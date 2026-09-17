@@ -444,6 +444,54 @@ sich Mathlibs Aufkreuzungs-API über einen beliebigen linear geordneten Index
 ziehen läßt. **Nicht der ganze Meilenstein 9 ist offen:** optionales Sampling in
 stetiger Zeit und die Stabilität unter Stoppen stehen seit dem 2026-09-10.
 
+**DIE DATEIGRENZE FÄLLT, vom Nutzer am 2026-09-17 entschieden.** Es gibt *eine*
+Tau-Ceti-Einreichung, und die vier `Suggested.lean` **dürfen aufeinander
+aufbauen**: `WeakConvergence` → `SkorokhodSpace` → `MartingaleProblems`,
+`KolmogorovExtension` unabhängig. `TauCeti/SUBMISSION.md` ist entsprechend
+geändert.
+
+**Was das einlöst — zwei `sorry`, die keine Mathematik waren:**
+
+* `isMPSolution_iff_forall_fdd_continuous` (Meilenstein 3). Der Lauf vom
+  2026-09-15 hat die Reduktion ausgeschrieben: sie ist genau
+  `integral_mul_eq_zero_of_isMulSystem` und
+  `generateFromFuns_setOf_continuous_bounded`, **beide bewiesen** in
+  `TauCeti/WeakConvergence/Suggested.lean`. Die Reduktion steht an der
+  Deklaration und in der README; sie ist nicht neu zu erfinden.
+* `mpSolution_of_tendsto_of_pContinuous` (Meilenstein 10) braucht das
+  Continuous-Mapping-Theorem aus `WeakConvergence`. Hier gibt es keinen
+  Ausweichweg wie den Quadrate-Weg bei
+  `isQuasiLeftContinuous_of_isRegularizingClass` — Verteilungskonvergenz *ist*
+  der Gegenstand von `WeakConvergence`.
+
+**ERSTE AUFGABE, und sie ist Werkzeugbau, nicht Mathematik.** Bisher wird jede
+`Suggested.lean` **einzeln** mit `lake env lean <datei>` gegen reines Mathlib
+geprüft; die Dateien stehen nicht im Lake-Build (`lakefile.lean` kennt nur
+`Journal` und `journal`, `TauCeti` kommt darin nicht vor, nachgesehen
+2026-09-17). Ein `import` zwischen ihnen setzt gebaute `.olean` voraus. Also
+**vor** der ersten Importzeile:
+
+1. Ein Lake-Target für die vier Dateien anlegen, das sie in
+   Abhängigkeitsordnung baut. Kleinster Eingriff: ein `lean_lib` mit
+   `srcDir := "Journal/Blog/MartingaleProblem"` und den vier Modulwurzeln.
+   **Den Modulnamen an dem prüfen, was `TauCetiRoadmap` erwartet** — unsere
+   Verzeichnisnamen müssen zu den dortigen Modulpfaden passen, sonst baut es
+   hier und nicht dort.
+2. `scripts/check_suggested.py` nachziehen: es prüft heute eine Datei
+   freistehend und muß künftig erst die Abhängigkeiten bauen. **Die Prüfung
+   darf nicht schwächer werden** — weiterhin ungefiltert, weiterhin die ganze
+   Datei, und die Falle von `| head -N` bleibt verboten (sie sieht wie ein
+   fehlerfreier Durchlauf aus).
+3. Erst danach die beiden `sorry` schließen, in dieser Reihenfolge:
+   Meilenstein 3 (die Reduktion ist ausgeschrieben, also billig), dann
+   Meilenstein 10.
+
+**Was die Entscheidung *nicht* erlaubt:** einen Import, der die Bodenhaftung
+verschlechtert. `CONTRIBUTING.md` verlangt, daß eine Roadmap Kontakt zu
+vorhandenem Material hat; die Kette untereinander ersetzt das nicht. Jede
+Roadmap muß weiterhin für sich auf zeilengeprüften Mathlib-Deklarationen ruhen,
+und `KolmogorovExtension` bleibt unabhängig.
+
 **Nachtrag 2026-09-15 zu Meilenstein 9: was im brownian-motion-Repo wirklich
 steht, nachgesehen und gezählt.** Die Roadmap nennt das Repo bisher pauschal und
 mit einem Pfadverweis, der auf dem ausgecheckten Stand nicht stimmt. Richtig ist:
