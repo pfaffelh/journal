@@ -39,7 +39,7 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-17 (fourth run of that day).  Every declaration elaborates; 6 declarations carry `sorry`, and
+2026-09-17 (fifth run of that day).  Every declaration elaborates; 5 declarations carry `sorry`, and
 Five more the same day, in `section JumpFiltration`, are the four bookkeeping
 facts about `lebesgueClock` that the conditional expectation of
 `jumpProcess_isMPSolution` still needed, plus their assembly:
@@ -385,7 +385,7 @@ Four more on 2026-09-14, in `section PropagationFromOnedim` and `section Uniquen
 `thm:absuniq`(b).  The two inputs are `weightedLaw_univ`, which reads the manuscript's "take
 `h ≡ 1`" off the hypothesis, and `weightedLaw_const_mul`, which makes the normalisation
 `E^P[Z] = 1` a change of variables.  Every statement from `PropagatesAgreement` to
-`thm:absuniq`(b) is now proved and none of the six `sorry`s of this file is reachable from any
+`thm:absuniq`(b) is now proved and none of the five `sorry`s of this file is reachable from any
 of them.
 
 Three more on 2026-09-14, in `section ShiftInvariantClock` and `section ShiftSystemMpFamily`,
@@ -3193,45 +3193,63 @@ What `h𝓧` supplies is the regularization of `Y`: a member of `𝓧` is a
 `IsCompensatorFor`, and `f ∘ X = Y + C` inherits them.  That half is done and is
 `ae_exists_tendsto_comp_of_isRegularizingClass` above.
 
-**Three hypotheses were missing and are now in, found 2026-09-17 by writing the
-proof of the modification half.**  Each is read at exactly one step of that half,
-and the step is named.
+**Four hypotheses carry the modification half, and each is read at exactly one
+step** (written out 2026-09-17, fifth run of that day, when the half was proved).
 
-* **`hΦcount` carries the continuity of `Φ₀`.**  Point separation alone does not
-  reach an `E`-valued limit: the one route from the real limits to it is
-  `ae_exists_tendsto_of_forall_ae_exists_tendsto`, which reads
-  `∀ f ∈ Φ₀, Continuous f` -- a compact set catches a cluster point and a
-  *continuous* function carries it.  Neither `IsSeparating Φ` nor
-  `IsRegularizingClass` gives the continuity of a single member.
-* **`hΦsq`, closure of `Φ` under `f ↦ f * conj f`**, is what carries the
-  modification property, and point separation by itself does not.  With `X'` the
-  right limit along `D` the chain is `f (X' t) = Y_{t+} + C_{t+}`, then
-  `C_{t+} = C t` almost surely -- that is
-  `IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi` above, the only place
-  `l1_rightContinuous` is used, so the field sits where it belongs -- and
-  `P[Y_{t+} | 𝓕 t] = Y t` by the uniform integrability of `{Y s}`, which is
-  `Integrable.uniformIntegrable_condExp_filtration`
-  (`Probability/Process/Filtration.lean:214`) read at the real and imaginary
-  parts.  Together `P[fun ω ↦ f (X' t ω) | 𝓕 t] =ᵐ[P] fun ω ↦ f (X t ω)` for
-  every `f ∈ Φ`.  Reading it at `f` and at `f * conj f` and expanding gives
-  `P[‖f (X' t) - f (X t)‖ ^ 2 | 𝓕 t] = 0`, hence `f (X' t) = f (X t)` almost
-  surely for each of the countably many `f ∈ Φ₀`, and point separation finishes.
-  Without `hΦsq` the null set of the identity depends on `f` and a countable
-  point separating family does not determine a conditional law; the alternative
-  is a right continuous filtration, which is the usual conditions, which Mathlib
-  does not have (checked 2026-09-12) and which would be a milestone of its own.
-  `hΦsq` is the cheaper of the two and asks nothing of the filtration.
+* **`hcont`, the continuity of the members of `Φ₀`.**  Point separation alone
+  does not reach an `E`-valued limit: the one route from the real limits to it is
+  `exists_tendsto_of_forall_tendsto_comp`, which reads `∀ f ∈ Φ₀, Continuous f`
+  -- a compact set catches a cluster point and a *continuous* function carries
+  it.  Neither `IsSeparating Φ` nor `IsRegularizingClass` gives the continuity of
+  a single member.  It is read a second time in the modification half, at
+  `f (X' t) = lim f (X s)`.
+* **`hsq`, closure under `f ↦ f * conj f`**, is what carries the modification
+  property, and point separation by itself does not.  With `X'` the right limit
+  along `D` the chain is `f (X' t) = Y_{t+} + C_{t+}`, then `C_{t+} = C t` almost
+  surely -- that is `IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi` above, the
+  only place `l1_rightContinuous` is used, so the field sits where it belongs --
+  and `P[Y_{t+} | 𝓕 t] = Y t` by `Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi`.
+  Together `P[fun ω ↦ f (X' t ω) | 𝓕 t] =ᵐ[P] fun ω ↦ f (X t ω)` for every
+  continuous bounded `f ∈ Φ`.  Reading it at `f` and at `f * conj f` and
+  expanding is `ae_eq_of_condExp_eq_of_condExp_mul_conj`, hence
+  `f (X' t) = f (X t)` almost surely for each of the countably many `f ∈ Φ₀`, and
+  point separation finishes.  Without `hsq` the null set of the identity depends
+  on `f` and a countable point separating family does not determine a conditional
+  law; the alternative is a right continuous filtration, which is the usual
+  conditions, which Mathlib does not have (checked 2026-09-12) and which would be
+  a milestone of its own.  `hsq` is the cheaper of the two and asks nothing of
+  the filtration.  **It is asked of the members of `Φ₀` only**, and the square
+  lands in `Φ`, not in `Φ₀`: the square is fed to the compensated decomposition
+  and never to the point separation, so nothing is gained by closing `Φ₀`.
+* **`hbdd`, a bound on each member of `Φ₀`** -- named as expected one run before
+  this one, and now paid for.  `ae_eq_of_condExp_eq_of_condExp_mul_conj` asks
+  `MemLp _ 2 P` of both sides, and nothing in `IsRegularizingClass` gives it: the
+  martingale part `Y t` is integrable by definition, but the compensator `C t` is
+  only `StronglyAdapted`, so `f ∘ X t = Y t + C t` is not even known to be
+  integrable.  A bound supplies everything at once -- `f ∘ X t` and `f ∘ X' t`
+  are bounded, hence in every `Lᵖ` under a probability measure, and `C t` is
+  integrable as the difference of two integrable functions.  A class of bounded
+  continuous functions satisfies it anyway.  The bound is asked of `Φ₀` and
+  inherited by the square, `‖f x * conj (f x)‖ = ‖f x‖ ^ 2 ≤ M ^ 2`.
 * **`[FirstCountableTopology ι]`**, because `C_{t+} = C t` passes through a
   sequence running into `𝓝[D ∩ Set.Ioi t] t`, hence through a countably
   generated filter.  `[(atTop : Filter ι).IsCountablyGenerated]` is the
   hypothesis of `ae_exists_tendsto_comp_of_isRegularizingClass` and is a
   different one: cofinality is not first countability.  `ℝ≥0` and `ℝ` have both.
 
-That the theorem is **false** without the first two is not claimed; no witness is
-known.  The nearest candidates die on `IsSeparating Φ` itself: for
-`X t = 1_{t > 1} Z` with `Z` centred, the hypotheses force `f 0 = 𝔼[f Z]` for
-every `f ∈ Φ`, and a class with that property does not separate `δ₀` from the law
-of `Z`.
+**`IsSeparating Φ` is not among them, and was dropped when the proof was
+written** (2026-09-17, fifth run of that day).  It stood in the statement from
+the beginning and no step reads it.  What the proof separates with is the
+*pointwise* separation `hsep` of the countable subclass, at the very last line:
+two points of `E` on which every member of `Φ₀` agrees are equal.  Separation of
+*measures* -- which is what `IsSeparating` says, and which is a strictly
+different property, neither implying nor implied by pointwise separation -- is
+what the uniqueness statements of the roadmap **WeakConvergence** need, and it
+belongs there and not here.  Carrying it would have made the theorem inapplicable
+to a class that determines paths but not laws.
+
+That the theorem is **false** without `hcont`, `hsq` or `hbdd` is not claimed; no
+witness is known for any of the three.
 
 **Four further hypotheses were missing and are now in, found 2026-09-17 by
 proving the path half.**  Each is consumed at a named step of
@@ -3257,42 +3275,155 @@ a convenience.
   is, the right limit there is unconstrained, and the path through that point is
   uncontrolled.  `ℝ≥0` and `ℝ` are densely ordered.
 
-**The witness and the state of the proof.**  The modification is
-`fun t ω ↦ rightLimAlong D (fun s ↦ X s ω) t`, and its path property is
-`ae_isCadlagPath_rightLimAlong_of_isRegularizingClass`, proved above.  What
-remains is the modification property `X' t = X t` almost surely at each `t`: at a
-point isolated from the right along `D` it holds by `rightLimAlong_of_not_neBot`,
-and elsewhere it is the chain `f (X' t) = V_f + W_f`, `W_f = C t` almost surely
-(`IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi`), `P[V_f | 𝓕 t] = Y t`
-(`Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi`), read at `f` and at
-`f * conj f` and closed by `ae_eq_of_condExp_eq_of_condExp_mul_conj`.
+**The witness, and the two points at which the modification property is read.**
+The modification is `fun t ω ↦ rightLimAlong D (fun s ↦ X s ω) t`, and its path
+property is `ae_isCadlagPath_rightLimAlong_of_isRegularizingClass` above.  The
+modification property `X' t = X t` almost surely splits on whether `t` is
+isolated from the right along `D`.  Where it is, the filter is `⊥` and
+`rightLimAlong_of_not_neBot` gives the equality **at every sample point** and not
+almost surely -- that is the whole return on guarding the definition by the
+filter rather than by the existence of a limit.  Where it is not, the filter
+produces a `b > t`, which is the bound
+`Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi` asks for, so no `NoMaxOrder`
+is needed here either: the greatest element, where there is one, is exactly a
+point isolated from the right and falls under the first case.
 
-**A fifth hypothesis is expected there and is not yet in**, because it has not
-been paid for by a proof: `ae_eq_of_condExp_eq_of_condExp_mul_conj` asks
-`MemLp _ 2 P` of both sides, and nothing in `IsRegularizingClass` gives it.  The
-martingale part `Y t` is integrable by definition, the compensator `C t` is only
-`StronglyAdapted`, and `f ∘ X t = Y t + C t` is therefore not known to be
-integrable, let alone square integrable.  A bound `∀ f ∈ Φ₀, ∃ M, ∀ x, ‖f x‖ ≤ M`
-supplies both at once — it makes `f ∘ X t` and `f ∘ X' t` bounded, hence in every
-`Lᵖ` under a probability measure, and it makes `C t` integrable as a difference —
-and it is what a class of bounded continuous functions satisfies anyway.  It is
-named here rather than added so that the hypothesis enters with the step that
-reads it. -/
+The chain in the second case, with `Y` and `C` the decomposition of `f ∘ X`:
+`W_f := rightLimAlong D (C · ω) t` is `C t` almost surely
+(`IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi`); `V_f := f ∘ X' t - W_f` is
+the limit of `Y` along the filter, because on `D` the decomposition holds and the
+two other limits exist; `P[V_f | 𝓕 t] = Y t`
+(`Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi`); and `P[W_f | 𝓕 t] = C t`
+because `C t` is `𝓕 t`-strongly measurable.  Adding gives
+`P[f ∘ X' t | 𝓕 t] =ᵐ[P] f ∘ X t`, and reading it at `f` and at `f * conj f`
+closes by `ae_eq_of_condExp_eq_of_condExp_mul_conj`.
+
+**Where the `𝓕 t`-measurability of `f ∘ X t` comes from, and why no adaptedness
+of `X` is assumed.**  `ae_eq_of_condExp_eq_of_condExp_mul_conj` asks it, and
+`IsRegularizingClass` supplies it without a word about `X`: the decomposition
+`f (X t ω) = Y t ω + C t ω` exhibits `f ∘ X t` as almost everywhere equal to a
+sum of two `𝓕 t`-strongly measurable functions.  Adaptedness of `X` itself is
+neither assumed nor available -- `X` is `E`-valued and `𝓕` is a filtration on
+`Ω`, and the class sees `X` only through its members. -/
 theorem exists_cadlag_modification_of_isRegularizingClass [FirstCountableTopology ι]
     [(atTop : Filter ι).IsCountablyGenerated] [DenselyOrdered ι]
-    [T2Space E] [RegularSpace E] [OpensMeasurableSpace E] {Φ : Set (E → 𝕂)}
+    [T2Space E] [RegularSpace E] [OpensMeasurableSpace E] {Φ Φ₀ : Set (E → 𝕂)}
     {X : ι → Ω → E} {𝓧 : Set (ι → Ω → 𝕂)} {𝓕 : Filtration ι m} {P : Measure Ω}
     [IsProbabilityMeasure P]
     {D : Set ι} (hD : D.Countable) (hD' : Dense D)
     (hXm : ∀ t : ι, Measurable (X t))
-    (h𝓧 : IsMPSolution 𝓧 𝓕 P)
-    (hΦ : IsRegularizingClass Φ X 𝓧 𝓕 P D) (hΦsep : IsSeparating Φ)
-    (hΦsq : ∀ f ∈ Φ, (fun x ↦ f x * (starRingEnd 𝕂) (f x)) ∈ Φ)
-    (hΦcount : ∃ Φ₀ ⊆ Φ, Φ₀.Countable ∧ (∀ f ∈ Φ₀, Continuous f) ∧
-      ∀ x y : E, x ≠ y → ∃ f ∈ Φ₀, f x ≠ f y)
+    (h𝓧 : IsMPSolution 𝓧 𝓕 P) (hΦ : IsRegularizingClass Φ X 𝓧 𝓕 P D)
+    (hΦ₀ : Φ₀ ⊆ Φ) (hΦ₀c : Φ₀.Countable) (hcont : ∀ f ∈ Φ₀, Continuous f)
+    (hbdd : ∀ f ∈ Φ₀, ∃ M : ℝ, ∀ x, ‖f x‖ ≤ M)
+    (hsq : ∀ f ∈ Φ₀, (fun x ↦ f x * (starRingEnd 𝕂) (f x)) ∈ Φ)
+    (hsep : ∀ x y : E, x ≠ y → ∃ f ∈ Φ₀, f x ≠ f y)
     (hcc : CompactContainment X P D) :
     ∃ X' : ι → Ω → E, (∀ t : ι, ∀ᵐ ω ∂P, X' t ω = X t ω) ∧
-      ∀ᵐ ω ∂P, IsCadlagPath (fun t ↦ X' t ω) := sorry
+      ∀ᵐ ω ∂P, IsCadlagPath (fun t ↦ X' t ω) := by
+  refine ⟨fun t ω ↦ rightLimAlong D (fun s ↦ X s ω) t, ?_,
+    ae_isCadlagPath_rightLimAlong_of_isRegularizingClass hD hD' hXm hcc h𝓧 hΦ
+      hΦ₀ hΦ₀c hcont hsep⟩
+  intro t
+  by_cases hne : (𝓝[D ∩ Set.Ioi t] t).NeBot
+  swap
+  · exact Filter.Eventually.of_forall fun ω ↦ rightLimAlong_of_not_neBot hne
+  have := hne
+  obtain ⟨b, -, hbt⟩ := Filter.nonempty_of_mem
+    (self_mem_nhdsWithin (a := t) (s := D ∩ Set.Ioi t))
+  have hXtend : ∀ᵐ ω ∂P, Tendsto (fun s ↦ X s ω) (𝓝[D ∩ Set.Ioi t] t)
+      (𝓝 (rightLimAlong D (fun s ↦ X s ω) t)) := by
+    filter_upwards [ae_forall_exists_tendsto_of_isRegularizingClass hD hXm hcc h𝓧 hΦ
+      hΦ₀ hΦ₀c hcont hsep] with ω hω using tendsto_rightLimAlong (hω t).2
+  -- the conditional expectation identity for one bounded continuous member of `Φ`
+  have key : ∀ g ∈ Φ, Continuous g → ∀ M : ℝ, (∀ x, ‖g x‖ ≤ M) →
+      MemLp (fun ω ↦ g (rightLimAlong D (fun s ↦ X s ω) t)) 2 P ∧
+      MemLp (fun ω ↦ g (X t ω)) 2 P ∧
+      AEStronglyMeasurable[𝓕 t] (fun ω ↦ g (X t ω)) P ∧
+      P[fun ω ↦ g (rightLimAlong D (fun s ↦ X s ω) t) | 𝓕 t] =ᵐ[P] fun ω ↦ g (X t ω) := by
+    intro g hgΦ hgc M hM
+    obtain ⟨Y, hY𝓧, C, hC⟩ := hΦ g hgΦ
+    have hYm : Martingale Y 𝓕 P := h𝓧 Y hY𝓧
+    have hmeas : ∀ s : ι, AEStronglyMeasurable (fun ω ↦ g (X s ω)) P := by
+      intro s
+      refine AEStronglyMeasurable.congr (f := fun ω ↦ Y s ω + C s ω) ?_
+        (Filter.EventuallyEq.symm (hC.decomposition s))
+      exact ((hYm.stronglyMeasurable s).mono (𝓕.le s)).aestronglyMeasurable.add
+        ((hC.stronglyAdapted s).mono (𝓕.le s)).aestronglyMeasurable
+    have hgXt2 : MemLp (fun ω ↦ g (X t ω)) 2 P :=
+      MemLp.of_bound (hmeas t) M (Filter.Eventually.of_forall fun ω ↦ hM _)
+    have hfm : AEStronglyMeasurable[𝓕 t] (fun ω ↦ g (X t ω)) P :=
+      ⟨fun ω ↦ Y t ω + C t ω,
+        (hYm.stronglyMeasurable t).add (hC.stronglyAdapted t), hC.decomposition t⟩
+    have hCint : Integrable (C t) P := by
+      refine Integrable.congr (f := fun ω ↦ g (X t ω) - Y t ω) ?_ ?_
+      · exact (hgXt2.integrable one_le_two).sub (hYm.integrable t)
+      · filter_upwards [hC.decomposition t] with ω hω
+        rw [hω]; ring
+    have hWt : ∀ᵐ ω ∂P, Tendsto (fun s ↦ C s ω) (𝓝[D ∩ Set.Ioi t] t)
+        (𝓝 (rightLimAlong D (fun s ↦ C s ω) t)) := by
+      filter_upwards [hC.exists_limits] with ω hω using tendsto_rightLimAlong (hω t).2
+    have hWC : (fun ω ↦ rightLimAlong D (fun s ↦ C s ω) t) =ᵐ[P] C t :=
+      hC.ae_eq_of_tendsto_nhdsWithin_Ioi hWt
+    have hWint : Integrable (fun ω ↦ rightLimAlong D (fun s ↦ C s ω) t) P :=
+      hCint.congr hWC.symm
+    have hgX' : ∀ᵐ ω ∂P, Tendsto (fun s ↦ g (X s ω)) (𝓝[D ∩ Set.Ioi t] t)
+        (𝓝 (g (rightLimAlong D (fun s ↦ X s ω) t))) := by
+      filter_upwards [hXtend] with ω hω using (hgc.tendsto _).comp hω
+    have hgX'meas : AEStronglyMeasurable
+        (fun ω ↦ g (rightLimAlong D (fun s ↦ X s ω) t)) P := by
+      obtain ⟨u, hu⟩ := Filter.exists_seq_tendsto (𝓝[D ∩ Set.Ioi t] t)
+      refine aestronglyMeasurable_of_tendsto_ae atTop (fun n ↦ hmeas (u n)) ?_
+      filter_upwards [hgX'] with ω hω using hω.comp hu
+    have hgX'2 : MemLp (fun ω ↦ g (rightLimAlong D (fun s ↦ X s ω) t)) 2 P :=
+      MemLp.of_bound hgX'meas M (Filter.Eventually.of_forall fun ω ↦ hM _)
+    set V : Ω → 𝕂 := fun ω ↦ g (rightLimAlong D (fun s ↦ X s ω) t)
+      - rightLimAlong D (fun s ↦ C s ω) t with hVdef
+    have hVtend : ∀ᵐ ω ∂P, Tendsto (fun s ↦ Y s ω) (𝓝[D ∩ Set.Ioi t] t) (𝓝 (V ω)) := by
+      have hdec : ∀ᵐ ω ∂P, ∀ s ∈ D, g (X s ω) = Y s ω + C s ω :=
+        (ae_ball_iff hD).2 fun s _ ↦ hC.decomposition s
+      filter_upwards [hgX', hWt, hdec] with ω h1 h2 h3
+      refine (h1.sub h2).congr' ?_
+      filter_upwards [self_mem_nhdsWithin] with s hs
+      rw [h3 s hs.1]; ring
+    have hVY : P[V | 𝓕 t] =ᵐ[P] Y t :=
+      Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi hYm hbt hVtend
+    have hVint : Integrable V P := (hgX'2.integrable one_le_two).sub hWint
+    refine ⟨hgX'2, hgXt2, hfm, ?_⟩
+    have hsum : (fun ω ↦ g (rightLimAlong D (fun s ↦ X s ω) t))
+        =ᵐ[P] V + fun ω ↦ rightLimAlong D (fun s ↦ C s ω) t := by
+      filter_upwards with ω
+      simp [hVdef]
+    calc P[fun ω ↦ g (rightLimAlong D (fun s ↦ X s ω) t) | 𝓕 t]
+        =ᵐ[P] P[V + fun ω ↦ rightLimAlong D (fun s ↦ C s ω) t | 𝓕 t] :=
+          condExp_congr_ae hsum
+      _ =ᵐ[P] P[V | 𝓕 t] + P[fun ω ↦ rightLimAlong D (fun s ↦ C s ω) t | 𝓕 t] :=
+          condExp_add hVint hWint (𝓕 t)
+      _ =ᵐ[P] fun ω ↦ g (X t ω) := by
+          have hW2 : P[fun ω ↦ rightLimAlong D (fun s ↦ C s ω) t | 𝓕 t] =ᵐ[P] C t :=
+            (condExp_congr_ae hWC).trans (Filter.EventuallyEq.of_eq
+              (condExp_of_stronglyMeasurable (𝓕.le t) (hC.stronglyAdapted t) hCint))
+          filter_upwards [hVY, hW2, hC.decomposition t] with ω h1 h2 h3
+          simp only [Pi.add_apply]
+          rw [h1, h2, h3]
+  -- read at `f` and at `f * conj f`, for each of the countably many `f ∈ Φ₀`
+  have hEach : ∀ f ∈ Φ₀, ∀ᵐ ω ∂P,
+      f (rightLimAlong D (fun s ↦ X s ω) t) = f (X t ω) := by
+    intro f hf
+    obtain ⟨M, hM⟩ := hbdd f hf
+    have hM2 : ∀ x, ‖(fun x ↦ f x * (starRingEnd 𝕂) (f x)) x‖ ≤ M * M := by
+      intro x
+      have h1 := hM x
+      have h0 : (0 : ℝ) ≤ ‖f x‖ := norm_nonneg _
+      simp only [norm_mul, RCLike.norm_conj]
+      nlinarith
+    obtain ⟨hA1, hA2, hA3, hA4⟩ := key f (hΦ₀ hf) (hcont f hf) M hM
+    obtain ⟨-, -, -, hB4⟩ := key (fun x ↦ f x * (starRingEnd 𝕂) (f x)) (hsq f hf)
+      ((hcont f hf).mul (RCLike.continuous_conj.comp (hcont f hf))) (M * M) hM2
+    exact ae_eq_of_condExp_eq_of_condExp_mul_conj (𝓕.le t) hA3 hA2 hA1 hA4 hB4
+  filter_upwards [(ae_ball_iff hΦ₀c).2 hEach] with ω hω
+  by_contra hcon
+  obtain ⟨f, hf, hfne⟩ := hsep _ _ hcon
+  exact hfne (hω f hf)
 
 /-- A càdlàg process reaches its left limits along every nondecreasing sequence
 of stopping times. The bound `t` keeps the stopping times bounded, which is what
@@ -28499,7 +28630,7 @@ end IncrementGenerator
 `def:propagation`, `prop:uniqfromprop` of the manuscript -- the half of Milestone 6 that carries
 **no** Markov structure at all.  It is the bottom of the tree: neither `restart` nor a shift
 system nor a determining set occurs in any statement or in any proof in `section Propagation` or
-`section Cylinders`, and none of the six `sorry`s of this file is reachable from here.  What
+`section Cylinders`, and none of the five `sorry`s of this file is reachable from here.  What
 sits above it -- `lem:propagation` in `section PropagationFromOnedim`, which makes
 `PropagatesAgreement` checkable from the one dimensional laws, and `thm:absuniq`(a), the Markov
 property, in `section MarkovFromOnedim` -- is where the shift system enters.

@@ -745,13 +745,14 @@ elaboriert gegen v4.33.1 nicht, weil `ProbabilityMeasure.map` dort noch ein
 erst. Nachgeprüft, absichtlich, bleibt so.
 
 Die ganze Bewegung steckt seither in `MartingaleProblems`: **1 036 Zeilen am
-8. September, 29 092 heute.** Die sechs verbliebenen `sorry` stehen in
+8. September, 29 092 heute.** Die **fünf** verbliebenen `sorry` stehen in
 `isMPSolution_iff_forall_fdd_continuous` (die stetige Fassung des
 fdd-Kriteriums — eine Entscheidung über die Anordnung der Dateien, keine offene
-Mathematik), `exists_cadlag_modification_of_isRegularizingClass` (wartet auf
-die reellwertige Regularisierung, Meilenstein 9), den beiden
-Quasi-Linksstetigkeiten und den beiden Konvergenzsätzen `mpSolution_of_tendsto`
-und `isMPSolution_of_forall_condExp_eq_of_dense`.
+Mathematik), den beiden Quasi-Linksstetigkeiten und den beiden Konvergenzsätzen
+`mpSolution_of_tendsto` und `isMPSolution_of_forall_condExp_eq_of_dense`.
+`exists_cadlag_modification_of_isRegularizingClass` steht seit dem 2026-09-17,
+fünftem Lauf des Tages, **bewiesen** — Doobs Regularisierung in der `E`-wertigen
+Fassung, und damit der erste der drei `sorry` von Meilenstein 9.
 
 Inhaltlich geschlossen sind seit dem 8. September: **Meilenstein 5**
 (`restart`, `restart_canonical` — dabei zeigte sich, daß der Aussage, wie sie
@@ -764,12 +765,11 @@ hat begonnen: erst der Schritt, der aus reellen Grenzwerten einen `E`-wertigen
 macht, dann im Lauf `20260915T210301Z` die **deterministische Hälfte von Doobs
 Regularisierung** — Oszillation längs eines einseitigen Filters *ist*
 Aufkreuzung eines rationalen Intervalls, und dieser Teil kommt ohne
-Wahrscheinlichkeit aus. Was zwischen
-`exists_cadlag_modification_of_isRegularizingClass` und seinem Beweis noch
-steht, sind nach diesem Lauf zwei Aussagen: `Submartingale.comp_monotone` und
-`Submartingale.ae_exists_not_hasUpcrossings`.
+Wahrscheinlichkeit aus. Am 2026-09-17 ist der Meilenstein dann in fünf Läufen
+bis zu `exists_cadlag_modification_of_isRegularizingClass` durchgezogen worden;
+offen bleiben dort die beiden Quasi-Linksstetigkeiten.
 
-Kein `sorry` steht in einer *Aussage*, nur in Beweisen: alle sechs sitzen in
+Kein `sorry` steht in einer *Aussage*, nur in Beweisen: alle fünf sitzen in
 `theorem`en.
 
 Manuskript: **134 Seiten**, `check.py` clean — der Runner verwirft `.tex` und

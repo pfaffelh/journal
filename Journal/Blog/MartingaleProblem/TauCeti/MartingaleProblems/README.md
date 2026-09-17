@@ -8217,10 +8217,12 @@ and 11 use them.
   2026-09-17.
 * `exists_cadlag_modification_of_isRegularizingClass`: if `P` is a probability
   measure solving the martingale problem for `𝓧`, `Φ` is a regularizing class
-  for `X` along `𝓧` containing a countable subset that separates points, `Φ` is
-  separating in the sense of the roadmap **WeakConvergence**, and `X` satisfies
-  compact containment, then `X` has a modification with paths in the càdlàg
-  space.
+  for `X` along `𝓧` containing a countable subset `Φ₀` of bounded continuous
+  functions that separates the points of `E` and whose squares `f * conj f` lie
+  in `Φ`, and `X` satisfies compact containment, then `X` has a modification
+  with paths in the càdlàg space. The modification is
+  `fun t ω ↦ rightLimAlong D (fun s ↦ X s ω) t`, the right limit of the path
+  along `D`, which is the object the two halves of the proof are about.
 
   **`IsMPSolution 𝓧 𝓕 P` belongs to the statement**, and the theorem is false
   without it; it was missing until 2026-09-16. `IsRegularizingClass` constrains
@@ -8241,38 +8243,49 @@ and 11 use them.
   along `D`. The compensator carries its own by a field of `IsCompensatorFor`,
   and `f ∘ X = Y + C` inherits them.
 
-  **Three hypotheses were missing and are now in**; they were found on
-  2026-09-17 by writing the proof of the modification half, and each is read at
-  exactly one step of it.
+  **Four hypotheses carry the modification half**, and each is read at exactly
+  one step of it. They were written out on 2026-09-17, fifth run of that day,
+  when the half was proved.
 
-  * **`hΦcount` carries the continuity of `Φ₀`.** Point separation alone does
-    not reach an `E`-valued limit: the one route from the real limits to it is
-    `ae_exists_tendsto_of_forall_ae_exists_tendsto`, and it reads
+  * **`hcont`, the continuity of the members of `Φ₀`.** Point separation alone
+    does not reach an `E`-valued limit: the one route from the real limits to it
+    is `exists_tendsto_of_forall_tendsto_comp`, and it reads
     `∀ f ∈ Φ₀, Continuous f` — a compact set catches a cluster point and a
     **continuous** `f` carries it. Neither `IsSeparating Φ` nor
-    `IsRegularizingClass` gives continuity of a single member, so the hypothesis
-    belongs in `hΦcount` and nowhere else.
-  * **`hΦsq`, closure of `Φ` under `f ↦ f * conj f`**, carries the modification
+    `IsRegularizingClass` gives continuity of a single member.
+  * **`hsq`, closure under `f ↦ f * conj f`**, carries the modification
     property, and point separation by itself does not. The chain is: for `f ∈ Φ`
-    and `X'` the right limit along `D`, `f (X' t) = Y_{t+} + C_{t+}`; then
-    `C_{t+} = C t` almost surely, which is
+    continuous and bounded and `X'` the right limit along `D`,
+    `f (X' t) = Y_{t+} + C_{t+}`; then `C_{t+} = C t` almost surely, which is
     `IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi` above; then
-    `P[Y_{t+} | 𝓕 t] = Y t`, which is the uniform integrability of `{Y s}`
-    between `t` and an upper bound. Together
-    `P[fun ω ↦ f (X' t ω) | 𝓕 t] =ᵐ[P] fun ω ↦ f (X t ω)` for every `f ∈ Φ`.
-    Reading that at `f` and at `f * conj f` and expanding the square gives
-    `P[fun ω ↦ ‖f (X' t ω) − f (X t ω)‖ ^ 2 | 𝓕 t] =ᵐ[P] 0`, so
-    `f (X' t) = f (X t)` almost surely for each of the countably many `f ∈ Φ₀`,
-    and point separation finishes. Without `hΦsq` the null set of that identity
-    depends on `f`, and a countable family that separates points does not
-    determine a conditional law.
+    `P[Y_{t+} | 𝓕 t] = Y t`, which is
+    `Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi`; and
+    `P[C_{t+} | 𝓕 t] = C t` because `C t` is `𝓕 t`-strongly measurable.
+    Together `P[fun ω ↦ f (X' t ω) | 𝓕 t] =ᵐ[P] fun ω ↦ f (X t ω)`. Reading that
+    at `f` and at `f * conj f` and expanding the square is
+    `ae_eq_of_condExp_eq_of_condExp_mul_conj`, so `f (X' t) = f (X t)` almost
+    surely for each of the countably many `f ∈ Φ₀`, and point separation
+    finishes. Without `hsq` the null set of that identity depends on `f`, and a
+    countable family that separates points does not determine a conditional law.
+    The hypothesis is asked of the members of `Φ₀` only, and the square lands in
+    `Φ` and not in `Φ₀`: the square is fed to the compensated decomposition and
+    never to the point separation.
 
     The alternative repair is a filtration right continuous up to null sets:
     then `Y_{t+}`, measurable for `𝓕_{t+}`, is measurable for `𝓕 t`, and
     `Y_{t+} = P[Y_{t+} | 𝓕 t] = Y t`. Those are the usual conditions, and
     Mathlib has neither them nor the augmentation (checked 2026-09-12); that is
-    a milestone of its own. `hΦsq` is the cheaper of the two, asks nothing of
+    a milestone of its own. `hsq` is the cheaper of the two, asks nothing of
     the filtration, and is the one this roadmap carries.
+  * **`hbdd`, a bound on each member of `Φ₀`.**
+    `ae_eq_of_condExp_eq_of_condExp_mul_conj` asks `MemLp _ 2 P` of both sides,
+    and `IsRegularizingClass` does not give it: `Y t` is integrable by
+    definition, but `C t` is only `StronglyAdapted`, so `f ∘ X t = Y t + C t` is
+    not even known to be integrable. A bound supplies everything at once —
+    `f ∘ X t` and `f ∘ X' t` become bounded, hence in every `Lᵖ` under a
+    probability measure, and `C t` becomes integrable as a difference. A class
+    of bounded continuous functions satisfies it anyway, and the square inherits
+    it, `‖f x * conj (f x)‖ = ‖f x‖ ^ 2 ≤ M ^ 2`.
   * **`[FirstCountableTopology ι]`**, because `C_{t+} = C t` passes through a
     sequence running into `𝓝[D ∩ Set.Ioi t] t`, hence through a countably
     generated filter. It is a different hypothesis from
@@ -8280,11 +8293,19 @@ and 11 use them.
     `ae_exists_tendsto_comp_of_isRegularizingClass` carries: cofinality is not
     first countability. `ℝ≥0` and `ℝ` have both.
 
-  That the theorem is **false** without the first two is not claimed; no witness
-  is known. The nearest candidates die on `IsSeparating Φ` itself: for
-  `X t = 1_{t > 1} Z` with `Z` centred, the hypotheses force `f 0 = 𝔼[f Z]` for
-  every `f ∈ Φ`, and a class with that property does not separate `δ₀` from the
-  law of `Z`.
+  **`IsSeparating Φ` is not among them and is not a hypothesis of this
+  statement.** It stood here from the beginning and was dropped on 2026-09-17,
+  fifth run of that day, when the proof was written and no step read it. What
+  the proof separates with is the **pointwise** separation of `Φ₀`, at the last
+  line: two points of `E` on which every member of `Φ₀` agrees are equal.
+  Separation of **measures**, which is what `IsSeparating` says, neither implies
+  nor is implied by pointwise separation; it is what the uniqueness statements
+  of the roadmap **WeakConvergence** need, and it belongs there. Carrying it
+  here would have made the theorem inapplicable to a class that determines paths
+  but not laws.
+
+  That the theorem is **false** without `hcont`, `hsq` or `hbdd` is not claimed;
+  no witness is known for any of the three.
 * The classical statement as a one line instance: for `A ⊆ Cb(E) × Bdd(E)` whose
   domain is separating and contains a countable subset separating points, every
   solution of the martingale problem for `A` satisfying compact containment has
@@ -8434,10 +8455,14 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   `⨆ n, (hτ n).measurableSpace`. So
   `f ∘ L = P[f (X (min τ' t)) | ⨆ n, (hτ n).measurableSpace]` for every
   `f ∈ Φ`, and `IsSeparating.ae_eq_of_forall_condExp_eq` of **WeakConvergence**
-  Milestone 1 gives `L =ᵐ[P] X (min τ' t)`. That last step is the one that also
-  closes `exists_cadlag_modification_of_isRegularizingClass`, and being
-  separating is the only hypothesis on `Φ` the two theorems share: no countable
-  subset separating the points of `E` is used here, and no compact containment.
+  Milestone 1 gives `L =ᵐ[P] X (min τ' t)`. **This is the one statement of the
+  milestone that reads `IsSeparating Φ`**, and it separates measures rather than
+  points: no countable subset separating the points of `E` is used here, and no
+  compact containment.
+  `exists_cadlag_modification_of_isRegularizingClass` takes the other road at
+  the same corner — squares and pointwise separation — and carries no
+  `IsSeparating` hypothesis at all, which is why the two share no hypothesis on
+  `Φ` beyond `IsRegularizingClass`.
 * `isQuasiLeftContinuous_of_isMPSolutionFor`, the classical instance
   (Ethier–Kurtz, Theorem 4.3.12). For `A ⊆ Cb(E) × Bdd(E)` with separating
   domain and a solution `X` with càdlàg paths, `IsQuasiLeftContinuous X 𝓕 P`
