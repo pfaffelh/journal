@@ -42,9 +42,15 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-17 (sixteenth run of that day), over the **whole** file and without an error.  Every
-declaration elaborates; 3 declarations carry `sorry`, and every one of those `sorry`s is a
-**proof** -- no statement carries one.  The sixteenth run of 2026-09-17 added no `sorry` and
+2026-09-17 (seventeenth run of that day), over the **whole** file and without an error.  Every
+declaration elaborates; 2 declarations carry `sorry`, and every one of those `sorry`s is a
+**proof** -- no statement carries one.  The seventeenth run of 2026-09-17 **removed** one: the
+passage from the martingale identity along a dense `D` to the whole index is proved
+(`isMPSolution_of_forall_condExp_eq_of_dense`), and with it the two steps it runs on,
+`tendsto_eLpNorm_sub_of_forall_condExp_eq` and `exists_seq_mem_of_nhdsWithin_Ioi_neBot`.  Its
+hypotheses changed in the proving: density of `D` is not enough and countability of `D` is not
+used.  The same run applied `isQuasiLeftContinuous_jumpProcessE` to the Poisson process and to
+M/M/1.  The sixteenth run of 2026-09-17 added no `sorry` and
 removed none: it applied `isQuasiLeftContinuous_of_isMPSolutionFor` to the local jump process over
 the Lebesgue clock and a countable state space (`isQuasiLeftContinuous_jumpProcessE`), whose
 instance on two states (`isQuasiLeftContinuous_flip`) is the positive half of the pair whose
@@ -423,7 +429,7 @@ Four more on 2026-09-14, in `section PropagationFromOnedim` and `section Uniquen
 `thm:absuniq`(b).  The two inputs are `weightedLaw_univ`, which reads the manuscript's "take
 `h ≡ 1`" off the hypothesis, and `weightedLaw_const_mul`, which makes the normalisation
 `E^P[Z] = 1` a change of variables.  Every statement from `PropagatesAgreement` to
-`thm:absuniq`(b) is now proved and none of the three `sorry`s of this file is reachable from any
+`thm:absuniq`(b) is now proved and none of the two `sorry`s of this file is reachable from any
 of them.
 
 Three more on 2026-09-14, in `section ShiftInvariantClock` and `section ShiftSystemMpFamily`,
@@ -5378,19 +5384,170 @@ section FromDense
 
 variable {ι : Type*} [LinearOrder ι] [TopologicalSpace ι] [OrderTopology ι]
 
-/-- From the martingale identity along a countable dense `D` to the whole index:
-right continuity of the members of `𝓧` and the uniform integrability of Step 2
-of the proof carry it across.  `D` must contain the greatest element of `ι` if
-there is one, because no sequence in `D` approaches it from the right. -/
-theorem isMPSolution_of_forall_condExp_eq_of_dense {𝓧 : Set (ι → Ω → 𝕂)}
+/-- **A sequence inside `D` running into `t` from the right, bounded above by a member of `D`,
+and staying inside a prescribed neighbourhood of `t`.**
+
+The bound `t₁ ∈ D` is what the uniform integrability below is bought with, and it costs nothing:
+`(𝓝[D ∩ Set.Ioi t] t).NeBot` already produces a point of `D ∩ Set.Ioi t`, and `Set.Iio t₁` is a
+neighbourhood of `t` once `t < t₁`, so cutting the filter down to it changes nothing.  This is
+cheaper than extracting a decreasing subsequence, which is the other way to get a common upper
+bound and needs a recursion.
+
+`U` is there for the second use, where the sequence has to stay below a time `t` that is *not* in
+`D`; passing `Set.univ` recovers the unconstrained form.
+
+The `+ N` shift turns the `Eventually` that `Filter.exists_seq_tendsto` delivers into a `∀ n`,
+which is what Vitali's theorem wants; carrying the `Eventually` through it would be dearer. -/
+theorem exists_seq_mem_of_nhdsWithin_Ioi_neBot [FirstCountableTopology ι] {D : Set ι} {t : ι}
+    (hne : (𝓝[D ∩ Set.Ioi t] t).NeBot) {U : Set ι} (hU : U ∈ 𝓝 t) :
+    ∃ (t₁ : ι) (w : ℕ → ι), t₁ ∈ D ∧ t < t₁ ∧ t₁ ∈ U ∧
+      (∀ n, w n ∈ D) ∧ (∀ n, t < w n) ∧ (∀ n, w n ≤ t₁) ∧ (∀ n, w n ∈ U) ∧
+      Tendsto w atTop (𝓝[D ∩ Set.Ioi t] t) := by
+  have := hne
+  have hUS : U ∈ 𝓝[D ∩ Set.Ioi t] t := mem_nhdsWithin_of_mem_nhds hU
+  have : (𝓝[(D ∩ Set.Ioi t) ∩ U] t).NeBot := by
+    rw [nhdsWithin_inter_of_mem' hUS]; exact hne
+  obtain ⟨t₁, ht₁⟩ :=
+    Filter.nonempty_of_mem (self_mem_nhdsWithin (a := t) (s := (D ∩ Set.Ioi t) ∩ U))
+  have htt₁ : t < t₁ := ht₁.1.2
+  have hIio : Set.Iio t₁ ∈ 𝓝 t := isOpen_Iio.mem_nhds htt₁
+  obtain ⟨u, hu⟩ := Filter.exists_seq_tendsto (𝓝[D ∩ Set.Ioi t] t)
+  have hev : ∀ᶠ n in atTop, (u n ∈ D ∧ t < u n) ∧ u n ∈ U ∧ u n < t₁ := by
+    filter_upwards [hu self_mem_nhdsWithin, hu hUS, hu (mem_nhdsWithin_of_mem_nhds hIio)]
+      with n h1 h2 h3 using ⟨h1, h2, h3⟩
+  obtain ⟨N, hN⟩ := eventually_atTop.1 hev
+  exact ⟨t₁, fun n ↦ u (n + N), ht₁.1.1, htt₁, ht₁.2,
+    fun n ↦ (hN (n + N) (Nat.le_add_left N n)).1.1,
+    fun n ↦ (hN (n + N) (Nat.le_add_left N n)).1.2,
+    fun n ↦ (hN (n + N) (Nat.le_add_left N n)).2.2.le,
+    fun n ↦ (hN (n + N) (Nat.le_add_left N n)).2.1,
+    hu.comp (tendsto_add_atTop_nat N)⟩
+
+omit [TopologicalSpace ι] [OrderTopology ι] in
+/-- **The uniform integrability of Step 2 is free, and it is not a hypothesis.**
+
+A sequence of times inside `D` bounded above by a single `t₁ ∈ D` makes `Y (w n)` a conditional
+expectation of the *one* integrable function `Y t₁`, by the martingale identity along `D` alone;
+the conditional expectations of a fixed integrable function form a uniformly integrable family
+(`Integrable.uniformIntegrable_condExp_filtration`), and Vitali then turns almost everywhere
+convergence into `L¹` convergence.
+
+So the martingale identity along `D` *produces* the uniform integrability that carrying it to the
+whole index needs.  Neither a hypothesis of uniform integrability nor a uniform bound on the
+family is required, and the countability of `D` is not used: what makes the filter countably
+generated is `[FirstCountableTopology ι]`, not the size of `D`.
+
+The real--imaginary split is avoided the same way as in
+`Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi`: `norm_condExp_le` dominates the `𝕂`-valued
+family by the real one and `UnifIntegrable.of_norm_le_ae` transfers the property. -/
+theorem tendsto_eLpNorm_sub_of_forall_condExp_eq {Y : ι → Ω → 𝕂} {𝓕 : Filtration ι m}
+    {P : Measure Ω} [IsFiniteMeasure P] {D : Set ι}
+    (hint : ∀ r : ι, Integrable (Y r) P)
+    (hD : ∀ r ∈ D, ∀ r' ∈ D, r ≤ r' → P[Y r' | 𝓕 r] =ᵐ[P] Y r)
+    {w : ℕ → ι} {t₁ : ι} (ht₁ : t₁ ∈ D) (hwD : ∀ n, w n ∈ D) (hwle : ∀ n, w n ≤ t₁)
+    {V : Ω → 𝕂} (hV : Integrable V P)
+    (hae : ∀ᵐ ω ∂P, Tendsto (fun n ↦ Y (w n) ω) atTop (𝓝 (V ω))) :
+    Tendsto (fun n ↦ eLpNorm (Y (w n) - V) 1 P) atTop (𝓝 0) := by
+  have hnorm : Integrable (fun ω ↦ ‖Y t₁ ω‖) P := (hint t₁).norm
+  have hUI0 : UnifIntegrable (fun n : ℕ ↦ P[fun ω ↦ ‖Y t₁ ω‖ | 𝓕 (w n)]) 1 P := by
+    intro ε hε
+    obtain ⟨δ, hδ, hδ'⟩ := (hnorm.uniformIntegrable_condExp_filtration (f := 𝓕)).2.1 hε
+    exact ⟨δ, hδ, fun n s hs hμs ↦ hδ' (w n) s hs hμs⟩
+  have hdom : ∀ n : ℕ, ∀ᵐ ω ∂P,
+      ‖Y (w n) ω‖ ≤ ‖P[fun ω ↦ ‖Y t₁ ω‖ | 𝓕 (w n)] ω‖ := by
+    intro n
+    filter_upwards [hD (w n) (hwD n) t₁ ht₁ (hwle n), norm_condExp_le (m := 𝓕 (w n)) (Y t₁),
+      condExp_nonneg (m := 𝓕 (w n)) (μ := P) (Eventually.of_forall fun ω ↦ norm_nonneg (Y t₁ ω))]
+      with ω h1 h2 h3
+    rw [← h1, Real.norm_of_nonneg h3]
+    exact h2
+  exact tendsto_Lp_finite_of_tendsto_ae le_rfl ENNReal.one_ne_top (fun n ↦ (hint (w n)).1)
+    (memLp_one_iff_integrable.2 hV) (hUI0.of_norm_le_ae hdom) hae
+
+/-- **From the martingale identity along `D` to the whole index.**  Right continuity of the
+members of `𝓧` carries it across, and nothing else does: the uniform integrability that Step 2 of
+the proof needs is produced by the identity itself
+(`tendsto_eLpNorm_sub_of_forall_condExp_eq`) and is not assumed.
+
+`hDr` is the hypothesis in the shape `LiftWitness.exists_countable_right_dense` delivers it, and
+it is the one that is really used.  Density of `D` is *not* enough: at an index `t ∉ D` isolated
+from the right -- one with an immediate successor, which an order like `Set.Iic 0 ∪ Set.Ici 1`
+inside `ℝ` has -- the filter `𝓝[D ∩ Set.Ioi t] t` is `⊥`, right continuity at `t` says nothing,
+and `Y t` is unconstrained, so the conclusion fails.  Requiring `D` to contain the greatest
+element of `ι` covers only one of the two ways this happens.
+
+The countability of `D` is **not** a hypothesis.  It is what makes such a `D` cheap to exhibit,
+but the proof uses only that `𝓝[D ∩ Set.Ioi t] t` is countably generated, and that comes from
+`[FirstCountableTopology ι]`.
+
+The proof is two applications of the same step.  For `s ∈ D` and arbitrary `t ≥ s`, a sequence
+`w n ∈ D` falling to `t` from the right has `∫_A Y (w n) = ∫_A Y s` for every `A ∈ 𝓕 s`, by the
+identity along `D`; the left side converges to `∫_A Y t`, so `∫_A Y t = ∫_A Y s`.  For `s ∉ D`, a
+sequence `v k ∈ D` falling to `s` from the right and kept **below `t`** has `∫_A Y t = ∫_A Y (v k)`
+by the first step, and the left side does not depend on `k` while the right side converges to
+`∫_A Y s`.  Both steps are `ae_eq_condExp_of_forall_setIntegral_eq` at the end, and neither uses
+a downward martingale convergence theorem. -/
+theorem isMPSolution_of_forall_condExp_eq_of_dense [FirstCountableTopology ι]
+    {𝓧 : Set (ι → Ω → 𝕂)}
     {𝓕 : Filtration ι m} {P : Measure Ω} [IsProbabilityMeasure P] {D : Set ι}
-    (hD : D.Countable) (hD' : Dense D) (hDmax : ∀ t : ι, IsMax t → t ∈ D)
+    (hDr : ∀ t : ι, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot)
     (hadapt : ∀ Y ∈ 𝓧, StronglyAdapted 𝓕 Y)
     (hint : ∀ Y ∈ 𝓧, ∀ t : ι, Integrable (Y t) P)
     (hright : ∀ Y ∈ 𝓧, ∀ᵐ ω ∂P, ∀ t : ι,
       ContinuousWithinAt (fun s ↦ Y s ω) (Set.Ioi t) t)
     (h : ∀ Y ∈ 𝓧, ∀ s ∈ D, ∀ t ∈ D, s ≤ t → P[Y t | 𝓕 s] =ᵐ[P] Y s) :
-    IsMPSolution 𝓧 𝓕 P := sorry
+    IsMPSolution 𝓧 𝓕 P := by
+  intro Y hY
+  have hint' : ∀ r : ι, Integrable (Y r) P := hint Y hY
+  have hDm : ∀ r ∈ D, ∀ r' ∈ D, r ≤ r' → P[Y r' | 𝓕 r] =ᵐ[P] Y r := h Y hY
+  have hrc : ∀ᵐ ω ∂P, ∀ t : ι, ContinuousWithinAt (fun s ↦ Y s ω) (Set.Ioi t) t := hright Y hY
+  -- the almost sure convergence a sequence running into `t` from the right delivers
+  have hlim : ∀ {r : ι} {w : ℕ → ι}, Tendsto w atTop (𝓝[D ∩ Set.Ioi r] r) →
+      ∀ᵐ ω ∂P, Tendsto (fun n ↦ Y (w n) ω) atTop (𝓝 (Y r ω)) := by
+    intro r w hw
+    filter_upwards [hrc] with ω hω
+    exact Tendsto.comp (hω r) (hw.mono_right (nhdsWithin_mono r Set.inter_subset_right))
+  -- Step 1: the identity holds from every `s ∈ D` to every later index, in integrated form
+  have stepA : ∀ s ∈ D, ∀ t : ι, s ≤ t → ∀ A : Set Ω, MeasurableSet[𝓕 s] A →
+      ∫ ω in A, Y t ω ∂P = ∫ ω in A, Y s ω ∂P := by
+    intro s hs t hst A hA
+    rcases hDr t with htD | hne
+    · calc ∫ ω in A, Y t ω ∂P = ∫ ω in A, (P[Y t | 𝓕 s]) ω ∂P :=
+            (setIntegral_condExp (𝓕.le s) (hint' t) hA).symm
+        _ = ∫ ω in A, Y s ω ∂P := integral_congr_ae (ae_restrict_of_ae (hDm s hs t htD hst))
+    · obtain ⟨t₁, w, ht₁D, -, -, hwD, hwt, hwle, -, hwtend⟩ :=
+        exists_seq_mem_of_nhdsWithin_Ioi_neBot hne (U := Set.univ) Filter.univ_mem
+      have hconv := tendsto_setIntegral_of_L1' (Y t) (hint' t).1
+        (Eventually.of_forall fun n ↦ hint' (w n))
+        (tendsto_eLpNorm_sub_of_forall_condExp_eq hint' hDm ht₁D hwD hwle (hint' t)
+          (hlim hwtend)) A
+      have hconst : ∀ n, ∫ ω in A, Y (w n) ω ∂P = ∫ ω in A, Y s ω ∂P := fun n ↦ by
+        calc ∫ ω in A, Y (w n) ω ∂P = ∫ ω in A, (P[Y (w n) | 𝓕 s]) ω ∂P :=
+              (setIntegral_condExp (𝓕.le s) (hint' (w n)) hA).symm
+          _ = ∫ ω in A, Y s ω ∂P :=
+              integral_congr_ae
+                (ae_restrict_of_ae (hDm s hs (w n) (hwD n) (hst.trans (hwt n).le)))
+      simp_rw [hconst] at hconv
+      exact tendsto_nhds_unique hconv tendsto_const_nhds
+  -- Step 2: an index outside `D` is reached from the right by indices inside it
+  refine ⟨hadapt Y hY, fun s t hst ↦ ?_⟩
+  refine (ae_eq_condExp_of_forall_setIntegral_eq (𝓕.le s) (hint' t)
+    (fun A _ _ ↦ (hint' s).integrableOn) (fun A hA _ ↦ ?_)
+    (hadapt Y hY s).aestronglyMeasurable).symm
+  rcases hDr s with hsD | hne
+  · exact (stepA s hsD t hst A hA).symm
+  rcases eq_or_lt_of_le hst with rfl | hlt
+  · rfl
+  obtain ⟨s₁, v, hs₁D, -, -, hvD, hvs, hvle, hvU, hvtend⟩ :=
+    exists_seq_mem_of_nhdsWithin_Ioi_neBot hne (U := Set.Iio t) (isOpen_Iio.mem_nhds hlt)
+  have hconv := tendsto_setIntegral_of_L1' (Y s) (hint' s).1
+    (Eventually.of_forall fun n ↦ hint' (v n))
+    (tendsto_eLpNorm_sub_of_forall_condExp_eq hint' hDm hs₁D hvD hvle (hint' s)
+      (hlim hvtend)) A
+  have hconst : ∀ n, ∫ ω in A, Y (v n) ω ∂P = ∫ ω in A, Y t ω ∂P := fun n ↦
+    (stepA (v n) (hvD n) t (hvU n).le A (𝓕.mono (hvs n).le A hA)).symm
+  simp_rw [hconst] at hconv
+  exact (tendsto_nhds_unique tendsto_const_nhds hconv).symm
 
 end FromDense
 
@@ -32697,5 +32854,43 @@ theorem isQuasiLeftContinuous_flip (nu : Measure Bool) [IsProbabilityMeasure nu]
     IsQuasiLeftContinuous (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE flipRate (t : ℝ) ω)
       (jumpFiltrationE flipRate measurable_flipRate) (jumpMeasure flipKernel nu) :=
   isQuasiLeftContinuous_jumpProcessE measurable_flipRate flipRate_pos flipRate_le_one flipKernel nu
+
+/-- **The Poisson process is quasi left continuous.**  It is
+`isQuasiLeftContinuous_jumpProcessE` on the Poisson data and nothing else, the rate being the
+constant `1`.
+
+It is the first instance of that theorem over an **infinite** state space, and that is why it is
+recorded: over `Bool` the countability of the separating class and the boundedness of its members
+are free for any test function at all, so an instance on two states cannot show that the
+countability hypothesis of the general theorem is the one doing the work.  Over `ℕ` the point
+indicators are a countable class inside an uncountable one, and it is they that are used.
+
+The two instances that `ℕ` supplies and `Bool` supplied by hand are `TopologicalSpace ℕ := ⊥`
+and `DiscreteTopology ℕ` (`Mathlib/Topology/Order.lean`), so `Continuous p.1` stays free. -/
+theorem isQuasiLeftContinuous_poissonProcess :
+    IsQuasiLeftContinuous (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE poissonRate (t : ℝ) ω)
+      (jumpFiltrationE poissonRate measurable_poissonRate)
+      (jumpMeasure poissonKernel (Measure.dirac 0)) :=
+  isQuasiLeftContinuous_jumpProcessE measurable_poissonRate poissonRate_pos poissonRate_le_one
+    poissonKernel (Measure.dirac 0)
+
+/-- **The M/M/1 queue is quasi left continuous.**  The bound on the rate is `β + δ` and the
+positivity is `0 < β`, both from `birthDeathRate_mm1_mem`; the Markov property of the kernel is
+carried as an instance hypothesis exactly as in `mm1_isMPSolution`.
+
+It is the instance with a **state dependent** rate: the Poisson process has a constant one, so on
+it the bound `hL` and the positivity `hlam0` are the same statement at every state, and an
+instance where they are not is what shows the two hypotheses are used separately.  The rate here
+takes the two values `β` and `β + δ`, the first at the empty queue. -/
+theorem isQuasiLeftContinuous_mm1 {β δ : ℝ} (hβ : 0 < β) (hδ : 0 ≤ δ)
+    [IsMarkovKernel (birthDeathKernel (mm1Birth β) (mm1Death δ))] :
+    IsQuasiLeftContinuous
+      (fun t : ℝ≥0 ↦ fun ω ↦
+        jumpProcessE (birthDeathRate (mm1Birth β) (mm1Death δ)) (t : ℝ) ω)
+      (jumpFiltrationE (birthDeathRate (mm1Birth β) (mm1Death δ)) (measurable_of_countable _))
+      (jumpMeasure (birthDeathKernel (mm1Birth β) (mm1Death δ)) (Measure.dirac 0)) :=
+  isQuasiLeftContinuous_jumpProcessE (measurable_of_countable _)
+    (fun x ↦ (birthDeathRate_mm1_mem hβ hδ x).1) (fun x ↦ (birthDeathRate_mm1_mem hβ hδ x).2)
+    _ (Measure.dirac 0)
 
 end CadlagWitness

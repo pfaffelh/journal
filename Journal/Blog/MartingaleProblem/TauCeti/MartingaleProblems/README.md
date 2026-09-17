@@ -8940,6 +8940,25 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   free. `Nonempty E` is not a hypothesis: the initial distribution is a
   probability measure, so the empty state space is excluded by `measure_univ`,
   and `0 < L` is read off any state. **In Lean** on 2026-09-17, sixteenth run.
+* `isQuasiLeftContinuous_poissonProcess`, the Poisson process is
+  quasi-left-continuous. It is `isQuasiLeftContinuous_jumpProcessE` on the
+  Poisson data, the rate being the constant `1`, and it is the first instance of
+  that theorem over an **infinite** state space: over two states the countability
+  of the separating class and the boundedness of its members are free for any
+  test function whatever, so an instance there cannot show that the countability
+  hypothesis carries weight. Over `ℕ` the point indicators are a countable class
+  inside an uncountable one, and it is they that are used. The two instances `ℕ`
+  supplies are `TopologicalSpace ℕ := ⊥` and `DiscreteTopology ℕ`, so
+  `Continuous p.1` stays free. **In Lean** on 2026-09-17, seventeenth run.
+* `isQuasiLeftContinuous_mm1`, the M/M/1 queue is quasi-left-continuous, with
+  positivity `0 < β` and bound `β + δ` from `birthDeathRate_mm1_mem` and the
+  Markov property of the kernel carried as an instance hypothesis exactly as in
+  `mm1_isMPSolution`. It is the instance with a **state dependent** rate, taking
+  the two values `β` at the empty queue and `β + δ` elsewhere; on a constant rate
+  the positivity and the bound are the same statement at every state, and an
+  instance where they are not is what shows the two hypotheses of
+  `isQuasiLeftContinuous_jumpProcessE` are spent separately. **In Lean** on
+  2026-09-17, seventeenth run.
 * `exists_bound_mpFamily_jumpProcessE`, the local bound of a test process of the
   local jump problem, `C + 2LC·j` on `[0, j]` with `C` a bound for the test
   function and `L` one for the rate. It is the third hypothesis of
@@ -9113,8 +9132,11 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   `X`; (b) `{Y° r (X n) | r ∈ D ∩ Iic t, n}` is uniformly integrable;
   (c) `𝔼^{P n}[(Y° t (X n) - Y° s (X n)) * Z (X n)] → 0`.
   Then `P[Y t | 𝓕 s] =ᵐ Y s` for all `s ≤ t` in `D`; and when `ι` carries the
-  order topology with `D` countable dense, `D` contains the greatest element if
-  there is one, and every `Y ∈ 𝓧` is right continuous, `P` is a solution.
+  order topology and is first countable, every index is either in `D` or
+  approached from the right inside `D`, and every `Y ∈ 𝓧` is right continuous,
+  `P` is a solution. That last step is
+  `isMPSolution_of_forall_condExp_eq_of_dense`, and the condition on `D` is its
+  hypothesis `hDr` and not density — see there for why density is not enough.
   State hypothesis (a) in this form. It carries no topology on `F`: it is a
   statement about finitely many real random variables, and the versions where
   `F` is metrizable and the coordinates are continuous are corollaries.
@@ -9159,6 +9181,49 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   `mpSolution_of_tendsto_augmented` is what remains: adjoining the coordinate at
   `1` to the path space makes the functional continuous. This pair fixes the
   division of labour between the two corollaries.
+* `isMPSolution_of_forall_condExp_eq_of_dense`, the passage from the martingale
+  identity along `D` to the whole index, and the last step of
+  `mpSolution_of_tendsto`. Over an index with the order topology and a first
+  countable one, for `𝓧` strongly adapted, integrable at each index and with
+  right continuous paths, and for a `D` such that every index is either in `D` or
+  has `𝓝[D ∩ Set.Ioi t] t` nontrivial, the identity along `D` gives
+  `IsMPSolution 𝓧 𝓕 P`. Two hypotheses that look natural are absent and one that
+  looks technical is not.
+  **Density of `D` is not enough**, and the hypothesis is the one
+  `LiftWitness.exists_countable_right_dense` already delivers: at an index
+  `t ∉ D` isolated from the right — an index with an immediate successor, which
+  an order like `Set.Iic 0 ∪ Set.Ici 1` inside `ℝ` has — the filter
+  `𝓝[D ∩ Set.Ioi t] t` is `⊥`, right continuity at `t` is vacuous and `Y t` is
+  unconstrained. Asking `D` to contain the greatest element of `ι` covers only
+  one of the two ways an index can be unapproachable from the right.
+  **Countability of `D` is not used.** It is what makes such a `D` cheap to
+  exhibit; what the proof needs is that `𝓝[D ∩ Set.Ioi t] t` be countably
+  generated, and that is `[FirstCountableTopology ι]`.
+  **Uniform integrability is not a hypothesis, it is a consequence.** A sequence
+  of times in `D` bounded above by a single `t₁ ∈ D` makes `Y (w n)` the
+  conditional expectation of the one integrable function `Y t₁`, by the identity
+  along `D` alone, and the conditional expectations of a fixed integrable
+  function are a uniformly integrable family. So the identity along `D` produces
+  what carrying it across needs. **In Lean** on 2026-09-17, seventeenth run.
+* `tendsto_eLpNorm_sub_of_forall_condExp_eq`, the step in which that uniform
+  integrability is spent: for a sequence in `D` bounded above by a member of `D`,
+  almost everywhere convergence of `Y (w n)` becomes `L¹` convergence. It is
+  Vitali on top of `Integrable.uniformIntegrable_condExp_filtration`, with
+  `norm_condExp_le` and `UnifIntegrable.of_norm_le_ae` carrying the property from
+  the real dominating family to the `𝕂`-valued one, so the real--imaginary split
+  is avoided exactly as in
+  `Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi`. **In Lean** on
+  2026-09-17, seventeenth run.
+* `exists_seq_mem_of_nhdsWithin_Ioi_neBot`, the sequence the two steps run along:
+  inside `D`, falling to `t` from the right, bounded above by a member of `D`,
+  and confined to a prescribed neighbourhood of `t`. The upper bound is what buys
+  the uniform integrability and it costs nothing — the filter already produces a
+  point `t₁` of `D ∩ Set.Ioi t`, and `Set.Iio t₁` is a neighbourhood of `t`, so
+  cutting the filter down to it changes nothing. This is cheaper than extracting
+  a decreasing subsequence, which is the other way to a common upper bound and
+  needs a recursion. The neighbourhood argument is what lets the second step keep
+  its sequence below a time `t` that is not in `D`. **In Lean** on 2026-09-17,
+  seventeenth run.
 
 ## Milestone 11: the Skorokhod instances
 

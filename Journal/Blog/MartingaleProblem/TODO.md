@@ -836,9 +836,16 @@ Quasi-Linksstetigkeiten** gefallen —
 `isQuasiLeftContinuous_of_isMPSolutionFor`, letztere **ohne** Atomlosigkeit der
 Uhr, die Ethier–Kurtz dort verlangen und die die hiesige Aussagefassung trug.
 **Meilenstein 9 hat damit kein `sorry` mehr.** Die Zahl in `MartingaleProblems`
-steht seither bei **drei**: die stetige Fassung des fdd-Kriteriums und die beiden
+stand seither bei **drei**: die stetige Fassung des fdd-Kriteriums und die beiden
 Konvergenzsätze `mpSolution_of_tendsto` und
-`isMPSolution_of_forall_condExp_eq_of_dense`.
+`isMPSolution_of_forall_condExp_eq_of_dense`. Im siebzehnten Lauf des
+2026-09-17 ist der letzte davon **bewiesen** — der Übergang von der
+Martingalidentität längs eines dichten `D` auf den ganzen Index —, und die Zahl
+steht bei **zwei**. Drei Befunde an seinen Voraussetzungen gehören dazu: die
+gleichgradige Integrierbarkeit ist keine Voraussetzung, sondern eine Folgerung
+aus der Identität längs `D` selbst; `Dense D` reicht **nicht** und ist durch die
+Bedingung ersetzt, die `LiftWitness.exists_countable_right_dense` liefert; und
+`D.Countable` wird gar nicht gebraucht.
 
 Kein `sorry` steht in einer *Aussage*, nur in Beweisen: alle sitzen in
 `theorem`en.

@@ -34057,3 +34057,174 @@ der Dateikopf von `Suggested.lean` ist fortgeschrieben.
    wurde.
 3. **Die fünfzig Aufrufe veralteter Namen**, unverändert Vorschlag 3 der beiden
    Vorläufe.
+
+### 2026-09-17, siebzehnter Lauf des Tages — ein `sorry` weniger: der Übergang von `D` auf den ganzen Index steht, und die gleichgradige Integrierbarkeit, nach der der Vorlauf fragte, ist weder Voraussetzung noch von der Schranke ersetzt — sie fällt aus der Aussage selbst heraus
+
+Beide Vorschläge des Vorlaufs sind eingelöst. **Fünf** neue Deklarationen, und
+die Zahl der `sorry` sinkt zum ersten Mal seit Tagen: von **drei** auf **zwei**.
+Die beiden verbliebenen sind `isMPSolution_iff_forall_fdd_continuous` und
+`mpSolution_of_tendsto`.
+
+**Dabei ist eine Buchung zu berichtigen.** Der Bericht des sechzehnten Laufs
+nennt die drei `sorry` „`Shift`-Feld, `AbstractConvergence`, `FromDense`". Das
+trifft nicht zu, und `TODO.md` hat es richtig: der Elaborator meldet
+`declaration uses sorry` an den Zeilen 1193, 5355 und (bis zu diesem Lauf) 5385,
+also an `isMPSolution_iff_forall_fdd_continuous`, `mpSolution_of_tendsto` und
+`isMPSolution_of_forall_condExp_eq_of_dense`. Der `sorry` im `Shift`-Feld ist ein
+`(sorry : Prop)` **im Typ eines Strukturfeldes** und keine Deklaration mit
+unvollständigem Beweis; er wird von dieser Zählung nicht erfaßt und ist beim
+Nachzählen mit einer der drei verwechselt worden.
+
+#### Vorschlag 1: die beiden Instanzen der Quasi-Linksstetigkeit
+
+* **`isQuasiLeftContinuous_poissonProcess`** — `isQuasiLeftContinuous_jumpProcessE`
+  auf den Poissondaten, die Rate die Konstante `1`.
+* **`isQuasiLeftContinuous_mm1`** — dasselbe für die M/M/1-Warteschlange, mit
+  `birthDeathRate_mm1_mem` für Positivität und Schranke.
+
+Die Prüfung, die der Vorlauf vor dem Bauen verlangt hat, ist am Quelltext
+erledigt und fiel positiv aus: `Mathlib/Topology/Order.lean:576` gibt
+`TopologicalSpace ℕ := ⊥`, `:577` gibt `DiscreteTopology ℕ`, und
+`Mathlib/MeasureTheory/MeasurableSpace/Instances.lean:60` gibt
+`Nat.instMeasurableSingletonClass`. Über `ℕ` ist also nichts von Hand zu
+stellen, was über `Bool` von selbst kam.
+
+**Wozu die beiden Instanzen gut sind, und es ist nicht Buchhaltung.** Der
+allgemeine Satz war auf **einen** Zustandsraum angewandt, den mit zwei Punkten,
+und über zwei Punkten sind zwei seiner Voraussetzungen frei, ohne daß man es
+sieht: die Abzählbarkeit der trennenden Klasse und die Beschränktheit ihrer
+Mitglieder gelten dort für *jede* Testfunktion. Der Poissonprozeß ist die erste
+Instanz über einem **unendlichen** Zustandsraum, und dort sind die
+Punktindikatoren eine abzählbare Klasse in einer überabzählbaren. M/M/1 ist die
+erste mit **zustandsabhängiger** Rate: bei konstanter Rate sind `hlam0` und `hL`
+an jedem Zustand dieselbe Aussage, hier nimmt die Rate die beiden Werte `β` an
+der leeren Schlange und `β + δ` sonst.
+
+#### Vorschlag 2: `isMPSolution_of_forall_condExp_eq_of_dense`, und drei Befunde an seinen Voraussetzungen
+
+Der Satz steht, mit drei Deklarationen: dem Satz selbst, dem `L¹`-Schritt
+`tendsto_eLpNorm_sub_of_forall_condExp_eq` und der Folgenkonstruktion
+`exists_seq_mem_of_nhdsWithin_Ioi_neBot`. **Die Aussage hat sich dabei
+geändert**, und zwar in beide Richtungen.
+
+**Erstens, und das ist die Antwort auf die Frage des Vorlaufs: die gleichgradige
+Integrierbarkeit wird gebraucht — aber sie ist keine Voraussetzung, sondern eine
+Folgerung.** Der Vorlauf hatte zwei Möglichkeiten genannt, „wirklich gebraucht"
+oder „von der Schranke ersetzt, die `mpFamily` ohnehin liefert". Es ist keine von
+beiden. Eine Folge von Zeiten in `D`, die von **einem einzigen** `t₁ ∈ D` nach
+oben beschränkt ist, macht `Y (w n)` zur bedingten Erwartung der **einen**
+integrierbaren Funktion `Y t₁` — allein durch die Martingalidentität längs `D`,
+die die Voraussetzung ist —, und die bedingten Erwartungen einer festen
+integrierbaren Funktion sind eine gleichgradig integrierbare Familie
+(`Integrable.uniformIntegrable_condExp_filtration`,
+`Probability/Process/Filtration.lean:214`). Die Identität längs `D` **erzeugt**
+also, was ihr Übertragen braucht. Von `mpFamily` und seiner Schranke ist dabei
+nirgends die Rede; der Satz steht über einem abstrakten `𝓧`.
+
+Die gemeinsame obere Schranke ist billig zu haben und das ist der ganze Trick:
+`(𝓝[D ∩ Set.Ioi t] t).NeBot` liefert schon einen Punkt `t₁` von `D ∩ Set.Ioi t`,
+und `Set.Iio t₁` ist eine Umgebung von `t`, also ändert das Herunterschneiden des
+Filters auf sie nichts. Der andere Weg zu einer gemeinsamen Schranke — eine
+fallende Teilfolge auszusondern — braucht eine Rekursion und ist teurer.
+
+**Zweitens: `Dense D` reicht nicht, und der Ersatz stand schon im Haus.** Die
+alte Fassung trug `hD' : Dense D` zusammen mit `hDmax : ∀ t, IsMax t → t ∈ D`.
+Das ist zu schwach. An einem Index `t ∉ D`, der von rechts **isoliert** ist —
+einem mit unmittelbarem Nachfolger, wie ihn etwa die Ordnung
+`Set.Iic 0 ∪ Set.Ici 1` in `ℝ` hat — ist `𝓝[D ∩ Set.Ioi t] t = ⊥`, die
+Rechtsstetigkeit in `t` sagt nichts, und `Y t` ist unbestimmt; die Behauptung
+ist dort falsch. Das größte Element ist nur **eine** der beiden Weisen, auf die
+ein Index von rechts unerreichbar sein kann, und `hDmax` deckt nur sie ab.
+
+Die richtige Voraussetzung ist die, die
+`LiftWitness.exists_countable_right_dense` seit langem in genau dieser Gestalt
+liefert: `∀ t, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot`. Sie steht jetzt als `hDr`
+da, und der Aufrufer, der ein `D` über `ℝ≥0` braucht, hat sie schon.
+
+**Drittens: `D.Countable` wird nicht benutzt.** Die Abzählbarkeit ist, was ein
+solches `D` billig vorzeigbar macht; der Beweis braucht allein, daß
+`𝓝[D ∩ Set.Ioi t] t` abzählbar erzeugt ist, und das kommt von
+`[FirstCountableTopology ι]` und nicht von der Größe von `D`. Die Hypothese ist
+nach der stehenden Regel gestrichen und `[FirstCountableTopology ι]` an ihre
+Stelle getreten — dieselbe Instanz, die
+`Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi` und
+`IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi` schon tragen.
+
+#### Der Beweis, und wovon er **nicht** Gebrauch macht
+
+Er ist zweimal derselbe Schritt, und beide Male endet er in
+`ae_eq_condExp_of_forall_setIntegral_eq`.
+
+* Für `s ∈ D` und beliebiges `t ≥ s`: eine Folge `w n ∈ D`, die von rechts nach
+  `t` fällt, hat `∫_A Y (w n) = ∫_A Y s` für jedes `A ∈ 𝓕 s` — das ist die
+  Identität längs `D` und `setIntegral_condExp`. Die linke Seite konvergiert
+  gegen `∫_A Y t`, also `∫_A Y t = ∫_A Y s`.
+* Für `s ∉ D`: eine Folge `v k ∈ D`, die von rechts nach `s` fällt und dabei
+  **unter `t`** gehalten wird, hat `∫_A Y t = ∫_A Y (v k)` nach dem ersten
+  Schritt; die linke Seite hängt nicht von `k` ab, die rechte konvergiert gegen
+  `∫_A Y s`.
+
+Das Unterhalten von `t` im zweiten Schritt ist, wozu
+`exists_seq_mem_of_nhdsWithin_Ioi_neBot` sein Umgebungsargument `U` hat; im
+ersten Schritt wird `Set.univ` eingesetzt.
+
+**Der Satz von der abwärts gerichteten Martingalkonvergenz kommt nicht vor.**
+Der übliche Weg für den zweiten Schritt ist Lévy abwärts: `P[Y t | 𝓕 sₖ]`
+konvergiert gegen `P[Y t | 𝓕 s⁺]`, und dann ist noch von `𝓕 s⁺` auf `𝓕 s`
+herunterzusteigen. Über Mengenintegrale gerechnet entfällt beides — `A ∈ 𝓕 s`
+liegt in jedem `𝓕 (v k)`, und mehr wird nicht gebraucht. Das ist der Grund,
+warum der Satz ohne eine Aussage auskommt, die in dieser Entwicklung sonst erst
+zu bauen wäre.
+
+**Die Real-Imaginär-Zerlegung kommt ebenfalls nicht vor**, und zwar auf demselben
+Weg wie im vierzehnten Lauf: `Integrable.uniformIntegrable_condExp_filtration`
+ist reellwertig, `norm_condExp_le` dominiert die `𝕂`-wertige Familie durch die
+reelle, und `UnifIntegrable.of_norm_le_ae` — die Dominierungsaussage, die dieser
+Datei gehört, weil Mathlibs `ae_mono` auf `master` beide Familien über derselben
+Gruppe quantifiziert — trägt die Eigenschaft hinüber.
+
+#### Der Durchlauf
+
+`lake env lean` über die **ganze** Datei gegen v4.33.1: **kein Fehler**, keine
+Warnung auf einer der fünf neuen Deklarationen. `#print axioms` gibt für alle
+fünf `propext`, `Classical.choice`, `Quot.sound` und nichts sonst. Kein neuer
+Import. Die Zahl der `sorry` steht bei **zwei**, und beide sind Beweise, keine
+Aussagen. `python3 Journal/Blog/MartingaleProblem/check.py` meldet `clean`.
+
+Entwickelt gegen eine an `end FromDense` abgeschnittene Kopie
+(`scratch/mktrunc.py`), die letzte Prüfung über die ganze Datei. Die Punkte
+stehen in `MartingaleProblems/README.md`: die beiden Instanzen in Meilenstein 9,
+die drei Aussagen von `FromDense` in Meilenstein 10. Dort ist zugleich der
+Eintrag zu `mpSolution_of_tendsto` **berichtigt** — er nannte als Bedingung an
+`D` „abzählbar dicht, und das größte Element enthalten, wenn es eines gibt", und
+das ist nach dem obigen Befund die falsche Bedingung.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`mpSolution_of_tendsto` an seinen letzten Schritt anschließen.** *Aussage:*
+   der `sorry` von `AbstractConvergence` schließt mit
+   `isMPSolution_of_forall_condExp_eq_of_dense` von der Identität längs `D` auf
+   `IsMPSolution`. *Worauf sie ruht:* der Satz steht seit diesem Lauf, und seine
+   Voraussetzungen über `ι` — Ordnungstopologie, erste Abzählbarkeit — hat
+   `ℝ≥0`. *Warum jetzt:* der `AbstractConvergence`-`sorry` ist von den beiden
+   verbliebenen der einzige, der überhaupt Mathematik ist, und sein **letzter**
+   Schritt ist ab jetzt eine Zeile; was von ihm bleibt, ist die Identität längs
+   `D` aus den drei Konvergenzhypothesen, und die ist ein
+   Konvergenz-plus-Vitali-Argument derselben Bauart wie der eben bewiesene
+   `L¹`-Schritt. *Zu prüfen, ehe gebaut wird:* ob `hDr` am Aufrufpunkt aus
+   `LiftWitness.exists_countable_right_dense` kommt oder ob `D` dort anders
+   erzeugt wird — die Konklusion von `mpSolution_of_tendsto` ist derzeit die
+   Identität längs `D` und nicht `IsMPSolution`, also ist zuerst zu entscheiden,
+   ob der Satz seine Konklusion verstärkt oder ob ein Korollar danebentritt.
+2. **`isQuasiLeftContinuous` für die lineare Geburt-Tod-Kette**, und sie wird
+   **nicht** ohne weiteres gehen. *Aussage:* `isQuasiLeftContinuous_jumpProcessE`
+   verlangt `lam ≤ L`, und `not_bddAbove_birthDeathRate_linear` sagt, daß die
+   lineare Kette keine solche Schranke hat. *Warum das trotzdem ein Vorschlag
+   ist:* die Stelle, an der die Schranke wirklich verbraucht wird, ist
+   `jumpProcessE_isMPSolution`, nicht der Quasi-Linksstetigkeitsbeweis; es ist
+   also zu **benennen**, ob der Satz in einer lokalen Fassung über
+   `jumpProcess_isLocalMPSolution` steht. Ist er es, so hat die
+   Quasi-Linksstetigkeit ihre erste Instanz mit unbeschränkter Rate; ist er es
+   nicht, so ist die Bruchstelle zu benennen und gehört in den Meilenstein.
+3. **Die fünfzig Aufrufe veralteter Namen**, unverändert Vorschlag 3 der drei
+   Vorläufe.
