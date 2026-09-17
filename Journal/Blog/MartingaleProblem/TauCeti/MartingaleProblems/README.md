@@ -6340,11 +6340,13 @@ Gruppe A auf demselben Raum, und was fehlt, ist allein ihr Zusammenbau.
   which transport an integral and integrability through the density and the map
   at once, and `integral_smul_martingale_eq`, that a martingale tested against a
   **bounded weight** measurable for the earlier past has equal integrals at the
-  two times. Mathlib has no lemma of that shape — not even for an indicator
-  weight: `Mathlib/Probability/Martingale/` contains no `setIntegral` statement
-  about `Martingale` at all, only `Supermartingale.setIntegral_le`
-  (`Probability/Martingale/Basic.lean:163`) and `Submartingale.setIntegral_le`
-  (`:242`), both inequalities and both for an indicator. The step is
+  two times. Mathlib has the **indicator** case, as
+  `MeasureTheory.Martingale.setIntegral_eq`
+  (`Probability/Martingale/Basic.lean:100`, in v4.33.1 and on `master`, checked
+  2026-09-17): `∫ ω in s, f i ω = ∫ ω in s, f j ω` for `s ∈ ℱ i` and `i ≤ j`,
+  with the one sided versions `Supermartingale.setIntegral_le` (`:163`) and
+  `Submartingale.setIntegral_le` (`:242`). For a **bounded weight** in place of
+  the indicator it has nothing. The step is
   the pull-out property `condExp_smul_of_aestronglyMeasurable_left`
   (`MeasureTheory/Function/ConditionalExpectation/PullOut.lean:223`) followed by
   `integral_condExp` (`…/ConditionalExpectation/Basic.lean:236`), and the weight

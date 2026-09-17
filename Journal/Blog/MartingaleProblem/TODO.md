@@ -173,17 +173,28 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 
 ## 8. Einundzwanzig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
-Alle einundzwanzig beim Beweisen aufgefallen, die ersten zwanzig gegen
-`upstream/master` geprüft und der einundzwanzigste gegen v4.33.1, und die ersten
-vier sind kleine, in sich abgeschlossene Beiträge. Sie gehören thematisch zu
+Alle einundzwanzig beim Beweisen aufgefallen, und die ersten vier sind kleine,
+in sich abgeschlossene Beiträge. Sie gehören thematisch zu
 `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben.
+
+**Sämtliche Negativaussagen dieses Punktes sind am 2026-09-17 gegen
+`upstream/master` `f61f3ed7633` (2026-09-17) nachgeprüft.** Eine von ihnen war
+falsch geworden und ist berichtigt: die Kompositionsaussage der siebzehnten
+Lücke steht auf `master` seit dem 2026-08-25. Alle übrigen stehen. Die Prüfung
+ist mechanisiert und wiederholbar — `scripts/check_negatives.py` führt jede
+Behauptung mit ihrem Suchmuster und den Dateien, in denen ein Treffer bekannt
+und harmlos ist, und meldet jeden Treffer daneben; der Lauf vom 2026-09-17
+meldet über 37 Behauptungen **keinen**. Was das Skript nicht leistet, steht in
+seinem Dateikopf: es prüft Zeichenketten, nicht Aussagen.
 
 * **Zeithomogenität von `Kernel.traj`.** Daß die Verschiebung einer homogenen
   Markovkette wieder dieselbe Kette ist, steht dort nicht — weder in `v4.33.1`
   noch auf `master`. Wir haben es am 2026-09-09 als `chainKernel_map_shift`
   bewiesen, über die endlichdimensionalen Verteilungen; der ganze Inhalt ist
-  `partialTraj_succ_map_shiftIic`, wo die verschobene Familie definitionsgleich
-  der nächsten ist, der Rest Induktion und Eindeutigkeit des projektiven Limes.
+  unser `partialTraj_succ_map_shiftIic` — der Name ist **unserer**, Mathlib hat
+  in `Probability/Kernel/IonescuTulcea/` das Wort `shift` nirgends —, wo die
+  verschobene Familie definitionsgleich der nächsten ist, der Rest Induktion und
+  Eindeutigkeit des projektiven Limes.
   Für Mathlib wäre die richtige Fassung nicht unsere, sondern eine über
   `Kernel.traj` selbst, mit einer Homogenitätshypothese an die Familie.
 
@@ -381,11 +392,18 @@ vier sind kleine, in sich abgeschlossene Beiträge. Sie gehören thematisch zu
   `710c215f98a3947b3301a21454f1f2c3caf72d0a` nach `measurable_primitive`,
   `Measurable ... primitive`, `Measurable fun x ↦ ∫ y in ...` und nach
   Meßbarkeitsaussagen im Umfeld von `intervalIntegral`: **null** Treffer.
-  Vorhanden ist allein die **Stetigkeit** der Stammfunktion in der oberen Grenze
-  (`intervalIntegral.continuousOn_primitive`,
+  Am 2026-09-17 gegen `f61f3ed7633` nachgeprüft: unverändert. Vorhanden sind
+  **Stetigkeits**aussagen und keine Meßbarkeitsaussage — die Stammfunktion in
+  der oberen Grenze (`intervalIntegral.continuousOn_primitive`,
   `MeasureTheory/Integral/DominatedConvergence.lean:440` in v4.33.1, `:439` auf
-  master, samt `continuousOn_primitive_interval` ebendort), und genau sie ist der
-  halbe Beweis.
+  master, samt `continuousOn_primitive_interval` ebendort), und, schärfer als
+  es hier zuerst stand, die **parametrische** Fassung
+  `intervalIntegral.continuousAt_parametric_primitive_of_dominated` (ebenda
+  `:364` auf master), die in Parameter **und** oberer Grenze gemeinsam stetig
+  ist. Sie trägt die Anwendung nicht: sie verlangt eine Topologie auf dem
+  Parameterraum und Stetigkeit des Integranden darin, und der Parameter ist
+  hier der Stichprobenpunkt eines Maßraums ohne Topologie. Die erste der beiden
+  ist der halbe Beweis.
 
   *Der Beweis, und er ist drei Zeilen lang:* meßbar im Parameter bei fester
   Grenze, stetig in der Grenze bei festem Parameter — das ist eine
@@ -544,23 +562,36 @@ vier sind kleine, in sich abgeschlossene Beiträge. Sie gehören thematisch zu
   Mit diesen dreien geht die Rechnung durch, ohne jede Stetigkeitsvoraussetzung
   an den Integranden.
 
-  *Was wirklich fehlt,* und es ist der Rest der Lücke: die absolute Stetigkeit
-  ist in Mathlib unter Summe, Produkt und Skalar abgeschlossen
-  (`MeasureTheory/Function/AbsolutelyContinuous.lean`) und es gibt „lipschitz ⇒
+  *Und die zweite Hälfte der Lücke ist am 2026-09-17 als **geschlossen**
+  vorgefunden worden — der wertvollste Fund des Laufs, weil eine Negativaussage
+  ein Versprechen an einen Leser ist.* Gemeldet war: die absolute Stetigkeit sei
+  in Mathlib unter Summe, Produkt und Skalar abgeschlossen
+  (`MeasureTheory/Function/AbsolutelyContinuous.lean`) und es gebe „lipschitz ⇒
   absolut stetig" (`LipschitzOnWith.absolutelyContinuousOnInterval`, ebenda
-  `:294`), aber **keine Kompositionsaussage**. Gebraucht wird
+  `:294` in v4.33.1, `:310` auf `master`), aber **keine Kompositionsaussage**.
+  Gebraucht wurde
 
   > ist `f` absolut stetig auf `uIcc a b` und `g` lipschitz auf einer Menge `s`,
   > in die `f` das Intervall abbildet, so ist `g ∘ f` absolut stetig auf
   > `uIcc a b`.
 
+  Genau das steht auf `master` seit dem 2026-08-25, als
+  `LipschitzOnWith.comp_absolutelyContinuousOnInterval` (ebenda `:328`, dazu
+  `LipschitzWith.comp_absolutelyContinuousOnInterval` `:343`), aus
+  `feat(MeasureTheory): absolute continuity preserved by Lipschitz
+  postcomposition` (#42996, `c4e2650f16e`, dean cureton) — unter **demselben
+  Namen**, den wir unabhängig gewählt haben, mit derselben Voraussetzung
+  `MapsTo g (uIcc a b) t` und allgemeiner als unsere: dort geht die äußere
+  Funktion in einen beliebigen pseudometrischen Raum, bei uns ist sie reell.
+  In **v4.33.1**, an das wir gebunden sind, gibt es sie nicht; unsere Fassung
+  vom 2026-09-13 bleibt deshalb stehen und ist keine Doppelarbeit mehr, sondern
+  der Stellvertreter für den Stand, gegen den wir übersetzen. Ein PR dieser
+  Aussage ist gegenstandslos.
+
   Die Lipschitzschranke nur auf `s` zu verlangen ist nicht Bequemlichkeit: `exp`
   ist nicht global lipschitz, und ohne die Einschränkung auf ein Kompaktum um
-  das Bild käme die Anwendung nicht durch. Wir haben sie am 2026-09-13 als
-  `LipschitzOnWith.comp_absolutelyContinuousOnInterval` bewiesen, aus der
-  `ε`-`δ`-Fassung (`absolutelyContinuousOnInterval_iff`), in einer
-  `calc`-Abschätzung von fünf Zeilen — dieselbe, die Mathlib eine Schicht
-  tiefer für `LipschitzOnWith.absolutelyContinuousOnInterval` führt.
+  das Bild käme die Anwendung nicht durch — Mathlibs Fassung stellt sie
+  ebenso.
 
   Daraus fällt die Substitutionsregel in der Allgemeinheit ab, die Mathlib fehlt:
 

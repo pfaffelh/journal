@@ -32470,3 +32470,179 @@ Beweise anfaßt, gehört in einen Lauf, der sie auch einzeln übersetzt.
    beiden Vorläufe.
 4. **`UnifIntegrable.comp` nachbauen**, unverändert der Vorschlag der vier
    Vorläufe, drei Zeilen.
+
+### 2026-09-17, achter Lauf des Tages — Teil D ist zu Ende: die Negativaussagen sind nachgeprüft, und zwei von ihnen waren falsch. Eine Lücke hat Mathlib am 2026-08-25 selbst geschlossen, unter genau dem Namen, den wir unabhängig gewählt haben
+
+Der Vorlauf hatte Teil D, Schritt 3 als den einzigen noch offenen benannt: „Mathlib
+hat X nicht" steht vielfach in den Roadmaps und in `TODO.md` Punkt 8, und keine
+dieser Aussagen war nachgeprüft. Der Stand, gegen den dieser Lauf geprüft hat, ist
+
+> **`f61f3ed7633ff99ecaae4a086395b501652a76ee`, 2026-09-17** — frisch geholt, ein
+> Tag neuer als der des Vorlaufs (`7ef65c0feea`).
+
+#### Der erste Befund: die Kompositionsaussage der siebzehnten Lücke steht auf `master`
+
+`TODO.md` Punkt 8, siebzehnte Lücke, meldete: die absolute Stetigkeit sei in
+Mathlib unter Summe, Produkt und Skalar abgeschlossen, es gebe „lipschitz ⇒
+absolut stetig", **aber keine Kompositionsaussage**. Das ist falsch. Auf `master`
+steht
+
+```
+Mathlib/MeasureTheory/Function/AbsolutelyContinuous.lean:328:
+theorem _root_.LipschitzOnWith.comp_absolutelyContinuousOnInterval
+    {Y : Type*} [PseudoMetricSpace Y] {f : X → Y} {K : ℝ≥0} {t : Set X}
+    (hf : LipschitzOnWith K f t) {g : ℝ → X} {a b : ℝ} (hg : MapsTo g (uIcc a b) t)
+    (h : AbsolutelyContinuousOnInterval g a b) :
+    AbsolutelyContinuousOnInterval (f ∘ g) a b
+```
+
+dazu `LipschitzWith.comp_absolutelyContinuousOnInterval` (`:343`), seit dem
+**2026-08-25**, aus `feat(MeasureTheory): absolute continuity preserved by
+Lipschitz postcomposition` (#42996, `c4e2650f16e`, dean cureton) — also drei
+Wochen **vor** unserem eigenen Beweis vom 2026-09-13, und die Suche jenes Tages
+hat es nicht gefunden.
+
+Drei Dinge daran sind bemerkenswert und stehen berichtigt in `TODO.md`:
+
+* **Der Name ist derselbe.** Wir haben `LipschitzOnWith.comp_absolutelyContinuousOnInterval`
+  unabhängig gewählt; Mathlibs Fassung heißt wörtlich so. Auch die Voraussetzung
+  ist dieselbe — die Lipschitzschranke nur auf einer Menge `t`, in die die innere
+  Funktion das Intervall abbildet, weil `exp` nicht global lipschitz ist.
+* **Mathlibs Fassung ist allgemeiner.** Dort geht die äußere Funktion in einen
+  beliebigen pseudometrischen Raum, bei uns ist sie reellwertig.
+* **In v4.33.1 gibt es sie nicht** (geprüft; die Datei trägt dort nur
+  `LipschitzOnWith.absolutelyContinuousOnInterval`, `:294`). Unsere Deklaration
+  bleibt deshalb stehen — sie ist keine Doppelarbeit mehr, sondern der
+  Stellvertreter für den Stand, gegen den wir übersetzen. **Was entfällt, ist der
+  PR**: ein Beitrag dieser Aussage wäre gegenstandslos.
+
+Der Doc-Kommentar an unserer Deklaration in `MartingaleProblems/Suggested.lean`
+behauptete dasselbe („Mathlib … has no composition lemma; this is the missing
+one") und ist mitberichtigt.
+
+#### Der zweite Befund: ein Martingal über einer Menge getestet steht in Mathlib sehr wohl
+
+`MartingaleProblems/README.md`, Meilenstein 5, sagte zu `integral_smul_martingale_eq`:
+
+> Mathlib has no lemma of that shape — not even for an indicator weight:
+> `Mathlib/Probability/Martingale/` contains no `setIntegral` statement about
+> `Martingale` at all, only `Supermartingale.setIntegral_le` und
+> `Submartingale.setIntegral_le`, both inequalities.
+
+Falsch, und zwar nicht erst seit heute: `MeasureTheory.Martingale.setIntegral_eq`
+steht in `Probability/Martingale/Basic.lean:100` — **in v4.33.1 wie auf `master`**,
+an derselben Zeile —, und es ist die Gleichheit selbst,
+`∫ ω in s, f i ω = ∫ ω in s, f j ω` für `s ∈ ℱ i` und `i ≤ j`. Der Indikatorfall
+war also die ganze Zeit da. Was fehlt, ist allein die **beschränkte Gewichtung**,
+und das steht jetzt so in der Roadmap. Der Rest des Absatzes — daß das Gewicht des
+`restart`-Lemmas eine Dichte mal einen Indikator ist und die Indikatorfassung
+darum nicht gereicht hätte — bleibt richtig und ist der Grund, warum der Befund
+den Satz nicht überflüssig macht.
+
+#### Drei Berichtigungen, die keine Widerlegung sind
+
+* **`IsStable` gibt es.** Die fünfte Lücke sagt, ein
+  `IsStable 𝓕 (fun Y ↦ Martingale Y 𝓕 P)` gebe es nicht; das stimmt, aber das
+  **Prädikat** `IsStable` steht sehr wohl da (`Probability/Process/LocalProperty.lean:142`,
+  mit der ganzen `Locally`-Maschinerie daneben). Was fehlt, ist der Zeuge für
+  `Martingale`: in `LocalProperty.lean` kommt das Wort `Martingale` nicht vor.
+  Die Behauptung ist so gemeint und steht; das Prüfskript führt die Datei jetzt
+  als bekannten Treffer, damit der nächste Lauf nicht darüber stolpert.
+* **Die zwölfte Lücke unterschätzt, was Mathlib hat.** Sie sagte, vorhanden sei
+  „allein die Stetigkeit der Stammfunktion in der oberen Grenze". Tatsächlich hat
+  Mathlib auch die **parametrische** Fassung,
+  `intervalIntegral.continuousAt_parametric_primitive_of_dominated`
+  (`MeasureTheory/Integral/DominatedConvergence.lean:364`), die in Parameter und
+  oberer Grenze **gemeinsam** stetig ist. Sie schließt die Lücke nicht — sie
+  verlangt eine Topologie auf dem Parameterraum und Stetigkeit des Integranden
+  darin, und unser Parameter ist der Stichprobenpunkt eines Maßraums —, aber eine
+  Roadmap nennt den stärksten vorhandenen Satz und nicht den bequemsten. Berichtigt.
+* **Ein Name, der wie ein Mathlib-Name aussah, ist unserer.** Die erste Lücke
+  nennt `partialTraj_succ_map_shiftIic` ohne Vermerk; Mathlib hat in
+  `Probability/Kernel/IonescuTulcea/` das Wort `shift` nirgends, und die
+  Deklaration steht bei uns (`MartingaleProblems/Suggested.lean:5087`). Vermerkt.
+
+#### Was steht: fünfunddreißig von siebenunddreißig
+
+Alle übrigen Negativaussagen sind nachgeprüft und stehen, jede einzeln am
+Quelltext. Die wichtigsten, mit dem, was den Befund trägt:
+
+* **Doobs `Lᵖ`-Ungleichung** fehlt weiterhin — und Mathlib sagt es selbst: der
+  Doc-Kommentar von `maximal_ineq` (`Probability/Martingale/OptionalStopping.lean:144`)
+  vermerkt, die `Lᵖ`-Fassung „will be proved in an upcoming PR".
+* **Der gestoppte Martingalsatz in stetiger Zeit** — `OptionalStopping.lean` steht
+  unverändert unter `{𝒢 : Filtration ℕ m0}` (`:38`), die Zeile, die `TODO.md`
+  zitiert, ist noch dieselbe.
+* **`HasCondDistrib.lean` enthält weiterhin keinen einzigen `condExp`**, und der
+  erste Faktor eines `compProd` hat weiterhin keinen Namen: `compProd_map`
+  (`Kernel/Composition/Lemmas.lean:120`) ist der zweite, und der erste steht
+  unverändert als `calc`-Zwischenschritt in `HasCondDistrib.comp_right` (`:98–102`).
+* **Einfrieren, augmentierte Filtration, Volterra-Resolvente, verallgemeinerte
+  Inverse, `Filtration.comp`, die Minimalungleichung, das Martingal hinter einer
+  stetigen linearen Abbildung, Punktprozeß, Skorokhodraum, Operatorhalbgruppe,
+  Quasi-Linksstetigkeit, die Vollständigkeit der Konvergenz im Maß, die
+  Zeithomogenität von `Kernel.traj`, der Schwanz der Exponentialverteilung** —
+  sämtlich null Treffer.
+
+Drei **Zeilenverschiebungen** ohne Belang, hier nur vermerkt, damit sie nicht für
+Befunde gehalten werden: `IsTightMeasureSet.prodMk` `:144 → :143`,
+`frontier_union_subset` `:544 → :559`, `LipschitzOnWith.absolutelyContinuousOnInterval`
+`:294 → :310`.
+
+#### Die Prüfung ist mechanisiert, und sie meldet jetzt statt zu zählen
+
+`scripts/check_negatives.py` gab es seit dem 2026-09-14 mit siebzehn
+Behauptungen; es zählte Treffer und überließ das Urteil dem Leser. Dieser Lauf
+hat es auf **37** erweitert — die Lücken von `TODO.md` Punkt 8 kommen hinzu — und
+um das entscheidende Feld ergänzt: **zu jeder Behauptung die Dateien, in denen ein
+Treffer bekannt und harmlos ist.** Jeder Treffer daneben heißt `UNERWARTET`. Damit
+ist der Lauf wiederholbar und sein Ergebnis eine Zahl statt einer Leseaufgabe:
+
+> **37 Behauptungen geprüft, 0 mit unerwarteten Treffern.**
+
+Genau so sind die beiden Befunde dieses Laufs gefunden worden — `abscont-comp`
+und `martingale-setIntegral-weight` meldeten `UNERWARTET`, und das Nachlesen gab
+in beiden Fällen recht. Der Dateikopf sagt ausdrücklich, was das Skript **nicht**
+leistet: es prüft Zeichenketten und keine Aussagen, eine Lücke kann unter einem
+Namen gefüllt sein, den kein Muster trifft, und eine Deklaration in einem
+`namespace` steht im Quelltext ohne ihr Präfix — ein Muster `Foo.bar` findet
+`lemma bar` in `namespace Foo` nicht. Diese letzte Falle hat in diesem Lauf
+zweimal zugeschlagen (`IsTightMeasureSet.prodMk`, `frontier_union_subset`) und ist
+beide Male von Hand aufgelöst worden.
+
+**Teil D ist damit vollständig.** Schritt 1 (frisches `master`, Commit genannt),
+Schritt 2 (jeder zitierte Name und Pfad) und Schritt 4 (die `Suggested.lean` gegen
+v4.33.1) hat der Vorlauf erledigt, Schritt 3 dieser. Was von Teil D **nicht**
+getan ist und auch nicht verlangt war: die drei `Suggested.lean` gegen `master`
+statt gegen v4.33.1 zu übersetzen — das ginge nur mit einem zweiten Toolchain-Bau.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die Leerheitsprobe von Meilenstein 9 zu Ende bringen**, auf `E = Bool` oder
+   einem endlichen Zustandsraum. *Worauf sie ruht:*
+   `lebesgueClock_isProgressive_jumpProcessE` und `isRegularizingClass_mpFamily`
+   aus den beiden Vorläufen, und der Abschnitt `TwoStateSolution`. *Warum jetzt:*
+   Teil D ist zu Ende, und nach der Reihenfolge des Auftrags (D → F → C → E) wäre
+   Teil F das nächste — aber diese Probe ist ein halber Lauf, keine Voraussetzung
+   ist mehr über den Prozeß offen, und sie entscheidet, ob Meilenstein 9 bewohnt
+   ist. Der Verdacht der Leerheit ist nach `Shift` und `hint` nicht akademisch.
+2. **Teil F beginnen, und zwar mit dem Lyapunov-Kriterium, nicht mit Yule**:
+   `isNonExplosive_of_lyapunov`. *Worauf es ruht:* die Erwartungswertidentität
+   `jumpMeasure_integral_sub_eq_intervalIntegral`, die Stoppzeiten `rateTime lam n`,
+   `gronwallBound` (`Analysis/ODE/Gronwall.lean`) und
+   `mul_meas_ge_le_lintegral` (`MeasureTheory/Integral/Lebesgue/Markov.lean:50`).
+   *Warum jetzt:* der Auftrag sagt es ausdrücklich — der Satz, um den es geht, ist
+   nicht Yule, sondern das allgemeine Kriterium, und die Instanzen fallen danach in
+   wenigen Zeilen. Die erste zu treffende Entscheidung ist begründet zu nennen: ob
+   der Weg über den gestoppten Prozeß oder über `truncRate` und einen Grenzübergang
+   geht, denn die Erwartungswertidentität verlangt derzeit eine globale Schranke an
+   `lam`, die Yule nicht hat.
+3. **`isQuasiLeftContinuous_of_isMPSolutionFor`**, unverändert Vorschlag 3 der
+   drei Vorläufe.
+4. **Die fünfzig Aufrufe veralteter Namen in unserem eigenen Lean berichtigen**
+   (`Set.mem_setOf_eq` → `Set.mem_ofPred_eq` 26 mal, `push_neg` → `push Not` 18 mal,
+   `Set.mem_diff` → `Set.mem_sdiff` 3 mal, dazu `Measurable.comp'`,
+   `intervalIntegral.integral_finset_sum`, `continuous_finset_sum`). Der Vorlauf hat
+   sie gefunden und ausdrücklich nicht angefaßt, weil `Set.mem_setOf_eq` in
+   `simp`-Listen steckt. Das ist ein eigener Lauf und einer, der jede Änderung
+   übersetzt.

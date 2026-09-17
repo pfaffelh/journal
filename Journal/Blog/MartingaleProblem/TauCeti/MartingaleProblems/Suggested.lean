@@ -28156,9 +28156,13 @@ independent of everything else in this file. -/
 The Lipschitz bound is asked only on a set `s` that the inner function maps `uIcc a b` into, so the
 outer function need not be globally Lipschitz -- which is what makes the lemma usable for `exp`.
 
-Mathlib has `LipschitzOnWith.absolutelyContinuousOnInterval` (a Lipschitz function is absolutely
-continuous) and closure of absolute continuity under sums, products and scalars, but no composition
-lemma; this is the missing one, and the proof is the same estimate as in Mathlib's, one layer up. -/
+In `v4.33.1`, to which this development is bound, Mathlib has
+`LipschitzOnWith.absolutelyContinuousOnInterval` (a Lipschitz function is absolutely continuous,
+`MeasureTheory/Function/AbsolutelyContinuous.lean:294`) and closure of absolute continuity under
+sums, products and scalars, but no composition lemma; the proof below is the same estimate as in
+Mathlib's, one layer up. On `master` the composition lemma has been there since 2026-08-25 (#42996),
+under this very name and at `:328`, and in greater generality -- the outer function goes into any
+pseudometric space, where this one is real valued. -/
 theorem LipschitzOnWith.comp_absolutelyContinuousOnInterval
     {f : ℝ → ℝ} {g : ℝ → ℝ} {a b : ℝ} {s : Set ℝ} {K : NNReal}
     (hg : LipschitzOnWith K g s) (hf : AbsolutelyContinuousOnInterval f a b)
