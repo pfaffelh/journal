@@ -8136,6 +8136,85 @@ and 11 use them.
   `MeasureTheory/Function/L1Space/Integrable.lean:1085`); the hypothesis on
   `g * conj g` constrains a conditional expectation, not the integrability of a
   product. Proved on 2026-09-17.
+* `rightLimAlong D g t`, the right limit of `g` along `D` at `t`, and `g t` where
+  there is none. This is the candidate modification, written as a function of one
+  path and of nothing else.
+
+  **The filter is guarded and not only the existence of a limit.** At a point
+  isolated from the right along `D` the filter `𝓝[D ∩ Set.Ioi t] t` is `⊥` and
+  *every* point of `E` is a limit along it, so an unguarded choice would name one
+  — a value where there is no answer, the failure mode recorded for `sInf ∅`,
+  `x / 0` and the Bochner integral of a non-integrable function. Under the guard
+  `rightLimAlong D g t = g t` there (`rightLimAlong_of_not_neBot`), so the
+  modification property holds at such a point by definition. `tendsto_rightLimAlong`
+  says that where the filter is not `⊥` and a limit exists, this is one of them;
+  no separation on `E` is asked, so one and not the. Written on 2026-09-17.
+* `nhdsWithin_inter_Ioi_neBot`: for `D` dense and `r` not a greatest element,
+  `(𝓝[D ∩ Set.Ioi r] r).NeBot`. `Dense D` is spent here and, in the path
+  argument, nowhere else.
+
+  **`[DenselyOrdered ι]` cannot be dropped and is not a convenience.** At a point
+  `r` with an immediate successor the filter is `⊥` however dense `D` is, the
+  right limit at `r` is unconstrained, and the path through `r` is uncontrolled.
+  `ℝ≥0` and `ℝ` are densely ordered. Proved on 2026-09-17.
+* `isCadlagPath_rightLimAlong`, **the deterministic half of Doob's
+  regularization**: if `g` has both one sided limits along a dense `D` at every
+  point, then `rightLimAlong D g` is càdlàg. No measure, no filtration, no
+  process — a statement about one path, and the whole of the path side of
+  `exists_cadlag_modification_of_isRegularizingClass`. It splits into
+  `tendsto_rightLimAlong_nhdsWithin_Ioi` and
+  `exists_tendsto_rightLimAlong_nhdsWithin_Iio`.
+
+  **`[RegularSpace E]` is what the right continuity costs**, and it is read at
+  one step. The values of `rightLimAlong D g` off `D` are limits, and a limit is
+  not pinned down by "eventually in a neighbourhood" unless the neighbourhood is
+  closed: the proof takes a closed neighbourhood `V` of `rightLimAlong D g t`
+  (`closed_nhds_basis`, `Topology/Separation/Regular.lean:174`) and an open
+  `U ∋ t` with `g '' (U ∩ D ∩ Set.Ioi t) ⊆ V`, observes that for
+  `r ∈ U ∩ Set.Ioi t` the filter `𝓝[D ∩ Set.Ioi r] r` still runs inside
+  `U ∩ D ∩ Set.Ioi t`, and closes with `IsClosed.mem_of_tendsto`. Without
+  regularity the same argument gives only membership in the closure of `V`, which
+  is no information. **No separation on `E` is used here**: `rightLimAlong D g t`
+  is *a* limit and the nearby values approach that one; `[T2Space E]` enters the
+  probabilistic statements at a different step. The left limits are the same
+  argument with `U ∩ Set.Iio t` in place of `U`, and there no element has to be
+  interpolated because `r < t` already makes `r` non-greatest. Proved on
+  2026-09-17.
+* `ae_forall_exists_tendsto_of_isRegularizingClass`, the `E`-valued
+  regularization **at every point of the index at once**:
+  `∀ᵐ ω, ∀ t`, the path `s ↦ X s ω` has both one sided limits along `D` at `t`.
+  `ae_exists_tendsto_comp_of_isRegularizingClass` gives this for one scalar test
+  function and `exists_tendsto_of_forall_tendsto_comp` makes an `E`-valued limit
+  out of a family of scalar ones; what this adds is that the two are joined under
+  **one** null set.
+
+  Countability is spent twice, in two places that are not interchangeable: the
+  countability of `Φ₀` collects the exceptional sets of its members, while
+  `[(atTop : Filter ι).IsCountablyGenerated]` supplies the cofinal sequence `u`
+  along which compact containment is read, and the countability of `D` is what
+  makes the compact containment event measurable. One compact set per `n` and per
+  `ω`, not one per `t`.
+
+  **The filter is allowed to be `⊥` and the statement stays true**, which removes
+  every hypothesis about maxima and about isolated points. Where the filter is
+  `⊥` the convergence holds for any value, and `X t ω` is named as the witness so
+  that no `[Nonempty E]` is needed. Where it is not, the filter itself produces a
+  point `b ∈ D` above `t` and `u` an `n` with `b ≤ u n`; the filter is eventually
+  below `b`, hence inside `Set.Iic (u n) ∩ D`, which is where the compact set
+  lives. Proved on 2026-09-17.
+* `ae_isCadlagPath_rightLimAlong_of_isRegularizingClass`, **the càdlàg half of
+  the modification theorem**: under the hypotheses of the theorem below, almost
+  every `rightLimAlong D (fun s ↦ X s ω)` is a càdlàg path. The candidate
+  modification is thereby named and its path property proved; what the theorem
+  below still owes is the modification property `X' t = X t` almost surely for
+  each `t`, which is a conditional expectation argument and not a path argument.
+  Each hypothesis is read at one step: `[RegularSpace E]` at the right
+  continuity, `[T2Space E]` at `exists_tendsto_of_forall_tendsto_comp`,
+  `[DenselyOrdered ι]` and the density of `D` at `nhdsWithin_inter_Ioi_neBot`,
+  the countability of `D` and the measurability of `X` at
+  `CompactContainment.ae_exists_isCompact`, and
+  `[(atTop : Filter ι).IsCountablyGenerated]` at the cofinal sequence. Proved on
+  2026-09-17.
 * `exists_cadlag_modification_of_isRegularizingClass`: if `P` is a probability
   measure solving the martingale problem for `𝓧`, `Φ` is a regularizing class
   for `X` along `𝓧` containing a countable subset that separates points, `Φ` is

@@ -31776,3 +31776,177 @@ von Befund 2.
 3. **Eine Meßbarkeitsprobe an `CompactContainment`.** Unverändert der Vorschlag
    der letzten sieben Läufe, samt dem Nachtrag des Nutzers vom 2026-09-15 abends
    zur Fassung (c) mit dem meßbaren Zeugen.
+
+### 2026-09-17, vierter Lauf des Tages — die Pfadhälfte der càdlàg-Modifikation steht, der Zeuge ist benannt, und die Aussage, auf die sie zuläuft, verlangte **vier** Voraussetzungen, die sie nicht trug
+
+**Neun neue Deklarationen** im Abschnitt `Regularizing` von
+`TauCeti/MartingaleProblems/Suggested.lean` (Zeilen 2935 bis 3155), dazu die
+berichtigte Signatur von `exists_cadlag_modification_of_isRegularizingClass`.
+Die Zahl der `sorry` bleibt bei sechs. Das war Vorschlag 1 des Vorlaufs — der
+Zusammenbau —, und er zerfällt in zwei Hälften: die **Pfadhälfte** ist ganz
+bewiesen, die **Modifikationshälfte** ist es nicht.
+
+Der Vorlauf hatte gesagt, es fehle „keine Aussage mehr, sondern die Montage".
+Das war für die Modifikationshälfte richtig und für die Pfadhälfte falsch: daß
+der Rechtslimes eines Pfades *selbst* rechtsstetig ist und Linkslimiten hat, ist
+kein Buchhaltungsschritt, sondern ein eigener Satz, und er hat eine
+Voraussetzung gekostet, die nirgends dastand.
+
+#### Was gebaut ist
+
+* `rightLimAlong D g t` — der Rechtslimes von `g` längs `D` bei `t`, und `g t`,
+  wo es keinen gibt. Der Zeuge der Modifikation, geschrieben als Funktion eines
+  einzelnen Pfades.
+* `tendsto_rightLimAlong`, `rightLimAlong_of_not_neBot` — die beiden Lesarten der
+  Definition.
+* `nhdsWithin_inter_Ioi_neBot` — für dichtes `D` und `r` kein größtes Element ist
+  `(𝓝[D ∩ Set.Ioi r] r).NeBot`.
+* `tendsto_rightLimAlong_nhdsWithin_Ioi`,
+  `exists_tendsto_rightLimAlong_nhdsWithin_Iio`, `isCadlagPath_rightLimAlong` —
+  die **deterministische Hälfte von Doobs Regularisierung**: hat `g` an jedem
+  Punkt beide einseitigen Limiten längs eines dichten `D`, so ist
+  `rightLimAlong D g` càdlàg. Kein Maß, keine Filtration, kein Prozeß.
+* `ae_forall_exists_tendsto_of_isRegularizingClass` — die `E`-wertige
+  Regularisierung an **jedem** Punkt des Index zugleich, unter *einer* Nullmenge.
+* `ae_isCadlagPath_rightLimAlong_of_isRegularizingClass` — die càdlàg-Hälfte des
+  Zielsatzes: f.s. ist `rightLimAlong D (fun s ↦ X s ω)` ein càdlàg-Pfad.
+
+#### Wie geprüft wurde
+
+Die Pfadhälfte zuerst in einer eigenen kleinen Datei gegen v4.33.1 entwickelt,
+dort ohne Fehler und ohne Warnung. Danach in die große Datei eingesetzt und
+diese als ganze durch `lake env lean` geschickt: **Exitcode 0, kein einziger
+Fehler**, weiterhin genau sechs Deklarationen mit `sorry`. Die neun neuen
+Deklarationen mit `#print axioms` geprüft.
+
+#### Befund 1, und er ist der wertvollste: `[RegularSpace E]`, und wo genau er verbraucht wird
+
+Die Rechtsstetigkeit des Limesprozesses ist **nicht** die Rechtsstetigkeit von
+`g` längs `D`, und der Unterschied ist kein technischer. Die Werte von
+`rightLimAlong D g` außerhalb von `D` sind selbst Limiten, und ein Limes wird
+durch „liegt schließlich in einer Umgebung" nicht festgehalten — es sei denn, die
+Umgebung ist **abgeschlossen**. Genau das ist `[RegularSpace E]`:
+
+> `closed_nhds_basis` (`Topology/Separation/Regular.lean:174`) gibt eine
+> abgeschlossene Umgebung `V` von `rightLimAlong D g t`; ein offenes `U ∋ t` mit
+> `g '' (U ∩ D ∩ Set.Ioi t) ⊆ V` liegt vor; für `r ∈ U ∩ Set.Ioi t` läuft der
+> Filter `𝓝[D ∩ Set.Ioi r] r` **immer noch** in `U ∩ D ∩ Set.Ioi t`, und weil `V`
+> abgeschlossen ist, zieht `IsClosed.mem_of_tendsto` den Limes hinein.
+
+Ohne Regularität gibt dasselbe Argument nur die Zugehörigkeit zum Abschluß von
+`V`, also gar nichts. **Und `[T2Space E]` hilft dabei nicht**: Trennung wird an
+einem anderen Schritt gelesen, nämlich bei
+`exists_tendsto_of_forall_tendsto_comp`, wo eine kompakte Menge einen
+Häufungspunkt fängt. Keine der beiden Eigenschaften folgt hier aus der anderen.
+Die Linkslimiten sind dasselbe Argument mit `U ∩ Set.Iio t` statt `U`.
+
+#### Befund 2: `[DenselyOrdered ι]` ist eine Voraussetzung und keine Bequemlichkeit
+
+An einem Punkt `r` mit **unmittelbarem Nachfolger** ist `𝓝[D ∩ Set.Ioi r] r = ⊥`,
+und zwar wie dicht `D` auch sei. Dann ist jeder Punkt von `E` ein Limes längs
+dieses Filters, der Rechtslimes bei `r` ist unbestimmt, und der Pfad durch `r`
+ist unkontrolliert. `ℝ≥0` und `ℝ` sind dicht geordnet; der Index dieser
+Entwicklung ist einer der beiden. Die Dichtheit von `D` wird in der Pfadhälfte
+**nur hier** verbraucht; ob die Modifikationshälfte sie noch einmal liest, ist
+offen.
+
+#### Befund 3: ein Müllwert, der beinahe entstanden wäre — und die Vorkehrung dagegen
+
+Die erste Fassung von `rightLimAlong` fragte nur, ob ein Limes **existiert**.
+Das ist die Falle: an einem von rechts isolierten Punkt ist der Filter `⊥`, und
+dann existiert ein Limes *immer* — jeder Punkt von `E` ist einer. `Classical`
+hätte einen genannt, also eine Zahl, wo es keine Antwort gibt. Das ist genau der
+Fehlertyp von `sInf ∅ = 0`, `x / 0 = 0` und dem Bochner-Integral einer
+nichtintegrierbaren Funktion, der in dieser Entwicklung sechsmal eine Aussage
+still wahr gemacht hat.
+
+Die Definition fragt jetzt nach `NeBot ∧ ∃ x, Tendsto …`, und an einem solchen
+Punkt ist `rightLimAlong D g t = g t` (`rightLimAlong_of_not_neBot`). Damit gilt
+die Modifikationseigenschaft dort **nach Definition** statt durch ein Argument,
+das sich nicht führen läßt. Der Preis ist eine `NeBot`-Voraussetzung in
+`tendsto_rightLimAlong`, und sie steht an jeder Aufrufstelle ohnehin zur
+Verfügung.
+
+#### Befund 4: die vier Voraussetzungen, die `exists_cadlag_modification_of_isRegularizingClass` nicht trug
+
+Der Satz stand mit `[FirstCountableTopology ι]`,
+`[(atTop).IsCountablyGenerated]`, `hD`, `hD'` und den vier `Φ`-Bedingungen da.
+Er ist so **nicht beweisbar**, und jede der vier fehlenden Voraussetzungen wird
+an einem benannten Schritt gelesen; sie stehen jetzt in der Signatur:
+
+* `hXm : ∀ t, Measurable (X t)` und `[OpensMeasurableSpace E]` bei
+  `CompactContainment.ae_exists_isCompact` — `CompactContainment` schränkt das
+  äußere Maß einer nicht als meßbar behaupteten Menge ein, und eine untere
+  Schranke an das äußere Maß einer Vereinigung sagt über ihr Komplement nichts;
+  das Ereignis ist meßbar, weil es ein abzählbarer Durchschnitt von Urbildern
+  einer kompakten — also abgeschlossenen, also meßbaren — Menge ist.
+* `[T2Space E]` bei `exists_tendsto_of_forall_tendsto_comp`.
+* `[RegularSpace E]` bei `tendsto_rightLimAlong_nhdsWithin_Ioi` (Befund 1).
+* `[DenselyOrdered ι]` bei `nhdsWithin_inter_Ioi_neBot` (Befund 2).
+
+#### Befund 5: eine **fünfte** Voraussetzung ist zu erwarten, und sie ist noch nicht eingetragen
+
+`ae_eq_of_condExp_eq_of_condExp_mul_conj` — der Schlußstein der
+Modifikationshälfte — verlangt `MemLp _ 2 P` von beiden Seiten, und
+`IsRegularizingClass` gibt das nicht her. Der Martingalanteil `Y t` ist nach
+Definition integrierbar, der Kompensator `C t` ist **nur** `StronglyAdapted`,
+und damit ist `f ∘ X t = Y t + C t` nicht einmal als integrierbar bekannt.
+
+Eine Schranke `∀ f ∈ Φ₀, ∃ M, ∀ x, ‖f x‖ ≤ M` liefert alles auf einmal: sie macht
+`f ∘ X t` und `f ∘ X' t` beschränkt, also unter einem Wahrscheinlichkeitsmaß in
+jedem `Lᵖ`, und sie macht `C t` als Differenz integrierbar. Eine Klasse
+beschränkter stetiger Funktionen erfüllt sie ohnehin. **Sie ist benannt und nicht
+eingetragen**, weil sie noch nicht durch einen Beweis bezahlt ist; sie gehört in
+die Signatur, sobald der Schritt geschrieben ist, der sie liest. Das ist die
+Regel dieses Projekts und der Grund, warum die vier oben eingetragen sind und
+diese eine nicht.
+
+**Und eine Beobachtung, die dem nächsten Lauf eine Voraussetzung erspart:**
+`X' t` selbst muß **nicht** meßbar sein, und keine Metrisierbarkeit von `E` wird
+gebraucht. Für den Schlußstein wird nur `f ∘ X' t` als `AEStronglyMeasurable`
+benötigt, und das ist es als Summe: `f (X' t ω) = V_f ω + C t ω` f.s., `V_f` ist
+der f.s. Grenzwert von `Y` längs einer **Folge** und damit nach
+`aestronglyMeasurable_of_tendsto_ae` meßbar, `C t` ist es über `stronglyAdapted`.
+Der Umweg über die Meßbarkeit des `E`-wertigen Limes, der
+`[PseudoMetrizableSpace E]` gekostet hätte, entfällt.
+
+#### Was dieser Lauf **nicht** getan hat
+
+* **Die Modifikationshälfte.** Unberührt; der Zielsatz trägt weiter sein `sorry`.
+  Was dort fehlt, ist jetzt eine Kette benannter Schritte über einer benannten
+  offenen Voraussetzung (Befund 5) und keine offene Mathematik.
+* **Die beiden Quasi-Linksstetigkeiten.** Unberührt.
+* **Die volle Zitatprüfung der Roadmaps (Teil D).** Die in diesem Lauf benutzten
+  Mathlib-Namen sind am Quelltext von v4.33.1 belegt
+  (`closed_nhds_basis`, `IsClosed.mem_of_tendsto`, `dense_iff_inter_open` mit
+  seinem Alias `Dense.inter_open_nonempty`, `nhdsGT_neBot_of_exists_gt`,
+  `mem_closure_iff_nhdsWithin_neBot`, `mem_nhdsWithin`,
+  `mem_nhdsWithin_of_mem_nhds`, `inter_mem_nhdsWithin`, `Filter.not_neBot`,
+  `Filter.nonempty_of_mem`); die vier `README.md` als ganze sind nicht geprüft.
+  Vermerkt sei, daß `nhdsWithin_Iio_self_neBot'` in v4.33.1 **deprecated** ist
+  (Alias auf `nhdsLT_neBot_of_exists_lt`, seit 2026-01-16) — die hier benutzte
+  Gegenstückform `nhdsGT_neBot_of_exists_gt` ist die aktuelle.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die Modifikationshälfte, und damit
+   `exists_cadlag_modification_of_isRegularizingClass` selbst.** *Worauf sie
+   ruht:* alles steht, bis auf die Schranke von Befund 5, und die ist als
+   Hypothese hinzuschreiben, nicht zu beweisen. Die Kette, Schritt für Schritt:
+   (a) an einem von rechts isolierten Punkt gibt `rightLimAlong_of_not_neBot` die
+   Gleichheit sofort; (b) sonst ist `f (X' t) = V_f + W_f` für `f ∈ Φ₀` und für
+   `f * conj f`, wobei `V_f` und `W_f` die Rechtslimiten von `Y` und `C` sind —
+   hier wird die **Stetigkeit** von `f` gelesen, und das ist die zweite Stelle
+   nach `exists_tendsto_of_forall_tendsto_comp`, an der `hΦcount` sie liefert;
+   (c) `W_f = C t` f.s. nach `IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi`;
+   (d) `P[V_f | 𝓕 t] = Y t` nach
+   `Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi`, die ein `T > t` verlangt
+   — zu klären ist, ob dafür `[NoMaxOrder ι]` in die Signatur gehört oder ob der
+   größte Index, wo es einen gibt, über `rightLimAlong_of_not_neBot` erledigt
+   ist; (e) `ae_eq_of_condExp_eq_of_condExp_mul_conj` an `f` und `f * conj f`,
+   dann die abzählbare trennende Familie. *Warum jetzt:* der Zeuge steht, seine
+   Pfadeigenschaft steht, und jeder Schritt der Kette hat seinen Satz.
+2. **`UnifIntegrable.comp` nachbauen**, unverändert der Vorschlag des Vorlaufs,
+   drei Zeilen.
+3. **Eine Meßbarkeitsprobe an `CompactContainment`.** Unverändert der Vorschlag
+   der letzten acht Läufe.
