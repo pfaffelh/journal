@@ -8037,10 +8037,11 @@ and 11 use them.
   almost sure convergence of `f ∘ X` for every `f` of a **countable** class
   separating the points of `E` gives almost sure convergence of `X`. Countability
   enters here and nowhere else: it is what lets the exceptional sets of the
-  individual `f` be collected into one, and it is the reason
+  individual `f` be collected into one, and it is one of the two reasons
   `exists_cadlag_modification_of_isRegularizingClass` asks for a countable
-  separating subclass while `isQuasiLeftContinuous_of_isRegularizingClass` does
-  not. Proved on 2026-09-15.
+  separating subclass — the other being the squares, which
+  `isQuasiLeftContinuous_of_isRegularizingClass` asks for as well. Proved on
+  2026-09-15.
 * `ae_exists_tendsto_comp_of_isRegularizingClass`, the real valued half of
   Doob's regularization read through a regularizing class: for one `f` of the
   class, `f ∘ X` has almost surely, at **every** point of the index at once,
@@ -8652,68 +8653,157 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   constrains `Y` only through the decomposition, which pins it down at each time
   only off a null set; the right continuity of `Y` is what forbids the null sets
   to fill the space. **In Lean** on 2026-09-17, twelfth run.
-* `not_isQuasiLeftContinuous_of_isRegularizingClass_of_free_solutionSet`: the
-  hypothesis `IsMPSolution 𝓧 𝓕 P` of the next item **is indispensable**, and
-  until 2026-09-17 it was not there. Drop it and nothing constrains `𝓧`, so
-  `Y := f ∘ X` and `C := 0` satisfy every remaining hypothesis — all of them are
-  statements about the zero process — for **any** `X` and even for `D = ∅`. The
-  coin of `AtomWitness` over `ι = ENNReal` is a càdlàg `X` with a separating `Φ`
-  that is not quasi-left-continuous, so the statement without `IsMPSolution` is
-  false. What it lacks is the martingale property that optional sampling needs.
+* `not_isQuasiLeftContinuous_of_isRegularizingClass_of_free_solutionSet`: a
+  martingale hypothesis on `Y` **is indispensable** in the theorem below, and
+  until 2026-09-17 there was none. Constrain `Y` by nothing and `Y := f ∘ X`,
+  `C := 0` satisfy every remaining hypothesis — all of them are statements about
+  the zero process — for **any** `X` and even for `D = ∅`. The coin of
+  `AtomWitness` over `ι = ENNReal` is a càdlàg `X` with a separating `Φ` that is
+  not quasi-left-continuous, so the statement without it is false. What it lacks
+  is optional sampling, which with `C = 0` the decomposition says nothing about.
   **In Lean** on 2026-09-17, twelfth run.
+* `isStoppingTime_iSup`: the supremum of a sequence of stopping times is a
+  stopping time, `{⨆ n, τ n ≤ i} = ⋂ n, {τ n ≤ i}`. Mathlib carries the infimum
+  (`MeasureTheory.IsStoppingTime.iInf`,
+  `Mathlib/Probability/Process/Stopping.lean:385`) and not the supremum, and the
+  asymmetry is real: the infimum needs `Filtration.IsRightContinuous`,
+  `DenselyOrdered` and `NoMaxOrder`, the supremum needs nothing beyond the
+  conditionally complete order of the index, since `OrderTop.bddAbove` makes
+  `ciSup_le_iff` available over `WithTop ι`. **In Lean** on 2026-09-17,
+  fourteenth run.
+* `IsOptionalSamplingFor Y 𝓕 P`: for every `t`, every stopping time `σ ≤ t`,
+  `stoppedValue Y σ =ᵐ[P] P[Y t | hσ.measurableSpace]`. This is the property of
+  the process that quasi-left-continuity consumes, and it is a hypothesis rather
+  than a consequence of `Martingale Y 𝓕 P`: optional sampling in continuous time
+  needs right continuous paths and a bound, and `stoppedValue_ae_eq_condExp` of
+  this milestone supplies it over `ℝ≥0` and over no other index. Naming the
+  consequence rather than the cause is what removes the solution set `𝓧` from
+  the theorem below. **In Lean** on 2026-09-17, fourteenth run.
+* `IsStronglyMeasurableAlongStoppingTimes C 𝓕`: for every stopping time `σ`,
+  `stoppedValue C σ` is `hσ.measurableSpace`-strongly measurable.
+  `IsCompensatorFor` gives `StronglyAdapted 𝓕 C`, and adaptedness at a *time* is
+  not adaptedness at a *stopping time*. Over a Borel codomain this is
+  `MeasureTheory.measurable_stoppedValue`
+  (`Mathlib/Probability/Process/Stopping.lean:1048`) applied to
+  `IsStronglyProgressive 𝓕 C`; for a `𝕂`-valued compensator it is assumed,
+  because `RCLike` gives `𝕂` a topology and no `MeasurableSpace`, so the Borel
+  hypothesis of that theorem cannot be written. **In Lean** on 2026-09-17,
+  fourteenth run.
+* `ae_eq_limUnder_condExp_stoppedValue`: one continuous bounded test function `g`
+  and one nondecreasing family `σ ≤ σ' ≤ t` of stopping times. Then
+  `g (stoppedValue X σ')` is almost everywhere strongly measurable and
+  ```
+  (fun ω ↦ limUnder atTop fun n ↦ g (stoppedValue X (σ n) ω))
+    =ᵐ[P] P[g ∘ stoppedValue X σ' | ⨆ n, stoppingFiltration hσ hσmono n] .
+  ```
+  This is `ae_eq_condExp_iSup_stoppedValue` with its seven hypotheses discharged
+  from `IsCompensatorFor`, `IsOptionalSamplingFor`,
+  `IsStronglyMeasurableAlongStoppingTimes` and
+  `IsL1LeftContinuousAlongStoppingTimes`. Two of the discharges are worth
+  naming. Optional sampling at `σ n` against `stoppedValue Y σ'` is **not** a
+  second hypothesis: `IsOptionalSamplingFor` gives both sides against `Y t` and
+  `MeasureTheory.condExp_condExp_of_le` joins them, because `σ n ≤ σ'` makes
+  `𝓕_{σ n}` a sub-σ-algebra of `𝓕_{σ'}`. And the integrability of the
+  compensator is not assumed at all: `C_ρ = g (X_ρ) - Y_ρ` is bounded by
+  `M + ‖Y_ρ‖`, and `Y_ρ` is integrable because it is almost everywhere a
+  conditional expectation. The limit is taken in `𝕂` and not in `E`, so no
+  hypothesis on `E` beyond its topology occurs. **In Lean** on 2026-09-17,
+  fourteenth run.
+* `stoppingFiltration`: a nondecreasing sequence `σ : ℕ → Ω → WithTop ι` of
+  stopping times for `𝓕` gives a `Filtration ℕ m`, `n ↦ (hσ n).measurableSpace`.
+  Monotonicity is `MeasureTheory.IsStoppingTime.measurableSpace_mono` and the
+  bound `MeasureTheory.IsStoppingTime.measurableSpace_le`, both of
+  `Mathlib/Probability/Process/Stopping.lean`; neither asks anything of the index
+  beyond `Preorder`. This is the only place at which the stopping times of
+  quasi-left-continuity are read as a filtration. **In Lean** on 2026-09-17,
+  thirteenth run.
+* `ae_eq_condExp_iSup_stoppedValue`: **the middle step**, that is, all of
+  `isQuasiLeftContinuous_of_isRegularizingClass` except the final appeal to the
+  separating class. Let `f ∘ X = Y + C` hold almost surely at all times at once,
+  let `ℱ : Filtration ℕ m` be arbitrary, and let
+  `stoppedValue Y (σ n) =ᵐ[P] P[stoppedValue Y σ' | ℱ n]` — optional sampling —
+  and `stoppedValue C (σ n)` be `ℱ n`-strongly measurable. If the stopped
+  increments of `C` vanish in `L¹` and `f (stoppedValue X (σ n))` converges
+  almost surely to `A`, then
+  `A =ᵐ[P] P[f (stoppedValue X σ') | ⨆ n, ℱ n]`.
+
+  **No stopping time occurs in the statement**, and none has to: `σ` and `σ'`
+  enter only through `stoppedValue`, which is evaluation at `(σ ω).untopA`, and
+  the stopping times are read in the two hypotheses alone. `OrderBot ι` is the
+  only instance on the index that the proof reads, and it is read by `untopA`.
+
+  The three hypotheses that `IsCompensatorFor` does **not** supply are named by
+  the statement rather than hidden in it: the decomposition is
+  `IsCompensatorFor.ae_forall_decomposition` and not the field `decomposition`,
+  by `LiftWitness`; optional sampling needs right continuity and a bound on `Y`,
+  which are properties of the solution class, and `stoppedValue_ae_eq_condExp`
+  supplies it over `ℝ≥0`; and strong measurability of `stoppedValue C (σ n)` for
+  `ℱ n` is progressive measurability of `C`, since `StronglyAdapted` is
+  adaptedness at a *time* and not at a stopping time. **In Lean** on 2026-09-17,
+  thirteenth run.
 * `isQuasiLeftContinuous_of_isRegularizingClass`, the abstract form of
   Ethier–Kurtz, Theorem 4.3.12, with no operator and no compensator of any
-  special shape. Let `𝓧` solve the martingale problem for `𝓕` and `P`, let `Φ`
-  be a regularizing class for `(X, 𝓧)` with `X` càdlàg,
-  let `Φ` be separating in the sense of the roadmap **WeakConvergence**, and let
-  the compensator `C` attached to each `f ∈ Φ` be almost surely right continuous
-  and **left continuous in `L¹` along stopping times**: for every nondecreasing
-  sequence `τ` of stopping times, with `τ' = ⨆ n, τ n`, and every `t`,
+  special shape. Let `Φ₀ ⊆ Φ` be countable, continuous, bounded and separating
+  the points of `E`, let `Φ` contain the square `f * conj f` of every `f ∈ Φ₀`,
+  let `X` be càdlàg, and let every `f ∈ Φ` have a decomposition `f ∘ X = Y + C`
+  with `IsCompensatorFor X 𝓕 P D f Y C`, with `Y` and `C` right continuous,
+  `IsOptionalSamplingFor Y 𝓕 P`, `IsStronglyMeasurableAlongStoppingTimes C 𝓕`,
+  and `C` **left continuous in `L¹` along stopping times**: for every
+  nondecreasing sequence `τ` of stopping times, with `τ' = ⨆ n, τ n`, and every
+  `t`,
   ```
   Tendsto (fun n ↦ ∫ ω, ‖C (min (τ' ω) t) ω - C (min (τ n ω) t) ω‖ ∂P)
     atTop (𝓝 0) .
   ```
-  Then `IsQuasiLeftContinuous X 𝓕 P`. The proof is four steps and each of them
-  is a named item already, here or in **WeakConvergence**. Optional sampling at
-  the bounded stopping times `min (τ n) t ≤ min τ' t`, the first item of this
-  milestone, gives
-  `Y (min (τ n) t) =ᵐ[P] P[Y (min τ' t) | (hτ n).measurableSpace]`. The
-  decomposition `f (X t) = Y t + C t` of `IsRegularizingClass` is then needed at
-  a stopping time and not only at each fixed `t`; that upgrade is
-  `IsCompensatorFor.decomposition_stoppedValue` above, and it costs two
-  hypotheses that `IsCompensatorFor` does not carry: that `D` approximates every
-  time from the right, and that the paths of `Y` are right continuous — the
-  latter genuinely, by `LiftWitness`. Substituting it,
+  Then `IsQuasiLeftContinuous X 𝓕 P`. The proof runs at
+  `σ n = min (τ n) t` and `σ' = min τ' t`, which are stopping times by
+  `MeasureTheory.IsStoppingTime.min_const` and `isStoppingTime_iSup` above, and
+  it has three moves.
+
+  First, the **paths**: `stoppedValue X (σ n) ω = X ((σ n ω).untopA) ω` runs
+  along a nondecreasing sequence of indices bounded by `t`, so
+  `IsCadlagPath.exists_tendsto_comp_monotone` gives a limit at almost every
+  sample point, and `g` continuous carries it to `g`. No supremum of the `σ n`
+  is computed and no interchange of `min` with `⨆` is needed: the limit is
+  produced, not identified.
+
+  Second, the **conditional expectation**:
+  `ae_eq_limUnder_condExp_stoppedValue` above, read once at `f` and once at
+  `f * conj f`, gives
   ```
-  f (X (min (τ n) t)) =ᵐ[P] P[f (X (min τ' t)) | (hτ n).measurableSpace]
-      - P[C (min τ' t) - C (min (τ n) t) | (hτ n).measurableSpace] ,
+  A =ᵐ[P] P[f ∘ stoppedValue X σ' | ⨆ n, 𝓕_{σ n}] ,
+  A₂ =ᵐ[P] P[(f * conj f) ∘ stoppedValue X σ' | ⨆ n, 𝓕_{σ n}] ,
   ```
-  whose second term tends to `0` in `L¹` by the hypothesis on `C` and
-  conditional Jensen. The first term is handled by **Lévy's upward theorem**,
-  `MeasureTheory.tendsto_ae_condExp` and `MeasureTheory.tendsto_eLpNorm_condExp`
-  of `Mathlib/Probability/Martingale/Convergence.lean` (`:426`, `:439`), read at the filtration
-  `n ↦ (hτ n).measurableSpace`, which is a `Filtration ℕ` by
-  `MeasureTheory.IsStoppingTime.measurableSpace_mono` and
-  `MeasureTheory.IsStoppingTime.measurableSpace_le` of
-  `Mathlib/Probability/Process/Stopping.lean` (`:464`, `:477`). Both Lévy
-  statements are stated for a real valued
-  integrand and a finite measure — they sit in `section L1Convergence`, whose
-  variable block at `Convergence.lean:243` is `[IsFiniteMeasure μ] {g : Ω → ℝ}` —
-  so the `𝕂` valued case is the two components.
-  The left side converges to `f ∘ L` with
-  `L ω = limUnder atTop (fun n ↦ X (τ n ω) ω)`, which exists because the paths
-  are càdlàg and `τ` is monotone, and which is measurable for
-  `⨆ n, (hτ n).measurableSpace`. So
-  `f ∘ L = P[f (X (min τ' t)) | ⨆ n, (hτ n).measurableSpace]` for every
-  `f ∈ Φ`, and `IsSeparating.ae_eq_of_forall_condExp_eq` of **WeakConvergence**
-  Milestone 1 gives `L =ᵐ[P] X (min τ' t)`. **This is the one statement of the
-  milestone that reads `IsSeparating Φ`**, and it separates measures rather than
-  points: no countable subset separating the points of `E` is used here, and no
-  compact containment.
-  `exists_cadlag_modification_of_isRegularizingClass` takes the other road at
-  the same corner — squares and pointwise separation — and carries no
-  `IsSeparating` hypothesis at all, which is why the two share no hypothesis on
-  `Φ` beyond `IsRegularizingClass`.
+  with `A` and `A₂` the two `limUnder`s. The squares are the reason `Φ` is asked
+  for them, and `A₂ = A * conj A` almost surely, because a limit of products is
+  the product of the limits.
+
+  Third, the **identification**: `ae_eq_of_condExp_eq_of_condExp_mul_conj` of
+  Milestone 9 turns the two identities into
+  `f (stoppedValue X σ') =ᵐ[P] A`, and on the event `τ' ≤ t`, where
+  `σ n = τ n` and `σ' = τ'`, that is the convergence that
+  `isQuasiLeftContinuous_of_forall_ae_tendsto_comp` asks for, one `f ∈ Φ₀` at a
+  time. The measurability of `A` costs nothing: `A` is almost everywhere a
+  conditional expectation by the second move, hence strongly measurable for
+  `⨆ n, 𝓕_{σ n}`, and `MemLp A 2 P` follows from the bound.
+
+  **The identification is where `E` would enter and does not.** The other road
+  at this corner is `IsSeparating.ae_eq_of_forall_condExp_eq` of
+  **WeakConvergence** Milestone 1, which separates measures rather than points
+  and needs no squares; it costs `[OpensMeasurableSpace E]`,
+  `[MeasurableSpace.CountablySeparated E]`, a real valued class, and each member
+  of the class as a bounded continuous function.
+  `ae_eq_of_condExp_eq_of_condExp_mul_conj` mentions `E` nowhere — it speaks of
+  `f g : Ω → 𝕂` and of nothing else — and the bound it asks for is needed for the
+  integrabilities of the second move in any case. That is why
+  `exists_cadlag_modification_of_isRegularizingClass` and this statement are
+  twins and not cousins: both read `Φ` through a countable, bounded, continuous,
+  point separating and square closed `Φ₀`, and neither reads `IsSeparating`.
+
+  **No measurability of `X` is read anywhere**, and in particular
+  `MeasureTheory.measurable_stoppedValue` is not used: the limit is taken in `𝕂`
+  and not in `E`, and what has to be measurable is a scalar function, which the
+  conditional expectation supplies for free.
 * `isQuasiLeftContinuous_of_isMPSolutionFor`, the classical instance
   (Ethier–Kurtz, Theorem 4.3.12). For `A ⊆ Cb(E) × Bdd(E)` with separating
   domain and a solution `X` with càdlàg paths, `IsQuasiLeftContinuous X 𝓕 P`

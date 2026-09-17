@@ -171,9 +171,9 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Einundzwanzig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Zweiundzwanzig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
-Alle einundzwanzig beim Beweisen aufgefallen, und die ersten vier sind kleine,
+Alle zweiundzwanzig beim Beweisen aufgefallen, und die ersten vier sind kleine,
 in sich abgeschlossene Beiträge. Sie gehören thematisch zu
 `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben.
 
@@ -721,6 +721,30 @@ seinem Dateikopf: es prüft Zeichenketten, nicht Aussagen.
   Satz. Der PR sollte die Martingal-, die Sub- und die Supermartingalfassung
   tragen; die letzten beiden verlangen eine Positivitätsbedingung an `T` und
   sind daher nicht dasselbe Lemma.
+
+* **Das Supremum einer Folge von Stoppzeiten.** Der zweiundzwanzigste, gefunden
+  am 2026-09-17 beim Zusammenbau der Quasi-Linksstetigkeit. Mathlib hat das
+  **Infimum**: `MeasureTheory.IsStoppingTime.iInf` und `…​.biInf`
+  (`Probability/Process/Stopping.lean:385` bzw. `:373`), beide mit
+  `[Filtration.IsRightContinuous]`, `[DenselyOrdered ι]`, `[NoMaxOrder ι]` und
+  `[FirstCountableTopology ι]`. Das **Supremum** fehlt — in
+  `Probability/Process/Stopping.lean` kommt `⨆` nur in der Definition von
+  `IsStoppingTime.measurableSpace` und in Beweisen vor, und in ganz
+  `Mathlib/Probability/` gibt die Suche nach `IsStoppingTime` neben `⨆` **null
+  Treffer** (am 2026-09-17 gegen `upstream/master` `f61f3ed7633` geprüft, und
+  gegen v4.33.1).
+
+  Die Asymmetrie ist echt und erklärt, warum die eine Hälfte dasteht und die
+  andere nicht: das Infimum verlangt die Rechtsstetigkeit der Filtration, weil
+  `{⨅ τ n < i}` und nicht `{⨅ τ n ≤ i}` die zugängliche Menge ist. Das Supremum
+  verlangt nichts: `{⨆ n, τ n ≤ i} = ⋂ n, {τ n ≤ i}` ist ein abzählbarer
+  Durchschnitt von Mengen, die schon `𝓕 i`-meßbar sind. Der Beweis ist fünf
+  Zeilen und steht bei uns als `isStoppingTime_iSup`; das einzige, was er über
+  den Index liest, ist `ciSup_le_iff` mit `OrderTop.bddAbove` über `WithTop ι`.
+
+  Für Mathlib wäre die richtige Fassung die über einer abzählbaren Indexmenge,
+  also `biSup` und `iSup` als Paar zu `biInf` und `iInf`, und ohne jede der vier
+  Instanzen, die jene tragen.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine

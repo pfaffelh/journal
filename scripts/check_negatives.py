@@ -7,7 +7,7 @@ Skript sucht mit `git grep` in `upstream/master` und meldet die Trefferzahl; ein
 Treffer ist kein Gegenbeweis, sondern eine Stelle zum Nachlesen.
 
 `CLAIMS` sind die Behauptungen der vier `README.md` und der drei
-`Suggested.lean`, `CLAIMS_TODO8` die einundzwanzig Lücken von `TODO.md` Punkt 8.
+`Suggested.lean`, `CLAIMS_TODO8` die zweiundzwanzig Lücken von `TODO.md` Punkt 8.
 
 Jede Zeile trägt als letztes Feld die Dateien, in denen ein Treffer **bekannt
 und harmlos** ist — Namensvettern, Literaturverweise, der jeweils benachbarte
@@ -125,7 +125,7 @@ CLAIMS = [
 ]
 
 
-# Die einundzwanzig Lücken von `TODO.md` Punkt 8.  Sechstes Feld: die Dateien,
+# Die zweiundzwanzig Lücken von `TODO.md` Punkt 8.  Sechstes Feld: die Dateien,
 # in denen ein Treffer bekannt und harmlos ist.
 CLAIMS_TODO8 = [
     ('traj-homogeneity', 'TODO.md Punkt 8, erste Lücke',
@@ -231,6 +231,13 @@ CLAIMS_TODO8 = [
      'gar nicht vor.',
      'ContinuousLinearMap|RCLike',
      ['Mathlib/Probability/Martingale/', 'Mathlib/Probability/Process/'], []),
+    ('stopping-isup', 'TODO.md Punkt 8, zweiundzwanzigste Lücke',
+     'Das Supremum einer Folge von Stoppzeiten fehlt; Mathlib hat nur das '
+     'Infimum (`IsStoppingTime.iInf`, `IsStoppingTime.biInf`), und ein '
+     '`protected lemma iSup` oder `biSup` kommt in `Mathlib/Probability/` '
+     'nicht vor.',
+     'protected (lemma|theorem) (iSup|biSup)',
+     ['Mathlib/Probability/'], []),
     ('martingale-setIntegral-weight',
      'MartingaleProblems/README.md, Meilenstein 5',
      'Ein Martingal gegen eine **beschränkte** Gewichtsfunktion getestet hat in '
@@ -291,7 +298,7 @@ if __name__ == '__main__':
         out += lines
         if s:
             surprised.append(key)
-    out += ['## Die einundzwanzig Lücken von `TODO.md` Punkt 8', '']
+    out += ['## Die zweiundzwanzig Lücken von `TODO.md` Punkt 8', '']
     for key, where, claim, pat, pfs, expected in CLAIMS_TODO8:
         lines, s = section(key, where, claim, pat, pfs, expected)
         out += lines
