@@ -41,7 +41,17 @@ def main(argv: list[str]) -> int:
     tmp.write_text(
         src.read_text() + "\n" + "".join(f"#print axioms {n}\n" for n in names))
     try:
-        proc = subprocess.run(["lake", "env", "lean", str(tmp)],
+        # Seit der Kette vom 2026-09-17 importieren die Roadmap-Dateien
+        # einander unter dem Präfix `TauCetiRoadmap.`; die `.olean` dazu legt
+        # `check_suggested.py` unter `scratch/_lean` ab.  Ohne diesen Pfad
+        # scheitert schon die Importzeile, und die Axiomprüfung sagt nichts.
+        build = ROOT / "scratch/_lean"
+        if not build.is_dir():
+            print(f"kein gebauter Baum unter {build}; "
+                  "erst `python3 scripts/check_suggested.py` laufen lassen")
+            return 2
+        shell = f'LEAN_PATH="$LEAN_PATH:{build}" exec lean {tmp}'
+        proc = subprocess.run(["lake", "env", "sh", "-c", shell],
                               cwd=MAIN, capture_output=True, text=True)
         out = proc.stdout + proc.stderr
         for line in out.splitlines():

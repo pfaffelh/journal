@@ -9128,9 +9128,25 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
 Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
 `(Ω n, 𝓕 n, P n)` with paths in `F`.
 
-* `PContinuous ψ X`, for `ψ : F → ℝ` Borel: there is a Borel `C` with
-  `P {X ∈ C} = 1` such that `ψ` is continuous at every point of `C` along
-  convergent sequences with limit in `C`.
+* **`P`-continuity at `X` is written `P {ω | ContinuousAt ψ (X ω)} = 1`** and
+  carries no definition of its own. The manuscript's `def:Pcont` asks for a Borel
+  `C` with `P {X ∈ C} = 1` such that `ψ (α m) → ψ α` whenever `α m → α` in `F`
+  with `α ∈ C`: the approximating points range over the whole of `F` and only the
+  limit is confined to `C`, so the condition is sequential continuity at each
+  point of `C`. Over a first countable `F` that is `ContinuousAt ψ` at each point
+  of `C`, and the certifying set adds nothing, because the continuity set
+  `{x | ContinuousAt ψ x}` is itself Borel — `measurableSet_of_continuousAt`,
+  `MeasureTheory/Constructions/BorelSpace/Basic.lean` — and is therefore the
+  largest `C` that any certificate can name.
+  **Confining the approximating points to `C` as well is a different condition,
+  and a false one.** `F = ℝ`, `C = {0}`, `ψ = Set.indicator {0} 1`, `X ≡ 0` and
+  `X n ≡ 1/n`: the only sequences inside `C` are eventually constant, so `ψ`
+  would be certified; `X n → X` in distribution; and `ψ (X n) = 0` does not
+  converge to `ψ (X) = 1`. The condition has to be read off the continuity set of
+  `ψ`, not off a set the approximating paths are asked to stay in.
+  `ContinuousAt` rather than the sequential form is what the statements below
+  carry, since no first countability of `F` is assumed and the portmanteau
+  argument underneath reads the topological continuity set.
 * `mpSolution_of_tendsto`: assume `X` and every `X n` measurable, every member of
   every `𝓩° r` bounded and measurable, `𝓧` canonical for `X` with determining set
   `𝓩°`, and that for every `Y ∈ 𝓧` with canonical version `Y°` and every `t ∈ D`:
@@ -9220,15 +9236,78 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   is what lets the limit carry the same truncation level as the sequence, and it
   is dominated convergence. **In Lean** on 2026-09-17, nineteenth run.
 * `mpSolution_of_tendsto_of_pContinuous`: the corollary in which (a) is replaced
-  by `X n → X` weakly on a separable metric `F` together with `P`-continuity of
-  `Y° t` and `Y° t * Z`. Uses the continuous mapping theorem of the roadmap
-  **WeakConvergence**.
-* `mpSolution_of_tendsto_augmented`: the corollary in which the coordinates at
-  finitely many exceptional times are adjoined to the path space, so that a
-  functional discontinuous at those times becomes continuous. It is the previous
-  statement on a larger space and costs nothing once that one is proved.
-* Uniform integrability of the limit family under `P`, as a separate lemma; it
-  is what makes the passage from `D` to the whole index work.
+  by `X n → X` in distribution on `F` together with
+  `P {ω | ContinuousAt (Y° r) (X ω)} = 1` for `r ∈ D ∩ Iic t` and
+  `P {ω | ContinuousAt ((Y° t - Y° s) * Z) (X ω)} = 1` for `s ∈ D ∩ Iic t` and
+  `Z ∈ 𝓩° s`. It is `MeasureTheory.TendstoInDistribution.continuousAt_comp` of
+  the roadmap **WeakConvergence** applied twice and nothing else.
+  **In Lean** on 2026-09-17, twenty-first run.
+  **`F` is neither separable nor metric.** What the continuous mapping theorem
+  reads on the path space is `HasOuterApproxClosed F` on top of the
+  `OpensMeasurableSpace F` that `MeasureTheory.TendstoInDistribution` asks for
+  anyway. Every pseudo-metrizable space has it (`instHasOuterApproxClosed`,
+  `MeasureTheory/Measure/HasOuterApproxClosed.lean`), so the separable metric
+  path space of the manuscript is an instance of this statement and not a
+  hypothesis of it.
+  **The continuity is asked of the products and not of the factors**, which is
+  the weaker hypothesis: continuity at a point is stable under differences and
+  products, so continuity of `Y° t`, `Y° s` and `Z` at `X ω` gives continuity of
+  `(Y° t - Y° s) * Z` there, and the converse fails. It is also the product that
+  the proof composes.
+* `IsDetermining.comp_fst`: a determining set read on an augmented path space
+  `F × G`, through `Z ∘ Prod.fst`. The two statements have the same content,
+  since `(Z ∘ Prod.fst) (X ω, γ (X ω)) = Z (X ω)`, and the proof is the image
+  being unfolded. **In Lean** on 2026-09-17, twenty-first run.
+* `mpSolution_of_tendsto_augmented`: the manuscript's `thm:absconvaug`. For a
+  measurable `γ : F → G`, the augmentation `x ↦ (x, γ x)` carries the readings
+  `γ` along as a second coordinate, and the statement is the previous one on
+  `F × G`: `X n → X` in distribution **jointly with** `γ (X n) → γ (X)`, and the
+  `P`-continuity asked of functionals on `F × G`. A functional discontinuous only
+  because it reads the path at prescribed places becomes continuous there. In the
+  instance that motivates it (`prop:atomaug`), `G = E^A` for the countable set
+  `A` of atoms of the clock and `γ ω = (ω a)_{a ∈ A}`. **In Lean** on 2026-09-17,
+  twenty-first run.
+  **There is no `Y°` on `F` among the hypotheses.** The manuscript asks for Borel
+  `Ŷ°` on the augmented space with `Ŷ° ∘ γ̂ = Y°`; the formalisation takes the
+  canonical version on `F × G` from the start, `Y t ω = Y° t (X ω, γ (X ω))`,
+  which is the same requirement with the detour through `F` removed.
+  **The augmented convergence hypothesis is strictly stronger than the plain
+  one, and that is the trade.** It gives back `X n → X` in distribution by
+  `MeasureTheory.TendstoInDistribution.continuous_comp continuous_fst`
+  (`MeasureTheory/Function/ConvergenceInDistribution.lean`), at the cost of
+  `BorelSpace F`; the converse fails, and `ex:atomicdiscontinuity` is the
+  witness — `ω n = indicator (Set.Ici (1 + 1/n)) 1` converges to
+  `indicator (Set.Ici 1) 1` in `J₁` while the values at `1` converge to the wrong
+  limit.
+  **`OpensMeasurableSpace` and `HasOuterApproxClosed` are asked of the product**
+  and not of the factors, which is again the weaker hypothesis. The routes from
+  the factors carry side conditions the statement does not read:
+  `Prod.opensMeasurableSpace` (`MeasureTheory/Constructions/BorelSpace/Basic.lean`)
+  needs `SecondCountableTopologyEither`, and the only instance of
+  `HasOuterApproxClosed` is `instHasOuterApproxClosed` for pseudo-metrizable
+  spaces, so obtaining it on `F × G` means metrizing both factors.
+* `integral_tail_le_of_tendstoInDistribution`: a uniform tail bound survives the
+  passage to the limit in distribution. The tail `max (‖x‖ - c) 0` is continuous
+  but **unbounded**, so convergence in distribution does not carry its integral;
+  the bounded truncations `min (max (‖x‖ - c) 0) M` do, each is dominated by the
+  tail on every space, and `M → ∞` on the limit side is dominated convergence
+  against the tail of the limit. The same device as in
+  `integrable_of_tendstoInDistribution`, one level up. **In Lean** on 2026-09-17,
+  twenty-first run.
+* `unifIntegrable_tail_of_tendstoInDistribution`: uniform integrability of the
+  limit family under `P`, in the tail form the milestone carries, with the
+  integrability of the limits as part of the conclusion. It is what makes the
+  passage from `D` to the whole index work: the family that has to be uniformly
+  integrable there is the **limit** family under `P` and not the approximating
+  one. **In Lean** on 2026-09-17, twenty-first run.
+  **The truncation level is the same on both sides.** It is chosen by the
+  hypothesis for the approximating family and serves the limit unchanged, which
+  is why the statement is an implication between two clauses of one shape rather
+  than a statement about enlarging a level.
+  **Integrability of the limits is not a hypothesis.** The uniform bound at
+  `ε = 1` gives `∫ ‖ξ r n‖ ≤ c₁ + 1` uniformly in `n` and `r`, and
+  `integrable_of_tendstoInDistribution` turns that into integrability of each
+  limit — the computation `mpSolution_of_tendsto` performs inline.
 
 **Acceptance examples.**
 
@@ -9251,11 +9330,11 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   acceptance test is that `mpSolution_of_tendsto` can be applied with `F` a bare
   measurable space, and that `mpSolution_of_tendsto_of_pContinuous` — which does
   need a separable metric `F` — is derived from it and not the other way round.
-* **`PContinuous` is not continuity**, and the manuscript's
+* **`P`-continuity is not continuity**, and the manuscript's
   `ex:atomicdiscontinuity` is why. The evaluation `ψ = π 1` on `D ℝ ℝ` is
-  discontinuous at every path jumping at `1`; it is nevertheless `PContinuous`
-  for every `P` with `P {ω | ω 1⁻ = ω 1} = 1`, the certifying set `C` being that
-  event. For a limit law charging paths that jump at `1` — the generic case when
+  discontinuous at every path jumping at `1`; it is nevertheless `P`-continuous
+  at `X` for every `P` with `P {ω | ω 1⁻ = ω 1} = 1`, that event being exactly
+  where `ψ` is continuous. For a limit law charging paths that jump at `1` — the generic case when
   the clock has an atom there — no `C` works, and
   `mpSolution_of_tendsto_augmented` is what remains: adjoining the coordinate at
   `1` to the path space makes the functional continuous. This pair fixes the

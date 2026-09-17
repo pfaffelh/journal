@@ -72,7 +72,7 @@ unserer Konstruktion. Daher:
 |---|---|---|---|---|
 | `fact:Dcountable` | 4 | EK, Lemma 3.7.7 | Roadmap | SkorokhodSpace M8, `SkorokhodSpace.exists_countable_dense_continuity`; Mathlib hat weder `cadlag` noch den Raum. Der Unterbau ist seit dem 2026-09-07, fünftem Lauf, bewiesen und geht durch `lake env lean`: `countable_leftJumpSet` — die Sprungmenge **einer** càdlàg-Abbildung ist abzählbar — samt `IsCadlag.continuousAt_iff_notMem_leftJumpSet`, die „Stetigkeitsstelle" und „nicht in `leftJumpSet`" identifiziert (Meilenstein 2). Was M8 darüber hinaus verlangt, ist die Fassung für **ein Maß** statt für einen Pfad — daß `{t | μ {f | f⁻ t = f t} = 1}` abzählbares Komplement hat —, und die folgt nicht punktweise aus der Pfadaussage, sondern braucht ein Fubini-Argument über die Sprunghöhen; das steht weiter aus |
 | `fact:monotoneclass` | 4 | Monotone class theorem; EK, Appendix 4 | Roadmap | WeakConvergence M5, `induction_on_mulSystem` — dort neu angelegt; Mathlib hat nur die Mengenfassung, und sie heißt `MeasurableSpace.induction_on_inter` (`MeasureTheory/PiSystem.lean:713`, nicht `MeasureTheory.`). Am 2026-09-06, zweiter Lauf, negativ belegt an `upstream/master` `810b3888` mit den Suchen `monotone class`, `MulSystem`, `generateFromFuns`, `multiplicative system`, `monotone limits`, `bounded monotone convergence`, `functional monotone`, `multiplicative family of functions` — kein einziger Treffer in `Mathlib/`. Der Unterbau ist seither übersetzt: `IsMulSystem`, `indicatorFuns`, `generateFromFuns`, die Brücke `generateFromFuns_indicatorFuns`, das π-System `ioiCells` samt `generateFromFuns_eq_generateFrom_ioiCells` und der erste Beweisschritt `of_tendstoUniformly_of_mono_lim` gehen durch `lake env lean`; seit dem 2026-09-06, dritter Lauf, dazu die algebraische Hälfte des zweiten Schritts — `mul_mem_span_insert_one_of_isMulSystem`, `of_mem_span_insert_one`, `exists_bound_of_mem_span_insert_one`. Seit dem 2026-09-07, achtem Lauf, ist der **zweite Schritt selbst bewiesen**, `of_continuous_comp_of_isMulSystem`: die Stone--Weierstraß-Hälfte der Induktion, über `ContinuousMap.exists_mem_subalgebra_near_continuous_of_isCompact_of_separatesPoints` (`Topology/ContinuousMap/StoneWeierstrass.lean:323`) und einen `AlgHom`-Rückzug in `Submodule.span ℝ (insert 1 K)`. Seit dem 2026-09-07, neuntem Lauf, ist der **Satz selbst bewiesen**: Schritt (iii) als `ioiApprox` samt `of_indicator_mem_ioiCells` und `of_indicator_of_measurable` (die Rampen gemeinsam als *eine* stetige Funktion, weil `P` nicht multiplikationsabgeschlossen ist), Schritt (iv) als `of_simpleFunc` und `of_nonneg_of_measurable` (der Umweg über `ℝ≥0∞` ist das einzige, was die Approximation wachsend macht — `SimpleFunc.approxOn` gibt keine Monotonie), und `induction_on_mulSystem` selbst als die Verschiebung `f = (f + C) + (-C)`. Alle drei Folgerungen tragen ebenfalls Beweise: `ext_of_forall_integral_eq_of_isMulSystem`, `integral_mul_eq_zero_of_isMulSystem` und `condExp_eq_of_forall_integral_mul_eq`. Der Kern von Meilenstein 5 ist damit vollständig; was `fact:monotoneclass` noch trennt, ist kein Beweis mehr, sondern die Übernahme nach Mathlib. Alles durch `lake env lean` gegen v4.33.1 |
-| `fact:cmt` | 3 | Continuous mapping theorem; EK, Corollary 3.1.9 and Co | Roadmap | WeakConvergence M2 — der stetige Fall ist Mathlib in **beiden** Fassungen, für Maße als `FiniteMeasure.tendsto_map_of_tendsto_of_continuous` und für Zufallsvariablen als `MeasureTheory.TendstoInDistribution.continuous_comp` (`MeasureTheory/Function/ConvergenceInDistribution.lean:136`, am 2026-09-01, fünfter Lauf, gefunden); die f.ü.-stetige Fassung fehlt in beiden. M2 steht auf „separabel metrisch", und das ist richtig: EK Cor. 3.1.9 verlangt nicht mehr (am Scan geprüft, 2026-08-31). **Seit dem 2026-09-08, erster Lauf, ist die f.ü.-stetige Fassung bewiesen**: `tendsto_of_measure_setOf_not_continuousAt_eq_zero` geht durch `lake env lean` gegen v4.33.1 und hängt nur an `propext`, `Classical.choice`, `Quot.sound`. Der Beweis ist Portmanteau auf beiden Seiten — `closure (h ⁻¹' F) ⊆ h ⁻¹' F ∪ {x | ¬ ContinuousAt h x}` — und braucht **weniger als „separabel metrisch"**: auf der Quelle `[OpensMeasurableSpace E] [HasOuterApproxClosed E]`, auf dem Ziel `[TopologicalSpace E'] [OpensMeasurableSpace E']` ohne jede Metrik, und keine Separabilität. Die Bildmaße treten als Daten mit ihren definierenden Gleichungen auf, nicht über `ProbabilityMeasure.map` — das ist die eine Konstruktion, deren Signatur sich zwischen v4.33.1 und `upstream/master` unterscheidet, und so elaboriert **eine** Aussage gegen beide; die verpackte Fassung `tendsto_map_of_measure_setOf_continuousAt_eq_one` ist diese Aussage instanziiert und trägt ihr `sorry` allein aus diesem Versionsgrund. **Am 2026-09-08, elfter Lauf, ist belegt, daß `fact:cmt` nirgends in nicht-polnischer Allgemeinheit gebraucht wird**, entgegen dem zweiten Absatz von `rem:MZcost`: `set:abstract` (`:2324`) verlangt unter (E3) für den Pfadraum $F$ ausdrücklich eine **polnische** Topologie, `thm:absconv` (`:8393`) ist mit (T0)+(E3) annotiert, `thm:absconvaug` arbeitet auf $F\times G$ mit $G$ polnisch, und `def:weakstrong` (`:9169`) sagt „let $F$ be Polish"; der einzige nicht-polnische Pfadraum des Manuskripts ist $\DE$ unter der Pseudopfad-Topologie, und dort benutzt der Beweis von `thm:MZconv` (`:9314`--`:9400`) **kein** `fact:cmt`, sondern (C1$'$) aus `rem:absconvtopfree`, das gar keine Topologie verlangt — er sagt es selbst („it is verified not by a continuous mapping theorem but by exhibiting the convergence on a common space"). Was der $M_E$-Weg an CMT braucht, ist allein die triviale Hälfte für **überall stetige** Abbildungen, und die hat Mathlib ohne jede Metrik |
+| `fact:cmt` | 3 | Continuous mapping theorem; EK, Corollary 3.1.9 and Co | Roadmap | WeakConvergence M2 — der stetige Fall ist Mathlib in **beiden** Fassungen, für Maße als `FiniteMeasure.tendsto_map_of_tendsto_of_continuous` und für Zufallsvariablen als `MeasureTheory.TendstoInDistribution.continuous_comp` (`MeasureTheory/Function/ConvergenceInDistribution.lean:136`, am 2026-09-01, fünfter Lauf, gefunden); die f.ü.-stetige Fassung fehlt in beiden. M2 steht auf „separabel metrisch", und das ist richtig: EK Cor. 3.1.9 verlangt nicht mehr (am Scan geprüft, 2026-08-31). **Seit dem 2026-09-08, erster Lauf, ist die f.ü.-stetige Fassung bewiesen**: `tendsto_of_measure_setOf_not_continuousAt_eq_zero` geht durch `lake env lean` gegen v4.33.1 und hängt nur an `propext`, `Classical.choice`, `Quot.sound`. Der Beweis ist Portmanteau auf beiden Seiten — `closure (h ⁻¹' F) ⊆ h ⁻¹' F ∪ {x | ¬ ContinuousAt h x}` — und braucht **weniger als „separabel metrisch"**: auf der Quelle `[OpensMeasurableSpace E] [HasOuterApproxClosed E]`, auf dem Ziel `[TopologicalSpace E'] [OpensMeasurableSpace E']` ohne jede Metrik, und keine Separabilität. Die Bildmaße treten als Daten mit ihren definierenden Gleichungen auf, nicht über `ProbabilityMeasure.map` — das ist die eine Konstruktion, deren Signatur sich zwischen v4.33.1 und `upstream/master` unterscheidet, und so elaboriert **eine** Aussage gegen beide; die verpackte Fassung `tendsto_map_of_measure_setOf_continuousAt_eq_one` ist diese Aussage instanziiert und trägt ihr `sorry` allein aus diesem Versionsgrund. **Am 2026-09-08, elfter Lauf, ist belegt, daß `fact:cmt` nirgends in nicht-polnischer Allgemeinheit gebraucht wird**, entgegen dem zweiten Absatz von `rem:MZcost`: `set:abstract` (`:2324`) verlangt unter (E3) für den Pfadraum $F$ ausdrücklich eine **polnische** Topologie, `thm:absconv` (`:8393`) ist mit (T0)+(E3) annotiert, `thm:absconvaug` arbeitet auf $F\times G$ mit $G$ polnisch, und `def:weakstrong` (`:9169`) sagt „let $F$ be Polish"; der einzige nicht-polnische Pfadraum des Manuskripts ist $\DE$ unter der Pseudopfad-Topologie, und dort benutzt der Beweis von `thm:MZconv` (`:9314`--`:9400`) **kein** `fact:cmt`, sondern (C1$'$) aus `rem:absconvtopfree`, das gar keine Topologie verlangt — er sagt es selbst („it is verified not by a continuous mapping theorem but by exhibiting the convergence on a common space"). Was der $M_E$-Weg an CMT braucht, ist allein die triviale Hälfte für **überall stetige** Abbildungen, und die hat Mathlib ohne jede Metrik. **Am 2026-09-17, einundzwanzigster Lauf, wird die f.ü.-stetige Fassung zum ersten Mal verbraucht**: `mpSolution_of_tendsto_of_pContinuous` und `mpSolution_of_tendsto_augmented` (MP M10) ruhen auf `MeasureTheory.TendstoInDistribution.continuousAt_comp` und auf nichts sonst; der Fact ist damit nicht nur abgedeckt, sondern getragen |
 | `fact:kolmogorov` | 3 | Kolmogorov extension; EK, Theorem 4.1.1; eqref{T0} + e | Roadmap | KolmogorovExtension M2 — Gerüst weitgehend in Mathlib, es fehlen σ-Subadditivität und `projectiveLimit` |
 | `fact:stoneweierstrass` | 3 | Stone--Weierstrass for separating classes; EK, Theorem | Roadmap | WeakConvergence M1 — die separierende Hälfte ist Mathlib (`ext_of_forall_mem_subalgebra_integral_eq_of_polish`); die konvergenzbestimmende ist es **auch**, unter Straffheit und bloßer Punktetrennung: `MeasureTheory.ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`, `MeasureTheory/Measure/LevyConvergence.lean:154`, am 2026-09-05 an `upstream/master` geprüft, nicht `deprecated`. Es fehlt allein der Schritt von **starker** Trennung zu Straffheit, in M1 als `isTightMeasureSet_of_stronglySeparatesPoints` angelegt (2026-09-05). Die separierende Hälfte ist seit dem 2026-09-06, drittem Lauf, auch auf unserer Seite bewiesen: `IsSeparating.of_subalgebra`, die Anbindung unseres Prädikats an `ext_of_forall_mem_subalgebra_integral_eq_of_polish`, geht durch `lake env lean`. ~~die konvergenzbestimmende fehlt~~ — dieser Befund stand vom 2026-08-29 bis zum 2026-09-05 und war falsch: gesucht worden war nach unserer Vokabel „konvergenzbestimmend" statt nach der Aussage, die in Mathlib unter `SeparatesPoints` und `IsTightMeasureSet` steht. **Am 2026-09-06, dritter Lauf, belegt, daß dieser Weg in Mathlib nicht bloß vorhanden, sondern tragend ist:** `Measure.ext_of_charFun` (`Measure/CharacteristicFunction/Basic.lean:257` auf `upstream/master` `810b3888`, `:248` in v4.33.1) und `Measure.ext_of_charFunDual` (`:462` bzw. `:453`) — „charakteristische Funktionen trennen endliche Maße" — ruhen über `ext_of_integral_char_eq` (`:103` bzw. `:101`) Zeile für Zeile auf `ext_of_forall_mem_subalgebra_integral_eq_of_pseudoEMetric_complete_countable` (`Measure/FiniteMeasureExt.lean:36`), angewandt auf `separatesPoints_charPoly` (`Analysis/Fourier/BoundedContinuousFunctionChar.lean:155`). Charakteristische Funktionen sind dort **kein eigenes Fundament**, sondern eine Anwendung der punktetrennenden Unteralgebra `charPoly` (`ibid.:141`), und diese ist eine `StarSubalgebra ℂ (V →ᵇ ℂ)` — also genau die Konjugationsabgeschlossenheit, die der Fact für $\K=\C$ verlangt. Keine der vier Deklarationen ist `deprecated`. **Am 2026-09-07, siebzehnter Lauf, sind die Schritte (1) und (3) des fehlenden Beweises bewiesen** und gehen durch `lake env lean` gegen v4.33.1: `tendsto_integral_comp_of_forall_tendsto_integral` (die Pushforwards nach `κ → ℝ` konvergieren schwach, für beliebigen `Fintype κ`) samt `coordAlgebra`, `separatesPoints_coordAlgebra` und `exists_mem_subalgebra_comp_of_mem_coordAlgebra`, dazu die Portmanteau-Folgerung `le_liminf_measure_preimage_of_isOpen` und Schritt (3) selbst, `le_liminf_measure_thickening_of_stronglySeparatesPoints`. **Und die Aussage von `isTightMeasureSet_of_stronglySeparatesPoints` war über beliebigem Filter falsch** — Zeuge `𝓕 = pure 0` auf `ℕ`, `E = ℝ`, `A = ⊤`, `μ n = δ n`, `μ₀ = δ 0`: die Voraussetzung ist dort die einzige Gleichung `∫ g ∂μ 0 = ∫ g ∂μ₀`, die gilt, und die Familie `{δ n}` ist nicht straff. Die fehlende Hypothese ist `Filter.cofinite ≤ 𝓕`, sie steht jetzt in der Aussage, und für Folgen ist sie geschenkt (`Nat.cofinite_eq_atTop`). **Im selben Lauf ist auch das gelockerte Straffheitskriterium EK Thm. 3.2.2 bewiesen**, `isTightMeasureSet_of_forall_exists_isCompact_measure_compl_thickening_le` — eine eigene Mathlib-Lücke, weil die Verdickung eines Kompaktums nur auf einem properen Raum kompakt ist, mit dem Zeugen `⋂ m, cthickening (u m) (K m)` für eine Nullfolge `u m`, der `TotallyBounded.isCompact_of_isClosed` trägt; auch **ohne** Separabilität. ~~Offen bleibt allein die Buchhaltung darüber~~ — **am 2026-09-08, erster Lauf, ist auch sie bewiesen, und damit der Fact ganz**: `isTightMeasureSet_of_stronglySeparatesPoints` und sein Korollar `isConvergenceDetermining_of_stronglySeparatesPoints` — die Aussage des Manuskripts — tragen Beweise, gehen durch `lake env lean` gegen v4.33.1 und hängen laut `#print axioms` allein an `propext`, `Classical.choice` und `Quot.sound`. Meilenstein 1 trägt danach **kein `sorry`** mehr. Die Buchhaltung ist: `μ₀` straff (`isTightMeasureSet_singleton`) gibt `K₀` mit `μ₀ K₀ᶜ ≤ ε/2`, Schritt (3) macht daraus `1 - ε/2 ≤ liminf`, die Hälfte erzeugt die **strikte** Ungleichung gegen `1 - ε`, die `Filter.eventually_lt_of_lt_liminf` verlangt, und die endlich vielen Ausnahmeindizes (endlich nach `Filter.mem_cofinite`) werden durch `Set.Finite.isCompact_biUnion` in `K₀` hineingezogen. Eine Hypothese hat sich dabei **geändert**: statt `[PolishSpace E]` steht `[CompleteSpace E] [SecondCountableTopology E]` — dieselbe Raumklasse (beide zusammen geben `PolishSpace` als Instanz), aber die Vollständigkeit hängt an der **gegebenen** Metrik, und die braucht der Beweis, weil `Metric.thickening` in ihr lebt; `PolishSpace` sagt nur, daß *eine* verträgliche Metrik vollständig ist (Zeuge in M1: $(0,1)$ mit der euklidischen Metrik) |
 | `fact:bp` | 2 | EK, Lemma 3.4.1, Proposition 3.4.2, and Appendix 3, Pr | entbehrlich (2026-08-30) | Kein Beweis des Manuskripts benutzt `cor:bpclosure`, und EK 4.3.1 trägt dort nichts; der bp-Abschluss ist am 2026-08-30 aus MartingaleProblems M2 gestrichen und durch `insert_of_tendsto_of_forall_norm_le` und `submartingale_mpProcess_of_tendsto` ersetzt, M9 trägt die Anwendung (EK 4.3.9/4.3.10) |
@@ -34741,3 +34741,191 @@ auf `propext`, `Classical.choice`, `Quot.sound`:
 4. **Die Entscheidung über das Lake-Target dem Nutzer vorlegen** (Symlink
    `TauCetiRoadmap → TauCeti` oder Umbenennung), unverändert. Es ist eine Frage
    und keine Arbeit.
+
+### 2026-09-17, einundzwanzigster Lauf des Tages — Meilenstein 10 ist fertig, und der Pfadraum darf dabei weder separabel noch metrisch sein
+
+**Vorschlag 1 des Vorlaufs ist eingelöst, Vorschlag 3 gleich mit, und der letzte
+offene Punkt des Meilensteins dazu.** Fünf Deklarationen im Abschnitt
+`AbstractConvergence` von `TauCeti/MartingaleProblems/Suggested.lean`, die Kette
+ohne einen Fehler:
+
+| Datei | rc | Fehler | `sorry` | Sekunden |
+| --- | ---: | ---: | ---: | ---: |
+| `WeakConvergence/Suggested.lean` | 0 | 0 | 0 | 8 |
+| `SkorokhodSpace/Suggested.lean` | 0 | 0 | 0 | 13 |
+| `MartingaleProblems/Suggested.lean` | 0 | 0 | 0 | 66 |
+
+Alle fünf mit `#print axioms` geprüft und alle allein auf `propext`,
+`Classical.choice`, `Quot.sound`: `mpSolution_of_tendsto_of_pContinuous`,
+`IsDetermining.comp_fst`, `mpSolution_of_tendsto_augmented`,
+`integral_tail_le_of_tendstoInDistribution`,
+`unifIntegrable_tail_of_tendstoInDistribution`. 285 hinzugefügte Zeilen in
+`Suggested.lean`, davon etwa die Hälfte Doc-Kommentar.
+
+#### 1. `mpSolution_of_tendsto_of_pContinuous`
+
+Die Voraussetzung (a) von `mpSolution_of_tendsto` — Verteilungskonvergenz der
+**getesteten** reellen Variablen — ist ersetzt durch Verteilungskonvergenz der
+**Pfade** zusammen mit der `P`-Stetigkeit der getesteten Funktionale. Der ganze
+Beweis ist `MeasureTheory.TendstoInDistribution.continuousAt_comp` aus
+`WeakConvergence`, zweimal angewandt: einmal auf `Y₀ r`, einmal auf das getestete
+Inkrement `(Y₀ t - Y₀ s) * Z`. Das ist die Aussage, für die der Nutzer am
+2026-09-17 die Dateigrenze hat fallen lassen, und sie kostet nun vierzehn Zeilen
+Beweis.
+
+**Befund 1: „separabel metrisch" ist zu viel.** Die Roadmap verlangte den
+Pfadraum bisher separabel metrisch. Der Beweis liest davon nichts. Er braucht auf
+`F` genau `HasOuterApproxClosed` über dem `OpensMeasurableSpace`, das
+`MeasureTheory.TendstoInDistribution` ohnehin fordert; jeder
+pseudo-metrisierbare Raum hat es (`instHasOuterApproxClosed`,
+`MeasureTheory/Measure/HasOuterApproxClosed.lean:219`, v4.33.1), also ist der
+separabel-metrische Pfadraum des Manuskripts eine **Instanz** dieser Aussage und
+keine Voraussetzung. Nach der stehenden Regel ist das kein Zusatz, sondern eine
+Berichtigung, und die Stelle ist benannt: die Separabilität kommt in
+`tendsto_of_forall_isClosed_limsup_le'` nicht vor, worauf die
+Portmanteau-Implikation ruht.
+
+**Befund 2, und er ist der wertvollere: die Definition der `P`-Stetigkeit in der
+Roadmap war mehrdeutig, und auf einer der beiden Lesarten falsch.** Die Roadmap
+führte `PContinuous ψ X` als eigenen Begriff: „es gibt ein Borelsches `C` mit
+`P {X ∈ C} = 1`, so daß `ψ` in jedem Punkt von `C` stetig ist **längs
+konvergenter Folgen mit Grenzwert in `C`**". Liest man „Folgen **in** `C`", so
+ist die Bedingung falsch, und der Zeuge ist eine Zeile:
+
+> `F = ℝ`, `C = {0}`, `ψ = Set.indicator {0} 1`, `X ≡ 0`, `X' n ≡ 1/n`. Die
+> einzigen Folgen in `C` sind schließlich konstant, `ψ` wäre also bescheinigt;
+> `X' n → X` in Verteilung; und `ψ (X' n) = 0` geht nicht gegen `ψ X = 1`.
+
+Das Manuskript selbst ist richtig: `def:Pcont` (`:8996`) sagt
+„$\psi(\alpha_m) \to \psi(\alpha)$ whenever $\alpha_m \to \alpha$ **in $F$** with
+$\alpha \in C$" — die approximierenden Punkte laufen über den ganzen Raum, nur
+der Grenzwert liegt in `C`. Das ist Folgenstetigkeit in jedem Punkt von `C`, und
+über einem erstabzählbaren `F` ist es `ContinuousAt`.
+
+**Daraus folgt, daß der Begriff überflüssig ist.** Die Stetigkeitsmenge
+`{x | ContinuousAt ψ x}` ist selbst Borelsch (`measurableSet_of_continuousAt`,
+`MeasureTheory/Constructions/BorelSpace/Basic.lean:252`), also das größte `C`,
+das eine Bescheinigung nennen kann; die Existenzaussage und
+`P {ω | ContinuousAt ψ (X ω)} = 1` sind dieselbe Aussage. Die Formalisierung
+trägt deshalb die zweite Gestalt und **keine Definition**. Das war die
+Entscheidung, die der Vorlauf offengelassen hatte, und sie ist damit begründet
+statt geraten. `ContinuousAt` steht dort und nicht die Folgenfassung, weil keine
+Erstabzählbarkeit von `F` vorausgesetzt wird und das Portmanteau-Argument
+darunter die topologische Stetigkeitsmenge liest.
+
+**Dritte Entscheidung:** die `P`-Stetigkeit wird von den **Produkten** verlangt
+und nicht von den Faktoren. Das ist die schwächere Voraussetzung — Stetigkeit in
+einem Punkt ist unter Differenzen und Produkten stabil, die Umkehrung gilt nicht
+—, und es ist das Produkt, das der Beweis komponiert.
+
+#### 2. `mpSolution_of_tendsto_augmented` und `IsDetermining.comp_fst`
+
+Das ist `thm:absconvaug`: für meßbares `γ : F → G` trägt die Augmentierung
+`x ↦ (x, γ x)` die Ablesungen als zweite Koordinate mit, und die Aussage ist die
+vorige auf `F × G`. Ein Funktional, das nur deshalb unstetig ist, weil es den Pfad
+an vorgeschriebenen Stellen ausliest, wird dort stetig; in der Instanz, die den
+Satz motiviert (`prop:atomaug`), ist `G = E^A` über der abzählbaren Atommenge `A`
+der Uhr und `γ ω = (ω a)_{a ∈ A}`.
+
+`IsDetermining.comp_fst` ist der einzige Baustein: eine bestimmende Menge, auf dem
+augmentierten Raum durch `Z ∘ Prod.fst` gelesen. Beide Aussagen haben denselben
+Inhalt, weil `(Z ∘ Prod.fst) (X ω, γ (X ω)) = Z (X ω)`, und der Beweis ist das
+Auspacken des Bildes.
+
+**Zwei Befunde an der Gestalt.**
+
+* **Es kommt kein `Y₀` auf `F` in den Voraussetzungen vor.** Das Manuskript
+  verlangt Borelsche `Ŷ°` auf dem augmentierten Raum mit `Ŷ° ∘ γ̂ = Y°`; die
+  Formalisierung nimmt die kanonische Fassung von vornherein auf `F × G`, also
+  `Y t ω = Y₀ t (X ω, γ (X ω))`. Das ist dieselbe Forderung ohne den Umweg über
+  `F`, und es spart die Verträglichkeitsgleichung ganz.
+* **`OpensMeasurableSpace` und `HasOuterApproxClosed` werden vom *Produkt*
+  verlangt und nicht von den Faktoren.** Das ist wieder die schwächere
+  Voraussetzung: die Wege von den Faktoren her tragen Nebenbedingungen, die die
+  Aussage nicht liest — `Prod.opensMeasurableSpace`
+  (`MeasureTheory/Constructions/BorelSpace/Basic.lean:405`) verlangt
+  `SecondCountableTopologyEither`, und die **einzige** Instanz von
+  `HasOuterApproxClosed` ist `instHasOuterApproxClosed` für
+  pseudo-metrisierbare Räume, auf `F × G` also beide Faktoren metrisiert.
+
+**Und die Bemerkung des Manuskripts, daß (C1$'$) die Voraussetzung (C1) zurückgibt,
+ist in Lean geprüft** und nicht bloß zitiert: `hweak.continuous_comp continuous_fst`
+(`MeasureTheory/Function/ConvergenceInDistribution.lean:121`, v4.33.1) leistet es,
+und es kostet `BorelSpace F` — die Instanzvoraussetzung, die
+`TendstoInDistribution.continuous_comp` auf dem **Ziel** trägt. Der Zeuge steht in
+`TauCeti/MartingaleProblems/scratch/PCont.lean`, damit der Doc-Kommentar nicht auf
+Ungeprüftes zeigt.
+
+#### 3. Werkzeugbefund: `scripts/check_axioms.py` war seit dem 2026-09-17 blind
+
+Das Skript rief `lake env lean` **ohne** `LEAN_PATH` auf. Seit die Roadmap-Dateien
+einander importieren (`TauCetiRoadmap.WeakConvergence.Suggested`), scheitert damit
+schon die Importzeile — `unknown module prefix 'TauCetiRoadmap'` —, und jede
+Axiomprüfung an `MartingaleProblems` hätte nur diesen einen Fehler gemeldet statt
+eines Befundes über die Deklarationen. Das Skript hängt jetzt `scratch/_lean` an
+`LEAN_PATH` und bricht mit einer benannten Meldung ab, wenn der Baum fehlt.
+`check_suggested.py` war davon nicht betroffen; es setzt den Pfad seit dem
+2026-09-17.
+
+#### 4. Der letzte Punkt von Meilenstein 10: die gleichgradige Integrierbarkeit der **Grenz**familie
+
+`integral_tail_le_of_tendstoInDistribution` sagt, daß eine gleichmäßige
+Schwanzschranke den Grenzübergang in Verteilung übersteht. Die Schwierigkeit
+steht in einem Satz: die Schwanzfunktion `max (‖x‖ - c) 0` ist stetig, aber
+**unbeschränkt**, und Verteilungskonvergenz trägt nur beschränkte stetige
+Testfunktionen. Der Ausweg ist derselbe wie bei
+`integrable_of_tendstoInDistribution`, eine Ebene höher: die beschränkten
+Abschneidungen `min (max (‖x‖ - c) 0) M` werden getragen, jede von ihnen wird auf
+**jedem** Raum vom Schwanz dominiert, und `M → ∞` ist auf der Grenzseite
+dominierte Konvergenz gegen den Schwanz von `ξ₀`.
+
+**Die Abschneidehöhe bleibt dieselbe auf beiden Seiten.** Sie wird von der
+Voraussetzung für die approximierende Familie gewählt und bedient die
+Grenzfamilie unverändert; deshalb ist
+`unifIntegrable_tail_of_tendstoInDistribution` eine Implikation zwischen zwei
+Klauseln **derselben Gestalt** und keine Aussage über das Vergrößern einer Höhe.
+Das war vor dem Beweis nicht klar — der naheliegende Verdacht war, daß der
+Grenzwert eine höhere Abschneidung braucht.
+
+**Die Integrierbarkeit der Grenzwerte ist keine Voraussetzung, sondern Teil der
+Konklusion.** Die gleichmäßige Schranke bei `ε = 1` gibt `∫ ‖ξ r n‖ ≤ c₁ + 1`
+gleichmäßig in `n` und `r`, und `integrable_of_tendstoInDistribution` macht
+daraus die Integrierbarkeit jedes Grenzwerts. Es ist dieselbe Rechnung, die
+`mpSolution_of_tendsto` inline führt; sie steht jetzt an einer Stelle.
+
+#### Was an Meilenstein 10 jetzt noch offen ist
+
+**Von den aufgeführten Punkten keiner.** Offen bleiben die Akzeptanzbeispiele —
+die reskalierte Markovkette von `ex:invariance` und die Arbeitsteilung zwischen
+den beiden Korollaren an `ex:atomicdiscontinuity` —, und die sind Anwendungen,
+keine Sätze des Meilensteins.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Das Akzeptanzbeispiel `ex:invariance` in Lean**, und zwar der Teil, der die
+   Sätze wirklich prüft. *Aussage:* für eine Markovkette `Ξ n` mit
+   Einschrittkern `P n` auf `ℝ^d`, `X n t = Ξ n ⌊n t⌋` und
+   `Y n t = f (Ξ n ⌊n t⌋) - ∑_{j < ⌊n t⌋} (P n f - f) (Ξ n j)` ist Voraussetzung
+   (c) von `mpSolution_of_tendsto` erfüllt, **weil jedes `Y n` ein exaktes
+   Martingal ist** — die getesteten Inkremente verschwinden nicht im Limes,
+   sondern schon für jedes feste `n`. *Worauf es ruht:* auf der Doob-Zerlegung
+   längs des eingebetteten Gitters, also auf `Martingale` über `ℕ` und nichts
+   Neuem. *Warum jetzt:* Meilenstein 10 hat nach diesem Lauf **fünf** Sätze und
+   **kein** Beispiel; die Roadmap sagt selbst, das Beispiel instanziiere „jede
+   Voraussetzung des Meilensteins auf einmal", und solange es fehlt, ist nicht
+   belegt, daß die fünf Voraussetzungen gemeinsam erfüllbar sind. *Was zuerst zu
+   entscheiden ist:* ob der Pfadraum `F` als `ℝ≥0 → ℝ^d` roh genommen wird — die
+   Sätze verlangen keine Topologie für (c), und (a) ist über den
+   Sprungpfad-Charakter der `X n` zugänglich — oder ob dafür `SkorokhodSpace`
+   gebraucht wird. Die erste Wahl ist die, die die Roadmap als Prüfstein
+   ausdrücklich nennt („`F` a bare measurable space").
+2. **Die Doppelung `IsSeparating` auflösen**, unverändert Vorschlag 2 der beiden
+   Vorläufe und mit der dort gemessenen Größe: die `WeakConvergence`-Fassung von
+   `ℝ` auf `RCLike` heben, sieben Aussagen mitziehen, die Nachbildung in
+   `MartingaleProblems` streichen. Ein eigener Lauf. Seit die Kette baut, ist es
+   nicht mehr nur Kosmetik: `MartingaleProblems` sieht die
+   `WeakConvergence`-Fassung jetzt wirklich, und zwei gleichnamige Begriffe in
+   einem Namensraum sind eine Falle für den Leser der Einreichung.
+3. **Die Entscheidung über das Lake-Target dem Nutzer vorlegen** (Symlink
+   `TauCetiRoadmap → TauCeti` oder Umbenennung des Verzeichnisses), unverändert.
+   Es ist eine Frage und keine Arbeit.

@@ -44,8 +44,19 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-17 (twentieth run of that day), over the **whole** file and without an error.  Every
+2026-09-17 (twenty-first run of that day), over the **whole** file and without an error.  Every
 declaration elaborates, and **no declaration carries `sorry`**.
+
+The twenty-first run of 2026-09-17 finished Milestone 10.  Its two corollaries:
+`mpSolution_of_tendsto_of_pContinuous`, which replaces the convergence in
+distribution of the tested variables by that of the **paths** together with
+`P`-continuity of the functionals, and `mpSolution_of_tendsto_augmented`, which
+is the same statement on an augmented path space `F × G`.  The path space is
+neither separable nor metric in either: what the continuous mapping theorem reads
+is `HasOuterApproxClosed`, which every pseudo-metrizable space has.  And its last
+point, the uniform integrability of the **limit** family under `P`:
+`integral_tail_le_of_tendstoInDistribution` and
+`unifIntegrable_tail_of_tendstoInDistribution`.
 
 The twentieth run of 2026-09-17 removed a duplication rather than adding a
 statement: convergence in distribution is now
@@ -5951,6 +5962,279 @@ theorem mpSolution_of_tendsto {𝓧 : Set (ι → Ω → 𝕂)} {𝓧₀ : ι �
   simp_rw [hsplit] at hzero
   rw [integral_sub hit₀ his₀, sub_eq_zero] at hzero
   exact hzero
+
+/-- **The convergence theorem with weak convergence of the paths in place of
+hypothesis (a).**  The convergence in distribution of the tested real variables is
+replaced by convergence in distribution of the **paths** together with
+`P`-continuity of the functionals that are tested.
+
+`P`-continuity at `X` is written `P {ω | ContinuousAt ψ (X ω)} = 1` and gets no
+definition of its own.  The manuscript's `def:Pcont` asks for a Borel `C` with
+`P {X ∈ C} = 1` such that `ψ (α m) → ψ α` whenever `α m → α` in `F` with
+`α ∈ C`: the approximating points run over the whole of `F` and only the limit is
+confined to `C`, so the condition is sequential continuity at each point of `C`,
+and the certifying set adds nothing, the continuity set `{x | ContinuousAt ψ x}`
+being itself Borel by `measurableSet_of_continuousAt` and therefore the largest
+`C` any certificate can name.  Confining the approximating points to `C` as well
+is a different condition, and a false one: `F = ℝ`, `C = {0}`,
+`ψ = Set.indicator {0} 1`, `X ≡ 0` and `X' n ≡ 1/n` would certify `ψ`, while
+`ψ (X' n) = 0` does not converge to `ψ X = 1`.
+
+**`F` is neither separable nor metric.**  What the continuous mapping theorem
+reads on the path space is `HasOuterApproxClosed F` on top of the
+`OpensMeasurableSpace F` that `TendstoInDistribution` asks for anyway; every
+pseudo-metrizable space has it (`instHasOuterApproxClosed`,
+`MeasureTheory/Measure/HasOuterApproxClosed.lean`), so the separable metric path
+space of the manuscript is an instance of this and not a hypothesis of it.
+`ContinuousAt` rather than the sequential form is what is carried, precisely
+because no first countability of `F` is assumed and the portmanteau argument
+underneath reads the topological continuity set.
+
+**The continuity is asked of the products and not of the factors.**  Continuity
+at a point is stable under differences and products, so continuity of `Y₀ t`,
+`Y₀ s` and `Z` at `X ω` gives continuity of `(Y₀ t - Y₀ s) * Z` there; the
+converse fails, and it is the product that the proof composes.
+
+The whole proof is `MeasureTheory.TendstoInDistribution.continuousAt_comp` of the
+roadmap **WeakConvergence**, applied once to `Y₀ r` and once to the tested
+increment. -/
+theorem mpSolution_of_tendsto_of_pContinuous
+    [TopologicalSpace F] [OpensMeasurableSpace F] [HasOuterApproxClosed F]
+    {𝓧 : Set (ι → Ω → 𝕂)} {𝓧₀ : ι → Set (F → 𝕂)}
+    {𝓩 : ι → Set (F → ℝ)} {X : Ω → F} {𝓕 : Filtration ι m} {P : Measure Ω}
+    [IsProbabilityMeasure P] {D : Set ι} {Ω' : ℕ → Type*}
+    {m' : ∀ n, MeasurableSpace (Ω' n)} {P' : ∀ n, @Measure (Ω' n) (m' n)}
+    [∀ n, IsProbabilityMeasure (P' n)]
+    {X' : ∀ n, Ω' n → F}
+    (hX : Measurable X) (hX' : ∀ n, @Measurable (Ω' n) F (m' n) _ (X' n))
+    (h𝓩 : ∀ r : ι, ∀ Z ∈ 𝓩 r, Measurable Z ∧ ∃ b : ℝ, ∀ x, ‖Z x‖ ≤ b)
+    (hdet : IsDetermining 𝓩 𝓧 X 𝓕)
+    (hweak : TendstoInDistribution X' atTop X P' P)
+    (hY : ∀ Y ∈ 𝓧, ∃ Y₀ : ι → F → 𝕂, (∀ t, Y₀ t ∈ 𝓧₀ t) ∧
+      (∀ t, StronglyMeasurable (Y₀ t)) ∧ (∀ t ω, Y t ω = Y₀ t (X ω)) ∧
+      ∀ t ∈ D,
+        (∀ (n : ℕ), ∀ r ∈ D ∩ Set.Iic t, Integrable (fun ω ↦ Y₀ r (X' n ω)) (P' n)) ∧
+        (∀ r ∈ D ∩ Set.Iic t, P {ω | ContinuousAt (Y₀ r) (X ω)} = 1) ∧
+        (∀ ε : ℝ, 0 < ε → ∃ c : ℝ, 0 < c ∧ ∀ (n : ℕ), ∀ r ∈ D ∩ Set.Iic t,
+            ∫ ω, max (‖Y₀ r (X' n ω)‖ - c) 0 ∂(P' n) ≤ ε) ∧
+        ∀ s ∈ D ∩ Set.Iic t, ∀ Z ∈ 𝓩 s,
+          P {ω | ContinuousAt (fun x ↦ (Y₀ t x - Y₀ s x) * (Z x : 𝕂)) (X ω)} = 1 ∧
+          Tendsto (fun n ↦ ∫ ω, (Y₀ t (X' n ω) - Y₀ s (X' n ω)) * (Z (X' n ω) : 𝕂)
+              ∂(P' n)) atTop (𝓝 0)) :
+    ∀ Y ∈ 𝓧, ∀ s ∈ D, ∀ t ∈ D, s ≤ t → P[Y t | 𝓕 s] =ᵐ[P] Y s := by
+  refine mpSolution_of_tendsto (𝓧₀ := 𝓧₀) (P' := P') (X' := X') hX hX' h𝓩 hdet
+    fun Y hYmem ↦ ?_
+  obtain ⟨Y₀, hY₀mem, hY₀meas, hYeq, hmain⟩ := hY Y hYmem
+  refine ⟨Y₀, hY₀mem, hY₀meas, hYeq, fun t ht ↦ ?_⟩
+  obtain ⟨hintn, hcont, hui, hZpart⟩ := hmain t ht
+  refine ⟨hintn, fun r hr ↦ hweak.continuousAt_comp (hY₀meas r).measurable (hcont r hr),
+    hui, fun s hs Z hZ ↦ ?_⟩
+  obtain ⟨hcZ, hzero⟩ := hZpart s hs Z hZ
+  obtain ⟨hZm, -⟩ := h𝓩 s Z hZ
+  have hZk : Measurable (fun x : F ↦ ((Z x : ℝ) : 𝕂)) :=
+    RCLike.continuous_ofReal.measurable.comp hZm
+  exact ⟨hweak.continuousAt_comp
+    (((hY₀meas t).measurable.sub (hY₀meas s).measurable).mul hZk) hcZ, hzero⟩
+
+/-- A determining set read on an augmented path space.  `Z ∘ Prod.fst` evaluated at
+`(X ω, γ (X ω))` is `Z (X ω)`, so the two statements have the same content and the
+proof is the image being unfolded. -/
+theorem IsDetermining.comp_fst {G : Type*} [MeasurableSpace G]
+    {𝓩 : ι → Set (F → ℝ)} {𝓧 : Set (ι → Ω → 𝕂)} {X : Ω → F} {𝓕 : Filtration ι m}
+    (h : IsDetermining 𝓩 𝓧 X 𝓕) (γ : F → G) :
+    IsDetermining (fun s ↦ (fun Z : F → ℝ ↦ Z ∘ Prod.fst) '' 𝓩 s) 𝓧
+      (fun ω ↦ (X ω, γ (X ω))) 𝓕 := by
+  intro P _ Y hYmem s t hst his hit hZ
+  exact h P Y hYmem s t hst his hit fun Z hZmem ↦ hZ (Z ∘ Prod.fst) ⟨Z, hZmem, rfl⟩
+
+/-- **The augmented form.**  A functional discontinuous only because it reads the
+path at prescribed places becomes continuous once those readings are carried along
+as a second coordinate.  `γ : F → G` is the record of them, `x ↦ (x, γ x)` the
+augmentation, and the statement is the previous one on `F × G`.
+
+This is the manuscript's `thm:absconvaug`.  In the instance that motivates it
+(`prop:atomaug`), `G = E^A` for the countable set `A` of atoms of the clock and
+`γ ω = (ω a)_{a ∈ A}`: the atomic part of the compensator is then a uniformly
+convergent series of coordinate evaluations on `G` and is continuous
+**everywhere** on `F × G`, while on `F` alone it is discontinuous at every path
+jumping at an atom.  That is `ex:atomicdiscontinuity`.
+
+**There is no `Y₀` on `F` in the hypotheses.**  The manuscript asks for Borel
+`Ŷ°` on the augmented space with `Ŷ° ∘ γ̂ = Y°`; here the canonical version is
+simply taken on `F × G` from the start, `Y t ω = Y₀ t (X ω, γ (X ω))`, which is
+the same requirement with the detour through `F` removed.
+
+**The augmented convergence hypothesis is strictly stronger than the plain one,
+and that is the trade.**  `TendstoInDistribution (fun n ω ↦ (X' n ω, γ (X' n ω)))`
+gives back `TendstoInDistribution X'` by
+`MeasureTheory.TendstoInDistribution.continuous_comp continuous_fst`
+(`MeasureTheory/Function/ConvergenceInDistribution.lean`), at the cost of
+`BorelSpace F`; the converse fails, and `ex:atomicdiscontinuity` is the witness —
+`ω n = indicator (Set.Ici (1 + 1/n)) 1` converges to `indicator (Set.Ici 1) 1` in
+`J₁` while the values at `1` converge to the wrong limit.
+
+`OpensMeasurableSpace` and `HasOuterApproxClosed` are asked of the **product**
+rather than of the factors.  That is the weaker hypothesis: the routes from the
+factors carry side conditions that the statement does not read --
+`Prod.opensMeasurableSpace` needs `SecondCountableTopologyEither`, and the only
+instance of `HasOuterApproxClosed` is `instHasOuterApproxClosed` for
+pseudo-metrizable spaces, so getting it on `F × G` means metrizing both. -/
+theorem mpSolution_of_tendsto_augmented
+    [TopologicalSpace F]
+    {G : Type*} [MeasurableSpace G] [TopologicalSpace G]
+    [OpensMeasurableSpace (F × G)] [HasOuterApproxClosed (F × G)]
+    {𝓧 : Set (ι → Ω → 𝕂)} {𝓧₀ : ι → Set (F × G → 𝕂)}
+    {𝓩 : ι → Set (F → ℝ)} {X : Ω → F} {𝓕 : Filtration ι m} {P : Measure Ω}
+    [IsProbabilityMeasure P] {D : Set ι} {Ω' : ℕ → Type*}
+    {m' : ∀ n, MeasurableSpace (Ω' n)} {P' : ∀ n, @Measure (Ω' n) (m' n)}
+    [∀ n, IsProbabilityMeasure (P' n)]
+    {X' : ∀ n, Ω' n → F} {γ : F → G}
+    (hX : Measurable X) (hX' : ∀ n, @Measurable (Ω' n) F (m' n) _ (X' n))
+    (hγ : Measurable γ)
+    (h𝓩 : ∀ r : ι, ∀ Z ∈ 𝓩 r, Measurable Z ∧ ∃ b : ℝ, ∀ x, ‖Z x‖ ≤ b)
+    (hdet : IsDetermining 𝓩 𝓧 X 𝓕)
+    (hweak : TendstoInDistribution (fun n ω ↦ (X' n ω, γ (X' n ω))) atTop
+      (fun ω ↦ (X ω, γ (X ω))) P' P)
+    (hY : ∀ Y ∈ 𝓧, ∃ Y₀ : ι → F × G → 𝕂, (∀ t, Y₀ t ∈ 𝓧₀ t) ∧
+      (∀ t, StronglyMeasurable (Y₀ t)) ∧ (∀ t ω, Y t ω = Y₀ t (X ω, γ (X ω))) ∧
+      ∀ t ∈ D,
+        (∀ (n : ℕ), ∀ r ∈ D ∩ Set.Iic t,
+          Integrable (fun ω ↦ Y₀ r (X' n ω, γ (X' n ω))) (P' n)) ∧
+        (∀ r ∈ D ∩ Set.Iic t, P {ω | ContinuousAt (Y₀ r) (X ω, γ (X ω))} = 1) ∧
+        (∀ ε : ℝ, 0 < ε → ∃ c : ℝ, 0 < c ∧ ∀ (n : ℕ), ∀ r ∈ D ∩ Set.Iic t,
+            ∫ ω, max (‖Y₀ r (X' n ω, γ (X' n ω))‖ - c) 0 ∂(P' n) ≤ ε) ∧
+        ∀ s ∈ D ∩ Set.Iic t, ∀ Z ∈ 𝓩 s,
+          P {ω | ContinuousAt (fun p ↦ (Y₀ t p - Y₀ s p) * (Z p.1 : 𝕂))
+              (X ω, γ (X ω))} = 1 ∧
+          Tendsto (fun n ↦ ∫ ω,
+              (Y₀ t (X' n ω, γ (X' n ω)) - Y₀ s (X' n ω, γ (X' n ω)))
+                * (Z (X' n ω) : 𝕂) ∂(P' n)) atTop (𝓝 0)) :
+    ∀ Y ∈ 𝓧, ∀ s ∈ D, ∀ t ∈ D, s ≤ t → P[Y t | 𝓕 s] =ᵐ[P] Y s := by
+  refine mpSolution_of_tendsto_of_pContinuous (𝓧₀ := 𝓧₀) (P' := P')
+    (X' := fun n ω ↦ (X' n ω, γ (X' n ω)))
+    (hX.prodMk (hγ.comp hX)) (fun n ↦ (hX' n).prodMk (hγ.comp (hX' n)))
+    ?_ (hdet.comp_fst γ) hweak ?_
+  · rintro r - ⟨Z, hZ, rfl⟩
+    obtain ⟨hZm, b, hb⟩ := h𝓩 r Z hZ
+    exact ⟨hZm.comp measurable_fst, b, fun p ↦ hb _⟩
+  · intro Y hYmem
+    obtain ⟨Y₀, h1, h2, h3, h4⟩ := hY Y hYmem
+    refine ⟨Y₀, h1, h2, h3, fun t ht ↦ ?_⟩
+    obtain ⟨hint, hcont, hui, hZpart⟩ := h4 t ht
+    refine ⟨hint, hcont, hui, ?_⟩
+    rintro s hs - ⟨Z, hZ, rfl⟩
+    exact hZpart s hs Z hZ
+
+/-- **A uniform tail bound survives the passage to the limit in distribution.**
+If every `ξ n` has its tail above level `c` of integral at most `ε`, then so does
+the limit.
+
+The tail `max (‖x‖ - c) 0` is continuous but **unbounded**, so convergence in
+distribution does not carry its integral directly; the bounded continuous
+truncations `min (max (‖x‖ - c) 0) M` do carry it, each of them is dominated by
+the tail on every space, and the passage `M → ∞` on the limit side is dominated
+convergence against the tail of `ξ₀`.  That is the same device as in
+`integrable_of_tendstoInDistribution`, one level up.
+
+`Integrable ξ₀ P` is a hypothesis and not a conclusion here: the statement is
+about a Bochner integral of the tail of `ξ₀`, which is what makes it a
+**bound** rather than a `⊤`.  `unifIntegrable_tail_of_tendstoInDistribution`
+discharges it from the uniform bound itself. -/
+theorem integral_tail_le_of_tendstoInDistribution {Ω' : ℕ → Type*}
+    {m' : ∀ n, MeasurableSpace (Ω' n)}
+    {P' : ∀ n, @Measure (Ω' n) (m' n)} [∀ n, IsProbabilityMeasure (P' n)]
+    {ξ : ∀ n, Ω' n → 𝕂} {P : Measure Ω} [IsProbabilityMeasure P] {ξ₀ : Ω → 𝕂}
+    {c ε : ℝ} (hc : 0 ≤ c)
+    (hlaw : TendstoInDistribution ξ atTop ξ₀ P' P)
+    (hint : ∀ n, Integrable (ξ n) (P' n)) (hint₀ : Integrable ξ₀ P)
+    (h : ∀ n, ∫ ω, max (‖ξ n ω‖ - c) 0 ∂(P' n) ≤ ε) :
+    ∫ ω, max (‖ξ₀ ω‖ - c) 0 ∂P ≤ ε := by
+  set φ : ℕ → 𝕂 → ℝ := fun M x ↦ min (max (‖x‖ - c) 0) (M : ℝ) with hφdef
+  have hφc : ∀ M : ℕ, Continuous (φ M) := fun M ↦
+    ((continuous_norm.sub continuous_const).max continuous_const).min continuous_const
+  have hφn : ∀ (M : ℕ) (x : 𝕂), 0 ≤ φ M x := fun M x ↦
+    le_min (le_max_right _ _) (Nat.cast_nonneg M)
+  have hφb : ∀ M : ℕ, ∃ b, ∀ x : 𝕂, ‖φ M x‖ ≤ b := fun M ↦
+    ⟨(M : ℝ), fun x ↦ by
+      rw [Real.norm_eq_abs, abs_of_nonneg (hφn M x)]; exact min_le_right _ _⟩
+  have hφi : ∀ (n M : ℕ), Integrable (fun ω ↦ φ M (ξ n ω)) (P' n) := by
+    intro n M
+    refine (integrable_tail (hint n) hc).mono'
+      ((hφc M).comp_aestronglyMeasurable (hint n).aestronglyMeasurable)
+      (Filter.Eventually.of_forall fun ω ↦ ?_)
+    rw [Real.norm_eq_abs, abs_of_nonneg (hφn M _)]
+    exact min_le_left _ _
+  have hle : ∀ M : ℕ, ∫ ω, φ M (ξ₀ ω) ∂P ≤ ε := by
+    intro M
+    refine le_of_tendsto (hlaw.tendsto_integral_comp (hφc M) (hφb M))
+      (Filter.Eventually.of_forall fun n ↦ ?_)
+    exact le_trans (integral_mono (hφi n M)
+      (integrable_tail (hint n) hc) fun ω ↦ min_le_left _ _) (h n)
+  have htail₀ : Integrable (fun ω ↦ max (‖ξ₀ ω‖ - c) 0) P := integrable_tail hint₀ hc
+  have hconv : Tendsto (fun M : ℕ ↦ ∫ ω, φ M (ξ₀ ω) ∂P) atTop
+      (𝓝 (∫ ω, max (‖ξ₀ ω‖ - c) 0 ∂P)) := by
+    refine tendsto_integral_of_dominated_convergence (fun ω ↦ max (‖ξ₀ ω‖ - c) 0)
+      (fun M ↦ (hφc M).comp_aestronglyMeasurable hint₀.aestronglyMeasurable) htail₀
+      (fun M ↦ Filter.Eventually.of_forall fun ω ↦ ?_) (Filter.Eventually.of_forall fun ω ↦ ?_)
+    · rw [Real.norm_eq_abs, abs_of_nonneg (hφn M _)]; exact min_le_left _ _
+    · refine tendsto_atTop_of_eventually_const (i₀ := ⌈max (‖ξ₀ ω‖ - c) 0⌉₊) fun i hi ↦ ?_
+      exact min_eq_left ((Nat.le_ceil _).trans (by exact_mod_cast hi))
+  exact le_of_tendsto hconv (Filter.Eventually.of_forall hle)
+
+/-- **Uniform integrability of the limit family**, in the tail form that
+`mpSolution_of_tendsto` carries, and with the integrability of the limits as part
+of the conclusion.
+
+This is what the passage from `D` to the whole index runs on: the martingale
+identity along `D` is transported to an index approached from the right inside
+`D` by a Vitali argument, and the family that has to be uniformly integrable
+there is the **limit** family under `P`, not the approximating one.
+
+Integrability of each `ξ₀ r` is not a hypothesis.  The uniform bound at `ε = 1`
+gives `∫ ‖ξ r n‖ ≤ c₁ + 1` uniformly in `n` and `r`, and
+`integrable_of_tendstoInDistribution` turns that into integrability of the
+limit; this is the same computation that `mpSolution_of_tendsto` performs
+inline.
+
+The truncation level is the **same** on both sides: it is chosen by the
+hypothesis for the approximating family, and
+`integral_tail_le_of_tendstoInDistribution` shows it serves the limit as well.
+No level has to be enlarged, which is why the statement is an implication
+between two clauses of the same shape. -/
+theorem unifIntegrable_tail_of_tendstoInDistribution {ι' : Type*} {S : Set ι'}
+    {Ω' : ℕ → Type*} {m' : ∀ n, MeasurableSpace (Ω' n)}
+    {P' : ∀ n, @Measure (Ω' n) (m' n)} [∀ n, IsProbabilityMeasure (P' n)]
+    {ξ : ι' → ∀ n, Ω' n → 𝕂} {P : Measure Ω} [IsProbabilityMeasure P] {ξ₀ : ι' → Ω → 𝕂}
+    (hlaw : ∀ r ∈ S, TendstoInDistribution (ξ r) atTop (ξ₀ r) P' P)
+    (hint : ∀ (n : ℕ), ∀ r ∈ S, Integrable (ξ r n) (P' n))
+    (hui : ∀ ε : ℝ, 0 < ε → ∃ c : ℝ, 0 < c ∧ ∀ (n : ℕ), ∀ r ∈ S,
+      ∫ ω, max (‖ξ r n ω‖ - c) 0 ∂(P' n) ≤ ε) :
+    (∀ r ∈ S, Integrable (ξ₀ r) P) ∧
+      ∀ ε : ℝ, 0 < ε → ∃ c : ℝ, 0 < c ∧ ∀ r ∈ S,
+        ∫ ω, max (‖ξ₀ r ω‖ - c) 0 ∂P ≤ ε := by
+  obtain ⟨c₁, hc₁, hc₁n⟩ := hui 1 one_pos
+  have hKbound : ∀ (n : ℕ), ∀ r ∈ S, ∫ ω, ‖ξ r n ω‖ ∂(P' n) ≤ c₁ + 1 := by
+    intro n r hr
+    have hi := hint n r hr
+    have hle : ∀ ω, ‖ξ r n ω‖ ≤ c₁ + max (‖ξ r n ω‖ - c₁) 0 := by
+      intro ω
+      rcases le_or_gt (‖ξ r n ω‖ - c₁) 0 with hx | hx
+      · rw [max_eq_right hx]; linarith
+      · rw [max_eq_left hx.le]; linarith
+    calc ∫ ω, ‖ξ r n ω‖ ∂(P' n)
+        ≤ ∫ ω, (c₁ + max (‖ξ r n ω‖ - c₁) 0) ∂(P' n) :=
+          integral_mono hi.norm ((integrable_const c₁).add (integrable_tail hi hc₁.le)) hle
+      _ = c₁ + ∫ ω, max (‖ξ r n ω‖ - c₁) 0 ∂(P' n) := by
+          rw [integral_add (integrable_const c₁) (integrable_tail hi hc₁.le)]
+          simp
+      _ ≤ c₁ + 1 := by linarith [hc₁n n r hr]
+  have hint₀ : ∀ r ∈ S, Integrable (ξ₀ r) P := fun r hr ↦
+    integrable_of_tendstoInDistribution (hlaw r hr) (fun n ↦ hint n r hr)
+      (fun n ↦ hKbound n r hr)
+  refine ⟨hint₀, fun ε hε ↦ ?_⟩
+  obtain ⟨c, hc, hcn⟩ := hui ε hε
+  exact ⟨c, hc, fun r hr ↦ integral_tail_le_of_tendstoInDistribution hc.le (hlaw r hr)
+    (fun n ↦ hint n r hr) (hint₀ r hr) fun n ↦ hcn n r hr⟩
 
 end AbstractConvergence
 
