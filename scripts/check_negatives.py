@@ -238,6 +238,15 @@ CLAIMS_TODO8 = [
      'nicht vor.',
      'protected (lemma|theorem) (iSup|biSup)',
      ['Mathlib/Probability/'], []),
+    ('unifintegrable-distribution',
+     'TODO.md Punkt 8, dreiundzwanzigste Lücke',
+     'Die gleichgradige Integrierbarkeit über einer Folge verschiedener Räume '
+     'zusammen mit der Verteilungskonvergenz gibt es nicht: `UnifIntegrable` '
+     'kommt in `ConvergenceInDistribution.lean` nicht vor, und die '
+     'Erwartungswertkonvergenz aus Verteilungskonvergenz plus gleichgradiger '
+     'Integrierbarkeit steht in keiner Fassung da.',
+     'UnifIntegrable|unifIntegrable',
+     ['Mathlib/MeasureTheory/Function/ConvergenceInDistribution.lean'], []),
     ('martingale-setIntegral-weight',
      'MartingaleProblems/README.md, Meilenstein 5',
      'Ein Martingal gegen eine **beschränkte** Gewichtsfunktion getestet hat in '

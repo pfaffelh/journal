@@ -9131,13 +9131,14 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
 * `PContinuous ψ X`, for `ψ : F → ℝ` Borel: there is a Borel `C` with
   `P {X ∈ C} = 1` such that `ψ` is continuous at every point of `C` along
   convergent sequences with limit in `C`.
-* `mpSolution_of_tendsto`: assume `𝓧` is canonical for `X` with determining set
-  `𝓩°`, and that for every `Y ∈ 𝓧` with canonical version `Y°`, every `t ∈ D`,
-  `s ∈ D ∩ Iic t` and `Z ∈ 𝓩° s`:
-  (a) the real random variables `Y° r (X n)` for `r ∈ D ∩ Iic t` and
-  `(Y° t - Y° s) * Z (X n)` converge in distribution to their counterparts under
-  `X`; (b) `{Y° r (X n) | r ∈ D ∩ Iic t, n}` is uniformly integrable;
-  (c) `𝔼^{P n}[(Y° t (X n) - Y° s (X n)) * Z (X n)] → 0`.
+* `mpSolution_of_tendsto`: assume `X` and every `X n` measurable, every member of
+  every `𝓩° r` bounded and measurable, `𝓧` canonical for `X` with determining set
+  `𝓩°`, and that for every `Y ∈ 𝓧` with canonical version `Y°` and every `t ∈ D`:
+  every `Y° r (X n)` with `r ∈ D ∩ Iic t` is integrable; (a) the real random
+  variables `Y° r (X n)` for `r ∈ D ∩ Iic t` converge in distribution to their
+  counterparts under `X`, and so does `(Y° t - Y° s) * Z (X n)` for every
+  `s ∈ D ∩ Iic t` and `Z ∈ 𝓩° s`; (b) `{Y° r (X n) | r ∈ D ∩ Iic t, n}` is
+  uniformly integrable; (c) `𝔼^{P n}[(Y° t (X n) - Y° s (X n)) * Z (X n)] → 0`.
   Then `P[Y t | 𝓕 s] =ᵐ Y s` for all `s ≤ t` in `D`; and when `ι` carries the
   order topology and is first countable, every index is either in `D` or
   approached from the right inside `D`, and every `Y ∈ 𝓧` is right continuous,
@@ -9147,6 +9148,49 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   State hypothesis (a) in this form. It carries no topology on `F`: it is a
   statement about finitely many real random variables, and the versions where
   `F` is metrizable and the coordinates are continuous are corollaries.
+  **In Lean** on 2026-09-17, nineteenth run.
+  **Items (a) and (b) are quantified outside `∀ Z ∈ 𝓩° s`, and that is forced.**
+  They mention `Y°` and not `Z`, and they are what produces `Integrable (Y r) P`,
+  which `IsDetermining` asks for whether or not `𝓩° s` has a member; an empty
+  `𝓩° s` makes the orthogonality hypothesis of `IsDetermining` vacuous but leaves
+  its integrability hypothesis standing, so an integrability hypothesis hidden
+  under `∀ Z` would have no source there.
+  **Uniform integrability is written by the tails**
+  `∫ max (‖Y° r (X n)‖ - c) 0 ≤ ε` and not by the truncated integrals
+  `∫_{c ≤ ‖Y° r (X n)‖} ‖Y° r (X n)‖ ≤ ε`. The tail form is implied by the other,
+  since `max (‖x‖ - c) 0 ≤ {y | c ≤ ‖y‖}.indicator ‖·‖ x` pointwise, so it is the
+  weaker hypothesis; and it asks no measurability of the sublevel sets. It is
+  also what the proof reads.
+* `radialTrunc`, the bounded continuous approximation to the identity that the
+  previous item runs on: `radialTrunc c x = (c / max c ‖x‖) • x`, the retraction
+  of a normed space onto the closed ball of radius `c`, with
+  `‖x - radialTrunc c x‖ ≤ max (‖x‖ - c) 0`. Convergence in distribution carries
+  the integrals of **bounded** continuous functions, and the integrals that have
+  to converge are those of the variables themselves; the truncation is the
+  bridge, and the tail is the error it commits. Written without a case
+  distinction so that continuity is `Continuous.div` and the denominator, bounded
+  below by `c`, is never zero. **In Lean** on 2026-09-17, nineteenth run, with
+  `integrable_tail`, `integral_tail_antitone` and
+  `abs_integral_sub_integral_radialTrunc_le`.
+* `integral_eq_zero_of_tendstoLaw`, the analytic core: for variables on different
+  probability spaces converging in distribution, uniformly integrable by the
+  tails, integrable on each space and with vanishing integrals, the limit has
+  vanishing integral. The `𝕂`-valued statement is obtained by testing against
+  `RCLike.reCLM` and `RCLike.imCLM`, since `TendstoLaw` tests against **real**
+  functions; the truncation level is chosen for the sequence by the uniform
+  integrability and for the limit by `tendsto_integral_tail`, and the larger of
+  the two serves both sides. Mathlib's `MeasureTheory.UnifIntegrable` is a
+  predicate about one fixed measure and does not apply across a sequence of
+  spaces. **In Lean** on 2026-09-17, nineteenth run.
+* `integrable_of_tendstoLaw`: a family with a uniform `L¹` bound has an
+  integrable limit. This is the half of (b) that is spent before any martingale
+  identity, and nothing else in the statement makes `Y s` and `Y t` integrable.
+  The bound travels by the bounded continuous truncations `min ‖x‖ M`, and the
+  passage `M → ∞` is monotone convergence. **In Lean** on 2026-09-17, nineteenth
+  run.
+* `tendsto_integral_tail`: the tails of a single integrable function vanish. It
+  is what lets the limit carry the same truncation level as the sequence, and it
+  is dominated convergence. **In Lean** on 2026-09-17, nineteenth run.
 * `mpSolution_of_tendsto_of_pContinuous`: the corollary in which (a) is replaced
   by `X n → X` weakly on a separable metric `F` together with `P`-continuity of
   `Y° t` and `Y° t * Z`. Uses the continuous mapping theorem of the roadmap

@@ -171,7 +171,7 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Zweiundzwanzig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Dreiundzwanzig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
 Alle zweiundzwanzig beim Beweisen aufgefallen, und die ersten vier sind kleine,
 in sich abgeschlossene Beiträge. Sie gehören thematisch zu
@@ -745,6 +745,36 @@ seinem Dateikopf: es prüft Zeichenketten, nicht Aussagen.
   Für Mathlib wäre die richtige Fassung die über einer abzählbaren Indexmenge,
   also `biSup` und `iSup` als Paar zu `biInf` und `iInf`, und ohne jede der vier
   Instanzen, die jene tragen.
+
+* **Gleichgradige Integrierbarkeit über einer Folge *verschiedener*
+  Wahrscheinlichkeitsräume, und was sie mit der Verteilungskonvergenz macht.**
+  Der dreiundzwanzigste, gefunden am 2026-09-17 beim Beweis von
+  `mpSolution_of_tendsto`. `MeasureTheory.UnifIntegrable`
+  (`MeasureTheory/Function/UniformIntegrable.lean:73`) ist ein Prädikat über
+  **einem** festen Maß `μ`; `MeasureTheory.TendstoInDistribution`
+  (`MeasureTheory/Function/ConvergenceInDistribution.lean:64`) läuft dagegen von
+  Haus aus über eine **Familie** `μ : (i : ι) → Measure (Ω i)`. Die beiden
+  passen also nicht aufeinander, und der klassische Satz
+
+  > konvergieren die Verteilungen und ist die Familie gleichgradig integrierbar,
+  > so konvergieren die Erwartungswerte,
+
+  ist in keiner Fassung da. Gesucht wurde am 2026-09-17 gegen `upstream/master`
+  `8018f6ac06b` nach `tendsto_integral` zusammen mit `Distribution`, nach
+  `UnifIntegrable` in `ConvergenceInDistribution.lean` (kein Treffer) und nach
+  `Tendsto`/`Distribution` in `UniformIntegrable.lean` (nur die
+  `TendstoInMeasure`-Sätze, also Konvergenz **in Wahrscheinlichkeit** auf einem
+  Raum). Wir haben ihn als `integral_eq_zero_of_tendstoLaw` in der Gestalt
+  bewiesen, die der Meilenstein braucht — „die Integrale der Folge gehen gegen
+  Null, also auch das des Limes" —, samt dem Apparat darunter: `radialTrunc`,
+  die Rückziehung eines normierten Raumes auf eine Kugel, `tendsto_integral_tail`
+  und `integrable_of_tendstoLaw`.
+
+  Für Mathlib wäre die richtige Fassung die volle Konvergenz der Integrale,
+  nicht unser Spezialfall, und der natürliche Ort ist
+  `ConvergenceInDistribution.lean`. Die gleichgradige Integrierbarkeit wäre
+  dabei über die Schwänze `∫ max (‖ξ i‖ - c) 0 ≤ ε` zu formulieren und nicht
+  über `UnifIntegrable`, das ein Maß festhält.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine

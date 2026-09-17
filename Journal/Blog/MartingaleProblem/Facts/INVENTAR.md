@@ -34431,3 +34431,152 @@ die Prüfung über die ganze Datei und über die ganze Kette. Der eine verbliebe
    `WeakConvergence` allein meldet `push_neg`, `Set.mem_setOf_eq`,
    `_root_.not_imp` und zwölf `haveI`-Stilwarnungen; sie sind jetzt, da die
    Datei fehlerfrei durchläuft, zum ersten Mal vollständig sichtbar.
+
+
+### 2026-09-17, neunzehnter Lauf des Tages — der letzte `sorry` von `MartingaleProblems` ist geschlossen; und die Begründung, mit der die Datei ihren eigenen Konvergenzbegriff eingeführt hat, war falsch
+
+**Vorschlag 1 des Vorlaufs, und er ist eingelöst.** `mpSolution_of_tendsto`
+(Meilenstein 10, `thm:absconv` des Manuskripts) trägt einen Beweis. Damit trägt
+**keine** der drei `Suggested.lean` mehr einen `sorry`:
+
+| Datei | rc | Fehler | `sorry` | Sekunden |
+| --- | ---: | ---: | ---: | ---: |
+| `WeakConvergence/Suggested.lean` | 0 | 0 | 0 | 7 |
+| `SkorokhodSpace/Suggested.lean` | 0 | 0 | 0 | 13 |
+| `MartingaleProblems/Suggested.lean` | 0 | 0 | 0 | 66 |
+
+Elf neue Deklarationen, alle mit `#print axioms` geprüft und alle allein auf
+`propext`, `Classical.choice`, `Quot.sound`: `radialTrunc`,
+`continuous_radialTrunc`, `radialTrunc_of_norm_le`, `norm_radialTrunc_le`,
+`norm_radialTrunc_le_norm`, `norm_sub_radialTrunc_le`, `tendsto_integral_tail`,
+`integrable_tail`, `integral_tail_antitone`,
+`abs_integral_sub_integral_radialTrunc_le`, `integrable_of_tendstoLaw`,
+`integral_eq_zero_of_tendstoLaw` — und `mpSolution_of_tendsto` selbst. Entwickelt
+gegen eine abgeschnittene Kopie (`scratch/mktrunc.py`, 5888 Zeilen, 13 Sekunden
+je Durchlauf), geprüft über die ganze Datei und über die ganze Kette.
+
+#### Der Befund, und er ist eine widerlegte Negativaussage
+
+> Die Datei erklärt einen eigenen Konvergenzbegriff `TendstoLaw` mit der
+> Begründung, Mathlibs `MeasureTheory.TendstoInDistribution` sei „dasselbe für
+> **einen festen** Raum". **Das ist falsch.**
+
+Schon in v4.33.1 steht die Struktur über `{Ω : ι → Type*}` mit
+`{μ : (i : ι) → Measure (Ω i)}` und `[∀ i, IsProbabilityMeasure (μ i)]`
+(`MeasureTheory/Function/ConvergenceInDistribution.lean:64`, Variablenblock
+`:51`–`:55`); die Zufallsvariablen leben dort auf **verschiedenen** Räumen,
+genau wie bei uns. Auf `upstream/master` `8018f6ac06b` (am 2026-09-17 geholt)
+steht es an derselben Stelle.
+
+Was wirklich verschieden ist, ist die **Gestalt**, nicht die Allgemeinheit:
+`TendstoInDistribution` ist `Tendsto` der Bildmaße in `ProbabilityMeasure E` und
+verlangt von `E` einen `MeasurableSpace` mit `OpensMeasurableSpace` sowie
+`AEMeasurable` von den Variablen; `TendstoLaw` verlangt von `V` nichts als eine
+Topologie und ist über die Integrale geschrieben, durch die es benutzt wird. Über
+`𝕂` sind beide äquivalent, und die Brücke steht in v4.33.1:
+`MeasureTheory.ProbabilityMeasure.tendsto_iff_forall_integral_tendsto`
+(`MeasureTheory/Measure/ProbabilityMeasure.lean:346`). Es fehlt also **kein**
+Satz; es steht eine Doppelung da. Die falsche Behauptung ist an der Deklaration
+berichtigt, mit Datei und Zeile.
+
+*Wie der Fehler entstand:* nicht beim Suchen — der Name stand im Kommentar —,
+sondern beim **Lesen**. Der Variablenblock, der `Ω` als Familie einführt, steht
+dreizehn Zeilen über der Struktur; wer nur die Struktur liest, sieht `μ` und
+`μ'` und hält das für „ein Raum und sein Limes". Das ist dieselbe Bauart wie der
+Fehlschluß vom 2026-09-08 bei `Kernel.traj`: ein Kandidat wurde verworfen, ohne
+die Voraussetzung zu nennen, an der er scheitert.
+
+#### Wie der Satz bewiesen ist
+
+Der Kern ist die **Abschneidung**, und sie ist ein eigener kleiner Apparat, weil
+Mathlibs gleichgradige Integrierbarkeit (`MeasureTheory.UnifIntegrable`) ein
+Prädikat über **einem** Maß ist und über eine Folge von Räumen nicht läuft.
+
+`radialTrunc c x = (c / max c ‖x‖) • x` ist die Rückziehung eines normierten
+Raumes auf die abgeschlossene Kugel vom Radius `c` — stetig, durch `c`
+beschränkt, die Identität auf der Kugel, und mit
+`‖x - radialTrunc c x‖ ≤ max (‖x‖ - c) 0`. Ohne Fallunterscheidung geschrieben:
+der Nenner ist durch `c` nach unten beschränkt und damit nie null, also ist die
+Stetigkeit `Continuous.div` und kostet am Rand der Kugel kein Argument.
+
+Damit: `∫ φ` konvergiert für **beschränkte** stetige `φ`, gebraucht wird die
+Konvergenz von `∫` der Variablen selbst; `radialTrunc` ist die Brücke und
+`max (‖·‖ - c) 0` der Fehler, den sie macht. Die Abschneidehöhe wählt für die
+Folge die gleichgradige Integrierbarkeit und für den Limes
+`tendsto_integral_tail` (dominierte Konvergenz für **eine** integrierbare
+Funktion); genommen wird das Maximum der beiden, und es trägt beide Seiten.
+
+**Zwei Stellen, an denen der angesagte Weg nicht trug.**
+
+* **`TendstoLaw` prüft gegen *reelle* Testfunktionen, die Variablen sind
+  `𝕂`-wertig.** `radialTrunc C` bildet `𝕂` nach `𝕂` ab und ist damit keine
+  zulässige Testfunktion. Der Ausweg ist nicht, den Begriff zu ändern, sondern
+  gegen `RCLike.reCLM` und `RCLike.imCLM` zu prüfen und die beiden Ergebnisse
+  mit `RCLike.ext` zusammenzusetzen — eine Real-Imaginär-Zerlegung, die hier
+  nicht vermeidbar war, anders als im dreizehnten Lauf dieses Tages.
+* **Die gleichgradige Integrierbarkeit des Produkts folgt nicht aus der der
+  Faktoren, wenn man die Mengenfassung nimmt.** `∫_{C ≤ ‖ξ‖} ‖ξ‖ ≤ ε` über
+  `ξ = (A - B) · Z` verlangt eine Mengeninklusion in eine **Vereinigung**
+  `{c ≤ ‖A‖} ∪ {c ≤ ‖B‖}` und danach eine Markov-Abschätzung für den Teil, auf
+  dem der eine Faktor klein und der andere groß ist. In der **Schwanzfassung**
+  `∫ max (‖ξ‖ - C) 0 ≤ ε` ist es eine punktweise Ungleichung und sonst nichts:
+  `max (u + v - 2c) 0 ≤ max (u - c) 0 + max (v - c) 0`. Deshalb steht in der
+  Aussage jetzt die Schwanzfassung.
+
+#### Die Voraussetzungen, die sich geändert haben — alle vier begründet
+
+1. **Gleichgradige Integrierbarkeit als Schwanz statt als Mengenintegral.** Die
+   Schwanzfassung ist die **schwächere** Voraussetzung, denn punktweise ist
+   `max (‖x‖ - c) 0 ≤ {y | c ≤ ‖y‖}.indicator ‖·‖ x`; und sie verlangt von den
+   Niveaumengen keine Meßbarkeit. Nach der stehenden Regel ist das die richtige
+   Richtung.
+2. **(a) und (b) stehen jetzt *außerhalb* von `∀ Z ∈ 𝓩 s`.** Sie handeln von
+   `Y₀` und nicht von `Z`, und sie sind es, aus denen `Integrable (Y r) P`
+   gewonnen wird — was `IsDetermining` **unbedingt** verlangt. Bei leerem
+   `𝓩 s` ist die Orthogonalitätsvoraussetzung von `IsDetermining` leer, die
+   Integrierbarkeitsvoraussetzung aber nicht; eine unter `∀ Z` versteckte
+   Integrierbarkeit hätte dort keine Quelle. Das ist kein Schönheitsfehler
+   gewesen, sondern eine Lücke.
+3. **Integrierbarkeit von `Y₀ r (X' n)` unter `P' n` ist hinzugekommen.** Ohne
+   sie ist `∫ ω, max (‖ξ n ω‖ - c) 0 ∂(P' n)` der Bochner-Müllwert `0`, und die
+   Voraussetzung (b) wäre still wahr, während die Funktion beliebig groß ist —
+   derselbe Müllwert, der im zweiten Lauf dieses Tages schon einmal eine
+   Voraussetzung erzwungen hat.
+4. **`Measurable X`, `Measurable (X' n)`, und `𝓩 r` beschränkt und meßbar.**
+   `IsDetermining` verlangt Integrierbarkeit, Integrierbarkeit enthält starke
+   Meßbarkeit, und nichts sonst in der Aussage macht `Y r` meßbar. Die
+   Beschränktheit der Testvariablen kündigt der Doc-Kommentar von
+   `IsDetermining` als „Eigenschaft der Instanziierung" an; hier wird sie
+   benutzt, also steht sie hier.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`TendstoLaw` durch `MeasureTheory.TendstoInDistribution` ersetzen.**
+   *Aussage:* die Definition streichen und die vier Stellen, die sie benutzen
+   (`integrable_of_tendstoLaw`, `integral_eq_zero_of_tendstoLaw`,
+   `mpSolution_of_tendsto` und die Roadmap), auf Mathlibs Struktur umstellen.
+   *Worauf sie ruht:* `ProbabilityMeasure.tendsto_iff_forall_integral_tendsto`
+   (`MeasureTheory/Measure/ProbabilityMeasure.lean:346`, v4.33.1), die aus der
+   Konvergenz der Bildmaße genau die Konvergenz der Integrale beschränkter
+   stetiger Funktionen macht, die unsere Beweise lesen. *Warum jetzt:* die
+   Doppelung ist dieses Laufes Befund und der Grund, aus dem sie entstand, ist
+   entfallen; und `CONTRIBUTING.md` verlangt Kontakt zu vorhandenem Material,
+   nicht Nachbau. *Zu entscheiden, ehe gebaut wird:* ob die Umstellung
+   `[OpensMeasurableSpace 𝕂]` und `AEMeasurable` an die Aussage heftet oder ob
+   sie sich aus `RCLike` von selbst ergeben — das ist am Quelltext zu prüfen und
+   nicht zu raten. Dieselbe Frage stellt sich für `_root_.IsSeparating`,
+   `IsCadlagPath` und die übrigen Nachbildungen, und die Antwort sollte für alle
+   dieselbe sein.
+2. **Die Doppelung `IsSeparating` auflösen**, unverändert Vorschlag 3 des
+   Vorlaufs: die `WeakConvergence`-Fassung von `ℝ` auf `RCLike` heben und die
+   Nachbildung in `MartingaleProblems` streichen. Sie ist jetzt derselbe
+   Aufräumfall wie Vorschlag 1 und gehört in denselben Lauf.
+3. **`mpSolution_of_tendsto_of_pContinuous` und
+   `mpSolution_of_tendsto_augmented`**, die beiden Korollare von Meilenstein 10,
+   die es noch nicht als Deklaration gibt. Das erste ist die Stelle, an der das
+   Continuous-Mapping-Theorem aus `WeakConvergence` eingesetzt wird — der Grund,
+   aus dem der Nutzer die Dateigrenze hat fallen lassen —, und der Hauptsatz,
+   auf den es sich stützt, steht seit diesem Lauf bewiesen da.
+4. **Die Entscheidung über das Lake-Target dem Nutzer vorlegen** (Symlink
+   `TauCetiRoadmap → TauCeti` oder Umbenennung), unverändert Vorschlag 2 des
+   Vorlaufs. Es ist eine Frage und keine Arbeit.

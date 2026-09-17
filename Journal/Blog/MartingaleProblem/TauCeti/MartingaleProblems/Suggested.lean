@@ -43,9 +43,19 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-17 (eighteenth run of that day), over the **whole** file and without an error.  Every
-declaration elaborates; 1 declaration carries `sorry`, and that `sorry` is a
-**proof** -- no statement carries one.
+2026-09-17 (nineteenth run of that day), over the **whole** file and without an error.  Every
+declaration elaborates, and **no declaration carries `sorry`**.
+
+The nineteenth run of 2026-09-17 closed the last one, `mpSolution_of_tendsto` of
+Milestone 10, together with the truncation machinery it runs on --- `radialTrunc`
+and its four lemmas, `tendsto_integral_tail`, `integrable_tail`,
+`integral_tail_antitone`, `abs_integral_sub_integral_radialTrunc_le`,
+`integrable_of_tendstoLaw` and `integral_eq_zero_of_tendstoLaw`.  Its hypotheses
+changed in the proving, and the changes are recorded at the declaration:
+uniform integrability is written by the tails rather than by truncated set
+integrals (the weaker of the two), the hypotheses that do not mention the test
+variable are quantified outside it, and measurability of the paths and
+boundedness of the test variables are asked for because the proof reads them.
 
 Since the eighteenth run of 2026-09-17 this file **imports** the roadmap
 `WeakConvergence`, in the chain `WeakConvergence -> SkorokhodSpace ->
@@ -438,8 +448,8 @@ Four more on 2026-09-14, in `section PropagationFromOnedim` and `section Uniquen
 `thm:absuniq`(b).  The two inputs are `weightedLaw_univ`, which reads the manuscript's "take
 `h ≡ 1`" off the hypothesis, and `weightedLaw_const_mul`, which makes the normalisation
 `E^P[Z] = 1` a change of variables.  Every statement from `PropagatesAgreement` to
-`thm:absuniq`(b) is now proved and none of the two `sorry`s of this file is reachable from any
-of them.
+`thm:absuniq`(b) is now proved; the two `sorry`s this remark was written against are both closed,
+the file carries none since the nineteenth run of 2026-09-17.
 
 Three more on 2026-09-14, in `section ShiftInvariantClock` and `section ShiftSystemMpFamily`,
 are `ex:shiftXA`: `Clock.IsShiftInvariant`, the change of variables
@@ -5459,45 +5469,446 @@ section AbstractConvergence
 
 variable {F : Type*} [MeasurableSpace F]
 
+section Truncation
+
+variable {V : Type*} [NormedAddCommGroup V] [NormedSpace ℝ V]
+
+/-- The radial retraction of a normed space onto the closed ball of radius `c`:
+the identity inside the ball, the nearest point of the sphere outside it.
+
+It is what convergence in distribution can be tested against.  Hypothesis (a) of
+`mpSolution_of_tendsto` gives the convergence of `∫ φ` for `φ` continuous and
+**bounded**, while the integrals that have to converge are those of the variables
+themselves; `radialTrunc c` is the bounded continuous function that approximates
+the identity, and `norm_sub_radialTrunc_le` measures the error it commits by
+exactly the tail `max (‖x‖ - c) 0` that the uniform integrability hypothesis
+controls.
+
+Written as `(c / max c ‖x‖) • x` and not by a case distinction: the denominator
+is bounded below by `c` and therefore never zero, so continuity is
+`Continuous.div` and costs no argument at the sphere. -/
+noncomputable def radialTrunc (c : ℝ) (x : V) : V := (c / max c ‖x‖) • x
+
+theorem continuous_radialTrunc {c : ℝ} (hc : 0 < c) : Continuous (radialTrunc (V := V) c) := by
+  unfold radialTrunc
+  exact (continuous_const.div (continuous_const.max continuous_norm)
+    fun _ ↦ (lt_max_of_lt_left hc).ne').smul continuous_id
+
+theorem radialTrunc_of_norm_le {c : ℝ} {x : V} (hc : 0 < c) (h : ‖x‖ ≤ c) :
+    radialTrunc c x = x := by
+  rw [radialTrunc, max_eq_left h, div_self hc.ne', one_smul]
+
+theorem norm_radialTrunc_le {c : ℝ} (hc : 0 < c) (x : V) : ‖radialTrunc c x‖ ≤ c := by
+  have hm : (0 : ℝ) < max c ‖x‖ := lt_max_of_lt_left hc
+  rw [radialTrunc, norm_smul, Real.norm_eq_abs, abs_of_nonneg (div_nonneg hc.le hm.le),
+    div_mul_eq_mul_div, div_le_iff₀ hm]
+  exact mul_le_mul_of_nonneg_left (le_max_right _ _) hc.le
+
+theorem norm_radialTrunc_le_norm {c : ℝ} (hc : 0 < c) (x : V) : ‖radialTrunc c x‖ ≤ ‖x‖ := by
+  have hm : (0 : ℝ) < max c ‖x‖ := lt_max_of_lt_left hc
+  rw [radialTrunc, norm_smul, Real.norm_eq_abs, abs_of_nonneg (div_nonneg hc.le hm.le)]
+  refine mul_le_of_le_one_left (norm_nonneg x) ?_
+  rw [div_le_one hm]
+  exact le_max_left _ _
+
+/-- The error of the retraction is the tail, and it is an equality outside the
+ball; the inequality is what the proofs use. -/
+theorem norm_sub_radialTrunc_le {c : ℝ} (hc : 0 < c) (x : V) :
+    ‖x - radialTrunc c x‖ ≤ max (‖x‖ - c) 0 := by
+  rcases le_or_gt ‖x‖ c with h | h
+  · rw [radialTrunc_of_norm_le hc h, sub_self, norm_zero]
+    exact le_max_right _ _
+  · have hx : (0 : ℝ) < ‖x‖ := hc.trans h
+    have hsm : x - radialTrunc c x = (1 - c / ‖x‖) • x := by
+      rw [radialTrunc, max_eq_right h.le, sub_smul, one_smul]
+    have hnn : (0 : ℝ) ≤ 1 - c / ‖x‖ := by
+      rw [sub_nonneg, div_le_one hx]; exact h.le
+    have heq : (1 - c / ‖x‖) * ‖x‖ = ‖x‖ - c := by field_simp
+    rw [hsm, norm_smul, Real.norm_eq_abs, abs_of_nonneg hnn, heq, max_eq_left (by linarith)]
+
+end Truncation
+
+/-- **The tails of an integrable function vanish.**  This is what makes the
+uniform integrability of the approximating family enough: the limit is then
+uniformly integrable by itself, and the same truncation level serves on both
+sides of the passage to the limit. -/
+theorem tendsto_integral_tail {μ : Measure Ω} {f : Ω → 𝕂} (hf : Integrable f μ) :
+    Tendsto (fun M : ℕ ↦ ∫ ω, max (‖f ω‖ - M) 0 ∂μ) atTop (𝓝 0) := by
+  have key : Tendsto (fun M : ℕ ↦ ∫ ω, max (‖f ω‖ - M) 0 ∂μ) atTop (𝓝 (∫ _ω, (0 : ℝ) ∂μ)) := by
+    refine tendsto_integral_of_dominated_convergence (fun ω ↦ ‖f ω‖) (fun M ↦ ?_) hf.norm
+      (fun M ↦ ?_) ?_
+    · exact ((continuous_norm.sub continuous_const).max continuous_const).comp_aestronglyMeasurable
+        hf.aestronglyMeasurable
+    · filter_upwards with ω
+      rw [Real.norm_eq_abs, abs_of_nonneg (le_max_right _ _)]
+      exact max_le (sub_le_self _ (Nat.cast_nonneg M)) (norm_nonneg _)
+    · filter_upwards with ω
+      refine tendsto_atTop_of_eventually_const (i₀ := ⌈‖f ω‖⌉₊) fun i hi ↦ ?_
+      have hle : ‖f ω‖ ≤ (i : ℝ) := (Nat.le_ceil _).trans (by exact_mod_cast hi)
+      exact max_eq_right (by linarith)
+  simpa using key
+
+section Tail
+
+variable {α : Type*} {mα : MeasurableSpace α} {μ : Measure α} {f : α → 𝕂}
+
+/-- The tail of an integrable function is integrable. -/
+theorem integrable_tail (hf : Integrable f μ) {c : ℝ} (hc : 0 ≤ c) :
+    Integrable (fun ω ↦ max (‖f ω‖ - c) 0) μ := by
+  refine hf.norm.mono' (((continuous_norm.sub continuous_const).max
+    continuous_const).comp_aestronglyMeasurable hf.aestronglyMeasurable) ?_
+  filter_upwards with ω
+  rw [Real.norm_eq_abs, abs_of_nonneg (le_max_right _ _)]
+  exact max_le (sub_le_self _ hc) (norm_nonneg _)
+
+/-- A higher truncation level cuts off more. -/
+theorem integral_tail_antitone (hf : Integrable f μ) {c d : ℝ} (hc : 0 ≤ c) (hcd : c ≤ d) :
+    ∫ ω, max (‖f ω‖ - d) 0 ∂μ ≤ ∫ ω, max (‖f ω‖ - c) 0 ∂μ :=
+  integral_mono (integrable_tail hf (hc.trans hcd)) (integrable_tail hf hc)
+    fun ω ↦ max_le_max (by linarith) le_rfl
+
+/-- **The error the radial truncation commits is at most the tail.**  Tested
+against a norm contracting real functional, which is how a `𝕂`-valued integral is
+read off from `TendstoLaw`. -/
+theorem abs_integral_sub_integral_radialTrunc_le (hf : Integrable f μ) {C : ℝ} (hC : 0 < C)
+    (L : 𝕂 →L[ℝ] ℝ) (hL : ∀ x : 𝕂, ‖L x‖ ≤ ‖x‖) :
+    |∫ ω, L (f ω) ∂μ - ∫ ω, L (radialTrunc C (f ω)) ∂μ| ≤ ∫ ω, max (‖f ω‖ - C) 0 ∂μ := by
+  have hTm : AEStronglyMeasurable (fun ω ↦ radialTrunc C (f ω)) μ :=
+    (continuous_radialTrunc hC).comp_aestronglyMeasurable hf.aestronglyMeasurable
+  have hT : Integrable (fun ω ↦ radialTrunc C (f ω)) μ :=
+    hf.mono hTm (Filter.Eventually.of_forall fun ω ↦ norm_radialTrunc_le_norm hC _)
+  have hLf : Integrable (fun ω ↦ L (f ω)) μ :=
+    hf.norm.mono' (L.continuous.comp_aestronglyMeasurable hf.aestronglyMeasurable)
+      (Filter.Eventually.of_forall fun ω ↦ hL _)
+  have hLT : Integrable (fun ω ↦ L (radialTrunc C (f ω))) μ :=
+    hT.norm.mono' (L.continuous.comp_aestronglyMeasurable hTm)
+      (Filter.Eventually.of_forall fun ω ↦ hL _)
+  rw [← integral_sub hLf hLT]
+  calc |∫ ω, (L (f ω) - L (radialTrunc C (f ω))) ∂μ|
+      = ‖∫ ω, (L (f ω) - L (radialTrunc C (f ω))) ∂μ‖ := (Real.norm_eq_abs _).symm
+    _ ≤ ∫ ω, ‖L (f ω) - L (radialTrunc C (f ω))‖ ∂μ := norm_integral_le_integral_norm _
+    _ ≤ ∫ ω, max (‖f ω‖ - C) 0 ∂μ := by
+        refine integral_mono (hLf.sub hLT).norm (integrable_tail hf hC.le) fun ω ↦ ?_
+        rw [← map_sub L]
+        exact (hL _).trans (norm_sub_radialTrunc_le hC _)
+
+end Tail
+
 /-- Convergence in distribution of random variables that live on **different**
-probability spaces, written by testing against bounded continuous functions.
-Mathlib's `MeasureTheory.TendstoInDistribution`
-(`MeasureTheory/Function/ConvergenceInDistribution.lean`) is the same notion for
-one fixed space; here the `n`-th variable lives on `Ω' n`, which is what a
-sequence of solutions of martingale problems gives. -/
+probability spaces, written by testing against bounded continuous functions; the
+`n`-th variable lives on `Ω' n`, which is what a sequence of solutions of
+martingale problems gives.
+
+**The claim this comment used to make about Mathlib is false, and the correction
+is a finding of the nineteenth run of 2026-09-17.**  It said that
+`MeasureTheory.TendstoInDistribution`
+(`MeasureTheory/Function/ConvergenceInDistribution.lean`) is the same notion "for
+one fixed space".  It is not: already in v4.33.1 that structure is declared over
+`{Ω : ι → Type*}` with `{μ : (i : ι) → Measure (Ω i)}` and
+`[∀ i, IsProbabilityMeasure (μ i)]`, so the variables live on **different**
+spaces there too, exactly as here.  What differs is the shape and not the
+generality: `TendstoInDistribution` is `Tendsto` of the laws in
+`ProbabilityMeasure E`, which asks `E` for a `MeasurableSpace` with
+`OpensMeasurableSpace` and the variables for `AEMeasurable`, while this predicate
+asks nothing of `V` beyond a topology and is stated by the integrals it is used
+through.  Over `𝕂` the two are equivalent by
+`MeasureTheory.ProbabilityMeasure.tendsto_iff_forall_integral_tendsto`, and
+replacing this definition by Mathlib's is the natural next cleanup; it is not a
+missing theorem. -/
 def TendstoLaw {V : Type*} [TopologicalSpace V] {Ω' : ℕ → Type*}
     (m' : ∀ n, MeasurableSpace (Ω' n)) (P' : ∀ n, @Measure (Ω' n) (m' n))
     (ξ : ∀ n, Ω' n → V) (P : Measure Ω) (ξ₀ : Ω → V) : Prop :=
   ∀ φ : V → ℝ, Continuous φ → (∃ b, ∀ x, ‖φ x‖ ≤ b) →
     Tendsto (fun n ↦ ∫ ω, φ (ξ n ω) ∂(P' n)) atTop (𝓝 (∫ ω, φ (ξ₀ ω) ∂P))
 
-/-- The abstract convergence theorem.  The three hypotheses are (a) convergence
-in distribution of the two families of real random variables, (b) their uniform
+/-- **The limit of a family with a uniform `L¹` bound is integrable.**  This is
+the half of hypothesis (b) of `mpSolution_of_tendsto` that is spent before any
+martingale identity: `IsDetermining` asks for `Y s` and `Y t` to be integrable
+under `P`, and nothing else in the statement says so.
+
+The bound is carried over by the truncations `min ‖x‖ M`, which are bounded and
+continuous and therefore admissible test functions, and the passage `M → ∞` is
+monotone convergence.  No topology on the space where the variables live is
+used, and the spaces are different for different `n`. -/
+theorem integrable_of_tendstoLaw {Ω' : ℕ → Type*} {m' : ∀ n, MeasurableSpace (Ω' n)}
+    {P' : ∀ n, @Measure (Ω' n) (m' n)} {ξ : ∀ n, Ω' n → 𝕂} {P : Measure Ω}
+    [IsProbabilityMeasure P] {ξ₀ : Ω → 𝕂} {K : ℝ}
+    (hmeas₀ : AEStronglyMeasurable ξ₀ P)
+    (hlaw : TendstoLaw m' P' ξ P ξ₀)
+    (hint : ∀ n, Integrable (ξ n) (P' n))
+    (hK : ∀ n, ∫ ω, ‖ξ n ω‖ ∂(P' n) ≤ K) :
+    Integrable ξ₀ P := by
+  have hφc : ∀ M : ℕ, Continuous fun x : 𝕂 ↦ min ‖x‖ (M : ℝ) :=
+    fun _ ↦ continuous_norm.min continuous_const
+  have hφn : ∀ (M : ℕ) (x : 𝕂), 0 ≤ min ‖x‖ (M : ℝ) :=
+    fun M x ↦ le_min (norm_nonneg x) (Nat.cast_nonneg M)
+  have hφb : ∀ M : ℕ, ∃ b, ∀ x : 𝕂, ‖min ‖x‖ (M : ℝ)‖ ≤ b := fun M ↦
+    ⟨(M : ℝ), fun x ↦ by
+      rw [Real.norm_eq_abs, abs_of_nonneg (hφn M x)]; exact min_le_right _ _⟩
+  have hle : ∀ M : ℕ, ∫ ω, min ‖ξ₀ ω‖ (M : ℝ) ∂P ≤ K := by
+    intro M
+    refine le_of_tendsto (hlaw _ (hφc M) (hφb M)) (Filter.Eventually.of_forall fun n ↦ ?_)
+    refine le_trans (integral_mono ?_ (hint n).norm fun ω ↦ min_le_left _ _) (hK n)
+    refine (hint n).norm.mono ((hφc M).comp_aestronglyMeasurable (hint n).aestronglyMeasurable) ?_
+    filter_upwards with ω
+    rw [Real.norm_eq_abs, Real.norm_eq_abs, abs_of_nonneg (hφn M _),
+      abs_of_nonneg (norm_nonneg _)]
+    exact min_le_left _ _
+  have hi₀ : ∀ M : ℕ, Integrable (fun ω ↦ min ‖ξ₀ ω‖ (M : ℝ)) P := fun M ↦
+    (integrable_const (M : ℝ)).mono' ((hφc M).comp_aestronglyMeasurable hmeas₀)
+      (Filter.Eventually.of_forall fun ω ↦ by
+        rw [Real.norm_eq_abs, abs_of_nonneg (hφn M _)]; exact min_le_right _ _)
+  refine ⟨hmeas₀, ?_⟩
+  rw [hasFiniteIntegral_iff_enorm]
+  have hsup : ∀ ω, ⨆ M : ℕ, ENNReal.ofReal (min ‖ξ₀ ω‖ (M : ℝ)) = ‖ξ₀ ω‖ₑ := by
+    intro ω
+    refine le_antisymm (iSup_le fun M ↦ ?_) (le_iSup_of_le ⌈‖ξ₀ ω‖⌉₊ ?_)
+    · rw [← ofReal_norm]; exact ENNReal.ofReal_le_ofReal (min_le_left _ _)
+    · rw [min_eq_left (Nat.le_ceil _), ofReal_norm]
+  have hmono : ∀ᵐ ω ∂P, Monotone fun M : ℕ ↦ ENNReal.ofReal (min ‖ξ₀ ω‖ (M : ℝ)) :=
+    Filter.Eventually.of_forall fun ω M₁ M₂ h ↦
+      ENNReal.ofReal_le_ofReal (min_le_min le_rfl (by exact_mod_cast h))
+  have haem : ∀ M : ℕ, AEMeasurable (fun ω ↦ ENNReal.ofReal (min ‖ξ₀ ω‖ (M : ℝ))) P :=
+    fun M ↦ ((hi₀ M).aestronglyMeasurable.aemeasurable).ennreal_ofReal
+  calc ∫⁻ ω, ‖ξ₀ ω‖ₑ ∂P
+      = ∫⁻ ω, ⨆ M : ℕ, ENNReal.ofReal (min ‖ξ₀ ω‖ (M : ℝ)) ∂P := by simp_rw [hsup]
+    _ = ⨆ M : ℕ, ∫⁻ ω, ENNReal.ofReal (min ‖ξ₀ ω‖ (M : ℝ)) ∂P := lintegral_iSup' haem hmono
+    _ ≤ ENNReal.ofReal K := by
+        refine iSup_le fun M ↦ ?_
+        rw [← ofReal_integral_eq_lintegral_ofReal (hi₀ M)
+          (Filter.Eventually.of_forall fun ω ↦ hφn M _)]
+        exact ENNReal.ofReal_le_ofReal (hle M)
+    _ < ⊤ := ENNReal.ofReal_lt_top
+
+/-- **The integral of the limit vanishes when the integrals along the sequence
+do.**  This is the analytic core of `mpSolution_of_tendsto`: convergence in
+distribution alone does not carry integrals, and what carries them is the
+uniform integrability, spent through `radialTrunc`.
+
+The argument is the classical truncation, done once for the real part and once
+for the imaginary part because `TendstoLaw` tests against **real** functions:
+`‖x - radialTrunc c x‖ ≤ max (‖x‖ - c) 0` bounds the error committed on both
+sides of the passage to the limit by the same tail, and the truncated integrals
+converge because `radialTrunc c` is bounded and continuous.  The truncation level
+is chosen for the sequence by `hui` and for the limit by `tendsto_integral_tail`,
+and the larger of the two serves both. -/
+theorem integral_eq_zero_of_tendstoLaw {Ω' : ℕ → Type*} {m' : ∀ n, MeasurableSpace (Ω' n)}
+    {P' : ∀ n, @Measure (Ω' n) (m' n)} {ξ : ∀ n, Ω' n → 𝕂} {P : Measure Ω}
+    [IsProbabilityMeasure P] {ξ₀ : Ω → 𝕂}
+    (hP' : ∀ n, @IsProbabilityMeasure (Ω' n) (m' n) (P' n))
+    (hint : ∀ n, Integrable (ξ n) (P' n)) (hint₀ : Integrable ξ₀ P)
+    (hlaw : TendstoLaw m' P' ξ P ξ₀)
+    (hui : ∀ ε : ℝ, 0 < ε → ∃ c : ℝ, 0 < c ∧ ∀ n,
+      ∫ ω, max (‖ξ n ω‖ - c) 0 ∂(P' n) ≤ ε)
+    (hzero : Tendsto (fun n ↦ ∫ ω, ξ n ω ∂(P' n)) atTop (𝓝 0)) :
+    ∫ ω, ξ₀ ω ∂P = 0 := by
+  have key : ∀ L : 𝕂 →L[ℝ] ℝ, (∀ x : 𝕂, ‖L x‖ ≤ ‖x‖) → L (∫ ω, ξ₀ ω ∂P) = 0 := by
+    intro L hL
+    have habs : ∀ ε : ℝ, 0 < ε → |L (∫ ω, ξ₀ ω ∂P)| ≤ ε := by
+      intro ε hε
+      obtain ⟨c, hc, hcn⟩ := hui (ε / 3) (by linarith)
+      obtain ⟨M, hM⟩ := ((tendsto_integral_tail hint₀).eventually_lt_const
+        (show (0 : ℝ) < ε / 3 by linarith)).exists
+      set C : ℝ := max c (M : ℝ) with hCdef
+      have hC0 : 0 < C := lt_max_of_lt_left hc
+      have hA₀ : |∫ ω, L (ξ₀ ω) ∂P - ∫ ω, L (radialTrunc C (ξ₀ ω)) ∂P| ≤ ε / 3 :=
+        (abs_integral_sub_integral_radialTrunc_le hint₀ hC0 L hL).trans
+          (((integral_tail_antitone hint₀ (Nat.cast_nonneg M)
+            (le_max_right c (M : ℝ))).trans hM.le))
+      have hAn : ∀ n, |∫ ω, L (ξ n ω) ∂(P' n) - ∫ ω, L (radialTrunc C (ξ n ω)) ∂(P' n)|
+          ≤ ε / 3 := fun n ↦
+        (abs_integral_sub_integral_radialTrunc_le (hint n) hC0 L hL).trans
+          (((integral_tail_antitone (hint n) hc.le (le_max_left c (M : ℝ))).trans (hcn n)))
+      have hconv : Tendsto (fun n ↦ ∫ ω, L (radialTrunc C (ξ n ω)) ∂(P' n)) atTop
+          (𝓝 (∫ ω, L (radialTrunc C (ξ₀ ω)) ∂P)) :=
+        hlaw (fun x ↦ L (radialTrunc C x)) (L.continuous.comp (continuous_radialTrunc hC0))
+          ⟨C, fun x ↦ (hL _).trans (norm_radialTrunc_le hC0 x)⟩
+      have hzeroL : Tendsto (fun n ↦ |∫ ω, L (ξ n ω) ∂(P' n)|) atTop (𝓝 0) := by
+        have : ∀ n, ∫ ω, L (ξ n ω) ∂(P' n) = L (∫ ω, ξ n ω ∂(P' n)) :=
+          fun n ↦ L.integral_comp_comm (hint n)
+        simp_rw [this]
+        simpa using ((L.continuous.tendsto 0).comp hzero).abs
+      have hbnd : |∫ ω, L (radialTrunc C (ξ₀ ω)) ∂P| ≤ ε / 3 := by
+        have hlim : Tendsto (fun n ↦ |∫ ω, L (ξ n ω) ∂(P' n)| + ε / 3) atTop (𝓝 (0 + ε / 3)) :=
+          hzeroL.add tendsto_const_nhds
+        have := le_of_tendsto_of_tendsto' hconv.abs hlim fun n ↦ ?_
+        · linarith
+        · have h1 := abs_sub_abs_le_abs_sub (∫ ω, L (radialTrunc C (ξ n ω)) ∂(P' n))
+            (∫ ω, L (ξ n ω) ∂(P' n))
+          rw [abs_sub_comm] at h1
+          linarith [hAn n]
+      have hLint : L (∫ ω, ξ₀ ω ∂P) = ∫ ω, L (ξ₀ ω) ∂P := (L.integral_comp_comm hint₀).symm
+      rw [hLint]
+      have h2 := abs_sub_abs_le_abs_sub (∫ ω, L (ξ₀ ω) ∂P) (∫ ω, L (radialTrunc C (ξ₀ ω)) ∂P)
+      linarith
+    by_contra hne
+    have hpos : 0 < |L (∫ ω, ξ₀ ω ∂P)| := abs_pos.mpr hne
+    linarith [habs (|L (∫ ω, ξ₀ ω ∂P)| / 2) (by linarith)]
+  have hre := key RCLike.reCLM fun x ↦ by
+    rw [RCLike.reCLM_apply, Real.norm_eq_abs]; exact RCLike.abs_re_le_norm x
+  have him := key RCLike.imCLM fun x ↦ by
+    rw [RCLike.imCLM_apply, Real.norm_eq_abs]; exact RCLike.abs_im_le_norm x
+  rw [RCLike.reCLM_apply] at hre
+  rw [RCLike.imCLM_apply] at him
+  exact RCLike.ext (by simpa using hre) (by simpa using him)
+
+/-- The abstract convergence theorem.  The hypotheses on the approximating family
+are, for each `t ∈ D`: integrability on each space, (a) convergence in
+distribution of the two families of real random variables, (b) their uniform
 integrability across the spaces, and (c) that the tested increments vanish in the
 limit; the conclusion is the martingale identity along `D`.
 
 The canonical version is bound inside the hypothesis, as in the manuscript's
 `(C3)`: it is *a* canonical version of `Y` for which (a), (b) and (c) hold, not
-every one. -/
+every one.
+
+**Where the hypotheses sit, and it is not cosmetic.**  Items (a) and (b) speak of
+`Y₀ r` alone and are quantified **outside** `∀ Z ∈ 𝓩 s`.  They have to be: they
+are what `integrable_of_tendstoLaw` spends to produce `Integrable (Y r) P`, which
+`IsDetermining` asks for unconditionally, and an empty `𝓩 s` — which
+`IsDetermining` tolerates, its own hypothesis then being vacuous — would leave
+that integrability with no source at all.
+
+**Uniform integrability is written by the tails** `max (‖·‖ - c) 0` and not by
+the truncated integrals `∫_{c ≤ ‖·‖} ‖·‖`.  That is the weaker hypothesis, since
+`max (‖x‖ - c) 0 ≤ {y | c ≤ ‖y‖}.indicator (‖·‖) x` pointwise, and it asks no
+measurability of the sublevel sets.  It is also what the proof reads:
+`norm_sub_radialTrunc_le` bounds the truncation error by exactly this tail.
+
+**`Measurable X` and `Measurable (X' n)` are hypotheses** because nothing else in
+the statement makes `Y r` measurable, and `IsDetermining` asks for integrability,
+which contains strong measurability.  **The members of `𝓩 s` are bounded and
+measurable**, which the documentation of `IsDetermining` announces as a property
+of the instantiation; here it is used, so here it is asked for. -/
 theorem mpSolution_of_tendsto {𝓧 : Set (ι → Ω → 𝕂)} {𝓧₀ : ι → Set (F → 𝕂)}
     {𝓩 : ι → Set (F → ℝ)} {X : Ω → F} {𝓕 : Filtration ι m} {P : Measure Ω}
     [IsProbabilityMeasure P] {D : Set ι} {Ω' : ℕ → Type*}
     {m' : ∀ n, MeasurableSpace (Ω' n)} {P' : ∀ n, @Measure (Ω' n) (m' n)}
     {X' : ∀ n, Ω' n → F}
+    (hP' : ∀ n, @IsProbabilityMeasure (Ω' n) (m' n) (P' n))
+    (hX : Measurable X) (hX' : ∀ n, @Measurable (Ω' n) F (m' n) _ (X' n))
+    (h𝓩 : ∀ r : ι, ∀ Z ∈ 𝓩 r, Measurable Z ∧ ∃ b : ℝ, ∀ x, ‖Z x‖ ≤ b)
     (hdet : IsDetermining 𝓩 𝓧 X 𝓕)
     (hY : ∀ Y ∈ 𝓧, ∃ Y₀ : ι → F → 𝕂, (∀ t, Y₀ t ∈ 𝓧₀ t) ∧
       (∀ t, StronglyMeasurable (Y₀ t)) ∧ (∀ t ω, Y t ω = Y₀ t (X ω)) ∧
-      ∀ t ∈ D, ∀ s ∈ D ∩ Set.Iic t, ∀ Z ∈ 𝓩 s,
+      ∀ t ∈ D,
+        (∀ (n : ℕ), ∀ r ∈ D ∩ Set.Iic t, Integrable (fun ω ↦ Y₀ r (X' n ω)) (P' n)) ∧
         (∀ r ∈ D ∩ Set.Iic t,
             TendstoLaw m' P' (fun n ω ↦ Y₀ r (X' n ω)) P fun ω ↦ Y₀ r (X ω)) ∧
-        TendstoLaw m' P'
-            (fun n ω ↦ (Y₀ t (X' n ω) - Y₀ s (X' n ω)) * (Z (X' n ω) : 𝕂)) P
-            (fun ω ↦ (Y₀ t (X ω) - Y₀ s (X ω)) * (Z (X ω) : 𝕂)) ∧
-        (∀ ε : ℝ, 0 < ε → ∃ c : ℝ, ∀ (n : ℕ), ∀ r ∈ D ∩ Set.Iic t,
-            ∫ ω in {ω | c ≤ ‖Y₀ r (X' n ω)‖}, ‖Y₀ r (X' n ω)‖ ∂(P' n) ≤ ε) ∧
-        Tendsto (fun n ↦ ∫ ω, (Y₀ t (X' n ω) - Y₀ s (X' n ω)) * (Z (X' n ω) : 𝕂)
-            ∂(P' n)) atTop (𝓝 0)) :
-    ∀ Y ∈ 𝓧, ∀ s ∈ D, ∀ t ∈ D, s ≤ t → P[Y t | 𝓕 s] =ᵐ[P] Y s := sorry
+        (∀ ε : ℝ, 0 < ε → ∃ c : ℝ, 0 < c ∧ ∀ (n : ℕ), ∀ r ∈ D ∩ Set.Iic t,
+            ∫ ω, max (‖Y₀ r (X' n ω)‖ - c) 0 ∂(P' n) ≤ ε) ∧
+        ∀ s ∈ D ∩ Set.Iic t, ∀ Z ∈ 𝓩 s,
+          TendstoLaw m' P'
+              (fun n ω ↦ (Y₀ t (X' n ω) - Y₀ s (X' n ω)) * (Z (X' n ω) : 𝕂)) P
+              (fun ω ↦ (Y₀ t (X ω) - Y₀ s (X ω)) * (Z (X ω) : 𝕂)) ∧
+          Tendsto (fun n ↦ ∫ ω, (Y₀ t (X' n ω) - Y₀ s (X' n ω)) * (Z (X' n ω) : 𝕂)
+              ∂(P' n)) atTop (𝓝 0)) :
+    ∀ Y ∈ 𝓧, ∀ s ∈ D, ∀ t ∈ D, s ≤ t → P[Y t | 𝓕 s] =ᵐ[P] Y s := by
+  intro Y hYmem s hs t ht hst
+  obtain ⟨Y₀, -, hY₀meas, hYeq, hmain⟩ := hY Y hYmem
+  obtain ⟨hintn, hlawr, hui, hZpart⟩ := hmain t ht
+  have hsmem : s ∈ D ∩ Set.Iic t := ⟨hs, hst⟩
+  have htmem : t ∈ D ∩ Set.Iic t := ⟨ht, le_rfl⟩
+  have hYfun : ∀ r, Y r = fun ω ↦ Y₀ r (X ω) := fun r ↦ funext (hYeq r)
+  have hmeas : ∀ r, AEStronglyMeasurable (fun ω ↦ Y₀ r (X ω)) P :=
+    fun r ↦ ((hY₀meas r).comp_measurable hX).aestronglyMeasurable
+  -- a uniform `L¹` bound, read off the tails at `ε = 1`
+  obtain ⟨c₁, hc₁, hc₁n⟩ := hui 1 one_pos
+  have hKbound : ∀ (n : ℕ), ∀ r ∈ D ∩ Set.Iic t,
+      ∫ ω, ‖Y₀ r (X' n ω)‖ ∂(P' n) ≤ c₁ + 1 := by
+    intro n r hr
+    haveI := hP' n
+    have hi := hintn n r hr
+    have hle : ∀ ω, ‖Y₀ r (X' n ω)‖ ≤ c₁ + max (‖Y₀ r (X' n ω)‖ - c₁) 0 := by
+      intro ω
+      rcases le_or_gt (‖Y₀ r (X' n ω)‖ - c₁) 0 with h | h
+      · rw [max_eq_right h]; linarith
+      · rw [max_eq_left h.le]; linarith
+    calc ∫ ω, ‖Y₀ r (X' n ω)‖ ∂(P' n)
+        ≤ ∫ ω, (c₁ + max (‖Y₀ r (X' n ω)‖ - c₁) 0) ∂(P' n) :=
+          integral_mono hi.norm ((integrable_const c₁).add (integrable_tail hi hc₁.le)) hle
+      _ = c₁ + ∫ ω, max (‖Y₀ r (X' n ω)‖ - c₁) 0 ∂(P' n) := by
+          rw [integral_add (integrable_const c₁) (integrable_tail hi hc₁.le)]
+          simp
+      _ ≤ c₁ + 1 := by linarith [hc₁n n r hr]
+  -- integrability of the limit
+  have hY₀int : ∀ r ∈ D ∩ Set.Iic t, Integrable (fun ω ↦ Y₀ r (X ω)) P := fun r hr ↦
+    integrable_of_tendstoLaw (hmeas r) (hlawr r hr) (fun n ↦ hintn n r hr)
+      fun n ↦ hKbound n r hr
+  refine hdet P Y hYmem s t hst ?_ ?_ ?_
+  · rw [hYfun s]; exact hY₀int s hsmem
+  · rw [hYfun t]; exact hY₀int t htmem
+  intro Z hZmem
+  obtain ⟨hZm, b₀, hb₀⟩ := h𝓩 s Z hZmem
+  obtain ⟨hlawZ, hzeroZ⟩ := hZpart s hsmem Z hZmem
+  set b : ℝ := max b₀ 1 with hbdef
+  have hb0 : (0 : ℝ) < b := lt_max_of_lt_right one_pos
+  have hb : ∀ x, ‖(Z x : 𝕂)‖ ≤ b := fun x ↦ by
+    rw [RCLike.norm_ofReal, ← Real.norm_eq_abs]
+    exact (hb₀ x).trans (le_max_left _ _)
+  have hZmeas' : ∀ n, AEStronglyMeasurable (fun ω ↦ ((Z (X' n ω) : 𝕂))) (P' n) := fun n ↦
+    (RCLike.continuous_ofReal.comp_aestronglyMeasurable
+      ((hZm.comp (hX' n)).aestronglyMeasurable))
+  have hZmeas₀ : AEStronglyMeasurable (fun ω ↦ ((Z (X ω) : 𝕂))) P :=
+    RCLike.continuous_ofReal.comp_aestronglyMeasurable ((hZm.comp hX).aestronglyMeasurable)
+  -- the tested increments, on each space and in the limit
+  have hintξ : ∀ n, Integrable
+      (fun ω ↦ (Y₀ t (X' n ω) - Y₀ s (X' n ω)) * (Z (X' n ω) : 𝕂)) (P' n) := fun n ↦
+    ((hintn n t htmem).sub (hintn n s hsmem)).mul_bdd (hZmeas' n)
+      (Filter.Eventually.of_forall fun ω ↦ hb _)
+  have hintξ₀ : Integrable
+      (fun ω ↦ (Y₀ t (X ω) - Y₀ s (X ω)) * (Z (X ω) : 𝕂)) P :=
+    ((hY₀int t htmem).sub (hY₀int s hsmem)).mul_bdd hZmeas₀
+      (Filter.Eventually.of_forall fun ω ↦ hb _)
+  -- uniform integrability of the increments, from that of the two factors
+  have huiξ : ∀ ε : ℝ, 0 < ε → ∃ C : ℝ, 0 < C ∧ ∀ n,
+      ∫ ω, max (‖(Y₀ t (X' n ω) - Y₀ s (X' n ω)) * (Z (X' n ω) : 𝕂)‖ - C) 0 ∂(P' n) ≤ ε := by
+    intro ε hε
+    obtain ⟨c, hc, hcn⟩ := hui (ε / (2 * b)) (by positivity)
+    refine ⟨2 * b * c, by positivity, fun n ↦ ?_⟩
+    have hit := hintn n t htmem
+    have his := hintn n s hsmem
+    have hptw : ∀ ω, max (‖(Y₀ t (X' n ω) - Y₀ s (X' n ω)) * (Z (X' n ω) : 𝕂)‖ - 2 * b * c) 0
+        ≤ b * max (‖Y₀ t (X' n ω)‖ - c) 0 + b * max (‖Y₀ s (X' n ω)‖ - c) 0 := by
+      intro ω
+      have h1 : ‖(Y₀ t (X' n ω) - Y₀ s (X' n ω)) * (Z (X' n ω) : 𝕂)‖
+          ≤ b * (‖Y₀ t (X' n ω)‖ + ‖Y₀ s (X' n ω)‖) := by
+        rw [norm_mul]
+        calc ‖Y₀ t (X' n ω) - Y₀ s (X' n ω)‖ * ‖(Z (X' n ω) : 𝕂)‖
+            ≤ (‖Y₀ t (X' n ω)‖ + ‖Y₀ s (X' n ω)‖) * b :=
+              mul_le_mul (norm_sub_le _ _) (hb _) (norm_nonneg _) (by positivity)
+          _ = b * (‖Y₀ t (X' n ω)‖ + ‖Y₀ s (X' n ω)‖) := by ring
+      have h2 : ‖Y₀ t (X' n ω)‖ - c ≤ max (‖Y₀ t (X' n ω)‖ - c) 0 := le_max_left _ _
+      have h3 : ‖Y₀ s (X' n ω)‖ - c ≤ max (‖Y₀ s (X' n ω)‖ - c) 0 := le_max_left _ _
+      have h4 : (0 : ℝ) ≤ max (‖Y₀ t (X' n ω)‖ - c) 0 := le_max_right _ _
+      have h5 : (0 : ℝ) ≤ max (‖Y₀ s (X' n ω)‖ - c) 0 := le_max_right _ _
+      refine max_le ?_ (by positivity)
+      nlinarith [hb0.le]
+    calc ∫ ω, max (‖(Y₀ t (X' n ω) - Y₀ s (X' n ω)) * (Z (X' n ω) : 𝕂)‖ - 2 * b * c) 0 ∂(P' n)
+        ≤ ∫ ω, (b * max (‖Y₀ t (X' n ω)‖ - c) 0 + b * max (‖Y₀ s (X' n ω)‖ - c) 0) ∂(P' n) :=
+          integral_mono (integrable_tail (hintξ n) (by positivity))
+            (((integrable_tail hit hc.le).const_mul b).add
+              ((integrable_tail his hc.le).const_mul b)) hptw
+      _ = b * ∫ ω, max (‖Y₀ t (X' n ω)‖ - c) 0 ∂(P' n)
+            + b * ∫ ω, max (‖Y₀ s (X' n ω)‖ - c) 0 ∂(P' n) := by
+          rw [integral_add ((integrable_tail hit hc.le).const_mul b)
+            ((integrable_tail his hc.le).const_mul b), integral_const_mul, integral_const_mul]
+      _ ≤ ε := by
+          have h1 := hcn n t htmem
+          have h2 := hcn n s hsmem
+          have : b * (ε / (2 * b)) = ε / 2 := by field_simp
+          nlinarith [hb0.le]
+  have hzero := integral_eq_zero_of_tendstoLaw hP' hintξ hintξ₀ hlawZ huiξ hzeroZ
+  have hsplit : ∀ ω, (Y₀ t (X ω) - Y₀ s (X ω)) * (Z (X ω) : 𝕂)
+      = Y₀ t (X ω) * (Z (X ω) : 𝕂) - Y₀ s (X ω) * (Z (X ω) : 𝕂) := fun ω ↦ sub_mul _ _ _
+  have hit₀ : Integrable (fun ω ↦ Y₀ t (X ω) * (Z (X ω) : 𝕂)) P :=
+    (hY₀int t htmem).mul_bdd hZmeas₀ (Filter.Eventually.of_forall fun ω ↦ hb _)
+  have his₀ : Integrable (fun ω ↦ Y₀ s (X ω) * (Z (X ω) : 𝕂)) P :=
+    (hY₀int s hsmem).mul_bdd hZmeas₀ (Filter.Eventually.of_forall fun ω ↦ hb _)
+  rw [hYfun s, hYfun t]
+  simp_rw [hsplit] at hzero
+  rw [integral_sub hit₀ his₀, sub_eq_zero] at hzero
+  exact hzero
 
 end AbstractConvergence
 
@@ -30715,7 +31126,7 @@ end IncrementGenerator
 `def:propagation`, `prop:uniqfromprop` of the manuscript -- the half of Milestone 6 that carries
 **no** Markov structure at all.  It is the bottom of the tree: neither `restart` nor a shift
 system nor a determining set occurs in any statement or in any proof in `section Propagation` or
-`section Cylinders`, and none of the three `sorry`s of this file is reachable from here.  What
+`section Cylinders`.  The file has carried no `sorry` since the nineteenth run of 2026-09-17.  What
 sits above it -- `lem:propagation` in `section PropagationFromOnedim`, which makes
 `PropagatesAgreement` checkable from the one dimensional laws, and `thm:absuniq`(a), the Markov
 property, in `section MarkovFromOnedim` -- is where the shift system enters.
