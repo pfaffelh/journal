@@ -34580,3 +34580,164 @@ Funktion); genommen wird das Maximum der beiden, und es trägt beide Seiten.
 4. **Die Entscheidung über das Lake-Target dem Nutzer vorlegen** (Symlink
    `TauCetiRoadmap → TauCeti` oder Umbenennung), unverändert Vorschlag 2 des
    Vorlaufs. Es ist eine Frage und keine Arbeit.
+
+### 2026-09-17, zwanzigster Lauf des Tages — eine Doppelung weniger, und die Bereinigung hat eine zweite nach sich gezogen: die Roadmap hatte Verteilungskonvergenz nachgebaut und den Satz von der stetigen Abbildung auf eine Folge eingeschränkt, die kein Beweis verlangt
+
+**Vorschlag 1 des Vorlaufs ist eingelöst, Vorschlag 2 nicht.** Der Lauf hat
+nichts Neues behauptet, sondern zwei Nachbildungen durch Mathlibs Material
+ersetzt und dabei eine Aussage der Roadmap **verallgemeinert**. Die Kette baut:
+
+| Datei | rc | Fehler | `sorry` | Sekunden |
+| --- | ---: | ---: | ---: | ---: |
+| `WeakConvergence/Suggested.lean` | 0 | 0 | 0 | 8 |
+| `SkorokhodSpace/Suggested.lean` | 0 | 0 | 0 | 13 |
+| `MartingaleProblems/Suggested.lean` | 0 | 0 | 0 | 67 |
+
+#### 1. `TendstoLaw` ist gestrichen; die Roadmap benutzt `MeasureTheory.TendstoInDistribution`
+
+Der Vorlauf hatte die falsche Begründung gefunden, unter der die Datei sich
+einen eigenen Konvergenzbegriff gebaut hatte („dasselbe für **einen** festen
+Raum"); dieser Lauf hat die Definition entfernt. An ihre Stelle tritt eine
+**Brücke**, und sie ist der ganze Aufwand:
+
+> `MeasureTheory.TendstoInDistribution.tendsto_integral_comp` — aus
+> `TendstoInDistribution ξ atTop ξ₀ P' P` und einer beschränkten stetigen
+> reellen Testfunktion `φ` folgt
+> `∫ φ (ξ n ·) ∂(P' n) → ∫ φ (ξ₀ ·) ∂P`.
+
+Bewiesen aus `ProbabilityMeasure.tendsto_iff_forall_integral_tendsto`
+(`MeasureTheory/Measure/ProbabilityMeasure.lean:346`, v4.33.1) und
+`integral_map`, dessen Meßbarkeitsbedingung genau das Feld
+`forall_aemeasurable` der Struktur ist. Drei Zeilen Beweis, und sie gehört nach
+Mathlib neben die Struktur; so steht sie jetzt in `TODO.md` Punkt 8.
+
+Umgestellt sind `integrable_of_tendstoInDistribution` und
+`integral_eq_zero_of_tendstoInDistribution` (beide umbenannt) sowie
+`mpSolution_of_tendsto` selbst.
+
+**Was die Umstellung kostet, und es ist zu benennen statt zu verschweigen:**
+
+* **`[∀ n, IsProbabilityMeasure (P' n)]` wird zur Instanzvoraussetzung.** In
+  `mpSolution_of_tendsto` stand sie schon als Hypothese `hP'` da und ist nur
+  vom expliziten Argument zur Instanz gewandert; in
+  `integrable_of_tendstoInDistribution` ist sie **neu**. Mathlibs Struktur
+  verlangt sie in ihrem Typ, also ist sie hier nicht vermeidbar.
+* **`AEMeasurable` der Variablen** kommt als Feld der Struktur hinzu. In der
+  Anwendung ist es keine Last: die Meßbarkeit stand ohnehin unter den
+  Hypothesen.
+* **`MeasurableSpace` mit `OpensMeasurableSpace` auf dem Wertebereich.** Über
+  `𝕂` beides Instanz — `RCLike.measurableSpace` und `RCLike.borelSpace`,
+  `MeasureTheory/Constructions/BorelSpace/Complex.lean:18` und `:21`, Priorität
+  900 —, also keine Voraussetzung an der Aussage.
+
+**Und eine Voraussetzung ist weggefallen:** `hmeas₀ : AEStronglyMeasurable ξ₀ P`
+in `integrable_of_tendstoInDistribution`. Sie ist das Feld
+`aemeasurable_limit`, gehoben mit `AEMeasurable.aestronglyMeasurable`
+(`MeasureTheory/Function/StronglyMeasurable/AEStronglyMeasurable.lean:479`), das
+über `𝕂` greift, weil `SecondCountableTopology 𝕂` Instanz ist — am Quelltext
+geprüft, nicht vermutet.
+
+#### 2. Der Satz von der stetigen Abbildung: Meilenstein 2 von `WeakConvergence` ist fertig
+
+Beim Nachsehen, was die Umstellung für `mpSolution_of_tendsto_of_pContinuous`
+(Vorschlag 3 des Vorlaufs) bedeutet, fiel eine zweite Nachbildung auf — diesmal
+keine der Roadmap gegen Mathlib, sondern eine **Einschränkung, die kein Beweis
+verlangt**:
+
+> `tendsto_of_measure_setOf_not_continuousAt_eq_zero` und
+> `tendsto_of_measure_setOf_continuousAt_eq_one` waren über
+> `μ : ℕ → ProbabilityMeasure E` und `atTop` geschrieben. Die
+> portmanteau-Implikation, auf der sie ruhen,
+> `tendsto_of_forall_isClosed_limsup_le'`
+> (`MeasureTheory/Measure/Portmanteau.lean:617`), steht über `{L : Filter ι}`
+> mit `[L.IsCountablyGenerated]`, und
+> `ProbabilityMeasure.limsup_measure_closed_le_of_tendsto` (`:314`) über einem
+> **beliebigen** Filter.
+
+Beide Aussagen tragen jetzt den allgemeinen Index. Nach der stehenden Regel ist
+das kein Zusatz, sondern eine Berichtigung: die Folge war eine Hypothese, die
+der Beweis nicht liest.
+
+Darauf steht jetzt die Fassung für Zufallsvariablen, die die Roadmap seit dem
+2026-09-08 ausformuliert und nie in Lean hatte:
+
+> `MeasureTheory.TendstoInDistribution.continuousAt_comp` — `X i → Z` in
+> Verteilung, `h` meßbar und `P₀ {ω | ContinuousAt h (Z ω)} = 1` geben
+> `h ∘ X i → h ∘ Z` in Verteilung.
+
+Sie ist die vorige Aussage durch die drei Felder der Struktur gelesen und
+verallgemeinert Mathlibs `TendstoInDistribution.continuous_comp`
+(`MeasureTheory/Function/ConvergenceInDistribution.lean:121`) so, wie die vorige
+`ProbabilityMeasure.tendsto_map_of_tendsto_of_continuous` verallgemeinert.
+
+**Zwei Entscheidungen an ihr, beide begründet:**
+
+* **Die Stetigkeitsvoraussetzung steht über dem Stichprobenraum**
+  (`P₀ {ω | ContinuousAt h (Z ω)} = 1`) und nicht über `E`. Die beiden sind hier
+  dieselbe Aussage — die Stetigkeitsmenge ist Borel
+  (`measurableSet_of_continuousAt`), `Z` ist `AEMeasurable` durch das Feld
+  `aemeasurable_limit`, also trägt `Measure.map_apply₀` von einer zur anderen —,
+  aber die erste ist die Gestalt, die ein Benutzer der Struktur hat: die
+  Struktur spricht von den Variablen, nicht von ihren Gesetzen.
+* **`Measurable h` ist Hypothese** und folgt nicht mehr aus der Stetigkeit, weil
+  die Stetigkeit nur noch fast überall gilt. Das ist das einzige, was die
+  Verallgemeinerung gegen `continuous_comp` kostet.
+
+#### Was **nicht** gemacht wurde, und warum
+
+**Vorschlag 2 des Vorlaufs, die Doppelung `IsSeparating`, bleibt offen.** Die
+Lage ist am Quelltext geprüft und die Abschätzung ist eine andere als die des
+Vorlaufs: `MeasureTheory.IsSeparating` (`WeakConvergence/Suggested.lean:396`)
+steht über `Set (E → ℝ)`, `_root_.IsSeparating`
+(`MartingaleProblems/Suggested.lean:2513`) über `Set (E → 𝕂)`. Die Auflösung
+verlangt die Hebung der ersten auf `RCLike`, und daran hängen **sieben**
+Aussagen von Meilenstein 1 samt Beweisen: `IsSeparating.mono`,
+`IsConvergenceDetermining.isSeparating` (die nur für `𝕂 = ℝ` überhaupt
+formulierbar bleibt, weil `IsConvergenceDetermining` reell ist),
+`isSeparating_setOf_boundedContinuous`, `IsSeparating.of_subalgebra`,
+`isSeparating_pi`, `IsSeparating.ae_eq_of_forall_condExp_eq` und die beiden
+Gebrauchsstellen bei `:1451` und `:1615`. Der Beweis von
+`isSeparating_setOf_boundedContinuous` ruht auf
+`ext_of_forall_integral_eq_of_IsFiniteMeasure`, das über `E →ᵇ ℝ` quantifiziert
+und über `𝕂` eine Real-Imaginär-Zerlegung verlangt. Das ist ein eigener Lauf und
+kein Nebenbei; es hier anzufangen hätte geheißen, `WeakConvergence` in einem
+halben Zustand zu hinterlassen.
+
+#### Axiomprüfung
+
+Alle sieben berührten Deklarationen mit `#print axioms` geprüft und alle allein
+auf `propext`, `Classical.choice`, `Quot.sound`:
+`MeasureTheory.TendstoInDistribution.tendsto_integral_comp`,
+`integrable_of_tendstoInDistribution`,
+`integral_eq_zero_of_tendstoInDistribution`, `mpSolution_of_tendsto`,
+`MeasureTheory.TendstoInDistribution.continuousAt_comp`,
+`MeasureTheory.tendsto_of_measure_setOf_continuousAt_eq_one`,
+`MeasureTheory.tendsto_of_measure_setOf_not_continuousAt_eq_zero`.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`mpSolution_of_tendsto_of_pContinuous`** (Meilenstein 10). *Aussage:* das
+   Korollar von `mpSolution_of_tendsto`, in dem Voraussetzung (a) — die
+   Verteilungskonvergenz der getesteten Variablen — ersetzt wird durch schwache
+   Konvergenz `X n → X` auf einem separabel metrischen `F` zusammen mit
+   `P`-Stetigkeit von `Y₀ t` und von `Y₀ t * Z`. *Worauf sie ruht:* auf
+   `MeasureTheory.TendstoInDistribution.continuousAt_comp`, seit diesem Lauf
+   bewiesen, und zwar zweimal — einmal für `Y₀ r` allein und einmal für das
+   Produkt, dessen Stetigkeitsmenge der Durchschnitt der beiden ist. *Warum
+   jetzt:* das war der Grund, aus dem der Nutzer die Dateigrenze hat fallen
+   lassen, und die Eingabe, die dabei fehlte, ist die von heute. *Zu entscheiden,
+   ehe gebaut wird:* ob die `P`-Stetigkeit als
+   `P {ω | ContinuousAt (Y₀ t) (X ω)} = 1` oder über die Unstetigkeitsmenge als
+   Nullmenge geschrieben wird; die zweite Gestalt braucht keine Meßbarkeit der
+   Menge und ist nach der stehenden Regel die schwächere — dieselbe Wahl, die in
+   `tendsto_of_measure_setOf_not_continuousAt_eq_zero` schon einmal getroffen
+   wurde.
+2. **Die Doppelung `IsSeparating` auflösen**, unverändert Vorschlag 2 des
+   Vorlaufs, aber mit der oben gemessenen Größe: die `WeakConvergence`-Fassung
+   von `ℝ` auf `RCLike` heben, sieben Aussagen mitziehen, die Nachbildung in
+   `MartingaleProblems` streichen. Ein eigener Lauf.
+3. **`mpSolution_of_tendsto_augmented`** (Meilenstein 10), das zweite Korollar,
+   nach dem ersten.
+4. **Die Entscheidung über das Lake-Target dem Nutzer vorlegen** (Symlink
+   `TauCetiRoadmap → TauCeti` oder Umbenennung), unverändert. Es ist eine Frage
+   und keine Arbeit.

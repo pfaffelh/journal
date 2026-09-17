@@ -34,6 +34,7 @@ import Mathlib.MeasureTheory.Integral.IntervalIntegral.LebesgueDifferentiationTh
 import Mathlib.MeasureTheory.Function.ConditionalExpectation.CondJensen
 import Mathlib.MeasureTheory.Function.ConditionalExpectation.Real
 import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
+import Mathlib.MeasureTheory.Function.ConvergenceInDistribution
 import Mathlib.Probability.Martingale.Convergence
 
 /-!
@@ -43,14 +44,21 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-17 (nineteenth run of that day), over the **whole** file and without an error.  Every
+2026-09-17 (twentieth run of that day), over the **whole** file and without an error.  Every
 declaration elaborates, and **no declaration carries `sorry`**.
+
+The twentieth run of 2026-09-17 removed a duplication rather than adding a
+statement: convergence in distribution is now
+`MeasureTheory.TendstoInDistribution` and no longer a predicate of this file.
+See `MeasureTheory.TendstoInDistribution.tendsto_integral_comp` for the bridge
+to the integrals and for what the change costs.
 
 The nineteenth run of 2026-09-17 closed the last one, `mpSolution_of_tendsto` of
 Milestone 10, together with the truncation machinery it runs on --- `radialTrunc`
 and its four lemmas, `tendsto_integral_tail`, `integrable_tail`,
 `integral_tail_antitone`, `abs_integral_sub_integral_radialTrunc_le`,
-`integrable_of_tendstoLaw` and `integral_eq_zero_of_tendstoLaw`.  Its hypotheses
+`integrable_of_tendstoInDistribution` and
+`integral_eq_zero_of_tendstoInDistribution`.  Its hypotheses
 changed in the proving, and the changes are recorded at the declaration:
 uniform integrability is written by the tails rather than by truncated set
 integrals (the weaker of the two), the hypotheses that do not mention the test
@@ -5569,7 +5577,7 @@ theorem integral_tail_antitone (hf : Integrable f μ) {c d : ℝ} (hc : 0 ≤ c)
 
 /-- **The error the radial truncation commits is at most the tail.**  Tested
 against a norm contracting real functional, which is how a `𝕂`-valued integral is
-read off from `TendstoLaw`. -/
+read off from convergence in distribution. -/
 theorem abs_integral_sub_integral_radialTrunc_le (hf : Integrable f μ) {C : ℝ} (hC : 0 < C)
     (L : 𝕂 →L[ℝ] ℝ) (hL : ∀ x : 𝕂, ‖L x‖ ≤ ‖x‖) :
     |∫ ω, L (f ω) ∂μ - ∫ ω, L (radialTrunc C (f ω)) ∂μ| ≤ ∫ ω, max (‖f ω‖ - C) 0 ∂μ := by
@@ -5594,32 +5602,51 @@ theorem abs_integral_sub_integral_radialTrunc_le (hf : Integrable f μ) {C : ℝ
 
 end Tail
 
-/-- Convergence in distribution of random variables that live on **different**
-probability spaces, written by testing against bounded continuous functions; the
-`n`-th variable lives on `Ω' n`, which is what a sequence of solutions of
-martingale problems gives.
+/-- **Convergence in distribution carries the integrals of bounded continuous
+test functions.**  The variables live on **different** probability spaces -- the
+`n`-th on `Ω' n`, which is what a sequence of solutions of martingale problems
+gives -- and that is no obstacle: `MeasureTheory.TendstoInDistribution` is
+declared over a family `{Ω : ι → Type*}` with `{μ : (i : ι) → Measure (Ω i)}`
+(`MeasureTheory/Function/ConvergenceInDistribution.lean`, the variable block
+above the structure), so the family case is the stated case there.
 
-**The claim this comment used to make about Mathlib is false, and the correction
-is a finding of the nineteenth run of 2026-09-17.**  It said that
-`MeasureTheory.TendstoInDistribution`
-(`MeasureTheory/Function/ConvergenceInDistribution.lean`) is the same notion "for
-one fixed space".  It is not: already in v4.33.1 that structure is declared over
-`{Ω : ι → Type*}` with `{μ : (i : ι) → Measure (Ω i)}` and
-`[∀ i, IsProbabilityMeasure (μ i)]`, so the variables live on **different**
-spaces there too, exactly as here.  What differs is the shape and not the
-generality: `TendstoInDistribution` is `Tendsto` of the laws in
-`ProbabilityMeasure E`, which asks `E` for a `MeasurableSpace` with
-`OpensMeasurableSpace` and the variables for `AEMeasurable`, while this predicate
-asks nothing of `V` beyond a topology and is stated by the integrals it is used
-through.  Over `𝕂` the two are equivalent by
-`MeasureTheory.ProbabilityMeasure.tendsto_iff_forall_integral_tendsto`, and
-replacing this definition by Mathlib's is the natural next cleanup; it is not a
-missing theorem. -/
-def TendstoLaw {V : Type*} [TopologicalSpace V] {Ω' : ℕ → Type*}
-    (m' : ∀ n, MeasurableSpace (Ω' n)) (P' : ∀ n, @Measure (Ω' n) (m' n))
-    (ξ : ∀ n, Ω' n → V) (P : Measure Ω) (ξ₀ : Ω → V) : Prop :=
-  ∀ φ : V → ℝ, Continuous φ → (∃ b, ∀ x, ‖φ x‖ ≤ b) →
-    Tendsto (fun n ↦ ∫ ω, φ (ξ n ω) ∂(P' n)) atTop (𝓝 (∫ ω, φ (ξ₀ ω) ∂P))
+This is the form in which the convergence hypothesis of `mpSolution_of_tendsto`
+is read: `TendstoInDistribution` is `Tendsto` of the laws in
+`ProbabilityMeasure V`, and the passage from that to the integrals is
+`ProbabilityMeasure.tendsto_iff_forall_integral_tendsto` composed with
+`integral_map`, whose measurability side condition is exactly the field
+`forall_aemeasurable` of the structure.
+
+**The predicate this replaces was a duplication, and the reason given for it was
+false** (the nineteenth run of 2026-09-17 found the claim, the twentieth removed
+the definition): the comment said Mathlib's notion was the same one "for one
+fixed space", which the variable block refutes.  What the roadmap pays for using
+Mathlib's structure instead of its own is named and small -- `V` must carry a
+`MeasurableSpace` with `OpensMeasurableSpace` and the measures on the `Ω' n`
+must be probability measures, neither of which is a restriction over `𝕂`, where
+both hold by instance (`RCLike.measurableSpace` and `RCLike.borelSpace`,
+`MeasureTheory/Constructions/BorelSpace/Complex.lean`). -/
+theorem MeasureTheory.TendstoInDistribution.tendsto_integral_comp
+    {V : Type*} [TopologicalSpace V] [MeasurableSpace V] [OpensMeasurableSpace V]
+    {Ω' : ℕ → Type*} {m' : ∀ n, MeasurableSpace (Ω' n)}
+    {P' : ∀ n, @Measure (Ω' n) (m' n)} [∀ n, IsProbabilityMeasure (P' n)]
+    {ξ : ∀ n, Ω' n → V} {P : Measure Ω} [IsProbabilityMeasure P] {ξ₀ : Ω → V}
+    (h : TendstoInDistribution ξ atTop ξ₀ P' P)
+    {φ : V → ℝ} (hφc : Continuous φ) (hφb : ∃ b, ∀ x, ‖φ x‖ ≤ b) :
+    Tendsto (fun n ↦ ∫ ω, φ (ξ n ω) ∂(P' n)) atTop (𝓝 (∫ ω, φ (ξ₀ ω) ∂P)) := by
+  obtain ⟨b, hb⟩ := hφb
+  set f : BoundedContinuousFunction V ℝ :=
+    BoundedContinuousFunction.mkOfBound ⟨φ, hφc⟩ (b + b) (fun x y ↦ by
+      simp only [ContinuousMap.coe_mk, Real.dist_eq]
+      calc |φ x - φ y| ≤ |φ x| + |φ y| := abs_sub _ _
+        _ ≤ b + b := by
+            have := hb x; have := hb y
+            rw [Real.norm_eq_abs] at *
+            linarith) with hf
+  have hkey := (ProbabilityMeasure.tendsto_iff_forall_integral_tendsto).1 h.tendsto f
+  convert hkey using 2 with n
+  · exact (integral_map (h.forall_aemeasurable n) f.continuous.aestronglyMeasurable).symm
+  · exact (integral_map h.aemeasurable_limit f.continuous.aestronglyMeasurable).symm
 
 /-- **The limit of a family with a uniform `L¹` bound is integrable.**  This is
 the half of hypothesis (b) of `mpSolution_of_tendsto` that is spent before any
@@ -5628,16 +5655,22 @@ under `P`, and nothing else in the statement says so.
 
 The bound is carried over by the truncations `min ‖x‖ M`, which are bounded and
 continuous and therefore admissible test functions, and the passage `M → ∞` is
-monotone convergence.  No topology on the space where the variables live is
-used, and the spaces are different for different `n`. -/
-theorem integrable_of_tendstoLaw {Ω' : ℕ → Type*} {m' : ∀ n, MeasurableSpace (Ω' n)}
-    {P' : ∀ n, @Measure (Ω' n) (m' n)} {ξ : ∀ n, Ω' n → 𝕂} {P : Measure Ω}
+monotone convergence.  The spaces are different for different `n`.
+
+**The measurability of the limit is not a hypothesis**: it is the field
+`aemeasurable_limit` of `TendstoInDistribution`, and over `𝕂` it upgrades to
+`AEStronglyMeasurable` by `AEMeasurable.aestronglyMeasurable`, since `𝕂` is a
+second countable pseudo-metrizable space with `OpensMeasurableSpace`. -/
+theorem integrable_of_tendstoInDistribution {Ω' : ℕ → Type*}
+    {m' : ∀ n, MeasurableSpace (Ω' n)}
+    {P' : ∀ n, @Measure (Ω' n) (m' n)} [∀ n, IsProbabilityMeasure (P' n)]
+    {ξ : ∀ n, Ω' n → 𝕂} {P : Measure Ω}
     [IsProbabilityMeasure P] {ξ₀ : Ω → 𝕂} {K : ℝ}
-    (hmeas₀ : AEStronglyMeasurable ξ₀ P)
-    (hlaw : TendstoLaw m' P' ξ P ξ₀)
+    (hlaw : TendstoInDistribution ξ atTop ξ₀ P' P)
     (hint : ∀ n, Integrable (ξ n) (P' n))
     (hK : ∀ n, ∫ ω, ‖ξ n ω‖ ∂(P' n) ≤ K) :
     Integrable ξ₀ P := by
+  have hmeas₀ : AEStronglyMeasurable ξ₀ P := hlaw.aemeasurable_limit.aestronglyMeasurable
   have hφc : ∀ M : ℕ, Continuous fun x : 𝕂 ↦ min ‖x‖ (M : ℝ) :=
     fun _ ↦ continuous_norm.min continuous_const
   have hφn : ∀ (M : ℕ) (x : 𝕂), 0 ≤ min ‖x‖ (M : ℝ) :=
@@ -5647,7 +5680,8 @@ theorem integrable_of_tendstoLaw {Ω' : ℕ → Type*} {m' : ∀ n, MeasurableSp
       rw [Real.norm_eq_abs, abs_of_nonneg (hφn M x)]; exact min_le_right _ _⟩
   have hle : ∀ M : ℕ, ∫ ω, min ‖ξ₀ ω‖ (M : ℝ) ∂P ≤ K := by
     intro M
-    refine le_of_tendsto (hlaw _ (hφc M) (hφb M)) (Filter.Eventually.of_forall fun n ↦ ?_)
+    refine le_of_tendsto (hlaw.tendsto_integral_comp (hφc M) (hφb M))
+      (Filter.Eventually.of_forall fun n ↦ ?_)
     refine le_trans (integral_mono ?_ (hint n).norm fun ω ↦ min_le_left _ _) (hK n)
     refine (hint n).norm.mono ((hφc M).comp_aestronglyMeasurable (hint n).aestronglyMeasurable) ?_
     filter_upwards with ω
@@ -5686,18 +5720,20 @@ distribution alone does not carry integrals, and what carries them is the
 uniform integrability, spent through `radialTrunc`.
 
 The argument is the classical truncation, done once for the real part and once
-for the imaginary part because `TendstoLaw` tests against **real** functions:
+for the imaginary part because the test functions carried by
+`TendstoInDistribution.tendsto_integral_comp` are **real**:
 `‖x - radialTrunc c x‖ ≤ max (‖x‖ - c) 0` bounds the error committed on both
 sides of the passage to the limit by the same tail, and the truncated integrals
 converge because `radialTrunc c` is bounded and continuous.  The truncation level
 is chosen for the sequence by `hui` and for the limit by `tendsto_integral_tail`,
 and the larger of the two serves both. -/
-theorem integral_eq_zero_of_tendstoLaw {Ω' : ℕ → Type*} {m' : ∀ n, MeasurableSpace (Ω' n)}
-    {P' : ∀ n, @Measure (Ω' n) (m' n)} {ξ : ∀ n, Ω' n → 𝕂} {P : Measure Ω}
+theorem integral_eq_zero_of_tendstoInDistribution {Ω' : ℕ → Type*}
+    {m' : ∀ n, MeasurableSpace (Ω' n)}
+    {P' : ∀ n, @Measure (Ω' n) (m' n)} [∀ n, IsProbabilityMeasure (P' n)]
+    {ξ : ∀ n, Ω' n → 𝕂} {P : Measure Ω}
     [IsProbabilityMeasure P] {ξ₀ : Ω → 𝕂}
-    (hP' : ∀ n, @IsProbabilityMeasure (Ω' n) (m' n) (P' n))
     (hint : ∀ n, Integrable (ξ n) (P' n)) (hint₀ : Integrable ξ₀ P)
-    (hlaw : TendstoLaw m' P' ξ P ξ₀)
+    (hlaw : TendstoInDistribution ξ atTop ξ₀ P' P)
     (hui : ∀ ε : ℝ, 0 < ε → ∃ c : ℝ, 0 < c ∧ ∀ n,
       ∫ ω, max (‖ξ n ω‖ - c) 0 ∂(P' n) ≤ ε)
     (hzero : Tendsto (fun n ↦ ∫ ω, ξ n ω ∂(P' n)) atTop (𝓝 0)) :
@@ -5721,7 +5757,7 @@ theorem integral_eq_zero_of_tendstoLaw {Ω' : ℕ → Type*} {m' : ∀ n, Measur
           (((integral_tail_antitone (hint n) hc.le (le_max_left c (M : ℝ))).trans (hcn n)))
       have hconv : Tendsto (fun n ↦ ∫ ω, L (radialTrunc C (ξ n ω)) ∂(P' n)) atTop
           (𝓝 (∫ ω, L (radialTrunc C (ξ₀ ω)) ∂P)) :=
-        hlaw (fun x ↦ L (radialTrunc C x)) (L.continuous.comp (continuous_radialTrunc hC0))
+        hlaw.tendsto_integral_comp (L.continuous.comp (continuous_radialTrunc hC0))
           ⟨C, fun x ↦ (hL _).trans (norm_radialTrunc_le hC0 x)⟩
       have hzeroL : Tendsto (fun n ↦ |∫ ω, L (ξ n ω) ∂(P' n)|) atTop (𝓝 0) := by
         have : ∀ n, ∫ ω, L (ξ n ω) ∂(P' n) = L (∫ ω, ξ n ω ∂(P' n)) :=
@@ -5764,7 +5800,8 @@ every one.
 
 **Where the hypotheses sit, and it is not cosmetic.**  Items (a) and (b) speak of
 `Y₀ r` alone and are quantified **outside** `∀ Z ∈ 𝓩 s`.  They have to be: they
-are what `integrable_of_tendstoLaw` spends to produce `Integrable (Y r) P`, which
+are what `integrable_of_tendstoInDistribution` spends to produce
+`Integrable (Y r) P`, which
 `IsDetermining` asks for unconditionally, and an empty `𝓩 s` — which
 `IsDetermining` tolerates, its own hypothesis then being vacuous — would leave
 that integrability with no source at all.
@@ -5779,13 +5816,18 @@ measurability of the sublevel sets.  It is also what the proof reads:
 the statement makes `Y r` measurable, and `IsDetermining` asks for integrability,
 which contains strong measurability.  **The members of `𝓩 s` are bounded and
 measurable**, which the documentation of `IsDetermining` announces as a property
-of the instantiation; here it is used, so here it is asked for. -/
+of the instantiation; here it is used, so here it is asked for.
+
+**Convergence in distribution is Mathlib's `MeasureTheory.TendstoInDistribution`**
+and not a predicate of this file.  It is stated over a family of spaces there, so
+the approximating solutions may live where they do; the integrals the proof reads
+come out of it by `TendstoInDistribution.tendsto_integral_comp`. -/
 theorem mpSolution_of_tendsto {𝓧 : Set (ι → Ω → 𝕂)} {𝓧₀ : ι → Set (F → 𝕂)}
     {𝓩 : ι → Set (F → ℝ)} {X : Ω → F} {𝓕 : Filtration ι m} {P : Measure Ω}
     [IsProbabilityMeasure P] {D : Set ι} {Ω' : ℕ → Type*}
     {m' : ∀ n, MeasurableSpace (Ω' n)} {P' : ∀ n, @Measure (Ω' n) (m' n)}
+    [∀ n, IsProbabilityMeasure (P' n)]
     {X' : ∀ n, Ω' n → F}
-    (hP' : ∀ n, @IsProbabilityMeasure (Ω' n) (m' n) (P' n))
     (hX : Measurable X) (hX' : ∀ n, @Measurable (Ω' n) F (m' n) _ (X' n))
     (h𝓩 : ∀ r : ι, ∀ Z ∈ 𝓩 r, Measurable Z ∧ ∃ b : ℝ, ∀ x, ‖Z x‖ ≤ b)
     (hdet : IsDetermining 𝓩 𝓧 X 𝓕)
@@ -5794,13 +5836,14 @@ theorem mpSolution_of_tendsto {𝓧 : Set (ι → Ω → 𝕂)} {𝓧₀ : ι �
       ∀ t ∈ D,
         (∀ (n : ℕ), ∀ r ∈ D ∩ Set.Iic t, Integrable (fun ω ↦ Y₀ r (X' n ω)) (P' n)) ∧
         (∀ r ∈ D ∩ Set.Iic t,
-            TendstoLaw m' P' (fun n ω ↦ Y₀ r (X' n ω)) P fun ω ↦ Y₀ r (X ω)) ∧
+            TendstoInDistribution (fun n ω ↦ Y₀ r (X' n ω)) atTop
+              (fun ω ↦ Y₀ r (X ω)) P' P) ∧
         (∀ ε : ℝ, 0 < ε → ∃ c : ℝ, 0 < c ∧ ∀ (n : ℕ), ∀ r ∈ D ∩ Set.Iic t,
             ∫ ω, max (‖Y₀ r (X' n ω)‖ - c) 0 ∂(P' n) ≤ ε) ∧
         ∀ s ∈ D ∩ Set.Iic t, ∀ Z ∈ 𝓩 s,
-          TendstoLaw m' P'
-              (fun n ω ↦ (Y₀ t (X' n ω) - Y₀ s (X' n ω)) * (Z (X' n ω) : 𝕂)) P
-              (fun ω ↦ (Y₀ t (X ω) - Y₀ s (X ω)) * (Z (X ω) : 𝕂)) ∧
+          TendstoInDistribution
+              (fun n ω ↦ (Y₀ t (X' n ω) - Y₀ s (X' n ω)) * (Z (X' n ω) : 𝕂)) atTop
+              (fun ω ↦ (Y₀ t (X ω) - Y₀ s (X ω)) * (Z (X ω) : 𝕂)) P' P ∧
           Tendsto (fun n ↦ ∫ ω, (Y₀ t (X' n ω) - Y₀ s (X' n ω)) * (Z (X' n ω) : 𝕂)
               ∂(P' n)) atTop (𝓝 0)) :
     ∀ Y ∈ 𝓧, ∀ s ∈ D, ∀ t ∈ D, s ≤ t → P[Y t | 𝓕 s] =ᵐ[P] Y s := by
@@ -5817,7 +5860,6 @@ theorem mpSolution_of_tendsto {𝓧 : Set (ι → Ω → 𝕂)} {𝓧₀ : ι �
   have hKbound : ∀ (n : ℕ), ∀ r ∈ D ∩ Set.Iic t,
       ∫ ω, ‖Y₀ r (X' n ω)‖ ∂(P' n) ≤ c₁ + 1 := by
     intro n r hr
-    haveI := hP' n
     have hi := hintn n r hr
     have hle : ∀ ω, ‖Y₀ r (X' n ω)‖ ≤ c₁ + max (‖Y₀ r (X' n ω)‖ - c₁) 0 := by
       intro ω
@@ -5833,7 +5875,7 @@ theorem mpSolution_of_tendsto {𝓧 : Set (ι → Ω → 𝕂)} {𝓧₀ : ι �
       _ ≤ c₁ + 1 := by linarith [hc₁n n r hr]
   -- integrability of the limit
   have hY₀int : ∀ r ∈ D ∩ Set.Iic t, Integrable (fun ω ↦ Y₀ r (X ω)) P := fun r hr ↦
-    integrable_of_tendstoLaw (hmeas r) (hlawr r hr) (fun n ↦ hintn n r hr)
+    integrable_of_tendstoInDistribution (hlawr r hr) (fun n ↦ hintn n r hr)
       fun n ↦ hKbound n r hr
   refine hdet P Y hYmem s t hst ?_ ?_ ?_
   · rw [hYfun s]; exact hY₀int s hsmem
@@ -5898,7 +5940,7 @@ theorem mpSolution_of_tendsto {𝓧 : Set (ι → Ω → 𝕂)} {𝓧₀ : ι �
           have h2 := hcn n s hsmem
           have : b * (ε / (2 * b)) = ε / 2 := by field_simp
           nlinarith [hb0.le]
-  have hzero := integral_eq_zero_of_tendstoLaw hP' hintξ hintξ₀ hlawZ huiξ hzeroZ
+  have hzero := integral_eq_zero_of_tendstoInDistribution hintξ hintξ₀ hlawZ huiξ hzeroZ
   have hsplit : ∀ ω, (Y₀ t (X ω) - Y₀ s (X ω)) * (Z (X ω) : 𝕂)
       = Y₀ t (X ω) * (Z (X ω) : 𝕂) - Y₀ s (X ω) * (Z (X ω) : 𝕂) := fun ω ↦ sub_mul _ _ _
   have hit₀ : Integrable (fun ω ↦ Y₀ t (X ω) * (Z (X ω) : 𝕂)) P :=

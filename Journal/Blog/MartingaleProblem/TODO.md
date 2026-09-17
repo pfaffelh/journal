@@ -764,11 +764,21 @@ seinem Dateikopf: es prüft Zeichenketten, nicht Aussagen.
   `UnifIntegrable` in `ConvergenceInDistribution.lean` (kein Treffer) und nach
   `Tendsto`/`Distribution` in `UniformIntegrable.lean` (nur die
   `TendstoInMeasure`-Sätze, also Konvergenz **in Wahrscheinlichkeit** auf einem
-  Raum). Wir haben ihn als `integral_eq_zero_of_tendstoLaw` in der Gestalt
-  bewiesen, die der Meilenstein braucht — „die Integrale der Folge gehen gegen
-  Null, also auch das des Limes" —, samt dem Apparat darunter: `radialTrunc`,
-  die Rückziehung eines normierten Raumes auf eine Kugel, `tendsto_integral_tail`
-  und `integrable_of_tendstoLaw`.
+  Raum). Wir haben ihn als `integral_eq_zero_of_tendstoInDistribution` in der
+  Gestalt bewiesen, die der Meilenstein braucht — „die Integrale der Folge gehen
+  gegen Null, also auch das des Limes" —, samt dem Apparat darunter:
+  `radialTrunc`, die Rückziehung eines normierten Raumes auf eine Kugel,
+  `tendsto_integral_tail` und `integrable_of_tendstoInDistribution`.
+
+  *Präzisiert am 2026-09-17, zwanzigster Lauf:* die Lücke ist die oben benannte
+  und keine größere. Die Verteilungskonvergenz selbst fehlt **nicht**: die
+  Roadmap trug bis zum zwanzigsten Lauf eine eigene Definition dafür, mit der
+  falschen Begründung, `TendstoInDistribution` sei „dasselbe für **einen**
+  festen Raum“ — es läuft über eine Familie, also über genau unseren Fall. Seit
+  dem zwanzigsten Lauf steht dort Mathlibs Struktur, und die Brücke zu den
+  Integralen ist `MeasureTheory.TendstoInDistribution.tendsto_integral_comp`,
+  drei Zeilen aus `ProbabilityMeasure.tendsto_iff_forall_integral_tendsto` und
+  `integral_map`. Auch sie gehört nach Mathlib, neben die Struktur.
 
   Für Mathlib wäre die richtige Fassung die volle Konvergenz der Integrale,
   nicht unser Spezialfall, und der natürliche Ort ist
