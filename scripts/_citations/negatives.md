@@ -124,7 +124,7 @@ Suche `smul_right_injective|smul_left_cancel|smul_right_inj|smul_eq_smul_iff` un
 Suche `isStronglyProgressive.*[Rr]ight|progMeasurable.*[Rr]ight|[Rr]ightContinuous.*[Pp]rogressive` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
 
 
-## Die einundzwanzig Lücken von `TODO.md` Punkt 8
+## Die zweiundzwanzig Lücken von `TODO.md` Punkt 8
 
 ## `traj-homogeneity` — TODO.md Punkt 8, erste Lücke
 
@@ -266,6 +266,13 @@ Suche `inf'` unter `Mathlib/Probability/Martingale/`: **0 Treffer** in 0 Dateien
 Suche `ContinuousLinearMap|RCLike` unter `Mathlib/Probability/Martingale/, Mathlib/Probability/Process/`: **0 Treffer** in 0 Dateien — wie erwartet.
 
 
+## `stopping-isup` — TODO.md Punkt 8, zweiundzwanzigste Lücke
+
+> Das Supremum einer Folge von Stoppzeiten fehlt; Mathlib hat nur das Infimum (`IsStoppingTime.iInf`, `IsStoppingTime.biInf`), und ein `protected lemma iSup` oder `biSup` kommt in `Mathlib/Probability/` nicht vor.
+
+Suche `protected (lemma|theorem) (iSup|biSup)` unter `Mathlib/Probability/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
 ## `martingale-setIntegral-weight` — MartingaleProblems/README.md, Meilenstein 5
 
 > Ein Martingal gegen eine **beschränkte** Gewichtsfunktion getestet hat in Mathlib keinen Satz; der Indikatorfall steht als `Martingale.setIntegral_eq` und ist die einzige Fassung.
@@ -277,5 +284,5 @@ Suche `setIntegral.*[Mm]artingale|[Mm]artingale.*setIntegral` unter `Mathlib/Pro
 
 ## Zusammenfassung
 
-37 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
+38 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
 

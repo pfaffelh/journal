@@ -33563,3 +33563,131 @@ mittleren Schritt ausschrieb, statt auf ihn zu zeigen.
    des Vorlaufs.
 4. **Die fünfzig Aufrufe veralteter Namen**, unverändert Vorschlag 3 des
    Vorlaufs.
+
+### 2026-09-17, vierzehnter Lauf des Tages — `isQuasiLeftContinuous_of_isRegularizingClass` steht; der Umbau auf den Quadrate-Weg hat eine Voraussetzung mehr weggenommen als angesagt, und die Eingabe, die der Vorlauf für die teuerste hielt, wird gar nicht gebraucht
+
+Vorschlag 1 des Vorlaufs war der Umbau des Satzes vom Maße-Weg auf den
+Quadrate-Weg. Er ist ausgeführt, der Satz ist bewiesen, und die Zahl der `sorry`
+in `MartingaleProblems/Suggested.lean` geht von **fünf auf vier**.
+
+#### Was steht
+
+Vier neue Deklarationen im Abschnitt `Regularizing`, unmittelbar hinter dem
+mittleren Schritt des Vorlaufs:
+
+* **`isStoppingTime_iSup`** — das Supremum einer Folge von Stoppzeiten ist eine
+  Stoppzeit. Fünf Zeilen, `{⨆ n, τ n ≤ i} = ⋂ n, {τ n ≤ i}`.
+* **`IsOptionalSamplingFor Y 𝓕 P`** — für jedes `t` und jede Stoppzeit `σ ≤ t`
+  ist `stoppedValue Y σ =ᵐ[P] P[Y t | 𝓕_σ]`.
+* **`IsStronglyMeasurableAlongStoppingTimes C 𝓕`** — `stoppedValue C σ` ist
+  `𝓕_σ`-stark meßbar, für jede Stoppzeit.
+* **`ae_eq_limUnder_condExp_stoppedValue`** — der mittlere Schritt mit allen
+  sieben Voraussetzungen eingelöst, für **eine** stetige beschränkte
+  Testfunktion.
+
+und der Satz selbst, `isQuasiLeftContinuous_of_isRegularizingClass`, in der
+Hypothesenlage seines Schwesternsatzes: `Φ₀ ⊆ Φ` abzählbar, stetig, beschränkt,
+punktetrennend, `Φ` quadratabgeschlossen über `Φ₀`.
+
+#### Drei Befunde, und der erste war nicht angesagt
+
+**1. Der Umbau nimmt nicht nur `IsSeparating` weg, sondern auch die Lösungsmenge
+`𝓧`.** Der Vorlauf hatte den Austausch von `IsSeparating Φ` gegen `Φ₀`
+vorgesehen. Beim Schreiben zeigte sich, daß `IsMPSolution 𝓧 𝓕 P` und
+`Y ∈ 𝓧` im Beweis **an keiner Stelle** vorkommen: gelesen wird allein das
+optionale Sampling, und das ist über einem allgemeinen Index keine Folgerung aus
+der Martingaleigenschaft — es verlangt Rechtsstetigkeit und eine Schranke.
+`IsOptionalSamplingFor` benennt darum die Folgerung statt der Ursache, und die
+Lösungsmenge verschwindet aus der Aussage. Der Zeuge des zwölften Laufs,
+`not_isQuasiLeftContinuous_of_isRegularizingClass_of_free_solutionSet`, bleibt
+gültig und wird sogar schärfer: er zeigt jetzt, daß **das optionale Sampling**
+nicht wegfallen darf, denn mit `C = 0` sagt die Zerlegung über `Y` nichts.
+
+**2. Die Meßbarkeit des Grenzwerts — Vorschlag 2 des Vorlaufs — ist keine
+Eingabe.** Der Vorlauf hatte sie als die eine noch nicht benannte Voraussetzung
+geführt und dafür `MeasureTheory.StronglyMeasurable.limUnder` und
+`MeasureTheory.measurable_stoppedValue` nachgeschlagen, letzteres mit
+`IsStronglyProgressive 𝓕 X` und zwei Instanzen auf `E`. **Keines von beiden wird
+gebraucht.** Der mittlere Schritt liefert `A =ᵐ[P] P[g ∘ X_{σ'} | ⨆ n, 𝓕_{σ n}]`,
+und `stronglyMeasurable_condExp` macht daraus die Meßbarkeit von `A` umsonst.
+Damit trägt der ganze Endteil **keine einzige Voraussetzung an `E`** außer seiner
+Topologie, und `measurable_stoppedValue` kommt im Beweis nicht vor. Das ist die
+schärfere Fassung des Urteils, das der Vorlauf begründet hatte: der Quadrate-Weg
+spart nicht nur die zwei Instanzen des Maße-Wegs, er spart auch die, die man ihm
+selbst zugeschrieben hatte.
+
+**3. Zwei Voraussetzungen, die man für Eingaben halten könnte, sind keine.**
+Das optionale Sampling an `σ n` **gegen `stoppedValue Y σ'`** ist nicht zu
+fordern: `IsOptionalSamplingFor` gibt beide Seiten gegen `Y t`, und
+`condExp_condExp_of_le` fügt sie zusammen, weil `σ n ≤ σ'` die σ-Algebren
+ordnet. Und die **Integrierbarkeit des Kompensators** wird nirgends angenommen:
+aus der Zerlegung ist `C_ρ = g (X_ρ) − Y_ρ`, also `‖C_ρ‖ ≤ M + ‖Y_ρ‖`, und `Y_ρ`
+ist integrierbar, weil es f.s. eine bedingte Erwartung ist.
+
+#### Die zweiundzwanzigste Lücke, gegen `upstream/master` geprüft
+
+Mathlib hat das **Infimum** einer Folge von Stoppzeiten
+(`MeasureTheory.IsStoppingTime.iInf` und `…​.biInf`,
+`Probability/Process/Stopping.lean:385` und `:373`) und nicht das **Supremum**.
+Die Suche nach `protected lemma iSup` bzw. `biSup` unter `Mathlib/Probability/`
+gibt gegen `upstream/master` `f61f3ed7633` (2026-09-17) **null Treffer**; die
+Behauptung steht als `stopping-isup` in `scripts/check_negatives.py`, das jetzt
+38 Behauptungen prüft und keinen unerwarteten Treffer meldet.
+
+Die Asymmetrie ist echt und erklärt, warum die eine Hälfte dasteht: das Infimum
+braucht `Filtration.IsRightContinuous`, `DenselyOrdered` und `NoMaxOrder`, weil
+`{⨅ τ n < i}` und nicht `{⨅ τ n ≤ i}` die zugängliche Menge ist. Das Supremum
+braucht nichts davon. Eingetragen als zweiundzwanzigste Lücke in `TODO.md`
+Punkt 8.
+
+#### Der Durchlauf
+
+Zuerst gegen eine abgeschnittene Kopie der Datei entwickelt — die ersten 4230
+Zeilen, also alles, worauf der Satz ruht —, was den Zyklus von Minuten auf
+sieben Sekunden bringt und der Grund ist, daß der Umbau in einem Lauf durchging.
+Dann in `Suggested.lean` übernommen. `lake env lean` über die **ganze** Datei
+gegen v4.33.1, ungefiltert und ohne `head`: **kein einziger Fehler**, und keine
+Warnung auf den neuen Deklarationen. `#print axioms` gibt für
+`isStoppingTime_iSup`, `ae_eq_limUnder_condExp_stoppedValue` und
+`isQuasiLeftContinuous_of_isRegularizingClass` `propext`, `Classical.choice`,
+`Quot.sound` und nichts sonst. Kein neuer Import.
+`python3 Journal/Blog/MartingaleProblem/check.py` meldet `clean`.
+
+Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 9, als vier neue
+benannte Einträge und ein neu geschriebener Eintrag für den Satz selbst; die
+beiden Stellen, an denen die Roadmap und der Dateikopf sagten, die
+Quasi-Linksstetigkeit brauche **keine** abzählbare trennende Teilklasse, sind
+berichtigt — sie braucht sie jetzt, und aus demselben Grund wie die
+càdlàg-Modifikation.
+
+*Eine Notiz zum Arbeitsbaum:* die Arbeitskopie liegt als
+`MartingaleProblems/scratch/Work.lean`; sie ließ sich in dieser Umgebung nicht
+löschen (`rm` wird von der Sandbox abgelehnt), und statt eine 4230-zeilige
+Dublette stehenzulassen, ist sie mit dem einzigen Stück überschrieben, das für
+sich allein lauffähig ist: `isStoppingTime_iSup` gegen Mathlib allein. Die Datei
+übersetzt fehlerfrei.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`isQuasiLeftContinuous_of_isMPSolutionFor`**, der zweite und letzte `sorry`
+   der Quasi-Linksstetigkeit und die klassische Instanz (Ethier--Kurtz 4.3.12).
+   *Aussage:* für `A ⊆ Cb(E) × Bdd(E)` mit trennender Domäne, eine Lösung mit
+   càdlàg-Pfaden und eine **atomlose** Uhr ist `IsQuasiLeftContinuous X 𝓕 P`.
+   *Worauf sie ruht:* `isQuasiLeftContinuous_of_isRegularizingClass` aus diesem
+   Lauf und `isRegularizingClass_mpFamily`, das die Zerlegung schon liefert. Was
+   dazwischen fehlt, ist dreierlei und jedes davon benannt: `IsOptionalSamplingFor`
+   für die Mitglieder von `mpFamily` — über `ι = ℝ≥0` ist das
+   `stoppedValue_ae_eq_condExp` des zehnten Laufs —, die `L¹`-Linksstetigkeit des
+   Kompensators `∫ u in Q.interval c ⊥ t, g (X u) ∂q` aus der Stetigkeit der Uhr
+   von oben, und `IsStronglyMeasurableAlongStoppingTimes` für denselben
+   Kompensator. *Warum jetzt:* der abstrakte Satz ist bewiesen, die Instanz ist
+   das einzige, was ihn an Daten bindet, und ohne sie steht der Gegenzeuge
+   `not_isQuasiLeftContinuous_of_atom` ohne seinen positiven Gegenpart.
+2. **Die Leerheitsprobe auf `E = ℕ` am Poissonprozeß**, unverändert Vorschlag 3
+   des Vorlaufs: `Φ₀` sind die Indikatoren der Punkte, und die Quadrate eines
+   Indikators sind der Indikator selbst, also ist `hsq` für diese Klasse
+   geschenkt. Das ist der billigste Zeuge dafür, daß die neue Hypothesenlage
+   bewohnt ist, und `CadlagWitness` am Ende der Datei hat `boolIndicators` als
+   Vorbild schon dastehen.
+3. **Die fünfzig Aufrufe veralteter Namen**, unverändert Vorschlag 4 des
+   Vorlaufs.
