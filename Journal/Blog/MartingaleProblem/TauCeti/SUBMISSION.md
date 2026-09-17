@@ -94,12 +94,23 @@ Vier Regeln betreffen uns unmittelbar:
   Lauf ist in `Facts/INVENTAR.md` protokolliert. Review-Kommentare mit
   KI-Hilfe tragen konventionell ein `:robot:`-Präfix.
 
-Empfehlung daraus: **vier getrennte PRs**, einer je Roadmap. Die Dokumente
-verlangen es nicht, aber die Abhängigkeitskette
-(`WeakConvergence` → `SkorokhodSpace` → `MartingaleProblems`, dazu
-`KolmogorovExtension`) macht sie einzeln prüfbar, und bei knappen Reviewern ist
-das die Höflichkeit, die zählt. `WeakConvergence` zuerst, weil es nur an Mathlib
-hängt und die meisten bewiesenen Deklarationen trägt.
+**ENTSCHEIDUNG DES NUTZERS, 2026-09-17: eine einzige Einreichung.** Die vier
+Roadmaps gehen als *ein* PR, und ihre `Suggested.lean` **dürfen aufeinander
+aufbauen** — in der Kette `WeakConvergence` → `SkorokhodSpace` →
+`MartingaleProblems`, mit `KolmogorovExtension` unabhängig.
+
+Die frühere Empfehlung dieses Dokuments waren vier getrennte PRs. Sie ist
+hiermit überholt. Der Grund, der für sie sprach, bleibt bestehen und ist
+festzuhalten, damit er in der PR-Beschreibung angesprochen wird: `CONTRIBUTING.md`
+nennt substantielles Review das Knappste im Projekt, und ein PR über vier
+Roadmaps ist schwerer zu prüfen als vier einzelne. Dem ist in der Beschreibung
+entgegenzukommen — die Abhängigkeitskette nennen, den empfohlenen Leseweg
+angeben (`WeakConvergence` zuerst, es hängt nur an Mathlib), und die
+Meilensteine benennen, die als *roadmap-for-a-roadmap* gekennzeichnet sind.
+
+Was die Entscheidung unmittelbar einlöst: zwei Aussagen, deren `sorry` **keine
+offene Mathematik war, sondern eine Dateigrenze**, sind damit beweisbar. Siehe
+`scripts/facts_prompt.md`, Abschnitt zur Dateigrenze.
 
 ## Steps
 
