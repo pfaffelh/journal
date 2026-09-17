@@ -1,6 +1,6 @@
 # Prüfwerkzeuge für die Tau-Ceti-Roadmaps
 
-Fünf Skripte, mit denen ein Lauf die vier `README.md` und die drei
+Skripte, mit denen ein Lauf die vier `README.md` und die drei
 `Suggested.lean` unter `Journal/Blog/MartingaleProblem/TauCeti/` gegen Mathlib
 prüft. Jedes ist allein lauffähig, jedes verankert seine Pfade an der Wurzel des
 Worktrees und läuft daher aus jedem Verzeichnis, und keines schreibt außerhalb
@@ -56,6 +56,18 @@ Laufbericht.
 
   ```
   python3 scripts/check_axioms.py MartingaleProblems isStoppingTime_jumpTime
+  ```
+
+* **`count_sections.py`** und **`count_range.py`** zählen Zeilen und
+  Deklarationen einer `Suggested.lean` — das erste je `section`, das zweite je
+  Zeilenbereich. Beide lesen nur und drucken die gefundenen Deklarationsnamen
+  mit, damit die Zuordnung zu einem Weg nachprüfbar ist statt geglaubt werden zu
+  müssen; sie lösen die ad-hoc-Zähler unter `_citations/count_*.py` ab, die je
+  einen Weg fest verdrahten.
+
+  ```
+  python3 scripts/count_sections.py <datei.lean> [Abschnitt ...]
+  python3 scripts/count_range.py <datei.lean> 15331-15560 15561-16092
   ```
 
 `show_master.py` daneben zeigt Kontextzeilen aus `upstream/master` oder aus

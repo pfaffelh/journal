@@ -8398,6 +8398,39 @@ and 11 use them.
   `f ↦ f * conj f`, and compact containment — on a **finite** state space with
   the discrete topology the indicators of the points are such a `Φ₀`, being
   idempotent, and compact containment is trivial.
+* `measurable_jumpFiltrationE_self`, `mem_image_fst_jumpOperator_bool`,
+  `boolIndicators` and `exists_cadlag_modification_flip`: **the emptiness probe
+  of this milestone, discharged on data.** **Proved** on 2026-09-17, ninth run.
+  For every initial law `nu` on `Bool`, the local jump construction at the flip
+  rate has a càdlàg modification:
+  ```
+  ∃ X', (∀ t, X' t =ᵐ[jumpMeasure flipKernel nu] jumpProcessE flipRate t)
+        ∧ ∀ᵐ ω, IsCadlagPath (fun t ↦ X' t ω) .
+  ```
+  Every one of the twelve hypotheses of
+  `exists_cadlag_modification_of_isRegularizingClass` is met by data and none is
+  assumed: the solution is `jumpProcessE_isMPSolution`, the regularizing class is
+  `isRegularizingClass_mpFamily` fed by
+  `lebesgueClock_isProgressive_jumpProcessE`, the countable dense time set is any
+  one, `ℝ≥0` being separable, and the state space is `Bool`.
+
+  `measurable_jumpFiltrationE_self` is the adaptedness
+  `isRegularizingClass_mpFamily` asks for, and it is `jumpFiltrationE` unfolded —
+  that filtration *is* the natural one, so the statement is
+  `measurable_naturalFiltration` at `j = i`. `mem_image_fst_jumpOperator_bool`
+  says that over `Bool` the domain of the generator is the **full** function
+  space, since measurability is free on a countable space with measurable points
+  and boundedness is free on a finite one; with it `Φ₀ ⊆ Φ` and the closure of
+  `Φ` under `f ↦ f * conj f` are the same one line. `boolIndicators` is `Φ₀`.
+
+  **What the probe does not show.** On a finite state space every path has
+  relatively compact range, so `CompactContainment` is `K = Set.univ` and the
+  hypothesis the theorem exists to exploit is vacuous; likewise `T2Space`,
+  `RegularSpace`, `OpensMeasurableSpace` and the continuity of `Φ₀` come from the
+  discrete topology and say nothing about a general `E`. The probe establishes
+  joint satisfiability of the hypotheses on data that also solves a martingale
+  problem, which is what it is for, and it is the first statement in this
+  development that produces a càdlàg process out of a martingale problem.
 * The classical statement as a one line instance: for `A ⊆ Cb(E) × Bdd(E)` whose
   domain is separating and contains a countable subset separating points, every
   solution of the martingale problem for `A` satisfying compact containment has

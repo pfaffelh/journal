@@ -30947,3 +30947,101 @@ example (P : Measure (RightContinuousPath Bool)) [IsProbabilityMeasure P]
   norm_num
 
 end TwoStateSolution
+
+/-! ### The emptiness probe of Milestone 9: a solution that has a càdlàg modification
+
+`exists_cadlag_modification_of_isRegularizingClass` carries twelve hypotheses, seven of them
+about the state space and the test class, and until now nothing in this file produced them
+together.  That is the same kind of debt `Shift` carried in Milestone 6 and `hint` in Milestone 4,
+and it is not academic: a theorem whose hypotheses no data satisfy is true and useless.
+
+This section discharges it.  The process is the local jump construction at the flip rate, the
+solution is `jumpProcessE_isMPSolution`, the regularizing class is
+`isRegularizingClass_mpFamily` fed by `lebesgueClock_isProgressive_jumpProcessE`, and the state
+space is `Bool`.  A **finite** state space with the discrete topology is what makes the last seven
+cheap and is the whole reason the probe is run there:
+
+* `Φ = Prod.fst '' jumpOperator flipRate flipKernel` is **every** real function on `Bool`, because
+  on a countable space with measurable points every function is measurable and on a finite one
+  every function is bounded (`mem_image_fst_jumpOperator_bool`).  So `Φ₀ ⊆ Φ` and the closure
+  under `f ↦ f * conj f` are one lemma each and say nothing.
+* `Φ₀` are the two point indicators: countable because there are two, continuous because the
+  topology is discrete, bounded by `1`, and separating because an indicator of a point separates
+  it from every other.
+* `CompactContainment` is `K = Set.univ`, which is compact because `Bool` is.
+
+What the probe does **not** show is that the theorem is sharp: on a finite state space every path
+into `E` has relatively compact range, and the compact containment that the theorem exists to
+exploit is vacuous.  It shows that the hypotheses are jointly satisfiable on data that also
+satisfies the martingale problem, which is what an emptiness probe is for, and it is the first
+statement in this development that produces a càdlàg process out of a martingale problem. -/
+
+section CadlagWitness
+
+/-- **The natural filtration of the local jump process sees the process at its own index.**  The
+adaptedness that `isRegularizingClass_mpFamily` asks for, and it is `jumpFiltrationE` unfolded:
+that filtration *is* the natural one, so the statement is `measurable_naturalFiltration` at
+`j = i`. -/
+theorem measurable_jumpFiltrationE_self {E : Type*} [MeasurableSpace E] {lam : E → ℝ}
+    (hlam : Measurable lam) (t : ℝ≥0) :
+    Measurable[jumpFiltrationE lam hlam t] fun ω ↦ jumpProcessE lam (t : ℝ) ω :=
+  measurable_naturalFiltration _ le_rfl
+
+/-- **On a finite state space the domain of the generator is everything.**  `jumpOperator` carries
+measurability and boundedness in its members; over `Bool` both are free, and the first component
+of the operator is therefore the full function space.  This is what makes `Φ₀ ⊆ Φ` and the closure
+of `Φ` under `f ↦ f * conj f` trivial in the probe below. -/
+theorem mem_image_fst_jumpOperator_bool {lam : Bool → ℝ} {mu : Kernel Bool Bool}
+    (f : Bool → ℝ) : f ∈ Prod.fst '' jumpOperator lam mu :=
+  ⟨(f, jumpApply lam mu f),
+    mem_jumpOperator (measurable_of_countable f) (C := max |f false| |f true|)
+      (fun x ↦ by cases x <;> simp [le_max_iff]), rfl⟩
+
+/-- **The point indicators of `Bool`**, the countable separating class `Φ₀` of the probe.  They
+are idempotent, so the hypothesis `hsq` is about them and not about a larger class. -/
+def boolIndicators : Set (Bool → ℝ) :=
+  Set.range fun y : Bool ↦ fun x : Bool ↦ if x = y then (1 : ℝ) else 0
+
+/-- **The solution of the two state martingale problem has a càdlàg modification**, and with it
+Milestone 9 has an inhabited instance.
+
+Every hypothesis of `exists_cadlag_modification_of_isRegularizingClass` is discharged on data:
+the process is the local jump construction, the martingale problem is solved by
+`jumpProcessE_isMPSolution`, the regularizing class comes from the generator itself through
+`isRegularizingClass_mpFamily`, and the state space is finite.  Nothing is assumed about the
+sample point, and the dense countable time set is any one -- `ℝ≥0` is separable. -/
+theorem exists_cadlag_modification_flip (nu : Measure Bool) [IsProbabilityMeasure nu] :
+    ∃ X' : ℝ≥0 → ((ℕ → Bool) × (ℕ → ℝ)) → Bool,
+      (∀ t : ℝ≥0, ∀ᵐ ω ∂(jumpMeasure flipKernel nu),
+          X' t ω = jumpProcessE flipRate (t : ℝ) ω) ∧
+        ∀ᵐ ω ∂(jumpMeasure flipKernel nu), IsCadlagPath fun t : ℝ≥0 ↦ X' t ω := by
+  obtain ⟨D, hDc, hDd⟩ := TopologicalSpace.exists_countable_dense ℝ≥0
+  have hA : ∀ p ∈ jumpOperator flipRate flipKernel,
+      Measurable p.2 ∧ ∃ b : ℝ, ∀ x, ‖p.2 x‖ ≤ b := fun p _ ↦
+    ⟨measurable_of_countable _, max ‖p.2 false‖ ‖p.2 true‖,
+      fun x ↦ by cases x <;> simp⟩
+  have hreg := isRegularizingClass_mpFamily (D := D) (P := jumpMeasure flipKernel nu) hA
+    (lebesgueClock_isProgressive_jumpProcessE measurable_flipRate)
+    (measurable_jumpFiltrationE_self measurable_flipRate)
+    lebesgueClock_isContinuousFor_optional
+  have hcc : CompactContainment (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE flipRate (t : ℝ) ω)
+      (jumpMeasure flipKernel nu) D := by
+    intro ε hε T
+    refine ⟨Set.univ, isCompact_univ, ?_⟩
+    have hset : {ω : (ℕ → Bool) × (ℕ → ℝ) |
+        ∀ t ∈ Set.Iic T ∩ D, jumpProcessE flipRate (t : ℝ) ω ∈ (Set.univ : Set Bool)}
+          = Set.univ := by
+      ext ω; simp
+    rw [hset, measure_univ]
+    simpa using sub_lt_self (1 : ℝ) hε
+  exact exists_cadlag_modification_of_isRegularizingClass (Φ₀ := boolIndicators)
+    hDc hDd (fun t ↦ measurable_jumpProcessE_apply measurable_flipRate (t : ℝ))
+    (jumpProcessE_isMPSolution measurable_flipRate flipRate_pos flipRate_le_one flipKernel nu)
+    hreg (fun f _ ↦ mem_image_fst_jumpOperator_bool f) (Set.countable_range _)
+    (fun _ _ ↦ continuous_of_discreteTopology)
+    (fun f _ ↦ ⟨max ‖f false‖ ‖f true‖, fun x ↦ by cases x <;> simp⟩)
+    (fun _ _ ↦ mem_image_fst_jumpOperator_bool _)
+    (fun x y hxy ↦ ⟨fun z ↦ if z = x then (1 : ℝ) else 0, ⟨x, rfl⟩, by simp [hxy.symm]⟩)
+    hcc
+
+end CadlagWitness

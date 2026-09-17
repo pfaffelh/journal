@@ -32646,3 +32646,222 @@ statt gegen v4.33.1 zu übersetzen — das ginge nur mit einem zweiten Toolchain
    sie gefunden und ausdrücklich nicht angefaßt, weil `Set.mem_setOf_eq` in
    `simp`-Listen steckt. Das ist ein eigener Lauf und einer, der jede Änderung
    übersetzt.
+
+### 2026-09-17, neunter Lauf des Tages — Meilenstein 9 ist bewohnt: aus einem Martingalproblem fällt ein càdlàg-Prozeß; und der zweite Vorschlag des Vorlaufs war überholt, der Satz steht seit dem 2026-09-11
+
+Der Vorlauf hatte zwei Dinge vorgeschlagen. Das erste ist getan, das zweite hat
+sich beim Nachsehen als schon erledigt erwiesen — und das ist der zweite Befund
+dieses Laufs.
+
+#### 1. Die Leerheitsprobe von Meilenstein 9 steht
+
+`exists_cadlag_modification_of_isRegularizingClass` trägt **zwölf**
+Voraussetzungen, und bis zu diesem Lauf hat sie nichts in einem Stück erfüllt.
+Das ist dieselbe Art Schuld, die `Shift` in Meilenstein 6 und `hint` in
+Meilenstein 4 getragen haben, und sie ist nicht akademisch: ein Satz, dessen
+Voraussetzungen keine Daten erfüllen, ist wahr und nutzlos.
+
+Vier Deklarationen im neuen Abschnitt `CadlagWitness` von
+`TauCeti/MartingaleProblems/Suggested.lean` lösen sie ein. Die Aussage ist
+
+```
+theorem exists_cadlag_modification_flip (nu : Measure Bool) [IsProbabilityMeasure nu] :
+    ∃ X' : ℝ≥0 → ((ℕ → Bool) × (ℕ → ℝ)) → Bool,
+      (∀ t : ℝ≥0, ∀ᵐ ω ∂(jumpMeasure flipKernel nu),
+          X' t ω = jumpProcessE flipRate (t : ℝ) ω) ∧
+        ∀ᵐ ω ∂(jumpMeasure flipKernel nu), IsCadlagPath fun t : ℝ≥0 ↦ X' t ω
+```
+
+— für **jede** Anfangsverteilung auf `Bool`. Nichts daran ist angenommen: die
+Lösung ist `jumpProcessE_isMPSolution`, die regularisierende Klasse ist
+`isRegularizingClass_mpFamily`, gefüttert mit
+`lebesgueClock_isProgressive_jumpProcessE` aus dem siebten Lauf und
+`lebesgueClock_isContinuousFor_optional`, und die abzählbare dichte Zeitmenge ist
+irgendeine — `ℝ≥0` ist separabel (`TopologicalSpace.exists_countable_dense`).
+
+Die beiden Hilfsaussagen sind das, was der Vorlauf als „nur noch über den
+Zustandsraum" benannt hatte, und beide sind kurz:
+
+* **`measurable_jumpFiltrationE_self`** — die Adaptiertheit, die
+  `isRegularizingClass_mpFamily` verlangt. Sie ist `jumpFiltrationE` aufgelöst:
+  diese Filtration **ist** die natürliche, also ist die Aussage
+  `measurable_naturalFiltration` bei `j = i`. Eine Zeile.
+* **`mem_image_fst_jumpOperator_bool`** — über `Bool` ist die Domäne des
+  Erzeugers der **ganze** Funktionenraum, weil Meßbarkeit auf einem abzählbaren
+  Raum mit meßbaren Punkten und Beschränktheit auf einem endlichen frei sind.
+  Damit sind `Φ₀ ⊆ Φ` und der Abschluß von `Φ` unter `f ↦ f * conj f` dieselbe
+  eine Zeile. `boolIndicators` ist `Φ₀`, die beiden Punktindikatoren.
+
+**Was die Probe nicht zeigt, und es steht so an der Deklaration.** Auf einem
+endlichen Zustandsraum hat jeder Pfad relativ kompaktes Bild, also ist
+`CompactContainment` schlicht `K = Set.univ` — genau die Voraussetzung, für die
+der Satz gebaut ist, ist hier leer. Ebenso kommen `T2Space`, `RegularSpace`,
+`OpensMeasurableSpace` und die Stetigkeit von `Φ₀` aus der diskreten Topologie
+und sagen über ein allgemeines `E` nichts. Die Probe belegt die **gemeinsame
+Erfüllbarkeit** der Voraussetzungen an Daten, die zugleich ein Martingalproblem
+lösen; das ist, wozu eine Leerheitsprobe da ist, und sie ist die erste Stelle
+dieser Entwicklung, an der aus einem Martingalproblem ein càdlàg-Prozeß
+**hergeleitet** wird statt von Hand gebaut zu werden. (Die Münze aus
+`AtomWitness` hat càdlàg-Pfade, aber durch Konstruktion und nicht durch den
+Satz.)
+
+**Der Durchlauf.** `lake env lean` über die ganze Datei gegen v4.33.1, ohne
+`head` und ohne Filter: **kein einziger Fehler**, Rückgabewert `0`, und die Zahl
+der `sorry` bleibt bei **fünf** (Zeilen 1171, 3713, 3727, 4126, 4156 —
+unverändert, alle vier neuen Deklarationen sind Beweise ohne Lücke).
+`#print axioms` gibt jeder der drei Aussagen — `measurable_jumpFiltrationE_self`,
+`mem_image_fst_jumpOperator_bool`, `exists_cadlag_modification_flip` —
+`[propext, Classical.choice, Quot.sound]` und nichts sonst. Nach dem Entfernen
+der Prüfzeilen und zweier unnötiger `simp`-Argumente ist die Datei ein drittes
+Mal ganz durchgelaufen, wieder mit Rückgabewert `0`, und der neue Abschnitt
+(Zeilen 30949–31047) trägt **keine einzige Warnung**. Die Punkte stehen in
+`MartingaleProblems/README.md`, Meilenstein 9.
+
+**Und eine Nachlässigkeit, damit sie nicht wiederholt wird:** die
+`#print axioms`-Zeilen sind von Hand angehängt und wieder entfernt worden,
+obwohl `scripts/check_axioms.py` genau dafür da ist und auf einer **Kopie**
+arbeitet, damit ein Abbruch die Quelle nicht verändert zurückläßt. Die Quelle
+steht am Ende unverändert da, aber der Weg dorthin war der, gegen den das Skript
+geschrieben wurde.
+
+**Eine Falle am Rande, und sie hat in diesem Lauf einen Durchlauf gekostet.** Ein
+`lake env lean … | grep … | head -60` beendet die Pipeline, sobald sechzig Zeilen
+da sind, und `lean` stirbt an `SIGPIPE`, ehe es ein Drittel der Datei gesehen
+hat. Das sieht wie ein fehlerfreier Durchlauf aus und ist keiner. **Über diese
+Datei wird ohne `head` gefahren**, und der Rückgabewert wird gelesen; wer filtern
+will, filtert die fertige Ausgabe.
+
+#### 2. Der Befund: Vorschlag 2 des Vorlaufs war überholt — das Lyapunov-Kriterium steht seit dem 2026-09-11
+
+Der Vorlauf hatte als zweiten Vorschlag „Teil F beginnen, und zwar mit dem
+Lyapunov-Kriterium, nicht mit Yule: `isNonExplosive_of_lyapunov`" genannt, mit
+dem Weg über den gestoppten Prozeß, `gronwallBound` und
+`mul_meas_ge_le_lintegral`. Der Vorschlag ist aus dem stehenden Auftrag
+abgeschrieben, und er ist **hinfällig**: der Satz steht, unter anderem Namen und
+über einen anderen Beweis.
+
+```
+theorem ae_mem_nonExplosiveE_jumpMeasure_of_jumpApply_le [MeasurableSpace E]
+    [MeasurableSingletonClass E] {lam f : E → ℝ} {C : ℝ} (hC : 0 ≤ C)
+    (hlamm : Measurable lam) (hfm : Measurable f) (hf : ∀ x, 0 ≤ f x)
+    (hlam0 : ∀ x, 0 ≤ lam x)
+    (hbdd : ∀ N : ℝ, ∃ B : ℝ, ∀ x, f x ≤ N → lam x ≤ B)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu]
+    (hint : ∀ z, Integrable f (mu z))
+    (hstep : ∀ z, 0 < lam z → jumpApply lam mu f z ≤ C * f z) :
+    ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam
+```
+
+(`Suggested.lean:15896`, bewiesen am 2026-09-11, zweiter Lauf). Das ist wörtlich
+die vom Auftrag verlangte Aussage: `f ≥ 0` meßbar, `A f ≤ C * f`, also keine
+Explosion. Drei Unterschiede zum Auftragstext, und alle drei in die richtige
+Richtung:
+
+* **Die zweite Voraussetzung ist schwächer als verlangt.** Der Auftrag sagt „deren
+  Subniveaumengen `{f ≤ N}` ausschöpfen"; gebraucht wird allein, daß `lam` auf
+  jeder Subniveaumenge **beschränkt** ist. Die Ausschöpfung wird nirgends
+  benutzt. Die klassische Fassung — Subniveaumengen kompakt — impliziert die
+  Schranke über die Stetigkeit der Rate und ist die stärkere Bedingung.
+* **Der Beweisweg ist nicht der angesagte.** Weder `gronwallBound` noch
+  `mul_meas_ge_le_lintegral` noch die Stoppzeiten `rateTime` kommen vor. An ihre
+  Stelle tritt die diskontierte Lyapunov-Funktion auf der **eingebetteten
+  Kette**, `M k = f (y k) * exp (-C ∑_{j<k} 1/lam (y j))`, und deren
+  Integralabschätzung wird durch Induktion über `k` geführt, in der die
+  Anfangsverteilung mitwandert. Ein Supermartingal wird dabei nie gebaut — kein
+  `Filtration.piLE`, kein `Kernel.condExp_traj`, kein `Supermartingale`. Das
+  steht so in `MartingaleProblems/README.md`, Meilenstein 4, und ist dort als
+  Befund ausgewiesen.
+* **Die Instanzen sind da.** `ae_mem_nonExplosiveE_birthDeath_of_birth_le` (die
+  Bedingung ist `b x - d x ≤ C * (x+1)`, der Todesterm hilft),
+  `ae_mem_nonExplosiveE_yule_of_jumpApply_le`, und über die gehobene Rate
+  `ae_mem_nonExplosiveE_posRate_birthDeath_of_birth_le` und
+  `ae_mem_nonExplosiveE_posRate_yule`.
+
+**Und der gemessene Vergleich, um den es in Teil F eigentlich geht, steht
+ebenfalls** — in `MartingaleProblems/README.md`, Meilenstein 4, unter „Der
+gemessene Vergleich, Stand 2026-09-11, fünfter Lauf", mit einer Tabelle über zehn
+Zeilen, den Mathlib-Bausteinen je Weg und dem Urteil. Nachgezählt in diesem Lauf
+mit zwei neuen, allein lauffähigen Skripten (`scripts/count_sections.py`,
+`scripts/count_range.py`, beide nur lesend, beide drucken die gefundenen
+Deklarationsnamen mit, damit die Zuordnung zu einem Weg nachprüfbar ist statt
+geglaubt werden zu müssen):
+
+| Weg | Deklarationen | Zeilen mit Dokumentation |
+| --- | --- | --- |
+| Reihe: das Kriterium (`Suggested.lean:10958–11087`) | 11 (davon 5 der Zeuge `linearRate`/`linearChain`) | 130 |
+| Reihe: die lineare Instanz (`:14645–14760`) | 4 | 116 |
+| Lyapunov, pfadweise Form (`:15331–15560`) | 7 | 230 |
+| Lyapunov, Erzeugerform (`:15561–16092`) | 19 | 532 |
+| Mastergleichung, Yule (`section YuleMasterEquation`) | 4 | 181 |
+| Mastergleichung, Lösung und Verteilung (`section YuleLaw`) | 13 | 395 |
+| Mastergleichung, Geburt-Tod (`section LinearBirthDeathMasterEquation`) | 5 | 220 |
+| Kopplung (`section RateMonotone`) | 3 | 82 |
+
+**Die Deklarationszahlen stimmen mit der Tabelle des Meilensteins in jeder Zeile,
+die beide führen** — nachgeprüft, nicht angenommen: Lyapunov pfadweise `4+3 = 7`,
+Lyapunov Erzeugerform `12+4 = 16` plus die drei der Hebung `= 19`, Yule-Master
+`3+1 = 4`, Lösung `8+5 = 13`, Geburt-Tod-Master `3+1+1 = 5`, Kopplung `2+1 = 3`.
+Die Zeilenzahlen weichen ab, weil dort Codezeilen und hier alle Zeilen gezählt
+sind. Eine Zeile stimmt **nicht**: die Tabelle führt `section LinearBirthDeath`
+mit 12 Deklarationen, gezählt sind heute 13. Woran die Differenz liegt, ist in
+diesem Lauf nicht geklärt; sie ist ohne Belang für das Urteil und hier nur
+vermerkt, damit die Zahl nicht für falsch gehalten wird.
+
+**Von Teil F steht damit alles außer dem
+Kopplungsweg, und dessen Bruchstelle ist benannt und nicht bloß vermutet:**
+`mem_nonExplosiveE_yule_of_linearBirthDeath` gibt die Dominierung in der
+**Rate**, und die zeigt in die Richtung, die niemand braucht — die Gesamtrate
+`(β+δ)x` der linearen Kette liegt **über** der Yule-Rate `βx`, weil ein
+Sterbeschritt die Gesamtrate hebt. Was der Weg meint, ist die Dominierung der
+**Zustände**, und zwei Prozesse, deren Zustände verglichen werden, teilen sich
+keine eingebettete Kette. Eine Kopplung ist ein Maß auf einem gemeinsamen Raum
+und keine Ungleichung zwischen Raten; das sind 21 Zeilen, die anerkanntermaßen
+nicht ankommen, und die Bruchstelle stand fest, bevor mehr dafür ausgegeben war.
+
+#### Was dieser Lauf **nicht** getan hat
+
+* **Den Kopplungsweg gebaut.** Er ist der einzige offene Punkt von Teil F, und
+  was er kostet, ist eine gemeinsame Konstruktion und kein Umbau des
+  Vorhandenen.
+* **Die beiden Quasi-Linksstetigkeiten**, `UnifIntegrable.comp`, die fünfzig
+  veralteten Namen. Unberührt.
+* **Die Probe auf einem *unendlichen* Zustandsraum.** Auf `ℕ` wäre
+  `CompactContainment` keine Leerformel mehr, und das ist der Punkt, an dem der
+  Satz erst etwas kostet — siehe Vorschlag 2.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`isQuasiLeftContinuous_of_isMPSolutionFor`** (`Suggested.lean:3727`).
+   *Worauf es ruht:* `isQuasiLeftContinuous_of_isRegularizingClass` (dessen
+   Beweis der zweite `sorry` daneben ist), `IsL1LeftContinuousAlongStoppingTimes`,
+   und jetzt zusätzlich auf `exists_cadlag_modification_flip`, das dem Satz seine
+   Eingabe `hX : ∀ᵐ ω, IsCadlagPath (X · ω)` auf Daten liefert. *Warum jetzt:*
+   der Gegenzeuge steht seit langem (`not_isQuasiLeftContinuous_of_atom`, die
+   Münze am Atom), der positive Satz ist der letzte offene Punkt des ersten
+   Gesichts von Meilenstein 9, und mit der Leerheitsprobe im Rücken ist er nicht
+   mehr eine Aussage über eine womöglich leere Klasse. Das ist unverändert der
+   Vorschlag der vier Vorläufe, und er ist jetzt besser gestützt als damals.
+2. **Die Leerheitsprobe auf `E = ℕ`, am Poissonprozeß.** *Worauf sie ruht:*
+   `jumpProcessE_isMPSolution` an den Poissondaten — **nicht**
+   `poissonProcess_isLocalMPSolution` (`:13854`), denn die càdlàg-Aussage verlangt
+   `IsMPSolution` und nicht `IsLocalMPSolution`; die Poissonrate ist konstant,
+   also erfüllt sie `0 < lam ≤ L` und der globale Satz greift unmittelbar.
+   Ferner `lebesgueClock_isProgressive_jumpProcessE` (das `Countable E` und
+   `MeasurableSingletonClass E` verlangt und beides auf `ℕ` hat), und für `Φ₀`
+   wieder die Punktindikatoren. *Warum jetzt:* sie ist der Prüfstein, den die
+   Probe dieses Laufs ausdrücklich **nicht** ist. Auf `ℕ` mit der diskreten
+   Topologie ist `CompactContainment` keine Leerformel — kompakt heißt dort
+   endlich —, und die Aussage „mit Wahrscheinlichkeit `> 1 - ε` bleibt der Pfad
+   auf `[0,T] ∩ D` unter einer Schranke" ist eine echte Straffheit, die aus der
+   Poissonverteilung folgt. Sie ist damit die erste Stelle, an der man sieht, was
+   der Satz kostet, wenn seine Voraussetzung nicht geschenkt ist. *Der zu
+   erwartende Widerstand:* `CompactContainment` quantifiziert über `t ∈ Iic T ∩ D`
+   und damit über eine abzählbare Menge, also reicht die Monotonie des Zählprozesses
+   und eine Schranke bei `T`; das ist ein Markovschluß und keine Straffheitstheorie.
+3. **Der Kopplungsweg von Teil F**, mit der benannten Bruchstelle als Aufgabe und
+   nicht als Hindernis: eine gemeinsame Konstruktion, unter der die lineare
+   Geburt-Tod-Kette pfadweise vom Yule-Prozeß dominiert wird. *Worauf er ruht:*
+   nichts Vorhandenes — und das ist der Meßwert, um den der Vergleich noch
+   unvollständig ist.
+4. **Die fünfzig Aufrufe veralteter Namen**, unverändert Vorschlag 4 des
+   Vorlaufs.
