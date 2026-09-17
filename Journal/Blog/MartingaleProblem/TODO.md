@@ -28,10 +28,54 @@ formalisiert dort niemand danach.
   stützen, weil KI-Reviewer es sonst als Standard nehmen. Unsere vier Stellen
   dazu sind entschärft.
 
-**Reihenfolge:** `WeakConvergence` zuerst (hängt nur an Mathlib, trägt die
-meisten bewiesenen Deklarationen), dann `KolmogorovExtension`,
-`SkorokhodSpace`, `MartingaleProblems`. Vier getrennte PRs, `awaiting-review`
-als Label.
+**Deine Entscheidung vom 17. September: eine einzige Einreichung**, also *ein*
+PR über alle vier Roadmaps, und die `Suggested.lean` dürfen aufeinander
+aufbauen. Das ist umgesetzt: die Kette baut, `check_suggested.py` übersetzt in
+Abhängigkeitsordnung mit `autoImplicit=false`, und **keine der drei Dateien
+trägt noch ein `sorry`** (Stand 17.09. abends: `WeakConvergence` 193
+Deklarationen, `SkorokhodSpace` 351, `MartingaleProblems` 1465).
+
+Die frühere Empfehlung waren vier getrennte PRs; der Grund dafür bleibt wahr und
+gehört in die PR-Beschreibung: `CONTRIBUTING.md` nennt substantielles Review das
+Knappste im Projekt. Komm ihm entgegen — die Abhängigkeitskette nennen
+(`WeakConvergence` und `SkorokhodSpace` sind unabhängige Blätter über Mathlib,
+`MartingaleProblems` hängt an beiden, `KolmogorovExtension` ist unabhängig), den
+Leseweg angeben (`WeakConvergence` zuerst), und die Meilensteine als
+*roadmap-for-a-roadmap* kennzeichnen (`MartingaleProblems` 12 und 13).
+Label `awaiting-review`.
+
+**Zwei Dinge, die vor dem PR noch zu tun sind und leicht untergehen:**
+
+1. **Die Bestandsaufnahme `ssec:available` im Manuskript nachziehen.** Sie ist
+   vom 8. September und stimmt in mehreren Zeilen nicht mehr. Sie ist zugleich
+   die ehrlichste Zusammenfassung dessen, was die Roadmaps leisten, und muß für
+   die PR-Beschreibung ohnehin stimmen. Was sich seither geändert hat:
+
+   *Mathlib hat inzwischen, was die Liste nicht weiß:* `IsCadlag`,
+   `IsRightContinuous`, `IsCaglad` seit `#43352` in
+   `Mathlib/Topology/Order/Cadlag.lean` — der Unterschied *Prädikat vorhanden,
+   Raum fehlt* steht dort nicht; `MeasureTheory.TendstoInDistribution` schon in
+   v4.33.1 über einer **Familie** von Räumen (wir hatten das Gegenteil behauptet
+   und einen eigenen Begriff gebaut, der am 17.09. gestrichen wurde);
+   `ContinuousLinearMap.comp_condExp_comm` (aber keine Prozeßfassung).
+
+   *Wir haben inzwischen bewiesen, was die Liste als „to be built" führt:* die
+   Regularisierung von Submartingalen längs einer dichten Menge
+   (`fact:cadlagext`, `fact:submgreg`) **ganz**, samt Doobs Maximal- und
+   Minimalungleichung in stetiger Zeit; die Skorokhod-Darstellung und $M_E$;
+   die Konvergenz der endlichdimensionalen Verteilungen in $\DE$ und die
+   relativen Kompaktheitskriterien (`SkorokhodSpace` ist vollständig).
+
+   *Und eine Zahl, die die Liste gar nicht führt:* Punkt 8 unten hat
+   dreiundzwanzig benannte Mathlib-Lücken, teils maschinell nachgeprüft.
+
+2. **Die `scratch/`-Verzeichnisse entfernen.** In
+   `TauCeti/MartingaleProblems/scratch/` liegen die Entwicklungs-Stubs, in denen
+   die Läufe erst gegen Mathlib allein arbeiten (`Seam.lean`, `Levy.lean`,
+   `Decomposition.lean`, `QuasiLeft.lean`, `Middle.lean`, `Work.lean`,
+   `PCont.lean`, `UI.lean`). Die Technik hat den Durchlauf von zwanzig Minuten
+   auf eine Minute gedrückt und ist gut so — aber in eine Roadmap gehören sie
+   nicht. Ebenso `KolmogorovExtension/scratch/TrajPi.lean`. Siehe Punkt 7.
 
 ## 2. Zulip, vor dem PR: wo gehört Feller hin?
 
