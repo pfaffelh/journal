@@ -1366,7 +1366,7 @@ both 2026-09-09. What is left of the milestone is the third instance,
   The integral half of the repair is proved too (2026-09-09):
   `SkorokhodSpace.intWith_le_of_ae_distWith_le` asks the windowed bound only *off*
   a measurable set `B` of radii and pays `B`'s measure below `M`, so the estimate
-  reads `ε + β + exp (-M)`; the split of `Set.Ioc 0 M` is `Set.diff_union_inter`
+  reads `ε + β + exp (-M)`; the split of `Set.Ioc 0 M` is `Set.sdiff_union_inter`
   and the bad piece is bounded by `1`, the integrand being `exp (-u) * min 1 _`.
   `radius_exhaustionMax_mem_Ico_subset` is what supplies a *measurable* `B`: the
   radius set itself is only visibly contained in

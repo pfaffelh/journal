@@ -39,15 +39,21 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-17 (fifth run of that day).  Every declaration elaborates; 5 declarations carry `sorry`,
-and every one of those `sorry`s is a **proof** -- no statement carries one.
+2026-09-17 (seventh run of that day), over the **whole** file and without an error.  Every
+declaration elaborates; 5 declarations carry `sorry`, and every one of those `sorry`s is a
+**proof** -- no statement carries one.  The debt the sixth run of that day left -- five
+declarations checked only as far as line 8386, where its output had been cut off -- is settled:
+`Clock.IsContinuousFor`, `norm_compensator_sub_le_of_isProgressive`, `isCompensatorFor_mpFamily`,
+`isRegularizingClass_mpFamily` and `lebesgueClock_isContinuousFor_optional` all elaborate in a
+full run, and `#print axioms` gives the four theorems among them `propext`, `Classical.choice`,
+`Quot.sound` and nothing else.
 
-**The five declarations added in the sixth run of that day are checked only as far as line 8386**,
-which is where that run's output was cut off: `Clock.IsContinuousFor`,
-`norm_compensator_sub_le_of_isProgressive`, `isCompensatorFor_mpFamily`,
-`isRegularizingClass_mpFamily` and `lebesgueClock_isContinuousFor_optional` all lie before it and
-elaborated without an error, and everything after it is unchanged from the fifth run's state.
-A full run with `#print axioms` over the four theorems is owed.
+Two more in the seventh run, in `section LocalProgressive`, give the emptiness probe of
+Milestone 9 its state process: `measurable_of_measurable_indicator_comp` -- over a countable `E`
+with measurable points, a map is measurable as soon as every real functional `1_{x} ∘ F` is --
+and `lebesgueClock_isProgressive_jumpProcessE`, which is `Clock.IsProgressive` for the local jump
+process.  That is the hypothesis `hXprog` of `isRegularizingClass_mpFamily`, and the only one of
+its three that the jump construction did not already carry.
 
 Five more the same day, in `section JumpFiltration`, are the four bookkeeping
 facts about `lebesgueClock` that the conditional expectation of
@@ -12981,6 +12987,53 @@ theorem measurable_uncurry_jumpProcessE {lam : E → ℝ} (hlam : Measurable lam
         = h (jumpProcessE lam (min (p.1 : ℝ) (t : ℝ)) p.2) := fun p ↦ by
     rw [max_eq_left (le_min p.1.coe_nonneg t.coe_nonneg)]
   simpa only [heq] using key
+
+/-- **Over a countable state space with measurable points, the real functionals determine the
+map.**  A map into a countable `E` is measurable as soon as each preimage of a point is, and that
+preimage is a level set of the real functional `1_{x} ∘ F`.  The σ-algebra is carried explicitly,
+because the one this is applied to -- a product with a value of a filtration -- is not an
+instance.
+
+This is the step that Befund 4 of the sixth run of 2026-09-17 named as missing: the dyadic
+argument behind `measurable_uncurry_min_of_rightContinuous` reaches every *real* functional of the
+jump process and not the `E` valued process itself, because a limit of `E` valued measurable maps
+needs a measurable diagonal.  A countable `E` with measurable singletons has one, and here it is
+not used through a limit at all -- the limit has already been taken in `ℝ`. -/
+theorem measurable_of_measurable_indicator_comp {α : Type*} {mα : MeasurableSpace α}
+    [Countable E] [MeasurableSingletonClass E] {F : α → E}
+    (h : ∀ x : E, Measurable[mα] fun a ↦ ({x} : Set E).indicator (fun _ ↦ (1 : ℝ)) (F a)) :
+    Measurable[mα] F := by
+  let _ : MeasurableSpace α := mα
+  refine measurable_to_countable' fun x ↦ ?_
+  have hpre : F ⁻¹' {x}
+      = (fun a ↦ ({x} : Set E).indicator (fun _ ↦ (1 : ℝ)) (F a)) ⁻¹' {1} := by
+    ext a
+    by_cases ha : F a = x <;> simp [ha]
+  rw [hpre]
+  exact h x (measurableSet_singleton 1)
+
+/-- **The local jump process is progressively measurable in the sense a `Clock` asks for, over a
+countable state space with measurable points.**
+
+This is the hypothesis `hXprog` of `isRegularizingClass_mpFamily`, and with it the emptiness probe
+of Milestone 9 has a state process: `Q.IsProgressive` speaks of the `E` valued path and not of its
+real functionals, which is why `measurable_uncurry_jumpProcessE` alone does not give it.
+
+The extension `Z` that the definition asks for is the path stopped at `t`, which is the shape
+`measurable_uncurry_jumpProcessE` already produces; below `t` the truncation does nothing, and
+that is the first field.  Countability of `E` enters only through
+`measurable_of_measurable_indicator_comp`, and no topology on `E` is needed. -/
+theorem lebesgueClock_isProgressive_jumpProcessE [Countable E] [MeasurableSingletonClass E]
+    {lam : E → ℝ} (hlam : Measurable lam) :
+    lebesgueClock.IsProgressive (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω)
+      (jumpFiltrationE lam hlam) := by
+  intro t
+  refine ⟨fun u ω ↦ jumpProcessE lam (min (u : ℝ) (t : ℝ)) ω, fun u hu ↦ ?_, ?_⟩
+  · funext ω
+    show jumpProcessE lam (min (u : ℝ) (t : ℝ)) ω = jumpProcessE lam (u : ℝ) ω
+    rw [min_eq_left (by exact_mod_cast hu)]
+  · exact measurable_of_measurable_indicator_comp (E := E) fun x ↦
+      measurable_uncurry_jumpProcessE hlam (measurable_one.indicator (measurableSet_singleton x)) t
 
 /-- **The compensator of the local jump problem is measurable for the past.**  The counterpart of
 `measurable_compensator`, and like it a statement that has to hold at *every* sample point, the
@@ -30890,8 +30943,3 @@ example (P : Measure (RightContinuousPath Bool)) [IsProbabilityMeasure P]
   norm_num
 
 end TwoStateSolution
-
-#print axioms norm_compensator_sub_le_of_isProgressive
-#print axioms isCompensatorFor_mpFamily
-#print axioms isRegularizingClass_mpFamily
-#print axioms lebesgueClock_isContinuousFor_optional

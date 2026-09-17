@@ -32285,3 +32285,188 @@ werden**, und die fehlende Eingabe ist benannt (Vorschlag 1 unten).
    Vorläufe, drei Zeilen.
 4. **Eine Meßbarkeitsprobe an `CompactContainment`.** Unverändert der Vorschlag
    der letzten zehn Läufe.
+
+### 2026-09-17, siebter Lauf des Tages — die offene Prüfschuld ist beglichen, die Leerheitsprobe von Meilenstein 9 hat ihre fehlende Eingabe, und Teil D beginnt mit einem Befund: ein zitierter Mathlib-Name ist seit dem 2026-06-03 `deprecated`
+
+Drei Dinge, in der Reihenfolge, in der der Vorlauf sie vorgeschlagen hatte.
+
+#### 1. Vorschlag 0: der vollständige Durchlauf, den der Vorlauf schuldig blieb
+
+`lake env lean` über die **ganze** `TauCeti/MartingaleProblems/Suggested.lean`,
+die Ausgabe ohne `head`, mit `#print axioms` am Dateiende. Ergebnis:
+
+* **kein einziger Fehler** über alle 30 897 Zeilen (Rückgabewert 0);
+* die Zahl der `sorry` ist unverändert **fünf**, und jedes ist ein *Beweis*,
+  keine Aussage;
+* `#print axioms` über die vier Sätze des Vorlaufs —
+  `norm_compensator_sub_le_of_isProgressive`, `isCompensatorFor_mpFamily`,
+  `isRegularizingClass_mpFamily`, `lebesgueClock_isContinuousFor_optional` —
+  gibt jedem `[propext, Classical.choice, Quot.sound]` und nichts sonst.
+
+Der Vermerk im Dateikopf, fünf Deklarationen seien nur bis Zeile 8386 geprüft,
+ist damit gegenstandslos und **gelöscht**, nicht fortgeschrieben.
+
+#### 2. Die fehlende Eingabe der Leerheitsprobe von Meilenstein 9 steht
+
+Befund 4 des Vorlaufs hatte den Markovschen Sprungprozeß als Zeugen verworfen,
+weil `isRegularizingClass_mpFamily` ein `Q.IsProgressive X 𝓕` über dem
+**`E`-wertigen** Prozeß verlangt und die dyadische Konstruktion nur *reelle*
+Funktionale erreicht: ein Grenzwert `E`-wertiger meßbarer Abbildungen ist nur
+meßbar, wenn die Diagonale von `E` es ist. Der Vorschlag war, das über einen
+abzählbaren diskreten Zustandsraum zu umgehen. Das ist gebaut, in zwei
+Deklarationen im Abschnitt `LocalProgressive`:
+
+* **`measurable_of_measurable_indicator_comp`** — über abzählbarem `E` mit
+  meßbaren Punkten ist `F : α → E` meßbar, sobald jedes reelle Funktional
+  `1_{x} ∘ F` es ist. Die σ-Algebra auf `α` wird **ausdrücklich getragen**
+  (`Measurable[mα]`), weil die, auf die es angewandt wird — ein Produkt mit
+  einem Wert einer Filtration — keine Instanz ist; mit der synthetisierten
+  Instanz scheitert die Anwendung an „synthesized type class instance is not
+  definitionally equal".
+* **`lebesgueClock_isProgressive_jumpProcessE`** — für abzählbares `E` mit
+  meßbaren Punkten und meßbares `lam`:
+  `lebesgueClock.IsProgressive (fun t ω ↦ jumpProcessE lam t ω) (jumpFiltrationE lam hlam)`.
+  Die von `Clock.IsProgressive` verlangte Fortsetzung ist der bei `t` gestoppte
+  Pfad, also genau die Gestalt, die `measurable_uncurry_jumpProcessE` schon
+  liefert; unterhalb von `t` tut das Abschneiden nichts, und das ist das erste
+  Feld.
+
+Beide gehen in einem vollständigen Durchlauf der ganzen Datei ohne Fehler durch
+`lake env lean` gegen v4.33.1, beide mit `#print axioms` auf `propext`,
+`Classical.choice`, `Quot.sound` geprüft; die Zahl der `sorry` bleibt fünf
+(jetzt in den Zeilen 1171, 3713, 3727, 4126, 4156 — die Verschiebung um sechs
+gegenüber dem Vorlauf ist der neue Dateikopf). Die Punkte stehen in
+`MartingaleProblems/README.md`, Meilenstein 9.
+
+**Was damit an der Probe noch fehlt, und es ist nichts über den Prozeß mehr.**
+Die Sprungkonstruktion erfüllt jetzt **alle drei** Voraussetzungen von
+`isRegularizingClass_mpFamily` (`hA`, `hXprog`, `hXm` — die beiden anderen trug
+sie schon). Was eine Leerheitsprobe noch einzulösen hat, betrifft allein den
+Zustandsraum: `Φ₀` abzählbar, beschränkt, stetig, punktetrennend, abgeschlossen
+unter `f ↦ f * conj f`, und `CompactContainment`. Auf einem **endlichen**
+Zustandsraum mit der diskreten Topologie sind die Indikatoren der Punkte ein
+solches `Φ₀` — sie sind idempotent, also unter `f ↦ f * conj f` fest —, und
+`CompactContainment` ist dort trivial. Das ist in die Roadmap geschrieben.
+
+**Keine Topologie auf `E`.** Die Aussage braucht `Countable E` und
+`MeasurableSingletonClass E` und sonst nichts; die diskrete Topologie kommt
+erst bei `Φ₀` ins Spiel, nicht bei der Progressivität.
+
+#### 3. Teil D, begonnen: die Roadmaps gegen frisches `upstream/master`
+
+`git fetch upstream master` in `~/Code/lean/mathlib4`; der Stand, gegen den
+geprüft wurde, ist
+
+> **`7ef65c0feea1fb202b501b758e8920144cc0c3a2`, 2026-09-16.**
+
+Der Auftrag verlangt, jeden zitierten Namen zu prüfen. Von Hand ist das für die
+vier `README.md` nicht zu leisten — sie zitieren **2850** verschiedene
+Bezeichner und **210** Dateipfade. Dieser Lauf hat die Prüfung deshalb
+mechanisiert, in zwei Skripten, die beide allein lauffähig sind und nur lesen:
+
+* **`scripts/check_cited_files.py`** — jeder in den vier `README.md` und den
+  drei `Suggested.lean` zitierte Pfad `.../X.lean` gegen
+  `git ls-tree upstream/master`. Abgekürzte Zitate (`Measure/Tight.lean` für
+  `Mathlib/MeasureTheory/Measure/Tight.lean`) gelten als eingelöst, wenn genau
+  eine getrackte Datei auf sie endet.
+
+  **Ergebnis: 204 von 204 zitierten Mathlib-Pfaden existieren auf `master`.**
+  Die sechs übrigen der 210 sind keine Mathlib-Pfade — vier gehören zum Repo
+  `brownian-motion` (`BrownianMotion/StochasticIntegral/Cadlag.lean`,
+  `Quasimartingale/{Basic,CadlagModification,MaximalInequality}.lean`), einer
+  ist unsere eigene Datei, einer ein Verweis auf `TauCeti/.../scratch/`.
+  Keine Datei ist verschwunden oder umgezogen.
+
+* **`scripts/check_cited_names.py`** — jeder in den vier `README.md`
+  zitierte Bezeichner gegen die auf `master` deklarierten Namen. Das Skript
+  führt `namespace`/`end` mit, so daß gegen den **vollen** Namen geprüft wird
+  und nicht bloß gegen die letzte Komponente, und es meldet einen Namen nur
+  dann als `deprecated`, wenn **jede** Deklaration, auf die das Zitat paßt, es
+  ist. Der Dateikopf sagt ausdrücklich, was das Skript **nicht** leistet: ein
+  Treffer belegt nicht den Namensraum, und ein Fehlschlag ist kein Befund,
+  sondern eine Prüfzeile.
+
+  **Ergebnis: genau ein Befund.**
+
+**Der Befund.** `Set.diff_union_inter`, zitiert in
+`SkorokhodSpace/README.md` und **benutzt** in
+`SkorokhodSpace/Suggested.lean`, ist auf `master` seit dem 2026-06-03
+`deprecated`:
+
+```
+Mathlib/Order/BooleanAlgebra/Set.lean:294:
+  @[deprecated (since := "2026-06-03")] alias diff_union_inter := sdiff_union_inter
+```
+
+und **ebenso schon in v4.33.1** (dieselbe Datei, Zeile 296). Der gültige Name
+ist `Set.sdiff_union_inter`, und er steht in v4.33.1 (Zeile 292). Beide Stellen
+sind berichtigt; `SkorokhodSpace/Suggested.lean` geht nach der Umbenennung
+weiterhin ohne einen Fehler und ohne ein `sorry` durch `lake env lean`.
+
+Die 366 Bezeichner, die das Skript weder auf `master` noch in unseren
+`Suggested.lean` findet, sind durchgesehen und **keine Befunde**: es sind
+Abschnittsnamen (`BoundedHawkes`, `AtomWitness`), Roadmap-Namen für noch nicht
+gebaute Aussagen (`Clock.atomLayerKernel`, `CompactContainment.family`) und
+Vokabeln des Fließtextes. Genau dafür ist die Spalte da — die Roadmap **darf**
+Namen nennen, die es noch nicht gibt; sie darf nur nicht auf Mathlib-Namen
+zeigen, die es nicht mehr gibt.
+
+#### Befund am Rande: fünfzig Aufrufe veralteter Namen in unserem eigenen Lean
+
+Der vollständige Durchlauf von `MartingaleProblems/Suggested.lean` gegen
+v4.33.1 meldet 50 Warnungen über veraltete Namen, und sie sind unsere:
+`Set.mem_setOf_eq` (26 mal, jetzt `Set.mem_ofPred_eq`), die Taktik `push_neg`
+(18 mal, jetzt `push Not`), `Set.mem_diff` (3 mal, jetzt `Set.mem_sdiff`),
+`Measurable.comp'`, `intervalIntegral.integral_finset_sum` und
+`continuous_finset_sum` (je einmal). Keine davon ist ein Fehler, und keine
+berührt eine Aussage — aber es sind fünfzig Stellen, an denen unser Quelltext
+auf einen Namen zeigt, den Mathlib zurückgezogen hat, und der Auftrag zu Teil D
+verlangt genau diese Prüfung. Sie sind **nicht** in diesem Lauf berichtigt:
+`Set.mem_setOf_eq` steckt in `simp`-Listen, und eine Umbenennung, die 26
+Beweise anfaßt, gehört in einen Lauf, der sie auch einzeln übersetzt.
+
+#### Was dieser Lauf **nicht** getan hat
+
+* **Teil D, Schritt 3 — die Negativaussagen.** „Mathlib hat X nicht" steht
+  vielfach in den Roadmaps und in `TODO.md` Punkt 8, und keine dieser Aussagen
+  ist in diesem Lauf nachgeprüft worden. Die beiden Skripte helfen dabei
+  ausdrücklich **nicht**: sie prüfen, ob ein genannter Name existiert, und eine
+  Negativaussage nennt keinen. Das bleibt Handarbeit und ist der erste
+  Vorschlag unten.
+* **Teil D, Schritt 4** — die drei `Suggested.lean` gegen `master` statt gegen
+  v4.33.1. Nur die eine Umbenennung ist geprüft.
+* **Die Leerheitsprobe selbst**, die beiden Quasi-Linksstetigkeiten,
+  `UnifIntegrable.comp`, die Meßbarkeitsprobe an `CompactContainment`.
+  Unberührt.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Teil D, Schritt 3: die Negativaussagen der vier `README.md` und von
+   `TODO.md` Punkt 8 nachprüfen.** *Worauf es ruht:* frisches `upstream/master`
+   (`7ef65c0feea`, schon geholt) und `git grep` darin. *Warum jetzt:* die
+   beiden anderen Schritte von Teil D sind mit diesem Lauf erledigt und
+   mechanisiert, dieser ist der einzige, der noch aussteht — und er ist der,
+   bei dem ein Fund am meisten wert ist, weil eine falsch gewordene
+   Negativaussage einen Leser Arbeit kostet, die schon getan ist. *Wie:* die
+   Aussagen einsammeln (sie stehen meist als „Mathlib has no …", „kein
+   Treffer", „in keiner Form"), je eine Suche auf `master`, und das Datum der
+   Prüfung an die Aussage schreiben, damit der nächste Lauf sieht, was frisch
+   ist.
+2. **Die Leerheitsprobe von Meilenstein 9 zu Ende bringen**, auf `E = Bool`
+   oder einem endlichen Zustandsraum. *Worauf sie ruht:*
+   `lebesgueClock_isProgressive_jumpProcessE` aus diesem Lauf,
+   `isRegularizingClass_mpFamily` aus dem Vorlauf, und der Abschnitt
+   `TwoStateSolution`, der auf `Bool` bereits eine Lösung des
+   Martingalproblems auf dem kanonischen Pfadraum hat. *Warum jetzt:* von den
+   sieben Voraussetzungen der càdlàg-Aussage ist keine mehr über den Prozeß
+   offen, nur noch über den Zustandsraum, und auf einem endlichen Raum sind sie
+   sämtlich billig — `Φ₀` sind die Punktindikatoren, `CompactContainment` ist
+   trivial, `T2Space`, `RegularSpace`, `OpensMeasurableSpace` und
+   `FirstCountableTopology` liefert die diskrete Topologie. Der Verdacht der
+   Leerheit ist nach `Shift` und `hint` nicht akademisch, und dieser Meilenstein
+   ist das Tor zu den 351 Deklarationen von `SkorokhodSpace`, die bis heute
+   nichts verbraucht.
+3. **`isQuasiLeftContinuous_of_isMPSolutionFor`**, unverändert Vorschlag 2 der
+   beiden Vorläufe.
+4. **`UnifIntegrable.comp` nachbauen**, unverändert der Vorschlag der vier
+   Vorläufe, drei Zeilen.

@@ -8367,6 +8367,35 @@ and 11 use them.
   `Clock.IsContinuousFor` under the optional convention, the window `(s ⊓ t, s ⊔ t]`
   having mass `|s - t|` exactly by `lebesgueClock_apply_Ioc`. The clock every
   jump process of Milestone 4 runs on is therefore an admissible one here.
+* `measurable_of_measurable_indicator_comp`: over a **countable** `E` with
+  measurable points, a map `F : α → E` is measurable as soon as every real
+  functional `1_{x} ∘ F` is, the σ-algebra on `α` being carried explicitly
+  because the one this is applied to — a product with a value of a filtration —
+  is not an instance.
+
+  It is the step that separates the `E` valued path from its real functionals.
+  The dyadic argument of `measurable_uncurry_min_of_rightContinuous` reaches
+  every real functional of a right continuous process and not the process
+  itself, because a limit of `E` valued measurable maps is measurable only when
+  the diagonal of `E` is; a countable `E` with measurable points has one, and
+  here it is not used through a limit at all, the limit having been taken in
+  `ℝ`.
+* `lebesgueClock_isProgressive_jumpProcessE`: for `E` countable with measurable
+  points and `lam` measurable,
+  ```
+  lebesgueClock.IsProgressive (fun t ω ↦ jumpProcessE lam t ω) (jumpFiltrationE lam hlam) .
+  ```
+  The extension the definition asks for is the path stopped at `t`, which is the
+  shape `measurable_uncurry_jumpProcessE` produces; below `t` the truncation does
+  nothing. No topology on `E` is needed.
+
+  With it the jump construction of Milestone 4 satisfies all three hypotheses of
+  `isRegularizingClass_mpFamily`, and the emptiness probe of this milestone has
+  a state process. What a probe still has to supply is about the state space
+  alone: a countable, bounded, continuous, point separating `Φ₀` closed under
+  `f ↦ f * conj f`, and compact containment — on a **finite** state space with
+  the discrete topology the indicators of the points are such a `Φ₀`, being
+  idempotent, and compact containment is trivial.
 * The classical statement as a one line instance: for `A ⊆ Cb(E) × Bdd(E)` whose
   domain is separating and contains a countable subset separating points, every
   solution of the martingale problem for `A` satisfying compact containment has
