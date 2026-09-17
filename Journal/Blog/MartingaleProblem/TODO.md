@@ -752,7 +752,15 @@ Mathematik), den beiden Quasi-Linksstetigkeiten und den beiden Konvergenzsätzen
 `mpSolution_of_tendsto` und `isMPSolution_of_forall_condExp_eq_of_dense`.
 `exists_cadlag_modification_of_isRegularizingClass` steht seit dem 2026-09-17,
 fünftem Lauf des Tages, **bewiesen** — Doobs Regularisierung in der `E`-wertigen
-Fassung, und damit der erste der drei `sorry` von Meilenstein 9.
+Fassung, und damit der erste der drei `sorry` von Meilenstein 9. Im sechsten
+Lauf desselben Tages ist die Voraussetzung `hΦ` dieser Aussage aus dem
+Martingalproblem selbst erzeugt worden statt angenommen
+(`isRegularizingClass_mpFamily`, über `isCompensatorFor_mpFamily` und die neue
+Uhrbedingung `Clock.IsContinuousFor`); was an einer Instanz noch einzulösen ist,
+betrifft den Zustandsraum und nicht mehr den Prozeß. Diese fünf Deklarationen
+sind bis Zeile 8386 fehlerfrei übersetzt und liegen sämtlich davor; ein
+vollständiger Durchlauf mit `#print axioms` steht aus und ist der erste
+Handgriff des nächsten Laufs.
 
 Inhaltlich geschlossen sind seit dem 8. September: **Meilenstein 5**
 (`restart`, `restart_canonical` — dabei zeigte sich, daß der Aussage, wie sie

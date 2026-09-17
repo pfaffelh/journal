@@ -39,7 +39,16 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-17 (fifth run of that day).  Every declaration elaborates; 5 declarations carry `sorry`, and
+2026-09-17 (fifth run of that day).  Every declaration elaborates; 5 declarations carry `sorry`,
+and every one of those `sorry`s is a **proof** -- no statement carries one.
+
+**The five declarations added in the sixth run of that day are checked only as far as line 8386**,
+which is where that run's output was cut off: `Clock.IsContinuousFor`,
+`norm_compensator_sub_le_of_isProgressive`, `isCompensatorFor_mpFamily`,
+`isRegularizingClass_mpFamily` and `lebesgueClock_isContinuousFor_optional` all lie before it and
+elaborated without an error, and everything after it is unchanged from the fifth run's state.
+A full run with `#print axioms` over the four theorems is owed.
+
 Five more the same day, in `section JumpFiltration`, are the four bookkeeping
 facts about `lebesgueClock` that the conditional expectation of
 `jumpProcess_isMPSolution` still needed, plus their assembly:
@@ -100,7 +109,8 @@ factor.  `integral_fddProd_eq_of_isMPSolution_of_map_eq` is the uniqueness, and
 process.  That induction is the one place that needs `X` itself to be adapted --
 the `StronglyAdapted` of `Martingale` is about the *compensated* processes --
 which for the construction is `stronglyMeasurable_jumpFiltration`.
-every one of those `sorry`s is a **proof**.  The last two blocks of the file are
+
+The last two blocks of the file are
 Milestone 4, and they carry **no** `sorry`.  The first, `IsStepPath`, was added on 2026-09-09:
 its three declarations are proved, and one of them,
 `exists_finite_setOf_leftLim_ne_not_isCadlagPath`, is the witness that the
@@ -567,6 +577,30 @@ theorem Clock.measure_interval_ne_top (Q : Clock ι) (c : Clock.Conv) (s t : ι)
 
 /-- The two conventions agree exactly for an atomless clock. -/
 def Clock.IsAtomless (Q : Clock ι) : Prop := ∀ t : ι, Q.q {u | t ≤ u ∧ u ≤ t} = 0
+
+section ClockContinuity
+
+variable {ι : Type*} [LinearOrder ι] [TopologicalSpace ι]
+
+/-- **A clock whose compensating windows shrink to nothing.**  The mass of the
+window between `s` and `t` tends to `0` as `s` tends to `t`.
+
+This is what the compensator of `mpFamily` needs in order to have one sided
+limits, and it gives more: the compensator becomes continuous in `t` at every
+sample point (`isCompensatorFor_mpFamily`).  Only a linear order and a topology
+on the index enter, no order topology and no completeness.
+
+**It does not imply `Clock.IsAtomless`.**  Over a discrete index it is vacuous: `𝓝 t = pure t`, the window at
+`s = t` is `Set.Iic t \ Set.Iic t = ∅` under both conventions, and so counting
+measure on `ℕ` has it while being as atomic as a clock can be.  In the other
+direction, over a first countable index an atomless clock should have it, by
+continuity from above of a measure finite on down-sets; that implication is not
+proved here and is not needed, the one clock this roadmap uses getting the
+property by computation (`lebesgueClock_isContinuousFor_optional`). -/
+def Clock.IsContinuousFor (Q : Clock ι) (c : Clock.Conv) : Prop :=
+  ∀ t : ι, Tendsto (fun s ↦ Q.q.real (Q.interval c (min s t) (max s t))) (𝓝 t) (𝓝 0)
+
+end ClockContinuity
 
 /-! ## Milestone 2: the abstract martingale problem -/
 
@@ -3424,6 +3458,149 @@ theorem exists_cadlag_modification_of_isRegularizingClass [FirstCountableTopolog
   by_contra hcon
   obtain ⟨f, hf, hfne⟩ := hsep _ _ hcon
   exact hfne (hω f hf)
+
+/-! ### The regularizing class of a bounded operator
+
+`exists_cadlag_modification_of_isRegularizingClass` above asks for a
+`IsRegularizingClass Φ X 𝓧 𝓕 P D`, and nothing so far produces one.  This block
+does, out of the martingale problem itself: for a **bounded** second component
+and a clock whose windows shrink to nothing, the compensator of `mpFamily` is a
+compensator in the sense of `IsCompensatorFor`, and `Prod.fst '' A` is a
+regularizing class for it.
+
+The three statements are the same estimate read three times.  Everything rests
+on `norm_compensator_sub_le_of_isProgressive`: the increment of the compensator
+over `[s,t]` is the integral over the window, so its norm is at most `b` times
+the mass of the window.  From it, the path regularity (`exists_limits`) is a
+squeeze at every point, and the `L¹` right continuity is the same squeeze under
+the lower integral of a finite measure.
+
+Two hypotheses that the abstract statement carries and this one does **not**:
+
+* **The measurability of `f`.**  `IsCompensatorFor` constrains `C`, and `C` does
+  not see `f`; the decomposition field is `sub_add_cancel` and holds at every
+  sample point.  A measurable `f` is needed for `Y` to be a martingale, which is
+  a different hypothesis of the càdlàg theorem (`h𝓧`), not for the class to be
+  regularizing.
+* **`[OrderTopology ι]`.**  The estimate and the squeeze read the topology of
+  the index only through `𝓝 t`.
+-/
+
+omit [TopologicalSpace E] [TopologicalSpace ι] [OrderTopology ι] in
+/-- **The increment of the compensator of `mpFamily` is the window integral**,
+hence bounded by `b` times the mass of the window.  The identity is
+`mpFamily_sub_of_isProgressive` at `f = 0`, which is why the state term does not
+appear and why no measurability of `f` is asked. -/
+theorem norm_compensator_sub_le_of_isProgressive {Q : Clock ι} {c : Clock.Conv}
+    {X : ι → Ω → E} {𝓕 : Filtration ι m} {g : E → 𝕂}
+    (hg : Measurable g) {b : ℝ} (hgb : ∀ x, ‖g x‖ ≤ b)
+    (hXprog : Q.IsProgressive X 𝓕) {s t : ι} (hst : s ≤ t) (ω : Ω) :
+    ‖(∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q) -
+        ∫ u in Q.interval c ⊥ s, g (X u ω) ∂Q.q‖ ≤ b * Q.q.real (Q.interval c s t) := by
+  have h := mpFamily_sub_of_isProgressive (Q := Q) (c := c) (X := X) (𝓕 := 𝓕)
+    (f := fun _ ↦ (0 : 𝕂)) (g := g)
+    (Y := fun t ω ↦ -(∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q))
+    (fun t ω ↦ by simp) hg hgb hXprog hst ω
+  have hrw : (∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q) -
+      ∫ u in Q.interval c ⊥ s, g (X u ω) ∂Q.q
+      = ∫ u in Q.interval c s t, g (X u ω) ∂Q.q := by
+    linear_combination -h
+  rw [hrw]
+  exact norm_setIntegral_le_of_norm_le_const
+    (lt_top_iff_ne_top.2 (Q.measure_interval_ne_top c s t)) fun u _ ↦ hgb _
+
+omit [TopologicalSpace E] [OrderTopology ι] in
+/-- **The compensator of `mpFamily` is a compensator.**  For a bounded generator
+over a clock whose windows shrink to nothing, all four fields of
+`IsCompensatorFor` hold, three of them by the single estimate
+`norm_compensator_sub_le_of_isProgressive`.
+
+The compensator is even **continuous in `t` at every sample point**, not merely
+possessed of one sided limits along `D`; `exists_limits` is that continuity
+restricted to the two filters, and the restriction is `nhdsWithin_le_nhds`.  The
+strong adaptedness is `stronglyAdapted_mpFamily_of_isProgressive` read at
+`f = 0`, so that it is the compensator alone that is asserted to be adapted. -/
+theorem isCompensatorFor_mpFamily {Q : Clock ι} {c : Clock.Conv} {D : Set ι}
+    {X : ι → Ω → E} {𝓕 : Filtration ι m} {P : Measure Ω} [IsFiniteMeasure P]
+    {f g : E → 𝕂} (hg : Measurable g) {b : ℝ} (hgb : ∀ x, ‖g x‖ ≤ b)
+    (hXprog : Q.IsProgressive X 𝓕) (hXm : ∀ t, Measurable[𝓕 t] (X t))
+    (hQc : Q.IsContinuousFor c) :
+    IsCompensatorFor X 𝓕 P D f
+      (fun t ω ↦ f (X t ω) - ∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q)
+      (fun t ω ↦ ∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q) := by
+  set C : ι → Ω → 𝕂 := fun t ω ↦ ∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q with hCdef
+  have key : ∀ (t s : ι) (ω : Ω),
+      ‖C s ω - C t ω‖ ≤ b * Q.q.real (Q.interval c (min s t) (max s t)) := by
+    intro t s ω
+    rcases le_total s t with h | h
+    · rw [norm_sub_rev, min_eq_left h, max_eq_right h]
+      exact norm_compensator_sub_le_of_isProgressive hg hgb hXprog h ω
+    · rw [min_eq_right h, max_eq_left h]
+      exact norm_compensator_sub_le_of_isProgressive hg hgb hXprog h ω
+  have hbound : ∀ t : ι,
+      Tendsto (fun s ↦ b * Q.q.real (Q.interval c (min s t) (max s t))) (𝓝 t) (𝓝 0) := by
+    intro t
+    simpa using (hQc t).const_mul b
+  have hcont : ∀ (t : ι) (ω : Ω), Tendsto (fun s ↦ C s ω) (𝓝 t) (𝓝 (C t ω)) := by
+    intro t ω
+    rw [← tendsto_sub_nhds_zero_iff]
+    exact squeeze_zero_norm (fun s ↦ key t s ω) (hbound t)
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · intro t
+    have h := stronglyAdapted_mpFamily_of_isProgressive (Q := Q) (c := c) (X := X) (𝓕 := 𝓕)
+      (f := fun _ ↦ (0 : 𝕂)) (g := g) (Y := fun t ω ↦ -(C t ω))
+      (fun t ω ↦ by rw [zero_sub]) measurable_const hg hXprog hXm t
+    have hCt : C t = fun ω ↦ -(-(C t ω)) := by funext ω; rw [neg_neg]
+    rw [hCt]
+    exact h.neg
+  · exact fun t ↦ Filter.Eventually.of_forall fun ω ↦ by ring
+  · exact Filter.Eventually.of_forall fun ω t ↦
+      ⟨⟨C t ω, (hcont t ω).mono_left nhdsWithin_le_nhds⟩,
+        ⟨C t ω, (hcont t ω).mono_left nhdsWithin_le_nhds⟩⟩
+  · intro t
+    have hle : ∀ s : ι, ∫⁻ ω, ‖C s ω - C t ω‖ₑ ∂P ≤
+        ENNReal.ofReal (b * Q.q.real (Q.interval c (min s t) (max s t))) * P Set.univ := by
+      intro s
+      calc ∫⁻ ω, ‖C s ω - C t ω‖ₑ ∂P
+          ≤ ∫⁻ _ : Ω, ENNReal.ofReal
+              (b * Q.q.real (Q.interval c (min s t) (max s t))) ∂P := by
+            refine lintegral_mono fun ω ↦ ?_
+            rw [← ofReal_norm]
+            exact ENNReal.ofReal_le_ofReal (key t s ω)
+        _ = _ := lintegral_const _
+    have hup : Tendsto (fun s ↦ ENNReal.ofReal
+        (b * Q.q.real (Q.interval c (min s t) (max s t))) * P Set.univ) (𝓝[>] t) (𝓝 0) := by
+      have h0 : Tendsto (fun s ↦ ENNReal.ofReal
+          (b * Q.q.real (Q.interval c (min s t) (max s t)))) (𝓝[>] t) (𝓝 0) := by
+        have hb' : Tendsto (fun s ↦ b * Q.q.real (Q.interval c (min s t) (max s t)))
+            (𝓝[>] t) (𝓝 0) := (hbound t).mono_left nhdsWithin_le_nhds
+        simpa using ENNReal.tendsto_ofReal hb'
+      simpa using ENNReal.Tendsto.mul_const h0 (Or.inr (measure_ne_top P Set.univ))
+    exact tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hup
+      (fun s ↦ by simp) hle
+
+omit [TopologicalSpace E] [OrderTopology ι] in
+/-- **The test functions of a bounded operator form a regularizing class.**  This
+is the hypothesis `hΦ` of `exists_cadlag_modification_of_isRegularizingClass`,
+read off the data of the martingale problem and not assumed: the member of `𝓧` is
+the test process of `mpFamily` itself, so that the càdlàg theorem and the
+solution speak about the same processes.
+
+Only the second component of each pair is constrained, and only by measurability
+and a bound; the first is arbitrary.  The bound may depend on the pair, which is
+what `∃ b` inside the quantifier says and what an operator with unbounded domain
+needs. -/
+theorem isRegularizingClass_mpFamily {A : Set ((E → 𝕂) × (E → 𝕂))}
+    {Q : Clock ι} {c : Clock.Conv} {D : Set ι} {X : ι → Ω → E} {𝓕 : Filtration ι m}
+    {P : Measure Ω} [IsFiniteMeasure P]
+    (hA : ∀ p ∈ A, Measurable p.2 ∧ ∃ b : ℝ, ∀ x, ‖p.2 x‖ ≤ b)
+    (hXprog : Q.IsProgressive X 𝓕) (hXm : ∀ t, Measurable[𝓕 t] (X t))
+    (hQc : Q.IsContinuousFor c) :
+    IsRegularizingClass (Prod.fst '' A) X (mpFamily A Q c X) 𝓕 P D := by
+  rintro _ ⟨p, hp, rfl⟩
+  obtain ⟨hg, b, hgb⟩ := hA p hp
+  exact ⟨fun t ω ↦ p.1 (X t ω) - ∫ u in Q.interval c ⊥ t, p.2 (X u ω) ∂Q.q,
+    ⟨p, hp, fun t ω ↦ rfl⟩, _, isCompensatorFor_mpFamily hg hgb hXprog hXm hQc⟩
 
 /-- A càdlàg process reaches its left limits along every nondecreasing sequence
 of stopping times. The bound `t` keeps the stopping times bounded, which is what
@@ -6504,6 +6681,29 @@ theorem lebesgueClock_apply_Ioc (a b : ℝ≥0) :
   rw [Measure.map_apply measurable_real_toNNReal measurableSet_Ioc,
     Measure.restrict_apply (measurable_real_toNNReal measurableSet_Ioc),
     lebesgueClock_preimage_Ioc, Real.volume_Ioc]
+
+/-- **`lebesgueClock` shrinks**, and so the hypothesis `Clock.IsContinuousFor` of
+`isCompensatorFor_mpFamily` is not empty.  The window between `s` and `t` has
+mass `|s - t|` exactly, by `lebesgueClock_apply_Ioc`, and that is continuous in
+`s` and vanishes at `t`.  The proof is a computation and reads nothing about
+atoms; the mass of the window is known exactly, which is more than any
+qualitative hypothesis on the clock would give. -/
+theorem lebesgueClock_isContinuousFor_optional :
+    lebesgueClock.IsContinuousFor Clock.Conv.optional := by
+  intro t
+  have hval : ∀ s : ℝ≥0,
+      lebesgueClock.q.real (lebesgueClock.interval Clock.Conv.optional (min s t) (max s t))
+        = ((max s t : ℝ) - (min s t : ℝ)) := by
+    intro s
+    rw [lebesgueClock_interval_optional_eq, measureReal_def, lebesgueClock_apply_Ioc,
+      ENNReal.toReal_ofReal (sub_nonneg.2 (NNReal.coe_le_coe.2 min_le_max))]
+    push_cast
+    ring
+  simp only [hval]
+  have hc : Continuous fun s : ℝ≥0 ↦ ((max s t : ℝ) - (min s t : ℝ)) :=
+    (NNReal.continuous_coe.comp (continuous_id.max continuous_const)).sub
+      (NNReal.continuous_coe.comp (continuous_id.min continuous_const))
+  simpa using hc.tendsto t
 
 /-- **A compensating integral over `lebesgueClock` is a genuine interval integral of `ℝ`, shifted
 to start at `0`.**  This is the fourth of the four bookkeeping steps `jumpProcess_isMPSolution`
@@ -30690,3 +30890,8 @@ example (P : Measure (RightContinuousPath Bool)) [IsProbabilityMeasure P]
   norm_num
 
 end TwoStateSolution
+
+#print axioms norm_compensator_sub_le_of_isProgressive
+#print axioms isCompensatorFor_mpFamily
+#print axioms isRegularizingClass_mpFamily
+#print axioms lebesgueClock_isContinuousFor_optional

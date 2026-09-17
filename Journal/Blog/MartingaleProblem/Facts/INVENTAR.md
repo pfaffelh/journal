@@ -32113,3 +32113,175 @@ obwohl `Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi` eine Schranke
    Vorläufe, drei Zeilen.
 4. **Eine Meßbarkeitsprobe an `CompactContainment`.** Unverändert der Vorschlag
    der letzten neun Läufe.
+
+### 2026-09-17, sechster Lauf des Tages — die Voraussetzung `hΦ` der càdlàg-Modifikation wird jetzt erzeugt statt angenommen; und der Zeuge, den der Vorlauf vorschlug, scheitert an einer Stelle, die die Roadmap schon kennt
+
+Der Vorlauf hatte als ersten Vorschlag die **Leerheitsprobe** von Meilenstein 9
+genannt: eine Klasse `Φ`, die alle sieben Voraussetzungen von
+`exists_cadlag_modification_of_isRegularizingClass` erfüllt. Dieser Lauf hat
+davon den Teil gebaut, der **allgemein** ist und nicht an einem einzelnen
+Prozeß hängt — die Brücke von der Lösung des Martingalproblems zur
+regularisierenden Klasse — und dabei festgestellt, daß der vorgeschlagene Zeuge
+(der Markovsche Sprungprozeß) an einer Stelle scheitert, die im Dateikopf schon
+ausgesprochen steht.
+
+Fünf neue Deklarationen in `TauCeti/MartingaleProblems/Suggested.lean`.
+
+**Wie geprüft wurde, und wie weit — das ist beim Lesen zu beachten.** Die fünf
+zuerst in einer eigenen kleinen Datei gegen v4.33.1 entwickelt, mit den
+Signaturen der Vorstufen (`mpFamily_sub_of_isProgressive`,
+`stronglyAdapted_mpFamily_of_isProgressive`, `lebesgueClock_apply_Ioc`,
+`lebesgueClock_interval_optional_eq`) als `sorry`-Rümpfe wörtlich kopiert; dort
+nach vier Durchläufen **fehlerfrei**, und alle Warnungen über überflüssige
+Abschnittsvariablen abgearbeitet statt abgeschaltet. Danach in die große Datei
+eingesetzt und diese durch `lake env lean` geschickt: der Durchlauf kam **ohne
+einen Fehler bis Zeile 8386**, und die fünf neuen Deklarationen stehen bei 594,
+3488, 3517, 3587 und 6685, liegen also sämtlich darin. Die Zahl der `sorry` ist
+unverändert fünf (Zeilen 1173, 3708, 3723, 4132, 4152).
+
+**Der Rest der Datei ist nicht in diesem Lauf übersetzt worden**, und der Grund
+ist ein Fehler in meinem Aufruf und nicht in der Datei: die Ausgabe lief durch
+ein `head -60`, das nach sechzig Zeilen zumacht, so daß die `#print axioms` am
+Dateiende nicht mehr durchkamen und der Durchlauf abgebrochen werden mußte. Was
+sich daraus dennoch sagen läßt: alles ab Zeile 8386 ist gegenüber dem am
+2026-09-17, fünftem Lauf des Tages, vollständig geprüften Stand **unverändert**
+— jede Einfügung dieses Laufs liegt davor —, und die fünf neuen Namen kommen in
+der Datei vorher nirgends vor, sind weder `instance` noch `@[simp]`, können also
+die Elaboration späterer Deklarationen nicht berühren. **Nachzuholen bleibt: ein
+vollständiger Durchlauf mit `#print axioms` über die vier Sätze**, und er ist
+der erste Handgriff des nächsten Laufs. Bis dahin gilt für sie: elaboriert und
+fehlerfrei, Axiomprüfung offen.
+
+#### Was gebaut wurde
+
+* **`Clock.IsContinuousFor Q c`** — die Uhr, deren Kompensationsfenster ihre
+  Masse verlieren:
+  `Tendsto (fun s ↦ Q.q.real (Q.interval c (min s t) (max s t))) (𝓝 t) (𝓝 0)`
+  für jedes `t`. Sie steht in einem eigenen Abschnitt über `[LinearOrder ι]`
+  und `[TopologicalSpace ι]`, ohne Ordnungstopologie und ohne Vollständigkeit.
+* **`norm_compensator_sub_le_of_isProgressive`** — der Zuwachs des Kompensators
+  über `[s,t]` ist das Fensterintegral, also höchstens `b * q.real (window)`.
+  Es ist `mpFamily_sub_of_isProgressive` gelesen bei `f = 0`.
+* **`isCompensatorFor_mpFamily`** — alle vier Felder von `IsCompensatorFor` für
+  das Paar `(Y, C)` von `mpFamily`.
+* **`isRegularizingClass_mpFamily`** — daraus
+  `IsRegularizingClass (Prod.fst '' A) X (mpFamily A Q c X) 𝓕 P D`.
+* **`lebesgueClock_isContinuousFor_optional`** — die Leerheitsprobe der neuen
+  Uhrbedingung: das Fenster `(s ⊓ t, s ⊔ t]` hat die Masse `|s − t|` genau.
+
+#### Befund 1: drei Voraussetzungen fallen weg, und die erste ist die überraschende
+
+`IsCompensatorFor X 𝓕 P D f Y C` wird für ein **nicht meßbares** `f` bewiesen.
+Der Grund ist, daß die Struktur `C` einschränkt und `C` das `f` nicht sieht: das
+Zerlegungsfeld ist `sub_add_cancel` und gilt an *jedem* Stichprobenpunkt, die
+starke Adaptiertheit wird über `stronglyAdapted_mpFamily_of_isProgressive` bei
+`f = 0` gewonnen, so daß nur der Kompensator selbst als adaptiert behauptet
+wird, und die beiden Grenzwertfelder lesen allein den Kompensator. Ein meßbares
+`f` braucht erst `h𝓧`, also die Martingaleigenschaft von `Y` — eine andere
+Voraussetzung der càdlàg-Aussage, nicht diese.
+
+Ebenso fällt `[OrderTopology ι]` weg (die Abschätzung liest den Index nur durch
+`𝓝 t`) und jede Voraussetzung an `D`: über `D` wird quantifiziert, es geht weder
+Abzählbarkeit noch Dichtheit ein.
+
+#### Befund 2: der Kompensator ist stetig, nicht bloß mit einseitigen Grenzwerten versehen
+
+Das Feld `exists_limits` verlangt einseitige Grenzwerte längs `D ∩ Iio t` und
+`D ∩ Ioi t`. Bewiesen wird mehr: `Tendsto (fun s ↦ C s ω) (𝓝 t) (𝓝 (C t ω))`,
+also **Stetigkeit an jedem Stichprobenpunkt**, und die beiden Felder sind ihre
+Einschränkung über `nhdsWithin_le_nhds`. Der Weg dahin braucht keinen
+Cauchykriterium-Schluß in `𝕂` — der Grenzwertkandidat ist `C t ω` selbst, und
+die Abschätzung von Befund 1 macht daraus eine Einklemmung
+(`squeeze_zero_norm`). `l1_rightContinuous` ist dieselbe Einklemmung unter dem
+unteren Integral, mit der Schranke gleichmäßig in `ω` und einem endlichen `P`.
+
+Das ist der Grund, warum die drei letzten Felder **eine** Rechnung sind und
+nicht drei.
+
+#### Befund 3: `Clock.IsContinuousFor` ist von `Clock.IsAtomless` unabhängig, und über einem diskreten Index leer
+
+Die erste Fassung des Doc-Kommentars behauptete, die neue Bedingung sei
+*stärker* als `Clock.IsAtomless`, mit dem Beispiel einer atomlosen Uhr, die auf
+jedem `(t, t + 1/n]` die Masse `1` trägt. **Das ist falsch**, und der Fehler ist
+vor dem Eintragen aufgefallen: die Uhr ist auf Untermengen endlich
+(`measure_Iic_ne_top`), also gibt die Stetigkeit von oben
+`q (t, t + 1/n] → q ∅ = 0`, sobald der Filter `𝓝 t` von einer Folge erzeugt
+wird. Eine solche Uhr gibt es nicht.
+
+Was statt dessen stimmt und eingetragen ist:
+
+* **`IsContinuousFor` zieht Atomlosigkeit nicht nach sich.** Über
+  einem **diskreten** Index ist die Bedingung leer — `𝓝 t = pure t`, und das
+  Fenster bei `s = t` ist `Set.Iic t \ Set.Iic t = ∅` unter beiden Konventionen.
+  Das Zählmaß auf `ℕ` erfüllt sie also und ist so atomar, wie eine Uhr nur sein
+  kann. Das ist kein Schönheitsfehler, sondern die richtige Lesart: in diskreter
+  Zeit *ist* der Kompensator stetig, weil jeder Punkt isoliert ist.
+* In der anderen Richtung sollte über einem erstabzählbaren Index eine atomlose
+  Uhr die Bedingung haben; dieser Schluß ist **nicht** geführt und wird nicht
+  gebraucht, weil die eine Uhr, die die Roadmap benutzt, ihre Fenstermasse exakt
+  kennt.
+
+#### Befund 4, und er ist der Grund, warum der vorgeschlagene Zeuge nicht durchgeht
+
+Der Vorlauf hatte den Markovschen Sprungprozeß als nächstliegenden Zeugen
+genannt. `isRegularizingClass_mpFamily` verlangt `Q.IsProgressive X 𝓕` — die
+gemeinsame Meßbarkeit des **`E`-wertigen** Prozesses —, und der Dateikopf von
+`measurable_uncurry_min_of_rightContinuous` sagt seit dem 2026-09-10, daß es sie
+für die Sprungkonstruktion über einem bloßen `[MeasurableSpace E]` **nicht gibt**:
+der Beweis nähert `X s` durch `X r` mit `r` knapp oberhalb und geht zur Grenze,
+und ein Grenzwert `E`-wertiger meßbarer Abbildungen ist nur meßbar, wenn die
+Diagonale von `E` es ist. Deshalb trägt die Sprungkonstruktion
+`measurable_uncurry_jumpProcess` für jedes *reelle* Funktional `h ∘ X` und keine
+`Clock.IsProgressive`.
+
+Für Meilenstein 9 ist das keine Schranke — dort ist `E` topologisch, `T2` und
+regulär, und für ein zweitabzählbares metrisierbares `E` ist die Diagonale
+meßbar. Für den Zeugen heißt es: **er muß über einem topologischen `E` gebaut
+werden**, und die fehlende Eingabe ist benannt (Vorschlag 1 unten).
+
+#### Was dieser Lauf **nicht** getan hat
+
+* **Die Leerheitsprobe selbst.** Sie ist jetzt kleiner, aber sie steht aus; was
+  fehlt, ist in Vorschlag 1 benannt.
+* **Die beiden Quasi-Linksstetigkeiten.** Unberührt.
+* **Die volle Zitatprüfung der Roadmaps (Teil D).** Die in diesem Lauf benutzten
+  Mathlib-Namen sind am Quelltext von v4.33.1 belegt (`squeeze_zero_norm`,
+  `tendsto_sub_nhds_zero_iff`, `norm_setIntegral_le_of_norm_le_const`,
+  `ENNReal.tendsto_ofReal`, `ENNReal.Tendsto.mul_const`,
+  `tendsto_of_tendsto_of_tendsto_of_le_of_le`, `lintegral_const`,
+  `nhdsWithin_le_nhds`, `NNReal.continuous_coe`); die vier `README.md` als ganze
+  sind nicht geprüft. Vermerkt sei, daß `ofReal_norm_eq_enorm` in v4.33.1
+  **deprecated** ist (Alias auf `ofReal_norm`) — die hier benutzte Form ist die
+  aktuelle.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+0. **Der vollständige Durchlauf, der diesem Lauf fehlt**, und er ist billig:
+   `lake env lean` über die ganze Datei, die Ausgabe **ohne `head`** in eine
+   Datei, mit `#print axioms` über `norm_compensator_sub_le_of_isProgressive`,
+   `isCompensatorFor_mpFamily`, `isRegularizingClass_mpFamily` und
+   `lebesgueClock_isContinuousFor_optional` am Dateiende; danach die Zeilen
+   wieder entfernen und den Dateikopf nachziehen. *Warum zuerst:* der Dateikopf
+   trägt derzeit ausdrücklich den Vermerk, daß fünf Deklarationen nur bis Zeile
+   8386 geprüft sind, und dieser Vermerk gehört gelöscht und nicht
+   fortgeschrieben.
+1. **`Clock.isProgressive_of_rightContinuous` für einen abzählbaren diskreten
+   Zustandsraum**, und damit die Leerheitsprobe von Meilenstein 9. *Worauf sie
+   ruht:* `measurable_uncurry_min_of_rightContinuous` steht und ist reellwertig;
+   für ein abzählbares `E` mit der diskreten Topologie ist eine Abbildung nach
+   `E` genau dann meßbar, wenn jedes Urbild eines Punktes meßbar ist, also
+   überträgt sich die Aussage ohne den Grenzwertschritt, an dem Befund 4 hängt.
+   Damit ist `Q.IsProgressive` für `jumpProcessE` auf `E = ℕ` verfügbar,
+   `isRegularizingClass_mpFamily` greift, und von den sieben Voraussetzungen
+   der càdlàg-Aussage bleiben die über den Zustandsraum: `Φ₀` abzählbar,
+   beschränkt, stetig, punktetrennend (auf `ℕ` etwa die Indikatoren der Punkte,
+   die unter `f ↦ f * conj f` fest bleiben), und `CompactContainment`, das auf
+   einem **endlichen** Zustandsraum trivial ist. *Warum jetzt:* der Verdacht der
+   Leerheit ist nach `Shift` und `hint` nicht akademisch, und die Probe ist seit
+   diesem Lauf auf eine einzige fehlende Eingabe zusammengeschnurrt.
+2. **`isQuasiLeftContinuous_of_isMPSolutionFor`**, unverändert Vorschlag 2 des
+   Vorlaufs.
+3. **`UnifIntegrable.comp` nachbauen**, unverändert der Vorschlag der drei
+   Vorläufe, drei Zeilen.
+4. **Eine Meßbarkeitsprobe an `CompactContainment`.** Unverändert der Vorschlag
+   der letzten zehn Läufe.

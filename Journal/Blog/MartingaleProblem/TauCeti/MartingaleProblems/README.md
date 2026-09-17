@@ -151,6 +151,21 @@ Lebesgue measure. Fix `[Preorder ι]`.
 * `Clock.IsAtomless q`, defined as `q {u | t ≤ u ∧ u ≤ t} = 0` for every `t`,
   together with `Clock.interval_eq_of_isAtomless`: the two conventions give the
   same measure of every interval exactly when the clock is atomless.
+* `Clock.IsContinuousFor q c`, defined as
+  `Tendsto (fun s ↦ q.real (interval c (min s t) (max s t))) (𝓝 t) (𝓝 0)` for
+  every `t`: the compensating window between `s` and `t` loses its mass as `s`
+  runs into `t`. It is the hypothesis under which the compensator of `mpFamily`
+  is continuous in time, and so the input of Milestone 9 that the martingale
+  problem itself does not supply. Only a linear order and a topology on the
+  index enter, no order topology and no completeness.
+
+  **It does not imply `Clock.IsAtomless`.** Over a discrete index it is
+  vacuous — `𝓝 t` is `pure t` and the window at `s = t` is empty under both
+  conventions — so counting measure on `ℕ` has it and is atomic. Over a first
+  countable index an atomless clock should have it, by continuity from above of
+  a measure finite on down-sets; that implication is not part of this milestone,
+  because the clock the roadmap uses gets the property by computing the mass of
+  the window exactly (`lebesgueClock_isContinuousFor_optional`).
 * For `[AddMonoid ι]` with a compatible order, `Clock.IsShiftInvariant q`,
   defined as `q ((r + ·) '' B) = q B` for measurable `B` — the **image** of `B`
   under the shift, not its preimage. The preimage form `q ((r + ·) ⁻¹' B) = q B`
@@ -8306,6 +8321,52 @@ and 11 use them.
 
   That the theorem is **false** without `hcont`, `hsq` or `hbdd` is not claimed;
   no witness is known for any of the three.
+* `norm_compensator_sub_le_of_isProgressive`: for `g` measurable with
+  `‖g x‖ ≤ b` and `X` progressive for the clock, and `s ≤ t`,
+  ```
+  ‖∫ u in interval c ⊥ t, g (X u ω) ∂q - ∫ u in interval c ⊥ s, g (X u ω) ∂q‖
+    ≤ b * q.real (interval c s t) .
+  ```
+  It is `mpFamily_sub_of_isProgressive` of Milestone 2 read at `f = 0`, so the
+  state term drops out and no measurability of `f` is asked. The whole block
+  below is this estimate read three times.
+* `isCompensatorFor_mpFamily`: under the same hypotheses on `g` together with
+  `Clock.IsContinuousFor q c` and `∀ t, Measurable[𝓕 t] (X t)`, the pair
+  ```
+  Y t ω = f (X t ω) - ∫ u in interval c ⊥ t, g (X u ω) ∂q ,
+  C t ω = ∫ u in interval c ⊥ t, g (X u ω) ∂q
+  ```
+  satisfies `IsCompensatorFor X 𝓕 P D f Y C` for every `D` and every finite `P`.
+  The decomposition field is `sub_add_cancel` and holds at every sample point;
+  the compensator is **continuous** in `t` at every sample point, and
+  `exists_limits` is that continuity restricted along `nhdsWithin_le_nhds`, so
+  the countability of `D` plays no part; `l1_rightContinuous` is the same
+  estimate under the lower integral, where the bound is uniform in `ω` and the
+  measure is finite.
+
+  Three hypotheses the abstract statement carries and this one does not: the
+  measurability of `f`, since `IsCompensatorFor` constrains `C` and `C` does not
+  see `f`; `[OrderTopology ι]`, the estimate reading the index only through
+  `𝓝 t`; and any countability or density of `D`, which is quantified over.
+* `isRegularizingClass_mpFamily`: if every `p ∈ A` has `p.2` measurable and
+  bounded — the bound may depend on `p` — and `X` is progressive and adapted for
+  a clock with `Clock.IsContinuousFor`, then
+  `IsRegularizingClass (Prod.fst '' A) X (mpFamily A Q c X) 𝓕 P D`. The member of
+  `𝓧` exhibited is the test process of `mpFamily` itself, so that the càdlàg
+  theorem and the solution speak about the same processes, and the first
+  component of a pair is unconstrained.
+
+  This is the hypothesis `hΦ` of
+  `exists_cadlag_modification_of_isRegularizingClass`, produced rather than
+  assumed, and with `h𝓧` it is the pair that ties the càdlàg theorem to the
+  martingale problem. What remains to be supplied at an instance is about the
+  state space and not about the process: a countable, bounded, continuous,
+  point separating `Φ₀ ⊆ Prod.fst '' A` closed under `f ↦ f * conj f` into
+  `Prod.fst '' A`, and compact containment.
+* `lebesgueClock_isContinuousFor_optional`: the Lebesgue clock on `ℝ≥0` has
+  `Clock.IsContinuousFor` under the optional convention, the window `(s ⊓ t, s ⊔ t]`
+  having mass `|s - t|` exactly by `lebesgueClock_apply_Ioc`. The clock every
+  jump process of Milestone 4 runs on is therefore an admissible one here.
 * The classical statement as a one line instance: for `A ⊆ Cb(E) × Bdd(E)` whose
   domain is separating and contains a countable subset separating points, every
   solution of the martingale problem for `A` satisfying compact containment has
