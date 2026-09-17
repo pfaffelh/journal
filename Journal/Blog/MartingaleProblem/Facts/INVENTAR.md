@@ -34929,3 +34929,180 @@ keine Sätze des Meilensteins.
 3. **Die Entscheidung über das Lake-Target dem Nutzer vorlegen** (Symlink
    `TauCetiRoadmap → TauCeti` oder Umbenennung des Verzeichnisses), unverändert.
    Es ist eine Frage und keine Arbeit.
+
+### 2026-09-17, zweiundzwanzigster Lauf des Tages — die Doppelung `IsSeparating` ist aufgelöst, und die Hebung auf `RCLike` kostet null Zeilen; dabei kam die zweite, größere Doppelung ans Licht
+
+**Vorschlag 2 der drei Vorläufe ist eingelöst.** `MeasureTheory.IsSeparating`
+steht ab jetzt **einmal**, in `WeakConvergence/Suggested.lean`, über einem
+`RCLike`-Skalarkörper; die gleichnamige Nachbildung in
+`MartingaleProblems/Suggested.lean` ist gestrichen. Die Kette ohne einen Fehler:
+
+| Datei | rc | Fehler | `sorry` | Sekunden |
+| --- | ---: | ---: | ---: | ---: |
+| `WeakConvergence/Suggested.lean` | 0 | 0 | 0 | 8 |
+| `SkorokhodSpace/Suggested.lean` | 0 | 0 | 0 | 13 |
+| `MartingaleProblems/Suggested.lean` | 0 | 0 | 0 | 65 |
+
+#### Was geändert wurde
+
+* `WeakConvergence/Suggested.lean`: `IsSeparating` trägt statt `Set (E → ℝ)`
+  jetzt `{𝕂 : Type*} [RCLike 𝕂]` und `Set (E → 𝕂)`; `IsSeparating.mono` ebenso.
+* `MartingaleProblems/Suggested.lean`: die eigene `def IsSeparating` ist
+  gestrichen, an ihrer Stelle steht ein Modulkommentar, der sagt, wo der Begriff
+  wohnt. Die drei Gebrauchsstellen — `isSeparating_coinClass`,
+  `not_isQuasiLeftContinuous_of_atom` und
+  `not_isQuasiLeftContinuous_of_isRegularizingClass_of_free_solutionSet` — lesen
+  statt `_root_.IsSeparating` jetzt den bloßen Namen, der über
+  `open MeasureTheory` die eine Fassung trifft.
+* `WeakConvergence/README.md`, Meilenstein 1, und ein Verweis in
+  `MartingaleProblems/README.md`, Meilenstein 9, sind nachgezogen.
+
+#### Befund 1: die Hebung kostet **nichts**, und das war vorher nicht klar
+
+Der Doc-Kommentar, der die Aufgabe beschrieb, veranschlagte sie „at the price of
+touching every statement of its Milestone 1". Der Preis ist **null Zeilen**.
+Kein einziger Satz von Meilenstein 1 mußte angefaßt werden, und der Grund ist
+die Elaborationsrichtung: jeder Verbraucher und jeder Erzeuger dort nennt seine
+Klasse mit explizitem Typ `Γ : Set (E → ℝ)`, so daß `𝕂 := ℝ` aus der
+Unifikation fällt und nicht geraten werden muß. Nur `IsSeparating.mono`, dessen
+`Γ` sonst über nichts bestimmt wäre, ist mitgehoben — und das ist dort das
+Richtige und kein Zugeständnis.
+
+Nach der stehenden Regel über minimale Voraussetzungen ist damit auch die
+Richtung geklärt: `RCLike` ist hier **schwächer** als `ℝ`, nicht stärker. `ℝ`
+war keine Voraussetzung der Aussage, sondern eine Einschränkung ihres
+Gegenstands, und sie zwang die zweite Roadmap, dieselbe Proposition noch einmal
+hinzuschreiben. `RCLike` ist zugleich das schwächste Bündel, unter dem die
+Definition überhaupt liest: das Bochner-Integral verlangt einen normierten Raum
+über `ℝ`, und mehr wird nicht gelesen.
+
+#### Befund 2: die drei Gebrauchsstellen in `MartingaleProblems` stehen alle bei `𝕂 = ℝ`
+
+Die gestrichene Fassung war über `Set (E → 𝕂)` formuliert, mit der Begründung,
+das sei „what the operator `A : Set ((E → 𝕂) × (E → 𝕂))` of a martingale problem
+needs". Nachgezählt: **keine** der drei Stellen instanziiert sie über einem
+anderen Körper als `ℝ` — der Münzzeuge lebt auf `Bool` mit reellen
+Testfunktionen, und `isQuasiLeftContinuous_of_isRegularizingClass` liest
+`IsSeparating` seit dem fünften Lauf des 2026-09-17 gar nicht mehr. Die
+Begründung war also richtig für die *Gestalt* des Begriffs und leer für seinen
+bisherigen *Gebrauch*. Sie bleibt trotzdem der Grund für `RCLike`: der Begriff
+gehört zu einem Operator, der `𝕂`-wertig ist, und eine Roadmap, die ihn über `ℝ`
+einsperrt, erzwingt die Doppelung beim ersten komplexen Testfunktional.
+
+#### Befund 3, und er ist der Fund des Laufs: die Doppelung war nicht die einzige
+
+`SUBMISSION.md` nennt neben `IsSeparating` noch „`IsCadlagPath` und Nachbarn".
+Nachgesehen: `MartingaleProblems.IsCadlagPath` ist, Feld für Feld, die
+`structure IsCadlag` aus `SkorokhodSpace/Suggested.lean:727` —
+
+```
+IsCadlagPath g := (∀ t, ContinuousWithinAt g (Set.Ioi t) t)
+                    ∧ ∀ t, ∃ l, Tendsto g (𝓝[<] t) (𝓝 l)
+IsCadlag  f  := ⟨isRightContinuous : ∀ a, ContinuousWithinAt f (Set.Ioi a) a,
+                  tendsto_nhdsLT   : ∀ x, ∃ l, Tendsto f (𝓝[<] x) (𝓝 l)⟩
+```
+
+— und damit ist es die **dritte** Fassung derselben Aussage. Das ist am
+Quelltext nachgesehen und nicht dem Doc-Kommentar geglaubt:
+`git show upstream/master:Mathlib/Topology/Order/Cadlag.lean` in
+`~/Code/lean/mathlib4`, Stand **`8018f6a`, 2026-09-17** („feat(MeasureTheory):
+`inhmgELpNorm` (#43822)"), zeigt `IsRightContinuous` als `def` (Zeile 35) und
+`IsCadlag` als `structure` (Zeile 104) mit genau den beiden Feldnamen
+`isRightContinuous` und `tendsto_nhdsLT`. In v4.33.1, woran wir gebunden sind,
+gibt es die Datei nicht; deshalb bleibt die `SkorokhodSpace`-Fassung, und
+deshalb ist sie diejenige, auf die `MartingaleProblems` jetzt zeigt.
+
+**Der Umbau ist gemacht, und die Kette baut.** `IsCadlagPath` ist gestrichen,
+alle 32 Vorkommen sowie die Satznamen darum sind auf `IsCadlag` gezogen
+(`isCadlag_jumpProcess`, `isCadlag_hawkesProcess`, `IsCadlag.comp_coe_nnreal`,
+`IsCadlag.exists_tendsto_comp_monotone`, `IsStepPath.isCadlag` und die übrigen),
+in `Suggested.lean` wie in `README.md`. **Kein Beweis mußte angefaßt werden:**
+die Stellen lesen durchweg `⟨_, _⟩` und `.1`/`.2`, und beides trifft ein
+`structure ... : Prop` genauso wie ein `And`. Das ist zugleich der Beleg dafür,
+daß die beiden Fassungen im Gebrauch dasselbe sind und nicht bloß auf dem
+Papier.
+
+#### Befund 4, und er ist der teuerste: die „Kette" hatte nur zwei Glieder, und `autoImplicit` hat das verdeckt
+
+Beim Umbau fielen 36 Fehler an, alle von der Bauart `Function expected at` und
+`don't know how to synthesize implicit argument ` + "`IsCadlag`". Der Grund ist
+**nicht** der Umbau: `MartingaleProblems/Suggested.lean` importierte
+`TauCetiRoadmap.WeakConvergence.Suggested` und **sonst nichts aus der Kette** —
+`SkorokhodSpace` war nie importiert. `IsCadlag` war also ein unbekannter Name,
+und weil `lean` ohne Lakefile `autoImplicit` **an** hat, wurde er stillschweigend
+zu einer automatisch gebundenen impliziten Variablen statt zu einem Fehler
+„unknown identifier".
+
+Das ist genau die Bauart von Müllwert, die diese Entwicklung sechsmal getroffen
+hat: eine plausible Antwort, wo keine existiert. Hier war sie laut genug, um
+Fehler zu erzeugen — an einer *Aussage* wäre sie es nicht gewesen. Eine
+Deklaration, die einen verschriebenen großgeschriebenen Namen nennt, wird unter
+`autoImplicit` über einer freien Variablen quantifiziert und ist dann wahr und
+leer.
+
+Der Import ist nachgetragen (`import TauCetiRoadmap.SkorokhodSpace.Suggested`),
+und damit ist die Kette `WeakConvergence → SkorokhodSpace → MartingaleProblems`
+zum ersten Mal die Kette, als die sie seit dem 2026-09-17 beschrieben wird; bis
+zu diesem Lauf waren es zwei unverbundene Kanten, und `check_suggested.py` hat
+sie nur der *Reihenfolge* nach gebaut. Die Kette ohne einen Fehler:
+
+| Datei | rc | Fehler | `sorry` | Sekunden |
+| --- | ---: | ---: | ---: | ---: |
+| `WeakConvergence/Suggested.lean` | 0 | 0 | 0 | 7 |
+| `SkorokhodSpace/Suggested.lean` | 0 | 0 | 0 | 13 |
+| `MartingaleProblems/Suggested.lean` | 0 | 0 | 0 | 68 |
+
+**Und der Abhängigkeitsgraph ist damit genau benannt, nicht mehr bloß eine
+Reihenfolge:** `SkorokhodSpace/Suggested.lean` importiert **nichts** aus
+`TauCetiRoadmap`, nur Mathlib; `MartingaleProblems` importiert beide anderen.
+Die Kette ist also ein Baum mit `MartingaleProblems` an der Spitze, und
+`WeakConvergence` und `SkorokhodSpace` sind zwei unabhängige Blätter über
+Mathlib — was die Forderung von `CONTRIBUTING.md`, jede Roadmap müsse für sich
+auf Mathlib ruhen, für zwei der drei wörtlich erfüllt.
+
+#### Werkzeugbefund: `check_suggested.py` und `check_axioms.py` prüfen jetzt mit Mathlibs Einstellung
+
+Beide riefen `lean` ohne Lakefile und damit mit `autoImplicit` **an**; Mathlib
+schaltet es aus, und das Zielrepositorium baut mit Mathlibs Einstellungen.
+Beide rufen jetzt `-DautoImplicit=false -DrelaxedAutoImplicit=false`.
+
+**Der Preis ist gemessen und er ist null.** Alle drei Dateien übersetzen unter
+der schärferen Einstellung ohne einen Fehler — einzeln nachgezählt, ehe das
+Skript geändert wurde. Keine Deklaration dieser Entwicklung ruht also auf einer
+automatisch gebundenen impliziten Variablen. Die Prüfung wird damit schärfer und
+nicht bequemer, wie es die stehende Regel verlangt.
+
+#### Eine Gegenprobe zum Abschluß: es bleibt keine dritte Doppelung
+
+Die Deklarationsnamen aller drei Dateien gegeneinander geschnitten: der Schnitt
+ist **leer**. (Was der Schnitt nicht sieht, ist eine Doppelung unter *zwei
+verschiedenen* Namen — genau die Bauart von `IsCadlagPath` gegen `IsCadlag`. Die
+beiden bekannten sind erledigt; eine dritte müßte am Inhalt gefunden werden und
+nicht am Namen.)
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Das Akzeptanzbeispiel `ex:invariance` in Lean**, unverändert Vorschlag 1 des
+   Vorlaufs und jetzt der älteste offene Punkt. *Aussage:* für eine Markovkette
+   `Ξ n` mit Einschrittkern `P n` auf `ℝ^d`, `X n t = Ξ n ⌊n t⌋` und
+   `Y n t = f (Ξ n ⌊n t⌋) - ∑_{j < ⌊n t⌋} (P n f - f) (Ξ n j)` ist Voraussetzung
+   (c) von `mpSolution_of_tendsto` erfüllt, weil jedes `Y n` ein **exaktes**
+   Martingal ist. *Worauf es ruht:* auf der Doob-Zerlegung längs des
+   eingebetteten Gitters, also auf `Martingale` über `ℕ` und nichts Neuem.
+   *Warum jetzt:* Meilenstein 10 hat fünf Sätze und kein Beispiel, und solange
+   es fehlt, ist nicht belegt, daß die fünf Voraussetzungen gemeinsam erfüllbar
+   sind. *Was zuerst zu entscheiden ist:* ob der Pfadraum `F` roh als
+   `ℝ≥0 → ℝ^d` genommen wird — die Roadmap nennt „`F` a bare measurable space"
+   ausdrücklich als Prüfstein — oder ob `SkorokhodSpace` gebraucht wird. Seit
+   diesem Lauf ist der Import dafür da und nicht mehr zu beschaffen.
+2. **Die Entscheidung über das Lake-Target dem Nutzer vorlegen** (Symlink
+   `TauCetiRoadmap → TauCeti` oder Umbenennung des Verzeichnisses), unverändert
+   seit drei Läufen. Es ist eine Frage und keine Arbeit — und sie ist durch
+   diesen Lauf **dringender** geworden, denn `MartingaleProblems` hängt jetzt an
+   zwei Importzeilen statt an einer, und beide tragen das Präfix, das es im
+   Repositorium nicht gibt.
+3. **Die vierte Roadmap gegen dieselbe Probe halten.** `KolmogorovExtension` hat
+   keine `Suggested.lean` und kommt in `check_suggested.py` nicht vor; die
+   Prüfung dieses Laufs sagt über sie nichts. Ob das so bleiben soll, ist zu
+   entscheiden, ehe eingereicht wird — eine Roadmap ohne zeilengeprüfte Datei
+   ist nicht dasselbe wie eine mit einer fehlerfreien.

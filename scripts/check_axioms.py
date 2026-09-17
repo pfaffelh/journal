@@ -50,7 +50,11 @@ def main(argv: list[str]) -> int:
             print(f"kein gebauter Baum unter {build}; "
                   "erst `python3 scripts/check_suggested.py` laufen lassen")
             return 2
-        shell = f'LEAN_PATH="$LEAN_PATH:{build}" exec lean {tmp}'
+        # Dieselben Schalter wie `check_suggested.py`: ohne Lakefile hat `lean`
+        # `autoImplicit` an, und ein unbekannter großgeschriebener Name wird
+        # dann eine freie Variable statt eines Fehlers.
+        shell = (f'LEAN_PATH="$LEAN_PATH:{build}" exec lean '
+                 f'-DautoImplicit=false -DrelaxedAutoImplicit=false {tmp}')
         proc = subprocess.run(["lake", "env", "sh", "-c", shell],
                               cwd=MAIN, capture_output=True, text=True)
         out = proc.stdout + proc.stderr

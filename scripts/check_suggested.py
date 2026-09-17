@@ -41,6 +41,21 @@ vortäuscht.
 
 Der Hauptcheckout wird nur gelesen: `lake env lean` baut dort nichts und legt
 dort nichts an.  Statt `cd` wird `lake --dir=…` benutzt.
+
+## Warum `autoImplicit` ausgeschaltet wird
+
+Ohne Lakefile hat `lean` `autoImplicit` **an**, Mathlib schaltet es aus.  Der
+Unterschied ist nicht stilistisch: ein unbekannter großgeschriebener Name wird
+unter `autoImplicit` stillschweigend zu einer automatisch gebundenen impliziten
+Variablen statt zu `unknown identifier`.  Am 2026-09-17, zweiundzwanzigster
+Lauf, hat genau das verdeckt, daß `MartingaleProblems/Suggested.lean` die
+`SkorokhodSpace`-Roadmap gar nicht importierte -- der Name `IsCadlag` war frei
+und die Prüfung fand nichts.  Eine Aussage über einem verschriebenen Namen wäre
+so wahr und leer geworden.
+
+Die Abschaltung kostet in allen drei Dateien **null Fehler**; am selben Tag
+gemessen.  Das Zielrepositorium baut mit Mathlibs Einstellungen, also prüft
+dieses Skript gegen die schärfere und nicht gegen die bequemere.
 """
 import os, shutil, subprocess, time
 
@@ -63,6 +78,9 @@ ver = subprocess.run(['lean', '--version'], capture_output=True, text=True).stdo
 rows = [f'# `lake env lean` gegen {ver}', '',
         'In Abhängigkeitsordnung gebaut; jede Datei sieht die `.olean` der vorigen '
         f'unter dem Modulpräfix `{PREFIX}.`.', '',
+        'Übersetzt mit `autoImplicit=false` und `relaxedAutoImplicit=false`, wie '
+        'Mathlib und wie das Zielrepositorium: ein unbekannter großgeschriebener '
+        'Name ist dann ein Fehler und keine freie Variable.', '',
         '| Datei | Modul | rc | Fehler | `sorry` | Sekunden |',
         '| --- | --- | --- | --- | --- | --- |']
 detail = []
@@ -82,6 +100,7 @@ for f in FILES:
 
     # `lake env` setzt LEAN_PATH auf Mathlib; unser Baum kommt hinten dran.
     shell = (f'LEAN_PATH="$LEAN_PATH:{BUILD}" exec lean '
+             f'-DautoImplicit=false -DrelaxedAutoImplicit=false '
              f'-o {olean} {src}')
     t0 = time.time()
     r = subprocess.run(['lake', f'--dir={JOURNAL}', 'env', 'sh', '-c', shell],

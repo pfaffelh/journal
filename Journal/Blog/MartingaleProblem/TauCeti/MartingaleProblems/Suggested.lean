@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Peter Pfaffelhuber
 -/
 import TauCetiRoadmap.WeakConvergence.Suggested
+import TauCetiRoadmap.SkorokhodSpace.Suggested
 import Mathlib.Probability.Martingale.Basic
 import Mathlib.Probability.Process.Stopping
 import Mathlib.Probability.Process.LocalProperty
@@ -44,8 +45,9 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-17 (twenty-first run of that day), over the **whole** file and without an error.  Every
-declaration elaborates, and **no declaration carries `sorry`**.
+2026-09-17 (twenty-second run of that day), over the **whole** file and without an error, and
+since that run with `autoImplicit=false` and `relaxedAutoImplicit=false`, as Mathlib itself
+builds.  Every declaration elaborates, and **no declaration carries `sorry`**.
 
 The twenty-first run of 2026-09-17 finished Milestone 10.  Its two corollaries:
 `mpSolution_of_tendsto_of_pContinuous`, which replaces the convergence in
@@ -183,7 +185,7 @@ which for the construction is `stronglyMeasurable_jumpFiltration`.
 The last two blocks of the file are
 Milestone 4, and they carry **no** `sorry`.  The first, `IsStepPath`, was added on 2026-09-09:
 its three declarations are proved, and one of them,
-`exists_finite_setOf_leftLim_ne_not_isCadlagPath`, is the witness that the
+`exists_finite_setOf_leftLim_ne_not_isCadlag`, is the witness that the
 roadmap's first proposal for that predicate -- local finiteness of the jump set
 -- does not imply càdlàg.  The second, `JumpConstruction`, was added the same
 day: thirty three proved declarations building `jumpProcess` on the explicit space
@@ -192,7 +194,7 @@ to be step paths, hence càdlàg, and jointly measurable in `(t, ω)`.  Ten more
 came the same day: the waiting times are almost surely positive with divergent
 partial sums (`ae_pos_waiting`, `tendsto_sum_waiting_atTop`, the second
 Borel--Cantelli lemma on `{ξ n > 1}`), so that `ae_isStepPath_jumpProcess` and
-`ae_isCadlagPath_jumpProcess` hold for `jumpMeasure mu nu`-almost every `ω`
+`ae_isCadlag_jumpProcess` hold for `jumpMeasure mu nu`-almost every `ω`
 under `0 < lam ≤ L` alone.  Four more the same day: the tail of the exponential
 law and its memorylessness (`expMeasure_Ioi`, `expMeasure_Ioi_add`, neither of
 which is in Mathlib), the generator `jumpApply` and its bound
@@ -2516,29 +2518,28 @@ variable {ι : Type*} [ConditionallyCompleteLinearOrder ι] [OrderBot ι]
   [TopologicalSpace ι] [OrderTopology ι]
 variable {E : Type*} [TopologicalSpace E] [MeasurableSpace E]
 
-/-- Separating, as `MeasureTheory.IsSeparating` of the roadmap
-**WeakConvergence**, Milestone 1 -- there over `Set (E → ℝ)`, here over
-`Set (E → 𝕂)`.  It is the same proposition, over a wider scalar field, and the
-`𝕂`-valued one is what the operator `A : Set ((E → 𝕂) × (E → 𝕂))` of a
-martingale problem needs.
+/-! Separating classes are **not** defined here.  `MeasureTheory.IsSeparating`
+of the roadmap **WeakConvergence**, Milestone 1, is the one predicate, and since
+the twenty-second run of 2026-09-17 it carries the scalar field `𝕂` of the
+operator `A : Set ((E → 𝕂) × (E → 𝕂))` rather than `ℝ`.  Until that run this
+file restated the same proposition over `𝕂` under the same name; the two
+coexisted after the import of 2026-09-17 and had to be told apart by
+`_root_.IsSeparating`, which is a trap for the reader of a submission in which
+both roadmaps appear. -/
 
-Since 2026-09-17 this file imports that roadmap, so the two names coexist and
-`open MeasureTheory` makes the bare name ambiguous; the uses below read
-`_root_.IsSeparating`.  Before the submission one of the two should give way:
-either the `WeakConvergence` definition is generalized from `ℝ` to `RCLike`, at
-the price of touching every statement of its Milestone 1, or this one is
-renamed.  The first is the better of the two, since `IsSeparating` over `ℝ` is
-then the instance `𝕂 = ℝ` and no proposition is stated twice. -/
-def IsSeparating (Γ : Set (E → 𝕂)) : Prop :=
-  ∀ (μ ν : Measure E) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν],
-    (∀ f ∈ Γ, ∫ x, f x ∂μ = ∫ x, f x ∂ν) → μ = ν
+/-! Càdlàg paths are **not** defined here either.  `IsCadlag` of the roadmap
+**SkorokhodSpace**, Milestone 2, is the one predicate, and it is the path
+property and not the membership in `D(ι, E)`, so it applies to a process whose
+paths are not yet known to live in the path space.
 
-/-- Right continuous with left limits: `IsCadlag` of the roadmap
-**SkorokhodSpace**, Milestone 2, unfolded.  Mathlib has neither predicate, and
-the path space itself is not available here, so the path property is stated and
-not the membership in `D(ι, E)`. -/
-def IsCadlagPath (g : ι → E) : Prop :=
-  (∀ t, ContinuousWithinAt g (Set.Ioi t) t) ∧ ∀ t, ∃ l, Tendsto g (𝓝[<] t) (𝓝 l)
+Until the twenty-second run of 2026-09-17 this file carried `IsCadlagPath`, the
+conjunction of the two fields of that structure, restated because the path space
+was said to be unavailable here; the import of 2026-09-17 removed the reason.
+The two agree field for field, and so does `IsCadlag` of
+`Mathlib/Topology/Order/Cadlag.lean` (`#43352`, on `master` at `8018f6a`,
+2026-09-17, not in v4.33.1): both fields carry the same name there.  Against a
+toolchain that has that file the `SkorokhodSpace` copy goes and nothing here
+changes. -/
 
 /-- The decomposition attached to one `f` of a regularizing class: `f ∘ X` splits
 into a member of `𝓧` and a compensator `C` that is adapted, has one sided limits
@@ -3278,11 +3279,11 @@ No measure, no filtration, no process -- this is a statement about one path, and
 it is the whole of the path side of
 `exists_cadlag_modification_of_isRegularizingClass`.  What that theorem adds to
 it is the modification property, which is where the probability sits. -/
-theorem isCadlagPath_rightLimAlong [RegularSpace E] [DenselyOrdered ι]
+theorem isCadlag_rightLimAlong [RegularSpace E] [DenselyOrdered ι]
     {D : Set ι} (hD : Dense D) {g : ι → E}
     (hex : ∀ r : ι, ∃ x, Tendsto g (𝓝[D ∩ Set.Ioi r] r) (𝓝 x))
     (hexl : ∀ t : ι, ∃ x, Tendsto g (𝓝[D ∩ Set.Iio t] t) (𝓝 x)) :
-    IsCadlagPath (rightLimAlong D g) :=
+    IsCadlag (rightLimAlong D g) :=
   ⟨tendsto_rightLimAlong_nhdsWithin_Ioi hD hex,
     exists_tendsto_rightLimAlong_nhdsWithin_Iio hD hex hexl⟩
 
@@ -3371,7 +3372,7 @@ Every hypothesis is read at one step and the step is named:
 `nhdsWithin_inter_Ioi_neBot`, `hD` and `hXm` at
 `CompactContainment.ae_exists_isCompact`, and
 `[(atTop : Filter ι).IsCountablyGenerated]` at the cofinal sequence. -/
-theorem ae_isCadlagPath_rightLimAlong_of_isRegularizingClass [T2Space E] [RegularSpace E]
+theorem ae_isCadlag_rightLimAlong_of_isRegularizingClass [T2Space E] [RegularSpace E]
     [OpensMeasurableSpace E] [DenselyOrdered ι] [(atTop : Filter ι).IsCountablyGenerated]
     {Φ Φ₀ : Set (E → 𝕂)} {X : ι → Ω → E} {𝓧 : Set (ι → Ω → 𝕂)} {𝓕 : Filtration ι m}
     {P : Measure Ω} [IsProbabilityMeasure P] {D : Set ι} (hD : D.Countable) (hD' : Dense D)
@@ -3379,10 +3380,10 @@ theorem ae_isCadlagPath_rightLimAlong_of_isRegularizingClass [T2Space E] [Regula
     (h𝓧 : IsMPSolution 𝓧 𝓕 P) (hΦ : IsRegularizingClass Φ X 𝓧 𝓕 P D)
     (hΦ₀ : Φ₀ ⊆ Φ) (hΦ₀c : Φ₀.Countable) (hcont : ∀ f ∈ Φ₀, Continuous f)
     (hsep : ∀ x y : E, x ≠ y → ∃ f ∈ Φ₀, f x ≠ f y) :
-    ∀ᵐ ω ∂P, IsCadlagPath (rightLimAlong D (fun s ↦ X s ω)) := by
+    ∀ᵐ ω ∂P, IsCadlag (rightLimAlong D (fun s ↦ X s ω)) := by
   filter_upwards [ae_forall_exists_tendsto_of_isRegularizingClass hD hXm hcc h𝓧 hΦ
     hΦ₀ hΦ₀c hcont hsep] with ω hω
-  exact isCadlagPath_rightLimAlong hD' (fun r ↦ (hω r).2) (fun t ↦ (hω t).1)
+  exact isCadlag_rightLimAlong hD' (fun r ↦ (hω r).2) (fun t ↦ (hω t).1)
 
 /-- A regularizing class whose countable subset separates the points of `E`, and
 compact containment, give a modification with càdlàg paths.  The conclusion is
@@ -3472,7 +3473,7 @@ witness is known for any of the three.
 
 **Four further hypotheses were missing and are now in, found 2026-09-17 by
 proving the path half.**  Each is consumed at a named step of
-`ae_isCadlagPath_rightLimAlong_of_isRegularizingClass` above, and none of them is
+`ae_isCadlag_rightLimAlong_of_isRegularizingClass` above, and none of them is
 a convenience.
 
 * **`hXm`, the measurability of each `X t`**, at
@@ -3496,7 +3497,7 @@ a convenience.
 
 **The witness, and the two points at which the modification property is read.**
 The modification is `fun t ω ↦ rightLimAlong D (fun s ↦ X s ω) t`, and its path
-property is `ae_isCadlagPath_rightLimAlong_of_isRegularizingClass` above.  The
+property is `ae_isCadlag_rightLimAlong_of_isRegularizingClass` above.  The
 modification property `X' t = X t` almost surely splits on whether `t` is
 isolated from the right along `D`.  Where it is, the filter is `⊥` and
 `rightLimAlong_of_not_neBot` gives the equality **at every sample point** and not
@@ -3538,9 +3539,9 @@ theorem exists_cadlag_modification_of_isRegularizingClass [FirstCountableTopolog
     (hsep : ∀ x y : E, x ≠ y → ∃ f ∈ Φ₀, f x ≠ f y)
     (hcc : CompactContainment X P D) :
     ∃ X' : ι → Ω → E, (∀ t : ι, ∀ᵐ ω ∂P, X' t ω = X t ω) ∧
-      ∀ᵐ ω ∂P, IsCadlagPath (fun t ↦ X' t ω) := by
+      ∀ᵐ ω ∂P, IsCadlag (fun t ↦ X' t ω) := by
   refine ⟨fun t ω ↦ rightLimAlong D (fun s ↦ X s ω) t, ?_,
-    ae_isCadlagPath_rightLimAlong_of_isRegularizingClass hD hD' hXm hcc h𝓧 hΦ
+    ae_isCadlag_rightLimAlong_of_isRegularizingClass hD hD' hXm hcc h𝓧 hΦ
       hΦ₀ hΦ₀c hcont hsep⟩
   intro t
   by_cases hne : (𝓝[D ∩ Set.Ioi t] t).NeBot
@@ -3818,7 +3819,7 @@ were found by writing the proof.
   and the almost sure quantifier sits inside, so the exceptional set depends on
   the sequence and uncountably many sequences may not be combined.  The passage
   from a sequence to the filter `𝓝[<] t` therefore needs the existence of the
-  left limit as a hypothesis -- the second half of `IsCadlagPath`, which is what
+  left limit as a hypothesis -- the second half of `IsCadlag`, which is what
   Ethier--Kurtz assume at this point anyway. -/
 theorem IsQuasiLeftContinuous.ae_eq_leftLim [T2Space E] {X : ι → Ω → E}
     {𝓕 : Filtration ι m} {P : Measure Ω} (h : IsQuasiLeftContinuous X 𝓕 P) {t : ι}
@@ -3884,11 +3885,11 @@ quasi-left-continuity consumes.  The proof splits on whether the sequence
 *reaches* its supremum: where it does, monotonicity makes the values eventually
 constant and no path property is read at all; where it does not, the sequence
 runs into `𝓝[<] T` and the limit is the left limit, the second field of
-`IsCadlagPath`.
+`IsCadlag`.
 
 Right continuity is not used, and neither is a separation axiom on `E`: the
 statement produces *a* limit and does not claim it is unique. -/
-theorem IsCadlagPath.exists_tendsto_comp_monotone {g : ι → E} (hg : IsCadlagPath g)
+theorem IsCadlag.exists_tendsto_comp_monotone {g : ι → E} (hg : IsCadlag g)
     {s : ℕ → ι} (hmono : Monotone s) {T : ι} (hle : ∀ n, s n ≤ T) (hsup : ⨆ n, s n = T) :
     ∃ l, Tendsto (fun n ↦ g (s n)) atTop (𝓝 l) := by
   by_cases h : ∃ N, s N = T
@@ -3918,14 +3919,14 @@ per `f`.
 
 **Three hypotheses that the abstract theorem below does carry are not needed
 here**, and saying so locates them: no compactness or compact containment -- the
-limit comes from `IsCadlagPath` and not from a cluster point -- no separation
+limit comes from `IsCadlag` and not from a cluster point -- no separation
 axiom on `E`, for uniqueness of limits is read in `𝕂` alone, and no
 measurability of `X`. -/
 theorem isQuasiLeftContinuous_of_forall_ae_tendsto_comp {Φ₀ : Set (E → 𝕂)}
     {X : ι → Ω → E} {𝓕 : Filtration ι m} {P : Measure Ω}
     (hΦ₀c : Φ₀.Countable) (hcont : ∀ f ∈ Φ₀, Continuous f)
     (hsep : ∀ x y : E, x ≠ y → ∃ f ∈ Φ₀, f x ≠ f y)
-    (hX : ∀ᵐ ω ∂P, IsCadlagPath (fun t ↦ X t ω))
+    (hX : ∀ᵐ ω ∂P, IsCadlag (fun t ↦ X t ω))
     (hlim : ∀ f ∈ Φ₀, ∀ τ : ℕ → Ω → WithTop ι, (∀ n, IsStoppingTime 𝓕 (τ n)) → Monotone τ →
       ∀ t : ι, ∀ᵐ ω ∂P, (⨆ n, τ n ω) ≤ (t : WithTop ι) →
         Tendsto (fun n ↦ f (stoppedValue X (τ n) ω)) atTop
@@ -4485,7 +4486,7 @@ theorem ae_eq_limUnder_condExp_stoppedValue {g : E → 𝕂} {M : ℝ}
     [IsFiniteMeasure P] {D : Set ι}
     (hDcount : D.Countable) (hD : ∀ t : ι, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot)
     (hgc : Continuous g) (hgb : ∀ x, ‖g x‖ ≤ M)
-    (hX : ∀ᵐ ω ∂P, IsCadlagPath fun t ↦ X t ω)
+    (hX : ∀ᵐ ω ∂P, IsCadlag fun t ↦ X t ω)
     (hC : IsCompensatorFor X 𝓕 P D g Y C)
     (hYr : ∀ᵐ ω ∂P, ∀ t : ι, ContinuousWithinAt (fun s ↦ Y s ω) (Set.Ioi t) t)
     (hCr : ∀ᵐ ω ∂P, ∀ t : ι, ContinuousWithinAt (fun s ↦ C s ω) (Set.Ioi t) t)
@@ -4596,7 +4597,7 @@ theorem isQuasiLeftContinuous_of_isRegularizingClass {Φ Φ₀ : Set (E → 𝕂
     (hbdd : ∀ f ∈ Φ₀, ∃ M : ℝ, ∀ x, ‖f x‖ ≤ M)
     (hsq : ∀ f ∈ Φ₀, (fun x ↦ f x * (starRingEnd 𝕂) (f x)) ∈ Φ)
     (hsep : ∀ x y : E, x ≠ y → ∃ f ∈ Φ₀, f x ≠ f y)
-    (hX : ∀ᵐ ω ∂P, IsCadlagPath fun t ↦ X t ω)
+    (hX : ∀ᵐ ω ∂P, IsCadlag fun t ↦ X t ω)
     (hΦ : ∀ f ∈ Φ, ∃ Y C : ι → Ω → 𝕂, IsCompensatorFor X 𝓕 P D f Y C ∧
       (∀ᵐ ω ∂P, ∀ t : ι, ContinuousWithinAt (fun s ↦ Y s ω) (Set.Ioi t) t) ∧
       (∀ᵐ ω ∂P, ∀ t : ι, ContinuousWithinAt (fun s ↦ C s ω) (Set.Ioi t) t) ∧
@@ -5004,7 +5005,7 @@ theorem isQuasiLeftContinuous_of_isMPSolutionFor {A : Set ((E → 𝕂) × (E �
     (hsep : ∀ x y : E, x ≠ y → ∃ f ∈ Φ₀, f x ≠ f y)
     (hXprog : Q.IsProgressive X 𝓕) (hXm : ∀ t, Measurable[𝓕 t] (X t))
     (hQc : Q.IsContinuousFor c)
-    (hX : ∀ᵐ ω ∂P, IsCadlagPath fun t ↦ X t ω)
+    (hX : ∀ᵐ ω ∂P, IsCadlag fun t ↦ X t ω)
     (hOS : ∀ Y ∈ mpFamily A Q c X, IsOptionalSamplingFor Y 𝓕 P)
     (hCm : ∀ p ∈ A, IsStronglyMeasurableAlongStoppingTimes
       (fun t ω ↦ ∫ u in Q.interval c ⊥ t, p.2 (X u ω) ∂Q.q) 𝓕) :
@@ -5107,8 +5108,8 @@ omit [OrderBot ι] in
 /-- The paths are càdlàg, whatever the clock does: they are locally constant on
 either side of `u`.  This is the half of the example that
 `exists_cadlag_modification_of_isRegularizingClass` predicts. -/
-theorem isCadlagPath_coinProcess (u : ι) (ω : Bool) :
-    IsCadlagPath fun t ↦ coinProcess u t ω := by
+theorem isCadlag_coinProcess (u : ι) (ω : Bool) :
+    IsCadlag fun t ↦ coinProcess u t ω := by
   constructor
   · intro t
     by_cases h : u ≤ t
@@ -5185,7 +5186,7 @@ noncomputable def coinClass : Set ((Bool → ℝ) × (Bool → ℝ)) := {coinPai
 /-- A single indicator separates the probability measures on `Bool`: it pins the
 mass of `{true}`, and the mass of `{false}` is what is left of the total mass.
 This is what forces `A ≠ ∅` in `not_isQuasiLeftContinuous_of_atom`. -/
-theorem isSeparating_coinClass : _root_.IsSeparating (Prod.fst '' coinClass) := by
+theorem isSeparating_coinClass : IsSeparating (Prod.fst '' coinClass) := by
   have key : ∀ ρ : Measure Bool, ∫ ω, coinPair.1 ω ∂ρ = ρ.real {true} := by
     intro ρ
     have hind : coinPair.1 = Set.indicator {true} fun _ ↦ (1 : ℝ) := by
@@ -5381,8 +5382,8 @@ theorem not_isQuasiLeftContinuous_of_atom (u : ι)
       Q.q {u} ≠ 0 ∧ ¬ Q.IsContinuousFor c ∧
         (∀ p ∈ A, Continuous p.1 ∧ (∃ b, ∀ x, ‖p.1 x‖ ≤ b) ∧
           ∃ b, ∀ x, ‖p.2 x‖ ≤ b) ∧
-        _root_.IsSeparating (Prod.fst '' A) ∧
-        (∀ᵐ ω ∂P, IsCadlagPath fun t ↦ X t ω) ∧
+        IsSeparating (Prod.fst '' A) ∧
+        (∀ᵐ ω ∂P, IsCadlag fun t ↦ X t ω) ∧
         @IsMPSolution ι _ Ω' m' ℝ _ (mpFamily A Q c X) 𝓕 P ∧
         ¬ IsQuasiLeftContinuous X 𝓕 P := by
   obtain ⟨s, hmono, hlt, hs⟩ := id hu
@@ -5395,7 +5396,7 @@ theorem not_isQuasiLeftContinuous_of_atom (u : ι)
     AtomWitness.coinClass, AtomWitness.coinProcess u,
     AtomWitness.atomClock_apply_singleton_ne_zero u,
     AtomWitness.not_isContinuousFor_atomClock u hu, ?_, AtomWitness.isSeparating_coinClass,
-    Filter.Eventually.of_forall (AtomWitness.isCadlagPath_coinProcess u),
+    Filter.Eventually.of_forall (AtomWitness.isCadlag_coinProcess u),
     AtomWitness.isMPSolution_coinProcess u hbot,
     AtomWitness.not_isQuasiLeftContinuous_coinProcess u hmono.monotone hlt hsup _⟩
   rintro p hp
@@ -5446,8 +5447,8 @@ theorem not_isQuasiLeftContinuous_of_isRegularizingClass_of_free_solutionSet :
     ∃ (Φ : Set (Bool → ℝ)) (𝓧 : Set (ENNReal → Bool → ℝ))
       (𝓕 : Filtration ENNReal (inferInstance : MeasurableSpace Bool))
       (D : Set ENNReal) (X : ENNReal → Bool → Bool),
-      _root_.IsSeparating Φ ∧
-      (∀ᵐ ω ∂AtomWitness.coinMeasure, IsCadlagPath fun t ↦ X t ω) ∧
+      IsSeparating Φ ∧
+      (∀ᵐ ω ∂AtomWitness.coinMeasure, IsCadlag fun t ↦ X t ω) ∧
       (∀ f ∈ Φ, ∃ Y ∈ 𝓧, ∃ C : ENNReal → Bool → ℝ,
         IsCompensatorFor X 𝓕 AtomWitness.coinMeasure D f Y C ∧
         (∀ᵐ ω ∂AtomWitness.coinMeasure, ∀ t : ENNReal,
@@ -5462,7 +5463,7 @@ theorem not_isQuasiLeftContinuous_of_isRegularizingClass_of_free_solutionSet :
     tendsto_nhds_unique (tendsto_atTop_ciSup hmono hbdd) ENNReal.tendsto_nat_nhds_top
   refine ⟨Prod.fst '' AtomWitness.coinClass, Set.univ, AtomWitness.coinFiltration ⊤, ∅,
     AtomWitness.coinProcess ⊤, AtomWitness.isSeparating_coinClass,
-    .of_forall (AtomWitness.isCadlagPath_coinProcess ⊤), fun f _ ↦ ?_,
+    .of_forall (AtomWitness.isCadlag_coinProcess ⊤), fun f _ ↦ ?_,
     AtomWitness.not_isQuasiLeftContinuous_coinProcess ⊤ hmono hlt hsup _⟩
   refine ⟨fun t ω ↦ f (AtomWitness.coinProcess ⊤ t ω), Set.mem_univ _, 0,
     ⟨fun _ ↦ stronglyMeasurable_zero, fun _ ↦ .of_forall fun _ ↦ by simp,
@@ -6440,7 +6441,7 @@ locally finite,
 
 and to derive right continuity and the existence of left limits from it.  That
 implication is **false**, and the witness is one line:
-`exists_finite_setOf_leftLim_ne_not_isCadlagPath` below exhibits
+`exists_finite_setOf_leftLim_ne_not_isCadlag` below exhibits
 `f = Set.indicator {0} 1` on `ℝ`, whose jump set is the single point `0` -- so
 the condition holds on every compact set -- and which is not right continuous at
 `0`.  The reason is that `Function.leftLim` is *total*
@@ -6464,7 +6465,7 @@ that is eventually constant along a filter converges along it to that constant.
 Right continuity uses `𝓝[>] x ≤ 𝓝[≥] x`, which is where the first conjunct is
 stated on the *closed* right neighbourhood -- that is the form the construction
 delivers, since the path takes the value `f x` at `x` itself and keeps it. -/
-theorem IsStepPath.isCadlagPath {f : ι → E} (hf : IsStepPath f) : IsCadlagPath f := by
+theorem IsStepPath.isCadlag {f : ι → E} (hf : IsStepPath f) : IsCadlag f := by
   refine ⟨fun t => ?_, fun t => ?_⟩
   · have h : ∀ᶠ y in 𝓝[>] t, f y = f t :=
       (hf.1 t).filter_mono (nhdsWithin_mono t Set.Ioi_subset_Ici_self)
@@ -6476,7 +6477,7 @@ theorem IsStepPath.isCadlagPath {f : ι → E} (hf : IsStepPath f) : IsCadlagPat
 
 The jump construction runs on `ℝ` -- `jumpProcessE lam (t : ℝ) ω` -- while every statement of
 Milestones 3, 6 and 9 is indexed by `ℝ≥0`, which is the index the clock and the filtration carry.
-The two path properties have to cross that coercion, and the crossing is not formal: `IsCadlagPath`
+The two path properties have to cross that coercion, and the crossing is not formal: `IsCadlag`
 is a statement about the one sided neighbourhood filters, and what has to be produced is that the
 coercion carries `𝓝[>] t` into `𝓝[>] (t : ℝ)` and `𝓝[<] t` into `𝓝[<] (t : ℝ)`.  It does, for the
 same reason twice: it is continuous and strictly monotone. -/
@@ -6491,7 +6492,7 @@ theorem tendsto_coe_nnreal_nhdsWithin_Ioi (t : ℝ≥0) :
 
 /-- The coercion `ℝ≥0 → ℝ` carries the left neighbourhood filter into the left neighbourhood
 filter.  At `t = 0` the source filter is `⊥` and the statement is empty, which is the right
-answer: a path indexed by `ℝ≥0` has no left limit to take at `0`, and `IsCadlagPath` asks for one
+answer: a path indexed by `ℝ≥0` has no left limit to take at `0`, and `IsCadlag` asks for one
 only because the quantifier is over all of `ℝ≥0`. -/
 theorem tendsto_coe_nnreal_nhdsWithin_Iio (t : ℝ≥0) :
     Tendsto (fun r : ℝ≥0 ↦ (r : ℝ)) (𝓝[<] t) (𝓝[<] ((t : ℝ))) :=
@@ -6504,8 +6505,8 @@ the jump construction is written over and the index the martingale problem is st
 
 Only one direction is available and only one is wanted: the restriction forgets the negative
 times, and nothing on `[0, ∞)` can recover them. -/
-theorem IsCadlagPath.comp_coe_nnreal {g : ℝ → E} (hg : IsCadlagPath g) :
-    IsCadlagPath fun t : ℝ≥0 ↦ g (t : ℝ) := by
+theorem IsCadlag.comp_coe_nnreal {g : ℝ → E} (hg : IsCadlag g) :
+    IsCadlag fun t : ℝ≥0 ↦ g (t : ℝ) := by
   refine ⟨fun t ↦ (hg.1 (t : ℝ)).tendsto.comp (tendsto_coe_nnreal_nhdsWithin_Ioi t), fun t ↦ ?_⟩
   obtain ⟨l, hl⟩ := hg.2 (t : ℝ)
   exact ⟨l, hl.comp (tendsto_coe_nnreal_nhdsWithin_Iio t)⟩
@@ -6571,9 +6572,9 @@ jump set is defined from the left limit alone.
 
 This is why `IsStepPath` is stated by constancy on one sided neighbourhoods and
 not by a condition on the jump set. -/
-theorem exists_finite_setOf_leftLim_ne_not_isCadlagPath :
+theorem exists_finite_setOf_leftLim_ne_not_isCadlag :
     ∃ f : ℝ → ℝ, (∀ K : Set ℝ, IsCompact K →
-        ({x : ℝ | Function.leftLim f x ≠ f x} ∩ K).Finite) ∧ ¬ IsCadlagPath f := by
+        ({x : ℝ | Function.leftLim f x ≠ f x} ∩ K).Finite) ∧ ¬ IsCadlag f := by
   classical
   set f : ℝ → ℝ := Set.indicator {(0 : ℝ)} (fun _ => (1 : ℝ)) with hf_def
   have hf0 : f 0 = 1 := by simp [hf_def]
@@ -6711,7 +6712,7 @@ theorem exists_stepIndex_window {x : α} (hex : ∃ n, x < T (n + 1)) :
   · exact Or.inr (T_stepIndex_le h)
 
 /-- **The path built from a strictly increasing, unbounded sequence of jump times is a step
-path**, hence càdlàg by `IsStepPath.isCadlagPath`.
+path**, hence càdlàg by `IsStepPath.isCadlag`.
 
 The two conjuncts are the two sides of a jump time and they are not symmetric.  On the right,
 the window `Set.Ico x (T (n + 1))` of the index `n` of `x` itself works, because the path takes
@@ -7003,11 +7004,11 @@ theorem isStepPath_jumpProcess [TopologicalSpace E] {L : ℝ} (hL0 : 0 < L)
       (tendsto_jumpTime_atTop hL0 hlam hL (fun n => (hxi n).le) hsum)) y
 
 /-- **The paths of the jump process are càdlàg.** -/
-theorem isCadlagPath_jumpProcess [TopologicalSpace E] {L : ℝ} (hL0 : 0 < L)
+theorem isCadlag_jumpProcess [TopologicalSpace E] {L : ℝ} (hL0 : 0 < L)
     (hlam : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L) (hxi : ∀ n, 0 < xi n)
     (hsum : Tendsto (fun n => ∑ k ∈ Finset.range n, xi k) atTop atTop) :
-    IsCadlagPath (fun t => jumpProcess lam t (y, xi)) :=
-  (isStepPath_jumpProcess hL0 hlam hL hxi hsum).isCadlagPath
+    IsCadlag (fun t => jumpProcess lam t (y, xi)) :=
+  (isStepPath_jumpProcess hL0 hlam hL hxi hsum).isCadlag
 
 /-- **The jump process starts at the initial state of the embedded chain.**  The zeroth window
 `[0, T 1)` contains `0` as soon as the first holding time is positive, and then the step index of
@@ -7734,12 +7735,12 @@ theorem ae_isStepPath_jumpProcess [TopologicalSpace E] {lam : E → ℝ} {L : �
   exact isStepPath_jumpProcess (y := ω.1) (xi := ω.2) hL0 hlam hL hω.1 hω.2
 
 /-- **Almost every path of the jump process is càdlàg**, unconditionally. -/
-theorem ae_isCadlagPath_jumpProcess [TopologicalSpace E] {lam : E → ℝ} {L : ℝ} (hL0 : 0 < L)
+theorem ae_isCadlag_jumpProcess [TopologicalSpace E] {lam : E → ℝ} {L : ℝ} (hL0 : 0 < L)
     (hlam : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L) (mu : Kernel E E) [IsMarkovKernel mu]
     (nu : Measure E) [IsProbabilityMeasure nu] :
-    ∀ᵐ ω ∂(jumpMeasure mu nu), IsCadlagPath (fun t ↦ jumpProcess lam t ω) := by
+    ∀ᵐ ω ∂(jumpMeasure mu nu), IsCadlag (fun t ↦ jumpProcess lam t ω) := by
   filter_upwards [ae_isStepPath_jumpProcess hL0 hlam hL mu nu] with ω hω
-  exact hω.isCadlagPath
+  exact hω.isCadlag
 
 /-- The waiting times of the jump construction are almost surely positive. -/
 theorem ae_pos_snd_jumpMeasure (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
@@ -7772,7 +7773,7 @@ theorem ae_exists_lt_jumpTime {lam : E → ℝ} {L : ℝ} (hL0 : 0 < L) (hlam : 
     (tendsto_jumpTime_atTop (y := ω.1) (xi := ω.2) hL0 hlam hL (fun n ↦ (hω.1 n).le) hω.2) s
 
 /-- **The jump process has the prescribed initial law.**  Together with
-`ae_isCadlagPath_jumpProcess` this is what makes `jumpProcess lam mu nu` a construction *of*
+`ae_isCadlag_jumpProcess` this is what makes `jumpProcess lam mu nu` a construction *of*
 `nu`: the process itself, and not merely the chain that drives it, starts with law `nu`. -/
 theorem jumpMeasure_map_jumpProcess_zero {lam : E → ℝ} (hlam : ∀ x, 0 < lam x)
     (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] :
@@ -12629,10 +12630,10 @@ theorem isStepPath_jumpProcessE [TopologicalSpace E] (hxi : ∀ n, 0 < xi n)
     hex
 
 /-- The paths of the local jump process are càdlàg. -/
-theorem isCadlagPath_jumpProcessE [TopologicalSpace E] (hxi : ∀ n, 0 < xi n)
+theorem isCadlag_jumpProcessE [TopologicalSpace E] (hxi : ∀ n, 0 < xi n)
     (hex : ∀ s : ℝ, ∃ n, ENNReal.ofReal s < jumpTimeE lam y xi (n + 1)) :
-    IsCadlagPath (fun t : ℝ ↦ jumpProcessE lam t (y, xi)) :=
-  (isStepPath_jumpProcessE hxi hex).isCadlagPath
+    IsCadlag (fun t : ℝ ↦ jumpProcessE lam t (y, xi)) :=
+  (isStepPath_jumpProcessE hxi hex).isCadlag
 
 /-! ### The acceptance example of the local case: the absorbing state, done right
 
@@ -12985,26 +12986,26 @@ theorem ae_isStepPath_jumpProcessE [MeasurableSpace E] [TopologicalSpace E] {lam
   exact hstep
 
 /-- Almost every path of the local process is càdlàg, in the same case. -/
-theorem ae_isCadlagPath_jumpProcessE [MeasurableSpace E] [TopologicalSpace E] {lam : E → ℝ}
+theorem ae_isCadlag_jumpProcessE [MeasurableSpace E] [TopologicalSpace E] {lam : E → ℝ}
     {L : ℝ} (hL0 : 0 < L) (hlam : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L) (mu : Kernel E E)
     [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] :
-    ∀ᵐ ω ∂(jumpMeasure mu nu), IsCadlagPath (fun t ↦ jumpProcessE lam t ω) := by
+    ∀ᵐ ω ∂(jumpMeasure mu nu), IsCadlag (fun t ↦ jumpProcessE lam t ω) := by
   filter_upwards [ae_isStepPath_jumpProcessE hL0 hlam hL mu nu] with ω hω
-  exact hω.isCadlagPath
+  exact hω.isCadlag
 
 /-- **Almost every path of the local process is càdlàg over the index `ℝ≥0`**, which is the index
 the martingale problem, the clock and the filtration are stated over.
 
-This is `ae_isCadlagPath_jumpProcessE` read through `IsCadlagPath.comp_coe_nnreal`, and it is the
+This is `ae_isCadlag_jumpProcessE` read through `IsCadlag.comp_coe_nnreal`, and it is the
 hypothesis `hX` of `isQuasiLeftContinuous_of_isMPSolutionFor` and of
 `isQuasiLeftContinuous_of_isRegularizingClass` on the data of Milestone 4.  It is worth stating
 separately because the process the two theorems are applied to is
 `fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω` and not `jumpProcessE lam` itself. -/
-theorem ae_isCadlagPath_nnreal_jumpProcessE [MeasurableSpace E] [TopologicalSpace E]
+theorem ae_isCadlag_nnreal_jumpProcessE [MeasurableSpace E] [TopologicalSpace E]
     {lam : E → ℝ} {L : ℝ} (hL0 : 0 < L) (hlam : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L)
     (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] :
-    ∀ᵐ ω ∂(jumpMeasure mu nu), IsCadlagPath fun t : ℝ≥0 ↦ jumpProcessE lam (t : ℝ) ω := by
-  filter_upwards [ae_isCadlagPath_jumpProcessE hL0 hlam hL mu nu] with ω hω
+    ∀ᵐ ω ∂(jumpMeasure mu nu), IsCadlag fun t : ℝ≥0 ↦ jumpProcessE lam (t : ℝ) ω := by
+  filter_upwards [ae_isCadlag_jumpProcessE hL0 hlam hL mu nu] with ω hω
   exact hω.comp_coe_nnreal
 
 /-! ### The two deterministic steps of the local non explosion criterion
@@ -20179,13 +20180,13 @@ theorem isStepPath_jumpProcessF [TopologicalSpace E]
       (tendsto_jumpTimeF_atTop hint hpos htop (fun n ↦ (hxi n).le) hsum)) ω.1
 
 /-- **The paths of the path dependent jump process are càdlàg.** -/
-theorem isCadlagPath_jumpProcessF [TopologicalSpace E]
+theorem isCadlag_jumpProcessF [TopologicalSpace E]
     (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
     (hpos : ∀ u, 0 < u → 0 < Λ u ω)
     (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (hxi : ∀ n, 0 < ω.2 n)
     (hsum : Tendsto (fun n ↦ ∑ k ∈ Finset.range n, ω.2 k) atTop atTop) :
-    IsCadlagPath (fun t ↦ jumpProcessF Λ t ω) :=
-  (isStepPath_jumpProcessF hint hpos htop hxi hsum).isCadlagPath
+    IsCadlag (fun t ↦ jumpProcessF Λ t ω) :=
+  (isStepPath_jumpProcessF hint hpos htop hxi hsum).isCadlag
 
 /-- **Before the first jump the path sits at the initial state of the chain.**  No hypothesis on the
 rate at all: `t < T 1` bounds the step index by `0` outright. -/
@@ -21026,12 +21027,12 @@ theorem isStepPath_hawkesProcess [TopologicalSpace E] (hν : 0 < ν) (hφ : ∀ 
   isStepPath_jumpProcessF hint (fun u _ ↦ hawkesSelfRate_pos hν hφ u ω)
     (tendsto_cumulativeRateF_hawkesSelfRate hν hφ hint) hxi hsum
 
-theorem isCadlagPath_hawkesProcess [TopologicalSpace E] (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
+theorem isCadlag_hawkesProcess [TopologicalSpace E] (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
     (hint : ∀ r, IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u ω) volume 0 r)
     (hxi : ∀ n, 0 < ω.2 n)
     (hsum : Tendsto (fun n ↦ ∑ k ∈ Finset.range n, ω.2 k) atTop atTop) :
-    IsCadlagPath (fun t ↦ hawkesProcess ν φ t ω) :=
-  (isStepPath_hawkesProcess hν hφ hint hxi hsum).isCadlagPath
+    IsCadlag (fun t ↦ hawkesProcess ν φ t ω) :=
+  (isStepPath_hawkesProcess hν hφ hint hxi hsum).isCadlag
 
 /-- **The jump times of the Hawkes process are the Hawkes jump times.**  This is the fixed point in
 the form in which the process uses it: what `jumpProcessF` computes from the self referential rate
@@ -22638,12 +22639,12 @@ theorem isStepPath_jumpProcessFE [TopologicalSpace E]
     (fun n h ↦ jumpTimeFE_lt_succ_of_lt_succ hint hpos hxi n h)
     (exists_ofReal_lt_jumpTimeFE hint hpos (fun n ↦ (hxi n).le) hsum)
 
-theorem isCadlagPath_jumpProcessFE [TopologicalSpace E]
+theorem isCadlag_jumpProcessFE [TopologicalSpace E]
     (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
     (hpos : ∀ u, 0 < u → 0 < Λ u ω) (hxi : ∀ n, 0 < ω.2 n)
     (hsum : Tendsto (fun n ↦ ∑ k ∈ Finset.range n, ω.2 k) atTop atTop) :
-    IsCadlagPath (fun t ↦ jumpProcessFE Λ t ω) :=
-  (isStepPath_jumpProcessFE hint hpos hxi hsum).isCadlagPath
+    IsCadlag (fun t ↦ jumpProcessFE Λ t ω) :=
+  (isStepPath_jumpProcessFE hint hpos hxi hsum).isCadlag
 
 /-- **The repaired process extends the old one.**  At a divergent cumulated rate -- the standing
 hypothesis of everything the path dependent variant has proved so far -- the two agree at every
@@ -27238,12 +27239,12 @@ theorem isStepPath_hawkesProcessH [TopologicalSpace E] (hhm : Measurable h) (hφ
     (tendsto_cumulativeRateF_atTop_of_le hint hcpos fun u _ ↦ le_hawkesSelfRateH hφ hc u ω)
     hxi hsum
 
-theorem isCadlagPath_hawkesProcessH [TopologicalSpace E] (hhm : Measurable h)
+theorem isCadlag_hawkesProcessH [TopologicalSpace E] (hhm : Measurable h)
     (hφm : Measurable φ) (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
     (hL : ∀ x, ν ≤ x → h x ≤ L) (hxi : ∀ k, 0 < ω.2 k)
     (hsum : Tendsto (fun m ↦ ∑ k ∈ Finset.range m, ω.2 k) atTop atTop) :
-    IsCadlagPath (fun t ↦ hawkesProcessH h ν φ t ω) :=
-  (isStepPath_hawkesProcessH hhm hφm hφ hcpos hc hL hxi hsum).isCadlagPath
+    IsCadlag (fun t ↦ hawkesProcessH h ν φ t ω) :=
+  (isStepPath_hawkesProcessH hhm hφm hφ hcpos hc hL hxi hsum).isCadlag
 
 /-- **The bounded nonlinear Hawkes process is the step path of its own jump times**, and unlike
 `hawkesProcess_eq_stepPath` this holds at every sample point with positive waiting times: the
@@ -33579,7 +33580,7 @@ theorem exists_cadlag_modification_flip (nu : Measure Bool) [IsProbabilityMeasur
     ∃ X' : ℝ≥0 → ((ℕ → Bool) × (ℕ → ℝ)) → Bool,
       (∀ t : ℝ≥0, ∀ᵐ ω ∂(jumpMeasure flipKernel nu),
           X' t ω = jumpProcessE flipRate (t : ℝ) ω) ∧
-        ∀ᵐ ω ∂(jumpMeasure flipKernel nu), IsCadlagPath fun t : ℝ≥0 ↦ X' t ω := by
+        ∀ᵐ ω ∂(jumpMeasure flipKernel nu), IsCadlag fun t : ℝ≥0 ↦ X' t ω := by
   obtain ⟨D, hDc, hDd⟩ := TopologicalSpace.exists_countable_dense ℝ≥0
   have hA : ∀ p ∈ jumpOperator flipRate flipKernel,
       Measurable p.2 ∧ ∃ b : ℝ, ∀ x, ‖p.2 x‖ ≤ b := fun p _ ↦
@@ -33632,7 +33633,7 @@ example of them.
 
 Every hypothesis of `isQuasiLeftContinuous_of_isMPSolutionFor` is discharged on the data of
 Milestone 4, and the three that the abstract theorem cannot discharge for itself are the three the
-index `ℝ≥0` supplies: the càdlàg paths are `ae_isCadlagPath_nnreal_jumpProcessE` -- *the paths of
+index `ℝ≥0` supplies: the càdlàg paths are `ae_isCadlag_nnreal_jumpProcessE` -- *the paths of
 the process itself*, not of a modification, since a step path is càdlàg to begin with -- the
 optional sampling is `isOptionalSamplingFor_mpFamily_jumpProcessE`, and the strong measurability
 of the compensator at a stopping time is `isStronglyMeasurableAlongStoppingTimes_compensatorE`.
@@ -33666,7 +33667,7 @@ theorem isQuasiLeftContinuous_jumpProcessE {E : Type*} [MeasurableSpace E] [Coun
       exact one_ne_zero⟩)
     (lebesgueClock_isProgressive_jumpProcessE hlam) (measurable_jumpFiltrationE_self hlam)
     lebesgueClock_isContinuousFor_optional
-    (ae_isCadlagPath_nnreal_jumpProcessE hL0 hlam0 hL mu nu)
+    (ae_isCadlag_nnreal_jumpProcessE hL0 hlam0 hL mu nu)
     (fun _ hY ↦ isOptionalSamplingFor_mpFamily_jumpProcessE hlam hlam0 hL nu hY) ?_
   · rintro p ⟨hf, ⟨C, hC⟩, hp2⟩
     refine ⟨continuous_of_discreteTopology, ⟨C, fun x ↦ by rw [Real.norm_eq_abs]; exact hC x⟩,

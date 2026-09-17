@@ -31,8 +31,9 @@ import Mathlib.Topology.UrysohnsLemma
 Prototypes only.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-09.  Every declaration elaborates, and none of them carries a `sorry`
-any more.
+2026-09-17, and since that date with `autoImplicit=false` and
+`relaxedAutoImplicit=false`, as Mathlib itself builds.  Every declaration
+elaborates, and none of them carries a `sorry` any more.
 
 Twenty declarations are no longer `sorry` but proved.  Of Milestone 1:
 `IsSeparating.mono`, `IsConvergenceDetermining.mono`,
@@ -399,8 +400,17 @@ Separating, over PROBABILITY measures, as in the manuscript's
 instead gives a strictly stronger notion under which
 `IsConvergenceDetermining.isSeparating` is false -- on a one-point space the
 empty set is convergence determining, there being only one probability measure,
-but does not separate `δ` from `2δ`. -/
-def IsSeparating (Γ : Set (E → ℝ)) : Prop :=
+but does not separate `δ` from `2δ`.
+
+**The scalar field is `RCLike` and not `ℝ`.**  A martingale problem tests its
+solutions against an operator `A : Set ((E → 𝕂) × (E → 𝕂))`, so the classes that
+the roadmap **MartingaleProblems** calls separating are `𝕂`-valued; stating this
+over `ℝ` alone would force that roadmap to restate the same proposition.  The
+real case is the instance `𝕂 = ℝ`, and every consumer below is at that instance,
+so nothing about the real theory changes.  `RCLike` is the weakest bundle the
+definition parses under: the Bochner integral asks for a normed space over `ℝ`,
+and `RCLike 𝕂` supplies it. -/
+def IsSeparating {𝕂 : Type*} [RCLike 𝕂] (Γ : Set (E → 𝕂)) : Prop :=
   ∀ (μ ν : Measure E) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν],
     (∀ f ∈ Γ, ∫ x, f x ∂μ = ∫ x, f x ∂ν) → μ = ν
 
@@ -416,7 +426,8 @@ def IsConvergenceDetermining [TopologicalSpace E] [OpensMeasurableSpace E]
     (∀ f ∈ Γ, Tendsto (fun n => ∫ x, f x ∂(μ n : Measure E)) atTop
       (𝓝 (∫ x, f x ∂(ν : Measure E)))) → Tendsto μ atTop (𝓝 ν)
 
-theorem IsSeparating.mono {Γ Γ' : Set (E → ℝ)} (h : IsSeparating Γ) (hsub : Γ ⊆ Γ') :
+theorem IsSeparating.mono {𝕂 : Type*} [RCLike 𝕂] {Γ Γ' : Set (E → 𝕂)}
+    (h : IsSeparating Γ) (hsub : Γ ⊆ Γ') :
     IsSeparating Γ' := by
   intro μ ν _ _ hμν
   exact h μ ν fun f hf => hμν f (hsub hf)
