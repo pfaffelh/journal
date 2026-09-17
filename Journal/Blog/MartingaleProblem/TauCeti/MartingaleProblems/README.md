@@ -8624,9 +8624,47 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   the càdlàg property of the paths, which is why the statement carries no
   hypothesis on `a` beyond the convergence itself. **In Lean** on 2026-09-17,
   eleventh run.
+* `ae_forall_eq_of_right_dense`: **from an identity that holds at each time
+  almost surely to one that holds almost surely at all times**. Let `D` be
+  countable, let every `t` either lie in `D` or be approached from the right
+  along `D` — `(𝓝[D ∩ Set.Ioi t] t).NeBot` — let `f (X t) = Y t + C t` hold
+  almost surely for each `t ∈ D`, and let the paths of `f ∘ X`, of `Y` and of `C`
+  be almost surely right continuous along `D ∩ Set.Ioi t` at every `t`. Then
+  `∀ᵐ ω, ∀ t, f (X t ω) = Y t ω + C t ω`. Neither hypothesis nor conclusion reads
+  a measurability: this is a statement about paths. **In Lean** on 2026-09-17,
+  twelfth run.
+* `IsCompensatorFor.ae_forall_decomposition`: the previous item read at the
+  `decomposition` field of `IsCompensatorFor`, and
+  `IsCompensatorFor.decomposition_stoppedValue`, its value at a random time
+  `σ : Ω → WithTop ι`:
+  `f (stoppedValue X σ) =ᵐ[P] stoppedValue Y σ + stoppedValue C σ`. **`σ` is
+  neither a stopping time nor measurable**; both are irrelevant, because the
+  identity holds at all times at once and is merely evaluated at `(σ ω).untopA`.
+  **In Lean** on 2026-09-17, twelfth run.
+* `LiftWitness`: the witness that the **right continuity of `Y` does not follow**
+  from that of `f ∘ X` and of `C` and must be assumed. On `ι = ℝ≥0` and `Ω = ℝ`
+  with Lebesgue measure on `Set.Icc 0 1`, with `X` constant, `f = 0`, `C = 0` and
+  `Y t ω = 1` exactly on the diagonal `(t : ℝ) = ω`, every field of
+  `IsCompensatorFor` holds for **every** `D` (`isCompensatorFor_diagY`), a
+  countable right dense `D` exists (`exists_countable_right_dense`, from
+  `TopologicalSpace.exists_countable_dense` and `Dense.open_subset_closure_inter`),
+  and the conclusion fails (`not_ae_forall_diagY_eq_zero`). `IsCompensatorFor`
+  constrains `Y` only through the decomposition, which pins it down at each time
+  only off a null set; the right continuity of `Y` is what forbids the null sets
+  to fill the space. **In Lean** on 2026-09-17, twelfth run.
+* `not_isQuasiLeftContinuous_of_isRegularizingClass_of_free_solutionSet`: the
+  hypothesis `IsMPSolution 𝓧 𝓕 P` of the next item **is indispensable**, and
+  until 2026-09-17 it was not there. Drop it and nothing constrains `𝓧`, so
+  `Y := f ∘ X` and `C := 0` satisfy every remaining hypothesis — all of them are
+  statements about the zero process — for **any** `X` and even for `D = ∅`. The
+  coin of `AtomWitness` over `ι = ENNReal` is a càdlàg `X` with a separating `Φ`
+  that is not quasi-left-continuous, so the statement without `IsMPSolution` is
+  false. What it lacks is the martingale property that optional sampling needs.
+  **In Lean** on 2026-09-17, twelfth run.
 * `isQuasiLeftContinuous_of_isRegularizingClass`, the abstract form of
   Ethier–Kurtz, Theorem 4.3.12, with no operator and no compensator of any
-  special shape. Let `Φ` be a regularizing class for `(X, 𝓧)` with `X` càdlàg,
+  special shape. Let `𝓧` solve the martingale problem for `𝓕` and `P`, let `Φ`
+  be a regularizing class for `(X, 𝓧)` with `X` càdlàg,
   let `Φ` be separating in the sense of the roadmap **WeakConvergence**, and let
   the compensator `C` attached to each `f ∈ Φ` be almost surely right continuous
   and **left continuous in `L¹` along stopping times**: for every nondecreasing
@@ -8641,10 +8679,11 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   milestone, gives
   `Y (min (τ n) t) =ᵐ[P] P[Y (min τ' t) | (hτ n).measurableSpace]`. The
   decomposition `f (X t) = Y t + C t` of `IsRegularizingClass` is then needed at
-  a stopping time and not only at each fixed `t`; it upgrades because both sides
-  are right continuous and it holds on the countable dense `D`, and that upgrade
-  is a lemma of `IsRegularizingClass` of its own, because the càdlàg theorem
-  uses the decomposition `t` by `t` and this theorem cannot. Substituting it,
+  a stopping time and not only at each fixed `t`; that upgrade is
+  `IsCompensatorFor.decomposition_stoppedValue` above, and it costs two
+  hypotheses that `IsCompensatorFor` does not carry: that `D` approximates every
+  time from the right, and that the paths of `Y` are right continuous — the
+  latter genuinely, by `LiftWitness`. Substituting it,
   ```
   f (X (min (τ n) t)) =ᵐ[P] P[f (X (min τ' t)) | (hτ n).measurableSpace]
       - P[C (min τ' t) - C (min (τ n) t) | (hτ n).measurableSpace] ,

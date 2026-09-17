@@ -33178,3 +33178,200 @@ trägt.
 3. **Die Leerheitsprobe auf `E = ℕ` am Poissonprozeß**, unverändert Vorschlag 3
    des Vorlaufs.
 4. **Die fünfzig Aufrufe veralteter Namen**, unverändert Vorschlag 4.
+
+### 2026-09-17, zwölfter Lauf des Tages — die Hebung der Zerlegung auf Stoppzeiten steht, und die Frage, die der Vorlauf als „erster zu klärender Punkt" hinterlassen hat, ist mit einem Zeugen beantwortet: die Rechtsstetigkeit von `Y` folgt **nicht**
+
+Der Vorlauf hat die Analysis von `isQuasiLeftContinuous_of_isRegularizingClass`
+vollständig gemacht und als Vorschlag 1 die einzige verbliebene Lücke benannt:
+
+> Die Zerlegung `f (X t) = Y t + C t` gilt je Zeitpunkt und damit auf einer von
+> `t` abhängenden Nullmenge; gebraucht wird sie an einer Stoppzeit.
+
+Und er hat dazu ausdrücklich verlangt, **zuerst** zu entscheiden, welche
+Voraussetzungen an `D` und an `Y` der Satz dafür zu tragen hat — „das ist zu
+entscheiden und im Bericht zu begründen, nicht zu raten". Beides ist entschieden,
+und die Entscheidung über `Y` ist nicht argumentiert, sondern **bewiesen**.
+
+#### Die Aussage ist stärker als die verlangte, und das ist kein Zufall
+
+Verlangt war die Zerlegung an einer Stoppzeit. Bewiesen ist
+`ae_forall_eq_of_right_dense`: die Zerlegung gilt fast sicher **an allen Zeiten
+zugleich**,
+
+```
+∀ᵐ ω ∂P, ∀ t : ι, f (X t ω) = Y t ω + C t ω .
+```
+
+Damit ist die Stoppzeitform (`IsCompensatorFor.decomposition_stoppedValue`) eine
+Zeile, und sie trägt **weder Stoppzeiteigenschaft noch Meßbarkeit** von `σ`: es
+wird an `(σ ω).untopA` ausgewertet, mehr geschieht nicht. Die Stoppzeit, die in
+der Aufgabenstellung stand, kommt im Beweis nirgends vor — sie war eine
+Eigenschaft der Anwendung, nicht des Schrittes. Ebenso kommt **keine
+Meßbarkeit** vor, auf keiner der beiden Seiten: Voraussetzungen wie Behauptung
+sind Aussagen über Pfade.
+
+#### Die Entscheidung über `D`
+
+`IsCompensatorFor` läßt `D` eine **beliebige** `Set ι` sein, und `D = ∅` erfüllt
+jedes seiner vier Felder — außerhalb von `D` wird ohne eine Zusatzvoraussetzung
+nichts erreicht. Genommen ist die schwächste Form, die den Schluß trägt:
+
+```
+∀ t : ι, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot .
+```
+
+Zwei Gründe für genau diese Gestalt, beide aus der stehenden Regel:
+
+* **Nicht Dichtheit, sondern Approximation von rechts.** Gebraucht wird allein,
+  daß der Filter, längs dessen der Grenzübergang läuft, nicht leer ist. `Dense D`
+  wäre stärker und an einem größten Element von `ι` sogar falsch anwendbar.
+* **Die Alternative `t ∈ D` ist kein Schmuck.** Ist `t` das größte Element, so
+  ist `Set.Ioi t = ∅` und der Filter leer; dort trägt die erste Alternative, und
+  die Aussage bleibt für Indexmengen mit Maximum brauchbar. Sie kostet zwei
+  Zeilen.
+
+Die drei Rechtsstetigkeiten sind längs `D ∩ Set.Ioi t` gestellt und nicht längs
+`Set.Ioi t` — auch das ist die schwächere Fassung, und `ContinuousWithinAt.mono`
+schlägt an der Verwendungsstelle die Brücke.
+
+Der Linter hat die Minimalität der Instanzen mitbestätigt: `OrderBot ι`,
+`OrderTopology ι`, `TopologicalSpace E` und `MeasurableSpace E` werden nicht
+gebraucht und stehen als `omit` über der Aussage.
+
+#### Die Entscheidung über `Y`, und sie ist ein Zeuge
+
+Der Vorlauf hat die Frage offengelassen, ob die Rechtsstetigkeit von `Y` aus der
+von `f ∘ X` und der von `C` folgt. **Sie folgt nicht**, und der Beweis dafür
+steht als `LiftWitness` in Lean:
+
+* `ι = ℝ≥0`, `Ω = ℝ` mit dem Lebesguemaß auf `Set.Icc 0 1`, `E = Unit`,
+  `f = 0`, `C = 0`, und `Y t ω = 1` genau auf der Diagonale `(t : ℝ) = ω`.
+* `isCompensatorFor_diagY`: **jedes** Feld von `IsCompensatorFor` ist erfüllt,
+  und zwar für **jedes** `D`. Der Kompensator ist `0`, also sind Adaptiertheit,
+  die einseitigen Grenzwerte und die `L¹`-Rechtsstetigkeit Konstanten; das Feld
+  `decomposition` ist `diagY_ae_eq_zero` — zu **fester** Zeit ist die Diagonale
+  eine Nullmenge.
+* `exists_countable_right_dense`: ein abzählbares, von rechts approximierendes
+  `D ⊆ ℝ≥0` gibt es. Das ist die Leerheitsprobe für die `D`-Voraussetzung und
+  drei Zeilen — `TopologicalSpace.exists_countable_dense`,
+  `Dense.open_subset_closure_inter` und `closure_Ioi`.
+* `not_ae_forall_diagY_eq_zero`: die Behauptung ist trotzdem falsch. Zu **jedem**
+  `ω ∈ Set.Icc 0 1` versagt sie an der einen Zeit `t = ω`, und diese Zeiten
+  füllen das Einheitsintervall.
+
+Die Rechtsstetigkeit der Pfade von `f ∘ X` und von `C` hält also stand, die von
+`Y` fällt — und sie fällt je Stichprobenpunkt an genau einer Stelle. Das ist der
+Mechanismus, gegen den die Hebung gebaut ist, in seiner kleinsten Gestalt.
+
+#### Was der Zeuge über die Gestalt von `IsCompensatorFor` sagt, und warum sie trotzdem bleibt
+
+Es gäbe einen zweiten Weg: das Feld `decomposition` von `∀ t, ∀ᵐ ω` auf
+`∀ᵐ ω, ∀ t` zu verschärfen. Dann wäre die Hebung überflüssig, denn die Behauptung
+**wäre** das Feld. Und der Weg ist nicht abwegig: in **jeder** vorhandenen
+Instanz ist die Zerlegung ohnehin punktweise, weil `C` als `f ∘ X - Y` definiert
+ist — der Doc-Kommentar der Struktur sagt das selbst („The decomposition itself
+is not a hypothesis -- `C := f ∘ X - Y` satisfies it").
+
+Genommen ist er trotzdem nicht, und zwar aus einem Grund und nicht aus zweien:
+**die Struktur ist die schwächere Voraussetzung**, und die stehende Regel
+verlangt die schwächste. Ein Kompensator, der aus bedingten Erwartungen gewonnen
+wird — und das ist die Bauart, in der Kompensatoren in der Literatur auftreten —
+ist je Zeitpunkt fast sicher bestimmt und sonst gar nicht. Wer das Feld
+verschärft, sperrt diese Bauart aus, um sich einen Satz zu sparen. Der Preis der
+Entscheidung ist benannt und beziffert: zwei Pfadvoraussetzungen, von denen die
+eine (`hYr`) in jeder punktweisen Instanz umsonst ist, weil dort
+`Y = f ∘ X - C` als **Funktionen** gilt und die Rechtsstetigkeit sich vererbt.
+
+#### Der Durchlauf
+
+Zuerst in `TauCeti/MartingaleProblems/scratch/Decomposition.lean` gegen Mathlib
+allein entwickelt — die Datei bleibt stehen, ist allein lauffähig und übersetzt
+ohne Fehler **und ohne Warnung** —, dann nach `Suggested.lean` übernommen,
+unmittelbar hinter den Abschnitt `LevyUpward` und vor
+`isQuasiLeftContinuous_of_isRegularizingClass`. `lake env lean` über die ganze
+Datei gegen v4.33.1, ohne `head` und ohne Filter: **kein einziger Fehler**, und
+die Zahl der `sorry` bleibt bei **fünf**, denselben fünf. Alle sieben neuen
+Deklarationen mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound`
+geprüft. Kein neuer Import.
+
+Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 9, als drei
+benannte Einträge vor `isQuasiLeftContinuous_of_isRegularizingClass`; der
+Beweisweg dieses Satzes ist dort an der Stelle berichtigt, an der er die Hebung
+seit langem als „a lemma of `IsRegularizingClass` of its own" ankündigte, ohne
+daß sie eines war.
+
+#### Derselbe Lauf, zweiter Teil — der Zusammenbau wurde begonnen und hat sofort etwas gefunden: der Satz, auf den dieser ganze Meilensteinabschnitt zuläuft, war **falsch**
+
+Nachdem die Hebung stand, war der nächste Schritt, den Beweisweg von
+`isQuasiLeftContinuous_of_isRegularizingClass` durchzurechnen. Dabei fiel auf,
+daß die Aussage, wie sie seit ihrer Formulierung dasteht, `𝓧` durch **nichts**
+einschränkt: `Y` soll in `𝓧` liegen, und `𝓧` ist eine freie Variable. Also:
+
+> Nimm `Y := f ∘ X` und `C := 0`. Dann sind **alle** übrigen Voraussetzungen
+> Aussagen über den Nullprozeß — Adaptiertheit, einseitige Grenzwerte,
+> `L¹`-Rechtsstetigkeit, pfadweise Rechtsstetigkeit und `L¹`-Linksstetigkeit
+> längs Stoppzeiten —, und sie gelten für **jedes** `X`, sogar für `D = ∅`.
+
+Übrig bleiben die Trennungseigenschaft von `Φ` und die Càdlàg-Pfade, und einen
+Prozeß, der beides hat und trotzdem nicht quasi-linksstetig ist, trägt diese
+Datei seit dem 2026-09-07: die Münze von `AtomWitness`.
+
+`not_isQuasiLeftContinuous_of_isRegularizingClass_of_free_solutionSet` schreibt
+das aus — `ι = ENNReal`, `u = ⊤`, `Φ = Prod.fst '' coinClass`, `𝓧 = Set.univ`,
+`D = ∅` —, und es ist der ganze Beweis, daß der Satz ohne
+`IsMPSolution 𝓧 𝓕 P` falsch ist. Die Voraussetzung ist ergänzt, und der
+Doc-Kommentar des Satzes nennt jetzt den Zeugen.
+
+**Was daran lehrreich ist, und es ist nicht die Lücke selbst.** Der Schwesternsatz
+`exists_cadlag_modification_of_isRegularizingClass` trägt `h𝓧` seit jeher; hier
+war sie beim Abschreiben der Signatur verlorengegangen und ist fünf Läufe lang
+niemandem aufgefallen, obwohl die Roadmap den Beweisweg über das optionale
+Sampling ausdrücklich beschreibt — und optionales Sampling ohne Martingal ist
+nichts. Gefunden wurde sie nicht beim Lesen, sondern beim **Zusammenbauen**: der
+Weg fragte nach dem Martingal, und es war keines da. Das ist ein Argument dafür,
+Sätze zusammenzubauen, statt sie zu sammeln.
+
+**Zwei weitere Voraussetzungen fehlen noch** und sind im Doc-Kommentar benannt,
+aber noch nicht in der Signatur, weil ihre Gestalt der Zusammenbau entscheidet:
+die beiden der Hebung (`D` abzählbar und von rechts approximierend, Pfade von `Y`
+rechtsstetig). Hinzu kommt eine dritte, die beim Durchrechnen aufgetaucht ist und
+festgehalten sei, damit der nächste Lauf sie nicht neu findet:
+
+> **Der gestoppte Kompensator muß für `(hτ n).measurableSpace` meßbar sein.**
+> Die Zerlegung wird in der Gestalt `a n = μ[W | ℱ n] + μ[Z n | ℱ n]` gelesen,
+> die `ae_eq_condExp_iSup_of_tendsto` verlangt, und der Schritt
+> `μ[Z n | ℱ n] = stoppedValue C (σ n) - μ[stoppedValue C σ' | ℱ n]` braucht
+> `stoppedValue C (σ n)` als `ℱ n`-meßbar. `IsCompensatorFor` gibt nur
+> `StronglyAdapted`, und das reicht an einer Stoppzeit nicht; gebraucht wird
+> `IsStronglyProgressive 𝓕 C`, genau wie `stoppedValue_ae_eq_condExp` es für `Y`
+> verlangt.
+
+`lake env lean` über die ganze Datei nach beiden Änderungen: **kein Fehler**, die
+Zahl der `sorry` unverändert **fünf**, und die neue Deklaration mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Der Zusammenbau von `isQuasiLeftContinuous_of_isRegularizingClass`**, jetzt
+   über der berichtigten Aussage. Alle
+   Eingaben stehen jetzt: `stoppedValue_ae_eq_condExp` (2026-09-17, zehnter
+   Lauf), die vier Aussagen von `LevyUpward` (elfter Lauf), die Hebung dieses
+   Laufs, `IsCadlagPath.exists_tendsto_comp_monotone` (neunter Lauf) und
+   `IsSeparating.ae_eq_of_forall_condExp_eq` aus **WeakConvergence**,
+   Meilenstein 1. *Worauf zu achten ist, und es ist keine Nebensache:* die
+   Aussage trägt die beiden Voraussetzungen der Hebung
+   **nicht** — weder die Abzählbarkeit und Rechtsapproximation von `D` noch die
+   Rechtsstetigkeit von `Y` —, und auch nicht die Progressivität von `C` aus dem
+   zweiten Teil dieses Laufs. Alle drei sind nachzutragen, und `LiftWitness` ist
+   der Beleg, daß die zweite kein Formfehler ist. Zu entscheiden ist dabei, ob
+   `hYr` als Hypothese steht oder ob die Klasse `𝓧` sie mitbringen soll; das
+   erste ist ehrlicher, das zweite bequemer für die Instanz. In der Instanz
+   `isCompensatorFor_mpFamily` ist sie ohnehin umsonst: dort ist
+   `Y = f ∘ X - C` als **Funktion**, und `C` ist dort sogar in beiden Richtungen
+   stetig (`hcont` im Beweis).
+2. **Die Leerheitsprobe auf `E = ℕ` am Poissonprozeß**, unverändert Vorschlag 3
+   des Vorlaufs — und nach Punkt 1 ist sie fällig, weil dann zum ersten Mal ein
+   Satz dieses Meilensteins an Daten geprüft werden kann, die nicht aus einem
+   Gegenbeispiel stammen.
+3. **Die fünfzig Aufrufe veralteter Namen**, unverändert Vorschlag 4 des
+   Vorlaufs.

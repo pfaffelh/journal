@@ -3948,16 +3948,193 @@ theorem ae_eq_condExp_iSup_of_tendsto [IsFiniteMeasure μ] {W A : Ω → 𝕂} {
 
 end LevyUpward
 
+/-! #### The lifting of the decomposition to a random time
+
+`IsCompensatorFor.decomposition` is an identity between two processes that holds,
+for each time separately, almost surely; the null set therefore depends on the
+time.  Quasi-left-continuity reads the decomposition **at a stopping time**, and
+a null set per time is worth nothing there.  The passage is the countability of
+`D` together with right continuity, and what comes out is more than the stopped
+form: the decomposition holds, almost surely, at **every** time at once, and
+hence at every random time, measurable or not, stopping time or not.  The stopped
+form below is the one line that reads it at `σ`.
+
+**Two hypotheses that `IsCompensatorFor` does not carry, and that this needs.**
+Both were decided by writing the proof, and both are genuine:
+
+* **`D` approximates every time from the right.**  `IsCompensatorFor` lets `D` be
+  an arbitrary `Set ι`, and `D = ∅` satisfies every one of its fields, so nothing
+  outside `D` is reached without a hypothesis.  The weakest form that carries the
+  argument is `∀ t, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot`: either `t` lies in `D`,
+  where the decomposition holds outright, or `t` is approached from the right
+  along `D`.  Density of `D` is not needed, only right approximation, and at a
+  greatest element of `ι` -- where `Set.Ioi t` is empty -- the first alternative
+  is what carries it.
+* **The right continuity of `Y`, and it does not follow from the other two.**
+  The namespace `LiftWitness` below is the proof that it does not: with `X`
+  constant, `f = 0` and `C = 0` every field of `IsCompensatorFor` holds, `D` may
+  be any countable right dense set, the paths of `f ∘ X` and of `C` are constant
+  and hence right continuous, and the conclusion is false.  What fails is only
+  the right continuity of `Y`, and it fails at one time per sample point.
+
+The proof reads no measurability at all, on either side: the hypotheses are about
+paths and the conclusion is about paths. -/
+
+omit [OrderBot ι] [OrderTopology ι] [TopologicalSpace E] [MeasurableSpace E] in
+/-- **From an identity that holds at each time almost surely to one that holds
+almost surely at all times.**  The three right continuities are stated along
+`D ∩ Set.Ioi t`, which is what the proof uses and is weaker than right continuity
+along `Set.Ioi t`; `ContinuousWithinAt.mono` bridges the two at the call site. -/
+theorem ae_forall_eq_of_right_dense
+    {P : Measure Ω} {D : Set ι} {X : ι → Ω → E} {f : E → 𝕂} {Y C : ι → Ω → 𝕂}
+    (hDcount : D.Countable)
+    (hD : ∀ t : ι, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot)
+    (hdec : ∀ t ∈ D, ∀ᵐ ω ∂P, f (X t ω) = Y t ω + C t ω)
+    (hXr : ∀ᵐ ω ∂P, ∀ t : ι, ContinuousWithinAt (fun s ↦ f (X s ω)) (D ∩ Set.Ioi t) t)
+    (hYr : ∀ᵐ ω ∂P, ∀ t : ι, ContinuousWithinAt (fun s ↦ Y s ω) (D ∩ Set.Ioi t) t)
+    (hCr : ∀ᵐ ω ∂P, ∀ t : ι, ContinuousWithinAt (fun s ↦ C s ω) (D ∩ Set.Ioi t) t) :
+    ∀ᵐ ω ∂P, ∀ t : ι, f (X t ω) = Y t ω + C t ω := by
+  have hall : ∀ᵐ ω ∂P, ∀ t ∈ D, f (X t ω) = Y t ω + C t ω := (ae_ball_iff hDcount).2 hdec
+  filter_upwards [hall, hXr, hYr, hCr] with ω hω hXω hYω hCω t
+  rcases hD t with ht | ht
+  · exact hω t ht
+  · have h1 : Tendsto (fun s ↦ f (X s ω)) (𝓝[D ∩ Set.Ioi t] t) (𝓝 (f (X t ω))) := hXω t
+    have h2 : Tendsto (fun s ↦ Y s ω + C s ω) (𝓝[D ∩ Set.Ioi t] t) (𝓝 (Y t ω + C t ω)) :=
+      (hYω t).add (hCω t)
+    refine tendsto_nhds_unique (h1.congr' ?_) h2
+    filter_upwards [self_mem_nhdsWithin] with s hs
+    exact hω s hs.1
+
+/-- The decomposition of a compensator, at all times at once. -/
+theorem IsCompensatorFor.ae_forall_decomposition {X : ι → Ω → E} {𝓕 : Filtration ι m}
+    {P : Measure Ω} {D : Set ι} {f : E → 𝕂} {Y C : ι → Ω → 𝕂}
+    (hC : IsCompensatorFor X 𝓕 P D f Y C) (hDcount : D.Countable)
+    (hD : ∀ t : ι, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot)
+    (hXr : ∀ᵐ ω ∂P, ∀ t : ι, ContinuousWithinAt (fun s ↦ f (X s ω)) (D ∩ Set.Ioi t) t)
+    (hYr : ∀ᵐ ω ∂P, ∀ t : ι, ContinuousWithinAt (fun s ↦ Y s ω) (D ∩ Set.Ioi t) t)
+    (hCr : ∀ᵐ ω ∂P, ∀ t : ι, ContinuousWithinAt (fun s ↦ C s ω) (D ∩ Set.Ioi t) t) :
+    ∀ᵐ ω ∂P, ∀ t : ι, f (X t ω) = Y t ω + C t ω :=
+  ae_forall_eq_of_right_dense hDcount hD (fun t _ ↦ hC.decomposition t) hXr hYr hCr
+
+/-- **The decomposition at a random time**, and the missing input of
+`isQuasiLeftContinuous_of_isRegularizingClass`.  Neither a stopping time property
+nor measurability of `σ` occurs: the previous theorem holds at all times at once,
+so evaluating it at `(σ ω).untopA` is the whole proof. -/
+theorem IsCompensatorFor.decomposition_stoppedValue {X : ι → Ω → E} {𝓕 : Filtration ι m}
+    {P : Measure Ω} {D : Set ι} {f : E → 𝕂} {Y C : ι → Ω → 𝕂}
+    (hC : IsCompensatorFor X 𝓕 P D f Y C) (hDcount : D.Countable)
+    (hD : ∀ t : ι, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot)
+    (hXr : ∀ᵐ ω ∂P, ∀ t : ι, ContinuousWithinAt (fun s ↦ f (X s ω)) (D ∩ Set.Ioi t) t)
+    (hYr : ∀ᵐ ω ∂P, ∀ t : ι, ContinuousWithinAt (fun s ↦ Y s ω) (D ∩ Set.Ioi t) t)
+    (hCr : ∀ᵐ ω ∂P, ∀ t : ι, ContinuousWithinAt (fun s ↦ C s ω) (D ∩ Set.Ioi t) t)
+    (σ : Ω → WithTop ι) :
+    ∀ᵐ ω ∂P, f (stoppedValue X σ ω) = stoppedValue Y σ ω + stoppedValue C σ ω := by
+  filter_upwards [hC.ae_forall_decomposition hDcount hD hXr hYr hCr] with ω hω
+  exact hω _
+
+/-! #### The witness that the right continuity of `Y` is not implied
+
+The data are `ι = ℝ≥0`, `Ω = ℝ` with Lebesgue measure on `Set.Icc 0 1`,
+`E = Unit`, `f = 0`, `C = 0`, and `Y t ω = 1` exactly on the diagonal `t = ω`.
+Every field of `IsCompensatorFor` holds for **every** `D`, and `D` may be taken
+countable and right dense; the paths of `f ∘ X` and of `C` are constant.  The
+conclusion of `ae_forall_eq_of_right_dense` nevertheless fails, because for each
+`ω` it fails at the single time `t = ω`, and those times fill `Set.Icc 0 1`.
+
+The mechanism is the one the lifting is built to survive: an identity that holds,
+for each time, off a null set can fail everywhere once the times are quantified
+inside.  What the witness shows is that right continuity of `Y` is what forbids
+it, and that it has to be assumed, since `IsCompensatorFor` says nothing about
+`Y` beyond the decomposition. -/
+
+namespace LiftWitness
+
+/-- The measure of the witness: Lebesgue on the unit interval. -/
+noncomputable def witnessMeasure : Measure ℝ := volume.restrict (Set.Icc (0 : ℝ) 1)
+
+/-- A countable set that approximates every point of `ℝ≥0` from the right.  It is
+the proof that the hypothesis `hD` of `ae_forall_eq_of_right_dense` is not
+vacuous, and the witness below holds for this `D` as for any other. -/
+theorem exists_countable_right_dense :
+    ∃ D : Set ℝ≥0, D.Countable ∧ ∀ t : ℝ≥0, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot := by
+  obtain ⟨D, hDc, hDd⟩ := TopologicalSpace.exists_countable_dense ℝ≥0
+  refine ⟨D, hDc, fun t ↦ Or.inr ?_⟩
+  rw [← mem_closure_iff_nhdsWithin_neBot, Set.inter_comm]
+  refine closure_minimal (hDd.open_subset_closure_inter isOpen_Ioi) isClosed_closure ?_
+  rw [closure_Ioi]
+  exact Set.mem_Ici.2 le_rfl
+
+/-- The martingale part of the witness: the indicator of the diagonal. -/
+noncomputable def diagY : ℝ≥0 → ℝ → ℝ := fun t ω ↦ if (t : ℝ) = ω then 1 else 0
+
+/-- At each fixed time the diagonal is a null set, so `diagY t` vanishes almost
+surely -- this is the `decomposition` field. -/
+theorem diagY_ae_eq_zero (t : ℝ≥0) : ∀ᵐ ω ∂witnessMeasure, diagY t ω = 0 := by
+  have hz : witnessMeasure {(t : ℝ)} = 0 := by
+    rw [witnessMeasure, Measure.restrict_apply (measurableSet_singleton _)]
+    exact measure_mono_null Set.inter_subset_left (by simp)
+  rw [ae_iff]
+  refine measure_mono_null (fun ω hω ↦ ?_) hz
+  by_contra hne
+  rw [Set.mem_singleton_iff] at hne
+  exact hω (by simp [diagY, Ne.symm hne])
+
+/-- Quantified inside, the same identity fails at every sample point of the unit
+interval. -/
+theorem not_ae_forall_diagY_eq_zero :
+    ¬ ∀ᵐ ω ∂witnessMeasure, ∀ t : ℝ≥0, diagY t ω = 0 := by
+  rw [ae_iff]
+  intro h
+  have hsub : Set.Icc (0 : ℝ) 1 ⊆ {ω : ℝ | ¬ ∀ t : ℝ≥0, diagY t ω = 0} := by
+    intro ω hω hcon
+    have h2 := hcon ω.toNNReal
+    simp [diagY, Real.coe_toNNReal ω hω.1] at h2
+  have h1 : witnessMeasure (Set.Icc (0 : ℝ) 1) = 1 := by
+    rw [witnessMeasure, Measure.restrict_apply_self, Real.volume_Icc]
+    norm_num
+  have hle := measure_mono (μ := witnessMeasure) hsub
+  rw [h1, h] at hle
+  simp at hle
+
+/-- Every field of `IsCompensatorFor` holds for the witness, for an arbitrary
+`D`: the compensator is `0`, so adaptedness, the one sided limits and the `L¹`
+right continuity are constants, and the decomposition is
+`diagY_ae_eq_zero`. -/
+theorem isCompensatorFor_diagY (D : Set ℝ≥0) :
+    IsCompensatorFor (fun (_ : ℝ≥0) (_ : ℝ) ↦ ())
+      (⊥ : Filtration ℝ≥0 (inferInstance : MeasurableSpace ℝ))
+      witnessMeasure D (fun _ ↦ (0 : ℝ)) diagY 0 where
+  stronglyAdapted := fun _ ↦ stronglyMeasurable_zero
+  decomposition := fun t ↦ by
+    filter_upwards [diagY_ae_eq_zero t] with ω hω
+    simp [hω]
+  exists_limits := .of_forall fun _ _ ↦ ⟨⟨0, tendsto_const_nhds⟩, ⟨0, tendsto_const_nhds⟩⟩
+  l1_rightContinuous := fun _ ↦ by simp
+
+end LiftWitness
+
 /-- The abstract form of Ethier--Kurtz, Theorem 4.3.12: no operator and no
 compensator of any special shape.  Being separating is the only hypothesis on `Φ`
 this shares with `exists_cadlag_modification_of_isRegularizingClass`; no
 countable subset separating the points of `E` is used, and no compact
 containment.  The compensator is quantified inside the hypothesis rather than
 recovered from `IsRegularizingClass`, because it is *the* compensator attached to
-`f` that must be right continuous and `L¹` left continuous. -/
+`f` that must be right continuous and `L¹` left continuous.
+
+**`h𝓧` was missing until 2026-09-17, twelfth run, and without it the statement is
+false**: see `not_isQuasiLeftContinuous_of_isRegularizingClass_of_free_solutionSet`
+below, where `Y := f ∘ X` and `C := 0` satisfy every other hypothesis for a
+process that is not quasi-left-continuous.  Optional sampling is what the proof
+turns on, and it is `h𝓧` that supplies the martingale property `Y` needs.  Two
+further hypotheses are known to be missing and are not yet written here, because
+their shape is decided by the assembly: the decomposition has to be lifted to a
+stopping time by `IsCompensatorFor.decomposition_stoppedValue`, which asks that
+`D` be countable and approximate every time from the right and that the paths of
+`Y` be right continuous. -/
 theorem isQuasiLeftContinuous_of_isRegularizingClass {Φ : Set (E → 𝕂)}
     {X : ι → Ω → E} {𝓧 : Set (ι → Ω → 𝕂)} {𝓕 : Filtration ι m} {P : Measure Ω}
     {D : Set ι} (hΦsep : IsSeparating Φ)
+    (h𝓧 : IsMPSolution 𝓧 𝓕 P)
     (hX : ∀ᵐ ω ∂P, IsCadlagPath (fun t ↦ X t ω))
     (hΦ : ∀ f ∈ Φ, ∃ Y ∈ 𝓧, ∃ C : ι → Ω → 𝕂, IsCompensatorFor X 𝓕 P D f Y C ∧
       (∀ᵐ ω ∂P, ∀ t : ι, ContinuousWithinAt (fun s ↦ C s ω) (Set.Ioi t) t) ∧
@@ -4332,6 +4509,58 @@ theorem exists_index_witness_for_atom :
   ⟨fun n => (n : ENNReal), Nat.strictMono_cast (α := ENNReal),
     fun n => lt_top_iff_ne_top.2 (ENNReal.natCast_ne_top n),
     ENNReal.tendsto_nat_nhds_top⟩
+
+/-- **`h𝓧` of `isQuasiLeftContinuous_of_isRegularizingClass` is indispensable**:
+without it the statement is false, and the witness is the one this file already
+carries.  Until 2026-09-17, twelfth run, the hypothesis was not there.
+
+Drop `h𝓧` and nothing constrains `𝓧`: `Y` is asked to lie in `𝓧`, and `𝓧` is
+then a free variable.  So `Y := f ∘ X` and `C := 0` satisfy every hypothesis
+about the compensator -- adaptedness, the one sided limits, `L¹` right
+continuity, pathwise right continuity, and `L¹` left continuity along stopping
+times are all statements about the zero process -- for **any** `X` whatever, and
+even for `D = ∅`.  What is then left of the hypotheses is that `Φ` separates and
+that the paths are càdlàg, and the coin of `AtomWitness` has both while failing
+to be quasi-left-continuous.
+
+**What was missing is the martingale property of `Y`.**  Optional sampling is
+what the proof of the theorem turns on, and `IsMPSolution 𝓧 𝓕 P` -- the
+hypothesis that `exists_cadlag_modification_of_isRegularizingClass` carried all
+along and this one did not -- is what supplies it.  Without it the decomposition
+`f ∘ X = Y + C` says nothing, because `C = 0` is always available.
+
+Found on 2026-09-17, twelfth run, while assembling the theorem from its four
+analytic inputs. -/
+theorem not_isQuasiLeftContinuous_of_isRegularizingClass_of_free_solutionSet :
+    ∃ (Φ : Set (Bool → ℝ)) (𝓧 : Set (ENNReal → Bool → ℝ))
+      (𝓕 : Filtration ENNReal (inferInstance : MeasurableSpace Bool))
+      (D : Set ENNReal) (X : ENNReal → Bool → Bool),
+      IsSeparating Φ ∧
+      (∀ᵐ ω ∂AtomWitness.coinMeasure, IsCadlagPath fun t ↦ X t ω) ∧
+      (∀ f ∈ Φ, ∃ Y ∈ 𝓧, ∃ C : ENNReal → Bool → ℝ,
+        IsCompensatorFor X 𝓕 AtomWitness.coinMeasure D f Y C ∧
+        (∀ᵐ ω ∂AtomWitness.coinMeasure, ∀ t : ENNReal,
+          ContinuousWithinAt (fun s ↦ C s ω) (Set.Ioi t) t) ∧
+        IsL1LeftContinuousAlongStoppingTimes C 𝓕 AtomWitness.coinMeasure) ∧
+      ¬ IsQuasiLeftContinuous X 𝓕 AtomWitness.coinMeasure := by
+  have hmono : Monotone (fun n : ℕ ↦ (n : ENNReal)) :=
+    (Nat.strictMono_cast (α := ENNReal)).monotone
+  have hlt : ∀ n : ℕ, (n : ENNReal) < ⊤ := fun n ↦ lt_top_iff_ne_top.2 (ENNReal.natCast_ne_top n)
+  have hbdd : BddAbove (Set.range fun n : ℕ ↦ (n : ENNReal)) := OrderTop.bddAbove _
+  have hsup : ⨆ n : ℕ, (n : ENNReal) = ⊤ :=
+    tendsto_nhds_unique (tendsto_atTop_ciSup hmono hbdd) ENNReal.tendsto_nat_nhds_top
+  refine ⟨Prod.fst '' AtomWitness.coinClass, Set.univ, AtomWitness.coinFiltration ⊤, ∅,
+    AtomWitness.coinProcess ⊤, AtomWitness.isSeparating_coinClass,
+    .of_forall (AtomWitness.isCadlagPath_coinProcess ⊤), fun f _ ↦ ?_,
+    AtomWitness.not_isQuasiLeftContinuous_coinProcess ⊤ hmono hlt hsup _⟩
+  refine ⟨fun t ω ↦ f (AtomWitness.coinProcess ⊤ t ω), Set.mem_univ _, 0,
+    ⟨fun _ ↦ stronglyMeasurable_zero, fun _ ↦ .of_forall fun _ ↦ by simp,
+      .of_forall fun _ _ ↦ ⟨⟨0, tendsto_const_nhds⟩, ⟨0, tendsto_const_nhds⟩⟩,
+      fun _ ↦ by simpa using tendsto_const_nhds⟩,
+    .of_forall fun _ _ ↦ continuousWithinAt_const,
+    fun _ _ _ _ ↦ by
+      simp only [stoppedValue, Pi.zero_apply, sub_self, norm_zero, abs_zero, integral_zero]
+      exact tendsto_const_nhds⟩
 
 end Regularizing
 
