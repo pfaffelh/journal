@@ -1631,6 +1631,31 @@ A concrete family of solutions, built without any of the theory above. Index
   uniform integrability of `{Y_ρ}`, but the test processes of the jump
   construction are bounded by `C + 2LC·t` on `[0, t]`
   (`integrable_mpFamily_jumpProcess`), so the dominating function is a constant.
+* `stoppedValue_ae_eq_condExp_of_forall_integral_eq`, `stoppedValue_ae_eq_condExp`:
+  **optional sampling in continuous time in its conditional form**,
+  `Y_σ =ᵐ[P] P[Y_j | 𝓕_σ]` for a bounded stopping time `σ ≤ j`. The expectation
+  identity of the previous point is not what a proof at stopping times consumes;
+  the conditional identity is, and Mathlib has it over a general index only for
+  stopping times of **countable range**
+  (`Martingale.stoppedValue_ae_eq_condExp_of_le_const_of_countable_range`,
+  `Probability/Martingale/OptionalSampling.lean:90`). Its unrestricted form
+  `…_of_le` (`ibid.:141`) carries `[Countable ι]`, and the section holding the
+  theorem named *Optional Sampling* there (`ibid.:158`) runs under
+  `[LocallyFiniteOrder ι]` and `[DiscreteTopology ι]`; in continuous time the
+  conditional form is therefore not available and the expectation form is what
+  the dyadic passage above delivers. The step between the two is **one auxiliary
+  stopping time and no analysis**: for a test set `S ∈ 𝓕_σ` the time `ρ = σ` on
+  `S` and `ρ = j` off `S` is a stopping time — on `S` because `S ∩ {σ ≤ t}` lies
+  in `𝓕 t` by the definition of `𝓕_σ`, off `S` because `𝓕_σ ≤ 𝓕 j ≤ 𝓕 t`
+  wherever `j ≤ t` — and the expectation identity read at `ρ` and at the constant
+  time `j`, with the common part over `Sᶜ` subtracted, is the set identity that
+  `ae_eq_condExp_of_forall_setIntegral_eq` asks for. The general form is stated
+  over any index that `MeasureTheory.measurable_stoppedValue`
+  (`Probability/Process/Stopping.lean:1048`) accepts, and it carries the
+  expectation identity as a hypothesis, so neither right continuity nor the
+  martingale property appears in it; `stoppedValue_ae_eq_condExp` is the instance
+  over `ℝ≥0` under the hypotheses of `integral_stoppedValue_eq`. **In Lean** on
+  2026-09-17, tenth run, in `section StoppedMartingale`.
 * `martingale_stoppedProcess_zero` and
   `martingale_of_martingale_stoppedProcess_top`: the two probes on the statement —
   the hypotheses are jointly satisfiable, and at `τ = ⊤` the conclusion is the
@@ -6340,11 +6365,13 @@ Gruppe A auf demselben Raum, und was fehlt, ist allein ihr Zusammenbau.
   which transport an integral and integrability through the density and the map
   at once, and `integral_smul_martingale_eq`, that a martingale tested against a
   **bounded weight** measurable for the earlier past has equal integrals at the
-  two times. Mathlib has no lemma of that shape — not even for an indicator
-  weight: `Mathlib/Probability/Martingale/` contains no `setIntegral` statement
-  about `Martingale` at all, only `Supermartingale.setIntegral_le`
-  (`Probability/Martingale/Basic.lean:163`) and `Submartingale.setIntegral_le`
-  (`:242`), both inequalities and both for an indicator. The step is
+  two times. Mathlib has the **indicator** case, as
+  `MeasureTheory.Martingale.setIntegral_eq`
+  (`Probability/Martingale/Basic.lean:100`, in v4.33.1 and on `master`, checked
+  2026-09-17): `∫ ω in s, f i ω = ∫ ω in s, f j ω` for `s ∈ ℱ i` and `i ≤ j`,
+  with the one sided versions `Supermartingale.setIntegral_le` (`:163`) and
+  `Submartingale.setIntegral_le` (`:242`). For a **bounded weight** in place of
+  the indicator it has nothing. The step is
   the pull-out property `condExp_smul_of_aestronglyMeasurable_left`
   (`MeasureTheory/Function/ConditionalExpectation/PullOut.lean:223`) followed by
   `integral_condExp` (`…/ConditionalExpectation/Basic.lean:236`), and the weight
@@ -8396,6 +8423,39 @@ and 11 use them.
   `f ↦ f * conj f`, and compact containment — on a **finite** state space with
   the discrete topology the indicators of the points are such a `Φ₀`, being
   idempotent, and compact containment is trivial.
+* `measurable_jumpFiltrationE_self`, `mem_image_fst_jumpOperator_bool`,
+  `boolIndicators` and `exists_cadlag_modification_flip`: **the emptiness probe
+  of this milestone, discharged on data.** **Proved** on 2026-09-17, ninth run.
+  For every initial law `nu` on `Bool`, the local jump construction at the flip
+  rate has a càdlàg modification:
+  ```
+  ∃ X', (∀ t, X' t =ᵐ[jumpMeasure flipKernel nu] jumpProcessE flipRate t)
+        ∧ ∀ᵐ ω, IsCadlagPath (fun t ↦ X' t ω) .
+  ```
+  Every one of the twelve hypotheses of
+  `exists_cadlag_modification_of_isRegularizingClass` is met by data and none is
+  assumed: the solution is `jumpProcessE_isMPSolution`, the regularizing class is
+  `isRegularizingClass_mpFamily` fed by
+  `lebesgueClock_isProgressive_jumpProcessE`, the countable dense time set is any
+  one, `ℝ≥0` being separable, and the state space is `Bool`.
+
+  `measurable_jumpFiltrationE_self` is the adaptedness
+  `isRegularizingClass_mpFamily` asks for, and it is `jumpFiltrationE` unfolded —
+  that filtration *is* the natural one, so the statement is
+  `measurable_naturalFiltration` at `j = i`. `mem_image_fst_jumpOperator_bool`
+  says that over `Bool` the domain of the generator is the **full** function
+  space, since measurability is free on a countable space with measurable points
+  and boundedness is free on a finite one; with it `Φ₀ ⊆ Φ` and the closure of
+  `Φ` under `f ↦ f * conj f` are the same one line. `boolIndicators` is `Φ₀`.
+
+  **What the probe does not show.** On a finite state space every path has
+  relatively compact range, so `CompactContainment` is `K = Set.univ` and the
+  hypothesis the theorem exists to exploit is vacuous; likewise `T2Space`,
+  `RegularSpace`, `OpensMeasurableSpace` and the continuity of `Φ₀` come from the
+  discrete topology and say nothing about a general `E`. The probe establishes
+  joint satisfiability of the hypotheses on data that also solves a martingale
+  problem, which is what it is for, and it is the first statement in this
+  development that produces a càdlàg process out of a martingale problem.
 * The classical statement as a one line instance: for `A ⊆ Cb(E) × Bdd(E)` whose
   domain is separating and contains a countable subset separating points, every
   solution of the martingale problem for `A` satisfying compact containment has
@@ -8502,9 +8562,109 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   to the filter `𝓝[<] t` is exactly what the existence of the left limit —
   the second half of `IsCadlagPath`, assumed by Ethier–Kurtz here anyway —
   supplies.
+* `IsCadlagPath.exists_tendsto_comp_monotone`: a càdlàg path converges along
+  every nondecreasing sequence of indices that has a supremum. The proof splits
+  on whether the sequence **reaches** its supremum: where it does, monotonicity
+  makes the values eventually constant and no path property is read; where it
+  does not, the sequence runs into `𝓝[<] T` and the limit is the left limit, the
+  second field of `IsCadlagPath`. Right continuity is not used, and the statement
+  produces *a* limit without claiming uniqueness, so no separation axiom on `E`
+  enters. **In Lean** on 2026-09-17, tenth run.
+* `isQuasiLeftContinuous_of_forall_ae_tendsto_comp`: **from countably many
+  scalar convergences to quasi-left-continuity**. For a countable class `Φ₀` of
+  continuous functions separating the points of `E`, almost sure càdlàg paths,
+  and the scalar convergence `f (X_{τ n}) → f (X_{τ'})` for each `f ∈ Φ₀` along
+  every nondecreasing sequence of stopping times bounded by `t`, the process is
+  quasi-left-continuous. This is the last line of the abstract theorem below
+  isolated: the path property produces a limit `l` and the separation identifies
+  it with `X_{τ'}`. Countability is what allows the null set of the scalar
+  statement to be chosen once for all `f` rather than once per `f`; no
+  compactness, no separation axiom on `E`, and no measurability of `X` are read,
+  the uniqueness of limits being taken in `𝕂` alone. **In Lean** on 2026-09-17,
+  tenth run.
+* `tendsto_ae_condExp_rclike`: **Lévy's upward theorem for an `RCLike` valued
+  integrand**. For a filtration `ℱ : Filtration ℕ m` on a finite measure space
+  and any `g : Ω → 𝕂`, `μ[g | ℱ n]` converges almost everywhere to
+  `μ[g | ⨆ n, ℱ n]`. Mathlib's `MeasureTheory.tendsto_ae_condExp` sits in a
+  section whose variable block fixes `{g : Ω → ℝ}`
+  (`Probability/Martingale/Convergence.lean:243`), so the `𝕂` valued case is the
+  two components, recombined by `RCLike.re_add_im`; the passage of `condExp`
+  through `RCLike.reCLM` and `RCLike.imCLM` is
+  `ContinuousLinearMap.comp_condExp_comm`
+  (`MeasureTheory/Function/ConditionalExpectation/Basic.lean:359`). No
+  integrability is assumed, exactly as in the real valued statement: where `g` is
+  not integrable both sides are `0`. **In Lean** on 2026-09-17, eleventh run.
+* `tendsto_integral_norm_condExp_of_tendsto`: a sequence that vanishes in `L¹`
+  has conditional expectations that vanish in `L¹`. This is conditional Jensen in
+  the form `integral_norm_condExp_le`
+  (`MeasureTheory/Function/ConditionalExpectation/Real.lean:206`) and nothing
+  else. The σ-algebras are an **arbitrary sequence** — no filtration, no
+  monotonicity — so the statement applies to `n ↦ (hτ n).measurableSpace` without
+  knowing that the stopping times are nondecreasing. **In Lean** on 2026-09-17,
+  eleventh run.
+* `tendstoInMeasure_zero_of_tendsto_integral_norm`: a sequence of integrable
+  functions whose `L¹` norms tend to `0` tends to `0` in measure. Only
+  `ofReal_integral_norm_eq_lintegral_enorm`
+  (`MeasureTheory/Integral/Bochner/Basic.lean:511`) stands between the Bochner
+  form in which `IsL1LeftContinuousAlongStoppingTimes` is stated and the
+  `eLpNorm` form in which Mathlib states the implication
+  (`MeasureTheory.tendstoInMeasure_of_tendsto_eLpNorm`). **In Lean** on
+  2026-09-17, eleventh run.
+* `ae_eq_condExp_iSup_of_tendsto`: **the identification of a pathwise limit with
+  a conditional expectation**, and the shape in which the three items above are
+  consumed. If a sequence `a` splits, for each `n`, as
+  `a n =ᵐ[μ] μ[W | ℱ n] + μ[Z n | ℱ n]` with one fixed `W` and a perturbation `Z`
+  vanishing in `L¹`, and if `a n → A` almost surely, then
+  `A =ᵐ[μ] μ[W | ⨆ n, ℱ n]`. The `L¹` hypothesis yields an almost sure statement
+  about the perturbation only along a subsequence
+  (`MeasureTheory.TendstoInMeasure.exists_seq_tendsto_ae`), and that suffices
+  precisely because the *left* side converges along the whole sequence: the
+  subsequence evaluates a limit already known to exist rather than producing one.
+  In the application `a n` is `f (X (min (τ n) t))` and the left convergence is
+  the càdlàg property of the paths, which is why the statement carries no
+  hypothesis on `a` beyond the convergence itself. **In Lean** on 2026-09-17,
+  eleventh run.
+* `ae_forall_eq_of_right_dense`: **from an identity that holds at each time
+  almost surely to one that holds almost surely at all times**. Let `D` be
+  countable, let every `t` either lie in `D` or be approached from the right
+  along `D` — `(𝓝[D ∩ Set.Ioi t] t).NeBot` — let `f (X t) = Y t + C t` hold
+  almost surely for each `t ∈ D`, and let the paths of `f ∘ X`, of `Y` and of `C`
+  be almost surely right continuous along `D ∩ Set.Ioi t` at every `t`. Then
+  `∀ᵐ ω, ∀ t, f (X t ω) = Y t ω + C t ω`. Neither hypothesis nor conclusion reads
+  a measurability: this is a statement about paths. **In Lean** on 2026-09-17,
+  twelfth run.
+* `IsCompensatorFor.ae_forall_decomposition`: the previous item read at the
+  `decomposition` field of `IsCompensatorFor`, and
+  `IsCompensatorFor.decomposition_stoppedValue`, its value at a random time
+  `σ : Ω → WithTop ι`:
+  `f (stoppedValue X σ) =ᵐ[P] stoppedValue Y σ + stoppedValue C σ`. **`σ` is
+  neither a stopping time nor measurable**; both are irrelevant, because the
+  identity holds at all times at once and is merely evaluated at `(σ ω).untopA`.
+  **In Lean** on 2026-09-17, twelfth run.
+* `LiftWitness`: the witness that the **right continuity of `Y` does not follow**
+  from that of `f ∘ X` and of `C` and must be assumed. On `ι = ℝ≥0` and `Ω = ℝ`
+  with Lebesgue measure on `Set.Icc 0 1`, with `X` constant, `f = 0`, `C = 0` and
+  `Y t ω = 1` exactly on the diagonal `(t : ℝ) = ω`, every field of
+  `IsCompensatorFor` holds for **every** `D` (`isCompensatorFor_diagY`), a
+  countable right dense `D` exists (`exists_countable_right_dense`, from
+  `TopologicalSpace.exists_countable_dense` and `Dense.open_subset_closure_inter`),
+  and the conclusion fails (`not_ae_forall_diagY_eq_zero`). `IsCompensatorFor`
+  constrains `Y` only through the decomposition, which pins it down at each time
+  only off a null set; the right continuity of `Y` is what forbids the null sets
+  to fill the space. **In Lean** on 2026-09-17, twelfth run.
+* `not_isQuasiLeftContinuous_of_isRegularizingClass_of_free_solutionSet`: the
+  hypothesis `IsMPSolution 𝓧 𝓕 P` of the next item **is indispensable**, and
+  until 2026-09-17 it was not there. Drop it and nothing constrains `𝓧`, so
+  `Y := f ∘ X` and `C := 0` satisfy every remaining hypothesis — all of them are
+  statements about the zero process — for **any** `X` and even for `D = ∅`. The
+  coin of `AtomWitness` over `ι = ENNReal` is a càdlàg `X` with a separating `Φ`
+  that is not quasi-left-continuous, so the statement without `IsMPSolution` is
+  false. What it lacks is the martingale property that optional sampling needs.
+  **In Lean** on 2026-09-17, twelfth run.
 * `isQuasiLeftContinuous_of_isRegularizingClass`, the abstract form of
   Ethier–Kurtz, Theorem 4.3.12, with no operator and no compensator of any
-  special shape. Let `Φ` be a regularizing class for `(X, 𝓧)` with `X` càdlàg,
+  special shape. Let `𝓧` solve the martingale problem for `𝓕` and `P`, let `Φ`
+  be a regularizing class for `(X, 𝓧)` with `X` càdlàg,
   let `Φ` be separating in the sense of the roadmap **WeakConvergence**, and let
   the compensator `C` attached to each `f ∈ Φ` be almost surely right continuous
   and **left continuous in `L¹` along stopping times**: for every nondecreasing
@@ -8519,10 +8679,11 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   milestone, gives
   `Y (min (τ n) t) =ᵐ[P] P[Y (min τ' t) | (hτ n).measurableSpace]`. The
   decomposition `f (X t) = Y t + C t` of `IsRegularizingClass` is then needed at
-  a stopping time and not only at each fixed `t`; it upgrades because both sides
-  are right continuous and it holds on the countable dense `D`, and that upgrade
-  is a lemma of `IsRegularizingClass` of its own, because the càdlàg theorem
-  uses the decomposition `t` by `t` and this theorem cannot. Substituting it,
+  a stopping time and not only at each fixed `t`; that upgrade is
+  `IsCompensatorFor.decomposition_stoppedValue` above, and it costs two
+  hypotheses that `IsCompensatorFor` does not carry: that `D` approximates every
+  time from the right, and that the paths of `Y` are right continuous — the
+  latter genuinely, by `LiftWitness`. Substituting it,
   ```
   f (X (min (τ n) t)) =ᵐ[P] P[f (X (min τ' t)) | (hτ n).measurableSpace]
       - P[C (min τ' t) - C (min (τ n) t) | (hτ n).measurableSpace] ,
