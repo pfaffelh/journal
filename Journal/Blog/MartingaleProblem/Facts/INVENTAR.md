@@ -76,12 +76,12 @@ unserer Konstruktion. Daher:
 | `fact:kolmogorov` | 3 | Kolmogorov extension; EK, Theorem 4.1.1; eqref{T0} + e | Roadmap | KolmogorovExtension M2 — Gerüst weitgehend in Mathlib, es fehlen σ-Subadditivität und `projectiveLimit` |
 | `fact:stoneweierstrass` | 3 | Stone--Weierstrass for separating classes; EK, Theorem | Roadmap | WeakConvergence M1 — die separierende Hälfte ist Mathlib (`ext_of_forall_mem_subalgebra_integral_eq_of_polish`); die konvergenzbestimmende ist es **auch**, unter Straffheit und bloßer Punktetrennung: `MeasureTheory.ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`, `MeasureTheory/Measure/LevyConvergence.lean:154`, am 2026-09-05 an `upstream/master` geprüft, nicht `deprecated`. Es fehlt allein der Schritt von **starker** Trennung zu Straffheit, in M1 als `isTightMeasureSet_of_stronglySeparatesPoints` angelegt (2026-09-05). Die separierende Hälfte ist seit dem 2026-09-06, drittem Lauf, auch auf unserer Seite bewiesen: `IsSeparating.of_subalgebra`, die Anbindung unseres Prädikats an `ext_of_forall_mem_subalgebra_integral_eq_of_polish`, geht durch `lake env lean`. ~~die konvergenzbestimmende fehlt~~ — dieser Befund stand vom 2026-08-29 bis zum 2026-09-05 und war falsch: gesucht worden war nach unserer Vokabel „konvergenzbestimmend" statt nach der Aussage, die in Mathlib unter `SeparatesPoints` und `IsTightMeasureSet` steht. **Am 2026-09-06, dritter Lauf, belegt, daß dieser Weg in Mathlib nicht bloß vorhanden, sondern tragend ist:** `Measure.ext_of_charFun` (`Measure/CharacteristicFunction/Basic.lean:257` auf `upstream/master` `810b3888`, `:248` in v4.33.1) und `Measure.ext_of_charFunDual` (`:462` bzw. `:453`) — „charakteristische Funktionen trennen endliche Maße" — ruhen über `ext_of_integral_char_eq` (`:103` bzw. `:101`) Zeile für Zeile auf `ext_of_forall_mem_subalgebra_integral_eq_of_pseudoEMetric_complete_countable` (`Measure/FiniteMeasureExt.lean:36`), angewandt auf `separatesPoints_charPoly` (`Analysis/Fourier/BoundedContinuousFunctionChar.lean:155`). Charakteristische Funktionen sind dort **kein eigenes Fundament**, sondern eine Anwendung der punktetrennenden Unteralgebra `charPoly` (`ibid.:141`), und diese ist eine `StarSubalgebra ℂ (V →ᵇ ℂ)` — also genau die Konjugationsabgeschlossenheit, die der Fact für $\K=\C$ verlangt. Keine der vier Deklarationen ist `deprecated`. **Am 2026-09-07, siebzehnter Lauf, sind die Schritte (1) und (3) des fehlenden Beweises bewiesen** und gehen durch `lake env lean` gegen v4.33.1: `tendsto_integral_comp_of_forall_tendsto_integral` (die Pushforwards nach `κ → ℝ` konvergieren schwach, für beliebigen `Fintype κ`) samt `coordAlgebra`, `separatesPoints_coordAlgebra` und `exists_mem_subalgebra_comp_of_mem_coordAlgebra`, dazu die Portmanteau-Folgerung `le_liminf_measure_preimage_of_isOpen` und Schritt (3) selbst, `le_liminf_measure_thickening_of_stronglySeparatesPoints`. **Und die Aussage von `isTightMeasureSet_of_stronglySeparatesPoints` war über beliebigem Filter falsch** — Zeuge `𝓕 = pure 0` auf `ℕ`, `E = ℝ`, `A = ⊤`, `μ n = δ n`, `μ₀ = δ 0`: die Voraussetzung ist dort die einzige Gleichung `∫ g ∂μ 0 = ∫ g ∂μ₀`, die gilt, und die Familie `{δ n}` ist nicht straff. Die fehlende Hypothese ist `Filter.cofinite ≤ 𝓕`, sie steht jetzt in der Aussage, und für Folgen ist sie geschenkt (`Nat.cofinite_eq_atTop`). **Im selben Lauf ist auch das gelockerte Straffheitskriterium EK Thm. 3.2.2 bewiesen**, `isTightMeasureSet_of_forall_exists_isCompact_measure_compl_thickening_le` — eine eigene Mathlib-Lücke, weil die Verdickung eines Kompaktums nur auf einem properen Raum kompakt ist, mit dem Zeugen `⋂ m, cthickening (u m) (K m)` für eine Nullfolge `u m`, der `TotallyBounded.isCompact_of_isClosed` trägt; auch **ohne** Separabilität. ~~Offen bleibt allein die Buchhaltung darüber~~ — **am 2026-09-08, erster Lauf, ist auch sie bewiesen, und damit der Fact ganz**: `isTightMeasureSet_of_stronglySeparatesPoints` und sein Korollar `isConvergenceDetermining_of_stronglySeparatesPoints` — die Aussage des Manuskripts — tragen Beweise, gehen durch `lake env lean` gegen v4.33.1 und hängen laut `#print axioms` allein an `propext`, `Classical.choice` und `Quot.sound`. Meilenstein 1 trägt danach **kein `sorry`** mehr. Die Buchhaltung ist: `μ₀` straff (`isTightMeasureSet_singleton`) gibt `K₀` mit `μ₀ K₀ᶜ ≤ ε/2`, Schritt (3) macht daraus `1 - ε/2 ≤ liminf`, die Hälfte erzeugt die **strikte** Ungleichung gegen `1 - ε`, die `Filter.eventually_lt_of_lt_liminf` verlangt, und die endlich vielen Ausnahmeindizes (endlich nach `Filter.mem_cofinite`) werden durch `Set.Finite.isCompact_biUnion` in `K₀` hineingezogen. Eine Hypothese hat sich dabei **geändert**: statt `[PolishSpace E]` steht `[CompleteSpace E] [SecondCountableTopology E]` — dieselbe Raumklasse (beide zusammen geben `PolishSpace` als Instanz), aber die Vollständigkeit hängt an der **gegebenen** Metrik, und die braucht der Beweis, weil `Metric.thickening` in ihr lebt; `PolishSpace` sagt nur, daß *eine* verträgliche Metrik vollständig ist (Zeuge in M1: $(0,1)$ mit der euklidischen Metrik) |
 | `fact:bp` | 2 | EK, Lemma 3.4.1, Proposition 3.4.2, and Appendix 3, Pr | entbehrlich (2026-08-30) | Kein Beweis des Manuskripts benutzt `cor:bpclosure`, und EK 4.3.1 trägt dort nichts; der bp-Abschluss ist am 2026-08-30 aus MartingaleProblems M2 gestrichen und durch `insert_of_tendsto_of_forall_norm_le` und `submartingale_mpProcess_of_tendsto` ersetzt, M9 trägt die Anwendung (EK 4.3.9/4.3.10) |
-| `fact:cadlagext` | 2 | Regularization along a dense set; EK, Lemma 2.2.8; eqr | Roadmap | MartingaleProblems M9; Vorarbeit in `brownian-motion` (Apache-2.0) |
+| `fact:cadlagext` | 2 | Regularization along a dense set; EK, Lemma 2.2.8; eqr | Roadmap | MartingaleProblems M9, `exists_cadlag_modification_of_isRegularizingClass` — seit dem 2026-09-17, fünftem Lauf des Tages, **bewiesen** und durch `lake env lean` gegen v4.33.1; dazu die deterministische Hälfte `isCadlagPath_rightLimAlong` und der Zeuge `rightLimAlong`. Vorarbeit in `brownian-motion` (Apache-2.0), Branch `master`, ist reellwertig; die `E`-wertige Zusammensetzung steht dort nicht |
 | `fact:optsampl` | 2 | Optional sampling; EK, Theorem 2.2.13, Remark 2.2.14,  | Roadmap | MartingaleProblems M9, `Submartingale.stoppedValue_min_le_condExp` — dort neu angelegt; Mathlibs `Martingale.stoppedValue_min_ae_eq_condExp` ist der diskrete Fall und nur für Martingale |
 | `fact:prohorov` | 2 | Prohorov; EK, Lemma 3.2.1 and Theorem 3.2.2 | Mathlib | `MeasureTheory/Measure/Prokhorov.lean`, `isCompact_closure_of_isTightMeasureSet` und Umkehrung |
 | `fact:relcompact2` | 2 | Relative compactness, II; EK, Theorem 3.9.4 | Roadmap | MartingaleProblems M11, `isTight_map_postcomp_of_exists_martingale` — dort neu angelegt; `isRelativelyCompact_of_approx` nannte nur die Folgerung, nicht das Kriterium |
 | `fact:sepcond` | 2 | Conditional determination by separating sets; EK, Chap | Roadmap | WeakConvergence M1, `IsSeparating.ae_eq_of_forall_condExp_eq` — seit dem 2026-09-06, erster Lauf, mit Beweis und durch `lake env lean`; Mathlib liefert `Filter.EventuallyEq.of_forall_separating_preimage` als Schlussschritt. Die trennende Klasse `M`, die der Fact **konsumiert**, ist in Mathlib mit `charPoly` und `Measure.ext_of_charFun` fertig instanziiert (siehe `fact:stoneweierstrass`) — aber nur über einem vollständigen zweitabzählbaren Innenprodukt- bzw. Banachraum. Am 2026-09-06, dritter Lauf, wurde jede Fundstelle des Manuskripts durchgesehen, an der eine trennende Klasse konkret instanziiert wird; an **keiner** liegt diese lineare Struktur vor, siehe den Laufbericht |
-| `fact:submgreg` | 2 | Submartingale regularization; EK, Proposition 2.2.9; e | Roadmap | MartingaleProblems M9; Vorarbeit in `brownian-motion` (Apache-2.0) |
+| `fact:submgreg` | 2 | Submartingale regularization; EK, Proposition 2.2.9; e | Roadmap | MartingaleProblems M9, `Submartingale.ae_exists_tendsto_nhdsWithin` — die reellwertige Regularisierung, seit dem 2026-09-16 bewiesen, und seit dem 2026-09-17, fünftem Lauf des Tages, über `ae_exists_tendsto_comp_of_isRegularizingClass` bis in `exists_cadlag_modification_of_isRegularizingClass` durchgezogen. Vorarbeit in `brownian-motion` (Apache-2.0) |
 | `fact:ui` | 2 | Uniform integrability; EK, Appendix 2 | Mathlib+ | `MeasureTheory.UniformIntegrable`, `uniformIntegrable_iff`; die Kopplung an Verteilungskonvergenz fehlt → WeakConvergence M4. **Am 2026-09-08, dreizehnter Lauf, war das Trunkierungskriterium des Meilensteins falsch und ist berichtigt**: `IsUniformlyIntegrableLaws` stand mit dem **Bochner**-Integral von $\max(|x|-N,0)$, und weil `MeasureTheory.integral_undef` (`Integral/Bochner/Basic.lean:202`) für einen nichtintegrierbaren Integranden den Ersatzwert `0` liefert, war die Voraussetzung von jeder Familie mit unendlichem ersten Moment erfüllt — Zeuge `ProbabilityTheory.cauchyMeasure 0 1` (`Probability/Distributions/Cauchy.lean:170`), für die die behauptete Folgerung `Integrable id ν` falsch ist. Sie steht jetzt mit dem **unteren** Integral, und in dieser Form impliziert sie die Integrierbarkeit statt sie vorauszusetzen (`integrable_id_of_isUniformlyIntegrableLaws`, bewiesen und mit `#print axioms` geprüft). **Am 2026-09-09, vierzehnter Lauf, ist die Kopplung an die Verteilungskonvergenz bewiesen, und damit der Satz, den dieser Fact trägt**: `tendsto_integral_of_tendsto_of_isUniformlyIntegrableLaws` (für die Gesetze) und `tendsto_integral_of_tendstoInDistribution_of_uniformIntegrable` (für Zufallsvariablen auf verschiedenen Räumen, mit Mathlibs `MeasureTheory.TendstoInDistribution` als Hypothese, wie der Meilenstein es verlangt); dazu `truncBdd`, `truncBdd_apply`, `abs_sub_truncBdd`, `integrable_id_of_lintegral_truncTail_lt_top`, `abs_integral_sub_integral_truncBdd_le` und `lintegral_truncTail_le_of_tendsto`. Alle durch `lake env lean` gegen v4.33.1 geprüft und alle mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound`. **Der angesagte Weg über die Skorohod-Darstellung ist nicht gegangen worden und wird nicht gebraucht**: der Beweis ist die Abschneidung, und sein einziger nicht elementarer Schritt ist der Schwanz des **Grenzgesetzes**, das kein Glied der Familie ist — er kommt aus der Portmanteau-Ungleichung für nichtnegative stetige Funktionen (`MeasureTheory.lintegral_le_liminf_lintegral_of_forall_isOpen_measure_le_liminf_measure`, `Measure/Portmanteau.lean:499`). Damit hängt dieser Fact **nicht** mehr an `exists_ae_tendsto_of_tendsto`. Ohne Signatur in `Suggested.lean` bleiben von Meilenstein 4 die de-la-Vallée-Poussin-Form und die vier Stabilitätslemmata |
 | `fact:MZtight` | 1 | Tightness; MZ, Theorem~4, and Ku | Roadmap | MartingaleProblems M11 |
 | `fact:PSpolish` | 1 | EK, Theorems 3.1.7 and 3.1.8 | Roadmap | WeakConvergence M3 — Skorokhod-Darstellung fehlt in Mathlib (dort nur `docs/1000.yaml`); dass 𝒫(S) separabel bzw. polnisch ist, fehlt seit dem 2026-08-31 belegt ebenfalls (Mathlib hat nur `instMetrizableSpaceProbabilityMeasure`), und steht jetzt als eigener Block in M3; der Block ist am 2026-08-31, dritter Lauf, auf typrichtige Aussagen gebracht — `CompleteSpace` gehört auf `LevyProkhorov (ProbabilityMeasure S)`, auf `ProbabilityMeasure S` gibt es keine Uniformität. **Der erste Punkt des Blocks ist seit dem 2026-09-08, erster Lauf, bewiesen**: `isTightMeasureSet_of_forall_exists_finite_iUnion_ball` — gleichmäßige Totalbeschränktheit im Maß gibt Straffheit — ist das gelockerte Straffheitskriterium von Meilenstein 1 in vier Zeilen, über `Metric.thickening_eq_biUnion_ball`; dabei ist `SecondCountableTopology` als unbenutzt aus der Aussage entfallen und das Kriterium selbst auf `[PseudoMetricSpace E] [CompleteSpace E]` abgeschwächt (vorher `[MetricSpace E] [CompleteSpace E] [BorelSpace E]`). **Am 2026-09-08, zweiter Lauf, sind die beiden Schätzungen bewiesen, auf denen die Separabilität von `ProbabilityMeasure E` ruht** — `levyProkhorovEDist_sum_dirac_le` (die geometrische Hälfte: eine endliche meßbare Zerlegung mit Vertretern im `ε`-Abstand außerhalb einer Menge kleiner Masse bringt das diskrete Maß `∑ i, μ (A i) • dirac (y i)` in Lévy--Prokhorov-Abstand `ε`) und `levyProkhorovEDist_sum_dirac_weights_le` (die arithmetische: Störung der Gewichte um insgesamt `δ` kostet `δ`), samt `sum_smul_dirac_apply`; alle drei durch `lake env lean` gegen v4.33.1. Der Satz selbst trägt weiterhin `sorry`, es fehlen die Zerlegung und die rationalen Gewichte, beide in Meilenstein 3 ausgeschrieben. Daß Mathlib die Separabilität nicht hat, ist am selben Tag gegen `upstream/master` `572e4d091bc` belegt, mit den im Laufbericht einzeln aufgezählten Suchformulierungen. **Am 2026-09-08, dritter Lauf, sind die beiden verbliebenen mathematischen Schritte bewiesen** und gehen durch `lake env lean` gegen v4.33.1: `exists_finite_partition_ball_of_denseRange` (die endliche Zerlegung in kleine Stücke mit benannten Vertretern — die einzige Stelle, an der `SeparableSpace E` verbraucht wird; die Vertreter kommen als **Indizes** `Fin n → ℕ` heraus, denn die Indizes sind es, die die Familie abzählbar machen) und `exists_nat_weights` (die rationale Approximation des Gewichtsvektors, mit **normierten** ganzzahligen Gewichten `m i / ∑ j, m j` statt auf Summe `1` festgenagelter — das erspart die abgeschnittene Subtraktion in `ℝ≥0∞` und den Ausnahmeindex). Der Satz selbst trägt weiterhin `sorry`; was fehlt, ist allein die Buchhaltung, die die vier Stücke zusammensetzt, und sie steht in Meilenstein 3 ausgeschrieben. **Am 2026-09-08, vierter Lauf, ist die Separabilität ganz bewiesen**: `separableSpace_levyProkhorov_probabilityMeasure` (die Aussage auf dem Lévy--Prokhorov-Synonym, wo die Metrik lebt), `separableSpace_probabilityMeasure` (die Aussage des Meilensteins, hinübergetragen mit `DenseRange.separableSpace` längs `probabilityMeasureHomeomorph`), `secondCountableTopology_probabilityMeasure` (der Meilensteinpunkt, der bis dahin gar keine Deklaration hatte) und der Hilfssatz `isProbabilityMeasure_natWeightMeasure` gehen durch `lake env lean` gegen v4.33.1 und hängen laut `#print axioms` allein an `propext`, `Classical.choice` und `Quot.sound`. Die approximierende Familie ist als **Definition** `natWeightMeasure x k m` benannt und nicht im Beweis beschrieben — das macht ihre Abzählbarkeit zu einer Zeile (Bild einer Funktion auf `Σ n, (Fin n → ℕ) × (Fin n → ℕ)`, zurückgezogen mit `Set.Countable.preimage` längs `ProbabilityMeasure.toMeasure_injective`). Mitgefallen ist `polishSpace_probabilityMeasure`, jetzt ein Beweis statt eines `sorry`, der allein auf `isCompletelyMetrizableSpace_probabilityMeasure` ruht — und **mit schwächeren Hypothesen**: `[TopologicalSpace E] [PolishSpace E] [BorelSpace E]` statt `[MetricSpace E] [BorelSpace E] [PolishSpace E]`, weil eine mitgegebene Metrik den Aufstieg zur vollständigen (`TopologicalSpace.upgradeIsCompletelyMetrizable`) **blockiert**. **Im selben Lauf ist auch die Vollständigkeit bewiesen**, und damit der ganze Block „der Raum der Gesetze" von Meilenstein 3: `isTightMeasureSet_of_forall_exists_levyProkhorovEDist_lt` (eine Cauchy-Folge von Gesetzen ist straff — der Kern, und die Stelle, an der die Vollständigkeit von `E` zweimal bezahlt wird), `isTightMeasureSet_of_cauchySeq`, `completeSpace_levyProkhorov_probabilityMeasure` und `isCompletelyMetrizableSpace_probabilityMeasure`. `polishSpace_probabilityMeasure` hängt danach an keinem `sorryAx` mehr; alle fünf sind mit `#print axioms` geprüft. **Am 2026-09-08, fünfter Lauf, ist der Schritt bewiesen, auf dem die Skorokhod-Darstellung ruht**: `exists_measurable_partition_diam_le_null_frontier` — eine abzählbare meßbare Zerlegung eines separablen pseudometrischen Raums in Stücke vom Durchmesser höchstens `ε`, deren Ränder alle `μ`-Nullmengen sind. Der Beweis ist Mathlibs `SeparableSpace.exists_measurable_partition_diam_le` (`Measure/LevyProkhorovMetric.lean:540`) mit **einer** Änderung: der Radius wird je Mittelpunkt aus dem **offenen** Intervall `(ε/4, ε/2)` gewählt, durch `exists_null_frontier_thickening` (`Measure/Portmanteau.lean:401`) am Singleton `{xs n}`, gelesen als Kugel über `Metric.thickening_singleton` (`Topology/MetricSpace/Thickening.lean:157`). Die untere Schranke trägt die Überdeckung, die obere den Durchmesser, und offen muß das Intervall sein, weil jener Satz nur abzählbar viele belastete Radien vermeidet, statt einen vorgeschriebenen zu liefern. Dazu zwei Randaussagen, die Mathlib nicht hat und die eigene Deklarationen geworden sind: `frontier_biInter_range_subset` (der endliche Durchschnitt; Mathlib hat mit `frontier_inter_subset` nur den Zweimengenfall) und `frontier_disjointed_subset`, das `disjointed S n` über `disjointed_eq_inter_compl` (`Order/Disjointed.lean:323`) als `S n ∩ ⋂ j < n, (S j)ᶜ` liest. Alle drei gehen durch `lake env lean` gegen v4.33.1 und hängen laut `#print axioms` allein an `propext`, `Classical.choice`, `Quot.sound`. **Im selben Lauf ist der zweite Eingang der Darstellung bewiesen**, der Scheffé-Schritt für eine abzählbare Zerlegung: `tendsto_tsum_posPart_sub_of_tendsto_measure` — konvergiert die Masse **jedes** Stücks, so geht `∑' i, max (ν (A i) - μ n (A i)) 0` über **alle** Stücke zugleich gegen `0` —, samt der Betragsfassung `tendsto_tsum_abs_sub_of_tendsto_measure` und den zwei Kleinigkeiten `summable_toReal_measure_of_pairwise_disjoint` und `tsum_toReal_measure_eq_one`; alle vier durch `lake env lean` und mit `#print axioms` geprüft. Von Meilenstein 3 bleibt allein `exists_ae_tendsto_of_tendsto`, die Skorokhod-Darstellung selbst. **Am 2026-09-08, sechster Lauf, ist der dritte Eingang bewiesen** und mit ihm die Arithmetik der Kopplung: `exists_measurable_map_restrict_volume_eq_sum_smul_dirac` (ein rein atomares Gesetz ist Bild des Lebesguemaßes auf `(0,1]`; die Abbildung ist `g y = x (Nat.find (h y))` zum Prädikat `y ≤ s (i+1) ∨ 1 ≤ y`, und der Zusatz `1 ≤ y` ist es, woran die Wohlgeformtheit hängt — bei unendlichem Träger von `p` bleibt jede Partialsumme unter `1`, also erfüllt bei `y = 1` **kein** `i` die erste Hälfte) und `exists_coupling_tsum_offDiag_le` (die diskrete Maximalkopplung: zwei Wahrscheinlichkeitsvektoren auf `ℕ` sind Randverteilungen eines `π` mit Nebendiagonalmasse höchstens `∑' i, (p i - q i)`, der abgeschnittenen Differenz in `ℝ≥0∞`). Beide gehen durch `lake env lean` gegen v4.33.1 und hängen laut `#print axioms` allein an `propext`, `Classical.choice`, `Quot.sound`. **Im selben Lauf ist der Bauplan für die letzte Aussage berichtigt**: der gemeinsame Wahrscheinlichkeitsraum ist **kein** `((0,1], Lebesgue)`, wie Meilenstein 3 seit dem 2026-09-08, fünftem Lauf, schrieb, sondern ein Produkt — die bedingten Gesetze innerhalb der Zerlegungsstücke treten als Koordinaten eines `Measure.pi` auf, denn sie als meßbare Abbildung aus dem Einheitsintervall zu realisieren ist der Borelsche Isomorphiesatz und verlangt `E` polnisch statt bloß separabel. EK bauen es ebenso (Lemma 3.1.3, Buchseite 100). **Am 2026-09-08, siebter Lauf, ist die einstufige Kopplung bewiesen, in beiden Fassungen**: `exists_coupling_of_partition` (der geometrische Kern — zwei Gesetze, eine abzählbare Zerlegung in beschränkte Stücke vom Durchmesser höchstens `ε`, ein Gesetz `γ` auf `E × E` mit den richtigen Rändern und `γ {z | ε < dist z.1 z.2} ≤ ∑' i, (μ (A i) - ν (A i))`) und `exists_coupling_of_tendsto` (dieselbe Aussage aus schwacher Konvergenz getrieben, `∀ᶠ n in atTop`, mit Schranke `ENNReal.ofReal ε`); dazu `condLaw` samt `condLaw_of_ne_zero`, `isProbabilityMeasure_condLaw`, `measure_mul_condLaw_apply`, `condLaw_compl_eq_zero`. Alle gehen durch `lake env lean` gegen v4.33.1 und hängen laut `#print axioms` allein an `propext`, `Classical.choice`, `Quot.sound`. Der Bauplan des sechsten Laufs ist dabei **berichtigt**: der gemeinsame Raum ist weder `((0,1], Lebesgue)` noch dessen Produkt mit einem `Measure.pi`, sondern `E × E` selbst — alles, was die Aussage über den Raum behauptet, ist das gemeinsame Gesetz der beiden Zufallsvariablen, und ein gemeinsames Gesetz ist ein Maß auf `E × E`; die Zufallsvariablen sind dann `Prod.fst` und `Prod.snd`. Was vom Befund des sechsten Laufs stehen bleibt, ist sein Kern: die bedingten Gesetze müssen als **Maße** eingehen und nicht als Funktionen einer gleichverteilten Variablen, denn Letzteres ist der Borelsche Isomorphiesatz. Von Meilenstein 3 bleibt allein `exists_ae_tendsto_of_tendsto`, die Iteration über eine Nullfolge von `ε`. **Am 2026-09-08, achter Lauf, ist der Randomisierungsschritt bewiesen** — der Schritt, an dem die Hypothesen des ganzen Meilensteins hängen: `map_eval_prod_infinitePi` (samt `sum_smul_dirac_singleton`, `map_eval_prod_infinitePi_of_map_eq` und `exists_measurable_map_prod_infinitePi_eq_sum_smul`) besagt, daß auf dem Produkt eines Raums mit meßbarem Index `ι : Ω → κ` und Mathlibs abzählbarem Produktmaß `Measure.infinitePi m` (`Probability/ProductMeasure.lean:358`) die Abbildung „schlage die vom Index genannte Koordinate nach" das Mischungsgesetz `∑ᵢ P{ι = i} · m i` trägt. Die Punkte darin einzeln zu ziehen — als meßbare **Funktion** einer gleichverteilten Variablen — ist der Borelsche Isomorphiesatz und verlangt `E` polnisch; sie als **Koordinaten** eines Produkts der bedingten Gesetze zu ziehen verlangt nichts, und die sieben Deklarationen des Laufs nennen über `E` nichts als `MeasurableSpace E`. Dazu die beiden Indexabbildungen: `exists_measurable_partitionIndex` (die Zerlegung gibt ein meßbares `j : E → ℕ`, dessen Fasern **genau** die Stücke sind — die Disjunktheit ist es, die aus `⊆` ein `=` macht) und `exists_measurable_index_of_stochastic_matrix` (eine ganze stochastische Matrix wird von **einer** meßbaren Abbildung `ℕ × ℝ → ℕ` realisiert, gleichmäßig im bedingenden Index, weil dieser über einen abzählbaren Raum läuft). Alle sieben gehen durch `lake env lean` gegen v4.33.1 und hängen laut `#print axioms` allein an `propext`, `Classical.choice`, `Quot.sound`. **Im selben Lauf ist entschieden, wie die Stufen auf einen Raum kommen** — der Punkt (c2) des Vorlaufs —, und die Antwort ist: gar nicht durch Verkleben. Die einstufigen Kopplungen längs des gemeinsamen zweiten Randes zu verkleben ist Desintegration (`Measure.condKernel`, verlangt `E` standard-borelsch) und danach ein abzählbares Produkt der entstehenden Kerne — und **das hat Mathlib nicht**: `infinitePi` ist ein Produkt von *Maßen*, unter `Probability/Kernel/` kommt weder `infinitePi` noch `Kernel.pi` noch irgendein `def pi` vor (`upstream/master` `572e4d091bc`, 2026-09-08) — ~~dieser Halbsatz ist falsch und am 2026-09-08, neunter Lauf, berichtigt: das abzählbare Produkt von Kernen **hat** Mathlib, als `ProbabilityTheory.Kernel.traj` (`Probability/Kernel/IonescuTulcea/Traj.lean:518`, *Ionescu-Tulcea Theorem*, Voraussetzungen nur `MeasurableSpace` und Markov), und das Produkt ist der Sonderfall ohne Gedächtnis; die Entscheidung gegen das Verkleben trägt allein das zweite Bein, `Measure.condKernel` verlangt `[StandardBorelSpace Ω] [Nonempty Ω]` (`Kernel/Disintegration/StandardBorel.lean:77`, `:361`), und separabel metrisch impliziert nicht standard-borelsch~~. Gebaut werden daher alle Stufen auf einmal, auf `(E × (ℕ → ℝ)) × (ℕ × ℕ → E)`; das ist EK, Lemma 3.1.3 mit `N = ∞`. Im selben Lauf ist auch die Massenbuchhaltung bewiesen, `map_index_prod_eq`: auf `E × ℝ` mit `ν ⊗ Lebesgue|₍₀,₁₎` hat `z ↦ G (j z.1, z.2)` das Gesetz `∑ₖ ν (A k) · c k` — die Zeilen der stochastischen Matrix gegen die Massen der Stücke. Dort wird die **Faseraussage** von `exists_measurable_partitionIndex` verbraucht: `(ν.map j) {k} = ν (A k)` verlangt, daß die Faser das Stück **ist** und nicht bloß darin liegt **Am 2026-09-08, zehnter Lauf, ist eine Stufe der Darstellung als *eine* Aussage bewiesen**: `exists_measurable_pair_of_partition` — auf `stageMeasure μ ν A = (ν ⊗ Lebesgue|₍₀,₁₎) ⊗ infinitePi (condLaw μ ∘ A)` eine meßbare Abbildung `X` mit `map X = μ`, deren **erste Koordinate selbst** das Gesetz `ν` hat und `{z | ε < dist (X z) z.1.1}` höchstens die Masse `∑' i, (μ (A i) - ν (A i))` trägt; das ist es, was zum Iterieren fehlte, weil jede Stufe damit ihre Grenzvariable von **derselben** Koordinate abliest. Mit ihr acht weitere bewiesene Deklarationen: `sum_smul_condLaw_eq` (`μ` ist die Mischung ihrer bedingten Gesetze) samt `tsum_measure_inter_eq`, `condRow` mit `tsum_condRow` und `mul_condRow` (die spaltenweise Normierung der Indexkopplung; `mul_condRow` gilt eigens **auch** auf einem Nullstück), `measure_index_ne_prod` (die einzige Ungleichung der Stufe) und `isProbabilityMeasure_volume_restrict_Ioc`, eine Mathlib-Lücke, die auf `upstream/master` `572e4d091bc` mit zwei Suchen belegt ist. Alle neun gehen durch `lake env lean` gegen v4.33.1 und hängen laut `#print axioms` allein an `propext`, `Classical.choice`, `Quot.sound`; über `E` steht nichts Stärkeres als in `exists_coupling_of_partition`, und die Zweitabzählbarkeit geht allein in die Meßbarkeit des schlechten Ereignisses. **Am 2026-09-08, elfter Lauf, ist die Allgemeinheit berichtigt, in der dieser Fact gebraucht wird: nur für polnische Räume.** Beide Gebrauchsstellen sind polnisch — `rem:EKrelcompact` ohnehin ($\DE$ unter $J_1$), und `thm:MZconv` Schritt 1, sobald man ihn statt auf $\DE$ in der Pseudopfad-Topologie auf **$M_E[0,\infty)$** stellt, dem Raum der $\lambda$-f.ü.-Klassen Borel-meßbarer $w:\Rp\to E$ unter $d_m(x,y)=\int_0^\infty e^{-t}(1\wedge r(x(t),y(t)))\dif t$, der nach Kurtz (1991), S. 1022 **vollständig und separabel** ist, sobald $(E,r)$ es ist — und (E3) gibt das. Der Angelpunkt, daß $\DE$ borelsch in $M_E$ ist, ist im Bericht des elften Laufs bewiesen, aus `fact:pseudopath` allein und ohne Lusin--Souslin. Der Preis ist die Konstruktion von $M_E$ selbst (`WeakConvergence` M6), der Ertrag der Verzicht auf die separable Fassung der Darstellung. `exists_ae_tendsto_of_tendsto` und die vierzehn Deklarationen der Läufe fünf bis zehn bleiben davon unberührt und richtig — der polnische Fall ist ein Spezialfall des separablen, und Mathlib hat die Darstellung in **keiner** Fassung. **Am 2026-09-08, zwölfter Lauf, sind vier der fünf Aussagen von Meilenstein 6 bewiesen** — der Raum $M_E$ selbst: `distInMeasure_triangle`, `distInMeasure_eq_zero_iff`, `tendsto_iff_tendstoInMeasure` (die Aussage, die die Metrik als die der Konvergenz im Maß benennt, und der Berührungspunkt mit `fact:pseudopath`(i)) und `exists_tendsto_distInMeasure_of_cauchy` (die Vollständigkeit nach Kurtz (4.2)--(4.4)), dazu `distInMeasure_le_add`, `measurable_dist_coeFn` und `integrable_min_one_dist`; alle durch `lake env lean` gegen v4.33.1 und mit `#print axioms` geprüft. `SecondCountableTopology E` ist dabei als unbenutzt aus allen entfallen, und die Vollständigkeit braucht kein `Nonempty E`. ~~Offen ist allein die **Separabilität**, der Punkt, den Kurtz „left to the reader“ schreibt.~~ **Am 2026-09-08, dreizehnter Lauf, ist auch sie bewiesen, und damit Meilenstein 6 ganz**: `exists_countable_dense_distInMeasure` samt `separableSpace`, `secondCountableTopology` und `polishSpace` — der Raum $M_E$ ist polnisch —, dazu die fünf Deklarationen, auf denen sie ruhen (`distInMeasure_mk_le_add`, `stepFun`, `stronglyMeasurable_stepFun`, `exists_mem_stepFun`, `stepClass`); alle acht durch `lake env lean` gegen v4.33.1 und mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft. Der Bauplan des Meilensteins war dabei an einer Stelle **nicht typrichtig** und ist berichtigt: er beschrieb die approximierende Familie als die Summen `∑ i, Set.indicator (A i) (fun _ ↦ y i)`, aber $E$ ist ein bloßer metrischer Raum ohne Addition. An ihre Stelle tritt die Stufenfunktion über einer **Liste** von Indexpaaren mit Vorrang der früheren Einträge — `List (ℕ × ℕ)` ist abzählbar durch Instanzsuche, und die Vorrangregel ersetzt die Summe durch eine Fallunterscheidung. Der Ertrag daraus, und er kürzt den Beweis: weil `exists_mem_stepFun` nur sagt, daß der gefeuerte Zweig von *irgendeinem* Eintrag stammt, dessen Menge das Argument enthält, dürfen die überdeckenden Mengen einander **überlappen**, und die Disjunktifizierung, die `exists_finite_partition_ball_of_denseRange` in Meilenstein 3 kostet, entfällt hier ganz. **Am 2026-09-08, vierzehnter Lauf, ist der Bauplan des Schlußschritts als falsch erkannt und ersetzt**: der zehnte Lauf hatte ihn über Borel--Cantelli geführt, und das geht nicht, weil die Schranke einer Stufe, `∑' i, (μ n (A i) - ν (A i))`, beliebig langsam fallen darf (Zeuge: `ν = dirac 0`, `μ n = (1 - 1/log n) • dirac 0 + (1/log n) • dirac 1` auf `ℝ`, wo sie auf jeder Stufe vom Durchmesser unter `1` mindestens `1/log n` ist und `∑ 1/log n = ∞`) — keine Wahl der Niveaus repariert das. Die fast sichere Konvergenz kommt aus der **Abhängigkeit** der Stufen: eine allen Stufen gemeinsame gleichverteilte Variable, die Schranke als **Inklusion** in ein Ereignis dieser Variablen, und endlich viele Stücke positiver Masse; das ist EK Thm. 3.1.8, (1.33)--(1.36), am Scan gelesen (Buchseiten 102--103). Bewiesen ist der abgetrennte Schlußsatz `ae_tendsto_of_subset_of_tendsto_measure_iUnion_ge` — (1.36) ohne die Konstruktion —, durch `lake env lean` gegen v4.33.1 und mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft; die drei übrigen Stücke stehen benannt in Meilenstein 3. Am 2026-09-08, fünfzehnter Lauf, sind zwei davon bewiesen und ebenso geprüft: `exists_measurable_index_of_stochastic_matrix_diag` (die Diagonale auf dem ersten Teilsummenintervall, samt dem Zusatz an `exists_measurable_map_restrict_volume_eq_sum_smul_dirac`) und `exists_finite_partition_diam_le_null_frontier` (die endliche Zerlegung mit Stücken positiver Masse, samt der Hilfsaussage `frontier_biUnion_finset_subset`). Offen ist allein `exists_measurable_pair_of_partition_subset` und danach der Zusammenbau. **Die zweite Gebrauchsstelle des Facts, `rem:EKrelcompact` — $\DE$ unter $J_1$ ist polnisch —, ist am 2026-09-08, dreiundzwanzigster Lauf, zur Hälfte eingelöst**: `SkorokhodSpace.instCompleteSpace` trägt einen Beweis, geht durch `lake env lean` gegen v4.33.1 und hängt laut `#print axioms` allein an `propext`, `Classical.choice`, `Quot.sound`. Offen bleibt dort `SkorokhodSpace.instSeparableSpace`; `instPolishSpace` ist `inferInstance` und fällt mit ihm. **Am 2026-09-08, vierundzwanzigster Lauf, ist Meilenstein 1 von `SkorokhodSpace` ganz geschlossen** — `exists_orderIso_isometry_real` trägt einen Beweis, über die benannte Koordinate `lengthCoord t₀ t = if t₀ ≤ t then dist t₀ t else -dist t₀ t` samt `sub_lengthCoord_of_le`, `strictMono_lengthCoord`, `isometry_lengthCoord`, `lengthCoord_self`; `OrderTopology ι` ist dabei als unbenutzt entfallen, verbraucht werden `AdditiveDist`, `MetricSpace` (für die Striktheit, über `dist_pos`) und von `ProperSpace` allein die Vollständigkeit (`complete_of_proper`). Mit ihr `TimeChange.exists_of_lengthCoord`, die erste Konstruktion eines Zeitwechsels auf einem allgemeinen Index. Und der Befund zur offenen Hälfte: `instSeparableSpace` zerfällt in die Approximation durch Treppenpfade an den eigenen Sprungzeiten (gleichmäßig, ohne Zeitwechsel, kommt mit `tendsto_modulus` aus Meilenstein 7) und das Verschieben der Sprungzeiten auf die abzählbare Menge, und Letzteres ist eine Aussage über den **Index**: das Interpolationslemma auf dem Bild der Koordinate. Für `ι = h • ℤ` ist dieses Bild `h • ℤ` und der einzige Zeitwechsel der triviale — dort ist nichts zu verschieben; für `ι = ℝ` tut es jedes stückweise lineare `φ`. Alle sieben Deklarationen gehen durch `lake env lean` gegen v4.33.1 und hängen laut `#print axioms` allein an `propext`, `Classical.choice`, `Quot.sound`. **Am 2026-09-09, erster Lauf, ist die zweite Hälfte dieser Gebrauchsstelle berichtigt statt bewiesen**: `SkorokhodSpace.instSeparableSpace` ist in der Fassung ohne Zusatzhypothese **falsch**. `SkorokhodSpace.not_separableSpace_of_rigid` (bewiesen, mit `stepAt`, `dist_le_distWith_stepAt`, `le_intWith_stepAt`, `le_intDist_stepAt`) zeigt: ist `ι` überabzählbar und ist die Identität der einzige Zeitwechsel mit Norm unter einem `c > 0`, so ist `D(ι, E)` nicht separabel — Zeuge für die Hypothesen ist die Cantormenge, deren Lückenlängen `3^{-n}` jeden bi-Lipschitz-Ordnungsisomorphismus mit Konstanten unter `3` zur Identität zwingen (diese Rechnung ist Prosa, nicht Lean). Die Instanz und `instPolishSpace` tragen seither die Typklasse `SkorokhodSpace.HasCountableCore ι`; für `rem:EKrelcompact` selbst — dort ist `ι = [0,∞)` — ist sie erfüllt, aber sie muß bewiesen werden, und das ist der nächste Punkt von Meilenstein 5. Mitgefallen ist die Integralbuchführung `SkorokhodSpace.intWith_le_of_forall_distWith_le` samt `exists_finite_range_intDist_le` (`intDist t₀ f g ≤ ε + exp (-M)` für ein `g` mit endlichem Wertebereich); alle zehn Deklarationen durch `lake env lean` gegen v4.33.1 und mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft **Am 2026-09-09, vierter Lauf, ist die zweite Gebrauchsstelle des Facts ganz eingelöst**: `SkorokhodSpace.instSeparableSpace` trägt einen Beweis, und damit ist `SkorokhodSpace.instPolishSpace` — `$\DE$ unter $J_1$ ist polnisch`, also `rem:EKrelcompact` — bewiesen statt `inferInstance` über einem `sorry`; beide hängen laut `#print axioms` allein an `propext`, `Classical.choice`, `Quot.sound`. Die Einlösung steht unter der Typklasse `SkorokhodSpace.HasCountableCore ι`, und das ist nach `not_separableSpace_of_rigid` unvermeidlich; für `ι = ℝ` und für jeden abzählbaren Index ist sie bewiesen. Die fünf tragenden Deklarationen sind `stepIdx_congr_of_forall_notMem_Ioc`, `SkorokhodSpace.stepIdx_eq_of_mem_uIcc`, `radius_exhaustionMin_mem_Ico_subset`, `volume_radius_exhaustionMin_mem_Ico` und `SkorokhodSpace.distWith_stepPath_le`; alle durch `lake env lean` gegen v4.33.1 geprüft. **Am 2026-09-09, dreizehnter Lauf, ist auch das Relativkompaktheitskriterium bewiesen, das `rem:EKrelcompact` neben der Polnischheit zitiert**: `SkorokhodSpace.isCompact_closure_iff` trägt in beiden Richtungen einen Beweis und hängt laut `#print axioms` allein an `propext`, `Classical.choice`, `Quot.sound`. Damit ist `SkorokhodSpace/Suggested.lean` **frei von `sorry`**  **Am 2026-09-09, fünfzehnter Lauf, ist das vorletzte Stück der ersten Gebrauchsstelle bewiesen**: `exists_measurable_pair_of_partition_subset` — alle Stufen der Darstellung auf **einem** Raum (`stagesMeasure`, `(E × ℝ) × (ℕ × ℕ → E)`), mit **einer** allen Stufen gemeinsamen gleichverteilten Variablen, und mit der Stufenschranke als **Inklusion** `ε n < dist (X n z) z.1.1 → z.1.1 ∈ A n 0 ∨ 1 - t n < z.1.2` statt als Zahl; dazu `sum_prod_slice_eq` und je ein Zusatz an `exists_coupling_tsum_offDiag_le` (`min (p i) (q i) ≤ π i i`, die Diagonalschranke, umsonst aus der expliziten Kopplung) und an `exists_finite_partition_diam_le_null_frontier` (`∀ i ∈ K, Bornology.IsBounded (A i)` — `Metric.diam` sagt auf einer unbeschränkten Menge nichts). Über `E` steht dabei allein `[PseudoMetricSpace E]`. Alle durch `lake env lean` gegen v4.33.1 und mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft. Zwei Berichtigungen am Meilenstein: der zweite Disjunkt steht als `1 - t n < ξ` und nicht als `ξ ≤ t`, weil der Diagonalzweig die Diagonale auf das *erste* Teilsummenintervall legt; und die Stufen brauchen die Beschränktheit der Stücke, nicht bloß ihren Durchmesser. Offen ist allein `exists_ae_tendsto_of_tendsto`, der Zusammenbau, dessen vier Schritte im Bericht des fünfzehnten Laufs stehen |
@@ -31413,3 +31413,1060 @@ anders. `ℝ≥0` und `ℝ` haben es. Das ist die dritte Eintragung im Meilenste
 
 3. **`isStrongMarkov` auf den Daten von Meilenstein 4.** Unverändert; die letzte
    der fünf im Meilenstein 6 ausformulierten Aussagen ohne Deklaration.
+
+### 2026-09-17, zweiter Lauf des Tages — die Kompensatorhälfte der Modifikation steht, und die Voraussetzung, die sie verlangte, gab das Feld selbst nicht her: der Bochner-Müllwert
+
+**Eine neue Deklaration**, **eine geänderte Strukturdefinition** und **eine
+berichtigte Signatur** im Abschnitt `Regularizing` von
+`TauCeti/MartingaleProblems/Suggested.lean`. Die Zahl der `sorry` bleibt bei
+sechs. Das waren die Vorschläge 0 und 1 des Vorlaufs; Vorschlag 0 ist ganz
+eingelöst, Vorschlag 1 zur Hälfte, und die Hälfte, die steht, ist die, die der
+Vorlauf für die schwierigere gehalten hatte.
+
+#### Wie geprüft wurde
+
+Entwickelt in einer kleinen Datei mit denselben Voraussetzungen (Struktur,
+Variablen, `IsMPSolution`, `IsSeparating`, `IsRegularizingClass`,
+`CompactContainment`), dort ohne einen Fehler und mit
+`#print axioms IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi` auf `propext`,
+`Classical.choice`, `Quot.sound` geprüft; die berichtigte Signatur des Zielsatzes
+ist in derselben Datei als `sigcheck` mit `sorry` elaboriert worden, also ist sie
+typkorrekt und nicht bloß hingeschrieben. Danach der Durchlauf über die **ganze**
+Datei: **Exitcode 0, kein einziger Fehler**, und weiterhin genau sechs
+Deklarationen mit `sorry`. Die geänderte Stelle steht bei den Zeilen 2335 bis
+2760.
+
+#### Befund 1: `l1_rightContinuous` stand über dem Bochner-Integral, und in dieser Gestalt ist das Feld gehaltlos
+
+Das Feld lautete
+
+```lean
+l1_rightContinuous : ∀ t : ι,
+    Tendsto (fun s ↦ ∫ ω, ‖C s ω - C t ω‖ ∂P) (𝓝[>] t) (𝓝 0)
+```
+
+`∫ ω, ‖C s ω - C t ω‖ ∂P` gibt für nichtintegrierbaren Integranden den
+**Müllwert `0`** zurück. Also ist das Feld von Kompensatoren erfüllt, die von
+Rechtsstetigkeit weit entfernt sind. Der Zeuge, und er ist so kurz, wie er
+aussieht:
+
+> `C s := g` für `s ≠ t`, mit `g` meßbar und **nicht** integrierbar, `C t := 0`,
+> und `Y := f ∘ X - C`.
+
+`stronglyAdapted` gilt, weil `g` meßbar ist; `decomposition` gilt nach Wahl von
+`Y`; `exists_limits` gilt, weil die Pfade abseits von `t` in `s` konstant sind;
+und `l1_rightContinuous` gilt, weil jedes Glied der Müllwert `0` ist. Der
+Rechtsgrenzwert von `C` bei `t` ist aber `g` und nicht `C t = 0`. Damit ist der
+Schritt `C_{t+} = C t`, den der Vorlauf als „die einzige Stelle, an der
+`l1_rightContinuous` gebraucht wird" ausgewiesen hatte, unter der alten Fassung
+des Feldes **falsch**.
+
+Das Feld steht jetzt in `ℝ≥0∞`:
+
+```lean
+l1_rightContinuous : ∀ t : ι,
+    Tendsto (fun s ↦ ∫⁻ ω, ‖C s ω - C t ω‖ₑ ∂P) (𝓝[>] t) (𝓝 0)
+```
+
+Das untere Integral hat keinen Müllwert, der Zeuge stirbt sofort, und — das ist
+die zweite Hälfte des Befundes — es ist zugleich die Gestalt, in der **Fatou**
+dasteht. Formulierung und Beweis wollen dasselbe Objekt.
+
+Das ist derselbe Befund wie beim Heben von `cumulativeRateF` nach `ℝ≥0∞` am
+2026-09-12: eine lügende Vorgabe durch eine ehrliche ersetzt. Neu ist, daß er
+zum ersten Mal **außerhalb** der Sprungkonstruktion auftritt.
+
+**Der Preis, und er gehört genannt:** `IsCompensatorFor` ist damit eine
+**stärkere** Voraussetzung, also `IsRegularizingClass` stärker und der Zielsatz
+schwächer. Für den Gebrauch kostet das nichts — der Kompensator einer Anwendung
+ist `f ∘ X - Y` mit integrierbarem `f ∘ X` und integrierbarem Martingal `Y` —,
+aber es ist eine Änderung der Aussage und keine der Schreibweise.
+
+#### Befund 2: `IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi` ist Fatou und sonst nichts
+
+```lean
+theorem IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi [FirstCountableTopology ι]
+    (hC : IsCompensatorFor X 𝓕 P D f Y C) {t : ι}
+    [(𝓝[D ∩ Set.Ioi t] t).NeBot] {W : Ω → 𝕂}
+    (hW : ∀ᵐ ω ∂P, Tendsto (fun s ↦ C s ω) (𝓝[D ∩ Set.Ioi t] t) (𝓝 (W ω))) :
+    W =ᵐ[P] C t
+```
+
+Der Vorlauf hatte den Weg als „`L¹`-Konvergenz gibt eine f.s. konvergente
+**Teilfolge**" angesagt und dafür `[FirstCountableTopology ι]` verlangt. Die
+Teilfolge wird nicht gebraucht. Längs einer Folge `u`, die in den Filter
+hineinläuft, geht `‖C (u n) ω - C t ω‖ₑ` f.s. gegen `‖W ω - C t ω‖ₑ`,
+insbesondere ist der `liminf` das; die unteren Integrale gehen gegen `0`;
+`lintegral_liminf_le` (`MeasureTheory/Integral/Lebesgue/Add.lean:231`, gegen
+v4.33.1 belegt) setzt `∫⁻ ‖W - C t‖ₑ ≤ 0`, und ein verschwindendes unteres
+Integral hat f.ü. verschwindenden Integranden. Achtzehn Zeilen.
+
+**Was dabei nirgends vorkommt:** Integrierbarkeit von `C`, Meßbarkeit von `W`,
+Endlichkeit des Maßes. `W` ist als Funktion völlig frei; die Meßbarkeit, die
+Fatou verlangt, ist die von `C (u n) - C t`, und die kommt aus
+`stronglyAdapted`. Das ist der zweite Gewinn der `ℝ≥0∞`-Fassung: der Bochner-Weg
+hätte `MemLp` des Grenzwerts gebraucht, und den hat man an dieser Stelle nicht.
+
+**`[(𝓝[D ∩ Set.Ioi t] t).NeBot]` ist keine Technikalität.** An einem von rechts
+isolierten Punkt ist `hW` gehaltlos und `W` beliebig; der Satz wäre falsch. Wo
+der càdlàg-Satz ihn benutzt, ist `D` dicht und `t` nicht größtes Element, also
+ist er da.
+
+**`Measurable.liminf'` trägt hier nicht**, und das ist der Grund, warum die Folge
+doch gebraucht wird: es verlangt eine **abzählbare Basis aus abzählbaren Mengen**
+(`MeasureTheory/Constructions/BorelSpace/Order.lean:997`), und die Basismengen
+von `𝓝[D ∩ Ioi t] t` sind nicht abzählbar. `Measurable.liminf` über `ℕ`
+(`ibid.:1057`) trägt. `Filter.exists_seq_tendsto`
+(`Order/Filter/AtTopBot/CountablyGenerated.lean:68`) macht aus dem Filter die
+Folge, und dafür ist `[FirstCountableTopology ι]` da — nicht für eine Teilfolge.
+
+#### Befund 3: die Signatur des Zielsatzes ist berichtigt, und zwar in der Fassung (i)
+
+`exists_cadlag_modification_of_isRegularizingClass` trägt jetzt die drei
+Voraussetzungen, die der Vorlauf als fehlend benannt hatte:
+
+* `[FirstCountableTopology ι]` und `[(atTop : Filter ι).IsCountablyGenerated]` —
+  **zwei verschiedene** Voraussetzungen, und das ist im Doc-Kommentar gesagt:
+  Kofinalität ist nicht Erstabzählbarkeit. `ℝ≥0` und `ℝ` haben beide.
+* `hΦsq : ∀ f ∈ Φ, (fun x ↦ f x * (starRingEnd 𝕂) (f x)) ∈ Φ` — die Fassung (i),
+  die der Vorlauf als die billigere ausgewiesen hatte. Sie verlangt nichts von
+  der Filtration.
+* `hΦcount` um `∀ f ∈ Φ₀, Continuous f` erweitert.
+
+Die Signatur ist als `sigcheck` elaboriert; sie ist typkorrekt.
+
+#### Was dieser Lauf **nicht** getan hat
+
+* **Die Martingalhälfte**, `P[Y_{t+} | 𝓕 t] =ᵐ[P] Y t`. Sie ist nicht
+  angefangen, und der Grund ist gemessen: sie braucht Vitali
+  (`tendsto_Lp_finite_of_tendsto_ae`,
+  `MeasureTheory/Function/UniformIntegrable.lean:518`, gegen v4.33.1 belegt),
+  und der liest **drei** Eingaben, die hier je eigene Arbeit sind —
+  `UnifIntegrable` der Familie, `MemLp` des **Grenzwerts**, und die
+  Reell-Imaginär-Zerlegung, weil
+  `Integrable.uniformIntegrable_condExp_filtration`
+  (`Probability/Process/Filtration.lean:214`) reellwertig ist. Das ist der
+  Unterschied zur Kompensatorhälfte, die mit Fatou auskam: Fatou braucht keine
+  der drei.
+* **`X'` als Konstruktion.** Unberührt.
+* **Die beiden Quasi-Linksstetigkeiten.** Unberührt.
+* **Die Zitatprüfung der Roadmaps gegen `upstream/master` (Teil D).** Dieser
+  Lauf hat `upstream` nicht neu geholt. Die fünf neu zitierten Mathlib-Namen —
+  `lintegral_liminf_le`, `Measurable.liminf`, `Measurable.liminf'`,
+  `Filter.exists_seq_tendsto`, `tendsto_Lp_finite_of_tendsto_ae` — sind am
+  Quelltext von v4.33.1 belegt, mit Datei und Zeile; die ersten drei werden in
+  der Datei benutzt oder sind an ihr entlang geprüft, sind also nicht bloß
+  zitiert.
+* **Keine neue Lücke für `TODO.md` Punkt 8.** Er bleibt bei einundzwanzig
+  Punkten. Der Befund dieses Laufs ist keine fehlende Mathlib-Aussage, sondern
+  eine falsch geschriebene eigene.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`condExp_rightLim_eq`** — die Martingalhälfte, und zwar in der Gestalt, die
+   von `X'` nicht abhängt: ist `Y` ein Martingal, `t < T`, `𝓝[D ∩ Set.Ioi t] t`
+   nicht `⊥`, und `Tendsto (fun s ↦ Y s ω) (𝓝[D ∩ Set.Ioi t] t) (𝓝 (V ω))` f.s.,
+   so ist `P[V | 𝓕 t] =ᵐ[P] Y t`. *Worauf sie ruht:* nichts, was noch fehlt.
+   Drei benannte Schritte, jeder mit seinem Mathlib-Baustein:
+   (a) `UnifIntegrable` von `fun n ↦ Y (u n)` aus
+   `Integrable.uniformIntegrable_condExp_filtration` an Real- und Imaginärteil,
+   über `Y s = P[Y T | 𝓕 s]` für `s ≤ T` — dafür wird gebraucht, daß `u n`
+   schließlich unter `T` liegt, und das gibt die Ordnungstopologie aus `T > t`;
+   (b) `MemLp V 1 P` aus Fatou, genau wie in diesem Lauf;
+   (c) `tendsto_Lp_finite_of_tendsto_ae` und die `L¹`-Stetigkeit von `condExp`.
+   *Warum jetzt:* nach dem heutigen Lauf ist sie der **einzige** noch unbewiesene
+   Schritt zwischen `ae_exists_tendsto_comp_of_isRegularizingClass` und dem
+   Zielsatz. Die Kompensatorhälfte steht.
+
+2. **Die Ausquadrierung**, `condExp_sub_eq_zero_of_condExp_mul_conj`: aus
+   `P[g | 𝓕 t] =ᵐ f` und `P[g * conj g | 𝓕 t] =ᵐ f * conj f` mit `f` meßbar für
+   `𝓕 t` folgt `g =ᵐ f`. Das ist der Schritt, für den `hΦsq` heute in die
+   Signatur gekommen ist, und er ist eine Rechnung mit `condExp` ohne jeden
+   Prozeßbegriff — also billig und unabhängig von Vorschlag 1 zu haben.
+   *Worauf er ruht:* das Herausziehen des `𝓕 t`-meßbaren Faktors aus der
+   bedingten Erwartung, und `condExp_nonneg`.
+
+3. **Eine Meßbarkeitsprobe an `CompactContainment`.** Unverändert der Vorschlag
+   der letzten sechs Läufe, samt dem Nachtrag des Nutzers vom 2026-09-15 abends
+   zur Fassung (c) mit dem meßbaren Zeugen.
+
+### 2026-09-17, dritter Lauf des Tages — die Martingalhälfte der Modifikation steht, und der Weg, den der Vorlauf für nötig hielt, war der teurere: Dominierung statt Real-Imaginär-Zerlegung
+
+**Drei neue Deklarationen** im Abschnitt `Regularizing` von
+`TauCeti/MartingaleProblems/Suggested.lean`, **ein neuer Import**. Die Zahl der
+`sorry` bleibt bei sechs. Das waren die Vorschläge 1 und 2 des Vorlaufs, beide
+ganz eingelöst; damit ist **jeder** Schritt zwischen
+`ae_exists_tendsto_comp_of_isRegularizingClass` und
+`exists_cadlag_modification_of_isRegularizingClass` bewiesen, und was von dem
+Zielsatz noch fehlt, ist der Zusammenbau und nicht mehr eine offene Aussage.
+
+#### Wie geprüft wurde
+
+Beide Sätze zuerst in eigenen kleinen Dateien gegen v4.33.1 entwickelt, dort
+ohne einen Fehler und ohne eine Warnung, jeder mit `#print axioms` auf
+`propext`, `Classical.choice`, `Quot.sound` geprüft. Danach in die große Datei
+eingesetzt und diese als ganze durch `lake env lean` geschickt: **Exitcode 0,
+kein einziger Fehler**, und weiterhin genau sechs Deklarationen mit `sorry`
+(Zeilen 1131, 2980, 3096, 3110, 3509, 3539). Die drei neuen Deklarationen stehen
+bei den Zeilen 2696, 2746 und 2846; der Zielsatz
+`exists_cadlag_modification_of_isRegularizingClass` steht jetzt bei 2980 und ist
+der zweite der sechs.
+
+#### Befund 1: `Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi`, und die angesagte Zerlegung wird nicht gebraucht
+
+Die Aussage ist die des Vorschlags: ist `Y` ein Martingal, `t < T`, ist
+`𝓝[D ∩ Set.Ioi t] t` nicht `⊥` und geht `Y s ω` längs dieses Filters f.s. gegen
+`V ω`, so ist `P[V | 𝓕 t] =ᵐ[P] Y t`. Sie nennt weder `X` noch die
+regularisierende Klasse und steht daher, ehe irgendeine Modifikation gebaut ist.
+
+Der Vorlauf hatte drei Eingaben benannt und die dritte — die
+**Real-Imaginär-Zerlegung** — als eigene Arbeit veranschlagt, weil
+`Integrable.uniformIntegrable_condExp_filtration`
+(`Probability/Process/Filtration.lean:214`) reellwertig ist. Sie wird **nicht**
+gebraucht, und der Grund ist, daß gleichgradige Integrierbarkeit nicht zerlegt,
+sondern **dominiert** werden will:
+
+> `norm_condExp_le`
+> (`MeasureTheory/Function/ConditionalExpectation/CondJensen.lean:246`) gibt
+> `‖P[Y T | 𝓕 s]‖ ≤ᵐ[P] P[‖Y T‖ | 𝓕 s]`. Rechts steht die
+> Bedingt-Erwartungs-Familie **einer festen integrierbaren reellen Funktion**,
+> also genau das, worauf der reellwertige Satz paßt. Links steht der Betrag des
+> Martingals. Eine Dominierungsaussage schließt die Lücke.
+
+Die Zerlegung hätte am Ende ein **Rekombinationslemma** verlangt — aus
+gleichgradiger Integrierbarkeit von Real- und Imaginärteil die des Ganzen —, und
+das hat Mathlib in v4.33.1 ebensowenig wie die Dominierung. Der
+Dominierungsweg ist damit nicht bloß kürzer, sondern braucht eine Aussage
+weniger.
+
+**`t < T` gehört in die Aussage** und ist keine technische Zutat. Die Familie
+eines Martingals ist nur über einem Ordnungsideal gleichgradig integrierbar; das
+Trägerlemma ist `Y s =ᵐ[P] P[Y T | 𝓕 s]` für `s ≤ T`. Die Ordnungstopologie macht
+aus `t < T` die Zugehörigkeit `Set.Iio T ∈ 𝓝[D ∩ Set.Ioi t] t`, also liegt eine
+in den Filter laufende Folge schließlich unter `T`; die Folge um diesen Index zu
+**verschieben** ist billiger, als ein `Eventually` durch Vitali zu tragen.
+
+Der Rest sind drei Mathlib-Bausteine, jeder an einer Stelle:
+`Lp.eLpNorm_le_of_ae_tendsto` (`MeasureTheory/Function/LpSpace/Complete.lean:89`)
+setzt den Grenzwert nach `L¹`, `tendsto_Lp_finite_of_tendsto_ae`
+(`MeasureTheory/Function/UniformIntegrable.lean:518`) ist Vitali, und
+`eLpNorm_condExp_le_eLpNorm`
+(`MeasureTheory/Function/ConditionalExpectation/Real.lean:288`) ist die
+`L¹`-Kontraktion, die die Konvergenz durch die bedingte Erwartung zieht. Das
+Ende ist, daß eine **von `n` unabhängige** Zahl unter einer Nullfolge liegt.
+
+#### Befund 2, und er ist der wertvollste des Laufs: die Negativaussage zur Dominierung ist gegen `master` **falsch**
+
+`upstream` frisch geholt, **`92fc6042c1d`, 2026-09-16 20:50 UTC**. Die
+Dominierung ist als eigener Satz eingetragen,
+`MeasureTheory.UnifIntegrable.of_norm_le_ae`, und die Prüfung gegen v4.33.1 gab
+her, was zu erwarten war: `UnifIntegrable` hat dort `add`, `neg`, `sub`,
+`ae_eq`, `indicator`, `restrict`
+(`MeasureTheory/Function/UniformIntegrable.lean:104` bis `:155`) und **keine**
+Dominierung. Gegen `master` ist das nicht mehr wahr:
+
+> `UnifIntegrable.ae_mono` (`ibid.:142` auf `master`) — genau die Dominierung,
+> und dazu `UnifIntegrable.comp` (`ibid.:176`), das die Umindizierung längs einer
+> Folge erledigt, die dieser Lauf noch von Hand aufgeschrieben hat. Die ganze
+> Definition von `UnifIntegrable` ist dort umgeschrieben (`Tendsto` eines
+> Supremums gegen `⊥` statt `∀ ε ∃ δ`), weshalb `add` dort ohne
+> Meßbarkeitsvoraussetzungen auskommt und `indicator` dafür `MeasurableSet s`
+> verlangt.
+
+**Also kein zweiundzwanzigster Punkt für `TODO.md` Punkt 8.** Er bleibt bei
+einundzwanzig. Die Lücke, die dieser Lauf gefunden hat, ist in der Bibliothek
+schon geschlossen — nur nicht in der Fassung, an die wir gebunden sind. Das ist
+der Fall, vor dem Teil D des Auftrags warnt; er ist hier eingetreten, ehe eine
+Roadmap die Behauptung aufstellen konnte, und die Aussage steht jetzt von
+vornherein mit ihrem Datum und ihrer Quelle da.
+
+**Zwei Unterschiede bleiben**, und sie sind der Grund, warum die eigene Fassung
+stehenbleibt statt auf `master` zu warten: `ae_mono` verlangt
+`∀ i, AEStronglyMeasurable (f i) μ` von der **dominierten** Familie, unsere
+nicht; und `ae_mono` quantifiziert beide Familien über **derselben** normierten
+Gruppe, während der Gebrauch hier eine reelle dominierende und eine
+`𝕂`-wertige dominierte Familie hat. Der Beweis ist in beiden Fällen
+`eLpNorm_mono_ae` am Indikator, aber über verschiedenen Definitionen.
+
+#### Befund 3: `ae_eq_of_condExp_eq_of_condExp_mul_conj`, und `MemLp _ 2` ist die richtige Voraussetzung
+
+Das Ausquadrieren des Vorschlags 2, und es ist eine Rechnung ohne jeden
+Prozeßbegriff: aus `P[g | m'] =ᵐ f` und `P[g * conj g | m'] =ᵐ f * conj f` mit
+`f` meßbar für `m'` folgt `g =ᵐ f`. Mit `d := g − f` ist `∫ d conj d` gleich
+`∫ g conj g − ∫ g conj f − ∫ f conj g + ∫ f conj f`; das erste ist `∫ f conj f`
+nach der zweiten Voraussetzung und `integral_condExp`, das zweite nach dem
+Herausziehen des `m'`-meßbaren Faktors
+(`condExp_bilin_of_aestronglyMeasurable_right`,
+`MeasureTheory/Function/ConditionalExpectation/PullOut.lean:215`) und der ersten
+Voraussetzung, das dritte ist das Konjugierte des zweiten und `∫ f conj f` ist
+reell. Also `∫ ‖g − f‖² = 0`.
+
+**Die Voraussetzung ist `MemLp _ 2 P` und nicht `Integrable`**, und das ist keine
+Bequemlichkeit: alle vier Produkte müssen integrierbar sein, und die
+**Kreuzterme** sind es genau deshalb, weil beide Faktoren quadratintegrierbar
+sind (`MemLp.integrable_mul`,
+`MeasureTheory/Function/L1Space/Integrable.lean:1085`). Die Voraussetzung an
+`g * conj g` gibt das nicht her — sie bindet eine bedingte Erwartung und nicht
+die Integrierbarkeit eines Produkts.
+
+**Und eine Falle, die nichts mit Mathematik zu tun hat.** Ein lokales
+`{m' : MeasurableSpace Ω}` ist ein Kandidat der Instanzensuche und gewinnt als
+**späterer** Binder gegen das umgebende `m`. Damit wird `P : Measure Ω` in der
+Signatur gegen `m'` elaboriert statt gegen `m`, und jedes `∫ … ∂P` im Beweis
+ebenso — der Satz ist dann ein anderer, als er aussieht. Zwei Vorkehrungen
+stehen jetzt da und sind im Doc-Kommentar begründet: `P` wird **vor** `m'`
+gebunden, und der Beweis beginnt mit `let _ : MeasurableSpace Ω := m`, das die
+umgebende σ-Algebra zuletzt bindet und sie damit der Suche zurückgibt. Das ist
+derselbe Fehlertyp wie die Müllwerte, nur eine Ebene tiefer: nicht eine lügende
+Vorgabe, sondern eine lügende Signatur.
+
+#### Zitatprüfung gegen `upstream/master` (ein Stück von Teil D)
+
+Bei der Gelegenheit alle zwölf in diesem und im vorigen Lauf zitierten
+Mathlib-Namen gegen `92fc6042c1d` geprüft. **Alle zwölf existieren dort noch,
+unter demselben Namen, in derselben Datei, keiner `deprecated`**:
+`norm_condExp_le`, `condExp_nonneg`, `condExp_bilin_of_aestronglyMeasurable_right`,
+`eLpNorm_condExp_le_eLpNorm`, `MemLp.integrable_mul`,
+`memLp_two_iff_integrable_sq_norm`, `Lp.eLpNorm_le_of_ae_tendsto`,
+`tendsto_Lp_finite_of_tendsto_ae`, `integral_eq_zero_iff_of_nonneg`,
+`lintegral_liminf_le`, `Filter.exists_seq_tendsto`,
+`Integrable.uniformIntegrable_condExp_filtration`. Verschoben sind nur
+Zeilennummern (`tendsto_Lp_finite_of_tendsto_ae` 518 → 540,
+`Lp.eLpNorm_le_of_ae_tendsto` 89 → 92, `exists_seq_tendsto` 68 → 55,
+`lintegral_liminf_le` 231 → 233, `MemLp.integrable_mul` 1085 → 1086), und die
+sind nach dem Auftrag nachrangig. Die einzige **inhaltliche** Abweichung ist die
+von Befund 2.
+
+#### Was dieser Lauf **nicht** getan hat
+
+* **`X'` als Konstruktion und der Zusammenbau des Zielsatzes.** Unberührt. Nach
+  diesem Lauf fehlt dort keine Aussage mehr, sondern die Montage: den Rechtslimes
+  längs `D` als `X'` hinschreiben, `hcc` die Grenzwerte in `E` halten lassen, die
+  beiden Hälften `C_{t+} = C t` und `P[Y_{t+} | 𝓕 t] = Y t` an jedem `f ∈ Φ`
+  lesen, dann `ae_eq_of_condExp_eq_of_condExp_mul_conj` an `f` und `f * conj f`,
+  und die abzählbare punktetrennende Familie einsammeln.
+* **Die beiden Quasi-Linksstetigkeiten.** Unberührt.
+* **Die volle Zitatprüfung der Roadmaps (Teil D).** Nur die zwölf oben genannten
+  Namen sind geprüft, nicht die vier `README.md` als ganze und nicht die drei
+  `Suggested.lean`.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`exists_cadlag_modification_of_isRegularizingClass` selbst**, und zwar in
+   der Reihenfolge, in der die Eingaben jetzt dastehen. *Worauf er ruht:* nichts,
+   was noch fehlt — das ist der Unterschied zu allen vorigen Läufen an diesem
+   Meilenstein. Drei benannte Schritte: (a) `X'` als Rechtslimes längs `D` auf der
+   f.s. Menge, auf der `ae_exists_tendsto_of_forall_ae_exists_tendsto` ihn
+   liefert, und `X t` außerhalb, damit `X'` überall definiert ist; (b) für jedes
+   `f ∈ Φ` die Kette `f (X' t) = Y_{t+} + C_{t+}`, also
+   `P[f ∘ X' t | 𝓕 t] =ᵐ f ∘ X t` aus den beiden Hälften dieses und des vorigen
+   Laufs; (c) das Ausquadrieren an `f` und `f * conj f`, dann die abzählbare
+   trennende Familie. *Warum jetzt:* jede andere Reihenfolge riskiert, daß beim
+   Zusammenbau eine weitere Voraussetzung auffällt und die Signatur ein viertes
+   Mal berichtigt wird; sie fällt billiger auf, wenn alle Eingaben stehen.
+
+2. **`UnifIntegrable.comp` nachbauen**, drei Zeilen: aus `UnifIntegrable f p μ`
+   und `g : ι' → ι` folgt `UnifIntegrable (f ∘ g) p μ`. *Worauf sie ruht:*
+   nichts. *Warum:* dieser Lauf hat sie im Beweis von
+   `Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi` von Hand ausgeschrieben,
+   und `master` hat sie inzwischen (`UniformIntegrable.lean:176`). Als eigene
+   Deklaration ist sie ein Zeilengewinn und dokumentiert zugleich den Abstand
+   zwischen v4.33.1 und `master` an einer Stelle, an der wir ihn gemessen haben.
+
+3. **Eine Meßbarkeitsprobe an `CompactContainment`.** Unverändert der Vorschlag
+   der letzten sieben Läufe, samt dem Nachtrag des Nutzers vom 2026-09-15 abends
+   zur Fassung (c) mit dem meßbaren Zeugen.
+
+### 2026-09-17, vierter Lauf des Tages — die Pfadhälfte der càdlàg-Modifikation steht, der Zeuge ist benannt, und die Aussage, auf die sie zuläuft, verlangte **vier** Voraussetzungen, die sie nicht trug
+
+**Neun neue Deklarationen** im Abschnitt `Regularizing` von
+`TauCeti/MartingaleProblems/Suggested.lean` (Zeilen 2935 bis 3155), dazu die
+berichtigte Signatur von `exists_cadlag_modification_of_isRegularizingClass`.
+Die Zahl der `sorry` bleibt bei sechs. Das war Vorschlag 1 des Vorlaufs — der
+Zusammenbau —, und er zerfällt in zwei Hälften: die **Pfadhälfte** ist ganz
+bewiesen, die **Modifikationshälfte** ist es nicht.
+
+Der Vorlauf hatte gesagt, es fehle „keine Aussage mehr, sondern die Montage".
+Das war für die Modifikationshälfte richtig und für die Pfadhälfte falsch: daß
+der Rechtslimes eines Pfades *selbst* rechtsstetig ist und Linkslimiten hat, ist
+kein Buchhaltungsschritt, sondern ein eigener Satz, und er hat eine
+Voraussetzung gekostet, die nirgends dastand.
+
+#### Was gebaut ist
+
+* `rightLimAlong D g t` — der Rechtslimes von `g` längs `D` bei `t`, und `g t`,
+  wo es keinen gibt. Der Zeuge der Modifikation, geschrieben als Funktion eines
+  einzelnen Pfades.
+* `tendsto_rightLimAlong`, `rightLimAlong_of_not_neBot` — die beiden Lesarten der
+  Definition.
+* `nhdsWithin_inter_Ioi_neBot` — für dichtes `D` und `r` kein größtes Element ist
+  `(𝓝[D ∩ Set.Ioi r] r).NeBot`.
+* `tendsto_rightLimAlong_nhdsWithin_Ioi`,
+  `exists_tendsto_rightLimAlong_nhdsWithin_Iio`, `isCadlagPath_rightLimAlong` —
+  die **deterministische Hälfte von Doobs Regularisierung**: hat `g` an jedem
+  Punkt beide einseitigen Limiten längs eines dichten `D`, so ist
+  `rightLimAlong D g` càdlàg. Kein Maß, keine Filtration, kein Prozeß.
+* `ae_forall_exists_tendsto_of_isRegularizingClass` — die `E`-wertige
+  Regularisierung an **jedem** Punkt des Index zugleich, unter *einer* Nullmenge.
+* `ae_isCadlagPath_rightLimAlong_of_isRegularizingClass` — die càdlàg-Hälfte des
+  Zielsatzes: f.s. ist `rightLimAlong D (fun s ↦ X s ω)` ein càdlàg-Pfad.
+
+#### Wie geprüft wurde
+
+Die Pfadhälfte zuerst in einer eigenen kleinen Datei gegen v4.33.1 entwickelt,
+dort ohne Fehler und ohne Warnung. Danach in die große Datei eingesetzt und
+diese als ganze durch `lake env lean` geschickt: **Exitcode 0, kein einziger
+Fehler**, weiterhin genau sechs Deklarationen mit `sorry`. Die neun neuen
+Deklarationen mit `#print axioms` geprüft.
+
+#### Befund 1, und er ist der wertvollste: `[RegularSpace E]`, und wo genau er verbraucht wird
+
+Die Rechtsstetigkeit des Limesprozesses ist **nicht** die Rechtsstetigkeit von
+`g` längs `D`, und der Unterschied ist kein technischer. Die Werte von
+`rightLimAlong D g` außerhalb von `D` sind selbst Limiten, und ein Limes wird
+durch „liegt schließlich in einer Umgebung" nicht festgehalten — es sei denn, die
+Umgebung ist **abgeschlossen**. Genau das ist `[RegularSpace E]`:
+
+> `closed_nhds_basis` (`Topology/Separation/Regular.lean:174`) gibt eine
+> abgeschlossene Umgebung `V` von `rightLimAlong D g t`; ein offenes `U ∋ t` mit
+> `g '' (U ∩ D ∩ Set.Ioi t) ⊆ V` liegt vor; für `r ∈ U ∩ Set.Ioi t` läuft der
+> Filter `𝓝[D ∩ Set.Ioi r] r` **immer noch** in `U ∩ D ∩ Set.Ioi t`, und weil `V`
+> abgeschlossen ist, zieht `IsClosed.mem_of_tendsto` den Limes hinein.
+
+Ohne Regularität gibt dasselbe Argument nur die Zugehörigkeit zum Abschluß von
+`V`, also gar nichts. **Und `[T2Space E]` hilft dabei nicht**: Trennung wird an
+einem anderen Schritt gelesen, nämlich bei
+`exists_tendsto_of_forall_tendsto_comp`, wo eine kompakte Menge einen
+Häufungspunkt fängt. Keine der beiden Eigenschaften folgt hier aus der anderen.
+Die Linkslimiten sind dasselbe Argument mit `U ∩ Set.Iio t` statt `U`.
+
+#### Befund 2: `[DenselyOrdered ι]` ist eine Voraussetzung und keine Bequemlichkeit
+
+An einem Punkt `r` mit **unmittelbarem Nachfolger** ist `𝓝[D ∩ Set.Ioi r] r = ⊥`,
+und zwar wie dicht `D` auch sei. Dann ist jeder Punkt von `E` ein Limes längs
+dieses Filters, der Rechtslimes bei `r` ist unbestimmt, und der Pfad durch `r`
+ist unkontrolliert. `ℝ≥0` und `ℝ` sind dicht geordnet; der Index dieser
+Entwicklung ist einer der beiden. Die Dichtheit von `D` wird in der Pfadhälfte
+**nur hier** verbraucht; ob die Modifikationshälfte sie noch einmal liest, ist
+offen.
+
+#### Befund 3: ein Müllwert, der beinahe entstanden wäre — und die Vorkehrung dagegen
+
+Die erste Fassung von `rightLimAlong` fragte nur, ob ein Limes **existiert**.
+Das ist die Falle: an einem von rechts isolierten Punkt ist der Filter `⊥`, und
+dann existiert ein Limes *immer* — jeder Punkt von `E` ist einer. `Classical`
+hätte einen genannt, also eine Zahl, wo es keine Antwort gibt. Das ist genau der
+Fehlertyp von `sInf ∅ = 0`, `x / 0 = 0` und dem Bochner-Integral einer
+nichtintegrierbaren Funktion, der in dieser Entwicklung sechsmal eine Aussage
+still wahr gemacht hat.
+
+Die Definition fragt jetzt nach `NeBot ∧ ∃ x, Tendsto …`, und an einem solchen
+Punkt ist `rightLimAlong D g t = g t` (`rightLimAlong_of_not_neBot`). Damit gilt
+die Modifikationseigenschaft dort **nach Definition** statt durch ein Argument,
+das sich nicht führen läßt. Der Preis ist eine `NeBot`-Voraussetzung in
+`tendsto_rightLimAlong`, und sie steht an jeder Aufrufstelle ohnehin zur
+Verfügung.
+
+#### Befund 4: die vier Voraussetzungen, die `exists_cadlag_modification_of_isRegularizingClass` nicht trug
+
+Der Satz stand mit `[FirstCountableTopology ι]`,
+`[(atTop).IsCountablyGenerated]`, `hD`, `hD'` und den vier `Φ`-Bedingungen da.
+Er ist so **nicht beweisbar**, und jede der vier fehlenden Voraussetzungen wird
+an einem benannten Schritt gelesen; sie stehen jetzt in der Signatur:
+
+* `hXm : ∀ t, Measurable (X t)` und `[OpensMeasurableSpace E]` bei
+  `CompactContainment.ae_exists_isCompact` — `CompactContainment` schränkt das
+  äußere Maß einer nicht als meßbar behaupteten Menge ein, und eine untere
+  Schranke an das äußere Maß einer Vereinigung sagt über ihr Komplement nichts;
+  das Ereignis ist meßbar, weil es ein abzählbarer Durchschnitt von Urbildern
+  einer kompakten — also abgeschlossenen, also meßbaren — Menge ist.
+* `[T2Space E]` bei `exists_tendsto_of_forall_tendsto_comp`.
+* `[RegularSpace E]` bei `tendsto_rightLimAlong_nhdsWithin_Ioi` (Befund 1).
+* `[DenselyOrdered ι]` bei `nhdsWithin_inter_Ioi_neBot` (Befund 2).
+
+#### Befund 5: eine **fünfte** Voraussetzung ist zu erwarten, und sie ist noch nicht eingetragen
+
+`ae_eq_of_condExp_eq_of_condExp_mul_conj` — der Schlußstein der
+Modifikationshälfte — verlangt `MemLp _ 2 P` von beiden Seiten, und
+`IsRegularizingClass` gibt das nicht her. Der Martingalanteil `Y t` ist nach
+Definition integrierbar, der Kompensator `C t` ist **nur** `StronglyAdapted`,
+und damit ist `f ∘ X t = Y t + C t` nicht einmal als integrierbar bekannt.
+
+Eine Schranke `∀ f ∈ Φ₀, ∃ M, ∀ x, ‖f x‖ ≤ M` liefert alles auf einmal: sie macht
+`f ∘ X t` und `f ∘ X' t` beschränkt, also unter einem Wahrscheinlichkeitsmaß in
+jedem `Lᵖ`, und sie macht `C t` als Differenz integrierbar. Eine Klasse
+beschränkter stetiger Funktionen erfüllt sie ohnehin. **Sie ist benannt und nicht
+eingetragen**, weil sie noch nicht durch einen Beweis bezahlt ist; sie gehört in
+die Signatur, sobald der Schritt geschrieben ist, der sie liest. Das ist die
+Regel dieses Projekts und der Grund, warum die vier oben eingetragen sind und
+diese eine nicht.
+
+**Und eine Beobachtung, die dem nächsten Lauf eine Voraussetzung erspart:**
+`X' t` selbst muß **nicht** meßbar sein, und keine Metrisierbarkeit von `E` wird
+gebraucht. Für den Schlußstein wird nur `f ∘ X' t` als `AEStronglyMeasurable`
+benötigt, und das ist es als Summe: `f (X' t ω) = V_f ω + C t ω` f.s., `V_f` ist
+der f.s. Grenzwert von `Y` längs einer **Folge** und damit nach
+`aestronglyMeasurable_of_tendsto_ae` meßbar, `C t` ist es über `stronglyAdapted`.
+Der Umweg über die Meßbarkeit des `E`-wertigen Limes, der
+`[PseudoMetrizableSpace E]` gekostet hätte, entfällt.
+
+#### Was dieser Lauf **nicht** getan hat
+
+* **Die Modifikationshälfte.** Unberührt; der Zielsatz trägt weiter sein `sorry`.
+  Was dort fehlt, ist jetzt eine Kette benannter Schritte über einer benannten
+  offenen Voraussetzung (Befund 5) und keine offene Mathematik.
+* **Die beiden Quasi-Linksstetigkeiten.** Unberührt.
+* **Die volle Zitatprüfung der Roadmaps (Teil D).** Die in diesem Lauf benutzten
+  Mathlib-Namen sind am Quelltext von v4.33.1 belegt
+  (`closed_nhds_basis`, `IsClosed.mem_of_tendsto`, `dense_iff_inter_open` mit
+  seinem Alias `Dense.inter_open_nonempty`, `nhdsGT_neBot_of_exists_gt`,
+  `mem_closure_iff_nhdsWithin_neBot`, `mem_nhdsWithin`,
+  `mem_nhdsWithin_of_mem_nhds`, `inter_mem_nhdsWithin`, `Filter.not_neBot`,
+  `Filter.nonempty_of_mem`); die vier `README.md` als ganze sind nicht geprüft.
+  Vermerkt sei, daß `nhdsWithin_Iio_self_neBot'` in v4.33.1 **deprecated** ist
+  (Alias auf `nhdsLT_neBot_of_exists_lt`, seit 2026-01-16) — die hier benutzte
+  Gegenstückform `nhdsGT_neBot_of_exists_gt` ist die aktuelle.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die Modifikationshälfte, und damit
+   `exists_cadlag_modification_of_isRegularizingClass` selbst.** *Worauf sie
+   ruht:* alles steht, bis auf die Schranke von Befund 5, und die ist als
+   Hypothese hinzuschreiben, nicht zu beweisen. Die Kette, Schritt für Schritt:
+   (a) an einem von rechts isolierten Punkt gibt `rightLimAlong_of_not_neBot` die
+   Gleichheit sofort; (b) sonst ist `f (X' t) = V_f + W_f` für `f ∈ Φ₀` und für
+   `f * conj f`, wobei `V_f` und `W_f` die Rechtslimiten von `Y` und `C` sind —
+   hier wird die **Stetigkeit** von `f` gelesen, und das ist die zweite Stelle
+   nach `exists_tendsto_of_forall_tendsto_comp`, an der `hΦcount` sie liefert;
+   (c) `W_f = C t` f.s. nach `IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi`;
+   (d) `P[V_f | 𝓕 t] = Y t` nach
+   `Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi`, die ein `T > t` verlangt
+   — zu klären ist, ob dafür `[NoMaxOrder ι]` in die Signatur gehört oder ob der
+   größte Index, wo es einen gibt, über `rightLimAlong_of_not_neBot` erledigt
+   ist; (e) `ae_eq_of_condExp_eq_of_condExp_mul_conj` an `f` und `f * conj f`,
+   dann die abzählbare trennende Familie. *Warum jetzt:* der Zeuge steht, seine
+   Pfadeigenschaft steht, und jeder Schritt der Kette hat seinen Satz.
+2. **`UnifIntegrable.comp` nachbauen**, unverändert der Vorschlag des Vorlaufs,
+   drei Zeilen.
+3. **Eine Meßbarkeitsprobe an `CompactContainment`.** Unverändert der Vorschlag
+   der letzten acht Läufe.
+
+### 2026-09-17, fünfter Lauf des Tages — Doobs Regularisierung steht; und die Voraussetzung, die dabei wegfiel, war die, die von Anfang an dastand
+
+`exists_cadlag_modification_of_isRegularizingClass` ist **bewiesen**. Das war
+Vorschlag 1 des Vorlaufs, die Modifikationshälfte, und der Satz trägt kein
+`sorry` mehr. Die Zahl der `sorry` in
+`TauCeti/MartingaleProblems/Suggested.lean` fällt damit von sechs auf **fünf**;
+es ist die erste der drei offenen Aussagen von Meilenstein 9, und mit ihr die
+einzige Stelle des Projekts, an der eine fertige Roadmap — `SkorokhodSpace` mit
+10 167 Zeilen ohne `sorry` — an einem fehlenden Satz einer anderen hing.
+
+#### Wie geprüft wurde
+
+Der Beweis zuerst in einer eigenen kleinen Datei gegen v4.33.1 entwickelt, mit
+den Signaturen der Vorstufen als `sorry`-Rümpfe wörtlich kopiert; dort nach zwei
+Durchläufen fehlerfrei. Danach in die große Datei eingesetzt und diese als ganze
+durch `lake env lean` geschickt: **Exitcode 0, kein einziger Fehler**, und in der
+Liste der `declaration uses 'sorry'` steht der Satz nicht mehr. `#print axioms`
+meldet
+
+```
+'exists_cadlag_modification_of_isRegularizingClass' depends on axioms:
+  [propext, Classical.choice, Quot.sound]
+```
+
+also die drei zulässigen und kein `sorryAx`. Die Zählangaben im Dateikopf und in
+`TODO.md` sind nachgezogen.
+
+#### Befund 1, und er ist der Befund dieses Laufs: `IsSeparating Φ` wird nicht gebraucht und ist gestrichen
+
+Die Aussage trug seit ihrer ersten Fassung `hΦsep : IsSeparating Φ` — Trennung
+von **Maßen**: zwei Wahrscheinlichkeitsmaße, die jedes `f ∈ Φ` gleich
+integrieren, sind gleich. Der Beweis liest sie **an keinem Schritt**. Was er
+trennt, ist punktweise, und es steht in der letzten Zeile: zwei Punkte von `E`,
+auf denen jedes `f ∈ Φ₀` übereinstimmt, sind gleich. Das ist eine andere
+Eigenschaft, und keine der beiden folgt aus der anderen.
+
+Das ist kein Schönheitsfehler. Mit `IsSeparating Φ` wäre der Satz auf eine
+Klasse, die **Pfade** bestimmt, aber keine **Gesetze**, nicht anwendbar gewesen
+— und die Konstruktion der càdlàg-Modifikation ist genau eine Aussage über
+Pfade. Der Maßtrennungsbegriff gehört zu den Eindeutigkeitssätzen der Roadmap
+**WeakConvergence**, und in Meilenstein 9 liest ihn genau eine andere Aussage,
+`isQuasiLeftContinuous_of_isMPSolutionFor` über
+`IsSeparating.ae_eq_of_forall_condExp_eq`. Der Satz im `README.md`, die
+Trennung sei „die einzige Voraussetzung an `Φ`, die die beiden Sätze teilen", ist
+damit falsch geworden und berichtigt: sie teilen gar keine.
+
+#### Befund 2: die fünfte Voraussetzung ist bezahlt, und sie ist kleiner, als sie angekündigt war
+
+Der Vorlauf hatte `∀ f ∈ Φ₀, ∃ M, ∀ x, ‖f x‖ ≤ M` als zu erwartende
+Voraussetzung benannt und ausdrücklich **nicht** eingetragen, weil sie noch von
+keinem Beweis gelesen wurde. Sie steht jetzt als `hbdd` in der Signatur, und der
+Schritt, der sie liest, ist `ae_eq_of_condExp_eq_of_condExp_mul_conj`
+(`MemLp _ 2 P` auf beiden Seiten). Zwei Beobachtungen dazu:
+
+* **Sie wird nur von `Φ₀` verlangt, nicht von `Φ`**, und das Quadrat erbt sie:
+  `‖f x * conj (f x)‖ = ‖f x‖ ^ 2 ≤ M ^ 2`. Ebenso ist `hsq` von
+  `∀ f ∈ Φ, … ∈ Φ` auf `∀ f ∈ Φ₀, … ∈ Φ` abgeschwächt — das Quadrat geht in die
+  kompensierte Zerlegung und **nie** in die Punkttrennung, also muß `Φ₀` unter
+  ihm nicht abgeschlossen sein. Beides ist die stehende Regel der minimalen
+  Voraussetzungen, angewandt, sobald der Beweis zeigt, wo die Hypothese
+  wirklich gelesen wird.
+* **Sie besorgt drei Dinge auf einmal** und ist deshalb billiger als jede
+  Zerlegung: `f ∘ X t` und `f ∘ X' t` liegen in jedem `Lᵖ`, und `C t` wird als
+  Differenz integrierbar. Ohne sie ist `C t` nur `StronglyAdapted`, also nicht
+  einmal als integrierbar bekannt, und `condExp_add` greift nicht.
+
+Die Voraussetzung `hΦcount` in ihrer Bündelgestalt ist dabei in die fünf
+Einzelhypothesen `hΦ₀ hΦ₀c hcont hbdd hsq hsep` aufgelöst — dieselbe Gestalt,
+die die Pfadhälfte `ae_isCadlagPath_rightLimAlong_of_isRegularizingClass` schon
+trägt, so daß die beiden Hälften dieselben Argumente nehmen.
+
+#### Befund 3: die `𝓕 t`-Meßbarkeit von `f ∘ X t` kommt aus der Zerlegung, nicht aus einer Adaptiertheit von `X`
+
+`ae_eq_of_condExp_eq_of_condExp_mul_conj` verlangt
+`AEStronglyMeasurable[𝓕 t] (f ∘ X t) P`, und das sah nach einer Hypothese aus,
+die der Satz noch nicht trägt: `X` ist `E`-wertig, `𝓕` eine Filtration auf `Ω`,
+und `IsRegularizingClass` sagt über `X` nichts. Sie ist trotzdem schon da. Die
+Zerlegung `f (X t ω) = Y t ω + C t ω` weist `f ∘ X t` als f.s. gleich einer
+Summe zweier `𝓕 t`-stark meßbarer Funktionen aus, und `AEStronglyMeasurable[m']`
+ist wörtlich „f.s. gleich einer `m'`-stark meßbaren Funktion". **Eine
+Adaptiertheitsvoraussetzung an `X` wäre also nicht nur überflüssig, sie wäre
+nicht einmal formulierbar**, ohne eine Meßbarkeitsstruktur auf `E` zu benutzen,
+die der Satz für `hXm` ohnehin schon hat, aber an anderer Stelle.
+
+#### Befund 4: der Gewinn aus der Vorsicht des Vorlaufs, an der Stelle eingelöst, an der er versprochen war
+
+Der Vorlauf hatte `rightLimAlong` durch den **Filter** und nicht durch die
+Existenz eines Limes geschützt, damit an einem von rechts isolierten Punkt kein
+Müllwert entsteht. Dieser Lauf hat die Rechnung dafür kassiert: der Fall
+„`𝓝[D ∩ Ioi t] t` ist `⊥`" ist im Beweis **eine Zeile**, und sie gibt die
+Modifikationseigenschaft *an jedem Stichprobenpunkt* statt fast sicher
+(`rightLimAlong_of_not_neBot`). Wäre der Wert dort durch `Classical.choice`
+benannt, gäbe es an dieser Stelle keinen Beweis, sondern eine Lücke.
+
+Derselbe Fall erledigt nebenbei das größte Element, wo es eines gibt: es ist von
+rechts isoliert. Deshalb steht in der Signatur **kein** `[NoMaxOrder ι]`,
+obwohl `Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi` eine Schranke
+`t < T` verlangt — im anderen Fall liefert der Filter selbst ein `b > t`.
+
+#### Drei Stolpersteine in Lean, die kein mathematischer Inhalt sind und einen Lauf kosten können
+
+* **`Martingale` ist ein `def` auf `And`, und Punktnotation trifft es nicht**,
+  wenn der eigene Satz `Martingale.foo` im Wurzelnamensraum steht, während
+  `Martingale` unter `open MeasureTheory` auf `MeasureTheory.Martingale`
+  auflöst. `hYm.foo` sucht dann `And.foo` und scheitert. Zu schreiben ist
+  `Martingale.foo hYm …`. Die Mathlib-eigenen Felder (`hYm.stronglyMeasurable`,
+  `hYm.integrable`) sind davon nicht betroffen, was den Fehler erst verwirrend
+  macht.
+* **`.symm` auf einer `∀ᵐ`-Aussage wird als `Eq.symm` gelesen.**
+  `(hC.decomposition s).symm` elaboriert gegen die entfaltete Gestalt
+  `0 = P {…}ᶜ` statt gegen `EventuallyEq`. Zu schreiben ist
+  `Filter.EventuallyEq.symm (hC.decomposition s)`.
+* **`condExp_of_stronglyMeasurable` gibt in v4.33.1 eine echte Gleichung**
+  (`μ[f|m] = f`), nicht eine f.s. Gleichheit
+  (`MeasureTheory/Function/ConditionalExpectation/Basic.lean:142`). In eine
+  Kette von `EventuallyEq.trans` geht sie nur über
+  `Filter.EventuallyEq.of_eq` (`Order/Filter/Basic.lean:967`).
+
+#### Was dieser Lauf **nicht** getan hat
+
+* **Die beiden Quasi-Linksstetigkeiten.** Unberührt; sie sind, was von
+  Meilenstein 9 noch offen ist.
+* **Die volle Zitatprüfung der Roadmaps (Teil D).** Die in diesem Lauf
+  benutzten Mathlib-Namen sind am Quelltext von v4.33.1 belegt
+  (`MemLp.of_bound` `LpSeminorm/Basic.lean:549`,
+  `condExp_of_stronglyMeasurable` `ConditionalExpectation/Basic.lean:142`,
+  `IsFiniteMeasure.sigmaFiniteFiltration` `Process/Filtration.lean:208`,
+  `EventuallyEq.of_eq` `Order/Filter/Basic.lean:967`,
+  `aestronglyMeasurable_of_tendsto_ae`, `condExp_add`, `condExp_congr_ae`,
+  `ae_ball_iff`, `RCLike.norm_conj`, `RCLike.continuous_conj`); die vier
+  `README.md` als ganze sind nicht geprüft.
+* **Eine Instanz.** Der Satz ist bewiesen und auf nichts angewandt; daß seine
+  Voraussetzungen erfüllbar sind, ist damit nicht vorgeführt. Das ist der
+  nächste Punkt.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die Leerheitsprobe von Meilenstein 9: eine Klasse `Φ`, die alle sieben
+   Voraussetzungen erfüllt.** *Worauf sie ruht:* der Satz steht, und alle seine
+   Hypothesen sind jetzt benannt; gesucht ist ein `Φ` mit `IsRegularizingClass`,
+   abzählbarem, punktetrennendem, beschränktem, stetigem `Φ₀`, dessen Quadrate in
+   `Φ` liegen. Der nächstliegende Zeuge ist der schon gebaute Markovsche
+   Sprungprozeß: `mpFamily` gibt die kompensierte Zerlegung unmittelbar, `C` ist
+   das Kompensatorintegral, und auf `E = ℕ` tut `Φ₀ = {x ↦ (1 + x)⁻¹ · ζ}` mit
+   einer abzählbaren Familie beschränkter Funktionen die Trennung. *Warum jetzt:*
+   die Aussage ist die erste des Projekts, deren Voraussetzungsliste in einem
+   einzigen Lauf von vier auf acht gewachsen ist — vier in der Pfadhälfte, drei
+   in der Modifikationshälfte, eine gestrichen —, und eine Liste dieser Länge
+   ist genau dann etwas wert, wenn ein Zeuge sie einlöst. Ohne ihn steht der
+   Satz unter Verdacht, leer zu sein, und der Verdacht ist nach der Geschichte
+   von `Shift` (kein Zeuge bis zum 2026-09-14) und `hint` (unerfüllbar) nicht
+   akademisch.
+2. **`isQuasiLeftContinuous_of_isMPSolutionFor`**, der positive Satz der
+   Quasi-Linksstetigkeit. *Worauf er ruht:* `hQ : Q.IsAtomless`, der Gegenzeuge
+   `not_isQuasiLeftContinuous_of_atom` steht fertig, und der Beweis ist die
+   Stetigkeit von oben des Uhrmaßes auf einem Intervall endlicher Masse. *Warum
+   jetzt:* er ist von den drei `sorry` des Meilensteins der billigere, und er
+   ist die zweite Hälfte eines Paares, dessen erste seit dem 2026-09-14 dasteht.
+3. **`UnifIntegrable.comp` nachbauen**, unverändert der Vorschlag der beiden
+   Vorläufe, drei Zeilen.
+4. **Eine Meßbarkeitsprobe an `CompactContainment`.** Unverändert der Vorschlag
+   der letzten neun Läufe.
+
+### 2026-09-17, sechster Lauf des Tages — die Voraussetzung `hΦ` der càdlàg-Modifikation wird jetzt erzeugt statt angenommen; und der Zeuge, den der Vorlauf vorschlug, scheitert an einer Stelle, die die Roadmap schon kennt
+
+Der Vorlauf hatte als ersten Vorschlag die **Leerheitsprobe** von Meilenstein 9
+genannt: eine Klasse `Φ`, die alle sieben Voraussetzungen von
+`exists_cadlag_modification_of_isRegularizingClass` erfüllt. Dieser Lauf hat
+davon den Teil gebaut, der **allgemein** ist und nicht an einem einzelnen
+Prozeß hängt — die Brücke von der Lösung des Martingalproblems zur
+regularisierenden Klasse — und dabei festgestellt, daß der vorgeschlagene Zeuge
+(der Markovsche Sprungprozeß) an einer Stelle scheitert, die im Dateikopf schon
+ausgesprochen steht.
+
+Fünf neue Deklarationen in `TauCeti/MartingaleProblems/Suggested.lean`.
+
+**Wie geprüft wurde, und wie weit — das ist beim Lesen zu beachten.** Die fünf
+zuerst in einer eigenen kleinen Datei gegen v4.33.1 entwickelt, mit den
+Signaturen der Vorstufen (`mpFamily_sub_of_isProgressive`,
+`stronglyAdapted_mpFamily_of_isProgressive`, `lebesgueClock_apply_Ioc`,
+`lebesgueClock_interval_optional_eq`) als `sorry`-Rümpfe wörtlich kopiert; dort
+nach vier Durchläufen **fehlerfrei**, und alle Warnungen über überflüssige
+Abschnittsvariablen abgearbeitet statt abgeschaltet. Danach in die große Datei
+eingesetzt und diese durch `lake env lean` geschickt: der Durchlauf kam **ohne
+einen Fehler bis Zeile 8386**, und die fünf neuen Deklarationen stehen bei 594,
+3488, 3517, 3587 und 6685, liegen also sämtlich darin. Die Zahl der `sorry` ist
+unverändert fünf (Zeilen 1173, 3708, 3723, 4132, 4152).
+
+**Der Rest der Datei ist nicht in diesem Lauf übersetzt worden**, und der Grund
+ist ein Fehler in meinem Aufruf und nicht in der Datei: die Ausgabe lief durch
+ein `head -60`, das nach sechzig Zeilen zumacht, so daß die `#print axioms` am
+Dateiende nicht mehr durchkamen und der Durchlauf abgebrochen werden mußte. Was
+sich daraus dennoch sagen läßt: alles ab Zeile 8386 ist gegenüber dem am
+2026-09-17, fünftem Lauf des Tages, vollständig geprüften Stand **unverändert**
+— jede Einfügung dieses Laufs liegt davor —, und die fünf neuen Namen kommen in
+der Datei vorher nirgends vor, sind weder `instance` noch `@[simp]`, können also
+die Elaboration späterer Deklarationen nicht berühren. **Nachzuholen bleibt: ein
+vollständiger Durchlauf mit `#print axioms` über die vier Sätze**, und er ist
+der erste Handgriff des nächsten Laufs. Bis dahin gilt für sie: elaboriert und
+fehlerfrei, Axiomprüfung offen.
+
+#### Was gebaut wurde
+
+* **`Clock.IsContinuousFor Q c`** — die Uhr, deren Kompensationsfenster ihre
+  Masse verlieren:
+  `Tendsto (fun s ↦ Q.q.real (Q.interval c (min s t) (max s t))) (𝓝 t) (𝓝 0)`
+  für jedes `t`. Sie steht in einem eigenen Abschnitt über `[LinearOrder ι]`
+  und `[TopologicalSpace ι]`, ohne Ordnungstopologie und ohne Vollständigkeit.
+* **`norm_compensator_sub_le_of_isProgressive`** — der Zuwachs des Kompensators
+  über `[s,t]` ist das Fensterintegral, also höchstens `b * q.real (window)`.
+  Es ist `mpFamily_sub_of_isProgressive` gelesen bei `f = 0`.
+* **`isCompensatorFor_mpFamily`** — alle vier Felder von `IsCompensatorFor` für
+  das Paar `(Y, C)` von `mpFamily`.
+* **`isRegularizingClass_mpFamily`** — daraus
+  `IsRegularizingClass (Prod.fst '' A) X (mpFamily A Q c X) 𝓕 P D`.
+* **`lebesgueClock_isContinuousFor_optional`** — die Leerheitsprobe der neuen
+  Uhrbedingung: das Fenster `(s ⊓ t, s ⊔ t]` hat die Masse `|s − t|` genau.
+
+#### Befund 1: drei Voraussetzungen fallen weg, und die erste ist die überraschende
+
+`IsCompensatorFor X 𝓕 P D f Y C` wird für ein **nicht meßbares** `f` bewiesen.
+Der Grund ist, daß die Struktur `C` einschränkt und `C` das `f` nicht sieht: das
+Zerlegungsfeld ist `sub_add_cancel` und gilt an *jedem* Stichprobenpunkt, die
+starke Adaptiertheit wird über `stronglyAdapted_mpFamily_of_isProgressive` bei
+`f = 0` gewonnen, so daß nur der Kompensator selbst als adaptiert behauptet
+wird, und die beiden Grenzwertfelder lesen allein den Kompensator. Ein meßbares
+`f` braucht erst `h𝓧`, also die Martingaleigenschaft von `Y` — eine andere
+Voraussetzung der càdlàg-Aussage, nicht diese.
+
+Ebenso fällt `[OrderTopology ι]` weg (die Abschätzung liest den Index nur durch
+`𝓝 t`) und jede Voraussetzung an `D`: über `D` wird quantifiziert, es geht weder
+Abzählbarkeit noch Dichtheit ein.
+
+#### Befund 2: der Kompensator ist stetig, nicht bloß mit einseitigen Grenzwerten versehen
+
+Das Feld `exists_limits` verlangt einseitige Grenzwerte längs `D ∩ Iio t` und
+`D ∩ Ioi t`. Bewiesen wird mehr: `Tendsto (fun s ↦ C s ω) (𝓝 t) (𝓝 (C t ω))`,
+also **Stetigkeit an jedem Stichprobenpunkt**, und die beiden Felder sind ihre
+Einschränkung über `nhdsWithin_le_nhds`. Der Weg dahin braucht keinen
+Cauchykriterium-Schluß in `𝕂` — der Grenzwertkandidat ist `C t ω` selbst, und
+die Abschätzung von Befund 1 macht daraus eine Einklemmung
+(`squeeze_zero_norm`). `l1_rightContinuous` ist dieselbe Einklemmung unter dem
+unteren Integral, mit der Schranke gleichmäßig in `ω` und einem endlichen `P`.
+
+Das ist der Grund, warum die drei letzten Felder **eine** Rechnung sind und
+nicht drei.
+
+#### Befund 3: `Clock.IsContinuousFor` ist von `Clock.IsAtomless` unabhängig, und über einem diskreten Index leer
+
+Die erste Fassung des Doc-Kommentars behauptete, die neue Bedingung sei
+*stärker* als `Clock.IsAtomless`, mit dem Beispiel einer atomlosen Uhr, die auf
+jedem `(t, t + 1/n]` die Masse `1` trägt. **Das ist falsch**, und der Fehler ist
+vor dem Eintragen aufgefallen: die Uhr ist auf Untermengen endlich
+(`measure_Iic_ne_top`), also gibt die Stetigkeit von oben
+`q (t, t + 1/n] → q ∅ = 0`, sobald der Filter `𝓝 t` von einer Folge erzeugt
+wird. Eine solche Uhr gibt es nicht.
+
+Was statt dessen stimmt und eingetragen ist:
+
+* **`IsContinuousFor` zieht Atomlosigkeit nicht nach sich.** Über
+  einem **diskreten** Index ist die Bedingung leer — `𝓝 t = pure t`, und das
+  Fenster bei `s = t` ist `Set.Iic t \ Set.Iic t = ∅` unter beiden Konventionen.
+  Das Zählmaß auf `ℕ` erfüllt sie also und ist so atomar, wie eine Uhr nur sein
+  kann. Das ist kein Schönheitsfehler, sondern die richtige Lesart: in diskreter
+  Zeit *ist* der Kompensator stetig, weil jeder Punkt isoliert ist.
+* In der anderen Richtung sollte über einem erstabzählbaren Index eine atomlose
+  Uhr die Bedingung haben; dieser Schluß ist **nicht** geführt und wird nicht
+  gebraucht, weil die eine Uhr, die die Roadmap benutzt, ihre Fenstermasse exakt
+  kennt.
+
+#### Befund 4, und er ist der Grund, warum der vorgeschlagene Zeuge nicht durchgeht
+
+Der Vorlauf hatte den Markovschen Sprungprozeß als nächstliegenden Zeugen
+genannt. `isRegularizingClass_mpFamily` verlangt `Q.IsProgressive X 𝓕` — die
+gemeinsame Meßbarkeit des **`E`-wertigen** Prozesses —, und der Dateikopf von
+`measurable_uncurry_min_of_rightContinuous` sagt seit dem 2026-09-10, daß es sie
+für die Sprungkonstruktion über einem bloßen `[MeasurableSpace E]` **nicht gibt**:
+der Beweis nähert `X s` durch `X r` mit `r` knapp oberhalb und geht zur Grenze,
+und ein Grenzwert `E`-wertiger meßbarer Abbildungen ist nur meßbar, wenn die
+Diagonale von `E` es ist. Deshalb trägt die Sprungkonstruktion
+`measurable_uncurry_jumpProcess` für jedes *reelle* Funktional `h ∘ X` und keine
+`Clock.IsProgressive`.
+
+Für Meilenstein 9 ist das keine Schranke — dort ist `E` topologisch, `T2` und
+regulär, und für ein zweitabzählbares metrisierbares `E` ist die Diagonale
+meßbar. Für den Zeugen heißt es: **er muß über einem topologischen `E` gebaut
+werden**, und die fehlende Eingabe ist benannt (Vorschlag 1 unten).
+
+#### Was dieser Lauf **nicht** getan hat
+
+* **Die Leerheitsprobe selbst.** Sie ist jetzt kleiner, aber sie steht aus; was
+  fehlt, ist in Vorschlag 1 benannt.
+* **Die beiden Quasi-Linksstetigkeiten.** Unberührt.
+* **Die volle Zitatprüfung der Roadmaps (Teil D).** Die in diesem Lauf benutzten
+  Mathlib-Namen sind am Quelltext von v4.33.1 belegt (`squeeze_zero_norm`,
+  `tendsto_sub_nhds_zero_iff`, `norm_setIntegral_le_of_norm_le_const`,
+  `ENNReal.tendsto_ofReal`, `ENNReal.Tendsto.mul_const`,
+  `tendsto_of_tendsto_of_tendsto_of_le_of_le`, `lintegral_const`,
+  `nhdsWithin_le_nhds`, `NNReal.continuous_coe`); die vier `README.md` als ganze
+  sind nicht geprüft. Vermerkt sei, daß `ofReal_norm_eq_enorm` in v4.33.1
+  **deprecated** ist (Alias auf `ofReal_norm`) — die hier benutzte Form ist die
+  aktuelle.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+0. **Der vollständige Durchlauf, der diesem Lauf fehlt**, und er ist billig:
+   `lake env lean` über die ganze Datei, die Ausgabe **ohne `head`** in eine
+   Datei, mit `#print axioms` über `norm_compensator_sub_le_of_isProgressive`,
+   `isCompensatorFor_mpFamily`, `isRegularizingClass_mpFamily` und
+   `lebesgueClock_isContinuousFor_optional` am Dateiende; danach die Zeilen
+   wieder entfernen und den Dateikopf nachziehen. *Warum zuerst:* der Dateikopf
+   trägt derzeit ausdrücklich den Vermerk, daß fünf Deklarationen nur bis Zeile
+   8386 geprüft sind, und dieser Vermerk gehört gelöscht und nicht
+   fortgeschrieben.
+1. **`Clock.isProgressive_of_rightContinuous` für einen abzählbaren diskreten
+   Zustandsraum**, und damit die Leerheitsprobe von Meilenstein 9. *Worauf sie
+   ruht:* `measurable_uncurry_min_of_rightContinuous` steht und ist reellwertig;
+   für ein abzählbares `E` mit der diskreten Topologie ist eine Abbildung nach
+   `E` genau dann meßbar, wenn jedes Urbild eines Punktes meßbar ist, also
+   überträgt sich die Aussage ohne den Grenzwertschritt, an dem Befund 4 hängt.
+   Damit ist `Q.IsProgressive` für `jumpProcessE` auf `E = ℕ` verfügbar,
+   `isRegularizingClass_mpFamily` greift, und von den sieben Voraussetzungen
+   der càdlàg-Aussage bleiben die über den Zustandsraum: `Φ₀` abzählbar,
+   beschränkt, stetig, punktetrennend (auf `ℕ` etwa die Indikatoren der Punkte,
+   die unter `f ↦ f * conj f` fest bleiben), und `CompactContainment`, das auf
+   einem **endlichen** Zustandsraum trivial ist. *Warum jetzt:* der Verdacht der
+   Leerheit ist nach `Shift` und `hint` nicht akademisch, und die Probe ist seit
+   diesem Lauf auf eine einzige fehlende Eingabe zusammengeschnurrt.
+2. **`isQuasiLeftContinuous_of_isMPSolutionFor`**, unverändert Vorschlag 2 des
+   Vorlaufs.
+3. **`UnifIntegrable.comp` nachbauen**, unverändert der Vorschlag der drei
+   Vorläufe, drei Zeilen.
+4. **Eine Meßbarkeitsprobe an `CompactContainment`.** Unverändert der Vorschlag
+   der letzten zehn Läufe.
+
+### 2026-09-17, siebter Lauf des Tages — die offene Prüfschuld ist beglichen, die Leerheitsprobe von Meilenstein 9 hat ihre fehlende Eingabe, und Teil D beginnt mit einem Befund: ein zitierter Mathlib-Name ist seit dem 2026-06-03 `deprecated`
+
+Drei Dinge, in der Reihenfolge, in der der Vorlauf sie vorgeschlagen hatte.
+
+#### 1. Vorschlag 0: der vollständige Durchlauf, den der Vorlauf schuldig blieb
+
+`lake env lean` über die **ganze** `TauCeti/MartingaleProblems/Suggested.lean`,
+die Ausgabe ohne `head`, mit `#print axioms` am Dateiende. Ergebnis:
+
+* **kein einziger Fehler** über alle 30 897 Zeilen (Rückgabewert 0);
+* die Zahl der `sorry` ist unverändert **fünf**, und jedes ist ein *Beweis*,
+  keine Aussage;
+* `#print axioms` über die vier Sätze des Vorlaufs —
+  `norm_compensator_sub_le_of_isProgressive`, `isCompensatorFor_mpFamily`,
+  `isRegularizingClass_mpFamily`, `lebesgueClock_isContinuousFor_optional` —
+  gibt jedem `[propext, Classical.choice, Quot.sound]` und nichts sonst.
+
+Der Vermerk im Dateikopf, fünf Deklarationen seien nur bis Zeile 8386 geprüft,
+ist damit gegenstandslos und **gelöscht**, nicht fortgeschrieben.
+
+#### 2. Die fehlende Eingabe der Leerheitsprobe von Meilenstein 9 steht
+
+Befund 4 des Vorlaufs hatte den Markovschen Sprungprozeß als Zeugen verworfen,
+weil `isRegularizingClass_mpFamily` ein `Q.IsProgressive X 𝓕` über dem
+**`E`-wertigen** Prozeß verlangt und die dyadische Konstruktion nur *reelle*
+Funktionale erreicht: ein Grenzwert `E`-wertiger meßbarer Abbildungen ist nur
+meßbar, wenn die Diagonale von `E` es ist. Der Vorschlag war, das über einen
+abzählbaren diskreten Zustandsraum zu umgehen. Das ist gebaut, in zwei
+Deklarationen im Abschnitt `LocalProgressive`:
+
+* **`measurable_of_measurable_indicator_comp`** — über abzählbarem `E` mit
+  meßbaren Punkten ist `F : α → E` meßbar, sobald jedes reelle Funktional
+  `1_{x} ∘ F` es ist. Die σ-Algebra auf `α` wird **ausdrücklich getragen**
+  (`Measurable[mα]`), weil die, auf die es angewandt wird — ein Produkt mit
+  einem Wert einer Filtration — keine Instanz ist; mit der synthetisierten
+  Instanz scheitert die Anwendung an „synthesized type class instance is not
+  definitionally equal".
+* **`lebesgueClock_isProgressive_jumpProcessE`** — für abzählbares `E` mit
+  meßbaren Punkten und meßbares `lam`:
+  `lebesgueClock.IsProgressive (fun t ω ↦ jumpProcessE lam t ω) (jumpFiltrationE lam hlam)`.
+  Die von `Clock.IsProgressive` verlangte Fortsetzung ist der bei `t` gestoppte
+  Pfad, also genau die Gestalt, die `measurable_uncurry_jumpProcessE` schon
+  liefert; unterhalb von `t` tut das Abschneiden nichts, und das ist das erste
+  Feld.
+
+Beide gehen in einem vollständigen Durchlauf der ganzen Datei ohne Fehler durch
+`lake env lean` gegen v4.33.1, beide mit `#print axioms` auf `propext`,
+`Classical.choice`, `Quot.sound` geprüft; die Zahl der `sorry` bleibt fünf
+(jetzt in den Zeilen 1171, 3713, 3727, 4126, 4156 — die Verschiebung um sechs
+gegenüber dem Vorlauf ist der neue Dateikopf). Die Punkte stehen in
+`MartingaleProblems/README.md`, Meilenstein 9.
+
+**Was damit an der Probe noch fehlt, und es ist nichts über den Prozeß mehr.**
+Die Sprungkonstruktion erfüllt jetzt **alle drei** Voraussetzungen von
+`isRegularizingClass_mpFamily` (`hA`, `hXprog`, `hXm` — die beiden anderen trug
+sie schon). Was eine Leerheitsprobe noch einzulösen hat, betrifft allein den
+Zustandsraum: `Φ₀` abzählbar, beschränkt, stetig, punktetrennend, abgeschlossen
+unter `f ↦ f * conj f`, und `CompactContainment`. Auf einem **endlichen**
+Zustandsraum mit der diskreten Topologie sind die Indikatoren der Punkte ein
+solches `Φ₀` — sie sind idempotent, also unter `f ↦ f * conj f` fest —, und
+`CompactContainment` ist dort trivial. Das ist in die Roadmap geschrieben.
+
+**Keine Topologie auf `E`.** Die Aussage braucht `Countable E` und
+`MeasurableSingletonClass E` und sonst nichts; die diskrete Topologie kommt
+erst bei `Φ₀` ins Spiel, nicht bei der Progressivität.
+
+#### 3. Teil D, begonnen: die Roadmaps gegen frisches `upstream/master`
+
+`git fetch upstream master` in `~/Code/lean/mathlib4`; der Stand, gegen den
+geprüft wurde, ist
+
+> **`7ef65c0feea1fb202b501b758e8920144cc0c3a2`, 2026-09-16.**
+
+Der Auftrag verlangt, jeden zitierten Namen zu prüfen. Von Hand ist das für die
+vier `README.md` nicht zu leisten — sie zitieren **2850** verschiedene
+Bezeichner und **210** Dateipfade. Dieser Lauf hat die Prüfung deshalb
+mechanisiert, in zwei Skripten, die beide allein lauffähig sind und nur lesen:
+
+* **`scripts/check_cited_files.py`** — jeder in den vier `README.md` und den
+  drei `Suggested.lean` zitierte Pfad `.../X.lean` gegen
+  `git ls-tree upstream/master`. Abgekürzte Zitate (`Measure/Tight.lean` für
+  `Mathlib/MeasureTheory/Measure/Tight.lean`) gelten als eingelöst, wenn genau
+  eine getrackte Datei auf sie endet.
+
+  **Ergebnis: 204 von 204 zitierten Mathlib-Pfaden existieren auf `master`.**
+  Die sechs übrigen der 210 sind keine Mathlib-Pfade — vier gehören zum Repo
+  `brownian-motion` (`BrownianMotion/StochasticIntegral/Cadlag.lean`,
+  `Quasimartingale/{Basic,CadlagModification,MaximalInequality}.lean`), einer
+  ist unsere eigene Datei, einer ein Verweis auf `TauCeti/.../scratch/`.
+  Keine Datei ist verschwunden oder umgezogen.
+
+* **`scripts/check_cited_names.py`** — jeder in den vier `README.md`
+  zitierte Bezeichner gegen die auf `master` deklarierten Namen. Das Skript
+  führt `namespace`/`end` mit, so daß gegen den **vollen** Namen geprüft wird
+  und nicht bloß gegen die letzte Komponente, und es meldet einen Namen nur
+  dann als `deprecated`, wenn **jede** Deklaration, auf die das Zitat paßt, es
+  ist. Der Dateikopf sagt ausdrücklich, was das Skript **nicht** leistet: ein
+  Treffer belegt nicht den Namensraum, und ein Fehlschlag ist kein Befund,
+  sondern eine Prüfzeile.
+
+  **Ergebnis: genau ein Befund.**
+
+**Der Befund.** `Set.diff_union_inter`, zitiert in
+`SkorokhodSpace/README.md` und **benutzt** in
+`SkorokhodSpace/Suggested.lean`, ist auf `master` seit dem 2026-06-03
+`deprecated`:
+
+```
+Mathlib/Order/BooleanAlgebra/Set.lean:294:
+  @[deprecated (since := "2026-06-03")] alias diff_union_inter := sdiff_union_inter
+```
+
+und **ebenso schon in v4.33.1** (dieselbe Datei, Zeile 296). Der gültige Name
+ist `Set.sdiff_union_inter`, und er steht in v4.33.1 (Zeile 292). Beide Stellen
+sind berichtigt; `SkorokhodSpace/Suggested.lean` geht nach der Umbenennung
+weiterhin ohne einen Fehler und ohne ein `sorry` durch `lake env lean`.
+
+Die 366 Bezeichner, die das Skript weder auf `master` noch in unseren
+`Suggested.lean` findet, sind durchgesehen und **keine Befunde**: es sind
+Abschnittsnamen (`BoundedHawkes`, `AtomWitness`), Roadmap-Namen für noch nicht
+gebaute Aussagen (`Clock.atomLayerKernel`, `CompactContainment.family`) und
+Vokabeln des Fließtextes. Genau dafür ist die Spalte da — die Roadmap **darf**
+Namen nennen, die es noch nicht gibt; sie darf nur nicht auf Mathlib-Namen
+zeigen, die es nicht mehr gibt.
+
+#### Befund am Rande: fünfzig Aufrufe veralteter Namen in unserem eigenen Lean
+
+Der vollständige Durchlauf von `MartingaleProblems/Suggested.lean` gegen
+v4.33.1 meldet 50 Warnungen über veraltete Namen, und sie sind unsere:
+`Set.mem_setOf_eq` (26 mal, jetzt `Set.mem_ofPred_eq`), die Taktik `push_neg`
+(18 mal, jetzt `push Not`), `Set.mem_diff` (3 mal, jetzt `Set.mem_sdiff`),
+`Measurable.comp'`, `intervalIntegral.integral_finset_sum` und
+`continuous_finset_sum` (je einmal). Keine davon ist ein Fehler, und keine
+berührt eine Aussage — aber es sind fünfzig Stellen, an denen unser Quelltext
+auf einen Namen zeigt, den Mathlib zurückgezogen hat, und der Auftrag zu Teil D
+verlangt genau diese Prüfung. Sie sind **nicht** in diesem Lauf berichtigt:
+`Set.mem_setOf_eq` steckt in `simp`-Listen, und eine Umbenennung, die 26
+Beweise anfaßt, gehört in einen Lauf, der sie auch einzeln übersetzt.
+
+#### Was dieser Lauf **nicht** getan hat
+
+* **Teil D, Schritt 3 — die Negativaussagen.** „Mathlib hat X nicht" steht
+  vielfach in den Roadmaps und in `TODO.md` Punkt 8, und keine dieser Aussagen
+  ist in diesem Lauf nachgeprüft worden. Die beiden Skripte helfen dabei
+  ausdrücklich **nicht**: sie prüfen, ob ein genannter Name existiert, und eine
+  Negativaussage nennt keinen. Das bleibt Handarbeit und ist der erste
+  Vorschlag unten.
+* **Teil D, Schritt 4** — die drei `Suggested.lean` gegen `master` statt gegen
+  v4.33.1. Nur die eine Umbenennung ist geprüft.
+* **Die Leerheitsprobe selbst**, die beiden Quasi-Linksstetigkeiten,
+  `UnifIntegrable.comp`, die Meßbarkeitsprobe an `CompactContainment`.
+  Unberührt.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Teil D, Schritt 3: die Negativaussagen der vier `README.md` und von
+   `TODO.md` Punkt 8 nachprüfen.** *Worauf es ruht:* frisches `upstream/master`
+   (`7ef65c0feea`, schon geholt) und `git grep` darin. *Warum jetzt:* die
+   beiden anderen Schritte von Teil D sind mit diesem Lauf erledigt und
+   mechanisiert, dieser ist der einzige, der noch aussteht — und er ist der,
+   bei dem ein Fund am meisten wert ist, weil eine falsch gewordene
+   Negativaussage einen Leser Arbeit kostet, die schon getan ist. *Wie:* die
+   Aussagen einsammeln (sie stehen meist als „Mathlib has no …", „kein
+   Treffer", „in keiner Form"), je eine Suche auf `master`, und das Datum der
+   Prüfung an die Aussage schreiben, damit der nächste Lauf sieht, was frisch
+   ist.
+2. **Die Leerheitsprobe von Meilenstein 9 zu Ende bringen**, auf `E = Bool`
+   oder einem endlichen Zustandsraum. *Worauf sie ruht:*
+   `lebesgueClock_isProgressive_jumpProcessE` aus diesem Lauf,
+   `isRegularizingClass_mpFamily` aus dem Vorlauf, und der Abschnitt
+   `TwoStateSolution`, der auf `Bool` bereits eine Lösung des
+   Martingalproblems auf dem kanonischen Pfadraum hat. *Warum jetzt:* von den
+   sieben Voraussetzungen der càdlàg-Aussage ist keine mehr über den Prozeß
+   offen, nur noch über den Zustandsraum, und auf einem endlichen Raum sind sie
+   sämtlich billig — `Φ₀` sind die Punktindikatoren, `CompactContainment` ist
+   trivial, `T2Space`, `RegularSpace`, `OpensMeasurableSpace` und
+   `FirstCountableTopology` liefert die diskrete Topologie. Der Verdacht der
+   Leerheit ist nach `Shift` und `hint` nicht akademisch, und dieser Meilenstein
+   ist das Tor zu den 351 Deklarationen von `SkorokhodSpace`, die bis heute
+   nichts verbraucht.
+3. **`isQuasiLeftContinuous_of_isMPSolutionFor`**, unverändert Vorschlag 2 der
+   beiden Vorläufe.
+4. **`UnifIntegrable.comp` nachbauen**, unverändert der Vorschlag der vier
+   Vorläufe, drei Zeilen.

@@ -151,6 +151,21 @@ Lebesgue measure. Fix `[Preorder ι]`.
 * `Clock.IsAtomless q`, defined as `q {u | t ≤ u ∧ u ≤ t} = 0` for every `t`,
   together with `Clock.interval_eq_of_isAtomless`: the two conventions give the
   same measure of every interval exactly when the clock is atomless.
+* `Clock.IsContinuousFor q c`, defined as
+  `Tendsto (fun s ↦ q.real (interval c (min s t) (max s t))) (𝓝 t) (𝓝 0)` for
+  every `t`: the compensating window between `s` and `t` loses its mass as `s`
+  runs into `t`. It is the hypothesis under which the compensator of `mpFamily`
+  is continuous in time, and so the input of Milestone 9 that the martingale
+  problem itself does not supply. Only a linear order and a topology on the
+  index enter, no order topology and no completeness.
+
+  **It does not imply `Clock.IsAtomless`.** Over a discrete index it is
+  vacuous — `𝓝 t` is `pure t` and the window at `s = t` is empty under both
+  conventions — so counting measure on `ℕ` has it and is atomic. Over a first
+  countable index an atomless clock should have it, by continuity from above of
+  a measure finite on down-sets; that implication is not part of this milestone,
+  because the clock the roadmap uses gets the property by computing the mass of
+  the window exactly (`lebesgueClock_isContinuousFor_optional`).
 * For `[AddMonoid ι]` with a compatible order, `Clock.IsShiftInvariant q`,
   defined as `q ((r + ·) '' B) = q B` for measurable `B` — the **image** of `B`
   under the shift, not its preimage. The preimage form `q ((r + ·) ⁻¹' B) = q B`
@@ -7936,6 +7951,17 @@ and 11 use them.
   `𝕂`-valued `C`
   with `f (X t) = Y t + C t` almost surely for every `t`, with `C` almost surely
   having one sided limits along `D`, and with `C` right continuous in `L¹`.
+  **Right continuity in `L¹` is stated in `ℝ≥0∞`**, as
+  `∫⁻ ω, ‖C s ω − C t ω‖ₑ ∂P → 0` along `𝓝[>] t`, and not through the Bochner
+  integral. The Bochner form has a junk value: `∫ ω, ‖C s ω − C t ω‖ ∂P` is `0`
+  whenever the integrand fails to be integrable, so it is satisfied by
+  compensators that are nowhere near right continuous. The witness is
+  `C s = g` for `s ≠ t` with `g` measurable and not integrable, `C t = 0`, and
+  `Y := f ∘ X − C`: the paths are constant in `s` off `t`, so the one sided
+  limits exist, every field holds, and the right limit of `C` at `t` is `g` and
+  not `C t`. The lower integral has no junk value and the witness dies at once.
+  It is also what Fatou is stated in, so the formulation and the proof of
+  `IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi` want the same object.
   `StronglyAdapted` (`Mathlib/Probability/Process/Adapted.lean:105`) and not
   `Adapted`: since 2026-01-13 the latter (`ibid.:60`) is measurability with
   respect to `𝓕 i` and asks for `[MeasurableSpace 𝕂]`, which `RCLike` does not
@@ -8018,12 +8044,200 @@ and 11 use them.
   `RCLike.imCLM`. Mathlib has `ContinuousLinearMap.comp_condExp_comm`
   (`MeasureTheory/Function/ConditionalExpectation/Basic.lean:359` in v4.33.1)
   and no process version. Proved on 2026-09-17.
+* `IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi`, the right limit of the
+  compensator along `D` is the compensator: if `C s ω` converges to `W ω` along
+  `𝓝[D ∩ Set.Ioi t] t` for almost every `ω`, then `W = C t` almost surely. In
+  the notation of the càdlàg theorem this is `C_{t+} = C t`, and it is the only
+  place where `l1_rightContinuous` of `IsCompensatorFor` is used.
+
+  The proof is Fatou and nothing else. Along a sequence `u` running into
+  `𝓝[D ∩ Set.Ioi t] t` the paths `C (u n) ω` go to `W ω` almost surely, so
+  `‖C (u n) ω − C t ω‖ₑ` goes to `‖W ω − C t ω‖ₑ` and in particular the `liminf`
+  is that; the lower integrals go to `0` by right continuity; `lintegral_liminf_le`
+  (`MeasureTheory/Integral/Lebesgue/Add.lean:231`) puts
+  `∫⁻ ‖W − C t‖ₑ ≤ 0`, and a vanishing lower integral has a vanishing integrand
+  almost everywhere. **No integrability of `C` enters, and `W` is not assumed
+  measurable** — that is the gain of the `ℝ≥0∞` formulation of the field.
+
+  `[(𝓝[D ∩ Set.Ioi t] t).NeBot]` is not a technicality: at a point isolated from
+  the right the hypothesis is vacuous and `W` is arbitrary. It holds where the
+  càdlàg theorem uses it, `D` being dense and `t` not greatest.
+  `[FirstCountableTopology ι]` is what makes the filter countably generated and
+  so produces `u`. Proved on 2026-09-17.
+* `MeasureTheory.UnifIntegrable.of_norm_le_ae`, uniform integrability passes to a
+  family dominated in norm: if `‖g i x‖ ≤ ‖f i x‖` almost everywhere for every
+  `i` and `f` is uniformly integrable, so is `g`. Nothing is assumed of `g` —
+  neither measurability nor integrability — and the two families may take their
+  values in different normed groups, which is what the use below needs.
+
+  In **v4.33.1**, the binding of this development, Mathlib has
+  `UnifIntegrable.add`, `.neg`, `.sub`, `.ae_eq`, `.indicator` and `.restrict`
+  (`MeasureTheory/Function/UniformIntegrable.lean:104` to `:155`) and **no
+  domination lemma**. On `upstream/master` it has one, `UnifIntegrable.ae_mono`
+  (`ibid.:142` at `92fc6042c1d`, 2026-09-16) — so this is not a gap to be
+  reported upstream, and the entry says so rather than claiming an absence that
+  has since been filled. Two differences remain and are the reason the lemma
+  stands here rather than being waited for: `ae_mono` asks
+  `∀ i, AEStronglyMeasurable (f i) μ` of the **dominated** family, which this one
+  does not, and it quantifies both families over the **same** normed group, while
+  the use below has a real dominating family and a `𝕂` valued dominated one.
+  `UnifIntegrable` itself is restated on master, so the two proofs are not the
+  same proof.
+
+  The proof is `eLpNorm_mono_ae` applied to the indicators, which are dominated
+  on the set by hypothesis and off it because both vanish. Proved on 2026-09-17.
+* `Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi`, the right limit of a
+  martingale along `D` has the martingale value for its conditional expectation:
+  if `Y` is a martingale, `t < T`, `𝓝[D ∩ Set.Ioi t] t` is not `⊥`, and `Y s ω`
+  converges to `V ω` along that filter for almost every `ω`, then
+  `P[V | 𝓕 t] =ᵐ[P] Y t`. In the notation of the càdlàg theorem this is
+  `P[Y_{t+} | 𝓕 t] = Y t`, and together with
+  `IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi` it is the whole modification
+  half of `f ∘ X = Y + C`. The statement mentions neither `X` nor the
+  regularizing class, so it stands before any modification is constructed.
+
+  **`t < T` is what carries the uniform integrability**, and is why a bound
+  appears in a statement about a limit at `t`: the family of a martingale is
+  uniformly integrable on an order ideal, `Y s =ᵐ[P] P[Y T | 𝓕 s]` holding for
+  `s ≤ T`. The order topology turns `t < T` into
+  `Set.Iio T ∈ 𝓝[D ∩ Set.Ioi t] t`, so a sequence running into the filter is
+  eventually below `T`, and shifting the sequence by that index is cheaper than
+  carrying an `Eventually` through Vitali.
+
+  **The real and imaginary parts are not split**, although
+  `Integrable.uniformIntegrable_condExp_filtration`
+  (`Probability/Process/Filtration.lean:214`) is real valued and the martingale
+  is `𝕂` valued. What carries uniform integrability across is domination:
+  `norm_condExp_le`
+  (`MeasureTheory/Function/ConditionalExpectation/CondJensen.lean:246`) gives
+  `‖P[Y T | 𝓕 s]‖ ≤ᵐ[P] P[‖Y T‖ | 𝓕 s]`, whose right hand side is the
+  conditional expectation family of one fixed integrable real function, and
+  `UnifIntegrable.of_norm_le_ae` above does the rest. A real–imaginary split
+  would need a recombination lemma that Mathlib does not have either, so
+  domination is strictly the cheaper route.
+
+  The remaining three steps are Mathlib's: `Lp.eLpNorm_le_of_ae_tendsto`
+  (`MeasureTheory/Function/LpSpace/Complete.lean:89`) puts the limit in `L¹`,
+  `tendsto_Lp_finite_of_tendsto_ae`
+  (`MeasureTheory/Function/UniformIntegrable.lean:518`) is Vitali, and
+  `eLpNorm_condExp_le_eLpNorm`
+  (`MeasureTheory/Function/ConditionalExpectation/Real.lean:288`) is the `L¹`
+  contraction that carries the convergence through the conditional expectation.
+  `[(𝓝[D ∩ Set.Ioi t] t).NeBot]` cannot be dropped, for the reason it cannot be
+  dropped in the compensator half. Proved on 2026-09-17.
+* `ae_eq_of_condExp_eq_of_condExp_mul_conj`, squaring out: a function is
+  determined almost surely by its conditional expectation together with that of
+  its squared modulus. If `f` is `m'` measurable, `f` and `g` are square
+  integrable, `P[g | m'] =ᵐ[P] f` and `P[g * conj g | m'] =ᵐ[P] f * conj f`, then
+  `g =ᵐ[P] f`. This is the step for which `hΦsq` sits in the hypotheses of the
+  càdlàg theorem: read at `f` and at `f * conj f`, the two conditional
+  expectations of the modification half give the two hypotheses, and the
+  conclusion is agreement with **one** null set and not one per member of the
+  class.
+
+  The proof is an expansion and carries no process notion. With `d := g − f`,
+  `∫ d conj d` is `∫ g conj g − ∫ g conj f − ∫ f conj g + ∫ f conj f`; the first
+  is `∫ f conj f` by the second hypothesis and `integral_condExp`, the second is
+  `∫ f conj f` by pulling the `m'` measurable factor `conj f` out
+  (`condExp_bilin_of_aestronglyMeasurable_right`,
+  `MeasureTheory/Function/ConditionalExpectation/PullOut.lean:215`) and the first
+  hypothesis, the third is the conjugate of the second and `∫ f conj f` is real.
+  So `∫ ‖g − f‖ ^ 2 = 0`, and a vanishing integral of a nonnegative integrand has
+  a vanishing integrand.
+
+  **`MemLp _ 2 P` is the right hypothesis and `Integrable` is not.** All four
+  products must be integrable, and the cross terms are integrable exactly because
+  both factors are square integrable (`MemLp.integrable_mul`,
+  `MeasureTheory/Function/L1Space/Integrable.lean:1085`); the hypothesis on
+  `g * conj g` constrains a conditional expectation, not the integrability of a
+  product. Proved on 2026-09-17.
+* `rightLimAlong D g t`, the right limit of `g` along `D` at `t`, and `g t` where
+  there is none. This is the candidate modification, written as a function of one
+  path and of nothing else.
+
+  **The filter is guarded and not only the existence of a limit.** At a point
+  isolated from the right along `D` the filter `𝓝[D ∩ Set.Ioi t] t` is `⊥` and
+  *every* point of `E` is a limit along it, so an unguarded choice would name one
+  — a value where there is no answer, the failure mode recorded for `sInf ∅`,
+  `x / 0` and the Bochner integral of a non-integrable function. Under the guard
+  `rightLimAlong D g t = g t` there (`rightLimAlong_of_not_neBot`), so the
+  modification property holds at such a point by definition. `tendsto_rightLimAlong`
+  says that where the filter is not `⊥` and a limit exists, this is one of them;
+  no separation on `E` is asked, so one and not the. Written on 2026-09-17.
+* `nhdsWithin_inter_Ioi_neBot`: for `D` dense and `r` not a greatest element,
+  `(𝓝[D ∩ Set.Ioi r] r).NeBot`. `Dense D` is spent here and, in the path
+  argument, nowhere else.
+
+  **`[DenselyOrdered ι]` cannot be dropped and is not a convenience.** At a point
+  `r` with an immediate successor the filter is `⊥` however dense `D` is, the
+  right limit at `r` is unconstrained, and the path through `r` is uncontrolled.
+  `ℝ≥0` and `ℝ` are densely ordered. Proved on 2026-09-17.
+* `isCadlagPath_rightLimAlong`, **the deterministic half of Doob's
+  regularization**: if `g` has both one sided limits along a dense `D` at every
+  point, then `rightLimAlong D g` is càdlàg. No measure, no filtration, no
+  process — a statement about one path, and the whole of the path side of
+  `exists_cadlag_modification_of_isRegularizingClass`. It splits into
+  `tendsto_rightLimAlong_nhdsWithin_Ioi` and
+  `exists_tendsto_rightLimAlong_nhdsWithin_Iio`.
+
+  **`[RegularSpace E]` is what the right continuity costs**, and it is read at
+  one step. The values of `rightLimAlong D g` off `D` are limits, and a limit is
+  not pinned down by "eventually in a neighbourhood" unless the neighbourhood is
+  closed: the proof takes a closed neighbourhood `V` of `rightLimAlong D g t`
+  (`closed_nhds_basis`, `Topology/Separation/Regular.lean:174`) and an open
+  `U ∋ t` with `g '' (U ∩ D ∩ Set.Ioi t) ⊆ V`, observes that for
+  `r ∈ U ∩ Set.Ioi t` the filter `𝓝[D ∩ Set.Ioi r] r` still runs inside
+  `U ∩ D ∩ Set.Ioi t`, and closes with `IsClosed.mem_of_tendsto`. Without
+  regularity the same argument gives only membership in the closure of `V`, which
+  is no information. **No separation on `E` is used here**: `rightLimAlong D g t`
+  is *a* limit and the nearby values approach that one; `[T2Space E]` enters the
+  probabilistic statements at a different step. The left limits are the same
+  argument with `U ∩ Set.Iio t` in place of `U`, and there no element has to be
+  interpolated because `r < t` already makes `r` non-greatest. Proved on
+  2026-09-17.
+* `ae_forall_exists_tendsto_of_isRegularizingClass`, the `E`-valued
+  regularization **at every point of the index at once**:
+  `∀ᵐ ω, ∀ t`, the path `s ↦ X s ω` has both one sided limits along `D` at `t`.
+  `ae_exists_tendsto_comp_of_isRegularizingClass` gives this for one scalar test
+  function and `exists_tendsto_of_forall_tendsto_comp` makes an `E`-valued limit
+  out of a family of scalar ones; what this adds is that the two are joined under
+  **one** null set.
+
+  Countability is spent twice, in two places that are not interchangeable: the
+  countability of `Φ₀` collects the exceptional sets of its members, while
+  `[(atTop : Filter ι).IsCountablyGenerated]` supplies the cofinal sequence `u`
+  along which compact containment is read, and the countability of `D` is what
+  makes the compact containment event measurable. One compact set per `n` and per
+  `ω`, not one per `t`.
+
+  **The filter is allowed to be `⊥` and the statement stays true**, which removes
+  every hypothesis about maxima and about isolated points. Where the filter is
+  `⊥` the convergence holds for any value, and `X t ω` is named as the witness so
+  that no `[Nonempty E]` is needed. Where it is not, the filter itself produces a
+  point `b ∈ D` above `t` and `u` an `n` with `b ≤ u n`; the filter is eventually
+  below `b`, hence inside `Set.Iic (u n) ∩ D`, which is where the compact set
+  lives. Proved on 2026-09-17.
+* `ae_isCadlagPath_rightLimAlong_of_isRegularizingClass`, **the càdlàg half of
+  the modification theorem**: under the hypotheses of the theorem below, almost
+  every `rightLimAlong D (fun s ↦ X s ω)` is a càdlàg path. The candidate
+  modification is thereby named and its path property proved; what the theorem
+  below still owes is the modification property `X' t = X t` almost surely for
+  each `t`, which is a conditional expectation argument and not a path argument.
+  Each hypothesis is read at one step: `[RegularSpace E]` at the right
+  continuity, `[T2Space E]` at `exists_tendsto_of_forall_tendsto_comp`,
+  `[DenselyOrdered ι]` and the density of `D` at `nhdsWithin_inter_Ioi_neBot`,
+  the countability of `D` and the measurability of `X` at
+  `CompactContainment.ae_exists_isCompact`, and
+  `[(atTop : Filter ι).IsCountablyGenerated]` at the cofinal sequence. Proved on
+  2026-09-17.
 * `exists_cadlag_modification_of_isRegularizingClass`: if `P` is a probability
   measure solving the martingale problem for `𝓧`, `Φ` is a regularizing class
-  for `X` along `𝓧` containing a countable subset that separates points, `Φ` is
-  separating in the sense of the roadmap **WeakConvergence**, and `X` satisfies
-  compact containment, then `X` has a modification with paths in the càdlàg
-  space.
+  for `X` along `𝓧` containing a countable subset `Φ₀` of bounded continuous
+  functions that separates the points of `E` and whose squares `f * conj f` lie
+  in `Φ`, and `X` satisfies compact containment, then `X` has a modification
+  with paths in the càdlàg space. The modification is
+  `fun t ω ↦ rightLimAlong D (fun s ↦ X s ω) t`, the right limit of the path
+  along `D`, which is the object the two halves of the proof are about.
 
   **`IsMPSolution 𝓧 𝓕 P` belongs to the statement**, and the theorem is false
   without it; it was missing until 2026-09-16. `IsRegularizingClass` constrains
@@ -8044,46 +8258,144 @@ and 11 use them.
   along `D`. The compensator carries its own by a field of `IsCompensatorFor`,
   and `f ∘ X = Y + C` inherits them.
 
-  **Two hypotheses are still missing, and they were found on 2026-09-17 by
-  writing the proof of the modification half.** The statement above is the one
-  that stands in `Suggested.lean`, and it is not yet the one that is provable.
+  **Four hypotheses carry the modification half**, and each is read at exactly
+  one step of it. They were written out on 2026-09-17, fifth run of that day,
+  when the half was proved.
 
-  * **`Φ₀` has to be continuous.** `hΦcount` asks only that the countable
-    subclass separate the points of `E`. The one route from the real limits to
-    an `E`-valued limit is `ae_exists_tendsto_of_forall_ae_exists_tendsto`, and
-    it reads `∀ f ∈ Φ₀, Continuous f`: a compact set catches a cluster point and
-    a **continuous** `f` carries it. Neither `IsSeparating Φ` nor
-    `IsRegularizingClass` gives continuity of a single member, so the hypothesis
-    belongs in `hΦcount` and nowhere else.
-  * **The modification half needs more than point separation.** The chain is:
-    for `f ∈ Φ` and `X'` the right limit along `D`,
-    `f (X' t) = Y_{t+} + C_{t+}`; then `C_{t+} = C t` almost surely, and this is
-    the **only** place where `l1_rightContinuous` of `IsCompensatorFor` is used,
-    so the field does sit where it belongs; then `P[Y_{t+} | 𝓕 t] = Y t`, which
-    is the uniform integrability of `{Y s}` between `t` and an upper bound.
-    Together `P[fun ω ↦ f (X' t ω) | 𝓕 t] =ᵐ[P] fun ω ↦ f (X t ω)`. **From here
-    point separation does not reach `X' t = X t` almost surely**, because the
-    null set of that identity depends on `f`, and a countable family that
-    separates points does not determine a conditional law. Two repairs:
-    - `Φ` closed under `f ↦ f * conj f`. Then expanding the square gives
-      `P[fun ω ↦ ‖f (X' t ω) − f (X t ω)‖ ^ 2 | 𝓕 t] =ᵐ[P] 0`, so
-      `f (X' t) = f (X t)` almost surely for each of the countably many
-      `f ∈ Φ₀`, and point separation finishes. No condition on the filtration,
-      no regular conditional distribution, and the whole step is a computation
-      with `condExp`.
-    - The filtration right continuous up to null sets. Then `Y_{t+}`, which is
-      measurable for `𝓕_{t+}`, is measurable for `𝓕 t`, and
-      `Y_{t+} = P[Y_{t+} | 𝓕 t] = Y t`. These are the usual conditions, and
-      Mathlib has neither them nor the augmentation (checked 2026-09-12); that
-      is a milestone of its own.
+  * **`hcont`, the continuity of the members of `Φ₀`.** Point separation alone
+    does not reach an `E`-valued limit: the one route from the real limits to it
+    is `exists_tendsto_of_forall_tendsto_comp`, and it reads
+    `∀ f ∈ Φ₀, Continuous f` — a compact set catches a cluster point and a
+    **continuous** `f` carries it. Neither `IsSeparating Φ` nor
+    `IsRegularizingClass` gives continuity of a single member.
+  * **`hsq`, closure under `f ↦ f * conj f`**, carries the modification
+    property, and point separation by itself does not. The chain is: for `f ∈ Φ`
+    continuous and bounded and `X'` the right limit along `D`,
+    `f (X' t) = Y_{t+} + C_{t+}`; then `C_{t+} = C t` almost surely, which is
+    `IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi` above; then
+    `P[Y_{t+} | 𝓕 t] = Y t`, which is
+    `Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi`; and
+    `P[C_{t+} | 𝓕 t] = C t` because `C t` is `𝓕 t`-strongly measurable.
+    Together `P[fun ω ↦ f (X' t ω) | 𝓕 t] =ᵐ[P] fun ω ↦ f (X t ω)`. Reading that
+    at `f` and at `f * conj f` and expanding the square is
+    `ae_eq_of_condExp_eq_of_condExp_mul_conj`, so `f (X' t) = f (X t)` almost
+    surely for each of the countably many `f ∈ Φ₀`, and point separation
+    finishes. Without `hsq` the null set of that identity depends on `f`, and a
+    countable family that separates points does not determine a conditional law.
+    The hypothesis is asked of the members of `Φ₀` only, and the square lands in
+    `Φ` and not in `Φ₀`: the square is fed to the compensated decomposition and
+    never to the point separation.
 
-    The first is the cheaper one and is the one this roadmap should carry.
-  * **The modification half reads `D` through sequences.** `C_{t+} = C t` comes
-    from `L¹` convergence along `s ↓ t` in `D`, and `L¹` convergence yields an
-    almost sure **subsequence**. Over a general linearly ordered `ι` the filter
-    `𝓝[D ∩ Set.Ioi t] t` need not be countably generated; either `ι` carries
-    `[FirstCountableTopology ι]` or the step is done another way. `ℝ≥0` and `ℝ`
-    have it.
+    The alternative repair is a filtration right continuous up to null sets:
+    then `Y_{t+}`, measurable for `𝓕_{t+}`, is measurable for `𝓕 t`, and
+    `Y_{t+} = P[Y_{t+} | 𝓕 t] = Y t`. Those are the usual conditions, and
+    Mathlib has neither them nor the augmentation (checked 2026-09-12); that is
+    a milestone of its own. `hsq` is the cheaper of the two, asks nothing of
+    the filtration, and is the one this roadmap carries.
+  * **`hbdd`, a bound on each member of `Φ₀`.**
+    `ae_eq_of_condExp_eq_of_condExp_mul_conj` asks `MemLp _ 2 P` of both sides,
+    and `IsRegularizingClass` does not give it: `Y t` is integrable by
+    definition, but `C t` is only `StronglyAdapted`, so `f ∘ X t = Y t + C t` is
+    not even known to be integrable. A bound supplies everything at once —
+    `f ∘ X t` and `f ∘ X' t` become bounded, hence in every `Lᵖ` under a
+    probability measure, and `C t` becomes integrable as a difference. A class
+    of bounded continuous functions satisfies it anyway, and the square inherits
+    it, `‖f x * conj (f x)‖ = ‖f x‖ ^ 2 ≤ M ^ 2`.
+  * **`[FirstCountableTopology ι]`**, because `C_{t+} = C t` passes through a
+    sequence running into `𝓝[D ∩ Set.Ioi t] t`, hence through a countably
+    generated filter. It is a different hypothesis from
+    `[(atTop : Filter ι).IsCountablyGenerated]`, which
+    `ae_exists_tendsto_comp_of_isRegularizingClass` carries: cofinality is not
+    first countability. `ℝ≥0` and `ℝ` have both.
+
+  **`IsSeparating Φ` is not among them and is not a hypothesis of this
+  statement.** It stood here from the beginning and was dropped on 2026-09-17,
+  fifth run of that day, when the proof was written and no step read it. What
+  the proof separates with is the **pointwise** separation of `Φ₀`, at the last
+  line: two points of `E` on which every member of `Φ₀` agrees are equal.
+  Separation of **measures**, which is what `IsSeparating` says, neither implies
+  nor is implied by pointwise separation; it is what the uniqueness statements
+  of the roadmap **WeakConvergence** need, and it belongs there. Carrying it
+  here would have made the theorem inapplicable to a class that determines paths
+  but not laws.
+
+  That the theorem is **false** without `hcont`, `hsq` or `hbdd` is not claimed;
+  no witness is known for any of the three.
+* `norm_compensator_sub_le_of_isProgressive`: for `g` measurable with
+  `‖g x‖ ≤ b` and `X` progressive for the clock, and `s ≤ t`,
+  ```
+  ‖∫ u in interval c ⊥ t, g (X u ω) ∂q - ∫ u in interval c ⊥ s, g (X u ω) ∂q‖
+    ≤ b * q.real (interval c s t) .
+  ```
+  It is `mpFamily_sub_of_isProgressive` of Milestone 2 read at `f = 0`, so the
+  state term drops out and no measurability of `f` is asked. The whole block
+  below is this estimate read three times.
+* `isCompensatorFor_mpFamily`: under the same hypotheses on `g` together with
+  `Clock.IsContinuousFor q c` and `∀ t, Measurable[𝓕 t] (X t)`, the pair
+  ```
+  Y t ω = f (X t ω) - ∫ u in interval c ⊥ t, g (X u ω) ∂q ,
+  C t ω = ∫ u in interval c ⊥ t, g (X u ω) ∂q
+  ```
+  satisfies `IsCompensatorFor X 𝓕 P D f Y C` for every `D` and every finite `P`.
+  The decomposition field is `sub_add_cancel` and holds at every sample point;
+  the compensator is **continuous** in `t` at every sample point, and
+  `exists_limits` is that continuity restricted along `nhdsWithin_le_nhds`, so
+  the countability of `D` plays no part; `l1_rightContinuous` is the same
+  estimate under the lower integral, where the bound is uniform in `ω` and the
+  measure is finite.
+
+  Three hypotheses the abstract statement carries and this one does not: the
+  measurability of `f`, since `IsCompensatorFor` constrains `C` and `C` does not
+  see `f`; `[OrderTopology ι]`, the estimate reading the index only through
+  `𝓝 t`; and any countability or density of `D`, which is quantified over.
+* `isRegularizingClass_mpFamily`: if every `p ∈ A` has `p.2` measurable and
+  bounded — the bound may depend on `p` — and `X` is progressive and adapted for
+  a clock with `Clock.IsContinuousFor`, then
+  `IsRegularizingClass (Prod.fst '' A) X (mpFamily A Q c X) 𝓕 P D`. The member of
+  `𝓧` exhibited is the test process of `mpFamily` itself, so that the càdlàg
+  theorem and the solution speak about the same processes, and the first
+  component of a pair is unconstrained.
+
+  This is the hypothesis `hΦ` of
+  `exists_cadlag_modification_of_isRegularizingClass`, produced rather than
+  assumed, and with `h𝓧` it is the pair that ties the càdlàg theorem to the
+  martingale problem. What remains to be supplied at an instance is about the
+  state space and not about the process: a countable, bounded, continuous,
+  point separating `Φ₀ ⊆ Prod.fst '' A` closed under `f ↦ f * conj f` into
+  `Prod.fst '' A`, and compact containment.
+* `lebesgueClock_isContinuousFor_optional`: the Lebesgue clock on `ℝ≥0` has
+  `Clock.IsContinuousFor` under the optional convention, the window `(s ⊓ t, s ⊔ t]`
+  having mass `|s - t|` exactly by `lebesgueClock_apply_Ioc`. The clock every
+  jump process of Milestone 4 runs on is therefore an admissible one here.
+* `measurable_of_measurable_indicator_comp`: over a **countable** `E` with
+  measurable points, a map `F : α → E` is measurable as soon as every real
+  functional `1_{x} ∘ F` is, the σ-algebra on `α` being carried explicitly
+  because the one this is applied to — a product with a value of a filtration —
+  is not an instance.
+
+  It is the step that separates the `E` valued path from its real functionals.
+  The dyadic argument of `measurable_uncurry_min_of_rightContinuous` reaches
+  every real functional of a right continuous process and not the process
+  itself, because a limit of `E` valued measurable maps is measurable only when
+  the diagonal of `E` is; a countable `E` with measurable points has one, and
+  here it is not used through a limit at all, the limit having been taken in
+  `ℝ`.
+* `lebesgueClock_isProgressive_jumpProcessE`: for `E` countable with measurable
+  points and `lam` measurable,
+  ```
+  lebesgueClock.IsProgressive (fun t ω ↦ jumpProcessE lam t ω) (jumpFiltrationE lam hlam) .
+  ```
+  The extension the definition asks for is the path stopped at `t`, which is the
+  shape `measurable_uncurry_jumpProcessE` produces; below `t` the truncation does
+  nothing. No topology on `E` is needed.
+
+  With it the jump construction of Milestone 4 satisfies all three hypotheses of
+  `isRegularizingClass_mpFamily`, and the emptiness probe of this milestone has
+  a state process. What a probe still has to supply is about the state space
+  alone: a countable, bounded, continuous, point separating `Φ₀` closed under
+  `f ↦ f * conj f`, and compact containment — on a **finite** state space with
+  the discrete topology the indicators of the points are such a `Φ₀`, being
+  idempotent, and compact containment is trivial.
 * The classical statement as a one line instance: for `A ⊆ Cb(E) × Bdd(E)` whose
   domain is separating and contains a countable subset separating points, every
   solution of the martingale problem for `A` satisfying compact containment has
@@ -8233,10 +8545,14 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   `⨆ n, (hτ n).measurableSpace`. So
   `f ∘ L = P[f (X (min τ' t)) | ⨆ n, (hτ n).measurableSpace]` for every
   `f ∈ Φ`, and `IsSeparating.ae_eq_of_forall_condExp_eq` of **WeakConvergence**
-  Milestone 1 gives `L =ᵐ[P] X (min τ' t)`. That last step is the one that also
-  closes `exists_cadlag_modification_of_isRegularizingClass`, and being
-  separating is the only hypothesis on `Φ` the two theorems share: no countable
-  subset separating the points of `E` is used here, and no compact containment.
+  Milestone 1 gives `L =ᵐ[P] X (min τ' t)`. **This is the one statement of the
+  milestone that reads `IsSeparating Φ`**, and it separates measures rather than
+  points: no countable subset separating the points of `E` is used here, and no
+  compact containment.
+  `exists_cadlag_modification_of_isRegularizingClass` takes the other road at
+  the same corner — squares and pointwise separation — and carries no
+  `IsSeparating` hypothesis at all, which is why the two share no hypothesis on
+  `Φ` beyond `IsRegularizingClass`.
 * `isQuasiLeftContinuous_of_isMPSolutionFor`, the classical instance
   (Ethier–Kurtz, Theorem 4.3.12). For `A ⊆ Cb(E) × Bdd(E)` with separating
   domain and a solution `X` with càdlàg paths, `IsQuasiLeftContinuous X 𝓕 P`

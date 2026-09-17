@@ -675,10 +675,11 @@ vier sind kleine, in sich abgeschlossene Beiträge. Sie gehören thematisch zu
   Die Aussage über den **Prozeß**, `Martingale f ℱ μ → Martingale (T ∘ f) ℱ μ`,
   fehlt: in `Mathlib/Probability/Martingale/` und `Mathlib/Probability/Process/`
   hat die Suche nach `Martingale` neben `ContinuousLinearMap` **null Treffer**
-  (am 2026-09-17 gegen v4.33.1 geprüft; dieser Lauf hat `upstream/master` nicht
-  geholt, die Negativaussage steht daher gegen den Release und nicht gegen
-  master). `Martingale.smul` und `Martingale.add` stehen da, die lineare
-  Abbildung nicht.
+  (am 2026-09-17 gegen v4.33.1 geprüft und im dritten Lauf desselben Tages gegen
+  `upstream/master`, `92fc6042c1d` vom 2026-09-16 — die Zeichenkette
+  `ContinuousLinearMap` kommt in keiner der beiden Verzeichnisse dort vor, und
+  `RCLike` in `Mathlib/Probability/Martingale/` ebensowenig). `Martingale.smul`
+  und `Martingale.add` stehen da, die lineare Abbildung nicht.
 
   Der Beweis ist vier Zeilen und steht bei uns als
   `MeasureTheory.Martingale.comp_continuousLinearMap`. Was ohne ihn fehlt, ist
@@ -744,13 +745,22 @@ elaboriert gegen v4.33.1 nicht, weil `ProbabilityMeasure.map` dort noch ein
 erst. Nachgeprüft, absichtlich, bleibt so.
 
 Die ganze Bewegung steckt seither in `MartingaleProblems`: **1 036 Zeilen am
-8. September, 29 092 heute.** Die sechs verbliebenen `sorry` stehen in
+8. September, 29 092 heute.** Die **fünf** verbliebenen `sorry` stehen in
 `isMPSolution_iff_forall_fdd_continuous` (die stetige Fassung des
 fdd-Kriteriums — eine Entscheidung über die Anordnung der Dateien, keine offene
-Mathematik), `exists_cadlag_modification_of_isRegularizingClass` (wartet auf
-die reellwertige Regularisierung, Meilenstein 9), den beiden
-Quasi-Linksstetigkeiten und den beiden Konvergenzsätzen `mpSolution_of_tendsto`
-und `isMPSolution_of_forall_condExp_eq_of_dense`.
+Mathematik), den beiden Quasi-Linksstetigkeiten und den beiden Konvergenzsätzen
+`mpSolution_of_tendsto` und `isMPSolution_of_forall_condExp_eq_of_dense`.
+`exists_cadlag_modification_of_isRegularizingClass` steht seit dem 2026-09-17,
+fünftem Lauf des Tages, **bewiesen** — Doobs Regularisierung in der `E`-wertigen
+Fassung, und damit der erste der drei `sorry` von Meilenstein 9. Im sechsten
+Lauf desselben Tages ist die Voraussetzung `hΦ` dieser Aussage aus dem
+Martingalproblem selbst erzeugt worden statt angenommen
+(`isRegularizingClass_mpFamily`, über `isCompensatorFor_mpFamily` und die neue
+Uhrbedingung `Clock.IsContinuousFor`); was an einer Instanz noch einzulösen ist,
+betrifft den Zustandsraum und nicht mehr den Prozeß. Diese fünf Deklarationen
+sind bis Zeile 8386 fehlerfrei übersetzt und liegen sämtlich davor; ein
+vollständiger Durchlauf mit `#print axioms` steht aus und ist der erste
+Handgriff des nächsten Laufs.
 
 Inhaltlich geschlossen sind seit dem 8. September: **Meilenstein 5**
 (`restart`, `restart_canonical` — dabei zeigte sich, daß der Aussage, wie sie
@@ -763,12 +773,11 @@ hat begonnen: erst der Schritt, der aus reellen Grenzwerten einen `E`-wertigen
 macht, dann im Lauf `20260915T210301Z` die **deterministische Hälfte von Doobs
 Regularisierung** — Oszillation längs eines einseitigen Filters *ist*
 Aufkreuzung eines rationalen Intervalls, und dieser Teil kommt ohne
-Wahrscheinlichkeit aus. Was zwischen
-`exists_cadlag_modification_of_isRegularizingClass` und seinem Beweis noch
-steht, sind nach diesem Lauf zwei Aussagen: `Submartingale.comp_monotone` und
-`Submartingale.ae_exists_not_hasUpcrossings`.
+Wahrscheinlichkeit aus. Am 2026-09-17 ist der Meilenstein dann in fünf Läufen
+bis zu `exists_cadlag_modification_of_isRegularizingClass` durchgezogen worden;
+offen bleiben dort die beiden Quasi-Linksstetigkeiten.
 
-Kein `sorry` steht in einer *Aussage*, nur in Beweisen: alle sechs sitzen in
+Kein `sorry` steht in einer *Aussage*, nur in Beweisen: alle fünf sitzen in
 `theorem`en.
 
 Manuskript: **134 Seiten**, `check.py` clean — der Runner verwirft `.tex` und

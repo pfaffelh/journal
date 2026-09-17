@@ -5182,7 +5182,7 @@ theorem SkorokhodSpace.intWith_le_of_ae_distWith_le [SecondCountableTopology E]
   have hsubb : Set.Ioc (0 : ℝ) M ∩ B ⊆ Set.Ioi (0 : ℝ) := fun u hu => hu.1.1
   have hsubM : Set.Ioi M ⊆ Set.Ioi (0 : ℝ) := Set.Ioi_subset_Ioi hM
   have hdecomp : (Set.Ioc (0 : ℝ) M \ B) ∪ (Set.Ioc (0 : ℝ) M ∩ B) = Set.Ioc (0 : ℝ) M :=
-    Set.diff_union_inter _ _
+    Set.sdiff_union_inter _ _
   have hdisj1 : Disjoint (Set.Ioc (0 : ℝ) M \ B) (Set.Ioc (0 : ℝ) M ∩ B) :=
     Set.disjoint_left.2 fun _ hx hx' => hx.2 hx'.2
   have hdisj2 : Disjoint ((Set.Ioc (0 : ℝ) M \ B) ∪ (Set.Ioc (0 : ℝ) M ∩ B)) (Set.Ioi M) := by
