@@ -45,9 +45,18 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-17 (twenty-second run of that day), over the **whole** file and without an error, and
-since that run with `autoImplicit=false` and `relaxedAutoImplicit=false`, as Mathlib itself
-builds.  Every declaration elaborates, and **no declaration carries `sorry`**.
+2026-09-17 (twenty-third run of that day), over the **whole** file and without an error, and
+since the twenty-second run with `autoImplicit=false` and `relaxedAutoImplicit=false`, as Mathlib
+itself builds.  Every declaration elaborates, and **no declaration carries `sorry`**.
+
+The twenty-third run of 2026-09-17 supplied the acceptance example of Milestone 10, the rescaled
+Markov chain of the manuscript's `ex:invariance`, as far as it is a theorem rather than an
+analytic hypothesis: `martingale_chainCompensated`, hypothesis (c) of `mpSolution_of_tendsto` as
+`tendsto_integral_mul_rescaledChain`, and the embedding of the grid into the **raw** path space
+`ℝ≥0 → E` as `gridPath` and `measurable_comp_gridPath`, which is what makes
+`tendsto_integral_mul_rescaledChain_natural` an instance over a path space with no topology at
+all.  Its finding is that (c) is **not** the exact martingale property alone; see the section
+header above `integral_mul_eq_of_condExp_eq`.
 
 The twenty-first run of 2026-09-17 finished Milestone 10.  Its two corollaries:
 `mpSolution_of_tendsto_of_pContinuous`, which replaces the convergence in
@@ -33753,3 +33762,390 @@ theorem isQuasiLeftContinuous_mm1 {β δ : ℝ} (hβ : 0 < β) (hδ : 0 ≤ δ)
     _ (Measure.dirac 0)
 
 end CadlagWitness
+
+/-!
+## The rescaled Markov chain: hypothesis (c) of `mpSolution_of_tendsto`
+
+The acceptance example of Milestone 10, the manuscript's `ex:invariance`.  A Markov chain
+`Ξ n` with one step kernel `P n` is read along the embedded grid, `X n t = Ξ n ⌊n t⌋`, and the
+approximating test process is the Doob decomposition read along that grid,
+
+    Y n t = f (Ξ n ⌊n t⌋) - ∑ j < ⌊n t⌋, (P n f - f) (Ξ n j) .
+
+What this section supplies is hypothesis (c) of `mpSolution_of_tendsto`: the tested increments
+vanish in the limit.
+
+**Hypothesis (c) is *not* the exact martingale property alone, and the difference is the whole
+point of the example.**  The canonical version `Y₀` that (c) speaks of is one function on one path
+space `F`, the same for every `n`; the exact martingale `Y n` is a different function for every
+`n`, because `P n` and the grid are.  So (c) splits into two summands, and only the first of them
+is the martingale identity:
+
+* `𝔼[(Y n t - Y n s) · Z (X n)] = 0`, which is `integral_sub_mul_eq_zero_of_condExp_eq` on the
+  martingale of `martingale_chainCompensated`; and
+* `𝔼[‖(Y₀ t - Y₀ s) (X n) - (Y n t - Y n s)‖] → 0`, which is the manuscript's `(K3)`, the
+  convergence `n (P n f - f) → A f` of the rescaled generators.
+
+The second is carried as a hypothesis here and is where the example spends its analysis; the
+first is free.  `tendsto_integral_mul_of_martingale` is the statement in which the two meet, and
+`tendsto_integral_mul_rescaledChain` is it on the chain.
+-/
+
+section MartingaleOrthogonality
+
+variable {μ : Measure Ω} {m' : MeasurableSpace Ω}
+
+/-- **A bounded variable of the past may be pulled through a conditional expectation under the
+integral.**  For `f` conditioned on `m'` equal to `g` and a bounded `m'`-measurable real `W`, the
+two integrals `∫ W · f` and `∫ W · g` agree.
+
+The hypotheses are the weakest under which the pull-out reads: no measurability of `f` or `g`
+beyond their integrability, and on `W` a bound and `m'`-measurability, which is what
+`condExp_smul_of_aestronglyMeasurable_left` (`ConditionalExpectation/PullOut.lean`) asks for.  In
+particular `g` is *not* required to be `m'`-measurable -- it is only required to be *a* version of
+`μ[f | m']`, which is what a martingale hands over. -/
+theorem integral_mul_eq_of_condExp_eq [IsFiniteMeasure μ] (hm : m' ≤ m)
+    {f g : Ω → 𝕂} {W : Ω → ℝ} {b : ℝ}
+    (hf : Integrable f μ) (hg : Integrable g μ) (hcond : μ[f | m'] =ᵐ[μ] g)
+    (hW : StronglyMeasurable[m'] W) (hb : ∀ ω, ‖W ω‖ ≤ b) :
+    ∫ ω, (W ω : 𝕂) * f ω ∂μ = ∫ ω, (W ω : 𝕂) * g ω ∂μ := by
+  have hWm : AEStronglyMeasurable[m] W μ := (hW.mono hm).aestronglyMeasurable
+  have hWK : AEStronglyMeasurable[m] (fun ω ↦ (W ω : 𝕂)) μ :=
+    RCLike.continuous_ofReal.comp_aestronglyMeasurable hWm
+  have hbK : ∀ᵐ ω ∂μ, ‖(W ω : 𝕂)‖ ≤ b := by
+    filter_upwards with ω
+    rw [RCLike.norm_ofReal]
+    simpa [Real.norm_eq_abs] using hb ω
+  have hWf : Integrable (fun ω ↦ (W ω : 𝕂) * f ω) μ := hf.bdd_mul hWK hbK
+  have hsmul : (fun ω ↦ (W ω : 𝕂) * f ω) = W • f := by
+    funext ω; simp [Pi.smul_apply', RCLike.real_smul_eq_coe_mul]
+  have hpull : μ[W • f | m'] =ᵐ[μ] W • μ[f | m'] :=
+    condExp_smul_of_aestronglyMeasurable_left hW.aestronglyMeasurable (hsmul ▸ hWf) hf
+  calc ∫ ω, (W ω : 𝕂) * f ω ∂μ
+      = ∫ ω, (μ[W • f | m']) ω ∂μ := by rw [integral_condExp hm, hsmul]
+    _ = ∫ ω, (W • μ[f | m']) ω ∂μ := integral_congr_ae hpull
+    _ = ∫ ω, (W ω : 𝕂) * g ω ∂μ := by
+        refine integral_congr_ae ?_
+        filter_upwards [hcond] with ω hω
+        simp [Pi.smul_apply', RCLike.real_smul_eq_coe_mul, hω]
+
+/-- **A martingale increment is orthogonal to every bounded variable of its past.**  This is the
+engine of hypothesis (c) of `mpSolution_of_tendsto`, and it is the previous statement written as
+the vanishing of one integral.
+
+It is stated on the conditional expectation identity and not on `Martingale`, because that is what
+is used: the index set, the order and the adaptedness of the family play no part, only the single
+identity `μ[f | m'] =ᵐ g` at the pair of times in question. -/
+theorem integral_sub_mul_eq_zero_of_condExp_eq [IsFiniteMeasure μ] (hm : m' ≤ m)
+    {f g : Ω → 𝕂} {W : Ω → ℝ} {b : ℝ}
+    (hf : Integrable f μ) (hg : Integrable g μ) (hcond : μ[f | m'] =ᵐ[μ] g)
+    (hW : StronglyMeasurable[m'] W) (hb : ∀ ω, ‖W ω‖ ≤ b) :
+    ∫ ω, (f ω - g ω) * (W ω : 𝕂) ∂μ = 0 := by
+  have hWm : AEStronglyMeasurable[m] W μ := (hW.mono hm).aestronglyMeasurable
+  have hWK : AEStronglyMeasurable[m] (fun ω ↦ (W ω : 𝕂)) μ :=
+    RCLike.continuous_ofReal.comp_aestronglyMeasurable hWm
+  have hbK : ∀ᵐ ω ∂μ, ‖(W ω : 𝕂)‖ ≤ b := by
+    filter_upwards with ω
+    rw [RCLike.norm_ofReal]
+    simpa [Real.norm_eq_abs] using hb ω
+  have hWf : Integrable (fun ω ↦ (W ω : 𝕂) * f ω) μ := hf.bdd_mul hWK hbK
+  have hWg : Integrable (fun ω ↦ (W ω : 𝕂) * g ω) μ := hg.bdd_mul hWK hbK
+  have key := integral_mul_eq_of_condExp_eq (𝕂 := 𝕂) hm hf hg hcond hW hb
+  have hexp : ∫ ω, (f ω - g ω) * (W ω : 𝕂) ∂μ
+      = ∫ ω, (W ω : 𝕂) * f ω ∂μ - ∫ ω, (W ω : 𝕂) * g ω ∂μ := by
+    rw [← integral_sub hWf hWg]
+    exact integral_congr_ae (Eventually.of_forall fun ω ↦ by ring)
+  rw [hexp, key, sub_self]
+
+end MartingaleOrthogonality
+
+section ChainDoob
+
+variable {E : Type*} {μ : Measure Ω} {𝓖 : Filtration ℕ m}
+
+/-- **The Doob decomposition of `f ∘ Ξ` read along a chain** whose one step kernel acts on the
+test function as `Pf`:  `f (Ξ n) - ∑ j < n, (Pf - f) (Ξ j)`.
+
+It is written as a formula and not as `MeasureTheory.martingalePart`, which is the same object
+built out of `μ[· | 𝓖 j]` and therefore determined only almost everywhere.  Adaptedness and
+`IsStoppingTime` are not almost sure notions, and the martingale that hypothesis (c) reads has to
+be one function and not a class; so the compensator is the *kernel's* increment `Pf - f`, and the
+Markov property enters as a hypothesis rather than as a definition. -/
+noncomputable def chainCompensated (Pf f : E → 𝕂) (Ξ : ℕ → Ω → E) (n : ℕ) (ω : Ω) : 𝕂 :=
+  f (Ξ n ω) - ∑ j ∈ Finset.range n, (Pf (Ξ j ω) - f (Ξ j ω))
+
+/-- **The compensated chain is a martingale.**  This is the manuscript's observation that the
+approximating test process of `ex:invariance` "is a genuine `(𝓕^{X n})`-martingale", and it is
+Mathlib's `martingale_nat` on the one step identity.
+
+**The Markov property is asked for in the form in which it is used** -- the conditional
+expectation identity `μ[f (Ξ (n+1)) | 𝓖 n] =ᵐ Pf (Ξ n)` -- and not through a kernel.  That is the
+weaker hypothesis and the honest one: no `ProbabilityTheory.Kernel`, no transition kernel
+composition, and no measurable structure on `E` at all.  A chain given by a kernel supplies it;
+so does a chain that is Markov only along the test function `f`, which is all this proof reads.
+
+**Measurability is asked of the compositions and not of the factors**, again the weaker
+hypothesis: `f ∘ Ξ n` and `Pf ∘ Ξ n` are `𝓖 n`-measurable.  Measurability of `f`, of `Pf` and
+adaptedness of `Ξ` give this and are not given by it. -/
+theorem martingale_chainCompensated [IsFiniteMeasure μ]
+    {Pf f : E → 𝕂} {Ξ : ℕ → Ω → E}
+    (hf : ∀ n, StronglyMeasurable[𝓖 n] fun ω ↦ f (Ξ n ω))
+    (hPf : ∀ n, StronglyMeasurable[𝓖 n] fun ω ↦ Pf (Ξ n ω))
+    (hfint : ∀ n, Integrable (fun ω ↦ f (Ξ n ω)) μ)
+    (hPfint : ∀ n, Integrable (fun ω ↦ Pf (Ξ n ω)) μ)
+    (hmarkov : ∀ n, μ[fun ω ↦ f (Ξ (n + 1) ω) | 𝓖 n] =ᵐ[μ] fun ω ↦ Pf (Ξ n ω)) :
+    Martingale (chainCompensated Pf f Ξ) 𝓖 μ := by
+  have hsum : ∀ n, StronglyMeasurable[𝓖 n]
+      fun ω ↦ ∑ j ∈ Finset.range n, (Pf (Ξ j ω) - f (Ξ j ω)) := by
+    intro n
+    refine Finset.stronglyMeasurable_fun_sum (M := 𝕂) _ fun j hj ↦ ?_
+    have hjn : 𝓖 j ≤ 𝓖 n := 𝓖.mono (Finset.mem_range.mp hj).le
+    exact ((hPf j).mono hjn).sub ((hf j).mono hjn)
+  have hadp : StronglyAdapted 𝓖 (chainCompensated Pf f Ξ) := fun n ↦ (hf n).sub (hsum n)
+  have hsumint : ∀ n, Integrable (fun ω ↦ ∑ j ∈ Finset.range n, (Pf (Ξ j ω) - f (Ξ j ω))) μ :=
+    fun n ↦ integrable_finsetSum _ fun j _ ↦ (hPfint j).sub (hfint j)
+  have hint : ∀ n, Integrable (chainCompensated Pf f Ξ n) μ :=
+    fun n ↦ (hfint n).sub (hsumint n)
+  refine martingale_nat hadp hint fun n ↦ ?_
+  have hsplit : chainCompensated Pf f Ξ (n + 1)
+      = (fun ω ↦ f (Ξ (n + 1) ω)) - fun ω ↦ ∑ j ∈ Finset.range (n + 1),
+          (Pf (Ξ j ω) - f (Ξ j ω)) := rfl
+  rw [hsplit]
+  have hce : μ[(fun ω ↦ f (Ξ (n + 1) ω)) - fun ω ↦ ∑ j ∈ Finset.range (n + 1),
+        (Pf (Ξ j ω) - f (Ξ j ω)) | 𝓖 n]
+      =ᵐ[μ] μ[fun ω ↦ f (Ξ (n + 1) ω) | 𝓖 n]
+        - μ[fun ω ↦ ∑ j ∈ Finset.range (n + 1), (Pf (Ξ j ω) - f (Ξ j ω)) | 𝓖 n] :=
+    condExp_sub (hfint (n + 1)) (hsumint (n + 1)) _
+  have hsucc : StronglyMeasurable[𝓖 n]
+      fun ω ↦ ∑ j ∈ Finset.range (n + 1), (Pf (Ξ j ω) - f (Ξ j ω)) := by
+    simp only [Finset.sum_range_succ]
+    exact (hsum n).add ((hPf n).sub (hf n))
+  have hfix : μ[fun ω ↦ ∑ j ∈ Finset.range (n + 1), (Pf (Ξ j ω) - f (Ξ j ω)) | 𝓖 n]
+      = fun ω ↦ ∑ j ∈ Finset.range (n + 1), (Pf (Ξ j ω) - f (Ξ j ω)) :=
+    condExp_of_stronglyMeasurable (𝓖.le n) hsucc (hsumint (n + 1))
+  filter_upwards [hce, hmarkov n] with ω h1 h3
+  rw [h1, Pi.sub_apply, hfix, h3]
+  simp only [chainCompensated, Finset.sum_range_succ]
+  ring
+
+end ChainDoob
+
+section VanishingIncrements
+
+/-- **Hypothesis (c) of `mpSolution_of_tendsto`, from an exactly orthogonal approximant.**  If the
+tested increments of `H n` vanish exactly on every space and `G n` approximates `H n` in `L¹`
+uniformly against a bounded weight, then the tested increments of `G n` vanish in the limit.
+
+This is where the two summands of the example meet.  The spaces are a family, as everywhere in
+Milestone 10, so no single measure and no `MeasureTheory.UnifIntegrable` is available; the
+estimate is `‖∫ (G n - H n) · W n‖ ≤ b · ∫ ‖G n - H n‖` on each space separately and a squeeze. -/
+theorem tendsto_integral_mul_of_integral_eq_zero {Ω' : ℕ → Type*}
+    {m' : ∀ n, MeasurableSpace (Ω' n)} {P' : ∀ n, @Measure (Ω' n) (m' n)}
+    {G H : ∀ n, Ω' n → 𝕂} {W : ∀ n, Ω' n → ℝ} {b : ℝ}
+    (hG : ∀ n, Integrable (G n) (P' n)) (hH : ∀ n, Integrable (H n) (P' n))
+    (hW : ∀ n, AEStronglyMeasurable (W n) (P' n)) (hb : ∀ n ω, ‖W n ω‖ ≤ b)
+    (hzero : ∀ n, ∫ ω, H n ω * (W n ω : 𝕂) ∂(P' n) = 0)
+    (happrox : Tendsto (fun n ↦ ∫ ω, ‖G n ω - H n ω‖ ∂(P' n)) atTop (𝓝 0)) :
+    Tendsto (fun n ↦ ∫ ω, G n ω * (W n ω : 𝕂) ∂(P' n)) atTop (𝓝 0) := by
+  have hWK : ∀ n, AEStronglyMeasurable (fun ω ↦ (W n ω : 𝕂)) (P' n) := fun n ↦
+    RCLike.continuous_ofReal.comp_aestronglyMeasurable (hW n)
+  have hbp : ∀ n ω, ‖(W n ω : 𝕂)‖ ≤ b := by
+    intro n ω
+    rw [RCLike.norm_ofReal]
+    simpa [Real.norm_eq_abs] using hb n ω
+  have hbK : ∀ n, ∀ᵐ ω ∂(P' n), ‖(W n ω : 𝕂)‖ ≤ b := fun n ↦ Eventually.of_forall (hbp n)
+  have hmul : ∀ (K : ∀ n, Ω' n → 𝕂), (∀ n, Integrable (K n) (P' n)) →
+      ∀ n, Integrable (fun ω ↦ K n ω * (W n ω : 𝕂)) (P' n) := fun K hK n ↦
+    ((hK n).bdd_mul (hWK n) (hbK n)).congr (Eventually.of_forall fun ω ↦ mul_comm _ _)
+  have hGW := hmul G hG
+  have hHW := hmul H hH
+  have hsplit : ∀ n, ∫ ω, G n ω * (W n ω : 𝕂) ∂(P' n)
+      = ∫ ω, (G n ω - H n ω) * (W n ω : 𝕂) ∂(P' n) := by
+    intro n
+    rw [← sub_zero (∫ ω, G n ω * (W n ω : 𝕂) ∂(P' n)), ← hzero n,
+      ← integral_sub (hGW n) (hHW n)]
+    exact integral_congr_ae (Eventually.of_forall fun ω ↦ by ring)
+  refine squeeze_zero_norm' (Eventually.of_forall fun n ↦ ?_)
+    (by simpa using happrox.const_mul b)
+  rw [hsplit n]
+  have hdiff := hmul (fun n ω ↦ G n ω - H n ω) (fun n ↦ (hG n).sub (hH n)) n
+  calc ‖∫ ω, (G n ω - H n ω) * (W n ω : 𝕂) ∂(P' n)‖
+      ≤ ∫ ω, ‖(G n ω - H n ω) * (W n ω : 𝕂)‖ ∂(P' n) := norm_integral_le_integral_norm _
+    _ ≤ ∫ ω, b * ‖G n ω - H n ω‖ ∂(P' n) := by
+        refine integral_mono hdiff.norm (((hG n).sub (hH n)).norm.const_mul b) fun ω ↦ ?_
+        rw [norm_mul, mul_comm]
+        exact mul_le_mul_of_nonneg_right (hbp n ω) (norm_nonneg _)
+    _ = b * ∫ ω, ‖G n ω - H n ω‖ ∂(P' n) := integral_const_mul _ _
+
+/-- **Hypothesis (c) of `mpSolution_of_tendsto` from a family of exact martingales.**  The
+approximating martingale `M n` is read at the two grid indices `k n` and `l n`, and what has to be
+supplied beyond it is the `L¹` approximation of the canonical increment by the martingale
+increment.
+
+**Integrability of `M n i` is a hypothesis and not a consequence.**  Mathlib's
+`MeasureTheory.Martingale` is `StronglyAdapted` together with the conditional expectation
+identity and carries *no* integrability -- unlike `Submartingale` and `Supermartingale`, which do
+(`Probability/Martingale/Basic.lean`).  So a theorem that integrates a martingale has to ask for
+it.
+
+**The weight is asked to be measurable for `𝓖 n (k n)`, the past of the earlier index**, which is
+where the functional `Z` of the determining set lives after composition with the path: a
+functional of the path up to `s` composed with `X n` reads the chain up to `⌊n s⌋`. -/
+theorem tendsto_integral_mul_of_martingale {Ω' : ℕ → Type*}
+    {m' : ∀ n, MeasurableSpace (Ω' n)} {P' : ∀ n, @Measure (Ω' n) (m' n)}
+    [∀ n, IsFiniteMeasure (P' n)] {𝓖 : ∀ n, Filtration ℕ (m' n)} {M : ∀ n, ℕ → Ω' n → 𝕂}
+    {k l : ℕ → ℕ} {G : ∀ n, Ω' n → 𝕂} {W : ∀ n, Ω' n → ℝ} {b : ℝ}
+    (hM : ∀ n, Martingale (M n) (𝓖 n) (P' n))
+    (hMint : ∀ n i, Integrable (M n i) (P' n)) (hkl : ∀ n, k n ≤ l n)
+    (hG : ∀ n, Integrable (G n) (P' n))
+    (hW : ∀ n, StronglyMeasurable[(𝓖 n) (k n)] (W n)) (hb : ∀ n ω, ‖W n ω‖ ≤ b)
+    (happrox : Tendsto (fun n ↦ ∫ ω, ‖G n ω - (M n (l n) ω - M n (k n) ω)‖ ∂(P' n))
+      atTop (𝓝 0)) :
+    Tendsto (fun n ↦ ∫ ω, G n ω * (W n ω : 𝕂) ∂(P' n)) atTop (𝓝 0) :=
+  tendsto_integral_mul_of_integral_eq_zero hG
+    (fun n ↦ (hMint n (l n)).sub (hMint n (k n)))
+    (fun n ↦ ((hW n).mono ((𝓖 n).le (k n))).aestronglyMeasurable) hb
+    (fun n ↦ integral_sub_mul_eq_zero_of_condExp_eq ((𝓖 n).le (k n)) (hMint n (l n))
+      (hMint n (k n)) ((hM n).2 (k n) (l n) (hkl n)) (hW n) (hb n))
+    happrox
+
+/-- **Hypothesis (c) of `mpSolution_of_tendsto` for the rescaled Markov chain**, the manuscript's
+`ex:invariance`.  The grid indices are `⌊n s⌋` and `⌊n t⌋`, the martingale is the Doob
+decomposition `chainCompensated (P n f) f (Ξ n)`, and what remains to be supplied is exactly the
+manuscript's `(K3)`: the `L¹` convergence of the canonical increment to the chain's.
+
+The two hypotheses that the milestone's own text left implicit are the ones visible here.  The
+first is that `(K3)` is needed at all -- see the section header.  The second is `s ≤ t`: the grid
+indices are monotone in the time only because `⌊·⌋` is, and `Nat.floor_mono` is what carries
+`s ≤ t` to `⌊n s⌋ ≤ ⌊n t⌋`, for every `n` including `n = 0`, where both are `0` and the martingale
+identity is trivially the one at equal indices.
+
+**The state space `E` carries no structure at all** -- not a measurable space, not a topology.
+The chain enters only through the compositions `f ∘ Ξ n i` and `P n f ∘ Ξ n i`, whose
+measurability is hypothesis; this is the same reading of "hypothesis (a) carries no topology"
+that the milestone records for the path space, one level down. -/
+theorem tendsto_integral_mul_rescaledChain {E : Type*} {Ω' : ℕ → Type*}
+    {m' : ∀ n, MeasurableSpace (Ω' n)} {P' : ∀ n, @Measure (Ω' n) (m' n)}
+    [∀ n, IsFiniteMeasure (P' n)] {𝓖 : ∀ n, Filtration ℕ (m' n)}
+    {Ξ : ∀ n, ℕ → Ω' n → E} {fn Pfn : ℕ → E → 𝕂} {s t : ℝ} (hst : s ≤ t)
+    {G : ∀ n, Ω' n → 𝕂} {W : ∀ n, Ω' n → ℝ} {b : ℝ}
+    (hf : ∀ n i, StronglyMeasurable[(𝓖 n) i] fun ω ↦ fn n (Ξ n i ω))
+    (hPf : ∀ n i, StronglyMeasurable[(𝓖 n) i] fun ω ↦ Pfn n (Ξ n i ω))
+    (hfint : ∀ n i, Integrable (fun ω ↦ fn n (Ξ n i ω)) (P' n))
+    (hPfint : ∀ n i, Integrable (fun ω ↦ Pfn n (Ξ n i ω)) (P' n))
+    (hmarkov : ∀ n i, (P' n)[fun ω ↦ fn n (Ξ n (i + 1) ω) | (𝓖 n) i]
+      =ᵐ[P' n] fun ω ↦ Pfn n (Ξ n i ω))
+    (hG : ∀ n, Integrable (G n) (P' n))
+    (hW : ∀ n, StronglyMeasurable[(𝓖 n) ⌊(n : ℝ) * s⌋₊] (W n)) (hb : ∀ n ω, ‖W n ω‖ ≤ b)
+    (happrox : Tendsto (fun n ↦ ∫ ω, ‖G n ω
+        - (chainCompensated (Pfn n) (fn n) (Ξ n) ⌊(n : ℝ) * t⌋₊ ω
+            - chainCompensated (Pfn n) (fn n) (Ξ n) ⌊(n : ℝ) * s⌋₊ ω)‖ ∂(P' n))
+      atTop (𝓝 0)) :
+    Tendsto (fun n ↦ ∫ ω, G n ω * (W n ω : 𝕂) ∂(P' n)) atTop (𝓝 0) :=
+  tendsto_integral_mul_of_martingale (M := fun n ↦ chainCompensated (Pfn n) (fn n) (Ξ n))
+    (fun n ↦ martingale_chainCompensated (hf n) (hPf n) (hfint n) (hPfint n) (hmarkov n))
+    (fun n i ↦ (hfint n i).sub (integrable_finsetSum _ fun j _ ↦ (hPfint n j).sub (hfint n j)))
+    (fun n ↦ Nat.floor_mono (mul_le_mul_of_nonneg_left hst (Nat.cast_nonneg n)))
+    hG hW hb happrox
+
+end VanishingIncrements
+
+section GridEmbedding
+
+variable {E : Type*} [mE : MeasurableSpace E]
+
+/-- **The chain read along the grid of mesh `1/r`**, as a path in the raw space `ℝ≥0 → E`:
+`gridPath Ξ r ω t = Ξ ⌊r t⌋ ω`.  This is the `X n` of the manuscript's `ex:invariance`, with
+`r = n`. -/
+noncomputable def gridPath (Ξ : ℕ → Ω → E) (r : ℝ) (ω : Ω) (t : ℝ≥0) : E :=
+  Ξ ⌊r * (t : ℝ)⌋₊ ω
+
+/-- The grid path is measurable into the raw path space.  Nothing but measurability of each
+`Ξ i` is needed, and the path space carries nothing but the product σ-algebra: this is the
+milestone's acceptance test that `mpSolution_of_tendsto` applies with `F` a bare measurable
+space. -/
+theorem measurable_gridPath {Ξ : ℕ → Ω → E} (hΞ : ∀ i, Measurable (Ξ i)) (r : ℝ) :
+    Measurable (gridPath Ξ r) :=
+  measurable_pi_lambda _ fun _ ↦ hΞ _
+
+/-- **The coordinate filtration of the raw path space** `ℝ≥0 → E`, which is `naturalFiltration`
+of the evaluation process.  It is the filtration with respect to which the members of a
+determining set `𝓩 s` are measurable. -/
+def coordFiltration (E : Type*) [MeasurableSpace E] :
+    Filtration ℝ≥0 (inferInstance : MeasurableSpace (ℝ≥0 → E)) :=
+  naturalFiltration (fun (t : ℝ≥0) (x : ℝ≥0 → E) ↦ x t) fun t ↦ measurable_pi_apply t
+
+/-- **The grid path pulls the past back to the past**: a coordinate of the path at a time `u ≤ s`
+is a coordinate of the chain at an index `⌊r u⌋ ≤ ⌊r s⌋`.
+
+The proof is `MeasurableSpace.comap_iSup` twice and `MeasurableSpace.comap_comp` once, and the
+one thing it needs beyond bookkeeping is `0 ≤ r`, without which `Nat.floor_mono` does not carry
+`u ≤ s` across the multiplication. -/
+theorem comap_gridPath_le {Ξ : ℕ → Ω → E} (hΞ : ∀ i, Measurable (Ξ i)) {r : ℝ}
+    (hr : 0 ≤ r) (s : ℝ≥0) :
+    MeasurableSpace.comap (gridPath Ξ r) (coordFiltration E s)
+      ≤ naturalFiltration Ξ hΞ ⌊r * (s : ℝ)⌋₊ := by
+  show MeasurableSpace.comap (gridPath Ξ r) (⨆ u, ⨆ _ : u ≤ s, _) ≤ _
+  rw [MeasurableSpace.comap_iSup]
+  refine iSup_le fun u ↦ ?_
+  rw [MeasurableSpace.comap_iSup]
+  refine iSup_le fun hus ↦ ?_
+  rw [MeasurableSpace.comap_comp]
+  have hfloor : ⌊r * (u : ℝ)⌋₊ ≤ ⌊r * (s : ℝ)⌋₊ :=
+    Nat.floor_mono (mul_le_mul_of_nonneg_left (by exact_mod_cast hus) hr)
+  exact le_iSup₂ (f := fun j (_ : j ≤ ⌊r * (s : ℝ)⌋₊) ↦ MeasurableSpace.comap (Ξ j) mE)
+    ⌊r * (u : ℝ)⌋₊ hfloor
+
+/-- **A functional of the path before `s`, read on the grid path, is a variable of the chain
+before `⌊r s⌋`.**  This is the hypothesis `hW` of `tendsto_integral_mul_rescaledChain`, and it is
+what makes the weight of hypothesis (c) a variable of the past rather than an assumption about
+one. -/
+theorem measurable_comp_gridPath {Ξ : ℕ → Ω → E} (hΞ : ∀ i, Measurable (Ξ i)) {r : ℝ}
+    (hr : 0 ≤ r) {s : ℝ≥0} {G : Type*} [MeasurableSpace G] {Z : (ℝ≥0 → E) → G}
+    (hZ : Measurable[coordFiltration E s] Z) :
+    Measurable[naturalFiltration Ξ hΞ ⌊r * (s : ℝ)⌋₊] (Z ∘ gridPath Ξ r) := fun _S hS ↦
+  comap_gridPath_le hΞ hr s _ ⟨_, hZ hS, rfl⟩
+
+/-- **The acceptance example of Milestone 10, assembled**: hypothesis (c) of
+`mpSolution_of_tendsto` for the rescaled Markov chain over its own natural filtration, with the
+weight a functional of the path before `s` read on the grid path.
+
+Every hypothesis of `tendsto_integral_mul_rescaledChain` that is about *measurability* is
+discharged here; what is carried is what the manuscript carries -- the Markov property, the
+integrability of the test function along the chain, the bound on the weight, and `(K3)`, the
+`L¹` convergence of the canonical increment to the chain's.
+
+**The path space is `ℝ≥0 → E` with the product σ-algebra and nothing else**: no topology, no
+metric, no separability, and `E` is a bare measurable space.  That is the milestone's own
+acceptance test for hypothesis (a) -- "`F` a bare measurable space" -- carried out on (c). -/
+theorem tendsto_integral_mul_rescaledChain_natural {Ω' : ℕ → Type*}
+    {m' : ∀ n, MeasurableSpace (Ω' n)} {P' : ∀ n, @Measure (Ω' n) (m' n)}
+    [∀ n, IsFiniteMeasure (P' n)]
+    {Ξ : ∀ n, ℕ → Ω' n → E} (hΞ : ∀ n i, @Measurable (Ω' n) E (m' n) _ (Ξ n i))
+    {fn Pfn : ℕ → E → 𝕂} (hfn : ∀ n, Measurable (fn n)) (hPfn : ∀ n, Measurable (Pfn n))
+    {s t : ℝ≥0} (hst : s ≤ t)
+    {Z : (ℝ≥0 → E) → ℝ} (hZ : Measurable[coordFiltration E s] Z) {b : ℝ}
+    (hb : ∀ x, ‖Z x‖ ≤ b)
+    (hfint : ∀ n i, Integrable (fun ω ↦ fn n (Ξ n i ω)) (P' n))
+    (hPfint : ∀ n i, Integrable (fun ω ↦ Pfn n (Ξ n i ω)) (P' n))
+    (hmarkov : ∀ n i, (P' n)[fun ω ↦ fn n (Ξ n (i + 1) ω) |
+        naturalFiltration (Ξ n) (hΞ n) i] =ᵐ[P' n] fun ω ↦ Pfn n (Ξ n i ω))
+    {G : ∀ n, Ω' n → 𝕂} (hG : ∀ n, Integrable (G n) (P' n))
+    (happrox : Tendsto (fun n ↦ ∫ ω, ‖G n ω
+        - (chainCompensated (Pfn n) (fn n) (Ξ n) ⌊(n : ℝ) * (t : ℝ)⌋₊ ω
+            - chainCompensated (Pfn n) (fn n) (Ξ n) ⌊(n : ℝ) * (s : ℝ)⌋₊ ω)‖ ∂(P' n))
+      atTop (𝓝 0)) :
+    Tendsto (fun n ↦ ∫ ω, G n ω * (Z (gridPath (Ξ n) n ω) : 𝕂) ∂(P' n)) atTop (𝓝 0) := by
+  refine tendsto_integral_mul_rescaledChain (𝓖 := fun n ↦ naturalFiltration (Ξ n) (hΞ n))
+    (by exact_mod_cast hst)
+    (fun n i ↦ Measurable.stronglyMeasurable
+      ((hfn n).comp (measurable_naturalFiltration (hΞ n) le_rfl)))
+    (fun n i ↦ Measurable.stronglyMeasurable
+      ((hPfn n).comp (measurable_naturalFiltration (hΞ n) le_rfl)))
+    hfint hPfint hmarkov hG
+    (fun n ↦ Measurable.stronglyMeasurable
+      (measurable_comp_gridPath (hΞ n) (Nat.cast_nonneg n) hZ))
+    (fun n ω ↦ hb _) ?_
+  simpa using happrox
+
+end GridEmbedding

@@ -9318,13 +9318,74 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   `E = ℝ^d`, `q n = (1/n) * ∑ k ≥ 1, δ (k/n)` with the optional convention,
   `X n t = Ξ n ⌊n * t⌋` for a chain with one step kernel `P n`, and
   `Y n t = f (Ξ n ⌊n t⌋) - ∑ j < ⌊n t⌋, (P n f - f) (Ξ n j)` — the Doob
-  decomposition read along the embedded grid. Hypothesis (c) of
-  `mpSolution_of_tendsto` is that the tested increments vanish, and it holds
-  because each `Y n` is an exact martingale; (a) and (b) are the convergence and
+  decomposition read along the embedded grid; (a) and (b) are the convergence and
   uniform integrability of finitely many real variables. The conclusion is that
   the limit solves the martingale problem for the limiting operator. This is the
   invariance principle, and it instantiates every hypothesis of the milestone at
   once.
+  **Hypothesis (c) is not the exact martingale property alone, and the
+  difference is where the example does its work.** The canonical version `Y°`
+  that (c) speaks of is one function on one path space, the same for every `n`;
+  the exact martingale `Y n` is a different function for every `n`, because
+  `P n` and the grid are. So (c) splits in two, and only the first summand is
+  free: `𝔼[(Y n t - Y n s) * Z (X n)] = 0` by the martingale identity, and
+  `𝔼[‖(Y° t - Y° s) (X n) - (Y n t - Y n s)‖] → 0`, which is the manuscript's
+  `(K3)`, the convergence `n (P n f - f) → A f` of the rescaled generators.
+  `tendsto_integral_mul_of_martingale` is the statement in which the two meet
+  and `tendsto_integral_mul_rescaledChain` is it on the chain. **In Lean** on
+  2026-09-17, twenty-third run.
+* `integral_mul_eq_of_condExp_eq` and `integral_sub_mul_eq_zero_of_condExp_eq`:
+  a bounded variable of the past may be pulled through a conditional expectation
+  under the integral, and hence a martingale increment is orthogonal to every
+  bounded variable of its past. This is the engine of (c). It is stated on the
+  conditional expectation identity `μ[f | m'] =ᵐ g` and not on `Martingale`,
+  because that is what is used — the index set, the order and the adaptedness of
+  the family play no part, only the single identity at the pair of times in
+  question. The pull-out is
+  `MeasureTheory.condExp_smul_of_aestronglyMeasurable_left`
+  (`MeasureTheory/Function/ConditionalExpectation/PullOut.lean`); the weight is
+  real and the variable `𝕂`-valued, so it is the `smul` form and not the `mul`
+  form that reads. **In Lean** on 2026-09-17, twenty-third run.
+* `chainCompensated` and `martingale_chainCompensated`, the Doob decomposition
+  `f (Ξ n) - ∑ j < n, (P f - f) (Ξ j)` along a chain and the proof that it is a
+  martingale. It is `MeasureTheory.martingale_nat` on the one step identity.
+  **In Lean** on 2026-09-17, twenty-third run.
+  **It is a formula and not `MeasureTheory.martingalePart`**, which is the same
+  object built out of `μ[· | 𝓖 j]` and therefore determined only almost
+  everywhere. `StronglyAdapted` is not an almost sure notion and the martingale
+  that (c) reads has to be one function and not a class, so the compensator is
+  the kernel's increment `P f - f`.
+  **The Markov property is asked for in the form in which it is used** — the
+  conditional expectation identity `μ[f (Ξ (n+1)) | 𝓖 n] =ᵐ (P f) (Ξ n)` — and
+  not through a `ProbabilityTheory.Kernel`. That is the weaker hypothesis: a
+  chain given by a kernel supplies it, and so does a chain that is Markov only
+  along the test function `f`, which is all the proof reads. The state space
+  carries no structure at all, not a measurable space and not a topology.
+  **Integrability of a martingale is a hypothesis and not a consequence.**
+  Mathlib's `MeasureTheory.Martingale` is `StronglyAdapted` together with the
+  conditional expectation identity and carries no integrability — unlike
+  `Submartingale` and `Supermartingale`, which do
+  (`Probability/Martingale/Basic.lean`). A theorem that integrates a martingale
+  has to ask for it.
+* `gridPath`, `measurable_gridPath`, `coordFiltration`, `comap_gridPath_le` and
+  `measurable_comp_gridPath`: the chain read along the grid of mesh `1/r` as a
+  path in the raw space `ℝ≥0 → E`, its measurability, and the statement that a
+  functional of the path before `s` becomes, on the grid path, a variable of the
+  chain before `⌊r s⌋`. The last is `MeasurableSpace.comap_iSup` twice and
+  `MeasurableSpace.comap_comp` once, and the one thing it needs beyond
+  bookkeeping is `0 ≤ r`, without which `Nat.floor_mono` does not carry `u ≤ s`
+  across the multiplication. **In Lean** on 2026-09-17, twenty-third run.
+* `tendsto_integral_mul_rescaledChain_natural`, the acceptance example
+  assembled: hypothesis (c) for the rescaled chain over its **own** natural
+  filtration, with the weight a functional of the path before `s` read on the
+  grid path. Every hypothesis about measurability is discharged; what is carried
+  is what the manuscript carries — the Markov property, the integrability of the
+  test function along the chain, the bound on the weight, and `(K3)`.
+  **In Lean** on 2026-09-17, twenty-third run.
+  **The path space is `ℝ≥0 → E` with the product σ-algebra and nothing else** —
+  no topology, no metric, no separability, and `E` a bare measurable space. That
+  is this milestone's own acceptance test for hypothesis (a), "`F` a bare
+  measurable space", carried out on (c).
 * **Hypothesis (a) is about real random variables and carries no topology.** In
   the example above the path space `F` is `D ι E` and the functionals
   `Y° t` are evaluations, but the statement of (a) never mentions `F`'s
