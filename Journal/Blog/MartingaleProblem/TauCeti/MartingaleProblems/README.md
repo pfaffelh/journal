@@ -8661,6 +8661,38 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   that is not quasi-left-continuous, so the statement without `IsMPSolution` is
   false. What it lacks is the martingale property that optional sampling needs.
   **In Lean** on 2026-09-17, twelfth run.
+* `stoppingFiltration`: a nondecreasing sequence `σ : ℕ → Ω → WithTop ι` of
+  stopping times for `𝓕` gives a `Filtration ℕ m`, `n ↦ (hσ n).measurableSpace`.
+  Monotonicity is `MeasureTheory.IsStoppingTime.measurableSpace_mono` and the
+  bound `MeasureTheory.IsStoppingTime.measurableSpace_le`, both of
+  `Mathlib/Probability/Process/Stopping.lean`; neither asks anything of the index
+  beyond `Preorder`. This is the only place at which the stopping times of
+  quasi-left-continuity are read as a filtration. **In Lean** on 2026-09-17,
+  thirteenth run.
+* `ae_eq_condExp_iSup_stoppedValue`: **the middle step**, that is, all of
+  `isQuasiLeftContinuous_of_isRegularizingClass` except the final appeal to the
+  separating class. Let `f ∘ X = Y + C` hold almost surely at all times at once,
+  let `ℱ : Filtration ℕ m` be arbitrary, and let
+  `stoppedValue Y (σ n) =ᵐ[P] P[stoppedValue Y σ' | ℱ n]` — optional sampling —
+  and `stoppedValue C (σ n)` be `ℱ n`-strongly measurable. If the stopped
+  increments of `C` vanish in `L¹` and `f (stoppedValue X (σ n))` converges
+  almost surely to `A`, then
+  `A =ᵐ[P] P[f (stoppedValue X σ') | ⨆ n, ℱ n]`.
+
+  **No stopping time occurs in the statement**, and none has to: `σ` and `σ'`
+  enter only through `stoppedValue`, which is evaluation at `(σ ω).untopA`, and
+  the stopping times are read in the two hypotheses alone. `OrderBot ι` is the
+  only instance on the index that the proof reads, and it is read by `untopA`.
+
+  The three hypotheses that `IsCompensatorFor` does **not** supply are named by
+  the statement rather than hidden in it: the decomposition is
+  `IsCompensatorFor.ae_forall_decomposition` and not the field `decomposition`,
+  by `LiftWitness`; optional sampling needs right continuity and a bound on `Y`,
+  which are properties of the solution class, and `stoppedValue_ae_eq_condExp`
+  supplies it over `ℝ≥0`; and strong measurability of `stoppedValue C (σ n)` for
+  `ℱ n` is progressive measurability of `C`, since `StronglyAdapted` is
+  adaptedness at a *time* and not at a stopping time. **In Lean** on 2026-09-17,
+  thirteenth run.
 * `isQuasiLeftContinuous_of_isRegularizingClass`, the abstract form of
   Ethier–Kurtz, Theorem 4.3.12, with no operator and no compensator of any
   special shape. Let `𝓧` solve the martingale problem for `𝓕` and `P`, let `Φ`
@@ -8689,7 +8721,12 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
       - P[C (min τ' t) - C (min (τ n) t) | (hτ n).measurableSpace] ,
   ```
   whose second term tends to `0` in `L¹` by the hypothesis on `C` and
-  conditional Jensen. The first term is handled by **Lévy's upward theorem**,
+  conditional Jensen. Those two moves together with the passage to the limit are
+  `ae_eq_condExp_iSup_stoppedValue` above, read at
+  `ℱ = stoppingFiltration hσ hσmono` for `σ n = min (τ n) t` and
+  `σ' = min τ' t`; what it leaves to this statement is the identification of the
+  limit, and nothing else. The first term is handled by **Lévy's upward
+  theorem**,
   `MeasureTheory.tendsto_ae_condExp` and `MeasureTheory.tendsto_eLpNorm_condExp`
   of `Mathlib/Probability/Martingale/Convergence.lean` (`:426`, `:439`), read at the filtration
   `n ↦ (hτ n).measurableSpace`, which is a `Filtration ℕ` by
@@ -8709,7 +8746,19 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   Milestone 1 gives `L =ᵐ[P] X (min τ' t)`. **This is the one statement of the
   milestone that reads `IsSeparating Φ`**, and it separates measures rather than
   points: no countable subset separating the points of `E` is used here, and no
-  compact containment.
+  compact containment. That last step is what the hypotheses on `E` are for: the
+  statement it appeals to carries `[OpensMeasurableSpace E]` and
+  `[MeasurableSpace.CountablySeparated E]`, asks each member of the class to be
+  a bounded continuous function, and is stated for a real valued class, so for
+  `𝕂 = ℂ` it is read on the two components.
+  The measurability of `L` is
+  `MeasureTheory.measurable_stoppedValue` of
+  `Mathlib/Probability/Process/Stopping.lean` (`:1048`), which asks
+  `IsStronglyProgressive 𝓕 X` and `[PseudoMetrizableSpace E] [BorelSpace E]`,
+  together with `MeasureTheory.StronglyMeasurable.limUnder` of
+  `Mathlib/MeasureTheory/Constructions/Polish/StronglyMeasurable.lean` (`:53`),
+  which asks `[Nonempty E] [IsCompletelyMetrizableSpace E]` and, expressly,
+  **no separability of the codomain**.
   `exists_cadlag_modification_of_isRegularizingClass` takes the other road at
   the same corner — squares and pointwise separation — and carries no
   `IsSeparating` hypothesis at all, which is why the two share no hypothesis on

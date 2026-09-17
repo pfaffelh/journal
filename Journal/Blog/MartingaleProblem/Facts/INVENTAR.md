@@ -33375,3 +33375,191 @@ Zahl der `sorry` unverändert **fünf**, und die neue Deklaration mit
    Gegenbeispiel stammen.
 3. **Die fünfzig Aufrufe veralteter Namen**, unverändert Vorschlag 4 des
    Vorlaufs.
+
+### 2026-09-17, dreizehnter Lauf des Tages — der mittlere Schritt der Quasi-Linksstetigkeit steht, und die Stoppzeit kommt in ihm nicht vor; was danach noch fehlt, ist keine Analysis, sondern eine Entscheidung zwischen zwei Wegen, und der eine davon überquert eine Dateigrenze
+
+Vorschlag 1 des Vorlaufs war der Zusammenbau von
+`isQuasiLeftContinuous_of_isRegularizingClass`. Dieser Lauf hat das Stück
+gebaut, das zwischen den beiden schon vorhandenen Enden lag, und dabei
+festgestellt, daß der Rest **kein** Beweisschritt mehr ist, sondern eine Wahl
+zwischen zwei Endstücken, die verschiedene Voraussetzungen kosten.
+
+#### Was steht: `ae_eq_condExp_iSup_stoppedValue`
+
+```
+A =ᵐ[P] P[fun ω ↦ f (stoppedValue X σ' ω) | ⨆ n, ℱ n]
+```
+
+unter: die Zerlegung `f ∘ X = Y + C` fast sicher **an allen Zeiten zugleich**
+(das ist `IsCompensatorFor.ae_forall_decomposition` aus dem zwölften Lauf, nicht
+das Feld `decomposition`), optionales Sampling
+`stoppedValue Y (σ n) =ᵐ[P] P[stoppedValue Y σ' | ℱ n]`, die `ℱ n`-Meßbarkeit von
+`stoppedValue C (σ n)`, drei Integrierbarkeiten, das Verschwinden der gestoppten
+Zuwächse von `C` in `L¹`, und die fast sichere Konvergenz von
+`f (stoppedValue X (σ n))` gegen `A`.
+
+**In der Aussage kommt keine Stoppzeit vor**, und es mußte auch keine
+vorkommen. `ℱ` ist eine **beliebige** `Filtration ℕ m`; `σ` und `σ'` gehen allein
+durch `stoppedValue` ein, und das ist Auswertung an `(σ ω).untopA`. Die
+Stoppzeiten stecken ausschließlich in den beiden Hypothesen `hOS` und `hCm`. Das
+ist dieselbe Beobachtung, die der zwölfte Lauf an der Hebung gemacht hat, und sie
+wiederholt sich hier aus demselben Grund: was ein Beweis von einer Stoppzeit
+braucht, ist fast nie die Stoppzeiteigenschaft, sondern eine Meßbarkeit an einer
+benannten Stelle.
+
+Der Linter hat die Minimalität bestätigt: von den Instanzen des Abschnitts wird
+**nur `OrderBot ι`** gelesen, und die liest `WithTop.untopA`. Weder
+`TopologicalSpace ι` noch `OrderTopology ι` noch eine Topologie oder ein
+Meßraum auf `E` kommen vor; sie stehen als `omit` über der Aussage.
+
+`stoppingFiltration` ist die zweite Deklaration und liefert das `ℱ` an der
+Verwendungsstelle: aus einer monoton wachsenden Folge von Stoppzeiten wird
+`n ↦ (hσ n).measurableSpace` eine `Filtration ℕ m`, über
+`IsStoppingTime.measurableSpace_mono` und `…_le`. Beide verlangen vom Index
+nichts als `Preorder`.
+
+#### Die drei Voraussetzungen, die `IsCompensatorFor` nicht gibt, und was jede von ihnen ist
+
+Der Vorlauf hat verlangt, sie zu benennen statt sie zu raten. Sie stehen jetzt in
+der Signatur, und jede hat einen anderen Grund:
+
+* **Die Zerlegung** ist die *gehobene*, nicht das Feld. Der Zeuge `LiftWitness`
+  des zwölften Laufs ist der Beleg, daß das zwei verschiedene Aussagen sind.
+* **Das optionale Sampling** ist Hypothese und nicht Folgerung, und das ist
+  keine Bequemlichkeit: in stetiger Zeit verlangt es Rechtsstetigkeit und eine
+  Schranke an `Y`, und beides sind Eigenschaften der **Lösungsklasse**, nicht des
+  Kompensators. `stoppedValue_ae_eq_condExp` (zehnter Lauf) liefert es über
+  `ℝ≥0`; über einem allgemeinen Index gibt es es nicht, weder hier noch in
+  Mathlib.
+* **Die `ℱ n`-Meßbarkeit von `stoppedValue C (σ n)`** ist die Progressivität von
+  `C`, die der zwölfte Lauf beim Durchrechnen gefunden hatte.
+  `IsCompensatorFor` gibt `StronglyAdapted`, und Adaptiertheit an einer *Zeit*
+  ist nicht Adaptiertheit an einer *Stoppzeit*.
+
+#### Und der Befund: was nach dem mittleren Schritt noch fehlt, ist eine Entscheidung zwischen zwei Endstücken
+
+Der mittlere Schritt gibt `f ∘ L =ᵐ[P] P[f (X_{σ'}) | ⨆ n, ℱ n]`, wo `L` der
+Pfadgrenzwert ist. Um daraus `L =ᵐ[P] X_{σ'}` zu machen — und *das* ist die
+Quasi-Linksstetigkeit —, gibt es in dieser Entwicklung **zwei** Wege, und sie
+kosten Verschiedenes. Der Doc-Kommentar des Satzes nennt bisher nur den ersten.
+
+1. **Der Maße-Weg**, den die Roadmap ausschreibt:
+   `IsSeparating.ae_eq_of_forall_condExp_eq` aus **WeakConvergence**,
+   Meilenstein 1. Er ist der, für den `IsSeparating Φ` in der Signatur steht.
+   Sein Preis ist dreifach und war bisher nicht beziffert:
+   * **Eine Dateigrenze.** Die Aussage steht in
+     `WeakConvergence/Suggested.lean:2017`, nicht hier — dieselbe Grenze, an der
+     der zweite `sorry` von Meilenstein 3 hängt.
+   * **Reellwertigkeit.** Dort ist `Γ : Set (E → ℝ)`, hier ist
+     `Φ : Set (E → 𝕂)`. Für `𝕂 = ℂ` ist das nicht dieselbe Aussage.
+   * **Zwei Instanzen und eine Schranke**, die
+     `isQuasiLeftContinuous_of_isRegularizingClass` heute nicht trägt:
+     `[OpensMeasurableSpace E]`, `[MeasurableSpace.CountablySeparated E]` und
+     `hΓb : ∀ f ∈ Γ, ∃ g : E →ᵇ ℝ, ⇑g = f`.
+2. **Der Quadrate-Weg**, den der Schwesternsatz
+   `exists_cadlag_modification_of_isRegularizingClass` in **dieser** Datei
+   nimmt: `ae_eq_of_condExp_eq_of_condExp_mul_conj` (`Suggested.lean:2889`), also
+   `P[g | m'] = f` **und** `P[g ḡ | m'] = f f̄`, woraus `g =ᵐ f` folgt. Er kostet
+   `hsq` — die Quadrate der abzählbaren, punktetrennenden Klasse `Φ₀` liegen in
+   `Φ` — und `hbdd`, eine Schranke an die Mitglieder von `Φ₀`, und er ist über
+   `𝕂` gestellt. Er überquert **keine** Dateigrenze und braucht `IsSeparating`
+   nicht.
+
+**Das Urteil, und es ist zu begründen, nicht zu raten:** der Quadrate-Weg ist der
+bessere, und zwar aus demselben Grund, aus dem ihn die càdlàg-Modifikation
+nimmt. Die Aussage, die ihn trägt, kennt `E` **gar nicht** —
+`ae_eq_of_condExp_eq_of_condExp_mul_conj` spricht über `f g : Ω → 𝕂` und über
+nichts sonst, also fällt `[MeasurableSpace.CountablySeparated E]` fort; er ist
+über `𝕂` und nicht nur über `ℝ` gestellt, und die
+Schranke `hbdd`, die er verlangt, wird für die **Integrierbarkeiten** des
+mittleren Schritts ohnehin gebraucht — `IsCompensatorFor` gibt von `C` nur
+`StronglyAdapted`, also ist `f ∘ X` ohne Schranke nicht einmal integrierbar. Der
+Maße-Weg spart die Schranke nicht ein, er verschiebt sie nur nach `hΓb`. Was der
+Quadrate-Weg zusätzlich verlangt, ist `hsq`, und das ist eine Bedingung an die
+**Klasse**, die der Anwender liefert, nicht an den Raum.
+
+Die Folge davon ist, daß `IsSeparating Φ` aus der Signatur **verschwinden**
+sollte und durch `Φ₀` abzählbar, stetig, punktetrennend, beschränkt und
+quadratabgeschlossen zu ersetzen ist — genau die Hypothesenlage des
+Schwesternsatzes. Dann sind die beiden Sätze von Meilenstein 9 Zwillinge und
+nicht Vettern, und `isQuasiLeftContinuous_of_forall_ae_tendsto_comp` (zehnter
+Lauf), das eine **abzählbare** punktetrennende Klasse verlangt, paßt ohne
+Übersetzung an. Das ist ein Umbau der Aussage und gehört in einen eigenen Lauf;
+dieser Lauf hat die Aussage darum **nicht** angefaßt.
+
+#### Der Durchlauf
+
+Zuerst in `TauCeti/MartingaleProblems/scratch/Middle.lean` gegen Mathlib allein
+entwickelt — die Datei bleibt stehen, ist allein lauffähig und übersetzt ohne
+Fehler und ohne Warnung; `ae_eq_condExp_iSup_of_tendsto` ist dort als Stumpf mit
+`sorry` geführt und als solcher gekennzeichnet, weil er in `Suggested.lean`,
+Abschnitt `LevyUpward`, bewiesen dasteht. Dann nach `Suggested.lean` übernommen,
+in den Abschnitt `Regularizing` unmittelbar hinter `LiftWitness` und vor
+`isQuasiLeftContinuous_of_isRegularizingClass`.
+
+`lake env lean` über die **ganze** Datei gegen v4.33.1, ohne `head` und ohne
+Filter: **kein einziger Fehler**, Rückgabewert `0`, und die Zahl der `sorry`
+bleibt bei **fünf**, denselben fünf. Alle drei neuen Deklarationen mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft. Kein
+neuer Import.
+
+*Eine Falle, die einen Durchlauf gekostet hat, und sie ist die Umkehrung der
+Falle des zehnten Laufs:* `lake env lean … | head -60` schneidet die Ausgabe ab,
+und weil `head` danach die Pipe schließt, endet der Lauf, **ehe** die Datei zu
+Ende übersetzt ist. Über eine 31 000-Zeilen-Datei ist `head` also nicht bloß
+unvollständig, sondern irreführend — es sieht aus wie ein Durchlauf ohne Fehler
+und ist keiner. Der Durchlauf ist ungefiltert zu führen und erst die *Ausgabe*
+zu durchsuchen.
+
+Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 9, als zwei
+benannte Einträge vor `isQuasiLeftContinuous_of_isRegularizingClass`; der
+Beweisweg dieses Satzes ist dort an der Stelle berichtigt, an der er den
+mittleren Schritt ausschrieb, statt auf ihn zu zeigen.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Den Umbau von `isQuasiLeftContinuous_of_isRegularizingClass` auf den
+   Quadrate-Weg**, mit der Begründung oben. *Aussage:* `IsSeparating Φ` fällt
+   weg; statt dessen `Φ₀` abzählbar, stetig, punktetrennend, beschränkt, mit
+   `hsq` wie in `exists_cadlag_modification_of_isRegularizingClass`. Dazu die
+   drei Voraussetzungen des mittleren Schritts, die der Satz noch nicht trägt
+   (die beiden der Hebung und `IsStronglyProgressive 𝓕 C`). *Worauf er ruht:*
+   `ae_eq_condExp_iSup_stoppedValue` und `stoppingFiltration` aus diesem Lauf,
+   `ae_eq_of_condExp_eq_of_condExp_mul_conj` (`:2889`),
+   `isQuasiLeftContinuous_of_forall_ae_tendsto_comp` und
+   `IsCadlagPath.exists_tendsto_comp_monotone` (zehnter Lauf),
+   `stoppedValue_ae_eq_condExp` (zehnter Lauf) für `hOS` über `ℝ≥0`. *Warum
+   jetzt:* der mittlere Schritt ist der letzte gewesen, der Analysis war; was
+   bleibt, ist Buchhaltung über einer entschiedenen Hypothesenlage.
+2. **Die Meßbarkeit des Grenzwerts**, die Eingabe, die Punkt 1 als einzige noch
+   nicht benannt hat — und sie ist billiger, als sie aussieht, **wenn sie skalar
+   gestellt wird**. Nachgesehen und nicht vermutet:
+   `MeasureTheory.StronglyMeasurable.limUnder`
+   (`MeasureTheory/Constructions/Polish/StronglyMeasurable.lean:53`) gibt für
+   `[Countable ι] [l.IsCountablyGenerated] [Nonempty E] [IsCompletelyMetrizableSpace E]`
+   die starke Meßbarkeit von `fun x ↦ limUnder l (f · x)` — **ohne
+   Separabilität des Wertebereichs**; das ist ausdrücklich der Zweck jener Datei
+   (Modul-Doc: „can be extended to strongly measurable functions without
+   assuming separability on the codomain"). Mit `l = atTop` auf `ℕ` sind die
+   ersten beiden Instanzen umsonst.
+
+   **Und daraus folgt die Entscheidung:** der Grenzwert ist in **`𝕂`** zu bilden,
+   nicht in `E`. Der Quadrate-Weg braucht `AEStronglyMeasurable[m'] f P` für
+   `f : Ω → 𝕂`; nimmt man
+   `f̄ ω = limUnder atTop (fun n ↦ f (stoppedValue X (σ n) ω))`, so ist die
+   Voraussetzung an den Wertebereich eine an `𝕂` und keine an `E`, und
+   `isQuasiLeftContinuous_of_forall_ae_tendsto_comp` (zehnter Lauf) verlangt
+   ohnehin nur die **skalaren** Konvergenzen. Die Existenz des Grenzwerts an
+   jedem Stichprobenpunkt kommt aus `IsCadlagPath.exists_tendsto_comp_monotone`
+   und der Stetigkeit von `f`. Damit trägt der ganze Endteil **keine einzige
+   Voraussetzung an `E`** — anders als der Maße-Weg, der zwei verlangt. Die
+   `(hσ n).measurableSpace`-Meßbarkeit der Glieder ist
+   `MeasureTheory.measurable_stoppedValue`
+   (`Probability/Process/Stopping.lean:1048`), und die verlangt
+   `IsStronglyProgressive 𝓕 X` sowie `[PseudoMetrizableSpace E] [BorelSpace E]`
+   — das ist die Stelle, an der `E` doch noch vorkommt, und sie ist zu prüfen,
+   ehe Punkt 1 geschrieben wird.
+3. **Die Leerheitsprobe auf `E = ℕ` am Poissonprozeß**, unverändert Vorschlag 2
+   des Vorlaufs.
+4. **Die fünfzig Aufrufe veralteter Namen**, unverändert Vorschlag 3 des
+   Vorlaufs.
