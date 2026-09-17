@@ -1,4 +1,4 @@
-# Negativaussagen gegen `upstream/master` `f61f3ed7633ff99ecaae4a086395b501652a76ee`
+# Negativaussagen gegen `upstream/master` `8018f6ac06b3ea23aa6f142703ab17a71e57dbe8`
 
 ## Die Behauptungen der Roadmaps
 
@@ -273,6 +273,13 @@ Suche `ContinuousLinearMap|RCLike` unter `Mathlib/Probability/Martingale/, Mathl
 Suche `protected (lemma|theorem) (iSup|biSup)` unter `Mathlib/Probability/`: **0 Treffer** in 0 Dateien — wie erwartet.
 
 
+## `unifintegrable-distribution` — TODO.md Punkt 8, dreiundzwanzigste Lücke
+
+> Die gleichgradige Integrierbarkeit über einer Folge verschiedener Räume zusammen mit der Verteilungskonvergenz gibt es nicht: `UnifIntegrable` kommt in `ConvergenceInDistribution.lean` nicht vor, und die Erwartungswertkonvergenz aus Verteilungskonvergenz plus gleichgradiger Integrierbarkeit steht in keiner Fassung da.
+
+Suche `UnifIntegrable|unifIntegrable` unter `Mathlib/MeasureTheory/Function/ConvergenceInDistribution.lean`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
 ## `martingale-setIntegral-weight` — MartingaleProblems/README.md, Meilenstein 5
 
 > Ein Martingal gegen eine **beschränkte** Gewichtsfunktion getestet hat in Mathlib keinen Satz; der Indikatorfall steht als `Martingale.setIntegral_eq` und ist die einzige Fassung.
@@ -284,5 +291,5 @@ Suche `setIntegral.*[Mm]artingale|[Mm]artingale.*setIntegral` unter `Mathlib/Pro
 
 ## Zusammenfassung
 
-38 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
+39 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
 

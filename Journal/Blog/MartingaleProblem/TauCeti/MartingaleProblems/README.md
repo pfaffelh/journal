@@ -469,14 +469,21 @@ generating its σ-algebra, and `X : Ω → F`.
   for every `(f,g) ∈ A`; and the same with `h k` bounded continuous when `E` is
   metrizable. The continuous form rests on the measurable one through exactly two
   statements of the roadmap **WeakConvergence**, and on nothing else:
-  `integral_mul_eq_zero_of_isMulSystem`, which carries the vanishing of
-  `∫ g · f` from a multiplicative system to the whole σ-algebra it generates, and
+  `integral_mul_ofReal_eq_zero_of_isMulSystem`, which carries the vanishing of
+  `∫ g · f` from a multiplicative system of **real** functions to the whole
+  σ-algebra it generates while the other factor stays `𝕂` valued, and
   `generateFromFuns_setOf_continuous_bounded`, which says that on a
   pseudo-metrizable space the bounded continuous real functions generate the
   Borel σ-algebra. The multiplicative system is the set of products
-  `ω ↦ ∏ k, h k (X (r k) ω)` with `r k ≤ s` and `h k` bounded continuous, and the
-  σ-algebra it generates is `𝓕 s` by `MeasurableSpace.comap_iSup` applied to that
-  second statement. Metrizability is consumed there and nowhere else. This is the statement that turns every later theorem into a
+  `ω ↦ ∏ k, h k (X (r k) ω)` with `r k ≤ s` and `h k` bounded continuous; it is
+  multiplicative because `Fin.append` concatenates two families, and
+  `Fin.prod_univ_add` splits the product back. What is needed of the σ-algebra
+  it generates is **one inequality and not an equality with `𝓕 s`**:
+  `MeasurableSpace.comap (X r) _ ≤ generateFromFuns K` for every `r ≤ s`, by
+  `MeasurableSpace.comap_iSup` and `MeasurableSpace.comap_comp` applied to that
+  second statement. The hypothesis of the first on the constant function,
+  `∫ g = 0`, is the right hand side at `n = 0`, where the empty product is `1`.
+  Metrizability is consumed in the second and nowhere else. This is the statement that turns every later theorem into a
   statement about finite dimensional distributions, and it is the reason the
   index needs no order structure beyond a preorder. The filtration is the
   natural one of `X`, `𝓕 s = ⨆ r ∈ Set.Iic s, MeasurableSpace.comap (X r) _`,
@@ -8679,6 +8686,14 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   this milestone supplies it over `ℝ≥0` and over no other index. Naming the
   consequence rather than the cause is what removes the solution set `𝓧` from
   the theorem below. **In Lean** on 2026-09-17, fourteenth run.
+* `isOptionalSamplingFor_of_martingale`, the property over `ι = ℝ≥0`: for `Y` a
+  martingale with right continuous paths, strongly progressively measurable and
+  bounded, `IsOptionalSamplingFor Y 𝓕 P`. It is `stoppedValue_ae_eq_condExp` of
+  this milestone quantified over the stopping times bounded by a `t`, and it is
+  the one input every instance of the two theorems below needs. The statement
+  belongs where both of its ends are visible: `stoppedValue_ae_eq_condExp` is
+  proved after the block in which `IsOptionalSamplingFor` is defined, so either
+  that block moves or the instances are stated after it.
 * `IsStronglyMeasurableAlongStoppingTimes C 𝓕`: for every stopping time `σ`,
   `stoppedValue C σ` is `hσ.measurableSpace`-strongly measurable.
   `IsCompensatorFor` gives `StronglyAdapted 𝓕 C`, and adaptedness at a *time* is
@@ -8804,15 +8819,162 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   `MeasureTheory.measurable_stoppedValue` is not used: the limit is taken in `𝕂`
   and not in `E`, and what has to be measurable is a scalar function, which the
   conditional expectation supplies for free.
+* `tendsto_compensator_mpFamily`, the compensator of `mpFamily` as a **continuous**
+  function of time at every sample point: for `g` measurable with `‖g x‖ ≤ b`, a
+  progressively measurable `X` and a clock with `Clock.IsContinuousFor c`,
+  ```
+  Tendsto (fun s ↦ ∫ u in Clock.interval q c ⊥ s, g (X u ω) ∂q) (𝓝 t)
+    (𝓝 (∫ u in Clock.interval q c ⊥ t, g (X u ω) ∂q)) .
+  ```
+  It is `norm_compensator_sub_le_of_isProgressive` squeezed against the shrinking
+  windows, and it is continuity and not right continuity: the window between `s`
+  and `t` is small on both sides. **In Lean** on 2026-09-17, fifteenth run.
+* `tendsto_measureReal_interval_of_isLUB`, the mass of the window between a
+  nondecreasing sequence and its least upper bound: for `s` monotone with
+  `∀ n, s n ≤ T` and `IsLUB (Set.range s) T`, and a clock with
+  `Clock.IsContinuousFor c`,
+  `Tendsto (fun n ↦ q.real (Clock.interval q c (s n) T)) atTop (𝓝 0)`. The
+  sequence converges to `T` (`tendsto_atTop_isLUB`) and the clock hypothesis is a
+  statement about `𝓝 T`; `s n ≤ T` turns its `min` and `max` into the endpoints.
+* `tendsto_measureReal_interval_of_forall_exists_lt`, the same conclusion from
+  `Clock.IsAtomless` instead, by continuity from above: the windows decrease, and
+  their intersection sits inside `{u | T ≤ u ∧ u ≤ T}`, which atomlessness
+  declares null. Neither hypothesis implies the other — over a discrete index
+  `Clock.IsContinuousFor` is vacuous and atomlessness may fail — and **under
+  `Clock.Conv.predictable` neither is needed**, the intersection being empty.
+* `isL1LeftContinuousAlongStoppingTimes_mpFamily`, the hypothesis of
+  `isQuasiLeftContinuous_of_isRegularizingClass` that the clock and not the
+  process discharges: for a bounded measurable `g`, a progressively measurable
+  `X` and `Clock.IsContinuousFor c`, the compensator
+  `C t = ∫ u in Clock.interval q c ⊥ t, g (X u) ∂q` is left continuous in `L¹`
+  along stopping times. Dominated convergence over the pointwise estimate
+  `‖C (min τ' t) - C (min (τ n) t)‖ ≤ b * q.real (Clock.interval q c (min (τ n) t) (min τ' t))`,
+  with `q.real (Set.Iic t)` as the majorant, finite by `Clock.measure_Iic_ne_top`.
+  The least upper bound is read off the stopping times and **no interchange of
+  `min` with `⨆` is performed**, which is what would need the index to be a
+  complete lattice. Strong measurability along stopping times is an input, since
+  `𝕂` carries no `MeasurableSpace`.
 * `isQuasiLeftContinuous_of_isMPSolutionFor`, the classical instance
-  (Ethier–Kurtz, Theorem 4.3.12). For `A ⊆ Cb(E) × Bdd(E)` with separating
-  domain and a solution `X` with càdlàg paths, `IsQuasiLeftContinuous X 𝓕 P`
-  **provided the clock has no atoms**, `∀ u, q {u} = 0`. The compensator is
-  `C t = ∫ u in Clock.interval q c ⊥ t, g (X u) ∂q`, so
-  `‖C (min τ' t) - C (min (τ n) t)‖ ≤ ‖g‖ * q (Clock.interval q c (min (τ n) t) (min τ' t))`,
-  the sets on the right decrease to the single point `min τ' t`, and continuity
-  from above of the clock on `Clock.interval q c ⊥ t`, which has finite measure,
-  finishes it.
+  (Ethier–Kurtz, Theorem 4.3.12). For `A` with every `p ∈ A` carrying a
+  continuous bounded `p.1` and a measurable bounded `p.2`, a countable
+  `Φ₀ ⊆ Prod.fst '' A` that separates the points of `E` and whose squares lie in
+  `Prod.fst '' A`, a progressively measurable and adapted `X` with càdlàg paths,
+  a clock with `Clock.IsContinuousFor c`, optional sampling for the members of
+  `mpFamily A Q c X` and strong measurability of the compensators along stopping
+  times: `IsQuasiLeftContinuous X 𝓕 P`. Every hypothesis of the abstract theorem
+  is read off the data by `isCompensatorFor_mpFamily`,
+  `tendsto_compensator_mpFamily` and
+  `isL1LeftContinuousAlongStoppingTimes_mpFamily`.
+
+  **The clock is not asked to be atomless**, although Ethier–Kurtz state the
+  theorem for a clock without atoms. What the `L¹` left continuity needs is that
+  the windows shrink, and `Clock.IsContinuousFor` — which the compensator needs
+  anyway, for its one sided limits — says exactly that along the filter a
+  nondecreasing sequence converges along. The sharpness is unaffected: the clock
+  of `not_isQuasiLeftContinuous_of_atom` fails `Clock.IsContinuousFor` and not
+  merely `Clock.IsAtomless`, which is `AtomWitness.not_isContinuousFor_atomClock`.
+
+  **The separating class must be countable**, as for
+  `exists_cadlag_modification_of_isRegularizingClass` and for the same reason: a
+  separating class gives one null set per test function and countably many of
+  them may be combined, uncountably many may not. `IsSeparating` alone, which
+  this statement carried until 2026-09-17, does not suffice.
+
+  **`IsMPSolution` is replaced by `IsOptionalSamplingFor`**, and `Measurable p.2`
+  is added: the first because over a general index the martingale property does
+  not give optional sampling, the second because the compensator is a Bochner
+  integral of `p.2 ∘ X`. **In Lean** on 2026-09-17, fifteenth run.
+* `isOptionalSamplingFor_of_martingale`, the discharge of the first of those two
+  hypotheses over the index `ℝ≥0`: for a martingale `Y` that is progressively
+  measurable, has right continuous paths and is bounded on every bounded stretch
+  of time, `IsOptionalSamplingFor Y 𝓕 P`. It is `stoppedValue_ae_eq_condExp` with
+  the level chosen by the bound, since the definition quantifies over a time and
+  a stopping time below it. The bound is the **local** one, one constant per
+  level and not one for all time, which is what the compensator of a test process
+  permits: it grows with the window. `isOptionalSamplingFor_zero` is the
+  emptiness check. **In Lean** on 2026-09-17, sixteenth run.
+* `isStronglyMeasurableAlongStoppingTimes_of_isStronglyProgressive`, the
+  discharge of the second over `ℝ≥0` and a real codomain: a progressively
+  measurable real process is strongly measurable at every stopping time for the
+  σ-algebra of that stopping time. It is Mathlib's `measurable_stoppedValue`
+  (`Probability/Process/Stopping.lean:1048`) followed by
+  `Measurable.stronglyMeasurable`, and it is available here and not in the
+  abstract theorem for the reason the docstring of
+  `IsStronglyMeasurableAlongStoppingTimes` records: `RCLike 𝕂` carries a topology
+  and no `MeasurableSpace`, so the `[BorelSpace β]` hypothesis of that theorem
+  cannot be written down over a general `𝕂`, while over `ℝ` it can. **In Lean**
+  on 2026-09-17, sixteenth run.
+* `IsCadlagPath.comp_coe_nnreal`, the restriction of a càdlàg path on `ℝ` to a
+  càdlàg path on `ℝ≥0`, with `tendsto_coe_nnreal_nhdsWithin_Ioi` and
+  `tendsto_coe_nnreal_nhdsWithin_Iio` as its two halves. The jump construction is
+  written over `ℝ` and every statement of Milestones 3, 6 and 9 is indexed by
+  `ℝ≥0`, which is the index the clock and the filtration carry; the crossing is
+  not formal, since `IsCadlagPath` is a statement about the one sided
+  neighbourhood filters and what has to be produced is that the coercion carries
+  each of them into its counterpart. It does, because it is continuous and
+  strictly monotone. At `t = 0` the left filter is `⊥` and the second half is
+  empty, which is the right answer. Only the restriction is available and only it
+  is wanted: nothing on `[0, ∞)` recovers the negative times. **In Lean** on
+  2026-09-17, sixteenth run.
+* `ae_isCadlagPath_nnreal_jumpProcessE`, `isOptionalSamplingFor_mpFamily_jumpProcessE`
+  and `isStronglyMeasurableAlongStoppingTimes_compensatorE`, the three
+  hypotheses of `isQuasiLeftContinuous_of_isMPSolutionFor` read off the data of
+  Milestone 4. The first is `ae_isCadlagPath_jumpProcessE` through
+  `IsCadlagPath.comp_coe_nnreal`. The second spends the same four statements that
+  `martingale_stoppedProcess_mpFamily_jumpProcessE` spends —
+  `jumpProcessE_isMPSolution`, `isStronglyProgressive_mpFamily_jumpProcessE`,
+  `tendsto_nhdsGE_mpFamily_jumpProcessE` and the local bound
+  `exists_bound_mpFamily_jumpProcessE` — so it costs no hypothesis beyond the
+  ones the jump construction already carries. The third rests on
+  `isStronglyProgressive_compensatorE`, which says of the compensator alone what
+  `isStronglyProgressive_mpFamily_jumpProcessE` says of the difference
+  `f ∘ X - C`; the two proofs are the same one with the first summand deleted,
+  and the deletion costs the bound on the rate, the bound on the integrand
+  becoming a hypothesis instead of a consequence of `abs_jumpApply_le`. **In
+  Lean** on 2026-09-17, sixteenth run.
+* `isQuasiLeftContinuous_jumpProcessE`, Ethier–Kurtz 4.3.12 for the Markovian
+  jump processes: over a countable state space with the discrete topology and
+  measurable points, and for a measurable rate with `0 < lam ≤ L`, the local jump
+  process is quasi-left-continuous. Every hypothesis of
+  `isQuasiLeftContinuous_of_isMPSolutionFor` is read off the data of Milestone 4.
+  The separating class is the point indicators
+  (`mem_image_fst_jumpOperator_indicator`): countable because `E` is, idempotent
+  so that `hsq` is about them and not about a larger class, separating because a
+  point is determined by its own indicator, and bounded by `1` — which is what
+  makes them usable where a general test function over an infinite `E` is not.
+  They are written as `Set.indicator` and not as an `if`, a general state space
+  carrying no `DecidableEq`. The discrete topology is what makes `Continuous p.1`
+  free. `Nonempty E` is not a hypothesis: the initial distribution is a
+  probability measure, so the empty state space is excluded by `measure_univ`,
+  and `0 < L` is read off any state. **In Lean** on 2026-09-17, sixteenth run.
+* `isQuasiLeftContinuous_poissonProcess`, the Poisson process is
+  quasi-left-continuous. It is `isQuasiLeftContinuous_jumpProcessE` on the
+  Poisson data, the rate being the constant `1`, and it is the first instance of
+  that theorem over an **infinite** state space: over two states the countability
+  of the separating class and the boundedness of its members are free for any
+  test function whatever, so an instance there cannot show that the countability
+  hypothesis carries weight. Over `ℕ` the point indicators are a countable class
+  inside an uncountable one, and it is they that are used. The two instances `ℕ`
+  supplies are `TopologicalSpace ℕ := ⊥` and `DiscreteTopology ℕ`, so
+  `Continuous p.1` stays free. **In Lean** on 2026-09-17, seventeenth run.
+* `isQuasiLeftContinuous_mm1`, the M/M/1 queue is quasi-left-continuous, with
+  positivity `0 < β` and bound `β + δ` from `birthDeathRate_mm1_mem` and the
+  Markov property of the kernel carried as an instance hypothesis exactly as in
+  `mm1_isMPSolution`. It is the instance with a **state dependent** rate, taking
+  the two values `β` at the empty queue and `β + δ` elsewhere; on a constant rate
+  the positivity and the bound are the same statement at every state, and an
+  instance where they are not is what shows the two hypotheses of
+  `isQuasiLeftContinuous_jumpProcessE` are spent separately. **In Lean** on
+  2026-09-17, seventeenth run.
+* `exists_bound_mpFamily_jumpProcessE`, the local bound of a test process of the
+  local jump problem, `C + 2LC·j` on `[0, j]` with `C` a bound for the test
+  function and `L` one for the rate. It is the third hypothesis of
+  `martingale_stoppedProcess` and the fourth of
+  `isOptionalSamplingFor_of_martingale`, and both spend it. Nothing is assumed
+  about the state space: the two positivity facts the estimate needs, `0 ≤ L` and
+  `0 ≤ C`, are read off the sample point, whose first coordinate is a chain of
+  states, so the empty state space is not a case to be excluded and no measure is
+  needed to produce a point. **In Lean** on 2026-09-17, sixteenth run.
 * `not_isQuasiLeftContinuous_of_not_ae_tendsto`, the contrapositive of
   `IsQuasiLeftContinuous.ae_eq_leftLim` and the half of the counterexample that
   is independent of the martingale problem: for a nondecreasing `s : ℕ → ι` with
@@ -8831,8 +8993,10 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   the statement, `∃ s : ℕ → ι, StrictMono s ∧ (∀ n, s n < u) ∧ Tendsto s atTop
   (𝓝 u)`; at `u = ⊥` the example does not exist, because there is no sequence
   `s n ↑ u` and quasi-left-continuity asks nothing there. The conclusion carries
-  every hypothesis of `isQuasiLeftContinuous_of_isMPSolutionFor` except `hQ` —
-  `IsProbabilityMeasure P`, the bounds and the continuity of `hA`,
+  `¬ Q.IsContinuousFor c` beside `Q.q {u} ≠ 0`, and that is the conjunct that
+  makes the delimitation exact, since atomlessness is not a hypothesis of
+  `isQuasiLeftContinuous_of_isMPSolutionFor` and shrinking windows are. It also
+  carries `IsProbabilityMeasure P`, the bounds and the continuity of `hA`,
   `IsSeparating (Prod.fst '' A)` and the almost sure càdlàg paths — because
   without them the example is empty: for `A = ∅` the family `mpFamily A Q c X`
   is empty, `IsMPSolution` holds of every measure, and any process that fails
@@ -8845,11 +9009,16 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   `⊤` and whose measure is `Measure.dirac u`, with
   `atomClock_apply_singleton : (atomClock u).q {u} = 1`, so that the atom is
   there and every down-set is measurable for free, together with
-  `not_isAtomless_atomClock : ¬ (atomClock u).IsAtomless`, which is what binds
-  the sharpness to the hypothesis it is sharp against: without it the example
-  might still satisfy `hQ` of `isQuasiLeftContinuous_of_isMPSolutionFor` and
-  contradict that theorem instead of delimiting it. It is `measure_mono` from
-  the singleton into the degenerate interval `{v | u ≤ v ∧ v ≤ u}`;
+  `not_isAtomless_atomClock : ¬ (atomClock u).IsAtomless`, which says that the
+  example is an example *of an atom*, as its name claims — `measure_mono` from
+  the singleton into the degenerate interval `{v | u ≤ v ∧ v ≤ u}` — and
+  `not_isContinuousFor_atomClock : ¬ (atomClock u).IsContinuousFor
+  Clock.Conv.optional`, which is what binds the sharpness to the hypothesis it is
+  sharp against: without it the example might satisfy every hypothesis of
+  `isQuasiLeftContinuous_of_isMPSolutionFor` and contradict that theorem instead
+  of delimiting it. Below `u` the window `Set.Iic u \ Set.Iic s` still contains
+  the atom, so the function the clock hypothesis asks to vanish is constantly `1`
+  along a sequence increasing to `u`;
   `coinProcess u t ω = if u ≤ t then ω else false`,
   the path over `Ω = E = Bool`, where the coin is both the sample point and the
   state; `isCadlagPath_coinProcess`, which holds for every `u` and every `ω`
@@ -8927,7 +9096,23 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   probability `1/2` for any `s n ↑ 1`. This is
   `not_isQuasiLeftContinuous_of_atom`, and the same process with `q = volume` is
   quasi-left-continuous by `isQuasiLeftContinuous_of_isMPSolutionFor`. The pair
-  fixes where atomlessness is a hypothesis and where it is not.
+  fixes where the regularity of the clock is a hypothesis and where it is not,
+  and it is `Clock.IsContinuousFor` and not `Clock.IsAtomless` that the positive
+  theorem asks for — `lebesgueClock_isContinuousFor_optional` gives it for
+  `q = volume`, `not_isContinuousFor_atomClock` denies it for the dirac.
+
+  The positive half is `isQuasiLeftContinuous_flip`: the two state jump process
+  of Milestone 4 over `lebesgueClock` is quasi-left-continuous, every hypothesis
+  discharged on data. The paths it is applied to are **the paths of the process
+  itself** and not of a modification — a step path is càdlàg to begin with, so
+  `exists_cadlag_modification_flip` is not an input here. It is an instance of
+  `isQuasiLeftContinuous_jumpProcessE`, which says the same over **any** countable
+  state space and is therefore a statement about the Markovian jump processes and
+  not about one example: the Poisson process and M/M/1 of Milestone 4 are covered
+  by it, both having bounded rate. It is kept as a named statement because it is
+  one half of a *pair* — the general theorem says nothing about the clock beyond
+  `Clock.IsContinuousFor`, and it is on precisely these data that the other clock
+  makes the conclusion fail. **In Lean** on 2026-09-17, sixteenth run.
 * **Cutting down to an open subset.** `E = ℝ`, `U = Set.Ioo (-1) 1`, and the
   bump sequence `f n x = min 1 (n * Metric.infDist x Uᶜ)` of Milestone 2 with
   `g n = 0`. For a solution started inside `U` whose paths do not leave it,
@@ -8946,19 +9131,66 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
 * `PContinuous ψ X`, for `ψ : F → ℝ` Borel: there is a Borel `C` with
   `P {X ∈ C} = 1` such that `ψ` is continuous at every point of `C` along
   convergent sequences with limit in `C`.
-* `mpSolution_of_tendsto`: assume `𝓧` is canonical for `X` with determining set
-  `𝓩°`, and that for every `Y ∈ 𝓧` with canonical version `Y°`, every `t ∈ D`,
-  `s ∈ D ∩ Iic t` and `Z ∈ 𝓩° s`:
-  (a) the real random variables `Y° r (X n)` for `r ∈ D ∩ Iic t` and
-  `(Y° t - Y° s) * Z (X n)` converge in distribution to their counterparts under
-  `X`; (b) `{Y° r (X n) | r ∈ D ∩ Iic t, n}` is uniformly integrable;
-  (c) `𝔼^{P n}[(Y° t (X n) - Y° s (X n)) * Z (X n)] → 0`.
+* `mpSolution_of_tendsto`: assume `X` and every `X n` measurable, every member of
+  every `𝓩° r` bounded and measurable, `𝓧` canonical for `X` with determining set
+  `𝓩°`, and that for every `Y ∈ 𝓧` with canonical version `Y°` and every `t ∈ D`:
+  every `Y° r (X n)` with `r ∈ D ∩ Iic t` is integrable; (a) the real random
+  variables `Y° r (X n)` for `r ∈ D ∩ Iic t` converge in distribution to their
+  counterparts under `X`, and so does `(Y° t - Y° s) * Z (X n)` for every
+  `s ∈ D ∩ Iic t` and `Z ∈ 𝓩° s`; (b) `{Y° r (X n) | r ∈ D ∩ Iic t, n}` is
+  uniformly integrable; (c) `𝔼^{P n}[(Y° t (X n) - Y° s (X n)) * Z (X n)] → 0`.
   Then `P[Y t | 𝓕 s] =ᵐ Y s` for all `s ≤ t` in `D`; and when `ι` carries the
-  order topology with `D` countable dense, `D` contains the greatest element if
-  there is one, and every `Y ∈ 𝓧` is right continuous, `P` is a solution.
+  order topology and is first countable, every index is either in `D` or
+  approached from the right inside `D`, and every `Y ∈ 𝓧` is right continuous,
+  `P` is a solution. That last step is
+  `isMPSolution_of_forall_condExp_eq_of_dense`, and the condition on `D` is its
+  hypothesis `hDr` and not density — see there for why density is not enough.
   State hypothesis (a) in this form. It carries no topology on `F`: it is a
   statement about finitely many real random variables, and the versions where
   `F` is metrizable and the coordinates are continuous are corollaries.
+  **In Lean** on 2026-09-17, nineteenth run.
+  **Items (a) and (b) are quantified outside `∀ Z ∈ 𝓩° s`, and that is forced.**
+  They mention `Y°` and not `Z`, and they are what produces `Integrable (Y r) P`,
+  which `IsDetermining` asks for whether or not `𝓩° s` has a member; an empty
+  `𝓩° s` makes the orthogonality hypothesis of `IsDetermining` vacuous but leaves
+  its integrability hypothesis standing, so an integrability hypothesis hidden
+  under `∀ Z` would have no source there.
+  **Uniform integrability is written by the tails**
+  `∫ max (‖Y° r (X n)‖ - c) 0 ≤ ε` and not by the truncated integrals
+  `∫_{c ≤ ‖Y° r (X n)‖} ‖Y° r (X n)‖ ≤ ε`. The tail form is implied by the other,
+  since `max (‖x‖ - c) 0 ≤ {y | c ≤ ‖y‖}.indicator ‖·‖ x` pointwise, so it is the
+  weaker hypothesis; and it asks no measurability of the sublevel sets. It is
+  also what the proof reads.
+* `radialTrunc`, the bounded continuous approximation to the identity that the
+  previous item runs on: `radialTrunc c x = (c / max c ‖x‖) • x`, the retraction
+  of a normed space onto the closed ball of radius `c`, with
+  `‖x - radialTrunc c x‖ ≤ max (‖x‖ - c) 0`. Convergence in distribution carries
+  the integrals of **bounded** continuous functions, and the integrals that have
+  to converge are those of the variables themselves; the truncation is the
+  bridge, and the tail is the error it commits. Written without a case
+  distinction so that continuity is `Continuous.div` and the denominator, bounded
+  below by `c`, is never zero. **In Lean** on 2026-09-17, nineteenth run, with
+  `integrable_tail`, `integral_tail_antitone` and
+  `abs_integral_sub_integral_radialTrunc_le`.
+* `integral_eq_zero_of_tendstoLaw`, the analytic core: for variables on different
+  probability spaces converging in distribution, uniformly integrable by the
+  tails, integrable on each space and with vanishing integrals, the limit has
+  vanishing integral. The `𝕂`-valued statement is obtained by testing against
+  `RCLike.reCLM` and `RCLike.imCLM`, since `TendstoLaw` tests against **real**
+  functions; the truncation level is chosen for the sequence by the uniform
+  integrability and for the limit by `tendsto_integral_tail`, and the larger of
+  the two serves both sides. Mathlib's `MeasureTheory.UnifIntegrable` is a
+  predicate about one fixed measure and does not apply across a sequence of
+  spaces. **In Lean** on 2026-09-17, nineteenth run.
+* `integrable_of_tendstoLaw`: a family with a uniform `L¹` bound has an
+  integrable limit. This is the half of (b) that is spent before any martingale
+  identity, and nothing else in the statement makes `Y s` and `Y t` integrable.
+  The bound travels by the bounded continuous truncations `min ‖x‖ M`, and the
+  passage `M → ∞` is monotone convergence. **In Lean** on 2026-09-17, nineteenth
+  run.
+* `tendsto_integral_tail`: the tails of a single integrable function vanish. It
+  is what lets the limit carry the same truncation level as the sequence, and it
+  is dominated convergence. **In Lean** on 2026-09-17, nineteenth run.
 * `mpSolution_of_tendsto_of_pContinuous`: the corollary in which (a) is replaced
   by `X n → X` weakly on a separable metric `F` together with `P`-continuity of
   `Y° t` and `Y° t * Z`. Uses the continuous mapping theorem of the roadmap
@@ -9000,6 +9232,49 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   `mpSolution_of_tendsto_augmented` is what remains: adjoining the coordinate at
   `1` to the path space makes the functional continuous. This pair fixes the
   division of labour between the two corollaries.
+* `isMPSolution_of_forall_condExp_eq_of_dense`, the passage from the martingale
+  identity along `D` to the whole index, and the last step of
+  `mpSolution_of_tendsto`. Over an index with the order topology and a first
+  countable one, for `𝓧` strongly adapted, integrable at each index and with
+  right continuous paths, and for a `D` such that every index is either in `D` or
+  has `𝓝[D ∩ Set.Ioi t] t` nontrivial, the identity along `D` gives
+  `IsMPSolution 𝓧 𝓕 P`. Two hypotheses that look natural are absent and one that
+  looks technical is not.
+  **Density of `D` is not enough**, and the hypothesis is the one
+  `LiftWitness.exists_countable_right_dense` already delivers: at an index
+  `t ∉ D` isolated from the right — an index with an immediate successor, which
+  an order like `Set.Iic 0 ∪ Set.Ici 1` inside `ℝ` has — the filter
+  `𝓝[D ∩ Set.Ioi t] t` is `⊥`, right continuity at `t` is vacuous and `Y t` is
+  unconstrained. Asking `D` to contain the greatest element of `ι` covers only
+  one of the two ways an index can be unapproachable from the right.
+  **Countability of `D` is not used.** It is what makes such a `D` cheap to
+  exhibit; what the proof needs is that `𝓝[D ∩ Set.Ioi t] t` be countably
+  generated, and that is `[FirstCountableTopology ι]`.
+  **Uniform integrability is not a hypothesis, it is a consequence.** A sequence
+  of times in `D` bounded above by a single `t₁ ∈ D` makes `Y (w n)` the
+  conditional expectation of the one integrable function `Y t₁`, by the identity
+  along `D` alone, and the conditional expectations of a fixed integrable
+  function are a uniformly integrable family. So the identity along `D` produces
+  what carrying it across needs. **In Lean** on 2026-09-17, seventeenth run.
+* `tendsto_eLpNorm_sub_of_forall_condExp_eq`, the step in which that uniform
+  integrability is spent: for a sequence in `D` bounded above by a member of `D`,
+  almost everywhere convergence of `Y (w n)` becomes `L¹` convergence. It is
+  Vitali on top of `Integrable.uniformIntegrable_condExp_filtration`, with
+  `norm_condExp_le` and `UnifIntegrable.of_norm_le_ae` carrying the property from
+  the real dominating family to the `𝕂`-valued one, so the real--imaginary split
+  is avoided exactly as in
+  `Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi`. **In Lean** on
+  2026-09-17, seventeenth run.
+* `exists_seq_mem_of_nhdsWithin_Ioi_neBot`, the sequence the two steps run along:
+  inside `D`, falling to `t` from the right, bounded above by a member of `D`,
+  and confined to a prescribed neighbourhood of `t`. The upper bound is what buys
+  the uniform integrability and it costs nothing — the filter already produces a
+  point `t₁` of `D ∩ Set.Ioi t`, and `Set.Iio t₁` is a neighbourhood of `t`, so
+  cutting the filter down to it changes nothing. This is cheaper than extracting
+  a decreasing subsequence, which is the other way to a common upper bound and
+  needs a recursion. The neighbourhood argument is what lets the second step keep
+  its sequence below a time `t` that is not in `D`. **In Lean** on 2026-09-17,
+  seventeenth run.
 
 ## Milestone 11: the Skorokhod instances
 

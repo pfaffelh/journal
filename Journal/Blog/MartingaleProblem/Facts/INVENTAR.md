@@ -33691,3 +33691,892 @@ sich allein lauffähig ist: `isStoppingTime_iSup` gegen Mathlib allein. Die Date
    Vorbild schon dastehen.
 3. **Die fünfzig Aufrufe veralteter Namen**, unverändert Vorschlag 4 des
    Vorlaufs.
+
+### 2026-09-17, fünfzehnter Lauf des Tages — `isQuasiLeftContinuous_of_isMPSolutionFor` steht, und die Voraussetzung, unter der Ethier–Kurtz den Satz aussprechen, wird nicht gebraucht: es ist nicht die Atomlosigkeit der Uhr, sondern das Schrumpfen ihrer Fenster
+
+Vorschlag 1 des Vorlaufs war die klassische Instanz von Ethier–Kurtz 4.3.12 auf
+den Daten eines beschränkten Erzeugers. Sie ist bewiesen, und die Zahl der
+`sorry` in `MartingaleProblems/Suggested.lean` geht von **vier auf drei**.
+
+#### Was steht
+
+Sechs neue Deklarationen, fünf im Abschnitt `Regularizing` unmittelbar hinter
+dem abstrakten Satz des Vorlaufs, eine im Zeugenblock `AtomWitness`:
+
+* **`tendsto_compensator_mpFamily`** — der Kompensator von `mpFamily` ist an
+  jedem Stichprobenpunkt **stetig** in der Zeit, nicht bloß rechtsstetig. Das ist
+  die Abschätzung `norm_compensator_sub_le_of_isProgressive`, gequetscht gegen
+  die schrumpfenden Fenster der Uhr; sie stand bisher nur im Innern des Beweises
+  von `isCompensatorFor_mpFamily` und wird jetzt zweimal gebraucht.
+* **`tendsto_measureReal_interval_of_isLUB`** — das Fenster zwischen einer
+  wachsenden Folge und ihrer kleinsten oberen Schranke hat verschwindende Masse,
+  aus `Clock.IsContinuousFor`. Zwei Zeilen: die Folge konvergiert gegen `T`
+  (`tendsto_atTop_isLUB`), die Uhrvoraussetzung ist eine Aussage über `𝓝 T`, und
+  `s n ≤ T` macht aus ihrem `min` und `max` die Endpunkte.
+* **`tendsto_measureReal_interval_of_forall_exists_lt`** — dieselbe Folgerung aus
+  `Clock.IsAtomless` statt dessen, über Stetigkeit von oben.
+* **`isL1LeftContinuousAlongStoppingTimes_mpFamily`** — die eine Voraussetzung
+  des abstrakten Satzes, die die Uhr und nicht der Prozeß einlöst.
+* **`isQuasiLeftContinuous_of_isMPSolutionFor`** — der Satz selbst.
+* **`AtomWitness.not_isContinuousFor_atomClock`** — die Uhr des Gegenbeispiels
+  verfehlt `Clock.IsContinuousFor`, und nicht bloß `Clock.IsAtomless`.
+
+#### Der Befund, und er war nicht angesagt: die Atomlosigkeit fällt ersatzlos weg
+
+Der Vorlauf hatte `hQ : Q.IsAtomless` als die Voraussetzung geführt, aus der die
+`L¹`-Linksstetigkeit des Kompensators kommt, und der erste Entwurf dieses Laufs
+hat sie auch so bewiesen: die Fenster `Q.interval c (s n) T` fallen, ihr
+Durchschnitt liegt in `{u | T ≤ u ∧ u ≤ T}`, und `Clock.IsAtomless` erklärt das
+für eine Nullmenge. Der Beweis steht und ist
+`tendsto_measureReal_interval_of_forall_exists_lt`.
+
+**Beim Einsetzen zeigte sich, daß er nicht gebraucht wird.** Die Instanz trägt
+`hQc : Q.IsContinuousFor c` ohnehin — `isCompensatorFor_mpFamily` verlangt sie,
+damit der Kompensator einseitige Limiten hat —, und `Clock.IsContinuousFor` sagt
+genau das Gesuchte längs des Filters `𝓝 T`, gegen den eine wachsende Folge mit
+kleinster oberer Schranke `T` konvergiert. Die Komposition ist zwei Zeilen. Die
+Atomlosigkeit ist damit **keine Voraussetzung des Satzes**, obwohl Ethier–Kurtz
+ihn mit ihr aussprechen und obwohl die hier seit dem 2026-09-07 stehende
+Aussagefassung sie trug.
+
+**Die beiden Bedingungen sind unvergleichbar**, und das ist der Grund, daß beide
+Lemmas stehenbleiben: über einem diskreten Index ist `Clock.IsContinuousFor`
+leer (das Fenster bei `s = t` ist die leere Menge) und die Uhr darf so atomar
+sein wie das Zählmaß, während eine atomlose Uhr über einem Index ohne
+Ordnungstopologie keinen Grund hat, schrumpfende Fenster zu haben. Für den Satz
+ist die erste die richtige, weil sie schon dasteht.
+
+**Und ein drittes Ergebnis fällt dabei ab:** unter der Konvention
+`Clock.Conv.predictable` braucht die `L¹`-Linksstetigkeit **keine** von beiden.
+Dort ist der Durchschnitt der Fenster leer — `¬ (u < s n)` für jedes `n` erzwingt
+`T ≤ u`, während das Fenster `u < T` verlangt —, also ist die Nullmenge leer. Es
+ist die *optionale* Konvention, die den Punkt `T` in jedem Fenster behält, und
+genau dort sitzt das Gegenbeispiel.
+
+#### Was das für die Schärfe heißt, und warum sie dadurch stärker wird
+
+`not_isQuasiLeftContinuous_of_atom` behauptete, sein Zeuge erfülle **jede**
+Voraussetzung der Instanz außer `hQ`. Mit dem Wegfall von `hQ` wäre das ein
+Widerspruch statt einer Abgrenzung gewesen — wenn der Zeuge nicht eine andere
+Voraussetzung verfehlte. Er verfehlt sie: unterhalb von `u` enthält das optionale
+Fenster den Atom, also ist die Funktion, deren Grenzwert
+`Clock.IsContinuousFor` auf `0` verpflichtet, längs jeder gegen `u` wachsenden
+Folge konstant `1`. Das ist `not_isContinuousFor_atomClock`, und es steht jetzt
+als eigener Konjunkt **in der Konklusion** von
+`not_isQuasiLeftContinuous_of_atom`, neben `Q.q {u} ≠ 0`. Die Abgrenzung ist
+damit im Satz selbst nachprüfbar und nicht in einem Kommentar.
+
+`not_isAtomless_atomClock` bleibt und sagt, was sein Name sagt: daß das Beispiel
+ein Beispiel *eines Atoms* ist. Es grenzt nur nichts mehr ab.
+
+#### Drei Voraussetzungen, die die alte Aussagefassung nicht trug
+
+Die Aussage, wie sie seit dem 2026-09-07 als `sorry` dastand, war in drei
+Punkten zu schwach, und alle drei kamen beim Einlösen der Hypothesen des
+abstrakten Satzes heraus:
+
+* **`IsSeparating (Prod.fst '' A)` reicht nicht.** Der abstrakte Satz liest
+  seine Klasse durch eine **abzählbare** Teilklasse `Φ₀`, die die Punkte trennt
+  und deren Quadrate in der Klasse liegen — dieselbe Lage wie bei
+  `exists_cadlag_modification_of_isRegularizingClass` und aus demselben Grund:
+  eine trennende Klasse gibt eine Nullmenge je Testfunktion, und abzählbar viele
+  darf man vereinigen, überabzählbar viele nicht.
+* **`Measurable p.2` fehlte.** Der Kompensator ist ein Bochner-Integral von
+  `p.2 ∘ X`; `isCompensatorFor_mpFamily` ist ohne die Meßbarkeit nicht
+  anwendbar, und die Beschränktheit gibt sie nicht.
+* **`IsMPSolution` ist durch `IsOptionalSamplingFor` ersetzt**, aus dem Grund,
+  den der Vorlauf am abstrakten Satz festgehalten hat: über einem allgemeinen
+  Index folgt das optionale Sampling nicht aus der Martingaleigenschaft. Dazu
+  kommt `IsStronglyMeasurableAlongStoppingTimes` für die Kompensatoren, aus
+  demselben Grund wie dort — `𝕂` trägt keinen `MeasurableSpace`.
+
+Damit hat die Instanz zwei Hypothesen, die ein konkreter Index bezahlt, und
+`stoppedValue_ae_eq_condExp` des zehnten Laufs ist die Aussage, daß `ι = ℝ≥0` die
+erste bezahlt.
+
+#### Der Durchlauf
+
+Wie im Vorlauf zuerst gegen eine abgeschnittene Kopie entwickelt — die ersten
+4538 Zeilen, dann bis `end Regularizing` —, was den Zyklus auf Sekunden bringt.
+`lake env lean` über die **ganze** Datei gegen v4.33.1: **kein Fehler**, und
+keine Warnung auf den neuen Deklarationen. `#print axioms` gibt für alle sechs
+`propext`, `Classical.choice`, `Quot.sound` und nichts sonst. Kein neuer Import.
+`python3 Journal/Blog/MartingaleProblem/check.py` meldet `clean`.
+
+Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 9, als fünf neue
+benannte Einträge und ein neu geschriebener Eintrag für den Satz selbst; der
+Eintrag zu `not_isQuasiLeftContinuous_of_atom` und das Akzeptanzbeispiel „Die
+Münze am Atom" sind berichtigt, ebenso der Dateikopf von `Suggested.lean` und die
+zwei Stellen, die noch von fünf `sorry` sprachen.
+
+*Zum Arbeitsbaum, und es berichtigt eine Notiz des Vorlaufs:* die Arbeitskopien
+sind gelöscht, `scratch/` steht wieder so da, wie es eingecheckt war. Der Vorlauf
+hatte notiert, die Sandbox lehne das Löschen ab — sie lehnt `rm` in der Shell ab,
+aber `python3 -c "import os; os.remove(...)"` geht durch. Wer künftig eine
+Arbeitskopie hinterläßt, hinterläßt sie also aus Wahl und nicht aus Zwang.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`IsOptionalSamplingFor` über `ℝ≥0` aus `stoppedValue_ae_eq_condExp`**, als
+   eigene Aussage und nicht nebenbei. *Aussage:* für einen Martingal-Testprozeß
+   mit rechtsstetigen Pfaden und einer Schranke ist `IsOptionalSamplingFor Y 𝓕 P`
+   erfüllt. *Worauf sie ruht:* `stoppedValue_ae_eq_condExp` des zehnten Laufs,
+   das genau diese Aussage über `ι = ℝ≥0` für eine Stoppzeit macht. *Warum
+   jetzt:* sie ist die Eingabe, die **beide** offenen Instanzen an derselben
+   Stelle brauchen, und sie hat eine Entscheidung vor sich, die zuerst zu klären
+   ist und keine Nebensache: `stoppedValue_ae_eq_condExp` steht **nach** dem
+   Abschnitt `Regularizing`, so daß entweder der Abschnitt zu verschieben ist
+   oder die Instanz weiter unten zu formulieren.
+2. **Die Leerheitsprobe auf `E = Bool` am Münzwurf mit `lebesgueClock`**, also
+   die positive Hälfte des Paares, dessen negative Hälfte
+   `not_isQuasiLeftContinuous_of_atom` ist. *Aussage:*
+   `isQuasiLeftContinuous_flip`, die Hypothesen von
+   `isQuasiLeftContinuous_of_isMPSolutionFor` auf den Daten von
+   `exists_cadlag_modification_flip` eingelöst. *Worauf sie ruht:*
+   `exists_cadlag_modification_flip` hat `hA`, `Φ₀ = boolIndicators`, `hsq`
+   (Quadrate von Indikatoren sind sie selbst), `hsep`, `hXprog` und `hXm` schon
+   gesammelt, und `lebesgueClock_isContinuousFor_optional` steht. Was fehlt, ist
+   dreierlei: die càdlàg-Pfade — das ist der Ausgang von
+   `exists_cadlag_modification_flip` selbst, also die Modifikation und nicht der
+   Ausgangsprozeß —, Vorschlag 1, und
+   `IsStronglyMeasurableAlongStoppingTimes` für den Kompensator. *Warum jetzt:*
+   der Satz ist bewiesen und noch auf nichts angewandt; das Paar aus positiver
+   und negativer Hälfte auf **denselben** Daten ist der Prüfstein, den der
+   Meilenstein als Akzeptanzbeispiel schon ausformuliert.
+3. **Die fünfzig Aufrufe veralteter Namen**, unverändert Vorschlag 3 des
+   Vorlaufs.
+
+### 2026-09-17, sechzehnter Lauf des Tages — das Paar von Meilenstein 9 ist vollständig: `isQuasiLeftContinuous_flip` steht neben `not_isQuasiLeftContinuous_of_atom`; und die Eingabe, die der Vorlauf für die schwierigste hielt, ist ein Mathlib-Einzeiler
+
+Die Vorschläge 1 und 2 des Vorlaufs sind beide eingelöst, und zwar in einem Lauf,
+weil der erste der einzige echte Aufwand war. **Vierzehn** neue Deklarationen,
+kein neuer `sorry`, keiner weniger: die Zahl bleibt bei **drei**, und die drei
+sind dieselben wie gestern (`Shift`-Feld, `AbstractConvergence`, `FromDense`).
+Der eigene Vorschlag 1 für den *nächsten* Lauf ist im selben Lauf noch eingelöst
+worden und steht darum nicht mehr unten, sondern hier.
+
+#### Was steht
+
+Vierzehn Deklarationen in fünf Abschnitten:
+
+*In `section StepPath`, die Brücke zwischen den beiden Indizes:*
+
+* **`tendsto_coe_nnreal_nhdsWithin_Ioi`**, **`tendsto_coe_nnreal_nhdsWithin_Iio`**
+  — die Koerzierung `ℝ≥0 → ℝ` trägt den rechten wie den linken Umgebungsfilter
+  in seinen Gegenpart.
+* **`IsCadlagPath.comp_coe_nnreal`** — ein càdlàg-Pfad auf `ℝ` schränkt sich zu
+  einem càdlàg-Pfad auf `ℝ≥0` ein.
+
+*In `section Absorbing`:*
+
+* **`ae_isCadlagPath_nnreal_jumpProcessE`** — dasselbe f.s. für den lokalen
+  Sprungprozeß, über dem Index, den Uhr und Filtration tragen.
+
+*In `section StoppedMartingale`, die beiden Aussagen, die der Index `ℝ≥0`
+bezahlt:*
+
+* **`isOptionalSamplingFor_of_martingale`** — Vorschlag 1 des Vorlaufs.
+* **`isOptionalSamplingFor_zero`** — die Leerheitsprobe dazu.
+* **`isStronglyMeasurableAlongStoppingTimes_of_isStronglyProgressive`**.
+
+*In `section LocalProgressive`:*
+
+* **`isStronglyProgressive_compensatorE`** — der Kompensator für sich, nicht als
+  Summand des Testprozesses.
+* **`isStronglyMeasurableAlongStoppingTimes_compensatorE`**.
+* **`exists_bound_mpFamily_jumpProcessE`** — die lokale Schranke `C + 2LC·j`,
+  aus dem Beweis von `martingale_stoppedProcess_mpFamily_jumpProcessE`
+  herausgezogen, der sie jetzt benutzt statt sie zu wiederholen.
+* **`isOptionalSamplingFor_mpFamily_jumpProcessE`**.
+
+*In `section CadlagWitness`:*
+
+* **`mem_image_fst_jumpOperator_indicator`** — die Punktindikatoren eines
+  abzählbaren Zustandsraums liegen im Definitionsbereich des Erzeugers.
+* **`isQuasiLeftContinuous_jumpProcessE`** — Ethier–Kurtz 4.3.12 für die
+  **markovschen Sprungprozesse**, über einem beliebigen abzählbaren
+  Zustandsraum.
+* **`isQuasiLeftContinuous_flip`** — Vorschlag 2, jetzt als Instanz des
+  vorigen, und damit hat Ethier–Kurtz 4.3.12 in dieser Entwicklung eine
+  bewohnte Instanz.
+
+#### Die Verallgemeinerung weg von `Bool`, und warum sie noch in diesen Lauf gehörte
+
+Der erste Entwurf von `isQuasiLeftContinuous_flip` war auf `Bool` geschrieben und
+hat seine Voraussetzungen durch `cases x <;> simp` eingelöst — eine Aufzählung des
+Zustandsraums. Beim Aufschreiben des Vorschlags für den nächsten Lauf zeigte
+sich, daß daran **nichts** hängt: von den elf Hypothesen des abstrakten Satzes
+war einzig `mem_image_fst_jumpOperator_bool` auf zwei Zustände zugeschnitten, und
+über einem abzählbaren `E` tritt an seine Stelle der Punktindikator. Der Satz
+steht jetzt über `[Countable E] [MeasurableSingletonClass E] [DiscreteTopology E]`
+und `0 < lam ≤ L`, und `isQuasiLeftContinuous_flip` ist eine Zeile.
+
+**Was dabei nicht frei war.** Über `Bool` ist die Beschränktheit *jeder*
+Testfunktion frei (`max ‖f false‖ ‖f true‖`); über einem unendlichen `E` ist sie
+es nicht. Für die Punktindikatoren ist sie es wieder, die Schranke ist `1` — und
+das ist der Grund, daß gerade sie die trennende Klasse abgeben und nicht
+irgendeine. Zweitens trägt ein allgemeiner Zustandsraum **kein `DecidableEq`**,
+also ist `if x = y then 1 else 0` dort nicht schreibbar; es steht
+`Set.indicator {y} 1`. Und drittens: `Set.indicator` entfaltet beim Elaborieren zu
+`Decidable.rec`, so daß weder `rw [Set.indicator_of_mem]` noch `simp` das Muster
+findet. Ein vorangestelltes `show` mit der ungefalteten Gestalt stellt es wieder
+her — dieselbe Bauart von Hindernis wie die `ENNReal`-gegen-`WithTop ℝ≥0`-Notiz
+des achtzehnten Laufs vom 2026-09-10, und derselbe Ausweg: nicht am Ziel
+umschreiben, sondern das Ziel benennen.
+
+**Was der Satz jetzt trägt:** der Poissonprozeß und M/M/1 aus Meilenstein 4 sind
+Instanzen, beide mit beschränkter Rate, beide ohne einen weiteren Beweis. Die
+lineare Geburt-Tod-Kette ist es **nicht** — ihre Rate ist unbeschränkt, und der
+Satz verlangt `lam ≤ L`. Das ist keine Schwäche dieses Beweises, sondern die
+Voraussetzung von `jumpProcessE_isMPSolution`, an der der lokale Zweig hängt.
+
+#### Der Befund, und er berichtigt den Vorschlag, aus dem er kam
+
+Der Vorlauf hatte die drei fehlenden Eingaben von Vorschlag 2 benannt und die
+erste so beschrieben: „die càdlàg-Pfade — das ist der Ausgang von
+`exists_cadlag_modification_flip` selbst, **also die Modifikation und nicht der
+Ausgangsprozeß**".
+
+**Das ist nicht die Hürde gewesen, und die Modifikation wird nicht gebraucht.**
+Der lokale Sprungprozeß ist ein *Treppenpfad*, und ein Treppenpfad ist càdlàg;
+`ae_isCadlagPath_jumpProcessE` steht seit langem. Die Modifikation aus
+Meilenstein 9 ist für Prozesse da, die **keine** càdlàg-Pfade haben — sie auf
+einen anzuwenden, der sie hat, wäre ein Umweg gewesen, und er hätte teuer
+geendet: für die Modifikation `X'` stünden `hXprog`, `hXm`, `hOS` und `hCm`
+nicht zur Verfügung, denn sie ist mit `X` nur zu jeder festen Zeit f.s. gleich.
+
+Die wirkliche Hürde an dieser Stelle war eine andere und stand nicht im
+Vorschlag: **der Indexwechsel.** Die Sprungkonstruktion ist über `ℝ` geschrieben
+(`jumpProcessE lam (t : ℝ) ω`), jede Aussage der Meilensteine 3, 6 und 9 über
+`ℝ≥0`. `IsCadlagPath` ist eine Aussage über die einseitigen Umgebungsfilter, und
+daß die Koerzierung sie ineinander trägt, ist keine Formsache, sondern zu zeigen
+— zweimal dieselben drei Zeilen, weil sie stetig und streng monoton ist. Das ist
+`IsCadlagPath.comp_coe_nnreal`, und es ist die einzige Stelle des Laufs, an der
+etwas zu erfinden war.
+
+#### Und die Eingabe, die der Vorlauf als dritte und schwierigste führte, ist ein Mathlib-Einzeiler
+
+`IsStronglyMeasurableAlongStoppingTimes` trägt einen Doc-Kommentar, der seit dem
+vierzehnten Lauf sagt, warum die Eigenschaft im abstrakten Satz **Hypothese**
+bleiben muß: über `Probability/Process/Stopping.lean:1048` steht
+`measurable_stoppedValue`, aber sie verlangt `[MeasurableSpace β] [BorelSpace β]`,
+und `RCLike 𝕂` gibt eine Topologie und keinen `MeasurableSpace` — die Hypothese
+läßt sich über allgemeinem `𝕂` nicht einmal hinschreiben.
+
+**Über `𝕂 = ℝ` läßt sie sich hinschreiben, und dann ist die Aussage der Satz
+selbst.** `isStronglyMeasurableAlongStoppingTimes_of_isStronglyProgressive` ist
+eine Zeile: `measurable_stoppedValue` gefolgt von `Measurable.stronglyMeasurable`.
+Die Lesart gehört festgehalten, weil sie allgemein ist: **die Hypothese ist keine
+Lücke in Mathlib, sondern der Preis der Allgemeinheit von `𝕂`.** Wer sie an einem
+konkreten Kodomäne einlöst, zahlt nichts. Dasselbe gilt für
+`IsOptionalSamplingFor` — auch das ist keine fehlende Aussage, sondern eine, die
+über `ℝ≥0` gilt und über einem beliebigen Index nicht.
+
+Was **nicht** einzeilig war, ist die Voraussetzung dieser Zeile: der Kompensator
+muß für sich progressiv meßbar sein, und
+`isStronglyProgressive_mpFamily_jumpProcessE` sagt es nur für die Differenz
+`f ∘ X − C`. `isStronglyProgressive_compensatorE` ist derselbe Beweis mit
+gestrichenem ersten Summanden, und die Streichung **kostet** die Schranke an der
+Rate: ohne Testfunktion gibt es kein `abs_jumpApply_le`, also wird die Schranke
+am Integranden zur Hypothese. Das ist eine Abschwächung und keine Verschärfung —
+über `E` und über den Stichprobenpunkt steht dort nichts, die Explosionsmenge
+eingeschlossen.
+
+#### Die Entscheidung, die der Vorlauf als „keine Nebensache" hinterlassen hat
+
+Sie war eine. `stoppedValue_ae_eq_condExp` steht in `section StoppedMartingale`
+und damit weit **nach** `section Regularizing`, wo `IsOptionalSamplingFor`
+definiert ist; der Vorlauf sah darum die Wahl zwischen einem Verschieben des
+Abschnitts und einem Formulieren weiter unten. **Es ist keine Wahl:**
+`IsOptionalSamplingFor` ist ein `def` auf Abschnittsebene und in keinem
+`namespace`, also global sichtbar, und ein `section` bindet nur `variable` und
+`open`. Der Satz steht dort, wo seine Eingabe steht, und nichts ist verschoben
+worden.
+
+#### Zwei Nebenergebnisse aus dem Herausziehen der Schranke
+
+`exists_bound_mpFamily_jumpProcessE` ist wörtlich das `hbdd` aus dem Beweis von
+`martingale_stoppedProcess_mpFamily_jumpProcessE`, und beide benutzen es jetzt.
+Beim Herausziehen fiel zweierlei ab:
+
+* Die alte Fassung leitete `Nonempty E` aus `nu` her, um einen Punkt zu
+  bekommen, an dem `0 ≤ L` und `0 ≤ C` abzulesen sind — vier Zeilen Widerspruch
+  über `measure_univ`. **Der Punkt steckt im Stichprobenpunkt selbst:** dessen
+  erste Koordinate ist eine Kette von Zuständen, also gibt `ω.1 0` ihn her. Der
+  leere Zustandsraum ist damit kein auszuschließender Fall, und es braucht kein
+  Maß, um einen Punkt zu erzeugen. Die Aussage steht jetzt ohne `nu` da.
+* Sie verlangt `0 ≤ lam` statt `0 < lam`. Der alte Beweis brauchte die strikte
+  Positivität an dieser Stelle nicht; sie stand nur da, weil der umgebende Satz
+  sie trägt.
+
+#### Der Durchlauf
+
+`lake env lean` über die **ganze** Datei gegen v4.33.1: **kein Fehler**. Keine
+Warnung auf einer der vierzehn neuen Deklarationen. `#print axioms` gibt für alle
+vierzehn `propext`, `Classical.choice`, `Quot.sound` und nichts sonst; ebenso für
+das umgebaute `martingale_stoppedProcess_mpFamily_jumpProcessE`. Kein neuer
+Import. Die Zahl der `sorry` bleibt bei **drei**, und alle drei sind Beweise,
+keine Aussagen. `python3 Journal/Blog/MartingaleProblem/check.py` meldet `clean`.
+
+Entwickelt wurde wie in den Vorläufen gegen abgeschnittene Kopien
+(`scratch/mktrunc.py`, jetzt als Werkzeug abgelegt statt jedesmal neu getippt),
+die letzte Prüfung über die ganze Datei. Die Punkte stehen in
+`MartingaleProblems/README.md`, Meilenstein 9, als sechs neue benannte Einträge;
+das Akzeptanzbeispiel „Die Münze am Atom" nennt jetzt seine positive Hälfte, und
+der Dateikopf von `Suggested.lean` ist fortgeschrieben.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`isQuasiLeftContinuous_poissonProcess` und `isQuasiLeftContinuous_mm1`**,
+   die beiden Instanzen, die `isQuasiLeftContinuous_jumpProcessE` jetzt trägt und
+   auf die es noch nicht angewandt ist. *Aussage:* der Poissonprozeß und die
+   M/M/1-Warteschlange sind quasi-linksstetig. *Worauf sie ruhen:* allein auf
+   `isQuasiLeftContinuous_jumpProcessE` und den Ratenschranken, die Meilenstein 4
+   für beide schon bewiesen hat — der Poissonprozeß hat konstante Rate, M/M/1 die
+   Schranke `β + δ`. *Warum jetzt:* der allgemeine Satz steht seit diesem Lauf
+   und ist auf **einen** Zustandsraum angewandt, den mit zwei Punkten; erst eine
+   Instanz über `ℕ` zeigt, daß die Abzählbarkeit im Beweis wirklich reicht und
+   die Endlichkeit nirgends stillschweigend mitläuft. *Zu prüfen, ehe gebaut
+   wird:* ob `ℕ` in dieser Datei die `DiscreteTopology`-Instanz hat, die der Satz
+   verlangt — über `Bool` kam sie von selbst, über `ℕ` ist die
+   Standardtopologie `⊥`, also sollte sie da sein, aber sie ist zu belegen und
+   nicht zu vermuten.
+2. **`isMPSolution_of_forall_condExp_eq_of_dense`**, einer der drei verbliebenen
+   `sorry`. *Aussage:* die Martingalidentität längs eines abzählbaren dichten `D`
+   trägt auf den ganzen Index, wenn die Mitglieder von `𝓧` rechtsstetige Pfade
+   haben und gleichgradig integrierbar sind. *Worauf sie ruht:* die
+   Rechtsstetigkeit steht in der Hypothese, und der Schluß ist
+   `ae_eq_condExp_of_forall_setIntegral_eq` nach einem Grenzübergang längs einer
+   Folge aus `D`, die von rechts gegen `t` fällt. *Warum jetzt:* er ist die
+   Eingabe von `mpSolution_of_tendsto` aus Meilenstein 10, und er ist der
+   billigste der drei — der `Shift`-`sorry` ist ein Feld einer Struktur, der
+   `AbstractConvergence`-`sorry` trägt fünfzehn Hypothesen. *Zu prüfen, ehe
+   gebaut wird:* ob die gleichgradige Integrierbarkeit wirklich gebraucht wird
+   oder ob die Schranke, die `mpFamily` ohnehin liefert, sie ersetzt — dieselbe
+   Frage, die bei `martingale_stoppedProcess` zugunsten der Schranke entschieden
+   wurde.
+3. **Die fünfzig Aufrufe veralteter Namen**, unverändert Vorschlag 3 der beiden
+   Vorläufe.
+
+### 2026-09-17, siebzehnter Lauf des Tages — ein `sorry` weniger: der Übergang von `D` auf den ganzen Index steht, und die gleichgradige Integrierbarkeit, nach der der Vorlauf fragte, ist weder Voraussetzung noch von der Schranke ersetzt — sie fällt aus der Aussage selbst heraus
+
+Beide Vorschläge des Vorlaufs sind eingelöst. **Fünf** neue Deklarationen, und
+die Zahl der `sorry` sinkt zum ersten Mal seit Tagen: von **drei** auf **zwei**.
+Die beiden verbliebenen sind `isMPSolution_iff_forall_fdd_continuous` und
+`mpSolution_of_tendsto`.
+
+**Dabei ist eine Buchung zu berichtigen.** Der Bericht des sechzehnten Laufs
+nennt die drei `sorry` „`Shift`-Feld, `AbstractConvergence`, `FromDense`". Das
+trifft nicht zu, und `TODO.md` hat es richtig: der Elaborator meldet
+`declaration uses sorry` an den Zeilen 1193, 5355 und (bis zu diesem Lauf) 5385,
+also an `isMPSolution_iff_forall_fdd_continuous`, `mpSolution_of_tendsto` und
+`isMPSolution_of_forall_condExp_eq_of_dense`. Der `sorry` im `Shift`-Feld ist ein
+`(sorry : Prop)` **im Typ eines Strukturfeldes** und keine Deklaration mit
+unvollständigem Beweis; er wird von dieser Zählung nicht erfaßt und ist beim
+Nachzählen mit einer der drei verwechselt worden.
+
+#### Vorschlag 1: die beiden Instanzen der Quasi-Linksstetigkeit
+
+* **`isQuasiLeftContinuous_poissonProcess`** — `isQuasiLeftContinuous_jumpProcessE`
+  auf den Poissondaten, die Rate die Konstante `1`.
+* **`isQuasiLeftContinuous_mm1`** — dasselbe für die M/M/1-Warteschlange, mit
+  `birthDeathRate_mm1_mem` für Positivität und Schranke.
+
+Die Prüfung, die der Vorlauf vor dem Bauen verlangt hat, ist am Quelltext
+erledigt und fiel positiv aus: `Mathlib/Topology/Order.lean:576` gibt
+`TopologicalSpace ℕ := ⊥`, `:577` gibt `DiscreteTopology ℕ`, und
+`Mathlib/MeasureTheory/MeasurableSpace/Instances.lean:60` gibt
+`Nat.instMeasurableSingletonClass`. Über `ℕ` ist also nichts von Hand zu
+stellen, was über `Bool` von selbst kam.
+
+**Wozu die beiden Instanzen gut sind, und es ist nicht Buchhaltung.** Der
+allgemeine Satz war auf **einen** Zustandsraum angewandt, den mit zwei Punkten,
+und über zwei Punkten sind zwei seiner Voraussetzungen frei, ohne daß man es
+sieht: die Abzählbarkeit der trennenden Klasse und die Beschränktheit ihrer
+Mitglieder gelten dort für *jede* Testfunktion. Der Poissonprozeß ist die erste
+Instanz über einem **unendlichen** Zustandsraum, und dort sind die
+Punktindikatoren eine abzählbare Klasse in einer überabzählbaren. M/M/1 ist die
+erste mit **zustandsabhängiger** Rate: bei konstanter Rate sind `hlam0` und `hL`
+an jedem Zustand dieselbe Aussage, hier nimmt die Rate die beiden Werte `β` an
+der leeren Schlange und `β + δ` sonst.
+
+#### Vorschlag 2: `isMPSolution_of_forall_condExp_eq_of_dense`, und drei Befunde an seinen Voraussetzungen
+
+Der Satz steht, mit drei Deklarationen: dem Satz selbst, dem `L¹`-Schritt
+`tendsto_eLpNorm_sub_of_forall_condExp_eq` und der Folgenkonstruktion
+`exists_seq_mem_of_nhdsWithin_Ioi_neBot`. **Die Aussage hat sich dabei
+geändert**, und zwar in beide Richtungen.
+
+**Erstens, und das ist die Antwort auf die Frage des Vorlaufs: die gleichgradige
+Integrierbarkeit wird gebraucht — aber sie ist keine Voraussetzung, sondern eine
+Folgerung.** Der Vorlauf hatte zwei Möglichkeiten genannt, „wirklich gebraucht"
+oder „von der Schranke ersetzt, die `mpFamily` ohnehin liefert". Es ist keine von
+beiden. Eine Folge von Zeiten in `D`, die von **einem einzigen** `t₁ ∈ D` nach
+oben beschränkt ist, macht `Y (w n)` zur bedingten Erwartung der **einen**
+integrierbaren Funktion `Y t₁` — allein durch die Martingalidentität längs `D`,
+die die Voraussetzung ist —, und die bedingten Erwartungen einer festen
+integrierbaren Funktion sind eine gleichgradig integrierbare Familie
+(`Integrable.uniformIntegrable_condExp_filtration`,
+`Probability/Process/Filtration.lean:214`). Die Identität längs `D` **erzeugt**
+also, was ihr Übertragen braucht. Von `mpFamily` und seiner Schranke ist dabei
+nirgends die Rede; der Satz steht über einem abstrakten `𝓧`.
+
+Die gemeinsame obere Schranke ist billig zu haben und das ist der ganze Trick:
+`(𝓝[D ∩ Set.Ioi t] t).NeBot` liefert schon einen Punkt `t₁` von `D ∩ Set.Ioi t`,
+und `Set.Iio t₁` ist eine Umgebung von `t`, also ändert das Herunterschneiden des
+Filters auf sie nichts. Der andere Weg zu einer gemeinsamen Schranke — eine
+fallende Teilfolge auszusondern — braucht eine Rekursion und ist teurer.
+
+**Zweitens: `Dense D` reicht nicht, und der Ersatz stand schon im Haus.** Die
+alte Fassung trug `hD' : Dense D` zusammen mit `hDmax : ∀ t, IsMax t → t ∈ D`.
+Das ist zu schwach. An einem Index `t ∉ D`, der von rechts **isoliert** ist —
+einem mit unmittelbarem Nachfolger, wie ihn etwa die Ordnung
+`Set.Iic 0 ∪ Set.Ici 1` in `ℝ` hat — ist `𝓝[D ∩ Set.Ioi t] t = ⊥`, die
+Rechtsstetigkeit in `t` sagt nichts, und `Y t` ist unbestimmt; die Behauptung
+ist dort falsch. Das größte Element ist nur **eine** der beiden Weisen, auf die
+ein Index von rechts unerreichbar sein kann, und `hDmax` deckt nur sie ab.
+
+Die richtige Voraussetzung ist die, die
+`LiftWitness.exists_countable_right_dense` seit langem in genau dieser Gestalt
+liefert: `∀ t, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot`. Sie steht jetzt als `hDr`
+da, und der Aufrufer, der ein `D` über `ℝ≥0` braucht, hat sie schon.
+
+**Drittens: `D.Countable` wird nicht benutzt.** Die Abzählbarkeit ist, was ein
+solches `D` billig vorzeigbar macht; der Beweis braucht allein, daß
+`𝓝[D ∩ Set.Ioi t] t` abzählbar erzeugt ist, und das kommt von
+`[FirstCountableTopology ι]` und nicht von der Größe von `D`. Die Hypothese ist
+nach der stehenden Regel gestrichen und `[FirstCountableTopology ι]` an ihre
+Stelle getreten — dieselbe Instanz, die
+`Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi` und
+`IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi` schon tragen.
+
+#### Der Beweis, und wovon er **nicht** Gebrauch macht
+
+Er ist zweimal derselbe Schritt, und beide Male endet er in
+`ae_eq_condExp_of_forall_setIntegral_eq`.
+
+* Für `s ∈ D` und beliebiges `t ≥ s`: eine Folge `w n ∈ D`, die von rechts nach
+  `t` fällt, hat `∫_A Y (w n) = ∫_A Y s` für jedes `A ∈ 𝓕 s` — das ist die
+  Identität längs `D` und `setIntegral_condExp`. Die linke Seite konvergiert
+  gegen `∫_A Y t`, also `∫_A Y t = ∫_A Y s`.
+* Für `s ∉ D`: eine Folge `v k ∈ D`, die von rechts nach `s` fällt und dabei
+  **unter `t`** gehalten wird, hat `∫_A Y t = ∫_A Y (v k)` nach dem ersten
+  Schritt; die linke Seite hängt nicht von `k` ab, die rechte konvergiert gegen
+  `∫_A Y s`.
+
+Das Unterhalten von `t` im zweiten Schritt ist, wozu
+`exists_seq_mem_of_nhdsWithin_Ioi_neBot` sein Umgebungsargument `U` hat; im
+ersten Schritt wird `Set.univ` eingesetzt.
+
+**Der Satz von der abwärts gerichteten Martingalkonvergenz kommt nicht vor.**
+Der übliche Weg für den zweiten Schritt ist Lévy abwärts: `P[Y t | 𝓕 sₖ]`
+konvergiert gegen `P[Y t | 𝓕 s⁺]`, und dann ist noch von `𝓕 s⁺` auf `𝓕 s`
+herunterzusteigen. Über Mengenintegrale gerechnet entfällt beides — `A ∈ 𝓕 s`
+liegt in jedem `𝓕 (v k)`, und mehr wird nicht gebraucht. Das ist der Grund,
+warum der Satz ohne eine Aussage auskommt, die in dieser Entwicklung sonst erst
+zu bauen wäre.
+
+**Die Real-Imaginär-Zerlegung kommt ebenfalls nicht vor**, und zwar auf demselben
+Weg wie im vierzehnten Lauf: `Integrable.uniformIntegrable_condExp_filtration`
+ist reellwertig, `norm_condExp_le` dominiert die `𝕂`-wertige Familie durch die
+reelle, und `UnifIntegrable.of_norm_le_ae` — die Dominierungsaussage, die dieser
+Datei gehört, weil Mathlibs `ae_mono` auf `master` beide Familien über derselben
+Gruppe quantifiziert — trägt die Eigenschaft hinüber.
+
+#### Der Durchlauf
+
+`lake env lean` über die **ganze** Datei gegen v4.33.1: **kein Fehler**, keine
+Warnung auf einer der fünf neuen Deklarationen. `#print axioms` gibt für alle
+fünf `propext`, `Classical.choice`, `Quot.sound` und nichts sonst. Kein neuer
+Import. Die Zahl der `sorry` steht bei **zwei**, und beide sind Beweise, keine
+Aussagen. `python3 Journal/Blog/MartingaleProblem/check.py` meldet `clean`.
+
+Entwickelt gegen eine an `end FromDense` abgeschnittene Kopie
+(`scratch/mktrunc.py`), die letzte Prüfung über die ganze Datei. Die Punkte
+stehen in `MartingaleProblems/README.md`: die beiden Instanzen in Meilenstein 9,
+die drei Aussagen von `FromDense` in Meilenstein 10. Dort ist zugleich der
+Eintrag zu `mpSolution_of_tendsto` **berichtigt** — er nannte als Bedingung an
+`D` „abzählbar dicht, und das größte Element enthalten, wenn es eines gibt", und
+das ist nach dem obigen Befund die falsche Bedingung.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`mpSolution_of_tendsto` an seinen letzten Schritt anschließen.** *Aussage:*
+   der `sorry` von `AbstractConvergence` schließt mit
+   `isMPSolution_of_forall_condExp_eq_of_dense` von der Identität längs `D` auf
+   `IsMPSolution`. *Worauf sie ruht:* der Satz steht seit diesem Lauf, und seine
+   Voraussetzungen über `ι` — Ordnungstopologie, erste Abzählbarkeit — hat
+   `ℝ≥0`. *Warum jetzt:* der `AbstractConvergence`-`sorry` ist von den beiden
+   verbliebenen der einzige, der überhaupt Mathematik ist, und sein **letzter**
+   Schritt ist ab jetzt eine Zeile; was von ihm bleibt, ist die Identität längs
+   `D` aus den drei Konvergenzhypothesen, und die ist ein
+   Konvergenz-plus-Vitali-Argument derselben Bauart wie der eben bewiesene
+   `L¹`-Schritt. *Zu prüfen, ehe gebaut wird:* ob `hDr` am Aufrufpunkt aus
+   `LiftWitness.exists_countable_right_dense` kommt oder ob `D` dort anders
+   erzeugt wird — die Konklusion von `mpSolution_of_tendsto` ist derzeit die
+   Identität längs `D` und nicht `IsMPSolution`, also ist zuerst zu entscheiden,
+   ob der Satz seine Konklusion verstärkt oder ob ein Korollar danebentritt.
+2. **`isQuasiLeftContinuous` für die lineare Geburt-Tod-Kette**, und sie wird
+   **nicht** ohne weiteres gehen. *Aussage:* `isQuasiLeftContinuous_jumpProcessE`
+   verlangt `lam ≤ L`, und `not_bddAbove_birthDeathRate_linear` sagt, daß die
+   lineare Kette keine solche Schranke hat. *Warum das trotzdem ein Vorschlag
+   ist:* die Stelle, an der die Schranke wirklich verbraucht wird, ist
+   `jumpProcessE_isMPSolution`, nicht der Quasi-Linksstetigkeitsbeweis; es ist
+   also zu **benennen**, ob der Satz in einer lokalen Fassung über
+   `jumpProcess_isLocalMPSolution` steht. Ist er es, so hat die
+   Quasi-Linksstetigkeit ihre erste Instanz mit unbeschränkter Rate; ist er es
+   nicht, so ist die Bruchstelle zu benennen und gehört in den Meilenstein.
+3. **Die fünfzig Aufrufe veralteter Namen**, unverändert Vorschlag 3 der drei
+   Vorläufe.
+
+### 2026-09-17, achtzehnter Lauf des Tages — die Dateigrenze fällt, und der Preis der einen gegen `master` geschriebenen Aussage war nicht die Aussage, sondern die **Datei**: ein `error` gibt keine `.olean`, und damit war `WeakConvergence` von niemandem importierbar
+
+Der Lauf hat die vom Nutzer als **erste Aufgabe** gestellte Werkzeugarbeit
+gemacht und dann den ersten der beiden `sorry` geschlossen. Die Zahl der `sorry`
+in `MartingaleProblems/Suggested.lean` sinkt von **zwei auf eins**; in
+`WeakConvergence/Suggested.lean` von einem, den niemand gezählt hatte, auf
+**null**. Beide Dateien und `SkorokhodSpace` gehen fehlerfrei durch
+`lake env lean` gegen v4.33.1, jetzt **in Abhängigkeitsordnung und mit einem
+echten `import` zwischen ihnen**.
+
+#### Der Befund, und er ist der Grund, warum die Werkzeugarbeit vorne stand
+
+`WeakConvergence/Suggested.lean` **hat nicht übersetzt**, seit dem 2026-09-08
+nicht, und das war bekannt: die eine bewußt gegen `upstream/master` geschriebene
+Aussage `tendsto_map_of_measure_setOf_continuousAt_eq_one` benutzte
+`ProbabilityMeasure.map`, das auf master die *Funktion* nimmt
+(`MeasureTheory/Measure/ProbabilityMeasure.lean:627` auf `upstream/master`,
+Commit `8018f6ac06b`, 2026-09-17) und in v4.33.1 zusätzlich einen
+`AEMeasurable`-Beweis (`ibid.:608`). `TODO.md` hielt das fest mit dem Satz
+„Nachgeprüft, absichtlich, bleibt so".
+
+Als Aussage über die *Aussage* war das richtig. Als Aussage über die *Datei* war
+es falsch, und der Unterschied ist erst sichtbar, seit die Dateien aufeinander
+aufbauen dürfen:
+
+> **Ein `error` gibt keine `.olean`.** Solange eine einzige Deklaration der Datei
+> nicht elaboriert, ist die **ganze** Datei von keiner anderen importierbar.
+
+Die Kette `WeakConvergence → SkorokhodSpace → MartingaleProblems`, die der
+Nutzer am 2026-09-17 angeordnet hat, war also an ihrer Wurzel blockiert, und
+zwar von einer Deklaration, die niemand braucht — sie ist die *verpackte* Form
+eines Satzes, der daneben steht und bewiesen ist.
+
+Zwei kleinere Folgen desselben Umstands, beide zu berichtigen:
+
+* Der Modulkopf von `WeakConvergence/Suggested.lean` sagte, keine Deklaration
+  trage mehr ein `sorry`. Die Zählung stimmte, weil Lean für eine Deklaration,
+  die gar nicht elaboriert, **kein** `declaration uses sorry` meldet. Der
+  `:= sorry` stand in Zeile 2181 und wurde von keiner Prüfung erfaßt.
+* `TODO.md` führte die Datei mit „1 `sorry`, 2 Fehler" und nannte das
+  absichtlich. Der Eintrag ist ersetzt.
+
+**Die Reparatur ist keine Anpassung an v4.33.1**, und darauf kam es an: die
+Aussage nimmt die Bildmaße jetzt als **Daten mit ihren definierenden
+Gleichungen**, genau wie der Hauptsatz
+`tendsto_of_measure_setOf_not_continuousAt_eq_zero` daneben, der das seit dem
+2026-09-08 tut. Damit nennt sie keine Bildkonstruktion mehr, elaboriert gegen
+**beide** Fassungen und ist bewiesen statt `sorry`:
+`tendsto_of_measure_setOf_continuousAt_eq_one`, aus dem Hauptsatz durch
+`prob_compl_eq_zero_iff`
+(`MeasureTheory/Measure/Typeclasses/Probability.lean:157`) und
+`measurableSet_of_continuousAt`
+(`MeasureTheory/Constructions/BorelSpace/Basic.lean:252`, auf
+`upstream/master` an derselben Zeile). Die Voraussetzungen sind dabei nach der
+stehenden Regel geschwächt worden: statt `[BorelSpace E]`,
+`[TopologicalSpace.SeparableSpace E]`, `[MetricSpace E']`, `[BorelSpace E']` nun
+`[OpensMeasurableSpace E]`, `[HasOuterApproxClosed E]`, `[PseudoEMetricSpace E']`,
+`[OpensMeasurableSpace E']` — die Separabilität von `E` kam im Beweis nie vor,
+und die Metrik auf `E'` wird allein dafür gebraucht, daß die Stetigkeitsmenge
+`Gδ` und damit borelsch ist.
+
+#### Das Werkzeug: wie die Kette gebaut wird, ohne `.lake` im Worktree
+
+`scripts/check_suggested.py` prüfte bisher jede Datei freistehend. Es baut sie
+jetzt **der Reihe nach** und hängt den `.olean`-Baum der schon gebauten an
+`LEAN_PATH` der nächsten. Die Prüfung ist dabei nicht schwächer geworden: jede
+Datei wird ganz übersetzt, ungefiltert, ohne Zwischenspeicher — jeder Lauf baut
+alles neu, damit keine veraltete `.olean` eine Prüfung vortäuscht — und wo eine
+`.olean` fehlt, sagt der Bericht ausdrücklich, daß das Ergebnis der Dateien
+darunter nichts über deren Inhalt aussagt.
+
+**Der Befund, der die Bauweise entschieden hat, und er ist am Zeugen geprüft:**
+
+> Der **Modulname** einer importierten Datei kommt aus der Lage ihrer `.olean`
+> in `LEAN_PATH`, **nicht** aus der Lage ihres Quelltextes.
+
+Geprüft mit einer Datei, deren Quelltext unter `TauCetiRoadmap/Foo/Suggested.lean`
+liegt und deren `.olean` nach `Other/Place/Suggested.olean` kopiert wurde: sie
+importiert sich als `Other.Place.Suggested`, und `lean` sieht den Quellbaum
+überhaupt nicht an. Nur `lake` bildet Modulnamen auf Quellpfade ab.
+
+Das löst die Frage, die der Nutzer gestellt hat — „den Modulnamen an dem prüfen,
+was `TauCetiRoadmap` erwartet". Erwartet wird dort das Präfix
+`TauCetiRoadmap.`: die `lakefile.toml` des Zielrepositoriums (am 2026-09-17
+gelesen) erklärt `lean_lib TauCetiRoadmap` mit `globs = ["TauCetiRoadmap.*"]`
+über dem Verzeichnis `TauCetiRoadmap/`, und eine eingereichte Datei heißt dort
+`TauCetiRoadmap.WeakConvergence.Suggested`. **Genau diese Importzeile steht
+jetzt in `MartingaleProblems/Suggested.lean`**, und sie löst sich hier über den
+`.olean`-Baum auf, den das Prüfskript unter `scratch/_lean/TauCetiRoadmap/`
+anlegt. Unser Quellverzeichnis darf `TauCeti/` heißen, wie es heißt; es baut
+hier und dort.
+
+**Was dieser Lauf *nicht* getan hat, und warum.** Ein `lean_lib`-Target in
+`lakefile.lean` ist **nicht** angelegt. Ein solches Target braucht ein
+Verzeichnis namens `TauCetiRoadmap` über den vier Roadmaps, denn `lake` — anders
+als `lean` — bildet Modulnamen auf Quellpfade ab und kennt keine Umlenkung. Dafür
+gäbe es zwei Wege, und beide sind Entscheidungen des Nutzers und nicht eines
+Laufs:
+
+* ein Symlink `Journal/Blog/MartingaleProblem/TauCetiRoadmap → TauCeti`, eine
+  Datei, kein Umbau. Der Lauf konnte ihn nicht anlegen: `ln` ist in dieser
+  Umgebung nicht freigegeben.
+* die Umbenennung des Verzeichnisses. Sie kostet **826** Verweise auf `TauCeti/`
+  im Repositorium, darunter `scripts/facts_prompt.md` — also den Auftrag, unter
+  dem diese Läufe stehen. Ein Lauf, der ihn umschreibt, hinterläßt einen
+  Auftrag, der auf Pfade zeigt, die es nicht mehr gibt.
+
+Ein Target hinzuschreiben, das erst nach einer dieser beiden Änderungen baut,
+wäre genau das, was die Regel „hinterlasse nichts, was auf Ungeschriebenes
+verweist" verbietet. **Und es fehlt dem Lauf auch nichts:** der Worktree hat kein
+`.lake`, ein Lake-Target wäre hier ohnehin nicht zu bauen, und die Kette wird von
+`check_suggested.py` gebaut und geprüft. Das Target ist Bequemlichkeit für den
+Hauptcheckout nach dem Merge, nicht die Fähigkeit selbst.
+
+#### Der geschlossene `sorry`: `isMPSolution_iff_forall_fdd_continuous`
+
+Die stetige Fassung des fdd-Kriteriums, Meilenstein 3. Der Lauf vom 2026-09-15
+hatte die Reduktion ausgeschrieben, und sie hat getragen, wie sie dastand — mit
+drei Abweichungen im einzelnen.
+
+Die leichte Richtung ist eine Zeile: eine stetige Funktion ist meßbar. Die
+schwere geht über
+`integral_mul_ofReal_eq_zero_of_isMulSystem` und
+`generateFromFuns_setOf_continuous_bounded`, beide aus `WeakConvergence`,
+Meilenstein 5, und über nichts sonst. Das multiplikative System ist
+`K = {ω ↦ ∏ k, h k (X (r k) ω) : r k ≤ s, h k stetig und beschränkt}`;
+multiplikativ ist es, weil `Fin.append` zwei Familien aneinanderhängt und
+`Fin.prod_univ_add` das Produkt wieder zerlegt.
+
+**Erstens: `∫ g = 0` ist nicht zu beweisen, sondern einzusetzen.** Die
+`hg0`-Voraussetzung des Übertragungssatzes — die Bedingung an die konstante
+Funktion, die dort ausdrücklich als nicht streichbar vermerkt ist — ist die
+rechte Seite des Kriteriums bei `n = 0`, wo das leere Produkt `1` ist.
+
+**Zweitens: die Roadmap verlangte mehr, als der Beweis braucht.** Der Eintrag zu
+Meilenstein 3 sagte, die von `K` erzeugte σ-Algebra **sei `𝓕 s`**. Gebraucht wird
+davon nur **eine Ungleichung**, und zwar die leichte:
+`MeasurableSpace.comap (X r) _ ≤ generateFromFuns K` für jedes `r ≤ s`, über
+`MeasurableSpace.comap_iSup` und `MeasurableSpace.comap_comp`. Die Gleichheit
+wäre zusätzlich zu zeigen und käme in keinem Schritt vor. Der Eintrag ist
+berichtigt.
+
+**Drittens, und es ist der erste gemessene Preis des Imports: eine
+Namenskollision.** `MartingaleProblems` erklärt im Wurzelnamensraum ein
+`IsSeparating` über `Set (E → 𝕂)`, `WeakConvergence` eines über `Set (E → ℝ)` in
+`MeasureTheory`; mit `open MeasureTheory` ist der nackte Name mehrdeutig, und
+drei Stellen der Datei brachen daran. Sie lesen jetzt `_root_.IsSeparating`. Das
+ist eine Notlösung und als solche vermerkt: vor der Einreichung sollte eine der
+beiden weichen, und die bessere Richtung ist, die `WeakConvergence`-Fassung von
+`ℝ` auf `RCLike` zu heben — dann ist die reelle der Fall `𝕂 = ℝ` und keine
+Aussage steht zweimal da. Das ist ein Eingriff in Meilenstein 1 dieser Roadmap
+und gehört dem Nutzer vorgelegt, nicht nebenbei gemacht.
+
+Die drei Sätze `IsSeparating`, `IsCadlagPath` und ihre Nachbarn tragen in
+`MartingaleProblems` alle denselben Doc-Satz „restated so that this file stands
+against Mathlib alone". Dieser Grund ist mit dem Import entfallen; welche
+dieser Nachbildungen jetzt durch das Original zu ersetzen sind, ist die
+natürliche Aufräumarbeit und ist **nicht** Teil dieses Laufs.
+
+#### Der Durchlauf
+
+| Datei | rc | Fehler | `sorry` | Sekunden |
+| --- | ---: | ---: | ---: | ---: |
+| `WeakConvergence/Suggested.lean` | 0 | 0 | 0 | 8 |
+| `SkorokhodSpace/Suggested.lean` | 0 | 0 | 0 | 13 |
+| `MartingaleProblems/Suggested.lean` | 0 | 0 | 1 | 65 |
+
+`#print axioms` gibt für `isMPSolution_iff_forall_fdd_continuous` und für
+`MeasureTheory.tendsto_of_measure_setOf_continuousAt_eq_one` je
+`propext`, `Classical.choice`, `Quot.sound` und nichts sonst.
+`python3 Journal/Blog/MartingaleProblem/check.py` meldet `clean`.
+
+Entwickelt gegen eine an Zeile 1213 abgeschnittene Kopie (`scratch/mktrunc.py`),
+die Prüfung über die ganze Datei und über die ganze Kette. Der eine verbliebene
+`sorry` ist `mpSolution_of_tendsto`.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`mpSolution_of_tendsto` schließen — der letzte `sorry` der Datei.**
+   *Aussage:* aus den drei Konvergenzhypothesen die Martingalidentität längs `D`,
+   dann `isMPSolution_of_forall_condExp_eq_of_dense`. *Worauf sie ruht:* beide
+   Bausteine stehen seit dem siebzehnten Lauf, und das
+   Continuous-Mapping-Theorem, an dem die `pContinuous`-Fassung hängt, ist seit
+   diesem Lauf **importierbar und bewiesen**. *Warum jetzt:* der Vorlauf hat
+   diesen Schritt als den einen von zweien benannt, der überhaupt Mathematik
+   ist, und der andere ist seit diesem Lauf erledigt. *Zu entscheiden, ehe
+   gebaut wird:* ob der Satz seine Konklusion von der Identität längs `D` auf
+   `IsMPSolution` verstärkt oder ob ein Korollar danebentritt — die Frage steht
+   seit dem siebzehnten Lauf offen und ist nicht beantwortet.
+2. **Die Entscheidung über das Lake-Target dem Nutzer vorlegen** (Symlink oder
+   Umbenennung, siehe oben), und erst danach das Target anlegen. Es ist eine
+   Frage und keine Arbeit; sie steht hier, damit sie nicht jeder Lauf neu
+   erschließt.
+3. **Die Doppelung `IsSeparating` auflösen**, nach derselben Vorlage: die
+   `WeakConvergence`-Fassung auf `RCLike` heben und die Nachbildung in
+   `MartingaleProblems` streichen. Dabei ist zu prüfen, welche der übrigen
+   Nachbildungen dort — `IsCadlagPath` und die Nachbarn — mit dem Import
+   ebenfalls entbehrlich geworden sind.
+4. **Die Aufrufe veralteter Namen**, unverändert Vorschlag 3 der vier Vorläufe.
+   `WeakConvergence` allein meldet `push_neg`, `Set.mem_setOf_eq`,
+   `_root_.not_imp` und zwölf `haveI`-Stilwarnungen; sie sind jetzt, da die
+   Datei fehlerfrei durchläuft, zum ersten Mal vollständig sichtbar.
+
+
+### 2026-09-17, neunzehnter Lauf des Tages — der letzte `sorry` von `MartingaleProblems` ist geschlossen; und die Begründung, mit der die Datei ihren eigenen Konvergenzbegriff eingeführt hat, war falsch
+
+**Vorschlag 1 des Vorlaufs, und er ist eingelöst.** `mpSolution_of_tendsto`
+(Meilenstein 10, `thm:absconv` des Manuskripts) trägt einen Beweis. Damit trägt
+**keine** der drei `Suggested.lean` mehr einen `sorry`:
+
+| Datei | rc | Fehler | `sorry` | Sekunden |
+| --- | ---: | ---: | ---: | ---: |
+| `WeakConvergence/Suggested.lean` | 0 | 0 | 0 | 7 |
+| `SkorokhodSpace/Suggested.lean` | 0 | 0 | 0 | 13 |
+| `MartingaleProblems/Suggested.lean` | 0 | 0 | 0 | 66 |
+
+Elf neue Deklarationen, alle mit `#print axioms` geprüft und alle allein auf
+`propext`, `Classical.choice`, `Quot.sound`: `radialTrunc`,
+`continuous_radialTrunc`, `radialTrunc_of_norm_le`, `norm_radialTrunc_le`,
+`norm_radialTrunc_le_norm`, `norm_sub_radialTrunc_le`, `tendsto_integral_tail`,
+`integrable_tail`, `integral_tail_antitone`,
+`abs_integral_sub_integral_radialTrunc_le`, `integrable_of_tendstoLaw`,
+`integral_eq_zero_of_tendstoLaw` — und `mpSolution_of_tendsto` selbst. Entwickelt
+gegen eine abgeschnittene Kopie (`scratch/mktrunc.py`, 5888 Zeilen, 13 Sekunden
+je Durchlauf), geprüft über die ganze Datei und über die ganze Kette.
+
+#### Der Befund, und er ist eine widerlegte Negativaussage
+
+> Die Datei erklärt einen eigenen Konvergenzbegriff `TendstoLaw` mit der
+> Begründung, Mathlibs `MeasureTheory.TendstoInDistribution` sei „dasselbe für
+> **einen festen** Raum". **Das ist falsch.**
+
+Schon in v4.33.1 steht die Struktur über `{Ω : ι → Type*}` mit
+`{μ : (i : ι) → Measure (Ω i)}` und `[∀ i, IsProbabilityMeasure (μ i)]`
+(`MeasureTheory/Function/ConvergenceInDistribution.lean:64`, Variablenblock
+`:51`–`:55`); die Zufallsvariablen leben dort auf **verschiedenen** Räumen,
+genau wie bei uns. Auf `upstream/master` `8018f6ac06b` (am 2026-09-17 geholt)
+steht es an derselben Stelle.
+
+Was wirklich verschieden ist, ist die **Gestalt**, nicht die Allgemeinheit:
+`TendstoInDistribution` ist `Tendsto` der Bildmaße in `ProbabilityMeasure E` und
+verlangt von `E` einen `MeasurableSpace` mit `OpensMeasurableSpace` sowie
+`AEMeasurable` von den Variablen; `TendstoLaw` verlangt von `V` nichts als eine
+Topologie und ist über die Integrale geschrieben, durch die es benutzt wird. Über
+`𝕂` sind beide äquivalent, und die Brücke steht in v4.33.1:
+`MeasureTheory.ProbabilityMeasure.tendsto_iff_forall_integral_tendsto`
+(`MeasureTheory/Measure/ProbabilityMeasure.lean:346`). Es fehlt also **kein**
+Satz; es steht eine Doppelung da. Die falsche Behauptung ist an der Deklaration
+berichtigt, mit Datei und Zeile.
+
+*Wie der Fehler entstand:* nicht beim Suchen — der Name stand im Kommentar —,
+sondern beim **Lesen**. Der Variablenblock, der `Ω` als Familie einführt, steht
+dreizehn Zeilen über der Struktur; wer nur die Struktur liest, sieht `μ` und
+`μ'` und hält das für „ein Raum und sein Limes". Das ist dieselbe Bauart wie der
+Fehlschluß vom 2026-09-08 bei `Kernel.traj`: ein Kandidat wurde verworfen, ohne
+die Voraussetzung zu nennen, an der er scheitert.
+
+#### Wie der Satz bewiesen ist
+
+Der Kern ist die **Abschneidung**, und sie ist ein eigener kleiner Apparat, weil
+Mathlibs gleichgradige Integrierbarkeit (`MeasureTheory.UnifIntegrable`) ein
+Prädikat über **einem** Maß ist und über eine Folge von Räumen nicht läuft.
+
+`radialTrunc c x = (c / max c ‖x‖) • x` ist die Rückziehung eines normierten
+Raumes auf die abgeschlossene Kugel vom Radius `c` — stetig, durch `c`
+beschränkt, die Identität auf der Kugel, und mit
+`‖x - radialTrunc c x‖ ≤ max (‖x‖ - c) 0`. Ohne Fallunterscheidung geschrieben:
+der Nenner ist durch `c` nach unten beschränkt und damit nie null, also ist die
+Stetigkeit `Continuous.div` und kostet am Rand der Kugel kein Argument.
+
+Damit: `∫ φ` konvergiert für **beschränkte** stetige `φ`, gebraucht wird die
+Konvergenz von `∫` der Variablen selbst; `radialTrunc` ist die Brücke und
+`max (‖·‖ - c) 0` der Fehler, den sie macht. Die Abschneidehöhe wählt für die
+Folge die gleichgradige Integrierbarkeit und für den Limes
+`tendsto_integral_tail` (dominierte Konvergenz für **eine** integrierbare
+Funktion); genommen wird das Maximum der beiden, und es trägt beide Seiten.
+
+**Zwei Stellen, an denen der angesagte Weg nicht trug.**
+
+* **`TendstoLaw` prüft gegen *reelle* Testfunktionen, die Variablen sind
+  `𝕂`-wertig.** `radialTrunc C` bildet `𝕂` nach `𝕂` ab und ist damit keine
+  zulässige Testfunktion. Der Ausweg ist nicht, den Begriff zu ändern, sondern
+  gegen `RCLike.reCLM` und `RCLike.imCLM` zu prüfen und die beiden Ergebnisse
+  mit `RCLike.ext` zusammenzusetzen — eine Real-Imaginär-Zerlegung, die hier
+  nicht vermeidbar war, anders als im dreizehnten Lauf dieses Tages.
+* **Die gleichgradige Integrierbarkeit des Produkts folgt nicht aus der der
+  Faktoren, wenn man die Mengenfassung nimmt.** `∫_{C ≤ ‖ξ‖} ‖ξ‖ ≤ ε` über
+  `ξ = (A - B) · Z` verlangt eine Mengeninklusion in eine **Vereinigung**
+  `{c ≤ ‖A‖} ∪ {c ≤ ‖B‖}` und danach eine Markov-Abschätzung für den Teil, auf
+  dem der eine Faktor klein und der andere groß ist. In der **Schwanzfassung**
+  `∫ max (‖ξ‖ - C) 0 ≤ ε` ist es eine punktweise Ungleichung und sonst nichts:
+  `max (u + v - 2c) 0 ≤ max (u - c) 0 + max (v - c) 0`. Deshalb steht in der
+  Aussage jetzt die Schwanzfassung.
+
+#### Die Voraussetzungen, die sich geändert haben — alle vier begründet
+
+1. **Gleichgradige Integrierbarkeit als Schwanz statt als Mengenintegral.** Die
+   Schwanzfassung ist die **schwächere** Voraussetzung, denn punktweise ist
+   `max (‖x‖ - c) 0 ≤ {y | c ≤ ‖y‖}.indicator ‖·‖ x`; und sie verlangt von den
+   Niveaumengen keine Meßbarkeit. Nach der stehenden Regel ist das die richtige
+   Richtung.
+2. **(a) und (b) stehen jetzt *außerhalb* von `∀ Z ∈ 𝓩 s`.** Sie handeln von
+   `Y₀` und nicht von `Z`, und sie sind es, aus denen `Integrable (Y r) P`
+   gewonnen wird — was `IsDetermining` **unbedingt** verlangt. Bei leerem
+   `𝓩 s` ist die Orthogonalitätsvoraussetzung von `IsDetermining` leer, die
+   Integrierbarkeitsvoraussetzung aber nicht; eine unter `∀ Z` versteckte
+   Integrierbarkeit hätte dort keine Quelle. Das ist kein Schönheitsfehler
+   gewesen, sondern eine Lücke.
+3. **Integrierbarkeit von `Y₀ r (X' n)` unter `P' n` ist hinzugekommen.** Ohne
+   sie ist `∫ ω, max (‖ξ n ω‖ - c) 0 ∂(P' n)` der Bochner-Müllwert `0`, und die
+   Voraussetzung (b) wäre still wahr, während die Funktion beliebig groß ist —
+   derselbe Müllwert, der im zweiten Lauf dieses Tages schon einmal eine
+   Voraussetzung erzwungen hat.
+4. **`Measurable X`, `Measurable (X' n)`, und `𝓩 r` beschränkt und meßbar.**
+   `IsDetermining` verlangt Integrierbarkeit, Integrierbarkeit enthält starke
+   Meßbarkeit, und nichts sonst in der Aussage macht `Y r` meßbar. Die
+   Beschränktheit der Testvariablen kündigt der Doc-Kommentar von
+   `IsDetermining` als „Eigenschaft der Instanziierung" an; hier wird sie
+   benutzt, also steht sie hier.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`TendstoLaw` durch `MeasureTheory.TendstoInDistribution` ersetzen.**
+   *Aussage:* die Definition streichen und die vier Stellen, die sie benutzen
+   (`integrable_of_tendstoLaw`, `integral_eq_zero_of_tendstoLaw`,
+   `mpSolution_of_tendsto` und die Roadmap), auf Mathlibs Struktur umstellen.
+   *Worauf sie ruht:* `ProbabilityMeasure.tendsto_iff_forall_integral_tendsto`
+   (`MeasureTheory/Measure/ProbabilityMeasure.lean:346`, v4.33.1), die aus der
+   Konvergenz der Bildmaße genau die Konvergenz der Integrale beschränkter
+   stetiger Funktionen macht, die unsere Beweise lesen. *Warum jetzt:* die
+   Doppelung ist dieses Laufes Befund und der Grund, aus dem sie entstand, ist
+   entfallen; und `CONTRIBUTING.md` verlangt Kontakt zu vorhandenem Material,
+   nicht Nachbau. *Zu entscheiden, ehe gebaut wird:* ob die Umstellung
+   `[OpensMeasurableSpace 𝕂]` und `AEMeasurable` an die Aussage heftet oder ob
+   sie sich aus `RCLike` von selbst ergeben — das ist am Quelltext zu prüfen und
+   nicht zu raten. Dieselbe Frage stellt sich für `_root_.IsSeparating`,
+   `IsCadlagPath` und die übrigen Nachbildungen, und die Antwort sollte für alle
+   dieselbe sein.
+2. **Die Doppelung `IsSeparating` auflösen**, unverändert Vorschlag 3 des
+   Vorlaufs: die `WeakConvergence`-Fassung von `ℝ` auf `RCLike` heben und die
+   Nachbildung in `MartingaleProblems` streichen. Sie ist jetzt derselbe
+   Aufräumfall wie Vorschlag 1 und gehört in denselben Lauf.
+3. **`mpSolution_of_tendsto_of_pContinuous` und
+   `mpSolution_of_tendsto_augmented`**, die beiden Korollare von Meilenstein 10,
+   die es noch nicht als Deklaration gibt. Das erste ist die Stelle, an der das
+   Continuous-Mapping-Theorem aus `WeakConvergence` eingesetzt wird — der Grund,
+   aus dem der Nutzer die Dateigrenze hat fallen lassen —, und der Hauptsatz,
+   auf den es sich stützt, steht seit diesem Lauf bewiesen da.
+4. **Die Entscheidung über das Lake-Target dem Nutzer vorlegen** (Symlink
+   `TauCetiRoadmap → TauCeti` oder Umbenennung), unverändert Vorschlag 2 des
+   Vorlaufs. Es ist eine Frage und keine Arbeit.

@@ -171,7 +171,7 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Zweiundzwanzig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Dreiundzwanzig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
 Alle zweiundzwanzig beim Beweisen aufgefallen, und die ersten vier sind kleine,
 in sich abgeschlossene Beiträge. Sie gehören thematisch zu
@@ -746,6 +746,36 @@ seinem Dateikopf: es prüft Zeichenketten, nicht Aussagen.
   also `biSup` und `iSup` als Paar zu `biInf` und `iInf`, und ohne jede der vier
   Instanzen, die jene tragen.
 
+* **Gleichgradige Integrierbarkeit über einer Folge *verschiedener*
+  Wahrscheinlichkeitsräume, und was sie mit der Verteilungskonvergenz macht.**
+  Der dreiundzwanzigste, gefunden am 2026-09-17 beim Beweis von
+  `mpSolution_of_tendsto`. `MeasureTheory.UnifIntegrable`
+  (`MeasureTheory/Function/UniformIntegrable.lean:73`) ist ein Prädikat über
+  **einem** festen Maß `μ`; `MeasureTheory.TendstoInDistribution`
+  (`MeasureTheory/Function/ConvergenceInDistribution.lean:64`) läuft dagegen von
+  Haus aus über eine **Familie** `μ : (i : ι) → Measure (Ω i)`. Die beiden
+  passen also nicht aufeinander, und der klassische Satz
+
+  > konvergieren die Verteilungen und ist die Familie gleichgradig integrierbar,
+  > so konvergieren die Erwartungswerte,
+
+  ist in keiner Fassung da. Gesucht wurde am 2026-09-17 gegen `upstream/master`
+  `8018f6ac06b` nach `tendsto_integral` zusammen mit `Distribution`, nach
+  `UnifIntegrable` in `ConvergenceInDistribution.lean` (kein Treffer) und nach
+  `Tendsto`/`Distribution` in `UniformIntegrable.lean` (nur die
+  `TendstoInMeasure`-Sätze, also Konvergenz **in Wahrscheinlichkeit** auf einem
+  Raum). Wir haben ihn als `integral_eq_zero_of_tendstoLaw` in der Gestalt
+  bewiesen, die der Meilenstein braucht — „die Integrale der Folge gehen gegen
+  Null, also auch das des Limes" —, samt dem Apparat darunter: `radialTrunc`,
+  die Rückziehung eines normierten Raumes auf eine Kugel, `tendsto_integral_tail`
+  und `integrable_of_tendstoLaw`.
+
+  Für Mathlib wäre die richtige Fassung die volle Konvergenz der Integrale,
+  nicht unser Spezialfall, und der natürliche Ort ist
+  `ConvergenceInDistribution.lean`. Die gleichgradige Integrierbarkeit wäre
+  dabei über die Schwänze `∫ max (‖ξ i‖ - c) 0 ≤ ε` zu formulieren und nicht
+  über `UnifIntegrable`, das ein Maß festhält.
+
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine
 lokal endliche lineare Ordnung geschrieben ist und `Traj.lean` auf `ℕ` festliegt.
@@ -787,17 +817,21 @@ Hauptcheckouts geprüft (dort wurde nichts geschrieben):
 
 | | Zeilen | Deklarationen | `sorry` | Fehler |
 |---|---:|---:|---:|---:|
-| `WeakConvergence` | 6 964 | 195 | 1 | 2 |
+| `WeakConvergence` | 6 989 | 196 | 0 | 0 |
 | `SkorokhodSpace` | 10 167 | 353 | 0 | 0 |
-| `MartingaleProblems` | 29 092 | 1 359 | 6 | 0 |
+| `MartingaleProblems` | 33 009 | — | 1 | 0 |
 
-`SkorokhodSpace` ist damit **ganz bewiesen** und seit dem 10. September
-unberührt; `WeakConvergence` seit dem 9. Die zwei Fehler dort sind die **eine**
-bewußt gegen `upstream/master` geschriebene Aussage
-`tendsto_map_of_measure_setOf_continuousAt_eq_one` (Zeile 2181) — sie
-elaboriert gegen v4.33.1 nicht, weil `ProbabilityMeasure.map` dort noch ein
-`AEMeasurable`-Argument nimmt, und darum meldet Lean ihr `sorry` gar nicht
-erst. Nachgeprüft, absichtlich, bleibt so.
+`SkorokhodSpace` ist **ganz bewiesen** und seit dem 10. September unberührt.
+`WeakConvergence` ist es seit dem 2026-09-17, achtzehntem Lauf des Tages, und
+die Zeile davor ist zu berichtigen: sie nannte die zwei Fehler dort „nachgeprüft,
+absichtlich, bleibt so". Das war als Aussage über die *Aussage* richtig und als
+Aussage über die *Datei* falsch. Ein `error` gibt keine `.olean`; solange die
+eine gegen `upstream/master` geschriebene Deklaration nicht elaborierte, war
+`WeakConvergence` von keiner anderen Datei importierbar, und seit der
+Entscheidung des Nutzers vom 2026-09-17, daß die vier Roadmaps aufeinander
+aufbauen dürfen, hing daran die ganze Kette. Die Aussage ist jetzt über die
+Bildmaße als Daten geschrieben, elaboriert gegen **beide** Fassungen und ist
+bewiesen: `tendsto_of_measure_setOf_continuousAt_eq_one`.
 
 Die ganze Bewegung steckt seither in `MartingaleProblems`: **1 036 Zeilen am
 8. September, 29 092 heute.** Die **fünf** verbliebenen `sorry` stehen in
@@ -830,9 +864,24 @@ Regularisierung** — Oszillation längs eines einseitigen Filters *ist*
 Aufkreuzung eines rationalen Intervalls, und dieser Teil kommt ohne
 Wahrscheinlichkeit aus. Am 2026-09-17 ist der Meilenstein dann in fünf Läufen
 bis zu `exists_cadlag_modification_of_isRegularizingClass` durchgezogen worden;
-offen bleiben dort die beiden Quasi-Linksstetigkeiten.
+im vierzehnten und fünfzehnten Lauf desselben Tages sind auch die **beiden
+Quasi-Linksstetigkeiten** gefallen —
+`isQuasiLeftContinuous_of_isRegularizingClass` und die klassische Instanz
+`isQuasiLeftContinuous_of_isMPSolutionFor`, letztere **ohne** Atomlosigkeit der
+Uhr, die Ethier–Kurtz dort verlangen und die die hiesige Aussagefassung trug.
+**Meilenstein 9 hat damit kein `sorry` mehr.** Die Zahl in `MartingaleProblems`
+stand seither bei **drei**: die stetige Fassung des fdd-Kriteriums und die beiden
+Konvergenzsätze `mpSolution_of_tendsto` und
+`isMPSolution_of_forall_condExp_eq_of_dense`. Im siebzehnten Lauf des
+2026-09-17 ist der letzte davon **bewiesen** — der Übergang von der
+Martingalidentität längs eines dichten `D` auf den ganzen Index —, und die Zahl
+steht bei **zwei**. Drei Befunde an seinen Voraussetzungen gehören dazu: die
+gleichgradige Integrierbarkeit ist keine Voraussetzung, sondern eine Folgerung
+aus der Identität längs `D` selbst; `Dense D` reicht **nicht** und ist durch die
+Bedingung ersetzt, die `LiftWitness.exists_countable_right_dense` liefert; und
+`D.Countable` wird gar nicht gebraucht.
 
-Kein `sorry` steht in einer *Aussage*, nur in Beweisen: alle fünf sitzen in
+Kein `sorry` steht in einer *Aussage*, nur in Beweisen: alle sitzen in
 `theorem`en.
 
 Manuskript: **134 Seiten**, `check.py` clean — der Runner verwirft `.tex` und

@@ -181,9 +181,9 @@ The same run proved the content of Milestone 2,
 `tendsto_of_measure_setOf_not_continuousAt_eq_zero`, the continuous mapping
 result for maps continuous almost everywhere: the image measures are given
 as data with their defining equations, which is what lets one statement elaborate
-against both `v4.33.1` and `upstream/master`.  The packaged form
-`tendsto_map_of_measure_setOf_continuousAt_eq_one` is that theorem instantiated
-and keeps its `sorry` for the version reason alone.
+against both `v4.33.1` and `upstream/master`.  The form with the continuity set
+of full measure, `tendsto_of_measure_setOf_continuousAt_eq_one`, is that theorem
+with `prob_compl_eq_zero_iff` in front of it.
 
 The same run also proved the first point of Milestone 3,
 `isTightMeasureSet_of_forall_exists_finite_iUnion_ball`, which turned out to be
@@ -354,13 +354,16 @@ last one, `exists_ae_tendsto_of_tendsto` of Milestone 3 -- the Skorokhod
 representation theorem -- is proved, and depends on `propext`,
 `Classical.choice` and `Quot.sound` alone.
 
-One statement is deliberately written for `upstream/master` rather than for
-`v4.33.1`, and so does not elaborate here:
-`tendsto_map_of_measure_setOf_continuousAt_eq_one` uses
+Until 2026-09-17 one statement was deliberately written for `upstream/master`
+rather than for `v4.33.1` and so did not elaborate here; it used
 `ProbabilityMeasure.map`, which on master takes the *function*
-(`MeasureTheory/Measure/ProbabilityMeasure.lean:626`) and in `v4.33.1` takes an
-`AEMeasurable` proof as well.  Master is what Tau Ceti builds on, so the
-statement follows master.
+(`MeasureTheory/Measure/ProbabilityMeasure.lean:627`) and in `v4.33.1` takes an
+`AEMeasurable` proof as well (`ibid.:608`).  The price was not the statement but
+the **file**: an `error` yields no `.olean`, so nothing could import this
+roadmap, and since the four roadmaps build on one another that blocked the whole
+chain.  It is written through the image measures as data now, elaborates against
+both versions, and is proved.  No declaration of this file is version bound any
+more.
 -/
 
 open Filter Topology MeasureTheory Set ENNReal
@@ -2167,18 +2170,40 @@ theorem tendsto_of_measure_setOf_not_continuousAt_eq_zero
         measure_union_le _ _
     _ = (ν : Measure E) (h ⁻¹' F) := by rw [hcont, add_zero]
 
-/-- The packaged form, for `upstream/master`.  It is
-`tendsto_of_measure_setOf_not_continuousAt_eq_zero` at `μ' n = (μ n).map h` and
-`ν' = ν.map h`, whose defining equations are `rfl` there, with
-`measurableSet_setOf_continuousAt` turning `ν {x | ContinuousAt h x} = 1` into
-the null discontinuity set.  Only the spelling of `ProbabilityMeasure.map`
-keeps it from elaborating against `v4.33.1`. -/
-theorem tendsto_map_of_measure_setOf_continuousAt_eq_one [TopologicalSpace E]
-    [BorelSpace E] [TopologicalSpace.SeparableSpace E] [MetricSpace E'] [BorelSpace E']
+/-- The same theorem with the hypothesis in the form it is usually met, the
+**continuity set of full measure**.
+
+The two hypotheses are not the same statement for an arbitrary set, but the
+continuity set of a map into a pseudo-emetric space is `Gδ` and hence Borel
+(`measurableSet_of_continuousAt`,
+`MeasureTheory/Constructions/BorelSpace/Basic.lean:252`), so
+`prob_compl_eq_zero_iff` (`MeasureTheory/Measure/Typeclasses/Probability.lean:157`)
+carries one to the other.  That is the whole proof, and the metric on `E'` is
+used for nothing else.
+
+The image measures stay data with their defining equations, as in the theorem
+above, and deliberately: `ProbabilityMeasure.map` is the one construction whose
+signature differs between `v4.33.1` (`MeasureTheory/Measure/ProbabilityMeasure.lean:608`,
+an `AEMeasurable` proof, the function implicit) and `upstream/master`
+(`ibid.:627`, the function itself).  Written through it, the statement
+elaborates against exactly one of the two, and a roadmap file that cannot be
+elaborated at all is a roadmap file that cannot be checked.  Written this way it
+elaborates against both and says the same thing: instantiate `μ'` and `ν'` with
+the pushforwards in whichever spelling the version at hand uses, where the two
+defining equations are `rfl`. -/
+theorem tendsto_of_measure_setOf_continuousAt_eq_one
+    [TopologicalSpace E] [OpensMeasurableSpace E] [HasOuterApproxClosed E]
+    [PseudoEMetricSpace E'] [OpensMeasurableSpace E']
     {μ : ℕ → ProbabilityMeasure E} {ν : ProbabilityMeasure E} {h : E → E'}
     (hh : Measurable h) (hconv : Tendsto μ atTop (𝓝 ν))
-    (hcont : (ν : Measure E) {x | ContinuousAt h x} = 1) :
-    Tendsto (fun n => (μ n).map h) atTop (𝓝 (ν.map h)) := sorry
+    (hcont : (ν : Measure E) {x | ContinuousAt h x} = 1)
+    {μ' : ℕ → ProbabilityMeasure E'} {ν' : ProbabilityMeasure E'}
+    (hμ' : ∀ n, (μ' n : Measure E') = (μ n : Measure E).map h)
+    (hν' : (ν' : Measure E') = (ν : Measure E).map h) :
+    Tendsto μ' atTop (𝓝 ν') := by
+  refine tendsto_of_measure_setOf_not_continuousAt_eq_zero hh hconv ?_ hμ' hν'
+  have hms : MeasurableSet {x : E | ContinuousAt h x} := measurableSet_of_continuousAt h
+  exact (prob_compl_eq_zero_iff hms).2 hcont
 
 /-! ## Milestone 3: the space of laws, and the Skorokhod representation theorem
 
