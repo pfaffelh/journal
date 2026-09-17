@@ -34785,3 +34785,395 @@ theorem measure_chainCompensated_jumpChain_pos_mm1 :
   · rintro x rfl; exact le_rfl
 
 end MM1Probe
+
+/-! ### The grid of the probe and the clock of the process: what separates them
+
+The probe above discharges hypothesis (c) of `mpSolution_of_tendsto` over the embedded jump
+chain, and it does so at the grid indices `⌊n s⌋` and `⌊n t⌋` -- the indices the manuscript's
+`ex:invariance` reads through `gridPath`.  The jump process of Milestone 4 reads the same chain
+at a different index: `jumpProcess lam t ω = ω.1 (stepIndex (jumpTime lam ω.1 ω.2) t)`, the
+**renewal count** of its own jump times.  The two are not the same function of `ω`, and saying
+so is the point of this block: the first is random and the second is not.
+
+Three statements make the distance between them exact.
+
+* `jumpProcess_const_mul_rate`: **speeding up the rate is a time change**, pointwise and with
+  no hypothesis but `0 < c`.  So the approximating sequence of `ex:invariance` applied to the
+  jump construction is *one* process read along a sequence of times, and the chain is
+  untouched.
+* `jumpProcess_eq_gridPath_unitWaiting`: for the **deterministic clock** -- unit waiting times
+  -- the renewal count *is* `⌊c t⌋` and the sped up process *is* the grid path.  The grid path
+  is therefore not a foreign object but the jump process of a degenerate clock.
+* `jumpProcess_ne_gridPath_unitDelay`: and one waiting time out of step already breaks the
+  identity, at a named sample point.  The gap is not a null set, and no modification repairs
+  it; what closes it as `n → ∞` is the law of large numbers for the waiting times, which is a
+  statement about the sequence and not about a sample point.
+
+What the probe therefore proves is an orthogonality at the **jump number**, and what
+`ex:invariance` speaks of is one at the **time**.  Nothing below closes that; it names it, and
+it says what the missing input is.
+
+The junk value is in this block too, and it is worth its own statement.  `stepIndex_le_iff`
+says that `{stepIndex T t ≤ n}` is the event `t < T (n + 1)` *or* the explosion set, and the
+second disjunct reads every jump time at once.  So the renewal count is a stopping time for the
+filtration of the first `n + 1` jump times only under non explosion -- one more place where
+`sInf ∅ = 0` makes a statement quietly true. -/
+
+section StepIndexJunk
+
+variable {α : Type*} [ConditionallyCompleteLinearOrder α] {T : ℕ → α} {t : α} {n : ℕ}
+
+/-- **The step index is below `n` exactly when the time lies in the window with index `n`, or
+else no window contains it at all.**  The second clause is the explosion set, where the junk
+value `sInf ∅ = 0` is returned, and it is not a blemish on the statement but the statement:
+the event `{stepIndex T t ≤ n}` is *not* a function of the jump times `T 0, …, T (n + 1)`
+alone, because `∀ m, T (m + 1) ≤ t` reads all of them. -/
+theorem stepIndex_le_iff (hT : Monotone T) :
+    stepIndex T t ≤ n ↔ t < T (n + 1) ∨ ∀ m, T (m + 1) ≤ t := by
+  constructor
+  · intro h
+    by_cases hex : ∃ m, t < T (m + 1)
+    · exact Or.inl (lt_of_lt_of_le (lt_stepIndex_succ hex) (hT (Nat.succ_le_succ h)))
+    · exact Or.inr fun m ↦ not_lt.1 fun hm ↦ hex ⟨m, hm⟩
+  · rintro (h | h)
+    · exact stepIndex_le h
+    · have hempty : {m | t < T (m + 1)} = (∅ : Set ℕ) := by
+        ext m; simpa using not_lt.2 (h m)
+      simp [stepIndex, hempty]
+
+/-- **Off the explosion set the step index is the index of the window and nothing else.**  This
+is the shape in which `{stepIndex T t ≤ n}` is an event of the first `n + 1` jump times, and it
+is the reason every statement that reads the index as a stopping time carries non explosion. -/
+theorem stepIndex_le_iff_of_exists (hT : Monotone T) (hex : ∃ m, t < T (m + 1)) :
+    stepIndex T t ≤ n ↔ t < T (n + 1) := by
+  refine (stepIndex_le_iff hT).trans ⟨fun h ↦ h.resolve_right ?_, Or.inl⟩
+  obtain ⟨m, hm⟩ := hex
+  exact fun h ↦ absurd (h m) (not_le.2 hm)
+
+end StepIndexJunk
+
+section DeterministicClock
+
+/-- **The renewal count of the unit clock is the floor.**  `stepIndex` of the jump times
+`T n = n` is `⌊·⌋₊`, which is the index the grid path of `ex:invariance` reads.  Only the order
+enters; the hypothesis `0 ≤ s` is what pins the left endpoint of the window. -/
+theorem stepIndex_natCast {s : ℝ} (hs : 0 ≤ s) :
+    stepIndex (fun n : ℕ ↦ (n : ℝ)) s = ⌊s⌋₊ := by
+  refine stepIndex_eq_of (Or.inr (Nat.floor_le hs)) ?_ fun a b hab ↦ by exact_mod_cast hab
+  push_cast
+  exact Nat.lt_floor_add_one s
+
+variable {E : Type*}
+
+/-- **The unit clock as jump data**: rate `1` and waiting times `1` give the jump times `n`. -/
+theorem jumpTime_unit (y : ℕ → E) (n : ℕ) :
+    jumpTime (fun _ ↦ (1 : ℝ)) y (fun _ ↦ (1 : ℝ)) n = n := by
+  induction n with
+  | zero => simp
+  | succ n ih => rw [jumpTime_succ, ih]; push_cast; ring
+
+end DeterministicClock
+
+section TimeGrid
+
+variable {E : Type*} [mE : MeasurableSpace E]
+
+/-- **The jump process is the embedded chain read at the step index.**  It is `rfl`, and it is
+worth a name: the process of Milestone 4 and the chain of Milestone 10 are the same family of
+random variables read at two different indices.  The index here is the *renewal count* of the
+jump times, a random one; the index the grid path of `ex:invariance` reads is `⌊n t⌋`, a
+deterministic one.  Everything below is about that difference. -/
+theorem jumpProcess_eq_jumpChain_stepIndex (lam : E → ℝ) (t : ℝ)
+    (ω : (ℕ → E) × (ℕ → ℝ)) :
+    jumpProcess lam t ω = jumpChain E (stepIndex (jumpTime lam ω.1 ω.2) t) ω := rfl
+
+omit mE in
+/-- **Speeding up the rate by `c` divides every jump time by `c`.**  No positivity is asked and
+none is needed: at `c = 0` both sides are `0`, the left because the holding time `ξ n / 0` is
+the junk value `0` at every step, the right because the division is by `0`.  Here the junk
+value of division tells the truth on both sides, which is why the statement is unconditional
+while `stepIndex_div_const` below is not. -/
+theorem jumpTime_const_mul (c : ℝ) (lam : E → ℝ) (y : ℕ → E) (xi : ℕ → ℝ) (n : ℕ) :
+    jumpTime (fun x ↦ c * lam x) y xi n = jumpTime lam y xi n / c := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+      rw [jumpTime_succ, jumpTime_succ, ih, div_mul_eq_div_div, div_right_comm, ← add_div]
+
+/-- **Dividing the jump times by `c > 0` is the same as multiplying the time by `c`.**  The
+step index is defined by the events `t < T (n + 1)` alone, so a positive rescaling of the jump
+times passes through it as the inverse rescaling of the time. -/
+theorem stepIndex_div_const {T : ℕ → ℝ} {c : ℝ} (hc : 0 < c) (t : ℝ) :
+    stepIndex (fun n ↦ T n / c) t = stepIndex T (t * c) := by
+  have h : {n | t < T (n + 1) / c} = {n | t * c < T (n + 1)} := by
+    ext n; exact lt_div_iff₀ hc
+  simp only [stepIndex, h]
+
+omit mE in
+/-- **Speeding up the rate is a time change.**  The jump process at rate `c · lam` read at time
+`t` is the jump process at rate `lam` read at time `c t`, at *every* sample point, with no
+hypothesis on the data beyond `0 < c`.
+
+This is what the rescaling of `ex:invariance` does to the jump construction, and it says the
+approximating sequence there is one process read along a sequence of times and not a sequence
+of processes.  The chain is untouched: only the clock is. -/
+theorem jumpProcess_const_mul_rate {c : ℝ} (hc : 0 < c) (lam : E → ℝ) (t : ℝ)
+    (ω : (ℕ → E) × (ℕ → ℝ)) :
+    jumpProcess (fun x ↦ c * lam x) t ω = jumpProcess lam (t * c) ω := by
+  show stepPath (jumpTime (fun x ↦ c * lam x) ω.1 ω.2) ω.1 t
+    = stepPath (jumpTime lam ω.1 ω.2) ω.1 (t * c)
+  simp only [stepPath, funext (jumpTime_const_mul c lam ω.1 ω.2), stepIndex_div_const hc]
+
+/-- **What separates the sped up jump process from the grid path of its own chain is one
+index.**  Both are the chain `ω.1` evaluated somewhere; the process evaluates it at the renewal
+count `stepIndex (jumpTime lam ω.1 ω.2) (c t)`, the grid path at `⌊c t⌋`.  The hypothesis is
+therefore the whole of the difference, and it is stated rather than assumed away. -/
+theorem jumpProcess_const_mul_rate_eq_gridPath {c : ℝ} (hc : 0 < c) (lam : E → ℝ) (t : ℝ≥0)
+    (ω : (ℕ → E) × (ℕ → ℝ))
+    (h : stepIndex (jumpTime lam ω.1 ω.2) ((t : ℝ) * c) = ⌊c * (t : ℝ)⌋₊) :
+    jumpProcess (fun x ↦ c * lam x) (t : ℝ) ω = gridPath (jumpChain E) c ω t := by
+  rw [jumpProcess_const_mul_rate hc, jumpProcess_eq_jumpChain_stepIndex, h]
+  rfl
+
+/-- **The two indices do agree, and the clock for which they do is the deterministic one.**  At
+rate `c` with unit waiting times the jump times are `n / c`, the renewal count of `c t` is
+`⌊c t⌋`, and the sped up jump process *is* the grid path of its embedded chain -- at every
+chain and for every time.
+
+This is the emptiness probe of the identification: the grid path of `ex:invariance` is not a
+different object from the process of Milestone 4 but the process of a degenerate clock.  What
+makes it degenerate is named in `jumpProcess_ne_gridPath_unitDelay`: it is the constancy of the
+waiting times, and under `waitingMeasure` they are exponential and not constant. -/
+theorem jumpProcess_eq_gridPath_unitWaiting {c : ℝ} (hc : 0 < c) (y : ℕ → E) (t : ℝ≥0) :
+    jumpProcess (fun _ ↦ c * (1 : ℝ)) (t : ℝ) (y, fun _ ↦ (1 : ℝ))
+      = gridPath (jumpChain E) c (y, fun _ ↦ (1 : ℝ)) t := by
+  refine jumpProcess_const_mul_rate_eq_gridPath hc _ t _ ?_
+  rw [funext (jumpTime_unit (E := E) y), stepIndex_natCast]
+  · rw [mul_comm]
+  · exact mul_nonneg t.coe_nonneg hc.le
+
+end TimeGrid
+
+section GridWitness
+
+/-- **And the identification is not general: one waiting time out of step breaks it.**  The
+chain is the identity on `ℕ`, the rate is `1`, and the zeroth waiting time is `2` instead of
+`1`.  Then the first jump has not happened by time `1`, so the process still sits at the state
+`0`, while the grid path has already moved to the state `1`.
+
+The witness is deterministic and therefore says more than an almost sure statement would: the
+gap between the renewal count and the deterministic count is not a null set phenomenon that a
+modification could repair.  What closes it in the limit is the law of large numbers for the
+waiting times, and that is a statement about `n → ∞` and not about a sample point. -/
+theorem jumpProcess_ne_gridPath_unitDelay :
+    jumpProcess (fun _ : ℕ ↦ (1 : ℝ)) 1 (id, fun k ↦ if k = 0 then (2 : ℝ) else 1)
+      ≠ gridPath (jumpChain ℕ) 1 (id, fun k ↦ if k = 0 then (2 : ℝ) else 1) 1 := by
+  have h1 : jumpTime (fun _ : ℕ ↦ (1 : ℝ)) id (fun k ↦ if k = 0 then (2 : ℝ) else 1) 1 = 2 := by
+    rw [jumpTime_one]; norm_num
+  have hl : jumpProcess (fun _ : ℕ ↦ (1 : ℝ)) 1 (id, fun k ↦ if k = 0 then (2 : ℝ) else 1)
+      = 0 := by
+    have := jumpProcess_of_lt_jumpTime_one (lam := fun _ : ℕ ↦ (1 : ℝ))
+      (ω := (id, fun k ↦ if k = 0 then (2 : ℝ) else 1)) (t := 1) (by rw [h1]; norm_num)
+    simpa using this
+  have hr : gridPath (jumpChain ℕ) 1 (id, fun k ↦ if k = 0 then (2 : ℝ) else 1) 1 = 1 := by
+    simp [gridPath, jumpChain]
+  rw [hl, hr]
+  norm_num
+
+end GridWitness
+
+/-! ### The probe with a nonzero `(K3)`, over the embedded jump chain
+
+`tendsto_integral_mul_jumpChain` meets `(K3)` exactly -- the canonical increment *is* the
+martingale increment -- so its conclusion is a limit of zeros and the estimate the theorem is
+built around is never applied.  The i.i.d. probe has a perturbed companion for that reason;
+the jump chain gets one here, so that no hypothesis of
+`tendsto_integral_mul_rescaledChain_natural` is met only in a shape that proves nothing. -/
+
+section PerturbedJumpChain
+
+variable {E : Type*} [mE : MeasurableSpace E]
+
+/-- **The jump chain probe with a nonzero `(K3)`.**  As in the i.i.d. case the canonical
+increment is the martingale increment displaced by the constant `(n + 1)⁻¹`, whose `L¹`
+distance to `0` is not `0`; so the conclusion is a limit and not a sequence of zeros, and the
+bound on the weight is used rather than idle.
+
+Together with `tendsto_integral_mul_jumpChain` this leaves no hypothesis of
+`tendsto_integral_mul_rescaledChain_natural` met only in its trivial shape: `hPf` is met by a
+compensator that reads the state, and `happrox` by an approximation that is not an equality. -/
+theorem tendsto_integral_mul_jumpChain_perturbed (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu]
+    {f : E → ℝ} (hf : Measurable f) {C : ℝ} (hfb : ∀ x, |f x| ≤ C)
+    {g : E → ℝ} (hg : Measurable g) {b : ℝ} (hgb : ∀ x, ‖g x‖ ≤ b)
+    {s t : ℝ≥0} (hst : s ≤ t) :
+    Tendsto (fun n : ℕ ↦ ∫ ω, (chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E)
+            ⌊(n : ℝ) * (t : ℝ)⌋₊ ω
+          - chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E)
+            ⌊(n : ℝ) * (s : ℝ)⌋₊ ω
+          + ((n : ℝ) + 1)⁻¹) * g (ω.1 0)
+        ∂(jumpMeasure mu nu)) atTop (𝓝 0) := by
+  set P : Measure ((ℕ → E) × (ℕ → ℝ)) := jumpMeasure mu nu with hP
+  set M : ℕ → ((ℕ → E) × (ℕ → ℝ)) → ℝ :=
+    chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E) with hM
+  have hPfm : Measurable (fun x : E ↦ ∫ y, f y ∂(mu x)) :=
+    (StronglyMeasurable.integral_kernel (κ := mu) hf.stronglyMeasurable).measurable
+  have hPfb : ∀ x : E, |∫ y, f y ∂(mu x)| ≤ C := by
+    intro x
+    have := norm_integral_le_of_norm_le_const (μ := mu x) (C := C) (f := f)
+      (.of_forall fun y ↦ by simpa [Real.norm_eq_abs] using hfb y)
+    simpa using this
+  have hfint : ∀ i : ℕ, Integrable (fun ω ↦ f (jumpChain E i ω)) P := fun i ↦
+    (integrable_const C).mono'
+      ((hf.comp (measurable_jumpChain (E := E) i)).aestronglyMeasurable)
+      (Eventually.of_forall fun ω ↦ by simpa [Real.norm_eq_abs] using hfb (jumpChain E i ω))
+  have hPfint : ∀ i : ℕ, Integrable (fun ω ↦ (∫ y, f y ∂(mu (jumpChain E i ω)))) P := fun i ↦
+    (integrable_const C).mono'
+      ((hPfm.comp (measurable_jumpChain (E := E) i)).aestronglyMeasurable)
+      (Eventually.of_forall fun ω ↦ by simpa [Real.norm_eq_abs] using hPfb (jumpChain E i ω))
+  have hMint : ∀ k : ℕ, Integrable (M k) P := by
+    intro k
+    show Integrable (fun ω ↦ f (jumpChain E k ω) - ∑ j ∈ Finset.range k,
+      ((∫ y, f y ∂(mu (jumpChain E j ω))) - f (jumpChain E j ω))) P
+    exact (hfint k).sub (integrable_finsetSum _ fun j _ ↦ (hPfint j).sub (hfint j))
+  refine tendsto_integral_mul_rescaledChain_natural (𝕂 := ℝ)
+    (Ω' := fun _ : ℕ ↦ ((ℕ → E) × (ℕ → ℝ))) (P' := fun _ : ℕ ↦ P)
+    (Ξ := fun _ : ℕ ↦ jumpChain E) (fun _ i ↦ measurable_jumpChain (E := E) i)
+    (fn := fun _ : ℕ ↦ f) (Pfn := fun _ : ℕ ↦ fun x : E ↦ ∫ y, f y ∂(mu x))
+    (fun _ ↦ hf) (fun _ ↦ hPfm) hst
+    (Z := fun x : ℝ≥0 → E ↦ g (x 0))
+    (hg.comp (measurable_naturalFiltration (fun u : ℝ≥0 ↦ measurable_pi_apply u)
+      (zero_le : (0 : ℝ≥0) ≤ s)))
+    (fun _ ↦ hgb _) (fun _ i ↦ hfint i) (fun _ i ↦ hPfint i)
+    (fun _ i ↦ condExp_jumpChain mu nu i hf hfb)
+    (G := fun n ω ↦ (M ⌊(n : ℝ) * (t : ℝ)⌋₊ ω - M ⌊(n : ℝ) * (s : ℝ)⌋₊ ω) + ((n : ℝ) + 1)⁻¹)
+    (fun n ↦ ((hMint _).sub (hMint _)).add (integrable_const _)) ?_ |>.congr ?_
+  · have hcalc : ∀ n : ℕ, ∫ _ω : (ℕ → E) × (ℕ → ℝ),
+        ‖(M ⌊(n : ℝ) * (t : ℝ)⌋₊ _ω - M ⌊(n : ℝ) * (s : ℝ)⌋₊ _ω + ((n : ℝ) + 1)⁻¹)
+          - (M ⌊(n : ℝ) * (t : ℝ)⌋₊ _ω - M ⌊(n : ℝ) * (s : ℝ)⌋₊ _ω)‖ ∂P = ((n : ℝ) + 1)⁻¹ := by
+      intro n
+      simp only [add_sub_cancel_left, Real.norm_eq_abs, abs_of_nonneg
+        (show (0 : ℝ) ≤ ((n : ℝ) + 1)⁻¹ by positivity), integral_const, probReal_univ,
+        smul_eq_mul, one_mul]
+    refine Tendsto.congr (fun n ↦ (hcalc n).symm) ?_
+    simpa using tendsto_one_div_add_atTop_nhds_zero_nat (𝕜 := ℝ)
+  · intro n
+    simp [gridPath, jumpChain, RCLike.ofReal_real_eq_id]
+
+end PerturbedJumpChain
+
+/-! ### The renewal law of large numbers, and it is deterministic
+
+The block above measures the distance between the grid index `⌊n t⌋` and the renewal count
+`stepIndex T (n t)`, and exhibits a sample point at which they differ.  What closes the
+distance is not a rewriting but a limit theorem, and the surprise is that its content is
+**deterministic**: nothing about the waiting times enters.  If the jump times grow like `m · n`
+and diverge, then the renewal count of `s` grows like `s / m`, and that is the sandwich
+
+    T (stepIndex T s) ≤ s < T (stepIndex T s + 1)
+
+divided by `stepIndex T s`.  Both ends of it are proved above -- `T_stepIndex_le` and
+`lt_stepIndex_succ` -- and the third input, `stepIndex T s → ∞`, is `stepIndex_le_iff_of_exists`
+read contrapositively.
+
+What the jump construction supplies on top of this is the almost sure hypothesis `T n / n → m`,
+and for a constant rate that is `ProbabilityTheory.strong_law_ae` applied to the coordinates of
+`waitingMeasure`.  Separating the two is worth the section: the deterministic half holds for
+every clock, explosive or not, and the divergence of the jump times is exactly the hypothesis
+that keeps the junk value `sInf ∅ = 0` out of the statement. -/
+
+section RenewalLLN
+
+variable {T : ℕ → ℝ}
+
+/-- **The step index is above `n` exactly when the `(n+1)`-st jump time has passed.**  One
+direction is `le_of_lt_stepIndex` and needs nothing; the other is the contrapositive of
+`stepIndex_le_iff_of_exists` and needs non explosion, as it must. -/
+theorem lt_stepIndex_iff (hmono : Monotone T) (hex : ∀ s : ℝ, ∃ n, s < T (n + 1))
+    (n : ℕ) (s : ℝ) : n < stepIndex T s ↔ T (n + 1) ≤ s := by
+  constructor
+  · exact le_of_lt_stepIndex
+  · intro hs
+    by_contra h
+    exact absurd ((stepIndex_le_iff_of_exists hmono (hex s)).1 (not_lt.1 h)) (not_lt.2 hs)
+
+/-- **The renewal count diverges with the time.**  The bound is explicit: past `T b` the count
+is at least `b`. -/
+theorem tendsto_stepIndex_atTop (hmono : Monotone T) (hinf : Tendsto T atTop atTop) :
+    Tendsto (fun s : ℝ ↦ stepIndex T s) atTop atTop := by
+  have hex : ∀ s : ℝ, ∃ n, s < T (n + 1) := fun s ↦ exists_lt_succ_of_tendsto_atTop hinf s
+  refine tendsto_atTop_atTop.2 fun b ↦ ⟨T b, fun s hs ↦ ?_⟩
+  cases b with
+  | zero => exact Nat.zero_le _
+  | succ k => exact (lt_stepIndex_iff hmono hex k s).2 hs
+
+/-- **The renewal law of large numbers, deterministically.**  If the jump times grow like `m · n`
+and diverge, then the renewal count of `s` grows like `s / m`.
+
+No probability enters, and no property of the jump times beyond monotonicity, divergence and the
+growth rate.  The proof is the sandwich `T (N s) ≤ s < T (N s + 1)` with `N s = stepIndex T s`,
+divided by `N s`: the lower end is `T (N s) / N s → m` by composition with `N s → ∞`, the upper
+end is the same at `N s + 1` times `(N s + 1) / N s → 1`, and the squeeze gives `s / N s → m`.
+Inverting is the last line and is where `0 < m` is spent. -/
+theorem tendsto_stepIndex_div_atTop (hmono : Monotone T) (hinf : Tendsto T atTop atTop)
+    {m : ℝ} (hm : 0 < m) (hTm : Tendsto (fun n : ℕ ↦ T n / n) atTop (𝓝 m)) :
+    Tendsto (fun s : ℝ ↦ (stepIndex T s : ℝ) / s) atTop (𝓝 m⁻¹) := by
+  have hex : ∀ s : ℝ, ∃ n, s < T (n + 1) := fun s ↦ exists_lt_succ_of_tendsto_atTop hinf s
+  set N : ℝ → ℕ := fun s ↦ stepIndex T s with hNdef
+  have hN : Tendsto N atTop atTop := tendsto_stepIndex_atTop hmono hinf
+  have hNR : Tendsto (fun s : ℝ ↦ (N s : ℝ)) atTop atTop :=
+    tendsto_natCast_atTop_atTop.comp hN
+  have hpos : ∀ᶠ s : ℝ in atTop, 0 < (N s : ℝ) := hNR.eventually_gt_atTop 0
+  have hlow : Tendsto (fun s : ℝ ↦ T (N s) / (N s : ℝ)) atTop (𝓝 m) := hTm.comp hN
+  have hup1 : Tendsto (fun s : ℝ ↦ T (N s + 1) / ((N s : ℝ) + 1)) atTop (𝓝 m) := by
+    have h := hTm.comp (tendsto_atTop_mono (fun s ↦ Nat.le_succ (N s)) hN)
+    refine h.congr fun s ↦ ?_
+    show T (N s + 1) / ((N s + 1 : ℕ) : ℝ) = T (N s + 1) / ((N s : ℝ) + 1)
+    push_cast
+    ring
+  have hup2 : Tendsto (fun s : ℝ ↦ ((N s : ℝ) + 1) / (N s : ℝ)) atTop (𝓝 1) := by
+    have h0 : Tendsto (fun s : ℝ ↦ (1 : ℝ) + ((N s : ℝ))⁻¹) atTop (𝓝 1) := by
+      simpa using tendsto_const_nhds.add hNR.inv_tendsto_atTop
+    refine h0.congr' ?_
+    filter_upwards [hpos] with s hs
+    field_simp
+  have hup : Tendsto (fun s : ℝ ↦ T (N s + 1) / (N s : ℝ)) atTop (𝓝 m) := by
+    have hmul := hup1.mul hup2
+    rw [mul_one] at hmul
+    refine hmul.congr' ?_
+    filter_upwards [hpos] with s hs
+    have h1 : ((N s : ℝ) + 1) ≠ 0 := by positivity
+    field_simp
+  have hsq : Tendsto (fun s : ℝ ↦ s / (N s : ℝ)) atTop (𝓝 m) := by
+    refine tendsto_of_tendsto_of_tendsto_of_le_of_le' hlow hup ?_ ?_
+    · filter_upwards [hpos] with s hs
+      have hne : N s ≠ 0 := by
+        intro h; rw [h] at hs; simp at hs
+      gcongr
+      exact T_stepIndex_le hne
+    · filter_upwards [hpos] with s hs
+      gcongr
+      exact (lt_stepIndex_succ (hex s)).le
+  have := hsq.inv₀ hm.ne'
+  simpa only [inv_div] using this
+
+/-- **The renewal count read on the grid of `ex:invariance`.**  Divided by `n`, the renewal
+count of `n t` converges to `t / m`, while the grid index `⌊n t⌋` divided by `n` converges to
+`t`.  So the two indices of the block above agree in the limit exactly when the mean spacing
+of the jump times is `1`, and differ by the factor `m` otherwise -- which is the rescaling the
+manuscript performs when it speeds the chain up by `n`. -/
+theorem tendsto_stepIndex_mul_div_atTop (hmono : Monotone T) (hinf : Tendsto T atTop atTop)
+    {m : ℝ} (hm : 0 < m) (hTm : Tendsto (fun n : ℕ ↦ T n / n) atTop (𝓝 m))
+    {t : ℝ} (ht : 0 < t) :
+    Tendsto (fun n : ℕ ↦ (stepIndex T ((n : ℝ) * t) : ℝ) / n) atTop (𝓝 (t / m)) := by
+  have hmul : Tendsto (fun n : ℕ ↦ (n : ℝ) * t) atTop atTop :=
+    Tendsto.atTop_mul_const ht tendsto_natCast_atTop_atTop
+  have h := ((tendsto_stepIndex_div_atTop hmono hinf hm hTm).comp hmul).mul_const t
+  rw [div_eq_inv_mul]
+  refine h.congr' ?_
+  filter_upwards [eventually_gt_atTop 0] with n hn
+  have hn' : (n : ℝ) ≠ 0 := Nat.cast_ne_zero.2 hn.ne'
+  show (stepIndex T ((n : ℝ) * t) : ℝ) / ((n : ℝ) * t) * t = (stepIndex T ((n : ℝ) * t) : ℝ) / n
+  field_simp
+
+end RenewalLLN

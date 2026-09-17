@@ -9513,16 +9513,81 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   **The data is the milestone's own and not a new object.** `birthDeathKernel`
   and the M/M/1 rates are Milestone 4's acceptance example; the probe reuses
   them, as the coin probe reuses `AtomWitness.coinMeasure`.
+* `tendsto_integral_mul_jumpChain_perturbed`, the jump chain probe with a
+  **nonzero** `(K3)`: the canonical increment is the martingale increment
+  displaced by the constant `(n + 1)⁻¹`, so the conclusion is a limit and not a
+  sequence of zeros and the bound on the weight is read. Together with
+  `tendsto_integral_mul_jumpChain` it leaves no hypothesis of
+  `tendsto_integral_mul_rescaledChain_natural` met only in a shape that proves
+  nothing: `hPf` by a compensator that reads the state, `happrox` by an
+  approximation that is not an equality. **In Lean** on 2026-09-18, second run.
 * **The probe reads the jump number and not the time, and the two are not the
   same.** `gridPath (jumpChain E) n` is the embedded chain at the index
   `⌊n · t⌋`, while the jump process is that same chain at the index
-  `stepIndex (jumpTime lam ω.1 ω.2) t` — `jumpProcess` is `stepPath` of the jump
-  times, by definition. The first index is deterministic, the second random, and
-  their agreement for large `n` at a constant rate is the law of large numbers
-  for the waiting times, not a rewriting. The probes above therefore inhabit
-  hypothesis (c) over the rescaled **chain**; the manuscript's `ex:invariance`
-  speaks of rescaled **time**, and the passage between the two indices is what
-  this milestone still owes.
+  `stepIndex (jumpTime lam ω.1 ω.2) t` — `jumpProcess_eq_jumpChain_stepIndex`,
+  which is `rfl`. The first index is deterministic, the second random. The
+  distance between them is exact and not a matter of taste, and four statements
+  measure it. **In Lean** on 2026-09-18, second run.
+* `jumpTime_const_mul` and `jumpProcess_const_mul_rate`: **speeding up the rate
+  is a time change.** Multiplying the rate by `c` divides every jump time by
+  `c`, so `jumpProcess (c · lam) t ω = jumpProcess lam (c t) ω` at every sample
+  point, with no hypothesis beyond `0 < c`. The rescaling of `ex:invariance`
+  applied to the jump construction is therefore **one** process read along a
+  sequence of times, and the embedded chain is untouched.
+  **The first of the two is unconditional and the second is not**, and the
+  reason is the junk value: at `c = 0` the holding time `ξ n / 0` is `0` and so
+  is `T n / 0`, so `jumpTime_const_mul` is true at `c = 0` as well, whereas
+  `stepIndex_div_const` inverts an inequality and needs `0 < c`.
+* `stepIndex_natCast`, `jumpTime_unit`,
+  `jumpProcess_const_mul_rate_eq_gridPath` and
+  `jumpProcess_eq_gridPath_unitWaiting`: **the grid path is the jump process of
+  a deterministic clock.** For unit waiting times the jump times at rate `c` are
+  `n / c`, the renewal count of `c t` is `⌊c t⌋` — `stepIndex` of `n ↦ n` is
+  `Nat.floor` — and the sped up jump process *is* `gridPath (jumpChain E) c`, at
+  every chain and every time. So the two objects of this milestone and of
+  Milestone 4 are the same object under a clock that does not fluctuate.
+* `jumpProcess_ne_gridPath_unitDelay`: **and one waiting time out of step
+  already breaks it.** With the chain the identity on `ℕ`, rate `1`, and the
+  zeroth waiting time `2` instead of `1`, the process still sits at the state
+  `0` at time `1` while the grid path has moved to `1`. The witness is
+  deterministic, so the gap is not a null set and no modification repairs it.
+* `stepIndex_le_iff` and `stepIndex_le_iff_of_exists`: `{stepIndex T t ≤ n}` is
+  the event `t < T (n + 1)` **or** the explosion set, and the second disjunct
+  reads every jump time at once. So the renewal count is a stopping time for the
+  filtration of the first `n + 1` jump times only under non explosion. This is
+  one more place where `sInf ∅ = 0` makes a statement quietly true, and it is
+  why the passage below has to be stated over a non explosive clock rather than
+  over the construction as it stands.
+* `lt_stepIndex_iff`, `tendsto_stepIndex_atTop` and
+  `tendsto_stepIndex_div_atTop`: **the renewal law of large numbers, and it is
+  deterministic.** For jump times `T` monotone with `T n → ∞` and `T n / n → m`
+  for some `0 < m`, the renewal count satisfies `stepIndex T s / s → m⁻¹` as
+  `s → ∞`. The proof is the sandwich
+  `T (stepIndex T s) ≤ s < T (stepIndex T s + 1)` — `T_stepIndex_le` and
+  `lt_stepIndex_succ` — divided by `stepIndex T s`, together with
+  `stepIndex T s → ∞`, which is `stepIndex_le_iff_of_exists` read
+  contrapositively. **In Lean** on 2026-09-18, second run.
+  **Nothing about the waiting times enters, and that is the finding.** The
+  passage between the jump number and the time looked probabilistic and is not:
+  the limit theorem holds for every clock whose jump times grow linearly, and
+  the divergence of the jump times is precisely the hypothesis that keeps the
+  junk value `sInf ∅ = 0` out of the statement.
+* `tendsto_stepIndex_mul_div_atTop`, the same on the grid: divided by `n`, the
+  renewal count of `n t` converges to `t / m`, while `⌊n t⌋ / n` converges to
+  `t`. **In Lean** on 2026-09-18, second run.
+  **So the two indices of the probe agree in the limit exactly when the mean
+  spacing of the jump times is `1`**, and differ by the factor `m` otherwise —
+  which is what the rescaling by `n` is for.
+* **The almost sure hypothesis `T n / n → m` for the jump construction**, the
+  one probabilistic input the passage needs. At a constant rate it is
+  `ProbabilityTheory.strong_law_ae` (`Mathlib/Probability/StrongLaw.lean`)
+  applied to the coordinates of `waitingMeasure`, whose independence is
+  `ProbabilityTheory.iIndepFun_infinitePi` and whose mean under `expMeasure 1`
+  is `1`; the jump times are their partial sums divided by the rate. With it and
+  `tendsto_stepIndex_mul_div_atTop` the probes above — an orthogonality at the
+  **jump number** — become the orthogonality at the **time** that
+  `ex:invariance` speaks of, and that last step is what this milestone still
+  owes.
 * **Hypothesis (a) is about real random variables and carries no topology.** In
   the example above the path space `F` is `D ι E` and the functionals
   `Y° t` are evaluations, but the statement of (a) never mentions `F`'s

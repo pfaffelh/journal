@@ -35601,3 +35601,173 @@ Struktur.
 3. **Die Entscheidung über das Lake-Target dem Nutzer vorlegen** (Symlink
    `TauCetiRoadmap → TauCeti` oder Umbenennung des Verzeichnisses), unverändert
    seit sechs Läufen. Es ist eine Frage und keine Arbeit.
+
+### 2026-09-18, zweiter Lauf des Tages — der Abstand zwischen dem Gitter der Probe und der Uhr des Prozesses ist ausgerechnet: es ist **ein Index**, und der Zeuge dafür, daß er nicht verschwindet, ist deterministisch
+
+**Vorschläge 1 und 2 des Vorlaufs sind eingelöst, und die Aussage, die dieser Lauf
+als offen eintragen wollte, steht am Ende auch.** **Sechzehn Deklarationen**, 390
+Zeilen, in sechs neuen Abschnitten am Ende von
+`TauCeti/MartingaleProblems/Suggested.lean`.
+Die Kette ohne einen Fehler:
+
+| Datei | rc | Fehler | `sorry` | Sekunden |
+| --- | ---: | ---: | ---: | ---: |
+| `WeakConvergence/Suggested.lean` | 0 | 0 | 0 | 8 |
+| `SkorokhodSpace/Suggested.lean` | 0 | 0 | 0 | 13 |
+| `MartingaleProblems/Suggested.lean` | 0 | 0 | 0 | 67 |
+
+Alle sechzehn mit `scripts/check_axioms.py` geprüft: `propext`,
+`Classical.choice`, `Quot.sound`, sonst nichts. Der Stand von `upstream/master`,
+gegen den die Mathlib-Nachfragen dieses Laufs gestellt sind: `8018f6a`,
+2026-09-17.
+
+#### Was gebaut ist
+
+* `stepIndex_le_iff`, `stepIndex_le_iff_of_exists` — das Ereignis
+  `{stepIndex T t ≤ n}` ist `t < T (n+1)` **oder** die Explosionsmenge, und der
+  zweite Fall liest alle Sprungzeiten auf einmal.
+* `stepIndex_natCast`, `jumpTime_unit` — die Erneuerungszählung der Uhr `T n = n`
+  ist `Nat.floor`, und Rate `1` mit Wartezeiten `1` gibt genau diese Uhr.
+* `jumpProcess_eq_jumpChain_stepIndex` — der Sprungprozeß **ist** die
+  eingebettete Kette, gelesen am Erneuerungszähler. `rfl`.
+* `jumpTime_const_mul`, `stepIndex_div_const`, `jumpProcess_const_mul_rate` — die
+  Beschleunigung der Rate ist eine Zeitänderung:
+  `jumpProcess (c·lam) t ω = jumpProcess lam (c t) ω`, punktweise, ohne
+  Voraussetzung außer `0 < c`.
+* `jumpProcess_const_mul_rate_eq_gridPath`, `jumpProcess_eq_gridPath_unitWaiting`
+  — der Gitterpfad von `ex:invariance` ist der Sprungprozeß einer
+  **deterministischen** Uhr, an jeder Kette und zu jeder Zeit.
+* `jumpProcess_ne_gridPath_unitDelay` — und **eine** Wartezeit aus dem Takt
+  genügt, um die Gleichheit zu brechen, an einem benannten Stichprobenpunkt.
+* `tendsto_integral_mul_jumpChain_perturbed` — die Probe über der Sprungkette mit
+  nichtverschwindendem `(K3)`.
+* `lt_stepIndex_iff`, `tendsto_stepIndex_atTop`, `tendsto_stepIndex_div_atTop`,
+  `tendsto_stepIndex_mul_div_atTop` — das Erneuerungsgesetz der großen Zahlen,
+  und es ist **deterministisch**: aus `T n / n → m` mit `0 < m` und `T n → ∞`
+  folgt `stepIndex T s / s → m⁻¹`, und auf dem Gitter
+  `stepIndex T (n t) / n → t / m`.
+
+#### Befund 1, und er ist der Zweck des Laufs: der Unterschied zwischen Probe und Prozeß ist **ein Index**, und er ist keine Buchhaltung
+
+Der Vorlauf hat die Lücke benannt und geschrieben, sie auszusprechen sei mehr
+wert, als sie zu schließen. Sie ist jetzt ausgesprochen, und zwar als Rechnung:
+
+* `gridPath (jumpChain E) c ω t = ω.1 ⌊c t⌋`,
+* `jumpProcess (c·lam) t ω = ω.1 (stepIndex (jumpTime lam ω.1 ω.2) (c t))`.
+
+Beide Seiten sind **dieselbe Kette**, ausgewertet an zwei Stellen. Was sie
+trennt, ist allein, ob der Index `⌊c t⌋` oder der Erneuerungszähler der
+Sprungzeiten ist. `jumpProcess_const_mul_rate_eq_gridPath` trägt genau diese
+Gleichheit der Indizes als Voraussetzung und nichts sonst — die Lücke steht damit
+in der Signatur eines Satzes und nicht in einem Kommentar.
+
+Der zweite Teil davon, `jumpProcess_const_mul_rate`, ist für sich bemerkenswert:
+die reskalierte Folge von `ex:invariance` ist über der Sprungkonstruktion
+**ein** Prozeß, gelesen längs einer Folge von Zeiten, und keine Folge von
+Prozessen. Die Kette wird nicht angefaßt; nur die Uhr.
+
+#### Befund 2: die Probe ist nicht leer, und der Zeuge dafür ist die deterministische Uhr
+
+`jumpProcess_eq_gridPath_unitWaiting` sagt: bei Wartezeiten `≡ 1` fallen die
+beiden Indizes zusammen, an **jeder** Kette und zu **jeder** Zeit. Der
+Gitterpfad ist also kein fremdes Objekt, sondern der Sprungprozeß einer Uhr, die
+nicht schwankt. Damit ist die Verbindung zwischen Meilenstein 10 und
+Meilenstein 4 nicht bloß behauptet, sondern an einem Fall eingelöst, in dem sie
+eine Gleichheit von Funktionen ist.
+
+#### Befund 3: und die Lücke ist keine Nullmenge — der Gegenzeuge ist deterministisch
+
+`jumpProcess_ne_gridPath_unitDelay`: Kette `id` auf `ℕ`, Rate `1`, nullte
+Wartezeit `2` statt `1`. Zur Zeit `1` sitzt der Prozeß noch im Zustand `0`,
+während der Gitterpfad schon im Zustand `1` ist.
+
+Das ist mehr als ein „die beiden sind verschieden". Ein Gegenbeispiel, das nur
+fast sicher gälte, ließe die Hoffnung, eine Modifikation könne die Sache
+richten; ein deterministisches nicht. Was die Lücke im Grenzübergang schließt,
+ist das Gesetz der großen Zahlen für die Wartezeiten, und das ist eine Aussage
+über `n → ∞` und nicht über einen Stichprobenpunkt.
+
+#### Befund 4: der Müllwert sitzt auch hier, und diesmal macht er aus einem Index eine Nicht-Stoppzeit
+
+`stepIndex_le_iff` sagt
+
+    stepIndex T t ≤ n  ↔  t < T (n+1)  ∨  ∀ m, T (m+1) ≤ t
+
+und der zweite Fall ist die Explosionsmenge, auf der `sInf ∅ = 0` zurückgegeben
+wird. Er liest **alle** Sprungzeiten. Also ist `{stepIndex T t ≤ n}` im
+allgemeinen **kein** Ereignis der ersten `n+1` Sprungzeiten, und der
+Erneuerungszähler ist für deren Filtration nur unter Nichtexplosion eine
+Stoppzeit.
+
+Das reiht sich in die Liste der Stellen, an denen ein Müllwert eine Aussage
+still wahr macht — und es ist der Grund, warum die Aussage, die den Lauf
+abschließt (`tendsto_stepIndex_div_atTop`, siehe unten), die Divergenz der
+Sprungzeiten in der Voraussetzung trägt und nicht bloß der Bequemlichkeit halber.
+
+#### Befund 5: die Beschleunigung der Rate braucht keine Positivität, die Zeitänderung schon
+
+`jumpTime_const_mul` gilt für **jedes** `c`, auch `c = 0`: links ist die
+Haltezeit `ξ n / 0 = 0` an jedem Schritt, rechts ist `T n / 0 = 0`. Hier sagt der
+Müllwert der Division auf beiden Seiten dasselbe, und das ist der seltene Fall,
+in dem er nicht lügt. `stepIndex_div_const` dagegen kehrt eine Ungleichung um und
+braucht `0 < c`. Die beiden nebeneinander sind eine brauchbare Probe darauf, ob
+eine Voraussetzung wirklich gebraucht wird oder nur mitgeschleppt.
+
+#### Befund 6, und er war als offener Punkt vorgesehen: das Erneuerungsgesetz der großen Zahlen ist **deterministisch**
+
+Der Bericht dieses Laufs hatte `tendsto_stepIndex_div_atTop` schon als benannten
+Punkt in Meilenstein 10 eingetragen und die Aussage für den nächsten Lauf
+vorgeschlagen. Sie steht jetzt, und das Bemerkenswerte ist nicht, daß sie billig
+war, sondern **was in ihr nicht vorkommt**: keine Wartezeit, kein Maß, keine
+Unabhängigkeit.
+
+    T n / n → m,  0 < m,  T n → ∞   ⟹   stepIndex T s / s → m⁻¹
+
+Der Weg ist die Einschachtelung `T (N s) ≤ s < T (N s + 1)`, geteilt durch
+`N s`, mit `N s → ∞` aus `stepIndex_le_iff_of_exists`. Die Divergenz der
+Sprungzeiten ist dabei genau die Voraussetzung, die den Müllwert aus der Aussage
+hält — dieselbe Beobachtung wie in Befund 4, eine Ebene höher.
+
+Der Übergang zwischen Sprungnummer und Zeit sah probabilistisch aus und ist es
+nicht. Was die Sprungkonstruktion noch beizutragen hat, ist die **eine**
+f.s.-Voraussetzung `T n / n → m`, und die ist bei konstanter Rate
+`ProbabilityTheory.strong_law_ae` (in v4.33.1 wie auf `upstream/master`,
+`Mathlib/Probability/StrongLaw.lean:786`, am Quelltext nachgesehen) an den
+Koordinaten von `waitingMeasure`.
+
+`tendsto_stepIndex_mul_div_atTop` liest dasselbe auf dem Gitter:
+`stepIndex T (n t) / n → t / m`, während `⌊n t⌋ / n → t`. Die beiden Indizes der
+Probe fallen im Grenzwert also **genau dann** zusammen, wenn der mittlere Abstand
+der Sprungzeiten `1` ist, und unterscheiden sich sonst um den Faktor `m`. Das ist
+die Rolle der Reskalierung mit `n`, und sie steht jetzt als Zahl da.
+
+#### Was offen bleibt
+
+* **Die eine f.s.-Voraussetzung**: `T n / n → m` unter `jumpMeasure mu nu`. Sie
+  ist als benannter Punkt in Meilenstein 10 eingetragen, mit den drei Eingaben,
+  auf denen sie ruht.
+* Die Voraussetzungen **(a) und (b)** von `mpSolution_of_tendsto` bleiben, wie
+  die drei Vorläufe sie hinterlassen haben: Eingabe eines Straffheitsarguments,
+  das das Manuskript ausdrücklich nicht liefert.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die probabilistische Hälfte des Übergangs.** *Aussage:*
+   `tendsto_jumpTime_div_atTop` — bei konstanter Rate `lam ≡ c > 0` gilt
+   `jumpTime lam y ξ n / n → c⁻¹` für `waitingMeasure`-fast alle `ξ`. *Worauf
+   sie ruht:* `jumpTime` ist bei konstanter Rate die Partialsumme der `ξ k`
+   geteilt durch `c` (Induktion, wie `jumpTime_const_mul` in diesem Lauf);
+   `ProbabilityTheory.strong_law_ae` für die Partialsummen;
+   `ProbabilityTheory.iIndepFun_infinitePi` für die Unabhängigkeit der
+   Koordinaten, in diesem Abschnitt schon über `indep_comap_coordChain` benutzt;
+   und `∫ x, x ∂(expMeasure 1) = 1`. *Warum jetzt:* sie ist die **einzige**
+   fehlende Eingabe von `tendsto_stepIndex_mul_div_atTop` über der
+   Sprungkonstruktion, und mit ihr ist der Übergang zwischen Sprungnummer und
+   Zeit vollständig.
+2. **Prüfen, ob Mathlib den Erwartungswert von `expMeasure 1` hat**, ehe er
+   gerechnet wird. `Mathlib/Probability/Distributions/Exponential.lean` ist
+   importiert; ist der Erwartungswert dort nicht ausgesprochen, ist das die
+   zehnte Lücke für `TODO.md` Punkt 8 und gehört als solche eingetragen, nicht
+   nebenbei bewiesen.
+3. **Und erst danach die Probe umschreiben**, von `⌊n t⌋` auf `stepIndex`. Mit 1
+   ist das eine Rechnung; vorher wäre es eine Behauptung.
