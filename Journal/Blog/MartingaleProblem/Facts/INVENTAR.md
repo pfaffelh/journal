@@ -33029,3 +33029,152 @@ Aufruf ist immer aus dem Hauptcheckout zu führen.
 3. **Die Leerheitsprobe auf `E = ℕ` am Poissonprozeß**, unverändert Vorschlag 2
    des Vorlaufs.
 4. **Die fünfzig Aufrufe veralteter Namen**, unverändert Vorschlag 4.
+
+### 2026-09-17, elfter Lauf des Tages — Vorschlag 1 des Vorlaufs: der mittlere Schritt zerfällt in drei Aussagen über Mathlib allein, und alle drei stehen. Was übrig bleibt, ist **keine** Analysis mehr, sondern die Hebung der Zerlegung auf Stoppzeiten
+
+Der Vorlauf hat die beiden **Enden** von
+`isQuasiLeftContinuous_of_isRegularizingClass` bewiesen — die pfadweise Hälfte
+(`IsCadlagPath.exists_tendsto_comp_monotone`,
+`isQuasiLeftContinuous_of_forall_ae_tendsto_comp`) und die Eingabe, an der der
+mittlere Schritt hing (`stoppedValue_ae_eq_condExp`) — und als Vorschlag 1
+`condExp_tendsto_of_isCompensatorFor` genannt, „der mittlere Schritt, und er ist
+jetzt der einzige".
+
+Dieser Lauf hat ihn angegangen und dabei festgestellt, daß er **kein einzelner
+Schritt** ist, sondern vier: drei analytische Aussagen, in denen weder eine
+Stoppzeit noch die Sprungkonstruktion vorkommt, und eine vierte, die sie
+zusammensetzt. Alle vier stehen jetzt in Lean, im neuen Abschnitt `LevyUpward`
+von `TauCeti/MartingaleProblems/Suggested.lean`, unmittelbar vor dem Satz, den
+sie bedienen.
+
+#### 1. Lévys Aufwärtssatz gab es hier nicht in der Fassung, die gebraucht wird
+
+Die Roadmap nennt `MeasureTheory.tendsto_ae_condExp` seit langem als Eingabe und
+vermerkt dabei richtig, der Satz sei reellwertig. Nachgesehen, nicht vermutet:
+der Variablenblock des Abschnitts `section L1Convergence` in
+`Probability/Martingale/Convergence.lean:243` lautet `[IsFiniteMeasure μ]
+{g : Ω → ℝ}`, und beide Fassungen — `tendsto_ae_condExp` (`:426`) und
+`tendsto_eLpNorm_condExp` (`:439`) — stehen darunter. Der Testprozeß dieses
+Meilensteins ist `𝕂`-wertig; die Umsetzung war also fällig und ist es bis heute
+nicht gewesen.
+
+`tendsto_ae_condExp_rclike` schließt das. Der Beweis ist der angesagte — Real-
+und Imaginärteil, zusammengesetzt durch `RCLike.re_add_im` —, und der Durchgang
+der bedingten Erwartung durch die beiden Projektionen ist
+`ContinuousLinearMap.comp_condExp_comm`
+(`MeasureTheory/Function/ConditionalExpectation/Basic.lean:359`), gelesen an
+`RCLike.reCLM` und `RCLike.imCLM`.
+
+**Eine Voraussetzung, die nicht nötig ist und deshalb nicht dasteht:** die
+Integrierbarkeit von `g`. Mathlibs reelle Fassung trägt sie nicht, und die
+`𝕂`-wertige braucht sie ebensowenig — wo `g` nicht integrierbar ist, sind beide
+Seiten `0` (`condExp_of_not_integrable`), und das ist eine Fallunterscheidung von
+zwei Zeilen. Der erste Entwurf trug sie; sie ist gestrichen, weil die stehende
+Regel es verlangt.
+
+#### 2. Die `L¹`-Voraussetzung an den Kompensator wird über einen Umweg verbraucht, und der Umweg ist der Punkt
+
+`IsL1LeftContinuousAlongStoppingTimes` ist in der **Bochner-Form** gestellt,
+`∫ ω, ‖…‖ ∂P → 0`. Was daraus zu machen ist, ist eine *fast sichere* Aussage,
+und der einzige Weg dorthin führt über die Konvergenz nach Maß und eine
+Teilfolge. Zwei Aussagen tragen das:
+
+* **`tendsto_integral_norm_condExp_of_tendsto`** — wer in `L¹` gegen `0` geht,
+  dessen bedingte Erwartungen gehen in `L¹` gegen `0`. Das ist bedingte
+  Jensensche Ungleichung in der Gestalt `integral_norm_condExp_le`
+  (`MeasureTheory/Function/ConditionalExpectation/Real.lean:206`, allgemein
+  normiert-wertig, also ohne Umweg über `ℝ` zu haben) und sonst nichts. **Die
+  σ-Algebren sind eine beliebige Folge** — keine Filtration, keine Monotonie —,
+  und das ist keine Sparsamkeit um ihrer selbst willen: die Folge, an der der
+  Satz gelesen wird, ist `n ↦ (hτ n).measurableSpace`, und daß sie wachsend ist,
+  braucht dieser Schritt nicht zu wissen.
+* **`tendstoInMeasure_zero_of_tendsto_integral_norm`** — von der Bochner-Form
+  zur Konvergenz nach Maß. Mathlib hat die Implikation, aber in der
+  `eLpNorm`-Form (`tendstoInMeasure_of_tendsto_eLpNorm`); dazwischen steht genau
+  `ofReal_integral_norm_eq_lintegral_enorm`
+  (`MeasureTheory/Integral/Bochner/Basic.lean:511`), und die Integrierbarkeit
+  ist hier wirklich nötig, weil sie es ist, die das Bochner-Integral des Betrags
+  mit dem unteren Integral der Enorm identifiziert.
+
+#### 3. Die vierte Aussage, und sie beantwortet die Frage, warum eine `L¹`-Voraussetzung für eine fast sichere Behauptung reicht
+
+`ae_eq_condExp_iSup_of_tendsto`: zerfällt `a n` für jedes `n` in
+`μ[W | ℱ n] + μ[Z n | ℱ n]` mit **einem festen** `W` und einem in `L¹`
+verschwindenden `Z`, und geht `a n` fast sicher gegen `A`, so ist
+`A =ᵐ[μ] μ[W | ⨆ n, ℱ n]`.
+
+Beim Schreiben ist die Stelle aufgetaucht, an der man sich verrechnen kann und
+die im Beweisweg der Roadmap nicht steht: die `L¹`-Voraussetzung gibt über die
+Störung `Z` eine fast sichere Aussage **nur längs einer Teilfolge**
+(`TendstoInMeasure.exists_seq_tendsto_ae`), die Behauptung ist aber eine über die
+volle Folge. Das geht trotzdem, und der Grund ist bemerkenswert:
+
+> Die Teilfolge wird auf der Seite gelesen, deren Grenzwert schon **feststeht**.
+
+`a n → A` gilt längs der ganzen Folge; die Teilfolge dient dazu, diesen
+Grenzwert *auszuwerten*, nicht ihn zu erzeugen. In der Anwendung ist `a n` der
+Wert `f (X (min (τ n) t))`, und die volle Konvergenz links ist die
+Càdlàg-Eigenschaft der Pfade — also gerade das, was der Vorlauf mit
+`IsCadlagPath.exists_tendsto_comp_monotone` bewiesen hat. Deshalb trägt die
+Aussage **keine** Voraussetzung an `a` außer der Konvergenz selbst.
+
+#### Der Durchlauf
+
+Die vier Aussagen wurden zuerst in
+`TauCeti/MartingaleProblems/scratch/Levy.lean` gegen Mathlib allein entwickelt
+und übersetzt — die Datei bleibt stehen und ist allein lauffähig —, dann nach
+`Suggested.lean` übernommen. `lake env lean` über die ganze Datei gegen v4.33.1,
+ohne `head` und ohne Filter: **kein einziger Fehler**, und die Zahl der `sorry`
+bleibt bei **fünf**, denselben fünf, um die Einfügung verschoben. Alle vier mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft. Drei
+neue Importe: `ConditionalExpectation.Real`, `ConvergenceInMeasure`,
+`Martingale.Convergence`.
+
+Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 9, als vier
+benannte Einträge vor `isQuasiLeftContinuous_of_isRegularizingClass`.
+
+#### Was jetzt noch fehlt, und es ist genau eine Aussage
+
+Mit diesem Lauf ist die **Analysis** des Satzes vollständig. Was zwischen den
+Bausteinen und dem Satz liegt, ist **keine Analysis mehr**, sondern eine
+Hebung — Vorschlag 2 des Vorlaufs, der damit von einem Nachtrag zur Hauptsache
+wird:
+
+> **Die Zerlegung `f (X t) = Y t + C t` gilt je Zeitpunkt und damit auf einer von
+> `t` abhängenden Nullmenge; gebraucht wird sie an einer Stoppzeit.**
+
+Das ist die einzige verbleibende Lücke, und sie ist keine Rechnung, sondern eine
+**Entscheidung über Voraussetzungen**: die Hebung geht über das abzählbare `D`,
+auf dem sie gemeinsam gilt, und dann über die Rechtsstetigkeit aller drei
+Bestandteile. `IsCompensatorFor` gibt die Rechtsstetigkeit von `C` nur in `L¹`
+(`l1_rightContinuous`); die punktweise steht im abstrakten Satz als eigene
+Hypothese (`∀ᵐ ω, ∀ t, ContinuousWithinAt (fun s ↦ C s ω) (Set.Ioi t) t`), die
+von `X` ist `IsCadlagPath`, und die von `Y` ist **in keiner Hypothese genannt**.
+Ob sie aus den beiden anderen folgt oder nachzutragen ist, ist der erste zu
+klärende Punkt und keine Nebensache. Hinzu kommt, daß `D` im abstrakten Satz
+bisher ein **beliebiges** `Set ι` ist: die Hebung braucht, daß `D` jede Zeit von
+rechts approximiert, und das ist eine Voraussetzung, die der Satz heute nicht
+trägt.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`IsCompensatorFor.decomposition_stoppedValue`** — die Hebung der Zerlegung
+   von festen Zeiten auf Stoppzeiten. *Aussage:* unter
+   `IsCompensatorFor X 𝓕 P D f Y C`, punktweiser Rechtsstetigkeit von `C` und
+   `IsCadlagPath` der Pfade von `X`, mit `D` von rechts dicht, gilt für jede
+   Stoppzeit `σ` mit Werten in `ι` die Gleichheit `f (X_σ) =ᵐ[P] Y_σ + C_σ`.
+   *Worauf sie ruht:* die Abzählbarkeit von `D` für `ae_all_iff`
+   (`MeasureTheory/OuterMeasure/AE.lean:109`), die drei Rechtsstetigkeiten, und
+   die Approximation von rechts. *Warum jetzt:* sie ist nach diesem Lauf die
+   **einzige** fehlende Eingabe des abstrakten Satzes, und die Roadmap nennt sie
+   seit langem „a lemma of `IsRegularizingClass` of its own", ohne daß sie eines
+   wäre. **Der erste Schritt ist nicht der Beweis, sondern die Frage, welche
+   Voraussetzungen an `D` und an `Y` der Satz dafür zu tragen hat** — das ist zu
+   entscheiden und im Bericht zu begründen, nicht zu raten.
+2. **Der Zusammenbau von `isQuasiLeftContinuous_of_isRegularizingClass`**, sobald
+   Punkt 1 steht: die vier Aussagen dieses Laufs, `stoppedValue_ae_eq_condExp`
+   des Vorlaufs, und `IsSeparating.ae_eq_of_forall_condExp_eq` aus
+   **WeakConvergence**, Meilenstein 1, als letzte Zeile.
+3. **Die Leerheitsprobe auf `E = ℕ` am Poissonprozeß**, unverändert Vorschlag 3
+   des Vorlaufs.
+4. **Die fünfzig Aufrufe veralteter Namen**, unverändert Vorschlag 4.

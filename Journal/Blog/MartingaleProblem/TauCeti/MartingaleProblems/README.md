@@ -8582,6 +8582,48 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   compactness, no separation axiom on `E`, and no measurability of `X` are read,
   the uniqueness of limits being taken in `𝕂` alone. **In Lean** on 2026-09-17,
   tenth run.
+* `tendsto_ae_condExp_rclike`: **Lévy's upward theorem for an `RCLike` valued
+  integrand**. For a filtration `ℱ : Filtration ℕ m` on a finite measure space
+  and any `g : Ω → 𝕂`, `μ[g | ℱ n]` converges almost everywhere to
+  `μ[g | ⨆ n, ℱ n]`. Mathlib's `MeasureTheory.tendsto_ae_condExp` sits in a
+  section whose variable block fixes `{g : Ω → ℝ}`
+  (`Probability/Martingale/Convergence.lean:243`), so the `𝕂` valued case is the
+  two components, recombined by `RCLike.re_add_im`; the passage of `condExp`
+  through `RCLike.reCLM` and `RCLike.imCLM` is
+  `ContinuousLinearMap.comp_condExp_comm`
+  (`MeasureTheory/Function/ConditionalExpectation/Basic.lean:359`). No
+  integrability is assumed, exactly as in the real valued statement: where `g` is
+  not integrable both sides are `0`. **In Lean** on 2026-09-17, eleventh run.
+* `tendsto_integral_norm_condExp_of_tendsto`: a sequence that vanishes in `L¹`
+  has conditional expectations that vanish in `L¹`. This is conditional Jensen in
+  the form `integral_norm_condExp_le`
+  (`MeasureTheory/Function/ConditionalExpectation/Real.lean:206`) and nothing
+  else. The σ-algebras are an **arbitrary sequence** — no filtration, no
+  monotonicity — so the statement applies to `n ↦ (hτ n).measurableSpace` without
+  knowing that the stopping times are nondecreasing. **In Lean** on 2026-09-17,
+  eleventh run.
+* `tendstoInMeasure_zero_of_tendsto_integral_norm`: a sequence of integrable
+  functions whose `L¹` norms tend to `0` tends to `0` in measure. Only
+  `ofReal_integral_norm_eq_lintegral_enorm`
+  (`MeasureTheory/Integral/Bochner/Basic.lean:511`) stands between the Bochner
+  form in which `IsL1LeftContinuousAlongStoppingTimes` is stated and the
+  `eLpNorm` form in which Mathlib states the implication
+  (`MeasureTheory.tendstoInMeasure_of_tendsto_eLpNorm`). **In Lean** on
+  2026-09-17, eleventh run.
+* `ae_eq_condExp_iSup_of_tendsto`: **the identification of a pathwise limit with
+  a conditional expectation**, and the shape in which the three items above are
+  consumed. If a sequence `a` splits, for each `n`, as
+  `a n =ᵐ[μ] μ[W | ℱ n] + μ[Z n | ℱ n]` with one fixed `W` and a perturbation `Z`
+  vanishing in `L¹`, and if `a n → A` almost surely, then
+  `A =ᵐ[μ] μ[W | ⨆ n, ℱ n]`. The `L¹` hypothesis yields an almost sure statement
+  about the perturbation only along a subsequence
+  (`MeasureTheory.TendstoInMeasure.exists_seq_tendsto_ae`), and that suffices
+  precisely because the *left* side converges along the whole sequence: the
+  subsequence evaluates a limit already known to exist rather than producing one.
+  In the application `a n` is `f (X (min (τ n) t))` and the left convergence is
+  the càdlàg property of the paths, which is why the statement carries no
+  hypothesis on `a` beyond the convergence itself. **In Lean** on 2026-09-17,
+  eleventh run.
 * `isQuasiLeftContinuous_of_isRegularizingClass`, the abstract form of
   Ethier–Kurtz, Theorem 4.3.12, with no operator and no compensator of any
   special shape. Let `Φ` be a regularizing class for `(X, 𝓧)` with `X` càdlàg,
