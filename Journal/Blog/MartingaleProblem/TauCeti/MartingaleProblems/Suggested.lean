@@ -3691,6 +3691,109 @@ theorem not_isQuasiLeftContinuous_of_not_ae_tendsto {X : ι → Ω → E}
   have := hω (le_of_eq hsupT)
   simpa only [stoppedValue, hsupT, WithTop.untopD_coe] using this
 
+omit [TopologicalSpace ι] [OrderTopology ι] [TopologicalSpace E] [MeasurableSpace E] in
+/-- A finite element of `WithTop ι` is the coercion of its `untopA`. -/
+theorem coe_untopA {x : WithTop ι} (hx : x ≠ ⊤) : ((x.untopA : ι) : WithTop ι) = x := by
+  induction x using WithTop.recTopCoe with
+  | top => exact absurd rfl hx
+  | coe a => rfl
+
+omit [OrderBot ι] [MeasurableSpace E] in
+/-- **A càdlàg path converges along every nondecreasing sequence of indices that
+has a supremum**, and this is the half of the path property that
+quasi-left-continuity consumes.  The proof splits on whether the sequence
+*reaches* its supremum: where it does, monotonicity makes the values eventually
+constant and no path property is read at all; where it does not, the sequence
+runs into `𝓝[<] T` and the limit is the left limit, the second field of
+`IsCadlagPath`.
+
+Right continuity is not used, and neither is a separation axiom on `E`: the
+statement produces *a* limit and does not claim it is unique. -/
+theorem IsCadlagPath.exists_tendsto_comp_monotone {g : ι → E} (hg : IsCadlagPath g)
+    {s : ℕ → ι} (hmono : Monotone s) {T : ι} (hle : ∀ n, s n ≤ T) (hsup : ⨆ n, s n = T) :
+    ∃ l, Tendsto (fun n ↦ g (s n)) atTop (𝓝 l) := by
+  by_cases h : ∃ N, s N = T
+  · obtain ⟨N, hN⟩ := h
+    refine ⟨g T, Tendsto.congr' ?_ tendsto_const_nhds⟩
+    filter_upwards [eventually_ge_atTop N] with n hn
+    exact congrArg g (le_antisymm (hle n) (hN ▸ hmono hn)).symm
+  · simp only [not_exists] at h
+    have hlt : ∀ n, s n < T := fun n ↦ lt_of_le_of_ne (hle n) (h n)
+    obtain ⟨l, hl⟩ := hg.2 T
+    have hbdd : BddAbove (Set.range s) := ⟨T, by rintro _ ⟨n, rfl⟩; exact hle n⟩
+    have hts : Tendsto s atTop (𝓝 T) := hsup ▸ tendsto_atTop_ciSup hmono hbdd
+    exact ⟨l, hl.comp (tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within _ hts
+      (.of_forall hlt))⟩
+
+omit [MeasurableSpace E] in
+/-- **From countably many scalar convergences to quasi-left-continuity**, and it
+is the step at which the separating class is read, exactly as in the last line of
+`exists_cadlag_modification_of_isRegularizingClass`.
+
+The scalar hypothesis is tested on one countable class `Φ₀` of continuous
+functions separating the points of `E`; the passage to the `E`-valued
+convergence is the path property, which produces *a* limit, and the separation,
+which identifies it with `X` at the supremum.  Countability is what allows the
+null set of the scalar statement to be chosen once for all `f ∈ Φ₀` and not once
+per `f`.
+
+**Three hypotheses that the abstract theorem below does carry are not needed
+here**, and saying so locates them: no compactness or compact containment -- the
+limit comes from `IsCadlagPath` and not from a cluster point -- no separation
+axiom on `E`, for uniqueness of limits is read in `𝕂` alone, and no
+measurability of `X`. -/
+theorem isQuasiLeftContinuous_of_forall_ae_tendsto_comp {Φ₀ : Set (E → 𝕂)}
+    {X : ι → Ω → E} {𝓕 : Filtration ι m} {P : Measure Ω}
+    (hΦ₀c : Φ₀.Countable) (hcont : ∀ f ∈ Φ₀, Continuous f)
+    (hsep : ∀ x y : E, x ≠ y → ∃ f ∈ Φ₀, f x ≠ f y)
+    (hX : ∀ᵐ ω ∂P, IsCadlagPath (fun t ↦ X t ω))
+    (hlim : ∀ f ∈ Φ₀, ∀ τ : ℕ → Ω → WithTop ι, (∀ n, IsStoppingTime 𝓕 (τ n)) → Monotone τ →
+      ∀ t : ι, ∀ᵐ ω ∂P, (⨆ n, τ n ω) ≤ (t : WithTop ι) →
+        Tendsto (fun n ↦ f (stoppedValue X (τ n) ω)) atTop
+          (𝓝 (f (stoppedValue X (fun ω ↦ ⨆ n, τ n ω) ω)))) :
+    IsQuasiLeftContinuous X 𝓕 P := by
+  intro τ hτ hmono t
+  have hall : ∀ᵐ ω ∂P, ∀ f ∈ Φ₀, (⨆ n, τ n ω) ≤ (t : WithTop ι) →
+      Tendsto (fun n ↦ f (stoppedValue X (τ n) ω)) atTop
+        (𝓝 (f (stoppedValue X (fun ω ↦ ⨆ n, τ n ω) ω))) :=
+    (ae_ball_iff hΦ₀c).2 fun f hf ↦ hlim f hf τ hτ hmono t
+  filter_upwards [hX, hall] with ω hcad hfω hle
+  have hbddT : BddAbove (Set.range fun n ↦ τ n ω) := OrderTop.bddAbove _
+  have hlen : ∀ n, τ n ω ≤ ⨆ k, τ k ω := fun n ↦ le_ciSup hbddT n
+  have hsupne : (⨆ k, τ k ω) ≠ ⊤ := fun h ↦ by
+    rw [h] at hle; exact absurd (top_le_iff.1 hle) WithTop.coe_ne_top
+  have hnen : ∀ n, τ n ω ≠ ⊤ := fun n h ↦ hsupne (top_le_iff.1 (h ▸ hlen n))
+  set s : ℕ → ι := fun n ↦ (τ n ω).untopA with hs
+  set T : ι := (⨆ k, τ k ω).untopA with hT
+  have hcoes : ∀ n, ((s n : ι) : WithTop ι) = τ n ω := fun n ↦ coe_untopA (hnen n)
+  have hcoeT : ((T : ι) : WithTop ι) = ⨆ k, τ k ω := coe_untopA hsupne
+  have hsle : ∀ n, s n ≤ T := fun n ↦ by
+    have := hlen n
+    rw [← hcoes n, ← hcoeT, WithTop.coe_le_coe] at this
+    exact this
+  have hsmono : Monotone s := fun a b hab ↦ by
+    have := hmono hab ω
+    rw [← hcoes a, ← hcoes b, WithTop.coe_le_coe] at this
+    exact this
+  have hsbdd : BddAbove (Set.range s) := ⟨T, by rintro _ ⟨n, rfl⟩; exact hsle n⟩
+  have hssup : ⨆ n, s n = T := by
+    have h1 : ((⨆ n, s n : ι) : WithTop ι) = ⨆ n, ((s n : ι) : WithTop ι) :=
+      WithTop.coe_iSup s hsbdd
+    have h2 : ((⨆ n, s n : ι) : WithTop ι) = ((T : ι) : WithTop ι) := by
+      rw [h1, hcoeT]
+      simp only [hcoes]
+    exact WithTop.coe_inj.1 h2
+  obtain ⟨l, hl⟩ := hcad.exists_tendsto_comp_monotone hsmono hsle hssup
+  have hval : l = X T ω := by
+    by_contra hne
+    obtain ⟨f, hfΦ, hfne⟩ := hsep l (X T ω) hne
+    have h1 : Tendsto (fun n ↦ f (X (s n) ω)) atTop (𝓝 (f l)) :=
+      ((hcont f hfΦ).tendsto l).comp hl
+    have h2 : Tendsto (fun n ↦ f (X (s n) ω)) atTop (𝓝 (f (X T ω))) := hfω f hfΦ hle
+    exact hfne (tendsto_nhds_unique h1 h2)
+  rw [hval] at hl
+  exact hl
+
 /-- Left continuity in `L¹` along stopping times: along every nondecreasing
 sequence `τ` of stopping times with supremum `τ'`, the increments of `C` between
 `min (τ n) t` and `min τ' t` tend to `0` in `L¹`.  This is the hypothesis on the
@@ -12763,6 +12866,128 @@ theorem integral_stoppedValue_eq (hY : Martingale Y 𝓕 P) (hprog : IsStronglyP
       (dyadStop_le j ρ n) (countable_range_dyadStop j ρ n)
   simp only [hconst] at hconv
   exact tendsto_nhds_unique hconv tendsto_const_nhds
+
+/-! ### From the expectation form of optional sampling to the conditional form
+
+The expectation identity above is not what a proof at stopping times uses;
+what it uses is the **conditional** identity `Y_σ = P[Y_j | 𝓕_σ]`.  Mathlib has
+that identity over a general index only for stopping times of **countable
+range** (`Martingale.stoppedValue_ae_eq_condExp_of_le_const_of_countable_range`,
+`OptionalSampling.lean:90`); its unrestricted form
+`Martingale.stoppedValue_ae_eq_condExp_of_le` (`ibid.:141`) carries
+`[Countable ι]`, and the section that holds the theorem called *Optional
+Sampling* there (`ibid.:158`) runs under `[LocallyFiniteOrder ι]` and
+`[DiscreteTopology ι]`.  In continuous time the conditional form is therefore
+not available off the shelf.
+
+It does not have to be proved again, though: the passage from the expectation
+form to the conditional one is **one auxiliary stopping time and no analysis**.
+For a test set `S ∈ 𝓕_σ` the time `ρ = σ` on `S` and `ρ = j` off `S` is a
+stopping time -- on `S` because `S ∩ {σ ≤ t}` lies in `𝓕 t` by the very
+definition of `𝓕_σ`, off `S` because `𝓕_σ ≤ 𝓕 j ≤ 𝓕 t` wherever `j ≤ t` -- and
+reading the expectation identity at `ρ` and at the constant time `j` and
+subtracting the common part over `Sᶜ` gives the set identity that
+`ae_eq_condExp_of_forall_setIntegral_eq` asks for.
+
+Hence the hypothesis of the theorem below is the expectation identity itself,
+for *all* bounded stopping times, and the theorem is stated over any index that
+`MeasureTheory.measurable_stoppedValue` accepts. -/
+
+/-- **The conditional form of optional sampling follows from the expectation
+form**, over any index for which the stopped value is measurable for the
+σ-algebra of the stopping time.
+
+The bound `C` is read twice and is not a convenience: it makes `Y j` and every
+stopped value integrable under a finite measure, and integrability of both sides
+is what the characterisation of the conditional expectation by its set integrals
+asks for.  No right continuity and no martingale property enter -- both sit
+inside the hypothesis `hint`. -/
+theorem stoppedValue_ae_eq_condExp_of_forall_integral_eq
+    {ι : Type*} [LinearOrder ι] [MeasurableSpace ι] [TopologicalSpace ι] [OrderTopology ι]
+    [SecondCountableTopology ι] [BorelSpace ι] [Nonempty ι]
+    {𝓖 : Filtration ι m} {P : Measure Ω} [IsFiniteMeasure P] {Z : ι → Ω → ℝ}
+    (hprog : IsStronglyProgressive 𝓖 Z) {j : ι} {C : ℝ}
+    (hbdd : ∀ s ≤ j, ∀ ω, |Z s ω| ≤ C)
+    (hint : ∀ ρ : Ω → WithTop ι, IsStoppingTime 𝓖 ρ → (∀ ω, ρ ω ≤ (j : WithTop ι)) →
+      ∫ ω, stoppedValue Z ρ ω ∂P = ∫ ω, Z j ω ∂P)
+    {σ : Ω → WithTop ι} (hσ : IsStoppingTime 𝓖 σ) (hσj : ∀ ω, σ ω ≤ (j : WithTop ι)) :
+    stoppedValue Z σ =ᵐ[P] P[Z j | hσ.measurableSpace] := by
+  classical
+  have hle : hσ.measurableSpace ≤ m := hσ.measurableSpace_le_of_le hσj
+  have hmeas : Measurable[hσ.measurableSpace] (stoppedValue Z σ) :=
+    measurable_stoppedValue hprog hσ
+  have hbd' : ∀ ω, |stoppedValue Z σ ω| ≤ C := fun ω ↦
+    hbdd _ (WithTop.untopA_le (hσj ω)) ω
+  have hσint : Integrable (stoppedValue Z σ) P :=
+    (integrable_const C).mono' ((hmeas.mono hle le_rfl).stronglyMeasurable.aestronglyMeasurable)
+      (Eventually.of_forall fun ω ↦ by simpa [Real.norm_eq_abs] using hbd' ω)
+  have hZjint : Integrable (Z j) P :=
+    (integrable_const C).mono'
+      (((hprog.stronglyAdapted j).mono (𝓖.le j)).aestronglyMeasurable)
+      (Eventually.of_forall fun ω ↦ by simpa [Real.norm_eq_abs] using hbdd j le_rfl ω)
+  refine ae_eq_condExp_of_forall_setIntegral_eq hle hZjint
+    (fun S _ _ ↦ hσint.integrableOn) ?_
+    hmeas.stronglyMeasurable.aestronglyMeasurable
+  intro S hS _
+  have hSm : MeasurableSet S := hle S hS
+  have hSj : MeasurableSet[𝓖 j] S := by
+    have h := hS.2 j
+    have heq : S ∩ {ω | σ ω ≤ (j : WithTop ι)} = S := by
+      ext ω; simp [hσj ω]
+    rwa [heq] at h
+  set ρ : Ω → WithTop ι := S.piecewise σ (fun _ ↦ (j : WithTop ι)) with hρdef
+  have hρj : ∀ ω, ρ ω ≤ (j : WithTop ι) := fun ω ↦ by
+    by_cases h : ω ∈ S <;> simp [hρdef, h, hσj ω]
+  have hρst : IsStoppingTime 𝓖 ρ := by
+    intro t
+    have heq : {ω | ρ ω ≤ (t : WithTop ι)}
+        = (S ∩ {ω | σ ω ≤ (t : WithTop ι)}) ∪ (Sᶜ ∩ {ω | (j : WithTop ι) ≤ (t : WithTop ι)}) := by
+      ext ω; by_cases h : ω ∈ S <;> simp [hρdef, Set.piecewise, h]
+    rw [heq]
+    refine MeasurableSet.union (hS.2 t) ?_
+    by_cases hjt : (j : WithTop ι) ≤ (t : WithTop ι)
+    · have hjt' : j ≤ t := by exact_mod_cast hjt
+      have huniv : Sᶜ ∩ {ω : Ω | (j : WithTop ι) ≤ (t : WithTop ι)} = Sᶜ := by simp [hjt]
+      rw [huniv]
+      exact (𝓖.mono hjt' _ hSj).compl
+    · simp [hjt]
+  have hρmeas : Measurable[𝓖 j] (stoppedValue Z ρ) :=
+    (stronglyMeasurable_stoppedValue_of_le hprog hρst hρj).measurable
+  have hρbd : ∀ ω, |stoppedValue Z ρ ω| ≤ C := fun ω ↦
+    hbdd _ (WithTop.untopA_le (hρj ω)) ω
+  have hρint : Integrable (stoppedValue Z ρ) P :=
+    (integrable_const C).mono'
+      ((hρmeas.mono (𝓖.le j) le_rfl).stronglyMeasurable.aestronglyMeasurable)
+      (Eventually.of_forall fun ω ↦ by simpa [Real.norm_eq_abs] using hρbd ω)
+  have hρval : ∀ ω, stoppedValue Z ρ ω = S.piecewise (stoppedValue Z σ) (Z j) ω := by
+    intro ω
+    by_cases h : ω ∈ S <;> simp [stoppedValue, hρdef, Set.piecewise, h]
+  have h1 : ∫ ω, stoppedValue Z ρ ω ∂P
+      = ∫ ω in S, stoppedValue Z σ ω ∂P + ∫ ω in Sᶜ, Z j ω ∂P := by
+    rw [← integral_add_compl hSm hρint]
+    congr 1
+    · refine setIntegral_congr_fun hSm fun ω hω ↦ ?_
+      rw [hρval ω]; simp [Set.piecewise, hω]
+    · refine setIntegral_congr_fun hSm.compl fun ω hω ↦ ?_
+      rw [hρval ω]; simp [Set.piecewise, Set.notMem_of_mem_compl hω]
+  have h2 : ∫ ω, Z j ω ∂P = ∫ ω in S, Z j ω ∂P + ∫ ω in Sᶜ, Z j ω ∂P :=
+    (integral_add_compl hSm hZjint).symm
+  have h3 := hint ρ hρst hρj
+  rw [h1, h2] at h3
+  exact add_right_cancel h3
+
+/-- **Optional sampling in continuous time, conditional form**: the value of a
+bounded right continuous martingale at a bounded stopping time is the
+conditional expectation of its terminal value for the σ-algebra of that stopping
+time.  The hypotheses are those of `integral_stoppedValue_eq`, and nothing is
+added: the passage is the auxiliary stopping time described above. -/
+theorem stoppedValue_ae_eq_condExp (hY : Martingale Y 𝓕 P) (hprog : IsStronglyProgressive 𝓕 Y)
+    (hrc : ∀ (ω : Ω) (s : ℝ≥0), Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
+    {j : ℝ≥0} {C : ℝ} (hbdd : ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C)
+    {σ : Ω → ENNReal} (hσ : IsStoppingTime 𝓕 σ) (hσj : ∀ ω, σ ω ≤ (j : ENNReal)) :
+    stoppedValue Y σ =ᵐ[P] P[Y j | hσ.measurableSpace] :=
+  stoppedValue_ae_eq_condExp_of_forall_integral_eq hprog hbdd
+    (fun _ hρ hρj ↦ integral_stoppedValue_eq hY hprog hrc hbdd hρ hρj) hσ hσj
 
 /-! ### The stopped martingale theorem -/
 

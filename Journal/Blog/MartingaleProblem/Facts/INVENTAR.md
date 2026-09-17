@@ -32865,3 +32865,167 @@ nicht ankommen, und die Bruchstelle stand fest, bevor mehr dafür ausgegeben war
    unvollständig ist.
 4. **Die fünfzig Aufrufe veralteter Namen**, unverändert Vorschlag 4 des
    Vorlaufs.
+
+### 2026-09-17, zehnter Lauf des Tages — Vorschlag 1 des Vorlaufs ist angegangen, und auf dem Weg lag eine fehlende Eingabe: optionales Sampling in stetiger Zeit gab es hier nur in der **Erwartungswertform**
+
+Der Vorlauf hatte `isQuasiLeftContinuous_of_isMPSolutionFor` vorgeschlagen, den
+zweiten der beiden `sorry` des ersten Gesichts von Meilenstein 9. Dieser Lauf hat
+den Weg dorthin von unten abgeschritten, drei Aussagen bewiesen und eine benannte
+Lücke geschlossen, die auf ihm lag. Der `sorry` selbst steht noch; was ihn trägt,
+ist jetzt kleiner und vollständig benannt.
+
+#### 1. Der Befund: die bedingte Fassung des optionalen Samplings fehlte
+
+Der ausgeschriebene Beweisweg in `MartingaleProblems/README.md`, Meilenstein 9,
+beginnt mit dem Satz „Optional sampling at the bounded stopping times
+`min (τ n) t ≤ min τ' t`, the first item of this milestone, gives
+`Y (min (τ n) t) =ᵐ[P] P[Y (min τ' t) | 𝓕_{τ n}]`". Diese Eingabe **gab es
+nicht**. Nachgesehen, nicht vermutet:
+
+* **Mathlib**: die bedingte Fassung über einem allgemeinen Index steht nur für
+  Stoppzeiten mit **abzählbarem Wertebereich** —
+  `Martingale.stoppedValue_ae_eq_condExp_of_le_const_of_countable_range`
+  (`Probability/Martingale/OptionalSampling.lean:90`) und
+  `…_of_le_of_countable_range` (`:121`). Die uneingeschränkte Fassung
+  `Martingale.stoppedValue_ae_eq_condExp_of_le` (`:141`) trägt `[Countable ι]`,
+  also diskrete Zeit. Und der Satz, der dort ausdrücklich **Optional Sampling
+  theorem** heißt, `Martingale.stoppedValue_min_ae_eq_condExp` (`:195`), steht in
+  einem Abschnitt, dessen Variablenblock (`:158`) `[LocallyFiniteOrder ι]` und
+  `[DiscreteTopology ι]` führt — ebenfalls diskret. In stetiger Zeit hat Mathlib
+  die bedingte Fassung nicht.
+* **Unsere eigene Datei**: `section StoppedMartingale` (seit dem 2026-09-10) gibt
+  über `ℝ≥0` die **Erwartungswertform** `integral_stoppedValue_eq`, also
+  `E[Y_ρ] = E[Y_j]`, und daraus `martingale_stoppedProcess`. Die bedingte Form
+  stand nirgends — und sie ist es, die ein Beweis *an Stoppzeiten* verbraucht:
+  aus `E[Y_ρ]` allein läßt sich `Y_{τ n}` nicht als bedingte Erwartung lesen, und
+  ohne das greift Lévys Aufwärtssatz nicht.
+
+#### 2. Die Lücke ist geschlossen, und sie kostete keine Analysis
+
+`stoppedValue_ae_eq_condExp_of_forall_integral_eq` sagt: **wer die
+Erwartungswertform für *alle* beschränkten Stoppzeiten hat, hat die bedingte.**
+Der Beweis ist eine einzige Hilfsstoppzeit und sonst nichts. Für eine Testmenge
+`S ∈ 𝓕_σ` ist
+
+```
+ρ := S.piecewise σ (fun _ ↦ j)
+```
+
+eine Stoppzeit: auf `S` liegt `S ∩ {σ ≤ t}` in `𝓕 t` **nach der Definition von
+`𝓕_σ`**, außerhalb von `S` ist `Sᶜ ∈ 𝓕 t` überall dort, wo `j ≤ t`, weil
+`𝓕_σ ≤ 𝓕 j ≤ 𝓕 t`. Die Erwartungswertidentität an `ρ` und an der konstanten Zeit
+`j`, um den gemeinsamen Anteil über `Sᶜ` gekürzt, **ist** die Mengenidentität,
+nach der `ae_eq_condExp_of_forall_setIntegral_eq` fragt.
+
+Mathlibs `IsStoppingTime.piecewise_of_le` (`Probability/Process/Stopping.lean:1380`)
+trägt das **nicht**: es verlangt `MeasurableSet[𝓕 i] s` für eine *untere* Schranke
+`i` beider Zeiten, und unser `S` ist nur `𝓕_σ`-meßbar. Die Stoppzeiteigenschaft
+ist deshalb von Hand nachgewiesen, aus
+`IsStoppingTime.measurableSet` (`ibid.:463`), die die Zugehörigkeit zu `𝓕_σ` als
+`∀ i, MeasurableSet[𝓕 i] (S ∩ {σ ≤ i})` ausbuchstabiert. Das ist der ganze
+Unterschied und der Grund, warum die Aussage nicht schon dastand.
+
+Die allgemeine Fassung ist über jedem Index gestellt, den
+`MeasureTheory.measurable_stoppedValue` (`ibid.:1048`) annimmt, und sie trägt die
+Erwartungswertidentität als **Hypothese**: weder Rechtsstetigkeit noch
+Martingaleigenschaft kommen in ihr vor, beide sitzen in der Hypothese. Die
+Schranke `C` wird zweimal gelesen und ist keine Bequemlichkeit: sie macht `Y j`
+und jeden gestoppten Wert unter einem endlichen Maß integrierbar, und die
+Integrierbarkeit **beider** Seiten ist es, wonach die Charakterisierung der
+bedingten Erwartung durch ihre Mengenintegrale fragt.
+
+`stoppedValue_ae_eq_condExp` ist die Instanz über `ℝ≥0` unter genau den
+Voraussetzungen von `integral_stoppedValue_eq` — vier Zeilen; damit steht die
+Eingabe, die der Beweisweg des Meilensteins an erster Stelle nennt.
+
+#### 3. Die pfadweise Hälfte von `isQuasiLeftContinuous_of_isRegularizingClass`
+
+Zwei weitere Deklarationen, beide im Abschnitt `Regularizing`, unmittelbar vor
+`IsL1LeftContinuousAlongStoppingTimes`:
+
+* **`IsCadlagPath.exists_tendsto_comp_monotone`** — ein càdlàg-Pfad konvergiert
+  längs jeder monotonen Indexfolge, die ein Supremum hat. Der Beweis spaltet
+  danach, ob die Folge ihr Supremum **erreicht**: wo sie es tut, macht die
+  Monotonie die Werte schließlich konstant und es wird *keine* Pfadeigenschaft
+  gelesen; wo sie es nicht tut, läuft die Folge in `𝓝[<] T` und der Grenzwert ist
+  der Linkslimes, das zweite Feld von `IsCadlagPath`. Die Rechtsstetigkeit wird
+  nicht gebraucht, und weil die Aussage *einen* Grenzwert liefert und nicht seine
+  Eindeutigkeit behauptet, auch kein Trennungsaxiom an `E`.
+* **`isQuasiLeftContinuous_of_forall_ae_tendsto_comp`** — von abzählbar vielen
+  skalaren Konvergenzen zur Quasi-Linksstetigkeit. Das ist die *letzte* Zeile des
+  abstrakten Satzes, herausgelöst und für sich bewiesen: der Pfad liefert einen
+  Grenzwert `l`, und die punktweise Trennung durch eine abzählbare Klasse
+  stetiger Funktionen identifiziert ihn mit `X_{τ'}`. Die **Abzählbarkeit** ist
+  es, die die Nullmenge der skalaren Aussage einmal für alle `f` statt einmal je
+  `f` wählen läßt (`ae_ball_iff`, `MeasureTheory/OuterMeasure/AE.lean:109`).
+
+  **Drei Voraussetzungen, die der abstrakte Satz führt, werden hier nicht
+  gelesen**, und das lokalisiert sie: keine Kompaktheit und keine
+  `CompactContainment` — der Grenzwert kommt aus `IsCadlagPath` und nicht aus
+  einem Häufungspunkt, anders als bei der càdlàg-Modifikation, wo
+  `exists_tendsto_of_forall_tendsto_comp` gerade die Kompaktheit braucht —, kein
+  Trennungsaxiom an `E`, denn die Eindeutigkeit der Grenzwerte wird in `𝕂`
+  gelesen, und keine Meßbarkeit von `X`.
+
+**Der Unterschied zur càdlàg-Modifikation, und er ist der Grund, warum hier
+`hsq` nicht auftaucht.** `exists_cadlag_modification_of_isRegularizingClass`
+schließt über Quadrate und punktweise Trennung
+(`ae_eq_of_condExp_eq_of_condExp_mul_conj`); der ausgeschriebene Weg zur
+Quasi-Linksstetigkeit schließt über `IsSeparating` und
+`IsSeparating.ae_eq_of_forall_condExp_eq` aus **WeakConvergence**, Meilenstein 1.
+Beide führen von bedingten Erwartungen zu einer fast sicheren Gleichheit; der
+eine trennt Maße, der andere Punkte. Die hier bewiesene Aussage ist das Endstück
+des **Punkte-Wegs** auch für die Quasi-Linksstetigkeit, und damit die Fassung,
+die ohne den Wechsel nach `WeakConvergence/Suggested.lean` auskommt — dieselbe
+Dateigrenze, an der der zweite `sorry` von Meilenstein 3 hängt. Welcher der
+beiden Wege genommen wird, ist damit **eine Entscheidung und keine Lücke mehr**.
+
+#### Der Durchlauf
+
+`lake env lean` über die ganze Datei gegen v4.33.1, ohne `head` und ohne Filter:
+**kein einziger Fehler**, und die Zahl der `sorry` bleibt bei **fünf** (dieselben
+fünf, um die Einfügung verschoben). Die drei neuen Aussagen wurden zuerst in
+`TauCeti/MartingaleProblems/scratch/QuasiLeft.lean` gegen Mathlib allein
+entwickelt und übersetzt, ehe sie nach `Suggested.lean` wanderten; die
+Scratch-Datei bleibt stehen und ist allein lauffähig.
+
+**Eine Falle, die einen Durchlauf gekostet hat:** `lake env lean` aus
+`~/Code/lean/journal/.lake/packages/mathlib` heraus aufgerufen statt aus
+`~/Code/lean/journal` fängt an, `batteries`, `aesop`, `Qq` und die übrigen Pakete
+**neu zu klonen**, und scheitert dann an `unknown module prefix 'Batteries'`. Der
+Aufruf ist immer aus dem Hauptcheckout zu führen.
+
+#### Was dieser Lauf **nicht** getan hat
+
+* **Den `sorry` geschlossen.** Was zwischen den beiden bewiesenen Enden fehlt,
+  ist der mittlere Schritt und nichts sonst.
+* **Die Aussage von `isQuasiLeftContinuous_of_isRegularizingClass` geändert.**
+  Sie steht unverändert; ob sie Voraussetzungen nachzutragen hat, entscheidet der
+  Beweis des mittleren Schritts und nicht eine Vermutung.
+* **Die Leerheitsprobe auf `E = ℕ`** und **die fünfzig veralteten Namen.**
+  Unberührt.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`condExp_tendsto_of_isCompensatorFor`** — der mittlere Schritt, und er ist
+   jetzt der einzige. *Aussage:* für `f ∈ Φ` mit Zerlegung `f ∘ X = Y + C`, eine
+   monotone Folge `τ n` von Stoppzeiten mit `τ' = ⨆ τ n`, und `C` links
+   `L¹`-stetig längs Stoppzeiten konvergiert `f (X_{min (τ n) t})` fast sicher
+   gegen `P[f (X_{min τ' t}) | ⨆ n, 𝓕_{τ n}]`. *Worauf er ruht:*
+   `stoppedValue_ae_eq_condExp` aus diesem Lauf — die Eingabe, die bis heute
+   fehlte —, `MeasureTheory.tendsto_ae_condExp`
+   (`Probability/Martingale/Convergence.lean:426`, **reellwertig**, also über
+   Real- und Imaginärteil zu führen), `IsStoppingTime.measurableSpace_mono`
+   (`Probability/Process/Stopping.lean:468`) für die Filtration `n ↦ 𝓕_{τ n}`,
+   und die Anhebung der Zerlegung auf Stoppzeiten. *Warum jetzt:* mit den beiden
+   Enden dieses Laufs ist er das ganze verbleibende Stück, und die Eingabe, an
+   der er hing, steht.
+2. **Die Anhebung der Zerlegung von festen Zeiten auf Stoppzeiten**, falls der
+   erste Punkt sie nicht mitnimmt: `IsCompensatorFor.decomposition` gilt je
+   Zeitpunkt und damit auf einer von `t` abhängenden Nullmenge; auf dem
+   abzählbaren `D` gilt sie gemeinsam, und die Rechtsstetigkeit beider Seiten
+   trägt sie auf alle Zeiten und dann auf Stoppzeiten. Die Roadmap nennt das
+   schon „a lemma of `IsRegularizingClass` of its own"; es ist bis heute keines.
+3. **Die Leerheitsprobe auf `E = ℕ` am Poissonprozeß**, unverändert Vorschlag 2
+   des Vorlaufs.
+4. **Die fünfzig Aufrufe veralteter Namen**, unverändert Vorschlag 4.

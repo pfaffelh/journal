@@ -1631,6 +1631,31 @@ A concrete family of solutions, built without any of the theory above. Index
   uniform integrability of `{Y_ρ}`, but the test processes of the jump
   construction are bounded by `C + 2LC·t` on `[0, t]`
   (`integrable_mpFamily_jumpProcess`), so the dominating function is a constant.
+* `stoppedValue_ae_eq_condExp_of_forall_integral_eq`, `stoppedValue_ae_eq_condExp`:
+  **optional sampling in continuous time in its conditional form**,
+  `Y_σ =ᵐ[P] P[Y_j | 𝓕_σ]` for a bounded stopping time `σ ≤ j`. The expectation
+  identity of the previous point is not what a proof at stopping times consumes;
+  the conditional identity is, and Mathlib has it over a general index only for
+  stopping times of **countable range**
+  (`Martingale.stoppedValue_ae_eq_condExp_of_le_const_of_countable_range`,
+  `Probability/Martingale/OptionalSampling.lean:90`). Its unrestricted form
+  `…_of_le` (`ibid.:141`) carries `[Countable ι]`, and the section holding the
+  theorem named *Optional Sampling* there (`ibid.:158`) runs under
+  `[LocallyFiniteOrder ι]` and `[DiscreteTopology ι]`; in continuous time the
+  conditional form is therefore not available and the expectation form is what
+  the dyadic passage above delivers. The step between the two is **one auxiliary
+  stopping time and no analysis**: for a test set `S ∈ 𝓕_σ` the time `ρ = σ` on
+  `S` and `ρ = j` off `S` is a stopping time — on `S` because `S ∩ {σ ≤ t}` lies
+  in `𝓕 t` by the definition of `𝓕_σ`, off `S` because `𝓕_σ ≤ 𝓕 j ≤ 𝓕 t`
+  wherever `j ≤ t` — and the expectation identity read at `ρ` and at the constant
+  time `j`, with the common part over `Sᶜ` subtracted, is the set identity that
+  `ae_eq_condExp_of_forall_setIntegral_eq` asks for. The general form is stated
+  over any index that `MeasureTheory.measurable_stoppedValue`
+  (`Probability/Process/Stopping.lean:1048`) accepts, and it carries the
+  expectation identity as a hypothesis, so neither right continuity nor the
+  martingale property appears in it; `stoppedValue_ae_eq_condExp` is the instance
+  over `ℝ≥0` under the hypotheses of `integral_stoppedValue_eq`. **In Lean** on
+  2026-09-17, tenth run, in `section StoppedMartingale`.
 * `martingale_stoppedProcess_zero` and
   `martingale_of_martingale_stoppedProcess_top`: the two probes on the statement —
   the hypotheses are jointly satisfiable, and at `τ = ⊤` the conclusion is the
@@ -8537,6 +8562,26 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   to the filter `𝓝[<] t` is exactly what the existence of the left limit —
   the second half of `IsCadlagPath`, assumed by Ethier–Kurtz here anyway —
   supplies.
+* `IsCadlagPath.exists_tendsto_comp_monotone`: a càdlàg path converges along
+  every nondecreasing sequence of indices that has a supremum. The proof splits
+  on whether the sequence **reaches** its supremum: where it does, monotonicity
+  makes the values eventually constant and no path property is read; where it
+  does not, the sequence runs into `𝓝[<] T` and the limit is the left limit, the
+  second field of `IsCadlagPath`. Right continuity is not used, and the statement
+  produces *a* limit without claiming uniqueness, so no separation axiom on `E`
+  enters. **In Lean** on 2026-09-17, tenth run.
+* `isQuasiLeftContinuous_of_forall_ae_tendsto_comp`: **from countably many
+  scalar convergences to quasi-left-continuity**. For a countable class `Φ₀` of
+  continuous functions separating the points of `E`, almost sure càdlàg paths,
+  and the scalar convergence `f (X_{τ n}) → f (X_{τ'})` for each `f ∈ Φ₀` along
+  every nondecreasing sequence of stopping times bounded by `t`, the process is
+  quasi-left-continuous. This is the last line of the abstract theorem below
+  isolated: the path property produces a limit `l` and the separation identifies
+  it with `X_{τ'}`. Countability is what allows the null set of the scalar
+  statement to be chosen once for all `f` rather than once per `f`; no
+  compactness, no separation axiom on `E`, and no measurability of `X` are read,
+  the uniqueness of limits being taken in `𝕂` alone. **In Lean** on 2026-09-17,
+  tenth run.
 * `isQuasiLeftContinuous_of_isRegularizingClass`, the abstract form of
   Ethier–Kurtz, Theorem 4.3.12, with no operator and no compensator of any
   special shape. Let `Φ` be a regularizing class for `(X, 𝓧)` with `X` càdlàg,
