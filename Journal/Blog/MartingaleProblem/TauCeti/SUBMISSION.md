@@ -132,12 +132,25 @@ Verweise im Repositorium berührt. Das ist zu entscheiden, ehe es geschrieben
 wird. Für die Einreichung selbst ist es gegenstandslos: dort liegen die
 Verzeichnisse ohnehin unter `TauCetiRoadmap/`.
 
-**Eine Aufräumarbeit, die der Import nach sich zieht.** `MartingaleProblems`
-bildet mehrere Begriffe der beiden Roadmaps unter ihm nach, mit dem Doc-Satz
-„restated so that this file stands against Mathlib alone" — `IsSeparating`,
-`IsCadlagPath` und Nachbarn. Dieser Grund ist entfallen. Bei `IsSeparating`
-kollidieren die beiden Namen bereits; die Auflösung, die keine Aussage doppelt
-stehen läßt, ist, die `WeakConvergence`-Fassung von `ℝ` auf `RCLike` zu heben.
+**Eine Aufräumarbeit, die der Import nach sich zog, und sie ist erledigt.**
+`MartingaleProblems` bildete mehrere Begriffe der beiden Roadmaps unter ihm nach,
+mit dem Doc-Satz „restated so that this file stands against Mathlib alone" —
+`IsSeparating` und `IsCadlagPath`. Dieser Grund ist mit dem Import entfallen, und
+am 2026-09-17, zweiundzwanzigster Lauf, sind beide Nachbildungen gestrichen:
+
+* `IsSeparating` steht nur noch in `WeakConvergence`, dort über einem
+  `RCLike`-Skalarkörper statt über `ℝ`. Das ist die Auflösung, die keine Aussage
+  doppelt stehen läßt: die reelle Fassung ist die Instanz `𝕂 = ℝ`. Kein Satz von
+  Meilenstein 1 mußte dafür angefaßt werden.
+* `IsCadlagPath` ist ersetzt durch `IsCadlag` aus `SkorokhodSpace`, mit dem es
+  Feld für Feld übereinstimmt; die Namen der Sätze darum sind mitgezogen
+  (`isCadlag_jumpProcess`, `IsCadlag.comp_coe_nnreal` und die übrigen).
+
+Damit hält jede Roadmap ihre Begriffe selbst und keine zweite bildet sie nach.
+`IsCadlag` und `IsRightContinuous` von `SkorokhodSpace` fallen ihrerseits weg,
+sobald die Bindung von v4.33.1 auf einen Stand wechselt, der
+`Mathlib/Topology/Order/Cadlag.lean` trägt (`#43352`; auf `master` am 2026-09-17,
+Commit `8018f6a`, mit denselben Feldnamen).
 
 ## Steps
 

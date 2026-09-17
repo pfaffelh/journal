@@ -102,8 +102,19 @@ no predicate for a class of functions. Downstream a predicate is needed, because
 theorem in the roadmap **MartingaleProblems**. So introduce the two predicates,
 tie them to the existing theorems, and prove the instances Mathlib lacks.
 
-* `MeasureTheory.IsSeparating Γ` for `Γ : Set (E → ℝ)`: two finite Borel
-  measures integrating every member of `Γ` alike are equal. Monotone in `Γ`.
+* `MeasureTheory.IsSeparating Γ` for `Γ : Set (E → 𝕂)` with `[RCLike 𝕂]`: two
+  Borel probability measures integrating every member of `Γ` alike are equal.
+  Monotone in `Γ`.
+
+  The scalar field is `𝕂` and not `ℝ`, and that is the minimal reading rather
+  than a generalization on suspicion. The consumer of the predicate is the
+  càdlàg modification theorem of **MartingaleProblems**, whose martingale
+  problem tests solutions against an operator `A : Set ((E → 𝕂) × (E → 𝕂))`, so
+  the classes it calls separating are `𝕂`-valued; over `ℝ` alone that roadmap
+  would have to restate the same proposition under the same name. `RCLike` is
+  the weakest bundle the definition parses under — the Bochner integral asks for
+  a normed space over `ℝ` and `RCLike 𝕂` supplies one — and the real theory
+  below is the instance `𝕂 = ℝ`, so nothing in it changes.
 * `MeasureTheory.IsConvergenceDetermining Γ` for `Γ : Set (E → ℝ)`: pointwise
   convergence of the integrals along `Γ` implies weak convergence. It carries
   `[TopologicalSpace E]` and `[OpensMeasurableSpace E]`, which is exactly what

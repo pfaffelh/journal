@@ -21,7 +21,8 @@ the commitments. `sorry` marks a statement whose proof is the work, never an
 empty proposition.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-09, and **free of `sorry` since the thirteenth run of that day**.  Every
+2026-09-17, with `autoImplicit=false` and `relaxedAutoImplicit=false` as Mathlib
+itself builds, and **free of `sorry` since the thirteenth run of 2026-09-09**.  Every
 declaration elaborates and every one of them is proved; `#print axioms` on
 `SkorokhodSpace.isCompact_closure_iff`, the last statement to be discharged,
 gives `propext`, `Classical.choice`, `Quot.sound`.

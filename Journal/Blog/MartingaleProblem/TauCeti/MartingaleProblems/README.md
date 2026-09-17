@@ -568,7 +568,7 @@ A concrete family of solutions, built without any of the theory above. Index
 `[0,∞)`, state space `E` with `[MeasurableSpace E]`.
 
 * `IsStepPath`, **proved** on 2026-09-09, sixteenth run, together with
-  `IsStepPath.isCadlagPath` and
+  `IsStepPath.isCadlag` and
   `IsStepPath.finite_setOf_not_continuousAt_inter`: the paths the construction
   below delivers, isolated first, because three otherwise awkward steps are easy
   on them — the joint measurability in `(t, ω)` is a sum over finitely many
@@ -585,7 +585,7 @@ A concrete family of solutions, built without any of the theory above. Index
   preference.** Asking for
   `∀ K, IsCompact K → ({x | Function.leftLim f x ≠ f x} ∩ K).Finite` and
   deriving càdlàg from it does **not** work:
-  `exists_finite_setOf_leftLim_ne_not_isCadlagPath` exhibits
+  `exists_finite_setOf_leftLim_ne_not_isCadlag` exhibits
   `f = Set.indicator {0} 1` on `ℝ`, whose jump set is `{0}` — finite on every
   compact set — and which is not right continuous at `0`. `Function.leftLim` is
   *total* (`Topology/Order/LeftRightLim.lean:50`): where no left limit exists it
@@ -628,7 +628,7 @@ A concrete family of solutions, built without any of the theory above. Index
   needs a topology on `E`; only the path statements do.
   `jumpMeasure_map_chain_zero` says the initial law is `nu`,
   `measurable_jumpProcess` gives the joint measurability in `(t, ω)`, and
-  `isStepPath_jumpProcess`, `isCadlagPath_jumpProcess` give the paths.
+  `isStepPath_jumpProcess`, `isCadlag_jumpProcess` give the paths.
 
   **The deterministic core is separated from the probabilistic one, and the
   separation is where the work is.** `stepIndex T t = sInf {n | t < T (n+1)}` is
@@ -661,7 +661,7 @@ A concrete family of solutions, built without any of the theory above. Index
   step index stops advancing of its own accord. **Proved** on 2026-09-10,
   seventh run, in forty two declarations. `jumpProcessE_of_absorbing` says the
   path stays at `y n` for all time once `lam (y n) = 0`,
-  `isStepPath_jumpProcessE` and `isCadlagPath_jumpProcessE` give the paths, and
+  `isStepPath_jumpProcessE` and `isCadlag_jumpProcessE` give the paths, and
   `jumpProcessE_eq_jumpProcess` says the two constructions agree wherever the
   rate is positive — so this is an extension of the bounded construction and not
   a competitor to it.
@@ -811,7 +811,7 @@ A concrete family of solutions, built without any of the theory above. Index
   `iIndepSet_waiting`, `waitingMeasure_eval_preimage`, `expMeasure_one_Iic_zero`
   and `expMeasure_one_Ioi_one_ne_zero`. This is the one probabilistic input the
   path statements above take as a hypothesis, and it is what makes
-  `isCadlagPath_jumpProcess` an almost sure statement about `jumpMeasure mu nu`
+  `isCadlag_jumpProcess` an almost sure statement about `jumpMeasure mu nu`
   rather than a conditional one. It is the second Borel--Cantelli lemma,
   `ProbabilityTheory.measure_limsup_eq_one`
   (`Mathlib/Probability/BorelCantelli.lean:69`), on the independent events
@@ -833,7 +833,7 @@ A concrete family of solutions, built without any of the theory above. Index
   `MeasureTheory.Measure.infinitePi_pi` (`Probability/ProductMeasure.lean:405`)
   in one step. The general lesson is the file's own: ask for the statement the
   consumer needs, not for the named concept nearest to it.
-* `ae_isStepPath_jumpProcess`, `ae_isCadlagPath_jumpProcess`: the two path
+* `ae_isStepPath_jumpProcess`, `ae_isCadlag_jumpProcess`: the two path
   statements of the previous item with their hypotheses discharged, so that they
   hold for `jumpMeasure mu nu`-almost every `ω` under `0 < lam ≤ L` alone.
   **Proved** in the same run, over `jumpMeasure_map_snd`: the waiting times are
@@ -2457,7 +2457,7 @@ A concrete family of solutions, built without any of the theory above. Index
     explosive one: after finitely many jumps the rate has spent itself and no
     further jump ever happens.
   * `jumpProcessF Λ t ω = stepPath (jumpTimeF Λ ω ω.2) ω.1 t`,
-    `isStepPath_jumpProcessF` and `isCadlagPath_jumpProcessF`: **the path
+    `isStepPath_jumpProcessF` and `isCadlag_jumpProcessF`: **the path
     dependent jump process and its paths.** **In Lean** on 2026-09-11, seventh
     run, together with `jumpProcessF_zero` and
     `jumpProcessF_of_lt_jumpTimeF_one`. The sample space is the one of the state
@@ -2961,7 +2961,7 @@ A concrete family of solutions, built without any of the theory above. Index
     `cumulativeRateF_rateInverse_of_exists`, `rateInverse_lt_rateInverse`, `jumpTimeFE_zero`,
     `monotone_jumpTimeFE`, `jumpTimeFE_eq_ofReal`, `lt_jumpTimeFE_succ`,
     `jumpTimeFE_lt_succ_of_lt_succ`, `exists_ofReal_lt_jumpTimeFE`, `isStepPath_jumpProcessFE`,
-    `isCadlagPath_jumpProcessFE`, `jumpProcessFE_eq_jumpProcessF`,
+    `isCadlag_jumpProcessFE`, `jumpProcessFE_eq_jumpProcessF`,
     `rateInverseE_truncRateF_eq_top_of_lt`, `jumpTimeFE_truncRateF_eq_top` and
     `jumpTimeFE_expRate_eq_top`.
 
@@ -3568,7 +3568,7 @@ A concrete family of solutions, built without any of the theory above. Index
     **the Hawkes process.** **In Lean** on 2026-09-11, eighth run, with
     `hawkesSelfRate`, `hawkesSelfRate_apply`, `le_hawkesSelfRate`,
     `hawkesSelfRate_pos`, `tendsto_cumulativeRateF_hawkesSelfRate`,
-    `isCadlagPath_hawkesProcess`, `jumpTimeF_hawkesSelfRate`,
+    `isCadlag_hawkesProcess`, `jumpTimeF_hawkesSelfRate`,
     `hawkesProcess_of_lt_first`, and `cumulativeRateF_congr` and
     `rateInverse_congr`. `hawkesSelfRate` is a rate of the type `jumpProcessF`
     accepts, `ℝ → Ω → ℝ`, whose value at `ω` is the Hawkes rate of the counting
@@ -3596,13 +3596,13 @@ A concrete family of solutions, built without any of the theory above. Index
 
 * **A single spike is a step path and is not càdlàg.**
   `f = Set.indicator {0} 1 : ℝ → ℝ` satisfies the *naive* condition — its jump
-  set is `{0}`, finite on every compact set — and fails `IsCadlagPath`, because
+  set is `{0}`, finite on every compact set — and fails `IsCadlag`, because
   `f` is `0` on `Set.Ioi 0` and `1` at `0`. It also fails `IsStepPath`, at the
   first conjunct and at `x = 0`, which is exactly what the definition has to
   achieve. Moving the spike to the *left* of the value, `Set.indicator (Set.Ici 0) 1`,
   gives a path that satisfies both. This pair is the acceptance test for the
   definition, and it is in Lean as
-  `exists_finite_setOf_leftLim_ne_not_isCadlagPath`.
+  `exists_finite_setOf_leftLim_ne_not_isCadlag`.
 * **The Poisson process as the degenerate jump process.** `E = ℕ`,
   `lam x = 1`, `mu x = Measure.dirac (x + 1)`. **In Lean** on 2026-09-10, third
   run, as `section PoissonExample` of `Suggested.lean`, in seven declarations.
@@ -5317,7 +5317,7 @@ so fällt jede dieser Schwierigkeiten auf einmal weg.
 * `hawkesSelfRateH`, `hawkesProcessH`, `intervalIntegrable_hawkesSelfRateH`,
   `jumpTimeF_hawkesSelfRateH`, `le_hawkesJumpTimeH`,
   `tendsto_hawkesJumpTimeH_atTop`, `isStepPath_hawkesProcessH`,
-  `isCadlagPath_hawkesProcessH`, `hawkesProcessH_eq_stepPath`,
+  `isCadlag_hawkesProcessH`, `hawkesProcessH_eq_stepPath`,
   `hawkesProcessH_of_lt_first` — der Prozeß.
 * `hawkesRateH_id`, `hawkesFrozenH_id`, `hawkesStepH_id`, `hawkesJumpTimeH_id` —
   die Probe gegen Leerheit: bei `h = id` ist die nichtlineare Schicht die lineare
@@ -8207,7 +8207,7 @@ and 11 use them.
   `r` with an immediate successor the filter is `⊥` however dense `D` is, the
   right limit at `r` is unconstrained, and the path through `r` is uncontrolled.
   `ℝ≥0` and `ℝ` are densely ordered. Proved on 2026-09-17.
-* `isCadlagPath_rightLimAlong`, **the deterministic half of Doob's
+* `isCadlag_rightLimAlong`, **the deterministic half of Doob's
   regularization**: if `g` has both one sided limits along a dense `D` at every
   point, then `rightLimAlong D g` is càdlàg. No measure, no filtration, no
   process — a statement about one path, and the whole of the path side of
@@ -8252,7 +8252,7 @@ and 11 use them.
   point `b ∈ D` above `t` and `u` an `n` with `b ≤ u n`; the filter is eventually
   below `b`, hence inside `Set.Iic (u n) ∩ D`, which is where the compact set
   lives. Proved on 2026-09-17.
-* `ae_isCadlagPath_rightLimAlong_of_isRegularizingClass`, **the càdlàg half of
+* `ae_isCadlag_rightLimAlong_of_isRegularizingClass`, **the càdlàg half of
   the modification theorem**: under the hypotheses of the theorem below, almost
   every `rightLimAlong D (fun s ↦ X s ω)` is a càdlàg path. The candidate
   modification is thereby named and its path property proved; what the theorem
@@ -8438,7 +8438,7 @@ and 11 use them.
   rate has a càdlàg modification:
   ```
   ∃ X', (∀ t, X' t =ᵐ[jumpMeasure flipKernel nu] jumpProcessE flipRate t)
-        ∧ ∀ᵐ ω, IsCadlagPath (fun t ↦ X' t ω) .
+        ∧ ∀ᵐ ω, IsCadlag (fun t ↦ X' t ω) .
   ```
   Every one of the twelve hypotheses of
   `exists_cadlag_modification_of_isRegularizingClass` is met by data and none is
@@ -8568,14 +8568,14 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   quantifier over sequences, the exceptional set depends on the sequence and
   uncountably many sequences cannot be combined: the passage from one sequence
   to the filter `𝓝[<] t` is exactly what the existence of the left limit —
-  the second half of `IsCadlagPath`, assumed by Ethier–Kurtz here anyway —
+  the second half of `IsCadlag`, assumed by Ethier–Kurtz here anyway —
   supplies.
-* `IsCadlagPath.exists_tendsto_comp_monotone`: a càdlàg path converges along
+* `IsCadlag.exists_tendsto_comp_monotone`: a càdlàg path converges along
   every nondecreasing sequence of indices that has a supremum. The proof splits
   on whether the sequence **reaches** its supremum: where it does, monotonicity
   makes the values eventually constant and no path property is read; where it
   does not, the sequence runs into `𝓝[<] T` and the limit is the left limit, the
-  second field of `IsCadlagPath`. Right continuity is not used, and the statement
+  second field of `IsCadlag`. Right continuity is not used, and the statement
   produces *a* limit without claiming uniqueness, so no separation axiom on `E`
   enters. **In Lean** on 2026-09-17, tenth run.
 * `isQuasiLeftContinuous_of_forall_ae_tendsto_comp`: **from countably many
@@ -8777,7 +8777,7 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
 
   First, the **paths**: `stoppedValue X (σ n) ω = X ((σ n ω).untopA) ω` runs
   along a nondecreasing sequence of indices bounded by `t`, so
-  `IsCadlagPath.exists_tendsto_comp_monotone` gives a limit at almost every
+  `IsCadlag.exists_tendsto_comp_monotone` gives a limit at almost every
   sample point, and `g` continuous carries it to `g`. No supremum of the `σ n`
   is computed and no interchange of `min` with `⨆` is needed: the limit is
   produced, not identified.
@@ -8904,23 +8904,23 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   and no `MeasurableSpace`, so the `[BorelSpace β]` hypothesis of that theorem
   cannot be written down over a general `𝕂`, while over `ℝ` it can. **In Lean**
   on 2026-09-17, sixteenth run.
-* `IsCadlagPath.comp_coe_nnreal`, the restriction of a càdlàg path on `ℝ` to a
+* `IsCadlag.comp_coe_nnreal`, the restriction of a càdlàg path on `ℝ` to a
   càdlàg path on `ℝ≥0`, with `tendsto_coe_nnreal_nhdsWithin_Ioi` and
   `tendsto_coe_nnreal_nhdsWithin_Iio` as its two halves. The jump construction is
   written over `ℝ` and every statement of Milestones 3, 6 and 9 is indexed by
   `ℝ≥0`, which is the index the clock and the filtration carry; the crossing is
-  not formal, since `IsCadlagPath` is a statement about the one sided
+  not formal, since `IsCadlag` is a statement about the one sided
   neighbourhood filters and what has to be produced is that the coercion carries
   each of them into its counterpart. It does, because it is continuous and
   strictly monotone. At `t = 0` the left filter is `⊥` and the second half is
   empty, which is the right answer. Only the restriction is available and only it
   is wanted: nothing on `[0, ∞)` recovers the negative times. **In Lean** on
   2026-09-17, sixteenth run.
-* `ae_isCadlagPath_nnreal_jumpProcessE`, `isOptionalSamplingFor_mpFamily_jumpProcessE`
+* `ae_isCadlag_nnreal_jumpProcessE`, `isOptionalSamplingFor_mpFamily_jumpProcessE`
   and `isStronglyMeasurableAlongStoppingTimes_compensatorE`, the three
   hypotheses of `isQuasiLeftContinuous_of_isMPSolutionFor` read off the data of
-  Milestone 4. The first is `ae_isCadlagPath_jumpProcessE` through
-  `IsCadlagPath.comp_coe_nnreal`. The second spends the same four statements that
+  Milestone 4. The first is `ae_isCadlag_jumpProcessE` through
+  `IsCadlag.comp_coe_nnreal`. The second spends the same four statements that
   `martingale_stoppedProcess_mpFamily_jumpProcessE` spends —
   `jumpProcessE_isMPSolution`, `isStronglyProgressive_mpFamily_jumpProcessE`,
   `tendsto_nhdsGE_mpFamily_jumpProcessE` and the local bound
@@ -9003,6 +9003,9 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   quasi-left-continuity settles the statement while saying nothing about atoms.
   `IsSeparating (Prod.fst '' A)` is what forces `A ≠ ∅`, since on `Bool` the
   empty class does not separate `Measure.dirac true` from `Measure.dirac false`.
+  The predicate is `MeasureTheory.IsSeparating` of **WeakConvergence**,
+  Milestone 1, read at `𝕂 = ℝ`; this roadmap defines no separating class of its
+  own, and `isSeparating_coinClass` below is an instance of that one.
   The witness is built in the namespace `AtomWitness`: `coinMeasure`, the fair
   coin `2⁻¹ • (Measure.dirac true + Measure.dirac false)` on `Bool` with
   `coinMeasure {true} = 2⁻¹`; `atomClock u`, the clock whose index σ-algebra is
@@ -9021,7 +9024,7 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   along a sequence increasing to `u`;
   `coinProcess u t ω = if u ≤ t then ω else false`,
   the path over `Ω = E = Bool`, where the coin is both the sample point and the
-  state; `isCadlagPath_coinProcess`, which holds for every `u` and every `ω`
+  state; `isCadlag_coinProcess`, which holds for every `u` and every `ω`
   because the path is locally constant on either side of `u`; and
   `not_isQuasiLeftContinuous_coinProcess`, which holds for **every** filtration,
   the constant stopping times of `not_isQuasiLeftContinuous_of_not_ae_tendsto`
@@ -9128,9 +9131,25 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
 Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
 `(Ω n, 𝓕 n, P n)` with paths in `F`.
 
-* `PContinuous ψ X`, for `ψ : F → ℝ` Borel: there is a Borel `C` with
-  `P {X ∈ C} = 1` such that `ψ` is continuous at every point of `C` along
-  convergent sequences with limit in `C`.
+* **`P`-continuity at `X` is written `P {ω | ContinuousAt ψ (X ω)} = 1`** and
+  carries no definition of its own. The manuscript's `def:Pcont` asks for a Borel
+  `C` with `P {X ∈ C} = 1` such that `ψ (α m) → ψ α` whenever `α m → α` in `F`
+  with `α ∈ C`: the approximating points range over the whole of `F` and only the
+  limit is confined to `C`, so the condition is sequential continuity at each
+  point of `C`. Over a first countable `F` that is `ContinuousAt ψ` at each point
+  of `C`, and the certifying set adds nothing, because the continuity set
+  `{x | ContinuousAt ψ x}` is itself Borel — `measurableSet_of_continuousAt`,
+  `MeasureTheory/Constructions/BorelSpace/Basic.lean` — and is therefore the
+  largest `C` that any certificate can name.
+  **Confining the approximating points to `C` as well is a different condition,
+  and a false one.** `F = ℝ`, `C = {0}`, `ψ = Set.indicator {0} 1`, `X ≡ 0` and
+  `X n ≡ 1/n`: the only sequences inside `C` are eventually constant, so `ψ`
+  would be certified; `X n → X` in distribution; and `ψ (X n) = 0` does not
+  converge to `ψ (X) = 1`. The condition has to be read off the continuity set of
+  `ψ`, not off a set the approximating paths are asked to stay in.
+  `ContinuousAt` rather than the sequential form is what the statements below
+  carry, since no first countability of `F` is assumed and the portmanteau
+  argument underneath reads the topological continuity set.
 * `mpSolution_of_tendsto`: assume `X` and every `X n` measurable, every member of
   every `𝓩° r` bounded and measurable, `𝓧` canonical for `X` with determining set
   `𝓩°`, and that for every `Y ∈ 𝓧` with canonical version `Y°` and every `t ∈ D`:
@@ -9220,15 +9239,78 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   is what lets the limit carry the same truncation level as the sequence, and it
   is dominated convergence. **In Lean** on 2026-09-17, nineteenth run.
 * `mpSolution_of_tendsto_of_pContinuous`: the corollary in which (a) is replaced
-  by `X n → X` weakly on a separable metric `F` together with `P`-continuity of
-  `Y° t` and `Y° t * Z`. Uses the continuous mapping theorem of the roadmap
-  **WeakConvergence**.
-* `mpSolution_of_tendsto_augmented`: the corollary in which the coordinates at
-  finitely many exceptional times are adjoined to the path space, so that a
-  functional discontinuous at those times becomes continuous. It is the previous
-  statement on a larger space and costs nothing once that one is proved.
-* Uniform integrability of the limit family under `P`, as a separate lemma; it
-  is what makes the passage from `D` to the whole index work.
+  by `X n → X` in distribution on `F` together with
+  `P {ω | ContinuousAt (Y° r) (X ω)} = 1` for `r ∈ D ∩ Iic t` and
+  `P {ω | ContinuousAt ((Y° t - Y° s) * Z) (X ω)} = 1` for `s ∈ D ∩ Iic t` and
+  `Z ∈ 𝓩° s`. It is `MeasureTheory.TendstoInDistribution.continuousAt_comp` of
+  the roadmap **WeakConvergence** applied twice and nothing else.
+  **In Lean** on 2026-09-17, twenty-first run.
+  **`F` is neither separable nor metric.** What the continuous mapping theorem
+  reads on the path space is `HasOuterApproxClosed F` on top of the
+  `OpensMeasurableSpace F` that `MeasureTheory.TendstoInDistribution` asks for
+  anyway. Every pseudo-metrizable space has it (`instHasOuterApproxClosed`,
+  `MeasureTheory/Measure/HasOuterApproxClosed.lean`), so the separable metric
+  path space of the manuscript is an instance of this statement and not a
+  hypothesis of it.
+  **The continuity is asked of the products and not of the factors**, which is
+  the weaker hypothesis: continuity at a point is stable under differences and
+  products, so continuity of `Y° t`, `Y° s` and `Z` at `X ω` gives continuity of
+  `(Y° t - Y° s) * Z` there, and the converse fails. It is also the product that
+  the proof composes.
+* `IsDetermining.comp_fst`: a determining set read on an augmented path space
+  `F × G`, through `Z ∘ Prod.fst`. The two statements have the same content,
+  since `(Z ∘ Prod.fst) (X ω, γ (X ω)) = Z (X ω)`, and the proof is the image
+  being unfolded. **In Lean** on 2026-09-17, twenty-first run.
+* `mpSolution_of_tendsto_augmented`: the manuscript's `thm:absconvaug`. For a
+  measurable `γ : F → G`, the augmentation `x ↦ (x, γ x)` carries the readings
+  `γ` along as a second coordinate, and the statement is the previous one on
+  `F × G`: `X n → X` in distribution **jointly with** `γ (X n) → γ (X)`, and the
+  `P`-continuity asked of functionals on `F × G`. A functional discontinuous only
+  because it reads the path at prescribed places becomes continuous there. In the
+  instance that motivates it (`prop:atomaug`), `G = E^A` for the countable set
+  `A` of atoms of the clock and `γ ω = (ω a)_{a ∈ A}`. **In Lean** on 2026-09-17,
+  twenty-first run.
+  **There is no `Y°` on `F` among the hypotheses.** The manuscript asks for Borel
+  `Ŷ°` on the augmented space with `Ŷ° ∘ γ̂ = Y°`; the formalisation takes the
+  canonical version on `F × G` from the start, `Y t ω = Y° t (X ω, γ (X ω))`,
+  which is the same requirement with the detour through `F` removed.
+  **The augmented convergence hypothesis is strictly stronger than the plain
+  one, and that is the trade.** It gives back `X n → X` in distribution by
+  `MeasureTheory.TendstoInDistribution.continuous_comp continuous_fst`
+  (`MeasureTheory/Function/ConvergenceInDistribution.lean`), at the cost of
+  `BorelSpace F`; the converse fails, and `ex:atomicdiscontinuity` is the
+  witness — `ω n = indicator (Set.Ici (1 + 1/n)) 1` converges to
+  `indicator (Set.Ici 1) 1` in `J₁` while the values at `1` converge to the wrong
+  limit.
+  **`OpensMeasurableSpace` and `HasOuterApproxClosed` are asked of the product**
+  and not of the factors, which is again the weaker hypothesis. The routes from
+  the factors carry side conditions the statement does not read:
+  `Prod.opensMeasurableSpace` (`MeasureTheory/Constructions/BorelSpace/Basic.lean`)
+  needs `SecondCountableTopologyEither`, and the only instance of
+  `HasOuterApproxClosed` is `instHasOuterApproxClosed` for pseudo-metrizable
+  spaces, so obtaining it on `F × G` means metrizing both factors.
+* `integral_tail_le_of_tendstoInDistribution`: a uniform tail bound survives the
+  passage to the limit in distribution. The tail `max (‖x‖ - c) 0` is continuous
+  but **unbounded**, so convergence in distribution does not carry its integral;
+  the bounded truncations `min (max (‖x‖ - c) 0) M` do, each is dominated by the
+  tail on every space, and `M → ∞` on the limit side is dominated convergence
+  against the tail of the limit. The same device as in
+  `integrable_of_tendstoInDistribution`, one level up. **In Lean** on 2026-09-17,
+  twenty-first run.
+* `unifIntegrable_tail_of_tendstoInDistribution`: uniform integrability of the
+  limit family under `P`, in the tail form the milestone carries, with the
+  integrability of the limits as part of the conclusion. It is what makes the
+  passage from `D` to the whole index work: the family that has to be uniformly
+  integrable there is the **limit** family under `P` and not the approximating
+  one. **In Lean** on 2026-09-17, twenty-first run.
+  **The truncation level is the same on both sides.** It is chosen by the
+  hypothesis for the approximating family and serves the limit unchanged, which
+  is why the statement is an implication between two clauses of one shape rather
+  than a statement about enlarging a level.
+  **Integrability of the limits is not a hypothesis.** The uniform bound at
+  `ε = 1` gives `∫ ‖ξ r n‖ ≤ c₁ + 1` uniformly in `n` and `r`, and
+  `integrable_of_tendstoInDistribution` turns that into integrability of each
+  limit — the computation `mpSolution_of_tendsto` performs inline.
 
 **Acceptance examples.**
 
@@ -9251,11 +9333,11 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   acceptance test is that `mpSolution_of_tendsto` can be applied with `F` a bare
   measurable space, and that `mpSolution_of_tendsto_of_pContinuous` — which does
   need a separable metric `F` — is derived from it and not the other way round.
-* **`PContinuous` is not continuity**, and the manuscript's
+* **`P`-continuity is not continuity**, and the manuscript's
   `ex:atomicdiscontinuity` is why. The evaluation `ψ = π 1` on `D ℝ ℝ` is
-  discontinuous at every path jumping at `1`; it is nevertheless `PContinuous`
-  for every `P` with `P {ω | ω 1⁻ = ω 1} = 1`, the certifying set `C` being that
-  event. For a limit law charging paths that jump at `1` — the generic case when
+  discontinuous at every path jumping at `1`; it is nevertheless `P`-continuous
+  at `X` for every `P` with `P {ω | ω 1⁻ = ω 1} = 1`, that event being exactly
+  where `ψ` is continuous. For a limit law charging paths that jump at `1` — the generic case when
   the clock has an atom there — no `C` works, and
   `mpSolution_of_tendsto_augmented` is what remains: adjoining the coordinate at
   `1` to the path space makes the functional continuous. This pair fixes the
