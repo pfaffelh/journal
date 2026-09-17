@@ -9449,6 +9449,80 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   Milestone 9 and serve here unchanged; the two witnesses of this file — the one
   that fails quasi-left-continuity and the one that inhabits the convergence
   theorem — sit on the same coin.
+* `naturalFiltration_eq_comap_block`: the natural filtration of a chain is the
+  comap of the block of its first `n + 1` coordinates. Both sides are
+  `⨆ j ≤ n, comap (Ξ j)`; the right-hand one because the product σ-algebra of the
+  block is the supremum of the comaps of its evaluations, and
+  `MeasurableSpace.comap_iSup` carries the comap through. No measure, no kernel
+  and no topology. **In Lean** on 2026-09-18, first run.
+  It is the bridge between a conditional expectation proved over the block
+  σ-algebra a disintegration produces and one read over the filtration
+  hypothesis (c) is written over.
+* `jumpChain`, `measurable_jumpChain`, `condExp_jumpChain`: the **embedded jump
+  chain** of Milestone 4, read as a process on the sample space of the jump
+  construction, and its Markov property in the shape
+  `martingale_chainCompensated` reads it. The compensator is
+  `Pf x = ∫ f d(mu x)` — a function of the state. **In Lean** on 2026-09-18,
+  first run.
+* `tendsto_integral_mul_jumpChain`: the nine hypotheses of
+  `tendsto_integral_mul_rescaledChain_natural` discharged together on the
+  embedded jump chain of an **arbitrary** Markov kernel, under `jumpMeasure mu
+  nu`. `E` carries nothing but its σ-algebra; the test function and the weight
+  are bounded and measurable. **In Lean** on 2026-09-18, first run.
+  **This is the hypothesis `hPf` met in a shape `measurable_const` cannot
+  meet.** The i.i.d. probe discharges it with a constant compensator, and a
+  hypothesis that is only ever met in its trivial shape has not been met. It is
+  also the join between this milestone and Milestone 4: the convergence theory
+  and the only construction by hand this roadmap has.
+* `measure_chainCompensated_chain_eq` and
+  `measure_chainCompensated_jumpChain_eq`: **how often the compensated chain
+  moves at its first step, exactly** — it is the mass the one step kernel puts
+  away from its own mean, averaged over the initial law,
+  `∫⁻ x, mu x {y | f y ≠ ∫ f d(mu x)} ∂nu`. The chain of the proof is
+  `comp_chainKernel_map_split`, then `Measure.compProd_apply`, then
+  `comp_chainKernel_map_zero` at the started measure `mu x`. **In Lean** on
+  2026-09-18, first run.
+  **Non-degeneracy is measured and not asserted.** The i.i.d. probe exhibits a
+  set of positive measure on which the compensated chain moves; this computes
+  the measure of that set for every kernel and every bounded test function, so
+  the degenerate case is visible as the vanishing of a named quantity rather
+  than as the failure of an argument.
+* `measure_ne_integral_pos_of_two_atoms` and
+  `measure_chainCompensated_jumpChain_pos`: two atoms carrying different values
+  of the test function put mass away from the mean, and an initial law charging
+  a set on which the kernel keeps a fixed amount of mass away from its own mean
+  makes the compensated chain move with positive probability. **In Lean** on
+  2026-09-18, first run.
+  **The integrand never has to be shown measurable.** The lower bound is an
+  indicator, so `x ↦ mu x {y | f y ≠ ∫ f d(mu x)}` — a kernel evaluated at a
+  *state dependent* set — is only ever bounded below pointwise and integrated
+  through `lintegral_mono`.
+* `mm1ChainKernel`, `mm1AtTwo`, `mm1ChainKernel_apply_one`,
+  `mm1ChainKernel_apply_zero`, `integral_mm1ChainKernel_zero`,
+  `integral_mm1ChainKernel_one`, `integral_mm1ChainKernel_ne`,
+  `tendsto_integral_mul_jumpChain_mm1` and
+  `measure_chainCompensated_jumpChain_pos_mm1`: the probe **on data**, over the
+  embedded chain of the M/M/1 queue at `β = δ = 1` started from a queue of
+  length one, with the indicator of the queue length `2` as test function.
+  Neither conclusion carries a hypothesis. **In Lean** on 2026-09-18, first run.
+  **The compensator takes two values, and the empty queue is where they part.**
+  From `0` the queue can only grow, so `mm1ChainKernel 0` is a Dirac measure and
+  `Pf 0 = 0`; from `1` it goes up or down with equal probability and
+  `Pf 1 = 2⁻¹`. That is `integral_mm1ChainKernel_ne`, and it is what the i.i.d.
+  probe cannot supply.
+  **The data is the milestone's own and not a new object.** `birthDeathKernel`
+  and the M/M/1 rates are Milestone 4's acceptance example; the probe reuses
+  them, as the coin probe reuses `AtomWitness.coinMeasure`.
+* **The probe reads the jump number and not the time, and the two are not the
+  same.** `gridPath (jumpChain E) n` is the embedded chain at the index
+  `⌊n · t⌋`, while the jump process is that same chain at the index
+  `stepIndex (jumpTime lam ω.1 ω.2) t` — `jumpProcess` is `stepPath` of the jump
+  times, by definition. The first index is deterministic, the second random, and
+  their agreement for large `n` at a constant rate is the law of large numbers
+  for the waiting times, not a rewriting. The probes above therefore inhabit
+  hypothesis (c) over the rescaled **chain**; the manuscript's `ex:invariance`
+  speaks of rescaled **time**, and the passage between the two indices is what
+  this milestone still owes.
 * **Hypothesis (a) is about real random variables and carries no topology.** In
   the example above the path space `F` is `D ι E` and the functionals
   `Y° t` are evaluations, but the statement of (a) never mentions `F`'s

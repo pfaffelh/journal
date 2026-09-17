@@ -34419,3 +34419,369 @@ theorem measure_chainCompensated_ne_pos_coin :
   rwa [integral_coinPair_coinMeasure] at h
 
 end CoinProbe
+
+/-! ### The probe on a chain whose kernel reads its state: the embedded jump chain
+
+The probe above is honest about what it does not do.  Its chain is i.i.d., so the one step
+kernel sends every state to the same law, `Pf` is the constant `∫ f dν`, and the hypothesis
+`hPf` -- that `Pf ∘ Ξ i` is `𝓖 i`-measurable -- is discharged by `measurable_const`.  That is
+the last hypothesis of `tendsto_integral_mul_rescaledChain_natural` with no nontrivial
+instance, and the lesson of the run that built the i.i.d. probe applies to it: a hypothesis
+that is only ever met in its trivial shape has not been met.
+
+The chain that meets it is the one this file already constructs: the **embedded jump chain** of
+Milestone 4, the first marginal of `jumpMeasure mu nu`, whose one step kernel is `mu` and whose
+compensator is therefore `Pf x = ∫ f d(mu x)` -- a function of the state and not a number.  The
+Markov property it needs stands as `condExp_chain_mark_jumpMeasure`; what is between the two is
+a σ-algebra, and `naturalFiltration_eq_comap_block` is that bridge.
+
+This connects the two milestones that are otherwise disjoint: Milestone 10, the convergence
+theory, and Milestone 4, the only construction by hand this project has.  What the probe
+answers is not "are the hypotheses consistent" -- the i.i.d. chain settled that -- but
+**whether the rescaled jump chain is expressible in the frame of the convergence theorem at
+all**.
+
+The non-degeneracy is measured and not asserted: `measure_chainCompensated_jumpChain_eq`
+computes the mass on which the compensated chain moves at its first step, and it is exactly
+the mass the one step kernel puts away from its own mean.
+-/
+
+section JumpChainProbe
+
+variable {E : Type*} [mE : MeasurableSpace E]
+
+/-- **The natural filtration of a chain is the comap of the block of its first `n + 1`
+coordinates.**  Both sides are `⨆ j ≤ n, comap (Ξ j)`: on the left by the definition of
+`naturalFiltration`, on the right because the product σ-algebra of the block is the supremum
+of the comaps of its evaluations, and `MeasurableSpace.comap_iSup` carries the comap through.
+
+It is what lets a conditional expectation proved over the block σ-algebra -- the shape
+`comp_chainKernel_map_split_range` disintegrates in -- be read as one over the filtration that
+hypothesis (c) of `mpSolution_of_tendsto` is written over.  No measure and no kernel enter. -/
+theorem naturalFiltration_eq_comap_block {Ω : Type*} [MeasurableSpace Ω]
+    {Ξ : ℕ → Ω → E} (hΞ : ∀ i, Measurable (Ξ i)) (n : ℕ) :
+    naturalFiltration Ξ hΞ n
+      = MeasurableSpace.comap
+          (fun ω ↦ fun j : Finset.range (n + 1) ↦ Ξ (j : ℕ) ω) inferInstance := by
+  show (⨆ j, ⨆ _ : j ≤ n, MeasurableSpace.comap (Ξ j) mE) = _
+  rw [show (inferInstance : MeasurableSpace ((_j : Finset.range (n + 1)) → E))
+      = ⨆ j : Finset.range (n + 1),
+          mE.comap (fun v : (_j : Finset.range (n + 1)) → E ↦ v j) from rfl,
+    MeasurableSpace.comap_iSup]
+  simp only [MeasurableSpace.comap_comp]
+  refine le_antisymm (iSup₂_le fun j hj ↦ ?_) (iSup_le fun j ↦ ?_)
+  · exact le_iSup (f := fun j : Finset.range (n + 1) ↦
+      MeasurableSpace.comap ((fun v : (_j : Finset.range (n + 1)) → E ↦ v j) ∘
+        (fun ω ↦ fun k : Finset.range (n + 1) ↦ Ξ (k : ℕ) ω)) mE)
+      ⟨j, Finset.mem_range.2 (Nat.lt_succ_of_le hj)⟩
+  · exact le_iSup₂ (f := fun j (_ : j ≤ n) ↦ MeasurableSpace.comap (Ξ j) mE) (j : ℕ)
+      (Nat.lt_succ_iff.1 (Finset.mem_range.1 j.2))
+
+/-- **The embedded jump chain, read as a process on the sample space of the jump
+construction**: the `i`-th mark of the chain factor.  It is `Y i` of `set:jumpdata`. -/
+def jumpChain (E : Type*) [MeasurableSpace E] (i : ℕ) (ω : (ℕ → E) × (ℕ → ℝ)) : E := ω.1 i
+
+theorem measurable_jumpChain (i : ℕ) : Measurable (jumpChain E i) :=
+  (measurable_pi_apply i).comp measurable_fst
+
+/-- **The Markov property of the embedded jump chain in the shape hypothesis (c) reads it**:
+over the natural filtration of the chain rather than over the block σ-algebra.  It is
+`condExp_chain_mark_jumpMeasure` and `naturalFiltration_eq_comap_block`, and nothing else.
+
+The compensator is `x ↦ ∫ f d(mu x)`: a function of the state, which is what distinguishes
+this probe from the i.i.d. one. -/
+theorem condExp_jumpChain (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] (n : ℕ) {f : E → ℝ} (hf : Measurable f)
+    {C : ℝ} (hfb : ∀ x, |f x| ≤ C) :
+    (jumpMeasure mu nu)[fun ω ↦ f (jumpChain E (n + 1) ω) |
+        naturalFiltration (jumpChain E) (measurable_jumpChain (E := E)) n]
+      =ᵐ[jumpMeasure mu nu] fun ω ↦ ∫ y, f y ∂(mu (jumpChain E n ω)) := by
+  rw [naturalFiltration_eq_comap_block]
+  exact condExp_chain_mark_jumpMeasure mu nu n hf hfb
+
+/-- **The nine hypotheses of `tendsto_integral_mul_rescaledChain_natural`, discharged together
+on the embedded jump chain of an arbitrary Markov kernel.**
+
+What is carried is a bounded measurable test function and a bounded measurable weight; what is
+*not* carried is any structure on `E` beyond its σ-algebra, and no topology anywhere.  `(K3)`
+is met exactly, by taking the canonical increment to be the martingale increment, so the
+conclusion is a limit of zeros and says nothing about the estimate -- the perturbed version of
+the i.i.d. probe is what exercises that, and it is independent of which chain is used.
+
+What this probe adds over the i.i.d. one is `hPf`: the compensator is `x ↦ ∫ f d(mu x)`, and
+`integral_mm1ChainKernel_ne` below shows on data that it is not constant. -/
+theorem tendsto_integral_mul_jumpChain (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu]
+    {f : E → ℝ} (hf : Measurable f) {C : ℝ} (hfb : ∀ x, |f x| ≤ C)
+    {g : E → ℝ} (hg : Measurable g) {b : ℝ} (hgb : ∀ x, ‖g x‖ ≤ b)
+    {s t : ℝ≥0} (hst : s ≤ t) :
+    Tendsto (fun n : ℕ ↦ ∫ ω, (chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E)
+            ⌊(n : ℝ) * (t : ℝ)⌋₊ ω
+          - chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E)
+            ⌊(n : ℝ) * (s : ℝ)⌋₊ ω) * g (ω.1 0)
+        ∂(jumpMeasure mu nu)) atTop (𝓝 0) := by
+  set P : Measure ((ℕ → E) × (ℕ → ℝ)) := jumpMeasure mu nu with hP
+  have hPfm : Measurable (fun x : E ↦ ∫ y, f y ∂(mu x)) :=
+    (StronglyMeasurable.integral_kernel (κ := mu) hf.stronglyMeasurable).measurable
+  have hPfb : ∀ x : E, |∫ y, f y ∂(mu x)| ≤ C := by
+    intro x
+    have := norm_integral_le_of_norm_le_const (μ := mu x) (C := C) (f := f)
+      (.of_forall fun y ↦ by simpa [Real.norm_eq_abs] using hfb y)
+    simpa using this
+  have hfint : ∀ i : ℕ, Integrable (fun ω ↦ f (jumpChain E i ω)) P := fun i ↦
+    (integrable_const C).mono'
+      ((hf.comp (measurable_jumpChain (E := E) i)).aestronglyMeasurable)
+      (Eventually.of_forall fun ω ↦ by simpa [Real.norm_eq_abs] using hfb (jumpChain E i ω))
+  have hPfint : ∀ i : ℕ, Integrable (fun ω ↦ (∫ y, f y ∂(mu (jumpChain E i ω)))) P := fun i ↦
+    (integrable_const C).mono'
+      ((hPfm.comp (measurable_jumpChain (E := E) i)).aestronglyMeasurable)
+      (Eventually.of_forall fun ω ↦ by simpa [Real.norm_eq_abs] using hPfb (jumpChain E i ω))
+  have hMint : ∀ k : ℕ,
+      Integrable (chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E) k) P := by
+    intro k
+    show Integrable (fun ω ↦ f (jumpChain E k ω) - ∑ j ∈ Finset.range k,
+      ((∫ y, f y ∂(mu (jumpChain E j ω))) - f (jumpChain E j ω))) P
+    exact (hfint k).sub (integrable_finsetSum _ fun j _ ↦ (hPfint j).sub (hfint j))
+  have h := tendsto_integral_mul_rescaledChain_natural (𝕂 := ℝ)
+    (Ω' := fun _ : ℕ ↦ ((ℕ → E) × (ℕ → ℝ))) (P' := fun _ : ℕ ↦ P)
+    (Ξ := fun _ : ℕ ↦ jumpChain E) (fun _ i ↦ measurable_jumpChain (E := E) i)
+    (fn := fun _ : ℕ ↦ f) (Pfn := fun _ : ℕ ↦ fun x : E ↦ ∫ y, f y ∂(mu x))
+    (fun _ ↦ hf) (fun _ ↦ hPfm) hst
+    (Z := fun x : ℝ≥0 → E ↦ g (x 0))
+    (hg.comp (measurable_naturalFiltration (fun u : ℝ≥0 ↦ measurable_pi_apply u)
+      (zero_le : (0 : ℝ≥0) ≤ s)))
+    (fun _ ↦ hgb _) (fun _ i ↦ hfint i) (fun _ i ↦ hPfint i)
+    (fun _ i ↦ condExp_jumpChain mu nu i hf hfb)
+    (G := fun n ↦ chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E)
+        ⌊(n : ℝ) * (t : ℝ)⌋₊
+      - chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E) ⌊(n : ℝ) * (s : ℝ)⌋₊)
+    (fun n ↦ (hMint _).sub (hMint _)) (by simp)
+  simpa [gridPath, jumpChain, RCLike.ofReal_real_eq_id] using h
+
+/-- **How often the compensated chain moves at its first step, exactly**: it is the mass the one
+step kernel puts away from its own mean, averaged over the initial law.
+
+The chain of the proof is the splitting `comp_chainKernel_map_split` -- the law of
+`(x 0, shifted chain)` is `nu ⊗ₘ (chainKernel mu ∘ₖ mu)` -- then `Measure.compProd_apply`, and
+then `comp_chainKernel_map_zero` at the started measure `mu x`, which says the shifted chain
+starts at one step of `mu`.  Nothing about the compensated chain enters but its definition. -/
+theorem measure_chainCompensated_chain_eq (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] {f : E → ℝ} (hf : Measurable f) :
+    (chainKernel mu ∘ₘ nu) {x : ℕ → E | f (x 1) ≠ ∫ y, f y ∂(mu (x 0))}
+      = ∫⁻ x, mu x {y | f y ≠ ∫ z, f z ∂(mu x)} ∂nu := by
+  have hPfm : Measurable (fun x : E ↦ ∫ y, f y ∂(mu x)) :=
+    (StronglyMeasurable.integral_kernel (κ := mu) hf.stronglyMeasurable).measurable
+  have hfib : ∀ c : ℝ, MeasurableSet {y : E | f y ≠ c} := fun c ↦
+    (hf (measurableSet_singleton c)).compl
+  have hS' : MeasurableSet {p : E × (ℕ → E) | f (p.2 0) ≠ ∫ y, f y ∂(mu p.1)} := by
+    have h1 : Measurable (fun p : E × (ℕ → E) ↦ f (p.2 0) - ∫ y, f y ∂(mu p.1)) :=
+      (hf.comp ((measurable_pi_apply 0).comp measurable_snd)).sub (hPfm.comp measurable_fst)
+    have h2 : {p : E × (ℕ → E) | f (p.2 0) ≠ ∫ y, f y ∂(mu p.1)}
+        = (fun p : E × (ℕ → E) ↦ f (p.2 0) - ∫ y, f y ∂(mu p.1)) ⁻¹' ({(0 : ℝ)}ᶜ) := by
+      ext p; simp [sub_eq_zero]
+    rw [h2]
+    exact h1 (measurableSet_singleton (0 : ℝ)).compl
+  have hpre : {x : ℕ → E | f (x 1) ≠ ∫ y, f y ∂(mu (x 0))}
+      = (fun x : ℕ → E ↦ (x 0, fun n ↦ x (n + 1))) ⁻¹'
+        {p : E × (ℕ → E) | f (p.2 0) ≠ ∫ y, f y ∂(mu p.1)} := rfl
+  rw [hpre, ← Measure.map_apply measurable_natSplit hS', comp_chainKernel_map_split,
+    Measure.compProd_apply hS']
+  refine lintegral_congr fun x ↦ ?_
+  have hsec : (Prod.mk x) ⁻¹' {p : E × (ℕ → E) | f (p.2 0) ≠ ∫ y, f y ∂(mu p.1)}
+      = (fun y : ℕ → E ↦ y 0) ⁻¹' {y : E | f y ≠ ∫ z, f z ∂(mu x)} := rfl
+  have hzero : ((chainKernel mu ∘ₖ mu) x).map (fun y : ℕ → E ↦ y 0) = mu x := by
+    have hc : (chainKernel mu ∘ₖ mu) x = chainKernel mu ∘ₘ (mu x) := by
+      rw [Kernel.comp_apply]
+    rw [hc, comp_chainKernel_map_zero]
+  rw [hsec, ← Measure.map_apply (measurable_pi_apply 0) (hfib _), hzero]
+
+/-- **The same count, on the sample space of the jump construction.**  The waiting times are an
+independent factor and the set reads the chain alone, so the whole passage is
+`Measure.map_fst_prod`; the arithmetic that turns "the compensated chain moves" into
+"`f (Y 1) ≠ ∫ f d(mu (Y 0))`" is two terms of a `Finset.range` sum. -/
+theorem measure_chainCompensated_jumpChain_eq (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] {f : E → ℝ} (hf : Measurable f) :
+    (jumpMeasure mu nu)
+        {ω | chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E) 1 ω
+          ≠ chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E) 0 ω}
+      = ∫⁻ x, mu x {y | f y ≠ ∫ z, f z ∂(mu x)} ∂nu := by
+  have hPfm : Measurable (fun x : E ↦ ∫ y, f y ∂(mu x)) :=
+    (StronglyMeasurable.integral_kernel (κ := mu) hf.stronglyMeasurable).measurable
+  have hSc : MeasurableSet {x : ℕ → E | f (x 1) ≠ ∫ y, f y ∂(mu (x 0))} := by
+    have h1 : Measurable (fun x : ℕ → E ↦ f (x 1) - ∫ y, f y ∂(mu (x 0))) :=
+      (hf.comp (measurable_pi_apply 1)).sub (hPfm.comp (measurable_pi_apply 0))
+    have h2 : {x : ℕ → E | f (x 1) ≠ ∫ y, f y ∂(mu (x 0))}
+        = (fun x : ℕ → E ↦ f (x 1) - ∫ y, f y ∂(mu (x 0))) ⁻¹' ({(0 : ℝ)}ᶜ) := by
+      ext x; simp [sub_eq_zero]
+    rw [h2]
+    exact h1 (measurableSet_singleton (0 : ℝ)).compl
+  have hset : {ω : (ℕ → E) × (ℕ → ℝ) |
+        chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E) 1 ω
+          ≠ chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E) 0 ω}
+      = Prod.fst ⁻¹' {x : ℕ → E | f (x 1) ≠ ∫ y, f y ∂(mu (x 0))} := by
+    ext ω
+    have hiff : chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E) 1 ω
+        = chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E) 0 ω
+      ↔ f (ω.1 1) = ∫ y, f y ∂(mu (ω.1 0)) := by
+      simp only [chainCompensated, jumpChain, Finset.sum_range_one, Finset.sum_range_zero,
+        sub_zero]
+      constructor <;> intro h <;> linarith
+    exact not_congr hiff
+  have hjm : jumpMeasure mu nu = (chainKernel mu ∘ₘ nu).prod waitingMeasure := rfl
+  have hmap : (jumpMeasure mu nu).map (Prod.fst : (ℕ → E) × (ℕ → ℝ) → (ℕ → E))
+      = chainKernel mu ∘ₘ nu := by
+    rw [hjm, Measure.map_fst_prod, measure_univ, one_smul]
+  rw [hset, ← Measure.map_apply measurable_fst hSc, hmap,
+    measure_chainCompensated_chain_eq mu nu hf]
+
+/-- **Two atoms on which the test function differs put mass away from the mean**, because the
+mean cannot equal both values.  Neither singleton is required to be measurable: a measure in
+Mathlib is monotone on arbitrary sets. -/
+theorem measure_ne_integral_pos_of_two_atoms {ρ : Measure E} {f : E → ℝ} {x y : E}
+    (hxρ : 0 < ρ {x}) (hyρ : 0 < ρ {y}) (hxy : f x ≠ f y) :
+    0 < ρ {z | f z ≠ ∫ w, f w ∂ρ} := by
+  rcases ne_or_eq (f x) (∫ w, f w ∂ρ) with h | h
+  · exact lt_of_lt_of_le hxρ (measure_mono (by rintro z rfl; exact h))
+  · exact lt_of_lt_of_le hyρ
+      (measure_mono (by rintro z rfl; exact fun hy' ↦ hxy (h.trans hy'.symm)))
+
+/-- **The probe is not the degenerate one**: if the initial law charges a set on which the one
+step kernel keeps a fixed amount of mass away from its own mean, then the compensated chain
+moves with positive probability.
+
+The lower bound is an indicator and not a measurability argument, which is why the integrand
+`x ↦ mu x {y | f y ≠ ∫ f d(mu x)}` -- a kernel evaluated at a *state dependent* set -- never has
+to be shown measurable. -/
+theorem measure_chainCompensated_jumpChain_pos (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] {f : E → ℝ} (hf : Measurable f)
+    {A : Set E} (hA : MeasurableSet A) (hAnu : 0 < nu A) {c : ENNReal} (hc : 0 < c)
+    (hAmu : ∀ x ∈ A, c ≤ mu x {y | f y ≠ ∫ z, f z ∂(mu x)}) :
+    0 < (jumpMeasure mu nu)
+      {ω | chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E) 1 ω
+        ≠ chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E) 0 ω} := by
+  rw [measure_chainCompensated_jumpChain_eq mu nu hf]
+  have hmono : ∀ x : E, A.indicator (fun _ ↦ c) x ≤ mu x {y | f y ≠ ∫ z, f z ∂(mu x)} := by
+    intro x
+    by_cases hxA : x ∈ A
+    · rw [Set.indicator_of_mem hxA]; exact hAmu x hxA
+    · rw [Set.indicator_of_notMem hxA]; exact zero_le
+  calc (0 : ENNReal) < c * nu A := ENNReal.mul_pos hc.ne' hAnu.ne'
+    _ = ∫⁻ x, A.indicator (fun _ ↦ c) x ∂nu := by
+        rw [lintegral_indicator hA, setLIntegral_const]
+    _ ≤ ∫⁻ x, mu x {y | f y ≠ ∫ z, f z ∂(mu x)} ∂nu := lintegral_mono hmono
+
+end JumpChainProbe
+
+/-! ### The probe on data: the embedded chain of the M/M/1 queue
+
+The data is the one Milestone 4 already carries -- `birthDeathKernel` at the M/M/1 rates -- at
+the cheapest parameters that leave the kernel genuinely state dependent, `β = δ = 1`.  Nothing
+is carried in either conclusion below.
+
+Two things are checked and not assumed.  `integral_mm1ChainKernel_ne` says the compensator
+`Pf x = ∫ f d(mu x)` takes two values, so the hypothesis `hPf` is met in a shape
+`measurable_const` cannot meet; and `measure_chainCompensated_jumpChain_pos_mm1` says the
+approximating martingale is not almost surely constant, so the orthogonality the example is
+about is not applied to zero.
+
+The kernel is state dependent in a way worth reading off: from `0` the queue can only grow, so
+`mm1ChainKernel 0` is a Dirac measure and `Pf 0 = 0`; from `1` it goes up or down with equal
+probability and `Pf 1 = 2⁻¹`.  The empty queue is exactly where the two values part.
+-/
+
+section MM1Probe
+
+/-- The embedded chain of the M/M/1 queue at `β = δ = 1`. -/
+noncomputable def mm1ChainKernel : Kernel ℕ ℕ := birthDeathKernel (mm1Birth 1) (mm1Death 1)
+
+instance isMarkovKernel_mm1ChainKernel : IsMarkovKernel mm1ChainKernel :=
+  isMarkovKernel_birthDeathKernel (b := mm1Birth 1) (d := mm1Death 1)
+    (fun _ ↦ zero_le_one) (fun x ↦ by unfold mm1Death; split_ifs <;> norm_num)
+
+/-- The test function of the probe: the indicator of the queue length `2`. -/
+def mm1AtTwo : ℕ → ℝ := fun y ↦ if y = 2 then 1 else 0
+
+theorem norm_mm1AtTwo_le (y : ℕ) : ‖mm1AtTwo y‖ ≤ 1 := by
+  unfold mm1AtTwo; split_ifs <;> norm_num
+
+theorem abs_mm1AtTwo_le (y : ℕ) : |mm1AtTwo y| ≤ 1 := by
+  unfold mm1AtTwo; split_ifs <;> norm_num
+
+/-- From a nonempty queue the chain goes up or down with equal probability. -/
+theorem mm1ChainKernel_apply_one :
+    mm1ChainKernel 1 = ENNReal.ofReal (2 : ℝ)⁻¹ • Measure.dirac 2
+      + ENNReal.ofReal (2 : ℝ)⁻¹ • Measure.dirac 0 := by
+  rw [mm1ChainKernel, birthDeathKernel_apply]
+  norm_num [mm1Birth, mm1Death]
+
+theorem mm1ChainKernel_one_two_pos : 0 < mm1ChainKernel 1 {2} := by
+  rw [mm1ChainKernel_apply_one]
+  simp
+
+theorem mm1ChainKernel_one_zero_pos : 0 < mm1ChainKernel 1 {0} := by
+  rw [mm1ChainKernel_apply_one]
+  simp
+
+/-- **From the empty queue the chain can only grow**, so its one step kernel is a Dirac
+measure there.  This is the fallback clause of `birthDeathKernel` doing no work: the death
+rate vanishes at `0` but the birth rate does not, so the total rate is positive. -/
+theorem mm1ChainKernel_apply_zero : mm1ChainKernel 0 = Measure.dirac 1 := by
+  rw [mm1ChainKernel, birthDeathKernel_apply]
+  norm_num [mm1Birth, mm1Death]
+
+theorem integral_mm1ChainKernel_zero : ∫ y, mm1AtTwo y ∂(mm1ChainKernel 0) = 0 := by
+  rw [mm1ChainKernel_apply_zero, integral_dirac]
+  norm_num [mm1AtTwo]
+
+theorem integral_mm1ChainKernel_one : ∫ y, mm1AtTwo y ∂(mm1ChainKernel 1) = (2 : ℝ)⁻¹ := by
+  have hd : ∀ a : ℕ, Integrable mm1AtTwo (Measure.dirac a) := fun a ↦
+    integrable_dirac (by simp [mm1AtTwo])
+  have hs : ∀ a : ℕ,
+      Integrable mm1AtTwo (ENNReal.ofReal (2 : ℝ)⁻¹ • Measure.dirac a) := fun a ↦
+    (hd a).smul_measure (by simp)
+  rw [mm1ChainKernel_apply_one, integral_add_measure (hs 2) (hs 0), integral_smul_measure,
+    integral_smul_measure, integral_dirac, integral_dirac]
+  norm_num [mm1AtTwo]
+
+/-- **The compensator of the probe reads the state.**  `Pf 0 = 0` and `Pf 1 = 2⁻¹`, so the
+hypothesis `hPf` of `tendsto_integral_mul_rescaledChain_natural` is met by a function that is
+not constant -- the one shape in which the i.i.d. probe could not meet it. -/
+theorem integral_mm1ChainKernel_ne :
+    (∫ y, mm1AtTwo y ∂(mm1ChainKernel 0)) ≠ ∫ y, mm1AtTwo y ∂(mm1ChainKernel 1) := by
+  rw [integral_mm1ChainKernel_zero, integral_mm1ChainKernel_one]
+  norm_num
+
+/-- **Hypothesis (c) of `mpSolution_of_tendsto` on data, over the embedded chain of the M/M/1
+queue started from a queue of length one.**  Every hypothesis of
+`tendsto_integral_mul_rescaledChain_natural` is discharged, and the compensator is the state
+dependent one of `integral_mm1ChainKernel_ne`. -/
+theorem tendsto_integral_mul_jumpChain_mm1 {s t : ℝ≥0} (hst : s ≤ t) :
+    Tendsto (fun n : ℕ ↦ ∫ ω,
+        (chainCompensated (fun x : ℕ ↦ ∫ y, mm1AtTwo y ∂(mm1ChainKernel x)) mm1AtTwo
+            (jumpChain ℕ) ⌊(n : ℝ) * (t : ℝ)⌋₊ ω
+          - chainCompensated (fun x : ℕ ↦ ∫ y, mm1AtTwo y ∂(mm1ChainKernel x)) mm1AtTwo
+            (jumpChain ℕ) ⌊(n : ℝ) * (s : ℝ)⌋₊ ω) * mm1AtTwo (ω.1 0)
+        ∂(jumpMeasure mm1ChainKernel (Measure.dirac 1))) atTop (𝓝 0) :=
+  tendsto_integral_mul_jumpChain mm1ChainKernel (Measure.dirac 1)
+    (measurable_of_countable mm1AtTwo) abs_mm1AtTwo_le
+    (measurable_of_countable mm1AtTwo) norm_mm1AtTwo_le hst
+
+/-- **And the martingale of the M/M/1 probe is genuinely random.**  From the queue of length
+one the chain reaches `2` and `0` with positive probability and the test function separates
+them, so the mean cannot be both; the count of
+`measure_chainCompensated_jumpChain_eq` is therefore positive. -/
+theorem measure_chainCompensated_jumpChain_pos_mm1 :
+    0 < (jumpMeasure mm1ChainKernel (Measure.dirac 1))
+      {ω | chainCompensated (fun x : ℕ ↦ ∫ y, mm1AtTwo y ∂(mm1ChainKernel x)) mm1AtTwo
+            (jumpChain ℕ) 1 ω
+        ≠ chainCompensated (fun x : ℕ ↦ ∫ y, mm1AtTwo y ∂(mm1ChainKernel x)) mm1AtTwo
+            (jumpChain ℕ) 0 ω} := by
+  refine measure_chainCompensated_jumpChain_pos mm1ChainKernel (Measure.dirac 1)
+    (measurable_of_countable mm1AtTwo) (A := {1}) (measurableSet_singleton 1) ?_
+    (c := mm1ChainKernel 1 {y | mm1AtTwo y ≠ ∫ z, mm1AtTwo z ∂(mm1ChainKernel 1)}) ?_ ?_
+  · simp
+  · exact measure_ne_integral_pos_of_two_atoms (x := 2) (y := 0)
+      mm1ChainKernel_one_two_pos mm1ChainKernel_one_zero_pos (by norm_num [mm1AtTwo])
+  · rintro x rfl; exact le_rfl
+
+end MM1Probe

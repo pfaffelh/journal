@@ -35439,3 +35439,165 @@ zweimal gelaufen. `scratch/` ist ignoriert, es bleibt also nichts liegen.
 3. **Die vierte Roadmap gegen dieselbe Probe halten.** `KolmogorovExtension` hat
    keine `Suggested.lean` und kommt in `check_suggested.py` nicht vor; die
    Prüfung dieses Laufs sagt über sie nichts.
+
+### 2026-09-18, erster Lauf des Tages — die Probe sitzt jetzt auf einer Kette, deren Kern den Zustand liest; und die Nichtdegeneriertheit wird nicht mehr behauptet, sondern ausgerechnet
+
+**Vorschlag 1 des Vorlaufs ist eingelöst.** **Dreiundzwanzig Deklarationen**, 367 Zeilen,
+in zwei neuen Abschnitten am Ende von `TauCeti/MartingaleProblems/Suggested.lean`.
+Die Kette ohne einen Fehler:
+
+| Datei | rc | Fehler | `sorry` | Sekunden |
+| --- | ---: | ---: | ---: | ---: |
+| `WeakConvergence/Suggested.lean` | 0 | 0 | 0 | 8 |
+| `SkorokhodSpace/Suggested.lean` | 0 | 0 | 0 | 14 |
+| `MartingaleProblems/Suggested.lean` | 0 | 0 | 0 | 66 |
+
+Alle dreiundzwanzig mit `scripts/check_axioms.py` geprüft: `propext`,
+`Classical.choice`, `Quot.sound`, sonst nichts.
+
+#### Was gebaut ist
+
+* `naturalFiltration_eq_comap_block` — die natürliche Filtration einer Kette ist
+  der Comap ihres Blocks der ersten `n + 1` Koordinaten. Beides ist
+  `⨆ j ≤ n, comap (Ξ j)`; kein Maß, kein Kern, keine Topologie.
+* `jumpChain`, `measurable_jumpChain`, `condExp_jumpChain` — die **eingebettete
+  Sprungkette** von Meilenstein 4 als Prozeß auf dem Stichprobenraum der
+  Sprungkonstruktion, und ihre Markoveigenschaft in der Gestalt, die
+  `martingale_chainCompensated` liest.
+* `tendsto_integral_mul_jumpChain` — die neun Voraussetzungen von
+  `tendsto_integral_mul_rescaledChain_natural` zugleich eingelöst, über
+  `jumpMeasure mu nu` und einem **beliebigen** Markovkern.
+* `measure_chainCompensated_chain_eq`, `measure_chainCompensated_jumpChain_eq` —
+  die Masse, auf der sich die kompensierte Kette im ersten Schritt bewegt,
+  **exakt**: `∫⁻ x, mu x {y | f y ≠ ∫ f d(mu x)} ∂nu`.
+* `measure_ne_integral_pos_of_two_atoms`,
+  `measure_chainCompensated_jumpChain_pos` — die Positivität daraus.
+* `mm1ChainKernel`, `mm1AtTwo`, `mm1ChainKernel_apply_one`,
+  `mm1ChainKernel_apply_zero`, `integral_mm1ChainKernel_zero`,
+  `integral_mm1ChainKernel_one`, `integral_mm1ChainKernel_ne`,
+  `tendsto_integral_mul_jumpChain_mm1`,
+  `measure_chainCompensated_jumpChain_pos_mm1` — die Probe **auf Daten**, über
+  der eingebetteten Kette der M/M/1-Warteschlange bei `β = δ = 1`.
+
+#### Befund 1, und er ist der Zweck des Laufs: `hPf` ist jetzt nichttrivial eingelöst, und der leere Warteraum ist die Stelle, an der der Kompensator zwei Werte annimmt
+
+Der Vorlauf hatte die letzte Voraussetzung benannt, die nur in ihrer trivialen
+Gestalt dastand: `hPf` — `Pf ∘ Ξ i` ist `Γ i`-meßbar —, bei der i.i.d.-Kette
+`measurable_const`, weil der Einschrittkern jeden Zustand nach `ν` schickt.
+
+Über der eingebetteten Sprungkette ist `Pf x = ∫ f d(mu x)`, und
+`integral_mm1ChainKernel_ne` rechnet auf Daten nach, daß das keine Konstante ist:
+`Pf 0 = 0` und `Pf 1 = 2⁻¹`. Der Grund ist hübsch und liegt an der Warteschlange
+selbst — **vom leeren Warteraum aus kann sie nur wachsen**, also ist
+`mm1ChainKernel 0` ein Diracmaß, während sie von `1` aus mit gleicher
+Wahrscheinlichkeit auf und ab geht. Die Rückfallklausel von `birthDeathKernel`
+tut dabei nichts: die Sterberate verschwindet bei `0`, die Geburtsrate nicht,
+also ist die Gesamtrate positiv und der Kern ist die gewöhnliche Mischung mit
+den Gewichten `1` und `0`.
+
+Damit ist keine Voraussetzung von
+`tendsto_integral_mul_rescaledChain_natural` mehr übrig, die nur trivial
+eingelöst wäre.
+
+#### Befund 2: die Nichtdegeneriertheit ist eine Rechnung und keine Konstruktion
+
+Der Vorlauf hat die Nichtdegeneriertheit durch einen **Zeugen** belegt — einen
+Zylinder, auf dem sich die kompensierte Kette bewegt. Über der Sprungkette geht
+mehr, und es ist billiger:
+`measure_chainCompensated_jumpChain_eq` **berechnet** die Masse, auf der sie sich
+im ersten Schritt bewegt, und es kommt
+
+    ∫⁻ x, mu x {y | f y ≠ ∫ f d(mu x)} ∂nu
+
+heraus — die Masse, die der Einschrittkern von seinem eigenen Mittelwert weg
+legt, gemittelt über das Anfangsgesetz. Der Weg ist die Aufspaltung
+`comp_chainKernel_map_split` (das Gesetz von `(x 0, geshiftete Kette)` ist
+`nu ⊗ₘ (chainKernel mu ∘ₖ mu)`), dann `Measure.compProd_apply`, dann
+`comp_chainKernel_map_zero` am gestarteten Maß `mu x`.
+
+**Was das ändert:** der degenerierte Fall ist nicht mehr das Ausbleiben eines
+Arguments, sondern das Verschwinden einer benannten Größe. Eine deterministische
+Kette hat `mu x = δ_{g(x)}`, also `∫ f d(mu x) = f (g x)`, also ist die Menge
+`{y | f y ≠ ∫ f d(mu x)}` `mu x`-leer und die Zahl ist `0`. Man sieht der Formel
+an, warum die Probe des Vorlaufs mit einer konstanten Kette nichts belegt hätte.
+
+#### Befund 3: die Zielmenge ist zustandsabhängig, und trotzdem muß nichts meßbar sein
+
+`x ↦ mu x {y | f y ≠ ∫ f d(mu x)}` ist ein Kern, ausgewertet an einer Menge, die
+**vom Zustand abhängt**; seine Meßbarkeit wäre
+`ProbabilityTheory.Kernel.measurable_kernel_prodMk_left` und eine
+Kongruenz. Gebraucht wird sie nicht: die untere Schranke in
+`measure_chainCompensated_jumpChain_pos` ist ein **Indikator**, also reicht
+`lintegral_mono` punktweise, und `lintegral_indicator` zusammen mit
+`setLIntegral_const` gibt `c * nu A`. Dieselbe Bauart wie Befund 5 des
+Vorlaufs — die Darstellung, die Mathlib wählt, spart eine Voraussetzung, die auf
+Papier selbstverständlich dastünde.
+
+#### Befund 4: `ℝ≥0∞` steht 75mal in dieser Datei und **kein einziges Mal im Code**
+
+Der Entwurf lief freistehend durch und scheiterte beim Einbau an
+`error: expected token` — die Datei hat `open scoped NNReal`, aber **nicht**
+`open scoped ENNReal`, und `ℝ≥0∞` ist skopierte Notation des Namensraums
+`ENNReal`. Alle 75 Vorkommen stehen in Kommentaren, wo sie niemand elaboriert;
+im Code heißt der Typ `ENNReal`.
+
+Das ist eine Falle für jeden Entwurf, der gegen die gebaute `.olean` geprüft und
+dann eingefügt wird: `scratch/`-Dateien dürfen ihre eigenen `open`-Zeilen haben,
+die Zieldatei hat sie nicht. **Beim Einbau ist die `open`-Zeile der Zieldatei zu
+lesen, nicht die des Entwurfs**, und `scripts/check_suggested.py` ist der einzige
+Lauf, der das findet.
+
+#### Befund 5: die Brücke zwischen Blockalgebra und Filtration ist ein Einzeiler und war die ganze fehlende Arbeit
+
+`condExp_chain_mark_jumpMeasure` stand seit dem 2026-09-13 und war für Punkt 3
+der Gruppe A von Teil C gebaut; `tendsto_integral_mul_rescaledChain_natural`
+verlangt dieselbe Aussage über `naturalFiltration`. Zwischen beiden liegt allein
+`naturalFiltration_eq_comap_block`, und der Beweis ist
+`MeasurableSpace.comap_iSup`, `MeasurableSpace.comap_comp` und eine
+Antisymmetrie über zwei Indexmengen. **Die Verbindung von Meilenstein 10 zu
+Meilenstein 4 hing an einer σ-Algebra-Gleichung und an nichts sonst.**
+
+Das ist auch die Antwort auf die Frage, die der Vorschlag gestellt hat — ob der
+reskalierte Sprungprozeß im Rahmen des Konvergenzsatzes überhaupt ausdrückbar
+ist. Er ist es, und zwar ohne jede Bedingung an `E` außer seiner meßbaren
+Struktur.
+
+#### Was offen bleibt
+
+* **`(K3)` ist über der Sprungkette exakt eingelöst**, also ist die Konklusion
+  von `tendsto_integral_mul_jumpChain` wieder eine Folge von Nullen. Die
+  gestörte Fassung, die die Abschätzung anwirft, gibt es bisher nur über der
+  i.i.d.-Kette (`tendsto_integral_mul_coordChain_perturbed`); sie ist vom Kern
+  unabhängig und wurde deshalb nicht verdoppelt. Wer beides in einer Probe will,
+  stört `tendsto_integral_mul_jumpChain` genauso.
+* Die Voraussetzungen **(a) und (b)** von `mpSolution_of_tendsto` bleiben, wie
+  die beiden Vorläufe sie hinterlassen haben: sie sind die Eingabe eines
+  Straffheitsarguments, das das Manuskript ausdrücklich nicht liefert.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die Lücke zwischen dem Gitter der Probe und der Zeit des Sprungprozesses
+   benennen und schließen.** *Der Befund, der dahintersteht, ist am Quelltext
+   nachgesehen:* `jumpProcess lam t ω = stepPath (jumpTime lam ω.1 ω.2) ω.1 t`
+   (`Suggested.lean:7002`), also ist der Sprungprozeß **schon** die eingebettete
+   Kette, gelesen am Index `stepIndex (jumpTime lam ω.1 ω.2) t`
+   (`:6660`). Die Probe liest sie dagegen am Index `⌊n · t⌋`. Die beiden Indizes
+   stimmen **nicht** überein, und der Unterschied ist keine Buchhaltung: der
+   erste ist zufällig, der zweite deterministisch, und daß sie bei konstanter
+   Rate `n` für großes `n` zusammenrücken, ist das Gesetz der großen Zahlen für
+   die Wartezeiten. *Aussage, die zu bauen ist:*
+   `jumpProcess_eq_jumpChain_stepIndex` — die Identität oben als Lemma, sie ist
+   `rfl` bis auf `stepPath` — und darüber die Frage, ob
+   `tendsto_integral_mul_jumpChain` mit `⌊n · t⌋` durch `stepIndex` ersetzt noch
+   gilt. *Warum jetzt:* die Probe belegt bisher eine Aussage über die
+   **Sprungnummer**, das Manuskript spricht in `ex:invariance` von der
+   **Zeit**, und diese Lücke steht in keinem der beiden Läufe, die die Probe
+   gebaut haben. Sie zuerst auszusprechen ist mehr wert, als sie zu schließen.
+2. **Die Störung auf die Sprungkette heben.** Ein Vierzeiler nach dem Muster
+   von `tendsto_integral_mul_coordChain_perturbed`, damit die Probe auf Daten
+   sowohl `hPf` nichttrivial als auch die Abschätzung nichttrivial bedient.
+   Billig, und es schließt den einzigen Punkt unter „Was offen bleibt", der
+   Arbeit und keine Entscheidung ist.
+3. **Die Entscheidung über das Lake-Target dem Nutzer vorlegen** (Symlink
+   `TauCetiRoadmap → TauCeti` oder Umbenennung des Verzeichnisses), unverändert
+   seit sechs Läufen. Es ist eine Frage und keine Arbeit.
