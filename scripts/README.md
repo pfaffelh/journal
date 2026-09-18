@@ -21,7 +21,13 @@ python3 scripts/mathlib_index.py v4331      # Deklarationsindex von v4.33.1
 python3 scripts/check_citations.py          # -> _citations/report.md
 python3 scripts/check_negatives.py          # -> _citations/negatives.md
 python3 scripts/check_suggested.py          # -> _citations/lean_check.md
+python3 scripts/check_master.py             # -> _citations/lean_check_master.md
 ```
+
+**Seit dem 2026-09-18 ist `check_master.py` die maßgebliche Prüfung** und
+`check_suggested.py` die Gegenprobe: die Kette ist auf Mathlib `master`
+umgestellt, und ihre Fehler gegen v4.33.1 sind zu **berichten**, nicht zu
+beheben.
 
 `git fetch upstream master` gehört davor, und der Commit gehört in den
 Laufbericht.
@@ -68,6 +74,25 @@ Laufbericht.
 
   ```
   python3 scripts/check_axioms.py MartingaleProblems isStoppingTime_jumpTime
+  ```
+
+* **`check_master.py`** ist `check_suggested.py` gegen den Worktree
+  `~/Code/lean/mathlib-master` auf `upstream/master`. Es leitet das
+  Repositorium aus dem eigenen Dateipfad ab, arbeitet also im Worktree, aus dem
+  es aufgerufen wird, und nicht im Hauptcheckout.
+* **`check_axioms_master.py`** ist `check_axioms.py` gegen denselben Worktree.
+  Es braucht den `.olean`-Baum, den `check_master.py` anlegt, und ist deshalb
+  nach ihm zu laufen.
+* **`show_master_errors.py`** zeigt die Meldungen eines `check_master.py`-Laufs
+  **ungekürzt**, wahlweise auf einen Zeilenbereich eingeschränkt;
+  **`master_error_families.py`** gruppiert sie nach dem Kopf der Anwendung, in
+  der sie auftreten, also nach dem Mathlib-Namen, dessen Signatur sich geändert
+  hat. Beide sind Lesehilfen und ersetzen `_citations/lean_check_master.md`
+  nicht.
+
+  ```
+  python3 scripts/show_master_errors.py MartingaleProblems 3000 3200
+  python3 scripts/master_error_families.py MartingaleProblems
   ```
 
 * **`count_sections.py`** und **`count_range.py`** zählen Zeilen und

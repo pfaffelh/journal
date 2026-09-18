@@ -7366,7 +7366,7 @@ theorem SkorokhodSpace.measurableEmbedding_piDense [CompleteSpace E]
     MeasurableEmbedding (fun f : D(ι, E) => fun t : D => f.toFun t) := by
   haveI := hD.to_subtype
   refine Measurable.measurableEmbedding
-    (measurable_pi_lambda _ fun t => SkorokhodSpace.measurable_eval (t : ι)) ?_
+    (measurable_pi_iff.mpr fun t => SkorokhodSpace.measurable_eval (t : ι)) ?_
   rintro ⟨f, hf⟩ ⟨g, hg⟩ hfg
   have hEq : f = g := hf.eq_of_eqOn_dense hg hD' fun t ht => congrFun hfg ⟨t, ht⟩
   simp only [SkorokhodSpace.mk.injEq]
@@ -10777,16 +10777,15 @@ from `SkorokhodSpace.measurable_eval` of Milestone 6.  Measurability, unlike
 continuity, needs no hypothesis on the times: evaluation is measurable at every
 point of the index and discontinuous at some.
 
-The coordinatewise step is `measurable_pi_lambda`, which is the name on
-`v4.33.1`, the version this file is checked against.  On `upstream/master` it is
-a **deprecated alias** of `Measurable.of_eval`
-(`MeasureTheory/MeasurableSpace/Constructions.lean:600`, deprecated 2026-08-20),
-and `Measurable.of_eval` does not exist on `v4.33.1`; there is no spelling that
-serves both, and this is the one declaration of this file that would warn
-against `master`. -/
+The coordinatewise step is `measurable_pi_iff`
+(`MeasureTheory/MeasurableSpace/Constructions.lean`), and it is deliberately
+*not* `measurable_pi_lambda`: that name takes the function as an explicit
+argument and is a **deprecated alias** of `Measurable.of_eval` since
+2026-08-20, while `Measurable.of_eval` in turn does not exist on `v4.33.1`.
+The `iff` is the one spelling that stands on both. -/
 theorem SkorokhodSpace.measurable_evalPi {α : Type*} (t : α → ι) :
     Measurable fun (f : D(ι, E)) (i : α) => f.toFun (t i) :=
-  measurable_pi_lambda _ fun i => SkorokhodSpace.measurable_eval (t i)
+  measurable_pi_iff.mpr fun i => SkorokhodSpace.measurable_eval (t i)
 
 /-- **The finite dimensional distributions converge at the times at which the
 limit law has no fixed discontinuity**, Ethier--Kurtz, Theorem 3.7.8(a).  The
@@ -11991,7 +11990,7 @@ theorem abs_prod_sub_prod_le {κ : Type*} (s : Finset κ) (a b : κ → ℝ) {C 
       have hpa : |∏ i ∈ s, a i| ≤ C ^ s.card := by
         rw [Finset.abs_prod]
         calc ∏ i ∈ s, |a i| ≤ ∏ _i ∈ s, C :=
-              Finset.prod_le_prod (fun i _ => abs_nonneg _) (fun i _ => ha i)
+              Finset.prod_le_prod₀ (fun i _ => abs_nonneg _) (fun i _ => ha i)
           _ = C ^ s.card := Finset.prod_const C
       have hCn : (0 : ℝ) ≤ C ^ s.card := pow_nonneg hC0 _
       have hsum0 : (0 : ℝ) ≤ ∑ i ∈ s, |a i - b i| :=
@@ -12054,7 +12053,7 @@ theorem SkorokhodSpace.dist_integral_evalPi_le_of_forall_dist_le {κ : Type*} [F
     intro u f
     rw [Finset.abs_prod]
     calc ∏ i, |F i (f.toFun (u i))| ≤ ∏ _i : κ, C :=
-          Finset.prod_le_prod (fun i _ => abs_nonneg _) (fun i _ => habs i (u i) f)
+          Finset.prod_le_prod₀ (fun i _ => abs_nonneg _) (fun i _ => habs i (u i) f)
       _ = C ^ Fintype.card κ := by rw [Finset.prod_const, Finset.card_univ]
   have hint : ∀ u : κ → ℝ, Integrable (fun f : D(ℝ, E) => ∏ i, F i (f.toFun (u i))) μ := fun u =>
     (integrable_const (C ^ Fintype.card κ)).mono' (hmeas u).aestronglyMeasurable

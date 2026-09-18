@@ -29,7 +29,11 @@ import os, shutil, subprocess, sys, time
 
 MW = os.path.abspath(sys.argv[1] if len(sys.argv) > 1
                      else os.path.expanduser('~/Code/lean/mathlib-master'))
-JOURNAL = '/home/pfaffelh/Code/lean/journal'
+# Das Repositorium, in dem *dieses Skript* liegt -- nicht der Hauptcheckout.
+# Ein Lauf arbeitet in einem Worktree, und geprüft gehören seine Quellen, nicht
+# die von `master`; ebenso wird der Bericht dorthin geschrieben, wo er committet
+# wird.
+JOURNAL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE = os.path.join(JOURNAL, 'Journal/Blog/MartingaleProblem/TauCeti')
 OUT = os.path.join(JOURNAL, 'scripts/_citations')
 PREFIX = 'TauCetiRoadmap'

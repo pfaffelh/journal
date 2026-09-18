@@ -4543,20 +4543,21 @@ und dazu den Begriff samt Algebra in
 * die Kettenregel identifiziert `deriv (g ∘ C)` fast überall;
 * und `integral_deriv_eq_sub` schließt.
 
-**Die eine Lücke, die dabei blieb, und sie ist die siebzehnte für `TODO.md`
-Punkt 8.** Mathlib hat die Abgeschlossenheit der absoluten Stetigkeit unter
-Summe, Produkt und Skalar, und es hat „lipschitz ⇒ absolut stetig"
-(`LipschitzOnWith.absolutelyContinuousOnInterval`), aber **keine
-Kompositionsaussage**. Gebraucht wird sie, weil `g ∘ C` mit `g = 1 − exp(−·)`
-gebildet wird:
+**Was hier einmal eine Lücke war, ist keine mehr.** Der gebrauchte Baustein ist
 
-> `LipschitzOnWith.comp_absolutelyContinuousOnInterval` — ist `f` absolut stetig
-> auf `uIcc a b` und `g` lipschitz auf einer Menge `s`, in die `f` das Intervall
-> abbildet, so ist `g ∘ f` absolut stetig auf `uIcc a b`.
+> `LipschitzOnWith.comp_absolutelyContinuousOnInterval` — ist `g` absolut stetig
+> auf `uIcc a b` und `f` lipschitz auf einer Menge `t`, in die `g` das Intervall
+> abbildet, so ist `f ∘ g` absolut stetig auf `uIcc a b`.
 
-Die Lipschitzschranke wird **nur auf `s`** verlangt und nicht global; das ist
-genau die Abschwächung, ohne die `exp` nicht durchkäme, und `s` wird im
-Anwendungsfall als Kompaktum um das Bild von `C` gewählt.
+Die Lipschitzschranke wird **nur auf `t`** verlangt und nicht global; das ist
+genau die Abschwächung, ohne die `exp` nicht durchkäme, und `t` wird im
+Anwendungsfall als Kompaktum um das Bild von `C` gewählt. **Mathlib hat den Satz
+seit dem 2026-08-25 (#42996)** unter genau diesem Namen
+(`MeasureTheory/Function/AbsolutelyContinuous.lean:328`), und zwar allgemeiner:
+die äußere Funktion darf in einen beliebigen pseudometrischen Raum gehen, wo
+unsere reellwertig war. Er wird seit dem 2026-09-18 von dort genommen; die eigene
+Fassung ist gestrichen, und die Stelle ist **kein** Punkt mehr für `TODO.md`
+Punkt 8.
 
 **Und was dabei abgefallen ist, ist mehr als die Rechnung.** Der Zwischensatz ist
 die Substitutionsregel selbst, in der Allgemeinheit, die Mathlib fehlt:
@@ -8241,24 +8242,27 @@ and 11 use them.
   `[FirstCountableTopology ι]` is what makes the filter countably generated and
   so produces `u`. Proved on 2026-09-17.
 * `MeasureTheory.UnifIntegrable.of_norm_le_ae`, uniform integrability passes to a
-  family dominated in norm: if `‖g i x‖ ≤ ‖f i x‖` almost everywhere for every
-  `i` and `f` is uniformly integrable, so is `g`. Nothing is assumed of `g` —
-  neither measurability nor integrability — and the two families may take their
-  values in different normed groups, which is what the use below needs.
+  family dominated in norm: if `g i` is a.e. strongly measurable and
+  `‖g i x‖ ≤ ‖f i x‖` almost everywhere for every `i`, and `f` is uniformly
+  integrable, then so is `g`. The two families may take their values in
+  different normed groups, which is what the use below needs.
 
-  In **v4.33.1**, the binding of this development, Mathlib has
-  `UnifIntegrable.add`, `.neg`, `.sub`, `.ae_eq`, `.indicator` and `.restrict`
-  (`MeasureTheory/Function/UniformIntegrable.lean:104` to `:155`) and **no
-  domination lemma**. On `upstream/master` it has one, `UnifIntegrable.ae_mono`
-  (`ibid.:142` at `92fc6042c1d`, 2026-09-16) — so this is not a gap to be
-  reported upstream, and the entry says so rather than claiming an absence that
-  has since been filled. Two differences remain and are the reason the lemma
-  stands here rather than being waited for: `ae_mono` asks
-  `∀ i, AEStronglyMeasurable (f i) μ` of the **dominated** family, which this one
-  does not, and it quantifies both families over the **same** normed group, while
-  the use below has a real dominating family and a `𝕂` valued dominated one.
-  `UnifIntegrable` itself is restated on master, so the two proofs are not the
-  same proof.
+  Mathlib has a domination lemma, `UnifIntegrable.ae_mono`
+  (`MeasureTheory/Function/UniformIntegrable.lean:142`) — so this is not a gap to
+  be reported upstream, and the entry says so rather than claiming an absence
+  that has since been filled. **One** difference remains and is the reason the
+  lemma stands here rather than being waited for: `ae_mono` quantifies both
+  families over the **same** normed group (`{f g : ι → α → β}` in its section),
+  while the use below has a real dominating family and a `𝕂` valued dominated
+  one.
+
+  **The measurability of the dominated family is not a convenience.** Until
+  2026-09-18 this entry said “nothing is assumed of `g` — neither measurability
+  nor integrability”, and against `v4.33.1` that was true. It is **false** on
+  `master`, where `eLpNorm` is `∞` for a function that is not a.e. strongly
+  measurable: without the hypothesis the conclusion does not hold, and so the
+  statement — not merely its proof — had to change. It is the one place in this
+  roadmap where the two Mathlib versions differ in what is true.
 
   The proof is `eLpNorm_mono_ae` applied to the indicators, which are dominated
   on the set by hypothesis and off it because both vanish. Proved on 2026-09-17.

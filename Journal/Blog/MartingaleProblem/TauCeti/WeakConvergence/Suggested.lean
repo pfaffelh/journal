@@ -775,8 +775,7 @@ theorem le_liminf_measure_preimage_of_isOpen [TopologicalSpace E] [OpensMeasurab
   have hΦm : Measurable Φ := hΦcont.measurable
   have hcomp : ∀ (F : (κ → ℝ) →ᵇ ℝ) (ρ : Measure E), ∫ y, F y ∂(ρ.map Φ) = ∫ x, F (Φ x) ∂ρ :=
     fun F ρ => integral_map hΦm.aemeasurable F.continuous.aestronglyMeasurable
-  have hlim : Tendsto (fun n => (μ n).map (hΦm.aemeasurable)) 𝓕
-      (𝓝 (μ₀.map hΦm.aemeasurable)) := by
+  have hlim : Tendsto (fun n => (μ n).map Φ) 𝓕 (𝓝 (μ₀.map Φ)) := by
     rw [ProbabilityMeasure.tendsto_iff_forall_integral_tendsto]
     intro F
     simp only [ProbabilityMeasure.toMeasure_map, hcomp]
@@ -1949,13 +1948,12 @@ theorem isConvergenceDetermining_pi [Countable ι] [∀ i, TopologicalSpace (S i
       simp
   -- Step 1: every one-coordinate marginal converges.
   have hmarg : ∀ i, Tendsto
-      (fun n => (μ n).map (f := fun x : ∀ j, S j => x i) (measurable_pi_apply i).aemeasurable)
-      atTop (𝓝 (ν.map (f := fun x : ∀ j, S j => x i) (measurable_pi_apply i).aemeasurable)) := by
+      (fun n => (μ n).map (fun x : ∀ j, S j => x i))
+      atTop (𝓝 (ν.map (fun x : ∀ j, S j => x i))) := by
     intro i
     refine hcd i _ _ fun f hf => ?_
     have hint : ∀ ρ : ProbabilityMeasure (∀ j, S j),
-        ∫ y, f y ∂((ρ.map (f := fun x : ∀ j, S j => x i)
-            (measurable_pi_apply i).aemeasurable : ProbabilityMeasure (S i)) : Measure (S i))
+        ∫ y, f y ∂((ρ.map (fun x : ∀ j, S j => x i) : ProbabilityMeasure (S i)) : Measure (S i))
           = ∫ x, f (x i) ∂(ρ : Measure (∀ j, S j)) := by
       intro ρ
       rw [ProbabilityMeasure.toMeasure_map]
@@ -1970,8 +1968,7 @@ theorem isConvergenceDetermining_pi [Countable ι] [∀ i, TopologicalSpace (S i
     have h1 := isTightMeasureSet_of_tendsto (hmarg i)
     have hset : (fun ρ : Measure (∀ j, S j) => ρ.map (fun x => x i)) ''
         {((μ n : ProbabilityMeasure (∀ j, S j)) : Measure (∀ j, S j)) | n}
-        = {((μ n).map (f := fun x : ∀ j, S j => x i)
-            (measurable_pi_apply i).aemeasurable : Measure (S i)) | n} := by
+        = {((μ n).map (fun x : ∀ j, S j => x i) : Measure (S i)) | n} := by
       ext ρ
       constructor
       · rintro ⟨_, ⟨n, rfl⟩, rfl⟩
@@ -3997,7 +3994,8 @@ theorem exists_coupling_of_partition [PseudoMetricSpace E] [OpensMeasurableSpace
         (π ij.1 ij.2 • ((condLaw μ (A ij.1)).prod (condLaw ν (A ij.2)))).map Prod.fst
           = π ij.1 ij.2 • condLaw μ (A ij.1) := by
       intro ij
-      rw [Measure.map_smul, Measure.map_fst_prod, measure_univ, one_smul]
+      rw [Measure.map_smul _ measurable_fst.aemeasurable, Measure.map_fst_prod, measure_univ,
+        one_smul]
     simp_rw [hstep]
     ext S hS
     rw [Measure.sum_apply _ hS]
@@ -4018,7 +4016,8 @@ theorem exists_coupling_of_partition [PseudoMetricSpace E] [OpensMeasurableSpace
         (π ij.1 ij.2 • ((condLaw μ (A ij.1)).prod (condLaw ν (A ij.2)))).map Prod.snd
           = π ij.1 ij.2 • condLaw ν (A ij.2) := by
       intro ij
-      rw [Measure.map_smul, Measure.map_snd_prod, measure_univ, one_smul]
+      rw [Measure.map_smul _ measurable_snd.aemeasurable, Measure.map_snd_prod, measure_univ,
+        one_smul]
     simp_rw [hstep]
     ext S hS
     rw [Measure.sum_apply _ hS]
@@ -4049,7 +4048,7 @@ theorem exists_coupling_of_partition [PseudoMetricSpace E] [OpensMeasurableSpace
         by_cases hπ0 : π i i = 0
         · simp [hπ0]
         have hle1 : π i i ≤ μ (A i) := hπp i ▸ ENNReal.le_tsum i
-        have hle2 : π i i ≤ ν (A i) := hπq i ▸ ENNReal.le_tsum i
+        have hle2 : π i i ≤ ν (A i) := hπq i ▸ ENNReal.le_tsum (f := fun j => π j i) i
         have hμ0 : μ (A i) ≠ 0 := fun h => hπ0 (le_antisymm (h ▸ hle1) bot_le)
         have hν0 : ν (A i) ≠ 0 := fun h => hπ0 (le_antisymm (h ▸ hle2) bot_le)
         have hsub : {z : E × E | ε < dist z.1 z.2}
@@ -4203,7 +4202,8 @@ event. -/
 theorem mul_condRow {π : ℕ → ℕ → ℝ≥0∞} {q : ℕ → ℝ≥0∞} (hq : ∀ k, ∑' i, π i k = q k)
     (hqtop : ∀ k, q k ≠ ∞) (k i : ℕ) : q k * condRow π q k i = π i k := by
   by_cases h : q k = 0
-  · have hz : π i k = 0 := le_antisymm (by rw [← h, ← hq k]; exact ENNReal.le_tsum i) bot_le
+  · have hz : π i k = 0 :=
+      le_antisymm (by rw [← h, ← hq k]; exact ENNReal.le_tsum (f := fun j => π j k) i) bot_le
     simp [h, hz]
   · rw [condRow, if_neg h, mul_comm, ENNReal.div_mul_cancel h (hqtop k)]
 
@@ -4361,7 +4361,8 @@ theorem exists_measurable_pair_of_partition [PseudoMetricSpace E] [OpensMeasurab
   have hYlaw : (stageMeasure μ ν A).map (fun z : (E × ℝ) × (ℕ → E) => z.1.1) = ν := by
     have h1 : (fun z : (E × ℝ) × (ℕ → E) => z.1.1) = Prod.fst ∘ Prod.fst := rfl
     rw [stageMeasure, h1, ← Measure.map_map measurable_fst measurable_fst,
-      Measure.map_fst_prod, Measure.map_smul, Measure.map_fst_prod]
+      Measure.map_fst_prod, Measure.map_smul _ measurable_fst.aemeasurable,
+      Measure.map_fst_prod]
     simp
   -- the bad event, and its two parts
   have hBm : MeasurableSet
@@ -4661,7 +4662,8 @@ theorem exists_measurable_pair_of_partition_subset [PseudoMetricSpace E]
   · -- the limit variable has law `ν`
     have h1 : (fun z : (E × ℝ) × (ℕ × ℕ → E) => z.1.1) = Prod.fst ∘ Prod.fst := rfl
     rw [stagesMeasure, h1, ← Measure.map_map measurable_fst measurable_fst,
-      Measure.map_fst_prod, Measure.map_smul, Measure.map_fst_prod]
+      Measure.map_fst_prod, Measure.map_smul _ measurable_fst.aemeasurable,
+      Measure.map_fst_prod]
     simp
   · -- the bad event of stage `n`, as an inclusion
     intro n
@@ -4673,7 +4675,7 @@ theorem exists_measurable_pair_of_partition_subset [PseudoMetricSpace E]
             (univ : Set (ℕ × ℕ → E)))
           ∪ {z : (E × ℝ) × (ℕ × ℕ → E) | z.2 (n, Φ n z.1) ∉ A n (Φ n z.1)} := by
       intro z hz
-      simp only [Set.mem_setOf_eq, _root_.not_imp, not_or, not_lt] at hz
+      simp only [Set.mem_setOf_eq, Classical.not_imp, not_or, not_lt] at hz
       obtain ⟨hdist, hnot0, hξ⟩ := hz
       by_cases hν0 : ν (A n (j n z.1.1)) = 0
       · exact Or.inl ⟨⟨hν0, Set.mem_univ _⟩, Set.mem_univ _⟩
@@ -5272,10 +5274,8 @@ theorem tendsto_integral_of_tendstoInDistribution_of_uniformIntegrable
         ∫⁻ ω, ENNReal.ofReal (|X n ω| - min |X n ω| N) ∂(P n)) atTop (𝓝 0)) :
     Integrable Z P' ∧
       Tendsto (fun n => ∫ ω, X n ω ∂(P n)) atTop (𝓝 (∫ ω, Z ω ∂P')) := by
-  set μ : ℕ → ProbabilityMeasure ℝ := fun n =>
-    ⟨(P n).map (X n), Measure.isProbabilityMeasure_map (h.forall_aemeasurable n)⟩ with hμ
-  set ν : ProbabilityMeasure ℝ :=
-    ⟨P'.map Z, Measure.isProbabilityMeasure_map h.aemeasurable_limit⟩ with hν
+  set μ : ℕ → ProbabilityMeasure ℝ := fun n => ⟨(P n).map (X n), inferInstance⟩ with hμ
+  set ν : ProbabilityMeasure ℝ := ⟨P'.map Z, inferInstance⟩ with hν
   have hcoeμ : ∀ n, ((μ n : Measure ℝ)) = (P n).map (X n) := fun _ => rfl
   have hcoeν : ((ν : Measure ℝ)) = P'.map Z := rfl
   have hlin : ∀ (N n : ℕ),
@@ -5839,7 +5839,7 @@ theorem of_indicator_mem_ioiCells {K : Set (Ω → ℝ)} {P : (Ω → ℝ) → P
   refine mono_lim (fun k x => ∏ i : Fin l.length,
     ioiApprox k ((l[(i : ℕ)]'i.isLt).1 x - (l[(i : ℕ)]'i.isLt).2)) _ ?_ ?_ ⟨1, ?_⟩ ?_
   · intro x k m hkm
-    exact Finset.prod_le_prod (fun i _ => ioiApprox_nonneg _ _)
+    exact Finset.prod_le_prod₀ (fun i _ => ioiApprox_nonneg _ _)
       (fun i _ => monotone_ioiApprox _ hkm)
   · intro k
     exact of_continuous_comp_of_isMulSystem hK hKbdd basic const add smul mono_lim
@@ -5853,7 +5853,7 @@ theorem of_indicator_mem_ioiCells {K : Set (Ω → ℝ)} {P : (Ω → ℝ) → P
       Finset.prod_nonneg fun i _ => ioiApprox_nonneg _ _
     have h1 : (∏ i : Fin l.length,
         ioiApprox k ((l[(i : ℕ)]'i.isLt).1 x - (l[(i : ℕ)]'i.isLt).2)) ≤ 1 :=
-      Finset.prod_le_one (fun i _ => ioiApprox_nonneg _ _) fun i _ => ioiApprox_le_one _ _
+      Finset.prod_le_one₀ (fun i _ => ioiApprox_nonneg _ _) fun i _ => ioiApprox_le_one _ _
     rw [abs_le]
     exact ⟨by linarith, h1⟩
   · intro x
