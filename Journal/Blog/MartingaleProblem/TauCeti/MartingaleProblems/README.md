@@ -9917,6 +9917,75 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   needs a recursion. The neighbourhood argument is what lets the second step keep
   its sequence below a time `t` that is not in `D`. **In Lean** on 2026-09-17,
   seventeenth run.
+* `integral_sub_mul_eq_zero_jumpProcessE_time`, `_apply`,
+  `integral_sub_mul_eq_zero_map_jumpPath_time` und
+  `integral_sub_mul_eq_zero_jumpPath_time`: **die Orthogonalität an der *Zeit*,
+  über der Sprungkonstruktion.** **In Lean** am 2026-09-18, neunter Lauf. Für ein
+  Testprozeß des Sprungoperators und `s ≤ t` verschwindet
+  `∫ (Y t − Y s) · W` gegen jedes beschränkte, für die Vergangenheit bei `s`
+  meßbare Gewicht — über dem Stichprobenraum der Konstruktion, in expliziter
+  Gestalt an einer beschränkten meßbaren Testfunktion
+  (`∫ ((f (X t) − ∫_0^t 𝒜f (X r) dr) − (f (X s) − ∫_0^s 𝒜f (X r) dr)) · W = 0`),
+  über dem kanonischen Pfadraum von Meilenstein 6 unter dem Bildmaß, und in der
+  Gestalt, die Voraussetzung (c) liest: Zuwachs und Gewicht beide mit `jumpPath`
+  verkettet.
+  **Damit ist die Lücke geschlossen, die der Abschnittskopf vor `StepIndexJunk`
+  benennt** — dort steht, die Probe beweise eine Orthogonalität an der
+  *Sprungnummer* und `ex:invariance` spreche von einer an der *Zeit*, und nichts
+  schließe das.
+  **Die Zeitfassung braucht weder die Augmentierung noch eine Stoppzeit**, weil
+  `s` und `t` nicht zufällig sind. Alles, was die Sprungnummernfassung teuer
+  machte, tritt durch `stepIndex` als *Index* ein: der Zähler ist nur außerhalb
+  der Explosionsmenge eine Stoppzeit (`stepIndex_le_iff`) und nur dort monoton in
+  der Zeit (`not_stepIndex_mono_time`). Hier liest keine Aussage `{stepIndex ≤ n}`
+  als Ereignis, also ist keine Nullmenge aufzunehmen, und die Filtration ist das
+  schlichte `jumpFiltrationE`.
+  **Bezahlt wird statt dessen mit der Martingaleigenschaft in stetiger Zeit.**
+  Die Sprungnummernfassung ruht auf `martingale_chainCompensated`, einer
+  Einschrittidentität über `ℕ`; diese hier ruht auf
+  `jumpProcessE_isMPSolution_of_nonneg`, also auf dem ganzen Meilenstein 4. Die
+  beiden Orthogonalitäten sind nicht zwei Lesarten eines Satzes, sondern ruhen auf
+  verschiedenen Martingalen.
+  **Die Schranke `lam ≤ L` bleibt, `0 < lam` fällt weg.** Die Rate darf
+  verschwinden, sofern der Kern dort absorbiert; die lineare Geburt-Tod-Kette an
+  ihrem absorbierenden Zustand ist also nicht ausgeschlossen. `[MeasurableEq E]`
+  ist von derselben Stelle geerbt, und keine Topologie auf `E` kommt vor.
+* `tendsto_integral_mul_jumpPath_time`: **Voraussetzung (c) an einer
+  approximierenden Familie von Sprungkonstruktionen.** **In Lean** am 2026-09-18,
+  neunter Lauf. Jedes Glied hat eigene Rate, eigenen Kern, eigenes Anfangsgesetz
+  und eigene Schranke; hinzuzugeben ist allein die `L¹`-Approximation des
+  kanonischen Zuwachses durch den Zuwachs des Testprozesses — das ist `(K3)` des
+  Manuskripts an der **Zeit** statt an der Sprungnummer. Der Grenzwert ist Null,
+  weil **jedes** Glied exakt Null ist; die Arbeitsteilung ist dieselbe wie in
+  `tendsto_integral_mul_of_martingale`, eine Stufe darüber. Die Integrierbarkeit
+  des Zuwachses ist keine Voraussetzung, sondern fällt aus dem Martingal.
+* `isDetermining_of_comap`, `isDetermining_pathFiltration` und
+  `isDetermining_jumpPath`: **die ersten Zeugen für `IsDetermining`.** **In Lean**
+  am 2026-09-18, neunter Lauf. `IsDetermining` trägt den ganzen Meilenstein — alle
+  drei Fassungen des Konvergenzsatzes verlangen es —, und bis dahin war es in der
+  Datei **unbewohnt**: die einzige Aussage darüber war `IsDetermining.comp_fst`,
+  die einen Zeugen fortträgt und also einen braucht. Dasselbe Integritätsproblem,
+  das `Shift` vor dem Bau des kanonischen Pfadraums hatte, und dieselbe Antwort.
+  **Der Zeuge ist keine neue Idee, sondern die Definition der bedingten
+  Erwartung.** Ist die Filtration unten der Rückzug einer σ-Algebra oben, so
+  ziehen die Indikatoren der Mengen oben genau auf die Mengen der Vergangenheit
+  zurück, und die Orthogonalität gegen sie alle ist, was
+  `ae_eq_condExp_of_forall_setIntegral_eq` verbraucht. Die trennende Menge darf
+  also stets **alle** beschränkten meßbaren Funktionen der Vergangenheit sein; der
+  Inhalt einer schärferen — der trennenden Klassen des Manuskripts, `fact:sepcond`
+  — ist, daß eine kleinere genügt.
+  **Die starke Adaptiertheit der Familie ist Voraussetzung und nicht wegzulassen.**
+  `IsDetermining` folgert `P[Y t | 𝓕 s] =ᵐ Y s`, und dafür muß die rechte Seite
+  `𝓕 s`-meßbar sein; die Orthogonalität allein sagt darüber nichts. Die Definition
+  verlangt es zu Recht nicht — es ist eine Eigenschaft von `𝓧` und nicht von `𝓩` —,
+  also muß jeder Zeuge es liefern.
+  Über dem kanonischen Pfadraum ist die Rückzugsvoraussetzung
+  `MeasurableSpace.comap_id`, über der Sprungkonstruktion
+  `jumpFiltrationE_eq_comap_jumpPath`. Keine Topologie auf dem Pfadraum, keine
+  Separabilität, und über `ι` nichts als was `IsDetermining` selbst trägt.
+  **Damit sind über der Sprungkonstruktion nur noch die Voraussetzungen (a) und
+  (b) ohne Zeugen**; sie sind das Straffheitsargument, das das Manuskript
+  ausdrücklich nicht liefert.
 
 ## Milestone 11: the Skorokhod instances
 

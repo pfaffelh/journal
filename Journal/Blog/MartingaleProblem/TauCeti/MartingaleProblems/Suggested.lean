@@ -48,10 +48,24 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-18 (eighth run of that day), over the **whole** file and without an error, and
+2026-09-18 (ninth run of that day), over the **whole** file and without an error, and
 since the twenty-second run of 2026-09-17 with `autoImplicit=false` and
 `relaxedAutoImplicit=false`, as Mathlib itself builds.  Every declaration elaborates, and
 **no declaration carries `sorry`**.
+
+The ninth run of 2026-09-18 closed the gap the section header above `StepIndexJunk` names: the
+probe proves an orthogonality at the **jump number**, and `ex:invariance` speaks of one at the
+**time**.  `integral_sub_mul_eq_zero_jumpProcessE_time` and its three companions are the second,
+and `tendsto_integral_mul_jumpPath_time` is it in the shape hypothesis (c) is written in.  The
+finding is where the cost sits: at a deterministic time neither the augmentation nor a stopping
+time occurs -- everything that made the jump number version expensive enters through `stepIndex`
+as an *index* -- and what is paid instead is the martingale property in continuous time, so the
+two orthogonalities rest on different martingales and the time version rests on the deeper one.
+The same run found that `IsDetermining`, which all three versions of the convergence theorem
+carry, had **no witness anywhere in this file**, and built three: `isDetermining_of_comap`, and
+its instances over the canonical path space and over the jump construction.  What the witness
+says is that the determining set may always be taken to be all bounded measurable functions of
+the past, so that the content of a separating class is only that a *smaller* one will do.
 
 The eighth run of 2026-09-18 assembled hypothesis (c) of `mpSolution_of_tendsto` over the jump
 construction into one statement, `integral_sub_mul_eq_zero_jumpChain_stepIndex`, and on the way
@@ -34844,8 +34858,12 @@ Three statements make the distance between them exact.
   statement about the sequence and not about a sample point.
 
 What the probe therefore proves is an orthogonality at the **jump number**, and what
-`ex:invariance` speaks of is one at the **time**.  Nothing below closes that; it names it, and
-it says what the missing input is.
+`ex:invariance` speaks of is one at the **time**.  The section `JumpTimeOrthogonality` at the end
+of this file closes that, and its finding is that the two are not two readings of one theorem:
+the jump number version rests on `martingale_chainCompensated`, a one step identity over `ℕ`
+carried to a random index by optional sampling and therefore by the augmentation; the time
+version rests on `jumpProcessE_isMPSolution_of_nonneg`, the whole of Milestone 4, and needs
+neither a stopping time nor a null set, because `s` and `t` are not random.
 
 The junk value is in this block too, and it is worth its own statement.  `stepIndex_le_iff`
 says that `{stepIndex T t ≤ n}` is the event `t < T (n + 1)` *or* the explosion set, and the
@@ -36576,3 +36594,324 @@ theorem integral_sub_mul_eq_zero_jumpChain_stepIndex {lam : E → ℝ} {L s t : 
   simpa [RCLike.ofReal_real_eq_id] using key
 
 end JumpChainOrthogonality
+
+/-! ### The orthogonality at the time, and the filtration it does *not* need
+
+The previous block discharges hypothesis (c) of `mpSolution_of_tendsto` at the **jump number**:
+the increment of the compensated chain between the two renewal counts.  What `ex:invariance`
+speaks of is the increment between two **times**, and the section head before `StepIndexJunk`
+says that nothing below closes that gap.  This block closes it, and the surprise is where the
+cost went.
+
+**The time version needs neither the augmentation nor a stopping time, and the reason is that
+`s` and `t` are not random.**  Everything that made the jump number version expensive -- the
+renewal count is a stopping time only off the explosion set (`stepIndex_le_iff`), it is monotone
+in the time only there (`not_stepIndex_mono_time`), and a σ-algebra without the null sets sees
+neither -- enters through `stepIndex` as an *index*.  At a deterministic time the junk value is
+still inside `jumpProcessE`, but it is inside a process that the martingale theorem of Milestone
+4 already carries; no statement here reads `{stepIndex ≤ n}` as an event, so no null set has to
+be absorbed.  The filtration is therefore the plain `jumpFiltrationE`, and `Filtration.augment`
+does not occur.
+
+**What it costs instead is the martingale property in continuous time**, which the jump number
+version did not need: there the martingale was `martingale_chainCompensated`, a one step identity
+over `ℕ`; here it is `jumpProcessE_isMPSolution_of_nonneg`, the whole of Milestone 4.  That is
+the honest accounting -- the two orthogonalities are not two readings of one theorem, they rest
+on different martingales, and the time version rests on the deeper one.
+
+**The bound `lam ≤ L` survives, `0 < lam` does not.**  The jump number version asks for
+`0 < lam ≤ L` because the renewal count has to be integrable and the jump times have to exhaust
+the half line.  Here the rate may vanish, provided the kernel absorbs there (`habs`), which is
+the hypothesis `jumpProcessE_isMPSolution_of_nonneg` carries and nothing more; so the linear
+birth and death chain at its absorbing state is not excluded.  `[MeasurableEq E]` is inherited
+from the same place.
+
+Four statements: the orthogonality over the sample space of the construction, its explicit form
+at a bounded measurable test function, the same over the canonical path space of Milestone 6, and
+the form hypothesis (c) reads -- weight and increment both composed with `jumpPath`, integrated
+against `jumpMeasure`. -/
+
+section JumpTimeOrthogonality
+
+variable {E : Type*} [MeasurableSpace E]
+
+/-- **The orthogonality at the time, over the sample space of the jump construction.**
+
+For a test process of the jump operator and two times `s ≤ t`, the increment `Y t - Y s`
+integrates to zero against every bounded weight measurable for the past at `s`.
+
+This is `integral_sub_mul_eq_zero_of_martingale` on `jumpProcessE_isMPSolution_of_nonneg`, and
+the point of writing it out is the filtration: it is `jumpFiltrationE lam hlam s` and not its
+augmentation.  Compare `integral_sub_mul_eq_zero_jumpChain_stepIndex`, whose weight lives on
+`(clockFiltration E).augment (jumpMeasure mu nu)` because the renewal count is a stopping time
+only up to a null set.  A deterministic time is a stopping time of every filtration. -/
+theorem integral_sub_mul_eq_zero_jumpProcessE_time [MeasurableEq E] {lam : E → ℝ}
+    (hlam : Measurable lam) {L : ℝ} (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (mu : Kernel E E) [IsMarkovKernel mu]
+    (habs : ∀ x, lam x = 0 → mu x = Measure.dirac x)
+    (nu : Measure E) [IsProbabilityMeasure nu]
+    {Y : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ}
+    (hY : Y ∈ mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+      (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω))
+    {s t : ℝ≥0} (hst : s ≤ t) {W : (ℕ → E) × (ℕ → ℝ) → ℝ}
+    (hW : StronglyMeasurable[jumpFiltrationE lam hlam s] W) {b : ℝ} (hb : ∀ ω, ‖W ω‖ ≤ b) :
+    ∫ ω, (Y t ω - Y s ω) * W ω ∂(jumpMeasure mu nu) = 0 := by
+  have key := integral_sub_mul_eq_zero_of_martingale (𝕂 := ℝ)
+    (jumpProcessE_isMPSolution_of_nonneg hlam hlam0 hL mu habs nu Y hY) hst hW hb
+  simpa [RCLike.ofReal_real_eq_id] using key
+
+/-- **The same at a bounded measurable test function, written out.**
+
+`∫ ((f (X t) - ∫_0^t 𝒜f (X r) dr) - (f (X s) - ∫_0^s 𝒜f (X r) dr)) · W = 0`, which is the
+shape `ex:invariance` reads.  The membership in `mpFamily` is `mem_jumpOperator` and the defining
+identity is `rfl`; nothing is decided here that the previous statement did not decide. -/
+theorem integral_sub_mul_eq_zero_jumpProcessE_time_apply [MeasurableEq E] {lam : E → ℝ}
+    (hlam : Measurable lam) {L : ℝ} (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (mu : Kernel E E) [IsMarkovKernel mu]
+    (habs : ∀ x, lam x = 0 → mu x = Measure.dirac x)
+    (nu : Measure E) [IsProbabilityMeasure nu]
+    {f : E → ℝ} (hf : Measurable f) {C : ℝ} (hC : ∀ x, |f x| ≤ C)
+    {s t : ℝ≥0} (hst : s ≤ t) {W : (ℕ → E) × (ℕ → ℝ) → ℝ}
+    (hW : StronglyMeasurable[jumpFiltrationE lam hlam s] W) {b : ℝ} (hb : ∀ ω, ‖W ω‖ ≤ b) :
+    ∫ ω, ((f (jumpProcessE lam (t : ℝ) ω)
+            - ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+                jumpApply lam mu f (jumpProcessE lam (u : ℝ) ω) ∂lebesgueClock.q)
+        - (f (jumpProcessE lam (s : ℝ) ω)
+            - ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ s,
+                jumpApply lam mu f (jumpProcessE lam (u : ℝ) ω) ∂lebesgueClock.q)) * W ω
+      ∂(jumpMeasure mu nu) = 0 :=
+  integral_sub_mul_eq_zero_jumpProcessE_time hlam hlam0 hL mu habs nu
+    ⟨(f, jumpApply lam mu f), mem_jumpOperator hf hC, fun _ _ ↦ rfl⟩ hst hW hb
+
+/-- **The orthogonality at the time over the canonical path space**, under the image measure.
+
+Here the weight is a functional of the **path** and measurable for `pathFiltration s`, which is
+the form `IsDetermining` and hypothesis (c) of `mpSolution_of_tendsto` ask for: there the members
+of `𝓩 s` are bounded measurable functions on the space the paths live in, and not on whatever
+sample space carries them. -/
+theorem integral_sub_mul_eq_zero_map_jumpPath_time [MeasurableEq E] {lam : E → ℝ}
+    (hlam : Measurable lam) {L : ℝ} (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (mu : Kernel E E) [IsMarkovKernel mu]
+    (habs : ∀ x, lam x = 0 → mu x = Measure.dirac x)
+    (nu : Measure E) [IsProbabilityMeasure nu]
+    {Y : ℝ≥0 → RightContinuousPath E → ℝ}
+    (hY : Y ∈ mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+      (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E))
+    {s t : ℝ≥0} (hst : s ≤ t) {Z : RightContinuousPath E → ℝ}
+    (hZ : StronglyMeasurable[RightContinuousPath.pathFiltration (E := E) s] Z)
+    {b : ℝ} (hb : ∀ p, ‖Z p‖ ≤ b) :
+    ∫ p, (Y t p - Y s p) * Z p ∂((jumpMeasure mu nu).map (jumpPath lam)) = 0 := by
+  haveI := isProbabilityMeasure_map_jumpPath hlam mu nu
+  have key := integral_sub_mul_eq_zero_of_martingale (𝕂 := ℝ)
+    (jumpPath_isMPSolution hlam hlam0 hL mu habs nu Y hY) hst hZ hb
+  simpa [RCLike.ofReal_real_eq_id] using key
+
+/-- **The form hypothesis (c) of `mpSolution_of_tendsto` reads**: increment and weight are both
+functionals of the path, composed with the path map, and the integral is against the measure of
+the construction.
+
+This is what a probe hands to `mpSolution_of_tendsto` with `X' n = jumpPath lam` and
+`P' n = jumpMeasure mu nu`, and it is exactly zero for every `n`, so the limit in (c) is zero for
+a reason that does not depend on the approximation.
+
+It is derived from the version over the sample space and not from the one over the image measure,
+which avoids `integral_map` and the almost everywhere strong measurability it wants: the weight
+`Z ∘ jumpPath lam` is measurable for `jumpFiltrationE lam hlam s` by
+`measurable_pathFiltration_jumpPath`, and that rests on an identity of σ-algebras
+(`jumpFiltrationE_eq_comap_jumpPath`) and not on an inclusion up to a null set. -/
+theorem integral_sub_mul_eq_zero_jumpPath_time [MeasurableEq E] {lam : E → ℝ}
+    (hlam : Measurable lam) {L : ℝ} (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (mu : Kernel E E) [IsMarkovKernel mu]
+    (habs : ∀ x, lam x = 0 → mu x = Measure.dirac x)
+    (nu : Measure E) [IsProbabilityMeasure nu]
+    {Y : ℝ≥0 → RightContinuousPath E → ℝ}
+    (hY : Y ∈ mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+      (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E))
+    {s t : ℝ≥0} (hst : s ≤ t) {Z : RightContinuousPath E → ℝ}
+    (hZ : StronglyMeasurable[RightContinuousPath.pathFiltration (E := E) s] Z)
+    {b : ℝ} (hb : ∀ p, ‖Z p‖ ≤ b) :
+    ∫ ω, (Y t (jumpPath lam ω) - Y s (jumpPath lam ω)) * Z (jumpPath lam ω)
+      ∂(jumpMeasure mu nu) = 0 :=
+  integral_sub_mul_eq_zero_jumpProcessE_time hlam hlam0 hL mu habs nu
+    (mem_mpFamily_comp_jumpPath lam Clock.Conv.optional hY) hst
+    (hZ.comp_measurable (measurable_pathFiltration_jumpPath hlam s)) (fun ω ↦ hb _)
+
+/-- **Hypothesis (c) of `mpSolution_of_tendsto` at an approximating family of jump
+constructions.**
+
+The four statements above say that one jump construction is exactly orthogonal; this one says
+what that buys for a *sequence* of them, which is the shape hypothesis (c) is written in.  Each
+member has its own rate, its own kernel, its own initial law and its own bound, and what has to
+be supplied on top is the `L¹` approximation of the canonical increment `G n` by the increment of
+the test process -- the manuscript's `(K3)` at the time instead of at the jump number.
+
+**The limit is zero for a reason that does not depend on the approximation**: every term of the
+approximating family is *exactly* zero, so the tendsto is a squeeze against `happrox` and nothing
+else.  That is the same division of labour as in `tendsto_integral_mul_of_martingale`, one
+milestone up: the martingale supplies an identity, the approximation supplies the limit.
+
+Integrability of the increment is not a hypothesis; it comes out of the martingale
+`jumpProcessE_isMPSolution_of_nonneg` through `mem_mpFamily_comp_jumpPath`, which is why the
+statement asks nothing of `Y` beyond membership. -/
+theorem tendsto_integral_mul_jumpPath_time [MeasurableEq E]
+    {lam : ℕ → E → ℝ} (hlam : ∀ n, Measurable (lam n)) {L : ℕ → ℝ}
+    (hlam0 : ∀ n x, 0 ≤ lam n x) (hL : ∀ n x, lam n x ≤ L n)
+    (mu : ℕ → Kernel E E) [∀ n, IsMarkovKernel (mu n)]
+    (habs : ∀ n x, lam n x = 0 → mu n x = Measure.dirac x)
+    (nu : ℕ → Measure E) [∀ n, IsProbabilityMeasure (nu n)]
+    {Y : ℕ → ℝ≥0 → RightContinuousPath E → ℝ}
+    (hY : ∀ n, Y n ∈ mpFamily (jumpOperator (lam n) (mu n)) lebesgueClock Clock.Conv.optional
+      (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E))
+    {s t : ℝ≥0} (hst : s ≤ t) {Z : ℕ → RightContinuousPath E → ℝ}
+    (hZ : ∀ n, StronglyMeasurable[RightContinuousPath.pathFiltration (E := E) s] (Z n))
+    {b : ℝ} (hb : ∀ n p, ‖Z n p‖ ≤ b)
+    {G : ℕ → ((ℕ → E) × (ℕ → ℝ)) → ℝ}
+    (hG : ∀ n, Integrable (G n) (jumpMeasure (mu n) (nu n)))
+    (happrox : Tendsto (fun n ↦ ∫ ω, ‖G n ω
+        - (Y n t (jumpPath (lam n) ω) - Y n s (jumpPath (lam n) ω))‖
+          ∂(jumpMeasure (mu n) (nu n))) atTop (𝓝 0)) :
+    Tendsto (fun n ↦ ∫ ω, G n ω * Z n (jumpPath (lam n) ω) ∂(jumpMeasure (mu n) (nu n)))
+      atTop (𝓝 0) := by
+  have hmart : ∀ n, Martingale (fun r ω ↦ Y n r (jumpPath (lam n) ω))
+      (jumpFiltrationE (lam n) (hlam n)) (jumpMeasure (mu n) (nu n)) := fun n ↦
+    jumpProcessE_isMPSolution_of_nonneg (hlam n) (hlam0 n) (hL n) (mu n) (habs n) (nu n) _
+      (mem_mpFamily_comp_jumpPath (lam n) Clock.Conv.optional (hY n))
+  have hHint : ∀ n, Integrable
+      (fun ω ↦ Y n t (jumpPath (lam n) ω) - Y n s (jumpPath (lam n) ω))
+      (jumpMeasure (mu n) (nu n)) := fun n ↦ ((hmart n).integrable t).sub ((hmart n).integrable s)
+  have hWm : ∀ n, AEStronglyMeasurable (fun ω ↦ Z n (jumpPath (lam n) ω))
+      (jumpMeasure (mu n) (nu n)) := fun n ↦
+    (((hZ n).comp_measurable (measurable_pathFiltration_jumpPath (hlam n) s)).mono
+      ((jumpFiltrationE (lam n) (hlam n)).le s)).aestronglyMeasurable
+  have hzero : ∀ n, ∫ ω, (Y n t (jumpPath (lam n) ω) - Y n s (jumpPath (lam n) ω))
+      * ((Z n (jumpPath (lam n) ω) : ℝ) : ℝ) ∂(jumpMeasure (mu n) (nu n)) = 0 := fun n ↦
+    integral_sub_mul_eq_zero_jumpPath_time (hlam n) (hlam0 n) (hL n) (mu n) (habs n) (nu n)
+      (hY n) hst (hZ n) (hb n)
+  have key := tendsto_integral_mul_of_integral_eq_zero (𝕂 := ℝ) hG hHint hWm
+    (fun n ω ↦ hb n _) hzero happrox
+  simpa [RCLike.ofReal_real_eq_id] using key
+
+end JumpTimeOrthogonality
+
+/-! ### The first witness for `IsDetermining`
+
+`IsDetermining` is the hypothesis on which the whole of Milestone 10 turns -- `mpSolution_of_tendsto`,
+`mpSolution_of_tendsto_of_pContinuous` and `mpSolution_of_tendsto_augmented` all carry it -- and
+until here it had **no witness anywhere in this file**: the only statement about it was
+`IsDetermining.comp_fst`, which transports one along a projection and therefore needs one to
+start with.  That is the same integrity defect that `Shift` had before the canonical path space
+was built, and it is answered the same way: by exhibiting the structure on data.
+
+**The witness is not a new idea, it is the definition of a conditional expectation.**  If the
+filtration downstairs is the pull back of a σ-algebra upstairs, then the indicators of the sets
+upstairs pull back to exactly the sets of the past, and the orthogonality against all of them is
+what `ae_eq_condExp_of_forall_setIntegral_eq` consumes.  So the determining set may always be
+taken to be *all* bounded measurable functions of the past, and the content of a sharper
+determining set -- the manuscript's separating classes, `fact:sepcond` -- is that a smaller one
+will do.
+
+**Strong adaptedness of the family is a hypothesis and cannot be dropped.**  `IsDetermining`
+concludes `P[Y t | 𝓕 s] =ᵐ Y s`, and the right hand side has to be `𝓕 s`-measurable for that to
+be possible at all; the orthogonality alone says nothing about it.  The definition does not ask
+for it, which is right -- it is a property of `𝓧` and not of `𝓩` -- so any witness has to supply
+it, and here it is `stronglyAdapted_mpFamily_coordinate`. -/
+
+section DeterminingWitness
+
+variable {Ω : Type*} {m : MeasurableSpace Ω} {𝕂 : Type*} [RCLike 𝕂]
+  {ι : Type*} [LinearOrder ι] [TopologicalSpace ι]
+
+/-- **The bounded measurable functions of the past are a determining set**, whenever the
+filtration is the pull back of a σ-algebra on the path space along the path map.
+
+The proof is `ae_eq_condExp_of_forall_setIntegral_eq` on the indicators: a set of `𝓕 s` is by
+hypothesis `X ⁻¹' B` with `B` measurable upstairs, the indicator of `B` is one of the test
+functions, and the orthogonality at it is the equality of the two set integrals over `X ⁻¹' B`.
+
+No topology on the path space, no separability, and nothing at all on `ι` beyond what
+`IsDetermining` itself carries. -/
+theorem isDetermining_of_comap {F : Type*} [MeasurableSpace F] {𝓖 : ι → MeasurableSpace F}
+    {X : Ω → F} {𝓕 : Filtration ι m}
+    (h𝓕 : ∀ s : ι, (𝓕 s : MeasurableSpace Ω) = MeasurableSpace.comap X (𝓖 s))
+    {𝓧 : Set (ι → Ω → 𝕂)} (hadp : ∀ Y ∈ 𝓧, StronglyAdapted 𝓕 Y) :
+    IsDetermining (fun s ↦ {Z : F → ℝ | Measurable[𝓖 s] Z ∧ ∃ b, ∀ x, ‖Z x‖ ≤ b}) 𝓧 X 𝓕 := by
+  intro P _ Y hY s t _ hints hintt horth
+  refine (ae_eq_condExp_of_forall_setIntegral_eq (𝓕.le s) hintt
+    (fun A _ _ ↦ hints.integrableOn) (fun A hA _ ↦ ?_)
+    (hadp Y hY s).aestronglyMeasurable).symm
+  have hAm : MeasurableSet A := 𝓕.le s A hA
+  rw [h𝓕 s] at hA
+  obtain ⟨B, hB, hBA⟩ := hA
+  have hZmem : (B.indicator fun _ ↦ (1 : ℝ))
+      ∈ {Z : F → ℝ | Measurable[𝓖 s] Z ∧ ∃ b, ∀ x, ‖Z x‖ ≤ b} := by
+    refine ⟨measurable_const.indicator hB, 1, fun x ↦ ?_⟩
+    by_cases hx : x ∈ B
+    · simp [Set.indicator_of_mem hx]
+    · simp [Set.indicator_of_notMem hx]
+  have hconv : ∀ r : ι, Integrable (Y r) P →
+      ∫ ω, Y r ω * (((B.indicator fun _ ↦ (1 : ℝ)) (X ω) : ℝ) : 𝕂) ∂P = ∫ ω in A, Y r ω ∂P := by
+    intro r hr
+    have hpt : ∀ ω, Y r ω * (((B.indicator fun _ ↦ (1 : ℝ)) (X ω) : ℝ) : 𝕂)
+        = A.indicator (Y r) ω := by
+      intro ω
+      by_cases hω : ω ∈ A
+      · have hxB : X ω ∈ B := by rw [← hBA] at hω; exact hω
+        simp [Set.indicator_of_mem hxB, Set.indicator_of_mem hω]
+      · have hxB : X ω ∉ B := by rw [← hBA] at hω; exact hω
+        simp [Set.indicator_of_notMem hxB, Set.indicator_of_notMem hω]
+    rw [integral_congr_ae (Filter.Eventually.of_forall hpt), integral_indicator hAm]
+  have hkey := horth _ hZmem
+  rw [hconv t hintt, hconv s hints] at hkey
+  exact hkey.symm
+
+end DeterminingWitness
+
+section DeterminingPathSpace
+
+variable {E : Type*} [MeasurableSpace E]
+
+/-- **`IsDetermining` on the canonical path space of Milestone 6**, with the path map the
+identity: the bounded functions measurable for the past of the coordinates determine the
+conditional expectation of every test process of an operator whose two components are
+measurable.
+
+This is the first inhabitant of `IsDetermining` in this file.  The pull back hypothesis is
+`MeasurableSpace.comap_id`, and the adaptedness is
+`RightContinuousPath.stronglyAdapted_mpFamily_coordinate`. -/
+theorem isDetermining_pathFiltration {A : Set ((E → ℝ) × (E → ℝ))} (c : Clock.Conv)
+    (hfm : ∀ p ∈ A, Measurable p.1) (hgm : ∀ p ∈ A, Measurable p.2) :
+    IsDetermining
+      (fun s ↦ {Z : RightContinuousPath E → ℝ |
+        Measurable[RightContinuousPath.pathFiltration (E := E) s] Z ∧ ∃ b, ∀ x, ‖Z x‖ ≤ b})
+      (mpFamily A lebesgueClock c
+        (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E))
+      id (RightContinuousPath.pathFiltration (E := E)) :=
+  isDetermining_of_comap (fun _ ↦ MeasurableSpace.comap_id.symm)
+    (fun _ hY ↦ RightContinuousPath.stronglyAdapted_mpFamily_coordinate c hfm hgm hY)
+
+/-- **`IsDetermining` on the sample space of the jump construction**, with the path map
+`jumpPath`.
+
+This is the shape `mpSolution_of_tendsto` reads over the jump construction: the processes live on
+`(ℕ → E) × (ℕ → ℝ)`, the determining functionals live on the path space, and the two are joined by
+`jumpFiltrationE_eq_comap_jumpPath` -- an identity of σ-algebras, which is exactly the hypothesis
+`isDetermining_of_comap` asks for.
+
+Together with `integral_sub_mul_eq_zero_jumpPath_time` this leaves hypotheses (a) and (b) of
+`mpSolution_of_tendsto` as the only ones without a witness over the jump construction. -/
+theorem isDetermining_jumpPath {lam : E → ℝ} (hlam : Measurable lam)
+    {A : Set ((E → ℝ) × (E → ℝ))} (c : Clock.Conv)
+    (hfm : ∀ p ∈ A, Measurable p.1) (hgm : ∀ p ∈ A, Measurable p.2) :
+    IsDetermining
+      (fun s ↦ {Z : RightContinuousPath E → ℝ |
+        Measurable[RightContinuousPath.pathFiltration (E := E) s] Z ∧ ∃ b, ∀ x, ‖Z x‖ ≤ b})
+      ((fun Y : ℝ≥0 → RightContinuousPath E → ℝ ↦ fun t ω ↦ Y t (jumpPath lam ω)) ''
+        mpFamily A lebesgueClock c
+          (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E))
+      (jumpPath lam) (jumpFiltrationE lam hlam) := by
+  refine isDetermining_of_comap (jumpFiltrationE_eq_comap_jumpPath hlam) ?_
+  rintro _ ⟨Y, hY, rfl⟩ t
+  exact (RightContinuousPath.stronglyAdapted_mpFamily_coordinate c hfm hgm hY t).comp_measurable
+    (measurable_pathFiltration_jumpPath hlam t)
+
+end DeterminingPathSpace
