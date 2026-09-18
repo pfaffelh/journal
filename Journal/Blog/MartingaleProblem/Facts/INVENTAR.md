@@ -70,7 +70,7 @@ unserer Konstruktion. Daher:
 
 | Fact | tragend | Aussage | Status | Beleg |
 |---|---|---|---|---|
-| `fact:Dcountable` | 4 | EK, Lemma 3.7.7 | Roadmap | SkorokhodSpace M8, `SkorokhodSpace.exists_countable_dense_continuity`; Mathlib hat weder `cadlag` noch den Raum. Der Unterbau ist seit dem 2026-09-07, fünftem Lauf, bewiesen und geht durch `lake env lean`: `countable_leftJumpSet` — die Sprungmenge **einer** càdlàg-Abbildung ist abzählbar — samt `IsCadlag.continuousAt_iff_notMem_leftJumpSet`, die „Stetigkeitsstelle" und „nicht in `leftJumpSet`" identifiziert (Meilenstein 2). Was M8 darüber hinaus verlangt, ist die Fassung für **ein Maß** statt für einen Pfad — daß `{t | μ {f | f⁻ t = f t} = 1}` abzählbares Komplement hat —, und die folgt nicht punktweise aus der Pfadaussage, sondern braucht ein Fubini-Argument über die Sprunghöhen; das steht weiter aus |
+| `fact:Dcountable` | 4 | EK, Lemma 3.7.7 | Roadmap | SkorokhodSpace M8, `SkorokhodSpace.exists_countable_dense_continuity`; Mathlib hat weder `cadlag` noch den Raum. Der Unterbau ist seit dem 2026-09-07, fünftem Lauf, bewiesen und geht durch `lake env lean`: `countable_leftJumpSet` — die Sprungmenge **einer** càdlàg-Abbildung ist abzählbar — samt `IsCadlag.continuousAt_iff_notMem_leftJumpSet`, die „Stetigkeitsstelle" und „nicht in `leftJumpSet`" identifiziert (Meilenstein 2). Die Fassung für **ein Maß** statt für einen Pfad steht seit dem 2026-09-18, zwölftem Lauf, und geht durch `lake env lean`: `SkorokhodSpace.countable_setOf_measure_leftJump_ne_zero` (für jedes endliche `μ` ist `{t | μ {f | t ∈ leftJumpSet f} ≠ 0}` abzählbar) und darauf `SkorokhodSpace.exists_countable_dense_continuity`. **Das vermutete Fubini-Argument über die Sprunghöhen wird nicht gebraucht**, und es wäre auch zu schwach gewesen: es gibt eine Nullmenge, keine abzählbare. Getragen wird die Aussage von `IsCadlag.finite_largeLeftJumpSet_inter` und der Stetigkeit von oben — `SkorokhodSpace.finite_setOf_le_measure_largeLeftJump`. Die Dichtheit des Komplements ist Baire und verlangt vom Index **nichts über das Bündel von Meilenstein 1 hinaus**: ein isolierter Punkt trägt keinen Sprung, weil dort `𝓝[<] t = ⊥` ist und der linke Grenzwert der Wert |
 | `fact:monotoneclass` | 4 | Monotone class theorem; EK, Appendix 4 | Roadmap | WeakConvergence M5, `induction_on_mulSystem` — dort neu angelegt; Mathlib hat nur die Mengenfassung, und sie heißt `MeasurableSpace.induction_on_inter` (`MeasureTheory/PiSystem.lean:713`, nicht `MeasureTheory.`). Am 2026-09-06, zweiter Lauf, negativ belegt an `upstream/master` `810b3888` mit den Suchen `monotone class`, `MulSystem`, `generateFromFuns`, `multiplicative system`, `monotone limits`, `bounded monotone convergence`, `functional monotone`, `multiplicative family of functions` — kein einziger Treffer in `Mathlib/`. Der Unterbau ist seither übersetzt: `IsMulSystem`, `indicatorFuns`, `generateFromFuns`, die Brücke `generateFromFuns_indicatorFuns`, das π-System `ioiCells` samt `generateFromFuns_eq_generateFrom_ioiCells` und der erste Beweisschritt `of_tendstoUniformly_of_mono_lim` gehen durch `lake env lean`; seit dem 2026-09-06, dritter Lauf, dazu die algebraische Hälfte des zweiten Schritts — `mul_mem_span_insert_one_of_isMulSystem`, `of_mem_span_insert_one`, `exists_bound_of_mem_span_insert_one`. Seit dem 2026-09-07, achtem Lauf, ist der **zweite Schritt selbst bewiesen**, `of_continuous_comp_of_isMulSystem`: die Stone--Weierstraß-Hälfte der Induktion, über `ContinuousMap.exists_mem_subalgebra_near_continuous_of_isCompact_of_separatesPoints` (`Topology/ContinuousMap/StoneWeierstrass.lean:323`) und einen `AlgHom`-Rückzug in `Submodule.span ℝ (insert 1 K)`. Seit dem 2026-09-07, neuntem Lauf, ist der **Satz selbst bewiesen**: Schritt (iii) als `ioiApprox` samt `of_indicator_mem_ioiCells` und `of_indicator_of_measurable` (die Rampen gemeinsam als *eine* stetige Funktion, weil `P` nicht multiplikationsabgeschlossen ist), Schritt (iv) als `of_simpleFunc` und `of_nonneg_of_measurable` (der Umweg über `ℝ≥0∞` ist das einzige, was die Approximation wachsend macht — `SimpleFunc.approxOn` gibt keine Monotonie), und `induction_on_mulSystem` selbst als die Verschiebung `f = (f + C) + (-C)`. Alle drei Folgerungen tragen ebenfalls Beweise: `ext_of_forall_integral_eq_of_isMulSystem`, `integral_mul_eq_zero_of_isMulSystem` und `condExp_eq_of_forall_integral_mul_eq`. Der Kern von Meilenstein 5 ist damit vollständig; was `fact:monotoneclass` noch trennt, ist kein Beweis mehr, sondern die Übernahme nach Mathlib. Alles durch `lake env lean` gegen v4.33.1 |
 | `fact:cmt` | 3 | Continuous mapping theorem; EK, Corollary 3.1.9 and Co | Roadmap | WeakConvergence M2 — der stetige Fall ist Mathlib in **beiden** Fassungen, für Maße als `FiniteMeasure.tendsto_map_of_tendsto_of_continuous` und für Zufallsvariablen als `MeasureTheory.TendstoInDistribution.continuous_comp` (`MeasureTheory/Function/ConvergenceInDistribution.lean:136`, am 2026-09-01, fünfter Lauf, gefunden); die f.ü.-stetige Fassung fehlt in beiden. M2 steht auf „separabel metrisch", und das ist richtig: EK Cor. 3.1.9 verlangt nicht mehr (am Scan geprüft, 2026-08-31). **Seit dem 2026-09-08, erster Lauf, ist die f.ü.-stetige Fassung bewiesen**: `tendsto_of_measure_setOf_not_continuousAt_eq_zero` geht durch `lake env lean` gegen v4.33.1 und hängt nur an `propext`, `Classical.choice`, `Quot.sound`. Der Beweis ist Portmanteau auf beiden Seiten — `closure (h ⁻¹' F) ⊆ h ⁻¹' F ∪ {x | ¬ ContinuousAt h x}` — und braucht **weniger als „separabel metrisch"**: auf der Quelle `[OpensMeasurableSpace E] [HasOuterApproxClosed E]`, auf dem Ziel `[TopologicalSpace E'] [OpensMeasurableSpace E']` ohne jede Metrik, und keine Separabilität. Die Bildmaße treten als Daten mit ihren definierenden Gleichungen auf, nicht über `ProbabilityMeasure.map` — das ist die eine Konstruktion, deren Signatur sich zwischen v4.33.1 und `upstream/master` unterscheidet, und so elaboriert **eine** Aussage gegen beide; die verpackte Fassung `tendsto_map_of_measure_setOf_continuousAt_eq_one` ist diese Aussage instanziiert und trägt ihr `sorry` allein aus diesem Versionsgrund. **Am 2026-09-08, elfter Lauf, ist belegt, daß `fact:cmt` nirgends in nicht-polnischer Allgemeinheit gebraucht wird**, entgegen dem zweiten Absatz von `rem:MZcost`: `set:abstract` (`:2324`) verlangt unter (E3) für den Pfadraum $F$ ausdrücklich eine **polnische** Topologie, `thm:absconv` (`:8393`) ist mit (T0)+(E3) annotiert, `thm:absconvaug` arbeitet auf $F\times G$ mit $G$ polnisch, und `def:weakstrong` (`:9169`) sagt „let $F$ be Polish"; der einzige nicht-polnische Pfadraum des Manuskripts ist $\DE$ unter der Pseudopfad-Topologie, und dort benutzt der Beweis von `thm:MZconv` (`:9314`--`:9400`) **kein** `fact:cmt`, sondern (C1$'$) aus `rem:absconvtopfree`, das gar keine Topologie verlangt — er sagt es selbst („it is verified not by a continuous mapping theorem but by exhibiting the convergence on a common space"). Was der $M_E$-Weg an CMT braucht, ist allein die triviale Hälfte für **überall stetige** Abbildungen, und die hat Mathlib ohne jede Metrik. **Am 2026-09-17, einundzwanzigster Lauf, wird die f.ü.-stetige Fassung zum ersten Mal verbraucht**: `mpSolution_of_tendsto_of_pContinuous` und `mpSolution_of_tendsto_augmented` (MP M10) ruhen auf `MeasureTheory.TendstoInDistribution.continuousAt_comp` und auf nichts sonst; der Fact ist damit nicht nur abgedeckt, sondern getragen |
 | `fact:kolmogorov` | 3 | Kolmogorov extension; EK, Theorem 4.1.1; eqref{T0} + e | Roadmap | KolmogorovExtension M2 — Gerüst weitgehend in Mathlib, es fehlen σ-Subadditivität und `projectiveLimit` |
@@ -37440,3 +37440,163 @@ Manuskript an dieser Stelle ausdrücklich nicht liefert.
    (a) die **einzige** offene Voraussetzung, und sie als Hypothese hinzuschreiben
    ist ehrlicher als sie als Lücke zu führen — dieselbe Entscheidung, die bei
    `𝔼[N t] < ∞` im Hawkes-Zweig schon getroffen ist.
+
+### 2026-09-18, zwölfter Lauf des Tages — die erste Eingabe von Vorschlag 1 steht, und der Weg, den das Inventar seit dem 2026-09-07 dafür vorgesehen hatte, wird nicht gebraucht: es ist kein Fubini-Argument, sondern Stetigkeit von oben, und es wird **kein Sprung gezählt**
+
+**Vorschlag 1 des Vorlaufs benannte eine Eingabe, die es in Lean nicht gab:**
+`SkorokhodSpace.exists_countable_dense_continuity`, den Lieferanten der Zeitmenge
+`D` für `mpSolution_of_tendsto_cadlag`. Sie steht jetzt. Acht neue
+Deklarationen in einem neuen Abschnitt „Milestone 8" von
+`TauCeti/SkorokhodSpace/Suggested.lean`, alle drei Roadmap-Dateien ohne einen
+Fehler und ohne ein `sorry` durch `scripts/check_suggested.py` gegen v4.33.1
+(Lean 4.33.1, commit `819816b2e0a3`), alle acht mit `#print axioms` auf
+`propext`, `Classical.choice`, `Quot.sound` geprüft. Die Punkte stehen in
+`SkorokhodSpace/README.md`, Meilenstein 8; die Zeile `fact:Dcountable` des
+Inventars ist entsprechend berichtigt.
+
+#### Der Befund, und er berichtigt eine Vorhersage des Inventars
+
+Die Zeile `fact:Dcountable` hielt seit dem 2026-09-07 fest, die Maßfassung
+„folgt nicht punktweise aus der Pfadaussage, sondern braucht ein
+**Fubini-Argument über die Sprunghöhen**". Das ist zweimal falsch.
+
+* **Fubini gibt die falsche Aussage.** Integriert man `1[t ∈ leftJumpSet f]`
+  über `t` gegen ein atomloses Maß auf dem Index, so ist das innere Integral für
+  jedes `f` Null, weil `leftJumpSet f` abzählbar ist, und heraus kommt: die
+  Ausnahmemenge ist eine **Nullmenge**. Verlangt ist aber, daß sie
+  **abzählbar** ist — eine echt stärkere Aussage. Der Weg hätte, selbst wenn er
+  durchgegangen wäre, nur die Dichtheit gegeben und nicht die Zählbarkeit, und
+  er hätte dafür die gemeinsame Meßbarkeit von `(t, f) ↦ 1[t ∈ leftJumpSet f]`
+  gebraucht, die hier nirgends vorliegt.
+* **Gebraucht wird Fubini nicht.** Der Beweis ist
+  `SkorokhodSpace.finite_setOf_le_measure_largeLeftJump`: für `ε > 0`, `c ≠ 0`
+  und kompaktes `K` gibt es nur endlich viele `t ∈ K` mit
+  `c ≤ μ {f | t ∈ largeLeftJumpSet f ε}`. Liest man eine unendliche solche
+  Familie als Folge **verschiedener** Zeiten `T k`, so haben die Schwänze
+  `B n = ⋃ k ≥ n, A k` sämtlich Masse `≥ c`, fallen, und die Endlichkeit von `μ`
+  macht daraus über `tendsto_measure_iInter_atTop` Masse `≥ c` für den
+  Durchschnitt. Der ist also **nichtleer** — und ein *einziger* Pfad darin hat
+  unendlich viele `ε`-Sprünge in `K`, was `IsCadlag.finite_largeLeftJumpSet_inter`
+  seit dem 2026-09-07 verbietet.
+
+#### Was daran der eigentliche Meßwert ist: der klassische Beweis wäre in Lean teurer gewesen
+
+Billingsley (Abschnitt 13) integriert die **Anzahl** der `ε`-Sprünge im Fenster
+gegen `μ`. Dafür muß diese Anzahl eine meßbare Funktion des Pfades sein, also
+`{f | (largeLeftJumpSet f ε ∩ K).ncard ≤ M}` meßbar — und **das geben die
+Koordinaten nicht her**: die Sprungzeiten laufen über eine überabzählbare Menge,
+und ein Abzählen über einer abzählbaren Gitterfamilie verlangt erst den Umweg
+über Oszillationsketten `s₁ < u₁ ≤ s₂ < u₂ ≤ …` in einer abzählbaren Menge, samt
+beider Richtungen des Vergleichs mit den wirklichen Sprüngen. Das war der Weg,
+den dieser Lauf zuerst vorgesehen hatte; er ist verworfen worden, ehe eine Zeile
+davon geschrieben war.
+
+Der Beweis, der dasteht, verbraucht `measure_mono`, `measure_iUnion_null` und
+Stetigkeit von oben — **sonst nichts**. Die einzige Meßbarkeit, die er verlangt,
+ist die der Sprungereignisse selbst, und die ist billig:
+
+* `SkorokhodSpace.measurable_leftLim_eval` — der **linke Grenzwert** an fester
+  Zeit ist eine Borel-meßbare Funktion des Pfades. Er ist punktweiser Grenzwert
+  von Auswertungen längs einer gegen `t` wachsenden Folge; die gibt es, weil ein
+  metrischer Index erstabzählbar und `𝓝[<] t` daher abzählbar erzeugt ist, und
+  `measurable_of_tendsto_metrizable` macht daraus die Meßbarkeit. Der
+  ausgeartete Fall `𝓝[<] t = ⊥` ist keine Ausnahme, sondern der zweite Zweig:
+  dort **ist** der linke Grenzwert der Wert (`leftLim_eq_of_eq_bot`).
+* `SkorokhodSpace.measurableSet_largeLeftJump`,
+  `SkorokhodSpace.setOf_mem_leftJumpSet_eq_iUnion`,
+  `SkorokhodSpace.measurableSet_leftJump` — das Sprungereignis an fester Zeit,
+  zerlegt über die Sprunghöhe.
+
+Damit ist der Unterschied zwischen den beiden Wegen benannt: der klassische
+braucht eine meßbare **Zählfunktion**, dieser braucht nur meßbare **Ereignisse**.
+In einer Bibliothek, in der Auswertung und linker Grenzwert meßbar sind und ein
+Abzählen von Sprüngen nicht, ist das der ganze Unterschied.
+
+#### Die Dichtheit kostet nichts, und das war die Vorhersage dieses Laufs, die sich als falsch erwies
+
+`SkorokhodSpace.countable_setOf_measure_leftJump_ne_zero` gilt für **jedes
+endliche** `μ` und ohne eine Bedingung an den Index. Der Schritt von dort zu
+`exists_countable_dense_continuity` — „abzählbares Komplement, **also** dichte
+Menge" — sah aus, als koste er eine: er ist Baire, und Baire verlangt, daß jeder
+Punkt der Ausnahmemenge nicht isoliert ist. Die erste Fassung dieses Laufs trug
+darum die Hypothese `∀ x : ι, (𝓝[≠] x).NeBot` und dazu die Behauptung, sie sei
+mit `ι = ℤ` als notwendig belegt.
+
+**Beides war falsch, und das Gegenbeispiel widerlegt sich selbst.** Über `ι = ℤ`
+ist `𝓝[<] x = ⊥` — die Topologie ist diskret, `x` liegt nicht in `Set.Iio x` —,
+also ist `Function.leftLim f x = f x` nach `leftLim_eq_of_eq_bot` und der
+Sprungmenge fehlt jeder Punkt. Der angebliche Zeuge für die Notwendigkeit der
+Hypothese ist der Fall, in dem die Ausnahmemenge **leer** ist.
+
+Und daraus fällt der Beweis, der die Hypothese ganz entfernt: **ein isolierter
+Punkt trägt keinen Sprung.** Ist `𝓝[<] t = ⊥`, so ist das Sprungereignis bei `t`
+die leere Menge, also `t` gar nicht in der Ausnahmemenge; jeder Punkt *dieser*
+Menge hat `𝓝[<] t` nichttrivial und damit erst recht `𝓝[≠] t`. Die
+Ausnahmemenge trägt die Bedingung, die Baire braucht, und nicht der Index. Die
+Aussage steht jetzt ohne jede Voraussetzung über das Bündel von Meilenstein 1
+hinaus da, und `SkorokhodSpace.exists_countable_dense_continuity_real` löst
+dieses Bündel über `ι = ℝ`, `E = ℝ` ein.
+
+**Der Meßwert daran** ist nicht der Satz, sondern die Reihenfolge: die Hypothese
+stand in der Datei und ging durch `lake env lean`, ehe sie geprüft war. Gefunden
+wurde sie beim Nachrechnen des *Gegenbeispiels*, das sie rechtfertigen sollte —
+nicht beim Beweisen. Eine Voraussetzung, deren Notwendigkeit nur behauptet und
+nicht an einem durchgerechneten Zeugen geprüft ist, ist genau so unsicher wie
+eine Aussage ohne Beweis, und Lean sagt dazu nichts: eine überflüssige Hypothese
+ist kein Fehler.
+
+#### Was dieser Lauf **nicht** getan hat
+
+`mpSolution_of_tendsto_cadlag` selbst ist nicht geschrieben. Der Vorlauf hatte
+zwei Fragen an ihn gestellt, und nur die erste ist beantwortet: die Zeitmenge
+`D` hat jetzt einen Lieferanten. Die zweite — ob der càdlàg-Raum als Zielraum
+der `X' n` genügt oder ob der Satz über `RightContinuousPath E` zu führen und
+danach zu transportieren ist — ist eine Entscheidung, die dieser Lauf nicht
+getroffen hat, weil sie ohne die Eingabe nicht zu begründen war. Sie ist der
+erste Punkt des nächsten.
+
+#### Eine Mathlib-Lücke, beim Beweisen gefunden und an `master` nachgeprüft
+
+Der Schritt, der die Endlichkeit trägt, ist die **umgekehrte Fatou-Ungleichung
+für Mengen**: für ein endliches `μ` ist `limsup μ (A n) ≤ μ (limsup A n)`.
+Mathlib hat sie **nicht als benannte Aussage**. Nachgesehen am 2026-09-18 an
+`upstream/master` `f71bd379b22`, mit den Suchen `limsup_measure_le`,
+`le_measure_limsup`, `measure_limsup_le`, `limsup_le_measure` über `Mathlib/`:
+die Treffer sind sämtlich aus `MeasureTheory/Measure/Portmanteau.lean` und
+sprechen über eine Folge von **Maßen** an einer festen Menge, nicht über eine
+Folge von **Mengen** unter einem festen Maß. In derselben Richtung steht nur
+Borel--Cantelli (`measure_limsup_atTop_eq_zero`), also der Sonderfall, in dem
+die Schranke `0` ist.
+
+Gebraucht und hier ausgeschrieben ist sie als
+`tendsto_measure_iInter_atTop` auf die Schwänze plus `ge_of_tendsto` — vier
+Zeilen, und deshalb keine Arbeit, die gefehlt hätte. Aber sie ist der Baustein,
+den ein Leser an dieser Stelle sucht, und sie gehört in die Kernschicht und
+nicht in eine Roadmap über den Skorokhodraum.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die Auswertung am Stetigkeitspunkt, und damit der Anschluß von (a).**
+   *Aussage:* `SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet` — die
+   Auswertung `f ↦ f.toFun t` ist am Pfad `g` stetig, sobald `g` bei `t` nicht
+   springt; und daraus
+   `SkorokhodSpace.tendsto_map_eval_of_tendsto_of_measure_leftJump_eq_zero`, die
+   Verteilungskonvergenz der eindimensionalen Ränder an solchen `t`.
+   *Worauf sie ruht:* `exists_countable_dense_continuity` (heute) liefert die
+   Zeiten; `SkorokhodSpace.exists_jump_continuousAt_eval` steht schon und ist
+   die Warnung dazu — die Umkehrung ist **falsch**, Auswertung kann an einem
+   Sprung stetig sein, also ist die Aussage nur in einer Richtung zu führen.
+   *Warum jetzt:* Voraussetzung (a) von `mpSolution_of_tendsto` ist seit dem
+   elften Lauf die einzige offene, und sie ist eine Aussage über Bildmaße unter
+   genau dieser Auswertung. Ohne diesen Schritt bleibt (a) eine Hypothese, die
+   nur die konstante Folge erfüllt.
+2. **Die Entscheidung über den Zielraum, begründet und aufgeschrieben.**
+   *Aussage:* `SkorokhodSpace.jumpPathD` — die Pfadabbildung der
+   Sprungkonstruktion nach `D(ℝ≥0, E)` statt nach `RightContinuousPath E`, samt
+   ihrer Meßbarkeit. *Worauf sie ruht:* `jumpPath` (2026-09-14) und
+   `SkorokhodSpace.borel_eq_iSup_comap_eval` (Meilenstein 6), das die
+   Meßbarkeit einer Abbildung **in** den Skorokhodraum auf die Meßbarkeit der
+   Koordinaten zurückführt. *Warum jetzt:* das ist die Entscheidung, die der
+   Vorlauf offengelassen hat, und sie ist keine Rechnung, sondern eine Frage
+   danach, wo die 351 Deklarationen von `SkorokhodSpace` verbraucht werden
+   können. Solange die Lösungen in `RightContinuousPath E` leben, in keiner.

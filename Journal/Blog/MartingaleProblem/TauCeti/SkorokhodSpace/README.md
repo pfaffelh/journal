@@ -2135,8 +2135,36 @@ state the second, as Theorem 3.9.1, for a complete separable `E` as well.
   The same conclusion for a tight family, from the previous item and
   `isCompact_closure_of_isTightMeasureSet`.
 * `SkorokhodSpace.exists_countable_dense_continuity` — stage (A). For a single
-  `μ`, the set of `t` with `μ {f | f⁻ t = f t} = 1` has countable complement,
-  hence contains a countable dense set.
+  probability measure `μ` the times `t` with `μ {f | f⁻ t = f t} = 1` contain a
+  countable dense set. The countability half is
+  `SkorokhodSpace.countable_setOf_measure_leftJump_ne_zero`, for any finite
+  `μ`: the set of `t` with `μ {f | t ∈ leftJumpSet f} ≠ 0` is countable. The
+  density half is Baire, and it asks **nothing of the index beyond the bundle of
+  Milestone 1**. That is worth saying because it looks as though it should ask
+  for an index without isolated points: an isolated point carries no jump, since
+  where `𝓝[<] t = ⊥` the left limit *is* the value, so such a `t` is not in the
+  exceptional set at all and the Baire argument never meets it.
+
+  The engine is `SkorokhodSpace.finite_setOf_le_measure_largeLeftJump`: for
+  `ε > 0`, `c ≠ 0` and compact `K` the times `t ∈ K` with
+  `c ≤ μ {f | t ∈ largeLeftJumpSet f ε}` are finitely many. Its proof reads an
+  infinite such family as a sequence of distinct times, applies continuity from
+  above to the tails `⋃ k ≥ n, A k` — the finiteness of `μ` is spent exactly
+  here — and obtains a *single* path with infinitely many `ε`-jumps in `K`,
+  which `IsCadlag.finite_largeLeftJumpSet_inter` forbids. **No jump is
+  counted.** The classical argument integrates the number of `ε`-jumps in the
+  window against `μ` and therefore needs `{f | (largeLeftJumpSet f ε ∩ K).ncard
+  ≤ M}` to be measurable, which the coordinates do not give; this one needs
+  `measure_mono` and nothing else.
+
+  The measurability it does need is
+  `SkorokhodSpace.measurableSet_largeLeftJump` and
+  `SkorokhodSpace.measurableSet_leftJump`, and both rest on
+  `SkorokhodSpace.measurable_leftLim_eval` — the left limit at a fixed time is a
+  pointwise limit of evaluations along a sequence increasing to `t`, which
+  exists because the index is first countable, and is the value itself where
+  `𝓝[<] t = ⊥`. The decomposition of the jump event over the jump size is
+  `SkorokhodSpace.setOf_mem_leftJumpSet_eq_iUnion`.
 * `SkorokhodSpace.continuous_postcomp` — stage (A). For continuous `h : E → E'` the induced
   map `SkorokhodSpace.postcomp h : D ι E → D ι E'`, `f ↦ h ∘ f`, is well defined
   and continuous; with `Measurable (postcomp h)` for `h` Borel, from Milestone 6.
@@ -2164,6 +2192,12 @@ state the second, as Theorem 3.9.1, for a complete separable `E` as well.
   `tendsto_of_isTight_of_tendsto_finiteDimensional` concludes weak convergence
   in `D ι E`. Every hypothesis of the milestone is instantiated once, and the
   conclusion is a statement one recognises.
+* **The hypothesis bundle of stage (A) is inhabited.**
+  `SkorokhodSpace.exists_countable_dense_continuity_real` is
+  `exists_countable_dense_continuity` over `ι = ℝ` and `E = ℝ`, with every
+  instance of the bundle discharged. It is the index of every other acceptance
+  example of this milestone, so the statement above is about the index the
+  milestone is for and not about an empty class.
 * **The excluded times are not a technicality.**
   `μ n = δ (Set.indicator (Set.Ici (1 + 1/n)) 1)` and
   `μ = δ (Set.indicator (Set.Ici 1) 1)` in `D ℝ ℝ`. Then `μ n → μ` weakly, and
