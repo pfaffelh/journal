@@ -2241,6 +2241,20 @@ state the second, as Theorem 3.9.1, for a complete separable `E` as well.
   on a product space, and `eval t` is measurable rather than continuous there —
   the proof of Ethier–Kurtz, Proposition 3.7.1 obtains `f ∘ eval t` as a
   pointwise limit of continuous averages, which is exactly the gap.
+
+  The first of those ingredients is the one to watch, and it asks more than the
+  density of `T`. The finite dimensional distributions of the sequence converge
+  along `T` by hypothesis, and those of a subsequential limit `ν` converge at
+  the continuity times of `ν` by the item above; the two are therefore compared
+  at the times lying in **both**, and what identifies `ν` is that those times are
+  dense. Density of `T` alone does not give it: the exceptional set of a single
+  law is countable and a countable `T` can lie inside it. What closes the step is
+  the uniform control of the oscillation that relative compactness carries —
+  Milestone 7 — by which the limit along `T` and the limit of the subsequence may
+  be interchanged; density of `T` is what makes the times of a finite family
+  approachable from the right, and the oscillation bound is what makes the
+  approach uniform in the sequence. Both are spent, and neither replaces the
+  other.
 * `SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional` — stage (A).
   The same conclusion for a tight family, from the previous item and
   `isCompact_closure_of_isTightMeasureSet`.

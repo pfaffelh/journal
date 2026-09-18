@@ -33440,6 +33440,333 @@ theorem isProbabilityMeasure_map_jumpPath {lam : E → ℝ} (hlam : Measurable l
 
 end JumpPath
 
+/-! ### The law on the path space has no fixed discontinuity
+
+`SkorokhodSpace.tendsto_finiteDimensional_of_tendsto` (roadmap **SkorokhodSpace**, Milestone 8)
+and `SkorokhodSpace.tendstoInDistribution_eval` carry a hypothesis on the **limit law**: at each
+of the times read off, the law must give the paths that jump there no mass,
+
+```
+ν {f | f⁻ t = f t} = 1.
+```
+
+`SkorokhodSpace.exists_countable_dense_continuity` says such times are abundant for *any* law;
+it does not say which they are for *ours*.  This section says it for the jump construction, and
+the answer is the strongest one available: **every** time is such a time.
+
+The mathematical content is one statement about the exponential law and one about the paths,
+and they are independent of each other.
+
+* A jump time of index `≥ 1` has an **atomless** law: writing `jumpTimeE` through its *first*
+  increment `ξ₀ / λ (y₀)` --- which is `jumpTimeE_succ_shift`, and not the recursion, which
+  peels off the *last* increment --- the coordinate `ξ₀` is split off by
+  `waitingMeasure_map_split`, and everything else is frozen.  What remains is that
+  `u ↦ ENNReal.ofReal u / c + b` is injective on `Set.Ioi 0`, so the bad set is a singleton up
+  to `Set.Iic 0`, and the exponential law charges neither.
+* Off the jump times the path is **locally constant**, hence continuous, hence has no jump
+  there; that is `IsCadlag.continuousAt_iff_notMem_leftJumpSet` of the roadmap
+  **SkorokhodSpace** read on the window of the step index.
+
+**The two degenerate values of `ENNReal` are what makes the first statement hold without a
+hypothesis on the rate.**  At an absorbing state the increment is `ofReal ξ / 0 = ⊤`, so the
+jump time is `⊤` and misses the finite value `a` outright; and if the divisor were `⊤` --- which
+`ENNReal.ofReal` never is --- the map would be constant and the statement false.  That is why
+`expMeasure_one_setOf_div_add_eq` asks `c ≠ ⊤` and asks nothing else. -/
+
+section JumpTimeAtomless
+
+/-- **The exponential law charges no point.**  `expMeasure_eq_withDensity` makes it a density
+against Lebesgue measure, hence absolutely continuous, and Lebesgue measure charges no point.
+Mathlib has the distribution function of `expMeasure` (`cdf_expMeasure_eq`) but not this. -/
+instance instNullSingletonClassExpMeasure (r : ℝ) : NullSingletonClass (expMeasure r) :=
+  ⟨fun x ↦ by
+    rw [expMeasure_eq_withDensity]
+    exact withDensity_absolutelyContinuous volume _ (by simp)⟩
+
+variable {E : Type*}
+
+/-- **The jump times split off their *first* increment.**  The recursion defines `jumpTimeE` by
+its **last** increment, which is the right form for the step index and the wrong one here: the
+coordinate that `waitingMeasure_map_split` isolates is `ξ 0`, and it enters the `(n+1)`-st jump
+time through the *first* summand.  Both readings are the same partial sum, and the proof is the
+associativity of `+` in `ENNReal`, which holds at `⊤` as well. -/
+theorem jumpTimeE_succ_shift (lam : E → ℝ) (y : ℕ → E) (xi : ℕ → ℝ) (n : ℕ) :
+    jumpTimeE lam y xi (n + 1)
+      = ENNReal.ofReal (xi 0) / ENNReal.ofReal (lam (y 0))
+        + jumpTimeE lam (fun k ↦ y (k + 1)) (fun k ↦ xi (k + 1)) n := by
+  induction n with
+  | zero => simp [jumpTimeE_succ]
+  | succ n ih => rw [jumpTimeE_succ, ih, jumpTimeE_succ (xi := fun k ↦ xi (k + 1)), add_assoc]
+
+/-- The jump times are measurable in the waiting times alone, the chain being held fixed.  Unlike
+`measurable_jumpTimeE` this asks **nothing** of the rate: with `y` fixed the numbers `lam (y k)`
+are constants. -/
+theorem measurable_jumpTimeE_snd (lam : E → ℝ) (y : ℕ → E) (n : ℕ) :
+    Measurable fun xi : ℕ → ℝ ↦ jumpTimeE lam y xi n := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+      simp only [jumpTimeE_succ, div_eq_mul_inv]
+      exact ih.add (((measurable_pi_apply n).ennreal_ofReal).mul_const _)
+
+/-- **A single exponential increment hits no prescribed finite value.**  For a fixed divisor `c`
+and a fixed shift `b`, the waiting times `u` with `ofReal u / c + b = a` are, off `Set.Iic 0`, at
+most one.
+
+The three degenerate cases are dispatched by the *finiteness of the target* and by nothing else:
+if `b = ⊤` or `c = 0` then the left hand side is `⊤`, which `a` is not, so the set is empty; and
+otherwise the map is injective on `Set.Ioi 0` by `ENNReal.div_mul_cancel`.  The hypothesis
+`c ≠ ⊤` is **necessary** and not a convenience: at `c = ⊤` the quotient is `0` for every finite
+numerator, the map is constant, and the set is everything when `b = a`.  In the application `c`
+is an `ENNReal.ofReal` and the hypothesis is free. -/
+theorem expMeasure_one_setOf_div_add_eq (c b : ENNReal) (hc : c ≠ ⊤) {a : ENNReal} (ha : a ≠ ⊤) :
+    expMeasure 1 {u : ℝ | ENNReal.ofReal u / c + b = a} = 0 := by
+  have hsing : ({u : ℝ | ENNReal.ofReal u / c + b = a} ∩ Set.Ioi 0).Subsingleton := by
+    rintro u ⟨hu, hu0⟩ v ⟨hv, hv0⟩
+    simp only [Set.mem_setOf_eq] at hu hv
+    have hune : ENNReal.ofReal u ≠ 0 := by
+      simpa using (ENNReal.ofReal_pos.2 hu0).ne'
+    have hbne : b ≠ ⊤ := fun hbtop ↦ ha (by rw [← hu, hbtop, add_top])
+    have hcne : c ≠ 0 := fun hc0 ↦ ha (by rw [← hu, hc0, ENNReal.div_zero hune, top_add])
+    have hdiv : ENNReal.ofReal u / c = ENNReal.ofReal v / c :=
+      (ENNReal.add_left_inj hbne).1 (hu.trans hv.symm)
+    have hval : ENNReal.ofReal u = ENNReal.ofReal v := by
+      rw [← ENNReal.div_mul_cancel hcne hc (b := ENNReal.ofReal u), hdiv,
+        ENNReal.div_mul_cancel hcne hc]
+    exact (ENNReal.ofReal_eq_ofReal_iff hu0.le hv0.le).1 hval
+  refine nonpos_iff_eq_zero.1 ?_
+  have hsub : {u : ℝ | ENNReal.ofReal u / c + b = a}
+      ⊆ Set.Iic 0 ∪ ({u : ℝ | ENNReal.ofReal u / c + b = a} ∩ Set.Ioi 0) := by
+    intro u hu
+    rcases le_or_gt u 0 with h | h
+    · exact Or.inl h
+    · exact Or.inr ⟨hu, h⟩
+  calc expMeasure 1 {u : ℝ | ENNReal.ofReal u / c + b = a}
+      ≤ expMeasure 1 (Set.Iic 0 ∪ ({u : ℝ | ENNReal.ofReal u / c + b = a} ∩ Set.Ioi 0)) :=
+        measure_mono hsub
+    _ ≤ expMeasure 1 (Set.Iic 0)
+        + expMeasure 1 ({u : ℝ | ENNReal.ofReal u / c + b = a} ∩ Set.Ioi 0) :=
+        measure_union_le _ _
+    _ ≤ 0 := by rw [expMeasure_one_Iic_zero, hsing.measure_zero, add_zero]
+
+/-- **No jump time of index `≥ 1` has an atom at a finite value**, the chain being held fixed.
+The whole of the probability is the previous statement; what this adds is the bookkeeping that
+freezes the tail: `waitingMeasure_map_split` turns the waiting times into
+`(expMeasure 1).prod waitingMeasure`, and `Measure.prod_apply_symm` integrates the *tail* last,
+so that the shift `b = jumpTimeE lam (y ∘ (· + 1)) tail n` is a constant when the zeroth
+coordinate is integrated.
+
+The index is `n + 1` and not `n` because `jumpTimeE _ _ _ 0 = 0` is deterministic: the zeroth
+jump time is the convention that the path starts at time `0`, and it does have an atom. -/
+theorem waitingMeasure_setOf_jumpTimeE_eq (lam : E → ℝ) (y : ℕ → E) (n : ℕ)
+    {a : ENNReal} (ha : a ≠ ⊤) :
+    waitingMeasure {xi : ℕ → ℝ | jumpTimeE lam y xi (n + 1) = a} = 0 := by
+  have hF : Measurable fun p : ℝ × (ℕ → ℝ) ↦
+      ENNReal.ofReal p.1 / ENNReal.ofReal (lam (y 0))
+        + jumpTimeE lam (fun k ↦ y (k + 1)) p.2 n := by
+    have h1 : Measurable fun p : ℝ × (ℕ → ℝ) ↦
+        ENNReal.ofReal p.1 / ENNReal.ofReal (lam (y 0)) := by
+      simp only [div_eq_mul_inv]
+      exact (measurable_fst.ennreal_ofReal).mul_const _
+    exact h1.add ((measurable_jumpTimeE_snd lam (fun k ↦ y (k + 1)) n).comp measurable_snd)
+  have hSm : MeasurableSet {p : ℝ × (ℕ → ℝ) | ENNReal.ofReal p.1 / ENNReal.ofReal (lam (y 0))
+      + jumpTimeE lam (fun k ↦ y (k + 1)) p.2 n = a} := hF (measurableSet_singleton a)
+  have hpre : {xi : ℕ → ℝ | jumpTimeE lam y xi (n + 1) = a}
+      = (fun xi : ℕ → ℝ ↦ (xi 0, fun k ↦ xi (k + 1))) ⁻¹'
+        {p : ℝ × (ℕ → ℝ) | ENNReal.ofReal p.1 / ENNReal.ofReal (lam (y 0))
+          + jumpTimeE lam (fun k ↦ y (k + 1)) p.2 n = a} := by
+    ext xi
+    simp only [Set.mem_setOf_eq, Set.mem_preimage, jumpTimeE_succ_shift]
+  have hmeas : Measurable fun xi : ℕ → ℝ ↦ ((xi 0 : ℝ), fun k ↦ xi (k + 1)) :=
+    (measurable_pi_apply 0).prodMk (measurable_pi_lambda _ fun k ↦ measurable_pi_apply (k + 1))
+  rw [hpre, ← Measure.map_apply hmeas hSm, waitingMeasure_map_split,
+    Measure.prod_apply_symm (μ := expMeasure 1) (ν := waitingMeasure) hSm]
+  have hz : ∀ tail : ℕ → ℝ, expMeasure 1 ((fun u : ℝ ↦ (u, tail)) ⁻¹'
+      {p : ℝ × (ℕ → ℝ) | ENNReal.ofReal p.1 / ENNReal.ofReal (lam (y 0))
+        + jumpTimeE lam (fun k ↦ y (k + 1)) p.2 n = a}) = 0 := by
+    intro tail
+    show expMeasure 1 {u : ℝ | ENNReal.ofReal u / ENNReal.ofReal (lam (y 0))
+      + jumpTimeE lam (fun k ↦ y (k + 1)) tail n = a} = 0
+    exact expMeasure_one_setOf_div_add_eq _ _ ENNReal.ofReal_ne_top ha
+  simp only [hz, lintegral_zero]
+
+variable [MeasurableSpace E]
+
+/-- **The jump construction has no jump time at a prescribed finite value.**  The chain is
+integrated out by `Measure.prod_apply`, which is all `jumpMeasure` is: the chain and the waiting
+times are independent, and the statement above holds for every chain. -/
+theorem jumpMeasure_setOf_jumpTimeE_eq {lam : E → ℝ} (hlam : Measurable lam) (mu : Kernel E E)
+    [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] (n : ℕ)
+    {a : ENNReal} (ha : a ≠ ⊤) :
+    jumpMeasure mu nu {ω : (ℕ → E) × (ℕ → ℝ) | jumpTimeE lam ω.1 ω.2 (n + 1) = a} = 0 := by
+  have hSm : MeasurableSet {ω : (ℕ → E) × (ℕ → ℝ) | jumpTimeE lam ω.1 ω.2 (n + 1) = a} :=
+    measurable_jumpTimeE hlam (n + 1) (measurableSet_singleton a)
+  rw [jumpMeasure, Measure.prod_apply hSm]
+  simp [waitingMeasure_setOf_jumpTimeE_eq lam _ n ha]
+
+/-- **A prescribed finite value is almost surely no jump time at all**, countably many null sets
+being one.  This is the form the path statement consumes, and it is where the countability of the
+jump times is spent --- the only place in this section where it is. -/
+theorem ae_forall_jumpTimeE_ne {lam : E → ℝ} (hlam : Measurable lam) (mu : Kernel E E)
+    [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] {a : ENNReal} (ha : a ≠ ⊤) :
+    ∀ᵐ ω ∂(jumpMeasure mu nu), ∀ n, jumpTimeE lam ω.1 ω.2 (n + 1) ≠ a := by
+  rw [ae_iff]
+  have hsub : {ω : (ℕ → E) × (ℕ → ℝ) | ¬ ∀ n, jumpTimeE lam ω.1 ω.2 (n + 1) ≠ a}
+      ⊆ ⋃ n, {ω : (ℕ → E) × (ℕ → ℝ) | jumpTimeE lam ω.1 ω.2 (n + 1) = a} := by
+    intro ω hω
+    simp only [not_forall, not_ne_iff] at hω
+    exact Set.mem_iUnion.2 hω
+  exact measure_mono_null hsub
+    (measure_iUnion_null fun n ↦ jumpMeasure_setOf_jumpTimeE_eq hlam mu nu n ha)
+
+end JumpTimeAtomless
+
+section JumpPathContinuity
+
+variable {E : Type*} [TopologicalSpace E] {lam : E → ℝ} {y : ℕ → E} {xi : ℕ → ℝ}
+
+/-- **Off the jump times the path is locally constant, hence continuous there.**  The window is
+the one the step index reads, `Set.Ioo` of the two neighbouring jump times, and the two ends are
+produced differently: on the right the jump time may be `⊤` --- an absorbing state --- and then
+any real bound serves, while on the left it is finite, because it is `≤ ENNReal.ofReal x`.
+
+The index `n = 0` is the case in which the hypothesis is **not** used and cannot be: the zeroth
+jump time is `0`, which is `ENNReal.ofReal x` when `x = 0`, and the path is nevertheless constant
+to the left of `0` --- the step index is `0` there too.  That is why the hypothesis quantifies
+over `n + 1` and the left end is chosen by cases on `n`.
+
+Non explosion enters as `hex`, in the form `NonExplosiveE` states it, and it is what makes the
+window exist at all; without it `stepIndex` returns its junk value `0` and the path is not
+locally constant at any time past the explosion. -/
+theorem continuousAt_jumpProcessE_of_forall_ne
+    (hex : ∀ s : ℝ, ∃ n, ENNReal.ofReal s < jumpTimeE lam y xi (n + 1))
+    {x : ℝ} (hx0 : 0 ≤ x) (hx : ∀ n, jumpTimeE lam y xi (n + 1) ≠ ENNReal.ofReal x) :
+    ContinuousAt (fun t : ℝ ↦ jumpProcessE lam t (y, xi)) x := by
+  have hmono : Monotone (jumpTimeE lam y xi) := monotone_jumpTimeE
+  obtain ⟨n, hx1, hx2⟩ := exists_stepIndex_window (T := jumpTimeE lam y xi) (hex x)
+  have key : ∀ z : ℝ, (n = 0 ∨ jumpTimeE lam y xi n ≤ ENNReal.ofReal z) →
+      ENNReal.ofReal z < jumpTimeE lam y xi (n + 1) → jumpProcessE lam z (y, xi) = y n := by
+    intro z h1 h2
+    simp only [jumpProcessE, stepPath, stepIndex_eq_of h1 h2 hmono]
+  have hpos : jumpTimeE lam y xi (n + 1) ≠ 0 := by
+    intro h0
+    rw [h0] at hx2
+    exact ENNReal.not_lt_zero hx2
+  have hleft : ∃ a : ℝ, a < x ∧ ∀ z : ℝ, a < z →
+      (n = 0 ∨ jumpTimeE lam y xi n ≤ ENNReal.ofReal z) := by
+    rcases Nat.eq_zero_or_pos n with rfl | hposn
+    · exact ⟨x - 1, by linarith, fun z _ ↦ Or.inl rfl⟩
+    · obtain ⟨m, rfl⟩ : ∃ m, n = m + 1 := ⟨n - 1, (Nat.succ_pred_eq_of_pos hposn).symm⟩
+      have hle : jumpTimeE lam y xi (m + 1) ≤ ENNReal.ofReal x :=
+        hx1.resolve_left (Nat.succ_ne_zero m)
+      have hlt : jumpTimeE lam y xi (m + 1) < ENNReal.ofReal x := lt_of_le_of_ne hle (hx m)
+      refine ⟨(jumpTimeE lam y xi (m + 1)).toReal,
+        (ENNReal.lt_ofReal_iff_toReal_lt hlt.ne_top).1 hlt, fun z hz ↦ Or.inr ?_⟩
+      rw [← ENNReal.ofReal_toReal hlt.ne_top]
+      exact ENNReal.ofReal_le_ofReal hz.le
+  have hright : ∃ b : ℝ, x < b ∧ ∀ z : ℝ, z < b →
+      ENNReal.ofReal z < jumpTimeE lam y xi (n + 1) := by
+    rcases eq_or_ne (jumpTimeE lam y xi (n + 1)) ⊤ with htop | htop
+    · exact ⟨x + 1, by linarith, fun z _ ↦ by rw [htop]; exact ENNReal.ofReal_lt_top⟩
+    · refine ⟨(jumpTimeE lam y xi (n + 1)).toReal,
+        (ENNReal.ofReal_lt_iff_lt_toReal hx0 htop).1 hx2, fun z hz ↦ ?_⟩
+      rw [← ENNReal.ofReal_toReal htop]
+      exact (ENNReal.ofReal_lt_ofReal_iff (ENNReal.toReal_pos hpos htop)).2 hz
+  obtain ⟨a, hax, ha⟩ := hleft
+  obtain ⟨b, hxb, hb⟩ := hright
+  have hev : ∀ᶠ z in 𝓝 x, jumpProcessE lam z (y, xi) = jumpProcessE lam x (y, xi) := by
+    filter_upwards [Ioo_mem_nhds hax hxb] with z hz
+    rw [key z (ha z hz.1) (hb z hz.2), key x hx1 hx2]
+  exact Filter.Tendsto.congr' (hev.mono fun z hz ↦ hz.symm) tendsto_const_nhds
+
+/-- The same over the index `ℝ≥0`, which is the index of the Skorokhod space and of the
+filtration.  The coercion is continuous, so the composition is, and the hypothesis `0 ≤ x` of the
+previous statement is discharged by `NNReal.coe_nonneg`. -/
+theorem continuousAt_nnreal_jumpProcessE_of_forall_ne
+    (hex : ∀ s : ℝ, ∃ n, ENNReal.ofReal s < jumpTimeE lam y xi (n + 1))
+    {t : ℝ≥0} (hx : ∀ n, jumpTimeE lam y xi (n + 1) ≠ ENNReal.ofReal (t : ℝ)) :
+    ContinuousAt (fun s : ℝ≥0 ↦ jumpProcessE lam (s : ℝ) (y, xi)) t :=
+  (continuousAt_jumpProcessE_of_forall_ne hex t.coe_nonneg hx).comp
+    NNReal.continuous_coe.continuousAt
+
+end JumpPathContinuity
+
+section JumpPathNoFixedJump
+
+variable {E : Type*} [MeasurableSpace E] [MetricSpace E] [BorelSpace E] [PolishSpace E]
+  [CompleteSpace E]
+
+/-- **The Skorokhod path of the construction does not jump at a time that is no jump time.**  On
+`CadlagSetE` the path *is* the process, so the continuity of the previous section applies, and
+`IsCadlag.continuousAt_iff_notMem_leftJumpSet` of the roadmap **SkorokhodSpace** turns it into
+the equality of the left limit with the value. -/
+theorem leftLim_jumpPathD_eq_of_forall_ne {lam : E → ℝ} {ω : (ℕ → E) × (ℕ → ℝ)}
+    (hω : ω ∈ CadlagSetE lam) {t : ℝ≥0}
+    (ht : ∀ n, jumpTimeE lam ω.1 ω.2 (n + 1) ≠ ENNReal.ofReal (t : ℝ)) :
+    Function.leftLim (jumpPathD lam ω).toFun t = (jumpPathD lam ω).toFun t := by
+  have hfun : (jumpPathD lam ω).toFun = fun s : ℝ≥0 ↦ jumpProcessE lam (s : ℝ) ω := by
+    funext s
+    exact jumpPathD_toFun_of_mem hω s
+  have hcont : ContinuousAt (jumpPathD lam ω).toFun t := by
+    rw [hfun]
+    exact continuousAt_nnreal_jumpProcessE_of_forall_ne hω.2 ht
+  have h := (jumpPathD lam ω).isCadlag.continuousAt_iff_notMem_leftJumpSet.1 hcont
+  simpa [leftJumpSet] using h
+
+/-- **A fixed time is almost surely not a jump time of the path**, for **every** time, the
+non explosion being the only hypothesis.  The two almost sure statements it rests on are of
+different kinds and are proved in different places: `ae_mem_cadlagSetE_jumpMeasure` says the path
+is a step path, and `ae_forall_jumpTimeE_ne` says no jump time sits at `t`. -/
+theorem ae_leftLim_jumpPathD_eq {lam : E → ℝ} (hlam : Measurable lam) (mu : Kernel E E)
+    [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu]
+    (hne : ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam) (t : ℝ≥0) :
+    ∀ᵐ ω ∂(jumpMeasure mu nu),
+      Function.leftLim (jumpPathD lam ω).toFun t = (jumpPathD lam ω).toFun t := by
+  filter_upwards [ae_mem_cadlagSetE_jumpMeasure hlam mu nu hne,
+    ae_forall_jumpTimeE_ne hlam mu nu (a := ENNReal.ofReal (t : ℝ)) ENNReal.ofReal_ne_top]
+    with ω hω ht
+  exact leftLim_jumpPathD_eq_of_forall_ne hω ht
+
+/-- **The hypothesis `ht` of `SkorokhodSpace.tendsto_finiteDimensional_of_tendsto` and of
+`SkorokhodSpace.tendstoInDistribution_eval`, discharged on the data of Milestone 4.**  The law of
+the jump construction on `D(ℝ≥0, E)` has **no** fixed discontinuity: not a dense set of good
+times, as `exists_countable_dense_continuity` provides for an arbitrary law, but all of them.
+
+That is the strongest form the hypothesis can take, and it is what makes those two theorems
+applicable to the construction at a time the caller chooses rather than at a time the law
+concedes. -/
+theorem map_jumpPathD_setOf_leftLim_eq {lam : E → ℝ} (hlam : Measurable lam) (mu : Kernel E E)
+    [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu]
+    (hne : ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam) (t : ℝ≥0) :
+    ((jumpMeasure mu nu).map (jumpPathD lam))
+        {f : D(ℝ≥0, E) | Function.leftLim f.toFun t = f.toFun t} = 1 := by
+  have hms : MeasurableSet {f : D(ℝ≥0, E) | Function.leftLim f.toFun t = f.toFun t} := by
+    have hcompl : {f : D(ℝ≥0, E) | Function.leftLim f.toFun t = f.toFun t}
+        = {f : D(ℝ≥0, E) | t ∈ leftJumpSet f.toFun}ᶜ := by
+      ext f
+      simp [leftJumpSet]
+    rw [hcompl]
+    exact (SkorokhodSpace.measurableSet_leftJump t).compl
+  have hae := ae_leftLim_jumpPathD_eq hlam mu nu hne t
+  rw [ae_iff] at hae
+  rw [Measure.map_apply (measurable_jumpPathD hlam) hms,
+    ← prob_compl_eq_zero_iff ((measurable_jumpPathD hlam) hms)]
+  convert hae using 2
+  ext ω
+  simp
+
+/-- **The emptiness probe.**  On the Poisson data every hypothesis is discharged, so the law of
+the Poisson path on `D(ℝ≥0, ℕ)` has no fixed discontinuity.  This is the same instantiation that
+`map_eval_map_jumpPathD_poisson` runs, and it says of that law what the convergence theorems of
+the roadmap **SkorokhodSpace** ask of a limit. -/
+theorem map_jumpPathD_setOf_leftLim_eq_poisson (t : ℝ≥0) :
+    ((jumpMeasure poissonKernel (Measure.dirac 0)).map (jumpPathD poissonRate))
+        {f : D(ℝ≥0, ℕ) | Function.leftLim f.toFun t = f.toFun t} = 1 :=
+  map_jumpPathD_setOf_leftLim_eq measurable_poissonRate poissonKernel (Measure.dirac 0)
+    ae_mem_nonExplosiveE_poisson t
+
+end JumpPathNoFixedJump
+
 /-! ### Milestone 6 on the data of Milestone 4: the solution set is a singleton
 
 The previous section put a solution on the canonical path space; this one puts the *only* one

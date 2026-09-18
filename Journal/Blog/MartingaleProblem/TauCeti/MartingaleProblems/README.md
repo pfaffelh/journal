@@ -6734,6 +6734,56 @@ it needs is `jumpMeasure_map_jumpProcessE_poisson`, also proved (2026-09-18) —
 construction is a *different function*, agreeing with the old one only where the
 holding times are strictly positive. That is almost everywhere and nowhere
 guaranteed, so the identification is carried across and not reused.
+
+**The path law has no fixed discontinuity, at any time whatever.** The
+convergence statements of the roadmap **SkorokhodSpace**, Milestone 8 —
+`SkorokhodSpace.tendsto_finiteDimensional_of_tendsto` and
+`SkorokhodSpace.tendstoInDistribution_eval` — carry a hypothesis on the limit
+law: at each time read off, the paths that jump there must carry no mass.
+`SkorokhodSpace.exists_countable_dense_continuity` supplies such times for an
+arbitrary law, and only a countable dense set of them. For the jump construction
+the answer is the strongest one available, and it is proved (2026-09-18):
+
+* `instNullSingletonClassExpMeasure`: the exponential law charges no point. It is
+  `expMeasure_eq_withDensity` read as an absolute continuity against Lebesgue
+  measure. Mathlib has the distribution function of `expMeasure`
+  (`cdf_expMeasure_eq`) and not this.
+* `jumpTimeE_succ_shift` and `measurable_jumpTimeE_snd`: the jump times split off
+  their **first** increment, and are measurable in the waiting times alone. The
+  recursion of `jumpTimeE` peels off the *last* increment, which is the right
+  form for the step index and the wrong one here: the coordinate that
+  `waitingMeasure_map_split` isolates is `ξ 0`.
+* `expMeasure_one_setOf_div_add_eq`: for a divisor `c ≠ ⊤` and a shift `b`, the
+  waiting times `u` with `ENNReal.ofReal u / c + b = a` are, off `Set.Iic 0`, at
+  most one, so the exponential law gives them no mass. The three degenerate cases
+  are settled by the finiteness of `a` alone: at `b = ⊤` and at `c = 0` the left
+  hand side is `⊤`. The hypothesis `c ≠ ⊤` is **necessary** — there the quotient
+  is `0` for every finite numerator and the set is everything when `b = a` — and
+  free in the application, where `c` is an `ENNReal.ofReal`.
+* `waitingMeasure_setOf_jumpTimeE_eq`, `jumpMeasure_setOf_jumpTimeE_eq` and
+  `ae_forall_jumpTimeE_ne`: no jump time of index `≥ 1` has an atom at a finite
+  value, first with the chain held fixed, then under `jumpMeasure`, then for all
+  indices at once. The index is `n + 1` and not `n` because
+  `jumpTimeE _ _ _ 0 = 0` is the convention that the path starts at time `0`, and
+  that one *is* an atom.
+* `continuousAt_jumpProcessE_of_forall_ne` and
+  `continuousAt_nnreal_jumpProcessE_of_forall_ne`: off the jump times the path is
+  locally constant, hence continuous, over `ℝ` and then over `ℝ≥0`. The window is
+  the one the step index reads, and its two ends are produced differently: on the
+  right the next jump time may be `⊤` — an absorbing state — and any real bound
+  serves, while on the left it is finite because it is `≤ ENNReal.ofReal x`. Non
+  explosion enters as the hypothesis of `NonExplosiveE` and is what makes the
+  window exist; without it `stepIndex` returns its junk value and the path is
+  locally constant at no time past the explosion.
+* `leftLim_jumpPathD_eq_of_forall_ne`, `ae_leftLim_jumpPathD_eq` and
+  `map_jumpPathD_setOf_leftLim_eq`: the Skorokhod path does not jump at a time
+  that is no jump time; a fixed time is almost surely not a jump time; and the
+  law `(jumpMeasure mu nu).map (jumpPathD lam)` gives, **for every** `t : ℝ≥0`,
+  the set of paths continuous at `t` full measure. The only hypothesis is the non
+  explosion, in the form `ae_mem_nonExplosiveE_jumpMeasure` states it.
+* `map_jumpPathD_setOf_leftLim_eq_poisson`: the emptiness probe, on the Poisson
+  data, where every hypothesis is discharged.
+
 * `jumpFiltrationE_eq_comap_jumpPath` and `measurable_pathFiltration_jumpPath`:
   the natural filtration of the construction **is** the pull back of
   `pathFiltration` along `jumpPath`, by `naturalFiltration_comp`, so the path map
