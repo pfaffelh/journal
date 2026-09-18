@@ -658,17 +658,17 @@ theorem sub_lengthCoord_of_le (t₀ : ι) {s t : ι} (hst : s ≤ t) :
     lengthCoord t₀ t - lengthCoord t₀ s = dist s t := by
   rcases lt_or_ge s t₀ with hs₀ | h₀s
   · rcases lt_or_ge t t₀ with ht₀ | h₀t
-    · simp only [lengthCoord, if_neg (not_le.2 hs₀), if_neg (not_le.2 ht₀)]
+    · simp only [lengthCoord, ite_eq_right (not_le.2 hs₀), ite_eq_right (not_le.2 ht₀)]
       have hadd := AdditiveDist.dist_add (α := ι) hst ht₀.le
       have hcs : dist t₀ s = dist s t₀ := dist_comm _ _
       have hct : dist t₀ t = dist t t₀ := dist_comm _ _
       linarith
-    · simp only [lengthCoord, if_neg (not_le.2 hs₀), if_pos h₀t]
+    · simp only [lengthCoord, ite_eq_right (not_le.2 hs₀), ite_eq_left h₀t]
       have hadd := AdditiveDist.dist_add (α := ι) hs₀.le h₀t
       have hc : dist t₀ s = dist s t₀ := dist_comm _ _
       linarith
   · have h₀t : t₀ ≤ t := h₀s.trans hst
-    simp only [lengthCoord, if_pos h₀s, if_pos h₀t]
+    simp only [lengthCoord, ite_eq_left h₀s, ite_eq_left h₀t]
     rw [dist_eq_sub_of_le h₀s hst]
 
 omit [OrderTopology ι] [ProperSpace ι] in
@@ -1322,7 +1322,7 @@ theorem IsCadlag.exists_subdivision {f : ι → E} (hf : IsCadlag f) {a b : ι} 
   have hbelow : ∀ y : ι, y < c → ∃ s ∈ S, y < s := by
     intro y hy
     by_contra hcon
-    push_neg at hcon
+    push Not at hcon
     have hsub : closure S ⊆ Set.Iic y := closure_minimal (fun s hs => hcon s hs) isClosed_Iic
     exact absurd (hsub hcmem) (not_le.2 hy)
   -- the greatest point of the closure is itself reachable
@@ -1402,7 +1402,7 @@ theorem IsCadlag.exists_subdivision_through {f : ι → E} (hf : IsCadlag f) {a 
       t i = t₁ ⟨(i : ℕ), Nat.lt_succ_of_le h⟩ := by
     intro i h
     simp only [htdef]
-    rw [dif_pos h]
+    rw [dite_eq_left h]
   have hval2 : ∀ (i : Fin (n + p + 1)) (h : n ≤ (i : ℕ)) (hlt : (i : ℕ) - n < p + 1),
       t i = t₂ ⟨(i : ℕ) - n, hlt⟩ := by
     intro i h hlt
@@ -1414,7 +1414,7 @@ theorem IsCadlag.exists_subdivision_through {f : ι → E} (hf : IsCadlag f) {a 
       have e2 : (⟨(i : ℕ) - n, hlt⟩ : Fin (p + 1)) = 0 := Fin.ext (by simp [hin])
       rw [e1, e2, h₁l, h₂0]
     · simp only [htdef]
-      rw [dif_neg hi]
+      rw [dite_eq_right hi]
   refine ⟨n + p, t, ?_, ?_, ?_, ?_, ?_⟩
   · -- strict monotonicity
     intro i j hij
@@ -1548,7 +1548,7 @@ theorem stepIdx_eq_of_forall_le {n : ℕ} {t : Fin (n + 1) → ι} {x : ι} {i :
     stepIdx t x = i := by
   have hmem : i ∈ Finset.univ.filter fun j => t j ≤ x :=
     Finset.mem_filter.2 ⟨Finset.mem_univ _, hi⟩
-  rw [stepIdx, dif_pos ⟨i, hmem⟩]
+  rw [stepIdx, dite_eq_left ⟨i, hmem⟩]
   exact le_antisymm (hmax _ (Finset.mem_filter.1 (Finset.max'_mem _ ⟨i, hmem⟩)).2)
     (Finset.le_max' _ _ hmem)
 
@@ -1560,7 +1560,7 @@ theorem stepIdx_eq_zero_of_lt {n : ℕ} {t : Fin (n + 1) → ι} (ht : StrictMon
     rintro ⟨j, hj⟩
     exact absurd (le_trans (ht.monotone (Fin.zero_le j)) (Finset.mem_filter.1 hj).2)
       (not_le.2 hx)
-  rw [stepIdx, dif_neg hne]
+  rw [stepIdx, dite_eq_right hne]
 
 omit [MetricSpace ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
 /-- **The index is invariant under an order isomorphism carrying one tuple onto
@@ -1646,7 +1646,7 @@ theorem exists_eventually_stepIdx_eq_nhdsLT {n : ℕ} (t : Fin (n + 1) → ι) (
       rintro ⟨j, hj⟩
       exact hS ⟨j, Finset.mem_filter.2 ⟨Finset.mem_univ _,
         lt_of_le_of_lt (Finset.mem_filter.1 hj).2 hy⟩⟩
-    rw [stepIdx, dif_neg hne]
+    rw [stepIdx, dite_eq_right hne]
 
 omit [AdditiveDist ι] [ProperSpace ι] in
 /-- **A tuple of values read through the index is a càdlàg path**, for any tuple
@@ -4206,28 +4206,28 @@ noncomputable def SkorokhodSpace.step : D(ℝ, ℝ) where
       show Filter.Tendsto (fun t => if (1 : ℝ) ≤ t then (1 : ℝ) else 0) (𝓝[Set.Ioi a] a)
         (𝓝 (if (1 : ℝ) ≤ a then (1 : ℝ) else 0))
       rcases lt_or_ge a 1 with ha | ha
-      · rw [if_neg (not_le.2 ha)]
+      · rw [ite_eq_right (not_le.2 ha)]
         refine Filter.Tendsto.congr' ?_ (tendsto_const_nhds (x := (0 : ℝ)))
         filter_upwards [Filter.Eventually.filter_mono nhdsWithin_le_nhds
           (Iio_mem_nhds ha)] with t ht
-        rw [if_neg (not_le.2 ht)]
+        rw [ite_eq_right (not_le.2 ht)]
       · have ha' : (1 : ℝ) ≤ a := ha
-        rw [if_pos ha']
+        rw [ite_eq_left ha']
         refine Filter.Tendsto.congr' ?_ (tendsto_const_nhds (x := (1 : ℝ)))
         filter_upwards [self_mem_nhdsWithin] with t ht
         simp only [Set.mem_Ioi] at ht
-        rw [if_pos (ha'.trans ht.le)]
+        rw [ite_eq_left (ha'.trans ht.le)]
     · intro x
       rcases lt_or_ge 1 x with hx | hx
       · refine ⟨1, Filter.Tendsto.congr' ?_ (tendsto_const_nhds (x := (1 : ℝ)))⟩
         filter_upwards [Filter.Eventually.filter_mono nhdsWithin_le_nhds
           (Ioi_mem_nhds hx)] with t ht
-        rw [if_pos (le_of_lt ht)]
+        rw [ite_eq_left (le_of_lt ht)]
       · have hx' : x ≤ 1 := hx
         refine ⟨0, Filter.Tendsto.congr' ?_ (tendsto_const_nhds (x := (0 : ℝ)))⟩
         filter_upwards [self_mem_nhdsWithin] with t ht
         simp only [Set.mem_Iio] at ht
-        rw [if_neg (not_le.2 (ht.trans_le hx'))]
+        rw [ite_eq_right (not_le.2 (ht.trans_le hx'))]
 
 theorem SkorokhodSpace.step_apply (t : ℝ) :
     SkorokhodSpace.step.toFun t = if (1 : ℝ) ≤ t then 1 else 0 := rfl
@@ -4237,7 +4237,7 @@ theorem SkorokhodSpace.leftLim_step : Function.leftLim SkorokhodSpace.step.toFun
   refine Filter.Tendsto.congr' ?_ (tendsto_const_nhds (x := (0 : ℝ)))
   filter_upwards [self_mem_nhdsWithin] with t ht
   simp only [Set.mem_Iio] at ht
-  rw [SkorokhodSpace.step_apply, if_neg (not_le.2 ht)]
+  rw [SkorokhodSpace.step_apply, ite_eq_right (not_le.2 ht)]
 
 /-- **The refutation.**  `SkorokhodSpace.step` jumps at `1`, and for the summed
 metric of Milestone 4 evaluation at `1` is continuous at it --- because `1` is the
@@ -4255,7 +4255,7 @@ theorem SkorokhodSpace.exists_jump_continuousAt_eval :
       @ContinuousAt _ _ (SkorokhodSpace.totalTopology (E := ℝ) (0 : ℝ)) _
         (fun g : D(ℝ, ℝ) => g.toFun 1) f := by
   refine ⟨SkorokhodSpace.step, ?_, ?_⟩
-  · rw [SkorokhodSpace.leftLim_step, SkorokhodSpace.step_apply, if_pos le_rfl]
+  · rw [SkorokhodSpace.leftLim_step, SkorokhodSpace.step_apply, ite_eq_left le_rfl]
     norm_num
   · have h := SkorokhodSpace.continuous_eval_exhaustionMax (ι := ℝ) (E := ℝ) 0 1
     have hb : exhaustionMax (0 : ℝ) ((1 : ℕ) : ℝ) = (1 : ℝ) := by
@@ -5050,7 +5050,7 @@ theorem SkorokhodSpace.tendsto_intDist_of_tendsto_of_partialComp [SecondCountabl
       by_cases hgap : ∃ δ : ℝ, 0 < δ ∧
           ∀ t : ι, exhaustionMax t₀ u < t → δ ≤ dist (exhaustionMax t₀ u) t
       · exact Or.inl hgap
-      · push_neg at hgap
+      · push Not at hgap
         refine Or.inr (z.isCadlag.continuousAt_iff_notMem_leftJumpSet.2 fun hjump => ?_)
         exact hbad (Or.inl ⟨hu, hjump, hgap⟩)
     have hB : (∃ δ : ℝ, 0 < δ ∧
@@ -5059,7 +5059,7 @@ theorem SkorokhodSpace.tendsto_intDist_of_tendsto_of_partialComp [SecondCountabl
       by_cases hgap : ∃ δ : ℝ, 0 < δ ∧
           ∀ t : ι, t < exhaustionMin t₀ u → δ ≤ dist (exhaustionMin t₀ u) t
       · exact Or.inl hgap
-      · push_neg at hgap
+      · push Not at hgap
         refine Or.inr (z.isCadlag.continuousAt_iff_notMem_leftJumpSet.2 fun hjump => ?_)
         exact hbad (Or.inr ⟨hu, hjump, hgap⟩)
     exact SkorokhodSpace.tendsto_distWith_of_tendstoUniformlyOn t₀ x z κ hκ hnorm hunif hu hA hB
@@ -5369,16 +5369,16 @@ noncomputable def SkorokhodSpace.stepAt (x : ι) (a b : E) : D(ι, E) where
     refine IsCadlag.of_eventually_const (fun t => ?_) (fun t => ?_)
     · rcases le_or_gt x t with hxt | htx
       · filter_upwards [self_mem_nhdsWithin] with y hy
-        rw [if_pos (hxt.trans (le_of_lt hy)), if_pos hxt]
+        rw [ite_eq_left (hxt.trans (le_of_lt hy)), ite_eq_left hxt]
       · filter_upwards [nhdsWithin_le_nhds (Iio_mem_nhds htx)] with y hy
-        rw [if_neg (not_le.2 hy), if_neg (not_le.2 htx)]
+        rw [ite_eq_right (not_le.2 hy), ite_eq_right (not_le.2 htx)]
     · rcases lt_or_ge x t with hxt | htx
       · refine ⟨a, ?_⟩
         filter_upwards [nhdsWithin_le_nhds (Ioi_mem_nhds hxt)] with y hy
-        exact if_pos (le_of_lt hy)
+        exact ite_eq_left (le_of_lt hy)
       · refine ⟨b, ?_⟩
         filter_upwards [self_mem_nhdsWithin] with y hy
-        exact if_neg (not_le.2 (lt_of_lt_of_le hy htx))
+        exact ite_eq_right (not_le.2 (lt_of_lt_of_le hy htx))
 
 omit [AdditiveDist ι] [ProperSpace ι] [BasePoint ι] in
 @[simp]
@@ -5400,8 +5400,8 @@ theorem SkorokhodSpace.dist_le_distWith_stepAt (t₀ : ι) {u : ℝ} {a b : E} {
   simp only [SkorokhodSpace.restrictExhaustion_apply, TimeChange.one_toOrderIso_apply,
     clamp_eq_self hmem, SkorokhodSpace.stepAt_apply]
   rcases hxy.lt_or_gt with h | h
-  · rw [min_eq_left h.le, if_pos le_rfl, if_neg (not_le.2 h)]
-  · rw [min_eq_right h.le, if_pos le_rfl, if_neg (not_le.2 h), dist_comm]
+  · rw [min_eq_left h.le, ite_eq_left le_rfl, ite_eq_right (not_le.2 h)]
+  · rw [min_eq_right h.le, ite_eq_left le_rfl, ite_eq_right (not_le.2 h), dist_comm]
 
 omit [BasePoint ι] in
 /-- The same statement carried under the integral over the window radius.  Every
@@ -5504,7 +5504,7 @@ theorem SkorokhodSpace.dist_le_distWith_stepAt_of_exp_norm_mul_lt (t₀ : ι) {u
     (SkorokhodSpace.stepAt x a b) (SkorokhodSpace.stepAt y a b) l) s ?_
   simp only [SkorokhodSpace.restrictExhaustion_apply, hls, clamp_eq_self hxmem,
     clamp_eq_self hsmem, SkorokhodSpace.stepAt_apply]
-  rw [if_pos (le_refl x), if_neg (not_le.2 hsy)]
+  rw [ite_eq_left (le_refl x), ite_eq_right (not_le.2 hsy)]
 
 omit [BasePoint ι] in
 /-- The previous estimate carried under the integral over the window radius:
@@ -5599,7 +5599,7 @@ theorem SkorokhodSpace.not_separableSpace_of_rigid [SecondCountableTopology E]
   obtain ⟨P, hPc, hPd⟩ := TopologicalSpace.exists_countable_dense D(ι, E)
   have hball : ∃ n : ℕ, ¬ (Metric.closedBall (basePoint : ι) (n : ℝ)).Countable := by
     by_contra hall
-    push_neg at hall
+    push Not at hall
     refine hι (Set.Countable.mono ?_ (Set.countable_iUnion fun n : ℕ => hall n))
     intro t _
     obtain ⟨n, hn⟩ := exists_nat_ge (dist t (basePoint : ι))
@@ -6439,7 +6439,7 @@ theorem radius_exhaustionMin_mem_Ico_subset (t₀ : ι) (a b : ι) (κ : ℝ) :
     absurd ((isLeast_exhaustionMin t₀ u).2 hmem') (not_le.2 hs)
   have hsu : u < dist s t₀ := by
     by_contra hcon
-    push_neg at hcon
+    push Not at hcon
     exact hsnot (by rw [exhaustion_eq_closedBall t₀ hu0]; exact Metric.mem_closedBall.2 hcon)
   have hdA : dist (exhaustionMin t₀ u) s
       = lengthCoord t₀ (exhaustionMin t₀ u) - lengthCoord t₀ s := by
@@ -6925,7 +6925,7 @@ theorem SkorokhodSpace.exists_radius_distWith_lt [SecondCountableTopology E]
     (hc1 : c ≤ 1) (h : SkorokhodSpace.intWith t₀ l f g < Real.exp (-(M + 1)) * c) :
     ∃ u : ℝ, u ∈ Set.Ioc M (M + 1) ∧ SkorokhodSpace.distWith t₀ u l f g < c := by
   by_contra hcon
-  push_neg at hcon
+  push Not at hcon
   have hnn : ∀ u : ℝ, (0 : ℝ) ≤ min 1 (SkorokhodSpace.distWith t₀ u l f g) :=
     fun u => le_min zero_le_one (SkorokhodSpace.distWith_nonneg t₀ u _ f g)
   have hFint := SkorokhodSpace.integrableOn_intDist t₀ l f g
@@ -7256,13 +7256,13 @@ theorem SkorokhodSpace.measurable_eval (t : ι) :
         have := dist_triangle w z (f.toFun t)
         rw [dist_comm z (f.toFun t)] at this
         linarith
-      · rw [Set.mem_setOf_eq, edist_dist]
+      · rw [Set.mem_ofPred_eq, edist_dist]
         exact ENNReal.ofReal_lt_ofReal_iff_of_nonneg dist_nonneg |>.2 (lt_trans hz hq1)
     · intro hf
       obtain ⟨p, hp⟩ := Set.mem_iUnion.1 hf
       obtain ⟨⟨hq0, hqsub⟩, hmem⟩ := Set.mem_iUnion.1 hp
       refine hqsub ?_
-      rw [Set.mem_setOf_eq, edist_dist] at hmem
+      rw [Set.mem_ofPred_eq, edist_dist] at hmem
       rw [Metric.mem_ball]
       exact (ENNReal.ofReal_lt_ofReal_iff_of_nonneg dist_nonneg).1 hmem
   rw [hset]
@@ -7842,7 +7842,7 @@ theorem SkorokhodSpace.le_modulusPinned_of_dist_exhaustionMin_le (t₀ : ι) (u 
   have hbase : t i.castSucc = exhaustionMin t₀ u := by rw [hcast, h0]
   have hxlt : x < t i.succ := by
     by_contra hcon
-    push_neg at hcon
+    push Not at hcon
     have h1 : t i.castSucc ≤ t i.succ := (hmono (Fin.castSucc_lt_succ (i := i))).le
     have h2 : dist (t i.castSucc) (t i.succ) ≤ dist (t i.castSucc) x :=
       monotoneOn_dist_basepoint (Set.mem_Ici.2 h1) (Set.mem_Ici.2 (h1.trans hcon)) hcon
@@ -7936,7 +7936,7 @@ theorem clamp_real_le_iff {u t r : ℝ} (hru : r < u) (hur : -u < r) :
   constructor
   · intro h
     by_contra hc
-    push_neg at hc
+    push Not at hc
     have h1 : max t (-u) < r := max_lt hc hur
     have h2 : min (max t (-u)) u ≤ max t (-u) := min_le_left _ _
     linarith
@@ -7968,16 +7968,16 @@ theorem SkorokhodSpace.distWith_scale_stepAt_le_zero {ε u : ℝ} (hε0 : 0 < ε
       constructor
       · intro h'
         by_contra hcon
-        push_neg at hcon
+        push Not at hcon
         nlinarith
       · intro h'
         nlinarith
   simp only [SkorokhodSpace.restrictExhaustion_apply, TimeChange.scale_apply,
     SkorokhodSpace.stepAt_apply]
   by_cases hc : (-1 : ℝ) ≤ clamp (0 : ℝ) u t
-  · rw [if_pos hc, if_pos (hkey.2 hc)]
+  · rw [ite_eq_left hc, ite_eq_left (hkey.2 hc)]
     simp
-  · rw [if_neg hc, if_neg (fun hh => hc (hkey.1 hh))]
+  · rw [ite_eq_right hc, ite_eq_right (fun hh => hc (hkey.1 hh))]
     simp
 
 /-- The windowed estimate carried under the integral: the bad radii form the
@@ -8077,11 +8077,11 @@ theorem SkorokhodSpace.not_tendsto_iSup_modulusPinned :
       rintro x ⟨f, hf, t, -, rfl⟩
       rcases hf with rfl | ⟨n, rfl⟩
       · by_cases h : (-1 : ℝ) ≤ t
-        · exact Or.inr (by rw [SkorokhodSpace.stepAt_apply, if_pos h]; rfl)
-        · exact Or.inl (by rw [SkorokhodSpace.stepAt_apply, if_neg h])
+        · exact Or.inr (by rw [SkorokhodSpace.stepAt_apply, ite_eq_left h]; rfl)
+        · exact Or.inl (by rw [SkorokhodSpace.stepAt_apply, ite_eq_right h])
       · by_cases h : 1 / ((n : ℝ) + 2) - 1 ≤ t
-        · exact Or.inr (by rw [hF]; rw [SkorokhodSpace.stepAt_apply, if_pos h]; rfl)
-        · exact Or.inl (by rw [hF]; rw [SkorokhodSpace.stepAt_apply, if_neg h])
+        · exact Or.inr (by rw [hF]; rw [SkorokhodSpace.stepAt_apply, ite_eq_left h]; rfl)
+        · exact Or.inl (by rw [hF]; rw [SkorokhodSpace.stepAt_apply, ite_eq_right h])
     refine ((Set.finite_singleton (1 : ℝ)).insert 0).isCompact.of_isClosed_subset
       isClosed_closure ?_
     exact closure_minimal hsub ((Set.finite_singleton (1 : ℝ)).insert 0).isClosed
@@ -8117,8 +8117,8 @@ theorem SkorokhodSpace.not_tendsto_iSup_modulusPinned :
     have hval : edist ((F n).toFun (1 / ((n : ℝ) + 2) - 1))
         ((F n).toFun (exhaustionMin (0 : ℝ) 1)) = 1 := by
       rw [hmin, hF]
-      simp only [SkorokhodSpace.stepAt_apply, if_pos (le_refl (1 / ((n : ℝ) + 2) - 1)),
-        if_neg (by linarith : ¬ 1 / ((n : ℝ) + 2) - 1 ≤ (-1 : ℝ))]
+      simp only [SkorokhodSpace.stepAt_apply, ite_eq_left (le_refl (1 / ((n : ℝ) + 2) - 1)),
+        ite_eq_right (by linarith : ¬ 1 / ((n : ℝ) + 2) - 1 ≤ (-1 : ℝ))]
       rw [edist_dist, Real.dist_eq]
       norm_num
     rw [hval] at hkey
@@ -8372,7 +8372,7 @@ theorem exists_mem_Ico_of_strictMono {α : Type*} [LinearOrder α] :
       refine ⟨i.castSucc, ?_⟩
       rw [Fin.succ_castSucc]
       exact hi
-    · push_neg at hcase
+    · push Not at hcase
       refine ⟨Fin.last n, hcase, ?_⟩
       rwa [Fin.succ_last]
 
@@ -8745,8 +8745,8 @@ theorem SkorokhodSpace.not_isCompact_closure_of_rigid [SecondCountableTopology E
       rintro y ⟨f, ⟨x, hx, rfl⟩, t, -, rfl⟩
       rw [SkorokhodSpace.stepAt_apply]
       by_cases h : x ≤ t
-      · rw [if_pos h]; exact Set.mem_insert _ _
-      · rw [if_neg h]; exact Set.mem_insert_of_mem _ rfl
+      · rw [ite_eq_left h]; exact Set.mem_insert _ _
+      · rw [ite_eq_right h]; exact Set.mem_insert_of_mem _ rfl
     refine ((Set.finite_singleton b).insert a).isCompact.of_isClosed_subset isClosed_closure ?_
     exact closure_minimal hsub ((Set.finite_singleton b).insert a).isClosed
   · -- the modulus vanishes below the separation
@@ -8795,10 +8795,10 @@ theorem SkorokhodSpace.not_isCompact_closure_of_rigid [SecondCountableTopology E
         · rw [hcs0] at hs ⊢
           rw [hsu0] at hs
           rw [SkorokhodSpace.stepAt_apply, SkorokhodSpace.stepAt_apply,
-            if_neg (not_le.2 hs.2), if_neg (not_le.2 h1), edist_self]
+            ite_eq_right (not_le.2 hs.2), ite_eq_right (not_le.2 h1), edist_self]
         · rw [hcs1] at hs ⊢
           rw [SkorokhodSpace.stepAt_apply, SkorokhodSpace.stepAt_apply,
-            if_pos hs.1, if_pos le_rfl, edist_self]
+            ite_eq_left hs.1, ite_eq_left le_rfl, edist_self]
     have hev : ∀ᶠ δ : ℝ in 𝓝[>] (0 : ℝ), δ < η :=
       (Filter.eventually_iff_exists_mem.2 ⟨Set.Iio η, Iio_mem_nhds hη,
         fun _ hx => hx⟩).filter_mono nhdsWithin_le_nhds
@@ -8998,8 +8998,8 @@ theorem SkorokhodSpace.not_isCompact_closure_of_jumps_at_basePoint
       rintro y ⟨f, ⟨k, rfl⟩, t, -, rfl⟩
       rw [SkorokhodSpace.stepAt_apply]
       by_cases h : ((1 : ℝ) / 4) ^ (k + 1) ≤ t
-      · rw [if_pos h]; exact Set.mem_insert _ _
-      · rw [if_neg h]; exact Set.mem_insert_of_mem _ rfl
+      · rw [ite_eq_left h]; exact Set.mem_insert _ _
+      · rw [ite_eq_right h]; exact Set.mem_insert_of_mem _ rfl
     refine ((Set.finite_singleton b).insert a).isCompact.of_isClosed_subset isClosed_closure ?_
     exact closure_minimal hsub ((Set.finite_singleton b).insert a).isClosed
   · -- the modulus vanishes below `3/4`, for every window
@@ -9055,11 +9055,11 @@ theorem SkorokhodSpace.not_isCompact_closure_of_jumps_at_basePoint
       · rw [hcs0] at hs ⊢
         rw [hsu0] at hs
         rw [SkorokhodSpace.stepAt_apply, SkorokhodSpace.stepAt_apply,
-          if_neg (not_le.2 hs.2), if_neg (not_le.2 (by linarith : -((m : ℝ) + 1) < x)),
+          ite_eq_right (not_le.2 hs.2), ite_eq_right (not_le.2 (by linarith : -((m : ℝ) + 1) < x)),
           edist_self]
       · rw [hcs1] at hs ⊢
         rw [SkorokhodSpace.stepAt_apply, SkorokhodSpace.stepAt_apply,
-          if_pos hs.1, if_pos le_rfl, edist_self]
+          ite_eq_left hs.1, ite_eq_left le_rfl, edist_self]
     have hev : ∀ᶠ δ : ℝ in 𝓝[>] (0 : ℝ), δ < 3 / 4 :=
       (Filter.eventually_iff_exists_mem.2 ⟨Set.Iio (3 / 4), Iio_mem_nhds (by norm_num),
         fun _ hx => hx⟩).filter_mono nhdsWithin_le_nhds
@@ -9417,7 +9417,7 @@ theorem dist_first_last_eq_sum : ∀ {n : ℕ} {t : Fin (n + 1) → ι}, Monoton
   | succ n ih =>
       intro t ht
       have hmono : Monotone fun i : Fin (n + 1) => t i.castSucc :=
-        fun a b hab => ht (by simpa only [Fin.le_def, Fin.coe_castSucc] using hab)
+        fun a b hab => ht (by simpa only [Fin.le_def, Fin.val_castSucc] using hab)
       have h2 := ih hmono
       have h1 : dist (t 0) (t (Fin.last (n + 1)))
           = dist (t 0) (t ((Fin.last n).castSucc))
@@ -10019,7 +10019,7 @@ theorem SkorokhodSpace.IsSubdivisionBased.trim {M δ : ℝ} (hM : 1 ≤ M) (hδ0
     refine ⟨_, (Finset.mem_filter.1 (Finset.max'_mem _ hne)).2, ?_⟩
     intro i hlt
     by_contra hcon
-    push_neg at hcon
+    push Not at hcon
     exact absurd (Finset.le_max' _ i (Finset.mem_filter.2 ⟨Finset.mem_univ _, hcon⟩))
       (not_le.2 hlt)
   obtain ⟨j₀, hj₀, hj₀min⟩ :
@@ -10029,7 +10029,7 @@ theorem SkorokhodSpace.IsSubdivisionBased.trim {M δ : ℝ} (hM : 1 ≤ M) (hδ0
     refine ⟨_, (Finset.mem_filter.1 (Finset.min'_mem _ hne)).2, ?_⟩
     intro i hlt
     by_contra hcon
-    push_neg at hcon
+    push Not at hcon
     exact absurd (Finset.min'_le _ i (Finset.mem_filter.2 ⟨Finset.mem_univ _, hcon⟩))
       (not_le.2 hlt)
   have hij : (i₀ : ℕ) < (j₀ : ℕ) := Fin.lt_def.1 (hmono.lt_iff_lt.1 (by linarith))
@@ -10521,7 +10521,7 @@ theorem SkorokhodSpace.setOf_mem_leftJumpSet_eq_iUnion (t : ι) :
     {f : D(ι, E) | t ∈ leftJumpSet f.toFun}
       = ⋃ n : ℕ, {f : D(ι, E) | t ∈ largeLeftJumpSet f.toFun (1 / (n + 1))} := by
   ext f
-  simp only [Set.mem_iUnion, Set.mem_setOf_eq, leftJumpSet, largeLeftJumpSet]
+  simp only [Set.mem_iUnion, Set.mem_ofPred_eq, leftJumpSet, largeLeftJumpSet]
   constructor
   · intro h
     obtain ⟨n, hn⟩ := exists_nat_one_div_lt (dist_pos.2 h)
@@ -10614,11 +10614,11 @@ theorem SkorokhodSpace.countable_setOf_measure_leftJump_ne_zero
         ((p.2.1 : ℝ≥0∞))⁻¹ ≤
           μ {f : D(ι, E) | t ∈ largeLeftJumpSet f.toFun (1 / (p.1 + 1))}} := by
     intro t ht
-    simp only [Set.mem_setOf_eq] at ht
+    simp only [Set.mem_ofPred_eq] at ht
     rw [SkorokhodSpace.setOf_mem_leftJumpSet_eq_iUnion t] at ht
     have hex : ∃ n : ℕ, μ {f : D(ι, E) | t ∈ largeLeftJumpSet f.toFun (1 / (n + 1))} ≠ 0 := by
       by_contra hall
-      push_neg at hall
+      push Not at hall
       exact ht (measure_iUnion_null hall)
     obtain ⟨n, hn⟩ := hex
     obtain ⟨k, hk⟩ := ENNReal.exists_inv_nat_lt hn
@@ -10657,7 +10657,7 @@ theorem SkorokhodSpace.exists_countable_dense_continuity
     · refine absurd ?_ hx
       have hempty : {f : D(ι, E) | x ∈ leftJumpSet f.toFun} = ∅ := by
         ext f
-        simp only [Set.mem_setOf_eq, leftJumpSet, Set.mem_empty_iff_false, iff_false, not_not]
+        simp only [Set.mem_ofPred_eq, leftJumpSet, Set.mem_empty_iff_false, iff_false, not_not]
         exact leftLim_eq_of_eq_bot _ hbot
       rw [hempty]
       exact measure_empty
@@ -10836,7 +10836,7 @@ theorem SkorokhodSpace.tendsto_finiteDimensional_of_tendsto
     have h0 := (prob_compl_eq_zero_iff hms).2 (ht i)
     rwa [hcompl, compl_compl] at h0
   refine measure_mono_null (fun f hf => ?_) (measure_iUnion_null hnull)
-  simp only [Set.mem_setOf_eq] at hf
+  simp only [Set.mem_ofPred_eq] at hf
   by_contra hcon
   refine hf (SkorokhodSpace.continuousAt_evalPi_of_forall_notMem_leftJumpSet fun i hi => ?_)
   exact hcon (Set.mem_iUnion.2 ⟨i, hi⟩)
@@ -10948,15 +10948,15 @@ theorem SkorokhodSpace.leftLim_step_of_ne {t : ℝ} (ht : t ≠ 1) :
       refine Filter.Tendsto.congr' ?_ (tendsto_const_nhds (x := (0 : ℝ)))
       filter_upwards [Filter.Eventually.filter_mono nhdsWithin_le_nhds
         (Iio_mem_nhds h)] with s hs
-      rw [SkorokhodSpace.step_apply, if_neg (not_le.2 hs)]
-    rw [hlim, SkorokhodSpace.step_apply, if_neg (not_le.2 h)]
+      rw [SkorokhodSpace.step_apply, ite_eq_right (not_le.2 hs)]
+    rw [hlim, SkorokhodSpace.step_apply, ite_eq_right (not_le.2 h)]
   · have hlim : Function.leftLim SkorokhodSpace.step.toFun t = 1 := by
       refine leftLim_eq_of_tendsto ?_
       refine Filter.Tendsto.congr' ?_ (tendsto_const_nhds (x := (1 : ℝ)))
       filter_upwards [Filter.Eventually.filter_mono nhdsWithin_le_nhds
         (Ioi_mem_nhds h)] with s hs
-      rw [SkorokhodSpace.step_apply, if_pos (le_of_lt hs)]
-    rw [hlim, SkorokhodSpace.step_apply, if_pos h.le]
+      rw [SkorokhodSpace.step_apply, ite_eq_left (le_of_lt hs)]
+    rw [hlim, SkorokhodSpace.step_apply, ite_eq_left h.le]
 
 /-- **The probe of the hypothesis, at a law that does jump.**  The Dirac law at
 `SkorokhodSpace.step` over `ι = ℝ`, `E = ℝ` --- the law of a path with one jump,
@@ -10996,8 +10996,8 @@ theorem SkorokhodSpace.dirac_step_setOf_leftLim_eq_one :
     exact (SkorokhodSpace.measurableSet_leftJump (1 : ℝ)).compl
   have hne : SkorokhodSpace.step
       ∉ {f : D(ℝ, ℝ) | Function.leftLim f.toFun 1 = f.toFun 1} := by
-    simp only [Set.mem_setOf_eq, SkorokhodSpace.leftLim_step, SkorokhodSpace.step_apply,
-      if_pos le_rfl]
+    simp only [Set.mem_ofPred_eq, SkorokhodSpace.leftLim_step, SkorokhodSpace.step_apply,
+      ite_eq_left le_rfl]
     norm_num
   rw [Measure.dirac_apply' _ hms, Set.indicator_of_notMem hne]
 
@@ -11064,7 +11064,7 @@ theorem SkorokhodSpace.leftLim_stepAt {x : ι} [(𝓝[<] x).NeBot] (a b : E) :
   refine Filter.Tendsto.congr' ?_ (tendsto_const_nhds (x := b))
   filter_upwards [self_mem_nhdsWithin] with t ht
   simp only [Set.mem_Iio] at ht
-  rw [SkorokhodSpace.stepAt_apply, if_neg (not_le.2 ht)]
+  rw [SkorokhodSpace.stepAt_apply, ite_eq_right (not_le.2 ht)]
 
 /-- The step at the `n`-th rational, under the enumeration `Denumerable.ofNat ℚ`. -/
 noncomputable def SkorokhodSpace.ratStep (n : ℕ) : D(ℝ, ℝ) :=
@@ -11111,7 +11111,7 @@ theorem SkorokhodSpace.denseJumpLaw_setOf_leftLim_ne_one (r : ℚ) :
     rw [SkorokhodSpace.ratStep, hq]
   have hne : Function.leftLim (SkorokhodSpace.stepAt t (1 : ℝ) (0 : ℝ)).toFun t
       ≠ (SkorokhodSpace.stepAt t (1 : ℝ) (0 : ℝ)).toFun t := by
-    rw [SkorokhodSpace.leftLim_stepAt, SkorokhodSpace.stepAt_apply, if_pos le_rfl]
+    rw [SkorokhodSpace.leftLim_stepAt, SkorokhodSpace.stepAt_apply, ite_eq_left le_rfl]
     norm_num
   have hmem : SkorokhodSpace.ratStep (Denumerable.eqv ℚ r) ∈ Gᶜ := by
     rw [hstep]
@@ -11233,7 +11233,7 @@ theorem SkorokhodSpace.exists_isCompact_forall_exists_one_le_dist :
     have hne : ¬ (1 / ((n : ℝ) + 2) - 1 ≤ (-1 : ℝ)) := by
       rw [not_le]; linarith
     rw [hF]
-    simp only [SkorokhodSpace.stepAt_apply, if_pos le_rfl, if_neg hne]
+    simp only [SkorokhodSpace.stepAt_apply, ite_eq_left le_rfl, ite_eq_right hne]
     rw [Real.dist_eq]
     norm_num
 
