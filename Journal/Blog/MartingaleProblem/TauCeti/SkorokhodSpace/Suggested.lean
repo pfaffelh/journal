@@ -11652,26 +11652,49 @@ theorem SkorokhodSpace.mul_volume_setOf_le_measure_setOf_exists_edist_lt {K : Se
   exact le_trans hmk
     (SkorokhodSpace.lintegral_measure_setOf_exists_edist_lt_le hM hδ0 hδ1 h μ hμ)
 
-/-- **From a bound on an integral over the window to a time.**  If the integral of
-`F` over `[-M, M)` is at most `C` and `C` is below `β` times the length of the
+/-- **From a bound on an integral over a window to a time.**  If the integral of
+`F` over `[u, v)` is at most `C` and `C` is below `β` times the length of the
 window, then some time of the window has `F t < β`.  It is Markov's inequality
 read by contradiction, and it is the step that turns a statement about the
 measure of the bad times into a statement about **one** time. -/
+theorem exists_mem_Ico_lt_of_setLIntegral_le' {u v : ℝ} {F : ℝ → ℝ≥0∞} (hF : Measurable F)
+    {C β : ℝ≥0∞} (hint : ∫⁻ t in Set.Ico u v, F t ≤ C)
+    (hβ : C < β * ENNReal.ofReal (v - u)) :
+    ∃ t ∈ Set.Ico u v, F t < β := by
+  by_contra hcon
+  simp only [not_exists, not_and, not_lt] at hcon
+  have hmk := mul_meas_ge_le_lintegral (μ := volume.restrict (Set.Ico u v)) hF β
+  have hms : MeasurableSet {t : ℝ | β ≤ F t} := hF measurableSet_Ici
+  have hEq : (volume.restrict (Set.Ico u v)) {t | β ≤ F t} = ENNReal.ofReal (v - u) := by
+    have hsubset : Set.Ico u v ⊆ {t : ℝ | β ≤ F t} := fun t ht => hcon t ht
+    rw [Measure.restrict_apply hms, Set.inter_eq_self_of_subset_right hsubset, Real.volume_Ico]
+  rw [hEq] at hmk
+  exact absurd (le_trans hmk hint) (not_le.2 hβ)
+
+/-- **The same on the symmetric window**, which is the shape the bound of
+`SkorokhodSpace.lintegral_measure_setOf_exists_edist_lt_le` comes in. -/
 theorem exists_mem_Ico_lt_of_setLIntegral_le {M : ℝ} {F : ℝ → ℝ≥0∞} (hF : Measurable F)
     {C β : ℝ≥0∞} (hint : ∫⁻ t in Set.Ico (-M) M, F t ≤ C)
     (hβ : C < β * ENNReal.ofReal (2 * M)) :
     ∃ t ∈ Set.Ico (-M) M, F t < β := by
-  by_contra hcon
-  simp only [not_exists, not_and, not_lt] at hcon
-  have hmk := mul_meas_ge_le_lintegral (μ := volume.restrict (Set.Ico (-M) M)) hF β
-  have hms : MeasurableSet {t : ℝ | β ≤ F t} := hF measurableSet_Ici
-  have hEq : (volume.restrict (Set.Ico (-M) M)) {t | β ≤ F t} = ENNReal.ofReal (2 * M) := by
-    have hsubset : Set.Ico (-M) M ⊆ {t : ℝ | β ≤ F t} := fun t ht => hcon t ht
-    rw [Measure.restrict_apply hms, Set.inter_eq_self_of_subset_right hsubset, Real.volume_Ico]
-    congr 1
-    ring
-  rw [hEq] at hmk
-  exact absurd (le_trans hmk hint) (not_le.2 hβ)
+  refine exists_mem_Ico_lt_of_setLIntegral_le' hF hint ?_
+  have hMM : M - -M = 2 * M := by ring
+  rwa [hMM]
+
+/-- **A small value inside a prescribed subwindow.**  The integrand being
+non-negative, the bound over the whole window bounds the integral over any
+subwindow, and the argument above then asks only that the bound be small against
+the *length of the subwindow*.
+
+This is what turns one good time into a good time *near a prescribed one*: the
+bound of `SkorokhodSpace.lintegral_measure_setOf_exists_edist_lt_le` is
+proportional to the span `δ'`, and the span is free, so it may be made small
+against any window one likes. -/
+theorem exists_mem_Ico_lt_of_setLIntegral_le_of_subset {u v M : ℝ} {F : ℝ → ℝ≥0∞}
+    (hF : Measurable F) {C β : ℝ≥0∞} (hint : ∫⁻ t in Set.Ico (-M) M, F t ≤ C)
+    (huv : Set.Ico u v ⊆ Set.Ico (-M) M) (hβ : C < β * ENNReal.ofReal (v - u)) :
+    ∃ t ∈ Set.Ico u v, F t < β :=
+  exists_mem_Ico_lt_of_setLIntegral_le' hF (le_trans (lintegral_mono_set huv) hint) hβ
 
 /-- **A good time for one law.**  Under the hypothesis of
 `SkorokhodSpace.lintegral_measure_setOf_exists_edist_lt_le` and for `δ'` small
@@ -11694,6 +11717,107 @@ theorem SkorokhodSpace.exists_time_measure_setOf_exists_edist_lt {K : Set D(ℝ,
     (measurable_measure_prodMk_left
       (SkorokhodSpace.measurableSet_setOf_exists_edist_lt (E := E) δ' (4 * c)))
     (SkorokhodSpace.lintegral_measure_setOf_exists_edist_lt_le hM hδ0 hδ1 h μ hμ) hβ
+
+/-- **A good time inside a prescribed subwindow.**  The same, read on a subwindow
+`[u, v)` of the window: the bound is spent against `v - u` and not against the
+whole window, and since it is proportional to the span `δ'`, which is free, it may
+be made small against any subwindow.
+
+This is the form in which a good time is found **near** a prescribed time and not
+merely somewhere. -/
+theorem SkorokhodSpace.exists_time_mem_Ico_measure_setOf_exists_edist_lt {K : Set D(ℝ, E)}
+    {M δ δ' u v : ℝ} (hM : 1 ≤ M) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) {c : ℝ≥0∞}
+    (h : (⨆ f ∈ K, SkorokhodSpace.modulusBased (0 : ℝ) M f δ) < c)
+    (μ : Measure D(ℝ, E)) [IsProbabilityMeasure μ] (hμ : μ Kᶜ = 0)
+    (huv : Set.Ico u v ⊆ Set.Ico (-M) M) {β : ℝ≥0∞}
+    (hβ : ((⌈2 * (M + 1) / δ⌉₊ : ℝ≥0∞) + 1) * ENNReal.ofReal δ'
+      < β * ENNReal.ofReal (v - u)) :
+    ∃ t ∈ Set.Ico u v,
+      μ {f : D(ℝ, E) | ∃ s ∈ Set.Ico t (t + δ'),
+        4 * c < edist (f.toFun s) (f.toFun t)} < β :=
+  exists_mem_Ico_lt_of_setLIntegral_le_of_subset
+    (measurable_measure_prodMk_left
+      (SkorokhodSpace.measurableSet_setOf_exists_edist_lt (E := E) δ' (4 * c)))
+    (SkorokhodSpace.lintegral_measure_setOf_exists_edist_lt_le hM hδ0 hδ1 h μ hμ) huv hβ
+
+/-- **Good times for a whole family, one to the right of each prescribed time.**
+To a family `t : κ → ℝ` of times, each carrying the window `[t i, t i + η)` inside
+`[-M, M)`, there is a family `s` with `s i ∈ [t i, t i + η)` at each of which the
+law charges a large right oscillation with probability less than `β`.
+
+The index `κ` need not be finite and needs no structure: the times are chosen
+independently of one another, by `choose`, because the bound holds on every
+subwindow at once.  What is common to the coordinates is the span `δ'` and the
+level `β`, and that is what the single hypothesis `hβ` records. -/
+theorem SkorokhodSpace.exists_times_forall_measure_setOf_exists_edist_lt {κ : Type*}
+    {K : Set D(ℝ, E)} {M δ δ' η : ℝ} (hM : 1 ≤ M) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) {c : ℝ≥0∞}
+    (h : (⨆ f ∈ K, SkorokhodSpace.modulusBased (0 : ℝ) M f δ) < c)
+    (μ : Measure D(ℝ, E)) [IsProbabilityMeasure μ] (hμ : μ Kᶜ = 0)
+    {t : κ → ℝ} (ht : ∀ i, Set.Ico (t i) (t i + η) ⊆ Set.Ico (-M) M) {β : ℝ≥0∞}
+    (hβ : ((⌈2 * (M + 1) / δ⌉₊ : ℝ≥0∞) + 1) * ENNReal.ofReal δ'
+      < β * ENNReal.ofReal η) :
+    ∃ s : κ → ℝ, (∀ i, s i ∈ Set.Ico (t i) (t i + η)) ∧
+      ∀ i, μ {f : D(ℝ, E) | ∃ r ∈ Set.Ico (s i) (s i + δ'),
+        4 * c < edist (f.toFun r) (f.toFun (s i))} < β := by
+  have hstep : ∀ i : κ, ∃ s ∈ Set.Ico (t i) (t i + η),
+      μ {f : D(ℝ, E) | ∃ r ∈ Set.Ico s (s + δ'),
+        4 * c < edist (f.toFun r) (f.toFun s)} < β := by
+    intro i
+    refine SkorokhodSpace.exists_time_mem_Ico_measure_setOf_exists_edist_lt hM hδ0 hδ1 h μ hμ
+      (ht i) ?_
+    have hsub : t i + η - t i = η := by ring
+    rw [hsub]
+    exact hβ
+  choose s hs hsm using hstep
+  exact ⟨s, hs, hsm⟩
+
+/-- **One good time serving finitely many laws at once.**  All the laws being
+carried by the same `K`, the bound of
+`SkorokhodSpace.lintegral_measure_setOf_exists_edist_lt_le` holds for each of them
+with the same constants; summing over a **finite** set of laws multiplies it by
+the cardinality, and the argument above then produces one time of the subwindow at
+which *every* law of the set charges a large right oscillation with probability
+less than `β`.
+
+**Why this stops at a finite set, and what stands in its place for a sequence.**
+The price is the factor `#s`, and it is paid by making the span `δ'` smaller; over
+an infinite index the sum of the bounds is infinite and no span is small enough.
+That is not a defect of this proof: a time good for every member of a sequence at
+once need not exist, and the inequality that would be needed,
+`∫ limsup ≤ limsup ∫`, is false. What a sequence has instead is
+`SkorokhodSpace.exists_time_liminf_measure_setOf_exists_edist_lt`, which gives a
+time good along a **subsequence**.
+
+Two laws are the case the identification of a law by its finite dimensional
+distributions along a dense set of times needs, and for two the factor is `2`. -/
+theorem SkorokhodSpace.exists_time_mem_Ico_forall_measure_setOf_exists_edist_lt {ν : Type*}
+    {K : Set D(ℝ, E)} {M δ δ' u v : ℝ} (hM : 1 ≤ M) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) {c : ℝ≥0∞}
+    (h : (⨆ f ∈ K, SkorokhodSpace.modulusBased (0 : ℝ) M f δ) < c)
+    (μ : ν → Measure D(ℝ, E)) [∀ j, IsProbabilityMeasure (μ j)] (hμ : ∀ j, (μ j) Kᶜ = 0)
+    (s : Finset ν) (huv : Set.Ico u v ⊆ Set.Ico (-M) M) {β : ℝ≥0∞}
+    (hβ : (s.card : ℝ≥0∞) * (((⌈2 * (M + 1) / δ⌉₊ : ℝ≥0∞) + 1) * ENNReal.ofReal δ')
+      < β * ENNReal.ofReal (v - u)) :
+    ∃ t ∈ Set.Ico u v, ∀ j ∈ s, (μ j) {f : D(ℝ, E) |
+      ∃ r ∈ Set.Ico t (t + δ'), 4 * c < edist (f.toFun r) (f.toFun t)} < β := by
+  classical
+  set g : ν → ℝ → ℝ≥0∞ := fun j t => (μ j) {f : D(ℝ, E) |
+    ∃ r ∈ Set.Ico t (t + δ'), 4 * c < edist (f.toFun r) (f.toFun t)} with hgdef
+  have hgmeas : ∀ j, Measurable (g j) := fun j =>
+    measurable_measure_prodMk_left
+      (SkorokhodSpace.measurableSet_setOf_exists_edist_lt (E := E) δ' (4 * c))
+  have hsum : ∫⁻ t in Set.Ico (-M) M, ∑ j ∈ s, g j t
+      ≤ (s.card : ℝ≥0∞) * (((⌈2 * (M + 1) / δ⌉₊ : ℝ≥0∞) + 1) * ENNReal.ofReal δ') := by
+    rw [lintegral_finsetSum _ fun j _ => hgmeas j]
+    calc ∑ _j ∈ s, ∫⁻ t in Set.Ico (-M) M, g _j t
+        ≤ ∑ _j ∈ s, (((⌈2 * (M + 1) / δ⌉₊ : ℝ≥0∞) + 1) * ENNReal.ofReal δ') :=
+          Finset.sum_le_sum fun j _ =>
+            SkorokhodSpace.lintegral_measure_setOf_exists_edist_lt_le hM hδ0 hδ1 h (μ j) (hμ j)
+      _ = (s.card : ℝ≥0∞) * (((⌈2 * (M + 1) / δ⌉₊ : ℝ≥0∞) + 1) * ENNReal.ofReal δ') := by
+          rw [Finset.sum_const, nsmul_eq_mul]
+  obtain ⟨t, ht, hlt⟩ := exists_mem_Ico_lt_of_setLIntegral_le_of_subset
+    (Finset.measurable_fun_sum _ fun j _ => hgmeas j) hsum huv hβ
+  exact ⟨t, ht, fun j hj => lt_of_le_of_lt (Finset.single_le_sum
+    (f := fun j => g j t) (fun k _ => by simp) hj) hlt⟩
 
 /-- **A good time for a whole sequence of laws, and it is a `liminf`.**  All the
 laws being carried by the same set `K`, the bound of
@@ -11757,7 +11881,7 @@ that criterion. -/
 /-- **From the bad times to the one dimensional distributions.**  For a law `μ`
 carried by `K`, a bounded continuous `F`, a time `t` and a time `t'` of the
 window `[t, t + δ')`:
-`|∫ F (f t') dμ - ∫ F (f t) dμ| ≤ ε + 2 ‖F‖ μ (bad t)`,
+`∫ |F (f t') - F (f t)| dμ ≤ ε + 2 ‖F‖ μ (bad t)`,
 where `bad t` is the set of paths whose right oscillation over the window
 exceeds `a` and `ε` is a modulus of `F` at the scale `a`, asked only of the set
 `S` in which the values of the paths of `K` over the window lie.
@@ -11767,14 +11891,20 @@ complement, by `integral_mono_ae` against
 `fun f => ε + (bad t).indicator (fun _ => 2 ‖F‖) f`.  Off `bad t` the witness is
 `t'` itself: were `edist (f t') (f t)` above `a`, the path would be in `bad t`.
 Reading it with `S = Set.univ` gives the unlocalised form, at the cost of a
-uniform modulus for `F`. -/
-theorem SkorokhodSpace.dist_integral_eval_le_of_forall_dist_le {K : Set D(ℝ, E)} {S : Set E}
+uniform modulus for `F`.
+
+**The statement is in `L¹` and not a difference of integrals**, and that is not a
+strengthening for its own sake: it is the form that survives multiplication by the
+other factors of a finite product, and hence the form a family of times needs.
+`SkorokhodSpace.dist_integral_eval_le_of_forall_dist_le` below is the difference of
+the integrals, one `abs_integral_le_integral_abs` away. -/
+theorem SkorokhodSpace.integral_abs_sub_eval_le_of_forall_dist_le {K : Set D(ℝ, E)} {S : Set E}
     (μ : Measure D(ℝ, E)) [IsProbabilityMeasure μ] (hμ : μ Kᶜ = 0) (F : E →ᵇ ℝ)
     {t δ' : ℝ} {a : ℝ≥0∞} {ε : ℝ} (hε : 0 ≤ ε)
     (hKS : ∀ f ∈ K, ∀ s ∈ Set.Ico t (t + δ'), f.toFun s ∈ S)
     (hF : ∀ x ∈ S, ∀ y ∈ S, edist x y ≤ a → dist (F x) (F y) ≤ ε)
     {t' : ℝ} (ht' : t' ∈ Set.Ico t (t + δ')) :
-    |(∫ f, F (f.toFun t') ∂μ) - ∫ f, F (f.toFun t) ∂μ|
+    (∫ f, |F (f.toFun t') - F (f.toFun t)| ∂μ)
       ≤ ε + 2 * ‖F‖ * (μ {f : D(ℝ, E) |
           ∃ s ∈ Set.Ico t (t + δ'), a < edist (f.toFun s) (f.toFun t)}).toReal := by
   classical
@@ -11789,8 +11919,6 @@ theorem SkorokhodSpace.dist_integral_eval_le_of_forall_dist_le {K : Set D(ℝ, E
   have hint : ∀ s : ℝ, Integrable (fun f : D(ℝ, E) => F (f.toFun s)) μ := fun s =>
     (integrable_const ‖F‖).mono' (hmeasF s).aestronglyMeasurable
       (Eventually.of_forall fun f => F.norm_coe_le_norm _)
-  rw [← integral_sub (hint t') (hint t)]
-  refine le_trans abs_integral_le_integral_abs ?_
   have hbound : ∀ᵐ f ∂μ, |F (f.toFun t') - F (f.toFun t)|
       ≤ ε + B.indicator (fun _ => 2 * ‖F‖) f := by
     filter_upwards [mem_ae_iff.2 hμ] with f hf
@@ -11817,6 +11945,147 @@ theorem SkorokhodSpace.dist_integral_eval_le_of_forall_dist_le {K : Set D(ℝ, E
   simp only [smul_eq_mul, one_mul]
   ring
 
+/-- **The difference of the two one dimensional integrals.**  The estimate above
+read through `abs_integral_le_integral_abs`, which is all that separates the two.
+
+The `L¹` form is the primitive and this one the corollary, and not the other way
+round: a bound on `|∫ F (f t') dμ - ∫ F (f t) dμ|` says nothing about a *product*
+of such differences, whereas the telescope of
+`SkorokhodSpace.dist_integral_evalPi_le_of_forall_dist_le` moves one coordinate
+at a time and pays, at each step, an integral of `|F i (f (t' i)) - F i (f (t i))|`
+against the remaining factors. -/
+theorem SkorokhodSpace.dist_integral_eval_le_of_forall_dist_le {K : Set D(ℝ, E)} {S : Set E}
+    (μ : Measure D(ℝ, E)) [IsProbabilityMeasure μ] (hμ : μ Kᶜ = 0) (F : E →ᵇ ℝ)
+    {t δ' : ℝ} {a : ℝ≥0∞} {ε : ℝ} (hε : 0 ≤ ε)
+    (hKS : ∀ f ∈ K, ∀ s ∈ Set.Ico t (t + δ'), f.toFun s ∈ S)
+    (hF : ∀ x ∈ S, ∀ y ∈ S, edist x y ≤ a → dist (F x) (F y) ≤ ε)
+    {t' : ℝ} (ht' : t' ∈ Set.Ico t (t + δ')) :
+    |(∫ f, F (f.toFun t') ∂μ) - ∫ f, F (f.toFun t) ∂μ|
+      ≤ ε + 2 * ‖F‖ * (μ {f : D(ℝ, E) |
+          ∃ s ∈ Set.Ico t (t + δ'), a < edist (f.toFun s) (f.toFun t)}).toReal := by
+  have hmeasF : ∀ s : ℝ, Measurable fun f : D(ℝ, E) => F (f.toFun s) := fun s =>
+    (map_continuous F).measurable.comp (SkorokhodSpace.measurable_eval s)
+  have hint : ∀ s : ℝ, Integrable (fun f : D(ℝ, E) => F (f.toFun s)) μ := fun s =>
+    (integrable_const ‖F‖).mono' (hmeasF s).aestronglyMeasurable
+      (Eventually.of_forall fun f => F.norm_coe_le_norm _)
+  rw [← integral_sub (hint t') (hint t)]
+  exact le_trans abs_integral_le_integral_abs
+    (SkorokhodSpace.integral_abs_sub_eval_le_of_forall_dist_le μ hμ F hε hKS hF ht')
+
+/-- **A telescope for a finite product of reals.**  If every factor of either
+family is bounded by `C ≥ 1`, then
+`|∏ a i - ∏ b i| ≤ C ^ #s * ∑ |a i - b i|`.
+
+The induction replaces one factor at a time,
+`a j ∏ a - b j ∏ b = (a j - b j) ∏ a + b j (∏ a - ∏ b)`, and `1 ≤ C` is what lets
+the two powers of `C` that arise --- `C ^ #s` on the first summand and
+`C ^ (#s + 1)` on the second --- be written with the larger exponent. -/
+theorem abs_prod_sub_prod_le {κ : Type*} (s : Finset κ) (a b : κ → ℝ) {C : ℝ} (hC : 1 ≤ C)
+    (ha : ∀ i, |a i| ≤ C) (hb : ∀ i, |b i| ≤ C) :
+    |(∏ i ∈ s, a i) - ∏ i ∈ s, b i| ≤ C ^ s.card * ∑ i ∈ s, |a i - b i| := by
+  classical
+  have hC0 : (0 : ℝ) ≤ C := le_trans zero_le_one hC
+  induction s using Finset.induction_on with
+  | empty => simp
+  | @insert j s hj ih =>
+      have hpa : |∏ i ∈ s, a i| ≤ C ^ s.card := by
+        rw [Finset.abs_prod]
+        calc ∏ i ∈ s, |a i| ≤ ∏ _i ∈ s, C :=
+              Finset.prod_le_prod (fun i _ => abs_nonneg _) (fun i _ => ha i)
+          _ = C ^ s.card := Finset.prod_const C
+      have hCn : (0 : ℝ) ≤ C ^ s.card := pow_nonneg hC0 _
+      have hsum0 : (0 : ℝ) ≤ ∑ i ∈ s, |a i - b i| :=
+        Finset.sum_nonneg fun i _ => abs_nonneg _
+      rw [Finset.prod_insert hj, Finset.prod_insert hj, Finset.sum_insert hj,
+        Finset.card_insert_of_notMem hj]
+      have key : a j * (∏ i ∈ s, a i) - b j * ∏ i ∈ s, b i
+          = (a j - b j) * (∏ i ∈ s, a i) + b j * ((∏ i ∈ s, a i) - ∏ i ∈ s, b i) := by ring
+      rw [key]
+      have h1 : |(a j - b j) * (∏ i ∈ s, a i)| ≤ |a j - b j| * C ^ s.card := by
+        rw [abs_mul]
+        exact mul_le_mul_of_nonneg_left hpa (abs_nonneg _)
+      have h2 : |b j * ((∏ i ∈ s, a i) - ∏ i ∈ s, b i)|
+          ≤ C * (C ^ s.card * ∑ i ∈ s, |a i - b i|) := by
+        rw [abs_mul]
+        exact mul_le_mul (hb j) ih (abs_nonneg _) hC0
+      have hpow : C ^ (s.card + 1) = C ^ s.card * C := pow_succ C s.card
+      have hextra : 0 ≤ |a j - b j| * C ^ s.card * (C - 1) :=
+        mul_nonneg (mul_nonneg (abs_nonneg _) hCn) (by linarith)
+      calc |(a j - b j) * (∏ i ∈ s, a i) + b j * ((∏ i ∈ s, a i) - ∏ i ∈ s, b i)|
+          ≤ |(a j - b j) * (∏ i ∈ s, a i)| + |b j * ((∏ i ∈ s, a i) - ∏ i ∈ s, b i)| :=
+            abs_add_le _ _
+        _ ≤ |a j - b j| * C ^ s.card + C * (C ^ s.card * ∑ i ∈ s, |a i - b i|) := by linarith
+        _ ≤ C ^ (s.card + 1) * (|a j - b j| + ∑ i ∈ s, |a i - b i|) := by
+            rw [hpow]; nlinarith
+
+/-- **From the bad times to the finite dimensional distributions.**  The same for
+a finite family of times, of test functions and of spans: to `t t' : κ → ℝ` with
+`t' i` in the window `[t i, t i + δ')` and to `F : κ → (E →ᵇ ℝ)` all bounded by
+`C ≥ 1`,
+`|∫ ∏ F i (f (t' i)) dμ - ∫ ∏ F i (f (t i)) dμ| ≤ C ^ #κ ∑ (ε + 2 C μ (bad (t i)))`.
+
+The proof is `abs_prod_sub_prod_le` under the integral sign and then the `L¹`
+estimate in each coordinate.  It is the `L¹` form that is spent, one coordinate at
+a time; the difference of the *integrals* in one coordinate would not suffice,
+since the telescope multiplies by the remaining factors before integrating. -/
+theorem SkorokhodSpace.dist_integral_evalPi_le_of_forall_dist_le {κ : Type*} [Fintype κ]
+    {K : Set D(ℝ, E)} {S : Set E}
+    (μ : Measure D(ℝ, E)) [IsProbabilityMeasure μ] (hμ : μ Kᶜ = 0)
+    (F : κ → (E →ᵇ ℝ)) {C : ℝ} (hC : 1 ≤ C) (hCF : ∀ i, ‖F i‖ ≤ C)
+    {t t' : κ → ℝ} {δ' : ℝ} {a : ℝ≥0∞} {ε : ℝ} (hε : 0 ≤ ε)
+    (hKS : ∀ f ∈ K, ∀ i, ∀ s ∈ Set.Ico (t i) (t i + δ'), f.toFun s ∈ S)
+    (hF : ∀ i, ∀ x ∈ S, ∀ y ∈ S, edist x y ≤ a → dist (F i x) (F i y) ≤ ε)
+    (ht' : ∀ i, t' i ∈ Set.Ico (t i) (t i + δ')) :
+    |(∫ f, ∏ i, F i (f.toFun (t' i)) ∂μ) - ∫ f, ∏ i, F i (f.toFun (t i)) ∂μ|
+      ≤ C ^ (Fintype.card κ) * ∑ i, (ε + 2 * C * (μ {f : D(ℝ, E) |
+          ∃ s ∈ Set.Ico (t i) (t i + δ'), a < edist (f.toFun s) (f.toFun (t i))}).toReal) := by
+  classical
+  have hC0 : (0 : ℝ) ≤ C := le_trans zero_le_one hC
+  have hmeas1 : ∀ (i : κ) (u : ℝ), Measurable fun f : D(ℝ, E) => F i (f.toFun u) := fun i u =>
+    (map_continuous (F i)).measurable.comp (SkorokhodSpace.measurable_eval u)
+  have hint1 : ∀ (i : κ) (u : ℝ), Integrable (fun f : D(ℝ, E) => F i (f.toFun u)) μ := fun i u =>
+    (integrable_const ‖F i‖).mono' (hmeas1 i u).aestronglyMeasurable
+      (Eventually.of_forall fun f => (F i).norm_coe_le_norm _)
+  have hmeas : ∀ u : κ → ℝ, Measurable fun f : D(ℝ, E) => ∏ i, F i (f.toFun (u i)) := fun u =>
+    Finset.measurable_fun_prod _ fun i _ => hmeas1 i (u i)
+  have habs : ∀ (i : κ) (u : ℝ) (f : D(ℝ, E)), |F i (f.toFun u)| ≤ C := fun i u f =>
+    le_trans (by simpa [Real.norm_eq_abs] using (F i).norm_coe_le_norm (f.toFun u)) (hCF i)
+  have hbd : ∀ (u : κ → ℝ) (f : D(ℝ, E)), |∏ i, F i (f.toFun (u i))| ≤ C ^ Fintype.card κ := by
+    intro u f
+    rw [Finset.abs_prod]
+    calc ∏ i, |F i (f.toFun (u i))| ≤ ∏ _i : κ, C :=
+          Finset.prod_le_prod (fun i _ => abs_nonneg _) (fun i _ => habs i (u i) f)
+      _ = C ^ Fintype.card κ := by rw [Finset.prod_const, Finset.card_univ]
+  have hint : ∀ u : κ → ℝ, Integrable (fun f : D(ℝ, E) => ∏ i, F i (f.toFun (u i))) μ := fun u =>
+    (integrable_const (C ^ Fintype.card κ)).mono' (hmeas u).aestronglyMeasurable
+      (Eventually.of_forall fun f => by
+        simp only [Real.norm_eq_abs]; exact hbd u f)
+  have hintdiff : ∀ i : κ,
+      Integrable (fun f : D(ℝ, E) => |F i (f.toFun (t' i)) - F i (f.toFun (t i))|) μ := fun i =>
+    ((hint1 i (t' i)).sub (hint1 i (t i))).abs
+  have hintsum : Integrable
+      (fun f : D(ℝ, E) => ∑ i, |F i (f.toFun (t' i)) - F i (f.toFun (t i))|) μ :=
+    integrable_finsetSum _ fun i _ => hintdiff i
+  have hpt : ∀ f : D(ℝ, E), |(∏ i, F i (f.toFun (t' i))) - ∏ i, F i (f.toFun (t i))|
+      ≤ C ^ Fintype.card κ * ∑ i, |F i (f.toFun (t' i)) - F i (f.toFun (t i))| := by
+    intro f
+    have := abs_prod_sub_prod_le Finset.univ (fun i => F i (f.toFun (t' i)))
+      (fun i => F i (f.toFun (t i))) hC (fun i => habs i (t' i) f) (fun i => habs i (t i) f)
+    rwa [Finset.card_univ] at this
+  rw [← integral_sub (hint t') (hint t)]
+  refine le_trans abs_integral_le_integral_abs ?_
+  refine le_trans (integral_mono_ae ((hint t').sub (hint t)).abs
+    (hintsum.const_mul (C ^ Fintype.card κ)) (Eventually.of_forall hpt)) ?_
+  rw [integral_const_mul, integral_finsetSum _ fun i _ => hintdiff i]
+  refine mul_le_mul_of_nonneg_left (Finset.sum_le_sum fun i _ => ?_) (pow_nonneg hC0 _)
+  refine le_trans (SkorokhodSpace.integral_abs_sub_eval_le_of_forall_dist_le μ hμ (F i) hε
+    (fun f hf s hs => hKS f hf i s hs) (hF i) (ht' i)) ?_
+  have hm : (0 : ℝ) ≤ (μ {f : D(ℝ, E) |
+      ∃ s ∈ Set.Ico (t i) (t i + δ'), a < edist (f.toFun s) (f.toFun (t i))}).toReal :=
+    ENNReal.toReal_nonneg
+  have : 2 * ‖F i‖ ≤ 2 * C := by linarith [hCF i]
+  nlinarith
+
 omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
 /-- **A modulus on a set with compact closure.**  A continuous function is
 uniformly continuous on a compact set, so for a set `S` whose closure is compact,
@@ -11841,6 +12110,31 @@ theorem exists_forall_dist_le_of_isCompact_closure {S : Set E} (hS : IsCompact (
     exact (ENNReal.ofReal_le_ofReal_iff (by linarith)).1 hxy
   exact (hdlt x (subset_closure hx) y (subset_closure hy) (lt_of_le_of_lt hdist
     (by linarith))).le
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **A modulus serving a finite family of test functions.**  The same scale for
+every `F i` with `i` in a finite set, obtained by taking the smaller of the two
+scales at each step of an induction over the set.
+
+The index type is arbitrary and the finiteness sits in the `Finset`, so the
+statement does not ask `κ` to be a `Fintype`; read at `Finset.univ` over a
+`Fintype` it is the form the finite dimensional estimate below wants.  The empty
+set is served by any scale, and `1` is taken. -/
+theorem exists_forall_mem_dist_le_of_isCompact_closure {κ : Type*} {S : Set E}
+    (hS : IsCompact (closure S)) (F : κ → (E →ᵇ ℝ)) {ε : ℝ} (hε : 0 < ε) (s : Finset κ) :
+    ∃ a : ℝ≥0∞, 0 < a ∧
+      ∀ i ∈ s, ∀ x ∈ S, ∀ y ∈ S, edist x y ≤ a → dist (F i x) (F i y) ≤ ε := by
+  classical
+  induction s using Finset.induction_on with
+  | empty => exact ⟨1, by norm_num, by simp⟩
+  | @insert j s hj ih =>
+      obtain ⟨a, ha0, ha⟩ := ih
+      obtain ⟨b, hb0, hb⟩ := exists_forall_dist_le_of_isCompact_closure hS (F j) hε
+      refine ⟨min a b, lt_min ha0 hb0, ?_⟩
+      intro i hi x hx y hy hxy
+      rcases Finset.mem_insert.1 hi with rfl | hi
+      · exact hb x hx y hy (le_trans hxy (min_le_right _ _))
+      · exact ha i hi x hx y hy (le_trans hxy (min_le_left _ _))
 
 /-- **A time at which the one dimensional distribution is stable to the right,
 for one law.**  The time of `SkorokhodSpace.exists_time_measure_setOf_exists_edist_lt`
@@ -12003,3 +12297,152 @@ theorem SkorokhodSpace.exists_time_forall_dist_integral_eval_le_of_isCompact_clo
   refine le_trans (hconc t' ht') ?_
   rw [hβreal]
   linarith
+
+/-- **The finite dimensional distributions are stable to the right, at times as
+close on the right to prescribed ones as one likes.**  For a law carried by a set
+of paths with compact closure, a finite family `F : κ → (E →ᵇ ℝ)`, prescribed times
+`t : κ → ℝ` of the window `[-m, m - 1)`, a reach `η ∈ (0, 1]` and an `ε > 0`, there
+are times `s i ∈ [t i, t i + η)` and a span `δ' > 0` with
+`|∫ ∏ F i (f (s' i)) dμ - ∫ ∏ F i (f (s i)) dμ| ≤ ε`
+for every family `s' i ∈ [s i, s i + δ')`.
+
+**The prescribed times are not themselves good, and cannot be made so.**  The
+estimate is available at a time only where the law charges a large right
+oscillation with small probability, and the bound on the bad times is a bound in
+*Lebesgue measure*, so it produces good times densely and not everywhere.  What is
+therefore proved is the statement with the times moved to the right by less than
+`η`, which is what an approximation from the right of a dense set of times asks
+for.
+
+Nothing is asked of the `F i` beyond boundedness and continuity, the modulus
+coming from the values of the paths over a bounded window through
+`exists_forall_mem_dist_le_of_isCompact_closure`.  The constants are chosen in the
+order the proof forces: the common norm bound `C = 1 + ∑ ‖F i‖`, then
+`Dc = C ^ #κ (#κ + 1)` which is what the telescope costs, then the scale `a` of the
+modulus at the level `ε / (2 Dc)`, then the radius `δ` of the subdivision, then the
+level `b = ε / (4 Dc C)` of the bad sets, and the span `δ'` last, since only it is
+still free once the reach `η` is given.  The window of the values is `[-m, m + 1]`
+and the times run to `(m - 1) + η + δ' ≤ m + 1`.
+
+The empty `κ` is not excluded and is not a degenerate reading: both products are
+the empty product `1`, the difference is `0`, and the factor `#κ + 1` in `Dc` is
+what keeps the arithmetic of the last step free of a division by `#κ`. -/
+theorem SkorokhodSpace.exists_times_forall_dist_integral_evalPi_le_of_isCompact_closure
+    [CompleteSpace E] {κ : Type*} [Fintype κ] {A : Set D(ℝ, E)} (hA : IsCompact (closure A))
+    (μ : Measure D(ℝ, E)) [IsProbabilityMeasure μ] (hμ : μ Aᶜ = 0)
+    (F : κ → (E →ᵇ ℝ)) (m : ℕ) (hm : 1 ≤ m) {t : κ → ℝ}
+    (ht : ∀ i, t i ∈ Set.Ico (-(m : ℝ)) ((m : ℝ) - 1))
+    {η : ℝ} (hη0 : 0 < η) (hη1 : η ≤ 1) {ε : ℝ} (hε : 0 < ε) :
+    ∃ s : κ → ℝ, (∀ i, s i ∈ Set.Ico (t i) (t i + η)) ∧ ∃ δ' > 0,
+      ∀ s' : κ → ℝ, (∀ i, s' i ∈ Set.Ico (s i) (s i + δ')) →
+        |(∫ f, ∏ i, F i (f.toFun (s' i)) ∂μ) - ∫ f, ∏ i, F i (f.toFun (s i)) ∂μ| ≤ ε := by
+  classical
+  have hM1 : (1 : ℝ) ≤ (m : ℝ) := by exact_mod_cast hm
+  have hM0 : (0 : ℝ) < (m : ℝ) := lt_of_lt_of_le zero_lt_one hM1
+  set N : ℕ := Fintype.card κ with hNdef
+  set C : ℝ := 1 + ∑ i, ‖F i‖ with hCdef
+  have hsum0 : (0 : ℝ) ≤ ∑ i, ‖F i‖ := Finset.sum_nonneg fun i _ => norm_nonneg _
+  have hC : 1 ≤ C := by rw [hCdef]; linarith
+  have hC0 : (0 : ℝ) < C := lt_of_lt_of_le zero_lt_one hC
+  have hCF : ∀ i, ‖F i‖ ≤ C := by
+    intro i
+    have hle := Finset.single_le_sum (f := fun j => ‖F j‖)
+      (fun j _ => norm_nonneg (F j)) (Finset.mem_univ i)
+    rw [hCdef]; linarith
+  set Dc : ℝ := C ^ N * ((N : ℝ) + 1) with hDdef
+  have hD0 : 0 < Dc := by rw [hDdef]; positivity
+  have hε₀ : (0 : ℝ) < ε / (2 * Dc) := by positivity
+  set S : Set E := {x | ∃ f ∈ A, ∃ r ∈ exhaustion (0 : ℝ) ((m + 1 : ℕ) : ℝ),
+    f.toFun r = x} with hSdef
+  have hval : IsCompact (closure S) :=
+    ((SkorokhodSpace.isCompact_closure_iff A).1 hA (m + 1)).1
+  obtain ⟨a, ha0, hFa⟩ :=
+    exists_forall_mem_dist_le_of_isCompact_closure hval F hε₀ Finset.univ
+  set c : ℝ≥0∞ := a / 4 with hcdef
+  have hc0 : 0 < c := ENNReal.div_pos ha0.ne' (by simp)
+  have h4c : 4 * c ≤ a := ENNReal.mul_div_le
+  have hFc : ∀ i, ∀ x ∈ S, ∀ y ∈ S, edist x y ≤ 4 * c →
+      dist (F i x) (F i y) ≤ ε / (2 * Dc) :=
+    fun i x hx y hy hxy => hFa i (Finset.mem_univ i) x hx y hy (le_trans hxy h4c)
+  have hten := ((SkorokhodSpace.isCompact_closure_iff A).1 hA m).2
+  have hev1 : ∀ᶠ d in 𝓝[>] (0 : ℝ),
+      (⨆ f ∈ A, SkorokhodSpace.modulusBased (0 : ℝ) (m : ℝ) f d) < c :=
+    hten.eventually_lt_const hc0
+  have hev2 : ∀ᶠ d in 𝓝[>] (0 : ℝ), d ≤ 1 :=
+    nhdsWithin_le_nhds (eventually_le_nhds (by norm_num : (0 : ℝ) < 1))
+  have hev3 : ∀ᶠ d in 𝓝[>] (0 : ℝ), d ∈ Set.Ioi (0 : ℝ) := eventually_mem_nhdsWithin
+  obtain ⟨δ, ⟨hδlt, hδ1⟩, hδ0'⟩ := ((hev1.and hev2).and hev3).exists
+  have hδ0 : (0 : ℝ) < δ := Set.mem_Ioi.1 hδ0'
+  set b : ℝ := ε / (4 * Dc * C) with hbdef
+  have hb0 : 0 < b := by rw [hbdef]; positivity
+  set β : ℝ≥0∞ := ENNReal.ofReal b with hβdef
+  have hβreal : β.toReal = b := ENNReal.toReal_ofReal hb0.le
+  set n₀ : ℕ := ⌈2 * ((m : ℝ) + 1) / δ⌉₊ with hn₀def
+  have hn₀pos : (0 : ℝ) < (n₀ : ℝ) + 1 := by positivity
+  set δ' : ℝ := min 1 (b * η / (2 * ((n₀ : ℝ) + 1))) with hδ'def
+  have hδ'0 : 0 < δ' := lt_min one_pos (by positivity)
+  have hδ'1 : δ' ≤ 1 := min_le_left _ _
+  have hkey : ((n₀ : ℝ) + 1) * δ' < b * η := by
+    have h1 : ((n₀ : ℝ) + 1) * δ' ≤ b * η / 2 := by
+      calc ((n₀ : ℝ) + 1) * δ'
+          ≤ ((n₀ : ℝ) + 1) * (b * η / (2 * ((n₀ : ℝ) + 1))) :=
+            mul_le_mul_of_nonneg_left (min_le_right _ _) hn₀pos.le
+        _ = b * η / 2 := by field_simp
+    have h2 : 0 < b * η := mul_pos hb0 hη0
+    linarith
+  have hβ : ((n₀ : ℝ≥0∞) + 1) * ENNReal.ofReal δ' < β * ENNReal.ofReal η := by
+    have hL : ((n₀ : ℝ≥0∞) + 1) * ENNReal.ofReal δ'
+        = ENNReal.ofReal (((n₀ : ℝ) + 1) * δ') := by
+      rw [ENNReal.ofReal_mul hn₀pos.le, ENNReal.ofReal_add (Nat.cast_nonneg n₀) zero_le_one,
+        ENNReal.ofReal_natCast, ENNReal.ofReal_one]
+    have hR : β * ENNReal.ofReal η = ENNReal.ofReal (b * η) := by
+      rw [hβdef, ← ENNReal.ofReal_mul hb0.le]
+    rw [hL, hR]
+    exact (ENNReal.ofReal_lt_ofReal_iff (by positivity)).2 hkey
+  have htsub : ∀ i, Set.Ico (t i) (t i + η) ⊆ Set.Ico (-(m : ℝ)) (m : ℝ) := by
+    intro i r hr
+    exact ⟨le_trans (ht i).1 hr.1, by linarith [hr.2, (ht i).2]⟩
+  obtain ⟨s, hs, hsm⟩ :=
+    SkorokhodSpace.exists_times_forall_measure_setOf_exists_edist_lt hM1 hδ0 hδ1 hδlt μ hμ
+      htsub hβ
+  refine ⟨s, hs, δ', hδ'0, fun s' hs' => ?_⟩
+  have hKS : ∀ f ∈ A, ∀ i, ∀ r ∈ Set.Ico (s i) (s i + δ'), f.toFun r ∈ S := by
+    intro f hf i r hr
+    refine ⟨f, hf, r, ?_, rfl⟩
+    have hball : ((m + 1 : ℕ) : ℝ) = (m : ℝ) + 1 := by push_cast; ring
+    rw [exhaustion, hball, Metric.mem_closedBall, Real.dist_eq, max_eq_left (by linarith)]
+    rw [abs_le]
+    refine ⟨by linarith [hr.1, (hs i).1, (ht i).1], ?_⟩
+    have h1 : s i < t i + η := (hs i).2
+    have h2 : t i < (m : ℝ) - 1 := (ht i).2
+    linarith [hr.2]
+  refine le_trans (SkorokhodSpace.dist_integral_evalPi_le_of_forall_dist_le μ hμ F hC hCF
+    hε₀.le hKS hFc hs') ?_
+  have hterm : ∀ i : κ, ε / (2 * Dc) + 2 * C * (μ {f : D(ℝ, E) |
+      ∃ r ∈ Set.Ico (s i) (s i + δ'),
+        4 * c < edist (f.toFun r) (f.toFun (s i))}).toReal ≤ ε / Dc := by
+    intro i
+    have hle : (μ {f : D(ℝ, E) | ∃ r ∈ Set.Ico (s i) (s i + δ'),
+        4 * c < edist (f.toFun r) (f.toFun (s i))}).toReal ≤ b := by
+      rw [← hβreal]
+      exact ENNReal.toReal_mono ENNReal.ofReal_ne_top (hsm i).le
+    have hCb : 2 * C * b = ε / (2 * Dc) := by
+      rw [hbdef]; field_simp; ring
+    have h2 : ε / Dc = ε / (2 * Dc) + ε / (2 * Dc) := by field_simp; ring
+    nlinarith [mul_le_mul_of_nonneg_left hle (by positivity : (0:ℝ) ≤ 2 * C)]
+  calc C ^ N * ∑ i, (ε / (2 * Dc) + 2 * C * (μ {f : D(ℝ, E) |
+          ∃ r ∈ Set.Ico (s i) (s i + δ'),
+            4 * c < edist (f.toFun r) (f.toFun (s i))}).toReal)
+      ≤ C ^ N * ∑ _i : κ, (ε / Dc) :=
+        mul_le_mul_of_nonneg_left (Finset.sum_le_sum fun i _ => hterm i) (pow_nonneg hC0.le _)
+    _ = C ^ N * ((N : ℝ) * (ε / Dc)) := by
+        rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul, hNdef]
+    _ ≤ ε := by
+        have hCN : (C : ℝ) ^ N ≠ 0 := by positivity
+        have hN1 : ((N : ℝ) + 1) ≠ 0 := by positivity
+        have hEq : C ^ N * ((N : ℝ) * (ε / Dc)) = ((N : ℝ) / ((N : ℝ) + 1)) * ε := by
+          rw [hDdef]; field_simp
+        rw [hEq]
+        have hfrac : (N : ℝ) / ((N : ℝ) + 1) ≤ 1 := by
+          rw [div_le_one (by positivity)]; linarith
+        nlinarith [hε.le]
