@@ -378,7 +378,7 @@ source the library drew on is `RemyDegenne/brownian-motion`,
 -/
 
 open Filter Topology Set MeasureTheory
-open scoped NNReal ENNReal
+open scoped NNReal ENNReal BoundedContinuousFunction
 
 /-! ## Milestone 1: the index -/
 
@@ -11727,3 +11727,279 @@ theorem SkorokhodSpace.exists_time_liminf_measure_setOf_exists_edist_lt {K : Set
   refine le_trans (lintegral_liminf_le hgm) ?_
   exact liminf_le_of_frequently_le' (Frequently.of_forall fun n =>
     SkorokhodSpace.lintegral_measure_setOf_exists_edist_lt_le hM hδ0 hδ1 h (μ n) (hμ n))
+
+/-! ### From the bad times to the one dimensional distributions
+
+The section above produces a *time* at which the law charges a large right
+oscillation with small probability.  What the interchange of the two limits of
+EK 3.7.8(b) compares are not oscillations but **integrals**, and this section is
+the passage between the two: at such a time the one dimensional distribution
+moves by little as the time is moved to the right inside the window.
+
+The estimate splits the integral over the bad set and its complement.  Off the
+bad set the two values of the path are `4 c` apart, so the test function moves
+by its modulus at that scale; on the bad set nothing is known of the values and
+the test function moves by at most twice its norm, which the small measure of
+the bad set pays for.  Both halves are needed: the bad set cannot be made empty,
+by `SkorokhodSpace.exists_isCompact_forall_exists_one_le_dist`.
+
+**The modulus is not an extra hypothesis on the test function.**  A bounded
+continuous function on a metric space need not be uniformly continuous, so the
+first statement below carries the modulus as a hypothesis, localised to a set
+`S` holding the values of the paths.  The last statement discharges it: for a
+set of paths with compact closure, the values over a bounded window lie in a set
+with compact closure --- that is the first conjunct of
+`SkorokhodSpace.isCompact_closure_iff` --- and a continuous function is
+uniformly continuous there.  So the interchange may be made with **bounded
+continuous** test functions, and the completeness of `E` enters only through
+that criterion. -/
+
+/-- **From the bad times to the one dimensional distributions.**  For a law `μ`
+carried by `K`, a bounded continuous `F`, a time `t` and a time `t'` of the
+window `[t, t + δ')`:
+`|∫ F (f t') dμ - ∫ F (f t) dμ| ≤ ε + 2 ‖F‖ μ (bad t)`,
+where `bad t` is the set of paths whose right oscillation over the window
+exceeds `a` and `ε` is a modulus of `F` at the scale `a`, asked only of the set
+`S` in which the values of the paths of `K` over the window lie.
+
+The proof is the decomposition of `∫ |F (f t') - F (f t)|` over `bad t` and its
+complement, by `integral_mono_ae` against
+`fun f => ε + (bad t).indicator (fun _ => 2 ‖F‖) f`.  Off `bad t` the witness is
+`t'` itself: were `edist (f t') (f t)` above `a`, the path would be in `bad t`.
+Reading it with `S = Set.univ` gives the unlocalised form, at the cost of a
+uniform modulus for `F`. -/
+theorem SkorokhodSpace.dist_integral_eval_le_of_forall_dist_le {K : Set D(ℝ, E)} {S : Set E}
+    (μ : Measure D(ℝ, E)) [IsProbabilityMeasure μ] (hμ : μ Kᶜ = 0) (F : E →ᵇ ℝ)
+    {t δ' : ℝ} {a : ℝ≥0∞} {ε : ℝ} (hε : 0 ≤ ε)
+    (hKS : ∀ f ∈ K, ∀ s ∈ Set.Ico t (t + δ'), f.toFun s ∈ S)
+    (hF : ∀ x ∈ S, ∀ y ∈ S, edist x y ≤ a → dist (F x) (F y) ≤ ε)
+    {t' : ℝ} (ht' : t' ∈ Set.Ico t (t + δ')) :
+    |(∫ f, F (f.toFun t') ∂μ) - ∫ f, F (f.toFun t) ∂μ|
+      ≤ ε + 2 * ‖F‖ * (μ {f : D(ℝ, E) |
+          ∃ s ∈ Set.Ico t (t + δ'), a < edist (f.toFun s) (f.toFun t)}).toReal := by
+  classical
+  set B : Set D(ℝ, E) := {f : D(ℝ, E) |
+    ∃ s ∈ Set.Ico t (t + δ'), a < edist (f.toFun s) (f.toFun t)} with hB
+  have hBmeas : MeasurableSet B :=
+    (SkorokhodSpace.measurableSet_setOf_exists_edist_lt (E := E) δ' a).preimage
+      (measurable_const.prodMk measurable_id)
+  have htmem : t ∈ Set.Ico t (t + δ') := ⟨le_rfl, lt_of_le_of_lt ht'.1 ht'.2⟩
+  have hmeasF : ∀ s : ℝ, Measurable fun f : D(ℝ, E) => F (f.toFun s) := fun s =>
+    (map_continuous F).measurable.comp (SkorokhodSpace.measurable_eval s)
+  have hint : ∀ s : ℝ, Integrable (fun f : D(ℝ, E) => F (f.toFun s)) μ := fun s =>
+    (integrable_const ‖F‖).mono' (hmeasF s).aestronglyMeasurable
+      (Eventually.of_forall fun f => F.norm_coe_le_norm _)
+  rw [← integral_sub (hint t') (hint t)]
+  refine le_trans abs_integral_le_integral_abs ?_
+  have hbound : ∀ᵐ f ∂μ, |F (f.toFun t') - F (f.toFun t)|
+      ≤ ε + B.indicator (fun _ => 2 * ‖F‖) f := by
+    filter_upwards [mem_ae_iff.2 hμ] with f hf
+    by_cases hfB : f ∈ B
+    · rw [Set.indicator_of_mem hfB]
+      have h2 : |F (f.toFun t') - F (f.toFun t)| ≤ 2 * ‖F‖ := by
+        have := F.dist_le_two_norm (f.toFun t') (f.toFun t)
+        rwa [Real.dist_eq] at this
+      linarith
+    · rw [Set.indicator_of_notMem hfB, add_zero]
+      have hle : edist (f.toFun t') (f.toFun t) ≤ a := by
+        by_contra hcon
+        exact hfB ⟨t', ht', not_le.1 hcon⟩
+      have := hF _ (hKS f hf t' ht') _ (hKS f hf t htmem) hle
+      rwa [Real.dist_eq] at this
+  refine le_trans (integral_mono_ae ((hint t').sub (hint t)).abs
+    ((integrable_const ε).add ((integrable_const (2 * ‖F‖)).indicator hBmeas)) hbound) ?_
+  simp only [Pi.add_apply]
+  rw [integral_add (integrable_const ε) ((integrable_const (2 * ‖F‖)).indicator hBmeas),
+    integral_const, integral_indicator_const _ hBmeas]
+  have huniv : μ.real Set.univ = 1 := by simp
+  rw [huniv, measureReal_def]
+  refine le_of_eq ?_
+  simp only [smul_eq_mul, one_mul]
+  ring
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **A modulus on a set with compact closure.**  A continuous function is
+uniformly continuous on a compact set, so for a set `S` whose closure is compact,
+a bounded continuous `F` and an `ε > 0` there is a scale `a > 0` at which `ε` is
+a modulus of `F` on `S`.
+
+This is what discharges the modulus hypothesis of
+`SkorokhodSpace.dist_integral_eval_le_of_forall_dist_le` without asking `F` to be
+uniformly continuous on all of `E`.  The scale is halved so that the conclusion
+may be stated with `≤` on both sides, the uniform continuity giving `<` under a
+strict bound. -/
+theorem exists_forall_dist_le_of_isCompact_closure {S : Set E} (hS : IsCompact (closure S))
+    (F : E →ᵇ ℝ) {ε : ℝ} (hε : 0 < ε) :
+    ∃ a : ℝ≥0∞, 0 < a ∧ ∀ x ∈ S, ∀ y ∈ S, edist x y ≤ a → dist (F x) (F y) ≤ ε := by
+  have huc : UniformContinuousOn F (closure S) :=
+    hS.uniformContinuousOn_of_continuous (map_continuous F).continuousOn
+  obtain ⟨d, hd, hdlt⟩ := Metric.uniformContinuousOn_iff.1 huc ε hε
+  refine ⟨ENNReal.ofReal (d / 2), by simp [ENNReal.ofReal_pos]; linarith, ?_⟩
+  intro x hx y hy hxy
+  have hdist : dist x y ≤ d / 2 := by
+    rw [edist_dist] at hxy
+    exact (ENNReal.ofReal_le_ofReal_iff (by linarith)).1 hxy
+  exact (hdlt x (subset_closure hx) y (subset_closure hy) (lt_of_le_of_lt hdist
+    (by linarith))).le
+
+/-- **A time at which the one dimensional distribution is stable to the right,
+for one law.**  The time of `SkorokhodSpace.exists_time_measure_setOf_exists_edist_lt`
+read through the estimate above: at it, and for every time of the span `δ'` to
+its right, the integral of `F` moves by at most `ε + 2 ‖F‖ β`.
+
+The window of the values is `[-M, M + δ']` and not `[-M, M]`, because the time
+is produced in `[-M, M)` and the span reaches beyond it. -/
+theorem SkorokhodSpace.exists_time_forall_dist_integral_eval_le {K : Set D(ℝ, E)} {S : Set E}
+    {M δ δ' : ℝ} (hM : 1 ≤ M) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) {c : ℝ≥0∞}
+    (h : (⨆ f ∈ K, SkorokhodSpace.modulusBased (0 : ℝ) M f δ) < c)
+    (μ : Measure D(ℝ, E)) [IsProbabilityMeasure μ] (hμ : μ Kᶜ = 0)
+    (hKS : ∀ f ∈ K, ∀ s ∈ Set.Icc (-M) (M + δ'), f.toFun s ∈ S)
+    {β : ℝ≥0∞} (hβtop : β ≠ ⊤)
+    (hβ : ((⌈2 * (M + 1) / δ⌉₊ : ℝ≥0∞) + 1) * ENNReal.ofReal δ'
+      < β * ENNReal.ofReal (2 * M))
+    (F : E →ᵇ ℝ) {ε : ℝ} (hε : 0 ≤ ε)
+    (hF : ∀ x ∈ S, ∀ y ∈ S, edist x y ≤ 4 * c → dist (F x) (F y) ≤ ε) :
+    ∃ t ∈ Set.Ico (-M) M, ∀ t' ∈ Set.Ico t (t + δ'),
+      |(∫ f, F (f.toFun t') ∂μ) - ∫ f, F (f.toFun t) ∂μ| ≤ ε + 2 * ‖F‖ * β.toReal := by
+  obtain ⟨t, ht, hlt⟩ :=
+    SkorokhodSpace.exists_time_measure_setOf_exists_edist_lt hM hδ0 hδ1 h μ hμ hβ
+  have hKS' : ∀ f ∈ K, ∀ s ∈ Set.Ico t (t + δ'), f.toFun s ∈ S := by
+    intro f hf s hs
+    exact hKS f hf s ⟨le_trans ht.1 hs.1, by linarith [ht.2, hs.2]⟩
+  have h2 : (0 : ℝ) ≤ 2 * ‖F‖ := by positivity
+  refine ⟨t, ht, fun t' ht' => ?_⟩
+  refine le_trans
+    (SkorokhodSpace.dist_integral_eval_le_of_forall_dist_le μ hμ F hε hKS' hF ht') ?_
+  have hle : (μ {f : D(ℝ, E) | ∃ s ∈ Set.Ico t (t + δ'),
+      4 * c < edist (f.toFun s) (f.toFun t)}).toReal ≤ β.toReal :=
+    ENNReal.toReal_mono hβtop hlt.le
+  linarith [mul_le_mul_of_nonneg_left hle h2]
+
+/-- **The same for a sequence of laws, and the time serves a subsequence.**  The
+`liminf` of `SkorokhodSpace.exists_time_liminf_measure_setOf_exists_edist_lt` is
+read by `frequently_lt_of_liminf_lt`, so the estimate holds frequently along the
+sequence and not for every member.  That is not a defect of this passage but of
+the time itself, for the reason recorded at that statement. -/
+theorem SkorokhodSpace.exists_time_frequently_dist_integral_eval_le {K : Set D(ℝ, E)}
+    {S : Set E} {M δ δ' : ℝ} (hM : 1 ≤ M) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) {c : ℝ≥0∞}
+    (h : (⨆ f ∈ K, SkorokhodSpace.modulusBased (0 : ℝ) M f δ) < c)
+    (μ : ℕ → Measure D(ℝ, E)) [∀ n, IsProbabilityMeasure (μ n)] (hμ : ∀ n, (μ n) Kᶜ = 0)
+    (hKS : ∀ f ∈ K, ∀ s ∈ Set.Icc (-M) (M + δ'), f.toFun s ∈ S)
+    {β : ℝ≥0∞} (hβtop : β ≠ ⊤)
+    (hβ : ((⌈2 * (M + 1) / δ⌉₊ : ℝ≥0∞) + 1) * ENNReal.ofReal δ'
+      < β * ENNReal.ofReal (2 * M))
+    (F : E →ᵇ ℝ) {ε : ℝ} (hε : 0 ≤ ε)
+    (hF : ∀ x ∈ S, ∀ y ∈ S, edist x y ≤ 4 * c → dist (F x) (F y) ≤ ε) :
+    ∃ t ∈ Set.Ico (-M) M, ∃ᶠ n in atTop, ∀ t' ∈ Set.Ico t (t + δ'),
+      |(∫ f, F (f.toFun t') ∂(μ n)) - ∫ f, F (f.toFun t) ∂(μ n)|
+        ≤ ε + 2 * ‖F‖ * β.toReal := by
+  obtain ⟨t, ht, hlt⟩ :=
+    SkorokhodSpace.exists_time_liminf_measure_setOf_exists_edist_lt hM hδ0 hδ1 h μ hμ hβ
+  have hKS' : ∀ f ∈ K, ∀ s ∈ Set.Ico t (t + δ'), f.toFun s ∈ S := by
+    intro f hf s hs
+    exact hKS f hf s ⟨le_trans ht.1 hs.1, by linarith [ht.2, hs.2]⟩
+  have h2 : (0 : ℝ) ≤ 2 * ‖F‖ := by positivity
+  refine ⟨t, ht, (frequently_lt_of_liminf_lt (h := hlt)).mono fun n hn t' ht' => ?_⟩
+  refine le_trans
+    (SkorokhodSpace.dist_integral_eval_le_of_forall_dist_le (μ n) (hμ n) F hε hKS' hF ht') ?_
+  have hle : ((μ n) {f : D(ℝ, E) | ∃ s ∈ Set.Ico t (t + δ'),
+      4 * c < edist (f.toFun s) (f.toFun t)}).toReal ≤ β.toReal :=
+    ENNReal.toReal_mono hβtop hn.le
+  linarith [mul_le_mul_of_nonneg_left hle h2]
+
+/-- **The modulus discharged, and the statement in the form the interchange
+wants it.**  For a law carried by a set of paths with compact closure, a bounded
+continuous `F` and an `ε > 0`, there are a span `δ' > 0` and a time `t` of the
+window `[-m, m)` at which the one dimensional distribution of `F` moves by at
+most `ε` over the whole span.
+
+Nothing is asked of `F` beyond boundedness and continuity, and that is the point
+of the statement.  The three constants are chosen in the order the proof forces:
+the scale `a` of the modulus from the compactness of the closure of the values
+over `[-(m+1), m+1]`, then the radius `δ` of the subdivision so that the modulus
+of the paths stays below `a / 4`, then the level `β = ε / (4 (‖F‖ + 1))` so that
+the bad set costs at most `ε / 2`, and the span `δ'` last, because the bound on
+the bad times is `(⌈2 (m + 1) / δ⌉ + 1) δ'` and only `δ'` is still free.
+
+The two windows are `m` for the modulus and `m + 1` for the values, since the
+time reaches `δ' ≤ 1` beyond its own window; the criterion
+`SkorokhodSpace.isCompact_closure_iff` is read at both. -/
+theorem SkorokhodSpace.exists_time_forall_dist_integral_eval_le_of_isCompact_closure
+    [CompleteSpace E] {A : Set D(ℝ, E)} (hA : IsCompact (closure A))
+    (μ : Measure D(ℝ, E)) [IsProbabilityMeasure μ] (hμ : μ Aᶜ = 0)
+    (F : E →ᵇ ℝ) (m : ℕ) (hm : 1 ≤ m) {ε : ℝ} (hε : 0 < ε) :
+    ∃ δ' > 0, ∃ t ∈ Set.Ico (-(m : ℝ)) (m : ℝ), ∀ t' ∈ Set.Ico t (t + δ'),
+      |(∫ f, F (f.toFun t') ∂μ) - ∫ f, F (f.toFun t) ∂μ| ≤ ε := by
+  classical
+  have hM1 : (1 : ℝ) ≤ (m : ℝ) := by exact_mod_cast hm
+  have hM0 : (0 : ℝ) < (m : ℝ) := lt_of_lt_of_le zero_lt_one hM1
+  set S : Set E := {x | ∃ f ∈ A, ∃ s ∈ exhaustion (0 : ℝ) ((m + 1 : ℕ) : ℝ),
+    f.toFun s = x} with hSdef
+  have hval : IsCompact (closure S) :=
+    ((SkorokhodSpace.isCompact_closure_iff A).1 hA (m + 1)).1
+  obtain ⟨a, ha0, hFa⟩ := exists_forall_dist_le_of_isCompact_closure hval F (half_pos hε)
+  set c : ℝ≥0∞ := a / 4 with hcdef
+  have hc0 : 0 < c := ENNReal.div_pos ha0.ne' (by simp)
+  have h4c : 4 * c ≤ a := ENNReal.mul_div_le
+  have hF : ∀ x ∈ S, ∀ y ∈ S, edist x y ≤ 4 * c → dist (F x) (F y) ≤ ε / 2 :=
+    fun x hx y hy hxy => hFa x hx y hy (le_trans hxy h4c)
+  have hten := ((SkorokhodSpace.isCompact_closure_iff A).1 hA m).2
+  have hev1 : ∀ᶠ d in 𝓝[>] (0 : ℝ),
+      (⨆ f ∈ A, SkorokhodSpace.modulusBased (0 : ℝ) (m : ℝ) f d) < c :=
+    hten.eventually_lt_const hc0
+  have hev2 : ∀ᶠ d in 𝓝[>] (0 : ℝ), d ≤ 1 :=
+    nhdsWithin_le_nhds (eventually_le_nhds (by norm_num : (0 : ℝ) < 1))
+  have hev3 : ∀ᶠ d in 𝓝[>] (0 : ℝ), d ∈ Set.Ioi (0 : ℝ) := eventually_mem_nhdsWithin
+  obtain ⟨δ, ⟨hδlt, hδ1⟩, hδ0'⟩ := ((hev1.and hev2).and hev3).exists
+  have hδ0 : (0 : ℝ) < δ := Set.mem_Ioi.1 hδ0'
+  set b : ℝ := ε / (4 * (‖F‖ + 1)) with hbdef
+  have hFn : (0 : ℝ) ≤ ‖F‖ := norm_nonneg F
+  have hb0 : 0 < b := by
+    rw [hbdef]; positivity
+  have hbb : b * (4 * (‖F‖ + 1)) = ε := by
+    rw [hbdef]; field_simp
+  have hFb : 2 * ‖F‖ * b ≤ ε / 2 := by
+    have hhalf : ε / 2 = 2 * ‖F‖ * b + 2 * b := by rw [← hbb]; ring
+    linarith
+  set β : ℝ≥0∞ := ENNReal.ofReal b with hβdef
+  have hβtop : β ≠ ⊤ := ENNReal.ofReal_ne_top
+  have hβreal : β.toReal = b := ENNReal.toReal_ofReal hb0.le
+  set n₀ : ℕ := ⌈2 * ((m : ℝ) + 1) / δ⌉₊ with hn₀def
+  have hn₀pos : (0 : ℝ) < (n₀ : ℝ) + 1 := by positivity
+  set δ' : ℝ := min 1 (b * (m : ℝ) / ((n₀ : ℝ) + 1)) with hδ'def
+  have hδ'0 : 0 < δ' :=
+    lt_min one_pos (div_pos (mul_pos hb0 hM0) hn₀pos)
+  have hδ'1 : δ' ≤ 1 := min_le_left _ _
+  have hkey : ((n₀ : ℝ) + 1) * δ' < b * (2 * (m : ℝ)) := by
+    have h1 : ((n₀ : ℝ) + 1) * δ' ≤ b * (m : ℝ) := by
+      calc ((n₀ : ℝ) + 1) * δ'
+          ≤ ((n₀ : ℝ) + 1) * (b * (m : ℝ) / ((n₀ : ℝ) + 1)) :=
+            mul_le_mul_of_nonneg_left (min_le_right _ _) hn₀pos.le
+        _ = b * (m : ℝ) := by field_simp
+    have h2 : b * (2 * (m : ℝ)) = 2 * (b * (m : ℝ)) := by ring
+    have h3 : 0 < b * (m : ℝ) := mul_pos hb0 hM0
+    linarith
+  have hβ : ((n₀ : ℝ≥0∞) + 1) * ENNReal.ofReal δ' < β * ENNReal.ofReal (2 * (m : ℝ)) := by
+    have hL : ((n₀ : ℝ≥0∞) + 1) * ENNReal.ofReal δ'
+        = ENNReal.ofReal (((n₀ : ℝ) + 1) * δ') := by
+      rw [ENNReal.ofReal_mul hn₀pos.le, ENNReal.ofReal_add (Nat.cast_nonneg n₀) zero_le_one,
+        ENNReal.ofReal_natCast, ENNReal.ofReal_one]
+    have hR : β * ENNReal.ofReal (2 * (m : ℝ)) = ENNReal.ofReal (b * (2 * (m : ℝ))) := by
+      rw [hβdef, ← ENNReal.ofReal_mul hb0.le]
+    rw [hL, hR]
+    exact (ENNReal.ofReal_lt_ofReal_iff (by positivity)).2 hkey
+  have hKS : ∀ f ∈ A, ∀ s ∈ Set.Icc (-(m : ℝ)) ((m : ℝ) + δ'), f.toFun s ∈ S := by
+    intro f hf s hs
+    refine ⟨f, hf, s, ?_, rfl⟩
+    have hball : ((m + 1 : ℕ) : ℝ) = (m : ℝ) + 1 := by push_cast; ring
+    rw [exhaustion, hball, Metric.mem_closedBall, Real.dist_eq,
+      max_eq_left (by linarith)]
+    rw [abs_le]
+    exact ⟨by linarith [hs.1], by linarith [hs.2]⟩
+  obtain ⟨t, ht, hconc⟩ :=
+    SkorokhodSpace.exists_time_forall_dist_integral_eval_le hM1 hδ0 hδ1 hδlt μ hμ hKS
+      hβtop hβ F (le_of_lt (half_pos hε)) hF
+  refine ⟨δ', hδ'0, t, ht, fun t' ht' => ?_⟩
+  refine le_trans (hconc t' ht') ?_
+  rw [hβreal]
+  linarith

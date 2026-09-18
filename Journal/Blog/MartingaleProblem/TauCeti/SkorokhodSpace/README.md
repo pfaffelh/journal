@@ -2481,6 +2481,63 @@ state the second, as Theorem 3.9.1, for a complete separable `E` as well.
   use here. What the interchange of the two limits may spend is therefore a time
   good along a **subsequence** — which is what an argument comparing
   subsequential limits has at its disposal in any case.
+* `SkorokhodSpace.dist_integral_eval_le_of_forall_dist_le` — stage (A),
+  **proved 2026-09-18**. The passage from the bad times to the one dimensional
+  distributions. For a law `μ` carried by `K`, a bounded continuous `F : E →ᵇ ℝ`,
+  a time `t` and a time `t'` of the span `[t, t + δ')`:
+  `|∫ F (f t') dμ − ∫ F (f t) dμ| ≤ ε + 2 ‖F‖ · μ (bad t)`,
+  with `bad t` the set of the item above and `ε` a modulus of `F` at the scale
+  `a`, asked only of a set `S` holding the values of the paths of `K` over the
+  span.
+
+  The proof decomposes `∫ |F (f t') − F (f t)|` over `bad t` and its complement,
+  by `integral_mono_ae` against
+  `fun f ↦ ε + (bad t).indicator (fun _ ↦ 2 ‖F‖) f`. Off `bad t` the witness is
+  `t'` itself: were `edist (f t') (f t)` above `a`, the path would be in
+  `bad t`. Both halves are spent, and neither can be dropped — the bad set
+  cannot be made empty, by
+  `SkorokhodSpace.exists_isCompact_forall_exists_one_le_dist`, and its measure
+  alone would not control a test function of unbounded oscillation.
+* `exists_forall_dist_le_of_isCompact_closure` — stage (A), **proved
+  2026-09-18**. A modulus on a set with compact closure: for `S ⊆ E` with
+  `IsCompact (closure S)`, a bounded continuous `F` and `ε > 0` there is a scale
+  `a > 0` at which `ε` is a modulus of `F` on `S`. It is
+  `IsCompact.uniformContinuousOn_of_continuous` and nothing else, and it names
+  neither the path space nor a law.
+* `SkorokhodSpace.exists_time_forall_dist_integral_eval_le` and
+  `SkorokhodSpace.exists_time_frequently_dist_integral_eval_le` — stage (A),
+  **proved 2026-09-18**. The two times above read through that estimate: at the
+  time of the window, and for every time of the span `δ'` to its right, the
+  integral of `F` moves by at most `ε + 2 ‖F‖ β`. For a sequence of laws the
+  conclusion is again along a **subsequence**, `frequently_lt_of_liminf_lt`
+  reading the `liminf`. The window of the values is `[-M, M + δ']` and not
+  `[-M, M]`, the time being produced in `[-M, M)` and the span reaching beyond
+  it.
+* `SkorokhodSpace.exists_time_forall_dist_integral_eval_le_of_isCompact_closure`
+  — stage (A), **proved 2026-09-18**. The modulus discharged, and the statement
+  in the form the interchange wants it: for `A ⊆ D(ℝ, E)` with compact closure,
+  a law `μ` with `μ Aᶜ = 0`, a bounded continuous `F` and `ε > 0`, there are a
+  span `δ' > 0` and a time `t ∈ [-m, m)` with
+  `|∫ F (f t') dμ − ∫ F (f t) dμ| ≤ ε` for every `t' ∈ [t, t + δ')`.
+
+  **Nothing is asked of `F` beyond boundedness and continuity**, and that
+  settles a question the two items above leave open. A bounded continuous
+  function on a metric space need not be uniformly continuous, so a modulus is
+  not to be had from `F` alone; it is had from the paths. The first conjunct of
+  `SkorokhodSpace.isCompact_closure_iff` says that the values of a relatively
+  compact set of paths over a bounded window lie in a set with compact closure,
+  and a continuous function is uniformly continuous there. So the interchange is
+  a statement of stage (A) with the test class the milestone already uses, and
+  the completeness of `E` enters through that criterion alone.
+
+  The four constants are chosen in the order the proof forces, and the order is
+  not free: the scale `a` of the modulus from the compactness of the values over
+  `[-(m+1), m+1]`; then the radius `δ` of the subdivision, so that the modulus of
+  the paths stays below `a / 4`; then the level `β = ε / (4 (‖F‖ + 1))`, so that
+  the bad set costs at most `ε / 2`; and the span `δ'` last, because the bound on
+  the bad times is `(⌈2 (m + 1) / δ⌉ + 1) δ'` and only `δ'` is still free. The
+  two windows differ — `m` for the modulus and `m + 1` for the values — since the
+  span reaches `δ' ≤ 1` beyond the window in which the time is produced.
 * `SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional` — stage (A).
   The same conclusion for a tight family, from the previous item and
   `isCompact_closure_of_isTightMeasureSet`.
