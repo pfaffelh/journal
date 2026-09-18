@@ -1929,7 +1929,15 @@ space; no topology is involved.
   `generateFromFuns_le_iff` of `generateFromFuns K ≤ m` as measurability of
   every `f ∈ K`, monotonicity in `K`, and the identity
   `generateFromFuns (indicatorFuns (insert ∅ 𝒞)) = MeasurableSpace.generateFrom 𝒞`
-  that connects the functional form to `induction_on_inter`.
+  that connects the functional form to `induction_on_inter`. And
+  `generateFromFuns_comp`: substitution commutes with generation, in that
+  `generateFromFuns ((· ∘ X) '' K) = MeasurableSpace.comap X (generateFromFuns K)`.
+  It is an **equality** and not an inclusion, and it needs nothing of `X` — not
+  even measurability, both sides being σ-algebras on the source. It is
+  `iSup_image` over the class, `MeasurableSpace.comap_iSup` to move the pull back
+  inside the supremum, and `MeasurableSpace.comap_comp` on each member. This is
+  the step by which a determining class living on a path space is transported to
+  the sample space that carries the process.
 * `MeasureTheory.ioiCells K`, the finite intersections of the sets
   `f ⁻¹' Set.Ioi c` with `f ∈ K`, indexed by a `List ((Ω → ℝ) × ℝ)` — a `Finset`
   of pairs would do as well, a `Finset` of functions with one level each would

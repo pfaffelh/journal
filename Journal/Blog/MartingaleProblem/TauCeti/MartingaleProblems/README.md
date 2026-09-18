@@ -9985,7 +9985,106 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   Separabilität, und über `ι` nichts als was `IsDetermining` selbst trägt.
   **Damit sind über der Sprungkonstruktion nur noch die Voraussetzungen (a) und
   (b) ohne Zeugen**; sie sind das Straffheitsargument, das das Manuskript
-  ausdrücklich nicht liefert.
+  ausdrücklich nicht liefert. *(Berichtigt am 2026-09-18, zehnter Lauf: an der
+  **konstanten** Folge haben auch (a) und (b) einen Zeugen, siehe
+  `mpSolution_of_tendsto_jumpPath`. Ohne Zeugen ist (a) und (b) an einer
+  **nichttrivialen** approximierenden Folge, und das ist die Straffheit.)*
+* `isDetermining_of_generateFromFuns` und `isDetermining_indicatorFuns`: **eine
+  erzeugende multiplikative Klasse ist schon eine trennende Menge**, und das ist
+  die Stelle, an der `IsDetermining` die trennenden Klassen des Manuskripts
+  (`fact:sepcond`) trifft. **In Lean** am 2026-09-18, zehnter Lauf.
+  `isDetermining_of_comap` nimmt *alle* beschränkten meßbaren Funktionen der
+  Vergangenheit und ist damit der triviale Zeuge; hier darf die Klasse so klein
+  sein, wie sie will, sofern sie unter Produkten abgeschlossen ist, die Konstante
+  `1` trägt und die Vergangenheit erzeugt. Der funktionale Monotone-Klassen-Satz
+  der Roadmap `WeakConvergence` — `integral_mul_eq_zero_of_isMulSystem` — trägt
+  die Orthogonalität von der Klasse auf alles, was sie erzeugt.
+  **Der Transport auf den Stichprobenraum ist `generateFromFuns_comp`**, ebenfalls
+  vom selben Lauf und in `WeakConvergence` eingetragen: die Klasse lebt auf dem
+  Pfadraum, die Integrale auf dem Raum, der den Prozeß trägt, und die von den
+  verketteten Funktionen erzeugte σ-Algebra ist der **Rückzug** der von der Klasse
+  erzeugten. Eine Gleichheit, also geht auf dem Weg nichts verloren.
+  **Real- und Imaginärteil werden getrennt behandelt**, weil der
+  Monotone-Klassen-Satz über reellen Funktionen spricht und `IsDetermining` über
+  `RCLike 𝕂`; zusammengesetzt wird mit `RCLike.ext`, und sonst sieht kein Schritt
+  des Beweises `𝕂`.
+  **Die Konstante `1` ist keine Zierde**: `integral_mul_eq_zero_of_isMulSystem`
+  trägt das Verschwinden von `∫ g` als eigene Voraussetzung und sagt, warum sie
+  nicht wegfällt; hier ist sie genau die Orthogonalität an der konstanten
+  Funktion.
+  `isDetermining_indicatorFuns` ist der Zeuge, der die Aussage von einer
+  Umformulierung unterscheidet: die **Indikatoren eines erzeugenden π-Systems**
+  sind eine trennende Menge. `isMulSystem_indicator_of_isPiSystem` macht aus dem
+  π-System die multiplikative Klasse — mit `∅` dazu, was nach
+  `generateFromFuns_indicatorFuns` nichts kostet —, und über das π-System hinaus
+  ist nur `Set.univ ∈ 𝒞 s` verlangt, weil es die Konstante `1` liefert. Damit darf
+  die trennende Menge so klein sein wie das Zylinder-π-System, das die Filtration
+  erzeugt, und das ist, wozu eine trennende Klasse da ist.
+* `measurableSet_pathCylinders_of_le`, `isDetermining_pathCylinders`,
+  `isDetermining_pathCylinders_coordinate` und
+  `isDetermining_pathCylinders_jumpPath`: **die Zylinder der Vergangenheit sind
+  eine trennende Menge**, über jeder Filtration, die der Rückzug der natürlichen
+  Filtration einer Koordinatenfamilie ist, und insbesondere über dem kanonischen
+  Pfadraum und über dem Stichprobenraum der Sprungkonstruktion. **In Lean** am
+  2026-09-18, zehnter Lauf. Die trennenden Funktionale sind hier die Indikatoren
+  endlich vieler Koordinatenbedingungen zu Zeiten unter `s`, also eine **echt
+  kleinere** Klasse als alle beschränkten meßbaren Funktionen der Vergangenheit.
+  Der Erzeugungsschritt ist `generateFrom_pathCylinders` zusammen mit
+  `iSup_subtype'` — genau die Umschreibung, die
+  `setIntegral_eq_of_forall_cylinder` in Meilenstein 3 schon führt —, und
+  `Set.univ` ist der Zylinder über der leeren Zeitmenge, der die Konstante `1`
+  liefert. Die Zeiten sind durch den Untertyp `Set.Iic s` indiziert und nicht
+  durch eine Kette; eine lineare Ordnung wird nirgends verbraucht.
+* `mpSolution_of_tendsto_jumpPath_of_isDetermining` und
+  `mpSolution_of_tendsto_jumpPath_cylinders`: **die Probe ein zweites Mal, über
+  den Zylindern allein.** **In Lean** am 2026-09-18, zehnter Lauf. Der Kern der
+  Probe trägt die trennende Menge als Parameter; `mpSolution_of_tendsto_jumpPath`
+  (alle beschränkten meßbaren Funktionen der Vergangenheit) und
+  `mpSolution_of_tendsto_jumpPath_cylinders` (die Zylinder) sind zwei Folgerungen
+  daraus.
+  **Das ist die Messung, für die eine trennende Klasse da ist:** derselbe Satz,
+  dieselbe Konklusion, dieselben drei übrigen Voraussetzungen — es ändert sich
+  **allein** die Voraussetzung `IsDetermining`. Was eine trennende Klasse kauft,
+  ist an dieser Stelle genau eine kleinere Menge von Testfunktionalen und sonst
+  nichts; bezahlt wird sie einmal, im funktionalen Monotone-Klassen-Satz hinter
+  `isDetermining_of_generateFromFuns`.
+* `lebesgueClock_real_interval_optional` und `abs_mpFamily_coordinate_le`: **ein
+  Testprozeß von `mpFamily` ist auf einem beschränkten Zeitfenster gleichmäßig
+  beschränkt**, in der Zeit und im Pfad. **In Lean** am 2026-09-18, zehnter Lauf.
+  Die Schranke ist `‖p.1‖ + ‖p.2‖ * t`, und sie ist gleichmäßig in `r ≤ t`, weil
+  das Fenster `Set.Ioc ⊥ r` mit `r` wächst; die Uhr ist das Lebesguemaß, also ist
+  die Masse des Fensters `r` selbst und die Konstante explizit. Das ist der
+  Begleiter von `integrable_mpFamily_coordinate`, das dieselben zwei Schranken
+  liest und nur Integrierbarkeit meldet: Voraussetzung (b) von
+  `mpSolution_of_tendsto` verlangt mehr als Integrierbarkeit, nämlich **eine**
+  Abschneidestufe für **alle** `r ∈ D ∩ Set.Iic t` zugleich, und das gibt eine
+  gleichmäßige Schranke und Integrierbarkeit allein nicht.
+* `mpSolution_of_tendsto_jumpPath`: **die Leerheitsprobe des Konvergenzsatzes, an
+  der konstanten Folge.** **In Lean** am 2026-09-18, zehnter Lauf. Alle vier
+  Voraussetzungen von `mpSolution_of_tendsto` sind auf den Daten von Meilenstein 4
+  eingelöst, für ein **beliebiges** `D` und ein beliebiges Glied der Testfamilie:
+  `IsDetermining` durch `isDetermining_jumpPath` — oder, in der Zylinderfassung
+  `mpSolution_of_tendsto_jumpPath_cylinders`, durch
+  `isDetermining_pathCylinders_jumpPath` —, die Verteilungskonvergenz durch
+  `MeasureTheory.tendstoInDistribution_const`, die gleichgradige Integrierbarkeit
+  durch `abs_mpFamily_coordinate_le`, und das Verschwinden der geprüften Zuwächse
+  durch `integral_sub_mul_eq_zero_jumpPath_time`.
+  **Was der Satz zurückgibt, ist die Martingalidentität, die
+  `jumpPath_isMPSolution` schon hat**, also nichts Neues über den Sprungprozeß.
+  Was er belegt, ist etwas über den **Satz**: seine vier Voraussetzungen sind an
+  einer wirklichen Lösung eines Martingalproblems gemeinsam bewohnt. Das ist es,
+  was eine Roadmap-Aussage braucht, die auf ihnen ruht, und was Meilenstein 10
+  nicht hatte.
+  **Die Stelle, an der die Probe klemmen sollte, klemmt nicht.** Voraussetzung (b)
+  verlangt **eine** Abschneidestufe, gleichmäßig über `r ∈ D ∩ Set.Iic t`;
+  `tendsto_integral_tail` gibt sie je Funktion, und ein Maximum über ein
+  unendliches `D ∩ Set.Iic t` gibt es nicht. Die Sprungkonstruktion entkommt dem,
+  **ohne `D` einzuschränken**: ihre Testprozesse sind auf einem beschränkten
+  Zeitfenster gleichmäßig beschränkt, also sind die Schwänze von (b) nicht klein,
+  sondern **Null**. Ebenso ist der Grenzwert in (c) nicht klein, sondern jedes
+  Glied ist exakt Null. Die Probe ist deshalb nirgends eine Abschätzung.
+  Die Voraussetzungen sind die von `jumpProcessE_isMPSolution_of_nonneg` und keine
+  weiteren; keine Topologie auf `E` kommt vor.
 
 ## Milestone 11: the Skorokhod instances
 

@@ -37107,3 +37107,188 @@ Meßwert dieses Laufs.
    an ganz anderer Stelle; daß Meilenstein 10 seine trennende Menge bisher nur
    trivial bewohnt, ist der Grund, warum die beiden Belege einander nicht
    stützen. Ein Zeuge über einer **erzeugenden** Klasse verbindet sie.
+
+### 2026-09-18, zehnter Lauf des Tages — Meilenstein 10 ist bewohnt: seine vier Voraussetzungen halten gemeinsam an einer wirklichen Lösung; und die Stelle, an der der Vorlauf das Klemmen erwartete, klemmt nicht, weil die Testprozesse auf einem Fenster gleichmäßig beschränkt sind; dazu der Anschluß von `IsDetermining` an die trennenden Klassen, der einen zweiten Zeugen brauchte, um nicht auf die triviale Menge zurückzufallen
+
+**Beide Vorschläge des Vorlaufs sind eingelöst.** Elf neue Deklarationen in
+`TauCeti/MartingaleProblems/Suggested.lean` und eine in
+`TauCeti/WeakConvergence/Suggested.lean`, alle drei Roadmap-Dateien ohne einen
+Fehler und ohne ein `sorry` durch `scripts/check_suggested.py` gegen v4.33.1
+(Lean 4.33.1, commit `819816b2e0a3`), alle zwölf mit `#print axioms` auf
+`propext`, `Classical.choice`, `Quot.sound` geprüft. Die Punkte stehen in
+`MartingaleProblems/README.md`, Meilenstein 10, und in
+`WeakConvergence/README.md`, Meilenstein 1.
+
+#### Was gebaut wurde (Vorschlag 1)
+
+* `lebesgueClock_real_interval_optional` — die reelle Masse eines
+  Kompensationsfensters in der optionalen Konvention ist sein rechter Endpunkt.
+  `abs_setIntegral_compensator_le` rechnet das seit dem 2026-09-10 inline für den
+  Sprungprozeß aus; hier wird es längs eines **beliebigen** Pfades gebraucht, also
+  steht es jetzt für sich.
+* `abs_mpFamily_coordinate_le` — ein Testprozeß von `mpFamily` über dem
+  kanonischen Pfadraum ist auf einem beschränkten Zeitfenster **gleichmäßig
+  beschränkt**, in der Zeit und im Pfad, mit der expliziten Schranke
+  `‖p.1‖ + ‖p.2‖ * t`.
+* `mpSolution_of_tendsto_jumpPath` — der Konvergenzsatz von Meilenstein 10,
+  angewandt mit `X' n = jumpPath lam` und `P' n = jumpMeasure mu nu` für **alle**
+  `n`, für ein **beliebiges** `D` und ein beliebiges Glied der Testfamilie.
+
+#### Der Befund, und er widerspricht der Vorhersage des Vorlaufs
+
+Der Vorlauf hatte angesagt, was von der Probe zu erwarten sei: „an welcher der
+vier Eingaben die Verzahnung klemmt — (b) verlangt **eine** Abschneidestufe `c`
+gleichmäßig über `r ∈ D ∩ Iic t`, und `tendsto_integral_tail` gibt sie je
+Funktion; für eine konstante Folge und ein **endliches** `D ∩ Iic t` ist das ein
+Maximum, für ein unendliches nicht."
+
+**Das ist richtig für `tendsto_integral_tail` und falsch für diese Daten.** Die
+Sprungkonstruktion braucht `tendsto_integral_tail` gar nicht: ein Testprozeß des
+Sprungoperators ist auf `[⊥, t]` **gleichmäßig beschränkt**, weil sein
+Zustandsterm durch die Schranke von `p.1` und sein Kompensator durch
+`‖p.2‖ * r ≤ ‖p.2‖ * t` beschränkt ist. Die Schwänze von (b) sind also nicht
+klein, sondern **Null**, und `D` darf beliebig sein — auch überabzählbar. Die
+Probe ist an keiner ihrer vier Eingaben eine Abschätzung: (c) ist ebenso nicht
+klein, sondern **jedes Glied exakt Null** (`integral_sub_mul_eq_zero_jumpPath_time`),
+(a) ist `tendstoInDistribution_const`, und `IsDetermining` ist der Zeuge des
+Vorlaufs.
+
+**Warum das mehr ist als eine Bequemlichkeit dieser Daten.** Die Schranke ruht
+darauf, daß die Operatorpaare von `jumpOperator` beide Komponenten beschränkt
+tragen — `p.1` nach Definition, `p.2` nach `abs_jumpApply_le` aus `lam ≤ L`. Wo
+ein Erzeuger diese Beschränktheit nicht hat (der lokale Zweig, der Yule-Prozeß,
+die unbeschränkte Rate), verliert die Probe ihr Argument für (b) und muß sie über
+gleichgradige Integrierbarkeit führen. Das ist die Grenze des Befundes, und sie
+gehört an die Deklaration; sie steht dort.
+
+#### Was der Befund für Meilenstein 10 heißt
+
+Der Vorlauf schloß: „Damit sind über der Sprungkonstruktion nur noch die
+Voraussetzungen (a) und (b) ohne Zeugen." Das ist jetzt zu berichtigen, und die
+Berichtigung steht in der Roadmap: **an der konstanten Folge haben auch (a) und
+(b) einen Zeugen.** Ohne Zeugen ist (a) und (b) an einer **nichttrivialen**
+approximierenden Folge — und genau das ist das Straffheitsargument, das das
+Manuskript ausdrücklich nicht liefert. Die Probe verschiebt die Lücke also von
+„die Voraussetzungen sind vielleicht unerfüllbar" nach „die Voraussetzungen sind
+erfüllbar, und was fehlt, ist die Straffheit". Das ist der Unterschied zwischen
+einem Integritätsproblem und einer benannten mathematischen Aufgabe.
+
+#### Eine Beobachtung zum Beweisaufwand
+
+Ein einziger Fehler im ersten Durchlauf, und er war kein mathematischer: `rw`
+findet das Muster nicht, wenn im Ziel die Koerzierung `RCLike.ofReal` steht und
+im Lemma bei `𝕂 = ℝ` keine. `Filter.Tendsto.congr` gegen `tendsto_const_nhds`
+umgeht es, weil `exact` bis auf Definitionsgleichheit prüft und
+`RCLike.ofReal_real_eq_id` `rfl` ist. Das ist dieselbe Falle wie die des
+achtzehnten Laufs vom 2026-09-10 (`ENNReal` gegen `WithTop ℝ≥0`), und die Regel
+daraus ist dieselbe: **nicht am Ziel rewriten, sondern das Ziel mit `exact`
+treffen.**
+
+#### Was gebaut wurde (Vorschlag 2) — der Anschluß von `IsDetermining` an `fact:sepcond`
+
+* `generateFromFuns_comp` (in `WeakConvergence/Suggested.lean`, neben
+  `generateFromFuns_mono`) — **Substitution vertauscht mit Erzeugung**:
+  `generateFromFuns ((· ∘ X) '' K) = MeasurableSpace.comap X (generateFromFuns K)`.
+  Eine **Gleichheit** und keine Inklusion, und sie verlangt von `X` nichts, nicht
+  einmal Meßbarkeit — beide Seiten sind σ-Algebren auf der Quelle. Drei Zeilen:
+  `iSup_image`, `MeasurableSpace.comap_iSup`, `MeasurableSpace.comap_comp`.
+* `isDetermining_of_generateFromFuns` — eine unter Produkten abgeschlossene
+  Klasse beschränkter meßbarer Funktionen, die die Vergangenheit **erzeugt** und
+  die Konstante `1` enthält, ist schon eine trennende Menge im Sinne von
+  `IsDetermining`.
+* `isDetermining_indicatorFuns` — die **Indikatoren eines erzeugenden π-Systems**
+  sind eine trennende Menge.
+
+#### Drei Befunde zu Vorschlag 2
+
+* **Der erste ist der Grund, warum der Zeuge nachgeschoben werden mußte.**
+  `isDetermining_of_generateFromFuns` allein wäre dieselbe Falle gewesen, die der
+  Vorlauf bei `IsDetermining` selbst aufgedeckt hat: eine Aussage über eine
+  Struktur, von der niemand weiß, ob sie kleiner bewohnt ist als trivial. Nimmt
+  man für `𝒦 s` *alle* beschränkten meßbaren Funktionen der Vergangenheit, so sind
+  ihre Voraussetzungen erfüllt und man ist bei `isDetermining_of_comap` zurück.
+  `isDetermining_indicatorFuns` ist deshalb kein Beiwerk: es ist der Beleg, daß
+  die Abschwächung **etwas gewinnt** — die trennende Menge darf so klein sein wie
+  das Zylinder-π-System, das die Filtration erzeugt.
+* **Über das erzeugende π-System hinaus ist genau eine Bedingung nötig, und sie
+  ist nicht wegzulassen:** `Set.univ ∈ 𝒞 s`. Sie liefert die Konstante `1`, und
+  `integral_mul_eq_zero_of_isMulSystem` trägt das Verschwinden von `∫ g` als
+  eigene Voraussetzung, mit einem Gegenbeispiel im eigenen Doc-Kommentar
+  (`K = {0}` erzeugt `⊥`). Die Formulierung mit `insert ∅` ist ebenfalls keine
+  Bequemlichkeit, sondern von `isMulSystem_indicator_of_isPiSystem` erzwungen —
+  das Produkt zweier Indikatoren disjunkter Mengen ist der Indikator von `∅`, und
+  ein π-System muß `∅` nicht enthalten.
+* **Der Monotone-Klassen-Satz ist reell, `IsDetermining` ist über `RCLike 𝕂`**,
+  und die Naht kostet einen Real-Imaginär-Schnitt. Er ist billig, weil er sich
+  über ein einziges `∀ L : 𝕂 →L[ℝ] ℝ` führen läßt und erst am Ende mit
+  `RCLike.ext` zusammengesetzt wird — dasselbe Muster, das der Beweis von
+  `mpSolution_of_tendsto` schon benutzt. Einen Verlust an Allgemeinheit kostet er
+  nicht: die Aussage bleibt über beliebigem `RCLike 𝕂`.
+
+#### Was daraus im selben Lauf noch gefallen ist: die Zylinder, und die Probe ein zweites Mal
+
+`isDetermining_indicatorFuns` wäre ohne Anwendung eine Aussage ohne Daten
+geblieben. Fünf weitere Deklarationen schließen das:
+
+* `measurableSet_pathCylinders_of_le` — ein Zylinder über Zeiten unter `s` liegt
+  in der Vergangenheit bei `s`;
+* `isDetermining_pathCylinders` — die Indikatoren der Zylinder der Vergangenheit
+  sind eine trennende Menge, für jede Filtration, die der Rückzug der natürlichen
+  Filtration einer Koordinatenfamilie ist. Der Erzeugungsschritt ist
+  `generateFrom_pathCylinders` mit `iSup_subtype'` — dieselbe Umschreibung, die
+  `setIntegral_eq_of_forall_cylinder` einen Meilenstein weiter oben schon führt —,
+  und `Set.univ` ist der Zylinder über der leeren Zeitmenge;
+* `isDetermining_pathCylinders_coordinate` und
+  `isDetermining_pathCylinders_jumpPath` — dasselbe über dem kanonischen Pfadraum
+  und über dem Stichprobenraum der Sprungkonstruktion;
+* `mpSolution_of_tendsto_jumpPath_cylinders` — **die Probe ein zweites Mal, über
+  den Zylindern allein.**
+
+Dafür ist die Probe von heute morgen umgebaut: ihr Kern heißt jetzt
+`mpSolution_of_tendsto_jumpPath_of_isDetermining` und trägt die trennende Menge
+als Parameter; `mpSolution_of_tendsto_jumpPath` (alle beschränkten meßbaren
+Funktionen der Vergangenheit) und `mpSolution_of_tendsto_jumpPath_cylinders` (die
+Zylinder) sind zwei Folgerungen daraus, jede vier Zeilen.
+
+**Und das ist der Meßwert, den `fact:sepcond` im Inventar bisher nur behauptet
+hat:** derselbe Satz, dieselbe Konklusion, dieselben drei anderen
+Voraussetzungen — es ändert sich **allein** die Voraussetzung `IsDetermining`.
+Was eine trennende Klasse kauft, ist an dieser Stelle also genau eine kleinere
+Menge von Testfunktionalen und sonst nichts; der Preis ist der funktionale
+Monotone-Klassen-Satz, einmal bezahlt in `isDetermining_of_generateFromFuns`.
+
+#### Was offen bleibt
+
+* (a) und (b) an einer nichttrivialen Folge bleiben Straffheit und damit
+  außerhalb dessen, was das Manuskript liefert. Sie sind nach diesem Lauf die
+  **einzigen** Voraussetzungen von `mpSolution_of_tendsto`, die über der
+  Sprungkonstruktion nur an der konstanten Folge einen Zeugen haben.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die Zylinderfassung über den kanonischen Pfadraum, unter dem Bildmaß.**
+   *Aussage:* `mpSolution_of_tendsto_map_jumpPath_cylinders` — dieselbe Probe wie
+   heute, aber mit `X = id`, `P = (jumpMeasure mu nu).map (jumpPath lam)` und der
+   Testfamilie `mpFamily (jumpOperator lam mu) … coordinate` selbst, also über dem
+   Raum, in dem Meilenstein 6 und Meilenstein 11 leben. *Worauf sie ruht — alle
+   Eingaben stehen:* `isDetermining_pathCylinders_coordinate` (heute),
+   `jumpPath_isMPSolution` (2026-09-17) für das Martingal,
+   `integral_sub_mul_eq_zero_map_jumpPath_time` (2026-09-18, neunter Lauf) für (c),
+   `abs_mpFamily_coordinate_le` (heute) für (b), `isProbabilityMeasure_map_jumpPath`
+   für die Instanz. *Warum jetzt:* beide heutigen Proben leben auf dem
+   **Stichprobenraum** `(ℕ → E) × (ℕ → ℝ)`; die Sätze von Meilenstein 11 sprechen
+   über Pfadräume. Solange keine Probe unter dem Bildmaß steht, ist der
+   Konvergenzsatz an der Stelle unbewohnt, an der ihn `SkorokhodSpace` gebrauchen
+   würde.
+2. **Die Straffheit an einer Familie von Sprungkonstruktionen, als benannte
+   Hypothese statt als Lücke.** *Aussage:* `isTight_jumpPath_of_bddRate` oder,
+   falls das zu viel ist, die schwächere Zwischenstufe: die gleichgradige
+   Integrierbarkeit (b) an einer Familie mit **gleichmäßig** beschränkten Raten
+   `lam n ≤ L` und gleichmäßig beschränkten Testfunktionen. *Worauf sie ruht:*
+   `abs_mpFamily_coordinate_le` gibt die Schranke `‖p.1‖ + ‖p.2‖ * t` je Glied;
+   ist `L` und die Testfunktion über `n` gleichmäßig, so ist die Schranke es auch,
+   und (b) fällt für die **Familie** genauso heraus wie heute für die konstante
+   Folge. *Warum jetzt:* das ist der billigste echte Fortschritt an (a)/(b) —
+   (b) ohne jede Straffheit, allein aus der gleichmäßigen Schranke —, und er
+   halbiert die Lücke, die dieser Lauf als einzige offene benennt. (a), die
+   Verteilungskonvergenz, bleibt danach die ganze Aufgabe.
