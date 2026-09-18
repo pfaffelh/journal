@@ -270,6 +270,14 @@ CLAIMS_TODO8 = [
      'Integrierbarkeit steht in keiner Fassung da.',
      'UnifIntegrable|unifIntegrable',
      ['Mathlib/MeasureTheory/Function/ConvergenceInDistribution.lean'], []),
+    ('condexp-sup-indep', 'TODO.md Punkt 8, fünfundzwanzigste Lücke',
+     'Die unerhebliche Vergrößerung der bedingten Erwartung fehlt: '
+     '`μ[f | m₁ ⊔ m₂] = μ[f | m₁]` für `m₂` unabhängig von `m₁ ⊔ σ(f)`. '
+     'Mathlib hat nur den Fall `m₁ = ⊥`, `condExp_indep_eq`; die Zeichenketten '
+     '`condExp_sup` und `condexp_sup` kommen nirgends vor.  Der Filter ist '
+     '`Mathlib/` und kein engerer -- die Behauptung handelt von der '
+     'Bibliothek und nicht von einer Datei.',
+     'condExp_sup|condexp_sup', ['Mathlib/'], []),
     ('martingale-setIntegral-weight',
      'MartingaleProblems/README.md, Meilenstein 5',
      'Ein Martingal gegen eine **beschränkte** Gewichtsfunktion getestet hat in '

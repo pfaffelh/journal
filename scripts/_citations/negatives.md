@@ -287,6 +287,13 @@ Suche `protected (lemma|theorem) (iSup|biSup)` unter `Mathlib/Probability/`: **0
 Suche `UnifIntegrable|unifIntegrable` unter `Mathlib/MeasureTheory/Function/ConvergenceInDistribution.lean`: **0 Treffer** in 0 Dateien — wie erwartet.
 
 
+## `condexp-sup-indep` — TODO.md Punkt 8, fünfundzwanzigste Lücke
+
+> Die unerhebliche Vergrößerung der bedingten Erwartung fehlt: `μ[f | m₁ ⊔ m₂] = μ[f | m₁]` für `m₂` unabhängig von `m₁ ⊔ σ(f)`. Mathlib hat nur den Fall `m₁ = ⊥`, `condExp_indep_eq`; die Zeichenketten `condExp_sup` und `condexp_sup` kommen nirgends vor.  Der Filter ist `Mathlib/` und kein engerer -- die Behauptung handelt von der Bibliothek und nicht von einer Datei.
+
+Suche `condExp_sup|condexp_sup` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
 ## `martingale-setIntegral-weight` — MartingaleProblems/README.md, Meilenstein 5
 
 > Ein Martingal gegen eine **beschränkte** Gewichtsfunktion getestet hat in Mathlib keinen Satz; der Indikatorfall steht als `Martingale.setIntegral_eq` und ist die einzige Fassung.
@@ -298,5 +305,5 @@ Suche `setIntegral.*[Mm]artingale|[Mm]artingale.*setIntegral` unter `Mathlib/Pro
 
 ## Zusammenfassung
 
-40 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
+41 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
 

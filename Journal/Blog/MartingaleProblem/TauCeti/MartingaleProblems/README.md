@@ -9682,6 +9682,62 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   and over such a filtration the index read is a **stopping time** and not a
   constant. That is the missing input, and it is named here rather than assumed
   away.
+* `supRectangles`, `isPiSystem_supRectangles`, `generateFrom_supRectangles`,
+  `setIntegral_eq_of_forall_supRectangle`,
+  `setIntegral_eq_measureReal_smul_integral_of_indep` and `condExp_sup_of_indep`:
+  **the irrelevant enlargement.** Is `m₂` independent of `m₁ ⊔ m₀` and is `f`
+  measurable for `m₀`, then `μ[f | m₁ ⊔ m₂] = μ[f | m₁]` almost surely: adding an
+  independent σ-algebra to the conditioning changes nothing. **In Lean** on
+  2026-09-18, fifth run, over an arbitrary Banach space and with no topology on
+  the sample space.
+  **Mathlib has only the case `m₁ = ⊥`**, `MeasureTheory.condExp_indep_eq`
+  (`Mathlib/Probability/ConditionalExpectation.lean:42`), the only theorem in
+  that file; `condExp_sup` and `condexp_sup` occur nowhere in `Mathlib/`, checked
+  against `upstream/master` `a218e50f981` (2026-09-17) and against v4.33.1. It is
+  the twenty-fifth gap of `TODO.md` point 8.
+  **The proof is the one `condExp_indep_eq` itself runs**: the π-system of
+  rectangles `t₁ ∩ t₂`, the extension over it, and the degenerate case as the
+  engine — on a rectangle the integral of an `m₁ ⊔ m₀`-measurable integrand cut
+  down to `t₁` factors into `μ.real t₂` times an integral over `t₁`, and there
+  the defining property of `μ[f | m₁]` closes.
+  **`m₀` is an argument and not `σ(f)`**, because the range of `f` carries no
+  measurable space to comap from; where it does, `σ(f)` is the smallest
+  admissible `m₀`. **The independence is asked of `m₁ ⊔ m₀` and not of `m₀`
+  alone**: `m₂` must be independent of the past and of the integrand jointly,
+  and pairwise independence does not give that.
+* `indep_comap_fst_comap_snd`, `condExp_sup_comap_snd` and
+  `condExp_jumpChain_clock`: **the first of the two inputs the probe needs is
+  supplied.** **In Lean** on 2026-09-18, fifth run. The two factors of a product
+  measure are independent σ-algebras — `ProbabilityTheory.indepFun_prod`
+  (`Mathlib/Probability/Independence/Basic.lean:727`) at the two identities — so
+  a σ-algebra lying under the first factor may be enlarged by the **whole**
+  second factor for free, and `jumpMeasure` is a product by definition.
+  `condExp_jumpChain_clock` is therefore `condExp_jumpChain` word for word over
+  `naturalFiltration (jumpChain E) n ⊔ comap Prod.snd ⊤`: the Markov property of
+  the embedded chain survives an enlargement by the whole clock.
+  **That the conditional expectation survives the enlargement was not automatic**
+  and is the reason this statement comes before any construction over the
+  enlarged filtration.
+* `integral_sub_mul_eq_zero_of_martingale_stoppedValue` and
+  `integral_sub_mul_eq_zero_of_martingale_stoppedValue_min`: **the orthogonality
+  of hypothesis (c) at a random pair of indices.** A martingale increment between
+  two stopping times of the chain filtration is orthogonal to every bounded
+  variable of the earlier one. **In Lean** on 2026-09-18, fifth run. It is
+  `integral_sub_mul_eq_zero_of_condExp_eq` at `m' = hσ.measurableSpace`, fed by
+  `Martingale.stoppedValue_ae_eq_condExp_of_le` and by
+  `Martingale.stoppedValue_min_ae_eq_condExp`
+  (`Mathlib/Probability/Martingale/OptionalSampling.lean:141` and `:195`).
+  **It relocates the second missing input of the probe.** Over the enlarged
+  filtration the whole clock sits in the σ-algebra at index `0`, so every
+  clock measurable index is a stopping time *trivially*, by being measurable at
+  the bottom; being a stopping time is free. What is not free is **boundedness**,
+  which optional sampling asks of the later index and which the renewal count at
+  a fixed time does not have. The minimum form is what answers that: the later
+  index may be truncated at a constant while the earlier one is left alone, so
+  the weight keeps the σ-algebra it is measurable for — truncating the earlier
+  index too would shrink that σ-algebra and lose the weight. What then remains is
+  the passage `K → ∞`, a convergence of integrals and no longer a question about
+  filtrations.
 * **Hypothesis (a) is about real random variables and carries no topology.** In
   the example above the path space `F` is `D ι E` and the functionals
   `Y° t` are evaluations, but the statement of (a) never mentions `F`'s

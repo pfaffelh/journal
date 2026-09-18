@@ -36198,3 +36198,228 @@ Gammaverteilung, die dieser Lauf als zweiten Vorschlag geführt hätte, ist in i
 selbst gebaut (`variance_id_gammaMeasure`), weil sie nach Befund 1 der ganze Rest
 der vierundzwanzigsten Lücke war und die allgemeine Identifikation sie fast
 umsonst mitliefert.
+
+### 2026-09-18, fünfter Lauf des Tages — beide Vorschläge des Vorlaufs sind eingelöst, und in der umgekehrten Reihenfolge: die Lücke, die Vorschlag 2 nur aufschreiben wollte, ist im selben Lauf bewiesen; und die zweite Eingabe der Probe steckt nicht an der Stoppzeit, sondern an der Beschränktheit
+
+Der Vorlauf hat zwei Vorschläge hinterlassen — die Filtration, die die Uhr
+enthält (1), und die Lücke, auf der sie ruht (2) —, mit der Bemerkung, Vorschlag
+2 sei die Eingabe von Vorschlag 1. Beides steht. Und der Grund, aus dem beides in
+*einen* Lauf paßte, ist derselbe wie im dritten und vierten Lauf dieses Tages:
+**die allgemeine Fassung ist billiger als der Spezialfall.**
+
+**Elf neue Deklarationen** in `TauCeti/MartingaleProblems/Suggested.lean`, in
+vier neuen Abschnitten (`IrrelevantEnlargement`, `ProductEnlargement`,
+`JumpChainClock`, `StoppedOrthogonality`). Die Kette ohne einen Fehler:
+
+| Datei | rc | Fehler | `sorry` | Sekunden |
+| --- | ---: | ---: | ---: | ---: |
+| `WeakConvergence/Suggested.lean` | 0 | 0 | 0 | 8 |
+| `SkorokhodSpace/Suggested.lean` | 0 | 0 | 0 | 13 |
+| `MartingaleProblems/Suggested.lean` | 0 | 0 | 0 | 68 |
+
+Alle neuen mit `scripts/check_axioms.py` geprüft: `propext`,
+`Classical.choice`, `Quot.sound`, sonst nichts. Der Stand von `upstream/master`,
+gegen den die Mathlib-Nachfragen dieses Laufs gestellt sind: `a218e50f981`,
+2026-09-17 (frisch geholt, derselbe wie in den beiden Vorläufen).
+`scripts/check_negatives.py` meldet jetzt über **41** Behauptungen keinen
+unerwarteten Treffer — eine mehr als im Vorlauf, und die neue ist die dieses
+Laufs.
+
+#### Die Lücke, und sie ist wirklich eine
+
+`Mathlib/Probability/ConditionalExpectation.lean` enthält auf `a218e50f981` wie
+in v4.33.1 **genau einen** Satz: `MeasureTheory.condExp_indep_eq`, Zeile 42, und
+er sagt `μ[f | m₂] =ᵐ μ[f]` für `f` meßbar über einer von `m₂` unabhängigen
+σ-Algebra. Gebraucht wird die *Vergrößerung*,
+
+    μ[f | m₁ ⊔ m₂] =ᵐ μ[f | m₁]   für m₂ unabhängig von m₁ ⊔ σ(f),
+
+deren Fall `m₁ = ⊥` der Mathlib-Satz ist. Die Zeichenketten `condExp_sup` und
+`condexp_sup` kommen in ganz `Mathlib/` **nicht** vor; eine Suche nach `condExp`
+neben `⊔` über `Mathlib/Probability/` und
+`Mathlib/MeasureTheory/Function/ConditionalExpectation/` gibt nichts. Das ist
+die fünfundzwanzigste Lücke von `TODO.md` Punkt 8, und sie steht — nach der Lehre
+des Vorlaufs — **zuerst in `scripts/check_negatives.py`** und erst dann im
+Fließtext, mit dem Filter `Mathlib/` und keinem engeren.
+
+#### Was gebaut ist, und warum die allgemeine Fassung kürzer war
+
+Sechs Deklarationen für die Lücke, drei für ihre Anwendung.
+
+* `supRectangles`, `isPiSystem_supRectangles`, `generateFrom_supRectangles` —
+  das π-System der Rechtecke `t₁ ∩ t₂` und seine Erzeugung von `m₁ ⊔ m₂`. Mathlib
+  hat es nicht als benannte Familie, obwohl `IndepSets.indep` genau darüber
+  läuft.
+* `setIntegral_eq_of_forall_supRectangle` — die Fortsetzung von den Rechtecken
+  auf die ganze Vereinigungs-σ-Algebra, über
+  `MeasurableSpace.induction_on_inter`. Sie ist das Gegenstück zu
+  `setIntegral_eq_of_forall_cylinder` aus dem Abschnitt `FddPiSystem`, und die
+  drei Schritte sind dort wie hier `integral_add_compl`, `integral_iUnion` und
+  das Gesamtintegral als Rechteck `univ ∩ univ`.
+* `setIntegral_eq_measureReal_smul_integral_of_indep` — `condExp_indep_eq`,
+  gelesen als Aussage über Mengenintegrale: über einer Menge von `m₂`
+  faktorisiert das Integral eines `m₁`-meßbaren Integranden in `μ.real t₂` mal
+  das Gesamtintegral. Zwei Zeilen über dem Mathlib-Satz und
+  `setIntegral_condExp`.
+* `condExp_sup_of_indep` — der Satz. Auf einem Rechteck wird beidemal derselbe
+  Zug gemacht: den Integranden auf `t₁` abschneiden, faktorisieren, und was
+  bleibt, ist `∫_{t₁} μ[f|m₁] = ∫_{t₁} f`, also die definierende Eigenschaft.
+
+**Warum das nicht teurer war als der Spezialfall:** der Beweis benutzt
+`condExp_indep_eq` als *Motor* und nicht als Vorbild. Ein eigener Weg über
+`MemLp.induction_stronglyMeasurable` — so beweist Mathlib den degenerierten Fall
+— wäre der lange gewesen; das Abschneiden auf `t₁` macht aus der Vergrößerung
+wieder den degenerierten Fall, an einem anderen Integranden.
+
+**Drei Voraussetzungen, und jede ist so schwach, wie sie sein kann.**
+
+* **Kein Raum, keine Topologie, kein Maßraum auf der Bildseite.** `V` ist ein
+  beliebiger Banachraum; `Θ` trägt nichts als seine σ-Algebren.
+* **`m₀` ist ein Argument und nicht `σ(f)`** — und das ist keine Bequemlichkeit,
+  sondern notwendig: ein Banachraum trägt keine Meßbarkeit, aus der sich `σ(f)`
+  überhaupt bilden ließe. Wo sie besteht, ist `σ(f)` das kleinste zulässige
+  `m₀`, und die Aussage nimmt dann die vertraute Gestalt an.
+* **Die Unabhängigkeit wird von `m₁ ⊔ m₀` verlangt, nicht von `m₀` allein.**
+  `m₂` muß von der Vergangenheit *und* vom Integranden gemeinsam unabhängig sein;
+  paarweise Unabhängigkeit genügt nicht, und der klassische Zeuge dagegen sind
+  drei paarweise unabhängige Münzwürfe.
+
+#### Die Anwendung, und sie ist der Vorschlag 1 des Vorlaufs
+
+* `indep_comap_fst_comap_snd` — die beiden Faktoren eines Produktmaßes sind
+  unabhängige σ-Algebren. Das ist `ProbabilityTheory.indepFun_prod`
+  (`Mathlib/Probability/Independence/Basic.lean:727`, in v4.33.1 **und** auf
+  `master`) an den beiden Identitäten, gelesen als Unabhängigkeit der Comaps
+  statt zweier Zufallsvariablen.
+* `condExp_sup_comap_snd` — eine σ-Algebra unter dem ersten Faktor darf um den
+  **ganzen** zweiten vergrößert werden, umsonst. Über `m₁` steht nichts als
+  `m₁ ≤ comap Prod.fst`: keine Filtration, keine abzählbare Erzeugung.
+* `condExp_jumpChain_clock` — `condExp_jumpChain` wörtlich, aber über
+  `naturalFiltration (jumpChain E) n ⊔ comap Prod.snd ⊤`. Der Beweis ist der
+  Aufruf und `naturalFiltration_jumpChain_le_comap_fst` aus dem Vorlauf; daß
+  `jumpMeasure` ein Produkt ist, steht in seiner Definition.
+
+**Damit ist die erste der beiden fehlenden Eingaben der Probe von Meilenstein 10
+eingelöst, und es war die, die in Zweifel stand.** Daß eine bedingte Erwartung
+eine Vergrößerung ihrer σ-Algebra übersteht, ist **nicht** automatisch — das ist
+dieselbe Frage, die bei der Augmentierung um Nullmengen in Teil C offen steht,
+und hier, an einem Produkt, ist sie billig zu beantworten. Sie *mußte* vor jeder
+Konstruktion über der vergrößerten Filtration beantwortet werden, sonst repariert
+man die Meßbarkeit und bricht die Markoveigenschaft.
+
+#### Befund: die Lücke war allgemeiner als ihre Anwendung, und deshalb billiger
+
+Der Vorlauf hatte Vorschlag 2 als bloßes *Aufschreiben* einer Lücke geführt —
+„ehe sie gebraucht wird" — und Vorschlag 1 als die Arbeit. Es war umgekehrt.
+`condExp_sup_of_indep` ist vierzig Zeilen und ein Standardweg; die Anwendung ist
+sechs Zeilen. Was den Unterschied macht, ist die **Form der Voraussetzung**:
+hätte man die Aussage nur für `jumpMeasure` gebraucht und dort bewiesen, so wäre
+die Produktstruktur im ganzen Beweis mitgelaufen und jede Zeile hätte sie gelesen.
+Über `Indep m₁ m₂ μ` kommt sie an genau einer Stelle vor, im Aufruf von
+`condExp_indep_eq`.
+
+Das ist derselbe Befund wie im dritten Lauf dieses Tages (die allgemeine
+Lückenfassung war billiger als der Spezialfall) und im vierten
+(`gammaPDF_toReal_smul_pow` ersetzt zwei private Hilfsaussagen). Dreimal
+hintereinander, und in allen drei Fällen aus demselben Grund: **ein Beweis, der
+eine Struktur nicht sieht, kann sie auch nicht mitschleppen.**
+
+#### Zwei kleine Stolperstellen, beide eine Minute
+
+* **Eine lokale Hypothese vom Typ einer Klasse ist ein Instanzkandidat**, auch
+  wenn sie implizit gebunden ist. In `condExp_sup_comap_snd` steht
+  `{m₁ : MeasurableSpace (α × β)}` im Kontext, und `measurable_fst` hat sich
+  daraufhin `m₁` statt `Prod.instMeasurableSpace` als Quellinstanz gesucht — mit
+  einer Typfehlermeldung, die wie ein Universenproblem aussieht und keines ist.
+  Zu schreiben ist die Instanz explizit:
+  `@Measurable (α × β) α Prod.instMeasurableSpace inferInstance Prod.fst`.
+* **`inferInstance` in einer Typangabe eines `have` wird nicht synthetisiert**,
+  solange der erwartete Typ nicht dasteht; `Measurable.comap_le` meldet dann
+  einen Typfehler zwischen `Prod.instMeasurableSpace` und `inferInstance`. Der
+  Ausweg ist, die Typangabe wegzulassen und den Typ aus dem Term kommen zu
+  lassen.
+
+#### Und dann die zweite Eingabe, im selben Lauf — mit einem Befund, der den Vorschlag des Vorlaufs berichtigt
+
+Der Bericht bis hierher hätte die zweite Eingabe als „Stoppzeit statt Konstante"
+vertagt. Sie ist statt dessen angegangen, und das Lesen der Hypothese hat die
+Lage anders gezeigt, als sie von außen aussah.
+
+**Erstens: `tendsto_integral_mul_rescaledChain` verlangt gar keine bestimmte
+Filtration.** Der allgemeine Satz trägt `{𝓖 : ∀ n, Filtration ℕ (m' n)}` als
+freie Größe; erst `tendsto_integral_mul_rescaledChain_natural` setzt die
+natürliche Kettenfiltration ein. Der vergrößerten Filtration steht also nichts im
+Weg, und `condExp_jumpChain_clock` ist genau das `hmarkov`, das sie braucht.
+
+**Zweitens, und das ist der Befund: Stoppzeit zu sein ist umsonst — es ist die
+Beschränktheit, die fehlt.** Über
+`naturalFiltration (jumpChain E) i ⊔ comap Prod.snd ⊤` liegt die **ganze** Uhr
+schon in der σ-Algebra bei `i = 0`. Jeder uhrmeßbare Index ist damit eine
+Stoppzeit, trivial, weil er unten meßbar ist; die Erneuerungszahl ist keine
+Ausnahme. Was das optionale Sampling dagegen verlangt und was sie nicht hat, ist
+eine **konstante obere Schranke**. Der Vorschlag des Vorlaufs hat die Schwierigkeit
+an der falschen Stelle vermutet.
+
+**Zwei Deklarationen dazu**, beide über der diskreten Kettenfiltration:
+
+* `integral_sub_mul_eq_zero_of_martingale_stoppedValue` — das Martingalinkrement
+  zwischen zwei Stoppzeiten ist orthogonal zu jeder beschränkten Größe der
+  früheren. Es ist `integral_sub_mul_eq_zero_of_condExp_eq` bei
+  `m' = hσ.measurableSpace`, gefüttert von
+  `Martingale.stoppedValue_ae_eq_condExp_of_le`
+  (`Mathlib/Probability/Martingale/OptionalSampling.lean:141`). Der feste
+  Indexfall ist der zweier konstanter Stoppzeiten.
+* `integral_sub_mul_eq_zero_of_martingale_stoppedValue_min` — dasselbe mit
+  **unbeschränkter früherer** Stoppzeit, über
+  `Martingale.stoppedValue_min_ae_eq_condExp` (`ibid.:195`). Das ist die Fassung,
+  die die Sprungkonstruktion braucht, und der Grund ist die σ-Algebra des
+  Gewichts: der späte Index darf bei einer Konstanten `K` abgeschnitten werden,
+  der frühe **nicht**, denn `hσ.measurableSpace` schrumpft beim Abschneiden und
+  das Gewicht `Z ∘ jumpPath` fiele heraus.
+
+**Was danach bleibt, ist keine Frage über Filtrationen mehr**, sondern der
+Grenzübergang `K → ∞` in `∫ (M_{N(t)∧K} − M_{N(s)∧K}) · W`, also eine Konvergenz
+von Integralen. Das ist der Stand, mit dem der nächste Lauf anfängt.
+
+#### Was offen bleibt
+
+* **Der Grenzübergang `K → ∞`** der eben benannten Abschneidung, und mit ihm die
+  Frage, unter welcher Voraussetzung er trägt — Dominierung durch eine
+  integrierbare Majorante oder gleichgradige Integrierbarkeit des
+  kompensierten Kettenmartingals längs der abgeschnittenen Indizes.
+* Die Voraussetzungen **(a) und (b)** von `mpSolution_of_tendsto` bleiben, wie
+  die sechs Vorläufe sie hinterlassen haben: Eingabe eines Straffheitsarguments,
+  das das Manuskript ausdrücklich nicht liefert.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Der Grenzübergang der Abschneidung, und zuerst die Wahl der Voraussetzung.**
+   *Aussage:* `integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_bdd` —
+   dieselbe Konklusion wie
+   `integral_sub_mul_eq_zero_of_martingale_stoppedValue`, aber **ohne** `hτN`
+   und statt dessen mit `∀ i ω, ‖M i ω‖ ≤ c`, einer gleichmäßigen Schranke am
+   Martingal. *Worauf sie ruht:* die Fassung mit Minimum aus diesem Lauf bei
+   `τ ⊓ K`, `stoppedValue_min`-Rechnung und dominierte Konvergenz mit der
+   konstanten Majorante `c · b`; die punktweise Konvergenz ist für jedes `ω` ein
+   **endliches** Argument, weil `N(t) ω` eine natürliche Zahl ist und die Folge
+   ab `K ≥ N(t) ω` stationär wird. *Warum jetzt:* das ist die letzte Eingabe der
+   Probe, und die Schranke ist für das kompensierte Kettenmartingal bei
+   beschränktem `f` und beschränktem `Pf` **vorhanden** — allerdings nur mit
+   einem Faktor, der mit dem Index wächst (`|M_k| ≤ C + 2kC`), und genau
+   deshalb ist die erste Arbeit, die Voraussetzung zu **wählen** und nicht zu
+   raten: eine `k`-abhängige Schranke reicht für dominierte Konvergenz nicht,
+   eine gleichgradige Integrierbarkeit schon. Die Entscheidung ist zu begründen.
+2. **Die Augmentierung um Nullmengen, jetzt, wo ihr Vorbild dasteht.**
+   *Aussage:* `condExp_sup_null` — ist `𝒩` die σ-Algebra der `P`-Nullmengen und
+   ihrer Komplemente, so ist `μ[f | m₁ ⊔ 𝒩] =ᵐ μ[f | m₁]`. *Worauf sie ruht:*
+   derselbe Rechteckweg wie `condExp_sup_of_indep` — `𝒩` ist unabhängig von
+   allem, weil jede ihrer Mengen Maß `0` oder `1` hat, und das ist
+   `Indep m 𝒩 μ` für **jedes** `m`; die Rechteckschritte sind dann wörtlich
+   dieselben. *Warum jetzt:* Teil C hat seit dem 2026-09-12 die ausdrückliche
+   Anweisung, **vor** dem Augmentieren zu prüfen, ob der Rest der Entwicklung sie
+   verträgt — „`Martingale X 𝓕 P` bei größerer Filtration ist nicht automatisch;
+   bei Vergrößerung um Nullmengen sollte es gelten, aber ich finde dafür in
+   Mathlib kein Lemma". Dieser Lauf hat das Lemma gebaut, nur an einer anderen
+   Vergrößerung. Die Nullmengenfassung ist sein zweiter Spezialfall, sie kostet
+   die Unabhängigkeit von `𝒩` und sonst nichts, und mit ihr ist die Frage, die
+   Teil C blockiert hat, beantwortet statt vertagt.

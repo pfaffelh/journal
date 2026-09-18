@@ -67,7 +67,7 @@ Label `awaiting-review`.
    relativen Kompaktheitskriterien (`SkorokhodSpace` ist vollständig).
 
    *Und eine Zahl, die die Liste gar nicht führt:* Punkt 8 unten hat
-   dreiundzwanzig benannte Mathlib-Lücken, teils maschinell nachgeprüft.
+   fünfundzwanzig benannte Mathlib-Lücken, teils maschinell nachgeprüft.
 
 2. **Die `scratch/`-Verzeichnisse entfernen.** In
    `TauCeti/MartingaleProblems/scratch/` liegen die Entwicklungs-Stubs, in denen
@@ -215,7 +215,7 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Vierundzwanzig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Fünfundzwanzig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
 Alle zweiundzwanzig beim Beweisen aufgefallen, und die ersten vier sind kleine,
 in sich abgeschlossene Beiträge. Sie gehören thematisch zu
@@ -898,6 +898,43 @@ seinem Dateikopf: es prüft Zeichenketten, nicht Aussagen.
   Neues** in `Analysis/` — die skalierte Konvergenz liegt, wie oben, schon in der
   Gaußdatei. Die Gedächtnislosigkeit der zweiten Lücke dieses Punktes gehört in
   denselben PR wie die Exponentialkorollare.
+
+* **Die unerhebliche Vergrößerung der bedingten Erwartung.** Der
+  fünfundzwanzigste, gefunden am 2026-09-18 im fünften Lauf, beim Anschluß der
+  Sprungkonstruktion an die Probe von Meilenstein 10.
+
+  Gebraucht wird: ist `m₂` unabhängig von `m₁ ⊔ σ(f)`, so ist
+  `μ[f | m₁ ⊔ m₂] = μ[f | m₁]` fast sicher — die Vergrößerung der
+  Bedingungs-σ-Algebra um eine unabhängige ändert nichts.
+  `Mathlib/Probability/ConditionalExpectation.lean` enthält **genau einen**
+  Satz, `MeasureTheory.condExp_indep_eq` (dort Zeile 42), und der ist der Fall
+  `m₁ = ⊥`: `μ[f | m₂] = μ[f]`. Die Zeichenketten `condExp_sup` und
+  `condexp_sup` kommen in ganz `Mathlib/` nicht vor, und eine Suche nach
+  `condExp` neben `⊔` über `Mathlib/Probability/` und
+  `Mathlib/MeasureTheory/Function/ConditionalExpectation/` gibt nichts. Am
+  2026-09-18 gegen `upstream/master` `a218e50f981` (2026-09-17) und gegen
+  v4.33.1 geprüft, und die Behauptung steht seither in
+  `scripts/check_negatives.py` mit dem Filter `Mathlib/` und keinem engeren.
+
+  Bewiesen ist sie als `condExp_sup_of_indep` in
+  `TauCeti/MartingaleProblems/Suggested.lean`, in der Fassung, die für Mathlib
+  die richtige ist: über beliebigem Banachraum, ohne Topologie auf dem
+  Grundraum, und mit der σ-Algebra des Integranden als eigenem Argument `m₀`
+  statt als `σ(f)` — denn ein Banachraum trägt keine Meßbarkeit, aus der sich
+  `σ(f)` bilden ließe, und wo sie besteht, ist `σ(f)` das kleinste zulässige
+  `m₀`. Der Weg ist der von `condExp_indep_eq` selbst: das π-System der
+  Rechtecke `t₁ ∩ t₂` (`supRectangles`, `isPiSystem_supRectangles`,
+  `generateFrom_supRectangles`), die Fortsetzung darüber
+  (`setIntegral_eq_of_forall_supRectangle`) und `condExp_indep_eq` als Motor —
+  auf einem Rechteck faktorisiert das Integral eines auf `t₁` abgeschnittenen
+  Integranden, und dort schließt die definierende Eigenschaft von `μ[f | m₁]`.
+
+  Der PR ist klein und gehört in dieselbe Datei wie `condExp_indep_eq`, das er
+  verallgemeinert: die drei Rechtecksaussagen, die Faktorisierung
+  `setIntegral_eq_measureReal_smul_integral_of_indep`, der Satz, und als
+  Anwendung `condExp_sup_comap_snd` — die Vergrößerung um den zweiten Faktor
+  eines Produktmaßes, wofür `ProbabilityTheory.indepFun_prod`
+  (`Mathlib/Probability/Independence/Basic.lean:727`) die Unabhängigkeit liefert.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine
