@@ -447,7 +447,7 @@ Under (A′):
   `[PseudoMetricSpace E]` rather than `[MetricSpace E]`, which is what the
   statement consumes: the proof goes through `IsCadlag.isLocallyBounded` and
   `isBounded_image_of_isLocallyBounded_of_isCompact`
-  (`Mathlib/Topology/Compactness/Compact.lean:696`), with
+  (`Mathlib/Topology/Compactness/Compact.lean:691`), with
   `Metric.exists_isBounded_image_of_tendsto`
   (`Mathlib/Topology/MetricSpace/Bounded.lean:274`) supplying the bound on each
   half. Both of those are older than the càdlàg file, so the weakening is
@@ -568,7 +568,7 @@ Under (B), with `E` a pseudometric space:
   limit lies in `D ι E` and not merely in the bounded functions is this
   statement. Both clauses come from Mathlib's
   `TendstoUniformly.tendsto_of_eventually_tendsto`
-  (`Topology/UniformSpace/UniformConvergence.lean:625`) — right continuity along
+  (`Topology/UniformSpace/UniformConvergence.lean:627`) — right continuity along
   `𝓝[>] a` with the values `F n a`, the left limits along `𝓝[<] x` with the left
   limits `Function.leftLim (F n) x`. The two differ in one place, and it is
   where the completeness of `E` is spent: the values converge because the
@@ -1504,7 +1504,7 @@ both 2026-09-09. What is left of the milestone is the third instance,
   displacement clause of the class quantifies over `δ` after the tuple.
 * `PolishSpace (D ι E)`, from the two above, and it costs nothing: Mathlib
   builds `PolishSpace` out of `SeparableSpace` and `IsCompletelyMetrizableSpace`
-  (`Mathlib/Topology/MetricSpace/Polish.lean:66`), and the latter out of a
+  (`Mathlib/Topology/MetricSpace/Polish.lean:62`), and the latter out of a
   complete metric (`MetricSpace.toIsCompletelyMetrizableSpace`,
   `Mathlib/Topology/Metrizable/CompletelyMetrizable.lean:172`), so the
   declaration is `inferInstance` and carries no proof obligation of its own
@@ -2387,7 +2387,7 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   The set is the one of `SkorokhodSpace.tendsto_stepAt_shift`: the steps with
   jump time `1/(n+2) - 1` together with their limit, the step at `-1`, compact
   as a convergent sequence with its limit by `Filter.Tendsto.isCompact_insert_range`
-  (`Mathlib/Topology/Compactness/Compact.lean:645`). At
+  (`Mathlib/Topology/Compactness/Compact.lean:640`). At
   `t = -1` the `n`-th path is `0` at `t` and `1` at its own jump time, which
   lies in `[t, t + δ)` as soon as `1/(n+2) < δ`. The modulus condition is read
   off the criterion of Milestone 7 and not proved again.
@@ -2411,7 +2411,7 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
 * `SkorokhodSpace.equicontinuousWithinAt_of_finite` — stage (A), **proved
   2026-09-18**. A finite `K ⊆ D(ℝ, E)` is equicontinuous within `Set.Ici t` at
   every `t`, by `equicontinuousWithinAt_finite`
-  (`Mathlib/Topology/UniformSpace/Equicontinuity.lean:252`) and
+  (`Mathlib/Topology/UniformSpace/Equicontinuity.lean:254`) and
   `continuousWithinAt_Ioi_iff_Ici`
   (`Mathlib/Topology/Order/LeftRight.lean:79`), which passes from the right
   continuity of `IsCadlag`, stated on `Set.Ioi t`, to the `Set.Ici t` the

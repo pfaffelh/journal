@@ -781,7 +781,7 @@ bounded functions is this statement.
 
 Both clauses are instances of Mathlib's
 `TendstoUniformly.tendsto_of_eventually_tendsto`
-(`Topology/UniformSpace/UniformConvergence.lean:625`) --- right continuity along
+(`Topology/UniformSpace/UniformConvergence.lean:627`) --- right continuity along
 `𝓝[>] a` with the values `F n a`, the left limits along `𝓝[<] x` with the left
 limits `Function.leftLim (F n) x`.  The two differ in exactly one place, and it
 is where `CompleteSpace E` is spent: the values converge because the uniform

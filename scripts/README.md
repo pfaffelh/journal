@@ -19,6 +19,7 @@ python3 scripts/extract_citations.py        # was die Roadmaps zitieren
 python3 scripts/mathlib_index.py master     # Deklarationsindex von upstream/master
 python3 scripts/mathlib_index.py v4331      # Deklarationsindex von v4.33.1
 python3 scripts/check_citations.py          # -> _citations/report.md
+python3 scripts/check_cited_lines.py        # -> _citations/cited_lines.md
 python3 scripts/check_negatives.py          # -> _citations/negatives.md
 python3 scripts/check_suggested.py          # -> _citations/lean_check.md
 python3 scripts/check_master.py             # -> _citations/lean_check_master.md
@@ -42,7 +43,34 @@ Laufbericht.
   falsche Funde erzeugt und die hier behandelt sind: `@[deprecated …] alias foo
   := bar` gilt dem Alias und nicht der nächsten Deklaration, und die von
   `@[to_dual foo]`, `@[to_additive foo]` und `@[to_fun foo]` erzeugten Namen
-  stehen in keiner Quellzeile als `theorem`.
+  stehen in keiner Quellzeile als `theorem`. Ein drittes ist am 2026-09-19
+  dazugekommen: ein Attribut **vor** der Deklaration in derselben Zeile —
+  `@[simp] lemma find_eq_zero …` — wurde vom Abschneiden an `@[` nicht
+  erfaßt, und der Index war dadurch um **8 866 Deklarationen zu klein**,
+  darunter `Nat.find_eq_zero`. Ein beliebiger Git-Revision-Ausdruck ist als
+  Argument zugelassen, damit gegen **den** Commit indiziert werden kann, den die
+  Roadmaps nennen, und nicht gegen den Stand des Tages.
+* **`check_cited_lines.py`** prüft das andere Stück derselben Angabe: nicht, ob
+  der zitierte Name existiert, sondern ob er auf der zitierten **Zeile** steht.
+  Es paart nicht auf gut Glück, sondern fragt umgekehrt, ob *irgendein*
+  Bezeichner des Umfelds dort steht; nur was dort nicht steht, wird gepaart, und
+  nur, wenn genau ein Bezeichner des Umfelds in der zitierten Datei wohnt. Drei
+  Klassen bleiben ausdrücklich draußen und werden getrennt gezählt: eine
+  Fundstelle, die auf eine *andere* Deklaration oder auf ein `variable`-Bündel
+  zeigt (die ist gemeint, nicht veraltet), eine, die sich selbst auf v4.33.1
+  beruft (die ist ein Versionsvergleich), und eine, die sich nicht paaren ließ.
+  Dazu ein Test, der ohne jede Paarung auskommt: zeigt eine Fundstelle in eine
+  Datei, die es nicht mehr gibt, die nur noch ein `deprecated_module`-Rumpf ist,
+  oder hinter deren Ende — das fand am 2026-09-19 drei Zitate in
+  `MeasureTheory/Measure/MeasureSpace.lean`, das auf `master` seit dem
+  2026-08-19 vierzehn Zeilen hat.
+
+  ```
+  python3 scripts/check_cited_lines.py            # gegen den gepinnten Commit
+  python3 scripts/check_cited_lines.py --fix      # schreibt die Abweichungen um
+  ```
+
+  rc 1, wenn eine Zeile verschoben oder eine Fundstelle tot ist.
 * **`check_citations.py`** schlägt jeden Namen in beiden Indizes nach und
   sortiert nach: auf beiden, nur v4.33.1 (also von master verschwunden), nur
   master, `deprecated`, gar nicht gefunden.

@@ -39778,3 +39778,226 @@ benannt und nicht behoben, und es ist der erste Vorschlag unten.
    der Vergleich zweier Gesetze an den verschobenen Zeiten. Seine Eingaben stehen
    alle, einschließlich der gemeinsamen guten Zeit für einen `Finset` von
    Gesetzen; der Vorschlag ist in der Roadmap ausgeschrieben.
+
+### 2026-09-19, erster Lauf des Tages — die zitierten Zeilennummern stehen jetzt gegen den Commit, den die Roadmaps nennen; und beim Bauen des Prüfers fielen zwei Löcher auf, durch die seit Wochen etwas fiel: der Deklarationsindex war um 8 866 Namen zu klein, und drei Fundstellen zeigten in eine Datei, die auf `master` nur noch ein Rumpf ist
+
+Dieser Lauf hat **Vorschlag 1** des vierundzwanzigsten Laufs vom 2026-09-18
+eingelöst. Keine Mathematik, kein geschlossenes `sorry`; Werkzeugbau und das,
+was er zutage gefördert hat.
+
+#### Der Stand, und die Entscheidung, gegen welchen Commit geprüft wird
+
+`git fetch upstream master` im Checkout `~/Code/lean/mathlib4`:
+`upstream/master` ist von `94ef6b89544e58e90f119da869f3fb48d1da0f4c` auf
+`dec5b2b780537b6eaf7f5e5f000c12f7387fb24d` (beide 2026-09-18) gewandert.
+
+Geprüft und umgeschrieben wurde trotzdem gegen **`94ef6b89544`**, und das ist
+kein Versäumnis, sondern die Bedingung dafür, daß der Text mit sich selbst
+übereinstimmt: die drei Modul-Doks der `Suggested.lean`, `TauCeti/SUBMISSION.md`
+und `scripts/_citations/lean_check_master.md` nennen genau diesen Commit, und der
+Worktree `~/Code/lean/mathlib-master`, gegen den `check_master.py` übersetzt,
+steht darauf. Eine Zeilennummer gegen `dec5b2b` neben einer Commitangabe
+`94ef6b8` wäre eine dritte Art von Fehlstand und keine Berichtigung.
+
+`scripts/mathlib_index.py` nimmt dafür seit diesem Lauf einen beliebigen
+Git-Revision-Ausdruck als Argument; `master` und `v4331` bleiben, wie sie waren.
+
+#### Das Werkzeug: `scripts/check_cited_lines.py`
+
+`check_cited_names.py` prüft, ob ein zitierter **Name** auf `master` existiert.
+Das neue Skript prüft das andere Stück derselben Angabe: ob er auf der zitierten
+**Zeile** steht. Zusammen ist das, was ein Leser der Roadmap nachschlägt.
+
+**Und der Weg dahin ist der Bericht wert, weil die erste Fassung falsch war.**
+Sie nahm zu jeder Fundstelle den *letzten davorstehenden* Bezeichner in
+Rückwärtsanführungszeichen und meldete 122 Abweichungen. Von denen waren
+mehrere reine Fehlpaarungen — die Roadmaps schreiben regelmäßig zwei Namen und
+zwei Zeilen in einen Satz, etwa
+
+> `Martingale.stoppedValue_ae_eq_condExp_of_le_of_countable_range`
+> (`OptionalSampling.lean:121` und `:90`),
+
+und `:90` gehört dort zur *anderen* Aussage, die genau dort steht. Hätte der Lauf
+diese Liste abgearbeitet, so hätte er richtige Angaben in falsche verwandelt.
+
+Die tragende Fassung geht deshalb **umgekehrt** vor. Sie baut aus dem Index die
+Umkehrung `Datei:Zeile -> Namen` und fragt zu jeder Fundstelle: steht
+*irgendeiner* der Bezeichner des Umfelds genau dort? Dann ist die Angabe richtig,
+gleichgültig, welcher es war. Erst wenn keiner dort steht, wird gepaart, und nur,
+wenn genau ein Bezeichner des Umfelds in der zitierten *Datei* wohnt.
+
+Vier Klassen bleiben danach ausdrücklich draußen, jede aus einem an einem Fall
+belegten Grund:
+
+* **Die Fundstelle ist die erste Zeile einer anderen Deklaration.** Der Fall
+  `:90` von oben.
+* **Sie ist der Kopf einer Deklaration** — Doc-Kommentar oder Attribut. Eine
+  Roadmap zitiert `MeasurableSpace/Defs.lean:329` für das
+  `@[instance_reducible]` auf `MeasurableSpace.generateFrom` (`:330`), und das
+  Attribut ist das, wovon dort die Rede ist.
+* **Sie ist ein `variable`-Bündel oder ein `section`.**
+  `MartingaleProblems/README.md` zitiert `Probability/Martingale/Basic.lean:48`
+  und sagt im selben Satz, warum: „stated for `[Preorder ι]` from the variable
+  block at `:48`". Ebenso `Convergence.lean:243` für die Sektion, deren
+  `variable`-Block `{g : Ω → ℝ}` festhält.
+* **Sie beruft sich selbst auf v4.33.1.** `MeasureTheory.maximal_ineq`
+  (`OptionalStopping.lean:155` in v4.33.1, `:144` auf `master`) ist ein
+  **Versionsvergleich**; ihn zu berichtigen hieße, ihn zu zerstören.
+
+Eine bloße Fortsetzung `` `:154` `` erbt die Datei der vorigen Fundstelle nur
+noch, wenn die höchstens 300 Zeichen davor steht. Ohne diese Schranke schlug das
+Skript eine Fundstelle in `LevyConvergence.lean` der Datei eines Absatzes weiter
+oben zu und machte daraus einen Befund, der keiner war.
+
+#### Was berichtigt ist
+
+**69 Zeilennummern und 4 Dateipfade**, in allen drei Roadmaps und den drei
+`Suggested.lean`:
+
+| | vorher | nachher |
+| --- | ---: | ---: |
+| gepaarte Fundstellen | 249 | 255 |
+| davon richtig | 186 | **255** |
+| davon verschoben | **63** | **0** |
+| tote Fundstellen | **4** | **0** |
+| zielt auf eine andere Deklaration (steht so richtig) | 41 | 35 |
+| nicht paarbar (von Hand) | 72 | 66 |
+
+Die gepaarte Zahl steigt, weil sechs von Hand berichtigte Fundstellen danach
+paarbar sind, die es vorher nicht waren: eine Angabe, die auf die *richtige*
+Zeile zeigt, findet der Prüfer über die Umkehrung, eine falsche nicht immer.
+
+63 davon hat `--fix` umgeschrieben, sechs weitere und alle vier Pfade sind von
+Hand gesetzt, jede einzeln am Quelltext von `94ef6b89544` nachgesehen. Die
+Verschiebungen sind meist klein (±1 bis ±30); die größten sind
+`AbsolutelyContinuousOnInterval.integral_deriv_eq_sub` (412 → 225),
+`MeasureTheory.tendsto_ae_condExp` (243 → 428) und
+`ofReal_integral_norm_eq_lintegral_enorm` (511 → 543).
+
+#### Der erste Fund, und er trifft ein Werkzeug, auf dem mehrere Läufe geruht haben
+
+`scripts/mathlib_index.py` schnitt ein Attribut am Zeichen `@[` ab und behielt,
+was danach kam. Für `@[simp] lemma find_eq_zero …` bleibt davon
+`simp] lemma find_eq_zero …` übrig, und das paßt auf keine Deklarationsregel.
+**Jede Deklaration, die mit einem Attribut in derselben Zeile geschrieben ist,
+war dem Index unsichtbar.**
+
+Gemessen an `94ef6b89544`:
+
+| | Deklarationen |
+| --- | ---: |
+| Index vorher | 231 292 |
+| Index nachher | **240 158** |
+| Differenz | **8 866** (3,7 %) |
+
+Das ist kein Schönheitsfehler. `check_citations.py` sortiert nach „auf beiden /
+nur v4.33.1 / nur master / gar nicht gefunden", und ein Name, den der Index nicht
+kennt, landet unter „gar nicht gefunden" — also genau dort, wo ein Lauf eine
+**Lücke** vermutet. `Nat.find_eq_zero` (`Data/Nat/Find.lean:101`) war so ein
+Name. Umgekehrt konnte das Skript für keinen dieser 8 866 Namen eine
+Zeilenangabe prüfen. `check_cited_names.py` ist nicht betroffen: es hat einen
+eigenen Parser, der das Attribut richtig entfernt.
+
+#### Der zweite Fund: Fundstellen in Dateien, die es nicht mehr gibt
+
+Dem Prüfer ist ein Test beigegeben, der ohne jede Paarung auskommt und deshalb
+auch dort greift, wo die Paarung scheitert: existiert die zitierte Datei, ist sie
+mehr als ein `deprecated_module`-Rumpf, und liegt die Zeile vor ihrem Ende?
+
+Vier Fundstellen fielen durch, und sie zeigen alle in **dieselbe Bewegung der
+Bibliothek**:
+
+* `MeasureTheory/Measure/MeasureSpace.lean` hat auf `master` **vierzehn Zeilen**
+  und trägt `deprecated_module (since := "2026-08-19")`. Drei Fundstellen zeigten
+  hinein — zweimal `tendsto_measure_iInter_atTop` (jetzt
+  `MeasureTheory/Measure/Continuity.lean:220`) und einmal
+  `Measure.sum_comp_equiv` (jetzt `MeasureTheory/Measure/Sum.lean:144`).
+* `Data/Countable/Basic.lean` ebenso, `deprecated_module` seit dem 2026-08-27;
+  die zitierte Instanz steht in `Basic/Countable/Basic.lean`, und zwar auf
+  **derselben Zeile 146**. Nur der Pfad war zu ändern.
+
+Mathlib schiebt also gerade Material von `Data/…` nach `Basic/…` und zerlegt
+`MeasureSpace.lean`. **Ein Zitat auf eine Zeile in einem leeren Rumpf sieht von
+außen aus wie ein gültiges Zitat** — der Name existiert weiter, nur woanders —,
+und `check_cited_names.py` hätte es nie gemeldet, weil es Namen prüft und keine
+Pfade. Das ist die Lücke, die dieser Test schließt.
+
+Auch dieser Test brauchte zwei Anläufe: seine erste Fassung ließ einen gekürzten
+Pfad auf den bloßen Dateinamen passen und hielt `Topology/Closure.lean` für
+`Analysis/Convex/Cone/Closure.lean`. Von fünfzehn Befunden war einer echt.
+Gefordert wird jetzt eine Übereinstimmung auf **ganze Wegbestandteile**, und
+gemeldet wird nur, wenn **keiner** der passenden Kandidaten die Fundstelle tragen
+kann — `Order/Disjointed.lean` paßt auch auf `Algebra/Order/Disjointed.lean`, und
+nur eine der beiden hat 324 Zeilen.
+
+#### Geprüft
+
+* `scripts/check_cited_lines.py` gegen `94ef6b89544`: 0 verschobene Zeilen, 0
+  tote Fundstellen, rc 0. Der Bericht liegt in
+  `scripts/_citations/cited_lines.md` und führt die 35 + 66 nicht berichtigten
+  Fundstellen einzeln auf, mit dem Grund.
+* `scripts/check_master.py` nach den Änderungen: 0 Fehler, 0 `sorry`, 0 veraltete
+  Namen in allen drei Dateien, rc 0. Die Eingriffe sind sämtlich Kommentare und
+  Doc-Kommentare, und genau deshalb ist der Durchlauf keine Formalie: er belegt,
+  daß keiner davon eine Zeichenkette getroffen hat, die Lean liest.
+* Neun Fundstellen einzeln am Quelltext von `94ef6b89544` nachgesehen, ehe sie von
+  Hand gesetzt wurden, dazu acht Stichproben aus den 63 maschinellen.
+* `scripts/_citations/.gitignore` faßt die Indizes jetzt als `index_*.json`,
+  damit ein Index gegen einen benannten Commit nicht als 20-MB-Blob im
+  Repository landet.
+
+**Und eine Warnung, die ein Lauf teuer bezahlen kann:** `check_master.py` darf
+**nicht zweimal nebenläufig** laufen. Dieser Lauf hat es versehentlich getan —
+einmal im Hintergrund, einmal im Vordergrund —, und der Hintergrundlauf gab für
+`MartingaleProblems` rc 1 mit der Meldung „Keine `.olean` für
+`MartingaleProblems`" zurück, obwohl **0 Fehler** gezählt waren: die beiden
+Durchläufe teilen sich denselben `.olean`-Baum, und der eine hat ihn dem anderen
+unter den Füßen weggeräumt. Der maßgebliche Durchlauf ist der letzte im
+Vordergrund, 0/0/0 in allen drei Dateien, und `lean_check_master.md` trägt ihn.
+Ein rc 1 ohne einen einzigen gezählten Fehler ist das Kennzeichen dieses Falls
+und nicht eines Befunds.
+
+#### Was dieser Lauf nicht getan hat
+
+Die 66 nicht paarbaren Fundstellen sind **nicht** einzeln geprüft. Sie entstehen,
+wo der zitierte Gegenstand kein benannter Satz ist — eine anonyme `instance`, ein
+`variable`-Bündel, ein von `@[to_additive]` erzeugter Name wie
+`measure_preimage_add`, der in keiner Quellzeile steht. Darunter kann eine
+veraltete Angabe stecken; der Lauf sagt nur, daß er sie nicht gesehen hat.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Vorschlag 2 des vierundzwanzigsten Laufs, jetzt mit einer zusätzlichen
+   Spur: nach weiteren Doppelungen gegen `master` suchen.**
+   *Was:* jede Deklaration der drei Dateien, deren *Aussage* auf `master` unter
+   anderem Namen steht. Der Weg bleibt der genannte —
+   `git diff --stat v4.33.1..upstream/master -- Mathlib/` und die neu angelegten
+   Dateien einzeln ansehen.
+   *Worauf es ruht:* auf dem Befund des vierundzwanzigsten Laufs (fünf
+   Doppelungen durch `#43352`) **und auf dem zweiten Fund dieses Laufs**: die
+   Bibliothek verschiebt gerade Material von `Data/…` nach `Basic/…` und zerlegt
+   `MeasureSpace.lean`. Wer die neuen Dateien durchsieht, sieht beide Bewegungen
+   in einem Durchgang.
+   *Warum jetzt:* eine Roadmap, die der Bibliothek etwas doppelt anbietet, ist
+   das, was die Bodenhaftungsregel von `CONTRIBUTING.md` ausschließen will, und
+   die Umstellung auf `master` ist frisch genug, daß der Rückstand überschaubar
+   ist.
+
+2. **Die 66 nicht paarbaren Fundstellen auf die anonymen Instanzen
+   zurückführen.**
+   *Was:* `mathlib_index.py` erfaßt eine `instance` ohne Namen gar nicht, und
+   genau darauf zeigen die meisten dieser Zitate („`ℝ≥0` hat eine
+   `MeasurableSpace`-Instanz (`BorelSpace/Basic.lean:717`)"). Zu ergänzen ist ein
+   zweiter Index `Datei:Zeile -> Zeilentext` für die Zeilen, die mit `instance`
+   beginnen; dann läßt sich prüfen, ob an der zitierten Zeile *überhaupt* eine
+   Instanz steht.
+   *Worauf es ruht:* auf `mathlib_index.py` in seiner berichtigten Fassung und
+   auf `check_cited_lines.py`.
+   *Warum jetzt:* nach diesem Lauf ist das der einzige verbliebene Rest, in dem
+   eine veraltete Angabe unbemerkt stehen könnte; 66 ist klein genug, um ihn
+   ganz zu erledigen, und die Zahl wächst mit jeder Roadmapzeile.
+
+3. **Erst danach wieder Mathematik**, unverändert dort, wo der einundzwanzigste
+   Lauf aufgehört hat: `SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq`.
+   Der Vorschlag steht in der Roadmap ausgeschrieben und ist von diesem Lauf
+   nicht berührt.

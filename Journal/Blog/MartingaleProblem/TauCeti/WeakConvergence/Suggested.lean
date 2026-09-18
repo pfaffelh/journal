@@ -1452,7 +1452,7 @@ merely bounded measurable would leave the limit unidentified. -/
 
 /-- A convergent sequence of probability measures on a Polish space is tight: its
 range together with its limit is compact, hence closed, hence tight by
-`isTightMeasureSet_of_isCompact_closure` (`Measure/Prokhorov.lean:635`).
+`isTightMeasureSet_of_isCompact_closure` (`Measure/Prokhorov.lean:634`).
 
 There is no circularity here of the kind the tightness-free Stone-Weierstrass
 statement fell into: the convergence is a *hypothesis*, not the conclusion. -/
@@ -1882,7 +1882,7 @@ theorem isSeparating_pi (Γ : ∀ i, Set (S i → ℝ)) (hsep : ∀ i, IsSeparat
     (by simp)
 
 /-- Missing from Mathlib, which has the two-factor case as
-`IsTightMeasureSet.prodMk` (`MeasureTheory/Measure/Tight.lean:144`) and nothing
+`IsTightMeasureSet.prodMk` (`MeasureTheory/Measure/Tight.lean:143`) and nothing
 for a countable product: if every family of one-coordinate marginals is tight,
 so is the family itself.
 
@@ -2033,7 +2033,7 @@ is chosen, and none exists in general.
 
 `[OpensMeasurableSpace E]` is what makes the members of `Γ` integrable: it is the
 hypothesis of `Continuous.stronglyMeasurable`
-(`MeasureTheory/Function/StronglyMeasurable/Basic.lean:718`, the second-countable
+(`MeasureTheory/Function/StronglyMeasurable/Basic.lean:723`, the second-countable
 side of `SecondCountableTopologyEither` being `ℝ`) and of
 `BoundedContinuousFunction.integrable`
 (`MeasureTheory/Integral/BoundedContinuousFunction.lean:99`).  Without it the
@@ -2207,7 +2207,7 @@ The two hypotheses are not the same statement for an arbitrary set, but the
 continuity set of a map into a pseudo-emetric space is `Gδ` and hence Borel
 (`measurableSet_of_continuousAt`,
 `MeasureTheory/Constructions/BorelSpace/Basic.lean:252`), so
-`prob_compl_eq_zero_iff` (`MeasureTheory/Measure/Typeclasses/Probability.lean:157`)
+`prob_compl_eq_zero_iff` (`MeasureTheory/Measure/Typeclasses/Probability.lean:161`)
 carries one to the other.  That is the whole proof, and the metric on `E'` is
 used for nothing else.
 
@@ -2715,7 +2715,7 @@ a set of laws and its image under `LevyProkhorov.ofMeasure` are different terms,
 so the density has to be carried across and cannot be reinterpreted.
 
 The empty `E` is a separate line and not a hypothesis:
-`TopologicalSpace.exists_dense_seq` (`Topology/Bases.lean:346`) asks for
+`TopologicalSpace.exists_dense_seq` (`Topology/Bases.lean:365`) asks for
 `[Nonempty E]`, and over an empty `E` there is no probability measure at all
 (`μ univ = 1` while `univ = ∅`), so `ProbabilityMeasure E` is empty and
 countable. -/
@@ -2782,7 +2782,7 @@ theorem separableSpace_levyProkhorov_probabilityMeasure [PseudoMetricSpace E]
 /-- **The laws on a separable metric space form a separable space.**  The
 statement of the milestone, carried from the Lévy-Prokhorov synonym along
 `LevyProkhorov.probabilityMeasureHomeomorph` (`Measure/LevyProkhorovMetric.lean:676`)
-by `DenseRange.separableSpace` (`Topology/Bases.lean:378`) -- the inverse
+by `DenseRange.separableSpace` (`Topology/Bases.lean:397`) -- the inverse
 homeomorphism is surjective, and a surjection has dense range. -/
 theorem separableSpace_probabilityMeasure [PseudoMetricSpace E] [OpensMeasurableSpace E]
     [TopologicalSpace.SeparableSpace E] :
@@ -2793,11 +2793,11 @@ theorem separableSpace_probabilityMeasure [PseudoMetricSpace E] [OpensMeasurable
 
 /-- The space of laws is second countable.  This is the item above read on the
 synonym, where there is a uniformity to argue with:
-`UniformSpace.secondCountable_of_separable` (`Topology/UniformSpace/Cauchy.lean:932`)
+`UniformSpace.secondCountable_of_separable` (`Topology/UniformSpace/Cauchy.lean:924`)
 asks for a uniform space with countably generated uniformity, which
 `ProbabilityMeasure E` is not, and the metric synonym is; the conclusion is
 topological and comes back by `Homeomorph.secondCountableTopology`
-(`Topology/Homeomorph/Lemmas.lean:37`). -/
+(`Topology/Homeomorph/Lemmas.lean:36`). -/
 theorem secondCountableTopology_probabilityMeasure [PseudoMetricSpace E] [OpensMeasurableSpace E]
     [TopologicalSpace.SeparableSpace E] :
     SecondCountableTopology (ProbabilityMeasure E) := by
@@ -3020,7 +3020,7 @@ theorem polishSpace_probabilityMeasure [TopologicalSpace E] [PolishSpace E] [Bor
 
 /-- The frontier of a finite intersection is contained in the union of the
 frontiers.  Mathlib has the two-set case, `frontier_inter_subset`
-(`Topology/Closure.lean:537`), but not the finite one; the induction is over
+(`Topology/Closure.lean:552`), but not the finite one; the induction is over
 `Finset.range_add_one` (`Data/Finset/Range.lean:79`, *not* `Finset.range_succ`,
 which does not exist). -/
 theorem frontier_biInter_range_subset [TopologicalSpace E] (S : ℕ → Set E) (n : ℕ) :
@@ -3037,7 +3037,7 @@ theorem frontier_biInter_range_subset [TopologicalSpace E] (S : ℕ → Set E) (
       · exact Or.inr (ih h.2)
 
 /-- The frontier of a finite union is contained in the union of the frontiers.
-Mathlib has the two-set case, `frontier_union_subset` (`Topology/Closure.lean:544`),
+Mathlib has the two-set case, `frontier_union_subset` (`Topology/Closure.lean:559`),
 but not the `Finset` one, and the two-set case is stated sharply
 (`frontier s ∩ closure tᶜ ∪ closure sᶜ ∩ frontier t`), so the induction has to
 throw the intersections away by hand.  It is the companion of
@@ -3061,7 +3061,7 @@ is covered by the frontiers of `S 0, …, S n`.  This is the reason the fixed-ra
 partition can be replaced by one whose pieces have `μ`-null frontier without any
 further choice -- once the balls have null frontiers, so do the disjointified
 pieces.  Uses `disjointed_eq_inter_compl` (`Order/Disjointed.lean:323`) and
-`frontier_compl` (`Topology/Closure.lean:528`). -/
+`frontier_compl` (`Topology/Closure.lean:543`). -/
 theorem frontier_disjointed_subset [TopologicalSpace E] (S : ℕ → Set E) (n : ℕ) :
     frontier (disjointed S n) ⊆ ⋃ j ∈ Finset.range (n + 1), frontier (S j) := by
   have hd : disjointed S n = S n ∩ ⋂ j ∈ Finset.range n, (S j)ᶜ := by
@@ -3088,7 +3088,7 @@ The proof is Mathlib's with one change: the radius is chosen **per centre**, in
 `Ioo (ε/4) (ε/2)`, by `exists_null_frontier_thickening`
 (`Measure/Portmanteau.lean:401`) applied to the singleton `{xs n}` and read as a
 ball through `Metric.thickening_singleton`
-(`Topology/MetricSpace/Thickening.lean:157`).  The lower bound `ε/4` is what
+(`Topology/MetricSpace/Thickening.lean:149`).  The lower bound `ε/4` is what
 still makes the balls cover `E`, the upper bound `ε/2` is what keeps the diameter
 below `ε`, and the interval has to be *open* on both sides because
 `exists_null_frontier_thickening` only avoids countably many charged radii. -/
@@ -3139,7 +3139,7 @@ index `0` is kept free for the remainder; outside `insert 0 K` the family is emp
 `A : ℕ → Set E` is still a countable partition of `E` and every statement stated for one applies.
 
 The truncation is the easy half: the tails `T M = (⋃ i < M, As i)ᶜ` of the countable partition
-decrease to `∅`, so `tendsto_measure_iInter_atTop` (`Measure/MeasureSpace.lean:672`) makes
+decrease to `∅`, so `tendsto_measure_iInter_atTop` (`Measure/Continuity.lean:220`) makes
 `ν (T M)` small.  The work is the other half, absorbing the pieces of **zero** mass into the
 remainder, and the reason it costs nothing is that `A 0` is not built as a union of leftovers but
 as the *complement* of the finite union `U` of the kept pieces: a complement has the frontier of
@@ -3328,7 +3328,7 @@ misplaces a total mass that tends to zero, and it does not follow from the
 piecewise convergence by any finite argument.
 
 The proof is Tannery's theorem, `tendsto_tsum_of_dominated_convergence`
-(`Analysis/Normed/Group/Tannery.lean:40`), with the limit measure's own masses as
+(`Analysis/Normed/Group/Tannery.lean:45`), with the limit measure's own masses as
 the dominating summable function -- the domination
 `max (ν (A i) - μ n (A i)) 0 ≤ ν (A i)` holds because `μ n (A i) ≥ 0`, and that is
 the whole reason the *positive part* and not the absolute value is the quantity
@@ -3563,7 +3563,7 @@ below need no topology on `E` whatsoever, only `MeasurableSpace E`.
 
 That is the reason the milestone can keep its hypothesis `SeparableSpace E` throughout.  Mathlib's
 countable product of probability measures, `MeasureTheory.Measure.infinitePi`
-(`Probability/ProductMeasure.lean:358`), is what supplies the independent draws; it exists for an
+(`Probability/ProductMeasure.lean:355`), is what supplies the independent draws; it exists for an
 arbitrary index type and an arbitrary family of probability measures, which is exactly the
 generality the mixture needs. -/
 
@@ -5076,7 +5076,7 @@ The integral is a **lower** integral, and that is not cosmetic.  Until
 Bochner integral, and in that form the predicate is **degenerate**: the integrand
 `|x| - min |x| N` is `max (|x| - N) 0`, so a family with infinite first moment
 makes it non-integrable for every `N`, whereupon `MeasureTheory.integral_undef`
-(`Integral/Bochner/Basic.lean:202`) returns the junk value `0`, the supremum is
+(`Integral/Bochner/Basic.lean:204`) returns the junk value `0`, the supremum is
 `0` for every `N`, and the hypothesis holds.  The conclusion `Integrable id ν`
 then fails --- witness `μ n = ν = ProbabilityTheory.cauchyMeasure 0 1`
 (`Probability/Distributions/Cauchy.lean:170`, which is a probability measure by

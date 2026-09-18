@@ -1865,7 +1865,7 @@ about **one** null set rather than one for each `t`, and it is the reason the
 probabilistic input is formulated as a global bound on a countable time set and
 not as a family of local ones.  Mathlib supplies the conversion from "no
 oscillation across a dense set of levels" to convergence,
-`tendsto_of_no_upcrossings` (`Topology/Order/LiminfLimsup.lean:318`), over an
+`tendsto_of_no_upcrossings` (`Topology/Order/LiminfLimsup.lean:317`), over an
 arbitrary filter; the rational levels are `Rat.denseRange_cast`. -/
 theorem exists_tendsto_nhdsWithin_Iio_of_hasUpcrossings_bound
     (hbdd : ∃ M, ∀ s ∈ S, |g s| ≤ M)
@@ -2573,7 +2573,7 @@ structure, which is what the suprema of stopping times are taken in.  A stopping
 time is `WithTop ι`-valued, its supremum is taken in `WithTop ι` through
 `SupSet (WithTop α)` (`Order/ConditionallyCompleteLattice/Basic.lean:52`), and a
 process is read at one through `MeasureTheory.stoppedValue`
-(`Probability/Process/Stopping.lean:801`, `fun ω ↦ u (τ ω).untopA ω` under
+(`Probability/Process/Stopping.lean:797`, `fun ω ↦ u (τ ω).untopA ω` under
 `[Nonempty ι]`). -/
 
 section Regularizing
@@ -3022,8 +3022,8 @@ into real and imaginary parts would need a recombination lemma that Mathlib does
 not have either, so the domination route is strictly the cheaper one.
 
 The three remaining steps are Mathlib's: `Lp.eLpNorm_le_of_ae_tendsto`
-(`MeasureTheory/Function/LpSpace/Complete.lean:89`) puts the limit in `L¹`,
-`tendsto_Lp_finite_of_tendsto_ae` (`MeasureTheory/Function/UniformIntegrable.lean:518`)
+(`MeasureTheory/Function/LpSpace/Complete.lean:92`) puts the limit in `L¹`,
+`tendsto_Lp_finite_of_tendsto_ae` (`MeasureTheory/Function/UniformIntegrable.lean:540`)
 is Vitali, and `eLpNorm_condExp_le_eLpNorm`
 (`MeasureTheory/Function/ConditionalExpectation/Real.lean:288`) is the `L¹`
 contraction that carries the convergence through the conditional expectation.
@@ -4133,7 +4133,7 @@ theorem tendsto_integral_norm_condExp_of_tendsto {m' : ℕ → MeasurableSpace �
 
 /-- A sequence of integrable functions whose `L¹` norms tend to `0` tends to `0` in
 measure.  Only `ofReal_integral_norm_eq_lintegral_enorm`
-(`MeasureTheory/Integral/Bochner/Basic.lean:511`) stands between the Bochner form
+(`MeasureTheory/Integral/Bochner/Basic.lean:543`) stands between the Bochner form
 in which `IsL1LeftContinuousAlongStoppingTimes` is stated and the `eLpNorm` form
 in which Mathlib states the implication
 (`MeasureTheory.tendstoInMeasure_of_tendsto_eLpNorm`). -/
@@ -4367,7 +4367,7 @@ omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] [TopologicalSpace E]
 /-- The filtration of a nondecreasing sequence of stopping times, and the only
 place at which the stopping times of quasi-left-continuity are read as a
 filtration indexed by `ℕ`.  Monotonicity is `IsStoppingTime.measurableSpace_mono`
-(`Probability/Process/Stopping.lean:468`) and the bound
+(`Probability/Process/Stopping.lean:464`) and the bound
 `IsStoppingTime.measurableSpace_le` (`ibid.:481`); neither asks anything of the
 index beyond `Preorder`. -/
 def stoppingFiltration {𝓕 : Filtration ι m} {σ : ℕ → Ω → WithTop ι}
@@ -4479,7 +4479,7 @@ no structure of this file carries, and the theorem. -/
 omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
 /-- **The supremum of a sequence of stopping times is a stopping time.**  Mathlib
 carries the infimum (`MeasureTheory.IsStoppingTime.iInf`,
-`Probability/Process/Stopping.lean:385`) and not the supremum, and the asymmetry
+`Probability/Process/Stopping.lean:381`) and not the supremum, and the asymmetry
 is not an oversight: the infimum needs a right continuous filtration, a densely
 ordered index and `NoMaxOrder`, while `{⨆ n, τ n ≤ i} = ⋂ n, {τ n ≤ i}` is an
 intersection of sets that are `𝓕 i`-measurable already.  Nothing is read of the
@@ -4515,7 +4515,7 @@ def IsOptionalSamplingFor (Y : ι → Ω → 𝕂) (𝓕 : Filtration ι m) (P :
 and adaptedness at a *time* is not adaptedness at a *stopping time*.
 
 Over a Borel codomain this is `MeasureTheory.measurable_stoppedValue`
-(`Probability/Process/Stopping.lean:1048`) applied to `IsStronglyProgressive 𝓕 C`.
+(`Probability/Process/Stopping.lean:1044`) applied to `IsStronglyProgressive 𝓕 C`.
 Here it has to be assumed: `𝕂` carries `RCLike` and hence a topology, but no
 `MeasurableSpace`, so the Borel hypothesis of that theorem cannot even be
 written down. -/
@@ -8972,7 +8972,7 @@ end MarkovProperty
 (`MeasureTheory/Constructions/BorelSpace/Basic.lean:717`) but **no** `MeasureSpace` instance, so
 there is no `volume` on it; Mathlib gives subtypes their measure through
 `MeasureTheory.Measure.Subtype.measureSpace`, which is deliberately not an instance
-(`MeasureTheory/Measure/Restrict.lean:843`).  That costs nothing here, because `Clock` carries
+(`MeasureTheory/Measure/Restrict.lean:822`).  That costs nothing here, because `Clock` carries
 its measurable space and its measure as *fields* and not as instances -- which is what that
 design decision was for. -/
 noncomputable def lebesgueClock : Clock ℝ≥0 where
