@@ -206,6 +206,42 @@ def main():
             return q
         return ''
 
+    DECLKW = (r'^(?:private |protected |noncomputable |nonrec |scoped |local )*'
+              r'(theorem|lemma|irreducible_def|def|abbrev|structure|class|'
+              r'instance|inductive|opaque|axiom|variable)\b')
+
+    def head_above(ipath, cline):
+        """Die nächste Zeile ≤ `cline`, die eine Deklaration oder ein
+        `variable`-Bündel eröffnet — am Quelltext gesucht, weil der Index
+        weder anonyme Instanzen noch `variable` kennt."""
+        for k in range(cline, max(0, cline - 40), -1):
+            t = re.sub(r'^\s*@\[[^\]]*\]\s*', '', source_line(rev, ipath, k))
+            if re.match(DECLKW, t):
+                return k
+        return 0
+
+    def in_signature(ipath, cline):
+        """Wahr, wenn die zitierte Zeile noch zur Signatur ihres Kopfes gehört
+        — also vor dem `:=`.  Wer `(hf : Integrable f μ)` zitiert, zitiert den
+        Satz und nicht seinen Beweis."""
+        hl = head_above(ipath, cline)
+        if not hl:
+            return 0
+        for k in range(hl, cline):
+            t = source_line(rev, ipath, k)
+            if ':=' in t or t.endswith(' by') or t == 'by':
+                return 0
+        return hl
+
+    def modifier_head(ipath, cline):
+        """Eine Zeile, die nur aus Modifikatoren besteht (`noncomputable`,
+        `open ... in`, `set_option ... in`) und zur nächsten Deklaration
+        gehört.  Sie ist die **erste** Zeile jener Deklaration."""
+        t = source_line(rev, ipath, cline)
+        return bool(re.fullmatch(r'(private|protected|noncomputable|nonrec|unsafe'
+                                 r'|partial|scoped|local)+', t.replace(' ', ''))
+                    or t.endswith(' in'))
+
     def deliberate(e):
         """Wahr, wenn die zitierte Zeile nicht veraltet, sondern gemeint ist."""
         where, name, _, cline, ipath, _ = e
@@ -213,6 +249,8 @@ def main():
             return True
         text = source_line(rev, ipath, cline)
         if text.startswith(('variable', 'section', 'namespace', 'open ')):
+            return True
+        if in_signature(ipath, cline) or modifier_head(ipath, cline):
             return True
         #  Der Kopf einer Deklaration — Doc-Kommentar oder Attribut — ist eine
         #  richtige Fundstelle, und manchmal die gemeinte: eine Roadmap zitiert
@@ -278,6 +316,99 @@ def main():
             if why and 'v4.33.1' not in ' '.join(body[max(0, ln - 2):ln + 2]):
                 dead.append((where, cpath, cline, '; '.join(why)))
 
+    #  Die ungepaarten Fundstellen, klassifiziert.  Bis zum 2026-09-19 standen
+    #  sie bloß als Liste da — „66 von Hand anzusehen" —, und der Vorlauf hatte
+    #  vermutet, es seien überwiegend **anonyme** Instanzen, die der Index nicht
+    #  erfaßt.  Das ist zu messen und nicht zu vermuten: das Skript schlägt
+    #  jetzt nach, **was an der zitierten Zeile wirklich steht**.  Eine
+    #  Fundstelle, die auf den Kopf einer Deklaration zeigt — benannt oder
+    #  anonym —, ist belegt, auch wenn der Text der Roadmap den Namen gar nicht
+    #  nennt (er beschreibt den Gegenstand: „`ℝ≥0` hat eine
+    #  `MeasurableSpace`-Instanz").  Was übrigbleibt, sind die Fundstellen
+    #  **mitten in einem Rumpf**, und nur die sind ein Befund.
+    ATTR = ('@[', '--', '/-', '*', '-/')
+
+    def resolve(cpath, cline):
+        """Der Kandidat aus dem Baum, der diese Fundstelle tragen kann."""
+        cands = [f for f in files if f == cpath or f.endswith('/' + cpath)]
+        best = ''
+        for cand in cands:
+            body = _FILES.get(cand)
+            if body is None:
+                r = subprocess.run(['git', '-C', MATHLIB4, 'show', f'{rev}:{cand}'],
+                                   capture_output=True, text=True)
+                body = _FILES[cand] = r.stdout.splitlines()
+            if any(l.startswith('deprecated_module') for l in body):
+                continue
+            if cline <= len(body):
+                #  Eine Datei, von der der Index Namen kennt, ist die
+                #  wahrscheinlichere; `Order/Disjointed.lean` paßt auch auf
+                #  `Algebra/Order/Disjointed.lean`.
+                if cand in by_file:
+                    return cand
+                best = best or cand
+        return best
+
+    def classify(cpath, cline):
+        """(Art, Beleg) für eine ungepaarte Fundstelle."""
+        ipath = resolve(cpath, cline)
+        if not ipath:
+            return 'Datei nicht auflösbar', ''
+        text = source_line(rev, ipath, cline)
+        if (ipath, cline) in exact_lines:
+            return 'Deklarationskopf', owner(ipath, cline)
+        #  Eine `instance` ohne Namen steht in keinem Index; sie ist trotzdem
+        #  eine Deklaration und eine richtige Fundstelle.
+        body = re.sub(r'^\s*@\[[^\]]*\]\s*', '', text)
+        if re.match(r'^(?:scoped\s+|local\s+|noncomputable\s+)*instance\b', body) \
+                and not re.match(r'^(?:scoped\s+|local\s+|noncomputable\s+)*instance\s+'
+                                 r"[A-Za-z_][A-Za-z0-9_.']*\s*[:(\[]", body):
+            return 'anonyme Instanz', text[:70]
+        if text.startswith(('variable', 'section', 'namespace', 'open ', 'theorem',
+                            'lemma', 'def ', 'abbrev', 'structure', 'class ',
+                            'instance', 'alias')):
+            return 'Deklaration/Abschnitt', text[:70]
+        h = header_owner(ipath, cline)
+        if h:
+            return 'Kopf von', h
+        if not text or text.startswith(ATTR):
+            return 'Kommentar/Attribut', text[:70]
+        own = owner(ipath, cline)
+        #  Drei Lagen, die wie „mitten im Rumpf" aussehen und keine sind.
+        #  (1) Eine **mehrzeilige Signatur**: die zitierte Zeile steht zwischen
+        #      dem Kopf der Deklaration und dem `:=`, trägt also noch eine
+        #      Hypothese.  Wer `(hf : Integrable f μ)` zitiert, zitiert den Satz.
+        #  (2) Ein **`variable`-Bündel**, dessen Fortsetzungszeile die zitierte
+        #      Instanzvoraussetzung trägt.
+        #  (3) Ein **Doc-Kommentar**, dessen Fortsetzungszeile weder mit `*`
+        #      noch mit `/-` beginnt; `header_owner` sieht sie deshalb nicht.
+        if modifier_head(ipath, cline):
+            return 'Modifikatorzeile vor', owner(ipath, cline + 1) or '?'
+        hl = in_signature(ipath, cline)
+        if hl:
+            head = source_line(rev, ipath, hl)
+            if head.startswith('variable'):
+                return 'variable-Bündel', f'Kopf `{hl}`'
+            return 'Signaturfortsetzung von', own or f'`{head[:50]}` (`{hl}`)'
+        depth = 0
+        for k in range(cline, max(0, cline - 60), -1):
+            t = source_line(rev, ipath, k)
+            if '-/' in t and k != cline:
+                break
+            if '/--' in t or t.startswith('/-'):
+                depth = 1
+                break
+        if depth:
+            return 'Doc-Kommentar von', own or '?'
+        return 'im Rumpf von', (own or '?') + f' — `{text[:50]}`'
+
+    unpaired_cls = [(where, cpath, cline, names) + classify(cpath, cline)
+                    for where, cpath, cline, names in unpaired]
+    kinds = {}
+    for e in unpaired_cls:
+        kinds[e[4]] = kinds.get(e[4], 0) + 1
+    inbody = [e for e in unpaired_cls if e[4] == 'im Rumpf von']
+
     lines = []
     lines.append(f'# Zitierte Zeilennummern gegen `{rev}`')
     lines.append('')
@@ -322,9 +453,31 @@ def main():
     lines.append('')
     lines.append(f'## Ungepaart ({len(unpaired)})')
     lines.append('')
-    for where, cpath, cline, names in unpaired:
-        cand = ', '.join(f'`{n}`' for n in names[:4]) if names else 'kein Kandidat'
-        lines.append(f'* `{where}` -> `{cpath}:{cline}` ({cand})')
+    lines.append('Ungepaart heißt: kein Bezeichner des Umfelds ist in der zitierten Datei '
+                 'deklariert — meist, weil der Text den Gegenstand **beschreibt**, statt '
+                 'ihn zu benennen. Das sagt nichts darüber, ob die Fundstelle stimmt. '
+                 'Gefragt wird deshalb umgekehrt: **was steht an der zitierten Zeile?**')
+    lines.append('')
+    for k in sorted(kinds, key=lambda k: -kinds[k]):
+        lines.append(f'* {k}: **{kinds[k]}**')
+    lines.append('')
+    lines.append(f'### Mitten im Rumpf ({len(inbody)}) — die einzige Klasse, die ein '
+                 'Befund sein kann')
+    lines.append('')
+    if inbody:
+        for where, cpath, cline, _names, _k, why in inbody:
+            lines.append(f'* `{where}` -> `{cpath}:{cline}`: {why}')
+    else:
+        lines.append('keine')
+    lines.append('')
+    lines.append('### Alle ungepaarten Fundstellen')
+    lines.append('')
+    lines.append('| Stelle | zitiert | an der Zeile steht |')
+    lines.append('| --- | --- | --- |')
+    for where, cpath, cline, _names, kind, why in unpaired_cls:
+        w = why.replace('|', '¦')
+        lines.append(f'| `{where}` | `{cpath}:{cline}` | {kind} '
+                     + (f'`{w}`' if why and not why.startswith('`') else w) + ' |')
     lines.append('')
     if FIX:
         keep = {(w, c, i) for w, _, _, c, _, i in moved}

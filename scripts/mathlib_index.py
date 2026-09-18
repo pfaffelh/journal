@@ -29,7 +29,11 @@ OUT = 'scripts/_citations'
 
 DECL = re.compile(
     r"^\s*(?:private\s+|protected\s+|noncomputable\s+|nonrec\s+|partial\s+|unsafe\s+|scoped\s+|local\s+)*"
-    r"(theorem|lemma|def|abbrev|structure|class|instance|inductive|opaque|axiom)\b"
+    # `irreducible_def` **vor** `def`, sonst greift die Alternative nie.  Am
+    # 2026-09-19 fehlte dadurch `MeasureTheory.Measure.condKernel`
+    # (`Probability/Kernel/Disintegration/StandardBorel.lean:362`) und alles
+    # andere, was so deklariert ist.
+    r"(theorem|lemma|irreducible_def|def|abbrev|structure|class|instance|inductive|opaque|axiom)\b"
     r"(?:\s+([A-Za-z_α-ωΓ-Ω][^\s:({\[]*))?")
 NS = re.compile(r'^\s*(namespace|end)\s+([A-Za-z_][A-Za-z0-9_.\']*)\s*$')
 DEPR = re.compile(r'@\[[^\]]*deprecated')
@@ -43,7 +47,7 @@ def emit_lines(source):
     """Yield (path, lineno, text) for every Mathlib/*.lean line of interest."""
     # POSIX ERE: `git grep -E` kennt weder `\s` noch `(?:`.
     pat = ('^[[:space:]]*(@\\[|private |protected |noncomputable |nonrec |partial '
-           '|unsafe |scoped |local |theorem |lemma |def |abbrev |structure |class '
+           '|unsafe |scoped |local |theorem |lemma |def |irreducible_def |abbrev |structure |class '
            '|instance|inductive |opaque |axiom |namespace |end |alias )')
     if source != 'v4331':
         #  `master` heißt `upstream/master`; jeder andere Wert wird als

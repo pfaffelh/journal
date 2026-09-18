@@ -20,6 +20,7 @@ python3 scripts/mathlib_index.py master     # Deklarationsindex von upstream/mas
 python3 scripts/mathlib_index.py v4331      # Deklarationsindex von v4.33.1
 python3 scripts/check_citations.py          # -> _citations/report.md
 python3 scripts/check_cited_lines.py        # -> _citations/cited_lines.md
+python3 scripts/check_duplicates.py         # -> _citations/duplicates.md
 python3 scripts/check_negatives.py          # -> _citations/negatives.md
 python3 scripts/check_suggested.py          # -> _citations/lean_check.md
 python3 scripts/check_master.py             # -> _citations/lean_check_master.md
@@ -70,7 +71,22 @@ Laufbericht.
   python3 scripts/check_cited_lines.py --fix      # schreibt die Abweichungen um
   ```
 
+  Die ungepaarten Fundstellen bleiben nicht als bloße Liste stehen: seit dem
+  2026-09-19 schlägt das Skript nach, **was an der zitierten Zeile steht**, und
+  ordnet jede einer Art zu (Deklarationskopf, anonyme Instanz,
+  Signaturfortsetzung, `variable`-Bündel, Modifikatorzeile, Doc-Kommentar,
+  Rumpf). Nur die letzte Art kann ein Befund sein. Die Vermutung, es seien
+  überwiegend anonyme Instanzen, war damit widerlegt — es waren sieben von 66,
+  und sechs Fundstellen zeigten wirklich in einen Beweisrumpf.
+
   rc 1, wenn eine Zeile verschoben oder eine Fundstelle tot ist.
+* **`check_duplicates.py`** sucht Deklarationen der Roadmaps, die es auf
+  `master` schon gibt — die Bodenhaftungsregel von `CONTRIBUTING.md` schließt
+  sie aus. Verglichen wird der **letzte Namensbestandteil**; Mathlib benennt
+  systematisch, also ist das ein Anhaltspunkt und keine Entscheidung. Am
+  2026-09-19: 2 275 eigene Deklarationen, 38 Treffer, davon zwei echte
+  Doppelungen (`integrableOn_of_bounded`, `sum_smul_dirac_singleton`).
+  Dieselbe Aussage unter einem **anderen** Namen findet es nicht.
 * **`check_citations.py`** schlägt jeden Namen in beiden Indizes nach und
   sortiert nach: auf beiden, nur v4.33.1 (also von master verschwunden), nur
   master, `deprecated`, gar nicht gefunden.

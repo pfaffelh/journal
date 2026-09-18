@@ -1245,7 +1245,7 @@ The representation theorem itself:
   `exists_measurable_map_prod_infinitePi_eq_sum_smul`: **the randomisation
   step**. On the product of a space carrying a measurable index `ι : Ω → κ`
   with `MeasureTheory.Measure.infinitePi m` — Mathlib's countable product of
-  the probability measures `m i` (`Probability/ProductMeasure.lean:358`) — the
+  the probability measures `m i` (`Probability/ProductMeasure.lean:355`) — the
   map `z ↦ z.2 (ι z.1)`, "look up the coordinate the index names", has the
   mixture law `∑ᵢ P{ι = i} · m i`. The index space `κ` is any countable
   measurable space with measurable singletons: `ℕ` for one stage, `ℕ × ℕ` for a
@@ -2243,7 +2243,8 @@ metric equivalent to `dist` gives the same topology.
   the triangle inequality against the subsequence. Mathlib has **no** completeness
   of convergence in measure to appeal to: `ConvergenceInMeasure.lean` contains no
   statement with `Cauchy` in it (checked 2026-09-08 against v4.33.1), and the
-  `Lᵖ` completeness (`LpSpace/Complete.lean:290`) is for a normed group.
+  `Lᵖ` completeness (`MeasureTheory.Lp.instCompleteSpace`,
+  `LpSpace/Complete.lean:387`) is for a normed group.
 * `MeasureTheory.AEEqFun.exists_countable_dense_distInMeasure` and
   `MeasureTheory.AEEqFun.separableSpace`, **proved** on 2026-09-08, thirteenth
   run, for `[MeasureTheory.IsSeparable μ]` (`Measure/SeparableMeasure.lean:339`;

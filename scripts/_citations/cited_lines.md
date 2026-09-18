@@ -1,16 +1,16 @@
 # Zitierte Zeilennummern gegen `94ef6b89544e58e90f119da869f3fb48d1da0f4c`
 
-* geprüft: 255 gepaarte Fundstellen
-* **stimmt: 255**
+* geprüft: 260 gepaarte Fundstellen
+* **stimmt: 260**
 * **verschoben: 0**
-* zielt auf eine andere Deklaration (von Hand): 35
-* ungepaart (von Hand): 66
+* zielt auf eine andere Deklaration (von Hand): 38
+* ungepaart (von Hand): 58
 * **tote Fundstelle: 0**
 
 ## Tote Fundstellen (0)
 
 
-## Zielt auf eine andere Deklaration (35)
+## Zielt auf eine andere Deklaration (38)
 
 Die zitierte Zeile ist die erste Zeile einer anderen Deklaration, ihr Kopf, oder ein `variable`-Bündel. Nicht umzuschreiben, ohne den Satz zu lesen.
 
@@ -20,7 +20,6 @@ Die zitierte Zeile ist die erste Zeile einer anderen Deklaration, ihr Kopf, oder
 * `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:1653`: `Probability/Martingale/OptionalSampling.lean:90` ist MeasureTheory.Martingale.stoppedValue_ae_eq_condExp_of_le_const_of_countable_range; gepaart wurde `MeasureTheory.Martingale.stoppedValue_ae_eq_condExp_of_le_of_countable_range` (`121`)
 * `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:4835`: `MeasureTheory/MeasurableSpace/Constructions.lean:1083` ist MeasurableEq; gepaart wurde `MeasurableEq` (`1084`)
 * `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:6228`: `Mathlib/Probability/Kernel/IonescuTulcea/Traj.lean:670` ist `(partialTraj κ a b x₀) ⊗ₘ (κ b) = (traj κ a x₀).map (fun x ↦`; gepaart wurde `ProbabilityTheory.Kernel.partialTraj_compProd_eq_map_traj` (`669`)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:6304`: `Mathlib/Probability/Kernel/CondDistrib.lean:381` ist ProbabilityTheory.condExp_ae_eq_integral_condDistrib'; gepaart wurde `ProbabilityTheory.condExp_ae_eq_integral_condDistrib` (`374`)
 * `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:6394`: `MeasureTheory/Function/ConditionalExpectation/Basic.lean:253` ist MeasureTheory.ae_eq_condExp_of_forall_setIntegral_eq; gepaart wurde `MeasureTheory.ae_eq_condExp_of_forall_setIntegral_eq` (`254`)
 * `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7938`: `Mathlib/Probability/Process/LocalProperty.lean:88` ist `variable [OrderBot ι]`; gepaart wurde `ProbabilityTheory.IsStable` (`142`)
 * `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8264`: `MeasureTheory/Integral/Lebesgue/Add.lean:231` ist MeasureTheory.lintegral_liminf_le; gepaart wurde `MeasureTheory.lintegral_liminf_le` (`233`)
@@ -37,88 +36,102 @@ Die zitierte Zeile ist die erste Zeile einer anderen Deklaration, ihr Kopf, oder
 * `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:1012`: `LevyProkhorovMetric.lean:324` ist MeasureTheory.LevyProkhorov.edist_probabilityMeasure_def; gepaart wurde `MeasureTheory.levyProkhorovEDist` (`53`)
 * `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:1040`: `Mathlib/Topology/Homeomorph/Defs.lean:296` ist Homeomorph.isClosedEmbedding; gepaart wurde `Homeomorph.isClosedEmbedding` (`297`)
 * `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:1095`: `Mathlib/Order/Disjointed.lean:323` ist disjointed_eq_inter_compl; gepaart wurde `disjointed_eq_inter_compl` (`324`)
+* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:1540`: `Probability/Kernel/Disintegration/StandardBorel.lean:361` ist `noncomputable`; gepaart wurde `ProbabilityTheory.Kernel._root_.MeasureTheory.Measure.condKernel` (`362`)
+* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:1562`: `StandardBorel.lean:77` ist `{mΩ : MeasurableSpace Ω} [StandardBorelSpace Ω] [Nonempty Ω]`; gepaart wurde `ProbabilityTheory.Kernel._root_.MeasureTheory.Measure.condKernel` (`362`)
 * `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:1678`: `ProductMeasure.lean:466` ist MeasureTheory.Measure._root_.measurePreserving_eval_infinitePi; gepaart wurde `MeasureTheory.Measure.infinitePi_dirac` (`464`)
 * `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:2197`: `AEEqFun.lean:139` ist MeasureTheory.AEEqFun.stronglyMeasurable; gepaart wurde `MeasureTheory.AEEqFun.stronglyMeasurable` (`141`)
+* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:292`: `Probability/Kernel/Disintegration/StandardBorel.lean:77` ist `{mΩ : MeasurableSpace Ω} [StandardBorelSpace Ω] [Nonempty Ω]`; gepaart wurde `ProbabilityTheory.Kernel._root_.MeasureTheory.Measure.condKernel` (`362`)
+* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:292`: `Probability/Kernel/Disintegration/StandardBorel.lean:361` ist `noncomputable`; gepaart wurde `ProbabilityTheory.Kernel._root_.MeasureTheory.Measure.condKernel` (`362`)
 * `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:404`: `MeasureTheory/Measure/ProbabilityMeasure.lean:364` ist MeasureTheory.ProbabilityMeasure.tendsto_iff_forall_integral_tendsto; gepaart wurde `MeasureTheory.ProbabilityMeasure.tendsto_iff_forall_integral_tendsto` (`365`)
 * `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:458`: `MeasureTheory/Measure/ProbabilityMeasure.lean:440` ist MeasureTheory.ProbabilityMeasure.t2Space; gepaart wurde `MeasureTheory.ProbabilityMeasure.t2Space` (`441`)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:1382`: `Topology/UrysohnsLemma.lean:404` ist exists_continuous_one_zero_of_isCompact; gepaart wurde `exists_continuous_one_zero_of_isCompact` (`405`)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:2131`: `MeasureTheory/Measure/ProbabilityMeasure.lean:657` ist MeasureTheory.FiniteMeasure.ProbabilityMeasure.tendsto_map_of_tendsto_of_continuous; gepaart wurde `MeasureTheory.FiniteMeasure.ProbabilityMeasure.tendsto_map_of_tendsto_of_continuous` (`658`)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:2216`: `MeasureTheory/Measure/ProbabilityMeasure.lean:608` ist `Tendsto (fun i ↦ (μs i).mass) F (𝓝 μ.mass) ↔`; gepaart wurde `MeasureTheory.FiniteMeasure.ProbabilityMeasure.map` (`627`)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:2966`: `UniformSpace/Cauchy.lean:277` ist tendsto_nhds_of_cauchySeq_of_subseq; gepaart wurde `tendsto_nhds_of_cauchySeq_of_subseq` (`279`)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:3063`: `Order/Disjointed.lean:323` ist disjointed_eq_inter_compl; gepaart wurde `disjointed_eq_inter_compl` (`324`)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:5387`: `MeasurableSpace/Defs.lean:329` ist MeasurableSpace.generateFrom; gepaart wurde `MeasurableSpace.generateFrom` (`330`)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:5675`: `Topology/ContinuousMap/StoneWeierstrass.lean:297` ist ContinuousMap.exists_mem_subalgebra_near_continuousMap_of_separatesPoints; gepaart wurde `ContinuousMap.exists_mem_subalgebra_near_continuous_of_separatesPoints` (`313`)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:6834`: `LpSpace/Basic.lean:223` ist MeasureTheory.Lp.instNNNorm; gepaart wurde `MeasureTheory.Lp` (`90`)
+* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:1384`: `Topology/UrysohnsLemma.lean:404` ist exists_continuous_one_zero_of_isCompact; gepaart wurde `exists_continuous_one_zero_of_isCompact` (`405`)
+* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:2133`: `MeasureTheory/Measure/ProbabilityMeasure.lean:657` ist MeasureTheory.FiniteMeasure.ProbabilityMeasure.tendsto_map_of_tendsto_of_continuous; gepaart wurde `MeasureTheory.FiniteMeasure.ProbabilityMeasure.tendsto_map_of_tendsto_of_continuous` (`658`)
+* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:2218`: `MeasureTheory/Measure/ProbabilityMeasure.lean:608` ist `Tendsto (fun i ↦ (μs i).mass) F (𝓝 μ.mass) ↔`; gepaart wurde `MeasureTheory.FiniteMeasure.ProbabilityMeasure.map` (`627`)
+* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:2968`: `UniformSpace/Cauchy.lean:277` ist tendsto_nhds_of_cauchySeq_of_subseq; gepaart wurde `tendsto_nhds_of_cauchySeq_of_subseq` (`279`)
+* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:3065`: `Order/Disjointed.lean:323` ist disjointed_eq_inter_compl; gepaart wurde `disjointed_eq_inter_compl` (`324`)
+* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:5389`: `MeasurableSpace/Defs.lean:329` ist MeasurableSpace.generateFrom; gepaart wurde `MeasurableSpace.generateFrom` (`330`)
+* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:5677`: `Topology/ContinuousMap/StoneWeierstrass.lean:297` ist ContinuousMap.exists_mem_subalgebra_near_continuousMap_of_separatesPoints; gepaart wurde `ContinuousMap.exists_mem_subalgebra_near_continuous_of_separatesPoints` (`313`)
+* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:6836`: `LpSpace/Basic.lean:223` ist MeasureTheory.Lp.instNNNorm; gepaart wurde `MeasureTheory.Lp` (`90`)
 
 ## Verschoben (0)
 
 keine
 
-## Ungepaart (66)
+## Ungepaart (58)
 
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:235` -> `Mathlib/MeasureTheory/Group/Measure.lean:230` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:786` -> `Probability/Moments/Variance.lean:422` (`ProbabilityTheory.IndepFun.variance_sum`, `ProbabilityTheory.meas_ge_le_variance_div_sq`)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:891` -> `MeasureTheory/Constructions/BorelSpace/Basic.lean:717` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:2066` -> `Mathlib/Analysis/Distribution/Sobolev.lean:47` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:2067` -> `Mathlib/Analysis/InnerProductSpace/LaxMilgram.lean:25` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:4587` -> `MeasureTheory/Function/AbsolutelyContinuous.lean:328` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:4837` -> `MeasureTheory/MeasurableSpace/Constructions.lean:1104` (`MeasurableEq`, `measurableSet_eq_fun`)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:4838` -> `Constructions/Polish/Basic.lean:157` (`MeasureTheory.StronglyMeasurable.measurableSet_eq_fun`, `StandardBorelSpace`)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:4839` -> `BorelSpace/Basic.lean:620` (`MeasureTheory.StronglyMeasurable.measurableSet_eq_fun`, `StandardBorelSpace`)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:4878` -> `Basic/Countable/Basic.lean:146` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:6285` -> `Mathlib/Probability/HasCondDistrib.lean:41` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7378` -> `Order/Antisymmetrization.lean:125` (`AntisymmRel`, `toAntisymmetrization`)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7382` -> `Order/Antisymmetrization.lean:308` (`AntisymmRel`, `instPartialOrderAntisymmetrization`, `toAntisymmetrization`)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8040` -> `Probability/Martingale/Convergence.lean:112` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8241` -> `Order/Filter/AtTopBot/Archimedean.lean:147` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8252` -> `MeasureTheory/Function/ConditionalExpectation/Basic.lean:359` (`MeasureTheory._root_.ContinuousLinearMap.comp_condExp_comm`, `RCLike.imCLM`, `RCLike.reCLM`)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8361` -> `MeasureTheory/Function/L1Space/Integrable.lean:1085` (`MeasureTheory.Integrable`, `MeasureTheory.MemLp.integrable_mul`)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8711` -> `Mathlib/Probability/Process/Stopping.lean:76` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8718` -> `Mathlib/Order/ConditionallyCompleteLattice/Basic.lean:52` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8777` -> `MeasureTheory/Function/ConditionalExpectation/Basic.lean:359` (`MeasureTheory._root_.ContinuousLinearMap.comp_condExp_comm`, `RCLike.imCLM`, `RCLike.reCLM`, `RCLike.re_add_im`)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:9789` -> `Analysis/SpecialFunctions/Gaussian/GaussianIntegral.lean:74` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:766` -> `LocalProperty.lean:77` (`ProbabilityTheory.IsLocalizingSequence`, `ProbabilityTheory.IsStable.locally_locally_iff`, `ProbabilityTheory.Locally`)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:767` -> `LocalProperty.lean:88` (`ProbabilityTheory.IsLocalizingSequence`, `ProbabilityTheory.IsStable.locally_locally_iff`, `ProbabilityTheory.Locally`)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:1914` -> `Probability/Martingale/Convergence.lean:112` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:2574` -> `Order/ConditionallyCompleteLattice/Basic.lean:52` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:2840` -> `Order/Filter/AtTopBot/Archimedean.lean:147` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:3123` -> `MeasureTheory/Function/L1Space/Integrable.lean:1085` (`MeasureTheory.Integrable`, `MeasureTheory.MemLp.integrable_mul`)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:4075` -> `MeasureTheory/Function/ConditionalExpectation/Basic.lean:359` (`MeasureTheory._root_.ContinuousLinearMap.comp_condExp_comm`, `RCLike`, `RCLike.imCLM`, `RCLike.reCLM`)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:8972` -> `MeasureTheory/Constructions/BorelSpace/Basic.lean:717` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:27913` -> `Mathlib/Probability/BorelCantelli.lean:50` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:32043` -> `MeasureTheory/Function/ConditionalExpectation/PullOut.lean:224` (`MeasureTheory.condExp_smul_of_aestronglyMeasurable_left`, `MeasureTheory.condExp_smul_of_aestronglyMeasurable_right`)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:32043` -> `MeasureTheory/Function/ConditionalExpectation/PullOut.lean:230` (`MeasureTheory.condExp_smul_of_aestronglyMeasurable_left`, `MeasureTheory.condExp_smul_of_aestronglyMeasurable_right`)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:35847` -> `Analysis/SpecialFunctions/Gaussian/GaussianIntegral.lean:74` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:35905` -> `Analysis/SpecialFunctions/Gaussian/GaussianIntegral.lean:74` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:198` -> `Topology/Order/Compact.lean:148` (`IsCompact.exists_isGreatest`, `IsCompact.exists_isLeast`)
-* `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:198` -> `Topology/Order/Compact.lean:160` (`IsCompact.exists_isGreatest`, `IsCompact.exists_isLeast`)
-* `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:516` -> `Mathlib/MeasureTheory/Constructions/BorelSpace/Basic.lean:509` (`CartanMatrix.D`, `CartanMatrix.E`, `CommRingCat.KaehlerDifferential.D`, `KaehlerDifferential.D`)
-* `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:1509` -> `Mathlib/Topology/Metrizable/CompletelyMetrizable.lean:172` (`TopologicalSpace.IsCompletelyMetrizableSpace`, `TopologicalSpace.IsCompletelyMetrizableSpace._root_.Topology.IsClosedEmbedding.IsCompletelyMetrizableSpace`)
-* `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/Suggested.lean:1051` -> `MeasureTheory/Constructions/BorelSpace/Basic.lean:509` (`CartanMatrix.E`, `ModularForm.E`, `measurable_of_countable_not_continuousAt`)
-* `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/Suggested.lean:11201` -> `Mathlib/Topology/UniformSpace/Equicontinuity.lean:252` (`EquicontinuousWithinAt`, `Set.EquicontinuousWithinAt`, `equicontinuousWithinAt_finite`)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:122` -> `Mathlib/MeasureTheory/Measure/ProbabilityMeasure.lean:307` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:154` -> `Mathlib/Analysis/SpecialFunctions/MulExpNegMulSqIntegral.lean:161` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:718` -> `Mathlib/Topology/GDelta/MetrizableSpace.lean:51` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:967` -> `Topology/Bases.lean:346` (`TopologicalSpace._root_.DenseRange.separableSpace`, `TopologicalSpace.exists_dense_seq`)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:1071` -> `LevyProkhorovMetric.lean:540` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:1248` -> `Probability/ProductMeasure.lean:358` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:1366` -> `Topology/Algebra/InfiniteSum/Basic.lean:562` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:1540` -> `Probability/Kernel/Disintegration/StandardBorel.lean:361` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:1562` -> `StandardBorel.lean:77` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:1568` -> `MeasureTheory/Constructions/Polish/Basic.lean:834` (`CartanMatrix.E`, `MeasurableSet.image_of_measurable_injOn`, `ModularForm.E`)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:1828` -> `Probability/Distributions/Cauchy.lean:170` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:1829` -> `Probability/Distributions/Cauchy.lean:188` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:2246` -> `LpSpace/Complete.lean:290` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:2249` -> `Measure/SeparableMeasure.lean:339` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:2251` -> `Measure/SeparableMeasure.lean:382` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:2346` -> `Measure/ProbabilityMeasure.lean:657` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:292` -> `Probability/Kernel/Disintegration/StandardBorel.lean:77` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:292` -> `Probability/Kernel/Disintegration/StandardBorel.lean:361` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:434` -> `MeasureTheory/Measure/ProbabilityMeasure.lean:307` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:504` -> `Analysis/SpecialFunctions/MulExpNegMulSqIntegral.lean:161` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:508` -> `Analysis/SpecialFunctions/MulExpNegMulSqIntegral.lean:72` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:2028` -> `MeasureTheory/MeasurableSpace/CountablyGenerated.lean:322` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:2029` -> `MeasureTheory/MeasurableSpace/CountablyGenerated.lean:326` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:2029` -> `MeasureTheory/MeasurableSpace/CountablyGenerated.lean:329` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:5082` -> `Probability/Distributions/Cauchy.lean:170` (kein Kandidat)
-* `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:5083` -> `Probability/Distributions/Cauchy.lean:188` (kein Kandidat)
+Ungepaart heißt: kein Bezeichner des Umfelds ist in der zitierten Datei deklariert — meist, weil der Text den Gegenstand **beschreibt**, statt ihn zu benennen. Das sagt nichts darüber, ob die Fundstelle stimmt. Gefragt wird deshalb umgekehrt: **was steht an der zitierten Zeile?**
+
+* Deklarationskopf: **20**
+* Kopf von: **12**
+* anonyme Instanz: **8**
+* Signaturfortsetzung von: **7**
+* Kommentar/Attribut: **5**
+* Deklaration/Abschnitt: **3**
+* Doc-Kommentar von: **3**
+
+### Mitten im Rumpf (0) — die einzige Klasse, die ein Befund sein kann
+
+keine
+
+### Alle ungepaarten Fundstellen
+
+| Stelle | zitiert | an der Zeile steht |
+| --- | --- | --- |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:235` | `Mathlib/MeasureTheory/Group/Measure.lean:230` | Kommentar/Attribut  |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:786` | `Probability/Moments/Variance.lean:422` | Kopf von `ProbabilityTheory.IndepFun.variance_sum` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:891` | `MeasureTheory/Constructions/BorelSpace/Basic.lean:717` | Kopf von `NNReal.measurableSpace` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:2066` | `Mathlib/Analysis/Distribution/Sobolev.lean:47` | Kommentar/Attribut `* [M. Taylor, *Partial Differential Equations 1*][taylorPDE1]` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:2067` | `Mathlib/Analysis/InnerProductSpace/LaxMilgram.lean:25` | Kommentar/Attribut `* We follow the notes of Peter Howard's Spring 2020 *M612: Partial Dif` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:4587` | `MeasureTheory/Function/AbsolutelyContinuous.lean:328` | Deklarationskopf `AbsolutelyContinuousOnInterval._root_.LipschitzOnWith.comp_absolutelyContinuousOnInterval` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:4837` | `MeasureTheory/MeasurableSpace/Constructions.lean:1104` | Kommentar/Attribut  |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:4838` | `Constructions/Polish/Basic.lean:159` | anonyme Instanz `instance [StandardBorelSpace α] : MeasurableEq α := by` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:4839` | `BorelSpace/Basic.lean:620` | Kommentar/Attribut  |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:4878` | `Basic/Countable/Basic.lean:146` | anonyme Instanz `instance [Finite α] [∀ a, Countable (π a)] : Countable (∀ a, π a) := b` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:6285` | `Mathlib/Probability/HasCondDistrib.lean:41` | Deklarationskopf `ProbabilityTheory.HasCondDistrib` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:6304` | `Mathlib/Probability/Kernel/CondDistrib.lean:381` | Kopf von `ProbabilityTheory.condExp_ae_eq_integral_condDistrib'` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7378` | `Order/Antisymmetrization.lean:125` | Deklarationskopf `Antisymmetrization` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7382` | `Order/Antisymmetrization.lean:308` | Signaturfortsetzung von `wellFoundedGT_antisymmetrization_iff` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8040` | `Probability/Martingale/Convergence.lean:112` | Deklarationskopf `MeasureTheory.not_frequently_of_upcrossings_lt_top` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8241` | `Order/Filter/AtTopBot/Archimedean.lean:147` | anonyme Instanz `instance (priority := 100) atTop_isCountablyGenerated_of_archimedean` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8252` | `MeasureTheory/Function/ConditionalExpectation/Basic.lean:359` | Kopf von `MeasureTheory._root_.ContinuousLinearMap.comp_condExp_comm` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8361` | `MeasureTheory/Function/L1Space/Integrable.lean:1085` | Kopf von `MeasureTheory.MemLp.integrable_mul` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8711` | `Mathlib/Probability/Process/Stopping.lean:76` | Deklarationskopf `MeasureTheory.IsStoppingTime` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8718` | `Mathlib/Order/ConditionallyCompleteLattice/Basic.lean:52` | anonyme Instanz `noncomputable instance [SupSet α] : SupSet (WithTop α) :=` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8777` | `MeasureTheory/Function/ConditionalExpectation/Basic.lean:359` | Kopf von `MeasureTheory._root_.ContinuousLinearMap.comp_condExp_comm` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:9789` | `Analysis/SpecialFunctions/Gaussian/GaussianIntegral.lean:74` | Deklarationskopf `integrableOn_rpow_mul_exp_neg_mul_rpow` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:766` | `LocalProperty.lean:77` | Deklaration/Abschnitt `variable [LinearOrder ι] {𝓕 : Filtration ι mΩ} {X : ι → Ω → E} {p q : ` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:767` | `LocalProperty.lean:88` | Deklaration/Abschnitt `variable [OrderBot ι]` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:1914` | `Probability/Martingale/Convergence.lean:112` | Deklarationskopf `MeasureTheory.not_frequently_of_upcrossings_lt_top` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:2574` | `Order/ConditionallyCompleteLattice/Basic.lean:52` | anonyme Instanz `noncomputable instance [SupSet α] : SupSet (WithTop α) :=` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:2840` | `Order/Filter/AtTopBot/Archimedean.lean:147` | anonyme Instanz `instance (priority := 100) atTop_isCountablyGenerated_of_archimedean` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:3123` | `MeasureTheory/Function/L1Space/Integrable.lean:1085` | Kopf von `MeasureTheory.MemLp.integrable_mul` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:4075` | `MeasureTheory/Function/ConditionalExpectation/Basic.lean:359` | Kopf von `MeasureTheory._root_.ContinuousLinearMap.comp_condExp_comm` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:8972` | `MeasureTheory/Constructions/BorelSpace/Basic.lean:717` | Kopf von `NNReal.measurableSpace` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:27913` | `Mathlib/Probability/BorelCantelli.lean:50` | Deklarationskopf `ProbabilityTheory.iIndepFun.condExp_natural_ae_eq_of_lt` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:32043` | `MeasureTheory/Function/ConditionalExpectation/PullOut.lean:224` | Signaturfortsetzung von `MeasureTheory.condExp_smul_of_aestronglyMeasurable_left` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:32043` | `MeasureTheory/Function/ConditionalExpectation/PullOut.lean:230` | Signaturfortsetzung von `MeasureTheory.condExp_smul_of_aestronglyMeasurable_right` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:35847` | `Analysis/SpecialFunctions/Gaussian/GaussianIntegral.lean:74` | Deklarationskopf `integrableOn_rpow_mul_exp_neg_mul_rpow` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:35905` | `Analysis/SpecialFunctions/Gaussian/GaussianIntegral.lean:74` | Deklarationskopf `integrableOn_rpow_mul_exp_neg_mul_rpow` |
+| `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:516` | `Mathlib/MeasureTheory/Constructions/BorelSpace/Basic.lean:509` | Kopf von `measurable_of_countable_not_continuousAt` |
+| `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:1509` | `Mathlib/Topology/Metrizable/CompletelyMetrizable.lean:172` | anonyme Instanz `instance (priority := 100) _root_.MetricSpace.toIsCompletelyMetrizable` |
+| `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/Suggested.lean:1051` | `MeasureTheory/Constructions/BorelSpace/Basic.lean:509` | Kopf von `measurable_of_countable_not_continuousAt` |
+| `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:122` | `Mathlib/MeasureTheory/Measure/ProbabilityMeasure.lean:307` | Doc-Kommentar von `MeasureTheory.ProbabilityMeasure.testAgainstNN_lipschitz` |
+| `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:154` | `Mathlib/Analysis/SpecialFunctions/MulExpNegMulSqIntegral.lean:161` | Signaturfortsetzung von `dist_integral_mulExpNegMulSq_comp_le` |
+| `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:718` | `Mathlib/Topology/GDelta/MetrizableSpace.lean:51` | Deklaration/Abschnitt `theorem IsGδ.setOfPred_continuousAt [PseudoMetrizableSpace Y] (f : X →` |
+| `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:967` | `Topology/Bases.lean:346` | Deklarationskopf `TopologicalSpace.SeparableSpace` |
+| `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:1071` | `LevyProkhorovMetric.lean:540` | Deklarationskopf `MeasureTheory.SeparableSpace.exists_measurable_partition_diam_le` |
+| `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:1248` | `Probability/ProductMeasure.lean:355` | Deklarationskopf `MeasureTheory.Measure.infinitePi` |
+| `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:1366` | `Topology/Algebra/InfiniteSum/Basic.lean:562` | Deklarationskopf `Equiv.tprod_eq` |
+| `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:1568` | `MeasureTheory/Constructions/Polish/Basic.lean:834` | Doc-Kommentar von `MeasurableSet.image_of_continuousOn_injOn` |
+| `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:1828` | `Probability/Distributions/Cauchy.lean:170` | Deklarationskopf `ProbabilityTheory.cauchyMeasure` |
+| `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:1829` | `Probability/Distributions/Cauchy.lean:188` | Deklarationskopf `ProbabilityTheory.instIsProbabilityMeasure_cauchyMeasure` |
+| `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:2250` | `Measure/SeparableMeasure.lean:339` | Deklarationskopf `MeasureTheory.IsSeparable` |
+| `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:2252` | `Measure/SeparableMeasure.lean:382` | anonyme Instanz `instance [CountablyGenerated X] [SFinite μ] : IsSeparable μ where` |
+| `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:2347` | `Measure/ProbabilityMeasure.lean:657` | Kopf von `MeasureTheory.FiniteMeasure.ProbabilityMeasure.tendsto_map_of_tendsto_of_continuous` |
+| `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:434` | `MeasureTheory/Measure/ProbabilityMeasure.lean:307` | Doc-Kommentar von `MeasureTheory.ProbabilityMeasure.testAgainstNN_lipschitz` |
+| `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:504` | `Analysis/SpecialFunctions/MulExpNegMulSqIntegral.lean:161` | Signaturfortsetzung von `dist_integral_mulExpNegMulSq_comp_le` |
+| `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:2030` | `MeasureTheory/MeasurableSpace/CountablyGenerated.lean:322` | Deklarationskopf `MeasurableSpace.CountablySeparated` |
+| `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:2031` | `MeasureTheory/MeasurableSpace/CountablyGenerated.lean:326` | Signaturfortsetzung von `MeasurableSpace.countablySeparated_of_hasCountableSeparatingOn` |
+| `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:2031` | `MeasureTheory/MeasurableSpace/CountablyGenerated.lean:329` | Signaturfortsetzung von `MeasurableSpace.hasCountableSeparatingOn_of_countablySeparated` |
+| `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:5084` | `Probability/Distributions/Cauchy.lean:170` | Deklarationskopf `ProbabilityTheory.cauchyMeasure` |
+| `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/Suggested.lean:5085` | `Probability/Distributions/Cauchy.lean:188` | Deklarationskopf `ProbabilityTheory.instIsProbabilityMeasure_cauchyMeasure` |

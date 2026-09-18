@@ -195,7 +195,7 @@ class AdditiveDist (α : Type*) [LinearOrder α] [PseudoMetricSpace α] : Prop w
   proved (2026-09-07): `mem_exhaustion_self`, `exhaustionMin` and
   `exhaustionMax` with their `isLeast`/`isGreatest` characterisations from
   `IsCompact.exists_isLeast` and `IsCompact.exists_isGreatest`
-  (`Topology/Order/Compact.lean:148` and `:160`, both under the
+  (`Topology/Order/Compact.lean:146` and `:158`, both under the
   `Closed{Iic,Ici}Topology` that `OrderTopology` supplies), then `clamp`,
   `monotone_clamp`, `continuous_clamp`, `clamp_mem_exhaustion`,
   `clamp_eq_self` and `clamp_idem`.

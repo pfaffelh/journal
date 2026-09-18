@@ -4835,7 +4835,7 @@ von `E × E`, und ob die Diagonale meßbar ist, steht über einer bloßen
 `MeasurableEq` (`MeasureTheory/MeasurableSpace/Constructions.lean:1083`), mit
 `measurableSet_eq_fun` als Werkzeug und mit den Instanzen `Countable` +
 `MeasurableSingletonClass` (`:1104`), `StandardBorelSpace`
-(`Constructions/Polish/Basic.lean:157`) und `SecondCountableTopology` + `T2Space`
+(`Constructions/Polish/Basic.lean:159`) und `SecondCountableTopology` + `T2Space`
 (`BorelSpace/Basic.lean:620`). Sie ist notwendig, und der Zeuge steht daneben:
 `exists_not_pointFiltrationE_le_stepPathFiltrationE_of_not_measurableEq` —
 Sprungzeiten, die an **jedem** Stichprobenpunkt bei `0` beginnen und streng

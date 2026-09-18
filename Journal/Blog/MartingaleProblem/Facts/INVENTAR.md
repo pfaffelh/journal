@@ -79,7 +79,7 @@ unserer Konstruktion. Daher:
 
 | Fact | tragend | Aussage | Status | Beleg |
 |---|---|---|---|---|
-| `fact:Dcountable` | 4 | EK, Lemma 3.7.7 | Roadmap | SkorokhodSpace M8, `SkorokhodSpace.exists_countable_dense_continuity`; Mathlib hat weder `cadlag` noch den Raum. Der Unterbau ist seit dem 2026-09-07, fünftem Lauf, bewiesen und geht durch `lake env lean`: `countable_leftJumpSet` — die Sprungmenge **einer** càdlàg-Abbildung ist abzählbar — samt `IsCadlag.continuousAt_iff_notMem_leftJumpSet`, die „Stetigkeitsstelle" und „nicht in `leftJumpSet`" identifiziert (Meilenstein 2). Die Fassung für **ein Maß** statt für einen Pfad steht seit dem 2026-09-18, zwölftem Lauf, und geht durch `lake env lean`: `SkorokhodSpace.countable_setOf_measure_leftJump_ne_zero` (für jedes endliche `μ` ist `{t | μ {f | t ∈ leftJumpSet f} ≠ 0}` abzählbar) und darauf `SkorokhodSpace.exists_countable_dense_continuity`. **Das vermutete Fubini-Argument über die Sprunghöhen wird nicht gebraucht**, und es wäre auch zu schwach gewesen: es gibt eine Nullmenge, keine abzählbare. Getragen wird die Aussage von `IsCadlag.finite_largeLeftJumpSet_inter` und der Stetigkeit von oben — `SkorokhodSpace.finite_setOf_le_measure_largeLeftJump`. Die Dichtheit des Komplements ist Baire und verlangt vom Index **nichts über das Bündel von Meilenstein 1 hinaus**: ein isolierter Punkt trägt keinen Sprung, weil dort `𝓝[<] t = ⊥` ist und der linke Grenzwert der Wert |
+| `fact:Dcountable` | 4 | EK, Lemma 3.7.7 | Roadmap | SkorokhodSpace M8, `SkorokhodSpace.exists_countable_dense_continuity`; Mathlib hat **den Raum** nicht — das *Prädikat* aber seit `#43352` sehr wohl, `Mathlib/Topology/Order/Cadlag.lean` mit `IsCadlag`/`IsCaglad` als Strukturen und 24 Deklarationen auf 196 Zeilen (geprüft 2026-09-19 gegen `94ef6b89544`). Die frühere Fassung dieser Zeile sagte „weder `cadlag` noch den Raum" und war damit zur Hälfte falsch; die Roadmap selbst ist auf Stand und schreibt Meilenstein 2 seit dem 2026-09-18 ausdrücklich gegen die Bibliotheksfassung. Der Unterbau ist seit dem 2026-09-07, fünftem Lauf, bewiesen und geht durch `lake env lean`: `countable_leftJumpSet` — die Sprungmenge **einer** càdlàg-Abbildung ist abzählbar — samt `IsCadlag.continuousAt_iff_notMem_leftJumpSet`, die „Stetigkeitsstelle" und „nicht in `leftJumpSet`" identifiziert (Meilenstein 2). Die Fassung für **ein Maß** statt für einen Pfad steht seit dem 2026-09-18, zwölftem Lauf, und geht durch `lake env lean`: `SkorokhodSpace.countable_setOf_measure_leftJump_ne_zero` (für jedes endliche `μ` ist `{t | μ {f | t ∈ leftJumpSet f} ≠ 0}` abzählbar) und darauf `SkorokhodSpace.exists_countable_dense_continuity`. **Das vermutete Fubini-Argument über die Sprunghöhen wird nicht gebraucht**, und es wäre auch zu schwach gewesen: es gibt eine Nullmenge, keine abzählbare. Getragen wird die Aussage von `IsCadlag.finite_largeLeftJumpSet_inter` und der Stetigkeit von oben — `SkorokhodSpace.finite_setOf_le_measure_largeLeftJump`. Die Dichtheit des Komplements ist Baire und verlangt vom Index **nichts über das Bündel von Meilenstein 1 hinaus**: ein isolierter Punkt trägt keinen Sprung, weil dort `𝓝[<] t = ⊥` ist und der linke Grenzwert der Wert |
 | `fact:monotoneclass` | 4 | Monotone class theorem; EK, Appendix 4 | Roadmap | WeakConvergence M5, `induction_on_mulSystem` — dort neu angelegt; Mathlib hat nur die Mengenfassung, und sie heißt `MeasurableSpace.induction_on_inter` (`MeasureTheory/PiSystem.lean:713`, nicht `MeasureTheory.`). Am 2026-09-06, zweiter Lauf, negativ belegt an `upstream/master` `810b3888` mit den Suchen `monotone class`, `MulSystem`, `generateFromFuns`, `multiplicative system`, `monotone limits`, `bounded monotone convergence`, `functional monotone`, `multiplicative family of functions` — kein einziger Treffer in `Mathlib/`. Der Unterbau ist seither übersetzt: `IsMulSystem`, `indicatorFuns`, `generateFromFuns`, die Brücke `generateFromFuns_indicatorFuns`, das π-System `ioiCells` samt `generateFromFuns_eq_generateFrom_ioiCells` und der erste Beweisschritt `of_tendstoUniformly_of_mono_lim` gehen durch `lake env lean`; seit dem 2026-09-06, dritter Lauf, dazu die algebraische Hälfte des zweiten Schritts — `mul_mem_span_insert_one_of_isMulSystem`, `of_mem_span_insert_one`, `exists_bound_of_mem_span_insert_one`. Seit dem 2026-09-07, achtem Lauf, ist der **zweite Schritt selbst bewiesen**, `of_continuous_comp_of_isMulSystem`: die Stone--Weierstraß-Hälfte der Induktion, über `ContinuousMap.exists_mem_subalgebra_near_continuous_of_isCompact_of_separatesPoints` (`Topology/ContinuousMap/StoneWeierstrass.lean:323`) und einen `AlgHom`-Rückzug in `Submodule.span ℝ (insert 1 K)`. Seit dem 2026-09-07, neuntem Lauf, ist der **Satz selbst bewiesen**: Schritt (iii) als `ioiApprox` samt `of_indicator_mem_ioiCells` und `of_indicator_of_measurable` (die Rampen gemeinsam als *eine* stetige Funktion, weil `P` nicht multiplikationsabgeschlossen ist), Schritt (iv) als `of_simpleFunc` und `of_nonneg_of_measurable` (der Umweg über `ℝ≥0∞` ist das einzige, was die Approximation wachsend macht — `SimpleFunc.approxOn` gibt keine Monotonie), und `induction_on_mulSystem` selbst als die Verschiebung `f = (f + C) + (-C)`. Alle drei Folgerungen tragen ebenfalls Beweise: `ext_of_forall_integral_eq_of_isMulSystem`, `integral_mul_eq_zero_of_isMulSystem` und `condExp_eq_of_forall_integral_mul_eq`. Der Kern von Meilenstein 5 ist damit vollständig; was `fact:monotoneclass` noch trennt, ist kein Beweis mehr, sondern die Übernahme nach Mathlib. Alles durch `lake env lean` gegen v4.33.1 |
 | `fact:cmt` | 3 | Continuous mapping theorem; EK, Corollary 3.1.9 and Co | Roadmap | WeakConvergence M2 — der stetige Fall ist Mathlib in **beiden** Fassungen, für Maße als `FiniteMeasure.tendsto_map_of_tendsto_of_continuous` und für Zufallsvariablen als `MeasureTheory.TendstoInDistribution.continuous_comp` (`MeasureTheory/Function/ConvergenceInDistribution.lean:136`, am 2026-09-01, fünfter Lauf, gefunden); die f.ü.-stetige Fassung fehlt in beiden. M2 steht auf „separabel metrisch", und das ist richtig: EK Cor. 3.1.9 verlangt nicht mehr (am Scan geprüft, 2026-08-31). **Seit dem 2026-09-08, erster Lauf, ist die f.ü.-stetige Fassung bewiesen**: `tendsto_of_measure_setOf_not_continuousAt_eq_zero` geht durch `lake env lean` gegen v4.33.1 und hängt nur an `propext`, `Classical.choice`, `Quot.sound`. Der Beweis ist Portmanteau auf beiden Seiten — `closure (h ⁻¹' F) ⊆ h ⁻¹' F ∪ {x | ¬ ContinuousAt h x}` — und braucht **weniger als „separabel metrisch"**: auf der Quelle `[OpensMeasurableSpace E] [HasOuterApproxClosed E]`, auf dem Ziel `[TopologicalSpace E'] [OpensMeasurableSpace E']` ohne jede Metrik, und keine Separabilität. Die Bildmaße treten als Daten mit ihren definierenden Gleichungen auf, nicht über `ProbabilityMeasure.map` — das ist die eine Konstruktion, deren Signatur sich zwischen v4.33.1 und `upstream/master` unterscheidet, und so elaboriert **eine** Aussage gegen beide; die verpackte Fassung `tendsto_map_of_measure_setOf_continuousAt_eq_one` ist diese Aussage instanziiert und trägt ihr `sorry` allein aus diesem Versionsgrund. **Am 2026-09-08, elfter Lauf, ist belegt, daß `fact:cmt` nirgends in nicht-polnischer Allgemeinheit gebraucht wird**, entgegen dem zweiten Absatz von `rem:MZcost`: `set:abstract` (`:2324`) verlangt unter (E3) für den Pfadraum $F$ ausdrücklich eine **polnische** Topologie, `thm:absconv` (`:8393`) ist mit (T0)+(E3) annotiert, `thm:absconvaug` arbeitet auf $F\times G$ mit $G$ polnisch, und `def:weakstrong` (`:9169`) sagt „let $F$ be Polish"; der einzige nicht-polnische Pfadraum des Manuskripts ist $\DE$ unter der Pseudopfad-Topologie, und dort benutzt der Beweis von `thm:MZconv` (`:9314`--`:9400`) **kein** `fact:cmt`, sondern (C1$'$) aus `rem:absconvtopfree`, das gar keine Topologie verlangt — er sagt es selbst („it is verified not by a continuous mapping theorem but by exhibiting the convergence on a common space"). Was der $M_E$-Weg an CMT braucht, ist allein die triviale Hälfte für **überall stetige** Abbildungen, und die hat Mathlib ohne jede Metrik. **Am 2026-09-17, einundzwanzigster Lauf, wird die f.ü.-stetige Fassung zum ersten Mal verbraucht**: `mpSolution_of_tendsto_of_pContinuous` und `mpSolution_of_tendsto_augmented` (MP M10) ruhen auf `MeasureTheory.TendstoInDistribution.continuousAt_comp` und auf nichts sonst; der Fact ist damit nicht nur abgedeckt, sondern getragen. **Der zweite Verbraucher steht seit dem 2026-09-18, dreizehntem Lauf**: `SkorokhodSpace.tendsto_finiteDimensional_of_tendsto` und die beiden Fassungen für Zufallsvariablen darunter (`fact:fddconv` (a)) ruhen auf beiden Fassungen der f.ü.-stetigen Abbildung, und zwar so, daß der Satz von der Skorokhod-Darstellung dort **nicht** mehr gebraucht wird — die f.ü.-Fassung ersetzt ihn |
 | `fact:kolmogorov` | 3 | Kolmogorov extension; EK, Theorem 4.1.1; eqref{T0} + e | Roadmap | KolmogorovExtension M2 — Gerüst weitgehend in Mathlib, es fehlen σ-Subadditivität und `projectiveLimit` |
@@ -40001,3 +40001,208 @@ veraltete Angabe stecken; der Lauf sagt nur, daß er sie nicht gesehen hat.
    Lauf aufgehört hat: `SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq`.
    Der Vorschlag steht in der Roadmap ausgeschrieben und ist von diesem Lauf
    nicht berührt.
+
+### 2026-09-19, zweiter Lauf des Tages — die Vermutung des Vorlaufs über die 66 ungepaarten Fundstellen ist widerlegt: es sind nicht die anonymen Instanzen, es sind sechs verschobene Zeilen; und die erste maschinelle Doppelungsprüfung findet zwei Deklarationen, die Mathlib schon hat
+
+Dieser Lauf hat Vorschlag 2 und Vorschlag 1 des Vorlaufs bearbeitet, in dieser
+Reihenfolge, weil Vorschlag 2 abschließbar war und Vorschlag 1 nicht.
+
+#### Vorschlag 2 — die 66 ungepaarten Fundstellen, und warum die Vermutung falsch war
+
+Der Vorlauf hatte sie so erklärt:
+
+> `mathlib_index.py` erfaßt eine `instance` ohne Namen gar nicht, und genau
+> darauf zeigen die meisten dieser Zitate.
+
+**Das stimmt nicht.** Von den 66 sind **sieben** anonyme Instanzen. Die erste
+Probe widerlegte die Vermutung sofort: `BorelSpace/Basic.lean:717` ist
+`instance NNReal.measurableSpace`, ein **benannter** Satz — ungepaart nur, weil
+der Roadmaptext ihn *beschreibt* („`ℝ≥0` hat eine `MeasurableSpace`-Instanz")
+statt ihn zu nennen. Ungepaart heißt also nicht „nicht erfaßt", sondern
+„nicht benannt", und das ist kein Mangel des Index.
+
+Gebaut wurde deshalb nicht der vorgeschlagene zweite Index, sondern die Frage
+umgedreht: **was steht an der zitierten Zeile?** `check_cited_lines.py` schlägt
+sie jetzt im Quelltext des angehefteten Commits nach und ordnet jede Fundstelle
+einer Art zu. Der Reihe nach fielen dabei drei Klassen heraus, die wie „mitten
+im Rumpf" aussehen und keine sind:
+
+* die **mehrzeilige Signatur** — wer `(hf : Integrable f μ)` zitiert, zitiert
+  den Satz und nicht seinen Beweis;
+* das **`variable`-Bündel**, dessen Fortsetzungszeile die zitierte
+  Instanzvoraussetzung trägt (`StandardBorel.lean:77`);
+* die **Modifikatorzeile** (`noncomputable` allein auf einer Zeile), die die
+  erste Zeile ihrer Deklaration ist.
+
+Der Kopf wird dafür **am Quelltext** gesucht und nicht im Index — der Index
+kennt weder anonyme Instanzen noch `variable`, und genau deren
+Fortsetzungszeilen werden zitiert.
+
+| | vorher | nachher |
+| --- | ---: | ---: |
+| ungepaart | 66 | 58 |
+| davon „mitten im Rumpf" | 21 | **0** |
+
+#### Die sechs verschobenen Zeilen
+
+Übrig blieben nach der Klassifikation zwölf Fundstellen mitten in einem Rumpf.
+**Sechs davon waren falsch**, und alle sechs sind berichtigt und gegen
+`94ef6b89544` einzeln am Quelltext nachgesehen:
+
+| Stelle | zitiert | richtig | was an der zitierten Zeile stand |
+| --- | ---: | ---: | --- |
+| `MartingaleProblems/README.md:4838` | `Polish/Basic.lean:157` | **159** | `inferInstance`, der Rumpf von `pi_countable` |
+| `SkorokhodSpace/README.md:198` | `Order/Compact.lean:148` | **146** | `have : Nonempty s := …` |
+| `SkorokhodSpace/README.md:198` | `` `:160` `` | **158** | der Beweisrumpf von `exists_isGreatest` |
+| `SkorokhodSpace/Suggested.lean:11201` | `Equicontinuity.lean:252` | **254** | der `simp`-Aufruf in `equicontinuousAt_finite` |
+| `WeakConvergence/README.md:1248` | `ProductMeasure.lean:358` | **355** | der Rumpf von `infinitePi` |
+| `WeakConvergence/README.md:2246` | `LpSpace/Complete.lean:290` | **387** | ein `rw` in `ae_tendsto_of_cauchy_eLpNorm'` |
+
+Die letzte ist die lehrreichste: zitiert war „die `Lᵖ`-Vollständigkeit", und
+Zeile 290 steht mitten im Beweis eines Hilfssatzes. Die Vollständigkeit ist
+`MeasureTheory.Lp.instCompleteSpace` (`:387`); der Name steht jetzt daneben,
+damit die Angabe nicht wieder bloß an einer Zahl hängt.
+
+**Und eine siebte Berichtigung, die keine verschobene Zeile ist, sondern eine
+unlesbare Angabe.** In `WeakConvergence/Suggested.lean:508` stand ein bloßes
+`` `:72` `` für `..._of_polish`. Ein bloßes `` `:n` `` erbt die Datei der
+vorigen Fundstelle — das war `MulExpNegMulSqIntegral.lean:161`, gemeint war
+aber `MeasureTheory/Measure/FiniteMeasureExt.lean:72`. Der Prüfer las es wie
+ein Leser es läse, nämlich falsch. Datei und Name stehen jetzt ausgeschrieben.
+
+#### Zwei Löcher im Index, beim Nachsehen gefunden
+
+* **`irreducible_def` war kein Deklarationsschlüsselwort.** 71 Mathlib-Dateien
+  benutzen es; dem Index fehlten dadurch **120** Namen, darunter
+  `MeasureTheory.Measure.condKernel`
+  (`Probability/Kernel/Disintegration/StandardBorel.lean:362`) — ein Name, den
+  unsere Roadmaps an zwei Stellen zitieren. Der Index gegen `94ef6b89544`
+  wächst damit von 240 158 auf **240 278**.
+* Nach dieser Ergänzung meldete der Prüfer vier „verschobene" Zeilen, die
+  keine sind: `condKernel` wird jetzt gefunden, und die Roadmaps zitieren
+  seine Modifikatorzeile (`:361`) und sein `variable`-Bündel (`:77`). Beides
+  ist richtig, und `deliberate()` erkennt es jetzt — dieselbe Kopfsuche wie in
+  der Klassifikation, einmal geschrieben und von beiden benutzt.
+
+**Stand danach** (`scripts/check_cited_lines.py` gegen `94ef6b89544`):
+260 geprüfte Fundstellen, **260 stimmen**, 0 verschoben, 0 tot, 58 ungepaart
+und davon **keine** mehr im Rumpf einer Deklaration. Der Bericht liegt in
+`scripts/_citations/cited_lines.md`.
+
+#### Vorschlag 1 — die Doppelungsprüfung, und warum sie anders gebaut ist als vorgeschlagen
+
+Der Vorlauf schlug `git diff --stat v4.33.1..upstream/master` vor. **Das läuft
+nicht:** in `~/Code/lean/mathlib4` gibt es kein Tag `v4.33.1`, und der Commit
+des Release (`0df444a360e`, aus `~/Code/lean/journal/.lake/packages/mathlib`)
+ist dort nicht vorhanden. Der Weg wäre also erst ein `git fetch` und dann ein
+Diff über Monate von Bibliotheksgeschichte.
+
+Statt dessen ist der Befund des vierundzwanzigsten Laufs zum Anlaß genommen
+worden. Jene fünf Doppelungen wurden nicht *gefunden*, sondern standen als
+Bemerkung in `SkorokhodSpace/Suggested.lean`, die irgendein Lauf hineingeschrieben
+hatte. Das ist Zufall und keine Methode. `scripts/check_duplicates.py` ersetzt
+ihn: es vergleicht den **letzten Namensbestandteil** jeder unserer
+Deklarationen mit dem Index von `master`. Mathlib benennt systematisch, also
+ist das ein brauchbarer Anhaltspunkt — und ausdrücklich nicht mehr: das Skript
+entscheidet nichts, es legt die Paare nebeneinander. Dieselbe Aussage unter
+einem **anderen** Namen findet es nicht, und es behauptet auch nicht, das zu
+können.
+
+**2 275 eigene Deklarationen, 38 Treffer, 53 als zu generisch übergangen**
+(`scripts/_citations/duplicates.md`). Von den 38 sind die meisten
+Namensgleichheiten über verschiedene Gegenstände (`TimeChange.norm_one` gegen
+`CStarRing.norm_one`). **Zwei sind echt:**
+
+* **`integrableOn_of_bounded`** (`MartingaleProblems/Suggested.lean:899`) gegen
+  `MeasureTheory.Measure.integrableOn_of_bounded`
+  (`MeasureTheory/Integral/IntegrableOn.lean:713`). Die Bibliotheksfassung ist
+  in **allen drei** Voraussetzungen schwächer: beliebiger normierter Zielraum
+  statt `[RCLike 𝕜]`, `AEStronglyMeasurable` statt `Measurable`, und die
+  Schranke nur `∀ᵐ a ∂(μ.restrict s)` statt überall. Unsere ist ein Spezialfall
+  und gehört gestrichen.
+* **`sum_smul_dirac_singleton`** (`WeakConvergence/Suggested.lean:3612`) gegen
+  `MeasureTheory.Measure.sum_smul_dirac_singleton`
+  (`MeasureTheory/Measure/Dirac/Basic.lean:92`) — **derselbe Name und dieselbe
+  Aussage**, bei uns mit expliziten statt impliziten Argumenten. Eine reine
+  Doppelung.
+
+**Gestrichen sind sie nicht**, und das ist eine Entscheidung und kein
+Liegenlassen: beide werden benutzt, das Streichen verlangt ein Umhängen der
+Benutzungsstellen, und die Regel „wer Lean schreibt, übersetzt es auch"
+verlangt danach eine volle Neuübersetzung gegen `master`, die dieser Lauf im
+Zeitbudget nicht mehr belegen konnte. Sie sind der erste Vorschlag unten.
+
+**Ein dritter Kandidat ist geprüft und *keine* Doppelung**, und das gehört
+ebenso in den Bericht: `Clock.IsProgressive`
+(`MartingaleProblems/Suggested.lean:880`) gegen `MeasureTheory.IsProgressive`
+(`Probability/Process/Adapted.lean:192`). Die Bibliotheksfassung mißt über
+`Set.Iic i` als Untertyp; unsere quantifiziert über eine Fortsetzung `Z`, die
+bis `t` mit `X` übereinstimmt, und mißt gegen `Q.measurableSpace` — das Feld
+einer `Clock` und keine Instanz. Die beiden teilen den Namen und nichts sonst.
+**Die Roadmap sagt das an keiner Stelle**, und sie sollte es sagen, wie sie es
+für `MeasureTheory.Filtration.IsRightContinuous` gegenüber `IsRightContinuous`
+schon tut.
+
+#### Ein Negativbefund des Inventars, der falsch geworden war
+
+Die Zeile zu `fact:Dcountable` sagte seit dem 2026-09-07: „Mathlib hat weder
+`cadlag` noch den Raum." Die zweite Hälfte stimmt, die **erste nicht mehr**:
+seit `#43352` trägt die Bibliothek `Mathlib/Topology/Order/Cadlag.lean`
+(Rémy Degenne u.a., Apache-2.0), 196 Zeilen, 24 Deklarationen, mit `IsCadlag`
+und `IsCaglad` als Strukturen. Die Zeile ist berichtigt.
+
+**Der Roadmap ist nichts vorzuwerfen**: `SkorokhodSpace/README.md` nennt
+`#43352` in seinem dritten Satz und schreibt Meilenstein 2 seit dem 2026-09-18
+ausdrücklich gegen die Bibliotheksfassung. Falsch war allein das Inventar —
+und das ist der Grund, warum es den Befund gab: das Inventar trägt eine
+Negativaussage von Hand, und niemand prüft sie nach, wenn die Roadmap daneben
+schon weiterweiß.
+
+#### Geprüft
+
+* `scripts/check_cited_lines.py` gegen `94ef6b89544`: 260/260, 0 verschoben,
+  0 tot, 0 ungepaarte Fundstelle im Rumpf, rc 0.
+* `scripts/check_duplicates.py` gegen denselben Commit: 2 275 geprüft,
+  38 Treffer, Bericht in `scripts/_citations/duplicates.md`.
+* Alle sechs berichtigten Zeilennummern und die drei Doppelungskandidaten
+  **einzeln** am Quelltext von `94ef6b89544` nachgesehen, nicht aus dem
+  Prüferbericht übernommen.
+* `scripts/check_master.py` nach den Eingriffen, ein Durchlauf und nicht
+  nebenläufig: **0 Fehler, 0 `sorry`, 0 veraltete Namen** in allen drei
+  Dateien, rc 0 (Warnungen 18 / 36 / 106, unverändert). Die Eingriffe sind
+  sämtlich Kommentare und Doc-Kommentare, und genau deshalb ist der Durchlauf
+  keine Formalie: der vierundzwanzigste Lauf hat gezeigt, daß eine
+  Kommentaränderung eine Zeichenkette treffen kann, die Lean liest.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die beiden Doppelungen streichen.**
+   *Was:* `integrableOn_of_bounded` und `sum_smul_dirac_singleton` entfernen
+   und ihre Benutzungsstellen auf `MeasureTheory.Measure.integrableOn_of_bounded`
+   bzw. `MeasureTheory.Measure.sum_smul_dirac_singleton` umhängen. Beim ersten
+   ist dabei zu beachten, daß die Bibliotheksfassung **schwächere**
+   Voraussetzungen hat: der Aufrufer liefert `Measurable f` und eine
+   punktweise Schranke, gebraucht werden nur `AEStronglyMeasurable f μ` und
+   die f.ü.-Fassung — es ist also abzuschwächen und nichts nachzuweisen.
+   *Worauf es ruht:* auf `scripts/_citations/duplicates.md` und den beiden
+   oben am Quelltext nachgesehenen Signaturen.
+   *Warum jetzt:* `CONTRIBUTING.md` schließt gerade das aus, was hier steht,
+   und es sind zwei Deklarationen — die Gelegenheit, die Regel einzuhalten,
+   ist so billig wie nie wieder.
+
+2. **`Clock.IsProgressive` gegen `MeasureTheory.IsProgressive` abgrenzen.**
+   *Was:* einen Absatz in `MartingaleProblems/README.md`, der sagt, daß die
+   beiden Prädikate den Namen teilen und nicht die Aussage, und warum die
+   Bibliotheksfassung hier nicht trägt (`Q.measurableSpace` ist ein Feld und
+   keine Instanz, also greift `Set.Iic i` als Untertyp nicht).
+   *Worauf es ruht:* auf dem Vergleich oben.
+   *Warum jetzt:* das Inventar führt vier eigene Fehler auf genau dieses
+   Muster zurück — nach der Vokabel gesucht statt nach der Aussage —, und
+   `IsStronglyProgressive`/`ProgMeasurable` war einer davon. Eine
+   Namensgleichheit, die stehenbleibt, ohne erklärt zu sein, ist die Falle
+   für den nächsten Lauf.
+
+3. **Erst danach wieder Mathematik**, unverändert dort, wo der einundzwanzigste
+   Lauf des 2026-09-18 aufgehört hat:
+   `SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq`. Dieser Lauf
+   hat den Vorschlag nicht berührt; er steht in der Roadmap ausgeschrieben.

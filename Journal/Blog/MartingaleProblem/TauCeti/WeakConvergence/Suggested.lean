@@ -505,7 +505,9 @@ that occurs inside its proof
 
 The bundle is the weaker of Mathlib's two: `PseudoEMetricSpace` with
 `CompleteSpace` and `SecondCountableTopology`, not `PolishSpace`.  Mathlib's
-`..._of_polish` (`:72`) is one line of `upgradeIsCompletelyMetrizable` away from
+`ext_of_forall_mem_subalgebra_integral_eq_of_polish`
+(`MeasureTheory/Measure/FiniteMeasureExt.lean:72`) is one line of
+`upgradeIsCompletelyMetrizable` away from
 the one used here, so nothing is lost, and the metric may be a pseudometric --
 the separation of `E` never enters, only the separation of the algebra. -/
 theorem IsSeparating.of_subalgebra [PseudoEMetricSpace E] [BorelSpace E] [CompleteSpace E]

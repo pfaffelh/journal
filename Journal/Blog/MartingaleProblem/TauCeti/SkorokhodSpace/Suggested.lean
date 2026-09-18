@@ -11198,7 +11198,7 @@ set itself.
 
 Stating it on `EquicontinuousWithinAt` and not only in the `ε`-`δ` form above is
 what makes it comparable with the positive results: `equicontinuousWithinAt_finite`
-(`Mathlib/Topology/UniformSpace/Equicontinuity.lean:252`) gives the property for
+(`Mathlib/Topology/UniformSpace/Equicontinuity.lean:254`) gives the property for
 every finite family of paths, and the theorem below gives it for every finite
 subset of `D(ℝ, E)`.  Between the two stands compactness, and it does not
 suffice. -/
