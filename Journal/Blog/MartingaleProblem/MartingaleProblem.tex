@@ -777,6 +777,33 @@ produces a measure on boxes.
   Example~\ref{ex:clocks}(i) --- which is why the choice is invisible in \EK{}
   and \CPS{}, and why neither source has to make it.
 
+  \emph{Which one to reach for.}  The two are not on an equal footing, and it is
+  worth saying so once rather than leaving it to be assembled from this remark
+  and the tables of Section~\ref{ssec:bundletable}.
+
+  \begin{itemize}
+  \item $\iota = \mathrm{o}$ is the \textbf{working convention}.  It is the only
+    one that serves every section, and Section~\ref{sec:cadlag} forces it: there
+    an atom at $t$ \emph{must} lie inside the compensator up to $t$.  A reader
+    who wants one convention should take this one.
+  \item $\iota = \mathrm{p}$ is the \textbf{canonical convention}.  It is the one
+    that makes the compensator predictable --- the property that singles it out
+    in the Doob--Meyer theory --- and on $\T = \N_0$ with counting measure it is
+    the one that reproduces the Doob decomposition, $A = P - I$.  It is also the
+    convention in which the duality proofs of Section~\ref{sec:duality} are
+    shortest.
+  \end{itemize}
+
+  What is \emph{not} the case is that $\iota = \mathrm{p}$ is needed anywhere: no
+  entry of the duality table is bold, and
+  Proposition~\ref{prop:atomicdual} is stated for either $\iota$.  Everything
+  could be written in $\iota = \mathrm{o}$ at the price of longer proofs in
+  Section~\ref{sec:duality} --- where the chain identity then telescopes to
+  $\gamma(t,0) - \gamma(0,t)$ rather than to $0$ --- and of a discrete instance in
+  which the Doob decomposition is no longer visible.  That this price is payable
+  at all is due to Proposition~\ref{prop:atomicdual}; before it, the choice was
+  not free.
+
   We carry both.  The reason is that neither serves the whole manuscript:
   Theorem~\ref{thm:absreg} holds only for $\iota = \mathrm{o}$, because an atom of
   $q$ at $t$ must lie inside the compensator up to $t$ for (R3) to hold, and it is
