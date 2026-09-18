@@ -2406,6 +2406,138 @@ state the second, as Theorem 3.9.1, for a complete separable `E` as well.
   the statement the interchange of the two limits is to be made in: the bad
   times cannot be made empty — that is the refutation above — and they can be
   made of small measure, uniformly.
+* `SkorokhodSpace.measurable_uncurry_eval` — stage (A), **proved 2026-09-18**.
+  Evaluation is measurable in the pair, `Measurable fun p : ℝ × D(ℝ, E) ↦ p.2 p.1`,
+  and not merely in the path. The approximation is the dyadic one from the
+  right, `⌈t 2ⁿ⌉ / 2ⁿ`: it has countable range, so each approximant is
+  measurable by `measurable_from_prod_countable_left` over
+  `SkorokhodSpace.measurable_eval`, the paths being right continuous the
+  approximants converge pointwise, and `measurable_of_tendsto_metrizable`
+  closes it.
+
+  **This is where the metrizability of `E` is spent**, and it cannot be
+  dropped: a pointwise limit of measurable maps into a bare measurable space
+  need not be measurable. Metrizability and separability, that is: the
+  completeness in the `[PolishSpace E]` of the signature is the one that comes
+  with the Borel σ-algebra on `D(ι, E)` and is spent by no step, which is why
+  this item and the five below it are stage (A) like their neighbours. It is the
+  same boundary that
+  `measurable_uncurry_min_of_rightContinuous` records in
+  **MartingaleProblems**, where the `E` valued process is deliberately not
+  claimed to be jointly measurable over an arbitrary σ-algebra; here `E` is
+  Polish and the claim is available. Without it no statement below can be
+  integrated over the time variable.
+* `SkorokhodSpace.measurableSet_setOf_exists_edist_lt` — stage (A), **proved
+  2026-09-18**. The event that the right oscillation over `[t, t + δ')` exceeds
+  `a` is measurable in the pair `(t, f)`. The existential over a real time is
+  replaced by a countable one over the rationals, and that replacement **is**
+  the right continuity of the paths: at `s = t` the distance is `0`, so a
+  witness lies strictly to the right of `t`, and the values just to the right of
+  a witness are again witnesses. `δ'` is again not assumed positive.
+* `SkorokhodSpace.lintegral_measure_setOf_exists_edist_lt_le` — stage (A),
+  **proved 2026-09-18**. For a law `μ` carried by a `K` whose supremum of based
+  moduli at `δ` is below `c`, the integral over the window of
+  `μ {f | ∃ s ∈ [t, t + δ'), 4 c < edist (f s) (f t)}` is at most
+  `(⌈2 (M + 1) / δ⌉ + 1) δ'`.
+
+  This is Tonelli, in the form `Measure.prod_apply` and
+  `Measure.prod_apply_symm`: the integral is the product measure of the pair
+  event, and read the other way round it is the average over paths of the
+  Lebesgue measure of that path's bad times, which
+  `forall_exists_measure_le_forall_edist_le` bounds. The bound survives the
+  average because the **length** of the subdivision is bounded in `M` and `δ`
+  alone.
+* `SkorokhodSpace.mul_volume_setOf_le_measure_setOf_exists_edist_lt` — stage (A),
+  **proved 2026-09-18**. Markov on the times: `β` times the Lebesgue measure of
+  the times of the window at which the law charges a large right oscillation
+  with probability at least `β` is at most the same constant. Written without a
+  division, so that it asks nothing of `β`.
+* `exists_mem_Ico_lt_of_setLIntegral_le` — stage (A), **proved 2026-09-18**. If
+  `∫⁻ t in [-M, M), F t ≤ C` and `C < β * (2 M)` then some `t` of the window has
+  `F t < β`. It is Markov read by contradiction, it mentions neither the path
+  space nor a law, and it is the step that turns a statement about the measure
+  of the bad times into a statement about **one** time.
+* `SkorokhodSpace.exists_time_measure_setOf_exists_edist_lt` — stage (A),
+  **proved 2026-09-18**. The time itself, for one law: under the hypothesis
+  above and for `δ'` small enough that `(⌈2 (M + 1) / δ⌉ + 1) δ' < β * (2 M)`
+  there is a `t ∈ [-M, M)` at which the law charges a large right oscillation
+  with probability less than `β`. This is what
+  `exists_isCompact_forall_exists_one_le_dist` leaves open: not every time is
+  good, and one is.
+* `SkorokhodSpace.exists_time_liminf_measure_setOf_exists_edist_lt` — stage (A),
+  **proved 2026-09-18**. The time for a whole **sequence** of laws, all carried
+  by the same `K`, and the conclusion carries a `liminf`:
+  `liminf (fun n ↦ μ n {f | ∃ s ∈ [t, t + δ'), 4 c < edist (f s) (f t)}) < β`.
+  The bound of the item above holds for every member with the same constants,
+  and Fatou's lemma `lintegral_liminf_le` carries it to the `liminf` of the
+  integrands.
+
+  **The `liminf` is not a weakening that a later proof may repair.** A time good
+  for *every* member of the sequence at once need not exist: each law's bad
+  times are of small measure, and their union over the sequence may cover the
+  window. The inequality that would be needed is `∫ liminf`'s mirror,
+  `∫ limsup ≤ limsup ∫`, and it is false; Mathlib's reverse Fatou
+  `limsup_lintegral_le` states the converse, `limsup ∫ ≤ ∫ limsup`, and is of no
+  use here. What the interchange of the two limits may spend is therefore a time
+  good along a **subsequence** — which is what an argument comparing
+  subsequential limits has at its disposal in any case.
+* `SkorokhodSpace.dist_integral_eval_le_of_forall_dist_le` — stage (A),
+  **proved 2026-09-18**. The passage from the bad times to the one dimensional
+  distributions. For a law `μ` carried by `K`, a bounded continuous `F : E →ᵇ ℝ`,
+  a time `t` and a time `t'` of the span `[t, t + δ')`:
+  `|∫ F (f t') dμ − ∫ F (f t) dμ| ≤ ε + 2 ‖F‖ · μ (bad t)`,
+  with `bad t` the set of the item above and `ε` a modulus of `F` at the scale
+  `a`, asked only of a set `S` holding the values of the paths of `K` over the
+  span.
+
+  The proof decomposes `∫ |F (f t') − F (f t)|` over `bad t` and its complement,
+  by `integral_mono_ae` against
+  `fun f ↦ ε + (bad t).indicator (fun _ ↦ 2 ‖F‖) f`. Off `bad t` the witness is
+  `t'` itself: were `edist (f t') (f t)` above `a`, the path would be in
+  `bad t`. Both halves are spent, and neither can be dropped — the bad set
+  cannot be made empty, by
+  `SkorokhodSpace.exists_isCompact_forall_exists_one_le_dist`, and its measure
+  alone would not control a test function of unbounded oscillation.
+* `exists_forall_dist_le_of_isCompact_closure` — stage (A), **proved
+  2026-09-18**. A modulus on a set with compact closure: for `S ⊆ E` with
+  `IsCompact (closure S)`, a bounded continuous `F` and `ε > 0` there is a scale
+  `a > 0` at which `ε` is a modulus of `F` on `S`. It is
+  `IsCompact.uniformContinuousOn_of_continuous` and nothing else, and it names
+  neither the path space nor a law.
+* `SkorokhodSpace.exists_time_forall_dist_integral_eval_le` and
+  `SkorokhodSpace.exists_time_frequently_dist_integral_eval_le` — stage (A),
+  **proved 2026-09-18**. The two times above read through that estimate: at the
+  time of the window, and for every time of the span `δ'` to its right, the
+  integral of `F` moves by at most `ε + 2 ‖F‖ β`. For a sequence of laws the
+  conclusion is again along a **subsequence**, `frequently_lt_of_liminf_lt`
+  reading the `liminf`. The window of the values is `[-M, M + δ']` and not
+  `[-M, M]`, the time being produced in `[-M, M)` and the span reaching beyond
+  it.
+* `SkorokhodSpace.exists_time_forall_dist_integral_eval_le_of_isCompact_closure`
+  — stage (A), **proved 2026-09-18**. The modulus discharged, and the statement
+  in the form the interchange wants it: for `A ⊆ D(ℝ, E)` with compact closure,
+  a law `μ` with `μ Aᶜ = 0`, a bounded continuous `F` and `ε > 0`, there are a
+  span `δ' > 0` and a time `t ∈ [-m, m)` with
+  `|∫ F (f t') dμ − ∫ F (f t) dμ| ≤ ε` for every `t' ∈ [t, t + δ')`.
+
+  **Nothing is asked of `F` beyond boundedness and continuity**, and that
+  settles a question the two items above leave open. A bounded continuous
+  function on a metric space need not be uniformly continuous, so a modulus is
+  not to be had from `F` alone; it is had from the paths. The first conjunct of
+  `SkorokhodSpace.isCompact_closure_iff` says that the values of a relatively
+  compact set of paths over a bounded window lie in a set with compact closure,
+  and a continuous function is uniformly continuous there. So the interchange is
+  a statement of stage (A) with the test class the milestone already uses, and
+  the completeness of `E` enters through that criterion alone.
+
+  The four constants are chosen in the order the proof forces, and the order is
+  not free: the scale `a` of the modulus from the compactness of the values over
+  `[-(m+1), m+1]`; then the radius `δ` of the subdivision, so that the modulus of
+  the paths stays below `a / 4`; then the level `β = ε / (4 (‖F‖ + 1))`, so that
+  the bad set costs at most `ε / 2`; and the span `δ'` last, because the bound on
+  the bad times is `(⌈2 (m + 1) / δ⌉ + 1) δ'` and only `δ'` is still free. The
+  two windows differ — `m` for the modulus and `m + 1` for the values — since the
+  span reaches `δ' ≤ 1` beyond the window in which the time is produced.
 * `SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional` — stage (A).
   The same conclusion for a tight family, from the previous item and
   `isCompact_closure_of_isTightMeasureSet`.
