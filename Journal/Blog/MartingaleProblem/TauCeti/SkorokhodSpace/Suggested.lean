@@ -13,6 +13,7 @@ import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Topology.Algebra.InfiniteSum.Real
 import Mathlib.Analysis.SpecialFunctions.ImproperIntegrals
+import Mathlib.Data.Rat.Denumerable
 
 /-!
 # Suggested signatures for the Skorokhod space roadmap
@@ -10999,3 +11000,145 @@ theorem SkorokhodSpace.dirac_step_setOf_leftLim_eq_one :
       if_pos le_rfl]
     norm_num
   rw [Measure.dirac_apply' _ hms, Set.indicator_of_notMem hne]
+
+/-- **From compactness of a set of measures to compactness of a set of paths.**  A relatively
+compact `S : Set (ProbabilityMeasure D(ℝ, E))` sits, up to mass `ε`, inside a compact set `K` of
+paths, and on `K` the modulus of Milestone 7 tends to `0` uniformly.
+
+This is the ingredient that
+`SkorokhodSpace.tendsto_of_isCompact_closure_of_tendsto_finiteDimensional` spends, and it is not
+`SkorokhodSpace.isCompact_closure_iff` by itself: that criterion speaks of a set of **paths**,
+the theorem hypothesises a set of **measures**, and the step between the two is Prokhorov's
+converse half, `MeasureTheory.isTightMeasureSet_of_isCompact_closure`
+(`Mathlib/MeasureTheory/Measure/Prokhorov.lean:634`).  What that asks of the path space is second
+countability and completeness, and `SkorokhodSpace.instSeparableSpace` and
+`SkorokhodSpace.instCompleteSpace` of Milestone 5 supply both.
+
+The hypotheses on `E` are the weakest under which those two instances fire: second countability
+and completeness of the given metric.  `PolishSpace E` is **not** needed — it is second
+countability together with completeness of *some* compatible metric, and the proof uses the one
+it is handed. -/
+theorem SkorokhodSpace.exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure
+    {E : Type*} [MetricSpace E] [MeasurableSpace E] [BorelSpace E]
+    [SecondCountableTopology E] [CompleteSpace E]
+    {S : Set (ProbabilityMeasure D(ℝ, E))} (hS : IsCompact (closure S))
+    {ε : ℝ≥0∞} (hε : 0 < ε) :
+    ∃ K : Set D(ℝ, E), IsCompact K ∧
+      (∀ m : ℕ, Tendsto (fun δ => ⨆ f ∈ K, SkorokhodSpace.modulusBased (0 : ℝ) (m : ℝ) f δ)
+        (𝓝[>] 0) (𝓝 0)) ∧
+      ∀ μ ∈ S, (μ : Measure D(ℝ, E)) Kᶜ ≤ ε := by
+  have htight := isTightMeasureSet_of_isCompact_closure hS
+  rw [isTightMeasureSet_iff_exists_isCompact_measure_compl_le] at htight
+  obtain ⟨K, hK, hKmu⟩ := htight ε hε
+  refine ⟨K, hK, fun m => ?_, fun μ hμ => hKmu _ ⟨μ, hμ, rfl⟩⟩
+  have hcl : IsCompact (closure K) := by
+    rw [hK.isClosed.closure_eq]
+    exact hK
+  exact ((SkorokhodSpace.isCompact_closure_iff K).1 hcl m).2
+
+/-! ### Milestone 8: the continuity times of a law need not meet a dense set of times
+
+`SkorokhodSpace.tendsto_of_isCompact_closure_of_tendsto_finiteDimensional` compares two families
+of finite dimensional distributions: those of the sequence, which converge along the dense set
+`T` by hypothesis, and those of a subsequential limit `ν`, which converge at the continuity times
+of `ν`.  The comparison happens at the times lying in **both**, and the proof needs those to be
+dense.
+
+This section shows that the density of `T` alone does **not** give it: there is a law on
+`D(ℝ, ℝ)` and a countable dense `T ⊆ ℝ` with `T` disjoint from the continuity times of that law.
+So the step is carried by something else, and the roadmap names it — the uniform control of the
+oscillation of Milestone 7.
+
+What is **not** shown here is that the theorem fails.  The law below is not exhibited as a
+subsequential limit of anything, and the hypotheses of the theorem are not in play; the witness
+speaks about one implication inside a proof, not about the statement.
+-/
+
+/-- **At its own jump time the left limit of `SkorokhodSpace.stepAt x a b` is `b`.**  It is
+constant equal to `b` on a left neighbourhood, which is all `leftLim_eq_of_tendsto` asks; the
+hypothesis `𝓝[<] x ≠ ⊥` is what makes the left limit the honest one rather than the junk value
+`f x` that `Function.leftLim` returns at a bottom element. -/
+theorem SkorokhodSpace.leftLim_stepAt {x : ι} [(𝓝[<] x).NeBot] (a b : E) :
+    Function.leftLim (SkorokhodSpace.stepAt x a b).toFun x = b := by
+  refine leftLim_eq_of_tendsto ?_
+  refine Filter.Tendsto.congr' ?_ (tendsto_const_nhds (x := b))
+  filter_upwards [self_mem_nhdsWithin] with t ht
+  simp only [Set.mem_Iio] at ht
+  rw [SkorokhodSpace.stepAt_apply, if_neg (not_le.2 ht)]
+
+/-- The step at the `n`-th rational, under the enumeration `Denumerable.ofNat ℚ`. -/
+noncomputable def SkorokhodSpace.ratStep (n : ℕ) : D(ℝ, ℝ) :=
+  SkorokhodSpace.stepAt ((Denumerable.ofNat ℚ n : ℚ) : ℝ) 1 0
+
+/-- **A law that jumps at every rational.**  The countable mixture `∑ₙ 2⁻ⁿ⁻¹ δ` of the steps at
+the rationals.
+
+A *single* path with a jump at every rational would do as well and is the classical witness, but
+it costs a càdlàg proof for a uniformly convergent series of steps; the mixture costs nothing
+beyond `SkorokhodSpace.stepAt` of Milestone 5 and a geometric series, and it charges every
+rational with mass `2⁻ⁿ⁻¹ > 0`, which is all the argument asks. -/
+noncomputable def SkorokhodSpace.denseJumpLaw : Measure D(ℝ, ℝ) :=
+  Measure.sum fun n => ((2 : ℝ≥0∞)⁻¹ ^ (n + 1)) • Measure.dirac (SkorokhodSpace.ratStep n)
+
+instance SkorokhodSpace.isProbabilityMeasure_denseJumpLaw :
+    IsProbabilityMeasure SkorokhodSpace.denseJumpLaw := by
+  constructor
+  rw [SkorokhodSpace.denseJumpLaw, Measure.sum_apply _ MeasurableSet.univ]
+  simp only [Measure.smul_apply, measure_univ, smul_eq_mul, mul_one]
+  rw [ENNReal.tsum_geometric_add_one, ENNReal.one_sub_inv_two, inv_inv]
+  exact ENNReal.inv_mul_cancel (by norm_num) (by norm_num)
+
+/-- **At every rational the law charges a jump.**  The set the hypothesis of the three
+convergence theorems asks to have full measure is not merely not of full measure: it misses at
+least the mass `2⁻ᵏ⁻¹` of the one step that jumps there. -/
+theorem SkorokhodSpace.denseJumpLaw_setOf_leftLim_ne_one (r : ℚ) :
+    SkorokhodSpace.denseJumpLaw
+      {f : D(ℝ, ℝ) | Function.leftLim f.toFun (r : ℝ) = f.toFun (r : ℝ)} ≠ 1 := by
+  set t : ℝ := (r : ℝ) with ht
+  set G : Set D(ℝ, ℝ) := {f : D(ℝ, ℝ) | Function.leftLim f.toFun t = f.toFun t} with hG
+  have hcompl : G = {f : D(ℝ, ℝ) | t ∈ leftJumpSet f.toFun}ᶜ := by
+    ext f
+    simp [hG, leftJumpSet]
+  have hms : MeasurableSet G := by
+    rw [hcompl]
+    exact (SkorokhodSpace.measurableSet_leftJump t).compl
+  intro h1
+  have h0 : SkorokhodSpace.denseJumpLaw Gᶜ = 0 := (prob_compl_eq_zero_iff hms).2 h1
+  have hq : Denumerable.ofNat ℚ (Denumerable.eqv ℚ r) = r :=
+    (Denumerable.eqv ℚ).symm_apply_apply r
+  have hstep : SkorokhodSpace.ratStep (Denumerable.eqv ℚ r)
+      = SkorokhodSpace.stepAt t (1 : ℝ) (0 : ℝ) := by
+    rw [SkorokhodSpace.ratStep, hq]
+  have hne : Function.leftLim (SkorokhodSpace.stepAt t (1 : ℝ) (0 : ℝ)).toFun t
+      ≠ (SkorokhodSpace.stepAt t (1 : ℝ) (0 : ℝ)).toFun t := by
+    rw [SkorokhodSpace.leftLim_stepAt, SkorokhodSpace.stepAt_apply, if_pos le_rfl]
+    norm_num
+  have hmem : SkorokhodSpace.ratStep (Denumerable.eqv ℚ r) ∈ Gᶜ := by
+    rw [hstep]
+    exact fun hcon => hne hcon
+  have hle : ((2 : ℝ≥0∞)⁻¹ ^ (Denumerable.eqv ℚ r + 1)) ≤ SkorokhodSpace.denseJumpLaw Gᶜ := by
+    rw [SkorokhodSpace.denseJumpLaw, Measure.sum_apply _ hms.compl]
+    refine le_trans ?_ (ENNReal.le_tsum (Denumerable.eqv ℚ r))
+    rw [Measure.smul_apply, Measure.dirac_apply' _ hms.compl, Set.indicator_of_mem hmem]
+    simp
+  rw [h0, le_zero_iff] at hle
+  exact pow_ne_zero _ (by simp : (2 : ℝ≥0∞)⁻¹ ≠ 0) hle
+
+/-- **The witness.**  There are a probability measure `ν` on `D(ℝ, ℝ)` and a countable dense
+`T ⊆ ℝ` such that no time of `T` is a continuity time of `ν`.
+
+Read against `SkorokhodSpace.exists_countable_dense_continuity`, which produces a countable dense
+set of continuity times for *any* law: the two sets are both countable and both dense, and they
+can be disjoint.  A proof of
+`SkorokhodSpace.tendsto_of_isCompact_closure_of_tendsto_finiteDimensional` may therefore not
+compare the two families of finite dimensional distributions on `T` itself, and the further
+hypotheses of that theorem — relative compactness, and through it the oscillation bound of
+Milestone 7 — are what the comparison rests on. -/
+theorem SkorokhodSpace.exists_countable_dense_forall_setOf_leftLim_ne_one :
+    ∃ (ν : Measure D(ℝ, ℝ)) (_ : IsProbabilityMeasure ν) (T : Set ℝ),
+      T.Countable ∧ Dense T ∧
+      ∀ t ∈ T, ν {f : D(ℝ, ℝ) | Function.leftLim f.toFun t = f.toFun t} ≠ 1 := by
+  refine ⟨SkorokhodSpace.denseJumpLaw, SkorokhodSpace.isProbabilityMeasure_denseJumpLaw,
+    Set.range ((↑) : ℚ → ℝ), Set.countable_range _, Rat.denseRange_cast, ?_⟩
+  rintro t ⟨r, rfl⟩
+  exact SkorokhodSpace.denseJumpLaw_setOf_leftLim_ne_one r

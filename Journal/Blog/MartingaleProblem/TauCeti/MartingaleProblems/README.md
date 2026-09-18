@@ -6783,6 +6783,24 @@ the answer is the strongest one available, and it is proved (2026-09-18):
   explosion, in the form `ae_mem_nonExplosiveE_jumpMeasure` states it.
 * `map_jumpPathD_setOf_leftLim_eq_poisson`: the emptiness probe, on the Poisson
   data, where every hypothesis is discharged.
+* `jumpMeasure_setOf_leftLim_jumpPathD_eq`: the same statement on the **sample
+  space**, `(jumpMeasure mu nu) {ω | (jumpPathD lam ω)⁻ t = jumpPathD lam ω t} = 1`.
+  That is the form the two convergence theorems for random variables take their
+  hypothesis in, because it is the form a user of the structure has; here the two
+  sets are the same by `rfl`, the event being a preimage under `jumpPathD`.
+* `tendstoInDistribution_evalPi_jumpPathD` and
+  `tendstoInDistribution_eval_jumpPathD`: a family of path valued variables
+  converging in distribution to the path of the construction has its finite
+  dimensional marginals converging, **at every countable family of times** and at
+  every single time. These are
+  `SkorokhodSpace.tendstoInDistribution_evalPi` and
+  `SkorokhodSpace.tendstoInDistribution_eval` (roadmap **SkorokhodSpace**,
+  Milestone 8) with their hypothesis `ht` discharged on the data of this
+  milestone. The quantifier over the family costs nothing, because the previous
+  item gives the hypothesis at *every* time rather than on a set the law
+  concedes, so the caller chooses the times. Nothing is asked of the
+  approximating variables beyond the convergence itself; they need not be jump
+  constructions.
 
 * `jumpFiltrationE_eq_comap_jumpPath` and `measurable_pathFiltration_jumpPath`:
   the natural filtration of the construction **is** the pull back of
