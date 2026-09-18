@@ -854,22 +854,50 @@ seinem Dateikopf: es prüft Zeichenketten, nicht Aussagen.
   jeder Schritt ist eine Identität von Bochner-Integralen, die auch am Müllwert
   gilt.
 
-  **Und hier liegt eine zweite, kleinere Lücke daneben: Mathlibs Eulersches Paar
-  ist unsymmetrisch.** Der *Wert* von `∫ t in Ioi 0, t^(a−1) · exp(−(r·t))`
-  steht für **jede** Rate `r` da (`Real.integral_rpow_mul_exp_neg_mul_Ioi`,
+  **Die zweite Hälfte dieses Punktes war eine Lücke und ist keine — hier stand
+  eine falsche Negativaussage, widerlegt am 2026-09-18 im vierten Lauf.** Der
+  dritte Lauf hatte notiert, Mathlibs Eulersches Paar sei unsymmetrisch: der
+  *Wert* von `∫ t in Ioi 0, t^(a−1) · exp(−(r·t))` stehe für **jede** Rate `r`
+  da (`Real.integral_rpow_mul_exp_neg_mul_Ioi`,
   `Analysis/SpecialFunctions/Gamma/Basic.lean:465`), die *Konvergenz* nur bei
-  `r = 1` (`Real.GammaIntegral_convergent`, `ibid.:66`). Ein skaliertes
-  `GammaIntegral_convergent` gibt es in ganz
-  `Analysis/SpecialFunctions/Gamma/` nicht; am 2026-09-18 gegen
-  `upstream/master` `a218e50f981` geprüft. Deshalb steht unser Mittelwert ohne
-  Ratenbeschränkung da, unsere Integrierbarkeit (`integrable_id_expMeasure`)
-  aber nur für die Exponentialverteilung.
+  `r = 1` (`Real.GammaIntegral_convergent`, `ibid.:66`), und ein skaliertes
+  `GammaIntegral_convergent` gebe es in `Analysis/SpecialFunctions/Gamma/`
+  nicht.
 
-  Für Mathlib gehören beide in **einen** PR neben
-  `Probability/Distributions/Gamma.lean`: der Mittelwert, die skalierte
-  Konvergenz und daraus die Integrierbarkeit, die Varianz daneben. Die
-  Gedächtnislosigkeit der zweiten Lücke dieses Punktes gehört in denselben PR
-  wie das Exponentialkorollar.
+  Der letzte Satz ist wahr und die Folgerung daraus falsch: die skalierte
+  Konvergenz steht **zwei Verzeichnisse weiter**, als
+  `integrableOn_rpow_mul_exp_neg_mul_rpow`
+  (`Analysis/SpecialFunctions/Gaussian/GaussianIntegral.lean:74`), für
+  `x^s · exp(−b·x^p)` mit `−1 < s`, `0 < p`, `0 < b` — dort nur bei `p = 2`
+  benutzt, für das Gaußintegral. Bei `p = 1` ist es genau die Aussage; die
+  Übersetzung ist `Real.rpow_one`. In v4.33.1 wie auf `upstream/master`
+  `a218e50f981` (2026-09-17) nachgesehen.
+
+  Unser `integrableOn_rpow_mul_exp_neg_mul_Ioi` ist deshalb kein Beweis mehr,
+  sondern vier Zeilen über der Mathlib-Aussage, und darüber steht
+  `integrable_id_gammaMeasure` mit demselben Gang wie der Mittelwert, mit
+  `integrable_id_expMeasure` als Korollar `a = r = 1`.
+
+  **Woran die falsche Negativaussage lag, und es ist eine Regel wert:** sie war
+  auf ein *Verzeichnis* eingeschränkt und in diesem Verzeichnis wahr. Ein
+  Pfadfilter, der eng genug ist, macht jede Negativaussage wahr. Gefunden hat
+  sie `scripts/check_negatives.py` — beim **ersten** Durchlauf, nachdem sie dort
+  mit dem Filter `Mathlib/` statt `…/Gamma/` aufgenommen worden war.
+
+  **Damit ist der PR nicht mehr anzukündigen, sondern zu schreiben**, und sein
+  Inhalt steht seit dem vierten Lauf des 2026-09-18 vollständig da: eine
+  Identifikation `gammaPDF_toReal_smul_pow` — die Dichte gegen `x^n` ist der
+  Eulersche Integrand `n` Stufen höher —, darüber `integral_id_gammaMeasure`
+  (`a/r`), `integrable_id_gammaMeasure`, `integral_sq_gammaMeasure`
+  (`a(a+1)/r²`), `integrable_sq_gammaMeasure` und `variance_id_gammaMeasure`
+  (`a/r²`), dazu die vier Exponentialkorollare `a = r = 1`. Mittelwert und
+  zweites Moment unterscheiden sich allein darin, wie oft danach
+  `Real.Gamma_add_one` greift.
+
+  Er gehört neben `Probability/Distributions/Gamma.lean` und braucht **nichts
+  Neues** in `Analysis/` — die skalierte Konvergenz liegt, wie oben, schon in der
+  Gaußdatei. Die Gedächtnislosigkeit der zweiten Lücke dieses Punktes gehört in
+  denselben PR wie die Exponentialkorollare.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine

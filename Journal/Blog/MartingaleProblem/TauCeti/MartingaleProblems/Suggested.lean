@@ -15,6 +15,7 @@ import Mathlib.Topology.Order.LeftRightLim
 import Mathlib.Probability.Kernel.IonescuTulcea.Traj
 import Mathlib.Probability.ProductMeasure
 import Mathlib.Probability.Distributions.Exponential
+import Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral
 import Mathlib.Probability.BorelCantelli
 import Mathlib.Probability.CDF
 import Mathlib.Topology.Algebra.InfiniteSum.Real
@@ -28,6 +29,7 @@ import Mathlib.Analysis.Normed.Ring.InfiniteSum
 import Mathlib.Probability.Distributions.Poisson.Basic
 import Mathlib.Probability.StrongLaw
 import Mathlib.Probability.Moments.Variance
+import Mathlib.MeasureTheory.Function.L2Space
 import Mathlib.Probability.Independence.InfinitePi
 import Mathlib.Analysis.PSeries
 import Mathlib.Probability.Martingale.OptionalSampling
@@ -54,8 +56,9 @@ since the twenty-second run of 2026-09-17 with `autoImplicit=false` and
 The third run of 2026-09-18 closed the one almost sure hypothesis the renewal law of large
 numbers was left standing on: `tendsto_jumpTime_div_atTop`, the mean spacing of the jump times
 at a constant rate.  Its input is the **mean of the exponential law**, which Mathlib has in no
-form, and which comes out of the second Euler integral together with its integrability
-(`integral_id_expMeasure`, `integrable_id_expMeasure`); the strong law is Mathlib's
+form, and which comes out of the Euler integral one step up together with its integrability --
+both for the **gamma** law, `integral_id_gammaMeasure` and `integrable_id_gammaMeasure`, with
+the exponential case the corollary `a = r = 1`; the strong law is Mathlib's
 `ProbabilityTheory.strong_law_ae`, fed by `waitingMeasure_map_eval`,
 `integrable_waiting_eval` and `identDistrib_waiting_eval`.
 
@@ -34992,6 +34995,7 @@ theorem jumpProcess_ne_gridPath_unitDelay :
 
 end GridWitness
 
+
 /-! ### The probe with a nonzero `(K3)`, over the embedded jump chain
 
 `tendsto_integral_mul_jumpChain` meets `(K3)` exactly -- the canonical increment *is* the
@@ -35210,36 +35214,80 @@ integrand one step up -- `x ^ (a - 1) · x = x ^ ((a+1) - 1)` -- so that
 `Real.integral_rpow_mul_exp_neg_mul_Ioi` at `a + 1` applies and `Real.Gamma_add_one` cancels
 the normalising constant.
 
-The companion **integrability** is stated only for the exponential law, and that is not an
-omission but the shape of what Mathlib supplies: the value of the Euler integral is there for
-every rate `r` (`Real.integral_rpow_mul_exp_neg_mul_Ioi`), the convergence only at `r = 1`
-(`Real.GammaIntegral_convergent`).  A scaled `GammaIntegral_convergent` exists nowhere in
-`Analysis/SpecialFunctions/Gamma/`, checked on `upstream/master` `a218e50f981`. -/
+The companion **integrability** is Mathlib's, and finding it is the point.  Inside
+`Analysis/SpecialFunctions/Gamma/` the scaled Euler integral has its *value*
+(`Real.integral_rpow_mul_exp_neg_mul_Ioi`) but not its *convergence*: there the only
+`IntegrableOn` is `Real.GammaIntegral_convergent` at rate `1`.  The scaled convergence sits
+two directories away, in
+`Analysis/SpecialFunctions/Gaussian/GaussianIntegral.lean:74`, as
+`integrableOn_rpow_mul_exp_neg_mul_rpow`, stated for `x ^ s · exp (−b · x ^ p)` and applied
+there only at `p = 2`.  Its case `p = 1` is exactly what the gamma law needs, and
+`integrableOn_rpow_mul_exp_neg_mul_Ioi` below is that case and nothing more.
+
+Over it `integrable_id_gammaMeasure` runs exactly parallel to the mean, and
+`integrable_id_expMeasure` is again the case `a = r = 1`.  Mean and integrability therefore
+hold at the same generality, which is what a contribution to Mathlib has to do: otherwise the
+gamma law would have there a mean whose integrability is missing.
+
+**The variance comes for free and is stated here for the same reason.**  The identification
+`gammaPDF_toReal_smul_pow` is written once for `x ^ n`, so the second moment is the Euler
+integrand *two* steps up and the same four lines prove it; `Real.Gamma_add_one` then applies
+twice instead of once.  What `variance_id_gammaMeasure` adds beyond arithmetic is the
+`MemLp _ 2` that Mathlib's `variance_eq_sub` asks for, and that is
+`memLp_two_iff_integrable_sq` over `integrable_sq_gammaMeasure`. -/
 
 section ExponentialMean
 
-/-- **The gamma density against the identity is the Euler integrand one step up.**  This is the
-whole content of the mean, and it is an equality of functions on all of `ℝ`: below `0` the
-density vanishes, at `0` the identity does, so the indicator sits on `Set.Ioi 0` and no null
-set is spent. -/
+/-- **The gamma density against `x ^ n` is the Euler integrand `n` steps up.**  This is the
+whole content of every moment of the law, and it is an equality of functions on all of `ℝ`:
+below `0` the density vanishes, at `0` the power does -- which is what `n ≠ 0` is for -- so the
+indicator sits on `Set.Ioi 0` and no null set is spent.
+
+The mean is its case `n = 1` and the second moment its case `n = 2`; the two differ only in
+how often `Real.Gamma_add_one` is applied afterwards. -/
+private theorem gammaPDF_toReal_smul_pow {a r : ℝ} (ha : 0 < a) (hr : 0 < r) {n : ℕ}
+    (hn : n ≠ 0) (x : ℝ) :
+    (gammaPDF a r x).toReal • x ^ n
+      = (Set.Ioi (0 : ℝ)).indicator
+          (fun t : ℝ ↦ r ^ a / Real.Gamma a
+            * (t ^ ((a + n) - 1) * Real.exp (-(r * t)))) x := by
+  have hGa : (0 : ℝ) < Real.Gamma a := Real.Gamma_pos_of_pos ha
+  rcases lt_or_ge 0 x with hx | hx
+  · rw [gammaPDF_of_nonneg hx.le, ENNReal.toReal_ofReal (by positivity),
+      Set.indicator_of_mem (Set.mem_Ioi.2 hx), smul_eq_mul]
+    have hxa : x ^ (a - 1) * x ^ n = x ^ ((a + n) - 1) := by
+      rw [← Real.rpow_natCast x n, ← Real.rpow_add hx]
+      ring_nf
+    calc r ^ a / Real.Gamma a * x ^ (a - 1) * Real.exp (-(r * x)) * x ^ n
+        = r ^ a / Real.Gamma a * (x ^ (a - 1) * x ^ n) * Real.exp (-(r * x)) := by ring
+      _ = r ^ a / Real.Gamma a * (x ^ ((a + n) - 1) * Real.exp (-(r * x))) := by
+          rw [hxa]; ring
+  · rw [Set.indicator_of_notMem (by simpa using hx), smul_eq_mul]
+    rcases hx.lt_or_eq with hx' | hx'
+    · rw [gammaPDF_of_neg hx', ENNReal.toReal_zero, zero_mul]
+    · rw [hx', zero_pow hn, mul_zero]
+
+/-- The case `n = 1` of `gammaPDF_toReal_smul_pow`, with the cast of `1` cleared away. -/
 private theorem gammaPDF_toReal_smul {a r : ℝ} (ha : 0 < a) (hr : 0 < r) (x : ℝ) :
     (gammaPDF a r x).toReal • x
       = (Set.Ioi (0 : ℝ)).indicator
           (fun t : ℝ ↦ r ^ a / Real.Gamma a * (t ^ ((a + 1) - 1) * Real.exp (-(r * t)))) x := by
-  have hGa : (0 : ℝ) < Real.Gamma a := Real.Gamma_pos_of_pos ha
-  rcases lt_or_ge 0 x with hx | hx
-  · rw [gammaPDF_of_nonneg hx.le, ENNReal.toReal_ofReal (by positivity),
-      Set.indicator_of_mem (Set.mem_Ioi.2 hx), add_sub_cancel_right, smul_eq_mul]
-    have hxa : x ^ (a - 1) * x = x ^ a := by
-      nth_rewrite 2 [← Real.rpow_one x]
-      rw [← Real.rpow_add hx, sub_add_cancel]
-    calc r ^ a / Real.Gamma a * x ^ (a - 1) * Real.exp (-(r * x)) * x
-        = r ^ a / Real.Gamma a * (x ^ (a - 1) * x) * Real.exp (-(r * x)) := by ring
-      _ = r ^ a / Real.Gamma a * (x ^ a * Real.exp (-(r * x))) := by rw [hxa]; ring
-  · rw [Set.indicator_of_notMem (by simpa using hx), smul_eq_mul]
-    rcases hx.lt_or_eq with hx' | hx'
-    · rw [gammaPDF_of_neg hx', ENNReal.toReal_zero, zero_mul]
-    · rw [hx', mul_zero]
+  simpa using gammaPDF_toReal_smul_pow ha hr (n := 1) one_ne_zero x
+
+/-- **The Euler integrand converges at every positive rate**, which is the companion of
+`Real.integral_rpow_mul_exp_neg_mul_Ioi` and **is in Mathlib** -- not beside the value in
+`Analysis/SpecialFunctions/Gamma/`, where a search for it fails, but in
+`Analysis/SpecialFunctions/Gaussian/GaussianIntegral.lean:74`, as
+`integrableOn_rpow_mul_exp_neg_mul_rpow`, stated for `exp (−b · x ^ p)` and used there at
+`p = 2`.  At `p = 1` it is what is wanted, and `Real.rpow_one` is the whole of the translation.
+
+The statement stands here only to name the case, since the shape `x ^ (1 : ℝ)` is not the one a
+reader of the gamma law searches for.  It is not a gap. -/
+theorem integrableOn_rpow_mul_exp_neg_mul_Ioi {a r : ℝ} (ha : 0 < a) (hr : 0 < r) :
+    IntegrableOn (fun t : ℝ ↦ t ^ (a - 1) * Real.exp (-(r * t))) (Set.Ioi 0) := by
+  have h := integrableOn_rpow_mul_exp_neg_mul_rpow (s := a - 1) (p := 1) (b := r)
+    (by linarith) one_pos hr
+  simpa [Real.rpow_one, neg_mul] using h
 
 /-- **The gamma law has mean `a / r`.**  Mathlib has the mean of no distribution of
 `Probability/Distributions/`; this is the shape a contribution there would take, and
@@ -35264,39 +35312,100 @@ theorem integral_id_gammaMeasure {a r : ℝ} (ha : 0 < a) (hr : 0 < r) :
   rw [one_div, Real.inv_rpow hr.le, Real.rpow_add hr, Real.rpow_one]
   field_simp
 
-/-- **The density of the standard exponential law, against the identity, is the second Euler
-integrand.**  This is the one computation both statements below rest on, and it is an equality
-of functions on all of `ℝ`: at a negative argument the density vanishes, and at `0` the identity
-does, so the indicator of `Set.Ioi 0` -- and not of `Set.Ici 0` -- is the honest right hand
-side. -/
-private theorem exponentialPDF_one_toReal_smul (x : ℝ) : (exponentialPDF 1 x).toReal • x
-    = (Set.Ioi (0 : ℝ)).indicator (fun t : ℝ ↦ Real.exp (-t) * t ^ ((2 : ℝ) - 1)) x := by
-  rcases lt_or_ge 0 x with hx | hx
-  · rw [exponentialPDF_of_nonneg hx.le, ENNReal.toReal_ofReal (by positivity),
-      Set.indicator_of_mem (Set.mem_Ioi.2 hx),
-      show (2 : ℝ) - 1 = 1 by norm_num, Real.rpow_one, smul_eq_mul, one_mul, one_mul]
-  · rw [Set.indicator_of_notMem (by simpa using hx), smul_eq_mul]
-    rcases hx.lt_or_eq with hx' | hx'
-    · rw [exponentialPDF_of_neg hx', ENNReal.toReal_zero, zero_mul]
-    · rw [hx', mul_zero]
+/-- **The gamma law is integrable.**  The companion of `integral_id_gammaMeasure`, and it runs
+over the same identification `gammaPDF_toReal_smul`: what was there the *value* of the Euler
+integral at `a + 1` is here its *convergence*, which is
+`integrableOn_rpow_mul_exp_neg_mul_Ioi`.
 
-/-- **The standard exponential law is integrable.**  `Real.GammaIntegral_convergent` at `s = 2`;
-Mathlib has the statement in no other form. -/
-theorem integrable_id_expMeasure : Integrable (fun x : ℝ ↦ x) (expMeasure 1) := by
-  have hmeas : Measurable (exponentialPDF 1) := (measurable_gammaPDFReal 1 1).ennreal_ofReal
-  have hlt : ∀ᵐ x ∂(volume : Measure ℝ), exponentialPDF 1 x < ⊤ := by
+The two therefore stand at the same generality, which they must: a mean without its
+integrability is a Bochner junk value that happens to agree with the answer, and the reader
+has no way to tell the two apart from the statement alone. -/
+theorem integrable_id_gammaMeasure {a r : ℝ} (ha : 0 < a) (hr : 0 < r) :
+    Integrable (fun x : ℝ ↦ x) (gammaMeasure a r) := by
+  have hmeas : Measurable (gammaPDF a r) := (measurable_gammaPDFReal a r).ennreal_ofReal
+  have hlt : ∀ᵐ x ∂(volume : Measure ℝ), gammaPDF a r x < ⊤ := by
     filter_upwards with x; exact ENNReal.ofReal_lt_top
-  rw [show expMeasure 1 = volume.withDensity (exponentialPDF 1) from rfl,
+  rw [show gammaMeasure a r = volume.withDensity (gammaPDF a r) from rfl,
     integrable_withDensity_iff_integrable_smul' hmeas hlt]
-  simp_rw [exponentialPDF_one_toReal_smul]
+  simp_rw [gammaPDF_toReal_smul ha hr]
   exact (integrable_indicator_iff measurableSet_Ioi).2
-    (Real.GammaIntegral_convergent (by norm_num))
+    ((integrableOn_rpow_mul_exp_neg_mul_Ioi (by linarith : (0 : ℝ) < a + 1) hr).const_mul _)
+
+/-- **The standard exponential law is integrable**, the case `a = r = 1` of
+`integrable_id_gammaMeasure`. -/
+theorem integrable_id_expMeasure : Integrable (fun x : ℝ ↦ x) (expMeasure 1) := by
+  rw [show expMeasure 1 = gammaMeasure 1 1 from rfl]
+  exact integrable_id_gammaMeasure one_pos one_pos
 
 /-- **The standard exponential law has mean one**, the case `a = r = 1` of
 `integral_id_gammaMeasure`. -/
 theorem integral_id_expMeasure : ∫ x, x ∂(expMeasure 1) = 1 := by
   rw [show expMeasure 1 = gammaMeasure 1 1 from rfl, integral_id_gammaMeasure one_pos one_pos]
   norm_num
+
+/-- **The second moment of the gamma law is `a (a + 1) / r ^ 2`.**  The same identification as
+the mean, read at `n = 2`: the Euler integrand two steps up, so
+`Real.integral_rpow_mul_exp_neg_mul_Ioi` applies at `a + 2` and `Real.Gamma_add_one` cancels
+the normalising constant in two applications instead of one.
+
+As with the mean, no integrability hypothesis appears and none is needed. -/
+theorem integral_sq_gammaMeasure {a r : ℝ} (ha : 0 < a) (hr : 0 < r) :
+    ∫ x, x ^ 2 ∂(gammaMeasure a r) = a * (a + 1) / r ^ 2 := by
+  have hmeas : Measurable (gammaPDF a r) := (measurable_gammaPDFReal a r).ennreal_ofReal
+  have hlt : ∀ᵐ x ∂(volume : Measure ℝ), gammaPDF a r x < ⊤ := by
+    filter_upwards with x; exact ENNReal.ofReal_lt_top
+  rw [show gammaMeasure a r = volume.withDensity (gammaPDF a r) from rfl,
+    integral_withDensity_eq_integral_toReal_smul hmeas hlt]
+  simp_rw [gammaPDF_toReal_smul_pow ha hr two_ne_zero]
+  rw [integral_indicator measurableSet_Ioi, integral_const_mul]
+  norm_num
+  rw [Real.integral_rpow_mul_exp_neg_mul_Ioi (by positivity) hr]
+  rw [show a + 2 = (a + 1) + 1 by ring, Real.Gamma_add_one (by positivity),
+    Real.Gamma_add_one ha.ne']
+  have hG : Real.Gamma a ≠ 0 := (Real.Gamma_pos_of_pos ha).ne'
+  have hra : r ^ a ≠ 0 := (Real.rpow_pos_of_pos hr a).ne'
+  rw [one_div, Real.inv_rpow hr.le, show a + 1 + 1 = a + 2 by ring,
+    Real.rpow_add hr, Real.rpow_two]
+  field_simp
+
+/-- **The square is integrable under the gamma law.**  The companion of
+`integral_sq_gammaMeasure`, and the input `variance_eq_sub` needs through
+`memLp_two_iff_integrable_sq`. -/
+theorem integrable_sq_gammaMeasure {a r : ℝ} (ha : 0 < a) (hr : 0 < r) :
+    Integrable (fun x : ℝ ↦ x ^ 2) (gammaMeasure a r) := by
+  have hmeas : Measurable (gammaPDF a r) := (measurable_gammaPDFReal a r).ennreal_ofReal
+  have hlt : ∀ᵐ x ∂(volume : Measure ℝ), gammaPDF a r x < ⊤ := by
+    filter_upwards with x; exact ENNReal.ofReal_lt_top
+  rw [show gammaMeasure a r = volume.withDensity (gammaPDF a r) from rfl,
+    integrable_withDensity_iff_integrable_smul' hmeas hlt]
+  simp_rw [gammaPDF_toReal_smul_pow ha hr two_ne_zero]
+  refine (integrable_indicator_iff measurableSet_Ioi).2 ?_
+  have hI : IntegrableOn (fun x : ℝ ↦ r ^ a / Real.Gamma a
+      * (x ^ ((a + 2) - 1) * Real.exp (-(r * x)))) (Set.Ioi 0) :=
+    (integrableOn_rpow_mul_exp_neg_mul_Ioi (a := a + 2) (by positivity) hr).const_mul _
+  refine hI.congr_fun ?_ measurableSet_Ioi
+  intro x _
+  norm_num
+
+/-- **The gamma law has variance `a / r ^ 2`.**  With the mean and the second moment in hand
+this is `variance_eq_sub` and arithmetic; what is not arithmetic is the hypothesis
+`MemLp (fun x ↦ x) 2`, and that is `memLp_two_iff_integrable_sq` over
+`integrable_sq_gammaMeasure`.
+
+`Mathlib/Probability/Distributions/` carries no declaration with `variance_` in its name, in
+`v4.33.1` nor on `upstream/master` `a218e50f981`; with the mean and this statement the gamma
+law has here the two moments a contribution there would be expected to bring. -/
+theorem variance_id_gammaMeasure {a r : ℝ} (ha : 0 < a) (hr : 0 < r) :
+    Var[fun x : ℝ ↦ x; gammaMeasure a r] = a / r ^ 2 := by
+  have : IsProbabilityMeasure (gammaMeasure a r) := isProbabilityMeasure_gammaMeasure ha hr
+  have hL : MemLp (fun x : ℝ ↦ x) 2 (gammaMeasure a r) :=
+    (memLp_two_iff_integrable_sq (by fun_prop)).2 (integrable_sq_gammaMeasure ha hr)
+  have hsq : ∫ x, ((fun x : ℝ ↦ x) ^ 2) x ∂(gammaMeasure a r) = a * (a + 1) / r ^ 2 := by
+    simpa using integral_sq_gammaMeasure ha hr
+  rw [variance_eq_sub hL, hsq, integral_id_gammaMeasure ha hr]
+  have hr' : r ≠ 0 := hr.ne'
+  field_simp
+  ring
 
 end ExponentialMean
 
@@ -35374,3 +35483,111 @@ theorem tendsto_jumpTime_div_atTop {E : Type*} (c : ℝ) (y : ℕ → E) :
   exact div_right_comm _ _ _
 
 end WaitingLLN
+
+/-! ### The index the renewal count reads, and why no index of the chain filtration holds it
+
+The block above says the two indices differ at a sample point.  This one says *by how much*,
+and it turns the difference into a refutation.
+
+`jumpProcess_constWaiting` computes the jump process at a constant rate `c` and **constant**
+waiting times `w`: it is the chain read at `⌊t · (c / w)⌋`, a grid path of mesh `w / c` and not
+of mesh `1 / c`.  `jumpProcess_eq_gridPath_unitWaiting` is its case `w = 1`, and the general
+case says what that case hides: the mesh is set by the clock, not by the rate.  The factor
+`c / w` is `c / m` with `m` the mean waiting time, which is exactly the limit
+`tendsto_stepIndex_mul_div_atTop` gives for the *random* clock -- so the deterministic
+computation and the law of large numbers agree on which index is read, and both say `⌊c t⌋`
+is the right one only at `m = 1`.
+
+That has a consequence for hypothesis `hW` of `tendsto_integral_mul_rescaledChain`, which asks
+that the weight be `naturalFiltration (Ξ n) ⌊n s⌋`-measurable.  For the grid path
+`measurable_comp_gridPath` supplies it.  For the jump path it **cannot** be supplied, at any
+index whatever, and the reason is not the size of the index but its origin:
+`naturalFiltration (jumpChain E) k` is generated by the chain factor alone and holds no
+information about the clock, while `jumpProcess` reads the clock.  Two sample points with the
+*same chain* and different constant clocks already have different jump processes, and that is
+`not_measurable_jumpProcess_naturalFiltration_jumpChain`: a refutation and not an obstacle to be
+worked around, since measurability is not an almost sure notion and a single pair of points
+settles it.
+
+What it says about the probe of Milestone 10 is therefore exact.  The jump process cannot enter
+`tendsto_integral_mul_rescaledChain_natural` as its `Z ∘ gridPath`; it needs a filtration that
+contains the clock, and over such a filtration the index read is a **stopping time** and not a
+constant.  That is the missing input, and it is named here rather than assumed away. -/
+
+section ConstantWaiting
+
+variable {E : Type*} [mE : MeasurableSpace E]
+
+omit mE in
+/-- **At a constant rate with constant waiting times the jump process is a grid path -- of mesh
+`w / c`.**  The chain is read at `⌊t · (c / w)⌋`, and the mesh is set by the clock as much as by
+the rate.  `jumpProcess_eq_gridPath_unitWaiting` is the case `w = 1`, where the two coincide and
+the clock becomes invisible.
+
+The proof is the two scaling lemmas above and nothing else: `jumpTime_const` makes the jump
+times `n · w / c = n / (c / w)`, `stepIndex_div_const` turns the division of the times into a
+multiplication of the time, and `stepIndex_natCast` reads the renewal count of the unit clock as
+the floor. -/
+theorem jumpProcess_constWaiting {c w : ℝ} (hc : 0 < c) (hw : 0 < w) (y : ℕ → E) {t : ℝ}
+    (ht : 0 ≤ t) : jumpProcess (fun _ ↦ c) t (y, fun _ ↦ w) = y ⌊t * (c / w)⌋₊ := by
+  have hT : ∀ n : ℕ, jumpTime (fun _ : E ↦ c) y (fun _ ↦ w) n = (n : ℝ) / (c / w) := by
+    intro n
+    rw [jumpTime_const, Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+    field_simp
+  show y (stepIndex (jumpTime (fun _ : E ↦ c) y (fun _ ↦ w)) t) = _
+  rw [funext hT, stepIndex_div_const (by positivity),
+    stepIndex_natCast (mul_nonneg ht (by positivity))]
+
+end ConstantWaiting
+
+section ClockWitness
+
+/-- **The chain filtration does not see the clock, at any index.**  Every σ-algebra of the
+natural filtration of the embedded chain is generated by coordinates of the chain factor, so it
+is coarser than the comap of the projection: two sample points with the same chain lie in the
+same sets of it, whatever their waiting times. -/
+theorem naturalFiltration_jumpChain_le_comap_fst {E : Type*} [mE : MeasurableSpace E] (k : ℕ) :
+    naturalFiltration (jumpChain E) (measurable_jumpChain (E := E)) k
+      ≤ MeasurableSpace.comap (Prod.fst : (ℕ → E) × (ℕ → ℝ) → (ℕ → E))
+          (inferInstance : MeasurableSpace (ℕ → E)) := by
+  show (⨆ j, ⨆ _ : j ≤ k, MeasurableSpace.comap (jumpChain E j) mE) ≤ _
+  refine iSup₂_le fun j _ ↦ ?_
+  have hcomp : jumpChain E j = (fun x : ℕ → E ↦ x j) ∘ Prod.fst := rfl
+  rw [hcomp, ← MeasurableSpace.comap_comp]
+  exact MeasurableSpace.comap_mono (measurable_pi_apply j).comap_le
+
+/-- **The jump process is measurable for no σ-algebra of the chain filtration**, and the witness
+is a pair of sample points with the *same chain*: the identity on `ℕ`, once with the constant
+clock `1/2` and once with the constant clock `1`.  At time `1` and rate `1` the first has had
+two jumps and sits at the state `2`, the second one jump and sits at the state `1`.
+
+This is what `measurable_comp_gridPath` supplies for the grid path and what nothing supplies for
+the jump path.  The failure is not one of index -- no `k` helps, and the statement is quantified
+over all of them -- but of *factor*: the chain filtration is generated by the chain alone, and
+the renewal count is a function of the clock.  Hypothesis `hW` of
+`tendsto_integral_mul_rescaledChain` therefore cannot be met by the jump process over this
+filtration, and the probe of Milestone 10 needs one that contains the clock. -/
+theorem not_measurable_jumpProcess_naturalFiltration_jumpChain (k : ℕ) :
+    ¬ Measurable[naturalFiltration (jumpChain ℕ) (measurable_jumpChain (E := ℕ)) k]
+        (fun ω : (ℕ → ℕ) × (ℕ → ℝ) ↦ jumpProcess (fun _ : ℕ ↦ (1 : ℝ)) 1 ω) := by
+  intro h
+  obtain ⟨A, -, hA⟩ := naturalFiltration_jumpChain_le_comap_fst (E := ℕ) k _
+    (h (measurableSet_singleton (2 : ℕ)))
+  set ω₁ : (ℕ → ℕ) × (ℕ → ℝ) := (id, fun _ ↦ (1 / 2 : ℝ)) with hω₁
+  set ω₂ : (ℕ → ℕ) × (ℕ → ℝ) := (id, fun _ ↦ (1 : ℝ)) with hω₂
+  have hhalf : jumpProcess (fun _ : ℕ ↦ (1 : ℝ)) 1 ω₁ = 2 := by
+    rw [hω₁, jumpProcess_constWaiting one_pos (by norm_num) id zero_le_one]
+    norm_num
+  have hone : jumpProcess (fun _ : ℕ ↦ (1 : ℝ)) 1 ω₂ = 1 := by
+    rw [hω₂, jumpProcess_constWaiting one_pos one_pos id zero_le_one]
+    norm_num
+  have key := Set.ext_iff.1 hA
+  have h1 := key ω₁
+  have h2 := key ω₂
+  rw [Set.mem_preimage, Set.mem_preimage, Set.mem_singleton_iff, hhalf] at h1
+  rw [Set.mem_preimage, Set.mem_preimage, Set.mem_singleton_iff, hone] at h2
+  have hfst : ω₁.1 = ω₂.1 := rfl
+  rw [hfst] at h1
+  exact absurd (h2.1 (h1.2 rfl)) (by omega)
+
+end ClockWitness

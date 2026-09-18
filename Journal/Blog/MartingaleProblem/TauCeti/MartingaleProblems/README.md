@@ -9578,17 +9578,27 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   **So the two indices of the probe agree in the limit exactly when the mean
   spacing of the jump times is `1`**, and differ by the factor `m` otherwise —
   which is what the rescaling by `n` is for.
-* `integral_id_gammaMeasure`: **the gamma law has mean `a / r`**, and
-  `integral_id_expMeasure` and `integrable_id_expMeasure`: **the standard
-  exponential law is integrable and has mean one.** **In Lean** on 2026-09-18,
-  third run. The whole content of the mean is that the density against the
+* `integral_id_gammaMeasure`, `integrable_id_gammaMeasure`,
+  `integral_sq_gammaMeasure`, `integrable_sq_gammaMeasure` and
+  `variance_id_gammaMeasure`: **the gamma law is square integrable, has mean
+  `a / r` and variance `a / r ^ 2`**, with `integral_id_expMeasure` and
+  `integrable_id_expMeasure` the case `a = r = 1`. **In Lean** on 2026-09-18,
+  third and fourth run.
+  **One identification carries all of them**: `gammaPDF_toReal_smul_pow` says
+  that the density against `x ^ n` is the Euler integrand `n` steps up, and the
+  mean and the second moment are its cases `n = 1` and `n = 2`, differing only in
+  how often `Real.Gamma_add_one` is applied afterwards. The variance is then
+  `MeasureTheory.variance_eq_sub` and arithmetic, over the `MemLp _ 2` that
+  `memLp_two_iff_integrable_sq` (`MeasureTheory/Function/L2Space.lean:52`) reads
+  off `integrable_sq_gammaMeasure`.
+  The whole content of the mean is that the density against the
   identity is the Euler integrand one step up —
   `x ^ (a - 1) · x = x ^ ((a + 1) - 1)`, as `gammaPDF_toReal_smul` — so that
   `Real.integral_rpow_mul_exp_neg_mul_Ioi` at `a + 1`
   (`Mathlib/Analysis/SpecialFunctions/Gamma/Basic.lean:465`) applies and
   `Real.Gamma_add_one` cancels the normalising constant. The exponential case is
-  its corollary at `a = r = 1`; the integrability is
-  `Real.GammaIntegral_convergent` (`ibid.:66`) at `s = 2`. The indicator sits on
+  its corollary at `a = r = 1`; the integrability is the same identification
+  read the other way, over `integrableOn_rpow_mul_exp_neg_mul_Ioi`. The indicator sits on
   `Set.Ioi 0` and not on `Set.Ici 0` because at `0` the identity vanishes, so the
   identification holds at **every** real point and no null set is spent.
   **Mathlib has the mean of no distribution of `Probability/Distributions/`**,
@@ -9597,12 +9607,16 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   (`lintegral_exponentialPDF_eq_one`, `lintegral_gammaPDF_eq_one`) and the
   distribution function, and no declaration of that directory carries `mean_` or
   `variance_` in its name.
-  **And Mathlib's Euler pair is asymmetric**: the *value* of
-  `∫ t in Ioi 0, t ^ (a - 1) · exp (-(r · t))` is there for every rate `r`, the
-  *convergence* only at `r = 1`. A scaled `GammaIntegral_convergent` exists
-  nowhere in `Analysis/SpecialFunctions/Gamma/`. That is why the mean above
-  needs no rate restriction and the integrability below is stated for the
-  exponential law alone.
+  **But the scaled convergence of the Euler integral is Mathlib's, two
+  directories from the value.** Inside `Analysis/SpecialFunctions/Gamma/` the
+  *value* of `∫ t in Ioi 0, t ^ (a - 1) · exp (-(r · t))` is there for every
+  rate `r` and the *convergence* only at `r = 1`; the scaled convergence sits in
+  `Analysis/SpecialFunctions/Gaussian/GaussianIntegral.lean:74` as
+  `integrableOn_rpow_mul_exp_neg_mul_rpow`, stated for `x ^ s · exp (-b · x ^ p)`
+  and used there only at `p = 2`. `integrableOn_rpow_mul_exp_neg_mul_Ioi` is its
+  case `p = 1` and nothing more; the translation is `Real.rpow_one`.
+  **Checked on 2026-09-18 in `v4.33.1` and on `upstream/master` `a218e50f981`**,
+  after the third run had recorded the opposite as a gap.
 * `waitingMeasure_map_eval`, `integrable_waiting_eval`,
   `identDistrib_waiting_eval` and `tendsto_sum_waiting_div_atTop`: **the strong
   law of large numbers for the waiting times**, `∑_{k<n} ξ k / n → 1` almost
@@ -9635,6 +9649,39 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   precisely for `c = 1`. Restating the probe over
   `fun t ↦ jumpProcess (fun _ ↦ (n : ℝ)) t` and carrying the limit through is
   what this milestone still owes.
+  **What it owes is not a restatement, and the fourth run of 2026-09-18 says
+  so with a witness**: see the two statements below.
+* `jumpProcess_constWaiting`: **at a constant rate with constant waiting times
+  the jump process is a grid path — of mesh `w / c` and not `1 / c`.** The chain
+  is read at `⌊t · (c / w)⌋`, so the mesh is set by the clock as much as by the
+  rate, and `jumpProcess_eq_gridPath_unitWaiting` is the case `w = 1`, where the
+  two coincide and the clock becomes invisible. **In Lean** on 2026-09-18,
+  fourth run. The proof is `jumpTime_const`, `stepIndex_div_const` and
+  `stepIndex_natCast` and nothing else.
+  **The factor `c / w` is `c / m` with `m` the mean waiting time**, which is the
+  limit `tendsto_stepIndex_mul_div_atTop` gives for the random clock: the
+  deterministic computation and the law of large numbers agree on which index is
+  read, and both say `⌊c t⌋` is right only at `m = 1`.
+* `naturalFiltration_jumpChain_le_comap_fst` and
+  `not_measurable_jumpProcess_naturalFiltration_jumpChain`: **the jump process
+  is measurable for no σ-algebra of the chain filtration, at any index.** **In
+  Lean** on 2026-09-18, fourth run. The witness is a pair of sample points with
+  the *same chain* — the identity on `ℕ` — and different constant clocks, `1/2`
+  and `1`: at time `1` and rate `1` the first sits at the state `2` and the
+  second at the state `1`.
+  **This refutes the restatement above rather than postponing it.** Hypothesis
+  `hW` of `tendsto_integral_mul_rescaledChain` asks the weight to be
+  `naturalFiltration (Ξ n) ⌊n s⌋`-measurable; `measurable_comp_gridPath` supplies
+  that for the grid path, and nothing can supply it for the jump path. The
+  failure is not one of **index** — no `k` helps, and the statement is quantified
+  over all of them — but of **factor**: the chain filtration is generated by the
+  chain alone and holds no information about the clock, while the renewal count
+  is a function of the clock. Measurability is not an almost sure notion, so one
+  pair of sample points settles it.
+  **What the probe therefore needs is a filtration that contains the clock**,
+  and over such a filtration the index read is a **stopping time** and not a
+  constant. That is the missing input, and it is named here rather than assumed
+  away.
 * **Hypothesis (a) is about real random variables and carries no topology.** In
   the example above the path space `F` is `D ι E` and the functionals
   `Y° t` are evaluations, but the statement of (a) never mentions `F`'s

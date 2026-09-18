@@ -144,6 +144,22 @@ CLAIMS_TODO8 = [
      'mean_|variance_|integral_id|expectation',
      ['Mathlib/Probability/Distributions/Exponential.lean',
       'Mathlib/Probability/Distributions/Gamma.lean'], []),
+    # Hier stand vom 2026-09-18 an eine zweite Behauptung: ein skaliertes
+    # `GammaIntegral_convergent` gebe es nicht.  Sie ist **widerlegt**, und zwar
+    # von diesem Skript selbst, im vierten Lauf des 2026-09-18, beim ersten
+    # Durchlauf nach ihrer Aufnahme.  Mathlib hat sie als
+    # `integrableOn_rpow_mul_exp_neg_mul_rpow`
+    # (`Analysis/SpecialFunctions/Gaussian/GaussianIntegral.lean:74`, in
+    # v4.33.1 wie auf `upstream/master` `a218e50f981`), für `exp (−b·x^p)` und
+    # dort nur bei `p = 2` benutzt; bei `p = 1` ist es genau die Aussage.
+    #
+    # Sie steht hier nicht mehr, weil eine widerlegte Behauptung keine zu
+    # prüfende ist.  Was von ihr bleibt, ist die Lehre, die der Pfadfilter
+    # verursacht hat: die Behauptung war auf `Analysis/SpecialFunctions/Gamma/`
+    # eingeschränkt und in *diesem* Verzeichnis wahr.  Ein Pfadfilter, der eng
+    # genug ist, macht jede Negativaussage wahr.  Deshalb steht in diesem
+    # Skript ab jetzt `Mathlib/` als Filter, wo die Behauptung von der
+    # Bibliothek und nicht von einer Datei handelt.
     ('convergence-in-measure-complete', 'TODO.md Punkt 8, dritte Lücke',
      '`ConvergenceInMeasure.lean` enthält das Wort `cauchy` nicht ein '
      'einziges Mal; die Vollständigkeit der Konvergenz im Maß fehlt.',
