@@ -26,6 +26,7 @@ import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 import Mathlib.Algebra.Group.ForwardDiff
 import Mathlib.Analysis.Normed.Ring.InfiniteSum
 import Mathlib.Probability.Distributions.Poisson.Basic
+import Mathlib.Probability.StrongLaw
 import Mathlib.Probability.Moments.Variance
 import Mathlib.Probability.Independence.InfinitePi
 import Mathlib.Analysis.PSeries
@@ -45,9 +46,18 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-17 (twenty-third run of that day), over the **whole** file and without an error, and
-since the twenty-second run with `autoImplicit=false` and `relaxedAutoImplicit=false`, as Mathlib
-itself builds.  Every declaration elaborates, and **no declaration carries `sorry`**.
+2026-09-18 (third run of that day), over the **whole** file and without an error, and
+since the twenty-second run of 2026-09-17 with `autoImplicit=false` and
+`relaxedAutoImplicit=false`, as Mathlib itself builds.  Every declaration elaborates, and
+**no declaration carries `sorry`**.
+
+The third run of 2026-09-18 closed the one almost sure hypothesis the renewal law of large
+numbers was left standing on: `tendsto_jumpTime_div_atTop`, the mean spacing of the jump times
+at a constant rate.  Its input is the **mean of the exponential law**, which Mathlib has in no
+form, and which comes out of the second Euler integral together with its integrability
+(`integral_id_expMeasure`, `integrable_id_expMeasure`); the strong law is Mathlib's
+`ProbabilityTheory.strong_law_ae`, fed by `waitingMeasure_map_eval`,
+`integrable_waiting_eval` and `identDistrib_waiting_eval`.
 
 The twenty-third run of 2026-09-17 supplied the acceptance example of Milestone 10, the rescaled
 Markov chain of the manuscript's `ex:invariance`, as far as it is a theorem rather than an
@@ -35177,3 +35187,190 @@ theorem tendsto_stepIndex_mul_div_atTop (hmono : Monotone T) (hinf : Tendsto T a
   field_simp
 
 end RenewalLLN
+
+/-! ### The probabilistic half: the mean spacing of the jump times
+
+The block above leaves the renewal law of large numbers standing on one almost sure hypothesis,
+`T n / n → m`, and nothing else.  This one supplies it for the jump construction at a constant
+rate, and the route is the one the header of `RenewalLLN` names: the jump times are then the
+partial sums of the waiting times divided by the rate, the waiting times are the coordinates of
+a product of standard exponential laws, and `ProbabilityTheory.strong_law_ae` applies to them.
+
+The one input that route needs and Mathlib does not have is the **mean of the exponential
+law**.  Neither `Probability/Distributions/Exponential.lean` nor
+`Probability/Distributions/Gamma.lean` says what `∫ x, x ∂(expMeasure r)` is -- in `v4.33.1` and
+on `upstream/master` alike, where the only integrals of either file are the normalisation
+`lintegral_exponentialPDF_eq_one` and the distribution function, and where neither `mean_` nor
+`variance_` occurs in the name of any declaration of `Probability/Distributions/`.
+
+It is proved below in the shape a contribution to Mathlib would take: for the **gamma** law,
+`integral_id_gammaMeasure : ∫ x, x ∂(gammaMeasure a r) = a / r`, with the exponential case its
+corollary at `a = 1`.  The whole content is that the density against the identity is the Euler
+integrand one step up -- `x ^ (a - 1) · x = x ^ ((a+1) - 1)` -- so that
+`Real.integral_rpow_mul_exp_neg_mul_Ioi` at `a + 1` applies and `Real.Gamma_add_one` cancels
+the normalising constant.
+
+The companion **integrability** is stated only for the exponential law, and that is not an
+omission but the shape of what Mathlib supplies: the value of the Euler integral is there for
+every rate `r` (`Real.integral_rpow_mul_exp_neg_mul_Ioi`), the convergence only at `r = 1`
+(`Real.GammaIntegral_convergent`).  A scaled `GammaIntegral_convergent` exists nowhere in
+`Analysis/SpecialFunctions/Gamma/`, checked on `upstream/master` `a218e50f981`. -/
+
+section ExponentialMean
+
+/-- **The gamma density against the identity is the Euler integrand one step up.**  This is the
+whole content of the mean, and it is an equality of functions on all of `ℝ`: below `0` the
+density vanishes, at `0` the identity does, so the indicator sits on `Set.Ioi 0` and no null
+set is spent. -/
+private theorem gammaPDF_toReal_smul {a r : ℝ} (ha : 0 < a) (hr : 0 < r) (x : ℝ) :
+    (gammaPDF a r x).toReal • x
+      = (Set.Ioi (0 : ℝ)).indicator
+          (fun t : ℝ ↦ r ^ a / Real.Gamma a * (t ^ ((a + 1) - 1) * Real.exp (-(r * t)))) x := by
+  have hGa : (0 : ℝ) < Real.Gamma a := Real.Gamma_pos_of_pos ha
+  rcases lt_or_ge 0 x with hx | hx
+  · rw [gammaPDF_of_nonneg hx.le, ENNReal.toReal_ofReal (by positivity),
+      Set.indicator_of_mem (Set.mem_Ioi.2 hx), add_sub_cancel_right, smul_eq_mul]
+    have hxa : x ^ (a - 1) * x = x ^ a := by
+      nth_rewrite 2 [← Real.rpow_one x]
+      rw [← Real.rpow_add hx, sub_add_cancel]
+    calc r ^ a / Real.Gamma a * x ^ (a - 1) * Real.exp (-(r * x)) * x
+        = r ^ a / Real.Gamma a * (x ^ (a - 1) * x) * Real.exp (-(r * x)) := by ring
+      _ = r ^ a / Real.Gamma a * (x ^ a * Real.exp (-(r * x))) := by rw [hxa]; ring
+  · rw [Set.indicator_of_notMem (by simpa using hx), smul_eq_mul]
+    rcases hx.lt_or_eq with hx' | hx'
+    · rw [gammaPDF_of_neg hx', ENNReal.toReal_zero, zero_mul]
+    · rw [hx', mul_zero]
+
+/-- **The gamma law has mean `a / r`.**  Mathlib has the mean of no distribution of
+`Probability/Distributions/`; this is the shape a contribution there would take, and
+`integral_id_expMeasure` below is its case `a = r = 1`.
+
+No integrability hypothesis appears and none is needed: every step --
+`integral_withDensity_eq_integral_toReal_smul`, `integral_indicator`, `integral_const_mul` and
+`Real.integral_rpow_mul_exp_neg_mul_Ioi` -- is an identity of Bochner integrals that holds
+whether or not the integrand is integrable. -/
+theorem integral_id_gammaMeasure {a r : ℝ} (ha : 0 < a) (hr : 0 < r) :
+    ∫ x, x ∂(gammaMeasure a r) = a / r := by
+  have hmeas : Measurable (gammaPDF a r) := (measurable_gammaPDFReal a r).ennreal_ofReal
+  have hlt : ∀ᵐ x ∂(volume : Measure ℝ), gammaPDF a r x < ⊤ := by
+    filter_upwards with x; exact ENNReal.ofReal_lt_top
+  rw [show gammaMeasure a r = volume.withDensity (gammaPDF a r) from rfl,
+    integral_withDensity_eq_integral_toReal_smul hmeas hlt]
+  simp_rw [gammaPDF_toReal_smul ha hr]
+  rw [integral_indicator measurableSet_Ioi, integral_const_mul,
+    Real.integral_rpow_mul_exp_neg_mul_Ioi (by linarith) hr, Real.Gamma_add_one ha.ne']
+  have hG : Real.Gamma a ≠ 0 := (Real.Gamma_pos_of_pos ha).ne'
+  have hra : r ^ a ≠ 0 := (Real.rpow_pos_of_pos hr a).ne'
+  rw [one_div, Real.inv_rpow hr.le, Real.rpow_add hr, Real.rpow_one]
+  field_simp
+
+/-- **The density of the standard exponential law, against the identity, is the second Euler
+integrand.**  This is the one computation both statements below rest on, and it is an equality
+of functions on all of `ℝ`: at a negative argument the density vanishes, and at `0` the identity
+does, so the indicator of `Set.Ioi 0` -- and not of `Set.Ici 0` -- is the honest right hand
+side. -/
+private theorem exponentialPDF_one_toReal_smul (x : ℝ) : (exponentialPDF 1 x).toReal • x
+    = (Set.Ioi (0 : ℝ)).indicator (fun t : ℝ ↦ Real.exp (-t) * t ^ ((2 : ℝ) - 1)) x := by
+  rcases lt_or_ge 0 x with hx | hx
+  · rw [exponentialPDF_of_nonneg hx.le, ENNReal.toReal_ofReal (by positivity),
+      Set.indicator_of_mem (Set.mem_Ioi.2 hx),
+      show (2 : ℝ) - 1 = 1 by norm_num, Real.rpow_one, smul_eq_mul, one_mul, one_mul]
+  · rw [Set.indicator_of_notMem (by simpa using hx), smul_eq_mul]
+    rcases hx.lt_or_eq with hx' | hx'
+    · rw [exponentialPDF_of_neg hx', ENNReal.toReal_zero, zero_mul]
+    · rw [hx', mul_zero]
+
+/-- **The standard exponential law is integrable.**  `Real.GammaIntegral_convergent` at `s = 2`;
+Mathlib has the statement in no other form. -/
+theorem integrable_id_expMeasure : Integrable (fun x : ℝ ↦ x) (expMeasure 1) := by
+  have hmeas : Measurable (exponentialPDF 1) := (measurable_gammaPDFReal 1 1).ennreal_ofReal
+  have hlt : ∀ᵐ x ∂(volume : Measure ℝ), exponentialPDF 1 x < ⊤ := by
+    filter_upwards with x; exact ENNReal.ofReal_lt_top
+  rw [show expMeasure 1 = volume.withDensity (exponentialPDF 1) from rfl,
+    integrable_withDensity_iff_integrable_smul' hmeas hlt]
+  simp_rw [exponentialPDF_one_toReal_smul]
+  exact (integrable_indicator_iff measurableSet_Ioi).2
+    (Real.GammaIntegral_convergent (by norm_num))
+
+/-- **The standard exponential law has mean one**, the case `a = r = 1` of
+`integral_id_gammaMeasure`. -/
+theorem integral_id_expMeasure : ∫ x, x ∂(expMeasure 1) = 1 := by
+  rw [show expMeasure 1 = gammaMeasure 1 1 from rfl, integral_id_gammaMeasure one_pos one_pos]
+  norm_num
+
+end ExponentialMean
+
+section WaitingLLN
+
+/-- **The law of a single waiting time**, as a pushforward.  `waitingMeasure_eval_preimage`
+says the same for a set; this is the form the strong law wants, since `IdentDistrib` and
+`integrable_map_measure` both speak of the image measure. -/
+theorem waitingMeasure_map_eval (n : ℕ) :
+    waitingMeasure.map (fun ξ : ℕ → ℝ ↦ ξ n) = expMeasure 1 :=
+  Measure.infinitePi_map_eval (fun _ : ℕ ↦ expMeasure 1) n
+
+/-- A single waiting time is integrable. -/
+theorem integrable_waiting_eval (n : ℕ) : Integrable (fun ξ : ℕ → ℝ ↦ ξ n) waitingMeasure := by
+  have h := (integrable_map_measure (f := fun ξ : ℕ → ℝ ↦ ξ n) (g := fun x : ℝ ↦ x)
+    (by rw [waitingMeasure_map_eval]; exact aestronglyMeasurable_id)
+    (measurable_pi_apply n).aemeasurable).1
+  rw [waitingMeasure_map_eval] at h
+  exact h integrable_id_expMeasure
+
+/-- The waiting times are identically distributed. -/
+theorem identDistrib_waiting_eval (n : ℕ) :
+    IdentDistrib (fun ξ : ℕ → ℝ ↦ ξ n) (fun ξ : ℕ → ℝ ↦ ξ 0) waitingMeasure waitingMeasure where
+  aemeasurable_fst := (measurable_pi_apply n).aemeasurable
+  aemeasurable_snd := (measurable_pi_apply 0).aemeasurable
+  map_eq := by rw [waitingMeasure_map_eval, waitingMeasure_map_eval]
+
+/-- **The strong law of large numbers for the waiting times.**  Etemadi's version in Mathlib
+asks for pairwise independence, integrability of one coordinate and identical distribution, and
+all three are supplied above; what the statement adds to `strong_law_ae` is the *value* of the
+limit, and that is `integral_id_expMeasure`. -/
+theorem tendsto_sum_waiting_div_atTop :
+    ∀ᵐ ξ ∂waitingMeasure,
+      Tendsto (fun n : ℕ ↦ (∑ k ∈ Finset.range n, ξ k) / (n : ℝ)) atTop (𝓝 1) := by
+  have hmean : waitingMeasure[fun ξ : ℕ → ℝ ↦ ξ 0] = 1 := by
+    have h : ∫ x : ℝ, x ∂(expMeasure 1) = ∫ ξ : ℕ → ℝ, ξ 0 ∂waitingMeasure := by
+      rw [← waitingMeasure_map_eval 0]
+      exact integral_map (measurable_pi_apply 0).aemeasurable (by fun_prop)
+    rw [← h, integral_id_expMeasure]
+  have h := strong_law_ae (μ := waitingMeasure) (fun (n : ℕ) (ξ : ℕ → ℝ) ↦ ξ n)
+    (integrable_waiting_eval 0) (fun i j hij ↦ iIndepFun_waiting.indepFun hij)
+    identDistrib_waiting_eval
+  rw [hmean] at h
+  filter_upwards [h] with ξ hξ
+  refine hξ.congr fun n ↦ ?_
+  rw [smul_eq_mul, div_eq_inv_mul]
+
+/-- **The jump times at a constant rate are the partial sums of the waiting times**, divided by
+the rate.  No hypothesis: at rate `0` both sides are `0`, since `x / 0 = 0`. -/
+theorem jumpTime_const {E : Type*} (c : ℝ) (y : ℕ → E) (xi : ℕ → ℝ) (n : ℕ) :
+    jumpTime (fun _ : E ↦ c) y xi n = (∑ k ∈ Finset.range n, xi k) / c := by
+  induction n with
+  | zero => simp [jumpTime]
+  | succ n ih => rw [jumpTime_succ, ih, Finset.sum_range_succ, add_div]
+
+/-- **The mean spacing of the jump times at a constant rate is the reciprocal of the rate.**
+This is the almost sure hypothesis of `tendsto_stepIndex_div_atTop`, discharged over the jump
+construction, and with it the passage between jump number and time is complete: at rate `c` the
+renewal count of `s` grows like `c · s`.
+
+The rate is **not** assumed positive, and the statement is true without it: at `c = 0` every
+holding time is the junk value `x / 0 = 0`, the jump times are constantly `0`, and the limit
+`c⁻¹ = 0` is what the constant sequence converges to.  Here the junk value happens to tell the
+truth on both sides, as it does in `jumpTime_const_mul` and unlike `stepIndex_div_const`.  What
+the consumer needs positivity for is the *other* hypothesis of `tendsto_stepIndex_div_atTop`,
+`0 < m`, which at `m = c⁻¹` is `0 < c`. -/
+theorem tendsto_jumpTime_div_atTop {E : Type*} (c : ℝ) (y : ℕ → E) :
+    ∀ᵐ ξ ∂waitingMeasure,
+      Tendsto (fun n : ℕ ↦ jumpTime (fun _ : E ↦ c) y ξ n / (n : ℝ)) atTop (𝓝 c⁻¹) := by
+  filter_upwards [tendsto_sum_waiting_div_atTop] with ξ hξ
+  have h := hξ.div_const c
+  rw [one_div] at h
+  refine h.congr fun n ↦ ?_
+  rw [jumpTime_const]
+  exact div_right_comm _ _ _
+
+end WaitingLLN

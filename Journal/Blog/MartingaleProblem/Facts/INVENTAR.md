@@ -35771,3 +35771,195 @@ die Rolle der Reskalierung mit `n`, und sie steht jetzt als Zahl da.
    nebenbei bewiesen.
 3. **Und erst danach die Probe umschreiben**, von `⌊n t⌋` auf `stepIndex`. Mit 1
    ist das eine Rechnung; vorher wäre es eine Behauptung.
+
+### 2026-09-18, dritter Lauf des Tages — die letzte f.s.-Voraussetzung des Erneuerungsgesetzes ist eingelöst; und der Baustein, den sie brauchte, war eine Lücke, deren allgemeine Fassung billiger ist als der Spezialfall
+
+**Vorschläge 1 und 2 des Vorlaufs sind eingelöst**, und Vorschlag 2 hat einen
+zweiten Satz nach sich gezogen, der nicht angesagt war. **Neun Deklarationen**
+(dazu zwei `private`), 200 Zeilen mitsamt den Abschnittsköpfen, in zwei neuen
+Abschnitten am Ende von
+`TauCeti/MartingaleProblems/Suggested.lean`. Die Kette ohne einen Fehler:
+
+| Datei | rc | Fehler | `sorry` | Sekunden |
+| --- | ---: | ---: | ---: | ---: |
+| `WeakConvergence/Suggested.lean` | 0 | 0 | 0 | 8 |
+| `SkorokhodSpace/Suggested.lean` | 0 | 0 | 0 | 13 |
+| `MartingaleProblems/Suggested.lean` | 0 | 0 | 0 | 67 |
+
+Alle neun mit `scripts/check_axioms.py` geprüft: `propext`, `Classical.choice`,
+`Quot.sound`, sonst nichts. Der Stand von `upstream/master`, gegen den die
+Mathlib-Nachfragen dieses Laufs gestellt sind: `a218e50f981`, 2026-09-17
+(frisch geholt; der Vorlauf stand auf `8018f6ac06b`).
+
+#### Was gebaut ist
+
+* `integral_id_gammaMeasure` — die **Gammaverteilung** hat den Erwartungswert
+  `a / r`; dazu `integral_id_expMeasure` als Korollar `a = r = 1` und
+  `integrable_id_expMeasure`, die Integrierbarkeit im Exponentialfall.
+* `waitingMeasure_map_eval`, `integrable_waiting_eval`,
+  `identDistrib_waiting_eval`, `tendsto_sum_waiting_div_atTop` — das starke
+  Gesetz der großen Zahlen für die Wartezeiten, `∑_{k<n} ξ k / n → 1` f.s.
+* `jumpTime_const`, `tendsto_jumpTime_div_atTop` — bei konstanter Rate sind die
+  Sprungzeiten die Partialsummen der Wartezeiten geteilt durch die Rate, und ihr
+  mittlerer Abstand ist der Kehrwert der Rate.
+
+Damit steht `tendsto_stepIndex_div_atTop` aus dem Vorlauf nicht länger auf einer
+unbewiesenen Voraussetzung: der Übergang zwischen Sprungnummer und Zeit ist
+über der Sprungkonstruktion vollständig.
+
+#### Befund 1, und er ist der Zweck von Vorschlag 2: Mathlib hat den Erwartungswert der Exponentialverteilung nicht — und den der Gammaverteilung auch nicht
+
+Nachgesehen am Quelltext, in v4.33.1 und auf `upstream/master` `a218e50f981`:
+
+* Die **einzigen** Integrale von
+  `Mathlib/Probability/Distributions/Exponential.lean` und von `…/Gamma.lean`
+  sind die Normierung (`lintegral_exponentialPDF_eq_one`,
+  `lintegral_gammaPDF_eq_one`) und die Verteilungsfunktion
+  (`cdf_expMeasure_eq_integral`, `cdf_gammaMeasure_eq_lintegral`).
+* In ganz `Mathlib/Probability/Distributions/` gibt es **kein** Lemma mit
+  `mean_` und **keines** mit `variance_` im Namen.
+* `expMeasure` kommt außerhalb seiner eigenen Datei in der ganzen Bibliothek
+  **nicht vor** — `git grep -l expMeasure upstream/master -- Mathlib/` gibt
+  genau eine Datei.
+
+Das ist die **vierundzwanzigste** Lücke für `TODO.md` Punkt 8 und dort als
+solche eingetragen. Geschlossen ist sie hier in der Fassung, die für Mathlib die
+richtige wäre — der über der **Gammaverteilung**,
+`∫ x, x ∂(gammaMeasure a r) = a / r`, mit dem Exponentialfall als Korollar
+`a = r = 1` —, und nicht in der, die dieser Lauf brauchte; warum, steht in
+Befund 2. Die Behauptung ist in
+`scripts/check_negatives.py` aufgenommen; der Lauf meldet über **40**
+Behauptungen keinen unerwarteten Treffer.
+
+#### Befund 2: der Erwartungswert ist der Eulersche Integrand **eine Stufe höher**, und deshalb kostet die Gammaverteilung nicht mehr als die Exponentialverteilung
+
+Der erste Entwurf dieses Laufs bewies den Exponentialfall unmittelbar, über
+`Γ(2) = 1`. Beim Aufschreiben der Lücke für `TODO.md` fiel auf, daß der
+allgemeine Fall **derselbe Beweis** ist: die Dichte gegen die Identität ist
+
+    (gammaPDF a r x).toReal • x = 1_{(0,∞)}(x) · r^a/Γ(a) · x^((a+1)−1) · exp(−(r·x)),
+
+also der Eulersche Integrand zum Parameter `a+1` statt `a` — die ganze Rechnung
+ist `x^(a−1) · x = x^a`, eine Zeile `Real.rpow_add`. Danach gibt
+`Real.integral_rpow_mul_exp_neg_mul_Ioi` bei `a+1` den Wert, und
+`Real.Gamma_add_one` kürzt die Normierungskonstante zu `a/r` weg. Der
+Exponentialfall ist ein Zweizeiler darüber.
+
+Der Umbau hat den Satz also **verallgemeinert und zugleich verkürzt** — die
+Hilfsaussage `Γ(2) = 1`, die den ersten Entwurf trug und die Mathlib nur in
+`BohrMollerup.lean` hat, wohin unsere Importkette nicht reicht, fällt dabei ganz
+weg. Das ist der Wert davon, eine Lücke **aufzuschreiben**, ehe man sie schließt:
+die Fassung, die man für Mathlib benennen müßte, war die billigere.
+
+#### Befund 2a: und Mathlibs Eulersches Paar ist unsymmetrisch
+
+Der *Wert* von `∫ t in Ioi 0, t^(a−1) · exp(−(r·t))` steht für **jede** Rate `r`
+da (`Real.integral_rpow_mul_exp_neg_mul_Ioi`,
+`Analysis/SpecialFunctions/Gamma/Basic.lean:465`), die *Konvergenz* nur bei
+`r = 1` (`Real.GammaIntegral_convergent`, `ibid.:66`); ein skaliertes
+`GammaIntegral_convergent` gibt es in ganz `Analysis/SpecialFunctions/Gamma/`
+nicht.
+
+Das schlägt bis in unsere Signaturen durch und ist dort sichtbar gemacht:
+`integral_id_gammaMeasure` steht ohne Ratenbeschränkung und **ohne** jede
+Integrierbarkeitsvoraussetzung — jeder seiner Schritte ist eine Identität von
+Bochner-Integralen, die auch am Müllwert gilt —, während
+`integrable_id_expMeasure` nur für die Exponentialverteilung dasteht. Wer die
+Lücke für Mathlib schließt, schließt beide zugleich; sonst hat die
+Gammaverteilung dort einen Mittelwert, dem die Integrierbarkeit fehlt.
+
+#### Befund 3: der Indikator sitzt auf `Ioi 0` und nicht auf `Ici 0`, und dadurch wird die Identität eine Gleichung an **jedem** Punkt
+
+Die Dichte verschwindet unterhalb von `0`, aber bei `0` ist sie im
+Exponentialfall `1` und nicht `0`. Trotzdem ist der offene Halbstrahl der
+richtige Träger — weil rechts nicht die Dichte steht, sondern die Dichte
+**gegen die Identität**, und die Identität verschwindet bei `0`. Der Punkt `0`
+fällt also von der anderen Seite weg.
+
+Das ist mehr als eine Bequemlichkeit: mit `Ici 0` wäre eine f.s.-Gleichheit
+nötig gewesen (`volume {0} = 0`) und damit ein `Measure.restrict`-Schritt mehr;
+mit `Ioi 0` ist es eine Gleichung an jedem Punkt, und keiner der beiden Sätze
+gibt eine Nullmenge aus. Dieselbe Beobachtung wie bei den Müllwerten, nur mit
+umgekehrtem Vorzeichen: hier trifft ein Randpunkt zwei Vorgaben, die einander
+aufheben.
+
+Beide Hilfsaussagen sind so gebaut, `gammaPDF_toReal_smul` wie
+`exponentialPDF_one_toReal_smul`; die zweite bleibt neben der ersten stehen, weil
+der Integrierbarkeitsbeweis den Integranden in der Gestalt
+`exp (−t) · t^(2−1)` braucht, die `Real.GammaIntegral_convergent` hat, und nicht
+in der von `Real.integral_rpow_mul_exp_neg_mul_Ioi`. Auch das ist die
+Unsymmetrie von Befund 2a, eine Ebene tiefer.
+
+#### Befund 4: `tendsto_jumpTime_div_atTop` braucht **keine** Positivität der Rate, und der Müllwert sagt dabei die Wahrheit
+
+Die Aussage steht für **jedes** `c : ℝ`, auch `c = 0`: dann ist jede Haltezeit
+`ξ n / 0 = 0`, die Sprungzeiten sind konstant `0`, und `c⁻¹ = 0` ist der
+Grenzwert der konstanten Folge. Wie bei `jumpTime_const_mul` des Vorlaufs sagt
+der Müllwert der Division auf beiden Seiten dasselbe.
+
+Gebraucht wird die Positivität erst beim **Verbraucher**, und zwar für die
+*andere* Voraussetzung von `tendsto_stepIndex_div_atTop`: dort steht `0 < m`, und
+bei `m = c⁻¹` ist das `0 < c`. Die beiden Sätze nebeneinander sind damit eine
+Probe darauf, wo eine Voraussetzung wirklich sitzt — sie sitzt nicht dort, wo die
+Rate vorkommt, sondern dort, wo durch den Grenzwert geteilt wird.
+
+#### Befund 5, klein und teuer: `∞` ist in dieser Datei kein Token
+
+Der Entwurf lief freistehend gegen Mathlib fehlerfrei und scheiterte beim
+Einfügen an `exponentialPDF 1 x < ∞` — die Datei erreicht `open scoped ENNReal`
+nicht, und Lean meldet `expected token` samt einem `sorry` an der Stelle des
+Grenzwerts, also **drei** Folgefehler für ein fehlendes Notationsskript. Zu
+schreiben ist `< ⊤`, wie es die Datei an 55 anderen Stellen tut. Ebenso ist
+`Real.integral_rpow_mul_exp_neg_mul_Ioi` voll zu qualifizieren, während
+`Real.GammaIntegral_convergent` schon so dasteht.
+
+Dazu ein zweites, gleicher Art: `positivity` scheitert an `r ^ a` mit `r : ℝ`
+frei — `Real.rpow` einer negativen Basis ist über die komplexe Potenz definiert
+und kann negativ sein. `0 < r` gehört also in die Voraussetzung der
+Hilfsaussage und nicht erst in die des Satzes.
+
+Der Entwurf gegen reines Mathlib ist trotzdem der schnellere Weg — 40 Sekunden
+statt 67 für die Kette —; was er nicht prüft, ist der **Namensraum**, in dem die
+Deklaration landen soll. Wer so entwirft, rechnet mit einer zweiten Runde.
+
+#### Was offen bleibt
+
+* **Die Probe selbst ist noch über `⌊n t⌋` gestellt.** Vorschlag 3 des Vorlaufs
+  — sie auf `stepIndex` umzuschreiben — ist mit diesem Lauf eine Rechnung
+  geworden und nicht mehr eine Behauptung, aber sie ist nicht ausgeführt. Der
+  Punkt steht in `MartingaleProblems/README.md`, Meilenstein 10, benannt.
+* Die Voraussetzungen **(a) und (b)** von `mpSolution_of_tendsto` bleiben, wie
+  die vier Vorläufe sie hinterlassen haben: Eingabe eines Straffheitsarguments,
+  das das Manuskript ausdrücklich nicht liefert.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die Probe an der Sprungkonstruktion, nicht am Gitter.** *Aussage:*
+   `tendsto_integral_mul_jumpProcess` — dieselbe Konklusion wie
+   `tendsto_integral_mul_rescaledChain_natural`, aber mit
+   `fun t ↦ jumpProcess (fun _ : E ↦ (n : ℝ)) t` an der Stelle von
+   `gridPath (jumpChain E) n`. *Worauf sie ruht:*
+   `jumpProcess_eq_jumpChain_stepIndex` (der Prozeß **ist** die Kette am
+   Erneuerungszähler, `rfl`), `jumpProcess_const_mul_rate` (die Beschleunigung
+   ist eine Zeitänderung), und für den Grenzübergang
+   `tendsto_stepIndex_mul_div_atTop` zusammen mit `tendsto_jumpTime_div_atTop`
+   aus diesem Lauf. *Warum jetzt:* die Probe ist der einzige Ort, an dem
+   Meilenstein 10 die Sprungkonstruktion berührt, und sie berührt sie bisher nur
+   über ein deterministisches Gitter — also über einen Prozeß, den
+   `jumpProcess_ne_gridPath_unitDelay` von der Konstruktion **unterscheidet**.
+   Mit dem Erneuerungsgesetz fällt der Unterschied im Grenzwert weg, und erst
+   damit ist das Akzeptanzbeispiel eines über der eigenen Konstruktion.
+2. **Die skalierte Konvergenz des Eulerschen Integrals, und daraus die
+   Integrierbarkeit der Gammaverteilung.** *Aussage:*
+   `integrableOn_rpow_mul_exp_neg_mul_Ioi : 0 < a → 0 < r →
+   IntegrableOn (fun t ↦ t ^ (a - 1) * exp (-(r * t))) (Set.Ioi 0)`, und darüber
+   `integrable_id_gammaMeasure`. *Worauf sie ruht:*
+   `Real.GammaIntegral_convergent` bei `s = a` und die Substitution `t ↦ t / r`,
+   also `MeasureTheory.integrableOn_Ioi_comp_mul_left_iff`
+   (`MeasureTheory/Integral/IntegralEqImproper.lean:1272` auf `upstream/master`,
+   `:1251` in v4.33.1), das genau diese
+   Gestalt hat. *Warum jetzt:* sie ist die in Befund 2a benannte Unsymmetrie, und
+   sie ist der einzige Grund, warum `integrable_id_expMeasure` nicht
+   `integrable_id_gammaMeasure` heißt. Solange sie fehlt, ist die
+   vierundzwanzigste Lücke von `TODO.md` Punkt 8 halb geschlossen, und der PR,
+   den sie vorschlägt, wäre unvollständig.

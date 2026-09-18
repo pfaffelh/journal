@@ -1,4 +1,4 @@
-# Negativaussagen gegen `upstream/master` `8018f6ac06b3ea23aa6f142703ab17a71e57dbe8`
+# Negativaussagen gegen `upstream/master` `a218e50f981942cba4fd060faff7cae680805062`
 
 ## Die Behauptungen der Roadmaps
 
@@ -138,6 +138,13 @@ Suche `shift` unter `Mathlib/Probability/Kernel/IonescuTulcea/`: **0 Treffer** i
 > Gedächtnislosigkeit und Schwanz der Exponentialverteilung fehlen; vorhanden ist allein die Verteilungsfunktion `cdf_expMeasure_eq`.
 
 Suche `memoryless|expMeasure_Ioi|Ioi.*expMeasure|expMeasure.*Ioi` unter `Mathlib/Probability/Distributions/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
+## `exp-mean` — TODO.md Punkt 8, vierundzwanzigste Lücke
+
+> Der Erwartungswert der Exponential- und der Gammaverteilung fehlt; die einzigen Integrale beider Dateien sind die Normierung und die Verteilungsfunktion.
+
+Suche `mean_|variance_|integral_id|expectation` unter `Mathlib/Probability/Distributions/Exponential.lean, Mathlib/Probability/Distributions/Gamma.lean`: **0 Treffer** in 0 Dateien — wie erwartet.
 
 
 ## `convergence-in-measure-complete` — TODO.md Punkt 8, dritte Lücke
@@ -291,5 +298,5 @@ Suche `setIntegral.*[Mm]artingale|[Mm]artingale.*setIntegral` unter `Mathlib/Pro
 
 ## Zusammenfassung
 
-39 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
+40 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
 

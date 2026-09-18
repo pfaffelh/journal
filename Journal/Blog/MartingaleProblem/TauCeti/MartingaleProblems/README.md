@@ -9578,16 +9578,63 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   **So the two indices of the probe agree in the limit exactly when the mean
   spacing of the jump times is `1`**, and differ by the factor `m` otherwise —
   which is what the rescaling by `n` is for.
-* **The almost sure hypothesis `T n / n → m` for the jump construction**, the
-  one probabilistic input the passage needs. At a constant rate it is
-  `ProbabilityTheory.strong_law_ae` (`Mathlib/Probability/StrongLaw.lean`)
-  applied to the coordinates of `waitingMeasure`, whose independence is
-  `ProbabilityTheory.iIndepFun_infinitePi` and whose mean under `expMeasure 1`
-  is `1`; the jump times are their partial sums divided by the rate. With it and
-  `tendsto_stepIndex_mul_div_atTop` the probes above — an orthogonality at the
-  **jump number** — become the orthogonality at the **time** that
-  `ex:invariance` speaks of, and that last step is what this milestone still
-  owes.
+* `integral_id_gammaMeasure`: **the gamma law has mean `a / r`**, and
+  `integral_id_expMeasure` and `integrable_id_expMeasure`: **the standard
+  exponential law is integrable and has mean one.** **In Lean** on 2026-09-18,
+  third run. The whole content of the mean is that the density against the
+  identity is the Euler integrand one step up —
+  `x ^ (a - 1) · x = x ^ ((a + 1) - 1)`, as `gammaPDF_toReal_smul` — so that
+  `Real.integral_rpow_mul_exp_neg_mul_Ioi` at `a + 1`
+  (`Mathlib/Analysis/SpecialFunctions/Gamma/Basic.lean:465`) applies and
+  `Real.Gamma_add_one` cancels the normalising constant. The exponential case is
+  its corollary at `a = r = 1`; the integrability is
+  `Real.GammaIntegral_convergent` (`ibid.:66`) at `s = 2`. The indicator sits on
+  `Set.Ioi 0` and not on `Set.Ici 0` because at `0` the identity vanishes, so the
+  identification holds at **every** real point and no null set is spent.
+  **Mathlib has the mean of no distribution of `Probability/Distributions/`**,
+  in `v4.33.1` nor on `upstream/master` `a218e50f981` (2026-09-17): the only
+  integrals of `Exponential.lean` and `Gamma.lean` are the normalisation
+  (`lintegral_exponentialPDF_eq_one`, `lintegral_gammaPDF_eq_one`) and the
+  distribution function, and no declaration of that directory carries `mean_` or
+  `variance_` in its name.
+  **And Mathlib's Euler pair is asymmetric**: the *value* of
+  `∫ t in Ioi 0, t ^ (a - 1) · exp (-(r · t))` is there for every rate `r`, the
+  *convergence* only at `r = 1`. A scaled `GammaIntegral_convergent` exists
+  nowhere in `Analysis/SpecialFunctions/Gamma/`. That is why the mean above
+  needs no rate restriction and the integrability below is stated for the
+  exponential law alone.
+* `waitingMeasure_map_eval`, `integrable_waiting_eval`,
+  `identDistrib_waiting_eval` and `tendsto_sum_waiting_div_atTop`: **the strong
+  law of large numbers for the waiting times**, `∑_{k<n} ξ k / n → 1` almost
+  surely. **In Lean** on 2026-09-18, third run. Etemadi's version in Mathlib
+  (`ProbabilityTheory.strong_law_ae`, `Mathlib/Probability/StrongLaw.lean:786`)
+  asks for pairwise independence, integrability of one coordinate and identical
+  distribution; the first is `iIndepFun_waiting` through
+  `ProbabilityTheory.iIndepFun.indepFun`, the other two are
+  `Measure.infinitePi_map_eval`, and what the statement adds to it is the
+  **value** of the limit, which is `integral_id_expMeasure`.
+* `jumpTime_const` and `tendsto_jumpTime_div_atTop`: **the mean spacing of the
+  jump times at a constant rate is the reciprocal of the rate.** **In Lean** on
+  2026-09-18, third run. This is the almost sure hypothesis `T n / n → m` of
+  `tendsto_stepIndex_div_atTop`, discharged over the jump construction, and with
+  it the passage between jump number and time is complete: at rate `c` the
+  renewal count of `s` grows like `c · s`.
+  **The rate is not assumed positive**, and the statement is true without it: at
+  `c = 0` every holding time is the junk value `x / 0 = 0`, the jump times are
+  constantly `0`, and `c⁻¹ = 0` is the limit of the constant sequence. The junk
+  value tells the truth on both sides here, as it does in `jumpTime_const_mul`
+  and unlike `stepIndex_div_const`. Positivity is what the *other* hypothesis of
+  `tendsto_stepIndex_div_atTop` needs, `0 < m`, which at `m = c⁻¹` is `0 < c`.
+* **Reading the probe at the renewal count instead of at `⌊n t⌋`**, which is
+  what the three statements above make a computation rather than a claim. The
+  probe `tendsto_integral_mul_rescaledChain_natural` is stated over
+  `gridPath (jumpChain E) n`, that is over the chain read at `⌊n t⌋`;
+  `jumpProcess_const_mul_rate_eq_gridPath` says the two agree exactly when the
+  indices do, and `tendsto_stepIndex_mul_div_atTop` together with
+  `tendsto_jumpTime_div_atTop` says that at rate `c` they agree in the limit
+  precisely for `c = 1`. Restating the probe over
+  `fun t ↦ jumpProcess (fun _ ↦ (n : ℝ)) t` and carrying the limit through is
+  what this milestone still owes.
 * **Hypothesis (a) is about real random variables and carries no topology.** In
   the example above the path space `F` is `D ι E` and the functionals
   `Y° t` are evaluations, but the statement of (a) never mentions `F`'s

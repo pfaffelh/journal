@@ -215,7 +215,7 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Dreiundzwanzig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Vierundzwanzig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
 Alle zweiundzwanzig beim Beweisen aufgefallen, und die ersten vier sind kleine,
 in sich abgeschlossene Beiträge. Sie gehören thematisch zu
@@ -829,6 +829,47 @@ seinem Dateikopf: es prüft Zeichenketten, nicht Aussagen.
   `ConvergenceInDistribution.lean`. Die gleichgradige Integrierbarkeit wäre
   dabei über die Schwänze `∫ max (‖ξ i‖ - c) 0 ≤ ε` zu formulieren und nicht
   über `UnifIntegrable`, das ein Maß festhält.
+
+* **Der Erwartungswert der Exponentialverteilung — und der der
+  Gammaverteilung.** Der vierundzwanzigste, gefunden am 2026-09-18 beim
+  Erneuerungsgesetz der großen Zahlen.
+  `Mathlib/Probability/Distributions/Exponential.lean` und
+  `…/Gamma.lean` sagen **nicht**, was `∫ x, x ∂(expMeasure r)` ist; die einzigen
+  Integrale beider Dateien sind die Normierung (`lintegral_exponentialPDF_eq_one`,
+  `lintegral_gammaPDF_eq_one`) und die Verteilungsfunktion
+  (`cdf_expMeasure_eq`, `cdf_gammaMeasure_eq_integral`). In ganz
+  `Mathlib/Probability/Distributions/` gibt es weder ein Lemma mit `mean_` noch
+  eines mit `variance_` im Namen, und `expMeasure` kommt außerhalb seiner eigenen
+  Datei überhaupt nicht vor. Am 2026-09-18 gegen `upstream/master`
+  `a218e50f981` (2026-09-17) und gegen v4.33.1 geprüft.
+
+  Wir haben ihn gleich in der Fassung bewiesen, die für Mathlib die richtige
+  ist: `integral_id_gammaMeasure`, `∫ x, x ∂(gammaMeasure a r) = a / r` für
+  `0 < a`, `0 < r`, mit `integral_id_expMeasure` als Korollar `a = r = 1`. Der
+  ganze Inhalt ist, daß die Dichte gegen die Identität der Eulersche Integrand
+  **eine Stufe höher** ist — `x^(a−1) · x = x^((a+1)−1)` —, worauf
+  `Real.integral_rpow_mul_exp_neg_mul_Ioi` bei `a+1` greift und
+  `Real.Gamma_add_one` die Normierungskonstante wegkürzt. Eine
+  Integrierbarkeitsvoraussetzung kommt darin nicht vor und wird nicht gebraucht:
+  jeder Schritt ist eine Identität von Bochner-Integralen, die auch am Müllwert
+  gilt.
+
+  **Und hier liegt eine zweite, kleinere Lücke daneben: Mathlibs Eulersches Paar
+  ist unsymmetrisch.** Der *Wert* von `∫ t in Ioi 0, t^(a−1) · exp(−(r·t))`
+  steht für **jede** Rate `r` da (`Real.integral_rpow_mul_exp_neg_mul_Ioi`,
+  `Analysis/SpecialFunctions/Gamma/Basic.lean:465`), die *Konvergenz* nur bei
+  `r = 1` (`Real.GammaIntegral_convergent`, `ibid.:66`). Ein skaliertes
+  `GammaIntegral_convergent` gibt es in ganz
+  `Analysis/SpecialFunctions/Gamma/` nicht; am 2026-09-18 gegen
+  `upstream/master` `a218e50f981` geprüft. Deshalb steht unser Mittelwert ohne
+  Ratenbeschränkung da, unsere Integrierbarkeit (`integrable_id_expMeasure`)
+  aber nur für die Exponentialverteilung.
+
+  Für Mathlib gehören beide in **einen** PR neben
+  `Probability/Distributions/Gamma.lean`: der Mittelwert, die skalierte
+  Konvergenz und daraus die Integrierbarkeit, die Varianz daneben. Die
+  Gedächtnislosigkeit der zweiten Lücke dieses Punktes gehört in denselben PR
+  wie das Exponentialkorollar.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine

@@ -7,7 +7,7 @@ Skript sucht mit `git grep` in `upstream/master` und meldet die Trefferzahl; ein
 Treffer ist kein Gegenbeweis, sondern eine Stelle zum Nachlesen.
 
 `CLAIMS` sind die Behauptungen der vier `README.md` und der drei
-`Suggested.lean`, `CLAIMS_TODO8` die zweiundzwanzig Lücken von `TODO.md` Punkt 8.
+`Suggested.lean`, `CLAIMS_TODO8` die vierundzwanzig Lücken von `TODO.md` Punkt 8.
 
 Jede Zeile trägt als letztes Feld die Dateien, in denen ein Treffer **bekannt
 und harmlos** ist — Namensvettern, Literaturverweise, der jeweils benachbarte
@@ -137,6 +137,13 @@ CLAIMS_TODO8 = [
      'vorhanden ist allein die Verteilungsfunktion `cdf_expMeasure_eq`.',
      'memoryless|expMeasure_Ioi|Ioi.*expMeasure|expMeasure.*Ioi',
      ['Mathlib/Probability/Distributions/'], []),
+    ('exp-mean', 'TODO.md Punkt 8, vierundzwanzigste Lücke',
+     'Der Erwartungswert der Exponential- und der Gammaverteilung fehlt; die '
+     'einzigen Integrale beider Dateien sind die Normierung und die '
+     'Verteilungsfunktion.',
+     'mean_|variance_|integral_id|expectation',
+     ['Mathlib/Probability/Distributions/Exponential.lean',
+      'Mathlib/Probability/Distributions/Gamma.lean'], []),
     ('convergence-in-measure-complete', 'TODO.md Punkt 8, dritte Lücke',
      '`ConvergenceInMeasure.lean` enthält das Wort `cauchy` nicht ein '
      'einziges Mal; die Vollständigkeit der Konvergenz im Maß fehlt.',
