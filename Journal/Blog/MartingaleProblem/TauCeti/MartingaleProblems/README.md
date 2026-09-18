@@ -118,6 +118,37 @@ Lebesgue measure. Fix `[Preorder ι]`.
 * `Clock ι`, a structure bundling a `MeasurableSpace ι`, a `Measure` `q` on it,
   the hypothesis that `Set.Iic t` and `Set.Iio t` are measurable for every `t`,
   and `q (Set.Iic t) ≠ ∞`.
+
+  **`measure_Iic_ne_top` is not σ-finiteness, and the two are incomparable.**
+  The condition says every *single* down-set has finite mass, which is what makes
+  the compensator `∫_{⟨⊥,t⟩} g (X s) q(ds)` a real number and the increment
+  `Y t - Y s` an honest difference rather than `∞ - ∞`. σ-finiteness does not give
+  that — it permits `q (Set.Iic t) = ∞`, and then `Y t` does not exist; `ℝ` with
+  Lebesgue measure is σ-finite and not a clock. Conversely the clock condition
+  does not give σ-finiteness: on an uncountable antichain (`t ≤ u ↔ t = u`) with
+  counting measure every `Set.Iic t = {t}` has mass `1`, and counting measure on
+  an uncountable set is not σ-finite. The union `⋃ t, Set.Iic t = univ` is
+  uncountable in general, which is exactly what σ-finiteness would need to be
+  countable.
+
+  Nothing in this development integrates over all of `ι` — only over windows —
+  so σ-finiteness is never required, and `SigmaFinite` occurs nowhere in
+  `Suggested.lean`. The `SFinite` instances there are all for measures on `Ω`,
+  on products or on kernels; the single clock-side occurrence is
+  `SFinite (lebesgueClock.q.restrict S)`, which `inferInstance` finds because
+  that is a concrete image of Lebesgue measure. For an abstract `Q : Clock ι`
+  there is nothing to infer: `q` is a structure field with no instance.
+
+  **Available on demand, and not worth stating before then.** If a proof ever
+  needs Fubini over `ι × Ω` for an *abstract* clock, σ-finiteness is what it
+  will want, and it follows in about ten lines from one extra hypothesis that is
+  nowhere assumed today: a countable cofinal family `(t n)`. Take
+  `A n = ⋃ k ≤ n, Set.Iic (t k)` — measurable by `measurableSet_Iic`, monotone,
+  of finite mass as a finite union by `measure_Iic_ne_top`, and covering `univ`
+  by cofinality; that is Mathlib's `spanningSets`. It holds for every instance
+  the manuscript carries (`ℝ≥0` via `ℕ`, `ℕ₀`, `[0,T]`, `h·ℤ`, and `ℝ₊^d` via
+  `(n,…,n)`). Until there is a consumer it would be a lemma nobody applies, so
+  it is recorded here rather than proved.
 * The two intervals `Clock.Ioc q s t = Set.Iic t \ Set.Iic s` and
   `Clock.Ico q s t = Set.Iio t \ Set.Iio s`, with `Clock.Conv` the two element
   type selecting between them and `Clock.interval q c s t` the selected one.
