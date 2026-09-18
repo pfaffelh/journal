@@ -444,6 +444,83 @@ sich Mathlibs Aufkreuzungs-API über einen beliebigen linear geordneten Index
 ziehen läßt. **Nicht der ganze Meilenstein 9 ist offen:** optionales Sampling in
 stetiger Zeit und die Stabilität unter Stoppen stehen seit dem 2026-09-10.
 
+**VORRANG AB 2026-09-18 ABENDS, vom Nutzer angeordnet: die Kette gegen Mathlib
+`master` zum Laufen bringen. Alles andere wartet.**
+
+> **Ein Lauf, eine Datei, in Kettenordnung. Zuerst `WeakConvergence`.**
+
+**Warum jetzt.** `TauCetiRoadmap/CONTRIBUTING.md` verlangt, daß eine
+eingereichte `Suggested.lean` gegen Mathlib `master` baut, und wir haben das nie
+geprüft: die Läufe kompilieren gegen v4.33.1 und holen `master` nur für die
+Zitatprüfung. Am 2026-09-18 abends ist es zum ersten Mal gemessen worden, und
+das Ergebnis steht in `scripts/_citations/lean_check_master.md`:
+
+| Datei | Fehler | Warnungen |
+| --- | ---: | ---: |
+| `WeakConvergence` | **16** | 52 |
+| `SkorokhodSpace` | 1 | — |
+| `MartingaleProblems` | 1 | — |
+
+**Die unteren beiden sind nicht geprüft.** Ihr einziger Fehler ist die fehlende
+`.olean` der Abhängigkeit; über ihren Zustand gegen `master` ist **nichts**
+bekannt, und eine Hochrechnung aus den 16 wäre geraten. Sag das so, statt eine
+Zahl zu schätzen.
+
+**Das Werkzeug liegt bereit.**
+
+* `~/Code/lean/mathlib-master` — Worktree von `~/Code/lean/mathlib4` auf
+  `upstream/master` (`94ef6b89544`, 2026-09-18), Toolchain `v4.35.0-rc2`,
+  Mathlib-Cache gezogen (6,7 GB). Nicht neu herunterladen.
+* `scripts/check_master.py` — dieselbe Prüfung wie `check_suggested.py`, nur
+  gegen diesen Worktree. Ungefiltert, ganze Datei, `| head -N` verboten.
+
+**Die Entscheidung, die dabei ansteht, und sie ist schon gefallen:
+`master` ist maßgeblich.** Beides zugleich geht nicht, und das ist belegt, nicht
+vermutet:
+
+```lean
+-- v4.33.1
+noncomputable def ProbabilityMeasure.map (ν : ProbabilityMeasure Ω) {f : Ω → Ω'}
+    (f_aemble : AEMeasurable f ν) : ProbabilityMeasure Ω'
+-- master
+noncomputable def ProbabilityMeasure.map (ν : ProbabilityMeasure Ω) (f : Ω → Ω')
+    : ProbabilityMeasure Ω'
+```
+
+Ebenso `measurable_pi_lambda` (auf master veralteter Alias von
+`Measurable.of_eval`, das es auf v4.33.1 nicht gibt). **Es gibt keine
+Schreibweise, die auf beiden Ständen steht.** Also: die Roadmap-Dateien wandern
+auf `master`, und `check_suggested.py` gegen v4.33.1 wird dabei **rot** — das
+ist erwartet und kein Rückschritt. Ab der ersten Anpassung ist
+`check_master.py` die maßgebliche Prüfung; `check_suggested.py` läuft weiter
+mit, aber seine Fehler sind ab dann zu *berichten*, nicht zu *beheben*.
+
+Das Journal-Projekt selbst bleibt auf v4.33.1 — die Roadmap-Dateien stehen nicht
+im Lake-Build, es ist also nichts zu migrieren außer ihnen.
+
+**Was der erste Lauf tut.**
+
+1. `scripts/check_master.py` laufen lassen, den Stand aufnehmen.
+2. **Nur `WeakConvergence`** anpassen, bis es 0 Fehler hat. Die sechzehn
+   zerfallen in vier Familien, drei davon mechanisch — sie sind in
+   `Facts/INVENTAR.md` unter „2026-09-18" mit Zeilennummern ausgeschrieben:
+   `ProbabilityMeasure.map` ohne Meßbarkeitsargument (3×, Z779/1952/1953),
+   `Finset.prod_le_prod`/`prod_le_one` mit weniger expliziten Argumenten
+   (3×, Z5842/5856), `ENNReal.le_tsum` (2×, Z4052/4206), und fünf
+   Taktikbeweise, die nicht mehr schließen (Z3998/4019/4361/4661/4677) — nur
+   die letzten fünf verlangen, in den Beweis zu sehen.
+3. **Danach messen, nicht schätzen:** ist `WeakConvergence` sauber, entsteht
+   seine `.olean`, und `check_master.py` sagt zum ersten Mal, wie es um
+   `SkorokhodSpace` steht. Diese Zahl ist das Ergebnis des Laufs.
+4. Die 52 Warnungen sind **nicht** Aufgabe dieses Laufs. Sie sind neue
+   Veraltungen (`if_pos`/`if_neg` → `ite_eq_left`/`ite_eq_right` 20×,
+   `dif_pos`/`dif_neg` 7×, `Set.mem_setOf_eq` → `Set.mem_ofPred_eq` 3×,
+   `push_neg` → `push Not`). Zählen, in den Bericht, liegen lassen — sie
+   brechen nichts und ihre Zahl wächst mit jeder Datei.
+
+**Kein Lauf fängt Meilenstein 11 oder C.5/G an, solange die Kette gegen
+`master` nicht durchläuft.**
+
 **STEHENDE REGEL AB 2026-09-18, vom Nutzer angeordnet: Nichtexplosion steht in
 der Hypothese, nicht im Nachtrag.**
 
