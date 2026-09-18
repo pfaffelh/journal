@@ -521,6 +521,53 @@ im Lake-Build, es ist also nichts zu migrieren außer ihnen.
 **Kein Lauf fängt Meilenstein 11 oder C.5/G an, solange die Kette gegen
 `master` nicht durchläuft.**
 
+---
+
+**EINGELÖST am 2026-09-18, zweiundzwanzigster Lauf: die Kette baut gegen
+`master` mit 0 Fehlern und 0 `sorry` in allen drei Dateien** (nachgeprüft vom
+Nutzer, `scripts/_citations/lean_check_master.md`). Der Vorrang oben ist damit
+erledigt. Was **unmittelbar** folgt, ist die zweite Hälfte derselben Aufgabe:
+
+**DIE VERALTUNGEN AUFLÖSEN, vom Nutzer am 2026-09-18 angeordnet.**
+
+Der master-Build hinterläßt **536 Warnungen** (51 / 123 / 362), davon **354
+echte Veraltungen** auf sechs Namen:
+
+| Anzahl | alt | neu |
+| ---: | --- | --- |
+| 133 | `if_neg` | `ite_eq_right` |
+| 120 | `if_pos` | `ite_eq_left` |
+| 40 | `Set.mem_setOf_eq` | `Set.mem_ofPred_eq` |
+| 32 | `push_neg` (Taktik) | `push Not` |
+| 11 | `dif_pos` | `dite_eq_left` |
+| 10 | `dif_neg` | `dite_eq_right` |
+
+**Drei Stufen, jede einzeln durch `scripts/check_master.py`, keine zwei
+zusammen:**
+
+1. **Die 274 mechanischen** — `if_pos`, `if_neg`, `dif_pos`, `dif_neg`. Das ist
+   risikolos, und der Beleg gehört in den Bericht: in `Init/Core.lean` von
+   `v4.35.0-rc2` (Zeilen 1179–1219) ist der alte Name **wörtlich als der neue
+   definiert**, mit identischer Argumentstruktur —
+   `theorem if_pos (hc : c) : (if c then t else e) = t := ite_eq_left hc`.
+   Eine reine Umbenennung. Trotzdem: nach der Ersetzung **ganz** übersetzen.
+2. **Die 40 `Set.mem_setOf_eq`** — erst eine Stelle ersetzen und übersetzen,
+   dann die übrigen. `Set.mem_ofPred_eq` ist am Quelltext zu belegen, nicht aus
+   der Warnung abzuschreiben.
+3. **Die 32 `push_neg`** — das ist ein **Taktiktausch**, keine Umbenennung, und
+   gehört deshalb zuletzt, mit voller Neuübersetzung.
+
+**Was ausdrücklich NICHT Aufgabe ist:** die 182 Nicht-Veraltungen
+(58 `unusedSectionVars`, 50 „Try this", 24 ungenutzte `simp`-Argumente,
+22 „Hint"). Das sind Stilfragen, und `unusedSectionVars` zu befolgen hieße
+Signaturen zu ändern. Sie werden gezählt und berichtet, nicht angefaßt.
+
+**Warum es sich lohnt, und der Grund ist gemessen:** am 2026-09-17 stand
+`Set.mem_setOf_eq` 37× in den Dateien und `check_suggested.py` war dafür blind,
+weil es nur Fehler zählt. Bei 536 Warnungen findet niemand die eine, die zählt.
+Nach dieser Aufgabe ist deshalb `check_master.py` um eine **Warnungsspalte** zu
+erweitern, damit die Zahl künftig nicht unbemerkt wächst.
+
 **STEHENDE REGEL AB 2026-09-18, vom Nutzer angeordnet: Nichtexplosion steht in
 der Hypothese, nicht im Nachtrag.**
 
