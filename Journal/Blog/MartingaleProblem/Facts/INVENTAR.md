@@ -36423,3 +36423,151 @@ von Integralen. Das ist der Stand, mit dem der nächste Lauf anfängt.
    Vergrößerung. Die Nullmengenfassung ist sein zweiter Spezialfall, sie kostet
    die Unabhängigkeit von `𝒩` und sonst nichts, und mit ihr ist die Frage, die
    Teil C blockiert hat, beantwortet statt vertagt.
+
+### 2026-09-18, sechster Lauf des Tages — der Grenzübergang der Abschneidung steht, und die Voraussetzung, die er kostet, ist die des Manuskripts; Vorschlag 2 war seit dem 2026-09-12 erledigt
+
+**Vorschlag 1 des Vorlaufs ist eingelöst, Vorschlag 2 war eine Doppelung und ist
+nicht gebaut worden.** Vier Deklarationen mehr in
+`TauCeti/MartingaleProblems/Suggested.lean`, alle drei Roadmap-Dateien ohne einen
+Fehler und ohne ein `sorry` durch `scripts/check_suggested.py` gegen v4.33.1, alle
+vier mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft.
+Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 10.
+
+#### Die Entscheidung, die der Vorlauf zu treffen aufgegeben hatte
+
+Der Vorlauf hatte sie ausdrücklich als *Entscheidung* hinterlassen und nicht als
+Rechnung: gleichmäßige Beschränktheit des Martingals oder gleichgradige
+Integrierbarkeit. Die Antwort ist **keines von beiden**, und der Grund steht in
+der Konvergenz selbst.
+
+**Der Grenzübergang `K → ∞` ist gar keine analytische Konvergenz.** An *jedem*
+Stichprobenpunkt ist die abgeschnittene Folge **stationär**: `τ ω` ist eine
+natürliche Zahl, also ist `min (τ ω) K = τ ω`, sobald `K ≥ τ ω`. Was die
+Vertauschung von Limes und Integral verlangt, ist deshalb genau eine
+**Majorante** und sonst nichts. Gleichgradige Integrierbarkeit täte es auch; sie
+ist nicht genommen, weil sie strikt mehr ist, als dieser Beweis verbraucht, und
+an der Anwendung strikt schwerer zu prüfen.
+
+`integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_dominated` trägt die
+Majorante daher an der schwächsten Stelle, an der sie stehen kann: `‖M n ω‖ ≤ g ω`
+für `n ≤ τ ω` und für keine anderen Indizes. Die Fassung mit konstanter Schranke,
+`…_of_bdd`, ist der Spezialfall `g = c` und die, nach der der Vorlauf gefragt
+hatte — sie ist mitgebaut und ist, wie der nächste Punkt zeigt, für die Probe
+**unbrauchbar**.
+
+#### Der Befund: die Schranke des kompensierten Kettenmartingals, und daß sie das Manuskript zitiert
+
+`norm_chainCompensated_le` rechnet aus, was der Vorlauf vermutet hatte:
+`‖chainCompensated Pf f Ξ n ω‖ ≤ C + 2 n C` bei beschränkter Testfunktion, und
+besser geht es nicht — der Kompensator ist eine Summe von `n` Zuwächsen der Größe
+höchstens `2 C`, und nichts hebt sich weg. Eine **gleichmäßige** Schranke gibt es
+also nicht, und `…_of_bdd` greift nicht.
+
+Die dominierte Fassung greift, mit `g = C + 2 τ C`, und
+`integral_sub_mul_eq_zero_of_chainCompensated` sagt damit, was die Probe kostet:
+**der zufällige Index muß einen endlichen Erwartungswert haben.**
+
+**Und das ist keine Formalisierungsschuld, sondern die Voraussetzung des
+Manuskripts.** `thm:pathjumpMP`(b) trägt `𝔼[N t] < ∞`; hier kommt sie von der
+anderen Seite heraus. Der lokale Satz verlangt nichts dergleichen, und in dem
+Augenblick, in dem die Orthogonalität an einem **zufälligen** statt an einem
+festen Index gelesen wird, ist das erste Moment dieses Index genau der Preis.
+Der Erneuerungszähler eines Sprungprozesses mit beschränkter Rate hat ihn; der
+lokale Zweig hat ihn nicht, und deshalb ist die Trennung der beiden Zweige des
+Manuskripts an dieser Stelle wiederzufinden.
+
+#### Die Stolperstelle, und sie ist die alte in neuem Gewand
+
+`ℕ∞` und `WithTop ℕ` sind **für `rw` nicht dasselbe**. `ENat` ist ein `def` über
+`WithTop ℕ` mit eigenen Ordnungsinstanzen; ein `min`, das man bei `ℕ∞`
+hinschreibt, und eines, das `IsStoppingTime.min` erzeugt, sind definitionsgleich
+und passen nicht als `rw`-Muster aufeinander. Der Assoziativitätsschritt des
+Beweises scheitert mit „Application type mismatch: `τ ω` has type `ℕ∞` but is
+expected to have type `WithTop ℕ`" an einem Term, dem er gleich ist. Die neuen
+Aussagen sind deshalb bei `WithTop ℕ` gestellt — dem Typ, über dem `stoppedValue`
+und `IsStoppingTime` selbst geschrieben sind. Das ist dieselbe Falle wie
+`ENNReal` gegen `WithTop ℝ≥0` beim achtzehnten Lauf des 2026-09-10; sie steht
+jetzt auch an der Deklaration.
+
+#### Vorschlag 2 des Vorlaufs war seit dem 2026-09-12 erledigt — und ist um ein Haar zum zweiten Mal gebaut worden
+
+Der Vorlauf hatte `condExp_sup_null` als zweite Lücke vorgeschlagen — die
+Augmentierung um Nullmengen, mit der Begründung, Teil C warte seit dem
+2026-09-12 auf die Antwort, ob die Entwicklung sie verträgt. Der Bauteil ist in
+diesem Lauf gebaut, übersetzt und mit `#print axioms` geprüft worden
+(`nullEvents`, `indep_nullEvents`, `condExp_sup_nullEvents`,
+`augmentedFiltration`, `martingale_augmentedFiltration`) — **und dann wieder
+entfernt**, weil er eine Doppelung ist.
+
+`Suggested.lean` hat seit dem 2026-09-12 den Abschnitt `Augmentation` mit
+siebzehn Deklarationen: `MeasureTheory.Filtration.augment`,
+`condExp_eq_condExp_of_forall_exists_ae_eq`, `condExp_augment`,
+`Martingale.augment`, `Martingale.of_augment`, `IsStoppingTime.augment`,
+`Locally.augment`. Die Vorfrage des Nutzers ist dort beantwortet, und zwar in
+**beiden** Richtungen; der Abschnitt „Die Augmentierung einer Filtration um die
+Nullmengen, und was sie trägt" der README sagt es ausdrücklich.
+
+**Und die vorhandene Fassung ist die bessere.** Sie erklärt die Augmentierung als
+`eventuallyMeasurableSpace (𝓕 i) (ae μ) ⊓ m₀` — die Mengen, die sich von einer
+`𝓕 i`-Menge um eine Nullmenge unterscheiden — statt als Verband `𝓕 i ⊔ 𝒩`, und
+ihr `condExp_eq_condExp_of_forall_exists_ae_eq` braucht **kein**
+`IsProbabilityMeasure`, während der Weg über die Unabhängigkeit es braucht: bei
+einem allgemeinen endlichen Maß hat eine konulle Menge das Maß `μ univ` und nicht
+`1`, und die Produktformel fällt.
+
+**Der Fehler, an dem die Doppelung aufgeflogen ist, ist lehrreich.**
+`Filtration.augment_apply := rfl` scheiterte mit „Not a definitional equality",
+und der Grund war nicht die Mathematik: eine Deklaration `def Filtration.augment`
+landet im **Wurzelnamensraum** `Filtration`, während Punktnotation auf einer
+`MeasureTheory.Filtration` nach `MeasureTheory.Filtration.augment` sucht. Der
+Name war schon vergeben, die neue Definition stand daneben, und `𝓕.augment`
+zeigte auf die alte. Eine Doppelung, die sich selbst meldet, ist die billigste
+Art, eine zu finden.
+
+**Das ist die dritte Doppelung in fünf Tagen** — nach `IsSeparating`
+(zweiundzwanzigster Lauf des 2026-09-17) und der nachgebauten
+Verteilungskonvergenz (zwanzigster Lauf desselben Tages). Alle drei entstanden
+gleich: ein Vorschlag am Ende eines Laufs nennt eine Lücke, ohne die eigene Datei
+danach durchsucht zu haben. **Ein Vorschlag, der eine Lücke behauptet, hat ab
+jetzt den Namen zu nennen, unter dem er in `Suggested.lean` gesucht hat.**
+
+#### Was offen bleibt
+
+* Die Probe von Meilenstein 10 über der Sprungkonstruktion braucht jetzt genau
+  noch **zwei** Eingaben, und keine davon ist Martingaltheorie: der endliche
+  Erwartungswert des Erneuerungszählers, und daß er eine Stoppzeit der
+  vergrößerten Filtration ist.
+* Die Voraussetzungen **(a)** und **(b)** von `mpSolution_of_tendsto` bleiben,
+  wie sieben Vorläufe sie hinterlassen haben: Eingabe eines Straffheitsarguments,
+  das das Manuskript ausdrücklich nicht liefert.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Der endliche Erwartungswert des Erneuerungszählers.** *Aussage:*
+   `integrable_stepIndex_jumpMeasure` — unter `hL : ∀ x, lam x ≤ L` und
+   `0 < lam` ist `fun ω ↦ ((stepIndex (jumpTime lam ω.1 ω.2) t ω : ℕ) : ℝ)`
+   integrierbar bezüglich `jumpMeasure mu nu`. *In `Suggested.lean` gesucht
+   unter:* `integrable_stepIndex`, `stepIndex` und `integrable_natCast` — nichts
+   davon steht dort. *Worauf sie ruht:* punktweise ist
+   `jumpTime lam y ξ n ≥ (1/L) · ∑_{k<n} ξ k`, weil jede Haltezeit
+   `ξ k / lam (y k) ≥ ξ k / L` ist — dieselbe Ungleichung, die bei C.5a die
+   Nichtexplosion gibt —, also `{stepIndex ≥ n} ⊆ {∑_{k<n} ξ k ≤ L t}`, und die
+   rechte Seite ist ein Gammaschwanz und summierbar. Daß die Integrierbarkeit
+   einer `ℕ`-wertigen Größe die Summierbarkeit ihrer Schwänze ist, ist am
+   Quelltext zu belegen und nicht zu raten. *Warum jetzt:* mit ihr ist
+   `integral_sub_mul_eq_zero_of_chainCompensated` auf die Sprungkonstruktion
+   anwendbar, und Voraussetzung (c) der Probe ist damit vollständig — der
+   einzige der drei Punkte, den das Manuskript überhaupt zu liefern verspricht.
+2. **Der Erneuerungszähler als Stoppzeit der vergrößerten Filtration.**
+   *Aussage:* `isStoppingTime_stepIndex_sup_comap_snd` — `stepIndex` zu fester
+   Zeit ist eine Stoppzeit von
+   `fun i ↦ naturalFiltration (jumpChain E) i ⊔ comap Prod.snd ⊤`. *In
+   `Suggested.lean` gesucht unter:* `isStoppingTime_stepIndex` und
+   `stepIndex_sup` — nichts davon steht dort. *Worauf sie ruht:* auf dem Befund
+   des fünften Laufs, daß über dieser Filtration die **ganze** Uhr schon bei
+   `i = 0` in der σ-Algebra liegt — die Aussage ist deshalb `IsStoppingTime` aus
+   Meßbarkeit ganz unten und kostet drei Zeilen. *Warum jetzt:* sie ist die
+   zweite und letzte Hypothese, die
+   `integral_sub_mul_eq_zero_of_chainCompensated` an der Sprungkonstruktion
+   verlangt, und sie ist billig; erst mit beiden ist der Punkt abgeschlossen und
+   nicht bloß vorbereitet.

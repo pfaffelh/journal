@@ -35924,4 +35924,196 @@ theorem integral_sub_mul_eq_zero_of_martingale_stoppedValue_min [IsFiniteMeasure
     (integrable_stoppedValue ℕ (hσ.min hτ) hM.integrable fun ω ↦ (min_le_right _ _).trans (hτN ω))
     (hM.stoppedValue_min_ae_eq_condExp hτ hσ hτN).symm hW hb
 
+/-- **The truncation passes to the limit, and what it costs is a dominating function.**  This is
+the previous statement with the constant bound `hτN` removed: the later stopping time is arbitrary,
+subject only to being finite.
+
+**The hypothesis is the one the proof reads and no more.**  The convergence in `K` is not an
+analytic limit at all -- at each sample point the sequence is *stationary*, because `τ ω` is a
+natural number and `min (τ ω) K = τ ω` as soon as `K ≥ τ ω`.  What the interchange of limit and
+integral therefore needs is exactly a dominating function, and `hdom` asks for it in the weakest
+place it can be asked: the martingale is dominated by `g` *along the path up to `τ`*, at indices
+`n ≤ τ ω` and nowhere else.  Uniform integrability would also do, and it is the usual hypothesis of
+optional sampling at an unbounded time; it is not taken here because it is strictly more than this
+proof uses and strictly harder to check at the application.
+
+**The index is `WithTop ℕ` and not `ℕ∞`.**  The two are definitionally equal but not syntactically:
+`ENat` is a `def` over `WithTop ℕ` with its own order instances, so a `min` written at `ℕ∞` and a
+`min` produced by `IsStoppingTime.min` do not match as `rw` patterns, and the associativity step of
+the proof fails against a term it is definitionally equal to.  Stating the theorem at `WithTop ℕ`
+-- the type `stoppedValue` and `IsStoppingTime` are themselves written over -- removes the
+mismatch.  This is the same trap as `ENNReal` against `WithTop ℝ≥0` recorded at
+`jumpProcess_isLocalMPSolution`. -/
+theorem integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_dominated [IsFiniteMeasure μ]
+    (hM : Martingale M 𝓖 μ) {σ τ : Ω → WithTop ℕ}
+    (hσ : IsStoppingTime 𝓖 σ) (hτ : IsStoppingTime 𝓖 τ) (hστ : σ ≤ τ)
+    (hτ_ne : ∀ ω, τ ω ≠ ⊤)
+    {g : Ω → ℝ} (hg : Integrable g μ)
+    (hdom : ∀ (n : ℕ) (ω : Ω), (n : WithTop ℕ) ≤ τ ω → ‖M n ω‖ ≤ g ω)
+    {W : Ω → ℝ} (hW : StronglyMeasurable[hσ.measurableSpace] W) {b : ℝ}
+    (hb : ∀ ω, ‖W ω‖ ≤ b) :
+    ∫ ω, (stoppedValue M τ ω - stoppedValue M σ ω) * (W ω : 𝕂) ∂μ = 0 := by
+  classical
+  have hτKst : ∀ K : ℕ, IsStoppingTime 𝓖 (fun ω ↦ min (τ ω) (K : WithTop ℕ)) :=
+    fun K ↦ hτ.min_const K
+  have hσKst : ∀ K : ℕ, IsStoppingTime 𝓖 (fun ω ↦ min (σ ω) (K : WithTop ℕ)) :=
+    fun K ↦ hσ.min_const K
+  -- every truncated integral vanishes, by the previous statement at `τ ⊓ K`
+  have hzero : ∀ K : ℕ,
+      ∫ ω, (stoppedValue M (fun ω ↦ min (τ ω) (K : WithTop ℕ)) ω
+        - stoppedValue M (fun ω ↦ min (σ ω) (K : WithTop ℕ)) ω) * (W ω : 𝕂) ∂μ = 0 := by
+    intro K
+    have key := integral_sub_mul_eq_zero_of_martingale_stoppedValue_min (𝕂 := 𝕂) hM hσ (hτKst K)
+      (fun ω ↦ min_le_right _ _) hW hb
+    rw [← key]
+    refine integral_congr_ae (Eventually.of_forall fun ω ↦ ?_)
+    simp only [stoppedValue]
+    rw [← min_assoc, min_eq_left (hστ ω)]
+  -- the index a truncated stopping time reads lies below `τ`, so `hdom` applies to it
+  have hindex : ∀ ρ : Ω → WithTop ℕ, (∀ ω, ρ ω ≤ τ ω) → ∀ (K : ℕ) (ω : Ω),
+      ‖stoppedValue M (fun ω ↦ min (ρ ω) (K : WithTop ℕ)) ω‖ ≤ g ω := by
+    intro ρ hρ K ω
+    have hne : min (ρ ω) (K : WithTop ℕ) ≠ ⊤ :=
+      ne_top_of_le_ne_top (by simp) (min_le_right _ _)
+    have hcoe : (((min (ρ ω) (K : WithTop ℕ)).untopA : ℕ) : WithTop ℕ)
+        = min (ρ ω) (K : WithTop ℕ) := by
+      obtain ⟨j, hj⟩ := WithTop.ne_top_iff_exists.mp hne
+      rw [← hj]
+      exact congrArg _ (WithTop.untopD_coe _ _)
+    refine hdom _ ω ?_
+    rw [hcoe]
+    exact (min_le_left _ _).trans (hρ ω)
+  have hmeas : ∀ K : ℕ, AEStronglyMeasurable
+      (fun ω ↦ (stoppedValue M (fun ω ↦ min (τ ω) (K : WithTop ℕ)) ω
+        - stoppedValue M (fun ω ↦ min (σ ω) (K : WithTop ℕ)) ω) * (W ω : 𝕂)) μ := by
+    intro K
+    have h1 : StronglyMeasurable[𝓖 K] (stoppedValue M (fun ω ↦ min (τ ω) (K : WithTop ℕ))) :=
+      stronglyMeasurable_stoppedValue_of_le
+        hM.stronglyAdapted.isStronglyProgressive_of_discrete (hτKst K)
+        (fun ω ↦ min_le_right _ _)
+    have h2 : StronglyMeasurable[𝓖 K] (stoppedValue M (fun ω ↦ min (σ ω) (K : WithTop ℕ))) :=
+      stronglyMeasurable_stoppedValue_of_le
+        hM.stronglyAdapted.isStronglyProgressive_of_discrete (hσKst K)
+        (fun ω ↦ min_le_right _ _)
+    have hWm : StronglyMeasurable[m] W := hW.mono hσ.measurableSpace_le
+    exact (((h1.sub h2).mono (𝓖.le K)).mul
+      (RCLike.continuous_ofReal.comp_stronglyMeasurable hWm)).aestronglyMeasurable
+  have hbound : ∀ K : ℕ, ∀ᵐ ω ∂μ,
+      ‖(stoppedValue M (fun ω ↦ min (τ ω) (K : WithTop ℕ)) ω
+        - stoppedValue M (fun ω ↦ min (σ ω) (K : WithTop ℕ)) ω) * (W ω : 𝕂)‖
+        ≤ (g ω + g ω) * b := by
+    intro K
+    filter_upwards with ω
+    have h1 : ‖stoppedValue M (fun ω ↦ min (τ ω) (K : WithTop ℕ)) ω‖ ≤ g ω :=
+      hindex τ (fun _ ↦ le_rfl) K ω
+    have h2 : ‖stoppedValue M (fun ω ↦ min (σ ω) (K : WithTop ℕ)) ω‖ ≤ g ω := hindex σ hστ K ω
+    have hg0 : (0 : ℝ) ≤ g ω := (norm_nonneg _).trans h1
+    have hW' : ‖(W ω : 𝕂)‖ ≤ b := by rw [RCLike.norm_ofReal]; simpa [Real.norm_eq_abs] using hb ω
+    rw [norm_mul]
+    exact mul_le_mul ((norm_sub_le _ _).trans (add_le_add h1 h2)) hW' (norm_nonneg _)
+      (add_nonneg hg0 hg0)
+  -- at each sample point the truncated sequence is stationary, because `τ ω` is a natural number
+  have hlim : ∀ᵐ ω ∂μ, Tendsto
+      (fun K : ℕ ↦ (stoppedValue M (fun ω ↦ min (τ ω) (K : WithTop ℕ)) ω
+        - stoppedValue M (fun ω ↦ min (σ ω) (K : WithTop ℕ)) ω) * (W ω : 𝕂)) atTop
+      (𝓝 ((stoppedValue M τ ω - stoppedValue M σ ω) * (W ω : 𝕂))) := by
+    filter_upwards with ω
+    obtain ⟨n, hn⟩ := WithTop.ne_top_iff_exists.mp (hτ_ne ω)
+    refine tendsto_atTop_of_eventually_const (i₀ := n) fun K hK ↦ ?_
+    have hτle : τ ω ≤ (K : WithTop ℕ) := by rw [← hn]; exact WithTop.coe_le_coe.2 hK
+    have h1 : min (τ ω) (K : WithTop ℕ) = τ ω := min_eq_left hτle
+    have h2 : min (σ ω) (K : WithTop ℕ) = σ ω := min_eq_left ((hστ ω).trans hτle)
+    simp only [stoppedValue, h1, h2]
+  have hconv := tendsto_integral_of_dominated_convergence _ hmeas
+    ((hg.add hg).mul_const b) hbound hlim
+  simp only [hzero] at hconv
+  exact (tendsto_nhds_unique tendsto_const_nhds hconv).symm
+
+/-- **The uniformly bounded case**, the special case `g = c` of the previous statement.
+
+It is the shape the sixth run of 2026-09-18 set out to prove, and it is recorded because it is the
+cheapest to check -- but it is *not* the shape the probe of Milestone 10 can use:
+`norm_chainCompensated_le` shows that the compensated chain has no uniform bound, only one growing
+linearly in the index. -/
+theorem integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_bdd [IsFiniteMeasure μ]
+    (hM : Martingale M 𝓖 μ) {σ τ : Ω → WithTop ℕ}
+    (hσ : IsStoppingTime 𝓖 σ) (hτ : IsStoppingTime 𝓖 τ) (hστ : σ ≤ τ)
+    (hτ_ne : ∀ ω, τ ω ≠ ⊤)
+    {c : ℝ} (hc : ∀ (n : ℕ) (ω : Ω), ‖M n ω‖ ≤ c)
+    {W : Ω → ℝ} (hW : StronglyMeasurable[hσ.measurableSpace] W) {b : ℝ}
+    (hb : ∀ ω, ‖W ω‖ ≤ b) :
+    ∫ ω, (stoppedValue M τ ω - stoppedValue M σ ω) * (W ω : 𝕂) ∂μ = 0 :=
+  integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_dominated hM hσ hτ hστ hτ_ne
+    (integrable_const c) (fun n ω _ ↦ hc n ω) hW hb
+
 end StoppedOrthogonality
+
+/-! ### What the compensated chain costs at a random index
+
+The two statements above leave one question: which of them the probe of Milestone 10 can use.
+`norm_chainCompensated_le` answers it.  A compensated chain built from a bounded test function
+carries the bound `C + 2 n C` at the index `n` and no better one -- the compensator is a sum of `n`
+increments, each of size at most `2 C`, and nothing cancels.  There is therefore **no** uniform
+bound, and `integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_bdd` does not apply.
+
+What does apply is the dominated form, and `integral_sub_mul_eq_zero_of_chainCompensated` says at
+what price: the dominating function is `C + 2 τ C`, so the hypothesis is that the random index has
+a **finite mean**.  That is not a technical artefact.  It is the manuscript's own hypothesis
+`𝔼[N t] < ∞` of `thm:pathjumpMP`(b), arrived at from the other side: the local statement needs no
+such thing, and the moment the argument is read at a random index rather than a constant one, the
+first moment of that index is exactly what has to be paid. -/
+
+section ChainGrowth
+
+variable {E : Type*} {μ : Measure Ω} {𝓖 : Filtration ℕ m}
+
+/-- **The compensated chain of a bounded test function grows at most linearly in the index.**
+The test function contributes `C`, the compensator `n` increments of size at most `2 C`.
+
+The statement is about *every* sample point and every index, so it is a statement about the
+function `chainCompensated` and not about a martingale: neither `𝓖`, nor a measure, nor the Markov
+property occurs in it. -/
+theorem norm_chainCompensated_le {Pf f : E → 𝕂} {Ξ : ℕ → Ω → E} {C : ℝ}
+    (hf : ∀ x, ‖f x‖ ≤ C) (hPf : ∀ x, ‖Pf x‖ ≤ C) (n : ℕ) (ω : Ω) :
+    ‖chainCompensated Pf f Ξ n ω‖ ≤ C + 2 * n * C := by
+  have hsum : ‖∑ j ∈ Finset.range n, (Pf (Ξ j ω) - f (Ξ j ω))‖ ≤ (n : ℝ) * (2 * C) := by
+    calc ‖∑ j ∈ Finset.range n, (Pf (Ξ j ω) - f (Ξ j ω))‖
+        ≤ ∑ j ∈ Finset.range n, ‖Pf (Ξ j ω) - f (Ξ j ω)‖ := norm_sum_le _ _
+      _ ≤ ∑ _j ∈ Finset.range n, (2 * C) := Finset.sum_le_sum fun j _ ↦
+          (norm_sub_le _ _).trans (by linarith [hPf (Ξ j ω), hf (Ξ j ω)])
+      _ = (n : ℝ) * (2 * C) := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+  calc ‖chainCompensated Pf f Ξ n ω‖
+      ≤ ‖f (Ξ n ω)‖ + ‖∑ j ∈ Finset.range n, (Pf (Ξ j ω) - f (Ξ j ω))‖ := norm_sub_le _ _
+    _ ≤ C + (n : ℝ) * (2 * C) := add_le_add (hf _) hsum
+    _ = C + 2 * n * C := by ring
+
+/-- **The orthogonality of the compensated chain at an unbounded random index**, and its price is
+the first moment of that index.
+
+This is the form hypothesis (c) of `mpSolution_of_tendsto` needs over a filtration that contains
+the clock: the indices read there are renewal counts, unbounded on the sample space, and the
+martingale is the compensated chain, which has no uniform bound.  `hτint` is what replaces both --
+and it is the manuscript's `𝔼[N t] < ∞`, not an artefact of the formalisation. -/
+theorem integral_sub_mul_eq_zero_of_chainCompensated [IsFiniteMeasure μ]
+    {Pf f : E → 𝕂} {Ξ : ℕ → Ω → E} {C : ℝ}
+    (hM : Martingale (chainCompensated Pf f Ξ) 𝓖 μ)
+    (hf : ∀ x, ‖f x‖ ≤ C) (hPf : ∀ x, ‖Pf x‖ ≤ C)
+    {σ τ : Ω → WithTop ℕ}
+    (hσ : IsStoppingTime 𝓖 σ) (hτ : IsStoppingTime 𝓖 τ) (hστ : σ ≤ τ)
+    (hτ_ne : ∀ ω, τ ω ≠ ⊤)
+    (hτint : Integrable (fun ω ↦ (((τ ω).untopA : ℕ) : ℝ)) μ)
+    {W : Ω → ℝ} (hW : StronglyMeasurable[hσ.measurableSpace] W) {b : ℝ}
+    (hb : ∀ ω, ‖W ω‖ ≤ b) :
+    ∫ ω, (stoppedValue (chainCompensated Pf f Ξ) τ ω
+      - stoppedValue (chainCompensated Pf f Ξ) σ ω) * (W ω : 𝕂) ∂μ = 0 := by
+  refine integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_dominated hM hσ hτ hστ hτ_ne
+    (g := fun ω ↦ C + 2 * (((τ ω).untopA : ℕ) : ℝ) * C)
+    ((integrable_const C).add ((hτint.const_mul 2).mul_const C)) ?_ hW hb
+  intro n ω hn
+  have hC : (0 : ℝ) ≤ C := (norm_nonneg (f (Ξ 0 ω))).trans (hf _)
+  have hle : n ≤ ((τ ω).untopA : ℕ) := (WithTop.le_untopA_iff (hτ_ne ω)).2 hn
+  have hcast : (n : ℝ) ≤ (((τ ω).untopA : ℕ) : ℝ) := Nat.cast_le.2 hle
+  refine (norm_chainCompensated_le hf hPf n ω).trans ?_
+  nlinarith
+
+end ChainGrowth

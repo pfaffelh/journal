@@ -9738,6 +9738,38 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   index too would shrink that σ-algebra and lose the weight. What then remains is
   the passage `K → ∞`, a convergence of integrals and no longer a question about
   filtrations.
+* `integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_dominated` and
+  `integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_bdd`: **the passage
+  `K → ∞` is done, and the hypothesis it costs is a dominating function.** The
+  later stopping time is arbitrary, subject only to being finite. **In Lean** on
+  2026-09-18, sixth run.
+  **The convergence is not analytic.** At each sample point the truncated
+  sequence is *stationary*: `τ ω` is a natural number, so `min (τ ω) K = τ ω`
+  as soon as `K ≥ τ ω`. What the interchange of limit and integral needs is
+  therefore a dominating function and nothing else, and `hdom` asks for it in the
+  weakest place it can be asked — the martingale is dominated by `g` along the
+  path up to `τ`, at indices `n ≤ τ ω` and nowhere else. Uniform integrability
+  would also do; it is not taken, because it is strictly more than this proof
+  uses and strictly harder to check at the application.
+  **The index is `WithTop ℕ` and not `ℕ∞`.** `ENat` is a `def` over `WithTop ℕ`
+  with its own order instances, so a `min` written at `ℕ∞` and a `min` produced
+  by `IsStoppingTime.min` are definitionally equal and do not match as `rw`
+  patterns; the associativity step fails against a term it is equal to. This is
+  the trap already recorded at `jumpProcess_isLocalMPSolution` for `ENNReal`
+  against `WithTop ℝ≥0`.
+* `norm_chainCompensated_le` and `integral_sub_mul_eq_zero_of_chainCompensated`:
+  **which of the two forms the probe may use, and what it pays.** **In Lean** on
+  2026-09-18, sixth run. A compensated chain built from a bounded test function
+  carries `‖M n ω‖ ≤ C + 2 n C` and no better bound — the compensator is a sum of
+  `n` increments of size at most `2 C` and nothing cancels — so there is **no**
+  uniform bound and the bounded form does not apply. The dominated form does, with
+  `g = C + 2 τ C`, and its hypothesis is therefore that the random index has a
+  **finite mean**.
+  **That hypothesis is not an artefact of the formalisation.** It is the
+  manuscript's own `𝔼[N t] < ∞` of `thm:pathjumpMP`(b), arrived at from the other
+  side: the local statement needs no such thing, and the moment the orthogonality
+  is read at a random index rather than a constant one, the first moment of that
+  index is exactly what has to be paid.
 * **Hypothesis (a) is about real random variables and carries no topology.** In
   the example above the path space `F` is `D ι E` and the functionals
   `Y° t` are evaluations, but the statement of (a) never mentions `F`'s
