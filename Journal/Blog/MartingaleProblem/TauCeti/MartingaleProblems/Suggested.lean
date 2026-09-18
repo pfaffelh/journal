@@ -33765,6 +33765,66 @@ theorem map_jumpPathD_setOf_leftLim_eq_poisson (t : ℝ≥0) :
   map_jumpPathD_setOf_leftLim_eq measurable_poissonRate poissonKernel (Measure.dirac 0)
     ae_mem_nonExplosiveE_poisson t
 
+/-- **The same statement on the sample space**, which is the form the two convergence theorems for
+random variables take it in: they write the hypothesis as `P₀ {ω | (Z ω)⁻ t = Z ω t} = 1` and not
+on the law, because that is the form a user of the structure has.  Here the two are the same set
+by `rfl`, the event being a preimage under `jumpPathD`. -/
+theorem jumpMeasure_setOf_leftLim_jumpPathD_eq {lam : E → ℝ} (hlam : Measurable lam)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu]
+    (hne : ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam) (t : ℝ≥0) :
+    (jumpMeasure mu nu)
+        {ω | Function.leftLim (jumpPathD lam ω).toFun t = (jumpPathD lam ω).toFun t} = 1 := by
+  have hms : MeasurableSet {f : D(ℝ≥0, E) | Function.leftLim f.toFun t = f.toFun t} := by
+    have hcompl : {f : D(ℝ≥0, E) | Function.leftLim f.toFun t = f.toFun t}
+        = {f : D(ℝ≥0, E) | t ∈ leftJumpSet f.toFun}ᶜ := by
+      ext f
+      simp [leftJumpSet]
+    rw [hcompl]
+    exact (SkorokhodSpace.measurableSet_leftJump t).compl
+  have hpre : {ω | Function.leftLim (jumpPathD lam ω).toFun t = (jumpPathD lam ω).toFun t}
+      = (jumpPathD lam) ⁻¹' {f : D(ℝ≥0, E) | Function.leftLim f.toFun t = f.toFun t} := rfl
+  rw [hpre, ← Measure.map_apply (measurable_jumpPathD hlam) hms]
+  exact map_jumpPathD_setOf_leftLim_eq hlam mu nu hne t
+
+/-- **The finite dimensional distributions of a sequence converging to the jump construction
+converge, at every countable family of times.**  This is
+`SkorokhodSpace.tendstoInDistribution_evalPi` with its hypothesis `ht` discharged on the data of
+Milestone 4, and the family of times is arbitrary: the previous section proved that the law has no
+fixed discontinuity **at all**, so the quantifier over `i` costs nothing and the caller chooses
+the times.
+
+Nothing is assumed of the approximating variables `X` beyond their convergence in distribution to
+the path of the construction; in particular they need not be jump constructions themselves. -/
+theorem tendstoInDistribution_evalPi_jumpPathD
+    {α : Type*} [Countable α] (t : α → ℝ≥0)
+    {γ : Type*} {Ω : γ → Type*} {mΩ : ∀ n, MeasurableSpace (Ω n)}
+    {P : (n : γ) → Measure (Ω n)} [∀ n, IsProbabilityMeasure (P n)]
+    {X : (n : γ) → Ω n → D(ℝ≥0, E)} {L : Filter γ} [L.IsCountablyGenerated]
+    {lam : E → ℝ} (hlam : Measurable lam) (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu]
+    (hne : ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam)
+    (hX : TendstoInDistribution X L (jumpPathD lam) P (jumpMeasure mu nu)) :
+    TendstoInDistribution (fun n ω (i : α) => (X n ω).toFun (t i)) L
+      (fun ω (i : α) => (jumpPathD lam ω).toFun (t i)) P (jumpMeasure mu nu) :=
+  SkorokhodSpace.tendstoInDistribution_evalPi t hX
+    fun i => jumpMeasure_setOf_leftLim_jumpPathD_eq hlam mu nu hne (t i)
+
+/-- **The one dimensional marginal**, and the form hypothesis (a) of `mpSolution_of_tendsto`
+(Milestone 10) is read in.  It is the previous theorem's companion and not its one point case:
+that one lands in `α → E` and this one in `E`. -/
+theorem tendstoInDistribution_eval_jumpPathD
+    {γ : Type*} {Ω : γ → Type*} {mΩ : ∀ n, MeasurableSpace (Ω n)}
+    {P : (n : γ) → Measure (Ω n)} [∀ n, IsProbabilityMeasure (P n)]
+    {X : (n : γ) → Ω n → D(ℝ≥0, E)} {L : Filter γ} [L.IsCountablyGenerated]
+    {lam : E → ℝ} (hlam : Measurable lam) (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu]
+    (hne : ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam)
+    (hX : TendstoInDistribution X L (jumpPathD lam) P (jumpMeasure mu nu)) (t : ℝ≥0) :
+    TendstoInDistribution (fun n ω => (X n ω).toFun t) L
+      (fun ω => (jumpPathD lam ω).toFun t) P (jumpMeasure mu nu) :=
+  SkorokhodSpace.tendstoInDistribution_eval hX t
+    (jumpMeasure_setOf_leftLim_jumpPathD_eq hlam mu nu hne t)
+
 end JumpPathNoFixedJump
 
 /-! ### Milestone 6 on the data of Milestone 4: the solution set is a singleton

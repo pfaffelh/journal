@@ -58,7 +58,19 @@ def main(argv: list[str]) -> int:
         proc = subprocess.run(["lake", "env", "sh", "-c", shell],
                               cwd=MAIN, capture_output=True, text=True)
         out = proc.stdout + proc.stderr
+        # Lean bricht lange Zeilen um und rückt die Fortsetzung ein.  Ein Filter
+        # auf die einzelnen Zeilen verlöre sie -- und bei einem langen
+        # Deklarationsnamen steht der Rest der Axiomliste genau dort, `sorryAx`
+        # eingeschlossen.  Am 2026-09-18, siebzehnter Lauf, so beobachtet:
+        # `'…of_isCompact_closure' depends on axioms: [propext,` war alles, was
+        # ankam.  Also werden Fortsetzungszeilen erst angehängt, dann gefiltert.
+        joined: list[str] = []
         for line in out.splitlines():
+            if joined and line[:1].isspace() and line.strip():
+                joined[-1] = joined[-1].rstrip() + " " + line.strip()
+            else:
+                joined.append(line)
+        for line in joined:
             if "depends on axioms" in line or "error" in line:
                 print(line.replace(str(tmp), str(src)))
         print(f"rc {proc.returncode}")

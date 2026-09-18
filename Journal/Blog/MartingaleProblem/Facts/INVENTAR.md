@@ -38317,3 +38317,165 @@ sagt das in seinem Kopf.
    `(jumpPathD, tendstoInDistribution_evalPi)` ist ohne weiteres Zutun anwendbar,
    sobald eine konvergente Folge von Sprungkonstruktionen da ist. Der natürliche
    Kandidat dafür gehört zum Akzeptanzbeispiel von Meilenstein 10.
+
+### 2026-09-18, siebzehnter Lauf des Tages — beide Vorschläge stehen; der Zeuge zur Bruchstelle von EK 3.7.8(b) brauchte **kein** Pfad mit dichter Sprungmenge, sondern eine Mischung; die Roadmap nannte für den Schritt eine Zutat, die sie an dieser Stelle nicht hatte, und sie ist im selben Lauf bewiesen; dazu eine Lücke im Axiomprüfer, durch die ein `sorryAx` gefallen wäre
+
+**Zehn Deklarationen**, sieben in `TauCeti/SkorokhodSpace/Suggested.lean` und drei
+in `TauCeti/MartingaleProblems/Suggested.lean`. Alle drei
+Roadmap-Dateien ohne einen Fehler und ohne ein `sorry` durch
+`scripts/check_suggested.py` gegen v4.33.1 (Lean 4.33.1, commit `819816b2e0a3`),
+alle zehn mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound`
+geprüft. Die Punkte stehen in `SkorokhodSpace/README.md`, Meilenstein 8, und in
+`MartingaleProblems/README.md`, Meilenstein 6.
+
+#### Vorschlag 1: der Zeuge steht
+
+`SkorokhodSpace.exists_countable_dense_forall_setOf_leftLim_ne_one` — es gibt ein
+Wahrscheinlichkeitsmaß `ν` auf `D(ℝ, ℝ)` und ein abzählbares dichtes `T ⊆ ℝ`, so
+daß **keine** Zeit von `T` eine Stetigkeitszeit von `ν` ist. Damit ist die
+Aussage der Roadmap, die Dichtheit von `T` allein trage den Schritt nicht, keine
+Warnung mehr, sondern ein Satz; und sie steht neben
+`exists_countable_dense_continuity`, die für *jedes* Gesetz eine abzählbare dichte
+Menge guter Zeiten liefert. Beide Mengen sind abzählbar und dicht, und sie können
+disjunkt sein.
+
+**Der Kandidat des Vorlaufs wird nicht gebraucht, und das ist der Befund.** Der
+Vorlauf hatte einen **einzelnen** Pfad mit einem Sprung an jedem Rationalen
+vorgesehen — die klassische Konstruktion, summierbare Sprunghöhen. Sie kostet
+einen Càdlàg-Beweis für eine gleichmäßig konvergente Reihe von Stufen, und den hat
+Mathlib nicht (ein gleichmäßiger Limes càdlàg ist càdlàg steht dort nicht). Statt
+dessen tut es die **Mischung**: `SkorokhodSpace.denseJumpLaw = ∑ₙ 2⁻ⁿ⁻¹ δ` über
+den Einheitsstufen `SkorokhodSpace.ratStep n = stepAt qₙ 1 0` an den Rationalen.
+Jedes Rationale trägt die Masse `2⁻ⁿ⁻¹ > 0` des einen Pfades, der dort springt,
+und mehr fragt die Aussage nicht. Der Preis ist
+`ENNReal.tsum_geometric_add_one` und sonst nichts.
+
+**Was der Zeuge nicht sagt**, und das steht so an der Deklaration: daß der Satz
+falsch ist. Das Gesetz ist an keiner Stelle als Teilfolgenlimes von irgend etwas
+ausgewiesen, und die Voraussetzungen des Satzes sind nicht im Spiel. Der Zeuge
+spricht über **eine Implikation innerhalb eines Beweises**, nicht über die
+Aussage. Der Papierbefund des Vorlaufs — daß es kein càdlàg `h` mit
+`h(q) = f(q⁻)` für alle Rationalen gibt — bleibt unangetastet und bleibt der
+Hebel, den ein Beweis der Dichtheit benutzen müßte.
+
+#### Vorschlag 2: stärker als bestellt
+
+Bestellt war die Voraussetzung `ht` für eine Familie von Zeiten, „eine Zeile".
+Geliefert sind statt dessen die beiden **Folgerungen**, die diese Zeile
+verbraucht, denn die Zeile allein ist kein Ergebnis:
+
+* `jumpMeasure_setOf_leftLim_jumpPathD_eq` — dieselbe Aussage über dem
+  **Stichprobenraum** statt über dem Bildmaß. Das ist die Gestalt, in der die
+  beiden Sätze für Zufallsvariable ihre Voraussetzung nehmen, und beide Mengen
+  sind hier durch `rfl` dieselbe, weil das Ereignis ein Urbild unter `jumpPathD`
+  ist.
+* `tendstoInDistribution_evalPi_jumpPathD` und
+  `tendstoInDistribution_eval_jumpPathD` — konvergiert eine Familie pfadwertiger
+  Zufallsvariabler in Verteilung gegen den Pfad der Sprungkonstruktion, so
+  konvergieren ihre endlichdimensionalen Randverteilungen, **an jeder abzählbaren
+  Familie von Zeiten** und an jeder einzelnen. Über die Approximanten wird nichts
+  vorausgesetzt als die Konvergenz selbst; sie müssen keine Sprungkonstruktionen
+  sein.
+
+#### Drei Befunde
+
+* **`SkorokhodSpace.stepAt` gab es schon, und zwar allgemeiner.** Der Lauf hat
+  zuerst eine eigene Einheitsstufe `stepAt (a : ℝ) : D(ℝ, ℝ)` gebaut und
+  prototypisch geprüft; die volle Übersetzung hat dann die Namenskollision mit
+  `SkorokhodSpace.stepAt (x : ι) (a b : E) : D(ι, E)` aus Meilenstein 5
+  gemeldet — achtzehn Folgefehler in einem Abschnitt, der mit dem neuen Zeugen
+  nichts zu tun hat. **Der Prototyp in einem eigenen `namespace` sieht eine
+  solche Kollision nicht**, und das ist die Grenze von `scripts/dev_check.py`:
+  es prüft, ob eine Aussage durchgeht, nicht, ob ihr Name frei ist. Wer mit ihm
+  arbeitet, sucht den Namen vorher im Zielort. Übrig bleibt von der eigenen
+  Fassung genau ein Lemma, `SkorokhodSpace.leftLim_stepAt`: der linke Grenzwert
+  der Stufe an ihrer eigenen Sprungzeit ist der untere Wert.
+* **`Denumerable.ofNat_encode` ist an `ℚ` nicht benutzbar, wie es dasteht.** `ℚ`
+  trägt zwei Wege zu `Encodable`: `Rat.instEncodable` und
+  `Rat.instDenumerable.toEncodable`. Die Elaboration nimmt den ersten, das Lemma
+  spricht vom zweiten, und `exact` scheitert an einem Typfehler, der die beiden
+  Instanzpfade nebeneinander zeigt. Was geht, ist
+  `(Denumerable.eqv ℚ).symm_apply_apply` — dieselbe Aussage über die Äquivalenz
+  statt über die Kodierung. Das ist die fünfte Instanz des Musters „zwei Wege zu
+  derselben Klasse", und sie kostet keinen Beweis, sondern eine Schreibweise.
+* **Die Roadmap nannte für den fraglichen Schritt eine Zutat, die sie an dieser
+  Stelle nicht hatte.** `tendsto_of_isCompact_closure_of_tendsto_finiteDimensional`
+  setzt **relative Kompaktheit einer Menge von Maßen** voraus; die
+  Oszillationsschranke, mit der die Roadmap den Schritt schließt, ist
+  `SkorokhodSpace.isCompact_closure_iff` und eine Aussage über eine Menge von
+  **Pfaden**. Zwischen beidem fehlte eine Brücke, und sie ist keine Kleinigkeit:
+  von relativ kompakt zu straff ist Prohorovs **Rückrichtung**. Sie steht in
+  Mathlib als `MeasureTheory.isTightMeasureSet_of_isCompact_closure`
+  (`Mathlib/MeasureTheory/Measure/Prokhorov.lean:634`, auf v4.33.1 und auf
+  frischem `upstream/master`, Commit `f0ab343610f` vom 2026-09-18, unter
+  demselben Namen und in derselben Zeile) und verlangt `CompleteSpace` und
+  zweite Abzählbarkeit des Pfadraums.
+
+  **Die Brücke ist im selben Lauf bewiesen**, weil sich beim Nachsehen zeigte,
+  daß beide Eingaben fertig dastehen:
+  `SkorokhodSpace.exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure`
+  — zu relativ kompaktem `S ⊆ ProbabilityMeasure D(ℝ, E)` und `ε > 0` gibt es ein
+  Kompaktum `K ⊆ D(ℝ, E)` mit `μ Kᶜ ≤ ε` für alle `μ ∈ S`, auf dem der Modul
+  gleichmäßig gegen `0` geht. Neun Zeilen Beweis: Prohorovs Rückrichtung,
+  `isTightMeasureSet_iff_exists_isCompact_measure_compl_le`, und
+  `isCompact_closure_iff` auf `K`, dessen Abschluß `K` selbst ist.
+  `SkorokhodSpace.instCompleteSpace` und `SkorokhodSpace.instSeparableSpace` aus
+  Meilenstein 5 liefern die beiden Instanzen am Pfadraum.
+
+  **Und die Voraussetzungen an `E` sind schwächer als erwartet.** Der erste
+  Entwurf trug `PolishSpace E`; er geht auch ohne, mit
+  `SecondCountableTopology E` und `CompleteSpace E` allein. Der Unterschied ist
+  nicht kosmetisch — Polnischsein ist zweite Abzählbarkeit plus Vollständigkeit
+  *irgendeiner* verträglichen Metrik, und die beiden Instanzen von Meilenstein 5
+  benutzen die, die sie bekommen. Das steht so an der Deklaration und in der
+  Roadmap.
+* **Der Axiomprüfer verlor die Fortsetzung umgebrochener Zeilen, und genau dort
+  stünde ein `sorryAx`.** `scripts/check_axioms.py` filterte die Ausgabe von
+  `lean` zeilenweise auf `depends on axioms`. Lean bricht lange Zeilen um und
+  rückt die Fortsetzung ein; bei einem langen Deklarationsnamen kam deshalb nur
+  `'…of_isCompact_closure' depends on axioms: [propext,` an, und der Rest der
+  Liste fiel weg. Das ist in diesem Lauf an zwei Deklarationen aufgetreten und
+  war erst als Schönheitsfehler gelesen worden — bis auffiel, daß `sorryAx` in
+  der Liste hinter `propext` steht und damit **unsichtbar geworden wäre**. Das
+  Skript hängt Fortsetzungszeilen jetzt erst an und filtert danach; beide
+  Deklarationen sind damit vollständig geprüft und sauber. Dieselbe Falle wie
+  `| head -N` bei `check_suggested.py`, nur eine Ebene tiefer: eine Prüfung, die
+  abschneidet, sieht aus wie eine, die nichts findet.
+
+#### Was dieser Lauf **nicht** getan hat
+
+Keine Zeile des Manuskripts, und keine Zeile des Inventars mit Status `?` — es
+gibt keine mehr. Er hat **nicht** bewiesen, daß `T ∩ C(ν)` unter den
+Voraussetzungen des Satzes dicht ist, und auch nicht, daß es das nicht ist; die
+Frage (i) des Vorlaufs bleibt offen, nur ist jetzt belegt, daß die **Dichtheit
+von `T` allein** sie nicht beantwortet. Und er hat `denseJumpLaw` nicht auf
+Straffheit oder auf Zugehörigkeit zu einer relativ kompakten Familie geprüft; das
+wäre nötig, um aus dem Zeugen einen Gegenzeugen zum Satz zu machen, und es ist
+nicht versucht worden.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Der Vertausch der beiden Grenzübergänge, und er ist jetzt der einzige
+   offene Schritt von EK 3.7.8(b).** Gesucht ist die Aussage, die die
+   Oszillationsschranke in die Form bringt, die der Beweis braucht: zu `t ∈ T`,
+   zu `ε > 0` und zum Kompaktum `K` des in diesem Lauf bewiesenen Satzes gibt es
+   ein `δ > 0`, so daß `dist (f s) (f t) ≤ ε` für alle `f ∈ K` und alle
+   `s ∈ [t, t + δ)` — **gleichmäßig in `f`**, und *das* ist es, was die Wahl von
+   `s` in den Stetigkeitszeiten des Limes von der Teilfolge entkoppelt.
+   *Worauf sie ruht:*
+   `SkorokhodSpace.exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure`
+   aus diesem Lauf und die Definition von `SkorokhodSpace.modulusBased` — es ist
+   das Auspacken des Moduls an einem Punkt und keine neue Analysis.
+   *Warum jetzt:* mit ihr sind alle Zutaten von
+   `tendsto_of_isCompact_closure_of_tendsto_finiteDimensional` beisammen, und
+   der Zeuge dieses Laufs sagt, daß es die einzige noch fehlende ist — die
+   Dichtheit von `T` tut es nicht, und die Maß-zu-Pfad-Brücke steht.
+2. **Der Anschluß von Vorschlag 2 an eine wirkliche Folge.**
+   `tendstoInDistribution_evalPi_jumpPathD` verlangt eine Familie, die in
+   Verteilung gegen den Pfad der Sprungkonstruktion konvergiert, und eine solche
+   Familie gibt es in der Entwicklung bisher nicht — die Sätze sind anwendbar und
+   auf nichts angewandt. *Worauf er ruht:* das Akzeptanzbeispiel von
+   Meilenstein 10, dessen Approximanten seit dem elften Lauf auf dem Pfadraum
+   unter dem Bildmaß stehen. *Warum jetzt:* es ist dieselbe Lage wie bei `Shift`
+   vor dem 2026-09-14 — ein Satz ohne Zeugen —, und der Unterschied ist, daß der
+   Zeuge hier in Reichweite ist und nicht erst gebaut werden muß.

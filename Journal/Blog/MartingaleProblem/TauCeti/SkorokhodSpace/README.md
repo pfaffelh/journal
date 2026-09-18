@@ -2247,14 +2247,63 @@ state the second, as Theorem 3.9.1, for a complete separable `E` as well.
   along `T` by hypothesis, and those of a subsequential limit `ν` converge at
   the continuity times of `ν` by the item above; the two are therefore compared
   at the times lying in **both**, and what identifies `ν` is that those times are
-  dense. Density of `T` alone does not give it: the exceptional set of a single
-  law is countable and a countable `T` can lie inside it. What closes the step is
+  dense. Density of `T` alone does not give it, and that is not a caution but a
+  theorem: `SkorokhodSpace.exists_countable_dense_forall_setOf_leftLim_ne_one`
+  below exhibits a law and a countable dense `T` with **no** time of `T` a
+  continuity time of the law. What closes the step is
   the uniform control of the oscillation that relative compactness carries —
-  Milestone 7 — by which the limit along `T` and the limit of the subsequence may
-  be interchanged; density of `T` is what makes the times of a finite family
-  approachable from the right, and the oscillation bound is what makes the
-  approach uniform in the sequence. Both are spent, and neither replaces the
-  other.
+  Milestone 7, through the item below — by which the limit along `T` and the
+  limit of the subsequence may be interchanged; density of `T` is what makes the
+  times of a finite family approachable from the right, and the oscillation bound
+  is what makes the approach uniform in the sequence. Both are spent, and neither
+  replaces the other.
+* `SkorokhodSpace.exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure`
+  — stage (A), **proved 2026-09-18**. For `S : Set (ProbabilityMeasure (D ℝ E))`
+  with compact closure and for `ε > 0` there is a compact `K ⊆ D(ℝ, E)` with
+  `μ Kᶜ ≤ ε` for every `μ ∈ S`, and the modulus
+  `SkorokhodSpace.modulusBased 0 m` tends to `0` uniformly over `K`.
+
+  This is the step from compactness **of a set of measures** to compactness **of
+  a set of paths**, and it is what `SkorokhodSpace.isCompact_closure_iff` of
+  Milestone 7 needs as its input: that criterion speaks of a set of paths and the
+  theorem above hypothesises a set of measures, so the oscillation bound is not
+  available to it directly. The bridge is Prokhorov's converse half,
+  `MeasureTheory.isTightMeasureSet_of_isCompact_closure`
+  (`Mathlib/MeasureTheory/Measure/Prokhorov.lean:634`), which asks for a second
+  countable complete metric space; `SkorokhodSpace.instCompleteSpace` and
+  `SkorokhodSpace.instSeparableSpace` of Milestone 5 supply both, the second
+  countability being separability read through the metric. It is this item, and
+  not the criterion of Milestone 7 by itself, that the theorem above spends.
+
+  The hypotheses on `E` are `SecondCountableTopology` and `CompleteSpace` and no
+  more. `PolishSpace E` is **not** among them, and the difference is not
+  cosmetic: Polishness is second countability together with completeness of
+  *some* compatible metric, while the two instances of Milestone 5 and the proof
+  use the metric they are handed.
+* `SkorokhodSpace.exists_countable_dense_forall_setOf_leftLim_ne_one` — stage
+  (A), **proved 2026-09-18**. There are a probability measure `ν` on `D(ℝ, ℝ)`
+  and a countable dense `T ⊆ ℝ` such that
+  `ν {f | f⁻ t = f t} ≠ 1` for every `t ∈ T`. Read against
+  `SkorokhodSpace.exists_countable_dense_continuity`, which gives a countable
+  dense set of continuity times for *any* law: both sets are countable and dense,
+  and they can be disjoint. This is what forbids the proof of the theorem above
+  from comparing the two families of finite dimensional distributions on `T`
+  itself.
+
+  The law is `SkorokhodSpace.denseJumpLaw`, the countable mixture
+  `∑ₙ 2⁻ⁿ⁻¹ δ` of the unit steps `SkorokhodSpace.ratStep n = stepAt qₙ 1 0` at
+  the rationals, and `T` is the range of `ℚ → ℝ`. The mixture, rather than a
+  single path with a jump at every rational, is what makes it cheap: a single
+  such path costs a càdlàg proof for a uniformly convergent series, while the
+  mixture costs `SkorokhodSpace.stepAt` of Milestone 5,
+  `SkorokhodSpace.leftLim_stepAt` — the left limit of a step at its own jump time
+  is the lower value — and `ENNReal.tsum_geometric_add_one`. Each rational
+  carries mass `2⁻ⁿ⁻¹ > 0`, which is all the argument asks.
+
+  **What it does not say** is that the theorem above fails. The law is not
+  exhibited as a subsequential limit of anything and the hypotheses of the
+  theorem are not in play; the witness speaks about one implication inside a
+  proof, not about the statement.
 * `SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional` — stage (A).
   The same conclusion for a tight family, from the previous item and
   `isCompact_closure_of_isTightMeasureSet`.
