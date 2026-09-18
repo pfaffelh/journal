@@ -37227,6 +37227,66 @@ theorem abs_mpFamily_coordinate_le {A : Set ((E → ℝ) × (E → ℝ))}
   rw [hYeq r f]
   linarith
 
+/-- **Hypothesis (b) of `mpSolution_of_tendsto` holds over the canonical path space for an
+arbitrary approximating family**, as soon as the operator has bounded components.
+
+The hypothesis asks for one truncation level `c`, uniform over `n` and over `r ∈ D ∩ Set.Iic t`,
+under which the tails `∫ max (‖Y r (X' n ·)‖ - c) 0` stay below `ε`.  Here the tails are not
+small but **zero**: `abs_mpFamily_coordinate_le` bounds `Y r` as a function on the path space,
+uniformly in the path, so the bound survives composition with *any* map into the path space and
+integration against *any* probability measure.
+
+**That is the finding, and it is not a convenience of one set of data.**  Nothing about the
+approximating family enters -- not its spaces, not its measures, not its maps, and in particular
+no uniform bound on the rates of the approximants.  Over the canonical path space and a bounded
+operator, hypothesis (b) of the convergence theorem carries no information, and what is left of
+the gap is hypothesis (a), convergence in distribution.
+
+The limit of the bound is where this stops: an operator whose second components are unbounded --
+the local branch, an unbounded rate -- has no such `c`, and there (b) has to be earned by uniform
+integrability. -/
+theorem tail_integral_mpFamily_coordinate_le {A : Set ((E → ℝ) × (E → ℝ))}
+    (hfb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.1 x‖ ≤ b) (hgb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.2 x‖ ≤ b)
+    {Y : ℝ≥0 → RightContinuousPath E → ℝ}
+    (hY : Y ∈ mpFamily A lebesgueClock Clock.Conv.optional
+      (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E))
+    (D : Set ℝ≥0) (t : ℝ≥0) {Ω' : ℕ → Type*} {m' : ∀ n, MeasurableSpace (Ω' n)}
+    {P' : ∀ n, @Measure (Ω' n) (m' n)} [∀ n, IsProbabilityMeasure (P' n)]
+    (X' : ∀ n, Ω' n → RightContinuousPath E) :
+    ∀ ε : ℝ, 0 < ε → ∃ c : ℝ, 0 < c ∧ ∀ (n : ℕ), ∀ r ∈ D ∩ Set.Iic t,
+      ∫ ω, max (‖Y r (X' n ω)‖ - c) 0 ∂(P' n) ≤ ε := by
+  intro ε hε
+  obtain ⟨c, hc, hbound⟩ := abs_mpFamily_coordinate_le hfb hgb hY t
+  refine ⟨c, hc, fun n r hr ↦ ?_⟩
+  have hzero : ∀ ω : Ω' n, max (‖Y r (X' n ω)‖ - c) 0 = 0 := fun ω ↦
+    max_eq_right (by
+      have hb := hbound r hr.2 (X' n ω)
+      rw [Real.norm_eq_abs]
+      linarith)
+  simp only [hzero, integral_zero]
+  exact hε.le
+
+/-- **Integrability of a test process along an arbitrary map into the path space.**  The companion
+of `tail_integral_mpFamily_coordinate_le`: the first hypothesis of `mpSolution_of_tendsto` is, like
+(b), automatic over the canonical path space for a bounded operator, because a bounded measurable
+function is integrable against a probability measure. -/
+theorem integrable_mpFamily_coordinate_comp {A : Set ((E → ℝ) × (E → ℝ))}
+    (hfm : ∀ p ∈ A, Measurable p.1) (hgm : ∀ p ∈ A, Measurable p.2)
+    (hfb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.1 x‖ ≤ b) (hgb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.2 x‖ ≤ b)
+    {Y : ℝ≥0 → RightContinuousPath E → ℝ}
+    (hY : Y ∈ mpFamily A lebesgueClock Clock.Conv.optional
+      (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E))
+    {Ω' : Type*} {m' : MeasurableSpace Ω'} {P' : Measure Ω'} [IsProbabilityMeasure P']
+    {X' : Ω' → RightContinuousPath E} (hX' : Measurable X') (r : ℝ≥0) :
+    Integrable (fun ω ↦ Y r (X' ω)) P' := by
+  obtain ⟨c, -, hbound⟩ := abs_mpFamily_coordinate_le hfb hgb hY r
+  have hYsm : StronglyMeasurable (Y r) :=
+    (RightContinuousPath.stronglyAdapted_mpFamily_coordinate Clock.Conv.optional hfm hgm
+      hY r).mono ((RightContinuousPath.pathFiltration (E := E)).le r)
+  exact Integrable.mono' (integrable_const c) (hYsm.comp_measurable hX').aestronglyMeasurable
+    (Filter.Eventually.of_forall fun ω ↦ by
+      rw [Real.norm_eq_abs]; exact hbound r le_rfl (X' ω))
+
 /-- **The probe: `mpSolution_of_tendsto` at the jump construction, with the constant approximating
 sequence, over any determining set of the past.**
 
@@ -37370,6 +37430,198 @@ theorem mpSolution_of_tendsto_jumpPath_cylinders [MeasurableEq E] {lam : E → �
         (jumpMeasure mu nu)[Y t | jumpFiltrationE lam hlam s] =ᵐ[jumpMeasure mu nu] Y s := by
   refine mpSolution_of_tendsto_jumpPath_of_isDetermining hlam hlam0 hL mu habs nu D ?_
     (isDetermining_pathCylinders_jumpPath hlam Clock.Conv.optional
+      (fun _ hp ↦ measurable_fst_jumpOperator hp)
+      (fun _ hp ↦ measurable_snd_jumpOperator hlam hp))
+  rintro r _ ⟨A, hA, rfl⟩
+  have hAm : MeasurableSet[RightContinuousPath.pathFiltration (E := E) r] A := by
+    rcases hA with rfl | hA
+    · exact @MeasurableSet.empty _ (RightContinuousPath.pathFiltration (E := E) r)
+    · exact measurableSet_pathCylinders_of_le
+        (fun s ↦ RightContinuousPath.pathFiltration_eq s) r hA
+  refine ⟨measurable_const.indicator hAm, 1, fun x ↦ ?_⟩
+  by_cases hx : x ∈ A <;> simp [hx]
+
+/-- **The convergence theorem over the canonical path space for a bounded operator**, carrying
+only the two hypotheses that are not automatic there.
+
+`mpSolution_of_tendsto` asks for four things of an approximating family; over
+`RightContinuousPath E` and an operator with bounded, measurable components two of them cost
+nothing:
+
+* integrability of `Y r ∘ X' n` on each space is `integrable_mpFamily_coordinate_comp`, a bounded
+  measurable function against a probability measure;
+* hypothesis (b), uniform integrability, is `tail_integral_mpFamily_coordinate_le`, and its tails
+  are zero rather than small.
+
+What is left is **(a)**, convergence in distribution of the tested quantities, and **(c)**, the
+vanishing of the tested increments.  This is the form Milestone 11 consumes: there the
+approximating processes are càdlàg and (a) comes out of convergence in the Skorokhod topology at
+the times of no fixed discontinuity, while (c) is what the approximating martingale problems
+supply.
+
+**The division is the finding of the probe below, stated once for all data.**  It says where the
+remaining work in a convergence argument sits, and it says that it does not sit in a uniform
+integrability estimate: as long as the *limiting* operator is bounded, the approximants may be
+arbitrary -- other spaces, other measures, other rates, unbounded ones included, since nothing
+here mentions the approximants' own operators.
+
+The conclusion is the martingale identity along `D`; turning it into `IsMPSolution` is
+`isMPSolution_of_forall_condExp_eq_of_dense` and is not part of this statement. -/
+theorem mpSolution_of_tendsto_mpFamily_coordinate {A : Set ((E → ℝ) × (E → ℝ))}
+    (hfm : ∀ p ∈ A, Measurable p.1) (hgm : ∀ p ∈ A, Measurable p.2)
+    (hfb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.1 x‖ ≤ b) (hgb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.2 x‖ ≤ b)
+    {𝓩 : ℝ≥0 → Set (RightContinuousPath E → ℝ)}
+    (h𝓩 : ∀ r : ℝ≥0, ∀ Z ∈ 𝓩 r,
+      Measurable[RightContinuousPath.pathFiltration (E := E) r] Z ∧ ∃ b, ∀ x, ‖Z x‖ ≤ b)
+    (hdet : IsDetermining 𝓩
+      (mpFamily A lebesgueClock Clock.Conv.optional
+        (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E))
+      id (RightContinuousPath.pathFiltration (E := E)))
+    {P : Measure (RightContinuousPath E)} [IsProbabilityMeasure P] (D : Set ℝ≥0)
+    {Ω' : ℕ → Type*} {m' : ∀ n, MeasurableSpace (Ω' n)} {P' : ∀ n, @Measure (Ω' n) (m' n)}
+    [∀ n, IsProbabilityMeasure (P' n)] {X' : ∀ n, Ω' n → RightContinuousPath E}
+    (hX' : ∀ n, @Measurable (Ω' n) _ (m' n) _ (X' n))
+    (hlaw : ∀ Y ∈ mpFamily A lebesgueClock Clock.Conv.optional
+        (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E), ∀ r ∈ D,
+      TendstoInDistribution (fun n ω ↦ Y r (X' n ω)) atTop (fun p ↦ Y r p) P' P)
+    (hlawZ : ∀ Y ∈ mpFamily A lebesgueClock Clock.Conv.optional
+        (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E),
+      ∀ s ∈ D, ∀ t ∈ D, s ≤ t → ∀ Z ∈ 𝓩 s,
+      TendstoInDistribution (fun n ω ↦ (Y t (X' n ω) - Y s (X' n ω)) * Z (X' n ω)) atTop
+        (fun p ↦ (Y t p - Y s p) * Z p) P' P)
+    (hzero : ∀ Y ∈ mpFamily A lebesgueClock Clock.Conv.optional
+        (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E),
+      ∀ s ∈ D, ∀ t ∈ D, s ≤ t → ∀ Z ∈ 𝓩 s,
+      Tendsto (fun n ↦ ∫ ω, (Y t (X' n ω) - Y s (X' n ω)) * Z (X' n ω) ∂(P' n)) atTop (𝓝 0)) :
+    ∀ Y ∈ mpFamily A lebesgueClock Clock.Conv.optional
+        (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E),
+      ∀ s ∈ D, ∀ t ∈ D, s ≤ t →
+        P[Y t | RightContinuousPath.pathFiltration (E := E) s] =ᵐ[P] Y s := by
+  refine mpSolution_of_tendsto (𝕂 := ℝ) (𝓧₀ := fun _ ↦ Set.univ) (D := D)
+    (P' := P') (X' := X') measurable_id hX' ?_ hdet ?_
+  · exact fun r Z hZ ↦
+      ⟨(h𝓩 r Z hZ).1.mono ((RightContinuousPath.pathFiltration (E := E)).le r) le_rfl,
+        (h𝓩 r Z hZ).2⟩
+  intro Y hYmem
+  have hYsm : ∀ r : ℝ≥0, StronglyMeasurable (Y r) := fun r ↦
+    (RightContinuousPath.stronglyAdapted_mpFamily_coordinate Clock.Conv.optional hfm hgm
+      hYmem r).mono ((RightContinuousPath.pathFiltration (E := E)).le r)
+  exact ⟨Y, fun _ ↦ Set.mem_univ _, hYsm, fun _ _ ↦ rfl, fun t ht ↦
+    ⟨fun n r _ ↦ integrable_mpFamily_coordinate_comp hfm hgm hfb hgb hYmem (hX' n) r,
+      fun r hr ↦ hlaw Y hYmem r hr.1,
+      tail_integral_mpFamily_coordinate_le hfb hgb hYmem D t X',
+      fun s hs Z hZ ↦ ⟨hlawZ Y hYmem s hs.1 t ht hs.2 Z hZ,
+        hzero Y hYmem s hs.1 t ht hs.2 Z hZ⟩⟩⟩
+
+/-- **The probe under the image measure, on the canonical path space itself.**
+
+The two probes above live on the sample space `(ℕ → E) × (ℕ → ℝ)` of the jump construction and
+carry the path map `jumpPath lam` through every hypothesis.  This one takes the path map to be
+the **identity**: the processes are the test processes of `mpFamily` over
+`RightContinuousPath E`, the filtration is `pathFiltration`, and the measure is the image
+`(jumpMeasure mu nu).map (jumpPath lam)` that `jumpPath_isMPSolution` solves for.
+
+**Why the change of space is not cosmetic.**  Milestone 6 and Milestone 11 speak about measures
+on a path space, not about sample spaces carrying paths:
+`mpSolutions_jumpOperator_coordinate_eq_singleton`
+is an identity of sets of measures on `RightContinuousPath E`, and every statement of
+`SkorokhodSpace` that a solution could feed lives there too.  Until here the convergence theorem
+of Milestone 10 had witnesses only over the sample space, so it was inhabited at data that no
+statement further up could consume.
+
+The proof runs through `mpSolution_of_tendsto_mpFamily_coordinate` and therefore discharges
+neither integrability nor hypothesis (b): over the path space and a bounded operator those two
+are automatic, and what is left to supply here is convergence in distribution -- trivial for a
+constant sequence -- and the vanishing of the tested increments.  What the sample space version
+buys in exchange is that its conclusion is about the construction's own filtration
+`jumpFiltrationE`, which the image measure forgets.
+
+The approximating sequence is again the constant one, so nothing new is proved about the jump
+process; what is proved is that the four hypotheses of `mpSolution_of_tendsto` are jointly
+inhabited **on the space where the theorem would be used**. -/
+theorem mpSolution_of_tendsto_map_jumpPath_of_isDetermining [MeasurableEq E] {lam : E → ℝ}
+    (hlam : Measurable lam) {L : ℝ} (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (mu : Kernel E E) [IsMarkovKernel mu]
+    (habs : ∀ x, lam x = 0 → mu x = Measure.dirac x)
+    (nu : Measure E) [IsProbabilityMeasure nu] (D : Set ℝ≥0)
+    {𝓩 : ℝ≥0 → Set (RightContinuousPath E → ℝ)}
+    (h𝓩 : ∀ r : ℝ≥0, ∀ Z ∈ 𝓩 r,
+      Measurable[RightContinuousPath.pathFiltration (E := E) r] Z ∧ ∃ b, ∀ x, ‖Z x‖ ≤ b)
+    (hdet : IsDetermining 𝓩
+      (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E))
+      id (RightContinuousPath.pathFiltration (E := E))) :
+    ∀ Y ∈ mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E),
+      ∀ s ∈ D, ∀ t ∈ D, s ≤ t →
+        ((jumpMeasure mu nu).map (jumpPath lam))[Y t |
+            RightContinuousPath.pathFiltration (E := E) s]
+          =ᵐ[(jumpMeasure mu nu).map (jumpPath lam)] Y s := by
+  haveI := isProbabilityMeasure_map_jumpPath hlam mu nu
+  have hfm : ∀ p ∈ jumpOperator lam mu, Measurable p.1 :=
+    fun _ hp ↦ measurable_fst_jumpOperator hp
+  have hgm : ∀ p ∈ jumpOperator lam mu, Measurable p.2 :=
+    fun _ hp ↦ measurable_snd_jumpOperator hlam hp
+  have hfb : ∀ p ∈ jumpOperator lam mu, ∃ b, ∀ x, ‖p.1 x‖ ≤ b :=
+    fun _ hp ↦ bddAbove_fst_jumpOperator hp
+  have hgb : ∀ p ∈ jumpOperator lam mu, ∃ b, ∀ x, ‖p.2 x‖ ≤ b :=
+    fun _ hp ↦ bddAbove_snd_jumpOperator hlam0 hL hp
+  have hYsm : ∀ Y ∈ mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+      (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E),
+      ∀ r : ℝ≥0, StronglyMeasurable (Y r) := fun _ hYmem r ↦
+    (RightContinuousPath.stronglyAdapted_mpFamily_coordinate Clock.Conv.optional hfm hgm
+      hYmem r).mono ((RightContinuousPath.pathFiltration (E := E)).le r)
+  refine mpSolution_of_tendsto_mpFamily_coordinate hfm hgm hfb hgb h𝓩 hdet D
+    (Ω' := fun _ ↦ RightContinuousPath E) (m' := fun _ ↦ inferInstance)
+    (P' := fun _ ↦ (jumpMeasure mu nu).map (jumpPath lam)) (X' := fun _ ↦ id)
+    (fun _ ↦ measurable_id)
+    (fun Y hYmem r _ ↦ tendstoInDistribution_const (hYsm Y hYmem r).measurable.aemeasurable)
+    (fun Y hYmem s _ t _ _ Z hZ ↦ ?_) (fun Y hYmem s _ t _ hst Z hZ ↦ ?_)
+  · exact tendstoInDistribution_const ((((hYsm Y hYmem t).measurable.sub
+      (hYsm Y hYmem s).measurable)).mul
+      ((h𝓩 s Z hZ).1.mono ((RightContinuousPath.pathFiltration (E := E)).le s) le_rfl)).aemeasurable
+  · -- every term of the sequence is exactly zero, so the limit is
+    have hkey : ∫ f, (Y t f - Y s f) * Z f ∂((jumpMeasure mu nu).map (jumpPath lam)) = 0 :=
+      integral_sub_mul_eq_zero_map_jumpPath_time hlam hlam0 hL mu habs nu hYmem hst
+        (h𝓩 s Z hZ).1.stronglyMeasurable (h𝓩 s Z hZ).2.choose_spec
+    exact Filter.Tendsto.congr (fun _ ↦ hkey.symm) tendsto_const_nhds
+
+/-- **The probe under the image measure over all bounded measurable functions of the past.** -/
+theorem mpSolution_of_tendsto_map_jumpPath [MeasurableEq E] {lam : E → ℝ}
+    (hlam : Measurable lam) {L : ℝ} (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (mu : Kernel E E) [IsMarkovKernel mu]
+    (habs : ∀ x, lam x = 0 → mu x = Measure.dirac x)
+    (nu : Measure E) [IsProbabilityMeasure nu] (D : Set ℝ≥0) :
+    ∀ Y ∈ mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E),
+      ∀ s ∈ D, ∀ t ∈ D, s ≤ t →
+        ((jumpMeasure mu nu).map (jumpPath lam))[Y t |
+            RightContinuousPath.pathFiltration (E := E) s]
+          =ᵐ[(jumpMeasure mu nu).map (jumpPath lam)] Y s :=
+  mpSolution_of_tendsto_map_jumpPath_of_isDetermining hlam hlam0 hL mu habs nu D
+    (fun _ _ hZ ↦ hZ)
+    (isDetermining_pathFiltration Clock.Conv.optional
+      (fun _ hp ↦ measurable_fst_jumpOperator hp)
+      (fun _ hp ↦ measurable_snd_jumpOperator hlam hp))
+
+/-- **The probe under the image measure over the cylinders of the past alone.**
+
+This is the statement Milestone 11 would consume: a measure on the canonical path space, a
+determining class that is a separating class of the manuscript, and the martingale identity of
+the convergence theorem along an arbitrary set of times. -/
+theorem mpSolution_of_tendsto_map_jumpPath_cylinders [MeasurableEq E] {lam : E → ℝ}
+    (hlam : Measurable lam) {L : ℝ} (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (mu : Kernel E E) [IsMarkovKernel mu]
+    (habs : ∀ x, lam x = 0 → mu x = Measure.dirac x)
+    (nu : Measure E) [IsProbabilityMeasure nu] (D : Set ℝ≥0) :
+    ∀ Y ∈ mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E),
+      ∀ s ∈ D, ∀ t ∈ D, s ≤ t →
+        ((jumpMeasure mu nu).map (jumpPath lam))[Y t |
+            RightContinuousPath.pathFiltration (E := E) s]
+          =ᵐ[(jumpMeasure mu nu).map (jumpPath lam)] Y s := by
+  refine mpSolution_of_tendsto_map_jumpPath_of_isDetermining hlam hlam0 hL mu habs nu D ?_
+    (isDetermining_pathCylinders_coordinate Clock.Conv.optional
       (fun _ hp ↦ measurable_fst_jumpOperator hp)
       (fun _ hp ↦ measurable_snd_jumpOperator hlam hp))
   rintro r _ ⟨A, hA, rfl⟩

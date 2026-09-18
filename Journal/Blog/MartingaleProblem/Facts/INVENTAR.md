@@ -37292,3 +37292,151 @@ Monotone-Klassen-Satz, einmal bezahlt in `isDetermining_of_generateFromFuns`.
    (b) ohne jede Straffheit, allein aus der gleichmäßigen Schranke —, und er
    halbiert die Lücke, die dieser Lauf als einzige offene benennt. (a), die
    Verteilungskonvergenz, bleibt danach die ganze Aufgabe.
+
+### 2026-09-18, elfter Lauf des Tages — die Probe steht jetzt dort, wo sie gebraucht wird: auf dem Pfadraum unter dem Bildmaß; und Vorschlag 2 war zu schwach gestellt — Voraussetzung (b) hängt überhaupt nicht an den Approximanten
+
+**Beide Vorschläge des Vorlaufs sind eingelöst**, der zweite in einer stärkeren
+Fassung als er gestellt war. Sechs neue Deklarationen in
+`TauCeti/MartingaleProblems/Suggested.lean`, alle drei Roadmap-Dateien ohne einen
+Fehler und ohne ein `sorry` durch `scripts/check_suggested.py` gegen v4.33.1
+(Lean 4.33.1, commit `819816b2e0a3`), alle sechs mit `#print axioms` auf
+`propext`, `Classical.choice`, `Quot.sound` geprüft. Die Punkte stehen in
+`MartingaleProblems/README.md`, Meilenstein 10.
+
+#### Vorschlag 2 zuerst, weil er die Gestalt von Vorschlag 1 geändert hat
+
+Der Vorlauf hatte vorgeschlagen, (b) „an einer Familie mit **gleichmäßig**
+beschränkten Raten `lam n ≤ L` und gleichmäßig beschränkten Testfunktionen" zu
+zeigen. **Diese Gleichmäßigkeit wird nicht gebraucht, und der Grund steht in der
+Aussage von `mpSolution_of_tendsto` selbst:** Voraussetzung (b) spricht von der
+kanonischen Fassung `Y₀`, einer Funktion auf dem **Pfadraum**, entlang der
+Abbildungen `X' n` ausgewertet. Die Schranke von `abs_mpFamily_coordinate_le`
+sitzt an `Y₀` als Funktion auf dem Pfadraum und ist gleichmäßig im Pfad; sie
+übersteht deshalb die Verkettung mit *jeder* Abbildung in den Pfadraum und die
+Integration gegen *jedes* Wahrscheinlichkeitsmaß.
+
+* `tail_integral_mpFamily_coordinate_le` — **Voraussetzung (b) gilt über dem
+  kanonischen Pfadraum für eine beliebige approximierende Familie**, sobald der
+  Operator beschränkte Komponenten hat. Die Schwänze sind nicht klein, sondern
+  Null.
+* `integrable_mpFamily_coordinate_comp` — dasselbe für die Integrierbarkeit auf
+  jedem Glied: eine beschränkte meßbare Funktion gegen ein
+  Wahrscheinlichkeitsmaß.
+
+**Über die approximierende Familie geht dabei nichts ein** — nicht ihre Räume,
+nicht ihre Maße, nicht ihre Abbildungen, und insbesondere **keine** Schranke an
+die Raten der Approximanten. Der Vorschlag wollte eine gleichmäßige Schranke über
+`n` einkaufen; es stellt sich heraus, daß nur die Beschränktheit des
+**Grenz**operators gebraucht wird. Die Approximanten dürfen unbeschränkte Raten
+haben.
+
+**Die Grenze des Befundes, und sie steht an der Deklaration:** ein Erzeuger ohne
+beschränkte zweite Komponenten — der lokale Zweig, der Yule-Prozeß — hat kein
+solches `c`, und dort ist (b) durch gleichgradige Integrierbarkeit zu erarbeiten.
+
+#### Was daraus fiel: der Konvergenzsatz in der Gestalt, die Meilenstein 11 verbraucht
+
+* `mpSolution_of_tendsto_mpFamily_coordinate` — **der Konvergenzsatz über dem
+  kanonischen Pfadraum für einen beschränkten Operator, mit genau den beiden
+  Voraussetzungen, die dort nicht automatisch sind:** (a) die
+  Verteilungskonvergenz der geprüften Größen und (c) das Verschwinden der
+  geprüften Zuwächse. Integrierbarkeit und (b) sind eingelöst.
+
+Das ist mehr als eine Umverpackung. Es sagt, **wo** die Arbeit eines
+Konvergenzarguments sitzt, und es sagt, daß sie nicht in einer Abschätzung der
+gleichgradigen Integrierbarkeit sitzt. In Meilenstein 11 sind die
+approximierenden Prozesse càdlàg, (a) fällt aus der Konvergenz in der
+Skorokhodtopologie an den Zeiten ohne feste Unstetigkeit, und (c) liefern die
+approximierenden Martingalprobleme; (b) ist dort nach diesem Lauf kein Posten
+mehr.
+
+Die Quantoren von (a) und (c) sind dabei die minimalen: `∀ r ∈ D` und
+`∀ s ∈ D, ∀ t ∈ D, s ≤ t`. Das ist **gleichwertig** zu der Gestalt, die
+`mpSolution_of_tendsto` liest (`∀ t ∈ D, ∀ r ∈ D ∩ Set.Iic t`), weil die
+Vereinigung der `D ∩ Set.Iic t` über `t ∈ D` wieder `D` ist — mit `t = r`.
+
+#### Vorschlag 1 — die Probe unter dem Bildmaß
+
+* `mpSolution_of_tendsto_map_jumpPath_of_isDetermining`,
+  `mpSolution_of_tendsto_map_jumpPath` und
+  `mpSolution_of_tendsto_map_jumpPath_cylinders` — dieselbe Probe wie im
+  Vorlauf, aber mit der Pfadabbildung `id`, dem Maß
+  `(jumpMeasure mu nu).map (jumpPath lam)` und der Filtration `pathFiltration`.
+  Beide trennenden Mengen des Vorlaufs passen:
+  `isDetermining_pathFiltration` und `isDetermining_pathCylinders_coordinate`.
+
+**Warum der Raumwechsel nicht kosmetisch ist.** Meilenstein 6 und Meilenstein 11
+sprechen über Maße auf einem Pfadraum und nicht über Stichprobenräume, die Pfade
+tragen: `mpSolutions_jumpOperator_coordinate_eq_singleton` ist eine Identität von
+Mengen von Maßen auf `RightContinuousPath E`, und jede Aussage von `SkorokhodSpace`, die
+eine Lösung verbrauchen könnte, lebt dort ebenfalls. Bis zu diesem Lauf hatte der
+Konvergenzsatz Zeugen allein über dem Stichprobenraum `(ℕ → E) × (ℕ → ℝ)`, war
+also an Daten bewohnt, die keine Aussage weiter oben verbrauchen kann.
+
+Der Beweis läuft über `mpSolution_of_tendsto_mpFamily_coordinate`. Zu liefern
+bleiben `tendstoInDistribution_const` für (a) — die Folge ist konstant — und
+`integral_sub_mul_eq_zero_map_jumpPath_time` für (c). **Was die Fassung über dem
+Stichprobenraum dafür einbringt**, ist eine Konklusion über die Filtration der
+Konstruktion selbst, `jumpFiltrationE`, die das Bildmaß vergißt; die beiden
+Fassungen stehen deshalb nebeneinander und nicht eine statt der anderen.
+
+#### Eine Beobachtung zum Aufwand
+
+Alle sechs Deklarationen gingen im **ersten** Durchlauf durch. Das ist in dieser
+Datei ungewöhnlich und hat einen benennbaren Grund: es wurde nichts Neues
+gerechnet. Fünf der sechs sind Umverpackungen von Aussagen, die der Vorlauf
+bewiesen hat, und die sechste (`integrable_mpFamily_coordinate_comp`) ist
+`Integrable.mono'` gegen eine Konstante. Der Meßwert daran ist, daß der Vorlauf
+mit `abs_mpFamily_coordinate_le` die richtige Zwischenaussage gewählt hat — eine
+Schranke an der **Funktion auf dem Pfadraum** und nicht am zusammengesetzten
+Prozeß; hätte sie am Prozeß gesessen, wäre keine der drei Verallgemeinerungen
+dieses Laufs möglich gewesen.
+
+#### Ein Werkzeug, das dabei entstand
+
+`scripts/iter_mp.py` baut in einen bleibenden `.olean`-Baum `scratch/_iter/` und
+übersetzt nur die verlangte Datei; das macht aus einem Durchgang an
+`MartingaleProblems/Suggested.lean` 70 Sekunden statt derselben 70 plus zwei
+Abhängigkeiten. Es gibt die Fehlerblöcke ungefiltert aus und **ersetzt
+`check_suggested.py` nicht** — der Abschlußbefund eines Laufs wird weiter mit
+jenem Skript erhoben, das seinen Baum bei jedem Lauf löscht und damit keine
+veraltete `.olean` durchgehen läßt. Das steht so im Kopf des Skripts.
+
+#### Was offen bleibt
+
+Nach diesem Lauf ist **(a)**, die Verteilungskonvergenz, die einzige
+Voraussetzung von `mpSolution_of_tendsto`, die über der Sprungkonstruktion nur an
+der konstanten Folge einen Zeugen hat. (b) ist es nicht mehr, und zwar für
+beliebige Approximanten. Das ist die Straffheit, und sie ist das, was das
+Manuskript an dieser Stelle ausdrücklich nicht liefert.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Der Anschluß von Meilenstein 10 an Meilenstein 11, jetzt, wo (b) wegfällt.**
+   *Aussage:* `mpSolution_of_tendsto_cadlag` in der Fassung, die
+   `mpSolution_of_tendsto_mpFamily_coordinate` verbraucht — die approximierenden
+   Prozesse leben im càdlàg-Raum, (a) kommt aus der Konvergenz in der
+   Skorokhodtopologie an den Zeiten ohne feste Unstetigkeit. *Worauf sie ruht:*
+   `mpSolution_of_tendsto_mpFamily_coordinate` (heute) nimmt (b) und die
+   Integrierbarkeit ab. Die Zeitmenge `D` soll
+   `SkorokhodSpace.exists_countable_dense_continuity` liefern — **das ist ein
+   Roadmap-Punkt, Meilenstein 8 dort, und in Lean noch nicht bewiesen**
+   (nachgesehen 2026-09-18: der Name kommt allein in
+   `SkorokhodSpace/README.md` vor, nicht in der `Suggested.lean`); er ist damit
+   die erste Eingabe, die dieser Anschluß braucht und noch nicht hat.
+   Die Auswertungsabbildung des Skorokhodraums ist stetig an genau diesen Zeiten.
+   *Warum jetzt:* Meilenstein 11 ist der einzige Ort, an dem **10 167 Zeilen und
+   351 Deklarationen** von `SkorokhodSpace` etwas verbrauchen würden, und der
+   Posten, der den Anschluß bisher am teuersten aussehen ließ — die gleichgradige
+   Integrierbarkeit über einer Familie — ist seit heute keiner mehr. **Zu klären
+   ist dabei zuerst**, ob der càdlàg-Raum als Zielraum der `X' n` genügt oder ob
+   der Satz über `RightContinuousPath E` zu führen und danach zu transportieren
+   ist; das ist eine Entscheidung und keine Rechnung, und sie ist zu begründen.
+2. **Die Straffheit als benannte Hypothese, nicht als Lücke.** *Aussage:*
+   ein Prädikat über einer Familie von Lösungen, und der Satz, daß aus Straffheit
+   die Voraussetzung (a) längs einer Teilfolge folgt. *Worauf sie ruht:*
+   `fact:prohorov` liegt in Mathlib, `fact:relcompact` und `fact:relcompact2`
+   sind Roadmap-Punkte von `SkorokhodSpace`. *Warum jetzt:* nach diesem Lauf ist
+   (a) die **einzige** offene Voraussetzung, und sie als Hypothese hinzuschreiben
+   ist ehrlicher als sie als Lücke zu führen — dieselbe Entscheidung, die bei
+   `𝔼[N t] < ∞` im Hawkes-Zweig schon getroffen ist.

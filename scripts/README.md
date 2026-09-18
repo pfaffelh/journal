@@ -47,6 +47,18 @@ Laufbericht.
 * **`check_suggested.py`** typprüft die drei `Suggested.lean` gegen das fertig
   gebaute Mathlib des Hauptcheckouts und zählt Fehler und `sorry`. Es benutzt
   `lake --dir=…` statt `cd`.
+* **`iter_mp.py`** übersetzt eine einzelne `Suggested.lean` gegen einen
+  **bleibenden** `.olean`-Baum `scratch/_iter/`, damit ein Durchgang während des
+  Schreibens nicht die beiden Abhängigkeiten mitbaut. Es gibt die Fehlerblöcke
+  ungefiltert aus und **ersetzt `check_suggested.py` nicht**: der Abschlußbefund
+  eines Laufs wird mit jenem Skript erhoben, das seinen Baum bei jedem Lauf
+  löscht und damit keine veraltete `.olean` durchgehen läßt.
+
+  ```
+  python3 scripts/iter_mp.py WeakConvergence SkorokhodSpace   # einmal je Lauf
+  python3 scripts/iter_mp.py MartingaleProblems               # je Durchgang
+  ```
+
 * **`check_axioms.py`** gibt die Axiomabhängigkeiten benannter Deklarationen
   einer `Suggested.lean` aus. Jeder Lauf prüft seine neuen Deklarationen mit
   `#print axioms`; bisher geschah das von Hand, indem die Zeilen an die Datei

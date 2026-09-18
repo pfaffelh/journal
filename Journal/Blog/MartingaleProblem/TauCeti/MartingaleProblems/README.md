@@ -10085,6 +10085,60 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   Glied ist exakt Null. Die Probe ist deshalb nirgends eine Abschätzung.
   Die Voraussetzungen sind die von `jumpProcessE_isMPSolution_of_nonneg` und keine
   weiteren; keine Topologie auf `E` kommt vor.
+* `tail_integral_mpFamily_coordinate_le` und
+  `integrable_mpFamily_coordinate_comp`: **über dem kanonischen Pfadraum und einem
+  Operator mit beschränkten Komponenten sind die Integrierbarkeit und
+  Voraussetzung (b) von `mpSolution_of_tendsto` für eine *beliebige*
+  approximierende Familie automatisch.** **In Lean** am 2026-09-18, elfter Lauf.
+  Die Abschneidestufe kommt aus `abs_mpFamily_coordinate_le`, und weil die
+  Schranke an `Y r` als Funktion auf dem Pfadraum sitzt und gleichmäßig im Pfad
+  ist, übersteht sie die Verkettung mit **jeder** Abbildung in den Pfadraum und
+  die Integration gegen **jedes** Wahrscheinlichkeitsmaß: die Schwänze von (b)
+  sind Null.
+  **Über die approximierende Familie geht dabei nichts ein** — nicht ihre Räume,
+  nicht ihre Maße, nicht ihre Abbildungen, und insbesondere keine gleichmäßige
+  Schranke an die Raten der Approximanten. Voraussetzung (b) trägt an dieser
+  Stelle also keine Information, und was von der Lücke bleibt, ist Voraussetzung
+  (a), die Verteilungskonvergenz.
+  Die Grenze des Befundes ist die Beschränktheit der zweiten Komponenten: ein
+  Erzeuger ohne sie — der lokale Zweig, eine unbeschränkte Rate — hat kein solches
+  `c`, und dort ist (b) durch gleichgradige Integrierbarkeit zu erarbeiten.
+* `mpSolution_of_tendsto_mpFamily_coordinate`: **der Konvergenzsatz über dem
+  kanonischen Pfadraum für einen beschränkten Operator**, mit genau den beiden
+  Voraussetzungen, die dort nicht automatisch sind. **In Lean** am 2026-09-18,
+  elfter Lauf. Übrig bleiben (a), die Verteilungskonvergenz der geprüften Größen,
+  und (c), das Verschwinden der geprüften Zuwächse; Integrierbarkeit und (b) sind
+  durch die beiden vorigen Punkte eingelöst. Das ist die Gestalt, die
+  Meilenstein 11 verbraucht: dort sind die approximierenden Prozesse càdlàg, (a)
+  fällt aus der Konvergenz in der Skorokhodtopologie an den Zeiten ohne feste
+  Unstetigkeit, und (c) liefern die approximierenden Martingalprobleme.
+  **Die Aufteilung sagt, wo die Arbeit eines Konvergenzarguments sitzt**, und sie
+  sagt, daß sie nicht in einer Abschätzung der gleichgradigen Integrierbarkeit
+  sitzt: solange der **Grenz**operator beschränkt ist, dürfen die Approximanten
+  beliebig sein, andere Räume, andere Maße, andere und auch unbeschränkte Raten.
+* `mpSolution_of_tendsto_map_jumpPath_of_isDetermining`,
+  `mpSolution_of_tendsto_map_jumpPath` und
+  `mpSolution_of_tendsto_map_jumpPath_cylinders`: **die Probe unter dem Bildmaß,
+  auf dem kanonischen Pfadraum selbst.** **In Lean** am 2026-09-18, elfter Lauf.
+  Die Pfadabbildung ist die **Identität**, die Prozesse sind die Testprozesse von
+  `mpFamily` über `RightContinuousPath E`, die Filtration ist `pathFiltration`,
+  und das Maß ist das Bild `(jumpMeasure mu nu).map (jumpPath lam)`, das
+  `jumpPath_isMPSolution` löst. Beide trennenden Mengen des zehnten Laufs passen:
+  `isDetermining_pathFiltration` und `isDetermining_pathCylinders_coordinate`.
+  **Warum der Raumwechsel nicht kosmetisch ist:** Meilenstein 6 und
+  Meilenstein 11 sprechen über Maße auf einem Pfadraum und nicht über
+  Stichprobenräume, die Pfade tragen — `mpSolutions_jumpOperator_coordinate_eq_singleton`
+  ist eine Identität von Mengen von Maßen auf `RightContinuousPath E`, und jede
+  Aussage von `SkorokhodSpace`, die eine Lösung verbrauchen könnte, lebt dort
+  ebenfalls. Bis hierher hatte der Konvergenzsatz Zeugen allein über dem
+  Stichprobenraum, war also an Daten bewohnt, die keine Aussage weiter oben
+  verbrauchen kann.
+  Der Beweis läuft über `mpSolution_of_tendsto_mpFamily_coordinate` und löst
+  deshalb weder die Integrierbarkeit noch (b) ein; zu liefern bleiben die
+  Verteilungskonvergenz — an einer konstanten Folge `tendstoInDistribution_const`
+  — und `integral_sub_mul_eq_zero_map_jumpPath_time` für (c). Was die Fassung über
+  dem Stichprobenraum dafür einbringt, ist eine Konklusion über die Filtration der
+  Konstruktion selbst, `jumpFiltrationE`, die das Bildmaß vergißt.
 
 ## Milestone 11: the Skorokhod instances
 
