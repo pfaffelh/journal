@@ -166,13 +166,25 @@ Commit `8018f6a`, mit denselben Feldnamen).
 2. For each, open an issue with the `[Intention]` template, titled
    `[Intention]: <specific targets>`, and comment `claim` to register it in the
    shared `leanprover-community/project-intentions` registry.
-3. Open one pull request per roadmap. Merging needs approval from
+3. Open **one** pull request for all four roadmaps (the author's decision of
+   2026-09-17; see the recommendation above for what to put in the description
+   to ease the review load). Merging needs approval from
    `@TauCetiProject/roadmap-reviewers` and a passing `build` check; the first
    merged PR earns triage rights, two earn reviewer status.
-4. `Suggested.lean` files must build against Mathlib `master`. The ones here are
-   prototypes written against the roadmap and have not been compiled; each needs
-   a pass under `lake build` before the PR, with `sorry` kept only where the
-   statement is the work.
+4. **`Suggested.lean` must build against Mathlib `master` — and that has never
+   been tested.** The three files are no longer prototypes: since 2026-09-17
+   they build in dependency order under `scripts/check_suggested.py` with
+   `autoImplicit=false` and `relaxedAutoImplicit=false` as Mathlib does, at **0
+   errors and 0 `sorry`** (2026-09-18: `WeakConvergence` 195 declarations,
+   `SkorokhodSpace` 424, `MartingaleProblems` 1635). But they are compiled
+   against **v4.33.1**; `upstream/master` is fetched only for the citation
+   check, never for a build.
+
+   One breakage is already known and cannot be papered over: `measurable_pi_lambda`
+   is a deprecated alias of `Measurable.of_eval` on master, and `Measurable.of_eval`
+   does not exist on v4.33.1 — there is **no spelling that works on both**. Expect
+   more of that kind. A build against master is therefore its own piece of work
+   and must happen before the PR, not after the `build` check fails.
 
 ## What is deliberately absent from the roadmaps
 

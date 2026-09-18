@@ -69,7 +69,18 @@ Label `awaiting-review`.
    *Und eine Zahl, die die Liste gar nicht führt:* Punkt 8 unten hat
    fünfundzwanzig benannte Mathlib-Lücken, teils maschinell nachgeprüft.
 
-2. **Die `scratch/`-Verzeichnisse entfernen.** In
+2. **Die Kette einmal gegen Mathlib `master` bauen.** `CONTRIBUTING.md` verlangt
+   es (Schritt 4 in `SUBMISSION.md`), und **wir haben es nie getan**: die
+   Läufe kompilieren gegen v4.33.1 und holen `upstream/master` nur für die
+   Zitatprüfung. Ein Bruch ist schon bekannt und nicht umgehbar —
+   `measurable_pi_lambda` ist auf master ein veralteter Alias von
+   `Measurable.of_eval`, das es auf v4.33.1 nicht gibt; es existiert **keine
+   Schreibweise, die auf beiden Ständen geht**. Bei 57 705 Zeilen gegen ein
+   Mathlib, das wir seit drei Wochen nur lesen, ist mit weiteren zu rechnen.
+   Das ist eigene Arbeit und gehört **vor** den PR, nicht hinter einen
+   fehlgeschlagenen `build`-Check.
+
+3. **Die `scratch/`-Verzeichnisse entfernen.** In
    `TauCeti/MartingaleProblems/scratch/` liegen die Entwicklungs-Stubs, in denen
    die Läufe erst gegen Mathlib allein arbeiten (`Seam.lean`, `Levy.lean`,
    `Decomposition.lean`, `QuasiLeft.lean`, `Middle.lean`, `Work.lean`,
