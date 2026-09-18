@@ -1132,6 +1132,39 @@ Umgekehrt gilt: eine Abschwächung wird **belegt**, nicht vermutet. Wer
 Vollständigkeit im Beweis nicht mehr vorkommt. Prohorovs Satz zum Beispiel
 braucht sie in der Rückrichtung; der Satz von der stetigen Abbildung nicht.
 
+### Eine Ausnahme von dieser Regel: die Nichtexplosion
+
+**Vom Nutzer am 2026-09-18 generell freigegeben.** Die Nichtexplosion darf
+**überall** vorausgesetzt werden, wo sie hilft, und zählt nicht als
+vermeidbare Bequemlichkeit. Kein Lauf soll Zeit darauf verwenden, eine Aussage
+ohne sie hinzubiegen, und kein Lauf muß sie rechtfertigen.
+
+Der Grund ist der des Nutzers: **in der Praxis muß die Nichtexplosion ohnehin
+gezeigt werden.** Sie ist keine technische Hilfsbedingung, sondern eine
+Eigenschaft, die jede Anwendung eines Sprungprozesses braucht — und für die
+Standardfälle steht sie bewiesen da (`ae_mem_nonExplosive` für beschränkte
+Raten, `ae_mem_nonExplosiveE_linear` für den linearen Geburt-Tod-Prozeß, der
+Lyapunov-Test darüber). Eine Aussage, die sie trägt, ist deshalb nicht schwächer
+im praktischen Sinn, sondern nur ehrlicher.
+
+Das gilt **in beide Richtungen**:
+
+* Sie darf frei **hinzugenommen** werden — als Hypothese einer neuen Aussage,
+  oder um einen Beweis zu vereinfachen, der sonst um einen Müllwert
+  herumarbeiten müßte. Für die `sInf`-getotalisierten Funktionen
+  (`stepIndex`, `rateInverse`, `jumpTime`, `jumpTimeF`) ist sie sogar
+  **verlangt**, siehe die stehende Regel oben im Auftrag.
+* Sie muß nicht **weggelassen** werden, wenn ein Beweis auch ohne sie
+  durchgeht. Wer sie in diesem Fall streicht, darf das — aber der
+  Doc-Kommentar sagt dann, **an welcher Stelle der Müllwert nicht gelesen
+  wird**, und nennt sie; das Wort „harmlos" allein genügt nicht (es stand bei
+  `stepIndex` und war falsch).
+
+Andere Hypothesen sind von dieser Freigabe **nicht** betroffen. Beschränktheit
+der Rate, Atomlosigkeit der Uhr, Polnischsein des Zustandsraums, Separabilität
+und die Ordnungsbündel \eqref{T0}–\eqref{T4} bleiben unter der Regel oben: so
+schwach wie möglich, und jede Abschwächung belegt.
+
 ## Wie geschrieben wird, damit ein Abbruch nichts kaputt macht
 
 Ein Lauf kann jederzeit abgeschnitten werden — von der Nutzungsgrenze, vom
