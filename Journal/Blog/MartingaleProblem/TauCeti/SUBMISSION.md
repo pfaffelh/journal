@@ -115,6 +115,14 @@ bewiesen.
 
 ### Wie die Kette hier gebaut wird
 
+**Seit dem 2026-09-18, dreizehntem Lauf, ist die zweite Kante der Kette
+ebenfalls benutzt:** `SkorokhodSpace/Suggested.lean` beginnt mit
+`import TauCetiRoadmap.WeakConvergence.Suggested` und nimmt daraus die
+f.ü.-stetige Fassung des Abbildungssatzes für Meilenstein 8. Gemessen hat der
+Import dort **null Fehler** und keine Anpassung im Bestand gekostet; alles vor
+Meilenstein 8 ruht weiterhin allein auf Mathlib. `MartingaleProblems` importiert
+beide Dateien wie bisher.
+
 Die Importzeile lautet `import TauCetiRoadmap.WeakConvergence.Suggested` — mit
 dem Präfix, unter dem das Zielrepositorium baut (`lakefile.toml` dort:
 `lean_lib TauCetiRoadmap` mit `globs = ["TauCetiRoadmap.*"]` über dem
