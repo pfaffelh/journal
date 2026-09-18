@@ -9449,6 +9449,414 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   Milestone 9 and serve here unchanged; the two witnesses of this file — the one
   that fails quasi-left-continuity and the one that inhabits the convergence
   theorem — sit on the same coin.
+* `naturalFiltration_eq_comap_block`: the natural filtration of a chain is the
+  comap of the block of its first `n + 1` coordinates. Both sides are
+  `⨆ j ≤ n, comap (Ξ j)`; the right-hand one because the product σ-algebra of the
+  block is the supremum of the comaps of its evaluations, and
+  `MeasurableSpace.comap_iSup` carries the comap through. No measure, no kernel
+  and no topology. **In Lean** on 2026-09-18, first run.
+  It is the bridge between a conditional expectation proved over the block
+  σ-algebra a disintegration produces and one read over the filtration
+  hypothesis (c) is written over.
+* `jumpChain`, `measurable_jumpChain`, `condExp_jumpChain`: the **embedded jump
+  chain** of Milestone 4, read as a process on the sample space of the jump
+  construction, and its Markov property in the shape
+  `martingale_chainCompensated` reads it. The compensator is
+  `Pf x = ∫ f d(mu x)` — a function of the state. **In Lean** on 2026-09-18,
+  first run.
+* `tendsto_integral_mul_jumpChain`: the nine hypotheses of
+  `tendsto_integral_mul_rescaledChain_natural` discharged together on the
+  embedded jump chain of an **arbitrary** Markov kernel, under `jumpMeasure mu
+  nu`. `E` carries nothing but its σ-algebra; the test function and the weight
+  are bounded and measurable. **In Lean** on 2026-09-18, first run.
+  **This is the hypothesis `hPf` met in a shape `measurable_const` cannot
+  meet.** The i.i.d. probe discharges it with a constant compensator, and a
+  hypothesis that is only ever met in its trivial shape has not been met. It is
+  also the join between this milestone and Milestone 4: the convergence theory
+  and the only construction by hand this roadmap has.
+* `measure_chainCompensated_chain_eq` and
+  `measure_chainCompensated_jumpChain_eq`: **how often the compensated chain
+  moves at its first step, exactly** — it is the mass the one step kernel puts
+  away from its own mean, averaged over the initial law,
+  `∫⁻ x, mu x {y | f y ≠ ∫ f d(mu x)} ∂nu`. The chain of the proof is
+  `comp_chainKernel_map_split`, then `Measure.compProd_apply`, then
+  `comp_chainKernel_map_zero` at the started measure `mu x`. **In Lean** on
+  2026-09-18, first run.
+  **Non-degeneracy is measured and not asserted.** The i.i.d. probe exhibits a
+  set of positive measure on which the compensated chain moves; this computes
+  the measure of that set for every kernel and every bounded test function, so
+  the degenerate case is visible as the vanishing of a named quantity rather
+  than as the failure of an argument.
+* `measure_ne_integral_pos_of_two_atoms` and
+  `measure_chainCompensated_jumpChain_pos`: two atoms carrying different values
+  of the test function put mass away from the mean, and an initial law charging
+  a set on which the kernel keeps a fixed amount of mass away from its own mean
+  makes the compensated chain move with positive probability. **In Lean** on
+  2026-09-18, first run.
+  **The integrand never has to be shown measurable.** The lower bound is an
+  indicator, so `x ↦ mu x {y | f y ≠ ∫ f d(mu x)}` — a kernel evaluated at a
+  *state dependent* set — is only ever bounded below pointwise and integrated
+  through `lintegral_mono`.
+* `mm1ChainKernel`, `mm1AtTwo`, `mm1ChainKernel_apply_one`,
+  `mm1ChainKernel_apply_zero`, `integral_mm1ChainKernel_zero`,
+  `integral_mm1ChainKernel_one`, `integral_mm1ChainKernel_ne`,
+  `tendsto_integral_mul_jumpChain_mm1` and
+  `measure_chainCompensated_jumpChain_pos_mm1`: the probe **on data**, over the
+  embedded chain of the M/M/1 queue at `β = δ = 1` started from a queue of
+  length one, with the indicator of the queue length `2` as test function.
+  Neither conclusion carries a hypothesis. **In Lean** on 2026-09-18, first run.
+  **The compensator takes two values, and the empty queue is where they part.**
+  From `0` the queue can only grow, so `mm1ChainKernel 0` is a Dirac measure and
+  `Pf 0 = 0`; from `1` it goes up or down with equal probability and
+  `Pf 1 = 2⁻¹`. That is `integral_mm1ChainKernel_ne`, and it is what the i.i.d.
+  probe cannot supply.
+  **The data is the milestone's own and not a new object.** `birthDeathKernel`
+  and the M/M/1 rates are Milestone 4's acceptance example; the probe reuses
+  them, as the coin probe reuses `AtomWitness.coinMeasure`.
+* `tendsto_integral_mul_jumpChain_perturbed`, the jump chain probe with a
+  **nonzero** `(K3)`: the canonical increment is the martingale increment
+  displaced by the constant `(n + 1)⁻¹`, so the conclusion is a limit and not a
+  sequence of zeros and the bound on the weight is read. Together with
+  `tendsto_integral_mul_jumpChain` it leaves no hypothesis of
+  `tendsto_integral_mul_rescaledChain_natural` met only in a shape that proves
+  nothing: `hPf` by a compensator that reads the state, `happrox` by an
+  approximation that is not an equality. **In Lean** on 2026-09-18, second run.
+* **The probe reads the jump number and not the time, and the two are not the
+  same.** `gridPath (jumpChain E) n` is the embedded chain at the index
+  `⌊n · t⌋`, while the jump process is that same chain at the index
+  `stepIndex (jumpTime lam ω.1 ω.2) t` — `jumpProcess_eq_jumpChain_stepIndex`,
+  which is `rfl`. The first index is deterministic, the second random. The
+  distance between them is exact and not a matter of taste, and four statements
+  measure it. **In Lean** on 2026-09-18, second run.
+* `jumpTime_const_mul` and `jumpProcess_const_mul_rate`: **speeding up the rate
+  is a time change.** Multiplying the rate by `c` divides every jump time by
+  `c`, so `jumpProcess (c · lam) t ω = jumpProcess lam (c t) ω` at every sample
+  point, with no hypothesis beyond `0 < c`. The rescaling of `ex:invariance`
+  applied to the jump construction is therefore **one** process read along a
+  sequence of times, and the embedded chain is untouched.
+  **The first of the two is unconditional and the second is not**, and the
+  reason is the junk value: at `c = 0` the holding time `ξ n / 0` is `0` and so
+  is `T n / 0`, so `jumpTime_const_mul` is true at `c = 0` as well, whereas
+  `stepIndex_div_const` inverts an inequality and needs `0 < c`.
+* `stepIndex_natCast`, `jumpTime_unit`,
+  `jumpProcess_const_mul_rate_eq_gridPath` and
+  `jumpProcess_eq_gridPath_unitWaiting`: **the grid path is the jump process of
+  a deterministic clock.** For unit waiting times the jump times at rate `c` are
+  `n / c`, the renewal count of `c t` is `⌊c t⌋` — `stepIndex` of `n ↦ n` is
+  `Nat.floor` — and the sped up jump process *is* `gridPath (jumpChain E) c`, at
+  every chain and every time. So the two objects of this milestone and of
+  Milestone 4 are the same object under a clock that does not fluctuate.
+* `jumpProcess_ne_gridPath_unitDelay`: **and one waiting time out of step
+  already breaks it.** With the chain the identity on `ℕ`, rate `1`, and the
+  zeroth waiting time `2` instead of `1`, the process still sits at the state
+  `0` at time `1` while the grid path has moved to `1`. The witness is
+  deterministic, so the gap is not a null set and no modification repairs it.
+* `stepIndex_le_iff` and `stepIndex_le_iff_of_exists`: `{stepIndex T t ≤ n}` is
+  the event `t < T (n + 1)` **or** the explosion set, and the second disjunct
+  reads every jump time at once. So the renewal count is a stopping time for the
+  filtration of the first `n + 1` jump times only under non explosion. This is
+  one more place where `sInf ∅ = 0` makes a statement quietly true, and it is
+  why the passage below has to be stated over a non explosive clock rather than
+  over the construction as it stands.
+* `lt_stepIndex_iff`, `tendsto_stepIndex_atTop` and
+  `tendsto_stepIndex_div_atTop`: **the renewal law of large numbers, and it is
+  deterministic.** For jump times `T` monotone with `T n → ∞` and `T n / n → m`
+  for some `0 < m`, the renewal count satisfies `stepIndex T s / s → m⁻¹` as
+  `s → ∞`. The proof is the sandwich
+  `T (stepIndex T s) ≤ s < T (stepIndex T s + 1)` — `T_stepIndex_le` and
+  `lt_stepIndex_succ` — divided by `stepIndex T s`, together with
+  `stepIndex T s → ∞`, which is `stepIndex_le_iff_of_exists` read
+  contrapositively. **In Lean** on 2026-09-18, second run.
+  **Nothing about the waiting times enters, and that is the finding.** The
+  passage between the jump number and the time looked probabilistic and is not:
+  the limit theorem holds for every clock whose jump times grow linearly, and
+  the divergence of the jump times is precisely the hypothesis that keeps the
+  junk value `sInf ∅ = 0` out of the statement.
+* `tendsto_stepIndex_mul_div_atTop`, the same on the grid: divided by `n`, the
+  renewal count of `n t` converges to `t / m`, while `⌊n t⌋ / n` converges to
+  `t`. **In Lean** on 2026-09-18, second run.
+  **So the two indices of the probe agree in the limit exactly when the mean
+  spacing of the jump times is `1`**, and differ by the factor `m` otherwise —
+  which is what the rescaling by `n` is for.
+* `integral_id_gammaMeasure`, `integrable_id_gammaMeasure`,
+  `integral_sq_gammaMeasure`, `integrable_sq_gammaMeasure` and
+  `variance_id_gammaMeasure`: **the gamma law is square integrable, has mean
+  `a / r` and variance `a / r ^ 2`**, with `integral_id_expMeasure` and
+  `integrable_id_expMeasure` the case `a = r = 1`. **In Lean** on 2026-09-18,
+  third and fourth run.
+  **One identification carries all of them**: `gammaPDF_toReal_smul_pow` says
+  that the density against `x ^ n` is the Euler integrand `n` steps up, and the
+  mean and the second moment are its cases `n = 1` and `n = 2`, differing only in
+  how often `Real.Gamma_add_one` is applied afterwards. The variance is then
+  `MeasureTheory.variance_eq_sub` and arithmetic, over the `MemLp _ 2` that
+  `memLp_two_iff_integrable_sq` (`MeasureTheory/Function/L2Space.lean:52`) reads
+  off `integrable_sq_gammaMeasure`.
+  The whole content of the mean is that the density against the
+  identity is the Euler integrand one step up —
+  `x ^ (a - 1) · x = x ^ ((a + 1) - 1)`, as `gammaPDF_toReal_smul` — so that
+  `Real.integral_rpow_mul_exp_neg_mul_Ioi` at `a + 1`
+  (`Mathlib/Analysis/SpecialFunctions/Gamma/Basic.lean:465`) applies and
+  `Real.Gamma_add_one` cancels the normalising constant. The exponential case is
+  its corollary at `a = r = 1`; the integrability is the same identification
+  read the other way, over `integrableOn_rpow_mul_exp_neg_mul_Ioi`. The indicator sits on
+  `Set.Ioi 0` and not on `Set.Ici 0` because at `0` the identity vanishes, so the
+  identification holds at **every** real point and no null set is spent.
+  **Mathlib has the mean of no distribution of `Probability/Distributions/`**,
+  in `v4.33.1` nor on `upstream/master` `a218e50f981` (2026-09-17): the only
+  integrals of `Exponential.lean` and `Gamma.lean` are the normalisation
+  (`lintegral_exponentialPDF_eq_one`, `lintegral_gammaPDF_eq_one`) and the
+  distribution function, and no declaration of that directory carries `mean_` or
+  `variance_` in its name.
+  **But the scaled convergence of the Euler integral is Mathlib's, two
+  directories from the value.** Inside `Analysis/SpecialFunctions/Gamma/` the
+  *value* of `∫ t in Ioi 0, t ^ (a - 1) · exp (-(r · t))` is there for every
+  rate `r` and the *convergence* only at `r = 1`; the scaled convergence sits in
+  `Analysis/SpecialFunctions/Gaussian/GaussianIntegral.lean:74` as
+  `integrableOn_rpow_mul_exp_neg_mul_rpow`, stated for `x ^ s · exp (-b · x ^ p)`
+  and used there only at `p = 2`. `integrableOn_rpow_mul_exp_neg_mul_Ioi` is its
+  case `p = 1` and nothing more; the translation is `Real.rpow_one`.
+  **Checked on 2026-09-18 in `v4.33.1` and on `upstream/master` `a218e50f981`**,
+  after the third run had recorded the opposite as a gap.
+* `waitingMeasure_map_eval`, `integrable_waiting_eval`,
+  `identDistrib_waiting_eval` and `tendsto_sum_waiting_div_atTop`: **the strong
+  law of large numbers for the waiting times**, `∑_{k<n} ξ k / n → 1` almost
+  surely. **In Lean** on 2026-09-18, third run. Etemadi's version in Mathlib
+  (`ProbabilityTheory.strong_law_ae`, `Mathlib/Probability/StrongLaw.lean:786`)
+  asks for pairwise independence, integrability of one coordinate and identical
+  distribution; the first is `iIndepFun_waiting` through
+  `ProbabilityTheory.iIndepFun.indepFun`, the other two are
+  `Measure.infinitePi_map_eval`, and what the statement adds to it is the
+  **value** of the limit, which is `integral_id_expMeasure`.
+* `jumpTime_const` and `tendsto_jumpTime_div_atTop`: **the mean spacing of the
+  jump times at a constant rate is the reciprocal of the rate.** **In Lean** on
+  2026-09-18, third run. This is the almost sure hypothesis `T n / n → m` of
+  `tendsto_stepIndex_div_atTop`, discharged over the jump construction, and with
+  it the passage between jump number and time is complete: at rate `c` the
+  renewal count of `s` grows like `c · s`.
+  **The rate is not assumed positive**, and the statement is true without it: at
+  `c = 0` every holding time is the junk value `x / 0 = 0`, the jump times are
+  constantly `0`, and `c⁻¹ = 0` is the limit of the constant sequence. The junk
+  value tells the truth on both sides here, as it does in `jumpTime_const_mul`
+  and unlike `stepIndex_div_const`. Positivity is what the *other* hypothesis of
+  `tendsto_stepIndex_div_atTop` needs, `0 < m`, which at `m = c⁻¹` is `0 < c`.
+* **Reading the probe at the renewal count instead of at `⌊n t⌋`**, which is
+  what the three statements above make a computation rather than a claim. The
+  probe `tendsto_integral_mul_rescaledChain_natural` is stated over
+  `gridPath (jumpChain E) n`, that is over the chain read at `⌊n t⌋`;
+  `jumpProcess_const_mul_rate_eq_gridPath` says the two agree exactly when the
+  indices do, and `tendsto_stepIndex_mul_div_atTop` together with
+  `tendsto_jumpTime_div_atTop` says that at rate `c` they agree in the limit
+  precisely for `c = 1`. Restating the probe over
+  `fun t ↦ jumpProcess (fun _ ↦ (n : ℝ)) t` and carrying the limit through is
+  what this milestone still owes.
+  **What it owes is not a restatement, and the fourth run of 2026-09-18 says
+  so with a witness**: see the two statements below.
+* `jumpProcess_constWaiting`: **at a constant rate with constant waiting times
+  the jump process is a grid path — of mesh `w / c` and not `1 / c`.** The chain
+  is read at `⌊t · (c / w)⌋`, so the mesh is set by the clock as much as by the
+  rate, and `jumpProcess_eq_gridPath_unitWaiting` is the case `w = 1`, where the
+  two coincide and the clock becomes invisible. **In Lean** on 2026-09-18,
+  fourth run. The proof is `jumpTime_const`, `stepIndex_div_const` and
+  `stepIndex_natCast` and nothing else.
+  **The factor `c / w` is `c / m` with `m` the mean waiting time**, which is the
+  limit `tendsto_stepIndex_mul_div_atTop` gives for the random clock: the
+  deterministic computation and the law of large numbers agree on which index is
+  read, and both say `⌊c t⌋` is right only at `m = 1`.
+* `naturalFiltration_jumpChain_le_comap_fst` and
+  `not_measurable_jumpProcess_naturalFiltration_jumpChain`: **the jump process
+  is measurable for no σ-algebra of the chain filtration, at any index.** **In
+  Lean** on 2026-09-18, fourth run. The witness is a pair of sample points with
+  the *same chain* — the identity on `ℕ` — and different constant clocks, `1/2`
+  and `1`: at time `1` and rate `1` the first sits at the state `2` and the
+  second at the state `1`.
+  **This refutes the restatement above rather than postponing it.** Hypothesis
+  `hW` of `tendsto_integral_mul_rescaledChain` asks the weight to be
+  `naturalFiltration (Ξ n) ⌊n s⌋`-measurable; `measurable_comp_gridPath` supplies
+  that for the grid path, and nothing can supply it for the jump path. The
+  failure is not one of **index** — no `k` helps, and the statement is quantified
+  over all of them — but of **factor**: the chain filtration is generated by the
+  chain alone and holds no information about the clock, while the renewal count
+  is a function of the clock. Measurability is not an almost sure notion, so one
+  pair of sample points settles it.
+  **What the probe therefore needs is a filtration that contains the clock**,
+  and over such a filtration the index read is a **stopping time** and not a
+  constant. That is the missing input, and it is named here rather than assumed
+  away.
+* `supRectangles`, `isPiSystem_supRectangles`, `generateFrom_supRectangles`,
+  `setIntegral_eq_of_forall_supRectangle`,
+  `setIntegral_eq_measureReal_smul_integral_of_indep` and `condExp_sup_of_indep`:
+  **the irrelevant enlargement.** Is `m₂` independent of `m₁ ⊔ m₀` and is `f`
+  measurable for `m₀`, then `μ[f | m₁ ⊔ m₂] = μ[f | m₁]` almost surely: adding an
+  independent σ-algebra to the conditioning changes nothing. **In Lean** on
+  2026-09-18, fifth run, over an arbitrary Banach space and with no topology on
+  the sample space.
+  **Mathlib has only the case `m₁ = ⊥`**, `MeasureTheory.condExp_indep_eq`
+  (`Mathlib/Probability/ConditionalExpectation.lean:42`), the only theorem in
+  that file; `condExp_sup` and `condexp_sup` occur nowhere in `Mathlib/`, checked
+  against `upstream/master` `a218e50f981` (2026-09-17) and against v4.33.1. It is
+  the twenty-fifth gap of `TODO.md` point 8.
+  **The proof is the one `condExp_indep_eq` itself runs**: the π-system of
+  rectangles `t₁ ∩ t₂`, the extension over it, and the degenerate case as the
+  engine — on a rectangle the integral of an `m₁ ⊔ m₀`-measurable integrand cut
+  down to `t₁` factors into `μ.real t₂` times an integral over `t₁`, and there
+  the defining property of `μ[f | m₁]` closes.
+  **`m₀` is an argument and not `σ(f)`**, because the range of `f` carries no
+  measurable space to comap from; where it does, `σ(f)` is the smallest
+  admissible `m₀`. **The independence is asked of `m₁ ⊔ m₀` and not of `m₀`
+  alone**: `m₂` must be independent of the past and of the integrand jointly,
+  and pairwise independence does not give that.
+* `indep_comap_fst_comap_snd`, `condExp_sup_comap_snd` and
+  `condExp_jumpChain_clock`: **the first of the two inputs the probe needs is
+  supplied.** **In Lean** on 2026-09-18, fifth run. The two factors of a product
+  measure are independent σ-algebras — `ProbabilityTheory.indepFun_prod`
+  (`Mathlib/Probability/Independence/Basic.lean:727`) at the two identities — so
+  a σ-algebra lying under the first factor may be enlarged by the **whole**
+  second factor for free, and `jumpMeasure` is a product by definition.
+  `condExp_jumpChain_clock` is therefore `condExp_jumpChain` word for word over
+  `naturalFiltration (jumpChain E) n ⊔ comap Prod.snd ⊤`: the Markov property of
+  the embedded chain survives an enlargement by the whole clock.
+  **That the conditional expectation survives the enlargement was not automatic**
+  and is the reason this statement comes before any construction over the
+  enlarged filtration.
+* `integral_sub_mul_eq_zero_of_martingale_stoppedValue` and
+  `integral_sub_mul_eq_zero_of_martingale_stoppedValue_min`: **the orthogonality
+  of hypothesis (c) at a random pair of indices.** A martingale increment between
+  two stopping times of the chain filtration is orthogonal to every bounded
+  variable of the earlier one. **In Lean** on 2026-09-18, fifth run. It is
+  `integral_sub_mul_eq_zero_of_condExp_eq` at `m' = hσ.measurableSpace`, fed by
+  `Martingale.stoppedValue_ae_eq_condExp_of_le` and by
+  `Martingale.stoppedValue_min_ae_eq_condExp`
+  (`Mathlib/Probability/Martingale/OptionalSampling.lean:141` and `:195`).
+  **It relocates the second missing input of the probe.** Over the enlarged
+  filtration the whole clock sits in the σ-algebra at index `0`, so every
+  clock measurable index is a stopping time *trivially*, by being measurable at
+  the bottom; being a stopping time is free. What is not free is **boundedness**,
+  which optional sampling asks of the later index and which the renewal count at
+  a fixed time does not have. The minimum form is what answers that: the later
+  index may be truncated at a constant while the earlier one is left alone, so
+  the weight keeps the σ-algebra it is measurable for — truncating the earlier
+  index too would shrink that σ-algebra and lose the weight. What then remains is
+  the passage `K → ∞`, a convergence of integrals and no longer a question about
+  filtrations.
+* `integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_dominated` and
+  `integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_bdd`: **the passage
+  `K → ∞` is done, and the hypothesis it costs is a dominating function.** The
+  later stopping time is arbitrary, subject only to being finite. **In Lean** on
+  2026-09-18, sixth run.
+  **The convergence is not analytic.** At each sample point the truncated
+  sequence is *stationary*: `τ ω` is a natural number, so `min (τ ω) K = τ ω`
+  as soon as `K ≥ τ ω`. What the interchange of limit and integral needs is
+  therefore a dominating function and nothing else, and `hdom` asks for it in the
+  weakest place it can be asked — the martingale is dominated by `g` along the
+  path up to `τ`, at indices `n ≤ τ ω` and nowhere else. Uniform integrability
+  would also do; it is not taken, because it is strictly more than this proof
+  uses and strictly harder to check at the application.
+  **The index is `WithTop ℕ` and not `ℕ∞`.** `ENat` is a `def` over `WithTop ℕ`
+  with its own order instances, so a `min` written at `ℕ∞` and a `min` produced
+  by `IsStoppingTime.min` are definitionally equal and do not match as `rw`
+  patterns; the associativity step fails against a term it is equal to. This is
+  the trap already recorded at `jumpProcess_isLocalMPSolution` for `ENNReal`
+  against `WithTop ℝ≥0`.
+* `norm_chainCompensated_le` and `integral_sub_mul_eq_zero_of_chainCompensated`:
+  **which of the two forms the probe may use, and what it pays.** **In Lean** on
+  2026-09-18, sixth run. A compensated chain built from a bounded test function
+  carries `‖M n ω‖ ≤ C + 2 n C` and no better bound — the compensator is a sum of
+  `n` increments of size at most `2 C` and nothing cancels — so there is **no**
+  uniform bound and the bounded form does not apply. The dominated form does, with
+  `g = C + 2 τ C`, and its hypothesis is therefore that the random index has a
+  **finite mean**.
+  **That hypothesis is not an artefact of the formalisation.** It is the
+  manuscript's own `𝔼[N t] < ∞` of `thm:pathjumpMP`(b), arrived at from the other
+  side: the local statement needs no such thing, and the moment the orthogonality
+  is read at a random index rather than a constant one, the first moment of that
+  index is exactly what has to be paid.
+* `lintegral_natCast_eq_tsum_measure` und
+  `integrable_natCast_of_tsum_measure_ne_top`: **die Schichtkuchenformel für eine
+  `ℕ`-wertige Größe** — ihr Integral ist die Summe der Maße ihrer Schwänze, und
+  eine summierbare Schwanzfolge ist die Integrierbarkeit. **In Lean** am
+  2026-09-18, siebter Lauf. Mathlib hat die *stetige* Schichtkuchenformel
+  (`lintegral_eq_lintegral_meas_lt`,
+  `MeasureTheory/Integral/Layercake.lean:496`, `upstream/master` `a218e50f981`)
+  und die zählende nicht; dort gesucht unter `lintegral_natCast`,
+  `integrable_natCast` und `tsum_measure_lt`, kein Treffer. Der Beweis ist die
+  punktweise Identität `k = ∑' n, 1_{n < k}` und `lintegral_tsum`; weder eine
+  Ordnung des Index noch σ-Endlichkeit kommen vor, anders als in der stetigen
+  Fassung.
+* `measure_lt_stepIndex_le` und `integrable_stepIndex_jumpMeasure`: **der
+  Erneuerungszähler der Sprungkonstruktion hat einen endlichen Erwartungswert**,
+  unter `0 < lam ≤ L`. **In Lean** am 2026-09-18, siebter Lauf. Damit ist
+  `integral_sub_mul_eq_zero_of_chainCompensated` auf die Sprungkonstruktion
+  anwendbar.
+  **Die Abschätzung ist grob, und das ist der Punkt.** Der natürliche Weg über
+  den Gammaschwanz braucht das Gesetz der `n`-ten Partialsumme, und Mathlib hat
+  es nicht. Er wird nicht gebraucht: mehr als `n` Sprünge vor `t` erzwingen
+  `∑_{k ≤ n} ξ k ≤ L t`, also — bei f.s. positiven Wartezeiten — daß **jede**
+  der ersten `n+1` Wartezeiten in `Iic (L t)` liegt. Das ist eine
+  **Zylindermenge**, `Measure.infinitePi_pi` rechnet ihr Maß als `q^(n+1)` aus
+  mit `q = expMeasure 1 (Iic (L t)) < 1`, und eine geometrische Schranke reicht.
+  Kein Gammagesetz, keine erzeugende Funktion, keine Unabhängigkeitsaussage über
+  die hinaus, die schon für Borel--Cantelli dasteht.
+* `clockFiltration`, `measurable_clockFiltration_jumpTime` und
+  `isStoppingTime_stepIndex_augment`: **der Erneuerungszähler ist eine Stoppzeit
+  — der augmentierten Uhrenfiltration.** **In Lean** am 2026-09-18, siebter Lauf.
+  Zwei Berichtigungen stecken darin, und beide zählen.
+  **Er ist nicht umsonst.** Über `naturalFiltration (jumpChain E) i ⊔ comap
+  Prod.snd ⊤` liegt die ganze Uhr schon bei `i = 0` in der σ-Algebra, also wäre
+  ein uhrmeßbarer Index trivial eine Stoppzeit. Der Erneuerungszähler ist **nicht
+  uhrmeßbar**: `jumpTime` teilt die `k`-te Wartezeit durch `lam` an der `k`-ten
+  Marke der Kette und liest damit beide Faktoren. Was den Beweis trägt, ist, daß
+  er sie *bis zum selben Index* liest, und die scharfe Schranke ist `k ≤ i + 1`
+  und nicht `k ≤ i` — die Rekursion `T (k+1) = T k + ξ k / lam (y k)` liest den
+  Zustand **vor** dem Sprung.
+  **Und über der schlichten Filtration ist die Aussage falsch.**
+  `stepIndex_le_iff` sagt warum: `{stepIndex T t ≤ i}` ist das Ereignis
+  `t < T (i+1)` **oder** die Explosionsmenge, auf der `sInf ∅ = 0` den Müllwert
+  zurückgibt, und der zweite Zweig liest alle Sprungzeiten auf einmal und liegt
+  in keinem `𝓖 i`. Die Explosionsmenge ist eine Nullmenge, also ist die ehrliche
+  Aussage die über der **augmentierten** Filtration. Das ist die erste Stelle
+  dieser Entwicklung, an der die Augmentierung keine Bequemlichkeit ist, sondern
+  der Inhalt: ein lügender Müllwert wird durch eine Nullmenge berichtigt, und
+  Nullmengen sind genau das, was `Filtration.augment` hinzufügt.
+  `Martingale.augment` trägt das kompensierte Kettenmartingal hinüber und
+  `Filtration.le_augment` das Gewicht; nichts oberhalb ist neu zu beweisen.
+* `stepIndex_mono_time` und `not_stepIndex_mono_time`: **der Erneuerungszähler
+  wächst mit der Zeit — außerhalb der Explosionsmenge, und nur dort.** **In
+  Lean** am 2026-09-18, achter Lauf. Die Voraussetzung ist die Nichtexplosion
+  **zur späteren Zeit** und sonst nichts; weder Monotonie von `T` noch eine
+  Ordnung der Fenster kommt vor, und der Beweis ist `stepIndex_le` an der Stelle
+  `stepIndex T t`.
+  **Der Zeuge ist der Inhalt.** `T = (0, 0, 5, 5, …)` ist monoton und beschränkt,
+  also explosiv; bei `s = 1` und `t = 6` ist `stepIndex T 6 = 0`, weil kein
+  Fenster `6` enthält und `sInf ∅ = 0` zurückkommt, während `stepIndex T 1 = 1`
+  ist. Der Zähler **fällt**. Das ist der dritte Müllwert dieser Entwicklung, der
+  eine Aussage kippt, nach `x / 0 = 0` am absorbierenden Zustand und
+  `sInf ∅ = 0` in `{stepIndex ≤ i}`, und es ist derselbe.
+* `integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_dominated`,
+  `_of_bdd` und `_of_chainCompensated` verlangen die Ordnung ihrer beiden
+  Stoppzeiten **fast überall** statt überall. **In Lean** am 2026-09-18, achter
+  Lauf. Das ist die Voraussetzung, die der Beweis liest — `hστ` kommt dreimal vor
+  und jedesmal innerhalb einer f.s.-Aussage —, und es ist die, die die Anwendung
+  liefern kann: nach `not_stepIndex_mono_time` ist die überall-Fassung über der
+  Sprungkonstruktion **falsch**, und die Menge, auf der sie scheitert, ist die
+  Explosionsmenge.
+* `martingale_chainCompensated_jumpChain` und
+  `integral_sub_mul_eq_zero_jumpChain_stepIndex`: **Voraussetzung (c) über der
+  Sprungkonstruktion, als *eine* Aussage.** **In Lean** am 2026-09-18, achter
+  Lauf. Für beschränktes meßbares `f`, `0 < lam ≤ L` und `0 ≤ s ≤ t` verschwindet
+  das Integral von `(M_{N t} − M_{N s}) · W` über `jumpMeasure mu nu`, wobei `M`
+  das kompensierte Kettenmartingal, `N` der Erneuerungszähler und `W` beschränkt
+  und meßbar für die σ-Algebra des früheren Zählers ist.
+  **Die Schranke `lam ≤ L` ist keine Bequemlichkeit.** Sie trägt zweierlei:
+  die Integrierbarkeit des Zählers (`integrable_stepIndex_jumpMeasure`) und die
+  Ausschöpfung der Halbachse durch die Sprungzeiten (`ae_exists_lt_jumpTime`),
+  und beides wird benutzt. Sie ist die formale Entsprechung dazu, daß das
+  Manuskript `𝔼[N t] < ∞` in `thm:pathjumpMP`(b) führt und nicht in (a).
+  Über `E` steht nichts als seine σ-Algebra, und keine Topologie kommt vor.
+  **Das Gewicht lebt über der augmentierten Filtration**, und das ist nicht
+  abzuschütteln: der Zähler ist nach `not_stepIndex_mono_time` nur außerhalb der
+  Explosionsmenge monoton und nach `stepIndex_le_iff` nur dort eine Stoppzeit.
+  Beide Defekte sind Nullmengen, und Nullmengen sind, was `Filtration.augment`
+  aufnimmt.
 * **Hypothesis (a) is about real random variables and carries no topology.** In
   the example above the path space `F` is `D ι E` and the functionals
   `Y° t` are evaluations, but the statement of (a) never mentions `F`'s

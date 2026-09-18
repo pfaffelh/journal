@@ -35439,3 +35439,1482 @@ zweimal gelaufen. `scratch/` ist ignoriert, es bleibt also nichts liegen.
 3. **Die vierte Roadmap gegen dieselbe Probe halten.** `KolmogorovExtension` hat
    keine `Suggested.lean` und kommt in `check_suggested.py` nicht vor; die
    Prüfung dieses Laufs sagt über sie nichts.
+
+### 2026-09-18, erster Lauf des Tages — die Probe sitzt jetzt auf einer Kette, deren Kern den Zustand liest; und die Nichtdegeneriertheit wird nicht mehr behauptet, sondern ausgerechnet
+
+**Vorschlag 1 des Vorlaufs ist eingelöst.** **Dreiundzwanzig Deklarationen**, 367 Zeilen,
+in zwei neuen Abschnitten am Ende von `TauCeti/MartingaleProblems/Suggested.lean`.
+Die Kette ohne einen Fehler:
+
+| Datei | rc | Fehler | `sorry` | Sekunden |
+| --- | ---: | ---: | ---: | ---: |
+| `WeakConvergence/Suggested.lean` | 0 | 0 | 0 | 8 |
+| `SkorokhodSpace/Suggested.lean` | 0 | 0 | 0 | 14 |
+| `MartingaleProblems/Suggested.lean` | 0 | 0 | 0 | 66 |
+
+Alle dreiundzwanzig mit `scripts/check_axioms.py` geprüft: `propext`,
+`Classical.choice`, `Quot.sound`, sonst nichts.
+
+#### Was gebaut ist
+
+* `naturalFiltration_eq_comap_block` — die natürliche Filtration einer Kette ist
+  der Comap ihres Blocks der ersten `n + 1` Koordinaten. Beides ist
+  `⨆ j ≤ n, comap (Ξ j)`; kein Maß, kein Kern, keine Topologie.
+* `jumpChain`, `measurable_jumpChain`, `condExp_jumpChain` — die **eingebettete
+  Sprungkette** von Meilenstein 4 als Prozeß auf dem Stichprobenraum der
+  Sprungkonstruktion, und ihre Markoveigenschaft in der Gestalt, die
+  `martingale_chainCompensated` liest.
+* `tendsto_integral_mul_jumpChain` — die neun Voraussetzungen von
+  `tendsto_integral_mul_rescaledChain_natural` zugleich eingelöst, über
+  `jumpMeasure mu nu` und einem **beliebigen** Markovkern.
+* `measure_chainCompensated_chain_eq`, `measure_chainCompensated_jumpChain_eq` —
+  die Masse, auf der sich die kompensierte Kette im ersten Schritt bewegt,
+  **exakt**: `∫⁻ x, mu x {y | f y ≠ ∫ f d(mu x)} ∂nu`.
+* `measure_ne_integral_pos_of_two_atoms`,
+  `measure_chainCompensated_jumpChain_pos` — die Positivität daraus.
+* `mm1ChainKernel`, `mm1AtTwo`, `mm1ChainKernel_apply_one`,
+  `mm1ChainKernel_apply_zero`, `integral_mm1ChainKernel_zero`,
+  `integral_mm1ChainKernel_one`, `integral_mm1ChainKernel_ne`,
+  `tendsto_integral_mul_jumpChain_mm1`,
+  `measure_chainCompensated_jumpChain_pos_mm1` — die Probe **auf Daten**, über
+  der eingebetteten Kette der M/M/1-Warteschlange bei `β = δ = 1`.
+
+#### Befund 1, und er ist der Zweck des Laufs: `hPf` ist jetzt nichttrivial eingelöst, und der leere Warteraum ist die Stelle, an der der Kompensator zwei Werte annimmt
+
+Der Vorlauf hatte die letzte Voraussetzung benannt, die nur in ihrer trivialen
+Gestalt dastand: `hPf` — `Pf ∘ Ξ i` ist `Γ i`-meßbar —, bei der i.i.d.-Kette
+`measurable_const`, weil der Einschrittkern jeden Zustand nach `ν` schickt.
+
+Über der eingebetteten Sprungkette ist `Pf x = ∫ f d(mu x)`, und
+`integral_mm1ChainKernel_ne` rechnet auf Daten nach, daß das keine Konstante ist:
+`Pf 0 = 0` und `Pf 1 = 2⁻¹`. Der Grund ist hübsch und liegt an der Warteschlange
+selbst — **vom leeren Warteraum aus kann sie nur wachsen**, also ist
+`mm1ChainKernel 0` ein Diracmaß, während sie von `1` aus mit gleicher
+Wahrscheinlichkeit auf und ab geht. Die Rückfallklausel von `birthDeathKernel`
+tut dabei nichts: die Sterberate verschwindet bei `0`, die Geburtsrate nicht,
+also ist die Gesamtrate positiv und der Kern ist die gewöhnliche Mischung mit
+den Gewichten `1` und `0`.
+
+Damit ist keine Voraussetzung von
+`tendsto_integral_mul_rescaledChain_natural` mehr übrig, die nur trivial
+eingelöst wäre.
+
+#### Befund 2: die Nichtdegeneriertheit ist eine Rechnung und keine Konstruktion
+
+Der Vorlauf hat die Nichtdegeneriertheit durch einen **Zeugen** belegt — einen
+Zylinder, auf dem sich die kompensierte Kette bewegt. Über der Sprungkette geht
+mehr, und es ist billiger:
+`measure_chainCompensated_jumpChain_eq` **berechnet** die Masse, auf der sie sich
+im ersten Schritt bewegt, und es kommt
+
+    ∫⁻ x, mu x {y | f y ≠ ∫ f d(mu x)} ∂nu
+
+heraus — die Masse, die der Einschrittkern von seinem eigenen Mittelwert weg
+legt, gemittelt über das Anfangsgesetz. Der Weg ist die Aufspaltung
+`comp_chainKernel_map_split` (das Gesetz von `(x 0, geshiftete Kette)` ist
+`nu ⊗ₘ (chainKernel mu ∘ₖ mu)`), dann `Measure.compProd_apply`, dann
+`comp_chainKernel_map_zero` am gestarteten Maß `mu x`.
+
+**Was das ändert:** der degenerierte Fall ist nicht mehr das Ausbleiben eines
+Arguments, sondern das Verschwinden einer benannten Größe. Eine deterministische
+Kette hat `mu x = δ_{g(x)}`, also `∫ f d(mu x) = f (g x)`, also ist die Menge
+`{y | f y ≠ ∫ f d(mu x)}` `mu x`-leer und die Zahl ist `0`. Man sieht der Formel
+an, warum die Probe des Vorlaufs mit einer konstanten Kette nichts belegt hätte.
+
+#### Befund 3: die Zielmenge ist zustandsabhängig, und trotzdem muß nichts meßbar sein
+
+`x ↦ mu x {y | f y ≠ ∫ f d(mu x)}` ist ein Kern, ausgewertet an einer Menge, die
+**vom Zustand abhängt**; seine Meßbarkeit wäre
+`ProbabilityTheory.Kernel.measurable_kernel_prodMk_left` und eine
+Kongruenz. Gebraucht wird sie nicht: die untere Schranke in
+`measure_chainCompensated_jumpChain_pos` ist ein **Indikator**, also reicht
+`lintegral_mono` punktweise, und `lintegral_indicator` zusammen mit
+`setLIntegral_const` gibt `c * nu A`. Dieselbe Bauart wie Befund 5 des
+Vorlaufs — die Darstellung, die Mathlib wählt, spart eine Voraussetzung, die auf
+Papier selbstverständlich dastünde.
+
+#### Befund 4: `ℝ≥0∞` steht 75mal in dieser Datei und **kein einziges Mal im Code**
+
+Der Entwurf lief freistehend durch und scheiterte beim Einbau an
+`error: expected token` — die Datei hat `open scoped NNReal`, aber **nicht**
+`open scoped ENNReal`, und `ℝ≥0∞` ist skopierte Notation des Namensraums
+`ENNReal`. Alle 75 Vorkommen stehen in Kommentaren, wo sie niemand elaboriert;
+im Code heißt der Typ `ENNReal`.
+
+Das ist eine Falle für jeden Entwurf, der gegen die gebaute `.olean` geprüft und
+dann eingefügt wird: `scratch/`-Dateien dürfen ihre eigenen `open`-Zeilen haben,
+die Zieldatei hat sie nicht. **Beim Einbau ist die `open`-Zeile der Zieldatei zu
+lesen, nicht die des Entwurfs**, und `scripts/check_suggested.py` ist der einzige
+Lauf, der das findet.
+
+#### Befund 5: die Brücke zwischen Blockalgebra und Filtration ist ein Einzeiler und war die ganze fehlende Arbeit
+
+`condExp_chain_mark_jumpMeasure` stand seit dem 2026-09-13 und war für Punkt 3
+der Gruppe A von Teil C gebaut; `tendsto_integral_mul_rescaledChain_natural`
+verlangt dieselbe Aussage über `naturalFiltration`. Zwischen beiden liegt allein
+`naturalFiltration_eq_comap_block`, und der Beweis ist
+`MeasurableSpace.comap_iSup`, `MeasurableSpace.comap_comp` und eine
+Antisymmetrie über zwei Indexmengen. **Die Verbindung von Meilenstein 10 zu
+Meilenstein 4 hing an einer σ-Algebra-Gleichung und an nichts sonst.**
+
+Das ist auch die Antwort auf die Frage, die der Vorschlag gestellt hat — ob der
+reskalierte Sprungprozeß im Rahmen des Konvergenzsatzes überhaupt ausdrückbar
+ist. Er ist es, und zwar ohne jede Bedingung an `E` außer seiner meßbaren
+Struktur.
+
+#### Was offen bleibt
+
+* **`(K3)` ist über der Sprungkette exakt eingelöst**, also ist die Konklusion
+  von `tendsto_integral_mul_jumpChain` wieder eine Folge von Nullen. Die
+  gestörte Fassung, die die Abschätzung anwirft, gibt es bisher nur über der
+  i.i.d.-Kette (`tendsto_integral_mul_coordChain_perturbed`); sie ist vom Kern
+  unabhängig und wurde deshalb nicht verdoppelt. Wer beides in einer Probe will,
+  stört `tendsto_integral_mul_jumpChain` genauso.
+* Die Voraussetzungen **(a) und (b)** von `mpSolution_of_tendsto` bleiben, wie
+  die beiden Vorläufe sie hinterlassen haben: sie sind die Eingabe eines
+  Straffheitsarguments, das das Manuskript ausdrücklich nicht liefert.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die Lücke zwischen dem Gitter der Probe und der Zeit des Sprungprozesses
+   benennen und schließen.** *Der Befund, der dahintersteht, ist am Quelltext
+   nachgesehen:* `jumpProcess lam t ω = stepPath (jumpTime lam ω.1 ω.2) ω.1 t`
+   (`Suggested.lean:7002`), also ist der Sprungprozeß **schon** die eingebettete
+   Kette, gelesen am Index `stepIndex (jumpTime lam ω.1 ω.2) t`
+   (`:6660`). Die Probe liest sie dagegen am Index `⌊n · t⌋`. Die beiden Indizes
+   stimmen **nicht** überein, und der Unterschied ist keine Buchhaltung: der
+   erste ist zufällig, der zweite deterministisch, und daß sie bei konstanter
+   Rate `n` für großes `n` zusammenrücken, ist das Gesetz der großen Zahlen für
+   die Wartezeiten. *Aussage, die zu bauen ist:*
+   `jumpProcess_eq_jumpChain_stepIndex` — die Identität oben als Lemma, sie ist
+   `rfl` bis auf `stepPath` — und darüber die Frage, ob
+   `tendsto_integral_mul_jumpChain` mit `⌊n · t⌋` durch `stepIndex` ersetzt noch
+   gilt. *Warum jetzt:* die Probe belegt bisher eine Aussage über die
+   **Sprungnummer**, das Manuskript spricht in `ex:invariance` von der
+   **Zeit**, und diese Lücke steht in keinem der beiden Läufe, die die Probe
+   gebaut haben. Sie zuerst auszusprechen ist mehr wert, als sie zu schließen.
+2. **Die Störung auf die Sprungkette heben.** Ein Vierzeiler nach dem Muster
+   von `tendsto_integral_mul_coordChain_perturbed`, damit die Probe auf Daten
+   sowohl `hPf` nichttrivial als auch die Abschätzung nichttrivial bedient.
+   Billig, und es schließt den einzigen Punkt unter „Was offen bleibt", der
+   Arbeit und keine Entscheidung ist.
+3. **Die Entscheidung über das Lake-Target dem Nutzer vorlegen** (Symlink
+   `TauCetiRoadmap → TauCeti` oder Umbenennung des Verzeichnisses), unverändert
+   seit sechs Läufen. Es ist eine Frage und keine Arbeit.
+
+### 2026-09-18, zweiter Lauf des Tages — der Abstand zwischen dem Gitter der Probe und der Uhr des Prozesses ist ausgerechnet: es ist **ein Index**, und der Zeuge dafür, daß er nicht verschwindet, ist deterministisch
+
+**Vorschläge 1 und 2 des Vorlaufs sind eingelöst, und die Aussage, die dieser Lauf
+als offen eintragen wollte, steht am Ende auch.** **Sechzehn Deklarationen**, 390
+Zeilen, in sechs neuen Abschnitten am Ende von
+`TauCeti/MartingaleProblems/Suggested.lean`.
+Die Kette ohne einen Fehler:
+
+| Datei | rc | Fehler | `sorry` | Sekunden |
+| --- | ---: | ---: | ---: | ---: |
+| `WeakConvergence/Suggested.lean` | 0 | 0 | 0 | 8 |
+| `SkorokhodSpace/Suggested.lean` | 0 | 0 | 0 | 13 |
+| `MartingaleProblems/Suggested.lean` | 0 | 0 | 0 | 67 |
+
+Alle sechzehn mit `scripts/check_axioms.py` geprüft: `propext`,
+`Classical.choice`, `Quot.sound`, sonst nichts. Der Stand von `upstream/master`,
+gegen den die Mathlib-Nachfragen dieses Laufs gestellt sind: `8018f6a`,
+2026-09-17.
+
+#### Was gebaut ist
+
+* `stepIndex_le_iff`, `stepIndex_le_iff_of_exists` — das Ereignis
+  `{stepIndex T t ≤ n}` ist `t < T (n+1)` **oder** die Explosionsmenge, und der
+  zweite Fall liest alle Sprungzeiten auf einmal.
+* `stepIndex_natCast`, `jumpTime_unit` — die Erneuerungszählung der Uhr `T n = n`
+  ist `Nat.floor`, und Rate `1` mit Wartezeiten `1` gibt genau diese Uhr.
+* `jumpProcess_eq_jumpChain_stepIndex` — der Sprungprozeß **ist** die
+  eingebettete Kette, gelesen am Erneuerungszähler. `rfl`.
+* `jumpTime_const_mul`, `stepIndex_div_const`, `jumpProcess_const_mul_rate` — die
+  Beschleunigung der Rate ist eine Zeitänderung:
+  `jumpProcess (c·lam) t ω = jumpProcess lam (c t) ω`, punktweise, ohne
+  Voraussetzung außer `0 < c`.
+* `jumpProcess_const_mul_rate_eq_gridPath`, `jumpProcess_eq_gridPath_unitWaiting`
+  — der Gitterpfad von `ex:invariance` ist der Sprungprozeß einer
+  **deterministischen** Uhr, an jeder Kette und zu jeder Zeit.
+* `jumpProcess_ne_gridPath_unitDelay` — und **eine** Wartezeit aus dem Takt
+  genügt, um die Gleichheit zu brechen, an einem benannten Stichprobenpunkt.
+* `tendsto_integral_mul_jumpChain_perturbed` — die Probe über der Sprungkette mit
+  nichtverschwindendem `(K3)`.
+* `lt_stepIndex_iff`, `tendsto_stepIndex_atTop`, `tendsto_stepIndex_div_atTop`,
+  `tendsto_stepIndex_mul_div_atTop` — das Erneuerungsgesetz der großen Zahlen,
+  und es ist **deterministisch**: aus `T n / n → m` mit `0 < m` und `T n → ∞`
+  folgt `stepIndex T s / s → m⁻¹`, und auf dem Gitter
+  `stepIndex T (n t) / n → t / m`.
+
+#### Befund 1, und er ist der Zweck des Laufs: der Unterschied zwischen Probe und Prozeß ist **ein Index**, und er ist keine Buchhaltung
+
+Der Vorlauf hat die Lücke benannt und geschrieben, sie auszusprechen sei mehr
+wert, als sie zu schließen. Sie ist jetzt ausgesprochen, und zwar als Rechnung:
+
+* `gridPath (jumpChain E) c ω t = ω.1 ⌊c t⌋`,
+* `jumpProcess (c·lam) t ω = ω.1 (stepIndex (jumpTime lam ω.1 ω.2) (c t))`.
+
+Beide Seiten sind **dieselbe Kette**, ausgewertet an zwei Stellen. Was sie
+trennt, ist allein, ob der Index `⌊c t⌋` oder der Erneuerungszähler der
+Sprungzeiten ist. `jumpProcess_const_mul_rate_eq_gridPath` trägt genau diese
+Gleichheit der Indizes als Voraussetzung und nichts sonst — die Lücke steht damit
+in der Signatur eines Satzes und nicht in einem Kommentar.
+
+Der zweite Teil davon, `jumpProcess_const_mul_rate`, ist für sich bemerkenswert:
+die reskalierte Folge von `ex:invariance` ist über der Sprungkonstruktion
+**ein** Prozeß, gelesen längs einer Folge von Zeiten, und keine Folge von
+Prozessen. Die Kette wird nicht angefaßt; nur die Uhr.
+
+#### Befund 2: die Probe ist nicht leer, und der Zeuge dafür ist die deterministische Uhr
+
+`jumpProcess_eq_gridPath_unitWaiting` sagt: bei Wartezeiten `≡ 1` fallen die
+beiden Indizes zusammen, an **jeder** Kette und zu **jeder** Zeit. Der
+Gitterpfad ist also kein fremdes Objekt, sondern der Sprungprozeß einer Uhr, die
+nicht schwankt. Damit ist die Verbindung zwischen Meilenstein 10 und
+Meilenstein 4 nicht bloß behauptet, sondern an einem Fall eingelöst, in dem sie
+eine Gleichheit von Funktionen ist.
+
+#### Befund 3: und die Lücke ist keine Nullmenge — der Gegenzeuge ist deterministisch
+
+`jumpProcess_ne_gridPath_unitDelay`: Kette `id` auf `ℕ`, Rate `1`, nullte
+Wartezeit `2` statt `1`. Zur Zeit `1` sitzt der Prozeß noch im Zustand `0`,
+während der Gitterpfad schon im Zustand `1` ist.
+
+Das ist mehr als ein „die beiden sind verschieden". Ein Gegenbeispiel, das nur
+fast sicher gälte, ließe die Hoffnung, eine Modifikation könne die Sache
+richten; ein deterministisches nicht. Was die Lücke im Grenzübergang schließt,
+ist das Gesetz der großen Zahlen für die Wartezeiten, und das ist eine Aussage
+über `n → ∞` und nicht über einen Stichprobenpunkt.
+
+#### Befund 4: der Müllwert sitzt auch hier, und diesmal macht er aus einem Index eine Nicht-Stoppzeit
+
+`stepIndex_le_iff` sagt
+
+    stepIndex T t ≤ n  ↔  t < T (n+1)  ∨  ∀ m, T (m+1) ≤ t
+
+und der zweite Fall ist die Explosionsmenge, auf der `sInf ∅ = 0` zurückgegeben
+wird. Er liest **alle** Sprungzeiten. Also ist `{stepIndex T t ≤ n}` im
+allgemeinen **kein** Ereignis der ersten `n+1` Sprungzeiten, und der
+Erneuerungszähler ist für deren Filtration nur unter Nichtexplosion eine
+Stoppzeit.
+
+Das reiht sich in die Liste der Stellen, an denen ein Müllwert eine Aussage
+still wahr macht — und es ist der Grund, warum die Aussage, die den Lauf
+abschließt (`tendsto_stepIndex_div_atTop`, siehe unten), die Divergenz der
+Sprungzeiten in der Voraussetzung trägt und nicht bloß der Bequemlichkeit halber.
+
+#### Befund 5: die Beschleunigung der Rate braucht keine Positivität, die Zeitänderung schon
+
+`jumpTime_const_mul` gilt für **jedes** `c`, auch `c = 0`: links ist die
+Haltezeit `ξ n / 0 = 0` an jedem Schritt, rechts ist `T n / 0 = 0`. Hier sagt der
+Müllwert der Division auf beiden Seiten dasselbe, und das ist der seltene Fall,
+in dem er nicht lügt. `stepIndex_div_const` dagegen kehrt eine Ungleichung um und
+braucht `0 < c`. Die beiden nebeneinander sind eine brauchbare Probe darauf, ob
+eine Voraussetzung wirklich gebraucht wird oder nur mitgeschleppt.
+
+#### Befund 6, und er war als offener Punkt vorgesehen: das Erneuerungsgesetz der großen Zahlen ist **deterministisch**
+
+Der Bericht dieses Laufs hatte `tendsto_stepIndex_div_atTop` schon als benannten
+Punkt in Meilenstein 10 eingetragen und die Aussage für den nächsten Lauf
+vorgeschlagen. Sie steht jetzt, und das Bemerkenswerte ist nicht, daß sie billig
+war, sondern **was in ihr nicht vorkommt**: keine Wartezeit, kein Maß, keine
+Unabhängigkeit.
+
+    T n / n → m,  0 < m,  T n → ∞   ⟹   stepIndex T s / s → m⁻¹
+
+Der Weg ist die Einschachtelung `T (N s) ≤ s < T (N s + 1)`, geteilt durch
+`N s`, mit `N s → ∞` aus `stepIndex_le_iff_of_exists`. Die Divergenz der
+Sprungzeiten ist dabei genau die Voraussetzung, die den Müllwert aus der Aussage
+hält — dieselbe Beobachtung wie in Befund 4, eine Ebene höher.
+
+Der Übergang zwischen Sprungnummer und Zeit sah probabilistisch aus und ist es
+nicht. Was die Sprungkonstruktion noch beizutragen hat, ist die **eine**
+f.s.-Voraussetzung `T n / n → m`, und die ist bei konstanter Rate
+`ProbabilityTheory.strong_law_ae` (in v4.33.1 wie auf `upstream/master`,
+`Mathlib/Probability/StrongLaw.lean:786`, am Quelltext nachgesehen) an den
+Koordinaten von `waitingMeasure`.
+
+`tendsto_stepIndex_mul_div_atTop` liest dasselbe auf dem Gitter:
+`stepIndex T (n t) / n → t / m`, während `⌊n t⌋ / n → t`. Die beiden Indizes der
+Probe fallen im Grenzwert also **genau dann** zusammen, wenn der mittlere Abstand
+der Sprungzeiten `1` ist, und unterscheiden sich sonst um den Faktor `m`. Das ist
+die Rolle der Reskalierung mit `n`, und sie steht jetzt als Zahl da.
+
+#### Was offen bleibt
+
+* **Die eine f.s.-Voraussetzung**: `T n / n → m` unter `jumpMeasure mu nu`. Sie
+  ist als benannter Punkt in Meilenstein 10 eingetragen, mit den drei Eingaben,
+  auf denen sie ruht.
+* Die Voraussetzungen **(a) und (b)** von `mpSolution_of_tendsto` bleiben, wie
+  die drei Vorläufe sie hinterlassen haben: Eingabe eines Straffheitsarguments,
+  das das Manuskript ausdrücklich nicht liefert.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die probabilistische Hälfte des Übergangs.** *Aussage:*
+   `tendsto_jumpTime_div_atTop` — bei konstanter Rate `lam ≡ c > 0` gilt
+   `jumpTime lam y ξ n / n → c⁻¹` für `waitingMeasure`-fast alle `ξ`. *Worauf
+   sie ruht:* `jumpTime` ist bei konstanter Rate die Partialsumme der `ξ k`
+   geteilt durch `c` (Induktion, wie `jumpTime_const_mul` in diesem Lauf);
+   `ProbabilityTheory.strong_law_ae` für die Partialsummen;
+   `ProbabilityTheory.iIndepFun_infinitePi` für die Unabhängigkeit der
+   Koordinaten, in diesem Abschnitt schon über `indep_comap_coordChain` benutzt;
+   und `∫ x, x ∂(expMeasure 1) = 1`. *Warum jetzt:* sie ist die **einzige**
+   fehlende Eingabe von `tendsto_stepIndex_mul_div_atTop` über der
+   Sprungkonstruktion, und mit ihr ist der Übergang zwischen Sprungnummer und
+   Zeit vollständig.
+2. **Prüfen, ob Mathlib den Erwartungswert von `expMeasure 1` hat**, ehe er
+   gerechnet wird. `Mathlib/Probability/Distributions/Exponential.lean` ist
+   importiert; ist der Erwartungswert dort nicht ausgesprochen, ist das die
+   zehnte Lücke für `TODO.md` Punkt 8 und gehört als solche eingetragen, nicht
+   nebenbei bewiesen.
+3. **Und erst danach die Probe umschreiben**, von `⌊n t⌋` auf `stepIndex`. Mit 1
+   ist das eine Rechnung; vorher wäre es eine Behauptung.
+
+### 2026-09-18, dritter Lauf des Tages — die letzte f.s.-Voraussetzung des Erneuerungsgesetzes ist eingelöst; und der Baustein, den sie brauchte, war eine Lücke, deren allgemeine Fassung billiger ist als der Spezialfall
+
+**Vorschläge 1 und 2 des Vorlaufs sind eingelöst**, und Vorschlag 2 hat einen
+zweiten Satz nach sich gezogen, der nicht angesagt war. **Neun Deklarationen**
+(dazu zwei `private`), 200 Zeilen mitsamt den Abschnittsköpfen, in zwei neuen
+Abschnitten am Ende von
+`TauCeti/MartingaleProblems/Suggested.lean`. Die Kette ohne einen Fehler:
+
+| Datei | rc | Fehler | `sorry` | Sekunden |
+| --- | ---: | ---: | ---: | ---: |
+| `WeakConvergence/Suggested.lean` | 0 | 0 | 0 | 8 |
+| `SkorokhodSpace/Suggested.lean` | 0 | 0 | 0 | 13 |
+| `MartingaleProblems/Suggested.lean` | 0 | 0 | 0 | 67 |
+
+Alle neun mit `scripts/check_axioms.py` geprüft: `propext`, `Classical.choice`,
+`Quot.sound`, sonst nichts. Der Stand von `upstream/master`, gegen den die
+Mathlib-Nachfragen dieses Laufs gestellt sind: `a218e50f981`, 2026-09-17
+(frisch geholt; der Vorlauf stand auf `8018f6ac06b`).
+
+#### Was gebaut ist
+
+* `integral_id_gammaMeasure` — die **Gammaverteilung** hat den Erwartungswert
+  `a / r`; dazu `integral_id_expMeasure` als Korollar `a = r = 1` und
+  `integrable_id_expMeasure`, die Integrierbarkeit im Exponentialfall.
+* `waitingMeasure_map_eval`, `integrable_waiting_eval`,
+  `identDistrib_waiting_eval`, `tendsto_sum_waiting_div_atTop` — das starke
+  Gesetz der großen Zahlen für die Wartezeiten, `∑_{k<n} ξ k / n → 1` f.s.
+* `jumpTime_const`, `tendsto_jumpTime_div_atTop` — bei konstanter Rate sind die
+  Sprungzeiten die Partialsummen der Wartezeiten geteilt durch die Rate, und ihr
+  mittlerer Abstand ist der Kehrwert der Rate.
+
+Damit steht `tendsto_stepIndex_div_atTop` aus dem Vorlauf nicht länger auf einer
+unbewiesenen Voraussetzung: der Übergang zwischen Sprungnummer und Zeit ist
+über der Sprungkonstruktion vollständig.
+
+#### Befund 1, und er ist der Zweck von Vorschlag 2: Mathlib hat den Erwartungswert der Exponentialverteilung nicht — und den der Gammaverteilung auch nicht
+
+Nachgesehen am Quelltext, in v4.33.1 und auf `upstream/master` `a218e50f981`:
+
+* Die **einzigen** Integrale von
+  `Mathlib/Probability/Distributions/Exponential.lean` und von `…/Gamma.lean`
+  sind die Normierung (`lintegral_exponentialPDF_eq_one`,
+  `lintegral_gammaPDF_eq_one`) und die Verteilungsfunktion
+  (`cdf_expMeasure_eq_integral`, `cdf_gammaMeasure_eq_lintegral`).
+* In ganz `Mathlib/Probability/Distributions/` gibt es **kein** Lemma mit
+  `mean_` und **keines** mit `variance_` im Namen.
+* `expMeasure` kommt außerhalb seiner eigenen Datei in der ganzen Bibliothek
+  **nicht vor** — `git grep -l expMeasure upstream/master -- Mathlib/` gibt
+  genau eine Datei.
+
+Das ist die **vierundzwanzigste** Lücke für `TODO.md` Punkt 8 und dort als
+solche eingetragen. Geschlossen ist sie hier in der Fassung, die für Mathlib die
+richtige wäre — der über der **Gammaverteilung**,
+`∫ x, x ∂(gammaMeasure a r) = a / r`, mit dem Exponentialfall als Korollar
+`a = r = 1` —, und nicht in der, die dieser Lauf brauchte; warum, steht in
+Befund 2. Die Behauptung ist in
+`scripts/check_negatives.py` aufgenommen; der Lauf meldet über **40**
+Behauptungen keinen unerwarteten Treffer.
+
+#### Befund 2: der Erwartungswert ist der Eulersche Integrand **eine Stufe höher**, und deshalb kostet die Gammaverteilung nicht mehr als die Exponentialverteilung
+
+Der erste Entwurf dieses Laufs bewies den Exponentialfall unmittelbar, über
+`Γ(2) = 1`. Beim Aufschreiben der Lücke für `TODO.md` fiel auf, daß der
+allgemeine Fall **derselbe Beweis** ist: die Dichte gegen die Identität ist
+
+    (gammaPDF a r x).toReal • x = 1_{(0,∞)}(x) · r^a/Γ(a) · x^((a+1)−1) · exp(−(r·x)),
+
+also der Eulersche Integrand zum Parameter `a+1` statt `a` — die ganze Rechnung
+ist `x^(a−1) · x = x^a`, eine Zeile `Real.rpow_add`. Danach gibt
+`Real.integral_rpow_mul_exp_neg_mul_Ioi` bei `a+1` den Wert, und
+`Real.Gamma_add_one` kürzt die Normierungskonstante zu `a/r` weg. Der
+Exponentialfall ist ein Zweizeiler darüber.
+
+Der Umbau hat den Satz also **verallgemeinert und zugleich verkürzt** — die
+Hilfsaussage `Γ(2) = 1`, die den ersten Entwurf trug und die Mathlib nur in
+`BohrMollerup.lean` hat, wohin unsere Importkette nicht reicht, fällt dabei ganz
+weg. Das ist der Wert davon, eine Lücke **aufzuschreiben**, ehe man sie schließt:
+die Fassung, die man für Mathlib benennen müßte, war die billigere.
+
+#### Befund 2a: und Mathlibs Eulersches Paar ist unsymmetrisch
+
+Der *Wert* von `∫ t in Ioi 0, t^(a−1) · exp(−(r·t))` steht für **jede** Rate `r`
+da (`Real.integral_rpow_mul_exp_neg_mul_Ioi`,
+`Analysis/SpecialFunctions/Gamma/Basic.lean:465`), die *Konvergenz* nur bei
+`r = 1` (`Real.GammaIntegral_convergent`, `ibid.:66`); ein skaliertes
+`GammaIntegral_convergent` gibt es in ganz `Analysis/SpecialFunctions/Gamma/`
+nicht.
+
+Das schlägt bis in unsere Signaturen durch und ist dort sichtbar gemacht:
+`integral_id_gammaMeasure` steht ohne Ratenbeschränkung und **ohne** jede
+Integrierbarkeitsvoraussetzung — jeder seiner Schritte ist eine Identität von
+Bochner-Integralen, die auch am Müllwert gilt —, während
+`integrable_id_expMeasure` nur für die Exponentialverteilung dasteht. Wer die
+Lücke für Mathlib schließt, schließt beide zugleich; sonst hat die
+Gammaverteilung dort einen Mittelwert, dem die Integrierbarkeit fehlt.
+
+#### Befund 3: der Indikator sitzt auf `Ioi 0` und nicht auf `Ici 0`, und dadurch wird die Identität eine Gleichung an **jedem** Punkt
+
+Die Dichte verschwindet unterhalb von `0`, aber bei `0` ist sie im
+Exponentialfall `1` und nicht `0`. Trotzdem ist der offene Halbstrahl der
+richtige Träger — weil rechts nicht die Dichte steht, sondern die Dichte
+**gegen die Identität**, und die Identität verschwindet bei `0`. Der Punkt `0`
+fällt also von der anderen Seite weg.
+
+Das ist mehr als eine Bequemlichkeit: mit `Ici 0` wäre eine f.s.-Gleichheit
+nötig gewesen (`volume {0} = 0`) und damit ein `Measure.restrict`-Schritt mehr;
+mit `Ioi 0` ist es eine Gleichung an jedem Punkt, und keiner der beiden Sätze
+gibt eine Nullmenge aus. Dieselbe Beobachtung wie bei den Müllwerten, nur mit
+umgekehrtem Vorzeichen: hier trifft ein Randpunkt zwei Vorgaben, die einander
+aufheben.
+
+Beide Hilfsaussagen sind so gebaut, `gammaPDF_toReal_smul` wie
+`exponentialPDF_one_toReal_smul`; die zweite bleibt neben der ersten stehen, weil
+der Integrierbarkeitsbeweis den Integranden in der Gestalt
+`exp (−t) · t^(2−1)` braucht, die `Real.GammaIntegral_convergent` hat, und nicht
+in der von `Real.integral_rpow_mul_exp_neg_mul_Ioi`. Auch das ist die
+Unsymmetrie von Befund 2a, eine Ebene tiefer.
+
+#### Befund 4: `tendsto_jumpTime_div_atTop` braucht **keine** Positivität der Rate, und der Müllwert sagt dabei die Wahrheit
+
+Die Aussage steht für **jedes** `c : ℝ`, auch `c = 0`: dann ist jede Haltezeit
+`ξ n / 0 = 0`, die Sprungzeiten sind konstant `0`, und `c⁻¹ = 0` ist der
+Grenzwert der konstanten Folge. Wie bei `jumpTime_const_mul` des Vorlaufs sagt
+der Müllwert der Division auf beiden Seiten dasselbe.
+
+Gebraucht wird die Positivität erst beim **Verbraucher**, und zwar für die
+*andere* Voraussetzung von `tendsto_stepIndex_div_atTop`: dort steht `0 < m`, und
+bei `m = c⁻¹` ist das `0 < c`. Die beiden Sätze nebeneinander sind damit eine
+Probe darauf, wo eine Voraussetzung wirklich sitzt — sie sitzt nicht dort, wo die
+Rate vorkommt, sondern dort, wo durch den Grenzwert geteilt wird.
+
+#### Befund 5, klein und teuer: `∞` ist in dieser Datei kein Token
+
+Der Entwurf lief freistehend gegen Mathlib fehlerfrei und scheiterte beim
+Einfügen an `exponentialPDF 1 x < ∞` — die Datei erreicht `open scoped ENNReal`
+nicht, und Lean meldet `expected token` samt einem `sorry` an der Stelle des
+Grenzwerts, also **drei** Folgefehler für ein fehlendes Notationsskript. Zu
+schreiben ist `< ⊤`, wie es die Datei an 55 anderen Stellen tut. Ebenso ist
+`Real.integral_rpow_mul_exp_neg_mul_Ioi` voll zu qualifizieren, während
+`Real.GammaIntegral_convergent` schon so dasteht.
+
+Dazu ein zweites, gleicher Art: `positivity` scheitert an `r ^ a` mit `r : ℝ`
+frei — `Real.rpow` einer negativen Basis ist über die komplexe Potenz definiert
+und kann negativ sein. `0 < r` gehört also in die Voraussetzung der
+Hilfsaussage und nicht erst in die des Satzes.
+
+Der Entwurf gegen reines Mathlib ist trotzdem der schnellere Weg — 40 Sekunden
+statt 67 für die Kette —; was er nicht prüft, ist der **Namensraum**, in dem die
+Deklaration landen soll. Wer so entwirft, rechnet mit einer zweiten Runde.
+
+#### Was offen bleibt
+
+* **Die Probe selbst ist noch über `⌊n t⌋` gestellt.** Vorschlag 3 des Vorlaufs
+  — sie auf `stepIndex` umzuschreiben — ist mit diesem Lauf eine Rechnung
+  geworden und nicht mehr eine Behauptung, aber sie ist nicht ausgeführt. Der
+  Punkt steht in `MartingaleProblems/README.md`, Meilenstein 10, benannt.
+* Die Voraussetzungen **(a) und (b)** von `mpSolution_of_tendsto` bleiben, wie
+  die vier Vorläufe sie hinterlassen haben: Eingabe eines Straffheitsarguments,
+  das das Manuskript ausdrücklich nicht liefert.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die Probe an der Sprungkonstruktion, nicht am Gitter.** *Aussage:*
+   `tendsto_integral_mul_jumpProcess` — dieselbe Konklusion wie
+   `tendsto_integral_mul_rescaledChain_natural`, aber mit
+   `fun t ↦ jumpProcess (fun _ : E ↦ (n : ℝ)) t` an der Stelle von
+   `gridPath (jumpChain E) n`. *Worauf sie ruht:*
+   `jumpProcess_eq_jumpChain_stepIndex` (der Prozeß **ist** die Kette am
+   Erneuerungszähler, `rfl`), `jumpProcess_const_mul_rate` (die Beschleunigung
+   ist eine Zeitänderung), und für den Grenzübergang
+   `tendsto_stepIndex_mul_div_atTop` zusammen mit `tendsto_jumpTime_div_atTop`
+   aus diesem Lauf. *Warum jetzt:* die Probe ist der einzige Ort, an dem
+   Meilenstein 10 die Sprungkonstruktion berührt, und sie berührt sie bisher nur
+   über ein deterministisches Gitter — also über einen Prozeß, den
+   `jumpProcess_ne_gridPath_unitDelay` von der Konstruktion **unterscheidet**.
+   Mit dem Erneuerungsgesetz fällt der Unterschied im Grenzwert weg, und erst
+   damit ist das Akzeptanzbeispiel eines über der eigenen Konstruktion.
+2. **Die skalierte Konvergenz des Eulerschen Integrals, und daraus die
+   Integrierbarkeit der Gammaverteilung.** *Aussage:*
+   `integrableOn_rpow_mul_exp_neg_mul_Ioi : 0 < a → 0 < r →
+   IntegrableOn (fun t ↦ t ^ (a - 1) * exp (-(r * t))) (Set.Ioi 0)`, und darüber
+   `integrable_id_gammaMeasure`. *Worauf sie ruht:*
+   `Real.GammaIntegral_convergent` bei `s = a` und die Substitution `t ↦ t / r`,
+   also `MeasureTheory.integrableOn_Ioi_comp_mul_left_iff`
+   (`MeasureTheory/Integral/IntegralEqImproper.lean:1272` auf `upstream/master`,
+   `:1251` in v4.33.1), das genau diese
+   Gestalt hat. *Warum jetzt:* sie ist die in Befund 2a benannte Unsymmetrie, und
+   sie ist der einzige Grund, warum `integrable_id_expMeasure` nicht
+   `integrable_id_gammaMeasure` heißt. Solange sie fehlt, ist die
+   vierundzwanzigste Lücke von `TODO.md` Punkt 8 halb geschlossen, und der PR,
+   den sie vorschlägt, wäre unvollständig.
+
+### 2026-09-18, vierter Lauf des Tages — Vorschlag 2 war keine Lücke, sondern eine falsche Negativaussage; und Vorschlag 1 ist nicht offen, sondern widerlegt
+
+**Beide Vorschläge des Vorlaufs sind erledigt, und keiner so, wie er gestellt
+war.** Vorschlag 2 — die skalierte Konvergenz des Eulerschen Integrals — steht in
+Mathlib, und zwar seit langem; Vorschlag 1 — die Probe an der Sprungkonstruktion
+— ist in der Gestalt, in der er dastand, **nicht ausführbar**, und der Lauf sagt
+das mit einem Zeugen statt mit einer Schätzung.
+
+**Neun neue Deklarationen** (dazu eine private, die zwei ersetzt), zwei
+umgeschriebene, eine entfallene, in
+`TauCeti/MartingaleProblems/Suggested.lean`. Die Kette ohne einen Fehler:
+
+| Datei | rc | Fehler | `sorry` | Sekunden |
+| --- | ---: | ---: | ---: | ---: |
+| `WeakConvergence/Suggested.lean` | 0 | 0 | 0 | 8 |
+| `SkorokhodSpace/Suggested.lean` | 0 | 0 | 0 | 13 |
+| `MartingaleProblems/Suggested.lean` | 0 | 0 | 0 | 68 |
+
+Alle neuen mit `scripts/check_axioms.py` geprüft: `propext`,
+`Classical.choice`, `Quot.sound`, sonst nichts. Der Stand von `upstream/master`,
+gegen den die Mathlib-Nachfragen dieses Laufs gestellt sind: `a218e50f981`,
+2026-09-17 (frisch geholt, derselbe wie im Vorlauf). `scripts/check_negatives.py`
+meldet über 40 Behauptungen keinen unerwarteten Treffer,
+`scripts/check_cited_files.py` den neu zitierten Pfad als `OK`.
+
+#### Befund 1, und er ist der wichtigste: eine unserer Negativaussagen war falsch, und gefunden hat sie unser eigenes Prüfskript
+
+Der Vorlauf hat notiert, Mathlibs Eulersches Paar sei unsymmetrisch: der *Wert*
+von `∫ t in Ioi 0, t^(a−1)·exp(−(r·t))` stehe für jede Rate da
+(`Real.integral_rpow_mul_exp_neg_mul_Ioi`,
+`Analysis/SpecialFunctions/Gamma/Basic.lean:465`), die *Konvergenz* nur bei
+`r = 1` (`Real.GammaIntegral_convergent`, `ibid.:66`), und ein skaliertes
+`GammaIntegral_convergent` gebe es in `Analysis/SpecialFunctions/Gamma/` nicht.
+
+Der letzte Satz ist wahr. Die Folgerung daraus — es sei eine Lücke — ist falsch.
+Die skalierte Konvergenz steht **zwei Verzeichnisse weiter**:
+
+    integrableOn_rpow_mul_exp_neg_mul_rpow {p s b : ℝ} (hs : -1 < s) (hp : 0 < p) (hb : 0 < b) :
+      IntegrableOn (fun x : ℝ => x ^ s * exp (- b * x ^ p)) (Ioi 0)
+
+in `Analysis/SpecialFunctions/Gaussian/GaussianIntegral.lean:74`, in v4.33.1
+**und** auf `upstream/master` `a218e50f981`, dort nur bei `p = 2` benutzt, für
+das Gaußintegral. Bei `p = 1` ist es genau die Aussage; die Übersetzung ist
+`Real.rpow_one`, und unser
+`integrableOn_rpow_mul_exp_neg_mul_Ioi` ist damit vier Zeilen und kein Beweis
+mehr. Der erste Entwurf dieses Laufs hatte es über
+`MeasureTheory.integrableOn_Ioi_comp_mul_left_iff` und `Real.mul_rpow`
+selbständig bewiesen — 18 Zeilen, korrekt, überflüssig.
+
+**Woran die falsche Behauptung lag, und das ist die Lehre, nicht der Ärger:** sie
+war auf ein **Verzeichnis** eingeschränkt und in diesem Verzeichnis wahr. Ein
+Pfadfilter, der eng genug ist, macht jede Negativaussage wahr. `TODO.md` Punkt 8
+ist entsprechend berichtigt, und `scripts/check_negatives.py` trägt die Regel
+jetzt als Kommentar: wo eine Behauptung von der Bibliothek und nicht von einer
+Datei handelt, steht dort `Mathlib/` als Filter und nichts Engeres.
+
+**Und der Weg, auf dem sie gefunden wurde, ist der Punkt.** Der Vorlauf hat die
+Behauptung nur in den Bericht geschrieben; dieser Lauf hat sie zuerst in
+`check_negatives.py` **aufgenommen** — mit `Mathlib/` statt `…/Gamma/` — und sie
+ist beim **ersten** Durchlauf nach der Aufnahme gefallen. Eine Negativaussage,
+die im Fließtext steht, prüft niemand wieder; eine, die im Skript steht, prüft
+sich bei jedem Lauf selbst. Der Ort, an dem eine Behauptung notiert wird, ist
+also nicht Buchhaltung, sondern entscheidet, ob sie je widerlegt werden kann.
+
+Was von der vierundzwanzigsten Lücke bleibt, ist damit **nur noch ihre erste
+Hälfte** — der Erwartungswert, den `Probability/Distributions/` wirklich nicht
+hat (nachgeprüft: `gammaMeasure` und `expMeasure` kommen auf `upstream/master`
+außerhalb ihrer eigenen beiden Dateien in ganz `Mathlib/` nicht vor). Der PR, den
+sie vorschlägt, ist kleiner als gedacht: Mittelwert und Integrierbarkeit der
+Gammaverteilung neben `Probability/Distributions/Gamma.lean`, beide über der
+schon vorhandenen Gaußdatei, die Varianz daneben.
+
+#### Was daraus gebaut ist
+
+* `integrableOn_rpow_mul_exp_neg_mul_Ioi` — der Fall `p = 1` der Mathlib-Aussage,
+  benannt, weil die Gestalt `x ^ (1 : ℝ)` nicht die ist, nach der ein Leser des
+  Gammagesetzes sucht.
+* `integrable_id_gammaMeasure` — die Gammaverteilung ist integrierbar, über
+  derselben Identifikation `gammaPDF_toReal_smul` wie der Mittelwert, nur in die
+  andere Richtung gelesen. `integrable_id_expMeasure` ist jetzt das Korollar
+  `a = r = 1` und zwei Zeilen; die private Hilfsaussage
+  `exponentialPDF_one_toReal_smul`, die es bisher trug, entfällt ganz.
+
+Mittelwert und Integrierbarkeit stehen damit in **derselben** Allgemeinheit. Das
+ist keine Ordnungsliebe: ein Mittelwert ohne seine Integrierbarkeit ist ein
+Bochner-Müllwert, der zufällig mit der Antwort übereinstimmt, und der Statement
+allein sagt einem Leser nicht, welches von beidem er vor sich hat.
+
+#### Und dann die Varianz, im selben Lauf — weil die Identifikation einmal allgemein geschrieben wird und nicht zweimal einzeln
+
+Der PR, den `TODO.md` Punkt 8 für diese Lücke vorschlägt, nennt die Varianz als
+Teil desselben Beitrags. Nach Befund 1 war sie der **ganze** Rest, also ist sie
+hier mitgebaut, und dabei hat sich derselbe Zug wie im Vorlauf wiederholt: die
+allgemeine Fassung ist billiger als zwei Spezialfälle.
+
+* `gammaPDF_toReal_smul_pow` — die Dichte gegen `x^n` ist der Eulersche Integrand
+  `n` Stufen höher. Sie **ersetzt** die beiden privaten Hilfsaussagen der
+  Vorläufe; `gammaPDF_toReal_smul` bleibt als ihr Fall `n = 1` stehen und ist
+  eine Zeile.
+* `integral_sq_gammaMeasure` — das zweite Moment ist `a(a+1)/r²`. Derselbe Gang
+  wie beim Mittelwert; der einzige Unterschied ist, daß `Real.Gamma_add_one`
+  zweimal greift statt einmal.
+* `integrable_sq_gammaMeasure`, und darüber
+* `variance_id_gammaMeasure` — `Var = a/r²`. Was daran **nicht** Arithmetik ist,
+  ist die Voraussetzung `MemLp (fun x ↦ x) 2`, die Mathlibs `variance_eq_sub`
+  verlangt; sie ist `memLp_two_iff_integrable_sq`
+  (`MeasureTheory/Function/L2Space.lean:52`) über der Integrierbarkeit des
+  Quadrats.
+
+`n ≠ 0` ist die einzige neue Voraussetzung der allgemeinen Identifikation, und
+sie sitzt genau dort, wo Befund 3 des Vorlaufs sie vorhergesagt hat: bei `x = 0`
+verschwindet nicht die Dichte, sondern die **Potenz** — und `x^0 = 1` verschwindet
+eben nicht. Der Randpunkt, der beim Mittelwert von der anderen Seite wegfiel,
+fällt hier aus demselben Grund weg und nur solange `n ≥ 1`.
+
+Damit ist die vierundzwanzigste Lücke von `TODO.md` Punkt 8 **ganz** geschlossen,
+und der Punkt sagt jetzt, was der PR enthält, statt was er enthalten müßte.
+
+#### Befund 2: Vorschlag 1 ist nicht offen, sondern widerlegt — und das Hindernis ist nicht der Index, sondern der Faktor
+
+Vorschlag 1 wollte `tendsto_integral_mul_jumpProcess`: dieselbe Konklusion wie
+`tendsto_integral_mul_rescaledChain_natural`, aber mit
+`jumpProcess (fun _ ↦ (n : ℝ))` an der Stelle von `gridPath (jumpChain E) n`.
+
+Das geht als Instanz **nicht**, und zwar aus einem Grund, der beim Lesen der
+Hypothesen sofort dasteht, sobald man ihn sucht. Der Satz verlangt
+
+    hW : Measurable[naturalFiltration (Ξ n) ⌊n · s⌋] (Z ∘ gridPath (Ξ n) n),
+
+und `measurable_comp_gridPath` liefert das für den Gitterpfad. Für den Sprungpfad
+kann es **niemand** liefern: `naturalFiltration (jumpChain E) k` ist von den
+Koordinaten des **Kettenfaktors** erzeugt und enthält über die Uhr gar nichts,
+während `jumpProcess` die Uhr liest. Zwei Stichprobenpunkte mit **derselben
+Kette** und verschiedenen Uhren haben verschiedene Sprungprozesse, und damit ist
+die Aussage falsch — für jedes `k`, nicht bloß für ein zu kleines.
+
+Das ist `not_measurable_jumpProcess_naturalFiltration_jumpChain`, über
+`naturalFiltration_jumpChain_le_comap_fst` (jede σ-Algebra der Kettenfiltration
+liegt unter `comap Prod.fst`). Der Zeuge ist deterministisch: die Kette ist die
+Identität auf `ℕ`, die Uhr einmal konstant `1/2` und einmal konstant `1`; bei
+Rate `1` und Zeit `1` sitzt der erste Prozeß im Zustand `2`, der zweite im
+Zustand `1`.
+
+**Und Meßbarkeit ist keine f.s.-Aussage**, also genügt *ein* Paar von Punkten.
+Das ist derselbe Zug wie beim 25. Lauf, der die Filtrationsgleichheit widerlegt
+hat, und er hat hier dieselbe Kraft: es ist kein Hindernis, um das man
+herumarbeitet, sondern ein Nein.
+
+**Was der Lauf statt dessen liefert, ist die Zahl, um die die beiden Indizes
+auseinanderliegen.** `jumpProcess_constWaiting`: bei konstanter Rate `c` und
+**konstanten** Haltezeiten `w` ist der Sprungprozeß ein Gitterpfad — der Maschen
+`w / c` und nicht `1 / c`, also die Kette gelesen bei `⌊t · (c / w)⌋`.
+`jumpProcess_eq_gridPath_unitWaiting` aus dem zweiten Lauf ist sein Fall `w = 1`,
+und genau dort wird die Uhr unsichtbar; der allgemeine Fall sagt, was dieser Fall
+verbirgt. Der Faktor `c / w` ist `c / m` mit `m` der mittleren Haltezeit — und
+das ist derselbe Grenzwert, den `tendsto_stepIndex_mul_div_atTop` für die
+**zufällige** Uhr gibt. Die deterministische Rechnung und das Gesetz der großen
+Zahlen sind sich also darüber einig, welcher Index gelesen wird, und beide sagen:
+`⌊c t⌋` ist nur bei `m = 1` der richtige.
+
+Der Beweis ist drei schon vorhandene Zeilen — `jumpTime_const`,
+`stepIndex_div_const`, `stepIndex_natCast` — und nichts sonst.
+
+#### Befund 3, klein und zweimal bezahlt: eine Deklaration steht in der Abhängigkeitsordnung ihrer Eingaben, nicht in der ihres Themas
+
+Der neue Abschnitt gehört dem Inhalt nach neben `GridWitness`, wo die Differenz
+der beiden Indizes besprochen wird, und ist zuerst auch dorthin geschrieben
+worden. Er braucht aber `jumpTime_const`, das 300 Zeilen **später** steht, in
+`WaitingLLN`. Vier Fehler, ein Durchlauf von 68 Sekunden, und eine Verschiebung
+ans Dateiende. Die Prosa steht jetzt dort, wo die Eingaben stehen, und der Verweis
+auf `GridWitness` geht rückwärts.
+
+Dazu ein zweites, gleicher Art: `Prod.fst` ohne Typannotation läßt die zweite
+Komponente offen und damit eine **Universenvariable** — Lean meldet `stuck at
+solving universe constraint`, was wie ein tiefes Problem aussieht und keines ist.
+Zu schreiben ist `(Prod.fst : (ℕ → E) × (ℕ → ℝ) → (ℕ → E))` und
+`(inferInstance : MeasurableSpace (ℕ → E))`, und die Mengenzugehörigkeit nicht
+über `∈ Prod.fst ⁻¹' A` zu formulieren, sondern über `Set.ext_iff` an einem
+Punkt, dessen Typ dasteht.
+
+#### Was offen bleibt
+
+* **Die Probe von Meilenstein 10 über der Sprungkonstruktion** braucht eine
+  Filtration, die die Uhr enthält, und über einer solchen ist der gelesene Index
+  eine **Stoppzeit** und keine Konstante. Das ist die fehlende Eingabe; sie ist
+  jetzt benannt statt geschätzt, und der nächste Lauf fängt dort an.
+* Die Voraussetzungen **(a) und (b)** von `mpSolution_of_tendsto` bleiben, wie
+  die fünf Vorläufe sie hinterlassen haben: Eingabe eines Straffheitsarguments,
+  das das Manuskript ausdrücklich nicht liefert.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die Filtration, die die Uhr enthält, und der Beleg, daß sie die
+   Markoveigenschaft nicht zerstört.** *Aussage:*
+   `condExp_jumpChain_clock` — dieselbe Konklusion wie `condExp_jumpChain`, aber
+   über `naturalFiltration (jumpChain E) i ⊔ MeasurableSpace.comap Prod.snd ⊤`.
+   *Worauf sie ruht:* `jumpMeasure mu nu` ist nach seiner Definition das
+   **Produkt** `(chainKernel mu ∘ₘ nu).prod waitingMeasure` — die Uhr ist von der
+   Kette unabhängig —, also sollte das Hinzufügen der ganzen Uhr-σ-Algebra die
+   bedingte Erwartung einer Funktion der Kette nicht ändern.
+   **Der Baustein dafür fehlt in Mathlib, und das ist vor dem Bauen zu wissen:**
+   `Mathlib/Probability/ConditionalExpectation.lean` enthält auf `a218e50f981`
+   **genau einen** Satz, `condExp_indep_eq`, und der hat die andere Gestalt —
+   `𝔼[f | m₂] = 𝔼[f]` für unabhängige `m₁, m₂` und `m₁`-meßbares `f`. Die hier
+   gebrauchte Aussage ist die *unerhebliche Vergrößerung*,
+   `𝔼[f | m₁ ⊔ m₂] = 𝔼[f | m₁]` bei `m₂` unabhängig vom Rest; eine Suche nach
+   `condExp_sup` und nach `condExp` neben `⊔` über `Mathlib/Probability/` und
+   `Mathlib/MeasureTheory/Function/ConditionalExpectation/` gibt nichts. Sie wäre
+   also die fünfundzwanzigste Lücke für `TODO.md` Punkt 8, und sie ist die
+   allgemeine Fassung von `condExp_indep_eq` (dessen Fall `m₁ = ⊥` sie ist).
+   *Warum jetzt:* das ist die
+   in Befund 2 benannte fehlende Eingabe, und sie ist die **erste** von zweien:
+   ohne sie ist `hW` unerfüllbar, mit ihr ist es eine Frage über Stoppzeiten und
+   keine über Faktoren mehr. Und sie ist zugleich die Probe darauf, ob die
+   Vergrößerung überhaupt zulässig ist — dieselbe Frage, die bei der
+   Augmentierung um Nullmengen in Teil C offen steht, hier aber an einem Produkt
+   und damit billig.
+2. **Die Uhr-σ-Algebra als eigene Lücke aufschreiben, ehe sie gebraucht wird.**
+   *Aussage:* `condExp_sup_of_indep` — ist `m₂` unabhängig von `m₁ ⊔ σ(f)`, so
+   ist `μ[f | m₁ ⊔ m₂] =ᵐ μ[f | m₁]`. *Worauf sie ruht:*
+   `ae_eq_condExp_of_forall_setIntegral_eq` über dem π-System der Rechtecke
+   `s₁ ∩ s₂` mit `sᵢ ∈ mᵢ`, genau wie `condExp_indep_eq` es für `m₁ = ⊥` tut.
+   *Warum jetzt:* sie ist die Eingabe von Vorschlag 1, und nach Befund 1 dieses
+   Laufs ist der **Ort**, an dem eine Negativaussage notiert wird, entscheidend
+   dafür, ob sie je geprüft wird. Sie gehört also in `TODO.md` Punkt 8 **und** in
+   `scripts/check_negatives.py` — mit dem Filter `Mathlib/` und nicht mit dem
+   Verzeichnis, in dem heute zufällig nichts steht. Wird sie dabei widerlegt, ist
+   das der billigste mögliche Ausgang und Vorschlag 1 wird kürzer.
+
+*Erledigt und deshalb nicht mehr vorgeschlagen:* die Varianz der
+Gammaverteilung, die dieser Lauf als zweiten Vorschlag geführt hätte, ist in ihm
+selbst gebaut (`variance_id_gammaMeasure`), weil sie nach Befund 1 der ganze Rest
+der vierundzwanzigsten Lücke war und die allgemeine Identifikation sie fast
+umsonst mitliefert.
+
+### 2026-09-18, fünfter Lauf des Tages — beide Vorschläge des Vorlaufs sind eingelöst, und in der umgekehrten Reihenfolge: die Lücke, die Vorschlag 2 nur aufschreiben wollte, ist im selben Lauf bewiesen; und die zweite Eingabe der Probe steckt nicht an der Stoppzeit, sondern an der Beschränktheit
+
+Der Vorlauf hat zwei Vorschläge hinterlassen — die Filtration, die die Uhr
+enthält (1), und die Lücke, auf der sie ruht (2) —, mit der Bemerkung, Vorschlag
+2 sei die Eingabe von Vorschlag 1. Beides steht. Und der Grund, aus dem beides in
+*einen* Lauf paßte, ist derselbe wie im dritten und vierten Lauf dieses Tages:
+**die allgemeine Fassung ist billiger als der Spezialfall.**
+
+**Elf neue Deklarationen** in `TauCeti/MartingaleProblems/Suggested.lean`, in
+vier neuen Abschnitten (`IrrelevantEnlargement`, `ProductEnlargement`,
+`JumpChainClock`, `StoppedOrthogonality`). Die Kette ohne einen Fehler:
+
+| Datei | rc | Fehler | `sorry` | Sekunden |
+| --- | ---: | ---: | ---: | ---: |
+| `WeakConvergence/Suggested.lean` | 0 | 0 | 0 | 8 |
+| `SkorokhodSpace/Suggested.lean` | 0 | 0 | 0 | 13 |
+| `MartingaleProblems/Suggested.lean` | 0 | 0 | 0 | 68 |
+
+Alle neuen mit `scripts/check_axioms.py` geprüft: `propext`,
+`Classical.choice`, `Quot.sound`, sonst nichts. Der Stand von `upstream/master`,
+gegen den die Mathlib-Nachfragen dieses Laufs gestellt sind: `a218e50f981`,
+2026-09-17 (frisch geholt, derselbe wie in den beiden Vorläufen).
+`scripts/check_negatives.py` meldet jetzt über **41** Behauptungen keinen
+unerwarteten Treffer — eine mehr als im Vorlauf, und die neue ist die dieses
+Laufs.
+
+#### Die Lücke, und sie ist wirklich eine
+
+`Mathlib/Probability/ConditionalExpectation.lean` enthält auf `a218e50f981` wie
+in v4.33.1 **genau einen** Satz: `MeasureTheory.condExp_indep_eq`, Zeile 42, und
+er sagt `μ[f | m₂] =ᵐ μ[f]` für `f` meßbar über einer von `m₂` unabhängigen
+σ-Algebra. Gebraucht wird die *Vergrößerung*,
+
+    μ[f | m₁ ⊔ m₂] =ᵐ μ[f | m₁]   für m₂ unabhängig von m₁ ⊔ σ(f),
+
+deren Fall `m₁ = ⊥` der Mathlib-Satz ist. Die Zeichenketten `condExp_sup` und
+`condexp_sup` kommen in ganz `Mathlib/` **nicht** vor; eine Suche nach `condExp`
+neben `⊔` über `Mathlib/Probability/` und
+`Mathlib/MeasureTheory/Function/ConditionalExpectation/` gibt nichts. Das ist
+die fünfundzwanzigste Lücke von `TODO.md` Punkt 8, und sie steht — nach der Lehre
+des Vorlaufs — **zuerst in `scripts/check_negatives.py`** und erst dann im
+Fließtext, mit dem Filter `Mathlib/` und keinem engeren.
+
+#### Was gebaut ist, und warum die allgemeine Fassung kürzer war
+
+Sechs Deklarationen für die Lücke, drei für ihre Anwendung.
+
+* `supRectangles`, `isPiSystem_supRectangles`, `generateFrom_supRectangles` —
+  das π-System der Rechtecke `t₁ ∩ t₂` und seine Erzeugung von `m₁ ⊔ m₂`. Mathlib
+  hat es nicht als benannte Familie, obwohl `IndepSets.indep` genau darüber
+  läuft.
+* `setIntegral_eq_of_forall_supRectangle` — die Fortsetzung von den Rechtecken
+  auf die ganze Vereinigungs-σ-Algebra, über
+  `MeasurableSpace.induction_on_inter`. Sie ist das Gegenstück zu
+  `setIntegral_eq_of_forall_cylinder` aus dem Abschnitt `FddPiSystem`, und die
+  drei Schritte sind dort wie hier `integral_add_compl`, `integral_iUnion` und
+  das Gesamtintegral als Rechteck `univ ∩ univ`.
+* `setIntegral_eq_measureReal_smul_integral_of_indep` — `condExp_indep_eq`,
+  gelesen als Aussage über Mengenintegrale: über einer Menge von `m₂`
+  faktorisiert das Integral eines `m₁`-meßbaren Integranden in `μ.real t₂` mal
+  das Gesamtintegral. Zwei Zeilen über dem Mathlib-Satz und
+  `setIntegral_condExp`.
+* `condExp_sup_of_indep` — der Satz. Auf einem Rechteck wird beidemal derselbe
+  Zug gemacht: den Integranden auf `t₁` abschneiden, faktorisieren, und was
+  bleibt, ist `∫_{t₁} μ[f|m₁] = ∫_{t₁} f`, also die definierende Eigenschaft.
+
+**Warum das nicht teurer war als der Spezialfall:** der Beweis benutzt
+`condExp_indep_eq` als *Motor* und nicht als Vorbild. Ein eigener Weg über
+`MemLp.induction_stronglyMeasurable` — so beweist Mathlib den degenerierten Fall
+— wäre der lange gewesen; das Abschneiden auf `t₁` macht aus der Vergrößerung
+wieder den degenerierten Fall, an einem anderen Integranden.
+
+**Drei Voraussetzungen, und jede ist so schwach, wie sie sein kann.**
+
+* **Kein Raum, keine Topologie, kein Maßraum auf der Bildseite.** `V` ist ein
+  beliebiger Banachraum; `Θ` trägt nichts als seine σ-Algebren.
+* **`m₀` ist ein Argument und nicht `σ(f)`** — und das ist keine Bequemlichkeit,
+  sondern notwendig: ein Banachraum trägt keine Meßbarkeit, aus der sich `σ(f)`
+  überhaupt bilden ließe. Wo sie besteht, ist `σ(f)` das kleinste zulässige
+  `m₀`, und die Aussage nimmt dann die vertraute Gestalt an.
+* **Die Unabhängigkeit wird von `m₁ ⊔ m₀` verlangt, nicht von `m₀` allein.**
+  `m₂` muß von der Vergangenheit *und* vom Integranden gemeinsam unabhängig sein;
+  paarweise Unabhängigkeit genügt nicht, und der klassische Zeuge dagegen sind
+  drei paarweise unabhängige Münzwürfe.
+
+#### Die Anwendung, und sie ist der Vorschlag 1 des Vorlaufs
+
+* `indep_comap_fst_comap_snd` — die beiden Faktoren eines Produktmaßes sind
+  unabhängige σ-Algebren. Das ist `ProbabilityTheory.indepFun_prod`
+  (`Mathlib/Probability/Independence/Basic.lean:727`, in v4.33.1 **und** auf
+  `master`) an den beiden Identitäten, gelesen als Unabhängigkeit der Comaps
+  statt zweier Zufallsvariablen.
+* `condExp_sup_comap_snd` — eine σ-Algebra unter dem ersten Faktor darf um den
+  **ganzen** zweiten vergrößert werden, umsonst. Über `m₁` steht nichts als
+  `m₁ ≤ comap Prod.fst`: keine Filtration, keine abzählbare Erzeugung.
+* `condExp_jumpChain_clock` — `condExp_jumpChain` wörtlich, aber über
+  `naturalFiltration (jumpChain E) n ⊔ comap Prod.snd ⊤`. Der Beweis ist der
+  Aufruf und `naturalFiltration_jumpChain_le_comap_fst` aus dem Vorlauf; daß
+  `jumpMeasure` ein Produkt ist, steht in seiner Definition.
+
+**Damit ist die erste der beiden fehlenden Eingaben der Probe von Meilenstein 10
+eingelöst, und es war die, die in Zweifel stand.** Daß eine bedingte Erwartung
+eine Vergrößerung ihrer σ-Algebra übersteht, ist **nicht** automatisch — das ist
+dieselbe Frage, die bei der Augmentierung um Nullmengen in Teil C offen steht,
+und hier, an einem Produkt, ist sie billig zu beantworten. Sie *mußte* vor jeder
+Konstruktion über der vergrößerten Filtration beantwortet werden, sonst repariert
+man die Meßbarkeit und bricht die Markoveigenschaft.
+
+#### Befund: die Lücke war allgemeiner als ihre Anwendung, und deshalb billiger
+
+Der Vorlauf hatte Vorschlag 2 als bloßes *Aufschreiben* einer Lücke geführt —
+„ehe sie gebraucht wird" — und Vorschlag 1 als die Arbeit. Es war umgekehrt.
+`condExp_sup_of_indep` ist vierzig Zeilen und ein Standardweg; die Anwendung ist
+sechs Zeilen. Was den Unterschied macht, ist die **Form der Voraussetzung**:
+hätte man die Aussage nur für `jumpMeasure` gebraucht und dort bewiesen, so wäre
+die Produktstruktur im ganzen Beweis mitgelaufen und jede Zeile hätte sie gelesen.
+Über `Indep m₁ m₂ μ` kommt sie an genau einer Stelle vor, im Aufruf von
+`condExp_indep_eq`.
+
+Das ist derselbe Befund wie im dritten Lauf dieses Tages (die allgemeine
+Lückenfassung war billiger als der Spezialfall) und im vierten
+(`gammaPDF_toReal_smul_pow` ersetzt zwei private Hilfsaussagen). Dreimal
+hintereinander, und in allen drei Fällen aus demselben Grund: **ein Beweis, der
+eine Struktur nicht sieht, kann sie auch nicht mitschleppen.**
+
+#### Zwei kleine Stolperstellen, beide eine Minute
+
+* **Eine lokale Hypothese vom Typ einer Klasse ist ein Instanzkandidat**, auch
+  wenn sie implizit gebunden ist. In `condExp_sup_comap_snd` steht
+  `{m₁ : MeasurableSpace (α × β)}` im Kontext, und `measurable_fst` hat sich
+  daraufhin `m₁` statt `Prod.instMeasurableSpace` als Quellinstanz gesucht — mit
+  einer Typfehlermeldung, die wie ein Universenproblem aussieht und keines ist.
+  Zu schreiben ist die Instanz explizit:
+  `@Measurable (α × β) α Prod.instMeasurableSpace inferInstance Prod.fst`.
+* **`inferInstance` in einer Typangabe eines `have` wird nicht synthetisiert**,
+  solange der erwartete Typ nicht dasteht; `Measurable.comap_le` meldet dann
+  einen Typfehler zwischen `Prod.instMeasurableSpace` und `inferInstance`. Der
+  Ausweg ist, die Typangabe wegzulassen und den Typ aus dem Term kommen zu
+  lassen.
+
+#### Und dann die zweite Eingabe, im selben Lauf — mit einem Befund, der den Vorschlag des Vorlaufs berichtigt
+
+Der Bericht bis hierher hätte die zweite Eingabe als „Stoppzeit statt Konstante"
+vertagt. Sie ist statt dessen angegangen, und das Lesen der Hypothese hat die
+Lage anders gezeigt, als sie von außen aussah.
+
+**Erstens: `tendsto_integral_mul_rescaledChain` verlangt gar keine bestimmte
+Filtration.** Der allgemeine Satz trägt `{𝓖 : ∀ n, Filtration ℕ (m' n)}` als
+freie Größe; erst `tendsto_integral_mul_rescaledChain_natural` setzt die
+natürliche Kettenfiltration ein. Der vergrößerten Filtration steht also nichts im
+Weg, und `condExp_jumpChain_clock` ist genau das `hmarkov`, das sie braucht.
+
+**Zweitens, und das ist der Befund: Stoppzeit zu sein ist umsonst — es ist die
+Beschränktheit, die fehlt.** Über
+`naturalFiltration (jumpChain E) i ⊔ comap Prod.snd ⊤` liegt die **ganze** Uhr
+schon in der σ-Algebra bei `i = 0`. Jeder uhrmeßbare Index ist damit eine
+Stoppzeit, trivial, weil er unten meßbar ist; die Erneuerungszahl ist keine
+Ausnahme. Was das optionale Sampling dagegen verlangt und was sie nicht hat, ist
+eine **konstante obere Schranke**. Der Vorschlag des Vorlaufs hat die Schwierigkeit
+an der falschen Stelle vermutet.
+
+**Zwei Deklarationen dazu**, beide über der diskreten Kettenfiltration:
+
+* `integral_sub_mul_eq_zero_of_martingale_stoppedValue` — das Martingalinkrement
+  zwischen zwei Stoppzeiten ist orthogonal zu jeder beschränkten Größe der
+  früheren. Es ist `integral_sub_mul_eq_zero_of_condExp_eq` bei
+  `m' = hσ.measurableSpace`, gefüttert von
+  `Martingale.stoppedValue_ae_eq_condExp_of_le`
+  (`Mathlib/Probability/Martingale/OptionalSampling.lean:141`). Der feste
+  Indexfall ist der zweier konstanter Stoppzeiten.
+* `integral_sub_mul_eq_zero_of_martingale_stoppedValue_min` — dasselbe mit
+  **unbeschränkter früherer** Stoppzeit, über
+  `Martingale.stoppedValue_min_ae_eq_condExp` (`ibid.:195`). Das ist die Fassung,
+  die die Sprungkonstruktion braucht, und der Grund ist die σ-Algebra des
+  Gewichts: der späte Index darf bei einer Konstanten `K` abgeschnitten werden,
+  der frühe **nicht**, denn `hσ.measurableSpace` schrumpft beim Abschneiden und
+  das Gewicht `Z ∘ jumpPath` fiele heraus.
+
+**Was danach bleibt, ist keine Frage über Filtrationen mehr**, sondern der
+Grenzübergang `K → ∞` in `∫ (M_{N(t)∧K} − M_{N(s)∧K}) · W`, also eine Konvergenz
+von Integralen. Das ist der Stand, mit dem der nächste Lauf anfängt.
+
+#### Was offen bleibt
+
+* **Der Grenzübergang `K → ∞`** der eben benannten Abschneidung, und mit ihm die
+  Frage, unter welcher Voraussetzung er trägt — Dominierung durch eine
+  integrierbare Majorante oder gleichgradige Integrierbarkeit des
+  kompensierten Kettenmartingals längs der abgeschnittenen Indizes.
+* Die Voraussetzungen **(a) und (b)** von `mpSolution_of_tendsto` bleiben, wie
+  die sechs Vorläufe sie hinterlassen haben: Eingabe eines Straffheitsarguments,
+  das das Manuskript ausdrücklich nicht liefert.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Der Grenzübergang der Abschneidung, und zuerst die Wahl der Voraussetzung.**
+   *Aussage:* `integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_bdd` —
+   dieselbe Konklusion wie
+   `integral_sub_mul_eq_zero_of_martingale_stoppedValue`, aber **ohne** `hτN`
+   und statt dessen mit `∀ i ω, ‖M i ω‖ ≤ c`, einer gleichmäßigen Schranke am
+   Martingal. *Worauf sie ruht:* die Fassung mit Minimum aus diesem Lauf bei
+   `τ ⊓ K`, `stoppedValue_min`-Rechnung und dominierte Konvergenz mit der
+   konstanten Majorante `c · b`; die punktweise Konvergenz ist für jedes `ω` ein
+   **endliches** Argument, weil `N(t) ω` eine natürliche Zahl ist und die Folge
+   ab `K ≥ N(t) ω` stationär wird. *Warum jetzt:* das ist die letzte Eingabe der
+   Probe, und die Schranke ist für das kompensierte Kettenmartingal bei
+   beschränktem `f` und beschränktem `Pf` **vorhanden** — allerdings nur mit
+   einem Faktor, der mit dem Index wächst (`|M_k| ≤ C + 2kC`), und genau
+   deshalb ist die erste Arbeit, die Voraussetzung zu **wählen** und nicht zu
+   raten: eine `k`-abhängige Schranke reicht für dominierte Konvergenz nicht,
+   eine gleichgradige Integrierbarkeit schon. Die Entscheidung ist zu begründen.
+2. **Die Augmentierung um Nullmengen, jetzt, wo ihr Vorbild dasteht.**
+   *Aussage:* `condExp_sup_null` — ist `𝒩` die σ-Algebra der `P`-Nullmengen und
+   ihrer Komplemente, so ist `μ[f | m₁ ⊔ 𝒩] =ᵐ μ[f | m₁]`. *Worauf sie ruht:*
+   derselbe Rechteckweg wie `condExp_sup_of_indep` — `𝒩` ist unabhängig von
+   allem, weil jede ihrer Mengen Maß `0` oder `1` hat, und das ist
+   `Indep m 𝒩 μ` für **jedes** `m`; die Rechteckschritte sind dann wörtlich
+   dieselben. *Warum jetzt:* Teil C hat seit dem 2026-09-12 die ausdrückliche
+   Anweisung, **vor** dem Augmentieren zu prüfen, ob der Rest der Entwicklung sie
+   verträgt — „`Martingale X 𝓕 P` bei größerer Filtration ist nicht automatisch;
+   bei Vergrößerung um Nullmengen sollte es gelten, aber ich finde dafür in
+   Mathlib kein Lemma". Dieser Lauf hat das Lemma gebaut, nur an einer anderen
+   Vergrößerung. Die Nullmengenfassung ist sein zweiter Spezialfall, sie kostet
+   die Unabhängigkeit von `𝒩` und sonst nichts, und mit ihr ist die Frage, die
+   Teil C blockiert hat, beantwortet statt vertagt.
+
+### 2026-09-18, sechster Lauf des Tages — der Grenzübergang der Abschneidung steht, und die Voraussetzung, die er kostet, ist die des Manuskripts; Vorschlag 2 war seit dem 2026-09-12 erledigt
+
+**Vorschlag 1 des Vorlaufs ist eingelöst, Vorschlag 2 war eine Doppelung und ist
+nicht gebaut worden.** Vier Deklarationen mehr in
+`TauCeti/MartingaleProblems/Suggested.lean`, alle drei Roadmap-Dateien ohne einen
+Fehler und ohne ein `sorry` durch `scripts/check_suggested.py` gegen v4.33.1, alle
+vier mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft.
+Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 10.
+
+#### Die Entscheidung, die der Vorlauf zu treffen aufgegeben hatte
+
+Der Vorlauf hatte sie ausdrücklich als *Entscheidung* hinterlassen und nicht als
+Rechnung: gleichmäßige Beschränktheit des Martingals oder gleichgradige
+Integrierbarkeit. Die Antwort ist **keines von beiden**, und der Grund steht in
+der Konvergenz selbst.
+
+**Der Grenzübergang `K → ∞` ist gar keine analytische Konvergenz.** An *jedem*
+Stichprobenpunkt ist die abgeschnittene Folge **stationär**: `τ ω` ist eine
+natürliche Zahl, also ist `min (τ ω) K = τ ω`, sobald `K ≥ τ ω`. Was die
+Vertauschung von Limes und Integral verlangt, ist deshalb genau eine
+**Majorante** und sonst nichts. Gleichgradige Integrierbarkeit täte es auch; sie
+ist nicht genommen, weil sie strikt mehr ist, als dieser Beweis verbraucht, und
+an der Anwendung strikt schwerer zu prüfen.
+
+`integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_dominated` trägt die
+Majorante daher an der schwächsten Stelle, an der sie stehen kann: `‖M n ω‖ ≤ g ω`
+für `n ≤ τ ω` und für keine anderen Indizes. Die Fassung mit konstanter Schranke,
+`…_of_bdd`, ist der Spezialfall `g = c` und die, nach der der Vorlauf gefragt
+hatte — sie ist mitgebaut und ist, wie der nächste Punkt zeigt, für die Probe
+**unbrauchbar**.
+
+#### Der Befund: die Schranke des kompensierten Kettenmartingals, und daß sie das Manuskript zitiert
+
+`norm_chainCompensated_le` rechnet aus, was der Vorlauf vermutet hatte:
+`‖chainCompensated Pf f Ξ n ω‖ ≤ C + 2 n C` bei beschränkter Testfunktion, und
+besser geht es nicht — der Kompensator ist eine Summe von `n` Zuwächsen der Größe
+höchstens `2 C`, und nichts hebt sich weg. Eine **gleichmäßige** Schranke gibt es
+also nicht, und `…_of_bdd` greift nicht.
+
+Die dominierte Fassung greift, mit `g = C + 2 τ C`, und
+`integral_sub_mul_eq_zero_of_chainCompensated` sagt damit, was die Probe kostet:
+**der zufällige Index muß einen endlichen Erwartungswert haben.**
+
+**Und das ist keine Formalisierungsschuld, sondern die Voraussetzung des
+Manuskripts.** `thm:pathjumpMP`(b) trägt `𝔼[N t] < ∞`; hier kommt sie von der
+anderen Seite heraus. Der lokale Satz verlangt nichts dergleichen, und in dem
+Augenblick, in dem die Orthogonalität an einem **zufälligen** statt an einem
+festen Index gelesen wird, ist das erste Moment dieses Index genau der Preis.
+Der Erneuerungszähler eines Sprungprozesses mit beschränkter Rate hat ihn; der
+lokale Zweig hat ihn nicht, und deshalb ist die Trennung der beiden Zweige des
+Manuskripts an dieser Stelle wiederzufinden.
+
+#### Die Stolperstelle, und sie ist die alte in neuem Gewand
+
+`ℕ∞` und `WithTop ℕ` sind **für `rw` nicht dasselbe**. `ENat` ist ein `def` über
+`WithTop ℕ` mit eigenen Ordnungsinstanzen; ein `min`, das man bei `ℕ∞`
+hinschreibt, und eines, das `IsStoppingTime.min` erzeugt, sind definitionsgleich
+und passen nicht als `rw`-Muster aufeinander. Der Assoziativitätsschritt des
+Beweises scheitert mit „Application type mismatch: `τ ω` has type `ℕ∞` but is
+expected to have type `WithTop ℕ`" an einem Term, dem er gleich ist. Die neuen
+Aussagen sind deshalb bei `WithTop ℕ` gestellt — dem Typ, über dem `stoppedValue`
+und `IsStoppingTime` selbst geschrieben sind. Das ist dieselbe Falle wie
+`ENNReal` gegen `WithTop ℝ≥0` beim achtzehnten Lauf des 2026-09-10; sie steht
+jetzt auch an der Deklaration.
+
+#### Vorschlag 2 des Vorlaufs war seit dem 2026-09-12 erledigt — und ist um ein Haar zum zweiten Mal gebaut worden
+
+Der Vorlauf hatte `condExp_sup_null` als zweite Lücke vorgeschlagen — die
+Augmentierung um Nullmengen, mit der Begründung, Teil C warte seit dem
+2026-09-12 auf die Antwort, ob die Entwicklung sie verträgt. Der Bauteil ist in
+diesem Lauf gebaut, übersetzt und mit `#print axioms` geprüft worden
+(`nullEvents`, `indep_nullEvents`, `condExp_sup_nullEvents`,
+`augmentedFiltration`, `martingale_augmentedFiltration`) — **und dann wieder
+entfernt**, weil er eine Doppelung ist.
+
+`Suggested.lean` hat seit dem 2026-09-12 den Abschnitt `Augmentation` mit
+siebzehn Deklarationen: `MeasureTheory.Filtration.augment`,
+`condExp_eq_condExp_of_forall_exists_ae_eq`, `condExp_augment`,
+`Martingale.augment`, `Martingale.of_augment`, `IsStoppingTime.augment`,
+`Locally.augment`. Die Vorfrage des Nutzers ist dort beantwortet, und zwar in
+**beiden** Richtungen; der Abschnitt „Die Augmentierung einer Filtration um die
+Nullmengen, und was sie trägt" der README sagt es ausdrücklich.
+
+**Und die vorhandene Fassung ist die bessere.** Sie erklärt die Augmentierung als
+`eventuallyMeasurableSpace (𝓕 i) (ae μ) ⊓ m₀` — die Mengen, die sich von einer
+`𝓕 i`-Menge um eine Nullmenge unterscheiden — statt als Verband `𝓕 i ⊔ 𝒩`, und
+ihr `condExp_eq_condExp_of_forall_exists_ae_eq` braucht **kein**
+`IsProbabilityMeasure`, während der Weg über die Unabhängigkeit es braucht: bei
+einem allgemeinen endlichen Maß hat eine konulle Menge das Maß `μ univ` und nicht
+`1`, und die Produktformel fällt.
+
+**Der Fehler, an dem die Doppelung aufgeflogen ist, ist lehrreich.**
+`Filtration.augment_apply := rfl` scheiterte mit „Not a definitional equality",
+und der Grund war nicht die Mathematik: eine Deklaration `def Filtration.augment`
+landet im **Wurzelnamensraum** `Filtration`, während Punktnotation auf einer
+`MeasureTheory.Filtration` nach `MeasureTheory.Filtration.augment` sucht. Der
+Name war schon vergeben, die neue Definition stand daneben, und `𝓕.augment`
+zeigte auf die alte. Eine Doppelung, die sich selbst meldet, ist die billigste
+Art, eine zu finden.
+
+**Das ist die dritte Doppelung in fünf Tagen** — nach `IsSeparating`
+(zweiundzwanzigster Lauf des 2026-09-17) und der nachgebauten
+Verteilungskonvergenz (zwanzigster Lauf desselben Tages). Alle drei entstanden
+gleich: ein Vorschlag am Ende eines Laufs nennt eine Lücke, ohne die eigene Datei
+danach durchsucht zu haben. **Ein Vorschlag, der eine Lücke behauptet, hat ab
+jetzt den Namen zu nennen, unter dem er in `Suggested.lean` gesucht hat.**
+
+#### Was offen bleibt
+
+* Die Probe von Meilenstein 10 über der Sprungkonstruktion braucht jetzt genau
+  noch **zwei** Eingaben, und keine davon ist Martingaltheorie: der endliche
+  Erwartungswert des Erneuerungszählers, und daß er eine Stoppzeit der
+  vergrößerten Filtration ist.
+* Die Voraussetzungen **(a)** und **(b)** von `mpSolution_of_tendsto` bleiben,
+  wie sieben Vorläufe sie hinterlassen haben: Eingabe eines Straffheitsarguments,
+  das das Manuskript ausdrücklich nicht liefert.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Der endliche Erwartungswert des Erneuerungszählers.** *Aussage:*
+   `integrable_stepIndex_jumpMeasure` — unter `hL : ∀ x, lam x ≤ L` und
+   `0 < lam` ist `fun ω ↦ ((stepIndex (jumpTime lam ω.1 ω.2) t ω : ℕ) : ℝ)`
+   integrierbar bezüglich `jumpMeasure mu nu`. *In `Suggested.lean` gesucht
+   unter:* `integrable_stepIndex`, `stepIndex` und `integrable_natCast` — nichts
+   davon steht dort. *Worauf sie ruht:* punktweise ist
+   `jumpTime lam y ξ n ≥ (1/L) · ∑_{k<n} ξ k`, weil jede Haltezeit
+   `ξ k / lam (y k) ≥ ξ k / L` ist — dieselbe Ungleichung, die bei C.5a die
+   Nichtexplosion gibt —, also `{stepIndex ≥ n} ⊆ {∑_{k<n} ξ k ≤ L t}`, und die
+   rechte Seite ist ein Gammaschwanz und summierbar. Daß die Integrierbarkeit
+   einer `ℕ`-wertigen Größe die Summierbarkeit ihrer Schwänze ist, ist am
+   Quelltext zu belegen und nicht zu raten. *Warum jetzt:* mit ihr ist
+   `integral_sub_mul_eq_zero_of_chainCompensated` auf die Sprungkonstruktion
+   anwendbar, und Voraussetzung (c) der Probe ist damit vollständig — der
+   einzige der drei Punkte, den das Manuskript überhaupt zu liefern verspricht.
+2. **Der Erneuerungszähler als Stoppzeit der vergrößerten Filtration.**
+   *Aussage:* `isStoppingTime_stepIndex_sup_comap_snd` — `stepIndex` zu fester
+   Zeit ist eine Stoppzeit von
+   `fun i ↦ naturalFiltration (jumpChain E) i ⊔ comap Prod.snd ⊤`. *In
+   `Suggested.lean` gesucht unter:* `isStoppingTime_stepIndex` und
+   `stepIndex_sup` — nichts davon steht dort. *Worauf sie ruht:* auf dem Befund
+   des fünften Laufs, daß über dieser Filtration die **ganze** Uhr schon bei
+   `i = 0` in der σ-Algebra liegt — die Aussage ist deshalb `IsStoppingTime` aus
+   Meßbarkeit ganz unten und kostet drei Zeilen. *Warum jetzt:* sie ist die
+   zweite und letzte Hypothese, die
+   `integral_sub_mul_eq_zero_of_chainCompensated` an der Sprungkonstruktion
+   verlangt, und sie ist billig; erst mit beiden ist der Punkt abgeschlossen und
+   nicht bloß vorbereitet.
+
+### 2026-09-18, siebter Lauf des Tages — beide Eingaben der Probe stehen; und die zweite war nicht „umsonst", sondern brauchte die Augmentierung, weil `sInf ∅ = 0` die Explosionsmenge in jedes Ereignis `{stepIndex ≤ i}` hineinlügt
+
+**Beide Vorschläge des Vorlaufs sind eingelöst.** Vierzehn Deklarationen mehr in
+`TauCeti/MartingaleProblems/Suggested.lean` — dreizehn Sätze und eine Definition
+—, in drei neuen Abschnitten (`NatLayerCake`, `RenewalMean`, `ClockFiltration`),
+alle drei Roadmap-Dateien ohne einen Fehler und ohne ein `sorry` durch
+`scripts/check_suggested.py` gegen v4.33.1, alle dreizehn Sätze mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft. Die
+Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 10.
+
+Damit hat Voraussetzung (c) der Probe von Meilenstein 10 über der
+Sprungkonstruktion **keine offene Eingabe mehr**:
+`integral_sub_mul_eq_zero_of_chainCompensated` verlangte `hτint` und `hτ`, und
+beide sind jetzt an der Sprungkonstruktion eingelöst.
+
+#### Vorschlag 1: der endliche Erwartungswert, und wie grob die Abschätzung sein darf
+
+`integrable_stepIndex_jumpMeasure` steht, unter `0 < lam ≤ L`, `Measurable lam`
+und `0 ≤ t`.
+
+**Der Vorlauf hatte den Gammaschwanz vorgeschlagen** — die `n`-te Partialsumme
+unabhängiger Exp(1)-Wartezeiten ist Gamma(n) verteilt, und deren Schwanz ist
+summierbar. Dieses Gesetz hat Mathlib nicht, und **es wird auch nicht
+gebraucht.** Die Abschätzung, die trägt, wirft fast alles weg:
+
+> `stepIndex ≥ n+1` erzwingt `∑_{k ≤ n} ξ k ≤ L t`, und weil die Wartezeiten
+> f.s. positiv sind, erzwingt das, daß **jede einzelne** der ersten `n+1`
+> Wartezeiten in `Iic (L t)` liegt.
+
+Das ist eine **Zylindermenge**, und für die rechnet `Measure.infinitePi_pi` das
+Maß aus: `q^(n+1)` mit `q = expMeasure 1 (Iic (L t))`, und `q < 1`, weil die
+Exponentialverteilung unterhalb jedes Punktes weniger als die volle Masse hat
+(`expMeasure_one_Iic_lt_one`, aus dem schon vorhandenen `expMeasure_Ioi`). Eine
+geometrische Reihe, und fertig. Kein Gammagesetz, keine erzeugende Funktion,
+keine Unabhängigkeitsaussage über die hinaus, die für Borel--Cantelli schon
+dasteht.
+
+**Der Befund, der daran allgemein ist:** die Ungleichung, die das trägt, ist
+`sum_div_le_jumpTime` — dieselbe, die bei beschränkter Rate die Nichtexplosion
+gibt. Erwartungswert des Erneuerungszählers und Nichtexplosion ruhen bei
+beschränkter Rate auf **einer** Ungleichung; sie unterscheiden sich nur darin,
+ob man sie summiert oder gegen unendlich laufen läßt.
+
+**Und eine Lücke in Mathlib, die auf dem Weg lag.** Die Integrierbarkeit einer
+`ℕ`-wertigen Größe *ist* die Summierbarkeit ihrer Schwänze — das ist die
+zählende Schichtkuchenformel. Mathlib hat die **stetige**
+(`lintegral_eq_lintegral_meas_lt`,
+`MeasureTheory/Integral/Layercake.lean:496`), und die zählende nicht; an
+`upstream/master` `a218e50f981` gesucht unter `lintegral_natCast`,
+`integrable_natCast` und `tsum_measure_lt`, kein Treffer. In `Suggested.lean`
+unter denselben drei Namen gesucht, ebenfalls nicht vorhanden. Sie ist gebaut:
+`lintegral_natCast_eq_tsum_measure` und
+`integrable_natCast_of_tsum_measure_ne_top`, drei Zeilen aus `lintegral_tsum`,
+**ohne** Ordnung des Index und **ohne** σ-Endlichkeit, die die stetige Fassung
+beide braucht. Sie gehört zu `TODO.md` Punkt 8; die dortige Zahl ist in diesem
+Lauf nicht nachgezählt worden und wird deshalb nicht genannt.
+
+#### Vorschlag 2: die Stoppzeit — und die Begründung des Vorlaufs war in beiden Hälften falsch
+
+Der Vorlauf hatte geschrieben, die Aussage sei „`IsStoppingTime` aus Meßbarkeit
+ganz unten" und koste „drei Zeilen", weil über der vergrößerten Filtration die
+ganze Uhr schon bei `i = 0` in der σ-Algebra liege. **Beides stimmt nicht.**
+
+**Erstens ist der Erneuerungszähler nicht uhrmeßbar.** `jumpTime` teilt die
+`k`-te Wartezeit durch `lam` an der `k`-ten Marke der *Kette*; der Zähler liest
+also beide Faktoren des Produktraums. Was den Beweis trägt, ist etwas anderes
+und Genaueres: er liest sie **bis zum selben Index**, und die scharfe Schranke
+ist `k ≤ i + 1` und nicht `k ≤ i`. Die Rekursion
+`T (k+1) = T k + ξ k / lam (y k)` liest den Zustand **vor** dem Sprung, also ist
+die `(i+1)`-te Sprungzeit bei `i` noch meßbar; erst der Zustand *nach* ihr ist
+es nicht. `measurable_clockFiltration_jumpTime` sagt das, mit dieser Schranke.
+
+**Zweitens ist die Aussage über der schlichten Filtration falsch**, und der
+Grund steht seit dem zweiten Lauf dieses Tages in derselben Datei:
+`stepIndex_le_iff` sagt, daß `{stepIndex T t ≤ i}` das Ereignis `t < T (i+1)`
+**oder** die Explosionsmenge ist. Auf letzterer gibt `sInf ∅ = 0` den Müllwert
+zurück, und der zweite Zweig liest **alle** Sprungzeiten auf einmal; er liegt in
+keinem `𝓖 i`. Der Blocktext jenes Laufs sagt es wörtlich: „So the renewal count
+is a stopping time for the filtration of the first `n + 1` jump times **only
+under non explosion** — one more place where `sInf ∅ = 0` makes a statement
+quietly true."
+
+**Das ist lehrreich, und zwar über die Arbeitsweise.** Die richtige Antwort
+stand seit dem zweiten Lauf desselben Tages in **derselben Datei**
+(`stepIndex_le_iff`, Zeile 34857), gut tausend Zeilen über dem Abschnitt
+`ChainGrowth`, aus dem der widersprechende Vorschlag kam. Der sechste Lauf hat beim
+Vorschlagen nach `isStoppingTime_stepIndex` und `stepIndex_sup` gesucht — den
+Namen, die er zu bauen gedachte — und nicht nach `stepIndex_le_iff`, dem Namen
+der Aussage, die dazu etwas zu sagen hat. Die Regel jenes Laufs („ein Vorschlag,
+der eine Lücke behauptet, hat den Namen zu nennen, unter dem er gesucht hat")
+verhindert **Doppelungen**, nicht **Widersprüche**: eine Suche nach dem eigenen
+künftigen Namen findet nie die vorhandene Aussage über denselben Gegenstand.
+Zu suchen ist nach dem **Gegenstand** — hier `stepIndex` —, nicht nach dem
+geplanten Namen.
+
+**Die Antwort ist die Augmentierung**, und das ist die erste Stelle dieser
+Entwicklung, an der sie kein Komfort ist, sondern der Inhalt: die
+Explosionsmenge ist eine Nullmenge, und Nullmengen sind genau das, was
+`Filtration.augment` hinzufügt. `isStoppingTime_stepIndex_augment` ist die
+Aussage über `(clockFiltration E).augment (jumpMeasure mu nu)`.
+
+**Und sie kostet oberhalb nichts.** Der Abschnitt `Augmentation` steht seit dem
+2026-09-12 mit siebzehn Deklarationen: `Martingale.augment` trägt das
+kompensierte Kettenmartingal hinüber, `Filtration.le_augment` das Gewicht, und
+`Martingale.of_augment` bringt es zurück. Die Vorfrage des Nutzers vom
+2026-09-12 — „verträgt der Rest der Entwicklung die augmentierte Filtration?" —
+ist damit an einer Anwendung eingelöst und nicht nur abstrakt beantwortet.
+
+**Das ist der zweite Müllwert dieser Arbeit, der eine Aussage kippt**, nach
+`x / 0 = 0` am absorbierenden Zustand. Die Regel des Nutzers („auf die Müllwerte
+muß man schon aufpassen") hat hier zum zweiten Mal getragen, und beide Male war
+die Reparatur dieselbe Bauart: nicht die Aussage abschwächen, sondern den Raum
+ehrlich machen — dort durch `ℝ≥0∞`, hier durch die Nullmengen.
+
+#### Die Stolperstelle des Laufs, und sie sitzt im Werkzeug und nicht in der Mathematik
+
+Beide Abschnitte gingen im **Entwurf** fehlerfrei durch `lake env lean` und
+fielen beim Einsetzen in die Datei mit fünf Fehlern durch. Der Grund war weder
+ein Beweis noch eine Aussage: `scripts/build_probe_oleans.sh` baut die
+`.olean`, und ein Entwurf daneben führt seine **eigene Präambel**. Meine hatte
+`open scoped NNReal ENNReal`, `Suggested.lean` hat nur `open scoped NNReal` —
+also ist `ℝ≥0∞` dort **keine Notation**, und vier Signaturzeilen scheiterten mit
+„expected token", zwei weitere Fehler waren Folgefehler.
+
+**Merksatz für den nächsten Entwurf:** die Präambel des Entwurfs muß die der
+Zieldatei sein, Zeile für Zeile, und nicht die bequemere. Der Prüflauf über die
+ganze Datei ist die einzige Instanz, die das merkt; ein Entwurf, der „durchgeht",
+sagt nichts über die Datei. Im Code steht deshalb jetzt `ENNReal` und nicht
+`ℝ≥0∞` — die übrigen achtzig Vorkommen der Notation in der Datei stehen
+sämtlich in Kommentaren, wo sie nichts kostet.
+
+#### Was offen bleibt
+
+* Die Voraussetzungen **(a)** und **(b)** von `mpSolution_of_tendsto` bleiben,
+  wie acht Vorläufe sie hinterlassen haben: Eingabe eines Straffheitsarguments,
+  das das Manuskript ausdrücklich nicht liefert.
+* Die Probe von Meilenstein 10 über der Sprungkonstruktion ist damit an
+  Voraussetzung (c) **fertig**; was noch fehlt, ist das Zusammensetzen — die
+  drei Teile zu *einer* Deklaration über der augmentierten Uhrenfiltration.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Das Zusammensetzen von Voraussetzung (c) über der Sprungkonstruktion.**
+   *Aussage:* `integral_sub_mul_eq_zero_jumpChain_stepIndex` — für beschränktes
+   meßbares `f`, `0 < lam ≤ L` und `0 ≤ s ≤ t` verschwindet
+   `∫ (M_{N t} − M_{N s}) · W` über `jumpMeasure mu nu`, wobei `M` das
+   kompensierte Kettenmartingal, `N` der Erneuerungszähler und `W` beschränkt und
+   `hσ.measurableSpace`-meßbar ist. *In `Suggested.lean` gesucht unter:*
+   `integral_sub_mul_eq_zero_jumpChain`, `_stepIndex` und `chainCompensated_jump`
+   — nichts davon steht dort. *Worauf sie ruht:* auf
+   `integral_sub_mul_eq_zero_of_chainCompensated`, dessen fünf Eingaben jetzt
+   alle einzeln dastehen — `martingale_chainCompensated` über
+   `condExp_jumpChain_clock` und `Martingale.augment`,
+   `integrable_stepIndex_jumpMeasure`, `isStoppingTime_stepIndex_augment` zweimal
+   (bei `s` und bei `t`), und die Monotonie des Erneuerungszählers in der Zeit.
+   *Warum jetzt:* es ist Buchhaltung ohne offene Entscheidung, und es ist der
+   Punkt, an dem die Probe von Meilenstein 10 ihre martingaltheoretische Hälfte
+   als **eine** Aussage hat statt als fünf Bausteine; ein Lauf, der sie nicht
+   zusammensetzt, hinterläßt genau das, wovor der sechste Lauf gewarnt hat —
+   Vorbereitetes statt Abgeschlossenes.
+2. **Die Monotonie des Erneuerungszählers, falls sie fehlt.** *Aussage:*
+   `stepIndex_mono_time` — `s ≤ t → stepIndex T s ≤ stepIndex T t` für monotones
+   `T`. *In `Suggested.lean` gesucht unter:* `stepIndex_mono` — nicht vorhanden;
+   `stepIndex_le`, `stepIndex_le_iff` und `stepIndex_eq_iff` stehen dort, aber
+   keine Monotonie im **Zeitargument**. *Worauf sie ruht:* auf `stepIndex_le`
+   und `lt_stepIndex_succ`, also auf zwei Zeilen; ohne Monotonie von `T` ist sie
+   sogar unbedingt wahr, weil `sInf` über einer wachsenden Menge fällt. *Warum
+   jetzt:* sie ist die `hστ`-Eingabe von Punkt 1 und die einzige, die dort noch
+   nicht benannt dasteht.
+### 2026-09-18, achter Lauf des Tages — Voraussetzung (c) über der Sprungkonstruktion steht als *eine* Aussage; und die Eingabe, die der Vorlauf für „unbedingt wahr" hielt, ist mit einem Zeugen widerlegt
+
+**Beide Vorschläge des Vorlaufs sind eingelöst, der zweite aber nicht so, wie er
+gestellt war.** Vier neue Deklarationen in
+`TauCeti/MartingaleProblems/Suggested.lean` und drei geänderte Signaturen, alle
+drei Roadmap-Dateien ohne einen Fehler und ohne ein `sorry` durch
+`scripts/check_suggested.py` gegen v4.33.1, alle vier neuen Sätze mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft. Die
+Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 10.
+
+#### Vorschlag 2 zuerst, weil er den Weg von Vorschlag 1 geändert hat
+
+Der Vorlauf hatte `stepIndex_mono_time` als Buchhaltung angekündigt: „ohne
+Monotonie von `T` ist sie sogar **unbedingt** wahr, weil `sInf` über einer
+wachsenden Menge fällt." Der zweite Halbsatz stimmt, der erste nicht, und die
+Lücke zwischen beiden ist genau der Müllwert.
+
+`stepIndex T t = sInf {n | t < T (n+1)}`. Für `s ≤ t` ist die Menge bei `s` eine
+**Obermenge** der Menge bei `t`, also fällt das Infimum — *solange beide Mengen
+nichtleer sind*. Ist die Menge bei `t` leer, so gibt `sInf ∅ = 0` den Müllwert
+zurück, und die Menge bei `s` kann sehr wohl nichtleer sein und ein positives
+Infimum haben. Dann **fällt** der Zähler mit wachsender Zeit.
+
+`not_stepIndex_mono_time` ist der Zeuge, und er ist beschränkt und monoton:
+
+> `T = (0, 0, 5, 5, …)`, `s = 1`, `t = 6`. Kein Fenster enthält `6`, also ist
+> `stepIndex T 6 = 0`. Aber `T 1 = 0 ≤ 1 < 5 = T 2`, also ist
+> `stepIndex T 1 = 1`.
+
+Ein beschränktes monotones `T` ist gerade der **explosive** Fall, und damit ist
+gesagt, wo die Aussage scheitert: auf der Explosionsmenge und nur dort. Die
+richtige Fassung `stepIndex_mono_time` trägt als einzige Voraussetzung die
+Nichtexplosion **zur späteren Zeit**, `∃ m, t < T (m+1)`, und ihr Beweis ist eine
+Zeile — `stepIndex_le` an der Stelle `stepIndex T t`, denn ein Fenster, das `t`
+enthält, enthält auch `s`. Monotonie von `T` kommt darin nicht vor.
+
+**Das ist der dritte Müllwert dieser Arbeit, der eine Aussage kippt**, nach
+`x / 0 = 0` am absorbierenden Zustand und `sInf ∅ = 0` in `{stepIndex ≤ i}` —
+und der zweite und dritte sind derselbe Müllwert an zwei Stellen. Die Regel des
+Nutzers („auf die Müllwerte muß man schon aufpassen") hat hier zum dritten Mal
+getragen.
+
+#### Was das den Satz darüber gekostet hat: eine Abschwächung, keine Reparatur
+
+`integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_dominated` verlangte
+`hστ : σ ≤ τ` **überall**. Über der Sprungkonstruktion ist das nach dem Zeugen
+**falsch**. Der Ausweg ist keine Reparatur der Anwendung, sondern die schwächere
+Voraussetzung im Satz: `hστ : ∀ᵐ ω ∂μ, σ ω ≤ τ ω`.
+
+**Und sie ist die, die der Beweis liest.** `hστ` kommt dort dreimal vor —
+in `hzero` unter einem `integral_congr_ae`, in `hbound` unter einem `∀ᵐ`, und in
+`hlim` unter einem `filter_upwards`. Jedes Mal steht es schon innerhalb einer
+f.s.-Aussage; die Umstellung ist dreimal `filter_upwards [hστ]` statt
+`filter_upwards`, und der Hilfssatz `hindex` nimmt seine Ordnungsvoraussetzung
+jetzt punktweise statt universell. Es ist die stehende Regel dieses Auftrags
+(„eine Roadmap-Aussage trägt die schwächsten Hypothesen, unter denen sie gilt")
+an einer Stelle, an der die bequemere Fassung die Anwendung ausgeschlossen
+hätte. `_of_bdd` und `_of_chainCompensated` erben die Abschwächung.
+
+**Der Zwischenweg, den ich nicht genommen habe, und warum.** Man könnte statt
+dessen `σ` durch `min σ τ` ersetzen; die beiden stimmen f.s. überein und die
+Ungleichung gilt dann überall. Das geht nicht: das Gewicht `W` ist meßbar für
+`hσ.measurableSpace`, und `(hσ.min hτ).measurableSpace` ist **kleiner**. Die
+Datei sagt das an
+`integral_sub_mul_eq_zero_of_martingale_stoppedValue_min` selbst — „truncating
+the earlier index too would shrink that σ-algebra and lose the weight". Die
+Abschwächung der Voraussetzung ist der einzige Weg, der das Gewicht behält.
+
+#### Vorschlag 1: das Zusammensetzen
+
+`integral_sub_mul_eq_zero_jumpChain_stepIndex` steht. Für beschränktes meßbares
+`f`, `0 < lam ≤ L` und `0 ≤ s ≤ t` verschwindet
+
+> `∫ (M_{N t} − M_{N s}) · W ∂(jumpMeasure mu nu)`
+
+mit `M` dem kompensierten Kettenmartingal, `N` dem Erneuerungszähler und `W`
+beschränkt und meßbar für die σ-Algebra des früheren Zählers. Damit hat
+Voraussetzung (c) der Probe von Meilenstein 10 über der Sprungkonstruktion ihre
+martingaltheoretische Hälfte als **eine** Aussage statt als fünf Bausteine.
+
+Die fünf Eingaben, jede an ihrer Stelle:
+
+* das Martingal — `martingale_chainCompensated_jumpChain`, neu, aus
+  `martingale_chainCompensated` über `condExp_jumpChain_clock`, und dann
+  `Martingale.augment`;
+* der endliche Erwartungswert — `integrable_stepIndex_jumpMeasure` (siebter
+  Lauf);
+* die Stoppzeiteigenschaft zweimal — `isStoppingTime_stepIndex_augment` (siebter
+  Lauf), bei `s` und bei `t`;
+* die Ordnung der beiden Zähler — `stepIndex_mono_time`, f.s. aus
+  `ae_exists_lt_jumpTime`;
+* die Endlichkeit von `τ` — `WithTop.coe_ne_top`, eine Zeile.
+
+**Was die Schranke `lam ≤ L` in dieser Aussage wirklich trägt**, und es ist
+zweierlei und nicht einerlei: die Integrierbarkeit des Zählers *und* die
+Ausschöpfung der Halbachse durch die Sprungzeiten. Die zweite ist die, die die
+f.s.-Monotonie liefert. Beide fehlen im lokalen Zweig, und das ist die formale
+Entsprechung dazu, daß das Manuskript `𝔼[N t] < ∞` in `thm:pathjumpMP`(b) führt
+und nicht in (a).
+
+Über `E` steht nichts als `[MeasurableSpace E]`; keine Topologie kommt vor.
+
+#### Eine Stolperstelle, und sie ist dieselbe Bauart wie die des Vorlaufs
+
+`(((n : ℕ) : WithTop ℕ).untopA : ℕ) = n` ist `WithTop.untopD_coe`, aber `rw`
+findet das Muster nicht, solange die beiden Seiten als **unreduzierte
+Applikationen** `(fun ω ↦ …) ω` dastehen — `Integrable.congr` läßt sie so
+stehen. `simp only [huntop]` β-reduziert vorher und trifft. Wie beim
+`ENNReal`-gegen-`WithTop ℝ≥0`-Fall des 2026-09-10 ist das kein Beweisproblem,
+sondern eines der syntaktischen Mustererkennung, und die Abhilfe ist dieselbe:
+nicht am Ziel rewriten, sondern das Ziel normalisieren.
+
+#### Nebenbei: die Lücke des Vorlaufs ist eingetragen und die Negativprüfung nachgeführt
+
+Der siebte Lauf hatte die **zählende Schichtkuchenformel** als Mathlib-Lücke
+gefunden und ausdrücklich offengelassen, sie in `TODO.md` Punkt 8 einzutragen,
+weil er die dortige Zahl nicht nachgezählt hatte. Sie steht jetzt dort als die
+**sechsundzwanzigste**, und die Überschrift ist mitgezählt.
+
+Der Befund ist **selbständig nachgeprüft** und nicht aus dem Bericht des
+Vorlaufs übernommen: `upstream master` frisch geholt (`4541bc634eb`,
+2026-09-18), und gesucht nach dem **Gegenstand** und nicht nur nach dem
+geplanten Namen — `lintegral_natCast`, `integrable_natCast`, `tsum_measure_lt`
+über `Mathlib/`, dazu die Muster `∑' n, μ {…}` und
+`tsum_meas`/`lintegral_eq_tsum_meas`/`measure_le_lintegral` über
+`Mathlib/MeasureTheory/` und `Mathlib/Probability/`, und der ganze Inhalt von
+`Layercake.lean`. Die Treffer dort sind sämtlich Überdeckungs- und
+Portmanteau-Aussagen; eine zählende Fassung steht nirgends. Alles in jener Datei
+ist ein Integral über `Ioi 0` gegen das Lebesguemaß.
+
+Die Behauptung ist seither in `scripts/check_negatives.py` mechanisiert; der Lauf
+meldet über **42** Behauptungen keinen unerwarteten Treffer, und die Angabe im
+Kopf von `TODO.md` Punkt 8 — bisher `f61f3ed7633` vom 2026-09-17 und 37
+Behauptungen — ist auf diesen Stand nachgeführt.
+
+#### Was offen bleibt
+
+* Die Voraussetzungen **(a)** und **(b)** von `mpSolution_of_tendsto` bleiben,
+  wie neun Vorläufe sie hinterlassen haben: Eingabe eines Straffheitsarguments,
+  das das Manuskript ausdrücklich nicht liefert.
+* Die Probe von Meilenstein 10 über der Sprungkonstruktion hat mit dieser
+  Aussage ihre martingaltheoretische Hälfte; was die Probe zur *Probe* macht —
+  die Verteilungskonvergenz der reskalierten Sprungprozesse gegen eine Lösung —
+  ist Voraussetzung (a) und damit dasselbe Straffheitsargument.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die Zeitorthogonalität statt der Sprungnummernorthogonalität.**
+   *Aussage:* `integral_sub_mul_eq_zero_jumpProcess_time` — dieselbe
+   Orthogonalität, aber mit dem **Sprungprozeß zur Zeit** `X t = ω.1 (N t)`
+   statt mit der Kette am Zähler, also
+   `∫ (F (X t) − F (X s) − ∫_s^t 𝒜 F (X r) dr) · W = 0`. *In `Suggested.lean`
+   gesucht nach dem Gegenstand und nicht nach dem Namen:* unter `stepIndex` und
+   `jumpProcess` zusammen stehen `jumpProcess_isMPSolution` und
+   `jumpProcess_isLocalMPSolution`, also die Aussage über der **Uhrenzeit** —
+   aber nicht über der augmentierten Uhrenfiltration und nicht in der Gestalt,
+   die die Probe von Meilenstein 10 verlangt. *Worauf sie ruht:* auf
+   `integral_sub_mul_eq_zero_jumpChain_stepIndex` und auf der Identifikation des
+   Kompensators am Zähler mit dem Zeitintegral, die
+   `jumpMeasure_integral_sub_eq_intervalIntegral` schon hat. *Warum jetzt:* der
+   Block, der heute geschlossen wurde, sagt selbst, was ihm fehlt — der
+   Abschnittskopf vor `StepIndexJunk` schreibt, „what the probe therefore proves is
+   an orthogonality at the **jump number**, and what `ex:invariance` speaks of is
+   one at the **time**. Nothing below closes that." Jetzt steht die erste
+   Hälfte, und die zweite ist der benannte Rest.
+2. **Der Erneuerungszähler als Stoppzeit über der *Sprungzeit*filtration,
+   falls Punkt 1 sie braucht.** *Aussage:* `isStoppingTime_stepIndex_point` —
+   `stepIndex (jumpTime lam ω.1 ω.2)` als Stoppzeit der augmentierten
+   **Punkt**filtration der Sprungzeiten statt der Uhrenfiltration. *In
+   `Suggested.lean` gesucht unter dem Gegenstand:* `pointFiltration` steht dort
+   mit `pointFiltrationE_eq_stepPathFiltrationE`, aber keine Aussage verbindet
+   `pointFiltration` mit `stepIndex` als Stoppzeit. *Worauf sie ruht:* auf
+   `stepIndex_le_iff_of_exists` und derselben Augmentierung wie heute. *Warum
+   jetzt:* die Uhrenfiltration ist für die Kette die richtige und für den
+   **Prozeß** die zu große — sie liest alle Wartezeiten schon bei `i = 0` —, und
+   Punkt 1 wird an dieser Stelle entscheiden müssen, welche Filtration die
+   Aussage trägt.

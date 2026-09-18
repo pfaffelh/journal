@@ -67,7 +67,7 @@ Label `awaiting-review`.
    relativen Kompaktheitskriterien (`SkorokhodSpace` ist vollständig).
 
    *Und eine Zahl, die die Liste gar nicht führt:* Punkt 8 unten hat
-   dreiundzwanzig benannte Mathlib-Lücken, teils maschinell nachgeprüft.
+   fünfundzwanzig benannte Mathlib-Lücken, teils maschinell nachgeprüft.
 
 2. **Die `scratch/`-Verzeichnisse entfernen.** In
    `TauCeti/MartingaleProblems/scratch/` liegen die Entwicklungs-Stubs, in denen
@@ -215,21 +215,21 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Dreiundzwanzig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Sechsundzwanzig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
 Alle zweiundzwanzig beim Beweisen aufgefallen, und die ersten vier sind kleine,
 in sich abgeschlossene Beiträge. Sie gehören thematisch zu
 `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben.
 
-**Sämtliche Negativaussagen dieses Punktes sind am 2026-09-17 gegen
-`upstream/master` `f61f3ed7633` (2026-09-17) nachgeprüft.** Eine von ihnen war
-falsch geworden und ist berichtigt: die Kompositionsaussage der siebzehnten
-Lücke steht auf `master` seit dem 2026-08-25. Alle übrigen stehen. Die Prüfung
-ist mechanisiert und wiederholbar — `scripts/check_negatives.py` führt jede
-Behauptung mit ihrem Suchmuster und den Dateien, in denen ein Treffer bekannt
-und harmlos ist, und meldet jeden Treffer daneben; der Lauf vom 2026-09-17
-meldet über 37 Behauptungen **keinen**. Was das Skript nicht leistet, steht in
-seinem Dateikopf: es prüft Zeichenketten, nicht Aussagen.
+**Sämtliche Negativaussagen dieses Punktes sind am 2026-09-18 gegen
+`upstream/master` `4541bc634eb` (2026-09-18) nachgeprüft.** Am 2026-09-17 war
+eine von ihnen falsch geworden und ist berichtigt: die Kompositionsaussage der
+siebzehnten Lücke steht auf `master` seit dem 2026-08-25. Alle übrigen stehen.
+Die Prüfung ist mechanisiert und wiederholbar — `scripts/check_negatives.py`
+führt jede Behauptung mit ihrem Suchmuster und den Dateien, in denen ein Treffer
+bekannt und harmlos ist, und meldet jeden Treffer daneben; der Lauf vom
+2026-09-18 meldet über **42** Behauptungen keinen. Was das Skript nicht leistet,
+steht in seinem Dateikopf: es prüft Zeichenketten, nicht Aussagen.
 
 * **Zeithomogenität von `Kernel.traj`.** Daß die Verschiebung einer homogenen
   Markovkette wieder dieselbe Kette ist, steht dort nicht — weder in `v4.33.1`
@@ -829,6 +829,140 @@ seinem Dateikopf: es prüft Zeichenketten, nicht Aussagen.
   `ConvergenceInDistribution.lean`. Die gleichgradige Integrierbarkeit wäre
   dabei über die Schwänze `∫ max (‖ξ i‖ - c) 0 ≤ ε` zu formulieren und nicht
   über `UnifIntegrable`, das ein Maß festhält.
+
+* **Der Erwartungswert der Exponentialverteilung — und der der
+  Gammaverteilung.** Der vierundzwanzigste, gefunden am 2026-09-18 beim
+  Erneuerungsgesetz der großen Zahlen.
+  `Mathlib/Probability/Distributions/Exponential.lean` und
+  `…/Gamma.lean` sagen **nicht**, was `∫ x, x ∂(expMeasure r)` ist; die einzigen
+  Integrale beider Dateien sind die Normierung (`lintegral_exponentialPDF_eq_one`,
+  `lintegral_gammaPDF_eq_one`) und die Verteilungsfunktion
+  (`cdf_expMeasure_eq`, `cdf_gammaMeasure_eq_integral`). In ganz
+  `Mathlib/Probability/Distributions/` gibt es weder ein Lemma mit `mean_` noch
+  eines mit `variance_` im Namen, und `expMeasure` kommt außerhalb seiner eigenen
+  Datei überhaupt nicht vor. Am 2026-09-18 gegen `upstream/master`
+  `a218e50f981` (2026-09-17) und gegen v4.33.1 geprüft.
+
+  Wir haben ihn gleich in der Fassung bewiesen, die für Mathlib die richtige
+  ist: `integral_id_gammaMeasure`, `∫ x, x ∂(gammaMeasure a r) = a / r` für
+  `0 < a`, `0 < r`, mit `integral_id_expMeasure` als Korollar `a = r = 1`. Der
+  ganze Inhalt ist, daß die Dichte gegen die Identität der Eulersche Integrand
+  **eine Stufe höher** ist — `x^(a−1) · x = x^((a+1)−1)` —, worauf
+  `Real.integral_rpow_mul_exp_neg_mul_Ioi` bei `a+1` greift und
+  `Real.Gamma_add_one` die Normierungskonstante wegkürzt. Eine
+  Integrierbarkeitsvoraussetzung kommt darin nicht vor und wird nicht gebraucht:
+  jeder Schritt ist eine Identität von Bochner-Integralen, die auch am Müllwert
+  gilt.
+
+  **Die zweite Hälfte dieses Punktes war eine Lücke und ist keine — hier stand
+  eine falsche Negativaussage, widerlegt am 2026-09-18 im vierten Lauf.** Der
+  dritte Lauf hatte notiert, Mathlibs Eulersches Paar sei unsymmetrisch: der
+  *Wert* von `∫ t in Ioi 0, t^(a−1) · exp(−(r·t))` stehe für **jede** Rate `r`
+  da (`Real.integral_rpow_mul_exp_neg_mul_Ioi`,
+  `Analysis/SpecialFunctions/Gamma/Basic.lean:465`), die *Konvergenz* nur bei
+  `r = 1` (`Real.GammaIntegral_convergent`, `ibid.:66`), und ein skaliertes
+  `GammaIntegral_convergent` gebe es in `Analysis/SpecialFunctions/Gamma/`
+  nicht.
+
+  Der letzte Satz ist wahr und die Folgerung daraus falsch: die skalierte
+  Konvergenz steht **zwei Verzeichnisse weiter**, als
+  `integrableOn_rpow_mul_exp_neg_mul_rpow`
+  (`Analysis/SpecialFunctions/Gaussian/GaussianIntegral.lean:74`), für
+  `x^s · exp(−b·x^p)` mit `−1 < s`, `0 < p`, `0 < b` — dort nur bei `p = 2`
+  benutzt, für das Gaußintegral. Bei `p = 1` ist es genau die Aussage; die
+  Übersetzung ist `Real.rpow_one`. In v4.33.1 wie auf `upstream/master`
+  `a218e50f981` (2026-09-17) nachgesehen.
+
+  Unser `integrableOn_rpow_mul_exp_neg_mul_Ioi` ist deshalb kein Beweis mehr,
+  sondern vier Zeilen über der Mathlib-Aussage, und darüber steht
+  `integrable_id_gammaMeasure` mit demselben Gang wie der Mittelwert, mit
+  `integrable_id_expMeasure` als Korollar `a = r = 1`.
+
+  **Woran die falsche Negativaussage lag, und es ist eine Regel wert:** sie war
+  auf ein *Verzeichnis* eingeschränkt und in diesem Verzeichnis wahr. Ein
+  Pfadfilter, der eng genug ist, macht jede Negativaussage wahr. Gefunden hat
+  sie `scripts/check_negatives.py` — beim **ersten** Durchlauf, nachdem sie dort
+  mit dem Filter `Mathlib/` statt `…/Gamma/` aufgenommen worden war.
+
+  **Damit ist der PR nicht mehr anzukündigen, sondern zu schreiben**, und sein
+  Inhalt steht seit dem vierten Lauf des 2026-09-18 vollständig da: eine
+  Identifikation `gammaPDF_toReal_smul_pow` — die Dichte gegen `x^n` ist der
+  Eulersche Integrand `n` Stufen höher —, darüber `integral_id_gammaMeasure`
+  (`a/r`), `integrable_id_gammaMeasure`, `integral_sq_gammaMeasure`
+  (`a(a+1)/r²`), `integrable_sq_gammaMeasure` und `variance_id_gammaMeasure`
+  (`a/r²`), dazu die vier Exponentialkorollare `a = r = 1`. Mittelwert und
+  zweites Moment unterscheiden sich allein darin, wie oft danach
+  `Real.Gamma_add_one` greift.
+
+  Er gehört neben `Probability/Distributions/Gamma.lean` und braucht **nichts
+  Neues** in `Analysis/` — die skalierte Konvergenz liegt, wie oben, schon in der
+  Gaußdatei. Die Gedächtnislosigkeit der zweiten Lücke dieses Punktes gehört in
+  denselben PR wie die Exponentialkorollare.
+
+* **Die unerhebliche Vergrößerung der bedingten Erwartung.** Der
+  fünfundzwanzigste, gefunden am 2026-09-18 im fünften Lauf, beim Anschluß der
+  Sprungkonstruktion an die Probe von Meilenstein 10.
+
+  Gebraucht wird: ist `m₂` unabhängig von `m₁ ⊔ σ(f)`, so ist
+  `μ[f | m₁ ⊔ m₂] = μ[f | m₁]` fast sicher — die Vergrößerung der
+  Bedingungs-σ-Algebra um eine unabhängige ändert nichts.
+  `Mathlib/Probability/ConditionalExpectation.lean` enthält **genau einen**
+  Satz, `MeasureTheory.condExp_indep_eq` (dort Zeile 42), und der ist der Fall
+  `m₁ = ⊥`: `μ[f | m₂] = μ[f]`. Die Zeichenketten `condExp_sup` und
+  `condexp_sup` kommen in ganz `Mathlib/` nicht vor, und eine Suche nach
+  `condExp` neben `⊔` über `Mathlib/Probability/` und
+  `Mathlib/MeasureTheory/Function/ConditionalExpectation/` gibt nichts. Am
+  2026-09-18 gegen `upstream/master` `a218e50f981` (2026-09-17) und gegen
+  v4.33.1 geprüft, und die Behauptung steht seither in
+  `scripts/check_negatives.py` mit dem Filter `Mathlib/` und keinem engeren.
+
+  Bewiesen ist sie als `condExp_sup_of_indep` in
+  `TauCeti/MartingaleProblems/Suggested.lean`, in der Fassung, die für Mathlib
+  die richtige ist: über beliebigem Banachraum, ohne Topologie auf dem
+  Grundraum, und mit der σ-Algebra des Integranden als eigenem Argument `m₀`
+  statt als `σ(f)` — denn ein Banachraum trägt keine Meßbarkeit, aus der sich
+  `σ(f)` bilden ließe, und wo sie besteht, ist `σ(f)` das kleinste zulässige
+  `m₀`. Der Weg ist der von `condExp_indep_eq` selbst: das π-System der
+  Rechtecke `t₁ ∩ t₂` (`supRectangles`, `isPiSystem_supRectangles`,
+  `generateFrom_supRectangles`), die Fortsetzung darüber
+  (`setIntegral_eq_of_forall_supRectangle`) und `condExp_indep_eq` als Motor —
+  auf einem Rechteck faktorisiert das Integral eines auf `t₁` abgeschnittenen
+  Integranden, und dort schließt die definierende Eigenschaft von `μ[f | m₁]`.
+
+  Der PR ist klein und gehört in dieselbe Datei wie `condExp_indep_eq`, das er
+  verallgemeinert: die drei Rechtecksaussagen, die Faktorisierung
+  `setIntegral_eq_measureReal_smul_integral_of_indep`, der Satz, und als
+  Anwendung `condExp_sup_comap_snd` — die Vergrößerung um den zweiten Faktor
+  eines Produktmaßes, wofür `ProbabilityTheory.indepFun_prod`
+  (`Mathlib/Probability/Independence/Basic.lean:727`) die Unabhängigkeit liefert.
+
+* **Die zählende Schichtkuchenformel.** Der sechsundzwanzigste, gefunden am
+  2026-09-18 im siebten Lauf, beim Erwartungswert des Erneuerungszählers, und
+  am achten Lauf desselben Tages gegen frisches `upstream/master`
+  `4541bc634eb` (2026-09-18) nachgeprüft.
+
+  Gebraucht wird: für meßbares `f : α → ℕ` ist
+  `∫⁻ x, f x ∂μ = ∑' n, μ {x | n < f x}`, und daraus die Integrierbarkeit aus
+  einer summierbaren Schwanzfolge. Mathlib hat die **stetige**
+  Schichtkuchenformel, `MeasureTheory.lintegral_eq_lintegral_meas_lt`
+  (`Mathlib/MeasureTheory/Integral/Layercake.lean:496`), und alles in jener
+  Datei ist ein Integral über `Ioi 0` gegen das Lebesguemaß; eine zählende
+  Fassung steht dort nicht. Gesucht wurde nach dem **Gegenstand** und nicht nur
+  nach dem geplanten Namen: `lintegral_natCast`, `integrable_natCast` und
+  `tsum_measure_lt` über `Mathlib/` geben nichts, ebensowenig die Muster
+  `∑' n, μ {…}` und `tsum_meas`/`lintegral_eq_tsum_meas` über
+  `Mathlib/MeasureTheory/` und `Mathlib/Probability/` — die Treffer dort sind
+  sämtlich Überdeckungs- und Portmanteau-Aussagen.
+
+  Bewiesen ist sie als `lintegral_natCast_eq_tsum_measure` und
+  `integrable_natCast_of_tsum_measure_ne_top` in
+  `TauCeti/MartingaleProblems/Suggested.lean`. Der Beweis ist die punktweise
+  Identität `k = ∑' n, 1_{n < k}` und `lintegral_tsum`, drei Zeilen — und er ist
+  **schwächer vorausgesetzt als die stetige Fassung**: weder eine Ordnung auf
+  dem Index noch σ-Endlichkeit des Maßes kommt vor, die jene beide braucht. Das
+  ist der Grund, weshalb es ein eigener Satz sein sollte und keine Folgerung:
+  aus der stetigen Fassung ließe er sich nur unter deren Voraussetzungen
+  gewinnen.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine

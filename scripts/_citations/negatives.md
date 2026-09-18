@@ -1,4 +1,4 @@
-# Negativaussagen gegen `upstream/master` `8018f6ac06b3ea23aa6f142703ab17a71e57dbe8`
+# Negativaussagen gegen `upstream/master` `4541bc634ebcfb60dee900d88eaaafe03c8df5d0`
 
 ## Die Behauptungen der Roadmaps
 
@@ -138,6 +138,13 @@ Suche `shift` unter `Mathlib/Probability/Kernel/IonescuTulcea/`: **0 Treffer** i
 > Gedächtnislosigkeit und Schwanz der Exponentialverteilung fehlen; vorhanden ist allein die Verteilungsfunktion `cdf_expMeasure_eq`.
 
 Suche `memoryless|expMeasure_Ioi|Ioi.*expMeasure|expMeasure.*Ioi` unter `Mathlib/Probability/Distributions/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
+## `exp-mean` — TODO.md Punkt 8, vierundzwanzigste Lücke
+
+> Der Erwartungswert der Exponential- und der Gammaverteilung fehlt; die einzigen Integrale beider Dateien sind die Normierung und die Verteilungsfunktion.
+
+Suche `mean_|variance_|integral_id|expectation` unter `Mathlib/Probability/Distributions/Exponential.lean, Mathlib/Probability/Distributions/Gamma.lean`: **0 Treffer** in 0 Dateien — wie erwartet.
 
 
 ## `convergence-in-measure-complete` — TODO.md Punkt 8, dritte Lücke
@@ -280,6 +287,20 @@ Suche `protected (lemma|theorem) (iSup|biSup)` unter `Mathlib/Probability/`: **0
 Suche `UnifIntegrable|unifIntegrable` unter `Mathlib/MeasureTheory/Function/ConvergenceInDistribution.lean`: **0 Treffer** in 0 Dateien — wie erwartet.
 
 
+## `condexp-sup-indep` — TODO.md Punkt 8, fünfundzwanzigste Lücke
+
+> Die unerhebliche Vergrößerung der bedingten Erwartung fehlt: `μ[f | m₁ ⊔ m₂] = μ[f | m₁]` für `m₂` unabhängig von `m₁ ⊔ σ(f)`. Mathlib hat nur den Fall `m₁ = ⊥`, `condExp_indep_eq`; die Zeichenketten `condExp_sup` und `condexp_sup` kommen nirgends vor.  Der Filter ist `Mathlib/` und kein engerer -- die Behauptung handelt von der Bibliothek und nicht von einer Datei.
+
+Suche `condExp_sup|condexp_sup` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
+## `counting-layercake` — TODO.md Punkt 8, sechsundzwanzigste Lücke
+
+> Die **zählende** Schichtkuchenformel fehlt: `∫⁻ x, (f x : ℝ≥0∞) ∂μ = ∑' n, μ {x | n < f x}` für `f : α → ℕ`. Mathlib hat die stetige Fassung (`lintegral_eq_lintegral_meas_lt`, `Layercake.lean`), die eine Ordnung auf dem Index und σ-Endlichkeit braucht; die zählende braucht beides nicht.
+
+Suche `lintegral_natCast|integrable_natCast|tsum_measure_lt|lintegral_eq_tsum_meas` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
 ## `martingale-setIntegral-weight` — MartingaleProblems/README.md, Meilenstein 5
 
 > Ein Martingal gegen eine **beschränkte** Gewichtsfunktion getestet hat in Mathlib keinen Satz; der Indikatorfall steht als `Martingale.setIntegral_eq` und ist die einzige Fassung.
@@ -291,5 +312,5 @@ Suche `setIntegral.*[Mm]artingale|[Mm]artingale.*setIntegral` unter `Mathlib/Pro
 
 ## Zusammenfassung
 
-39 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
+42 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
 

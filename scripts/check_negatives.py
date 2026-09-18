@@ -7,7 +7,7 @@ Skript sucht mit `git grep` in `upstream/master` und meldet die Trefferzahl; ein
 Treffer ist kein Gegenbeweis, sondern eine Stelle zum Nachlesen.
 
 `CLAIMS` sind die Behauptungen der vier `README.md` und der drei
-`Suggested.lean`, `CLAIMS_TODO8` die zweiundzwanzig Lücken von `TODO.md` Punkt 8.
+`Suggested.lean`, `CLAIMS_TODO8` die vierundzwanzig Lücken von `TODO.md` Punkt 8.
 
 Jede Zeile trägt als letztes Feld die Dateien, in denen ein Treffer **bekannt
 und harmlos** ist — Namensvettern, Literaturverweise, der jeweils benachbarte
@@ -137,6 +137,29 @@ CLAIMS_TODO8 = [
      'vorhanden ist allein die Verteilungsfunktion `cdf_expMeasure_eq`.',
      'memoryless|expMeasure_Ioi|Ioi.*expMeasure|expMeasure.*Ioi',
      ['Mathlib/Probability/Distributions/'], []),
+    ('exp-mean', 'TODO.md Punkt 8, vierundzwanzigste Lücke',
+     'Der Erwartungswert der Exponential- und der Gammaverteilung fehlt; die '
+     'einzigen Integrale beider Dateien sind die Normierung und die '
+     'Verteilungsfunktion.',
+     'mean_|variance_|integral_id|expectation',
+     ['Mathlib/Probability/Distributions/Exponential.lean',
+      'Mathlib/Probability/Distributions/Gamma.lean'], []),
+    # Hier stand vom 2026-09-18 an eine zweite Behauptung: ein skaliertes
+    # `GammaIntegral_convergent` gebe es nicht.  Sie ist **widerlegt**, und zwar
+    # von diesem Skript selbst, im vierten Lauf des 2026-09-18, beim ersten
+    # Durchlauf nach ihrer Aufnahme.  Mathlib hat sie als
+    # `integrableOn_rpow_mul_exp_neg_mul_rpow`
+    # (`Analysis/SpecialFunctions/Gaussian/GaussianIntegral.lean:74`, in
+    # v4.33.1 wie auf `upstream/master` `a218e50f981`), für `exp (−b·x^p)` und
+    # dort nur bei `p = 2` benutzt; bei `p = 1` ist es genau die Aussage.
+    #
+    # Sie steht hier nicht mehr, weil eine widerlegte Behauptung keine zu
+    # prüfende ist.  Was von ihr bleibt, ist die Lehre, die der Pfadfilter
+    # verursacht hat: die Behauptung war auf `Analysis/SpecialFunctions/Gamma/`
+    # eingeschränkt und in *diesem* Verzeichnis wahr.  Ein Pfadfilter, der eng
+    # genug ist, macht jede Negativaussage wahr.  Deshalb steht in diesem
+    # Skript ab jetzt `Mathlib/` als Filter, wo die Behauptung von der
+    # Bibliothek und nicht von einer Datei handelt.
     ('convergence-in-measure-complete', 'TODO.md Punkt 8, dritte Lücke',
      '`ConvergenceInMeasure.lean` enthält das Wort `cauchy` nicht ein '
      'einziges Mal; die Vollständigkeit der Konvergenz im Maß fehlt.',
@@ -247,6 +270,22 @@ CLAIMS_TODO8 = [
      'Integrierbarkeit steht in keiner Fassung da.',
      'UnifIntegrable|unifIntegrable',
      ['Mathlib/MeasureTheory/Function/ConvergenceInDistribution.lean'], []),
+    ('condexp-sup-indep', 'TODO.md Punkt 8, fünfundzwanzigste Lücke',
+     'Die unerhebliche Vergrößerung der bedingten Erwartung fehlt: '
+     '`μ[f | m₁ ⊔ m₂] = μ[f | m₁]` für `m₂` unabhängig von `m₁ ⊔ σ(f)`. '
+     'Mathlib hat nur den Fall `m₁ = ⊥`, `condExp_indep_eq`; die Zeichenketten '
+     '`condExp_sup` und `condexp_sup` kommen nirgends vor.  Der Filter ist '
+     '`Mathlib/` und kein engerer -- die Behauptung handelt von der '
+     'Bibliothek und nicht von einer Datei.',
+     'condExp_sup|condexp_sup', ['Mathlib/'], []),
+    ('counting-layercake', 'TODO.md Punkt 8, sechsundzwanzigste Lücke',
+     'Die **zählende** Schichtkuchenformel fehlt: '
+     '`∫⁻ x, (f x : ℝ≥0∞) ∂μ = ∑'"'"' n, μ {x | n < f x}` für `f : α → ℕ`. '
+     'Mathlib hat die stetige Fassung (`lintegral_eq_lintegral_meas_lt`, '
+     '`Layercake.lean`), die eine Ordnung auf dem Index und σ-Endlichkeit '
+     'braucht; die zählende braucht beides nicht.',
+     'lintegral_natCast|integrable_natCast|tsum_measure_lt|lintegral_eq_tsum_meas',
+     ['Mathlib/'], []),
     ('martingale-setIntegral-weight',
      'MartingaleProblems/README.md, Meilenstein 5',
      'Ein Martingal gegen eine **beschränkte** Gewichtsfunktion getestet hat in '

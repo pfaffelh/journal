@@ -15,6 +15,7 @@ import Mathlib.Topology.Order.LeftRightLim
 import Mathlib.Probability.Kernel.IonescuTulcea.Traj
 import Mathlib.Probability.ProductMeasure
 import Mathlib.Probability.Distributions.Exponential
+import Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral
 import Mathlib.Probability.BorelCantelli
 import Mathlib.Probability.CDF
 import Mathlib.Topology.Algebra.InfiniteSum.Real
@@ -26,7 +27,9 @@ import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 import Mathlib.Algebra.Group.ForwardDiff
 import Mathlib.Analysis.Normed.Ring.InfiniteSum
 import Mathlib.Probability.Distributions.Poisson.Basic
+import Mathlib.Probability.StrongLaw
 import Mathlib.Probability.Moments.Variance
+import Mathlib.MeasureTheory.Function.L2Space
 import Mathlib.Probability.Independence.InfinitePi
 import Mathlib.Analysis.PSeries
 import Mathlib.Probability.Martingale.OptionalSampling
@@ -45,9 +48,40 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-17 (twenty-third run of that day), over the **whole** file and without an error, and
-since the twenty-second run with `autoImplicit=false` and `relaxedAutoImplicit=false`, as Mathlib
-itself builds.  Every declaration elaborates, and **no declaration carries `sorry`**.
+2026-09-18 (eighth run of that day), over the **whole** file and without an error, and
+since the twenty-second run of 2026-09-17 with `autoImplicit=false` and
+`relaxedAutoImplicit=false`, as Mathlib itself builds.  Every declaration elaborates, and
+**no declaration carries `sorry`**.
+
+The eighth run of 2026-09-18 assembled hypothesis (c) of `mpSolution_of_tendsto` over the jump
+construction into one statement, `integral_sub_mul_eq_zero_jumpChain_stepIndex`, and on the way
+weakened the order of the two stopping times in
+`integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_dominated` from everywhere to almost
+everywhere.  That is not a convenience: `not_stepIndex_mono_time` exhibits a bounded monotone
+`T` at which the renewal count *falls* with the time, so over the jump construction the
+everywhere statement is false and the set where it fails is the explosion set.
+
+The fifth run of 2026-09-18 proved the **irrelevant enlargement** of a conditional
+expectation, `condExp_sup_of_indep`: adding to the conditioning σ-algebra one that is
+independent of the past and of the integrand jointly changes nothing.  Mathlib has only the
+case `m₁ = ⊥`, `MeasureTheory.condExp_indep_eq`, and that case is the engine of the proof;
+the extension from the rectangles `t₁ ∩ t₂` to the whole join is
+`setIntegral_eq_of_forall_supRectangle`.  Its application is
+`condExp_jumpChain_clock`: the Markov property of the embedded jump chain survives an
+enlargement of its filtration by the **whole** clock, which is the first of the two inputs
+the probe of Milestone 10 needs over the jump construction.  The same run located the second:
+over that filtration being a stopping time is free -- the whole clock sits in the σ-algebra at
+index `0` -- and what optional sampling asks for and the renewal count lacks is a constant
+bound.  `integral_sub_mul_eq_zero_of_martingale_stoppedValue_min` is the form that answers it.
+
+The third run of 2026-09-18 closed the one almost sure hypothesis the renewal law of large
+numbers was left standing on: `tendsto_jumpTime_div_atTop`, the mean spacing of the jump times
+at a constant rate.  Its input is the **mean of the exponential law**, which Mathlib has in no
+form, and which comes out of the Euler integral one step up together with its integrability --
+both for the **gamma** law, `integral_id_gammaMeasure` and `integrable_id_gammaMeasure`, with
+the exponential case the corollary `a = r = 1`; the strong law is Mathlib's
+`ProbabilityTheory.strong_law_ae`, fed by `waitingMeasure_map_eval`,
+`integrable_waiting_eval` and `identDistrib_waiting_eval`.
 
 The twenty-third run of 2026-09-17 supplied the acceptance example of Milestone 10, the rescaled
 Markov chain of the manuscript's `ex:invariance`, as far as it is a theorem rather than an
@@ -34419,3 +34453,2126 @@ theorem measure_chainCompensated_ne_pos_coin :
   rwa [integral_coinPair_coinMeasure] at h
 
 end CoinProbe
+
+/-! ### The probe on a chain whose kernel reads its state: the embedded jump chain
+
+The probe above is honest about what it does not do.  Its chain is i.i.d., so the one step
+kernel sends every state to the same law, `Pf` is the constant `∫ f dν`, and the hypothesis
+`hPf` -- that `Pf ∘ Ξ i` is `𝓖 i`-measurable -- is discharged by `measurable_const`.  That is
+the last hypothesis of `tendsto_integral_mul_rescaledChain_natural` with no nontrivial
+instance, and the lesson of the run that built the i.i.d. probe applies to it: a hypothesis
+that is only ever met in its trivial shape has not been met.
+
+The chain that meets it is the one this file already constructs: the **embedded jump chain** of
+Milestone 4, the first marginal of `jumpMeasure mu nu`, whose one step kernel is `mu` and whose
+compensator is therefore `Pf x = ∫ f d(mu x)` -- a function of the state and not a number.  The
+Markov property it needs stands as `condExp_chain_mark_jumpMeasure`; what is between the two is
+a σ-algebra, and `naturalFiltration_eq_comap_block` is that bridge.
+
+This connects the two milestones that are otherwise disjoint: Milestone 10, the convergence
+theory, and Milestone 4, the only construction by hand this project has.  What the probe
+answers is not "are the hypotheses consistent" -- the i.i.d. chain settled that -- but
+**whether the rescaled jump chain is expressible in the frame of the convergence theorem at
+all**.
+
+The non-degeneracy is measured and not asserted: `measure_chainCompensated_jumpChain_eq`
+computes the mass on which the compensated chain moves at its first step, and it is exactly
+the mass the one step kernel puts away from its own mean.
+-/
+
+section JumpChainProbe
+
+variable {E : Type*} [mE : MeasurableSpace E]
+
+/-- **The natural filtration of a chain is the comap of the block of its first `n + 1`
+coordinates.**  Both sides are `⨆ j ≤ n, comap (Ξ j)`: on the left by the definition of
+`naturalFiltration`, on the right because the product σ-algebra of the block is the supremum
+of the comaps of its evaluations, and `MeasurableSpace.comap_iSup` carries the comap through.
+
+It is what lets a conditional expectation proved over the block σ-algebra -- the shape
+`comp_chainKernel_map_split_range` disintegrates in -- be read as one over the filtration that
+hypothesis (c) of `mpSolution_of_tendsto` is written over.  No measure and no kernel enter. -/
+theorem naturalFiltration_eq_comap_block {Ω : Type*} [MeasurableSpace Ω]
+    {Ξ : ℕ → Ω → E} (hΞ : ∀ i, Measurable (Ξ i)) (n : ℕ) :
+    naturalFiltration Ξ hΞ n
+      = MeasurableSpace.comap
+          (fun ω ↦ fun j : Finset.range (n + 1) ↦ Ξ (j : ℕ) ω) inferInstance := by
+  show (⨆ j, ⨆ _ : j ≤ n, MeasurableSpace.comap (Ξ j) mE) = _
+  rw [show (inferInstance : MeasurableSpace ((_j : Finset.range (n + 1)) → E))
+      = ⨆ j : Finset.range (n + 1),
+          mE.comap (fun v : (_j : Finset.range (n + 1)) → E ↦ v j) from rfl,
+    MeasurableSpace.comap_iSup]
+  simp only [MeasurableSpace.comap_comp]
+  refine le_antisymm (iSup₂_le fun j hj ↦ ?_) (iSup_le fun j ↦ ?_)
+  · exact le_iSup (f := fun j : Finset.range (n + 1) ↦
+      MeasurableSpace.comap ((fun v : (_j : Finset.range (n + 1)) → E ↦ v j) ∘
+        (fun ω ↦ fun k : Finset.range (n + 1) ↦ Ξ (k : ℕ) ω)) mE)
+      ⟨j, Finset.mem_range.2 (Nat.lt_succ_of_le hj)⟩
+  · exact le_iSup₂ (f := fun j (_ : j ≤ n) ↦ MeasurableSpace.comap (Ξ j) mE) (j : ℕ)
+      (Nat.lt_succ_iff.1 (Finset.mem_range.1 j.2))
+
+/-- **The embedded jump chain, read as a process on the sample space of the jump
+construction**: the `i`-th mark of the chain factor.  It is `Y i` of `set:jumpdata`. -/
+def jumpChain (E : Type*) [MeasurableSpace E] (i : ℕ) (ω : (ℕ → E) × (ℕ → ℝ)) : E := ω.1 i
+
+theorem measurable_jumpChain (i : ℕ) : Measurable (jumpChain E i) :=
+  (measurable_pi_apply i).comp measurable_fst
+
+/-- **The Markov property of the embedded jump chain in the shape hypothesis (c) reads it**:
+over the natural filtration of the chain rather than over the block σ-algebra.  It is
+`condExp_chain_mark_jumpMeasure` and `naturalFiltration_eq_comap_block`, and nothing else.
+
+The compensator is `x ↦ ∫ f d(mu x)`: a function of the state, which is what distinguishes
+this probe from the i.i.d. one. -/
+theorem condExp_jumpChain (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] (n : ℕ) {f : E → ℝ} (hf : Measurable f)
+    {C : ℝ} (hfb : ∀ x, |f x| ≤ C) :
+    (jumpMeasure mu nu)[fun ω ↦ f (jumpChain E (n + 1) ω) |
+        naturalFiltration (jumpChain E) (measurable_jumpChain (E := E)) n]
+      =ᵐ[jumpMeasure mu nu] fun ω ↦ ∫ y, f y ∂(mu (jumpChain E n ω)) := by
+  rw [naturalFiltration_eq_comap_block]
+  exact condExp_chain_mark_jumpMeasure mu nu n hf hfb
+
+/-- **The nine hypotheses of `tendsto_integral_mul_rescaledChain_natural`, discharged together
+on the embedded jump chain of an arbitrary Markov kernel.**
+
+What is carried is a bounded measurable test function and a bounded measurable weight; what is
+*not* carried is any structure on `E` beyond its σ-algebra, and no topology anywhere.  `(K3)`
+is met exactly, by taking the canonical increment to be the martingale increment, so the
+conclusion is a limit of zeros and says nothing about the estimate -- the perturbed version of
+the i.i.d. probe is what exercises that, and it is independent of which chain is used.
+
+What this probe adds over the i.i.d. one is `hPf`: the compensator is `x ↦ ∫ f d(mu x)`, and
+`integral_mm1ChainKernel_ne` below shows on data that it is not constant. -/
+theorem tendsto_integral_mul_jumpChain (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu]
+    {f : E → ℝ} (hf : Measurable f) {C : ℝ} (hfb : ∀ x, |f x| ≤ C)
+    {g : E → ℝ} (hg : Measurable g) {b : ℝ} (hgb : ∀ x, ‖g x‖ ≤ b)
+    {s t : ℝ≥0} (hst : s ≤ t) :
+    Tendsto (fun n : ℕ ↦ ∫ ω, (chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E)
+            ⌊(n : ℝ) * (t : ℝ)⌋₊ ω
+          - chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E)
+            ⌊(n : ℝ) * (s : ℝ)⌋₊ ω) * g (ω.1 0)
+        ∂(jumpMeasure mu nu)) atTop (𝓝 0) := by
+  set P : Measure ((ℕ → E) × (ℕ → ℝ)) := jumpMeasure mu nu with hP
+  have hPfm : Measurable (fun x : E ↦ ∫ y, f y ∂(mu x)) :=
+    (StronglyMeasurable.integral_kernel (κ := mu) hf.stronglyMeasurable).measurable
+  have hPfb : ∀ x : E, |∫ y, f y ∂(mu x)| ≤ C := by
+    intro x
+    have := norm_integral_le_of_norm_le_const (μ := mu x) (C := C) (f := f)
+      (.of_forall fun y ↦ by simpa [Real.norm_eq_abs] using hfb y)
+    simpa using this
+  have hfint : ∀ i : ℕ, Integrable (fun ω ↦ f (jumpChain E i ω)) P := fun i ↦
+    (integrable_const C).mono'
+      ((hf.comp (measurable_jumpChain (E := E) i)).aestronglyMeasurable)
+      (Eventually.of_forall fun ω ↦ by simpa [Real.norm_eq_abs] using hfb (jumpChain E i ω))
+  have hPfint : ∀ i : ℕ, Integrable (fun ω ↦ (∫ y, f y ∂(mu (jumpChain E i ω)))) P := fun i ↦
+    (integrable_const C).mono'
+      ((hPfm.comp (measurable_jumpChain (E := E) i)).aestronglyMeasurable)
+      (Eventually.of_forall fun ω ↦ by simpa [Real.norm_eq_abs] using hPfb (jumpChain E i ω))
+  have hMint : ∀ k : ℕ,
+      Integrable (chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E) k) P := by
+    intro k
+    show Integrable (fun ω ↦ f (jumpChain E k ω) - ∑ j ∈ Finset.range k,
+      ((∫ y, f y ∂(mu (jumpChain E j ω))) - f (jumpChain E j ω))) P
+    exact (hfint k).sub (integrable_finsetSum _ fun j _ ↦ (hPfint j).sub (hfint j))
+  have h := tendsto_integral_mul_rescaledChain_natural (𝕂 := ℝ)
+    (Ω' := fun _ : ℕ ↦ ((ℕ → E) × (ℕ → ℝ))) (P' := fun _ : ℕ ↦ P)
+    (Ξ := fun _ : ℕ ↦ jumpChain E) (fun _ i ↦ measurable_jumpChain (E := E) i)
+    (fn := fun _ : ℕ ↦ f) (Pfn := fun _ : ℕ ↦ fun x : E ↦ ∫ y, f y ∂(mu x))
+    (fun _ ↦ hf) (fun _ ↦ hPfm) hst
+    (Z := fun x : ℝ≥0 → E ↦ g (x 0))
+    (hg.comp (measurable_naturalFiltration (fun u : ℝ≥0 ↦ measurable_pi_apply u)
+      (zero_le : (0 : ℝ≥0) ≤ s)))
+    (fun _ ↦ hgb _) (fun _ i ↦ hfint i) (fun _ i ↦ hPfint i)
+    (fun _ i ↦ condExp_jumpChain mu nu i hf hfb)
+    (G := fun n ↦ chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E)
+        ⌊(n : ℝ) * (t : ℝ)⌋₊
+      - chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E) ⌊(n : ℝ) * (s : ℝ)⌋₊)
+    (fun n ↦ (hMint _).sub (hMint _)) (by simp)
+  simpa [gridPath, jumpChain, RCLike.ofReal_real_eq_id] using h
+
+/-- **How often the compensated chain moves at its first step, exactly**: it is the mass the one
+step kernel puts away from its own mean, averaged over the initial law.
+
+The chain of the proof is the splitting `comp_chainKernel_map_split` -- the law of
+`(x 0, shifted chain)` is `nu ⊗ₘ (chainKernel mu ∘ₖ mu)` -- then `Measure.compProd_apply`, and
+then `comp_chainKernel_map_zero` at the started measure `mu x`, which says the shifted chain
+starts at one step of `mu`.  Nothing about the compensated chain enters but its definition. -/
+theorem measure_chainCompensated_chain_eq (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] {f : E → ℝ} (hf : Measurable f) :
+    (chainKernel mu ∘ₘ nu) {x : ℕ → E | f (x 1) ≠ ∫ y, f y ∂(mu (x 0))}
+      = ∫⁻ x, mu x {y | f y ≠ ∫ z, f z ∂(mu x)} ∂nu := by
+  have hPfm : Measurable (fun x : E ↦ ∫ y, f y ∂(mu x)) :=
+    (StronglyMeasurable.integral_kernel (κ := mu) hf.stronglyMeasurable).measurable
+  have hfib : ∀ c : ℝ, MeasurableSet {y : E | f y ≠ c} := fun c ↦
+    (hf (measurableSet_singleton c)).compl
+  have hS' : MeasurableSet {p : E × (ℕ → E) | f (p.2 0) ≠ ∫ y, f y ∂(mu p.1)} := by
+    have h1 : Measurable (fun p : E × (ℕ → E) ↦ f (p.2 0) - ∫ y, f y ∂(mu p.1)) :=
+      (hf.comp ((measurable_pi_apply 0).comp measurable_snd)).sub (hPfm.comp measurable_fst)
+    have h2 : {p : E × (ℕ → E) | f (p.2 0) ≠ ∫ y, f y ∂(mu p.1)}
+        = (fun p : E × (ℕ → E) ↦ f (p.2 0) - ∫ y, f y ∂(mu p.1)) ⁻¹' ({(0 : ℝ)}ᶜ) := by
+      ext p; simp [sub_eq_zero]
+    rw [h2]
+    exact h1 (measurableSet_singleton (0 : ℝ)).compl
+  have hpre : {x : ℕ → E | f (x 1) ≠ ∫ y, f y ∂(mu (x 0))}
+      = (fun x : ℕ → E ↦ (x 0, fun n ↦ x (n + 1))) ⁻¹'
+        {p : E × (ℕ → E) | f (p.2 0) ≠ ∫ y, f y ∂(mu p.1)} := rfl
+  rw [hpre, ← Measure.map_apply measurable_natSplit hS', comp_chainKernel_map_split,
+    Measure.compProd_apply hS']
+  refine lintegral_congr fun x ↦ ?_
+  have hsec : (Prod.mk x) ⁻¹' {p : E × (ℕ → E) | f (p.2 0) ≠ ∫ y, f y ∂(mu p.1)}
+      = (fun y : ℕ → E ↦ y 0) ⁻¹' {y : E | f y ≠ ∫ z, f z ∂(mu x)} := rfl
+  have hzero : ((chainKernel mu ∘ₖ mu) x).map (fun y : ℕ → E ↦ y 0) = mu x := by
+    have hc : (chainKernel mu ∘ₖ mu) x = chainKernel mu ∘ₘ (mu x) := by
+      rw [Kernel.comp_apply]
+    rw [hc, comp_chainKernel_map_zero]
+  rw [hsec, ← Measure.map_apply (measurable_pi_apply 0) (hfib _), hzero]
+
+/-- **The same count, on the sample space of the jump construction.**  The waiting times are an
+independent factor and the set reads the chain alone, so the whole passage is
+`Measure.map_fst_prod`; the arithmetic that turns "the compensated chain moves" into
+"`f (Y 1) ≠ ∫ f d(mu (Y 0))`" is two terms of a `Finset.range` sum. -/
+theorem measure_chainCompensated_jumpChain_eq (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] {f : E → ℝ} (hf : Measurable f) :
+    (jumpMeasure mu nu)
+        {ω | chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E) 1 ω
+          ≠ chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E) 0 ω}
+      = ∫⁻ x, mu x {y | f y ≠ ∫ z, f z ∂(mu x)} ∂nu := by
+  have hPfm : Measurable (fun x : E ↦ ∫ y, f y ∂(mu x)) :=
+    (StronglyMeasurable.integral_kernel (κ := mu) hf.stronglyMeasurable).measurable
+  have hSc : MeasurableSet {x : ℕ → E | f (x 1) ≠ ∫ y, f y ∂(mu (x 0))} := by
+    have h1 : Measurable (fun x : ℕ → E ↦ f (x 1) - ∫ y, f y ∂(mu (x 0))) :=
+      (hf.comp (measurable_pi_apply 1)).sub (hPfm.comp (measurable_pi_apply 0))
+    have h2 : {x : ℕ → E | f (x 1) ≠ ∫ y, f y ∂(mu (x 0))}
+        = (fun x : ℕ → E ↦ f (x 1) - ∫ y, f y ∂(mu (x 0))) ⁻¹' ({(0 : ℝ)}ᶜ) := by
+      ext x; simp [sub_eq_zero]
+    rw [h2]
+    exact h1 (measurableSet_singleton (0 : ℝ)).compl
+  have hset : {ω : (ℕ → E) × (ℕ → ℝ) |
+        chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E) 1 ω
+          ≠ chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E) 0 ω}
+      = Prod.fst ⁻¹' {x : ℕ → E | f (x 1) ≠ ∫ y, f y ∂(mu (x 0))} := by
+    ext ω
+    have hiff : chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E) 1 ω
+        = chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E) 0 ω
+      ↔ f (ω.1 1) = ∫ y, f y ∂(mu (ω.1 0)) := by
+      simp only [chainCompensated, jumpChain, Finset.sum_range_one, Finset.sum_range_zero,
+        sub_zero]
+      constructor <;> intro h <;> linarith
+    exact not_congr hiff
+  have hjm : jumpMeasure mu nu = (chainKernel mu ∘ₘ nu).prod waitingMeasure := rfl
+  have hmap : (jumpMeasure mu nu).map (Prod.fst : (ℕ → E) × (ℕ → ℝ) → (ℕ → E))
+      = chainKernel mu ∘ₘ nu := by
+    rw [hjm, Measure.map_fst_prod, measure_univ, one_smul]
+  rw [hset, ← Measure.map_apply measurable_fst hSc, hmap,
+    measure_chainCompensated_chain_eq mu nu hf]
+
+/-- **Two atoms on which the test function differs put mass away from the mean**, because the
+mean cannot equal both values.  Neither singleton is required to be measurable: a measure in
+Mathlib is monotone on arbitrary sets. -/
+theorem measure_ne_integral_pos_of_two_atoms {ρ : Measure E} {f : E → ℝ} {x y : E}
+    (hxρ : 0 < ρ {x}) (hyρ : 0 < ρ {y}) (hxy : f x ≠ f y) :
+    0 < ρ {z | f z ≠ ∫ w, f w ∂ρ} := by
+  rcases ne_or_eq (f x) (∫ w, f w ∂ρ) with h | h
+  · exact lt_of_lt_of_le hxρ (measure_mono (by rintro z rfl; exact h))
+  · exact lt_of_lt_of_le hyρ
+      (measure_mono (by rintro z rfl; exact fun hy' ↦ hxy (h.trans hy'.symm)))
+
+/-- **The probe is not the degenerate one**: if the initial law charges a set on which the one
+step kernel keeps a fixed amount of mass away from its own mean, then the compensated chain
+moves with positive probability.
+
+The lower bound is an indicator and not a measurability argument, which is why the integrand
+`x ↦ mu x {y | f y ≠ ∫ f d(mu x)}` -- a kernel evaluated at a *state dependent* set -- never has
+to be shown measurable. -/
+theorem measure_chainCompensated_jumpChain_pos (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] {f : E → ℝ} (hf : Measurable f)
+    {A : Set E} (hA : MeasurableSet A) (hAnu : 0 < nu A) {c : ENNReal} (hc : 0 < c)
+    (hAmu : ∀ x ∈ A, c ≤ mu x {y | f y ≠ ∫ z, f z ∂(mu x)}) :
+    0 < (jumpMeasure mu nu)
+      {ω | chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E) 1 ω
+        ≠ chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E) 0 ω} := by
+  rw [measure_chainCompensated_jumpChain_eq mu nu hf]
+  have hmono : ∀ x : E, A.indicator (fun _ ↦ c) x ≤ mu x {y | f y ≠ ∫ z, f z ∂(mu x)} := by
+    intro x
+    by_cases hxA : x ∈ A
+    · rw [Set.indicator_of_mem hxA]; exact hAmu x hxA
+    · rw [Set.indicator_of_notMem hxA]; exact zero_le
+  calc (0 : ENNReal) < c * nu A := ENNReal.mul_pos hc.ne' hAnu.ne'
+    _ = ∫⁻ x, A.indicator (fun _ ↦ c) x ∂nu := by
+        rw [lintegral_indicator hA, setLIntegral_const]
+    _ ≤ ∫⁻ x, mu x {y | f y ≠ ∫ z, f z ∂(mu x)} ∂nu := lintegral_mono hmono
+
+end JumpChainProbe
+
+/-! ### The probe on data: the embedded chain of the M/M/1 queue
+
+The data is the one Milestone 4 already carries -- `birthDeathKernel` at the M/M/1 rates -- at
+the cheapest parameters that leave the kernel genuinely state dependent, `β = δ = 1`.  Nothing
+is carried in either conclusion below.
+
+Two things are checked and not assumed.  `integral_mm1ChainKernel_ne` says the compensator
+`Pf x = ∫ f d(mu x)` takes two values, so the hypothesis `hPf` is met in a shape
+`measurable_const` cannot meet; and `measure_chainCompensated_jumpChain_pos_mm1` says the
+approximating martingale is not almost surely constant, so the orthogonality the example is
+about is not applied to zero.
+
+The kernel is state dependent in a way worth reading off: from `0` the queue can only grow, so
+`mm1ChainKernel 0` is a Dirac measure and `Pf 0 = 0`; from `1` it goes up or down with equal
+probability and `Pf 1 = 2⁻¹`.  The empty queue is exactly where the two values part.
+-/
+
+section MM1Probe
+
+/-- The embedded chain of the M/M/1 queue at `β = δ = 1`. -/
+noncomputable def mm1ChainKernel : Kernel ℕ ℕ := birthDeathKernel (mm1Birth 1) (mm1Death 1)
+
+instance isMarkovKernel_mm1ChainKernel : IsMarkovKernel mm1ChainKernel :=
+  isMarkovKernel_birthDeathKernel (b := mm1Birth 1) (d := mm1Death 1)
+    (fun _ ↦ zero_le_one) (fun x ↦ by unfold mm1Death; split_ifs <;> norm_num)
+
+/-- The test function of the probe: the indicator of the queue length `2`. -/
+def mm1AtTwo : ℕ → ℝ := fun y ↦ if y = 2 then 1 else 0
+
+theorem norm_mm1AtTwo_le (y : ℕ) : ‖mm1AtTwo y‖ ≤ 1 := by
+  unfold mm1AtTwo; split_ifs <;> norm_num
+
+theorem abs_mm1AtTwo_le (y : ℕ) : |mm1AtTwo y| ≤ 1 := by
+  unfold mm1AtTwo; split_ifs <;> norm_num
+
+/-- From a nonempty queue the chain goes up or down with equal probability. -/
+theorem mm1ChainKernel_apply_one :
+    mm1ChainKernel 1 = ENNReal.ofReal (2 : ℝ)⁻¹ • Measure.dirac 2
+      + ENNReal.ofReal (2 : ℝ)⁻¹ • Measure.dirac 0 := by
+  rw [mm1ChainKernel, birthDeathKernel_apply]
+  norm_num [mm1Birth, mm1Death]
+
+theorem mm1ChainKernel_one_two_pos : 0 < mm1ChainKernel 1 {2} := by
+  rw [mm1ChainKernel_apply_one]
+  simp
+
+theorem mm1ChainKernel_one_zero_pos : 0 < mm1ChainKernel 1 {0} := by
+  rw [mm1ChainKernel_apply_one]
+  simp
+
+/-- **From the empty queue the chain can only grow**, so its one step kernel is a Dirac
+measure there.  This is the fallback clause of `birthDeathKernel` doing no work: the death
+rate vanishes at `0` but the birth rate does not, so the total rate is positive. -/
+theorem mm1ChainKernel_apply_zero : mm1ChainKernel 0 = Measure.dirac 1 := by
+  rw [mm1ChainKernel, birthDeathKernel_apply]
+  norm_num [mm1Birth, mm1Death]
+
+theorem integral_mm1ChainKernel_zero : ∫ y, mm1AtTwo y ∂(mm1ChainKernel 0) = 0 := by
+  rw [mm1ChainKernel_apply_zero, integral_dirac]
+  norm_num [mm1AtTwo]
+
+theorem integral_mm1ChainKernel_one : ∫ y, mm1AtTwo y ∂(mm1ChainKernel 1) = (2 : ℝ)⁻¹ := by
+  have hd : ∀ a : ℕ, Integrable mm1AtTwo (Measure.dirac a) := fun a ↦
+    integrable_dirac (by simp [mm1AtTwo])
+  have hs : ∀ a : ℕ,
+      Integrable mm1AtTwo (ENNReal.ofReal (2 : ℝ)⁻¹ • Measure.dirac a) := fun a ↦
+    (hd a).smul_measure (by simp)
+  rw [mm1ChainKernel_apply_one, integral_add_measure (hs 2) (hs 0), integral_smul_measure,
+    integral_smul_measure, integral_dirac, integral_dirac]
+  norm_num [mm1AtTwo]
+
+/-- **The compensator of the probe reads the state.**  `Pf 0 = 0` and `Pf 1 = 2⁻¹`, so the
+hypothesis `hPf` of `tendsto_integral_mul_rescaledChain_natural` is met by a function that is
+not constant -- the one shape in which the i.i.d. probe could not meet it. -/
+theorem integral_mm1ChainKernel_ne :
+    (∫ y, mm1AtTwo y ∂(mm1ChainKernel 0)) ≠ ∫ y, mm1AtTwo y ∂(mm1ChainKernel 1) := by
+  rw [integral_mm1ChainKernel_zero, integral_mm1ChainKernel_one]
+  norm_num
+
+/-- **Hypothesis (c) of `mpSolution_of_tendsto` on data, over the embedded chain of the M/M/1
+queue started from a queue of length one.**  Every hypothesis of
+`tendsto_integral_mul_rescaledChain_natural` is discharged, and the compensator is the state
+dependent one of `integral_mm1ChainKernel_ne`. -/
+theorem tendsto_integral_mul_jumpChain_mm1 {s t : ℝ≥0} (hst : s ≤ t) :
+    Tendsto (fun n : ℕ ↦ ∫ ω,
+        (chainCompensated (fun x : ℕ ↦ ∫ y, mm1AtTwo y ∂(mm1ChainKernel x)) mm1AtTwo
+            (jumpChain ℕ) ⌊(n : ℝ) * (t : ℝ)⌋₊ ω
+          - chainCompensated (fun x : ℕ ↦ ∫ y, mm1AtTwo y ∂(mm1ChainKernel x)) mm1AtTwo
+            (jumpChain ℕ) ⌊(n : ℝ) * (s : ℝ)⌋₊ ω) * mm1AtTwo (ω.1 0)
+        ∂(jumpMeasure mm1ChainKernel (Measure.dirac 1))) atTop (𝓝 0) :=
+  tendsto_integral_mul_jumpChain mm1ChainKernel (Measure.dirac 1)
+    (measurable_of_countable mm1AtTwo) abs_mm1AtTwo_le
+    (measurable_of_countable mm1AtTwo) norm_mm1AtTwo_le hst
+
+/-- **And the martingale of the M/M/1 probe is genuinely random.**  From the queue of length
+one the chain reaches `2` and `0` with positive probability and the test function separates
+them, so the mean cannot be both; the count of
+`measure_chainCompensated_jumpChain_eq` is therefore positive. -/
+theorem measure_chainCompensated_jumpChain_pos_mm1 :
+    0 < (jumpMeasure mm1ChainKernel (Measure.dirac 1))
+      {ω | chainCompensated (fun x : ℕ ↦ ∫ y, mm1AtTwo y ∂(mm1ChainKernel x)) mm1AtTwo
+            (jumpChain ℕ) 1 ω
+        ≠ chainCompensated (fun x : ℕ ↦ ∫ y, mm1AtTwo y ∂(mm1ChainKernel x)) mm1AtTwo
+            (jumpChain ℕ) 0 ω} := by
+  refine measure_chainCompensated_jumpChain_pos mm1ChainKernel (Measure.dirac 1)
+    (measurable_of_countable mm1AtTwo) (A := {1}) (measurableSet_singleton 1) ?_
+    (c := mm1ChainKernel 1 {y | mm1AtTwo y ≠ ∫ z, mm1AtTwo z ∂(mm1ChainKernel 1)}) ?_ ?_
+  · simp
+  · exact measure_ne_integral_pos_of_two_atoms (x := 2) (y := 0)
+      mm1ChainKernel_one_two_pos mm1ChainKernel_one_zero_pos (by norm_num [mm1AtTwo])
+  · rintro x rfl; exact le_rfl
+
+end MM1Probe
+
+/-! ### The grid of the probe and the clock of the process: what separates them
+
+The probe above discharges hypothesis (c) of `mpSolution_of_tendsto` over the embedded jump
+chain, and it does so at the grid indices `⌊n s⌋` and `⌊n t⌋` -- the indices the manuscript's
+`ex:invariance` reads through `gridPath`.  The jump process of Milestone 4 reads the same chain
+at a different index: `jumpProcess lam t ω = ω.1 (stepIndex (jumpTime lam ω.1 ω.2) t)`, the
+**renewal count** of its own jump times.  The two are not the same function of `ω`, and saying
+so is the point of this block: the first is random and the second is not.
+
+Three statements make the distance between them exact.
+
+* `jumpProcess_const_mul_rate`: **speeding up the rate is a time change**, pointwise and with
+  no hypothesis but `0 < c`.  So the approximating sequence of `ex:invariance` applied to the
+  jump construction is *one* process read along a sequence of times, and the chain is
+  untouched.
+* `jumpProcess_eq_gridPath_unitWaiting`: for the **deterministic clock** -- unit waiting times
+  -- the renewal count *is* `⌊c t⌋` and the sped up process *is* the grid path.  The grid path
+  is therefore not a foreign object but the jump process of a degenerate clock.
+* `jumpProcess_ne_gridPath_unitDelay`: and one waiting time out of step already breaks the
+  identity, at a named sample point.  The gap is not a null set, and no modification repairs
+  it; what closes it as `n → ∞` is the law of large numbers for the waiting times, which is a
+  statement about the sequence and not about a sample point.
+
+What the probe therefore proves is an orthogonality at the **jump number**, and what
+`ex:invariance` speaks of is one at the **time**.  Nothing below closes that; it names it, and
+it says what the missing input is.
+
+The junk value is in this block too, and it is worth its own statement.  `stepIndex_le_iff`
+says that `{stepIndex T t ≤ n}` is the event `t < T (n + 1)` *or* the explosion set, and the
+second disjunct reads every jump time at once.  So the renewal count is a stopping time for the
+filtration of the first `n + 1` jump times only under non explosion -- one more place where
+`sInf ∅ = 0` makes a statement quietly true. -/
+
+section StepIndexJunk
+
+variable {α : Type*} [ConditionallyCompleteLinearOrder α] {T : ℕ → α} {t : α} {n : ℕ}
+
+/-- **The step index is below `n` exactly when the time lies in the window with index `n`, or
+else no window contains it at all.**  The second clause is the explosion set, where the junk
+value `sInf ∅ = 0` is returned, and it is not a blemish on the statement but the statement:
+the event `{stepIndex T t ≤ n}` is *not* a function of the jump times `T 0, …, T (n + 1)`
+alone, because `∀ m, T (m + 1) ≤ t` reads all of them. -/
+theorem stepIndex_le_iff (hT : Monotone T) :
+    stepIndex T t ≤ n ↔ t < T (n + 1) ∨ ∀ m, T (m + 1) ≤ t := by
+  constructor
+  · intro h
+    by_cases hex : ∃ m, t < T (m + 1)
+    · exact Or.inl (lt_of_lt_of_le (lt_stepIndex_succ hex) (hT (Nat.succ_le_succ h)))
+    · exact Or.inr fun m ↦ not_lt.1 fun hm ↦ hex ⟨m, hm⟩
+  · rintro (h | h)
+    · exact stepIndex_le h
+    · have hempty : {m | t < T (m + 1)} = (∅ : Set ℕ) := by
+        ext m; simpa using not_lt.2 (h m)
+      simp [stepIndex, hempty]
+
+/-- **Off the explosion set the step index is the index of the window and nothing else.**  This
+is the shape in which `{stepIndex T t ≤ n}` is an event of the first `n + 1` jump times, and it
+is the reason every statement that reads the index as a stopping time carries non explosion. -/
+theorem stepIndex_le_iff_of_exists (hT : Monotone T) (hex : ∃ m, t < T (m + 1)) :
+    stepIndex T t ≤ n ↔ t < T (n + 1) := by
+  refine (stepIndex_le_iff hT).trans ⟨fun h ↦ h.resolve_right ?_, Or.inl⟩
+  obtain ⟨m, hm⟩ := hex
+  exact fun h ↦ absurd (h m) (not_le.2 hm)
+
+/-- **The renewal count grows with the time, off the explosion set.**
+
+The hypothesis is non explosion *at the later time*, and it is the only one: no monotonicity of
+`T` and no order between the windows enters.  The proof is `stepIndex_le` applied at the index
+`stepIndex T t`, which is a window containing `t` and therefore contains `s` as well. -/
+theorem stepIndex_mono_time {s : α} (hst : s ≤ t) (hex : ∃ m, t < T (m + 1)) :
+    stepIndex T s ≤ stepIndex T t :=
+  stepIndex_le (hst.trans_lt (lt_stepIndex_succ hex))
+
+/-- **And the hypothesis cannot be dropped, not even for a monotone `T`.**  The junk value is
+again what breaks it: at a sample point where no window contains `t` the index is `sInf ∅ = 0`,
+while an earlier time may well sit in a window of positive index, and then the count *falls*.
+
+The witness is `T = (0, 0, 5, 5, …)` at `s = 1` and `t = 6`: the jump times stop below `6`, so
+`stepIndex T 6 = 0`, whereas `T 1 ≤ 1 < T 2` makes `stepIndex T 1 = 1`.  It is a bounded
+monotone `T`, which is exactly the explosive case.
+
+This is why `integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_dominated` asks for the
+order of its two stopping times almost everywhere and not everywhere: over the jump
+construction the everywhere statement is false, and the set where it fails is the explosion
+set. -/
+theorem not_stepIndex_mono_time :
+    ¬ ∀ T : ℕ → ℝ, Monotone T → ∀ s t : ℝ, s ≤ t → stepIndex T s ≤ stepIndex T t := by
+  intro h
+  have hmono : Monotone (fun n : ℕ ↦ if n ≤ 1 then (0 : ℝ) else 5) := by
+    intro a b hab
+    by_cases hb : b ≤ 1
+    · simp [hb, hab.trans hb]
+    · by_cases ha : a ≤ 1 <;> simp [ha, hb]
+  have h6 : stepIndex (fun n : ℕ ↦ if n ≤ 1 then (0 : ℝ) else 5) 6 = 0 :=
+    Nat.le_zero.1 ((stepIndex_le_iff hmono).2 (Or.inr fun m ↦ by
+      show (if m + 1 ≤ 1 then (0 : ℝ) else 5) ≤ 6
+      split <;> norm_num))
+  have h1 : stepIndex (fun n : ℕ ↦ if n ≤ 1 then (0 : ℝ) else 5) 1 = 1 := by
+    refine stepIndex_eq_of (Or.inr ?_) ?_ hmono
+    · show (if (1 : ℕ) ≤ 1 then (0 : ℝ) else 5) ≤ 1
+      norm_num
+    · show (1 : ℝ) < if (1 : ℕ) + 1 ≤ 1 then (0 : ℝ) else 5
+      norm_num
+  have hkey := h (fun n : ℕ ↦ if n ≤ 1 then (0 : ℝ) else 5) hmono 1 6 (by norm_num)
+  rw [h1, h6] at hkey
+  exact absurd hkey (by norm_num)
+
+end StepIndexJunk
+
+section DeterministicClock
+
+/-- **The renewal count of the unit clock is the floor.**  `stepIndex` of the jump times
+`T n = n` is `⌊·⌋₊`, which is the index the grid path of `ex:invariance` reads.  Only the order
+enters; the hypothesis `0 ≤ s` is what pins the left endpoint of the window. -/
+theorem stepIndex_natCast {s : ℝ} (hs : 0 ≤ s) :
+    stepIndex (fun n : ℕ ↦ (n : ℝ)) s = ⌊s⌋₊ := by
+  refine stepIndex_eq_of (Or.inr (Nat.floor_le hs)) ?_ fun a b hab ↦ by exact_mod_cast hab
+  push_cast
+  exact Nat.lt_floor_add_one s
+
+variable {E : Type*}
+
+/-- **The unit clock as jump data**: rate `1` and waiting times `1` give the jump times `n`. -/
+theorem jumpTime_unit (y : ℕ → E) (n : ℕ) :
+    jumpTime (fun _ ↦ (1 : ℝ)) y (fun _ ↦ (1 : ℝ)) n = n := by
+  induction n with
+  | zero => simp
+  | succ n ih => rw [jumpTime_succ, ih]; push_cast; ring
+
+end DeterministicClock
+
+section TimeGrid
+
+variable {E : Type*} [mE : MeasurableSpace E]
+
+/-- **The jump process is the embedded chain read at the step index.**  It is `rfl`, and it is
+worth a name: the process of Milestone 4 and the chain of Milestone 10 are the same family of
+random variables read at two different indices.  The index here is the *renewal count* of the
+jump times, a random one; the index the grid path of `ex:invariance` reads is `⌊n t⌋`, a
+deterministic one.  Everything below is about that difference. -/
+theorem jumpProcess_eq_jumpChain_stepIndex (lam : E → ℝ) (t : ℝ)
+    (ω : (ℕ → E) × (ℕ → ℝ)) :
+    jumpProcess lam t ω = jumpChain E (stepIndex (jumpTime lam ω.1 ω.2) t) ω := rfl
+
+omit mE in
+/-- **Speeding up the rate by `c` divides every jump time by `c`.**  No positivity is asked and
+none is needed: at `c = 0` both sides are `0`, the left because the holding time `ξ n / 0` is
+the junk value `0` at every step, the right because the division is by `0`.  Here the junk
+value of division tells the truth on both sides, which is why the statement is unconditional
+while `stepIndex_div_const` below is not. -/
+theorem jumpTime_const_mul (c : ℝ) (lam : E → ℝ) (y : ℕ → E) (xi : ℕ → ℝ) (n : ℕ) :
+    jumpTime (fun x ↦ c * lam x) y xi n = jumpTime lam y xi n / c := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+      rw [jumpTime_succ, jumpTime_succ, ih, div_mul_eq_div_div, div_right_comm, ← add_div]
+
+/-- **Dividing the jump times by `c > 0` is the same as multiplying the time by `c`.**  The
+step index is defined by the events `t < T (n + 1)` alone, so a positive rescaling of the jump
+times passes through it as the inverse rescaling of the time. -/
+theorem stepIndex_div_const {T : ℕ → ℝ} {c : ℝ} (hc : 0 < c) (t : ℝ) :
+    stepIndex (fun n ↦ T n / c) t = stepIndex T (t * c) := by
+  have h : {n | t < T (n + 1) / c} = {n | t * c < T (n + 1)} := by
+    ext n; exact lt_div_iff₀ hc
+  simp only [stepIndex, h]
+
+omit mE in
+/-- **Speeding up the rate is a time change.**  The jump process at rate `c · lam` read at time
+`t` is the jump process at rate `lam` read at time `c t`, at *every* sample point, with no
+hypothesis on the data beyond `0 < c`.
+
+This is what the rescaling of `ex:invariance` does to the jump construction, and it says the
+approximating sequence there is one process read along a sequence of times and not a sequence
+of processes.  The chain is untouched: only the clock is. -/
+theorem jumpProcess_const_mul_rate {c : ℝ} (hc : 0 < c) (lam : E → ℝ) (t : ℝ)
+    (ω : (ℕ → E) × (ℕ → ℝ)) :
+    jumpProcess (fun x ↦ c * lam x) t ω = jumpProcess lam (t * c) ω := by
+  show stepPath (jumpTime (fun x ↦ c * lam x) ω.1 ω.2) ω.1 t
+    = stepPath (jumpTime lam ω.1 ω.2) ω.1 (t * c)
+  simp only [stepPath, funext (jumpTime_const_mul c lam ω.1 ω.2), stepIndex_div_const hc]
+
+/-- **What separates the sped up jump process from the grid path of its own chain is one
+index.**  Both are the chain `ω.1` evaluated somewhere; the process evaluates it at the renewal
+count `stepIndex (jumpTime lam ω.1 ω.2) (c t)`, the grid path at `⌊c t⌋`.  The hypothesis is
+therefore the whole of the difference, and it is stated rather than assumed away. -/
+theorem jumpProcess_const_mul_rate_eq_gridPath {c : ℝ} (hc : 0 < c) (lam : E → ℝ) (t : ℝ≥0)
+    (ω : (ℕ → E) × (ℕ → ℝ))
+    (h : stepIndex (jumpTime lam ω.1 ω.2) ((t : ℝ) * c) = ⌊c * (t : ℝ)⌋₊) :
+    jumpProcess (fun x ↦ c * lam x) (t : ℝ) ω = gridPath (jumpChain E) c ω t := by
+  rw [jumpProcess_const_mul_rate hc, jumpProcess_eq_jumpChain_stepIndex, h]
+  rfl
+
+/-- **The two indices do agree, and the clock for which they do is the deterministic one.**  At
+rate `c` with unit waiting times the jump times are `n / c`, the renewal count of `c t` is
+`⌊c t⌋`, and the sped up jump process *is* the grid path of its embedded chain -- at every
+chain and for every time.
+
+This is the emptiness probe of the identification: the grid path of `ex:invariance` is not a
+different object from the process of Milestone 4 but the process of a degenerate clock.  What
+makes it degenerate is named in `jumpProcess_ne_gridPath_unitDelay`: it is the constancy of the
+waiting times, and under `waitingMeasure` they are exponential and not constant. -/
+theorem jumpProcess_eq_gridPath_unitWaiting {c : ℝ} (hc : 0 < c) (y : ℕ → E) (t : ℝ≥0) :
+    jumpProcess (fun _ ↦ c * (1 : ℝ)) (t : ℝ) (y, fun _ ↦ (1 : ℝ))
+      = gridPath (jumpChain E) c (y, fun _ ↦ (1 : ℝ)) t := by
+  refine jumpProcess_const_mul_rate_eq_gridPath hc _ t _ ?_
+  rw [funext (jumpTime_unit (E := E) y), stepIndex_natCast]
+  · rw [mul_comm]
+  · exact mul_nonneg t.coe_nonneg hc.le
+
+end TimeGrid
+
+section GridWitness
+
+/-- **And the identification is not general: one waiting time out of step breaks it.**  The
+chain is the identity on `ℕ`, the rate is `1`, and the zeroth waiting time is `2` instead of
+`1`.  Then the first jump has not happened by time `1`, so the process still sits at the state
+`0`, while the grid path has already moved to the state `1`.
+
+The witness is deterministic and therefore says more than an almost sure statement would: the
+gap between the renewal count and the deterministic count is not a null set phenomenon that a
+modification could repair.  What closes it in the limit is the law of large numbers for the
+waiting times, and that is a statement about `n → ∞` and not about a sample point. -/
+theorem jumpProcess_ne_gridPath_unitDelay :
+    jumpProcess (fun _ : ℕ ↦ (1 : ℝ)) 1 (id, fun k ↦ if k = 0 then (2 : ℝ) else 1)
+      ≠ gridPath (jumpChain ℕ) 1 (id, fun k ↦ if k = 0 then (2 : ℝ) else 1) 1 := by
+  have h1 : jumpTime (fun _ : ℕ ↦ (1 : ℝ)) id (fun k ↦ if k = 0 then (2 : ℝ) else 1) 1 = 2 := by
+    rw [jumpTime_one]; norm_num
+  have hl : jumpProcess (fun _ : ℕ ↦ (1 : ℝ)) 1 (id, fun k ↦ if k = 0 then (2 : ℝ) else 1)
+      = 0 := by
+    have := jumpProcess_of_lt_jumpTime_one (lam := fun _ : ℕ ↦ (1 : ℝ))
+      (ω := (id, fun k ↦ if k = 0 then (2 : ℝ) else 1)) (t := 1) (by rw [h1]; norm_num)
+    simpa using this
+  have hr : gridPath (jumpChain ℕ) 1 (id, fun k ↦ if k = 0 then (2 : ℝ) else 1) 1 = 1 := by
+    simp [gridPath, jumpChain]
+  rw [hl, hr]
+  norm_num
+
+end GridWitness
+
+
+/-! ### The probe with a nonzero `(K3)`, over the embedded jump chain
+
+`tendsto_integral_mul_jumpChain` meets `(K3)` exactly -- the canonical increment *is* the
+martingale increment -- so its conclusion is a limit of zeros and the estimate the theorem is
+built around is never applied.  The i.i.d. probe has a perturbed companion for that reason;
+the jump chain gets one here, so that no hypothesis of
+`tendsto_integral_mul_rescaledChain_natural` is met only in a shape that proves nothing. -/
+
+section PerturbedJumpChain
+
+variable {E : Type*} [mE : MeasurableSpace E]
+
+/-- **The jump chain probe with a nonzero `(K3)`.**  As in the i.i.d. case the canonical
+increment is the martingale increment displaced by the constant `(n + 1)⁻¹`, whose `L¹`
+distance to `0` is not `0`; so the conclusion is a limit and not a sequence of zeros, and the
+bound on the weight is used rather than idle.
+
+Together with `tendsto_integral_mul_jumpChain` this leaves no hypothesis of
+`tendsto_integral_mul_rescaledChain_natural` met only in its trivial shape: `hPf` is met by a
+compensator that reads the state, and `happrox` by an approximation that is not an equality. -/
+theorem tendsto_integral_mul_jumpChain_perturbed (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu]
+    {f : E → ℝ} (hf : Measurable f) {C : ℝ} (hfb : ∀ x, |f x| ≤ C)
+    {g : E → ℝ} (hg : Measurable g) {b : ℝ} (hgb : ∀ x, ‖g x‖ ≤ b)
+    {s t : ℝ≥0} (hst : s ≤ t) :
+    Tendsto (fun n : ℕ ↦ ∫ ω, (chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E)
+            ⌊(n : ℝ) * (t : ℝ)⌋₊ ω
+          - chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E)
+            ⌊(n : ℝ) * (s : ℝ)⌋₊ ω
+          + ((n : ℝ) + 1)⁻¹) * g (ω.1 0)
+        ∂(jumpMeasure mu nu)) atTop (𝓝 0) := by
+  set P : Measure ((ℕ → E) × (ℕ → ℝ)) := jumpMeasure mu nu with hP
+  set M : ℕ → ((ℕ → E) × (ℕ → ℝ)) → ℝ :=
+    chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E) with hM
+  have hPfm : Measurable (fun x : E ↦ ∫ y, f y ∂(mu x)) :=
+    (StronglyMeasurable.integral_kernel (κ := mu) hf.stronglyMeasurable).measurable
+  have hPfb : ∀ x : E, |∫ y, f y ∂(mu x)| ≤ C := by
+    intro x
+    have := norm_integral_le_of_norm_le_const (μ := mu x) (C := C) (f := f)
+      (.of_forall fun y ↦ by simpa [Real.norm_eq_abs] using hfb y)
+    simpa using this
+  have hfint : ∀ i : ℕ, Integrable (fun ω ↦ f (jumpChain E i ω)) P := fun i ↦
+    (integrable_const C).mono'
+      ((hf.comp (measurable_jumpChain (E := E) i)).aestronglyMeasurable)
+      (Eventually.of_forall fun ω ↦ by simpa [Real.norm_eq_abs] using hfb (jumpChain E i ω))
+  have hPfint : ∀ i : ℕ, Integrable (fun ω ↦ (∫ y, f y ∂(mu (jumpChain E i ω)))) P := fun i ↦
+    (integrable_const C).mono'
+      ((hPfm.comp (measurable_jumpChain (E := E) i)).aestronglyMeasurable)
+      (Eventually.of_forall fun ω ↦ by simpa [Real.norm_eq_abs] using hPfb (jumpChain E i ω))
+  have hMint : ∀ k : ℕ, Integrable (M k) P := by
+    intro k
+    show Integrable (fun ω ↦ f (jumpChain E k ω) - ∑ j ∈ Finset.range k,
+      ((∫ y, f y ∂(mu (jumpChain E j ω))) - f (jumpChain E j ω))) P
+    exact (hfint k).sub (integrable_finsetSum _ fun j _ ↦ (hPfint j).sub (hfint j))
+  refine tendsto_integral_mul_rescaledChain_natural (𝕂 := ℝ)
+    (Ω' := fun _ : ℕ ↦ ((ℕ → E) × (ℕ → ℝ))) (P' := fun _ : ℕ ↦ P)
+    (Ξ := fun _ : ℕ ↦ jumpChain E) (fun _ i ↦ measurable_jumpChain (E := E) i)
+    (fn := fun _ : ℕ ↦ f) (Pfn := fun _ : ℕ ↦ fun x : E ↦ ∫ y, f y ∂(mu x))
+    (fun _ ↦ hf) (fun _ ↦ hPfm) hst
+    (Z := fun x : ℝ≥0 → E ↦ g (x 0))
+    (hg.comp (measurable_naturalFiltration (fun u : ℝ≥0 ↦ measurable_pi_apply u)
+      (zero_le : (0 : ℝ≥0) ≤ s)))
+    (fun _ ↦ hgb _) (fun _ i ↦ hfint i) (fun _ i ↦ hPfint i)
+    (fun _ i ↦ condExp_jumpChain mu nu i hf hfb)
+    (G := fun n ω ↦ (M ⌊(n : ℝ) * (t : ℝ)⌋₊ ω - M ⌊(n : ℝ) * (s : ℝ)⌋₊ ω) + ((n : ℝ) + 1)⁻¹)
+    (fun n ↦ ((hMint _).sub (hMint _)).add (integrable_const _)) ?_ |>.congr ?_
+  · have hcalc : ∀ n : ℕ, ∫ _ω : (ℕ → E) × (ℕ → ℝ),
+        ‖(M ⌊(n : ℝ) * (t : ℝ)⌋₊ _ω - M ⌊(n : ℝ) * (s : ℝ)⌋₊ _ω + ((n : ℝ) + 1)⁻¹)
+          - (M ⌊(n : ℝ) * (t : ℝ)⌋₊ _ω - M ⌊(n : ℝ) * (s : ℝ)⌋₊ _ω)‖ ∂P = ((n : ℝ) + 1)⁻¹ := by
+      intro n
+      simp only [add_sub_cancel_left, Real.norm_eq_abs, abs_of_nonneg
+        (show (0 : ℝ) ≤ ((n : ℝ) + 1)⁻¹ by positivity), integral_const, probReal_univ,
+        smul_eq_mul, one_mul]
+    refine Tendsto.congr (fun n ↦ (hcalc n).symm) ?_
+    simpa using tendsto_one_div_add_atTop_nhds_zero_nat (𝕜 := ℝ)
+  · intro n
+    simp [gridPath, jumpChain, RCLike.ofReal_real_eq_id]
+
+end PerturbedJumpChain
+
+/-! ### The renewal law of large numbers, and it is deterministic
+
+The block above measures the distance between the grid index `⌊n t⌋` and the renewal count
+`stepIndex T (n t)`, and exhibits a sample point at which they differ.  What closes the
+distance is not a rewriting but a limit theorem, and the surprise is that its content is
+**deterministic**: nothing about the waiting times enters.  If the jump times grow like `m · n`
+and diverge, then the renewal count of `s` grows like `s / m`, and that is the sandwich
+
+    T (stepIndex T s) ≤ s < T (stepIndex T s + 1)
+
+divided by `stepIndex T s`.  Both ends of it are proved above -- `T_stepIndex_le` and
+`lt_stepIndex_succ` -- and the third input, `stepIndex T s → ∞`, is `stepIndex_le_iff_of_exists`
+read contrapositively.
+
+What the jump construction supplies on top of this is the almost sure hypothesis `T n / n → m`,
+and for a constant rate that is `ProbabilityTheory.strong_law_ae` applied to the coordinates of
+`waitingMeasure`.  Separating the two is worth the section: the deterministic half holds for
+every clock, explosive or not, and the divergence of the jump times is exactly the hypothesis
+that keeps the junk value `sInf ∅ = 0` out of the statement. -/
+
+section RenewalLLN
+
+variable {T : ℕ → ℝ}
+
+/-- **The step index is above `n` exactly when the `(n+1)`-st jump time has passed.**  One
+direction is `le_of_lt_stepIndex` and needs nothing; the other is the contrapositive of
+`stepIndex_le_iff_of_exists` and needs non explosion, as it must. -/
+theorem lt_stepIndex_iff (hmono : Monotone T) (hex : ∀ s : ℝ, ∃ n, s < T (n + 1))
+    (n : ℕ) (s : ℝ) : n < stepIndex T s ↔ T (n + 1) ≤ s := by
+  constructor
+  · exact le_of_lt_stepIndex
+  · intro hs
+    by_contra h
+    exact absurd ((stepIndex_le_iff_of_exists hmono (hex s)).1 (not_lt.1 h)) (not_lt.2 hs)
+
+/-- **The renewal count diverges with the time.**  The bound is explicit: past `T b` the count
+is at least `b`. -/
+theorem tendsto_stepIndex_atTop (hmono : Monotone T) (hinf : Tendsto T atTop atTop) :
+    Tendsto (fun s : ℝ ↦ stepIndex T s) atTop atTop := by
+  have hex : ∀ s : ℝ, ∃ n, s < T (n + 1) := fun s ↦ exists_lt_succ_of_tendsto_atTop hinf s
+  refine tendsto_atTop_atTop.2 fun b ↦ ⟨T b, fun s hs ↦ ?_⟩
+  cases b with
+  | zero => exact Nat.zero_le _
+  | succ k => exact (lt_stepIndex_iff hmono hex k s).2 hs
+
+/-- **The renewal law of large numbers, deterministically.**  If the jump times grow like `m · n`
+and diverge, then the renewal count of `s` grows like `s / m`.
+
+No probability enters, and no property of the jump times beyond monotonicity, divergence and the
+growth rate.  The proof is the sandwich `T (N s) ≤ s < T (N s + 1)` with `N s = stepIndex T s`,
+divided by `N s`: the lower end is `T (N s) / N s → m` by composition with `N s → ∞`, the upper
+end is the same at `N s + 1` times `(N s + 1) / N s → 1`, and the squeeze gives `s / N s → m`.
+Inverting is the last line and is where `0 < m` is spent. -/
+theorem tendsto_stepIndex_div_atTop (hmono : Monotone T) (hinf : Tendsto T atTop atTop)
+    {m : ℝ} (hm : 0 < m) (hTm : Tendsto (fun n : ℕ ↦ T n / n) atTop (𝓝 m)) :
+    Tendsto (fun s : ℝ ↦ (stepIndex T s : ℝ) / s) atTop (𝓝 m⁻¹) := by
+  have hex : ∀ s : ℝ, ∃ n, s < T (n + 1) := fun s ↦ exists_lt_succ_of_tendsto_atTop hinf s
+  set N : ℝ → ℕ := fun s ↦ stepIndex T s with hNdef
+  have hN : Tendsto N atTop atTop := tendsto_stepIndex_atTop hmono hinf
+  have hNR : Tendsto (fun s : ℝ ↦ (N s : ℝ)) atTop atTop :=
+    tendsto_natCast_atTop_atTop.comp hN
+  have hpos : ∀ᶠ s : ℝ in atTop, 0 < (N s : ℝ) := hNR.eventually_gt_atTop 0
+  have hlow : Tendsto (fun s : ℝ ↦ T (N s) / (N s : ℝ)) atTop (𝓝 m) := hTm.comp hN
+  have hup1 : Tendsto (fun s : ℝ ↦ T (N s + 1) / ((N s : ℝ) + 1)) atTop (𝓝 m) := by
+    have h := hTm.comp (tendsto_atTop_mono (fun s ↦ Nat.le_succ (N s)) hN)
+    refine h.congr fun s ↦ ?_
+    show T (N s + 1) / ((N s + 1 : ℕ) : ℝ) = T (N s + 1) / ((N s : ℝ) + 1)
+    push_cast
+    ring
+  have hup2 : Tendsto (fun s : ℝ ↦ ((N s : ℝ) + 1) / (N s : ℝ)) atTop (𝓝 1) := by
+    have h0 : Tendsto (fun s : ℝ ↦ (1 : ℝ) + ((N s : ℝ))⁻¹) atTop (𝓝 1) := by
+      simpa using tendsto_const_nhds.add hNR.inv_tendsto_atTop
+    refine h0.congr' ?_
+    filter_upwards [hpos] with s hs
+    field_simp
+  have hup : Tendsto (fun s : ℝ ↦ T (N s + 1) / (N s : ℝ)) atTop (𝓝 m) := by
+    have hmul := hup1.mul hup2
+    rw [mul_one] at hmul
+    refine hmul.congr' ?_
+    filter_upwards [hpos] with s hs
+    have h1 : ((N s : ℝ) + 1) ≠ 0 := by positivity
+    field_simp
+  have hsq : Tendsto (fun s : ℝ ↦ s / (N s : ℝ)) atTop (𝓝 m) := by
+    refine tendsto_of_tendsto_of_tendsto_of_le_of_le' hlow hup ?_ ?_
+    · filter_upwards [hpos] with s hs
+      have hne : N s ≠ 0 := by
+        intro h; rw [h] at hs; simp at hs
+      gcongr
+      exact T_stepIndex_le hne
+    · filter_upwards [hpos] with s hs
+      gcongr
+      exact (lt_stepIndex_succ (hex s)).le
+  have := hsq.inv₀ hm.ne'
+  simpa only [inv_div] using this
+
+/-- **The renewal count read on the grid of `ex:invariance`.**  Divided by `n`, the renewal
+count of `n t` converges to `t / m`, while the grid index `⌊n t⌋` divided by `n` converges to
+`t`.  So the two indices of the block above agree in the limit exactly when the mean spacing
+of the jump times is `1`, and differ by the factor `m` otherwise -- which is the rescaling the
+manuscript performs when it speeds the chain up by `n`. -/
+theorem tendsto_stepIndex_mul_div_atTop (hmono : Monotone T) (hinf : Tendsto T atTop atTop)
+    {m : ℝ} (hm : 0 < m) (hTm : Tendsto (fun n : ℕ ↦ T n / n) atTop (𝓝 m))
+    {t : ℝ} (ht : 0 < t) :
+    Tendsto (fun n : ℕ ↦ (stepIndex T ((n : ℝ) * t) : ℝ) / n) atTop (𝓝 (t / m)) := by
+  have hmul : Tendsto (fun n : ℕ ↦ (n : ℝ) * t) atTop atTop :=
+    Tendsto.atTop_mul_const ht tendsto_natCast_atTop_atTop
+  have h := ((tendsto_stepIndex_div_atTop hmono hinf hm hTm).comp hmul).mul_const t
+  rw [div_eq_inv_mul]
+  refine h.congr' ?_
+  filter_upwards [eventually_gt_atTop 0] with n hn
+  have hn' : (n : ℝ) ≠ 0 := Nat.cast_ne_zero.2 hn.ne'
+  show (stepIndex T ((n : ℝ) * t) : ℝ) / ((n : ℝ) * t) * t = (stepIndex T ((n : ℝ) * t) : ℝ) / n
+  field_simp
+
+end RenewalLLN
+
+/-! ### The probabilistic half: the mean spacing of the jump times
+
+The block above leaves the renewal law of large numbers standing on one almost sure hypothesis,
+`T n / n → m`, and nothing else.  This one supplies it for the jump construction at a constant
+rate, and the route is the one the header of `RenewalLLN` names: the jump times are then the
+partial sums of the waiting times divided by the rate, the waiting times are the coordinates of
+a product of standard exponential laws, and `ProbabilityTheory.strong_law_ae` applies to them.
+
+The one input that route needs and Mathlib does not have is the **mean of the exponential
+law**.  Neither `Probability/Distributions/Exponential.lean` nor
+`Probability/Distributions/Gamma.lean` says what `∫ x, x ∂(expMeasure r)` is -- in `v4.33.1` and
+on `upstream/master` alike, where the only integrals of either file are the normalisation
+`lintegral_exponentialPDF_eq_one` and the distribution function, and where neither `mean_` nor
+`variance_` occurs in the name of any declaration of `Probability/Distributions/`.
+
+It is proved below in the shape a contribution to Mathlib would take: for the **gamma** law,
+`integral_id_gammaMeasure : ∫ x, x ∂(gammaMeasure a r) = a / r`, with the exponential case its
+corollary at `a = 1`.  The whole content is that the density against the identity is the Euler
+integrand one step up -- `x ^ (a - 1) · x = x ^ ((a+1) - 1)` -- so that
+`Real.integral_rpow_mul_exp_neg_mul_Ioi` at `a + 1` applies and `Real.Gamma_add_one` cancels
+the normalising constant.
+
+The companion **integrability** is Mathlib's, and finding it is the point.  Inside
+`Analysis/SpecialFunctions/Gamma/` the scaled Euler integral has its *value*
+(`Real.integral_rpow_mul_exp_neg_mul_Ioi`) but not its *convergence*: there the only
+`IntegrableOn` is `Real.GammaIntegral_convergent` at rate `1`.  The scaled convergence sits
+two directories away, in
+`Analysis/SpecialFunctions/Gaussian/GaussianIntegral.lean:74`, as
+`integrableOn_rpow_mul_exp_neg_mul_rpow`, stated for `x ^ s · exp (−b · x ^ p)` and applied
+there only at `p = 2`.  Its case `p = 1` is exactly what the gamma law needs, and
+`integrableOn_rpow_mul_exp_neg_mul_Ioi` below is that case and nothing more.
+
+Over it `integrable_id_gammaMeasure` runs exactly parallel to the mean, and
+`integrable_id_expMeasure` is again the case `a = r = 1`.  Mean and integrability therefore
+hold at the same generality, which is what a contribution to Mathlib has to do: otherwise the
+gamma law would have there a mean whose integrability is missing.
+
+**The variance comes for free and is stated here for the same reason.**  The identification
+`gammaPDF_toReal_smul_pow` is written once for `x ^ n`, so the second moment is the Euler
+integrand *two* steps up and the same four lines prove it; `Real.Gamma_add_one` then applies
+twice instead of once.  What `variance_id_gammaMeasure` adds beyond arithmetic is the
+`MemLp _ 2` that Mathlib's `variance_eq_sub` asks for, and that is
+`memLp_two_iff_integrable_sq` over `integrable_sq_gammaMeasure`. -/
+
+section ExponentialMean
+
+/-- **The gamma density against `x ^ n` is the Euler integrand `n` steps up.**  This is the
+whole content of every moment of the law, and it is an equality of functions on all of `ℝ`:
+below `0` the density vanishes, at `0` the power does -- which is what `n ≠ 0` is for -- so the
+indicator sits on `Set.Ioi 0` and no null set is spent.
+
+The mean is its case `n = 1` and the second moment its case `n = 2`; the two differ only in
+how often `Real.Gamma_add_one` is applied afterwards. -/
+private theorem gammaPDF_toReal_smul_pow {a r : ℝ} (ha : 0 < a) (hr : 0 < r) {n : ℕ}
+    (hn : n ≠ 0) (x : ℝ) :
+    (gammaPDF a r x).toReal • x ^ n
+      = (Set.Ioi (0 : ℝ)).indicator
+          (fun t : ℝ ↦ r ^ a / Real.Gamma a
+            * (t ^ ((a + n) - 1) * Real.exp (-(r * t)))) x := by
+  have hGa : (0 : ℝ) < Real.Gamma a := Real.Gamma_pos_of_pos ha
+  rcases lt_or_ge 0 x with hx | hx
+  · rw [gammaPDF_of_nonneg hx.le, ENNReal.toReal_ofReal (by positivity),
+      Set.indicator_of_mem (Set.mem_Ioi.2 hx), smul_eq_mul]
+    have hxa : x ^ (a - 1) * x ^ n = x ^ ((a + n) - 1) := by
+      rw [← Real.rpow_natCast x n, ← Real.rpow_add hx]
+      ring_nf
+    calc r ^ a / Real.Gamma a * x ^ (a - 1) * Real.exp (-(r * x)) * x ^ n
+        = r ^ a / Real.Gamma a * (x ^ (a - 1) * x ^ n) * Real.exp (-(r * x)) := by ring
+      _ = r ^ a / Real.Gamma a * (x ^ ((a + n) - 1) * Real.exp (-(r * x))) := by
+          rw [hxa]; ring
+  · rw [Set.indicator_of_notMem (by simpa using hx), smul_eq_mul]
+    rcases hx.lt_or_eq with hx' | hx'
+    · rw [gammaPDF_of_neg hx', ENNReal.toReal_zero, zero_mul]
+    · rw [hx', zero_pow hn, mul_zero]
+
+/-- The case `n = 1` of `gammaPDF_toReal_smul_pow`, with the cast of `1` cleared away. -/
+private theorem gammaPDF_toReal_smul {a r : ℝ} (ha : 0 < a) (hr : 0 < r) (x : ℝ) :
+    (gammaPDF a r x).toReal • x
+      = (Set.Ioi (0 : ℝ)).indicator
+          (fun t : ℝ ↦ r ^ a / Real.Gamma a * (t ^ ((a + 1) - 1) * Real.exp (-(r * t)))) x := by
+  simpa using gammaPDF_toReal_smul_pow ha hr (n := 1) one_ne_zero x
+
+/-- **The Euler integrand converges at every positive rate**, which is the companion of
+`Real.integral_rpow_mul_exp_neg_mul_Ioi` and **is in Mathlib** -- not beside the value in
+`Analysis/SpecialFunctions/Gamma/`, where a search for it fails, but in
+`Analysis/SpecialFunctions/Gaussian/GaussianIntegral.lean:74`, as
+`integrableOn_rpow_mul_exp_neg_mul_rpow`, stated for `exp (−b · x ^ p)` and used there at
+`p = 2`.  At `p = 1` it is what is wanted, and `Real.rpow_one` is the whole of the translation.
+
+The statement stands here only to name the case, since the shape `x ^ (1 : ℝ)` is not the one a
+reader of the gamma law searches for.  It is not a gap. -/
+theorem integrableOn_rpow_mul_exp_neg_mul_Ioi {a r : ℝ} (ha : 0 < a) (hr : 0 < r) :
+    IntegrableOn (fun t : ℝ ↦ t ^ (a - 1) * Real.exp (-(r * t))) (Set.Ioi 0) := by
+  have h := integrableOn_rpow_mul_exp_neg_mul_rpow (s := a - 1) (p := 1) (b := r)
+    (by linarith) one_pos hr
+  simpa [Real.rpow_one, neg_mul] using h
+
+/-- **The gamma law has mean `a / r`.**  Mathlib has the mean of no distribution of
+`Probability/Distributions/`; this is the shape a contribution there would take, and
+`integral_id_expMeasure` below is its case `a = r = 1`.
+
+No integrability hypothesis appears and none is needed: every step --
+`integral_withDensity_eq_integral_toReal_smul`, `integral_indicator`, `integral_const_mul` and
+`Real.integral_rpow_mul_exp_neg_mul_Ioi` -- is an identity of Bochner integrals that holds
+whether or not the integrand is integrable. -/
+theorem integral_id_gammaMeasure {a r : ℝ} (ha : 0 < a) (hr : 0 < r) :
+    ∫ x, x ∂(gammaMeasure a r) = a / r := by
+  have hmeas : Measurable (gammaPDF a r) := (measurable_gammaPDFReal a r).ennreal_ofReal
+  have hlt : ∀ᵐ x ∂(volume : Measure ℝ), gammaPDF a r x < ⊤ := by
+    filter_upwards with x; exact ENNReal.ofReal_lt_top
+  rw [show gammaMeasure a r = volume.withDensity (gammaPDF a r) from rfl,
+    integral_withDensity_eq_integral_toReal_smul hmeas hlt]
+  simp_rw [gammaPDF_toReal_smul ha hr]
+  rw [integral_indicator measurableSet_Ioi, integral_const_mul,
+    Real.integral_rpow_mul_exp_neg_mul_Ioi (by linarith) hr, Real.Gamma_add_one ha.ne']
+  have hG : Real.Gamma a ≠ 0 := (Real.Gamma_pos_of_pos ha).ne'
+  have hra : r ^ a ≠ 0 := (Real.rpow_pos_of_pos hr a).ne'
+  rw [one_div, Real.inv_rpow hr.le, Real.rpow_add hr, Real.rpow_one]
+  field_simp
+
+/-- **The gamma law is integrable.**  The companion of `integral_id_gammaMeasure`, and it runs
+over the same identification `gammaPDF_toReal_smul`: what was there the *value* of the Euler
+integral at `a + 1` is here its *convergence*, which is
+`integrableOn_rpow_mul_exp_neg_mul_Ioi`.
+
+The two therefore stand at the same generality, which they must: a mean without its
+integrability is a Bochner junk value that happens to agree with the answer, and the reader
+has no way to tell the two apart from the statement alone. -/
+theorem integrable_id_gammaMeasure {a r : ℝ} (ha : 0 < a) (hr : 0 < r) :
+    Integrable (fun x : ℝ ↦ x) (gammaMeasure a r) := by
+  have hmeas : Measurable (gammaPDF a r) := (measurable_gammaPDFReal a r).ennreal_ofReal
+  have hlt : ∀ᵐ x ∂(volume : Measure ℝ), gammaPDF a r x < ⊤ := by
+    filter_upwards with x; exact ENNReal.ofReal_lt_top
+  rw [show gammaMeasure a r = volume.withDensity (gammaPDF a r) from rfl,
+    integrable_withDensity_iff_integrable_smul' hmeas hlt]
+  simp_rw [gammaPDF_toReal_smul ha hr]
+  exact (integrable_indicator_iff measurableSet_Ioi).2
+    ((integrableOn_rpow_mul_exp_neg_mul_Ioi (by linarith : (0 : ℝ) < a + 1) hr).const_mul _)
+
+/-- **The standard exponential law is integrable**, the case `a = r = 1` of
+`integrable_id_gammaMeasure`. -/
+theorem integrable_id_expMeasure : Integrable (fun x : ℝ ↦ x) (expMeasure 1) := by
+  rw [show expMeasure 1 = gammaMeasure 1 1 from rfl]
+  exact integrable_id_gammaMeasure one_pos one_pos
+
+/-- **The standard exponential law has mean one**, the case `a = r = 1` of
+`integral_id_gammaMeasure`. -/
+theorem integral_id_expMeasure : ∫ x, x ∂(expMeasure 1) = 1 := by
+  rw [show expMeasure 1 = gammaMeasure 1 1 from rfl, integral_id_gammaMeasure one_pos one_pos]
+  norm_num
+
+/-- **The second moment of the gamma law is `a (a + 1) / r ^ 2`.**  The same identification as
+the mean, read at `n = 2`: the Euler integrand two steps up, so
+`Real.integral_rpow_mul_exp_neg_mul_Ioi` applies at `a + 2` and `Real.Gamma_add_one` cancels
+the normalising constant in two applications instead of one.
+
+As with the mean, no integrability hypothesis appears and none is needed. -/
+theorem integral_sq_gammaMeasure {a r : ℝ} (ha : 0 < a) (hr : 0 < r) :
+    ∫ x, x ^ 2 ∂(gammaMeasure a r) = a * (a + 1) / r ^ 2 := by
+  have hmeas : Measurable (gammaPDF a r) := (measurable_gammaPDFReal a r).ennreal_ofReal
+  have hlt : ∀ᵐ x ∂(volume : Measure ℝ), gammaPDF a r x < ⊤ := by
+    filter_upwards with x; exact ENNReal.ofReal_lt_top
+  rw [show gammaMeasure a r = volume.withDensity (gammaPDF a r) from rfl,
+    integral_withDensity_eq_integral_toReal_smul hmeas hlt]
+  simp_rw [gammaPDF_toReal_smul_pow ha hr two_ne_zero]
+  rw [integral_indicator measurableSet_Ioi, integral_const_mul]
+  norm_num
+  rw [Real.integral_rpow_mul_exp_neg_mul_Ioi (by positivity) hr]
+  rw [show a + 2 = (a + 1) + 1 by ring, Real.Gamma_add_one (by positivity),
+    Real.Gamma_add_one ha.ne']
+  have hG : Real.Gamma a ≠ 0 := (Real.Gamma_pos_of_pos ha).ne'
+  have hra : r ^ a ≠ 0 := (Real.rpow_pos_of_pos hr a).ne'
+  rw [one_div, Real.inv_rpow hr.le, show a + 1 + 1 = a + 2 by ring,
+    Real.rpow_add hr, Real.rpow_two]
+  field_simp
+
+/-- **The square is integrable under the gamma law.**  The companion of
+`integral_sq_gammaMeasure`, and the input `variance_eq_sub` needs through
+`memLp_two_iff_integrable_sq`. -/
+theorem integrable_sq_gammaMeasure {a r : ℝ} (ha : 0 < a) (hr : 0 < r) :
+    Integrable (fun x : ℝ ↦ x ^ 2) (gammaMeasure a r) := by
+  have hmeas : Measurable (gammaPDF a r) := (measurable_gammaPDFReal a r).ennreal_ofReal
+  have hlt : ∀ᵐ x ∂(volume : Measure ℝ), gammaPDF a r x < ⊤ := by
+    filter_upwards with x; exact ENNReal.ofReal_lt_top
+  rw [show gammaMeasure a r = volume.withDensity (gammaPDF a r) from rfl,
+    integrable_withDensity_iff_integrable_smul' hmeas hlt]
+  simp_rw [gammaPDF_toReal_smul_pow ha hr two_ne_zero]
+  refine (integrable_indicator_iff measurableSet_Ioi).2 ?_
+  have hI : IntegrableOn (fun x : ℝ ↦ r ^ a / Real.Gamma a
+      * (x ^ ((a + 2) - 1) * Real.exp (-(r * x)))) (Set.Ioi 0) :=
+    (integrableOn_rpow_mul_exp_neg_mul_Ioi (a := a + 2) (by positivity) hr).const_mul _
+  refine hI.congr_fun ?_ measurableSet_Ioi
+  intro x _
+  norm_num
+
+/-- **The gamma law has variance `a / r ^ 2`.**  With the mean and the second moment in hand
+this is `variance_eq_sub` and arithmetic; what is not arithmetic is the hypothesis
+`MemLp (fun x ↦ x) 2`, and that is `memLp_two_iff_integrable_sq` over
+`integrable_sq_gammaMeasure`.
+
+`Mathlib/Probability/Distributions/` carries no declaration with `variance_` in its name, in
+`v4.33.1` nor on `upstream/master` `a218e50f981`; with the mean and this statement the gamma
+law has here the two moments a contribution there would be expected to bring. -/
+theorem variance_id_gammaMeasure {a r : ℝ} (ha : 0 < a) (hr : 0 < r) :
+    Var[fun x : ℝ ↦ x; gammaMeasure a r] = a / r ^ 2 := by
+  have : IsProbabilityMeasure (gammaMeasure a r) := isProbabilityMeasure_gammaMeasure ha hr
+  have hL : MemLp (fun x : ℝ ↦ x) 2 (gammaMeasure a r) :=
+    (memLp_two_iff_integrable_sq (by fun_prop)).2 (integrable_sq_gammaMeasure ha hr)
+  have hsq : ∫ x, ((fun x : ℝ ↦ x) ^ 2) x ∂(gammaMeasure a r) = a * (a + 1) / r ^ 2 := by
+    simpa using integral_sq_gammaMeasure ha hr
+  rw [variance_eq_sub hL, hsq, integral_id_gammaMeasure ha hr]
+  have hr' : r ≠ 0 := hr.ne'
+  field_simp
+  ring
+
+end ExponentialMean
+
+section WaitingLLN
+
+/-- **The law of a single waiting time**, as a pushforward.  `waitingMeasure_eval_preimage`
+says the same for a set; this is the form the strong law wants, since `IdentDistrib` and
+`integrable_map_measure` both speak of the image measure. -/
+theorem waitingMeasure_map_eval (n : ℕ) :
+    waitingMeasure.map (fun ξ : ℕ → ℝ ↦ ξ n) = expMeasure 1 :=
+  Measure.infinitePi_map_eval (fun _ : ℕ ↦ expMeasure 1) n
+
+/-- A single waiting time is integrable. -/
+theorem integrable_waiting_eval (n : ℕ) : Integrable (fun ξ : ℕ → ℝ ↦ ξ n) waitingMeasure := by
+  have h := (integrable_map_measure (f := fun ξ : ℕ → ℝ ↦ ξ n) (g := fun x : ℝ ↦ x)
+    (by rw [waitingMeasure_map_eval]; exact aestronglyMeasurable_id)
+    (measurable_pi_apply n).aemeasurable).1
+  rw [waitingMeasure_map_eval] at h
+  exact h integrable_id_expMeasure
+
+/-- The waiting times are identically distributed. -/
+theorem identDistrib_waiting_eval (n : ℕ) :
+    IdentDistrib (fun ξ : ℕ → ℝ ↦ ξ n) (fun ξ : ℕ → ℝ ↦ ξ 0) waitingMeasure waitingMeasure where
+  aemeasurable_fst := (measurable_pi_apply n).aemeasurable
+  aemeasurable_snd := (measurable_pi_apply 0).aemeasurable
+  map_eq := by rw [waitingMeasure_map_eval, waitingMeasure_map_eval]
+
+/-- **The strong law of large numbers for the waiting times.**  Etemadi's version in Mathlib
+asks for pairwise independence, integrability of one coordinate and identical distribution, and
+all three are supplied above; what the statement adds to `strong_law_ae` is the *value* of the
+limit, and that is `integral_id_expMeasure`. -/
+theorem tendsto_sum_waiting_div_atTop :
+    ∀ᵐ ξ ∂waitingMeasure,
+      Tendsto (fun n : ℕ ↦ (∑ k ∈ Finset.range n, ξ k) / (n : ℝ)) atTop (𝓝 1) := by
+  have hmean : waitingMeasure[fun ξ : ℕ → ℝ ↦ ξ 0] = 1 := by
+    have h : ∫ x : ℝ, x ∂(expMeasure 1) = ∫ ξ : ℕ → ℝ, ξ 0 ∂waitingMeasure := by
+      rw [← waitingMeasure_map_eval 0]
+      exact integral_map (measurable_pi_apply 0).aemeasurable (by fun_prop)
+    rw [← h, integral_id_expMeasure]
+  have h := strong_law_ae (μ := waitingMeasure) (fun (n : ℕ) (ξ : ℕ → ℝ) ↦ ξ n)
+    (integrable_waiting_eval 0) (fun i j hij ↦ iIndepFun_waiting.indepFun hij)
+    identDistrib_waiting_eval
+  rw [hmean] at h
+  filter_upwards [h] with ξ hξ
+  refine hξ.congr fun n ↦ ?_
+  rw [smul_eq_mul, div_eq_inv_mul]
+
+/-- **The jump times at a constant rate are the partial sums of the waiting times**, divided by
+the rate.  No hypothesis: at rate `0` both sides are `0`, since `x / 0 = 0`. -/
+theorem jumpTime_const {E : Type*} (c : ℝ) (y : ℕ → E) (xi : ℕ → ℝ) (n : ℕ) :
+    jumpTime (fun _ : E ↦ c) y xi n = (∑ k ∈ Finset.range n, xi k) / c := by
+  induction n with
+  | zero => simp [jumpTime]
+  | succ n ih => rw [jumpTime_succ, ih, Finset.sum_range_succ, add_div]
+
+/-- **The mean spacing of the jump times at a constant rate is the reciprocal of the rate.**
+This is the almost sure hypothesis of `tendsto_stepIndex_div_atTop`, discharged over the jump
+construction, and with it the passage between jump number and time is complete: at rate `c` the
+renewal count of `s` grows like `c · s`.
+
+The rate is **not** assumed positive, and the statement is true without it: at `c = 0` every
+holding time is the junk value `x / 0 = 0`, the jump times are constantly `0`, and the limit
+`c⁻¹ = 0` is what the constant sequence converges to.  Here the junk value happens to tell the
+truth on both sides, as it does in `jumpTime_const_mul` and unlike `stepIndex_div_const`.  What
+the consumer needs positivity for is the *other* hypothesis of `tendsto_stepIndex_div_atTop`,
+`0 < m`, which at `m = c⁻¹` is `0 < c`. -/
+theorem tendsto_jumpTime_div_atTop {E : Type*} (c : ℝ) (y : ℕ → E) :
+    ∀ᵐ ξ ∂waitingMeasure,
+      Tendsto (fun n : ℕ ↦ jumpTime (fun _ : E ↦ c) y ξ n / (n : ℝ)) atTop (𝓝 c⁻¹) := by
+  filter_upwards [tendsto_sum_waiting_div_atTop] with ξ hξ
+  have h := hξ.div_const c
+  rw [one_div] at h
+  refine h.congr fun n ↦ ?_
+  rw [jumpTime_const]
+  exact div_right_comm _ _ _
+
+end WaitingLLN
+
+/-! ### The index the renewal count reads, and why no index of the chain filtration holds it
+
+The block above says the two indices differ at a sample point.  This one says *by how much*,
+and it turns the difference into a refutation.
+
+`jumpProcess_constWaiting` computes the jump process at a constant rate `c` and **constant**
+waiting times `w`: it is the chain read at `⌊t · (c / w)⌋`, a grid path of mesh `w / c` and not
+of mesh `1 / c`.  `jumpProcess_eq_gridPath_unitWaiting` is its case `w = 1`, and the general
+case says what that case hides: the mesh is set by the clock, not by the rate.  The factor
+`c / w` is `c / m` with `m` the mean waiting time, which is exactly the limit
+`tendsto_stepIndex_mul_div_atTop` gives for the *random* clock -- so the deterministic
+computation and the law of large numbers agree on which index is read, and both say `⌊c t⌋`
+is the right one only at `m = 1`.
+
+That has a consequence for hypothesis `hW` of `tendsto_integral_mul_rescaledChain`, which asks
+that the weight be `naturalFiltration (Ξ n) ⌊n s⌋`-measurable.  For the grid path
+`measurable_comp_gridPath` supplies it.  For the jump path it **cannot** be supplied, at any
+index whatever, and the reason is not the size of the index but its origin:
+`naturalFiltration (jumpChain E) k` is generated by the chain factor alone and holds no
+information about the clock, while `jumpProcess` reads the clock.  Two sample points with the
+*same chain* and different constant clocks already have different jump processes, and that is
+`not_measurable_jumpProcess_naturalFiltration_jumpChain`: a refutation and not an obstacle to be
+worked around, since measurability is not an almost sure notion and a single pair of points
+settles it.
+
+What it says about the probe of Milestone 10 is therefore exact.  The jump process cannot enter
+`tendsto_integral_mul_rescaledChain_natural` as its `Z ∘ gridPath`; it needs a filtration that
+contains the clock, and over such a filtration the index read is a **stopping time** and not a
+constant.  That is the missing input, and it is named here rather than assumed away. -/
+
+section ConstantWaiting
+
+variable {E : Type*} [mE : MeasurableSpace E]
+
+omit mE in
+/-- **At a constant rate with constant waiting times the jump process is a grid path -- of mesh
+`w / c`.**  The chain is read at `⌊t · (c / w)⌋`, and the mesh is set by the clock as much as by
+the rate.  `jumpProcess_eq_gridPath_unitWaiting` is the case `w = 1`, where the two coincide and
+the clock becomes invisible.
+
+The proof is the two scaling lemmas above and nothing else: `jumpTime_const` makes the jump
+times `n · w / c = n / (c / w)`, `stepIndex_div_const` turns the division of the times into a
+multiplication of the time, and `stepIndex_natCast` reads the renewal count of the unit clock as
+the floor. -/
+theorem jumpProcess_constWaiting {c w : ℝ} (hc : 0 < c) (hw : 0 < w) (y : ℕ → E) {t : ℝ}
+    (ht : 0 ≤ t) : jumpProcess (fun _ ↦ c) t (y, fun _ ↦ w) = y ⌊t * (c / w)⌋₊ := by
+  have hT : ∀ n : ℕ, jumpTime (fun _ : E ↦ c) y (fun _ ↦ w) n = (n : ℝ) / (c / w) := by
+    intro n
+    rw [jumpTime_const, Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+    field_simp
+  show y (stepIndex (jumpTime (fun _ : E ↦ c) y (fun _ ↦ w)) t) = _
+  rw [funext hT, stepIndex_div_const (by positivity),
+    stepIndex_natCast (mul_nonneg ht (by positivity))]
+
+end ConstantWaiting
+
+section ClockWitness
+
+/-- **The chain filtration does not see the clock, at any index.**  Every σ-algebra of the
+natural filtration of the embedded chain is generated by coordinates of the chain factor, so it
+is coarser than the comap of the projection: two sample points with the same chain lie in the
+same sets of it, whatever their waiting times. -/
+theorem naturalFiltration_jumpChain_le_comap_fst {E : Type*} [mE : MeasurableSpace E] (k : ℕ) :
+    naturalFiltration (jumpChain E) (measurable_jumpChain (E := E)) k
+      ≤ MeasurableSpace.comap (Prod.fst : (ℕ → E) × (ℕ → ℝ) → (ℕ → E))
+          (inferInstance : MeasurableSpace (ℕ → E)) := by
+  show (⨆ j, ⨆ _ : j ≤ k, MeasurableSpace.comap (jumpChain E j) mE) ≤ _
+  refine iSup₂_le fun j _ ↦ ?_
+  have hcomp : jumpChain E j = (fun x : ℕ → E ↦ x j) ∘ Prod.fst := rfl
+  rw [hcomp, ← MeasurableSpace.comap_comp]
+  exact MeasurableSpace.comap_mono (measurable_pi_apply j).comap_le
+
+/-- **The jump process is measurable for no σ-algebra of the chain filtration**, and the witness
+is a pair of sample points with the *same chain*: the identity on `ℕ`, once with the constant
+clock `1/2` and once with the constant clock `1`.  At time `1` and rate `1` the first has had
+two jumps and sits at the state `2`, the second one jump and sits at the state `1`.
+
+This is what `measurable_comp_gridPath` supplies for the grid path and what nothing supplies for
+the jump path.  The failure is not one of index -- no `k` helps, and the statement is quantified
+over all of them -- but of *factor*: the chain filtration is generated by the chain alone, and
+the renewal count is a function of the clock.  Hypothesis `hW` of
+`tendsto_integral_mul_rescaledChain` therefore cannot be met by the jump process over this
+filtration, and the probe of Milestone 10 needs one that contains the clock. -/
+theorem not_measurable_jumpProcess_naturalFiltration_jumpChain (k : ℕ) :
+    ¬ Measurable[naturalFiltration (jumpChain ℕ) (measurable_jumpChain (E := ℕ)) k]
+        (fun ω : (ℕ → ℕ) × (ℕ → ℝ) ↦ jumpProcess (fun _ : ℕ ↦ (1 : ℝ)) 1 ω) := by
+  intro h
+  obtain ⟨A, -, hA⟩ := naturalFiltration_jumpChain_le_comap_fst (E := ℕ) k _
+    (h (measurableSet_singleton (2 : ℕ)))
+  set ω₁ : (ℕ → ℕ) × (ℕ → ℝ) := (id, fun _ ↦ (1 / 2 : ℝ)) with hω₁
+  set ω₂ : (ℕ → ℕ) × (ℕ → ℝ) := (id, fun _ ↦ (1 : ℝ)) with hω₂
+  have hhalf : jumpProcess (fun _ : ℕ ↦ (1 : ℝ)) 1 ω₁ = 2 := by
+    rw [hω₁, jumpProcess_constWaiting one_pos (by norm_num) id zero_le_one]
+    norm_num
+  have hone : jumpProcess (fun _ : ℕ ↦ (1 : ℝ)) 1 ω₂ = 1 := by
+    rw [hω₂, jumpProcess_constWaiting one_pos one_pos id zero_le_one]
+    norm_num
+  have key := Set.ext_iff.1 hA
+  have h1 := key ω₁
+  have h2 := key ω₂
+  rw [Set.mem_preimage, Set.mem_preimage, Set.mem_singleton_iff, hhalf] at h1
+  rw [Set.mem_preimage, Set.mem_preimage, Set.mem_singleton_iff, hone] at h2
+  have hfst : ω₁.1 = ω₂.1 := rfl
+  rw [hfst] at h1
+  exact absurd (h2.1 (h1.2 rfl)) (by omega)
+
+end ClockWitness
+
+/-! ### The enlargement that costs nothing, and the σ-algebra it adds
+
+The block above ends with a refutation: the jump process is measurable for no σ-algebra of the
+chain filtration, because that filtration is generated by the chain factor alone and the jump
+process reads the clock.  The remedy it names is to condition over a filtration that *contains*
+the clock.  The question that then has to be answered before anything is built is whether such an
+enlargement is free -- whether the Markov property of the chain survives it.
+
+It does, and the reason is the product structure of `jumpMeasure`: the clock is independent of the
+chain, so adding the whole clock σ-algebra to the conditioning cannot change the conditional
+expectation of a function of the chain.  That statement is the **irrelevant enlargement**,
+
+`μ[f | m₁ ⊔ m₂] =ᵐ μ[f | m₁]`  for `m₂` independent of `m₁ ⊔ m₀` and `f` measurable for `m₀`,
+
+and **Mathlib does not have it**.  What it has is the degenerate case `m₁ = ⊥`:
+`MeasureTheory.condExp_indep_eq` (`Mathlib/Probability/ConditionalExpectation.lean:42`), the only
+theorem in that file, says `μ[f | m₂] =ᵐ μ[f]` for `f` measurable for a σ-algebra independent of
+`m₂`.  Searched on `upstream/master` `a218e50f981` and in v4.33.1 for `condExp_sup`, and for
+`condExp` beside `⊔` over `Mathlib/Probability/` and
+`Mathlib/MeasureTheory/Function/ConditionalExpectation/`: nothing.
+
+The proof runs over the π-system of **rectangles** `t₁ ∩ t₂`, which is how `condExp_indep_eq`
+itself is proved for `m₁ = ⊥`, and the degenerate case is used as the engine: on a rectangle the
+integral of an `m₁ ⊔ m₀`-measurable integrand factors, by `condExp_indep_eq` applied to the
+integrand cut down to `t₁`.  Nothing else enters, and in particular no topology on the range and
+no separability -- the statement holds for an arbitrary Banach space.
+
+**The three hypotheses are what they have to be.**  `m₀` is carried separately rather than taken
+to be `σ(f)` because `f` has no measurable space on its range to comap from; where `σ(f)` exists
+it is the smallest admissible `m₀`.  The independence is asked of `m₁ ⊔ m₀` and not of `m₀`
+alone: `m₂` must be independent of the past *and* of the integrand jointly, and an example where
+it is independent of each separately and not jointly is the classical one of three pairwise
+independent coin flips.  And `μ` is finite because `condExp` is the junk value `0` off
+σ-finiteness of the trimmed measure.
+-/
+
+section IrrelevantEnlargement
+
+variable {Θ : Type*} {m₀ m₁ m₂ mΘ : MeasurableSpace Θ} {μ : Measure Θ}
+variable {V : Type*} [NormedAddCommGroup V] [NormedSpace ℝ V] [CompleteSpace V]
+
+/-- **The rectangles of two σ-algebras**: the intersections `t₁ ∩ t₂` of a set of `m₁` with a set
+of `m₂`.  It is the π-system that generates `m₁ ⊔ m₂`, and it is the one every proof about a
+joined σ-algebra runs over. -/
+def supRectangles (m₁ m₂ : MeasurableSpace Θ) : Set (Set Θ) :=
+  {s | ∃ t₁, MeasurableSet[m₁] t₁ ∧ ∃ t₂, MeasurableSet[m₂] t₂ ∧ s = t₁ ∩ t₂}
+
+/-- The rectangles are closed under intersection, coordinatewise. -/
+theorem isPiSystem_supRectangles : IsPiSystem (supRectangles m₁ m₂) := by
+  rintro _ ⟨s₁, hs₁, s₂, hs₂, rfl⟩ _ ⟨t₁, ht₁, t₂, ht₂, rfl⟩ -
+  exact ⟨s₁ ∩ t₁, hs₁.inter ht₁, s₂ ∩ t₂, hs₂.inter ht₂, by
+    ext ω; simp only [Set.mem_inter_iff]; tauto⟩
+
+/-- **The rectangles generate the join.**  One direction is that a rectangle is measurable for the
+join; the other is that each factor is a rectangle, with the other side taken to be the whole
+space. -/
+theorem generateFrom_supRectangles :
+    MeasurableSpace.generateFrom (supRectangles m₁ m₂) = m₁ ⊔ m₂ := by
+  refine le_antisymm (MeasurableSpace.generateFrom_le ?_) (sup_le ?_ ?_)
+  · rintro _ ⟨t₁, ht₁, t₂, ht₂, rfl⟩
+    exact ((le_sup_left : m₁ ≤ m₁ ⊔ m₂) _ ht₁).inter ((le_sup_right : m₂ ≤ m₁ ⊔ m₂) _ ht₂)
+  · intro t ht
+    exact MeasurableSpace.measurableSet_generateFrom
+      ⟨t, ht, Set.univ, MeasurableSet.univ, by simp⟩
+  · intro t ht
+    exact MeasurableSpace.measurableSet_generateFrom
+      ⟨Set.univ, MeasurableSet.univ, t, ht, by simp⟩
+
+omit [CompleteSpace V] in
+/-- **Two integrals that agree on the rectangles agree on the whole join.**  The extension is
+`MeasurableSpace.induction_on_inter`: the complement step is `integral_add_compl` against the
+rectangle `univ ∩ univ`, the countable step is `integral_iUnion`.  It is the counterpart for a
+joined σ-algebra of `setIntegral_eq_of_forall_cylinder`, which does the same for the cylinders of
+a past. -/
+theorem setIntegral_eq_of_forall_supRectangle [IsFiniteMeasure μ]
+    (hle : m₁ ⊔ m₂ ≤ mΘ) {F G : Θ → V} (hF : Integrable F μ) (hG : Integrable G μ)
+    (hrect : ∀ t₁, MeasurableSet[m₁] t₁ → ∀ t₂, MeasurableSet[m₂] t₂ →
+      (∫ ω in t₁ ∩ t₂, F ω ∂μ) = ∫ ω in t₁ ∩ t₂, G ω ∂μ) :
+    ∀ s, MeasurableSet[m₁ ⊔ m₂] s → (∫ ω in s, F ω ∂μ) = ∫ ω in s, G ω ∂μ := by
+  have htot : (∫ ω, F ω ∂μ) = ∫ ω, G ω ∂μ := by
+    have := hrect Set.univ MeasurableSet.univ Set.univ MeasurableSet.univ
+    simpa using this
+  refine MeasurableSpace.induction_on_inter (C := fun S _ =>
+      (∫ ω in S, F ω ∂μ) = ∫ ω in S, G ω ∂μ) generateFrom_supRectangles.symm
+    isPiSystem_supRectangles (by simp) ?_ ?_ ?_
+  · rintro S ⟨t₁, ht₁, t₂, ht₂, rfl⟩
+    exact hrect t₁ ht₁ t₂ ht₂
+  · intro S hS hSeq
+    have hSm : MeasurableSet S := hle S hS
+    have h1 := integral_add_compl hSm hF
+    have h2 := integral_add_compl hSm hG
+    rw [htot] at h1
+    rw [← hSeq] at h2
+    linear_combination (norm := module) h1 - h2
+  · intro g hdisj hgm hgeq
+    have hgm' : ∀ i, MeasurableSet (g i) := fun i => hle _ (hgm i)
+    rw [integral_iUnion hgm' hdisj hF.integrableOn,
+      integral_iUnion hgm' hdisj hG.integrableOn]
+    exact tsum_congr hgeq
+
+/-- **An integral over a set of an independent σ-algebra factors**, and the factor is the measure
+of the set.  This is `condExp_indep_eq` read as a statement about set integrals: the conditional
+expectation over `m₂` is the constant `∫ g`, and `setIntegral_condExp` turns the integral over a
+set of `m₂` into the integral of that constant. -/
+theorem setIntegral_eq_measureReal_smul_integral_of_indep [IsFiniteMeasure μ]
+    (hle₁ : m₁ ≤ mΘ) (hle₂ : m₂ ≤ mΘ) (hindep : Indep m₁ m₂ μ)
+    {g : Θ → V} (hg : StronglyMeasurable[m₁] g) (hgint : Integrable g μ)
+    {t₂ : Set Θ} (ht₂ : MeasurableSet[m₂] t₂) :
+    (∫ ω in t₂, g ω ∂μ) = (μ.real t₂) • ∫ ω, g ω ∂μ := by
+  have hcond := condExp_indep_eq hle₁ hle₂ hg hindep
+  calc (∫ ω in t₂, g ω ∂μ) = ∫ ω in t₂, (μ[g | m₂]) ω ∂μ :=
+        (setIntegral_condExp hle₂ hgint ht₂).symm
+    _ = ∫ _ω in t₂, (∫ ω, g ω ∂μ) ∂μ :=
+        setIntegral_congr_ae (hle₂ _ ht₂) (by filter_upwards [hcond] with ω hω _ using hω)
+    _ = (μ.real t₂) • ∫ ω, g ω ∂μ := by rw [setIntegral_const]
+
+/-- **The irrelevant enlargement.**  Adding to the conditioning σ-algebra one that is independent
+of the past and of the integrand jointly does not change the conditional expectation:
+`μ[f | m₁ ⊔ m₂] =ᵐ μ[f | m₁]`.
+
+`MeasureTheory.condExp_indep_eq` is the case `m₁ = ⊥`, and it is also the engine of the proof:
+on a rectangle `t₁ ∩ t₂` both integrals factor through it, into `μ.real t₂` times an integral
+over `t₁`, and there the defining property of `μ[f | m₁]` finishes.  The extension from the
+rectangles to the whole join is `setIntegral_eq_of_forall_supRectangle`.
+
+`m₀` is the σ-algebra the integrand is measurable for; where the range of `f` carries a
+measurable space it may be taken to be `σ(f)`, and the hypothesis is then the familiar one that
+`m₂` is independent of `m₁ ⊔ σ(f)`. -/
+theorem condExp_sup_of_indep [IsFiniteMeasure μ]
+    (hle₁ : m₁ ≤ mΘ) (hle₂ : m₂ ≤ mΘ) (hle₀ : m₀ ≤ mΘ)
+    {f : Θ → V} (hf : StronglyMeasurable[m₀] f) (hfint : Integrable f μ)
+    (hindep : Indep (m₁ ⊔ m₀) m₂ μ) :
+    μ[f | m₁ ⊔ m₂] =ᵐ[μ] μ[f | m₁] := by
+  have hle : m₁ ⊔ m₂ ≤ mΘ := sup_le hle₁ hle₂
+  have hle₁₀ : m₁ ⊔ m₀ ≤ mΘ := sup_le hle₁ hle₀
+  have hcond : Integrable (μ[f | m₁]) μ := integrable_condExp
+  refine (ae_eq_condExp_of_forall_setIntegral_eq hle hfint
+    (fun s _ _ => hcond.integrableOn) (fun s hs _ => ?_)
+    ((stronglyMeasurable_condExp.mono (le_sup_left : m₁ ≤ m₁ ⊔ m₂)).aestronglyMeasurable)).symm
+  refine setIntegral_eq_of_forall_supRectangle hle hcond hfint ?_ s hs
+  intro t₁ ht₁ t₂ ht₂
+  have ht₁m : MeasurableSet t₁ := hle₁ _ ht₁
+  have hsplit : ∀ {g : Θ → V}, Integrable g μ →
+      (∫ ω in t₁ ∩ t₂, g ω ∂μ) = ∫ ω in t₂, t₁.indicator g ω ∂μ := by
+    intro g _
+    rw [setIntegral_indicator ht₁m, Set.inter_comm]
+  have hind₁ : StronglyMeasurable[m₁ ⊔ m₀] (t₁.indicator (μ[f | m₁])) :=
+    (stronglyMeasurable_condExp.indicator ht₁).mono (le_sup_left : m₁ ≤ m₁ ⊔ m₀)
+  have hind₂ : StronglyMeasurable[m₁ ⊔ m₀] (t₁.indicator f) :=
+    (hf.mono (le_sup_right : m₀ ≤ m₁ ⊔ m₀)).indicator
+      ((le_sup_left : m₁ ≤ m₁ ⊔ m₀) _ ht₁)
+  rw [hsplit hcond, hsplit hfint,
+    setIntegral_eq_measureReal_smul_integral_of_indep hle₁₀ hle₂ hindep hind₁
+      (hcond.indicator ht₁m) ht₂,
+    setIntegral_eq_measureReal_smul_integral_of_indep hle₁₀ hle₂ hindep hind₂
+      (hfint.indicator ht₁m) ht₂,
+    integral_indicator ht₁m, integral_indicator ht₁m,
+    setIntegral_condExp hle₁ hfint ht₁]
+
+end IrrelevantEnlargement
+
+/-! ### The enlargement on a product, and the clock of the jump construction
+
+`jumpMeasure` is a product by definition, so the two factors are independent σ-algebras and the
+general statement specialises at once.  What the specialisation says is the thing the refutation
+above asked for: a filtration of the *chain* may be enlarged by the **whole** clock σ-algebra
+without changing a single conditional expectation of a function of the chain.  The Markov
+property of the embedded jump chain therefore survives the enlargement, and `condExp_jumpChain`
+holds verbatim over the enlarged filtration.
+
+That settles the first of the two inputs the probe of Milestone 10 needs over the jump
+construction.  The second is not settled here and is not measure theory: over a filtration that
+contains the clock the index the jump process reads is a **stopping time** and not a constant, and
+hypothesis `hW` of `tendsto_integral_mul_rescaledChain` asks for a fixed index. -/
+
+section ProductEnlargement
+
+variable {V : Type*} [NormedAddCommGroup V] [NormedSpace ℝ V] [CompleteSpace V]
+variable {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
+
+/-- **The two factors of a product measure are independent σ-algebras.**  It is
+`ProbabilityTheory.indepFun_prod` at the two identities, read as independence of the comaps of
+the projections rather than of two random variables. -/
+theorem indep_comap_fst_comap_snd (P : Measure α) [IsProbabilityMeasure P]
+    (Q : Measure β) [IsProbabilityMeasure Q] :
+    Indep (MeasurableSpace.comap (Prod.fst : α × β → α) inferInstance)
+      (MeasurableSpace.comap (Prod.snd : α × β → β) inferInstance) (P.prod Q) :=
+  indepFun_prod (X := (id : α → α)) (Y := (id : β → β)) measurable_id measurable_id
+
+/-- **Enlarging a σ-algebra of the first factor by the whole second factor is free**, for an
+integrand that is a function of the first factor.  The hypothesis on `m₁` is only that it lives
+under the first factor; it need not be a filtration and need not be countably generated. -/
+theorem condExp_sup_comap_snd {P : Measure α} [IsProbabilityMeasure P]
+    {Q : Measure β} [IsProbabilityMeasure Q] {m₁ : MeasurableSpace (α × β)}
+    (hm₁ : m₁ ≤ MeasurableSpace.comap (Prod.fst : α × β → α) inferInstance)
+    {f : α × β → V}
+    (hf : StronglyMeasurable[MeasurableSpace.comap (Prod.fst : α × β → α) inferInstance] f)
+    (hfint : Integrable f (P.prod Q)) :
+    (P.prod Q)[f | m₁ ⊔ MeasurableSpace.comap (Prod.snd : α × β → β) inferInstance]
+      =ᵐ[P.prod Q] (P.prod Q)[f | m₁] := by
+  have hfstm : @Measurable (α × β) α Prod.instMeasurableSpace inferInstance Prod.fst :=
+    measurable_fst
+  have hsndm : @Measurable (α × β) β Prod.instMeasurableSpace inferInstance Prod.snd :=
+    measurable_snd
+  have h₀ := hfstm.comap_le
+  have h₂ := hsndm.comap_le
+  refine condExp_sup_of_indep (hm₁.trans h₀) h₂ h₀ hf hfint ?_
+  rw [sup_eq_right.2 hm₁]
+  exact indep_comap_fst_comap_snd P Q
+
+end ProductEnlargement
+
+section JumpChainClock
+
+variable {E : Type*} [mE : MeasurableSpace E]
+
+/-- **The Markov property of the embedded jump chain, over a filtration that contains the whole
+clock.**  The conclusion is that of `condExp_jumpChain` word for word; what has changed is the
+conditioning σ-algebra, which now carries every waiting time of the sample point and not only the
+first `n + 1` marks of the chain.
+
+The enlargement is free by `condExp_sup_comap_snd`, because `jumpMeasure` is by definition the
+product of the law of the chain with `waitingMeasure`, and the integrand is a function of the
+chain alone.  `naturalFiltration_jumpChain_le_comap_fst` is what says the old filtration lies
+under the chain factor.
+
+This is the first of the two inputs the probe of Milestone 10 needs over the jump construction,
+and the one that was in doubt: `not_measurable_jumpProcess_naturalFiltration_jumpChain` says the
+probe must condition over a filtration containing the clock, and it is not automatic that a
+conditional expectation survives an enlargement of its σ-algebra.  Here it does. -/
+theorem condExp_jumpChain_clock (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] (n : ℕ) {f : E → ℝ} (hf : Measurable f)
+    {C : ℝ} (hfb : ∀ x, |f x| ≤ C) :
+    (jumpMeasure mu nu)[fun ω ↦ f (jumpChain E (n + 1) ω) |
+        naturalFiltration (jumpChain E) (measurable_jumpChain (E := E)) n
+          ⊔ MeasurableSpace.comap
+              (Prod.snd : (ℕ → E) × (ℕ → ℝ) → (ℕ → ℝ)) inferInstance]
+      =ᵐ[jumpMeasure mu nu] fun ω ↦ ∫ y, f y ∂(mu (jumpChain E n ω)) := by
+  have hfst : Measurable[MeasurableSpace.comap
+      (Prod.fst : (ℕ → E) × (ℕ → ℝ) → (ℕ → E)) inferInstance]
+      (Prod.fst : (ℕ → E) × (ℕ → ℝ) → (ℕ → E)) := comap_measurable _
+  have hfm : StronglyMeasurable[MeasurableSpace.comap
+      (Prod.fst : (ℕ → E) × (ℕ → ℝ) → (ℕ → E)) inferInstance]
+      (fun ω ↦ f (jumpChain E (n + 1) ω)) :=
+    (hf.comp ((measurable_pi_apply (n + 1)).comp hfst)).stronglyMeasurable
+  have hfint : Integrable (fun ω ↦ f (jumpChain E (n + 1) ω)) (jumpMeasure mu nu) :=
+    (integrable_const C).mono'
+      ((hf.comp (measurable_jumpChain (E := E) (n + 1))).aestronglyMeasurable)
+      (Filter.Eventually.of_forall fun ω ↦ by simpa [Real.norm_eq_abs] using hfb _)
+  refine Filter.EventuallyEq.trans ?_ (condExp_jumpChain mu nu n hf hfb)
+  exact condExp_sup_comap_snd (P := chainKernel mu ∘ₘ nu) (Q := waitingMeasure)
+    (naturalFiltration_jumpChain_le_comap_fst n) hfm hfint
+
+end JumpChainClock
+
+/-! ### The orthogonality at a random index, and what is left of the second input
+
+`integral_sub_mul_eq_zero_of_condExp_eq` is the engine of hypothesis (c) at a *fixed* pair of
+indices.  Over a filtration that contains the clock the indices the jump process reads are the
+renewal counts, and those are random.  This section is the same statement at a pair of stopping
+times, over the discrete index of the chain.
+
+**It also locates the remaining obstruction, and it is not the one the fourth run named.**  Over
+the enlarged filtration `naturalFiltration (jumpChain E) i ⊔ comap Prod.snd ⊤` the whole clock
+already sits in the σ-algebra at `i = 0`, so *every* clock measurable index is a stopping time --
+trivially, by being measurable at the bottom.  Stopping time is therefore free.  What is not free
+is **boundedness**: `Martingale.stoppedValue_ae_eq_condExp_of_le` asks the later stopping time to
+be bounded by a constant, and the renewal count `stepIndex` at a fixed time is unbounded on the
+sample space.
+
+`integral_sub_mul_eq_zero_of_martingale_stoppedValue_min` is what answers that, and it is why the
+minimum form of optional sampling is carried here beside the plain one: the later index may be
+truncated at a constant `K` while the *earlier* one is left alone, so the weight keeps the
+σ-algebra it is measurable for.  Passing `K → ∞` is then a convergence of integrals and no longer
+a question about filtrations. -/
+
+section StoppedOrthogonality
+
+variable {μ : Measure Ω} {𝓖 : Filtration ℕ m} {M : ℕ → Ω → 𝕂}
+
+/-- **A martingale increment between two stopping times is orthogonal to every bounded variable
+of the earlier one**, over the discrete index of a chain.
+
+It is `integral_sub_mul_eq_zero_of_condExp_eq` at `m' = hσ.measurableSpace`, fed by
+`Martingale.stoppedValue_ae_eq_condExp_of_le`; the fixed index version is the case of two
+constant stopping times.  The hypothesis that cannot be dropped is `hτN`: optional sampling for
+an unbounded stopping time is false without uniform integrability, and the martingale here
+carries no such hypothesis. -/
+theorem integral_sub_mul_eq_zero_of_martingale_stoppedValue [IsFiniteMeasure μ]
+    (hM : Martingale M 𝓖 μ) {σ τ : Ω → ℕ∞}
+    (hσ : IsStoppingTime 𝓖 σ) (hτ : IsStoppingTime 𝓖 τ) (hστ : σ ≤ τ)
+    {N : ℕ} (hτN : ∀ ω, τ ω ≤ (N : ℕ∞))
+    {W : Ω → ℝ} (hW : StronglyMeasurable[hσ.measurableSpace] W) {b : ℝ}
+    (hb : ∀ ω, ‖W ω‖ ≤ b) :
+    ∫ ω, (stoppedValue M τ ω - stoppedValue M σ ω) * (W ω : 𝕂) ∂μ = 0 :=
+  integral_sub_mul_eq_zero_of_condExp_eq hσ.measurableSpace_le
+    (integrable_stoppedValue ℕ hτ hM.integrable hτN)
+    (integrable_stoppedValue ℕ hσ hM.integrable fun ω ↦ (hστ ω).trans (hτN ω))
+    (hM.stoppedValue_ae_eq_condExp_of_le hτ hσ hστ hτN).symm hW hb
+
+/-- **The same, with the earlier index left unbounded.**  Only the later stopping time has to be
+bounded; the earlier one is arbitrary, and the increment is then read between `τ` and `σ ⊓ τ`.
+
+This is the form the jump construction needs.  There the later index is a renewal count truncated
+at a constant and the earlier one is not truncated, so the weight keeps the σ-algebra
+`hσ.measurableSpace` it is measurable for -- truncating the earlier index too would shrink that
+σ-algebra and lose the weight. -/
+theorem integral_sub_mul_eq_zero_of_martingale_stoppedValue_min [IsFiniteMeasure μ]
+    (hM : Martingale M 𝓖 μ) {σ τ : Ω → ℕ∞}
+    (hσ : IsStoppingTime 𝓖 σ) (hτ : IsStoppingTime 𝓖 τ)
+    {N : ℕ} (hτN : ∀ ω, τ ω ≤ (N : ℕ∞))
+    {W : Ω → ℝ} (hW : StronglyMeasurable[hσ.measurableSpace] W) {b : ℝ}
+    (hb : ∀ ω, ‖W ω‖ ≤ b) :
+    ∫ ω, (stoppedValue M τ ω - stoppedValue M (fun ω ↦ min (σ ω) (τ ω)) ω) * (W ω : 𝕂) ∂μ = 0 :=
+  integral_sub_mul_eq_zero_of_condExp_eq hσ.measurableSpace_le
+    (integrable_stoppedValue ℕ hτ hM.integrable hτN)
+    (integrable_stoppedValue ℕ (hσ.min hτ) hM.integrable fun ω ↦ (min_le_right _ _).trans (hτN ω))
+    (hM.stoppedValue_min_ae_eq_condExp hτ hσ hτN).symm hW hb
+
+/-- **The truncation passes to the limit, and what it costs is a dominating function.**  This is
+the previous statement with the constant bound `hτN` removed: the later stopping time is arbitrary,
+subject only to being finite.
+
+**The hypothesis is the one the proof reads and no more.**  The convergence in `K` is not an
+analytic limit at all -- at each sample point the sequence is *stationary*, because `τ ω` is a
+natural number and `min (τ ω) K = τ ω` as soon as `K ≥ τ ω`.  What the interchange of limit and
+integral therefore needs is exactly a dominating function, and `hdom` asks for it in the weakest
+place it can be asked: the martingale is dominated by `g` *along the path up to `τ`*, at indices
+`n ≤ τ ω` and nowhere else.  Uniform integrability would also do, and it is the usual hypothesis of
+optional sampling at an unbounded time; it is not taken here because it is strictly more than this
+proof uses and strictly harder to check at the application.
+
+**And the order of the two stopping times is asked for almost everywhere only.**  That is what the
+proof reads -- `hστ` occurs three times and each time inside an almost everywhere statement -- and
+it is what the application can supply: the renewal count of the jump construction is monotone in
+the time on the complement of the explosion set and nowhere else, by
+`not_stepIndex_mono_time`, so the everywhere hypothesis is not available there.
+
+**The index is `WithTop ℕ` and not `ℕ∞`.**  The two are definitionally equal but not syntactically:
+`ENat` is a `def` over `WithTop ℕ` with its own order instances, so a `min` written at `ℕ∞` and a
+`min` produced by `IsStoppingTime.min` do not match as `rw` patterns, and the associativity step of
+the proof fails against a term it is definitionally equal to.  Stating the theorem at `WithTop ℕ`
+-- the type `stoppedValue` and `IsStoppingTime` are themselves written over -- removes the
+mismatch.  This is the same trap as `ENNReal` against `WithTop ℝ≥0` recorded at
+`jumpProcess_isLocalMPSolution`. -/
+theorem integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_dominated [IsFiniteMeasure μ]
+    (hM : Martingale M 𝓖 μ) {σ τ : Ω → WithTop ℕ}
+    (hσ : IsStoppingTime 𝓖 σ) (hτ : IsStoppingTime 𝓖 τ) (hστ : ∀ᵐ ω ∂μ, σ ω ≤ τ ω)
+    (hτ_ne : ∀ ω, τ ω ≠ ⊤)
+    {g : Ω → ℝ} (hg : Integrable g μ)
+    (hdom : ∀ (n : ℕ) (ω : Ω), (n : WithTop ℕ) ≤ τ ω → ‖M n ω‖ ≤ g ω)
+    {W : Ω → ℝ} (hW : StronglyMeasurable[hσ.measurableSpace] W) {b : ℝ}
+    (hb : ∀ ω, ‖W ω‖ ≤ b) :
+    ∫ ω, (stoppedValue M τ ω - stoppedValue M σ ω) * (W ω : 𝕂) ∂μ = 0 := by
+  classical
+  have hτKst : ∀ K : ℕ, IsStoppingTime 𝓖 (fun ω ↦ min (τ ω) (K : WithTop ℕ)) :=
+    fun K ↦ hτ.min_const K
+  have hσKst : ∀ K : ℕ, IsStoppingTime 𝓖 (fun ω ↦ min (σ ω) (K : WithTop ℕ)) :=
+    fun K ↦ hσ.min_const K
+  -- every truncated integral vanishes, by the previous statement at `τ ⊓ K`
+  have hzero : ∀ K : ℕ,
+      ∫ ω, (stoppedValue M (fun ω ↦ min (τ ω) (K : WithTop ℕ)) ω
+        - stoppedValue M (fun ω ↦ min (σ ω) (K : WithTop ℕ)) ω) * (W ω : 𝕂) ∂μ = 0 := by
+    intro K
+    have key := integral_sub_mul_eq_zero_of_martingale_stoppedValue_min (𝕂 := 𝕂) hM hσ (hτKst K)
+      (fun ω ↦ min_le_right _ _) hW hb
+    rw [← key]
+    refine integral_congr_ae ?_
+    filter_upwards [hστ] with ω hω
+    simp only [stoppedValue]
+    rw [← min_assoc, min_eq_left hω]
+  -- the index a truncated stopping time reads lies below `τ`, so `hdom` applies to it
+  have hindex : ∀ (ρ : Ω → WithTop ℕ) (K : ℕ) (ω : Ω), ρ ω ≤ τ ω →
+      ‖stoppedValue M (fun ω ↦ min (ρ ω) (K : WithTop ℕ)) ω‖ ≤ g ω := by
+    intro ρ K ω hρ
+    have hne : min (ρ ω) (K : WithTop ℕ) ≠ ⊤ :=
+      ne_top_of_le_ne_top (by simp) (min_le_right _ _)
+    have hcoe : (((min (ρ ω) (K : WithTop ℕ)).untopA : ℕ) : WithTop ℕ)
+        = min (ρ ω) (K : WithTop ℕ) := by
+      obtain ⟨j, hj⟩ := WithTop.ne_top_iff_exists.mp hne
+      rw [← hj]
+      exact congrArg _ (WithTop.untopD_coe _ _)
+    refine hdom _ ω ?_
+    rw [hcoe]
+    exact (min_le_left _ _).trans hρ
+  have hmeas : ∀ K : ℕ, AEStronglyMeasurable
+      (fun ω ↦ (stoppedValue M (fun ω ↦ min (τ ω) (K : WithTop ℕ)) ω
+        - stoppedValue M (fun ω ↦ min (σ ω) (K : WithTop ℕ)) ω) * (W ω : 𝕂)) μ := by
+    intro K
+    have h1 : StronglyMeasurable[𝓖 K] (stoppedValue M (fun ω ↦ min (τ ω) (K : WithTop ℕ))) :=
+      stronglyMeasurable_stoppedValue_of_le
+        hM.stronglyAdapted.isStronglyProgressive_of_discrete (hτKst K)
+        (fun ω ↦ min_le_right _ _)
+    have h2 : StronglyMeasurable[𝓖 K] (stoppedValue M (fun ω ↦ min (σ ω) (K : WithTop ℕ))) :=
+      stronglyMeasurable_stoppedValue_of_le
+        hM.stronglyAdapted.isStronglyProgressive_of_discrete (hσKst K)
+        (fun ω ↦ min_le_right _ _)
+    have hWm : StronglyMeasurable[m] W := hW.mono hσ.measurableSpace_le
+    exact (((h1.sub h2).mono (𝓖.le K)).mul
+      (RCLike.continuous_ofReal.comp_stronglyMeasurable hWm)).aestronglyMeasurable
+  have hbound : ∀ K : ℕ, ∀ᵐ ω ∂μ,
+      ‖(stoppedValue M (fun ω ↦ min (τ ω) (K : WithTop ℕ)) ω
+        - stoppedValue M (fun ω ↦ min (σ ω) (K : WithTop ℕ)) ω) * (W ω : 𝕂)‖
+        ≤ (g ω + g ω) * b := by
+    intro K
+    filter_upwards [hστ] with ω hω
+    have h1 : ‖stoppedValue M (fun ω ↦ min (τ ω) (K : WithTop ℕ)) ω‖ ≤ g ω :=
+      hindex τ K ω le_rfl
+    have h2 : ‖stoppedValue M (fun ω ↦ min (σ ω) (K : WithTop ℕ)) ω‖ ≤ g ω := hindex σ K ω hω
+    have hg0 : (0 : ℝ) ≤ g ω := (norm_nonneg _).trans h1
+    have hW' : ‖(W ω : 𝕂)‖ ≤ b := by rw [RCLike.norm_ofReal]; simpa [Real.norm_eq_abs] using hb ω
+    rw [norm_mul]
+    exact mul_le_mul ((norm_sub_le _ _).trans (add_le_add h1 h2)) hW' (norm_nonneg _)
+      (add_nonneg hg0 hg0)
+  -- at each sample point the truncated sequence is stationary, because `τ ω` is a natural number
+  have hlim : ∀ᵐ ω ∂μ, Tendsto
+      (fun K : ℕ ↦ (stoppedValue M (fun ω ↦ min (τ ω) (K : WithTop ℕ)) ω
+        - stoppedValue M (fun ω ↦ min (σ ω) (K : WithTop ℕ)) ω) * (W ω : 𝕂)) atTop
+      (𝓝 ((stoppedValue M τ ω - stoppedValue M σ ω) * (W ω : 𝕂))) := by
+    filter_upwards [hστ] with ω hω
+    obtain ⟨n, hn⟩ := WithTop.ne_top_iff_exists.mp (hτ_ne ω)
+    refine tendsto_atTop_of_eventually_const (i₀ := n) fun K hK ↦ ?_
+    have hτle : τ ω ≤ (K : WithTop ℕ) := by rw [← hn]; exact WithTop.coe_le_coe.2 hK
+    have h1 : min (τ ω) (K : WithTop ℕ) = τ ω := min_eq_left hτle
+    have h2 : min (σ ω) (K : WithTop ℕ) = σ ω := min_eq_left (hω.trans hτle)
+    simp only [stoppedValue, h1, h2]
+  have hconv := tendsto_integral_of_dominated_convergence _ hmeas
+    ((hg.add hg).mul_const b) hbound hlim
+  simp only [hzero] at hconv
+  exact (tendsto_nhds_unique tendsto_const_nhds hconv).symm
+
+/-- **The uniformly bounded case**, the special case `g = c` of the previous statement.
+
+It is the shape the sixth run of 2026-09-18 set out to prove, and it is recorded because it is the
+cheapest to check -- but it is *not* the shape the probe of Milestone 10 can use:
+`norm_chainCompensated_le` shows that the compensated chain has no uniform bound, only one growing
+linearly in the index. -/
+theorem integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_bdd [IsFiniteMeasure μ]
+    (hM : Martingale M 𝓖 μ) {σ τ : Ω → WithTop ℕ}
+    (hσ : IsStoppingTime 𝓖 σ) (hτ : IsStoppingTime 𝓖 τ) (hστ : ∀ᵐ ω ∂μ, σ ω ≤ τ ω)
+    (hτ_ne : ∀ ω, τ ω ≠ ⊤)
+    {c : ℝ} (hc : ∀ (n : ℕ) (ω : Ω), ‖M n ω‖ ≤ c)
+    {W : Ω → ℝ} (hW : StronglyMeasurable[hσ.measurableSpace] W) {b : ℝ}
+    (hb : ∀ ω, ‖W ω‖ ≤ b) :
+    ∫ ω, (stoppedValue M τ ω - stoppedValue M σ ω) * (W ω : 𝕂) ∂μ = 0 :=
+  integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_dominated hM hσ hτ hστ hτ_ne
+    (integrable_const c) (fun n ω _ ↦ hc n ω) hW hb
+
+end StoppedOrthogonality
+
+/-! ### What the compensated chain costs at a random index
+
+The two statements above leave one question: which of them the probe of Milestone 10 can use.
+`norm_chainCompensated_le` answers it.  A compensated chain built from a bounded test function
+carries the bound `C + 2 n C` at the index `n` and no better one -- the compensator is a sum of `n`
+increments, each of size at most `2 C`, and nothing cancels.  There is therefore **no** uniform
+bound, and `integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_bdd` does not apply.
+
+What does apply is the dominated form, and `integral_sub_mul_eq_zero_of_chainCompensated` says at
+what price: the dominating function is `C + 2 τ C`, so the hypothesis is that the random index has
+a **finite mean**.  That is not a technical artefact.  It is the manuscript's own hypothesis
+`𝔼[N t] < ∞` of `thm:pathjumpMP`(b), arrived at from the other side: the local statement needs no
+such thing, and the moment the argument is read at a random index rather than a constant one, the
+first moment of that index is exactly what has to be paid. -/
+
+section ChainGrowth
+
+variable {E : Type*} {μ : Measure Ω} {𝓖 : Filtration ℕ m}
+
+/-- **The compensated chain of a bounded test function grows at most linearly in the index.**
+The test function contributes `C`, the compensator `n` increments of size at most `2 C`.
+
+The statement is about *every* sample point and every index, so it is a statement about the
+function `chainCompensated` and not about a martingale: neither `𝓖`, nor a measure, nor the Markov
+property occurs in it. -/
+theorem norm_chainCompensated_le {Pf f : E → 𝕂} {Ξ : ℕ → Ω → E} {C : ℝ}
+    (hf : ∀ x, ‖f x‖ ≤ C) (hPf : ∀ x, ‖Pf x‖ ≤ C) (n : ℕ) (ω : Ω) :
+    ‖chainCompensated Pf f Ξ n ω‖ ≤ C + 2 * n * C := by
+  have hsum : ‖∑ j ∈ Finset.range n, (Pf (Ξ j ω) - f (Ξ j ω))‖ ≤ (n : ℝ) * (2 * C) := by
+    calc ‖∑ j ∈ Finset.range n, (Pf (Ξ j ω) - f (Ξ j ω))‖
+        ≤ ∑ j ∈ Finset.range n, ‖Pf (Ξ j ω) - f (Ξ j ω)‖ := norm_sum_le _ _
+      _ ≤ ∑ _j ∈ Finset.range n, (2 * C) := Finset.sum_le_sum fun j _ ↦
+          (norm_sub_le _ _).trans (by linarith [hPf (Ξ j ω), hf (Ξ j ω)])
+      _ = (n : ℝ) * (2 * C) := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+  calc ‖chainCompensated Pf f Ξ n ω‖
+      ≤ ‖f (Ξ n ω)‖ + ‖∑ j ∈ Finset.range n, (Pf (Ξ j ω) - f (Ξ j ω))‖ := norm_sub_le _ _
+    _ ≤ C + (n : ℝ) * (2 * C) := add_le_add (hf _) hsum
+    _ = C + 2 * n * C := by ring
+
+/-- **The orthogonality of the compensated chain at an unbounded random index**, and its price is
+the first moment of that index.
+
+This is the form hypothesis (c) of `mpSolution_of_tendsto` needs over a filtration that contains
+the clock: the indices read there are renewal counts, unbounded on the sample space, and the
+martingale is the compensated chain, which has no uniform bound.  `hτint` is what replaces both --
+and it is the manuscript's `𝔼[N t] < ∞`, not an artefact of the formalisation. -/
+theorem integral_sub_mul_eq_zero_of_chainCompensated [IsFiniteMeasure μ]
+    {Pf f : E → 𝕂} {Ξ : ℕ → Ω → E} {C : ℝ}
+    (hM : Martingale (chainCompensated Pf f Ξ) 𝓖 μ)
+    (hf : ∀ x, ‖f x‖ ≤ C) (hPf : ∀ x, ‖Pf x‖ ≤ C)
+    {σ τ : Ω → WithTop ℕ}
+    (hσ : IsStoppingTime 𝓖 σ) (hτ : IsStoppingTime 𝓖 τ) (hστ : ∀ᵐ ω ∂μ, σ ω ≤ τ ω)
+    (hτ_ne : ∀ ω, τ ω ≠ ⊤)
+    (hτint : Integrable (fun ω ↦ (((τ ω).untopA : ℕ) : ℝ)) μ)
+    {W : Ω → ℝ} (hW : StronglyMeasurable[hσ.measurableSpace] W) {b : ℝ}
+    (hb : ∀ ω, ‖W ω‖ ≤ b) :
+    ∫ ω, (stoppedValue (chainCompensated Pf f Ξ) τ ω
+      - stoppedValue (chainCompensated Pf f Ξ) σ ω) * (W ω : 𝕂) ∂μ = 0 := by
+  refine integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_dominated hM hσ hτ hστ hτ_ne
+    (g := fun ω ↦ C + 2 * (((τ ω).untopA : ℕ) : ℝ) * C)
+    ((integrable_const C).add ((hτint.const_mul 2).mul_const C)) ?_ hW hb
+  intro n ω hn
+  have hC : (0 : ℝ) ≤ C := (norm_nonneg (f (Ξ 0 ω))).trans (hf _)
+  have hle : n ≤ ((τ ω).untopA : ℕ) := (WithTop.le_untopA_iff (hτ_ne ω)).2 hn
+  have hcast : (n : ℝ) ≤ (((τ ω).untopA : ℕ) : ℝ) := Nat.cast_le.2 hle
+  refine (norm_chainCompensated_le hf hPf n ω).trans ?_
+  nlinarith
+
+end ChainGrowth
+
+/-! ### The counting layer cake, and the mean of a renewal count
+
+`integral_sub_mul_eq_zero_of_chainCompensated` asks the random index to have a finite mean.  Over
+the jump construction that index is the renewal count `stepIndex (jumpTime lam ω.1 ω.2) t`, and
+this block pays the price.
+
+Two things are built, and the first is general.  Mathlib has the layer cake formula for a
+nonnegative function against Lebesgue measure on the half line
+(`lintegral_eq_lintegral_meas_lt`, `MeasureTheory/Integral/Layercake.lean:496` on
+`upstream/master` `a218e50f981`), and nothing for the **counting** version -- that the integral of
+a `ℕ`-valued function is the sum of the measures of its tails.  Searched there for
+`lintegral_natCast`, `integrable_natCast` and `tsum_measure_lt`: no declaration of that shape.
+The counting version is what an integer valued index needs, and it is three lines from
+`lintegral_tsum`.
+
+The second is the tail bound, and the point of it is how **crude** it is allowed to be.  The
+natural estimate for `P (stepIndex ≥ n)` is the tail of a Gamma law -- the `n`-th partial sum of
+the waiting times is `Gamma n`, and that law is not in Mathlib.  It is not needed.  The event
+`stepIndex ≥ n + 1` forces `∑_{k ≤ n} ξ k ≤ L t`, and since the waiting times are almost surely
+positive it forces **each** of `ξ 0, …, ξ n` to lie in `Iic (L t)` -- a *cylinder set*, whose
+measure `Measure.infinitePi_pi` computes as `q ^ (n + 1)` with `q = expMeasure 1 (Iic (L t)) < 1`.
+A geometric bound, from the product formula alone, with no Gamma law, no moment generating
+function and no independence lemma beyond the one already used for Borel--Cantelli. -/
+
+section NatLayerCake
+
+variable {Ω : Type*} {m : MeasurableSpace Ω}
+
+/-- The number of naturals below `k`, written as a sum in `ℝ≥0∞`. -/
+theorem tsum_ite_lt (k : ℕ) : ∑' n : ℕ, (if n < k then (1 : ENNReal) else 0) = k := by
+  rw [tsum_eq_sum (s := Finset.range k) fun n hn ↦ if_neg (by simpa using hn)]
+  simp [Finset.filter_true_of_mem fun x hx ↦ Finset.mem_range.1 hx]
+
+/-- **The layer cake formula for a `ℕ`-valued function**: its integral is the sum of the measures
+of its tails.  Mathlib has the continuous layer cake and not this one.
+
+The proof is the pointwise identity `k = ∑' n, 1_{n < k}` and `lintegral_tsum`; no ordering of the
+index and no σ-finiteness occur, unlike in the continuous statement. -/
+theorem lintegral_natCast_eq_tsum_measure {g : Ω → ℕ} (hg : Measurable g) (μ : Measure Ω) :
+    ∫⁻ ω, (g ω : ENNReal) ∂μ = ∑' n : ℕ, μ {ω | n < g ω} := by
+  have hmeas : ∀ n : ℕ, MeasurableSet {ω | n < g ω} := fun n ↦ hg trivial
+  have hpt : ∀ ω, (g ω : ENNReal)
+      = ∑' n : ℕ, Set.indicator {ω | n < g ω} (fun _ ↦ (1 : ENNReal)) ω := by
+    intro ω
+    rw [← tsum_ite_lt (g ω)]
+    refine tsum_congr fun n ↦ ?_
+    by_cases h : n < g ω <;> simp [h]
+  simp_rw [hpt]
+  rw [lintegral_tsum fun n ↦ (measurable_const.indicator (hmeas n)).aemeasurable]
+  exact tsum_congr fun n ↦ by rw [lintegral_indicator (hmeas n), setLIntegral_one]
+
+/-- **A `ℕ`-valued variable with summable tails is integrable.**  This is the form the hypothesis
+`hτint` of `integral_sub_mul_eq_zero_of_chainCompensated` is checked in. -/
+theorem integrable_natCast_of_tsum_measure_ne_top {g : Ω → ℕ} (hg : Measurable g)
+    (μ : Measure Ω) (h : ∑' n : ℕ, μ {ω | n < g ω} ≠ ⊤) :
+    Integrable (fun ω ↦ (g ω : ℝ)) μ := by
+  have hm : Measurable fun ω ↦ ((g ω : ℕ) : ENNReal) :=
+    (measurable_from_top (f := fun n : ℕ ↦ (n : ENNReal))).comp hg
+  have := integrable_toReal_of_lintegral_ne_top hm.aemeasurable
+    (by rw [lintegral_natCast_eq_tsum_measure hg]; exact h)
+  simpa using this
+
+end NatLayerCake
+
+section RenewalMean
+
+variable {E : Type*} [MeasurableSpace E]
+
+/-- The event that the first `n` waiting times all lie below `s` is a cylinder set, and its
+measure is the `n`-th power of a single probability. -/
+theorem waitingMeasure_forall_le (s : ℝ) (n : ℕ) :
+    waitingMeasure {xi : ℕ → ℝ | ∀ k < n, xi k ≤ s} = expMeasure 1 (Set.Iic s) ^ n := by
+  have hset : {xi : ℕ → ℝ | ∀ k < n, xi k ≤ s}
+      = Set.pi (↑(Finset.range n)) fun _ ↦ Set.Iic s := by
+    ext xi; simp [Set.mem_pi]
+  rw [hset, waitingMeasure,
+    Measure.infinitePi_pi (μ := fun _ : ℕ ↦ expMeasure 1) fun i _ ↦ measurableSet_Iic,
+    Finset.prod_const, Finset.card_range]
+
+theorem measurableSet_forall_le (s : ℝ) (n : ℕ) :
+    MeasurableSet {xi : ℕ → ℝ | ∀ k < n, xi k ≤ s} := by
+  have hset : {xi : ℕ → ℝ | ∀ k < n, xi k ≤ s}
+      = Set.pi (↑(Finset.range n)) fun _ ↦ Set.Iic s := by
+    ext xi; simp [Set.mem_pi]
+  rw [hset]
+  exact MeasurableSet.pi (Finset.range n).countable_toSet fun i _ ↦ measurableSet_Iic
+
+/-- **The exponential law puts less than the full mass below any point.**  This is the whole of
+the probabilistic content of the tail bound, and `expMeasure_Ioi` is what supplies it. -/
+theorem expMeasure_one_Iic_lt_one {s : ℝ} (hs : 0 ≤ s) : expMeasure 1 (Set.Iic s) < 1 := by
+  have h : expMeasure 1 (Set.Iic s) = 1 - ENNReal.ofReal (Real.exp (-s)) := by
+    rw [← Set.compl_Ioi, prob_compl_eq_one_sub measurableSet_Ioi, expMeasure_Ioi one_pos hs,
+      one_mul]
+  rw [h]
+  refine ENNReal.sub_lt_self ENNReal.one_ne_top one_ne_zero ?_
+  simp [ENNReal.ofReal_eq_zero, not_le, Real.exp_pos]
+
+/-- **The tails of the renewal count decay geometrically**, for a rate bounded above and below.
+
+The inequality that carries it is `sum_div_le_jumpTime`, the same one that gives non explosion for
+a bounded rate: more than `n` jumps before `t` forces the first `n + 1` waiting times to have sum
+at most `L t`, hence -- the waiting times being almost surely positive -- forces each of them into
+`Iic (L t)`.  That is a cylinder set, and its measure is a power.
+
+The estimate throws away everything but membership of each coordinate in a half line, and it is
+still enough: a Gamma tail would be sharper and is not available, a geometric one is available and
+summable. -/
+theorem measure_lt_stepIndex_le {lam : E → ℝ} {L t : ℝ} (hL0 : 0 < L)
+    (hlam : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] (n : ℕ) :
+    jumpMeasure mu nu {ω | n < stepIndex (jumpTime lam ω.1 ω.2) t}
+      ≤ expMeasure 1 (Set.Iic (L * t)) ^ (n + 1) := by
+  have hsub : {ω : (ℕ → E) × (ℕ → ℝ) | n < stepIndex (jumpTime lam ω.1 ω.2) t}
+      ≤ᵐ[jumpMeasure mu nu] {ω : (ℕ → E) × (ℕ → ℝ) | ∀ k < n + 1, ω.2 k ≤ L * t} := by
+    filter_upwards [ae_pos_snd_jumpMeasure mu nu] with ω hpos hmem k hk
+    have hTle : jumpTime lam ω.1 ω.2 (n + 1) ≤ t := le_of_lt_stepIndex hmem
+    have hsum : (∑ j ∈ Finset.range (n + 1), ω.2 j) / L ≤ t :=
+      le_trans (sum_div_le_jumpTime hlam hL (fun j ↦ (hpos j).le) (n + 1)) hTle
+    rw [div_le_iff₀ hL0] at hsum
+    calc ω.2 k ≤ ∑ j ∈ Finset.range (n + 1), ω.2 j :=
+          Finset.single_le_sum (f := fun j ↦ ω.2 j) (fun j _ ↦ (hpos j).le)
+            (Finset.mem_range.2 hk)
+      _ ≤ L * t := by linarith
+  refine (measure_mono_ae hsub).trans ?_
+  have hB : {ω : (ℕ → E) × (ℕ → ℝ) | ∀ k < n + 1, ω.2 k ≤ L * t}
+      = Prod.snd ⁻¹' {xi : ℕ → ℝ | ∀ k < n + 1, xi k ≤ L * t} := rfl
+  rw [hB, ← Measure.map_apply measurable_snd (measurableSet_forall_le _ _),
+    jumpMeasure_map_snd, waitingMeasure_forall_le]
+
+/-- **The renewal count of the jump construction has a finite mean.**
+
+This is hypothesis `hτint` of `integral_sub_mul_eq_zero_of_chainCompensated` at the jump
+construction, and with it hypothesis (c) of `mpSolution_of_tendsto` has its martingale half over a
+filtration containing the clock.
+
+The hypotheses are those of the bounded rate throughout: `0 < lam ≤ L`.  They are not decoration.
+The local branch of `thm:pathjumpMP` has no such bound, and there the renewal count need not be
+integrable at all -- which is the formal counterpart of the manuscript carrying `𝔼[N t] < ∞` only
+in the global statement `thm:pathjumpMP`(b). -/
+theorem integrable_stepIndex_jumpMeasure {lam : E → ℝ} {L t : ℝ} (hL0 : 0 < L)
+    (hlamm : Measurable lam) (hlam : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L) (ht : 0 ≤ t)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] :
+    Integrable (fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+      ((stepIndex (jumpTime lam ω.1 ω.2) t : ℕ) : ℝ)) (jumpMeasure mu nu) := by
+  have hmeas : Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ stepIndex (jumpTime lam ω.1 ω.2) t :=
+    (measurable_stepIndex fun n ↦ measurable_jumpTime hlamm n).comp
+      (measurable_const.prodMk measurable_id)
+  refine integrable_natCast_of_tsum_measure_ne_top hmeas _ ?_
+  have hq : expMeasure 1 (Set.Iic (L * t)) < 1 :=
+    expMeasure_one_Iic_lt_one (mul_nonneg hL0.le ht)
+  refine ne_top_of_le_ne_top ?_
+    (ENNReal.tsum_le_tsum fun n ↦ measure_lt_stepIndex_le hL0 hlam hL mu nu n)
+  rw [ENNReal.tsum_geometric_add_one]
+  refine ENNReal.mul_ne_top hq.ne_top ?_
+  rw [Ne, ENNReal.inv_eq_top, tsub_eq_zero_iff_le]
+  exact hq.not_ge
+
+end RenewalMean
+
+/-! ### The renewal count as a stopping time, and why it needs the augmentation
+
+The second input the probe of Milestone 10 asks of the jump construction is that the renewal count
+is a stopping time of the filtration that contains the clock.  It is, but **for neither of the two
+reasons one would expect**, and both corrections matter.
+
+*It is not free.*  Over `naturalFiltration (jumpChain E) i ⊔ comap Prod.snd ⊤` the whole clock sits
+in the σ-algebra at `i = 0`, so a clock measurable index would indeed be a stopping time by being
+measurable at the bottom.  The renewal count is **not** clock measurable: `jumpTime` divides the
+`k`-th waiting time by `lam` at the `k`-th mark of the chain, so it reads both factors.  What makes
+the argument work is that it reads them *up to the same index*: `jumpTime lam ω.1 ω.2 (i + 1)` is
+built from `ω.1 0, …, ω.1 i` and `ω.2 0, …, ω.2 i`, and the chain half of that is exactly what
+`naturalFiltration` supplies at `i`.  `measurable_clockFiltration_jumpTime` is that bookkeeping,
+and its index bound is `k ≤ i + 1` and not `k ≤ i` -- the jump time whose index exceeds the
+filtration index by one is still readable, because the recursion reads the state *before* the jump.
+
+*And it is not true over the plain filtration.*  `stepIndex_le_iff` already says why:
+`{stepIndex T t ≤ i}` is the event `t < T (i + 1)` **or** the explosion set, on which `sInf ∅ = 0`
+returns the junk value, and the second disjunct reads every jump time at once and lies in no
+`𝓖 i`.  The explosion set is null, so the honest statement is over the **augmented** filtration,
+and it is the first place in this development where the augmentation is not an option but the
+content: a junk value that lies is repaired by a null set, and a null set is what
+`Filtration.augment` adds.
+
+`Martingale.augment` carries the compensated chain over to the augmented filtration and
+`Filtration.le_augment` carries the weight, so nothing above this point has to be redone. -/
+
+section ClockFiltration
+
+variable {E : Type*} [MeasurableSpace E]
+
+/-- **The filtration of the embedded chain, enlarged by the whole clock.**  This is the filtration
+`condExp_jumpChain_clock` conditions over, packaged as a `Filtration` so that stopping times of it
+can be spoken of. -/
+def clockFiltration (E : Type*) [MeasurableSpace E] :
+    Filtration ℕ (inferInstance : MeasurableSpace ((ℕ → E) × (ℕ → ℝ))) :=
+  naturalFiltration (jumpChain E) (measurable_jumpChain (E := E))
+    ⊔ Filtration.const (ι := ℕ) (MeasurableSpace.comap
+        (Prod.snd : (ℕ → E) × (ℕ → ℝ) → (ℕ → ℝ)) inferInstance) measurable_snd.comap_le
+
+theorem clockFiltration_apply (i : ℕ) :
+    clockFiltration E i = naturalFiltration (jumpChain E) (measurable_jumpChain (E := E)) i
+      ⊔ MeasurableSpace.comap (Prod.snd : (ℕ → E) × (ℕ → ℝ) → (ℕ → ℝ)) inferInstance := rfl
+
+/-- Every waiting time, at every index of the filtration: the clock is there from the bottom. -/
+theorem measurable_clockFiltration_snd (i k : ℕ) :
+    Measurable[clockFiltration E i] fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ω.2 k := by
+  rw [clockFiltration_apply]
+  exact ((measurable_pi_apply k).comp
+    (comap_measurable (Prod.snd : (ℕ → E) × (ℕ → ℝ) → (ℕ → ℝ)))).mono le_sup_right le_rfl
+
+/-- The marks of the chain, and only those below the index. -/
+theorem measurable_clockFiltration_fst {i k : ℕ} (hk : k ≤ i) :
+    Measurable[clockFiltration E i] fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ω.1 k := by
+  rw [clockFiltration_apply]
+  exact (measurable_naturalFiltration (measurable_jumpChain (E := E)) hk).mono le_sup_left le_rfl
+
+/-- **The `(i + 1)`-st jump time is measurable at the index `i`.**
+
+The bound `k ≤ i + 1` is the sharp one and is what the stopping time property needs: the recursion
+`T (k + 1) = T k + ξ k / lam (y k)` reads the chain at `k` and not at `k + 1`, so the jump time
+whose index is one above the filtration index is still readable.  Only the *state after* the
+`(i + 1)`-st jump lies outside `𝓖 i`. -/
+theorem measurable_clockFiltration_jumpTime {lam : E → ℝ} (hlamm : Measurable lam) {i : ℕ} :
+    ∀ {k : ℕ}, k ≤ i + 1 →
+      Measurable[clockFiltration E i] fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpTime lam ω.1 ω.2 k := by
+  intro k
+  induction k with
+  | zero => intro _; simp only [jumpTime_zero]; exact measurable_const
+  | succ k ih =>
+      intro hk
+      have hki : k ≤ i := Nat.succ_le_succ_iff.1 hk
+      have h1 := ih (le_trans hki (Nat.le_succ i))
+      have h2 : Measurable[clockFiltration E i]
+          fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ω.2 k / lam (ω.1 k) :=
+        (measurable_clockFiltration_snd i k).div
+          (hlamm.comp (measurable_clockFiltration_fst hki))
+      have heq : (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpTime lam ω.1 ω.2 (k + 1))
+          = fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpTime lam ω.1 ω.2 k + ω.2 k / lam (ω.1 k) :=
+        funext fun ω ↦ jumpTime_succ lam ω.1 ω.2 k
+      rw [heq]
+      exact h1.add h2
+
+/-- **The renewal count is a stopping time of the augmented clock filtration.**
+
+The augmentation is not cosmetic.  Without it the statement is false: by `stepIndex_le_iff` the
+event `{stepIndex ≤ i}` contains the explosion set, where `sInf ∅ = 0` is returned, and that set is
+described by all the jump times at once.  It is null, and `Filtration.augment` is exactly the
+enlargement by null sets, so the event differs from `{t < jumpTime … (i + 1)}` -- which does lie in
+`𝓖 i`, by `measurable_clockFiltration_jumpTime` -- by nothing that the augmented σ-algebra cannot
+absorb.
+
+Together with `integrable_stepIndex_jumpMeasure` this is what
+`integral_sub_mul_eq_zero_of_chainCompensated` asks of the jump construction. -/
+theorem isStoppingTime_stepIndex_augment {lam : E → ℝ} {L t : ℝ} (hL0 : 0 < L)
+    (hlamm : Measurable lam) (hlam : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] :
+    IsStoppingTime ((clockFiltration E).augment (jumpMeasure mu nu))
+      (fun ω ↦ ((stepIndex (jumpTime lam ω.1 ω.2) t : ℕ) : WithTop ℕ)) := by
+  have hmeas : Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ stepIndex (jumpTime lam ω.1 ω.2) t :=
+    (measurable_stepIndex fun n ↦ measurable_jumpTime hlamm n).comp
+      (measurable_const.prodMk measurable_id)
+  intro i
+  have hset : {ω : (ℕ → E) × (ℕ → ℝ) |
+      ((stepIndex (jumpTime lam ω.1 ω.2) t : ℕ) : WithTop ℕ) ≤ ((i : ℕ) : WithTop ℕ)}
+      = (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ stepIndex (jumpTime lam ω.1 ω.2) t) ⁻¹' Set.Iic i := by
+    ext ω
+    simp
+  rw [MeasureTheory.Filtration.measurableSet_augment_iff]
+  refine ⟨by
+      show MeasurableSet {ω : (ℕ → E) × (ℕ → ℝ) |
+        ((stepIndex (jumpTime lam ω.1 ω.2) t : ℕ) : WithTop ℕ) ≤ ((i : ℕ) : WithTop ℕ)}
+      rw [hset]
+      exact hmeas measurableSet_Iic,
+    (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpTime lam ω.1 ω.2 (i + 1)) ⁻¹' Set.Ioi t,
+    measurable_clockFiltration_jumpTime hlamm le_rfl measurableSet_Ioi, ?_⟩
+  rw [Filter.eventuallyEq_set]
+  filter_upwards [ae_pos_snd_jumpMeasure mu nu, ae_exists_lt_jumpTime hL0 hlam hL mu nu]
+    with ω hpos hex
+  have hmono : Monotone (jumpTime lam ω.1 ω.2) :=
+    (strictMono_jumpTime (fun n ↦ hpos n) hlam).monotone
+  have := stepIndex_le_iff_of_exists (T := jumpTime lam ω.1 ω.2) (t := t) (n := i) hmono (hex t)
+  simpa using this
+
+end ClockFiltration
+
+/-! ### Hypothesis (c) at the jump construction, assembled
+
+The five inputs of `integral_sub_mul_eq_zero_of_chainCompensated` now stand separately at the
+jump construction, and this block is what they were built for: one statement saying that the
+compensated chain of a bounded test function is orthogonal, at the renewal counts of two times,
+to every bounded weight measurable for the earlier one.
+
+Nothing is decided here.  The martingale is `martingale_chainCompensated` fed by
+`condExp_jumpChain_clock` and carried up by `Martingale.augment`; the finite mean is
+`integrable_stepIndex_jumpMeasure`; the stopping time property at each of the two times is
+`isStoppingTime_stepIndex_augment`; and the order of the two counts is `stepIndex_mono_time`,
+which holds off the explosion set and, by `not_stepIndex_mono_time`, nowhere else.
+
+**The augmentation is the filtration of the statement and not a step inside it.**  Both
+stopping times are stopping times of `(clockFiltration E).augment (jumpMeasure mu nu)` and of no
+smaller filtration, so the σ-algebra the weight is measurable for is the augmented one.  That is
+the honest reading: the renewal count is a stopping time only up to the explosion null set, and
+a σ-algebra that does not contain the null sets does not see that. -/
+
+section JumpChainOrthogonality
+
+variable {E : Type*} [MeasurableSpace E]
+
+/-- **The compensated chain of the jump construction is a martingale of the clock filtration.**
+
+The test function is bounded and measurable, the compensator is the one step kernel average
+`x ↦ ∫ f d(mu x)`, and the filtration is `clockFiltration E` -- the natural filtration of the
+embedded chain enlarged by the whole clock.  The enlargement is what
+`condExp_jumpChain_clock` pays for, and it is why this statement can be made at all: the
+renewal count reads the waiting times, so a filtration that does not carry them has no stopping
+time to offer.
+
+`measurable_clockFiltration_fst` is the adaptedness and `measurable_integral_kernel_apply` the
+measurability of the compensator; the two integrability hypotheses are the constant bound. -/
+theorem martingale_chainCompensated_jumpChain (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] {f : E → ℝ} (hf : Measurable f)
+    {C : ℝ} (hfb : ∀ x, |f x| ≤ C) :
+    Martingale (chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E))
+      (clockFiltration E) (jumpMeasure mu nu) := by
+  have hPfm : Measurable (fun x : E ↦ ∫ y, f y ∂(mu x)) := measurable_integral_kernel_apply hf
+  have hPfb : ∀ x : E, |∫ y, f y ∂(mu x)| ≤ C := by
+    intro x
+    have := norm_integral_le_of_norm_le_const (μ := mu x) (C := C) (f := f)
+      (.of_forall fun y ↦ by simpa [Real.norm_eq_abs] using hfb y)
+    simpa using this
+  refine martingale_chainCompensated (𝓖 := clockFiltration E) (fun n ↦ ?_) (fun n ↦ ?_)
+    (fun n ↦ ?_) (fun n ↦ ?_) (fun n ↦ ?_)
+  · exact (hf.comp (measurable_clockFiltration_fst (le_refl n))).stronglyMeasurable
+  · exact (hPfm.comp (measurable_clockFiltration_fst (le_refl n))).stronglyMeasurable
+  · exact (integrable_const C).mono'
+      ((hf.comp (measurable_jumpChain (E := E) n)).aestronglyMeasurable)
+      (.of_forall fun ω ↦ by simpa [Real.norm_eq_abs] using hfb (jumpChain E n ω))
+  · exact (integrable_const C).mono'
+      ((hPfm.comp (measurable_jumpChain (E := E) n)).aestronglyMeasurable)
+      (.of_forall fun ω ↦ by simpa [Real.norm_eq_abs] using hPfb (jumpChain E n ω))
+  · exact condExp_jumpChain_clock mu nu n hf hfb
+
+/-- **Hypothesis (c) of `mpSolution_of_tendsto` at the jump construction, as one statement.**
+
+For a bounded measurable test function, a rate with `0 < lam ≤ L`, and two times `0 ≤ s ≤ t`,
+the increment of the compensated chain between the two renewal counts is orthogonal to every
+bounded weight measurable for the σ-algebra of the earlier count.
+
+**What the hypotheses are, and what they are not.**  The bound `lam ≤ L` is not decoration: it
+is what makes the renewal count integrable (`integrable_stepIndex_jumpMeasure`) and what makes
+the jump times exhaust the half line (`ae_exists_lt_jumpTime`), and both are used.  It is the
+formal counterpart of the manuscript carrying `𝔼[N t] < ∞` in `thm:pathjumpMP`(b) and not in
+(a); the local branch has no such bound and no such statement.  Over `E` nothing is asked but
+its σ-algebra, and no topology occurs anywhere.
+
+**The weight lives on the augmented filtration**, and the augmentation is not removable: by
+`not_stepIndex_mono_time` the renewal count is monotone in the time only off the explosion set,
+and by `stepIndex_le_iff` it is a stopping time only there.  Both defects are null sets, which
+is what `Filtration.augment` absorbs. -/
+theorem integral_sub_mul_eq_zero_jumpChain_stepIndex {lam : E → ℝ} {L s t : ℝ}
+    (hL0 : 0 < L) (hlamm : Measurable lam) (hlam : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L)
+    (hs : 0 ≤ s) (hst : s ≤ t)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu]
+    {f : E → ℝ} (hf : Measurable f) {C : ℝ} (hfb : ∀ x, |f x| ≤ C)
+    {W : (ℕ → E) × (ℕ → ℝ) → ℝ}
+    (hW : StronglyMeasurable[(isStoppingTime_stepIndex_augment (t := s) hL0 hlamm hlam hL
+      mu nu).measurableSpace] W) {b : ℝ} (hb : ∀ ω, ‖W ω‖ ≤ b) :
+    ∫ ω, (stoppedValue (chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E))
+          (fun ω ↦ ((stepIndex (jumpTime lam ω.1 ω.2) t : ℕ) : WithTop ℕ)) ω
+        - stoppedValue (chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E))
+          (fun ω ↦ ((stepIndex (jumpTime lam ω.1 ω.2) s : ℕ) : WithTop ℕ)) ω) * W ω
+      ∂(jumpMeasure mu nu) = 0 := by
+  have hPfb : ∀ x : E, |∫ y, f y ∂(mu x)| ≤ C := by
+    intro x
+    have := norm_integral_le_of_norm_le_const (μ := mu x) (C := C) (f := f)
+      (.of_forall fun y ↦ by simpa [Real.norm_eq_abs] using hfb y)
+    simpa using this
+  have hM := (martingale_chainCompensated_jumpChain mu nu hf hfb).augment
+  have hστ : ∀ᵐ ω ∂(jumpMeasure mu nu),
+      ((stepIndex (jumpTime lam ω.1 ω.2) s : ℕ) : WithTop ℕ)
+        ≤ ((stepIndex (jumpTime lam ω.1 ω.2) t : ℕ) : WithTop ℕ) := by
+    filter_upwards [ae_exists_lt_jumpTime hL0 hlam hL mu nu] with ω hex
+    exact_mod_cast stepIndex_mono_time hst (hex t)
+  have hτint : Integrable (fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+      (((((stepIndex (jumpTime lam ω.1 ω.2) t : ℕ) : WithTop ℕ).untopA : ℕ) : ℝ)))
+      (jumpMeasure mu nu) := by
+    have hint := integrable_stepIndex_jumpMeasure (t := t) hL0 hlamm hlam hL (hs.trans hst) mu nu
+    refine hint.congr (Filter.Eventually.of_forall fun ω ↦ ?_)
+    have huntop : ((((stepIndex (jumpTime lam ω.1 ω.2) t : ℕ) : WithTop ℕ)).untopA : ℕ)
+        = stepIndex (jumpTime lam ω.1 ω.2) t := WithTop.untopD_coe _ _
+    simp only [huntop]
+  have key := integral_sub_mul_eq_zero_of_chainCompensated (𝕂 := ℝ) hM
+    (fun x ↦ by simpa [Real.norm_eq_abs] using hfb x)
+    (fun x ↦ by simpa [Real.norm_eq_abs] using hPfb x)
+    (isStoppingTime_stepIndex_augment (t := s) hL0 hlamm hlam hL mu nu)
+    (isStoppingTime_stepIndex_augment (t := t) hL0 hlamm hlam hL mu nu)
+    hστ (fun ω ↦ by simp) hτint hW hb
+  simpa [RCLike.ofReal_real_eq_id] using key
+
+end JumpChainOrthogonality
