@@ -39068,3 +39068,281 @@ zwanzigsten Lauf desselben Tages.
    auf nichts angewandt; der Zeuge ist das Akzeptanzbeispiel von Meilenstein 10,
    dessen Approximanten seit dem elften Lauf des 2026-09-18 auf dem Pfadraum
    unter dem Bildmaß stehen.
+
+### 2026-09-18, zweiundzwanzigster Lauf des Tages — die Kette gegen Mathlib `master`: `WeakConvergence` und `SkorokhodSpace` sind fehlerfrei, und damit steht zum ersten Mal die Zahl, die niemand schätzen wollte
+
+Dies ist der erste Lauf unter dem Vorrang vom 2026-09-18 abends. Er hat **keine
+Mathematik** angefaßt: keine neue Deklaration, kein `sorry` geschlossen, keine
+Aussage geändert. Was sich geändert hat, sind Schreibweisen, und was dabei
+herauskommt, ist eine Messung.
+
+#### Der Stand, gemessen statt hochgerechnet
+
+Mathlib `upstream/master`, Commit `94ef6b89544e58e90f119da869f3fb48d1da0f4c`
+vom 2026-09-18, Lean `4.35.0-rc2`. Die Tabelle steht in
+`scripts/_citations/lean_check_master.md`.
+
+| Datei | vorher | nachher |
+| --- | ---: | ---: |
+| `WeakConvergence` | 16 Fehler | **0** |
+| `SkorokhodSpace` | *nicht geprüft* | **0** |
+| `MartingaleProblems` | *nicht geprüft* | 93 Fehler gemessen, dann **0** |
+
+**Die ganze Kette übersetzt gegen `master`: 0 Fehler, 0 `sorry`, in allen drei
+Dateien.** Das ist mehr, als der Auftrag verlangt hat -- er verlangte
+`WeakConvergence` sauber und die Zahl für die übrigen. Die Zahl steht oben, und
+sie ist im selben Lauf auf Null gebracht.
+
+**Die beiden unteren waren nicht geprüft**, und genau deshalb war die Aufgabe
+gestellt: ihr einziger gemeldeter Fehler war die fehlende `.olean` der
+Abhängigkeit. Jetzt, wo `WeakConvergence` eine `.olean` erzeugt, sagt die
+Prüfung zum ersten Mal etwas über sie.
+
+* **`SkorokhodSpace` hatte vier Fehler** — zwei Familien, beide mechanisch, in
+  einem Zug erledigt. Die Datei ist fehlerfrei gegen `master`.
+* **`MartingaleProblems` hatte 93 Fehler**, 414 Warnungen, und einen
+  `deterministic timeout` des Kernels an einer Stelle. Das ist die Zahl, die der
+  Auftrag verlangt hat und die keine Hochrechnung aus den sechzehn hergegeben
+  hätte: 38 184 Zeilen sind nicht das Fünffache von 7 073, und die Fehler sitzen
+  nicht gleichverteilt. 69 der 93 sind **zwei** Familien.
+
+#### Die Familien, und wie viele Wege es wirklich gibt
+
+Die 16 Fehler von `WeakConvergence` zerfielen in **sechs** Familien, nicht in
+die vier, die der Auftrag genannt hatte. Die beiden zusätzlichen sind:
+
+* `Measure.map_smul` trägt auf `master` eine Voraussetzung `AEMeasurable f μ`,
+  die es auf v4.33.1 nicht hat (`MeasureTheory/Measure/Map.lean:142` gegen
+  `:128`). Das ist **kein** Schönheitsfehler, sondern eine Berichtigung: auf
+  `master` ist der Müllwert von `Measure.map` für nicht meßbares `f` ein
+  **Dirac** statt `0` — `Measure/Typeclasses/Probability.lean:124` macht daraus
+  eine voraussetzungslose Instanz `IsProbabilityMeasure (map f μ)` —, und dann
+  ist `(c • μ).map f = c • μ.map f` ohne Meßbarkeit schlicht falsch. Vier der
+  gemeldeten „unsolved goals `case hf`" kamen daher.
+* `_root_.not_imp` gibt es auf `master` nicht mehr; `Classical.not_imp` steht auf
+  **beiden** Ständen und ist genommen.
+
+Der Müllwertwechsel erklärt zugleich die zwölf Fehler
+`Measure.isProbabilityMeasure_map` in `MartingaleProblems`: der Satz ist auf
+`master` verschwunden, weil er zur Instanz geworden ist.
+
+**Und er ist eine Bestätigung der stehenden Regel über Müllwerte**, von der
+anderen Seite her: Mathlib hat hier einen lügenden Müllwert (`0`, das kein
+Wahrscheinlichkeitsmaß ist) durch einen anderen ersetzt (einen Dirac, der eines
+ist) und die Voraussetzung dorthin geschoben, wo sie gebraucht wird. Wer sich
+auf den alten verlassen hatte, merkt es jetzt.
+
+#### Die Schreibweisen, die **beide** Stände tragen — und es sind mehr, als die Roadmap glaubte
+
+Der Auftrag sagt, `master` sei ab jetzt maßgeblich und `check_suggested.py`
+gegen v4.33.1 dürfe rot werden. Das ist die Entscheidung; sie zwingt aber nicht
+dazu, die Bodenhaftung zu v4.33.1 leichtfertig aufzugeben. Wo eine Schreibweise
+auf beiden Ständen steht, ist sie genommen:
+
+* `ENNReal.le_tsum (f := fun j => π j k) i` — die Aussage ist auf beiden
+  Ständen dieselbe (`Topology/Algebra/InfiniteSum/ENNReal.lean:147` gegen
+  `:146`); was sich geändert hat, ist die Elaboration: `?m i ≤ ∑' a, ?m a`
+  gegen `π i k ≤ ∑' i, π i k` ist Unifikation höherer Ordnung, und Lean 4.35
+  rät anders als 4.33. Die Funktion explizit zu nennen, ist die Reparatur und
+  steht überall.
+* `Classical.not_imp` statt `_root_.not_imp`.
+* `(Measure.isProbabilityMeasure_map_iff h).2 inferInstance` statt
+  `Measure.isProbabilityMeasure_map h`: die `iff`-Fassung steht wörtlich gleich
+  auf v4.33.1 (`Probability.lean:135`) und auf `master` (`:139`).
+* **`measurable_pi_iff.mpr` statt `measurable_pi_lambda`** — und das ist der
+  eigentliche Fund dieses Abschnitts. Der Doc-Kommentar von
+  `SkorokhodSpace.measurable_evalPi` behauptete: *„there is no spelling that
+  serves both"*. Das ist falsch. `measurable_pi_lambda` ist auf `master` ein
+  `deprecated` Alias von `Measurable.of_eval`, das die Funktion nicht mehr
+  explizit nimmt; aber `Measurable.of_eval` ist dort selbst als
+  `measurable_pi_iff.mpr hf` definiert
+  (`MeasurableSpace/Constructions.lean:596`), und `measurable_pi_iff` steht
+  unverändert auf v4.33.1 (`:580`). Der Kommentar ist berichtigt. Es waren
+  **64** Aufrufe in `MartingaleProblems` und zwei in `SkorokhodSpace`, alle in
+  der Gestalt `measurable_pi_lambda _`, also alle durch dieselbe Ersetzung
+  erledigt.
+
+Wirklich unvermeidbar gegen v4.33.1 sind damit bisher nur drei Stellen:
+`ProbabilityMeasure.map` ohne Meßbarkeitsargument (3×),
+`Finset.prod_le_prod₀`/`prod_le_one₀` statt `prod_le_prod`/`prod_le_one` (2+2×;
+die `₀`-Namen gibt es auf v4.33.1 **nicht**, gesucht in ganz `Mathlib/`), und
+`Measure.map_smul` mit dem neuen Argument (4×).
+
+#### Am Werkzeug geändert
+
+* `scripts/check_master.py` nahm sein Verzeichnis fest als
+  `/home/pfaffelh/Code/lean/journal` an — also den **Hauptcheckout**, der auf
+  `master` steht. Ein Lauf im Worktree hätte damit fremde Quellen geprüft und
+  seinen Bericht außerhalb seines Branches abgelegt. Es leitet das Repositorium
+  jetzt aus dem eigenen Dateipfad ab.
+* `scripts/show_master_errors.py` und `scripts/master_error_families.py` sind
+  neu: das erste zeigt die Meldungen eines Durchlaufs **ungekürzt** in einem
+  Zeilenbereich, das zweite gruppiert sie nach dem Kopf der Anwendung, in der sie
+  auftreten. Beide sind Lesehilfen; maßgeblich bleibt
+  `scripts/_citations/lean_check_master.md`, und die Regel, daß nicht gefiltert
+  und nicht abgeschnitten wird, gilt unverändert für die Prüfung selbst.
+
+#### Die Warnungen, gezählt und liegengelassen
+
+Wie angeordnet nicht Aufgabe dieses Laufs: `WeakConvergence` 51 (vorher 52),
+`SkorokhodSpace` 123, `MartingaleProblems` 414.
+
+#### Die 93 von `MartingaleProblems`, nach Familien
+
+69 der 93 waren die beiden mechanischen Familien oben — 57× `measurable_pi_lambda`
+(insgesamt 64 Aufrufe in der Datei) und 12× `Measure.isProbabilityMeasure_map`.
+Was danach übrigblieb, waren acht Familien, und sie sind interessanter als ihre
+Zahl:
+
+* **`UnifIntegrable` ist auf `master` ein anderer Begriff**, nicht ein
+  umbenannter: statt der `ε`-`δ`-Aussage steht dort
+  `Tendsto (fun ε ↦ ⨆ i, ⨆ s, ⨆ (_ : μ s ≤ ε), eLpNorm (f i) p (μ.restrict s)) (𝓝 0) (𝓝 0)`
+  (`MeasureTheory/Function/UniformIntegrable.lean:67`), mit `ε`, `δ` in `ℝ≥0∞`
+  statt in `ℝ` und mit der **eingeschränkten** statt der indizierten Norm. Die
+  `ε`-`δ`-Gestalt gibt es als `unifIntegrable_iff` (`:78`) und
+  `unifIntegrable_iff'` (`:187`); über die beiden gehen unsere drei betroffenen
+  Beweise. Und `UniformIntegrable` hat auf `master` **zwei** Komponenten statt
+  drei, also `.1` statt `.2.1` — genommen ist `.unifIntegrable`.
+* **`MemLp f p μ` ist auf `master` nur noch `eLpNorm f p μ < ∞`**
+  (`LpSeminorm/Defs.lean:149`); die Meßbarkeit ist keine Komponente mehr,
+  sondern eine Folgerung (`MemLp.aestronglyMeasurable`), weil `eLpNorm` für
+  nicht fast überall stark meßbare Funktionen `∞` ist. Also
+  `h.1 → h.aestronglyMeasurable`, `h.2 → h`, und `⟨hmeas, hfin⟩ → hfin`.
+* **Dieselbe Konvention nimmt Meßbarkeitsargumente weg und gibt andere hinzu.**
+  Weggefallen sind sie bei `tendstoInMeasure_of_tendsto_eLpNorm`,
+  `tendsto_setIntegral_of_L1'` und `eLpNorm_eq_zero_iff`, hinzugekommen bei
+  `eLpNorm_one_eq_lintegral_enorm`, `eLpNorm_mono_ae` und
+  `Lp.eLpNorm_le_of_ae_tendsto`. Das ist kein Hin und Her: die Meßbarkeit ist
+  von der *Aussage* in den *Wert* von `eLpNorm` gewandert und steht jetzt genau
+  dort, wo sie gebraucht wird, um eine Ungleichung nach oben abzusichern.
+* `Measurable.comp'` ist weg; `Measurable.fun_comp` steht auf beiden Ständen —
+  auf v4.33.1 war `comp'` seit dem 2026-01-23 ein `deprecated` Alias darauf. Wir
+  haben also einen veralteten Namen benutzt und es erst jetzt gemerkt.
+* Ein `(kernel) deterministic timeout`, dazu unten.
+* Und ein `has already been declared`, der wertvollste Fund des Laufs.
+
+#### Zwei Aussagen mußten sich ändern, nicht nur ihre Schreibweise
+
+Das ist der Teil, der kein Werkzeug ist. Die neue `eLpNorm`-Konvention macht
+zwei unserer Sätze, so wie sie dastanden, auf `master` **falsch**:
+
+* **`MeasureTheory.UnifIntegrable.of_norm_le_ae`** sagte ausdrücklich: „Nothing
+  is assumed of `g` — not measurability, not integrability." Gegen v4.33.1 war
+  das wahr. Auf `master` ist es falsch: ist `g i` nicht fast überall stark
+  meßbar, so ist `eLpNorm (g i) p (μ.restrict s) = ∞`, und die gleichmäßige
+  Integrierbarkeit von `g` kann nicht folgen. Der Satz trägt jetzt
+  `hg : ∀ i, AEStronglyMeasurable (g i) μ`. Beide Anwendungsstellen hatten sie
+  ohnehin zur Hand — es ist die Adaptiertheit des Martingals.
+* **`weightedLaw_const_mul`** brauchte `Measurable (π t)`, aus demselben Grund
+  eine Stufe tiefer: `Measure.map_smul` ist auf `master` an die Meßbarkeit
+  gebunden, weil `Measure.map` für nicht meßbares `f` jetzt einen **Dirac**
+  zurückgibt und ein Dirac sich nicht skalieren läßt wie eine Null.
+
+Beides ist nach der stehenden Regel über minimale Voraussetzungen zu melden und
+nicht stillschweigend hinzunehmen: zwei Stellen, an denen die Roadmap mehr
+verlangt als vorher, und der Beleg für die Notwendigkeit ist die Konvention
+selbst, nicht die Bequemlichkeit des Beweises.
+
+#### Der wertvollste Fund: eine Lücke, die Mathlib geschlossen hat, schließt jetzt auch bei uns
+
+`LipschitzOnWith.comp_absolutelyContinuousOnInterval` — „eine lipschitzsche
+Funktion, verkettet mit einer absolut stetigen, ist absolut stetig" — stand bei
+uns als eigene Deklaration, weil v4.33.1 sie nicht hat. Der achte Lauf des
+2026-09-17 hatte bereits festgestellt, daß Mathlib sie seit dem 2026-08-25
+(#42996) hat, unter **demselben Namen**, den wir unabhängig gewählt hatten.
+Solange gegen v4.33.1 übersetzt wurde, blieb unsere Fassung als Stellvertreter
+stehen. Gegen `master` ist sie ein Fehler: *`… has already been declared`*.
+
+Sie ist gestrichen, der Satz wird aus Mathlib genommen — Argumentreihenfolge
+`(hf, hg, h)` statt unserer `(hg, hf, hfs)`, sonst dieselbe Aussage in größerer
+Allgemeinheit —, und die drei Stellen, die die Lücke behaupteten, sind
+berichtigt: der Abschnittskommentar in `MartingaleProblems/Suggested.lean`,
+`MartingaleProblems/README.md` (Meilenstein 4) und `TODO.md` Punkt 8.
+
+#### Der Kernel-Timeout, und was er nicht ist
+
+`not_measurable_cumulativeRateF_jumpFiltrationFE` ist gegen `master` am
+**Kernel** gescheitert, nicht an der Elaboration. Der Grund steht im Beweis:
+`hpath` ist ein `rfl` zwischen zwei Treppenpfaden der versteckten Konstruktion,
+und den nachzuprüfen heißt, `stepPath` an zwei Stichprobenpunkten aufzufalten.
+Gegen v4.33.1 reichte das Standardbudget, gegen `master` nicht. Genommen ist
+`set_option maxHeartbeats 1000000 in`, und der Doc-Kommentar sagt, wofür — nicht
+für die Taktik, sondern für den Kernel. **Das ist keine Verkleidung eines
+Fehlers:** die Aussage steht, sie hängt an `propext`, `Classical.choice`,
+`Quot.sound`, und geprüft ist sie vollständig.
+
+#### Gegenprobe gegen v4.33.1, wie angeordnet berichtet und nicht behoben
+
+`scripts/check_suggested.py`, derselbe Lauf:
+
+| Datei | rc | Fehler | `sorry` |
+| --- | ---: | ---: | ---: |
+| `WeakConvergence` | 1 | 14 | 0 |
+| `SkorokhodSpace` | 1 | 1 (keine `.olean` der Abhängigkeit) | — |
+| `MartingaleProblems` | 1 | 1 (dito) | — |
+
+Die vierzehn sind genau die Familien, für die es keine gemeinsame Schreibweise
+gibt: `ProbabilityMeasure.map` ohne Meßbarkeitsargument, `Measure.map_smul` mit
+dem neuen, `Finset.prod_le_prod₀`/`prod_le_one₀`, und die
+`eLpNorm`/`MemLp`/`UnifIntegrable`-Umstellung. **Das ist der erwartete
+Richtungswechsel und kein Rückschritt**; ab jetzt ist `check_master.py` die
+maßgebliche Prüfung.
+
+#### Geprüft
+
+* `scripts/check_master.py`: alle drei Dateien rc 0, 0 Fehler, 0 `sorry`.
+* `#print axioms` auf elf Deklarationen, darunter alle, deren **Aussage** sich
+  geändert hat (`MeasureTheory.UnifIntegrable.of_norm_le_ae`,
+  `weightedLaw_const_mul`), die mit erhöhtem Budget
+  (`not_measurable_cumulativeRateF_jumpFiltrationFE`), die, die jetzt auf
+  Mathlibs Lipschitzsatz ruht (`integral_mul_deriv_comp_intervalIntegral`), und
+  je zwei aus den beiden anderen Dateien. Alle elf: `propext`,
+  `Classical.choice`, `Quot.sound`.
+* Dafür neu: `scripts/check_axioms_master.py`. `check_axioms.py` hängt am
+  v4.33.1-Baum `scratch/_lean`, den es jetzt nicht mehr gibt; ohne das neue
+  Skript wäre die Axiomprüfung dieses Laufs gar nicht möglich gewesen.
+
+#### Was dieser Lauf **nicht** getan hat
+
+Keine Mathematik. Keine neue mathematische Deklaration, kein `sorry`
+geschlossen, keine Zeile des Manuskripts angefaßt, keine Zeile des Inventars mit
+Status `?` — es gibt keine mehr.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die Versionsangaben der vier Roadmaps auf `master` umstellen.**
+   *Was:* jede Stelle in den `README.md` und in `TODO.md`, die sagt, die
+   Entwicklung sei „an v4.33.1 gebunden" oder gegen v4.33.1 übersetzt, auf den
+   neuen Stand bringen, mit dem Commit im Text. Allein
+   `MartingaleProblems/README.md` nennt v4.33.1 an über zwanzig Stellen
+   (`grep -n "v4\\.33\\.1"`), und `:4945` behauptet ausdrücklich „Was gebaut ist
+   und gegen v4.33.1 übersetzt".
+   *Worauf es ruht:* auf diesem Lauf allein; es ist Schreibarbeit und keine
+   Mathematik.
+   *Warum jetzt:* `CONTRIBUTING.md` verlangt zeilengeprüfte Zitate, und eine
+   Roadmap, die den Stand falsch nennt, gegen den sie geprüft ist, ist genau die
+   Sorte Zusage, von der der Auftrag sagt, sie sei ein Versprechen an einen
+   Leser. Es ist außerdem der billigste Zeitpunkt: die Zeilennummern sind eben
+   gegen `94ef6b89544` gemessen worden.
+   **Und dabei mitzunehmen:** die Zeilennummern der zitierten Mathlib-Namen sind
+   nach wie vor die von v4.33.1. Welche davon auf `master` verschoben sind, sagt
+   `scripts/check_cited_names.py` nicht — es prüft die Existenz, nicht die Zeile.
+
+2. **Die 536 Warnungen sichten und die Veraltungen abtragen.**
+   *Was:* `Set.mem_setOf_eq → Set.mem_ofPred_eq`, `if_pos`/`if_neg →
+   ite_eq_left`/`ite_eq_right`, `dif_pos`/`dif_neg`, `push_neg → push Not` — und
+   vor allem: **welche davon waren, wie `Measurable.comp'`, schon auf v4.33.1
+   veraltet und nur nie aufgefallen?** Das ist die Frage, die den Punkt über
+   bloße Kosmetik hebt.
+   *Worauf es ruht:* auf `scripts/_citations/master_*.out`, die vollständig
+   dastehen.
+   *Warum jetzt:* ihre Zahl wächst mit jeder Datei, und sie sind der einzige
+   verbliebene Unterschied zwischen „baut" und „baut sauber", den das
+   Zielrepositorium sieht.
+
+3. **Erst danach wieder Mathematik**, und zwar dort, wo der einundzwanzigste
+   Lauf aufgehört hat:
+   `SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq`, der Vergleich
+   zweier Gesetze an den verschobenen Zeiten. Seine Eingaben stehen alle,
+   einschließlich der gemeinsamen guten Zeit für einen `Finset` von Gesetzen;
+   der Vorschlag ist unverändert gültig und dort ausgeschrieben.

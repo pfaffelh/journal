@@ -638,10 +638,11 @@ steht in seinem Dateikopf: es prüft Zeichenketten, nicht Aussagen.
   Namen**, den wir unabhängig gewählt haben, mit derselben Voraussetzung
   `MapsTo g (uIcc a b) t` und allgemeiner als unsere: dort geht die äußere
   Funktion in einen beliebigen pseudometrischen Raum, bei uns ist sie reell.
-  In **v4.33.1**, an das wir gebunden sind, gibt es sie nicht; unsere Fassung
-  vom 2026-09-13 bleibt deshalb stehen und ist keine Doppelarbeit mehr, sondern
-  der Stellvertreter für den Stand, gegen den wir übersetzen. Ein PR dieser
-  Aussage ist gegenstandslos.
+  In **v4.33.1** gibt es sie nicht. Solange die Roadmaps gegen v4.33.1
+  übersetzten, blieb unsere Fassung vom 2026-09-13 als Stellvertreter stehen;
+  seit dem 2026-09-18, als die Kette auf `master` umgestellt wurde, ist sie
+  **gestrichen** und der Satz wird aus Mathlib genommen. Ein PR dieser Aussage
+  ist gegenstandslos.
 
   Die Lipschitzschranke nur auf `s` zu verlangen ist nicht Bequemlichkeit: `exp`
   ist nicht global lipschitz, und ohne die Einschränkung auf ein Kompaktum um
