@@ -1091,7 +1091,6 @@ theorem IsCadlag.eq_of_eqOn_dense {f g : ι → E} (hf : IsCadlag f) (hg : IsCad
       filter_upwards [self_mem_nhdsWithin] with x hx using (h hx.1).symm
     exact tendsto_nhds_unique hf' (Filter.Tendsto.congr' hfg hg')
 
-omit [AdditiveDist ι] [ProperSpace ι] in
 /-- Càdlàg functions are closed under precomposition with a monotone continuous
 map of the index.  This is what makes `SkorokhodSpace.restrictExhaustion` of
 Milestone 4 land in the space again, `clamp` being monotone and continuous.
@@ -1102,8 +1101,21 @@ continuity of `f` may be read through `continuousWithinAt_Ioi_iff_Ici`.  On the
 left the proof splits: either `g` is already constant to the left of `x` --- and
 then so is `f ∘ g` on the whole interval, by monotonicity between the two equal
 values --- or `g y < g x` for every `y < x`, and then `g` tends to `g x` from
-below, so the left limit of `f` at `g x` is the left limit of `f ∘ g` at `x`. -/
-theorem IsCadlag.comp_monotone_continuous {f : ι → E} (hf : IsCadlag f) {g : ι → ι}
+below, so the left limit of `f` at `g x` is the left limit of `f ∘ g` at `x`.
+
+**The two indices are not the same index**, and this is the generalisation of
+2026-09-18.  The proof never compares a point of the source with a point of the
+target, so `g` may change the index outright; what it uses of the source is the
+order topology, through `Ioo_mem_nhdsLT`, and of the target the order topology
+again, through `continuousWithinAt_Ioi_iff_Ici`.  Neither index needs a metric,
+and the target needs none of the bundle of Milestone 1.  The one-index form is
+the case `α = β` and is how `restrictExhaustion` reads it; the two-index form is
+what `IsCadlag.comp_coe_nnreal` below needs, where the source is `ℝ≥0` and the
+target is `ℝ`. -/
+theorem IsCadlag.comp_monotone_continuous {α β γ : Type*}
+    [LinearOrder α] [TopologicalSpace α] [OrderTopology α]
+    [LinearOrder β] [TopologicalSpace β] [OrderTopology β] [TopologicalSpace γ]
+    {f : β → γ} (hf : IsCadlag f) {g : α → β}
     (hgm : Monotone g) (hgc : Continuous g) : IsCadlag (f ∘ g) where
   isRightContinuous a := by
     have h₁ : ContinuousWithinAt f (Set.Ici (g a)) (g a) :=
@@ -1123,6 +1135,19 @@ theorem IsCadlag.comp_monotone_continuous {f : ι → E} (hf : IsCadlag f) {g : 
         hgc.continuousWithinAt ?_
       filter_upwards [self_mem_nhdsWithin] with y hy
       exact lt_of_le_of_ne (hgm (le_of_lt hy)) (hconst y hy)
+
+/-- **A càdlàg function of a real time is càdlàg as a function of a nonnegative
+time.**  The index of the martingale problems of **MartingaleProblems** is `ℝ≥0`
+while the paths of its jump construction are functions of a real time, and this
+is the passage between the two.  The coercion is monotone and continuous, so it
+is `IsCadlag.comp_monotone_continuous` in its two index form and nothing else.
+
+What the passage does **not** do is repair the left limits: `f` has to be càdlàg
+on all of `ℝ` for this to apply, and a path that accumulates infinitely many
+jumps at a finite time is càdlàg at no index. -/
+theorem IsCadlag.comp_coe_nnreal {γ : Type*} [TopologicalSpace γ] {f : ℝ → γ}
+    (hf : IsCadlag f) : IsCadlag fun t : ℝ≥0 => f (t : ℝ) :=
+  hf.comp_monotone_continuous NNReal.coe_mono NNReal.continuous_coe
 
 /-- The form the completeness argument of Milestone 5 consumes
 `IsCadlag.of_forall_eventuallyEq` in: uniform convergence **on every window** is
@@ -7354,6 +7379,191 @@ theorem SkorokhodSpace.borel_eq_iSup_comap_eval [CompleteSpace E]
       exact iSup_le fun t => le_iSup_of_le (t : ι) le_rfl
     exact hle A ⟨S, hS, hSA⟩
   · exact iSup_le fun t => (SkorokhodSpace.measurable_eval (E := E) t).comap_le
+
+/-! ### The index `ℝ≥0`
+
+`ℝ≥0` is the index of the martingale problems of **MartingaleProblems** and of
+its path space, so `D(ℝ≥0, E)` is the space a solution of a jump martingale
+problem would live in.  Nothing above says that `ℝ≥0` is an index at all.  The
+bundle of Milestone 1 is `LinearOrder`, `MetricSpace`, `OrderTopology`,
+`AdditiveDist`, `ProperSpace` and `BasePoint`; Mathlib supplies the first three
+and `ProperSpace ℝ≥0`
+(`Mathlib/Topology/MetricSpace/ProperSpace/Real.lean`, `NNReal.instProperSpace`),
+and separability and the Borel structure ask for
+`SkorokhodSpace.HasCountableCore` on top of them.  The declarations below supply
+what is missing, and the countable core is the only one of them with content.
+
+**The core is inherited from `ℝ` and is not built a second time.**  A time change
+of `ℝ` fixing `0` carries `Set.Ici 0` onto itself and therefore restricts to
+`ℝ≥0`; restriction can only shrink the set over which a Lipschitz constant is
+tested, so both constants can only drop and with them the norm, and the core `ℚ`
+of `Real.instHasCountableCore` restricts to the nonnegative rationals.  That the
+restricted nodes are nonnegative is not an extra assumption but a consequence:
+`l (d i) = t i ≥ 0` together with `l 0 = 0` forces `d i ≥ 0`, because `l` is an
+order isomorphism.  It is the clause `l.toOrderIso basePoint = basePoint` of
+`HasCountableCore` that makes the transport possible; a core without it would say
+nothing about a half line. -/
+
+/-- The metric of `ℝ≥0` is additive along the order, `dist s u = dist s t +
+dist t u` for `s ≤ t ≤ u`.  It is `Real.instAdditiveDist` read through
+`NNReal.dist_eq`, the coercion being an isometry onto its image. -/
+instance NNReal.instAdditiveDist : AdditiveDist ℝ≥0 where
+  dist_add := by
+    intro s t u hst htu
+    have h1 : (s : ℝ) ≤ t := hst
+    have h2 : (t : ℝ) ≤ u := htu
+    rw [NNReal.dist_eq, NNReal.dist_eq, NNReal.dist_eq, abs_of_nonpos (by linarith),
+      abs_of_nonpos (by linarith), abs_of_nonpos (by linarith)]
+    ring
+
+/-- The base point of `ℝ≥0` is `0`, as for `ℝ`.  Here there is no choice to be
+made: `0` is the least element, and the exhaustion by balls around any other
+point would still be an exhaustion but would not be the one the processes are
+started at. -/
+instance NNReal.instBasePoint : BasePoint ℝ≥0 := ⟨0⟩
+
+/-- The order isomorphism of `ℝ≥0` obtained by restricting one of `ℝ` that fixes
+`0`.  Both halves need the same argument: a monotone bijection fixing `0` maps
+nonnegatives to nonnegatives, and so does its inverse, which fixes `0` as well. -/
+noncomputable def TimeChange.nnrealOrderIso (l : TimeChange ℝ) (h0 : l.toOrderIso 0 = 0) :
+    ℝ≥0 ≃o ℝ≥0 where
+  toFun x := ⟨l.toOrderIso (x : ℝ), by
+    have := l.toOrderIso.monotone x.2
+    rwa [h0] at this⟩
+  invFun x := ⟨l.toOrderIso.symm (x : ℝ), by
+    have hsymm : l.toOrderIso.symm 0 = 0 := by
+      have h := congrArg l.toOrderIso.symm h0
+      rw [OrderIso.symm_apply_apply] at h
+      exact h.symm
+    have := l.toOrderIso.symm.monotone x.2
+    rwa [hsymm] at this⟩
+  left_inv x := by
+    apply NNReal.coe_injective
+    exact l.toOrderIso.symm_apply_apply (x : ℝ)
+  right_inv x := by
+    apply NNReal.coe_injective
+    exact l.toOrderIso.apply_symm_apply (x : ℝ)
+  map_rel_iff' := by
+    intro a b
+    exact l.toOrderIso.le_iff_le
+
+/-- **A time change of `ℝ` fixing `0` restricts to a time change of `ℝ≥0`.**  The
+two Lipschitz fields are inherited with the same constants, because the coercion
+`ℝ≥0 → ℝ` is distance preserving and the restricted map is the old one read on a
+smaller set. -/
+noncomputable def TimeChange.toNNReal (l : TimeChange ℝ) (h0 : l.toOrderIso 0 = 0) :
+    TimeChange ℝ≥0 where
+  toOrderIso := l.nnrealOrderIso h0
+  lipschitz := ⟨l.lipConst, LipschitzWith.of_dist_le_mul fun a b => by
+    rw [NNReal.dist_eq, NNReal.dist_eq, ← Real.dist_eq, ← Real.dist_eq]
+    exact l.lipschitzWith_lipConst.dist_le_mul _ _⟩
+  lipschitz_symm := ⟨l⁻¹.lipConst, LipschitzWith.of_dist_le_mul fun a b => by
+    rw [NNReal.dist_eq, NNReal.dist_eq, ← Real.dist_eq, ← Real.dist_eq]
+    exact l⁻¹.lipschitzWith_lipConst.dist_le_mul _ _⟩
+
+@[simp] theorem TimeChange.coe_toNNReal_apply (l : TimeChange ℝ) (h0 : l.toOrderIso 0 = 0)
+    (x : ℝ≥0) : ((l.toNNReal h0).toOrderIso x : ℝ) = l.toOrderIso (x : ℝ) := rfl
+
+/-- The restriction fixes the base point, which is what `HasCountableCore` asks
+of the time change it produces. -/
+theorem TimeChange.toNNReal_basePoint (l : TimeChange ℝ) (h0 : l.toOrderIso 0 = 0) :
+    (l.toNNReal h0).toOrderIso (basePoint : ℝ≥0) = basePoint := by
+  apply NNReal.coe_injective
+  rw [TimeChange.coe_toNNReal_apply]
+  exact h0
+
+/-- Restriction commutes with inversion.  This is what carries the second
+Lipschitz constant of the norm across, and it is `rfl` on the underlying map. -/
+theorem TimeChange.inv_toNNReal (l : TimeChange ℝ) (h0 : l.toOrderIso 0 = 0)
+    (h0' : l⁻¹.toOrderIso 0 = 0) : (l.toNNReal h0)⁻¹ = l⁻¹.toNNReal h0' := by
+  refine TimeChange.ext ?_
+  refine OrderIso.ext ?_
+  funext x
+  apply NNReal.coe_injective
+  rfl
+
+/-- The inverse of a time change fixing `0` fixes `0`. -/
+theorem TimeChange.inv_orderIso_zero (l : TimeChange ℝ) (h0 : l.toOrderIso 0 = 0) :
+    l⁻¹.toOrderIso 0 = 0 := by
+  have h := congrArg l.toOrderIso.symm h0
+  rw [OrderIso.symm_apply_apply] at h
+  exact h.symm
+
+/-- Restriction can only lower the least Lipschitz constant: every admissible
+constant of `l` is admissible for its restriction, so the infimum is taken over a
+larger set. -/
+theorem TimeChange.lipConst_toNNReal_le (l : TimeChange ℝ) (h0 : l.toOrderIso 0 = 0) :
+    (l.toNNReal h0).lipConst ≤ l.lipConst :=
+  csInf_le' (LipschitzWith.of_dist_le_mul fun a b => by
+    rw [NNReal.dist_eq, NNReal.dist_eq, ← Real.dist_eq, ← Real.dist_eq]
+    exact l.lipschitzWith_lipConst.dist_le_mul _ _)
+
+/-- **Restriction can only lower the norm**, which is what makes the core of `ℝ`
+usable on `ℝ≥0` with the same `δ`.  The logarithm is monotone where it is applied
+because `TimeChange.one_le_max_lipConst` keeps its argument at least `1`, `ℝ≥0`
+being nontrivial. -/
+theorem TimeChange.norm_toNNReal_le (l : TimeChange ℝ) (h0 : l.toOrderIso 0 = 0) :
+    (l.toNNReal h0).norm ≤ l.norm := by
+  have h0' : l⁻¹.toOrderIso 0 = 0 := l.inv_orderIso_zero h0
+  have hA : ((l.toNNReal h0).lipConst : ℝ) ≤ (l.lipConst : ℝ) := by
+    exact_mod_cast TimeChange.lipConst_toNNReal_le l h0
+  have hB : (((l.toNNReal h0)⁻¹).lipConst : ℝ) ≤ (l⁻¹.lipConst : ℝ) := by
+    rw [TimeChange.inv_toNNReal l h0 h0']
+    exact_mod_cast TimeChange.lipConst_toNNReal_le l⁻¹ h0'
+  have hpos : (0 : ℝ) < max ((l.toNNReal h0).lipConst : ℝ) (((l.toNNReal h0)⁻¹).lipConst : ℝ) := by
+    have h := TimeChange.one_le_max_lipConst (l.toNNReal h0)
+    have h' : (1 : ℝ) ≤ max ((l.toNNReal h0).lipConst : ℝ) (((l.toNNReal h0)⁻¹).lipConst : ℝ) := by
+      exact_mod_cast h
+    linarith
+  simp only [TimeChange.norm]
+  exact Real.log_le_log hpos (max_le (hA.trans (le_max_left _ _)) (hB.trans (le_max_right _ _)))
+
+/-- **`ℝ≥0` has a countable core**, the nonnegative rationals, and the time
+change is the restriction of the one `Real.instHasCountableCore` produces.  With
+it `D(ℝ≥0, E)` is separable, Polish and standard Borel under the same hypotheses
+on `E` as `D(ℝ, E)`. -/
+instance NNReal.instHasCountableCore : SkorokhodSpace.HasCountableCore ℝ≥0 where
+  exists_core := by
+    obtain ⟨C, hCc, hC⟩ := (Real.instHasCountableCore).exists_core
+    refine ⟨((↑) : ℝ≥0 → ℝ) ⁻¹' C, hCc.preimage NNReal.coe_injective, ?_⟩
+    intro n t ht δ hδ
+    have htR : StrictMono fun i => ((t i : ℝ)) := fun i j hij => by exact_mod_cast ht hij
+    obtain ⟨d, l, hdC, hl0, hlnorm, hdisp, hval⟩ := hC n (fun i => ((t i : ℝ))) htR δ hδ
+    have h0 : l.toOrderIso 0 = 0 := hl0
+    have hdnn : ∀ i, 0 ≤ d i := by
+      intro i
+      by_contra hcon
+      have hneg : d i < 0 := not_le.1 hcon
+      have h1 : l.toOrderIso (d i) < l.toOrderIso 0 := l.toOrderIso.lt_iff_lt.2 hneg
+      rw [h0, hval i] at h1
+      exact absurd (t i).2 (not_le.2 h1)
+    have hcoe : ∀ i, ((Real.toNNReal (d i) : ℝ≥0) : ℝ) = d i :=
+      fun i => Real.coe_toNNReal _ (hdnn i)
+    refine ⟨fun i => Real.toNNReal (d i), l.toNNReal h0, fun i => ?_,
+      l.toNNReal_basePoint h0, (l.norm_toNNReal_le h0).trans hlnorm, fun i => ?_, fun i => ?_⟩
+    · show ((Real.toNNReal (d i) : ℝ≥0) : ℝ) ∈ C
+      rw [hcoe i]
+      exact hdC i
+    · rw [NNReal.dist_eq, hcoe i, ← Real.dist_eq]
+      exact hdisp i
+    · apply NNReal.coe_injective
+      rw [TimeChange.coe_toNNReal_apply, hcoe i]
+      exact hval i
+
+/-- **The bundle is inhabited at `ℝ≥0`**: `D(ℝ≥0, E)` is Polish.  Without
+`NNReal.instHasCountableCore` this instance would not fire, and the statement is
+here to say that it does. -/
+theorem SkorokhodSpace.polishSpace_nnreal [CompleteSpace E] : PolishSpace D(ℝ≥0, E) :=
+  inferInstance
+
+/-- **The Borel structure of `D(ℝ≥0, E)` is the one the coordinates generate.**
+This is `SkorokhodSpace.borel_eq_iSup_comap_eval` at the index the jump
+construction uses, and it is the form in which a map into the path space is shown
+to be measurable: it suffices that every coordinate of it is. -/
+theorem SkorokhodSpace.borel_eq_iSup_comap_eval_nnreal [CompleteSpace E] :
+    (borel D(ℝ≥0, E))
+      = ⨆ t : ℝ≥0, MeasurableSpace.comap (fun f : D(ℝ≥0, E) => f.toFun t) inferInstance :=
+  SkorokhodSpace.borel_eq_iSup_comap_eval
 
 /-! ## Milestone 7: the modulus and compactness
 

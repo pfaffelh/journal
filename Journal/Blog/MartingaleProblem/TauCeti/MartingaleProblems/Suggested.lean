@@ -6539,34 +6539,12 @@ is a statement about the one sided neighbourhood filters, and what has to be pro
 coercion carries `𝓝[>] t` into `𝓝[>] (t : ℝ)` and `𝓝[<] t` into `𝓝[<] (t : ℝ)`.  It does, for the
 same reason twice: it is continuous and strictly monotone. -/
 
-/-- The coercion `ℝ≥0 → ℝ` carries the right neighbourhood filter into the right neighbourhood
-filter. -/
-theorem tendsto_coe_nnreal_nhdsWithin_Ioi (t : ℝ≥0) :
-    Tendsto (fun r : ℝ≥0 ↦ (r : ℝ)) (𝓝[>] t) (𝓝[>] ((t : ℝ))) :=
-  tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within _
-    ((NNReal.continuous_coe.tendsto t).mono_left nhdsWithin_le_nhds)
-    (by filter_upwards [self_mem_nhdsWithin] with r hr using NNReal.coe_lt_coe.2 hr)
-
-/-- The coercion `ℝ≥0 → ℝ` carries the left neighbourhood filter into the left neighbourhood
-filter.  At `t = 0` the source filter is `⊥` and the statement is empty, which is the right
-answer: a path indexed by `ℝ≥0` has no left limit to take at `0`, and `IsCadlag` asks for one
-only because the quantifier is over all of `ℝ≥0`. -/
-theorem tendsto_coe_nnreal_nhdsWithin_Iio (t : ℝ≥0) :
-    Tendsto (fun r : ℝ≥0 ↦ (r : ℝ)) (𝓝[<] t) (𝓝[<] ((t : ℝ))) :=
-  tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within _
-    ((NNReal.continuous_coe.tendsto t).mono_left nhdsWithin_le_nhds)
-    (by filter_upwards [self_mem_nhdsWithin] with r hr using NNReal.coe_lt_coe.2 hr)
-
-/-- **A càdlàg path on `ℝ` restricts to a càdlàg path on `ℝ≥0`.**  The bridge between the index
-the jump construction is written over and the index the martingale problem is stated over.
-
-Only one direction is available and only one is wanted: the restriction forgets the negative
-times, and nothing on `[0, ∞)` can recover them. -/
-theorem IsCadlag.comp_coe_nnreal {g : ℝ → E} (hg : IsCadlag g) :
-    IsCadlag fun t : ℝ≥0 ↦ g (t : ℝ) := by
-  refine ⟨fun t ↦ (hg.1 (t : ℝ)).tendsto.comp (tendsto_coe_nnreal_nhdsWithin_Ioi t), fun t ↦ ?_⟩
-  obtain ⟨l, hl⟩ := hg.2 (t : ℝ)
-  exact ⟨l, hl.comp (tendsto_coe_nnreal_nhdsWithin_Iio t)⟩
+/-! **A càdlàg path on `ℝ` restricts to a càdlàg path on `ℝ≥0`** --- the bridge between the
+index the jump construction is written over and the index the martingale problem is stated
+over --- is `IsCadlag.comp_coe_nnreal` of the roadmap **SkorokhodSpace**, and it is not
+restated here.  It was proved twice: once in that file, as the two index form of
+`IsCadlag.comp_monotone_continuous` applied to the coercion, and once here, by producing the
+two one sided filter statements by hand.  The second is the one that went, on 2026-09-18. -/
 
 /-- **A step path is discontinuous at only finitely many points of a compact
 set.**  This is the property the construction is built for, and on the present

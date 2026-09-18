@@ -37773,3 +37773,163 @@ sondern über drei benannte.
    (a) steht seit diesem Lauf, und (b) ist die Richtung, die der
    Invarianzsatz — das Akzeptanzbeispiel des Meilensteins — wirklich braucht.
    Die Eingaben sind sämtlich bewiesen; offen ist allein der Zusammenbau.
+
+### 2026-09-18, vierzehnter Lauf des Tages — Vorschlag 1 hatte eine Voraussetzung, die niemand aufgeschrieben hatte: `D(ℝ≥0, E)` gab es nicht. Jetzt gibt es ihn — und beim Bauen fiel eine Doppelung heraus, die eine Dateigrenze alt ist
+
+**Vorschlag 1 des Vorlaufs — `jumpPathD`, das Pfadabbild der Sprungkonstruktion
+nach `D(ℝ≥0, E)` — ist nicht gebaut, und der Grund ist der Fund des Laufs:** der
+Zielraum `D(ℝ≥0, E)` war in dieser Entwicklung **kein Objekt**. Der
+Indexverbund von Meilenstein 1 verlangt `LinearOrder`, `MetricSpace`,
+`OrderTopology`, `AdditiveDist`, `ProperSpace` und `BasePoint`, und für
+Separabilität, Polnischsein und die Borelstruktur zusätzlich
+`SkorokhodSpace.HasCountableCore`. Von diesen sieben hatte `ℝ≥0` **vier**:
+Mathlib gibt Ordnung, Metrik, Ordnungstopologie und `NNReal.instProperSpace`
+(`Mathlib/Topology/MetricSpace/ProperSpace/Real.lean:48`, nachgesehen an
+v4.33.1). `AdditiveDist`, `BasePoint` und der abzählbare Kern fehlten. Der
+Vorschlag war also nicht zu klein gestellt, sondern zu weit oben: er nannte eine
+Abbildung in einen Raum, den es nicht gab.
+
+Das ist jetzt behoben. **Vierzehn Deklarationen** in
+`TauCeti/SkorokhodSpace/Suggested.lean`, alle drei Roadmap-Dateien ohne einen
+Fehler und ohne ein `sorry` durch `scripts/check_suggested.py` gegen v4.33.1
+(Lean 4.33.1, commit `819816b2e0a3`), alle vierzehn mit `#print axioms` auf
+`propext`, `Classical.choice`, `Quot.sound` geprüft. Die Punkte stehen in
+`SkorokhodSpace/README.md`, Meilensteine 1, 2 und 5, und in
+`MartingaleProblems/README.md`, Meilenstein 6.
+
+#### Was bewiesen ist
+
+* `NNReal.instAdditiveDist` und `NNReal.instBasePoint` — der Verbund von
+  Meilenstein 1 an `ℝ≥0`. Beide billig; der Punkt ist, daß sie fehlten.
+  `instAdditiveDistSubtype` erreicht `ℝ≥0` **nicht**: für die Instanzensuche ist
+  `ℝ≥0` kein Untertyp von `ℝ`, und `Set.Ici (0:ℝ)` ist ein anderer Typ als der,
+  über dem die Prozesse indiziert sind. Dieselbe Lücke wie die `SetLike`-Lücke,
+  die die README von Meilenstein 1 seit jeher nennt, und dieselbe Antwort:
+  hinschreiben.
+* `TimeChange.nnrealOrderIso`, `TimeChange.toNNReal`,
+  `TimeChange.toNNReal_basePoint`, `TimeChange.inv_toNNReal`,
+  `TimeChange.inv_orderIso_zero`, `TimeChange.coe_toNNReal_apply`,
+  `TimeChange.lipConst_toNNReal_le`, `TimeChange.norm_toNNReal_le` — **eine
+  Zeitverschiebung von `ℝ`, die `0` festhält, schränkt sich auf `ℝ≥0` ein**, und
+  ihre Norm kann dabei nur fallen. Die Einschränkung verkleinert die Menge, auf
+  der eine Lipschitzkonstante geprüft wird, also wird das Infimum über eine
+  *größere* Menge zulässiger Konstanten genommen (`csInf_le'`); das gilt für `l`
+  und für `l⁻¹`, und der Logarithmus ist dort monoton, wo
+  `TimeChange.one_le_max_lipConst` sein Argument bei mindestens `1` hält.
+* `NNReal.instHasCountableCore` — **der abzählbare Kern von `ℝ≥0`, geerbt und
+  nicht neu gebaut.** Der Kern ist `ℚ≥0`, die Zeitverschiebung die Einschränkung
+  derjenigen, die `Real.instHasCountableCore` liefert.
+
+  **Und die Klausel, die den Transport trägt, ist die über den Basispunkt.**
+  `HasCountableCore` verlangt `l.toOrderIso basePoint = basePoint`; daraus folgt,
+  daß die Knoten `d i` selbst nichtnegativ sind — aus `l (d i) = t i ≥ 0` und
+  `l 0 = 0` folgt `d i ≥ 0`, weil `l` ein Ordnungsisomorphismus ist. Ein Kern
+  ohne diese Klausel sagte über eine Halbgerade **nichts**: die Knoten dürften
+  jenseits von `0` liegen und würden von der Einschränkung nicht erfaßt. Die
+  Klausel steht seit dem 2026-09-08 in der Klasse, und zwar aus einem anderen
+  Grund (`Set.Icc (0:ℝ) 1` und sein Randpunkt `1`); hier zahlt sie ein zweites
+  Mal.
+* `SkorokhodSpace.polishSpace_nnreal` und
+  `SkorokhodSpace.borel_eq_iSup_comap_eval_nnreal` — die Leerheitsprobe.
+  `D(ℝ≥0, E)` ist polnisch, und seine Borelstruktur ist die von den Koordinaten
+  erzeugte. Die zweite ist die Gestalt, in der eine Abbildung **in** den Pfadraum
+  meßbar gemacht wird: es genügt, daß jede Koordinate es ist. Ohne den
+  abzählbaren Kern feuert keine der beiden Instanzen, und das ist es, was die
+  beiden Aussagen belegen.
+
+#### Der Nebenbefund, und er kostete eine Deklaration weniger statt mehr
+
+`IsCadlag.comp_monotone_continuous` stand über **einem** Index (`g : ι → ι`).
+Der Beweis vergleicht an keiner Stelle einen Punkt der Quelle mit einem des
+Ziels; was er von beiden benutzt, ist die Ordnungstopologie, und sonst nichts.
+Die Aussage ist deshalb auf **zwei** Indizes verallgemeinert, ohne eine Zeile
+Beweis zu ändern und ohne eine Aufrufstelle anzufassen — die einindexige Fassung
+ist der Fall `α = β`. Weder Quelle noch Ziel brauchen eine Metrik, und das Ziel
+nichts vom Verbund des Meilensteins 1.
+
+**Daraus fiel eine Doppelung heraus, die eine Dateigrenze alt ist.**
+`IsCadlag.comp_coe_nnreal` — der Übergang vom reellen zum nichtnegativen Index —
+stand seit dem 2026-09-17, sechzehnter Lauf, in
+`MartingaleProblems/Suggested.lean`, dort von Hand bewiesen über zwei eigens
+dafür geschriebene Filteraussagen (`tendsto_coe_nnreal_nhdsWithin_Ioi` und
+`…_Iio`). Aus der zweiindexigen Fassung ist er **eine Zeile**. Die Kollision fiel
+auf, weil die Prüfung nach dem Einfügen `has already been declared` meldete —
+also erst, nachdem die Dateigrenze am 2026-09-17 gefallen war. Vorher hätte sie
+niemand gesehen: zwei Dateien ohne Import dürfen denselben Namen zweimal tragen,
+und beide Prüfungen sind grün. **Die Kette untereinander findet Doppelungen, die
+die getrennte Prüfung nicht finden kann** — ein Argument für die Entscheidung vom
+2026-09-17, das bei ihr noch nicht dastand.
+
+Die drei Deklarationen in `MartingaleProblems` sind entfernt, die Aussage wird
+importiert, und an ihrer Stelle steht ein Kommentar, der sagt, was dort stand und
+warum es ging. Die einzige Verbraucherstelle (`ae_isCadlag_nnreal_jumpProcessE`,
+Zeile 13056) hat sich nicht geändert.
+
+#### Warum `jumpPathD` damit noch nicht dasteht, und was ihm wirklich fehlt
+
+Der Index ist jetzt da; die zweite Hürde ist **nicht** der Index, sondern die
+Totalität. `RightContinuousPath E` verlangt von seinem Träger die rechte lokale
+Konstanz, und die gilt an **jedem** Stichprobenpunkt und unter keiner
+Voraussetzung — `eventuallyEq_nhdsGE_stepPath` (Zeile 10646) sagt es und trägt
+nicht einmal die Monotonie der Sprungzeiten. Deshalb ist `jumpPath` eine totale
+Funktion ohne Fallunterscheidung, und die README sagt an dieser Stelle seit jeher,
+warum: „an almost sure statement would define the map off a null set only".
+`D(ℝ≥0, E)` verlangt `IsCadlag`, also zusätzlich die **linken Grenzwerte**, und
+die überleben die Explosionsmenge nicht: `isStepPath_jumpProcessE` trägt die
+Nichtexplosion, und es trägt sie genau dafür.
+
+`jumpPathD` ist deshalb über eine Fallunterscheidung an der meßbaren Menge
+`NonExplosiveE` (Zeile 12768) zu definieren, mit einem konstanten Pfad daneben,
+und die Aussage, daß es den Prozeß trifft, ist eine fast sichere, über
+`ae_mem_nonExplosiveE_jumpMeasure` (Zeile 13329). Das ist die stehende Regel vom
+2026-09-18 an einer **Definition** statt an einem Satz gelesen: die Nichtexplosion
+steht in der Voraussetzung, und der Müllwert wird benannt, statt harmlos genannt
+zu werden. Der Punkt steht so in `MartingaleProblems/README.md`, Meilenstein 6,
+unter `jumpPath`.
+
+#### Was dieser Lauf **nicht** getan hat
+
+Er hat keine Zeile des Manuskripts angefaßt und keine Zeile des Inventars mit
+Status `?` bearbeitet — es gibt keine mehr. Er hat auch nicht geprüft, ob die
+übrigen drei laufenden Indizes (`Set.Ici (0:ℝ)`, `Set.Icc (0:ℝ) T`,
+`AddSubgroup.zmultiples h`) ihren abzählbaren Kern in Lean haben; die README
+führt sie, die Datei hat nur `ℝ`, den abzählbaren Fall und seit heute `ℝ≥0`. Für
+`Set.Ici (0:ℝ)` sollte derselbe Transport gehen wie hier, und dann wäre er zu
+einem Satz über **Anfangsstücke** zusammenzufassen statt zweimal geschrieben —
+das ist der Fund hinter dem Fund und gehört in den nächsten Lauf, der den Index
+anfaßt.
+
+#### Ein Nebenbefund für Rückstaupunkt 5, beim Zitieren gefunden
+
+Die drei Mathlib-Namen, auf denen der neue Abschnitt ruht, stehen auf
+`upstream/master` (`f71bd379b22`, 2026-09-18) unverändert und unveraltet an
+derselben Zeile wie auf v4.33.1: `NNReal.instProperSpace`
+(`Mathlib/Topology/MetricSpace/ProperSpace/Real.lean:48`), `NNReal.dist_eq`
+(`Mathlib/Topology/MetricSpace/Pseudo/Constructions.lean:113`) und `csInf_le'`
+(`Mathlib/Order/ConditionallyCompleteLattice/Basic.lean:534`). Der Abschnitt
+gibt gegen `master` also keine Verwarnung; die einzige Stelle der Datei, die das
+täte, bleibt `measurable_pi_lambda` aus dem Vorlauf.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`jumpPathD`, jetzt mit benannter Hürde.**
+   *Aussage:* `jumpPathD (lam) (ω) : D(ℝ≥0, E)`, über `NonExplosiveE`
+   fallunterschieden, mit `measurable_jumpPathD` und
+   `jumpPathD_eq_jumpProcessE_of_mem`. *Worauf sie ruht:* der Indexverbund an
+   `ℝ≥0` (dieser Lauf), `IsCadlag.comp_coe_nnreal`, `isStepPath_jumpProcessE`,
+   `measurable_jumpProcessE_apply` (Zeile 12757) und
+   `SkorokhodSpace.borel_eq_iSup_comap_eval_nnreal` für die Meßbarkeit, sowie
+   `ae_mem_nonExplosiveE_jumpMeasure` für die fast sichere Identifikation.
+   *Warum jetzt:* der Verbraucher liegt vor — `tendstoInDistribution_eval` ist
+   Voraussetzung (a) von `mpSolution_of_tendsto` und steht über `D(ι, E)`; in
+   `RightContinuousPath E` ist sie nie einlösbar. Zu klären ist dabei **eine**
+   Frage, und sie ist die eigentliche Arbeit: ob die Meßbarkeit koordinatenweise
+   durchgeht, wenn die Abbildung an `NonExplosiveE` fallunterschieden ist — der
+   Ersatzpfad daneben ist konstant, also ist jede Koordinate der
+   Fallunterscheidung eine Fallunterscheidung meßbarer Funktionen, und
+   `NonExplosiveE` ist meßbar; die Frage ist, ob `E` dafür mehr als `MetricSpace`
+   und `PolishSpace` braucht.
+2. **Die zweite Hälfte von `fact:fddconv`** — unverändert der Vorschlag 2 des
+   Vorlaufs: `SkorokhodSpace.tendsto_of_isCompact_closure_of_tendsto_finiteDimensional`,
+   Ethier–Kurtz 3.7.8(b). Er ist von diesem Lauf nicht berührt, seine Eingaben
+   stehen sämtlich, und offen ist allein der Zusammenbau.

@@ -6661,6 +6661,31 @@ one, and they are what the instances of the milestone stand on.
   needs: an almost sure statement would define the map off a null set only.
   `coordinate_jumpPath`, the statement that the coordinate of the image is the
   process, is `rfl`.
+* `jumpPathD` and `measurable_jumpPathD`: the same map into the Skorokhod space
+  `D(ℝ≥0, E)` of the roadmap **SkorokhodSpace**, for `E` Polish and complete.
+  This is the target the convergence theorems of Milestone 8 there consume —
+  `tendstoInDistribution_eval` is hypothesis (a) of `mpSolution_of_tendsto`
+  (Milestone 10) and is stated over `D(ι, E)` and over nothing else — so a family
+  of jump processes is a family those theorems apply to only once it is written
+  in this space. Measurability is `SkorokhodSpace.borel_eq_iSup_comap_eval_nnreal`
+  coordinatewise, on `measurable_jumpProcessE_apply`.
+
+  **Two things separate it from `jumpPath`, and both are to be settled here.**
+  The index bundle at `ℝ≥0` is the first, and it is supplied: `D(ℝ≥0, E)` became
+  an object of the development on 2026-09-18 with `NNReal.instAdditiveDist`,
+  `NNReal.instBasePoint` and `NNReal.instHasCountableCore`, and the crossing of
+  the two indices is `IsCadlag.comp_coe_nnreal`. The second is that **the
+  defining property of this space does not hold at every sample point**, where
+  the defining property of `RightContinuousPath E` does: right local constancy
+  survives the explosion set (`eventuallyEq_nhdsGE_stepPath`, no hypothesis at
+  all), while the left limits do not, and `isStepPath_jumpProcessE` carries the
+  non explosion of the jump times for exactly that reason. `jumpPathD` is
+  therefore defined by cases on the measurable set `NonExplosiveE`, with a
+  constant path off it, and the statement that it agrees with the process is an
+  almost sure one, by `ae_mem_nonExplosiveE_jumpMeasure`. That is the standing
+  rule of 2026-09-18 read on a definition rather than on a theorem: the non
+  explosion is in the hypothesis, and the junk value is named instead of being
+  called harmless.
 * `jumpFiltrationE_eq_comap_jumpPath` and `measurable_pathFiltration_jumpPath`:
   the natural filtration of the construction **is** the pull back of
   `pathFiltration` along `jumpPath`, by `naturalFiltration_comp`, so the path map
@@ -8905,17 +8930,17 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   cannot be written down over a general `𝕂`, while over `ℝ` it can. **In Lean**
   on 2026-09-17, sixteenth run.
 * `IsCadlag.comp_coe_nnreal`, the restriction of a càdlàg path on `ℝ` to a
-  càdlàg path on `ℝ≥0`, with `tendsto_coe_nnreal_nhdsWithin_Ioi` and
-  `tendsto_coe_nnreal_nhdsWithin_Iio` as its two halves. The jump construction is
-  written over `ℝ` and every statement of Milestones 3, 6 and 9 is indexed by
-  `ℝ≥0`, which is the index the clock and the filtration carry; the crossing is
-  not formal, since `IsCadlag` is a statement about the one sided
-  neighbourhood filters and what has to be produced is that the coercion carries
-  each of them into its counterpart. It does, because it is continuous and
-  strictly monotone. At `t = 0` the left filter is `⊥` and the second half is
-  empty, which is the right answer. Only the restriction is available and only it
-  is wanted: nothing on `[0, ∞)` recovers the negative times. **In Lean** on
-  2026-09-17, sixteenth run.
+  càdlàg path on `ℝ≥0`. The jump construction is written over `ℝ` and every
+  statement of Milestones 3, 6 and 9 is indexed by `ℝ≥0`, which is the index the
+  clock and the filtration carry; the crossing is not formal, since `IsCadlag` is
+  a statement about the one sided neighbourhood filters. Only the restriction is
+  available and only it is wanted: nothing on `[0, ∞)` recovers the negative
+  times. **In Lean** on 2026-09-17, sixteenth run — and **in the roadmap
+  SkorokhodSpace** since 2026-09-18, where it is the two index form of
+  `IsCadlag.comp_monotone_continuous` applied to the coercion. It was proved
+  twice; the copy in this file, with
+  `tendsto_coe_nnreal_nhdsWithin_Ioi` and `tendsto_coe_nnreal_nhdsWithin_Iio`
+  as its two halves, is gone, and the statement is imported.
 * `ae_isCadlag_nnreal_jumpProcessE`, `isOptionalSamplingFor_mpFamily_jumpProcessE`
   and `isStronglyMeasurableAlongStoppingTimes_compensatorE`, the three
   hypotheses of `isQuasiLeftContinuous_of_isMPSolutionFor` read off the data of
