@@ -73,8 +73,12 @@ it. What Mathlib does have, and what is **not** to be rebuilt:
   here, and `T1` is all it consumes.
 
 This roadmap depends on the roadmap **WeakConvergence** for separating and
-convergence determining classes (Milestone 1 there) and for the Skorokhod
-representation theorem (Milestone 3 there).
+convergence determining classes (Milestone 1 there), for the continuous mapping
+theorem for almost everywhere continuous maps (Milestone 2 there), and for the
+Skorokhod representation theorem (Milestone 3 there). Since 2026-09-18 the
+dependency is an `import` and not only a citation: `Suggested.lean` of this
+roadmap begins with `import TauCetiRoadmap.WeakConvergence.Suggested`, which the
+submission's file order allows. Only Milestone 8 uses it.
 
 The time index is a linear order carrying a metric that induces the order
 topology, is additive along the order, and has compact closed balls. That
@@ -2070,8 +2074,12 @@ over a shrinking family and is therefore an infimum.
 
 Here `μ n` and `μ` are Borel probability measures on `D ι E`, with `ι` the
 index of Milestone 1; the roadmap **WeakConvergence** supplies separating
-classes, the Skorokhod representation theorem and the continuous mapping
-theorem, and its Milestone 5 supplies the functional monotone class theorem.
+classes and the continuous mapping theorem for almost everywhere continuous
+maps (Milestone 2 there), and its Milestone 5 supplies the functional monotone
+class theorem. The Skorokhod representation theorem of Milestone 3 there is
+available and is used by no item of this milestone; where it was announced as
+the route, at the convergence of the finite dimensional distributions, the
+almost everywhere continuous mapping theorem does the work directly.
 Like Milestone 2, this milestone states its hypotheses on `E` item by item, in
 two stages.
 
@@ -2097,15 +2105,53 @@ state the second, as Theorem 3.9.1, for a complete separable `E` as well.
   Milestone 7 with `MeasureTheory.isTightMeasureSet_of_isCompact_closure` and
   its converse `isCompact_closure_of_isTightMeasureSet`; the completeness of
   `E` is what the first of the two asks for.
-* `SkorokhodSpace.tendsto_finiteDimensional_of_tendsto` — stage (A). If
-  `μ n → μ` weakly then, for every finite family `t 1, ..., t k` of points at
-  which the limit has no fixed discontinuity — that is
+* `SkorokhodSpace.tendsto_finiteDimensional_of_tendsto` — stage (A),
+  **proved 2026-09-18**. If `μ n → μ` weakly then, for every **countable** family
+  `t : α → ι` of points at which the limit has no fixed discontinuity — that is
   `μ {f | f⁻ (t i) = f (t i)} = 1` — the finite dimensional distributions
-  converge. The set of `t` failing this is countable. The proof runs through
-  the Skorokhod representation theorem (**WeakConvergence** Milestone 3) and
-  the continuous mapping theorem (Milestone 2 there), which is why separability
-  suffices: Ethier–Kurtz state both, as Theorem 3.1.8 and Corollary 3.1.9, for
-  a separable metric space and use the completeness in neither proof.
+  converge. The set of `t` failing this is countable, and
+  `exists_countable_dense_continuity` below makes the good times dense.
+
+  **The Skorokhod representation theorem is not used**, and this corrects what
+  this item said before. The representation theorem turns weak convergence into
+  almost sure convergence of representatives so as to apply the continuous
+  mapping theorem pathwise; what the proof needs is the *almost everywhere*
+  continuous mapping theorem, `tendsto_of_measure_setOf_not_continuousAt_eq_zero`
+  (**WeakConvergence** Milestone 2), and that is portmanteau on the laws with no
+  representatives at all. Separability still suffices, and completeness is still
+  unused; the dependency on Milestone 3 there is gone.
+
+  The analytic content is a statement about one path and one time and is proved
+  ahead of it: `SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet`,
+  evaluation at `t` is continuous **at** every path that does not jump at `t`.
+  It is `exists_orderIso_dist_lt_of_intDist_lt` of Milestone 6 read at the single
+  point `t` and composed with the continuity of the limit path, and it is where
+  the second estimate of that lemma — that `e.symm t` is near `t`, not only that
+  `e t` is — is spent. **Only this direction holds**: where `𝓝[>] t = ⊥`,
+  `continuous_eval_of_nhdsGT_eq_bot` makes evaluation continuous outright, jump
+  or no jump.
+
+  `SkorokhodSpace.continuousAt_evalPi_of_forall_notMem_leftJumpSet` and
+  `SkorokhodSpace.measurable_evalPi` carry it to a family of times, the first for
+  an arbitrary index by `continuousAt_pi` and the second for an arbitrary index
+  by `measurable_pi_lambda`. The countability of `α` is spent in exactly one
+  step, the union of the exceptional sets of the coordinates; the target
+  `α → E` needs no metric, only `Pi.borelSpace`
+  (`Mathlib/MeasureTheory/Constructions/BorelSpace/Basic.lean`), which asks for a
+  countable index and for nothing else. `measurable_pi_lambda` is the name on
+  `v4.33.1`; on master it is a deprecated alias of `Measurable.of_eval`
+  (deprecated 2026-08-20), which `v4.33.1` does not have, so the two versions
+  have no common spelling here.
+* `SkorokhodSpace.tendstoInDistribution_evalPi` and
+  `SkorokhodSpace.tendstoInDistribution_eval` — stage (A),
+  **proved 2026-09-18**. The same for random variables, on Mathlib's
+  `MeasureTheory.TendstoInDistribution`: path valued variables converging in
+  distribution have their marginals at such times converging in distribution.
+  The second is the form the convergence hypothesis (a) of `mpSolution_of_tendsto`
+  (**MartingaleProblems** Milestone 10) is read in, a bounded continuous function
+  of the value composing with it by Mathlib's
+  `TendstoInDistribution.continuous_comp`. The two also instantiate the image
+  measures that the theorem above leaves as data, so that form is not vacuous.
 * `SkorokhodSpace.tendsto_of_isCompact_closure_of_tendsto_finiteDimensional` —
   stage (A). Let `S : Set (ProbabilityMeasure (D ι E))` have compact closure,
   let every `μ n` lie in `S`, and let `T ⊆ ι` be dense and such that the finite
@@ -2135,8 +2181,36 @@ state the second, as Theorem 3.9.1, for a complete separable `E` as well.
   The same conclusion for a tight family, from the previous item and
   `isCompact_closure_of_isTightMeasureSet`.
 * `SkorokhodSpace.exists_countable_dense_continuity` — stage (A). For a single
-  `μ`, the set of `t` with `μ {f | f⁻ t = f t} = 1` has countable complement,
-  hence contains a countable dense set.
+  probability measure `μ` the times `t` with `μ {f | f⁻ t = f t} = 1` contain a
+  countable dense set. The countability half is
+  `SkorokhodSpace.countable_setOf_measure_leftJump_ne_zero`, for any finite
+  `μ`: the set of `t` with `μ {f | t ∈ leftJumpSet f} ≠ 0` is countable. The
+  density half is Baire, and it asks **nothing of the index beyond the bundle of
+  Milestone 1**. That is worth saying because it looks as though it should ask
+  for an index without isolated points: an isolated point carries no jump, since
+  where `𝓝[<] t = ⊥` the left limit *is* the value, so such a `t` is not in the
+  exceptional set at all and the Baire argument never meets it.
+
+  The engine is `SkorokhodSpace.finite_setOf_le_measure_largeLeftJump`: for
+  `ε > 0`, `c ≠ 0` and compact `K` the times `t ∈ K` with
+  `c ≤ μ {f | t ∈ largeLeftJumpSet f ε}` are finitely many. Its proof reads an
+  infinite such family as a sequence of distinct times, applies continuity from
+  above to the tails `⋃ k ≥ n, A k` — the finiteness of `μ` is spent exactly
+  here — and obtains a *single* path with infinitely many `ε`-jumps in `K`,
+  which `IsCadlag.finite_largeLeftJumpSet_inter` forbids. **No jump is
+  counted.** The classical argument integrates the number of `ε`-jumps in the
+  window against `μ` and therefore needs `{f | (largeLeftJumpSet f ε ∩ K).ncard
+  ≤ M}` to be measurable, which the coordinates do not give; this one needs
+  `measure_mono` and nothing else.
+
+  The measurability it does need is
+  `SkorokhodSpace.measurableSet_largeLeftJump` and
+  `SkorokhodSpace.measurableSet_leftJump`, and both rest on
+  `SkorokhodSpace.measurable_leftLim_eval` — the left limit at a fixed time is a
+  pointwise limit of evaluations along a sequence increasing to `t`, which
+  exists because the index is first countable, and is the value itself where
+  `𝓝[<] t = ⊥`. The decomposition of the jump event over the jump size is
+  `SkorokhodSpace.setOf_mem_leftJumpSet_eq_iUnion`.
 * `SkorokhodSpace.continuous_postcomp` — stage (A). For continuous `h : E → E'` the induced
   map `SkorokhodSpace.postcomp h : D ι E → D ι E'`, `f ↦ h ∘ f`, is well defined
   and continuous; with `Measurable (postcomp h)` for `h` Borel, from Milestone 6.
@@ -2164,6 +2238,24 @@ state the second, as Theorem 3.9.1, for a complete separable `E` as well.
   `tendsto_of_isTight_of_tendsto_finiteDimensional` concludes weak convergence
   in `D ι E`. Every hypothesis of the milestone is instantiated once, and the
   conclusion is a statement one recognises.
+* **The hypothesis bundle of stage (A) is inhabited.**
+  `SkorokhodSpace.exists_countable_dense_continuity_real` is
+  `exists_countable_dense_continuity` over `ι = ℝ` and `E = ℝ`, with every
+  instance of the bundle discharged. It is the index of every other acceptance
+  example of this milestone, so the statement above is about the index the
+  milestone is for and not about an empty class.
+* **The hypothesis of the convergence theorems is met at a law that jumps, and
+  fails at the jump.** `SkorokhodSpace.dirac_step_setOf_leftLim_eq_of_ne` and
+  `SkorokhodSpace.dirac_step_setOf_leftLim_eq_one`, **proved 2026-09-18**: for
+  the Dirac law at `SkorokhodSpace.step`, the path with one jump at `1`, the set
+  `{f | f⁻ t = f t}` has measure `1` at every `t ≠ 1` and measure `0` at `t = 1`.
+  A continuous path would have met the hypothesis everywhere and left a reader
+  unable to tell it from a tautology; this one locates the exceptional set
+  exactly. `SkorokhodSpace.dirac_setOf_leftLim_eq_one_iff` is the reading behind
+  it — for a law carried by one path the hypothesis is that *that* path does not
+  jump — and `SkorokhodSpace.leftLim_step_of_ne` the computation. What is probed
+  is the hypothesis and not the strength of the conclusion: over a Dirac law the
+  conclusion is a convergence of constants.
 * **The excluded times are not a technicality.**
   `μ n = δ (Set.indicator (Set.Ici (1 + 1/n)) 1)` and
   `μ = δ (Set.indicator (Set.Ici 1) 1)` in `D ℝ ℝ`. Then `μ n → μ` weakly, and

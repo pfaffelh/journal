@@ -3,6 +3,7 @@ Copyright (c) 2026 Peter Pfaffelhuber. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Peter Pfaffelhuber
 -/
+import TauCetiRoadmap.WeakConvergence.Suggested
 import Mathlib.Topology.Order.LeftRightLim
 import Mathlib.Topology.MetricSpace.Polish
 import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
@@ -21,11 +22,31 @@ the commitments. `sorry` marks a statement whose proof is the work, never an
 empty proposition.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-17, with `autoImplicit=false` and `relaxedAutoImplicit=false` as Mathlib
+2026-09-18, with `autoImplicit=false` and `relaxedAutoImplicit=false` as Mathlib
 itself builds, and **free of `sorry` since the thirteenth run of 2026-09-09**.  Every
 declaration elaborates and every one of them is proved; `#print axioms` on
 `SkorokhodSpace.isCompact_closure_iff`, the last statement to be discharged,
 gives `propext`, `Classical.choice`, `Quot.sound`.
+
+Milestone 8 opens at the end of the file with the times at which a law has no
+fixed discontinuity: `SkorokhodSpace.countable_setOf_measure_leftJump_ne_zero`
+and `SkorokhodSpace.exists_countable_dense_continuity`, proved in the twelfth
+run of 2026-09-18.  They are what the quantifiers of the rest of that milestone
+--- and the time set `D` of `mpSolution_of_tendsto` in **MartingaleProblems**,
+Milestone 10 --- range over.  The thirteenth run consumed them:
+`SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet` and
+`SkorokhodSpace.tendsto_finiteDimensional_of_tendsto`, with the two forms for
+random variables under them and with the hypothesis probed at a law that really
+jumps, `SkorokhodSpace.dirac_step_setOf_leftLim_eq_of_ne` and
+`SkorokhodSpace.dirac_step_setOf_leftLim_eq_one`.
+
+**This file imports the roadmap `WeakConvergence`**, which its README has always
+named as a dependency and which the submission's file order
+(`WeakConvergence -> SkorokhodSpace -> MartingaleProblems`) allows since
+2026-09-17.  What is used of it is the almost everywhere continuous mapping
+theorem of Milestone 2 there, in both of its forms; nothing of this file's own
+development rests on the import, and every statement before Milestone 8 stands
+against bare Mathlib as it did.
 
 The last `sorry` was the **converse** of the compactness criterion
 `SkorokhodSpace.isCompact_closure_iff` of Milestone 7, whose modulus the ninth
@@ -10166,3 +10187,559 @@ theorem SkorokhodSpace.isCompact_closure_iff [CompleteSpace E] (A : Set D(ℝ, E
   refine max_lt (by linarith) ?_
   have hexpM : Real.exp (-M) < r / 8 := by rw [hMdef]; exact hmr
   linarith
+
+/-! ## Milestone 8: the times at which a law has no fixed discontinuity
+
+Stage (A) of the milestone opens here.  Every other statement of that stage ---
+the convergence of the finite dimensional distributions, and the identification
+of a limit law from them --- quantifies over the times `t` at which the limit
+law has no fixed discontinuity, that is over
+`μ {f | Function.leftLim f.toFun t = f.toFun t} = 1`.  Were those times not
+dense, the quantifiers would be over a set too thin to determine a law, and the
+whole of stage (A) would say nothing; `exists_countable_dense_continuity` is
+what makes them a set one can integrate against.
+
+**The pathwise countability is not enough, and that is the whole difficulty.**
+`countable_leftJumpSet` says that *each* path jumps at countably many times; a
+union of countably many countable sets over an *uncountable* family of paths is
+not countable, so nothing follows for `μ`.  What carries the statement is the
+pathwise *local* finiteness of the jumps of a fixed size,
+`IsCadlag.finite_largeLeftJumpSet_inter`, read through the reverse Fatou
+inequality: were there infinitely many times in one window at which a fixed
+fraction of the paths jumps by at least `ε`, then the paths that jump at
+infinitely many of those times would still carry that fraction --- and a single
+such path already contradicts the local finiteness.
+
+**No jump is counted.**  The classical argument (Billingsley, Section 13)
+integrates the number of `ε`-jumps in the window against `μ` and therefore needs
+that number to be a measurable function of the path --- a set of the form
+`{f | (largeLeftJumpSet f.toFun ε ∩ K).ncard ≤ M}`, whose measurability is not
+available from the coordinates.  The proof below spends only `measure_mono` and
+continuity from above, and the only measurability it asks for is that of the
+jump events themselves, which `measurableSet_largeLeftJump` supplies from
+`measurable_eval` and `measurable_leftLim_eval`. -/
+
+/-- **The left limit at a fixed time is a Borel measurable function of the
+path.**  Evaluation is measurable by `SkorokhodSpace.measurable_eval` and is not
+continuous; the left limit is a pointwise limit of evaluations, along any
+sequence increasing to `t`, and `measurable_of_tendsto_metrizable` turns that
+into measurability.  The sequence exists because a metric index is first
+countable, so `𝓝[<] t` is countably generated, and the degenerate case
+`𝓝[<] t = ⊥` --- an index point with nothing below it --- is not an exception
+but the second branch: there the left limit *is* the value, by
+`Function.leftLim_eq_of_eq_bot`. -/
+theorem SkorokhodSpace.measurable_leftLim_eval (t : ι) :
+    Measurable fun f : D(ι, E) => Function.leftLim f.toFun t := by
+  by_cases ht : (𝓝[<] t).NeBot
+  · haveI := ht
+    obtain ⟨s, hs⟩ := (𝓝[<] t).exists_seq_tendsto
+    refine measurable_of_tendsto_metrizable
+      (fun n => SkorokhodSpace.measurable_eval (s n)) ?_
+    rw [tendsto_pi_nhds]
+    intro f
+    exact (f.isCadlag.tendsto_leftLim t).comp hs
+  · have hbot : 𝓝[<] t = ⊥ := not_neBot.1 ht
+    have hEq : (fun f : D(ι, E) => Function.leftLim f.toFun t)
+        = fun f : D(ι, E) => f.toFun t :=
+      funext fun f => leftLim_eq_of_eq_bot _ hbot
+    rw [hEq]
+    exact SkorokhodSpace.measurable_eval t
+
+/-- The event that the path jumps by at least `ε` at a fixed time is
+measurable. -/
+theorem SkorokhodSpace.measurableSet_largeLeftJump (t : ι) (ε : ℝ) :
+    MeasurableSet {f : D(ι, E) | t ∈ largeLeftJumpSet f.toFun ε} := by
+  have hEq : {f : D(ι, E) | t ∈ largeLeftJumpSet f.toFun ε}
+      = (fun f : D(ι, E) => dist (Function.leftLim f.toFun t) (f.toFun t)) ⁻¹' Set.Ici ε := rfl
+  rw [hEq]
+  exact ((SkorokhodSpace.measurable_leftLim_eval t).dist
+    (SkorokhodSpace.measurable_eval t)) measurableSet_Ici
+
+/-- The jump event at a fixed time decomposes over the jump size.  This is the
+pointwise form of the decomposition that `countable_leftJumpSet` uses in the
+index; here it is used in the path, and it is what makes the jump event
+measurable at all. -/
+theorem SkorokhodSpace.setOf_mem_leftJumpSet_eq_iUnion (t : ι) :
+    {f : D(ι, E) | t ∈ leftJumpSet f.toFun}
+      = ⋃ n : ℕ, {f : D(ι, E) | t ∈ largeLeftJumpSet f.toFun (1 / (n + 1))} := by
+  ext f
+  simp only [Set.mem_iUnion, Set.mem_setOf_eq, leftJumpSet, largeLeftJumpSet]
+  constructor
+  · intro h
+    obtain ⟨n, hn⟩ := exists_nat_one_div_lt (dist_pos.2 h)
+    exact ⟨n, hn.le⟩
+  · rintro ⟨n, hn⟩
+    exact dist_pos.1 (lt_of_lt_of_le (by positivity) hn)
+
+/-- The jump event at a fixed time is measurable. -/
+theorem SkorokhodSpace.measurableSet_leftJump (t : ι) :
+    MeasurableSet {f : D(ι, E) | t ∈ leftJumpSet f.toFun} := by
+  rw [SkorokhodSpace.setOf_mem_leftJumpSet_eq_iUnion t]
+  exact MeasurableSet.iUnion fun n => SkorokhodSpace.measurableSet_largeLeftJump t _
+
+/-- **In each window there are only finitely many times at which a fixed
+fraction of the paths jumps by at least `ε`.**  This is the engine of the
+milestone, and the reason it is stated for a compact `K` and a fixed `ε` is that
+this is exactly the shape in which the pathwise statement
+`IsCadlag.finite_largeLeftJumpSet_inter` is available.
+
+The proof is by contradiction and reads the infinitude as a sequence `T` of
+*distinct* times, each carrying mass at least `c`.  The tails
+`B n = ⋃ k ≥ n, A k` decrease, each has mass at least `c`, and `μ` is finite, so
+continuity from above gives mass at least `c` to their intersection --- the
+paths that jump at infinitely many of the `T k`.  That intersection is therefore
+nonempty, and one path in it has infinitely many jumps of size `ε` inside `K`,
+which is what the pathwise statement forbids.
+
+`c` is an `ℝ≥0∞` and is only asked to be nonzero: no upper bound on it is used,
+and the conclusion for `c > μ Set.univ` is the empty set. -/
+theorem SkorokhodSpace.finite_setOf_le_measure_largeLeftJump
+    (μ : Measure D(ι, E)) [IsFiniteMeasure μ] {ε : ℝ} (hε : 0 < ε) {c : ℝ≥0∞} (hc : c ≠ 0)
+    {K : Set ι} (hK : IsCompact K) :
+    {t : ι | t ∈ K ∧ c ≤ μ {f : D(ι, E) | t ∈ largeLeftJumpSet f.toFun ε}}.Finite := by
+  by_contra hinf
+  rw [Set.not_finite] at hinf
+  obtain e := Set.Infinite.natEmbedding _ hinf
+  set T : ℕ → ι := fun n => (e n : ι) with hTdef
+  have hTinj : Function.Injective T := fun m n h => e.injective (Subtype.ext h)
+  have hTmem : ∀ n, T n ∈ K ∧ c ≤ μ {f : D(ι, E) | T n ∈ largeLeftJumpSet f.toFun ε} :=
+    fun n => (e n).2
+  set A : ℕ → Set D(ι, E) := fun n => {f : D(ι, E) | T n ∈ largeLeftJumpSet f.toFun ε} with hAdef
+  set B : ℕ → Set D(ι, E) := fun n => ⋃ k, ⋃ (_ : n ≤ k), A k with hBdef
+  have hAm : ∀ n, MeasurableSet (A n) := fun n =>
+    SkorokhodSpace.measurableSet_largeLeftJump _ _
+  have hBm : ∀ n, MeasurableSet (B n) := fun n =>
+    MeasurableSet.iUnion fun k => MeasurableSet.iUnion fun _ => hAm k
+  have hanti : Antitone B := by
+    intro m n hmn f hf
+    simp only [hBdef, Set.mem_iUnion] at hf ⊢
+    obtain ⟨k, hk, hfk⟩ := hf
+    exact ⟨k, hmn.trans hk, hfk⟩
+  have hsubAB : ∀ n, A n ⊆ B n := fun n f hf =>
+    Set.mem_iUnion.2 ⟨n, Set.mem_iUnion.2 ⟨le_rfl, hf⟩⟩
+  have hlim := tendsto_measure_iInter_atTop (μ := μ)
+    (fun n => (hBm n).nullMeasurableSet) hanti ⟨0, measure_ne_top μ _⟩
+  have hcle : c ≤ μ (⋂ n, B n) := by
+    refine ge_of_tendsto hlim ?_
+    filter_upwards with n
+    exact (hTmem n).2.trans (measure_mono (hsubAB n))
+  have hne : (⋂ n, B n).Nonempty := by
+    rw [Set.nonempty_iff_ne_empty]
+    intro h
+    rw [h, measure_empty] at hcle
+    exact hc (nonpos_iff_eq_zero.1 hcle)
+  obtain ⟨f, hf⟩ := hne
+  have hunb : ∀ n : ℕ, ∃ k, n ≤ k ∧ f ∈ A k := by
+    intro n
+    have hmem := Set.mem_iInter.1 hf n
+    simpa only [hBdef, Set.mem_iUnion, exists_prop] using hmem
+  have hSinf : {k : ℕ | f ∈ A k}.Infinite := by
+    intro hfin
+    obtain ⟨M, hM⟩ := hfin.bddAbove
+    obtain ⟨k, hk1, hk2⟩ := hunb (M + 1)
+    exact absurd (hM hk2) (by omega)
+  have hsub : T '' {k : ℕ | f ∈ A k} ⊆ largeLeftJumpSet f.toFun ε ∩ K := by
+    rintro _ ⟨k, hk, rfl⟩
+    exact ⟨hk, (hTmem k).1⟩
+  exact (hSinf.image hTinj.injOn) ((f.isCadlag.finite_largeLeftJumpSet_inter hε hK).subset hsub)
+
+/-- **The times at which a positive fraction of the paths jumps are countably
+many.**  This is `fact:Dcountable` of the manuscript, in the form a law needs
+and not in the pathwise form.  The set decomposes over three countable
+parameters --- the jump size, the fraction, and the window --- and each piece is
+finite by `finite_setOf_le_measure_largeLeftJump`. -/
+theorem SkorokhodSpace.countable_setOf_measure_leftJump_ne_zero
+    (μ : Measure D(ι, E)) [IsFiniteMeasure μ] :
+    {t : ι | μ {f : D(ι, E) | t ∈ leftJumpSet f.toFun} ≠ 0}.Countable := by
+  have hcov : {t : ι | μ {f : D(ι, E) | t ∈ leftJumpSet f.toFun} ≠ 0} ⊆
+      ⋃ p : ℕ × ℕ × ℕ, {t : ι | t ∈ exhaustion (basePoint : ι) (p.2.2 : ℝ) ∧
+        ((p.2.1 : ℝ≥0∞))⁻¹ ≤
+          μ {f : D(ι, E) | t ∈ largeLeftJumpSet f.toFun (1 / (p.1 + 1))}} := by
+    intro t ht
+    simp only [Set.mem_setOf_eq] at ht
+    rw [SkorokhodSpace.setOf_mem_leftJumpSet_eq_iUnion t] at ht
+    have hex : ∃ n : ℕ, μ {f : D(ι, E) | t ∈ largeLeftJumpSet f.toFun (1 / (n + 1))} ≠ 0 := by
+      by_contra hall
+      push_neg at hall
+      exact ht (measure_iUnion_null hall)
+    obtain ⟨n, hn⟩ := hex
+    obtain ⟨k, hk⟩ := ENNReal.exists_inv_nat_lt hn
+    obtain ⟨m, hm⟩ := exists_nat_ge (dist t (basePoint : ι))
+    refine Set.mem_iUnion.2 ⟨(n, k, m), ?_, hk.le⟩
+    rw [exhaustion_eq_closedBall _ (by positivity)]
+    exact Metric.mem_closedBall.2 hm
+  refine Set.Countable.mono hcov (Set.countable_iUnion fun p => ?_)
+  exact (SkorokhodSpace.finite_setOf_le_measure_largeLeftJump μ (by positivity)
+    (ENNReal.inv_ne_zero.2 (ENNReal.natCast_ne_top p.2.1))
+    (isCompact_exhaustion _ _)).countable
+
+/-- **Stage (A) of Milestone 8: the times at which a law has no fixed
+discontinuity contain a countable dense set.**  Countability of the exceptional
+set is `countable_setOf_measure_leftJump_ne_zero`; density of its complement is
+Baire, and it needs **no hypothesis on the index beyond the bundle of
+Milestone 1**.
+
+That the Baire argument asks nothing extra is worth saying, because it looks as
+though it should: it wants every point of the exceptional set to be
+non-isolated, and an index is not required to have no isolated points.  But an
+isolated point carries no jump.  Where `𝓝[<] t = ⊥` the left limit *is* the
+value, by `leftLim_eq_of_eq_bot`, so the jump event there is empty and `t` is
+not in the exceptional set at all; every point of that set therefore has
+`𝓝[<] t` nontrivial and *a fortiori* `𝓝[≠] t`.  The exceptional set carries the
+hypothesis it needs, rather than the index. -/
+theorem SkorokhodSpace.exists_countable_dense_continuity
+    (μ : Measure D(ι, E)) [IsProbabilityMeasure μ] :
+    ∃ S : Set ι, S.Countable ∧ Dense S ∧
+      ∀ t ∈ S, μ {f : D(ι, E) | Function.leftLim f.toFun t = f.toFun t} = 1 := by
+  set N := {t : ι | μ {f : D(ι, E) | t ∈ leftJumpSet f.toFun} ≠ 0} with hNdef
+  have hN : N.Countable := SkorokhodSpace.countable_setOf_measure_leftJump_ne_zero μ
+  have hNne : ∀ x ∈ N, (𝓝[≠] x).NeBot := by
+    intro x hx
+    by_cases hbot : (𝓝[<] x) = ⊥
+    · refine absurd ?_ hx
+      have hempty : {f : D(ι, E) | x ∈ leftJumpSet f.toFun} = ∅ := by
+        ext f
+        simp only [Set.mem_setOf_eq, leftJumpSet, Set.mem_empty_iff_false, iff_false, not_not]
+        exact leftLim_eq_of_eq_bot _ hbot
+      rw [hempty]
+      exact measure_empty
+    · exact (Filter.neBot_iff.2 hbot).mono (nhdsWithin_mono x fun y hy => ne_of_lt hy)
+  have hdense : Dense Nᶜ := by
+    have hres : (⋂ x ∈ N, ({x}ᶜ : Set ι)) ∈ residual ι :=
+      (countable_bInter_mem hN).2 fun x hx => by
+        haveI := hNne x hx
+        exact residual_of_dense_open isOpen_compl_singleton (dense_compl_singleton x)
+    have hsub : (⋂ x ∈ N, ({x}ᶜ : Set ι)) ⊆ Nᶜ := by
+      intro y hy hyN
+      exact (Set.mem_iInter₂.1 hy y hyN) rfl
+    exact dense_of_mem_residual (Filter.mem_of_superset hres hsub)
+  obtain ⟨S, hSsub, hScount, hSdense⟩ := hdense.exists_countable_dense_subset
+  refine ⟨S, hScount, hSdense, fun t ht => ?_⟩
+  have h0 : μ {f : D(ι, E) | t ∈ leftJumpSet f.toFun} = 0 := not_not.1 (hSsub ht)
+  have hcompl : {f : D(ι, E) | Function.leftLim f.toFun t = f.toFun t}
+      = {f : D(ι, E) | t ∈ leftJumpSet f.toFun}ᶜ := by
+    ext f
+    simp [leftJumpSet]
+  rw [hcompl, measure_compl (SkorokhodSpace.measurableSet_leftJump t) (measure_ne_top μ _), h0,
+    measure_univ, tsub_zero]
+
+/-- **Leerheitsprobe für Milestone 8, stage (A).**  Every hypothesis of
+`SkorokhodSpace.exists_countable_dense_continuity` is instantiated at once over
+the index of the acceptance examples, `ι = ℝ`, and over `E = ℝ`: the order, the
+metric, the additivity of the metric along the order, properness, the base
+point, and the Polish structure on the state space.  Without this the theorem
+would be a statement about a hypothesis bundle that no index is known to
+satisfy. -/
+theorem SkorokhodSpace.exists_countable_dense_continuity_real
+    (μ : Measure D(ℝ, ℝ)) [IsProbabilityMeasure μ] :
+    ∃ S : Set ℝ, S.Countable ∧ Dense S ∧
+      ∀ t ∈ S, μ {f : D(ℝ, ℝ) | Function.leftLim f.toFun t = f.toFun t} = 1 :=
+  SkorokhodSpace.exists_countable_dense_continuity μ
+
+/-! ### The finite dimensional distributions
+
+The times supplied by `exists_countable_dense_continuity` are consumed here.
+What makes them the right times is a statement about a *single* path and a
+*single* time: evaluation at `t` is continuous **at** every path that does not
+jump at `t`, and the almost everywhere continuous mapping theorem
+(`tendsto_of_measure_setOf_not_continuousAt_eq_zero`, roadmap
+**WeakConvergence**, Milestone 2) turns that into convergence of the image laws
+as soon as the limit law gives the jump at `t` no mass.
+
+**The Skorokhod representation theorem is not used**, although the item of this
+milestone announced it as the route.  The representation theorem converts weak
+convergence into almost sure convergence of representatives and then applies the
+continuous mapping theorem *pathwise*; the almost everywhere version of that
+theorem is available directly here, and it is portmanteau on the laws with no
+representatives at all.  What the two routes share is the analytic content of
+the first statement below, which neither of them can avoid: continuity of
+evaluation off the jumps.
+
+**Only one direction is available, and that is not an artefact of the proof.**
+Where the index has a point `t` with `𝓝[>] t = ⊥` --- the right endpoint of
+`Set.Icc (0:ℝ) T` and every point of a discrete index ---
+`SkorokhodSpace.continuous_eval_of_nhdsGT_eq_bot` makes evaluation at `t`
+continuous everywhere, at jumping paths included, so the converse fails wherever
+such a `t` carries a jump.  For the *summed* metric of Milestone 4 the failure is
+exhibited in Lean at an interior point as well,
+`SkorokhodSpace.exists_jump_continuousAt_eval`. -/
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **Evaluation at `t` is continuous at every path that does not jump at `t`.**
+This is the analytic content of the convergence of the finite dimensional
+distributions, and it is what the Skorokhod metric buys in place of the
+continuity of evaluation that it denies.
+
+The proof is `SkorokhodSpace.exists_orderIso_dist_lt_of_intDist_lt` read at the
+single point `t` and then composed with the continuity of the *limit* path:
+a path `f` close to `g` has `dist (f t) (g (e.symm t))` small for a time change
+`e` that moves `t` by little, and `g` --- being continuous at `t`, by
+`IsCadlag.continuousAt_iff_notMem_leftJumpSet` --- does not notice that the time
+has moved.  The two halves take `ε / 2` each.
+
+Both estimates of that lemma are consumed, and this is where the second one
+earns its keep at a point that is *not* right isolated: without
+`dist (e.symm t) t < ε` the value `g (e.symm t)` could not be compared with
+`g t` at all, and the continuity of `g` would have nothing to act on. -/
+theorem SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet [SecondCountableTopology E]
+    {t : ι} {g : D(ι, E)} (hg : t ∉ leftJumpSet g.toFun) :
+    ContinuousAt (fun f : D(ι, E) => f.toFun t) g := by
+  have hcont : ContinuousAt g.toFun t := g.isCadlag.continuousAt_iff_notMem_leftJumpSet.2 hg
+  rw [Metric.continuousAt_iff]
+  intro ε hε
+  obtain ⟨ρ, hρ, hball⟩ := Metric.continuousAt_iff.1 hcont (ε / 2) (by linarith)
+  obtain ⟨δ, hδ, h⟩ := SkorokhodSpace.exists_orderIso_dist_lt_of_intDist_lt (E := E)
+    (basePoint : ι) t (ε := min (ε / 2) ρ) (lt_min (by linarith) hρ)
+  refine ⟨δ, hδ, fun f hf => ?_⟩
+  obtain ⟨e, -, h2, h3⟩ := h f g (by rw [← SkorokhodSpace.dist_eq]; exact hf)
+  have h4 : dist (g.toFun (e.symm t)) (g.toFun t) < ε / 2 :=
+    hball (lt_of_lt_of_le h2 (min_le_right _ _))
+  have h5 : dist (f.toFun t) (g.toFun (e.symm t)) < ε / 2 :=
+    lt_of_lt_of_le h3 (min_le_left _ _)
+  calc dist (f.toFun t) (g.toFun t)
+      ≤ dist (f.toFun t) (g.toFun (e.symm t)) + dist (g.toFun (e.symm t)) (g.toFun t) :=
+        dist_triangle _ _ _
+    _ < ε / 2 + ε / 2 := by linarith
+    _ = ε := by ring
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The finite dimensional evaluation is continuous at every path that jumps at
+none of its times.**  The index family `α` is arbitrary --- not finite, not even
+countable --- because continuity into a product is continuity in each
+coordinate, `continuousAt_pi`, and the countability enters only later, when the
+exceptional paths of the several coordinates are collected into one null set. -/
+theorem SkorokhodSpace.continuousAt_evalPi_of_forall_notMem_leftJumpSet
+    [SecondCountableTopology E] {α : Type*} {t : α → ι} {g : D(ι, E)}
+    (hg : ∀ i, t i ∉ leftJumpSet g.toFun) :
+    ContinuousAt (fun (f : D(ι, E)) (i : α) => f.toFun (t i)) g :=
+  continuousAt_pi.2 fun i => SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet (hg i)
+
+/-- The finite dimensional evaluation is measurable, coordinate by coordinate
+from `SkorokhodSpace.measurable_eval` of Milestone 6.  Measurability, unlike
+continuity, needs no hypothesis on the times: evaluation is measurable at every
+point of the index and discontinuous at some.
+
+The coordinatewise step is `measurable_pi_lambda`, which is the name on
+`v4.33.1`, the version this file is checked against.  On `upstream/master` it is
+a **deprecated alias** of `Measurable.of_eval`
+(`MeasureTheory/MeasurableSpace/Constructions.lean:600`, deprecated 2026-08-20),
+and `Measurable.of_eval` does not exist on `v4.33.1`; there is no spelling that
+serves both, and this is the one declaration of this file that would warn
+against `master`. -/
+theorem SkorokhodSpace.measurable_evalPi {α : Type*} (t : α → ι) :
+    Measurable fun (f : D(ι, E)) (i : α) => f.toFun (t i) :=
+  measurable_pi_lambda _ fun i => SkorokhodSpace.measurable_eval (t i)
+
+/-- **The finite dimensional distributions converge at the times at which the
+limit law has no fixed discontinuity**, Ethier--Kurtz, Theorem 3.7.8(a).  The
+times exist in abundance by `SkorokhodSpace.exists_countable_dense_continuity`,
+which produces a countable dense set of them for any probability law on the
+path space.
+
+The family of times is **countable and otherwise arbitrary**; finiteness is
+never used.  What countability is used for is one step, and only one: the paths
+that jump at some one of the times form a countable union of null sets.
+
+The image measures are taken as data with their defining equations, exactly as
+in `tendsto_of_measure_setOf_not_continuousAt_eq_zero` on which this rests, and
+for the same reason: `ProbabilityMeasure.map` is the one construction whose
+signature differs between `v4.33.1` and `upstream/master`, and written this way
+the statement elaborates against both.  The two theorems below instantiate that
+data and are the proof that the form is not vacuous.
+
+**No metric on the target.**  The product `α → E` carries the product topology
+and the product σ-algebra, which is its Borel structure for countable `α` by
+`Pi.borelSpace`; a pseudo-emetric on it would need `α` finite, and nothing here
+asks for one.  That is inherited from the portmanteau implication underneath,
+which is stated over an arbitrary topological target. -/
+theorem SkorokhodSpace.tendsto_finiteDimensional_of_tendsto
+    {α : Type*} [Countable α] (t : α → ι)
+    {γ : Type*} {L : Filter γ} [L.IsCountablyGenerated]
+    {μ : γ → ProbabilityMeasure D(ι, E)} {ν : ProbabilityMeasure D(ι, E)}
+    (hconv : Tendsto μ L (𝓝 ν))
+    (ht : ∀ i, (ν : Measure D(ι, E))
+      {f : D(ι, E) | Function.leftLim f.toFun (t i) = f.toFun (t i)} = 1)
+    {μ' : γ → ProbabilityMeasure (α → E)} {ν' : ProbabilityMeasure (α → E)}
+    (hμ' : ∀ n, (μ' n : Measure (α → E))
+      = (μ n : Measure D(ι, E)).map fun (f : D(ι, E)) (i : α) => f.toFun (t i))
+    (hν' : (ν' : Measure (α → E))
+      = (ν : Measure D(ι, E)).map fun (f : D(ι, E)) (i : α) => f.toFun (t i)) :
+    Tendsto μ' L (𝓝 ν') := by
+  refine tendsto_of_measure_setOf_not_continuousAt_eq_zero
+    (SkorokhodSpace.measurable_evalPi t) hconv ?_ hμ' hν'
+  have hnull : ∀ i, (ν : Measure D(ι, E)) {f : D(ι, E) | t i ∈ leftJumpSet f.toFun} = 0 := by
+    intro i
+    have hcompl : {f : D(ι, E) | Function.leftLim f.toFun (t i) = f.toFun (t i)}
+        = {f : D(ι, E) | t i ∈ leftJumpSet f.toFun}ᶜ := by
+      ext f
+      simp [leftJumpSet]
+    have hms : MeasurableSet {f : D(ι, E) | Function.leftLim f.toFun (t i) = f.toFun (t i)} := by
+      rw [hcompl]
+      exact (SkorokhodSpace.measurableSet_leftJump (t i)).compl
+    have h0 := (prob_compl_eq_zero_iff hms).2 (ht i)
+    rwa [hcompl, compl_compl] at h0
+  refine measure_mono_null (fun f hf => ?_) (measure_iUnion_null hnull)
+  simp only [Set.mem_setOf_eq] at hf
+  by_contra hcon
+  refine hf (SkorokhodSpace.continuousAt_evalPi_of_forall_notMem_leftJumpSet fun i hi => ?_)
+  exact hcon (Set.mem_iUnion.2 ⟨i, hi⟩)
+
+/-- **The same for random variables**, on Mathlib's
+`MeasureTheory.TendstoInDistribution`: path valued variables converging in
+distribution have their finite dimensional marginals converging in distribution,
+at every countable family of times that the limit law does not charge with a
+jump.
+
+The hypothesis is written on the sample space of the limit,
+`P₀ {ω | (Z ω)⁻ (t i) = Z ω (t i)} = 1`, and not on its law, because that is the
+form a user of the structure has; `Measure.map_apply₀` carries one to the other,
+the jump event being Borel by `SkorokhodSpace.measurableSet_leftJump`.
+
+This is also the **emptiness probe** for the previous theorem: its image
+measures, left as data there, are instantiated here with the laws of the
+marginals, and the two defining equations come out of
+`AEMeasurable.map_map_of_aemeasurable`. -/
+theorem SkorokhodSpace.tendstoInDistribution_evalPi
+    {α : Type*} [Countable α] (t : α → ι)
+    {γ : Type*} {Ω : γ → Type*} {mΩ : ∀ n, MeasurableSpace (Ω n)}
+    {P : (n : γ) → Measure (Ω n)} [∀ n, IsProbabilityMeasure (P n)]
+    {Ω₀ : Type*} {mΩ₀ : MeasurableSpace Ω₀} {P₀ : Measure Ω₀} [IsProbabilityMeasure P₀]
+    {X : (n : γ) → Ω n → D(ι, E)} {Z : Ω₀ → D(ι, E)} {L : Filter γ} [L.IsCountablyGenerated]
+    (hX : TendstoInDistribution X L Z P P₀)
+    (ht : ∀ i, P₀ {ω | Function.leftLim (Z ω).toFun (t i) = (Z ω).toFun (t i)} = 1) :
+    TendstoInDistribution (fun n ω (i : α) => (X n ω).toFun (t i)) L
+      (fun ω (i : α) => (Z ω).toFun (t i)) P P₀ where
+  forall_aemeasurable n :=
+    (SkorokhodSpace.measurable_evalPi t).comp_aemeasurable (hX.forall_aemeasurable n)
+  aemeasurable_limit :=
+    (SkorokhodSpace.measurable_evalPi t).comp_aemeasurable hX.aemeasurable_limit
+  tendsto := by
+    have hlaw : ∀ i, (P₀.map Z)
+        {f : D(ι, E) | Function.leftLim f.toFun (t i) = f.toFun (t i)} = 1 := by
+      intro i
+      have hcompl : {f : D(ι, E) | Function.leftLim f.toFun (t i) = f.toFun (t i)}
+          = {f : D(ι, E) | t i ∈ leftJumpSet f.toFun}ᶜ := by
+        ext f
+        simp [leftJumpSet]
+      have hms : MeasurableSet {f : D(ι, E) | Function.leftLim f.toFun (t i) = f.toFun (t i)} := by
+        rw [hcompl]
+        exact (SkorokhodSpace.measurableSet_leftJump (t i)).compl
+      rw [Measure.map_apply₀ hX.aemeasurable_limit hms.nullMeasurableSet]
+      exact ht i
+    refine SkorokhodSpace.tendsto_finiteDimensional_of_tendsto t hX.tendsto hlaw
+      (fun n => ?_) ?_
+    · exact (AEMeasurable.map_map_of_aemeasurable
+        (SkorokhodSpace.measurable_evalPi t).aemeasurable (hX.forall_aemeasurable n)).symm
+    · exact (AEMeasurable.map_map_of_aemeasurable
+        (SkorokhodSpace.measurable_evalPi t).aemeasurable hX.aemeasurable_limit).symm
+
+/-- **The one dimensional marginal**, and the form the convergence hypothesis of
+`mpSolution_of_tendsto` (roadmap **MartingaleProblems**, Milestone 10) is read
+in: there the test functions are functions of the path through its value at one
+time, and this says that they converge in distribution as soon as the limit law
+does not jump at that time.
+
+It is not the previous theorem at a one point family --- that one lands in
+`α → E` and this one in `E` --- but it is the same proof, through
+`TendstoInDistribution.continuousAt_comp` of the roadmap **WeakConvergence**
+instead of through the measure level statement.  A further continuous bounded
+function of the value composes with it by Mathlib's
+`TendstoInDistribution.continuous_comp`. -/
+theorem SkorokhodSpace.tendstoInDistribution_eval
+    {γ : Type*} {Ω : γ → Type*} {mΩ : ∀ n, MeasurableSpace (Ω n)}
+    {P : (n : γ) → Measure (Ω n)} [∀ n, IsProbabilityMeasure (P n)]
+    {Ω₀ : Type*} {mΩ₀ : MeasurableSpace Ω₀} {P₀ : Measure Ω₀} [IsProbabilityMeasure P₀]
+    {X : (n : γ) → Ω n → D(ι, E)} {Z : Ω₀ → D(ι, E)} {L : Filter γ} [L.IsCountablyGenerated]
+    (hX : TendstoInDistribution X L Z P P₀) (t : ι)
+    (ht : P₀ {ω | Function.leftLim (Z ω).toFun t = (Z ω).toFun t} = 1) :
+    TendstoInDistribution (fun n ω => (X n ω).toFun t) L (fun ω => (Z ω).toFun t) P P₀ := by
+  refine hX.continuousAt_comp (SkorokhodSpace.measurable_eval t) ?_
+  refine le_antisymm prob_le_one ?_
+  rw [← ht]
+  refine measure_mono fun ω hω => ?_
+  exact SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet (by simpa [leftJumpSet] using hω)
+
+/-- For a law carried by a single path the hypothesis of the three theorems above
+says exactly that **that** path does not jump at `t`.  This is the reading under
+which the probe below is a probe of the hypothesis and not of a coincidence. -/
+theorem SkorokhodSpace.dirac_setOf_leftLim_eq_one_iff (g : D(ι, E)) (t : ι) :
+    (Measure.dirac g) {f : D(ι, E) | Function.leftLim f.toFun t = f.toFun t} = 1
+      ↔ t ∉ leftJumpSet g.toFun := by
+  have hcompl : {f : D(ι, E) | Function.leftLim f.toFun t = f.toFun t}
+      = {f : D(ι, E) | t ∈ leftJumpSet f.toFun}ᶜ := by
+    ext f
+    simp [leftJumpSet]
+  have hms : MeasurableSet {f : D(ι, E) | Function.leftLim f.toFun t = f.toFun t} := by
+    rw [hcompl]
+    exact (SkorokhodSpace.measurableSet_leftJump t).compl
+  rw [Measure.dirac_apply' _ hms]
+  by_cases hg : Function.leftLim g.toFun t = g.toFun t
+  · rw [Set.indicator_of_mem (s := {f : D(ι, E) | Function.leftLim f.toFun t = f.toFun t}) hg]
+    simp [leftJumpSet, hg]
+  · rw [Set.indicator_of_notMem (s := {f : D(ι, E) | Function.leftLim f.toFun t = f.toFun t}) hg]
+    simp [leftJumpSet, hg]
+
+/-- The step path of Milestone 5 is continuous away from its one jump, and the
+left limit there is the value: below `1` both are `0`, above `1` both are `1`.
+`SkorokhodSpace.leftLim_step` is the complementary computation at `1` itself,
+where the left limit is `0` and the value is `1`. -/
+theorem SkorokhodSpace.leftLim_step_of_ne {t : ℝ} (ht : t ≠ 1) :
+    Function.leftLim SkorokhodSpace.step.toFun t = SkorokhodSpace.step.toFun t := by
+  rcases lt_or_gt_of_ne ht with h | h
+  · have hlim : Function.leftLim SkorokhodSpace.step.toFun t = 0 := by
+      refine leftLim_eq_of_tendsto ?_
+      refine Filter.Tendsto.congr' ?_ (tendsto_const_nhds (x := (0 : ℝ)))
+      filter_upwards [Filter.Eventually.filter_mono nhdsWithin_le_nhds
+        (Iio_mem_nhds h)] with s hs
+      rw [SkorokhodSpace.step_apply, if_neg (not_le.2 hs)]
+    rw [hlim, SkorokhodSpace.step_apply, if_neg (not_le.2 h)]
+  · have hlim : Function.leftLim SkorokhodSpace.step.toFun t = 1 := by
+      refine leftLim_eq_of_tendsto ?_
+      refine Filter.Tendsto.congr' ?_ (tendsto_const_nhds (x := (1 : ℝ)))
+      filter_upwards [Filter.Eventually.filter_mono nhdsWithin_le_nhds
+        (Ioi_mem_nhds h)] with s hs
+      rw [SkorokhodSpace.step_apply, if_pos (le_of_lt hs)]
+    rw [hlim, SkorokhodSpace.step_apply, if_pos h.le]
+
+/-- **The probe of the hypothesis, at a law that does jump.**  The Dirac law at
+`SkorokhodSpace.step` over `ι = ℝ`, `E = ℝ` --- the law of a path with one jump,
+at `1` --- meets the hypothesis of the three convergence theorems above at every
+time but `1`.
+
+Why this and not a continuous path: a law with no jump at all would meet the
+hypothesis at every time and would leave the reader unable to tell the
+hypothesis from a tautology.  Here it is met at every `t ≠ 1` and **fails** at
+`t = 1`, which the next declaration states; the times of
+`exists_countable_dense_continuity` are, for this law, exactly `{1}ᶜ`.
+
+What is probed is the **hypothesis** and not the strength of the conclusion: for
+a Dirac law, and for the constant approximating family that
+`MeasureTheory.tendstoInDistribution_const` supplies, the conclusion is a
+convergence of constants.  The probe says that the hypothesis bundle of the
+theorems is inhabited by a law that charges a jump, and nothing more. -/
+theorem SkorokhodSpace.dirac_step_setOf_leftLim_eq_of_ne {t : ℝ} (ht : t ≠ 1) :
+    (Measure.dirac SkorokhodSpace.step)
+      {f : D(ℝ, ℝ) | Function.leftLim f.toFun t = f.toFun t} = 1 :=
+  (SkorokhodSpace.dirac_setOf_leftLim_eq_one_iff SkorokhodSpace.step t).2
+    (by simpa [leftJumpSet] using SkorokhodSpace.leftLim_step_of_ne ht)
+
+/-- **And at the jump the hypothesis fails, in the strongest possible way**: the
+set it asks to have full measure is null.  So the hypothesis of the three
+theorems above is not decoration --- there is a law and a time at which it is
+violated, and it is violated exactly where the path jumps. -/
+theorem SkorokhodSpace.dirac_step_setOf_leftLim_eq_one :
+    (Measure.dirac SkorokhodSpace.step)
+      {f : D(ℝ, ℝ) | Function.leftLim f.toFun 1 = f.toFun 1} = 0 := by
+  have hcompl : {f : D(ℝ, ℝ) | Function.leftLim f.toFun 1 = f.toFun 1}
+      = {f : D(ℝ, ℝ) | (1 : ℝ) ∈ leftJumpSet f.toFun}ᶜ := by
+    ext f
+    simp [leftJumpSet]
+  have hms : MeasurableSet {f : D(ℝ, ℝ) | Function.leftLim f.toFun 1 = f.toFun 1} := by
+    rw [hcompl]
+    exact (SkorokhodSpace.measurableSet_leftJump (1 : ℝ)).compl
+  have hne : SkorokhodSpace.step
+      ∉ {f : D(ℝ, ℝ) | Function.leftLim f.toFun 1 = f.toFun 1} := by
+    simp only [Set.mem_setOf_eq, SkorokhodSpace.leftLim_step, SkorokhodSpace.step_apply,
+      if_pos le_rfl]
+    norm_num
+  rw [Measure.dirac_apply' _ hms, Set.indicator_of_notMem hne]

@@ -9917,6 +9917,228 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   needs a recursion. The neighbourhood argument is what lets the second step keep
   its sequence below a time `t` that is not in `D`. **In Lean** on 2026-09-17,
   seventeenth run.
+* `integral_sub_mul_eq_zero_jumpProcessE_time`, `_apply`,
+  `integral_sub_mul_eq_zero_map_jumpPath_time` und
+  `integral_sub_mul_eq_zero_jumpPath_time`: **die Orthogonalität an der *Zeit*,
+  über der Sprungkonstruktion.** **In Lean** am 2026-09-18, neunter Lauf. Für ein
+  Testprozeß des Sprungoperators und `s ≤ t` verschwindet
+  `∫ (Y t − Y s) · W` gegen jedes beschränkte, für die Vergangenheit bei `s`
+  meßbare Gewicht — über dem Stichprobenraum der Konstruktion, in expliziter
+  Gestalt an einer beschränkten meßbaren Testfunktion
+  (`∫ ((f (X t) − ∫_0^t 𝒜f (X r) dr) − (f (X s) − ∫_0^s 𝒜f (X r) dr)) · W = 0`),
+  über dem kanonischen Pfadraum von Meilenstein 6 unter dem Bildmaß, und in der
+  Gestalt, die Voraussetzung (c) liest: Zuwachs und Gewicht beide mit `jumpPath`
+  verkettet.
+  **Damit ist die Lücke geschlossen, die der Abschnittskopf vor `StepIndexJunk`
+  benennt** — dort steht, die Probe beweise eine Orthogonalität an der
+  *Sprungnummer* und `ex:invariance` spreche von einer an der *Zeit*, und nichts
+  schließe das.
+  **Die Zeitfassung braucht weder die Augmentierung noch eine Stoppzeit**, weil
+  `s` und `t` nicht zufällig sind. Alles, was die Sprungnummernfassung teuer
+  machte, tritt durch `stepIndex` als *Index* ein: der Zähler ist nur außerhalb
+  der Explosionsmenge eine Stoppzeit (`stepIndex_le_iff`) und nur dort monoton in
+  der Zeit (`not_stepIndex_mono_time`). Hier liest keine Aussage `{stepIndex ≤ n}`
+  als Ereignis, also ist keine Nullmenge aufzunehmen, und die Filtration ist das
+  schlichte `jumpFiltrationE`.
+  **Bezahlt wird statt dessen mit der Martingaleigenschaft in stetiger Zeit.**
+  Die Sprungnummernfassung ruht auf `martingale_chainCompensated`, einer
+  Einschrittidentität über `ℕ`; diese hier ruht auf
+  `jumpProcessE_isMPSolution_of_nonneg`, also auf dem ganzen Meilenstein 4. Die
+  beiden Orthogonalitäten sind nicht zwei Lesarten eines Satzes, sondern ruhen auf
+  verschiedenen Martingalen.
+  **Die Schranke `lam ≤ L` bleibt, `0 < lam` fällt weg.** Die Rate darf
+  verschwinden, sofern der Kern dort absorbiert; die lineare Geburt-Tod-Kette an
+  ihrem absorbierenden Zustand ist also nicht ausgeschlossen. `[MeasurableEq E]`
+  ist von derselben Stelle geerbt, und keine Topologie auf `E` kommt vor.
+* `tendsto_integral_mul_jumpPath_time`: **Voraussetzung (c) an einer
+  approximierenden Familie von Sprungkonstruktionen.** **In Lean** am 2026-09-18,
+  neunter Lauf. Jedes Glied hat eigene Rate, eigenen Kern, eigenes Anfangsgesetz
+  und eigene Schranke; hinzuzugeben ist allein die `L¹`-Approximation des
+  kanonischen Zuwachses durch den Zuwachs des Testprozesses — das ist `(K3)` des
+  Manuskripts an der **Zeit** statt an der Sprungnummer. Der Grenzwert ist Null,
+  weil **jedes** Glied exakt Null ist; die Arbeitsteilung ist dieselbe wie in
+  `tendsto_integral_mul_of_martingale`, eine Stufe darüber. Die Integrierbarkeit
+  des Zuwachses ist keine Voraussetzung, sondern fällt aus dem Martingal.
+* `isDetermining_of_comap`, `isDetermining_pathFiltration` und
+  `isDetermining_jumpPath`: **die ersten Zeugen für `IsDetermining`.** **In Lean**
+  am 2026-09-18, neunter Lauf. `IsDetermining` trägt den ganzen Meilenstein — alle
+  drei Fassungen des Konvergenzsatzes verlangen es —, und bis dahin war es in der
+  Datei **unbewohnt**: die einzige Aussage darüber war `IsDetermining.comp_fst`,
+  die einen Zeugen fortträgt und also einen braucht. Dasselbe Integritätsproblem,
+  das `Shift` vor dem Bau des kanonischen Pfadraums hatte, und dieselbe Antwort.
+  **Der Zeuge ist keine neue Idee, sondern die Definition der bedingten
+  Erwartung.** Ist die Filtration unten der Rückzug einer σ-Algebra oben, so
+  ziehen die Indikatoren der Mengen oben genau auf die Mengen der Vergangenheit
+  zurück, und die Orthogonalität gegen sie alle ist, was
+  `ae_eq_condExp_of_forall_setIntegral_eq` verbraucht. Die trennende Menge darf
+  also stets **alle** beschränkten meßbaren Funktionen der Vergangenheit sein; der
+  Inhalt einer schärferen — der trennenden Klassen des Manuskripts, `fact:sepcond`
+  — ist, daß eine kleinere genügt.
+  **Die starke Adaptiertheit der Familie ist Voraussetzung und nicht wegzulassen.**
+  `IsDetermining` folgert `P[Y t | 𝓕 s] =ᵐ Y s`, und dafür muß die rechte Seite
+  `𝓕 s`-meßbar sein; die Orthogonalität allein sagt darüber nichts. Die Definition
+  verlangt es zu Recht nicht — es ist eine Eigenschaft von `𝓧` und nicht von `𝓩` —,
+  also muß jeder Zeuge es liefern.
+  Über dem kanonischen Pfadraum ist die Rückzugsvoraussetzung
+  `MeasurableSpace.comap_id`, über der Sprungkonstruktion
+  `jumpFiltrationE_eq_comap_jumpPath`. Keine Topologie auf dem Pfadraum, keine
+  Separabilität, und über `ι` nichts als was `IsDetermining` selbst trägt.
+  **Damit sind über der Sprungkonstruktion nur noch die Voraussetzungen (a) und
+  (b) ohne Zeugen**; sie sind das Straffheitsargument, das das Manuskript
+  ausdrücklich nicht liefert. *(Berichtigt am 2026-09-18, zehnter Lauf: an der
+  **konstanten** Folge haben auch (a) und (b) einen Zeugen, siehe
+  `mpSolution_of_tendsto_jumpPath`. Ohne Zeugen ist (a) und (b) an einer
+  **nichttrivialen** approximierenden Folge, und das ist die Straffheit.)*
+* `isDetermining_of_generateFromFuns` und `isDetermining_indicatorFuns`: **eine
+  erzeugende multiplikative Klasse ist schon eine trennende Menge**, und das ist
+  die Stelle, an der `IsDetermining` die trennenden Klassen des Manuskripts
+  (`fact:sepcond`) trifft. **In Lean** am 2026-09-18, zehnter Lauf.
+  `isDetermining_of_comap` nimmt *alle* beschränkten meßbaren Funktionen der
+  Vergangenheit und ist damit der triviale Zeuge; hier darf die Klasse so klein
+  sein, wie sie will, sofern sie unter Produkten abgeschlossen ist, die Konstante
+  `1` trägt und die Vergangenheit erzeugt. Der funktionale Monotone-Klassen-Satz
+  der Roadmap `WeakConvergence` — `integral_mul_eq_zero_of_isMulSystem` — trägt
+  die Orthogonalität von der Klasse auf alles, was sie erzeugt.
+  **Der Transport auf den Stichprobenraum ist `generateFromFuns_comp`**, ebenfalls
+  vom selben Lauf und in `WeakConvergence` eingetragen: die Klasse lebt auf dem
+  Pfadraum, die Integrale auf dem Raum, der den Prozeß trägt, und die von den
+  verketteten Funktionen erzeugte σ-Algebra ist der **Rückzug** der von der Klasse
+  erzeugten. Eine Gleichheit, also geht auf dem Weg nichts verloren.
+  **Real- und Imaginärteil werden getrennt behandelt**, weil der
+  Monotone-Klassen-Satz über reellen Funktionen spricht und `IsDetermining` über
+  `RCLike 𝕂`; zusammengesetzt wird mit `RCLike.ext`, und sonst sieht kein Schritt
+  des Beweises `𝕂`.
+  **Die Konstante `1` ist keine Zierde**: `integral_mul_eq_zero_of_isMulSystem`
+  trägt das Verschwinden von `∫ g` als eigene Voraussetzung und sagt, warum sie
+  nicht wegfällt; hier ist sie genau die Orthogonalität an der konstanten
+  Funktion.
+  `isDetermining_indicatorFuns` ist der Zeuge, der die Aussage von einer
+  Umformulierung unterscheidet: die **Indikatoren eines erzeugenden π-Systems**
+  sind eine trennende Menge. `isMulSystem_indicator_of_isPiSystem` macht aus dem
+  π-System die multiplikative Klasse — mit `∅` dazu, was nach
+  `generateFromFuns_indicatorFuns` nichts kostet —, und über das π-System hinaus
+  ist nur `Set.univ ∈ 𝒞 s` verlangt, weil es die Konstante `1` liefert. Damit darf
+  die trennende Menge so klein sein wie das Zylinder-π-System, das die Filtration
+  erzeugt, und das ist, wozu eine trennende Klasse da ist.
+* `measurableSet_pathCylinders_of_le`, `isDetermining_pathCylinders`,
+  `isDetermining_pathCylinders_coordinate` und
+  `isDetermining_pathCylinders_jumpPath`: **die Zylinder der Vergangenheit sind
+  eine trennende Menge**, über jeder Filtration, die der Rückzug der natürlichen
+  Filtration einer Koordinatenfamilie ist, und insbesondere über dem kanonischen
+  Pfadraum und über dem Stichprobenraum der Sprungkonstruktion. **In Lean** am
+  2026-09-18, zehnter Lauf. Die trennenden Funktionale sind hier die Indikatoren
+  endlich vieler Koordinatenbedingungen zu Zeiten unter `s`, also eine **echt
+  kleinere** Klasse als alle beschränkten meßbaren Funktionen der Vergangenheit.
+  Der Erzeugungsschritt ist `generateFrom_pathCylinders` zusammen mit
+  `iSup_subtype'` — genau die Umschreibung, die
+  `setIntegral_eq_of_forall_cylinder` in Meilenstein 3 schon führt —, und
+  `Set.univ` ist der Zylinder über der leeren Zeitmenge, der die Konstante `1`
+  liefert. Die Zeiten sind durch den Untertyp `Set.Iic s` indiziert und nicht
+  durch eine Kette; eine lineare Ordnung wird nirgends verbraucht.
+* `mpSolution_of_tendsto_jumpPath_of_isDetermining` und
+  `mpSolution_of_tendsto_jumpPath_cylinders`: **die Probe ein zweites Mal, über
+  den Zylindern allein.** **In Lean** am 2026-09-18, zehnter Lauf. Der Kern der
+  Probe trägt die trennende Menge als Parameter; `mpSolution_of_tendsto_jumpPath`
+  (alle beschränkten meßbaren Funktionen der Vergangenheit) und
+  `mpSolution_of_tendsto_jumpPath_cylinders` (die Zylinder) sind zwei Folgerungen
+  daraus.
+  **Das ist die Messung, für die eine trennende Klasse da ist:** derselbe Satz,
+  dieselbe Konklusion, dieselben drei übrigen Voraussetzungen — es ändert sich
+  **allein** die Voraussetzung `IsDetermining`. Was eine trennende Klasse kauft,
+  ist an dieser Stelle genau eine kleinere Menge von Testfunktionalen und sonst
+  nichts; bezahlt wird sie einmal, im funktionalen Monotone-Klassen-Satz hinter
+  `isDetermining_of_generateFromFuns`.
+* `lebesgueClock_real_interval_optional` und `abs_mpFamily_coordinate_le`: **ein
+  Testprozeß von `mpFamily` ist auf einem beschränkten Zeitfenster gleichmäßig
+  beschränkt**, in der Zeit und im Pfad. **In Lean** am 2026-09-18, zehnter Lauf.
+  Die Schranke ist `‖p.1‖ + ‖p.2‖ * t`, und sie ist gleichmäßig in `r ≤ t`, weil
+  das Fenster `Set.Ioc ⊥ r` mit `r` wächst; die Uhr ist das Lebesguemaß, also ist
+  die Masse des Fensters `r` selbst und die Konstante explizit. Das ist der
+  Begleiter von `integrable_mpFamily_coordinate`, das dieselben zwei Schranken
+  liest und nur Integrierbarkeit meldet: Voraussetzung (b) von
+  `mpSolution_of_tendsto` verlangt mehr als Integrierbarkeit, nämlich **eine**
+  Abschneidestufe für **alle** `r ∈ D ∩ Set.Iic t` zugleich, und das gibt eine
+  gleichmäßige Schranke und Integrierbarkeit allein nicht.
+* `mpSolution_of_tendsto_jumpPath`: **die Leerheitsprobe des Konvergenzsatzes, an
+  der konstanten Folge.** **In Lean** am 2026-09-18, zehnter Lauf. Alle vier
+  Voraussetzungen von `mpSolution_of_tendsto` sind auf den Daten von Meilenstein 4
+  eingelöst, für ein **beliebiges** `D` und ein beliebiges Glied der Testfamilie:
+  `IsDetermining` durch `isDetermining_jumpPath` — oder, in der Zylinderfassung
+  `mpSolution_of_tendsto_jumpPath_cylinders`, durch
+  `isDetermining_pathCylinders_jumpPath` —, die Verteilungskonvergenz durch
+  `MeasureTheory.tendstoInDistribution_const`, die gleichgradige Integrierbarkeit
+  durch `abs_mpFamily_coordinate_le`, und das Verschwinden der geprüften Zuwächse
+  durch `integral_sub_mul_eq_zero_jumpPath_time`.
+  **Was der Satz zurückgibt, ist die Martingalidentität, die
+  `jumpPath_isMPSolution` schon hat**, also nichts Neues über den Sprungprozeß.
+  Was er belegt, ist etwas über den **Satz**: seine vier Voraussetzungen sind an
+  einer wirklichen Lösung eines Martingalproblems gemeinsam bewohnt. Das ist es,
+  was eine Roadmap-Aussage braucht, die auf ihnen ruht, und was Meilenstein 10
+  nicht hatte.
+  **Die Stelle, an der die Probe klemmen sollte, klemmt nicht.** Voraussetzung (b)
+  verlangt **eine** Abschneidestufe, gleichmäßig über `r ∈ D ∩ Set.Iic t`;
+  `tendsto_integral_tail` gibt sie je Funktion, und ein Maximum über ein
+  unendliches `D ∩ Set.Iic t` gibt es nicht. Die Sprungkonstruktion entkommt dem,
+  **ohne `D` einzuschränken**: ihre Testprozesse sind auf einem beschränkten
+  Zeitfenster gleichmäßig beschränkt, also sind die Schwänze von (b) nicht klein,
+  sondern **Null**. Ebenso ist der Grenzwert in (c) nicht klein, sondern jedes
+  Glied ist exakt Null. Die Probe ist deshalb nirgends eine Abschätzung.
+  Die Voraussetzungen sind die von `jumpProcessE_isMPSolution_of_nonneg` und keine
+  weiteren; keine Topologie auf `E` kommt vor.
+* `tail_integral_mpFamily_coordinate_le` und
+  `integrable_mpFamily_coordinate_comp`: **über dem kanonischen Pfadraum und einem
+  Operator mit beschränkten Komponenten sind die Integrierbarkeit und
+  Voraussetzung (b) von `mpSolution_of_tendsto` für eine *beliebige*
+  approximierende Familie automatisch.** **In Lean** am 2026-09-18, elfter Lauf.
+  Die Abschneidestufe kommt aus `abs_mpFamily_coordinate_le`, und weil die
+  Schranke an `Y r` als Funktion auf dem Pfadraum sitzt und gleichmäßig im Pfad
+  ist, übersteht sie die Verkettung mit **jeder** Abbildung in den Pfadraum und
+  die Integration gegen **jedes** Wahrscheinlichkeitsmaß: die Schwänze von (b)
+  sind Null.
+  **Über die approximierende Familie geht dabei nichts ein** — nicht ihre Räume,
+  nicht ihre Maße, nicht ihre Abbildungen, und insbesondere keine gleichmäßige
+  Schranke an die Raten der Approximanten. Voraussetzung (b) trägt an dieser
+  Stelle also keine Information, und was von der Lücke bleibt, ist Voraussetzung
+  (a), die Verteilungskonvergenz.
+  Die Grenze des Befundes ist die Beschränktheit der zweiten Komponenten: ein
+  Erzeuger ohne sie — der lokale Zweig, eine unbeschränkte Rate — hat kein solches
+  `c`, und dort ist (b) durch gleichgradige Integrierbarkeit zu erarbeiten.
+* `mpSolution_of_tendsto_mpFamily_coordinate`: **der Konvergenzsatz über dem
+  kanonischen Pfadraum für einen beschränkten Operator**, mit genau den beiden
+  Voraussetzungen, die dort nicht automatisch sind. **In Lean** am 2026-09-18,
+  elfter Lauf. Übrig bleiben (a), die Verteilungskonvergenz der geprüften Größen,
+  und (c), das Verschwinden der geprüften Zuwächse; Integrierbarkeit und (b) sind
+  durch die beiden vorigen Punkte eingelöst. Das ist die Gestalt, die
+  Meilenstein 11 verbraucht: dort sind die approximierenden Prozesse càdlàg, (a)
+  fällt aus der Konvergenz in der Skorokhodtopologie an den Zeiten ohne feste
+  Unstetigkeit, und (c) liefern die approximierenden Martingalprobleme.
+  **Die Aufteilung sagt, wo die Arbeit eines Konvergenzarguments sitzt**, und sie
+  sagt, daß sie nicht in einer Abschätzung der gleichgradigen Integrierbarkeit
+  sitzt: solange der **Grenz**operator beschränkt ist, dürfen die Approximanten
+  beliebig sein, andere Räume, andere Maße, andere und auch unbeschränkte Raten.
+* `mpSolution_of_tendsto_map_jumpPath_of_isDetermining`,
+  `mpSolution_of_tendsto_map_jumpPath` und
+  `mpSolution_of_tendsto_map_jumpPath_cylinders`: **die Probe unter dem Bildmaß,
+  auf dem kanonischen Pfadraum selbst.** **In Lean** am 2026-09-18, elfter Lauf.
+  Die Pfadabbildung ist die **Identität**, die Prozesse sind die Testprozesse von
+  `mpFamily` über `RightContinuousPath E`, die Filtration ist `pathFiltration`,
+  und das Maß ist das Bild `(jumpMeasure mu nu).map (jumpPath lam)`, das
+  `jumpPath_isMPSolution` löst. Beide trennenden Mengen des zehnten Laufs passen:
+  `isDetermining_pathFiltration` und `isDetermining_pathCylinders_coordinate`.
+  **Warum der Raumwechsel nicht kosmetisch ist:** Meilenstein 6 und
+  Meilenstein 11 sprechen über Maße auf einem Pfadraum und nicht über
+  Stichprobenräume, die Pfade tragen — `mpSolutions_jumpOperator_coordinate_eq_singleton`
+  ist eine Identität von Mengen von Maßen auf `RightContinuousPath E`, und jede
+  Aussage von `SkorokhodSpace`, die eine Lösung verbrauchen könnte, lebt dort
+  ebenfalls. Bis hierher hatte der Konvergenzsatz Zeugen allein über dem
+  Stichprobenraum, war also an Daten bewohnt, die keine Aussage weiter oben
+  verbrauchen kann.
+  Der Beweis läuft über `mpSolution_of_tendsto_mpFamily_coordinate` und löst
+  deshalb weder die Integrierbarkeit noch (b) ein; zu liefern bleiben die
+  Verteilungskonvergenz — an einer konstanten Folge `tendstoInDistribution_const`
+  — und `integral_sub_mul_eq_zero_map_jumpPath_time` für (c). Was die Fassung über
+  dem Stichprobenraum dafür einbringt, ist eine Konklusion über die Filtration der
+  Konstruktion selbst, `jumpFiltrationE`, die das Bildmaß vergißt.
 
 ## Milestone 11: the Skorokhod instances
 
