@@ -444,6 +444,47 @@ sich Mathlibs Aufkreuzungs-API über einen beliebigen linear geordneten Index
 ziehen läßt. **Nicht der ganze Meilenstein 9 ist offen:** optionales Sampling in
 stetiger Zeit und die Stabilität unter Stoppen stehen seit dem 2026-09-10.
 
+**STEHENDE REGEL AB 2026-09-18, vom Nutzer angeordnet: Nichtexplosion steht in
+der Hypothese, nicht im Nachtrag.**
+
+> Jede neue Aussage über `stepIndex`, `rateInverse`, `jumpTime`, `jumpTimeF`
+> oder eine andere Funktion, die durch `sInf` total gemacht ist, **trägt die
+> Nichtexplosion von Anfang an als Voraussetzung**. Sie wird nicht erst
+> eingefügt, wenn ein Gegenzeuge sie erzwingt.
+
+**Warum.** Der Doc-Kommentar von `stepIndex` sagt: „`sInf` auf `ℕ` ist dieselbe
+Funktion, total gemacht durch `sInf ∅ = 0`, und der Müllwert ist **harmlos**: er
+wird genau auf der Explosionsmenge zurückgegeben, wo kein Fenster die Zeit
+enthält." Er ist nicht harmlos. Am 2026-09-18, achter Lauf, hat
+`not_stepIndex_mono_time` gezeigt, daß er die Monotonie in der Zeit zerstört:
+mit `T = (0,0,5,5,…)` — beschränkt und monoton, also explosiv — ist
+`stepIndex T 6 = 0 < 1 = stepIndex T 1`, der Zähler **fällt**.
+
+Das ist die vierte Instanz desselben Musters (`sInf ∅ = 0`, `x/0 = 0`, der
+Bochner-Müllwert, `stepIndex` auf der Explosionsmenge), und **dreimal hat ein
+Lauf erst beim Beweisen gemerkt, daß der Müllwert nicht harmlos war**. Jedes Mal
+kostete es die Runde „Vorhersage → Gegenzeuge → Abschwächung": bei `hint` im
+Hawkes-Zweig, bei `tsum_jumpLaw_eq_one` (wo die Behauptung, das Mastergleichungs-
+Argument gäbe die Nichtexplosion, widerlegt wurde) und jetzt bei `stepIndex`.
+
+**Der Nutzer hat die Regel mit dem Argument angeordnet, das sie trägt:
+Nichtexplosion muß in der Praxis ohnehin gezeigt werden.** Sie ist keine
+technische Last, die man sich spart, sondern eine Aussage, die jede Anwendung
+braucht — und die Bausteine dafür stehen bereits:
+`NonExplosive` (Zeile 9809) und `NonExplosiveE` (12776) als Mengen,
+`ae_mem_nonExplosive` (9830), `ae_mem_nonExplosive_jumpKernel` (10040),
+`ae_mem_nonExplosiveE` (13326), `ae_mem_nonExplosiveE_jumpMeasure` (13337) als
+die f.s.-Aussagen dazu. Wer eine neue Aussage über einen `sInf`-Wert schreibt,
+zieht die passende heran, statt die Hypothese weglassen zu wollen.
+
+**Was die Regel nicht heißt.** Sie verlangt keinen `ℝ≥0∞`-Lift — der sagt die
+Wahrheit (`⊤` statt `0`), ändert aber die Typen überall und ist als eigener
+Umbau geparkt. Und sie verlangt nicht, eine *bewiesene* Aussage nachträglich mit
+einer überflüssigen Hypothese zu belasten: wo ein Beweis ohne Nichtexplosion
+durchgeht, bleibt er, aber **im Doc-Kommentar ist zu sagen, warum der Müllwert
+dort wirklich nicht gelesen wird** — mit der Stelle, nicht mit dem Wort
+„harmlos".
+
 **DIE DATEIGRENZE FÄLLT, vom Nutzer am 2026-09-17 entschieden.** Es gibt *eine*
 Tau-Ceti-Einreichung, und die vier `Suggested.lean` **dürfen aufeinander
 aufbauen**: `WeakConvergence` → `SkorokhodSpace` → `MartingaleProblems`,
