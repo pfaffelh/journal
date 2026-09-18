@@ -1249,3 +1249,24 @@ Lauf, passiert; `axcheck_tmp.lean` steht seither eingedampft und in `.gitignore`
    Umfang, falls es trägt: jede Gesetzesaussage in `MartingaleProblems`, dazu die
    `P.map (X n) = μ n` in `WeakConvergence`. Mechanisch, aber breit — deshalb
    nicht vor dem offenen Beweis.
+
+8. **Die 37 `Set.mem_setOf_eq` ersetzen.** *(gestellt 2026-09-18, achtzehnter
+   Lauf des Tages.)* Der Name ist auf v4.33.1 `deprecated` — Lean sagt es selbst
+   beim Übersetzen: „`Set.mem_setOf_eq` has been deprecated: Use
+   `Set.mem_ofPred_eq` instead". Er kommt in den drei Roadmap-Dateien 37mal vor,
+   26mal in `MartingaleProblems`, 7mal in `SkorokhodSpace`, 4mal in
+   `WeakConvergence`.
+
+   **Warum es nicht von selbst auffiel:** ein `deprecated` ist ein `warning` und
+   kein `error`, und `scripts/check_suggested.py` zählt Fehler und `sorry`. Die
+   Prüfung ist damit nicht falsch, aber sie ist an dieser Stelle blind, und das
+   ist dieselbe Bauart wie die beiden Fallen, die schon aufgeschrieben stehen:
+   `| head -N` bei `check_suggested.py` und die abgeschnittene Fortsetzungszeile
+   bei `check_axioms.py`.
+
+   **Zu tun, in dieser Reihenfolge:** erst prüfen, ob `Set.mem_ofPred_eq` auf
+   v4.33.1 *und* auf `upstream/master` unter diesem Namen steht — sonst zerfällt
+   die Bindung an v4.33.1 gegen das Zielrepositorium; dann ersetzen; und dann
+   `check_suggested.py` um eine Spalte `warning` erweitern, damit der nächste
+   `deprecated` nicht wieder erst beim Lesen einer Fehlermeldung auffällt. Die
+   Spalte ist der eigentliche Punkt, das Ersetzen ist die Gelegenheit dazu.
