@@ -36571,3 +36571,173 @@ jetzt den Namen zu nennen, unter dem er in `Suggested.lean` gesucht hat.**
    `integral_sub_mul_eq_zero_of_chainCompensated` an der Sprungkonstruktion
    verlangt, und sie ist billig; erst mit beiden ist der Punkt abgeschlossen und
    nicht bloß vorbereitet.
+
+### 2026-09-18, siebter Lauf des Tages — beide Eingaben der Probe stehen; und die zweite war nicht „umsonst", sondern brauchte die Augmentierung, weil `sInf ∅ = 0` die Explosionsmenge in jedes Ereignis `{stepIndex ≤ i}` hineinlügt
+
+**Beide Vorschläge des Vorlaufs sind eingelöst.** Vierzehn Deklarationen mehr in
+`TauCeti/MartingaleProblems/Suggested.lean` — dreizehn Sätze und eine Definition
+—, in drei neuen Abschnitten (`NatLayerCake`, `RenewalMean`, `ClockFiltration`),
+alle drei Roadmap-Dateien ohne einen Fehler und ohne ein `sorry` durch
+`scripts/check_suggested.py` gegen v4.33.1, alle dreizehn Sätze mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft. Die
+Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 10.
+
+Damit hat Voraussetzung (c) der Probe von Meilenstein 10 über der
+Sprungkonstruktion **keine offene Eingabe mehr**:
+`integral_sub_mul_eq_zero_of_chainCompensated` verlangte `hτint` und `hτ`, und
+beide sind jetzt an der Sprungkonstruktion eingelöst.
+
+#### Vorschlag 1: der endliche Erwartungswert, und wie grob die Abschätzung sein darf
+
+`integrable_stepIndex_jumpMeasure` steht, unter `0 < lam ≤ L`, `Measurable lam`
+und `0 ≤ t`.
+
+**Der Vorlauf hatte den Gammaschwanz vorgeschlagen** — die `n`-te Partialsumme
+unabhängiger Exp(1)-Wartezeiten ist Gamma(n) verteilt, und deren Schwanz ist
+summierbar. Dieses Gesetz hat Mathlib nicht, und **es wird auch nicht
+gebraucht.** Die Abschätzung, die trägt, wirft fast alles weg:
+
+> `stepIndex ≥ n+1` erzwingt `∑_{k ≤ n} ξ k ≤ L t`, und weil die Wartezeiten
+> f.s. positiv sind, erzwingt das, daß **jede einzelne** der ersten `n+1`
+> Wartezeiten in `Iic (L t)` liegt.
+
+Das ist eine **Zylindermenge**, und für die rechnet `Measure.infinitePi_pi` das
+Maß aus: `q^(n+1)` mit `q = expMeasure 1 (Iic (L t))`, und `q < 1`, weil die
+Exponentialverteilung unterhalb jedes Punktes weniger als die volle Masse hat
+(`expMeasure_one_Iic_lt_one`, aus dem schon vorhandenen `expMeasure_Ioi`). Eine
+geometrische Reihe, und fertig. Kein Gammagesetz, keine erzeugende Funktion,
+keine Unabhängigkeitsaussage über die hinaus, die für Borel--Cantelli schon
+dasteht.
+
+**Der Befund, der daran allgemein ist:** die Ungleichung, die das trägt, ist
+`sum_div_le_jumpTime` — dieselbe, die bei beschränkter Rate die Nichtexplosion
+gibt. Erwartungswert des Erneuerungszählers und Nichtexplosion ruhen bei
+beschränkter Rate auf **einer** Ungleichung; sie unterscheiden sich nur darin,
+ob man sie summiert oder gegen unendlich laufen läßt.
+
+**Und eine Lücke in Mathlib, die auf dem Weg lag.** Die Integrierbarkeit einer
+`ℕ`-wertigen Größe *ist* die Summierbarkeit ihrer Schwänze — das ist die
+zählende Schichtkuchenformel. Mathlib hat die **stetige**
+(`lintegral_eq_lintegral_meas_lt`,
+`MeasureTheory/Integral/Layercake.lean:496`), und die zählende nicht; an
+`upstream/master` `a218e50f981` gesucht unter `lintegral_natCast`,
+`integrable_natCast` und `tsum_measure_lt`, kein Treffer. In `Suggested.lean`
+unter denselben drei Namen gesucht, ebenfalls nicht vorhanden. Sie ist gebaut:
+`lintegral_natCast_eq_tsum_measure` und
+`integrable_natCast_of_tsum_measure_ne_top`, drei Zeilen aus `lintegral_tsum`,
+**ohne** Ordnung des Index und **ohne** σ-Endlichkeit, die die stetige Fassung
+beide braucht. Sie gehört zu `TODO.md` Punkt 8; die dortige Zahl ist in diesem
+Lauf nicht nachgezählt worden und wird deshalb nicht genannt.
+
+#### Vorschlag 2: die Stoppzeit — und die Begründung des Vorlaufs war in beiden Hälften falsch
+
+Der Vorlauf hatte geschrieben, die Aussage sei „`IsStoppingTime` aus Meßbarkeit
+ganz unten" und koste „drei Zeilen", weil über der vergrößerten Filtration die
+ganze Uhr schon bei `i = 0` in der σ-Algebra liege. **Beides stimmt nicht.**
+
+**Erstens ist der Erneuerungszähler nicht uhrmeßbar.** `jumpTime` teilt die
+`k`-te Wartezeit durch `lam` an der `k`-ten Marke der *Kette*; der Zähler liest
+also beide Faktoren des Produktraums. Was den Beweis trägt, ist etwas anderes
+und Genaueres: er liest sie **bis zum selben Index**, und die scharfe Schranke
+ist `k ≤ i + 1` und nicht `k ≤ i`. Die Rekursion
+`T (k+1) = T k + ξ k / lam (y k)` liest den Zustand **vor** dem Sprung, also ist
+die `(i+1)`-te Sprungzeit bei `i` noch meßbar; erst der Zustand *nach* ihr ist
+es nicht. `measurable_clockFiltration_jumpTime` sagt das, mit dieser Schranke.
+
+**Zweitens ist die Aussage über der schlichten Filtration falsch**, und der
+Grund steht seit dem zweiten Lauf dieses Tages in derselben Datei:
+`stepIndex_le_iff` sagt, daß `{stepIndex T t ≤ i}` das Ereignis `t < T (i+1)`
+**oder** die Explosionsmenge ist. Auf letzterer gibt `sInf ∅ = 0` den Müllwert
+zurück, und der zweite Zweig liest **alle** Sprungzeiten auf einmal; er liegt in
+keinem `𝓖 i`. Der Blocktext jenes Laufs sagt es wörtlich: „So the renewal count
+is a stopping time for the filtration of the first `n + 1` jump times **only
+under non explosion** — one more place where `sInf ∅ = 0` makes a statement
+quietly true."
+
+**Das ist lehrreich, und zwar über die Arbeitsweise.** Die richtige Antwort
+stand seit dem zweiten Lauf desselben Tages in **derselben Datei**
+(`stepIndex_le_iff`, Zeile 34857), gut tausend Zeilen über dem Abschnitt
+`ChainGrowth`, aus dem der widersprechende Vorschlag kam. Der sechste Lauf hat beim
+Vorschlagen nach `isStoppingTime_stepIndex` und `stepIndex_sup` gesucht — den
+Namen, die er zu bauen gedachte — und nicht nach `stepIndex_le_iff`, dem Namen
+der Aussage, die dazu etwas zu sagen hat. Die Regel jenes Laufs („ein Vorschlag,
+der eine Lücke behauptet, hat den Namen zu nennen, unter dem er gesucht hat")
+verhindert **Doppelungen**, nicht **Widersprüche**: eine Suche nach dem eigenen
+künftigen Namen findet nie die vorhandene Aussage über denselben Gegenstand.
+Zu suchen ist nach dem **Gegenstand** — hier `stepIndex` —, nicht nach dem
+geplanten Namen.
+
+**Die Antwort ist die Augmentierung**, und das ist die erste Stelle dieser
+Entwicklung, an der sie kein Komfort ist, sondern der Inhalt: die
+Explosionsmenge ist eine Nullmenge, und Nullmengen sind genau das, was
+`Filtration.augment` hinzufügt. `isStoppingTime_stepIndex_augment` ist die
+Aussage über `(clockFiltration E).augment (jumpMeasure mu nu)`.
+
+**Und sie kostet oberhalb nichts.** Der Abschnitt `Augmentation` steht seit dem
+2026-09-12 mit siebzehn Deklarationen: `Martingale.augment` trägt das
+kompensierte Kettenmartingal hinüber, `Filtration.le_augment` das Gewicht, und
+`Martingale.of_augment` bringt es zurück. Die Vorfrage des Nutzers vom
+2026-09-12 — „verträgt der Rest der Entwicklung die augmentierte Filtration?" —
+ist damit an einer Anwendung eingelöst und nicht nur abstrakt beantwortet.
+
+**Das ist der zweite Müllwert dieser Arbeit, der eine Aussage kippt**, nach
+`x / 0 = 0` am absorbierenden Zustand. Die Regel des Nutzers („auf die Müllwerte
+muß man schon aufpassen") hat hier zum zweiten Mal getragen, und beide Male war
+die Reparatur dieselbe Bauart: nicht die Aussage abschwächen, sondern den Raum
+ehrlich machen — dort durch `ℝ≥0∞`, hier durch die Nullmengen.
+
+#### Die Stolperstelle des Laufs, und sie sitzt im Werkzeug und nicht in der Mathematik
+
+Beide Abschnitte gingen im **Entwurf** fehlerfrei durch `lake env lean` und
+fielen beim Einsetzen in die Datei mit fünf Fehlern durch. Der Grund war weder
+ein Beweis noch eine Aussage: `scripts/build_probe_oleans.sh` baut die
+`.olean`, und ein Entwurf daneben führt seine **eigene Präambel**. Meine hatte
+`open scoped NNReal ENNReal`, `Suggested.lean` hat nur `open scoped NNReal` —
+also ist `ℝ≥0∞` dort **keine Notation**, und vier Signaturzeilen scheiterten mit
+„expected token", zwei weitere Fehler waren Folgefehler.
+
+**Merksatz für den nächsten Entwurf:** die Präambel des Entwurfs muß die der
+Zieldatei sein, Zeile für Zeile, und nicht die bequemere. Der Prüflauf über die
+ganze Datei ist die einzige Instanz, die das merkt; ein Entwurf, der „durchgeht",
+sagt nichts über die Datei. Im Code steht deshalb jetzt `ENNReal` und nicht
+`ℝ≥0∞` — die übrigen achtzig Vorkommen der Notation in der Datei stehen
+sämtlich in Kommentaren, wo sie nichts kostet.
+
+#### Was offen bleibt
+
+* Die Voraussetzungen **(a)** und **(b)** von `mpSolution_of_tendsto` bleiben,
+  wie acht Vorläufe sie hinterlassen haben: Eingabe eines Straffheitsarguments,
+  das das Manuskript ausdrücklich nicht liefert.
+* Die Probe von Meilenstein 10 über der Sprungkonstruktion ist damit an
+  Voraussetzung (c) **fertig**; was noch fehlt, ist das Zusammensetzen — die
+  drei Teile zu *einer* Deklaration über der augmentierten Uhrenfiltration.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Das Zusammensetzen von Voraussetzung (c) über der Sprungkonstruktion.**
+   *Aussage:* `integral_sub_mul_eq_zero_jumpChain_stepIndex` — für beschränktes
+   meßbares `f`, `0 < lam ≤ L` und `0 ≤ s ≤ t` verschwindet
+   `∫ (M_{N t} − M_{N s}) · W` über `jumpMeasure mu nu`, wobei `M` das
+   kompensierte Kettenmartingal, `N` der Erneuerungszähler und `W` beschränkt und
+   `hσ.measurableSpace`-meßbar ist. *In `Suggested.lean` gesucht unter:*
+   `integral_sub_mul_eq_zero_jumpChain`, `_stepIndex` und `chainCompensated_jump`
+   — nichts davon steht dort. *Worauf sie ruht:* auf
+   `integral_sub_mul_eq_zero_of_chainCompensated`, dessen fünf Eingaben jetzt
+   alle einzeln dastehen — `martingale_chainCompensated` über
+   `condExp_jumpChain_clock` und `Martingale.augment`,
+   `integrable_stepIndex_jumpMeasure`, `isStoppingTime_stepIndex_augment` zweimal
+   (bei `s` und bei `t`), und die Monotonie des Erneuerungszählers in der Zeit.
+   *Warum jetzt:* es ist Buchhaltung ohne offene Entscheidung, und es ist der
+   Punkt, an dem die Probe von Meilenstein 10 ihre martingaltheoretische Hälfte
+   als **eine** Aussage hat statt als fünf Bausteine; ein Lauf, der sie nicht
+   zusammensetzt, hinterläßt genau das, wovor der sechste Lauf gewarnt hat —
+   Vorbereitetes statt Abgeschlossenes.
+2. **Die Monotonie des Erneuerungszählers, falls sie fehlt.** *Aussage:*
+   `stepIndex_mono_time` — `s ≤ t → stepIndex T s ≤ stepIndex T t` für monotones
+   `T`. *In `Suggested.lean` gesucht unter:* `stepIndex_mono` — nicht vorhanden;
+   `stepIndex_le`, `stepIndex_le_iff` und `stepIndex_eq_iff` stehen dort, aber
+   keine Monotonie im **Zeitargument**. *Worauf sie ruht:* auf `stepIndex_le`
+   und `lt_stepIndex_succ`, also auf zwei Zeilen; ohne Monotonie von `T` ist sie
+   sogar unbedingt wahr, weil `sInf` über einer wachsenden Menge fällt. *Warum
+   jetzt:* sie ist die `hστ`-Eingabe von Punkt 1 und die einzige, die dort noch
+   nicht benannt dasteht.

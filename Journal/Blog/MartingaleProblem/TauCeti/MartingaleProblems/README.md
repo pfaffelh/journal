@@ -9770,6 +9770,55 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   side: the local statement needs no such thing, and the moment the orthogonality
   is read at a random index rather than a constant one, the first moment of that
   index is exactly what has to be paid.
+* `lintegral_natCast_eq_tsum_measure` und
+  `integrable_natCast_of_tsum_measure_ne_top`: **die Schichtkuchenformel für eine
+  `ℕ`-wertige Größe** — ihr Integral ist die Summe der Maße ihrer Schwänze, und
+  eine summierbare Schwanzfolge ist die Integrierbarkeit. **In Lean** am
+  2026-09-18, siebter Lauf. Mathlib hat die *stetige* Schichtkuchenformel
+  (`lintegral_eq_lintegral_meas_lt`,
+  `MeasureTheory/Integral/Layercake.lean:496`, `upstream/master` `a218e50f981`)
+  und die zählende nicht; dort gesucht unter `lintegral_natCast`,
+  `integrable_natCast` und `tsum_measure_lt`, kein Treffer. Der Beweis ist die
+  punktweise Identität `k = ∑' n, 1_{n < k}` und `lintegral_tsum`; weder eine
+  Ordnung des Index noch σ-Endlichkeit kommen vor, anders als in der stetigen
+  Fassung.
+* `measure_lt_stepIndex_le` und `integrable_stepIndex_jumpMeasure`: **der
+  Erneuerungszähler der Sprungkonstruktion hat einen endlichen Erwartungswert**,
+  unter `0 < lam ≤ L`. **In Lean** am 2026-09-18, siebter Lauf. Damit ist
+  `integral_sub_mul_eq_zero_of_chainCompensated` auf die Sprungkonstruktion
+  anwendbar.
+  **Die Abschätzung ist grob, und das ist der Punkt.** Der natürliche Weg über
+  den Gammaschwanz braucht das Gesetz der `n`-ten Partialsumme, und Mathlib hat
+  es nicht. Er wird nicht gebraucht: mehr als `n` Sprünge vor `t` erzwingen
+  `∑_{k ≤ n} ξ k ≤ L t`, also — bei f.s. positiven Wartezeiten — daß **jede**
+  der ersten `n+1` Wartezeiten in `Iic (L t)` liegt. Das ist eine
+  **Zylindermenge**, `Measure.infinitePi_pi` rechnet ihr Maß als `q^(n+1)` aus
+  mit `q = expMeasure 1 (Iic (L t)) < 1`, und eine geometrische Schranke reicht.
+  Kein Gammagesetz, keine erzeugende Funktion, keine Unabhängigkeitsaussage über
+  die hinaus, die schon für Borel--Cantelli dasteht.
+* `clockFiltration`, `measurable_clockFiltration_jumpTime` und
+  `isStoppingTime_stepIndex_augment`: **der Erneuerungszähler ist eine Stoppzeit
+  — der augmentierten Uhrenfiltration.** **In Lean** am 2026-09-18, siebter Lauf.
+  Zwei Berichtigungen stecken darin, und beide zählen.
+  **Er ist nicht umsonst.** Über `naturalFiltration (jumpChain E) i ⊔ comap
+  Prod.snd ⊤` liegt die ganze Uhr schon bei `i = 0` in der σ-Algebra, also wäre
+  ein uhrmeßbarer Index trivial eine Stoppzeit. Der Erneuerungszähler ist **nicht
+  uhrmeßbar**: `jumpTime` teilt die `k`-te Wartezeit durch `lam` an der `k`-ten
+  Marke der Kette und liest damit beide Faktoren. Was den Beweis trägt, ist, daß
+  er sie *bis zum selben Index* liest, und die scharfe Schranke ist `k ≤ i + 1`
+  und nicht `k ≤ i` — die Rekursion `T (k+1) = T k + ξ k / lam (y k)` liest den
+  Zustand **vor** dem Sprung.
+  **Und über der schlichten Filtration ist die Aussage falsch.**
+  `stepIndex_le_iff` sagt warum: `{stepIndex T t ≤ i}` ist das Ereignis
+  `t < T (i+1)` **oder** die Explosionsmenge, auf der `sInf ∅ = 0` den Müllwert
+  zurückgibt, und der zweite Zweig liest alle Sprungzeiten auf einmal und liegt
+  in keinem `𝓖 i`. Die Explosionsmenge ist eine Nullmenge, also ist die ehrliche
+  Aussage die über der **augmentierten** Filtration. Das ist die erste Stelle
+  dieser Entwicklung, an der die Augmentierung keine Bequemlichkeit ist, sondern
+  der Inhalt: ein lügender Müllwert wird durch eine Nullmenge berichtigt, und
+  Nullmengen sind genau das, was `Filtration.augment` hinzufügt.
+  `Martingale.augment` trägt das kompensierte Kettenmartingal hinüber und
+  `Filtration.le_augment` das Gewicht; nichts oberhalb ist neu zu beweisen.
 * **Hypothesis (a) is about real random variables and carries no topology.** In
   the example above the path space `F` is `D ι E` and the functionals
   `Y° t` are evaluations, but the statement of (a) never mentions `F`'s

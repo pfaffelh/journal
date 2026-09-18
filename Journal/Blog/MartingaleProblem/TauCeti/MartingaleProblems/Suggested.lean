@@ -36117,3 +36117,288 @@ theorem integral_sub_mul_eq_zero_of_chainCompensated [IsFiniteMeasure μ]
   nlinarith
 
 end ChainGrowth
+
+/-! ### The counting layer cake, and the mean of a renewal count
+
+`integral_sub_mul_eq_zero_of_chainCompensated` asks the random index to have a finite mean.  Over
+the jump construction that index is the renewal count `stepIndex (jumpTime lam ω.1 ω.2) t`, and
+this block pays the price.
+
+Two things are built, and the first is general.  Mathlib has the layer cake formula for a
+nonnegative function against Lebesgue measure on the half line
+(`lintegral_eq_lintegral_meas_lt`, `MeasureTheory/Integral/Layercake.lean:496` on
+`upstream/master` `a218e50f981`), and nothing for the **counting** version -- that the integral of
+a `ℕ`-valued function is the sum of the measures of its tails.  Searched there for
+`lintegral_natCast`, `integrable_natCast` and `tsum_measure_lt`: no declaration of that shape.
+The counting version is what an integer valued index needs, and it is three lines from
+`lintegral_tsum`.
+
+The second is the tail bound, and the point of it is how **crude** it is allowed to be.  The
+natural estimate for `P (stepIndex ≥ n)` is the tail of a Gamma law -- the `n`-th partial sum of
+the waiting times is `Gamma n`, and that law is not in Mathlib.  It is not needed.  The event
+`stepIndex ≥ n + 1` forces `∑_{k ≤ n} ξ k ≤ L t`, and since the waiting times are almost surely
+positive it forces **each** of `ξ 0, …, ξ n` to lie in `Iic (L t)` -- a *cylinder set*, whose
+measure `Measure.infinitePi_pi` computes as `q ^ (n + 1)` with `q = expMeasure 1 (Iic (L t)) < 1`.
+A geometric bound, from the product formula alone, with no Gamma law, no moment generating
+function and no independence lemma beyond the one already used for Borel--Cantelli. -/
+
+section NatLayerCake
+
+variable {Ω : Type*} {m : MeasurableSpace Ω}
+
+/-- The number of naturals below `k`, written as a sum in `ℝ≥0∞`. -/
+theorem tsum_ite_lt (k : ℕ) : ∑' n : ℕ, (if n < k then (1 : ENNReal) else 0) = k := by
+  rw [tsum_eq_sum (s := Finset.range k) fun n hn ↦ if_neg (by simpa using hn)]
+  simp [Finset.filter_true_of_mem fun x hx ↦ Finset.mem_range.1 hx]
+
+/-- **The layer cake formula for a `ℕ`-valued function**: its integral is the sum of the measures
+of its tails.  Mathlib has the continuous layer cake and not this one.
+
+The proof is the pointwise identity `k = ∑' n, 1_{n < k}` and `lintegral_tsum`; no ordering of the
+index and no σ-finiteness occur, unlike in the continuous statement. -/
+theorem lintegral_natCast_eq_tsum_measure {g : Ω → ℕ} (hg : Measurable g) (μ : Measure Ω) :
+    ∫⁻ ω, (g ω : ENNReal) ∂μ = ∑' n : ℕ, μ {ω | n < g ω} := by
+  have hmeas : ∀ n : ℕ, MeasurableSet {ω | n < g ω} := fun n ↦ hg trivial
+  have hpt : ∀ ω, (g ω : ENNReal)
+      = ∑' n : ℕ, Set.indicator {ω | n < g ω} (fun _ ↦ (1 : ENNReal)) ω := by
+    intro ω
+    rw [← tsum_ite_lt (g ω)]
+    refine tsum_congr fun n ↦ ?_
+    by_cases h : n < g ω <;> simp [h]
+  simp_rw [hpt]
+  rw [lintegral_tsum fun n ↦ (measurable_const.indicator (hmeas n)).aemeasurable]
+  exact tsum_congr fun n ↦ by rw [lintegral_indicator (hmeas n), setLIntegral_one]
+
+/-- **A `ℕ`-valued variable with summable tails is integrable.**  This is the form the hypothesis
+`hτint` of `integral_sub_mul_eq_zero_of_chainCompensated` is checked in. -/
+theorem integrable_natCast_of_tsum_measure_ne_top {g : Ω → ℕ} (hg : Measurable g)
+    (μ : Measure Ω) (h : ∑' n : ℕ, μ {ω | n < g ω} ≠ ⊤) :
+    Integrable (fun ω ↦ (g ω : ℝ)) μ := by
+  have hm : Measurable fun ω ↦ ((g ω : ℕ) : ENNReal) :=
+    (measurable_from_top (f := fun n : ℕ ↦ (n : ENNReal))).comp hg
+  have := integrable_toReal_of_lintegral_ne_top hm.aemeasurable
+    (by rw [lintegral_natCast_eq_tsum_measure hg]; exact h)
+  simpa using this
+
+end NatLayerCake
+
+section RenewalMean
+
+variable {E : Type*} [MeasurableSpace E]
+
+/-- The event that the first `n` waiting times all lie below `s` is a cylinder set, and its
+measure is the `n`-th power of a single probability. -/
+theorem waitingMeasure_forall_le (s : ℝ) (n : ℕ) :
+    waitingMeasure {xi : ℕ → ℝ | ∀ k < n, xi k ≤ s} = expMeasure 1 (Set.Iic s) ^ n := by
+  have hset : {xi : ℕ → ℝ | ∀ k < n, xi k ≤ s}
+      = Set.pi (↑(Finset.range n)) fun _ ↦ Set.Iic s := by
+    ext xi; simp [Set.mem_pi]
+  rw [hset, waitingMeasure,
+    Measure.infinitePi_pi (μ := fun _ : ℕ ↦ expMeasure 1) fun i _ ↦ measurableSet_Iic,
+    Finset.prod_const, Finset.card_range]
+
+theorem measurableSet_forall_le (s : ℝ) (n : ℕ) :
+    MeasurableSet {xi : ℕ → ℝ | ∀ k < n, xi k ≤ s} := by
+  have hset : {xi : ℕ → ℝ | ∀ k < n, xi k ≤ s}
+      = Set.pi (↑(Finset.range n)) fun _ ↦ Set.Iic s := by
+    ext xi; simp [Set.mem_pi]
+  rw [hset]
+  exact MeasurableSet.pi (Finset.range n).countable_toSet fun i _ ↦ measurableSet_Iic
+
+/-- **The exponential law puts less than the full mass below any point.**  This is the whole of
+the probabilistic content of the tail bound, and `expMeasure_Ioi` is what supplies it. -/
+theorem expMeasure_one_Iic_lt_one {s : ℝ} (hs : 0 ≤ s) : expMeasure 1 (Set.Iic s) < 1 := by
+  have h : expMeasure 1 (Set.Iic s) = 1 - ENNReal.ofReal (Real.exp (-s)) := by
+    rw [← Set.compl_Ioi, prob_compl_eq_one_sub measurableSet_Ioi, expMeasure_Ioi one_pos hs,
+      one_mul]
+  rw [h]
+  refine ENNReal.sub_lt_self ENNReal.one_ne_top one_ne_zero ?_
+  simp [ENNReal.ofReal_eq_zero, not_le, Real.exp_pos]
+
+/-- **The tails of the renewal count decay geometrically**, for a rate bounded above and below.
+
+The inequality that carries it is `sum_div_le_jumpTime`, the same one that gives non explosion for
+a bounded rate: more than `n` jumps before `t` forces the first `n + 1` waiting times to have sum
+at most `L t`, hence -- the waiting times being almost surely positive -- forces each of them into
+`Iic (L t)`.  That is a cylinder set, and its measure is a power.
+
+The estimate throws away everything but membership of each coordinate in a half line, and it is
+still enough: a Gamma tail would be sharper and is not available, a geometric one is available and
+summable. -/
+theorem measure_lt_stepIndex_le {lam : E → ℝ} {L t : ℝ} (hL0 : 0 < L)
+    (hlam : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] (n : ℕ) :
+    jumpMeasure mu nu {ω | n < stepIndex (jumpTime lam ω.1 ω.2) t}
+      ≤ expMeasure 1 (Set.Iic (L * t)) ^ (n + 1) := by
+  have hsub : {ω : (ℕ → E) × (ℕ → ℝ) | n < stepIndex (jumpTime lam ω.1 ω.2) t}
+      ≤ᵐ[jumpMeasure mu nu] {ω : (ℕ → E) × (ℕ → ℝ) | ∀ k < n + 1, ω.2 k ≤ L * t} := by
+    filter_upwards [ae_pos_snd_jumpMeasure mu nu] with ω hpos hmem k hk
+    have hTle : jumpTime lam ω.1 ω.2 (n + 1) ≤ t := le_of_lt_stepIndex hmem
+    have hsum : (∑ j ∈ Finset.range (n + 1), ω.2 j) / L ≤ t :=
+      le_trans (sum_div_le_jumpTime hlam hL (fun j ↦ (hpos j).le) (n + 1)) hTle
+    rw [div_le_iff₀ hL0] at hsum
+    calc ω.2 k ≤ ∑ j ∈ Finset.range (n + 1), ω.2 j :=
+          Finset.single_le_sum (f := fun j ↦ ω.2 j) (fun j _ ↦ (hpos j).le)
+            (Finset.mem_range.2 hk)
+      _ ≤ L * t := by linarith
+  refine (measure_mono_ae hsub).trans ?_
+  have hB : {ω : (ℕ → E) × (ℕ → ℝ) | ∀ k < n + 1, ω.2 k ≤ L * t}
+      = Prod.snd ⁻¹' {xi : ℕ → ℝ | ∀ k < n + 1, xi k ≤ L * t} := rfl
+  rw [hB, ← Measure.map_apply measurable_snd (measurableSet_forall_le _ _),
+    jumpMeasure_map_snd, waitingMeasure_forall_le]
+
+/-- **The renewal count of the jump construction has a finite mean.**
+
+This is hypothesis `hτint` of `integral_sub_mul_eq_zero_of_chainCompensated` at the jump
+construction, and with it hypothesis (c) of `mpSolution_of_tendsto` has its martingale half over a
+filtration containing the clock.
+
+The hypotheses are those of the bounded rate throughout: `0 < lam ≤ L`.  They are not decoration.
+The local branch of `thm:pathjumpMP` has no such bound, and there the renewal count need not be
+integrable at all -- which is the formal counterpart of the manuscript carrying `𝔼[N t] < ∞` only
+in the global statement `thm:pathjumpMP`(b). -/
+theorem integrable_stepIndex_jumpMeasure {lam : E → ℝ} {L t : ℝ} (hL0 : 0 < L)
+    (hlamm : Measurable lam) (hlam : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L) (ht : 0 ≤ t)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] :
+    Integrable (fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+      ((stepIndex (jumpTime lam ω.1 ω.2) t : ℕ) : ℝ)) (jumpMeasure mu nu) := by
+  have hmeas : Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ stepIndex (jumpTime lam ω.1 ω.2) t :=
+    (measurable_stepIndex fun n ↦ measurable_jumpTime hlamm n).comp
+      (measurable_const.prodMk measurable_id)
+  refine integrable_natCast_of_tsum_measure_ne_top hmeas _ ?_
+  have hq : expMeasure 1 (Set.Iic (L * t)) < 1 :=
+    expMeasure_one_Iic_lt_one (mul_nonneg hL0.le ht)
+  refine ne_top_of_le_ne_top ?_
+    (ENNReal.tsum_le_tsum fun n ↦ measure_lt_stepIndex_le hL0 hlam hL mu nu n)
+  rw [ENNReal.tsum_geometric_add_one]
+  refine ENNReal.mul_ne_top hq.ne_top ?_
+  rw [Ne, ENNReal.inv_eq_top, tsub_eq_zero_iff_le]
+  exact hq.not_ge
+
+end RenewalMean
+
+/-! ### The renewal count as a stopping time, and why it needs the augmentation
+
+The second input the probe of Milestone 10 asks of the jump construction is that the renewal count
+is a stopping time of the filtration that contains the clock.  It is, but **for neither of the two
+reasons one would expect**, and both corrections matter.
+
+*It is not free.*  Over `naturalFiltration (jumpChain E) i ⊔ comap Prod.snd ⊤` the whole clock sits
+in the σ-algebra at `i = 0`, so a clock measurable index would indeed be a stopping time by being
+measurable at the bottom.  The renewal count is **not** clock measurable: `jumpTime` divides the
+`k`-th waiting time by `lam` at the `k`-th mark of the chain, so it reads both factors.  What makes
+the argument work is that it reads them *up to the same index*: `jumpTime lam ω.1 ω.2 (i + 1)` is
+built from `ω.1 0, …, ω.1 i` and `ω.2 0, …, ω.2 i`, and the chain half of that is exactly what
+`naturalFiltration` supplies at `i`.  `measurable_clockFiltration_jumpTime` is that bookkeeping,
+and its index bound is `k ≤ i + 1` and not `k ≤ i` -- the jump time whose index exceeds the
+filtration index by one is still readable, because the recursion reads the state *before* the jump.
+
+*And it is not true over the plain filtration.*  `stepIndex_le_iff` already says why:
+`{stepIndex T t ≤ i}` is the event `t < T (i + 1)` **or** the explosion set, on which `sInf ∅ = 0`
+returns the junk value, and the second disjunct reads every jump time at once and lies in no
+`𝓖 i`.  The explosion set is null, so the honest statement is over the **augmented** filtration,
+and it is the first place in this development where the augmentation is not an option but the
+content: a junk value that lies is repaired by a null set, and a null set is what
+`Filtration.augment` adds.
+
+`Martingale.augment` carries the compensated chain over to the augmented filtration and
+`Filtration.le_augment` carries the weight, so nothing above this point has to be redone. -/
+
+section ClockFiltration
+
+variable {E : Type*} [MeasurableSpace E]
+
+/-- **The filtration of the embedded chain, enlarged by the whole clock.**  This is the filtration
+`condExp_jumpChain_clock` conditions over, packaged as a `Filtration` so that stopping times of it
+can be spoken of. -/
+def clockFiltration (E : Type*) [MeasurableSpace E] :
+    Filtration ℕ (inferInstance : MeasurableSpace ((ℕ → E) × (ℕ → ℝ))) :=
+  naturalFiltration (jumpChain E) (measurable_jumpChain (E := E))
+    ⊔ Filtration.const (ι := ℕ) (MeasurableSpace.comap
+        (Prod.snd : (ℕ → E) × (ℕ → ℝ) → (ℕ → ℝ)) inferInstance) measurable_snd.comap_le
+
+theorem clockFiltration_apply (i : ℕ) :
+    clockFiltration E i = naturalFiltration (jumpChain E) (measurable_jumpChain (E := E)) i
+      ⊔ MeasurableSpace.comap (Prod.snd : (ℕ → E) × (ℕ → ℝ) → (ℕ → ℝ)) inferInstance := rfl
+
+/-- Every waiting time, at every index of the filtration: the clock is there from the bottom. -/
+theorem measurable_clockFiltration_snd (i k : ℕ) :
+    Measurable[clockFiltration E i] fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ω.2 k := by
+  rw [clockFiltration_apply]
+  exact ((measurable_pi_apply k).comp
+    (comap_measurable (Prod.snd : (ℕ → E) × (ℕ → ℝ) → (ℕ → ℝ)))).mono le_sup_right le_rfl
+
+/-- The marks of the chain, and only those below the index. -/
+theorem measurable_clockFiltration_fst {i k : ℕ} (hk : k ≤ i) :
+    Measurable[clockFiltration E i] fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ω.1 k := by
+  rw [clockFiltration_apply]
+  exact (measurable_naturalFiltration (measurable_jumpChain (E := E)) hk).mono le_sup_left le_rfl
+
+/-- **The `(i + 1)`-st jump time is measurable at the index `i`.**
+
+The bound `k ≤ i + 1` is the sharp one and is what the stopping time property needs: the recursion
+`T (k + 1) = T k + ξ k / lam (y k)` reads the chain at `k` and not at `k + 1`, so the jump time
+whose index is one above the filtration index is still readable.  Only the *state after* the
+`(i + 1)`-st jump lies outside `𝓖 i`. -/
+theorem measurable_clockFiltration_jumpTime {lam : E → ℝ} (hlamm : Measurable lam) {i : ℕ} :
+    ∀ {k : ℕ}, k ≤ i + 1 →
+      Measurable[clockFiltration E i] fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpTime lam ω.1 ω.2 k := by
+  intro k
+  induction k with
+  | zero => intro _; simp only [jumpTime_zero]; exact measurable_const
+  | succ k ih =>
+      intro hk
+      have hki : k ≤ i := Nat.succ_le_succ_iff.1 hk
+      have h1 := ih (le_trans hki (Nat.le_succ i))
+      have h2 : Measurable[clockFiltration E i]
+          fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ω.2 k / lam (ω.1 k) :=
+        (measurable_clockFiltration_snd i k).div
+          (hlamm.comp (measurable_clockFiltration_fst hki))
+      have heq : (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpTime lam ω.1 ω.2 (k + 1))
+          = fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpTime lam ω.1 ω.2 k + ω.2 k / lam (ω.1 k) :=
+        funext fun ω ↦ jumpTime_succ lam ω.1 ω.2 k
+      rw [heq]
+      exact h1.add h2
+
+/-- **The renewal count is a stopping time of the augmented clock filtration.**
+
+The augmentation is not cosmetic.  Without it the statement is false: by `stepIndex_le_iff` the
+event `{stepIndex ≤ i}` contains the explosion set, where `sInf ∅ = 0` is returned, and that set is
+described by all the jump times at once.  It is null, and `Filtration.augment` is exactly the
+enlargement by null sets, so the event differs from `{t < jumpTime … (i + 1)}` -- which does lie in
+`𝓖 i`, by `measurable_clockFiltration_jumpTime` -- by nothing that the augmented σ-algebra cannot
+absorb.
+
+Together with `integrable_stepIndex_jumpMeasure` this is what
+`integral_sub_mul_eq_zero_of_chainCompensated` asks of the jump construction. -/
+theorem isStoppingTime_stepIndex_augment {lam : E → ℝ} {L t : ℝ} (hL0 : 0 < L)
+    (hlamm : Measurable lam) (hlam : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] :
+    IsStoppingTime ((clockFiltration E).augment (jumpMeasure mu nu))
+      (fun ω ↦ ((stepIndex (jumpTime lam ω.1 ω.2) t : ℕ) : WithTop ℕ)) := by
+  have hmeas : Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ stepIndex (jumpTime lam ω.1 ω.2) t :=
+    (measurable_stepIndex fun n ↦ measurable_jumpTime hlamm n).comp
+      (measurable_const.prodMk measurable_id)
+  intro i
+  have hset : {ω : (ℕ → E) × (ℕ → ℝ) |
+      ((stepIndex (jumpTime lam ω.1 ω.2) t : ℕ) : WithTop ℕ) ≤ ((i : ℕ) : WithTop ℕ)}
+      = (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ stepIndex (jumpTime lam ω.1 ω.2) t) ⁻¹' Set.Iic i := by
+    ext ω
+    simp
+  rw [MeasureTheory.Filtration.measurableSet_augment_iff]
+  refine ⟨by
+      show MeasurableSet {ω : (ℕ → E) × (ℕ → ℝ) |
+        ((stepIndex (jumpTime lam ω.1 ω.2) t : ℕ) : WithTop ℕ) ≤ ((i : ℕ) : WithTop ℕ)}
+      rw [hset]
+      exact hmeas measurableSet_Iic,
+    (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpTime lam ω.1 ω.2 (i + 1)) ⁻¹' Set.Ioi t,
+    measurable_clockFiltration_jumpTime hlamm le_rfl measurableSet_Ioi, ?_⟩
+  rw [Filter.eventuallyEq_set]
+  filter_upwards [ae_pos_snd_jumpMeasure mu nu, ae_exists_lt_jumpTime hL0 hlam hL mu nu]
+    with ω hpos hex
+  have hmono : Monotone (jumpTime lam ω.1 ω.2) :=
+    (strictMono_jumpTime (fun n ↦ hpos n) hlam).monotone
+  have := stepIndex_le_iff_of_exists (T := jumpTime lam ω.1 ω.2) (t := t) (n := i) hmono (hex t)
+  simpa using this
+
+end ClockFiltration
