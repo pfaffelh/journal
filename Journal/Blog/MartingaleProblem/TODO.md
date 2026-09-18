@@ -215,21 +215,21 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Fünfundzwanzig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Sechsundzwanzig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
 Alle zweiundzwanzig beim Beweisen aufgefallen, und die ersten vier sind kleine,
 in sich abgeschlossene Beiträge. Sie gehören thematisch zu
 `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben.
 
-**Sämtliche Negativaussagen dieses Punktes sind am 2026-09-17 gegen
-`upstream/master` `f61f3ed7633` (2026-09-17) nachgeprüft.** Eine von ihnen war
-falsch geworden und ist berichtigt: die Kompositionsaussage der siebzehnten
-Lücke steht auf `master` seit dem 2026-08-25. Alle übrigen stehen. Die Prüfung
-ist mechanisiert und wiederholbar — `scripts/check_negatives.py` führt jede
-Behauptung mit ihrem Suchmuster und den Dateien, in denen ein Treffer bekannt
-und harmlos ist, und meldet jeden Treffer daneben; der Lauf vom 2026-09-17
-meldet über 37 Behauptungen **keinen**. Was das Skript nicht leistet, steht in
-seinem Dateikopf: es prüft Zeichenketten, nicht Aussagen.
+**Sämtliche Negativaussagen dieses Punktes sind am 2026-09-18 gegen
+`upstream/master` `4541bc634eb` (2026-09-18) nachgeprüft.** Am 2026-09-17 war
+eine von ihnen falsch geworden und ist berichtigt: die Kompositionsaussage der
+siebzehnten Lücke steht auf `master` seit dem 2026-08-25. Alle übrigen stehen.
+Die Prüfung ist mechanisiert und wiederholbar — `scripts/check_negatives.py`
+führt jede Behauptung mit ihrem Suchmuster und den Dateien, in denen ein Treffer
+bekannt und harmlos ist, und meldet jeden Treffer daneben; der Lauf vom
+2026-09-18 meldet über **42** Behauptungen keinen. Was das Skript nicht leistet,
+steht in seinem Dateikopf: es prüft Zeichenketten, nicht Aussagen.
 
 * **Zeithomogenität von `Kernel.traj`.** Daß die Verschiebung einer homogenen
   Markovkette wieder dieselbe Kette ist, steht dort nicht — weder in `v4.33.1`
@@ -935,6 +935,34 @@ seinem Dateikopf: es prüft Zeichenketten, nicht Aussagen.
   Anwendung `condExp_sup_comap_snd` — die Vergrößerung um den zweiten Faktor
   eines Produktmaßes, wofür `ProbabilityTheory.indepFun_prod`
   (`Mathlib/Probability/Independence/Basic.lean:727`) die Unabhängigkeit liefert.
+
+* **Die zählende Schichtkuchenformel.** Der sechsundzwanzigste, gefunden am
+  2026-09-18 im siebten Lauf, beim Erwartungswert des Erneuerungszählers, und
+  am achten Lauf desselben Tages gegen frisches `upstream/master`
+  `4541bc634eb` (2026-09-18) nachgeprüft.
+
+  Gebraucht wird: für meßbares `f : α → ℕ` ist
+  `∫⁻ x, f x ∂μ = ∑' n, μ {x | n < f x}`, und daraus die Integrierbarkeit aus
+  einer summierbaren Schwanzfolge. Mathlib hat die **stetige**
+  Schichtkuchenformel, `MeasureTheory.lintegral_eq_lintegral_meas_lt`
+  (`Mathlib/MeasureTheory/Integral/Layercake.lean:496`), und alles in jener
+  Datei ist ein Integral über `Ioi 0` gegen das Lebesguemaß; eine zählende
+  Fassung steht dort nicht. Gesucht wurde nach dem **Gegenstand** und nicht nur
+  nach dem geplanten Namen: `lintegral_natCast`, `integrable_natCast` und
+  `tsum_measure_lt` über `Mathlib/` geben nichts, ebensowenig die Muster
+  `∑' n, μ {…}` und `tsum_meas`/`lintegral_eq_tsum_meas` über
+  `Mathlib/MeasureTheory/` und `Mathlib/Probability/` — die Treffer dort sind
+  sämtlich Überdeckungs- und Portmanteau-Aussagen.
+
+  Bewiesen ist sie als `lintegral_natCast_eq_tsum_measure` und
+  `integrable_natCast_of_tsum_measure_ne_top` in
+  `TauCeti/MartingaleProblems/Suggested.lean`. Der Beweis ist die punktweise
+  Identität `k = ∑' n, 1_{n < k}` und `lintegral_tsum`, drei Zeilen — und er ist
+  **schwächer vorausgesetzt als die stetige Fassung**: weder eine Ordnung auf
+  dem Index noch σ-Endlichkeit des Maßes kommt vor, die jene beide braucht. Das
+  ist der Grund, weshalb es ein eigener Satz sein sollte und keine Folgerung:
+  aus der stetigen Fassung ließe er sich nur unter deren Voraussetzungen
+  gewinnen.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine

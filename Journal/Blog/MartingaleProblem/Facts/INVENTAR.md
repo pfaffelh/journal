@@ -36741,3 +36741,180 @@ sämtlich in Kommentaren, wo sie nichts kostet.
    sogar unbedingt wahr, weil `sInf` über einer wachsenden Menge fällt. *Warum
    jetzt:* sie ist die `hστ`-Eingabe von Punkt 1 und die einzige, die dort noch
    nicht benannt dasteht.
+### 2026-09-18, achter Lauf des Tages — Voraussetzung (c) über der Sprungkonstruktion steht als *eine* Aussage; und die Eingabe, die der Vorlauf für „unbedingt wahr" hielt, ist mit einem Zeugen widerlegt
+
+**Beide Vorschläge des Vorlaufs sind eingelöst, der zweite aber nicht so, wie er
+gestellt war.** Vier neue Deklarationen in
+`TauCeti/MartingaleProblems/Suggested.lean` und drei geänderte Signaturen, alle
+drei Roadmap-Dateien ohne einen Fehler und ohne ein `sorry` durch
+`scripts/check_suggested.py` gegen v4.33.1, alle vier neuen Sätze mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft. Die
+Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 10.
+
+#### Vorschlag 2 zuerst, weil er den Weg von Vorschlag 1 geändert hat
+
+Der Vorlauf hatte `stepIndex_mono_time` als Buchhaltung angekündigt: „ohne
+Monotonie von `T` ist sie sogar **unbedingt** wahr, weil `sInf` über einer
+wachsenden Menge fällt." Der zweite Halbsatz stimmt, der erste nicht, und die
+Lücke zwischen beiden ist genau der Müllwert.
+
+`stepIndex T t = sInf {n | t < T (n+1)}`. Für `s ≤ t` ist die Menge bei `s` eine
+**Obermenge** der Menge bei `t`, also fällt das Infimum — *solange beide Mengen
+nichtleer sind*. Ist die Menge bei `t` leer, so gibt `sInf ∅ = 0` den Müllwert
+zurück, und die Menge bei `s` kann sehr wohl nichtleer sein und ein positives
+Infimum haben. Dann **fällt** der Zähler mit wachsender Zeit.
+
+`not_stepIndex_mono_time` ist der Zeuge, und er ist beschränkt und monoton:
+
+> `T = (0, 0, 5, 5, …)`, `s = 1`, `t = 6`. Kein Fenster enthält `6`, also ist
+> `stepIndex T 6 = 0`. Aber `T 1 = 0 ≤ 1 < 5 = T 2`, also ist
+> `stepIndex T 1 = 1`.
+
+Ein beschränktes monotones `T` ist gerade der **explosive** Fall, und damit ist
+gesagt, wo die Aussage scheitert: auf der Explosionsmenge und nur dort. Die
+richtige Fassung `stepIndex_mono_time` trägt als einzige Voraussetzung die
+Nichtexplosion **zur späteren Zeit**, `∃ m, t < T (m+1)`, und ihr Beweis ist eine
+Zeile — `stepIndex_le` an der Stelle `stepIndex T t`, denn ein Fenster, das `t`
+enthält, enthält auch `s`. Monotonie von `T` kommt darin nicht vor.
+
+**Das ist der dritte Müllwert dieser Arbeit, der eine Aussage kippt**, nach
+`x / 0 = 0` am absorbierenden Zustand und `sInf ∅ = 0` in `{stepIndex ≤ i}` —
+und der zweite und dritte sind derselbe Müllwert an zwei Stellen. Die Regel des
+Nutzers („auf die Müllwerte muß man schon aufpassen") hat hier zum dritten Mal
+getragen.
+
+#### Was das den Satz darüber gekostet hat: eine Abschwächung, keine Reparatur
+
+`integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_dominated` verlangte
+`hστ : σ ≤ τ` **überall**. Über der Sprungkonstruktion ist das nach dem Zeugen
+**falsch**. Der Ausweg ist keine Reparatur der Anwendung, sondern die schwächere
+Voraussetzung im Satz: `hστ : ∀ᵐ ω ∂μ, σ ω ≤ τ ω`.
+
+**Und sie ist die, die der Beweis liest.** `hστ` kommt dort dreimal vor —
+in `hzero` unter einem `integral_congr_ae`, in `hbound` unter einem `∀ᵐ`, und in
+`hlim` unter einem `filter_upwards`. Jedes Mal steht es schon innerhalb einer
+f.s.-Aussage; die Umstellung ist dreimal `filter_upwards [hστ]` statt
+`filter_upwards`, und der Hilfssatz `hindex` nimmt seine Ordnungsvoraussetzung
+jetzt punktweise statt universell. Es ist die stehende Regel dieses Auftrags
+(„eine Roadmap-Aussage trägt die schwächsten Hypothesen, unter denen sie gilt")
+an einer Stelle, an der die bequemere Fassung die Anwendung ausgeschlossen
+hätte. `_of_bdd` und `_of_chainCompensated` erben die Abschwächung.
+
+**Der Zwischenweg, den ich nicht genommen habe, und warum.** Man könnte statt
+dessen `σ` durch `min σ τ` ersetzen; die beiden stimmen f.s. überein und die
+Ungleichung gilt dann überall. Das geht nicht: das Gewicht `W` ist meßbar für
+`hσ.measurableSpace`, und `(hσ.min hτ).measurableSpace` ist **kleiner**. Die
+Datei sagt das an
+`integral_sub_mul_eq_zero_of_martingale_stoppedValue_min` selbst — „truncating
+the earlier index too would shrink that σ-algebra and lose the weight". Die
+Abschwächung der Voraussetzung ist der einzige Weg, der das Gewicht behält.
+
+#### Vorschlag 1: das Zusammensetzen
+
+`integral_sub_mul_eq_zero_jumpChain_stepIndex` steht. Für beschränktes meßbares
+`f`, `0 < lam ≤ L` und `0 ≤ s ≤ t` verschwindet
+
+> `∫ (M_{N t} − M_{N s}) · W ∂(jumpMeasure mu nu)`
+
+mit `M` dem kompensierten Kettenmartingal, `N` dem Erneuerungszähler und `W`
+beschränkt und meßbar für die σ-Algebra des früheren Zählers. Damit hat
+Voraussetzung (c) der Probe von Meilenstein 10 über der Sprungkonstruktion ihre
+martingaltheoretische Hälfte als **eine** Aussage statt als fünf Bausteine.
+
+Die fünf Eingaben, jede an ihrer Stelle:
+
+* das Martingal — `martingale_chainCompensated_jumpChain`, neu, aus
+  `martingale_chainCompensated` über `condExp_jumpChain_clock`, und dann
+  `Martingale.augment`;
+* der endliche Erwartungswert — `integrable_stepIndex_jumpMeasure` (siebter
+  Lauf);
+* die Stoppzeiteigenschaft zweimal — `isStoppingTime_stepIndex_augment` (siebter
+  Lauf), bei `s` und bei `t`;
+* die Ordnung der beiden Zähler — `stepIndex_mono_time`, f.s. aus
+  `ae_exists_lt_jumpTime`;
+* die Endlichkeit von `τ` — `WithTop.coe_ne_top`, eine Zeile.
+
+**Was die Schranke `lam ≤ L` in dieser Aussage wirklich trägt**, und es ist
+zweierlei und nicht einerlei: die Integrierbarkeit des Zählers *und* die
+Ausschöpfung der Halbachse durch die Sprungzeiten. Die zweite ist die, die die
+f.s.-Monotonie liefert. Beide fehlen im lokalen Zweig, und das ist die formale
+Entsprechung dazu, daß das Manuskript `𝔼[N t] < ∞` in `thm:pathjumpMP`(b) führt
+und nicht in (a).
+
+Über `E` steht nichts als `[MeasurableSpace E]`; keine Topologie kommt vor.
+
+#### Eine Stolperstelle, und sie ist dieselbe Bauart wie die des Vorlaufs
+
+`(((n : ℕ) : WithTop ℕ).untopA : ℕ) = n` ist `WithTop.untopD_coe`, aber `rw`
+findet das Muster nicht, solange die beiden Seiten als **unreduzierte
+Applikationen** `(fun ω ↦ …) ω` dastehen — `Integrable.congr` läßt sie so
+stehen. `simp only [huntop]` β-reduziert vorher und trifft. Wie beim
+`ENNReal`-gegen-`WithTop ℝ≥0`-Fall des 2026-09-10 ist das kein Beweisproblem,
+sondern eines der syntaktischen Mustererkennung, und die Abhilfe ist dieselbe:
+nicht am Ziel rewriten, sondern das Ziel normalisieren.
+
+#### Nebenbei: die Lücke des Vorlaufs ist eingetragen und die Negativprüfung nachgeführt
+
+Der siebte Lauf hatte die **zählende Schichtkuchenformel** als Mathlib-Lücke
+gefunden und ausdrücklich offengelassen, sie in `TODO.md` Punkt 8 einzutragen,
+weil er die dortige Zahl nicht nachgezählt hatte. Sie steht jetzt dort als die
+**sechsundzwanzigste**, und die Überschrift ist mitgezählt.
+
+Der Befund ist **selbständig nachgeprüft** und nicht aus dem Bericht des
+Vorlaufs übernommen: `upstream master` frisch geholt (`4541bc634eb`,
+2026-09-18), und gesucht nach dem **Gegenstand** und nicht nur nach dem
+geplanten Namen — `lintegral_natCast`, `integrable_natCast`, `tsum_measure_lt`
+über `Mathlib/`, dazu die Muster `∑' n, μ {…}` und
+`tsum_meas`/`lintegral_eq_tsum_meas`/`measure_le_lintegral` über
+`Mathlib/MeasureTheory/` und `Mathlib/Probability/`, und der ganze Inhalt von
+`Layercake.lean`. Die Treffer dort sind sämtlich Überdeckungs- und
+Portmanteau-Aussagen; eine zählende Fassung steht nirgends. Alles in jener Datei
+ist ein Integral über `Ioi 0` gegen das Lebesguemaß.
+
+Die Behauptung ist seither in `scripts/check_negatives.py` mechanisiert; der Lauf
+meldet über **42** Behauptungen keinen unerwarteten Treffer, und die Angabe im
+Kopf von `TODO.md` Punkt 8 — bisher `f61f3ed7633` vom 2026-09-17 und 37
+Behauptungen — ist auf diesen Stand nachgeführt.
+
+#### Was offen bleibt
+
+* Die Voraussetzungen **(a)** und **(b)** von `mpSolution_of_tendsto` bleiben,
+  wie neun Vorläufe sie hinterlassen haben: Eingabe eines Straffheitsarguments,
+  das das Manuskript ausdrücklich nicht liefert.
+* Die Probe von Meilenstein 10 über der Sprungkonstruktion hat mit dieser
+  Aussage ihre martingaltheoretische Hälfte; was die Probe zur *Probe* macht —
+  die Verteilungskonvergenz der reskalierten Sprungprozesse gegen eine Lösung —
+  ist Voraussetzung (a) und damit dasselbe Straffheitsargument.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die Zeitorthogonalität statt der Sprungnummernorthogonalität.**
+   *Aussage:* `integral_sub_mul_eq_zero_jumpProcess_time` — dieselbe
+   Orthogonalität, aber mit dem **Sprungprozeß zur Zeit** `X t = ω.1 (N t)`
+   statt mit der Kette am Zähler, also
+   `∫ (F (X t) − F (X s) − ∫_s^t 𝒜 F (X r) dr) · W = 0`. *In `Suggested.lean`
+   gesucht nach dem Gegenstand und nicht nach dem Namen:* unter `stepIndex` und
+   `jumpProcess` zusammen stehen `jumpProcess_isMPSolution` und
+   `jumpProcess_isLocalMPSolution`, also die Aussage über der **Uhrenzeit** —
+   aber nicht über der augmentierten Uhrenfiltration und nicht in der Gestalt,
+   die die Probe von Meilenstein 10 verlangt. *Worauf sie ruht:* auf
+   `integral_sub_mul_eq_zero_jumpChain_stepIndex` und auf der Identifikation des
+   Kompensators am Zähler mit dem Zeitintegral, die
+   `jumpMeasure_integral_sub_eq_intervalIntegral` schon hat. *Warum jetzt:* der
+   Block, der heute geschlossen wurde, sagt selbst, was ihm fehlt — der
+   Abschnittskopf vor `StepIndexJunk` schreibt, „what the probe therefore proves is
+   an orthogonality at the **jump number**, and what `ex:invariance` speaks of is
+   one at the **time**. Nothing below closes that." Jetzt steht die erste
+   Hälfte, und die zweite ist der benannte Rest.
+2. **Der Erneuerungszähler als Stoppzeit über der *Sprungzeit*filtration,
+   falls Punkt 1 sie braucht.** *Aussage:* `isStoppingTime_stepIndex_point` —
+   `stepIndex (jumpTime lam ω.1 ω.2)` als Stoppzeit der augmentierten
+   **Punkt**filtration der Sprungzeiten statt der Uhrenfiltration. *In
+   `Suggested.lean` gesucht unter dem Gegenstand:* `pointFiltration` steht dort
+   mit `pointFiltrationE_eq_stepPathFiltrationE`, aber keine Aussage verbindet
+   `pointFiltration` mit `stepIndex` als Stoppzeit. *Worauf sie ruht:* auf
+   `stepIndex_le_iff_of_exists` und derselben Augmentierung wie heute. *Warum
+   jetzt:* die Uhrenfiltration ist für die Kette die richtige und für den
+   **Prozeß** die zu große — sie liest alle Wartezeiten schon bei `i = 0` —, und
+   Punkt 1 wird an dieser Stelle entscheiden müssen, welche Filtration die
+   Aussage trägt.

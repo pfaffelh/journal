@@ -278,6 +278,14 @@ CLAIMS_TODO8 = [
      '`Mathlib/` und kein engerer -- die Behauptung handelt von der '
      'Bibliothek und nicht von einer Datei.',
      'condExp_sup|condexp_sup', ['Mathlib/'], []),
+    ('counting-layercake', 'TODO.md Punkt 8, sechsundzwanzigste Lücke',
+     'Die **zählende** Schichtkuchenformel fehlt: '
+     '`∫⁻ x, (f x : ℝ≥0∞) ∂μ = ∑'"'"' n, μ {x | n < f x}` für `f : α → ℕ`. '
+     'Mathlib hat die stetige Fassung (`lintegral_eq_lintegral_meas_lt`, '
+     '`Layercake.lean`), die eine Ordnung auf dem Index und σ-Endlichkeit '
+     'braucht; die zählende braucht beides nicht.',
+     'lintegral_natCast|integrable_natCast|tsum_measure_lt|lintegral_eq_tsum_meas',
+     ['Mathlib/'], []),
     ('martingale-setIntegral-weight',
      'MartingaleProblems/README.md, Meilenstein 5',
      'Ein Martingal gegen eine **beschränkte** Gewichtsfunktion getestet hat in '

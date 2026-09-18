@@ -48,10 +48,18 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-18 (fifth run of that day), over the **whole** file and without an error, and
+2026-09-18 (eighth run of that day), over the **whole** file and without an error, and
 since the twenty-second run of 2026-09-17 with `autoImplicit=false` and
 `relaxedAutoImplicit=false`, as Mathlib itself builds.  Every declaration elaborates, and
 **no declaration carries `sorry`**.
+
+The eighth run of 2026-09-18 assembled hypothesis (c) of `mpSolution_of_tendsto` over the jump
+construction into one statement, `integral_sub_mul_eq_zero_jumpChain_stepIndex`, and on the way
+weakened the order of the two stopping times in
+`integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_dominated` from everywhere to almost
+everywhere.  That is not a convenience: `not_stepIndex_mono_time` exhibits a bounded monotone
+`T` at which the renewal count *falls* with the time, so over the jump construction the
+everywhere statement is false and the set where it fails is the explosion set.
 
 The fifth run of 2026-09-18 proved the **irrelevant enlargement** of a conditional
 expectation, `condExp_sup_of_indep`: adding to the conditioning σ-algebra one that is
@@ -34876,6 +34884,49 @@ theorem stepIndex_le_iff_of_exists (hT : Monotone T) (hex : ∃ m, t < T (m + 1)
   obtain ⟨m, hm⟩ := hex
   exact fun h ↦ absurd (h m) (not_le.2 hm)
 
+/-- **The renewal count grows with the time, off the explosion set.**
+
+The hypothesis is non explosion *at the later time*, and it is the only one: no monotonicity of
+`T` and no order between the windows enters.  The proof is `stepIndex_le` applied at the index
+`stepIndex T t`, which is a window containing `t` and therefore contains `s` as well. -/
+theorem stepIndex_mono_time {s : α} (hst : s ≤ t) (hex : ∃ m, t < T (m + 1)) :
+    stepIndex T s ≤ stepIndex T t :=
+  stepIndex_le (hst.trans_lt (lt_stepIndex_succ hex))
+
+/-- **And the hypothesis cannot be dropped, not even for a monotone `T`.**  The junk value is
+again what breaks it: at a sample point where no window contains `t` the index is `sInf ∅ = 0`,
+while an earlier time may well sit in a window of positive index, and then the count *falls*.
+
+The witness is `T = (0, 0, 5, 5, …)` at `s = 1` and `t = 6`: the jump times stop below `6`, so
+`stepIndex T 6 = 0`, whereas `T 1 ≤ 1 < T 2` makes `stepIndex T 1 = 1`.  It is a bounded
+monotone `T`, which is exactly the explosive case.
+
+This is why `integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_dominated` asks for the
+order of its two stopping times almost everywhere and not everywhere: over the jump
+construction the everywhere statement is false, and the set where it fails is the explosion
+set. -/
+theorem not_stepIndex_mono_time :
+    ¬ ∀ T : ℕ → ℝ, Monotone T → ∀ s t : ℝ, s ≤ t → stepIndex T s ≤ stepIndex T t := by
+  intro h
+  have hmono : Monotone (fun n : ℕ ↦ if n ≤ 1 then (0 : ℝ) else 5) := by
+    intro a b hab
+    by_cases hb : b ≤ 1
+    · simp [hb, hab.trans hb]
+    · by_cases ha : a ≤ 1 <;> simp [ha, hb]
+  have h6 : stepIndex (fun n : ℕ ↦ if n ≤ 1 then (0 : ℝ) else 5) 6 = 0 :=
+    Nat.le_zero.1 ((stepIndex_le_iff hmono).2 (Or.inr fun m ↦ by
+      show (if m + 1 ≤ 1 then (0 : ℝ) else 5) ≤ 6
+      split <;> norm_num))
+  have h1 : stepIndex (fun n : ℕ ↦ if n ≤ 1 then (0 : ℝ) else 5) 1 = 1 := by
+    refine stepIndex_eq_of (Or.inr ?_) ?_ hmono
+    · show (if (1 : ℕ) ≤ 1 then (0 : ℝ) else 5) ≤ 1
+      norm_num
+    · show (1 : ℝ) < if (1 : ℕ) + 1 ≤ 1 then (0 : ℝ) else 5
+      norm_num
+  have hkey := h (fun n : ℕ ↦ if n ≤ 1 then (0 : ℝ) else 5) hmono 1 6 (by norm_num)
+  rw [h1, h6] at hkey
+  exact absurd hkey (by norm_num)
+
 end StepIndexJunk
 
 section DeterministicClock
@@ -35937,6 +35988,12 @@ place it can be asked: the martingale is dominated by `g` *along the path up to 
 optional sampling at an unbounded time; it is not taken here because it is strictly more than this
 proof uses and strictly harder to check at the application.
 
+**And the order of the two stopping times is asked for almost everywhere only.**  That is what the
+proof reads -- `hστ` occurs three times and each time inside an almost everywhere statement -- and
+it is what the application can supply: the renewal count of the jump construction is monotone in
+the time on the complement of the explosion set and nowhere else, by
+`not_stepIndex_mono_time`, so the everywhere hypothesis is not available there.
+
 **The index is `WithTop ℕ` and not `ℕ∞`.**  The two are definitionally equal but not syntactically:
 `ENat` is a `def` over `WithTop ℕ` with its own order instances, so a `min` written at `ℕ∞` and a
 `min` produced by `IsStoppingTime.min` do not match as `rw` patterns, and the associativity step of
@@ -35946,7 +36003,7 @@ mismatch.  This is the same trap as `ENNReal` against `WithTop ℝ≥0` recorded
 `jumpProcess_isLocalMPSolution`. -/
 theorem integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_dominated [IsFiniteMeasure μ]
     (hM : Martingale M 𝓖 μ) {σ τ : Ω → WithTop ℕ}
-    (hσ : IsStoppingTime 𝓖 σ) (hτ : IsStoppingTime 𝓖 τ) (hστ : σ ≤ τ)
+    (hσ : IsStoppingTime 𝓖 σ) (hτ : IsStoppingTime 𝓖 τ) (hστ : ∀ᵐ ω ∂μ, σ ω ≤ τ ω)
     (hτ_ne : ∀ ω, τ ω ≠ ⊤)
     {g : Ω → ℝ} (hg : Integrable g μ)
     (hdom : ∀ (n : ℕ) (ω : Ω), (n : WithTop ℕ) ≤ τ ω → ‖M n ω‖ ≤ g ω)
@@ -35966,13 +36023,14 @@ theorem integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_dominated [IsFini
     have key := integral_sub_mul_eq_zero_of_martingale_stoppedValue_min (𝕂 := 𝕂) hM hσ (hτKst K)
       (fun ω ↦ min_le_right _ _) hW hb
     rw [← key]
-    refine integral_congr_ae (Eventually.of_forall fun ω ↦ ?_)
+    refine integral_congr_ae ?_
+    filter_upwards [hστ] with ω hω
     simp only [stoppedValue]
-    rw [← min_assoc, min_eq_left (hστ ω)]
+    rw [← min_assoc, min_eq_left hω]
   -- the index a truncated stopping time reads lies below `τ`, so `hdom` applies to it
-  have hindex : ∀ ρ : Ω → WithTop ℕ, (∀ ω, ρ ω ≤ τ ω) → ∀ (K : ℕ) (ω : Ω),
+  have hindex : ∀ (ρ : Ω → WithTop ℕ) (K : ℕ) (ω : Ω), ρ ω ≤ τ ω →
       ‖stoppedValue M (fun ω ↦ min (ρ ω) (K : WithTop ℕ)) ω‖ ≤ g ω := by
-    intro ρ hρ K ω
+    intro ρ K ω hρ
     have hne : min (ρ ω) (K : WithTop ℕ) ≠ ⊤ :=
       ne_top_of_le_ne_top (by simp) (min_le_right _ _)
     have hcoe : (((min (ρ ω) (K : WithTop ℕ)).untopA : ℕ) : WithTop ℕ)
@@ -35982,7 +36040,7 @@ theorem integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_dominated [IsFini
       exact congrArg _ (WithTop.untopD_coe _ _)
     refine hdom _ ω ?_
     rw [hcoe]
-    exact (min_le_left _ _).trans (hρ ω)
+    exact (min_le_left _ _).trans hρ
   have hmeas : ∀ K : ℕ, AEStronglyMeasurable
       (fun ω ↦ (stoppedValue M (fun ω ↦ min (τ ω) (K : WithTop ℕ)) ω
         - stoppedValue M (fun ω ↦ min (σ ω) (K : WithTop ℕ)) ω) * (W ω : 𝕂)) μ := by
@@ -36003,10 +36061,10 @@ theorem integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_dominated [IsFini
         - stoppedValue M (fun ω ↦ min (σ ω) (K : WithTop ℕ)) ω) * (W ω : 𝕂)‖
         ≤ (g ω + g ω) * b := by
     intro K
-    filter_upwards with ω
+    filter_upwards [hστ] with ω hω
     have h1 : ‖stoppedValue M (fun ω ↦ min (τ ω) (K : WithTop ℕ)) ω‖ ≤ g ω :=
-      hindex τ (fun _ ↦ le_rfl) K ω
-    have h2 : ‖stoppedValue M (fun ω ↦ min (σ ω) (K : WithTop ℕ)) ω‖ ≤ g ω := hindex σ hστ K ω
+      hindex τ K ω le_rfl
+    have h2 : ‖stoppedValue M (fun ω ↦ min (σ ω) (K : WithTop ℕ)) ω‖ ≤ g ω := hindex σ K ω hω
     have hg0 : (0 : ℝ) ≤ g ω := (norm_nonneg _).trans h1
     have hW' : ‖(W ω : 𝕂)‖ ≤ b := by rw [RCLike.norm_ofReal]; simpa [Real.norm_eq_abs] using hb ω
     rw [norm_mul]
@@ -36017,12 +36075,12 @@ theorem integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_dominated [IsFini
       (fun K : ℕ ↦ (stoppedValue M (fun ω ↦ min (τ ω) (K : WithTop ℕ)) ω
         - stoppedValue M (fun ω ↦ min (σ ω) (K : WithTop ℕ)) ω) * (W ω : 𝕂)) atTop
       (𝓝 ((stoppedValue M τ ω - stoppedValue M σ ω) * (W ω : 𝕂))) := by
-    filter_upwards with ω
+    filter_upwards [hστ] with ω hω
     obtain ⟨n, hn⟩ := WithTop.ne_top_iff_exists.mp (hτ_ne ω)
     refine tendsto_atTop_of_eventually_const (i₀ := n) fun K hK ↦ ?_
     have hτle : τ ω ≤ (K : WithTop ℕ) := by rw [← hn]; exact WithTop.coe_le_coe.2 hK
     have h1 : min (τ ω) (K : WithTop ℕ) = τ ω := min_eq_left hτle
-    have h2 : min (σ ω) (K : WithTop ℕ) = σ ω := min_eq_left ((hστ ω).trans hτle)
+    have h2 : min (σ ω) (K : WithTop ℕ) = σ ω := min_eq_left (hω.trans hτle)
     simp only [stoppedValue, h1, h2]
   have hconv := tendsto_integral_of_dominated_convergence _ hmeas
     ((hg.add hg).mul_const b) hbound hlim
@@ -36037,7 +36095,7 @@ cheapest to check -- but it is *not* the shape the probe of Milestone 10 can use
 linearly in the index. -/
 theorem integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_bdd [IsFiniteMeasure μ]
     (hM : Martingale M 𝓖 μ) {σ τ : Ω → WithTop ℕ}
-    (hσ : IsStoppingTime 𝓖 σ) (hτ : IsStoppingTime 𝓖 τ) (hστ : σ ≤ τ)
+    (hσ : IsStoppingTime 𝓖 σ) (hτ : IsStoppingTime 𝓖 τ) (hστ : ∀ᵐ ω ∂μ, σ ω ≤ τ ω)
     (hτ_ne : ∀ ω, τ ω ≠ ⊤)
     {c : ℝ} (hc : ∀ (n : ℕ) (ω : Ω), ‖M n ω‖ ≤ c)
     {W : Ω → ℝ} (hW : StronglyMeasurable[hσ.measurableSpace] W) {b : ℝ}
@@ -36099,7 +36157,7 @@ theorem integral_sub_mul_eq_zero_of_chainCompensated [IsFiniteMeasure μ]
     (hM : Martingale (chainCompensated Pf f Ξ) 𝓖 μ)
     (hf : ∀ x, ‖f x‖ ≤ C) (hPf : ∀ x, ‖Pf x‖ ≤ C)
     {σ τ : Ω → WithTop ℕ}
-    (hσ : IsStoppingTime 𝓖 σ) (hτ : IsStoppingTime 𝓖 τ) (hστ : σ ≤ τ)
+    (hσ : IsStoppingTime 𝓖 σ) (hτ : IsStoppingTime 𝓖 τ) (hστ : ∀ᵐ ω ∂μ, σ ω ≤ τ ω)
     (hτ_ne : ∀ ω, τ ω ≠ ⊤)
     (hτint : Integrable (fun ω ↦ (((τ ω).untopA : ℕ) : ℝ)) μ)
     {W : Ω → ℝ} (hW : StronglyMeasurable[hσ.measurableSpace] W) {b : ℝ}
@@ -36402,3 +36460,119 @@ theorem isStoppingTime_stepIndex_augment {lam : E → ℝ} {L t : ℝ} (hL0 : 0 
   simpa using this
 
 end ClockFiltration
+
+/-! ### Hypothesis (c) at the jump construction, assembled
+
+The five inputs of `integral_sub_mul_eq_zero_of_chainCompensated` now stand separately at the
+jump construction, and this block is what they were built for: one statement saying that the
+compensated chain of a bounded test function is orthogonal, at the renewal counts of two times,
+to every bounded weight measurable for the earlier one.
+
+Nothing is decided here.  The martingale is `martingale_chainCompensated` fed by
+`condExp_jumpChain_clock` and carried up by `Martingale.augment`; the finite mean is
+`integrable_stepIndex_jumpMeasure`; the stopping time property at each of the two times is
+`isStoppingTime_stepIndex_augment`; and the order of the two counts is `stepIndex_mono_time`,
+which holds off the explosion set and, by `not_stepIndex_mono_time`, nowhere else.
+
+**The augmentation is the filtration of the statement and not a step inside it.**  Both
+stopping times are stopping times of `(clockFiltration E).augment (jumpMeasure mu nu)` and of no
+smaller filtration, so the σ-algebra the weight is measurable for is the augmented one.  That is
+the honest reading: the renewal count is a stopping time only up to the explosion null set, and
+a σ-algebra that does not contain the null sets does not see that. -/
+
+section JumpChainOrthogonality
+
+variable {E : Type*} [MeasurableSpace E]
+
+/-- **The compensated chain of the jump construction is a martingale of the clock filtration.**
+
+The test function is bounded and measurable, the compensator is the one step kernel average
+`x ↦ ∫ f d(mu x)`, and the filtration is `clockFiltration E` -- the natural filtration of the
+embedded chain enlarged by the whole clock.  The enlargement is what
+`condExp_jumpChain_clock` pays for, and it is why this statement can be made at all: the
+renewal count reads the waiting times, so a filtration that does not carry them has no stopping
+time to offer.
+
+`measurable_clockFiltration_fst` is the adaptedness and `measurable_integral_kernel_apply` the
+measurability of the compensator; the two integrability hypotheses are the constant bound. -/
+theorem martingale_chainCompensated_jumpChain (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] {f : E → ℝ} (hf : Measurable f)
+    {C : ℝ} (hfb : ∀ x, |f x| ≤ C) :
+    Martingale (chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E))
+      (clockFiltration E) (jumpMeasure mu nu) := by
+  have hPfm : Measurable (fun x : E ↦ ∫ y, f y ∂(mu x)) := measurable_integral_kernel_apply hf
+  have hPfb : ∀ x : E, |∫ y, f y ∂(mu x)| ≤ C := by
+    intro x
+    have := norm_integral_le_of_norm_le_const (μ := mu x) (C := C) (f := f)
+      (.of_forall fun y ↦ by simpa [Real.norm_eq_abs] using hfb y)
+    simpa using this
+  refine martingale_chainCompensated (𝓖 := clockFiltration E) (fun n ↦ ?_) (fun n ↦ ?_)
+    (fun n ↦ ?_) (fun n ↦ ?_) (fun n ↦ ?_)
+  · exact (hf.comp (measurable_clockFiltration_fst (le_refl n))).stronglyMeasurable
+  · exact (hPfm.comp (measurable_clockFiltration_fst (le_refl n))).stronglyMeasurable
+  · exact (integrable_const C).mono'
+      ((hf.comp (measurable_jumpChain (E := E) n)).aestronglyMeasurable)
+      (.of_forall fun ω ↦ by simpa [Real.norm_eq_abs] using hfb (jumpChain E n ω))
+  · exact (integrable_const C).mono'
+      ((hPfm.comp (measurable_jumpChain (E := E) n)).aestronglyMeasurable)
+      (.of_forall fun ω ↦ by simpa [Real.norm_eq_abs] using hPfb (jumpChain E n ω))
+  · exact condExp_jumpChain_clock mu nu n hf hfb
+
+/-- **Hypothesis (c) of `mpSolution_of_tendsto` at the jump construction, as one statement.**
+
+For a bounded measurable test function, a rate with `0 < lam ≤ L`, and two times `0 ≤ s ≤ t`,
+the increment of the compensated chain between the two renewal counts is orthogonal to every
+bounded weight measurable for the σ-algebra of the earlier count.
+
+**What the hypotheses are, and what they are not.**  The bound `lam ≤ L` is not decoration: it
+is what makes the renewal count integrable (`integrable_stepIndex_jumpMeasure`) and what makes
+the jump times exhaust the half line (`ae_exists_lt_jumpTime`), and both are used.  It is the
+formal counterpart of the manuscript carrying `𝔼[N t] < ∞` in `thm:pathjumpMP`(b) and not in
+(a); the local branch has no such bound and no such statement.  Over `E` nothing is asked but
+its σ-algebra, and no topology occurs anywhere.
+
+**The weight lives on the augmented filtration**, and the augmentation is not removable: by
+`not_stepIndex_mono_time` the renewal count is monotone in the time only off the explosion set,
+and by `stepIndex_le_iff` it is a stopping time only there.  Both defects are null sets, which
+is what `Filtration.augment` absorbs. -/
+theorem integral_sub_mul_eq_zero_jumpChain_stepIndex {lam : E → ℝ} {L s t : ℝ}
+    (hL0 : 0 < L) (hlamm : Measurable lam) (hlam : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L)
+    (hs : 0 ≤ s) (hst : s ≤ t)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu]
+    {f : E → ℝ} (hf : Measurable f) {C : ℝ} (hfb : ∀ x, |f x| ≤ C)
+    {W : (ℕ → E) × (ℕ → ℝ) → ℝ}
+    (hW : StronglyMeasurable[(isStoppingTime_stepIndex_augment (t := s) hL0 hlamm hlam hL
+      mu nu).measurableSpace] W) {b : ℝ} (hb : ∀ ω, ‖W ω‖ ≤ b) :
+    ∫ ω, (stoppedValue (chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E))
+          (fun ω ↦ ((stepIndex (jumpTime lam ω.1 ω.2) t : ℕ) : WithTop ℕ)) ω
+        - stoppedValue (chainCompensated (fun x : E ↦ ∫ y, f y ∂(mu x)) f (jumpChain E))
+          (fun ω ↦ ((stepIndex (jumpTime lam ω.1 ω.2) s : ℕ) : WithTop ℕ)) ω) * W ω
+      ∂(jumpMeasure mu nu) = 0 := by
+  have hPfb : ∀ x : E, |∫ y, f y ∂(mu x)| ≤ C := by
+    intro x
+    have := norm_integral_le_of_norm_le_const (μ := mu x) (C := C) (f := f)
+      (.of_forall fun y ↦ by simpa [Real.norm_eq_abs] using hfb y)
+    simpa using this
+  have hM := (martingale_chainCompensated_jumpChain mu nu hf hfb).augment
+  have hστ : ∀ᵐ ω ∂(jumpMeasure mu nu),
+      ((stepIndex (jumpTime lam ω.1 ω.2) s : ℕ) : WithTop ℕ)
+        ≤ ((stepIndex (jumpTime lam ω.1 ω.2) t : ℕ) : WithTop ℕ) := by
+    filter_upwards [ae_exists_lt_jumpTime hL0 hlam hL mu nu] with ω hex
+    exact_mod_cast stepIndex_mono_time hst (hex t)
+  have hτint : Integrable (fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+      (((((stepIndex (jumpTime lam ω.1 ω.2) t : ℕ) : WithTop ℕ).untopA : ℕ) : ℝ)))
+      (jumpMeasure mu nu) := by
+    have hint := integrable_stepIndex_jumpMeasure (t := t) hL0 hlamm hlam hL (hs.trans hst) mu nu
+    refine hint.congr (Filter.Eventually.of_forall fun ω ↦ ?_)
+    have huntop : ((((stepIndex (jumpTime lam ω.1 ω.2) t : ℕ) : WithTop ℕ)).untopA : ℕ)
+        = stepIndex (jumpTime lam ω.1 ω.2) t := WithTop.untopD_coe _ _
+    simp only [huntop]
+  have key := integral_sub_mul_eq_zero_of_chainCompensated (𝕂 := ℝ) hM
+    (fun x ↦ by simpa [Real.norm_eq_abs] using hfb x)
+    (fun x ↦ by simpa [Real.norm_eq_abs] using hPfb x)
+    (isStoppingTime_stepIndex_augment (t := s) hL0 hlamm hlam hL mu nu)
+    (isStoppingTime_stepIndex_augment (t := t) hL0 hlamm hlam hL mu nu)
+    hστ (fun ω ↦ by simp) hτint hW hb
+  simpa [RCLike.ofReal_real_eq_id] using key
+
+end JumpChainOrthogonality

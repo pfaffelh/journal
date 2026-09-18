@@ -1,4 +1,4 @@
-# Negativaussagen gegen `upstream/master` `a218e50f981942cba4fd060faff7cae680805062`
+# Negativaussagen gegen `upstream/master` `4541bc634ebcfb60dee900d88eaaafe03c8df5d0`
 
 ## Die Behauptungen der Roadmaps
 
@@ -294,6 +294,13 @@ Suche `UnifIntegrable|unifIntegrable` unter `Mathlib/MeasureTheory/Function/Conv
 Suche `condExp_sup|condexp_sup` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
 
 
+## `counting-layercake` — TODO.md Punkt 8, sechsundzwanzigste Lücke
+
+> Die **zählende** Schichtkuchenformel fehlt: `∫⁻ x, (f x : ℝ≥0∞) ∂μ = ∑' n, μ {x | n < f x}` für `f : α → ℕ`. Mathlib hat die stetige Fassung (`lintegral_eq_lintegral_meas_lt`, `Layercake.lean`), die eine Ordnung auf dem Index und σ-Endlichkeit braucht; die zählende braucht beides nicht.
+
+Suche `lintegral_natCast|integrable_natCast|tsum_measure_lt|lintegral_eq_tsum_meas` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
 ## `martingale-setIntegral-weight` — MartingaleProblems/README.md, Meilenstein 5
 
 > Ein Martingal gegen eine **beschränkte** Gewichtsfunktion getestet hat in Mathlib keinen Satz; der Indikatorfall steht als `Martingale.setIntegral_eq` und ist die einzige Fassung.
@@ -305,5 +312,5 @@ Suche `setIntegral.*[Mm]artingale|[Mm]artingale.*setIntegral` unter `Mathlib/Pro
 
 ## Zusammenfassung
 
-41 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
+42 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
 

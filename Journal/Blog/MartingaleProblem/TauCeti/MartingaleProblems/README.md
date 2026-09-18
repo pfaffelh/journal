@@ -9819,6 +9819,44 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   Nullmengen sind genau das, was `Filtration.augment` hinzufügt.
   `Martingale.augment` trägt das kompensierte Kettenmartingal hinüber und
   `Filtration.le_augment` das Gewicht; nichts oberhalb ist neu zu beweisen.
+* `stepIndex_mono_time` und `not_stepIndex_mono_time`: **der Erneuerungszähler
+  wächst mit der Zeit — außerhalb der Explosionsmenge, und nur dort.** **In
+  Lean** am 2026-09-18, achter Lauf. Die Voraussetzung ist die Nichtexplosion
+  **zur späteren Zeit** und sonst nichts; weder Monotonie von `T` noch eine
+  Ordnung der Fenster kommt vor, und der Beweis ist `stepIndex_le` an der Stelle
+  `stepIndex T t`.
+  **Der Zeuge ist der Inhalt.** `T = (0, 0, 5, 5, …)` ist monoton und beschränkt,
+  also explosiv; bei `s = 1` und `t = 6` ist `stepIndex T 6 = 0`, weil kein
+  Fenster `6` enthält und `sInf ∅ = 0` zurückkommt, während `stepIndex T 1 = 1`
+  ist. Der Zähler **fällt**. Das ist der dritte Müllwert dieser Entwicklung, der
+  eine Aussage kippt, nach `x / 0 = 0` am absorbierenden Zustand und
+  `sInf ∅ = 0` in `{stepIndex ≤ i}`, und es ist derselbe.
+* `integral_sub_mul_eq_zero_of_martingale_stoppedValue_of_dominated`,
+  `_of_bdd` und `_of_chainCompensated` verlangen die Ordnung ihrer beiden
+  Stoppzeiten **fast überall** statt überall. **In Lean** am 2026-09-18, achter
+  Lauf. Das ist die Voraussetzung, die der Beweis liest — `hστ` kommt dreimal vor
+  und jedesmal innerhalb einer f.s.-Aussage —, und es ist die, die die Anwendung
+  liefern kann: nach `not_stepIndex_mono_time` ist die überall-Fassung über der
+  Sprungkonstruktion **falsch**, und die Menge, auf der sie scheitert, ist die
+  Explosionsmenge.
+* `martingale_chainCompensated_jumpChain` und
+  `integral_sub_mul_eq_zero_jumpChain_stepIndex`: **Voraussetzung (c) über der
+  Sprungkonstruktion, als *eine* Aussage.** **In Lean** am 2026-09-18, achter
+  Lauf. Für beschränktes meßbares `f`, `0 < lam ≤ L` und `0 ≤ s ≤ t` verschwindet
+  das Integral von `(M_{N t} − M_{N s}) · W` über `jumpMeasure mu nu`, wobei `M`
+  das kompensierte Kettenmartingal, `N` der Erneuerungszähler und `W` beschränkt
+  und meßbar für die σ-Algebra des früheren Zählers ist.
+  **Die Schranke `lam ≤ L` ist keine Bequemlichkeit.** Sie trägt zweierlei:
+  die Integrierbarkeit des Zählers (`integrable_stepIndex_jumpMeasure`) und die
+  Ausschöpfung der Halbachse durch die Sprungzeiten (`ae_exists_lt_jumpTime`),
+  und beides wird benutzt. Sie ist die formale Entsprechung dazu, daß das
+  Manuskript `𝔼[N t] < ∞` in `thm:pathjumpMP`(b) führt und nicht in (a).
+  Über `E` steht nichts als seine σ-Algebra, und keine Topologie kommt vor.
+  **Das Gewicht lebt über der augmentierten Filtration**, und das ist nicht
+  abzuschütteln: der Zähler ist nach `not_stepIndex_mono_time` nur außerhalb der
+  Explosionsmenge monoton und nach `stepIndex_le_iff` nur dort eine Stoppzeit.
+  Beide Defekte sind Nullmengen, und Nullmengen sind, was `Filtration.augment`
+  aufnimmt.
 * **Hypothesis (a) is about real random variables and carries no topology.** In
   the example above the path space `F` is `D ι E` and the functionals
   `Y° t` are evaluations, but the statement of (a) never mentions `F`'s
