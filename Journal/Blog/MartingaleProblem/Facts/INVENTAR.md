@@ -38639,3 +38639,132 @@ liegt keine offene Analysis mehr.
    angewandt; der Zeuge ist das Akzeptanzbeispiel von Meilenstein 10, dessen
    Approximanten seit dem elften Lauf des 2026-09-18 auf dem Pfadraum unter dem
    Bildmaß stehen.
+
+### 2026-09-18, neunzehnter Lauf des Tages — der Integrationsschritt steht, und die Zeit, die er gewinnt, ist eine für eine **Teilfolge**: die Umkehr-Fatou zeigt in die falsche Richtung; davor lag eine Voraussetzung, die der Vorlauf nicht genannt hatte — die gemeinsame Meßbarkeit der Auswertung
+
+**Sieben Deklarationen**, alle in `TauCeti/SkorokhodSpace/Suggested.lean`, dazu
+eine Importzeile (`Mathlib.MeasureTheory.Function.Floor`, für
+`Int.measurable_ceil`). Alle drei Roadmap-Dateien ohne einen
+Fehler und ohne ein `sorry` durch `scripts/check_suggested.py` gegen v4.33.1
+(Lean 4.33.1, commit `819816b2e0a3`), alle sieben mit `#print axioms` auf
+`propext`, `Classical.choice`, `Quot.sound` geprüft. Die Punkte stehen in
+`SkorokhodSpace/README.md`, Meilenstein 8.
+
+Angegangen war Vorschlag 1 des Vorlaufs: der Vertausch der beiden Grenzübergänge,
+„mit allen Zutaten in der Hand". Die Zutaten reichten nicht, und beides — was
+fehlte und was dann herauskam — ist der Befund des Laufs.
+
+#### Die fehlende Zutat: Auswertung ist meßbar im **Paar**, nicht nur im Pfad
+
+Der Integrationsschritt über die Zeitvariable ist Tonelli, und Tonelli fragt nach
+der Meßbarkeit des Ereignisses in `(t, f)`. Die Datei hatte
+`SkorokhodSpace.measurable_eval` — Meßbarkeit in `f` bei festem `t` — und sonst
+nichts; das Wort „uncurry" kam in den 11 443 Zeilen **kein einziges Mal** vor.
+
+* `SkorokhodSpace.measurable_uncurry_eval` — `Measurable fun p : ℝ × D(ℝ, E) ↦
+  p.2 p.1`. Der Weg ist die dyadische Näherung **von rechts**, `⌈t 2ⁿ⌉ / 2ⁿ`: sie
+  hat abzählbaren Wertebereich, also ist jede Näherung nach
+  `measurable_from_prod_countable_left` über `measurable_eval` meßbar, die Pfade
+  sind rechtsstetig, also konvergieren die Näherungen punktweise, und
+  `measurable_of_tendsto_metrizable` schließt.
+* `SkorokhodSpace.measurableSet_setOf_exists_edist_lt` — das Ereignis „die
+  Rechtsschwankung über `[t, t + δ')` übersteigt `a`" ist meßbar im Paar. Der
+  Existenzquantor über eine reelle Zeit wird durch einen über die **Rationalen**
+  ersetzt, und diese Ersetzung *ist* die Rechtsstetigkeit: bei `s = t` ist der
+  Abstand `0`, ein Zeuge liegt also echt rechts von `t`, und die Werte knapp
+  rechts eines Zeugen sind wieder Zeugen.
+
+**Die Grenze, an der das steht, ist dieselbe wie im markovschen Zweig.** Der
+Doc-Kommentar von `measurable_uncurry_min_of_rightContinuous` in
+`MartingaleProblems/Suggested.lean` sagt ausdrücklich, daß der `E`-wertige Prozeß
+über einem bloßen `[MeasurableSpace E]` **nicht** gemeinsam meßbar ist — ein
+Grenzwert meßbarer Abbildungen ist es nur bei meßbarer Diagonale. Hier ist `E`
+polnisch, und genau deshalb geht die Aussage durch. Verbraucht werden dabei
+Metrisierbarkeit und Separabilität; die **Vollständigkeit** in `[PolishSpace E]`
+ist die, die mit der Borel-σ-Algebra auf `D(ι, E)` kommt, und kein Schritt liest
+sie — die sieben Punkte stehen deshalb in Stufe (A) der Roadmap, wie ihre
+Nachbarn.
+
+#### Der Integrationsschritt, in drei Stücken
+
+* `SkorokhodSpace.lintegral_measure_setOf_exists_edist_lt_le` — für ein Gesetz
+  `μ`, das auf `K` sitzt, ist das Integral über das Fenster von
+  `μ {f | ∃ s ∈ [t, t + δ'), 4c < edist (f s) (f t)}` höchstens
+  `(⌈2 (M + 1) / δ⌉ + 1) δ'`. Das ist Tonelli in der Gestalt
+  `Measure.prod_apply` und `Measure.prod_apply_symm`: andersherum gelesen ist das
+  Integral der Mittelwert über die Pfade des Lebesguemaßes der schlechten Zeiten
+  *dieses* Pfades, und das ist die Schranke des Vorlaufs. Sie übersteht den
+  Mittelwert, weil die **Länge** der Zerlegung eine Schranke in `M` und `δ`
+  allein hat.
+* `SkorokhodSpace.mul_volume_setOf_le_measure_setOf_exists_edist_lt` — Markov auf
+  den Zeiten, ohne Division geschrieben, damit die Aussage nichts von `β`
+  verlangt.
+* `exists_mem_Ico_lt_of_setLIntegral_le` — und das ist der Schritt, der aus dem
+  Maß eine **Zeit** macht: ist `∫⁻ t in [-M, M), F t ≤ C` und `C < β · 2M`, so hat
+  eine Zeit des Fensters `F t < β`. Er nennt weder den Pfadraum noch ein Gesetz.
+
+Daraus fällt `SkorokhodSpace.exists_time_measure_setOf_exists_edist_lt`: die Zeit
+für **ein** Gesetz. Das ist die positive Seite zu
+`exists_isCompact_forall_exists_one_le_dist` aus dem Vorlauf — nicht jede Zeit ist
+gut, und eine ist es.
+
+#### Der Befund: für eine **Folge** von Gesetzen steht dort ein `liminf`, und das ist keine Schwäche der Beweisführung
+
+Bestellt war eine Zeit, „die für alle Glieder der Folge zugleich gut ist". Die
+gibt es nicht, und der Grund ist elementar: jedes Gesetz hat schlechte Zeiten von
+kleinem Maß, aber die **Vereinigung** über die Folge kann das ganze Fenster
+überdecken.
+
+Was aus den Schranken folgt, ist eine Zeit mit kleinem `liminf`:
+
+* `SkorokhodSpace.exists_time_liminf_measure_setOf_exists_edist_lt` — es gibt
+  `t ∈ [-M, M)` mit
+  `liminf (fun n ↦ μ n {f | ∃ s ∈ [t, t + δ'), 4c < edist (f s) (f t)}) < β`.
+
+Der Beweis ist Fatou, `lintegral_liminf_le`, mit der Richtung
+`∫ liminf ≤ liminf ∫`. Die Ungleichung, die eine Aussage über **alle** Glieder
+oder auch nur über den `limsup` trüge, wäre `∫ limsup ≤ limsup ∫`, und die ist
+falsch; Mathlibs Umkehr-Fatou `limsup_lintegral_le`
+(`MeasureTheory/Integral/Lebesgue/DominatedConvergence.lean:27`) sagt das
+Gegenteil, `limsup ∫ ≤ ∫ limsup`, und ist hier unbrauchbar. Ich hatte den Lauf
+mit der Absicht begonnen, die Folgenfassung über die Umkehr-Fatou zu führen; die
+Richtung stimmte nicht, und das ist kein Formfehler, sondern die Aussage selbst.
+
+**Was das für den Vertausch heißt:** er darf eine Zeit verbrauchen, die nur längs
+einer **Teilfolge** gut ist. Das ist keine Einschränkung, die man später
+wegarbeiten müßte — ein Beweis, der Teilfolgengrenzwerte vergleicht, verfügt
+ohnehin über Teilfolgen. Aber es ist in der Roadmap gesagt, damit kein späterer
+Lauf die stärkere Fassung zu beweisen versucht, die es nicht gibt.
+
+#### Was dieser Lauf **nicht** getan hat
+
+Den Vertausch selbst, also EK 3.7.8(b), hat er nicht geführt: was jetzt dasteht,
+ist die Zeit; was fehlt, ist der Vergleich der endlichdimensionalen Verteilungen
+bei `t` und bei dieser Zeit. Der nächste Punkt unten ist genau das. Er hat keine
+Zeile des Manuskripts angefaßt und keine Zeile des Inventars mit Status `?`; es
+gibt keine mehr. Vorschlag 2 des Vorlaufs ist wieder unberührt geblieben und
+steht unten erneut.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die Brücke von der Zeit zu den endlichdimensionalen Verteilungen.**
+   `SkorokhodSpace.dist_integral_eval_le_of_notMem_badTimes` — zu `F : E →ᵇ ℝ`,
+   zu `t` und `t' ∈ [t, t + δ')` und zu einem Gesetz `μ`:
+   `|∫ F (f t') dμ − ∫ F (f t) dμ| ≤ ω_F (4c) + 2 ‖F‖ · μ (bad t)`,
+   mit `ω_F` dem Stetigkeitsmodul von `F` und `bad t` der Menge aus diesem Lauf.
+   *Worauf sie ruht:* `exists_time_measure_setOf_exists_edist_lt` aus diesem
+   Lauf für die Zeit, `SkorokhodSpace.measurable_eval` für die
+   Integrierbarkeit, und eine Zerlegung des Integrals über `bad t` und sein
+   Komplement — auf dem Komplement die Modulschranke, auf `bad t` die
+   Beschränktheit von `F`.
+   *Warum jetzt:* es ist die einzige noch fehlende Stufe zwischen dem
+   Maßbefund dieses Laufs und der Aussage, um die es geht; und es ist die
+   Stelle, an der sich entscheidet, ob der Vertausch mit beschränkten stetigen
+   Testfunktionen (dann genügt Stufe (A)) oder mit gleichmäßig stetigen geführt
+   wird.
+
+2. **Der Anschluß von `tendstoInDistribution_evalPi_jumpPathD` an eine wirkliche
+   Folge**, unverändert seit dem sechzehnten Lauf. Die Sätze sind anwendbar und
+   auf nichts angewandt; der Zeuge ist das Akzeptanzbeispiel von Meilenstein 10,
+   dessen Approximanten seit dem elften Lauf des 2026-09-18 auf dem Pfadraum
+   unter dem Bildmaß stehen.

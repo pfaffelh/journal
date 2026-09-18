@@ -14,6 +14,7 @@ import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Topology.Algebra.InfiniteSum.Real
 import Mathlib.Analysis.SpecialFunctions.ImproperIntegrals
 import Mathlib.Data.Rat.Denumerable
+import Mathlib.MeasureTheory.Function.Floor
 
 /-!
 # Suggested signatures for the Skorokhod space roadmap
@@ -11441,3 +11442,288 @@ theorem SkorokhodSpace.forall_exists_measure_le_forall_edist_le {K : Set D(ℝ, 
     (lt_of_le_of_lt (le_iSup₂ (f := fun g (_ : g ∈ K) =>
       SkorokhodSpace.modulusBased (0 : ℝ) M g δ) f hf) h)
 
+/-! ### The bad times of a law, and a time that is good for a whole sequence
+
+`SkorokhodSpace.exists_isCompact_forall_exists_one_le_dist` rules out the
+pathwise reading of the uniformity; what is left is the measure of the times at
+which the right oscillation is large, and
+`SkorokhodSpace.forall_exists_measure_le_forall_edist_le` bounds it for every
+path of a set at once.  This section turns that bound into a statement about a
+*law* and then produces a **time**.
+
+The step over the time variable is Tonelli, and it needs the evaluation to be
+measurable in the pair `(t, f)` and not merely in `f`.  That is
+`SkorokhodSpace.measurable_uncurry_eval`, proved by the dyadic approximation
+from the right; it is the counterpart over `D(ℝ, E)` of the joint measurability
+that the jump construction of **MartingaleProblems** carries for real valued
+right continuous processes, and the completeness and separability of `E` are
+spent here, in the passage to the limit of measurable maps.
+
+The last statement of the section is the form in which the interchange of the
+two limits of EK 3.7.8(b) can use it, and its shape is not the expected one: it
+carries a `liminf` and not a `limsup`.  The reason is that the inequality
+available for a sequence of integrands is Fatou's, `lintegral_liminf_le`, whose
+direction is `∫ liminf ≤ liminf ∫`; Mathlib's reverse Fatou,
+`limsup_lintegral_le`, points the other way (`limsup ∫ ≤ ∫ limsup`) and is of no
+use here.  A single time that is good for **all** members of a sequence at once
+does not follow from a bound on each member's bad times: their union may cover
+the window.  What follows is a time good along a **subsequence**, and that is
+what an argument comparing subsequential limits may spend. -/
+
+/-- **Evaluation is jointly measurable in the time and the path.**  The
+approximation is from the right, `⌈t 2ⁿ⌉ / 2ⁿ`, which is a measurable function of
+`t` with countable range, so that each approximant is measurable by
+`measurable_from_prod_countable_left` over
+`SkorokhodSpace.measurable_eval`; the paths being right continuous, the
+approximants converge pointwise, and `measurable_of_tendsto_metrizable` closes
+it.
+
+The metrizability of `E` is used in that last step and cannot be dropped: a
+limit of measurable maps into a bare measurable space need not be measurable.
+This is the same boundary as the one recorded at
+`measurable_uncurry_min_of_rightContinuous` in **MartingaleProblems**, where the
+`E` valued process is deliberately *not* claimed to be jointly measurable over an
+arbitrary σ-algebra; here `E` is Polish and the claim is available. -/
+theorem SkorokhodSpace.measurable_uncurry_eval :
+    Measurable fun p : ℝ × D(ℝ, E) => p.2.toFun p.1 := by
+  have hstep : ∀ n : ℕ, Measurable fun p : ℝ × D(ℝ, E) =>
+      p.2.toFun ((⌈p.1 * 2 ^ n⌉ : ℤ) / 2 ^ n : ℝ) := by
+    intro n
+    have hF : Measurable fun q : D(ℝ, E) × ℤ => q.1.toFun ((q.2 : ℝ) / 2 ^ n) :=
+      measurable_from_prod_countable_left fun k =>
+        SkorokhodSpace.measurable_eval ((k : ℝ) / 2 ^ n)
+    exact hF.comp (measurable_snd.prodMk
+      ((Int.measurable_ceil (R := ℝ)).comp (measurable_fst.mul_const _)))
+  refine measurable_of_tendsto_metrizable hstep (tendsto_pi_nhds.2 fun p => ?_)
+  set t : ℝ := p.1 with ht
+  have hpow : ∀ n : ℕ, (0 : ℝ) < 2 ^ n := fun n => by positivity
+  have hge : ∀ n : ℕ, t ≤ ((⌈t * 2 ^ n⌉ : ℤ) : ℝ) / 2 ^ n := by
+    intro n
+    rw [le_div_iff₀ (hpow n)]
+    exact Int.le_ceil _
+  have hlt : ∀ n : ℕ, ((⌈t * 2 ^ n⌉ : ℤ) : ℝ) / 2 ^ n ≤ t + (2 : ℝ)⁻¹ ^ n := by
+    intro n
+    rw [div_le_iff₀ (hpow n)]
+    have h := (Int.ceil_lt_add_one (t * 2 ^ n)).le
+    have hone : ((2 : ℝ)⁻¹) ^ n * 2 ^ n = 1 := by
+      rw [← mul_pow]
+      norm_num
+    have : (t + (2 : ℝ)⁻¹ ^ n) * 2 ^ n = t * 2 ^ n + 1 := by
+      rw [add_mul, hone]
+    rw [this]
+    exact h
+  have hzero : Tendsto (fun n : ℕ => t + (2 : ℝ)⁻¹ ^ n) atTop (𝓝 (t + 0)) :=
+    tendsto_const_nhds.add (tendsto_pow_atTop_nhds_zero_of_lt_one (by norm_num) (by norm_num))
+  rw [add_zero] at hzero
+  have hsq : Tendsto (fun n : ℕ => ((⌈t * 2 ^ n⌉ : ℤ) : ℝ) / 2 ^ n) atTop (𝓝 t) :=
+    tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hzero hge hlt
+  have hwithin : Tendsto (fun n : ℕ => ((⌈t * 2 ^ n⌉ : ℤ) : ℝ) / 2 ^ n) atTop (𝓝[≥] t) :=
+    tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within _ hsq
+      (Eventually.of_forall hge)
+  have hrc : Tendsto p.2.toFun (𝓝[≥] t) (𝓝 (p.2.toFun t)) :=
+    continuousWithinAt_Ioi_iff_Ici.1 (p.2.isCadlag.isRightContinuous t)
+  exact hrc.comp hwithin
+
+/-- **The event that the right oscillation over `[t, t + δ')` exceeds `a` is
+measurable in the pair.**  The existential over a real time is replaced by a
+countable one over the rationals, and that replacement is right continuity: at
+`s = t` the distance is `0`, so a witness lies strictly to the right of `t`, and
+the values just to the right of a witness are again witnesses.
+
+No positivity is asked of `δ'`, and none is needed: for `δ' ≤ 0` the window is
+empty and the set is empty. -/
+theorem SkorokhodSpace.measurableSet_setOf_exists_edist_lt (δ' : ℝ) (a : ℝ≥0∞) :
+    MeasurableSet {p : ℝ × D(ℝ, E) |
+      ∃ s ∈ Set.Ico p.1 (p.1 + δ'), a < edist (p.2.toFun s) (p.2.toFun p.1)} := by
+  have hkey : {p : ℝ × D(ℝ, E) |
+        ∃ s ∈ Set.Ico p.1 (p.1 + δ'), a < edist (p.2.toFun s) (p.2.toFun p.1)}
+      = ⋃ q : ℚ, {p : ℝ × D(ℝ, E) | p.1 < (q : ℝ) ∧ (q : ℝ) < p.1 + δ' ∧
+          a < edist (p.2.toFun (q : ℝ)) (p.2.toFun p.1)} := by
+    ext p
+    constructor
+    · rintro ⟨s, hs, hlt⟩
+      rcases eq_or_lt_of_le hs.1 with rfl | hts
+      · rw [edist_self] at hlt
+        exact absurd hlt (by simp)
+      · have hrc : Tendsto (fun r : ℝ => edist (p.2.toFun r) (p.2.toFun p.1)) (𝓝[>] s)
+            (𝓝 (edist (p.2.toFun s) (p.2.toFun p.1))) :=
+          (p.2.isCadlag.isRightContinuous s).tendsto.edist tendsto_const_nhds
+        have hev : ∀ᶠ r in 𝓝[>] s, a < edist (p.2.toFun r) (p.2.toFun p.1) :=
+          hrc (eventually_gt_nhds hlt)
+        obtain ⟨u, hsu, hsub⟩ := mem_nhdsGT_iff_exists_Ioo_subset.1 hev
+        obtain ⟨q, hq1, hq2⟩ := exists_rat_btwn (lt_min hsu hs.2)
+        refine Set.mem_iUnion.2 ⟨q, hts.trans hq1, lt_of_lt_of_le hq2 (min_le_right _ _), ?_⟩
+        exact hsub ⟨hq1, lt_of_lt_of_le hq2 (min_le_left _ _)⟩
+    · intro hp
+      obtain ⟨q, hq⟩ := Set.mem_iUnion.1 hp
+      exact ⟨(q : ℝ), ⟨hq.1.le, hq.2.1⟩, hq.2.2⟩
+  rw [hkey]
+  refine MeasurableSet.iUnion fun q => ?_
+  have h1 : MeasurableSet {p : ℝ × D(ℝ, E) | p.1 < (q : ℝ)} :=
+    measurable_fst measurableSet_Iio
+  have h2 : MeasurableSet {p : ℝ × D(ℝ, E) | (q : ℝ) < p.1 + δ'} :=
+    (measurable_fst.add_const δ') measurableSet_Ioi
+  have h3 : MeasurableSet {p : ℝ × D(ℝ, E) |
+      a < edist (p.2.toFun (q : ℝ)) (p.2.toFun p.1)} :=
+    (((SkorokhodSpace.measurable_eval (q : ℝ)).comp measurable_snd).edist
+      SkorokhodSpace.measurable_uncurry_eval) measurableSet_Ioi
+  exact h1.inter (h2.inter h3)
+
+/-- **The bad times of a law have small integrated mass.**  For a law carried by
+a set `K` over which the based modulus at `δ` stays below `c`, the probability of
+a large right oscillation at `t`, integrated over the window, is at most
+`(⌈2 (M + 1) / δ⌉ + 1) δ'`.
+
+The proof is Tonelli in the form `Measure.prod_apply` and
+`Measure.prod_apply_symm`: the integral is the product measure of the pair event,
+and read the other way round it is the average over paths of the Lebesgue measure
+of that path's bad times, which
+`SkorokhodSpace.forall_exists_measure_le_forall_edist_le` bounds.  The bound is
+uniform because the *length* of the subdivision is, the number of cells of a
+`δ`-sparse subdivision of the window being at most `2 (M + 1) / δ`. -/
+theorem SkorokhodSpace.lintegral_measure_setOf_exists_edist_lt_le {K : Set D(ℝ, E)}
+    {M δ δ' : ℝ} (hM : 1 ≤ M) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) {c : ℝ≥0∞}
+    (h : (⨆ f ∈ K, SkorokhodSpace.modulusBased (0 : ℝ) M f δ) < c)
+    (μ : Measure D(ℝ, E)) [IsProbabilityMeasure μ] (hμ : μ Kᶜ = 0) :
+    ∫⁻ t in Set.Ico (-M) M,
+        μ {f : D(ℝ, E) | ∃ s ∈ Set.Ico t (t + δ'), 4 * c < edist (f.toFun s) (f.toFun t)}
+      ≤ ((⌈2 * (M + 1) / δ⌉₊ : ℝ≥0∞) + 1) * ENNReal.ofReal δ' := by
+  classical
+  set A : Set (ℝ × D(ℝ, E)) :=
+    {p | ∃ s ∈ Set.Ico p.1 (p.1 + δ'), 4 * c < edist (p.2.toFun s) (p.2.toFun p.1)} with hA
+  have hAmeas : MeasurableSet A :=
+    SkorokhodSpace.measurableSet_setOf_exists_edist_lt δ' (4 * c)
+  have hsec : ∀ t : ℝ, {f : D(ℝ, E) |
+      ∃ s ∈ Set.Ico t (t + δ'), 4 * c < edist (f.toFun s) (f.toFun t)}
+      = Prod.mk t ⁻¹' A := fun t => rfl
+  simp only [hsec]
+  rw [← Measure.prod_apply hAmeas, Measure.prod_apply_symm hAmeas]
+  have hinner : ∀ f ∈ K, (volume.restrict (Set.Ico (-M) M)) ((fun t => (t, f)) ⁻¹' A)
+      ≤ ((⌈2 * (M + 1) / δ⌉₊ : ℝ≥0∞) + 1) * ENNReal.ofReal δ' := by
+    intro f hf
+    obtain ⟨n, B, hn, hB, hgood⟩ :=
+      SkorokhodSpace.forall_exists_measure_le_forall_edist_le (δ' := δ') hM hδ0 hδ1 h f hf
+    have hnN : n ≤ ⌈2 * (M + 1) / δ⌉₊ := by
+      have h1 : (n : ℝ) ≤ 2 * (M + 1) / δ := (le_div_iff₀ hδ0).2 hn
+      exact Nat.cast_le.1 (le_trans h1 (Nat.le_ceil _))
+    have hTmeas : MeasurableSet ((fun t => (t, f)) ⁻¹' A) :=
+      hAmeas.preimage (measurable_id.prodMk measurable_const)
+    have hsub : (fun t => (t, f)) ⁻¹' A ∩ Set.Ico (-M) M ⊆ B := by
+      rintro t ⟨htA, htS⟩
+      by_contra htB
+      obtain ⟨s, hs, hlt⟩ := htA
+      exact absurd (hgood t htS htB s hs) (not_le.2 hlt)
+    rw [Measure.restrict_apply hTmeas]
+    refine le_trans (measure_mono hsub) (le_trans hB ?_)
+    have hcast : ((n : ℝ≥0∞) + 1) ≤ ((⌈2 * (M + 1) / δ⌉₊ : ℝ≥0∞) + 1) :=
+      add_le_add (Nat.cast_le.2 hnN) le_rfl
+    gcongr
+  have hae : ∀ᵐ f ∂μ, (volume.restrict (Set.Ico (-M) M)) ((fun t => (t, f)) ⁻¹' A)
+      ≤ ((⌈2 * (M + 1) / δ⌉₊ : ℝ≥0∞) + 1) * ENNReal.ofReal δ' := by
+    filter_upwards [mem_ae_iff.2 hμ] with f hf using hinner f hf
+  calc ∫⁻ f, (volume.restrict (Set.Ico (-M) M)) ((fun t => (t, f)) ⁻¹' A) ∂μ
+      ≤ ∫⁻ _, ((⌈2 * (M + 1) / δ⌉₊ : ℝ≥0∞) + 1) * ENNReal.ofReal δ' ∂μ :=
+        lintegral_mono_ae hae
+    _ = ((⌈2 * (M + 1) / δ⌉₊ : ℝ≥0∞) + 1) * ENNReal.ofReal δ' := by
+        rw [lintegral_const, measure_univ, mul_one]
+
+/-- **Markov's inequality on the bad times.**  The Lebesgue measure of the times
+of the window at which the law charges a large right oscillation with probability
+at least `β` is small, and the statement is written without a division so that it
+asks nothing of `β`. -/
+theorem SkorokhodSpace.mul_volume_setOf_le_measure_setOf_exists_edist_lt {K : Set D(ℝ, E)}
+    {M δ δ' : ℝ} (hM : 1 ≤ M) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) {c : ℝ≥0∞}
+    (h : (⨆ f ∈ K, SkorokhodSpace.modulusBased (0 : ℝ) M f δ) < c)
+    (μ : Measure D(ℝ, E)) [IsProbabilityMeasure μ] (hμ : μ Kᶜ = 0) (β : ℝ≥0∞) :
+    β * volume (Set.Ico (-M) M ∩ {t : ℝ |
+        β ≤ μ {f : D(ℝ, E) | ∃ s ∈ Set.Ico t (t + δ'), 4 * c < edist (f.toFun s) (f.toFun t)}})
+      ≤ ((⌈2 * (M + 1) / δ⌉₊ : ℝ≥0∞) + 1) * ENNReal.ofReal δ' := by
+  set g : ℝ → ℝ≥0∞ := fun t =>
+    μ {f : D(ℝ, E) | ∃ s ∈ Set.Ico t (t + δ'), 4 * c < edist (f.toFun s) (f.toFun t)} with hg
+  have hgmeas : Measurable g :=
+    measurable_measure_prodMk_left
+      (SkorokhodSpace.measurableSet_setOf_exists_edist_lt (E := E) δ' (4 * c))
+  have hmk := mul_meas_ge_le_lintegral (μ := volume.restrict (Set.Ico (-M) M)) hgmeas β
+  have hset : (volume.restrict (Set.Ico (-M) M)) {t | β ≤ g t}
+      = volume (Set.Ico (-M) M ∩ {t | β ≤ g t}) := by
+    have hms : MeasurableSet {t : ℝ | β ≤ g t} := hgmeas measurableSet_Ici
+    rw [Measure.restrict_apply hms, Set.inter_comm]
+  rw [hset] at hmk
+  exact le_trans hmk
+    (SkorokhodSpace.lintegral_measure_setOf_exists_edist_lt_le hM hδ0 hδ1 h μ hμ)
+
+/-- **From a bound on an integral over the window to a time.**  If the integral of
+`F` over `[-M, M)` is at most `C` and `C` is below `β` times the length of the
+window, then some time of the window has `F t < β`.  It is Markov's inequality
+read by contradiction, and it is the step that turns a statement about the
+measure of the bad times into a statement about **one** time. -/
+theorem exists_mem_Ico_lt_of_setLIntegral_le {M : ℝ} {F : ℝ → ℝ≥0∞} (hF : Measurable F)
+    {C β : ℝ≥0∞} (hint : ∫⁻ t in Set.Ico (-M) M, F t ≤ C)
+    (hβ : C < β * ENNReal.ofReal (2 * M)) :
+    ∃ t ∈ Set.Ico (-M) M, F t < β := by
+  by_contra hcon
+  simp only [not_exists, not_and, not_lt] at hcon
+  have hmk := mul_meas_ge_le_lintegral (μ := volume.restrict (Set.Ico (-M) M)) hF β
+  have hms : MeasurableSet {t : ℝ | β ≤ F t} := hF measurableSet_Ici
+  have hEq : (volume.restrict (Set.Ico (-M) M)) {t | β ≤ F t} = ENNReal.ofReal (2 * M) := by
+    have hsubset : Set.Ico (-M) M ⊆ {t : ℝ | β ≤ F t} := fun t ht => hcon t ht
+    rw [Measure.restrict_apply hms, Set.inter_eq_self_of_subset_right hsubset, Real.volume_Ico]
+    congr 1
+    ring
+  rw [hEq] at hmk
+  exact absurd (le_trans hmk hint) (not_le.2 hβ)
+
+/-- **A good time for one law.**  Under the hypothesis of
+`SkorokhodSpace.lintegral_measure_setOf_exists_edist_lt_le` and for `δ'` small
+enough that the bound stays below `β` times the length of the window, there is a
+time of the window at which the law charges a large right oscillation with
+probability less than `β`.
+
+This is what `SkorokhodSpace.exists_isCompact_forall_exists_one_le_dist` leaves
+open: not every time is good, and one is. -/
+theorem SkorokhodSpace.exists_time_measure_setOf_exists_edist_lt {K : Set D(ℝ, E)}
+    {M δ δ' : ℝ} (hM : 1 ≤ M) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) {c : ℝ≥0∞}
+    (h : (⨆ f ∈ K, SkorokhodSpace.modulusBased (0 : ℝ) M f δ) < c)
+    (μ : Measure D(ℝ, E)) [IsProbabilityMeasure μ] (hμ : μ Kᶜ = 0) {β : ℝ≥0∞}
+    (hβ : ((⌈2 * (M + 1) / δ⌉₊ : ℝ≥0∞) + 1) * ENNReal.ofReal δ'
+      < β * ENNReal.ofReal (2 * M)) :
+    ∃ t ∈ Set.Ico (-M) M,
+      μ {f : D(ℝ, E) | ∃ s ∈ Set.Ico t (t + δ'),
+        4 * c < edist (f.toFun s) (f.toFun t)} < β :=
+  exists_mem_Ico_lt_of_setLIntegral_le
+    (measurable_measure_prodMk_left
+      (SkorokhodSpace.measurableSet_setOf_exists_edist_lt (E := E) δ' (4 * c)))
+    (SkorokhodSpace.lintegral_measure_setOf_exists_edist_lt_le hM hδ0 hδ1 h μ hμ) hβ
+
+/-- **A good time for a whole sequence of laws, and it is a `liminf`.**  All the
+laws being carried by the same set `K`, the bound of
+`SkorokhodSpace.lintegral_measure_setOf_exists_edist_lt_le` holds for each of them
+with the same constants, and Fatou's lemma `lintegral_liminf_le` carries it to the
+`liminf` of the integrands.
+
+**The `liminf` is not a weakening one may repair.**  A time good for *every*
+member of the sequence at once need not exist: each law's bad times are of small
+measure, but their union over the sequence may cover the window, and the
+inequality that would be needed, `∫ limsup ≤ limsup ∫`, is false --- Mathlib's
+`limsup_lintegral_le` states the converse.  What the interchange of limits may
+therefore spend is a time good along a **subsequence**, which is what an argument
+comparing subsequential limits has at its disposal anyway. -/
+theorem SkorokhodSpace.exists_time_liminf_measure_setOf_exists_edist_lt {K : Set D(ℝ, E)}
+    {M δ δ' : ℝ} (hM : 1 ≤ M) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) {c : ℝ≥0∞}
+    (h : (⨆ f ∈ K, SkorokhodSpace.modulusBased (0 : ℝ) M f δ) < c)
+    (μ : ℕ → Measure D(ℝ, E)) [∀ n, IsProbabilityMeasure (μ n)]
+    (hμ : ∀ n, (μ n) Kᶜ = 0) {β : ℝ≥0∞}
+    (hβ : ((⌈2 * (M + 1) / δ⌉₊ : ℝ≥0∞) + 1) * ENNReal.ofReal δ'
+      < β * ENNReal.ofReal (2 * M)) :
+    ∃ t ∈ Set.Ico (-M) M,
+      liminf (fun n => (μ n) {f : D(ℝ, E) | ∃ s ∈ Set.Ico t (t + δ'),
+        4 * c < edist (f.toFun s) (f.toFun t)}) atTop < β := by
+  have hgm : ∀ n : ℕ, Measurable fun t : ℝ =>
+      (μ n) {f : D(ℝ, E) | ∃ s ∈ Set.Ico t (t + δ'),
+        4 * c < edist (f.toFun s) (f.toFun t)} := fun n =>
+    measurable_measure_prodMk_left
+      (SkorokhodSpace.measurableSet_setOf_exists_edist_lt (E := E) δ' (4 * c))
+  refine exists_mem_Ico_lt_of_setLIntegral_le (Measurable.liminf hgm) ?_ hβ
+  refine le_trans (lintegral_liminf_le hgm) ?_
+  exact liminf_le_of_frequently_le' (Frequently.of_forall fun n =>
+    SkorokhodSpace.lintegral_measure_setOf_exists_edist_lt_le hM hδ0 hδ1 h (μ n) (hμ n))

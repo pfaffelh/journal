@@ -2406,6 +2406,81 @@ state the second, as Theorem 3.9.1, for a complete separable `E` as well.
   the statement the interchange of the two limits is to be made in: the bad
   times cannot be made empty — that is the refutation above — and they can be
   made of small measure, uniformly.
+* `SkorokhodSpace.measurable_uncurry_eval` — stage (A), **proved 2026-09-18**.
+  Evaluation is measurable in the pair, `Measurable fun p : ℝ × D(ℝ, E) ↦ p.2 p.1`,
+  and not merely in the path. The approximation is the dyadic one from the
+  right, `⌈t 2ⁿ⌉ / 2ⁿ`: it has countable range, so each approximant is
+  measurable by `measurable_from_prod_countable_left` over
+  `SkorokhodSpace.measurable_eval`, the paths being right continuous the
+  approximants converge pointwise, and `measurable_of_tendsto_metrizable`
+  closes it.
+
+  **This is where the metrizability of `E` is spent**, and it cannot be
+  dropped: a pointwise limit of measurable maps into a bare measurable space
+  need not be measurable. Metrizability and separability, that is: the
+  completeness in the `[PolishSpace E]` of the signature is the one that comes
+  with the Borel σ-algebra on `D(ι, E)` and is spent by no step, which is why
+  this item and the five below it are stage (A) like their neighbours. It is the
+  same boundary that
+  `measurable_uncurry_min_of_rightContinuous` records in
+  **MartingaleProblems**, where the `E` valued process is deliberately not
+  claimed to be jointly measurable over an arbitrary σ-algebra; here `E` is
+  Polish and the claim is available. Without it no statement below can be
+  integrated over the time variable.
+* `SkorokhodSpace.measurableSet_setOf_exists_edist_lt` — stage (A), **proved
+  2026-09-18**. The event that the right oscillation over `[t, t + δ')` exceeds
+  `a` is measurable in the pair `(t, f)`. The existential over a real time is
+  replaced by a countable one over the rationals, and that replacement **is**
+  the right continuity of the paths: at `s = t` the distance is `0`, so a
+  witness lies strictly to the right of `t`, and the values just to the right of
+  a witness are again witnesses. `δ'` is again not assumed positive.
+* `SkorokhodSpace.lintegral_measure_setOf_exists_edist_lt_le` — stage (A),
+  **proved 2026-09-18**. For a law `μ` carried by a `K` whose supremum of based
+  moduli at `δ` is below `c`, the integral over the window of
+  `μ {f | ∃ s ∈ [t, t + δ'), 4 c < edist (f s) (f t)}` is at most
+  `(⌈2 (M + 1) / δ⌉ + 1) δ'`.
+
+  This is Tonelli, in the form `Measure.prod_apply` and
+  `Measure.prod_apply_symm`: the integral is the product measure of the pair
+  event, and read the other way round it is the average over paths of the
+  Lebesgue measure of that path's bad times, which
+  `forall_exists_measure_le_forall_edist_le` bounds. The bound survives the
+  average because the **length** of the subdivision is bounded in `M` and `δ`
+  alone.
+* `SkorokhodSpace.mul_volume_setOf_le_measure_setOf_exists_edist_lt` — stage (A),
+  **proved 2026-09-18**. Markov on the times: `β` times the Lebesgue measure of
+  the times of the window at which the law charges a large right oscillation
+  with probability at least `β` is at most the same constant. Written without a
+  division, so that it asks nothing of `β`.
+* `exists_mem_Ico_lt_of_setLIntegral_le` — stage (A), **proved 2026-09-18**. If
+  `∫⁻ t in [-M, M), F t ≤ C` and `C < β * (2 M)` then some `t` of the window has
+  `F t < β`. It is Markov read by contradiction, it mentions neither the path
+  space nor a law, and it is the step that turns a statement about the measure
+  of the bad times into a statement about **one** time.
+* `SkorokhodSpace.exists_time_measure_setOf_exists_edist_lt` — stage (A),
+  **proved 2026-09-18**. The time itself, for one law: under the hypothesis
+  above and for `δ'` small enough that `(⌈2 (M + 1) / δ⌉ + 1) δ' < β * (2 M)`
+  there is a `t ∈ [-M, M)` at which the law charges a large right oscillation
+  with probability less than `β`. This is what
+  `exists_isCompact_forall_exists_one_le_dist` leaves open: not every time is
+  good, and one is.
+* `SkorokhodSpace.exists_time_liminf_measure_setOf_exists_edist_lt` — stage (A),
+  **proved 2026-09-18**. The time for a whole **sequence** of laws, all carried
+  by the same `K`, and the conclusion carries a `liminf`:
+  `liminf (fun n ↦ μ n {f | ∃ s ∈ [t, t + δ'), 4 c < edist (f s) (f t)}) < β`.
+  The bound of the item above holds for every member with the same constants,
+  and Fatou's lemma `lintegral_liminf_le` carries it to the `liminf` of the
+  integrands.
+
+  **The `liminf` is not a weakening that a later proof may repair.** A time good
+  for *every* member of the sequence at once need not exist: each law's bad
+  times are of small measure, and their union over the sequence may cover the
+  window. The inequality that would be needed is `∫ liminf`'s mirror,
+  `∫ limsup ≤ limsup ∫`, and it is false; Mathlib's reverse Fatou
+  `limsup_lintegral_le` states the converse, `limsup ∫ ≤ ∫ limsup`, and is of no
+  use here. What the interchange of the two limits may spend is therefore a time
+  good along a **subsequence** — which is what an argument comparing
+  subsequential limits has at its disposal in any case.
 * `SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional` — stage (A).
   The same conclusion for a tight family, from the previous item and
   `isCompact_closure_of_isTightMeasureSet`.
