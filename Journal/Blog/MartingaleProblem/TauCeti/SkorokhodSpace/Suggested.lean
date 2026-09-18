@@ -5,6 +5,7 @@ Authors: Peter Pfaffelhuber
 -/
 import TauCetiRoadmap.WeakConvergence.Suggested
 import Mathlib.Topology.Order.LeftRightLim
+import Mathlib.Topology.Order.Cadlag
 import Mathlib.Topology.MetricSpace.Polish
 import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
 import Mathlib.MeasureTheory.Constructions.BorelSpace.Order
@@ -23,12 +24,19 @@ Prototypes only. Names and argument orders are suggestions; the statements are
 the commitments. `sorry` marks a statement whose proof is the work, never an
 empty proposition.
 
-**Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
+**Status: type-checked** with `lake env lean` against Mathlib `upstream/master`
+`94ef6b89544e58e90f119da869f3fb48d1da0f4c` (Lean `4.35.0-rc2`), last on
 2026-09-18, with `autoImplicit=false` and `relaxedAutoImplicit=false` as Mathlib
 itself builds, and **free of `sorry` since the thirteenth run of 2026-09-09**.  Every
 declaration elaborates and every one of them is proved; `#print axioms` on
 `SkorokhodSpace.isCompact_closure_iff`, the last statement to be discharged,
-gives `propext`, `Classical.choice`, `Quot.sound`.
+gives `propext`, `Classical.choice`, `Quot.sound`.  Since the twenty third run of
+2026-09-18 the file uses no deprecated name.
+
+**`master` is the reference, not `v4.33.1`**, since 2026-09-18; the module doc of
+**WeakConvergence** says why, and names the four families for which no spelling
+carries both.  Line numbers of cited declarations are still those of `v4.33.1`
+unless the citation says otherwise; the names are checked, the lines are not.
 
 Milestone 8 opens at the end of the file with the times at which a law has no
 fixed discontinuity: `SkorokhodSpace.countable_setOf_measure_leftJump_ne_zero`
@@ -300,10 +308,12 @@ path truncated to the window --- càdlàg again by the new
 places where a conditionally complete supremum could otherwise be a junk value.
 `distOn_nonneg`, `distOn_self`, `distOn_comm` and `distOn_triangle` are proved,
 and so is the separation; every axiom of `distOn` is a theorem.  The one statement
-of Milestone 2 that had to be corrected first is
-`IsCadlag.isBounded_image_of_isCompact`: under the bundle (A) of the roadmap,
-a mere preorder, it is **false**, and the witness is in the roadmap; it holds
-under a linear order, and needs no order topology.
+of Milestone 2 that had to be corrected first is the image of a compact set
+under a càdlàg map: under the bundle (A) of the roadmap, a mere preorder, it is
+**false**, and the witness is in the roadmap; it holds under a linear order, and
+needs no order topology.  Since 2026-09-18 it is not ours but Mathlib's, as
+`isBounded_image_of_isCadlag_of_isCompact`, and Mathlib states it under
+`[LinearOrder X]` too --- the correction and the library agree.
 
 Since 2026-09-07, fourth run, the jump theory of Milestone 2 is proved:
 `countable_leftJumpSet`, through the two statements it needed and which the
@@ -311,7 +321,7 @@ roadmap did not name --- `IsCadlag.dist_leftLim_le_of_Ioo_subset`, the jump
 bound from a two sided oscillation bound, and
 `IsCadlag.eventually_dist_leftLim_lt`, the local finiteness of
 `largeLeftJumpSet` in its pointwise form --- together with
-`IsCadlag.finite_largeLeftJumpSet_inter`, `IsCadlag.tendsto_leftLim`, and the
+`IsCadlag.finite_largeLeftJumpSet_inter`, `IsCadlag.tendsto_nhdsLT_leftLim`, and the
 continuity characterization `IsCadlag.continuousAt_iff_notMem_leftJumpSet` with
 its global form `IsCadlag.continuous_iff_leftJumpSet_eq_empty`.  **The proof
 uses none of the bundle (B) of the roadmap**: no countable dense set and no
@@ -731,38 +741,27 @@ theorem exists_orderIso_isometry_real :
 
 /-! ## Milestone 2: càdlàg functions
 
-Neither predicate is in v4.33.1, to which this file is pinned; both are in
-`Mathlib/Topology/Order/Cadlag.lean` since #43352, and the two definitions below
-agree with the library ones term for term, including the names of the fields and
-the instance bundle.  Against a toolchain that carries that file the two are to
-be deleted and nothing else changed.
+**Neither predicate is declared here.**  `IsRightContinuous` and `IsCadlag` are
+Mathlib's, from `Mathlib/Topology/Order/Cadlag.lean` (`#43352`), imported above.
+Until 2026-09-18 this file restated both, because it was checked against the
+release `v4.33.1`, which does not have that file; the move of the chain to
+`upstream/master` in the twenty second run of that day removed the reason, and
+the twenty fourth run removed the definitions.  They agreed with the library
+ones term for term, fields included, so the deletion was the whole of the
+transition and no statement below changed.
 
-`Function.leftLim` and `Function.rightLim` are in v4.33.1
-(`Mathlib/Topology/Order/LeftRightLim.lean:50` and `:59`), and the two lemmas
-that connect the structure to them, `tendsto_leftLim_of_tendsto` and
+Three statements below were duplicates of the library's under a different name
+and are gone with them: `isCadlag_const` is `IsCadlag.const` (`ibid.:115`),
+`IsCadlag.tendsto_nhdsLT_leftLim` is `IsCadlag.tendsto_nhdsLT_leftLim` (`:165`), and
+`IsCadlag.isBounded_image_of_isCompact` is
+`isBounded_image_of_isCadlag_of_isCompact` (`:192`).  What the library does
+**not** have, and what the rest of this milestone is, begins at the uniform
+limit.
+
+`Function.leftLim` and `Function.rightLim` are in
+`Mathlib/Topology/Order/LeftRightLim.lean` (`:50` and `:59` in v4.33.1), and the
+two lemmas that connect the structure to them, `tendsto_leftLim_of_tendsto` and
 `ContinuousWithinAt.rightLim_eq`, live in the same file. -/
-
-/-- Right continuity at every point. -/
-def IsRightContinuous {α β : Type*} [TopologicalSpace α] [Preorder α]
-    [TopologicalSpace β] (f : α → β) : Prop :=
-  ∀ a, ContinuousWithinAt f (Set.Ioi a) a
-
-/-- Right continuous with left limits. -/
-structure IsCadlag {α β : Type*} [TopologicalSpace α] [Preorder α]
-    [TopologicalSpace β] (f : α → β) : Prop where
-  isRightContinuous : IsRightContinuous f
-  tendsto_nhdsLT : ∀ x, ∃ l, Tendsto f (𝓝[<] x) (𝓝 l)
-
-/-- **A constant path is càdlàg**, over any index and into any space.  It asks nothing
-of either: the right continuity is `continuousWithinAt_const` and the left limit is
-the value, whether or not `𝓝[<] x` is the bottom filter.
-
-This is the witness that keeps `D(ι, E)` from being empty, and it is the value a path
-map is given off the set where the process it reads is càdlàg. -/
-theorem isCadlag_const {α β : Type*} [TopologicalSpace α] [Preorder α]
-    [TopologicalSpace β] (c : β) : IsCadlag (fun _ : α => c) where
-  isRightContinuous _ := continuousWithinAt_const
-  tendsto_nhdsLT _ := ⟨c, tendsto_const_nhds⟩
 
 variable {E : Type*} [MetricSpace E]
 
@@ -772,15 +771,6 @@ def leftJumpSet (f : ι → E) : Set ι := {x | Function.leftLim f x ≠ f x}
 /-- The set of points where the left limit differs from the value by at least `ε`. -/
 def largeLeftJumpSet (f : ι → E) (ε : ℝ) : Set ι :=
   {x | ε ≤ dist (Function.leftLim f x) (f x)}
-
-omit [AdditiveDist ι] [ProperSpace ι] in
-/-- The `tendsto_nhdsLT` field, read through `Function.leftLim`.  This is what makes
-the existing API of `Mathlib/Topology/Order/LeftRightLim.lean` apply, and it is
-unconditional: `tendsto_leftLim_of_tendsto` covers the degenerate case
-`𝓝[<] x = ⊥` itself. -/
-theorem IsCadlag.tendsto_leftLim {f : ι → E} (hf : IsCadlag f) (x : ι) :
-    Tendsto f (𝓝[<] x) (𝓝 (Function.leftLim f x)) :=
-  tendsto_leftLim_of_tendsto (hf.tendsto_nhdsLT x)
 
 omit [AdditiveDist ι] [ProperSpace ι] in
 /-- **The uniform limit of càdlàg paths is càdlàg.**  This is the step at which
@@ -818,7 +808,7 @@ theorem IsCadlag.of_tendstoUniformly [CompleteSpace E] {F : ℕ → ι → E} {f
         refine ⟨N, fun n hn m hm => ?_⟩
         have hlim : Tendsto (fun t => dist (F n t) (F m t)) (𝓝[<] x)
             (𝓝 (dist (Function.leftLim (F n) x) (Function.leftLim (F m) x))) :=
-          ((hF n).tendsto_leftLim x).dist ((hF m).tendsto_leftLim x)
+          ((hF n).tendsto_nhdsLT_leftLim x).dist ((hF m).tendsto_nhdsLT_leftLim x)
         have hle : dist (Function.leftLim (F n) x) (Function.leftLim (F m) x) ≤ ε / 2 := by
           refine le_of_tendsto hlim (Eventually.of_forall fun t => ?_)
           have h1 := hN n hn t
@@ -829,7 +819,7 @@ theorem IsCadlag.of_tendstoUniformly [CompleteSpace E] {F : ℕ → ι → E} {f
         linarith
       obtain ⟨l, hl⟩ := cauchySeq_tendsto_of_complete hcauchy
       exact ⟨l, h.tendsto_of_eventually_tendsto
-        (Eventually.of_forall fun n => (hF n).tendsto_leftLim x) hl⟩
+        (Eventually.of_forall fun n => (hF n).tendsto_nhdsLT_leftLim x) hl⟩
 
 omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
 /-- **Being càdlàg is local.**  A function that agrees near every point with
@@ -878,7 +868,7 @@ theorem IsCadlag.dist_leftLim_le_of_Ioo_subset {f : ι → E} (hf : IsCadlag f) 
       mem_of_superset (inter_mem_nhdsWithin (Set.Iio y) (Ioi_mem_nhds hay))
         fun z hz => ⟨hz.2, hz.1⟩
     have h1 : dist (Function.leftLim f y) c ≤ r := by
-      refine le_of_tendsto ((hf.tendsto_leftLim y).dist tendsto_const_nhds) ?_
+      refine le_of_tendsto ((hf.tendsto_nhdsLT_leftLim y).dist tendsto_const_nhds) ?_
       filter_upwards [hmem] with z hz using hIoo z hz
     calc dist (Function.leftLim f y) (f y)
         ≤ dist (Function.leftLim f y) c + dist c (f y) := dist_triangle _ _ _
@@ -908,7 +898,7 @@ theorem IsCadlag.eventually_dist_leftLim_lt {f : ι → E} (hf : IsCadlag f) (x 
   · by_cases hlt : ∃ l : ι, l < x
     · obtain ⟨l, hl⟩ := hlt
       have hA : {z | dist (f z) (Function.leftLim f x) ≤ ε / 4} ∈ 𝓝[<] x := by
-        filter_upwards [Metric.tendsto_nhds.1 (hf.tendsto_leftLim x) (ε / 4) (by positivity)]
+        filter_upwards [Metric.tendsto_nhds.1 (hf.tendsto_nhdsLT_leftLim x) (ε / 4) (by positivity)]
           with z hz using hz.le
       obtain ⟨a, ha, hsub⟩ := (mem_nhdsLT_iff_exists_Ioo_subset' hl).1 hA
       filter_upwards [(mem_nhdsLT_iff_exists_Ioo_subset' hl).2 ⟨a, ha, subset_rfl⟩]
@@ -993,7 +983,7 @@ omit [AdditiveDist ι] [ProperSpace ι] in
 /-- A càdlàg map is continuous at `x` exactly where it does not jump.  The two
 directions use the two fields separately: forwards it is
 `ContinuousWithinAt.leftLim_eq` on the restriction of continuity to `Set.Iic x`,
-backwards the left limit *is* the value, so `IsCadlag.tendsto_leftLim` gives
+backwards the left limit *is* the value, so `IsCadlag.tendsto_nhdsLT_leftLim` gives
 convergence along `𝓝[<] x`, which together with the right continuity along
 `𝓝[≥] x` is convergence along `𝓝 x` by `nhdsLT_sup_nhdsGE`. -/
 theorem IsCadlag.continuousAt_iff_notMem_leftJumpSet {f : ι → E} (hf : IsCadlag f) {x : ι} :
@@ -1003,7 +993,7 @@ theorem IsCadlag.continuousAt_iff_notMem_leftJumpSet {f : ι → E} (hf : IsCadl
     simpa [leftJumpSet] using hc.continuousWithinAt.leftLim_eq
   · intro hx
     have hx' : Function.leftLim f x = f x := by simpa [leftJumpSet] using hx
-    have h1 : Tendsto f (𝓝[<] x) (𝓝 (f x)) := hx' ▸ hf.tendsto_leftLim x
+    have h1 : Tendsto f (𝓝[<] x) (𝓝 (f x)) := hx' ▸ hf.tendsto_nhdsLT_leftLim x
     have h2 : Tendsto f (𝓝[≥] x) (𝓝 (f x)) :=
       continuousWithinAt_Ioi_iff_Ici.1 (hf.isRightContinuous x)
     have := h1.sup h2
@@ -1189,41 +1179,6 @@ theorem IsCadlag.of_tendstoUniformlyOn_exhaustion [CompleteSpace E] (t₀ : ι)
     show f t = f (clamp t₀ m t)
     rw [clamp_eq_self ht]
 
-omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
-/-- The image of a compact set under a càdlàg map is bounded.  Milestone 4 needs
-it to know that the supremum in its `distOn` is a real number: the paths there
-are constant outside `exhaustion t₀ m`, which is compact.
-
-Only `E` contributes a metric.  The index contributes compactness, the order
-topology through `nhdsLT_sup_nhdsGE` --- a neighbourhood of a point is the join
-of the two one sided ones, which is exactly the split the two fields of
-`IsCadlag` cover --- and nothing else. -/
-theorem IsCadlag.isBounded_image_of_isCompact {f : ι → E} (hf : IsCadlag f)
-    {K : Set ι} (hK : IsCompact K) : Bornology.IsBounded (f '' K) := by
-  have key : ∀ x : ι, ∃ r : ℝ, {y | dist (f y) (f x) ≤ r} ∈ 𝓝 x := by
-    intro x
-    obtain ⟨l, hl⟩ := hf.tendsto_nhdsLT x
-    refine ⟨1 + dist l (f x), ?_⟩
-    rw [← nhdsLT_sup_nhdsGE x, Filter.mem_sup]
-    constructor
-    · filter_upwards [Metric.tendsto_nhds.1 hl 1 one_pos] with y hy
-      calc dist (f y) (f x) ≤ dist (f y) l + dist l (f x) := dist_triangle _ _ _
-        _ ≤ 1 + dist l (f x) := by linarith
-    · have h2 : Tendsto f (𝓝[≥] x) (𝓝 (f x)) :=
-        continuousWithinAt_Ioi_iff_Ici.1 (hf.isRightContinuous x)
-      filter_upwards [Metric.tendsto_nhds.1 h2 1 one_pos] with y hy
-      have hd : (0 : ℝ) ≤ dist l (f x) := dist_nonneg
-      linarith
-  choose r hr using key
-  obtain ⟨s, -, hsub⟩ :=
-    hK.elim_nhds_subcover (fun x => {y | dist (f y) (f x) ≤ r x}) fun x _ => hr x
-  refine ((Bornology.isBounded_biUnion_finset s
-      (f := fun x => Metric.closedBall (f x) (r x))).2
-    (fun x _ => Metric.isBounded_closedBall)).subset ?_
-  rintro _ ⟨y, hyK, rfl⟩
-  obtain ⟨x, hxs, hx⟩ := Set.mem_iUnion₂.1 (hsub hyK)
-  exact Set.mem_iUnion₂.2 ⟨x, hxs, by simpa [Metric.mem_closedBall] using hx⟩
-
 /-! ### Subdivisions with small oscillation
 
 This is the structure theorem for càdlàg paths on a compact window, and it is
@@ -1332,7 +1287,7 @@ theorem IsCadlag.exists_subdivision {f : ι → E} (hf : IsCadlag f) {a b : ι} 
     obtain ⟨y, hyc, hsub⟩ : ∃ y, y < c ∧
         ∀ z ∈ Set.Ioo y c, dist (f z) (Function.leftLim f c) ≤ ε / 2 := by
       have hA : {z | dist (f z) (Function.leftLim f c) ≤ ε / 2} ∈ 𝓝[<] c := by
-        filter_upwards [Metric.tendsto_nhds.1 (hf.tendsto_leftLim c) (ε / 2) (by positivity)]
+        filter_upwards [Metric.tendsto_nhds.1 (hf.tendsto_nhdsLT_leftLim c) (ε / 2) (by positivity)]
           with z hz using hz.le
       obtain ⟨y, hy, hsub⟩ := (mem_nhdsLT_iff_exists_Ioo_subset' hac).1 hA
       exact ⟨y, hy, fun z hz => hsub hz⟩
@@ -2969,11 +2924,11 @@ structure SkorokhodSpace (ι E : Type*) [LinearOrder ι] [TopologicalSpace ι]
 
 omit [AdditiveDist ι] [ProperSpace ι] in
 /-- **The constant path.**  `D(ι, E)` is inhabited whenever `E` is, and this is the
-witness; `isCadlag_const` is the whole content.  It is also the value a path map takes
+witness; `IsCadlag.const` is the whole content.  It is also the value a path map takes
 off the set where the process it reads has left limits -- a case distinction of that
 shape is how a process whose paths are càdlàg only almost surely is read as a *total*
 map into the path space. -/
-def SkorokhodSpace.const (c : E) : D(ι, E) := ⟨fun _ => c, isCadlag_const c⟩
+def SkorokhodSpace.const (c : E) : D(ι, E) := ⟨fun _ => c, IsCadlag.const⟩
 
 omit [AdditiveDist ι] [ProperSpace ι] in
 @[simp] theorem SkorokhodSpace.const_toFun (c : E) (t : ι) :
@@ -3021,7 +2976,7 @@ compactness of the window is spent, and it is what makes the supremum in
 `distOn` a real number rather than a junk value. -/
 theorem SkorokhodSpace.isBounded_range_restrictExhaustion (t₀ : ι) (u : ℝ) (f : D(ι, E)) :
     Bornology.IsBounded (Set.range (SkorokhodSpace.restrictExhaustion t₀ u f).toFun) := by
-  refine (f.isCadlag.isBounded_image_of_isCompact (isCompact_exhaustion t₀ u)).subset ?_
+  refine (isBounded_image_of_isCadlag_of_isCompact f.isCadlag (isCompact_exhaustion t₀ u)).subset ?_
   rintro _ ⟨t, rfl⟩
   exact ⟨clamp t₀ u t, clamp_mem_exhaustion t₀ u t, rfl⟩
 
@@ -10495,7 +10450,7 @@ theorem SkorokhodSpace.measurable_leftLim_eval (t : ι) :
       (fun n => SkorokhodSpace.measurable_eval (s n)) ?_
     rw [tendsto_pi_nhds]
     intro f
-    exact (f.isCadlag.tendsto_leftLim t).comp hs
+    exact (f.isCadlag.tendsto_nhdsLT_leftLim t).comp hs
   · have hbot : 𝓝[<] t = ⊥ := not_neBot.1 ht
     have hEq : (fun f : D(ι, E) => Function.leftLim f.toFun t)
         = fun f : D(ι, E) => f.toFun t :=

@@ -28,6 +28,13 @@ Die drei Dateien werden deshalb nach `<worktree>/TauCetiRoadmap/<Name>/` kopiert
 `cwd` im Worktree, weil `elan` die Lean-Version am Arbeitsverzeichnis wählt: von
 woanders aus nimmt es v4.33.1 und meldet `incompatible header`.
 
+## Der Rückgabewert
+
+Seit dem 2026-09-18, vierundzwanzigster Lauf, ist er **nicht mehr immer 0**: das
+Skript scheitert, wenn die Spalte „davon veraltet" nicht 0 ist, und ebenso bei
+einem Fehler.  Die übrigen Warnungen bleiben draußen -- es sind 160, und sie sind
+Stilfragen.
+
 ## Was die Prüfung nicht tut
 
 Sie filtert nicht und schneidet nicht ab.  `| head -N` ist verboten: ein
@@ -67,6 +74,7 @@ rows = [f'# `lake env lean` gegen Mathlib `upstream/master`', '',
         '| --- | ---: | ---: | ---: | ---: | ---: | ---: |']
 detail = []
 deprecated = {}
+errcount = 0
 
 # Eine Warnung ist eine Zeile der Gestalt `<datei>:<zeile>:<spalte>: warning: …`.
 # Auf das bloße Vorkommen von `warning:` zu prüfen, zählt zu viel: der Hinweis
@@ -91,6 +99,7 @@ for f in FILES:
     warns = [m.group(1) for m in map(WARN.search, out.splitlines()) if m]
     deps = [w for w in warns if 'has been deprecated' in w]
     deprecated[f] = deps
+    errcount += len(errs)
     rows.append(f'| `{f}` | {r.returncode} | {len(errs)} | {len(sorries)} | '
                 f'{len(warns)} | {len(deps)} | {secs} |')
     if errs:
@@ -112,3 +121,26 @@ text = '\n'.join(rows + detail) + '\n'
 with open(os.path.join(OUT, 'lean_check_master.md'), 'w') as fh:
     fh.write(text)
 print(text)
+
+# Die Schranke, und sie gilt nur für die Veraltungen.
+#
+# Am 2026-09-18 waren 78 der 354 abgetragenen Veraltungen schon gegen v4.33.1
+# veraltet, eine davon seit zehn Monaten; unbemerkt geblieben sind sie, weil
+# `check_suggested.py` nur Fehler zählt.  Ein Nullstand ohne Schranke hält bis
+# zur nächsten Deklaration, deshalb bricht der Lauf hier ab.
+#
+# Die übrigen Warnungen bleiben ausdrücklich draußen.  Es sind 160, und sie sind
+# Stilfragen -- `unusedSectionVars` zu befolgen hieße Signaturen ändern.  Eine
+# Schranke darüber machte die Prüfung unbrauchbar.
+#
+# Fehler lassen den Lauf ebenfalls scheitern.  Das steht nicht im Auftrag, der
+# nur die Veraltungen verlangte, ist aber dieselbe Falle: ein Prüfskript, das
+# bei Fehlern rc 0 zurückgibt, sieht von außen wie ein sauberer Durchlauf aus.
+bad = sum(len(v) for v in deprecated.values())
+if bad:
+    print(f'FEHLSCHLAG: {bad} veraltete Namen in der Kette. '
+          f'Die Namen stehen im Anhang von `_citations/lean_check_master.md`.',
+          file=sys.stderr)
+if errcount:
+    print(f'FEHLSCHLAG: {errcount} Fehler in der Kette.', file=sys.stderr)
+sys.exit(1 if (bad or errcount) else 0)

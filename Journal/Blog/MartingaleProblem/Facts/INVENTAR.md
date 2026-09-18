@@ -32,6 +32,15 @@ Mathlib-Deklaration existiert unter diesem Namen und ist nicht `deprecated`, ode
 der Meilenstein nennt die Aussage. Nicht aus dem Gedächtnis. Wer einen Status
 setzt, nennt den Beleg.
 
+**Der maßgebliche Mathlib-Stand ist seit dem 2026-09-18 `upstream/master`**, und
+nicht mehr das Release `v4.33.1`. Die Kette der drei `Suggested.lean` baut seit
+dem zweiundzwanzigsten Lauf jenes Tages dagegen, mit 0 Fehlern, 0 `sorry` und —
+seit dem dreiundzwanzigsten — 0 veralteten Namen; `scripts/check_master.py` ist
+die Prüfung, `scripts/check_suggested.py` gegen v4.33.1 nur noch die Gegenprobe,
+deren Fehler zu berichten und nicht zu beheben sind. Wo unten in einer
+Beleg-Spalte „durch `lake env lean` gegen v4.33.1" steht, ist das die Angabe des
+Tages, an dem der Eintrag geschrieben wurde, und keine Aussage über heute.
+
 ## Regel für den Negativbefund
 
 Vier Fehler dieses Inventars — `Locally` statt „local martingale",
@@ -39535,3 +39544,237 @@ hieße Signaturen ändern.
    alle, einschließlich der gemeinsamen guten Zeit für einen `Finset` von
    Gesetzen; der Vorschlag ist unverändert gültig und in der Roadmap
    ausgeschrieben.
+
+### 2026-09-18, vierundzwanzigster Lauf des Tages — der Text sagt jetzt, was gemessen ist; und die Umstellung auf `master` hat ihren ersten inhaltlichen Befund: fünf unserer Deklarationen sind dort Doppelungen der Bibliothek
+
+Dies ist der dritte und letzte Lauf unter dem Vorrang vom 2026-09-18 abends. Er
+hat Vorschlag 1 und Vorschlag 2 des Vorlaufs eingelöst und dabei etwas gefunden,
+was keiner von beiden vorgesehen hatte.
+
+#### Vorschlag 1 — die Versionsangaben
+
+Geändert sind die Stellen, die sagen, die Entwicklung sei an v4.33.1 gebunden
+oder dagegen übersetzt. **Nicht** geändert sind die vielen Stellen, an denen ein
+Negativbefund gegen *beide* Stände geprüft ist („weder in v4.33.1 noch auf
+`master`") — das sind keine Bindungsaussagen, sondern Meßwerte, und sie bleiben
+stehen.
+
+* Die drei Modul-Doks der `Suggested.lean` tragen jetzt
+  `upstream/master 94ef6b89544e58e90f119da869f3fb48d1da0f4c`, Lean `4.35.0-rc2`,
+  statt `v4.33.1`. Das von `WeakConvergence` nennt zusätzlich die vier
+  Namensfamilien, für die es keine gemeinsame Schreibweise gibt; die beiden
+  anderen verweisen darauf, statt es zu wiederholen.
+* `TauCeti/SUBMISSION.md`, Schritt 4 — die Stelle, an der stand „must build
+  against Mathlib `master` — and that has never been tested" — trägt jetzt die
+  gemessene Tabelle und den Satz, was **nicht** getan ist: die zitierten
+  Zeilennummern sind weiter die von v4.33.1, und `check_cited_names.py` prüft
+  Namen, nicht Zeilen.
+* `TODO.md`: Punkt 1.2 (derselbe Auftrag) ist als erledigt umgeschrieben, der
+  Abschnitt „Lean-Stand" trägt die master-Zahlen statt der v4.33.1-Zahlen vom
+  2026-09-15, und die Behauptung, in `MartingaleProblems` stünden noch fünf
+  `sorry`, ist berichtigt: es sind **null**, und die fünf sind einzeln benannt,
+  wo sie geblieben sind.
+* `Facts/INVENTAR.md`, Abschnitt „Regel": ein Absatz sagt, daß „gegen v4.33.1" in
+  einer Beleg-Spalte die Angabe ihres Tages ist und keine über heute. Das ist
+  billiger und ehrlicher, als fünfundzwanzig datierte Einträge umzuschreiben.
+
+**Die Zahlen, gemessen und nicht geschätzt** (`scripts/check_master.py`, vier
+Durchläufe in diesem Lauf; die Zeilen- und Deklarationszahlen sind die nach den
+Streichungen des nächsten Abschnitts):
+
+| Datei | Zeilen | Deklarationen | Fehler | `sorry` | Warnungen | davon veraltet |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `WeakConvergence` | 7 087 | 195 | 0 | 0 | 18 | 0 |
+| `SkorokhodSpace` | 12 402 | 419 | 0 | 0 | 36 | 0 |
+| `MartingaleProblems` | 38 179 | 1 634 | 0 | 0 | 106 | 0 |
+
+#### Der Befund, und er ist der Ertrag der Umstellung
+
+Beim Nachziehen der Versionsangaben stand in `SkorokhodSpace/Suggested.lean` ein
+Satz, den mehrere Läufe vorbereitet und keiner eingelöst hatte:
+
+> Neither predicate is in v4.33.1, to which this file is pinned; […] Against a
+> toolchain that carries that file the two are to be deleted and nothing else
+> changed.
+
+Die Bedingung war seit dem zweiundzwanzigsten Lauf erfüllt und niemandem
+aufgefallen. `Mathlib/Topology/Order/Cadlag.lean` (`#43352`) steht auf `master`,
+und damit waren `IsRightContinuous` und `IsCadlag` unserer Datei **Doppelungen
+der Bibliothek** — im Wurzel-Namensraum, mit denselben Feldnamen und demselben
+Instanzenbündel.
+
+Gestrichen sind fünf Deklarationen, und drei davon hatte niemand als Doppelung
+geführt, weil sie **anders heißen** als in Mathlib:
+
+| unsere Fassung | Mathlibs |
+| --- | --- |
+| `IsRightContinuous` (`def`) | `IsRightContinuous`, `Topology/Order/Cadlag.lean:36` |
+| `IsCadlag` (`structure`) | `IsCadlag`, `ibid.:104` |
+| `isCadlag_const` | `IsCadlag.const`, `ibid.:115` |
+| `IsCadlag.tendsto_leftLim` | `IsCadlag.tendsto_nhdsLT_leftLim`, `ibid.:165` |
+| `IsCadlag.isBounded_image_of_isCompact` | `isBounded_image_of_isCadlag_of_isCompact`, `ibid.:192` |
+
+`SkorokhodSpace/Suggested.lean` importiert jetzt
+`Mathlib.Topology.Order.Cadlag`; die acht Aufrufstellen von `.tendsto_leftLim`,
+die eine von `isCadlag_const` und die eine von `.isBounded_image_of_isCompact`
+lesen die Namen der Bibliothek. **Die ganze Kette baut unverändert mit 0
+Fehlern**, und `#print axioms` über `scripts/check_axioms_master.py` gibt für
+`SkorokhodSpace.const`, `IsCadlag.of_tendstoUniformly`,
+`IsCadlag.eventually_dist_leftLim_lt`,
+`IsCadlag.continuousAt_iff_notMem_leftJumpSet`,
+`SkorokhodSpace.bddAbove_range_dist_restrictExhaustion` (die Aufrufstelle der
+Kompaktheitsaussage) sowie `isCadlag_jumpProcessE` und `jumpPathD` aus
+`MartingaleProblems` jeweils `propext`, `Classical.choice`, `Quot.sound`.
+
+Eine Nebenbemerkung, die zur Sache gehört: Mathlibs Fassung der
+Kompaktheitsaussage steht unter `[PseudoMetricSpace Y]`, unsere unter
+`[MetricSpace E]`, und Mathlib verlangt wie wir die **lineare** Ordnung. Der
+Befund des 2026-09-07, daß der Satz unter einem bloßen Preorder falsch ist, wird
+von der Bibliothek also bestätigt; der Zeuge dafür (`ι = ℕ ∪ {ω}` mit `ω`
+unvergleichbar) bleibt in `SkorokhodSpace/README.md` stehen und zeigt jetzt auf
+den Namen der Bibliothek.
+
+**Und das ist die Lehre, die über diesen einen Fall hinausgeht.** Solange gegen
+v4.33.1 gebaut wurde, war nicht zu *sehen*, daß fünf Deklarationen gegen den
+Stand, auf den Tau Ceti aufsetzt, Doppelungen sind. Die Prüfung gegen `master`
+ist deshalb nicht bloß eine Formalie des `build`-Checks: sie ist die einzige, die
+die Bodenhaftungsregel von `CONTRIBUTING.md` wirklich mißt. Weitere solche
+Doppelungen sind zu erwarten, wann immer Mathlib übernimmt, was wir hier führen.
+Die drei betroffenen Meilensteinpunkte in `SkorokhodSpace/README.md` sind
+entsprechend auf **upstream** umgestellt, mit dem Datum der Streichung.
+
+#### Vorschlag 2 — die Schranke in `check_master.py`, und sie ist beim Auslösen gesehen worden
+
+`scripts/check_master.py` gibt seit diesem Lauf rc 1 zurück, wenn die Spalte
+„davon veraltet" nicht 0 ist. Zwei Abweichungen vom Auftrag, beide begründet:
+
+* **Fehler lassen den Lauf ebenfalls scheitern.** Der Auftrag nannte nur die
+  Veraltungen. Ein Prüfskript, das bei Fehlern rc 0 zurückgibt, ist aber dieselbe
+  Falle wie `| head -N`: von außen sieht es wie ein sauberer Durchlauf aus.
+* **Die Schranke ist beim Auslösen beobachtet worden, nicht bloß eingebaut.**
+  Eine Probe — `example … := Set.mem_setOf_eq`, ans Dateiende von
+  `WeakConvergence` gehängt — gab rc 1, die Spalte sprang von 0 auf 1, und der
+  Anhang nannte den Namen: *1× `Set.mem_setOf_eq` has been deprecated: Use
+  `Set.mem_ofPred_eq` instead*. Die Probe ist wieder entfernt, und der
+  anschließende Durchlauf gibt rc 0. Eine Schranke, die man nicht hat auslösen
+  sehen, ist eine Behauptung.
+
+Die 160 übrigen Warnungen bleiben ausdrücklich draußen; `scripts/README.md` sagt
+das jetzt, mit dem gemessenen Grund (78 der 354 Veraltungen des Vorlaufs waren
+schon gegen v4.33.1 veraltet, eine seit zehn Monaten).
+
+#### Die Gegenprobe gegen v4.33.1 — berichtet, nicht behoben
+
+`scripts/check_suggested.py`, nach diesem Lauf: `WeakConvergence` rc 1 mit **54**
+Fehlern, die beiden anderen blockiert an der fehlenden `.olean`. Die Fehler gehen
+auf **sechs** Namen zurück, die es auf v4.33.1 nicht gibt, nicht auf vier:
+
+| Name | Stellen |
+| --- | ---: |
+| `ite_eq_right` | 11 |
+| `ite_eq_left` | 8 |
+| `dite_eq_left` | 4 |
+| `dite_eq_right` | 3 |
+| `Finset.prod_le_prod₀` | 1 |
+| `Finset.prod_le_one₀` | 1 |
+
+Der Rest sind Folgefehler derselben Stellen (9 Argumenttyp-, 6 Typkonflikte, 5
+offene Ziele, je einer bei `⟨…⟩`-Notation, `rewrite` und „no goals") und **zwei
+Instanzensuchen**, die auf `master` gelingen und auf v4.33.1 nicht — und die
+haben eine Ursache, die diesem Projekt bekannt vorkommen wird.
+
+Der Zusatz gegenüber dem Vorlauf ist damit klein und gehört festgehalten: die
+Familie `Finset.prod_le_prod₀`/`Finset.prod_le_one₀` war in der Aufzählung des
+dreiundzwanzigsten Laufs nicht als versionsscheidend genannt. Es sind also sechs
+Namen und, nach Familien gezählt, fünf.
+
+#### Ein Fund am Rande, und er gehört in die Sammlung der Müllwerte
+
+Die beiden Instanzensuchen stehen in
+`tendsto_integral_of_tendstoInDistribution_of_uniformIntegrable`, an
+`⟨(P n).map (X n), inferInstance⟩`. Gesucht wird `IsProbabilityMeasure (map f μ)`.
+
+* Auf **v4.33.1** gibt es dafür **keine Instanz**, sondern den Satz
+  `Measure.isProbabilityMeasure_map` mit der Voraussetzung `AEMeasurable f μ`
+  (`MeasureTheory/Measure/Typeclasses/Probability.lean:124`).
+* Auf **`master`** ist es eine Instanz **ohne jede Voraussetzung**
+  (`ibid.:124`: `instance {f : α → β} : IsProbabilityMeasure (map f μ)`).
+
+Der Grund steht im Doc-Kommentar von `Measure.map` selbst
+(`MeasureTheory/Measure/Map.lean:93`): *„If `f` is not an almost everywhere
+measurable function, we define it to be `0` if `μ = 0`, and to be an arbitrary
+Dirac mass otherwise. That way we always have `map f 0 = 0`, and the push-forward
+of a probability measure is always a probability measure."*
+
+**Mathlib hat also einen Müllwert geändert** — von `0` auf einen Dirac —, und zwar
+genau, um eine Klasse von Aussagen voraussetzungsfrei wahr zu machen. Das ist der
+Vorgang, den dieses Projekt von der anderen Seite kennt: die Müllwerte
+`sInf ∅ = 0`, `x / 0 = 0`, `∫ f = 0` für nichtintegrierbares `f` und
+`stepIndex = 0` jenseits der Explosion **lügen** und haben mehrfach eine Aussage
+still wahr gemacht; `⊤` in `ℝ≥0∞` sagt die Wahrheit. `map f μ = 0` für nicht
+meßbares `f` lügt ebenso — es behauptet, das Bild einer Wahrscheinlichkeit habe
+Masse 0 —, und die Dirac-Wahl ist die Antwort in derselben Richtung wie unsere
+Hebung nach `ℝ≥0∞`: nicht plausibler, sondern *verträglich*. Sie ist zugleich die
+gemeinsame Ursache der `ProbabilityMeasure.map`-Unterschiede, an denen der
+zweiundzwanzigste Lauf hängenblieb, und sie erklärt, warum das
+Meßbarkeitsargument dort wegfallen konnte.
+
+#### Geprüft
+
+* `scripts/check_master.py` viermal: nach dem Import und der Streichung der
+  beiden Definitionen, nach der Streichung der drei Sätze, nach dem Einbau der
+  Schranke, und nach dem Entfernen der Probe. Jedesmal 0 Fehler, 0 `sorry`, 0
+  veraltete Namen in allen drei Dateien; der letzte Durchlauf gibt rc 0.
+* Die Schranke einmal gegen eine eingebaute Veraltung: rc 1.
+* `#print axioms` auf sieben Deklarationen, ausgewählt nach dem einzigen
+  Eingriff, der kein Text war: alle auf `propext`, `Classical.choice`,
+  `Quot.sound`.
+* `scripts/check_suggested.py` gegen v4.33.1: rc 1, wie angesagt, und berichtet
+  statt behoben.
+
+#### Was dieser Lauf nicht getan hat
+
+Keine Mathematik. Keine neue Aussage, kein geschlossenes `sorry`. Die
+Zeilennummern der zitierten Mathlib-Namen sind weiter die von v4.33.1; das ist
+benannt und nicht behoben, und es ist der erste Vorschlag unten.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die zitierten Zeilennummern auf `master` nachziehen — maschinell, und nur
+   dort, wo sie sich bewegt haben.**
+   *Was:* `scripts/check_cited_names.py` prüft heute, ob ein zitierter Name
+   existiert; zu ergänzen ist, ob er auf der zitierten **Zeile** steht, und eine
+   Liste der Abweichungen auszugeben. Erst danach wird umgeschrieben, und nur die
+   Abweichungen.
+   *Worauf es ruht:* auf `scripts/mathlib_index.py master`, das den
+   Deklarationsindex von `upstream/master` schon baut, und auf
+   `extract_citations.py`, das Pfad und Name schon zusammen hat. Der fehlende
+   Teil ist die Zeile.
+   *Warum jetzt:* nach diesem Lauf sagen alle Roadmaps, sie stünden gegen
+   `master` — und ihre Zeilennummern sagen etwas anderes. Das ist die letzte
+   Stelle, an der der Text mit dem Stand nicht übereinstimmt, und ein Reviewer
+   trifft sie sofort. Die Größenordnung ist bekannt und im gutartigen Fall klein:
+   `Set.mem_setOf_eq` stand auf v4.33.1 in `Data/Set/Operations.lean:82` und auf
+   `master` in `:81`.
+
+2. **Nach den übrigen Doppelungen gegen `master` suchen, mit demselben Verfahren,
+   das diesen Lauf zu den fünf geführt hat.**
+   *Was:* jede Deklaration der drei Dateien, deren *Aussage* auf `master` unter
+   anderem Namen steht. Der Fund oben zeigt, daß der Namensvergleich dafür nicht
+   genügt — `IsCadlag.isBounded_image_of_isCompact` und
+   `isBounded_image_of_isCadlag_of_isCompact` sind dieselbe Aussage und
+   verschiedene Zeichenketten. Zu nehmen ist der Weg über die **Dateien**, in
+   denen Mathlib seit v4.33.1 Neues angelegt hat:
+   `git diff --stat v4.33.1..upstream/master -- Mathlib/` gibt die Liste, und die
+   neu angelegten Dateien sind wenige genug, um sie einzeln anzusehen.
+   *Worauf es ruht:* auf dem gebauten master-Worktree und auf diesem Befund.
+   *Warum jetzt:* `#43352` ist mit einiger Wahrscheinlichkeit nicht der einzige
+   PR der letzten Wochen, der etwas übernommen hat, was wir hier führen; und eine
+   Roadmap, die der Bibliothek etwas doppelt anbietet, ist genau das, was die
+   Bodenhaftungsregel ausschließen will.
+
+3. **Erst danach wieder Mathematik**, unverändert dort, wo der einundzwanzigste
+   Lauf aufgehört hat: `SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq`,
+   der Vergleich zweier Gesetze an den verschobenen Zeiten. Seine Eingaben stehen
+   alle, einschließlich der gemeinsamen guten Zeit für einen `Finset` von
+   Gesetzen; der Vorschlag ist in der Roadmap ausgeschrieben.

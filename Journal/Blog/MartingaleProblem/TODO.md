@@ -69,16 +69,40 @@ Label `awaiting-review`.
    *Und eine Zahl, die die Liste gar nicht führt:* Punkt 8 unten hat
    fünfundzwanzig benannte Mathlib-Lücken, teils maschinell nachgeprüft.
 
-2. **Die Kette einmal gegen Mathlib `master` bauen.** `CONTRIBUTING.md` verlangt
-   es (Schritt 4 in `SUBMISSION.md`), und **wir haben es nie getan**: die
-   Läufe kompilieren gegen v4.33.1 und holen `upstream/master` nur für die
-   Zitatprüfung. Ein Bruch ist schon bekannt und nicht umgehbar —
-   `measurable_pi_lambda` ist auf master ein veralteter Alias von
-   `Measurable.of_eval`, das es auf v4.33.1 nicht gibt; es existiert **keine
-   Schreibweise, die auf beiden Ständen geht**. Bei 57 705 Zeilen gegen ein
-   Mathlib, das wir seit drei Wochen nur lesen, ist mit weiteren zu rechnen.
-   Das ist eigene Arbeit und gehört **vor** den PR, nicht hinter einen
-   fehlgeschlagenen `build`-Check.
+2. ~~**Die Kette einmal gegen Mathlib `master` bauen.**~~ **Erledigt am
+   2026-09-18, im zweiundzwanzigsten und dreiundzwanzigsten Lauf des Tages.**
+   `CONTRIBUTING.md` verlangt es (Schritt 4 in `SUBMISSION.md`), und bis dahin
+   hatten wir es nie getan: die Läufe kompilierten gegen v4.33.1 und holten
+   `upstream/master` nur für die Zitatprüfung.
+
+   **Der Stand, und er ist gemessen und nicht geschätzt** — Mathlib
+   `upstream/master` `94ef6b89544e58e90f119da869f3fb48d1da0f4c` vom 2026-09-18,
+   Lean `4.35.0-rc2`, Bericht in `scripts/_citations/lean_check_master.md`:
+
+   | Datei | Fehler | `sorry` | Warnungen | davon veraltet |
+   | --- | ---: | ---: | ---: | ---: |
+   | `WeakConvergence` | 0 | 0 | 18 | 0 |
+   | `SkorokhodSpace` | 0 | 0 | 36 | 0 |
+   | `MartingaleProblems` | 0 | 0 | 106 | 0 |
+
+   Die verbliebenen 160 Warnungen sind ausdrücklich keine Veraltungen: 58
+   `unusedSectionVars`, 50 „Try this", 24 ungenutzte `simp`-Argumente, 22
+   Hinweise auf nicht ausdrücklich benutzte Bindungen, dazu sechs Einzelfälle.
+   Sie sind Stilfragen; `unusedSectionVars` zu befolgen hieße Signaturen ändern.
+
+   **`master` ist damit der maßgebliche Stand, nicht v4.33.1.** Beides zugleich
+   geht nicht, und das ist belegt statt vermutet: es gibt **vier** Familien, für
+   die keine Schreibweise auf beiden Ständen steht —
+   `ProbabilityMeasure.map` (auf `master` ohne Meßbarkeitsargument),
+   `measurable_pi_lambda`/`Measurable.of_eval`,
+   `Filter.eventuallyEq_set`/`eventuallyEqSet_iff`, und mit 274 Stellen die
+   größte: `if_pos`/`if_neg`/`dif_pos`/`dif_neg`, deren neue Namen
+   `ite_eq_left`/`ite_eq_right`/`dite_eq_left`/`dite_eq_right` es auf v4.33.1
+   weder im Lean-Kern noch in Mathlib gibt. `scripts/check_master.py` ist
+   seither die maßgebliche Prüfung; `scripts/check_suggested.py` läuft gegen
+   v4.33.1 weiter mit, aber seine Fehler sind zu **berichten**, nicht zu
+   **beheben**. Das Journal-Projekt selbst bleibt auf v4.33.1 — die vier
+   `Suggested.lean` stehen nicht im Lake-Build.
 
 3. **Die `scratch/`-Verzeichnisse entfernen.** In
    `TauCeti/MartingaleProblems/scratch/` liegen die Entwicklungs-Stubs, in denen
@@ -337,7 +361,7 @@ steht in seinem Dateikopf: es prüft Zeichenketten, nicht Aussagen.
   beiden Sätze, die eine Bibliothek dafür braucht: daß die Augmentierung wieder
   eine Filtration ist, und daß **die Martingaleigenschaft unter Vergrößerung um
   Nullmengen erhalten bleibt**. Beides ist am 2026-09-12, siebter Lauf, auf
-  unserer Seite gebaut und gegen v4.33.1 übersetzt
+  unserer Seite gebaut und übersetzt
   (`MartingaleProblems/Suggested.lean`, `section Augmentation`:
   `Filtration.augment`, `condExp_augment`, `Martingale.augment`,
   `Martingale.of_augment`, `Locally.augment`), siebzehn Deklarationen ohne
@@ -752,7 +776,7 @@ steht in seinem Dateikopf: es prüft Zeichenketten, nicht Aussagen.
   mitzunehmen, ist nicht Bequemlichkeit: die Brücke von `maximal_ineq` in
   `ℝ≥0∞` über `Y⁺` zu der Fassung, die eine zweiseitige Schranke braucht,
   kostet mehr als der Beweis, und die beiden Beweise sind derselbe, an den
-  beiden Enden angesetzt. Beide gehen durch `lake env lean` gegen v4.33.1.
+  beiden Enden angesetzt. Beide gehen durch `lake env lean`.
 
 * **Ein Martingal hinter einer stetigen linearen Abbildung.** Der
   einundzwanzigste, und der kleinste von allen. Mathlib hat
@@ -1010,16 +1034,19 @@ selbst wieder, sobald `NOT_BEFORE` überschritten ist. Eine Zeile in
 `~/bin/facts_gate.sh` entscheidet das; die Fassung ohne Schranke liegt als
 `~/bin/facts_gate.sh.bak` daneben.
 
-Lean-Stand, alle drei Dateien am 2026-09-15 nach dem Lauf `20260915T210301Z`
-über
-`lake --dir=~/Code/lean/journal env lean` gegen das gebaute Mathlib v4.33.1 des
-Hauptcheckouts geprüft (dort wurde nichts geschrieben):
+Lean-Stand, alle drei Dateien am 2026-09-18 über `scripts/check_master.py` gegen
+Mathlib `upstream/master` `94ef6b89544` (Lean `4.35.0-rc2`) geprüft, in
+Abhängigkeitsordnung und mit `autoImplicit=false`. **Das ist seit dem
+2026-09-18 die maßgebliche Prüfung**; die Gegenprobe gegen v4.33.1
+(`scripts/check_suggested.py`) läuft weiter mit, meldet aber erwartete Fehler,
+weil es für vier Namensfamilien keine gemeinsame Schreibweise gibt (Punkt 1.2
+oben).
 
-| | Zeilen | Deklarationen | `sorry` | Fehler |
-|---|---:|---:|---:|---:|
-| `WeakConvergence` | 6 989 | 196 | 0 | 0 |
-| `SkorokhodSpace` | 10 167 | 353 | 0 | 0 |
-| `MartingaleProblems` | 33 009 | — | 1 | 0 |
+| | Zeilen | Deklarationen | `sorry` | Fehler | Warnungen |
+|---|---:|---:|---:|---:|---:|
+| `WeakConvergence` | 7 087 | 195 | 0 | 0 | 18 |
+| `SkorokhodSpace` | 12 402 | 419 | 0 | 0 | 36 |
+| `MartingaleProblems` | 38 179 | 1 634 | 0 | 0 | 106 |
 
 `SkorokhodSpace` ist **ganz bewiesen** und seit dem 10. September unberührt.
 `WeakConvergence` ist es seit dem 2026-09-17, achtzehntem Lauf des Tages, und
@@ -1034,22 +1061,22 @@ Bildmaße als Daten geschrieben, elaboriert gegen **beide** Fassungen und ist
 bewiesen: `tendsto_of_measure_setOf_continuousAt_eq_one`.
 
 Die ganze Bewegung steckt seither in `MartingaleProblems`: **1 036 Zeilen am
-8. September, 29 092 heute.** Die **fünf** verbliebenen `sorry` stehen in
-`isMPSolution_iff_forall_fdd_continuous` (die stetige Fassung des
-fdd-Kriteriums — eine Entscheidung über die Anordnung der Dateien, keine offene
-Mathematik), den beiden Quasi-Linksstetigkeiten und den beiden Konvergenzsätzen
+8. September, 38 179 heute.** **Seit dem 2026-09-17 trägt keine der drei Dateien
+mehr ein `sorry`**; die fünf, die hier zuletzt standen, sind eingelöst:
+`isMPSolution_iff_forall_fdd_continuous` (über
+`integral_mul_eq_zero_of_isMulSystem` und
+`generateFromFuns_setOf_continuous_bounded` aus `WeakConvergence`, nachdem die
+Dateigrenze am 2026-09-17 gefallen war), die beiden Quasi-Linksstetigkeiten
+`isQuasiLeftContinuous_of_isRegularizingClass` und
+`isQuasiLeftContinuous_of_isMPSolutionFor`, und die beiden Konvergenzsätze
 `mpSolution_of_tendsto` und `isMPSolution_of_forall_condExp_eq_of_dense`.
 `exists_cadlag_modification_of_isRegularizingClass` steht seit dem 2026-09-17,
 fünftem Lauf des Tages, **bewiesen** — Doobs Regularisierung in der `E`-wertigen
-Fassung, und damit der erste der drei `sorry` von Meilenstein 9. Im sechsten
-Lauf desselben Tages ist die Voraussetzung `hΦ` dieser Aussage aus dem
-Martingalproblem selbst erzeugt worden statt angenommen
+Fassung. Im sechsten Lauf desselben Tages ist die Voraussetzung `hΦ` dieser
+Aussage aus dem Martingalproblem selbst erzeugt worden statt angenommen
 (`isRegularizingClass_mpFamily`, über `isCompensatorFor_mpFamily` und die neue
 Uhrbedingung `Clock.IsContinuousFor`); was an einer Instanz noch einzulösen ist,
-betrifft den Zustandsraum und nicht mehr den Prozeß. Diese fünf Deklarationen
-sind bis Zeile 8386 fehlerfrei übersetzt und liegen sämtlich davor; ein
-vollständiger Durchlauf mit `#print axioms` steht aus und ist der erste
-Handgriff des nächsten Laufs.
+betrifft den Zustandsraum und nicht mehr den Prozeß.
 
 Inhaltlich geschlossen sind seit dem 8. September: **Meilenstein 5**
 (`restart`, `restart_canonical` — dabei zeigte sich, daß der Aussage, wie sie

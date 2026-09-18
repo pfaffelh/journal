@@ -30,10 +30,24 @@ import Mathlib.Topology.UrysohnsLemma
 
 Prototypes only.
 
-**Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-17, and since that date with `autoImplicit=false` and
+**Status: type-checked** with `lake env lean` against Mathlib `upstream/master`
+`94ef6b89544e58e90f119da869f3fb48d1da0f4c` (Lean `4.35.0-rc2`), last on
+2026-09-18, and since 2026-09-17 with `autoImplicit=false` and
 `relaxedAutoImplicit=false`, as Mathlib itself builds.  Every declaration
-elaborates, and none of them carries a `sorry` any more.
+elaborates, none of them carries a `sorry` any more, and since the twenty third
+run of 2026-09-18 the file uses no deprecated name.
+
+**`master` is the reference, not `v4.33.1`.**  Until 2026-09-18 this file was
+checked against the release `v4.33.1`; the chain was then moved, because
+`CONTRIBUTING.md` asks a submitted file to build against `master` and there is
+no spelling that carries both.  Four families witness that: `ProbabilityMeasure.map`
+(no measurability argument on `master`), `measurable_pi_lambda`/`Measurable.of_eval`,
+`Filter.eventuallyEq_set`/`Filter.eventuallyEqSet_iff`, and
+`if_pos`/`if_neg`/`dif_pos`/`dif_neg`, whose replacements
+`ite_eq_left`/`ite_eq_right`/`dite_eq_left`/`dite_eq_right` exist on `v4.33.1`
+neither in the Lean core nor in Mathlib.  Line numbers of cited declarations
+are still those of `v4.33.1` unless the citation says otherwise; the names are
+checked, the lines are not.
 
 Twenty declarations are no longer `sorry` but proved.  Of Milestone 1:
 `IsSeparating.mono`, `IsConvergenceDetermining.mono`,

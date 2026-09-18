@@ -47,11 +47,18 @@ import Mathlib.Probability.Martingale.Convergence
 Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
-**Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-18 (ninth run of that day), over the **whole** file and without an error, and
+**Status: type-checked** with `lake env lean` against Mathlib `upstream/master`
+`94ef6b89544e58e90f119da869f3fb48d1da0f4c` (Lean `4.35.0-rc2`), last on
+2026-09-18, over the **whole** file and without an error, and
 since the twenty-second run of 2026-09-17 with `autoImplicit=false` and
-`relaxedAutoImplicit=false`, as Mathlib itself builds.  Every declaration elaborates, and
-**no declaration carries `sorry`**.
+`relaxedAutoImplicit=false`, as Mathlib itself builds.  Every declaration elaborates,
+**no declaration carries `sorry`**, and since the twenty third run of 2026-09-18 the
+file uses no deprecated name.
+
+**`master` is the reference, not `v4.33.1`**, since 2026-09-18; the module doc of
+**WeakConvergence** says why, and names the four families for which no spelling
+carries both.  Line numbers of cited declarations are still those of `v4.33.1`
+unless the citation says otherwise; the names are checked, the lines are not.
 
 The ninth run of 2026-09-18 closed the gap the section header above `StepIndexJunk` names: the
 probe proves an orthogonality at the **jump number**, and `ex:invariance` speaks of one at the
@@ -2584,19 +2591,20 @@ coexisted after the import of 2026-09-17 and had to be told apart by
 `_root_.IsSeparating`, which is a trap for the reader of a submission in which
 both roadmaps appear. -/
 
-/-! Càdlàg paths are **not** defined here either.  `IsCadlag` of the roadmap
-**SkorokhodSpace**, Milestone 2, is the one predicate, and it is the path
-property and not the membership in `D(ι, E)`, so it applies to a process whose
-paths are not yet known to live in the path space.
+/-! Càdlàg paths are **not** defined here either.  `IsCadlag` is Mathlib's, from
+`Mathlib/Topology/Order/Cadlag.lean` (`#43352`), reached through the import of
+**SkorokhodSpace**; it is the path property and not the membership in `D(ι, E)`,
+so it applies to a process whose paths are not yet known to live in the path
+space.
 
 Until the twenty-second run of 2026-09-17 this file carried `IsCadlagPath`, the
 conjunction of the two fields of that structure, restated because the path space
 was said to be unavailable here; the import of 2026-09-17 removed the reason.
-The two agree field for field, and so does `IsCadlag` of
-`Mathlib/Topology/Order/Cadlag.lean` (`#43352`, on `master` at `8018f6a`,
-2026-09-17, not in v4.33.1): both fields carry the same name there.  Against a
-toolchain that has that file the `SkorokhodSpace` copy goes and nothing here
-changes. -/
+**SkorokhodSpace** then carried its own copy, because that file was checked
+against `v4.33.1`, which does not have `Mathlib/Topology/Order/Cadlag.lean`; the
+move of the chain to `upstream/master` on 2026-09-18 removed that reason too, and
+the copy is gone.  All three agreed field for field, so nothing here changed at
+either step. -/
 
 /-- The decomposition attached to one `f` of a regularizing class: `f ∘ X` splits
 into a member of `𝓧` and a compensator `C` that is adapted, has one sided limits

@@ -4974,7 +4974,7 @@ Nullmengen und keine anderen. Wer jede Teilmenge einer Nullmenge will,
 vervollständigt zuerst `(Ω, 𝓐, P)` — und ändert damit den Grundraum und den Sinn
 jeder Aussage darüber.
 
-**Was gebaut ist und gegen v4.33.1 übersetzt** (`Suggested.lean`,
+**Was gebaut ist und übersetzt** (`Suggested.lean`,
 `section Augmentation` und `section AugmentationLocal`, siebzehn Deklarationen
 ohne `sorry`):
 
@@ -5222,9 +5222,8 @@ an der er anfällt, nichts: die Bedingung ist in `ε` monoton, wird also von den
 abzählbarer Durchschnitt meßbarer Mengen, und die Meßbarkeit der Inversen folgt,
 ohne daß über die Rate mehr verlangt würde als ihre gemeinsame Meßbarkeit.
 
-**Die Punkte, achtundzwanzig Deklarationen, alle durch `lake env lean` gegen
-v4.33.1 und alle mit `#print axioms` auf `propext`, `Classical.choice`,
-`Quot.sound` geprüft:**
+**Die Punkte, achtundzwanzig Deklarationen, alle durch `lake env lean` und alle
+mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft:**
 
 * `cumulativeRateFE`, `cumulativeRateFE_zero`, `cumulativeRateFE_of_nonpos`,
   `cumulativeRateFE_congr` — die Hebung und ihre Randwerte.

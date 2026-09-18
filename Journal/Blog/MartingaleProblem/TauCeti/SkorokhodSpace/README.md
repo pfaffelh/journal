@@ -378,37 +378,38 @@ Under (A), for `f : ι → E`:
 
 Under (A′):
 
-* **upstream as `IsCadlag.tendsto_nhdsLT_leftLim`**
-  `IsCadlag.tendsto_leftLim`, `Tendsto f (𝓝[<] x) (𝓝 (Function.leftLim f x))`,
-  which is `tendsto_leftLim_of_tendsto` applied to the `tendsto_nhdsLT` field, and
+* **upstream** `IsCadlag.tendsto_nhdsLT_leftLim`,
+  `Tendsto f (𝓝[<] x) (𝓝 (Function.leftLim f x))`, which is
+  `tendsto_leftLim_of_tendsto` applied to the `tendsto_nhdsLT` field, and
   `IsCadlag.rightLim_eq`, `Function.rightLim f x = f x`, which is
   `ContinuousWithinAt.rightLim_eq` applied to the `isRightContinuous` field
-  through `continuousWithinAt_Ioi_iff_Ici`; the second adds `[T2Space E]`. These
-  connect the structure to `Function.leftLim` and `Function.rightLim` so that
-  the existing API applies; every later statement about left limits uses those
-  names, not a new one. `IsCadlag.tendsto_leftLim` is proved (2026-09-07), and
-  it is unconditional: `tendsto_leftLim_of_tendsto` covers the degenerate case
-  `𝓝[<] x = ⊥` itself, so no hypothesis on the point is needed.
+  through `continuousWithinAt_Ioi_iff_Ici`; the second adds `[T2Space E]` and is
+  ours. These connect the structure to `Function.leftLim` and `Function.rightLim`
+  so that the existing API applies; every later statement about left limits uses
+  those names, not a new one. The first is unconditional:
+  `tendsto_leftLim_of_tendsto` covers the degenerate case `𝓝[<] x = ⊥` itself, so
+  no hypothesis on the point is needed. It was proved here on 2026-09-07 under
+  the name `IsCadlag.tendsto_leftLim` and **deleted on 2026-09-18**, when the
+  chain moved to `master`; the eight uses in `Suggested.lean` now read the
+  library's name.
 * The identity `Function.leftLim f x = f x` at continuity points, from
   `ContinuousWithinAt.leftLim_eq` applied to the restriction of continuity at
   `x` to `Iic x`, with `[T2Space E]`.
-* `isCadlag_const` and `SkorokhodSpace.const`: a constant function is càdlàg,
-  over any index and into any space, and the constant path is a point of
-  `D(ι, E)`. Proved (2026-09-18). It asks nothing of either side — the right
-  continuity is `continuousWithinAt_const` and the left limit is the value,
-  whether or not `𝓝[<] x` is the bottom filter — and it is what keeps `D(ι, E)`
-  from being empty whenever `E` is not. Its first use is as the value a path map
-  is given **off** the set where the process it reads is càdlàg: `jumpPathD` of
-  the roadmap **MartingaleProblems**, Milestone 6, is written that way, and a
-  total map into the path space is what a random element has to be.
+* **upstream** `IsCadlag.const`, and ours `SkorokhodSpace.const`: a constant
+  function is càdlàg, over any index and into any space, and the constant path is
+  a point of `D(ι, E)`. It asks nothing of either side — the right continuity is
+  `continuousWithinAt_const` and the left limit is the value, whether or not
+  `𝓝[<] x` is the bottom filter — and it is what keeps `D(ι, E)` from being empty
+  whenever `E` is not. Its first use is as the value a path map is given **off**
+  the set where the process it reads is càdlàg: `jumpPathD` of the roadmap
+  **MartingaleProblems**, Milestone 6, is written that way, and a total map into
+  the path space is what a random element has to be.
 
-  `isCadlag_const` is the **v4.33.1 stand-in for `IsCadlag.const`** of
-  `Mathlib/Topology/Order/Cadlag.lean:115` on master, and it is not a second
-  proof of something the library has: that file does not exist on v4.33.1, which
-  is why this roadmap carries its own `IsCadlag` at all. Master's structure is
-  field for field the same one, so when the binding moves, the local predicate
-  and this lemma go together and the name above is what they go to.
-  `SkorokhodSpace.const` stays either way — the *space* is ours.
+  The lemma was proved here on 2026-09-18 as `isCadlag_const`, the v4.33.1 stand
+  in for `IsCadlag.const` (`Mathlib/Topology/Order/Cadlag.lean:115` on master),
+  and **deleted the same day**, when the chain moved to `master` and the local
+  predicate went with it. `SkorokhodSpace.const` stays either way — the *space*
+  is ours.
 * `IsCadlag.comp_monotone_continuous`: `f ∘ g` is càdlàg for càdlàg `f` and
   monotone continuous `g : α → β`, the two indices **different** since
   2026-09-18 — the proof never compares a point of the source with a point of
@@ -430,9 +431,12 @@ Under (A′):
   then `g` tends to `g x` from strictly below, so the left limit of `f` at `g x`
   is the left limit of `f ∘ g` at `x`. The first branch is the only place in
   this milestone that uses the order topology, through `Ioo_mem_nhdsLT`.
-* `IsCadlag.isBounded_image_of_isCompact`: the image of a compact set under a
-  càdlàg map into a pseudometric space is bounded. Proved (2026-09-07), and the
-  proof is where the bundle of this item was found to be wrong. It needs the
+* **upstream** `isBounded_image_of_isCadlag_of_isCompact`: the image of a compact
+  set under a càdlàg map into a pseudometric space is bounded. Proved here on
+  2026-09-07 as `IsCadlag.isBounded_image_of_isCompact` and **deleted on
+  2026-09-18**, with the move to `master`; the proof is where the bundle of this
+  item was found to be wrong, and the library's statement agrees with the
+  correction. It needs the
   **linear** order and nothing else of (A′) --- not the order topology ---
   because it splits a neighbourhood of a point into its two one sided halves by
   `nhdsLT_sup_nhdsGE`, `𝓝[<] x ⊔ 𝓝[≥] x = 𝓝 x`, which is `Iio x ∪ Ici x = univ`
@@ -658,7 +662,7 @@ Under (B), with `E` a pseudometric space:
   simply true, since they stand under (A′), which this index does satisfy.
 * **The two witnesses already in the text, as tests of the bundles.**
   `ι = ℕ ∪ {ω}` with `ω` incomparable refutes
-  `IsCadlag.isBounded_image_of_isCompact` under (A), so an implementer who
+  `isBounded_image_of_isCadlag_of_isCompact` under (A), so an implementer who
   states that item under `[Preorder ι]` fails on it; and the pair `f = 0`,
   `g = Set.indicator {1} 1` on `ι = Set.Icc (0:ℝ) 1` with
   `D = Set.Ico (0:ℝ) 1 ∩ ℚ` refutes `IsCadlag.eq_of_eqOn_dense` when the maximal

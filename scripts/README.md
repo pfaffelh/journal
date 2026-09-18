@@ -80,6 +80,15 @@ Laufbericht.
   `~/Code/lean/mathlib-master` auf `upstream/master`. Es leitet das
   Repositorium aus dem eigenen Dateipfad ab, arbeitet also im Worktree, aus dem
   es aufgerufen wird, und nicht im Hauptcheckout.
+
+  **Sein Rückgabewert ist seit dem 2026-09-18 eine Schranke**, nicht bloß eine
+  Meldung: rc 1 bei einem Fehler *oder* bei einem veralteten Namen. Die übrigen
+  Warnungen (am 2026-09-18: 160, davon 58 `unusedSectionVars`) bleiben
+  ausdrücklich draußen — sie sind Stilfragen, und `unusedSectionVars` zu
+  befolgen hieße Signaturen ändern. Der Grund für die Schranke ist gemessen: von
+  den 354 Veraltungen, die der dreiundzwanzigste Lauf des 2026-09-18 abtrug,
+  waren **78 schon gegen v4.33.1 veraltet**, eine seit zehn Monaten. Sie sind
+  eingesickert, weil `check_suggested.py` nur Fehler zählt.
 * **`check_axioms_master.py`** ist `check_axioms.py` gegen denselben Worktree.
   Es braucht den `.olean`-Baum, den `check_master.py` anlegt, und ist deshalb
   nach ihm zu laufen.
