@@ -39346,3 +39346,192 @@ Status `?` — es gibt keine mehr.
    zweier Gesetze an den verschobenen Zeiten. Seine Eingaben stehen alle,
    einschließlich der gemeinsamen guten Zeit für einen `Finset` von Gesetzen;
    der Vorschlag ist unverändert gültig und dort ausgeschrieben.
+
+### 2026-09-18, dreiundzwanzigster Lauf des Tages — die Veraltungen sind abgetragen, alle 354; und die Frage, die der Vorlauf gestellt hatte, hat eine Zahl: 78 davon waren **schon auf v4.33.1** veraltet, und das Werkzeug, das sie hätte finden sollen, zählte 22 Warnungen, die keine sind
+
+Dies ist der zweite Lauf unter dem Vorrang vom 2026-09-18 abends und die zweite
+Hälfte derselben Aufgabe. Wie der Vorlauf hat er **keine Mathematik** angefaßt:
+keine neue Deklaration, kein `sorry` geschlossen, keine Aussage geändert. Was
+sich geändert hat, sind Namen und eine Taktik.
+
+#### Das Ergebnis
+
+Mathlib `upstream/master`, Commit `94ef6b89544e58e90f119da869f3fb48d1da0f4c` vom
+2026-09-18, Lean `4.35.0-rc2` — derselbe Stand wie im Vorlauf, damit die Zahlen
+vergleichbar sind.
+
+| Datei | Warnungen vorher | nachher | davon veraltet vorher | nachher |
+| --- | ---: | ---: | ---: | ---: |
+| `WeakConvergence` | 51 | **18** | 33 | **0** |
+| `SkorokhodSpace` | 119 | **36** | 83 | **0** |
+| `MartingaleProblems` | 344 | **106** | 238 | **0** |
+| **zusammen** | **514** | **160** | **354** | **0** |
+
+**Die Kette hat gegen `master` keinen veralteten Namen mehr**, bei unverändert
+0 Fehlern und 0 `sorry` in allen drei Dateien
+(`scripts/_citations/lean_check_master.md`).
+
+#### Vier Stufen, jede einzeln übersetzt
+
+Der Auftrag verlangte drei; es sind vier geworden, weil die Tabelle im Auftrag
+sechs Namen nennt und es **neun** sind.
+
+1. **Die 274 mechanischen** — `if_pos`→`ite_eq_left` (120), `if_neg`→`ite_eq_right`
+   (133), `dif_pos`→`dite_eq_left` (11), `dif_neg`→`dite_eq_right` (10). Der
+   Beleg, wie verlangt am Quelltext und nicht aus der Warnung: in
+   `Init/Core.lean` von `v4.35.0-rc2` stehen die alten Namen wörtlich als die
+   neuen definiert, mit identischer Argumentstruktur —
+   `theorem if_pos {c : Prop} {h : Decidable c} (hc : c) {α : Sort u} {t e : α} : (if c then t else e) = t := ite_eq_left hc`
+   (`:1185`, dazu `:1194`, `:1210`, `:1219`; die neuen Namen auf `:1179`,
+   `:1188`, `:1204`, `:1213`, alle seit dem 2026-07-21 veraltet). Nach der
+   Ersetzung ganz übersetzt: 0 Fehler, Warnungen 514 → 240.
+2. **Die 40 `Set.mem_setOf_eq`** → `Set.mem_ofPred_eq`. Wie angeordnet erst
+   **eine** Stelle, ganz übersetzt (Warnungen 240 → 239), dann die übrigen 39.
+   Beleg am Quelltext: `Mathlib/Data/Set/Operations.lean:79` erklärt
+   `theorem mem_ofPred_eq {x : α} {p : α → Prop} : (x ∈ {y | p y}) = p x := rfl`,
+   und `:81` macht daraus
+   `@[deprecated (since := "2026-07-09")] alias mem_setOf_eq := mem_ofPred_eq`.
+   Ein Alias, keine neue Aussage. Warnungen danach 200.
+3. **Die 32 `push_neg at h`** → `push Not at h`. Ein Taktiktausch, deshalb
+   zuletzt und mit voller Neuübersetzung. Und er ist billiger, als sein Rang
+   vermuten ließ: `Mathlib/Tactic/Push.lean:283` erklärt `push_neg` als `elab`,
+   dessen Rumpf nach der Warnung wörtlich
+   `push (← elabPushConfig cfg) none (.const Not) loc` ausführt — die veraltete
+   Taktik *ist* die neue, mit einer Warnung davor. Alle 32 Stellen waren von der
+   Gestalt `push_neg at <hyp>`, keine mit Konfiguration; die Ersetzung ist
+   deshalb eine Zeichenkette. Warnungen danach 168.
+4. **Die acht Übrigen**, auf fünf Namen, die in der Tabelle des Auftrags nicht
+   vorkamen und ohne die die Aufgabe nicht erledigt gewesen wäre:
+   `Set.mem_diff`→`Set.mem_sdiff` (3×, `Data/Set/Operations.lean:126`),
+   `Filter.eventuallyEq_set`→`Filter.eventuallyEqSet_iff`
+   (2×, `Order/Filter/Basic.lean:946`),
+   `Fin.coe_castSucc`→`Fin.val_castSucc`
+   (1×, Lean-Kern `Init/Data/Fin/Lemmas.lean:575`),
+   `continuous_finset_sum`→`continuous_finsetSum`
+   (1×, `Topology/Algebra/Monoid.lean:972`),
+   `intervalIntegral.integral_finset_sum`→`intervalIntegral.integral_finsetSum`
+   (1×, `MeasureTheory/Integral/IntervalIntegral/Basic.lean:786`). Alle fünf am
+   Quelltext von `upstream/master` als Alias oder als wörtlich gleiche Aussage
+   belegt. Warnungen danach 160.
+
+#### Die Frage des Vorlaufs, und sie hat eine Zahl
+
+Vorschlag 2 des zweiundzwanzigsten Laufs fragte: **welche dieser Veraltungen
+waren, wie `Measurable.comp'`, schon auf v4.33.1 veraltet und nur nie
+aufgefallen?** Nachgesehen im gebauten Mathlib des Hauptcheckouts und im
+Lean-Kern `v4.33.1`:
+
+| Name | auf v4.33.1 | Anzahl |
+| --- | --- | ---: |
+| `Set.mem_setOf_eq` | **veraltet seit 2026-07-09** (`Data/Set/Operations.lean:82`) | 40 |
+| `push_neg` | **veraltet** (`Mathlib/Tactic/Push.lean:283`, dieselbe Warnung) | 32 |
+| `Set.mem_diff` | **veraltet seit 2026-06-03** (`:127`) | 3 |
+| `continuous_finset_sum` | **veraltet seit 2026-04-08** (`Topology/Algebra/Monoid.lean:954`) | 1 |
+| `intervalIntegral.integral_finset_sum` | **veraltet seit 2026-04-08** (`IntervalIntegral/Basic.lean:784`) | 1 |
+| `Fin.coe_castSucc` | **veraltet seit 2025-11-21** (Kern `Init/Data/Fin/Lemmas.lean:574`) | 1 |
+| `if_pos`/`if_neg`/`dif_pos`/`dif_neg` | nicht veraltet; `ite_eq_left` gibt es dort **nicht** | 274 |
+| `Filter.eventuallyEq_set` | nicht veraltet; `eventuallyEqSet_iff` gibt es dort **nicht** | 2 |
+
+**78 der 354 — 22 Prozent — waren gegen den Stand veraltet, an den wir gebunden
+waren**, eine von ihnen seit zehn Monaten. Sie sind nicht aufgefallen, weil
+`check_suggested.py` nur Fehler zählt; ein veralteter Name ist keiner.
+
+#### Das Werkzeug, und der Grund, warum es die Zahl nicht zeigen konnte
+
+Der Auftrag verlangte, `check_master.py` um eine **Warnungsspalte** zu
+erweitern. Sie stand schon da — und sie zählte falsch.
+
+* **22 der „536" waren keine Warnungen.** Gezählt wurde jede Zeile, die die
+  Zeichenfolge `warning:` enthält; der Hinweis des Linters für nicht
+  ausdrücklich benutzte Bindungen endet aber mit den Worten *„prefix the name
+  with `_` to silence this warning:"* und stand damit als eigene Warnung in der
+  Zahl. Der wahre Stand des Vorlaufs war **514**, nicht 536, und die Aufteilung
+  51/119/344 statt 51/123/362. Gezählt wird jetzt die Gestalt, die eine
+  Lean-Warnung wirklich hat: `<datei>:<zeile>:<spalte>: warning: …`.
+* **Neu ist die Spalte „davon veraltet"** und darunter ein Anhang, der die
+  veralteten Namen nach Häufigkeit auflistet. Das ist die Zahl, die künftig
+  nicht unbemerkt wachsen soll, und sie steht jetzt neben den Fehlern statt in
+  160 Zeilen Ausgabe.
+
+#### Die Gegenprobe gegen v4.33.1 — berichtet, nicht behoben
+
+`scripts/check_suggested.py`, derselbe Lauf: `WeakConvergence` rc 1 mit **54**
+Fehlern statt 14. Das ist der angesagte Richtungswechsel, und die Aufteilung ist
+lehrreich:
+
+* **40 der 40 neuen Fehler kommen aus Stufe 1**, `Unknown identifier
+  'ite_eq_left'` und die drei Geschwister. `ite_eq_left` gibt es weder im
+  Lean-Kern `v4.33.1` (dort ist `if_pos` auf `Init/Core.lean:1178` die
+  **primitive** Aussage, nicht ein Alias) noch irgendwo in Mathlib v4.33.1
+  (`grep` über ganz `Mathlib/`: kein Treffer). Damit ist das die **vierte**
+  Familie, für die es keine gemeinsame Schreibweise gibt — und mit 274 Stellen
+  die mit Abstand größte.
+* Einer kommt aus Stufe 4 (`Filter.eventuallyEqSet_iff`).
+* **Die Stufen 2 und 3 kosten nichts.** `Set.mem_ofPred_eq` steht auf v4.33.1
+  (`Data/Set/Operations.lean:81` zeigt darauf), und `push Not` ebenso — beide
+  Schreibweisen tragen **beide** Stände. Von den 346 Ersetzungen der ersten drei
+  Stufen sind also 72 versionsneutral und 274 nicht.
+
+#### Geprüft
+
+* `scripts/check_master.py` nach **jeder** Stufe einzeln, nie zwei zusammen, wie
+  angeordnet: viermal rc 0, 0 Fehler, 0 `sorry` in allen drei Dateien.
+* `#print axioms` über `scripts/check_axioms_master.py` auf sechs Deklarationen,
+  ausgewählt nach dem einzigen Eingriff, der keine Umbenennung war — dem
+  Taktiktausch: `MeasureTheory.support_ballCutoff` (`WeakConvergence`),
+  `IsCadlag.exists_subdivision` und
+  `SkorokhodSpace.not_separableSpace_of_rigid` (`SkorokhodSpace`),
+  `isMPSolution_iff_forall_fdd`, `stepIndex_eq_of` und `isStepPath_stepPath`
+  (`MartingaleProblems`). Alle sechs: `propext`, `Classical.choice`,
+  `Quot.sound`.
+
+#### Was dieser Lauf ausdrücklich **nicht** getan hat
+
+Die 160 verbliebenen Warnungen sind, wie angeordnet, gezählt und liegengelassen:
+58 `unusedSectionVars`, 50 „Try this", 24 ungenutzte `simp`-Argumente, 22
+Hinweise auf nicht ausdrücklich benutzte Bindungen, dazu sechs Einzelfälle (zwei
+tote Taktiken, ein `simp`, das das Ziel schon schließt, überlappende
+Instanzparameter in `SkorokhodSpace.not_isCompact_closure_of_jumps_at_basePoint`,
+und der Hinweis, daß `aeCompletion` als Definition eines Klassentyps
+semireduzibel ist). Sie brechen nichts, und `unusedSectionVars` zu befolgen
+hieße Signaturen ändern.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die Versionsangaben der vier Roadmaps auf `master` umstellen** — Vorschlag 1
+   des Vorlaufs, unverändert gültig und jetzt der einzige verbliebene Punkt des
+   Vorrangs vom 2026-09-18 abends.
+   *Was:* jede Stelle in den `README.md` und in `TODO.md`, die sagt, die
+   Entwicklung sei „an v4.33.1 gebunden" oder gegen v4.33.1 übersetzt, auf
+   `94ef6b89544` / Lean `4.35.0-rc2` bringen; allein
+   `MartingaleProblems/README.md` nennt v4.33.1 an über zwanzig Stellen.
+   *Worauf es ruht:* auf den Messungen des zweiundzwanzigsten und dieses Laufs;
+   es ist Schreibarbeit und keine Mathematik.
+   *Warum jetzt:* nach diesem Lauf ist die Kette gegen `master` nicht nur
+   fehlerfrei, sondern frei von veralteten Namen — das ist der Zustand, den
+   `CONTRIBUTING.md` sehen will, und der Text sagt derzeit etwas anderes.
+   **Und dabei mitzunehmen, mit einem Befund dieses Laufs als Begründung:** die
+   Zeilennummern der zitierten Mathlib-Namen sind nach wie vor die von v4.33.1,
+   und `check_cited_names.py` prüft die Existenz, nicht die Zeile. Der
+   Größenordnung nach ist das kein kleiner Unterschied: `Set.mem_setOf_eq` stand
+   auf v4.33.1 in `Data/Set/Operations.lean:82` und auf `master` in `:81` —
+   dieselbe Datei, andere Zeile, und das ist der *gutartige* Fall.
+
+2. **Eine Warnungsschranke in `check_master.py`**, und zwar nur für die
+   Veraltungen.
+   *Was:* das Skript gibt rc ≠ 0 zurück, wenn die Spalte „davon veraltet" nicht
+   0 ist.
+   *Worauf es ruht:* auf der Spalte, die dieser Lauf gebaut hat, und auf dem
+   Nullstand, den er hergestellt hat.
+   *Warum jetzt:* der Befund oben sagt, warum die Zahl von allein wächst — 78
+   Veraltungen sind über Monate unbemerkt eingesickert, weil niemand hinsah. Ein
+   Nullstand ohne Schranke hält bis zur nächsten Deklaration. Die übrigen 160
+   Warnungen bleiben ausdrücklich draußen: sie sind Stilfragen, und eine
+   Schranke darüber würde die Prüfung unbrauchbar machen.
+
+3. **Erst danach wieder Mathematik**, dort, wo der einundzwanzigste Lauf
+   aufgehört hat: `SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq`,
+   der Vergleich zweier Gesetze an den verschobenen Zeiten. Seine Eingaben stehen
+   alle, einschließlich der gemeinsamen guten Zeit für einen `Finset` von
+   Gesetzen; der Vorschlag ist unverändert gültig und in der Roadmap
+   ausgeschrieben.

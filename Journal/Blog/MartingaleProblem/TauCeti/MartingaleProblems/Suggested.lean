@@ -1801,12 +1801,12 @@ theorem exists_chain_alternating {α : Type*} {L : Filter α} [L.NeBot] {S : Set
   · intro j hj
     have hj' : j % 2 = 0 := hj
     show p (if j % 2 = 0 then nextp (w j) else nextq (w j))
-    rw [if_pos hj']
+    rw [ite_eq_left hj']
     exact hnextpp _ (hwS j)
   · intro j hj
     have hj' : ¬ j % 2 = 0 := by omega
     show q (if j % 2 = 0 then nextp (w j) else nextq (w j))
-    rw [if_neg hj']
+    rw [ite_eq_right hj']
     exact hnextqq _ (hwS j)
 
 variable [TopologicalSpace ι] [OrderTopology ι] {g : ι → ℝ} {S : Set ι} {t : ι} {a b : ℝ}
@@ -1927,7 +1927,7 @@ theorem le_upcrossingsBefore_of_alternating' {Ω₀ : Type*} {f : ℕ → Ω₀ 
           · simp [hJ, hq0]
           · obtain ⟨r, rfl⟩ : ∃ r, q = r + 1 := ⟨q - 1, by omega⟩
             have hr : j (2 * r + 1) < j (2 * r + 1 + 1) := hj (2 * r + 1) (by omega)
-            simp only [hJ, if_neg (Nat.succ_ne_zero r)]
+            simp only [hJ, ite_eq_right (Nat.succ_ne_zero r)]
             have h2 : 2 * (r + 1) - 1 = 2 * r + 1 := by omega
             have h3 : 2 * (r + 1) = 2 * r + 1 + 1 := by omega
             rw [h2, h3]
@@ -1938,13 +1938,13 @@ theorem le_upcrossingsBefore_of_alternating' {Ω₀ : Type*} {f : ℕ → Ω₀ 
           hab (N := J q) (N₁ := j (2 * q)) hN₁ h1 (N₂ := j (2 * q + 1)) hN₂ h2
         have h5 : 2 * (q + 1) - 1 = 2 * q + 1 := by omega
         have h4 : J (q + 1) = j (2 * q + 1) + 1 := by
-          simp only [hJ, if_neg (Nat.succ_ne_zero q), h5]
+          simp only [hJ, ite_eq_right (Nat.succ_ne_zero q), h5]
         rw [h4]
         omega
   have hJn : J n ≤ M := by
     rcases Nat.eq_zero_or_pos n with hn0 | hn0
     · simp [hJ, hn0]
-    · simp only [hJ, if_neg (by omega : ¬ n = 0)]
+    · simp only [hJ, ite_eq_right (by omega : ¬ n = 0)]
       exact hM (2 * n - 1) (by omega)
   exact (key n le_rfl).trans (upcrossingsBefore_mono hab hJn ω)
 
@@ -3223,7 +3223,7 @@ theorem tendsto_rightLimAlong {D : Set ι} {g : ι → E} {t : ι}
     [hne : (𝓝[D ∩ Set.Ioi t] t).NeBot]
     (h : ∃ x, Tendsto g (𝓝[D ∩ Set.Ioi t] t) (𝓝 x)) :
     Tendsto g (𝓝[D ∩ Set.Ioi t] t) (𝓝 (rightLimAlong D g t)) := by
-  rw [rightLimAlong, dif_pos ⟨hne, h⟩]
+  rw [rightLimAlong, dite_eq_left ⟨hne, h⟩]
   exact h.choose_spec
 
 omit [OrderBot ι] [OrderTopology ι] [MeasurableSpace E] in
@@ -3232,7 +3232,7 @@ the candidate modification is the value of the path itself.  This is what makes
 the modification property hold there without an argument. -/
 theorem rightLimAlong_of_not_neBot {D : Set ι} {g : ι → E} {t : ι}
     (h : ¬ (𝓝[D ∩ Set.Ioi t] t).NeBot) : rightLimAlong D g t = g t := by
-  rw [rightLimAlong, dif_neg fun hc ↦ h hc.1]
+  rw [rightLimAlong, dite_eq_right fun hc ↦ h hc.1]
 
 omit [OrderBot ι] [MeasurableSpace E] in
 /-- **A dense `D` is approached from the right wherever the order is**, which is
@@ -5156,11 +5156,11 @@ def coinProcess (u : ι) (t : ι) (ω : Bool) : Bool := if u ≤ t then ω else 
 
 omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
 theorem coinProcess_of_le {u t : ι} (h : u ≤ t) (ω : Bool) :
-    coinProcess u t ω = ω := if_pos h
+    coinProcess u t ω = ω := ite_eq_left h
 
 omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
 theorem coinProcess_of_not_le {u t : ι} (h : ¬ u ≤ t) (ω : Bool) :
-    coinProcess u t ω = false := if_neg h
+    coinProcess u t ω = false := ite_eq_right h
 
 omit [OrderBot ι] in
 /-- The paths are càdlàg, whatever the clock does: they are locally constant on
@@ -5328,9 +5328,9 @@ theorem integral_coinPair_snd (u : ι) (hu : ¬ u ≤ (⊥ : ι)) (t : ι) (ω :
     simp only [Clock.interval, Set.mem_sdiff, Set.mem_Iic]
     exact ⟨fun h ↦ h.1, fun h ↦ ⟨h, hu⟩⟩
   by_cases h : u ≤ t
-  · rw [atomClock_real_of_mem u (hmem.2 h), if_pos h]
+  · rw [atomClock_real_of_mem u (hmem.2 h), ite_eq_left h]
     simp
-  · rw [atomClock_real_of_notMem u fun hc ↦ h (hmem.1 hc), if_neg h]
+  · rw [atomClock_real_of_notMem u fun hc ↦ h (hmem.1 hc), ite_eq_right h]
     simp
 
 /-- The filtration of the witness: nothing before `u`, everything from `u` on.
@@ -5341,15 +5341,15 @@ def coinFiltration (u : ι) : Filtration ι (inferInstance : MeasurableSpace Boo
     show (if u ≤ a then (inferInstance : MeasurableSpace Bool) else ⊥) ≤
       (if u ≤ b then (inferInstance : MeasurableSpace Bool) else ⊥)
     by_cases ha : u ≤ a
-    · simp only [if_pos ha, if_pos (ha.trans hab), le_refl]
-    · simp only [if_neg ha]
+    · simp only [ite_eq_left ha, ite_eq_left (ha.trans hab), le_refl]
+    · simp only [ite_eq_right ha]
       exact bot_le
   le' := fun t ↦ by
     show (if u ≤ t then (inferInstance : MeasurableSpace Bool) else ⊥) ≤
       (inferInstance : MeasurableSpace Bool)
     by_cases ht : u ≤ t
-    · simp only [if_pos ht, le_refl]
-    · simp only [if_neg ht]
+    · simp only [ite_eq_left ht, le_refl]
+    · simp only [ite_eq_right ht]
       exact bot_le
 
 omit [TopologicalSpace ι] [OrderTopology ι] in
@@ -5369,39 +5369,39 @@ theorem isMPSolution_coinProcess (u : ι) (hu : ¬ u ≤ (⊥ : ι)) :
     intro t ω
     rw [hY t ω, integral_coinPair_snd u hu t ω]
     by_cases h : u ≤ t
-    · simp only [if_pos h, coinProcess_of_le h]
+    · simp only [ite_eq_left h, coinProcess_of_le h]
       rfl
-    · simp only [if_neg h, coinProcess_of_not_le h]
+    · simp only [ite_eq_right h, coinProcess_of_not_le h]
       norm_num [coinPair]
   have hbefore : ∀ t : ι, ¬ u ≤ t → Y t = fun _ ↦ (0 : ℝ) :=
-    fun t ht ↦ funext fun ω ↦ by rw [hval t ω, if_neg ht]
+    fun t ht ↦ funext fun ω ↦ by rw [hval t ω, ite_eq_right ht]
   have hzero : ∀ t : ι, ∫ ω, Y t ω ∂coinMeasure = 0 := by
     intro t
     simp only [hval t]
     by_cases ht : u ≤ t
-    · simp only [if_pos ht]
+    · simp only [ite_eq_left ht]
       rw [integral_coinMeasure]
       norm_num
-    · simp only [if_neg ht]
+    · simp only [ite_eq_right ht]
       simp
   refine ⟨fun t ↦ ?_, fun s t hst ↦ ?_⟩
   · by_cases ht : u ≤ t
-    · have hf : (coinFiltration u) t = (inferInstance : MeasurableSpace Bool) := if_pos ht
+    · have hf : (coinFiltration u) t = (inferInstance : MeasurableSpace Bool) := ite_eq_left ht
       rw [hf]
       exact (measurable_of_finite _).stronglyMeasurable
-    · have hf : (coinFiltration u) t = ⊥ := if_neg ht
+    · have hf : (coinFiltration u) t = ⊥ := ite_eq_right ht
       rw [hf, hbefore t ht]
       exact stronglyMeasurable_const
   · by_cases hs : u ≤ s
     · have hYts : Y t = Y s := funext fun ω ↦ by
-        rw [hval t ω, hval s ω, if_pos (hs.trans hst), if_pos hs]
+        rw [hval t ω, hval s ω, ite_eq_left (hs.trans hst), ite_eq_left hs]
       have hle : (coinFiltration u) s ≤ (inferInstance : MeasurableSpace Bool) :=
         (coinFiltration u).le' s
       have hsm : StronglyMeasurable[(coinFiltration u) s] (Y s) := by
-        rw [show (coinFiltration u) s = (inferInstance : MeasurableSpace Bool) from if_pos hs]
+        rw [show (coinFiltration u) s = (inferInstance : MeasurableSpace Bool) from ite_eq_left hs]
         exact (measurable_of_finite _).stronglyMeasurable
       rw [hYts, condExp_of_stronglyMeasurable hle hsm (integrable_bool _)]
-    · have hf : (coinFiltration u) s = ⊥ := if_neg hs
+    · have hf : (coinFiltration u) s = ⊥ := ite_eq_right hs
       rw [hf, hbefore s hs, condExp_bot]
       exact Filter.Eventually.of_forall fun _ ↦ hzero t
 
@@ -6703,7 +6703,7 @@ theorem stepIndex_eq_of (h1 : n = 0 ∨ T n ≤ t) (h2 : t < T (n + 1)) (hT : Mo
     stepIndex T t = n := by
   refine le_antisymm (stepIndex_le h2) ?_
   by_contra hlt
-  push_neg at hlt
+  push Not at hlt
   rcases h1 with rfl | h1
   · exact Nat.not_lt_zero _ hlt
   · exact absurd (lt_stepIndex_succ ⟨n, h2⟩)
@@ -6783,7 +6783,7 @@ theorem isStepPath_stepPath [TopologicalSpace α] [OrderTopology α] [Topologica
         mem_nhdsWithin.2 ⟨Set.Ioi (T n), isOpen_Ioi, hlt, fun z hz => ⟨hz.1, hz.2⟩⟩
       filter_upwards [hmem] with z hz
       exact key z n (Or.inr hz.1.le) (hz.2.trans hx2)
-    · push_neg at hlt
+    · push Not at hlt
       rcases Nat.eq_zero_or_pos n with rfl | hpos
       · refine ⟨y 0, ?_⟩
         filter_upwards [self_mem_nhdsWithin] with z (hz : z < x)
@@ -6808,7 +6808,7 @@ theorem stepIndex_eq_iff : stepIndex T t = n ↔
   · intro h
     by_cases hne : ∃ k, t < T (k + 1)
     · exact Or.inl ⟨h ▸ lt_stepIndex_succ hne, fun m hm => le_of_lt_stepIndex (h ▸ hm)⟩
-    · push_neg at hne
+    · push Not at hne
       refine Or.inr ⟨?_, hne⟩
       rw [← h]
       exact Nat.sInf_eq_zero.2 (Or.inr (Set.eq_empty_iff_forall_notMem.2
@@ -6843,12 +6843,12 @@ theorem eventuallyEq_nhdsGE_stepPath_comp [TopologicalSpace α] [OrderTopology �
     have h1 : stepIndex T (u r) ≤ stepIndex T (u t) := stepIndex_le hr.1
     have h2 : stepIndex T (u t) ≤ stepIndex T (u r) := by
       by_contra hc
-      push_neg at hc
+      push Not at hc
       have h3 : T (stepIndex T (u r) + 1) ≤ u t := le_of_lt_stepIndex hc
       have h4 : u r < T (stepIndex T (u r) + 1) := lt_stepIndex_succ ⟨stepIndex T (u t), hr.1⟩
       exact absurd (h4.trans_le (h3.trans hut)) (lt_irrefl _)
     simp only [stepPath, le_antisymm h1 h2]
-  · push_neg at hex
+  · push Not at hex
     filter_upwards [self_mem_nhdsWithin] with r (hr : t ≤ r)
     have ht0 : stepIndex T (u t) = 0 := stepIndex_eq_iff.2 (Or.inr ⟨rfl, hex⟩)
     have hr0 : stepIndex T (u r) = 0 :=
@@ -6877,7 +6877,7 @@ theorem measurable_stepIndex_comp [TopologicalSpace α] [OrderClosedTopology α]
         ∪ {c | n = 0 ∧ ∀ k, T c (k + 1) ≤ u c} := by
     ext c
     simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_union, Set.mem_inter_iff,
-      Set.mem_setOf_eq, Set.mem_iInter, Set.mem_Iio]
+      Set.mem_ofPred_eq, Set.mem_iInter, Set.mem_Iio]
     rw [stepIndex_eq_iff]
   rw [hset]
   refine MeasurableSet.union (MeasurableSet.inter ?_ ?_) ?_
@@ -7107,7 +7107,7 @@ theorem stepIndex_shift {T : ℕ → ℝ} {t : ℝ} (h1 : T 1 ≤ t) (hex : ∃ 
   have hzero : 0 ∉ S := by simp [hS, not_lt, h1]
   have hmem : ∀ m : ℕ, m ∈ S' ↔ m + 1 ∈ S := by
     intro m
-    simp only [hS', hS, Set.mem_setOf_eq, sub_lt_sub_iff_right]
+    simp only [hS', hS, Set.mem_ofPred_eq, sub_lt_sub_iff_right]
   have hs'ne : S'.Nonempty := by
     obtain ⟨n, hn⟩ := hSne
     have hn0 : n ≠ 0 := by rintro rfl; exact hzero hn
@@ -7228,7 +7228,7 @@ theorem expMeasure_Ioi {r : ℝ} (hr : 0 < r) {x : ℝ} (hx : 0 ≤ x) :
   have hpos : (0 : ℝ) ≤ Real.exp (-(r * x)) := (Real.exp_pos _).le
   have hle : Real.exp (-(r * x)) ≤ 1 := Real.exp_le_one_iff.2 (by nlinarith)
   have h1 : expMeasure r (Set.Iic x) = 1 - ENNReal.ofReal (Real.exp (-(r * x))) := by
-    rw [← ofReal_cdf, cdf_expMeasure_eq hr, if_pos hx, ENNReal.ofReal_sub _ hpos,
+    rw [← ofReal_cdf, cdf_expMeasure_eq hr, ite_eq_left hx, ENNReal.ofReal_sub _ hpos,
       ENNReal.ofReal_one]
   rw [← Set.compl_Iic, prob_compl_eq_one_sub measurableSet_Iic, h1,
     ENNReal.sub_sub_cancel ENNReal.one_ne_top]
@@ -7260,9 +7260,9 @@ theorem expMeasure_eq_withDensity (r : ℝ) :
 theorem toReal_exponentialPDF_one (s : ℝ) :
     (exponentialPDF 1 s).toReal = if 0 ≤ s then Real.exp (-s) else 0 := by
   by_cases hs : (0 : ℝ) ≤ s
-  · rw [exponentialPDF_of_nonneg hs, if_pos hs, ENNReal.toReal_ofReal (by positivity)]
+  · rw [exponentialPDF_of_nonneg hs, ite_eq_left hs, ENNReal.toReal_ofReal (by positivity)]
     simp
-  · rw [exponentialPDF_of_neg (not_le.1 hs), if_neg hs, ENNReal.toReal_zero]
+  · rw [exponentialPDF_of_neg (not_le.1 hs), ite_eq_right hs, ENNReal.toReal_zero]
 
 /-- **Integration against the standard exponential law is integration of `exp (-s) * ·` over the
 positive half line.**  There is no hypothesis on `F` at all: the identity is the definition of
@@ -7434,11 +7434,11 @@ theorem partialTraj_succ_map_shiftIic (mu : Kernel E E) [IsMarkovKernel mu] (b :
   funext v
   funext i
   by_cases hi : i.1 ≤ b
-  · simp only [Function.comp_apply, shiftIic, IicProdIoc, dif_pos hi,
-      dif_pos (Nat.succ_le_succ hi)]
+  · simp only [Function.comp_apply, shiftIic, IicProdIoc, dite_eq_left hi,
+      dite_eq_left (Nat.succ_le_succ hi)]
   · have hib : i.1 = b + 1 := le_antisymm (Finset.mem_Iic.1 i.2) (Nat.succ_le_of_lt (not_le.1 hi))
-    simp only [Function.comp_apply, shiftIic, IicProdIoc, dif_neg hi,
-      dif_neg (fun h : i.1 + 1 ≤ b + 1 ↦ hi (Nat.succ_le_succ_iff.1 h))]
+    simp only [Function.comp_apply, shiftIic, IicProdIoc, dite_eq_right hi,
+      dite_eq_right (fun h : i.1 + 1 ≤ b + 1 ↦ hi (Nat.succ_le_succ_iff.1 h))]
     rw [piSingleton_apply_const, piSingleton_apply_const]
 
 /-- **The finite dimensional distributions of the chain commute with the shift.** -/
@@ -7591,7 +7591,7 @@ theorem measurable_natCons {X : Type*} [MeasurableSpace X] :
   refine measurable_pi_iff.mpr fun n ↦ ?_
   by_cases h : n = 0
   · simpa [natCons, h] using measurable_fst
-  · simp only [natCons, if_neg h]
+  · simp only [natCons, ite_eq_right h]
     fun_prop
 
 /-- **An infinite product over `ℕ` of one and the same law is invariant under prepending an
@@ -7646,8 +7646,8 @@ theorem infinitePi_map_natCons {X : Type*} [MeasurableSpace X] (μ : Measure X)
     rw [this]
   rw [Finset.prod_congr rfl hcongr]
   by_cases h0 : 0 ∈ s
-  · rw [hA, if_pos h0, Finset.mul_prod_erase s (fun i ↦ μ (t i)) h0]
-  · rw [hA, if_neg h0, Finset.erase_eq_of_notMem h0, measure_univ, one_mul]
+  · rw [hA, ite_eq_left h0, Finset.mul_prod_erase s (fun i ↦ μ (t i)) h0]
+  · rw [hA, ite_eq_right h0, Finset.erase_eq_of_notMem h0, measure_univ, one_mul]
 
 /-- **The zeroth coordinate and the tail are independent** under an infinite product of one and
 the same law. -/
@@ -7885,7 +7885,7 @@ theorem integral_chainKernel_zero_eq {H : E × (ℕ → E) → ℝ} (hH : Measur
     intro y; funext n
     by_cases h : n = 0
     · simp [natCons, h]
-    · simp only [natCons, if_neg h]
+    · simp only [natCons, ite_eq_right h]
       congr 1
       omega
   have key : ∀ K : E × (ℕ → E) → ℝ, Measurable K → (∀ p, |K p| ≤ C) →
@@ -7985,9 +7985,9 @@ def waitShift (a : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) : (ℕ → E) × (�
 theorem measurable_waitShift (a : ℝ) : Measurable (waitShift (E := E) a) := by
   refine measurable_fst.prodMk (measurable_pi_iff.mpr fun n ↦ ?_)
   by_cases h : n = 0
-  · simp only [waitShift, if_pos h]
+  · simp only [waitShift, ite_eq_left h]
     exact ((measurable_pi_apply 0).comp measurable_snd).sub measurable_const
-  · simp only [waitShift, if_neg h]
+  · simp only [waitShift, ite_eq_right h]
     exact (measurable_pi_apply n).comp measurable_snd
 
 /-- **The jump times of the shortened data**: every one of them, except the trivial `T 0`, is
@@ -8004,7 +8004,7 @@ theorem jumpTime_waitShift (lam : E → ℝ) (y : ℕ → E) (xi : ℕ → ℝ) 
       rw [h0, h1, sub_div]
   | succ n ih =>
       rw [jumpTime_succ, ih, jumpTime_succ lam y xi (n + 1)]
-      simp only [if_neg (Nat.succ_ne_zero n)]
+      simp only [ite_eq_right (Nat.succ_ne_zero n)]
       ring
 
 /-- **Shortening the zeroth waiting time by `lam (y 0) * s` is a shift of the time axis by `s`.**
@@ -8027,7 +8027,7 @@ theorem jumpProcess_waitShift {lam : E → ℝ} {ω : (ℕ → E) × (ℕ → �
         (waitShift (lam (ω.1 0) * s) ω).2 (n + 1)}
       = {n | s + t < jumpTime lam ω.1 ω.2 (n + 1)} := by
     ext n
-    simp only [Set.mem_setOf_eq, hT n]
+    simp only [Set.mem_ofPred_eq, hT n]
     constructor <;> intro h <;> linarith
   simp only [jumpProcess, stepPath, stepIndex, hset]
   rfl
@@ -8083,16 +8083,16 @@ theorem integral_waitingMeasure_waitShift {a : ℝ} (ha : 0 ≤ a) {F : (ℕ →
     refine integral_congr_ae (Filter.Eventually.of_forall fun xi ↦ ?_)
     by_cases hx : a < xi 0
     · rw [Set.indicator_of_mem (show xi ∈ {xi : ℕ → ℝ | a < xi 0} from hx)]
-      simp only [hΦdef, if_pos hx]
+      simp only [hΦdef, ite_eq_left hx]
       congr 1
       funext n
       by_cases hn : n = 0
       · simp [natCons, hn]
-      · simp only [natCons, if_neg hn]
+      · simp only [natCons, ite_eq_right hn]
         congr 1
         omega
     · rw [Set.indicator_of_notMem (show xi ∉ {xi : ℕ → ℝ | a < xi 0} from hx)]
-      simp only [hΦdef, if_neg hx]
+      simp only [hΦdef, ite_eq_right hx]
   -- Step B: the zeroth coordinate is independent of the tail.
   have stepB : (∫ xi, Φ ((fun x : ℕ → ℝ ↦ (x 0, fun n ↦ x (n + 1))) xi) ∂waitingMeasure)
       = ∫ u, (∫ tail, Φ (u, tail) ∂waitingMeasure) ∂(expMeasure 1) := by
@@ -8101,8 +8101,8 @@ theorem integral_waitingMeasure_waitShift {a : ℝ} (ha : 0 ≤ a) {F : (ℕ →
   have hinner : ∀ u : ℝ, (∫ tail, Φ (u, tail) ∂waitingMeasure) = if a < u then Ψ (u - a) else 0 := by
     intro u
     by_cases hu : a < u
-    · simp only [hΦdef, if_pos hu, hΨdef]
-    · simp only [hΦdef, if_neg hu, integral_zero, if_neg hu]
+    · simp only [hΦdef, ite_eq_left hu, hΨdef]
+    · simp only [hΦdef, ite_eq_right hu, integral_zero, ite_eq_right hu]
   -- Step C: the translation of the half line, which is where the factor `exp (-a)` appears.
   have stepC : (∫ u, (if a < u then Ψ (u - a) else 0) ∂(expMeasure 1))
       = Real.exp (-a) * ∫ v, Ψ v ∂(expMeasure 1) := by
@@ -8117,14 +8117,14 @@ theorem integral_waitingMeasure_waitShift {a : ℝ} (ha : 0 ≤ a) {F : (ℕ →
     by_cases hv : (0 : ℝ) < v
     · rw [Set.indicator_of_mem (Set.mem_Ioi.2 hv),
         Set.indicator_of_mem (Set.mem_Ioi.2 (show (0:ℝ) < v + a by linarith)),
-        if_pos (show a < v + a by linarith)]
+        ite_eq_left (show a < v + a by linarith)]
       simp only [add_sub_cancel_right]
       rw [show -(v + a) = -a + -v from by ring, Real.exp_add]
       ring
     · rw [Set.indicator_of_notMem (show v ∉ Set.Ioi (0:ℝ) from by simpa using hv), mul_zero]
       by_cases hva : (0 : ℝ) < v + a
       · rw [Set.indicator_of_mem (Set.mem_Ioi.2 hva),
-          if_neg (not_lt.2 (by simp only [not_lt] at hv; linarith)), mul_zero]
+          ite_eq_right (not_lt.2 (by simp only [not_lt] at hv; linarith)), mul_zero]
       · rw [Set.indicator_of_notMem (show v + a ∉ Set.Ioi (0:ℝ) from by simpa using hva)]
   -- Step D: prepending an independent exponential variable recovers `waitingMeasure`.
   have stepD : (∫ v, Ψ v ∂(expMeasure 1)) = ∫ xi, F xi ∂waitingMeasure := by
@@ -8164,7 +8164,7 @@ theorem integral_jumpKernel_waitShift {lam : E → ℝ} (hlam : Measurable lam)
   have hSeq : {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1}
       = {ω : (ℕ → E) × (ℕ → ℝ) | lam (ω.1 0) * s < ω.2 0} := by
     ext ω
-    simp only [Set.mem_setOf_eq, jumpTime_one]
+    simp only [Set.mem_ofPred_eq, jumpTime_one]
     rw [lt_div_iff₀ (hlam0 _), mul_comm s (lam (ω.1 0))]
   have hS : MeasurableSet {ω : (ℕ → E) × (ℕ → ℝ) | lam (ω.1 0) * s < ω.2 0} :=
     measurableSet_lt ((hlam.comp ((measurable_pi_apply 0).comp measurable_fst)).mul
@@ -8172,10 +8172,10 @@ theorem integral_jumpKernel_waitShift {lam : E → ℝ} (hlam : Measurable lam)
   have hmap : Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ F (waitShift (lam (ω.1 0) * s) ω) := by
     refine hF.comp (measurable_fst.prodMk (measurable_pi_iff.mpr fun n ↦ ?_))
     by_cases hn : n = 0
-    · simp only [waitShift, if_pos hn]
+    · simp only [waitShift, ite_eq_left hn]
       exact ((measurable_pi_apply 0).comp measurable_snd).sub
         ((hlam.comp ((measurable_pi_apply 0).comp measurable_fst)).mul measurable_const)
-    · simp only [waitShift, if_neg hn]
+    · simp only [waitShift, ite_eq_right hn]
       exact (measurable_pi_apply n).comp measurable_snd
   -- The inner integral over the waiting times, for a fixed path of the chain.
   have hG : Measurable fun p : (ℕ → E) × (ℕ → ℝ) ↦ F (p.1, p.2) := hF
@@ -8322,7 +8322,7 @@ theorem jumpMeasure_integral_eq_of_firstJump {lam : E → ℝ} (hlam : Measurabl
   have hEq : Set.EqOn (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ h (jumpProcess lam t ω))
       (fun ω ↦ h (ω.1 0)) {ω : (ℕ → E) × (ℕ → ℝ) | jumpTime lam ω.1 ω.2 1 ≤ t}ᶜ := by
     intro ω hω
-    simp only [Set.mem_compl_iff, Set.mem_setOf_eq, not_le] at hω
+    simp only [Set.mem_compl_iff, Set.mem_ofPred_eq, not_le] at hω
     simp only [jumpProcess_of_lt_jumpTime_one hω]
   have hinner : ∀ yy : ℕ → E,
       (∫ ξ : ℕ → ℝ, {ω : (ℕ → E) × (ℕ → ℝ) | jumpTime lam ω.1 ω.2 1 ≤ t}ᶜ.indicator
@@ -8333,13 +8333,13 @@ theorem jumpMeasure_integral_eq_of_firstJump {lam : E → ℝ} (hlam : Measurabl
         ((yy, ξ) ∈ {ω : (ℕ → E) × (ℕ → ℝ) | jumpTime lam ω.1 ω.2 1 ≤ t}ᶜ)
           ↔ ξ 0 ∈ Set.Ioi (lam (yy 0) * t) := by
       intro ξ
-      simp only [Set.mem_compl_iff, Set.mem_setOf_eq, not_le, jumpTime_one, Set.mem_Ioi]
+      simp only [Set.mem_compl_iff, Set.mem_ofPred_eq, not_le, jumpTime_one, Set.mem_Ioi]
       rw [lt_div_iff₀ (hlam0 _), mul_comm t (lam (yy 0))]
     have hset : (fun ξ : ℕ → ℝ ↦ {ω : (ℕ → E) × (ℕ → ℝ) | jumpTime lam ω.1 ω.2 1 ≤ t}ᶜ.indicator
         (fun ω ↦ h (ω.1 0)) (yy, ξ))
         = {ξ : ℕ → ℝ | ξ 0 ∈ Set.Ioi (lam (yy 0) * t)}.indicator (fun _ ↦ h (yy 0)) := by
       funext ξ
-      simp only [Set.indicator_apply, hiff ξ, Set.mem_setOf_eq]
+      simp only [Set.indicator_apply, hiff ξ, Set.mem_ofPred_eq]
     rw [hset, integral_indicator_const (h (yy 0))
         (s := {ξ : ℕ → ℝ | ξ 0 ∈ Set.Ioi (lam (yy 0) * t)})
         (measurableSet_Ioi.preimage (measurable_pi_apply 0)), measureReal_def,
@@ -8512,7 +8512,7 @@ theorem jumpMeasure_integral_eq_renewal {lam : E → ℝ} (hlam : Measurable lam
         linarith
       rw [Set.indicator_of_mem
         (show ω ∈ {ω : (ℕ → E) × (ℕ → ℝ) | jumpTime lam ω.1 ω.2 1 ≤ t} from hcase)]
-      simp only [hGdef, if_pos hcond]
+      simp only [hGdef, ite_eq_left hcond]
       rw [jumpProcess_jumpShift hcase (hω t), jumpTime_one]
     · have hcond : ¬ (ω.2 0 ≤ lam (ω.1 0) * t) := by
         intro hcon
@@ -8520,7 +8520,7 @@ theorem jumpMeasure_integral_eq_renewal {lam : E → ℝ} (hlam : Measurable lam
         exact hcase (by linarith)
       rw [Set.indicator_of_notMem
         (show ω ∉ {ω : (ℕ → E) × (ℕ → ℝ) | jumpTime lam ω.1 ω.2 1 ≤ t} from hcase)]
-      simp only [hGdef, if_neg hcond]
+      simp only [hGdef, ite_eq_right hcond]
   rw [jumpMeasure_integral_eq_of_firstJump hlam hlam0 mu nu hh hC ht, key,
     integral_jumpMeasure_eq_of_split mu nu hGmeas hGb]
   refine congrArg _ (integral_congr_ae (Filter.Eventually.of_forall fun z ↦ ?_))
@@ -8534,10 +8534,10 @@ theorem jumpMeasure_integral_eq_renewal {lam : E → ℝ} (hlam : Measurable lam
     by_cases hs : s ≤ lam z * t
     · rw [Set.indicator_of_mem (Set.mem_Iic.2 hs)]
       exact congrArg _ (integral_congr_ae
-        (Filter.Eventually.of_forall fun ω' ↦ by simp only [hGdef, if_pos hs]))
+        (Filter.Eventually.of_forall fun ω' ↦ by simp only [hGdef, ite_eq_left hs]))
     · rw [Set.indicator_of_notMem (fun hmem ↦ hs (Set.mem_Iic.1 hmem))]
       have hzero : (∫ ω', G ((z, s), ω') ∂(jumpMeasure mu (mu z))) = 0 := by
-        simp only [hGdef, if_neg hs, integral_zero]
+        simp only [hGdef, ite_eq_right hs, integral_zero]
       rw [hzero, mul_zero]
   rw [integral_expMeasure_one, hmul, setIntegral_indicator measurableSet_Iic,
     Set.Ioi_inter_Iic]
@@ -8732,7 +8732,7 @@ theorem abs_integral_jumpMeasure_add_sub_le {lam : E → ℝ} (hlam : Measurable
       have hGb : ∀ q, |G q| ≤ 2 * C := by
         intro q
         by_cases hq : q.1.2 ≤ lam q.1.1 * s
-        · simp only [hGdef, if_pos hq]
+        · simp only [hGdef, ite_eq_left hq]
           calc |h (jumpProcess lam ((s - q.1.2 / lam q.1.1) + t) q.2)
                   - jumpSemigroup lam mu h t (jumpProcess lam (s - q.1.2 / lam q.1.1) q.2)|
               ≤ |h (jumpProcess lam ((s - q.1.2 / lam q.1.1) + t) q.2)|
@@ -8740,17 +8740,17 @@ theorem abs_integral_jumpMeasure_add_sub_le {lam : E → ℝ} (hlam : Measurable
                 abs_sub _ _
             _ ≤ C + C := add_le_add (hC _) (abs_jumpSemigroup_le mu hC t _)
             _ = 2 * C := by ring
-        · simp only [hGdef, if_neg hq, abs_zero]
+        · simp only [hGdef, ite_eq_right hq, abs_zero]
           linarith
       have hG'b : ∀ q, |G' q| ≤ 2 * C := by
         intro q
         by_cases hq : q.1.2 ≤ lam q.1.1 * s
         · by_cases hq2 : jumpTime lam q.2.1 q.2.2 n ≤ s - q.1.2 / lam q.1.1
-          · simp only [hG'def, if_pos hq, if_pos hq2]
+          · simp only [hG'def, ite_eq_left hq, ite_eq_left hq2]
             rw [abs_of_nonneg (by linarith : (0:ℝ) ≤ 2 * C)]
-          · simp only [hG'def, if_pos hq, if_neg hq2, abs_zero]
+          · simp only [hG'def, ite_eq_left hq, ite_eq_right hq2, abs_zero]
             linarith
-        · simp only [hG'def, if_neg hq, abs_zero]
+        · simp only [hG'def, ite_eq_right hq, abs_zero]
           linarith
       -- The first identification: the shifted functional is the integrand on `{T 1 ≤ s}`.
       have hGeq : (∫ ω, G ((ω.1 0, ω.2 0), jumpShift ω) ∂(jumpMeasure mu nu))
@@ -8764,7 +8764,7 @@ theorem abs_integral_jumpMeasure_add_sub_le {lam : E → ℝ} (hlam : Measurable
           rw [jumpTime_one, div_le_iff₀ (hlam0 _), mul_comm s (lam (ω.1 0))]
         by_cases hωS : s < jumpTime lam ω.1 ω.2 1
         · rw [Set.indicator_of_notMem (by simpa using hωS)]
-          simp only [hGdef, if_neg (fun hq ↦ absurd (hiff.1 hq) (not_le.2 hωS))]
+          simp only [hGdef, ite_eq_right (fun hq ↦ absurd (hiff.1 hq) (not_le.2 hωS))]
         · have hT1 : jumpTime lam ω.1 ω.2 1 ≤ s := not_lt.1 hωS
           rw [Set.indicator_of_mem (by simpa using hωS)]
           have e1 : jumpProcess lam (s + t) ω
@@ -8779,7 +8779,7 @@ theorem abs_integral_jumpMeasure_add_sub_le {lam : E → ℝ} (hlam : Measurable
             congr 1
             rw [jumpTime_one]
           rw [e1, e2]
-          simp only [hGdef, if_pos (hiff.2 hT1)]
+          simp only [hGdef, ite_eq_left (hiff.2 hT1)]
       -- The second identification: the majorant is the indicator of two jump time conditions.
       have hG'eq : (∫ ω, G' ((ω.1 0, ω.2 0), jumpShift ω) ∂(jumpMeasure mu nu))
           ≤ 2 * C * (jumpMeasure mu nu).real
@@ -8806,12 +8806,12 @@ theorem abs_integral_jumpMeasure_add_sub_le {lam : E → ℝ} (hlam : Measurable
             · rw [Set.indicator_of_mem (show ω ∈ {ω : (ℕ → E) × (ℕ → ℝ) |
                   jumpTime lam ω.1 ω.2 1 ≤ s} ∩ {ω : (ℕ → E) × (ℕ → ℝ) |
                     jumpTime lam ω.1 ω.2 (n + 1) ≤ s} from ⟨h1, h2⟩)]
-              simp only [hG'def, if_pos (hiff.2 h1), if_pos (hiff2.2 h2)]
+              simp only [hG'def, ite_eq_left (hiff.2 h1), ite_eq_left (hiff2.2 h2)]
             · rw [Set.indicator_of_notMem (fun hmem ↦ h2 hmem.2)]
-              simp only [hG'def, if_pos (hiff.2 h1),
-                if_neg (fun hq ↦ h2 (hiff2.1 hq))]
+              simp only [hG'def, ite_eq_left (hiff.2 h1),
+                ite_eq_right (fun hq ↦ h2 (hiff2.1 hq))]
           · rw [Set.indicator_of_notMem (fun hmem ↦ h1 hmem.1)]
-            simp only [hG'def, if_neg (fun hq ↦ h1 (hiff.1 hq))]
+            simp only [hG'def, ite_eq_right (fun hq ↦ h1 (hiff.1 hq))]
         rw [hW, integral_indicator_const (2 * C) hWm, smul_eq_mul, mul_comm]
         exact mul_le_mul_of_nonneg_left (measureReal_mono Set.inter_subset_right)
           (by linarith)
@@ -8831,7 +8831,7 @@ theorem abs_integral_jumpMeasure_add_sub_le {lam : E → ℝ} (hlam : Measurable
                     ∂(jumpMeasure mu (mu p.1)) := by
             rw [← integral_sub (hAi _ (mu p.1) inferInstance) (hBi _ (mu p.1) inferInstance)]
             refine integral_congr_ae (Filter.Eventually.of_forall fun ω' ↦ ?_)
-            simp only [hGdef, if_pos hp]
+            simp only [hGdef, ite_eq_left hp]
           have hR' : (∫ ω', G' (p, ω') ∂(jumpMeasure mu (mu p.1)))
               = 2 * C * (jumpMeasure mu (mu p.1)).real
                   {ω' : (ℕ → E) × (ℕ → ℝ) | jumpTime lam ω'.1 ω'.2 n ≤ s - p.2 / lam p.1} := by
@@ -8842,10 +8842,10 @@ theorem abs_integral_jumpMeasure_add_sub_le {lam : E → ℝ} (hlam : Measurable
               by_cases hq : jumpTime lam ω'.1 ω'.2 n ≤ s - p.2 / lam p.1
               · rw [Set.indicator_of_mem (show ω' ∈ {ω' : (ℕ → E) × (ℕ → ℝ) |
                     jumpTime lam ω'.1 ω'.2 n ≤ s - p.2 / lam p.1} from hq)]
-                simp only [hG'def, if_pos hp, if_pos hq]
+                simp only [hG'def, ite_eq_left hp, ite_eq_left hq]
               · rw [Set.indicator_of_notMem (show ω' ∉ {ω' : (ℕ → E) × (ℕ → ℝ) |
                     jumpTime lam ω'.1 ω'.2 n ≤ s - p.2 / lam p.1} from hq)]
-                simp only [hG'def, if_pos hp, if_neg hq]
+                simp only [hG'def, ite_eq_left hp, ite_eq_right hq]
             rw [hfun, integral_indicator_const (2 * C)
               (measurableSet_le (measurable_jumpTime hlam n) measurable_const), smul_eq_mul,
               mul_comm]
@@ -8853,10 +8853,10 @@ theorem abs_integral_jumpMeasure_add_sub_le {lam : E → ℝ} (hlam : Measurable
           exact ih (mu p.1) inferInstance _ hs'
         · have h0 : ∀ ω' : (ℕ → E) × (ℕ → ℝ), G (p, ω') = 0 := by
             intro ω'
-            simp only [hGdef, if_neg hp]
+            simp only [hGdef, ite_eq_right hp]
           have h0' : ∀ ω' : (ℕ → E) × (ℕ → ℝ), G' (p, ω') = 0 := by
             intro ω'
-            simp only [hG'def, if_neg hp]
+            simp only [hG'def, ite_eq_right hp]
           simp only [h0, h0', integral_zero, abs_zero, le_refl]
       have hfinal : |∫ ω, G ((ω.1 0, ω.2 0), jumpShift ω) ∂(jumpMeasure mu nu)|
           ≤ ∫ ω, G' ((ω.1 0, ω.2 0), jumpShift ω) ∂(jumpMeasure mu nu) := by
@@ -8987,7 +8987,7 @@ half open interval of `ℝ≥0`.** This is what lets the four bookkeeping facts 
 theorem lebesgueClock_interval_optional_eq (a b : ℝ≥0) :
     lebesgueClock.interval Clock.Conv.optional a b = Set.Ioc a b := by
   ext x
-  simp [Clock.interval, Set.mem_diff, Set.mem_Iic, Set.mem_Ioc, not_le]
+  simp [Clock.interval, Set.mem_sdiff, Set.mem_Iic, Set.mem_Ioc, not_le]
 
 /-- The preimage of an `ℝ≥0` window under `Real.toNNReal`, intersected with the nonnegative reals
 that `lebesgueClock.q` restricts to, is the corresponding real window: the fact that makes the
@@ -9383,14 +9383,14 @@ theorem abs_integral_jumpProcess_sub_sub_le {lam : E → ℝ} (hlam : Measurable
         rw [jumpTime_one, div_le_iff₀ (hlam0 _)] at hcase
         linarith
       rw [Set.indicator_of_mem (show ω ∈ S from hcase)]
-      simp only [hG1def, if_pos hcnd]
+      simp only [hG1def, ite_eq_left hcnd]
       rw [jumpProcess_jumpShift hcase (hω t), jumpTime_one]
     · have hcnd : ¬ (ω.2 0 ≤ lam (ω.1 0) * t) := by
         intro hcon
         rw [jumpTime_one, div_le_iff₀ (hlam0 _)] at hcase
         exact hcase (by linarith)
       rw [Set.indicator_of_notMem (show ω ∉ S from hcase)]
-      simp only [hG1def, if_neg hcnd]
+      simp only [hG1def, ite_eq_right hcnd]
   -- the comparison functional integrates in closed form
   have key2 : ∫ ω, G2 ((ω.1 0, ω.2 0), jumpShift ω) ∂(jumpMeasure mu nu)
       = ∫ z, (1 - Real.exp (-(lam z * t))) * m z ∂nu := by
@@ -9401,10 +9401,10 @@ theorem abs_integral_jumpProcess_sub_sub_le {lam : E → ℝ} (hlam : Measurable
       intro s
       by_cases hs : s ≤ lam z * t
       · rw [Set.indicator_of_mem (Set.mem_Iic.2 hs)]
-        simp only [hG2def, if_pos hs]
+        simp only [hG2def, ite_eq_left hs]
         exact integral_chain_zero_eq mu (mu z) hh
       · rw [Set.indicator_of_notMem (fun hmem ↦ hs (Set.mem_Iic.1 hmem))]
-        simp only [hG2def, if_neg hs, integral_zero]
+        simp only [hG2def, ite_eq_right hs, integral_zero]
     simp_rw [hinner]
     rw [integral_indicator_const (m z) measurableSet_Iic,
       expMeasure_one_real_Iic (hat z), smul_eq_mul]
@@ -9450,7 +9450,7 @@ theorem abs_integral_jumpProcess_sub_sub_le {lam : E → ℝ} (hlam : Measurable
         have hrw : (fun ω' : (ℕ → E) × (ℕ → ℝ) ↦ (G1 - G2) ((z, s), ω'))
             = fun ω' ↦ h (jumpProcess lam (t - s / lam z) ω') - h (ω'.1 0) := by
           funext ω'
-          simp only [Pi.sub_apply, hG1def, hG2def, if_pos hs]
+          simp only [Pi.sub_apply, hG1def, hG2def, ite_eq_left hs]
         have hia : Integrable
             (fun ω' : (ℕ → E) × (ℕ → ℝ) ↦ h (jumpProcess lam (t - s / lam z) ω'))
             (jumpMeasure mu (mu z)) :=
@@ -9469,7 +9469,7 @@ theorem abs_integral_jumpProcess_sub_sub_le {lam : E → ℝ} (hlam : Measurable
       · rw [Set.indicator_of_notMem (fun hmem ↦ hs (Set.mem_Iic.1 hmem)), hgdef]
         have hrw : (fun ω' : (ℕ → E) × (ℕ → ℝ) ↦ (G1 - G2) ((z, s), ω')) = fun _ ↦ (0:ℝ) := by
           funext ω'
-          simp only [Pi.sub_apply, hG1def, hG2def, if_neg hs, sub_zero]
+          simp only [Pi.sub_apply, hG1def, hG2def, ite_eq_right hs, sub_zero]
         simp only [hrw, integral_zero, norm_zero, le_refl]
     have hgint : Integrable
         ((Set.Iic (lam z * t)).indicator (fun _ ↦ 2 * C * L * t)) (expMeasure 1) :=
@@ -9811,7 +9811,7 @@ theorem measurableSet_nonExplosive {lam : E → ℝ} (hlam : Measurable lam) :
   have hEq : NonExplosive lam
       = ⋂ m : ℕ, ⋃ n : ℕ, {ω : (ℕ → E) × (ℕ → ℝ) | (m : ℝ) < jumpTime lam ω.1 ω.2 (n + 1)} := by
     ext ω
-    simp only [NonExplosive, Set.mem_setOf_eq, Set.mem_iInter, Set.mem_iUnion]
+    simp only [NonExplosive, Set.mem_ofPred_eq, Set.mem_iInter, Set.mem_iUnion]
     refine ⟨fun h m ↦ h m, fun h t ↦ ?_⟩
     obtain ⟨m, hm⟩ := exists_nat_gt t
     obtain ⟨n, hn⟩ := h m
@@ -9954,9 +9954,9 @@ theorem jumpProcess_jumpPrepend {lam : E → ℝ} {x : E} {a : ℝ} {ω : (ℕ �
     jumpProcess lam r (jumpPrepend x a ω)
       = if r < a / lam x then x else jumpProcess lam (r - a / lam x) ω := by
   by_cases hr : r < a / lam x
-  · rw [if_pos hr, jumpProcess_of_lt_jumpTime_one (by rwa [jumpTime_one_jumpPrepend])]
+  · rw [ite_eq_left hr, jumpProcess_of_lt_jumpTime_one (by rwa [jumpTime_one_jumpPrepend])]
     rfl
-  · rw [if_neg hr]
+  · rw [ite_eq_right hr]
     have hex : ∃ n, r < jumpTime lam (jumpPrepend x a ω).1 (jumpPrepend x a ω).2 (n + 1) :=
       (jumpPrepend_mem_nonExplosive_iff x a ω).2 hω r
     rw [jumpProcess_jumpShift (by rw [jumpTime_one_jumpPrepend]; exact not_lt.1 hr) hex,
@@ -9999,8 +9999,8 @@ theorem IsPastFunctional.comp_jumpPrepend {lam : E → ℝ} {s : ℝ}
     _ ((jumpPrepend_mem_nonExplosive_iff x a ω').2 hω') fun r hr0 hr ↦ ?_
   rw [jumpProcess_jumpPrepend hω, jumpProcess_jumpPrepend hω']
   by_cases hlt : r < a / lam x
-  · rw [if_pos hlt, if_pos hlt]
-  · rw [if_neg hlt, if_neg hlt]
+  · rw [ite_eq_left hlt, ite_eq_left hlt]
+  · rw [ite_eq_right hlt, ite_eq_right hlt]
     exact hpath _ (by linarith [not_lt.1 hlt]) (by linarith)
 
 /-- **The canonical representative of the past is measurable in the initial state.** -/
@@ -10252,7 +10252,7 @@ theorem abs_integral_jumpMeasure_add_sub_le_past {lam : E → ℝ} (hlam : Measu
       have hKb : ∀ q, |K q| ≤ 2 * C := by
         intro q
         by_cases hq : q.1.2 ≤ lam q.1.1 * s
-        · simp only [hKdef, if_pos hq]
+        · simp only [hKdef, ite_eq_left hq]
           rw [abs_mul]
           have hb2 : |h (jumpProcess lam ((s - q.1.2 / lam q.1.1) + t) q.2)
                   - jumpSemigroup lam mu h t (jumpProcess lam (s - q.1.2 / lam q.1.1) q.2)|
@@ -10267,17 +10267,17 @@ theorem abs_integral_jumpMeasure_add_sub_le_past {lam : E → ℝ} (hlam : Measu
           calc |G (jumpPrepend q.1.1 q.1.2 q.2)| * _
               ≤ 1 * (2 * C) := mul_le_mul (hGb _) hb2 (abs_nonneg _) zero_le_one
             _ = 2 * C := one_mul _
-        · simp only [hKdef, if_neg hq, abs_zero]
+        · simp only [hKdef, ite_eq_right hq, abs_zero]
           linarith
       have hK'b : ∀ q, |K' q| ≤ 2 * C := by
         intro q
         by_cases hq : q.1.2 ≤ lam q.1.1 * s
         · by_cases hq2 : jumpTime lam q.2.1 q.2.2 n ≤ s - q.1.2 / lam q.1.1
-          · simp only [hK'def, if_pos hq, if_pos hq2]
+          · simp only [hK'def, ite_eq_left hq, ite_eq_left hq2]
             rw [abs_of_nonneg (by linarith : (0:ℝ) ≤ 2 * C)]
-          · simp only [hK'def, if_pos hq, if_neg hq2, abs_zero]
+          · simp only [hK'def, ite_eq_left hq, ite_eq_right hq2, abs_zero]
             linarith
-        · simp only [hK'def, if_neg hq, abs_zero]
+        · simp only [hK'def, ite_eq_right hq, abs_zero]
           linarith
       -- The first identification: the shifted functional is the integrand on `{T 1 ≤ s}`.
       have hKeq : (∫ ω, K ((ω.1 0, ω.2 0), jumpShift ω) ∂(jumpMeasure mu nu))
@@ -10292,7 +10292,7 @@ theorem abs_integral_jumpMeasure_add_sub_le_past {lam : E → ℝ} (hlam : Measu
           rw [jumpTime_one, div_le_iff₀ (hlam0 _), mul_comm s (lam (ω.1 0))]
         by_cases hωS : s < jumpTime lam ω.1 ω.2 1
         · rw [Set.indicator_of_notMem (by simpa using hωS)]
-          simp only [hKdef, if_neg (fun hq ↦ absurd (hiff.1 hq) (not_le.2 hωS))]
+          simp only [hKdef, ite_eq_right (fun hq ↦ absurd (hiff.1 hq) (not_le.2 hωS))]
         · have hT1 : jumpTime lam ω.1 ω.2 1 ≤ s := not_lt.1 hωS
           rw [Set.indicator_of_mem (by simpa using hωS)]
           have e1 : jumpProcess lam (s + t) ω
@@ -10307,7 +10307,7 @@ theorem abs_integral_jumpMeasure_add_sub_le_past {lam : E → ℝ} (hlam : Measu
             congr 1
             rw [jumpTime_one]
           rw [e1, e2]
-          simp only [hKdef, if_pos (hiff.2 hT1), jumpPrepend_self]
+          simp only [hKdef, ite_eq_left (hiff.2 hT1), jumpPrepend_self]
           ring
       -- The second identification: the majorant is the indicator of two jump time conditions.
       have hK'eq : (∫ ω, K' ((ω.1 0, ω.2 0), jumpShift ω) ∂(jumpMeasure mu nu))
@@ -10335,11 +10335,11 @@ theorem abs_integral_jumpMeasure_add_sub_le_past {lam : E → ℝ} (hlam : Measu
             · rw [Set.indicator_of_mem (show ω ∈ {ω : (ℕ → E) × (ℕ → ℝ) |
                   jumpTime lam ω.1 ω.2 1 ≤ s} ∩ {ω : (ℕ → E) × (ℕ → ℝ) |
                     jumpTime lam ω.1 ω.2 (n + 1) ≤ s} from ⟨h1, h2⟩)]
-              simp only [hK'def, if_pos (hiff.2 h1), if_pos (hiff2.2 h2)]
+              simp only [hK'def, ite_eq_left (hiff.2 h1), ite_eq_left (hiff2.2 h2)]
             · rw [Set.indicator_of_notMem (fun hmem ↦ h2 hmem.2)]
-              simp only [hK'def, if_pos (hiff.2 h1), if_neg (fun hq ↦ h2 (hiff2.1 hq))]
+              simp only [hK'def, ite_eq_left (hiff.2 h1), ite_eq_right (fun hq ↦ h2 (hiff2.1 hq))]
           · rw [Set.indicator_of_notMem (fun hmem ↦ h1 hmem.1)]
-            simp only [hK'def, if_neg (fun hq ↦ h1 (hiff.1 hq))]
+            simp only [hK'def, ite_eq_right (fun hq ↦ h1 (hiff.1 hq))]
         rw [hW, integral_indicator_const (2 * C) hWm, smul_eq_mul, mul_comm]
         exact mul_le_mul_of_nonneg_left (measureReal_mono Set.inter_subset_right)
           (by linarith)
@@ -10366,7 +10366,7 @@ theorem abs_integral_jumpMeasure_add_sub_le_past {lam : E → ℝ} (hlam : Measu
             rw [← integral_sub (hAi _ (mu p.1) inferInstance Gp hGpm hGpb)
               (hBi _ (mu p.1) inferInstance Gp hGpm hGpb)]
             refine integral_congr_ae (Filter.Eventually.of_forall fun ω' ↦ ?_)
-            simp only [hKdef, if_pos hp, hGpdef]
+            simp only [hKdef, ite_eq_left hp, hGpdef]
             ring
           have hR' : (∫ ω', K' (p, ω') ∂(jumpMeasure mu (mu p.1)))
               = 2 * C * (jumpMeasure mu (mu p.1)).real
@@ -10378,10 +10378,10 @@ theorem abs_integral_jumpMeasure_add_sub_le_past {lam : E → ℝ} (hlam : Measu
               by_cases hq : jumpTime lam ω'.1 ω'.2 n ≤ s - p.2 / lam p.1
               · rw [Set.indicator_of_mem (show ω' ∈ {ω' : (ℕ → E) × (ℕ → ℝ) |
                     jumpTime lam ω'.1 ω'.2 n ≤ s - p.2 / lam p.1} from hq)]
-                simp only [hK'def, if_pos hp, if_pos hq]
+                simp only [hK'def, ite_eq_left hp, ite_eq_left hq]
               · rw [Set.indicator_of_notMem (show ω' ∉ {ω' : (ℕ → E) × (ℕ → ℝ) |
                     jumpTime lam ω'.1 ω'.2 n ≤ s - p.2 / lam p.1} from hq)]
-                simp only [hK'def, if_pos hp, if_neg hq]
+                simp only [hK'def, ite_eq_left hp, ite_eq_right hq]
             rw [hfun, integral_indicator_const (2 * C)
               (measurableSet_le (measurable_jumpTime hlam n) measurable_const), smul_eq_mul,
               mul_comm]
@@ -10389,10 +10389,10 @@ theorem abs_integral_jumpMeasure_add_sub_le_past {lam : E → ℝ} (hlam : Measu
           exact ih (mu p.1) inferInstance _ hs' Gp hGpm hGpb hGpp
         · have h0 : ∀ ω' : (ℕ → E) × (ℕ → ℝ), K (p, ω') = 0 := by
             intro ω'
-            simp only [hKdef, if_neg hp]
+            simp only [hKdef, ite_eq_right hp]
           have h0' : ∀ ω' : (ℕ → E) × (ℕ → ℝ), K' (p, ω') = 0 := by
             intro ω'
-            simp only [hK'def, if_neg hp]
+            simp only [hK'def, ite_eq_right hp]
           simp only [h0, h0', integral_zero, abs_zero, le_refl]
       have hfinal : |∫ ω, K ((ω.1 0, ω.2 0), jumpShift ω) ∂(jumpMeasure mu nu)|
           ≤ ∫ ω, K' ((ω.1 0, ω.2 0), jumpShift ω) ∂(jumpMeasure mu nu) := by
@@ -11501,10 +11501,10 @@ theorem abs_sub_sum_le_of_recursion [IsMarkovKernel mu] (hlam : Measurable lam)
           volume 0 (t : ℝ) := fun k ↦ (by fun_prop : Continuous _).intervalIntegrable _ _
       have hsint : IntervalIntegrable
           (fun r : ℝ ↦ ∑ k ∈ Finset.range n, (r ^ k / k.factorial) * c k) volume 0 (t : ℝ) :=
-        (continuous_finset_sum _ fun k _ ↦ (by fun_prop : Continuous _)).intervalIntegrable _ _
+        (continuous_finsetSum _ fun k _ ↦ (by fun_prop : Continuous _)).intervalIntegrable _ _
       have hsplit : ∑ k ∈ Finset.range n, ((t : ℝ) ^ (k + 1) / (k + 1).factorial) * c k
           = ∫ r in (0:ℝ)..(t : ℝ), ∑ k ∈ Finset.range n, (r ^ k / k.factorial) * c k := by
-        rw [intervalIntegral.integral_finset_sum (fun k _ ↦ hpint k)]
+        rw [intervalIntegral.integral_finsetSum (fun k _ ↦ hpint k)]
         exact Finset.sum_congr rfl fun k _ ↦ (intervalIntegral_pow_div_factorial _ hT k (c k)).symm
       have hgoal : I t φ - ∑ k ∈ Finset.range (n + 1),
             ((t : ℝ) ^ k / k.factorial) * I 0 ((jumpApply lam mu)^[k] φ)
@@ -12474,7 +12474,7 @@ theorem jumpProcess_absorbing_const (t : ℝ) :
     by_cases ht : t < 1
     · exact Nat.le_zero.1 (stepIndex_le (by rw [jumpTime_absorb 0]; exact ht))
     · refine Nat.sInf_eq_zero.2 (Or.inr (Set.eq_empty_iff_forall_notMem.2 fun k hk => ?_))
-      rw [Set.mem_setOf_eq, jumpTime_absorb k] at hk
+      rw [Set.mem_ofPred_eq, jumpTime_absorb k] at hk
       exact ht hk
   simp [jumpProcess, stepPath, h0, absorbChain]
 
@@ -12587,7 +12587,7 @@ theorem jumpProcessE_eq_jumpProcess (hlam : ∀ x, 0 < lam x) (hxi : ∀ n, 0 < 
   have hset : {m | ENNReal.ofReal t < jumpTimeE lam y xi (m + 1)}
       = {m | t < jumpTime lam y xi (m + 1)} := by
     ext m
-    rw [Set.mem_setOf_eq, Set.mem_setOf_eq,
+    rw [Set.mem_ofPred_eq, Set.mem_ofPred_eq,
       jumpTimeE_eq_ofReal hlam (fun k => (hxi k).le),
       ENNReal.ofReal_lt_ofReal_iff (hpos m)]
   simp only [jumpProcessE, jumpProcess, stepPath, stepIndex, hset]
@@ -12780,7 +12780,7 @@ theorem measurableSet_nonExplosiveE [MeasurableSpace E] {lam : E → ℝ} (hlam 
   have hEq : NonExplosiveE lam = ⋂ m : ℕ, ⋃ n : ℕ,
       {ω : (ℕ → E) × (ℕ → ℝ) | ENNReal.ofReal (m : ℝ) < jumpTimeE lam ω.1 ω.2 (n + 1)} := by
     ext ω
-    simp only [NonExplosiveE, Set.mem_setOf_eq, Set.mem_iInter, Set.mem_iUnion]
+    simp only [NonExplosiveE, Set.mem_ofPred_eq, Set.mem_iInter, Set.mem_iUnion]
     refine ⟨fun h m ↦ h m, fun h t ↦ ?_⟩
     obtain ⟨m, hm⟩ := exists_nat_gt t
     obtain ⟨n, hn⟩ := h m
@@ -13224,7 +13224,7 @@ theorem measure_sum_waitBig_lt_le {b : ℕ → ℝ} (hb0 : ∀ n, 0 ≤ b n) (hb
   refine le_trans (measure_mono ?_)
     (le_trans (meas_ge_le_variance_div_sq hmem hc) (ENNReal.ofReal_le_ofReal ?_))
   · intro ξ hξ
-    simp only [Set.mem_setOf_eq] at hξ ⊢
+    simp only [Set.mem_ofPred_eq] at hξ ⊢
     rw [hmean, abs_sub_comm, abs_of_nonneg (by linarith)]
     linarith
   · calc variance Y waitingMeasure / (Real.exp (-1) * B / 2) ^ 2
@@ -13276,7 +13276,7 @@ theorem ae_tendsto_sum_smul_waiting_atTop {c : ℕ → ℝ} (hc : ∀ n, 0 ≤ c
       filter_upwards [hev] with N hN
       refine le_trans (measure_mono ?_) (measure_sum_waitBig_lt_le hb0 hb1 hN.2)
       intro ξ hξ
-      simp only [Set.mem_setOf_eq, not_exists, not_le] at hξ ⊢
+      simp only [Set.mem_ofPred_eq, not_exists, not_le] at hξ ⊢
       exact lt_of_lt_of_le (hξ N) hN.1
   filter_upwards [step1, ae_pos_waiting] with ξ hξ hpos
   refine tendsto_atTop_mono (fun N ↦ Finset.sum_le_sum fun n _ ↦ ?_) hξ
@@ -13496,12 +13496,12 @@ theorem isMarkovKernel_birthDeathKernel (hb : ∀ x, 0 ≤ b x) (hd : ∀ x, 0 �
   refine ⟨fun x ↦ ⟨?_⟩⟩
   rw [birthDeathKernel_apply]
   by_cases h0 : b x + d x = 0
-  · rw [if_pos h0]; simp
+  · rw [ite_eq_left h0]; simp
   · have hpos : 0 < b x + d x := lt_of_le_of_ne (by linarith [hb x, hd x]) (Ne.symm h0)
     have hmass : (ENNReal.ofReal (b x / (b x + d x)) • Measure.dirac (x + 1)
           + ENNReal.ofReal (d x / (b x + d x)) • Measure.dirac (x - 1) : Measure ℕ) Set.univ
         = ENNReal.ofReal (b x / (b x + d x)) + ENNReal.ofReal (d x / (b x + d x)) := by simp
-    rw [if_neg h0, hmass, ← ENNReal.ofReal_add (div_nonneg (hb x) hpos.le)
+    rw [ite_eq_right h0, hmass, ← ENNReal.ofReal_add (div_nonneg (hb x) hpos.le)
       (div_nonneg (hd x) hpos.le),
       show b x / (b x + d x) + d x / (b x + d x) = 1 from by
         rw [← add_div, div_self hpos.ne'],
@@ -13518,7 +13518,7 @@ theorem jumpApply_birthDeath (hb : ∀ x, 0 ≤ b x) (hd : ∀ x, 0 ≤ d x) (f 
   by_cases h0 : b x + d x = 0
   · have hb0 : b x = 0 := le_antisymm (by linarith [hd x]) (hb x)
     have hd0 : d x = 0 := le_antisymm (by linarith [hb x]) (hd x)
-    rw [if_pos h0, birthDeathRate, h0, hb0, hd0]
+    rw [ite_eq_left h0, birthDeathRate, h0, hb0, hd0]
     simp
   · have hpos : 0 < b x + d x := lt_of_le_of_ne (by linarith [hb x, hd x]) (Ne.symm h0)
     have hb' : 0 ≤ b x / (b x + d x) := div_nonneg (hb x) hpos.le
@@ -13526,7 +13526,7 @@ theorem jumpApply_birthDeath (hb : ∀ x, 0 ≤ b x) (hd : ∀ x, 0 ≤ d x) (f 
     have hint : ∀ (c : ENNReal) (a : ℕ), c ≠ ⊤ →
         Integrable (fun y ↦ f y - f x) (c • Measure.dirac a) := fun c a hc ↦
       (integrable_dirac (by simp [enorm_eq_nnnorm])).smul_measure hc
-    rw [if_neg h0,
+    rw [ite_eq_right h0,
       integral_add_measure (hint _ _ ENNReal.ofReal_ne_top) (hint _ _ ENNReal.ofReal_ne_top),
       integral_smul_measure, integral_smul_measure, integral_dirac, integral_dirac,
       ENNReal.toReal_ofReal hb', ENNReal.toReal_ofReal hd', birthDeathRate, smul_eq_mul,
@@ -13744,10 +13744,10 @@ theorem not_isStoppingTime_min_jumpTimeE {lam : E → ℝ} (hlam : Measurable la
   have h₂ : jumpTimeE lam ω₂.1 ω₂.2 1 = 1 := by
     rw [hω₂, jumpTimeE_const_chain, ENNReal.div_self hne ENNReal.ofReal_ne_top]
   have hmem₁ : ω₁ ∈ S := by
-    rw [hS, Set.mem_setOf_eq, h₁, hcoe]
+    rw [hS, Set.mem_ofPred_eq, h₁, hcoe]
     exact le_trans (min_le_left _ _) (ENNReal.ofReal_le_ofReal (by norm_num))
   have hmem₂ : ω₂ ∉ S := by
-    rw [hS, Set.mem_setOf_eq, h₂, min_self, hcoe, ← ENNReal.ofReal_one,
+    rw [hS, Set.mem_ofPred_eq, h₂, min_self, hcoe, ← ENNReal.ofReal_one,
       ENNReal.ofReal_le_ofReal_iff (by norm_num)]
     norm_num
   -- but no `𝓕 t₀`-measurable function separates two points with equal paths
@@ -14256,7 +14256,7 @@ theorem jumpProcessE_eq_of_rate_eq_on_path {lam lam' : E → ℝ} {y : ℕ → E
         · exact Or.inr (heqk.trans_le h)
       · rw [hTk1]; exact hk2
     simp [jumpProcessE, stepPath, h1, h2]
-  · push_neg at hex
+  · push Not at hex
     have hall : ∀ m, jumpTimeE lam y xi m ≤ ENNReal.ofReal t := by
       intro m
       cases m with
@@ -14303,7 +14303,7 @@ theorem ofReal_lam_jumpProcessE_lt_of_lt_rateTime {lam : E → ℝ} {n : ℕ}
     ENNReal.ofReal (lam (jumpProcessE lam s ω)) < (n : ENNReal) := by
   refine lt_of_le_of_lt (le_rateSup (t := s) ⟨hs, le_rfl⟩) ?_
   by_contra hcon
-  push_neg at hcon
+  push Not at hcon
   have hs' : ((Real.toNNReal s : ℝ≥0) : ℝ) = s := Real.coe_toNNReal s hs
   have h2 : rateTime lam n ω ≤ ((Real.toNNReal s : ℝ≥0) : ENNReal) :=
     (rateTime_le_iff (Real.toNNReal s)).2 (by rwa [hs'])
@@ -14460,7 +14460,7 @@ theorem naturalFiltration_inter_le {ι' : Type*} [Preorder ι'] {Ω' : Type*}
       measurableSet_compl := fun B hB ↦ by
         have hset : Bᶜ ∩ N = N \ (B ∩ N) := by
           ext ω
-          simp only [Set.mem_inter_iff, Set.mem_compl_iff, Set.mem_diff]
+          simp only [Set.mem_inter_iff, Set.mem_compl_iff, Set.mem_sdiff]
           tauto
         rw [hset]
         exact hN.diff hB
@@ -14509,7 +14509,7 @@ theorem naturalFiltration_inter_le_of_measurable {ι' : Type*} [Preorder ι'] {�
       measurableSet_compl := fun B hB ↦ by
         have hset : Bᶜ ∩ N = N \ (B ∩ N) := by
           ext ω
-          simp only [Set.mem_inter_iff, Set.mem_compl_iff, Set.mem_diff]
+          simp only [Set.mem_inter_iff, Set.mem_compl_iff, Set.mem_sdiff]
           tauto
         rw [hset]
         exact hN.diff hB
@@ -14617,11 +14617,11 @@ theorem lt_rateTime_iff_rateSup_lt {lam : E → ℝ} {n : ℕ} {ω : (ℕ → E)
   constructor
   · intro h
     by_contra hcon
-    push_neg at hcon
+    push Not at hcon
     exact absurd ((rateTime_le_iff s).2 hcon) (not_le.2 h)
   · intro h
     by_contra hcon
-    push_neg at hcon
+    push Not at hcon
     exact absurd ((rateTime_le_iff s).1 hcon) (not_le.2 h)
 
 /-- **The set on which the local process has not yet reached the level is a set of the truncated
@@ -14631,7 +14631,7 @@ theorem setOf_lt_rateTime_eq {lam : E → ℝ} {n : ℕ} (s : ℝ≥0) :
     {ω : (ℕ → E) × (ℕ → ℝ) | ((s : ℝ≥0) : ENNReal) < rateTime lam n ω}
       = {ω : (ℕ → E) × (ℕ → ℝ) | rateSup (truncRate lam n) (s : ℝ) ω < (n : ENNReal)} := by
   ext ω
-  rw [Set.mem_setOf_eq, Set.mem_setOf_eq, lt_rateTime_iff_rateSup_lt,
+  rw [Set.mem_ofPred_eq, Set.mem_ofPred_eq, lt_rateTime_iff_rateSup_lt,
     ← rateSup_truncRate_lt_iff s.coe_nonneg]
 
 /-- The set is an event of the local filtration, since `rateTime` is a stopping time for it. -/
@@ -14640,7 +14640,7 @@ theorem measurableSet_lt_rateTime {lam : E → ℝ} (hlam : Measurable lam) (n :
       {ω : (ℕ → E) × (ℕ → ℝ) | ((s : ℝ≥0) : ENNReal) < rateTime lam n ω} := by
   refine MeasurableSet.congr (isStoppingTime_rateTime hlam n s).compl ?_
   ext ω
-  simp only [Set.mem_compl_iff, Set.mem_setOf_eq]
+  simp only [Set.mem_compl_iff, Set.mem_ofPred_eq]
   exact not_le
 
 /-- And it is an event of the truncated filtration, by `setOf_lt_rateTime_eq`. -/
@@ -14817,7 +14817,7 @@ theorem jumpProcessE_eq_jumpProcess_of_nonneg {lam : E → ℝ} {y : ℕ → E} 
   have hset : {m | ENNReal.ofReal t < jumpTimeE lam y xi (m + 1)}
       = {m | t < jumpTime lam y xi (m + 1)} := by
     ext m
-    rw [Set.mem_setOf_eq, Set.mem_setOf_eq, jumpTimeE_eq_ofReal hlam hxi,
+    rw [Set.mem_ofPred_eq, Set.mem_ofPred_eq, jumpTimeE_eq_ofReal hlam hxi,
       ENNReal.ofReal_lt_ofReal_iff_of_nonneg ht]
   simp only [jumpProcessE, jumpProcess, stepPath, stepIndex, hset]
 
@@ -15964,7 +15964,7 @@ theorem jumpProcessE_truncRate_eq_of_rate_le {lam : E → ℝ} {n : ℕ} {y : �
     jumpProcessE (truncRate lam n) t (y, xi) = jumpProcessE lam t (y, xi) := by
   by_cases hex : ∃ m, ENNReal.ofReal t < jumpTimeE lam y xi (m + 1)
   · exact jumpProcessE_truncRate_eq hex hrate
-  · push_neg at hex
+  · push Not at hex
     have hall : ∀ m, jumpTimeE (truncRate lam n) y xi m = jumpTimeE lam y xi m := by
       intro m
       refine jumpTimeE_truncRate_eq hrate m ?_
@@ -16172,7 +16172,7 @@ theorem martingale_of_martingale_of_stopped {𝓖 𝓗 : Filtration ℝ≥0 m} {
     setIntegral_congr_fun hA₀m fun ω hω ↦ (hstop i j hij ω hω.2).symm
   have hunion : B ∪ A₀ = S := by
     ext ω
-    simp only [hBdef, hA₀def, Set.mem_union, Set.mem_inter_iff, Set.mem_setOf_eq]
+    simp only [hBdef, hA₀def, Set.mem_union, Set.mem_inter_iff, Set.mem_ofPred_eq]
     constructor
     · rintro (⟨h, _⟩ | ⟨h, _⟩) <;> exact h
     · intro h
@@ -16426,7 +16426,7 @@ theorem jumpProcess_isLocalMPSolution {lam : E → ℝ} (hlam : Measurable lam)
       {ω : (ℕ → E) × (ℕ → ℝ) | (⊥ : ENNReal) < rateTime lam (n + 1) ω} := by
     refine MeasurableSet.congr ((isStoppingTime_rateTime hlam (n + 1)) ⊥).compl ?_
     ext ω
-    simp only [Set.mem_compl_iff, Set.mem_setOf_eq]
+    simp only [Set.mem_compl_iff, Set.mem_ofPred_eq]
     exact not_le
   exact martingale_indicator_bot hmartG hbot
 
@@ -16630,7 +16630,7 @@ theorem jumpOperator_posRate [MeasurableSpace E] [MeasurableEq E] {lam : E → �
     (habs : ∀ x, lam x = 0 → mu x = Measure.dirac x) :
     jumpOperator (posRate lam) mu = jumpOperator lam mu := by
   ext p
-  simp only [jumpOperator, Set.mem_setOf_eq, jumpApply_posRate habs]
+  simp only [jumpOperator, Set.mem_ofPred_eq, jumpApply_posRate habs]
 
 /-! ### The chain does not move at an absorbing state -/
 
@@ -16822,12 +16822,12 @@ theorem jumpProcessE_posRate_eq_of_mem {lam : E → ℝ} {ω : (ℕ → E) × (�
     · have hjN' : j = Nat.find hex := le_antisymm hjN hjge
       have hkN : Nat.find hex ≤ k := by
         by_contra hcon
-        push_neg at hcon
+        push Not at hcon
         have h1 : j ≤ k := hkj hcon
         rw [hjN'] at h1
         exact absurd hcon (not_lt.2 h1)
       rw [hconst k hkN, hjN']
-  · push_neg at hex
+  · push Not at hex
     have hTeq : jumpTimeE (posRate lam) y xi = jumpTimeE lam y xi :=
       funext fun n ↦ jumpTimeE_congr_of_lt fun m _ ↦ posRate_of_ne (hex m)
     rw [hTeq]
@@ -16909,7 +16909,7 @@ theorem mem_nonExplosiveE_posRate_of_mem {lam : E → ℝ} (hlam0 : ∀ x, 0 ≤
     exact mem_nonExplosiveE_of_tendsto_sum (fun k ↦ posRate_pos hlam0 (ω.1 k)) hxi
       (tendsto_atTop_mono' atTop hev
         (tendsto_atTop_add_const_right atTop (-(∑ k ∈ Finset.range N, ω.2 k)) hsum))
-  · push_neg at hex
+  · push Not at hex
     have hTeq : jumpTimeE (posRate lam) ω.1 ω.2 = jumpTimeE lam ω.1 ω.2 :=
       funext fun n ↦ jumpTimeE_congr_of_lt fun m _ ↦ posRate_of_ne (hex m)
     intro t
@@ -17119,7 +17119,7 @@ theorem jumpProcess_isLocalMPSolution_of_nonneg [MeasurableEq E] {lam : E → �
       {ω : (ℕ → E) × (ℕ → ℝ) | (⊥ : ENNReal) < rateTime lam (n + 1) ω} := by
     refine MeasurableSet.congr ((isStoppingTime_rateTime hlam (n + 1)) ⊥).compl ?_
     ext ω
-    simp only [Set.mem_compl_iff, Set.mem_setOf_eq]
+    simp only [Set.mem_compl_iff, Set.mem_ofPred_eq]
     exact not_le
   exact martingale_indicator_bot hmartG hbot
 
@@ -17325,7 +17325,7 @@ theorem ae_mem_nonExplosiveE_linearBirthDeath {β δ : ℝ} (hβδ0 : 0 ≤ β +
   by_cases hex : ∃ m, y m = 0
   · obtain ⟨m, hm⟩ := hex
     exact Or.inl ⟨m, by rw [hm]; exact birthDeathRate_linear_zero⟩
-  · push_neg at hex
+  · push Not at hex
     exact Or.inr ⟨fun k ↦ birthDeathRate_linear_pos hβδ (hex k),
       not_summable_inv_birthDeathRate_linear hβδ (fun k ↦ hy k) hex⟩
 
@@ -17349,7 +17349,7 @@ theorem ae_mem_nonExplosiveE_posRate_linearBirthDeath {β δ : ℝ} (hβδ : 0 �
     (birthDeathRate_linear_nonneg hβδ) _
     (fun x hx ↦ by
       rw [birthDeathRate] at hx
-      rw [birthDeathKernel_apply, if_pos hx]) nu
+      rw [birthDeathKernel_apply, ite_eq_left hx]) nu
     (ae_mem_nonExplosiveE_linearBirthDeath hβδ nu)
 
 /-- **The linear birth and death chain solves its martingale problem locally.**  Every hypothesis
@@ -17380,7 +17380,7 @@ theorem linearBirthDeath_isLocalMPSolution {β δ : ℝ} (hβδ : 0 ≤ β + δ)
     (birthDeathRate_linear_nonneg hβδ)
     (fun x hx ↦ by
       rw [birthDeathRate] at hx
-      rw [birthDeathKernel_apply, if_pos hx]) nu
+      rw [birthDeathKernel_apply, ite_eq_left hx]) nu
     (ae_mem_nonExplosiveE_linearBirthDeath hβδ nu)
 
 end LinearBirthDeath
@@ -17459,7 +17459,7 @@ theorem yuleKernel_apply (hβ : 0 < β) {x : ℕ} (hx : x ≠ 0) :
   have hne : linearBirth β x + linearDeath 0 x ≠ 0 := by
     simp only [linearBirth, linearDeath, zero_mul, add_zero]
     positivity
-  rw [birthDeathKernel_apply, if_neg hne]
+  rw [birthDeathKernel_apply, ite_eq_right hne]
   have hb : linearBirth β x / (linearBirth β x + linearDeath 0 x) = 1 := by
     simp only [linearBirth, linearDeath, zero_mul, add_zero]
     rw [div_self (by positivity)]
@@ -17607,7 +17607,7 @@ theorem jumpApply_yule_indicator (hβ : 0 ≤ β) (n x : ℕ) :
     · subst hxn1
       have h1 : ¬ (n + 1 + 1 = n + 1) := by omega
       have h2 : ¬ (n + 1 = n) := by omega
-      rw [if_neg h1, if_neg h2, if_pos rfl]
+      rw [ite_eq_right h1, ite_eq_right h2, ite_eq_left rfl]
       push_cast
       ring
     · simp [hxn, hxn1]
@@ -17797,7 +17797,7 @@ theorem eventually_jumpProcess_truncRate_eq {E : Type*} [MeasurableSpace E] {lam
     ofReal_lam_jumpProcessE_lt_of_lt_rateTime hs hlt
   have hle : lam (jumpProcessE lam s (y, xi)) ≤ (m : ℝ) := by
     by_contra hcon
-    push_neg at hcon
+    push Not at hcon
     refine absurd hrate (not_lt.2 ?_)
     rw [← ENNReal.ofReal_natCast m]
     exact ENNReal.ofReal_le_ofReal hcon.le
@@ -18069,7 +18069,7 @@ theorem ae_mem_nonExplosiveE_jumpMeasure_of_lyapunov [MeasurableSpace E]
   filter_upwards [ae_forall_step_comp_chainKernel mu hSm hker nu] with y hy
   by_cases hex : ∃ m, lam (y m) = 0
   · exact Or.inl hex
-  · push_neg at hex
+  · push Not at hex
     have hpos : ∀ k, 0 < lam (y k) := fun k ↦ lt_of_le_of_ne (hlam0 _) (Ne.symm (hex k))
     refine Or.inr ⟨hpos, not_summable_inv_of_lyapunov hC hpos (fun k ↦ hf _) (fun k ↦ ?_)
       fun N ↦ (hbdd N).imp fun B hB k hk ↦ hB _ hk⟩
@@ -18226,7 +18226,7 @@ theorem prod_lyapunovWeight_of_pos {lam : E → ℝ} {C : ℝ} {y : ℕ → E} (
   have h1 : ∀ j ∈ Finset.range k, lyapunovWeight lam C (y j)
       = ENNReal.ofReal (Real.exp (-(C / lam (y j)))) := by
     intro j _
-    simp only [lyapunovWeight, if_neg (not_le.2 (hpos j))]
+    simp only [lyapunovWeight, ite_eq_right (not_le.2 (hpos j))]
   rw [Finset.prod_congr rfl h1, ← ENNReal.ofReal_prod_of_nonneg fun j _ ↦ (Real.exp_nonneg _),
     ← Real.exp_sum]
   congr 1
@@ -18293,7 +18293,7 @@ theorem lintegral_chainKernel_lyapunov_le [MeasurableSpace E] [MeasurableSinglet
     rw [hmap]
     refine le_trans (mul_le_mul' (le_refl (lyapunovWeight lam C z)) (ih (mu z) inferInstance)) ?_
     by_cases hz : lam z ≤ 0
-    · simp [lyapunovWeight, if_pos hz]
+    · simp [lyapunovWeight, ite_eq_left hz]
     · rw [not_le] at hz
       have hone : ENNReal.ofReal (Real.exp (-(C / lam z))) * ENNReal.ofReal (1 + C / lam z)
           ≤ 1 := by
@@ -18306,7 +18306,7 @@ theorem lintegral_chainKernel_lyapunov_le [MeasurableSpace E] [MeasurableSinglet
           _ = 1 := by rw [← Real.exp_add]; simp
       calc lyapunovWeight lam C z * ∫⁻ x, F x ∂(mu z)
           ≤ ENNReal.ofReal (Real.exp (-(C / lam z))) * (F z * ENNReal.ofReal (1 + C / lam z)) := by
-            rw [lyapunovWeight, if_neg (not_le.2 hz)]
+            rw [lyapunovWeight, ite_eq_right (not_le.2 hz)]
             exact mul_le_mul' (le_refl _) (hstep z hz)
         _ = F z * (ENNReal.ofReal (Real.exp (-(C / lam z))) * ENNReal.ofReal (1 + C / lam z)) := by
             ring
@@ -18360,7 +18360,7 @@ theorem ae_absorb_or_not_summable_of_lintegral_le [MeasurableSpace E]
   filter_upwards [hlt] with y hy
   by_cases hex : ∃ m, lam (y m) = 0
   · exact Or.inl hex
-  · push_neg at hex
+  · push Not at hex
     have hpos : ∀ k, 0 < lam (y k) := fun k ↦ lt_of_le_of_ne (hlam0 _) (Ne.symm (hex k))
     refine Or.inr ⟨hpos, fun hsum ↦ ?_⟩
     set L := Filter.liminf (fun k ↦ F (y k) *
@@ -18687,7 +18687,7 @@ theorem ae_mem_nonExplosiveE_posRate_birthDeath_of_birth_le {b d : ℕ → ℝ} 
     exact ⟨B, fun x hx ↦ hB x (by linarith)⟩
   · intro x hx
     rw [birthDeathRate] at hx
-    rw [birthDeathKernel_apply, if_pos hx]
+    rw [birthDeathKernel_apply, ite_eq_left hx]
   · intro z _
     rw [jumpApply_birthDeath hb hd]
     have hup : ((z + 1 : ℕ) : ℝ) + 1 - ((z : ℝ) + 1) = 1 := by push_cast; ring
@@ -18855,7 +18855,7 @@ theorem yule_masterEquation {β : ℝ} (hβ : 0 ≤ β) (nu : Measure ℕ) [IsPr
       birthDeathKernel (linearBirth β) (linearDeath 0) x = Measure.dirac x := by
     intro x hx
     rw [birthDeathRate] at hx
-    rw [birthDeathKernel_apply, if_pos hx]
+    rw [birthDeathKernel_apply, ite_eq_left hx]
   have hA : ∀ x : ℕ, jumpApply (posRate (birthDeathRate (linearBirth β) (linearDeath 0)))
       (birthDeathKernel (linearBirth β) (linearDeath 0)) (stateIndicator (n + 1)) x
       = β * (n : ℝ) * stateIndicator n x - β * ((n : ℝ) + 1) * stateIndicator (n + 1) x := by
@@ -19145,7 +19145,7 @@ theorem eq_yuleDensity_of_masterEquation {β : ℝ} {p : ℕ → ℝ → ℝ}
         hs (hrmeas 0) (hrbd 0) (hmaster 0) ?_ ?_ ?_ ?_
       · have hz : ContinuousOn (fun _ : ℝ ↦ (0 : ℝ)) (Set.Ici 0) := continuousOn_const
         exact hz.congr fun u _ ↦ by simp
-      · rw [hp0 (0 + 1), if_pos (by omega : (0 : ℕ) + 1 = 1)]
+      · rw [hp0 (0 + 1), ite_eq_left (by omega : (0 : ℕ) + 1 = 1)]
         simp
       · exact (hFcont 0).continuousOn
       · intro r hr
@@ -19176,7 +19176,7 @@ theorem eq_yuleDensity_of_masterEquation {β : ℝ} {p : ℕ → ℝ → ℝ}
           = β * ((k + 1 : ℕ) : ℝ)
             * (Real.exp (-(β * u)) * (1 - Real.exp (-(β * u))) ^ k)
         rw [ih u (Set.mem_Ici.mp hu)]
-      · rw [hp0 (k + 1 + 1), if_neg (by omega : ¬ (k + 1 + 1 = 1))]
+      · rw [hp0 (k + 1 + 1), ite_eq_right (by omega : ¬ (k + 1 + 1 = 1))]
         simp
       · exact (hFcont (k + 1)).continuousOn
       · intro r hr
@@ -19207,7 +19207,7 @@ theorem yule_masterEquation_zero {β : ℝ} (hβ : 0 ≤ β) (nu : Measure ℕ) 
       birthDeathKernel (linearBirth β) (linearDeath 0) x = Measure.dirac x := by
     intro x hx
     rw [birthDeathRate] at hx
-    rw [birthDeathKernel_apply, if_pos hx]
+    rw [birthDeathKernel_apply, ite_eq_left hx]
   have hA : ∀ x : ℕ, jumpApply (posRate (birthDeathRate (linearBirth β) (linearDeath 0)))
       (birthDeathKernel (linearBirth β) (linearDeath 0)) (stateIndicator 0) x = 0 := by
     intro x
@@ -19425,24 +19425,24 @@ theorem jumpApply_linearBirthDeath_indicator (hβ : 0 ≤ β) (hδ : 0 ≤ δ) (
   rw [jumpApply_linearBirthDeath hβ hδ]
   simp only [stateIndicator_apply]
   by_cases h1 : x = n
-  · rw [h1, if_pos (rfl : n + 1 = n + 1), if_neg (by omega : ¬ (n = n + 1)),
-      if_neg (by omega : ¬ (n - 1 = n + 1)), if_pos (rfl : n = n),
-      if_neg (by omega : ¬ (n = n + 2))]
+  · rw [h1, ite_eq_left (rfl : n + 1 = n + 1), ite_eq_right (by omega : ¬ (n = n + 1)),
+      ite_eq_right (by omega : ¬ (n - 1 = n + 1)), ite_eq_left (rfl : n = n),
+      ite_eq_right (by omega : ¬ (n = n + 2))]
     ring
   · by_cases h2 : x = n + 1
-    · rw [h2, if_neg (by omega : ¬ (n + 1 + 1 = n + 1)), if_pos (rfl : n + 1 = n + 1),
-        if_neg (by omega : ¬ (n + 1 - 1 = n + 1)), if_neg (by omega : ¬ (n + 1 = n)),
-        if_neg (by omega : ¬ (n + 1 = n + 2))]
+    · rw [h2, ite_eq_right (by omega : ¬ (n + 1 + 1 = n + 1)), ite_eq_left (rfl : n + 1 = n + 1),
+        ite_eq_right (by omega : ¬ (n + 1 - 1 = n + 1)), ite_eq_right (by omega : ¬ (n + 1 = n)),
+        ite_eq_right (by omega : ¬ (n + 1 = n + 2))]
       push_cast
       ring
     · by_cases h3 : x = n + 2
-      · rw [h3, if_neg (by omega : ¬ (n + 2 + 1 = n + 1)), if_neg (by omega : ¬ (n + 2 = n + 1)),
-          if_pos (by omega : n + 2 - 1 = n + 1), if_neg (by omega : ¬ (n + 2 = n)),
-          if_pos (rfl : n + 2 = n + 2)]
+      · rw [h3, ite_eq_right (by omega : ¬ (n + 2 + 1 = n + 1)), ite_eq_right (by omega : ¬ (n + 2 = n + 1)),
+          ite_eq_left (by omega : n + 2 - 1 = n + 1), ite_eq_right (by omega : ¬ (n + 2 = n)),
+          ite_eq_left (rfl : n + 2 = n + 2)]
         push_cast
         ring
-      · rw [if_neg (by omega : ¬ (x + 1 = n + 1)), if_neg h2,
-          if_neg (by omega : ¬ (x - 1 = n + 1)), if_neg h1, if_neg h3]
+      · rw [ite_eq_right (by omega : ¬ (x + 1 = n + 1)), ite_eq_right h2,
+          ite_eq_right (by omega : ¬ (x - 1 = n + 1)), ite_eq_right h1, ite_eq_right h3]
         ring
 
 /-- **The generator of the linear birth and death chain at the indicator of the absorbing state.**
@@ -19461,8 +19461,8 @@ theorem jumpApply_linearBirthDeath_indicator_zero (hβ : 0 ≤ β) (hδ : 0 ≤ 
   · by_cases h1 : x = 1
     · rw [h1]
       norm_num
-    · rw [if_neg (by omega : ¬ (x + 1 = 0)), if_neg h0, if_neg (by omega : ¬ (x - 1 = 0)),
-        if_neg h1]
+    · rw [ite_eq_right (by omega : ¬ (x + 1 = 0)), ite_eq_right h0, ite_eq_right (by omega : ¬ (x - 1 = 0)),
+        ite_eq_right h1]
       ring
 
 /-- **The pure birth generator is the case `δ = 0`**, and the term that vanishes is the one that
@@ -19546,7 +19546,7 @@ theorem linearBirthDeath_masterEquation (hβ : 0 ≤ β) (hδ : 0 ≤ δ) (nu : 
       birthDeathKernel (linearBirth β) (linearDeath δ) x = Measure.dirac x := by
     intro x hx
     rw [birthDeathRate] at hx
-    rw [birthDeathKernel_apply, if_pos hx]
+    rw [birthDeathKernel_apply, ite_eq_left hx]
   have hA : ∀ x : ℕ, jumpApply (posRate (birthDeathRate (linearBirth β) (linearDeath δ)))
       (birthDeathKernel (linearBirth β) (linearDeath δ)) (stateIndicator (n + 1)) x
       = β * (n : ℝ) * stateIndicator n x + δ * ((n : ℝ) + 2) * stateIndicator (n + 2) x
@@ -20062,7 +20062,7 @@ theorem rateInverse_eq_zero_of_forall_lt (h : ∀ r : ℝ, 0 ≤ r → cumulativ
     rateInverse Λ ω a = 0 := by
   have hempty : {r : ℝ | 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r} = ∅ := by
     ext r
-    simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false, not_and, not_le]
+    simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false, not_and, not_le]
     exact fun hr ↦ h r hr
   rw [rateInverse, hempty]
   exact Real.sInf_empty
@@ -20639,7 +20639,7 @@ noncomputable def hawkesJumpTime (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ
 theorem hawkesStep_succ_of_le (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ) (ω : Ω) {m n : ℕ} (h : m ≤ n) :
     hawkesStep ν φ xi ω (n + 1) m = hawkesStep ν φ xi ω n m := by
   simp only [hawkesStep]
-  rw [if_pos h]
+  rw [ite_eq_left h]
 
 /-- **A later stage does not revise an earlier entry.**  This is what makes the stagewise recursion
 a definition of a single family and not of a sequence of families. -/
@@ -20667,7 +20667,7 @@ theorem hawkesJumpTime_succ (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ) (ω
       hawkesStep_eq_hawkesJumpTime ν φ xi ω (Nat.lt_succ_iff.1 hk)
   rw [hawkesJumpTime]
   simp only [hawkesStep]
-  rw [if_neg (by omega : ¬ n + 1 ≤ n), hfr]
+  rw [ite_eq_right (by omega : ¬ n + 1 ≤ n), hfr]
 
 /-- **The defining equation of the Hawkes jump times.**  Under the rate frozen at its own stage, the
 `(n+1)`-st jump time is exactly where the cumulated rate has consumed the first `n + 1` waiting
@@ -20810,7 +20810,7 @@ theorem restrict_countingMeasure {T : ℕ → ℝ} (hT : Monotone T) {u : ℝ} (
   have hk' : n ≤ k := by simpa using Finset.mem_range.not.1 hk
   have hnot : T (k + 1) ∉ Set.Ico 0 u :=
     fun hmem ↦ absurd (hu.trans (hT (Nat.succ_le_succ hk'))) (not_le.2 hmem.2)
-  rw [MeasureTheory.restrict_dirac' measurableSet_Ico, if_neg hnot]
+  rw [MeasureTheory.restrict_dirac' measurableSet_Ico, ite_eq_right hnot]
   simp
 
 /-- **An integral against the counting measure below a jump time is a finite sum.**  No measurability
@@ -20825,12 +20825,12 @@ theorem integral_countingMeasure_Ico {T : ℕ → ℝ} (hT : Monotone T) {u : �
   · refine Finset.sum_congr rfl fun k _ ↦ ?_
     rw [MeasureTheory.restrict_dirac' measurableSet_Ico]
     by_cases h : T (k + 1) ∈ Set.Ico 0 u
-    · rw [if_pos h, integral_dirac, Set.indicator_of_mem h]
-    · rw [if_neg h, integral_zero_measure, Set.indicator_of_notMem h]
+    · rw [ite_eq_left h, integral_dirac, Set.indicator_of_mem h]
+    · rw [ite_eq_right h, integral_zero_measure, Set.indicator_of_notMem h]
   · rw [MeasureTheory.restrict_dirac' measurableSet_Ico]
     by_cases h : T (k + 1) ∈ Set.Ico 0 u
-    · rw [if_pos h]; exact integrable_dirac (by simp)
-    · rw [if_neg h]; simp
+    · rw [ite_eq_left h]; exact integrable_dirac (by simp)
+    · rw [ite_eq_right h]; simp
 
 /-- The frozen sum, reindexed off the origin. -/
 theorem hawkesFrozen_succ_eq_sum_range (ν : ℝ) (φ : ℝ → ℝ) (T : ℕ → ℝ) (n : ℕ) (u : ℝ) (ω : Ω) :
@@ -22188,10 +22188,10 @@ theorem truncRateF_apply (Λ : ℝ → Ω → ℝ) (a : ℝ) (u : ℝ) (w : Ω) 
 almost everywhere statement: it is the input of an identification of two processes, and a process
 is compared at sample points. -/
 theorem truncRateF_of_lt (h : t < rateInverse Λ ω a) : truncRateF Λ a t ω = Λ t ω := by
-  rw [truncRateF_apply, if_pos h]
+  rw [truncRateF_apply, ite_eq_left h]
 
 theorem truncRateF_of_le (h : rateInverse Λ ω a ≤ t) : truncRateF Λ a t ω = 0 := by
-  rw [truncRateF_apply, if_neg (not_lt.2 h)]
+  rw [truncRateF_apply, ite_eq_right (not_lt.2 h)]
 
 theorem truncRateF_nonneg (h : ∀ u, 0 < u → 0 ≤ Λ u ω) (ht : 0 < t) :
     0 ≤ truncRateF Λ a t ω := by
@@ -25887,7 +25887,7 @@ theorem measurableSet_le_stepPathFiltrationE [MeasurableEq E]
       by_cases hexp : ∀ k, T ω (k + 1) ≤ ((i : ℝ≥0) : ENNReal)
       · obtain ⟨m, rfl⟩ := Nat.exists_eq_succ_of_ne_zero hn
         exact hexp m
-      · push_neg at hexp
+      · push Not at hexp
         obtain ⟨k₀, hk₀⟩ := hexp
         have hgle : ∀ k : Fin (n + 1), (((q k : ℝ≥0)) : ENNReal) ≤ ((i : ℝ≥0) : ENNReal) :=
           fun k ↦ by exact_mod_cast (hsm.monotone (Fin.le_last k)).trans hlast
@@ -26162,25 +26162,25 @@ theorem pointFiltrationE_augment_eq_stepPathFiltrationE_augment_of_ae [Measurabl
     (fun n ↦ Measurable.ite hHm (hy n) measurable_const) (fun ω ↦ ?_) (fun ω ↦ ?_)
     (fun ω n ↦ ?_) P ?_ ?_
   · by_cases hω : StrictMono (T ω) ∧ T ω 0 = 0
-    · simp only [if_pos hω]
+    · simp only [ite_eq_left hω]
       exact hω.1
-    · simp only [if_neg hω]
+    · simp only [ite_eq_right hω]
       intro a b hab
       show ((a : ℕ) : ENNReal) < ((b : ℕ) : ENNReal)
       exact_mod_cast hab
   · by_cases hω : StrictMono (T ω) ∧ T ω 0 = 0
-    · simp only [if_pos hω]
+    · simp only [ite_eq_left hω]
       exact hω.2
-    · simp only [if_neg hω, Nat.cast_zero]
+    · simp only [ite_eq_right hω, Nat.cast_zero]
   · by_cases hω : ∀ k, y ω k ≠ y ω (k + 1)
-    · simp only [if_pos hω]
+    · simp only [ite_eq_left hω]
       exact hω n
-    · simp only [if_neg hω]
+    · simp only [ite_eq_right hω]
       exact hy₀ n
   · filter_upwards [hmono, hzero] with ω h1 h2
-    exact funext fun n ↦ (if_pos ⟨h1, h2⟩).symm
+    exact funext fun n ↦ (ite_eq_left ⟨h1, h2⟩).symm
   · filter_upwards [hmove] with ω h
-    exact funext fun n ↦ (if_pos h).symm
+    exact funext fun n ↦ (ite_eq_left h).symm
 
 /-! ### The same identity for jump times in `ℝ`
 
@@ -26979,7 +26979,7 @@ noncomputable def hawkesJumpTimeH (h : ℝ → ℝ) (ν : ℝ) (φ : ℝ → ℝ
 theorem hawkesStepH_succ_of_le (h : ℝ → ℝ) (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ) (ω : Ω) {m p : ℕ}
     (hmp : m ≤ p) : hawkesStepH h ν φ xi ω (p + 1) m = hawkesStepH h ν φ xi ω p m := by
   simp only [hawkesStepH]
-  rw [if_pos hmp]
+  rw [ite_eq_left hmp]
 
 theorem hawkesStepH_eq_of_le (h : ℝ → ℝ) (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ) (ω : Ω) {m p q : ℕ}
     (hmp : m ≤ p) (hpq : p ≤ q) : hawkesStepH h ν φ xi ω q m = hawkesStepH h ν φ xi ω p m := by
@@ -27001,7 +27001,7 @@ theorem hawkesJumpTimeH_succ (h : ℝ → ℝ) (ν : ℝ) (φ : ℝ → ℝ) (xi
       hawkesStepH_eq_hawkesJumpTimeH h ν φ xi ω (Nat.lt_succ_iff.1 hk)
   rw [hawkesJumpTimeH]
   simp only [hawkesStepH]
-  rw [if_neg (by omega : ¬ p + 1 ≤ p), hfr]
+  rw [ite_eq_right (by omega : ¬ p + 1 ≤ p), hfr]
 
 theorem hawkesJumpTimeH_nonneg (h : ℝ → ℝ) (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ) (ω : Ω) (p : ℕ) :
     0 ≤ hawkesJumpTimeH h ν φ xi ω p := by
@@ -28364,17 +28364,17 @@ noncomputable def rangeExtend (n : ℕ) (ξ : Finset.range n → ℝ) : ℕ → 
 
 theorem rangeExtend_apply_of_lt {n : ℕ} (ξ : ℕ → ℝ) {k : ℕ} (hk : k < n) :
     rangeExtend n (fun i : Finset.range n ↦ ξ i) k = ξ k :=
-  dif_pos (Finset.mem_range.2 hk)
+  dite_eq_left (Finset.mem_range.2 hk)
 
 theorem measurable_rangeExtend (n : ℕ) : Measurable (rangeExtend n) := by
   refine measurable_pi_iff.mpr fun k ↦ ?_
   by_cases hk : k ∈ Finset.range n
   · have hfun : (fun ξ : Finset.range n → ℝ ↦ rangeExtend n ξ k)
-        = fun ξ : Finset.range n → ℝ ↦ ξ ⟨k, hk⟩ := funext fun _ ↦ dif_pos hk
+        = fun ξ : Finset.range n → ℝ ↦ ξ ⟨k, hk⟩ := funext fun _ ↦ dite_eq_left hk
     rw [hfun]
     exact measurable_pi_apply _
   · have hfun : (fun ξ : Finset.range n → ℝ ↦ rangeExtend n ξ k)
-        = fun _ : Finset.range n → ℝ ↦ (0 : ℝ) := funext fun _ ↦ dif_neg hk
+        = fun _ : Finset.range n → ℝ ↦ (0 : ℝ) := funext fun _ ↦ dite_eq_right hk
     rw [hfun]
     exact measurable_const
 
@@ -28629,10 +28629,10 @@ them, and `rangeShift_eq_hawkesJumpTimeH` says it is the identity on the stages 
 noncomputable def rangeShift (n : ℕ) (S : Finset.range n → ℝ) : ℕ → ℝ :=
   fun k ↦ if k = 0 then 0 else rangeExtend n S (k - 1)
 
-theorem rangeShift_zero (n : ℕ) (S : Finset.range n → ℝ) : rangeShift n S 0 = 0 := if_pos rfl
+theorem rangeShift_zero (n : ℕ) (S : Finset.range n → ℝ) : rangeShift n S 0 = 0 := ite_eq_left rfl
 
 theorem rangeShift_succ (n : ℕ) (S : Finset.range n → ℝ) (j : ℕ) :
-    rangeShift n S (j + 1) = rangeExtend n S j := if_neg (Nat.succ_ne_zero j)
+    rangeShift n S (j + 1) = rangeExtend n S j := ite_eq_right (Nat.succ_ne_zero j)
 
 theorem measurable_rangeShift (n : ℕ) : Measurable (rangeShift n) := by
   refine measurable_pi_iff.mpr fun k ↦ ?_
@@ -29263,8 +29263,8 @@ theorem condExp_le_jumpTimeFE_hawkesSelfRateH_block (hhm : Measurable h) (hφm :
     funext ω
     simp only [Pi.sub_apply, Set.indicator_apply, Set.mem_ofPred_eq]
     by_cases hω : jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1) ≤ ENNReal.ofReal t
-    · rw [if_pos hω, if_neg (not_lt.2 hω)]; ring
-    · rw [if_neg hω, if_pos (not_le.1 hω)]; ring
+    · rw [ite_eq_left hω, ite_eq_right (not_lt.2 hω)]; ring
+    · rw [ite_eq_right hω, ite_eq_left (not_le.1 hω)]; ring
   rw [hsplit]
   have hint1 : Integrable (fun _ : (ℕ → E) × (ℕ → ℝ) ↦ (1 : ℝ)) (jumpMeasure mu nu) :=
     integrable_const (1 : ℝ)
@@ -29903,8 +29903,8 @@ theorem condExp_le_jumpTimeFE_hawkesSelfRateH_jumpTimes (hhm : Measurable h) (h�
     funext ω
     simp only [Pi.sub_apply, Set.indicator_apply, Set.mem_ofPred_eq]
     by_cases hω : jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1) ≤ ENNReal.ofReal t
-    · rw [if_pos hω, if_neg (not_lt.2 hω)]; ring
-    · rw [if_neg hω, if_pos (not_le.1 hω)]; ring
+    · rw [ite_eq_left hω, ite_eq_right (not_lt.2 hω)]; ring
+    · rw [ite_eq_right hω, ite_eq_left (not_le.1 hω)]; ring
   rw [hsplit]
   have hint1 : Integrable (fun _ : (ℕ → E) × (ℕ → ℝ) ↦ (1 : ℝ)) (jumpMeasure mu nu) :=
     integrable_const (1 : ℝ)
@@ -33181,7 +33181,7 @@ theorem measurableSet_cadlagSetE {lam : E → ℝ} (hlam : Measurable lam) :
   have hpos : MeasurableSet {ω : (ℕ → E) × (ℕ → ℝ) | ∀ n, 0 < ω.2 n} := by
     have hEq : {ω : (ℕ → E) × (ℕ → ℝ) | ∀ n, 0 < ω.2 n}
         = ⋂ n : ℕ, {ω : (ℕ → E) × (ℕ → ℝ) | 0 < ω.2 n} := by
-      ext ω; simp only [Set.mem_setOf_eq, Set.mem_iInter]
+      ext ω; simp only [Set.mem_ofPred_eq, Set.mem_iInter]
     rw [hEq]
     exact MeasurableSet.iInter fun n ↦
       measurableSet_lt measurable_const ((measurable_pi_apply n).comp measurable_snd)
@@ -33510,7 +33510,7 @@ theorem expMeasure_one_setOf_div_add_eq (c b : ENNReal) (hc : c ≠ ⊤) {a : EN
     expMeasure 1 {u : ℝ | ENNReal.ofReal u / c + b = a} = 0 := by
   have hsing : ({u : ℝ | ENNReal.ofReal u / c + b = a} ∩ Set.Ioi 0).Subsingleton := by
     rintro u ⟨hu, hu0⟩ v ⟨hv, hv0⟩
-    simp only [Set.mem_setOf_eq] at hu hv
+    simp only [Set.mem_ofPred_eq] at hu hv
     have hune : ENNReal.ofReal u ≠ 0 := by
       simpa using (ENNReal.ofReal_pos.2 hu0).ne'
     have hbne : b ≠ ⊤ := fun hbtop ↦ ha (by rw [← hu, hbtop, add_top])
@@ -33563,7 +33563,7 @@ theorem waitingMeasure_setOf_jumpTimeE_eq (lam : E → ℝ) (y : ℕ → E) (n :
         {p : ℝ × (ℕ → ℝ) | ENNReal.ofReal p.1 / ENNReal.ofReal (lam (y 0))
           + jumpTimeE lam (fun k ↦ y (k + 1)) p.2 n = a} := by
     ext xi
-    simp only [Set.mem_setOf_eq, Set.mem_preimage, jumpTimeE_succ_shift]
+    simp only [Set.mem_ofPred_eq, Set.mem_preimage, jumpTimeE_succ_shift]
   have hmeas : Measurable fun xi : ℕ → ℝ ↦ ((xi 0 : ℝ), fun k ↦ xi (k + 1)) :=
     (measurable_pi_apply 0).prodMk (measurable_pi_iff.mpr fun k ↦ measurable_pi_apply (k + 1))
   rw [hpre, ← Measure.map_apply hmeas hSm, waitingMeasure_map_split,
@@ -36759,7 +36759,7 @@ variable {Ω : Type*} {m : MeasurableSpace Ω}
 
 /-- The number of naturals below `k`, written as a sum in `ℝ≥0∞`. -/
 theorem tsum_ite_lt (k : ℕ) : ∑' n : ℕ, (if n < k then (1 : ENNReal) else 0) = k := by
-  rw [tsum_eq_sum (s := Finset.range k) fun n hn ↦ if_neg (by simpa using hn)]
+  rw [tsum_eq_sum (s := Finset.range k) fun n hn ↦ ite_eq_right (by simpa using hn)]
   simp [Finset.filter_true_of_mem fun x hx ↦ Finset.mem_range.1 hx]
 
 /-- **The layer cake formula for a `ℕ`-valued function**: its integral is the sum of the measures
@@ -37004,7 +37004,7 @@ theorem isStoppingTime_stepIndex_augment {lam : E → ℝ} {L t : ℝ} (hL0 : 0 
       exact hmeas measurableSet_Iic,
     (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpTime lam ω.1 ω.2 (i + 1)) ⁻¹' Set.Ioi t,
     measurable_clockFiltration_jumpTime hlamm le_rfl measurableSet_Ioi, ?_⟩
-  rw [Filter.eventuallyEq_set]
+  rw [Filter.eventuallyEqSet_iff]
   filter_upwards [ae_pos_snd_jumpMeasure mu nu, ae_exists_lt_jumpTime hL0 hlam hL mu nu]
     with ω hpos hex
   have hmono : Monotone (jumpTime lam ω.1 ω.2) :=

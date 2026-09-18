@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 """Typprüft die drei `Suggested.lean` gegen Mathlib **`upstream/master`**, in
-Abhängigkeitsordnung, und zählt Fehler, `sorry` und Warnungen.
+Abhängigkeitsordnung, und zählt Fehler, `sorry`, Warnungen und darunter eigens
+die **veralteten Namen**.
+
+## Warum die Veraltungen eine eigene Spalte haben
+
+Am 2026-09-17 standen 37 Aufrufe von `Set.mem_setOf_eq` in den Dateien, das seit
+dem 2026-07-09 **auch auf v4.33.1** veraltet ist; `check_suggested.py` zählt nur
+Fehler und war dafür blind.  Bei 514 Warnungen findet niemand die eine, die
+zählt.  Die Spalte macht die Zahl sichtbar, und der Anhang nennt die Namen.
 
     python3 scripts/check_master.py [pfad-zum-master-worktree]
 
@@ -25,7 +33,7 @@ woanders aus nimmt es v4.33.1 und meldet `incompatible header`.
 Sie filtert nicht und schneidet nicht ab.  `| head -N` ist verboten: ein
 abgeschnittener Durchlauf sieht wie ein fehlerfreier aus.
 """
-import os, shutil, subprocess, sys, time
+import collections, os, re, shutil, subprocess, sys, time
 
 MW = os.path.abspath(sys.argv[1] if len(sys.argv) > 1
                      else os.path.expanduser('~/Code/lean/mathlib-master'))
@@ -55,9 +63,17 @@ commit = subprocess.run(['git', '-C', MW, 'log', '-1', '--format=%H %ad',
                          '--date=short'], capture_output=True, text=True).stdout.strip()
 rows = [f'# `lake env lean` gegen Mathlib `upstream/master`', '',
         f'* Mathlib: `{commit}`', f'* {ver}', '',
-        '| Datei | rc | Fehler | `sorry` | Warnungen | Sekunden |',
-        '| --- | ---: | ---: | ---: | ---: | ---: |']
+        '| Datei | rc | Fehler | `sorry` | Warnungen | davon veraltet | Sekunden |',
+        '| --- | ---: | ---: | ---: | ---: | ---: | ---: |']
 detail = []
+deprecated = {}
+
+# Eine Warnung ist eine Zeile der Gestalt `<datei>:<zeile>:<spalte>: warning: …`.
+# Auf das bloße Vorkommen von `warning:` zu prüfen, zählt zu viel: der Hinweis
+# des Linters für ungenutzte Bindungen endet mit den Worten „to silence this
+# warning:" und wurde bis zum 2026-09-18 als eigene Warnung mitgezählt -- 22 von
+# den 536 des ersten master-Durchlaufs waren solche Fortsetzungszeilen.
+WARN = re.compile(r':\d+:\d+: warning: (.*)$')
 
 for f in FILES:
     src = os.path.join(SRCDIR, f, 'Suggested.lean')
@@ -72,9 +88,11 @@ for f in FILES:
     out = r.stdout + r.stderr
     errs = [l for l in out.splitlines() if 'error:' in l or 'error(' in l]
     sorries = [l for l in out.splitlines() if 'declaration uses' in l and 'sorry' in l]
-    warns = [l for l in out.splitlines() if 'warning:' in l]
+    warns = [m.group(1) for m in map(WARN.search, out.splitlines()) if m]
+    deps = [w for w in warns if 'has been deprecated' in w]
+    deprecated[f] = deps
     rows.append(f'| `{f}` | {r.returncode} | {len(errs)} | {len(sorries)} | '
-                f'{len(warns)} | {secs} |')
+                f'{len(warns)} | {len(deps)} | {secs} |')
     if errs:
         detail += ['', f'## Fehler in `{f}`', ''] + [f'* `{e.split("Suggested.lean:")[-1][:200]}`'
                                                      for e in errs]
@@ -83,6 +101,12 @@ for f in FILES:
                    '* die folgenden Dateien der Kette sind damit **nicht geprüft**']
     with open(os.path.join(OUT, f'master_{f}.out'), 'w') as fh:
         fh.write(out)
+
+flat = [w for f in FILES for w in deprecated.get(f, [])]
+if flat:
+    detail += ['', '## Veraltete Namen, nach Häufigkeit', '']
+    for w, n in collections.Counter(flat).most_common():
+        detail.append(f'* {n}× {w}')
 
 text = '\n'.join(rows + detail) + '\n'
 with open(os.path.join(OUT, 'lean_check_master.md'), 'w') as fh:

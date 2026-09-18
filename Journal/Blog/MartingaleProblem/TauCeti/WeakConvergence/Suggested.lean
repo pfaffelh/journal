@@ -1108,7 +1108,7 @@ lemma support_ballCutoff (x₀ : E) (R : ℝ) :
   simp only [Function.mem_support, ne_eq] at hx
   simp only [Metric.mem_closedBall]
   by_contra h
-  push_neg at h
+  push Not at h
   refine hx ?_
   unfold ballCutoff
   rw [max_eq_left (by linarith), min_eq_right (by norm_num)]
@@ -2462,11 +2462,11 @@ theorem exists_finite_partition_ball_of_denseRange [PseudoMetricSpace E]
     fun i => if h : (i : ℕ) < n then Metric.ball (x i) r \ U i else (U n)ᶜ with hAdef
   have hAsub : ∀ i : Fin (n + 1), (h : (i : ℕ) < n) → A i ⊆ Metric.ball (x i) r := by
     intro i h
-    simp only [hAdef, dif_pos h]
+    simp only [hAdef, dite_eq_left h]
     exact Set.sdiff_subset
   have hAdisj : ∀ i : Fin (n + 1), (h : (i : ℕ) < n) → Disjoint (A i) (U i) := by
     intro i h
-    simp only [hAdef, dif_pos h]
+    simp only [hAdef, dite_eq_left h]
     exact disjoint_sdiff_left
   have hball : ∀ (i : ℕ) (m : ℕ), i < m → Metric.ball (x i) r ⊆ U m := by
     intro i m him z hz
@@ -2485,7 +2485,7 @@ theorem exists_finite_partition_ball_of_denseRange [PseudoMetricSpace E]
       · have hi : (i : ℕ) < n := hij.trans hj
         exact ((hAdisj j hj).mono_right ((hAsub i hi).trans (hball _ _ hij))).symm
       · have hi : (i : ℕ) < n := lt_of_lt_of_le hij (by omega)
-        have hAj : A j = (U n)ᶜ := by simp only [hAdef, dif_neg hj]
+        have hAj : A j = (U n)ᶜ := by simp only [hAdef, dite_eq_right hj]
         rw [hAj]
         exact Disjoint.mono_left ((hAsub i hi).trans (hball _ _ hi)) disjoint_compl_right
     intro i j hne
@@ -2503,18 +2503,18 @@ theorem exists_finite_partition_ball_of_denseRange [PseudoMetricSpace E]
         obtain ⟨j, hjn, hzj⟩ := hz
         exact lt_of_le_of_lt (Nat.find_le hzj) hjn
       refine mem_iUnion.2 ⟨⟨Nat.find hex, by omega⟩, ?_⟩
-      simp only [hAdef, dif_pos hlt]
+      simp only [hAdef, dite_eq_left hlt]
       refine ⟨Nat.find_spec hex, ?_⟩
       simp only [hUdef, mem_iUnion, exists_prop, not_exists, not_and]
       exact fun l hl => Nat.find_min hex hl
     · refine mem_iUnion.2 ⟨Fin.last n, ?_⟩
-      simp only [hAdef, Fin.val_last, lt_irrefl, dif_neg, not_false_eq_true]
+      simp only [hAdef, Fin.val_last, lt_irrefl, dite_eq_right, not_false_eq_true]
       exact hz
   · intro i z hz
     by_cases h : (i : ℕ) < n
-    · simp only [if_pos h]
+    · simp only [ite_eq_left h]
       exact le_of_lt (Metric.mem_ball.1 (hAsub i h hz.1))
-    · exact absurd hz.1 (by simp only [hAdef, dif_neg h]; exact hz.2)
+    · exact absurd hz.1 (by simp only [hAdef, dite_eq_right h]; exact hz.2)
 
 /-- **Rational approximation of a finite probability vector.**  A weight vector
 `c : Fin n → ℝ≥0∞` of total mass `1` is approximated, to within a total error
@@ -3495,7 +3495,7 @@ theorem exists_measurable_map_restrict_volume_eq_sum_smul_dirac
     exact Real.volume_singleton
   have hae : ∀ i, (T i ∩ Ioc (0 : ℝ) 1 : Set ℝ) =ᵐ[volume] (Ioc (s i) (s (i + 1)) : Set ℝ) := by
     intro i
-    rw [Filter.eventuallyEq_set]
+    rw [Filter.eventuallyEqSet_iff]
     filter_upwards [hone] with y hy
     constructor
     · rintro ⟨hT, hy0, hy1⟩
@@ -3864,11 +3864,11 @@ theorem exists_coupling_tsum_offDiag_le {p q : ℕ → ℝ≥0∞}
     fun i => ?_⟩
   · rw [ENNReal.tsum_add, hrow i]
     have hdiag : ∑' j, (if i = j then m i else 0) = m i :=
-      (tsum_eq_single i fun j hj => if_neg (Ne.symm hj)).trans (by simp)
+      (tsum_eq_single i fun j hj => ite_eq_right (Ne.symm hj)).trans (by simp)
     rw [hdiag, hma i]
   · rw [ENNReal.tsum_add, hcol j]
     have hdiag : ∑' i, (if i = j then m i else 0) = m j :=
-      (tsum_eq_single j fun i hi => if_neg hi).trans (by simp)
+      (tsum_eq_single j fun i hi => ite_eq_right hi).trans (by simp)
     rw [hdiag, hmb j]
   · have hle : ∀ i, ∑' j, (if i = j then (0 : ℝ≥0∞)
         else (if i = j then m i else 0) + a i * b j / D) ≤ a i := by
@@ -3877,7 +3877,7 @@ theorem exists_coupling_tsum_offDiag_le {p q : ℕ → ℝ≥0∞}
       split_ifs with h <;> simp
     exact ENNReal.tsum_le_tsum hle
   · show min (p i) (q i) ≤ (if i = i then m i else 0) + a i * b i / D
-    rw [if_pos rfl]
+    rw [ite_eq_left rfl]
     exact le_self_add
 
 /-- The conditional law of `μ` on `A`, made total: it is `ProbabilityTheory.cond μ A`, that is
@@ -3895,12 +3895,12 @@ noncomputable def condLaw (μ : Measure E) (A : Set E) : Measure E :=
 
 lemma condLaw_of_ne_zero {μ : Measure E} {A : Set E} (h : μ A ≠ 0) :
     condLaw μ A = (μ A)⁻¹ • μ.restrict A := by
-  rw [condLaw, if_neg h, ProbabilityTheory.cond]
+  rw [condLaw, ite_eq_right h, ProbabilityTheory.cond]
 
 instance isProbabilityMeasure_condLaw (μ : Measure E) [IsProbabilityMeasure μ] (A : Set E) :
     IsProbabilityMeasure (condLaw μ A) := by
   by_cases h : μ A = 0
-  · rw [condLaw, if_pos h]; infer_instance
+  · rw [condLaw, ite_eq_left h]; infer_instance
   · refine ⟨?_⟩
     rw [condLaw_of_ne_zero h, Measure.smul_apply, Measure.restrict_apply_univ, smul_eq_mul,
       ENNReal.inv_mul_cancel h (measure_ne_top μ A)]
@@ -4044,7 +4044,7 @@ theorem exists_coupling_of_partition [PseudoMetricSpace E] [OpensMeasurableSpace
       rintro ⟨i, j⟩
       by_cases hij : i = j
       · subst hij
-        rw [if_pos rfl, nonpos_iff_eq_zero]
+        rw [ite_eq_left rfl, nonpos_iff_eq_zero]
         by_cases hπ0 : π i i = 0
         · simp [hπ0]
         have hle1 : π i i ≤ μ (A i) := hπp i ▸ ENNReal.le_tsum i
@@ -4065,7 +4065,7 @@ theorem exists_coupling_of_partition [PseudoMetricSpace E] [OpensMeasurableSpace
           · rw [Measure.prod_prod, condLaw_compl_eq_zero (hAm i) hμ0, zero_mul]
           · rw [Measure.prod_prod, condLaw_compl_eq_zero (hAm i) hν0, mul_zero]
         rw [Measure.smul_apply, smul_eq_mul, hz, mul_zero]
-      · rw [if_neg hij, Measure.smul_apply, smul_eq_mul]
+      · rw [ite_eq_right hij, Measure.smul_apply, smul_eq_mul]
         calc π i j * ((condLaw μ (A i)).prod (condLaw ν (A j))) {z : E × E | ε < dist z.1 z.2}
             ≤ π i j * 1 := by gcongr; exact prob_le_one
           _ = π i j := mul_one _
@@ -4187,9 +4187,9 @@ carries no mass. -/
 theorem tsum_condRow {π : ℕ → ℕ → ℝ≥0∞} {q : ℕ → ℝ≥0∞} (hq : ∀ k, ∑' i, π i k = q k)
     (hqtop : ∀ k, q k ≠ ∞) (k : ℕ) : ∑' i, condRow π q k i = 1 := by
   by_cases h : q k = 0
-  · simp only [condRow, if_pos h]
+  · simp only [condRow, ite_eq_left h]
     exact tsum_ite_eq 0 1
-  · simp only [condRow, if_neg h, div_eq_mul_inv]
+  · simp only [condRow, ite_eq_right h, div_eq_mul_inv]
     rw [ENNReal.tsum_mul_right, hq k, ← div_eq_mul_inv, ENNReal.div_self h (hqtop k)]
 
 /-- **The normalisation is exact.**  Weighting the row by the mass of the conditioning piece
@@ -4205,7 +4205,7 @@ theorem mul_condRow {π : ℕ → ℕ → ℝ≥0∞} {q : ℕ → ℝ≥0∞} (
   · have hz : π i k = 0 :=
       le_antisymm (by rw [← h, ← hq k]; exact ENNReal.le_tsum (f := fun j => π j k) i) bot_le
     simp [h, hz]
-  · rw [condRow, if_neg h, mul_comm, ENNReal.div_mul_cancel h (hqtop k)]
+  · rw [condRow, ite_eq_right h, mul_comm, ENNReal.div_mul_cancel h (hqtop k)]
 
 /-- **The two indices disagree with the off-diagonal probability of the row law.**  On
 `E × (0,1]` the first coordinate decides the piece `j y` its point lies in and the uniform
@@ -4250,8 +4250,8 @@ theorem measure_index_ne_prod {ν : Measure E} [SFinite ν] {A : ℕ → Set E}
     refine tsum_congr fun i => ?_
     rw [Measure.smul_apply, smul_eq_mul, Measure.dirac_apply' _ hTm]
     by_cases hik : i = j y
-    · rw [if_pos hik, Set.indicator_of_notMem (by simpa using hik), mul_zero]
-    · rw [if_neg hik, Set.indicator_of_mem hik]
+    · rw [ite_eq_left hik, Set.indicator_of_notMem (by simpa using hik), mul_zero]
+    · rw [ite_eq_right hik, Set.indicator_of_mem hik]
       simp
   simp only [hslice]
   have hmeas : Measurable fun k : ℕ => ∑' i, (if i = k then (0 : ℝ≥0∞) else c k i) :=
@@ -4391,7 +4391,7 @@ theorem exists_measurable_pair_of_partition [PseudoMetricSpace E] [OpensMeasurab
       refine tsum_congr fun i => ?_
       by_cases hik : i = k
       · simp [hik]
-      · rw [if_neg hik, if_neg hik]
+      · rw [ite_eq_right hik, ite_eq_right hik]
         exact hcmul k i
     simp only [hrow]
     exact ENNReal.tsum_comm
@@ -4614,7 +4614,7 @@ theorem exists_measurable_pair_of_partition_subset [PseudoMetricSpace E]
           _ = ν (A n (j n w.1)) := one_mul _
       have hcd : ENNReal.ofReal (1 - t n)
           ≤ condRow (π n) (fun k => ν (A n k)) (j n w.1) (j n w.1) := by
-        rw [condRow, if_neg hν0]
+        rw [condRow, ite_eq_right hν0]
         exact (ENNReal.le_div_iff_mul_le (Or.inl hν0) (Or.inl hνtop)).2 hmulle
       have hcle : condRow (π n) (fun k => ν (A n k)) (j n w.1) (j n w.1) ≤ 1 := by
         rw [← hcsum n (j n w.1)]
@@ -4638,7 +4638,7 @@ theorem exists_measurable_pair_of_partition_subset [PseudoMetricSpace E]
         ext w
         simp only [Set.mem_preimage, Set.mem_singleton_iff, Prod.ext_iff]
         exact ⟨fun h => h.2, fun h => ⟨hq1.symm, h⟩⟩
-      rw [hpre, if_pos hq1, ← Measure.map_apply (hΦm n) (measurableSet_singleton q.2),
+      rw [hpre, ite_eq_left hq1, ← Measure.map_apply (hΦm n) (measurableSet_singleton q.2),
         hΦlaw n, sum_smul_dirac_singleton]
     · have hpre : (fun w : E × ℝ => ((n, Φ n w) : ℕ × ℕ)) ⁻¹' {q} = (∅ : Set (E × ℝ)) := by
         ext w
@@ -4646,7 +4646,7 @@ theorem exists_measurable_pair_of_partition_subset [PseudoMetricSpace E]
           Set.mem_empty_iff_false, iff_false, not_and]
         intro h
         exact absurd h.symm hq1
-      rw [hpre, if_neg hq1, measure_empty]
+      rw [hpre, ite_eq_right hq1, measure_empty]
   refine ⟨fun n z => z.2 (n, Φ n z.1), hXm, ?_, ?_, ?_⟩
   · -- the law of stage `n` is `μ n`
     intro n
@@ -4675,14 +4675,14 @@ theorem exists_measurable_pair_of_partition_subset [PseudoMetricSpace E]
             (univ : Set (ℕ × ℕ → E)))
           ∪ {z : (E × ℝ) × (ℕ × ℕ → E) | z.2 (n, Φ n z.1) ∉ A n (Φ n z.1)} := by
       intro z hz
-      simp only [Set.mem_setOf_eq, Classical.not_imp, not_or, not_lt] at hz
+      simp only [Set.mem_ofPred_eq, Classical.not_imp, not_or, not_lt] at hz
       obtain ⟨hdist, hnot0, hξ⟩ := hz
       by_cases hν0 : ν (A n (j n z.1.1)) = 0
       · exact Or.inl ⟨⟨hν0, Set.mem_univ _⟩, Set.mem_univ _⟩
       · refine Or.inr ?_
         have hk0 : j n z.1.1 ≠ 0 := fun h => hnot0 (h ▸ hyk z)
         have hGk : Φ n z.1 = j n z.1.1 := hΦdiag n z.1 hk0 hν0 hξ
-        simp only [Set.mem_setOf_eq, hGk]
+        simp only [Set.mem_ofPred_eq, hGk]
         intro hcon
         rw [hGk] at hdist
         exact absurd hdist (not_lt.2
@@ -4691,7 +4691,7 @@ theorem exists_measurable_pair_of_partition_subset [PseudoMetricSpace E]
     · -- the limit variable falls into a piece that `ν` does not charge
       have hpre : j n ⁻¹' {k : ℕ | ν (A n k) = 0} = ⋃ k ∈ {k : ℕ | ν (A n k) = 0}, A n k := by
         ext y
-        simp only [Set.mem_preimage, Set.mem_setOf_eq, Set.mem_iUnion, exists_prop]
+        simp only [Set.mem_preimage, Set.mem_ofPred_eq, Set.mem_iUnion, exists_prop]
         refine ⟨fun hy => ⟨j n y, hy, hmem n y⟩, ?_⟩
         rintro ⟨k, hk, hy⟩
         rwa [hjeq n y k hy]
@@ -4702,7 +4702,7 @@ theorem exists_measurable_pair_of_partition_subset [PseudoMetricSpace E]
       have hDm : MeasurableSet {r : ℕ × E | r.2 ∉ A n r.1} := by
         have hrw : {r : ℕ × E | r.2 ∉ A n r.1} = ⋃ i : ℕ, ({i} : Set ℕ) ×ˢ (A n i)ᶜ := by
           ext r
-          simp only [Set.mem_setOf_eq, Set.mem_iUnion, Set.mem_prod, Set.mem_singleton_iff,
+          simp only [Set.mem_ofPred_eq, Set.mem_iUnion, Set.mem_prod, Set.mem_singleton_iff,
             Set.mem_compl_iff]
           refine ⟨fun h => ⟨r.1, rfl, h⟩, ?_⟩
           rintro ⟨i, hi, h⟩
@@ -6784,7 +6784,7 @@ theorem exists_tendsto_distInMeasure_of_cauchy [IsFiniteMeasure μ] [CompleteSpa
   have hGlim : ∀ᵐ a ∂μ, Filter.Tendsto (fun k => F k a) Filter.atTop (nhds (G a)) := by
     filter_upwards [hcauchy] with a ha
     rw [hG_def]
-    simp only [dif_pos ha]
+    simp only [dite_eq_left ha]
     exact ha.choose_spec
   have hGmeas : AEStronglyMeasurable G μ :=
     aestronglyMeasurable_of_tendsto_ae Filter.atTop
@@ -6886,7 +6886,7 @@ theorem exists_mem_stepFun {A : ℕ → Set α} {y : ℕ → E} {e : E} {a : α}
       intro h
       by_cases hq : a ∈ A q.1
       · refine ⟨q, List.mem_cons_self .., hq, ?_⟩
-        simp only [stepFun, if_pos hq]
+        simp only [stepFun, ite_eq_left hq]
       · have h' : ∃ p ∈ l, a ∈ A p.1 := by
           obtain ⟨p, hp, hpa⟩ := h
           rcases List.mem_cons.1 hp with rfl | hp'
@@ -6894,7 +6894,7 @@ theorem exists_mem_stepFun {A : ℕ → Set α} {y : ℕ → E} {e : E} {a : α}
           · exact ⟨p, hp', hpa⟩
         obtain ⟨p, hpl, hpa, hpeq⟩ := ih h'
         refine ⟨p, List.mem_cons_of_mem _ hpl, hpa, ?_⟩
-        simp only [stepFun, if_neg hq]
+        simp only [stepFun, ite_eq_right hq]
         exact hpeq
 
 /-- The class of a step function.  Naming the approximating family as a *definition*,
