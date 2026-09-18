@@ -11142,3 +11142,302 @@ theorem SkorokhodSpace.exists_countable_dense_forall_setOf_leftLim_ne_one :
     Set.range ((↑) : ℚ → ℝ), Set.countable_range _, Rat.denseRange_cast, ?_⟩
   rintro t ⟨r, rfl⟩
   exact SkorokhodSpace.denseJumpLaw_setOf_leftLim_ne_one r
+
+/-! ### A compact set of paths is not equi-right-continuous at a time
+
+The section above shows that the density of `T` does not by itself put a time of
+`T` among the continuity times of a limit law, so the comparison of the two
+families of finite dimensional distributions inside
+`SkorokhodSpace.tendsto_of_isCompact_closure_of_tendsto_finiteDimensional` has to
+be carried by the oscillation bound of Milestone 7 through
+`SkorokhodSpace.exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure`.
+
+What that bound does **not** give is a uniform right modulus at a *fixed* time.
+The natural reading — to a compact `K`, a time `t` and an `ε > 0` there is a
+`δ > 0` with `dist (f s) (f t) ≤ ε` for every `f ∈ K` and every `s ∈ [t, t + δ)`
+— is false, and the witness is one already in this file: the jump times of
+`SkorokhodSpace.tendsto_stepAt_shift` march down to `-1` from the right, the set
+they form together with their limit is compact, and at `t = -1` every path of the
+sequence still carries its full jump inside `[t, t + δ)`.
+
+The failure is one of uniformity alone.  Each single path is right continuous at
+`t`, which is `IsRightContinuous.exists_forall_dist_le`, and a *finite* family is
+equi-right-continuous, which is
+`SkorokhodSpace.equicontinuousWithinAt_of_finite`; compactness in `D(ℝ, E)` does
+not bridge the two, because the metric of Milestone 4 allows a time change to
+carry a jump across a fixed time at vanishing cost.
+
+What survives of the bound, and what a proof has to spend instead, is the
+*number* of cells: a `δ`-sparse subdivision of a window of radius `m` has at most
+`2m/δ + 1` of them, uniformly in `f`, so for each path the times at which the
+right oscillation is large lie in that many cells' left edges.  That is a
+statement about the Lebesgue measure of the bad times and not about their
+absence, and it is the form in which the interchange of the two limits has to be
+made. -/
+
+/-- **Right continuity at `t`, in the `ε`-`δ` form the interchange of limits asks
+for.**  It holds for every single path and asks nothing beyond right continuity;
+the time `t` itself is covered separately because `Set.Ico t (t + δ)` contains it
+while `Set.Ioi t` does not. -/
+theorem IsRightContinuous.exists_forall_dist_le {E : Type*} [MetricSpace E] {f : ℝ → E}
+    (hf : IsRightContinuous f) (t : ℝ) {ε : ℝ} (hε : 0 < ε) :
+    ∃ δ > 0, ∀ s ∈ Set.Ico t (t + δ), dist (f s) (f t) ≤ ε := by
+  obtain ⟨δ, hδ, h⟩ := Metric.continuousWithinAt_iff.1 (hf t) ε hε
+  refine ⟨δ, hδ, fun s hs => ?_⟩
+  rcases eq_or_lt_of_le hs.1 with rfl | hlt
+  · simpa using hε.le
+  · refine (h hlt ?_).le
+    rw [Real.dist_eq, abs_of_nonneg (by linarith)]
+    linarith [hs.2]
+
+/-- **The refutation.**  There is a compact set `K` of paths — so one over which
+the modulus of Milestone 7 tends to `0` uniformly, by
+`SkorokhodSpace.isCompact_closure_iff` — and a time `t` such that for **every**
+`δ > 0` some path of `K` moves by a full unit between `t` and a time of
+`[t, t + δ)`.
+
+The set is the one of `SkorokhodSpace.tendsto_stepAt_shift`: the steps with jump
+time `1/(n+2) - 1`, together with their limit, the step at `-1`.  It is compact
+as a convergent sequence with its limit, and the modulus condition is read off
+`SkorokhodSpace.isCompact_closure_iff` rather than proved again.  At `t = -1` the
+`n`-th path is `0` at `t` and `1` at its own jump time, which lies in
+`[t, t + δ)` as soon as `1/(n+2) < δ`.
+
+So the uniform right modulus at a fixed time is **not** among the consequences of
+relative compactness, and the step of
+`SkorokhodSpace.tendsto_of_isCompact_closure_of_tendsto_finiteDimensional` that
+moves the times of a finite family from `T` to the continuity times of the limit
+cannot be carried by it. -/
+theorem SkorokhodSpace.exists_isCompact_forall_exists_one_le_dist :
+    ∃ (K : Set D(ℝ, ℝ)) (t : ℝ), IsCompact K ∧
+      (∀ m : ℕ, Tendsto (fun δ : ℝ => ⨆ f ∈ K, SkorokhodSpace.modulusBased (0 : ℝ) (m : ℝ) f δ)
+        (𝓝[>] 0) (𝓝 0)) ∧
+      ∀ δ : ℝ, 0 < δ → ∃ f ∈ K, ∃ s ∈ Set.Ico t (t + δ),
+        1 ≤ dist (f.toFun s) (f.toFun t) := by
+  set F : ℕ → D(ℝ, ℝ) :=
+    fun n => SkorokhodSpace.stepAt (1 / ((n : ℝ) + 2) - 1) (1 : ℝ) 0 with hF
+  set A : Set D(ℝ, ℝ) := insert (SkorokhodSpace.stepAt (-1) (1 : ℝ) 0) (Set.range F) with hA
+  have hcompact : IsCompact A :=
+    SkorokhodSpace.tendsto_stepAt_shift.isCompact_insert_range
+  refine ⟨A, -1, hcompact, fun m => ?_, ?_⟩
+  · have hcl : IsCompact (closure A) := by rwa [hcompact.isClosed.closure_eq]
+    exact ((SkorokhodSpace.isCompact_closure_iff A).1 hcl m).2
+  · intro δ hδ
+    obtain ⟨n, hn⟩ := exists_nat_one_div_lt hδ
+    have hcast : (0 : ℝ) ≤ (n : ℝ) := Nat.cast_nonneg n
+    have hpos : (0 : ℝ) < 1 / ((n : ℝ) + 2) := by positivity
+    have h2 : 1 / ((n : ℝ) + 2) < δ :=
+      lt_of_le_of_lt (one_div_le_one_div_of_le (by linarith) (by linarith)) hn
+    refine ⟨F n, Set.mem_insert_of_mem _ ⟨n, rfl⟩, 1 / ((n : ℝ) + 2) - 1,
+      ⟨by linarith, by linarith⟩, ?_⟩
+    have hne : ¬ (1 / ((n : ℝ) + 2) - 1 ≤ (-1 : ℝ)) := by
+      rw [not_le]; linarith
+    rw [hF]
+    simp only [SkorokhodSpace.stepAt_apply, if_pos le_rfl, if_neg hne]
+    rw [Real.dist_eq]
+    norm_num
+
+/-- **The same refutation on Mathlib's predicate.**  A compact set of paths need
+not be equicontinuous within `Set.Ici t` at `t`, the family being indexed by the
+set itself.
+
+Stating it on `EquicontinuousWithinAt` and not only in the `ε`-`δ` form above is
+what makes it comparable with the positive results: `equicontinuousWithinAt_finite`
+(`Mathlib/Topology/UniformSpace/Equicontinuity.lean:252`) gives the property for
+every finite family of paths, and the theorem below gives it for every finite
+subset of `D(ℝ, E)`.  Between the two stands compactness, and it does not
+suffice. -/
+theorem SkorokhodSpace.exists_isCompact_not_equicontinuousWithinAt :
+    ∃ (K : Set D(ℝ, ℝ)) (t : ℝ), IsCompact K ∧
+      ¬ EquicontinuousWithinAt (fun f : K => (f : D(ℝ, ℝ)).toFun) (Set.Ici t) t := by
+  obtain ⟨K, t, hK, -, hbad⟩ := SkorokhodSpace.exists_isCompact_forall_exists_one_le_dist
+  refine ⟨K, t, hK, fun heq => ?_⟩
+  have hU : {p : ℝ × ℝ | dist p.1 p.2 < 1} ∈ uniformity ℝ := Metric.dist_mem_uniformity one_pos
+  obtain ⟨δ, hδ, h⟩ := Metric.mem_nhdsWithin_iff.1 (heq _ hU)
+  obtain ⟨f, hf, s, hs, hdist⟩ := hbad δ hδ
+  have hlt : dist s t < δ := by
+    rw [Real.dist_eq, abs_of_nonneg (by linarith [hs.1])]
+    linarith [hs.2]
+  have hclose : dist (f.toFun t) (f.toFun s) < 1 := h ⟨Metric.mem_ball.2 hlt, hs.1⟩ ⟨f, hf⟩
+  rw [dist_comm] at hclose
+  linarith
+
+/-- **And the positive half, which locates the defect.**  A *finite* set of paths
+is equi-right-continuous at every time: each path is right continuous there, and
+`equicontinuousWithinAt_finite` turns finitely many `ContinuousWithinAt` into the
+equicontinuity.  `continuousWithinAt_Ioi_iff_Ici`
+(`Mathlib/Topology/Order/LeftRight.lean:79`) is what passes from the right
+continuity of `IsCadlag`, stated on `Set.Ioi t`, to the `Set.Ici t` the predicate
+asks for.
+
+Read against the refutation above: the obstruction is neither the paths nor the
+time, it is the passage from a finite family to a compact one. -/
+theorem SkorokhodSpace.equicontinuousWithinAt_of_finite {E : Type*} [MetricSpace E]
+    {K : Set D(ℝ, E)} (hK : K.Finite) (t : ℝ) :
+    EquicontinuousWithinAt (fun f : K => (f : D(ℝ, E)).toFun) (Set.Ici t) t := by
+  have : Finite K := hK.to_subtype
+  refine equicontinuousWithinAt_finite.2 fun f => ?_
+  exact continuousWithinAt_Ioi_iff_Ici.1 ((f : D(ℝ, E)).isCadlag.isRightContinuous t)
+
+/-! ### What the oscillation bound gives uniformly: the number of cells
+
+The two refutations above say that a compact set of paths carries no common
+right modulus at a fixed time.  What it does carry is a bound on the *length* of
+the subdivision, and that bound depends on the window and on `δ` alone.  It is
+the quantity a proof of
+`SkorokhodSpace.tendsto_of_isCompact_closure_of_tendsto_finiteDimensional` may
+use in place of the pathwise statement: the times at which one path oscillates
+to the right over a span `δ'` lie in at most `2(M+1)/δ + 1` intervals of length
+`δ'`, so they fill a set of Lebesgue measure at most `(2(M+1)/δ + 1) · δ'` — the
+same bound for every path of the set. -/
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **A small based modulus produces a subdivision of bounded length.**  The
+subdivision of `SkorokhodSpace.exists_isSubdivisionBased_subdivisionOsc_lt`,
+trimmed to the marks `± (M + 1)` by `SkorokhodSpace.IsSubdivisionBased.trim`.
+
+The point is the third conjunct, `(n : ℝ) * δ ≤ 2 * (M + 1)`: it is a bound in
+`M` and `δ` and **not in the path**, so it survives a supremum over a set of
+paths, which the placement of the nodes does not.
+
+The factor `2` on the oscillation is the price of the trimming and is not
+removable: `SkorokhodSpace.subdivisionOsc` measures each cell from its own left
+endpoint, and a trimmed cell's left endpoint is an interior point of the cell it
+came from.  That is
+`SkorokhodSpace.subdivisionOsc_le_two_mul_of_cells`, whose docstring exhibits the
+path on which the constant is attained. -/
+theorem SkorokhodSpace.exists_isSubdivisionBased_of_modulusBased_lt
+    {M δ : ℝ} (hM : 1 ≤ M) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (f : D(ℝ, E)) {c : ℝ≥0∞}
+    (h : SkorokhodSpace.modulusBased (0 : ℝ) M f δ < c) :
+    ∃ (n : ℕ) (s : Fin (n + 1) → ℝ), SkorokhodSpace.IsSubdivisionBased (0 : ℝ) M δ s ∧
+      (∀ k, s k ∈ Set.Icc (-(M + 1)) (M + 1)) ∧ (n : ℝ) * δ ≤ 2 * (M + 1) ∧
+      SkorokhodSpace.subdivisionOsc f s ≤ 2 * c := by
+  obtain ⟨n, t, ht, hosc⟩ :=
+    SkorokhodSpace.exists_isSubdivisionBased_subdivisionOsc_lt (0 : ℝ) M f h
+  obtain ⟨n', s, hs, hmem, hcard, hcells⟩ := ht.trim hM hδ0 hδ1
+  refine ⟨n', s, hs, hmem, hcard, ?_⟩
+  refine le_trans (SkorokhodSpace.subdivisionOsc_le_two_mul_of_cells f hs.1.1 hcells) ?_
+  gcongr
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The same over a whole set of paths, and this is the uniformity that
+remains.**  If the supremum of the based modulus over `K` is below `c`, then
+*every* path of `K` has a subdivision with oscillation below `2 c` whose length
+obeys `(n : ℝ) * δ ≤ 2 * (M + 1)` — one bound, independent of the path.
+
+Read against `SkorokhodSpace.exists_isCompact_forall_exists_one_le_dist`: the
+count is uniform over `K`, the placement is not, and a proof that wants
+uniformity has to be phrased in the count.  The hypothesis is what
+`SkorokhodSpace.exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure`
+produces at every `δ` small enough. -/
+theorem SkorokhodSpace.forall_exists_isSubdivisionBased_of_iSup_lt {K : Set D(ℝ, E)}
+    {M δ : ℝ} (hM : 1 ≤ M) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) {c : ℝ≥0∞}
+    (h : (⨆ f ∈ K, SkorokhodSpace.modulusBased (0 : ℝ) M f δ) < c) :
+    ∀ f ∈ K, ∃ (n : ℕ) (s : Fin (n + 1) → ℝ), SkorokhodSpace.IsSubdivisionBased (0 : ℝ) M δ s ∧
+      (∀ k, s k ∈ Set.Icc (-(M + 1)) (M + 1)) ∧ (n : ℝ) * δ ≤ 2 * (M + 1) ∧
+      SkorokhodSpace.subdivisionOsc f s ≤ 2 * c := by
+  intro f hf
+  exact SkorokhodSpace.exists_isSubdivisionBased_of_modulusBased_lt hM hδ0 hδ1 f
+    (lt_of_le_of_lt (le_iSup₂ (f := fun g (_ : g ∈ K) =>
+      SkorokhodSpace.modulusBased (0 : ℝ) M g δ) f hf) h)
+
+
+/-! ### The bad times, and their Lebesgue measure
+
+This is the form in which the interchange of the two limits is available.  The
+right oscillation of a path over a span `δ'` is small at every time outside a set
+of bad times, and that set has Lebesgue measure at most `(n + 1) · δ'` with
+`(n : ℝ) * δ ≤ 2 (M + 1)` — a bound in the window and in `δ`, the same for every
+path of the set.  It is what remains of the uniform right modulus that
+`SkorokhodSpace.exists_isCompact_forall_exists_one_le_dist` refutes: not that the
+bad times are absent, but that they are few. -/
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The right oscillation is small off a set of times of small measure.**  To a
+path whose based modulus at `δ` is below `c` there are a subdivision length `n`
+with `(n : ℝ) * δ ≤ 2 * (M + 1)` and a set `B` of Lebesgue measure at most
+`(n + 1) * δ'` such that `edist (f s) (f t) ≤ 4 * c` for every `t` of the window
+outside `B` and every `s ∈ [t, t + δ')`.
+
+`B` is the union of the intervals `[sₖ - δ', sₖ)` over the nodes: off it, a time
+`t` of the window and every `s ∈ [t, t + δ')` lie in **one** cell of the
+subdivision, by `exists_mem_Ico_of_strictMono` for `t` and because a node in
+`(t, s]` would put `t` into `B`.  The factor `4` is two applications of the
+cellwise bound `2 * c` of
+`SkorokhodSpace.exists_isSubdivisionBased_of_modulusBased_lt` and the triangle
+inequality, the cell being measured from its left endpoint and not from `t`.
+
+**`δ'` is not assumed positive.**  For `δ' ≤ 0` the intervals of `B` and the
+spans `[t, t + δ')` are both empty and the statement is true and empty; no proof
+step asks for more, and requiring `0 < δ'` would be a hypothesis the conclusion
+does not spend. -/
+theorem SkorokhodSpace.exists_measure_le_forall_edist_le
+    {M δ δ' : ℝ} (hM : 1 ≤ M) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1)
+    (f : D(ℝ, E)) {c : ℝ≥0∞} (h : SkorokhodSpace.modulusBased (0 : ℝ) M f δ < c) :
+    ∃ (n : ℕ) (B : Set ℝ), (n : ℝ) * δ ≤ 2 * (M + 1) ∧
+      volume B ≤ (n + 1) * ENNReal.ofReal δ' ∧
+      ∀ t ∈ Set.Ico (-M) M, t ∉ B → ∀ s ∈ Set.Ico t (t + δ'),
+        edist (f.toFun s) (f.toFun t) ≤ 4 * c := by
+  obtain ⟨n, s, hs, -, hcard, hosc⟩ :=
+    SkorokhodSpace.exists_isSubdivisionBased_of_modulusBased_lt hM hδ0 hδ1 f h
+  obtain ⟨⟨hmono, hs0, hslast, -⟩, -⟩ := hs
+  have hM0 : (0 : ℝ) ≤ M := by linarith
+  rw [exhaustionMin_real, max_eq_left hM0] at hs0
+  rw [exhaustionMax_real, max_eq_left hM0] at hslast
+  refine ⟨n, ⋃ k : Fin (n + 1), Set.Ico (s k - δ') (s k), hcard, ?_, ?_⟩
+  · refine le_trans (measure_iUnion_le _) ?_
+    rw [tsum_fintype]
+    have hvol : ∀ k : Fin (n + 1), volume (Set.Ico (s k - δ') (s k)) = ENNReal.ofReal δ' := by
+      intro k
+      rw [Real.volume_Ico]
+      congr 1
+      ring
+    simp only [hvol, Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
+    push_cast
+    exact le_rfl
+  · intro t ht htB u hu
+    have h0t : s 0 ≤ t := le_trans hs0 ht.1
+    have htlast : t < s (Fin.last n) := lt_of_lt_of_le ht.2 hslast
+    obtain ⟨k, hk⟩ := exists_mem_Ico_of_strictMono hmono h0t htlast
+    have hulast : u < s k.succ := by
+      by_contra hcon
+      rw [not_lt] at hcon
+      refine htB (Set.mem_iUnion.2 ⟨k.succ, ?_⟩)
+      exact ⟨by linarith [hu.2], hk.2⟩
+    have hku : u ∈ Set.Ico (s k.castSucc) (s k.succ) := ⟨le_trans hk.1 hu.1, hulast⟩
+    have hbound : ∀ x ∈ Set.Ico (s k.castSucc) (s k.succ),
+        edist (f.toFun x) (f.toFun (s k.castSucc)) ≤ 2 * c := by
+      intro x hx
+      refine le_trans ?_ hosc
+      exact le_iSup_of_le k (le_iSup₂_of_le x hx le_rfl)
+    calc edist (f.toFun u) (f.toFun t)
+        ≤ edist (f.toFun u) (f.toFun (s k.castSucc))
+          + edist (f.toFun (s k.castSucc)) (f.toFun t) := edist_triangle _ _ _
+      _ ≤ 2 * c + 2 * c := by
+          refine add_le_add (hbound u hku) ?_
+          rw [edist_comm]
+          exact hbound t hk
+      _ = 4 * c := by ring
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The same bound for every path of a set, and this is the uniformity that the
+interchange of limits can use.**  The hypothesis is what
+`SkorokhodSpace.exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure`
+produces at every small enough `δ`, and the conclusion carries **one** measure
+bound for all of `K`, the subdivision length being bounded by `2 (M + 1) / δ`
+whatever the path.
+
+Read against `SkorokhodSpace.exists_isCompact_forall_exists_one_le_dist`: the bad
+times cannot be made empty, and they can be made of small measure. -/
+theorem SkorokhodSpace.forall_exists_measure_le_forall_edist_le {K : Set D(ℝ, E)}
+    {M δ δ' : ℝ} (hM : 1 ≤ M) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) {c : ℝ≥0∞}
+    (h : (⨆ f ∈ K, SkorokhodSpace.modulusBased (0 : ℝ) M f δ) < c) :
+    ∀ f ∈ K, ∃ (n : ℕ) (B : Set ℝ), (n : ℝ) * δ ≤ 2 * (M + 1) ∧
+      volume B ≤ (n + 1) * ENNReal.ofReal δ' ∧
+      ∀ t ∈ Set.Ico (-M) M, t ∉ B → ∀ s ∈ Set.Ico t (t + δ'),
+        edist (f.toFun s) (f.toFun t) ≤ 4 * c := by
+  intro f hf
+  exact SkorokhodSpace.exists_measure_le_forall_edist_le hM hδ0 hδ1 f
+    (lt_of_le_of_lt (le_iSup₂ (f := fun g (_ : g ∈ K) =>
+      SkorokhodSpace.modulusBased (0 : ℝ) M g δ) f hf) h)
+

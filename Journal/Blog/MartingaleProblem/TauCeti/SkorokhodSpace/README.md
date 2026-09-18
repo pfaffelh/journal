@@ -2257,6 +2257,29 @@ state the second, as Theorem 3.9.1, for a complete separable `E` as well.
   times of a finite family approachable from the right, and the oscillation bound
   is what makes the approach uniform in the sequence. Both are spent, and neither
   replaces the other.
+
+  **In what sense the oscillation bound is uniform, and in what sense it is
+  not.** It is not a uniform right modulus at a fixed time: to a compact set `K`
+  of paths, a time `t` and an `ε > 0` there need be **no** `δ > 0` with
+  `dist (f s) (f t) ≤ ε` for all `f ∈ K` and all `s ∈ [t, t + δ)`. That is
+  `SkorokhodSpace.exists_isCompact_forall_exists_one_le_dist` and, on Mathlib's
+  predicate, `SkorokhodSpace.exists_isCompact_not_equicontinuousWithinAt`. The
+  defect is one of uniformity alone — a single path has the property by right
+  continuity (`IsRightContinuous.exists_forall_dist_le`) and a finite family has
+  it by `SkorokhodSpace.equicontinuousWithinAt_of_finite` — and compactness in
+  `D(ℝ, E)` does not bridge the two, because the metric of Milestone 4 lets a
+  time change carry a jump across a fixed time at vanishing cost.
+
+  What the modulus does give uniformly is the **number of cells**: trimmed to
+  the marks `± (M + 1)`, a `δ`-sparse subdivision of the window of radius `M`
+  has at most `2(M+1)/δ` of them whatever the path — that is
+  `SkorokhodSpace.forall_exists_isSubdivisionBased_of_iSup_lt` below — so the
+  times at which one path oscillates by more than `ε` to the right over a span
+  `δ'` lie in that many intervals of length `δ'` and hence in a set of Lebesgue
+  measure at most `(2(M+1)/δ + 1) · δ'`. The interchange
+  of the two limits is therefore to be made in measure over the time variable
+  and not pathwise: the bound on the bad times is uniform over `K`, and it is
+  the bound that survives.
 * `SkorokhodSpace.exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure`
   — stage (A), **proved 2026-09-18**. For `S : Set (ProbabilityMeasure (D ℝ E))`
   with compact closure and for `ε > 0` there is a compact `K ⊆ D(ℝ, E)` with
@@ -2304,6 +2327,85 @@ state the second, as Theorem 3.9.1, for a complete separable `E` as well.
   exhibited as a subsequential limit of anything and the hypotheses of the
   theorem are not in play; the witness speaks about one implication inside a
   proof, not about the statement.
+* `SkorokhodSpace.exists_isCompact_forall_exists_one_le_dist` — stage (A),
+  **proved 2026-09-18**. There are a compact `K ⊆ D(ℝ, ℝ)` — over which the
+  modulus of Milestone 7 therefore tends to `0` uniformly, by
+  `SkorokhodSpace.isCompact_closure_iff` — and a time `t` such that for
+  **every** `δ > 0` some `f ∈ K` and some `s ∈ [t, t + δ)` have
+  `1 ≤ dist (f s) (f t)`.
+
+  The set is the one of `SkorokhodSpace.tendsto_stepAt_shift`: the steps with
+  jump time `1/(n+2) - 1` together with their limit, the step at `-1`, compact
+  as a convergent sequence with its limit by `Filter.Tendsto.isCompact_insert_range`
+  (`Mathlib/Topology/Compactness/Compact.lean:645`). At
+  `t = -1` the `n`-th path is `0` at `t` and `1` at its own jump time, which
+  lies in `[t, t + δ)` as soon as `1/(n+2) < δ`. The modulus condition is read
+  off the criterion of Milestone 7 and not proved again.
+
+  This is what fixes the sense in which the oscillation bound is uniform: it is
+  uniform over the *radii of the subdivision* and not over the *paths at a fixed
+  time*. A proof of the theorem above may not take a `δ` that serves all of `K`
+  at once.
+* `SkorokhodSpace.exists_isCompact_not_equicontinuousWithinAt` — stage (A),
+  **proved 2026-09-18**. The same on Mathlib's predicate: there are a compact
+  `K ⊆ D(ℝ, ℝ)` and a time `t` with
+  `¬ EquicontinuousWithinAt (fun f : K => f.toFun) (Set.Ici t) t`. It is the
+  previous item read through `Metric.mem_nhdsWithin_iff` and
+  `Metric.dist_mem_uniformity`, and it is stated so that the negative result and
+  the two positive ones below live on one predicate.
+* `IsRightContinuous.exists_forall_dist_le` — stage (A), **proved 2026-09-18**.
+  For a right continuous `f : ℝ → E`, a time `t` and `ε > 0` there is `δ > 0`
+  with `dist (f s) (f t) ≤ ε` for every `s ∈ [t, t + δ)`. It asks nothing beyond
+  right continuity; `t` itself is covered separately, `Set.Ico t (t + δ)`
+  containing it while `Set.Ioi t` does not.
+* `SkorokhodSpace.equicontinuousWithinAt_of_finite` — stage (A), **proved
+  2026-09-18**. A finite `K ⊆ D(ℝ, E)` is equicontinuous within `Set.Ici t` at
+  every `t`, by `equicontinuousWithinAt_finite`
+  (`Mathlib/Topology/UniformSpace/Equicontinuity.lean:252`) and
+  `continuousWithinAt_Ioi_iff_Ici`
+  (`Mathlib/Topology/Order/LeftRight.lean:79`), which passes from the right
+  continuity of `IsCadlag`, stated on `Set.Ioi t`, to the `Set.Ici t` the
+  predicate asks for.
+
+  Read with the two refutations above: the obstruction is neither the paths nor
+  the time, it is the passage from a finite family to a compact one.
+* `SkorokhodSpace.exists_isSubdivisionBased_of_modulusBased_lt` — stage (A),
+  **proved 2026-09-18**. For `1 ≤ M`, `0 < δ ≤ 1` and a path `f` with
+  `modulusBased 0 M f δ < c` there is a based subdivision `s` with all nodes in
+  `[-(M+1), M+1]`, with `(n : ℝ) * δ ≤ 2 * (M + 1)`, and with
+  `subdivisionOsc f s ≤ 2 * c`. It is
+  `SkorokhodSpace.exists_isSubdivisionBased_subdivisionOsc_lt` followed by
+  `SkorokhodSpace.IsSubdivisionBased.trim`, and the factor `2` is the one of
+  `SkorokhodSpace.subdivisionOsc_le_two_mul_of_cells`, which its own docstring
+  shows to be attained.
+
+  The third conjunct is the point: it is a bound in `M` and `δ` and **not in the
+  path**.
+* `SkorokhodSpace.forall_exists_isSubdivisionBased_of_iSup_lt` — stage (A),
+  **proved 2026-09-18**. The same for every `f` of a set `K` whose supremum of
+  based moduli is below `c`, which is what the item above the refutations
+  produces at every small enough `δ`. This is the uniformity that survives: the
+  **number** of cells is one bound for all of `K`, while their **placement** is
+  not, by `SkorokhodSpace.exists_isCompact_forall_exists_one_le_dist`. A proof
+  wanting uniformity over `K` is to be phrased in the count.
+* `SkorokhodSpace.exists_measure_le_forall_edist_le` — stage (A), **proved
+  2026-09-18**. For a path with `modulusBased 0 M f δ < c` there are a length
+  `n` with `(n : ℝ) * δ ≤ 2 * (M + 1)` and a set `B ⊆ ℝ` of Lebesgue measure at
+  most `(n + 1) * δ'` such that `edist (f s) (f t) ≤ 4 * c` for every
+  `t ∈ [-M, M) \ B` and every `s ∈ [t, t + δ')`.
+
+  `B` is the union of `[sₖ - δ', sₖ)` over the nodes; off it, `t` and every such
+  `s` lie in **one** cell, by `exists_mem_Ico_of_strictMono` for `t` and because
+  a node in `(t, s]` would put `t` into `B`. The factor `4` is the cellwise
+  bound `2 * c` twice and the triangle inequality, the cell being measured from
+  its left endpoint. **`δ'` is not assumed positive**: for `δ' ≤ 0` both `B` and
+  the spans are empty, and no step of the proof asks for more.
+* `SkorokhodSpace.forall_exists_measure_le_forall_edist_le` — stage (A),
+  **proved 2026-09-18**. The same for every path of a `K` whose supremum of
+  based moduli is below `c`, with **one** measure bound for all of `K`. This is
+  the statement the interchange of the two limits is to be made in: the bad
+  times cannot be made empty — that is the refutation above — and they can be
+  made of small measure, uniformly.
 * `SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional` — stage (A).
   The same conclusion for a tight family, from the previous item and
   `isCompact_closure_of_isTightMeasureSet`.

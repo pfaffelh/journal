@@ -38479,3 +38479,163 @@ nicht versucht worden.
    unter dem Bildmaß stehen. *Warum jetzt:* es ist dieselbe Lage wie bei `Shift`
    vor dem 2026-09-14 — ein Satz ohne Zeugen —, und der Unterschied ist, daß der
    Zeuge hier in Reichweite ist und nicht erst gebaut werden muß.
+
+### 2026-09-18, achtzehnter Lauf des Tages — Vorschlag 1 des Vorlaufs ist **widerlegt**: die bestellte Aussage ist falsch, und der Zeuge stand seit dem 2026-09-09 in der Datei; was von der Gleichmäßigkeit übrigbleibt, ist nicht die Lage der Stützstellen, sondern ihre Anzahl, und daraus fällt die Maßaussage über die schlechten Zeiten im selben Lauf
+
+**Acht Deklarationen**, alle in `TauCeti/SkorokhodSpace/Suggested.lean`. Alle
+drei Roadmap-Dateien ohne einen Fehler und ohne ein `sorry` durch
+`scripts/check_suggested.py` gegen v4.33.1 (Lean 4.33.1, commit `819816b2e0a3`),
+alle acht mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound`
+geprüft. Die Punkte stehen in `SkorokhodSpace/README.md`, Meilenstein 8.
+
+#### Vorschlag 1 war falsch gestellt, und das ist der Befund des Laufs
+
+Bestellt war: zum Kompaktum `K`, zu `t` und zu `ε > 0` ein `δ > 0` mit
+`dist (f s) (f t) ≤ ε` für **alle** `f ∈ K` und alle `s ∈ [t, t + δ)`,
+„gleichmäßig in `f`". Die Aussage ist falsch, und zwar an einem Zeugen, der seit
+dem 2026-09-09 in derselben Datei steht:
+
+* `SkorokhodSpace.exists_isCompact_forall_exists_one_le_dist` — es gibt ein
+  kompaktes `K ⊆ D(ℝ, ℝ)` und eine Zeit `t`, so daß zu **jedem** `δ > 0` ein
+  `f ∈ K` und ein `s ∈ [t, t + δ)` existieren mit `1 ≤ dist (f s) (f t)`.
+
+`K` ist die Folge aus `SkorokhodSpace.tendsto_stepAt_shift` — die Stufen mit
+Sprungzeit `1/(n+2) - 1` samt ihrem Grenzwert, der Stufe bei `-1` — und `t = -1`.
+Sie ist kompakt als konvergente Folge mit ihrem Grenzwert
+(`Filter.Tendsto.isCompact_insert_range`), und die Modulbedingung ist aus
+`SkorokhodSpace.isCompact_closure_iff` abgelesen und nicht neu bewiesen; die
+bestellte Voraussetzung ist also vollständig erfüllt und trotzdem hilft sie
+nicht. Die `n`-te Stufe ist `0` bei `t` und `1` an ihrer eigenen Sprungzeit, und
+die liegt in `[t, t + δ)`, sobald `1/(n+2) < δ`.
+
+**Der Defekt ist einer der Gleichmäßigkeit allein**, und beide Seiten davon
+stehen jetzt als Satz daneben:
+
+* `IsRightContinuous.exists_forall_dist_le` — ein **einzelner** Pfad hat die
+  Eigenschaft, und zwar aus nichts als der Rechtsstetigkeit.
+* `SkorokhodSpace.equicontinuousWithinAt_of_finite` — eine **endliche** Familie
+  hat sie, über Mathlibs `equicontinuousWithinAt_finite` und
+  `continuousWithinAt_Ioi_iff_Ici`.
+* `SkorokhodSpace.exists_isCompact_not_equicontinuousWithinAt` — dazwischen
+  steht die Kompaktheit, und sie trägt nicht. Dieselbe Widerlegung auf Mathlibs
+  Prädikat `EquicontinuousWithinAt`, damit der negative und die beiden positiven
+  Befunde auf **einem** Begriff liegen und vergleichbar sind.
+
+Der Grund ist die Metrik von Meilenstein 4 selbst: sie läßt einen Zeitwechsel
+einen Sprung über eine feste Zeit tragen, und der kostet im Grenzwert nichts.
+Genau das ist es, was `tendsto_stepAt_shift` beweist, und es war von Anfang an
+das Gegenstück zur Unstetigkeit der Auswertung.
+
+#### Was von der Gleichmäßigkeit übrigbleibt, und es ist beweisbar
+
+Nicht die **Lage** der Stützstellen ist gleichmäßig, sondern ihre **Anzahl**:
+
+* `SkorokhodSpace.exists_isSubdivisionBased_of_modulusBased_lt` — aus
+  `modulusBased 0 M f δ < c` (bei `1 ≤ M`, `0 < δ ≤ 1`) eine Zerlegung mit allen
+  Knoten in `[-(M+1), M+1]`, mit `(n : ℝ) * δ ≤ 2 * (M + 1)` und mit
+  `subdivisionOsc f s ≤ 2 * c`.
+* `SkorokhodSpace.forall_exists_isSubdivisionBased_of_iSup_lt` — dasselbe für
+  **jedes** `f` einer Menge `K`, deren Supremum der Moduln unter `c` liegt, und
+  das ist genau, was
+  `exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure` bei kleinem
+  `δ` liefert.
+
+Beide sind billig — `exists_isSubdivisionBased_subdivisionOsc_lt`,
+`IsSubdivisionBased.trim` und `subdivisionOsc_le_two_mul_of_cells` stehen seit
+dem 2026-09-09 —, aber die Schranke `(n : ℝ) * δ ≤ 2 * (M + 1)` ist eine in `M`
+und `δ` und **nicht im Pfad**, und deshalb übersteht sie ein Supremum über `K`,
+was die Knotenlage nicht tut. Damit ist gesagt, in welcher Gestalt der Vertausch
+der beiden Grenzübergänge zu führen ist: über das **Lebesguemaß der schlechten
+Zeiten** und nicht über ihr Fehlen.
+
+#### Drei Befunde am Rande
+
+* **Der Zeuge mußte nicht gebaut werden.** `tendsto_stepAt_shift` war für die
+  Widerlegung der *gepinnten* Zerlegung gebaut (`not_tendsto_iSup_modulusPinned`,
+  2026-09-09) und trägt dieselbe Aussage über eine ganz andere Frage: eine
+  Sprungzeitfolge, die von rechts auf eine feste Zeit zuläuft, während die Pfade
+  konvergieren. Der ganze Beweis der Widerlegung ist fünfzehn Zeilen.
+* **`Set.mem_setOf_eq` ist auf v4.33.1 `deprecated`** (zugunsten von
+  `Set.mem_ofPred_eq`). Der erste Entwurf benutzte es; die Endfassung kommt ohne
+  aus, weil die Zugehörigkeit zu `{p | dist p.1 p.2 < 1}` definitionsgleich zur
+  Ungleichung ist und `have hclose : … := h …` sie direkt nimmt. Der
+  Deprecation-Hinweis erscheint als `warning`, nicht als `error`, und
+  `check_suggested.py` zählt nur Fehler — er wäre also stehengeblieben. **Er
+  steht auch sonst**: der Name kommt in den drei Roadmap-Dateien 37mal vor (26 in
+  `MartingaleProblems`, 7 in `SkorokhodSpace`, 4 in `WeakConvergence`). Das ist
+  kein Fehler und keine Dringlichkeit, aber eine Einreichung, die mit 37
+  Deprecation-Warnungen ankommt, sagt etwas über ihre Pflege; der Punkt steht
+  jetzt in `Facts/BACKLOG.md`.
+* **Zwei zitierte Mathlib-Namen gegen frisches `upstream/master` geprüft**
+  (Commit `1f22924fd51`, 2026-09-18 14:05 UTC): `equicontinuousWithinAt_finite`
+  steht dort in `Mathlib/Topology/UniformSpace/Equicontinuity.lean:254` (v4.33.1:
+  `:252`), `continuousWithinAt_Ioi_iff_Ici` in
+  `Mathlib/Topology/Order/LeftRight.lean:81` (v4.33.1: `:79`); beide unter
+  demselben Namen und nicht `deprecated`. `scripts/check_cited_names.py` meldet
+  für die vier README weiterhin **null** `deprecated` Zitate — dabei fiel auf,
+  daß der erste Entwurf dieses Berichts `IsCompact.insert_range` schrieb, wo das
+  Lemma `Filter.Tendsto.isCompact_insert_range` heißt; die Roadmap ist berichtigt.
+
+#### Was dieser Lauf **nicht** getan hat
+
+Er hat den Vertausch der beiden Grenzübergänge **nicht** geführt — die
+Maßaussage, auf der er ruht, steht (siehe den nächsten Abschnitt), der
+Integrationsschritt über die Zeitvariable nicht. Er hat auch **nicht** gezeigt,
+daß der Satz EK 3.7.8(b) selbst falsch wäre: der Zeuge spricht über eine
+Implikation innerhalb eines Beweises, wie schon der des Vorlaufs.
+Er hat keine Zeile des Manuskripts angefaßt, und keine Zeile des
+Inventars mit Status `?`; es gibt keine mehr. Vorschlag 2 des Vorlaufs — der
+Anschluß von `tendstoInDistribution_evalPi_jumpPathD` an eine wirkliche Folge —
+ist unberührt geblieben und steht unten wieder.
+
+#### Und die Maßaussage steht auch, im selben Lauf
+
+Angesetzt war sie als Vorschlag für den nächsten Lauf; sie kostete zwei weitere
+Deklarationen, weil `exists_mem_Ico_of_strictMono` — „zu einem Punkt des Fensters
+die Zelle" — seit dem 2026-09-09 dasteht und der Rest Dreiecksungleichung ist:
+
+* `SkorokhodSpace.exists_measure_le_forall_edist_le` — zu `f` mit
+  `modulusBased 0 M f δ < c` gibt es eine Länge `n` mit
+  `(n : ℝ) * δ ≤ 2 * (M + 1)` und eine Menge `B ⊆ ℝ` vom Lebesguemaß höchstens
+  `(n + 1) * δ'`, so daß `edist (f s) (f t) ≤ 4 * c` für jede Zeit `t` des
+  Fensters außerhalb `B` und alle `s ∈ [t, t + δ')`.
+* `SkorokhodSpace.forall_exists_measure_le_forall_edist_le` — dasselbe für jedes
+  `f ∈ K` mit **einer** Maßschranke für ganz `K`.
+
+`B` ist die Vereinigung der `[sₖ - δ', sₖ)` über die Knoten: außerhalb davon
+liegen `t` und jedes `s ∈ [t, t + δ')` in **einer** Zelle, denn ein Knoten in
+`(t, s]` legte `t` nach `B`. Der Faktor `4` ist die Zellenschranke `2 * c`
+zweimal, weil die Zelle von ihrem linken Ende aus gemessen wird und nicht von `t`.
+
+**Eine Voraussetzung ist dabei weggefallen, und sie stand im ersten Entwurf:**
+`0 < δ'` wird nicht gebraucht. Für `δ' ≤ 0` sind sowohl die Intervalle von `B`
+als auch die Spannen `[t, t + δ')` leer, die Aussage ist wahr und leer, und kein
+Schritt des Beweises fragt nach mehr. Das steht so an der Deklaration.
+
+Damit ist die berichtigte Gestalt des Schrittes **vollständig** da: die
+pfadweise Fassung ist widerlegt, die Maßfassung ist bewiesen, und dazwischen
+liegt keine offene Analysis mehr.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Der Vertausch selbst**, jetzt mit allen Zutaten in der Hand.
+   `SkorokhodSpace.tendsto_finiteDimensional_of_forall_mem_isCompact` — zu einer
+   Folge von Gesetzen mit relativ kompakter Menge, deren endlichdimensionale
+   Verteilungen längs einer dichten Menge `T` konvergieren, und zu einer
+   Stetigkeitszeit `t` des Teilfolgengrenzwerts: die Verteilung bei `t` ist der
+   Grenzwert der Verteilungen bei Zeiten aus `T` rechts von `t`.
+   *Worauf er ruht:* `forall_exists_measure_le_forall_edist_le` aus diesem Lauf,
+   angewandt auf das Kompaktum von
+   `exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure`, und ein
+   Integrationsschritt über die Zeitvariable, der aus „das Maß der schlechten
+   Zeiten ist klein" eine **Zeit** gewinnt, die für alle Glieder der Folge
+   zugleich gut ist.
+   *Warum jetzt:* die pfadweise Abkürzung ist mit einem Zeugen ausgeschlossen,
+   also führt kein Weg an ihm vorbei; und die Schranke, die er integriert, ist
+   bewiesen. Es ist der einzige Schritt von EK 3.7.8(b), der noch offen ist.
+
+2. **Der Anschluß von `tendstoInDistribution_evalPi_jumpPathD` an eine wirkliche
+   Folge**, unverändert vom Vorlauf. Die Sätze sind anwendbar und auf nichts
+   angewandt; der Zeuge ist das Akzeptanzbeispiel von Meilenstein 10, dessen
+   Approximanten seit dem elften Lauf des 2026-09-18 auf dem Pfadraum unter dem
+   Bildmaß stehen.
