@@ -38798,7 +38798,7 @@ entscheidet, ob der Vertausch mit beschränkten stetigen Testfunktionen (dann
 genügt Stufe (A)) oder mit gleichmäßig stetigen geführt wird" — und die Antwort
 ist: **mit beschränkten stetigen, und der Modul kommt von den Pfaden.**
 
-#### Die Kette, in vier Stücken
+#### Die Kette, in fünf Stücken
 
 * `SkorokhodSpace.dist_integral_eval_le_of_forall_dist_le` — die Abschätzung
   selbst, mit dem Modul als **Hypothese** und **lokalisiert** auf eine Menge `S`,
@@ -38886,6 +38886,182 @@ Inventars mit Status `?`; es gibt keine mehr.
    `induction_on_mulSystem` (**WeakConvergence** M5) das Gesetz identifiziert;
    und es ist die Stelle, an der sich zeigt, ob die Spanne von der Zahl der
    Zeiten abhängt.
+
+2. **Der Anschluß von `tendstoInDistribution_evalPi_jumpPathD` an eine wirkliche
+   Folge**, unverändert seit dem sechzehnten Lauf. Die Sätze sind anwendbar und
+   auf nichts angewandt; der Zeuge ist das Akzeptanzbeispiel von Meilenstein 10,
+   dessen Approximanten seit dem elften Lauf des 2026-09-18 auf dem Pfadraum
+   unter dem Bildmaß stehen.
+
+### 2026-09-18, einundzwanzigster Lauf des Tages — Vorschlag 1 steht, aber nicht in der bestellten Gestalt: die Aussage über die *Differenz der Integrale* telescopiert nicht, und was telescopiert, ist die `L¹`-Fassung; dazu der Befund, daß die vorgeschriebenen Zeiten nicht gut gemacht werden können, sondern nach rechts verschoben werden müssen
+
+**Zehn neue Deklarationen** und **zwei bestehende zu Korollaren umgeschrieben**,
+alle in `TauCeti/SkorokhodSpace/Suggested.lean`. Alle drei Roadmap-Dateien ohne
+einen Fehler und ohne ein `sorry` durch `scripts/check_suggested.py` gegen
+v4.33.1 (Lean 4.33.1, commit `819816b2e0a3`), alle zehn geprüften Namen mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` — und die
+zehnte, im selben Lauf nachgeschobene, ebenso. Die Punkte stehen in
+`SkorokhodSpace/README.md`, Meilenstein 8.
+
+Angegangen war Vorschlag 1 des Vorlaufs,
+`exists_time_forall_dist_integral_evalPi_le_of_isCompact_closure`. Er ist
+eingelöst; zwei Dinge daran waren anders als bestellt, und beide sind der Befund
+des Laufs.
+
+#### Erster Befund: die bestellte Eingabe telescopiert nicht
+
+Der Vorlauf hatte als Weg „ein Teleskopschritt über `κ`, in dem ein Faktor nach
+dem anderen von `t i` nach `t' i` bewegt wird" angesagt, mit der vorhandenen
+eindimensionalen Aussage
+`SkorokhodSpace.dist_integral_eval_le_of_forall_dist_le` als Baustein. Das geht
+nicht, und der Grund ist keine Feinheit: jener Satz schätzt
+`|∫ F (f t') dμ − ∫ F (f t) dμ|` ab, der Teleskopschritt aber multipliziert den
+Faktor `F i (f (t' i)) − F i (f (t i))` mit den **übrigen Faktoren, ehe**
+integriert wird, und eine Schranke an die Differenz der Integrale sagt über das
+Integral des Produkts nichts.
+
+Was der Schritt verlangt, ist `∫ |F i (f (t' i)) − F i (f (t i))| dμ`. Diese
+Größe ist im Beweis des vorhandenen Satzes bereits abgeschätzt und wird dort im
+letzten Schritt durch `abs_integral_le_integral_abs` weggeworfen. Sie ist
+deshalb als
+`SkorokhodSpace.integral_abs_sub_eval_le_of_forall_dist_le` **herausgezogen**
+und der bestehende Satz auf drei Zeilen als Korollar daraus umgeschrieben —
+keine Doppelung, und die schwächere Aussage steht jetzt an der Stelle, an der
+sie hingehört.
+
+#### Zweiter Befund: die vorgeschriebenen Zeiten lassen sich nicht gut machen
+
+Der Vorlauf hatte die Zeiten `t : κ → ℝ` als **gegeben** gestellt und
+`t' i ∈ [t i, t i + δ')` gesucht. So stimmt die Aussage nicht: die Abschätzung
+steht nur an einer Zeit, an der das Gesetz eine große Rechtsschwankung mit
+kleiner Wahrscheinlichkeit belegt, und die Schranke an die schlechten Zeiten ist
+eine Schranke im **Lebesguemaß**. Sie liefert gute Zeiten dicht, nicht überall.
+Eine beliebig vorgeschriebene Zeit braucht keine gute zu sein.
+
+Die Aussage, die gilt, ist die mit **verschobenen** Zeiten: zu einer Reichweite
+`η ∈ (0,1]` gibt es `s i ∈ [t i, t i + η)`, die gut sind, und an denen dann die
+Stabilität nach rechts steht. Das ist keine Abschwächung auf Verdacht, sondern
+genau, was die Roadmap an der Stelle braucht, an der sie die Dichtheit von `T`
+verbraucht: „density of `T` is what makes the times of a finite family
+approachable from the right". Die Annäherung von rechts ist die Aussage.
+
+Der Vorlauf hatte daneben notiert, die Zeit sei „nicht je Koordinate zu wählen,
+sondern einmal". Auch das trifft nicht zu, und es ist dieselbe Sache von der
+anderen Seite: die schlechten Zeiten der Koordinaten sind zwar dieselbe Funktion
+`t ↦ μ (bad t)`, aber die Koordinaten sitzen an **verschiedenen** Zeiten `t i`,
+und jede braucht ihre eigene gute Zeit in ihrem eigenen Fenster. Gemeinsam sind
+die Spanne `δ'` und der Pegel `β`, und mehr ist auch nicht nötig.
+
+#### Die Kette, in vier Stücken
+
+* **Der Teleskop.** `abs_prod_sub_prod_le` — sind alle Faktoren beider Familien
+  durch `C ≥ 1` beschränkt, so ist
+  `|∏ a i − ∏ b i| ≤ C ^ #s · ∑ |a i − b i|`. Induktion über den `Finset` mit
+  `a j ∏ a − b j ∏ b = (a j − b j) ∏ a + b j (∏ a − ∏ b)`; `1 ≤ C` ist, was die
+  beiden auftretenden Potenzen von `C` auf denselben Exponenten bringt. Mathlib
+  hat das nicht, und der nächste Treffer ist keiner: `dist_prod_prod_le`
+  (`Analysis/Normed/Group/Basic.lean:860`) steht über einer `SeminormedCommGroup`
+  und schätzt den Abstand zweier Produkte **in der Gruppenoperation** ab; sein
+  `to_additive`-Zwilling ist die Aussage über Summen. Auf Produkte reeller Zahlen
+  ist er nicht anwendbar, weil `ℝ` mit der Multiplikation keine seminormierte
+  Gruppe ist. Gesucht ist auf v4.33.1 nach `prod_sub_prod`, `norm_prod_sub` und
+  `dist_prod_prod`; außer jenem Satz gibt es nichts.
+* **Die `L¹`-Fassung** und der bestehende Satz als Korollar, siehe oben.
+* **Die endlichdimensionale Abschätzung.**
+  `SkorokhodSpace.dist_integral_evalPi_le_of_forall_dist_le` — der Teleskop unter
+  dem Integralzeichen, dann die `L¹`-Fassung in jeder Koordinate:
+  `|∫ ∏ F i (f (t' i)) dμ − ∫ ∏ F i (f (t i)) dμ| ≤ C ^ #κ ∑ (ε + 2 C μ (bad (t i)))`.
+* **Eine Zeit für endlich viele Gesetze.**
+  `SkorokhodSpace.exists_time_mem_Ico_forall_measure_setOf_exists_edist_lt`,
+  nachgeschoben, weil der erste Vorschlag unten sonst an einer offenen Frage
+  hinge — siehe dort.
+* **Die guten Zeiten.** `exists_mem_Ico_lt_of_setLIntegral_le'` (das Fenster
+  beliebig statt symmetrisch; der bestehende Satz ist daraus abgeleitet),
+  `exists_mem_Ico_lt_of_setLIntegral_le_of_subset` (auf einem **Teilfenster**,
+  durch `lintegral_mono_set`),
+  `SkorokhodSpace.exists_time_mem_Ico_measure_setOf_exists_edist_lt` und
+  `SkorokhodSpace.exists_times_forall_measure_setOf_exists_edist_lt`. Der Index
+  `κ` trägt dabei **keine Struktur**: die Zeiten werden unabhängig voneinander
+  mit `choose` gewählt, weil die Schranke auf jedem Teilfenster zugleich gilt.
+
+  Daß das trägt, ist die Beobachtung, daß die Schranke
+  `(⌈2 (M+1)/δ⌉ + 1) δ'` **proportional zur Spanne** `δ'` ist und die Spanne frei
+  ist. Gegen ein Fenster der Länge `η` ist sie also klein zu machen, wie klein
+  `η` auch sei. Der Vorlauf hatte die Schranke nur gegen das ganze Fenster
+  `2 M` gelesen.
+* **Der Zusammenbau.**
+  `SkorokhodSpace.exists_times_forall_dist_integral_evalPi_le_of_isCompact_closure`,
+  mit `exists_forall_mem_dist_le_of_isCompact_closure` für den Modul der ganzen
+  Familie (Induktion über den `Finset`, jeweils das Minimum der beiden Skalen).
+
+#### Die Reihenfolge der Konstanten, und der Preis des Teleskops
+
+Sie ist nicht frei: erst die gemeinsame Normschranke `C = 1 + ∑ ‖F i‖`, dann
+`Dc = C ^ #κ (#κ + 1)` — das ist, was der Teleskop kostet —, dann die Skala `a`
+des Moduls auf dem Pegel `ε / (2 Dc)`, dann der Radius `δ` der Zerlegung, dann
+der Pegel `b = ε / (4 Dc C)` der schlechten Mengen, und die Spanne `δ'` zuletzt,
+weil bei gegebener Reichweite `η` nur sie noch frei ist.
+
+**Die Spanne hängt von der Zahl der Zeiten ab**, und das beantwortet die Frage,
+die der Vorlauf ausdrücklich gestellt hatte („es ist die Stelle, an der sich
+zeigt, ob die Spanne von der Zahl der Zeiten abhängt"). Sie hängt davon ab, und
+zwar exponentiell: `δ'` ist proportional zu `b`, und `b` trägt `Dc = C ^ #κ (#κ+1)`
+im Nenner. Für eine *feste* endliche Familie ist das gleichgültig — die Spanne ist
+positiv, und mehr wird nicht gebraucht —, aber eine Aussage, die über die Zahl
+der Zeiten gleichmäßig sein müßte, gäbe es auf diesem Weg nicht.
+
+Das leere `κ` ist nicht ausgeschlossen: beide Produkte sind das leere Produkt
+`1`, die Differenz `0`, und der Faktor `#κ + 1` in `Dc` ist gerade, was den
+letzten Rechenschritt von einer Division durch `#κ` freihält.
+
+#### Was dieser Lauf **nicht** getan hat
+
+EK 3.7.8(b) selbst ist nicht geführt. Was jetzt dasteht, ist die Stabilität der
+**endlichdimensionalen** Verteilungen nach rechts an geeigneten Zeiten; was
+fehlt, ist der Vergleich mit dem Teilfolgenlimes, also der Schritt, in dem die
+Aussage dieses Laufs gegen die Konvergenz längs `T` gehalten wird. Er hat keine
+Zeile des Manuskripts angefaßt und keine Zeile des Inventars mit Status `?`; es
+gibt keine mehr. Die Prüfung der Roadmaps gegen frisches `upstream/master` ist in
+diesem Lauf **nicht** wiederholt worden; sie steht vom fünfzehnten und vom
+zwanzigsten Lauf desselben Tages.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Der Vergleich zweier Gesetze an den verschobenen Zeiten.**
+   `SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq` — stimmen zwei
+   Gesetze `μ ν` auf `D(ℝ, E)`, beide getragen von einer Menge mit kompaktem
+   Abschluß, in den endlichdimensionalen Verteilungen längs einer **dichten**
+   Menge `T ⊆ ℝ` überein, so sind sie gleich.
+   *Worauf sie ruht:* die Aussage dieses Laufs, **zweimal** — für `μ` und für
+   `ν`, mit derselben vorgeschriebenen Familie `t` und derselben Reichweite `η`,
+   aber je eigenen guten Zeiten; die Dichtheit von `T`, um in jedem Fenster
+   `[s i, s i + δ')` eine Zeit von `T` zu finden; und
+   `induction_on_mulSystem` (**WeakConvergence** M5) zusammen mit
+   `borel_eq_iSup_comap_eval` (M6, in der Fassung längs einer dichten Menge),
+   um von der Gleichheit der Integrale der Produkte auf die Gleichheit der
+   Gesetze zu schließen.
+   *Warum jetzt:* es ist die letzte Stufe vor EK 3.7.8(b) selbst, und es ist die
+   Stelle, an der sich zeigt, ob die beiden Gesetze **dieselben** verschobenen
+   Zeiten brauchen. Sie brauchen sie, und die Aussage dieses Laufs gibt sie
+   nicht: sie liefert zu jedem Gesetz eigene gute Zeiten. Zu klären ist, ob eine
+   gemeinsame gute Zeit für zwei Gesetze zu haben ist — für **zwei** ist das ein
+   Summenargument über die schlechten Zeiten und sollte gehen, anders als für
+   eine ganze Folge, wo der zwanzigste Lauf die `liminf`-Schranke gefunden hat.
+   **Diese Frage ist im selben Lauf beantwortet, und die Antwort ist ja.**
+   `SkorokhodSpace.exists_time_mem_Ico_forall_measure_setOf_exists_edist_lt` gibt
+   **eine** gute Zeit für einen `Finset` von Gesetzen, die alle von `K` getragen
+   sind: die Schranke wird über den `Finset` summiert, der Preis ist der Faktor
+   `#s`, und er wird durch eine kleinere Spanne `δ'` bezahlt. Für zwei Gesetze
+   ist der Faktor `2`. Der nächste Lauf findet die Eingabe also fertig vor und
+   braucht sie nicht zu erschließen.
+
+   **Und die Endlichkeit ist dabei nicht Bequemlichkeit, sondern die Grenze des
+   Weges:** über einem unendlichen Index ist die Summe der Schranken unendlich
+   und keine Spanne klein genug. Das paßt zu dem, was der zwanzigste Lauf für
+   eine *Folge* von Gesetzen gefunden hat — dort steht nur die Zeit längs einer
+   **Teilfolge**, und der Grund ist derselbe von der anderen Seite: `∫ limsup ≤
+   limsup ∫` ist falsch. Zwei Gesetze sind endlich, eine Folge ist es nicht, und
+   genau dazwischen verläuft die Grenze.
 
 2. **Der Anschluß von `tendstoInDistribution_evalPi_jumpPathD` an eine wirkliche
    Folge**, unverändert seit dem sechzehnten Lauf. Die Sätze sind anwendbar und

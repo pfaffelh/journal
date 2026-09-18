@@ -2498,11 +2498,19 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   the times of the window at which the law charges a large right oscillation
   with probability at least `β` is at most the same constant. Written without a
   division, so that it asks nothing of `β`.
-* `exists_mem_Ico_lt_of_setLIntegral_le` — stage (A), **proved 2026-09-18**. If
-  `∫⁻ t in [-M, M), F t ≤ C` and `C < β * (2 M)` then some `t` of the window has
-  `F t < β`. It is Markov read by contradiction, it mentions neither the path
-  space nor a law, and it is the step that turns a statement about the measure
-  of the bad times into a statement about **one** time.
+* `exists_mem_Ico_lt_of_setLIntegral_le'` and
+  `exists_mem_Ico_lt_of_setLIntegral_le` — stage (A), **proved 2026-09-18**. If
+  `∫⁻ t in [u, v), F t ≤ C` and `C < β * (v - u)` then some `t` of the window has
+  `F t < β`; the second is the symmetric window `[-M, M)`, which is the shape the
+  bound below comes in. It is Markov read by contradiction, it mentions neither
+  the path space nor a law, and it is the step that turns a statement about the
+  measure of the bad times into a statement about **one** time.
+* `exists_mem_Ico_lt_of_setLIntegral_le_of_subset` — stage (A), **proved
+  2026-09-18**. The same on a *subwindow* `[u, v) ⊆ [-M, M)`, the integrand being
+  non-negative so that `lintegral_mono_set` carries the bound down. This is what
+  turns one good time into a good time **near a prescribed one**: the bound below
+  is proportional to the span `δ'`, and the span is free, so it may be made small
+  against any subwindow one likes.
 * `SkorokhodSpace.exists_time_measure_setOf_exists_edist_lt` — stage (A),
   **proved 2026-09-18**. The time itself, for one law: under the hypothesis
   above and for `δ'` small enough that `(⌈2 (M + 1) / δ⌉ + 1) δ' < β * (2 M)`
@@ -2510,6 +2518,32 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   with probability less than `β`. This is what
   `exists_isCompact_forall_exists_one_le_dist` leaves open: not every time is
   good, and one is.
+* `SkorokhodSpace.exists_time_mem_Ico_measure_setOf_exists_edist_lt` and
+  `SkorokhodSpace.exists_times_forall_measure_setOf_exists_edist_lt` — stage (A),
+  **proved 2026-09-18**. The good time inside a *prescribed subwindow*, and then
+  a whole family of them: to `t : κ → ℝ` with every `[t i, t i + η)` inside
+  `[-M, M)` and to `δ'` small enough that
+  `(⌈2 (M + 1) / δ⌉ + 1) δ' < β η`, there are `s i ∈ [t i, t i + η)` at each of
+  which the law charges a large right oscillation with probability less than `β`.
+
+  The index `κ` is arbitrary and carries no structure: the times are chosen
+  independently of one another, the bound holding on every subwindow at once.
+  What the coordinates share is the span `δ'` and the level `β`, and that is the
+  whole content of the single hypothesis.
+* `SkorokhodSpace.exists_time_mem_Ico_forall_measure_setOf_exists_edist_lt` —
+  stage (A), **proved 2026-09-18**. One good time serving **finitely many laws at
+  once**: to a `Finset` of laws all carried by `K` and to `δ'` small enough that
+  `#s · (⌈2 (M + 1) / δ⌉ + 1) δ' < β (v − u)`, there is a time of the subwindow at
+  which every law of the set charges a large right oscillation with probability
+  less than `β`. It is the bound summed over the set and then the argument above.
+
+  **The finiteness is the whole hypothesis, and it is sharp in the following
+  sense.** The price is the factor `#s`, paid by making the span smaller; over an
+  infinite index the sum of the bounds is infinite and no span is small enough.
+  That is not an artefact of this proof — a time good for every member of a
+  sequence at once need not exist, for the reason recorded at the item below.
+  Two laws are the case that identifying a law by its finite dimensional
+  distributions along a dense set of times needs, and for two the factor is `2`.
 * `SkorokhodSpace.exists_time_liminf_measure_setOf_exists_edist_lt` — stage (A),
   **proved 2026-09-18**. The time for a whole **sequence** of laws, all carried
   by the same `K`, and the conclusion carries a `liminf`:
@@ -2527,14 +2561,16 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   use here. What the interchange of the two limits may spend is therefore a time
   good along a **subsequence** — which is what an argument comparing
   subsequential limits has at its disposal in any case.
-* `SkorokhodSpace.dist_integral_eval_le_of_forall_dist_le` — stage (A),
+* `SkorokhodSpace.integral_abs_sub_eval_le_of_forall_dist_le` and
+  `SkorokhodSpace.dist_integral_eval_le_of_forall_dist_le` — stage (A),
   **proved 2026-09-18**. The passage from the bad times to the one dimensional
   distributions. For a law `μ` carried by `K`, a bounded continuous `F : E →ᵇ ℝ`,
   a time `t` and a time `t'` of the span `[t, t + δ')`:
-  `|∫ F (f t') dμ − ∫ F (f t) dμ| ≤ ε + 2 ‖F‖ · μ (bad t)`,
+  `∫ |F (f t') − F (f t)| dμ ≤ ε + 2 ‖F‖ · μ (bad t)`,
   with `bad t` the set of the item above and `ε` a modulus of `F` at the scale
   `a`, asked only of a set `S` holding the values of the paths of `K` over the
-  span.
+  span. The second is the difference of the two integrals, one
+  `abs_integral_le_integral_abs` away.
 
   The proof decomposes `∫ |F (f t') − F (f t)|` over `bad t` and its complement,
   by `integral_mono_ae` against
@@ -2544,12 +2580,42 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   cannot be made empty, by
   `SkorokhodSpace.exists_isCompact_forall_exists_one_le_dist`, and its measure
   alone would not control a test function of unbounded oscillation.
+
+  **The `L¹` statement is the primitive and the difference of the integrals the
+  corollary**, and the order matters for what comes after. A bound on
+  `|∫ F (f t') dμ − ∫ F (f t) dμ|` says nothing about a *product* of such
+  differences: the telescope of the item below moves one coordinate at a time and
+  multiplies by the remaining factors **before** integrating, so what it can spend
+  is `∫ |F i (f (t' i)) − F i (f (t i))| dμ` and not the difference of the two
+  one dimensional integrals.
+* `abs_prod_sub_prod_le` — stage (A), **proved 2026-09-18**. The telescope for a
+  finite product of reals: if every factor of either family is bounded by
+  `C ≥ 1`, then `|∏ a i − ∏ b i| ≤ C ^ #s · ∑ |a i − b i|`. The induction replaces
+  one factor at a time,
+  `a j ∏ a − b j ∏ b = (a j − b j) ∏ a + b j (∏ a − ∏ b)`, and `1 ≤ C` is what
+  lets the two powers of `C` that arise be written with the larger exponent. It
+  names neither the path space nor a measure.
+* `SkorokhodSpace.dist_integral_evalPi_le_of_forall_dist_le` — stage (A),
+  **proved 2026-09-18**. The estimate for a finite family of times and of test
+  functions: to `t t' : κ → ℝ` with `t' i ∈ [t i, t i + δ')` and to
+  `F : κ → (E →ᵇ ℝ)` all bounded by `C ≥ 1`,
+  `|∫ ∏ F i (f (t' i)) dμ − ∫ ∏ F i (f (t i)) dμ| ≤ C ^ #κ ∑ (ε + 2 C μ (bad (t i)))`.
+  It is the telescope under the integral sign and then the `L¹` estimate in each
+  coordinate. The bad sets of the coordinates are different sets, one per `t i`,
+  and each is paid for separately; what the coordinates share is the span `δ'` and
+  the scale `a`.
 * `exists_forall_dist_le_of_isCompact_closure` — stage (A), **proved
   2026-09-18**. A modulus on a set with compact closure: for `S ⊆ E` with
   `IsCompact (closure S)`, a bounded continuous `F` and `ε > 0` there is a scale
   `a > 0` at which `ε` is a modulus of `F` on `S`. It is
   `IsCompact.uniformContinuousOn_of_continuous` and nothing else, and it names
   neither the path space nor a law.
+* `exists_forall_mem_dist_le_of_isCompact_closure` — stage (A), **proved
+  2026-09-18**. The same scale for every `F i` with `i` in a finite set, by taking
+  the smaller of the two scales at each step of an induction over the set. The
+  index type is arbitrary and the finiteness sits in the `Finset`, so the
+  statement asks nothing of `κ`; read at `Finset.univ` over a `Fintype` it is the
+  form the finite dimensional estimate wants.
 * `SkorokhodSpace.exists_time_forall_dist_integral_eval_le` and
   `SkorokhodSpace.exists_time_frequently_dist_integral_eval_le` — stage (A),
   **proved 2026-09-18**. The two times above read through that estimate: at the
@@ -2584,6 +2650,34 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   the bad times is `(⌈2 (m + 1) / δ⌉ + 1) δ'` and only `δ'` is still free. The
   two windows differ — `m` for the modulus and `m + 1` for the values — since the
   span reaches `δ' ≤ 1` beyond the window in which the time is produced.
+* `SkorokhodSpace.exists_times_forall_dist_integral_evalPi_le_of_isCompact_closure`
+  — stage (A), **proved 2026-09-18**. The same for the finite dimensional
+  distributions, and with the times **near prescribed ones**: for `A ⊆ D(ℝ, E)`
+  with compact closure, a law `μ` with `μ Aᶜ = 0`, a finite family
+  `F : κ → (E →ᵇ ℝ)`, prescribed times `t : κ → ℝ` of the window `[-m, m − 1)`, a
+  reach `η ∈ (0, 1]` and an `ε > 0`, there are times `s i ∈ [t i, t i + η)` and a
+  span `δ' > 0` with
+  `|∫ ∏ F i (f (s' i)) dμ − ∫ ∏ F i (f (s i)) dμ| ≤ ε`
+  for every family `s' i ∈ [s i, s i + δ')`.
+
+  **The prescribed times are not themselves good, and cannot be made so.** The
+  estimate is available at a time only where the law charges a large right
+  oscillation with small probability, and the bound on the bad times is a bound
+  in *Lebesgue measure*: it produces good times densely and not everywhere. What
+  holds is therefore the statement with the times moved to the right by less than
+  `η` — which is exactly what approximating a finite family from the right along a
+  dense set of times asks for, and what the density of `T` is spent on in the item
+  `tendsto_of_isCompact_closure_of_tendsto_finiteDimensional` above.
+
+  The constants are chosen in the order the proof forces: the common norm bound
+  `C = 1 + ∑ ‖F i‖`, then `Dc = C ^ #κ (#κ + 1)`, which is what the telescope
+  costs, then the scale `a` of the modulus at the level `ε / (2 Dc)`, then the
+  radius `δ` of the subdivision, then the level `b = ε / (4 Dc C)` of the bad
+  sets, and the span `δ'` last, only it being still free once the reach `η` is
+  given. The window of the values is `[-m, m + 1]`, the times running to
+  `(m − 1) + η + δ' ≤ m + 1`. The empty `κ` is not excluded: both products are the
+  empty product `1`, and the factor `#κ + 1` in `Dc` is what keeps the last step
+  free of a division by `#κ`.
 * `SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional` — stage (A).
   The same conclusion for a tight family, from the previous item and
   `isCompact_closure_of_isTightMeasureSet`.
