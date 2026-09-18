@@ -6663,14 +6663,15 @@ one, and they are what the instances of the milestone stand on.
   process, is `rfl`.
 * `jumpPathD` and `measurable_jumpPathD`: the same map into the Skorokhod space
   `D(ℝ≥0, E)` of the roadmap **SkorokhodSpace**, for `E` Polish and complete.
-  This is the target the convergence theorems of Milestone 8 there consume —
-  `tendstoInDistribution_eval` is hypothesis (a) of `mpSolution_of_tendsto`
-  (Milestone 10) and is stated over `D(ι, E)` and over nothing else — so a family
-  of jump processes is a family those theorems apply to only once it is written
-  in this space. Measurability is `SkorokhodSpace.borel_eq_iSup_comap_eval_nnreal`
-  coordinatewise, on `measurable_jumpProcessE_apply`.
+  Proved (2026-09-18). This is the target the convergence theorems of Milestone 8
+  there consume — `tendstoInDistribution_eval` is hypothesis (a) of
+  `mpSolution_of_tendsto` (Milestone 10) and is stated over `D(ι, E)` and over
+  nothing else — so a family of jump processes is a family those theorems apply
+  to only once it is written in this space. Measurability is
+  `SkorokhodSpace.measurable_of_measurable_eval` coordinatewise, on
+  `measurable_jumpProcessE_apply`.
 
-  **Two things separate it from `jumpPath`, and both are to be settled here.**
+  **Two things separate it from `jumpPath`, and both are settled here.**
   The index bundle at `ℝ≥0` is the first, and it is supplied: `D(ℝ≥0, E)` became
   an object of the development on 2026-09-18 with `NNReal.instAdditiveDist`,
   `NNReal.instBasePoint` and `NNReal.instHasCountableCore`, and the crossing of
@@ -6680,12 +6681,59 @@ one, and they are what the instances of the milestone stand on.
   survives the explosion set (`eventuallyEq_nhdsGE_stepPath`, no hypothesis at
   all), while the left limits do not, and `isStepPath_jumpProcessE` carries the
   non explosion of the jump times for exactly that reason. `jumpPathD` is
-  therefore defined by cases on the measurable set `NonExplosiveE`, with a
-  constant path off it, and the statement that it agrees with the process is an
-  almost sure one, by `ae_mem_nonExplosiveE_jumpMeasure`. That is the standing
-  rule of 2026-09-18 read on a definition rather than on a theorem: the non
-  explosion is in the hypothesis, and the junk value is named instead of being
-  called harmless.
+  therefore defined by cases on a measurable set, with the **constant path at the
+  starting state** `ω.1 0` off it, and the statement that it agrees with the
+  process is an almost sure one. That is the standing rule of 2026-09-18 read on
+  a definition rather than on a theorem: the non explosion is in the hypothesis,
+  and the junk value is named instead of being called harmless.
+
+  **The set is `CadlagSetE`, and it is not `NonExplosiveE`.** Non explosion alone
+  does not make the path a step path: `isStepPath_jumpProcessE` asks two things,
+  and the second is that **every holding time is strictly positive**, without
+  which two jump times coincide and the local constancy that carries the left
+  limits is not available. `CadlagSetE lam = {ω | ∀ n, 0 < ω.2 n} ∩ NonExplosiveE lam`
+  is exactly the hypothesis of that theorem read as a set, and
+  `measurableSet_cadlagSetE` is its measurability, from
+  `measurableSet_nonExplosiveE` and a countable intersection. Both halves are
+  almost sure under `jumpMeasure`, and in different ways: the positivity is free
+  (`ae_pos_snd_jumpMeasure`, no hypothesis at all, the waiting law being
+  exponential), the non explosion is a hypothesis of the caller
+  (`ae_mem_nonExplosiveE_jumpMeasure` and the criteria above it). That asymmetry
+  is why the two are carried separately and only joined in
+  `ae_mem_cadlagSetE_jumpMeasure`.
+* `isCadlag_nnreal_jumpProcessE_of_mem`, `jumpPathD_toFun_of_mem` and
+  `jumpPathD_toFun_of_not_mem`: the path is càdlàg over `ℝ≥0` on `CadlagSetE`,
+  the coordinate of the image is the process there, and off it the image is the
+  constant path. Proved (2026-09-18). The third is stated so that the junk value
+  is a theorem and not a reading of the definition.
+* `ae_mem_cadlagSetE_jumpMeasure` and `ae_jumpPathD_toFun_eq`: almost every
+  sample point lies in `CadlagSetE`, and there the Skorokhod path map agrees with
+  the process **at every time at once**. Proved (2026-09-18). The second is an
+  almost sure identity of *paths* and not of a fixed coordinate, which is what
+  every distributional conclusion of Milestones 7 to 11 needs: a coordinatewise
+  statement would give a null set per time and no null set for the path.
+* `map_eval_map_jumpPathD` and `isProbabilityMeasure_map_jumpPathD`: the law
+  `(jumpMeasure mu nu).map (jumpPathD lam)` on `D(ℝ≥0, E)` is a probability
+  measure whose coordinate at `t` is the law of `jumpProcessE lam t`. Proved
+  (2026-09-18). This is the form in which the path law is compared with anything
+  known: every identification already proved for the process —
+  `jumpMeasure_map_jumpProcessE_zero` at the start, `poissonMeasure` at the
+  Poisson rate — becomes one for the path law without a second computation.
+
+**Acceptance example.** `map_eval_map_jumpPathD_poisson`, proved (2026-09-18):
+the Poisson data run through `jumpPathD` land in `D(ℝ≥0, ℕ)`, and the coordinate
+of the resulting law at `t` is `ProbabilityTheory.poissonMeasure t`. It probes
+two things at once and is worth stating for both. As an emptiness probe it shows
+that `ℕ` carries the whole bundle the map asks of its state space —
+`MetricSpace`, `BorelSpace`, `PolishSpace`, `CompleteSpace` — and that the non
+explosion hypothesis is dischargeable on data (`ae_mem_nonExplosiveE_poisson`).
+Beyond that it is an **independent control on a law of the Skorokhod space**:
+`poissonMeasure` is defined with nothing of this development in it. The bridge
+it needs is `jumpMeasure_map_jumpProcessE_poisson`, also proved (2026-09-18) —
+`jumpMeasure_map_jumpProcess_poisson` is about `jumpProcess`, and the local
+construction is a *different function*, agreeing with the old one only where the
+holding times are strictly positive. That is almost everywhere and nowhere
+guaranteed, so the identification is carried across and not reused.
 * `jumpFiltrationE_eq_comap_jumpPath` and `measurable_pathFiltration_jumpPath`:
   the natural filtration of the construction **is** the pull back of
   `pathFiltration` along `jumpPath`, by `naturalFiltration_comp`, so the path map

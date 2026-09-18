@@ -392,6 +392,23 @@ Under (A′):
 * The identity `Function.leftLim f x = f x` at continuity points, from
   `ContinuousWithinAt.leftLim_eq` applied to the restriction of continuity at
   `x` to `Iic x`, with `[T2Space E]`.
+* `isCadlag_const` and `SkorokhodSpace.const`: a constant function is càdlàg,
+  over any index and into any space, and the constant path is a point of
+  `D(ι, E)`. Proved (2026-09-18). It asks nothing of either side — the right
+  continuity is `continuousWithinAt_const` and the left limit is the value,
+  whether or not `𝓝[<] x` is the bottom filter — and it is what keeps `D(ι, E)`
+  from being empty whenever `E` is not. Its first use is as the value a path map
+  is given **off** the set where the process it reads is càdlàg: `jumpPathD` of
+  the roadmap **MartingaleProblems**, Milestone 6, is written that way, and a
+  total map into the path space is what a random element has to be.
+
+  `isCadlag_const` is the **v4.33.1 stand-in for `IsCadlag.const`** of
+  `Mathlib/Topology/Order/Cadlag.lean:115` on master, and it is not a second
+  proof of something the library has: that file does not exist on v4.33.1, which
+  is why this roadmap carries its own `IsCadlag` at all. Master's structure is
+  field for field the same one, so when the binding moves, the local predicate
+  and this lemma go together and the name above is what they go to.
+  `SkorokhodSpace.const` stays either way — the *space* is ours.
 * `IsCadlag.comp_monotone_continuous`: `f ∘ g` is càdlàg for càdlàg `f` and
   monotone continuous `g : α → β`, the two indices **different** since
   2026-09-18 — the proof never compares a point of the source with a point of
@@ -1616,6 +1633,13 @@ over a shrinking family and is therefore an infimum.
   `borel (D ι E) = ⨆ t, MeasurableSpace.comap (eval t) (borel E)`. Proved
   (2026-09-09), one inclusion from `measurable_eval` and the other from the
   embedding at a countable right dense set.
+* `SkorokhodSpace.measurable_of_measurable_eval`: a map `G : α → D(ι, E)` is
+  measurable as soon as every coordinate `a ↦ (G a) t` is. Proved (2026-09-18),
+  as the identity above read as a criterion. It is the direction in which a
+  process with càdlàg paths is shown to be a **random element of the path
+  space**, and it is the one that spends the countable core: `measurable_eval` is
+  the converse and asks nothing of the index. The first consumer is `jumpPathD`
+  of the roadmap **MartingaleProblems**, Milestone 6.
 * Consequences, each stated separately: a Borel probability measure on `D ι E`
   is determined by its finite dimensional distributions along a countable dense
   set; a map into `D ι E` is measurable if and only if all its coordinates along

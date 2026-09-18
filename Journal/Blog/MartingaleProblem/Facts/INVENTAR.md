@@ -37933,3 +37933,223 @@ täte, bleibt `measurable_pi_lambda` aus dem Vorlauf.
    Vorlaufs: `SkorokhodSpace.tendsto_of_isCompact_closure_of_tendsto_finiteDimensional`,
    Ethier–Kurtz 3.7.8(b). Er ist von diesem Lauf nicht berührt, seine Eingaben
    stehen sämtlich, und offen ist allein der Zusammenbau.
+
+### 2026-09-18, fünfzehnter Lauf des Tages — `jumpPathD` steht, und die Menge, an der es fallunterschieden wird, ist **nicht** die Explosionsmenge: die Nichtexplosion allein macht den Pfad nicht càdlàg; dazu die erste unabhängige Kontrolle an einem Gesetz auf dem Skorokhodraum, und Rückstaupunkt 5 gegen frisches `master`
+
+**Vorschlag 1 des Vorlaufs ist eingelöst.** Der Sprungprozeß von Meilenstein 4
+ist seit diesem Lauf ein **Zufallselement des Skorokhodraums** `D(ℝ≥0, E)`, und
+damit ist die letzte fehlende Verbindung zwischen Meilenstein 4 und den
+Meilensteinen 7 bis 11 gelegt: `tendstoInDistribution_eval`, Voraussetzung (a)
+von `mpSolution_of_tendsto`, steht über `D(ι, E)` und über nichts sonst, und in
+`RightContinuousPath E` ist sie nie einlösbar.
+
+**Siebzehn Deklarationen** — vier in `TauCeti/SkorokhodSpace/Suggested.lean`,
+dreizehn in `TauCeti/MartingaleProblems/Suggested.lean` —, alle drei
+Roadmap-Dateien ohne einen Fehler und ohne ein `sorry` durch
+`scripts/check_suggested.py` gegen v4.33.1 (Lean 4.33.1, commit `819816b2e0a3`),
+alle siebzehn mit `#print axioms`
+auf `propext`, `Classical.choice`, `Quot.sound` geprüft. Die Punkte stehen in
+`SkorokhodSpace/README.md`, Meilensteine 2 und 6, und in
+`MartingaleProblems/README.md`, Meilenstein 6.
+
+#### Der Fund, und er berichtigt die Roadmap des Vorlaufs
+
+Die README sagte seit dem vierzehnten Lauf, `jumpPathD` sei „über eine
+Fallunterscheidung an der meßbaren Menge `NonExplosiveE` zu definieren". **Das
+ist zu wenig.** `isStepPath_jumpProcessE` verlangt **zwei** Dinge, und die
+Nichtexplosion ist nur das zweite; das erste ist
+
+> `hxi : ∀ n, 0 < xi n` — **jede Haltezeit ist echt positiv.**
+
+Ohne sie fallen zwei Sprungzeiten zusammen, die lokale Konstanz, die die linken
+Grenzwerte trägt, steht nicht zur Verfügung, und der Satz greift nicht. Die
+Menge der Fallunterscheidung ist deshalb
+
+```lean
+def CadlagSetE (lam : E → ℝ) : Set ((ℕ → E) × (ℕ → ℝ)) :=
+  {ω | ∀ n, 0 < ω.2 n} ∩ NonExplosiveE lam
+```
+
+also genau die Hypothese jenes Satzes als Menge gelesen, und
+`measurableSet_cadlagSetE` ist ihre Meßbarkeit (abzählbarer Schnitt plus
+`measurableSet_nonExplosiveE`).
+
+**Und die beiden Hälften sind ungleich teuer**, was der Grund ist, sie getrennt
+zu tragen und erst in `ae_mem_cadlagSetE_jumpMeasure` zusammenzuführen: die
+Positivität ist **umsonst** — `ae_pos_snd_jumpMeasure` trägt keine einzige
+Voraussetzung, weil das Wartezeitgesetz exponentiell ist —, die Nichtexplosion
+ist eine Voraussetzung des Aufrufers, in der Gestalt, in der
+`ae_mem_nonExplosiveE_jumpMeasure` sie stellt. Das ist die stehende Regel vom
+2026-09-18 an einer **Definition** statt an einem Satz, und sie hat hier zum
+vierten Mal an derselben Stelle gegriffen: der Müllwert wird benannt
+(`jumpPathD_toFun_of_not_mem` ist ein Satz und keine Lesart der Definition), und
+er ist der **konstante Pfad am Startzustand** `ω.1 0` — kein Wert, den das Modell
+annimmt, sondern die Antwort dort, wo das Modell keine hat.
+
+#### Die Frage des Vorlaufs, beantwortet
+
+Der Vorlauf nannte als „eigentliche Arbeit" die Frage, ob die Meßbarkeit
+koordinatenweise durchgeht, wenn die Abbildung fallunterschieden ist, und ob `E`
+dafür mehr als `MetricSpace` und `PolishSpace` braucht. **Die Antwort ist: nein,
+die Fallunterscheidung kostet in der Meßbarkeit nichts**, und `E` trägt genau das
+Bündel, unter dem `D(ℝ≥0, E)` überhaupt eine Borelstruktur hat —
+`MetricSpace`, `MeasurableSpace`, `BorelSpace`, `PolishSpace`, `CompleteSpace`,
+kein Zeichen mehr. Jede Koordinate ist `Set.piecewise` zweier meßbarer
+Funktionen an einer meßbaren Menge; der Ersatzpfad ist konstant, also ist seine
+Koordinate `ω ↦ ω.1 0` und damit `measurable_pi_apply 0` nach `measurable_fst`.
+
+#### Was bewiesen ist
+
+In `SkorokhodSpace/Suggested.lean`:
+
+* `isCadlag_const` und `SkorokhodSpace.const` — **eine konstante Abbildung ist
+  càdlàg**, über jedem Index und in jeden Raum, und der konstante Pfad ist ein
+  Punkt von `D(ι, E)`. Es fragt von keiner Seite etwas: die Rechtsstetigkeit ist
+  `continuousWithinAt_const`, der linke Grenzwert ist der Wert, gleichgültig ob
+  `𝓝[<] x` der Bodenfilter ist. Das ist der Zeuge dafür, daß `D(ι, E)` nicht leer
+  ist, sobald `E` es nicht ist — und `D(ι, E)` hatte bis heute **keinen**.
+
+  **Und `isCadlag_const` ist kein zweiter Beweis von etwas, das Mathlib hat**:
+  auf `upstream/master` steht `IsCadlag.const`
+  (`Mathlib/Topology/Order/Cadlag.lean:115`, an diesem Lauf nachgesehen), aber
+  diese Datei gibt es auf v4.33.1 nicht — deshalb trägt die Roadmap ihr eigenes
+  `IsCadlag`. Die Struktur auf master ist Feld für Feld dieselbe; wandert die
+  Bindung, so gehen das lokale Prädikat und dieses Lemma zusammen, und der
+  Mathlib-Name steht in der README daneben. `SkorokhodSpace.const` bleibt in
+  jedem Fall — der *Raum* ist unserer.
+* `SkorokhodSpace.measurable_of_measurable_eval` — **eine Abbildung in den
+  Pfadraum ist meßbar, sobald jede ihrer Koordinaten es ist.** Das ist
+  `borel_eq_iSup_comap_eval` als Kriterium statt als Identität gelesen, und es
+  ist die Richtung, die den abzählbaren Kern verbraucht; `measurable_eval` ist
+  die Umkehrung und verlangt vom Index nichts. Die README führte diese Aussage
+  seit jeher unter „Folgerungen, jede einzeln zu formulieren", ohne Namen; jetzt
+  hat sie einen und einen Verbraucher.
+
+In `MartingaleProblems/Suggested.lean`:
+
+* `CadlagSetE`, `measurableSet_cadlagSetE`, `isCadlag_nnreal_jumpProcessE_of_mem`
+  — die Menge, ihre Meßbarkeit, und daß der Pfad dort über `ℝ≥0` càdlàg ist
+  (`isStepPath_jumpProcessE`, dann `IsCadlag.comp_coe_nnreal`).
+* `jumpPathD`, `jumpPathD_toFun_of_mem`, `jumpPathD_toFun_of_not_mem`,
+  `measurable_jumpPathD` — die Abbildung, beide Zweige als Sätze, und die
+  Meßbarkeit.
+* `ae_mem_cadlagSetE_jumpMeasure` und `ae_jumpPathD_toFun_eq` — fast jeder
+  Stichprobenpunkt liegt in `CadlagSetE`, und dort trifft die Abbildung den
+  Prozeß **an allen Zeiten zugleich**. Die zweite ist eine f.s. Gleichheit von
+  *Pfaden* und nicht von einer festen Koordinate, und das ist der Unterschied,
+  auf den es ankommt: koordinatenweise bekäme man eine Nullmenge je Zeit und
+  keine für den Pfad.
+* `map_eval_map_jumpPathD` und `isProbabilityMeasure_map_jumpPathD` — das Bildmaß
+  `(jumpMeasure mu nu).map (jumpPathD lam)` ist ein Wahrscheinlichkeitsmaß auf
+  `D(ℝ≥0, E)`, dessen Koordinate bei `t` das Gesetz von `jumpProcessE lam t` ist.
+  Damit wird **jede** schon bewiesene Identifikation des Prozesses eine des
+  Pfadgesetzes, ohne zweite Rechnung: `jumpMeasure_map_jumpProcessE_zero` am
+  Anfang, `poissonMeasure` bei der Poissonrate.
+
+#### Die Leerheitsprobe, und sie ist mehr als eine
+
+`map_eval_map_jumpPathD_poisson`: die Poissondaten laufen durch `jumpPathD` und
+landen in `D(ℝ≥0, ℕ)`, und die Koordinate des dabei entstehenden Gesetzes bei `t`
+ist `ProbabilityTheory.poissonMeasure t`.
+
+Als **Leerheitsprobe** belegt sie zweierlei: `ℕ` trägt das ganze Bündel, das die
+Abbildung von ihrem Zustandsraum verlangt — `MetricSpace`, `BorelSpace`,
+`PolishSpace`, `CompleteSpace`, alle vier in einer eigenen Probe einzeln
+synthetisiert —, und die Nichtexplosionsvoraussetzung ist an Daten einlösbar
+(`ae_mem_nonExplosiveE_poisson`).
+
+**Aber sie ist mehr:** sie ist eine unabhängige Kontrolle an einem Gesetz *auf
+dem Skorokhodraum*. In die Definition von `poissonMeasure` geht nichts dieser
+Entwicklung ein. Damit ist zum ersten Mal ein Maß auf `D(ℝ≥0, E)`, das aus
+unserer Konstruktion stammt, gegen etwas geprüft, das nicht aus ihr stammt.
+
+Die Brücke dafür ist `jumpMeasure_map_jumpProcessE_poisson`, und sie ist kein
+Formalismus: `jumpMeasure_map_jumpProcess_poisson` handelt von `jumpProcess`, und
+die lokale Konstruktion ist eine **andere Funktion**. Beide stimmen nur dort
+überein, wo die Haltezeiten echt positiv sind — fast überall, und nirgends
+garantiert. Dieselbe Unterscheidung, an der oben schon `CadlagSetE` hängt.
+
+#### Was dieser Lauf **nicht** getan hat
+
+Er hat keine Zeile des Manuskripts angefaßt und keine Zeile des Inventars mit
+Status `?` bearbeitet — es gibt keine mehr. Er hat **nicht** geprüft, ob die
+Positivität der Haltezeiten für die càdlàg-Eigenschaft wirklich *notwendig* ist
+oder nur eine Voraussetzung des vorhandenen Satzes: ein Pfad, der bei
+verschwindender Haltezeit einen Zustand überspringt, könnte càdlàg bleiben. Die
+Menge ist die Hypothese von `isStepPath_jumpProcessE`, nicht eine bewiesene
+Charakterisierung, und das steht so an der Deklaration. Ein Zeuge in der einen
+oder anderen Richtung wäre ein Lauf wert, und er ist billig — er kostet keine
+Wahrscheinlichkeit, nur eine Folge.
+
+#### Rückstaupunkt 5 (Teil D) ist in diesem Lauf mitgelaufen, vollständig und nicht als Stichprobe
+
+Die letzte **volle** Zitatprüfung war vom 2026-09-14; seither haben die Läufe nur
+noch einzelne Namen nachgesehen. Dieser Lauf hat den ganzen Durchgang gefahren:
+`git fetch upstream master` in `~/Code/lean/mathlib4`, dann
+`extract_citations.py`, `mathlib_index.py master`, `check_citations.py` und
+`check_negatives.py`.
+
+**Der Commit ist `86952bd676edb000870b1ae92da2538d48944ba4`, 2026-09-18 11:47
+UTC** (vorher `f71bd379b22`).
+
+* **Alle 42 Negativaussagen der Roadmaps und von `TODO.md` Punkt 8 halten.**
+  Keine hat unerwartete Treffer; das ist der wertvollste Fund, den es hier geben
+  kann, in seiner negativen Gestalt. 1498 Namen geprüft, 956 in beiden Indizes.
+* **Ein einziger Name steht auf v4.33.1 und nicht mehr auf master:**
+  `measurable_pi_lambda`, ersetzt durch `Measurable.of_eval`
+  (`Mathlib/MeasureTheory/MeasurableSpace/Constructions.lean:596` auf master,
+  wo `measurable_pi_lambda` auf v4.33.1 in Zeile 597 stand). Das ist die Stelle,
+  die der vierzehnte Lauf schon benannt hat, und sie ist unverändert die
+  **einzige**. Betroffen sind `measurable_jumpPath`
+  (`MartingaleProblems/Suggested.lean`) und `SkorokhodSpace/Suggested.lean:10778`.
+  **Der neue Abschnitt dieses Laufs vergrößert sie nicht:**
+  `SkorokhodSpace.measurable_of_measurable_eval` geht über
+  `measurable_iff_comap_le` und `MeasurableSpace.comap_iSup`, nicht über
+  `measurable_pi_lambda`, und die Koordinaten von `jumpPathD` werden mit
+  `measurable_pi_apply` gelesen. Beide Namen stehen auf master unverändert.
+* **Ein Name ist auf master `deprecated`:** `Subgroup.isClosed_of_discrete`, dort
+  nur noch Alias in `Mathlib/Topology/Algebra/OpenSubgroup.lean:384`. Die
+  `SkorokhodSpace/README.md` sagt das an Ort und Stelle (Zeilen 67–73), samt dem
+  neuen Namen `Subgroup.isClosed_of_discreteTopology` und der schwächeren
+  Voraussetzung `T1Space`. Kein Handlungsbedarf.
+* **Zwei zitierte Dateipfade gibt es auf master und nicht auf v4.33.1:**
+  `Mathlib/Topology/Order/Cadlag.lean` und
+  `Mathlib/Basic/ENNReal/Operations.lean`. Beide sind bewußt so zitiert — der
+  erste ist Mathlibs inzwischen eingezogenes càdlàg-Prädikat, das die
+  `SkorokhodSpace`-README in ihren Zeilen 5–20 ausdrücklich als *neu auf master*
+  führt.
+
+Damit ist der Rückstaupunkt für diesen Stand von master abgearbeitet, und das
+Ergebnis ist: **die Roadmaps zeigen auf keinen verschwundenen Namen außer dem
+einen, der seit vier Tagen benannt ist.**
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die zweite Hälfte von `fact:fddconv`**, unverändert seit zwei Läufen:
+   `SkorokhodSpace.tendsto_of_isCompact_closure_of_tendsto_finiteDimensional`,
+   Ethier–Kurtz 3.7.8(b). *Worauf sie ruht:* die erste Hälfte
+   (`tendsto_finiteDimensional_of_tendsto`, dreizehnter Lauf), die relative
+   Kompaktheit von Meilenstein 7 und `exists_countable_dense_continuity`
+   (zwölfter Lauf). *Warum jetzt:* ihre Eingaben stehen sämtlich, offen ist
+   allein der Zusammenbau, und sie ist der letzte Punkt, der `fact:fddconv` von
+   `Roadmap` auf eine vollständig bewiesene Zeile bringt.
+2. **Die feste Zeit wird f.s. nicht getroffen:**
+   `ae_notMem_leftJumpSet_jumpProcessE` — für festes `t : ℝ≥0` springt der Pfad
+   der Sprungkonstruktion `jumpMeasure`-fast sicher **nicht** bei `t`, also
+   `P₀ {ω | leftLim (jumpPathD lam ω) t = (jumpPathD lam ω) t} = 1`. *Worauf sie
+   ruht:* die Sprungzeiten sind bei festem `n` stetig verteilt, weil die
+   Wartezeit `ξ n` es ist; also `P (jumpTimeE … n = t) = 0` für jedes `n`, und
+   abzählbar viele Nullmengen. *Warum jetzt:* das ist **die** Voraussetzung `ht`
+   von `SkorokhodSpace.tendstoInDistribution_eval` und von
+   `…_evalPi`, und sie ist die einzige der beiden, die an unseren Daten hängt.
+
+   **Und dabei ist eine Richtung zu berichtigen, die der Vorlauf dieses Laufs
+   falsch angesagt hatte.** `SkorokhodSpace.tendstoInDistribution_eval` läuft
+   **vom Pfad zu den Rändern**, nicht umgekehrt: es nimmt
+   `hX : TendstoInDistribution X L Z P P₀` auf `D(ι, E)` als *Voraussetzung* und
+   gibt die Konvergenz der Koordinaten. Ein Vorschlag „aus der Konvergenz der
+   eindimensionalen Gesetze folgt die der Pfadmaße" ist damit **nicht** dieser
+   Satz, sondern Straffheit plus endlichdimensionale Konvergenz, also
+   Meilenstein 7 und die zweite Hälfte von `fact:fddconv` — Vorschlag 1. Die
+   beiden Vorschläge hängen also zusammen, und in dieser Ordnung: erst 1, dann
+   liefert 2 die Voraussetzung, unter der 1 an den Sprungdaten anwendbar wird.

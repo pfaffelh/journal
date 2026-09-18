@@ -16460,6 +16460,24 @@ theorem poissonProcess_isLocalMPSolution :
   jumpProcess_isLocalMPSolution measurable_poissonRate poissonRate_pos (Measure.dirac 0)
     ae_mem_nonExplosiveE_poisson
 
+/-- **The local construction has the Poisson laws too.**  `jumpMeasure_map_jumpProcess_poisson`
+is about `jumpProcess`, and the local construction is a different function; it agrees with the old
+one only where the holding times are strictly positive, which is almost everywhere
+(`ae_pos_snd_jumpMeasure`) and nowhere guaranteed.  So the identification has to be carried across,
+and this carries it.
+
+It is the independent control of the milestone read on the construction the local theorems are
+stated over, and it is what `map_eval_map_jumpPathD_poisson` turns into a statement about the law
+on the path space. -/
+theorem jumpMeasure_map_jumpProcessE_poisson (t : ℝ≥0) :
+    (jumpMeasure poissonKernel (Measure.dirac 0)).map (jumpProcessE poissonRate (t : ℝ))
+      = poissonMeasure t := by
+  rw [← jumpMeasure_map_jumpProcess_poisson t]
+  refine Measure.map_congr ?_
+  filter_upwards [ae_pos_snd_jumpMeasure poissonKernel (Measure.dirac 0)] with ω hpos
+  exact jumpProcessE_eq_jumpProcess (lam := poissonRate) (y := ω.1) (xi := ω.2)
+    poissonRate_pos hpos (t : ℝ)
+
 end LocalSolution
 
 section AbsorbingRate
@@ -33140,6 +33158,171 @@ theorem measurable_pathFiltration_jumpPath {lam : E → ℝ} (hlam : Measurable 
     Measurable[jumpFiltrationE lam hlam t, RightContinuousPath.pathFiltration (E := E) t]
       (jumpPath lam) :=
   measurable_iff_comap_le.2 (jumpFiltrationE_eq_comap_jumpPath hlam t).ge
+
+/-! ### The path map into the Skorokhod space
+
+`jumpPath` lands in `RightContinuousPath E`, which asks of its support the **right** local
+constancy alone and therefore needs no hypothesis at all.  The Skorokhod space `D(ℝ≥0, E)` of
+the roadmap **SkorokhodSpace** asks for `IsCadlag`, hence also for the **left limits**, and those
+do not survive an explosion: past the explosion time the step index is the junk value of
+`sInf ∅` and the path has no left limit there.  So the map into `D(ℝ≥0, E)` cannot be total in
+the way `jumpPath` is, and it is written with a case distinction at the measurable set where the
+paths really are càdlàg, with a constant path beside it.
+
+This is the standing rule of 2026-09-18 read at a **definition** rather than at a theorem: non
+explosion stands in the hypothesis, and the junk value is named instead of being called harmless.
+What it costs is that the identification with the process is an almost sure statement --
+`ae_jumpPathD_toFun_eq` -- and what it buys is a random element of the space over which
+Milestones 7 to 11 are stated.  `tendstoInDistribution_eval`, hypothesis (a) of
+`mpSolution_of_tendsto`, is stated over `D(ι, E)` and is not expressible in
+`RightContinuousPath E`; this is the map that makes it applicable to the jump construction. -/
+
+/-- **The sample points whose path is càdlàg.**  Two conditions, and both are needed by
+`isStepPath_jumpProcessE`: the holding times are strictly positive, so that the jump times
+increase strictly and the path is locally constant, and the construction does not explode at any
+real time, so that every time lies below some jump time and the step index is read from a window
+that exists.
+
+Both hold almost surely under `jumpMeasure` -- `ae_pos_snd_jumpMeasure` for the first without any
+hypothesis, and `ae_mem_nonExplosiveE_jumpMeasure` for the second under a criterion -- and that is
+`ae_mem_cadlagSetE_jumpMeasure` below. -/
+def CadlagSetE (lam : E → ℝ) : Set ((ℕ → E) × (ℕ → ℝ)) :=
+  {ω | ∀ n, 0 < ω.2 n} ∩ NonExplosiveE lam
+
+theorem measurableSet_cadlagSetE {lam : E → ℝ} (hlam : Measurable lam) :
+    MeasurableSet (CadlagSetE lam) := by
+  have hpos : MeasurableSet {ω : (ℕ → E) × (ℕ → ℝ) | ∀ n, 0 < ω.2 n} := by
+    have hEq : {ω : (ℕ → E) × (ℕ → ℝ) | ∀ n, 0 < ω.2 n}
+        = ⋂ n : ℕ, {ω : (ℕ → E) × (ℕ → ℝ) | 0 < ω.2 n} := by
+      ext ω; simp only [Set.mem_setOf_eq, Set.mem_iInter]
+    rw [hEq]
+    exact MeasurableSet.iInter fun n ↦
+      measurableSet_lt measurable_const ((measurable_pi_apply n).comp measurable_snd)
+  exact hpos.inter (measurableSet_nonExplosiveE hlam)
+
+/-- **On `CadlagSetE` the path is càdlàg over the index `ℝ≥0`.**  `isStepPath_jumpProcessE` over
+`ℝ`, then `IsCadlag.comp_coe_nnreal` for the passage of the index.  Nothing is asked of the rate
+beyond what the set says. -/
+theorem isCadlag_nnreal_jumpProcessE_of_mem [TopologicalSpace E] {lam : E → ℝ}
+    {ω : (ℕ → E) × (ℕ → ℝ)} (hω : ω ∈ CadlagSetE lam) :
+    IsCadlag fun t : ℝ≥0 ↦ jumpProcessE lam (t : ℝ) ω :=
+  ((isStepPath_jumpProcessE (lam := lam) (y := ω.1) (xi := ω.2) hω.1 hω.2).isCadlag).comp_coe_nnreal
+
+open scoped Classical in
+/-- **The path map of the local jump construction into the Skorokhod space.**  On `CadlagSetE` it
+is the path of the process; off it -- that is, on the explosion set and where a holding time
+vanishes -- it is the **constant path at the starting state** `ω.1 0`.
+
+The replacement value is named on purpose.  It is not a value the model takes: it is the answer
+given where the model has none, and every statement below that identifies this map with the
+process carries the set, or the almost sure statement that the set is full. -/
+noncomputable def jumpPathD [MetricSpace E] [BorelSpace E] [PolishSpace E] [CompleteSpace E]
+    (lam : E → ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) : D(ℝ≥0, E) :=
+  if hω : ω ∈ CadlagSetE lam then
+    ⟨fun t : ℝ≥0 ↦ jumpProcessE lam (t : ℝ) ω, isCadlag_nnreal_jumpProcessE_of_mem hω⟩
+  else SkorokhodSpace.const (ω.1 0)
+
+/-- **On the good set the coordinate of the image is the process**, exactly as
+`coordinate_jumpPath` says it for `RightContinuousPath E` -- but there by `rfl` and here only
+under the hypothesis, which is the whole difference between the two path spaces. -/
+theorem jumpPathD_toFun_of_mem [MetricSpace E] [BorelSpace E] [PolishSpace E] [CompleteSpace E]
+    {lam : E → ℝ} {ω : (ℕ → E) × (ℕ → ℝ)} (hω : ω ∈ CadlagSetE lam) (t : ℝ≥0) :
+    (jumpPathD lam ω).toFun t = jumpProcessE lam (t : ℝ) ω := by
+  classical
+  simp [jumpPathD, hω]
+
+/-- **Off the good set the image is the constant path at the starting state.**  Stated so that the
+junk value is a theorem and not a reading of the definition. -/
+theorem jumpPathD_toFun_of_not_mem [MetricSpace E] [BorelSpace E] [PolishSpace E] [CompleteSpace E]
+    {lam : E → ℝ} {ω : (ℕ → E) × (ℕ → ℝ)} (hω : ω ∉ CadlagSetE lam) (t : ℝ≥0) :
+    (jumpPathD lam ω).toFun t = ω.1 0 := by
+  classical
+  simp [jumpPathD, hω]
+
+/-- **The path map into the Skorokhod space is measurable.**  Coordinatewise, by
+`SkorokhodSpace.measurable_of_measurable_eval`, and each coordinate is a piecewise function of two
+measurable ones at the measurable set `CadlagSetE`.
+
+So the case distinction costs nothing in measurability: what it needs is that `CadlagSetE` is
+measurable, which is `measurableSet_cadlagSetE`, and `E` is asked for no more than the bundle
+under which `D(ℝ≥0, E)` carries a Borel structure at all. -/
+theorem measurable_jumpPathD [MetricSpace E] [BorelSpace E] [PolishSpace E] [CompleteSpace E]
+    {lam : E → ℝ} (hlam : Measurable lam) : Measurable (jumpPathD lam) := by
+  classical
+  refine SkorokhodSpace.measurable_of_measurable_eval fun t ↦ ?_
+  have hEq : (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ (jumpPathD lam ω).toFun t)
+      = (CadlagSetE lam).piecewise (fun ω ↦ jumpProcessE lam (t : ℝ) ω) (fun ω ↦ ω.1 0) := by
+    funext ω
+    by_cases hω : ω ∈ CadlagSetE lam
+    · rw [Set.piecewise_eq_of_mem _ _ _ hω, jumpPathD_toFun_of_mem hω]
+    · rw [Set.piecewise_eq_of_notMem _ _ _ hω, jumpPathD_toFun_of_not_mem hω]
+  rw [hEq]
+  exact Measurable.piecewise (measurableSet_cadlagSetE hlam)
+    (measurable_jumpProcessE_apply hlam (t : ℝ)) ((measurable_pi_apply 0).comp measurable_fst)
+
+/-- **Almost every sample point of `jumpMeasure` lies in the good set.**  The positivity of the
+holding times is free (`ae_pos_snd_jumpMeasure`); the non explosion is the hypothesis, in the form
+`ae_mem_nonExplosiveE_jumpMeasure` asks it, and it is the only thing the caller has to supply. -/
+theorem ae_mem_cadlagSetE_jumpMeasure {lam : E → ℝ} (hlam : Measurable lam) (mu : Kernel E E)
+    [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu]
+    (hne : ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam) :
+    ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ CadlagSetE lam := by
+  filter_upwards [ae_pos_snd_jumpMeasure mu nu, hne] with ω hpos hex
+  exact ⟨hpos, hex⟩
+
+/-- **The Skorokhod path map agrees with the process almost surely, at every time at once.**  This
+is the statement that carries every distributional conclusion from the construction to the path
+space, and it is an almost sure identity of **paths**, not one of a fixed coordinate. -/
+theorem ae_jumpPathD_toFun_eq [MetricSpace E] [BorelSpace E] [PolishSpace E] [CompleteSpace E]
+    {lam : E → ℝ} (hlam : Measurable lam) (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu] (hne : ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam) :
+    ∀ᵐ ω ∂(jumpMeasure mu nu),
+      ∀ t : ℝ≥0, (jumpPathD lam ω).toFun t = jumpProcessE lam (t : ℝ) ω := by
+  filter_upwards [ae_mem_cadlagSetE_jumpMeasure hlam mu nu hne] with ω hω
+  exact fun t ↦ jumpPathD_toFun_of_mem hω t
+
+/-- **The law of the image on the Skorokhod space has the one dimensional distributions of the
+process.**  This is the form in which the image measure is compared with anything known: a
+coordinate of `(jumpMeasure mu nu).map (jumpPathD lam)` is the law of `jumpProcessE lam t`, so
+every identification already proved for the process -- `jumpMeasure_map_jumpProcessE_zero` at the
+start, `poissonMeasure` at the Poisson rate -- is one for the path law as well. -/
+theorem map_eval_map_jumpPathD [MetricSpace E] [BorelSpace E] [PolishSpace E] [CompleteSpace E]
+    {lam : E → ℝ} (hlam : Measurable lam) (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu] (hne : ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam) (t : ℝ≥0) :
+    ((jumpMeasure mu nu).map (jumpPathD lam)).map (fun f : D(ℝ≥0, E) ↦ f.toFun t)
+      = (jumpMeasure mu nu).map (jumpProcessE lam (t : ℝ)) := by
+  rw [Measure.map_map (SkorokhodSpace.measurable_eval (E := E) t) (measurable_jumpPathD hlam)]
+  refine Measure.map_congr ?_
+  filter_upwards [ae_jumpPathD_toFun_eq hlam mu nu hne] with ω hω
+  exact hω t
+
+/-- **The image law on the Skorokhod space is a probability measure.**  Nothing but the
+measurability of the map; it is stated because every consumer of Milestones 7 to 11 asks for it as
+an instance. -/
+theorem isProbabilityMeasure_map_jumpPathD [MetricSpace E] [BorelSpace E] [PolishSpace E]
+    [CompleteSpace E] {lam : E → ℝ} (hlam : Measurable lam) (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] :
+    IsProbabilityMeasure ((jumpMeasure mu nu).map (jumpPathD lam)) :=
+  Measure.isProbabilityMeasure_map (measurable_jumpPathD hlam).aemeasurable
+
+/-- **The emptiness probe of the Skorokhod path map, and it is not an emptiness probe alone.**
+The Poisson data run through `jumpPathD` land in `D(ℝ≥0, ℕ)` -- so `ℕ` really carries the bundle
+the map asks of its state space, `MetricSpace`, `BorelSpace`, `PolishSpace` and `CompleteSpace`,
+and the non explosion hypothesis is really dischargeable on data
+(`ae_mem_nonExplosiveE_poisson`) -- and the coordinate of the resulting law on the path space is
+`ProbabilityTheory.poissonMeasure t`.
+
+That second half is what makes this more than a probe: a **law on the Skorokhod space** is here
+compared with a measure into whose definition nothing of this development enters. It is
+`map_eval_map_jumpPathD` spent once, and it is the pattern every later identification follows --
+the path law is identified through its coordinates, and the coordinates are the process, whose
+laws are already known. -/
+theorem map_eval_map_jumpPathD_poisson (t : ℝ≥0) :
+    ((jumpMeasure poissonKernel (Measure.dirac 0)).map (jumpPathD poissonRate)).map
+        (fun f : D(ℝ≥0, ℕ) ↦ f.toFun t)
+      = poissonMeasure t := by
+  rw [map_eval_map_jumpPathD measurable_poissonRate poissonKernel (Measure.dirac 0)
+    ae_mem_nonExplosiveE_poisson t, jumpMeasure_map_jumpProcessE_poisson t]
 
 /-- **A test process of the path space, composed with the path map, is a test process of the
 construction.**  Membership in `mpFamily` is transported as an identity of the defining data: the
