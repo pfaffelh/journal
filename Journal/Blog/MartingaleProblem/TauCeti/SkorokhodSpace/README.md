@@ -2161,6 +2161,52 @@ Prokhorov in the other direction, from compactness to tightness, and
 `[CompleteSpace 𝓧]` and `[SecondCountableTopology 𝓧]` for it. Ethier–Kurtz
 state the second, as Theorem 3.9.1, for a complete separable `E` as well.
 
+### The subsequence argument is not to be repeated here
+
+**Instruction of the author, 2026-09-18.** The general principle — *tightness
+plus convergence along a separating class gives weak convergence* — is proved
+in the roadmap **WeakConvergence**, Milestone 1, as
+
+```lean
+theorem tendsto_of_isSeparating_of_isTightMeasureSet [PolishSpace E] [BorelSpace E]
+    {Γ : Set (E → ℝ)} (hsep : IsSeparating Γ)
+    (hcont : ∀ f ∈ Γ, Continuous f) (hbdd : ∀ f ∈ Γ, ∃ C, ∀ x, |f x| ≤ C)
+    (htight : IsTightMeasureSet {μ n | n})
+    (hconv : ∀ f ∈ Γ, Tendsto (fun n ↦ ∫ x, f x ∂(μ n)) atTop (𝓝 (∫ x, f x ∂ν))) :
+    Tendsto μ atTop (𝓝 ν)
+```
+
+Its proof is Prokhorov for the compact closure, `tendsto_subseq` for a
+convergent subsequence of any subsequence, identification of the limit by `Γ`,
+and `tendsto_of_subseq_tendsto` to put the sequence back together. Since the
+file boundary fell on 2026-09-17, this milestone **imports** it and must not
+run that argument a second time.
+
+What remains for `fact:fddconv`(b) — Ethier–Kurtz 3.7.8(b) — is therefore
+exactly the procurement of the two hypotheses at `Γ` = the finite dimensional
+class on `D ι E`, and nothing else:
+
+1. **Continuity.** The coordinate evaluations are *not* continuous on `D ι E`;
+   `continuousAt_eval_of_notMem_leftJumpSet` says they are continuous exactly at
+   the paths without a jump at `t`. So `Γ` is not a subclass of `C_b(D ι E)`,
+   the hypothesis `hcont` is not available as stated, and the route is the
+   **almost everywhere** continuous mapping theorem of **WeakConvergence**,
+   Milestone 2, with the exceptional set carried by the limit law. This is what
+   forces `D` to avoid the fixed discontinuities of the limit — see the
+   counterexample `X n = 1_[1+1/n,∞)`, `X = 1_[1,∞)` of Milestone 4 — and it is
+   why `MartingaleProblems` had to prove `map_jumpPathD_setOf_leftLim_eq`, that
+   the jump law has no fixed discontinuity at all.
+2. **Separation.** That the finite dimensional class over `D` is separating is
+   `thm:fdd` of the manuscript, and `D` must contain every maximal element and
+   every right-isolated non-isolated point (corrected 2026-09-14).
+
+Open, and the only open point: whether `T ∩ C(ν)` is dense under the
+hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
+(2026-09-18) shows that density of `T` alone does not decide it.
+
+**Stating this milestone's items so that they read as suppliers of `hcont` and
+`hsep` — and not as convergence theorems of their own — is part of the work.**
+
 * `SkorokhodSpace.isTightMeasureSet_iff` — stage (B). A set of laws is tight if
   and only if for every `ε > 0` and `m` there are a compact `K ⊆ E` and a
   function `δ ↦ η δ` tending to `0` with
