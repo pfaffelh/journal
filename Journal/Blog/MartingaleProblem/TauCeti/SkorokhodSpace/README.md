@@ -111,6 +111,18 @@ class AdditiveDist (α : Type*) [LinearOrder α] [PseudoMetricSpace α] : Prop w
 ```
 
 * Instances for `ℝ`, `ℤ`, `ℕ`, and `NNReal`.
+* **The bundle at `ℝ≥0`, proved 2026-09-18.** `NNReal.instAdditiveDist` and
+  `NNReal.instBasePoint` complete the bundle at the index the martingale
+  problems of **MartingaleProblems** are stated over; Mathlib supplies
+  `LinearOrder`, `MetricSpace`, `OrderTopology` and `ProperSpace ℝ≥0`
+  (`Mathlib/Topology/MetricSpace/ProperSpace/Real.lean`). They are stated in the
+  file next to the countable core, which needs them, and not here, because they
+  are one bundle and are read together.
+
+  `ℝ≥0` is not a subtype of `ℝ` for the instance search, so
+  `instAdditiveDistSubtype` does not reach it and `Set.Ici (0:ℝ)` is a different
+  type from the one the processes are indexed by. This is the same gap as the
+  `SetLike` one above and it is settled the same way: by writing the instance.
 * The instance for a subtype: any `s : Set α` with `[AdditiveDist α]` inherits
   `AdditiveDist s`, definitionally. Two points where this does not carry as far
   as it looks, both to be settled here rather than met later:
@@ -380,8 +392,34 @@ Under (A′):
 * The identity `Function.leftLim f x = f x` at continuity points, from
   `ContinuousWithinAt.leftLim_eq` applied to the restriction of continuity at
   `x` to `Iic x`, with `[T2Space E]`.
+* `isCadlag_const` and `SkorokhodSpace.const`: a constant function is càdlàg,
+  over any index and into any space, and the constant path is a point of
+  `D(ι, E)`. Proved (2026-09-18). It asks nothing of either side — the right
+  continuity is `continuousWithinAt_const` and the left limit is the value,
+  whether or not `𝓝[<] x` is the bottom filter — and it is what keeps `D(ι, E)`
+  from being empty whenever `E` is not. Its first use is as the value a path map
+  is given **off** the set where the process it reads is càdlàg: `jumpPathD` of
+  the roadmap **MartingaleProblems**, Milestone 6, is written that way, and a
+  total map into the path space is what a random element has to be.
+
+  `isCadlag_const` is the **v4.33.1 stand-in for `IsCadlag.const`** of
+  `Mathlib/Topology/Order/Cadlag.lean:115` on master, and it is not a second
+  proof of something the library has: that file does not exist on v4.33.1, which
+  is why this roadmap carries its own `IsCadlag` at all. Master's structure is
+  field for field the same one, so when the binding moves, the local predicate
+  and this lemma go together and the name above is what they go to.
+  `SkorokhodSpace.const` stays either way — the *space* is ours.
 * `IsCadlag.comp_monotone_continuous`: `f ∘ g` is càdlàg for càdlàg `f` and
-  monotone continuous `g : ι → ι`. This is what puts
+  monotone continuous `g : α → β`, the two indices **different** since
+  2026-09-18 — the proof never compares a point of the source with a point of
+  the target, and what it uses of either is the order topology alone, so neither
+  needs a metric and the target needs nothing of the bundle of Milestone 1.
+  `IsCadlag.comp_coe_nnreal` is the case `α = ℝ≥0`, `β = ℝ`: a càdlàg path of a
+  real time restricts to a càdlàg path of a nonnegative time, which is the
+  bridge between the index the jump construction of **MartingaleProblems** is
+  written over and the index its martingale problems are stated over. That file
+  had proved the bridge by hand, out of the two one sided filter statements;
+  since 2026-09-18 it does not, and the statement lives here. This is what puts
   `SkorokhodSpace.restrictExhaustion` of Milestone 4 back into the space, `clamp`
   being monotone and continuous. Proved (2026-09-07). Both fields use the
   monotonicity, and differently. On the right, `g` maps `Set.Ioi a` into
@@ -1307,6 +1345,25 @@ both 2026-09-09. What is left of the milestone is the third instance,
   subset of `ℝ` through `exists_orderIso_isometry_real` of Milestone 1 — and the
   Cantor set is precisely the case where that boundary is uncountable, which is
   the refutation above seen from the other side.
+* `NNReal.instHasCountableCore`, **proved 2026-09-18**: `ℝ≥0` has a countable
+  core, the nonnegative rationals, and it is **inherited from `ℝ` rather than
+  built again**. A time change of `ℝ` fixing `0` carries `Set.Ici 0` onto itself
+  and therefore restricts (`TimeChange.toNNReal`); restriction shrinks the set a
+  Lipschitz constant is tested over, so both constants and with them the norm can
+  only drop (`TimeChange.lipConst_toNNReal_le`, `TimeChange.norm_toNNReal_le`),
+  and the same `δ` serves. That the restricted nodes are nonnegative is a
+  consequence and not an assumption: `l (d i) = t i ≥ 0` with `l 0 = 0` forces
+  `d i ≥ 0`, `l` being an order isomorphism. **It is the base point clause of the
+  class that makes the transport possible**; a core that did not fix the base
+  point would say nothing about a half line. `TimeChange.inv_toNNReal` carries
+  the second Lipschitz constant across and is `rfl` on the underlying map.
+
+  With it `D(ℝ≥0, E)` is separable, Polish (`SkorokhodSpace.polishSpace_nnreal`)
+  and standard Borel, and its Borel structure is generated by the coordinates
+  (`SkorokhodSpace.borel_eq_iSup_comap_eval_nnreal`, Milestone 6). That matters
+  because `ℝ≥0` is the index of **MartingaleProblems**: before this, `D(ℝ≥0, E)`
+  was not an object of this development at all, and no solution of a martingale
+  problem could be said to live in it.
 * `SeparableSpace (D ι E)` under `[SkorokhodSpace.HasCountableCore ι]`, **proved
   2026-09-09**: the step paths with jump times in `C` and values in a countable
   dense subset of `E` are dense. Its analytic half is (2026-09-08):
@@ -1576,6 +1633,13 @@ over a shrinking family and is therefore an infimum.
   `borel (D ι E) = ⨆ t, MeasurableSpace.comap (eval t) (borel E)`. Proved
   (2026-09-09), one inclusion from `measurable_eval` and the other from the
   embedding at a countable right dense set.
+* `SkorokhodSpace.measurable_of_measurable_eval`: a map `G : α → D(ι, E)` is
+  measurable as soon as every coordinate `a ↦ (G a) t` is. Proved (2026-09-18),
+  as the identity above read as a criterion. It is the direction in which a
+  process with càdlàg paths is shown to be a **random element of the path
+  space**, and it is the one that spends the countable core: `measurable_eval` is
+  the converse and asks nothing of the index. The first consumer is `jumpPathD`
+  of the roadmap **MartingaleProblems**, Milestone 6.
 * Consequences, each stated separately: a Borel probability measure on `D ι E`
   is determined by its finite dimensional distributions along a countable dense
   set; a map into `D ι E` is measurable if and only if all its coordinates along
@@ -2177,6 +2241,20 @@ state the second, as Theorem 3.9.1, for a complete separable `E` as well.
   on a product space, and `eval t` is measurable rather than continuous there —
   the proof of Ethier–Kurtz, Proposition 3.7.1 obtains `f ∘ eval t` as a
   pointwise limit of continuous averages, which is exactly the gap.
+
+  The first of those ingredients is the one to watch, and it asks more than the
+  density of `T`. The finite dimensional distributions of the sequence converge
+  along `T` by hypothesis, and those of a subsequential limit `ν` converge at
+  the continuity times of `ν` by the item above; the two are therefore compared
+  at the times lying in **both**, and what identifies `ν` is that those times are
+  dense. Density of `T` alone does not give it: the exceptional set of a single
+  law is countable and a countable `T` can lie inside it. What closes the step is
+  the uniform control of the oscillation that relative compactness carries —
+  Milestone 7 — by which the limit along `T` and the limit of the subsequence may
+  be interchanged; density of `T` is what makes the times of a finite family
+  approachable from the right, and the oscillation bound is what makes the
+  approach uniform in the sequence. Both are spent, and neither replaces the
+  other.
 * `SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional` — stage (A).
   The same conclusion for a tight family, from the previous item and
   `isCompact_closure_of_isTightMeasureSet`.

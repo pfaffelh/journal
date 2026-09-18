@@ -6661,6 +6661,129 @@ one, and they are what the instances of the milestone stand on.
   needs: an almost sure statement would define the map off a null set only.
   `coordinate_jumpPath`, the statement that the coordinate of the image is the
   process, is `rfl`.
+* `jumpPathD` and `measurable_jumpPathD`: the same map into the Skorokhod space
+  `D(ℝ≥0, E)` of the roadmap **SkorokhodSpace**, for `E` Polish and complete.
+  Proved (2026-09-18). This is the target the convergence theorems of Milestone 8
+  there consume — `tendstoInDistribution_eval` is hypothesis (a) of
+  `mpSolution_of_tendsto` (Milestone 10) and is stated over `D(ι, E)` and over
+  nothing else — so a family of jump processes is a family those theorems apply
+  to only once it is written in this space. Measurability is
+  `SkorokhodSpace.measurable_of_measurable_eval` coordinatewise, on
+  `measurable_jumpProcessE_apply`.
+
+  **Two things separate it from `jumpPath`, and both are settled here.**
+  The index bundle at `ℝ≥0` is the first, and it is supplied: `D(ℝ≥0, E)` became
+  an object of the development on 2026-09-18 with `NNReal.instAdditiveDist`,
+  `NNReal.instBasePoint` and `NNReal.instHasCountableCore`, and the crossing of
+  the two indices is `IsCadlag.comp_coe_nnreal`. The second is that **the
+  defining property of this space does not hold at every sample point**, where
+  the defining property of `RightContinuousPath E` does: right local constancy
+  survives the explosion set (`eventuallyEq_nhdsGE_stepPath`, no hypothesis at
+  all), while the left limits do not, and `isStepPath_jumpProcessE` carries the
+  non explosion of the jump times for exactly that reason. `jumpPathD` is
+  therefore defined by cases on a measurable set, with the **constant path at the
+  starting state** `ω.1 0` off it, and the statement that it agrees with the
+  process is an almost sure one. That is the standing rule of 2026-09-18 read on
+  a definition rather than on a theorem: the non explosion is in the hypothesis,
+  and the junk value is named instead of being called harmless.
+
+  **The set is `CadlagSetE`, and it is not `NonExplosiveE`.** Non explosion alone
+  does not make the path a step path: `isStepPath_jumpProcessE` asks two things,
+  and the second is that **every holding time is strictly positive**, without
+  which two jump times coincide and the local constancy that carries the left
+  limits is not available. `CadlagSetE lam = {ω | ∀ n, 0 < ω.2 n} ∩ NonExplosiveE lam`
+  is exactly the hypothesis of that theorem read as a set, and
+  `measurableSet_cadlagSetE` is its measurability, from
+  `measurableSet_nonExplosiveE` and a countable intersection. Both halves are
+  almost sure under `jumpMeasure`, and in different ways: the positivity is free
+  (`ae_pos_snd_jumpMeasure`, no hypothesis at all, the waiting law being
+  exponential), the non explosion is a hypothesis of the caller
+  (`ae_mem_nonExplosiveE_jumpMeasure` and the criteria above it). That asymmetry
+  is why the two are carried separately and only joined in
+  `ae_mem_cadlagSetE_jumpMeasure`.
+* `isCadlag_nnreal_jumpProcessE_of_mem`, `jumpPathD_toFun_of_mem` and
+  `jumpPathD_toFun_of_not_mem`: the path is càdlàg over `ℝ≥0` on `CadlagSetE`,
+  the coordinate of the image is the process there, and off it the image is the
+  constant path. Proved (2026-09-18). The third is stated so that the junk value
+  is a theorem and not a reading of the definition.
+* `ae_mem_cadlagSetE_jumpMeasure` and `ae_jumpPathD_toFun_eq`: almost every
+  sample point lies in `CadlagSetE`, and there the Skorokhod path map agrees with
+  the process **at every time at once**. Proved (2026-09-18). The second is an
+  almost sure identity of *paths* and not of a fixed coordinate, which is what
+  every distributional conclusion of Milestones 7 to 11 needs: a coordinatewise
+  statement would give a null set per time and no null set for the path.
+* `map_eval_map_jumpPathD` and `isProbabilityMeasure_map_jumpPathD`: the law
+  `(jumpMeasure mu nu).map (jumpPathD lam)` on `D(ℝ≥0, E)` is a probability
+  measure whose coordinate at `t` is the law of `jumpProcessE lam t`. Proved
+  (2026-09-18). This is the form in which the path law is compared with anything
+  known: every identification already proved for the process —
+  `jumpMeasure_map_jumpProcessE_zero` at the start, `poissonMeasure` at the
+  Poisson rate — becomes one for the path law without a second computation.
+
+**Acceptance example.** `map_eval_map_jumpPathD_poisson`, proved (2026-09-18):
+the Poisson data run through `jumpPathD` land in `D(ℝ≥0, ℕ)`, and the coordinate
+of the resulting law at `t` is `ProbabilityTheory.poissonMeasure t`. It probes
+two things at once and is worth stating for both. As an emptiness probe it shows
+that `ℕ` carries the whole bundle the map asks of its state space —
+`MetricSpace`, `BorelSpace`, `PolishSpace`, `CompleteSpace` — and that the non
+explosion hypothesis is dischargeable on data (`ae_mem_nonExplosiveE_poisson`).
+Beyond that it is an **independent control on a law of the Skorokhod space**:
+`poissonMeasure` is defined with nothing of this development in it. The bridge
+it needs is `jumpMeasure_map_jumpProcessE_poisson`, also proved (2026-09-18) —
+`jumpMeasure_map_jumpProcess_poisson` is about `jumpProcess`, and the local
+construction is a *different function*, agreeing with the old one only where the
+holding times are strictly positive. That is almost everywhere and nowhere
+guaranteed, so the identification is carried across and not reused.
+
+**The path law has no fixed discontinuity, at any time whatever.** The
+convergence statements of the roadmap **SkorokhodSpace**, Milestone 8 —
+`SkorokhodSpace.tendsto_finiteDimensional_of_tendsto` and
+`SkorokhodSpace.tendstoInDistribution_eval` — carry a hypothesis on the limit
+law: at each time read off, the paths that jump there must carry no mass.
+`SkorokhodSpace.exists_countable_dense_continuity` supplies such times for an
+arbitrary law, and only a countable dense set of them. For the jump construction
+the answer is the strongest one available, and it is proved (2026-09-18):
+
+* `instNullSingletonClassExpMeasure`: the exponential law charges no point. It is
+  `expMeasure_eq_withDensity` read as an absolute continuity against Lebesgue
+  measure. Mathlib has the distribution function of `expMeasure`
+  (`cdf_expMeasure_eq`) and not this.
+* `jumpTimeE_succ_shift` and `measurable_jumpTimeE_snd`: the jump times split off
+  their **first** increment, and are measurable in the waiting times alone. The
+  recursion of `jumpTimeE` peels off the *last* increment, which is the right
+  form for the step index and the wrong one here: the coordinate that
+  `waitingMeasure_map_split` isolates is `ξ 0`.
+* `expMeasure_one_setOf_div_add_eq`: for a divisor `c ≠ ⊤` and a shift `b`, the
+  waiting times `u` with `ENNReal.ofReal u / c + b = a` are, off `Set.Iic 0`, at
+  most one, so the exponential law gives them no mass. The three degenerate cases
+  are settled by the finiteness of `a` alone: at `b = ⊤` and at `c = 0` the left
+  hand side is `⊤`. The hypothesis `c ≠ ⊤` is **necessary** — there the quotient
+  is `0` for every finite numerator and the set is everything when `b = a` — and
+  free in the application, where `c` is an `ENNReal.ofReal`.
+* `waitingMeasure_setOf_jumpTimeE_eq`, `jumpMeasure_setOf_jumpTimeE_eq` and
+  `ae_forall_jumpTimeE_ne`: no jump time of index `≥ 1` has an atom at a finite
+  value, first with the chain held fixed, then under `jumpMeasure`, then for all
+  indices at once. The index is `n + 1` and not `n` because
+  `jumpTimeE _ _ _ 0 = 0` is the convention that the path starts at time `0`, and
+  that one *is* an atom.
+* `continuousAt_jumpProcessE_of_forall_ne` and
+  `continuousAt_nnreal_jumpProcessE_of_forall_ne`: off the jump times the path is
+  locally constant, hence continuous, over `ℝ` and then over `ℝ≥0`. The window is
+  the one the step index reads, and its two ends are produced differently: on the
+  right the next jump time may be `⊤` — an absorbing state — and any real bound
+  serves, while on the left it is finite because it is `≤ ENNReal.ofReal x`. Non
+  explosion enters as the hypothesis of `NonExplosiveE` and is what makes the
+  window exist; without it `stepIndex` returns its junk value and the path is
+  locally constant at no time past the explosion.
+* `leftLim_jumpPathD_eq_of_forall_ne`, `ae_leftLim_jumpPathD_eq` and
+  `map_jumpPathD_setOf_leftLim_eq`: the Skorokhod path does not jump at a time
+  that is no jump time; a fixed time is almost surely not a jump time; and the
+  law `(jumpMeasure mu nu).map (jumpPathD lam)` gives, **for every** `t : ℝ≥0`,
+  the set of paths continuous at `t` full measure. The only hypothesis is the non
+  explosion, in the form `ae_mem_nonExplosiveE_jumpMeasure` states it.
+* `map_jumpPathD_setOf_leftLim_eq_poisson`: the emptiness probe, on the Poisson
+  data, where every hypothesis is discharged.
+
 * `jumpFiltrationE_eq_comap_jumpPath` and `measurable_pathFiltration_jumpPath`:
   the natural filtration of the construction **is** the pull back of
   `pathFiltration` along `jumpPath`, by `naturalFiltration_comp`, so the path map
@@ -8905,17 +9028,17 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   cannot be written down over a general `𝕂`, while over `ℝ` it can. **In Lean**
   on 2026-09-17, sixteenth run.
 * `IsCadlag.comp_coe_nnreal`, the restriction of a càdlàg path on `ℝ` to a
-  càdlàg path on `ℝ≥0`, with `tendsto_coe_nnreal_nhdsWithin_Ioi` and
-  `tendsto_coe_nnreal_nhdsWithin_Iio` as its two halves. The jump construction is
-  written over `ℝ` and every statement of Milestones 3, 6 and 9 is indexed by
-  `ℝ≥0`, which is the index the clock and the filtration carry; the crossing is
-  not formal, since `IsCadlag` is a statement about the one sided
-  neighbourhood filters and what has to be produced is that the coercion carries
-  each of them into its counterpart. It does, because it is continuous and
-  strictly monotone. At `t = 0` the left filter is `⊥` and the second half is
-  empty, which is the right answer. Only the restriction is available and only it
-  is wanted: nothing on `[0, ∞)` recovers the negative times. **In Lean** on
-  2026-09-17, sixteenth run.
+  càdlàg path on `ℝ≥0`. The jump construction is written over `ℝ` and every
+  statement of Milestones 3, 6 and 9 is indexed by `ℝ≥0`, which is the index the
+  clock and the filtration carry; the crossing is not formal, since `IsCadlag` is
+  a statement about the one sided neighbourhood filters. Only the restriction is
+  available and only it is wanted: nothing on `[0, ∞)` recovers the negative
+  times. **In Lean** on 2026-09-17, sixteenth run — and **in the roadmap
+  SkorokhodSpace** since 2026-09-18, where it is the two index form of
+  `IsCadlag.comp_monotone_continuous` applied to the coercion. It was proved
+  twice; the copy in this file, with
+  `tendsto_coe_nnreal_nhdsWithin_Ioi` and `tendsto_coe_nnreal_nhdsWithin_Iio`
+  as its two halves, is gone, and the statement is imported.
 * `ae_isCadlag_nnreal_jumpProcessE`, `isOptionalSamplingFor_mpFamily_jumpProcessE`
   and `isStronglyMeasurableAlongStoppingTimes_compensatorE`, the three
   hypotheses of `isQuasiLeftContinuous_of_isMPSolutionFor` read off the data of
