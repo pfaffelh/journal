@@ -3453,13 +3453,54 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
      gives is `4`, not `2`. Neither matters to the consumer, which asks only that
      the modulus vanish as `δ → 0`.
 
-     **Of that route no calculation is left open**, only the assembly: the two
-     theorems above, the finiteness of the large jumps, a uniform grid, and the
-     `Fin`-bookkeeping of an `IsSubdivisionBased`. The one point to decide there
-     is the **base point**, which the grid does not meet and which the predicate
-     demands among the nodes; inserting it afterwards may leave a cell shorter
-     than `δ`, the same edge case `SkorokhodSpace.IsSubdivisionBased.trim` handles
-     at the window's ends.
+     Of that route the **cell estimate** is proved,
+     `SkorokhodSpace.edist_le_four_mul_of_forall_min_edist_lt`: a window whose
+     jumps are all at most `2 * η` — the hypothesis asked on `Set.Ioc u v` and not
+     at `u`, a cell not seeing the jump at its own left endpoint — has oscillation
+     at most `4 * η`.
+
+     **And the base point, which that route called its one point to decide, is
+     not a point to decide but a refutation, 2026-09-19.**
+     `SkorokhodSpace.IsSubdivisionBased` demands the base point among the nodes
+     **and** every gap longer than `δ`; a jump in `Set.Ioo t₀ (t₀ + δ)` can
+     therefore be put at no cell boundary, and is charged in full to the cell
+     beginning at `t₀`. The unit step `SkorokhodSpace.step` has three point
+     quantity `0` at every triple and every span
+     (`SkorokhodSpace.min_edist_step_eq_zero`) and based modulus at least `1` at
+     every `δ ≥ 1` (`SkorokhodSpace.one_le_modulusBased_step`), so **no** finite
+     constant and no reading of the span makes the link true:
+     `SkorokhodSpace.not_forall_modulusBased_le_mul_of_forall_min_edist_lt`,
+     proved with the global hypothesis and hence against the strongest reading.
+
+     **The link carries a boundary term at the base point**, which is what the
+     classical statement on `[0, ∞)` writes as `sup_{t < δ} d(x t, x 0)` and what
+     this roadmap never had:
+
+     > `modulusBased t₀ m f δ ≤ 4 * η + 2 * ⨆ r ∈ Set.Ico (t₀ - 2*δ) t₀, edist (f r) (leftLim f t₀) + ⨆ r ∈ Set.Ico t₀ (t₀ + 2*δ), edist (f r) (f t₀)`,
+
+     one summand for the cell beginning at `t₀` and one for the cell ending
+     there, both sides suffering the same defect. The left one is measured
+     against `leftLim f t₀` and **not** against `f t₀`: a jump **at** the base
+     point sits at the left endpoint of the cell beginning there and is not seen
+     by it, and measured against `f t₀` the term would not vanish and the
+     criterion would be false for every path jumping at `t₀`.
+
+     The term is `SkorokhodSpace.basePointOsc`, and that it **vanishes** is
+     `SkorokhodSpace.tendsto_basePointOsc`, proved: the correction does not reach
+     the consumer, which asks only that the modulus vanish as `δ → 0`, the right
+     summand doing so by right continuity and the left one by the existence of
+     the left limit. That the left one must be read against `leftLim f t₀` is
+     `SkorokhodSpace.iSup_edist_step_left_eq_one`, also proved: at the unit step
+     and the base point `1` the same supremum against `f t₀` is `1` at every `δ`.
+     For a **family** the vanishing has to be uniform, and that is a hypothesis
+     and not a formality — it says the paths do not accumulate displacement at
+     the one time the subdivisions are pinned at.
+     `SkorokhodSpace.not_isCompact_closure_of_jumps_at_basePoint` is the same
+     phenomenon from the other side.
+
+     What is left of the route is the assembly, in the corrected shape: the two
+     theorems above, the cell estimate, the finiteness of the large jumps, a
+     uniform grid, and the `Fin`-bookkeeping of an `IsSubdivisionBased`.
   2. Three point quantity of the path ⟹ the same for the image under
      `SkorokhodSpace.clipDist (f t)`, capped at `1`
      (`SkorokhodSpace.min_edist_postcomp_clipDist`), and in the form a dense `H`

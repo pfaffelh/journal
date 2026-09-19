@@ -1,7 +1,7 @@
 # Zitierte Zeilennummern gegen `94ef6b89544e58e90f119da869f3fb48d1da0f4c`
 
-* geprüft: 297 gepaarte Fundstellen
-* **stimmt: 297**
+* geprüft: 299 gepaarte Fundstellen
+* **stimmt: 299**
 * **verschoben: 0**
 * zielt auf eine andere Deklaration (von Hand): 38
 * ungepaart (von Hand): 59

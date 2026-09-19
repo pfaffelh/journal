@@ -15621,6 +15621,299 @@ theorem SkorokhodSpace.jump_le_two_mul_of_forall_min_edist_lt
     _ ≤ η + η := add_le_add (by rw [edist_comm]; exact hA) hB
     _ = 2 * η := (two_mul η).symm
 
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **A window whose jumps are all small has oscillation at most `4 * η`.**  This
+is the cell estimate of the replacement route, and it is the structure theorem
+read once more: the break `τ` of
+`SkorokhodSpace.exists_forall_edist_lt_of_forall_min_edist_lt` carries a jump of
+at most `2 * η` by hypothesis, its left limit lies within `η` of the window's left
+end by the first clause --- a passage to the limit `r ↑ τ`, which is where `τ > u`
+is used --- so the displacement at the break is below `3 * η`, and the second
+clause adds the last `η`.
+
+The hypothesis is asked at every `p` of `Set.Ioc u v` and **not** at `u` itself:
+a jump at the left endpoint of a cell is not seen by that cell, the cells of
+`SkorokhodSpace.subdivisionOsc` being half open.  That is the whole reason the
+nodes of a subdivision belong at the large jumps. -/
+theorem SkorokhodSpace.edist_le_four_mul_of_forall_min_edist_lt
+    (f : D(ℝ, E)) {u v : ℝ} (huv : u ≤ v) {η : ℝ≥0∞} (hη : 0 < η)
+    (h : ∀ t₁ t t₂ : ℝ, u ≤ t₁ → t₁ ≤ t → t ≤ t₂ → t₂ ≤ v →
+      min (edist (f.toFun t) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun t)) < η)
+    (hjump : ∀ p : ℝ, u < p → p ≤ v →
+      edist (f.toFun p) (Function.leftLim f.toFun p) ≤ 2 * η)
+    {r : ℝ} (hr : r ∈ Set.Icc u v) :
+    edist (f.toFun r) (f.toFun u) ≤ 4 * η := by
+  obtain ⟨τ, hτ, hfirst, hsecond⟩ :=
+    SkorokhodSpace.exists_forall_edist_lt_of_forall_min_edist_lt f huv hη h
+  have hηle : η ≤ 4 * η := by
+    have hsplit : (4 : ℝ≥0∞) * η = η + 3 * η := by ring
+    rw [hsplit]
+    exact le_self_add
+  have hbreak : edist (f.toFun τ) (f.toFun u) ≤ 3 * η := by
+    rcases eq_or_lt_of_le hτ.1 with hu | hu
+    · rw [← hu, edist_self]
+      exact zero_le
+    · have hlim : edist (Function.leftLim f.toFun τ) (f.toFun u) ≤ η := by
+        refine le_of_tendsto (Filter.Tendsto.edist
+          (f.isCadlag.tendsto_nhdsLT_leftLim τ) tendsto_const_nhds) ?_
+        have hlt : ∀ᶠ s in 𝓝[<] τ, s < τ := eventually_mem_nhdsWithin
+        have hgt : ∀ᶠ s in 𝓝[<] τ, u < s :=
+          Filter.Eventually.filter_mono nhdsWithin_le_nhds (eventually_gt_nhds hu)
+        filter_upwards [hlt, hgt] with s hs1 hs2
+        exact (hfirst s ⟨hs2.le, hs1⟩).le
+      calc edist (f.toFun τ) (f.toFun u)
+          ≤ edist (f.toFun τ) (Function.leftLim f.toFun τ)
+            + edist (Function.leftLim f.toFun τ) (f.toFun u) := edist_triangle _ _ _
+        _ ≤ 2 * η + η := add_le_add (hjump τ hu hτ.2) hlim
+        _ = 3 * η := by ring
+  rcases lt_or_ge r τ with hlt | hge
+  · exact le_trans (hfirst r ⟨hr.1, hlt⟩).le hηle
+  · calc edist (f.toFun r) (f.toFun u)
+        ≤ edist (f.toFun r) (f.toFun τ) + edist (f.toFun τ) (f.toFun u) := edist_triangle _ _ _
+      _ ≤ η + 3 * η := add_le_add (hsecond r ⟨hge, hr.2⟩).le hbreak
+      _ = 4 * η := by ring
+
+/-! ### The base point is charged, and the link as stated is false
+
+The cell estimate above is the last **calculation** the replacement route needs.
+What it does not supply, and what no calculation can, is a subdivision whose
+cells all satisfy its hypothesis: `SkorokhodSpace.IsSubdivisionBased` demands the
+base point `t₀` among the nodes **and** every gap longer than `δ`, and those two
+demands together forbid a node at a jump sitting in `Set.Ioo t₀ (t₀ + δ)`.  Such
+a jump is therefore charged in full to the cell that begins at `t₀`.
+
+**That is not a gap in the proof but a refutation of the statement.**  The unit
+step `SkorokhodSpace.step`, whose single jump sits at the time `1`, has three
+point quantity `0` --- at **every** span, not merely at `2 * δ`
+(`SkorokhodSpace.min_edist_step_eq_zero`) --- and based modulus at least `1` at
+every `δ ≥ 1` (`SkorokhodSpace.one_le_modulusBased_step`).  So no inequality
+`modulusBased t₀ m f δ ≤ C * η` holds with a finite constant, for any reading of
+the span; that is
+`SkorokhodSpace.not_forall_modulusBased_le_mul_of_forall_min_edist_lt`.
+
+**What the corrected link has to say**, and it is the shape the classical
+statement has on `[0, ∞)`, where the base point is the left end of the window and
+the term is written `sup_{t < δ} d(x t, x 0)`: a boundary term at the base point,
+
+> `modulusBased t₀ m f δ ≤ 4 * η + 2 * SkorokhodSpace.basePointOsc t₀ f (2 * δ)`,
+
+whose two summands are one for the cell that begins at `t₀` and one for the cell
+that ends there.  Both are needed and for the same reason on both sides: a node
+within `δ` of `t₀` is forbidden, so a jump of either of the two intervals cannot
+be put at a cell boundary.
+
+**The correction does not reach the consumer, and that is why the criterion
+survives.**  `SkorokhodSpace.isTightMeasureSet_iff` asks that the modulus
+**vanish** as `δ → 0`, and `SkorokhodSpace.tendsto_basePointOsc` says the
+boundary term does.  The right hand summand tends to `0` by right continuity at
+`t₀` and the left hand one by the existence of the left limit there --- it is
+measured against `Function.leftLim f t₀` and not against `f t₀`, which is what
+makes a path that jumps **at** the base point harmless: that jump sits at the
+left endpoint of the cell beginning at `t₀` and is not seen by it.  Measured
+against `f t₀` the term would not vanish, and the criterion would be false for
+every path with a jump at the base point; that is
+`SkorokhodSpace.iSup_edist_step_left_eq_one`, and it is why the two halves are
+measured against different points.
+
+**For a family the two terms must vanish uniformly**, and that is a real
+hypothesis rather than a formality: it is the statement that the paths of the
+family do not accumulate displacement at the one time the subdivisions are pinned
+at.  `SkorokhodSpace.not_isCompact_closure_of_jumps_at_basePoint` is the same
+phenomenon seen from the other side, and this is the second place where the base
+point is not a normalisation. -/
+
+/-- **The unit step has three point quantity `0`**, at every triple and with no
+restriction on the span: of the two displacements one is always between two times
+on the same side of the jump.  It is `SkorokhodSpace.step` that refutes the link,
+and this is the half of the refutation that says the hypothesis holds. -/
+theorem SkorokhodSpace.min_edist_step_eq_zero {t₁ t t₂ : ℝ} (h1 : t₁ ≤ t) (h2 : t ≤ t₂) :
+    min (edist (SkorokhodSpace.step.toFun t) (SkorokhodSpace.step.toFun t₁))
+      (edist (SkorokhodSpace.step.toFun t₂) (SkorokhodSpace.step.toFun t)) = 0 := by
+  rcases le_or_gt (1 : ℝ) t with ht | ht
+  · have hval : SkorokhodSpace.step.toFun t₂ = SkorokhodSpace.step.toFun t := by
+      rw [SkorokhodSpace.step_apply, SkorokhodSpace.step_apply, ite_eq_left ht,
+        ite_eq_left (ht.trans h2)]
+    rw [hval, edist_self]
+    exact min_eq_right zero_le
+  · have hval : SkorokhodSpace.step.toFun t₁ = SkorokhodSpace.step.toFun t := by
+      rw [SkorokhodSpace.step_apply, SkorokhodSpace.step_apply,
+        ite_eq_right (not_le.2 (lt_of_le_of_lt h1 ht)), ite_eq_right (not_le.2 ht)]
+    rw [hval, edist_self]
+    exact min_eq_left zero_le
+
+/-- **The unit step has based modulus at least `1` at every `δ ≥ 1`**, and the
+reason is the base point alone.  A based subdivision carries a node at `0`, that
+node is not the last one because the window reaches `3`, and the gap to the next
+node exceeds `δ ≥ 1`.  So the time `1`, where the path jumps, lies in the cell
+that **begins** at `0`, and that cell sees the whole jump.
+
+No sparseness beyond `δ ≥ 1` is used and no upper bound on `δ` is needed: once
+`δ` exceeds the diameter of the window there is no based subdivision at all and
+the modulus is `⊤`. -/
+theorem SkorokhodSpace.one_le_modulusBased_step {δ : ℝ} (hδ : 1 ≤ δ) :
+    (1 : ℝ≥0∞) ≤ SkorokhodSpace.modulusBased (0 : ℝ) 3 SkorokhodSpace.step δ := by
+  refine le_iInf fun n => le_iInf fun t => le_iInf fun ht => ?_
+  obtain ⟨⟨hmono, h0, hlast, hgap⟩, j, hj⟩ := ht
+  have hmax3 : (3 : ℝ) ≤ exhaustionMax (0 : ℝ) 3 := by
+    rw [exhaustionMax_real]
+    norm_num
+  have hjlast : j ≠ Fin.last n := by
+    intro hcon
+    rw [hcon] at hj
+    have h3 : (3 : ℝ) ≤ t (Fin.last n) := le_trans hmax3 hlast
+    rw [hj] at h3
+    linarith
+  obtain ⟨k, rfl⟩ := Fin.eq_castSucc_of_ne_last hjlast
+  have hmono' : t k.castSucc < t k.succ := hmono (Fin.castSucc_lt_succ (i := k))
+  have hgapk := hgap k
+  rw [Real.dist_eq, hj, abs_of_nonpos (by linarith), zero_sub, neg_neg] at hgapk
+  have hmem : (1 : ℝ) ∈ Set.Ico (t k.castSucc) (t k.succ) := by
+    rw [hj]
+    exact ⟨by norm_num, by linarith⟩
+  have hle : edist (SkorokhodSpace.step.toFun 1) (SkorokhodSpace.step.toFun (t k.castSucc))
+      ≤ SkorokhodSpace.subdivisionOsc SkorokhodSpace.step t := by
+    rw [SkorokhodSpace.subdivisionOsc]
+    exact le_iSup_of_le k (le_iSup₂_of_le (1 : ℝ) hmem le_rfl)
+  refine le_trans (SkorokhodSpace.one_le_edist_of_one_le_dist ?_) hle
+  rw [hj, SkorokhodSpace.step_apply, SkorokhodSpace.step_apply, ite_eq_left le_rfl,
+    ite_eq_right (by norm_num), Real.dist_eq]
+  norm_num
+
+/-- **The link the roadmap named is false**, and no constant repairs it: the unit
+step satisfies the three point hypothesis for **every** positive level `η` and at
+every span, and its based modulus at `δ = 1` is at least `1`.
+
+The quantified hypothesis here is the *global* one --- the outer times are not
+confined to the window --- so the refutation is of the strongest reading of the
+link, and a fortiori of the windowed one that
+`SkorokhodSpace.min_edist_le_two_mul_modulusBased` produces.  The constant `C` is
+arbitrary and the span factor `c` is arbitrary, which is what says that neither
+the `4` nor the `2 * δ` of the route was the mistake.
+
+What is missing is the boundary term at the base point, written out at the head
+of this section. -/
+theorem SkorokhodSpace.not_forall_modulusBased_le_mul_of_forall_min_edist_lt
+    {C : ℝ≥0∞} (hC : C ≠ ⊤) (c : ℝ) :
+    ¬ ∀ (f : D(ℝ, ℝ)) (δ : ℝ) (η : ℝ≥0∞), 0 < δ → 0 < η →
+        (∀ t₁ t t₂ : ℝ, t₁ ≤ t → t ≤ t₂ → t₂ - t₁ ≤ c * δ →
+          min (edist (f.toFun t) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun t)) < η) →
+        SkorokhodSpace.modulusBased (0 : ℝ) 3 f δ ≤ C * η := by
+  intro hcon
+  obtain ⟨η, hη0, hηC⟩ : ∃ η : ℝ≥0∞, 0 < η ∧ C * η < 1 := by
+    rcases eq_or_ne C 0 with rfl | hC0
+    · exact ⟨1, zero_lt_one, by rw [zero_mul]; exact zero_lt_one⟩
+    · refine ⟨C⁻¹ / 2,
+        ENNReal.div_pos (ENNReal.inv_pos.2 hC).ne' ENNReal.ofNat_ne_top, ?_⟩
+      rw [← mul_div_assoc, ENNReal.mul_inv_cancel hC0 hC]
+      exact ENNReal.half_lt_self one_ne_zero ENNReal.one_ne_top
+  have hstep := hcon SkorokhodSpace.step 1 η zero_lt_one hη0
+    (fun t₁ t t₂ hle1 hle2 _ => by
+      rw [SkorokhodSpace.min_edist_step_eq_zero hle1 hle2]
+      exact hη0)
+  exact absurd (le_trans (SkorokhodSpace.one_le_modulusBased_step le_rfl) hstep)
+    (not_le.2 hηC)
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The boundary term at the base point**: the oscillation of `f` over the two
+intervals of length `δ` adjoining `t₀`, the one on the right measured against
+`f t₀` and the one on the left against `Function.leftLim f t₀`.
+
+It is the term the link of Milestone 8 is missing, by
+`SkorokhodSpace.not_forall_modulusBased_le_mul_of_forall_min_edist_lt`, and it is
+what the classical statement on `[0, ∞)` writes as `sup_{t < δ} d(x t, x 0)`,
+where base point and window edge coincide and only the right half occurs.
+
+**The two halves are measured against different points, and that is the whole
+design.**  The cell that ends at `t₀` does not contain `t₀`, the cells of
+`SkorokhodSpace.subdivisionOsc` being half open, so the jump **at** the base
+point is not charged to it --- and against `Function.leftLim f t₀` the term
+vanishes with `δ`, while against `f t₀` it would not.  That is
+`SkorokhodSpace.tendsto_basePointOsc` together with
+`SkorokhodSpace.iSup_edist_step_left_eq_one`. -/
+noncomputable def SkorokhodSpace.basePointOsc (t₀ : ℝ) (f : D(ℝ, E)) (δ : ℝ) : ℝ≥0∞ :=
+  (⨆ r ∈ Set.Ico (t₀ - δ) t₀, edist (f.toFun r) (Function.leftLim f.toFun t₀))
+    + ⨆ r ∈ Set.Ico t₀ (t₀ + δ), edist (f.toFun r) (f.toFun t₀)
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The boundary term vanishes**, and this is why the correction does not reach
+the consumer: `SkorokhodSpace.isTightMeasureSet_iff` asks that the modulus vanish
+as `δ → 0`, and a summand that vanishes with it changes nothing.
+
+One half is right continuity at `t₀` and the other the existence of the left
+limit there; both are read through `mem_nhdsGE_iff_exists_Ico_subset'`
+(`Mathlib/Topology/Order/LeftRightNhds.lean:288`) and
+`mem_nhdsLT_iff_exists_Ioo_subset'` (`:214`), which turn a neighbourhood into the
+interval a supremum needs.
+
+**For a family this has to be required uniformly**, and then it is a hypothesis
+and not a formality: it says the paths of the family accumulate no displacement
+at the one time at which the subdivisions are pinned. -/
+theorem SkorokhodSpace.tendsto_basePointOsc (t₀ : ℝ) (f : D(ℝ, E)) :
+    Filter.Tendsto (SkorokhodSpace.basePointOsc t₀ f) (𝓝[>] (0 : ℝ)) (𝓝 0) := by
+  rw [ENNReal.tendsto_nhds_zero]
+  intro ε hε
+  have hε2 : 0 < ε / 2 := ENNReal.half_pos hε.ne'
+  obtain ⟨u, hu, hsubR⟩ : ∃ u, t₀ < u ∧
+      ∀ r ∈ Set.Ico t₀ u, edist (f.toFun r) (f.toFun t₀) ≤ ε / 2 := by
+    have h2 : Filter.Tendsto f.toFun (𝓝[≥] t₀) (𝓝 (f.toFun t₀)) :=
+      continuousWithinAt_Ioi_iff_Ici.1 (f.isCadlag.isRightContinuous t₀)
+    have h3 : Filter.Tendsto (fun r => edist (f.toFun r) (f.toFun t₀)) (𝓝[≥] t₀) (𝓝 0) := by
+      have h4 := Filter.Tendsto.edist h2 (tendsto_const_nhds (x := f.toFun t₀))
+      rwa [edist_self] at h4
+    obtain ⟨u, hu, hsub⟩ := (mem_nhdsGE_iff_exists_Ico_subset' (lt_add_one t₀)).1
+      (ENNReal.tendsto_nhds_zero.1 h3 (ε / 2) hε2)
+    exact ⟨u, hu, fun r hr => hsub hr⟩
+  obtain ⟨l, hl, hsubL⟩ : ∃ l, l < t₀ ∧
+      ∀ r ∈ Set.Ioo l t₀, edist (f.toFun r) (Function.leftLim f.toFun t₀) ≤ ε / 2 := by
+    have h3 : Filter.Tendsto (fun r => edist (f.toFun r) (Function.leftLim f.toFun t₀))
+        (𝓝[<] t₀) (𝓝 0) := by
+      have h4 := Filter.Tendsto.edist (f.isCadlag.tendsto_nhdsLT_leftLim t₀)
+        (tendsto_const_nhds (x := Function.leftLim f.toFun t₀))
+      rwa [edist_self] at h4
+    obtain ⟨l, hl, hsub⟩ := (mem_nhdsLT_iff_exists_Ioo_subset' (sub_one_lt t₀)).1
+      (ENNReal.tendsto_nhds_zero.1 h3 (ε / 2) hε2)
+    exact ⟨l, hl, fun r hr => hsub hr⟩
+  have hpos : (0 : ℝ) < min (u - t₀) (t₀ - l) := lt_min (by linarith) (by linarith)
+  filter_upwards [Filter.Eventually.filter_mono nhdsWithin_le_nhds (Iio_mem_nhds hpos)]
+    with δ hδ
+  have hδ' : δ < min (u - t₀) (t₀ - l) := hδ
+  have hL : (⨆ r ∈ Set.Ico (t₀ - δ) t₀, edist (f.toFun r) (Function.leftLim f.toFun t₀))
+      ≤ ε / 2 := by
+    refine iSup₂_le fun r hr => hsubL r ⟨?_, hr.2⟩
+    have : δ < t₀ - l := lt_of_lt_of_le hδ' (min_le_right _ _)
+    have := hr.1
+    linarith
+  have hR : (⨆ r ∈ Set.Ico t₀ (t₀ + δ), edist (f.toFun r) (f.toFun t₀)) ≤ ε / 2 := by
+    refine iSup₂_le fun r hr => hsubR r ⟨hr.1, ?_⟩
+    have : δ < u - t₀ := lt_of_lt_of_le hδ' (min_le_left _ _)
+    have := hr.2
+    linarith
+  calc SkorokhodSpace.basePointOsc t₀ f δ ≤ ε / 2 + ε / 2 := add_le_add hL hR
+    _ = ε := ENNReal.add_halves ε
+
+/-- **The left half of the boundary term has to be measured against the left
+limit.**  At the unit step and the base point `1` --- the time at which it jumps
+--- the same supremum taken against `f t₀` is `1` at **every** `δ > 0`, so it does
+not vanish and `SkorokhodSpace.tendsto_basePointOsc` would be false with that
+reading.
+
+Against `Function.leftLim SkorokhodSpace.step.toFun 1`, which is `0`
+(`SkorokhodSpace.leftLim_step`), the same supremum is `0`.  The difference is the
+jump at the base point, and the reason it may be dropped is that the cell ending
+at `t₀` does not contain `t₀`. -/
+theorem SkorokhodSpace.iSup_edist_step_left_eq_one {δ : ℝ} (hδ : 0 < δ) :
+    (⨆ r ∈ Set.Ico (1 - δ) (1 : ℝ),
+      edist (SkorokhodSpace.step.toFun r) (SkorokhodSpace.step.toFun 1)) = 1 := by
+  have hval : ∀ r : ℝ, r < 1 →
+      edist (SkorokhodSpace.step.toFun r) (SkorokhodSpace.step.toFun 1) = 1 := by
+    intro r hr
+    rw [SkorokhodSpace.step_apply, SkorokhodSpace.step_apply, ite_eq_right (not_le.2 hr),
+      ite_eq_left le_rfl, edist_dist, Real.dist_eq]
+    norm_num
+  refine le_antisymm (iSup₂_le fun r hr => le_of_eq (hval r hr.2)) ?_
+  exact le_iSup₂_of_le (1 - δ / 2) ⟨by linarith, by linarith⟩
+    (le_of_eq (hval _ (by linarith)).symm)
+
 /-! ## Milestone 9: the nonnegative index inside the real one
 
 Everything above about the modulus and about tightness is stated over the index

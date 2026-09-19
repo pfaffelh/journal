@@ -1,6 +1,6 @@
 # Deklarationen, die es auf `94ef6b89544e58e90f119da869f3fb48d1da0f4c` schon geben könnte
 
-* geprüfte eigene Deklarationen: **2352**
+* geprüfte eigene Deklarationen: **2359**
 * Treffer auf dem letzten Namensbestandteil: **37**
 * als zu allgemein übergangen (kurz oder generisch): 23
 
@@ -43,5 +43,5 @@ Ein Treffer ist ein **Anhaltspunkt**, keine Doppelung. Er sagt, daß Mathlib ein
 | `SkorokhodSpace.instSeparableSpace` | `SkorokhodSpace/Suggested.lean:6760` | `DomMulAct.instSeparableSpace` (`Mathlib/Topology/Algebra/Constructions/DomMulAct.lean:100`); `ContinuousMap.instSeparableSpace` (`Mathlib/Topology/ContinuousMap/SecondCountableSpace.lean:108`) |
 | `SkorokhodSpace.metricSpace` | `SkorokhodSpace/Suggested.lean:3501` | `spectralNorm.metricSpace` (`Mathlib/Analysis/Normed/Unbundled/SpectralNorm.lean:905`); `Padic.metricSpace` (`Mathlib/NumberTheory/Padics/PadicNumbers.lean:784`); `Subtype.metricSpace` (`Mathlib/Topology/MetricSpace/Basic.lean:111`) |
 | `SkorokhodSpace.postcomp` | `SkorokhodSpace/Suggested.lean:14231` | `PresheafOfModulesOfCommRing.Derivation.postcomp` (`Mathlib/Algebra/Category/ModuleCat/Differentials/Presheaf.lean:83`); `ModuleCat.AlternatingMap.postcomp` (`Mathlib/Algebra/Category/ModuleCat/ExteriorPower.lean:55`); `CategoryTheory.Abelian.Ext.postcomp` (`Mathlib/Algebra/Homology/DerivedCategory/Ext/Basic.lean:407`) |
-| `TimeChange.ofNNReal` | `SkorokhodSpace/Suggested.lean:15848` | `ENNReal.ofNNReal` (`Mathlib/Basic/ENNReal/Basic.lean:116`) |
+| `TimeChange.ofNNReal` | `SkorokhodSpace/Suggested.lean:16138` | `ENNReal.ofNNReal` (`Mathlib/Basic/ENNReal/Basic.lean:116`) |
 | `TimeChange.toNNReal` | `SkorokhodSpace/Suggested.lean:7484` | `ContinuousMap.toNNReal` (`Mathlib/Analysis/CStarAlgebra/ContinuousFunctionalCalculus/Unique.lean:67`); `ContinuousMapZero.toNNReal` (`Mathlib/Analysis/CStarAlgebra/ContinuousFunctionalCalculus/Unique.lean:233`); `ENNReal.toNNReal` (`Mathlib/Basic/ENNReal/Basic.lean:226`) |

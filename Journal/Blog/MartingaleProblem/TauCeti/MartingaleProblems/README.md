@@ -10548,9 +10548,25 @@ had no declaration at all, and they are needed in this order:
    at a break is the one quantity the hypothesis leaves free. The replacement
    puts the nodes at the large jumps instead — that they are far enough apart is
    `SkorokhodSpace.jump_le_two_mul_of_forall_min_edist_lt`, proved the same day —
-   and it reads the hypothesis at span `2 * δ` and yields the constant `4`;
-   neither change reaches a consumer, which asks only that the modulus vanish as
-   `δ → 0`. What is left of the item is the assembly, not a calculation.
+   and its cell estimate is
+   `SkorokhodSpace.edist_le_four_mul_of_forall_min_edist_lt`: a window whose
+   jumps are all at most `2 * η` has oscillation at most `4 * η`.
+
+   **And the item as stated is false, 2026-09-19.** A based subdivision carries
+   the base point among its nodes and has every gap longer than `δ`, so a jump in
+   `Set.Ioo t₀ (t₀ + δ)` sits at no cell boundary and is charged in full to the
+   cell beginning at `t₀`. The unit step, whose three point quantity is `0` at
+   every triple and every span, has based modulus at least `1`
+   (`SkorokhodSpace.not_forall_modulusBased_le_mul_of_forall_min_edist_lt`), so no
+   finite constant repairs it. The link carries a **boundary term at the base
+   point** — the term the classical statement on `[0, ∞)` writes as
+   `sup_{t < δ} d(x t, x 0)` — with the left half measured against
+   `leftLim f t₀`. It is `SkorokhodSpace.basePointOsc`, it vanishes as `δ → 0`
+   (`SkorokhodSpace.tendsto_basePointOsc`), so the consumer is unaffected, and
+   against `f t₀` it would not vanish
+   (`SkorokhodSpace.iSup_edist_step_left_eq_one`); for a family the vanishing is
+   a hypothesis and not a formality. It is written out at the item in
+   `SkorokhodSpace/README.md`, Milestone 8.
 
 Only then does `isTight_map_postcomp_of_exists_martingale` have a conclusion it
 can reach, and `isRelativelyCompact_of_approx` an input. **The order of work is
