@@ -365,6 +365,19 @@ Pfadraum, dann Meilenstein 3, dann zurück zu C.5/G.**
 
 > **`jumpPath` → Meilenstein 3 → Meilenstein 9 → C.5/G**
 
+*(Stand 2026-09-19: `jumpPath` steht, Meilenstein 3 steht, Meilenstein 9 von
+`MartingaleProblems` trägt kein `sorry` mehr, und Meilenstein 8 von
+`SkorokhodSpace` ist seit dem achten Lauf des Tages vollständig — EK 3.7.8(b)
+eingeschlossen. **Der nächste Punkt dieser Reihe ist Meilenstein 11**, die
+Skorokhod-Instanzen, und er ist jetzt zum ersten Mal nicht mehr blockiert: die
+càdlàg-Modifikation, die Quasi-Linksstetigkeit, der Konvergenzsatz und die
+fdd-Konvergenz stehen alle. Die Kette des Meilensteins ist
+`isTight_map_postcomp_of_exists_martingale` →
+`isRelativelyCompact_of_approx` → `mpSolution_of_tendsto_cadlag` →
+`tendsto_of_isRelativelyCompact_of_unique`, und ihr Akzeptanztest ist **Donsker**,
+bei dem die vier je genau einmal und in dieser Reihenfolge vorkommen. Erst
+danach C.5/G.)*
+
 *(Fortgeschrieben 2026-09-15, vom Nutzer angeordnet. Der Pfadraum selbst ist am
 2026-09-14 im sechsten Lauf gebaut: `RightContinuousPath E`, `pathShift`, und
 damit der erste Zeuge für `Shift`. Was davon noch aussteht, ist `jumpPath` — das
