@@ -44828,3 +44828,214 @@ zwei Minuten, und die Axiomprüfung oben lief darüber.
    Eingabe aus `SkorokhodSpace` mehr aufgehalten — nur noch an Punkt 1 oben und an
    den stetigzeitlichen Doob-Ungleichungen von Meilenstein 9, die es ausdrücklich
    verbraucht.
+
+### 2026-09-19, vierundzwanzigster Lauf des Tages — Vorschlag 1 steht, und die Entscheidung, die er zu begründen aufgab, ist gegen die Pfadabbildung gefallen; dazu der Befund, daß die Übersetzung nicht bloß hinreichend, sondern eine **Äquivalenz** ist, und daß die Fensterfrage nicht am Index hängt, sondern am **rechten Endpunkt**
+
+**Bearbeitet:** Vorschlag 1 des Vorlaufs — „die gleichmäßige Fassung von
+`CompactContainment` in `MartingaleProblems`, und der Weg von ihr zu
+`SkorokhodSpace.IsCompactContained` der Pfadgesetze". Das ist der vierte und
+letzte der vier Unterschiede, die zwischen Meilenstein 11 und seiner ersten
+Aussage standen.
+
+Fünf Deklarationen am Ende von `MartingaleProblems/Suggested.lean` (ein neuer
+Abschnitt `UniformCompactContainment`, die Definition und vier Sätze) und vier in
+`SkorokhodSpace/Suggested.lean`, Meilenstein 9 — davon zwei neu, eine
+verallgemeinert und eine aus ihr hergeleitet.
+
+#### Die Entscheidung, die der Vorlauf zu begründen aufgab
+
+Der Vorlauf hatte zwei Lesarten benannt und verlangt, die Wahl sei zu begründen,
+nicht zu raten. Sie ist gefallen, und zwar gegen die Pfadabbildung:
+
+> **Die gleichmäßige Fassung steht über pfadraumwertigen Zufallsgrößen
+> `X : (n : γ) → Ω n → D(ℝ≥0, E)`, nicht über Prozessen `ι → Ω n → E`.**
+
+Der Grund ist nicht Bequemlichkeit, sondern eine Unmöglichkeit: eine allgemeine
+Pfadabbildung eines Prozesses in `D(ℝ≥0, E)` kann **nicht total** sein. Ein
+Prozeß mit nur f.s. càdlàg-Pfaden braucht auf der Ausnahmemenge einen Wert, und
+genau deshalb setzt `jumpPathD` dort `SkorokhodSpace.const`. Eine Aussage über
+Prozesse müßte die Ausnahmemenge mitführen; eine über pfadraumwertige Größen
+nicht. Und die beiden Aussagen des Meilensteins 6, die Meilenstein 11 ohnehin
+verbraucht — `tendstoInDistribution_evalPi_jumpPathD` und
+`tendstoInDistribution_eval_jumpPathD` —, quantifizieren aus demselben Grund
+bereits über pfadraumwertige Größen. Die Hypothese steht damit dort, wo die Kette
+sie liest.
+
+`CompactContainment` bleibt trotzdem die **Instanz bei festem `n`**
+(`UniformCompactContainment.compactContainment`), und zwar wörtlich: die
+Definition ist Zeichen für Zeichen die von `CompactContainment` — reelles
+Niveau, `1 - ε`, einseitiges Fenster längs `D` — mit der einen Änderung, um die
+es geht.
+
+> Der ganze Inhalt der gleichmäßigen Fassung ist die **Reihenfolge der
+> Quantoren**: `∃ K, ∀ n` statt `∀ n, ∃ K`.
+
+#### Der Befund, und er stand in keinem Vorschlag: die Übersetzung ist eine Äquivalenz
+
+Der Auftrag verlangte nur den Weg von der gleichmäßigen Fassung zu
+`SkorokhodSpace.IsCompactContained`. Die Gegenrichtung ist im selben Lauf
+mitbewiesen, und sie ist **billiger als die Hinrichtung**, weil sie ohne
+Dichtheit auskommt:
+
+> `uniformCompactContainment_iff_isCompactContained_map` — unter `Dense D` und
+> Meßbarkeit der `X n` sind die gleichmäßige Fassung dieser Datei und die
+> Pfadraumfassung des Kriteriums **dieselbe Bedingung**.
+
+Das ist die ehrliche Gestalt der Übersetzung. Ohne die Rückrichtung stünde da
+eine hinreichende Bedingung, und ein Leser müßte glauben, daß nichts verschenkt
+wird; mit ihr ist es nachgewiesen. Sie kostet eine Halbierung des Niveaus und
+eine Deckelung unter `1` — `CompactContainment` verlangt eine **strikte**
+Ungleichung, die Pfadraumfassung gibt eine schwache —, und sonst nichts.
+
+Zusammen mit `SkorokhodSpace.isCompactContained_of_isTightMeasureSet` des
+Vorlaufs heißt das: die gleichmäßige Fassung folgt aus der Straffheit, die das
+Kriterium schließt. Sie ist also an keiner Stelle eine Verschärfung.
+
+#### Der zweite Befund: die Fensterfrage hängt am rechten Endpunkt, nicht am Index
+
+Der Vorlauf hatte den Fensterübergang `Set.Iic T ∩ D → exhaustion 0 m` als
+Indexfrage geführt und mit
+`SkorokhodSpace.preimage_extendNNReal_setOf_forall_mem_exhaustion` erledigt. Das
+ist richtig für den Übergang `ℝ≥0 → ℝ`. Was dabei **nicht** erledigt war und
+diesen Lauf aufgehalten hat, ist der Übergang von `D` auf alle Zeiten:
+
+> **Ein Pfad, der längs einer dichten Menge in einem abgeschlossenen `K` bleibt,
+> bleibt darin auf dem **halboffenen** Fenster — am **rechten Endpunkt** eines
+> abgeschlossenen aber nicht.** An ihn kommt von rechts nichts heran, was noch im
+> Fenster liegt.
+
+`SkorokhodSpace.forall_mem_Icc_of_forall_mem_dense` des dreiundzwanzigsten Laufs
+trägt dafür die Voraussetzung `hb : a ≤ b → f b ∈ K`, und **der Verbraucher hier
+kann sie nicht bezahlen**: der Wert am rechten Endpunkt ist gerade das, was eine
+dichte Menge nicht erreicht. Die Antwort ist nicht, `hb` zu erzwingen, sondern
+das Fenster zu vergrößern:
+
+* `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` — die **halboffene** Fassung
+  ist die primitive; auf `Set.Ico a b` hat jeder Punkt Fensterpunkte echt rechts
+  von sich, und `hb` verschwindet ersatzlos. Die abgeschlossene Fassung steht
+  jetzt in drei Zeilen darüber, mit derselben Signatur wie zuvor.
+* Der Beweis in Meilenstein 11 wendet die gleichmäßige Hypothese am Horizont
+  `m + 1` an und liest `[0, m]` im halboffenen `[0, m+1)`. **Die Vergrößerung ist
+  umsonst**, weil die Hypothese über alle Horizonte quantifiziert ist.
+
+Beide Fassungen stehen jetzt über einem **beliebigen dicht geordneten** Index
+statt über `ℝ`. Das ist keine Verallgemeinerung auf Verdacht: die beiden
+Verbraucher sind über `ℝ` (die Meßbarkeit des Fensters) und über `ℝ≥0` (dieser
+Lauf), und im Beweis kommt der Index nur über `closure_Ioo`,
+`Dense.open_subset_closure_inter` und `IsRightContinuous` vor, die alle nichts
+von `ℝ` wissen.
+
+#### Wo die Meßbarkeit sitzt, und wo sie ausdrücklich nicht verlangt wird
+
+Der Vorlauf hatte festgehalten, daß compact containment als einzige Aussage
+seines Meilensteins die Meßbarkeit der Fenstermenge braucht, weil eine Schranke
+**zurück** wandert. Dieser Lauf ist der Verbraucher davon, und die Buchführung
+ist es wert, benannt zu werden:
+
+* `SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion_nnreal` — die
+  `ℝ≥0`-Fassung, die aus der `ℝ`-Fassung über die Urbildgleichheit fällt und
+  nichts zweimal beweist. Beide Richtungen des Laufs gehen über
+  `MeasureTheory.Measure.map_apply` und verlangen sie.
+* **Die Menge `{ω | ∀ t ∈ Set.Iic T ∩ D, X n ω t ∈ K}` ist dagegen nirgends als
+  meßbar behauptet**, und sie wird auch nicht so benutzt: sie wird nur von oben
+  durch das meßbare Urbild des Fensters abgeschätzt, und das Komplement wird von
+  *diesem* genommen. Der erste Entwurf des Beweises hatte `P n Sᶜ ≤ 1 - P n S`
+  benutzt — das ist für eine nicht meßbare Menge **falsch**, weil das äußere Maß
+  subadditiv und nicht superadditiv ist, und der Beweis ist daran gescheitert,
+  ehe er stand. Das ist dieselbe Falle, vor der der Doc-Kommentar von
+  `CompactContainment.ae_exists_isCompact` seit dem 2026-09-07 warnt.
+* `mem_exhaustion_zero_nnreal_iff` — über `ℝ≥0` ist das Fenster am Basispunkt
+  `Set.Iic`; die Kugel hat keine negative Hälfte zu erreichen.
+
+#### Die Leerheitsprobe, an der Stelle, an der sie diesmal etwas sagt
+
+`uniformCompactContainment_of_forall_map_eq`: eine Familie, deren Glieder alle
+**dasselbe** Gesetz haben, hat die Bedingung umsonst — über die Rückrichtung und
+`SkorokhodSpace.isCompactContained_const`. Ein einzelner Prozeß fällt also nie
+durch. Was die Bedingung ausschließt, ist allein das Entweichen der Masse **längs
+des Index**, und damit sitzt sie genau dort, wo der Vorlauf sie für die
+Pfadraumfassung schon lokalisiert hatte.
+
+#### Geprüft
+
+* `scripts/check_master.py`: rc 0, **0 Fehler**, 0 `sorry`, 0 veraltet,
+  Warnungen 18 / 35 / 106 — **unverändert** gegenüber dem Vorlauf. Mathlib
+  `94ef6b89544e58e90f119da869f3fb48d1da0f4c` (2026-09-18), Lean 4.35.0-rc2.
+  Die beiden neuen `unusedSectionVars`, die der erste Durchlauf hinterließ, sind
+  durch `omit`-Zeilen an den beiden betroffenen Deklarationen beseitigt und nicht
+  durch Wegsehen; im Fall von `SkorokhodSpace` waren es `[AdditiveDist ι]`,
+  `[ProperSpace ι]`, `[BasePoint ι]`, die die Verallgemeinerung des Index
+  überflüssig gemacht hat.
+* `scripts/check_axioms_master.py` auf alle neun neuen und geänderten
+  Deklarationen: `propext`, `Classical.choice`, `Quot.sound`, ohne Ausnahme.
+* `scripts/check_duplicates.py`: 2 446 geprüfte eigene Deklarationen (neun mehr),
+  37 Treffer auf dem letzten Namensbestandteil — **unverändert**, also kollidiert
+  kein neuer Name.
+* `scripts/check_negatives.py`: 43 Behauptungen, 0 mit unerwarteten Treffern.
+* `scripts/extract_citations.py`, `scripts/check_cited_lines.py`: **304**
+  gepaarte Fundstellen (eine mehr), 0 verschoben, 0 tot.
+* Die neu benutzten Mathlib-Namen sind am Quelltext des gebundenen Commits
+  belegt: `closure_Ioo` (`Mathlib/Topology/Order/DenselyOrdered.lean:74`, über
+  `[LinearOrder] [OrderTopology] [DenselyOrdered]` und damit über `ℝ≥0`),
+  `MeasurableSet.preimage` (`Mathlib/MeasureTheory/MeasurableSpace/Basic.lean:312`),
+  `tsub_le_iff_right` (`Mathlib/Algebra/Order/Sub/Defs.lean:63`),
+  `MeasureTheory.prob_compl_eq_one_sub`, `ENNReal.toReal_sub_of_le`, `Nat.le_ceil`.
+  Zwei Namen, die ein früherer Lauf aus dem Gedächtnis genommen hätte, gibt es
+  auf `master` **nicht**: `ENNReal.sub_le_iff_le_add` (es ist `tsub_le_iff_right`)
+  und `isProbabilityMeasure_map` — letzteres ist überflüssig geworden, weil
+  `IsProbabilityMeasure (Measure.map f μ)` seit `Probability.lean:124` eine
+  **Instanz ohne Meßbarkeitsvoraussetzung** ist.
+
+#### Eingetragen
+
+* `MartingaleProblems/Suggested.lean`: neuer Abschnitt „Milestone 11: compact
+  containment of a family, and its path space form" am Ende, fünf Deklarationen.
+* `SkorokhodSpace/Suggested.lean`, Meilenstein 9:
+  `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` (neu),
+  `SkorokhodSpace.forall_mem_Icc_of_forall_mem_dense` (über `ι` verallgemeinert
+  und aus der ersten hergeleitet), `mem_exhaustion_zero_nnreal_iff` und
+  `SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion_nnreal` (neu).
+* `MartingaleProblems/README.md`, Meilenstein 11, an der Stelle, die der Vorlauf
+  für diesen Punkt offengelassen hatte.
+* `SkorokhodSpace/README.md`, Meilenstein 9, vor dem Akzeptanzbeispiel.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`isTight_map_postcomp_of_exists_martingale`**, die erste eigentliche Aussage
+   des Meilensteins 11. Sie ist Vorschlag 2 des Vorlaufs und Vorschlag 1 des
+   Vorvorlaufs, unverändert in der Sache — und sie ist jetzt an **keiner**
+   Eingabe aus `SkorokhodSpace` mehr aufgehalten und an keiner Übersetzung mehr.
+
+   *Worauf sie ruht:* auf
+   `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal` (Meilenstein 9
+   dort, 2026-09-19), dessen Hypothese dieser Lauf liefert, und auf den
+   stetigzeitlichen Doob-Ungleichungen des Meilensteins 9 von
+   `MartingaleProblems`, die sie ausdrücklich verbraucht und die **fehlen**.
+
+   *Woran es daher klemmt, und es ist zu prüfen und nicht zu vermuten:* die
+   Definition der Approximierbarkeit im Meilenstein verlangt
+   `𝔼[⨆ t ∈ Set.Iic T ∩ D, |Y n t - f (X n t)|] < ε` — ein Supremum über eine
+   Zeitmenge unter dem Erwartungswert, also genau die Größe, die Doobs
+   Maximalungleichung in stetiger Zeit abschätzt. Der erste Schritt eines Laufs
+   an diesem Punkt ist deshalb nicht der Satz, sondern die Frage, ob die
+   Abzählbarkeit von `D` das Supremum schon meßbar macht und ob Mathlibs
+   Maximalungleichung über einem **diskreten** Index sich längs `D` darüber
+   ziehen läßt — das ist dieselbe Frage, an der Meilenstein 9 hängt (dort für
+   die Aufkreuzungen statt für das Maximum), und sie einmal zu beantworten
+   entlastet beide.
+2. **Die gleichmäßige Fassung an Daten vorführen**, und zwar an den Daten, die
+   der Meilenstein ohnehin hat: `jumpPathD` für eine Folge von Sprungprozessen
+   mit gemeinsam beschränkter Rate. `uniformCompactContainment_of_forall_map_eq`
+   zeigt die Bedingung nur für eine **konstante** Familie, also gerade für den
+   Fall, in dem die Gleichmäßigkeit nichts fordert. Ein Zeuge mit wirklich
+   verschiedenen Gliedern fehlt, und ohne ihn ist nicht vorgeführt, daß die
+   Bedingung an einer nichttrivialen Approximationsfolge erfüllbar ist.
+
+   *Worauf er ruht:* auf `jumpPathD`, auf `ae_mem_nonExplosiveE` für beschränkte
+   Raten und auf einem Zustandsraum, in dem die erreichbare Menge kompakt ist —
+   der billigste Fall ist `E` selbst kompakt, wo jede Familie die Bedingung mit
+   `K = Set.univ` erfüllt, und der ist als Probe zu schwach. Der erste
+   nichttriviale ist der Poissonprozeß auf `ℕ`, wo `K = Set.Icc 0 N` mit `N` aus
+   der Markovungleichung an `𝔼[X T] = λT` kommt, **gleichmäßig in `n`**, sobald
+   die Raten gleichmäßig beschränkt sind. Das ist eine Rechnung und keine
+   Theorie, und sie prüft die Definition dort, wo sie etwas behauptet.

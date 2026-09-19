@@ -10715,16 +10715,57 @@ about the index. What a run at Milestone 11 now holds:
   `SkorokhodSpace.isCompactContained_const` shows it is free for one law repeated,
   which locates the condition where it belongs, in the uniformity in `n`.
 
-**What is therefore left to this milestone at that point is the translation of
-`CompactContainment` itself**, and it is the fourth difference and no longer the
-first three: a family `X n` of processes over `ℝ≥0`, each satisfying
+**The translation of `CompactContainment` itself is the fourth difference, and it
+is done, 2026-09-19.** A family `X n` of processes over `ℝ≥0`, each satisfying
 `CompactContainment` with its own compact sets, does **not** give
 `SkorokhodSpace.IsCompactContained` of the family of path laws — the compact set
-has to be chosen once for all `n`. The item that states this is therefore a
-*uniform* hypothesis on the family, `CompactContainment` being its instance at a
-single `n`, and the path laws enter through the path map; over the one sided
-window of `CompactContainment` the two agree, the negative half of the two sided
-window being answered by the time `0`.
+has to be chosen once for all `n`. What stands:
+
+* `UniformCompactContainment` — the hypothesis, kept **verbatim from
+  `CompactContainment`** except for the quantifier order, so that
+  `UniformCompactContainment.compactContainment` is the instance at a single `n`
+  and not a second translation. It is `∃ K, ∀ n` where `CompactContainment` at
+  each `n` is `∀ n, ∃ K`, and that is its whole content.
+* It is stated about **path space valued variables**
+  `X : (n : γ) → Ω n → D(ℝ≥0, E)` and not about processes `ι → Ω n → E`, and the
+  reason is measured rather than aesthetic: this file has no general path map of
+  a process into `D(ℝ≥0, E)` and cannot have a **total** one — a process with
+  only almost surely càdlàg paths needs a value on the exceptional set, which is
+  why `jumpPathD` puts `SkorokhodSpace.const` there. The two statements of
+  Milestone 6 that this milestone consumes,
+  `tendstoInDistribution_evalPi_jumpPathD` and
+  `tendstoInDistribution_eval_jumpPathD`, already quantify over path space valued
+  variables for the same reason; the hypothesis is stated where the chain reads
+  it.
+* `isCompactContained_map_of_uniformCompactContainment` — the passage to
+  `SkorokhodSpace.IsCompactContained` of the image laws. It spends exactly two
+  things and both are named: `Dense D`, which buys the times of the window
+  outside `D`, and the measurability of `X n`, which carries the bound to the
+  image law by `MeasureTheory.Measure.map_apply` at the window set — measurable
+  by `SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion_nnreal`. The set
+  `{ω | ∀ t ∈ Set.Iic T ∩ D, X n ω t ∈ K}` is **not** asserted measurable and is
+  not used as if it were: it is only bounded above by the measurable preimage of
+  the window.
+* **The window is bought at a horizon one unit longer**, and that is the shape of
+  the argument rather than a convenience. The value at the right endpoint of a
+  closed window is what a dense set does not reach, so the closed form of the
+  dense window lemma cannot be used; the uniform hypothesis is applied at `m + 1`
+  and `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` reads `[0, m]` inside
+  the half open `[0, m+1)`. The enlargement is free because the hypothesis is
+  quantified over all horizons.
+* `uniformCompactContainment_of_isCompactContained_map` and
+  `uniformCompactContainment_iff_isCompactContained_map` — the converse, for any
+  `D` whatever and **without density**, and hence the equivalence. This is what
+  says the uniform hypothesis is the right one and not merely a sufficient one:
+  it is the hypothesis the criterion carries, in the shape a consumer of this
+  file can discharge. The level is halved and capped below `1` because
+  `CompactContainment` asks a strict inequality where the path space form gives a
+  weak one.
+* `uniformCompactContainment_of_forall_map_eq` — the emptiness test, and it
+  locates the condition: a family all of whose members have the **same** law has
+  the hypothesis for nothing, by `SkorokhodSpace.isCompactContained_const`. A
+  single process never fails it; what the hypothesis excludes is the escape of
+  mass **along the index**.
 
 * `mpSolution_of_tendsto_cadlag`: let `A ⊆ Cb(E) × Cb(E)` and let `A n` be
   relations between bounded measurable functions such that for every `(f,g) ∈ A`

@@ -38422,3 +38422,207 @@ theorem mpSolution_of_tendsto_map_jumpPath_cylinders [MeasurableEq E] {lam : E �
   by_cases hx : x ∈ A <;> simp [hx]
 
 end ConvergenceProbe
+
+/-! ### Milestone 11: compact containment of a family, and its path space form
+
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal` -- the criterion every item of
+Milestone 11 reads -- carries `SkorokhodSpace.IsCompactContained` as a hypothesis, and that is a
+predicate on a **family of laws on the path space**.  What this file has is `CompactContainment`,
+a predicate on **one process** under **one** measure, over the one sided window `Set.Iic T ∩ D`
+and with a real level.  The twenty-third run of 2026-09-19 settled three of the four differences
+inside **SkorokhodSpace** -- the complement against `1 -`, `ℝ≥0∞` against `ℝ`, and the two sided
+window against the one sided one, the last by
+`SkorokhodSpace.preimage_extendNNReal_setOf_forall_mem_exhaustion`, which is an equality of sets.
+The fourth is left here and is not translation: **the compact set has to be chosen once for the
+whole family**, and `CompactContainment` cannot say that, being about one process.
+
+This section states the uniform hypothesis, `UniformCompactContainment`, and derives the path
+space form from it.  Three decisions, and each is against a shape that looked equally natural.
+
+* It is stated about **path space valued variables** `X : (n : γ) → Ω n → D(ℝ≥0, E)` and not
+  about processes `ι → Ω n → E`.  The reason is measured and not aesthetic: this file has **no**
+  general path map of a process into `D(ℝ≥0, E)` and cannot have a total one -- a process with
+  only almost surely càdlàg paths needs a value on the exceptional set, which is why `jumpPathD`
+  puts `SkorokhodSpace.const` there.  The two statements of the previous section that Milestone
+  11 consumes, `tendstoInDistribution_evalPi_jumpPathD` and `tendstoInDistribution_eval_jumpPathD`,
+  already quantify over path space valued variables for the same reason; the hypothesis is stated
+  where the chain reads it.
+* Everything else is kept **verbatim from `CompactContainment`** -- the real level, the `1 -`, the
+  one sided window along `D` -- so that `UniformCompactContainment.compactContainment` is the
+  instance at a single `n` and not a second translation.
+* The passage to `SkorokhodSpace.IsCompactContained` asks `Dense D`, and asks it **only in that
+  direction**.  It is what buys the times of the window that lie outside `D`, and it is bought at
+  a window one unit longer: the closed window `[0, m]` sits inside the half open `[0, m+1)`, where
+  every time has points of `D` strictly to its right and no endpoint has to be read separately.
+  That is `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense`, and the enlargement is free because
+  compact containment is quantified over all horizons.
+
+And the two are **equivalent**, which is the honest form of the translation: the uniform
+hypothesis is not stronger than the path space one, so nothing is given away by stating it in the
+shape a consumer of this file can discharge. -/
+
+section UniformCompactContainment
+
+variable {E : Type*} [MetricSpace E] [MeasurableSpace E] [BorelSpace E] [PolishSpace E]
+variable {γ : Type*} {Ω : γ → Type*} {mΩ : ∀ n, MeasurableSpace (Ω n)}
+
+/-- **Compact containment, uniformly in the index.**  For every level and every horizon there is
+**one** compact set of the value space that every member of the family meets along the window with
+probability more than `1 - ε`.
+
+The quantifier order is the whole content: `∃ K, ∀ n` and not `∀ n, ∃ K`.  The second is
+`CompactContainment` at each `n` separately, and it does not give tightness -- the constant paths
+at height `n` satisfy it and are not tight. -/
+def UniformCompactContainment (X : (n : γ) → Ω n → D(ℝ≥0, E)) (P : (n : γ) → Measure (Ω n))
+    (D : Set ℝ≥0) : Prop :=
+  ∀ ε : ℝ, 0 < ε → ∀ T : ℝ≥0, ∃ K : Set E, IsCompact K ∧ ∀ n,
+    1 - ε < (P n {ω | ∀ t ∈ Set.Iic T ∩ D, (X n ω).toFun t ∈ K}).toReal
+
+variable {P : (n : γ) → Measure (Ω n)} {X : (n : γ) → Ω n → D(ℝ≥0, E)} {D : Set ℝ≥0}
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **`CompactContainment` is the instance at a single index**, and by construction: the two
+statements differ only in where the compact set is quantified.  This is what makes the uniform
+hypothesis readable for a consumer who has the one process version. -/
+theorem UniformCompactContainment.compactContainment (h : UniformCompactContainment X P D)
+    (n : γ) :
+    CompactContainment (fun (t : ℝ≥0) (ω : Ω n) => (X n ω).toFun t) (P n) D := by
+  intro ε hε T
+  obtain ⟨K, hK, hKle⟩ := h ε hε T
+  exact ⟨K, hK, hKle n⟩
+
+/-- **The path space form of the uniform hypothesis**, and the statement Milestone 11 hands to
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal`.
+
+Two things are spent and named.  `Dense D` carries the window from `D` to all of it, along the
+half open enlargement `[0, m+1)` -- `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense`, whose
+hypothesis is bought by applying the uniform hypothesis at the horizon `m + 1`.  And the
+measurability of `X n` carries the bound from the sample space to the image law: that is
+`MeasureTheory.Measure.map_apply` at the window set, which is measurable by
+`SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion_nnreal` because a compact set in a
+metric space is closed.
+
+The set `{ω | ∀ t ∈ Set.Iic T ∩ D, X n ω t ∈ K}` is **not** asserted measurable, and is not used
+as if it were: it is only ever bounded from above by the measurable preimage of the window, and
+the complement is taken of that one. -/
+theorem isCompactContained_map_of_uniformCompactContainment [CompleteSpace E]
+    [∀ n, IsProbabilityMeasure (P n)] (hD : Dense D) (hXm : ∀ n, Measurable (X n))
+    (h : UniformCompactContainment X P D) :
+    SkorokhodSpace.IsCompactContained (0 : ℝ≥0) (fun n => (P n).map (X n)) := by
+  intro ε hε m
+  obtain ⟨r, hr, hrle⟩ : ∃ r : ℝ, 0 < r ∧ ENNReal.ofReal r ≤ ε := by
+    rcases eq_or_ne ε ⊤ with rfl | hne
+    · exact ⟨1, one_pos, le_top⟩
+    · exact ⟨ε.toReal, ENNReal.toReal_pos hε.ne' hne, by rw [ENNReal.ofReal_toReal hne]⟩
+  obtain ⟨K, hK, hKle⟩ := h r hr ((m : ℝ≥0) + 1)
+  refine ⟨K, hK, fun n => ?_⟩
+  set W : Set D(ℝ≥0, E) :=
+    {f : D(ℝ≥0, E) | ∀ t ∈ exhaustion (0 : ℝ≥0) (m : ℝ), f.toFun t ∈ K} with hW
+  set S : Set (Ω n) :=
+    {ω | ∀ t ∈ Set.Iic ((m : ℝ≥0) + 1) ∩ D, (X n ω).toFun t ∈ K} with hS
+  have hWm : MeasurableSet W :=
+    SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion_nnreal hK.isClosed _
+  have hSW : S ⊆ (X n) ⁻¹' W := by
+    intro ω hω
+    have hmem : ∀ t ∈ Set.Ico (0 : ℝ≥0) ((m : ℝ≥0) + 1) ∩ D, (X n ω).toFun t ∈ K := by
+      rintro t ⟨ht, htD⟩
+      exact hω t ⟨ht.2.le, htD⟩
+    have hall := SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense hK.isClosed hD
+      (X n ω).isCadlag.isRightContinuous hmem
+    intro t ht
+    refine hall t ⟨zero_le, ?_⟩
+    have ht' : t ≤ (m : ℝ≥0) := by
+      have hiff := mem_exhaustion_zero_nnreal_iff (u := (m : ℝ≥0)) (t := t)
+      simp only [NNReal.coe_natCast] at hiff
+      exact hiff.1 ht
+    exact lt_of_le_of_lt ht' (lt_add_one _)
+  have hstep : ((P n).map (X n)) Wᶜ ≤ 1 - (P n) S := by
+    rw [Measure.map_apply (hXm n) hWm.compl, Set.preimage_compl,
+      prob_compl_eq_one_sub (hWm.preimage (hXm n))]
+    exact tsub_le_tsub_left (measure_mono hSW) 1
+  refine hstep.trans (le_trans ?_ hrle)
+  have hPS : (P n) S ≠ ⊤ := measure_ne_top _ _
+  rw [tsub_le_iff_right]
+  have hreal : (1 : ℝ) ≤ r + ((P n) S).toReal := by
+    have hn := hKle n
+    simp only [← hS] at hn
+    linarith
+  calc (1 : ENNReal) = ENNReal.ofReal 1 := by simp
+    _ ≤ ENNReal.ofReal (r + ((P n) S).toReal) := ENNReal.ofReal_le_ofReal hreal
+    _ = ENNReal.ofReal r + (P n) S := by
+        rw [ENNReal.ofReal_add hr.le ENNReal.toReal_nonneg, ENNReal.ofReal_toReal hPS]
+
+/-- **And back**, for any `D` whatever and without density: the window at radius `⌈T⌉₊` contains
+`Set.Iic T`, so the path space bound is already a bound along `D`.  The level is halved, and
+capped below `1`, because `CompactContainment` asks a **strict** inequality and the path space
+form gives a weak one.
+
+This is what says the uniform hypothesis is the right one and not merely a sufficient one: it is
+equivalent to the hypothesis the criterion carries. -/
+theorem uniformCompactContainment_of_isCompactContained_map [CompleteSpace E]
+    [∀ n, IsProbabilityMeasure (P n)] (hXm : ∀ n, Measurable (X n))
+    (h : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) (fun n => (P n).map (X n))) :
+    UniformCompactContainment X P D := by
+  intro ε hε T
+  set δ : ℝ := min (ε / 2) (1 / 2) with hδ
+  have hδpos : 0 < δ := lt_min (by linarith) (by norm_num)
+  have hδlt : δ < ε := lt_of_le_of_lt (min_le_left _ _) (by linarith)
+  have hδone : δ ≤ 1 := le_trans (min_le_right _ _) (by norm_num)
+  obtain ⟨K, hK, hKle⟩ := h (ENNReal.ofReal δ) (ENNReal.ofReal_pos.2 hδpos) ⌈(T : ℝ≥0)⌉₊
+  refine ⟨K, hK, fun n => ?_⟩
+  set W : Set D(ℝ≥0, E) :=
+    {f : D(ℝ≥0, E) | ∀ t ∈ exhaustion (0 : ℝ≥0) ((⌈(T : ℝ≥0)⌉₊ : ℕ) : ℝ), f.toFun t ∈ K} with hW
+  have hWm : MeasurableSet W :=
+    SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion_nnreal hK.isClosed _
+  have hWle : (1 : ENNReal) - ENNReal.ofReal δ ≤ ((P n).map (X n)) W := by
+    have hc : ((P n).map (X n)) Wᶜ = 1 - ((P n).map (X n)) W := prob_compl_eq_one_sub hWm
+    have hn := hKle n
+    rw [hc] at hn
+    rw [tsub_le_iff_right] at hn ⊢
+    rwa [add_comm] at hn
+  have hsub : (X n) ⁻¹' W ⊆ {ω | ∀ t ∈ Set.Iic T ∩ D, (X n ω).toFun t ∈ K} := by
+    intro ω hω t ht
+    refine hω t ?_
+    have hTm : T ≤ (⌈(T : ℝ≥0)⌉₊ : ℝ≥0) := Nat.le_ceil T
+    have htle : t ≤ ((⌈(T : ℝ≥0)⌉₊ : ℕ) : ℝ≥0) := le_trans ht.1 hTm
+    have h2 := (mem_exhaustion_zero_nnreal_iff
+      (u := ((⌈(T : ℝ≥0)⌉₊ : ℕ) : ℝ≥0)) (t := t)).2 htle
+    simpa only [NNReal.coe_natCast] using h2
+  have hmono : ((P n).map (X n)) W ≤ (P n) {ω | ∀ t ∈ Set.Iic T ∩ D, (X n ω).toFun t ∈ K} := by
+    rw [Measure.map_apply (hXm n) hWm]
+    exact measure_mono hsub
+  have hfin : (P n) {ω | ∀ t ∈ Set.Iic T ∩ D, (X n ω).toFun t ∈ K} ≠ ⊤ := measure_ne_top _ _
+  have hR := ENNReal.toReal_mono hfin (hWle.trans hmono)
+  rw [ENNReal.toReal_sub_of_le (by simpa using ENNReal.ofReal_le_one.2 hδone) (by simp),
+    ENNReal.toReal_ofReal hδpos.le, ENNReal.toReal_one] at hR
+  linarith
+
+/-- **The translation, as an equivalence.**  Under density of the time set and measurability of
+the variables the uniform hypothesis of this file and the path space hypothesis of the tightness
+criterion are the same condition. -/
+theorem uniformCompactContainment_iff_isCompactContained_map [CompleteSpace E]
+    [∀ n, IsProbabilityMeasure (P n)] (hD : Dense D) (hXm : ∀ n, Measurable (X n)) :
+    UniformCompactContainment X P D ↔
+      SkorokhodSpace.IsCompactContained (0 : ℝ≥0) (fun n => (P n).map (X n)) :=
+  ⟨isCompactContained_map_of_uniformCompactContainment hD hXm,
+    uniformCompactContainment_of_isCompactContained_map hXm⟩
+
+/-- **The emptiness test, and it locates the condition.**  A family whose members all have the
+**same** law has the uniform hypothesis for nothing -- one finite law on the Polish space
+`D(ℝ≥0, E)` is tight, which is `SkorokhodSpace.isCompactContained_const`.  So what the hypothesis
+excludes is not any particular process but the escape of mass **along the index**, and a single
+process never fails it.
+
+Nothing is asked of `D`: this direction is the one that needs no density. -/
+theorem uniformCompactContainment_of_forall_map_eq [CompleteSpace E] [Nonempty γ]
+    [∀ n, IsProbabilityMeasure (P n)] (hXm : ∀ n, Measurable (X n))
+    {ν : Measure D(ℝ≥0, E)} (hν : ∀ n, (P n).map (X n) = ν) :
+    UniformCompactContainment X P D := by
+  have hprob : IsProbabilityMeasure ν := by
+    rw [← hν Classical.ofNonempty]; infer_instance
+  refine uniformCompactContainment_of_isCompactContained_map hXm ?_
+  have hfun : (fun n => (P n).map (X n)) = fun _ : γ => ν := funext hν
+  rw [hfun]
+  exact SkorokhodSpace.isCompactContained_const ν
+
+end UniformCompactContainment

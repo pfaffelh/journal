@@ -18294,43 +18294,64 @@ uncountable intersection of coordinate conditions -- and it is
 that a càdlàg path on a window is determined there by a countable dense set
 together with the right endpoint. -/
 
-omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+omit [AdditiveDist ι] [ProperSpace ι] [BasePoint ι] [MeasurableSpace E] [BorelSpace E]
+  [PolishSpace E] in
 /-- **A right continuous path that stays in a closed set along a dense subset of
-a window stays in it on the whole window** -- with the right endpoint of the
-window read separately, and necessarily so: nothing approaches `b` from the
-right *inside* `[a, b]`.
+a window stays in it on the whole window**, in the half open form -- which is the
+primitive one, because on `Set.Ico a b` every point has points of the window
+strictly to its right and no endpoint has to be read separately.
 
 The one sided limit is taken along `S ∩ Set.Ioo t b`, and the filter is not
 trivial because `S` is dense and `Set.Ioo t b` is open and nonempty; that is
 `Dense.open_subset_closure_inter` together with `closure_Ioo`.  Only right
 continuity is used, so the statement holds for a càglàd function read backwards
-and for a continuous one without change. -/
-theorem SkorokhodSpace.forall_mem_Icc_of_forall_mem_dense
-    {K : Set E} (hK : IsClosed K) {S : Set ℝ} (hS : Dense S) {a b : ℝ}
-    {f : ℝ → E} (hf : IsRightContinuous f)
+and for a continuous one without change.
+
+The index is an arbitrary densely ordered one and not `ℝ`: the two consumers are
+over `ℝ` (the measurability of the window set below) and over `ℝ≥0` (the
+translation of compact containment in **MartingaleProblems** Milestone 11), and
+nothing in the proof knows which. -/
+theorem SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense [DenselyOrdered ι]
+    {K : Set E} (hK : IsClosed K) {S : Set ι} (hS : Dense S) {a b : ι}
+    {f : ι → E} (hf : IsRightContinuous f)
+    (hmem : ∀ t ∈ Set.Ico a b ∩ S, f t ∈ K) :
+    ∀ t ∈ Set.Ico a b, f t ∈ K := by
+  rintro t ⟨hat, htb⟩
+  have hsub : S ∩ Set.Ioo t b ⊆ Set.Ico a b ∩ S := by
+    rintro x ⟨hxS, hxt, hxb⟩
+    exact ⟨⟨hat.trans hxt.le, hxb⟩, hxS⟩
+  have hcl : t ∈ closure (S ∩ Set.Ioo t b) := by
+    have h1 : Set.Ioo t b ⊆ closure (Set.Ioo t b ∩ S) :=
+      hS.open_subset_closure_inter isOpen_Ioo
+    have h2 : closure (Set.Ioo t b) ⊆ closure (S ∩ Set.Ioo t b) := by
+      refine (closure_mono h1).trans ?_
+      rw [closure_closure, Set.inter_comm]
+    rw [closure_Ioo htb.ne] at h2
+    exact h2 ⟨le_rfl, htb.le⟩
+  have hne : (𝓝[S ∩ Set.Ioo t b] t).NeBot :=
+    (mem_closure_iff_nhdsWithin_neBot (s := S ∩ Set.Ioo t b) (x := t)).1 hcl
+  have hmono : S ∩ Set.Ioo t b ⊆ Set.Ioi t := by rintro x ⟨-, hxt, -⟩; exact hxt
+  have htend : Tendsto f (𝓝[S ∩ Set.Ioo t b] t) (𝓝 (f t)) :=
+    (hf t : Tendsto f (𝓝[Set.Ioi t] t) (𝓝 (f t))).mono_left (nhdsWithin_mono t hmono)
+  refine hK.mem_of_tendsto htend ?_
+  filter_upwards [self_mem_nhdsWithin] with x hx using hmem x (hsub hx)
+
+omit [AdditiveDist ι] [ProperSpace ι] [BasePoint ι] [MeasurableSpace E] [BorelSpace E]
+  [PolishSpace E] in
+/-- **The same on the closed window** -- with the right endpoint read separately,
+and necessarily so: nothing approaches `b` from the right *inside* `[a, b]`.  The
+hypothesis `hb` is where that is paid for, and a consumer that cannot pay it
+enlarges the window instead and uses the half open form above. -/
+theorem SkorokhodSpace.forall_mem_Icc_of_forall_mem_dense [DenselyOrdered ι]
+    {K : Set E} (hK : IsClosed K) {S : Set ι} (hS : Dense S) {a b : ι}
+    {f : ι → E} (hf : IsRightContinuous f)
     (hmem : ∀ t ∈ Set.Icc a b ∩ S, f t ∈ K) (hb : a ≤ b → f b ∈ K) :
     ∀ t ∈ Set.Icc a b, f t ∈ K := by
   rintro t ⟨hat, htb⟩
   rcases eq_or_lt_of_le htb with rfl | htb'
   · exact hb hat
-  · have hsub : S ∩ Set.Ioo t b ⊆ Set.Icc a b ∩ S := by
-      rintro x ⟨hxS, hxt, hxb⟩
-      exact ⟨⟨hat.trans hxt.le, hxb.le⟩, hxS⟩
-    have hcl : t ∈ closure (S ∩ Set.Ioo t b) := by
-      have h1 : Set.Ioo t b ⊆ closure (Set.Ioo t b ∩ S) :=
-        hS.open_subset_closure_inter isOpen_Ioo
-      have h2 : closure (Set.Ioo t b) ⊆ closure (S ∩ Set.Ioo t b) := by
-        refine (closure_mono h1).trans ?_
-        rw [closure_closure, Set.inter_comm]
-      rw [closure_Ioo htb'.ne] at h2
-      exact h2 ⟨le_rfl, htb⟩
-    have hne : (𝓝[S ∩ Set.Ioo t b] t).NeBot :=
-      (mem_closure_iff_nhdsWithin_neBot (s := S ∩ Set.Ioo t b) (x := t)).1 hcl
-    have hmono : S ∩ Set.Ioo t b ⊆ Set.Ioi t := by rintro x ⟨-, hxt, -⟩; exact hxt
-    have htend : Tendsto f (𝓝[S ∩ Set.Ioo t b] t) (𝓝 (f t)) :=
-      (hf t : Tendsto f (𝓝[Set.Ioi t] t) (𝓝 (f t))).mono_left (nhdsWithin_mono t hmono)
-    refine hK.mem_of_tendsto htend ?_
-    filter_upwards [self_mem_nhdsWithin] with x hx using hmem x (hsub hx)
+  · exact SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense hK hS hf
+      (fun x hx => hmem x ⟨Set.Ico_subset_Icc_self hx.1, hx.2⟩) t ⟨hat, htb'⟩
 
 /-- **The window set is measurable**, and this is what lets a bound on it be
 carried from a measure to a measure it is the image of.
@@ -18394,6 +18415,29 @@ theorem SkorokhodSpace.preimage_extendNNReal_setOf_forall_mem_exhaustion
       abs_of_nonneg (t.toNNReal).coe_nonneg, Real.coe_toNNReal']
     rw [Real.dist_eq, sub_zero] at ht
     exact max_le ((le_abs_self t).trans ht) hr
+
+/-- **Over `ℝ≥0` the window at the base point `0` is an initial segment.**  The
+ball has no negative half to reach, so `exhaustion 0 u` is `Set.Iic u` -- which
+is the form in which a process over `ℝ≥0` meets its window, and the shape in
+which **MartingaleProblems** Milestone 11 reads it. -/
+theorem mem_exhaustion_zero_nnreal_iff {u t : ℝ≥0} :
+    t ∈ exhaustion (0 : ℝ≥0) (u : ℝ) ↔ t ≤ u := by
+  simp [exhaustion, Metric.mem_closedBall, NNReal.dist_eq,
+    abs_of_nonneg t.coe_nonneg, ← NNReal.coe_le_coe]
+
+/-- **The window set over `ℝ≥0` is measurable**, and it is the crossed form of
+`SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion`: the identity above is
+an equality of sets, so the measurability travels along
+`SkorokhodSpace.extendNNReal` without anything being proved twice.  It is what
+lets a bound on the window be carried *back* from an image law to the law of the
+variable, which `MeasureTheory.Measure.map_apply` asks measurability for and
+`MeasureTheory.Measure.le_map_apply` does not supply. -/
+theorem SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion_nnreal [CompleteSpace E]
+    {K : Set E} (hK : IsClosed K) (u : ℝ) :
+    MeasurableSet {g : D(ℝ≥0, E) | ∀ s ∈ exhaustion (0 : ℝ≥0) u, g.toFun s ∈ K} := by
+  rw [← SkorokhodSpace.preimage_extendNNReal_setOf_forall_mem_exhaustion K u]
+  exact (SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion hK 0 u).preimage
+    SkorokhodSpace.isometry_extendNNReal.continuous.measurable
 
 /-- **Compact containment of a family of laws**, in the uniform path space form
 the tightness criterion asks for: for every level and every window there is one
