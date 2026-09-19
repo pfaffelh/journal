@@ -6903,6 +6903,16 @@ the answer is the strongest one available, and it is proved (2026-09-18):
   `Dense T` together with `(0 : ℝ≥0) ∈ T`, and each negative time is answered by
   the time `0` of `T`.
 
+  **The bridge in the form this milestone consumes it** is
+  `SkorokhodSpace.tendstoInDistribution_eval_of_isTight_of_tendsto_finiteDimensional_nnreal`
+  (**SkorokhodSpace** Milestone 9, proved 2026-09-19): path valued variables on
+  `D(ℝ≥0, E)`, tight laws, finite dimensional distributions converging along a
+  dense `T ∋ 0`, and out comes convergence in distribution of the value at every
+  nonnegative time the limit law does not charge with a jump. The evaluation
+  step of that chain, `SkorokhodSpace.tendstoInDistribution_eval`, is stated over
+  an arbitrary index and needed no crossing at all; the crossing is spent on the
+  compactness criterion beneath it.
+
 * `jumpFiltrationE_eq_comap_jumpPath` and `measurable_pathFiltration_jumpPath`:
   the natural filtration of the construction **is** the pull back of
   `pathFiltration` along `jumpPath`, by `naturalFiltration_comp`, so the path map
