@@ -15203,6 +15203,47 @@ theorem SkorokhodSpace.min_edist_postcomp_clipDist (f : D(ι, E)) (t₁ t t₂ :
   rw [h₁, h₂, inf_inf_inf_comm, min_self]
 
 omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **One displacement, one centre**, and this is the estimate both the three
+point quantity and the boundary term rest on.  A test function `h` uniformly
+within `ρ` of the clipped distance to a point `x` that is itself within `ρ` of
+the reference value `b` reports the displacement `dist a b`, capped at `1`, to
+within `4 * ρ`.
+
+Two of the four `ρ` pay for the net --- the centre is not the reference value ---
+and two for the density of the class the test function comes from.
+
+**The test function is asked about at two points and not everywhere**, and that
+is what a consumer can supply: the class `H` of
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` is dense for uniform
+convergence **on compact sets**, so a bound valid at every point of `E` is not
+available, while a bound at the values of one path over one window is.  No
+positivity of `ρ` is asked either, and none is needed: a negative `ρ` only makes
+the hypotheses unsatisfiable.  `SkorokhodSpace.le_min_dist_of_dist_clipDist_le`
+is this statement spent twice at the same centre `b`, and
+`SkorokhodSpace.min_edist_le_edist_postcomp_add` with
+`SkorokhodSpace.min_edist_leftLim_le_edist_leftLim_postcomp_add` spend it once
+each at the two centres the boundary term has. -/
+theorem SkorokhodSpace.sub_le_dist_of_dist_clipDist_le {x a b : E} {ρ : ℝ}
+    {h : E → ℝ} (hha : dist (h a) (SkorokhodSpace.clipDist x a) ≤ ρ)
+    (hhb : dist (h b) (SkorokhodSpace.clipDist x b) ≤ ρ)
+    (hxb : dist b x ≤ ρ) :
+    min (dist a b) 1 - 4 * ρ ≤ dist (h a) (h b) := by
+  have hgb : SkorokhodSpace.clipDist x b ≤ ρ := le_trans (min_le_left _ _) hxb
+  have hgb0 : (0 : ℝ) ≤ SkorokhodSpace.clipDist x b := le_min dist_nonneg zero_le_one
+  have hga : min (dist a b) 1 - ρ ≤ SkorokhodSpace.clipDist x a := by
+    rw [SkorokhodSpace.clipDist_apply]
+    refine le_min ?_ (by linarith [min_le_right (dist a b) 1])
+    have htri := dist_triangle a x b
+    have hxb' : dist x b ≤ ρ := by rwa [dist_comm]
+    linarith [min_le_left (dist a b) 1]
+  have hu := hha
+  have hb := hhb
+  rw [Real.dist_eq, abs_le] at hu hb
+  rw [Real.dist_eq]
+  refine le_trans ?_ (le_abs_self _)
+  linarith [hu.1, hu.2, hb.1, hb.2]
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
 /-- **The dense class delivers, and the net costs `4 * ρ`.**  A function `h`
 uniformly within `ρ` of the clipped distance to a point `x` that is itself within
 `ρ` of the middle value `b` still sees both displacements of the triple `a, b, c`,
@@ -15213,39 +15254,36 @@ and two for the density of `H` in `E →ᵇ ℝ`.  Both are free to a consumer: 
 is a net of the compact set that compact containment supplies, and the density is
 a hypothesis of `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` itself.
 
+**The bound on `h` is asked at the three points of the triple and nowhere else**,
+2026-09-19.  That density is density for uniform convergence **on compact sets**,
+so `∀ y` --- which this statement asked until then --- is more than a consumer has;
+the three values of the triple lie in the compact set that compact containment
+supplies, and a bound there is what the class delivers.  The positivity of `ρ`
+went with it: it was never used.
+
 **This is what the refutations do not touch.**  They rule out a family that
 recovers the *metric* on the compact set; a net of clipped distances is more than
 that, and what it has in addition is exactly what the three point quantity reads:
 a function that vanishes near the middle value. -/
-theorem SkorokhodSpace.le_min_dist_of_dist_clipDist_le {x a b c : E} {ρ : ℝ} (hρ : 0 ≤ ρ)
-    {h : E → ℝ} (hh : ∀ y, dist (h y) (SkorokhodSpace.clipDist x y) ≤ ρ)
+theorem SkorokhodSpace.le_min_dist_of_dist_clipDist_le {x a b c : E} {ρ : ℝ}
+    {h : E → ℝ} (hha : dist (h a) (SkorokhodSpace.clipDist x a) ≤ ρ)
+    (hhb : dist (h b) (SkorokhodSpace.clipDist x b) ≤ ρ)
+    (hhc : dist (h c) (SkorokhodSpace.clipDist x c) ≤ ρ)
     (hxb : dist b x ≤ ρ) :
     min (min (dist b a) (dist c b)) 1 - 4 * ρ ≤ min (dist (h b) (h a)) (dist (h c) (h b)) := by
-  have hgb : SkorokhodSpace.clipDist x b ≤ ρ := le_trans (min_le_left _ _) hxb
-  have hgb0 : (0 : ℝ) ≤ SkorokhodSpace.clipDist x b := le_min dist_nonneg zero_le_one
-  have key : ∀ u : E, min (dist u b) 1 - 4 * ρ ≤ dist (h u) (h b) := by
-    intro u
-    have hgu : min (dist u b) 1 - ρ ≤ SkorokhodSpace.clipDist x u := by
-      rw [SkorokhodSpace.clipDist_apply]
-      refine le_min ?_ (by linarith [min_le_right (dist u b) 1])
-      have htri := dist_triangle u x b
-      have hxb' : dist x b ≤ ρ := by rwa [dist_comm]
-      linarith [min_le_left (dist u b) 1]
-    have hu := hh u
-    have hb := hh b
-    rw [Real.dist_eq, abs_le] at hu hb
-    rw [Real.dist_eq]
-    refine le_trans ?_ (le_abs_self _)
-    linarith [hu.1, hu.2, hb.1, hb.2]
+  have keya : min (dist a b) 1 - 4 * ρ ≤ dist (h a) (h b) :=
+    SkorokhodSpace.sub_le_dist_of_dist_clipDist_le hha hhb hxb
+  have keyc : min (dist c b) 1 - 4 * ρ ≤ dist (h c) (h b) :=
+    SkorokhodSpace.sub_le_dist_of_dist_clipDist_le hhc hhb hxb
   refine le_min ?_ ?_
   · have hmm : min (min (dist b a) (dist c b)) 1 ≤ min (dist a b) 1 := by
       rw [dist_comm a b]
       exact min_le_min (min_le_left _ _) le_rfl
     rw [dist_comm (h b) (h a)]
-    linarith [key a]
+    linarith [keya]
   · have hmm : min (min (dist b a) (dist c b)) 1 ≤ min (dist c b) 1 :=
       min_le_min (min_le_right _ _) le_rfl
-    linarith [key c]
+    linarith [keyc]
 
 omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
 /-- **A small oscillation on a `δ`-sparse subdivision makes the three point
@@ -15845,9 +15883,11 @@ limit there; both are read through `mem_nhdsGE_iff_exists_Ico_subset'`
 `mem_nhdsLT_iff_exists_Ioo_subset'` (`:214`), which turn a neighbourhood into the
 interval a supremum needs.
 
-**For a family this has to be required uniformly**, and then it is a hypothesis
-and not a formality: it says the paths of the family accumulate no displacement
-at the one time at which the subdivisions are pinned. -/
+**For a family the vanishing has to be uniform**, and it says something --- that
+the paths accumulate no displacement at the one time at which the subdivisions
+are pinned.  It is **not** a hypothesis the tightness criterion has to carry:
+`SkorokhodSpace.basePointOsc_le_three_mul_modulusBased` bounds the term by the
+modulus, and the modulus is what the criterion already controls. -/
 theorem SkorokhodSpace.tendsto_basePointOsc (t₀ : ℝ) (f : D(ℝ, E)) :
     Filter.Tendsto (SkorokhodSpace.basePointOsc t₀ f) (𝓝[>] (0 : ℝ)) (𝓝 0) := by
   rw [ENNReal.tendsto_nhds_zero]
@@ -16776,6 +16816,437 @@ theorem SkorokhodSpace.modulusBased_le_of_forall_min_edist_lt
   · refine Or.inr (Or.inr fun p hp => ?_)
     by_contra hcon
     exact hJ p (not_le.mp hcon) hp
+
+/-! ### The boundary term needs no hypothesis of its own
+
+`SkorokhodSpace.modulusBased_le_of_forall_min_edist_lt` closes link 1 of the
+chain at the price of the boundary term `SkorokhodSpace.basePointOsc`, and the
+question that price raised was whether the converse half of
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` has to *assume* that the
+term vanishes uniformly over the family.  It does not, and this section is the
+answer, in two statements that close the term from both sides.
+
+**From above it is the modulus itself.**
+`SkorokhodSpace.basePointOsc_le_three_mul_modulusBased` --- the boundary term at
+a window radius `m > 0` is at most three times the based modulus at the same
+`δ`.  The reason is that a based subdivision has the base point among its nodes
+and every gap longer than `δ`, so the cell beginning at `t₀` contains
+`Set.Ico t₀ (t₀ + δ)` entire and the cell ending there contains
+`Set.Ico (t₀ - δ) t₀` entire.  The factor is `3` and not `2` because the left
+cell measures from *its own* left endpoint while the term measures against
+`Function.leftLim f t₀`, which costs one triangle inequality; the left limit is
+reached by `le_of_tendsto` along `𝓝[<] t₀`, the cell being a neighbourhood of
+`t₀` from the left.
+
+The positivity of `m` is used and is not a blemish: at `m ≤ 0` the window is the
+single point `t₀`, a subdivision may then have `t₀` as its first or its last
+node, and one of the two cells does not exist.  A consumer reads the statement at
+`m + 1`.
+
+**From below it travels under post-composition**, and with the *same* test
+functions the three point quantity uses --- the clipped distances to the points
+of a net.  What the boundary term needs and the three point quantity does not is
+**two** centres, not one: its left half is measured against
+`Function.leftLim f t₀` and its right half against `f t₀`, and no single centre
+serves both.  Both are values the compact containment hypothesis supplies, the
+left limit lying in a compact set because a compact set is closed.
+
+`SkorokhodSpace.leftLim_postcomp` is what makes the left half readable at all:
+the left limit passes through post-composition with a continuous map, so the
+image path's own boundary term is what the estimate bounds.  It is
+`leftLim_eq_of_tendsto` (`Mathlib/Topology/Order/LeftRightLim.lean:65`) applied
+to `IsCadlag.tendsto_nhdsLT_leftLim` composed with the map.
+
+`SkorokhodSpace.sub_le_dist_of_dist_clipDist_le` is the one displacement estimate
+both halves rest on.  It is stated with link 2 above, where it is spent twice,
+having been the step proved inside
+`SkorokhodSpace.le_min_dist_of_dist_clipDist_le` until 2026-09-19: a test
+function uniformly within `ρ` of the clipped distance to a point within `ρ` of
+`b` reports the displacement from `b` to within `4 * ρ`, capped at `1`.  The
+three point quantity spends it twice at one centre; the boundary term spends it
+once at each of two.
+
+**The cap distributes over the supremum by the library's frame law.**
+`iSup₂_inf_eq` (`Mathlib/Order/CompleteBooleanAlgebra.lean:372`) applies to `min`
+on `ℝ≥0∞` with no intermediate step, `ℝ≥0∞` being a `CompletelyDistribLattice`
+through `CompleteLinearOrder.toCompletelyDistribLattice` (`:323`).  So the
+pointwise estimates become the two supremum estimates with no case distinction on
+whether the supremum exceeds the cap. -/
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **A based subdivision pays for the boundary term.**  Its cells at the base
+point are longer than `δ`, and one of them begins at `t₀` while the other ends
+there, so both halves of `SkorokhodSpace.basePointOsc` are read inside a single
+cell.
+
+The factor `3` splits as `1 + 2`: the right half is one cell oscillation, the
+left half two, because the term measures against `Function.leftLim f 0` and the
+cell measures from its own left endpoint.  That the left limit is within one
+oscillation of that endpoint is `le_of_tendsto` along `𝓝[<] 0`, the cell
+containing `Set.Ioo (t k'.castSucc) 0`.
+
+**`0 < m` is used.**  It is what puts the base point strictly inside the window
+and so gives it both a predecessor and a successor among the nodes; at `m ≤ 0`
+the base point may be the first or the last node and one of the two cells is
+absent. -/
+theorem SkorokhodSpace.basePointOsc_le_three_mul_subdivisionOsc
+    (f : D(ℝ, E)) {δ m : ℝ} (hm : 0 < m) {n : ℕ} {t : Fin (n + 1) → ℝ}
+    (ht : SkorokhodSpace.IsSubdivisionBased (0 : ℝ) m δ t) :
+    SkorokhodSpace.basePointOsc (0 : ℝ) f δ ≤ 3 * SkorokhodSpace.subdivisionOsc f t := by
+  obtain ⟨⟨hmono, hlo, hhi, hgap⟩, hmem⟩ := ht
+  rw [exhaustionMin_real, max_eq_left hm.le] at hlo
+  rw [exhaustionMax_real, max_eq_left hm.le] at hhi
+  obtain ⟨j, hj⟩ := hmem
+  have hjlast : (j : ℕ) < n := by
+    have h1 : t j < t (Fin.last n) := by rw [hj]; linarith
+    have h2 := hmono.lt_iff_lt.1 h1
+    simpa [Fin.lt_def, Fin.val_last] using h2
+  have hj0 : 0 < (j : ℕ) := by
+    have h1 : t 0 < t j := by rw [hj]; linarith
+    have h2 := hmono.lt_iff_lt.1 h1
+    simp only [Fin.lt_def, Fin.val_zero] at h2
+    exact h2
+  set k : Fin n := ⟨(j : ℕ), hjlast⟩ with hk
+  have hkc : k.castSucc = j := by
+    apply Fin.ext
+    simp only [hk, Fin.val_castSucc]
+  set k' : Fin n := ⟨(j : ℕ) - 1, by omega⟩ with hk'
+  have hks : k'.succ = j := by
+    apply Fin.ext
+    simp only [hk', Fin.val_succ]
+    omega
+  have hcell : ∀ i : Fin n, ∀ v ∈ Set.Ico (t i.castSucc) (t i.succ),
+      edist (f.toFun v) (f.toFun (t i.castSucc)) ≤ SkorokhodSpace.subdivisionOsc f t := by
+    intro i v hv
+    rw [SkorokhodSpace.subdivisionOsc]
+    exact le_iSup_of_le i (le_iSup₂_of_le v hv le_rfl)
+  have hsucc_pos : (0 : ℝ) < t k.succ := by
+    have h1 : t k.castSucc < t k.succ := hmono (Fin.castSucc_lt_succ (i := k))
+    rwa [hkc, hj] at h1
+  have hprev_neg : t k'.castSucc < 0 := by
+    have h1 : t k'.castSucc < t k'.succ := hmono (Fin.castSucc_lt_succ (i := k'))
+    rwa [hks, hj] at h1
+  have hδsucc : δ < t k.succ := by
+    have h2 := hgap k
+    rw [hkc, hj, Real.dist_eq, abs_of_nonpos (by linarith)] at h2
+    linarith
+  have hδprev : t k'.castSucc < -δ := by
+    have h2 := hgap k'
+    rw [hks, hj, Real.dist_eq, abs_of_nonpos (by linarith)] at h2
+    linarith
+  have hR : (⨆ r ∈ Set.Ico (0 : ℝ) (0 + δ), edist (f.toFun r) (f.toFun 0))
+      ≤ SkorokhodSpace.subdivisionOsc f t := by
+    refine iSup₂_le fun r hr => ?_
+    have hr' : r ∈ Set.Ico (t k.castSucc) (t k.succ) := by
+      rw [hkc, hj]
+      exact ⟨hr.1, lt_trans (by linarith [hr.2]) hδsucc⟩
+    have h3 := hcell k r hr'
+    rwa [hkc, hj] at h3
+  have hL : (⨆ r ∈ Set.Ico (0 - δ) (0 : ℝ), edist (f.toFun r) (Function.leftLim f.toFun 0))
+      ≤ 2 * SkorokhodSpace.subdivisionOsc f t := by
+    have hlim : edist (Function.leftLim f.toFun (0 : ℝ)) (f.toFun (t k'.castSucc))
+        ≤ SkorokhodSpace.subdivisionOsc f t := by
+      have htend : Filter.Tendsto (fun r => edist (f.toFun r) (f.toFun (t k'.castSucc)))
+          (𝓝[<] (0 : ℝ))
+          (𝓝 (edist (Function.leftLim f.toFun (0 : ℝ)) (f.toFun (t k'.castSucc)))) :=
+        (f.isCadlag.tendsto_nhdsLT_leftLim 0).edist tendsto_const_nhds
+      refine le_of_tendsto htend ?_
+      filter_upwards [Ioo_mem_nhdsLT hprev_neg] with r hr
+      exact hcell k' r ⟨le_of_lt hr.1, by rw [hks, hj]; exact hr.2⟩
+    refine iSup₂_le fun r hr => ?_
+    have hr' : r ∈ Set.Ico (t k'.castSucc) (t k'.succ) := by
+      refine ⟨by linarith [hr.1], ?_⟩
+      rw [hks, hj]; exact hr.2
+    calc edist (f.toFun r) (Function.leftLim f.toFun 0)
+        ≤ edist (f.toFun r) (f.toFun (t k'.castSucc))
+            + edist (f.toFun (t k'.castSucc)) (Function.leftLim f.toFun 0) :=
+          edist_triangle _ _ _
+      _ ≤ SkorokhodSpace.subdivisionOsc f t + SkorokhodSpace.subdivisionOsc f t :=
+          add_le_add (hcell k' r hr') (by rw [edist_comm]; exact hlim)
+      _ = 2 * SkorokhodSpace.subdivisionOsc f t := (two_mul _).symm
+  rw [SkorokhodSpace.basePointOsc]
+  calc (⨆ r ∈ Set.Ico (0 - δ) (0 : ℝ), edist (f.toFun r) (Function.leftLim f.toFun 0))
+        + ⨆ r ∈ Set.Ico (0 : ℝ) (0 + δ), edist (f.toFun r) (f.toFun 0)
+      ≤ 2 * SkorokhodSpace.subdivisionOsc f t + SkorokhodSpace.subdivisionOsc f t :=
+        add_le_add hL hR
+    _ = 3 * SkorokhodSpace.subdivisionOsc f t := by ring
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The boundary term is at most three times the modulus.**  This is the
+previous statement under the infimum, and it is the half of the answer that says
+the correction of link 1 needs no hypothesis of its own on the image side: a
+family whose image moduli are controlled has its image boundary terms controlled
+with them.
+
+`ENNReal.mul_iInf_of_ne` carries the factor through the three nested infima of
+`SkorokhodSpace.modulusBased`, exactly as in
+`SkorokhodSpace.min_edist_le_two_mul_modulusBased`. -/
+theorem SkorokhodSpace.basePointOsc_le_three_mul_modulusBased
+    (f : D(ℝ, E)) {δ m : ℝ} (hm : 0 < m) :
+    SkorokhodSpace.basePointOsc (0 : ℝ) f δ
+      ≤ 3 * SkorokhodSpace.modulusBased (0 : ℝ) m f δ := by
+  rw [SkorokhodSpace.modulusBased]
+  simp only [ENNReal.mul_iInf_of_ne (by simp : (3 : ℝ≥0∞) ≠ 0) ENNReal.ofNat_ne_top]
+  refine le_iInf fun n => le_iInf fun t => le_iInf fun ht => ?_
+  exact SkorokhodSpace.basePointOsc_le_three_mul_subdivisionOsc f hm ht
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The left limit passes through post-composition.**  It is
+`leftLim_eq_of_tendsto` applied to `IsCadlag.tendsto_nhdsLT_leftLim` followed by
+the continuity of the map, and over the index `ℝ` the instance `(𝓝[<] t₀).NeBot`
+that lemma asks for is found automatically.
+
+Without it the left half of `SkorokhodSpace.basePointOsc` of an image path would
+not be comparable with that of the path: the term is measured against the left
+limit, and the reduction has to know that the image's left limit is the image of
+the left limit. -/
+theorem SkorokhodSpace.leftLim_postcomp {E' : Type*} [MetricSpace E'] (h : C(E, E'))
+    (f : D(ℝ, E)) (t₀ : ℝ) :
+    Function.leftLim (SkorokhodSpace.postcomp h f).toFun t₀
+      = h (Function.leftLim f.toFun t₀) :=
+  leftLim_eq_of_tendsto ((h.continuous.tendsto _).comp (f.isCadlag.tendsto_nhdsLT_leftLim t₀))
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The right half of the boundary term travels**, pointwise in the time `r`
+and with the centre `x` taken near the value `f t₀`.  The passage from `dist` to
+`edist` is `ENNReal.ofReal` throughout, and the cap `1` is where the clip of
+`SkorokhodSpace.clipDist` shows: a consumer reads the statement at a level below
+`1`, where the cap does nothing. -/
+theorem SkorokhodSpace.min_edist_le_edist_postcomp_add {x : E} {ρ : ℝ} (hρ : 0 ≤ ρ)
+    (f : D(ℝ, E)) (t₀ r : ℝ) {h : E →ᵇ ℝ}
+    (hhr : dist (h (f.toFun r)) (SkorokhodSpace.clipDist x (f.toFun r)) ≤ ρ)
+    (hh₀ : dist (h (f.toFun t₀)) (SkorokhodSpace.clipDist x (f.toFun t₀)) ≤ ρ)
+    (hxb : dist (f.toFun t₀) x ≤ ρ) :
+    min (edist (f.toFun r) (f.toFun t₀)) 1
+      ≤ edist ((SkorokhodSpace.postcomp h.toContinuousMap f).toFun r)
+          ((SkorokhodSpace.postcomp h.toContinuousMap f).toFun t₀) + ENNReal.ofReal (4 * ρ) := by
+  have hkey := SkorokhodSpace.sub_le_dist_of_dist_clipDist_le (a := f.toFun r)
+    (b := f.toFun t₀) hhr hh₀ hxb
+  have h1 : min (edist (f.toFun r) (f.toFun t₀)) 1
+      = ENNReal.ofReal (min (dist (f.toFun r) (f.toFun t₀)) 1) := by
+    rw [edist_dist]
+    rcases le_total (dist (f.toFun r) (f.toFun t₀)) 1 with hc | hc
+    · rw [min_eq_left hc, min_eq_left]
+      rw [← ENNReal.ofReal_one]
+      exact ENNReal.ofReal_le_ofReal hc
+    · rw [min_eq_right hc, min_eq_right, ENNReal.ofReal_one]
+      rw [← ENNReal.ofReal_one]
+      exact ENNReal.ofReal_le_ofReal hc
+  rw [h1, SkorokhodSpace.postcomp_toFun, SkorokhodSpace.postcomp_toFun,
+    BoundedContinuousFunction.coe_toContinuousMap, edist_dist, ← ENNReal.ofReal_add dist_nonneg
+      (by linarith)]
+  exact ENNReal.ofReal_le_ofReal (by linarith)
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The left half of the boundary term travels**, with the centre `x` taken
+near `Function.leftLim f t₀` and **not** near `f t₀`.  That is the one asymmetry
+of the reduction: the boundary term reads two different reference values and
+therefore two different test functions, where the three point quantity reads one.
+
+Both reference values lie in the compact set that compact containment supplies
+--- the left limit because a compact set is closed --- so the same finite net
+serves both and no hypothesis is added.
+`SkorokhodSpace.leftLim_postcomp` is what identifies the left limit of the image
+path on the right hand side. -/
+theorem SkorokhodSpace.min_edist_leftLim_le_edist_leftLim_postcomp_add {x : E} {ρ : ℝ}
+    (hρ : 0 ≤ ρ) (f : D(ℝ, E)) (t₀ r : ℝ) {h : E →ᵇ ℝ}
+    (hhr : dist (h (f.toFun r)) (SkorokhodSpace.clipDist x (f.toFun r)) ≤ ρ)
+    (hh₀ : dist (h (Function.leftLim f.toFun t₀))
+      (SkorokhodSpace.clipDist x (Function.leftLim f.toFun t₀)) ≤ ρ)
+    (hxb : dist (Function.leftLim f.toFun t₀) x ≤ ρ) :
+    min (edist (f.toFun r) (Function.leftLim f.toFun t₀)) 1
+      ≤ edist ((SkorokhodSpace.postcomp h.toContinuousMap f).toFun r)
+          (Function.leftLim (SkorokhodSpace.postcomp h.toContinuousMap f).toFun t₀)
+        + ENNReal.ofReal (4 * ρ) := by
+  have hkey := SkorokhodSpace.sub_le_dist_of_dist_clipDist_le (a := f.toFun r)
+    (b := Function.leftLim f.toFun t₀) hhr hh₀ hxb
+  have h1 : min (edist (f.toFun r) (Function.leftLim f.toFun t₀)) 1
+      = ENNReal.ofReal (min (dist (f.toFun r) (Function.leftLim f.toFun t₀)) 1) := by
+    rw [edist_dist]
+    rcases le_total (dist (f.toFun r) (Function.leftLim f.toFun t₀)) 1 with hc | hc
+    · rw [min_eq_left hc, min_eq_left]
+      rw [← ENNReal.ofReal_one]
+      exact ENNReal.ofReal_le_ofReal hc
+    · rw [min_eq_right hc, min_eq_right, ENNReal.ofReal_one]
+      rw [← ENNReal.ofReal_one]
+      exact ENNReal.ofReal_le_ofReal hc
+  rw [h1, SkorokhodSpace.leftLim_postcomp, SkorokhodSpace.postcomp_toFun,
+    BoundedContinuousFunction.coe_toContinuousMap, edist_dist, ← ENNReal.ofReal_add dist_nonneg
+      (by linarith)]
+  exact ENNReal.ofReal_le_ofReal (by linarith)
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The right half at the level of suprema.**  The pointwise estimate under a
+supremum, the cap distributing over it by `iSup₂_inf_eq`.  This is the form the
+converse half of `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` reads: it
+bounds a half of `SkorokhodSpace.basePointOsc` of the path by the corresponding
+half of the image path, which
+`SkorokhodSpace.basePointOsc_le_three_mul_modulusBased` then bounds by the image
+modulus. -/
+theorem SkorokhodSpace.min_iSup_edist_le_iSup_edist_postcomp {x : E} {ρ : ℝ} (hρ : 0 ≤ ρ)
+    (f : D(ℝ, E)) (t₀ δ : ℝ) {h : E →ᵇ ℝ}
+    (hh : ∀ r ∈ Set.Ico t₀ (t₀ + δ),
+      dist (h (f.toFun r)) (SkorokhodSpace.clipDist x (f.toFun r)) ≤ ρ)
+    (hh₀ : dist (h (f.toFun t₀)) (SkorokhodSpace.clipDist x (f.toFun t₀)) ≤ ρ)
+    (hxb : dist (f.toFun t₀) x ≤ ρ) :
+    min (⨆ r ∈ Set.Ico t₀ (t₀ + δ), edist (f.toFun r) (f.toFun t₀)) 1
+      ≤ (⨆ r ∈ Set.Ico t₀ (t₀ + δ),
+            edist ((SkorokhodSpace.postcomp h.toContinuousMap f).toFun r)
+              ((SkorokhodSpace.postcomp h.toContinuousMap f).toFun t₀))
+        + ENNReal.ofReal (4 * ρ) := by
+  rw [show min (⨆ r ∈ Set.Ico t₀ (t₀ + δ), edist (f.toFun r) (f.toFun t₀)) 1
+      = ⨆ r ∈ Set.Ico t₀ (t₀ + δ), min (edist (f.toFun r) (f.toFun t₀)) 1 from iSup₂_inf_eq 1]
+  refine iSup₂_le fun r hr => ?_
+  refine le_trans
+    (SkorokhodSpace.min_edist_le_edist_postcomp_add hρ f t₀ r (hh r hr) hh₀ hxb) ?_
+  exact add_le_add (le_iSup₂ (f := fun r (_ : r ∈ Set.Ico t₀ (t₀ + δ)) =>
+    edist ((SkorokhodSpace.postcomp h.toContinuousMap f).toFun r)
+      ((SkorokhodSpace.postcomp h.toContinuousMap f).toFun t₀)) r hr) le_rfl
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The left half at the level of suprema.**  The same as the previous
+statement at the other centre, and together the two say that
+`SkorokhodSpace.basePointOsc` of a path is controlled, up to the cap and up to
+`8 * ρ`, by the boundary terms of two images.
+
+**The two halves are not added into one statement**, and that is deliberate:
+`min (L + R) 2 ≤ min L 1 + min R 1` is false --- at `L = 5`, `R = 0` the left side
+is `2` and the right side `1` --- so a capped statement about the sum says less
+than the two capped statements about the summands.  A consumer that wants the sum
+small argues that one summand is large, which is what these two are shaped
+for. -/
+theorem SkorokhodSpace.min_iSup_edist_leftLim_le_iSup_edist_leftLim_postcomp {x : E} {ρ : ℝ}
+    (hρ : 0 ≤ ρ) (f : D(ℝ, E)) (t₀ δ : ℝ) {h : E →ᵇ ℝ}
+    (hh : ∀ r ∈ Set.Ico (t₀ - δ) t₀,
+      dist (h (f.toFun r)) (SkorokhodSpace.clipDist x (f.toFun r)) ≤ ρ)
+    (hh₀ : dist (h (Function.leftLim f.toFun t₀))
+      (SkorokhodSpace.clipDist x (Function.leftLim f.toFun t₀)) ≤ ρ)
+    (hxb : dist (Function.leftLim f.toFun t₀) x ≤ ρ) :
+    min (⨆ r ∈ Set.Ico (t₀ - δ) t₀, edist (f.toFun r) (Function.leftLim f.toFun t₀)) 1
+      ≤ (⨆ r ∈ Set.Ico (t₀ - δ) t₀,
+            edist ((SkorokhodSpace.postcomp h.toContinuousMap f).toFun r)
+              (Function.leftLim (SkorokhodSpace.postcomp h.toContinuousMap f).toFun t₀))
+        + ENNReal.ofReal (4 * ρ) := by
+  rw [show min (⨆ r ∈ Set.Ico (t₀ - δ) t₀, edist (f.toFun r) (Function.leftLim f.toFun t₀)) 1
+      = ⨆ r ∈ Set.Ico (t₀ - δ) t₀, min (edist (f.toFun r) (Function.leftLim f.toFun t₀)) 1
+      from iSup₂_inf_eq 1]
+  refine iSup₂_le fun r hr => ?_
+  refine le_trans (SkorokhodSpace.min_edist_leftLim_le_edist_leftLim_postcomp_add hρ f t₀ r
+    (hh r hr) hh₀ hxb) ?_
+  exact add_le_add (le_iSup₂ (f := fun r (_ : r ∈ Set.Ico (t₀ - δ) t₀) =>
+    edist ((SkorokhodSpace.postcomp h.toContinuousMap f).toFun r)
+      (Function.leftLim (SkorokhodSpace.postcomp h.toContinuousMap f).toFun t₀)) r hr) le_rfl
+
+/-! ### Both inputs of link 1 read off one image modulus
+
+The three statements below are the chain composed: each says that a quantity of
+the path which `SkorokhodSpace.modulusBased_le_of_forall_min_edist_lt` reads is
+bounded, capped at `1` and up to `4 * ρ`, by the based modulus of **one** image
+path.  That is the shape the converse half of
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` needs, because the
+hypothesis it has control over is exactly the image modulus.
+
+The cap is not a defect and the `ρ` is not slack.  A consumer reads the
+statements at a level below `1`, where the cap does nothing, and chooses `ρ` as
+the mesh of a net of the compact set that compact containment supplies, where
+`4 * ρ` is as small as it likes.  What it must not do is choose the test function
+before the path: every one of the three has the centre `x` near a value of the
+path, and `SkorokhodSpace.exists_isCompact_modulusBased_postcomp_eq_zero` is the
+refutation of the other order. -/
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The three point quantity of the path, read off the image modulus.**  Links
+2 and 3 composed: `SkorokhodSpace.le_min_dist_of_dist_clipDist_le` turns the
+quantity of the path into that of the image, up to `4 * ρ` and the cap, and
+`SkorokhodSpace.min_edist_le_two_mul_modulusBased` turns that into the image
+modulus, at the **same** `δ`.
+
+The centre `x` is asked to be within `ρ` of the **middle** value `f u`, and the
+test function within `ρ` of the clipped distance to it at the three values of the
+triple.  Nothing else about `h` is used, and in particular no bound at a point
+that is not a value of the path. -/
+theorem SkorokhodSpace.min_edist_le_two_mul_modulusBased_postcomp
+    {x : E} {ρ : ℝ} (hρ : 0 ≤ ρ) (f : D(ℝ, E)) (m : ℝ) {δ t₁ u t₂ : ℝ}
+    (h1 : t₁ ≤ u) (h2 : u ≤ t₂) (hspan : t₂ - t₁ ≤ δ)
+    (hlo : exhaustionMin (0 : ℝ) m ≤ u) (hhi : u < exhaustionMax (0 : ℝ) m)
+    {h : E →ᵇ ℝ}
+    (hh1 : dist (h (f.toFun t₁)) (SkorokhodSpace.clipDist x (f.toFun t₁)) ≤ ρ)
+    (hhu : dist (h (f.toFun u)) (SkorokhodSpace.clipDist x (f.toFun u)) ≤ ρ)
+    (hh2 : dist (h (f.toFun t₂)) (SkorokhodSpace.clipDist x (f.toFun t₂)) ≤ ρ)
+    (hxb : dist (f.toFun u) x ≤ ρ) :
+    min (min (edist (f.toFun u) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun u))) 1
+      ≤ 2 * SkorokhodSpace.modulusBased (0 : ℝ) m
+          (SkorokhodSpace.postcomp h.toContinuousMap f) δ + ENNReal.ofReal (4 * ρ) := by
+  have hlink3 := SkorokhodSpace.min_edist_le_two_mul_modulusBased (0 : ℝ) m
+    (SkorokhodSpace.postcomp h.toContinuousMap f) h1 h2 hspan hlo hhi
+  have hlink2 := SkorokhodSpace.le_min_dist_of_dist_clipDist_le (a := f.toFun t₁)
+    (b := f.toFun u) (c := f.toFun t₂) hh1 hhu hh2 hxb
+  have himg : min (edist ((SkorokhodSpace.postcomp h.toContinuousMap f).toFun u)
+        ((SkorokhodSpace.postcomp h.toContinuousMap f).toFun t₁))
+      (edist ((SkorokhodSpace.postcomp h.toContinuousMap f).toFun t₂)
+        ((SkorokhodSpace.postcomp h.toContinuousMap f).toFun u))
+      = ENNReal.ofReal (min (dist (h (f.toFun u)) (h (f.toFun t₁)))
+          (dist (h (f.toFun t₂)) (h (f.toFun u)))) := by
+    rw [ENNReal.ofReal_min, SkorokhodSpace.postcomp_toFun, SkorokhodSpace.postcomp_toFun,
+      SkorokhodSpace.postcomp_toFun, BoundedContinuousFunction.coe_toContinuousMap,
+      edist_dist, edist_dist]
+  rw [show min (min (edist (f.toFun u) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun u))) 1
+      = ENNReal.ofReal (min (min (dist (f.toFun u) (f.toFun t₁))
+          (dist (f.toFun t₂) (f.toFun u))) 1) by
+    rw [edist_dist, edist_dist, ← ENNReal.ofReal_one, ← ENNReal.ofReal_min,
+      ← ENNReal.ofReal_min]]
+  refine le_trans ?_ (add_le_add (le_trans (le_of_eq himg.symm) hlink3) (le_refl _))
+  rw [← ENNReal.ofReal_add (le_min dist_nonneg dist_nonneg) (by linarith)]
+  exact ENNReal.ofReal_le_ofReal (by linarith)
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The right half of the boundary term, read off the image modulus.**  The
+transport of that half followed by
+`SkorokhodSpace.basePointOsc_le_three_mul_modulusBased`, the half being at most
+the whole boundary term because the other half is nonnegative.
+
+The constant is `3` and not `2` because the boundary term costs the detour
+through `Function.leftLim f 0` on its *other* half; that the halves are not
+separated here is the price of bounding both by one quantity, and it is paid once
+in the constant rather than in a hypothesis. -/
+theorem SkorokhodSpace.min_iSup_edist_le_three_mul_modulusBased_postcomp
+    {x : E} {ρ : ℝ} (hρ : 0 ≤ ρ) (f : D(ℝ, E)) {m : ℝ} (hm : 0 < m) (δ : ℝ) {h : E →ᵇ ℝ}
+    (hh : ∀ r ∈ Set.Ico (0 : ℝ) (0 + δ),
+      dist (h (f.toFun r)) (SkorokhodSpace.clipDist x (f.toFun r)) ≤ ρ)
+    (hh₀ : dist (h (f.toFun 0)) (SkorokhodSpace.clipDist x (f.toFun 0)) ≤ ρ)
+    (hxb : dist (f.toFun 0) x ≤ ρ) :
+    min (⨆ r ∈ Set.Ico (0 : ℝ) (0 + δ), edist (f.toFun r) (f.toFun 0)) 1
+      ≤ 3 * SkorokhodSpace.modulusBased (0 : ℝ) m
+          (SkorokhodSpace.postcomp h.toContinuousMap f) δ + ENNReal.ofReal (4 * ρ) := by
+  refine le_trans
+    (SkorokhodSpace.min_iSup_edist_le_iSup_edist_postcomp hρ f 0 δ hh hh₀ hxb) ?_
+  refine add_le_add (le_trans ?_
+    (SkorokhodSpace.basePointOsc_le_three_mul_modulusBased _ hm)) le_rfl
+  rw [SkorokhodSpace.basePointOsc]
+  exact le_add_self
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The left half of the boundary term, read off the image modulus.**  The same
+at the other centre, `Function.leftLim f 0` in place of `f 0`, which is the one
+asymmetry of the reduction; both values lie in the compact set that compact
+containment supplies, the left limit because a compact set is closed, so one net
+answers both. -/
+theorem SkorokhodSpace.min_iSup_edist_leftLim_le_three_mul_modulusBased_postcomp
+    {x : E} {ρ : ℝ} (hρ : 0 ≤ ρ) (f : D(ℝ, E)) {m : ℝ} (hm : 0 < m) (δ : ℝ) {h : E →ᵇ ℝ}
+    (hh : ∀ r ∈ Set.Ico (0 - δ) (0 : ℝ),
+      dist (h (f.toFun r)) (SkorokhodSpace.clipDist x (f.toFun r)) ≤ ρ)
+    (hh₀ : dist (h (Function.leftLim f.toFun 0))
+      (SkorokhodSpace.clipDist x (Function.leftLim f.toFun 0)) ≤ ρ)
+    (hxb : dist (Function.leftLim f.toFun 0) x ≤ ρ) :
+    min (⨆ r ∈ Set.Ico (0 - δ) (0 : ℝ), edist (f.toFun r) (Function.leftLim f.toFun 0)) 1
+      ≤ 3 * SkorokhodSpace.modulusBased (0 : ℝ) m
+          (SkorokhodSpace.postcomp h.toContinuousMap f) δ + ENNReal.ofReal (4 * ρ) := by
+  refine le_trans
+    (SkorokhodSpace.min_iSup_edist_leftLim_le_iSup_edist_leftLim_postcomp hρ f 0 δ hh hh₀ hxb) ?_
+  refine add_le_add (le_trans ?_
+    (SkorokhodSpace.basePointOsc_le_three_mul_modulusBased _ hm)) le_rfl
+  rw [SkorokhodSpace.basePointOsc]
+  exact le_self_add
 
 /-! ## Milestone 9: the nonnegative index inside the real one
 
