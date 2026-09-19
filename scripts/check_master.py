@@ -42,7 +42,13 @@ abgeschnittener Durchlauf sieht wie ein fehlerfreier aus.
 """
 import atexit, collections, os, re, shutil, subprocess, sys, time
 
-MW = os.path.abspath(sys.argv[1] if len(sys.argv) > 1
+# `--keep` tut dasselbe wie `CHECK_MASTER_KEEP=1`.  Der Grund für die zweite
+# Schreibweise ist nicht Bequemlichkeit: eine Umgebung läßt sich nicht in jedem
+# Aufrufkontext setzen (ein Lauf vom 2026-09-19 konnte Kommandos nur ohne
+# vorangestellte Zuweisung absetzen), und dann ist der schnelle Entwicklungsweg
+# ohne eine Flagge gar nicht erreichbar.
+ARGV = [a for a in sys.argv[1:] if a != '--keep']
+MW = os.path.abspath(ARGV[0] if ARGV
                      else os.path.expanduser('~/Code/lean/mathlib-master'))
 # Das Repositorium, in dem *dieses Skript* liegt -- nicht der Hauptcheckout.
 # Ein Lauf arbeitet in einem Worktree, und geprüft gehören seine Quellen, nicht
@@ -70,7 +76,7 @@ shutil.rmtree(RUNDIR, ignore_errors=True)
 # zurück.  `check_axioms_master.py` und `dev_check_master.py` brauchen die
 # gebauten `.olean`, und seit der Baum je Aufruf angelegt wird, finden sie ihn
 # nur, wenn er stehenbleibt und sein Pfad genannt wird.
-KEEP = os.environ.get('CHECK_MASTER_KEEP') == '1'
+KEEP = os.environ.get('CHECK_MASTER_KEEP') == '1' or '--keep' in sys.argv[1:]
 if not KEEP:
     atexit.register(shutil.rmtree, RUNDIR, True)
 for f in FILES:

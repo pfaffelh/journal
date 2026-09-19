@@ -3908,6 +3908,71 @@ tightness *criterion* carries a conclusion: it is therefore stated once, over
 run over `ℝ≥0` crosses its family, applies the criterion, and comes back. Nothing
 of it is to be restated over `ℝ≥0`.
 
+**Compact containment crosses too, and it is the one hypothesis of Milestone 8
+that a consumer over `ℝ≥0` holds in a different shape**, 2026-09-19.
+
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` carries compact
+containment as a hypothesis, and by the rule above a hypothesis crosses only
+forward. The crossing is made here, once.
+
+* `SkorokhodSpace.IsCompactContained` — the predicate itself, on a **family**
+  `μ : γ → Measure D(ι, E)`: for every level and every window one compact set of
+  the value space that every member of the family charges outside of by at most
+  that level. The uniformity in the index is its whole content, and that is why
+  it is a predicate on a family and not on a measure; the level is `ℝ≥0∞` and the
+  measure is that of the complement, so that neither a subtraction nor an
+  `ENNReal.toReal` appears.
+* `SkorokhodSpace.preimage_extendNNReal_setOf_forall_mem_exhaustion` — **the two
+  windows are the same condition**, not merely comparable ones. Over `ℝ` the
+  window is two sided and reaches times the processes do not have; under the
+  embedding every one of those times reads the value at `0`, which lies in every
+  window. So the crossing of the window is an equality of sets.
+* `SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion` — **and the
+  crossing needs the window set to be measurable**, which is where it differs
+  from everything else in this milestone. A bound travels from a measure to its
+  image along `MeasureTheory.Measure.le_map_apply` for an arbitrary set — that is
+  what let the modulus conditions of Milestone 8 be stated over sets no one can
+  measure — but *back* along `MeasureTheory.Measure.map_apply` only for a
+  measurable one, and compact containment crosses back. The window set is an
+  uncountable intersection of coordinate conditions, and that it is measurable is
+  the statement that a càdlàg path on a window is determined there by the
+  rationals of the window **together with its right endpoint**; the endpoint is
+  not a formality, nothing approaching it from the right lying inside the window.
+  The deterministic half is
+  `SkorokhodSpace.forall_mem_Icc_of_forall_mem_dense`, which reads only right
+  continuity and asks `K` to be closed and not compact.
+* `SkorokhodSpace.isCompactContained_map_extendNNReal_iff` — the crossing, in
+  both directions, with the **same** compact set of `E` on either side: the
+  crossing changes the path space and not the value space.
+
+**And the hypothesis is necessary**, so the criterion is not weakened by carrying
+it: `SkorokhodSpace.isCompactContained_of_isTightMeasureSet` derives compact
+containment from tightness, being the first conjunct of
+`SkorokhodSpace.isTightMeasureSet_iff` crossed back. What compact containment
+excludes is only families for which the criterion would be false — the constant
+paths at height `n`, whose images under every bounded continuous map are tight
+and which are not tight.
+
+**At data it is free for a constant family**, and that is where the condition
+lives. `SkorokhodSpace.isCompactContained_const`: a finite measure on a Polish
+space is tight (`MeasureTheory.isTightMeasureSet_singleton`,
+`Mathlib/MeasureTheory/Measure/Tight.lean:99`) and `D(ℝ≥0, E)` is Polish by
+`SkorokhodSpace.instPolishSpace`, so one law repeated has compact containment for
+nothing. A genuine family need not, and that is the emptiness test for the
+predicate: it is inhabited, and it is not vacuous.
+
+**The `ℝ≥0`-form of the criterion, and what it does and does not do to the rule
+above.** `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal` states
+stage (B) with **both** sides of the equivalence over `ℝ≥0`, which is the form
+**MartingaleProblems** Milestone 11 consumes. It **restates nothing**: its proof
+reads `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` once and crosses
+three times — the hypothesis forward, the left side of the equivalence back over
+`E`, and the right side back over `ℝ`, the two crossings on the right being
+exchanged by `SkorokhodSpace.postcomp_extendNNReal`, which is `rfl`. So the rule
+stands as stated for the mathematics; what it did not say, and now does, is that
+a criterion carrying a hypothesis needs a wrapper that crosses it, and that the
+wrapper is bookkeeping rather than a second proof.
+
 **Acceptance example.** `SkorokhodSpace.extendNNReal (jumpPathD …)` of the
 roadmap **MartingaleProblems**, Milestone 6: the path law of the jump
 construction, which lives on `D(ℝ≥0, E)`, read on `D(ℝ, E)`. It is the family

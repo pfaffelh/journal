@@ -18266,3 +18266,302 @@ theorem SkorokhodSpace.isTightMeasureSet_map_extendNNReal_iff [CompleteSpace E]
     IsTightMeasureSet {(μ i).map SkorokhodSpace.extendNNReal | i} ↔ IsTightMeasureSet {μ i | i} :=
   ⟨SkorokhodSpace.isTightMeasureSet_of_isTightMeasureSet_map_extendNNReal,
     SkorokhodSpace.isTightMeasureSet_map_extendNNReal⟩
+
+/-! ### Compact containment across the index
+
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` of Milestone 8 carries a
+hypothesis that its consumer -- **MartingaleProblems** Milestone 11 -- holds over
+the index `ℝ≥0` and in a different shape.  The rule stated at the head of this
+milestone settles which way it travels: a *hypothesis* crosses forward, from
+`ℝ≥0` to `ℝ`, and that is what this section does, once, so that no consumer reads
+the criterion with a window it has to translate by hand.
+
+**The window is the only difference that is not translation.**  Over `ℝ` the
+window `exhaustion 0 m` is two sided and reaches times a process over `ℝ≥0` does
+not have.  Under `SkorokhodSpace.extendNNReal` a path is continued to the
+negative axis by its value at `0`, so every negative time of the window is
+answered by the time `0` and by nothing else, and the two window conditions are
+not merely comparable but **equal** --
+`SkorokhodSpace.preimage_extendNNReal_setOf_forall_mem_exhaustion`.
+
+**And the crossing needs the window set to be measurable**, which the modulus
+conditions of the criterion do not: a bound travels from a measure to its image
+along `MeasureTheory.Measure.le_map_apply` for an arbitrary set, but *back* along
+`MeasureTheory.Measure.map_apply` only for a measurable one, and this section
+goes back.  That the window set is measurable is not formal -- it is an
+uncountable intersection of coordinate conditions -- and it is
+`SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion`, proved from the fact
+that a càdlàg path on a window is determined there by a countable dense set
+together with the right endpoint. -/
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **A right continuous path that stays in a closed set along a dense subset of
+a window stays in it on the whole window** -- with the right endpoint of the
+window read separately, and necessarily so: nothing approaches `b` from the
+right *inside* `[a, b]`.
+
+The one sided limit is taken along `S ∩ Set.Ioo t b`, and the filter is not
+trivial because `S` is dense and `Set.Ioo t b` is open and nonempty; that is
+`Dense.open_subset_closure_inter` together with `closure_Ioo`.  Only right
+continuity is used, so the statement holds for a càglàd function read backwards
+and for a continuous one without change. -/
+theorem SkorokhodSpace.forall_mem_Icc_of_forall_mem_dense
+    {K : Set E} (hK : IsClosed K) {S : Set ℝ} (hS : Dense S) {a b : ℝ}
+    {f : ℝ → E} (hf : IsRightContinuous f)
+    (hmem : ∀ t ∈ Set.Icc a b ∩ S, f t ∈ K) (hb : a ≤ b → f b ∈ K) :
+    ∀ t ∈ Set.Icc a b, f t ∈ K := by
+  rintro t ⟨hat, htb⟩
+  rcases eq_or_lt_of_le htb with rfl | htb'
+  · exact hb hat
+  · have hsub : S ∩ Set.Ioo t b ⊆ Set.Icc a b ∩ S := by
+      rintro x ⟨hxS, hxt, hxb⟩
+      exact ⟨⟨hat.trans hxt.le, hxb.le⟩, hxS⟩
+    have hcl : t ∈ closure (S ∩ Set.Ioo t b) := by
+      have h1 : Set.Ioo t b ⊆ closure (Set.Ioo t b ∩ S) :=
+        hS.open_subset_closure_inter isOpen_Ioo
+      have h2 : closure (Set.Ioo t b) ⊆ closure (S ∩ Set.Ioo t b) := by
+        refine (closure_mono h1).trans ?_
+        rw [closure_closure, Set.inter_comm]
+      rw [closure_Ioo htb'.ne] at h2
+      exact h2 ⟨le_rfl, htb⟩
+    have hne : (𝓝[S ∩ Set.Ioo t b] t).NeBot :=
+      (mem_closure_iff_nhdsWithin_neBot (s := S ∩ Set.Ioo t b) (x := t)).1 hcl
+    have hmono : S ∩ Set.Ioo t b ⊆ Set.Ioi t := by rintro x ⟨-, hxt, -⟩; exact hxt
+    have htend : Tendsto f (𝓝[S ∩ Set.Ioo t b] t) (𝓝 (f t)) :=
+      (hf t : Tendsto f (𝓝[Set.Ioi t] t) (𝓝 (f t))).mono_left (nhdsWithin_mono t hmono)
+    refine hK.mem_of_tendsto htend ?_
+    filter_upwards [self_mem_nhdsWithin] with x hx using hmem x (hsub hx)
+
+/-- **The window set is measurable**, and this is what lets a bound on it be
+carried from a measure to a measure it is the image of.
+
+The set is an intersection over the uncountably many times of the window, and the
+reduction to countably many is the previous statement: the rationals of the
+window together with its right endpoint.  `K` is asked to be **closed** and not
+compact, which is all the limit argument reads; the consumers supply a compact
+`K` and use `IsCompact.isClosed`. -/
+theorem SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion [CompleteSpace E]
+    {K : Set E} (hK : IsClosed K) (t₀ u : ℝ) :
+    MeasurableSet {f : D(ℝ, E) | ∀ t ∈ exhaustion t₀ u, f.toFun t ∈ K} := by
+  set r : ℝ := max u 0 with hr
+  have hwin : exhaustion t₀ u = Set.Icc (t₀ - r) (t₀ + r) := by
+    rw [exhaustion, Real.closedBall_eq_Icc]
+  set a : ℝ := t₀ - r with ha
+  set b : ℝ := t₀ + r with hb
+  set T : Set ℝ := (Set.Icc a b ∩ Set.range ((↑) : ℚ → ℝ)) ∪ (Set.Icc a b ∩ {b}) with hT
+  have hTc : T.Countable :=
+    ((Set.countable_range _).mono Set.inter_subset_right).union
+      ((Set.countable_singleton b).mono Set.inter_subset_right)
+  have hTsub : T ⊆ Set.Icc a b := by
+    rintro x (⟨hx, -⟩ | ⟨hx, -⟩) <;> exact hx
+  have hset : {f : D(ℝ, E) | ∀ t ∈ exhaustion t₀ u, f.toFun t ∈ K}
+      = ⋂ t ∈ T, {f : D(ℝ, E) | f.toFun t ∈ K} := by
+    ext f
+    simp only [Set.mem_ofPred_eq, Set.mem_iInter, hwin]
+    refine ⟨fun h t ht => h t (hTsub ht), fun h => ?_⟩
+    refine SkorokhodSpace.forall_mem_Icc_of_forall_mem_dense hK Rat.denseRange_cast
+      f.isCadlag.isRightContinuous (fun t ht => h t (Or.inl ht)) fun hab => ?_
+    exact h b (Or.inr ⟨⟨hab, le_rfl⟩, rfl⟩)
+  rw [hset]
+  exact MeasurableSet.biInter hTc fun t _ =>
+    (SkorokhodSpace.measurable_eval (E := E) t) hK.measurableSet
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The two windows are the same condition.**  The negative half of the two
+sided window over `ℝ` is answered by the time `0` of the path over `ℝ≥0`, because
+that is the value `SkorokhodSpace.extendNNReal` puts there, and `0` lies in every
+window; the nonnegative half is a change of variable along `Real.toNNReal`.  So
+this is an equality of sets and not an inclusion, and the crossing of compact
+containment below costs nothing beyond it. -/
+theorem SkorokhodSpace.preimage_extendNNReal_setOf_forall_mem_exhaustion
+    (K : Set E) (u : ℝ) :
+    SkorokhodSpace.extendNNReal ⁻¹'
+        {f : D(ℝ, E) | ∀ t ∈ exhaustion (0 : ℝ) u, f.toFun t ∈ K}
+      = {g : D(ℝ≥0, E) | ∀ s ∈ exhaustion (0 : ℝ≥0) u, g.toFun s ∈ K} := by
+  have hr : (0:ℝ) ≤ max u 0 := le_max_right _ _
+  ext g
+  simp only [Set.mem_preimage, Set.mem_ofPred_eq, SkorokhodSpace.extendNNReal_apply,
+    exhaustion, Metric.mem_closedBall]
+  constructor
+  · intro h s hs
+    have hco : ((s : ℝ)).toNNReal = s := Real.toNNReal_coe
+    refine hco ▸ h (s : ℝ) ?_
+    rw [Real.dist_eq, sub_zero, abs_of_nonneg s.coe_nonneg]
+    rwa [NNReal.dist_eq, NNReal.coe_zero, sub_zero, abs_of_nonneg s.coe_nonneg] at hs
+  · intro h t ht
+    refine h t.toNNReal ?_
+    rw [NNReal.dist_eq, NNReal.coe_zero, sub_zero,
+      abs_of_nonneg (t.toNNReal).coe_nonneg, Real.coe_toNNReal']
+    rw [Real.dist_eq, sub_zero] at ht
+    exact max_le ((le_abs_self t).trans ht) hr
+
+/-- **Compact containment of a family of laws**, in the uniform path space form
+the tightness criterion asks for: for every level and every window there is one
+compact set of the value space that **every** member of the family charges
+outside of by at most that level.
+
+Three things are decided here, and each of them is decided against a shape that
+looked equally natural.
+
+* It is a predicate on a **family** `μ : γ → Measure D(ι, E)` and not on one
+  measure.  The uniformity in the index is the whole content: for a single finite
+  law the condition is free (`SkorokhodSpace.isCompactContained_const`), and for
+  a family it is exactly what fails on the constant paths at height `n`.
+* The level is `ℝ≥0∞` and the measure is that of the **complement**, so that no
+  subtraction and no `ENNReal.toReal` appears; a junk value at `⊤` would be read
+  by `1 - ε` and by `toReal` alike.
+* The window is `exhaustion t₀ m` at **natural** radii, which is the form
+  `SkorokhodSpace.isTightMeasureSet_iff` states and hence the form in which the
+  condition is consumed; that countably many radii suffice is that statement's
+  business and not this definition's. -/
+def SkorokhodSpace.IsCompactContained {γ : Type*} (t₀ : ι) (μ : γ → Measure D(ι, E)) : Prop :=
+  ∀ ε : ℝ≥0∞, 0 < ε → ∀ m : ℕ, ∃ K : Set E, IsCompact K ∧ ∀ i,
+    μ i {f : D(ι, E) | ∀ t ∈ exhaustion t₀ (m : ℝ), f.toFun t ∈ K}ᶜ ≤ ε
+
+/-- The window measure of a law on `D(ℝ≥0, E)` and of its crossed law agree.  The
+measurability of the window set is where
+`SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion` is used, and it is
+used because this identity is read in **both** directions below. -/
+theorem SkorokhodSpace.measure_map_extendNNReal_compl_eq [CompleteSpace E]
+    (ν : Measure D(ℝ≥0, E)) {K : Set E} (hK : IsClosed K) (u : ℝ) :
+    (ν.map SkorokhodSpace.extendNNReal)
+        {f : D(ℝ, E) | ∀ t ∈ exhaustion (0 : ℝ) u, f.toFun t ∈ K}ᶜ
+      = ν {g : D(ℝ≥0, E) | ∀ s ∈ exhaustion (0 : ℝ≥0) u, g.toFun s ∈ K}ᶜ := by
+  rw [Measure.map_apply SkorokhodSpace.isometry_extendNNReal.continuous.measurable
+      (SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion hK 0 u).compl,
+    Set.preimage_compl, SkorokhodSpace.preimage_extendNNReal_setOf_forall_mem_exhaustion K u]
+
+/-- **Compact containment crosses the index in both directions**, and the same
+compact set of `E` serves on either side -- the crossing changes the path space
+and not the value space.  This is the statement a consumer over `ℝ≥0` uses to
+hand `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` its hypothesis. -/
+theorem SkorokhodSpace.isCompactContained_map_extendNNReal_iff [CompleteSpace E] {γ : Type*}
+    {μ : γ → Measure D(ℝ≥0, E)} :
+    (∀ ε : ℝ≥0∞, 0 < ε → ∀ m : ℕ, ∃ K : Set E, IsCompact K ∧
+        ∀ ν ∈ {(μ i).map SkorokhodSpace.extendNNReal | i},
+          ν {f : D(ℝ, E) | ∀ t ∈ exhaustion (0 : ℝ) (m : ℝ), f.toFun t ∈ K}ᶜ ≤ ε)
+      ↔ SkorokhodSpace.IsCompactContained (0 : ℝ≥0) μ := by
+  constructor
+  · intro h ε hε m
+    obtain ⟨K, hK, hKle⟩ := h ε hε m
+    refine ⟨K, hK, fun i => ?_⟩
+    rw [← SkorokhodSpace.measure_map_extendNNReal_compl_eq (μ i) hK.isClosed (m : ℝ)]
+    exact hKle _ ⟨i, rfl⟩
+  · intro h ε hε m
+    obtain ⟨K, hK, hKle⟩ := h ε hε m
+    refine ⟨K, hK, ?_⟩
+    rintro ν ⟨i, rfl⟩
+    rw [SkorokhodSpace.measure_map_extendNNReal_compl_eq (μ i) hK.isClosed (m : ℝ)]
+    exact hKle i
+
+/-- The forward half, in the shape
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` reads it. -/
+theorem SkorokhodSpace.IsCompactContained.map_extendNNReal [CompleteSpace E] {γ : Type*}
+    {μ : γ → Measure D(ℝ≥0, E)} (h : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) μ) :
+    ∀ ε : ℝ≥0∞, 0 < ε → ∀ m : ℕ, ∃ K : Set E, IsCompact K ∧
+      ∀ ν ∈ {(μ i).map SkorokhodSpace.extendNNReal | i},
+        ν {f : D(ℝ, E) | ∀ t ∈ exhaustion (0 : ℝ) (m : ℝ), f.toFun t ∈ K}ᶜ ≤ ε :=
+  SkorokhodSpace.isCompactContained_map_extendNNReal_iff.2 h
+
+/-- **Compact containment is necessary for tightness**, so the hypothesis the
+criterion carries costs it nothing: it is implied by its own conclusion.
+
+This is the first conjunct of `SkorokhodSpace.isTightMeasureSet_iff`, crossed
+back over the index.  It is worth stating for what it settles about the
+criterion: `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` and its `ℝ≥0`
+form below are **not** weaker for carrying compact containment, because a family
+that satisfies the conclusion satisfies the hypothesis anyway.  What compact
+containment excludes is only families for which the criterion would be false --
+the constant paths at height `n`, whose images under every bounded continuous map
+are tight and which are not tight. -/
+theorem SkorokhodSpace.isCompactContained_of_isTightMeasureSet [CompleteSpace E] {γ : Type*}
+    {μ : γ → Measure D(ℝ≥0, E)} (h : IsTightMeasureSet {μ i | i}) :
+    SkorokhodSpace.IsCompactContained (0 : ℝ≥0) μ :=
+  SkorokhodSpace.isCompactContained_map_extendNNReal_iff.1 fun ε hε m =>
+    (SkorokhodSpace.isTightMeasureSet_iff.1
+      (SkorokhodSpace.isTightMeasureSet_map_extendNNReal h) ε hε m).1
+
+/-- **Compact containment at data, and it is free for a constant family.**  A
+finite measure on a Polish space is tight (`MeasureTheory.isTightMeasureSet_singleton`,
+`Mathlib/MeasureTheory/Measure/Tight.lean:99`), and `D(ℝ≥0, E)` is Polish by
+`SkorokhodSpace.instPolishSpace` of Milestone 6, so the previous statement
+applies.
+
+This is the emptiness test for `SkorokhodSpace.IsCompactContained`, and it says
+precisely where the condition lives: **in the uniformity in the index**.  A
+constant family -- one law, repeated -- has it for nothing; a genuine family need
+not. -/
+theorem SkorokhodSpace.isCompactContained_const [CompleteSpace E]
+    {γ : Type*} [Nonempty γ] (ν : Measure D(ℝ≥0, E)) [IsFiniteMeasure ν] :
+    SkorokhodSpace.IsCompactContained (0 : ℝ≥0) (fun _ : γ => ν) := by
+  refine SkorokhodSpace.isCompactContained_of_isTightMeasureSet ?_
+  have hsing : {(fun _ : γ => ν) i | i} = ({ν} : Set (Measure D(ℝ≥0, E))) := by
+    ext x; simp [eq_comm]
+  rw [hsing]
+  exact isTightMeasureSet_singleton
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **Post-composition and the index crossing commute**, and definitionally: both
+sides send `t` to `h (f t.toNNReal)`.  It is the identity that lets the criterion
+below be stated over `ℝ≥0` on both sides of the equivalence instead of mixing the
+two indices. -/
+theorem SkorokhodSpace.postcomp_extendNNReal {E' : Type*} [MetricSpace E']
+    (h : C(E, E')) (f : D(ℝ≥0, E)) :
+    SkorokhodSpace.postcomp h (SkorokhodSpace.extendNNReal f)
+      = SkorokhodSpace.extendNNReal (SkorokhodSpace.postcomp h f) := rfl
+
+/-- **Stage (B) of Milestone 8, over the index the processes have.**  Under
+compact containment a family of laws on `D(ℝ≥0, E)` is tight if and only if all
+of its real valued images are -- with **both** sides over `ℝ≥0`, which is the
+form **MartingaleProblems** Milestone 11 consumes.
+
+This is `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` read through
+Milestone 9 three times: the hypothesis crosses forward by
+`SkorokhodSpace.IsCompactContained.map_extendNNReal`, the left side of the
+equivalence crosses back by `SkorokhodSpace.isTightMeasureSet_map_extendNNReal_iff`
+over `E`, and the right side by the same statement over `ℝ`, the two crossings on
+the right being exchanged by `SkorokhodSpace.postcomp_extendNNReal`.  Nothing of
+Milestone 8 is restated; the rule that a criterion carries its conclusion
+backwards across the index is what makes that possible.
+
+The hypothesis is not a weakening: `SkorokhodSpace.isCompactContained_of_isTightMeasureSet`
+derives it from the left side of the equivalence. -/
+theorem SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal [CompleteSpace E]
+    {γ : Type*} {μ : γ → Measure D(ℝ≥0, E)}
+    (hcc : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) μ) :
+    IsTightMeasureSet {μ i | i} ↔
+      ∀ h : E →ᵇ ℝ, IsTightMeasureSet
+        {(μ i).map (SkorokhodSpace.postcomp h.toContinuousMap) | i} := by
+  rw [← SkorokhodSpace.isTightMeasureSet_map_extendNNReal_iff,
+    SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp hcc.map_extendNNReal]
+  refine forall_congr' fun h => ?_
+  have hE : Measurable (SkorokhodSpace.extendNNReal (E := E)) :=
+    SkorokhodSpace.isometry_extendNNReal.continuous.measurable
+  have hR : Measurable (SkorokhodSpace.extendNNReal (E := ℝ)) :=
+    SkorokhodSpace.isometry_extendNNReal.continuous.measurable
+  have hp : Measurable (SkorokhodSpace.postcomp (ι := ℝ) (E := E) h.toContinuousMap) :=
+    SkorokhodSpace.measurable_postcomp _
+  have hp' : Measurable (SkorokhodSpace.postcomp (ι := ℝ≥0) (E := E) h.toContinuousMap) :=
+    SkorokhodSpace.measurable_postcomp _
+  have hcomm : (SkorokhodSpace.postcomp (ι := ℝ) (E := E) h.toContinuousMap)
+        ∘ SkorokhodSpace.extendNNReal
+      = SkorokhodSpace.extendNNReal
+        ∘ (SkorokhodSpace.postcomp (ι := ℝ≥0) (E := E) h.toContinuousMap) :=
+    funext fun f => SkorokhodSpace.postcomp_extendNNReal _ f
+  have hstep : ∀ i, ((μ i).map SkorokhodSpace.extendNNReal).map
+        (SkorokhodSpace.postcomp h.toContinuousMap)
+      = ((μ i).map (SkorokhodSpace.postcomp h.toContinuousMap)).map
+        (SkorokhodSpace.extendNNReal (E := ℝ)) := by
+    intro i
+    rw [Measure.map_map hp hE, hcomm, ← Measure.map_map hR hp']
+  have himg : (fun ν : Measure D(ℝ, E) => ν.map (SkorokhodSpace.postcomp h.toContinuousMap))
+        '' {(μ i).map SkorokhodSpace.extendNNReal | i}
+      = {((μ i).map (SkorokhodSpace.postcomp h.toContinuousMap)).map
+          (SkorokhodSpace.extendNNReal (E := ℝ)) | i} := by
+    ext ν
+    constructor
+    · rintro ⟨σ, ⟨i, rfl⟩, rfl⟩
+      exact ⟨i, (hstep i).symm⟩
+    · rintro ⟨i, rfl⟩
+      exact ⟨(μ i).map SkorokhodSpace.extendNNReal, ⟨i, rfl⟩, hstep i⟩
+  rw [himg, SkorokhodSpace.isTightMeasureSet_map_extendNNReal_iff]

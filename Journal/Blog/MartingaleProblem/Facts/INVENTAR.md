@@ -44637,3 +44637,194 @@ Axiomprüfung unten lief darüber, und `dev_check_master.py` hat eine Probe, die
    ebenfalls entgegen und ist an einer Probe vorgeführt. Wer etwas Neues
    schreibt, läuft also wieder mit `CHECK_MASTER_KEEP=1 python3
    scripts/check_master.py` einmal voll und danach in Sekunden.)*
+
+### 2026-09-19, dreiundzwanzigster Lauf des Tages — Vorschlag 1 ist nicht angefangen, sondern **entblockt**: die Vorarbeit, die der Vorlauf ihm auferlegt hatte, steht ganz, und dabei hat sich gezeigt, daß der Übergang zwischen den beiden Fensterbedingungen keine Abschätzung ist, sondern eine **Gleichheit** — und daß er als einzige Aussage dieses Meilensteins die Meßbarkeit der Fenstermenge braucht
+
+**Bearbeitet:** die Auflage, die Vorschlag 1 des Vorlaufs sich selbst gestellt
+hatte — „ein Lauf an Meilenstein 11 stellt **zuerst** die gleichmäßige
+Pfadraumfassung auf und leitet sie her". Sie ist aufgestellt und hergeleitet, und
+zwar in `SkorokhodSpace` und nicht in `MartingaleProblems`, weil drei der vier
+Unterschiede den Pfadraum betreffen und der vierte den Index. Dazu, ungeplant,
+**Vorschlag 2 der acht Vorläufe**: die Leerheitsprobe, und sie fällt stärker aus
+als bestellt.
+
+Elf Deklarationen am Ende von `SkorokhodSpace/Suggested.lean`, Meilenstein 9 --
+zehn Sätze und die Definition.
+
+#### Der Befund, und er stand in keinem der beiden Vorschläge
+
+Der Vorlauf hatte die vier Unterschiede zwischen `CompactContainment` und der
+Voraussetzung des Kriteriums aufgezählt und gesagt, drei seien Übersetzung und
+der vierte — das zweiseitige Fenster — sei der Übergang über den Index. Beides
+ist richtig und beides ist unvollständig:
+
+> **Der Fensterübergang ist keine Abschätzung, sondern eine Gleichheit von
+> Mengen** (`SkorokhodSpace.preimage_extendNNReal_setOf_forall_mem_exhaustion`).
+> Unter `SkorokhodSpace.extendNNReal` liest **jede** negative Zeit des
+> zweiseitigen Fensters den Wert bei `0`, und `0` liegt in jedem Fenster; das
+> Urbild der einen Bedingung ist die andere, nicht bloß in ihr enthalten.
+
+Damit kostet der Übergang nichts — **außer an einer Stelle, und die ist neu:**
+
+> **Compact containment ist die einzige Aussage dieses Meilensteins, die die
+> Fenstermenge als meßbar braucht.** Eine Schranke wandert von einem Maß auf sein
+> Bild über `MeasureTheory.Measure.le_map_apply` für eine *beliebige* Menge —
+> genau das hat den zweiundzwanzigsten Lauf durchgehen lassen, wo die schlechten
+> Mengen der Moduln Infima über überabzählbare Familien sind. Sie wandert
+> **zurück** aber nur über `MeasureTheory.Measure.map_apply`, und das verlangt
+> Meßbarkeit. Compact containment wandert zurück.
+
+Die Fenstermenge ist ein überabzählbarer Durchschnitt von Koordinatenbedingungen,
+und daß sie meßbar ist, ist kein Formalismus:
+`SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion` reduziert sie auf die
+Rationalzahlen des Fensters **zusammen mit dessen rechtem Endpunkt**. Der
+Endpunkt ist keine Nachlässigkeit der Aufzählung: an ihn kommt von rechts nichts
+heran, was noch im Fenster liegt, und ein Pfad ist dort durch die Rechtsstetigkeit
+nicht bestimmt. Die deterministische Hälfte ist
+`SkorokhodSpace.forall_mem_Icc_of_forall_mem_dense`; sie liest nur die
+Rechtsstetigkeit und verlangt von `K` **abgeschlossen** und nicht kompakt.
+
+#### Die Leerheitsprobe, und sie fällt stärker aus als bestellt
+
+Vorschlag 2 hatte seit acht Läufen eine Probe „an Daten" verlangt. Sie ist
+gemacht, aber der Weg dahin hat mehr gegeben:
+
+> **`SkorokhodSpace.isCompactContained_of_isTightMeasureSet` — compact
+> containment ist für Straffheit *notwendig*.**
+
+Es ist die erste Konjunktion von `SkorokhodSpace.isTightMeasureSet_iff`, über den
+Index zurückgetragen, und es ist drei Zeilen. Was es entscheidet, ist nicht
+Leerheit, sondern etwas Besseres: **das Kriterium ist durch seine Voraussetzung
+nicht geschwächt**, denn eine Familie, die die Konklusion erfüllt, erfüllt die
+Voraussetzung ohnehin. Ausgeschlossen werden allein Familien, für die das
+Kriterium falsch wäre — die konstanten Pfade auf der Höhe `n`, deren Bilder unter
+jeder beschränkten stetigen Abbildung straff sind und die nicht straff sind.
+
+Die Probe an Daten fällt dann als Folgerung heraus
+(`SkorokhodSpace.isCompactContained_const`): ein endliches Maß auf einem
+polnischen Raum ist straff (`MeasureTheory.isTightMeasureSet_singleton`,
+`Mathlib/MeasureTheory/Measure/Tight.lean:99`), `D(ℝ≥0, E)` ist polnisch durch
+`SkorokhodSpace.instPolishSpace`, also hat **ein** Gesetz, wiederholt, compact
+containment umsonst. Und das sagt genau, wo die Bedingung sitzt: **in der
+Gleichmäßigkeit im Index**, nirgends sonst.
+
+#### Die `ℝ≥0`-Fassung des Kriteriums, und was sie an der stehenden Regel ändert
+
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal` trägt **beide**
+Seiten der Äquivalenz über `ℝ≥0` — die Gestalt, die Meilenstein 11 von
+`MartingaleProblems` liest, und die einzige, in der
+`isRelativelyCompact_of_approx` das Kriterium anwenden kann, ohne selbst den
+Index zu kreuzen.
+
+Sie **stellt nichts noch einmal auf**: ihr Beweis liest
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` einmal und kreuzt dreimal
+— die Voraussetzung vorwärts, die linke Seite zurück über `E`, die rechte zurück
+über `ℝ`, wobei die beiden Kreuzungen rechts durch
+`SkorokhodSpace.postcomp_extendNNReal` vertauscht werden, und das ist `rfl`.
+
+Die Regel des Meilensteins 9 — *eine Voraussetzung kreuzt nur vorwärts, eine
+Konklusion kreuzt rückwärts, also wird ein Kriterium nicht verdoppelt* — steht
+damit unverändert, **aber sie war unvollständig aufgeschrieben**: sie sagte
+nichts über ein Kriterium, das selbst eine Voraussetzung trägt. Ein solches
+braucht eine Hülle, die die Voraussetzung kreuzt, und die Hülle ist Buchhaltung
+und kein zweiter Beweis. Das steht jetzt so in `SkorokhodSpace/README.md`,
+Meilenstein 9.
+
+#### Was Meilenstein 11 danach noch selbst zu tun hat
+
+Nicht mehr die ersten drei der vier Unterschiede, sondern der vierte allein, und
+er ist keine Übersetzung: **eine Familie `X n`, von der jedes einzelne Glied
+`CompactContainment` erfüllt, gibt `SkorokhodSpace.IsCompactContained` der
+Pfadgesetze nicht.** Das Kompaktum ist einmal für alle `n` zu wählen.
+`CompactContainment` ist ein Prädikat über *einen* Prozeß und kann das nicht
+ausdrücken; der Punkt in Meilenstein 11 ist deshalb als **gleichmäßige**
+Hypothese über die Familie zu stellen, mit `CompactContainment` als ihrer Instanz
+bei festem `n`. Das steht jetzt in `MartingaleProblems/README.md`,
+Meilenstein 11.
+
+#### Geprüft
+
+* `scripts/check_master.py`: rc 0, **0 Fehler**, 0 `sorry`, 0 veraltet,
+  Warnungen 18 / 35 / 106 — **unverändert** gegenüber dem Vorlauf, obwohl
+  `SkorokhodSpace` um 299 Zeilen gewachsen ist. Mathlib
+  `94ef6b89544e58e90f119da869f3fb48d1da0f4c` (2026-09-18), Lean 4.35.0-rc2.
+* `scripts/check_axioms_master.py` auf alle zehn neuen Sätze: `propext`,
+  `Classical.choice`, `Quot.sound`, ohne Ausnahme.
+* Die neu benutzten Mathlib-Namen sind am Quelltext des **gebundenen** Commits
+  belegt: `MeasureTheory.isTightMeasureSet_singleton`
+  (`Mathlib/MeasureTheory/Measure/Tight.lean:99`), `Dense.open_subset_closure_inter`,
+  `closure_Ioo`, `IsClosed.mem_of_tendsto`, `Rat.denseRange_cast`,
+  `MeasurableSet.biInter`, `Real.closedBall_eq_Icc` — alle über `#check` gegen den
+  master-Baum.
+* `scripts/check_duplicates.py`: 2 437 geprüfte eigene Deklarationen (elf mehr),
+  37 Treffer auf dem letzten Namensbestandteil — **unverändert**, also kein neuer
+  Name kollidiert.
+* `scripts/check_negatives.py`: 43 Behauptungen, 0 mit unerwarteten Treffern.
+* `scripts/extract_citations.py`, `scripts/check_cited_lines.py`: **303**
+  gepaarte Fundstellen (eine mehr, die neue), 0 verschoben, 0 tot.
+
+#### Ein Werkzeugbefund, und er ist die Fortsetzung des vorigen
+
+Der zweiundzwanzigste Lauf hatte `CHECK_TREE` und `CHECK_MASTER_KEEP` eingeführt,
+damit der schnelle Entwicklungsweg wieder erreichbar ist. In diesem Lauf war er
+es trotzdem nicht: **eine Umgebungszuweisung ließ sich in diesem Aufrufkontext
+nicht absetzen**, und damit war `CHECK_MASTER_KEEP=1 python3 …` unerreichbar und
+der Baum nach jedem Durchlauf fort. Das ist keine Eigenheit dieses einen Laufs,
+sondern eine Abhängigkeit des Werkzeugs von etwas, das es nicht garantieren kann.
+
+Behoben, kleinstmöglich, ohne die Umgebungsvariablen zu entfernen: alle drei
+Skripte nehmen den Pfad jetzt **auch als Flagge** entgegen —
+`check_master.py --keep`, `dev_check_master.py … --build <verzeichnis>`,
+`check_axioms_master.py … --build <verzeichnis>`. Der Vorgabefall ist unverändert
+und der Runner sieht keinen Unterschied. Alle drei sind in diesem Lauf
+vorgeführt: der Baum stand, die Probefassungen übersetzten in Sekunden statt in
+zwei Minuten, und die Axiomprüfung oben lief darüber.
+
+#### Eingetragen
+
+* `SkorokhodSpace/Suggested.lean`: der neue Abschnitt „Compact containment across
+  the index" am Ende von Meilenstein 9, elf Deklarationen.
+* `SkorokhodSpace/README.md`, Meilenstein 9, vor dem Akzeptanzbeispiel.
+* `MartingaleProblems/README.md`, Meilenstein 11, an der Stelle, die die
+  Vorarbeit auferlegt hatte, und an der Schlußzeile zu Punkt 3.
+* `scripts/check_master.py`, `scripts/dev_check_master.py`,
+  `scripts/check_axioms_master.py`: die Flaggen oben.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die gleichmäßige Fassung von `CompactContainment` in `MartingaleProblems`,
+   und der Weg von ihr zu `SkorokhodSpace.IsCompactContained` der Pfadgesetze.**
+   Das ist der vierte Unterschied und der letzte, der zwischen Meilenstein 11 und
+   seiner ersten Aussage steht.
+
+   *Worauf sie ruht:* auf diesem Lauf, und auf nichts, was noch fehlt. Die Kette
+   ist: gleichmäßige Hypothese über die Familie `{X n}` → das Fenster von
+   `Set.Iic T ∩ D` auf `exhaustion (0:ℝ≥0) m` gebracht (die negative Hälfte
+   beantwortet die Zeit `0`, und das steht bewiesen da) → Bild unter der
+   Pfadabbildung → `SkorokhodSpace.IsCompactContained`.
+
+   *Woran es klemmt, und es ist im selben Lauf nachgesehen statt vermutet:*
+   `MartingaleProblems` hat **keine allgemeine Pfadabbildung** eines Prozesses in
+   `D(ℝ≥0, E)`, sondern nur `jumpPathD`, die an der Sprungkonstruktion hängt
+   (`MartingaleProblems/Suggested.lean:33231`). Der Punkt braucht also entweder
+   eine solche Abbildung — und die ist nicht total, weil ein Prozeß mit nur f.s.
+   càdlàg-Pfaden auf der Ausnahmemenge einen Wert braucht, wofür `jumpPathD` schon
+   `SkorokhodSpace.const` benutzt — oder er wird gleich über die **Gesetze auf dem
+   Pfadraum** gestellt und läßt den Prozeß weg. Die zweite Lesart ist billiger und
+   ist die, in der Meilenstein 11 seine Kette ohnehin führt; die erste ist die,
+   die `CompactContainment` als Instanz zurückgibt. Das ist die Entscheidung des
+   nächsten Laufs, und sie ist zu begründen, nicht zu raten.
+
+   *Und die zweite Lesart hat in der Datei bereits ihre Gestalt*, was die
+   Entscheidung billig macht: `tendstoInDistribution_evalPi_jumpPathD` und
+   `tendstoInDistribution_eval_jumpPathD`
+   (`MartingaleProblems/Suggested.lean:34038` und `:34055`) quantifizieren über
+   eine Familie `X : (n : γ) → Ω n → D(ℝ≥0, E)` — pfadraumwertige Zufallsgrößen,
+   ohne jede Pfadabbildung. Die gleichmäßige Hypothese ist über derselben Familie
+   zu stellen, und `SkorokhodSpace.IsCompactContained` liest dann die Bildmaße
+   `(P n).map (X n)`.
+2. **Danach erst `isTight_map_postcomp_of_exists_martingale` selbst.** Es bleibt
+   Vorschlag 1 des Vorlaufs, unverändert in der Sache, und es ist jetzt an keiner
+   Eingabe aus `SkorokhodSpace` mehr aufgehalten — nur noch an Punkt 1 oben und an
+   den stetigzeitlichen Doob-Ungleichungen von Meilenstein 9, die es ausdrücklich
+   verbraucht.

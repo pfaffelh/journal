@@ -10665,7 +10665,10 @@ had no declaration at all, and they are needed in this order:
 
 Item 3 is **closed**, 2026-09-19, so
 `isTight_map_postcomp_of_exists_martingale` has a conclusion it can reach and
-`isRelativelyCompact_of_approx` an input.
+`isRelativelyCompact_of_approx` an input. The form in which those two read it is
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal` of **SkorokhodSpace**
+Milestone 9, 2026-09-19, which carries both sides of the equivalence over `ℝ≥0`
+and asks its hypothesis as `SkorokhodSpace.IsCompactContained`.
 
 **What a run at either has to do first, and it is measured and not guessed:
 the two compact containments are not the same statement.** `CompactContainment`
@@ -10692,6 +10695,36 @@ negative axis by its value at `0`, so the negative half of the window is
 answered by the time `0` and by nothing else. A run at Milestone 11 states the
 uniform, path space form first and derives it; it does not read
 `CompactContainment` into the criterion directly.
+
+**This is done, 2026-09-19, and it is done in SkorokhodSpace and not here**,
+because three of the four differences are about the path space and the fourth is
+about the index. What a run at Milestone 11 now holds:
+
+* `SkorokhodSpace.IsCompactContained` — the uniform, path space form, a predicate
+  on a **family** of laws. It is what the item above asked to be stated first,
+  and its being about a family rather than about one process is what
+  `CompactContainment` could not express.
+* `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal` — stage (B) of
+  **SkorokhodSpace** Milestone 8 with both sides over `ℝ≥0`, so that
+  `isRelativelyCompact_of_approx` reads it without crossing the index itself. The
+  windows are crossed by
+  `SkorokhodSpace.preimage_extendNNReal_setOf_forall_mem_exhaustion`, which is an
+  equality of sets and not an inclusion.
+* `SkorokhodSpace.isCompactContained_of_isTightMeasureSet` — compact containment
+  is **necessary** for tightness, so carrying it costs the criterion nothing; and
+  `SkorokhodSpace.isCompactContained_const` shows it is free for one law repeated,
+  which locates the condition where it belongs, in the uniformity in `n`.
+
+**What is therefore left to this milestone at that point is the translation of
+`CompactContainment` itself**, and it is the fourth difference and no longer the
+first three: a family `X n` of processes over `ℝ≥0`, each satisfying
+`CompactContainment` with its own compact sets, does **not** give
+`SkorokhodSpace.IsCompactContained` of the family of path laws — the compact set
+has to be chosen once for all `n`. The item that states this is therefore a
+*uniform* hypothesis on the family, `CompactContainment` being its instance at a
+single `n`, and the path laws enter through the path map; over the one sided
+window of `CompactContainment` the two agree, the negative half of the two sided
+window being answered by the time `0`.
 
 * `mpSolution_of_tendsto_cadlag`: let `A ⊆ Cb(E) × Cb(E)` and let `A n` be
   relations between bounded measurable functions such that for every `(f,g) ∈ A`
