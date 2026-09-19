@@ -3498,9 +3498,46 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
      `SkorokhodSpace.not_isCompact_closure_of_jumps_at_basePoint` is the same
      phenomenon from the other side.
 
-     What is left of the route is the assembly, in the corrected shape: the two
-     theorems above, the cell estimate, the finiteness of the large jumps, a
-     uniform grid, and the `Fin`-bookkeeping of an `IsSubdivisionBased`.
+     **The corrected link splits in two, and the analytic half is proved**,
+     2026-09-19: `SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt` says
+     what a *given* subdivision costs. It asks two things of it — every gap at
+     most `2 * δ`, and every cell either free of jumps larger than `2 * η` in its
+     **interior** or adjoining the base point — and returns
+     `4 * η + 2 * SkorokhodSpace.basePointOsc t₀ f (2 * δ)`. Neither strict
+     monotonicity, nor coverage of the window, nor sparseness is used, so the
+     theorem is independent of `SkorokhodSpace.IsSubdivisionBased`. The exemption
+     it grants the two cells at `t₀` is exactly the one the refutation forces and
+     no wider, and the factor `2` on the left cell is not slack: that cell
+     compares two *different* times of `Set.Ico (t₀ - 2*δ) t₀`, and the only
+     value available to route between them is `Function.leftLim f t₀`
+     (`SkorokhodSpace.edist_le_two_mul_basePointOsc`).
+
+     That the corrected inequality survives its own counterexample is
+     `SkorokhodSpace.one_le_four_mul_add_two_mul_basePointOsc_step`: at the unit
+     step and `δ = 1` the right hand side is at least `1` at every level `η`,
+     which is the lower bound `SkorokhodSpace.one_le_modulusBased_step` puts on
+     the left hand side.
+
+     **What is left is the combinatorial half**: a `t : Fin (n + 1) → ℝ` with
+     `SkorokhodSpace.IsSubdivisionBased t₀ M δ t`, every gap in `(δ, 2 * δ]`, and
+     no jump larger than `2 * η` in the interior of any cell but the two at `t₀`.
+     The node-placing rule that produces it is written out at its section in
+     `SkorokhodSpace/Suggested.lean`: from a node `x`, the next node is the jump
+     in `Set.Ioc (x + δ) (x + 2*δ)` if there is one; otherwise `(x + q) / 2` for
+     the jump `q` in `Set.Ioc (x + 2*δ) (x + 3*δ)` if there is one; otherwise
+     `x + 2 * δ`. Its gap lies in `(δ, 2 * δ]` in all three cases **with no
+     hypothesis at all**, which is what skipping over `Set.Ioc x (x + δ)` instead
+     of looking into it buys; the invariant `J ∩ Set.Ioc x (x + δ) = ∅` is needed
+     only for the jump-freeness, and the rule re-establishes it at its own output
+     in each case, out of `SkorokhodSpace.two_mul_le_sub_of_forall_min_edist_lt`
+     — two large jumps are at least `2 * δ` apart — and nothing else. The
+     invariant is unavailable at the base point itself, which is precisely the
+     cell the analytic half exempts, so the rule starts at `t₀` unconditioned.
+     The middle case is the one that is easy to miss: without it a node at
+     `x + 2 * δ` may land within `δ` of a jump, and then no admissible node
+     reaches that jump. What is left after the rule is `Fin`-bookkeeping: the
+     mirror rule to the left, strict monotonicity of the joined enumeration, and
+     a count of steps covering the window, each step being longer than `δ`.
   2. Three point quantity of the path ⟹ the same for the image under
      `SkorokhodSpace.clipDist (f t)`, capped at `1`
      (`SkorokhodSpace.min_edist_postcomp_clipDist`), and in the form a dense `H`

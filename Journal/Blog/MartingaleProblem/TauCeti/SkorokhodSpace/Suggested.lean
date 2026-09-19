@@ -15914,6 +15914,223 @@ theorem SkorokhodSpace.iSup_edist_step_left_eq_one {δ : ℝ} (hδ : 0 < δ) :
   exact le_iSup₂_of_le (1 - δ / 2) ⟨by linarith, by linarith⟩
     (le_of_eq (hval _ (by linarith)).symm)
 
+/-! ### The corrected link, reduced to a subdivision
+
+With the boundary term in hand the corrected link splits cleanly in two, and the
+split is along the line between analysis and bookkeeping:
+
+> **the analysis** says what a *given* subdivision costs, and
+> **the combinatorics** says that a subdivision of the required shape exists.
+
+`SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt` is the first half and
+is proved here.  It asks of a subdivision `t` exactly two things --- every gap at
+most `2 * δ`, and every cell either free of jumps larger than `2 * η` in its
+**interior** or adjacent to the base point --- and returns
+`4 * η + 2 * SkorokhodSpace.basePointOsc t₀ f (2 * δ)`.  Nothing else about `t`
+is used: neither strict monotonicity, nor that it covers the window, nor that it
+is sparse.  Those are what an `SkorokhodSpace.IsSubdivisionBased` needs and they
+are the business of the second half.
+
+**The exemption granted to the two cells at the base point is exactly the one the
+refutation forces**, no wider: a cell whose left endpoint is `t₀` is charged the
+right half of the boundary term, a cell whose right endpoint is `t₀` the left
+half twice --- twice because both its own left endpoint and the time inside it are
+compared to `Function.leftLim f t₀`, and neither to the other.  That is where the
+factor `2` of the corrected statement comes from, and it is not a slack: the two
+values a cell compares are two *different* points of the interval, and only the
+limit at `t₀` is available to route between them.
+
+**What remains is the construction**, and it is stated here so that the next run
+builds rather than designs.  What is wanted is `t : Fin (n + 1) → ℝ` with
+`SkorokhodSpace.IsSubdivisionBased t₀ M δ t`, every gap in `(δ, 2 * δ]`, and no
+jump larger than `2 * η` in the interior of any cell except the two at `t₀`.  The
+one node-placing rule that produces it, reading `J` for the set of times where
+the jump exceeds `2 * η`:
+
+> from a node `x`, the next node is `q` if `J` meets `Set.Ioc (x + δ) (x + 2*δ)`
+> in `q`; otherwise `(x + q) / 2` if `J` meets `Set.Ioc (x + 2*δ) (x + 3*δ)` in
+> `q`; otherwise `x + 2 * δ`.
+
+**Its gap is in `(δ, 2 * δ]` by construction, in all three cases and with no
+hypothesis at all** --- that is the point of skipping over `Set.Ioc x (x + δ)`
+rather than looking into it.  What the rule needs an invariant for is only the
+jump-freeness, and the invariant is `J ∩ Set.Ioc x (x + δ) = ∅`, which the rule
+**re-establishes** at its own output in each of the three cases, using
+`SkorokhodSpace.two_mul_le_sub_of_forall_min_edist_lt` and nothing else: in the
+first case by the separation at `q` directly, in the second because `q` lies more
+than `δ` beyond the new node while any other jump is `2 * δ` from `q`, in the
+third because the case hypothesis already says so.
+
+**And the invariant is not available at the base point itself** --- a jump may sit
+anywhere in `Set.Ioc t₀ (t₀ + δ)` --- which is precisely the cell the first half
+exempts.  So the rule is started at `t₀` unconditioned, and from the first node
+on the invariant carries itself.  The middle case is the one that is easy to
+miss: without it a node at `x + 2 * δ` may land within `δ` of a jump, and then no
+admissible node reaches that jump.
+
+The left half is the mirror of the same rule, and the two are joined at `t₀`.
+What is left after that is `Fin`-bookkeeping: strict monotonicity of the joined
+enumeration, and a count of steps large enough to cover the window, each step
+being longer than `δ`. -/
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **Two large jumps are at least the span apart.**  If the three point quantity
+is below `η` at span `2 * δ` and the path jumps by more than `2 * η` at both `p`
+and `q`, then `2 * δ ≤ q - p`.
+
+This is `SkorokhodSpace.jump_le_two_mul_of_forall_min_edist_lt` read as a
+separation statement, and it is the only property of the large jumps the
+construction of a subdivision uses.  The window it is read on is
+`Set.Icc (q - 2 * δ) q`, which contains `p` exactly when the separation fails ---
+so the proof is one choice of window and one contradiction.
+
+The threshold is `2 * η` at **both** times and not `η` at one of them, because
+the quoted theorem asks `η <` at its later time and returns `≤ 2 * η` at the
+earlier one; `η ≤ 2 * η` bridges the two, and that is the only place the
+inequality between the two levels is used. -/
+theorem SkorokhodSpace.two_mul_le_sub_of_forall_min_edist_lt
+    (f : D(ℝ, E)) {δ : ℝ} {η : ℝ≥0∞}
+    (h : ∀ t₁ t t₂ : ℝ, t₁ ≤ t → t ≤ t₂ → t₂ - t₁ ≤ 2 * δ →
+      min (edist (f.toFun t) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun t)) < η)
+    {p q : ℝ} (hpq : p < q)
+    (hp : 2 * η < edist (f.toFun p) (Function.leftLim f.toFun p))
+    (hq : 2 * η < edist (f.toFun q) (Function.leftLim f.toFun q)) :
+    2 * δ ≤ q - p := by
+  by_contra hcon
+  push Not at hcon
+  have hη2 : η ≤ 2 * η := by
+    rw [two_mul]; exact le_self_add
+  have hu : q - 2 * δ < p := by linarith
+  refine absurd (SkorokhodSpace.jump_le_two_mul_of_forall_min_edist_lt f
+    (u := q - 2 * δ) (v := q)
+    (fun t₁ t t₂ h1 h2 h3 h4 => h t₁ t t₂ h2 h3 (by linarith))
+    hu hpq le_rfl (lt_of_le_of_lt hη2 hq)) (not_le.2 hp)
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The right half of the boundary term bounds the cell that begins at the base
+point.**  One term of a supremum, and the summand on the left of
+`SkorokhodSpace.basePointOsc` is dropped by `le_add_self`. -/
+theorem SkorokhodSpace.edist_le_basePointOsc (t₀ : ℝ) (f : D(ℝ, E)) {δ r : ℝ}
+    (hr : r ∈ Set.Ico t₀ (t₀ + δ)) :
+    edist (f.toFun r) (f.toFun t₀) ≤ SkorokhodSpace.basePointOsc t₀ f δ :=
+  le_trans (le_iSup₂_of_le r hr le_rfl) le_add_self
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The left half of the boundary term bounds the cell that ends at the base
+point, and it is needed twice.**  That cell compares a time inside it with its own
+left endpoint, and both are times of `Set.Ico (t₀ - δ) t₀`; the only value
+available to route between them is `Function.leftLim f t₀`, against which the
+left summand of `SkorokhodSpace.basePointOsc` measures.  Hence the factor `2`,
+and hence the `2 *` in the corrected link. -/
+theorem SkorokhodSpace.edist_le_two_mul_basePointOsc (t₀ : ℝ) (f : D(ℝ, E)) {δ a r : ℝ}
+    (ha : a ∈ Set.Ico (t₀ - δ) t₀) (hr : r ∈ Set.Ico (t₀ - δ) t₀) :
+    edist (f.toFun r) (f.toFun a) ≤ 2 * SkorokhodSpace.basePointOsc t₀ f δ := by
+  have hL : ∀ x ∈ Set.Ico (t₀ - δ) t₀,
+      edist (f.toFun x) (Function.leftLim f.toFun t₀) ≤ SkorokhodSpace.basePointOsc t₀ f δ :=
+    fun x hx => le_trans (le_iSup₂_of_le x hx le_rfl) le_self_add
+  calc edist (f.toFun r) (f.toFun a)
+      ≤ edist (f.toFun r) (Function.leftLim f.toFun t₀)
+        + edist (Function.leftLim f.toFun t₀) (f.toFun a) := edist_triangle _ _ _
+    _ ≤ SkorokhodSpace.basePointOsc t₀ f δ + SkorokhodSpace.basePointOsc t₀ f δ :=
+        add_le_add (hL r hr) (by rw [edist_comm]; exact hL a ha)
+    _ = 2 * SkorokhodSpace.basePointOsc t₀ f δ := (two_mul _).symm
+
+/-- **The witness does not refute the corrected link.**  This is the check that
+had to be made before anything was built on the corrected inequality, and it is
+made at the very path that refutes the old one: the unit step has
+`SkorokhodSpace.basePointOsc (0 : ℝ) SkorokhodSpace.step 2 = 1` at least, because
+the time `1` lies in `Set.Ico 0 2` and the path is `1` there and `0` at the base
+point.
+
+`SkorokhodSpace.one_le_modulusBased_step` says the left hand side of the link is
+at least `1` at `δ = 1`; this says the right hand side is too, at every `η`.  An
+inequality that its own counterexample refutes is not a correction but the next
+false statement. -/
+theorem SkorokhodSpace.one_le_basePointOsc_step :
+    (1 : ℝ≥0∞) ≤ SkorokhodSpace.basePointOsc (0 : ℝ) SkorokhodSpace.step 2 := by
+  refine le_trans (SkorokhodSpace.one_le_edist_of_one_le_dist (p := SkorokhodSpace.step.toFun 1)
+    (q := SkorokhodSpace.step.toFun 0) ?_) (SkorokhodSpace.edist_le_basePointOsc
+      (0 : ℝ) SkorokhodSpace.step (r := 1) ⟨by norm_num, by norm_num⟩)
+  rw [SkorokhodSpace.step_apply, SkorokhodSpace.step_apply, ite_eq_left le_rfl,
+    ite_eq_right (by norm_num), Real.dist_eq]
+  norm_num
+
+/-- The same check stated as the inequality it protects: at the refuting path and
+at `δ = 1`, the corrected right hand side is at least `1`, which is the lower
+bound `SkorokhodSpace.one_le_modulusBased_step` puts on the left hand side.  The
+level `η` is arbitrary, so the boundary term alone carries it --- which is the
+whole content of the correction. -/
+theorem SkorokhodSpace.one_le_four_mul_add_two_mul_basePointOsc_step (η : ℝ≥0∞) :
+    (1 : ℝ≥0∞) ≤ 4 * η + 2 * SkorokhodSpace.basePointOsc (0 : ℝ) SkorokhodSpace.step 2 :=
+  le_trans (le_trans SkorokhodSpace.one_le_basePointOsc_step
+    (by rw [two_mul]; exact le_self_add)) le_add_self
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **What a subdivision costs: the analytic half of the corrected link.**  A
+subdivision whose gaps are at most `2 * δ` and whose cells are free of jumps
+larger than `2 * η` --- except for the at most two cells adjoining the base point,
+which are charged the boundary term instead --- has oscillation at most
+`4 * η + 2 * SkorokhodSpace.basePointOsc t₀ f (2 * δ)`.
+
+**Only two properties of the subdivision are used**, and neither is strict
+monotonicity, coverage of the window or sparseness: every gap at most `2 * δ`, and
+the cell hypothesis.  So this theorem is independent of
+`SkorokhodSpace.IsSubdivisionBased` and of the window, and what is left of the
+corrected link is the *existence* of such a subdivision --- pure combinatorics,
+written out at the head of this section.
+
+The three cases of the proof are the three clauses of the cell hypothesis.  A
+cell beginning at `t₀` is inside `Set.Ico t₀ (t₀ + 2 * δ)` by the gap bound, so
+`SkorokhodSpace.edist_le_basePointOsc` applies; a cell ending at `t₀` has both
+its left endpoint and its interior inside `Set.Ico (t₀ - 2 * δ) t₀`, so
+`SkorokhodSpace.edist_le_two_mul_basePointOsc` applies; and an ordinary cell is
+`SkorokhodSpace.edist_le_four_mul_of_forall_min_edist_lt`, read on the window
+`Set.Icc (t i.castSucc) s` for the time `s` at hand rather than on the whole cell,
+which is what turns the *open* jump condition on `Set.Ioo` into the half open one
+that theorem asks for. -/
+theorem SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt
+    (f : D(ℝ, E)) {δ : ℝ} {η : ℝ≥0∞} (hη : 0 < η)
+    (h : ∀ t₁ t t₂ : ℝ, t₁ ≤ t → t ≤ t₂ → t₂ - t₁ ≤ 2 * δ →
+      min (edist (f.toFun t) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun t)) < η)
+    (t₀ : ℝ) {n : ℕ} {t : Fin (n + 1) → ℝ}
+    (hspan : ∀ i : Fin n, t i.succ - t i.castSucc ≤ 2 * δ)
+    (hcell : ∀ i : Fin n, t i.castSucc = t₀ ∨ t i.succ = t₀ ∨
+      ∀ p ∈ Set.Ioo (t i.castSucc) (t i.succ),
+        edist (f.toFun p) (Function.leftLim f.toFun p) ≤ 2 * η) :
+    SkorokhodSpace.subdivisionOsc f t
+      ≤ 4 * η + 2 * SkorokhodSpace.basePointOsc t₀ f (2 * δ) := by
+  rw [SkorokhodSpace.subdivisionOsc]
+  refine iSup_le fun i => iSup₂_le fun s hs => ?_
+  rcases hcell i with hL | hR | hJ
+  · -- the cell that begins at the base point
+    have hmem : s ∈ Set.Ico t₀ (t₀ + 2 * δ) := by
+      have h1 := hspan i
+      have h2 := hs.2
+      have h3 := hs.1
+      rw [hL] at h1 h3
+      exact ⟨h3, by linarith⟩
+    have hbp : SkorokhodSpace.basePointOsc t₀ f (2 * δ)
+        ≤ 4 * η + 2 * SkorokhodSpace.basePointOsc t₀ f (2 * δ) :=
+      calc SkorokhodSpace.basePointOsc t₀ f (2 * δ)
+          ≤ 2 * SkorokhodSpace.basePointOsc t₀ f (2 * δ) := by
+            rw [two_mul (SkorokhodSpace.basePointOsc t₀ f (2 * δ))]; exact le_self_add
+        _ ≤ 4 * η + 2 * SkorokhodSpace.basePointOsc t₀ f (2 * δ) := le_add_self
+    rw [hL]
+    exact le_trans (SkorokhodSpace.edist_le_basePointOsc t₀ f (δ := 2 * δ) hmem) hbp
+  · -- the cell that ends at the base point
+    have hmem : ∀ x : ℝ, t i.castSucc ≤ x → x < t i.succ → x ∈ Set.Ico (t₀ - 2 * δ) t₀ := by
+      intro x hx1 hx2
+      have h1 := hspan i
+      rw [hR] at h1 hx2
+      exact ⟨by linarith, hx2⟩
+    refine le_trans (SkorokhodSpace.edist_le_two_mul_basePointOsc t₀ f (δ := 2 * δ)
+      (hmem _ le_rfl (lt_of_le_of_lt hs.1 hs.2)) (hmem s hs.1 hs.2)) ?_
+    exact le_add_self
+  · -- an ordinary cell: no large jump inside, and its span is at most `2 * δ`
+    refine le_trans (SkorokhodSpace.edist_le_four_mul_of_forall_min_edist_lt f hs.1 hη
+      (fun t₁ x t₂ h1 h2 h3 h4 => h t₁ x t₂ h2 h3 (by linarith [hspan i, hs.2]))
+      (fun p hp1 hp2 => hJ p ⟨hp1, lt_of_le_of_lt hp2 hs.2⟩) ⟨hs.1, le_rfl⟩) le_self_add
+
 /-! ## Milestone 9: the nonnegative index inside the real one
 
 Everything above about the modulus and about tightness is stated over the index

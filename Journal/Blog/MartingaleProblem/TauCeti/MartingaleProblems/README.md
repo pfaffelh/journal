@@ -10568,6 +10568,19 @@ had no declaration at all, and they are needed in this order:
    a hypothesis and not a formality. It is written out at the item in
    `SkorokhodSpace/README.md`, Milestone 8.
 
+   **In the corrected shape the link splits, and its analytic half stands**,
+   2026-09-19: `SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt` says what
+   a *given* subdivision costs — every gap at most `2 * δ`, every cell either free
+   of jumps larger than `2 * η` in its interior or adjoining the base point, and
+   the oscillation is at most `4 * η + 2 * SkorokhodSpace.basePointOsc t₀ f (2*δ)`
+   — using neither monotonicity nor coverage nor sparseness. That the corrected
+   inequality survives its own counterexample is
+   `SkorokhodSpace.one_le_four_mul_add_two_mul_basePointOsc_step`. What is left is
+   the *existence* of such a subdivision, and the node-placing rule that produces
+   it, together with the separation
+   `SkorokhodSpace.two_mul_le_sub_of_forall_min_edist_lt` it rests on, is written
+   out at the item in `SkorokhodSpace/README.md`, Milestone 8.
+
 Only then does `isTight_map_postcomp_of_exists_martingale` have a conclusion it
 can reach, and `isRelativelyCompact_of_approx` an input. **The order of work is
 therefore Milestone 8 of SkorokhodSpace first**, and what is left of it is item
