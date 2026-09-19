@@ -140,6 +140,13 @@ Suche `shift` unter `Mathlib/Probability/Kernel/IonescuTulcea/`: **0 Treffer** i
 Suche `memoryless|expMeasure_Ioi|Ioi.*expMeasure|expMeasure.*Ioi` unter `Mathlib/Probability/Distributions/`: **0 Treffer** in 0 Dateien — wie erwartet.
 
 
+## `unif-near-compact` — TODO.md Punkt 8, siebenundzwanzigste Lücke
+
+> Die einseitige gleichmäßige Stetigkeit in der Nähe eines Kompaktums — erster Punkt in `K`, zweiter frei — fehlt; Mathlib hat allein `IsCompact.uniformContinuousOn_of_continuous`, die beide Punkte einsperrt.
+
+Suche `exists_pos_forall_dist|forall_dist_image_lt|uniformContinuousOn_of_mem_nhdsSet` unter `Mathlib/Topology/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
 ## `exp-mean` — TODO.md Punkt 8, vierundzwanzigste Lücke
 
 > Der Erwartungswert der Exponential- und der Gammaverteilung fehlt; die einzigen Integrale beider Dateien sind die Normierung und die Verteilungsfunktion.
@@ -312,5 +319,5 @@ Suche `setIntegral.*[Mm]artingale|[Mm]artingale.*setIntegral` unter `Mathlib/Pro
 
 ## Zusammenfassung
 
-42 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
+43 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
 

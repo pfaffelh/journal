@@ -7,7 +7,7 @@ Skript sucht mit `git grep` in `upstream/master` und meldet die Trefferzahl; ein
 Treffer ist kein Gegenbeweis, sondern eine Stelle zum Nachlesen.
 
 `CLAIMS` sind die Behauptungen der vier `README.md` und der drei
-`Suggested.lean`, `CLAIMS_TODO8` die vierundzwanzig Lücken von `TODO.md` Punkt 8.
+`Suggested.lean`, `CLAIMS_TODO8` die Lücken von `TODO.md` Punkt 8.
 
 Jede Zeile trägt als letztes Feld die Dateien, in denen ein Treffer **bekannt
 und harmlos** ist — Namensvettern, Literaturverweise, der jeweils benachbarte
@@ -137,6 +137,13 @@ CLAIMS_TODO8 = [
      'vorhanden ist allein die Verteilungsfunktion `cdf_expMeasure_eq`.',
      'memoryless|expMeasure_Ioi|Ioi.*expMeasure|expMeasure.*Ioi',
      ['Mathlib/Probability/Distributions/'], []),
+    ('unif-near-compact', 'TODO.md Punkt 8, siebenundzwanzigste Lücke',
+     'Die einseitige gleichmäßige Stetigkeit in der Nähe eines Kompaktums — '
+     'erster Punkt in `K`, zweiter frei — fehlt; Mathlib hat allein '
+     '`IsCompact.uniformContinuousOn_of_continuous`, die beide Punkte '
+     'einsperrt.',
+     'exists_pos_forall_dist|forall_dist_image_lt|uniformContinuousOn_of_mem_nhdsSet',
+     ['Mathlib/Topology/'], []),
     ('exp-mean', 'TODO.md Punkt 8, vierundzwanzigste Lücke',
      'Der Erwartungswert der Exponential- und der Gammaverteilung fehlt; die '
      'einzigen Integrale beider Dateien sind die Normierung und die '

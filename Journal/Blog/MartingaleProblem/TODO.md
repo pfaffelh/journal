@@ -250,7 +250,7 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Sechsundzwanzig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Siebenundzwanzig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
 Alle zweiundzwanzig beim Beweisen aufgefallen, und die ersten vier sind kleine,
 in sich abgeschlossene Beiträge. Sie gehören thematisch zu
@@ -999,6 +999,34 @@ steht in seinem Dateikopf: es prüft Zeichenketten, nicht Aussagen.
   ist der Grund, weshalb es ein eigener Satz sein sollte und keine Folgerung:
   aus der stetigen Fassung ließe er sich nur unter deren Voraussetzungen
   gewinnen.
+
+* **Gleichmäßige Stetigkeit in der Nähe eines Kompaktums, einseitig.** Der
+  siebenundzwanzigste, gefunden am 2026-09-19 im dreizehnten Lauf, beim Beweis
+  der Stetigkeit der Nachschaltung auf dem Skorokhodraum, und im selben Lauf
+  gegen `upstream/master` `94ef6b89544` (2026-09-18) nachgeprüft.
+
+  Gebraucht wird: ist `K` kompakt in einem metrischen Raum `E` und
+  `h : E → E'` stetig, so gibt es zu `ε > 0` ein `δ > 0` mit
+  `dist (h x) (h y) < ε` für **alle** `x ∈ K` und **jedes** `y ∈ E` mit
+  `dist x y < δ`. Der zweite Punkt läuft also über den ganzen Raum und nicht
+  über `K`.
+
+  Mathlib hat `IsCompact.uniformContinuousOn_of_continuous`
+  (`Mathlib/Topology/UniformSpace/Compact.lean`), und die sperrt **beide**
+  Punkte in `K` ein; für zwei Objekte, von denen nur eines in `K` liegt — hier
+  zwei càdlàg-Pfade, von denen einer der Mittelpunkt der Kugel ist — trägt sie
+  nicht. Gesucht wurde nach dem Gegenstand und nicht nur nach dem Namen:
+  `lebesgue_number_lemma`, `uniformContinuousOn`, `nhdsSet` samt Uniformität
+  über `Mathlib/Topology/` geben die zweiseitige Fassung und die
+  Filterfassungen, keine einseitige.
+
+  Bewiesen ist sie als `IsCompact.exists_pos_forall_dist_image_lt` in
+  `TauCeti/SkorokhodSpace/Suggested.lean`, zehn Zeilen: das Lebesguesche
+  Zahlenlemma (`lebesgue_number_lemma_of_metric`,
+  `Mathlib/Topology/MetricSpace/Pseudo/Lemmas.lean:120`) auf die Überdeckung von
+  `K` durch die Urbilder der `ε/2`-Bälle von `E'`, dann die Dreiecksungleichung.
+  Sie hat mit diesem Projekt nichts zu tun und gehört in dieselbe Datei wie die
+  zweiseitige.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine

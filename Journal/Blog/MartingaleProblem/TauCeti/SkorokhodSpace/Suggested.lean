@@ -757,6 +757,13 @@ and are gone with them: `isCadlag_const` is `IsCadlag.const` (`ibid.:115`),
 **not** have, and what the rest of this milestone is, begins at the uniform
 limit.
 
+A fourth was never written, and it is recorded here so that no run writes it:
+**post composition with a continuous map of the value space** is
+`IsCadlag.continuous_comp` (`ibid.:119`), with `IsCadlag.continuous_comp₂` at
+`:128` beside it.  It is what `SkorokhodSpace.postcomp` of Milestone 8 is built
+on.  The composition this file does have is the one on the **index** side,
+`IsCadlag.comp_monotone_continuous`, and the library has no counterpart of it.
+
 `Function.leftLim` and `Function.rightLim` are in
 `Mathlib/Topology/Order/LeftRightLim.lean` (`:50` and `:59` in v4.33.1), and the
 two lemmas that connect the structure to them, `tendsto_leftLim_of_tendsto` and
@@ -13832,6 +13839,507 @@ theorem SkorokhodSpace.tendstoInDistribution_eval_of_isTight_of_tendsto_finiteDi
   SkorokhodSpace.tendstoInDistribution_eval
     (SkorokhodSpace.tendstoInDistribution_of_isTight_of_tendsto_finiteDimensional
       hX hZ htight hT hfdd) s hs
+
+/-! ### From a set of paths to a set of measures
+
+`SkorokhodSpace.isCompact_closure_iff` of Milestone 7 is a criterion about a
+**set of paths**, and the tightness criterion `SkorokhodSpace.isTightMeasureSet_iff`
+that reads it is about a **set of measures**.  The two statements below are the
+joint, and they are stated for an arbitrary measurable topological space because
+nothing of the path space enters them.
+
+**Neither needs any measurability of the sets involved**, and that is the
+observation that decides how the criterion is to be stated: a `Measure` in
+Mathlib is defined on *every* set, being an outer measure with a measurability
+predicate attached, so `μ Aᶜ ≤ ε` is a statement about an arbitrary `A` and
+`measure_mono` and `measure_iUnion_le` hold for arbitrary sets.  The modulus
+sets `{f | η ≤ modulusBased t₀ u f δ}` are infima over an *uncountable* family
+of subdivisions, so no argument is available that they are Borel; with these two
+lemmas the criterion never has to ask. -/
+
+/-- **A set of paths with compact closure that carries all but `ε` of every
+measure of the family makes the family tight.**  The compact set is the closure,
+and the estimate survives it by `measure_mono`; the set `A` itself is arbitrary
+and in particular need not be measurable. -/
+theorem isTightMeasureSet_of_forall_exists_isCompact_closure {X : Type*} [TopologicalSpace X]
+    [MeasurableSpace X] {S : Set (Measure X)}
+    (h : ∀ ε : ℝ≥0∞, 0 < ε → ∃ A : Set X, IsCompact (closure A) ∧ ∀ μ ∈ S, μ Aᶜ ≤ ε) :
+    IsTightMeasureSet S := by
+  rw [isTightMeasureSet_iff_exists_isCompact_measure_compl_le]
+  intro ε hε
+  obtain ⟨A, hA, hAle⟩ := h ε hε
+  refine ⟨closure A, hA, fun μ hμ => le_trans (measure_mono ?_) (hAle μ hμ)⟩
+  exact Set.compl_subset_compl.2 subset_closure
+
+/-- **The countable bookkeeping of the criterion**, and it is `measure_iUnion_le`
+read through `Set.compl_iInter`: the exceptional set of a countable intersection
+is paid for by the sum of the exceptional sets.  Stated separately because it is
+the step at which a criterion with one condition per window radius and per
+tolerance becomes a single set, and because it too holds for arbitrary sets. -/
+theorem measure_compl_iInter_le {X : Type*} [MeasurableSpace X] (μ : Measure X)
+    (A : ℕ → Set X) : μ (⋂ k, A k)ᶜ ≤ ∑' k, μ (A k)ᶜ := by
+  rw [Set.compl_iInter]
+  exact measure_iUnion_le _
+
+/-! ### Milestone 8, stage (A): post-composition with a map of the value space
+
+The reduction of tightness to real valued paths reads a law on `D(ι, E)` through
+the maps `f ↦ h ∘ f` for `h` in a class of real valued test functions, so the
+first thing it needs is that such a map exists at all, is well defined, and is
+measurable.  **Well definedness is Mathlib's**: that post-composing a càdlàg
+function with a continuous map leaves it càdlàg is `IsCadlag.continuous_comp`
+(`Mathlib/Topology/Order/Cadlag.lean:119`), both clauses being a `Tendsto`
+composed with `Continuous.tendsto`.  Nothing of it is restated here; the
+definition below is the bundling of that lemma into a map of path spaces, and
+the measurability is `SkorokhodSpace.measurable_of_measurable_eval` of Milestone
+6 applied coordinatewise.
+
+**The argument is a bundled `C(E, E')` and not a pair of a function and a
+proof.**  Its consumers are `Measure.map (postcomp h)` and `Continuous
+(postcomp h)`, and both want a map of one argument; a bounded continuous test
+function `h : E →ᵇ ℝ`, which is what the reduction runs over, reaches it through
+`BoundedContinuousFunction.toContinuousMap`.
+
+`SkorokhodSpace.continuous_postcomp` is the other half of stage (A) and is proved
+below, in four steps that are worth naming because each is a statement of its
+own: the value space estimate `IsCompact.exists_pos_forall_dist_image_lt`, the
+window estimate `SkorokhodSpace.distWith_postcomp_le`, the compactness of the
+window values `SkorokhodSpace.totallyBounded_image_exhaustion`, and the passage
+to the integral `SkorokhodSpace.intWith_postcomp_le`.  The last is the only one
+of the four that is not a pointwise bound: a small `SkorokhodSpace.intWith` does
+not make `SkorokhodSpace.distWith` small at every radius, only at all radii
+outside a set of small Lebesgue measure, so what carries it is a Markov
+inequality and the truncation at `1` in the integrand.
+
+What the continuity is for is the last statement of the section,
+`SkorokhodSpace.isTightMeasureSet_map_postcomp`: the forward half of the
+reduction of stage (B).  The converse half is not available here, and cannot be:
+it runs through the tightness criterion at the level of measures, which is
+`SkorokhodSpace.isTightMeasureSet_iff` and is not in this file. -/
+
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] [BasePoint ι]
+  [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **Post-composition with a continuous map of the value space.**  The path
+`h ∘ f` is càdlàg by `IsCadlag.continuous_comp`, and that is the whole of the
+definition. -/
+def SkorokhodSpace.postcomp {E' : Type*} [TopologicalSpace E'] (h : C(E, E'))
+    (f : D(ι, E)) : D(ι, E') where
+  toFun := h ∘ f.toFun
+  isCadlag := f.isCadlag.continuous_comp h.continuous
+
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] [BasePoint ι]
+  [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+@[simp]
+theorem SkorokhodSpace.postcomp_toFun {E' : Type*} [TopologicalSpace E'] (h : C(E, E'))
+    (f : D(ι, E)) (t : ι) :
+    (SkorokhodSpace.postcomp h f).toFun t = h (f.toFun t) := rfl
+
+/-- **Post-composition is Borel measurable**, and it is so for the reason every
+map into a path space is: its coordinates are.  The coordinate of
+`postcomp h f` at `t` is `h (f.toFun t)`, which is
+`SkorokhodSpace.measurable_eval` followed by a continuous map, and
+`SkorokhodSpace.measurable_of_measurable_eval` of Milestone 6 assembles them.
+
+The continuity of `postcomp h` itself -- which would give this at once -- is not
+used, and that is deliberate: measurability is what
+`MeasureTheory.Measure.map (postcomp h)` asks for, and it is available before
+the harder statement is. -/
+theorem SkorokhodSpace.measurable_postcomp {E' : Type*} [MetricSpace E'] [MeasurableSpace E']
+    [BorelSpace E'] [PolishSpace E'] [CompleteSpace E'] [SkorokhodSpace.HasCountableCore ι]
+    (h : C(E, E')) :
+    Measurable (SkorokhodSpace.postcomp (ι := ι) h) :=
+  SkorokhodSpace.measurable_of_measurable_eval fun t =>
+    h.continuous.measurable.comp (SkorokhodSpace.measurable_eval t)
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **A continuous map is uniformly continuous near a compact set**, in the one
+sided form the path space needs: the first point is confined to `K`, the second
+is anywhere.
+
+This is not `IsCompact.uniformContinuousOn_of_continuous`, which confines both
+points to `K`; the paths compared below take their values near the window image
+of *one* of them and not inside it.  The proof is the Lebesgue number lemma
+(`lebesgue_number_lemma_of_metric`,
+`Mathlib/Topology/MetricSpace/Pseudo/Lemmas.lean:120`) applied to the cover of
+`K` by the preimages of the balls of radius `ε / 2` about the points of `E'`:
+a Lebesgue number `δ` of that cover puts `x` and `y` in one such preimage, and
+the triangle inequality closes it.
+
+Compactness is not replaceable by total boundedness: on a non complete `E` a
+continuous map can fail to be uniformly continuous near a totally bounded set,
+and that is why the consumer of this statement carries `[CompleteSpace E]`. -/
+theorem IsCompact.exists_pos_forall_dist_image_lt {E' : Type*} [MetricSpace E'] (h : C(E, E'))
+    {K : Set E} (hK : IsCompact K) {ε : ℝ} (hε : 0 < ε) :
+    ∃ δ > 0, ∀ x ∈ K, ∀ y : E, dist x y < δ → dist (h x) (h y) < ε := by
+  have hcov : K ⊆ ⋃ y : E', h ⁻¹' Metric.ball y (ε / 2) := fun x _ =>
+    Set.mem_iUnion.2 ⟨h x, Metric.mem_ball_self (by linarith)⟩
+  obtain ⟨δ, hδ, hball⟩ :=
+    lebesgue_number_lemma_of_metric (c := fun y : E' => h ⁻¹' Metric.ball y (ε / 2)) hK
+      (fun _ => Metric.isOpen_ball.preimage h.continuous) hcov
+  refine ⟨δ, hδ, fun x hx y hxy => ?_⟩
+  obtain ⟨z, hz⟩ := hball x hx
+  have hx' : h x ∈ Metric.ball z (ε / 2) := hz (Metric.mem_ball_self hδ)
+  have hy' : h y ∈ Metric.ball z (ε / 2) := hz (Metric.mem_ball.2 (by rwa [dist_comm]))
+  rw [Metric.mem_ball] at hx'
+  rw [Metric.mem_ball, dist_comm] at hy'
+  calc dist (h x) (h y) ≤ dist (h x) z + dist z (h y) := dist_triangle _ _ _
+    _ < ε / 2 + ε / 2 := add_lt_add hx' hy'
+    _ = ε := add_halves ε
+
+omit [BasePoint ι] [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The windowed supremum of Milestone 4 survives post-composition**, at one
+radius and one time change: if the two paths are within `δ` of each other in the
+window `u` under `l`, and the values of the *first* of them in that window are a
+set on which `h` moves points by less than `ε`, then the post-composed paths are
+within `ε` in the same window under the same time change.
+
+The time change is not moved, and that is the point of stating it for a fixed
+`l`: `SkorokhodSpace.distOn` and `SkorokhodSpace.intDist` are infima over `l`,
+and an infimum is bounded above by any one member, so a statement at fixed `l`
+is what their estimates are made of.
+
+The hypothesis is anchored at the **first** path because `SkorokhodSpace.distWith`
+is not symmetric -- the time change acts on the first argument -- and because
+the consumer, a continuity statement, holds its centre there; `intDist_comm`
+turns the other reading into this one. -/
+theorem SkorokhodSpace.distWith_postcomp_le {E' : Type*} [MetricSpace E'] (h : C(E, E'))
+    (t₀ : ι) (u : ℝ) (l : TimeChange ι) (f g : D(ι, E)) {ε δ : ℝ}
+    (hunif : ∀ x ∈ f.toFun '' exhaustion t₀ u, ∀ y : E, dist x y < δ → dist (h x) (h y) < ε)
+    (hd : SkorokhodSpace.distWith t₀ u l f g < δ) :
+    SkorokhodSpace.distWith t₀ u l (SkorokhodSpace.postcomp h f)
+      (SkorokhodSpace.postcomp h g) ≤ ε := by
+  have : Nonempty ι := ⟨t₀⟩
+  refine ciSup_le fun t => ?_
+  have hle : dist ((SkorokhodSpace.restrictExhaustion t₀ u f).toFun (l.toOrderIso t))
+      ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun t)
+      ≤ SkorokhodSpace.distWith t₀ u l f g :=
+    le_ciSup (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion t₀ u f g l) t
+  have hmem : f.toFun (clamp t₀ u (l.toOrderIso t)) ∈ f.toFun '' exhaustion t₀ u :=
+    ⟨clamp t₀ u (l.toOrderIso t), clamp_mem_exhaustion t₀ u _, rfl⟩
+  exact (hunif _ hmem _ (lt_of_le_of_lt hle hd)).le
+
+omit [BasePoint ι] [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The values of a càdlàg path on a window are totally bounded.**  The window
+is a closed ball and `IsCadlag.totallyBounded_image_Icc` speaks of an interval,
+so the bridge is `ordConnected_exhaustion`: the ball lies between its least and
+its greatest point, that interval is a closed subset of the compact ball and
+hence compact, and total boundedness passes to subsets.
+
+This is the statement `SkorokhodSpace.totallyBounded_values_of_isCompact` of
+Milestone 7 makes for a *family* of paths, done here for a single one, where it
+needs neither the time change nor a second radius. -/
+theorem SkorokhodSpace.totallyBounded_image_exhaustion (f : D(ι, E)) (t₀ : ι) (u : ℝ) :
+    TotallyBounded (f.toFun '' exhaustion t₀ u) := by
+  have hmin := isLeast_exhaustionMin t₀ u
+  have hmax := isGreatest_exhaustionMax t₀ u
+  have hab : exhaustionMin t₀ u ≤ exhaustionMax t₀ u := hmin.2 hmax.1
+  have hK : IsCompact (Set.Icc (exhaustionMin t₀ u) (exhaustionMax t₀ u)) :=
+    (isCompact_exhaustion t₀ u).of_isClosed_subset isClosed_Icc
+      ((ordConnected_exhaustion t₀ u).out hmin.1 hmax.1)
+  have hsub : exhaustion t₀ u ⊆ Set.Icc (exhaustionMin t₀ u) (exhaustionMax t₀ u) :=
+    fun z hz => ⟨hmin.2 hz, hmax.2 hz⟩
+  exact TotallyBounded.subset (Set.image_mono hsub)
+    (f.isCadlag.totallyBounded_image_Icc hab hK)
+
+omit [BasePoint ι] [MeasurableSpace E] [BorelSpace E] in
+/-- **The integral over the window radius survives post-composition**, and this
+is the step that is not a pointwise bound.
+
+A small `SkorokhodSpace.intWith` does **not** make `SkorokhodSpace.distWith`
+small at every radius; it makes the set of radii at which `distWith` exceeds a
+threshold `δ₁` small in **Lebesgue measure**.  That is a Markov inequality, and
+it is where the shape of the metric of Milestone 4 -- an integral against
+`exp (-u)` of a quantity truncated at `1` -- is spent twice over:
+
+* the truncation at `1` gives the trivial bound on the exceptional radii, so
+  that their contribution is at most their measure;
+* the weight `exp (-u)` is bounded below by `exp (-M)` on the window `Ioc 0 M`,
+  which turns the integral into a bound on that measure, and its tail beyond `M`
+  integrates to `exp (-M)`, which is the third summand.
+
+The middle range is `SkorokhodSpace.distWith_postcomp_le` applied at each radius
+`u ≤ M`, the hypothesis of that lemma being inherited from the radius `M`
+through `exhaustion_subset_of_le`.
+
+**Nothing is assumed about `h` beyond the modulus `hunif`**, which is where a
+consumer will put `IsCompact.exists_pos_forall_dist_image_lt`; in particular the
+statement is free of compactness and of completeness, both of which enter only
+when the modulus is produced. -/
+theorem SkorokhodSpace.intWith_postcomp_le {E' : Type*} [MetricSpace E']
+    [SecondCountableTopology E'] (h : C(E, E')) (t₀ : ι) (l : TimeChange ι) (f g : D(ι, E))
+    {M ε₀ δ₁ : ℝ} (hM : 0 ≤ M) (hε₀ : 0 ≤ ε₀) (hδ₁ : 0 < δ₁)
+    (hunif : ∀ x ∈ f.toFun '' exhaustion t₀ M, ∀ y : E, dist x y < δ₁ → dist (h x) (h y) < ε₀) :
+    SkorokhodSpace.intWith t₀ l (SkorokhodSpace.postcomp h f) (SkorokhodSpace.postcomp h g)
+      ≤ ε₀ + Real.exp (-M) + Real.exp M / min 1 δ₁ * SkorokhodSpace.intWith t₀ l f g := by
+  have hmin : (0 : ℝ) < min 1 δ₁ := lt_min zero_lt_one hδ₁
+  -- the radii at which the two paths are still far apart
+  set A : Set ℝ := Set.Ioc 0 M ∩ {u | δ₁ ≤ SkorokhodSpace.distWith t₀ u l f g} with hA
+  have hAmeas : MeasurableSet A :=
+    measurableSet_Ioc.inter
+      (measurableSet_le measurable_const (SkorokhodSpace.measurable_distWith t₀ l f g))
+  have hAsub : A ⊆ Set.Ioi (0 : ℝ) := fun u hu => hu.1.1
+  have hAvol : volume A ≤ ENNReal.ofReal M := by
+    refine le_trans (measure_mono (fun u hu => hu.1)) ?_
+    rw [Real.volume_Ioc]
+    simp
+  have hAvolne : volume A ≠ ⊤ := ne_top_of_le_ne_top ENNReal.ofReal_ne_top hAvol
+  have hrestrict : (volume.restrict (Set.Ioi (0:ℝ))) A = volume A := by
+    rw [Measure.restrict_apply hAmeas, Set.inter_eq_self_of_subset_left hAsub]
+  have hd0 : ∀ (F G : D(ι, E)) (u : ℝ), 0 ≤ min 1 (SkorokhodSpace.distWith t₀ u l F G) :=
+    fun F G u => le_min zero_le_one (le_ciSup_of_le
+      (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion t₀ u F G l) t₀ dist_nonneg)
+  have hindA : IntegrableOn (A.indicator fun u : ℝ => Real.exp (-u)) (Set.Ioi (0:ℝ)) :=
+    IntegrableOn.indicator (integrableOn_exp_neg_Ioi 0) hAmeas
+  have hindM : IntegrableOn ((Set.Ioi M).indicator fun u : ℝ => Real.exp (-u))
+      (Set.Ioi (0:ℝ)) :=
+    IntegrableOn.indicator (integrableOn_exp_neg_Ioi 0) measurableSet_Ioi
+  -- Markov: the bad radii have small Lebesgue measure
+  have hmarkov : Real.exp (-M) * min 1 δ₁ * (volume A).toReal
+      ≤ SkorokhodSpace.intWith t₀ l f g := by
+    have hint1 : IntegrableOn (A.indicator fun _ : ℝ => Real.exp (-M) * min 1 δ₁)
+        (Set.Ioi (0:ℝ)) :=
+      ((integrable_indicator_iff hAmeas).2 (integrableOn_const hAvolne)).integrableOn
+    have hmono := MeasureTheory.setIntegral_mono_on hint1
+      (SkorokhodSpace.integrableOn_intDist t₀ l f g) measurableSet_Ioi ?_
+    · rw [MeasureTheory.integral_indicator hAmeas, MeasureTheory.setIntegral_const,
+        Measure.real_def, hrestrict, smul_eq_mul] at hmono
+      rw [SkorokhodSpace.intWith]
+      calc Real.exp (-M) * min 1 δ₁ * (volume A).toReal
+          = (volume A).toReal * (Real.exp (-M) * min 1 δ₁) := by ring
+        _ ≤ _ := hmono
+    · intro u hu
+      by_cases huA : u ∈ A
+      · rw [Set.indicator_of_mem huA]
+        have h1 : Real.exp (-M) ≤ Real.exp (-u) :=
+          Real.exp_le_exp.2 (by linarith [huA.1.2])
+        have h2 : min 1 δ₁ ≤ min 1 (SkorokhodSpace.distWith t₀ u l f g) :=
+          le_min (min_le_left _ _) (le_trans (min_le_right _ _) huA.2)
+        exact mul_le_mul h1 h2 hmin.le (Real.exp_pos _).le
+      · rw [Set.indicator_of_notMem huA]
+        exact mul_nonneg (Real.exp_pos _).le (hd0 f g u)
+  -- the pointwise bound for the post-composed pair
+  have hbound : ∀ u ∈ Set.Ioi (0:ℝ),
+      Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u l
+          (SkorokhodSpace.postcomp h f) (SkorokhodSpace.postcomp h g))
+        ≤ ε₀ * Real.exp (-u) + (Set.Ioi M).indicator (fun u => Real.exp (-u)) u
+          + A.indicator (fun u => Real.exp (-u)) u := by
+    intro u hu
+    have hexp : (0 : ℝ) < Real.exp (-u) := Real.exp_pos _
+    have hnn1 : 0 ≤ (Set.Ioi M).indicator (fun u => Real.exp (-u)) u :=
+      Set.indicator_nonneg (fun _ _ => (Real.exp_pos _).le) u
+    have hnn2 : 0 ≤ A.indicator (fun u => Real.exp (-u)) u :=
+      Set.indicator_nonneg (fun _ _ => (Real.exp_pos _).le) u
+    rcases lt_or_ge M u with hMu | hMu
+    · have hind : (Set.Ioi M).indicator (fun u => Real.exp (-u)) u = Real.exp (-u) :=
+        Set.indicator_of_mem hMu _
+      rw [hind]
+      have hle : Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u l
+          (SkorokhodSpace.postcomp h f) (SkorokhodSpace.postcomp h g)) ≤ Real.exp (-u) * 1 :=
+        mul_le_mul_of_nonneg_left (min_le_left _ _) hexp.le
+      nlinarith [mul_nonneg hε₀ hexp.le]
+    · by_cases hfar : δ₁ ≤ SkorokhodSpace.distWith t₀ u l f g
+      · have huA : u ∈ A := ⟨⟨hu, hMu⟩, hfar⟩
+        rw [Set.indicator_of_mem huA]
+        have hle : Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u l
+            (SkorokhodSpace.postcomp h f) (SkorokhodSpace.postcomp h g)) ≤ Real.exp (-u) * 1 :=
+          mul_le_mul_of_nonneg_left (min_le_left _ _) hexp.le
+        nlinarith [mul_nonneg hε₀ hexp.le]
+      · rw [not_le] at hfar
+        have hsub : f.toFun '' exhaustion t₀ u ⊆ f.toFun '' exhaustion t₀ M :=
+          Set.image_mono (exhaustion_subset_of_le t₀ hMu)
+        have hle0 : SkorokhodSpace.distWith t₀ u l (SkorokhodSpace.postcomp h f)
+            (SkorokhodSpace.postcomp h g) ≤ ε₀ :=
+          SkorokhodSpace.distWith_postcomp_le h t₀ u l f g
+            (fun x hx => hunif x (hsub hx)) hfar
+        have hle : Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u l
+            (SkorokhodSpace.postcomp h f) (SkorokhodSpace.postcomp h g))
+            ≤ Real.exp (-u) * ε₀ :=
+          mul_le_mul_of_nonneg_left (le_trans (min_le_right _ _) hle0) hexp.le
+        nlinarith
+  -- integrate the pointwise bound
+  have hintR : IntegrableOn (fun u : ℝ => ε₀ * Real.exp (-u)
+      + (Set.Ioi M).indicator (fun u => Real.exp (-u)) u
+      + A.indicator (fun u => Real.exp (-u)) u) (Set.Ioi (0:ℝ)) :=
+    (((integrableOn_exp_neg_Ioi 0).const_mul ε₀).add hindM).add hindA
+  have hstep := MeasureTheory.setIntegral_mono_on
+    (SkorokhodSpace.integrableOn_intDist t₀ l
+      (SkorokhodSpace.postcomp h f) (SkorokhodSpace.postcomp h g))
+    hintR measurableSet_Ioi hbound
+  have hI1 : ∫ u in Set.Ioi (0:ℝ), ε₀ * Real.exp (-u) = ε₀ := by
+    rw [MeasureTheory.integral_const_mul, integral_exp_neg_Ioi_zero, mul_one]
+  have hI2 : ∫ u in Set.Ioi (0:ℝ), (Set.Ioi M).indicator (fun u => Real.exp (-u)) u
+      = Real.exp (-M) := by
+    rw [MeasureTheory.integral_indicator measurableSet_Ioi,
+      Measure.restrict_restrict measurableSet_Ioi,
+      Set.inter_eq_self_of_subset_left (Set.Ioi_subset_Ioi hM), integral_exp_neg_Ioi]
+  have hI3 : ∫ u in Set.Ioi (0:ℝ), A.indicator (fun u => Real.exp (-u)) u
+      ≤ (volume A).toReal := by
+    rw [MeasureTheory.integral_indicator hAmeas, Measure.restrict_restrict hAmeas,
+      Set.inter_eq_self_of_subset_left hAsub]
+    calc ∫ u in A, Real.exp (-u) ≤ ∫ _u in A, (1 : ℝ) := by
+          refine MeasureTheory.setIntegral_mono_on
+            ((integrableOn_exp_neg_Ioi 0).mono_set hAsub)
+            (integrableOn_const hAvolne) hAmeas ?_
+          intro u hu
+          exact Real.exp_le_one_iff.2 (by linarith [Set.mem_Ioi.1 (hAsub hu)])
+      _ = (volume A).toReal := by
+          rw [MeasureTheory.setIntegral_const, Measure.real_def, smul_eq_mul, mul_one]
+  have hVol : (volume A).toReal
+      ≤ Real.exp M / min 1 δ₁ * SkorokhodSpace.intWith t₀ l f g := by
+    rw [div_mul_eq_mul_div, le_div_iff₀ hmin]
+    have hexp : Real.exp M * Real.exp (-M) = 1 := by
+      rw [← Real.exp_add]
+      simp
+    have key : Real.exp M * (Real.exp (-M) * min 1 δ₁ * (volume A).toReal)
+        ≤ Real.exp M * SkorokhodSpace.intWith t₀ l f g :=
+      mul_le_mul_of_nonneg_left hmarkov (Real.exp_pos M).le
+    have heq : Real.exp M * (Real.exp (-M) * min 1 δ₁ * (volume A).toReal)
+        = (volume A).toReal * min 1 δ₁ := by
+      have hassoc : Real.exp M * (Real.exp (-M) * min 1 δ₁ * (volume A).toReal)
+          = Real.exp M * Real.exp (-M) * (min 1 δ₁ * (volume A).toReal) := by ring
+      rw [hassoc, hexp, one_mul, mul_comm]
+    rw [heq] at key
+    exact key
+  rw [SkorokhodSpace.intWith]
+  have hsum : ∫ u in Set.Ioi (0:ℝ), (ε₀ * Real.exp (-u)
+      + (Set.Ioi M).indicator (fun u => Real.exp (-u)) u
+      + A.indicator (fun u => Real.exp (-u)) u)
+      = ε₀ + Real.exp (-M) + ∫ u in Set.Ioi (0:ℝ), A.indicator (fun u => Real.exp (-u)) u := by
+    have hsum0 : IntegrableOn (fun u : ℝ => ε₀ * Real.exp (-u)) (Set.Ioi (0:ℝ)) :=
+      (integrableOn_exp_neg_Ioi 0).const_mul ε₀
+    have hsum1 : IntegrableOn (fun u : ℝ => ε₀ * Real.exp (-u)
+        + (Set.Ioi M).indicator (fun u => Real.exp (-u)) u) (Set.Ioi (0:ℝ)) :=
+      hsum0.add hindM
+    rw [MeasureTheory.integral_add hsum1 hindA, MeasureTheory.integral_add hsum0 hindM,
+      hI1, hI2]
+  rw [hsum] at hstep
+  linarith [hstep, hI3, hVol]
+
+omit [MeasurableSpace E] [BorelSpace E] in
+/-- **Post-composition is continuous**, which is the forward half of the
+reduction of tightness to real valued paths.
+
+The proof is the estimate above run once, and everything in it is a choice of
+constants:
+
+* the radius `M` is chosen by `Real.log` so that the tail `exp (-M)` is below
+  `ε / 4`;
+* the modulus `δ₁` comes from `IsCompact.exists_pos_forall_dist_image_lt` at the
+  compact set `closure (b.toFun '' exhaustion basePoint M)`, compact because the
+  window values of a càdlàg path are totally bounded
+  (`SkorokhodSpace.totallyBounded_image_exhaustion`) and `E` is complete;
+* the radius of the ball is `min (ε / 4) (ε / 4 * min 1 δ₁ / exp M)`, whose
+  second term is what `SkorokhodSpace.intWith_postcomp_le` charges for the
+  exceptional radii.
+
+**The centre sits in the first argument throughout**, and that is the one place
+where the shape of the metric dictates the proof: `SkorokhodSpace.distWith` is
+not symmetric, the time change acting on the first path, while the modulus is
+known only near the values of the centre.  `SkorokhodSpace.intDist_comm` turns
+the goal round once at the start and once at the end, and `exists_lt_of_ciInf_lt`
+produces the time change that the infimum only approaches.
+
+`[CompleteSpace E]` is what makes the closure of the window values compact, and
+it is not removable: near a merely totally bounded set a continuous map need not
+be uniformly continuous. -/
+theorem SkorokhodSpace.continuous_postcomp {E' : Type*} [MetricSpace E']
+    [SecondCountableTopology E'] [CompleteSpace E] (h : C(E, E')) :
+    Continuous (SkorokhodSpace.postcomp (ι := ι) h) := by
+  rw [Metric.continuous_iff]
+  intro b ε hε
+  have h4 : (0:ℝ) < ε / 4 := by linarith
+  -- the window radius, chosen so that the tail of the integral is small
+  set M : ℝ := max 0 (Real.log (4 / ε) + 1) with hMdef
+  have hM0 : (0:ℝ) ≤ M := le_max_left _ _
+  have hMexp : Real.exp (-M) < ε / 4 := by
+    have h1 : Real.log (4 / ε) < M := lt_of_lt_of_le (by linarith) (le_max_right _ _)
+    have h2 : Real.exp (-M) < Real.exp (-Real.log (4 / ε)) := Real.exp_lt_exp.2 (by linarith)
+    have h3 : Real.exp (-Real.log (4 / ε)) = ε / 4 := by
+      rw [Real.exp_neg, Real.exp_log (by positivity), inv_div]
+    rwa [h3] at h2
+  -- the modulus of `h` near the window values of the centre
+  have htb : TotallyBounded (b.toFun '' exhaustion (basePoint : ι) M) :=
+    SkorokhodSpace.totallyBounded_image_exhaustion b _ M
+  have hKc : IsCompact (closure (b.toFun '' exhaustion (basePoint : ι) M)) :=
+    htb.closure.isCompact_of_isClosed isClosed_closure
+  obtain ⟨δ₁, hδ₁, hδ₁unif⟩ := IsCompact.exists_pos_forall_dist_image_lt h hKc h4
+  have hmin0 : (0:ℝ) < min 1 δ₁ := lt_min zero_lt_one hδ₁
+  refine ⟨min (ε / 4) (ε / 4 * min 1 δ₁ / Real.exp M), lt_min h4 (by positivity), ?_⟩
+  intro a hab
+  set δ : ℝ := min (ε / 4) (ε / 4 * min 1 δ₁ / Real.exp M) with hδdef
+  -- a time change that is good for the pair, with the centre first
+  have hba : SkorokhodSpace.intDist (basePoint : ι) b a < δ := by
+    rw [SkorokhodSpace.intDist_comm]
+    rw [SkorokhodSpace.dist_eq] at hab
+    exact hab
+  rw [SkorokhodSpace.intDist] at hba
+  obtain ⟨l, hl⟩ := exists_lt_of_ciInf_lt hba
+  have hnorm : TimeChange.norm (l : TimeChange ι) < δ := lt_of_le_of_lt (le_max_left _ _) hl
+  have hiw : SkorokhodSpace.intWith (basePoint : ι) (l : TimeChange ι) b a < δ :=
+    lt_of_le_of_lt (le_max_right _ _) hl
+  have hpost : SkorokhodSpace.intWith (basePoint : ι) (l : TimeChange ι)
+      (SkorokhodSpace.postcomp h b) (SkorokhodSpace.postcomp h a)
+      ≤ ε / 4 + Real.exp (-M)
+        + Real.exp M / min 1 δ₁ * SkorokhodSpace.intWith (basePoint : ι) (l : TimeChange ι) b a :=
+    SkorokhodSpace.intWith_postcomp_le h (basePoint : ι) (l : TimeChange ι) b a hM0 h4.le hδ₁
+      (fun x hx y hxy => hδ₁unif x (subset_closure hx) y hxy)
+  have hiw0 : 0 ≤ SkorokhodSpace.intWith (basePoint : ι) (l : TimeChange ι) b a := by
+    rw [SkorokhodSpace.intWith]
+    refine MeasureTheory.setIntegral_nonneg measurableSet_Ioi fun u _ => ?_
+    refine mul_nonneg (Real.exp_pos _).le (le_min zero_le_one ?_)
+    exact le_ciSup_of_le
+      (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion (basePoint : ι) u b a
+        (l : TimeChange ι)) (basePoint : ι) dist_nonneg
+  have hcoef : Real.exp M / min 1 δ₁
+      * SkorokhodSpace.intWith (basePoint : ι) (l : TimeChange ι) b a ≤ ε / 4 := by
+    have h1 : SkorokhodSpace.intWith (basePoint : ι) (l : TimeChange ι) b a
+        ≤ ε / 4 * min 1 δ₁ / Real.exp M :=
+      le_of_lt (lt_of_lt_of_le hiw (min_le_right _ _))
+    have h2 : (0:ℝ) < Real.exp M / min 1 δ₁ := by positivity
+    calc Real.exp M / min 1 δ₁
+          * SkorokhodSpace.intWith (basePoint : ι) (l : TimeChange ι) b a
+        ≤ Real.exp M / min 1 δ₁ * (ε / 4 * min 1 δ₁ / Real.exp M) :=
+          mul_le_mul_of_nonneg_left h1 h2.le
+      _ = ε / 4 := by
+          field_simp
+  rw [SkorokhodSpace.dist_eq, SkorokhodSpace.intDist_comm]
+  refine lt_of_le_of_lt (ciInf_le (SkorokhodSpace.bddBelow_range_intDist (basePoint : ι) _ _) l) ?_
+  refine max_lt (lt_of_lt_of_le hnorm (le_trans (min_le_left _ _) (by linarith))) ?_
+  linarith [hpost, hcoef, hMexp]
+
+omit [MeasurableSpace E] [BorelSpace E] in
+/-- **Tightness travels forward under post-composition**, which is the forward
+half of `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp`: a tight family of
+laws on `D(ι, E)` has tight images on `D(ι, E')`.
+
+The mathematics is `MeasureTheory.IsTightMeasureSet.map`
+(`Mathlib/MeasureTheory/Measure/Tight.lean:129`) and the content is
+`SkorokhodSpace.continuous_postcomp`; what is added here is the index, the
+hypothesis a consumer holds being about a family `μ : γ → Measure D(ι, E)` rather
+than about an image of a set of measures.  This is the same bookkeeping that
+`SkorokhodSpace.isTightMeasureSet_map_extendNNReal` of Milestone 9 does for the
+index crossing, and the two are the only transports of tightness in this file.
+
+**The converse is not this statement read backwards**, and it is not true without
+compact containment: the laws of the constant paths at height `n` have tight
+images under every bounded continuous `h` and are not tight.  That is
+`isTightMeasureSet_iff_forall_postcomp`, and it goes through the criterion at the
+level of measures. -/
+theorem SkorokhodSpace.isTightMeasureSet_map_postcomp {E' : Type*} [MetricSpace E']
+    [MeasurableSpace E'] [BorelSpace E'] [PolishSpace E'] [CompleteSpace E]
+    {γ : Type*} {μ : γ → Measure D(ι, E)}
+    (h : C(E, E')) (htight : IsTightMeasureSet {μ i | i}) :
+    IsTightMeasureSet {(μ i).map (SkorokhodSpace.postcomp h) | i} := by
+  have him : Measure.map (SkorokhodSpace.postcomp (ι := ι) h) '' {μ i | i}
+      = {(μ i).map (SkorokhodSpace.postcomp h) | i} := by
+    ext m
+    constructor
+    · rintro ⟨ρ, ⟨i, rfl⟩, rfl⟩
+      exact ⟨i, rfl⟩
+    · rintro ⟨i, rfl⟩
+      exact ⟨μ i, ⟨i, rfl⟩, rfl⟩
+  rw [← him]
+  exact htight.map (SkorokhodSpace.continuous_postcomp h)
 
 /-! ## Milestone 9: the nonnegative index inside the real one
 
