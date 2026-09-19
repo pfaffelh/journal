@@ -1240,8 +1240,7 @@ The representation theorem itself:
   its purpose is to make `IsProbabilityMeasure (condLaw μ A)` hold
   *unconditionally* and so be an instance.
 * `MeasureTheory.map_eval_prod_infinitePi`, **proved** on 2026-09-08, eighth
-  run, together with `sum_smul_dirac_singleton`,
-  `map_eval_prod_infinitePi_of_map_eq` and
+  run, together with `map_eval_prod_infinitePi_of_map_eq` and
   `exists_measurable_map_prod_infinitePi_eq_sum_smul`: **the randomisation
   step**. On the product of a space carrying a measurable index `ι : Ω → κ`
   with `MeasureTheory.Measure.infinitePi m` — Mathlib's countable product of

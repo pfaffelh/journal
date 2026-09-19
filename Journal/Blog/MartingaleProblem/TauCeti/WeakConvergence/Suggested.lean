@@ -270,7 +270,7 @@ Of Milestone 3 only `exists_ae_tendsto_of_tendsto` itself is now unproved.
 
 The eighth run of 2026-09-08 proved the randomisation step and the two index maps
 the representation needs on top of the one-stage coupling:
-`map_eval_prod_infinitePi` with `sum_smul_dirac_singleton`,
+`map_eval_prod_infinitePi` with `Measure.sum_smul_dirac_singleton`,
 `map_eval_prod_infinitePi_of_map_eq` and
 `exists_measurable_map_prod_infinitePi_eq_sum_smul`, then
 `exists_measurable_partitionIndex`,
@@ -3606,21 +3606,11 @@ theorem map_eval_prod_infinitePi {Ω κ : Type*} [MeasurableSpace Ω] [Measurabl
   refine tsum_congr fun i => ?_
   rw [Measure.smul_apply, smul_eq_mul, mul_comm]
 
-/-- The point masses of a countable superposition of Diracs are its weights.  Stated separately
-because `Measure.sum` is how the discrete realisation reports its law, while
-`map_eval_prod_infinitePi` reports the index law through its point masses. -/
-theorem sum_smul_dirac_singleton {κ : Type*} [MeasurableSpace κ] [MeasurableSingletonClass κ]
-    (p : κ → ℝ≥0∞) (j : κ) :
-    (Measure.sum fun i => p i • Measure.dirac i) {j} = p j := by
-  rw [Measure.sum_apply _ (measurableSet_singleton j)]
-  refine tsum_eq_single j ?_ |>.trans ?_
-  · intro i hij
-    rw [Measure.smul_apply, Measure.dirac_apply' _ (measurableSet_singleton j)]
-    simp [Set.indicator_of_notMem, hij]
-  · rw [Measure.smul_apply, Measure.dirac_apply' _ (measurableSet_singleton j)]
-    simp
-
-/-- The randomisation step with the index law given as a weight vector. -/
+/-- The randomisation step with the index law given as a weight vector.  The point masses of a
+countable superposition of Diracs are its weights; that is `Measure.sum_smul_dirac_singleton`
+(`MeasureTheory/Measure/Dirac/Basic.lean:92`), and it is the bridge between the two ways the
+discrete realisation reports its law -- `Measure.sum` here, point masses in
+`map_eval_prod_infinitePi`. -/
 theorem map_eval_prod_infinitePi_of_map_eq {Ω κ : Type*} [MeasurableSpace Ω] [MeasurableSpace κ]
     [Countable κ] [MeasurableSingletonClass κ] (P : Measure Ω) [SFinite P]
     {ι : Ω → κ} (hι : Measurable ι) {p : κ → ℝ≥0∞}
@@ -3629,7 +3619,7 @@ theorem map_eval_prod_infinitePi_of_map_eq {Ω κ : Type*} [MeasurableSpace Ω] 
     (P.prod (Measure.infinitePi m)).map (fun z => z.2 (ι z.1))
       = Measure.sum fun i => p i • m i := by
   rw [map_eval_prod_infinitePi P hι m]
-  simp only [hp, sum_smul_dirac_singleton]
+  simp only [hp, Measure.sum_smul_dirac_singleton]
 
 /-- **A countable mixture is realised on `(0,1] × (ℕ → E)`.**  This is
 `exists_measurable_map_restrict_volume_eq_sum_smul_dirac` with the point masses `dirac (x i)`
@@ -4655,7 +4645,7 @@ theorem exists_measurable_pair_of_partition_subset [PseudoMetricSpace E]
         simp only [Set.mem_preimage, Set.mem_singleton_iff, Prod.ext_iff]
         exact ⟨fun h => h.2, fun h => ⟨hq1.symm, h⟩⟩
       rw [hpre, ite_eq_left hq1, ← Measure.map_apply (hΦm n) (measurableSet_singleton q.2),
-        hΦlaw n, sum_smul_dirac_singleton]
+        hΦlaw n, Measure.sum_smul_dirac_singleton]
     · have hpre : (fun w : E × ℝ => ((n, Φ n w) : ℕ × ℕ)) ⁻¹' {q} = (∅ : Set (E × ℝ)) := by
         ext w
         simp only [Set.mem_preimage, Set.mem_singleton_iff, Prod.ext_iff,

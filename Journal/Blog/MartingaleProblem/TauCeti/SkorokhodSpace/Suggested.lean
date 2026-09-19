@@ -371,19 +371,18 @@ without importing it, and Milestone 6 spoke of measurable maps out of `D(ι, E)`
 with no measurable structure on it.  The last is now declared, as the Borel
 structure of the metric.
 
-`IsRightContinuous` and `IsCadlag` are restated here because v4.33.1, to
-which this file is pinned, does not have them; the earlier version of the file,
-which used them without defining them, could not be elaborated at all.
-
-Mathlib has them since #43352, in `Mathlib/Topology/Order/Cadlag.lean`, under the
-names `IsRightContinuous` and `IsCadlag` and with the fields `isRightContinuous`
-and `tendsto_nhdsLT`.  The two definitions agree term for term, including the
-instance bundle `[TopologicalSpace X] [Preorder X] [TopologicalSpace Y]`, so the
-`IsCadlag` below collides with the library one by name and not merely by subject.
-Against a toolchain that carries that file, the two definitions below are to be
-deleted and nothing else changed; the field names used throughout this file are
-already Mathlib's, so that the deletion is the whole of the transition.  The
-source the library drew on is `RemyDegenne/brownian-motion`,
+`IsRightContinuous` and `IsCadlag` are **Mathlib's**, from
+`Mathlib/Topology/Order/Cadlag.lean` (`#43352`), imported above; they are not
+declared here.  Until 2026-09-18 this file restated both, because it was checked
+against the release `v4.33.1`, which does not carry that file; the move of the
+chain to `upstream/master` removed the reason and the twenty fourth run of that
+day removed the definitions.  They agreed with the library ones term for term,
+fields (`isRightContinuous`, `tendsto_nhdsLT`) and instance bundle
+(`[TopologicalSpace X] [Preorder X] [TopologicalSpace Y]`) included, so the
+deletion was the whole of the transition and no statement below changed.  What
+this file adds beyond `Cadlag.lean` begins at the uniform limit; the head of
+Milestone 2 says which three of its own statements went with the definitions.
+The source the library drew on is `RemyDegenne/brownian-motion`,
 `BrownianMotion/StochasticIntegral/Cadlag.lean` (Apache 2.0).
 -/
 

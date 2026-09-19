@@ -338,8 +338,8 @@ topology free form of the theorem prescribes.
 
 The tenth run of 2026-09-07 added the clock's interval calculus
 (`Clock.interval_subset_Iic`, `Clock.measurableSet_interval`,
-`Clock.measure_interval_ne_top`), the two measure theoretic tools
-`stronglyMeasurable_integral_comp` and `integrableOn_of_bounded`, and the
+`Clock.measure_interval_ne_top`), the measure theoretic tool
+`stronglyMeasurable_integral_comp`, and the
 increment identity `mpFamily_sub_of_measurable_path`, all proved; and it
 corrected both forms of `isMPSolution_iff_forall_fdd`, which were **not
 provable** as they stood.  They now carry `Clock.IsProgressive Q X 𝓕`.
@@ -862,12 +862,23 @@ def IsDetermining {F : Type*} [MeasurableSpace F] (𝓩 : ι → Set (F → ℝ)
 
 /-- Joint measurability of the path up to each time, relative to the filtration.
 
-This is Mathlib's `IsStronglyProgressive` in the shape a `Clock` forces: the
-clock carries its `MeasurableSpace ι` as a *field* and not as an instance, so the
+This is progressive measurability in the shape a `Clock` forces: the clock
+carries its `MeasurableSpace ι` as a *field* and not as an instance, so the
 subtype `Set.Iic t` of that structure cannot be written without `@`; the
-equivalent formulation by a jointly measurable extension `Z`, which agrees with
-`X` below `t` and is `Q.measurableSpace ⊗ 𝓕 t`-measurable everywhere, is used
-instead.
+formulation by a jointly measurable extension `Z`, which agrees with `X` below
+`t` and is `Q.measurableSpace ⊗ 𝓕 t`-measurable everywhere, is used instead.
+
+**It shares its name with `MeasureTheory.IsProgressive`
+(`Probability/Process/Adapted.lean:192`) and not its statement.** The library's
+predicate measures the restriction to the *subtype* `Set.Iic i`, whose σ-algebra
+is `Subtype.instMeasurableSpace` and hence derived from an instance
+`[MeasurableSpace ι]`; instance search is syntactic and will not produce
+`Q.measurableSpace` for it. The two formulations agree when the clock's σ-algebra
+is that instance, and neither implies the other as written. The same distinction
+holds against the strongly measurable variant `MeasureTheory.IsStronglyProgressive`
+(`:262`), which this file uses under its own name wherever the index does carry
+its σ-algebra as an instance -- `martingale_stoppedProcess` and the optional
+sampling results below are stated with it.
 
 It is a hypothesis on `X` and the clock alone, never on `P`, and it is not
 cosmetic.  Without it neither side of `isMPSolution_iff_forall_fdd` is reachable
@@ -893,20 +904,9 @@ theorem stronglyMeasurable_integral_comp {α : Type*} [MeasurableSpace α]
   MeasureTheory.StronglyMeasurable.integral_prod_left
     (f := fun x y => g (W x y)) ((hg.comp hW).stronglyMeasurable)
 
-/-- A bounded measurable function is integrable on every set of finite measure.
-The compensator of `mpFamily` is exactly of this shape, by
-`Clock.measure_interval_ne_top`. -/
-theorem integrableOn_of_bounded {α : Type*} [MeasurableSpace α] {𝕜 : Type*}
-    [RCLike 𝕜] (μ : Measure α) {s : Set α} (hs : μ s ≠ ⊤) {f : α → 𝕜}
-    (hf : Measurable f) {b : ℝ} (hb : ∀ x, ‖f x‖ ≤ b) : IntegrableOn f s μ := by
-  have : IsFiniteMeasure (μ.restrict s) :=
-    ⟨by rw [Measure.restrict_apply_univ]; exact lt_top_iff_ne_top.2 hs⟩
-  exact Integrable.mono' (integrable_const b) hf.stronglyMeasurable.aestronglyMeasurable
-    (Filter.Eventually.of_forall hb)
-
 /-- A bounded measurable real function is integrable against a finite measure.  The unbundled
-companion of `integrableOn_of_bounded`, for the whole space and in absolute value; the renewal
-equation of the jump construction uses it at every one of its five nested integrals. -/
+companion of `Measure.integrableOn_of_bounded`, for the whole space and in absolute value; the
+renewal equation of the jump construction uses it at every one of its five nested integrals. -/
 theorem integrable_of_abs_le {α : Type*} [MeasurableSpace α] {μ : Measure α} [IsFiniteMeasure μ]
     {f : α → ℝ} (hf : Measurable f) {C : ℝ} (hC : ∀ x, |f x| ≤ C) : Integrable f μ :=
   Integrable.mono' (integrable_const C) hf.aestronglyMeasurable
@@ -926,7 +926,7 @@ omit [MeasurableSpace E] in
 /-- The increment of a member of `mpFamily` over `[s,t]` is the compensated
 increment that `isMPSolution_iff_forall_fdd` tests.  `Clock.interval_union` is
 what makes the two compensators subtract, and the integrability of the integrand
-on each half is `integrableOn_of_bounded` through
+on each half is `Measure.integrableOn_of_bounded` through
 `Clock.measure_interval_ne_top`.  The hypothesis `hZ` is the path measurability
 that `Clock.IsProgressive` supplies below `t`; it is not decoration, for without
 it both compensators are the junk value `0` and the identity is false. -/
@@ -939,9 +939,10 @@ theorem mpFamily_sub_of_measurable_path [OrderBot ι] {Q : Clock ι} {c : Clock.
       f (X t ω) - f (X s ω) - ∫ u in Q.interval c s t, g (X u ω) ∂Q.q := by
   obtain ⟨hunion, hdisj⟩ := Q.interval_union c (bot_le : ⊥ ≤ s) hst
   have hint := fun s' t' : ι =>
-    @integrableOn_of_bounded ι Q.measurableSpace 𝕂 _ Q.q (Q.interval c s' t')
-      (Q.measure_interval_ne_top c s' t') (fun u => g (X u ω)) hZ b
-      (fun u => hgb (X u ω))
+    Measure.integrableOn_of_bounded (mα := Q.measurableSpace) (μ := Q.q)
+      (s := Q.interval c s' t') (f := fun u => g (X u ω))
+      (Q.measure_interval_ne_top c s' t') hZ.aestronglyMeasurable (M := b)
+      (Filter.Eventually.of_forall fun u => hgb (X u ω))
   rw [hY t ω, hY s ω, hunion,
     setIntegral_union hdisj (Q.measurableSet_interval c s t) (hint ⊥ s) (hint s t)]
   ring
@@ -9798,7 +9799,8 @@ theorem jumpMeasure_integral_sub_eq_intervalIntegral {lam : E → ℝ} (hlam : M
     have hfin : volume (Set.uIoc (0:ℝ) t) ≠ ⊤ := by
       simp [Set.uIoc]
     rw [intervalIntegrable_iff]
-    exact integrableOn_of_bounded volume hfin hGm hGb
+    exact Measure.integrableOn_of_bounded hfin hGm.aestronglyMeasurable
+      (Filter.Eventually.of_forall hGb)
   have hF0 : F 0 = ∫ z, h z ∂nu :=
     integral_jumpProcess_of_nonpos hlam0 mu nu hh (le_refl (0:ℝ))
   rw [← hF0]
@@ -10900,10 +10902,12 @@ theorem setIntegral_compensator_sub_eq_intervalIntegral {lam : E → ℝ} (hlam 
     abs_setIntegral_compensator_le hD
   have hInt_i : IntegrableOn (fun ω => ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ i,
       g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q) S μ0 :=
-    integrableOn_of_bounded μ0 (measure_ne_top μ0 S) (hmeas_win i) (houterbound i)
+    Measure.integrableOn_of_bounded (measure_ne_top μ0 S) (hmeas_win i).aestronglyMeasurable
+      (Filter.Eventually.of_forall (houterbound i))
   have hInt_j : IntegrableOn (fun ω => ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ j,
       g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q) S μ0 :=
-    integrableOn_of_bounded μ0 (measure_ne_top μ0 S) (hmeas_win j) (houterbound j)
+    Measure.integrableOn_of_bounded (measure_ne_top μ0 S) (hmeas_win j).aestronglyMeasurable
+      (Filter.Eventually.of_forall (houterbound j))
   rw [← integral_sub hInt_j hInt_i]
   have habij : (0 : ℝ) ≤ (j : ℝ) - (i : ℝ) := by
     have := (NNReal.coe_le_coe).2 hij; linarith
@@ -10917,12 +10921,14 @@ theorem setIntegral_compensator_sub_eq_intervalIntegral {lam : E → ℝ} (hlam 
       (bot_le : (⊥ : ℝ≥0) ≤ i) hij
     have hIa : IntegrableOn (fun u : ℝ≥0 => g (jumpProcess lam (u : ℝ) ω))
         (lebesgueClock.interval Clock.Conv.optional ⊥ i) lebesgueClock.q :=
-      integrableOn_of_bounded lebesgueClock.q
-        (lebesgueClock.measure_interval_ne_top Clock.Conv.optional ⊥ i) (hgXu ω) (fun u => hD _)
+      Measure.integrableOn_of_bounded
+        (lebesgueClock.measure_interval_ne_top Clock.Conv.optional ⊥ i)
+        (hgXu ω).aestronglyMeasurable (Filter.Eventually.of_forall fun u => hD _)
     have hIb : IntegrableOn (fun u : ℝ≥0 => g (jumpProcess lam (u : ℝ) ω))
         (lebesgueClock.interval Clock.Conv.optional i j) lebesgueClock.q :=
-      integrableOn_of_bounded lebesgueClock.q
-        (lebesgueClock.measure_interval_ne_top Clock.Conv.optional i j) (hgXu ω) (fun u => hD _)
+      Measure.integrableOn_of_bounded
+        (lebesgueClock.measure_interval_ne_top Clock.Conv.optional i j)
+        (hgXu ω).aestronglyMeasurable (Filter.Eventually.of_forall fun u => hD _)
     rw [hunion,
       setIntegral_union hdisj (lebesgueClock.measurableSet_interval Clock.Conv.optional i j)
         hIa hIb]
@@ -11085,12 +11091,13 @@ theorem jumpProcess_isMPSolution {lam : E → ℝ} (hlam : Measurable lam) {L : 
     intro t
     have hIa : IntegrableOn (fun ω ↦ p.1 (jumpProcess lam (t : ℝ) ω))
         (NonExplosive lam ∩ S) (jumpMeasure mu nu) :=
-      integrableOn_of_bounded _ (measure_ne_top _ _) (hXm (t : ℝ)) fun ω ↦ hC _
+      Measure.integrableOn_of_bounded (measure_ne_top _ _) (hXm (t : ℝ)).aestronglyMeasurable
+        (Filter.Eventually.of_forall fun ω ↦ hC _)
     have hIb : IntegrableOn (fun ω ↦ ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
         p.2 (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q)
         (NonExplosive lam ∩ S) (jumpMeasure mu nu) :=
-      integrableOn_of_bounded _ (measure_ne_top _ _) (hwin t)
-        (abs_setIntegral_compensator_le hgb t)
+      Measure.integrableOn_of_bounded (measure_ne_top _ _) (hwin t).aestronglyMeasurable
+        (Filter.Eventually.of_forall (abs_setIntegral_compensator_le hgb t))
     simp only [hYeq t]
     exact integral_sub hIa hIb
   simp only [hp2] at hsplit
@@ -11451,10 +11458,12 @@ theorem integral_mul_sub_eq_intervalIntegral_of_isMPSolution [IsProbabilityMeasu
 /-- A bounded measurable real function is interval integrable. -/
 theorem intervalIntegrable_of_abs_le {F : ℝ → ℝ} (hF : Measurable F) {b : ℝ}
     (hb : ∀ x, |F x| ≤ b) (a c : ℝ) : IntervalIntegrable F volume a c :=
-  ⟨integrableOn_of_bounded _ (by rw [Real.volume_Ioc]; exact ENNReal.ofReal_ne_top) hF
-      (fun x ↦ by simpa only [Real.norm_eq_abs] using hb x),
-   integrableOn_of_bounded _ (by rw [Real.volume_Ioc]; exact ENNReal.ofReal_ne_top) hF
-      (fun x ↦ by simpa only [Real.norm_eq_abs] using hb x)⟩
+  ⟨Measure.integrableOn_of_bounded (by rw [Real.volume_Ioc]; exact ENNReal.ofReal_ne_top)
+      hF.aestronglyMeasurable
+      (Filter.Eventually.of_forall fun x ↦ by simpa only [Real.norm_eq_abs] using hb x),
+   Measure.integrableOn_of_bounded (by rw [Real.volume_Ioc]; exact ENNReal.ofReal_ne_top)
+      hF.aestronglyMeasurable
+      (Filter.Eventually.of_forall fun x ↦ by simpa only [Real.norm_eq_abs] using hb x)⟩
 
 /-- The primitive of a monomial, in the shape the Picard iteration consumes. -/
 theorem intervalIntegral_pow_div_factorial (T : ℝ) (hT : 0 ≤ T) (k : ℕ) (a : ℝ) :
@@ -11991,11 +12000,17 @@ section PoissonExample
 /-- **The rate of the Poisson process**, constant `1`. -/
 def poissonRate : ℕ → ℝ := fun _ ↦ 1
 
-/-- **The jump kernel of the Poisson process**, the deterministic step `x ↦ x + 1`. -/
-noncomputable def poissonKernel : Kernel ℕ ℕ :=
+/-- **The jump kernel of the Poisson process**, the deterministic step `x ↦ x + 1`.
+
+*Not* `poissonKernel`: that name is taken in the root namespace by
+`Mathlib/Analysis/Complex/Poisson.lean:55`, the Poisson kernel of the disc, and
+this section declares into the root namespace as well (`PoissonExample` is a
+`section`, not a `namespace`).  The two have nothing to do with each other, and
+a file importing both would find the name ambiguous. -/
+noncomputable def poissonJumpKernel : Kernel ℕ ℕ :=
   Kernel.deterministic (fun x ↦ x + 1) (measurable_of_countable _)
 
-instance : IsMarkovKernel poissonKernel :=
+instance : IsMarkovKernel poissonJumpKernel :=
   Kernel.isMarkovKernel_deterministic (measurable_of_countable _)
 
 theorem measurable_poissonRate : Measurable poissonRate := measurable_const
@@ -12008,8 +12023,8 @@ theorem poissonRate_le_one (x : ℕ) : poissonRate x ≤ 1 := le_rfl
 `A f x = f (x + 1) - f x`.  The rate cancels because it is `1`, and the integral against the
 kernel is an evaluation because the kernel is a Dirac measure. -/
 theorem jumpApply_poisson (f : ℕ → ℝ) (x : ℕ) :
-    jumpApply poissonRate poissonKernel f x = f (x + 1) - f x := by
-  rw [jumpApply, poissonKernel, Kernel.deterministic_apply,
+    jumpApply poissonRate poissonJumpKernel f x = f (x + 1) - f x := by
+  rw [jumpApply, poissonJumpKernel, Kernel.deterministic_apply,
     integral_dirac (fun y ↦ f y - f x) (x + 1), poissonRate, one_mul]
 
 /-- **The compensated increment of a bounded function along the Poisson process belongs to the
@@ -12021,9 +12036,9 @@ theorem mem_mpFamily_poisson {f : ℕ → ℝ} {C : ℝ} (hC : ∀ x, |f x| ≤ 
         - ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
             (f (jumpProcess poissonRate (u : ℝ) ω + 1)
               - f (jumpProcess poissonRate (u : ℝ) ω)) ∂lebesgueClock.q)
-      ∈ mpFamily (jumpOperator poissonRate poissonKernel) lebesgueClock Clock.Conv.optional
+      ∈ mpFamily (jumpOperator poissonRate poissonJumpKernel) lebesgueClock Clock.Conv.optional
         (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcess poissonRate (t : ℝ) ω) := by
-  refine ⟨(f, jumpApply poissonRate poissonKernel f),
+  refine ⟨(f, jumpApply poissonRate poissonJumpKernel f),
     mem_jumpOperator (measurable_of_countable f) hC, fun t ω ↦ ?_⟩
   simp only [jumpApply_poisson]
 
@@ -12032,12 +12047,12 @@ This is `jumpProcess_isMPSolution` with `lam ≡ 1`, `mu x = δ_{x+1}` and `nu =
 point of writing it out is that every hypothesis of that theorem is discharged here on data,
 so that the theorem is shown to have an instance. -/
 theorem poissonProcess_isMPSolution :
-    IsMPSolution (mpFamily (jumpOperator poissonRate poissonKernel) lebesgueClock
+    IsMPSolution (mpFamily (jumpOperator poissonRate poissonJumpKernel) lebesgueClock
         Clock.Conv.optional (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcess poissonRate (t : ℝ) ω))
       (jumpFiltration poissonRate measurable_poissonRate)
-      (jumpMeasure poissonKernel (Measure.dirac 0)) :=
+      (jumpMeasure poissonJumpKernel (Measure.dirac 0)) :=
   jumpProcess_isMPSolution measurable_poissonRate poissonRate_pos poissonRate_le_one
-    poissonKernel (Measure.dirac 0)
+    poissonJumpKernel (Measure.dirac 0)
 
 /-- **A concrete martingale**, and not a solution predicate: for every bounded `f : ℕ → ℝ`, the
 compensated increment `f (X t) - ∫_0^t (f (X u + 1) - f (X u)) du` of the Poisson process is a
@@ -12048,7 +12063,7 @@ theorem martingale_compensated_poisson {f : ℕ → ℝ} {C : ℝ} (hC : ∀ x, 
             (f (jumpProcess poissonRate (u : ℝ) ω + 1)
               - f (jumpProcess poissonRate (u : ℝ) ω)) ∂lebesgueClock.q)
       (jumpFiltration poissonRate measurable_poissonRate)
-      (jumpMeasure poissonKernel (Measure.dirac 0)) :=
+      (jumpMeasure poissonJumpKernel (Measure.dirac 0)) :=
   poissonProcess_isMPSolution _ (mem_mpFamily_poisson hC)
 
 /-! ### The independent control: the one dimensional laws are Mathlib's Poisson laws
@@ -12156,14 +12171,14 @@ theorem tsum_fwdDiff_iter_eq {f : ℕ → ℝ} {C : ℝ} (hC : ∀ x, |f x| ≤ 
 
 /-- **The generator of the Poisson jump data is Mathlib's forward difference operator.** -/
 theorem jumpApply_poisson_eq_fwdDiff (f : ℕ → ℝ) :
-    jumpApply poissonRate poissonKernel f = fwdDiff 1 f := by
+    jumpApply poissonRate poissonJumpKernel f = fwdDiff 1 f := by
   funext x
   rw [jumpApply_poisson]
   rfl
 
 /-- The iterates agree, which is what carries the Gregory--Newton formula into `expJumpApply`. -/
 theorem iterate_jumpApply_poisson (f : ℕ → ℝ) (n : ℕ) :
-    (jumpApply poissonRate poissonKernel)^[n] f = (fwdDiff 1)^[n] f := by
+    (jumpApply poissonRate poissonJumpKernel)^[n] f = (fwdDiff 1)^[n] f := by
   induction n generalizing f with
   | zero => rfl
   | succ n ih =>
@@ -12172,22 +12187,22 @@ theorem iterate_jumpApply_poisson (f : ℕ → ℝ) (n : ℕ) :
 
 /-- **The exponential series of the Poisson generator is the Poisson sum.** -/
 theorem expJumpApply_poisson {f : ℕ → ℝ} {C : ℝ} (hC : ∀ x, |f x| ≤ C) (t : ℝ) (x : ℕ) :
-    expJumpApply poissonRate poissonKernel t f x
+    expJumpApply poissonRate poissonJumpKernel t f x
       = ∑' k : ℕ, (Real.exp (-t) * t ^ k / k.factorial) * f (x + k) := by
   rw [expJumpApply]
   simp only [iterate_jumpApply_poisson]
   exact tsum_fwdDiff_iter_eq hC t x
 
 /-- **The one dimensional distributions of the constructed process are the Poisson laws.**
-`(jumpMeasure poissonKernel δ_0).map (X t) = Po(t)`, with `Po` Mathlib's
+`(jumpMeasure poissonJumpKernel δ_0).map (X t) = Po(t)`, with `Po` Mathlib's
 `ProbabilityTheory.poissonMeasure`.  This is the independent control that the milestone asks
 for: it compares the construction with a measure defined without any reference to it. -/
 theorem jumpMeasure_map_jumpProcess_poisson (t : ℝ≥0) :
-    (jumpMeasure poissonKernel (Measure.dirac 0)).map (jumpProcess poissonRate (t : ℝ))
+    (jumpMeasure poissonJumpKernel (Measure.dirac 0)).map (jumpProcess poissonRate (t : ℝ))
       = poissonMeasure t := by
   have hXm : Measurable (jumpProcess poissonRate ((t : ℝ))) :=
     (measurable_jumpProcess measurable_poissonRate).comp (measurable_const.prodMk measurable_id)
-  haveI : IsProbabilityMeasure ((jumpMeasure poissonKernel (Measure.dirac 0)).map
+  haveI : IsProbabilityMeasure ((jumpMeasure poissonJumpKernel (Measure.dirac 0)).map
       (jumpProcess poissonRate (t : ℝ))) :=
     (Measure.isProbabilityMeasure_map_iff hXm.aemeasurable).2 inferInstance
   refine ext_iff_measureReal_singleton.2 fun n ↦ ?_
@@ -12212,8 +12227,8 @@ whose value at the Poisson data is `poissonMeasure t` by
 `jumpMeasure_map_jumpProcess_poisson`. -/
 example (t : ℝ≥0) (f : ℕ → ℝ) (C : ℝ) (hC : ∀ x, |f x| ≤ C) :
     ∫ ω, fddProd (fun s : ℝ≥0 ↦ fun ω ↦ jumpProcess poissonRate (s : ℝ) ω) [(t, f)] 0 ω
-        ∂(jumpMeasure poissonKernel (Measure.dirac 0))
-      = ∫ x, expJumpApply poissonRate poissonKernel (t : ℝ) f x ∂(Measure.dirac (0 : ℕ)) := by
+        ∂(jumpMeasure poissonJumpKernel (Measure.dirac 0))
+      = ∫ x, expJumpApply poissonRate poissonJumpKernel (t : ℝ) f x ∂(Measure.dirac (0 : ℕ)) := by
   rw [jumpMeasure_integral_fddProd_eq_fddExp (L := 1) measurable_poissonRate poissonRate_pos
       poissonRate_le_one (Measure.dirac 0) [(t, f)]
       (by intro p hp; rw [List.mem_singleton] at hp; subst hp; exact measurable_of_countable _)
@@ -15469,8 +15484,10 @@ theorem continuous_intervalIntegral_of_bounded {g : ℝ → ℝ} (hg : Measurabl
   have hfin : ∀ c d : ℝ, (volume (Set.Ioc c d)) ≠ ⊤ := fun c d ↦ by
     rw [Real.volume_Ioc]; exact ENNReal.ofReal_ne_top
   exact intervalIntegral.continuous_primitive
-    (fun a b ↦ ⟨integrableOn_of_bounded volume (hfin a b) hg hb,
-      integrableOn_of_bounded volume (hfin b a) hg hb⟩) 0
+    (fun a b ↦ ⟨Measure.integrableOn_of_bounded (hfin a b) hg.aestronglyMeasurable
+        (Filter.Eventually.of_forall hb),
+      Measure.integrableOn_of_bounded (hfin b a) hg.aestronglyMeasurable
+        (Filter.Eventually.of_forall hb)⟩) 0
 
 variable {E : Type*} [MeasurableSpace E]
 
@@ -16454,8 +16471,8 @@ reach of this theorem for a named reason: its rate vanishes at the absorbing sta
 /-- **The Poisson data do not explode**, at almost every sample point of their own measure.  The
 rate is constant, so both hypotheses of the criterion hold at *every* chain. -/
 theorem ae_mem_nonExplosiveE_poisson :
-    ∀ᵐ ω ∂(jumpMeasure poissonKernel (Measure.dirac 0)), ω ∈ NonExplosiveE poissonRate := by
-  refine ae_mem_nonExplosiveE_jumpMeasure measurable_poissonRate poissonKernel (Measure.dirac 0)
+    ∀ᵐ ω ∂(jumpMeasure poissonJumpKernel (Measure.dirac 0)), ω ∈ NonExplosiveE poissonRate := by
+  refine ae_mem_nonExplosiveE_jumpMeasure measurable_poissonRate poissonJumpKernel (Measure.dirac 0)
     (Filter.Eventually.of_forall fun y ↦ ⟨fun k ↦ poissonRate_pos _, fun hsum ↦ ?_⟩)
   have h1 : Filter.Tendsto (fun k : ℕ ↦ (poissonRate (y k))⁻¹) Filter.atTop (𝓝 1) := by
     simp only [poissonRate, inv_one]
@@ -16468,10 +16485,10 @@ on data.  It is of course also a solution outright (`poissonProcess_isMPSolution
 the point of the probe -- a local solution that is a global one is the cheapest witness that the
 localizing machinery does not collapse. -/
 theorem poissonProcess_isLocalMPSolution :
-    IsLocalMPSolution (mpFamily (jumpOperator poissonRate poissonKernel) lebesgueClock
+    IsLocalMPSolution (mpFamily (jumpOperator poissonRate poissonJumpKernel) lebesgueClock
         Clock.Conv.optional (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE poissonRate (t : ℝ) ω))
       (jumpFiltrationE poissonRate measurable_poissonRate)
-      (jumpMeasure poissonKernel (Measure.dirac 0)) :=
+      (jumpMeasure poissonJumpKernel (Measure.dirac 0)) :=
   jumpProcess_isLocalMPSolution measurable_poissonRate poissonRate_pos (Measure.dirac 0)
     ae_mem_nonExplosiveE_poisson
 
@@ -16485,11 +16502,11 @@ It is the independent control of the milestone read on the construction the loca
 stated over, and it is what `map_eval_map_jumpPathD_poisson` turns into a statement about the law
 on the path space. -/
 theorem jumpMeasure_map_jumpProcessE_poisson (t : ℝ≥0) :
-    (jumpMeasure poissonKernel (Measure.dirac 0)).map (jumpProcessE poissonRate (t : ℝ))
+    (jumpMeasure poissonJumpKernel (Measure.dirac 0)).map (jumpProcessE poissonRate (t : ℝ))
       = poissonMeasure t := by
   rw [← jumpMeasure_map_jumpProcess_poisson t]
   refine Measure.map_congr ?_
-  filter_upwards [ae_pos_snd_jumpMeasure poissonKernel (Measure.dirac 0)] with ω hpos
+  filter_upwards [ae_pos_snd_jumpMeasure poissonJumpKernel (Measure.dirac 0)] with ω hpos
   exact jumpProcessE_eq_jumpProcess (lam := poissonRate) (y := ω.1) (xi := ω.2)
     poissonRate_pos hpos (t : ℝ)
 
@@ -26301,7 +26318,7 @@ is adapted, and by `Locally.augment` the same holds for the local martingale pro
 `jumpProcess_isLocalMPSolution`.
 
 The instance is the counting process of `ex:hawkes` -- `E = ℕ` and the jump kernel
-`poissonKernel`, the deterministic step `x ↦ x + 1` -- because that is where the chain moves
+`poissonJumpKernel`, the deterministic step `x ↦ x + 1` -- because that is where the chain moves
 almost surely.  Over a general state space `hmove` is a condition on the kernel and not on the
 construction, and `ae_move_jumpMeasure_of_ne` says exactly which one. -/
 
@@ -26320,14 +26337,14 @@ theorem ae_move_jumpMeasure_of_ne {E : Type*} [MeasurableSpace E] [MeasurableEq 
     (measurableSet_eq_fun measurable_fst measurable_snd).compl hmu nu
 
 /-- **The counting kernel never stays put.** -/
-theorem ae_ne_poissonKernel (z : ℕ) : ∀ᵐ x ∂(poissonKernel z), z ≠ x := by
-  rw [poissonKernel, Kernel.deterministic_apply]
+theorem ae_ne_poissonJumpKernel (z : ℕ) : ∀ᵐ x ∂(poissonJumpKernel z), z ≠ x := by
+  rw [poissonJumpKernel, Kernel.deterministic_apply]
   exact (ae_dirac_iff MeasurableSet.of_discrete).2 (Nat.succ_ne_self z).symm
 
 /-- **The chain of the counting process moves at every step**, almost surely. -/
-theorem ae_move_jumpMeasure_poissonKernel (nu : Measure ℕ) [IsProbabilityMeasure nu] :
-    ∀ᵐ ω ∂(jumpMeasure poissonKernel nu), ∀ n, ω.1 n ≠ ω.1 (n + 1) :=
-  ae_move_jumpMeasure_of_ne poissonKernel ae_ne_poissonKernel nu
+theorem ae_move_jumpMeasure_poissonJumpKernel (nu : Measure ℕ) [IsProbabilityMeasure nu] :
+    ∀ᵐ ω ∂(jumpMeasure poissonJumpKernel nu), ∀ n, ω.1 n ≠ ω.1 (n + 1) :=
+  ae_move_jumpMeasure_of_ne poissonJumpKernel ae_ne_poissonJumpKernel nu
 
 variable {ν : ℝ} {φ : ℝ → ℝ}
 
@@ -26349,7 +26366,7 @@ This is the statement that survives the refutation `not_hawkesFiltration_le_hawk
 and it is the one the development uses.  Its hypotheses are the data of `ex:hawkes` and nothing
 else: the strict increase of the jump times is almost sure by `ae_strictMono_hawkesJumpTime`, the
 start at `0` is `hawkesJumpTime_zero` and holds everywhere, the chain moves almost surely by
-`ae_move_jumpMeasure_poissonKernel`, and `MeasurableEq ℕ` is the instance from `Countable` and
+`ae_move_jumpMeasure_poissonJumpKernel`, and `MeasurableEq ℕ` is the instance from `Countable` and
 `MeasurableSingletonClass`.
 
 **Non explosion does not enter.**  Neither the local integrability of the self referential rate
@@ -26360,19 +26377,19 @@ theorem hawkesFiltration_augment_eq_hawkesPathFiltration_augment (hν : 0 < ν) 
     (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hφm : Measurable φ)
     (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r)
     (nu : Measure ℕ) [IsProbabilityMeasure nu] :
-    (hawkesFiltration (E := ℕ) hν hφ hφm hφint).augment (jumpMeasure poissonKernel nu)
+    (hawkesFiltration (E := ℕ) hν hφ hφm hφint).augment (jumpMeasure poissonJumpKernel nu)
       = (hawkesPathFiltration (E := ℕ) hν hφ hφm hφint).augment
-          (jumpMeasure poissonKernel nu) :=
+          (jumpMeasure poissonJumpKernel nu) :=
   pointFiltration_augment_eq_stepPathFiltration_augment_of_ae
     (measurable_hawkesJumpTime_apply hν hφ hφm hφint)
     (fun n ↦ (measurable_pi_apply n).comp measurable_fst)
     (fun i ↦ measurable_stepPath_comp (u := fun _ : (ℕ → ℕ) × (ℕ → ℝ) ↦ (i : ℝ))
       measurable_const (measurable_hawkesJumpTime_apply hν hφ hφm hφint)
       fun n ↦ (measurable_pi_apply n).comp measurable_fst)
-    (jumpMeasure poissonKernel nu) (fun n ↦ n) (fun n ↦ (Nat.succ_ne_self n).symm)
-    (ae_strictMono_hawkesJumpTime hν hφ hφ0 hφint poissonKernel nu)
+    (jumpMeasure poissonJumpKernel nu) (fun n ↦ n) (fun n ↦ (Nat.succ_ne_self n).symm)
+    (ae_strictMono_hawkesJumpTime hν hφ hφ0 hφint poissonJumpKernel nu)
     (Filter.Eventually.of_forall fun ω ↦ hawkesJumpTime_zero ν φ ω.2 ω)
-    (ae_move_jumpMeasure_poissonKernel nu)
+    (ae_move_jumpMeasure_poissonJumpKernel nu)
 
 end HawkesAugmentedFiltration
 
@@ -27730,19 +27747,19 @@ theorem hawkesFiltrationH_augment_eq_hawkesPathFiltrationH_augment (hhm : Measur
     (hc : ∀ x, ν ≤ x → c ≤ h x) (hL : ∀ x, ν ≤ x → h x ≤ L)
     (nu : Measure ℕ) [IsProbabilityMeasure nu] :
     (hawkesFiltrationH (E := ℕ) hhm hφm hφ hcpos hc hL).augment
-        (jumpMeasure poissonKernel nu)
+        (jumpMeasure poissonJumpKernel nu)
       = (hawkesPathFiltrationH (E := ℕ) hhm hφm hφ hcpos hc hL).augment
-          (jumpMeasure poissonKernel nu) :=
+          (jumpMeasure poissonJumpKernel nu) :=
   pointFiltration_augment_eq_stepPathFiltration_augment_of_ae
     (measurable_hawkesJumpTimeH_apply hhm hφm hφ hcpos hc hL)
     (fun n ↦ (measurable_pi_apply n).comp measurable_fst)
     (fun i ↦ measurable_stepPath_comp (u := fun _ : (ℕ → ℕ) × (ℕ → ℝ) ↦ (i : ℝ))
       measurable_const (measurable_hawkesJumpTimeH_apply hhm hφm hφ hcpos hc hL)
       fun n ↦ (measurable_pi_apply n).comp measurable_fst)
-    (jumpMeasure poissonKernel nu) (fun n ↦ n) (fun n ↦ (Nat.succ_ne_self n).symm)
-    (ae_strictMono_hawkesJumpTimeH hhm hφm hφ hφ0 hcpos hc hL poissonKernel nu)
+    (jumpMeasure poissonJumpKernel nu) (fun n ↦ n) (fun n ↦ (Nat.succ_ne_self n).symm)
+    (ae_strictMono_hawkesJumpTimeH hhm hφm hφ hφ0 hcpos hc hL poissonJumpKernel nu)
     (Filter.Eventually.of_forall fun ω ↦ hawkesJumpTimeH_zero h ν φ ω.2 ω)
-    (ae_move_jumpMeasure_poissonKernel nu)
+    (ae_move_jumpMeasure_poissonJumpKernel nu)
 
 end BoundedHawkesFiltration
 
@@ -33313,10 +33330,10 @@ compared with a measure into whose definition nothing of this development enters
 the path law is identified through its coordinates, and the coordinates are the process, whose
 laws are already known. -/
 theorem map_eval_map_jumpPathD_poisson (t : ℝ≥0) :
-    ((jumpMeasure poissonKernel (Measure.dirac 0)).map (jumpPathD poissonRate)).map
+    ((jumpMeasure poissonJumpKernel (Measure.dirac 0)).map (jumpPathD poissonRate)).map
         (fun f : D(ℝ≥0, ℕ) ↦ f.toFun t)
       = poissonMeasure t := by
-  rw [map_eval_map_jumpPathD measurable_poissonRate poissonKernel (Measure.dirac 0)
+  rw [map_eval_map_jumpPathD measurable_poissonRate poissonJumpKernel (Measure.dirac 0)
     ae_mem_nonExplosiveE_poisson t, jumpMeasure_map_jumpProcessE_poisson t]
 
 /-- **A test process of the path space, composed with the path map, is a test process of the
@@ -33755,9 +33772,9 @@ the Poisson path on `D(ℝ≥0, ℕ)` has no fixed discontinuity.  This is the s
 `map_eval_map_jumpPathD_poisson` runs, and it says of that law what the convergence theorems of
 the roadmap **SkorokhodSpace** ask of a limit. -/
 theorem map_jumpPathD_setOf_leftLim_eq_poisson (t : ℝ≥0) :
-    ((jumpMeasure poissonKernel (Measure.dirac 0)).map (jumpPathD poissonRate))
+    ((jumpMeasure poissonJumpKernel (Measure.dirac 0)).map (jumpPathD poissonRate))
         {f : D(ℝ≥0, ℕ) | Function.leftLim f.toFun t = f.toFun t} = 1 :=
-  map_jumpPathD_setOf_leftLim_eq measurable_poissonRate poissonKernel (Measure.dirac 0)
+  map_jumpPathD_setOf_leftLim_eq measurable_poissonRate poissonJumpKernel (Measure.dirac 0)
     ae_mem_nonExplosiveE_poisson t
 
 /-- **The same statement on the sample space**, which is the form the two convergence theorems for
@@ -34329,9 +34346,9 @@ and `DiscreteTopology ℕ` (`Mathlib/Topology/Order.lean`), so `Continuous p.1` 
 theorem isQuasiLeftContinuous_poissonProcess :
     IsQuasiLeftContinuous (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE poissonRate (t : ℝ) ω)
       (jumpFiltrationE poissonRate measurable_poissonRate)
-      (jumpMeasure poissonKernel (Measure.dirac 0)) :=
+      (jumpMeasure poissonJumpKernel (Measure.dirac 0)) :=
   isQuasiLeftContinuous_jumpProcessE measurable_poissonRate poissonRate_pos poissonRate_le_one
-    poissonKernel (Measure.dirac 0)
+    poissonJumpKernel (Measure.dirac 0)
 
 /-- **The M/M/1 queue is quasi left continuous.**  The bound on the rate is `β + δ` and the
 positivity is `0 < β`, both from `birthDeathRate_mm1_mem`; the Markov property of the kernel is

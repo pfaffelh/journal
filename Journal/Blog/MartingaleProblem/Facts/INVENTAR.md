@@ -40206,3 +40206,260 @@ schon weiterweiß.
    Lauf des 2026-09-18 aufgehört hat:
    `SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq`. Dieser Lauf
    hat den Vorschlag nicht berührt; er steht in der Roadmap ausgeschrieben.
+
+### 2026-09-19, dritter Lauf des Tages — die beiden Doppelungen sind gestrichen, und die Bibliotheksfassung der einen ist an jeder der zwölf Stellen schwächer als die unsere; dazu drei Befunde, die keiner der Vorschläge erwartet hatte: die Roadmap nannte für `Clock.IsProgressive` den **falschen** Gegenpart, die Doppelungsprüfung zählte 46 Deklarationen mit, die in Kommentaren stehen, und der Modulkopf von `SkorokhodSpace` trug noch eine Anweisung, die seit dem 2026-09-18 ausgeführt ist
+
+Vorschläge 1 und 2 des zweiten Laufs sind beide eingelöst. Das Ergebnis ist ein
+Nullstand, der sich nicht verschlechtert hat: `scripts/check_master.py` meldet
+für alle drei Dateien **0 Fehler, 0 `sorry`, 0 veraltete Namen**, Warnungen
+18 / 36 / 106 — unverändert gegenüber dem Vorlauf.
+
+#### Vorschlag 1 — die beiden Doppelungen
+
+`scripts/check_duplicates.py` zählt danach **2 273** eigene Deklarationen (vorher
+2 275) und **36** Treffer (vorher 38). Die Differenz ist genau die beabsichtigte;
+es ist keine dritte dazugekommen und keine weggefallen.
+
+**`sum_smul_dirac_singleton`** (`WeakConvergence/Suggested.lean:3612`) ist
+ersatzlos gestrichen. Die Bibliotheksfassung
+`MeasureTheory.Measure.sum_smul_dirac_singleton`
+(`MeasureTheory/Measure/Dirac/Basic.lean:92`) ist dieselbe Aussage mit
+**impliziten** statt expliziten Argumenten, und beide Benutzungsstellen
+(`map_eval_prod_infinitePi_of_map_eq` und die Indexrechnung im
+Skorokhod-Kopplungsbeweis) stehen in einem `simp only` bzw. einem `rw`, wo der
+Unterschied nicht zu merken ist. Es waren zwei Zeichen je Stelle: der
+vorangestellte Namensraum `Measure.`.
+
+**`integrableOn_of_bounded`** (`MartingaleProblems/Suggested.lean:899`) ist
+gestrichen und seine **zwölf** Benutzungsstellen hängen an
+`MeasureTheory.Measure.integrableOn_of_bounded`
+(`MeasureTheory/Integral/IntegrableOn.lean:713`). Der Vorlauf hatte angesagt, die
+Bibliotheksfassung sei in allen drei Voraussetzungen schwächer; das hat sich beim
+Umhängen bestätigt und ist an jeder Stelle derselbe Handgriff:
+
+| unsere Voraussetzung | die der Bibliothek | der Übergang |
+| --- | --- | --- |
+| `[RCLike 𝕜]` | `[NormedAddCommGroup E]` | entfällt |
+| `Measurable f` | `AEStronglyMeasurable f μ` | `.aestronglyMeasurable` |
+| `∀ x, ‖f x‖ ≤ b` | `∀ᵐ a ∂(μ.restrict s), ‖f a‖ ≤ M` | `Filter.Eventually.of_forall` |
+
+Es ist also **abzuschwächen und nichts nachzuweisen**, wie angesagt. Die
+Aufrufer liefern durchweg mehr, als gebraucht wird.
+
+**Eine Stelle war nicht mechanisch, und sie ist die lehrreiche.**
+`mpFamily_sub_of_measurable_path` rief unsere Fassung mit `@` und sieben
+Positionsargumenten auf, weil `Q.measurableSpace` das **Feld** einer `Clock` ist
+und keine Instanz — die Instanzensuche findet es nicht, also muß es von Hand
+übergeben werden. Ein `@`-Aufruf ist gegen jede Umordnung der impliziten Binder
+der Zielaussage empfindlich, und die der Bibliotheksfassung stammen aus zwei
+verschiedenen `variable`-Zeilen (`IntegrableOn.lean:32` und `:81`), deren
+Reihenfolge nirgends zugesichert ist. Die Stelle steht deshalb jetzt mit
+**benannten** Argumenten da (`(mα := Q.measurableSpace) (μ := Q.q) (s := …)
+(f := …) (M := b)`). Das ist nicht Geschmack: ein `@`-Aufruf in eine fremde
+Bibliothek hinein ist eine Zitierung von Binderpositionen, und die prüft kein
+Skript.
+
+**Geprüft.** `scripts/check_axioms_master.py` auf die sieben Deklarationen, deren
+Beweise dadurch tatsächlich anders lauten — `mpFamily_sub_of_measurable_path`,
+`jumpMeasure_integral_sub_eq_intervalIntegral`,
+`setIntegral_compensator_sub_eq_intervalIntegral`, `jumpProcess_isMPSolution`,
+`intervalIntegrable_of_abs_le`, `continuous_intervalIntegral_of_bounded` und
+`map_eval_prod_infinitePi_of_map_eq`: alle sieben auf `propext`,
+`Classical.choice`, `Quot.sound` und nichts sonst.
+
+#### Vorschlag 2 — und der Befund, der dabei herausfiel
+
+Bestellt war ein Absatz, der `Clock.IsProgressive` gegen
+`MeasureTheory.IsProgressive` abgrenzt. Beim Nachsehen am Quelltext stellte sich
+heraus, daß die Roadmap den Gegenpart **falsch benannt** hatte, und zwar an
+beiden Stellen, an denen sie ihn nennt:
+
+* `MartingaleProblems/README.md` (Meilenstein 3) schrieb: „This is
+  `IsStronglyProgressive` in the shape a `Clock` forces."
+* Der Doc-Kommentar an der Definition schrieb: „This is Mathlib's
+  `IsStronglyProgressive` in the shape a `Clock` forces."
+
+Beides ist unscharf, denn `Clock.IsProgressive` fordert `Measurable[…]`, nicht
+`StronglyMeasurable[…]`. Der inhaltliche Gegenpart ist
+**`MeasureTheory.IsProgressive`** (`Probability/Process/Adapted.lean:192`), das
+mit `Measurable[Subtype.instMeasurableSpace.prod (f i)]` gebildet ist;
+`MeasureTheory.IsStronglyProgressive` (`:262`) ist die stark meßbare Variante und
+das, was die Stoppsätze verbrauchen. Die Roadmap zeigte also auf den Nachbarn des
+Gegenparts — und ausgerechnet auf den, mit dem sie **keinen** Namenskonflikt hat,
+während der wirkliche Konflikt (`Clock.IsProgressive` gegen
+`MeasureTheory.IsProgressive`, beide im geöffneten Namensraum `MeasureTheory`)
+unerwähnt blieb.
+
+Das ist dasselbe Muster, auf das dieses Inventar schon vier eigene Fehler
+zurückführt: nach der Vokabel gesucht statt nach der Aussage.
+`IsStronglyProgressive`/`ProgMeasurable` war einer davon, und die Berichtigung
+von damals hat die Stelle offenbar mit dem damals gesuchten Namen gefüllt, statt
+mit dem, der hier zutrifft.
+
+Beide Stellen sind berichtigt und tragen jetzt die Abgrenzung aus, mit dem Grund,
+aus dem die Bibliotheksfassung hier nicht trägt: sie mißt über den **Untertyp**
+`Set.Iic i`, dessen σ-Algebra `Subtype.instMeasurableSpace` aus einer *Instanz*
+`[MeasurableSpace ι]` kommt; eine `Clock` hat keine, sondern das Feld
+`Q.measurableSpace`, und die Instanzensuche ist syntaktisch. Unsere Fassung
+quantifiziert statt dessen über eine **Fortsetzung** `Z`. Ausdrücklich
+festgehalten ist dabei, daß **keine der beiden die andere impliziert**, wie sie
+dastehen — sie fallen zusammen, wenn die σ-Algebra der Uhr die Instanz ist. Der
+Absatz behauptet also keine Äquivalenz; der alte Wortlaut („the equivalent
+formulation") tat das, und dafür steht kein Beweis.
+
+`MartingaleProblems/README.md:15–18` ist **richtig** und bleibt: `ProgMeasurable`
+ist auf `master` ein `@[deprecated (since := "2026-04-24")] alias` von
+`IsStronglyProgressive` (`Adapted.lean:381`), und die Roadmap sagt das.
+
+#### Geprüft
+
+* `scripts/check_master.py`, zwei volle Durchläufe (nach den Lean-Eingriffen und
+  noch einmal nach den Doc-Kommentaren): 0 Fehler, 0 `sorry`, 0 veraltete Namen
+  in allen drei Dateien, Warnungen 18 / 36 / 106, rc 0. Der zweite Durchlauf ist
+  keine Formalie — der vierundzwanzigste Lauf des 2026-09-18 hat gezeigt, daß
+  eine Kommentaränderung eine Zeichenkette treffen kann, die Lean liest.
+* `scripts/check_duplicates.py`: 2 273 geprüft, 36 Treffer.
+* `scripts/check_axioms_master.py` auf die sieben oben genannten Deklarationen.
+* Die Mathlib-Fundstellen (`IntegrableOn.lean:713`, `Dirac/Basic.lean:92`,
+  `Adapted.lean:192`, `:262`, `:381`) einzeln am Quelltext von
+  `94ef6b89544e58e90f119da869f3fb48d1da0f4c` nachgesehen, nicht aus dem Bericht
+  des Vorlaufs übernommen.
+
+#### Die Trefferliste ganz gelesen — und dabei zwei Löcher im Prüfer selbst
+
+Der eigene Vorschlag, die verbliebenen Treffer *im nächsten* Lauf durchzusehen,
+ist noch in diesem eingelöst worden, und das war richtig so: die Liste war in
+Teilen unlesbar, und zwar aus zwei Gründen, die im Prüfer lagen und nicht im
+Bestand.
+
+**Erstes Loch: `ours()` las Blockkommentare mit.**
+`MartingaleProblems/Suggested.lean:32443` beginnt im Fließtext eines
+Doc-Kommentars mit den Worten „instance arguments with `lebesgueClock…`", und
+die Deklarationssuche — eine Zeilensuche ohne Kommentarzustand — las das als eine
+Deklaration namens **`arguments`**. Sie stand als Treffer gegen
+`Mathlib/Algebra/HierarchyDesign.lean:223` im Bericht des Vorlaufs. Es blieb
+nicht bei der einen: nach dem Überspringen von `/-` bis `-/` fällt die Zahl der
+„eigenen Deklarationen" von **2 273 auf 2 227**. Es waren also **46 Phantome**,
+und von ihnen wurden 30 bis dahin unter „zu generisch übergangen" mitgezählt,
+deren Zahl entsprechend von 53 auf 23 fällt. Die 2 275 des vierundzwanzigsten
+Laufs waren aus demselben Grund zu hoch.
+
+**Zweites Loch: der Prüfer löste keine Namensräume auf.** Er nahm den Namen, wie
+er hinter dem Schlüsselwort steht. `RightContinuousPath.coordinate` stand deshalb
+als `coordinate` im Bericht, `MeasureTheory.AEEqFun.polishSpace` als
+`polishSpace`, `MeasureTheory.IsSeparating` als `IsSeparating`. Für den *letzten*
+Bestandteil, nach dem gesucht wird, ist das gleichgültig; für den Leser, der das
+Paar beurteilen soll, ist es der ganze Unterschied — nämlich der zwischen einer
+Kollision im Wurzelnamensraum und keiner. Neun der Treffer sahen wie
+Wurzelnamen aus und waren keine.
+
+Beides ist in `scripts/check_duplicates.py` behoben, mit dem Befund als Begründung
+im Doc-Kommentar der Funktion. Der Stapel behandelt `namespace`/`section`/`end`
+gemeinsam, weil `end` in Lean beides schließt.
+
+**Und danach ist die Liste lesbar, und sie sagt: es ist genau eine Zeile übrig,
+die eine echte Kollision ist.** Von den 35 Treffern nach der Berichtigung sind
+33 Namensgleichheiten über verschiedenen Gegenständen in verschiedenen
+Namensräumen (`TimeChange.norm_one` gegen `CStarRing.norm_one`,
+`SkorokhodSpace.instMetricSpace` gegen `Circle.instMetricSpace`,
+`IsCadlag.measurable` gegen `Continuous.measurable`, und so fort) — der Vorlauf
+sagte „die meisten", und die Zahl ist jetzt gezählt statt geschätzt.
+
+**Die eine echte:** **`poissonKernel`** (`MartingaleProblems/Suggested.lean:12004`)
+gegen `poissonKernel` (`Mathlib/Analysis/Complex/Poisson.lean:55`). Beide stehen
+im **Wurzelnamensraum** — unseres, weil `PoissonExample` ein `section` und kein
+`namespace` ist, das der Bibliothek, weil `Analysis/Complex/Poisson.lean` keinen
+`namespace` öffnet (nachgesehen: die Datei hat nur ein `open` in Zeile 21). Es ist
+keine Doppelung — der eine ist der Sprungkern `x ↦ x + 1` des Poissonprozesses,
+der andere der Poissonkern der Kreisscheibe —, aber es ist **derselbe volle
+Name**, und eine Datei, die beides importiert, fände ihn mehrdeutig.
+
+Umbenannt in **`poissonJumpKernel`**, drei Bezeichner und 54 Fundstellen
+(`poissonKernel` 46×, `ae_move_jumpMeasure_poissonKernel` 5×,
+`ae_ne_poissonKernel` 3×), Doc-Kommentar und README mit; an der Definition steht
+jetzt, **warum** sie nicht `poissonKernel` heißt, damit ein späterer Lauf den
+Namen nicht für eine Umständlichkeit hält und zurückdreht. Voller Durchlauf von
+`check_master.py` danach: 0 Fehler.
+
+**Ein zweiter Wurzelname bleibt stehen und ist der einzige Rest der Liste:**
+`dist_eq_sub_of_le` (`SkorokhodSpace/Suggested.lean:448`). Die Bibliotheksfassung
+`Nat.dist_eq_sub_of_le` (`Data/Nat/Dist.lean:35`) ist in `namespace Nat`, also
+kollidiert heute nichts, und die Aussagen sind verschieden — unsere ist die
+Additivität der Metrik längs der Ordnung (`AdditiveDist`), Mathlibs ist
+`Nat.dist`. Aber `dist_eq_sub_of_le` im Wurzelnamensraum ist ein Name, den die
+Bibliothek so nicht annähme. Er ist **nicht** umbenannt: anders als bei
+`poissonKernel` gibt es keinen Konflikt, der einen Umbau in diesem Lauf
+rechtfertigte, und der richtige Namensraum ist eine Entscheidung
+(`AdditiveDist.dist_eq_sub_of_le`?) und keine Buchhaltung. Er ist der zweite
+Vorschlag unten.
+
+#### Der stehengebliebene Wegweiser in `SkorokhodSpace/Suggested.lean`
+
+Beim Nachsehen, ob unsere `IsCadlag`-Sätze die Bibliotheksfassung doppeln — sie
+tun es nicht, `IsCadlag.measurable` und `IsCadlag.eq_of_eqOn_dense` stehen in
+`Topology/Order/Cadlag.lean` nicht, die Datei hat 196 Zeilen und endet bei
+`isBounded_image_of_isCadlag_of_isCompact` (`:192`) —, fiel auf, daß der
+**Modulkopf der Datei sich selbst widerspricht**:
+
+* Kopf, Zeile 374 ff.: „`IsRightContinuous` and `IsCadlag` are restated here
+  because v4.33.1, **to which this file is pinned**, does not have them … the
+  `IsCadlag` below collides with the library one by name … **the two definitions
+  below are to be deleted** and nothing else changed."
+* Meilenstein 2, Zeile 744: „**Neither predicate is declared here.**"
+
+Das zweite stimmt. Die Definitionen sind am 2026-09-18 im vierundzwanzigsten Lauf
+entfernt worden, und die Datei ist seit dem zweiundzwanzigsten nicht mehr an
+v4.33.1 gebunden — der Kopf derselben Datei sagt das in Zeile 27 und 36 selbst.
+Stehengeblieben war also ein Absatz, der einen vergangenen Zustand beschreibt und
+dem Leser eine Arbeit aufträgt, die getan ist. In einer Datei, die eingereicht
+werden soll, ist das schlimmer als eine Lücke: es ist eine Anweisung ins Leere.
+Der Absatz ist ersetzt; die brauchbaren Angaben daraus — Feldnamen, Instanzbündel,
+die Herkunft aus `RemyDegenne/brownian-motion` — sind erhalten.
+
+Daß gerade dieser Absatz stehenblieb, hat einen Grund, den die Regeln dieses
+Inventars schon kennen: er stand im **Modulkopf**, und die Arbeit fand im
+**Abschnittskopf** statt. Wer eine Definition löscht, liest den Absatz daneben und
+nicht den vierhundert Zeilen darüber. Ein Prüfer dafür gibt es nicht, und dieser
+Lauf schlägt auch keinen vor — gefunden wurde es beim Lesen.
+
+#### Geprüft, zweiter Teil
+
+* `scripts/check_master.py` ein drittes Mal, nach der Umbenennung und dem
+  berichtigten Kopf: **0 Fehler, 0 `sorry`, 0 veraltete Namen** in allen drei
+  Dateien, Warnungen 18 / 36 / 106, rc 0.
+* `scripts/check_duplicates.py` nach der Berichtigung: 2 227 geprüft, **34**
+  Treffer, davon **keiner** mehr eine Kollision im Wurzelnamensraum außer
+  `dist_eq_sub_of_le`.
+* `Mathlib/Analysis/Complex/Poisson.lean` und `Mathlib/Data/Nat/Dist.lean` auf
+  ihren Namensraum hin einzeln nachgesehen, nicht aus der Trefferliste
+  geschlossen.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Zurück zur Mathematik, dort wo der einundzwanzigste Lauf des 2026-09-18
+   aufgehört hat:** `SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq`.
+   *Warum jetzt:* die beiden Werkzeugvorschläge des zweiten Laufs sind
+   abgetragen, die Trefferliste der Doppelungsprüfung ist einmal ganz gelesen und
+   bis auf eine benannte Zeile abgehakt, und `CONTRIBUTING.md` hat keinen offenen
+   Einwand mehr gegen den Bestand. Der Vorschlag steht in der Roadmap
+   ausgeschrieben; dieser Lauf hat ihn nicht berührt.
+
+2. **`dist_eq_sub_of_le` in einen Namensraum bringen.**
+   *Was:* die letzte Deklaration der Roadmaps, die einen generischen Namen im
+   Wurzelnamensraum trägt. Naheliegend ist `AdditiveDist.dist_eq_sub_of_le`, denn
+   der Doc-Kommentar sagt, daß `AdditiveDist` allein die Aussage trägt; zu prüfen
+   ist, ob der Nachbarsatz `monotoneOn_dist_basepoint` (`:455`) mitwandern muß,
+   der über dieselbe Klasse geht.
+   *Worauf es ruht:* auf der Trefferliste dieses Laufs und auf
+   `Data/Nat/Dist.lean:35`, wo die Bibliothek denselben Namen unter `Nat` führt.
+   *Warum jetzt:* es ist eine Deklaration mit wenigen Fundstellen, und sie ist
+   der einzige verbliebene Punkt einer Liste, die sonst abgehakt ist. Eine Liste
+   mit einem Rest wird wieder ganz gelesen.
+
+3. **Die Abgrenzung auch für `Clock.IsProgressiveComp` nachziehen.**
+   *Was:* dasselbe für die Variante über die reellen Funktionale — sie trägt den
+   Namen von nichts in Mathlib, aber sie erbt die Verwechslungsgefahr ihres
+   Vorbilds, und der Absatz in der README nennt sie unmittelbar nach
+   `Clock.IsProgressive`.
+   *Worauf es ruht:* auf dem berichtigten Absatz dieses Laufs.
+   *Warum jetzt:* solange die Stelle frisch ist. Es ist ein Absatz, kein Lauf.

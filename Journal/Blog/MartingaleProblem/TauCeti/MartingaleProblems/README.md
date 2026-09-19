@@ -457,11 +457,28 @@ generating its σ-algebra, and `X : Ω → F`.
   Milestone 5, applied to the multiplicative system of those products.
 * `Clock.IsProgressive Q X 𝓕`: for every `t` there is `Z : ι → Ω → E` agreeing
   with `X` on `Set.Iic t` whose uncurried form is
-  `Q.measurableSpace ⊗ 𝓕 t`-measurable. This is `IsStronglyProgressive` in the
+  `Q.measurableSpace ⊗ 𝓕 t`-measurable. This is progressive measurability in the
   shape a `Clock` forces — the clock carries its `MeasurableSpace ι` as a field
   and not as an instance, so the subtype of `Set.Iic t` cannot be written without
   `@` — and it is a hypothesis of `isMPSolutionFor_iff_forall_fdd` in both its
   forms. It is a hypothesis on `X` and the clock alone, never on `P`.
+
+  **It shares a name with `MeasureTheory.IsProgressive` and not the statement,
+  and the two must not be conflated.** The library's predicate
+  (`Probability/Process/Adapted.lean:192`) reads
+  `∀ i, Measurable[Subtype.instMeasurableSpace.prod (f i)] fun p : Set.Iic i × Ω ↦ u p.1 p.2`:
+  it measures the restriction to the **subtype** `Set.Iic i`, whose
+  `MeasurableSpace` is `Subtype.instMeasurableSpace` and therefore comes from an
+  *instance* `[MeasurableSpace ι]`. A `Clock` has no such instance — its
+  σ-algebra is the field `Q.measurableSpace` — so the subtype comparison cannot
+  even be stated without `@`, and instance search, being syntactic, will not
+  find it. Ours quantifies instead over an **extension** `Z` that agrees with `X`
+  below `t` and is measurable on all of `ι × Ω`; the two formulations coincide
+  when the clock's σ-algebra happens to be the instance, and neither implies the
+  other as written. The same holds for the strongly measurable variant
+  `MeasureTheory.IsStronglyProgressive` (`:262`), which is what the stopping
+  results of Milestone 9 consume and which this roadmap cites under its own name
+  wherever an instance is available.
 * `Clock.IsProgressiveComp Q X 𝓕`: the same statement for the **real
   functionals** of the process, `∀ h : E → ℝ` measurable, `(u, ω) ↦ h (Z u ω)`
   is `Q.measurableSpace ⊗ 𝓕 t`-measurable, together with
@@ -483,8 +500,9 @@ generating its σ-algebra, and `X : Ω → F`.
   compensator a bounded function of `ω` for a bounded `g`.
 * `stronglyMeasurable_integral_comp`: `StronglyMeasurable.integral_prod_left`
   with both σ-algebras passed by hand, so that `Q.measurableSpace` and `𝓕 t` can
-  be handed to it; and `integrableOn_of_bounded`, a bounded measurable function
-  is integrable on a set of finite measure. Together they are what turns
+  be handed to it. Together with `MeasureTheory.Measure.integrableOn_of_bounded`
+  (`MeasureTheory/Integral/IntegrableOn.lean:713`) — a bounded measurable
+  function is integrable on a set of finite measure — this is what turns
   `Clock.IsProgressive` into strong adaptedness of the compensator.
 * `mpFamily_sub_of_measurable_path`: for a measurable path,
   `Y t ω - Y s ω = f (X t ω) - f (X s ω) - ∫ u in Clock.interval q c s t, g (X u ω) ∂q`.
@@ -3656,7 +3674,7 @@ A concrete family of solutions, built without any of the theory above. Index
 
   **The one dimensional laws are Mathlib's Poisson laws**, in Lean on
   2026-09-10, fifth run, as `jumpMeasure_map_jumpProcess_poisson`:
-  `(jumpMeasure poissonKernel δ₀).map (jumpProcess poissonRate t) = Po(t)`, with
+  `(jumpMeasure poissonJumpKernel δ₀).map (jumpProcess poissonRate t) = Po(t)`, with
   `Po` the `ProbabilityTheory.poissonMeasure`
   (`Mathlib/Probability/Distributions/Poisson/Basic.lean:41`) into whose
   definition nothing of `jumpTime`, `stepIndex` or `waitingMeasure` enters.
@@ -5130,9 +5148,9 @@ hawkesFiltration_augment_eq_hawkesPathFiltration_augment (hν : 0 < ν)
     (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hφm : Measurable φ)
     (hφint : ∀ a r, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r)
     (nu : Measure ℕ) [IsProbabilityMeasure nu] :
-  (hawkesFiltration (E := ℕ) hν hφ hφm hφint).augment (jumpMeasure poissonKernel nu)
+  (hawkesFiltration (E := ℕ) hν hφ hφm hφint).augment (jumpMeasure poissonJumpKernel nu)
     = (hawkesPathFiltration (E := ℕ) hν hφ hφm hφint).augment
-        (jumpMeasure poissonKernel nu)
+        (jumpMeasure poissonJumpKernel nu)
 ```
 
 Die Voraussetzungen sind die Daten von `ex:hawkes` und nichts sonst. Ihre
@@ -5150,7 +5168,7 @@ Einlösung:
   an den **Kern** und nicht an die Konstruktion, und sie ist scharf: bei
   `mu x {x} > 0` ist die Kette mit positiver Wahrscheinlichkeit stehend und der
   Pfad sieht den Sprung nicht.
-* `ae_ne_poissonKernel`, `ae_move_jumpMeasure_poissonKernel` — der Zählkern
+* `ae_ne_poissonJumpKernel`, `ae_move_jumpMeasure_poissonJumpKernel` — der Zählkern
   `x ↦ x + 1` von `ex:hawkes` erfüllt sie.
 * `MeasurableEq ℕ` ist die Instanz aus `Countable` und
   `MeasurableSingletonClass`, und `y₀ = fun n ↦ n` ist `Nat.succ_ne_self`.

@@ -56,16 +56,67 @@ def index_for(rev):
     return json.load(open(path))
 
 
+#  `namespace X` / `section` / `section X` / `end` / `end X`.  Gebraucht wird
+#  beides: der Namensraum, um den vollen Namen zu bilden, und die Klammer, um
+#  ihn wieder abzuräumen.  `end` schließt in Lean beides, deshalb ein Stapel
+#  aus Paaren und nicht zwei Zähler.
+SCOPE = re.compile(r"^(namespace|section|end)(?:\s+([A-Za-z_][A-Za-z0-9_'.]*))?\s*$")
+
+
 def ours():
-    """(Datei, Zeile, Name) für jede Deklaration der Roadmap-Dateien."""
+    """(Datei, Zeile, voller Name) für jede Deklaration der Roadmap-Dateien.
+
+    Zwei Dinge, die eine reine Zeilensuche falsch macht und die der dritte Lauf
+    des 2026-09-19 an zwei Fundstellen nachgewiesen hat:
+
+    * **Blockkommentare.**  `MartingaleProblems/Suggested.lean:32443` beginnt im
+      Fließtext eines Doc-Kommentars mit den Worten „instance arguments with …",
+      und das las der Prüfer als eine Deklaration namens `arguments`.  Sie stand
+      als Treffer gegen `Mathlib/Algebra/HierarchyDesign.lean:223` im Bericht.
+      `/-` bis `-/` wird daher übersprungen; Zeilenkommentare `--` können keine
+      Deklaration beginnen und bleiben unbeachtet.
+
+    * **Namensräume.**  Der Prüfer nahm den Namen, wie er dasteht, und
+      `RightContinuousPath.coordinate` stand deshalb als `coordinate` im
+      Bericht — ein Name, den es bei uns nicht gibt.  Für den *letzten*
+      Bestandteil, nach dem gesucht wird, ist das gleichgültig; für den Leser,
+      der das Paar beurteilen soll, ist es der Unterschied zwischen einer
+      Kollision im Wurzelnamensraum und keiner.  Der volle Name wird daher aus
+      dem Stapel der offenen `namespace` gebildet.
+    """
     for d in DIRS:
         p = os.path.join(BASE, d, 'Suggested.lean')
         if not os.path.exists(p):
             continue
+        stack, depth = [], 0
         for i, line in enumerate(open(p, encoding='utf-8'), 1):
+            if depth:
+                depth -= line.count('-/')
+                depth += line.count('/-')
+                continue
+            stripped = line.strip()
+            #  Ein einzeiliger Blockkommentar `/-- … -/` öffnet nichts.
+            opens = line.count('/-') - line.count('-/')
+            if opens > 0:
+                #  Beginnt der Kommentar am Zeilenanfang, so kann in dieser
+                #  Zeile keine Deklaration mehr stehen.
+                depth = opens
+                if stripped.startswith('/-'):
+                    continue
+            m = SCOPE.match(stripped)
+            if m:
+                kind, nm = m.group(1), m.group(2)
+                if kind == 'end':
+                    if stack:
+                        stack.pop()
+                else:
+                    stack.append(nm if kind == 'namespace' else None)
+                continue
             m = DECL.match(line)
             if m:
-                yield p, i, m.group(2)
+                prefix = '.'.join(s for s in stack if s)
+                name = m.group(2)
+                yield p, i, f'{prefix}.{name}' if prefix else name
 
 
 def main():
