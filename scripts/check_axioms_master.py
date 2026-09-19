@@ -26,10 +26,24 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 MW = pathlib.Path(os.environ.get('MATHLIB_MASTER',
                                  os.path.expanduser('~/Code/lean/mathlib-master')))
-BUILD = MW / '_lean_master'
+# Seit `check_master.py` je Aufruf einen eigenen Baum anlegt (2026-09-19), liegt
+# der gebaute Baum nicht mehr fest unter `<worktree>/_lean_master`.  `CHECK_TREE`
+# nimmt den Pfad auf, den ein Lauf mit `CHECK_MASTER_KEEP=1` stehenläßt.
+BUILD = pathlib.Path(os.environ.get('CHECK_TREE', str(MW / '_lean_master')))
 
 
 def main(argv: list[str]) -> int:
+    # `--build <verzeichnis>` tut dasselbe wie `CHECK_TREE=<verzeichnis>`, aus dem
+    # Grund, der bei `check_master.py --keep` steht: eine Umgebungszuweisung ist
+    # nicht in jedem Aufrufkontext absetzbar.
+    global BUILD
+    if '--build' in argv:
+        i = argv.index('--build')
+        if i + 1 >= len(argv):
+            print('`--build` verlangt ein Verzeichnis')
+            return 2
+        BUILD = pathlib.Path(argv[i + 1]).resolve()
+        del argv[i:i + 2]
     if len(argv) < 2:
         print(__doc__)
         return 2

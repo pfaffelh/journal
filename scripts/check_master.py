@@ -42,7 +42,13 @@ abgeschnittener Durchlauf sieht wie ein fehlerfreier aus.
 """
 import atexit, collections, os, re, shutil, subprocess, sys, time
 
-MW = os.path.abspath(sys.argv[1] if len(sys.argv) > 1
+# `--keep` tut dasselbe wie `CHECK_MASTER_KEEP=1`.  Der Grund für die zweite
+# Schreibweise ist nicht Bequemlichkeit: eine Umgebung läßt sich nicht in jedem
+# Aufrufkontext setzen (ein Lauf vom 2026-09-19 konnte Kommandos nur ohne
+# vorangestellte Zuweisung absetzen), und dann ist der schnelle Entwicklungsweg
+# ohne eine Flagge gar nicht erreichbar.
+ARGV = [a for a in sys.argv[1:] if a != '--keep']
+MW = os.path.abspath(ARGV[0] if ARGV
                      else os.path.expanduser('~/Code/lean/mathlib-master'))
 # Das Repositorium, in dem *dieses Skript* liegt -- nicht der Hauptcheckout.
 # Ein Lauf arbeitet in einem Worktree, und geprüft gehören seine Quellen, nicht
@@ -66,7 +72,13 @@ FILES = ['WeakConvergence', 'SkorokhodSpace', 'MartingaleProblems']
 
 os.makedirs(OUT, exist_ok=True)
 shutil.rmtree(RUNDIR, ignore_errors=True)
-atexit.register(shutil.rmtree, RUNDIR, True)
+# Der eigene Baum wird am Ende geräumt -- außer ein Entwicklungslauf verlangt ihn
+# zurück.  `check_axioms_master.py` und `dev_check_master.py` brauchen die
+# gebauten `.olean`, und seit der Baum je Aufruf angelegt wird, finden sie ihn
+# nur, wenn er stehenbleibt und sein Pfad genannt wird.
+KEEP = os.environ.get('CHECK_MASTER_KEEP') == '1' or '--keep' in sys.argv[1:]
+if not KEEP:
+    atexit.register(shutil.rmtree, RUNDIR, True)
 for f in FILES:
     os.makedirs(os.path.join(SRCDIR, f), exist_ok=True)
     shutil.copy(os.path.join(BASE, f, 'Suggested.lean'),
@@ -144,6 +156,8 @@ print(text)
 # Fehler lassen den Lauf ebenfalls scheitern.  Das steht nicht im Auftrag, der
 # nur die Veraltungen verlangte, ist aber dieselbe Falle: ein Prüfskript, das
 # bei Fehlern rc 0 zurückgibt, sieht von außen wie ein sauberer Durchlauf aus.
+if KEEP:
+    print(f'CHECK_TREE={RUNDIR}/_lean_master')
 bad = sum(len(v) for v in deprecated.values())
 if bad:
     print(f'FEHLSCHLAG: {bad} veraltete Namen in der Kette. '

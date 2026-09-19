@@ -24,18 +24,37 @@ Arbeitsverzeichnis wählt.
 """
 import os, shutil, subprocess, sys
 
-if len(sys.argv) not in (2, 3):
-    raise SystemExit('Aufruf: python3 scripts/dev_check_master.py <datei.lean> '
-                     '[pfad-zum-master-worktree]')
+# `--build <verzeichnis>` tut dasselbe wie `CHECK_TREE=<verzeichnis>`, aus dem
+# Grund, der bei `check_master.py --keep` steht: eine Umgebungszuweisung ist
+# nicht in jedem Aufrufkontext absetzbar, und ohne sie wäre der schnelle Weg
+# unerreichbar.
+ARGV = sys.argv[1:]
+BUILD_ARG = None
+if '--build' in ARGV:
+    i = ARGV.index('--build')
+    if i + 1 >= len(ARGV):
+        raise SystemExit('`--build` verlangt ein Verzeichnis')
+    BUILD_ARG = os.path.abspath(ARGV[i + 1])
+    del ARGV[i:i + 2]
 
-SRC = os.path.abspath(sys.argv[1])
-MW = os.path.abspath(sys.argv[2] if len(sys.argv) > 2
+if len(ARGV) not in (1, 2):
+    raise SystemExit('Aufruf: python3 scripts/dev_check_master.py <datei.lean> '
+                     '[pfad-zum-master-worktree] [--build <verzeichnis>]')
+
+SRC = os.path.abspath(ARGV[0])
+MW = os.path.abspath(ARGV[1] if len(ARGV) > 1
                      else os.path.expanduser('~/Code/lean/mathlib-master'))
-BUILD = os.path.join(MW, '_lean_master')
+# Seit `check_master.py` je Aufruf einen eigenen Baum anlegt (2026-09-19), liegt
+# der gebaute Baum nicht mehr fest unter `<worktree>/_lean_master`.  `CHECK_TREE`
+# nimmt den Pfad auf, den ein Lauf mit `CHECK_MASTER_KEEP=1` stehenläßt und am
+# Ende als `CHECK_TREE=…` nennt.
+BUILD = BUILD_ARG or os.environ.get('CHECK_TREE', os.path.join(MW, '_lean_master'))
 DEST = os.path.join(MW, 'TauCetiRoadmap', '_Dev.lean')
 
 if not os.path.isdir(BUILD):
-    raise SystemExit(f'{BUILD} fehlt -- erst `python3 scripts/check_master.py` laufen lassen.')
+    raise SystemExit(f'{BUILD} fehlt -- erst `CHECK_MASTER_KEEP=1 python3 '
+                     'scripts/check_master.py` laufen lassen und dessen '
+                     '`CHECK_TREE=…` in die Umgebung übernehmen.')
 
 os.makedirs(os.path.dirname(DEST), exist_ok=True)
 if os.path.abspath(SRC) != os.path.abspath(DEST):
