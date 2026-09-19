@@ -1,7 +1,7 @@
 # Deklarationen, die es auf `94ef6b89544e58e90f119da869f3fb48d1da0f4c` schon geben könnte
 
-* geprüfte eigene Deklarationen: **2253**
-* Treffer auf dem letzten Namensbestandteil: **34**
+* geprüfte eigene Deklarationen: **2281**
+* Treffer auf dem letzten Namensbestandteil: **35**
 * als zu allgemein übergangen (kurz oder generisch): 23
 
 Ein Treffer ist ein **Anhaltspunkt**, keine Doppelung. Er sagt, daß Mathlib einen Satz mit demselben letzten Namensbestandteil hat — nachzusehen ist, ob es dieselbe Aussage ist.
@@ -41,4 +41,5 @@ Ein Treffer ist ein **Anhaltspunkt**, keine Doppelung. Er sagt, daß Mathlib ein
 | `SkorokhodSpace.instMetricSpace` | `SkorokhodSpace/Suggested.lean:4056` | `Circle.instMetricSpace` (`Mathlib/Analysis/Complex/Circle.lean:65`); `Unitization.instMetricSpace` (`Mathlib/Analysis/Normed/Algebra/Unitization.lean:230`); `BoundedContinuousFunction.instMetricSpace` (`Mathlib/Topology/ContinuousMap/Bounded/Basic.lean:205`) |
 | `SkorokhodSpace.instSeparableSpace` | `SkorokhodSpace/Suggested.lean:6753` | `DomMulAct.instSeparableSpace` (`Mathlib/Topology/Algebra/Constructions/DomMulAct.lean:100`); `ContinuousMap.instSeparableSpace` (`Mathlib/Topology/ContinuousMap/SecondCountableSpace.lean:108`) |
 | `SkorokhodSpace.metricSpace` | `SkorokhodSpace/Suggested.lean:3494` | `spectralNorm.metricSpace` (`Mathlib/Analysis/Normed/Unbundled/SpectralNorm.lean:905`); `Padic.metricSpace` (`Mathlib/NumberTheory/Padics/PadicNumbers.lean:784`); `Subtype.metricSpace` (`Mathlib/Topology/MetricSpace/Basic.lean:111`) |
+| `TimeChange.ofNNReal` | `SkorokhodSpace/Suggested.lean:14060` | `ENNReal.ofNNReal` (`Mathlib/Basic/ENNReal/Basic.lean:116`) |
 | `TimeChange.toNNReal` | `SkorokhodSpace/Suggested.lean:7477` | `ContinuousMap.toNNReal` (`Mathlib/Analysis/CStarAlgebra/ContinuousFunctionalCalculus/Unique.lean:67`); `ContinuousMapZero.toNNReal` (`Mathlib/Analysis/CStarAlgebra/ContinuousFunctionalCalculus/Unique.lean:233`); `ENNReal.toNNReal` (`Mathlib/Basic/ENNReal/Basic.lean:226`) |
