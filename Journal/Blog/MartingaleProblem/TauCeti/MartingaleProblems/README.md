@@ -10540,6 +10540,16 @@ had no declaration at all, and they are needed in this order:
    a run at this item builds. It is written out at the item in
    `SkorokhodSpace/README.md`, Milestone 8; it is not an application of item 2.
 
+   Its **first half stands** since 2026-09-19:
+   `SkorokhodSpace.exists_forall_edist_lt_of_forall_min_edist_lt`, that a window
+   on which the three point quantity is below `η` carries exactly **one break**.
+   The greedy subdivision that the item named for the second half does **not**
+   close it — merging two greedy cells crosses that break, and the displacement
+   at a break is the one quantity the hypothesis leaves free. The replacement
+   puts the nodes at the large jumps instead; it reads the hypothesis at span
+   `2 * δ` and yields the constant `4`, and neither change reaches a consumer,
+   which asks only that the modulus vanish as `δ → 0`.
+
 Only then does `isTight_map_postcomp_of_exists_martingale` have a conclusion it
 can reach, and `isRelativelyCompact_of_approx` an input. **The order of work is
 therefore Milestone 8 of SkorokhodSpace first**, and what is left of it is item

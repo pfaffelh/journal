@@ -15361,6 +15361,201 @@ theorem SkorokhodSpace.one_le_modulusBased_postcomp_clipDist_twoJump {γ δ : �
   le_trans (SkorokhodSpace.one_le_modulus_postcomp_clipDist_twoJump hγ0 hγδ)
     (SkorokhodSpace.modulus_le_modulusBased _ _ _ _)
 
+/-! ### One break to a window: what the three point modulus really says
+
+The chain that reduces `SkorokhodSpace.modulusBased` to the three point quantity
+has its two easy links proved above.  The remaining one is the passage from the
+three point quantity **back** to a subdivision, and it is the only step of the
+reduction that has to *construct* something.
+
+**What is proved here is its first half, and it is a structure theorem.**  Read
+the three point hypothesis on a window `[u, v]` --- for every triple
+`u ≤ t₁ ≤ t ≤ t₂ ≤ v`, `min (edist (f t) (f t₁)) (edist (f t₂) (f t)) < η` ---
+and it says exactly this:
+
+> the window carries **one** break.  There is a single time `τ ∈ [u, v]` with
+> `f` within `η` of `f u` strictly before `τ`, and within `η` of `f τ` from `τ`
+> on.
+
+That is `SkorokhodSpace.exists_forall_edist_lt_of_forall_min_edist_lt`.  The
+proof takes `τ` to be the first time the displacement from `f u` reaches `η` ---
+a real infimum, attained because the path is right continuous --- and then reads
+the hypothesis **once**, at the triple `(u, τ, t₂)`: the first displacement of
+that triple is `≥ η` by the choice of `τ`, so the second is `< η`, and that is
+the second clause.  The hypothesis is used at a single triple and the rest is
+the infimum.
+
+**The proof the roadmap named for the remaining link does not close, and this is
+where it breaks.**  That proof grows the cells greedily from their left ends:
+let `σ 0` be the left end of the window and `σ (k+1)` the last time the
+displacement from `f (σ k)` stays `≤ η`.  Each cell then has oscillation `≤ η`,
+which is better than the `2 * η` asked for --- but the cells are **not** longer
+than `δ`.  What the hypothesis gives is that no *two* consecutive cells fit
+inside a window of span `δ`, because both `σ (k+1)` and `σ (k+2)` are
+displacements of at least `η` from their own cell's start, and the triple
+`(σ k, σ (k+1), σ (k+2))` would then have both of its displacements `≥ η`.  So
+the subdivision has to be thinned to every other node, and **that is the step
+that fails**: the merged cell `[σ k, σ (k+2))` measures its oscillation from
+`f (σ k)`, and for a time `r` in the second half this costs
+`edist (f r) (f (σ (k+1))) + edist (f (σ (k+1))) (f (σ k))`.  The first summand
+is `≤ η`; the second is the displacement **at the break**, and the hypothesis
+says nothing about it.  A path may jump by any amount at `σ (k+1)` without
+violating the three point condition --- the condition forbids two large
+displacements in one window of span `δ`, not one.
+
+The structure theorem is the precise form of that statement: it says the
+displacement at the break is the **only** quantity the hypothesis leaves free.
+`SkorokhodSpace.edist_le_of_forall_min_edist_lt` puts it that way, bounding the
+oscillation over the whole window by `edist (f τ) (f u) + η`.
+
+**What the remaining link needs instead**, and it is written here so that a next
+run does not rediscover the greedy: the nodes must be put at the **jumps**, not
+at the greedy stops.  Two jumps of size `≥ 2 * η` cannot lie within one window of
+span `δ`, so the large jumps of a compact window are more than `δ` apart, and
+they are finitely many (`IsCadlag.finite_largeLeftJumpSet_inter`).
+
+*The size is `2 * η` and not `η`, and the reason is worth one sentence, because
+the naive triple does not give it.*  With jumps at `p < q` one would like to read
+the hypothesis at `(t₁, p, q)` with `t₁` below `p`; its second displacement is
+`edist (f q) (f p)`, which the jump at `q` does not bound --- the path may return
+to `f p` just before `q`.  What works is two passages to the left limit instead
+of one.  Reading the hypothesis at `(t₁, t, q)` with `t₁ ↑ p` and `t ↑ q` gives
+`edist (leftLim f q) (leftLim f p) < η`, the second displacement being the jump
+at `q`; reading it at `(t₁, p, t₂)` with `t₂ ↑ q` gives
+`edist (leftLim f q) (f p) < η`, the first displacement being the jump at `p`.
+The triangle inequality then bounds the jump at `p` by `2 * η`.
+
+Between two consecutive large jumps the window is filled with a uniform grid of
+`⌈(q - p) / (2 * δ)⌉` cells, whose lengths then lie in `(δ, 2 * δ]`.  Each such
+cell has oscillation `≤ 4 * η` by the structure theorem: its break `τ` carries a
+jump smaller than `2 * η`, the left limit at `τ` is within `η` of the cell's left
+end by the first clause, so the displacement at the break is below `3 * η`, and
+`SkorokhodSpace.edist_le_of_forall_min_edist_lt` adds the last `η`.
+
+So the link that route proves is
+`modulusBased t₀ m f δ ≤ 4 * η` from the three point quantity at span `2 * δ`,
+and **neither** number is the one the roadmap wrote down.  The span `2 * δ` is
+not an artefact: a path drifting at the largest slope the hypothesis at span `δ`
+allows moves by nearly `2 * η` across a cell of length `δ`, so the hypothesis has
+to be read at the larger span.  The constant `4` is not claimed to be optimal ---
+the classical bound is `2` --- and for the consumer it does not matter: the
+criterion asks that the modulus **vanish** as `δ → 0`, and a fixed factor passes
+through that unchanged, exactly as the factor `2` of
+`SkorokhodSpace.min_edist_le_two_mul_modulusBased` does in the other direction. -/
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **A window on which the three point quantity is small carries one break.**
+There is a time `τ` in `[u, v]` before which the path stays within `η` of its
+value at `u`, and from which on it stays within `η` of its value at `τ`.
+
+The break is `sInf {t ∈ [u, v] | η ≤ edist (f t) (f u)}`, and right continuity is
+what makes the infimum a *minimum*: were the displacement at `τ` itself below
+`η`, it would stay below `η` on an interval `Ioo τ w` as well
+(`mem_nhdsGT_iff_exists_Ioo_subset`, `Mathlib/Topology/Order/LeftRightNhds.lean:104`),
+and then no point of the set would lie below `w`, putting its infimum above `τ`.
+With the break in hand the hypothesis is read **once**, at the triple
+`(u, τ, t₂)`.
+
+If the displacement never reaches `η` the break is `v` and the second clause is
+the single point `v`, where the displacement is `0`; that is why the statement
+does not have to distinguish the two cases for its consumer. -/
+theorem SkorokhodSpace.exists_forall_edist_lt_of_forall_min_edist_lt
+    (f : D(ℝ, E)) {u v : ℝ} (huv : u ≤ v) {η : ℝ≥0∞} (hη : 0 < η)
+    (h : ∀ t₁ t t₂ : ℝ, u ≤ t₁ → t₁ ≤ t → t ≤ t₂ → t₂ ≤ v →
+      min (edist (f.toFun t) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun t)) < η) :
+    ∃ τ ∈ Set.Icc u v,
+      (∀ r ∈ Set.Ico u τ, edist (f.toFun r) (f.toFun u) < η) ∧
+      (∀ r ∈ Set.Icc τ v, edist (f.toFun r) (f.toFun τ) < η) := by
+  classical
+  set S : Set ℝ := {t | t ∈ Set.Icc u v ∧ η ≤ edist (f.toFun t) (f.toFun u)} with hSdef
+  by_cases hSne : S.Nonempty
+  · have hbdd : BddBelow S := ⟨u, fun x hx => hx.1.1⟩
+    set τ := sInf S with hτdef
+    have hτlb : ∀ x ∈ S, τ ≤ x := fun x hx => csInf_le hbdd hx
+    have hτu : u ≤ τ := le_csInf hSne fun x hx => hx.1.1
+    have hτv : τ ≤ v := by
+      obtain ⟨x, hx⟩ := hSne
+      exact le_trans (hτlb x hx) hx.1.2
+    have hfirst : ∀ r ∈ Set.Ico u τ, edist (f.toFun r) (f.toFun u) < η := by
+      intro r hr
+      by_contra hcon
+      push Not at hcon
+      exact absurd (hτlb r ⟨⟨hr.1, le_trans hr.2.le hτv⟩, hcon⟩) (not_le.2 hr.2)
+    have hbreak : η ≤ edist (f.toFun τ) (f.toFun u) := by
+      by_contra hcon
+      push Not at hcon
+      have hE : Filter.Tendsto (fun r => edist (f.toFun r) (f.toFun u)) (𝓝[>] τ)
+          (𝓝 (edist (f.toFun τ) (f.toFun u))) :=
+        Filter.Tendsto.edist (f.isCadlag.isRightContinuous τ) tendsto_const_nhds
+      obtain ⟨w, hw, hsub⟩ := mem_nhdsGT_iff_exists_Ioo_subset.1
+        (hE (isOpen_Iio.mem_nhds hcon))
+      refine absurd (le_csInf hSne fun x hx => ?_) (not_le.2 hw)
+      rcases eq_or_lt_of_le (hτlb x hx) with heq | hlt
+      · exact absurd hx.2 (not_le.2 (heq ▸ hcon))
+      · by_contra hxw
+        push Not at hxw
+        exact absurd hx.2 (not_le.2 (hsub ⟨hlt, hxw⟩))
+    refine ⟨τ, ⟨hτu, hτv⟩, hfirst, fun r hr => ?_⟩
+    rcases min_lt_iff.1 (h u τ r le_rfl hτu hr.1 hr.2) with h1 | h2
+    · exact absurd hbreak (not_le.2 h1)
+    · exact h2
+  · refine ⟨v, ⟨huv, le_rfl⟩, fun r hr => ?_, fun r hr => ?_⟩
+    · by_contra hcon
+      push Not at hcon
+      exact hSne ⟨r, ⟨hr.1, hr.2.le⟩, hcon⟩
+    · rw [le_antisymm hr.2 hr.1, edist_self]
+      exact hη
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The oscillation of such a window is the displacement at its break, and
+nothing else.**  This is the triangle inequality on the second clause of
+`SkorokhodSpace.exists_forall_edist_lt_of_forall_min_edist_lt`, and it is the
+form in which the structure theorem is consumed: the three point hypothesis
+bounds the oscillation of the window by `η` **plus one displacement**, the one at
+the single break, and leaves that displacement entirely free.
+
+So a consumer that can bound the jump at the break --- because it has put its
+nodes at the large jumps and is looking at a cell between two of them --- gets
+`2 * η` for the whole cell, and a consumer that cannot gets nothing.  That is the
+whole difficulty of the remaining link of the chain, stated as an inequality. -/
+theorem SkorokhodSpace.edist_le_of_forall_min_edist_lt
+    (f : D(ℝ, E)) {u v : ℝ} (huv : u ≤ v) {η : ℝ≥0∞} (hη : 0 < η)
+    (h : ∀ t₁ t t₂ : ℝ, u ≤ t₁ → t₁ ≤ t → t ≤ t₂ → t₂ ≤ v →
+      min (edist (f.toFun t) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun t)) < η) :
+    ∃ τ ∈ Set.Icc u v, ∀ r ∈ Set.Icc u v,
+      edist (f.toFun r) (f.toFun u) ≤ edist (f.toFun τ) (f.toFun u) + η := by
+  obtain ⟨τ, hτ, hfirst, hsecond⟩ :=
+    SkorokhodSpace.exists_forall_edist_lt_of_forall_min_edist_lt f huv hη h
+  refine ⟨τ, hτ, fun r hr => ?_⟩
+  rcases lt_or_ge r τ with hlt | hge
+  · exact le_trans (hfirst r ⟨hr.1, hlt⟩).le le_add_self
+  · calc edist (f.toFun r) (f.toFun u)
+        ≤ edist (f.toFun r) (f.toFun τ) + edist (f.toFun τ) (f.toFun u) := edist_triangle _ _ _
+      _ ≤ η + edist (f.toFun τ) (f.toFun u) := add_le_add (hsecond r ⟨hge, hr.2⟩).le le_rfl
+      _ = edist (f.toFun τ) (f.toFun u) + η := add_comm _ _
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **Two balls hold the window.**  The same statement read as a covering: every
+value the path takes on `[u, v]` is within `η` either of `f u` or of `f τ`.
+
+This is the form in which the structure theorem refutes a reading of the three
+point hypothesis that a consumer might be tempted by --- that a small three point
+quantity makes the path *nearly constant* on a window of span `δ`.  It does not:
+it makes the path nearly constant on **two** pieces, and the two values may be
+arbitrarily far apart. -/
+theorem SkorokhodSpace.exists_forall_edist_lt_or_edist_lt
+    (f : D(ℝ, E)) {u v : ℝ} (huv : u ≤ v) {η : ℝ≥0∞} (hη : 0 < η)
+    (h : ∀ t₁ t t₂ : ℝ, u ≤ t₁ → t₁ ≤ t → t ≤ t₂ → t₂ ≤ v →
+      min (edist (f.toFun t) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun t)) < η) :
+    ∃ τ ∈ Set.Icc u v, ∀ r ∈ Set.Icc u v,
+      edist (f.toFun r) (f.toFun u) < η ∨ edist (f.toFun r) (f.toFun τ) < η := by
+  obtain ⟨τ, hτ, hfirst, hsecond⟩ :=
+    SkorokhodSpace.exists_forall_edist_lt_of_forall_min_edist_lt f huv hη h
+  refine ⟨τ, hτ, fun r hr => ?_⟩
+  rcases lt_or_ge r τ with hlt | hge
+  · exact Or.inl (hfirst r ⟨hr.1, hlt⟩)
+  · exact Or.inr (hsecond r ⟨hge, hr.2⟩)
+
 /-! ## Milestone 9: the nonnegative index inside the real one
 
 Everything above about the modulus and about tightness is stated over the index

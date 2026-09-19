@@ -3406,10 +3406,47 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
 
   1. `modulusBased` large ⟹ three point quantity large. The **hard** half of
      Ethier–Kurtz' comparison of `w'` with `w''`, and the only link that is open.
-     Its proof is the greedy subdivision: run each cell from its left endpoint as
-     far as the oscillation allows; a cell shorter than `δ` produces the triple,
-     because the value that forced the break and the value that forced the next
-     one are each at distance `η` from the endpoint between them.
+     Its **first half is proved**, and it is a structure theorem:
+     `SkorokhodSpace.exists_forall_edist_lt_of_forall_min_edist_lt` says that a
+     window on which the three point quantity is below `η` carries exactly **one
+     break** — a single time `τ` before which the path stays within `η` of its
+     value at the window's left end, and from which on it stays within `η` of its
+     value at `τ`. The break is the first time the displacement reaches `η`, an
+     infimum that right continuity makes a minimum, and the hypothesis is then
+     read at a **single** triple `(u, τ, t₂)`.
+     `SkorokhodSpace.edist_le_of_forall_min_edist_lt` is the same statement as an
+     oscillation bound: `edist (f τ) (f u) + η`, the displacement **at** the break
+     plus `η`.
+
+     **The greedy subdivision that this item named until 2026-09-19 does not
+     close the link, and the structure theorem says why.** Greedy cells — each
+     run from its left endpoint as far as the oscillation allows — have
+     oscillation `≤ η`, but they are not longer than `δ`; what the hypothesis
+     gives is that no *two consecutive* cells fit in a window of span `δ`. So the
+     nodes have to be thinned to every other one, and the merged cell measures
+     its oscillation from the far left endpoint, which costs the displacement at
+     the break in between — and that displacement is precisely the quantity the
+     three point hypothesis leaves free. A path may jump by any amount at one
+     time without violating it; the condition forbids two large displacements in
+     one window, not one.
+
+     **What the link needs instead**, written out at the section in
+     `SkorokhodSpace/Suggested.lean`: nodes at the jumps of size `≥ 2 * η`, which
+     are more than `δ` apart under the hypothesis and finitely many in a compact
+     window (`IsCadlag.finite_largeLeftJumpSet_inter`). The threshold is `2 * η`
+     and not `η`, and the reason is worth keeping: the naive triple `(t₁, p, q)`
+     at two jumps has `edist (f q) (f p)` for its second displacement, which the
+     jump at `q` does not bound — the path may return to `f p` just before `q`.
+     It takes **two** passages to the left limit, one at each jump, and the
+     triangle inequality between them. Between two consecutive such jumps the
+     window is filled with a uniform grid of `⌈(q-p)/(2*δ)⌉` cells, whose lengths
+     lie in `(δ, 2*δ]` and whose oscillation the structure theorem bounds by
+     `4 * η`. Two numbers of the original
+     statement change with it: the hypothesis is read at span `2 * δ`, not `δ` —
+     a path drifting at the largest slope the hypothesis at span `δ` allows moves
+     by nearly `2 * η` across a cell of length `δ` — and the constant the route
+     gives is `4`, not `2`. Neither matters to the consumer, which asks only that
+     the modulus vanish as `δ → 0`.
   2. Three point quantity of the path ⟹ the same for the image under
      `SkorokhodSpace.clipDist (f t)`, capped at `1`
      (`SkorokhodSpace.min_edist_postcomp_clipDist`), and in the form a dense `H`
