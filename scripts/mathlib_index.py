@@ -8,6 +8,11 @@ Verzeichnis im Dateisystem (der v4.33.1-Release unter
 
     python3 scripts/mathlib_index.py master   -> scripts/_citations/index_master.json
     python3 scripts/mathlib_index.py v4331    -> scripts/_citations/index_v4331.json
+    python3 scripts/mathlib_index.py <rev>    -> scripts/_citations/index_<rev>.json
+
+Jedes andere Argument als `v4331` ist ein Git-Revision-Ausdruck; `master` steht
+für `upstream/master`.  Damit kann ein Lauf gegen **den** Commit indizieren, den
+die Roadmaps nennen, statt gegen den Stand des Tages.
 
 Der Index ist ein Dict `voller Name -> "Datei:Zeile"`.  Namespaces werden
 mitgeführt, `deprecated` wird an der Deklaration vermerkt (Präfix `!` im Wert).
@@ -24,7 +29,11 @@ OUT = 'scripts/_citations'
 
 DECL = re.compile(
     r"^\s*(?:private\s+|protected\s+|noncomputable\s+|nonrec\s+|partial\s+|unsafe\s+|scoped\s+|local\s+)*"
-    r"(theorem|lemma|def|abbrev|structure|class|instance|inductive|opaque|axiom)\b"
+    # `irreducible_def` **vor** `def`, sonst greift die Alternative nie.  Am
+    # 2026-09-19 fehlte dadurch `MeasureTheory.Measure.condKernel`
+    # (`Probability/Kernel/Disintegration/StandardBorel.lean:362`) und alles
+    # andere, was so deklariert ist.
+    r"(theorem|lemma|irreducible_def|def|abbrev|structure|class|instance|inductive|opaque|axiom)\b"
     r"(?:\s+([A-Za-z_α-ωΓ-Ω][^\s:({\[]*))?")
 NS = re.compile(r'^\s*(namespace|end)\s+([A-Za-z_][A-Za-z0-9_.\']*)\s*$')
 DEPR = re.compile(r'@\[[^\]]*deprecated')
@@ -38,11 +47,15 @@ def emit_lines(source):
     """Yield (path, lineno, text) for every Mathlib/*.lean line of interest."""
     # POSIX ERE: `git grep -E` kennt weder `\s` noch `(?:`.
     pat = ('^[[:space:]]*(@\\[|private |protected |noncomputable |nonrec |partial '
-           '|unsafe |scoped |local |theorem |lemma |def |abbrev |structure |class '
+           '|unsafe |scoped |local |theorem |lemma |def |irreducible_def |abbrev |structure |class '
            '|instance|inductive |opaque |axiom |namespace |end |alias )')
-    if source == 'master':
+    if source != 'v4331':
+        #  `master` heißt `upstream/master`; jeder andere Wert wird als
+        #  Git-Revision genommen, damit ein Lauf gegen den Commit indizieren
+        #  kann, den die Roadmaps nennen, statt gegen den heutigen Stand.
+        rev = 'upstream/master' if source == 'master' else source
         cmd = ['git', '-C', MATHLIB4, 'grep', '-n', '-E', pat,
-               'upstream/master', '--', 'Mathlib/']
+               rev, '--', 'Mathlib/']
         out = subprocess.run(cmd, capture_output=True, text=True).stdout
         for line in out.splitlines():
             try:
@@ -102,7 +115,12 @@ def build(source):
             # ein anderes Attribut auf eigener Zeile hebt ein hängendes
             # `deprecated` nicht auf, unterbricht es aber auch nicht
             continue
-        m = DECL.match(text.split('@[')[-1] if text.lstrip().startswith('@[') else text)
+        # Ein Attribut **vor** der Deklaration in derselben Zeile —
+        # `@[simp] lemma find_eq_zero …` — wird abgeschnitten.  Eine frühere
+        # Fassung schnitt an `@[` und behielt `simp] lemma …`, was auf die
+        # Deklarationsregel nicht paßt: am 2026-09-19 fehlten dadurch
+        # `Nat.find_eq_zero` und alles andere, was so geschrieben ist.
+        m = DECL.match(re.sub(r'^\s*@\[[^\]]*\]\s*', '', text))
         if not m:
             continue
         name = m.group(2)

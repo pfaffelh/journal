@@ -19,6 +19,8 @@ python3 scripts/extract_citations.py        # was die Roadmaps zitieren
 python3 scripts/mathlib_index.py master     # Deklarationsindex von upstream/master
 python3 scripts/mathlib_index.py v4331      # Deklarationsindex von v4.33.1
 python3 scripts/check_citations.py          # -> _citations/report.md
+python3 scripts/check_cited_lines.py        # -> _citations/cited_lines.md
+python3 scripts/check_duplicates.py         # -> _citations/duplicates.md
 python3 scripts/check_negatives.py          # -> _citations/negatives.md
 python3 scripts/check_suggested.py          # -> _citations/lean_check.md
 python3 scripts/check_master.py             # -> _citations/lean_check_master.md
@@ -42,7 +44,49 @@ Laufbericht.
   falsche Funde erzeugt und die hier behandelt sind: `@[deprecated …] alias foo
   := bar` gilt dem Alias und nicht der nächsten Deklaration, und die von
   `@[to_dual foo]`, `@[to_additive foo]` und `@[to_fun foo]` erzeugten Namen
-  stehen in keiner Quellzeile als `theorem`.
+  stehen in keiner Quellzeile als `theorem`. Ein drittes ist am 2026-09-19
+  dazugekommen: ein Attribut **vor** der Deklaration in derselben Zeile —
+  `@[simp] lemma find_eq_zero …` — wurde vom Abschneiden an `@[` nicht
+  erfaßt, und der Index war dadurch um **8 866 Deklarationen zu klein**,
+  darunter `Nat.find_eq_zero`. Ein beliebiger Git-Revision-Ausdruck ist als
+  Argument zugelassen, damit gegen **den** Commit indiziert werden kann, den die
+  Roadmaps nennen, und nicht gegen den Stand des Tages.
+* **`check_cited_lines.py`** prüft das andere Stück derselben Angabe: nicht, ob
+  der zitierte Name existiert, sondern ob er auf der zitierten **Zeile** steht.
+  Es paart nicht auf gut Glück, sondern fragt umgekehrt, ob *irgendein*
+  Bezeichner des Umfelds dort steht; nur was dort nicht steht, wird gepaart, und
+  nur, wenn genau ein Bezeichner des Umfelds in der zitierten Datei wohnt. Drei
+  Klassen bleiben ausdrücklich draußen und werden getrennt gezählt: eine
+  Fundstelle, die auf eine *andere* Deklaration oder auf ein `variable`-Bündel
+  zeigt (die ist gemeint, nicht veraltet), eine, die sich selbst auf v4.33.1
+  beruft (die ist ein Versionsvergleich), und eine, die sich nicht paaren ließ.
+  Dazu ein Test, der ohne jede Paarung auskommt: zeigt eine Fundstelle in eine
+  Datei, die es nicht mehr gibt, die nur noch ein `deprecated_module`-Rumpf ist,
+  oder hinter deren Ende — das fand am 2026-09-19 drei Zitate in
+  `MeasureTheory/Measure/MeasureSpace.lean`, das auf `master` seit dem
+  2026-08-19 vierzehn Zeilen hat.
+
+  ```
+  python3 scripts/check_cited_lines.py            # gegen den gepinnten Commit
+  python3 scripts/check_cited_lines.py --fix      # schreibt die Abweichungen um
+  ```
+
+  Die ungepaarten Fundstellen bleiben nicht als bloße Liste stehen: seit dem
+  2026-09-19 schlägt das Skript nach, **was an der zitierten Zeile steht**, und
+  ordnet jede einer Art zu (Deklarationskopf, anonyme Instanz,
+  Signaturfortsetzung, `variable`-Bündel, Modifikatorzeile, Doc-Kommentar,
+  Rumpf). Nur die letzte Art kann ein Befund sein. Die Vermutung, es seien
+  überwiegend anonyme Instanzen, war damit widerlegt — es waren sieben von 66,
+  und sechs Fundstellen zeigten wirklich in einen Beweisrumpf.
+
+  rc 1, wenn eine Zeile verschoben oder eine Fundstelle tot ist.
+* **`check_duplicates.py`** sucht Deklarationen der Roadmaps, die es auf
+  `master` schon gibt — die Bodenhaftungsregel von `CONTRIBUTING.md` schließt
+  sie aus. Verglichen wird der **letzte Namensbestandteil**; Mathlib benennt
+  systematisch, also ist das ein Anhaltspunkt und keine Entscheidung. Am
+  2026-09-19: 2 275 eigene Deklarationen, 38 Treffer, davon zwei echte
+  Doppelungen (`integrableOn_of_bounded`, `sum_smul_dirac_singleton`).
+  Dieselbe Aussage unter einem **anderen** Namen findet es nicht.
 * **`check_citations.py`** schlägt jeden Namen in beiden Indizes nach und
   sortiert nach: auf beiden, nur v4.33.1 (also von master verschwunden), nur
   master, `deprecated`, gar nicht gefunden.
@@ -80,9 +124,34 @@ Laufbericht.
   `~/Code/lean/mathlib-master` auf `upstream/master`. Es leitet das
   Repositorium aus dem eigenen Dateipfad ab, arbeitet also im Worktree, aus dem
   es aufgerufen wird, und nicht im Hauptcheckout.
+
+  **Sein Rückgabewert ist seit dem 2026-09-18 eine Schranke**, nicht bloß eine
+  Meldung: rc 1 bei einem Fehler *oder* bei einem veralteten Namen. Die übrigen
+  Warnungen (am 2026-09-18: 160, davon 58 `unusedSectionVars`) bleiben
+  ausdrücklich draußen — sie sind Stilfragen, und `unusedSectionVars` zu
+  befolgen hieße Signaturen ändern. Der Grund für die Schranke ist gemessen: von
+  den 354 Veraltungen, die der dreiundzwanzigste Lauf des 2026-09-18 abtrug,
+  waren **78 schon gegen v4.33.1 veraltet**, eine seit zehn Monaten. Sie sind
+  eingesickert, weil `check_suggested.py` nur Fehler zählt.
 * **`check_axioms_master.py`** ist `check_axioms.py` gegen denselben Worktree.
   Es braucht den `.olean`-Baum, den `check_master.py` anlegt, und ist deshalb
   nach ihm zu laufen.
+* **`dev_check_master.py`** ist `dev_check.py` gegen denselben Worktree: es
+  übersetzt **eine Arbeitsdatei**, die `TauCetiRoadmap.…Suggested` importiert,
+  gegen die schon gebauten `.olean`. Das dauert Sekunden statt der knapp zwei
+  Minuten eines vollen Kettendurchlaufs und ist der Weg, auf dem eine neue
+  Deklaration entsteht, ehe sie in die Roadmap gehängt wird. Es braucht
+  denselben `.olean`-Baum und ist deshalb ebenfalls nach `check_master.py` zu
+  laufen; die Arbeitsdatei landet in `<worktree>/TauCetiRoadmap/_Dev.lean`, das
+  `check_master.py` zu Beginn jedes Durchlaufs leert, ein Zwischenstand kann
+  also nicht in eine verbindliche Prüfung geraten.
+
+  **Verbindlich bleibt `check_master.py`**, ungefiltert und über die ganze
+  Datei.
+
+  ```
+  python3 scripts/dev_check_master.py scratch/neu.lean
+  ```
 * **`show_master_errors.py`** zeigt die Meldungen eines `check_master.py`-Laufs
   **ungekürzt**, wahlweise auf einen Zeilenbereich eingeschränkt;
   **`master_error_families.py`** gruppiert sie nach dem Kopf der Anwendung, in

@@ -37,7 +37,7 @@ Mathlib supplies the probabilistic base, which is **not** to be rebuilt:
   convergence theorems of `Mathlib/Probability/Martingale/Convergence.lean` fix
   `Filtration ℕ` as well. What is **not** tied to `ℕ` is the step from "no
   oscillation" to convergence: `tendsto_of_no_upcrossings`
-  (`Mathlib/Topology/Order/LiminfLimsup.lean:318`) holds along an arbitrary
+  (`Mathlib/Topology/Order/LiminfLimsup.lean:317`) holds along an arbitrary
   filter, over a densely ordered target and a dense set of levels. Only the
   *counting* of upcrossings is discrete, which is what Milestone 9 splits along.
   Doob's `Lᵖ` inequality is absent for every index.
@@ -457,11 +457,28 @@ generating its σ-algebra, and `X : Ω → F`.
   Milestone 5, applied to the multiplicative system of those products.
 * `Clock.IsProgressive Q X 𝓕`: for every `t` there is `Z : ι → Ω → E` agreeing
   with `X` on `Set.Iic t` whose uncurried form is
-  `Q.measurableSpace ⊗ 𝓕 t`-measurable. This is `IsStronglyProgressive` in the
+  `Q.measurableSpace ⊗ 𝓕 t`-measurable. This is progressive measurability in the
   shape a `Clock` forces — the clock carries its `MeasurableSpace ι` as a field
   and not as an instance, so the subtype of `Set.Iic t` cannot be written without
   `@` — and it is a hypothesis of `isMPSolutionFor_iff_forall_fdd` in both its
   forms. It is a hypothesis on `X` and the clock alone, never on `P`.
+
+  **It shares a name with `MeasureTheory.IsProgressive` and not the statement,
+  and the two must not be conflated.** The library's predicate
+  (`Probability/Process/Adapted.lean:192`) reads
+  `∀ i, Measurable[Subtype.instMeasurableSpace.prod (f i)] fun p : Set.Iic i × Ω ↦ u p.1 p.2`:
+  it measures the restriction to the **subtype** `Set.Iic i`, whose
+  `MeasurableSpace` is `Subtype.instMeasurableSpace` and therefore comes from an
+  *instance* `[MeasurableSpace ι]`. A `Clock` has no such instance — its
+  σ-algebra is the field `Q.measurableSpace` — so the subtype comparison cannot
+  even be stated without `@`, and instance search, being syntactic, will not
+  find it. Ours quantifies instead over an **extension** `Z` that agrees with `X`
+  below `t` and is measurable on all of `ι × Ω`; the two formulations coincide
+  when the clock's σ-algebra happens to be the instance, and neither implies the
+  other as written. The same holds for the strongly measurable variant
+  `MeasureTheory.IsStronglyProgressive` (`:262`), which is what the stopping
+  results of Milestone 9 consume and which this roadmap cites under its own name
+  wherever an instance is available.
 * `Clock.IsProgressiveComp Q X 𝓕`: the same statement for the **real
   functionals** of the process, `∀ h : E → ℝ` measurable, `(u, ω) ↦ h (Z u ω)`
   is `Q.measurableSpace ⊗ 𝓕 t`-measurable, together with
@@ -483,8 +500,9 @@ generating its σ-algebra, and `X : Ω → F`.
   compensator a bounded function of `ω` for a bounded `g`.
 * `stronglyMeasurable_integral_comp`: `StronglyMeasurable.integral_prod_left`
   with both σ-algebras passed by hand, so that `Q.measurableSpace` and `𝓕 t` can
-  be handed to it; and `integrableOn_of_bounded`, a bounded measurable function
-  is integrable on a set of finite measure. Together they are what turns
+  be handed to it. Together with `MeasureTheory.Measure.integrableOn_of_bounded`
+  (`MeasureTheory/Integral/IntegrableOn.lean:713`) — a bounded measurable
+  function is integrable on a set of finite measure — this is what turns
   `Clock.IsProgressive` into strong adaptedness of the compensator.
 * `mpFamily_sub_of_measurable_path`: for a measurable path,
   `Y t ω - Y s ω = f (X t ω) - f (X s ω) - ∫ u in Clock.interval q c s t, g (X u ω) ∂q`.
@@ -786,7 +804,7 @@ A concrete family of solutions, built without any of the theory above. Index
   as `ProbabilityTheory.IndepFun.variance_sum` (`:422`) on the indicators, and
   that is `iIndepFun` of the coordinates, which
   `ProbabilityTheory.iIndepFun_infinitePi`
-  (`Independence/InfinitePi.lean:127`) supplies at the identity.
+  (`Independence/InfinitePi.lean:125`) supplies at the identity.
 
   Its two ends are not probabilistic and are **proved** on 2026-09-10, eighth
   run. `not_summable_min_one` says the truncation preserves divergence, and it
@@ -854,14 +872,14 @@ A concrete family of solutions, built without any of the theory above. Index
 
   **The independence is the product formula and not the independence API.** The
   route through `ProbabilityTheory.iIndepFun_iff_map_fun_eq_infinitePi_map`
-  (`Independence/InfinitePi.lean:103`) is a detour: it produces `iIndepFun` of
+  (`Independence/InfinitePi.lean:101`) is a detour: it produces `iIndepFun` of
   the coordinates, from which `iIndepSet` of the events `{ξ n > 1}` still has to
   be extracted, and Mathlib has no lemma in that direction. What
   `measure_limsup_eq_one` wants is `iIndepSet`, and
   `ProbabilityTheory.iIndepSet_iff_meas_biInter`
   (`Independence/Basic.lean:623`) says it *is* the product formula for finite
   intersections — which for coordinate events is `Set.pi` and therefore
-  `MeasureTheory.Measure.infinitePi_pi` (`Probability/ProductMeasure.lean:405`)
+  `MeasureTheory.Measure.infinitePi_pi` (`Probability/ProductMeasure.lean:402`)
   in one step. The general lesson is the file's own: ask for the statement the
   consumer needs, not for the named concept nearest to it.
 * `ae_isStepPath_jumpProcess`, `ae_isCadlag_jumpProcess`: the two path
@@ -891,7 +909,7 @@ A concrete family of solutions, built without any of the theory above. Index
   (`MeasureTheory/Constructions/BorelSpace/Basic.lean:717`) but **no**
   `MeasureSpace` instance and hence no `volume`; Mathlib gives subtypes their
   measure through `MeasureTheory.Measure.Subtype.measureSpace`, which is
-  deliberately not an instance (`MeasureTheory/Measure/Restrict.lean:843`). That
+  deliberately not an instance (`MeasureTheory/Measure/Restrict.lean:822`). That
   costs nothing, because `Clock` carries its measurable space and its measure as
   *fields*, which is what that design decision was for: the clock is
   `((volume : Measure ℝ).restrict (Set.Ici 0)).map Real.toNNReal`.
@@ -1689,7 +1707,7 @@ A concrete family of solutions, built without any of the theory above. Index
   time `j`, with the common part over `Sᶜ` subtracted, is the set identity that
   `ae_eq_condExp_of_forall_setIntegral_eq` asks for. The general form is stated
   over any index that `MeasureTheory.measurable_stoppedValue`
-  (`Probability/Process/Stopping.lean:1048`) accepts, and it carries the
+  (`Probability/Process/Stopping.lean:1044`) accepts, and it carries the
   expectation identity as a hypothesis, so neither right continuity nor the
   martingale property appears in it; `stoppedValue_ae_eq_condExp` is the instance
   over `ℝ≥0` under the hypotheses of `integral_stoppedValue_eq`. **In Lean** on
@@ -3656,7 +3674,7 @@ A concrete family of solutions, built without any of the theory above. Index
 
   **The one dimensional laws are Mathlib's Poisson laws**, in Lean on
   2026-09-10, fifth run, as `jumpMeasure_map_jumpProcess_poisson`:
-  `(jumpMeasure poissonKernel δ₀).map (jumpProcess poissonRate t) = Po(t)`, with
+  `(jumpMeasure poissonJumpKernel δ₀).map (jumpProcess poissonRate t) = Po(t)`, with
   `Po` the `ProbabilityTheory.poissonMeasure`
   (`Mathlib/Probability/Distributions/Poisson/Basic.lean:41`) into whose
   definition nothing of `jumpTime`, `stepIndex` or `waitingMeasure` enters.
@@ -4550,7 +4568,7 @@ Ableitung an **jedem** Punkt:
 Fassungen, `integral_comp_mul_deriv_of_deriv_nonneg`
 (`MeasureTheory/Integral/IntervalIntegral/IntegrationByParts.lean:496–539`),
 `integral_comp_mul_deriv_Ioi`
-(`MeasureTheory/Integral/IntegralEqImproper.lean:1121`) und
+(`MeasureTheory/Integral/IntegralEqImproper.lean:1118`) und
 `integral_image_eq_integral_abs_deriv_smul`
 (`MeasureTheory/Function/JacobianOneDim.lean:66`). Über die Substitution ist die
 Aussage also nicht zu erreichen.
@@ -4566,7 +4584,7 @@ und dazu den Begriff samt Algebra in
 
 * eine Stammfunktion ist absolut stetig
   (`IntervalIntegrable.absolutelyContinuousOnInterval_intervalIntegral`, ebenda
-  `:412`);
+  `:225`);
 * sie ist fast überall differenzierbar mit dem Integranden als Ableitung
   (`IntervalIntegrable.ae_hasDerivAt_integral`,
   `MeasureTheory/Integral/IntervalIntegral/LebesgueDifferentiationThm.lean:66`
@@ -4732,7 +4750,7 @@ des Tages, nachdem die Suche nach ihr in Mathlib negativ ausging.)*
 Der Kompensatorteil des Zuwachses verlangt, das Integral über den Zeitparameter
 mit der bedingten Erwartung zu vertauschen. **Mathlib hat diese Vertauschung
 nicht**, in keinem der beiden Stände; was es hat, ist
-`condExp_ae_eq_integral_condDistrib` (`Probability/Kernel/CondDistrib.lean:377`)
+`condExp_ae_eq_integral_condDistrib` (`Probability/Kernel/CondDistrib.lean:374`)
 und dessen Verwandte, die gegen einen **Kern** integrieren — das ist die
 Desintegration und nicht Fubini.
 
@@ -4835,7 +4853,7 @@ von `E × E`, und ob die Diagonale meßbar ist, steht über einer bloßen
 `MeasurableEq` (`MeasureTheory/MeasurableSpace/Constructions.lean:1083`), mit
 `measurableSet_eq_fun` als Werkzeug und mit den Instanzen `Countable` +
 `MeasurableSingletonClass` (`:1104`), `StandardBorelSpace`
-(`Constructions/Polish/Basic.lean:157`) und `SecondCountableTopology` + `T2Space`
+(`Constructions/Polish/Basic.lean:159`) und `SecondCountableTopology` + `T2Space`
 (`BorelSpace/Basic.lean:620`). Sie ist notwendig, und der Zeuge steht daneben:
 `exists_not_pointFiltrationE_le_stepPathFiltrationE_of_not_measurableEq` —
 Sprungzeiten, die an **jedem** Stichprobenpunkt bei `0` beginnen und streng
@@ -4875,7 +4893,7 @@ stehen.**
 * **Das Gitter wird über `Fin (n+1)` indiziert und nicht über `ℕ`.** Gebraucht
   wird eine **abzählbare** Vereinigung, und `ℕ → gridPoints i` ist nicht abzählbar,
   während `Fin (n+1) → gridPoints i` es ist (`Pi.countable` bei endlichem
-  Definitionsbereich, `Data/Countable/Basic.lean:146`). Die Zählung läuft dann
+  Definitionsbereich, `Basic/Countable/Basic.lean:146`). Die Zählung läuft dann
   über `Fin.induction`.
 * **`q₀ = 0` wird nicht gebraucht**, anders als auf Papier: die Rückrichtung
   beginnt mit `0 ≤ stepIndex (q₀)`, und das ist umsonst. Was `hzero` leistet, ist
@@ -4974,7 +4992,7 @@ Nullmengen und keine anderen. Wer jede Teilmenge einer Nullmenge will,
 vervollständigt zuerst `(Ω, 𝓐, P)` — und ändert damit den Grundraum und den Sinn
 jeder Aussage darüber.
 
-**Was gebaut ist und gegen v4.33.1 übersetzt** (`Suggested.lean`,
+**Was gebaut ist und übersetzt** (`Suggested.lean`,
 `section Augmentation` und `section AugmentationLocal`, siebzehn Deklarationen
 ohne `sorry`):
 
@@ -5130,9 +5148,9 @@ hawkesFiltration_augment_eq_hawkesPathFiltration_augment (hν : 0 < ν)
     (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hφm : Measurable φ)
     (hφint : ∀ a r, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r)
     (nu : Measure ℕ) [IsProbabilityMeasure nu] :
-  (hawkesFiltration (E := ℕ) hν hφ hφm hφint).augment (jumpMeasure poissonKernel nu)
+  (hawkesFiltration (E := ℕ) hν hφ hφm hφint).augment (jumpMeasure poissonJumpKernel nu)
     = (hawkesPathFiltration (E := ℕ) hν hφ hφm hφint).augment
-        (jumpMeasure poissonKernel nu)
+        (jumpMeasure poissonJumpKernel nu)
 ```
 
 Die Voraussetzungen sind die Daten von `ex:hawkes` und nichts sonst. Ihre
@@ -5150,7 +5168,7 @@ Einlösung:
   an den **Kern** und nicht an die Konstruktion, und sie ist scharf: bei
   `mu x {x} > 0` ist die Kette mit positiver Wahrscheinlichkeit stehend und der
   Pfad sieht den Sprung nicht.
-* `ae_ne_poissonKernel`, `ae_move_jumpMeasure_poissonKernel` — der Zählkern
+* `ae_ne_poissonJumpKernel`, `ae_move_jumpMeasure_poissonJumpKernel` — der Zählkern
   `x ↦ x + 1` von `ex:hawkes` erfüllt sie.
 * `MeasurableEq ℕ` ist die Instanz aus `Countable` und
   `MeasurableSingletonClass`, und `y₀ = fun n ↦ n` ist `Nat.succ_ne_self`.
@@ -5222,9 +5240,8 @@ an der er anfällt, nichts: die Bedingung ist in `ε` monoton, wird also von den
 abzählbarer Durchschnitt meßbarer Mengen, und die Meßbarkeit der Inversen folgt,
 ohne daß über die Rate mehr verlangt würde als ihre gemeinsame Meßbarkeit.
 
-**Die Punkte, achtundzwanzig Deklarationen, alle durch `lake env lean` gegen
-v4.33.1 und alle mit `#print axioms` auf `propext`, `Classical.choice`,
-`Quot.sound` geprüft:**
+**Die Punkte, achtundzwanzig Deklarationen, alle durch `lake env lean` und alle
+mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft:**
 
 * `cumulativeRateFE`, `cumulativeRateFE_zero`, `cumulativeRateFE_of_nonpos`,
   `cumulativeRateFE_congr` — die Hebung und ihre Randwerte.
@@ -6751,6 +6768,30 @@ one, and they are what the instances of the milestone stand on.
   known: every identification already proved for the process —
   `jumpMeasure_map_jumpProcessE_zero` at the start, `poissonMeasure` at the
   Poisson rate — becomes one for the path law without a second computation.
+* `eq_map_jumpPathD_of_forall_dense`: a probability measure on `D(ℝ≥0, E)` whose
+  finite dimensional distributions agree with those of
+  `(jumpMeasure mu nu).map (jumpPathD lam)` along **some dense set of times** is
+  that law. Proved (2026-09-19). This is
+  `SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq` (**SkorokhodSpace**
+  Milestone 6) read at the index `ℝ≥0`, which is densely ordered and has no
+  greatest element, so the two conditions that statement puts on the times
+  collapse into density; the countable core is `NNReal.instHasCountableCore`.
+
+  **It says what the item above does not.** The coordinate identification pins
+  down the one dimensional distributions and nothing more — a law on a path space
+  is not determined by its marginals. Here the law itself is determined, and what
+  is spent is the finite dimensional family together with the density of the
+  times: no modulus of the paths, no compact containment, and no non explosion
+  beyond what `jumpPathD` has already consumed. No time is asked to be a
+  continuity time either, and that is the difference from Milestone 8 of
+  **SkorokhodSpace**: there two sequences are compared and the fixed
+  discontinuities of the limit have to be avoided, while an identification at
+  fixed times has no limit to avoid.
+* `eq_map_jumpPathD_poisson_of_forall_dense`: the same on the Poisson data, so
+  the hypotheses on `E` and on the rate are jointly discharged. Proved
+  (2026-09-19). Read together with `map_eval_map_jumpPathD_poisson` it says that
+  the Poisson path law on `D(ℝ≥0, ℕ)` has Poisson marginals and is the only law on
+  that space with its finite dimensional distributions along ℚ.
 
 **Acceptance example.** `map_eval_map_jumpPathD_poisson`, proved (2026-09-18):
 the Poisson data run through `jumpPathD` land in `D(ℝ≥0, ℕ)`, and the coordinate
@@ -7196,7 +7237,7 @@ order.
   `p 0 ⬝ᵥ 1 = 1`; normalise to `p̂ k = ∑ j ≤ k, w (k-j) • p j`, where `w` inverts
   `∑ k, (p k ⬝ᵥ 1) • X ^ k` in `ℝ[X] ⧸ X ^ r`, so that `p̂ k ⬝ᵥ 1 = if k = 0 then 1 else 0`;
   and with `ψ k = (Vᵀ) ^ k *ᵥ Pi.single t 1` and `c j = (V ^ j *ᵥ 1) t` put, with
-  `Matrix.vecMulVec` (`Data/Matrix/Mul.lean:616`) for the outer product,
+  `Matrix.vecMulVec` (`Data/Matrix/Mul.lean:626`) for the outer product,
   ```
   T = ∑ k, (vecMulVec (p̂ k) (ψ k) + vecMulVec (ψ k) (p̂ k))
         - ∑ k, ∑ l, c (k + l) • vecMulVec (p̂ k) (p̂ l) .
@@ -8016,7 +8057,7 @@ and 11 use them.
   hypothesis serves every `t`; that is what makes the almost sure version a
   statement about one null set instead of one for each `t`. Mathlib supplies the
   passage from "no oscillation across a dense set of levels" to convergence,
-  `tendsto_of_no_upcrossings` (`Topology/Order/LiminfLimsup.lean:318`), over an
+  `tendsto_of_no_upcrossings` (`Topology/Order/LiminfLimsup.lean:317`), over an
   arbitrary filter, and `Rat.denseRange_cast` supplies the levels.
 * Submartingale regularization, which Mathlib does not have, although the
   ingredient does. For a submartingale `Y` indexed by `ι` and a countable
@@ -8328,9 +8369,9 @@ and 11 use them.
   domination is strictly the cheaper route.
 
   The remaining three steps are Mathlib's: `Lp.eLpNorm_le_of_ae_tendsto`
-  (`MeasureTheory/Function/LpSpace/Complete.lean:89`) puts the limit in `L¹`,
+  (`MeasureTheory/Function/LpSpace/Complete.lean:92`) puts the limit in `L¹`,
   `tendsto_Lp_finite_of_tendsto_ae`
-  (`MeasureTheory/Function/UniformIntegrable.lean:518`) is Vitali, and
+  (`MeasureTheory/Function/UniformIntegrable.lean:540`) is Vitali, and
   `eLpNorm_condExp_le_eLpNorm`
   (`MeasureTheory/Function/ConditionalExpectation/Real.lean:288`) is the `L¹`
   contraction that carries the convergence through the conditional expectation.
@@ -8789,7 +8830,7 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
 * `tendstoInMeasure_zero_of_tendsto_integral_norm`: a sequence of integrable
   functions whose `L¹` norms tend to `0` tends to `0` in measure. Only
   `ofReal_integral_norm_eq_lintegral_enorm`
-  (`MeasureTheory/Integral/Bochner/Basic.lean:511`) stands between the Bochner
+  (`MeasureTheory/Integral/Bochner/Basic.lean:543`) stands between the Bochner
   form in which `IsL1LeftContinuousAlongStoppingTimes` is stated and the
   `eLpNorm` form in which Mathlib states the implication
   (`MeasureTheory.tendstoInMeasure_of_tendsto_eLpNorm`). **In Lean** on
@@ -8848,7 +8889,7 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
 * `isStoppingTime_iSup`: the supremum of a sequence of stopping times is a
   stopping time, `{⨆ n, τ n ≤ i} = ⋂ n, {τ n ≤ i}`. Mathlib carries the infimum
   (`MeasureTheory.IsStoppingTime.iInf`,
-  `Mathlib/Probability/Process/Stopping.lean:385`) and not the supremum, and the
+  `Mathlib/Probability/Process/Stopping.lean:381`) and not the supremum, and the
   asymmetry is real: the infimum needs `Filtration.IsRightContinuous`,
   `DenselyOrdered` and `NoMaxOrder`, the supremum needs nothing beyond the
   conditionally complete order of the index, since `OrderTop.bddAbove` makes
@@ -8875,7 +8916,7 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   `IsCompensatorFor` gives `StronglyAdapted 𝓕 C`, and adaptedness at a *time* is
   not adaptedness at a *stopping time*. Over a Borel codomain this is
   `MeasureTheory.measurable_stoppedValue`
-  (`Mathlib/Probability/Process/Stopping.lean:1048`) applied to
+  (`Mathlib/Probability/Process/Stopping.lean:1044`) applied to
   `IsStronglyProgressive 𝓕 C`; for a `𝕂`-valued compensator it is assumed,
   because `RCLike` gives `𝕂` a topology and no `MeasurableSpace`, so the Borel
   hypothesis of that theorem cannot be written. **In Lean** on 2026-09-17,
@@ -9073,7 +9114,7 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   discharge of the second over `ℝ≥0` and a real codomain: a progressively
   measurable real process is strongly measurable at every stopping time for the
   σ-algebra of that stopping time. It is Mathlib's `measurable_stoppedValue`
-  (`Probability/Process/Stopping.lean:1048`) followed by
+  (`Probability/Process/Stopping.lean:1044`) followed by
   `Measurable.stronglyMeasurable`, and it is available here and not in the
   abstract theorem for the reason the docstring of
   `IsStronglyMeasurableAlongStoppingTimes` records: `RCLike 𝕂` carries a topology

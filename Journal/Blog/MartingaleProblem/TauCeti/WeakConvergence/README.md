@@ -278,9 +278,9 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
      `d y (x l) ≥ δ` forcing `max ≥ ε l`. Members of `Γ` are assumed continuous,
      which is the only thing beyond strong separation the step uses; the finite
      subcover comes from `IsCompact.elim_finite_subcover_image`
-     (`Topology/Compactness/Compact.lean:350`), which is the form that keeps the
+     (`Topology/Compactness/Compact.lean:348`), which is the form that keeps the
      centres inside `K`, and the second inclusion is
-     `Metric.mem_thickening_iff` (`Topology/MetricSpace/Thickening.lean:151`).
+     `Metric.mem_thickening_iff` (`Topology/MetricSpace/Thickening.lean:143`).
   3. `MeasureTheory.le_liminf_measure_thickening_of_stronglySeparatesPoints`,
      **proved** on 2026-09-07, seventeenth run —
      `μ₀ K ≤ liminf (μ n) (Metric.thickening δ K)`. This is where steps (1) and
@@ -312,7 +312,7 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
      step (3) delivers and what
      `IsTightMeasureSet` does not say, because the thickening of a compact set
      is compact only on a **proper** space (`IsCompact.cthickening`,
-     `Topology/MetricSpace/Thickening.lean:300`; on a merely complete space the
+     `Topology/MetricSpace/Thickening.lean:283`; on a merely complete space the
      closed unit ball of an infinite-dimensional Banach space is the
      counterexample, being `cthickening 1 {0}`). The witnessing set is the one
      Mathlib's own proof of the Prokhorov converse builds
@@ -371,7 +371,7 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   `lipschitzWith_ballCutoff` and `tendsto_ballCutoff`;
   `lipschitzWith_mul_of_bounded`, a product of two bounded Lipschitz functions
   is Lipschitz — Mathlib's `LipschitzWith.mul`
-  (`Analysis/Normed/Group/Uniform.lean:308`) is the `to_additive` companion of
+  (`Analysis/Normed/Group/Uniform.lean:306`) is the `to_additive` companion of
   `LipschitzWith.add` and concerns the group operation, so it does not apply to
   a product of real valued functions; and
   `integrable_of_continuous_of_bounded`.
@@ -474,7 +474,7 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   `ι` countable and a set `T` of measures on `Π i, S i` whose one-coordinate
   marginals `Measure.map (· i) '' T` are tight for every `i`, `T` is tight.
   Mathlib has the two-factor case, `IsTightMeasureSet.prodMk`
-  (`MeasureTheory/Measure/Tight.lean:144`), and nothing for a countable product.
+  (`MeasureTheory/Measure/Tight.lean:143`), and nothing for a countable product.
   The proof is the `ε 2⁻ⁿ` argument, and countability is used twice: to
   distribute `ε` over the coordinates (`ENNReal.exists_pos_sum_of_countable'`)
   and for the countable subadditivity that turns
@@ -488,7 +488,7 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   sequence `μ : ℕ → ProbabilityMeasure E` has `IsTightMeasureSet {μ n | n}`.
   `Filter.Tendsto.isCompact_insert_range` makes `insert ν (range μ)` compact,
   hence closed, and `isTightMeasureSet_of_isCompact_closure`
-  (`Measure/Prokhorov.lean:635`) turns that into tightness. This is not the
+  (`Measure/Prokhorov.lean:634`) turns that into tightness. This is not the
   circular use of that theorem which the strong separation point rules out: here
   the convergence is a hypothesis and not the conclusion.
 
@@ -716,7 +716,7 @@ carried by Mathlib as well: the set of continuity points is a `MeasurableSet` by
 namespace, for `[OpensMeasurableSpace α]` and a target `[PseudoEMetricSpace β]`),
 which is `IsGδ.setOfPred_continuousAt`
 (`Mathlib/Topology/GDelta/MetrizableSpace.lean:51`) followed by
-`IsGδ.measurableSet` (`BorelSpace/Basic.lean:248`).
+`IsGδ.measurableSet` (`BorelSpace/Basic.lean:252`).
 
 * `MeasureTheory.tendsto_of_measure_setOf_continuousAt_eq_one`:
   for `E` with `HasOuterApproxClosed`, `E'` pseudo-emetric, `h : E → E'` Borel,
@@ -755,7 +755,7 @@ which is `IsGδ.setOfPred_continuousAt`
   differ, a set and its complement both being able to have outer measure `1`,
   and this is what keeps the metric off `E'`. Where the `= 1` form is wanted,
   `measurableSet_of_continuousAt` and `prob_compl_eq_zero_iff`
-  (`Measure/Typeclasses/Probability.lean:157`) are the passage.
+  (`Measure/Typeclasses/Probability.lean:161`) are the passage.
 * `MeasureTheory.TendstoInDistribution.continuousAt_comp`: the same statement on
   Mathlib's structure, for `X i : Ω i → E` with `TendstoInDistribution X l Z μ μ'`
   and `μ' {ω | ContinuousAt h (Z ω)} = 1`, concluding
@@ -950,7 +950,7 @@ made on `LevyProkhorov (ProbabilityMeasure E)`, a **topological** one on
   description, which is what makes its countability a line: it is the range of a
   function on `Σ n, (Fin n → ℕ) × (Fin n → ℕ)`, pulled back along
   `MeasureTheory.ProbabilityMeasure.toMeasure_injective`
-  (`Measure/ProbabilityMeasure.lean:128`) by `Set.Countable.preimage`. That it is
+  (`Measure/ProbabilityMeasure.lean:146`) by `Set.Countable.preimage`. That it is
   a family of *probability* measures is
   `MeasureTheory.isProbabilityMeasure_natWeightMeasure`, the one place where the
   `+ 1` of `exists_nat_weights` is needed: the total mass is
@@ -961,7 +961,7 @@ made on `LevyProkhorov (ProbabilityMeasure E)`, a **topological** one on
   laws and its image under `LevyProkhorov.ofMeasure` are different terms and the
   density has to be **carried** across, not reinterpreted; it is proved on the
   synonym, where `Metric.dense_iff` applies, and carried back by
-  `DenseRange.separableSpace` (`Topology/Bases.lean:378`) along
+  `DenseRange.separableSpace` (`Topology/Bases.lean:397`) along
   `probabilityMeasureHomeomorph.symm`, whose surjectivity gives the dense range
   for free. The empty `E` is a separate line and not a hypothesis:
   `TopologicalSpace.exists_dense_seq` (`Topology/Bases.lean:346`)
@@ -977,10 +977,10 @@ made on `LevyProkhorov (ProbabilityMeasure E)`, a **topological** one on
   2026-09-08, fourth run: the item above,
   read on the synonym, where there is a uniformity to argue with —
   `UniformSpace.secondCountable_of_separable`
-  (`Mathlib/Topology/UniformSpace/Cauchy.lean:932`) asks for a uniform space with
+  (`Mathlib/Topology/UniformSpace/Cauchy.lean:924`) asks for a uniform space with
   countably generated uniformity and does not apply to `ProbabilityMeasure E`
   itself — and carried back by `Homeomorph.secondCountableTopology`
-  (`Mathlib/Topology/Homeomorph/Lemmas.lean:37`). Like the separability, it needs
+  (`Mathlib/Topology/Homeomorph/Lemmas.lean:36`). Like the separability, it needs
   no completeness of `E`.
 * `MeasureTheory.isTightMeasureSet_of_forall_exists_finite_iUnion_ball`,
   **proved** on 2026-09-08, first run: on a complete pseudometric space, a set
@@ -989,7 +989,7 @@ made on `LevyProkhorov (ProbabilityMeasure E)`, a **topological** one on
   `μ ∈ S` — uniform total boundedness in measure. It is
   `isTightMeasureSet_of_forall_exists_isCompact_measure_compl_thickening_le` of
   Milestone 1 in four lines: a finite set is compact, and
-  `Metric.thickening_eq_biUnion_ball` (`Topology/MetricSpace/Thickening.lean:167`)
+  `Metric.thickening_eq_biUnion_ball` (`Topology/MetricSpace/Thickening.lean:159`)
   identifies the union of the balls around its points with its thickening, so
   the hypothesis is that criterion's at `K = F`. `SecondCountableTopology E`
   stood among the hypotheses and that route does not use it, so it is gone.
@@ -1044,7 +1044,7 @@ made on `LevyProkhorov (ProbabilityMeasure E)`, a **topological** one on
   fourth run, and by the end of that run resting on nothing unproved: for `E` Polish,
   `ProbabilityMeasure E` is Polish. `PolishSpace` is
   `SecondCountableTopology` together with `IsCompletelyMetrizableSpace`
-  (`Mathlib/Topology/MetricSpace/Polish.lean:62`) and the instance at `:65`
+  (`Mathlib/Topology/MetricSpace/Polish.lean:62`) and the instance at `:62`
   builds it from separability and complete metrizability, so this is the first
   and the fourth item. Here the completeness of `E` is used; separability alone
   gives the first two items and the whole of the rest of this milestone.
@@ -1102,7 +1102,7 @@ The representation theorem itself:
   misplaces a total mass tending to zero — and it does not follow from the
   piecewise convergence by any finite argument. The proof is Tannery's theorem,
   `tendsto_tsum_of_dominated_convergence`
-  (`Mathlib/Analysis/Normed/Group/Tannery.lean:40`), with `ν (A i)` as the
+  (`Mathlib/Analysis/Normed/Group/Tannery.lean:45`), with `ν (A i)` as the
   dominating summable function; the domination
   `max (ν (A i) - μ n (A i)) 0 ≤ ν (A i)` holds because `μ n (A i) ≥ 0`, and that
   is why the *positive part* and not the absolute value is the quantity with an
@@ -1130,7 +1130,7 @@ The representation theorem itself:
   endpoint. With `S i = ∑ j ∈ Finset.range i, p j` and `s i = (S i).toReal`, the
   map is `g y = x (Nat.find (h y))` for the predicate
   `P i y := y ≤ s (i + 1) ∨ 1 ≤ y`, and its measurability is
-  `Measurable.find` (`Mathlib/MeasureTheory/MeasurableSpace/Constructions.lean:516`)
+  `Measurable.find` (`Mathlib/MeasureTheory/MeasurableSpace/Constructions.lean:515`)
   applied to the constant maps `fun _ => x i`. The disjunct `1 ≤ y` is what makes
   `h : ∀ y, ∃ i, P i y` true at all: for `y < 1` there is an `i` with
   `y ≤ s (i + 1)` because `s i → 1`, but at `y = 1` there need be none, since the
@@ -1142,7 +1142,7 @@ The representation theorem itself:
 
   The statement carries a third conjunct, `∀ y, y ≤ (p 0).toReal → g y = x 0`: the
   **first** interval is named, and on it the map is constantly `x 0`. Its proof is
-  `Nat.find_eq_zero` (`Mathlib/Data/Nat/Find.lean:106`) at `s 1 = (p 0).toReal`, and
+  `Nat.find_eq_zero` (`Mathlib/Data/Nat/Find.lean:101`) at `s 1 = (p 0).toReal`, and
   it is what lets a caller turn a bound on a *mass* into an inclusion of events of
   `y` alone. No positivity of `y` is needed, and the statement does not ask for it:
   for `y ≤ 0` the first partial sum already passes `y`.
@@ -1240,12 +1240,11 @@ The representation theorem itself:
   its purpose is to make `IsProbabilityMeasure (condLaw μ A)` hold
   *unconditionally* and so be an instance.
 * `MeasureTheory.map_eval_prod_infinitePi`, **proved** on 2026-09-08, eighth
-  run, together with `sum_smul_dirac_singleton`,
-  `map_eval_prod_infinitePi_of_map_eq` and
+  run, together with `map_eval_prod_infinitePi_of_map_eq` and
   `exists_measurable_map_prod_infinitePi_eq_sum_smul`: **the randomisation
   step**. On the product of a space carrying a measurable index `ι : Ω → κ`
   with `MeasureTheory.Measure.infinitePi m` — Mathlib's countable product of
-  the probability measures `m i` (`Probability/ProductMeasure.lean:358`) — the
+  the probability measures `m i` (`Probability/ProductMeasure.lean:355`) — the
   map `z ↦ z.2 (ι z.1)`, "look up the coordinate the index names", has the
   mixture law `∑ᵢ P{ι = i} · m i`. The index space `κ` is any countable
   measurable space with measurable singletons: `ℕ` for one stage, `ℕ × ℕ` for a
@@ -1361,7 +1360,7 @@ The representation theorem itself:
   `G (j, y) = j` for every `y ≤ (c j j).toReal`. It is the previous statement
   applied, for each `j`, to the vector `c j ∘ Equiv.swap 0 j` and the points
   `Equiv.swap 0 j`, so that the diagonal entry is the first interval of the
-  partial sums; `Measure.sum_comp_equiv` (`Measure/MeasureSpace.lean:1415`) carries the
+  partial sums; `Measure.sum_comp_equiv` (`Measure/Sum.lean:144`) carries the
   reindexing of the conclusion and `Equiv.tsum_eq`
   (`Topology/Algebra/InfiniteSum/Basic.lean:562`, the additive form of
   `Equiv.tprod_eq`) that of the hypothesis, and the first-interval property is the
@@ -1375,7 +1374,7 @@ The representation theorem itself:
 * `MeasureTheory.frontier_biUnion_finset_subset`, **proved** on 2026-09-08,
   fifteenth run: `frontier (⋃ j ∈ K, S j) ⊆ ⋃ j ∈ K, frontier (S j)` for a
   `Finset` index. Mathlib has the two-set case, `frontier_union_subset`
-  (`Topology/Closure.lean:544`), and it is stated *sharply* —
+  (`Topology/Closure.lean:559`), and it is stated *sharply* —
   `frontier s ∩ closure tᶜ ∪ closure sᶜ ∩ frontier t` — so the induction over
   `Finset.set_biUnion_insert` has to discard the intersections by hand. It is the
   companion of `frontier_biInter_range_subset`.
@@ -1392,7 +1391,7 @@ The representation theorem itself:
 
   Truncation is the easy half: the tails `T M = (⋃ i < M, As i)ᶜ` of
   `exists_measurable_partition_diam_le_null_frontier` decrease to `∅`, so
-  `tendsto_measure_iInter_atTop` (`Measure/MeasureSpace.lean:672`) makes `ν (T M)`
+  `tendsto_measure_iInter_atTop` (`Measure/Continuity.lean:220`) makes `ν (T M)`
   small. The work is the other half, absorbing the pieces of **zero** mass into
   the remainder, and the reason it costs nothing is that `A 0` is not assembled
   out of leftovers but taken as the *complement* of the finite union `U` of the
@@ -1548,7 +1547,7 @@ The representation theorem itself:
   (`Probability/Kernel/Composition/MapComap.lean:187`) — the kernel `traj κ 0`
   goes from `Π i : Iic 0, E ≃ᵐ E` to `ℕ → E`, its coordinates are conditionally
   independent given the base point with laws `K n`, and `Kernel.trajMeasure μ κ`
-  (`Traj.lean:763`) is the glued measure; `traj_map_frestrictLe` (`:530`)
+  (`Traj.lean:530`) is the glued measure; `traj_map_frestrictLe` (`:530`)
   characterises it by its finite-dimensional projections. A product of kernels
   is the special case of Ionescu–Tulcea in which the kernels do not read the
   past, and `traj` asks for nothing but `[∀ n, MeasurableSpace (X n)]` and
@@ -1822,7 +1821,7 @@ spaces are Mathlib's and not this roadmap's.
   `MeasureTheory.IsUniformlyIntegrableLaws` that stood in `Suggested.lean` until
   then. The integrand is `max (|x| - N) 0`; a family with infinite first moment
   makes it non-integrable for every `N`, whereupon `MeasureTheory.integral_undef`
-  (`Integral/Bochner/Basic.lean:202`) returns the junk value `0`, the supremum is
+  (`Integral/Bochner/Basic.lean:204`) returns the junk value `0`, the supremum is
   `0` for every `N`, and the criterion is **satisfied** — by exactly the families
   it exists to exclude. `ProbabilityTheory.cauchyMeasure 0 1`
   (`Probability/Distributions/Cauchy.lean:170`, a probability measure by the
@@ -2220,7 +2219,7 @@ metric equivalent to `dist` gives the same topology.
   `tendstoInMeasure_iff_measureReal_dist`
   (`ConvergenceInMeasure.lean:110`, stated for `[IsFiniteMeasure μ]`): one way by
   Markov's inequality `mul_meas_ge_le_integral_of_nonneg`
-  (`Integral/Bochner/Basic.lean:1129`) applied at the level `min 1 ε` — the
+  (`Integral/Bochner/Basic.lean:1162`) applied at the level `min 1 ε` — the
   truncation has to be carried into the level as well, or the inclusion of sets
   is the wrong way round — the other by splitting the integral at level `ε` into
   `ε` plus the measure of the exceptional set. That second half is
@@ -2243,7 +2242,8 @@ metric equivalent to `dist` gives the same topology.
   the triangle inequality against the subsequence. Mathlib has **no** completeness
   of convergence in measure to appeal to: `ConvergenceInMeasure.lean` contains no
   statement with `Cauchy` in it (checked 2026-09-08 against v4.33.1), and the
-  `Lᵖ` completeness (`LpSpace/Complete.lean:290`) is for a normed group.
+  `Lᵖ` completeness (`MeasureTheory.Lp.instCompleteSpace`,
+  `LpSpace/Complete.lean:387`) is for a normed group.
 * `MeasureTheory.AEEqFun.exists_countable_dense_distInMeasure` and
   `MeasureTheory.AEEqFun.separableSpace`, **proved** on 2026-09-08, thirteenth
   run, for `[MeasureTheory.IsSeparable μ]` (`Measure/SeparableMeasure.lean:339`;
@@ -2270,7 +2270,7 @@ metric equivalent to `dist` gives the same topology.
   * `MeasureTheory.AEEqFun.stronglyMeasurable_stepFun`: a step function is
     *strongly* measurable and not merely measurable, because it takes finitely
     many values; `StronglyMeasurable.ite`
-    (`Function/StronglyMeasurable/Basic.lean:817`) does it by induction on the
+    (`Function/StronglyMeasurable/Basic.lean:822`) does it by induction on the
     list, and no second countability of `E` is used.
   * `MeasureTheory.AEEqFun.exists_mem_stepFun`: whichever branch fires, the value
     is the point named by *some* entry whose set contains the argument. This is

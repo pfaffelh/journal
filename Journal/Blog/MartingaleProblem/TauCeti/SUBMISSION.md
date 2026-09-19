@@ -155,10 +155,24 @@ am 2026-09-17, zweiundzwanzigster Lauf, sind beide Nachbildungen gestrichen:
   (`isCadlag_jumpProcess`, `IsCadlag.comp_coe_nnreal` und die übrigen).
 
 Damit hält jede Roadmap ihre Begriffe selbst und keine zweite bildet sie nach.
-`IsCadlag` und `IsRightContinuous` von `SkorokhodSpace` fallen ihrerseits weg,
-sobald die Bindung von v4.33.1 auf einen Stand wechselt, der
-`Mathlib/Topology/Order/Cadlag.lean` trägt (`#43352`; auf `master` am 2026-09-17,
-Commit `8018f6a`, mit denselben Feldnamen).
+
+**Und am 2026-09-18, vierundzwanzigster Lauf, ist der angekündigte zweite Schritt
+vollzogen:** mit der Umstellung auf `master` tragen `IsCadlag` und
+`IsRightContinuous` von `SkorokhodSpace` keinen Grund mehr und sind gestrichen;
+die Datei importiert jetzt `Mathlib.Topology.Order.Cadlag` (`#43352`). Mit ihnen
+fielen **drei Sätze**, die unter anderem Namen dieselbe Aussage machten wie die
+Bibliothek: `isCadlag_const` ist `IsCadlag.const`, `IsCadlag.tendsto_leftLim` ist
+`IsCadlag.tendsto_nhdsLT_leftLim`, und `IsCadlag.isBounded_image_of_isCompact`
+ist `isBounded_image_of_isCadlag_of_isCompact`. Fünf Deklarationen weniger, und
+die Kette baut unverändert mit 0 Fehlern.
+
+**Und das ist der Befund, den die Umstellung eingebracht hat:** solange die Kette
+gegen v4.33.1 gebaut wurde, war nicht zu sehen, daß fünf unserer Deklarationen
+gegen den Stand, auf den Tau Ceti aufsetzt, Doppelungen der Bibliothek sind. Die
+Prüfung gegen `master` ist also nicht bloß eine Formalie des `build`-Checks — sie
+ist die einzige, die die Bodenhaftungsregel oben wirklich mißt. Zu erwarten ist,
+daß weitere solche Doppelungen entstehen, wann immer Mathlib etwas übernimmt, was
+wir hier führen; `#43352` ist die erste.
 
 ## Steps
 
@@ -171,20 +185,39 @@ Commit `8018f6a`, mit denselben Feldnamen).
    to ease the review load). Merging needs approval from
    `@TauCetiProject/roadmap-reviewers` and a passing `build` check; the first
    merged PR earns triage rights, two earn reviewer status.
-4. **`Suggested.lean` must build against Mathlib `master` — and that has never
-   been tested.** The three files are no longer prototypes: since 2026-09-17
-   they build in dependency order under `scripts/check_suggested.py` with
-   `autoImplicit=false` and `relaxedAutoImplicit=false` as Mathlib does, at **0
-   errors and 0 `sorry`** (2026-09-18: `WeakConvergence` 195 declarations,
-   `SkorokhodSpace` 424, `MartingaleProblems` 1635). But they are compiled
-   against **v4.33.1**; `upstream/master` is fetched only for the citation
-   check, never for a build.
+4. ~~**`Suggested.lean` must build against Mathlib `master` — and that has never
+   been tested.**~~ **Done on 2026-09-18**, in the twenty second, twenty third and
+   twenty fourth runs of that day. `scripts/check_master.py` builds the three
+   files in dependency order against a worktree on `upstream/master`
+   `94ef6b89544e58e90f119da869f3fb48d1da0f4c` (Lean `4.35.0-rc2`), with
+   `autoImplicit=false` and `relaxedAutoImplicit=false` as Mathlib does:
 
-   One breakage is already known and cannot be papered over: `measurable_pi_lambda`
-   is a deprecated alias of `Measurable.of_eval` on master, and `Measurable.of_eval`
-   does not exist on v4.33.1 — there is **no spelling that works on both**. Expect
-   more of that kind. A build against master is therefore its own piece of work
-   and must happen before the PR, not after the `build` check fails.
+   | file | errors | `sorry` | warnings | deprecated |
+   | --- | ---: | ---: | ---: | ---: |
+   | `WeakConvergence` | 0 | 0 | 18 | 0 |
+   | `SkorokhodSpace` | 0 | 0 | 36 | 0 |
+   | `MartingaleProblems` | 0 | 0 | 106 | 0 |
+
+   The 160 remaining warnings are style, not deprecation: 58
+   `unusedSectionVars`, 50 "Try this", 24 unused `simp` arguments, 22 unused
+   binder hints, six singletons. Following `unusedSectionVars` would mean
+   changing signatures.
+
+   **`master` is now the reference, and `v4.33.1` is not.** There is no spelling
+   that works on both, and four families witness it: `ProbabilityMeasure.map`
+   (no measurability argument on master), `measurable_pi_lambda`/`Measurable.of_eval`,
+   `Filter.eventuallyEq_set`/`Filter.eventuallyEqSet_iff`, and — with 274 call
+   sites, the largest — `if_pos`/`if_neg`/`dif_pos`/`dif_neg`, whose replacements
+   `ite_eq_left`/`ite_eq_right`/`dite_eq_left`/`dite_eq_right` exist on v4.33.1
+   neither in the Lean core nor in Mathlib. `scripts/check_suggested.py` still
+   runs against v4.33.1, but its errors are to be **reported**, not fixed.
+
+   **What is not done, and is the one thing a reviewer will see:** the cited
+   Mathlib line numbers throughout the roadmaps are still those of v4.33.1.
+   `scripts/check_cited_names.py` checks that a cited *name* exists, not that it
+   sits on the cited line, and the two do drift — `Set.mem_setOf_eq` stood at
+   `Data/Set/Operations.lean:82` on v4.33.1 and at `:81` on master, which is the
+   benign case.
 
 ## What is deliberately absent from the roadmaps
 
