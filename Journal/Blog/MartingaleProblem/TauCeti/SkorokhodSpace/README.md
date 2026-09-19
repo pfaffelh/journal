@@ -3350,23 +3350,83 @@ known there is convergence at the single time `0`. The statement of the
 `(0 : ℝ≥0) ∈ T`, and under those two the negative times are handled by replacing
 each of them by `0`, which is a time of `T`.
 
-**The `ℝ≥0`-form of Milestone 8, to be built on the embedding.**
+**The `ℝ≥0`-form of Milestone 8, built on the embedding.**
 
+* `SkorokhodSpace.isTightMeasureSet_map_extendNNReal` — tightness carries
+  forward along the embedding, because a continuous image of a compact set is
+  compact. **The mathematics of this one is Mathlib's**:
+  `MeasureTheory.IsTightMeasureSet.map`
+  (`Mathlib/MeasureTheory/Measure/Tight.lean:129`) is the statement for an
+  arbitrary continuous map, and what is added here is the index — a consumer
+  holds a hypothesis about a *family* `μ : γ → Measure D(ℝ≥0, E)` and not about
+  `Measure.map e '' S`, and the two sets have to be identified. The
+  measurability of the embedding is its continuity; completeness of `E` is not
+  spent here.
+* `SkorokhodSpace.tendsto_of_tendsto_map_extendNNReal` — weak convergence pulls
+  back along the embedding: a bounded continuous function on `D(ℝ≥0, E)` extends
+  to one on `D(ℝ, E)`, by
+  `BoundedContinuousFunction.exists_extension_norm_eq_of_isClosedEmbedding`
+  (`Mathlib/Topology/TietzeExtension.lean:273`), whose conclusion carries the
+  equality `g ∘ e = f` that the comparison of integrals needs and not merely an
+  estimate of norms. Its hypothesis `[NormalSpace Y]` is an instance and not a
+  step, `D(ℝ, E)` being metric. The topology of `ProbabilityMeasure` is read
+  through `→ᵇ ℝ` by
+  `MeasureTheory.ProbabilityMeasure.tendsto_iff_forall_integral_tendsto`, the
+  push forward through `MeasureTheory.ProbabilityMeasure.toMeasure_map`, which
+  is `rfl`, and `integral_map` moves the integral to the smaller space.
 * `SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional_nnreal` —
   a tight sequence of laws on `D(ℝ≥0, E)` whose finite dimensional
   distributions converge along a dense `T ∋ 0` converges weakly. It rests on
   `isClosedEmbedding_extendNNReal`, on the `ℝ`-form of the theorem, and on the
-  two transports named above.
-* `SkorokhodSpace.isTightMeasureSet_map_extendNNReal` — tightness carries
-  forward along the embedding, because a continuous image of a compact set is
-  compact.
-* `SkorokhodSpace.tendsto_of_tendsto_map_extendNNReal` — weak convergence pulls
-  back along a closed embedding, by extension of bounded continuous functions
-  from a closed set.
+  two transports above. The set of real times it feeds the `ℝ`-form is
+  `Real.toNNReal ⁻¹' T`, whose density is where `(0 : ℝ≥0) ∈ T` is spent: a
+  nonpositive real lies in it because `Real.toNNReal` sends it to `0`, and a
+  positive one is approximated by a point of `T` read back through the
+  coercion, `Real.toNNReal` being a retraction there.
+* `SkorokhodSpace.tendstoInDistribution_of_isTight_of_tendsto_finiteDimensional_nnreal`
+  — the same for path valued random variables, `Measure.map` carrying the one
+  form to the other.
+* `SkorokhodSpace.tendstoInDistribution_eval_of_isTight_of_tendsto_finiteDimensional_nnreal`
+  — and the marginal read off it at a nonnegative time the limit law does not
+  charge with a jump. This is the form the roadmap **MartingaleProblems** asks
+  for in its Milestone 10. **`SkorokhodSpace.tendstoInDistribution_eval` itself
+  needed no crossing**: it is stated over an arbitrary index and applies over
+  `ℝ≥0` as it stands. What had to be crossed is the index of the *criterion*,
+  which is `isCompact_closure_iff` of Milestone 7 and everything above it.
+
+**Tightness crosses in both directions, and that is what fixes the index of a
+criterion.**
+
+* `SkorokhodSpace.isTightMeasureSet_of_isTightMeasureSet_map_extendNNReal` —
+  tightness travels **backward** along the embedding. The image being closed, a
+  compact `K ⊆ D(ℝ, E)` has a compact preimage
+  (`Topology.IsClosedEmbedding.isCompact_preimage`,
+  `Mathlib/Topology/Compactness/Compact.lean:1017`), and the mass outside the
+  preimage is the mass the image law puts outside `K`, by
+  `MeasureTheory.Measure.map_apply` at `Kᶜ`. The same `ε` serves.
+* `SkorokhodSpace.isTightMeasureSet_map_extendNNReal_iff` — the two transports
+  read as one equivalence.
+
+**The rule this settles, and it applies to every statement of Milestones 7 and 8
+that a consumer over `ℝ≥0` would otherwise ask to have duplicated.** A
+*hypothesis* crosses only forward; a *conclusion* crosses backward. The
+`ℝ≥0`-form of Milestone 8 had to be written out because it carries the
+convergence of the finite dimensional distributions across as a hypothesis, and
+that one does not travel at all — a dense `T ⊆ ℝ≥0` is not dense in `ℝ`. A
+tightness *criterion* carries a conclusion: it is therefore stated once, over
+`ℝ`, where `isCompact_closure_iff` is available, and a consumer whose processes
+run over `ℝ≥0` crosses its family, applies the criterion, and comes back. Nothing
+of it is to be restated over `ℝ≥0`.
 
 **Acceptance example.** `SkorokhodSpace.extendNNReal (jumpPathD …)` of the
 roadmap **MartingaleProblems**, Milestone 6: the path law of the jump
 construction, which lives on `D(ℝ≥0, E)`, read on `D(ℝ, E)`. It is the family
 for which the index crossing was built, and the statement to be checked on it is
 that its coordinate at a nonnegative time is unchanged by the crossing, which is
-`extendNNReal_apply` together with `Real.toNNReal_coe`.
+`extendNNReal_apply` together with `Real.toNNReal_coe`. It is proved
+(2026-09-19) in **MartingaleProblems** as `extendNNReal_jumpPathD_toFun`, and
+with it the whole chain: `map_eval_map_extendNNReal_map_jumpPathD` for the
+coordinate of the crossed law, `map_eval_map_extendNNReal_map_jumpPathD_poisson`
+for the independent control against `ProbabilityTheory.poissonMeasure`, and
+`isTightMeasureSet_map_extendNNReal_map_jumpPathD` for the tightness transport,
+whose hypothesis is there discharged on data.

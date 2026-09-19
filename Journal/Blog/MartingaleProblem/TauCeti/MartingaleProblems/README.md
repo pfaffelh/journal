@@ -6903,6 +6903,50 @@ the answer is the strongest one available, and it is proved (2026-09-18):
   `Dense T` together with `(0 : ℝ≥0) ∈ T`, and each negative time is answered by
   the time `0` of `T`.
 
+  **The bridge in the form this milestone consumes it** is
+  `SkorokhodSpace.tendstoInDistribution_eval_of_isTight_of_tendsto_finiteDimensional_nnreal`
+  (**SkorokhodSpace** Milestone 9, proved 2026-09-19): path valued variables on
+  `D(ℝ≥0, E)`, tight laws, finite dimensional distributions converging along a
+  dense `T ∋ 0`, and out comes convergence in distribution of the value at every
+  nonnegative time the limit law does not charge with a jump. The evaluation
+  step of that chain, `SkorokhodSpace.tendstoInDistribution_eval`, is stated over
+  an arbitrary index and needed no crossing at all; the crossing is spent on the
+  compactness criterion beneath it.
+
+**The path law sent through the crossing.** The five statements of
+**SkorokhodSpace** Milestone 9 are about a family of measures on `D(ℝ≥0, E)`, and
+this development produces exactly one such family. Sending it through is the
+acceptance example that milestone names, and it is proved (2026-09-19):
+
+* `extendNNReal_jumpPathD_toFun` and `extendNNReal_jumpPathD_toFun_of_mem`: the
+  crossing does not move a coordinate at a nonnegative time, so on the good set
+  the crossed path is the process there. This is
+  `SkorokhodSpace.extendNNReal_apply` together with `Real.toNNReal_coe`, and it
+  is the statement the acceptance example of that milestone asks for.
+* `measurable_extendNNReal_jumpPathD` and
+  `isProbabilityMeasure_map_extendNNReal_map_jumpPathD`: the crossed path map is
+  measurable, the crossing being an isometry, and its law is a probability
+  measure. Every consumer over the index `ℝ` asks for both as instances.
+* `map_eval_map_extendNNReal_map_jumpPathD`: the coordinate of the crossed law at
+  a nonnegative time is the law of `jumpProcessE` there. **Nothing of the law is
+  lost in the crossing**, which is what makes the passage usable: a statement
+  proved about the process is a statement about the law on `D(ℝ, E)` as well, at
+  every time the model has.
+* `map_eval_map_extendNNReal_map_jumpPathD_poisson`: the independent control, on
+  `D(ℝ, ℕ)`. Its marginal at every nonnegative time is
+  `ProbabilityTheory.poissonMeasure t`, into whose definition nothing of this
+  development enters.
+* `isTightMeasureSet_map_jumpPathD` and
+  `isTightMeasureSet_map_extendNNReal_map_jumpPathD`: the path law is tight on
+  `D(ℝ≥0, E)` — a single finite measure on a complete second countable metric
+  space is, by `MeasureTheory.isTightMeasureSet_singleton` — and its image under
+  the crossing is tight on `D(ℝ, E)`. The second is not a new estimate, the
+  conclusion being available on the target space directly; what it is, is the
+  first passage of a law of this development through
+  `SkorokhodSpace.isTightMeasureSet_map_extendNNReal`, whose hypothesis is here
+  discharged on data and whose family form `{μ i | i}` is matched against a
+  measure actually produced here.
+
 * `jumpFiltrationE_eq_comap_jumpPath` and `measurable_pathFiltration_jumpPath`:
   the natural filtration of the construction **is** the pull back of
   `pathFiltration` along `jumpPath`, by `naturalFiltration_comp`, so the path map
@@ -10389,6 +10433,53 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
 
 Now `ι = [0,∞)`, `E` Polish, and paths in the càdlàg space `D ι E` of the
 roadmap **SkorokhodSpace**.
+
+**The index of this milestone is `ℝ`, not `ℝ≥0`, and it is decided rather than
+chosen.** Every statement of this milestone that *produces* tightness rests on
+`SkorokhodSpace.isCompact_closure_iff` of Milestone 7 there, which is false over
+an index with gaps (`SkorokhodSpace.not_isCompact_closure_of_rigid`) and is
+therefore available over `ℝ` alone. That the processes run over `ℝ≥0` costs
+nothing, because tightness crosses the index **in both directions**:
+`SkorokhodSpace.isTightMeasureSet_map_extendNNReal_iff` (**SkorokhodSpace**
+Milestone 9, proved 2026-09-19). The rule behind it is worth stating once, since
+it settles the same question for every later item: a *hypothesis* crosses only
+forward, from `ℝ≥0` to `ℝ`, and a *conclusion* crosses backward. That is why the
+`ℝ≥0`-form of Milestone 8 there had to be written out — it carries the
+convergence of the finite dimensional distributions across as a hypothesis, and
+that one does not cross at all, a dense `T ⊆ ℝ≥0` not being dense in `ℝ` — while
+nothing of this milestone is to be restated over `ℝ≥0`.
+
+**What has to exist in SkorokhodSpace before this milestone can begin, checked at
+the source 2026-09-19.** In `SkorokhodSpace/Suggested.lean` the predicate
+`IsTightMeasureSet` occurs only ever as a **hypothesis** or in the two transports
+of Milestone 9, which carry tightness along the index crossing and therefore ask
+for it as well: no declaration there produces tightness from anything but
+tightness. Three named items of
+**SkorokhodSpace** Milestone 8 that this milestone consumes have no declaration
+at all, and they are needed in this order:
+
+1. `SkorokhodSpace.postcomp` with `SkorokhodSpace.continuous_postcomp` and
+   `Measurable (postcomp h)` — the map `f ↦ h ∘ f` for continuous, resp. Borel,
+   `h : E → E'`. Well definedness is a càdlàg statement that is also missing:
+   post composition with a continuous map preserves `IsCadlag`, whose two halves
+   are the composition of a continuous map with a right continuous one and with a
+   left limit. Measurability is `SkorokhodSpace.measurable_of_measurable_eval`
+   coordinatewise and is cheap; continuity is the work, and what it needs is that
+   a continuous map is uniformly continuous near a compact set, the window of a
+   càdlàg path having totally bounded image by
+   `IsCadlag.totallyBounded_image_Icc`.
+2. `SkorokhodSpace.isTightMeasureSet_iff` — the tightness criterion at the level
+   of measures, compact containment together with the modulus condition. This is
+   the statement `isCompact_closure_iff` of Milestone 7 is *for*, and it is the
+   one every item below reads.
+3. `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` — the reduction to real
+   valued paths, whose forward direction is item 1 and whose converse is item 2.
+
+Only then does `isTight_map_postcomp_of_exists_martingale` have a conclusion it
+can reach, and `isRelativelyCompact_of_approx` an input. **The order of work is
+therefore Milestone 8 of SkorokhodSpace first**, and the first run at it is item
+1, which is self contained and answers no question of this milestone but unblocks
+both of the others.
 
 * `mpSolution_of_tendsto_cadlag`: let `A ⊆ Cb(E) × Cb(E)` and let `A n` be
   relations between bounded measurable functions such that for every `(f,g) ∈ A`

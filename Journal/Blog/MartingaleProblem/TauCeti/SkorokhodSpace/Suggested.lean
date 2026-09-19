@@ -14207,3 +14207,262 @@ theorem SkorokhodSpace.isClosedEmbedding_extendNNReal [SecondCountableTopology E
     [CompleteSpace E] :
     Topology.IsClosedEmbedding (SkorokhodSpace.extendNNReal (E := E)) :=
   SkorokhodSpace.isometry_extendNNReal.isClosedEmbedding
+
+omit [MeasurableSpace E] [BorelSpace E] in
+/-- **Tightness travels forward along the embedding**, and the general statement
+behind it is `MeasureTheory.IsTightMeasureSet.map`
+(`Mathlib/MeasureTheory/Measure/Tight.lean:129`): the continuous image of a
+compact set is compact, and the preimage of the complement of the image contains
+the complement.  What is added here is not mathematics but the index: the
+hypothesis a consumer holds is about a *family* `μ : γ → Measure D(ℝ≥0, E)` and
+not about `Measure.map e '' S`, and the two sets have to be identified.
+
+The measurability of `SkorokhodSpace.extendNNReal` is its continuity, which is
+`SkorokhodSpace.isometry_extendNNReal`; no completeness of `E` is needed for
+that, only for the closed embedding the next transport uses.
+
+The Borel structure of `D(ℝ≥0, E)` is the one of its metric and reads nothing off
+`E` but its topology, which is why `[MeasurableSpace E]` and `[BorelSpace E]` are
+omitted here and `[PolishSpace E]` is not. -/
+theorem SkorokhodSpace.isTightMeasureSet_map_extendNNReal {γ : Type*}
+    {μ : γ → Measure D(ℝ≥0, E)} (h : IsTightMeasureSet {μ i | i}) :
+    IsTightMeasureSet {(μ i).map SkorokhodSpace.extendNNReal | i} := by
+  have him : Measure.map (SkorokhodSpace.extendNNReal (E := E)) '' {μ i | i}
+      = {(μ i).map SkorokhodSpace.extendNNReal | i} := by
+    ext m
+    constructor
+    · rintro ⟨ρ, ⟨i, rfl⟩, rfl⟩
+      exact ⟨i, rfl⟩
+    · rintro ⟨i, rfl⟩
+      exact ⟨μ i, ⟨i, rfl⟩, rfl⟩
+  rw [← him]
+  exact h.map SkorokhodSpace.isometry_extendNNReal.continuous
+
+omit [MeasurableSpace E] [BorelSpace E] in
+/-- **Weak convergence travels backward along the embedding.**  The direction is
+forced: the image is closed, so a bounded continuous function on `D(ℝ≥0, E)`
+extends to one on `D(ℝ, E)`, and testing the image laws against the extension is
+testing the original laws against the original function.
+
+The extension is Tietze in the form
+`BoundedContinuousFunction.exists_extension_norm_eq_of_isClosedEmbedding`
+(`Mathlib/Topology/TietzeExtension.lean:273`), whose conclusion carries the
+equality `g ∘ e = f` the comparison of integrals needs and not merely an estimate
+of norms.  Its hypothesis `[NormalSpace Y]` is an instance and not a step:
+`D(ℝ, E)` is metric by `SkorokhodSpace.instMetricSpace`.
+
+**The topology of `ProbabilityMeasure` is read through `→ᵇ ℝ`**, by
+`MeasureTheory.ProbabilityMeasure.tendsto_iff_forall_integral_tendsto`, and the
+push forward through `MeasureTheory.ProbabilityMeasure.toMeasure_map`, which is
+`rfl`; `integral_map` then moves the integral to the smaller space. -/
+theorem SkorokhodSpace.tendsto_of_tendsto_map_extendNNReal [CompleteSpace E]
+    {γ : Type*} {F : Filter γ} {μ : γ → ProbabilityMeasure D(ℝ≥0, E)}
+    {ν : ProbabilityMeasure D(ℝ≥0, E)}
+    (h : Tendsto (fun i => (μ i).map SkorokhodSpace.extendNNReal) F
+      (𝓝 (ν.map SkorokhodSpace.extendNNReal))) :
+    Tendsto μ F (𝓝 ν) := by
+  have hmeas : Measurable (SkorokhodSpace.extendNNReal (E := E)) :=
+    SkorokhodSpace.isometry_extendNNReal.continuous.measurable
+  rw [MeasureTheory.ProbabilityMeasure.tendsto_iff_forall_integral_tendsto]
+  intro f
+  obtain ⟨g, -, hg⟩ :=
+    BoundedContinuousFunction.exists_extension_norm_eq_of_isClosedEmbedding f
+      (SkorokhodSpace.isClosedEmbedding_extendNNReal (E := E))
+  have hgf : ∀ x : D(ℝ≥0, E), g (SkorokhodSpace.extendNNReal x) = f x := fun x => congrFun hg x
+  have hint : ∀ ρ : ProbabilityMeasure D(ℝ≥0, E),
+      ∫ x, g x ∂((ρ.map SkorokhodSpace.extendNNReal : ProbabilityMeasure D(ℝ, E)) :
+          Measure D(ℝ, E))
+        = ∫ x, f x ∂(ρ : Measure D(ℝ≥0, E)) := by
+    intro ρ
+    rw [MeasureTheory.ProbabilityMeasure.toMeasure_map,
+      integral_map hmeas.aemeasurable g.continuous.aestronglyMeasurable]
+    simp only [hgf]
+  have key := (MeasureTheory.ProbabilityMeasure.tendsto_iff_forall_integral_tendsto.mp h) g
+  simpa only [hint] using key
+
+/-- **Ethier--Kurtz, Theorem 3.7.8(b) over the index `ℝ≥0`**, which is the index
+the processes of the roadmap **MartingaleProblems** carry.  It is the theorem over
+`ℝ` read through `SkorokhodSpace.extendNNReal`, and the reading costs two
+transports and one substitution of times.
+
+**The hypothesis `(0 : ℝ≥0) ∈ T` is what the passage really costs.**  A dense
+subset of `ℝ≥0` is not dense in `ℝ`: the times that are missing are the negative
+ones, and there the extended path is constant equal to `f 0`.  So the set of
+times the theorem over `ℝ` is fed is `Real.toNNReal ⁻¹' T`, which contains the
+whole of `Set.Iic 0` precisely because `0 ∈ T`, and a family of real times is
+answered by the family `Real.toNNReal ∘ t` of times of `T`, repetitions allowed.
+No hypothesis beyond `Dense T` is needed on the positive half line, since
+`Real.toNNReal` is a retraction there. -/
+theorem SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional_nnreal
+    [CompleteSpace E] {μ : ℕ → ProbabilityMeasure D(ℝ≥0, E)}
+    (htight : IsTightMeasureSet
+      {((μ n : ProbabilityMeasure D(ℝ≥0, E)) : Measure D(ℝ≥0, E)) | n})
+    {ν : ProbabilityMeasure D(ℝ≥0, E)} {T : Set ℝ≥0} (hT : Dense T) (hT0 : (0 : ℝ≥0) ∈ T)
+    (hfdd : ∀ (α : Type) (_ : Fintype α) (F : α → (E →ᵇ ℝ)) (t : α → ℝ≥0), (∀ i, t i ∈ T) →
+      Tendsto (fun n => ∫ f, ∏ i, F i (f.toFun (t i)) ∂(μ n : Measure D(ℝ≥0, E))) atTop
+        (𝓝 (∫ f, ∏ i, F i (f.toFun (t i)) ∂(ν : Measure D(ℝ≥0, E))))) :
+    Tendsto μ atTop (𝓝 ν) := by
+  have hmeas : Measurable (SkorokhodSpace.extendNNReal (E := E)) :=
+    SkorokhodSpace.isometry_extendNNReal.continuous.measurable
+  have hT' : Dense (Real.toNNReal ⁻¹' T) := by
+    rw [Metric.dense_iff]
+    intro x r hr
+    rcases le_or_gt x 0 with hx | hx
+    · refine ⟨x, Metric.mem_ball_self hr, ?_⟩
+      simp only [Set.mem_preimage, Real.toNNReal_of_nonpos hx]
+      exact hT0
+    · obtain ⟨y, hyb, hyT⟩ := Metric.dense_iff.mp hT (Real.toNNReal x) r hr
+      refine ⟨(y : ℝ), ?_, by simpa using hyT⟩
+      have hd : dist ((y : ℝ)) x = dist y (Real.toNNReal x) := by
+        rw [Real.dist_eq, NNReal.dist_eq, Real.coe_toNNReal x hx.le]
+      rw [Metric.mem_ball] at hyb ⊢
+      rw [hd]
+      exact hyb
+  refine SkorokhodSpace.tendsto_of_tendsto_map_extendNNReal ?_
+  refine SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional ?_ hT' ?_
+  · have h1 := SkorokhodSpace.isTightMeasureSet_map_extendNNReal
+      (μ := fun n => ((μ n : ProbabilityMeasure D(ℝ≥0, E)) : Measure D(ℝ≥0, E))) htight
+    simpa only [MeasureTheory.ProbabilityMeasure.toMeasure_map] using h1
+  · intro α hα Fn t htT
+    have hm : Measurable (fun f : D(ℝ, E) => ∏ i, Fn i (f.toFun (t i))) :=
+      Finset.measurable_prod _ fun i _ =>
+        (Fn i).continuous.measurable.comp (SkorokhodSpace.measurable_eval (t i))
+    have hmap : ∀ ρ : ProbabilityMeasure D(ℝ≥0, E),
+        ∫ f, ∏ i, Fn i (f.toFun (t i))
+            ∂((ρ.map SkorokhodSpace.extendNNReal : ProbabilityMeasure D(ℝ, E)) :
+              Measure D(ℝ, E))
+          = ∫ f, ∏ i, Fn i (f.toFun (Real.toNNReal (t i))) ∂(ρ : Measure D(ℝ≥0, E)) := by
+      intro ρ
+      rw [MeasureTheory.ProbabilityMeasure.toMeasure_map,
+        integral_map hmeas.aemeasurable hm.aestronglyMeasurable]
+      simp only [SkorokhodSpace.extendNNReal_apply]
+    simpa only [hmap] using hfdd α hα Fn (fun i => Real.toNNReal (t i)) fun i => htT i
+
+/-- **The same for random variables, over the index `ℝ≥0`.**  Path valued
+variables on `D(ℝ≥0, E)` whose laws are tight and whose finite dimensional
+distributions along a dense `T ∋ 0` converge to those of `Z` converge to `Z` in
+distribution.
+
+The passage from the form about laws to the form about variables is
+`Measure.map`, exactly as over the index `ℝ`; `integral_map` is where `hX` is
+spent, and the integrand is measurable rather than continuous, being
+`SkorokhodSpace.measurable_eval` at each of the finitely many times followed by
+the bounded continuous `F i`. -/
+theorem SkorokhodSpace.tendstoInDistribution_of_isTight_of_tendsto_finiteDimensional_nnreal
+    [CompleteSpace E]
+    {Ω : ℕ → Type*} {mΩ : ∀ n, MeasurableSpace (Ω n)}
+    {P : (n : ℕ) → Measure (Ω n)} [∀ n, IsProbabilityMeasure (P n)]
+    {Ω₀ : Type*} {mΩ₀ : MeasurableSpace Ω₀} {P₀ : Measure Ω₀} [IsProbabilityMeasure P₀]
+    {X : (n : ℕ) → Ω n → D(ℝ≥0, E)} {Z : Ω₀ → D(ℝ≥0, E)}
+    (hX : ∀ n, AEMeasurable (X n) (P n)) (hZ : AEMeasurable Z P₀)
+    (htight : IsTightMeasureSet {(P n).map (X n) | n})
+    {T : Set ℝ≥0} (hT : Dense T) (hT0 : (0 : ℝ≥0) ∈ T)
+    (hfdd : ∀ (α : Type) (_ : Fintype α) (F : α → (E →ᵇ ℝ)) (t : α → ℝ≥0), (∀ i, t i ∈ T) →
+      Tendsto (fun n => ∫ ω, ∏ i, F i ((X n ω).toFun (t i)) ∂(P n)) atTop
+        (𝓝 (∫ ω, ∏ i, F i ((Z ω).toFun (t i)) ∂P₀))) :
+    TendstoInDistribution X atTop Z P P₀ where
+  forall_aemeasurable := hX
+  aemeasurable_limit := hZ
+  tendsto := by
+    refine SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional_nnreal
+      (μ := fun n => ⟨(P n).map (X n), inferInstance⟩)
+      (ν := ⟨P₀.map Z, inferInstance⟩) htight hT hT0 ?_
+    intro α hα F t htT
+    have hm : Measurable (fun f : D(ℝ≥0, E) => ∏ i, F i (f.toFun (t i))) :=
+      Finset.measurable_prod _ fun i _ =>
+        (F i).continuous.measurable.comp (SkorokhodSpace.measurable_eval (t i))
+    have h1 : ∀ n : ℕ, ∫ f, ∏ i, F i (f.toFun (t i)) ∂((P n).map (X n))
+        = ∫ ω, ∏ i, F i ((X n ω).toFun (t i)) ∂(P n) := fun n =>
+      integral_map (hX n) hm.aestronglyMeasurable
+    have h2 : ∫ f, ∏ i, F i (f.toFun (t i)) ∂(P₀.map Z)
+        = ∫ ω, ∏ i, F i ((Z ω).toFun (t i)) ∂P₀ :=
+      integral_map hZ hm.aestronglyMeasurable
+    have key : Tendsto (fun n : ℕ => ∫ f, ∏ i, F i (f.toFun (t i)) ∂((P n).map (X n))) atTop
+        (𝓝 (∫ f, ∏ i, F i (f.toFun (t i)) ∂(P₀.map Z))) := by
+      rw [funext h1, h2]
+      exact hfdd α hα F t htT
+    exact key
+
+/-- **The marginal at a nonnegative time that need not lie in `T`**, and this is
+the supplier the roadmap **MartingaleProblems** reaches for in its Milestone 10:
+hypothesis (a) of `mpSolution_of_tendsto` is convergence in distribution of the
+value at *each* time of the index set it runs over, and an approximating family
+delivers convergence of the finite dimensional distributions along **one** dense
+set of times.
+
+`SkorokhodSpace.tendstoInDistribution_eval` is stated over an arbitrary index and
+is therefore already available here; what had to be crossed is the index of the
+*criterion*, and that is the theorem above. -/
+theorem SkorokhodSpace.tendstoInDistribution_eval_of_isTight_of_tendsto_finiteDimensional_nnreal
+    [CompleteSpace E]
+    {Ω : ℕ → Type*} {mΩ : ∀ n, MeasurableSpace (Ω n)}
+    {P : (n : ℕ) → Measure (Ω n)} [∀ n, IsProbabilityMeasure (P n)]
+    {Ω₀ : Type*} {mΩ₀ : MeasurableSpace Ω₀} {P₀ : Measure Ω₀} [IsProbabilityMeasure P₀]
+    {X : (n : ℕ) → Ω n → D(ℝ≥0, E)} {Z : Ω₀ → D(ℝ≥0, E)}
+    (hX : ∀ n, AEMeasurable (X n) (P n)) (hZ : AEMeasurable Z P₀)
+    (htight : IsTightMeasureSet {(P n).map (X n) | n})
+    {T : Set ℝ≥0} (hT : Dense T) (hT0 : (0 : ℝ≥0) ∈ T)
+    (hfdd : ∀ (α : Type) (_ : Fintype α) (F : α → (E →ᵇ ℝ)) (t : α → ℝ≥0), (∀ i, t i ∈ T) →
+      Tendsto (fun n => ∫ ω, ∏ i, F i ((X n ω).toFun (t i)) ∂(P n)) atTop
+        (𝓝 (∫ ω, ∏ i, F i ((Z ω).toFun (t i)) ∂P₀)))
+    (s : ℝ≥0) (hs : P₀ {ω | Function.leftLim (Z ω).toFun s = (Z ω).toFun s} = 1) :
+    TendstoInDistribution (fun n ω => (X n ω).toFun s) atTop (fun ω => (Z ω).toFun s) P P₀ :=
+  SkorokhodSpace.tendstoInDistribution_eval
+    (SkorokhodSpace.tendstoInDistribution_of_isTight_of_tendsto_finiteDimensional_nnreal
+      hX hZ htight hT hT0 hfdd) s hs
+
+/-! ### Tightness crosses in both directions, and that is what fixes the index of a criterion
+
+The transport above carries tightness **forward**, and that is the direction
+`SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional_nnreal` needs: it holds a
+hypothesis over `D(ℝ≥0, E)` and feeds a theorem stated over `D(ℝ, E)`.
+
+A tightness *criterion* runs the other way.  Everything built on
+`SkorokhodSpace.isCompact_closure_iff` of Milestone 7 lives over `ℝ`, that criterion being false
+over an index with gaps (`SkorokhodSpace.not_isCompact_closure_of_rigid`), so a theorem that
+**produces** tightness produces it over `ℝ`, while its consumer -- the roadmap
+**MartingaleProblems** -- wants it over `ℝ≥0`.  The statement below is what settles that: tightness
+comes back along the embedding as well, so a criterion is stated once, over `ℝ`, and is not
+crossed. -/
+
+omit [MeasurableSpace E] [BorelSpace E] in
+/-- **Tightness travels backward along the embedding**, so the crossing is an equivalence for
+tightness and not merely a transport.
+
+The image is closed, so a compact `K ⊆ D(ℝ, E)` has a compact preimage
+(`Topology.IsClosedEmbedding.isCompact_preimage`,
+`Mathlib/Topology/Compactness/Compact.lean:1017`, whose content is that `K` meets the range in a
+closed and hence compact set on which the map is a homeomorphism).  The mass outside the preimage
+is exactly the mass the image law puts outside `K`, by `MeasureTheory.Measure.map_apply` at the
+measurable set `Kᶜ`, so the same `ε` serves and no estimate is lost.
+
+**Why the direction matters.**  With this statement a tightness criterion over the index `ℝ`
+serves a consumer over `ℝ≥0` without being restated: the consumer crosses its family once, applies
+the criterion, and comes back.  The `ℝ≥0`-form of Milestone 8 above had to be written out because
+it carries a **hypothesis** across, and a hypothesis crosses only forward; a criterion carries a
+conclusion, and a conclusion crosses backward.  That is the whole rule, and it is why the
+statements that read `SkorokhodSpace.isCompact_closure_iff` are not to be duplicated over `ℝ≥0`. -/
+theorem SkorokhodSpace.isTightMeasureSet_of_isTightMeasureSet_map_extendNNReal [CompleteSpace E]
+    {γ : Type*} {μ : γ → Measure D(ℝ≥0, E)}
+    (h : IsTightMeasureSet {(μ i).map SkorokhodSpace.extendNNReal | i}) :
+    IsTightMeasureSet {μ i | i} := by
+  have hemb : Topology.IsClosedEmbedding (SkorokhodSpace.extendNNReal (E := E)) :=
+    SkorokhodSpace.isClosedEmbedding_extendNNReal
+  have hmeas : Measurable (SkorokhodSpace.extendNNReal (E := E)) := hemb.continuous.measurable
+  rw [isTightMeasureSet_iff_exists_isCompact_measure_compl_le] at h ⊢
+  intro ε hε
+  obtain ⟨K, hK, hKle⟩ := h ε hε
+  refine ⟨SkorokhodSpace.extendNNReal ⁻¹' K, hemb.isCompact_preimage hK, ?_⟩
+  rintro ν ⟨i, rfl⟩
+  rw [← Set.preimage_compl, ← Measure.map_apply hmeas hK.isClosed.measurableSet.compl]
+  exact hKle _ ⟨i, rfl⟩
+
+omit [MeasurableSpace E] [BorelSpace E] in
+/-- **Tightness of a family on `D(ℝ≥0, E)` is tightness of the crossed family.**  The two
+transports read as one equivalence, and that is the form in which a consumer whose processes run
+over `ℝ≥0` states its hypothesis and receives its conclusion. -/
+theorem SkorokhodSpace.isTightMeasureSet_map_extendNNReal_iff [CompleteSpace E]
+    {γ : Type*} {μ : γ → Measure D(ℝ≥0, E)} :
+    IsTightMeasureSet {(μ i).map SkorokhodSpace.extendNNReal | i} ↔ IsTightMeasureSet {μ i | i} :=
+  ⟨SkorokhodSpace.isTightMeasureSet_of_isTightMeasureSet_map_extendNNReal,
+    SkorokhodSpace.isTightMeasureSet_map_extendNNReal⟩

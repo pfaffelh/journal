@@ -41964,3 +41964,427 @@ von den Verbrauchern nicht mehr gelesen; die Stelle sagt das jetzt.
    und erst danach — es ist der Zusammenbau aus 1, 2 und der Ersetzung der
    negativen Zeiten durch `0`, und es ist die Aussage, an der die Kette von
    `SkorokhodSpace` nach `MartingaleProblems` zum ersten Mal schließt.
+
+### 2026-09-19, elfter Lauf des Tages — alle drei Vorschläge stehen, und der Zusammenbau reichte weiter als bestellt: die Kette nach `MartingaleProblems` schließt jetzt in der Gestalt, die der Verbraucher hält; dazu der Befund, daß die Mathematik von Vorschlag 1 **schon in Mathlib steht**
+
+**Bearbeitet:** die drei Vorschläge des Vorlaufs, und zwei Aussagen darüber
+hinaus.
+
+**Fünf Deklarationen**, 203 Zeilen, am Ende von
+`TauCeti/SkorokhodSpace/Suggested.lean` in Meilenstein 9. Die ganze Kette durch
+`scripts/check_master.py` gegen `94ef6b89544` mit **0 Fehlern, 0 `sorry`, 0
+veralteten Namen** und **unveränderten Warnungszahlen (18 / 35 / 106)**; alle
+fünf mit `scripts/check_axioms_master.py` auf `propext`, `Classical.choice`,
+`Quot.sound` geprüft.
+
+* `SkorokhodSpace.isTightMeasureSet_map_extendNNReal` (Vorschlag 1)
+* `SkorokhodSpace.tendsto_of_tendsto_map_extendNNReal` (Vorschlag 2)
+* `SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional_nnreal`
+  (Vorschlag 3)
+* `SkorokhodSpace.tendstoInDistribution_of_isTight_of_tendsto_finiteDimensional_nnreal`
+* `SkorokhodSpace.tendstoInDistribution_eval_of_isTight_of_tendsto_finiteDimensional_nnreal`
+
+#### Der Befund, und er ist der wertvollste des Laufs: Vorschlag 1 ist keine Mathematik
+
+Der Vorlauf hatte für die Straffheit längs der Einbettung den Weg
+ausgeschrieben — `isTightMeasureSet_iff_exists_isCompact_measure_compl_le`,
+`IsCompact.image`, `Measure.map_apply` am Komplement. Das ist der richtige
+Beweis, und er steht **schon in Mathlib**:
+
+> `MeasureTheory.IsTightMeasureSet.map`
+> (`Mathlib/MeasureTheory/Measure/Tight.lean:129`), für eine **beliebige**
+> stetige Abbildung, mit genau diesem Beweis in fünf Zeilen.
+
+Was hier zu tun blieb, ist nicht der Satz, sondern der **Index**: die
+Bibliotheksfassung spricht über `Measure.map f '' S`, und die Voraussetzung, die
+ein Verbraucher in der Hand hält, spricht über eine *Familie*
+`μ : γ → Measure D(ℝ≥0, E)`. Die beiden Mengen sind zu identifizieren, und das
+sind sechs Zeilen `ext`/`rintro`. Der ganze Satz ist acht Zeilen statt der
+geschätzten zwanzig.
+
+Das ist kein Vorwurf an den Vorlauf — er hatte den Weg richtig, nur nicht
+gesehen, daß er gebahnt ist. Es ist aber die zweite Erinnerung binnen zweier
+Tage (nach den fünf Doppelungen des 2026-09-18) daran, **vor** dem Schreiben
+eines allgemeinen Bausteins in Mathlib nachzusehen, und nicht erst
+`scripts/check_duplicates.py` hinterher.
+
+#### Vorschlag 2: Tietze trägt, und die Voraussetzung, vor der der Vorlauf warnte, kostet nichts
+
+Der Vorlauf hatte zwei Stellen als teuer benannt: die Instanz `[NormalSpace Y]`
+des Tietze und den Übergang zwischen `→ᵇ ℝ≥0` und `→ᵇ ℝ` in der Topologie von
+`ProbabilityMeasure`. Beide fallen weg.
+
+* **`[NormalSpace D(ℝ, E)]` wird von der Instanzensuche gefunden**, ohne ein
+  Wort im Beweis. `SkorokhodSpace.instMetricSpace` gibt den metrischen Raum, und
+  Mathlib hat die Normalität eines metrischen Raums als Instanz.
+* **`→ᵇ ℝ≥0` kommt gar nicht vor.**
+  `MeasureTheory.ProbabilityMeasure.tendsto_iff_forall_integral_tendsto`
+  (`Mathlib/MeasureTheory/Measure/ProbabilityMeasure.lean:365`) ist über
+  `f : Ω →ᵇ ℝ` gestellt, nicht über `→ᵇ ℝ≥0`; die Umrechnung steckt im Beweis
+  jenes Satzes und nicht in unserem. Der Übergang, an dem der Vorlauf
+  Zeitverlust erwartete, ist ein `rw`.
+
+Was der Beweis wirklich braucht, ist die Gestalt der Tietze-Konklusion:
+`BoundedContinuousFunction.exists_extension_norm_eq_of_isClosedEmbedding`
+(`Mathlib/Topology/TietzeExtension.lean:273`) liefert `g ∘ e = f` als
+**Gleichung**, und nur deshalb ist der Integralvergleich eine Umschreibung und
+keine Abschätzung.
+
+#### Vorschlag 3, und wo `(0 : ℝ≥0) ∈ T` wirklich ausgegeben wird
+
+Die Zeitmenge, die der `ℝ`-Fassung gefüttert wird, ist `Real.toNNReal ⁻¹' T`.
+Ihre **Dichtheit in `ℝ`** ist die einzige Stelle, an der `hT0` verbraucht wird,
+und die Fallunterscheidung ist eine Zeile lang:
+
+* `x ≤ 0` — dann liegt `x` **selbst** in der Menge, weil `Real.toNNReal x = 0`
+  und `0 ∈ T`. Es ist nichts zu approximieren.
+* `0 < x` — dann gibt die Dichtheit von `T` in `ℝ≥0` ein `y ∈ T` nahe bei
+  `Real.toNNReal x`, und `(y : ℝ)` liegt in der Urbildmenge, weil
+  `Real.toNNReal` auf der positiven Halbachse eine Retraktion ist. Der
+  Abstandsvergleich ist `NNReal.dist_eq` mit `Real.coe_toNNReal x hx.le`.
+
+Die Ersetzung der Zeiten in der Testfunktion ist dann
+`SkorokhodSpace.extendNNReal_apply`, ein `rfl`-`simp`-Lemma.
+
+#### Was über die Bestellung hinaus gebaut wurde, und warum es dazugehörte
+
+Vorschlag 3 endet bei `Tendsto μ atTop (𝓝 ν)` für `ProbabilityMeasure`. **Das
+ist nicht die Gestalt, die Meilenstein 10 von `MartingaleProblems` verlangt.**
+Dort ist Voraussetzung (a) von `mpSolution_of_tendsto` die Konvergenz in
+Verteilung des **Wertes zu jeder Zeit**, also eine Aussage über
+Zufallsvariablen und über eine Koordinate. Über dem Index `ℝ` steht die Kette
+schon (`tendstoInDistribution_of_…`, `tendstoInDistribution_eval_of_…`, beide
+2026-09-18); über `ℝ≥0` fehlte sie, und ohne sie hätte der Verbraucher die
+Kreuzung selbst nachbauen müssen.
+
+Sie ist billig ausgefallen, und der Grund ist ein Befund:
+
+> **`SkorokhodSpace.tendstoInDistribution_eval` brauchte gar keine Kreuzung.**
+> Es steht seit dem 2026-09-11 über **beliebigem** Index `ι` (Zeile 10931) und
+> gilt über `ℝ≥0`, wie es dasteht. Was den Index `ℝ` erzwingt, ist allein das
+> **Kompaktheitskriterium** `isCompact_closure_iff` von Meilenstein 7 und die
+> Oszillationskette darüber — nicht die Auswertung, nicht die
+> Verteilungskonvergenz, nicht der Satz von der stetigen Abbildung.
+
+Damit ist die Grenze zwischen dem, was über `ℝ≥0` von selbst gilt, und dem, was
+gekreuzt werden mußte, zum ersten Mal scharf gezogen: **es ist genau das
+Kriterium, und nichts sonst.**
+
+#### Vier Einzelheiten, die ein nächster Lauf sonst wiederfindet
+
+* **`integral_map` will den Integranden als *benannte* Meßbarkeit.** Ein
+  eingesetztes `(Finset.measurable_prod _ fun i _ => …).aestronglyMeasurable`
+  läßt `rw` mit „Did not find an occurrence of the pattern" scheitern, weil das
+  Produkt unreduziert dasteht. Ein
+  `have hm : Measurable (fun f : D(ℝ, E) => ∏ i, F i (f.toFun (t i))) := …` mit
+  **ausgeschriebenem Typ** und danach `hm.aestronglyMeasurable` geht. Die Datei
+  macht es an Zeile 13782 schon so; das war der einzige Fehler des Laufs.
+* **`omit … in` steht *vor* dem Doc-Kommentar, nicht dazwischen.** Zwischen
+  Kommentar und `theorem` gesetzt gibt es
+  `unexpected token 'omit'; expected 'lemma'`.
+* **Der Borelraum von `D(ι, E)` liest von `E` nur die Topologie.** Der Linter
+  verlangte an zwei der fünf Deklarationen
+  `omit [MeasurableSpace E] [BorelSpace E]`, und `[PolishSpace E]` blieb stehen:
+  die Instanz `MeasurableSpace D(ι, E) := borel _` hängt an der Metrikinstanz
+  von `D`, und die braucht von `E` das `SecondCountableTopology`, das
+  `PolishSpace` mitbringt. Die dritte bis fünfte Deklaration brauchen sie
+  dagegen wirklich, über `SkorokhodSpace.measurable_eval`.
+* **`MeasureTheory.ProbabilityMeasure.map` verlangt auf `master` keine
+  Meßbarkeit mehr** (Zeile 627), und `toMeasure_map` (Zeile 631) ist `rfl` und
+  `@[simp]`. Der Müllwert ist dort ein Dirac und keine Null — `Measure.map` ist
+  auf `master` so eingerichtet, daß ein Wahrscheinlichkeitsmaß unter *jeder*
+  Abbildung ein Wahrscheinlichkeitsmaß bleibt
+  (`Mathlib/MeasureTheory/Measure/Typeclasses/Probability.lean:124`). Wer über
+  eine nicht meßbare Abbildung schiebt, bekommt also eine plausible Antwort, wo
+  keine ist; das ist dieselbe Bauart wie `sInf ∅ = 0`, und die Meßbarkeit
+  gehört deshalb auch hier in die Hypothese und nicht in den Nachtrag. In
+  unseren fünf Aussagen ist sie das: sie kommt aus der Stetigkeit der
+  Einbettung.
+
+#### Geprüft
+
+* `scripts/check_master.py`: rc 0, 0 Fehler, 0 `sorry`, 0 veraltet, Warnungen
+  18 / 35 / 106 — **unverändert** gegenüber dem Vorlauf.
+* `scripts/check_axioms_master.py` auf alle fünf Namen.
+* `scripts/check_duplicates.py`: 2 286 geprüfte eigene Deklarationen, 35 Treffer
+  auf dem letzten Namensbestandteil, also **kein neuer**.
+* `scripts/extract_citations.py`, `scripts/check_cited_lines.py`: 283 gepaarte
+  Fundstellen (zwei mehr als im Vorlauf, die beiden neuen), 283 stimmen, 0
+  verschoben, 0 tot.
+* Die benutzten Mathlib-Namen am Quelltext von `94ef6b89544` nachgesehen:
+  `Mathlib/MeasureTheory/Measure/Tight.lean:129` (`IsTightMeasureSet.map`),
+  `Mathlib/Topology/TietzeExtension.lean:273`
+  (`exists_extension_norm_eq_of_isClosedEmbedding`),
+  `Mathlib/MeasureTheory/Measure/ProbabilityMeasure.lean:365`
+  (`tendsto_iff_forall_integral_tendsto`), `:627` (`map`), `:631`
+  (`toMeasure_map`),
+  `Mathlib/Topology/MetricSpace/Pseudo/Defs.lean:1240` (`Metric.dense_iff`),
+  `Mathlib/Topology/MetricSpace/Pseudo/Constructions.lean:113`
+  (`NNReal.dist_eq`), `Mathlib/Basic/NNReal/Defs.lean:557`
+  (`Real.toNNReal_of_nonpos`).
+
+#### Eingetragen
+
+* `SkorokhodSpace/README.md`, Meilenstein 9: die fünf Aussagen mit ihren
+  Stützen, der Befund zu `IsTightMeasureSet.map`, und der Satz, daß
+  `tendstoInDistribution_eval` keine Kreuzung brauchte.
+* `MartingaleProblems/README.md`, Meilenstein 10: die Brücke in der Gestalt, die
+  dieser Meilenstein verbraucht.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die Leerheitsprobe der Kreuzung: `jumpPathD` durch die Brücke schicken.**
+
+   *Die Aussage:* das Akzeptanzbeispiel, das `SkorokhodSpace/README.md`,
+   Meilenstein 9, schon benennt — `SkorokhodSpace.extendNNReal (jumpPathD …)` —
+   mit der Aussage, daß die Koordinate zu einer nichtnegativen Zeit unter der
+   Kreuzung unverändert bleibt: `extendNNReal_apply` zusammen mit
+   `Real.toNNReal_coe`.
+
+   *Worauf sie ruht:* `jumpPathD` (2026-09-18, fünfzehnter Lauf) und
+   `SkorokhodSpace.extendNNReal_apply`.
+
+   *Warum sie zuerst:* die fünf Aussagen dieses Laufs haben in der ganzen Datei
+   **keinen Zeugen** — kein Gesetz auf `D(ℝ≥0, E)` ist bisher durch sie
+   hindurchgeschickt worden. Das ist dieselbe Lage, in der `Shift` und
+   `IsDetermining` waren, ehe ein Lauf sie bewohnt hat, und sie ist billig zu
+   beheben: der Zeuge steht schon da, es fehlt der Satz, der ihn an die Brücke
+   hängt. Er ist ein halber Lauf und macht aus fünf richtigen Aussagen fünf
+   anwendbare.
+
+2. **Meilenstein 11 von `SkorokhodSpace`, die Skorokhod-Instanzen**, und zwar
+   mit dem ersten Glied seiner Kette,
+   `isTight_map_postcomp_of_exists_martingale`.
+
+   *Warum jetzt:* der Auftrag nennt ihn als den nächsten Punkt der Reihe
+   `jumpPath → Meilenstein 3 → Meilenstein 9 → C.5/G`, und er war blockiert,
+   solange die càdlàg-Modifikation fehlte. Sie steht seit dem 2026-09-17, die
+   Quasi-Linksstetigkeit ebenso, und mit den fünf Aussagen dieses Laufs steht
+   jetzt auch die Straffheits- und Konvergenzbrücke über dem Index, den die
+   Prozesse tragen. Der Akzeptanztest der Kette ist **Donsker**, und ihre vier
+   Glieder kommen dort je genau einmal und in dieser Reihenfolge vor.
+
+   *Was vor dem Bauen zu klären ist:* ob
+   `isTight_map_postcomp_of_exists_martingale` über `ℝ≥0` oder über `ℝ` zu
+   stellen ist. Nach dem Befund dieses Laufs ist die Antwort nicht frei: alles,
+   was das **Kompaktheitskriterium** liest, muß über `ℝ` stehen, und alles
+   andere darf über `ℝ≥0` stehen. Diese Frage ist zu beantworten, ehe die erste
+   Signatur geschrieben wird, sonst wird die Kreuzung ein zweites Mal gemacht.
+
+### 2026-09-19, zwölfter Lauf des Tages — beide Vorschläge sind bedient, und der zweite hat sich in einen Befund verwandelt: die Indexfrage ist beantwortet, aber Meilenstein 11 ist nicht blockiert, wo der Auftrag es vermutete, sondern drei Aussagen tiefer — in `SkorokhodSpace` produziert **keine** Deklaration Straffheit
+
+**Bearbeitet:** Vorschlag 1 des Vorlaufs (die Leerheitsprobe der Kreuzung) und
+Vorschlag 2 (Meilenstein 11), letzterer in seinem ausdrücklich verlangten ersten
+Teil — der Frage nach dem Index — mit einem Ergebnis, das über die Frage
+hinausgeht.
+
+**Zehn Deklarationen**, acht in `TauCeti/MartingaleProblems/Suggested.lean`
+(Meilenstein 6, Abschnitt `JumpPath`) und zwei am Ende von
+`TauCeti/SkorokhodSpace/Suggested.lean` (Meilenstein 9). Die ganze Kette durch
+`scripts/check_master.py` gegen `94ef6b89544` mit **0 Fehlern, 0 `sorry`, 0
+veralteten Namen** und **unveränderten Warnungszahlen (18 / 35 / 106)**; alle
+zehn mit `scripts/check_axioms_master.py` auf `propext`, `Classical.choice`,
+`Quot.sound` geprüft.
+
+In `SkorokhodSpace`:
+
+* `SkorokhodSpace.isTightMeasureSet_of_isTightMeasureSet_map_extendNNReal`
+* `SkorokhodSpace.isTightMeasureSet_map_extendNNReal_iff`
+
+In `MartingaleProblems`:
+
+* `extendNNReal_jumpPathD_toFun`, `extendNNReal_jumpPathD_toFun_of_mem`
+* `measurable_extendNNReal_jumpPathD`,
+  `isProbabilityMeasure_map_extendNNReal_map_jumpPathD`
+* `map_eval_map_extendNNReal_map_jumpPathD`,
+  `map_eval_map_extendNNReal_map_jumpPathD_poisson`
+* `isTightMeasureSet_map_jumpPathD`,
+  `isTightMeasureSet_map_extendNNReal_map_jumpPathD`
+
+#### Vorschlag 1: die Kreuzung ist bewohnt, und die Probe reicht bis zur Straffheit
+
+Die fünf Aussagen des Vorlaufs hatten in der ganzen Datei keinen Zeugen. Jetzt
+geht das einzige Gesetz, das diese Entwicklung auf `D(ℝ≥0, E)` erzeugt, durch
+sie hindurch:
+
+* Die Koordinate bleibt unter der Kreuzung stehen
+  (`extendNNReal_jumpPathD_toFun`) — das ist das Akzeptanzbeispiel, das
+  `SkorokhodSpace/README.md`, Meilenstein 9, beim Namen nennt, und es ist wirklich
+  `extendNNReal_apply` mit `Real.toNNReal_coe`, zwei Umschreibungen.
+* Damit ist die Koordinate des gekreuzten Gesetzes das Gesetz des Prozesses
+  (`map_eval_map_extendNNReal_map_jumpPathD`), und auf den Poissondaten ist sie
+  `ProbabilityTheory.poissonMeasure t`
+  (`map_eval_map_extendNNReal_map_jumpPathD_poisson`). Das ist die unabhängige
+  Kontrolle, jetzt auf `D(ℝ, ℕ)`, also auf dem Raum über dem Index der
+  Meilensteine 7 und 8.
+* Und die Straffheit: `isTightMeasureSet_map_jumpPathD` über
+  `MeasureTheory.isTightMeasureSet_singleton` (`Measure/Tight.lean:99`), dann
+  `isTightMeasureSet_map_extendNNReal_map_jumpPathD` durch den Transport des
+  Vorlaufs.
+
+**Was an der letzten ehrlich zu sagen ist**, und es steht so am Doc-Kommentar:
+sie ist keine neue Abschätzung. Dieselbe Folgerung fällt auch aus
+`isTightMeasureSet_singleton` auf `D(ℝ, E)` unmittelbar, denn auch dieser Raum ist
+vollständig und zweitabzählbar. Was sie ist, ist die erste Durchleitung eines
+Gesetzes dieser Entwicklung durch
+`SkorokhodSpace.isTightMeasureSet_map_extendNNReal`: dessen Voraussetzung wird
+hier an Daten eingelöst, und seine Familiengestalt `{μ i | i}` an einem wirklich
+erzeugten Maß getroffen.
+
+#### Vorschlag 2, erster Teil: die Indexfrage ist beantwortet, und zwar mit einem Satz statt mit einem Urteil
+
+Der Auftrag verlangte, vor der ersten Signatur zu entscheiden, ob
+`isTight_map_postcomp_of_exists_martingale` über `ℝ` oder über `ℝ≥0` zu stehen
+hat. Die Antwort ist **`ℝ`**, und sie ist nicht abgewogen, sondern bewiesen:
+
+> **Straffheit kreuzt in beide Richtungen.**
+> `SkorokhodSpace.isTightMeasureSet_of_isTightMeasureSet_map_extendNNReal`: ist
+> die Bildfamilie auf `D(ℝ, E)` straff, so ist die Familie auf `D(ℝ≥0, E)` es
+> auch.
+
+Der Beweis ist kurz und sitzt an der **Abgeschlossenheit** des Bildes, nicht an
+der Isometrie: das Urbild einer kompakten Menge unter einer abgeschlossenen
+Einbettung ist kompakt
+(`Topology.IsClosedEmbedding.isCompact_preimage`,
+`Mathlib/Topology/Compactness/Compact.lean:1017`), und die Masse außerhalb des
+Urbildes ist genau die, die das Bildmaß außerhalb der kompakten Menge legt
+(`Measure.map_apply` an `Kᶜ`). Dasselbe `ε` trägt; es geht nichts verloren.
+
+**Die Regel, die daraus fällt, und sie entscheidet dieselbe Frage für jede
+spätere Aussage:**
+
+> Eine **Voraussetzung** kreuzt nur vorwärts, eine **Konklusion** rückwärts.
+
+Deshalb mußte die `ℝ≥0`-Fassung von Meilenstein 8 ausgeschrieben werden — sie
+trägt die Konvergenz der endlichdimensionalen Verteilungen als *Voraussetzung*
+hinüber, und gerade die kreuzt überhaupt nicht, weil ein dichtes `T ⊆ ℝ≥0` in
+`ℝ` nicht dicht ist. Ein Straffheits*kriterium* dagegen trägt eine Konklusion:
+es wird einmal über `ℝ` gestellt, und der Verbraucher über `ℝ≥0` kreuzt seine
+Familie, wendet es an und kommt zurück. **Nichts von Meilenstein 11 ist über
+`ℝ≥0` zu wiederholen.**
+
+#### Vorschlag 2, zweiter Teil: und hier steht der eigentliche Befund des Laufs
+
+Ehe die erste Signatur von `isTight_map_postcomp_of_exists_martingale`
+geschrieben wurde, ist nachgesehen worden, worauf sie zeigen kann. Ergebnis, am
+Quelltext von `TauCeti/SkorokhodSpace/Suggested.lean` gezählt:
+
+> **`IsTightMeasureSet` kommt dort ausschließlich als Voraussetzung vor** — an
+> sechs Stellen —, dazu in den beiden Transporten von Meilenstein 9, die
+> Straffheit längs der Kreuzung tragen und sie deshalb ebenfalls voraussetzen.
+> **Keine Deklaration erzeugt Straffheit aus etwas anderem als Straffheit.**
+
+Damit hat der erste Punkt von Meilenstein 11 keine Konklusion, die er erreichen
+könnte. Drei benannte Punkte von `SkorokhodSpace`, Meilenstein 8, haben **keine
+Deklaration**, und sie werden in dieser Reihenfolge gebraucht:
+
+1. `SkorokhodSpace.postcomp` mit `continuous_postcomp` und der Meßbarkeit. Auch
+   die Wohldefiniertheit fehlt: daß die Nachschaltung einer stetigen Abbildung
+   `IsCadlag` erhält, steht in der Datei nicht — die Liste der `IsCadlag`-Sätze
+   hat `comp_monotone_continuous` und `comp_coe_nnreal`, beide über den *Index*,
+   und keinen über den *Wertebereich*.
+2. `SkorokhodSpace.isTightMeasureSet_iff` — das Straffheitskriterium auf
+   Maßebene, kompakte Einschließung samt Modulbedingung. Dafür ist
+   `isCompact_closure_iff` von Meilenstein 7 gebaut worden, und es ist die
+   Aussage, die alles darüber liest.
+3. `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` — die Reduktion auf
+   reellwertige Pfade, deren Hinrichtung Punkt 1 ist und deren Rückrichtung
+   Punkt 2.
+
+**Das ändert die Reihenfolge des Auftrags, und zwar sparsam:** nicht
+Meilenstein 11 ist als nächstes dran, sondern Meilenstein 8 von
+`SkorokhodSpace`. Der Auftrag nannte Meilenstein 11 „zum ersten Mal nicht mehr
+blockiert", und für die *càdlàg-Modifikation* stimmt das auch; die Blockade sitzt
+woanders und ist bis heute niemandem aufgefallen, weil die Straffheit in jeder
+bisherigen Aussage eine Voraussetzung war und deshalb nie bezahlt werden mußte.
+
+#### Vier Einzelheiten, die ein nächster Lauf sonst wiederfindet
+
+* **`haveI` kostet drei Warnungen.** Zwei `haveI := …` in Prop-Zielen gaben je
+  eine `linter.style.haveILetI`-Warnung, und die zweite zog eine dritte nach
+  sich: der `unusedVariables`-Linter hielt das `hlam` des *Binders* für
+  ungenutzt, obwohl es im `haveI`-Term steht. Mit
+  `have : IsProbabilityMeasure … := …` — also mit **ausgeschriebenem Typ** —
+  verschwinden alle drei. Die Warnungszahl ist damit unverändert bei 18 / 35 /
+  106.
+* **Die Familiengestalt `{μ i | i}` an einem einzelnen Maß** ist zweimal sechs
+  Zeilen `ext`/`rintro` mit `γ := Unit`. Das ist dieselbe Buchhaltung, die der
+  Vorlauf schon im Beweis von `isTightMeasureSet_map_extendNNReal` machen mußte;
+  wer eine dritte solche Aussage schreibt, baut besser einmal ein Lemma
+  `{(fun _ : Unit ↦ m) i | i} = {m}`.
+* **`isTightMeasureSet_singleton` verlangt auf `master`
+  `IsCompletelyPseudoMetrizableSpace`, `SecondCountableTopology`, `BorelSpace`
+  und `IsFiniteMeasure`**, und auf `D(ℝ≥0, E)` findet die Instanzensuche alle
+  vier ohne ein Wort im Beweis: `SkorokhodSpace.instMetricSpace`,
+  `instCompleteSpace`, `instSeparableSpace` und die Borelinstanz von
+  Meilenstein 6.
+* **Der Linter verlangte an den beiden neuen `SkorokhodSpace`-Aussagen
+  `omit [MeasurableSpace E] [BorelSpace E]`**, genau wie an den Transporten des
+  Vorlaufs, und `[PolishSpace E]` blieb stehen: die Borelstruktur von
+  `D(ℝ≥0, E)` liest von `E` nur die Topologie.
+
+#### Geprüft
+
+* `scripts/check_master.py`: rc 0, 0 Fehler, 0 `sorry`, 0 veraltet, Warnungen
+  18 / 35 / 106 — **unverändert** gegenüber dem Vorlauf.
+* `scripts/check_axioms_master.py` auf alle zehn Namen.
+* `scripts/check_duplicates.py`: 2 296 geprüfte eigene Deklarationen, 35 Treffer
+  auf dem letzten Namensbestandteil, also **kein neuer**.
+* `scripts/extract_citations.py`, `scripts/check_cited_lines.py`: 286 gepaarte
+  Fundstellen (drei mehr als im Vorlauf), 286 stimmen, 0 verschoben, 0 tot.
+* Die benutzten Mathlib-Namen am Quelltext von `94ef6b89544` nachgesehen:
+  `Mathlib/MeasureTheory/Measure/Tight.lean:99`
+  (`isTightMeasureSet_singleton`), `:60`
+  (`isTightMeasureSet_iff_exists_isCompact_measure_compl_le`),
+  `Mathlib/Topology/Compactness/Compact.lean:1017`
+  (`Topology.IsClosedEmbedding.isCompact_preimage`),
+  `Mathlib/Basic/NNReal/Defs.lean:358` (`Real.toNNReal_coe`).
+
+#### Eingetragen
+
+* `SkorokhodSpace/README.md`, Meilenstein 9: die beiden Rückwärtstransporte, die
+  Regel „Voraussetzung vorwärts, Konklusion rückwärts", und das Akzeptanzbeispiel
+  als eingelöst.
+* `MartingaleProblems/README.md`, Meilenstein 6: die acht Aussagen der Probe.
+* `MartingaleProblems/README.md`, Meilenstein 11: die Indexentscheidung mit ihrer
+  Begründung, und die drei fehlenden Punkte von `SkorokhodSpace`, Meilenstein 8,
+  in der Reihenfolge, in der sie gebraucht werden.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`SkorokhodSpace.postcomp` samt Wohldefiniertheit und Meßbarkeit.**
+
+   *Die Aussagen:* `IsCadlag.comp_continuous` — ist `f : ι → E` càdlàg und
+   `h : E → E'` stetig, so ist `h ∘ f` càdlàg —, darauf
+   `SkorokhodSpace.postcomp h : D(ι, E) → D(ι, E')` als Definition, und
+   `SkorokhodSpace.measurable_postcomp` für borelsches `h`.
+
+   *Worauf sie ruhen:* die beiden Hälften von `IsCadlag` sind die Stetigkeit von
+   rechts und der linke Limes, und beide überleben die Nachschaltung einer
+   stetigen Abbildung durch `Filter.Tendsto.comp`; die Meßbarkeit ist
+   `SkorokhodSpace.measurable_of_measurable_eval` koordinatenweise über
+   `SkorokhodSpace.measurable_eval`.
+
+   *Warum sie zuerst:* sie sind der unterste der drei fehlenden Punkte, sie
+   hängen an nichts, was noch fehlt, und sie sind billig — die Stetigkeit von
+   `postcomp h`, die teuer ist, wird hier **nicht** verlangt. Ohne sie läßt sich
+   der zweite Punkt nicht einmal hinschreiben.
+
+2. **`SkorokhodSpace.continuous_postcomp`.**
+
+   *Die Aussage:* für stetiges `h : E → E'` ist `SkorokhodSpace.postcomp h`
+   stetig.
+
+   *Worauf sie ruht:* die Metrik von Meilenstein 4 über `intDist`, und der
+   eigentliche Inhalt ist, daß eine stetige Abbildung in der Nähe einer
+   kompakten Menge gleichmäßig stetig ist; das Fenster eines càdlàg-Pfades hat
+   totalbeschränktes Bild (`IsCadlag.totallyBounded_image_Icc`, Zeile 8525).
+
+   *Warum sie danach:* sie ist die Hinrichtung von
+   `isTightMeasureSet_iff_forall_postcomp` und die einzige teure der drei; sie
+   von Punkt 1 zu trennen, hält den Lauf schneidbar.
+
+3. **Das Lemma für die Familiengestalt.** `{(fun _ : Unit ↦ m) i | i} = {m}`,
+   oder besser gleich `IsTightMeasureSet {m} ↔ IsTightMeasureSet {μ i | i}` für
+   konstantes `μ`. Dreimal in zwei Läufen von Hand geschrieben; das ist die
+   Schwelle, ab der es ein Lemma wird.
