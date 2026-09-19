@@ -16029,10 +16029,10 @@ the quoted theorem asks `η <` at its later time and returns `≤ 2 * η` at the
 earlier one; `η ≤ 2 * η` bridges the two, and that is the only place the
 inequality between the two levels is used. -/
 theorem SkorokhodSpace.two_mul_le_sub_of_forall_min_edist_lt
-    (f : D(ℝ, E)) {δ : ℝ} {η : ℝ≥0∞}
-    (h : ∀ t₁ t t₂ : ℝ, t₁ ≤ t → t ≤ t₂ → t₂ - t₁ ≤ 2 * δ →
+    (f : D(ℝ, E)) {δ : ℝ} {η : ℝ≥0∞} {a b : ℝ}
+    (h : ∀ t₁ t t₂ : ℝ, a ≤ t₁ → t₂ ≤ b → t₁ ≤ t → t ≤ t₂ → t₂ - t₁ ≤ 2 * δ →
       min (edist (f.toFun t) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun t)) < η)
-    {p q : ℝ} (hpq : p < q)
+    {p q : ℝ} (hpq : p < q) (ha : a + 2 * δ ≤ q) (hb : q ≤ b)
     (hp : 2 * η < edist (f.toFun p) (Function.leftLim f.toFun p))
     (hq : 2 * η < edist (f.toFun q) (Function.leftLim f.toFun q)) :
     2 * δ ≤ q - p := by
@@ -16043,7 +16043,7 @@ theorem SkorokhodSpace.two_mul_le_sub_of_forall_min_edist_lt
   have hu : q - 2 * δ < p := by linarith
   refine absurd (SkorokhodSpace.jump_le_two_mul_of_forall_min_edist_lt f
     (u := q - 2 * δ) (v := q)
-    (fun t₁ t t₂ h1 h2 h3 h4 => h t₁ t t₂ h2 h3 (by linarith))
+    (fun t₁ t t₂ h1 h2 h3 h4 => h t₁ t t₂ (by linarith) (by linarith) h2 h3 (by linarith))
     hu hpq le_rfl (lt_of_le_of_lt hη2 hq)) (not_le.2 hp)
 
 omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
@@ -16129,10 +16129,11 @@ its left endpoint and its interior inside `Set.Ico (t₀ - 2 * δ) t₀`, so
 which is what turns the *open* jump condition on `Set.Ioo` into the half open one
 that theorem asks for. -/
 theorem SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt
-    (f : D(ℝ, E)) {δ : ℝ} {η : ℝ≥0∞} (hη : 0 < η)
-    (h : ∀ t₁ t t₂ : ℝ, t₁ ≤ t → t ≤ t₂ → t₂ - t₁ ≤ 2 * δ →
+    (f : D(ℝ, E)) {δ : ℝ} {η : ℝ≥0∞} (hη : 0 < η) {a b : ℝ}
+    (h : ∀ t₁ t t₂ : ℝ, a ≤ t₁ → t₂ ≤ b → t₁ ≤ t → t ≤ t₂ → t₂ - t₁ ≤ 2 * δ →
       min (edist (f.toFun t) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun t)) < η)
     (t₀ : ℝ) {n : ℕ} {t : Fin (n + 1) → ℝ}
+    (hrange : ∀ i : Fin (n + 1), a ≤ t i ∧ t i ≤ b)
     (hspan : ∀ i : Fin n, t i.succ - t i.castSucc ≤ 2 * δ)
     (hcell : ∀ i : Fin n, t i.castSucc = t₀ ∨ t i.succ = t₀ ∨
       ∀ p ∈ Set.Ioo (t i.castSucc) (t i.succ),
@@ -16168,7 +16169,9 @@ theorem SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt
     exact le_add_self
   · -- an ordinary cell: no large jump inside, and its span is at most `2 * δ`
     refine le_trans (SkorokhodSpace.edist_le_four_mul_of_forall_min_edist_lt f hs.1 hη
-      (fun t₁ x t₂ h1 h2 h3 h4 => h t₁ x t₂ h2 h3 (by linarith [hspan i, hs.2]))
+      (fun t₁ x t₂ h1 h2 h3 h4 => h t₁ x t₂ (le_trans (hrange i.castSucc).1 h1)
+        (le_trans h4 (le_trans hs.2.le (hrange i.succ).2)) h2 h3
+        (by linarith [hspan i, hs.2]))
       (fun p hp1 hp2 => hJ p ⟨hp1, lt_of_le_of_lt hp2 hs.2⟩) ⟨hs.1, le_rfl⟩) le_self_add
 
 /-! ### The node-placing rule
@@ -16357,13 +16360,16 @@ one line that connects `SkorokhodSpace.nextNode` --- which knows nothing of path
 `SkorokhodSpace.two_mul_le_sub_of_forall_min_edist_lt` read as a property of the
 set rather than of a pair. -/
 theorem SkorokhodSpace.separated_setOf_lt_edist_leftLim
-    (f : D(ℝ, E)) {δ : ℝ} {η : ℝ≥0∞}
-    (h : ∀ t₁ t t₂ : ℝ, t₁ ≤ t → t ≤ t₂ → t₂ - t₁ ≤ 2 * δ →
+    (f : D(ℝ, E)) {δ : ℝ} {η : ℝ≥0∞} {a b : ℝ}
+    (h : ∀ t₁ t t₂ : ℝ, a ≤ t₁ → t₂ ≤ b → t₁ ≤ t → t ≤ t₂ → t₂ - t₁ ≤ 2 * δ →
       min (edist (f.toFun t) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun t)) < η) :
-    ∀ p ∈ {r : ℝ | 2 * η < edist (f.toFun r) (Function.leftLim f.toFun r)},
-      ∀ q ∈ {r : ℝ | 2 * η < edist (f.toFun r) (Function.leftLim f.toFun r)},
+    ∀ p ∈ {r : ℝ | r ∈ Set.Icc (a + 2 * δ) b ∧
+        2 * η < edist (f.toFun r) (Function.leftLim f.toFun r)},
+      ∀ q ∈ {r : ℝ | r ∈ Set.Icc (a + 2 * δ) b ∧
+        2 * η < edist (f.toFun r) (Function.leftLim f.toFun r)},
         p < q → 2 * δ ≤ q - p :=
-  fun _ hp _ hq hpq => SkorokhodSpace.two_mul_le_sub_of_forall_min_edist_lt f h hpq hp hq
+  fun _ hp _ hq hpq =>
+    SkorokhodSpace.two_mul_le_sub_of_forall_min_edist_lt f h hpq hq.1.1 hq.1.2 hp.2 hq.2
 
 /-! ### The iteration of the rule, and its mirror
 
@@ -16439,6 +16445,23 @@ theorem SkorokhodSpace.add_mul_le_node (J : Set ℝ) {δ : ℝ} (hδ : 0 < δ) (
   | zero => simp
   | succ k ih =>
       have := SkorokhodSpace.add_lt_node_succ J hδ x₀ k
+      push_cast
+      linarith
+
+/-- **The iteration grows at most linearly as well**, which is what bounds the
+*range* of the nodes.  The lower bound `SkorokhodSpace.add_mul_le_node` says a
+window is covered after finitely many steps; this one says the nodes do not run
+away while covering it, and that is what lets the three point hypothesis of
+`SkorokhodSpace.modulusBased_le_of_forall_min_edist_lt` be read on a **bounded**
+window rather than on all of `ℝ`.  A consumer holds it on a window and on nothing
+more: the modulus of an image path controls the three point quantity only where
+the image subdivisions live. -/
+theorem SkorokhodSpace.node_le_add_two_mul (J : Set ℝ) {δ : ℝ} (hδ : 0 < δ) (x₀ : ℝ) (k : ℕ) :
+    SkorokhodSpace.node J δ x₀ k ≤ x₀ + 2 * δ * k := by
+  induction k with
+  | zero => simp
+  | succ k ih =>
+      have := SkorokhodSpace.node_succ_sub_le J hδ x₀ k
       push_cast
       linarith
 
@@ -16569,6 +16592,14 @@ theorem SkorokhodSpace.strictAnti_pnode (J : Set ℝ) {δ : ℝ} (hδ : 0 < δ) 
 theorem SkorokhodSpace.pnode_le_sub_mul (J : Set ℝ) {δ : ℝ} (hδ : 0 < δ) (x₀ : ℝ) (k : ℕ) :
     SkorokhodSpace.pnode J δ x₀ k ≤ x₀ - k * δ := by
   have := SkorokhodSpace.add_mul_le_node (SkorokhodSpace.negSet J) hδ (-x₀) k
+  simp only [SkorokhodSpace.pnode]
+  linarith
+
+/-- The mirror of `SkorokhodSpace.node_le_add_two_mul`, and with it the left half
+of the range bound the nodes obey. -/
+theorem SkorokhodSpace.sub_two_mul_le_pnode (J : Set ℝ) {δ : ℝ} (hδ : 0 < δ) (x₀ : ℝ) (k : ℕ) :
+    x₀ - 2 * δ * k ≤ SkorokhodSpace.pnode J δ x₀ k := by
+  have := SkorokhodSpace.node_le_add_two_mul (SkorokhodSpace.negSet J) hδ (-x₀) k
   simp only [SkorokhodSpace.pnode]
   linarith
 
@@ -16729,20 +16760,39 @@ Those are precisely the hypotheses of
 a path by `SkorokhodSpace.separated_setOf_lt_edist_leftLim`.
 
 The number of nodes on each side is one Archimedean choice, `u / δ < a`, and the
-two sides are given the same count, there being no reason to distinguish them. -/
+two sides are given the same count, there being no reason to distinguish them.
+
+**The last two conclusions bound the range of the nodes**, and they are what makes
+the whole construction readable on a bounded window: every node lies within
+`2 * u + 4 * δ` of the base point.  The choice of `a` is therefore not any natural
+number above `u / δ` but `⌈u / δ⌉₊ + 1`, which is the smallest one the covering
+needs; `Nat.ceil_lt_add_one` turns that into `a * δ ≤ u + 2 * δ` and
+`SkorokhodSpace.node_le_add_two_mul` with `SkorokhodSpace.sub_two_mul_le_pnode`
+into the bound.  Without them the three point hypothesis of
+`SkorokhodSpace.modulusBased_le_of_forall_min_edist_lt` would have to be read at
+**every** triple of `ℝ`, and no consumer of that link has it there. -/
 theorem SkorokhodSpace.exists_subdivision_of_separated {J : Set ℝ} {δ : ℝ} (hδ : 0 < δ)
-    (hsep : ∀ p ∈ J, ∀ q ∈ J, p < q → 2 * δ ≤ q - p) (x₀ u : ℝ) :
+    (hsep : ∀ p ∈ J, ∀ q ∈ J, p < q → 2 * δ ≤ q - p) (x₀ : ℝ) {u : ℝ} (hu : 0 ≤ u) :
     ∃ (n : ℕ) (t : Fin (n + 1) → ℝ), StrictMono t ∧ x₀ ∈ Set.range t ∧
       t 0 ≤ x₀ - u ∧ x₀ + u ≤ t (Fin.last n) ∧
       (∀ i : Fin n, δ < t i.succ - t i.castSucc) ∧
       (∀ i : Fin n, t i.succ - t i.castSucc ≤ 2 * δ) ∧
       (∀ i : Fin n, t i.castSucc = x₀ ∨ t i.succ = x₀ ∨
-        ∀ p ∈ J, p ∉ Set.Ioo (t i.castSucc) (t i.succ)) := by
-  obtain ⟨a, ha⟩ := exists_nat_gt (u / δ)
+        ∀ p ∈ J, p ∉ Set.Ioo (t i.castSucc) (t i.succ)) ∧
+      x₀ - (2 * u + 4 * δ) ≤ t 0 ∧ t (Fin.last n) ≤ x₀ + (2 * u + 4 * δ) := by
+  obtain ⟨a, ha, ha2⟩ : ∃ a : ℕ, u / δ < a ∧ 2 * δ * a ≤ 2 * u + 4 * δ := by
+    refine ⟨⌈u / δ⌉₊ + 1, ?_, ?_⟩
+    · exact lt_of_le_of_lt (Nat.le_ceil _) (by push_cast; linarith)
+    · have hc : (⌈u / δ⌉₊ : ℝ) < u / δ + 1 := Nat.ceil_lt_add_one (by positivity)
+      have hd : u / δ * δ = u := div_mul_cancel₀ u hδ.ne'
+      have hm := mul_lt_mul_of_pos_right hc hδ
+      push_cast
+      nlinarith
   have hau : u < a * δ := by
     rw [div_lt_iff₀ hδ] at ha
     exact ha
-  refine ⟨a + a, fun i => SkorokhodSpace.nodeSeq J δ x₀ a (i : ℕ), ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨a + a, fun i => SkorokhodSpace.nodeSeq J δ x₀ a (i : ℕ),
+    ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · exact fun i j hij => SkorokhodSpace.strictMono_nodeSeq J hδ x₀ a hij
   · exact ⟨⟨a, by omega⟩, SkorokhodSpace.nodeSeq_self J δ x₀ a⟩
   · have := SkorokhodSpace.nodeSeq_zero_le J hδ x₀ a
@@ -16761,6 +16811,13 @@ theorem SkorokhodSpace.exists_subdivision_of_separated {J : Set ℝ} {δ : ℝ} 
   · intro i
     simp only [Fin.val_succ, Fin.val_castSucc]
     exact SkorokhodSpace.cell_nodeSeq hδ hsep x₀ a (i : ℕ)
+  · have hp := SkorokhodSpace.sub_two_mul_le_pnode J hδ x₀ a
+    simp only [Fin.val_zero, SkorokhodSpace.nodeSeq_of_le J δ x₀ (Nat.zero_le a), Nat.sub_zero]
+    linarith
+  · have hn := SkorokhodSpace.node_le_add_two_mul J hδ x₀ a
+    simp only [Fin.val_last, SkorokhodSpace.nodeSeq_of_ge J δ x₀ (by omega : a ≤ a + a),
+      show a + a - a = a by omega]
+    linarith
 
 omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
 /-- **The corrected link of Milestone 8, entire.**  A path whose three point
@@ -16788,16 +16845,42 @@ Nothing else is computed: the window is `exhaustionMin_real` and
 (`SkorokhodSpace.one_le_modulusBased_step`,
 `SkorokhodSpace.min_edist_le_two_mul_modulusBased`); over a general base point the
 two window endpoints would have to be computed afresh, and no consumer asks for
-it. -/
+it.
+
+**And the hypothesis is read on a bounded window, not on all of `ℝ`**, which is
+what a consumer has and what this statement asked for in vain until 2026-09-19.
+The three point quantity of a path is controlled by the based modulus of an image
+path (`SkorokhodSpace.min_edist_le_two_mul_modulusBased_postcomp`) only at times
+inside the window the image modulus is read at --- a subdivision covers a window
+and nothing beyond it --- so a hypothesis quantified over every triple of `ℝ` is
+unreachable.  The radius `R` the statement asks for is `2 * max m 0 + 6 * δ`: the
+nodes the construction places lie within `2 * max m 0 + 4 * δ` of the base point
+(`SkorokhodSpace.exists_subdivision_of_separated`), and the separation of the
+large jumps costs the further `2 * δ` because
+`SkorokhodSpace.two_mul_le_sub_of_forall_min_edist_lt` reads the hypothesis on
+`Set.Icc (q - 2 * δ) q` at the later of the two jumps. -/
 theorem SkorokhodSpace.modulusBased_le_of_forall_min_edist_lt
-    (f : D(ℝ, E)) {δ : ℝ} (hδ : 0 < δ) {η : ℝ≥0∞} (hη : 0 < η) (m : ℝ)
-    (h : ∀ t₁ t t₂ : ℝ, t₁ ≤ t → t ≤ t₂ → t₂ - t₁ ≤ 2 * δ →
+    (f : D(ℝ, E)) {δ : ℝ} (hδ : 0 < δ) {η : ℝ≥0∞} (hη : 0 < η) (m : ℝ) {R : ℝ}
+    (hR : 2 * max m 0 + 6 * δ ≤ R)
+    (h : ∀ t₁ t t₂ : ℝ, -R ≤ t₁ → t₂ ≤ R → t₁ ≤ t → t ≤ t₂ → t₂ - t₁ ≤ 2 * δ →
       min (edist (f.toFun t) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun t)) < η) :
     SkorokhodSpace.modulusBased (0 : ℝ) m f δ
       ≤ 4 * η + 2 * SkorokhodSpace.basePointOsc (0 : ℝ) f (2 * δ) := by
-  obtain ⟨n, t, hmono, hmem, hlo, hhi, hgap, hspan, hcell⟩ :=
+  obtain ⟨n, t, hmono, hmem, hlo, hhi, hgap, hspan, hcell, hfirst, hlast⟩ :=
     SkorokhodSpace.exists_subdivision_of_separated hδ
-      (SkorokhodSpace.separated_setOf_lt_edist_leftLim f h) (0 : ℝ) (max m 0)
+      (SkorokhodSpace.separated_setOf_lt_edist_leftLim f h) (0 : ℝ) (le_max_right m 0)
+  have hlow : ∀ i : Fin (n + 1), -R + 2 * δ ≤ t i := by
+    intro i
+    have := hmono.monotone (Fin.zero_le i)
+    simp only [zero_sub] at hfirst
+    linarith
+  have hhigh : ∀ i : Fin (n + 1), t i ≤ R := by
+    intro i
+    have := hmono.monotone (Fin.le_last i)
+    simp only [zero_add] at hlast
+    linarith
+  have hrange : ∀ i : Fin (n + 1), -R ≤ t i ∧ t i ≤ R :=
+    fun i => ⟨by linarith [hlow i], hhigh i⟩
   have hsub : SkorokhodSpace.IsSubdivisionBased (0 : ℝ) m δ t := by
     refine ⟨⟨hmono, ?_, ?_, fun i => ?_⟩, hmem⟩
     · rw [exhaustionMin_real]
@@ -16808,14 +16891,16 @@ theorem SkorokhodSpace.modulusBased_le_of_forall_min_edist_lt
       exact hgap i
   rw [SkorokhodSpace.modulusBased]
   refine le_trans (iInf_le_of_le n (iInf_le_of_le t (iInf_le_of_le hsub le_rfl))) ?_
-  refine SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt f hη h (0 : ℝ) hspan
+  refine SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt f hη h (0 : ℝ) hrange hspan
     fun i => ?_
-  rcases hcell i with hL | hR | hJ
+  rcases hcell i with hL | hR' | hJ
   · exact Or.inl hL
-  · exact Or.inr (Or.inl hR)
+  · exact Or.inr (Or.inl hR')
   · refine Or.inr (Or.inr fun p hp => ?_)
     by_contra hcon
-    exact hJ p (not_le.mp hcon) hp
+    refine hJ p ⟨⟨?_, ?_⟩, not_le.mp hcon⟩ hp
+    · exact le_trans (hlow i.castSucc) hp.1.le
+    · exact le_trans hp.2.le (hhigh i.succ)
 
 /-! ### The boundary term needs no hypothesis of its own
 
@@ -17247,6 +17332,306 @@ theorem SkorokhodSpace.min_iSup_edist_leftLim_le_three_mul_modulusBased_postcomp
     (SkorokhodSpace.basePointOsc_le_three_mul_modulusBased _ hm)) le_rfl
   rw [SkorokhodSpace.basePointOsc]
   exact le_self_add
+
+/-! ### The converse half, which is the bookkeeping and no longer the chain
+
+The three statements above bound, by the based modulus of **one** image path,
+every quantity of the path that
+`SkorokhodSpace.modulusBased_le_of_forall_min_edist_lt` asks about.  What is left
+is the order of the choices, and it does not commute: `ε`, then the window radius
+`m`, then the level `η`, then the tolerance `ρ` of the net, then the compact set
+`K` compact containment supplies, then the net and its `N` test functions, and
+only then the scale `δ` as the least of the `N` answers.
+
+`SkorokhodSpace.exists_pos_forall_le` is that last step and nothing more: `N`
+positive scales have a positive lower bound. -/
+theorem SkorokhodSpace.exists_pos_forall_le {α : Type*} (s : Finset α) (g : α → ℝ)
+    (hg : ∀ x ∈ s, 0 < g x) : ∃ d : ℝ, 0 < d ∧ ∀ x ∈ s, d ≤ g x := by
+  classical
+  induction s using Finset.induction_on with
+  | empty => exact ⟨1, one_pos, by simp⟩
+  | insert a s ha ih =>
+      obtain ⟨d, hd, hdle⟩ := ih fun x hx => hg x (Finset.mem_insert_of_mem hx)
+      refine ⟨min d (g a), lt_min hd (hg a (Finset.mem_insert_self a s)), fun x hx => ?_⟩
+      rcases Finset.mem_insert.1 hx with rfl | hx'
+      · exact min_le_right _ _
+      · exact le_trans (min_le_left _ _) (hdle x hx')
+
+/-- **Tightness travels backwards under post-composition**, which is the converse
+half of `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` and the substance
+of it: the forward half is `SkorokhodSpace.isTightMeasureSet_map_postcomp` and
+one line of `MeasureTheory.IsTightMeasureSet.map`.
+
+**Compact containment is a hypothesis and is not removable**: the laws of the
+constant paths at height `n` have tight images under every bounded continuous `h`
+and are not tight.  It enters in the shape
+`SkorokhodSpace.isTightMeasureSet_iff` states it, which is where it is used, and
+it is the first of the two clauses of that criterion verbatim.
+
+**The test class is asked for less than density**, and that is deliberate.  What
+the proof reads off `H` is one function per net point of the compact set, within
+`ρ` of the clipped distance `SkorokhodSpace.clipDist x` **on that compact set**
+and nowhere else.  A class dense for uniform convergence on compact sets delivers
+exactly that; a consumer holding density discharges the hypothesis, and one
+holding less may still use the theorem.  The `H`-free reading is
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp`, where the clipped
+distances are their own approximants.
+
+The arithmetic, so that no run rediscovers it.  With `c = min η 1 / 64`: the
+three point quantity of the path is below `4 * c` by
+`SkorokhodSpace.min_edist_le_two_mul_modulusBased_postcomp` (`2 * c` from the
+image modulus, `c` from the net), each half of the boundary term is at most
+`4 * c` by the two statements above (`3 * c` and `c`), and
+`SkorokhodSpace.modulusBased_le_of_forall_min_edist_lt` turns that into
+`4 * (4 * c) + 2 * (8 * c) = 32 * c < 64 * c = min η 1`.  The cap at `1` that
+links 2 and 3 carry is removed at each step by `4 * c ≤ 1`, which is where the
+level is cut down to `min η 1` and why it is cut down at all.
+
+The exceptional sets are `1 + N`: one for compact containment at `ε / 2`, and `N`
+for the image moduli at `ε / 2 / N`, added by `measure_biUnion_finset_le` and
+`ENNReal.mul_div_le`.  **No set is asked to be measurable**, and none is: the bad
+set of a modulus is an infimum over an uncountable family of subdivisions.  The
+image bound travels to the path by `MeasureTheory.Measure.le_map_apply`
+(`Mathlib/MeasureTheory/Measure/Map.lean:218`), which is the inequality that
+holds for an arbitrary set, and not by `Measure.map_apply`, which would ask for
+one. -/
+theorem SkorokhodSpace.isTightMeasureSet_of_isTightMeasureSet_map_postcomp
+    [CompleteSpace E] {S : Set (Measure D(ℝ, E))} {H : Set (E →ᵇ ℝ)}
+    (hcc : ∀ ε : ℝ≥0∞, 0 < ε → ∀ m : ℕ, ∃ K : Set E, IsCompact K ∧ ∀ μ ∈ S,
+      μ {f : D(ℝ, E) | ∀ t ∈ exhaustion (0 : ℝ) (m : ℝ), f.toFun t ∈ K}ᶜ ≤ ε)
+    (hH : ∀ K : Set E, IsCompact K → ∀ (x : E) (ρ : ℝ), 0 < ρ → ∃ h ∈ H,
+      ∀ y ∈ K, dist (h y) (SkorokhodSpace.clipDist x y) ≤ ρ)
+    (himg : ∀ h ∈ H, IsTightMeasureSet
+      ((fun μ : Measure D(ℝ, E) => μ.map (SkorokhodSpace.postcomp h.toContinuousMap)) '' S)) :
+    IsTightMeasureSet S := by
+  classical
+  rw [SkorokhodSpace.isTightMeasureSet_iff]
+  intro ε hε m
+  refine ⟨hcc ε hε m, ?_⟩
+  intro η hη
+  suffices hsuff : ∃ δ : ℝ, 0 < δ ∧ ∀ μ ∈ S,
+      μ {f : D(ℝ, E) | min η 1 ≤ SkorokhodSpace.modulusBased (0 : ℝ) (m : ℝ) f δ} ≤ ε by
+    obtain ⟨δ, hδ, hle⟩ := hsuff
+    exact ⟨δ, hδ, fun μ hμ => le_trans (measure_mono fun f hf =>
+      le_trans (min_le_left η 1) hf) (hle μ hμ)⟩
+  -- the level, cut down to at most `1`, and the sixty-fourth of it the chain spends
+  have hη'pos : (0 : ℝ≥0∞) < min η 1 := lt_min hη one_pos
+  have hη'le : min η 1 ≤ 1 := min_le_right _ _
+  have hη'top : min η 1 ≠ ⊤ := ne_top_of_le_ne_top ENNReal.one_ne_top hη'le
+  set c : ℝ≥0∞ := min η 1 / 64 with hcdef
+  have hcpos : 0 < c := ENNReal.div_pos hη'pos.ne' (by norm_num)
+  have hctop : c ≠ ⊤ := (ENNReal.div_lt_top hη'top (by norm_num)).ne
+  have hc64 : 64 * c = min η 1 := ENNReal.mul_div_cancel (by norm_num) (by norm_num)
+  have hc464 : (4 : ℝ≥0∞) * c ≤ 64 * c := by gcongr; norm_num
+  have hc4 : 4 * c ≤ 1 := le_trans (le_trans hc464 hc64.le) hη'le
+  -- the tolerance of the net, in the real numbers
+  set ρ : ℝ := c.toReal / 4 with hρdef
+  have hρpos : 0 < ρ := by
+    have := ENNReal.toReal_pos hcpos.ne' hctop
+    rw [hρdef]; linarith
+  have hρc : ENNReal.ofReal (4 * ρ) = c := by
+    rw [hρdef, show 4 * (c.toReal / 4) = c.toReal by ring, ENNReal.ofReal_toReal hctop]
+  -- the two window radii
+  set M : ℕ := 2 * m + 6 with hMdef
+  set M₁ : ℕ := M + 1 with hM₁def
+  have hM₁nn : (0 : ℝ) ≤ (M₁ : ℝ) := Nat.cast_nonneg _
+  have hMM₁ : (M : ℝ) + 1 = (M₁ : ℝ) := by rw [hM₁def]; push_cast; ring
+  have hM₁pos : (0 : ℝ) < (M₁ : ℝ) := by
+    rw [hM₁def, hMdef]; push_cast; linarith [Nat.cast_nonneg (α := ℝ) m]
+  obtain ⟨K, hK, hKle⟩ := hcc (ε / 2) (ENNReal.div_pos hε.ne' (by norm_num)) M₁
+  obtain ⟨net, -, hnetfin, hnetcov⟩ := finite_cover_balls_of_compact hK hρpos
+  set s : Finset E := hnetfin.toFinset with hsdef
+  have hnet : ∀ v ∈ K, ∃ x ∈ s, dist v x ≤ ρ := by
+    intro v hv
+    obtain ⟨x, hxnet, hxv⟩ := Set.mem_iUnion₂.1 (hnetcov hv)
+    exact ⟨x, by rw [hsdef, Set.Finite.mem_toFinset]; exact hxnet,
+      le_of_lt (Metric.mem_ball.1 hxv)⟩
+  -- one test function per net point, and one scale per test function
+  choose tf htfH htfapp using fun x : E => hH K hK x ρ hρpos
+  have hδex : ∀ x : E, ∃ d : ℝ, 0 < d ∧ ∀ μ ∈ S,
+      μ.map (SkorokhodSpace.postcomp (tf x).toContinuousMap)
+        {g : D(ℝ, ℝ) | c ≤ SkorokhodSpace.modulusBased (0 : ℝ) (M₁ : ℝ) g d}
+        ≤ ε / 2 / (s.card : ℝ≥0∞) := by
+    intro x
+    have hpos : (0 : ℝ≥0∞) < ε / 2 / (s.card : ℝ≥0∞) :=
+      ENNReal.div_pos (ENNReal.div_pos hε.ne' (by norm_num)).ne' (by finiteness)
+    obtain ⟨d, hd, hdle⟩ :=
+      ((SkorokhodSpace.isTightMeasureSet_iff).1 (himg (tf x) (htfH x)) _ hpos M₁).2 c hcpos
+    exact ⟨d, hd, fun μ hμ => hdle _ ⟨μ, hμ, rfl⟩⟩
+  choose dfun hdpos hdle using hδex
+  obtain ⟨d₀, hd₀pos, hd₀le⟩ := SkorokhodSpace.exists_pos_forall_le s dfun fun x _ => hdpos x
+  refine ⟨min (1 / 2) (d₀ / 2), lt_min (by norm_num) (by linarith), fun μ hμ => ?_⟩
+  set δ : ℝ := min (1 / 2) (d₀ / 2) with hδdef
+  have hδpos : 0 < δ := lt_min (by norm_num) (by linarith)
+  have hδhalf : δ ≤ 1 / 2 := min_le_left _ _
+  have h2δ : ∀ x ∈ s, 2 * δ ≤ dfun x := by
+    intro x hx
+    have h1 := hd₀le x hx
+    have h2 : δ ≤ d₀ / 2 := min_le_right _ _
+    linarith
+  -- the bad set sits inside the failure of compact containment together with the
+  -- `s.card` failures of the image moduli
+  have hsub : {f : D(ℝ, E) | min η 1 ≤ SkorokhodSpace.modulusBased (0 : ℝ) (m : ℝ) f δ}
+      ⊆ {f : D(ℝ, E) | ∀ t ∈ exhaustion (0 : ℝ) (M₁ : ℝ), f.toFun t ∈ K}ᶜ
+        ∪ ⋃ x ∈ s, (SkorokhodSpace.postcomp (tf x).toContinuousMap) ⁻¹'
+            {g : D(ℝ, ℝ) | c ≤ SkorokhodSpace.modulusBased (0 : ℝ) (M₁ : ℝ) g (2 * δ)} := by
+    intro f hf
+    by_contra hcon
+    rw [Set.mem_union] at hcon
+    push Not at hcon
+    obtain ⟨hG, hA⟩ := hcon
+    rw [Set.mem_compl_iff, not_not] at hG
+    have himgsmall : ∀ x ∈ s, SkorokhodSpace.modulusBased (0 : ℝ) (M₁ : ℝ)
+        (SkorokhodSpace.postcomp (tf x).toContinuousMap f) (2 * δ) < c := by
+      intro x hx
+      rw [Set.mem_iUnion₂] at hA
+      push Not at hA
+      have hnot := hA x hx
+      simp only [Set.mem_preimage, Set.mem_ofPred_eq, not_le] at hnot
+      exact hnot
+    -- the values of the path over the window lie in the compact set
+    have hKmem : ∀ t : ℝ, -(M₁ : ℝ) ≤ t → t ≤ (M₁ : ℝ) → f.toFun t ∈ K := by
+      intro t h1 h2
+      refine hG t ?_
+      rw [exhaustion, Metric.mem_closedBall, Real.dist_eq, abs_le, max_eq_left hM₁nn]
+      exact ⟨by linarith, by linarith⟩
+    -- link 1's hypothesis, on the window it is read at
+    have hthree : ∀ t₁ t t₂ : ℝ, -(M : ℝ) ≤ t₁ → t₂ ≤ (M : ℝ) → t₁ ≤ t → t ≤ t₂ →
+        t₂ - t₁ ≤ 2 * δ →
+        min (edist (f.toFun t) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun t)) < 4 * c := by
+      intro t₁ t t₂ hlo hhi h1 h2 hspan
+      obtain ⟨x, hxs, hxd⟩ := hnet _ (hKmem t (by linarith) (by linarith))
+      have key := SkorokhodSpace.min_edist_le_two_mul_modulusBased_postcomp
+        hρpos.le f (M₁ : ℝ) h1 h2 hspan
+        (by rw [exhaustionMin_real, max_eq_left hM₁nn]; linarith)
+        (by rw [exhaustionMax_real, max_eq_left hM₁nn]; linarith)
+        (h := tf x)
+        (htfapp x _ (hKmem t₁ (by linarith) (by linarith)))
+        (htfapp x _ (hKmem t (by linarith) (by linarith)))
+        (htfapp x _ (hKmem t₂ (by linarith) (by linarith))) hxd
+      rw [hρc] at key
+      have hlt : 2 * SkorokhodSpace.modulusBased (0 : ℝ) (M₁ : ℝ)
+          (SkorokhodSpace.postcomp (tf x).toContinuousMap f) (2 * δ) + c < 4 * c := by
+        refine lt_trans (ENNReal.add_lt_add_right hctop
+          (ENNReal.mul_lt_mul_right (by norm_num) (by norm_num) (himgsmall x hxs))) ?_
+        calc (2 : ℝ≥0∞) * c + c = 3 * c := by ring
+          _ < 4 * c := ENNReal.mul_lt_mul_left hcpos.ne' hctop (by norm_num)
+      by_contra hq
+      rw [not_lt] at hq
+      exact absurd (le_trans (le_min hq hc4) key) (not_le.2 hlt)
+    -- the boundary term, each half at its own centre
+    have hleftLim : Function.leftLim f.toFun 0 ∈ K := by
+      refine hK.isClosed.mem_of_tendsto (f.isCadlag.tendsto_nhdsLT_leftLim 0) ?_
+      have hmem : Set.Ioo (-(M₁ : ℝ)) 0 ∈ 𝓝[<] (0 : ℝ) := by
+        have h1 : Set.Ioi (-(M₁ : ℝ)) ∈ 𝓝 (0 : ℝ) :=
+          isOpen_Ioi.mem_nhds (by simp only [Set.mem_Ioi]; linarith)
+        have h2 := inter_mem_nhdsWithin (Set.Iio (0 : ℝ)) h1
+        rwa [Set.inter_comm, Set.Ioi_inter_Iio] at h2
+      filter_upwards [hmem] with r hr using hKmem r hr.1.le (by linarith [hr.2])
+    have hbpR : (⨆ r ∈ Set.Ico (0 : ℝ) (0 + 2 * δ), edist (f.toFun r) (f.toFun 0)) ≤ 4 * c := by
+      obtain ⟨x, hxs, hxd⟩ := hnet _ (hKmem 0 (by linarith) (by linarith))
+      have key := SkorokhodSpace.min_iSup_edist_le_three_mul_modulusBased_postcomp
+        hρpos.le f hM₁pos (2 * δ) (h := tf x)
+        (fun r hr => htfapp x _ (hKmem r (by linarith [hr.1]) (by linarith [hr.2])))
+        (htfapp x _ (hKmem 0 (by linarith) (by linarith))) hxd
+      rw [hρc] at key
+      have hlt : 3 * SkorokhodSpace.modulusBased (0 : ℝ) (M₁ : ℝ)
+          (SkorokhodSpace.postcomp (tf x).toContinuousMap f) (2 * δ) + c < 4 * c := by
+        refine lt_of_lt_of_le (ENNReal.add_lt_add_right hctop
+          (ENNReal.mul_lt_mul_right (by norm_num) (by norm_num) (himgsmall x hxs))) ?_
+        exact le_of_eq (by ring)
+      by_contra hq
+      rw [not_le] at hq
+      exact absurd (le_trans (le_min hq.le hc4) key) (not_le.2 hlt)
+    have hbpL : (⨆ r ∈ Set.Ico (0 - 2 * δ) (0 : ℝ),
+        edist (f.toFun r) (Function.leftLim f.toFun 0)) ≤ 4 * c := by
+      obtain ⟨x, hxs, hxd⟩ := hnet _ hleftLim
+      have key := SkorokhodSpace.min_iSup_edist_leftLim_le_three_mul_modulusBased_postcomp
+        hρpos.le f hM₁pos (2 * δ) (h := tf x)
+        (fun r hr => htfapp x _ (hKmem r (by linarith [hr.1]) (by linarith [hr.2])))
+        (htfapp x _ hleftLim) hxd
+      rw [hρc] at key
+      have hlt : 3 * SkorokhodSpace.modulusBased (0 : ℝ) (M₁ : ℝ)
+          (SkorokhodSpace.postcomp (tf x).toContinuousMap f) (2 * δ) + c < 4 * c := by
+        refine lt_of_lt_of_le (ENNReal.add_lt_add_right hctop
+          (ENNReal.mul_lt_mul_right (by norm_num) (by norm_num) (himgsmall x hxs))) ?_
+        exact le_of_eq (by ring)
+      by_contra hq
+      rw [not_le] at hq
+      exact absurd (le_trans (le_min hq.le hc4) key) (not_le.2 hlt)
+    have hbp : SkorokhodSpace.basePointOsc (0 : ℝ) f (2 * δ) ≤ 8 * c := by
+      rw [SkorokhodSpace.basePointOsc]
+      calc (⨆ r ∈ Set.Ico (0 - 2 * δ) (0 : ℝ), edist (f.toFun r) (Function.leftLim f.toFun 0))
+            + ⨆ r ∈ Set.Ico (0 : ℝ) (0 + 2 * δ), edist (f.toFun r) (f.toFun 0)
+          ≤ 4 * c + 4 * c := add_le_add hbpL hbpR
+        _ = 8 * c := by ring
+    have hRw : 2 * max (m : ℝ) 0 + 6 * δ ≤ (M : ℝ) := by
+      rw [hMdef, max_eq_left (Nat.cast_nonneg m : (0 : ℝ) ≤ (m : ℝ))]
+      push_cast
+      linarith
+    have hlink := SkorokhodSpace.modulusBased_le_of_forall_min_edist_lt f hδpos
+      (η := 4 * c) (ENNReal.mul_pos (by norm_num) hcpos.ne') (m : ℝ) hRw hthree
+    have hstep : (2 : ℝ≥0∞) * SkorokhodSpace.basePointOsc (0 : ℝ) f (2 * δ) ≤ 16 * c := by
+      calc (2 : ℝ≥0∞) * SkorokhodSpace.basePointOsc (0 : ℝ) f (2 * δ)
+          ≤ 2 * (8 * c) := by gcongr
+        _ = 16 * c := by ring
+    have hfinal : SkorokhodSpace.modulusBased (0 : ℝ) (m : ℝ) f δ < min η 1 :=
+      calc SkorokhodSpace.modulusBased (0 : ℝ) (m : ℝ) f δ
+          ≤ 4 * (4 * c) + 2 * SkorokhodSpace.basePointOsc (0 : ℝ) f (2 * δ) := hlink
+        _ ≤ 4 * (4 * c) + 16 * c := add_le_add le_rfl hstep
+        _ = 32 * c := by ring
+        _ < 64 * c := ENNReal.mul_lt_mul_left hcpos.ne' hctop (by norm_num)
+        _ = min η 1 := hc64
+    exact absurd hf (not_le.2 hfinal)
+  refine le_trans (measure_mono hsub) (le_trans (measure_union_le _ _) ?_)
+  have h1 : μ {f : D(ℝ, E) | ∀ t ∈ exhaustion (0 : ℝ) (M₁ : ℝ), f.toFun t ∈ K}ᶜ ≤ ε / 2 :=
+    hKle μ hμ
+  have h2 : μ (⋃ x ∈ s, (SkorokhodSpace.postcomp (tf x).toContinuousMap) ⁻¹'
+      {g : D(ℝ, ℝ) | c ≤ SkorokhodSpace.modulusBased (0 : ℝ) (M₁ : ℝ) g (2 * δ)}) ≤ ε / 2 := by
+    refine le_trans (measure_biUnion_finset_le s _) ?_
+    refine le_trans (Finset.sum_le_card_nsmul s _ (ε / 2 / (s.card : ℝ≥0∞)) ?_) ?_
+    · intro x hx
+      refine le_trans (Measure.le_map_apply
+        (SkorokhodSpace.measurable_postcomp (tf x).toContinuousMap).aemeasurable _) ?_
+      refine le_trans (measure_mono ?_) (hdle x μ hμ)
+      intro g hg
+      exact le_trans hg (SkorokhodSpace.modulusBased_mono _ _ _ (h2δ x hx))
+    · rw [nsmul_eq_mul]
+      exact ENNReal.mul_div_le
+  calc μ {f : D(ℝ, E) | ∀ t ∈ exhaustion (0 : ℝ) (M₁ : ℝ), f.toFun t ∈ K}ᶜ
+        + μ (⋃ x ∈ s, (SkorokhodSpace.postcomp (tf x).toContinuousMap) ⁻¹'
+            {g : D(ℝ, ℝ) | c ≤ SkorokhodSpace.modulusBased (0 : ℝ) (M₁ : ℝ) g (2 * δ)})
+      ≤ ε / 2 + ε / 2 := add_le_add h1 h2
+    _ = ε := ENNReal.add_halves ε
+
+/-- **Stage (B) of Milestone 8, both halves.**  Under compact containment a family
+of laws on `D(ℝ, E)` is tight if and only if all of its real valued images are.
+
+The forward half is `MeasureTheory.IsTightMeasureSet.map` with
+`SkorokhodSpace.continuous_postcomp`, and holds without compact containment; the
+converse is `SkorokhodSpace.isTightMeasureSet_of_isTightMeasureSet_map_postcomp`
+and does not, the laws of the constant paths at height `n` having tight images
+under every bounded continuous map.
+
+**The test class here is all of `E →ᵇ ℝ`**, and the clipped distances
+`SkorokhodSpace.clipDist x` are then their own approximants, so the density
+hypothesis of the general statement is discharged at `ρ` with room to spare.  A
+consumer with a class `H` dense for uniform convergence on compact sets uses the
+general statement instead; what it asks of `H` is a bound on the compact set
+compact containment supplies and nowhere else. -/
+theorem SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp [CompleteSpace E]
+    {S : Set (Measure D(ℝ, E))}
+    (hcc : ∀ ε : ℝ≥0∞, 0 < ε → ∀ m : ℕ, ∃ K : Set E, IsCompact K ∧ ∀ μ ∈ S,
+      μ {f : D(ℝ, E) | ∀ t ∈ exhaustion (0 : ℝ) (m : ℝ), f.toFun t ∈ K}ᶜ ≤ ε) :
+    IsTightMeasureSet S ↔ ∀ h : E →ᵇ ℝ, IsTightMeasureSet
+      ((fun μ : Measure D(ℝ, E) => μ.map (SkorokhodSpace.postcomp h.toContinuousMap)) '' S) := by
+  constructor
+  · intro htight h
+    exact htight.map (SkorokhodSpace.continuous_postcomp h.toContinuousMap)
+  · intro himg
+    refine SkorokhodSpace.isTightMeasureSet_of_isTightMeasureSet_map_postcomp
+      (H := Set.univ) hcc (fun K _ x ρ hρ => ⟨SkorokhodSpace.clipDist x, Set.mem_univ _,
+        fun y _ => by simp [hρ.le]⟩) fun h _ => himg h
 
 /-! ## Milestone 9: the nonnegative index inside the real one
 

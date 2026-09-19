@@ -3689,6 +3689,41 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   of the `N` applications add up to `ε`. The order of the choices is `ε`, `m`,
   `η`, `ρ`, `K`, `N`, `δ`, and it does not commute.
 
+  **Stage (B) is closed, 2026-09-19**, in both halves:
+  `SkorokhodSpace.isTightMeasureSet_of_isTightMeasureSet_map_postcomp` is the
+  converse and `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` the
+  equivalence, the test class of the latter being all of `E →ᵇ ℝ`, where the
+  clipped distances are their own approximants.
+
+  The arithmetic, so that it is not rediscovered: with `c = min η 1 / 64` the
+  three point quantity of the path is below `4 * c`, each half of the boundary
+  term is at most `4 * c`, and link 1 turns that into
+  `4 * (4 * c) + 2 * (8 * c) = 32 * c < 64 * c = min η 1`. The level is cut down
+  to `min η 1` for one reason and it is not tidiness: links 2 and 3 carry a cap
+  at `1`, and `4 * c ≤ 1` is what removes it. The window radii are `2 * m + 6`
+  for the values and one more for the image moduli, the strict upper end of
+  `SkorokhodSpace.min_edist_le_two_mul_modulusBased` needing the room.
+
+  **The hypothesis on the test class is weaker than density and is what the
+  proof reads**: for every compact `K`, every `x` and every `ρ > 0` some `h ∈ H`
+  is within `ρ` of `SkorokhodSpace.clipDist x` **on `K`**. Density for uniform
+  convergence on compact sets delivers it; nothing else is used.
+
+  **And link 1 had to be weakened first.** It asked its three point hypothesis at
+  every triple of `ℝ`, and the chain supplies it only on a window — the based
+  modulus of an image path says nothing about times outside the window its
+  subdivisions cover. The hypothesis is now read on `Set.Icc (-R) R` with
+  `R ≥ 2 * max m 0 + 6 * δ`, which is what
+  `SkorokhodSpace.exists_subdivision_of_separated` now bounds the nodes by
+  (`SkorokhodSpace.node_le_add_two_mul`, `SkorokhodSpace.sub_two_mul_le_pnode`,
+  and `a = ⌈u / δ⌉₊ + 1` in place of any natural number above `u / δ`), plus the
+  `2 * δ` that the separation of the large jumps reads to the left of the later
+  jump. The same window travels through
+  `SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt`, which asks its nodes
+  to lie in it, `SkorokhodSpace.two_mul_le_sub_of_forall_min_edist_lt` and
+  `SkorokhodSpace.separated_setOf_lt_edist_leftLim`, whose separated set is now
+  the large jumps **inside** the window.
+
 **Acceptance examples.**
 
 * **The invariance principle, which is what the milestone is for.** This is the

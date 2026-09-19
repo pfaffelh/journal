@@ -10638,10 +10638,60 @@ had no declaration at all, and they are needed in this order:
    the compact set compact containment supplies. The positivity of `ρ` went with
    it, having never been used.
 
-Only then does `isTight_map_postcomp_of_exists_martingale` have a conclusion it
-can reach, and `isRelativelyCompact_of_approx` an input. **The order of work is
-therefore Milestone 8 of SkorokhodSpace first**, and what is left of it is item
-3 alone.
+   **This item is closed, 2026-09-19.**
+   `SkorokhodSpace.isTightMeasureSet_of_isTightMeasureSet_map_postcomp` is the
+   converse and `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` the
+   equivalence this item names, the latter with the test class `E →ᵇ ℝ`, where
+   the clipped distances are their own approximants. Compact containment is a
+   hypothesis of both and is not removable.
+
+   **What held it up at the end was not the bookkeeping but link 1**, which asked
+   its three point hypothesis at every triple of `ℝ` — a level at which no
+   consumer has it, the based modulus of an image path saying nothing about times
+   outside the window its subdivisions cover. It is now read on
+   `Set.Icc (-R) R` with `R ≥ 2 * max m 0 + 6 * δ`, the nodes being confined to
+   `2 * u + 4 * δ` around the base point by
+   `SkorokhodSpace.exists_subdivision_of_separated`, and the same window travels
+   through `SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt`,
+   `SkorokhodSpace.two_mul_le_sub_of_forall_min_edist_lt` and
+   `SkorokhodSpace.separated_setOf_lt_edist_leftLim`.
+
+   The arithmetic, with `c = min η 1 / 64`:
+   `4 * (4 * c) + 2 * (8 * c) = 32 * c < 64 * c = min η 1`. The level is cut down
+   to `min η 1` because links 2 and 3 are capped at `1` and `4 * c ≤ 1` is what
+   removes the cap. **No exceptional set is measurable**, and none has to be: the
+   image bound reaches the path by `MeasureTheory.Measure.le_map_apply`, which
+   holds for an arbitrary set.
+
+Item 3 is **closed**, 2026-09-19, so
+`isTight_map_postcomp_of_exists_martingale` has a conclusion it can reach and
+`isRelativelyCompact_of_approx` an input.
+
+**What a run at either has to do first, and it is measured and not guessed:
+the two compact containments are not the same statement.** `CompactContainment`
+of this file is about a **process** under **one** measure, over a **one sided**
+window along a set `D`, and with a real `ε`:
+
+> `∀ ε > 0, ∀ T, ∃ K, IsCompact K ∧ 1 - ε < (P {ω | ∀ t ∈ Set.Iic T ∩ D, X t ω ∈ K}).toReal`
+
+The hypothesis `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` carries is
+about a **set of laws on the path space**, over the **two sided** window
+`exhaustion 0 m` and every time in it, with `ε : ℝ≥0∞` and the complement:
+
+> `∀ ε > 0, ∀ m : ℕ, ∃ K, IsCompact K ∧ ∀ μ ∈ S, μ {f | ∀ t ∈ exhaustion 0 m, f t ∈ K}ᶜ ≤ ε`
+
+Four differences, and three of them are translation: the measure of the
+complement against `1 -` the measure, `ℝ≥0∞` against `ℝ`, and one law against a
+family — the family version has to be **uniform in `n`**, which
+`CompactContainment` as stated does not express at all, being a predicate on one
+process. The fourth is not translation: the window. Over the index `ℝ≥0` the two
+sided window reaches times the one sided one does not, and the passage is
+Milestone 9 of **SkorokhodSpace** — under
+`SkorokhodSpace.isClosedEmbedding_extendNNReal` a path is continued to the
+negative axis by its value at `0`, so the negative half of the window is
+answered by the time `0` and by nothing else. A run at Milestone 11 states the
+uniform, path space form first and derives it; it does not read
+`CompactContainment` into the criterion directly.
 
 * `mpSolution_of_tendsto_cadlag`: let `A ⊆ Cb(E) × Cb(E)` and let `A n` be
   relations between bounded measurable functions such that for every `(f,g) ∈ A`

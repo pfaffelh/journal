@@ -66,7 +66,13 @@ FILES = ['WeakConvergence', 'SkorokhodSpace', 'MartingaleProblems']
 
 os.makedirs(OUT, exist_ok=True)
 shutil.rmtree(RUNDIR, ignore_errors=True)
-atexit.register(shutil.rmtree, RUNDIR, True)
+# Der eigene Baum wird am Ende geräumt -- außer ein Entwicklungslauf verlangt ihn
+# zurück.  `check_axioms_master.py` und `dev_check_master.py` brauchen die
+# gebauten `.olean`, und seit der Baum je Aufruf angelegt wird, finden sie ihn
+# nur, wenn er stehenbleibt und sein Pfad genannt wird.
+KEEP = os.environ.get('CHECK_MASTER_KEEP') == '1'
+if not KEEP:
+    atexit.register(shutil.rmtree, RUNDIR, True)
 for f in FILES:
     os.makedirs(os.path.join(SRCDIR, f), exist_ok=True)
     shutil.copy(os.path.join(BASE, f, 'Suggested.lean'),
@@ -144,6 +150,8 @@ print(text)
 # Fehler lassen den Lauf ebenfalls scheitern.  Das steht nicht im Auftrag, der
 # nur die Veraltungen verlangte, ist aber dieselbe Falle: ein Prüfskript, das
 # bei Fehlern rc 0 zurückgibt, sieht von außen wie ein sauberer Durchlauf aus.
+if KEEP:
+    print(f'CHECK_TREE={RUNDIR}/_lean_master')
 bad = sum(len(v) for v in deprecated.values())
 if bad:
     print(f'FEHLSCHLAG: {bad} veraltete Namen in der Kette. '

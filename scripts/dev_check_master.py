@@ -31,11 +31,17 @@ if len(sys.argv) not in (2, 3):
 SRC = os.path.abspath(sys.argv[1])
 MW = os.path.abspath(sys.argv[2] if len(sys.argv) > 2
                      else os.path.expanduser('~/Code/lean/mathlib-master'))
-BUILD = os.path.join(MW, '_lean_master')
+# Seit `check_master.py` je Aufruf einen eigenen Baum anlegt (2026-09-19), liegt
+# der gebaute Baum nicht mehr fest unter `<worktree>/_lean_master`.  `CHECK_TREE`
+# nimmt den Pfad auf, den ein Lauf mit `CHECK_MASTER_KEEP=1` stehenläßt und am
+# Ende als `CHECK_TREE=…` nennt.
+BUILD = os.environ.get('CHECK_TREE', os.path.join(MW, '_lean_master'))
 DEST = os.path.join(MW, 'TauCetiRoadmap', '_Dev.lean')
 
 if not os.path.isdir(BUILD):
-    raise SystemExit(f'{BUILD} fehlt -- erst `python3 scripts/check_master.py` laufen lassen.')
+    raise SystemExit(f'{BUILD} fehlt -- erst `CHECK_MASTER_KEEP=1 python3 '
+                     'scripts/check_master.py` laufen lassen und dessen '
+                     '`CHECK_TREE=…` in die Umgebung übernehmen.')
 
 os.makedirs(os.path.dirname(DEST), exist_ok=True)
 if os.path.abspath(SRC) != os.path.abspath(DEST):
