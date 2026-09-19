@@ -40,7 +40,7 @@ Stilfragen.
 Sie filtert nicht und schneidet nicht ab.  `| head -N` ist verboten: ein
 abgeschnittener Durchlauf sieht wie ein fehlerfreier aus.
 """
-import collections, os, re, shutil, subprocess, sys, time
+import atexit, collections, os, re, shutil, subprocess, sys, time
 
 MW = os.path.abspath(sys.argv[1] if len(sys.argv) > 1
                      else os.path.expanduser('~/Code/lean/mathlib-master'))
@@ -52,13 +52,21 @@ JOURNAL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE = os.path.join(JOURNAL, 'Journal/Blog/MartingaleProblem/TauCeti')
 OUT = os.path.join(JOURNAL, 'scripts/_citations')
 PREFIX = 'TauCetiRoadmap'
-SRCDIR = os.path.join(MW, PREFIX)
-BUILD = os.path.join(MW, '_lean_master')
+# Jeder Aufruf bekommt seinen eigenen Baum unterhalb des Worktrees.  Der Grund
+# ist gemessen, nicht vorsorglich: am 2026-09-19 liefen der Cron-Lauf und der
+# Hauptcheckout in derselben Minute, beide kopierten nach `<MW>/TauCetiRoadmap/`
+# und ueberschrieben einander Quellen und `.olean`.  Die Zahlen mussten allein
+# nachgemessen werden.  `lean` verlangt nur, dass die Eingabedatei *unterhalb*
+# des Wurzelverzeichnisses liegt, nicht unmittelbar darin -- eine Ebene mehr
+# kostet also nichts und erlaubt parallele Aufrufe.
+RUNDIR = os.path.join(MW, f'_check_{os.getpid()}')
+SRCDIR = os.path.join(RUNDIR, PREFIX)
+BUILD = os.path.join(RUNDIR, '_lean_master')
 FILES = ['WeakConvergence', 'SkorokhodSpace', 'MartingaleProblems']
 
 os.makedirs(OUT, exist_ok=True)
-shutil.rmtree(BUILD, ignore_errors=True)
-shutil.rmtree(SRCDIR, ignore_errors=True)
+shutil.rmtree(RUNDIR, ignore_errors=True)
+atexit.register(shutil.rmtree, RUNDIR, True)
 for f in FILES:
     os.makedirs(os.path.join(SRCDIR, f), exist_ok=True)
     shutil.copy(os.path.join(BASE, f, 'Suggested.lean'),
