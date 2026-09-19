@@ -45236,3 +45236,320 @@ geblieben.
    gleichmäßige Fassung von `CompactContainment` an einer nichttrivialen Folge
    von Sprungprozessen vorführen. Sie ist von diesem Lauf unberührt und war schon
    dort als Rechnung und nicht als Theorie beschrieben.
+
+### 2026-09-20, zweiter Lauf des Tages — Doobs `Lᵖ`-Ungleichung steht, und der Weg dahin war nicht der angesagte: **die Schichtformel ein zweites Mal, unter dem gewichteten Maß**, ersetzt Fubini ganz; dazu die stetigzeitliche Maximalungleichung, bei der das **strikte** Niveau das primitive ist
+
+**Bearbeitet:** die Vorschläge 1 und 2 des Vorlaufs, beide, und in der
+umgekehrten Reihenfolge ihrer Numerierung, weil Vorschlag 2 die Eingabe von
+Vorschlag 1 im stetigzeitlichen Fall ist.
+
+Dreizehn neue Deklarationen in `MartingaleProblems/Suggested.lean` und eine
+umgebaute, zwei neue Abschnitte unter Meilenstein 9 (`Doob's maximal inequality
+in continuous time` und `Doob's Lᵖ inequality`), ein neuer Import
+(`Mathlib.Analysis.SpecialFunctions.Pow.Integral`). **Der Satz, den der
+Meilenstein bestellt hatte, steht** — Doobs `Lᵖ`-Ungleichung über dem ganzen
+Fenster `Set.Iic T`, nicht bloß über `ℕ`.
+
+#### Die Vorfrage von Vorschlag 1 ist mit „ja" zu beantworten, und zwar in beiden Fassungen
+
+Der Vorlauf hatte sie ausdrücklich als das genannt, was „zuerst zu prüfen ist
+und nicht zu raten": ob Mathlib die Schichtformel in der Gestalt hat, die der
+Beweis braucht. Es hat sie, und in zwei zueinander passenden Fassungen:
+
+* `MeasureTheory.lintegral_rpow_eq_lintegral_meas_le_mul`
+  (`Analysis/SpecialFunctions/Pow/Integral.lean:57`) und `…_lt_mul`
+  (`ibid.:91`):
+  `∫⁻ ω, ofReal (f ω ^ p) = ofReal p * ∫⁻ t in Ioi 0, μ {t ≤ f} * ofReal (t^(p-1))`,
+  ohne σ-Endlichkeit, für `AEMeasurable f` und `0 ≤ᵐ f`.
+* `MeasureTheory.lintegral_comp_eq_lintegral_meas_le_mul`
+  (`MeasureTheory/Integral/Layercake.lean:394`) und `…_lt_mul` (`ibid.:478`):
+  dieselbe Formel mit **beliebigem Gewicht** `g`, also
+  `∫⁻ ω, ofReal (∫ t in 0..f ω, g t) = ∫⁻ t in Ioi 0, μ {t ≤ f} * ofReal (g t)`.
+
+Damit war der Satz ein Lauf, wie der Vorlauf geschätzt hatte. Was er **nicht**
+vorhergesehen hatte, ist, daß die zweite Fassung den Fubini-Schritt ganz
+überflüssig macht.
+
+#### Der Befund: Fubini kommt nicht vor
+
+Der Lehrbuchbeweis setzt die Schwachtypschranke in die Schichtformel ein und
+vertauscht dann `∫ dt` mit `∫ dμ`. Der Vorlauf hatte dafür
+`lintegral_lintegral_swap` und ein Lebesgue-Integral von `t^(p-2)` über ein
+Intervall eingeplant — beides teuer. Beides entfällt:
+
+> Setzt man `ν = μ.withDensity (ENNReal.ofReal ∘ g)`, so **ist** `ν {t ≤ M}`
+> gleich `∫⁻_{t ≤ M} g` (`withDensity_apply`), und die Schichtformel mit
+> Gewicht `t^(p-2)`, **unter `ν` gelesen**, leistet die Vertauschung in einem
+> Schritt. `lintegral_withDensity_eq_lintegral_mul` liest das Ergebnis wieder
+> unter `μ`.
+
+Das innere Integral ist damit ein **Bochnersches** Intervallintegral,
+`∫ t in 0..M a, t^(p-2) = M a^(p-1)/(p-1)`, und dafür hat Mathlib
+`integral_rpow` und `intervalIntegral.intervalIntegrable_rpow'`. Die
+Bruchstelle, die der Vorlauf benannt hatte, gibt es nicht — sie war eine
+Bruchstelle des Lehrbuchwegs und nicht des Satzes.
+
+#### Was eingetragen ist
+
+* `lintegral_rpow_le_mul_lintegral_mul_rpow` — die Schichtformel, die
+  Schwachtypschranke Niveau für Niveau, die Schichtformel unter `ν`. Ergebnis
+  ist die Zwischenschranke durch `∫⁻ g · M^(p-1)`. **`g` wird nicht als
+  nichtnegativ vorausgesetzt**: es geht nur durch `ENNReal.ofReal (g a)` ein,
+  also durch seinen Positivteil, und die Hypothese spricht von diesem.
+* `lintegral_rpow_le_of_le_mul_lintegral_mul_rpow` — Hölder gegen
+  `q = p/(p-1)` und die Kürzung von `A^(1/q)`.
+* `lintegral_rpow_le_of_weak_type` — beide zusammen. **Sie trägt keine
+  Filtration, kein Submartingal und keine Wahrscheinlichkeit**: eine
+  nichtnegative meßbare `M`, deren Niveaumengen
+  `ofReal t * μ {t ≤ M} ≤ ∫⁻_{t ≤ M} ofReal g` für alle `t > 0` erfüllen,
+  erfüllt `∫⁻ M^p ≤ (p/(p-1))^p * ∫⁻ g^p`. Das ist der ganze Satz bis auf die
+  Eingabe, und deshalb steht er über einem nackten Maßraum: der diskrete und
+  der stetigzeitliche Fall teilen sich einen Beweis.
+* `Submartingale.lintegral_rpow_range_sup'_le` — die Instanz über `ℕ`, aus
+  Mathlibs `maximal_ineq` und `ofReal_integral_eq_lintegral_ofReal`.
+* `eLpNorm_le_of_lintegral_rpow_le` und `Submartingale.eLpNorm_range_sup'_le` —
+  dieselbe Instanz in der Gestalt, die der Meilenstein nennt,
+  `‖f*‖ₚ ≤ p/(p-1) · ‖f n‖ₚ`. Das erste ist die Stelle, an der die beiden
+  Schreibweisen aufeinandertreffen: `eLpNorm` liest `‖·‖ₑ`, der Kern liest
+  `ENNReal.ofReal`, und für eine nichtnegative Funktion stimmen sie überein
+  (`Real.enorm_eq_ofReal`).
+* `Submartingale.mul_measReal_lt_biSup_enorm_le` und
+  `Submartingale.mul_measReal_le_biSup_enorm_le` — Vorschlag 2, die
+  stetigzeitliche Maximalungleichung, und sie ist eine reine Zusammensetzung:
+  `biSup_enorm_Iic_eq_of_isRightContinuous` liest das Fenstersupremum längs
+  `insert T (Set.Iic T ∩ D)`, und diese abzählbare Menge trägt die Schranke
+  durch `Submartingale.mul_measReal_exists_ge_abs_le_countable`.
+
+#### Und ein Befund, der beim Anschließen auffiel: die Maximalungleichung dieses Projekts ist **nicht lokalisiert**, und die `Lᵖ`-Ungleichung braucht das
+
+`lintegral_rpow_le_of_weak_type` liest auf der rechten Seite
+`∫⁻ a in {t ≤ M a}, g a` — ein Integral **über die Niveaumenge**. Eine Schranke
+durch eine *Konstante* ist dort wertlos: in die Schichtformel eingesetzt gäbe
+sie `∫⁻ M^p ≤ C · ∫⁻ t^(p-2) dt`, und dieses Integral divergiert. Mathlibs
+`maximal_ineq` ist in genau diesem Sinn lokalisiert; unsere
+`mul_measReal_exists_ge_abs_le_countable` und die beiden stetigzeitlichen
+Fassungen sind es **nicht**, ihre rechte Seite ist `2 𝔼[(Y T)⁺] − 𝔼[Y R]`.
+
+Der Befund ist eingelöst, nicht nur notiert:
+
+* `Submartingale.mul_measReal_exists_ge_le_setIntegral` über `ℕ`. Sie steckte
+  bereits im Beweis der globalen Fassung und war dort nicht ausgesprochen —
+  dasselbe Muster wie beim Vorlauf, wo `mul_measReal_exists_ge_abs_le_countable`
+  als `have key` im Beweis von `ae_bddOn` stand.
+  `mul_measReal_exists_ge_le_integral_posPart` ist jetzt ihre einzeilige
+  Abschwächung, und der Beweis ist um dreißig Zeilen kürzer.
+* `Submartingale.mul_measReal_exists_ge_le_setIntegral_countable` über einer
+  beliebigen linearen Ordnung. **Zwei Schritte** trennen sie von der globalen
+  Fassung und nur zwei: die Niveaumenge eines endlichen Stücks liegt in
+  `𝓕 (max F)`, weil sie eine endliche Vereinigung von `{ε ≤ Y t}` mit
+  `t ≤ max F` ist — damit trägt die Submartingaleigenschaft das Integral von
+  `max F` nach `T` —, und die Integrale über die wachsenden Stücke werden vom
+  Integral über die Vereinigung dominiert, weil der Integrand nichtnegativ ist.
+
+**Der Preis ist die Einseitigkeit, und er hat denselben Grund wie der Wegfall
+der unteren Schranke.** Die lokalisierte Fassung hat keine untere
+Ordnungsschranke an `S` und spricht von `{∃ s ∈ S, ε ≤ Y s ω}` statt von
+`{∃ s ∈ S, ε ≤ |Y s ω|}`. Beides kommt daher, daß die **Minimalungleichung**,
+die die untere Schranke verbraucht, lokalisiert über die Niveaumenge von `−Y`
+liefe — einer *anderen* Menge —, und die beiden Schranken sich dann nicht
+addieren ließen.
+
+#### Und der Satz über dem ganzen Fenster, `Submartingale.lintegral_biSup_enorm_rpow_le` — **nicht** über eine stetigzeitliche Schwachtypschranke, sondern über monotone Konvergenz
+
+> `∫⁻ ω, (⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ) ^ r ∂P`
+> `  ≤ ENNReal.ofReal ((r/(r-1))^r) * ∫⁻ ω, ‖Y T ω‖ₑ ^ r ∂P`
+> für ein nichtnegatives rechtsstetiges Submartingal, `1 < r`, und `Y t ∈ Lʳ`
+> für jedes `t`.
+
+Der naheliegende Weg — die lokalisierte Maximalungleichung nach stetiger Zeit
+tragen und den Kern darauf anwenden — ist **nicht** gegangen worden, und die
+Begründung ist kein Aufwandsargument, sondern eine über Müllwerte:
+
+* **Die Aussage steht in `ℝ≥0∞`, und das ist erzwungen.** Jede reellwertige
+  Kodierung des Fenstersupremums lügt an den entweichenden Pfaden:
+  `(⨆ t, ‖Y t ω‖ₑ).toReal` ist dort `0`, und `⨆ t, Y t ω` in `ℝ` ebenfalls
+  (`biSup_eq_zero_of_not_bddAbove` des Vorlaufs). Der Kern
+  `lintegral_rpow_le_of_weak_type` ist reellwertig und kann das
+  Fenstersupremum deshalb gar nicht lesen. Das, und nicht die
+  Maximalungleichung, war die eigentliche Hürde.
+* **Die Endlichkeit des Supremums ist damit keine Voraussetzung**, sondern
+  fällt ab: monotone Konvergenz gibt die Schranke auch dort, wo beide Seiten
+  `⊤` sind. Die einzige neue Hypothese ist `Y t ∈ Lʳ` für jedes einzelne `t`,
+  und die ist die übliche.
+* **Die stetigzeitliche Schwachtypschranke wird gar nicht gebraucht.** Sie wäre
+  der teure Weg: die Niveaumenge `{ofReal t ≤ ⨆ s ∈ S, ‖Y s‖ₑ}` ist der
+  *absteigende* Durchschnitt der Mengen `{∃ s ∈ S, t' ≤ Y s}` über `t' ↑ t`,
+  und man bräuchte `tendsto_measure_iInter_atTop` **und**
+  `tendsto_setIntegral_of_antitone` — beide vorhanden, aber beide vermeidbar.
+
+**Der Schritt, auf den es ankommt, ist eine Umnumerierung.** Die Aufzählung von
+`S = insert T (Set.Iic T ∩ D)` wird so umgebaut, daß `ρ 0 = T` ist. Dann liegt
+`T` in **jedem** endlichen Stück, und weil alle Zeiten von `S` unter `T` liegen,
+ist die größte Zeit jedes Stücks `T`. Die Instanz über `ℕ` schätzt damit
+unmittelbar durch `Y T` ab. Ohne diesen Kunstgriff müßte man zeigen, daß
+`t ↦ ‖Y t‖ᵣ` wächst, und das ist die bedingte Jensen-Ungleichung.
+
+Der Grenzübergang ist `lintegral_iSup` zusammen mit `ENNReal.orderIsoRpow` —
+einer **Ordnungsisomorphie**, also mit `OrderIso.map_iSup` verträglich mit
+Suprema —, und daß das Supremum über die Stücke das Fenstersupremum ist, ist
+`biSup_enorm_Iic_eq_of_isRightContinuous` des Vorlaufs.
+
+#### Und die Gestalt, die das Manuskript wirklich benutzt, steht auch — mitsamt der Mathlib-Lücke, die dafür zu schließen war
+
+`Martingale.lintegral_biSup_enorm_rpow_le`: dieselbe Ungleichung für ein
+rechtsstetiges **Martingal** `X`, angewandt auf das nichtnegative Submartingal
+`‖X ·‖`.
+
+Daß `‖X ·‖` ein Submartingal ist, **hat Mathlib nicht** — die Zeichenketten
+`submartingale_abs`, `Martingale.abs`, `Martingale.norm` und `convex` kommen in
+`Mathlib/Probability/Martingale/` nicht vor (geprüft 2026-09-20 an
+`dec5b2b780537b6eaf7f5e5f000c12f7387fb24d`). Die **Eingabe** dazu hat es aber,
+und deshalb ist der Beweis drei Zeilen lang: `MeasureTheory.norm_condExp_le`
+(`MeasureTheory/Function/ConditionalExpectation/CondJensen.lean:246`), die
+bedingte Jensen-Ungleichung für die Norm, und zwar **ohne jede
+Integrierbarkeitsvoraussetzung**. `Martingale.submartingale_norm` ist damit
+eingetragen, für ein banachraumwertiges Martingal, weil das nichts kostet —
+`norm_condExp_le` steht dort schon so.
+
+Zu beachten ist beim Anschließen nur, daß **zwei Normen aufeinandertreffen**:
+der Submartingalsatz liest `‖Y t ω‖ₑ` des *reellen* Prozesses
+`Y t ω = ‖X t ω‖`, und das ist `‖X t ω‖ₑ`, weil die Norm nichtnegativ ist. Die
+Rechtsstetigkeit wird von den Pfaden von `X` verlangt und mit
+`IsRightContinuous.continuous_comp` auf `‖X ·‖` getragen — schwächer, als sie
+von der Norm zu verlangen, und genau das, was ein càdlàg-Martingal liefert.
+
+#### Vier Entscheidungen, die nicht ästhetisch sind
+
+**Die Niveaumengen der `Lᵖ`-Ungleichung werden nicht-strikt gelesen.** Mathlibs
+`maximal_ineq` steht über `{ε ≤ f*}`, und die Schichtformel gibt es in beiden
+Fassungen. Liest man durchweg nicht-strikt, so wird die Martingaleingabe
+**unverändert** verbraucht und es ist kein Übergang zwischen den beiden
+Niveaumengen zu führen. Der erste Entwurf dieses Laufs stand strikt und hätte
+genau diesen Übergang gekostet.
+
+**In der Maximalungleichung dagegen ist das *strikte* Niveau das primitive**,
+und das ist die Umkehrung der üblichen Darstellungsreihenfolge. Der Grund ist
+die Gestalt des Supremums: aus `ofReal ε < ⨆ s ∈ S, ‖Y s ω‖ₑ` **bekommt** man
+eine Zeit, an der das Niveau überschritten wird, aus `ofReal ε ≤ ⨆` bekommt man
+keine, weil das Supremum nicht angenommen zu werden braucht. Die klassische
+nicht-strikte Fassung ist deshalb das Korollar: man liest die strikte an jedem
+`x < ε` und läßt `x` längs `𝓝[<] ε` wachsen.
+
+**Die Endlichkeit `∫⁻ M^p ≠ ⊤` wird getragen, nicht hergeleitet.** Der Beweis
+endet bei `A ≤ C · B^(1/p) · A^(1/q)` und teilt durch `A^(1/q)`. Über einem
+unendlichen Maß ist das eine echte Voraussetzung; in der Instanz über `ℕ` ist
+sie die `Lᵖ`-Integrierbarkeit des Maximums, die aus der der `f k` folgt, aber
+nicht Teil von `Submartingale` ist. Nicht behauptet wird, daß sie **nötig** ist
+— dafür fehlt ein Zeuge, und ohne Zeugen steht hier keine Notwendigkeit.
+
+**Keine der beiden Maximalungleichungen benutzt die Meßbarkeit der
+Niveaumenge.** Beide Seiten lesen `Measure.real`, und der Übergang zwischen den
+Mengen ist `measureReal_mono`, also Monotonie des äußeren Maßes. Daß die
+Niveaumenge meßbar *ist*, sagt `measurable_biSup_enorm_of_countable` des
+Vorlaufs mitsamt der Reduktion; gebraucht wird es hier nicht.
+
+#### Geprüft
+
+* `scripts/check_master.py`: rc 0, **0 Fehler**, 0 `sorry`, 0 veraltet,
+  Warnungen 18 / 35 / 106 — **unverändert** gegenüber dem Vorlauf, also haben
+  die vierzehn neuen und umgebauten Deklarationen keine einzige Warnung
+  hinterlassen. Mathlib `94ef6b89544e58e90f119da869f3fb48d1da0f4c`
+  (2026-09-18), Lean 4.35.0-rc2.
+* **Die Warnungsspalte hat sich in diesem Lauf zum ersten Mal bewährt.** Ein
+  Zwischenstand stand bei 107 Warnungen, davon **1 veraltet**, und das Skript
+  ist mit rc 1 ausgestiegen: `HasSubset.Subset.eventuallyLE` ist auf `master`
+  veraltet zugunsten von `LE.le.eventuallySubset`. Ersetzt ist es durch
+  `Filter.Eventually.of_forall`, was keinen der beiden Namen braucht. Das ist
+  genau der Fall, für den die Spalte am 2026-09-18 angelegt wurde: unter 106
+  Warnungen wäre die eine nicht aufgefallen.
+* `scripts/check_axioms_master.py` auf alle vierzehn: `propext`,
+  `Classical.choice`, `Quot.sound`, ohne Ausnahme.
+* `scripts/check_duplicates.py`: 2 464 geprüfte eigene Deklarationen (dreizehn
+  mehr), 37 Treffer auf dem letzten Namensbestandteil — **unverändert**.
+* `scripts/check_negatives.py`: 43 Behauptungen, 0 mit unerwarteten Treffern.
+* `scripts/extract_citations.py`, `scripts/check_cited_lines.py`: 308 gepaarte
+  Fundstellen (vier mehr, aus den neuen Absätzen der Roadmap), 0 verschoben,
+  0 tot.
+* Die Negativaussage bleibt stehen und ist am Quelltext von `upstream/master`
+  (`dec5b2b780537b6eaf7f5e5f000c12f7387fb24d`) geprüft: **Doobs
+  `Lᵖ`-Ungleichung hat Mathlib für keinen Index.** Was es hat, ist der ganze
+  analytische Unterbau, und das ist der Grund, aus dem der Satz billig war.
+* Neu benutzte Mathlib-Namen, am Quelltext belegt:
+  `lintegral_rpow_eq_lintegral_meas_le_mul`
+  (`Analysis/SpecialFunctions/Pow/Integral.lean:57`),
+  `lintegral_comp_eq_lintegral_meas_le_mul`
+  (`MeasureTheory/Integral/Layercake.lean:394`),
+  `lintegral_withDensity_eq_lintegral_mul`
+  (`MeasureTheory/Measure/WithDensity.lean:398`),
+  `ENNReal.lintegral_mul_le_Lp_mul_Lq`
+  (`MeasureTheory/Integral/MeanInequalities.lean:202`),
+  `Real.holderConjugate_iff_eq_conjExponent`
+  (`Basic/Real/ConjExponents.lean:203`),
+  `ENNReal.mul_le_mul_iff_left` (`Basic/ENNReal/Operations.lean:79`),
+  `ENNReal.ofReal_rpow_of_nonneg`
+  (`Analysis/SpecialFunctions/Pow/NNReal.lean:964`),
+  `ofReal_integral_eq_lintegral_ofReal`
+  (`MeasureTheory/Integral/Bochner/Basic.lean:734`),
+  `Finset.measurable_range_sup''` (`MeasureTheory/Order/Lattice.lean:211`),
+  `Finset.nonempty_range_add_one` (`Data/Finset/Range.lean:116`),
+  `integral_rpow`, `intervalIntegral.intervalIntegrable_rpow'`,
+  `Ioo_mem_nhdsLT` (`Topology/Order/OrderClosed.lean:282`),
+  `Real.enorm_eq_ofReal_abs` (`Analysis/Normed/Group/Real.lean:110`),
+  `Real.enorm_eq_ofReal` (`ibid.:104`),
+  `eLpNorm_eq_lintegral_rpow_enorm_toReal`
+  (`MeasureTheory/Function/LpSeminorm/Defs.lean:115`),
+  `ENNReal.orderIsoRpow` (`Analysis/SpecialFunctions/Pow/NNReal.lean:788`),
+  `lintegral_iSup` (`MeasureTheory/Integral/Lebesgue/Add.lean:36`),
+  `Finset.measurable_sup'` (`MeasureTheory/Order/Lattice.lean:200`),
+  `Finset.exists_mem_eq_sup'` (`Data/Finset/Lattice/Fold.lean:764`),
+  `setIntegral_mono_set` (`MeasureTheory/Integral/Bochner/Set.lean:739`),
+  `Submartingale.setIntegral_le` (`Probability/Martingale/Basic.lean:242`),
+  `Set.Countable.exists_eq_range`, `lintegral_finsetSum`,
+  `Monotone.measure_iUnion`.
+* **Eine Namensänderung auf `master`, die einen Lauf kosten kann:**
+  `mul_le_mul_left'` und `mul_le_mul_right'` gibt es dort nicht mehr. Die
+  Lemmata heißen jetzt `mul_le_mul_right (bc : b ≤ c) (a) : a * b ≤ a * c` und
+  `mul_le_mul_left (bc : b ≤ c) (a) : b * a ≤ c * a`
+  (`Algebra/Order/Monoid/Unbundled/Basic.lean:60` und `:69`) — die Seitenangabe
+  hat dabei ihre Bedeutung **getauscht**: sie benennt jetzt die Seite, auf der
+  der gemeinsame Faktor steht.
+
+#### Eingetragen
+
+* `MartingaleProblems/Suggested.lean`: die beiden neuen Abschnitte am Ende des
+  `namespace MeasureTheory` von Meilenstein 9, die beiden lokalisierten
+  Maximalungleichungen im Abschnitt `DoobUpcrossingBound`, und der Import.
+* `MartingaleProblems/README.md`: Meilenstein 9, der Absatz zur
+  Maximalungleichung, der neue zur `Lᵖ`-Ungleichung und der zur Lokalisierung;
+  Meilenstein 11, der Stand der beiden Hälften.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+Die `Lᵖ`-Hälfte des Meilensteins 9 ist mit diesem Lauf zu Ende — von der
+Schichtformel bis zu der Gestalt, die das Manuskript benutzt. Was bleibt:
+
+1. **`Martingale.measure_iSup_norm_le`**, die *Maximal*-Ungleichung in
+   derselben Gestalt: `ε * P {ω | ε ≤ ⨆ t ∈ Set.Iic T, ‖X t ω‖} ≤ 𝔼‖X T‖` für
+   ein rechtsstetiges Martingal. Sie ist jetzt dieselbe Zusammensetzung wie die
+   `Lᵖ`-Fassung — `Martingale.submartingale_norm` und dann
+   `Submartingale.mul_measReal_le_biSup_enorm_le` — und ist die letzte
+   Deklaration, die Meilenstein 9 für sein Gesicht 1 nennt und die noch nicht
+   dasteht. Sie sollte eine halbe Stunde kosten; kostet sie mehr, ist der Grund
+   die Umschreibung zwischen `P.real` und `ENNReal`, und die ist zu benennen.
+
+2. **`Submartingale.eLpNorm_iSup_le` — und die Frage, ob es sie überhaupt geben
+   soll.** Meilenstein 9 nennt die Fensterungleichung auch in `eLpNorm`-Gestalt,
+   aber `eLpNorm` ist reellwertig, und jede reellwertige Kodierung des
+   Fenstersupremums trägt einen Müllwert. Die `ℝ≥0∞`-Fassung steht seit diesem
+   Lauf. Zu entscheiden ist, ob die `eLpNorm`-Fassung unter der **f.s.
+   Endlichkeit** des Supremums nachgereicht wird — die aus
+   `mul_measReal_le_biSup_enorm_le` folgt, indem man
+   `P.real {ofReal ε ≤ ⨆} ≤ c/ε` über `ε → ∞` liest — oder ob der Meilenstein
+   ganz auf die `ℝ≥0∞`-Gestalt umgestellt wird. Der Verbraucher, Meilenstein 11,
+   liest ohnehin in `ℝ≥0∞`; das spricht für das Zweite, und dann ist der Punkt
+   eine Roadmap-Änderung und kein Beweis. **Diese Entscheidung gehört vor
+   Punkt 1**, weil sie die Gestalt von dessen Aussage mitbestimmt.
+
+3. **Die zweite Hälfte von Vorschlag 2 des Vorvorlaufs bleibt stehen** — die
+   gleichmäßige Fassung von `CompactContainment` an einer nichttrivialen Folge
+   von Sprungprozessen vorführen. Sie ist von diesem Lauf unberührt.

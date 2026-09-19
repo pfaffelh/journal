@@ -8124,16 +8124,144 @@ and 11 use them.
   uncountable window; `iSup_subtype'` and the countable `D` are the step, and
   the reduction above is what supplies `D`.
 
-  Then `MeasureTheory.maximal_ineq_of_rightContinuous`, the continuous
-  time form of `MeasureTheory.maximal_ineq` for a non-negative right continuous
-  submartingale, and `Submartingale.eLpNorm_iSup_le`, Doob's `Lᵖ` inequality
-  `eLpNorm (fun ω ↦ ⨆ t ∈ Set.Iic T, Y t ω) p P ≤ (p / (p - 1)) * eLpNorm (Y T) p P`
-  for `1 < p < ∞` and `Y` a non-negative submartingale. Mathlib has neither, and
-  the `Lᵖ` inequality is to be proved for `Filtration ℕ` from `maximal_ineq`
-  first and then transferred by the same approximation. The form the manuscript
-  uses is the corollary for a right continuous martingale `X`, applied to the
-  non-negative submartingale `‖X ·‖`; state `Martingale.measure_iSup_norm_le` and
-  `Martingale.eLpNorm_iSup_norm_le` for it.
+  **Doob's maximal inequality in continuous time**, `2026-09-20`. It is the
+  composition of the reduction above with the countable time bound, and no
+  analysis is left in it: `Submartingale.mul_measReal_lt_biSup_enorm_le` reads
+  the window supremum along `insert T (Set.Iic T ∩ D)` and hands that countable
+  set to `Submartingale.mul_measReal_exists_ge_abs_le_countable`.
+
+  **The strict level is the primitive and the non-strict level is the
+  corollary**, which is the reverse of the usual order and is forced by the
+  supremum: from `ENNReal.ofReal ε < ⨆ s ∈ S, ‖Y s ω‖ₑ` a time at which the
+  level is exceeded can be produced, and from `ENNReal.ofReal ε ≤ ⨆ s ∈ S,
+  ‖Y s ω‖ₑ` it cannot, the supremum not being attained.
+  `Submartingale.mul_measReal_le_biSup_enorm_le` recovers the classical form by
+  reading the strict one at every `x < ε` and letting `x` increase along
+  `𝓝[<] ε`. Neither form uses measurability of the level set: both sides read
+  `Measure.real`, and the passage between the level sets is `measureReal_mono`.
+
+  **Doob's `Lᵖ` inequality**, `2026-09-20`, in three statements, of which the
+  middle one carries no probability. `lintegral_rpow_le_of_weak_type` says that
+  a non-negative measurable `M` whose level sets obey
+  `ENNReal.ofReal t * μ {a | t ≤ M a} ≤ ∫⁻ a in {a | t ≤ M a}, ENNReal.ofReal (g a)`
+  at every `t > 0` obeys `∫⁻ M ^ p ≤ (p/(p-1))^p * ∫⁻ g ^ p` for `1 < p`,
+  provided `∫⁻ M ^ p ≠ ⊤`. It is the whole of Doob's `Lᵖ` inequality except for
+  the input, and it is stated over a bare measure space so that the discrete and
+  the continuous time forms share one proof; it is split into
+  `lintegral_rpow_le_mul_lintegral_mul_rpow`, which produces the intermediate
+  bound by `M ^ (p-1)`, and `lintegral_rpow_le_of_le_mul_lintegral_mul_rpow`,
+  which is Hölder against `q = p/(p-1)` and the cancellation of `A ^ (1/q)`.
+
+  **The level sets are read non-strictly here and strictly in the maximal
+  inequality above**, and that is deliberate: Mathlib's `maximal_ineq` is stated
+  at `{ε ≤ f*}` and the layer cake formula exists in both forms
+  (`lintegral_rpow_eq_lintegral_meas_le_mul`, `…_lt_mul`), so the non-strict
+  reading consumes the martingale input as it stands.
+
+  **Fubini does not appear, and that is what makes the proof short.** The usual
+  argument exchanges `∫ dt` with `∫ dμ` after inserting the weak type bound.
+  Here the exchange is Mathlib's own layer cake formula read a second time under
+  the weighted measure `ν = μ.withDensity (ENNReal.ofReal ∘ g)`: `ν {t ≤ M}`
+  *is* `∫⁻_{t ≤ M} g` by `withDensity_apply`, so
+  `lintegral_comp_eq_lintegral_meas_le_mul ν` with weight `t ^ (p-2)` performs
+  the exchange in one step and `lintegral_withDensity_eq_lintegral_mul` reads the
+  result back under `μ`. Neither `lintegral_lintegral_swap` nor a Lebesgue
+  integral of `t ^ (p-2)` over an interval is used; the inner integral is the
+  Bochner `integral_rpow`.
+
+  **The finiteness hypothesis is where the cancellation happens** and is carried,
+  not derived: the proof ends at `A ≤ C · B^(1/p) · A^(1/q)` and divides by
+  `A^(1/q)`.
+
+  `Submartingale.lintegral_rpow_range_sup'_le` is the instance over `ℕ`: for a
+  non-negative submartingale, `∫⁻ (f*)^p ≤ (p/(p-1))^p * ∫⁻ (f n)^p` with
+  `f* = (Finset.range (n+1)).sup' _ fun k ↦ f k ω`, the shape `maximal_ineq`
+  produces, and `Submartingale.eLpNorm_range_sup'_le` is the same statement as
+  `‖f*‖ₚ ≤ p/(p-1) · ‖f n‖ₚ`. The passage between the two shapes is
+  `eLpNorm_le_of_lintegral_rpow_le`, which is where the two conventions meet:
+  `eLpNorm` reads `‖·‖ₑ` and the core reads `ENNReal.ofReal`, and for a
+  non-negative function these agree by `Real.enorm_eq_ofReal`.
+
+  **The continuous time instance is stated in `ℝ≥0∞` and reached by monotone
+  convergence, not by a continuous time weak type bound** (`2026-09-20`).
+  `Submartingale.lintegral_biSup_enorm_rpow_le`,
+  `∫⁻ ω, (⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ)^r ≤ (r/(r-1))^r · ∫⁻ ω, ‖Y T ω‖ₑ^r` for a
+  non-negative right continuous submartingale, `1 < r`, and each `Y t` in `Lʳ`.
+
+  Three things fix that shape. **Every real valued encoding of the window
+  supremum carries a junk value** — `(⨆ t, ‖Y t ω‖ₑ).toReal` is `0` where the
+  path escapes, and so is `⨆ t, Y t ω` read in `ℝ` by
+  `biSup_eq_zero_of_not_bddAbove` — so the conclusion is taken in `ℝ≥0∞`, where
+  the escaping paths contribute `⊤`. **The finiteness of the supremum is then
+  not a hypothesis but a consequence**, monotone convergence giving the bound
+  also where both sides are `⊤`. And **no localised weak type bound in
+  continuous time is needed**: the level set `{ENNReal.ofReal t ≤ ⨆ s ∈ S, ‖Y s‖ₑ}`
+  is the decreasing intersection of the sets `{∃ s ∈ S, t' ≤ Y s}` over
+  `t' ↑ t`, so that route runs through `tendsto_measure_iInter_atTop`
+  (`MeasureTheory/Measure/Continuity.lean:220`) and
+  `tendsto_setIntegral_of_antitone` (`MeasureTheory/Integral/Bochner/Set.lean:299`),
+  and the route through the finite pieces avoids both.
+
+  The step the proof turns on: enumerate `S = insert T (Set.Iic T ∩ D)` so that
+  the **first** time is `T`, which is possible because `T ∈ S`; then `T` lies in
+  every finite piece, every time of `S` lies below `T`, and the largest time of
+  every piece is `T`. The instance over `ℕ` therefore bounds each piece by
+  `Y T` directly, with no need for the monotonicity of `r ↦ ‖Y r‖ₚ` and hence
+  no conditional Jensen inequality. Its finiteness hypothesis over a finite
+  piece follows from `Lʳ` of the members, the maximum being one of them. The
+  passage to the limit is `lintegral_iSup`
+  (`MeasureTheory/Integral/Lebesgue/Add.lean:36`) together with
+  `ENNReal.orderIsoRpow` (`Analysis/SpecialFunctions/Pow/NNReal.lean:788`),
+  which is an order isomorphism and therefore commutes with suprema, and the
+  supremum over the pieces is the window supremum by
+  `biSup_enorm_Iic_eq_of_isRightContinuous`.
+
+  **What the `Lᵖ` inequality consumes is a localised bound, and that is a
+  distinction the maximal inequalities above do not make.** The right hand side
+  of `lintegral_rpow_le_of_weak_type` is `∫⁻ a in {t ≤ M a}, g a` and not a
+  constant, and a constant would be useless there: inserted into the layer cake
+  it gives `∫⁻ M^p ≤ C · ∫⁻ t^(p-2) dt`, which diverges. Mathlib's
+  `maximal_ineq` is localised in exactly this sense, and since `2026-09-20` so
+  are `Submartingale.mul_measReal_exists_ge_le_setIntegral` over `ℕ` and
+  `Submartingale.mul_measReal_exists_ge_le_setIntegral_countable` over an
+  arbitrary linear order,
+  `ε * P {ω | ∃ s ∈ S, ε ≤ Y s ω} ≤ ∫ ω in {ω | ∃ s ∈ S, ε ≤ Y s ω}, (Y T ω)⁺`
+  for countable `S` bounded above by `T`. Two steps separate the localised bound
+  from the global one and only two: over a finite piece the level set lies in
+  the filtration at the largest time of that piece, so the submartingale
+  property carries the integral from there to `T`; and the integrals over the
+  increasing pieces are dominated by the integral over their union, the
+  integrand being non-negative. `Submartingale.mul_measReal_exists_ge_le_integral_posPart`
+  is now the one line weakening of the first.
+
+  **The localised form has no lower bound on `S` and is one sided**, where the
+  global one has a lower bound and is two sided. Both differences have the same
+  cause: the minimal inequality, which is what spends the lower bound, would
+  localise to the level set of `-Y`, a *different* set, and the two bounds could
+  not be added.
+
+  The form the manuscript uses is the corollary for a right continuous
+  martingale `X`, applied to the non-negative submartingale `‖X ·‖`:
+  `Martingale.lintegral_biSup_enorm_rpow_le` and `Martingale.measure_iSup_norm_le`,
+  and each is that application and nothing more.
+
+  **That `‖X ·‖` is a submartingale is itself a gap in Mathlib**, closed here as
+  `Martingale.submartingale_norm` (`2026-09-20`): the strings
+  `submartingale_abs`, `Martingale.abs`, `Martingale.norm` and `convex` do not
+  occur in `Mathlib/Probability/Martingale/` (checked 2026-09-20 against
+  `dec5b2b780537b6eaf7f5e5f000c12f7387fb24d`). Its input does exist there and
+  is what makes the proof three lines: `MeasureTheory.norm_condExp_le`
+  (`MeasureTheory/Function/ConditionalExpectation/CondJensen.lean:246`), the
+  conditional Jensen inequality for the norm, stated with no integrability
+  hypothesis. The statement is for a Banach space valued martingale rather than
+  a real one because that costs nothing — `norm_condExp_le` is already there.
+
+  Two norms meet in the corollary and the meeting is the only computation in
+  it: the submartingale theorem reads `‖Y t ω‖ₑ` of the *real* process
+  `Y t ω = ‖X t ω‖`, and that is `‖X t ω‖ₑ` because the norm is non-negative.
+  Right continuity is asked of the paths of `X` and carried to `‖X ·‖` by
+  `IsRightContinuous.continuous_comp`, which is weaker than asking it of the
+  norm and is what a càdlàg martingale supplies.
 * Oscillation of a real function along a one sided filter, which is the
   deterministic content of regularization and carries no probability at all.
   `HasUpcrossings a b g S n` says that `g` runs through an increasing tuple
@@ -10852,12 +10980,27 @@ has to be chosen once for all `n`. What stands:
   Mathlib's `maximal_ineq`, which is indexed by `ℕ` and reads a `Finset.sup'`,
   can be dragged along `D`: it can, through `Filtration.comp`,
   `Finset.monoEnum` and continuity from below, and the passage needs no
-  measurability of the level set. What is still missing is the `Lᵖ` half,
-  `Submartingale.eLpNorm_iSup_le`, which Mathlib does not have for any index
-  (checked 2026-09-20 against `dec5b2b780537b6eaf7f5e5f000c12f7387fb24d`: the
-  docstring of `maximal_ineq` says the `Lᵖ` inequality "will be proved in an
-  upcoming PR", and `eLpNorm` occurs in `Mathlib/Probability/Martingale/` only
-  in `BorelCantelli.lean` and `Convergence.lean`).
+  measurability of the level set. Its continuous time form is
+  `Submartingale.mul_measReal_lt_biSup_enorm_le` and
+  `Submartingale.mul_measReal_le_biSup_enorm_le` of Milestone 9, which read the
+  window supremum directly.
+
+  The `Lᵖ` half is `lintegral_rpow_le_of_weak_type` of Milestone 9, which turns
+  either maximal estimate into `∫⁻ M^p ≤ (p/(p-1))^p ∫⁻ g^p` and carries no
+  probability, together with its instance over `ℕ`,
+  `Submartingale.lintegral_rpow_range_sup'_le`, its `eLpNorm` form
+  `Submartingale.eLpNorm_range_sup'_le`, and the window bound itself,
+  `Submartingale.lintegral_biSup_enorm_rpow_le`. Mathlib has none of these for
+  any index (checked 2026-09-20 against
+  `dec5b2b780537b6eaf7f5e5f000c12f7387fb24d`: the docstring of `maximal_ineq`
+  says the `Lᵖ` inequality "will be proved in an upcoming PR", and `eLpNorm`
+  occurs in `Mathlib/Probability/Martingale/` only in `BorelCantelli.lean` and
+  `Convergence.lean`).
+
+  **The window bound is read in `ℝ≥0∞`, and this criterion is to read it there
+  too.** Its approximability condition is already a lower integral in `ℝ≥0∞`
+  for the same reason — a real valued supremum vanishes where the path escapes
+  — so the two fit without a `toReal` anywhere between them.
 * `isRelativelyCompact_of_approx`: if `E` is Polish, the domain of `A` contains
   an algebra separating points and vanishing nowhere, the approximation holds
   for each `(f,g) ∈ A`, and `{X n}` satisfies compact containment, then `{X n}`
