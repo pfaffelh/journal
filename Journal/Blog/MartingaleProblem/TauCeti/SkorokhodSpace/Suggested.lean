@@ -8869,6 +8869,24 @@ theorem SkorokhodSpace.modulus_le_modulusBased (t₀ : ι) (u : ℝ) (f : D(ι, 
   refine le_iInf fun n => le_iInf fun t => le_iInf fun ht => ?_
   exact iInf_le_of_le n (iInf_le_of_le t (iInf_le_of_le ht.1 le_rfl))
 
+omit [AdditiveDist ι] [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- The based modulus is monotone in `δ` for the same reason
+`SkorokhodSpace.modulus_mono` is, the node at the base point surviving the
+weakening untouched: a `δ₂`-sparse subdivision through `t₀` is `δ₁`-sparse
+through `t₀` for every smaller `δ₁`.
+
+It is what turns a bound at **one** radius into a bound at **every smaller**
+radius, and so what lets `SkorokhodSpace.isTightMeasureSet_iff` read a countable
+family of conditions, one per level, as the limit its statement asks for.  The
+`ℝ≥0∞` valuation is spent here exactly as it is in `modulus_mono`: over `ℝ` the
+statement is false, the junk value at large `δ` running the other way. -/
+theorem SkorokhodSpace.modulusBased_mono (t₀ : ι) (u : ℝ) (f : D(ι, E)) :
+    Monotone (SkorokhodSpace.modulusBased t₀ u f) := by
+  intro δ₁ δ₂ h
+  refine le_iInf fun n => le_iInf fun t => le_iInf fun ht => ?_
+  exact iInf_le_of_le n (iInf_le_of_le t (iInf_le_of_le
+    ⟨⟨ht.1.1, ht.1.2.1, ht.1.2.2.1, fun i => lt_of_le_of_lt h (ht.1.2.2.2 i)⟩, ht.2⟩ le_rfl))
+
 omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
 /-- **A small based modulus produces a subdivision**, and it is nothing but the
 `iInf` unfolded.  The forward half of Milestone 7 reads a subdivision off a path
@@ -9955,6 +9973,158 @@ theorem SkorokhodSpace.subdivisionOsc_le_two_mul_of_cells (f : D(ι, E)) {n n' :
         + edist (f.toFun (t i.castSucc)) (f.toFun (s k.castSucc)) := edist_triangle _ _ _
     _ ≤ SkorokhodSpace.subdivisionOsc f t + SkorokhodSpace.subdivisionOsc f t := add_le_add h1 h2
     _ = 2 * SkorokhodSpace.subdivisionOsc f t := (two_mul _).symm
+
+/-! ### What a refinement costs, and why it cannot be had uniformly
+
+`SkorokhodSpace.subdivisionOsc_le_two_mul_of_cells` bounds the oscillation of a
+subdivision only by that of one whose cells it **refines**.  Any argument that
+wants *one* subdivision to serve several paths at once therefore wants a common
+refinement, and the two statements below say what that costs.
+
+The first is the mechanism: **a refinement carries every interior node of the
+subdivision it refines.**  The second is the price, and it is a refutation: the
+sparseness of a common refinement cannot be bounded in terms of the sparseness of
+the two subdivisions alone.  Together they say that a common refinement exists
+for *given* subdivisions — the union has a smallest positive gap — and is useless
+wherever the sparseness has to be chosen ahead of the paths, which is exactly what
+`SkorokhodSpace.isTightMeasureSet_iff` asks of the modulus.
+
+This is the obstacle in the converse half of
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp`, where each real valued
+test function supplies its own subdivision; the roadmap's Milestone 8 says what
+remains open there. -/
+
+omit [AdditiveDist ι] [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- **A refinement carries every interior node of the subdivision it refines.**
+If the cells of `r` refine those of `t` and `t i.castSucc` lies in the window and
+below its right end, then `t i.castSucc` is a node of `r`.
+
+The proof is the only thing the cell condition can be used for pointwise: the
+cell of `r` that contains the node lies inside a cell of `t`, and strict
+monotonicity of `t` identifies that cell as the one the node opens.  Its left
+endpoint is then both `≤` and `≥` the node, the second because a cell is nonempty
+and therefore meets the cell of `t` it is contained in.
+
+Nothing of the path space enters, and neither does the sparseness of `t`; only
+`r` has to be a subdivision, because it is `r` that has to reach across the
+window. -/
+theorem SkorokhodSpace.exists_eq_castSucc_of_cells (t₀ : ι) (u : ℝ) {δ' : ℝ} {n n' : ℕ}
+    {t : Fin (n + 1) → ι} {r : Fin (n' + 1) → ι}
+    (ht : StrictMono t) (hr : SkorokhodSpace.IsSubdivision t₀ u δ' r)
+    (hcells : ∀ k : Fin n', ∃ i : Fin n,
+      Set.Ico (r k.castSucc) (r k.succ) ⊆ Set.Ico (t i.castSucc) (t i.succ))
+    {i : Fin n} (h1 : exhaustionMin t₀ u ≤ t i.castSucc)
+    (h2 : t i.castSucc < exhaustionMax t₀ u) :
+    ∃ k : Fin n', r k.castSucc = t i.castSucc := by
+  have hra : r 0 ≤ t i.castSucc := le_trans hr.2.1 h1
+  have hral : t i.castSucc < r (Fin.last n') := lt_of_lt_of_le h2 hr.2.2.1
+  obtain ⟨k, hk⟩ := exists_mem_Ico_of_strictMono hr.1 hra hral
+  obtain ⟨j, hj⟩ := hcells k
+  have hmem : t i.castSucc ∈ Set.Ico (t j.castSucc) (t j.succ) := hj hk
+  have hji : j = i := by
+    have hle : j ≤ i := by
+      have := ht.le_iff_le.1 hmem.1
+      exact_mod_cast Fin.castSucc_le_castSucc_iff.1 this
+    have hge : i ≤ j := Fin.castSucc_lt_succ_iff.1 (ht.lt_iff_lt.1 hmem.2)
+    exact le_antisymm hle hge
+  subst hji
+  have hlt : r k.castSucc < r k.succ := hr.1 (Fin.castSucc_lt_succ (i := k))
+  have hin : r k.castSucc ∈ Set.Ico (t j.castSucc) (t j.succ) := hj ⟨le_rfl, hlt⟩
+  exact ⟨k, le_antisymm hk.1 hin.1⟩
+
+/-- **The sparseness of a common refinement cannot be bounded in terms of the
+sparseness of the two subdivisions.**  For every `δ' > 0` there are two based
+`1/2`-sparse subdivisions of the window `exhaustion 0 3` of `ℝ` admitting no
+`δ'`-sparse subdivision whose cells refine both — and the witnesses are as
+elementary as they can be, `![-4, 0, 1, 4]` and `![-4, 0, 1 + γ, 4]` with
+`γ = min (δ'/2) 1`.
+
+By `SkorokhodSpace.exists_eq_castSucc_of_cells` a common refinement carries both
+`1` and `1 + γ`, so it has two nodes at distance `γ < δ'`, and between them a
+consecutive pair at distance at most `γ`.  The refuted subdivision is not required
+to be based, so the statement refutes the larger class as well.
+
+**What it rules out.**  Not the existence of a common refinement — for given
+subdivisions the union of the nodes is one, and it is sparse below its smallest
+gap. What it rules out is a common refinement whose sparseness is chosen **before**
+the subdivisions, which is what a criterion quantifying `∃ δ, ∀ paths` needs.  An
+argument that wants one subdivision for finitely many paths therefore cannot get
+it from `SkorokhodSpace.subdivisionOsc_le_two_mul_of_cells` and the sparseness
+alone. -/
+theorem SkorokhodSpace.exists_isSubdivisionBased_pair_forall_not_cells
+    {δ' : ℝ} (hδ' : 0 < δ') :
+    ∃ t s : Fin 4 → ℝ,
+      SkorokhodSpace.IsSubdivisionBased (0 : ℝ) 3 (1 / 2) t ∧
+      SkorokhodSpace.IsSubdivisionBased (0 : ℝ) 3 (1 / 2) s ∧
+      ∀ (n' : ℕ) (r : Fin (n' + 1) → ℝ), SkorokhodSpace.IsSubdivision (0 : ℝ) 3 δ' r →
+        (∀ k : Fin n', ∃ i : Fin 3,
+          Set.Ico (r k.castSucc) (r k.succ) ⊆ Set.Ico (t i.castSucc) (t i.succ)) →
+        ¬ ∀ k : Fin n', ∃ i : Fin 3,
+          Set.Ico (r k.castSucc) (r k.succ) ⊆ Set.Ico (s i.castSucc) (s i.succ) := by
+  have hd : ∀ a b d : ℝ, a + d < b → d < dist a b := by
+    intro a b d h
+    rw [Real.dist_eq, abs_sub_comm]
+    exact lt_of_lt_of_le (by linarith) (le_abs_self _)
+  have hmin0 : exhaustionMin (0 : ℝ) 3 ≤ 0 :=
+    (isLeast_exhaustionMin (0 : ℝ) 3).2 (mem_exhaustion_self (0 : ℝ) 3)
+  have hmax3 : (3 : ℝ) ≤ exhaustionMax (0 : ℝ) 3 := by
+    refine (isGreatest_exhaustionMax (0 : ℝ) 3).2 ?_
+    rw [exhaustion, Metric.mem_closedBall, Real.dist_eq]
+    norm_num
+  have hmin4 : (-4 : ℝ) ≤ exhaustionMin (0 : ℝ) 3 := by
+    have h := (isLeast_exhaustionMin (0 : ℝ) 3).1
+    rw [exhaustion, Metric.mem_closedBall, Real.dist_eq, abs_le] at h
+    norm_num at h
+    linarith [h.1]
+  have hmax4 : exhaustionMax (0 : ℝ) 3 ≤ 4 := by
+    have h := (isGreatest_exhaustionMax (0 : ℝ) 3).1
+    rw [exhaustion, Metric.mem_closedBall, Real.dist_eq, abs_le] at h
+    norm_num at h
+    linarith [h.2]
+  set γ : ℝ := min (δ' / 2) 1 with hγ
+  have hγ0 : 0 < γ := lt_min (by linarith) one_pos
+  have hγ1 : γ ≤ 1 := min_le_right _ _
+  have hγδ : γ < δ' := lt_of_le_of_lt (min_le_left _ _) (by linarith)
+  refine ⟨![-4, 0, 1, 4], ![-4, 0, 1 + γ, 4], ⟨⟨?_, ?_, ?_, ?_⟩, ?_⟩, ⟨⟨?_, ?_, ?_, ?_⟩, ?_⟩, ?_⟩
+  · rw [Fin.strictMono_iff_lt_succ]
+    intro i; fin_cases i <;> norm_num
+  · simpa using hmin4
+  · simpa using hmax4
+  · intro i; fin_cases i <;> (apply hd; norm_num)
+  · exact ⟨1, by norm_num⟩
+  · rw [Fin.strictMono_iff_lt_succ]
+    intro i; fin_cases i <;> simp <;> linarith
+  · simpa using hmin4
+  · simpa using hmax4
+  · intro i; fin_cases i <;> (apply hd; norm_num; try linarith)
+  · exact ⟨1, by norm_num⟩
+  · intro n' r hr hct hcs
+    have hone : ∃ k : Fin n', r k.castSucc = (1 : ℝ) := by
+      have := SkorokhodSpace.exists_eq_castSucc_of_cells (0 : ℝ) 3
+        (t := ![-4, 0, 1, 4]) (r := r) (by
+          rw [Fin.strictMono_iff_lt_succ]; intro i; fin_cases i <;> norm_num) hr hct
+        (i := 2) (by simpa using le_trans hmin0 (by norm_num))
+        (by simpa using lt_of_lt_of_le (by norm_num) hmax3)
+      simpa using this
+    have htwo : ∃ k : Fin n', r k.castSucc = 1 + γ := by
+      have := SkorokhodSpace.exists_eq_castSucc_of_cells (0 : ℝ) 3
+        (t := ![-4, 0, 1 + γ, 4]) (r := r) (by
+          rw [Fin.strictMono_iff_lt_succ]; intro i; fin_cases i <;> simp <;> linarith) hr hcs
+        (i := 2) (by simpa using le_trans hmin0 (by linarith))
+        (by simpa using lt_of_lt_of_le (by linarith) hmax3)
+      simpa using this
+    obtain ⟨k₁, hk₁⟩ := hone
+    obtain ⟨k₂, hk₂⟩ := htwo
+    have hlt : k₁ < k₂ := by
+      have : r k₁.castSucc < r k₂.castSucc := by rw [hk₁, hk₂]; linarith
+      exact Fin.castSucc_lt_castSucc_iff.1 (hr.1.lt_iff_lt.1 this)
+    have hsucc : r k₁.succ ≤ 1 + γ := by
+      rw [← hk₂]
+      exact hr.1.le_iff_le.2 (Fin.succ_le_castSucc_iff.2 hlt)
+    have hgap := hr.2.2.2 k₁
+    rw [Real.dist_eq, hk₁,
+      abs_of_nonpos (by linarith [hr.1 (Fin.castSucc_lt_succ (i := k₁))])] at hgap
+    linarith
 
 /-- **Trimming a based subdivision to the marks `± (M + 1)`.**  Every node lands
 in `Set.Icc (-(M+1)) (M+1)`, the length is bounded by `2 (M + 1) / δ` --- and so
@@ -13844,9 +14014,11 @@ theorem SkorokhodSpace.tendstoInDistribution_eval_of_isTight_of_tendsto_finiteDi
 
 `SkorokhodSpace.isCompact_closure_iff` of Milestone 7 is a criterion about a
 **set of paths**, and the tightness criterion `SkorokhodSpace.isTightMeasureSet_iff`
-that reads it is about a **set of measures**.  The two statements below are the
-joint, and they are stated for an arbitrary measurable topological space because
-nothing of the path space enters them.
+that reads it is about a **set of measures**.  The first two statements below are
+the joint, and they are stated for an arbitrary measurable topological space
+because nothing of the path space enters them; the criterion itself follows, and
+it is the only statement of this file that produces tightness from something
+other than tightness.
 
 **Neither needs any measurability of the sets involved**, and that is the
 observation that decides how the criterion is to be stated: a `Measure` in
@@ -13881,6 +14053,140 @@ theorem measure_compl_iInter_le {X : Type*} [MeasurableSpace X] (μ : Measure X)
   rw [Set.compl_iInter]
   exact measure_iUnion_le _
 
+/-- **The tightness criterion on `D(ℝ, E)`**, which is Ethier--Kurtz 3.7.2 read
+at the level of laws: a set `S` of measures is tight if and only if, for every
+tolerance `ε` and every window radius `m`, the values of the path over the window
+lie in a compact subset of `E` up to `ε`, and the based modulus is below any
+prescribed level up to `ε` — both uniformly over `S`.
+
+**Both halves are `SkorokhodSpace.isCompact_closure_iff` of Milestone 7**, which
+until now had no consumer at all, and the two directions spend it in opposite
+ways.
+
+*Tight implies the two conditions* is the short half.  A compact set of paths `K`
+carrying all but `ε` of every measure satisfies the criterion of Milestone 7, and
+both conditions are then read off `K` by `measure_mono`, the exceptional set of
+each being contained in `Kᶜ`.
+
+*The two conditions imply tight* is the substantial half, and it is the
+construction of **one** set of paths out of a doubly indexed family of
+conditions.  Indexed by `n` through `Nat.unpair` — window radius `(n.unpair).1`,
+modulus level `((n.unpair).2 + 1)⁻¹`, tolerance `ε * 2⁻¹ ^ (n + 2)` for each of
+the two conditions — the set is `⋂ n, V n ∩ W n`, and `measure_compl_iInter_le`
+pays for it: the two tolerances at index `n` add up to `ε * 2⁻¹ ^ (n + 1)` and
+the geometric series to `ε` on the nose.  That this set has compact closure is
+Milestone 7 read backwards, and the step at which a countable family of
+conditions becomes the **limit** that criterion asks for is
+`SkorokhodSpace.modulusBased_mono`: the bound at the radius the hypothesis
+supplies holds at every smaller radius as well.
+
+**No measurability of any of these sets is needed, and none is available**:
+`{f | η ≤ modulusBased 0 m f δ}` is an infimum over an uncountable family of
+subdivisions.  A Mathlib `Measure` is defined on every set, and that is what the
+two lemmas above are stated to exploit.
+
+The completeness of `E` is inherited from Milestone 7 and is not avoidable there:
+the converse half of that criterion produces a totally bounded set and needs a
+complete space to call its closure compact. -/
+theorem SkorokhodSpace.isTightMeasureSet_iff [CompleteSpace E] {S : Set (Measure D(ℝ, E))} :
+    IsTightMeasureSet S ↔ ∀ ε : ℝ≥0∞, 0 < ε → ∀ m : ℕ,
+      (∃ K : Set E, IsCompact K ∧ ∀ μ ∈ S,
+        μ {f : D(ℝ, E) | ∀ t ∈ exhaustion (0 : ℝ) (m : ℝ), f.toFun t ∈ K}ᶜ ≤ ε) ∧
+      (∀ η : ℝ≥0∞, 0 < η → ∃ δ : ℝ, 0 < δ ∧ ∀ μ ∈ S,
+        μ {f : D(ℝ, E) | η ≤ SkorokhodSpace.modulusBased (0 : ℝ) (m : ℝ) f δ} ≤ ε) := by
+  constructor
+  · -- the short half: a compact set of paths is read through Milestone 7
+    intro htight ε hε m
+    rw [isTightMeasureSet_iff_exists_isCompact_measure_compl_le] at htight
+    obtain ⟨K, hK, hKle⟩ := htight ε hε
+    have hcl : IsCompact (closure K) := by
+      rw [hK.isClosed.closure_eq]; exact hK
+    obtain ⟨hval, hten⟩ := (SkorokhodSpace.isCompact_closure_iff K).1 hcl m
+    refine ⟨⟨closure {x | ∃ f ∈ K, ∃ t ∈ exhaustion (0 : ℝ) (m : ℝ), f.toFun t = x}, hval,
+      fun μ hμ => le_trans (measure_mono ?_) (hKle μ hμ)⟩, fun η hη => ?_⟩
+    · intro f hf hfK
+      exact hf fun t ht => subset_closure ⟨f, hfK, t, ht, rfl⟩
+    · have h1 : ∀ᶠ δ : ℝ in 𝓝[>] (0 : ℝ),
+          (⨆ f ∈ K, SkorokhodSpace.modulusBased (0 : ℝ) (m : ℝ) f δ) < η :=
+        hten.eventually_lt_const hη
+      have h2 : ∀ᶠ δ : ℝ in 𝓝[>] (0 : ℝ), δ ∈ Set.Ioi (0 : ℝ) := eventually_mem_nhdsWithin
+      obtain ⟨δ, hδ1, hδ2⟩ := (h1.and h2).exists
+      refine ⟨δ, hδ2, fun μ hμ => le_trans (measure_mono ?_) (hKle μ hμ)⟩
+      intro f hf hfK
+      exact absurd (le_trans hf (le_iSup₂ (f := fun g (_ : g ∈ K) =>
+        SkorokhodSpace.modulusBased (0 : ℝ) (m : ℝ) g δ) f hfK)) (not_le.2 hδ1)
+  · -- the substantial half: the two conditions build one set of paths
+    intro h
+    refine isTightMeasureSet_of_forall_exists_isCompact_closure fun ε hε => ?_
+    have h2 : (2 : ℝ≥0∞) * 2⁻¹ = 1 := ENNReal.mul_inv_cancel two_ne_zero (by finiteness)
+    set c : ℕ → ℝ≥0∞ := fun n => ε * (2 : ℝ≥0∞)⁻¹ ^ (n + 2) with hc
+    have hcpos : ∀ n, 0 < c n := by
+      intro n
+      refine pos_iff_ne_zero.2 (mul_ne_zero hε.ne' ?_)
+      exact pow_ne_zero _ (ENNReal.inv_ne_zero.2 (by finiteness))
+    have hηpos : ∀ k : ℕ, (0 : ℝ≥0∞) < ((k : ℝ≥0∞) + 1)⁻¹ :=
+      fun k => ENNReal.inv_pos.2 (by finiteness)
+    choose K hKc hKle using fun n : ℕ => (h (c n) (hcpos n) (Nat.unpair n).1).1
+    choose δ hδ0 hδle using fun n : ℕ =>
+      (h (c n) (hcpos n) (Nat.unpair n).1).2 (((Nat.unpair n).2 : ℝ≥0∞) + 1)⁻¹
+        (hηpos (Nat.unpair n).2)
+    set V : ℕ → Set D(ℝ, E) := fun n =>
+      {f : D(ℝ, E) | ∀ t ∈ exhaustion (0 : ℝ) (((Nat.unpair n).1 : ℕ) : ℝ), f.toFun t ∈ K n}
+      with hV
+    set W : ℕ → Set D(ℝ, E) := fun n =>
+      {f : D(ℝ, E) | SkorokhodSpace.modulusBased (0 : ℝ) (((Nat.unpair n).1 : ℕ) : ℝ) f (δ n)
+        < (((Nat.unpair n).2 : ℝ≥0∞) + 1)⁻¹} with hW
+    refine ⟨⋂ n, V n ∩ W n, ?_, fun μ hμ => ?_⟩
+    · -- compactness of the closure, through Milestone 7
+      refine (SkorokhodSpace.isCompact_closure_iff _).2 fun m => ⟨?_, ?_⟩
+      · refine IsCompact.of_isClosed_subset (hKc (Nat.pair m 0)) isClosed_closure ?_
+        rw [(hKc (Nat.pair m 0)).isClosed.closure_eq.symm]
+        refine closure_mono ?_
+        rintro x ⟨f, hf, t, ht, rfl⟩
+        have hfV : f ∈ V (Nat.pair m 0) :=
+          (Set.mem_iInter.1 hf (Nat.pair m 0)).1
+        rw [hV] at hfV
+        exact hfV t (by rwa [Nat.unpair_pair])
+      · rw [ENNReal.tendsto_nhds_zero]
+        intro η hη
+        obtain ⟨k, hk⟩ := ENNReal.exists_inv_nat_lt hη.ne'
+        have hkle : (((k : ℕ) : ℝ≥0∞) + 1)⁻¹ ≤ η := le_of_lt (lt_of_le_of_lt
+          (ENNReal.inv_le_inv.2 le_self_add) hk)
+        set n := Nat.pair m k with hn
+        have hun : Nat.unpair n = (m, k) := Nat.unpair_pair m k
+        have hev : ∀ᶠ d : ℝ in 𝓝[>] (0 : ℝ), d < δ n :=
+          (Filter.eventually_iff_exists_mem.2 ⟨Set.Iio (δ n), Iio_mem_nhds (hδ0 n),
+            fun _ hx => hx⟩).filter_mono nhdsWithin_le_nhds
+        filter_upwards [hev] with d hd
+        refine le_trans (iSup₂_le fun f hf => ?_) hkle
+        have hfW : f ∈ W n := (Set.mem_iInter.1 hf n).2
+        rw [hW] at hfW
+        simp only [hun] at hfW
+        exact le_trans (SkorokhodSpace.modulusBased_mono (0 : ℝ) (m : ℝ) f hd.le) hfW.le
+    · -- and the exceptional set, paid for by a geometric series
+      refine le_trans (measure_compl_iInter_le μ _) ?_
+      refine le_trans (ENNReal.tsum_le_tsum (fun n => ?_))
+        (le_of_eq (?_ : ∑' n : ℕ, ε * (2 : ℝ≥0∞)⁻¹ ^ (n + 1) = ε))
+      · refine le_trans (le_of_eq (by rw [Set.compl_inter])) ?_
+        refine le_trans (measure_union_le _ _) ?_
+        have hVle : μ (V n)ᶜ ≤ c n := hKle n μ hμ
+        have hWle : μ (W n)ᶜ ≤ c n := by
+          refine le_trans (le_of_eq (congrArg μ ?_)) (hδle n μ hμ)
+          rw [hW]
+          ext f
+          simp only [Set.mem_compl_iff, Set.mem_ofPred_eq, not_lt]
+        refine le_trans (add_le_add hVle hWle) (le_of_eq ?_)
+        rw [hc]
+        simp only
+        rw [← two_mul, ← mul_assoc, mul_comm (2 : ℝ≥0∞) ε, mul_assoc, pow_succ,
+          mul_comm ((2 : ℝ≥0∞)⁻¹ ^ (n + 1)) ((2 : ℝ≥0∞)⁻¹), ← mul_assoc, ← mul_assoc,
+          mul_assoc ε (2 : ℝ≥0∞) (2 : ℝ≥0∞)⁻¹, h2, mul_one]
+      · rw [ENNReal.tsum_mul_left]
+        have hgeo : ∑' n : ℕ, (2 : ℝ≥0∞)⁻¹ ^ (n + 1) = 1 := by
+          simp only [pow_succ]
+          rw [ENNReal.tsum_mul_right, ENNReal.tsum_geometric_two, h2]
+        rw [hgeo, mul_one]
+
 /-! ### Milestone 8, stage (A): post-composition with a map of the value space
 
 The reduction of tightness to real valued paths reads a law on `D(ι, E)` through
@@ -13913,9 +14219,9 @@ inequality and the truncation at `1` in the integrand.
 
 What the continuity is for is the last statement of the section,
 `SkorokhodSpace.isTightMeasureSet_map_postcomp`: the forward half of the
-reduction of stage (B).  The converse half is not available here, and cannot be:
-it runs through the tightness criterion at the level of measures, which is
-`SkorokhodSpace.isTightMeasureSet_iff` and is not in this file. -/
+reduction of stage (B).  The converse half is not this statement read backwards:
+it runs through the tightness criterion at the level of measures,
+`SkorokhodSpace.isTightMeasureSet_iff`, which is proved in the section above. -/
 
 omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] [BasePoint ι]
   [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
