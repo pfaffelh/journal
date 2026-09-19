@@ -1941,6 +1941,51 @@ over a shrinking family and is therefore an infimum.
   Three forms of the modulus have been tried and two are refuted theorems of this
   file — pinned to the window's edges by `not_tendsto_iSup_modulusPinned`, free of
   the base point by `not_isCompact_closure_of_jumps_at_basePoint`.
+* `SkorokhodSpace.isCompact_closure_iff_nnreal`: the previous item over the index
+  `ℝ≥0`. Every instance of the bundle of Milestone 1 is discharged there —
+  `NNReal.instAdditiveDist`, `NNReal.instBasePoint`,
+  `NNReal.instHasCountableCore` — and the hypothesis `hrigid` of
+  `not_isCompact_closure_of_rigid`, that every time change fixing the base point
+  of small norm is the identity, fails over `ℝ≥0`, which carries non-identity
+  time changes fixing `0` of arbitrarily small norm; so the witness that confines
+  the criterion over a general index excludes nothing at this one. Only the
+  converse half is at stake: the forward half is already stated over an arbitrary
+  index, `isCompact_closure_values_of_isCompact` and
+  `tendsto_iSup_modulusBased_of_isCompact` both reading `basePoint : ι`, and
+  `exhaustion`, `modulusBased`, `IsSubdivisionBased` and `stepPathFamilyLe` are
+  index-generic as well. What the converse reads at `ℝ` is the finite grid and
+  the time change that snaps a `δ`-sparse subdivision onto it,
+  `exists_finite_grid_timeChange`, and the net built from it,
+  `exists_mem_stepPathFamilyLe_intDist_le`. It is a statement about the
+  criterion itself; the consumers of Milestone 8 over `ℝ≥0` do not read it, they
+  read the closed embedding of Milestone 9,
+  `SkorokhodSpace.isClosedEmbedding_extendNNReal`, which crosses the index once
+  for all of them.
+
+  **This item is not by itself the index crossing**, and the next one says why:
+  53 declarations of this file are stated over the index `ℝ`, 2 967 lines of
+  them, and the criterion is three of those. Restating the rest one by one is
+  not the route.
+* `SkorokhodSpace.extendNNReal`, `SkorokhodSpace.isometry_extendNNReal` and
+  `SkorokhodSpace.isClosedEmbedding_extendNNReal`: **the index crossing.** A path
+  on `ℝ≥0` extends to one on `ℝ` by the constant `f 0` on the negative half line,
+  and that map is a closed isometric embedding of `D(ℝ≥0, E)` into `D(ℝ, E)`.
+  With it every statement over `ℝ` is read at `ℝ≥0` by transport — tightness of a
+  set of laws is the tightness of the image laws, a finite dimensional
+  distribution at a nonnegative time is one of the image, and weak convergence
+  pulls back along a closed embedding — and the 53 declarations over `ℝ` are used
+  as they stand instead of restated.
+
+  The two directions of the time change are what the proof turns on, and they are
+  not symmetric: a time change of `ℝ≥0` extends to one of `ℝ` by the identity on
+  the negative half line, while one of `ℝ` restricts only when it fixes `0`
+  (`TimeChange.toNNReal`, with `TimeChange.norm_toNNReal_le` for the norm). The
+  isometry therefore has to say that the extra freedom on the negative half line
+  buys nothing, and it does not, both extended paths being constant there.
+
+  **This is what Milestone 8 spends the index on**, and what **MartingaleProblems**
+  needs of it: every convergence statement there stands over `ℝ`, and `jumpPathD`
+  of that roadmap's Milestone 6 lands in `D(ℝ≥0, E)`.
 * `IsCadlag.exists_subdivision_through`: a càdlàg subdivision of `Set.Icc a b`
   through a prescribed interior point `c`, with cell oscillation at most `ε`.
   Proved (2026-09-09). It is `IsCadlag.exists_subdivision` twice, on `[a,c]` and
@@ -3088,9 +3133,60 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   one, and under two instances the two products `∏ i, …` are no longer the same
   term — not for `exact`, and not for `linarith`'s atoms either. Naming the
   instance binder of the item above and passing it is the whole fix.
-* `SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional` — stage (A).
-  The same conclusion for a tight family, from the previous item and
-  `isCompact_closure_of_isTightMeasureSet`.
+* `SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional` — stage (A),
+  **proved 2026-09-19**. The same conclusion for a tight sequence, from the
+  previous item and `isCompact_closure_of_isTightMeasureSet`
+  (`Mathlib/MeasureTheory/Measure/Prokhorov.lean:530`). That lemma asks of the
+  path space `[T2Space]` and `[BorelSpace]` and nothing further, so this step
+  adds no hypothesis on `E`: the bundle is the previous item's, and it is spent
+  on Prokhorov's *converse* half inside
+  `exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure`. The set is
+  the range of the sequence, which is the form both the hypothesis and
+  `fact:relcompact` are reached in; for a tight family of which the sequence is
+  a part, the previous item with `S` that family is the statement.
+* `SkorokhodSpace.tendstoInDistribution_of_isTight_of_tendsto_finiteDimensional`
+  — stage (A), **proved 2026-09-19**. The previous item for random variables, on
+  Mathlib's `MeasureTheory.TendstoInDistribution`: path valued `X n` whose laws
+  are tight and whose finite dimensional distributions along a dense `T`
+  converge to those of `Z` converge to `Z` in distribution. `Measure.map` and
+  `integral_map` carry the one form to the other, and the finite product of the
+  test functions is measurable and not continuous, being
+  `SkorokhodSpace.measurable_eval` at each time followed by the bounded
+  continuous factor.
+* `SkorokhodSpace.tendstoInDistribution_eval_of_isTight_of_tendsto_finiteDimensional`
+  — stage (A), **proved 2026-09-19**. **The marginal at a time that need not lie
+  in `T`**, and this is the milestone as a supplier for Milestone 10 of the
+  roadmap **MartingaleProblems**. Hypothesis (a) of `mpSolution_of_tendsto` is
+  convergence in distribution of the value at *each* time of the index set it
+  runs over; what an approximating family delivers is convergence of the finite
+  dimensional distributions along **one** dense set of times. The two are not
+  the same statement, and the gap is not cosmetic:
+  `exists_countable_dense_forall_setOf_leftLim_ne_one` exhibits a law and a
+  countable dense `T` no time of which is a continuity time of the law, so a
+  time of the index set may stand in no useful relation to `T` whatever. What
+  closes it is the weak convergence on the path space, which is a statement
+  about no particular time, read back at a single time by
+  `tendstoInDistribution_eval`; the times at which that reading is available are
+  dense by `exists_countable_dense_continuity` and cocountable by
+  `countable_setOf_measure_leftJump_ne_zero`.
+
+  **The index of these three is `ℝ` and not the `ι` of Milestone 1**, and that is
+  inherited: the compactness criterion `isCompact_closure_iff` of Milestone 7,
+  through which every one of them passes, is stated over `D(ℝ, E)`. What confines
+  *that* to `ℝ` is the converse half and the rigid-index witness
+  `not_isCompact_closure_of_rigid` — the criterion is false over the Cantor set
+  as index. That witness carries the hypothesis `hrigid`, that every time change
+  fixing the base point of small norm is the identity, and what discharges it at
+  the Cantor set is the factor `3` between scales.
+
+  It matters for a reader of **MartingaleProblems**, whose path map `jumpPathD`
+  lands in `D(ℝ≥0, E)`: `tendstoInDistribution_eval` is index-generic and applies
+  there, these three are stated over `ℝ` and do not. That is the one place where
+  the chain from tightness to hypothesis (a) of `mpSolution_of_tendsto` parts,
+  and it parts at an index and not at a statement. What joins the two is
+  `SkorokhodSpace.isClosedEmbedding_extendNNReal` of Milestone 7, along which
+  every statement over `ℝ` is read at `ℝ≥0`; 53 declarations of this file stand
+  over the index `ℝ`, so the crossing is made once and not repeated.
 * `SkorokhodSpace.exists_countable_dense_continuity` — stage (A). For a single
   probability measure `μ` the times `t` with `μ {f | f⁻ t = f t} = 1` contain a
   countable dense set. The countability half is
@@ -3191,3 +3287,86 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   `K ⊆ ℝ` containing every `n`. So
   `isTightMeasureSet_iff_forall_postcomp` cannot drop the compact containment
   hypothesis, and this is the family that shows it.
+
+## Milestone 9: the nonnegative index inside the real one
+
+Milestones 7 and 8 are stated over the index `ℝ`. The reason is
+`isCompact_closure_iff`, whose converse half is false over an index with gaps
+(`not_isCompact_closure_of_rigid`), and every statement of the oscillation
+chain reads it. The processes of the roadmap **MartingaleProblems** live over
+`ℝ≥0`. This milestone is the passage between the two indices, and it is made
+**once**, as a map of path spaces.
+
+**The map.** `SkorokhodSpace.extendNNReal : D(ℝ≥0, E) → D(ℝ, E)` sends `f` to
+`f ∘ Real.toNNReal`, that is, extends the path by the constant value `f 0` on
+the negative half line. It is càdlàg by `IsCadlag.comp_monotone_continuous`,
+`Real.toNNReal` being monotone and continuous, and it is the mirror of
+`IsCadlag.comp_coe_nnreal` of Milestone 2, which goes the other way.
+
+**The theorems.**
+
+* `SkorokhodSpace.isometry_extendNNReal` — the map is an isometry.
+* `SkorokhodSpace.isClosedEmbedding_extendNNReal` — and its image is closed.
+  Completeness of `D(ℝ≥0, E)` is `SkorokhodSpace.instCompleteSpace` of
+  Milestone 5, and it is what turns the isometry into a closed embedding.
+* `SkorokhodSpace.intDist_extendNNReal` — the metric statement behind it, at
+  the level of `intDist` and therefore usable without the instance.
+* `SkorokhodSpace.distWith_extendNNReal` — the windowed supremum for one time
+  change, which is where the two indices actually meet.
+* `TimeChange.ofNNReal` — a time change of `ℝ≥0` extended to `ℝ` by the
+  identity on the negative half line, with `TimeChange.norm_ofNNReal_le`,
+  `TimeChange.inv_ofNNReal` and `TimeChange.toNNReal_ofNNReal`.
+* `TimeChange.orderIso_zero_nnreal` — every time change of `ℝ≥0` fixes `0`, so
+  `TimeChange.fixing 0` is the whole group there. `TimeChange.ofNNReal` needs no
+  hypothesis, while `TimeChange.toNNReal` of Milestone 5 needs `h0`.
+* `exhaustion_nnreal`, `exhaustionMin_nnreal`, `exhaustionMax_nnreal`,
+  `toNNReal_clamp` — the window of `ℝ≥0` written out, and the one identity that
+  carries the clamp across.
+
+**Why the isometry is content and not bookkeeping.** The two groups of time
+changes are not symmetric. One of `ℝ` fixing `0` restricts to `ℝ≥0` and can only
+lose norm; one of `ℝ≥0` extends to `ℝ` and picks up a Lipschitz constant `1`
+from the pairs `a < 0 ≤ b`, where the left point does not move while the right
+one does. That gain is free, and `TimeChange.one_le_max_lipConst` is the reason:
+the larger of the two constants of a time change is at least `1` anyway, so the
+`1` disappears in the maximum the norm takes. The extra freedom a time change of
+`ℝ` has on the negative half line buys nothing, because both extended paths are
+constant there.
+
+**What the embedding transports.** Three things travel along it: the image of a
+compact set is compact, so tightness of a set of laws on `D(ℝ≥0, E)` gives
+tightness of the image laws; the image is closed, so a bounded continuous
+function on `D(ℝ≥0, E)` extends and weak convergence of the image laws pulls
+back; and a coordinate at a nonnegative time is a coordinate of the extended
+path.
+
+**And the one that does not.** Convergence of the finite dimensional
+distributions along a dense `T ⊆ ℝ≥0` is *not* convergence along a dense subset
+of `ℝ`, because `T` is not dense in `ℝ`. It is a hypothesis and not a
+conclusion, so the embedding does not carry it. The times to be added are the
+negative ones, where the extended path takes the value `f 0`, so what has to be
+known there is convergence at the single time `0`. The statement of the
+`ℝ≥0`-form of Milestone 8 therefore reads `Dense T` together with
+`(0 : ℝ≥0) ∈ T`, and under those two the negative times are handled by replacing
+each of them by `0`, which is a time of `T`.
+
+**The `ℝ≥0`-form of Milestone 8, to be built on the embedding.**
+
+* `SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional_nnreal` —
+  a tight sequence of laws on `D(ℝ≥0, E)` whose finite dimensional
+  distributions converge along a dense `T ∋ 0` converges weakly. It rests on
+  `isClosedEmbedding_extendNNReal`, on the `ℝ`-form of the theorem, and on the
+  two transports named above.
+* `SkorokhodSpace.isTightMeasureSet_map_extendNNReal` — tightness carries
+  forward along the embedding, because a continuous image of a compact set is
+  compact.
+* `SkorokhodSpace.tendsto_of_tendsto_map_extendNNReal` — weak convergence pulls
+  back along a closed embedding, by extension of bounded continuous functions
+  from a closed set.
+
+**Acceptance example.** `SkorokhodSpace.extendNNReal (jumpPathD …)` of the
+roadmap **MartingaleProblems**, Milestone 6: the path law of the jump
+construction, which lives on `D(ℝ≥0, E)`, read on `D(ℝ, E)`. It is the family
+for which the index crossing was built, and the statement to be checked on it is
+that its coordinate at a nonnegative time is unchanged by the crossing, which is
+`extendNNReal_apply` together with `Real.toNNReal_coe`.

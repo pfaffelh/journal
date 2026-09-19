@@ -6875,6 +6875,34 @@ the answer is the strongest one available, and it is proved (2026-09-18):
   approximating variables beyond the convergence itself; they need not be jump
   constructions.
 
+  **What these two still ask for, and where it comes from.** Their hypothesis is
+  weak convergence *on the path space*, and an approximating family delivers
+  convergence of the finite dimensional distributions along one dense set of
+  times. The two are bridged by
+  `SkorokhodSpace.tendstoInDistribution_eval_of_isTight_of_tendsto_finiteDimensional`
+  (**SkorokhodSpace** Milestone 8, 2026-09-19), which adds tightness to the
+  convergence along a dense `T` and returns the marginal at every time the limit
+  law does not charge with a jump — in particular at times outside `T`, which is
+  the whole point, since a time of the index set need stand in no relation to `T`
+  at all. That bridge is stated over the index `ℝ`, inherited from
+  `SkorokhodSpace.isCompact_closure_iff` of Milestone 7 there, while `jumpPathD`
+  lands in `D(ℝ≥0, E)`; `SkorokhodSpace.isClosedEmbedding_extendNNReal`
+  (**SkorokhodSpace** Milestone 9, proved 2026-09-19) is the item that joins the
+  two, and it joins them once for all the declarations of that file which stand
+  over `ℝ`, rather than repeating them.
+
+  **What the crossing leaves to be said.** Three of the four pieces travel along
+  the embedding on their own: tightness forward, because a continuous image of a
+  compact set is compact; weak convergence backward, because the image is
+  closed; and the coordinate at a nonnegative time, because the extended path
+  has the same value there. The fourth is the hypothesis on the finite
+  dimensional distributions, and it does not travel: a dense `T ⊆ ℝ≥0` is not
+  dense in `ℝ`. The times to be added are the negative ones, where the extended
+  path takes the value at `0`, so the `ℝ≥0`-form of the bridge,
+  `SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional_nnreal`, reads
+  `Dense T` together with `(0 : ℝ≥0) ∈ T`, and each negative time is answered by
+  the time `0` of `T`.
+
 * `jumpFiltrationE_eq_comap_jumpPath` and `measurable_pathFiltration_jumpPath`:
   the natural filtration of the construction **is** the pull back of
   `pathFiltration` along `jumpPath`, by `naturalFiltration_comp`, so the path map

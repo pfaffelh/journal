@@ -13706,3 +13706,504 @@ theorem SkorokhodSpace.tendsto_of_isCompact_closure_of_tendsto_finiteDimensional
       (fun k => hμS (ns (φ k))) hconv' hT
       (fun α hα F t htT => (hfdd α hα F t htT).comp hsub)
   exact ⟨φ, hνρ ▸ hconv'⟩
+
+/-- **Ethier--Kurtz, Theorem 3.7.8(b) for a tight sequence.**  The theorem above
+under the hypothesis a reader meets it with: `μ` tight rather than relatively
+compact.
+
+Prokhorov's forward half, `isCompact_closure_of_isTightMeasureSet`
+(`Mathlib/MeasureTheory/Measure/Prokhorov.lean:530`), is the whole proof; it asks
+of the path space nothing but `[T2Space]` and `[BorelSpace]`, both of which
+`SkorokhodSpace.instMetricSpace` and the Borel instance of Milestone 6 give.  The
+hypotheses on `E` are therefore not those of this step but those of the theorem
+above, which spends completeness and second countability on the *converse* half
+through `exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure`.
+
+**The set is the range of the sequence**, and that is the form both the
+hypothesis and `fact:relcompact` are reached in; for a tight *family* of which
+the sequence is a part, the theorem above with `S` that family is the statement. -/
+theorem SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional
+    [CompleteSpace E] {μ : ℕ → ProbabilityMeasure D(ℝ, E)}
+    (htight : IsTightMeasureSet {((μ n : ProbabilityMeasure D(ℝ, E)) : Measure D(ℝ, E)) | n})
+    {ν : ProbabilityMeasure D(ℝ, E)} {T : Set ℝ} (hT : Dense T)
+    (hfdd : ∀ (α : Type) (_ : Fintype α) (F : α → (E →ᵇ ℝ)) (t : α → ℝ), (∀ i, t i ∈ T) →
+      Tendsto (fun n => ∫ f, ∏ i, F i (f.toFun (t i)) ∂(μ n : Measure D(ℝ, E))) atTop
+        (𝓝 (∫ f, ∏ i, F i (f.toFun (t i)) ∂(ν : Measure D(ℝ, E))))) :
+    Tendsto μ atTop (𝓝 ν) := by
+  have hset : {((ρ : ProbabilityMeasure D(ℝ, E)) : Measure D(ℝ, E)) | ρ ∈ Set.range μ}
+      = {((μ n : ProbabilityMeasure D(ℝ, E)) : Measure D(ℝ, E)) | n} := by
+    ext m
+    constructor
+    · rintro ⟨ρ, ⟨n, rfl⟩, rfl⟩
+      exact ⟨n, rfl⟩
+    · rintro ⟨n, rfl⟩
+      exact ⟨μ n, ⟨n, rfl⟩, rfl⟩
+  refine SkorokhodSpace.tendsto_of_isCompact_closure_of_tendsto_finiteDimensional
+    (S := Set.range μ) (isCompact_closure_of_isTightMeasureSet ?_) (fun n => ⟨n, rfl⟩) hT hfdd
+  rw [hset]
+  exact htight
+
+/-- **The same for random variables.**  Path valued variables whose laws are tight
+and whose finite dimensional distributions along a dense `T` converge to those of
+`Z` converge to `Z` in distribution, on Mathlib's
+`MeasureTheory.TendstoInDistribution`.
+
+This is the theorem above read on the sample spaces, `Measure.map` carrying the
+one form to the other; `integral_map` is where the hypothesis `hX` is spent, and
+the integrand is measurable rather than continuous, being
+`SkorokhodSpace.measurable_eval` at each of the finitely many times followed by
+the bounded continuous `F i`.
+
+**The coercion of `ProbabilityMeasure` is not to be rewritten through.**  The goal
+of the `tendsto` field carries `↑⟨(P n).map (X n), _⟩`, and a `simp only` at it
+fails with an application type mismatch, the subtype not reducing at `implicit`
+transparency.  The equality of the integrals is therefore established *beside* the
+goal and `exact` closes it by definitional unfolding. -/
+theorem SkorokhodSpace.tendstoInDistribution_of_isTight_of_tendsto_finiteDimensional
+    [CompleteSpace E]
+    {Ω : ℕ → Type*} {mΩ : ∀ n, MeasurableSpace (Ω n)}
+    {P : (n : ℕ) → Measure (Ω n)} [∀ n, IsProbabilityMeasure (P n)]
+    {Ω₀ : Type*} {mΩ₀ : MeasurableSpace Ω₀} {P₀ : Measure Ω₀} [IsProbabilityMeasure P₀]
+    {X : (n : ℕ) → Ω n → D(ℝ, E)} {Z : Ω₀ → D(ℝ, E)}
+    (hX : ∀ n, AEMeasurable (X n) (P n)) (hZ : AEMeasurable Z P₀)
+    (htight : IsTightMeasureSet {(P n).map (X n) | n})
+    {T : Set ℝ} (hT : Dense T)
+    (hfdd : ∀ (α : Type) (_ : Fintype α) (F : α → (E →ᵇ ℝ)) (t : α → ℝ), (∀ i, t i ∈ T) →
+      Tendsto (fun n => ∫ ω, ∏ i, F i ((X n ω).toFun (t i)) ∂(P n)) atTop
+        (𝓝 (∫ ω, ∏ i, F i ((Z ω).toFun (t i)) ∂P₀))) :
+    TendstoInDistribution X atTop Z P P₀ where
+  forall_aemeasurable := hX
+  aemeasurable_limit := hZ
+  tendsto := by
+    refine SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional
+      (μ := fun n => ⟨(P n).map (X n), inferInstance⟩)
+      (ν := ⟨P₀.map Z, inferInstance⟩) htight hT ?_
+    intro α hα F t htT
+    have hm : Measurable (fun f : D(ℝ, E) => ∏ i, F i (f.toFun (t i))) :=
+      Finset.measurable_prod _ fun i _ =>
+        (F i).continuous.measurable.comp (SkorokhodSpace.measurable_eval (t i))
+    have h1 : ∀ n : ℕ, ∫ f, ∏ i, F i (f.toFun (t i)) ∂((P n).map (X n))
+        = ∫ ω, ∏ i, F i ((X n ω).toFun (t i)) ∂(P n) := fun n =>
+      integral_map (hX n) hm.aestronglyMeasurable
+    have h2 : ∫ f, ∏ i, F i (f.toFun (t i)) ∂(P₀.map Z)
+        = ∫ ω, ∏ i, F i ((Z ω).toFun (t i)) ∂P₀ :=
+      integral_map hZ hm.aestronglyMeasurable
+    have hfun : (fun n : ℕ => ∫ f, ∏ i, F i (f.toFun (t i)) ∂((P n).map (X n)))
+        = fun n : ℕ => ∫ ω, ∏ i, F i ((X n ω).toFun (t i)) ∂(P n) := funext h1
+    have key : Tendsto (fun n : ℕ => ∫ f, ∏ i, F i (f.toFun (t i)) ∂((P n).map (X n))) atTop
+        (𝓝 (∫ f, ∏ i, F i (f.toFun (t i)) ∂(P₀.map Z))) := by
+      rw [hfun, h2]
+      exact hfdd α hα F t htT
+    exact key
+
+/-- **The marginal at a time that need not lie in `T`**, and this is Milestone 8
+as a supplier for Milestone 10 of the roadmap **MartingaleProblems**.
+
+Hypothesis (a) of `mpSolution_of_tendsto` is convergence in distribution of the
+value at *each* time of the index set `D` it runs over, and what an approximating
+family delivers is convergence of the finite dimensional distributions along
+**one** dense set of times.  The two are not the same statement, and the gap is
+not cosmetic: `SkorokhodSpace.exists_countable_dense_forall_setOf_leftLim_ne_one`
+exhibits a law and a countable dense `T` no time of which is a continuity time of
+the law, so a time of `D` may stand in no useful relation to `T` whatever.
+
+What closes the gap is the theorem above, and only it: tightness together with
+convergence along `T` gives weak convergence on the path space, which is a
+statement about no particular time, and
+`SkorokhodSpace.tendstoInDistribution_eval` reads the marginal off it at every
+time the limit law does not charge with a jump.  Those times are dense by
+`SkorokhodSpace.exists_countable_dense_continuity` and their complement is
+countable by `SkorokhodSpace.countable_setOf_measure_leftJump_ne_zero`, so the
+conclusion is available at all but countably many `s`. -/
+theorem SkorokhodSpace.tendstoInDistribution_eval_of_isTight_of_tendsto_finiteDimensional
+    [CompleteSpace E]
+    {Ω : ℕ → Type*} {mΩ : ∀ n, MeasurableSpace (Ω n)}
+    {P : (n : ℕ) → Measure (Ω n)} [∀ n, IsProbabilityMeasure (P n)]
+    {Ω₀ : Type*} {mΩ₀ : MeasurableSpace Ω₀} {P₀ : Measure Ω₀} [IsProbabilityMeasure P₀]
+    {X : (n : ℕ) → Ω n → D(ℝ, E)} {Z : Ω₀ → D(ℝ, E)}
+    (hX : ∀ n, AEMeasurable (X n) (P n)) (hZ : AEMeasurable Z P₀)
+    (htight : IsTightMeasureSet {(P n).map (X n) | n})
+    {T : Set ℝ} (hT : Dense T)
+    (hfdd : ∀ (α : Type) (_ : Fintype α) (F : α → (E →ᵇ ℝ)) (t : α → ℝ), (∀ i, t i ∈ T) →
+      Tendsto (fun n => ∫ ω, ∏ i, F i ((X n ω).toFun (t i)) ∂(P n)) atTop
+        (𝓝 (∫ ω, ∏ i, F i ((Z ω).toFun (t i)) ∂P₀)))
+    (s : ℝ) (hs : P₀ {ω | Function.leftLim (Z ω).toFun s = (Z ω).toFun s} = 1) :
+    TendstoInDistribution (fun n ω => (X n ω).toFun s) atTop (fun ω => (Z ω).toFun s) P P₀ :=
+  SkorokhodSpace.tendstoInDistribution_eval
+    (SkorokhodSpace.tendstoInDistribution_of_isTight_of_tendsto_finiteDimensional
+      hX hZ htight hT hfdd) s hs
+
+/-! ## Milestone 9: the nonnegative index inside the real one
+
+Everything above about the modulus and about tightness is stated over the index
+`ℝ`, and the reason is `SkorokhodSpace.isCompact_closure_iff`, whose converse
+half is false over an index with gaps
+(`SkorokhodSpace.not_isCompact_closure_of_rigid`).  The processes of
+**MartingaleProblems** live over `ℝ≥0`.  This milestone is the passage between
+the two, and it is made **once**, as a map of path spaces, rather than by
+repeating the declarations that carry the index `ℝ`.
+
+A path on `ℝ≥0` is extended to `ℝ` by the constant value `f 0` on the negative
+half line, which is `f ∘ Real.toNNReal`.  The map is an isometry and its image is
+closed; that is `SkorokhodSpace.isClosedEmbedding_extendNNReal`.
+
+**The isometry is the content, and it is not formal.**  The two groups of time
+changes are not symmetric: one of `ℝ` fixing `0` restricts to `ℝ≥0`
+(`TimeChange.toNNReal`, Milestone 5) and can only lose norm in doing so, while
+one of `ℝ≥0` extends to `ℝ` by the identity on the negative half line
+(`TimeChange.ofNNReal`) and gains a Lipschitz constant `1` from the pairs
+`a < 0 ≤ b`, where the left point does not move at all.  That gain is free, and
+the reason is `TimeChange.one_le_max_lipConst`: the larger of the two constants
+of a time change is at least `1` anyway, so the `1` disappears in the maximum the
+norm takes.  Extension therefore does not raise the norm, restriction does not
+raise it either, and the two infima over the two groups agree.  What the extra
+freedom of a time change of `ℝ` on the negative half line could buy is nothing,
+because both extended paths are constant there.
+
+The windowed supremum matches on the nose and not merely up to an estimate:
+`Real.toNNReal` commutes with the clamp (`toNNReal_clamp`) and is surjective, so
+the two suprema are suprema of the *same* set of numbers
+(`SkorokhodSpace.distWith_extendNNReal`).
+
+**What the embedding transports, and what it does not.**  Three things travel
+along it.  The image of a compact set is compact, so tightness of a set of laws
+on `D(ℝ≥0, E)` gives tightness of the image laws.  The image is closed, so a
+bounded continuous function on `D(ℝ≥0, E)` extends to one on `D(ℝ, E)` and weak
+convergence of the image laws pulls back.  And a coordinate at a nonnegative time
+is a coordinate of the extended path, by
+`SkorokhodSpace.extendNNReal_apply`.
+
+The fourth does **not** travel, and it is a hypothesis rather than a conclusion:
+a dense subset `T` of `ℝ≥0` is not dense in `ℝ`, so convergence of the finite
+dimensional distributions along `T` is not convergence along a dense subset of
+`ℝ`.  The times that have to be added are the negative ones, where the extended
+path takes the value `f 0`; convergence there is convergence at the single time
+`0`.  The statement over `ℝ≥0` therefore reads `Dense T` together with
+`(0 : ℝ≥0) ∈ T`, and under those two the negative times are handled by replacing
+each of them by `0`, which is a time of `T`.
+-/
+
+/-- The window of `ℝ≥0` is an initial segment: the closed ball of radius `u`
+about `0` is `[0, u]`, and for negative `u` it is `{0}`. -/
+theorem exhaustion_nnreal (u : ℝ) :
+    exhaustion (0 : ℝ≥0) u = Set.Iic (Real.toNNReal u) := by
+  ext x
+  rw [exhaustion, Metric.mem_closedBall, NNReal.dist_eq, Set.mem_Iic, ← NNReal.coe_le_coe,
+    Real.coe_toNNReal']
+  simp
+
+/-- The least point of the window of `ℝ≥0` is the base point itself, and this is
+the one place where the two indices differ visibly: over `ℝ` it is `-max u 0`. -/
+theorem exhaustionMin_nnreal (u : ℝ) : exhaustionMin (0 : ℝ≥0) u = 0 := by
+  refine IsLeast.unique (isLeast_exhaustionMin (0 : ℝ≥0) u) ?_
+  rw [exhaustion_nnreal]
+  exact ⟨Set.mem_Iic.2 (by simp), fun x _ => by simp⟩
+
+/-- The greatest point of the window of `ℝ≥0`. -/
+theorem exhaustionMax_nnreal (u : ℝ) :
+    exhaustionMax (0 : ℝ≥0) u = Real.toNNReal u := by
+  refine IsGreatest.unique (isGreatest_exhaustionMax (0 : ℝ≥0) u) ?_
+  rw [exhaustion_nnreal]
+  exact isGreatest_Iic
+
+/-- **The truncation commutes with the clamp.**  This is what makes the windowed
+supremum of the extended paths the windowed supremum of the original ones: a
+point of the negative half line is clamped into `[-u, 0]` and then truncated to
+`0`, while a point truncated to `0` first is already the least point of the
+window of `ℝ≥0`. -/
+theorem toNNReal_clamp (u t : ℝ) :
+    Real.toNNReal (clamp (0 : ℝ) u t) = clamp (0 : ℝ≥0) u (Real.toNNReal t) := by
+  rw [clamp, clamp, exhaustionMin_real, exhaustionMax_real, exhaustionMin_nnreal,
+    exhaustionMax_nnreal]
+  apply NNReal.coe_injective
+  rw [NNReal.coe_min, NNReal.coe_max, Real.coe_toNNReal', Real.coe_toNNReal',
+    Real.coe_toNNReal', NNReal.coe_zero]
+  simp only [max_def, min_def]
+  split_ifs <;> linarith
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **A path on `ℝ≥0`, read as a path on `ℝ`**: it is extended by the constant
+value `f 0` on the negative half line.  Càdlàg it stays, by
+`IsCadlag.comp_monotone_continuous` with `Real.toNNReal`, which is monotone and
+continuous; this is the mirror of `IsCadlag.comp_coe_nnreal`, which goes the
+other way. -/
+noncomputable def SkorokhodSpace.extendNNReal (f : D(ℝ≥0, E)) : D(ℝ, E) where
+  toFun t := f.toFun (Real.toNNReal t)
+  isCadlag :=
+    f.isCadlag.comp_monotone_continuous Real.toNNReal_monotone continuous_real_toNNReal
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+@[simp] theorem SkorokhodSpace.extendNNReal_apply (f : D(ℝ≥0, E)) (t : ℝ) :
+    (SkorokhodSpace.extendNNReal f).toFun t = f.toFun (Real.toNNReal t) := rfl
+
+/-- **Every time change of `ℝ≥0` fixes the base point**, so the subgroup
+`TimeChange.fixing 0` of `TimeChange ℝ≥0` is the whole group.  There is nothing
+to assume here: an order isomorphism preserves the least element, and `0` is
+`⊥`.  Over `ℝ` the corresponding statement is false, which is why
+`TimeChange.toNNReal` carries `h0` as a hypothesis and `TimeChange.ofNNReal`
+below carries none. -/
+theorem TimeChange.orderIso_zero_nnreal (m : TimeChange ℝ≥0) : m.toOrderIso 0 = 0 := by
+  have h : m.toOrderIso ⊥ = ⊥ := m.toOrderIso.map_bot
+  simpa using h
+
+/-- A time change of `ℝ≥0`, read on `ℝ`: it is the identity on the negative half
+line.  The two branches agree at `0` by `TimeChange.orderIso_zero_nnreal`. -/
+noncomputable def TimeChange.realExtend (m : TimeChange ℝ≥0) (t : ℝ) : ℝ :=
+  if 0 ≤ t then ((m.toOrderIso (Real.toNNReal t) : ℝ≥0) : ℝ) else t
+
+theorem TimeChange.realExtend_of_nonneg (m : TimeChange ℝ≥0) {t : ℝ} (ht : 0 ≤ t) :
+    m.realExtend t = ((m.toOrderIso (Real.toNNReal t) : ℝ≥0) : ℝ) := ite_eq_left ht
+
+theorem TimeChange.realExtend_of_neg (m : TimeChange ℝ≥0) {t : ℝ} (ht : t < 0) :
+    m.realExtend t = t := ite_eq_right (not_le.2 ht)
+
+/-- The extension carries each of the two half lines onto itself. -/
+theorem TimeChange.realExtend_nonneg_iff (m : TimeChange ℝ≥0) (t : ℝ) :
+    0 ≤ m.realExtend t ↔ 0 ≤ t := by
+  rcases le_or_gt 0 t with ht | ht
+  · simp [m.realExtend_of_nonneg ht, ht]
+  · simp [m.realExtend_of_neg ht, ht.not_ge]
+
+/-- Reading the extension back on `ℝ≥0` gives the original time change, at every
+point of `ℝ` and not only at the nonnegative ones: below `0` both sides are
+`0`. -/
+theorem TimeChange.toNNReal_realExtend (m : TimeChange ℝ≥0) (t : ℝ) :
+    Real.toNNReal (m.realExtend t) = m.toOrderIso (Real.toNNReal t) := by
+  rcases le_or_gt 0 t with ht | ht
+  · rw [m.realExtend_of_nonneg ht, Real.toNNReal_coe]
+  · rw [m.realExtend_of_neg ht, Real.toNNReal_of_nonpos ht.le]
+    exact m.orderIso_zero_nnreal.symm
+
+theorem TimeChange.monotone_realExtend (m : TimeChange ℝ≥0) : Monotone m.realExtend := by
+  intro a b hab
+  rcases le_or_gt 0 a with ha | ha
+  · have hb : (0 : ℝ) ≤ b := ha.trans hab
+    rw [m.realExtend_of_nonneg ha, m.realExtend_of_nonneg hb, NNReal.coe_le_coe]
+    exact m.toOrderIso.monotone (Real.toNNReal_mono hab)
+  · rw [m.realExtend_of_neg ha]
+    rcases le_or_gt 0 b with hb | hb
+    · rw [m.realExtend_of_nonneg hb]
+      exact ha.le.trans (NNReal.coe_nonneg _)
+    · rw [m.realExtend_of_neg hb]; exact hab
+
+theorem TimeChange.realExtend_inv_realExtend (m : TimeChange ℝ≥0) (t : ℝ) :
+    m⁻¹.realExtend (m.realExtend t) = t := by
+  rcases le_or_gt 0 t with ht | ht
+  · have h0 : 0 ≤ m.realExtend t := (m.realExtend_nonneg_iff t).2 ht
+    rw [m⁻¹.realExtend_of_nonneg h0, m.toNNReal_realExtend]
+    show ((m.toOrderIso.symm (m.toOrderIso (Real.toNNReal t)) : ℝ≥0) : ℝ) = t
+    rw [OrderIso.symm_apply_apply, Real.coe_toNNReal t ht]
+  · rw [m.realExtend_of_neg ht, m⁻¹.realExtend_of_neg ht]
+
+/-- The extension is an order isomorphism of `ℝ`, its inverse being the extension
+of the inverse. -/
+noncomputable def TimeChange.realOrderIso (m : TimeChange ℝ≥0) : ℝ ≃o ℝ where
+  toFun := m.realExtend
+  invFun := m⁻¹.realExtend
+  left_inv := m.realExtend_inv_realExtend
+  right_inv t := by
+    have h := m⁻¹.realExtend_inv_realExtend t
+    rwa [inv_inv] at h
+  map_rel_iff' {a b} := by
+    show m.realExtend a ≤ m.realExtend b ↔ a ≤ b
+    refine ⟨fun h => ?_, fun h => m.monotone_realExtend h⟩
+    have h2 := m⁻¹.monotone_realExtend h
+    rwa [m.realExtend_inv_realExtend, m.realExtend_inv_realExtend] at h2
+
+/-- **The extension is Lipschitz with constant `max m.lipConst 1`, and the `1` is
+there for a reason.**  The three cases of a pair `a ≤ b` are: both nonnegative,
+where the constant of `m` does it and the coercion of `ℝ≥0` is distance
+preserving; both negative, where the map is the identity; and `a < 0 ≤ b`, where
+the left point does not move while the right one moves by at most
+`m.lipConst * b`.  It is the third that costs the `1`. -/
+theorem TimeChange.lipschitzWith_realExtend (m : TimeChange ℝ≥0) :
+    LipschitzWith (max m.lipConst 1) m.realExtend := by
+  refine LipschitzWith.of_dist_le_mul fun a b => ?_
+  have hK : ∀ x y : ℝ≥0, dist (m.toOrderIso x) (m.toOrderIso y) ≤ (m.lipConst : ℝ) * dist x y :=
+    fun x y => m.lipschitzWith_lipConst.dist_le_mul x y
+  have hKm : (m.lipConst : ℝ) ≤ ((max m.lipConst 1 : ℝ≥0) : ℝ) := by
+    exact_mod_cast le_max_left m.lipConst 1
+  have h1 : (1 : ℝ) ≤ ((max m.lipConst 1 : ℝ≥0) : ℝ) := by
+    exact_mod_cast le_max_right m.lipConst 1
+  have key : ∀ a b : ℝ, a ≤ b →
+      dist (m.realExtend a) (m.realExtend b) ≤ ((max m.lipConst 1 : ℝ≥0) : ℝ) * dist a b := by
+    intro a b hab
+    have hmono := m.monotone_realExtend hab
+    rw [Real.dist_eq, Real.dist_eq, abs_of_nonpos (by linarith), abs_of_nonpos (by linarith)]
+    rcases le_or_gt 0 a with ha | ha
+    · have hb : (0 : ℝ) ≤ b := ha.trans hab
+      have h := hK (Real.toNNReal a) (Real.toNNReal b)
+      rw [NNReal.dist_eq, NNReal.dist_eq, Real.coe_toNNReal a ha, Real.coe_toNNReal b hb] at h
+      rw [m.realExtend_of_nonneg ha, m.realExtend_of_nonneg hb] at hmono ⊢
+      have habs : |((m.toOrderIso (Real.toNNReal a) : ℝ≥0) : ℝ)
+          - ((m.toOrderIso (Real.toNNReal b) : ℝ≥0) : ℝ)| ≤ (m.lipConst : ℝ) * |a - b| := h
+      rw [abs_of_nonpos (by linarith), abs_of_nonpos (by linarith)] at habs
+      nlinarith [mul_le_mul_of_nonneg_right hKm (by linarith : (0:ℝ) ≤ -(a - b))]
+    · rcases le_or_gt 0 b with hb | hb
+      · have hzero : m.toOrderIso 0 = 0 := m.orderIso_zero_nnreal
+        have h := hK 0 (Real.toNNReal b)
+        rw [hzero, NNReal.dist_eq, NNReal.dist_eq, NNReal.coe_zero,
+          Real.coe_toNNReal b hb] at h
+        have hnn : (0 : ℝ) ≤ ((m.toOrderIso (Real.toNNReal b) : ℝ≥0) : ℝ) := NNReal.coe_nonneg _
+        rw [abs_of_nonpos (by linarith), abs_of_nonpos (by linarith)] at h
+        rw [m.realExtend_of_neg ha, m.realExtend_of_nonneg hb]
+        nlinarith [mul_le_mul_of_nonneg_right hKm hb]
+      · rw [m.realExtend_of_neg ha, m.realExtend_of_neg hb]
+        nlinarith
+  rcases le_total a b with hab | hab
+  · exact key a b hab
+  · rw [dist_comm, dist_comm a b]; exact key b a hab
+
+/-- **A time change of `ℝ≥0` extends to one of `ℝ`.**  This is the converse
+direction of `TimeChange.toNNReal`, and unlike it needs no hypothesis: every
+order isomorphism of `ℝ≥0` fixes `0` already. -/
+noncomputable def TimeChange.ofNNReal (m : TimeChange ℝ≥0) : TimeChange ℝ where
+  toOrderIso := m.realOrderIso
+  lipschitz := ⟨max m.lipConst 1, m.lipschitzWith_realExtend⟩
+  lipschitz_symm := ⟨max m⁻¹.lipConst 1, m⁻¹.lipschitzWith_realExtend⟩
+
+@[simp] theorem TimeChange.ofNNReal_apply (m : TimeChange ℝ≥0) (t : ℝ) :
+    m.ofNNReal.toOrderIso t = m.realExtend t := rfl
+
+/-- The extension lies in the subgroup over which the metric of `D(ℝ, E)` takes
+its infimum. -/
+theorem TimeChange.ofNNReal_zero (m : TimeChange ℝ≥0) : m.ofNNReal.toOrderIso 0 = 0 := by
+  rw [TimeChange.ofNNReal_apply, m.realExtend_of_nonneg le_rfl, Real.toNNReal_zero,
+    m.orderIso_zero_nnreal, NNReal.coe_zero]
+
+/-- Extension commutes with inversion; on the underlying map it is `rfl`. -/
+theorem TimeChange.inv_ofNNReal (m : TimeChange ℝ≥0) : m.ofNNReal⁻¹ = m⁻¹.ofNNReal :=
+  TimeChange.ext (OrderIso.ext rfl)
+
+/-- Extending and restricting again is the identity, so `TimeChange.ofNNReal` is
+a section of `TimeChange.toNNReal`. -/
+theorem TimeChange.toNNReal_ofNNReal (m : TimeChange ℝ≥0) :
+    m.ofNNReal.toNNReal m.ofNNReal_zero = m := by
+  refine TimeChange.ext (OrderIso.ext (funext fun x => ?_))
+  apply NNReal.coe_injective
+  show m.realExtend ((x : ℝ≥0) : ℝ) = ((m.toOrderIso x : ℝ≥0) : ℝ)
+  rw [m.realExtend_of_nonneg (NNReal.coe_nonneg x), Real.toNNReal_coe]
+
+theorem TimeChange.lipConst_ofNNReal_le (m : TimeChange ℝ≥0) :
+    m.ofNNReal.lipConst ≤ max m.lipConst 1 :=
+  csInf_le' m.lipschitzWith_realExtend
+
+/-- **Extension does not raise the norm.**  The `1` picked up by
+`TimeChange.lipschitzWith_realExtend` is free, because
+`TimeChange.one_le_max_lipConst` puts the larger of the two constants of `m`
+above `1` anyway. -/
+theorem TimeChange.norm_ofNNReal_le (m : TimeChange ℝ≥0) : m.ofNNReal.norm ≤ m.norm := by
+  have hmax : (1 : ℝ≥0) ≤ max m.lipConst m⁻¹.lipConst := TimeChange.one_le_max_lipConst m
+  have hA : m.ofNNReal.lipConst ≤ max m.lipConst m⁻¹.lipConst :=
+    m.lipConst_ofNNReal_le.trans (max_le (le_max_left _ _) hmax)
+  have hB : (m.ofNNReal⁻¹).lipConst ≤ max m.lipConst m⁻¹.lipConst := by
+    rw [TimeChange.inv_ofNNReal]
+    exact (m⁻¹.lipConst_ofNNReal_le).trans (max_le (le_max_right _ _) hmax)
+  have hle : max m.ofNNReal.lipConst (m.ofNNReal⁻¹).lipConst ≤
+      max m.lipConst m⁻¹.lipConst := max_le hA hB
+  have hpos : (0 : ℝ) < ((max m.ofNNReal.lipConst (m.ofNNReal⁻¹).lipConst : ℝ≥0) : ℝ) := by
+    have h := TimeChange.one_le_max_lipConst m.ofNNReal
+    have h' : (1 : ℝ) ≤ ((max m.ofNNReal.lipConst (m.ofNNReal⁻¹).lipConst : ℝ≥0) : ℝ) := by
+      exact_mod_cast h
+    linarith
+  simp only [TimeChange.norm]
+  exact Real.log_le_log hpos (by exact_mod_cast hle)
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The windowed supremum is unchanged by the extension.**  Not an estimate but
+an equality of two suprema of the *same* set of numbers: the term at `t : ℝ` is
+the term at `Real.toNNReal t`, by `toNNReal_clamp` and because a time change of
+`ℝ` fixing `0` commutes with the truncation, and `Real.toNNReal` is
+surjective. -/
+theorem SkorokhodSpace.distWith_extendNNReal (u : ℝ) (L : TimeChange ℝ)
+    (h0 : L.toOrderIso 0 = 0) (f g : D(ℝ≥0, E)) :
+    SkorokhodSpace.distWith (0 : ℝ) u L (SkorokhodSpace.extendNNReal f)
+        (SkorokhodSpace.extendNNReal g)
+      = SkorokhodSpace.distWith (0 : ℝ≥0) u (L.toNNReal h0) f g := by
+  have hLmono : ∀ t : ℝ, Real.toNNReal (L.toOrderIso t)
+      = (L.toNNReal h0).toOrderIso (Real.toNNReal t) := by
+    intro t
+    rcases le_or_gt 0 t with ht | ht
+    · have hLt : (0 : ℝ) ≤ L.toOrderIso t := by
+        have := L.toOrderIso.monotone ht
+        rwa [h0] at this
+      apply NNReal.coe_injective
+      rw [Real.coe_toNNReal _ hLt, TimeChange.coe_toNNReal_apply, Real.coe_toNNReal t ht]
+    · have hLt : L.toOrderIso t < 0 := by
+        have := L.toOrderIso.strictMono ht
+        rwa [h0] at this
+      rw [Real.toNNReal_of_nonpos hLt.le, Real.toNNReal_of_nonpos ht.le]
+      exact (L.toNNReal_basePoint h0).symm
+  have hterm : ∀ t : ℝ,
+      dist ((SkorokhodSpace.restrictExhaustion (0 : ℝ) u
+              (SkorokhodSpace.extendNNReal f)).toFun (L.toOrderIso t))
+          ((SkorokhodSpace.restrictExhaustion (0 : ℝ) u
+              (SkorokhodSpace.extendNNReal g)).toFun t)
+        = dist ((SkorokhodSpace.restrictExhaustion (0 : ℝ≥0) u f).toFun
+              ((L.toNNReal h0).toOrderIso (Real.toNNReal t)))
+            ((SkorokhodSpace.restrictExhaustion (0 : ℝ≥0) u g).toFun (Real.toNNReal t)) := by
+    intro t
+    simp only [SkorokhodSpace.restrictExhaustion_apply, SkorokhodSpace.extendNNReal_apply]
+    rw [toNNReal_clamp, toNNReal_clamp, hLmono t]
+  simp only [SkorokhodSpace.distWith, hterm]
+  have hsurj : Function.Surjective Real.toNNReal := fun x => ⟨(x : ℝ), Real.toNNReal_coe⟩
+  exact hsurj.iSup_comp (g := fun s : ℝ≥0 =>
+    dist ((SkorokhodSpace.restrictExhaustion (0 : ℝ≥0) u f).toFun
+        ((L.toNNReal h0).toOrderIso s))
+      ((SkorokhodSpace.restrictExhaustion (0 : ℝ≥0) u g).toFun s))
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- The integral over the window radius inherits the equality radius by
+radius. -/
+theorem SkorokhodSpace.intWith_extendNNReal (L : TimeChange ℝ)
+    (h0 : L.toOrderIso 0 = 0) (f g : D(ℝ≥0, E)) :
+    SkorokhodSpace.intWith (0 : ℝ) L (SkorokhodSpace.extendNNReal f)
+        (SkorokhodSpace.extendNNReal g)
+      = SkorokhodSpace.intWith (0 : ℝ≥0) (L.toNNReal h0) f g := by
+  simp only [SkorokhodSpace.intWith, SkorokhodSpace.distWith_extendNNReal _ L h0 f g]
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The two metrics agree.**  One inequality is `TimeChange.ofNNReal` together
+with `TimeChange.norm_ofNNReal_le`, the other is `TimeChange.toNNReal` together
+with `TimeChange.norm_toNNReal_le`, and both read the same
+`SkorokhodSpace.intWith_extendNNReal`. -/
+theorem SkorokhodSpace.intDist_extendNNReal [SecondCountableTopology E] (f g : D(ℝ≥0, E)) :
+    SkorokhodSpace.intDist (0 : ℝ) (SkorokhodSpace.extendNNReal f)
+        (SkorokhodSpace.extendNNReal g)
+      = SkorokhodSpace.intDist (0 : ℝ≥0) f g := by
+  refine le_antisymm ?_ ?_
+  · refine le_ciInf fun m => ?_
+    have h0 := (m : TimeChange ℝ≥0).ofNNReal_zero
+    have hmem : (m : TimeChange ℝ≥0).ofNNReal ∈ TimeChange.fixing (0 : ℝ) := h0
+    refine (ciInf_le (SkorokhodSpace.bddBelow_range_intDist (0 : ℝ) _ _)
+      ⟨(m : TimeChange ℝ≥0).ofNNReal, hmem⟩).trans ?_
+    rw [SkorokhodSpace.intWith_extendNNReal _ h0 f g, TimeChange.toNNReal_ofNNReal]
+    exact max_le_max (TimeChange.norm_ofNNReal_le _) le_rfl
+  · refine le_ciInf fun L => ?_
+    have h0 : (L : TimeChange ℝ).toOrderIso 0 = 0 := L.2
+    have hmem : (L : TimeChange ℝ).toNNReal h0 ∈ TimeChange.fixing (0 : ℝ≥0) :=
+      (L : TimeChange ℝ).toNNReal_basePoint h0
+    refine (ciInf_le (SkorokhodSpace.bddBelow_range_intDist (0 : ℝ≥0) f g)
+      ⟨(L : TimeChange ℝ).toNNReal h0, hmem⟩).trans ?_
+    rw [← SkorokhodSpace.intWith_extendNNReal _ h0 f g]
+    exact max_le_max (TimeChange.norm_toNNReal_le _ h0) le_rfl
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **`D(ℝ≥0, E)` sits isometrically in `D(ℝ, E)`.** -/
+theorem SkorokhodSpace.isometry_extendNNReal [SecondCountableTopology E] :
+    Isometry (SkorokhodSpace.extendNNReal (E := E)) := by
+  refine Isometry.of_dist_eq fun f g => ?_
+  rw [SkorokhodSpace.dist_eq, SkorokhodSpace.dist_eq]
+  exact SkorokhodSpace.intDist_extendNNReal f g
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **And it sits there closed.**  This is the form the transports read: the
+image of a compact set is compact, so tightness carries forward; the image is
+closed, so a bounded continuous function on it extends; and the map is a
+homeomorphism onto its image, so weak convergence pulls back.  Completeness of
+`D(ℝ≥0, E)` is `SkorokhodSpace.instCompleteSpace`, and it is what turns the
+isometry into a closed embedding. -/
+theorem SkorokhodSpace.isClosedEmbedding_extendNNReal [SecondCountableTopology E]
+    [CompleteSpace E] :
+    Topology.IsClosedEmbedding (SkorokhodSpace.extendNNReal (E := E)) :=
+  SkorokhodSpace.isometry_extendNNReal.isClosedEmbedding
