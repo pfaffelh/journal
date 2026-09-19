@@ -10515,13 +10515,29 @@ had no declaration at all, and they are needed in this order:
    `w''`, and it fails on the same witness: a path of `D(ℝ, ℝ × ℝ)` with **two
    jumps in different coordinates**, by
    `SkorokhodSpace.exists_isCompact_modulusBased_postcomp_eq_zero` and
-   `SkorokhodSpace.exists_min_edist_postcomp_eq_zero`. What is refuted is the
-   passage through **finitely many** test functions read off a net of the compact
-   set — granted even a family that recovers the metric of the value space with
-   equality there. The criterion itself stands, because it quantifies over a
+   `SkorokhodSpace.exists_min_edist_postcomp_eq_zero`. What is refuted is a family
+   that recovers the metric of the value space on the compact set — granted even
+   with equality there. The criterion itself stands, because it quantifies over a
    **dense** class, which contains functions seeing both jumps at once; a proof has
-   therefore to choose its test function **after** the path. That is what a run at
-   this item starts from, and it is written out at the item in
+   therefore to choose its test function **after** the path.
+
+   **And that proof has a shape now, 2026-09-19.** The refutation is narrower than
+   it read: it does not touch the family this roadmap names, the clipped distances
+   `y ↦ min (dist y x_j) 1` to the points of a net. At the very witness that
+   defeats the coordinates, the clipped distance to the value **between** the two
+   jumps has image path `1, 0, 1` and modulus at least `1`
+   (`SkorokhodSpace.one_le_modulus_postcomp_clipDist_twoJump`), because the three
+   point quantity compares both displacements to the **common middle value** and
+   the distance to that value reads both at once —
+   `SkorokhodSpace.min_edist_postcomp_clipDist`, with **equality** up to the clip,
+   so at the level `min η 1`, which depends on `η` alone. The passage has three
+   links, of which **two are proved**: the reduction to the middle value
+   (`SkorokhodSpace.min_edist_postcomp_clipDist`,
+   `SkorokhodSpace.le_min_dist_of_dist_clipDist_le`) and the easy half of the
+   comparison with the modulus
+   (`SkorokhodSpace.min_edist_le_two_mul_modulusBased`). The open one is the
+   **hard** half of Ethier–Kurtz' comparison of `w'` with `w''`, and that is what
+   a run at this item builds. It is written out at the item in
    `SkorokhodSpace/README.md`, Milestone 8; it is not an application of item 2.
 
 Only then does `isTight_map_postcomp_of_exists_martingale` have a conclusion it

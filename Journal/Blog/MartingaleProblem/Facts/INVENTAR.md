@@ -100,7 +100,7 @@ unserer Konstruktion. Daher:
 | `fact:jacodmemin` | 1 | Continuous mapping, Jacod--M'emin; CPS, Theorem 2.9 | bewusst | nicht formalisiert; `rem:augvsws` begründet, warum Augmentierung genügt |
 | `fact:picard` | 1 | Picard--Lindel"of for SDEs | bewusst | SDE-Weg wird zitiert, nicht bewiesen (§7.5) |
 | `fact:pseudopath` | 1 | Pseudo-paths; MZ, Section~1 and Lemma~1 | Roadmap | MartingaleProblems M11. **Am 2026-09-08, elfter Lauf, sind alle drei Teile als tragend erkannt, und zwar für einen Zweck, den das Manuskript ihnen nicht gibt**: (i) und (iii) machen die Inklusion $\DE \hookrightarrow M_E[0,\infty)$ zu einem Homöomorphismus auf ihr Bild mit Spur-$\sigma$-Algebra $\sigma(\pi_u)$, und (ii) — in der Lesart „$\gamma(\DE)$ ist borelsch im kompakten $\Prob([0,\infty]\times\hat E)$", nicht in der Lesart „nicht polnisch" — macht zusammen mit der Injektivität von $\gamma$ auf ganz $M_E$ den Raum $\DE$ zu einer **Borelmenge von $M_E$**. Das ist es, was Schritt 1 von `thm:MZconv` über den polnischen Raum $M_E$ (Kurtz 1991, S. 1022) laufen läßt. Die Injektivität von $\gamma$ auf $M_E$ steht wörtlich im Fact („identifies two paths exactly when they agree $\lambda$-a.e."); das Manuskript zieht daraus nur die schwächere Folgerung für $\DE$ |
-| `fact:relcompact` | 1 | Relative compactness, I; EK, Theorem 3.9.1 | Roadmap | SkorokhodSpace M8, `isTightMeasureSet_iff_forall_postcomp` mit `continuous_postcomp`. **Stand 2026-09-19, dreizehnter Lauf:** von diesem Beleg ist die zweite Hälfte keine Ankündigung mehr — `SkorokhodSpace.postcomp`, `SkorokhodSpace.measurable_postcomp` und `SkorokhodSpace.continuous_postcomp` sind bewiesen und gehen durch `check_master.py`, ebenso die Vorwärtsrichtung der Reduktion als `SkorokhodSpace.isTightMeasureSet_map_postcomp`. Offen ist die Rückrichtung, und sie geht nicht ohne `SkorokhodSpace.isTightMeasureSet_iff`, das Straffheitskriterium auf Maßebene; ohne kompakte Einschließung ist sie **falsch**, und der Zeuge steht im README von Meilenstein 8. Die Wohldefiniertheit, die dieselbe Zeile früher als eigene Arbeit führte, ist Mathlibs `IsCadlag.continuous_comp` (`Mathlib/Topology/Order/Cadlag.lean:119`, geprüft gegen `94ef6b89544`). **Stand 2026-09-19, vierzehnter Lauf: `SkorokhodSpace.isTightMeasureSet_iff` ist bewiesen** — mit `SkorokhodSpace.modulusBased_mono` als einziger neuer Eingabe, durch `check_master.py` gegen `94ef6b89544`, `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound`. Damit ruht der Beleg dieser Zeile auf **einer** offenen Aussage, der Rückrichtung der Reduktion, und deren Bruchstelle ist nicht bloß benannt, sondern in Lean widerlegt: jedes Testfunktional liefert seine **eigene** `δ`-dünne Unterteilung, das Kriterium verlangt eine, die der ganzen endlichen Familie dient, und `SkorokhodSpace.exists_isSubdivisionBased_pair_forall_not_cells` zeigt, daß eine gemeinsame Verfeinerung mit einer **vor** den Pfaden gewählten Dünnheit nicht existiert (die Mechanik dazu ist `SkorokhodSpace.exists_eq_castSucc_of_cells`: eine Verfeinerung trägt jeden inneren Knoten). **Stand 2026-09-19, fünfzehnter Lauf: auch der zweite Weg ist widerlegt.** Übrig war der Dreipunktmodul `w''` von Ethier--Kurtz, weil er an *einem* Zeittripel gelesen wird und keine gemeinsame Verfeinerung braucht; er trägt nicht, und der Zeuge ist derselbe Pfad für beide Wege: `SkorokhodSpace.twoJump γ` in `D(ℝ, ℝ × ℝ)` mit **zwei Sprüngen in verschiedenen Koordinaten**. `SkorokhodSpace.exists_isCompact_modulusBased_postcomp_eq_zero` gibt zu jedem `0 < δ < 1` ein Kompaktum, das jeden Wert des Pfades trägt, und zwei **beschränkt stetige** Testfunktionen, die dort die Metrik von `ℝ × ℝ` mit *Gleichheit* wiedergewinnen, deren Bildpfade aber `modulusBased = 0` haben, während der Pfad selbst `≥ 1` hat; `SkorokhodSpace.exists_min_edist_postcomp_eq_zero` tut dasselbe für den Dreipunktmodul am Tripel `1 - γ < 1 < 1 + γ`. Widerlegt ist damit der Durchgang durch **endlich viele** Testfunktionen aus einem Netz des Kompaktums — nicht das Kriterium, das über eine **dichte** Klasse quantifiziert und damit über Funktionen, die beide Sprünge zugleich sehen (`p ↦ p.1 + 2 * p.2`). Ein Beweis muß die Testfunktion **nach** dem Pfad wählen; das ist der Stand, und der Beleg dieser Zeile ruht weiterhin auf dieser einen offenen Aussage |
+| `fact:relcompact` | 1 | Relative compactness, I; EK, Theorem 3.9.1 | Roadmap | SkorokhodSpace M8, `isTightMeasureSet_iff_forall_postcomp` mit `continuous_postcomp`. **Stand 2026-09-19, dreizehnter Lauf:** von diesem Beleg ist die zweite Hälfte keine Ankündigung mehr — `SkorokhodSpace.postcomp`, `SkorokhodSpace.measurable_postcomp` und `SkorokhodSpace.continuous_postcomp` sind bewiesen und gehen durch `check_master.py`, ebenso die Vorwärtsrichtung der Reduktion als `SkorokhodSpace.isTightMeasureSet_map_postcomp`. Offen ist die Rückrichtung, und sie geht nicht ohne `SkorokhodSpace.isTightMeasureSet_iff`, das Straffheitskriterium auf Maßebene; ohne kompakte Einschließung ist sie **falsch**, und der Zeuge steht im README von Meilenstein 8. Die Wohldefiniertheit, die dieselbe Zeile früher als eigene Arbeit führte, ist Mathlibs `IsCadlag.continuous_comp` (`Mathlib/Topology/Order/Cadlag.lean:119`, geprüft gegen `94ef6b89544`). **Stand 2026-09-19, vierzehnter Lauf: `SkorokhodSpace.isTightMeasureSet_iff` ist bewiesen** — mit `SkorokhodSpace.modulusBased_mono` als einziger neuer Eingabe, durch `check_master.py` gegen `94ef6b89544`, `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound`. Damit ruht der Beleg dieser Zeile auf **einer** offenen Aussage, der Rückrichtung der Reduktion, und deren Bruchstelle ist nicht bloß benannt, sondern in Lean widerlegt: jedes Testfunktional liefert seine **eigene** `δ`-dünne Unterteilung, das Kriterium verlangt eine, die der ganzen endlichen Familie dient, und `SkorokhodSpace.exists_isSubdivisionBased_pair_forall_not_cells` zeigt, daß eine gemeinsame Verfeinerung mit einer **vor** den Pfaden gewählten Dünnheit nicht existiert (die Mechanik dazu ist `SkorokhodSpace.exists_eq_castSucc_of_cells`: eine Verfeinerung trägt jeden inneren Knoten). **Stand 2026-09-19, fünfzehnter Lauf: auch der zweite Weg ist widerlegt.** Übrig war der Dreipunktmodul `w''` von Ethier--Kurtz, weil er an *einem* Zeittripel gelesen wird und keine gemeinsame Verfeinerung braucht; er trägt nicht, und der Zeuge ist derselbe Pfad für beide Wege: `SkorokhodSpace.twoJump γ` in `D(ℝ, ℝ × ℝ)` mit **zwei Sprüngen in verschiedenen Koordinaten**. `SkorokhodSpace.exists_isCompact_modulusBased_postcomp_eq_zero` gibt zu jedem `0 < δ < 1` ein Kompaktum, das jeden Wert des Pfades trägt, und zwei **beschränkt stetige** Testfunktionen, die dort die Metrik von `ℝ × ℝ` mit *Gleichheit* wiedergewinnen, deren Bildpfade aber `modulusBased = 0` haben, während der Pfad selbst `≥ 1` hat; `SkorokhodSpace.exists_min_edist_postcomp_eq_zero` tut dasselbe für den Dreipunktmodul am Tripel `1 - γ < 1 < 1 + γ`. Widerlegt ist damit der Durchgang durch **endlich viele** Testfunktionen aus einem Netz des Kompaktums — nicht das Kriterium, das über eine **dichte** Klasse quantifiziert und damit über Funktionen, die beide Sprünge zugleich sehen (`p ↦ p.1 + 2 * p.2`). Ein Beweis muß die Testfunktion **nach** dem Pfad wählen; das ist der Stand, und der Beleg dieser Zeile ruht weiterhin auf dieser einen offenen Aussage. **Stand 2026-09-19, sechzehnter Lauf: die Widerlegung ist enger als sie dastand, und der Weg hat jetzt eine Gestalt.** Widerlegt ist eine Familie, die die **Metrik** wiedergewinnt (`clipFst`, `clipSnd`); die Familie, die die Roadmap wirklich nennt — die abgeschnittenen Abstände `y ↦ min (dist y x_j) 1` zu den Punkten eines Netzes — wird von demselben Zeugen **nicht** widerlegt: `SkorokhodSpace.one_le_modulus_postcomp_clipDist_twoJump` zeigt, daß der abgeschnittene Abstand zum Wert **zwischen** den beiden Sprüngen den Bildpfad `1, 0, 1` und damit Modul `≥ 1` hat. Der Grund ist, daß der Dreipunktmodul beide Verrückungen am **gemeinsamen mittleren Wert** mißt: `SkorokhodSpace.min_edist_postcomp_clipDist` gibt ihn mit **Gleichheit** bis auf die Abschneidung zurück, also auf der Stufe `min η 1`, die von `η` allein abhängt — das ist die Gleichmäßigkeit, die der Vorlauf zu prüfen aufgegeben hatte. Die Kette hat drei Glieder, **zwei sind bewiesen** (`min_edist_postcomp_clipDist`, `le_min_dist_of_dist_clipDist_le`, `min_edist_le_two_mul_modulusBased`), offen ist die **schwere** Hälfte des Vergleichs von `w'` mit `w''` bei Ethier--Kurtz |
 | `fact:stoppingtimes` | 1 | EK, Propositions 2.1.2 and 2.1.4; eqref{T2b} | Mathlib | `MeasureTheory.IsStoppingTime` in `Probability/Process/Stopping.lean` |
 | `fact:strookvaradhan` | 1 | Stroock--Varadhan; KA, Theorem 32.7 | bewusst | SDE-Weg wird zitiert, nicht bewiesen (§7.5) |
 | `fact:yamadawatanabe` | 1 | Yamada--Watanabe | bewusst | SDE-Weg wird zitiert, nicht bewiesen (§7.5) |
@@ -43193,3 +43193,205 @@ zugestanden; was scheitert, ist der Schluß und nicht die Eingabe.
    verschmelzen können —, einmal in `ℝ × ℝ` und einmal in `ℝ`, und das README nennt
    sie an zwei Stellen, ohne es zu sagen. Das ist Buchhaltung und ein halber Lauf,
    aber es verhindert, daß ein dritter Lauf die Konstruktion ein drittes Mal baut.
+
+### 2026-09-19, sechzehnter Lauf des Tages — die Auflage des Vorlaufs ist geprüft und mit Ja beantwortet: die Gleichmäßigkeit ist **geschenkt**, sobald die Testfunktion der abgeschnittene Abstand zum **mittleren Wert** ist; dabei stellt sich heraus, daß die Widerlegung des Vorlaufs enger ist, als sie aufgeschrieben war — sie trifft nicht die Familie, die die Roadmap nennt
+
+**Bearbeitet:** Vorschlag 1 des Vorlaufs — die Rückrichtung von
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` als Aussage der Gestalt
+„ein `h` **nach** dem Pfad", mit der ausdrücklichen Auflage, **zuerst an der
+Gleichmäßigkeit zu prüfen, ob die Kontraposition trägt, ehe sie bewiesen wird**.
+Sie trägt, und sie kostet nichts: die Stufe ist `min η 1` und hängt von `η`
+allein ab — nicht vom Pfad, nicht von einem Kompaktum, nicht von einem Netz.
+
+**Elf neue Deklarationen**, alle in `TauCeti/SkorokhodSpace/Suggested.lean`, im
+neuen Abschnitt „Choosing the test function after the path", unmittelbar hinter
+der Widerlegung des Vorlaufs und vor Meilenstein 9. Dazu zwei **verallgemeinerte**
+Deklarationen (siehe unten).
+
+#### Der Befund, und er berichtigt den Vorlauf
+
+Der Vorlauf hat mit `SkorokhodSpace.twoJump` — zwei Sprünge in verschiedenen
+Koordinaten — gezeigt, daß eine endliche Familie den Modul nicht wiedergewinnt,
+und hat das in beiden README als „der Durchgang durch **endlich viele** `h i`,
+abgelesen an einem Netz des Kompaktums" aufgeschrieben. Das ist zu weit gefaßt.
+Die Testfunktionen des Zeugen sind `clipFst` und `clipSnd`, die abgeschnittenen
+**Koordinaten**; was sie können, ist die **Metrik** auf dem Kompaktum
+wiedergewinnen. Die Familie, die diese Roadmap seit dem 2026-08-31 nennt, ist
+eine andere: die abgeschnittenen **Abstände** `y ↦ min (dist y x_j) 1` zu den
+Punkten eines Netzes. Sie kann mehr, und das Mehr ist genau das, was der
+Dreipunktmodul liest.
+
+> `SkorokhodSpace.one_le_modulus_postcomp_clipDist_twoJump` — an **demselben**
+> Pfad, der die Koordinaten widerlegt, hat der Bildpfad unter der einen
+> Testfunktion `SkorokhodSpace.clipDist (1, 0)`, dem abgeschnittenen Abstand zum
+> Wert **zwischen** den beiden Sprüngen, den Modul `≥ 1` bei jeder Skala `δ > γ`.
+
+Der Bildpfad ist `1, 0, 1`: vor dem ersten Sprung hat er den Abstand `1` zum
+Mittelwert, zwischen den Sprüngen sitzt er darauf, nach dem zweiten hat er wieder
+Abstand `1`. Zwei Verrückungen der Größe `1` im zeitlichen Abstand `γ` — genau
+die Lage, die den Modul treibt.
+
+#### Warum das kein Zufall dieses Zeugen ist
+
+Der Dreipunktmodul vergleicht beide Verrückungen mit dem **gemeinsamen mittleren
+Wert** `f t`. Der Abstand zu diesem einen Wert macht aus beiden Vergleichen
+Differenzen seiner eigenen Werte, und zwar auf einmal. Das ist der Satz:
+
+> `SkorokhodSpace.min_edist_postcomp_clipDist` — für **jeden** Pfad und **jedes**
+> Tripel `t₁ ≤ t ≤ t₂` ist der Dreipunktmodul des Bildpfades unter
+> `clipDist (f t)` **gleich** dem des Pfades, abgeschnitten bei `1`.
+
+Keine Abschätzung, keine Konstante, kein Kompaktum. Das ist die positive
+Gegenstück-Aussage zu `SkorokhodSpace.exists_min_edist_postcomp_eq_zero` des
+Vorlaufs, und der Unterschied zwischen beiden ist die Reihenfolge der
+Quantoren und sonst nichts: dort wird die Familie zuerst festgelegt und der Pfad
+schlägt sie, hier ist der Pfad zuerst da und die Funktion wird an ihm abgelesen.
+
+**Damit ist die Auflage des Vorlaufs beantwortet.** Er hatte notiert, `η'` müsse
+gleichmäßig in `f` sein, sonst helfe die Kontraposition auf der Maßebene nicht,
+und das sei „die eigentliche Arbeit". Es ist keine Arbeit: `η' = min η 1`.
+
+#### Was die dichte Klasse kostet: `4 * ρ`, und keine Division
+
+Das Kriterium bietet eine **dichte** Klasse `H ⊆ E →ᵇ ℝ` an, nicht die
+Abstandsfunktion selbst, und das Netz gibt nicht den Mittelwert, sondern einen
+Punkt daneben. Beides zusammen:
+
+> `SkorokhodSpace.le_min_dist_of_dist_clipDist_le` — ist `h` gleichmäßig um `ρ`
+> nahe an `clipDist x` und `x` um `ρ` nahe am mittleren Wert, so sieht `h` beide
+> Verrückungen noch, mit der Stufe um `4 * ρ` gesenkt.
+
+Zwei der vier `ρ` zahlen für das Netz, zwei für die Dichtheit. Beide sind einem
+Verbraucher geschenkt: das Netz ist eines des Kompaktums, das die kompakte
+Einschließung liefert, und die Dichtheit ist eine Voraussetzung des Kriteriums.
+
+#### Die Kette, und was von ihr offen ist
+
+Der Weg vom Modul zum Dreipunktmodul und zurück hat **drei** Glieder. Zwei sind
+mit diesem Lauf bewiesen, eines ist offen:
+
+1. `modulusBased` groß ⟹ Dreipunktmodul groß. Die **schwere** Hälfte des
+   Vergleichs von `w'` mit `w''` bei Ethier--Kurtz, und das **einzige** offene
+   Glied. Der Beweis ist die gierige Unterteilung: jede Zelle läuft von ihrem
+   linken Rand so weit, wie die Schwankung es erlaubt; eine Zelle kürzer als `δ`
+   liefert das Tripel, weil der Wert, der den Schnitt erzwang, und der Wert, der
+   den nächsten erzwang, beide den Abstand `η` zum Knoten dazwischen haben.
+2. Dreipunktmodul des Pfades ⟹ derselbe für den Bildpfad unter `clipDist (f t)`,
+   abgeschnitten bei `1`. Bewiesen, siehe oben, samt der Fassung für die dichte
+   Klasse.
+3. Dreipunktmodul des Bildpfades groß ⟹ sein `modulusBased` groß. Die **leichte**
+   Hälfte, ebenfalls mit diesem Lauf bewiesen:
+   `SkorokhodSpace.min_edist_le_two_mul_modulusBased`. In einer `δ`-dünnen
+   Unterteilung enthält die Zelle, die `t` enthält, auch `t₁` — oder andernfalls
+   `t₂`, denn die Spanne des Tripels ist höchstens `δ` und die Zelle ist länger.
+
+**Glieder 2 und 3 gelten bei *festem* `δ`**, und das ist es, was die Kette
+brauchbar macht: das `δ`, das ein Verbraucher für den Pfad wählt, ist dasselbe,
+bei dem die Voraussetzung für den Bildpfad gelesen wird. Es wird nichts verfeinert
+— und damit ist die Bruchstelle des vierzehnten Laufs (keine gemeinsame
+Verfeinerung mit vorab gewählter Dünnheit) umgangen statt bestritten.
+
+#### Drei Einzelheiten, die ein nächster Lauf sonst wiederfindet
+
+* **Der Beweis des Zeugen ist derselbe wie der des Vorlaufs, und er ist jetzt
+  einer.** `SkorokhodSpace.one_le_modulus_twoJump` war für `twoJump`
+  ausgeschrieben; die Fallunterscheidung (die Zelle, die die Zeit `1` enthält,
+  sieht den ersten Sprung, oder ihr rechter Rand liegt jenseits `1 + δ` und sie
+  sieht den zweiten) liest von dem Pfad nichts als zwei Verrückungen der Größe
+  `1`. Sie steht jetzt als `SkorokhodSpace.one_le_modulus_of_twoStep` über
+  beliebigem Wertebereich da, und die beiden Zeugen — der in `ℝ × ℝ`, der die
+  Koordinaten widerlegt, und der in `ℝ`, der den Abstand bestätigt — sind beide
+  vier Zeilen darauf. Dabei ist `SkorokhodSpace.one_le_edist_of_one_le_dist` von
+  `ℝ × ℝ` auf den Wertebereich des Abschnitts verallgemeinert worden, weil die
+  positive Fassung ihn an **reellen** Bildern liest.
+* **`ENNReal.mul_iInf_of_ne` (`Mathlib/Basic/ENNReal/Inv.lean:865`) trägt den
+  Faktor `2` durch die drei geschachtelten Infima von `modulusBased`**, und es
+  verlangt `2 ≠ 0` und `2 ≠ ∞` und **nichts** über den Index. Das ist wesentlich:
+  der innerste Index ist eine Proposition und leer genau dann, wenn es keine
+  `δ`-dünne Unterteilung gibt — dort ist die Schranke `⊤` und sagt nichts. Der
+  naheliegende Umweg über `ENNReal.div_le_iff` wird nicht gebraucht.
+* **`ENNReal.two_ne_top` gibt es nicht.** Der Name auf `master` ist
+  `ENNReal.ofNat_ne_top` (`Mathlib/Basic/ENNReal/Basic.lean:521`), und er greift
+  über `Nat.AtLeastTwo`. Das kostete den einzigen Fehlschlag dieses Laufs.
+
+#### Eingetragen
+
+* `SkorokhodSpace/Suggested.lean`: der neue Abschnitt „Choosing the test function
+  after the path" mit elf Deklarationen; sein Kopf sagt, was der Vorlauf wirklich
+  widerlegt hat, welche Familie er nicht trifft, und schreibt die drei Glieder der
+  Kette mit ihrem Stand aus. Dazu die beiden Verallgemeinerungen
+  (`one_le_modulus_of_twoStep`, `one_le_edist_of_one_le_dist`), mit
+  `one_le_modulus_twoJump` als Vierzeiler darauf.
+* `SkorokhodSpace/README.md`, Meilenstein 8, am Punkt
+  `isTightMeasureSet_iff_forall_postcomp`: die Berichtigung der Widerlegung und
+  die Kette mit ihren drei Gliedern.
+* `MartingaleProblems/README.md`, Meilenstein 11, Punkt 3: dasselbe in kurzer
+  Fassung, mit dem Satz, daß zwei der drei Glieder stehen und welches nicht.
+* `Facts/INVENTAR.md`: die Zeile `fact:relcompact` sagt es ebenfalls.
+
+#### Geprüft
+
+* `scripts/check_master.py`: rc 0, 0 Fehler, 0 `sorry`, 0 veraltet, Warnungen
+  18 / 35 / 106 — **unverändert** gegenüber dem Vorlauf. Mathlib
+  `94ef6b89544e58e90f119da869f3fb48d1da0f4c` (2026-09-18), Lean 4.35.0-rc2.
+  (Der erste Durchlauf hatte 36 in `SkorokhodSpace`: `min_edist_postcomp_clipDist`
+  zog `[AdditiveDist ι]`, `[ProperSpace ι]`, `[BasePoint ι]` ungenutzt herein; die
+  `omit`-Zeile ist nachgezogen.)
+* `scripts/check_axioms_master.py` auf alle elf neuen Namen und auf die beiden
+  geänderten: `propext`, `Classical.choice`, `Quot.sound`.
+* `scripts/check_duplicates.py`: 2 348 geprüfte eigene Deklarationen (12 mehr als
+  im Vorlauf), 37 Treffer auf dem letzten Namensbestandteil — **unverändert**,
+  also kein neuer Namenskonflikt.
+* `scripts/extract_citations.py`, `scripts/check_cited_lines.py`: 295 gepaarte
+  Fundstellen (zwei mehr), 295 stimmen, 0 verschoben, 0 tot.
+* `scripts/check_negatives.py`: 43 Behauptungen, 0 mit unerwarteten Treffern.
+* Die benutzten Mathlib-Namen am Quelltext von `94ef6b89544` nachgesehen:
+  `Mathlib/Basic/ENNReal/Inv.lean:865` (`ENNReal.mul_iInf_of_ne`),
+  `Mathlib/Basic/ENNReal/Basic.lean:521` (`ENNReal.ofNat_ne_top`),
+  `Mathlib/Order/Lattice.lean:270` (`sup_sup_sup_comm`, aus dem `inf_inf_inf_comm`
+  durch `@[to_dual]` entsteht — dieselbe Falle wie bei `Continuous.min` im
+  Vorlauf, und der Grund, warum kein eigenes `min`-Lemma gebaut wurde),
+  `Mathlib/Topology/ContinuousMap/Bounded/Basic.lean:119`
+  (`BoundedContinuousFunction.mkOfBound`).
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die schwere Hälfte des Vergleichs von `w'` mit `w''`**, und damit das letzte
+   offene Glied der Kette:
+
+   > `SkorokhodSpace.modulusBased_le_of_forall_min_edist_lt`: ist der
+   > Dreipunktmodul eines Pfades auf dem Fenster kleiner als `η` — also für
+   > **jedes** Tripel `t₁ ≤ t ≤ t₂` der Spanne `≤ δ` ist
+   > `min (edist (f t) (f t₁)) (edist (f t₂) (f t)) < η` —, so ist
+   > `modulusBased 0 m f δ ≤ 2 * η`.
+
+   *Worauf sie ruht:* nichts von diesem Lauf außer der Gegenrichtung als Probe;
+   gebraucht wird eine **gierige Konstruktion** einer Unterteilung und
+   `SkorokhodSpace.IsSubdivisionBased.trim`, das die überschießenden Ränder
+   zurückschneidet.
+
+   *Warum jetzt:* sie ist das einzige offene Glied, und ihr Beweis ist der einzige
+   Schritt der ganzen Reduktion, der etwas **konstruiert** statt etwas abzulesen.
+
+   **Und sie ist nicht geschenkt:** der Schritt, an dem ein Papierbeweis
+   stillschweigend weitergeht, ist die **Terminierung** der gierigen Konstruktion
+   — daß endlich viele Zellen das Fenster ausschöpfen. Auf `ℝ` folgt das daraus,
+   daß jede Zelle die Länge `δ` hat und das Fenster beschränkt ist, also aus
+   `Nat.ceil`; in Lean ist es eine Induktion über die Anzahl der Zellen mit einer
+   **Schranke**, und der erste Schritt eines Laufs ist, diese Schranke
+   hinzuschreiben, ehe die Zellen gebaut werden. Der zweite ist die Frage, ob die
+   Zelle bei ihrem Schnitt **abgeschlossen** oder **halboffen** endet — der Modul
+   ist über `Set.Ico` gebildet, und die gierige Zelle endet an der ersten Zeit, zu
+   der die Schwankung `η` erreicht; diese Zeit gehört in die **nächste** Zelle.
+2. **Eine Leerheitsprobe für `isTightMeasureSet_iff` an Daten**, unverändert der
+   Vorschlag 2 des Vorlaufs und von diesem Lauf nicht angefaßt. Sie ist erneut
+   billiger geworden: `SkorokhodSpace.one_le_modulus_of_twoStep` ist jetzt die
+   allgemeine Fassung des Beweises, den sie braucht, und die Familie
+   `S = {δ (1_{[1,∞)} + 1_{[1+1/n,∞)})}` ist genau ein Pfad mit zwei
+   Verrückungen der Größe `1` im Abstand `1/n`. Der Beweis ist damit **ein
+   Aufruf** und nicht mehr eine eigene Fallunterscheidung.
+3. **Den Zusammenhang zwischen `SkorokhodSpace.twoJump` und dem Akzeptanzbeispiel
+   „Compact containment alone is not tightness" ausdrücklich machen**, unverändert
+   der Vorschlag 3 des Vorlaufs. Mit Vorschlag 2 fällt er ohnehin zusammen: beide
+   sind derselbe Pfad in `ℝ`, und `one_le_modulus_of_twoStep` ist die Stelle, an
+   der das jetzt sichtbar wäre.

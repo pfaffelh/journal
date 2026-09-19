@@ -3381,10 +3381,50 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   content. It quantifies over a **dense** class `H`, and `H` contains functions
   that see both jumps at once: `p ↦ p.1 + 2 * p.2` separates `(0,0)`, `(1,0)`,
   `(1,1)`, so its image path has two jumps at distance `γ` and a modulus of its
-  own. What both theorems rule out is the passage through **finitely many** `h i`
-  read off a net of the compact set, which is the only passage the roadmap had
-  described. A proof must therefore choose its test function **after** the path —
-  and that, rather than a third modulus, is where a run at this item starts.
+  own. A proof must therefore choose its test function **after** the path.
+
+  **And what is refuted is narrower than it was stated to be, 2026-09-19.** The
+  two theorems above rule out a finite family that **recovers the metric** on the
+  compact set, which is what `clipFst` and `clipSnd` do. They do **not** rule out
+  the family this roadmap actually names — the clipped distances
+  `y ↦ min (dist y x_j) 1` to the points of a net.
+  `SkorokhodSpace.one_le_modulus_postcomp_clipDist_twoJump` is the check, at the
+  very path that refutes the other family: the single function
+  `SkorokhodSpace.clipDist (1, 0)`, the clipped distance to the value **between**
+  the two jumps, has image path `1, 0, 1` and modulus at least `1`.
+
+  The reason is that the three point quantity compares both displacements to the
+  **common middle value**, and the distance to that one value turns both
+  comparisons into differences of its own values at once.
+  `SkorokhodSpace.min_edist_postcomp_clipDist` says so with **equality** up to the
+  clip: the image quantity is the quantity of the path, capped at `1`. So the
+  level is `min η 1` — a function of `η` alone, not of the path, not of a compact
+  set, not of a net — which is the uniformity that had to be checked before
+  anything was built.
+
+  **The passage now has three links, and two of them are proved.**
+
+  1. `modulusBased` large ⟹ three point quantity large. The **hard** half of
+     Ethier–Kurtz' comparison of `w'` with `w''`, and the only link that is open.
+     Its proof is the greedy subdivision: run each cell from its left endpoint as
+     far as the oscillation allows; a cell shorter than `δ` produces the triple,
+     because the value that forced the break and the value that forced the next
+     one are each at distance `η` from the endpoint between them.
+  2. Three point quantity of the path ⟹ the same for the image under
+     `SkorokhodSpace.clipDist (f t)`, capped at `1`
+     (`SkorokhodSpace.min_edist_postcomp_clipDist`), and in the form a dense `H`
+     supplies it, `SkorokhodSpace.le_min_dist_of_dist_clipDist_le`: a test
+     function uniformly within `ρ` of the clipped distance to a point within `ρ`
+     of the middle value still sees both displacements, up to `4 * ρ`. Two of the
+     four `ρ` pay for the net, two for the density.
+  3. Three point quantity of the image large ⟹ its `modulusBased` large. The
+     **easy** half, `SkorokhodSpace.min_edist_le_two_mul_modulusBased`: in a
+     `δ`-sparse subdivision the cell holding `t` holds `t₁` as well, or else it
+     holds `t₂`, the span being at most `δ` and the cell longer.
+
+  Links 2 and 3 hold at a **fixed** `δ`, which is what makes the chain usable:
+  the `δ` a consumer chooses for the path is the `δ` the hypothesis is read at for
+  the image, and nothing is asked to be refined.
 
 **Acceptance examples.**
 
