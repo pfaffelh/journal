@@ -172,13 +172,15 @@ class AdditiveDist (α : Type*) [LinearOrder α] [PseudoMetricSpace α] : Prop w
   `Real.dist_eq` —, because `TimeChange.not_normOn_mul_le` of Milestone 3
   instantiates its refutation at `ℝ` and cannot do so without it. The other
   three follow from it through `instAdditiveDistSubtype`.
-* `AdditiveDist.dist_eq_sub_of_le` and `monotoneOn_dist_basepoint`: for `t₀ ≤ s ≤ t`,
+* `AdditiveDist.dist_eq_sub_of_le` and
+  `AdditiveDist.monotoneOn_dist_basepoint`: for `t₀ ≤ s ≤ t`,
   `dist s t = dist t₀ t - dist t₀ s`, and `t ↦ dist t₀ t` is monotone on
   `Set.Ici t₀`. This is the step from which the embedding above follows. Both
   are proved (2026-09-06), and both need `AdditiveDist` alone: neither the order
   topology nor properness enters.
-* `dist_eq_abs_sub_of_sameSide`: for `s` and `t` on one side of `t₀` — both
-  above it or both below it — `dist s t = |dist t₀ t - dist t₀ s|`. This is the
+* `AdditiveDist.dist_eq_abs_sub_of_sameSide`: for `s` and `t` on one side of
+  `t₀` — both above it or both below it — `dist s t = |dist t₀ t - dist t₀ s|`.
+  This is the
   two sided form of the previous item, and it is the form the estimate of
   Milestone 3 consumes, where the two points compared are `t` and its image
   under a time change fixing `t₀`, so that only their common position relative
@@ -238,8 +240,9 @@ class AdditiveDist (α : Type*) [LinearOrder α] [PseudoMetricSpace α] : Prop w
 * `ordConnected_exhaustion`: the window is an order interval. This is the step
   the clamp actually needs — being between the least and the greatest element
   of a set does not put a point in the set unless the set is order convex — and
-  it is `AdditiveDist` again: above the base point `monotoneOn_dist_basepoint`
-  gives it, below the base point the additivity is read from the other end.
+  it is `AdditiveDist` again: above the base point
+  `AdditiveDist.monotoneOn_dist_basepoint` gives it, below the base point the
+  additivity is read from the other end.
   Proved (2026-09-07). It needs neither the order topology nor properness.
 * Independence of the base point: two base points give exhaustions each of which
   refines the other after finitely many steps.
@@ -286,8 +289,8 @@ class AdditiveDist (α : Type*) [LinearOrder α] [PseudoMetricSpace α] : Prop w
   fails on it for the same reason — a bounded metric admits no isometry onto an
   unbounded closed subset of `ℝ` — so the class is not decoration, and the
   embedding theorem is where it is spent.
-* **`dist_eq_abs_sub_of_sameSide` needs its hypothesis.** On `ℝ` with `t₀ = 0`,
-  `s = -1`, `t = 1`: the left hand side is `2` and
+* **`AdditiveDist.dist_eq_abs_sub_of_sameSide` needs its hypothesis.** On `ℝ`
+  with `t₀ = 0`, `s = -1`, `t = 1`: the left hand side is `2` and
   `|dist 0 1 - dist 0 (-1)| = 0`. Any proof that drops the same-side clause is
   refuted here, and this is why Milestone 3 anchors its time changes at `t₀`.
 * **A window that is not an interval of `ℝ`.** `ι = Set.Icc (0:ℝ) 1 ∪ {2}`, a
@@ -767,8 +770,9 @@ Under (B), with `E` a pseudometric space:
   sided index it has to be imposed. The time changes fixing `t₀` form a
   subgroup, so `norm_one`, `norm_inv` and `norm_mul_le` restrict to it unchanged.
   Proved (2026-09-07). The anchor and the order isomorphism put `t` and `λ t` on
-  one side of `t₀`, so `dist_eq_abs_sub_of_sameSide` of Milestone 1 turns the
-  left hand side into `|dist t₀ (λ t) - dist t₀ t|`; `lipschitzWith_lipConst`,
+  one side of `t₀`, so `AdditiveDist.dist_eq_abs_sub_of_sameSide` of Milestone 1
+  turns the left hand side into `|dist t₀ (λ t) - dist t₀ t|`;
+  `lipschitzWith_lipConst`,
   applied to `λ` and to `λ⁻¹` and read through `log (max …) ≤ γ`, squeezes
   `dist t₀ (λ t)` between `e^{-γ}` and `e^{γ}` times `dist t₀ t`, and
   `dist t₀ t ≤ m` closes it. The bound obtained is `(exp γ - 1) * m`, half of
@@ -2743,6 +2747,55 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   answers is the question in which the times of the hypothesis and the times of
   the conclusion are *different* — comparing a subsequential limit with the
   convergence along `T`, which is EK 3.7.8(b).
+* `MeasureTheory.abs_integral_sub_integral_smul_restrict_le` — **proved
+  2026-09-19**, and general measure theory: for a probability measure `μ`, a
+  measurable `A` with `(μ Aᶜ).toReal ≤ ε₀ < 1`, and a measurable `g` with
+  `|g| ≤ C`, conditioning on `A` moves the integral by at most `2 C ε₀`,
+  `|∫ g dμ − ∫ g d((μ A)⁻¹ • μ.restrict A)| ≤ 2 C ε₀`.
+
+  **The bound carries no division.** With `p = (μ A).toReal` and
+  `q = (μ Aᶜ).toReal` the difference is `∫_{Aᶜ} g dμ − (p⁻¹ − 1) ∫_A g dμ`. The
+  first term is at most `C q`; in the second the factor `p⁻¹ − 1` grows without
+  bound as `p` falls, but the integral it multiplies falls with it, `|∫_A g dμ|
+  ≤ C p`, and the product is `(p⁻¹ − 1)(C p) = C (1 − p) = C q` **exactly**. The
+  two halves are equal, and the naive `2 C ε₀ / (1 − ε₀)` is not what comes out.
+  `ε₀ < 1` is spent on the positivity of `μ A` and on nothing else; `0 ≤ ε₀` and
+  `0 ≤ C` are consequences and not hypotheses.
+
+  The library's bundled counterpart is `MeasureTheory.FiniteMeasure.normalize`
+  (`Mathlib/MeasureTheory/Measure/ProbabilityMeasure.lean`), which
+  `toMeasure_normalize_eq_of_nonzero` identifies with this same measure; the
+  plain `Measure` form is the one stated because every consumer here speaks of
+  `Measure`.
+* `SkorokhodSpace.exists_times_forall_dist_integral_evalPi_le_of_measure_compl_le`
+  — stage (A), **proved 2026-09-19**. The previous estimate under
+  `μ Aᶜ ≤ ENNReal.ofReal ε₀` with `0 ≤ ε₀ < 1` in place of `μ Aᶜ = 0`, with the
+  same conclusion `≤ ε` under `8 (∏ i, ‖F i‖) ε₀ ≤ ε`.
+
+  **This is where the chain joins what tightness gives.** Every statement of the
+  oscillation chain above hypothesises `μ Aᶜ = 0`, while
+  `exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure` — the only
+  bridge from a compact set of *measures* to a compact set of *paths* — concludes
+  `μ Kᶜ ≤ ε` for a given positive `ε`, and for `ε = 0` gives nothing: a tight law
+  on `D(ℝ, E)` has in general no relatively compact carrier of full measure.
+  Without this item not one statement of the chain applies to the members of a
+  tight family, which is what the chain was built for, and EK 3.7.8(b) is its
+  only consumer.
+
+  **The chain is not rewritten.** The estimate is bought where it already holds,
+  for the law conditioned on `B = closure A`, and carried back by
+  `MeasureTheory.abs_integral_sub_integral_smul_restrict_le` — one comparison,
+  used twice, once at each of the two families of times. The closure and not `A`
+  itself, because conditioning needs a measurable set while `A` is only assumed
+  to have compact closure; passing to it costs nothing, since
+  `μ (closure A)ᶜ ≤ μ Aᶜ` and `closure (closure A) = closure A`. The hypothesis
+  `8 (∏ i, ‖F i‖) ε₀ ≤ ε` divides `ε`: half to the conditional law, half to the
+  two comparisons at `2 (∏ i, ‖F i‖) ε₀` each, the product of the norms being the
+  bound on the integrand. A consumer holds `ε` and the test functions fixed and
+  takes `ε₀` from tightness, so the hypothesis constrains the compact set it asks
+  for and not `ε`. It is **not** a statement that `ε₀` may be dropped: at `ε₀`
+  comparable to `ε` it says nothing, and it should not, a law being free to put
+  mass `ε₀` on paths of arbitrarily wild oscillation.
 * `SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional` — stage (A).
   The same conclusion for a tight family, from the previous item and
   `isCompact_closure_of_isTightMeasureSet`.

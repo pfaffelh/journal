@@ -280,7 +280,7 @@ change to fix the base point; without that a translation refutes it.
 
 Since 2026-09-07, second run, **Milestones 3 and 4 carry no `sorry` at all** in
 their time change layer.  `dist_le_of_norm_le` is proved, through the new
-`dist_eq_abs_sub_of_sameSide` of Milestone 1; and `not_normOn_mul_le` is proved
+`AdditiveDist.dist_eq_abs_sub_of_sameSide` of Milestone 1; and `not_normOn_mul_le` is proved
 as well, so the failure on which Milestone 4 rests its choice of the global
 `norm` is a theorem and not a doc comment.  Its witness is spelled out here:
 `TimeChange.steep`, the piecewise linear order isomorphism of `ℝ`, and
@@ -355,7 +355,7 @@ against `measurable_of_countable_not_continuousAt`, so the whole of Milestone 2
 except `IsCadlag.eq_of_eqOn_dense` is now free of (B).
 
 Seven `sorry`s went on 2026-09-06: `isCompact_exhaustion`,
-`monotoneOn_dist_basepoint` and
+`AdditiveDist.monotoneOn_dist_basepoint` and
 `IsCadlag.eq_of_eqOn_dense` carry proofs --- the last had to be corrected first,
 its hypothesis was bare density, under which it is false ---, the `Group
 (TimeChange ι)` instance is constructed, `TimeChange.lipConstOn` and
@@ -452,7 +452,7 @@ theorem AdditiveDist.dist_eq_sub_of_le {t₀ s t : ι} (h₀s : t₀ ≤ s) (hst
 
 omit [OrderTopology ι] [ProperSpace ι] in
 /-- Again `AdditiveDist` alone, through `AdditiveDist.dist_eq_sub_of_le`. -/
-theorem monotoneOn_dist_basepoint {t₀ : ι} :
+theorem AdditiveDist.monotoneOn_dist_basepoint {t₀ : ι} :
     MonotoneOn (fun t => dist t₀ t) (Set.Ici t₀) := by
   intro s hs t _ hst
   have h : dist s t = dist t₀ t - dist t₀ s := AdditiveDist.dist_eq_sub_of_le (Set.mem_Ici.1 hs) hst
@@ -469,7 +469,7 @@ relative to `t₀` is known.  Like `AdditiveDist.dist_eq_sub_of_le` it is `Addit
 
 The hypothesis cannot be dropped: on `ℝ` with `t₀ = 0`, `s = -1` and `t = 1` the
 left hand side is `2` and the right hand side is `0`. -/
-theorem dist_eq_abs_sub_of_sameSide {t₀ s t : ι}
+theorem AdditiveDist.dist_eq_abs_sub_of_sameSide {t₀ s t : ι}
     (h : (t₀ ≤ s ∧ t₀ ≤ t) ∨ (s ≤ t₀ ∧ t ≤ t₀)) :
     dist s t = |dist t₀ t - dist t₀ s| := by
   have key : dist s t = dist t₀ t - dist t₀ s ∨ dist s t = dist t₀ s - dist t₀ t := by
@@ -557,7 +557,7 @@ theorem ordConnected_exhaustion (t₀ : ι) (u : ℝ) : (exhaustion t₀ u).OrdC
   simp only [exhaustion, Metric.mem_closedBall] at hx hy ⊢
   rcases le_total t₀ z with h | h
   · have h1 : dist t₀ z ≤ dist t₀ y :=
-      monotoneOn_dist_basepoint (Set.mem_Ici.2 h) (Set.mem_Ici.2 (h.trans hzy)) hzy
+      AdditiveDist.monotoneOn_dist_basepoint (Set.mem_Ici.2 h) (Set.mem_Ici.2 (h.trans hzy)) hzy
     rw [dist_comm] at hy ⊢
     linarith
   · have h2 := AdditiveDist.dist_add (α := ι) hxz h
@@ -2348,7 +2348,7 @@ subgroup, so nothing else in Milestones 3 and 4 changes.
 It needs neither the order topology nor properness, and in particular not the
 compactness of `exhaustion t₀ m`: the window enters only through the bound
 `dist t₀ t ≤ m`.  What it does need, and it is the first place in Milestone 3
-where this happens, is `AdditiveDist`, through `dist_eq_abs_sub_of_sameSide`. -/
+where this happens, is `AdditiveDist`, through `AdditiveDist.dist_eq_abs_sub_of_sameSide`. -/
 theorem TimeChange.dist_le_of_norm_le (t₀ : ι) {u : ℝ} (hu : 0 ≤ u) {l : TimeChange ι}
     {γ : ℝ} (h₀ : l.toOrderIso t₀ = t₀) (h : l.norm ≤ γ) {t : ι} (ht : t ∈ exhaustion t₀ u) :
     dist (l.toOrderIso t) t ≤ (Real.exp γ - 1) * (2 * u) := by
@@ -2402,7 +2402,7 @@ theorem TimeChange.dist_le_of_norm_le (t₀ : ι) {u : ℝ} (hu : 0 ≤ u) {l : 
       linarith
   have hfinal : (Real.exp γ - 1) * (u : ℝ) ≤ (Real.exp γ - 1) * (2 * u) :=
     mul_le_mul_of_nonneg_left (by linarith) (by linarith)
-  rw [dist_eq_abs_sub_of_sameSide hside]
+  rw [AdditiveDist.dist_eq_abs_sub_of_sameSide hside]
   linarith
 
 omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
@@ -5444,10 +5444,10 @@ theorem SkorokhodSpace.dist_le_distWith_stepAt_of_exp_norm_mul_lt (t₀ : ι) {u
   have hdsy : dist t₀ s < dist t₀ y := lt_of_le_of_lt hds hnorm
   have hsy : s < y := by
     by_contra hcon
-    exact absurd (monotoneOn_dist_basepoint (Set.mem_Ici.2 h₀y) (Set.mem_Ici.2 h₀s)
+    exact absurd (AdditiveDist.monotoneOn_dist_basepoint (Set.mem_Ici.2 h₀y) (Set.mem_Ici.2 h₀s)
       (not_lt.1 hcon)) (not_le.2 hdsy)
   have hdx : dist t₀ x ≤ dist t₀ y :=
-    monotoneOn_dist_basepoint (Set.mem_Ici.2 h₀x) (Set.mem_Ici.2 h₀y) hxy.le
+    AdditiveDist.monotoneOn_dist_basepoint (Set.mem_Ici.2 h₀x) (Set.mem_Ici.2 h₀y) hxy.le
   have hxmem : x ∈ exhaustion t₀ u := by
     rw [exhaustion, Metric.mem_closedBall, dist_comm]
     exact le_max_of_le_left (hdx.trans hu)
@@ -7820,7 +7820,7 @@ theorem SkorokhodSpace.le_modulusPinned_of_dist_exhaustionMin_le (t₀ : ι) (u 
     push Not at hcon
     have h1 : t i.castSucc ≤ t i.succ := (hmono (Fin.castSucc_lt_succ (i := i))).le
     have h2 : dist (t i.castSucc) (t i.succ) ≤ dist (t i.castSucc) x :=
-      monotoneOn_dist_basepoint (Set.mem_Ici.2 h1) (Set.mem_Ici.2 (h1.trans hcon)) hcon
+      AdditiveDist.monotoneOn_dist_basepoint (Set.mem_Ici.2 h1) (Set.mem_Ici.2 (h1.trans hcon)) hcon
     have hxδ' : dist (t i.castSucc) x ≤ δ := by rw [hbase]; exact hxδ
     exact absurd (lt_of_lt_of_le (hgap i) h2) (not_lt.2 hxδ')
   refine le_iSup_of_le i (le_iSup₂_of_le x ⟨hbase.symm ▸ hx, hxlt⟩ ?_)
@@ -12420,6 +12420,189 @@ theorem SkorokhodSpace.exists_times_forall_dist_integral_evalPi_le_of_isCompact_
         have hfrac : (N : ℝ) / ((N : ℝ) + 1) ≤ 1 := by
           rw [div_le_one (by positivity)]; linarith
         nlinarith [hε.le]
+
+/-- **Conditioning a probability measure on a set of almost full mass moves a
+bounded integral by at most twice the missing mass times the bound.**
+
+`(μ A)⁻¹ • μ.restrict A` is the law of `μ` conditioned on `A`.  The library has
+the bundled counterpart, `MeasureTheory.FiniteMeasure.normalize`
+(`MeasureTheory/Measure/ProbabilityMeasure.lean:468`), and
+`MeasureTheory.FiniteMeasure.toMeasure_normalize_eq_of_nonzero` (`:505`) says
+that it is this same measure; the plain `Measure` form is used here because
+everything the estimate feeds speaks of `Measure`, and the bundling would have to
+be undone again at once.
+
+**The bound carries no division**, and that is worth saying, because the estimate
+one writes down first does.  With `p = (μ A).toReal` and `q = (μ Aᶜ).toReal` the
+difference of the two integrals is
+
+    ∫_{Aᶜ} g dμ - (p⁻¹ - 1) ∫_A g dμ,
+
+whose first term is at most `C q`.  In the second the factor `p⁻¹ - 1` grows
+without bound as `p` falls, but the integral it multiplies falls for the same
+reason --- `|∫_A g dμ| ≤ C p` --- and the product is
+`(p⁻¹ - 1) * (C p) = C (1 - p) = C q` **exactly**.  The two halves are equal and
+the bound is `2 C q`, not `2 C q / (1 - q)`.
+
+`ε₀ < 1` is what makes `μ A` positive and the conditioning meaningful, and it is
+used for nothing else.  `0 ≤ ε₀` is not hypothesised: it follows from `hε₀`,
+since `ENNReal.toReal` is nonnegative.  Nor is `0 ≤ C` hypothesised --- it
+follows from `|∫_A g dμ| ≤ C p` and the positivity of `p`, and asking for it
+would be asking twice. -/
+theorem MeasureTheory.abs_integral_sub_integral_smul_restrict_le
+    {α : Type*} [MeasurableSpace α] (μ : Measure α) [IsProbabilityMeasure μ]
+    {A : Set α} (hA : MeasurableSet A) {ε₀ : ℝ} (hε₀ : (μ Aᶜ).toReal ≤ ε₀) (hε₀1 : ε₀ < 1)
+    {g : α → ℝ} (hg : Measurable g) {C : ℝ} (hgC : ∀ x, |g x| ≤ C) :
+    |(∫ x, g x ∂μ) - ∫ x, g x ∂((μ A)⁻¹ • μ.restrict A)| ≤ 2 * C * ε₀ := by
+  have hAtop : μ A ≠ ⊤ := measure_ne_top μ A
+  have hctop : μ Aᶜ ≠ ⊤ := measure_ne_top μ Aᶜ
+  have hptoReal : (μ A).toReal + (μ Aᶜ).toReal = 1 := by
+    rw [← ENNReal.toReal_add hAtop hctop, measure_add_measure_compl hA, measure_univ,
+      ENNReal.toReal_one]
+  have hp0 : 0 < (μ A).toReal := by linarith
+  have hint : Integrable g μ :=
+    Integrable.of_bound hg.aestronglyMeasurable C
+      (ae_of_all _ fun x => by simpa [Real.norm_eq_abs] using hgC x)
+  have hbI : |∫ x in A, g x ∂μ| ≤ C * (μ A).toReal := by
+    have h := norm_integral_le_of_norm_le_const (μ := μ.restrict A) (f := g) (C := C)
+      (ae_of_all _ fun x => by simpa [Real.norm_eq_abs] using hgC x)
+    rwa [Real.norm_eq_abs, measureReal_restrict_apply_univ, measureReal_def] at h
+  have hbJ : |∫ x in Aᶜ, g x ∂μ| ≤ C * (μ Aᶜ).toReal := by
+    have h := norm_integral_le_of_norm_le_const (μ := μ.restrict Aᶜ) (f := g) (C := C)
+      (ae_of_all _ fun x => by simpa [Real.norm_eq_abs] using hgC x)
+    rwa [Real.norm_eq_abs, measureReal_restrict_apply_univ, measureReal_def] at h
+  have hC0 : 0 ≤ C := by
+    have h1 : 0 ≤ C * (μ A).toReal := le_trans (abs_nonneg _) hbI
+    by_contra hneg
+    exact absurd h1 (not_le.2 (mul_neg_of_neg_of_pos (not_le.1 hneg) hp0))
+  have hsmul : (∫ x, g x ∂((μ A)⁻¹ • μ.restrict A))
+      = ((μ A).toReal)⁻¹ * ∫ x in A, g x ∂μ := by
+    rw [integral_smul_measure, ENNReal.toReal_inv, smul_eq_mul]
+  have hsplit : (∫ x, g x ∂μ) = (∫ x in A, g x ∂μ) + ∫ x in Aᶜ, g x ∂μ :=
+    (integral_add_compl hA hint).symm
+  have hinv1 : 1 ≤ ((μ A).toReal)⁻¹ := by
+    rw [le_inv_comm₀ one_pos hp0, inv_one]
+    linarith [ENNReal.toReal_nonneg (a := μ Aᶜ)]
+  rw [hsmul, hsplit]
+  have hrw : (∫ x in A, g x ∂μ) + (∫ x in Aᶜ, g x ∂μ)
+      - ((μ A).toReal)⁻¹ * ∫ x in A, g x ∂μ
+      = (∫ x in Aᶜ, g x ∂μ) - (((μ A).toReal)⁻¹ - 1) * ∫ x in A, g x ∂μ := by ring
+  rw [hrw]
+  have habs : ∀ x y : ℝ, |x - y| ≤ |x| + |y| := fun x y => by simpa using abs_sub_le x 0 y
+  have htri : |(∫ x in Aᶜ, g x ∂μ) - (((μ A).toReal)⁻¹ - 1) * ∫ x in A, g x ∂μ|
+      ≤ |∫ x in Aᶜ, g x ∂μ| + (((μ A).toReal)⁻¹ - 1) * |∫ x in A, g x ∂μ| := by
+    refine le_trans (habs _ _) ?_
+    rw [abs_mul, abs_of_nonneg (by linarith : (0:ℝ) ≤ ((μ A).toReal)⁻¹ - 1)]
+  have hstep : (((μ A).toReal)⁻¹ - 1) * |∫ x in A, g x ∂μ| ≤ C * (μ Aᶜ).toReal := by
+    refine le_trans (mul_le_mul_of_nonneg_left hbI (by linarith)) ?_
+    have h1 : ((μ A).toReal)⁻¹ * (μ A).toReal = 1 := inv_mul_cancel₀ hp0.ne'
+    have h2 : (((μ A).toReal)⁻¹ - 1) * (C * (μ A).toReal)
+        = C * (((μ A).toReal)⁻¹ * (μ A).toReal) - C * (μ A).toReal := by ring
+    have hq : (μ Aᶜ).toReal = 1 - (μ A).toReal := by linarith
+    rw [h2, h1, hq]
+    exact le_of_eq (by ring)
+  have hfin : C * (μ Aᶜ).toReal ≤ C * ε₀ := mul_le_mul_of_nonneg_left hε₀ hC0
+  linarith
+
+/-- **The estimate of the section above under a bound on the missing mass**, in
+place of a carrier of full measure.
+
+`SkorokhodSpace.exists_times_forall_dist_integral_evalPi_le_of_isCompact_closure`
+and the whole oscillation chain beneath it hypothesise `μ Aᶜ = 0`: the law is
+carried by a set with compact closure.  **What tightness gives is weaker**, and
+`SkorokhodSpace.exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure`
+says so in its own conclusion --- a compact `K` with `μ Kᶜ ≤ ε` for a *given*
+positive `ε`, and for `ε = 0` none.  A tight law on `D(ℝ, E)` has in general no
+relatively compact carrier of full measure; without this step not one statement of
+the chain applies to the members of a tight family, which is what the chain was
+built for.
+
+**The chain is not rewritten.**  The estimate is bought where it already holds,
+for the conditional law `(μ B)⁻¹ • μ.restrict B` given `B = closure A`, and
+carried back by `MeasureTheory.abs_integral_sub_integral_smul_restrict_le`: one
+comparison, used twice, once at each of the two families of times.  The closure
+and not `A` itself, because conditioning needs a measurable set while `A` is only
+assumed to have compact closure; passing to it costs nothing, since
+`μ (closure A)ᶜ ≤ μ Aᶜ` and `closure (closure A) = closure A`.
+
+`8 * (∏ i, ‖F i‖) * ε₀ ≤ ε` is how the two sources of error divide `ε`.  Half of
+it is spent on the estimate for the conditional law, the other half on the two
+comparisons, each of which costs `2 * (∏ i, ‖F i‖) * ε₀`; the product of the norms
+is the bound on the integrand, by `SkorokhodSpace.bounded_of_mem_evalFuns`'s
+computation.  A consumer holds `ε` and the test functions fixed and takes `ε₀`
+from tightness, so the hypothesis constrains the compact set it asks for and not
+`ε`.
+
+The statement is **not** that `ε₀` may be dropped: at `ε₀` comparable to `ε` it
+says nothing, and it should not, since a law may put mass `ε₀` on paths of
+arbitrarily wild oscillation. -/
+theorem SkorokhodSpace.exists_times_forall_dist_integral_evalPi_le_of_measure_compl_le
+    [CompleteSpace E] {κ : Type*} [Fintype κ] {A : Set D(ℝ, E)} (hA : IsCompact (closure A))
+    (μ : Measure D(ℝ, E)) [IsProbabilityMeasure μ]
+    {ε₀ : ℝ} (hε₀0 : 0 ≤ ε₀) (hε₀1 : ε₀ < 1) (hμ : μ Aᶜ ≤ ENNReal.ofReal ε₀)
+    (F : κ → (E →ᵇ ℝ)) (m : ℕ) (hm : 1 ≤ m) {t : κ → ℝ}
+    (ht : ∀ i, t i ∈ Set.Ico (-(m : ℝ)) ((m : ℝ) - 1))
+    {η : ℝ} (hη0 : 0 < η) (hη1 : η ≤ 1) {ε : ℝ} (hε : 0 < ε)
+    (hcomp : 8 * (∏ i, ‖F i‖) * ε₀ ≤ ε) :
+    ∃ s : κ → ℝ, (∀ i, s i ∈ Set.Ico (t i) (t i + η)) ∧ ∃ δ' > 0,
+      ∀ s' : κ → ℝ, (∀ i, s' i ∈ Set.Ico (s i) (s i + δ')) →
+        |(∫ f, ∏ i, F i (f.toFun (s' i)) ∂μ) - ∫ f, ∏ i, F i (f.toFun (s i)) ∂μ| ≤ ε := by
+  classical
+  have hBc : IsCompact (closure (closure A)) := by rw [closure_closure]; exact hA
+  have hBm : MeasurableSet (closure A) := isClosed_closure.measurableSet
+  have hμB : μ (closure A)ᶜ ≤ ENNReal.ofReal ε₀ :=
+    le_trans (measure_mono (compl_subset_compl.2 subset_closure)) hμ
+  have hqle : (μ (closure A)ᶜ).toReal ≤ ε₀ := by
+    have h := ENNReal.toReal_mono ENNReal.ofReal_ne_top hμB
+    rwa [ENNReal.toReal_ofReal hε₀0] at h
+  have hBtop : μ (closure A) ≠ ⊤ := measure_ne_top _ _
+  have hptoReal : (μ (closure A)).toReal + (μ (closure A)ᶜ).toReal = 1 := by
+    rw [← ENNReal.toReal_add hBtop (measure_ne_top _ _), measure_add_measure_compl hBm,
+      measure_univ, ENNReal.toReal_one]
+  have hp0 : 0 < (μ (closure A)).toReal := by linarith
+  have hBne0 : μ (closure A) ≠ 0 := by
+    intro h
+    rw [h, ENNReal.toReal_zero] at hp0
+    exact lt_irrefl 0 hp0
+  set ν : Measure D(ℝ, E) := (μ (closure A))⁻¹ • μ.restrict (closure A) with hν
+  have : IsProbabilityMeasure ν := by
+    constructor
+    rw [hν, Measure.smul_apply, Measure.restrict_apply_univ, smul_eq_mul,
+      ENNReal.inv_mul_cancel hBne0 hBtop]
+  have hνB : ν (closure A)ᶜ = 0 := by
+    rw [hν, Measure.smul_apply, Measure.restrict_apply' hBm, smul_eq_mul]
+    simp
+  obtain ⟨s, hs, δ', hδ'0, hb⟩ :=
+    SkorokhodSpace.exists_times_forall_dist_integral_evalPi_le_of_isCompact_closure hBc ν hνB
+      F m hm ht hη0 hη1 (half_pos hε)
+  refine ⟨s, hs, δ', hδ'0, fun s' hs' => ?_⟩
+  have hmeas : ∀ u : κ → ℝ, Measurable fun f : D(ℝ, E) => ∏ i, F i (f.toFun (u i)) :=
+    fun u => Finset.measurable_prod _ fun i _ =>
+      (F i).continuous.measurable.comp (SkorokhodSpace.measurable_eval (u i))
+  have hbdd : ∀ (u : κ → ℝ) (f : D(ℝ, E)), |∏ i, F i (f.toFun (u i))| ≤ ∏ i, ‖F i‖ := by
+    intro u f
+    rw [Finset.abs_prod]
+    refine Finset.prod_le_prod₀ (fun i _ => abs_nonneg _) fun i _ => ?_
+    simpa [Real.norm_eq_abs] using (F i).norm_coe_le_norm (f.toFun (u i))
+  have hcmp : ∀ u : κ → ℝ,
+      |(∫ f, ∏ i, F i (f.toFun (u i)) ∂μ) - ∫ f, ∏ i, F i (f.toFun (u i)) ∂ν|
+        ≤ 2 * (∏ i, ‖F i‖) * ε₀ := by
+    intro u
+    have h := MeasureTheory.abs_integral_sub_integral_smul_restrict_le μ hBm hqle hε₀1
+      (hmeas u) (hbdd u)
+    rwa [← hν] at h
+  have htri : ∀ a b c d : ℝ, |a - d| ≤ |a - b| + |b - c| + |c - d| := by
+    intro a b c d
+    calc |a - d| ≤ |a - b| + |b - d| := abs_sub_le _ _ _
+      _ ≤ |a - b| + (|b - c| + |c - d|) := by linarith [abs_sub_le b c d]
+      _ = |a - b| + |b - c| + |c - d| := by ring
+  refine le_trans (htri _ (∫ f, ∏ i, F i (f.toFun (s' i)) ∂ν)
+    (∫ f, ∏ i, F i (f.toFun (s i)) ∂ν) _) ?_
+  have h1 := hcmp s'
+  have h2 := hcmp s
+  have h3 := hb s' hs'
+  rw [abs_sub_comm (∫ f, ∏ i, F i (f.toFun (s i)) ∂ν)]
+  linarith
 
 /-! ### Two laws that agree along a dense set of times
 

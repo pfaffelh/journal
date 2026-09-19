@@ -40868,3 +40868,190 @@ Der Übergang zwischen den beiden Voraussetzungen ist der **erste** Schritt von 
 3. **Die beiden Nachbarn von `AdditiveDist.dist_eq_sub_of_le`**, wenn ein Lauf
    Platz hat: `monotoneOn_dist_basepoint` und `dist_eq_abs_sub_of_sameSide` in
    denselben Namensraum. Kein Sachbefund, nur Ordnung — und deshalb zuletzt.
+
+### 2026-09-19, sechster Lauf des Tages — Vorschlag 1 steht, und der Preis der Abschwächung ist niedriger als angesagt: der Übergang von `μ Kᶜ = 0` auf `μ Kᶜ ≤ ε₀` kostet **keine** Division, weil die beiden Fehlerhälften einander genau aufwiegen
+
+Zwei Deklarationen neu, zwei umbenannt (Vorschlag 3 des Vorlaufs, mit erledigt).
+Alle drei Roadmap-Dateien durch
+`scripts/check_master.py` gegen
+`94ef6b89544e58e90f119da869f3fb48d1da0f4c`: **0 Fehler, 0 `sorry`, 0 veraltete
+Namen**, Warnungen 18 / 35 / 106 — **unverändert** gegenüber dem Vorlauf, die
+beiden neuen Aussagen bringen also keine einzige Warnung mit —, rc 0. Beide mit
+`scripts/check_axioms_master.py` auf `propext`, `Classical.choice`, `Quot.sound`
+und nichts sonst. Die Punkte stehen in `SkorokhodSpace/README.md`,
+Meilenstein 8.
+
+#### Vorschlag 1 — die Lücke, an der Meilenstein 8 nicht zusammenhing
+
+Der Vorlauf hatte den Befund: die **vierzehn** Aussagen der Oszillationskette
+tragen `hμ : μ Kᶜ = 0`, während die einzige Brücke von einer kompakten Menge von
+**Maßen** zu einer kompakten Menge von **Pfaden**,
+`exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure`, nur
+`μ Kᶜ ≤ ε` liefert — und für `ε = 0` nichts, denn ein straffes Maß auf `D(ℝ, E)`
+hat im allgemeinen keinen relativ kompakten Träger vom Maß eins. Die Kette war
+damit auf keinen einzigen Verbraucher anwendbar, für den sie gebaut wurde.
+
+Gebaut, in der Gestalt, die der Vorschlag vorsah — **die vierzehn Aussagen
+bleiben unangetastet**:
+
+* **`MeasureTheory.abs_integral_sub_integral_smul_restrict_le`** — allgemeine
+  Maßtheorie, kein Wort über Skorokhodräume: ist `μ` ein
+  Wahrscheinlichkeitsmaß, `A` meßbar mit `(μ Aᶜ).toReal ≤ ε₀ < 1` und `g` meßbar
+  mit `|g| ≤ C`, so verschiebt die Bedingung auf `A` das Integral um höchstens
+  `2 C ε₀`.
+* **`SkorokhodSpace.exists_times_forall_dist_integral_evalPi_le_of_measure_compl_le`**
+  — die Aussage von
+  `exists_times_forall_dist_integral_evalPi_le_of_isCompact_closure` unter
+  `μ Aᶜ ≤ ENNReal.ofReal ε₀` mit `0 ≤ ε₀ < 1`, mit derselben Konklusion `≤ ε`
+  unter der Teilungsbedingung `8 * (∏ i, ‖F i‖) * ε₀ ≤ ε`.
+
+#### Der Befund: die angesagte Division fällt weg
+
+Der Vorschlag hatte den Vergleich der beiden Integrale mit
+`|∫ g dμ − ∫ g dμ'| ≤ 2 C ε₀ / (1 − ε₀)` angesetzt. **Die Schranke ist
+`2 C ε₀`**, ohne Nenner, und der Grund ist keine Schärfung der Abschätzung,
+sondern eine Gleichheit. Mit `p = (μ A).toReal`, `q = (μ Aᶜ).toReal` und
+`μ' = (μ A)⁻¹ • μ.restrict A` ist
+
+    ∫ g dμ − ∫ g dμ' = ∫_{Aᶜ} g dμ − (p⁻¹ − 1) ∫_A g dμ.
+
+Der erste Summand ist höchstens `C q`. Im zweiten wächst der Faktor `p⁻¹ − 1`
+über alle Grenzen, wenn `p` fällt — und **genau deshalb** fällt das Integral, das
+er multipliziert: `|∫_A g dμ| ≤ C p`, und das Produkt ist
+`(p⁻¹ − 1) * (C p) = C (1 − p) = C q`, **exakt**. Die beiden Hälften sind
+gleich, nicht bloß beide klein. Wer statt dessen `|∫_A g dμ| ≤ C` einsetzt —
+die Schranke, die ohne Nachdenken dasteht —, bekommt den Nenner und eine
+Voraussetzung, die bei `ε₀ → 1` explodiert.
+
+`ε₀ < 1` bleibt, aber es wird **nur** für die Positivität von `μ A` verbraucht,
+also dafür, daß die Bedingung überhaupt ein Wahrscheinlichkeitsmaß ergibt. Zwei
+Voraussetzungen, die man erwartet, stehen deshalb nicht da: `0 ≤ ε₀` folgt aus
+`hε₀`, weil `ENNReal.toReal` nichtnegativ ist, und `0 ≤ C` folgt aus der
+Schranke an `|∫_A g dμ|` zusammen mit `0 < p`. Beide sind Folgerungen und keine
+Hypothesen.
+
+#### Zwei Entscheidungen, die in den Bericht gehören
+
+* **`closure A` statt `A`.** Die Bedingung braucht eine **meßbare** Menge, und
+  die Kette setzt von `A` nur voraus, daß der Abschluß kompakt ist. Der Übergang
+  kostet nichts: `μ (closure A)ᶜ ≤ μ Aᶜ`, `closure (closure A) = closure A`, und
+  `isClosed_closure.measurableSet` gibt die Meßbarkeit. Ein Lauf, der das
+  übersieht, landet bei einer überflüssigen Meßbarkeitsvoraussetzung an `A` und
+  damit an allen vierzehn Aussagen darüber.
+* **`Measure` und nicht `FiniteMeasure`.** Die Bibliothek hat das gebündelte
+  Gegenstück, `MeasureTheory.FiniteMeasure.normalize`
+  (`Mathlib/MeasureTheory/Measure/ProbabilityMeasure.lean:468`), und
+  `toMeasure_normalize_eq_of_nonzero` (`:505`) sagt, daß es dasselbe Maß ist —
+  am Quelltext von `94ef6b89544` nachgesehen. Genommen ist trotzdem die
+  ungebündelte Gestalt `(μ A)⁻¹ • μ.restrict A`, weil jeder Verbraucher hier von
+  `Measure D(ℝ, E)` spricht und die Bündelung sofort wieder aufzulösen wäre. Das
+  ist **keine** Doppelung: `check_duplicates.py` zählt jetzt **2 239** eigene
+  Deklarationen (vorher 2 237, also genau die beiden neuen) bei **34** Treffern,
+  unverändert.
+
+#### Die Teilungsbedingung, und warum sie keine Schwäche ist
+
+`8 * (∏ i, ‖F i‖) * ε₀ ≤ ε` teilt `ε` in zwei Hälften: die eine zahlt die
+Abschätzung für das bedingte Gesetz, die andere die **zwei** Vergleiche — einen
+je Zeitenfamilie — zu je `2 * (∏ i, ‖F i‖) * ε₀`. Das Produkt der Normen ist die
+Schranke an den Integranden und stammt aus der Rechnung von
+`bounded_of_mem_evalFuns`.
+
+Ein Verbraucher hält `ε` und die Testfunktionen fest und nimmt `ε₀` aus der
+Straffheit; die Bedingung schränkt also das Kompaktum ein, nach dem er fragt,
+und nicht `ε`. Was die Aussage **nicht** behauptet, steht am Doc-Kommentar: daß
+`ε₀` entbehrlich wäre. Bei `ε₀` in der Größenordnung von `ε` sagt sie nichts,
+und sie soll nichts sagen — ein Gesetz darf die Masse `ε₀` auf beliebig wild
+oszillierende Pfade legen.
+
+#### Geprüft
+
+* `scripts/dev_check_master.py` auf beide Aussagen im Entwurf gegen den
+  master-Baum, dann `scripts/check_master.py` über die ganze Kette: rc 0, Zahlen
+  oben.
+* `scripts/check_axioms_master.py` auf
+  `MeasureTheory.abs_integral_sub_integral_smul_restrict_le` und
+  `SkorokhodSpace.exists_times_forall_dist_integral_evalPi_le_of_measure_compl_le`.
+* `scripts/check_duplicates.py`: 2 239 / 34.
+* Die Mathlib-Fundstellen am Quelltext von `94ef6b89544` nachgesehen:
+  `MeasureTheory/Measure/ProbabilityMeasure.lean:468` und `:505`
+  (`FiniteMeasure.normalize`, `toMeasure_normalize_eq_of_nonzero`),
+  `MeasureTheory/Measure/Basic.lean:122` (`measure_add_measure_compl`),
+  `MeasureTheory/Measure/Restrict.lean:111` (`restrict_apply'`),
+  `MeasureTheory/Measure/Real.lean:106` (`measureReal_restrict_apply_univ`),
+  `MeasureTheory/Integral/Bochner/Basic.lean:999`
+  (`norm_integral_le_of_norm_le_const`) und `:1047` (`integral_smul_measure`),
+  `MeasureTheory/Integral/Bochner/Set.lean:158` (`integral_add_compl`),
+  `MeasureTheory/Integral/IntegrableOn.lean:171` (`Integrable.of_bound`),
+  `Basic/ENNReal/Inv.lean:108` (`ENNReal.inv_mul_cancel`) und `:974`
+  (`toReal_inv`), `Algebra/Order/GroupWithZero/Basic.lean:1248`
+  (`le_inv_comm₀`), `Algebra/Order/BigOperators/GroupWithZero/Finset.lean:39`
+  (`Finset.prod_le_prod₀`), `MeasureTheory/Group/Arithmetic.lean:831`
+  (`Finset.measurable_prod`).
+
+#### Vorschlag 3 des Vorlaufs ist mit erledigt — der Namensraum ist vollständig
+
+`monotoneOn_dist_basepoint` und `dist_eq_abs_sub_of_sameSide` heißen jetzt
+`AdditiveDist.monotoneOn_dist_basepoint` und
+`AdditiveDist.dist_eq_abs_sub_of_sameSide`: zehn Stellen in
+`SkorokhodSpace/Suggested.lean` — zwei Deklarationen, fünf Benutzungen, drei
+Doc-Kommentare — und fünf in der README. Damit steht kein Name dieser Gruppe mehr
+im Wurzelnamensraum; der dritte, `AdditiveDist.dist_eq_sub_of_le`, war am
+fünften Lauf des Tages bewegt worden.
+
+Die Zuordnung ist nicht geraten: beide Doc-Kommentare sagen von sich selbst, daß
+sie `AdditiveDist` **allein** brauchen — `omit [OrderTopology ι] [ProperSpace ι]`
+steht über beiden —, und
+`AdditiveDist.dist_eq_abs_sub_of_sameSide` ist nach seinem eigenen Kommentar die
+zweiseitige Gestalt von `AdditiveDist.dist_eq_sub_of_le`. Eine Kollision gibt es
+nicht: `git grep` über `94ef6b89544` findet weder die beiden Namen noch
+`namespace AdditiveDist` in `Mathlib/`, der Namensraum ist also unsererseits
+frei. `check_duplicates.py` bleibt bei 2 239 / 34, wie es muß — es vergleicht den
+letzten Namensbestandteil, und der ist unverändert.
+
+#### Eine Falle, die einen Durchlauf kostete
+
+`norm_integral_le_of_norm_le_const` schließt auf `master` mit
+`C * (μ.restrict A).real univ` und nicht mehr mit
+`C * (μ.restrict A univ).toReal` — `Measure.real` ist inzwischen eigene
+Schreibweise. `Measure.restrict_apply_univ` findet darin **kein** Muster; zu
+nehmen sind `measureReal_restrict_apply_univ` und dann `measureReal_def`. Das
+ist keine Veraltung und wird von `check_master.py` nicht gemeldet, weil der alte
+Name noch existiert; es ist eine geänderte **Konklusion**.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **EK 3.7.8(b) selbst**,
+   `SkorokhodSpace.tendsto_of_isCompact_closure_of_tendsto_finiteDimensional`.
+   Es ist heute **keine Deklaration** — der Name kommt in
+   `SkorokhodSpace/Suggested.lean` sechsmal vor (Zeilen 10984, 11016, 11108,
+   11126, 11183, 11263) und **jedesmal nur im Doc-Kommentar**, mit `grep`
+   nachgesehen. Das ist der letzte offene Punkt von Meilenstein 8.
+
+   *Was sich seit dem Vorlauf geändert hat, und es ist der Grund, warum er jetzt
+   dran ist:* seine beiden Eingaben sind **seit diesem Lauf** vollständig. Die
+   erste ist `exists_times_forall_dist_integral_evalPi_le_of_measure_compl_le`
+   von oben, die zweite die Identifikation des Limes,
+   `eq_of_forall_dense_forall_integral_evalPi_eq` (seit dem fünften Lauf über
+   beliebigem Index, `ℝ` also inbegriffen), und die ist in der
+   `ProbabilityMeasure`-Sprache eine Zeile entfernt:
+   `ProbabilityMeasure.toMeasure_injective`
+   (`MeasureTheory/Measure/ProbabilityMeasure.lean:146`) darauf. Diese
+   Umformulierung ist bis heute **nicht** geschrieben, weil sie keinen
+   Verbraucher hatte; der Lauf, der EK 3.7.8(b) angeht, schreibt sie dorthin, wo
+   er sie braucht.
+
+   *Und die Anweisung der README bleibt:* das Teilfolgenargument wird hier nicht
+   ein zweites Mal geführt, es steht in **WeakConvergence** Meilenstein 1.
+
+   *Was dabei zuerst zu entscheiden ist, und es ist keine Nebensache:* die
+   Teilungsbedingung `8 * (∏ i, ‖F i‖) * ε₀ ≤ ε` verlangt, `ε₀` **nach** den
+   Testfunktionen zu wählen, während die Straffheit `ε₀` **vor** dem Kompaktum
+   liefert und der Modul aus dem Kompaktum kommt. Die Reihenfolge der
+   Quantoren ist also `F`, dann `ε₀`, dann `K` — und `K` hängt damit von `F` ab.
+   Ob das trägt, oder ob die Aussage über eine feste Testfunktionenfamilie zu
+   führen ist, ist der erste zu klärende Punkt.
+
+2. Vorschlag 3 des Vorlaufs — die beiden Nachbarn von
+   `AdditiveDist.dist_eq_sub_of_le` — ist in diesem Lauf mit erledigt und
+   entfällt.
