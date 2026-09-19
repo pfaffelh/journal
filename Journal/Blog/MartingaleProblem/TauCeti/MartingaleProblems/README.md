@@ -6946,6 +6946,12 @@ acceptance example that milestone names, and it is proved (2026-09-19):
   `SkorokhodSpace.isTightMeasureSet_map_extendNNReal`, whose hypothesis is here
   discharged on data and whose family form `{μ i | i}` is matched against a
   measure actually produced here.
+* `isTightMeasureSet_map_postcomp_map_jumpPathD`: the same service for the other
+  transport of Milestone 8 there, `SkorokhodSpace.isTightMeasureSet_map_postcomp`
+  — the path law pushed forward under `f ↦ h ∘ f` for a continuous `h : E → E'`
+  into any Polish `E'`. With `E' = ℝ` this is the tightness of the law of the
+  **real valued** process `h ∘ X`, which is the shape the tightness criterion of
+  Milestone 8 reduces to.
 
 * `jumpFiltrationE_eq_comap_jumpPath` and `measurable_pathFiltration_jumpPath`:
   the natural filtration of the construction **is** the pull back of
@@ -10459,19 +10465,36 @@ tightness. Three named items of
 at all, and they are needed in this order:
 
 1. `SkorokhodSpace.postcomp` with `SkorokhodSpace.continuous_postcomp` and
-   `Measurable (postcomp h)` — the map `f ↦ h ∘ f` for continuous, resp. Borel,
-   `h : E → E'`. Well definedness is a càdlàg statement that is also missing:
-   post composition with a continuous map preserves `IsCadlag`, whose two halves
-   are the composition of a continuous map with a right continuous one and with a
-   left limit. Measurability is `SkorokhodSpace.measurable_of_measurable_eval`
-   coordinatewise and is cheap; continuity is the work, and what it needs is that
-   a continuous map is uniformly continuous near a compact set, the window of a
-   càdlàg path having totally bounded image by
-   `IsCadlag.totallyBounded_image_Icc`.
+   `Measurable (postcomp h)` — the map `f ↦ h ∘ f` for continuous `h : E → E'`.
+   **The map, its coordinates and its measurability are proved since
+   2026-09-19**, in `SkorokhodSpace/Suggested.lean`: `SkorokhodSpace.postcomp`,
+   `SkorokhodSpace.postcomp_toFun`, `SkorokhodSpace.measurable_postcomp`. Well
+   definedness is **Mathlib's** and was not ours to prove:
+   `IsCadlag.continuous_comp`, `Mathlib/Topology/Order/Cadlag.lean:119`.
+   Measurability is `SkorokhodSpace.measurable_of_measurable_eval`
+   coordinatewise and was cheap. **The continuity is proved too**, as
+   `SkorokhodSpace.continuous_postcomp`, with four named inputs:
+   `IsCompact.exists_pos_forall_dist_image_lt`, that a continuous map is
+   uniformly continuous near a compact set in the one sided form with the second
+   point free; `SkorokhodSpace.distWith_postcomp_le`, the windowed estimate at
+   one radius and one time change; `SkorokhodSpace.totallyBounded_image_exhaustion`,
+   which with `[CompleteSpace E]` makes the closure of the window values of the
+   centre compact; and `SkorokhodSpace.intWith_postcomp_le`, the estimate of the
+   integral over the window radius. The last is a Markov inequality and not a
+   pointwise bound: a small `SkorokhodSpace.intWith` leaves
+   `SkorokhodSpace.distWith` large on a set of radii of small Lebesgue measure,
+   and that set is paid for by the trivial bound `1` on the truncated integrand.
+   **This item is therefore closed**; what remains of the three are items 2 and
+   3. And the forward half of item 3 came with it, as
+   `SkorokhodSpace.isTightMeasureSet_map_postcomp`.
 2. `SkorokhodSpace.isTightMeasureSet_iff` — the tightness criterion at the level
    of measures, compact containment together with the modulus condition. This is
    the statement `isCompact_closure_iff` of Milestone 7 is *for*, and it is the
-   one every item below reads.
+   one every item below reads. **Two of its inputs are proved since
+   2026-09-19**, `isTightMeasureSet_of_forall_exists_isCompact_closure` and
+   `measure_compl_iInter_le`, and with them the item asks for no measure theory
+   and no measurability of the modulus sets: what is left is the construction of
+   a set of paths with compact closure out of the two conditions.
 3. `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` — the reduction to real
    valued paths, whose forward direction is item 1 and whose converse is item 2.
 

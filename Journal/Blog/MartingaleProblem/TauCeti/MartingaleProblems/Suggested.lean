@@ -33521,27 +33521,47 @@ theorem isTightMeasureSet_map_extendNNReal_map_jumpPathD [MetricSpace E] [BorelS
       {((jumpMeasure mu nu).map (jumpPathD lam)).map (SkorokhodSpace.extendNNReal (E := E))} := by
   have hsingle := isTightMeasureSet_map_jumpPathD hlam mu nu
   have h1 : {((fun _ : Unit ↦ (jumpMeasure mu nu).map (jumpPathD lam)) i) | i}
-      = ({(jumpMeasure mu nu).map (jumpPathD lam)} : Set (Measure D(ℝ≥0, E))) := by
-    ext m
-    rw [Set.mem_singleton_iff]
-    constructor
-    · rintro ⟨-, rfl⟩
-      rfl
-    · rintro rfl
-      exact ⟨(), rfl⟩
+      = ({(jumpMeasure mu nu).map (jumpPathD lam)} : Set (Measure D(ℝ≥0, E))) :=
+    Set.range_const
   have h2 := SkorokhodSpace.isTightMeasureSet_map_extendNNReal
     (μ := fun _ : Unit ↦ (jumpMeasure mu nu).map (jumpPathD lam)) (by rw [h1]; exact hsingle)
   have h3 : {((fun _ : Unit ↦ (jumpMeasure mu nu).map (jumpPathD lam)) i).map
         (SkorokhodSpace.extendNNReal (E := E)) | i}
       = ({((jumpMeasure mu nu).map (jumpPathD lam)).map (SkorokhodSpace.extendNNReal (E := E))} :
-          Set (Measure D(ℝ, E))) := by
-    ext m
-    rw [Set.mem_singleton_iff]
-    constructor
-    · rintro ⟨-, rfl⟩
-      rfl
-    · rintro rfl
-      exact ⟨(), rfl⟩
+          Set (Measure D(ℝ, E))) :=
+    Set.range_const
+  rwa [h3] at h2
+
+/-- **The tightness transport under post-composition, inhabited on the law of the jump
+construction.**  `SkorokhodSpace.isTightMeasureSet_map_postcomp` of Milestone 8 there says that a
+tight family on `D(ι, E)` has tight images under `f ↦ h ∘ f`; here its hypothesis is discharged on
+data, and the image lives on `D(ℝ≥0, E')` for an arbitrary Polish `E'`.
+
+**What this probes is the reduction to real valued paths**, which is what the tightness criterion
+of that milestone is stated over: with `E' = ℝ` and `h` a bounded continuous function the
+conclusion is the tightness of the law of the real valued process `h ∘ X`.  As with
+`isTightMeasureSet_map_extendNNReal_map_jumpPathD`, the conclusion also follows from
+`MeasureTheory.isTightMeasureSet_singleton` directly, `D(ℝ≥0, E')` being complete and second
+countable as well; what is probed is that the hypothesis of the transport is met by a law this
+development actually produces, and that its family form `{μ i | i}` is reachable from a single
+measure. -/
+theorem isTightMeasureSet_map_postcomp_map_jumpPathD {E' : Type*} [MetricSpace E']
+    [MeasurableSpace E'] [BorelSpace E'] [PolishSpace E'] [MetricSpace E] [BorelSpace E]
+    [PolishSpace E] [CompleteSpace E] {lam : E → ℝ} (hlam : Measurable lam) (mu : Kernel E E)
+    [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] (h : C(E, E')) :
+    IsTightMeasureSet
+      {((jumpMeasure mu nu).map (jumpPathD lam)).map (SkorokhodSpace.postcomp h)} := by
+  have hsingle := isTightMeasureSet_map_jumpPathD hlam mu nu
+  have h1 : {((fun _ : Unit ↦ (jumpMeasure mu nu).map (jumpPathD lam)) i) | i}
+      = ({(jumpMeasure mu nu).map (jumpPathD lam)} : Set (Measure D(ℝ≥0, E))) :=
+    Set.range_const
+  have h2 := SkorokhodSpace.isTightMeasureSet_map_postcomp
+    (μ := fun _ : Unit ↦ (jumpMeasure mu nu).map (jumpPathD lam)) h (by rw [h1]; exact hsingle)
+  have h3 : {((fun _ : Unit ↦ (jumpMeasure mu nu).map (jumpPathD lam)) i).map
+        (SkorokhodSpace.postcomp h) | i}
+      = ({((jumpMeasure mu nu).map (jumpPathD lam)).map (SkorokhodSpace.postcomp h)} :
+          Set (Measure D(ℝ≥0, E'))) :=
+    Set.range_const
   rwa [h3] at h2
 
 /-- **A test process of the path space, composed with the path map, is a test process of the

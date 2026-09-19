@@ -2320,6 +2320,19 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   Milestone 7 with `MeasureTheory.isTightMeasureSet_of_isCompact_closure` and
   its converse `isCompact_closure_of_isTightMeasureSet`; the completeness of
   `E` is what the first of the two asks for.
+
+  **Two of its inputs are proved, 2026-09-19, and they settle the question the
+  statement would otherwise stumble over.** `isTightMeasureSet_of_forall_exists_isCompact_closure`
+  is the joint between the two milestones — a set of *paths* with compact
+  closure carrying all but `ε` of every measure of the family makes the family
+  tight — and `measure_compl_iInter_le` is the countable bookkeeping over window
+  radius and tolerance. **Neither needs the sets to be measurable**, and that is
+  the point: `{f | η ≤ modulusBased t₀ u f δ}` is an infimum over an
+  uncountable family of subdivisions and nothing here shows it is Borel, but a
+  Mathlib `Measure` is defined on every set, so `measure_mono` and
+  `measure_iUnion_le` apply as they stand. What is left of the item is the
+  construction of the set and the verification that `isCompact_closure_iff`
+  applies to it — no measure theory.
 * `SkorokhodSpace.tendsto_finiteDimensional_of_tendsto` — stage (A),
   **proved 2026-09-18**. If `μ n → μ` weakly then, for every **countable** family
   `t : α → ι` of points at which the limit has no fixed discontinuity — that is
@@ -3220,9 +3233,64 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   `SkorokhodSpace.setOf_mem_leftJumpSet_eq_iUnion`.
 * `SkorokhodSpace.continuous_postcomp` — stage (A). For continuous `h : E → E'` the induced
   map `SkorokhodSpace.postcomp h : D ι E → D ι E'`, `f ↦ h ∘ f`, is well defined
-  and continuous; with `Measurable (postcomp h)` for `h` Borel, from Milestone 6.
+  and continuous; with `SkorokhodSpace.measurable_postcomp`, from Milestone 6.
   Together with `ProbabilityMeasure.tendsto_map_of_tendsto_of_continuous` this is
   the continuous mapping theorem in the form the next item needs.
+
+  **The map and its measurability are proved, 2026-09-19.**
+  `SkorokhodSpace.postcomp` takes a bundled `C(E, E')`, because its consumers —
+  `MeasureTheory.Measure.map (postcomp h)` and `Continuous (postcomp h)` — want
+  a map of one argument, and a bounded continuous test function reaches it
+  through `BoundedContinuousFunction.toContinuousMap`. Well definedness is
+  **Mathlib's** `IsCadlag.continuous_comp`
+  (`Mathlib/Topology/Order/Cadlag.lean:119`) and is not restated here;
+  `SkorokhodSpace.measurable_postcomp` is
+  `SkorokhodSpace.measurable_of_measurable_eval` applied coordinatewise and does
+  not go through the continuity.
+
+  **The continuity is proved as well, 2026-09-19, and it has four named
+  inputs.**
+
+  - `IsCompact.exists_pos_forall_dist_image_lt` — the value space estimate: a
+    continuous map is uniformly continuous near a compact set, with the first
+    point confined to `K` and the second free, which is *not*
+    `IsCompact.uniformContinuousOn_of_continuous`, that one confining both. Its
+    proof is `lebesgue_number_lemma_of_metric` applied to the cover of `K` by
+    the preimages of the `ε / 2`-balls of `E'`.
+  - `SkorokhodSpace.distWith_postcomp_le` — the window estimate, at one radius
+    and one time change, anchored at the first path because `distWith` is not
+    symmetric.
+  - `SkorokhodSpace.totallyBounded_image_exhaustion` — the window values of a
+    single càdlàg path are totally bounded, the bridge from the closed ball to
+    the interval `IsCadlag.totallyBounded_image_Icc` speaks of being
+    `ordConnected_exhaustion`.
+  - `SkorokhodSpace.intWith_postcomp_le` — the passage to the integral over the
+    window radius, and **the only one of the four that is not a pointwise
+    bound**. A small integral does not make the integrand small at every radius;
+    it makes the radii at which `distWith` exceeds a threshold `δ₁` small in
+    Lebesgue measure, by at most `exp M / min 1 δ₁` times the integral, and on
+    them the truncated integrand is paid for by `1`. The tail beyond the radius
+    `M` is `exp (-M)`. So the metric of Milestone 4 is spent twice in this one
+    statement: the truncation at `1` bounds the exceptional radii and the weight
+    `exp (-u)` both bounds their measure and supplies the tail.
+
+  The compact set the first input is applied to is the closure of the window
+  image of the centre, compact by the third input together with
+  `[CompleteSpace E]` — and the completeness is not avoidable, a continuous map
+  on a non complete space failing to be uniformly continuous near a merely
+  totally bounded set. The assembly chooses `M` by `Real.log`, `δ₁` by the first
+  input, and the radius of the ball as
+  `min (ε / 4) (ε / 4 * min 1 δ₁ / exp M)`; `SkorokhodSpace.intDist_comm` keeps
+  the centre in the first argument, where the modulus is known, and
+  `exists_lt_of_ciInf_lt` produces the time change that the infimum only
+  approaches.
+  **The forward direction of the reduction is proved with it**, as
+  `SkorokhodSpace.isTightMeasureSet_map_postcomp`: a tight family of laws on
+  `D ι E` has tight images on `D ι E'`. It is `MeasureTheory.IsTightMeasureSet.map`
+  with the continuity above, plus the same index bookkeeping
+  `isTightMeasureSet_map_extendNNReal` of Milestone 9 does; the converse is not
+  it read backwards and needs the criterion.
+
 * `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` — stage (B). The
   reduction to
   real-valued paths. Let `S` be a set of Borel probability measures on `D ι E`

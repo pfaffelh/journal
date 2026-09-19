@@ -100,7 +100,7 @@ unserer Konstruktion. Daher:
 | `fact:jacodmemin` | 1 | Continuous mapping, Jacod--M'emin; CPS, Theorem 2.9 | bewusst | nicht formalisiert; `rem:augvsws` begründet, warum Augmentierung genügt |
 | `fact:picard` | 1 | Picard--Lindel"of for SDEs | bewusst | SDE-Weg wird zitiert, nicht bewiesen (§7.5) |
 | `fact:pseudopath` | 1 | Pseudo-paths; MZ, Section~1 and Lemma~1 | Roadmap | MartingaleProblems M11. **Am 2026-09-08, elfter Lauf, sind alle drei Teile als tragend erkannt, und zwar für einen Zweck, den das Manuskript ihnen nicht gibt**: (i) und (iii) machen die Inklusion $\DE \hookrightarrow M_E[0,\infty)$ zu einem Homöomorphismus auf ihr Bild mit Spur-$\sigma$-Algebra $\sigma(\pi_u)$, und (ii) — in der Lesart „$\gamma(\DE)$ ist borelsch im kompakten $\Prob([0,\infty]\times\hat E)$", nicht in der Lesart „nicht polnisch" — macht zusammen mit der Injektivität von $\gamma$ auf ganz $M_E$ den Raum $\DE$ zu einer **Borelmenge von $M_E$**. Das ist es, was Schritt 1 von `thm:MZconv` über den polnischen Raum $M_E$ (Kurtz 1991, S. 1022) laufen läßt. Die Injektivität von $\gamma$ auf $M_E$ steht wörtlich im Fact („identifies two paths exactly when they agree $\lambda$-a.e."); das Manuskript zieht daraus nur die schwächere Folgerung für $\DE$ |
-| `fact:relcompact` | 1 | Relative compactness, I; EK, Theorem 3.9.1 | Roadmap | SkorokhodSpace M8, `isTightMeasureSet_iff_forall_postcomp` mit `continuous_postcomp` — dort neu angelegt |
+| `fact:relcompact` | 1 | Relative compactness, I; EK, Theorem 3.9.1 | Roadmap | SkorokhodSpace M8, `isTightMeasureSet_iff_forall_postcomp` mit `continuous_postcomp`. **Stand 2026-09-19, dreizehnter Lauf:** von diesem Beleg ist die zweite Hälfte keine Ankündigung mehr — `SkorokhodSpace.postcomp`, `SkorokhodSpace.measurable_postcomp` und `SkorokhodSpace.continuous_postcomp` sind bewiesen und gehen durch `check_master.py`, ebenso die Vorwärtsrichtung der Reduktion als `SkorokhodSpace.isTightMeasureSet_map_postcomp`. Offen ist die Rückrichtung, und sie geht nicht ohne `SkorokhodSpace.isTightMeasureSet_iff`, das Straffheitskriterium auf Maßebene; ohne kompakte Einschließung ist sie **falsch**, und der Zeuge steht im README von Meilenstein 8. Die Wohldefiniertheit, die dieselbe Zeile früher als eigene Arbeit führte, ist Mathlibs `IsCadlag.continuous_comp` (`Mathlib/Topology/Order/Cadlag.lean:119`, geprüft gegen `94ef6b89544`) |
 | `fact:stoppingtimes` | 1 | EK, Propositions 2.1.2 and 2.1.4; eqref{T2b} | Mathlib | `MeasureTheory.IsStoppingTime` in `Probability/Process/Stopping.lean` |
 | `fact:strookvaradhan` | 1 | Stroock--Varadhan; KA, Theorem 32.7 | bewusst | SDE-Weg wird zitiert, nicht bewiesen (§7.5) |
 | `fact:yamadawatanabe` | 1 | Yamada--Watanabe | bewusst | SDE-Weg wird zitiert, nicht bewiesen (§7.5) |
@@ -42388,3 +42388,322 @@ bisherigen Aussage eine Voraussetzung war und deshalb nie bezahlt werden mußte.
    oder besser gleich `IsTightMeasureSet {m} ↔ IsTightMeasureSet {μ i | i}` für
    konstantes `μ`. Dreimal in zwei Läufen von Hand geschrieben; das ist die
    Schwelle, ab der es ein Lemma wird.
+### 2026-09-19, dreizehnter Lauf des Tages — alle drei Vorschläge sind erledigt, aber zwei davon **durch die Bibliothek**: sie standen schon in Mathlib; und der teure dritte, die Stetigkeit von `postcomp`, steht — sie hängt an einer Ungleichung, die keine punktweise ist, sondern eine von Markov
+
+**Bearbeitet:** die drei Vorschläge des Vorlaufs, in ihrer Reihenfolge. Zwei von
+ihnen haben sich beim Nachsehen in Befunde über die Bibliotheksgrenze
+verwandelt, und das ist das Ergebnis des Laufs, nicht ein Nebenprodukt.
+
+**Elf Deklarationen**, zehn in `TauCeti/SkorokhodSpace/Suggested.lean` — acht im
+neuen Abschnitt „Milestone 8, stage (A)" am Ende von Meilenstein 8 und zwei im
+Abschnitt davor — und eine Leerheitsprobe in
+`TauCeti/MartingaleProblems/Suggested.lean`:
+
+* `SkorokhodSpace.postcomp`, `SkorokhodSpace.postcomp_toFun`
+* `SkorokhodSpace.measurable_postcomp`
+* `IsCompact.exists_pos_forall_dist_image_lt`
+* `SkorokhodSpace.distWith_postcomp_le`
+* `SkorokhodSpace.totallyBounded_image_exhaustion`
+* `SkorokhodSpace.intWith_postcomp_le`
+* `SkorokhodSpace.continuous_postcomp`
+* `SkorokhodSpace.isTightMeasureSet_map_postcomp`
+* `isTightMeasureSet_map_postcomp_map_jumpPathD` (in `MartingaleProblems`)
+
+Dazu zwei weitere in `SkorokhodSpace`, die dem **nächsten** Punkt vorgreifen und
+im vorletzten Abschnitt dieses Berichts stehen:
+`isTightMeasureSet_of_forall_exists_isCompact_closure` und
+`measure_compl_iInter_le`.
+
+Dazu zwei Beweise in `MartingaleProblems` durch je eine Zeile ersetzt. **Damit
+ist Punkt 1 der drei fehlenden Aussagen von Meilenstein 8 geschlossen**, um den
+Meilenstein 11 von `MartingaleProblems` seit dem Vorlauf ansteht; offen bleiben
+`isTightMeasureSet_iff` und `isTightMeasureSet_iff_forall_postcomp` — von der
+zweiten steht seit heute die Vorwärtsrichtung, die Rückrichtung geht durch die
+erste.
+
+#### Vorschlag 1, erster Teil: die Wohldefiniertheit ist **kein** eigener Satz
+
+Der Vorlauf hatte `IsCadlag.comp_continuous` bestellt — daß die Nachschaltung
+einer stetigen Abbildung càdlàg erhält — und angemerkt, die Liste der
+`IsCadlag`-Sätze der Datei habe nur Aussagen über den *Index* und keine über den
+*Wertebereich*. Das stimmt für unsere Datei und ist für die Bibliothek falsch:
+
+> **`IsCadlag.continuous_comp` steht in Mathlib**,
+> `Mathlib/Topology/Order/Cadlag.lean:119`, mit
+> `IsCadlag.continuous_comp₂` bei `:128` daneben.
+
+Beide Klauseln sind dort genau so bewiesen, wie der Vorschlag es angesagt hatte
+(`hf.isRightContinuous.continuous_comp hg` und `(hg.tendsto l).comp hl`). Der
+Satz war also nicht zu schreiben, sondern zu finden — und er war zu finden, weil
+die Kette seit dem 2026-09-18 gegen `master` baut und `Cadlag.lean` dort seit
+`#43352` liegt. Der Modulkopf von Meilenstein 2, der die drei beim Umzug
+gestrichenen Doppelungen aufzählt, nennt ihn jetzt als vierte Stelle, damit kein
+Lauf ihn nachbaut.
+
+**Was daraus für `postcomp` folgt:** die Definition ist die Bündelung dieses
+Lemmas und sonst nichts, und sie nimmt ein **gebündeltes `C(E, E')`**. Der Grund
+steht am Doc-Kommentar: ihre Verbraucher sind `Measure.map (postcomp h)` und
+`Continuous (postcomp h)`, und beide wollen eine Abbildung *eines* Arguments;
+eine beschränkte stetige Testfunktion `h : E →ᵇ ℝ`, über die die Reduktion läuft,
+kommt über `BoundedContinuousFunction.toContinuousMap` daran.
+
+`SkorokhodSpace.measurable_postcomp` ist, wie angesagt,
+`measurable_of_measurable_eval` koordinatenweise — und sie geht **nicht** über
+die Stetigkeit, was der Punkt ist: `Measure.map` fragt nach Meßbarkeit, und die
+steht damit vor dem teuren Satz.
+
+#### Vorschlag 3 ist ebenfalls Mathlibs, und die beiden handgeschriebenen Blöcke sind weg
+
+Der Vorlauf hatte `{(fun _ : Unit ↦ m) i | i} = {m}` als Lemma vorgeschlagen,
+dreimal in zwei Läufen von Hand geschrieben. Die Aussage ist
+
+> **`Set.range_const`**, `Mathlib/Data/Set/Image.lean:870`,
+> `(range fun _ : ι => c) = {c}` unter `[Nonempty ι]`,
+
+denn `{f i | i}` ist die Schreibweise für `Set.range f`. Die beiden Blöcke in
+`isTightMeasureSet_map_extendNNReal_map_jumpPathD` — je sechs Zeilen `ext`,
+`rintro`, `rfl` — sind durch `Set.range_const` ersetzt; sechzehn Zeilen weniger,
+und die Stelle liest sich jetzt als das, was sie ist.
+
+**Die Lehre, und sie ist dieselbe wie beim ersten Befund:** die Schwelle „dreimal
+von Hand, also ein Lemma" ist richtig, aber der erste Schritt danach ist nicht,
+es zu schreiben, sondern nachzusehen, ob es schon dasteht. Zwei von drei
+Vorschlägen dieses Vorlaufs waren so.
+
+#### Vorschlag 2: die Stetigkeit steht, und der Schritt, den der Vorlauf nicht benennen konnte, ist eine Markovungleichung
+
+Der Vorlauf hatte `continuous_postcomp` als „die einzige teure der drei" von
+Punkt 1 getrennt und für ihren Inhalt die gleichmäßige Stetigkeit in der Nähe
+eines Kompaktums genannt. Das ist richtig und reicht **nicht**. Vier Aussagen
+tragen sie, und die vierte hat der Vorlauf nicht gesehen:
+
+* `IsCompact.exists_pos_forall_dist_image_lt` — zu kompaktem `K` und `ε > 0` gibt
+  es `δ > 0` mit `dist (h x) (h y) < ε` für **alle** `x ∈ K` und **jedes** `y`.
+  Das ist ausdrücklich **nicht** `IsCompact.uniformContinuousOn_of_continuous`
+  (`Mathlib/Topology/UniformSpace/Compact.lean`), die beide Punkte in `K`
+  einsperrt; verglichen werden hier aber zwei Pfade, von denen nur einer sein
+  Fenster in `K` hat. Der Beweis ist das Lebesguesche Zahlenlemma
+  (`lebesgue_number_lemma_of_metric`,
+  `Mathlib/Topology/MetricSpace/Pseudo/Lemmas.lean:120`) auf die Überdeckung von
+  `K` durch die Urbilder der `ε/2`-Bälle von `E'`. **Mathlib hat diese einseitige
+  Fassung nicht** — gesucht am Quelltext von `94ef6b89544`; sie ist ein Kandidat
+  für die Bibliothek.
+* `SkorokhodSpace.distWith_postcomp_le` — der Fensterschluß bei **einem** Radius
+  und **einer** Zeitverwandlung. Er steht bei festem `l`, weil `distOn` und
+  `intDist` Infima über `l` sind und ein Infimum von jedem einzelnen Glied nach
+  oben beschränkt wird; und er ist am **ersten** Pfad verankert, weil `distWith`
+  nicht symmetrisch ist — die Zeitverwandlung wirkt auf das erste Argument —,
+  wozu `intDist_comm` die andere Lesart zurückdreht.
+* `SkorokhodSpace.totallyBounded_image_exhaustion` — die Fensterwerte **eines**
+  Pfades sind totalbeschränkt. Das ist die Einzelpfadfassung dessen, was
+  `totallyBounded_values_of_isCompact` von Meilenstein 7 für eine Familie tut,
+  und sie braucht weder Zeitverwandlung noch zweiten Radius; die Brücke vom
+  abgeschlossenen Ball zum Intervall, das
+  `IsCadlag.totallyBounded_image_Icc` verlangt, ist `ordConnected_exhaustion`.
+* `SkorokhodSpace.intWith_postcomp_le` — **und hier ist der Befund des Laufs.**
+
+> `SkorokhodSpace.intWith t₀ l f g < δ` macht `distWith t₀ u l f g` **nicht** an
+> jedem Radius `u` klein. Es macht nur die Menge der Radien, an denen `distWith`
+> über einer Schwelle `δ₁` liegt, klein — und zwar dem **Lebesguemaß** nach.
+
+Der Übergang vom Fenster zum Integral über den Fensterradius ist also keine
+punktweise Abschätzung, sondern eine Markovungleichung. Mit
+`A = {u ∈ Ioc 0 M | δ₁ ≤ distWith t₀ u l f g}` ist
+`exp (-M) * min 1 δ₁ * volume A ≤ ∫_A ≤ intWith t₀ l f g`, und heraus kommt
+
+> `intWith t₀ l (postcomp h f) (postcomp h g)`
+> `≤ ε₀ + exp (-M) + exp M / min 1 δ₁ * intWith t₀ l f g`.
+
+**Dabei wird die Gestalt der Metrik von Meilenstein 4 zweimal verbraucht**, und
+das ist der Satz, der von diesem Lauf bleibt: die Stutzung bei `1` bezahlt die
+Ausnahmeradien, deren Beitrag damit höchstens ihr Maß ist, und das Gewicht
+`exp (-u)` tut beides — es beschränkt jenes Maß nach unten gegen `exp (-M)` auf
+dem Fenster und liefert als Schwanz den Summanden `exp (-M)`. Eine Metrik, die
+über den Radius **summierte** statt zu integrieren — `totalDist`, am 2026-09-08
+verworfen —, hätte hier keinen Schwanz, der klein wird.
+
+Der Zusammenbau ist danach Buchhaltung, wie angesagt: `Metric.continuous_iff`,
+`M` über `Real.log`, der Ballradius `min (ε/4) (ε/4 * min 1 δ₁ / exp M)`,
+`exists_lt_of_ciInf_lt` für die Zeitverwandlung, die das Infimum nur annähert,
+und `ciInf_le` zurück. **Die Vollständigkeit von `E` steht in der Aussage** und
+ist nicht vermeidbar: der Abschluß einer totalbeschränkten Menge ist nur in einem
+vollständigen Raum kompakt, und in der Nähe einer bloß totalbeschränkten Menge
+ist eine stetige Abbildung im allgemeinen nicht gleichmäßig stetig.
+
+#### Und die Stetigkeit trägt sofort etwas: `isTightMeasureSet_map_postcomp`
+
+Damit der neue Satz nicht bloß dasteht, ist die **Vorwärtsrichtung** von Punkt 3
+gleich mitgenommen: eine straffe Familie von Gesetzen auf `D(ι, E)` hat straffe
+Bilder auf `D(ι, E')`. Die Mathematik ist `MeasureTheory.IsTightMeasureSet.map`
+(`Mathlib/MeasureTheory/Measure/Tight.lean:129`), der Inhalt ist die Stetigkeit
+von heute, und hinzu kommt allein die Buchhaltung des Index — dieselbe, die
+`isTightMeasureSet_map_extendNNReal` für die Indexkreuzung macht. **Der Befund
+des Vorlaufs ist damit an einer Stelle abgetragen:** es gibt jetzt eine
+Deklaration in `SkorokhodSpace`, die Straffheit aus etwas anderem als Straffheit
+**derselben** Familie gewinnt — wenn auch noch nicht aus dem Kriterium.
+
+Was die Rückrichtung ist und warum sie nicht dieselbe Aussage rückwärts ist,
+steht am Doc-Kommentar: sie ist ohne kompakte Einschließung **falsch**, und der
+Zeuge dafür — die Gesetze der konstanten Pfade auf der Höhe `n` — steht seit
+langem im README von Meilenstein 8.
+
+**Und die Voraussetzung ist an Daten eingelöst**, im selben Lauf:
+`isTightMeasureSet_map_postcomp_map_jumpPathD` schickt das Pfadgesetz der
+Sprungkonstruktion durch den Transport, für beliebiges polnisches `E'`. Mit
+`E' = ℝ` und beschränktem stetigem `h` ist die Folgerung die Straffheit des
+Gesetzes des **reellwertigen** Prozesses `h ∘ X` — also gerade die Gestalt, auf
+die das Kriterium von Meilenstein 8 reduziert.
+
+#### Vier Einzelheiten, die ein nächster Lauf sonst wiederfindet
+
+* **`ciSup_le` über `ι` verlangt `Nonempty ι`**, und die Indexklasse gibt es
+  nicht her: `BasePoint ι` ist Daten und keine Instanz von `Nonempty`. Ein
+  `have : Nonempty ι := ⟨t₀⟩` vor dem `refine` ist der ganze Aufwand; dieselbe
+  Zeile steht im Beweis von `measurable_distWith`.
+* **`omit … in` steht vor dem Doc-Kommentar, nicht zwischen ihm und dem Satz.**
+  Dazwischen gibt es `unexpected token 'omit'; expected 'lemma'`, und zwar erst
+  beim Übersetzen der ganzen Datei — der Entwicklungsprüfer sieht es nicht, weil
+  dort der Satz ohne Kommentar steht. Das ist der Grund, weshalb
+  `check_master.py` ungefiltert über die ganze Datei läuft und nicht über einen
+  Ausschnitt.
+* **Ein benanntes Argument in der Mengenschreibweise `{… | i}` bricht den
+  Parser.** `{(μ i).map (SkorokhodSpace.postcomp (ι := ℝ≥0) h) | i}` gibt
+  `unexpected token '}'; expected '|'` und einen Fehler über `∃ᵉ`: das `:=` im
+  Innern wird als Beginn eines erweiterten Binders gelesen. Weglassen genügt —
+  der Index ist aus dem Typ des Maßes bestimmt.
+* **`Integrable.add` gibt `f + g` und nicht `fun u ↦ f u + g u`**, und `rw
+  [integral_add h₁ h₂]` findet das Muster dann nicht. Der Ausweg ist, die
+  Integrierbarkeit als `have` mit **ausgeschriebenem punktweisen Typ** zu
+  stellen; danach paßt das Muster. Dasselbe gilt für `integrableOn_const`, das
+  auf `master` seine Endlichkeitsvoraussetzung als `autoParam` trägt und deshalb
+  nicht mehr `integrableOn_const.2 (Or.inr …)` heißt, sondern
+  `integrableOn_const hA` mit dem Beweis von `volume A ≠ ⊤`.
+
+#### Eingetragen
+
+* `SkorokhodSpace/Suggested.lean`, Meilenstein 2: `IsCadlag.continuous_comp` als
+  vierte Stelle, an der die Bibliothek hat, was die Datei nicht schreibt.
+* `SkorokhodSpace/README.md`, Meilenstein 8: der Punkt `continuous_postcomp` sagt
+  jetzt, was steht (die Abbildung, ihre Koordinate, ihre Meßbarkeit, die vier
+  Eingaben der Stetigkeit und die Vorwärtsrichtung der Reduktion), was Mathlibs
+  ist, und wo die Gestalt der Metrik von Meilenstein 4 verbraucht wird.
+* `MartingaleProblems/README.md`, Meilenstein 11: Punkt 1 der drei fehlenden
+  Aussagen ist geschlossen, und von Punkt 3 steht die Vorwärtsrichtung.
+* `TODO.md`, Punkt 8: die **siebenundzwanzigste** Lücke,
+  `IsCompact.exists_pos_forall_dist_image_lt`, mit der Suche, die sie belegt, und
+  als Behauptung in `scripts/check_negatives.py` aufgenommen (43 statt 42
+  Behauptungen, 0 unerwartete Treffer).
+
+#### Geprüft
+
+* `scripts/check_master.py`: rc 0, 0 Fehler, 0 `sorry`, 0 veraltet, Warnungen
+  18 / 35 / 106 — **unverändert** gegenüber dem Vorlauf, obwohl elf
+  Deklarationen hinzugekommen sind.
+* `scripts/check_axioms_master.py` auf alle neuen Namen: `propext`,
+  `Classical.choice`, `Quot.sound`.
+* `scripts/check_duplicates.py`: 2 308 geprüfte eigene Deklarationen, 37 Treffer
+  auf dem letzten Namensbestandteil, also zwei mehr als im Vorlauf — beide
+  harmlos und in fremden Namensräumen: `ContinuousMap.continuous_postcomp`
+  (kompakt-offene Topologie) und `Pi.continuous_postcomp` (Produkte) neben
+  unserem `SkorokhodSpace.continuous_postcomp`.
+* `scripts/extract_citations.py`, `scripts/check_cited_lines.py`:
+  291 gepaarte Fundstellen (fünf mehr als im Vorlauf), 291
+  stimmen, 0 verschoben, 0 tot.
+* `scripts/check_negatives.py`: 43 Behauptungen, 0 mit unerwarteten Treffern —
+  darunter die heute aufgenommene über die einseitige gleichmäßige Stetigkeit.
+* Die benutzten Mathlib-Namen am Quelltext von `94ef6b89544` nachgesehen:
+  `Mathlib/Topology/Order/Cadlag.lean:104` (`IsCadlag`), `:119`
+  (`IsCadlag.continuous_comp`), `:128` (`continuous_comp₂`),
+  `Mathlib/Data/Set/Image.lean:870` (`Set.range_const`),
+  `Mathlib/Topology/MetricSpace/Pseudo/Lemmas.lean:120`
+  (`lebesgue_number_lemma_of_metric`),
+  `Mathlib/Topology/UniformSpace/Cauchy.lean:561` (`TotallyBounded.closure`),
+  `:748` (`TotallyBounded.isCompact_of_isClosed`),
+  `Mathlib/MeasureTheory/Integral/IntegrableOn.lean:119` (`integrableOn_const`,
+  mit `autoParam`), `:360` (`IntegrableOn.indicator`),
+  `Mathlib/MeasureTheory/Integral/Bochner/Set.lean:526` (`setIntegral_const`,
+  in der `Measure.real`-Gestalt), `:739` (`setIntegral_mono_set`),
+  `Mathlib/Analysis/SpecialFunctions/ImproperIntegrals.lean:44` und `:57`
+  (`integrableOn_exp_neg_Ioi`, `integral_exp_neg_Ioi`),
+  `Mathlib/MeasureTheory/Measure/Tight.lean:129` (`IsTightMeasureSet.map`, dessen
+  Kopf bei `:128` steht),
+  `Mathlib/Order/ConditionallyCompleteLattice/Indexed.lean:342`
+  (`exists_lt_of_ciInf_lt`).
+
+#### Ein Vorgriff auf Punkt 2, und er beantwortet die Frage, an der er hängen bliebe
+
+Ehe die Vorschläge stehen, ist die erste Entscheidung von
+`SkorokhodSpace.isTightMeasureSet_iff` schon getroffen, weil sie billig war und
+ein Lauf sonst eine Runde daran verlöre:
+
+> **Die Meßbarkeit der Modulmengen wird nicht gebraucht.**
+
+`{f | η ≤ modulusBased t₀ u f δ}` ist ein Infimum über eine **überabzählbare**
+Familie von Unterteilungen; daß sie borelsch ist, folgt aus nichts, was in der
+Datei steht, und die Zerlegung der Straffheit über solche Mengen sähe damit
+blockiert aus. Sie ist es nicht: ein `MeasureTheory.Measure` ist in Mathlib auf
+**jeder** Menge definiert — es ist ein äußeres Maß mit angehängtem
+Meßbarkeitsprädikat —, und `measure_mono` wie `measure_iUnion_le` gelten für
+beliebige Mengen.
+
+Die beiden Aussagen, die das ausnutzen, stehen und gehen durch
+`check_master.py`:
+
+* `isTightMeasureSet_of_forall_exists_isCompact_closure` — gibt es zu jedem
+  `ε > 0` eine Menge `A` von Pfaden mit kompaktem Abschluß und `μ Aᶜ ≤ ε` für
+  jedes `μ` der Familie, so ist die Familie straff. Das ist die **Naht zwischen
+  Meilenstein 7 und 8**: das Kriterium von Meilenstein 7 spricht über eine Menge
+  von *Pfaden*, die Straffheit über eine Menge von *Maßen*.
+* `measure_compl_iInter_le` — die abzählbare Buchhaltung, `measure_iUnion_le`
+  durch `Set.compl_iInter` gelesen, also die Stelle, an der aus einer Bedingung
+  je Fensterradius und je Toleranz **eine** Menge wird.
+
+Beide sind über einem beliebigen meßbaren topologischen Raum gestellt, weil vom
+Pfadraum nichts eingeht. Was damit von `isTightMeasureSet_iff` noch aussteht, ist
+allein die **Konstruktion der Menge** `A` aus den beiden Bedingungen und der
+Nachweis, daß `isCompact_closure_iff` auf sie paßt — keine Maßtheorie mehr.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`SkorokhodSpace.isTightMeasureSet_iff`** — Punkt 2 der drei fehlenden
+   Aussagen von Meilenstein 8, und nach dem Abschluß von Punkt 1 die unterste
+   noch offene.
+
+   *Die Aussage:* eine Familie von Borelschen Wahrscheinlichkeitsmaßen auf
+   `D(ℝ, E)` ist straff genau dann, wenn sie kompakte Einschließung und die
+   Modulbedingung erfüllt.
+
+   *Worauf sie ruht:* `SkorokhodSpace.isCompact_closure_iff` von Meilenstein 7,
+   das eigens dafür gebaut ist und bisher **keinen Verbraucher** hat, und die
+   beiden heute bewiesenen Nahtstellen
+   `isTightMeasureSet_of_forall_exists_isCompact_closure` und
+   `measure_compl_iInter_le`. Zu bauen ist die Menge der Pfade, die für jedes
+   Fenster `m` und jede Stufe `k` im kompakten `K (m,k)` bleiben und dort den
+   Modul `1/(k+1)` unterschreiten, mit den Toleranzen `ε / 2^(m+k)`; **die
+   Meßbarkeit dieser Mengen ist nach dem Vorgriff oben nicht zu zeigen**.
+
+   *Warum jetzt:* sie ist die Aussage, die alles über ihr liest, und sie ist die
+   **einzige**, die aus etwas anderem als Straffheit Straffheit macht — der
+   Befund des Vorlaufs, daß es eine solche in der ganzen Datei nicht gibt, hängt
+   an ihr allein.
+
+2. **`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp`** — Punkt 3, die
+   Reduktion auf reellwertige Pfade.
+
+   *Worauf sie ruht:* die Hinrichtung **steht** seit heute als
+   `SkorokhodSpace.isTightMeasureSet_map_postcomp`; die Rückrichtung ist Punkt 1
+   oben, angewandt auf den aus den reellwertigen Moduln zurückgewonnenen Modul. Das Akzeptanzbeispiel, das die
+   kompakte Einschließung als unentbehrlich ausweist, steht im README von
+   Meilenstein 8 (`S = {δ (fun _ ↦ (n : ℝ))}`) und ist mitzunehmen.
+
+3. **Die Zeile `fact:relcompact` ganz einlösen.** Ihr Beleg ist
+   `isTightMeasureSet_iff_forall_postcomp` mit `continuous_postcomp`; davon steht
+   nach diesem Lauf das zweite ganz und vom ersten die Hinrichtung, und die
+   Zeile sagt das seit heute. Mit den Punkten 1 und 2 oben wäre der Beleg
+   vollständig bewiesen statt bloß geplant — die Zeile bliebe im Status
+   `Roadmap`, aber ihre Zelle nennt dann eine Aussage, die dasteht, und nicht
+   eine, die angekündigt ist.
+
+   *(Der Mathlib-Vorschlag `IsCompact.exists_pos_forall_dist_image_lt` ist in
+   diesem Lauf schon eingetragen, als siebenundzwanzigste Lücke in `TODO.md`
+   Punkt 8; er ist kein Vorschlag mehr, sondern erledigt.)*
