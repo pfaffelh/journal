@@ -6768,6 +6768,30 @@ one, and they are what the instances of the milestone stand on.
   known: every identification already proved for the process —
   `jumpMeasure_map_jumpProcessE_zero` at the start, `poissonMeasure` at the
   Poisson rate — becomes one for the path law without a second computation.
+* `eq_map_jumpPathD_of_forall_dense`: a probability measure on `D(ℝ≥0, E)` whose
+  finite dimensional distributions agree with those of
+  `(jumpMeasure mu nu).map (jumpPathD lam)` along **some dense set of times** is
+  that law. Proved (2026-09-19). This is
+  `SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq` (**SkorokhodSpace**
+  Milestone 6) read at the index `ℝ≥0`, which is densely ordered and has no
+  greatest element, so the two conditions that statement puts on the times
+  collapse into density; the countable core is `NNReal.instHasCountableCore`.
+
+  **It says what the item above does not.** The coordinate identification pins
+  down the one dimensional distributions and nothing more — a law on a path space
+  is not determined by its marginals. Here the law itself is determined, and what
+  is spent is the finite dimensional family together with the density of the
+  times: no modulus of the paths, no compact containment, and no non explosion
+  beyond what `jumpPathD` has already consumed. No time is asked to be a
+  continuity time either, and that is the difference from Milestone 8 of
+  **SkorokhodSpace**: there two sequences are compared and the fixed
+  discontinuities of the limit have to be avoided, while an identification at
+  fixed times has no limit to avoid.
+* `eq_map_jumpPathD_poisson_of_forall_dense`: the same on the Poisson data, so
+  the hypotheses on `E` and on the rate are jointly discharged. Proved
+  (2026-09-19). Read together with `map_eval_map_jumpPathD_poisson` it says that
+  the Poisson path law on `D(ℝ≥0, ℕ)` has Poisson marginals and is the only law on
+  that space with its finite dimensional distributions along ℚ.
 
 **Acceptance example.** `map_eval_map_jumpPathD_poisson`, proved (2026-09-18):
 the Poisson data run through `jumpPathD` land in `D(ℝ≥0, ℕ)`, and the coordinate

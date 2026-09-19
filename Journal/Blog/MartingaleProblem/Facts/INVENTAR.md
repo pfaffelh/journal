@@ -40667,3 +40667,204 @@ verschwundener Name, sondern ein verschobener.
 3. **`dist_eq_sub_of_le` in einen Namensraum bringen**, unverändert vom Vorlauf.
    Es ist die letzte Deklaration der Roadmaps mit einem generischen Namen im
    Wurzelnamensraum, und dieser Lauf hat sie nicht berührt.
+
+### 2026-09-19, fünfter Lauf des Tages — Vorschläge 2 und 3 stehen, und Vorschlag 2 hat den Satz des Vorlaufs **allgemeiner** gemacht statt ihn nur zu benutzen; dazu der Befund, der Vorschlag 1 aufhält: seine erste Eingabe ist **nicht** vollständig, denn die ganze Oszillationskette von Meilenstein 8 verlangt einen kompakten Träger vom Maß **eins**, und ein straffes Gesetz hat keinen
+
+Zwei Deklarationen neu, eine bestehende verallgemeinert, eine umbenannt. Alle
+drei Roadmap-Dateien durch `scripts/check_master.py` gegen
+`94ef6b89544e58e90f119da869f3fb48d1da0f4c`: **0 Fehler, 0 `sorry`, 0 veraltete
+Namen**, Warnungen 18 / 35 / 106 — unverändert gegenüber dem Vorlauf —, rc 0.
+Die beiden neuen Namen, die verallgemeinerte und die umbenannte Aussage mit
+`scripts/check_axioms_master.py` auf `propext`, `Classical.choice`, `Quot.sound`
+und nichts sonst. Die Punkte stehen in `SkorokhodSpace/README.md`, Meilenstein 6,
+und in `MartingaleProblems/README.md`, Meilenstein 4.
+
+#### Vorschlag 2 — und er ist größer ausgefallen als bestellt
+
+Bestellt war `jumpPathD_law_eq_of_forall_dense`, ein Verbraucher für den Satz des
+vierten Laufs. Die erste zu klärende Frage war laut Vorschlag, ob die
+`ℝ`-Fassung `SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq` über
+dem Index `ℝ≥0` greift. Die Antwort ist: **sie greift nicht, und sie muß es auch
+nicht — der Satz gilt über beliebigem Index.**
+
+Was die `ℝ`-Fassung wirklich verbraucht hatte, waren zwei Eigenschaften der
+Ordnung und keine Eigenschaften von `ℝ`:
+
+* **Die abzählbare dichte Teilmenge.** `Dense.exists_countable_dense_subset`
+  (`Topology/Bases.lean:671`) verlangt `SeparableSpace ↥T`. Der Vorlauf bezog das
+  aus der Zweitabzählbarkeit von `ℝ`; sie steht aber für **jeden** Index von
+  Meilenstein 1 schon da, weil `secondCountable_of_proper`
+  (`Topology/MetricSpace/ProperSpace.lean:66`, Instanz der Priorität 100, am
+  Quelltext von `94ef6b89544` nachgesehen) sie aus `ProperSpace ι` liest — und
+  `ProperSpace ι` steht in der Variablenzeile der Datei, Zeile 420.
+* **Die Rechtsdichtheit.** Der Vorlauf rechnete sie über `Set.Ioo t (t + ε)` aus,
+  also über die Addition von `ℝ`. Gebraucht wird nur, daß `𝓝[>] t` nichttrivial
+  ist, und das ist `nhdsGT_neBot` (`Topology/Order/DenselyOrdered.lean:222`, im
+  Abschnitt unter `[OrderTopology α] [DenselyOrdered α]`, mit `[NoMaxOrder α]` an
+  der Aussage). Der Rest ist `Dense.exists_mem_open` auf die offene nichtleere
+  Menge `o ∩ Set.Ioi t`.
+
+`SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq` steht deshalb
+jetzt über beliebigem `ι` mit `[DenselyOrdered ι] [NoMaxOrder ι]`. Die
+`ℝ`-Fassung ist damit **kein eigener Satz mehr**, sondern die Instanz mit
+gefundenen Instanzen; die Zahl der Deklarationen bleibt gleich, die Reichweite
+nicht.
+
+**Beide Ordnungsvoraussetzungen werden verbraucht, und keine ist Zierat.** Ohne
+`DenselyOrdered` ist `ℤ` diskret, jede dichte Menge ist alles, und die Aussage
+wäre die längs *aller* Zeiten. Ohne `NoMaxOrder` ist das größte Element
+rechtsisoliert — das ist genau die Lücke, für die der erste Zweig der
+allgemeinen Bedingung (`t ∈ T`) da ist, und der Punkt, an dem der Gegenzeuge im
+Doc-Kommentar von `measurableEmbedding_piDense` bricht: auf
+`ι = Set.Icc (0:ℝ) 1` mit `D = Set.Ico 0 1 ∩ ℚ` ist `𝓝[>] 1 = ⊥`, und die
+konstante `0` und der Indikator von `{1}` sind beide càdlàg und stimmen auf `D`
+überein. Am Quelltext der Datei nachgesehen, nicht aus dem Gedächtnis.
+
+**Der Verbraucher, in der Gestalt, die ihm bleibt.** Über `ℝ≥0` sind beide
+Ordnungsvoraussetzungen Instanzen, also fällt er heraus:
+
+* **`eq_map_jumpPathD_of_forall_dense`** (`MartingaleProblems`) — ein
+  Wahrscheinlichkeitsmaß auf `D(ℝ≥0, E)`, dessen endlichdimensionale
+  Verteilungen längs *irgendeiner* dichten Zeitmenge mit denen von
+  `(jumpMeasure mu nu).map (jumpPathD lam)` übereinstimmen, **ist** dieses
+  Gesetz. Was es gegenüber `map_eval_map_jumpPathD` sagt: jenes bestimmt die
+  eindimensionalen Verteilungen und nichts weiter — ein Gesetz auf einem
+  Pfadraum ist durch seine Randverteilungen nicht bestimmt.
+* **`eq_map_jumpPathD_poisson_of_forall_dense`** — dasselbe auf den
+  Poissondaten, also die Voraussetzungen an `E` und an die Rate gemeinsam
+  eingelöst. Gegen `map_eval_map_jumpPathD_poisson` gelesen: das Poissongesetz
+  auf `D(ℝ≥0, ℕ)` hat Poissonsche Randverteilungen und ist das **einzige**
+  Gesetz auf diesem Raum mit seinen endlichdimensionalen Verteilungen längs ℚ.
+
+Die bestellte Formulierung — „zwei Sprungkonstruktionen mit denselben Daten
+haben dasselbe Pfadgesetz" — ist **nicht** genommen worden, und der Grund gehört
+in den Bericht: bei denselben Daten sind die beiden Bildmaße dieselbe Funktion
+desselben Maßes, die Aussage wäre `rfl`. Was gemeint sein kann und was hier
+steht, ist die **Bestimmtheit**: ein *fremdes* Gesetz mit denselben
+endlichdimensionalen Verteilungen ist dasselbe.
+
+**Eine Falle beim Einhängen, und sie kostete einen vollen Durchlauf.** Die
+Notation `→ᵇ` ist in `MartingaleProblems/Suggested.lean` **nicht offen** — die
+Datei öffnet nur `open scoped NNReal`, während `SkorokhodSpace` bei Zeile 390
+auch `BoundedContinuousFunction` öffnet. Der Fehler, den Lean dafür meldet, ist
+`elaboration function for 'Mathlib.Tactic.superscriptTerm' has not been
+implemented` und nennt weder die Notation noch den fehlenden `open`. Zu
+schreiben ist `BoundedContinuousFunction E ℝ`, wie es die einzige andere Stelle
+der Datei tut (Zeile 5717).
+
+#### Vorschlag 3 — der Namensraum
+
+`dist_eq_sub_of_le` heißt jetzt `AdditiveDist.dist_eq_sub_of_le`: acht Stellen in
+`SkorokhodSpace/Suggested.lean` — die Deklaration, fünf Benutzungen, zwei
+Doc-Kommentare — und eine in der README. Eine Kollision mit der Bibliothek gab es
+nicht: `dist_eq_sub_of_le` steht auf `master` in `Mathlib/Data/Nat/Dist.lean:35`
+und damit im Namensraum `Nat`. Was es gab, war ein generischer Name im
+Wurzelnamensraum, und das war der Grund.
+
+`scripts/check_duplicates.py` führt das Paar weiter — es vergleicht den letzten
+Namensbestandteil, und der ist derselbe geblieben. Es ist **keine** Doppelung:
+`Nat.dist_eq_sub_of_le` ist `Nat.dist n m = m - n` mit der abgeschnittenen
+Subtraktion auf `ℕ`, unsere Aussage ist `dist s t = dist t₀ t - dist t₀ s` über
+`ℝ` unter `AdditiveDist`. Das gehört hier vermerkt, damit ein späterer Lauf die
+Zeile in `duplicates.md` nicht zum zweiten Mal aufschlägt.
+
+**Zwei Nachbarn sind absichtlich nicht mitgenommen worden.**
+`monotoneOn_dist_basepoint` und `dist_eq_abs_sub_of_sameSide` stehen ebenfalls im
+Wurzelnamensraum. Sie tragen mit `basepoint` und `sameSide` Vokabeln dieser Datei
+und nicht der Bibliothek, und `git grep` über `upstream/master` findet für keinen
+von beiden einen Gegenpart — so wenig wie für `AdditiveDist` selbst, das damit
+als Namensraum frei ist. Wer sie doch verschieben will, tut es als eigenen Schritt;
+dieser Lauf hat den einen bewegt, den der Vorschlag nannte.
+
+#### Der Befund: Vorschlag 1 hat eine Eingabe weniger, als der Vorlauf ihm zuschrieb
+
+Der Vorlauf schrieb, EK 3.7.8(b) sei „der einzige noch offene Punkt von
+Meilenstein 8, und seine beiden Eingaben sind seit diesem Lauf vollständig".
+**Die erste Eingabe ist es nicht.** Nachgesehen, Zeile für Zeile:
+
+Die ganze Oszillationskette von Meilenstein 8 — die Zeilen 11561, 11611, 11684,
+11705, 11729, 11770, 11813, 11876, 11932, 12007, 12123, 12154, 12197 und 12306
+von `SkorokhodSpace/Suggested.lean`, also **vierzehn** Aussagen einschließlich
+`exists_time_liminf_measure_setOf_exists_edist_lt` und
+`exists_times_forall_dist_integral_evalPi_le_of_isCompact_closure`, die der
+Vorschlag beide namentlich nennt — trägt die Voraussetzung
+
+    hμ : μ Kᶜ = 0     neben    IsCompact (closure K)
+
+(in den letzten beiden, 12197 und 12306, heißt die Trägermenge `A` statt `K`, und
+die Kompaktheit steht an ihrem Abschluß; die Voraussetzung ist dieselbe).
+
+Die einzige Brücke von der Kompaktheit einer **Menge von Maßen** zu einer
+kompakten **Menge von Pfaden**,
+`exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure` (Zeile 10996),
+liefert aber
+
+    ∀ μ ∈ S, μ Kᶜ ≤ ε     (Zeile 11004).
+
+Das ist keine Frage der Schreibweise. Ein straffes Maß auf `D(ℝ, E)` hat im
+allgemeinen **keinen** relativ kompakten Träger vom Maß eins: Prohorov gibt zu
+jedem `ε > 0` ein Kompaktum und zu `ε = 0` keines. Die Oszillationskette ist
+damit heute auf Gesetze anwendbar, die auf einer relativ kompakten Pfadmenge
+sitzen, und nicht auf die Glieder einer straffen Folge, für die sie gebaut wurde.
+Der Übergang zwischen den beiden Voraussetzungen ist der **erste** Schritt von EK
+3.7.8(b) und kein Nachtrag in seinem Beweis.
+
+#### Geprüft
+
+* `scripts/dev_check_master.py` auf die verallgemeinerte Fassung und auf die
+  beiden Verbraucher gegen den master-Baum: rc 0.
+* `scripts/check_master.py`, zwei volle Durchläufe: der erste fiel über die
+  Notationsfalle oben (3 Fehler in `MartingaleProblems`, `SkorokhodSpace` schon
+  sauber), der zweite meldet 0 / 0 / 0 Fehler, 0 `sorry`, 0 veraltete Namen und
+  Warnungen 18 / 35 / 106.
+* `scripts/check_axioms_master.py` auf
+  `SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq`,
+  `AdditiveDist.dist_eq_sub_of_le`, `eq_map_jumpPathD_of_forall_dense` und
+  `eq_map_jumpPathD_poisson_of_forall_dense`: alle vier auf `propext`,
+  `Classical.choice`, `Quot.sound`.
+* `scripts/check_duplicates.py`: **2 237** geprüfte eigene Deklarationen (vorher
+  2 235, also genau die beiden neuen), **34** Treffer — unverändert.
+* Die Mathlib-Fundstellen `Topology/MetricSpace/ProperSpace.lean:66`,
+  `Topology/Order/DenselyOrdered.lean:222`, `Topology/Bases.lean:671`,
+  `MeasureTheory/Measure/ProbabilityMeasure.lean:146` und
+  `Data/Nat/Dist.lean:35` einzeln am Quelltext von `94ef6b89544` nachgesehen.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Den fehlenden Übergang bauen, als Einschränkung mit Renormierung.**
+   `SkorokhodSpace.exists_times_forall_dist_integral_evalPi_le_of_measure_compl_le`
+   — dieselbe Aussage wie
+   `exists_times_forall_dist_integral_evalPi_le_of_isCompact_closure`, aber unter
+   `μ Kᶜ ≤ ENNReal.ofReal ε₀` mit `ε₀ < 1` statt unter `μ Kᶜ = 0`.
+
+   *Der Weg, und er läßt die vorhandene Kette unangetastet:* zu `μ` das Maß
+   `μ' = (μ K)⁻¹ • μ.restrict K` bilden. Es ist ein Wahrscheinlichkeitsmaß mit
+   `μ' Kᶜ = 0`, also greift der vorhandene Satz auf `μ'`; und für jedes
+   beschränkte meßbare `g` mit `‖g‖ ≤ C` ist
+   `|∫ g dμ − ∫ g dμ'| ≤ 2 C ε₀ / (1 − ε₀)`. Der Integrand ist hier
+   `∏ i, F i (f (s i))`, also `C = ∏ i, ‖F i‖`. **Genau eine** Hilfsaussage ist
+   neu, der Vergleich der beiden Integrale; die vierzehn Aussagen der Kette
+   bleiben, wie sie sind, und werden nicht umgeschrieben.
+
+   *Warum jetzt:* ohne ihn ist keine Aussage der Kette auf ein straffes Gesetz
+   anwendbar, und EK 3.7.8(b) ist der einzige Verbraucher, für den sie gebaut
+   wurde. Es ist die Stelle, an der Meilenstein 8 heute nicht zusammenhängt.
+
+2. **Erst danach EK 3.7.8(b) selbst**,
+   `SkorokhodSpace.tendsto_of_isCompact_closure_of_tendsto_finiteDimensional`.
+
+   *Was sich gegenüber dem Vorschlag des Vorlaufs geändert hat:* die
+   Identifikation des Limes ist seit diesem Lauf nicht mehr auf `ℝ` beschränkt,
+   und sie ist in der `ProbabilityMeasure`-Sprache eine Zeile entfernt —
+   `ProbabilityMeasure.toMeasure_injective`
+   (`MeasureTheory/Measure/ProbabilityMeasure.lean:146`) auf
+   `eq_of_forall_dense_forall_integral_evalPi_eq`. Dieser Lauf hat diese
+   Umformulierung **nicht** dazugeschrieben, weil sie heute keinen Verbraucher
+   hätte; der nächste Lauf schreibt sie dorthin, wo er sie braucht.
+
+   *Und die Anweisung der README bleibt:* das Teilfolgenargument wird hier nicht
+   ein zweites Mal geführt, es steht in **WeakConvergence** Meilenstein 1.
+
+3. **Die beiden Nachbarn von `AdditiveDist.dist_eq_sub_of_le`**, wenn ein Lauf
+   Platz hat: `monotoneOn_dist_basepoint` und `dist_eq_abs_sub_of_sameSide` in
+   denselben Namensraum. Kein Sachbefund, nur Ordnung — und deshalb zuletzt.

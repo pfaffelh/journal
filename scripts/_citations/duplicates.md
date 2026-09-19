@@ -1,6 +1,6 @@
 # Deklarationen, die es auf `94ef6b89544e58e90f119da869f3fb48d1da0f4c` schon geben könnte
 
-* geprüfte eigene Deklarationen: **2235**
+* geprüfte eigene Deklarationen: **2237**
 * Treffer auf dem letzten Namensbestandteil: **34**
 * als zu allgemein übergangen (kurz oder generisch): 23
 
@@ -8,8 +8,8 @@ Ein Treffer ist ein **Anhaltspunkt**, keine Doppelung. Er sagt, daß Mathlib ein
 
 | unsere Deklaration | Stelle | gleichnamig auf `master` |
 | --- | --- | --- |
+| `AdditiveDist.dist_eq_sub_of_le` | `SkorokhodSpace/Suggested.lean:448` | `Nat.dist_eq_sub_of_le` (`Mathlib/Data/Nat/Dist.lean:35`) |
 | `SkorokhodSpace.borel_eq_iSup_comap_eval` | `SkorokhodSpace/Suggested.lean:7373` | `ContinuousMap.borel_eq_iSup_comap_eval` (`Mathlib/MeasureTheory/Constructions/BorelSpace/ContinuousMap.lean:77`) |
-| `dist_eq_sub_of_le` | `SkorokhodSpace/Suggested.lean:448` | `Nat.dist_eq_sub_of_le` (`Mathlib/Data/Nat/Dist.lean:35`) |
 | `IsCadlag.eq_of_eqOn_dense` | `SkorokhodSpace/Suggested.lean:1081` | `MonoidHom.eq_of_eqOn_dense` (`Mathlib/Algebra/Group/Subgroup/Ker.lean:407`); `MulHom.eq_of_eqOn_dense` (`Mathlib/Algebra/Group/Subsemigroup/Basic.lean:261`); `FirstOrder.Language.Hom.eq_of_eqOn_dense` (`Mathlib/ModelTheory/Substructures.lean:855`) |
 | `SkorokhodSpace.isCompact_closure_iff` | `SkorokhodSpace/Suggested.lean:10316` | `Pi.isCompact_closure_iff` (`Mathlib/Topology/Separation/Hausdorff.lean:618`) |
 | `TimeChange.norm_mul_le` | `SkorokhodSpace/Suggested.lean:2070` | `norm_mul_le` (`Mathlib/Analysis/Normed/Ring/Basic.lean:218`); `FreeGroup.norm_mul_le` (`Mathlib/GroupTheory/FreeGroup/Reduce.lean:447`) |

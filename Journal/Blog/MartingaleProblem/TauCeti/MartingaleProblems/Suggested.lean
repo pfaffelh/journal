@@ -33336,6 +33336,57 @@ theorem map_eval_map_jumpPathD_poisson (t : ℝ≥0) :
   rw [map_eval_map_jumpPathD measurable_poissonRate poissonJumpKernel (Measure.dirac 0)
     ae_mem_nonExplosiveE_poisson t, jumpMeasure_map_jumpProcessE_poisson t]
 
+/-- **The path law of the jump construction is determined by its finite dimensional
+distributions along a dense set of times.**  A probability measure on `D(ℝ≥0, E)` whose finite
+dimensional distributions agree with those of `(jumpMeasure mu nu).map (jumpPathD lam)` along any
+dense set of times **is** that law.
+
+This is `SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq` (**SkorokhodSpace**
+Milestone 6) read at the index `ℝ≥0`, which is densely ordered and has no greatest element, so
+the two conditions that statement asks of the times collapse into density; the countable core of
+the index is `NNReal.instHasCountableCore`.
+
+**What it says that `map_eval_map_jumpPathD` does not.**  That theorem identifies the *one*
+dimensional distributions and identifies nothing else: a law on the path space is not determined
+by its marginals.  Here the whole law is pinned down, and what is spent for it is the finite
+dimensional family and the density of the times -- not the modulus of the paths, not a compact
+containment, and not the non explosion, which has already been spent in the construction of
+`jumpPathD` itself.
+
+**No time has to be a continuity time.**  The statement is available at every dense `T`, and this
+is the point at which it differs from the convergence statements of **SkorokhodSpace**
+Milestone 8: those compare two *sequences* and have to avoid the fixed discontinuities of the
+limit, while an identification at fixed times has no limit to avoid.  That the jump law has no
+fixed discontinuity at all is `map_jumpPathD_setOf_leftLim_eq` and is not used here. -/
+theorem eq_map_jumpPathD_of_forall_dense [MetricSpace E] [BorelSpace E] [PolishSpace E]
+    [CompleteSpace E] {lam : E → ℝ} (hlam : Measurable lam) (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu]
+    (P : Measure D(ℝ≥0, E)) [IsProbabilityMeasure P] {T : Set ℝ≥0} (hT : Dense T)
+    (h : ∀ s : Finset ℝ≥0, ↑s ⊆ T → ∀ F : ℝ≥0 → BoundedContinuousFunction E ℝ,
+      (∫ f, ∏ t ∈ s, F t (f.toFun t) ∂P)
+        = ∫ f, ∏ t ∈ s, F t (f.toFun t) ∂((jumpMeasure mu nu).map (jumpPathD lam))) :
+    P = (jumpMeasure mu nu).map (jumpPathD lam) := by
+  have := isProbabilityMeasure_map_jumpPathD hlam mu nu
+  exact SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq hT _ _ h
+
+/-- **The Poisson instance of the identification, and the reason it is stated.**  The theorem
+above has hypotheses on `E` -- `MetricSpace`, `BorelSpace`, `PolishSpace`, `CompleteSpace` -- and
+a rate; that they are jointly dischargeable on data is what this says, on the same data
+`map_eval_map_jumpPathD_poisson` runs on.
+
+Read against that theorem it says: the law of the Poisson path on `D(ℝ≥0, ℕ)` has Poisson
+marginals, and it is the **only** law on that space with its finite dimensional distributions
+along ℚ, or along any other dense set of times. -/
+theorem eq_map_jumpPathD_poisson_of_forall_dense (P : Measure D(ℝ≥0, ℕ)) [IsProbabilityMeasure P]
+    {T : Set ℝ≥0} (hT : Dense T)
+    (h : ∀ s : Finset ℝ≥0, ↑s ⊆ T → ∀ F : ℝ≥0 → BoundedContinuousFunction ℕ ℝ,
+      (∫ f, ∏ t ∈ s, F t (f.toFun t) ∂P)
+        = ∫ f, ∏ t ∈ s, F t (f.toFun t)
+            ∂((jumpMeasure poissonJumpKernel (Measure.dirac 0)).map (jumpPathD poissonRate))) :
+    P = (jumpMeasure poissonJumpKernel (Measure.dirac 0)).map (jumpPathD poissonRate) :=
+  eq_map_jumpPathD_of_forall_dense measurable_poissonRate poissonJumpKernel
+    (Measure.dirac 0) P hT h
+
 /-- **A test process of the path space, composed with the path map, is a test process of the
 construction.**  Membership in `mpFamily` is transported as an identity of the defining data: the
 pair `p` is the same pair, because the coordinate of the image is the process by `rfl`. -/

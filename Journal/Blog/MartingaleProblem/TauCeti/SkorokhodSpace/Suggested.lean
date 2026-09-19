@@ -445,27 +445,27 @@ theorem isCompact_exhaustion (t₀ : ι) (u : ℝ) : IsCompact (exhaustion t₀ 
 omit [OrderTopology ι] [ProperSpace ι] in
 /-- The metric is the difference of the length function to a base point.  It is
 `AdditiveDist` alone that does this, neither the order topology nor properness. -/
-theorem dist_eq_sub_of_le {t₀ s t : ι} (h₀s : t₀ ≤ s) (hst : s ≤ t) :
+theorem AdditiveDist.dist_eq_sub_of_le {t₀ s t : ι} (h₀s : t₀ ≤ s) (hst : s ≤ t) :
     dist s t = dist t₀ t - dist t₀ s := by
   have := AdditiveDist.dist_add (α := ι) h₀s hst
   linarith
 
 omit [OrderTopology ι] [ProperSpace ι] in
-/-- Again `AdditiveDist` alone, through `dist_eq_sub_of_le`. -/
+/-- Again `AdditiveDist` alone, through `AdditiveDist.dist_eq_sub_of_le`. -/
 theorem monotoneOn_dist_basepoint {t₀ : ι} :
     MonotoneOn (fun t => dist t₀ t) (Set.Ici t₀) := by
   intro s hs t _ hst
-  have h : dist s t = dist t₀ t - dist t₀ s := dist_eq_sub_of_le (Set.mem_Ici.1 hs) hst
+  have h : dist s t = dist t₀ t - dist t₀ s := AdditiveDist.dist_eq_sub_of_le (Set.mem_Ici.1 hs) hst
   have h' : (0 : ℝ) ≤ dist s t := dist_nonneg
   simp only
   linarith
 
 omit [OrderTopology ι] [ProperSpace ι] in
 /-- On either side of the base point the metric is the difference of the two
-length functions.  This is `dist_eq_sub_of_le` in the form that
+length functions.  This is `AdditiveDist.dist_eq_sub_of_le` in the form that
 `TimeChange.dist_le_of_norm_le` consumes, where the two points compared are `t`
 and its image under a time change fixing `t₀`, and only their common position
-relative to `t₀` is known.  Like `dist_eq_sub_of_le` it is `AdditiveDist` alone.
+relative to `t₀` is known.  Like `AdditiveDist.dist_eq_sub_of_le` it is `AdditiveDist` alone.
 
 The hypothesis cannot be dropped: on `ℝ` with `t₀ = 0`, `s = -1` and `t = 1` the
 left hand side is `2` and the right hand side is `0`. -/
@@ -475,10 +475,10 @@ theorem dist_eq_abs_sub_of_sameSide {t₀ s t : ι}
   have key : dist s t = dist t₀ t - dist t₀ s ∨ dist s t = dist t₀ s - dist t₀ t := by
     rcases h with ⟨h₀s, h₀t⟩ | ⟨hs₀, ht₀⟩
     · rcases le_total s t with hst | hts
-      · exact Or.inl (dist_eq_sub_of_le h₀s hst)
+      · exact Or.inl (AdditiveDist.dist_eq_sub_of_le h₀s hst)
       · refine Or.inr ?_
         rw [dist_comm]
-        exact dist_eq_sub_of_le h₀t hts
+        exact AdditiveDist.dist_eq_sub_of_le h₀t hts
     · rcases le_total s t with hst | hts
       · refine Or.inr ?_
         have := AdditiveDist.dist_add (α := ι) hst ht₀
@@ -678,7 +678,7 @@ theorem sub_lengthCoord_of_le (t₀ : ι) {s t : ι} (hst : s ≤ t) :
       linarith
   · have h₀t : t₀ ≤ t := h₀s.trans hst
     simp only [lengthCoord, ite_eq_left h₀s, ite_eq_left h₀t]
-    rw [dist_eq_sub_of_le h₀s hst]
+    rw [AdditiveDist.dist_eq_sub_of_le h₀s hst]
 
 omit [OrderTopology ι] [ProperSpace ι] in
 /-- The coordinate is strictly monotone.  Strictness is where `MetricSpace`
@@ -12596,34 +12596,54 @@ theorem SkorokhodSpace.eq_of_forall_rightDense_forall_integral_evalPi_eq [Comple
   · rw [hgen]
     exact hA
 
-/-- **Two laws on `D(ℝ, E)` that agree in their finite dimensional distributions
-along a dense set of times are equal.**
+/-- **Two laws on `D(ι, E)` that agree in their finite dimensional distributions
+along a dense set of times are equal**, on an index that is densely ordered and
+has no greatest element.
 
-This is `SkorokhodSpace.eq_of_forall_rightDense_forall_integral_evalPi_eq` on the
-index `ℝ`, where the two hypotheses on the set of times collapse into plain
-density: a dense subset of `ℝ` has a countable dense subset
-(`Dense.exists_countable_dense_subset`, `Topology/Bases.lean:671`, which asks for
-the separability of the subspace and gets it from the second countability of
-`ℝ`), and a dense set accumulates at every point from the right, since every
-interval `(t, t + ε)` is open and nonempty.  There is no right isolated point of
-`ℝ` to be caught by the first branch of the condition, which is what makes the
-collapse possible; on a general index it is not, and the counterexample is in the
-doc string of `SkorokhodSpace.measurableEmbedding_piDense`.
+This is `SkorokhodSpace.eq_of_forall_rightDense_forall_integral_evalPi_eq` where
+the two hypotheses on the set of times collapse into plain density.
+
+* **Countable.**  A dense subset of `ι` has a countable dense subset
+  (`Dense.exists_countable_dense_subset`, `Topology/Bases.lean:671`), which asks
+  for the separability of the subspace and gets it from the second countability
+  of `ι`.  That in turn is not an extra hypothesis: `secondCountable_of_proper`
+  (`Topology/MetricSpace/ProperSpace.lean:66`, an instance of priority 100) reads
+  it off `ProperSpace ι`, which the index of Milestone 1 carries already.
+* **Right dense.**  `nhdsGT_neBot` (`Topology/Order/DenselyOrdered.lean:222`) says
+  that `𝓝[>] t` is nontrivial on a densely ordered index without a greatest
+  element, so every neighbourhood of `t` meets `Ioi t` in a nonempty open set, and
+  a dense set meets that.  The first branch of the condition -- `t ∈ T` -- is then
+  never needed, because such an index has no right isolated point.
+
+**Both order hypotheses are used and neither is decoration.**  Without
+`DenselyOrdered` the index `ℤ` has `𝓝[>] t = ⊥` at every point and a dense set is
+everything, so the statement would be the one along *all* times; without
+`NoMaxOrder` a greatest element is right isolated and lies in no dense set's right
+accumulation, which is exactly the gap the first branch of the general condition
+is there to cover.  The counterexample for a general index is in the doc string of
+`SkorokhodSpace.measurableEmbedding_piDense`, on `ι = Icc (0 : ℝ) 1`, where the
+greatest element `1` is the point the embedding fails to separate.
 
 **The set of times is not asked to be countable.**  The hypothesis is tested on
 finite subsets of it, so a larger set of times is a stronger hypothesis, and the
-countable subset produced here is where it is actually spent. -/
+countable subset produced here is where it is actually spent.
+
+`ℝ` and `ℝ≥0` both satisfy the two order hypotheses, so the statement applies to
+the index of Milestone 8 and to the index over which `MartingaleProblems` states
+its path law (`eq_map_jumpPathD_of_forall_dense` there is the consumer). -/
 theorem SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq [CompleteSpace E]
-    {T : Set ℝ} (hT : Dense T)
-    (μ ν : Measure D(ℝ, E)) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
-    (h : ∀ s : Finset ℝ, ↑s ⊆ T → ∀ F : ℝ → (E →ᵇ ℝ),
+    [SkorokhodSpace.HasCountableCore ι] [DenselyOrdered ι] [NoMaxOrder ι]
+    {T : Set ι} (hT : Dense T)
+    (μ ν : Measure D(ι, E)) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
+    (h : ∀ s : Finset ι, ↑s ⊆ T → ∀ F : ι → (E →ᵇ ℝ),
       (∫ f, ∏ t ∈ s, F t (f.toFun t) ∂μ) = ∫ f, ∏ t ∈ s, F t (f.toFun t) ∂ν) :
     μ = ν := by
   obtain ⟨D, hDT, hDc, hDd⟩ := hT.exists_countable_dense_subset
   refine SkorokhodSpace.eq_of_forall_rightDense_forall_integral_evalPi_eq hDc
     (fun t => Or.inr ?_) μ ν (fun s hs F => h s (hs.trans hDT) F)
-  rw [← mem_closure_iff_nhdsWithin_neBot, Metric.mem_closure_iff]
-  intro ε hε
-  obtain ⟨x, hxD, hx⟩ := hDd.exists_mem_open (U := Set.Ioo t (t + ε)) isOpen_Ioo
-    ⟨t + ε / 2, by constructor <;> linarith⟩
-  exact ⟨x, ⟨hxD, hx.1⟩, by rw [Real.dist_eq, abs_of_neg (by linarith [hx.1])]; linarith [hx.2]⟩
+  rw [← mem_closure_iff_nhdsWithin_neBot, mem_closure_iff]
+  intro o ho hto
+  have h1 : (o ∩ Set.Ioi t).Nonempty :=
+    mem_closure_iff.1 (mem_closure_iff_nhdsWithin_neBot.2 (nhdsGT_neBot t)) o ho hto
+  obtain ⟨x, hxD, hx⟩ := hDd.exists_mem_open (ho.inter isOpen_Ioi) h1
+  exact ⟨x, hx.1, hxD, hx.2⟩

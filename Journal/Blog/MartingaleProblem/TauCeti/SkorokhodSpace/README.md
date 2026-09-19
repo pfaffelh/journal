@@ -172,7 +172,7 @@ class AdditiveDist (α : Type*) [LinearOrder α] [PseudoMetricSpace α] : Prop w
   `Real.dist_eq` —, because `TimeChange.not_normOn_mul_le` of Milestone 3
   instantiates its refutation at `ℝ` and cannot do so without it. The other
   three follow from it through `instAdditiveDistSubtype`.
-* `dist_eq_sub_of_le` and `monotoneOn_dist_basepoint`: for `t₀ ≤ s ≤ t`,
+* `AdditiveDist.dist_eq_sub_of_le` and `monotoneOn_dist_basepoint`: for `t₀ ≤ s ≤ t`,
   `dist s t = dist t₀ t - dist t₀ s`, and `t ↦ dist t₀ t` is monotone on
   `Set.Ici t₀`. This is the step from which the embedding above follows. Both
   are proved (2026-09-06), and both need `AdditiveDist` alone: neither the order
@@ -1670,13 +1670,26 @@ over a shrinking family and is therefore an infimum.
 * `SkorokhodSpace.eq_of_forall_rightDense_forall_integral_evalPi_eq`: two laws on
   `D ι E` that agree in their finite dimensional distributions along a countable
   right dense set of times are equal. Proved (2026-09-19).
-* `SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq`: the same on the
-  index `ℝ` with the hypothesis on the times reduced to plain **density**. Proved
-  (2026-09-19). A dense subset of `ℝ` has a countable dense subset, and a dense
-  set accumulates at every point from the right; `ℝ` has no right isolated point
-  for the first branch of the right density condition to catch. The set of times
-  is *not* asked to be countable — the hypothesis is tested on finite subsets, so
-  a larger set is a stronger hypothesis.
+* `SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq`: the same with the
+  hypothesis on the times reduced to plain **density**, on an index that is
+  densely ordered and has no greatest element. Proved (2026-09-19). A dense subset
+  has a countable dense subset — `Dense.exists_countable_dense_subset`, whose
+  separability hypothesis is the second countability that
+  `secondCountable_of_proper` reads off the `ProperSpace ι` of Milestone 1 — and
+  such an index has no right isolated point, so `nhdsGT_neBot` makes a dense set
+  accumulate from the right at every point and the first branch of the right
+  density condition is never used. The set of times is *not* asked to be countable
+  — the hypothesis is tested on finite subsets, so a larger set is a stronger
+  hypothesis.
+
+  **Both order hypotheses are used.** Without `DenselyOrdered` the index `ℤ` is
+  discrete, a dense set is everything, and the statement would be the one along
+  all times; without `NoMaxOrder` the greatest element is right isolated, which is
+  the gap the first branch of the general condition exists to cover and the point
+  at which the counterexample of `measurableEmbedding_piDense` — `Icc (0:ℝ) 1`
+  with `Ico 0 1 ∩ ℚ` — breaks. `ℝ` and `ℝ≥0` satisfy both, the second being the
+  index over which **MartingaleProblems** states its path law; the consumer there
+  is `eq_map_jumpPathD_of_forall_dense`.
 
   **Neither law is asked to be carried by a set with compact closure**, and no
   modulus of continuity appears. That is the difference between identifying two
