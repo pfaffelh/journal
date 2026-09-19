@@ -26,7 +26,7 @@ empty proposition.
 
 **Status: type-checked** with `lake env lean` against Mathlib `upstream/master`
 `94ef6b89544e58e90f119da869f3fb48d1da0f4c` (Lean `4.35.0-rc2`), last on
-2026-09-18, with `autoImplicit=false` and `relaxedAutoImplicit=false` as Mathlib
+2026-09-19, with `autoImplicit=false` and `relaxedAutoImplicit=false` as Mathlib
 itself builds, and **free of `sorry` since the thirteenth run of 2026-09-09**.  Every
 declaration elaborates and every one of them is proved; `#print axioms` on
 `SkorokhodSpace.isCompact_closure_iff`, the last statement to be discharged,
@@ -14646,6 +14646,1273 @@ theorem SkorokhodSpace.isTightMeasureSet_map_postcomp {E' : Type*} [MetricSpace 
       exact ⟨μ i, ⟨i, rfl⟩, rfl⟩
   rw [← him]
   exact htight.map (SkorokhodSpace.continuous_postcomp h)
+
+/-! ### What a finite family of test functions cannot see
+
+The converse half of `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` would
+like to read the modulus of a path off the moduli of finitely many real valued
+images `h 1 ∘ f, …, h N ∘ f`, the `h i` chosen out of the dense class so that they
+recover the metric of `E` on a compact set carrying the path.  The section
+above refutes the route through a **common refinement** of the `N` subdivisions;
+this one refutes the reduction itself, and it refutes it for **both** moduli at
+once --- the subdivision modulus `SkorokhodSpace.modulusBased` and
+Ethier--Kurtz' subdivision free three point quantity `w''`, which was the only
+route left after that refutation.
+
+The witness is one path with **two jumps in different coordinates**:
+`SkorokhodSpace.twoJump γ` in `D(ℝ, ℝ × ℝ)` steps from `0` to `1` in the first
+coordinate at time `1` and in the second at time `1 + γ`.  Each coordinate alone
+is a single step and has based modulus `0` at every scale below `1`; the pair has
+two jumps at distance `γ`, and no `δ`-sparse subdivision separates them once
+`γ < δ`, so its modulus is at least `1`.  All values lie in the unit square, which
+is compact, and there the two clipped coordinates `SkorokhodSpace.clipFst` and
+`SkorokhodSpace.clipSnd` --- **bounded** continuous, which is what the criterion's
+test class `E →ᵇ ℝ` asks and the coordinate projections do not satisfy --- recover
+the metric of `ℝ × ℝ` **exactly**, by
+`SkorokhodSpace.dist_eq_max_dist_clip`.  So no hypothesis of the route is
+weakened; what fails is the inference.
+
+This is the remark that under `d ≈ max over i` the quantity `min (max a) (max b)`
+is not bounded by `max over i of min (a i) (b i)` --- with `a = (1, 0)` and
+`b = (0, 1)`, the left side `1` and the right side `0` --- realized as **paths**
+rather than as vectors, and that is the point of stating it here: as a remark
+about vectors it says nothing about the path space, while
+`SkorokhodSpace.exists_min_edist_postcomp_eq_zero` exhibits the three times
+`1 - γ < 1 < 1 + γ`, of span `2 γ`, at which the three point quantity of the path
+is `1` and that of both images is `0`.
+
+**The criterion itself is not refuted**, and the difference is the whole content.
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` quantifies over a **dense**
+class `H`, and `H` contains functions that see both jumps at once: `p ↦ p.1 + 2 * p.2`
+separates the three values `(0, 0)`, `(1, 0)`, `(1, 1)`, so its image path has two
+jumps at distance `γ` and a modulus of its own.  What the two theorems below rule
+out is the passage through **finitely many** `h i` read off a net of the compact
+set: such a family recovers the metric and still does not recover the modulus,
+because the two comparisons attain their maximum at **different** `i`.  A proof of
+the criterion therefore has to choose its test function **after** the path, and
+that is the shape a run at that item starts from. -/
+
+/-- **The path with two jumps in different coordinates.**  In `D(ℝ, ℝ × ℝ)`: the
+first coordinate steps from `0` to `1` at time `1`, the second at time `1 + γ`.
+Each coordinate is a `SkorokhodSpace.stepAt`, and the pair is càdlàg by Mathlib's
+`IsCadlag.continuous_comp₂` (`Mathlib/Topology/Order/Cadlag.lean:128`), the
+pairing being continuous. -/
+noncomputable def SkorokhodSpace.twoJump (γ : ℝ) : D(ℝ, ℝ × ℝ) where
+  toFun := fun t => ((SkorokhodSpace.stepAt (1 : ℝ) (1 : ℝ) 0).toFun t,
+    (SkorokhodSpace.stepAt (1 + γ) (1 : ℝ) 0).toFun t)
+  isCadlag := IsCadlag.continuous_comp₂ (φ := fun a b => ((a, b) : ℝ × ℝ))
+    (SkorokhodSpace.stepAt (1 : ℝ) (1 : ℝ) 0).isCadlag
+    (SkorokhodSpace.stepAt (1 + γ) (1 : ℝ) 0).isCadlag (by fun_prop)
+
+@[simp]
+theorem SkorokhodSpace.twoJump_apply (γ t : ℝ) :
+    (SkorokhodSpace.twoJump γ).toFun t
+      = (if (1 : ℝ) ≤ t then 1 else 0, if 1 + γ ≤ t then 1 else 0) := rfl
+
+/-- A real number clipped into `[0, 1]`.  It is the identity there, which is all
+the two test functions below use, and it is what makes them **bounded**: the test
+class of `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` is `E →ᵇ ℝ`, and
+the coordinate projections of `ℝ × ℝ` are not in it. -/
+noncomputable def SkorokhodSpace.clip01 (x : ℝ) : ℝ := max (min x 1) 0
+
+theorem SkorokhodSpace.continuous_clip01 : Continuous SkorokhodSpace.clip01 :=
+  (continuous_id.min continuous_const).max continuous_const
+
+theorem SkorokhodSpace.clip01_nonneg (x : ℝ) : 0 ≤ SkorokhodSpace.clip01 x := le_max_right _ _
+
+theorem SkorokhodSpace.clip01_le_one (x : ℝ) : SkorokhodSpace.clip01 x ≤ 1 :=
+  max_le (min_le_right _ _) zero_le_one
+
+theorem SkorokhodSpace.clip01_eq_self {x : ℝ} (h : x ∈ Set.Icc (0 : ℝ) 1) :
+    SkorokhodSpace.clip01 x = x := by
+  rw [SkorokhodSpace.clip01, min_eq_left h.2, max_eq_left h.1]
+
+@[simp] theorem SkorokhodSpace.clip01_zero : SkorokhodSpace.clip01 0 = 0 := by
+  rw [SkorokhodSpace.clip01]; norm_num
+
+@[simp] theorem SkorokhodSpace.clip01_one : SkorokhodSpace.clip01 1 = 1 := by
+  rw [SkorokhodSpace.clip01]; norm_num
+
+/-- **The first coordinate as a bounded continuous function**, clipped to `[0, 1]`.
+With `SkorokhodSpace.clipSnd` it is the finite test family of the refutation
+below.  `BoundedContinuousFunction.mkOfBound`
+(`Mathlib/Topology/ContinuousMap/Bounded/Basic.lean:119`) is what turns the bound
+on the values into an element of `(ℝ × ℝ) →ᵇ ℝ`. -/
+noncomputable def SkorokhodSpace.clipFst : (ℝ × ℝ) →ᵇ ℝ :=
+  BoundedContinuousFunction.mkOfBound
+    ⟨fun p => SkorokhodSpace.clip01 p.1,
+      SkorokhodSpace.continuous_clip01.comp continuous_fst⟩ 1 (fun p q => by
+      simp only [ContinuousMap.coe_mk]
+      rw [Real.dist_eq, abs_le]
+      constructor <;>
+        linarith [SkorokhodSpace.clip01_nonneg p.1, SkorokhodSpace.clip01_le_one p.1,
+          SkorokhodSpace.clip01_nonneg q.1, SkorokhodSpace.clip01_le_one q.1])
+
+/-- **The second coordinate as a bounded continuous function**, clipped to
+`[0, 1]`. -/
+noncomputable def SkorokhodSpace.clipSnd : (ℝ × ℝ) →ᵇ ℝ :=
+  BoundedContinuousFunction.mkOfBound
+    ⟨fun p => SkorokhodSpace.clip01 p.2,
+      SkorokhodSpace.continuous_clip01.comp continuous_snd⟩ 1 (fun p q => by
+      simp only [ContinuousMap.coe_mk]
+      rw [Real.dist_eq, abs_le]
+      constructor <;>
+        linarith [SkorokhodSpace.clip01_nonneg p.2, SkorokhodSpace.clip01_le_one p.2,
+          SkorokhodSpace.clip01_nonneg q.2, SkorokhodSpace.clip01_le_one q.2])
+
+@[simp] theorem SkorokhodSpace.clipFst_apply (p : ℝ × ℝ) :
+    SkorokhodSpace.clipFst p = SkorokhodSpace.clip01 p.1 := rfl
+
+@[simp] theorem SkorokhodSpace.clipSnd_apply (p : ℝ × ℝ) :
+    SkorokhodSpace.clipSnd p = SkorokhodSpace.clip01 p.2 := rfl
+
+/-- **On the unit square the two clipped coordinates recover the metric exactly**,
+not merely up to an error.  This is what makes the refutation below one of the
+*inference* and not of the hypothesis: the route that fails is granted the best
+finite family there is, and the estimate it would have to run on --- `dist` bounded
+by the maximum of the two image distances --- holds with equality. -/
+theorem SkorokhodSpace.dist_eq_max_dist_clip {p q : ℝ × ℝ}
+    (hp : p ∈ Set.Icc (0 : ℝ) 1 ×ˢ Set.Icc (0 : ℝ) 1)
+    (hq : q ∈ Set.Icc (0 : ℝ) 1 ×ˢ Set.Icc (0 : ℝ) 1) :
+    dist p q = max (dist (SkorokhodSpace.clipFst p) (SkorokhodSpace.clipFst q))
+      (dist (SkorokhodSpace.clipSnd p) (SkorokhodSpace.clipSnd q)) := by
+  rw [Prod.dist_eq, SkorokhodSpace.clipFst_apply, SkorokhodSpace.clipFst_apply,
+    SkorokhodSpace.clipSnd_apply, SkorokhodSpace.clipSnd_apply,
+    SkorokhodSpace.clip01_eq_self hp.1, SkorokhodSpace.clip01_eq_self hp.2,
+    SkorokhodSpace.clip01_eq_self hq.1, SkorokhodSpace.clip01_eq_self hq.2]
+
+/-- **A path with a single step has based modulus `0`** on the window
+`exhaustion 0 3`, at every scale below the two gaps the step leaves.  The
+subdivision is `![-4, 0, x, 4]`: it carries the base point `0` among its nodes, as
+`SkorokhodSpace.IsSubdivisionBased` demands, it overshoots the window at both ends,
+which the corrected `SkorokhodSpace.IsSubdivision` permits, and the path is
+constant on each of its three cells, so the oscillation is `0` on the nose.  The
+two hypotheses `δ < x` and `δ < 4 - x` are its sparseness and nothing else.
+
+Stated through `hf` rather than for `SkorokhodSpace.stepAt` itself, because its
+consumers are the **post compositions** of `SkorokhodSpace.twoJump`, and reading
+them as step paths would need an equality of paths where an equality of values
+suffices. -/
+theorem SkorokhodSpace.modulusBased_eq_zero_of_step {f : D(ℝ, ℝ)} {x δ a b : ℝ}
+    (hf : ∀ t : ℝ, f.toFun t = if x ≤ t then a else b)
+    (hx0 : 0 < x) (hx4 : x < 4) (hδx : δ < x) (hδ4 : δ < 4 - x) :
+    SkorokhodSpace.modulusBased (0 : ℝ) 3 f δ = 0 := by
+  have hd : ∀ a b d : ℝ, a + d < b → d < dist a b := by
+    intro a b d h
+    rw [Real.dist_eq, abs_sub_comm]
+    exact lt_of_lt_of_le (by linarith) (le_abs_self _)
+  have hmin4 : (-4 : ℝ) ≤ exhaustionMin (0 : ℝ) 3 := by
+    have h := (isLeast_exhaustionMin (0 : ℝ) 3).1
+    rw [exhaustion, Metric.mem_closedBall, Real.dist_eq, abs_le] at h
+    norm_num at h
+    linarith [h.1]
+  have hmax4 : exhaustionMax (0 : ℝ) 3 ≤ 4 := by
+    have h := (isGreatest_exhaustionMax (0 : ℝ) 3).1
+    rw [exhaustion, Metric.mem_closedBall, Real.dist_eq, abs_le] at h
+    norm_num at h
+    linarith [h.2]
+  refine le_antisymm ?_ zero_le
+  refine iInf_le_of_le 3 (iInf_le_of_le ![-4, 0, x, 4]
+    (iInf_le_of_le ⟨⟨?_, ?_, ?_, ?_⟩, ?_⟩ ?_))
+  · rw [Fin.strictMono_iff_lt_succ]
+    intro i; fin_cases i <;> simp <;> linarith
+  · simpa using hmin4
+  · simpa using hmax4
+  · intro i
+    fin_cases i <;> simp <;>
+      first
+        | linarith
+        | (rw [abs_of_pos hx0]; linarith)
+        | exact hd _ _ _ (by linarith)
+  · exact ⟨1, by norm_num⟩
+  · rw [SkorokhodSpace.subdivisionOsc]
+    refine iSup_le fun i => iSup₂_le fun s hs => ?_
+    obtain ⟨h1, h2⟩ := hs
+    rw [hf s, hf _]
+    fin_cases i
+    · have hh2 : s < (0 : ℝ) := by simpa using h2
+      show edist (if x ≤ s then a else b) (if x ≤ (-4 : ℝ) then a else b) ≤ 0
+      rw [ite_eq_right (not_le.2 (by linarith)), ite_eq_right (not_le.2 (by linarith)), edist_self]
+    · have hh2 : s < x := by simpa using h2
+      show edist (if x ≤ s then a else b) (if x ≤ (0 : ℝ) then a else b) ≤ 0
+      rw [ite_eq_right (not_le.2 (by linarith)), ite_eq_right (not_le.2 (by linarith)), edist_self]
+    · have hh1 : x ≤ s := by simpa using h1
+      show edist (if x ≤ s then a else b) (if x ≤ x then a else b) ≤ 0
+      rw [ite_eq_left hh1, ite_eq_left (le_refl x), edist_self]
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- From a real distance to the extended one, at the single value the refutation
+reads.  It is stated over the value space of the section and not over `ℝ × ℝ`,
+because the positive counterpart below reads it at the **real valued** images. -/
+theorem SkorokhodSpace.one_le_edist_of_one_le_dist {p q : E} (h : 1 ≤ dist p q) :
+    (1 : ℝ≥0∞) ≤ edist p q := by
+  rw [edist_dist, ← ENNReal.ofReal_one]
+  exact ENNReal.ofReal_le_ofReal h
+
+/-- Below the first jump `SkorokhodSpace.twoJump` sits at the origin. -/
+theorem SkorokhodSpace.twoJump_of_lt_one {γ s : ℝ} (hγ0 : 0 < γ) (hs : s < 1) :
+    (SkorokhodSpace.twoJump γ).toFun s = ((0 : ℝ), (0 : ℝ)) := by
+  simp only [SkorokhodSpace.twoJump_apply, Prod.mk.injEq]
+  exact ⟨ite_eq_right (not_le.2 hs), ite_eq_right (not_le.2 (by linarith))⟩
+
+/-- Between the two jumps only the first coordinate has moved. -/
+theorem SkorokhodSpace.twoJump_one {γ : ℝ} (hγ0 : 0 < γ) :
+    (SkorokhodSpace.twoJump γ).toFun 1 = ((1 : ℝ), (0 : ℝ)) := by
+  simp only [SkorokhodSpace.twoJump_apply, Prod.mk.injEq]
+  exact ⟨ite_eq_left le_rfl, ite_eq_right (not_le.2 (by linarith))⟩
+
+/-- At the second jump both coordinates have moved. -/
+theorem SkorokhodSpace.twoJump_one_add {γ : ℝ} (hγ0 : 0 < γ) :
+    (SkorokhodSpace.twoJump γ).toFun (1 + γ) = ((1 : ℝ), (1 : ℝ)) := by
+  simp only [SkorokhodSpace.twoJump_apply, Prod.mk.injEq]
+  exact ⟨ite_eq_left (by linarith), ite_eq_left le_rfl⟩
+
+/-- The first jump costs `1` in the metric of `ℝ × ℝ`, and it is the **first**
+coordinate that pays. -/
+theorem SkorokhodSpace.one_le_dist_firstJump :
+    (1 : ℝ) ≤ dist ((1 : ℝ), (0 : ℝ)) ((0 : ℝ), (0 : ℝ)) := by
+  rw [Prod.dist_eq]
+  norm_num [Real.dist_eq]
+
+/-- The second jump costs `1` as well, and it is the **second** coordinate that
+pays.  That the two are paid by different coordinates is the whole mechanism of
+the refutation: each image path sees one of the two jumps and is blind to the
+other. -/
+theorem SkorokhodSpace.one_le_dist_secondJump :
+    (1 : ℝ) ≤ dist ((1 : ℝ), (1 : ℝ)) ((1 : ℝ), (0 : ℝ)) := by
+  rw [Prod.dist_eq]
+  norm_num [Real.dist_eq]
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **Two displacements of size `1` closer in time than `δ` cost the modulus `1`.**
+The path is anything that sits at distance at least `1` from its value at the time
+`1` for every earlier time, and moves by at least `1` again between `1` and
+`1 + γ`; on the window `exhaustion 0 3` its `SkorokhodSpace.modulus` at scale
+`δ > γ` is at least `1`, hence so is its based modulus by
+`SkorokhodSpace.modulus_le_modulusBased`.
+
+The proof is one case distinction and no estimate.  Any `δ`-sparse subdivision
+covers the window, so `exists_mem_Ico_of_strictMono` gives the cell that contains
+the time `1`, and its left endpoint `c` is at most `1`.  If `c < 1` the cell sees
+the first displacement, `c` being an earlier time.  If `c = 1` then sparseness puts
+the right endpoint beyond `1 + δ > 1 + γ`, so the same cell contains the time
+`1 + γ` and sees the second.  Either way the oscillation over that one cell is at
+least `1`.
+
+**No upper bound on `δ` is needed.**  Once `δ` exceeds the diameter of the window
+there is no `δ`-sparse subdivision at all and the modulus is `⊤`; that the
+statement survives this is the `ℝ≥0∞` valuation of `SkorokhodSpace.modulus`
+paying for itself a third time.
+
+It is stated for an arbitrary value space and not for `SkorokhodSpace.twoJump`,
+because the refutation below and the positive counterpart after it read the **same**
+two displacements --- once in `ℝ × ℝ`, where they sit in different coordinates, and
+once in `ℝ`, where a single test function has recovered both. -/
+theorem SkorokhodSpace.one_le_modulus_of_twoStep {f : D(ℝ, E)} {γ δ : ℝ}
+    (hγ0 : 0 < γ) (hγδ : γ < δ)
+    (hfirst : ∀ s : ℝ, s < 1 → 1 ≤ dist (f.toFun 1) (f.toFun s))
+    (hsecond : 1 ≤ dist (f.toFun (1 + γ)) (f.toFun 1)) :
+    (1 : ℝ≥0∞) ≤ SkorokhodSpace.modulus (0 : ℝ) 3 f δ := by
+  refine le_iInf fun n => le_iInf fun t => le_iInf fun ht => ?_
+  have hmin0 : exhaustionMin (0 : ℝ) 3 ≤ 0 :=
+    (isLeast_exhaustionMin (0 : ℝ) 3).2 (mem_exhaustion_self (0 : ℝ) 3)
+  have hmax3 : (3 : ℝ) ≤ exhaustionMax (0 : ℝ) 3 := by
+    refine (isGreatest_exhaustionMax (0 : ℝ) 3).2 ?_
+    rw [exhaustion, Metric.mem_closedBall, Real.dist_eq]
+    norm_num
+  have h0 : t 0 ≤ (1 : ℝ) := le_trans ht.2.1 (le_trans hmin0 (by norm_num))
+  have hlast : (1 : ℝ) < t (Fin.last n) :=
+    lt_of_lt_of_le (by norm_num) (le_trans hmax3 ht.2.2.1)
+  obtain ⟨k, hk⟩ := exists_mem_Ico_of_strictMono ht.1 h0 hlast
+  rcases lt_or_eq_of_le hk.1 with hc | hc
+  · have hle : edist (f.toFun 1) (f.toFun (t k.castSucc))
+        ≤ SkorokhodSpace.subdivisionOsc f t := by
+      rw [SkorokhodSpace.subdivisionOsc]
+      exact le_iSup_of_le k (le_iSup₂_of_le (1 : ℝ) hk le_rfl)
+    exact le_trans (SkorokhodSpace.one_le_edist_of_one_le_dist (hfirst _ hc)) hle
+  · have hgap := ht.2.2.2 k
+    have hlt : t k.castSucc < t k.succ := ht.1 (Fin.castSucc_lt_succ (i := k))
+    have hgap' : (1 : ℝ) + δ < t k.succ := by
+      rw [Real.dist_eq, abs_of_nonpos (by linarith), hc] at hgap
+      linarith
+    have hmem : (1 : ℝ) + γ ∈ Set.Ico (t k.castSucc) (t k.succ) := by
+      rw [← hc]
+      exact ⟨by linarith, by linarith⟩
+    have hle : edist (f.toFun (1 + γ)) (f.toFun (t k.castSucc))
+        ≤ SkorokhodSpace.subdivisionOsc f t := by
+      rw [SkorokhodSpace.subdivisionOsc]
+      exact le_iSup_of_le k (le_iSup₂_of_le ((1 : ℝ) + γ) hmem le_rfl)
+    refine le_trans (SkorokhodSpace.one_le_edist_of_one_le_dist ?_) hle
+    rw [hc]
+    exact hsecond
+
+/-- **Two jumps closer than `δ` cost the modulus `1`**, for
+`SkorokhodSpace.twoJump γ`: the two displacements of the general statement above
+are the two jumps, the first paid by the first coordinate and the second by the
+second. -/
+theorem SkorokhodSpace.one_le_modulus_twoJump {γ δ : ℝ} (hγ0 : 0 < γ) (hγδ : γ < δ) :
+    (1 : ℝ≥0∞) ≤ SkorokhodSpace.modulus (0 : ℝ) 3 (SkorokhodSpace.twoJump γ) δ := by
+  refine SkorokhodSpace.one_le_modulus_of_twoStep hγ0 hγδ (fun s hs => ?_) ?_
+  · rw [SkorokhodSpace.twoJump_one hγ0, SkorokhodSpace.twoJump_of_lt_one hγ0 hs]
+    exact SkorokhodSpace.one_le_dist_firstJump
+  · rw [SkorokhodSpace.twoJump_one_add hγ0, SkorokhodSpace.twoJump_one hγ0]
+    exact SkorokhodSpace.one_le_dist_secondJump
+
+/-- **A finite family of bounded continuous test functions does not control the
+modulus, even when it recovers the metric exactly on a compact set carrying every
+value of the path.**
+
+For every `0 < δ < 1` there are a path `f` of `D(ℝ, ℝ × ℝ)` and a compact
+`K ⊆ ℝ × ℝ` containing every value of `f` such that
+
+* the two bounded continuous `SkorokhodSpace.clipFst`, `SkorokhodSpace.clipSnd`
+  recover the metric of `ℝ × ℝ` on `K` with equality;
+* both image paths have based modulus `0` at scale `δ` on the window
+  `exhaustion 0 3`;
+* and `f` itself has based modulus at least `1` there.
+
+So the step the converse half of
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` would take --- pass from
+small moduli of the images to a small modulus of the path --- is false, and it is
+false under the strongest form of its own hypothesis.  The witness is
+`SkorokhodSpace.twoJump (δ / 4)`, and what defeats the family is that its two
+jumps sit in different coordinates: each image sees one of them and is blind to the
+other, so each image is a single step.
+
+**What this does not touch** is the criterion, which quantifies over a dense class
+and therefore over functions that see both jumps; the section header says which
+one does it here.  What it rules out is the route through a finite net, and with
+`SkorokhodSpace.exists_isSubdivisionBased_pair_forall_not_cells` above it rules out
+both routes that the roadmap named. -/
+theorem SkorokhodSpace.exists_isCompact_modulusBased_postcomp_eq_zero
+    {δ : ℝ} (hδ0 : 0 < δ) (hδ1 : δ < 1) :
+    ∃ (f : D(ℝ, ℝ × ℝ)) (K : Set (ℝ × ℝ)), IsCompact K ∧ (∀ t : ℝ, f.toFun t ∈ K) ∧
+      (∀ p ∈ K, ∀ q ∈ K, dist p q
+        = max (dist (SkorokhodSpace.clipFst p) (SkorokhodSpace.clipFst q))
+          (dist (SkorokhodSpace.clipSnd p) (SkorokhodSpace.clipSnd q))) ∧
+      SkorokhodSpace.modulusBased (0 : ℝ) 3
+        (SkorokhodSpace.postcomp SkorokhodSpace.clipFst.toContinuousMap f) δ = 0 ∧
+      SkorokhodSpace.modulusBased (0 : ℝ) 3
+        (SkorokhodSpace.postcomp SkorokhodSpace.clipSnd.toContinuousMap f) δ = 0 ∧
+      1 ≤ SkorokhodSpace.modulusBased (0 : ℝ) 3 f δ := by
+  refine ⟨SkorokhodSpace.twoJump (δ / 4), Set.Icc (0 : ℝ) 1 ×ˢ Set.Icc (0 : ℝ) 1,
+    (isCompact_Icc.prod isCompact_Icc), fun t => ?_, fun p hp q hq =>
+      SkorokhodSpace.dist_eq_max_dist_clip hp hq, ?_, ?_, ?_⟩
+  · rw [SkorokhodSpace.twoJump_apply]
+    constructor <;> split_ifs <;> norm_num
+  · refine SkorokhodSpace.modulusBased_eq_zero_of_step (x := 1) (a := 1) (b := 0)
+      (fun t => ?_) (by norm_num) (by norm_num) (by linarith) (by linarith)
+    simp only [SkorokhodSpace.postcomp_toFun, BoundedContinuousFunction.coe_toContinuousMap,
+      SkorokhodSpace.clipFst_apply, SkorokhodSpace.twoJump_apply]
+    split_ifs <;> simp
+  · refine SkorokhodSpace.modulusBased_eq_zero_of_step (x := 1 + δ / 4) (a := 1) (b := 0)
+      (fun t => ?_) (by linarith) (by linarith) (by linarith) (by linarith)
+    simp only [SkorokhodSpace.postcomp_toFun, BoundedContinuousFunction.coe_toContinuousMap,
+      SkorokhodSpace.clipSnd_apply, SkorokhodSpace.twoJump_apply]
+    split_ifs <;> simp
+  · exact le_trans (SkorokhodSpace.one_le_modulus_twoJump (by linarith) (by linarith))
+      (SkorokhodSpace.modulus_le_modulusBased _ _ _ _)
+
+/-- **The three point quantity fares no better**, and this is what closes the
+route the roadmap had left open after the refutation of the common refinement.
+
+Ethier--Kurtz' `w''` is read at a triple `t₁ ≤ t ≤ t₂` of span at most `δ` as
+`min (d (f t) (f t₁)) (d (f t₂) (f t))`; it is subdivision free, which is why it
+was the candidate.  For every `δ > 0` there are a path of `D(ℝ, ℝ × ℝ)` and such a
+triple --- `1 - δ/4 < 1 < 1 + δ/4`, of span `δ/2` --- at which that quantity is at
+least `1` for the path and exactly `0` for **both** images under
+`SkorokhodSpace.clipFst` and `SkorokhodSpace.clipSnd`.
+
+It is the inequality of the roadmap's remark made concrete: `min (max a) (max b)`
+against `max over i of min (a i) (b i)` with `a = (1, 0)` and `b = (0, 1)`, only
+now the two vectors are the two displacements of an actual càdlàg path, so the
+failure is one of the path space and not of an auxiliary estimate.  The path is
+the same `SkorokhodSpace.twoJump (δ / 4)` as above, and the two refutations are
+therefore one witness and not two. -/
+theorem SkorokhodSpace.exists_min_edist_postcomp_eq_zero {δ : ℝ} (hδ0 : 0 < δ) :
+    ∃ (f : D(ℝ, ℝ × ℝ)) (t₁ t t₂ : ℝ), t₁ ≤ t ∧ t ≤ t₂ ∧ t₂ - t₁ ≤ δ ∧
+      1 ≤ min (edist (f.toFun t) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun t)) ∧
+      min (edist (SkorokhodSpace.clipFst (f.toFun t)) (SkorokhodSpace.clipFst (f.toFun t₁)))
+        (edist (SkorokhodSpace.clipFst (f.toFun t₂)) (SkorokhodSpace.clipFst (f.toFun t))) = 0 ∧
+      min (edist (SkorokhodSpace.clipSnd (f.toFun t)) (SkorokhodSpace.clipSnd (f.toFun t₁)))
+        (edist (SkorokhodSpace.clipSnd (f.toFun t₂)) (SkorokhodSpace.clipSnd (f.toFun t))) = 0 := by
+  have hγ0 : (0 : ℝ) < δ / 4 := by linarith
+  have hlt : 1 - δ / 4 < (1 : ℝ) := by linarith
+  have h0 := SkorokhodSpace.twoJump_of_lt_one hγ0 hlt
+  have h1 := SkorokhodSpace.twoJump_one hγ0
+  have h2 := SkorokhodSpace.twoJump_one_add hγ0
+  refine ⟨SkorokhodSpace.twoJump (δ / 4), 1 - δ / 4, 1, 1 + δ / 4, by linarith, by linarith,
+    by linarith, ?_, ?_, ?_⟩
+  · rw [h0, h1, h2]
+    exact le_min (SkorokhodSpace.one_le_edist_of_one_le_dist SkorokhodSpace.one_le_dist_firstJump)
+      (SkorokhodSpace.one_le_edist_of_one_le_dist SkorokhodSpace.one_le_dist_secondJump)
+  · rw [h0, h1, h2]
+    simp
+  · rw [h0, h1, h2]
+    simp
+
+/-! ### Choosing the test function after the path
+
+The section above refutes two routes to the converse half of
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp`, and both refutations are
+about a family of test functions fixed **before** the path.  This section is their
+positive counterpart, and it corrects the description the roadmap gave of what was
+refuted: the witness `SkorokhodSpace.twoJump` defeats a finite family that merely
+**recovers the metric** on a compact set, which is what `SkorokhodSpace.clipFst`
+and `SkorokhodSpace.clipSnd` do; it does **not** defeat the family the roadmap
+actually named, the clipped distances `y ↦ min (dist y x) 1` to the points of a
+net.  `SkorokhodSpace.one_le_modulus_postcomp_clipDist_twoJump` is that check, at
+the very path that refutes the other family.
+
+The reason is one line, and it is the shape a proof has to have.  The three point
+quantity of Ethier--Kurtz is read at a triple `t₁ ≤ t ≤ t₂` and compares the two
+displacements to the **common middle value** `f t`.  The clipped distance to that
+one value turns both comparisons into differences of its own values at once, and
+`SkorokhodSpace.min_edist_postcomp_clipDist` says that it does so **with
+equality** up to the clip: the image quantity is the quantity of the path, capped
+at `1`.  There is no compact set in that statement, no net, and no constant
+depending on the path --- the level `η` is answered by `min η 1`, which is the
+uniformity a passage to measures needs and which the roadmap had listed as the
+first thing to check.  A family fixed in advance has no such common value to aim
+at, and that is exactly what the two refutations exploit.
+
+**What this leaves open, and it is now a single named statement.**  The passage
+from the modulus to the three point quantity has three links:
+
+1. `modulusBased 0 m f δ` large implies the three point quantity large.  This is
+   the **hard** half of Ethier--Kurtz' comparison of `w'` with `w''`, and it is
+   the only link that is open.  Its proof is a greedy subdivision: let the first
+   cell run from the left end of the window as far as the oscillation allows, and
+   the cell after a break at `t` run from `t`; a cell shorter than `δ` produces a
+   triple at which the three point quantity is large, because the value that
+   forced the break is at distance at least `η` from the left endpoint and the
+   value that forced the next one is at distance at least `η` from it.
+2. The three point quantity of the path is the three point quantity of the image
+   under the clipped distance to the middle value, capped at `1`.  That is
+   `SkorokhodSpace.min_edist_postcomp_clipDist`, proved here, and
+   `SkorokhodSpace.le_min_dist_of_dist_clipDist_le` is the form a dense class `H`
+   can supply: a test function uniformly within `ρ` of the clipped distance to a
+   point within `ρ` of the middle value still sees both displacements, up to
+   `4 * ρ`.
+3. The three point quantity of the image large implies its `modulusBased` large.
+   That is the **easy** half, `SkorokhodSpace.min_edist_le_two_mul_modulusBased`,
+   proved here: in a `δ`-sparse subdivision the cell containing `t` contains `t₁`
+   as well, or else it contains `t₂`, because the span of the triple is at most
+   `δ` and the cell is longer.
+
+Links 2 and 3 hold at a **fixed** `δ`, which is what makes the chain usable: the
+`δ` a consumer chooses for the path is the `δ` the hypothesis is read at for the
+image, and no common refinement is asked of anything. -/
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The distance to a point, clipped at `1`.**  This is the test function the
+roadmap names for the converse half of
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp`, and it is bounded
+continuous, which is what the criterion's class `E →ᵇ ℝ` asks.
+`BoundedContinuousFunction.mkOfBound`
+(`Mathlib/Topology/ContinuousMap/Bounded/Basic.lean:119`) turns the bound on its
+values into an element of that class. -/
+noncomputable def SkorokhodSpace.clipDist (x : E) : E →ᵇ ℝ :=
+  BoundedContinuousFunction.mkOfBound
+    ⟨fun y => min (dist y x) 1,
+      (continuous_id.dist continuous_const).min continuous_const⟩ 1
+    (fun y z => by
+      simp only [ContinuousMap.coe_mk]
+      rw [Real.dist_eq, abs_le]
+      constructor <;>
+        linarith [le_min (dist_nonneg (x := y) (y := x)) zero_le_one,
+          le_min (dist_nonneg (x := z) (y := x)) zero_le_one,
+          min_le_right (dist y x) 1, min_le_right (dist z x) 1])
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+@[simp] theorem SkorokhodSpace.clipDist_apply (x y : E) :
+    SkorokhodSpace.clipDist x y = min (dist y x) 1 := rfl
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **At its own centre the clipped distance vanishes**, and that is the whole
+mechanism: the two comparisons of the three point quantity are both made against
+the middle value, so against the one point at which this function is `0`. -/
+@[simp] theorem SkorokhodSpace.clipDist_self (x : E) : SkorokhodSpace.clipDist x x = 0 := by
+  rw [SkorokhodSpace.clipDist_apply, dist_self]
+  exact min_eq_left zero_le_one
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- The clipped distance recovers the distance to its centre, up to the clip. -/
+theorem SkorokhodSpace.dist_clipDist_self (x y : E) :
+    dist (SkorokhodSpace.clipDist x y) (SkorokhodSpace.clipDist x x) = min (dist y x) 1 := by
+  rw [SkorokhodSpace.clipDist_self, SkorokhodSpace.clipDist_apply, Real.dist_eq, sub_zero,
+    abs_of_nonneg (le_min dist_nonneg zero_le_one)]
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- The same in the extended distance, which is the valuation the modulus and the
+three point quantity carry. -/
+theorem SkorokhodSpace.edist_clipDist_self (x y : E) :
+    edist (SkorokhodSpace.clipDist x y) (SkorokhodSpace.clipDist x x) = min (edist y x) 1 := by
+  rw [edist_dist, SkorokhodSpace.dist_clipDist_self, edist_dist]
+  rcases le_total (dist y x) 1 with h | h
+  · rw [min_eq_left h, min_eq_left]
+    rw [← ENNReal.ofReal_one]
+    exact ENNReal.ofReal_le_ofReal h
+  · rw [min_eq_right h, min_eq_right, ENNReal.ofReal_one]
+    rw [← ENNReal.ofReal_one]
+    exact ENNReal.ofReal_le_ofReal h
+
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] [BasePoint ι]
+  [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **One test function, chosen after the path, recovers the three point quantity
+exactly.**  At a triple `t₁ ≤ t ≤ t₂` the clipped distance to the middle value
+`f t` sends the path to a real valued path whose three point quantity at that
+same triple is the path's own, capped at `1`.
+
+This is the positive counterpart of
+`SkorokhodSpace.exists_min_edist_postcomp_eq_zero`, and the difference between
+them is the order of the two quantifiers and nothing else: there the family is
+fixed first and the path defeats it, here the path is given first and the function
+is read off it.  The level is `min η 1`, so it depends on `η` alone --- not on the
+path, not on a compact set, not on a net --- which is the uniformity the passage
+to measures needs.
+
+The clip is not a blemish: the criterion's test class is `E →ᵇ ℝ`, and the
+unclipped distance to a point is not bounded.  A consumer applies the statement at
+a level `η ≤ 1`, where the cap does nothing. -/
+theorem SkorokhodSpace.min_edist_postcomp_clipDist (f : D(ι, E)) (t₁ t t₂ : ι) :
+    min (edist ((SkorokhodSpace.postcomp
+          (SkorokhodSpace.clipDist (f.toFun t)).toContinuousMap f).toFun t)
+        ((SkorokhodSpace.postcomp
+          (SkorokhodSpace.clipDist (f.toFun t)).toContinuousMap f).toFun t₁))
+      (edist ((SkorokhodSpace.postcomp
+          (SkorokhodSpace.clipDist (f.toFun t)).toContinuousMap f).toFun t₂)
+        ((SkorokhodSpace.postcomp
+          (SkorokhodSpace.clipDist (f.toFun t)).toContinuousMap f).toFun t))
+      = min (min (edist (f.toFun t) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun t))) 1 := by
+  have h₁ : edist ((SkorokhodSpace.postcomp
+        (SkorokhodSpace.clipDist (f.toFun t)).toContinuousMap f).toFun t)
+      ((SkorokhodSpace.postcomp
+        (SkorokhodSpace.clipDist (f.toFun t)).toContinuousMap f).toFun t₁)
+      = min (edist (f.toFun t) (f.toFun t₁)) 1 := by
+    rw [SkorokhodSpace.postcomp_toFun, SkorokhodSpace.postcomp_toFun,
+      BoundedContinuousFunction.coe_toContinuousMap, edist_comm,
+      SkorokhodSpace.edist_clipDist_self, edist_comm]
+  have h₂ : edist ((SkorokhodSpace.postcomp
+        (SkorokhodSpace.clipDist (f.toFun t)).toContinuousMap f).toFun t₂)
+      ((SkorokhodSpace.postcomp
+        (SkorokhodSpace.clipDist (f.toFun t)).toContinuousMap f).toFun t)
+      = min (edist (f.toFun t₂) (f.toFun t)) 1 := by
+    rw [SkorokhodSpace.postcomp_toFun, SkorokhodSpace.postcomp_toFun,
+      BoundedContinuousFunction.coe_toContinuousMap, SkorokhodSpace.edist_clipDist_self]
+  rw [h₁, h₂, inf_inf_inf_comm, min_self]
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The dense class delivers, and the net costs `4 * ρ`.**  A function `h`
+uniformly within `ρ` of the clipped distance to a point `x` that is itself within
+`ρ` of the middle value `b` still sees both displacements of the triple `a, b, c`,
+with the level lowered by `4 * ρ` and by nothing else.
+
+Two of the four `ρ` pay for the net --- the centre `x` is not the middle value ---
+and two for the density of `H` in `E →ᵇ ℝ`.  Both are free to a consumer: the net
+is a net of the compact set that compact containment supplies, and the density is
+a hypothesis of `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` itself.
+
+**This is what the refutations do not touch.**  They rule out a family that
+recovers the *metric* on the compact set; a net of clipped distances is more than
+that, and what it has in addition is exactly what the three point quantity reads:
+a function that vanishes near the middle value. -/
+theorem SkorokhodSpace.le_min_dist_of_dist_clipDist_le {x a b c : E} {ρ : ℝ} (hρ : 0 ≤ ρ)
+    {h : E → ℝ} (hh : ∀ y, dist (h y) (SkorokhodSpace.clipDist x y) ≤ ρ)
+    (hxb : dist b x ≤ ρ) :
+    min (min (dist b a) (dist c b)) 1 - 4 * ρ ≤ min (dist (h b) (h a)) (dist (h c) (h b)) := by
+  have hgb : SkorokhodSpace.clipDist x b ≤ ρ := le_trans (min_le_left _ _) hxb
+  have hgb0 : (0 : ℝ) ≤ SkorokhodSpace.clipDist x b := le_min dist_nonneg zero_le_one
+  have key : ∀ u : E, min (dist u b) 1 - 4 * ρ ≤ dist (h u) (h b) := by
+    intro u
+    have hgu : min (dist u b) 1 - ρ ≤ SkorokhodSpace.clipDist x u := by
+      rw [SkorokhodSpace.clipDist_apply]
+      refine le_min ?_ (by linarith [min_le_right (dist u b) 1])
+      have htri := dist_triangle u x b
+      have hxb' : dist x b ≤ ρ := by rwa [dist_comm]
+      linarith [min_le_left (dist u b) 1]
+    have hu := hh u
+    have hb := hh b
+    rw [Real.dist_eq, abs_le] at hu hb
+    rw [Real.dist_eq]
+    refine le_trans ?_ (le_abs_self _)
+    linarith [hu.1, hu.2, hb.1, hb.2]
+  refine le_min ?_ ?_
+  · have hmm : min (min (dist b a) (dist c b)) 1 ≤ min (dist a b) 1 := by
+      rw [dist_comm a b]
+      exact min_le_min (min_le_left _ _) le_rfl
+    rw [dist_comm (h b) (h a)]
+    linarith [key a]
+  · have hmm : min (min (dist b a) (dist c b)) 1 ≤ min (dist c b) 1 :=
+      min_le_min (min_le_right _ _) le_rfl
+    linarith [key c]
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **A small oscillation on a `δ`-sparse subdivision makes the three point
+quantity small**, which is the easy half of Ethier--Kurtz' comparison and the
+third link of the chain the section header describes.
+
+The proof is a case distinction on where `t₁` sits relative to the cell that holds
+`t`.  If it is in that cell, the first displacement is bounded by twice the
+oscillation, the left endpoint being the common reference.  If it is to the left
+of the cell, then `t₂` is still **inside** it: the span of the triple is at most
+`δ` and the cell is longer than `δ`, so `t₂ ≤ t₁ + δ` cannot reach the right
+endpoint.  The factor `2` is the price of comparing two values of a cell through
+its left endpoint, as in
+`SkorokhodSpace.subdivisionOsc_le_two_mul_of_cells`. -/
+theorem SkorokhodSpace.min_edist_le_two_mul_subdivisionOsc (f : D(ℝ, E)) {n : ℕ}
+    {t : Fin (n + 1) → ℝ} (hmono : StrictMono t) {δ : ℝ}
+    (hsparse : ∀ i : Fin n, δ < dist (t i.castSucc) (t i.succ))
+    {t₁ u t₂ : ℝ} (h1 : t₁ ≤ u) (h2 : u ≤ t₂) (hspan : t₂ - t₁ ≤ δ)
+    (hlo : t 0 ≤ u) (hhi : u < t (Fin.last n)) :
+    min (edist (f.toFun u) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun u))
+      ≤ 2 * SkorokhodSpace.subdivisionOsc f t := by
+  obtain ⟨k, hk⟩ := exists_mem_Ico_of_strictMono hmono hlo hhi
+  have hcell : ∀ v ∈ Set.Ico (t k.castSucc) (t k.succ),
+      edist (f.toFun v) (f.toFun (t k.castSucc)) ≤ SkorokhodSpace.subdivisionOsc f t := by
+    intro v hv
+    rw [SkorokhodSpace.subdivisionOsc]
+    exact le_iSup_of_le k (le_iSup₂_of_le v hv le_rfl)
+  have hu := hcell u hk
+  rcases le_or_gt (t k.castSucc) t₁ with hle | hlt
+  · refine le_trans (min_le_left _ _) ?_
+    have ht₁ : t₁ ∈ Set.Ico (t k.castSucc) (t k.succ) := ⟨hle, lt_of_le_of_lt h1 hk.2⟩
+    refine le_trans (edist_triangle _ (f.toFun (t k.castSucc)) _) ?_
+    rw [two_mul]
+    exact add_le_add hu (by rw [edist_comm]; exact hcell t₁ ht₁)
+  · refine le_trans (min_le_right _ _) ?_
+    have hlt' : t k.castSucc < t k.succ := hmono (Fin.castSucc_lt_succ (i := k))
+    have hgap := hsparse k
+    rw [Real.dist_eq, abs_of_nonpos (by linarith)] at hgap
+    have hb : t₂ < t k.succ := by linarith
+    have ht₂ : t₂ ∈ Set.Ico (t k.castSucc) (t k.succ) := ⟨le_trans hk.1 h2, hb⟩
+    refine le_trans (edist_triangle _ (f.toFun (t k.castSucc)) _) ?_
+    rw [two_mul]
+    exact add_le_add (hcell t₂ ht₂) (by rw [edist_comm]; exact hu)
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The same through the based modulus**, which is the form the criterion is
+stated in.  The middle time is asked to lie in the window and below its greatest
+point; the outer two are free, a subdivision overshooting the window at both ends.
+
+`ENNReal.mul_iInf_of_ne` (`Mathlib/Basic/ENNReal/Inv.lean:865`) is what carries
+the factor `2` through the three nested infima of
+`SkorokhodSpace.modulusBased`; it wants `2 ≠ 0` and `2 ≠ ∞` and nothing about the
+index, which may well be empty --- and it is empty exactly when no `δ`-sparse
+subdivision exists, where the bound is `⊤` and says nothing. -/
+theorem SkorokhodSpace.min_edist_le_two_mul_modulusBased (t₀ : ℝ) (m : ℝ) (f : D(ℝ, E)) {δ : ℝ}
+    {t₁ u t₂ : ℝ} (h1 : t₁ ≤ u) (h2 : u ≤ t₂) (hspan : t₂ - t₁ ≤ δ)
+    (hlo : exhaustionMin t₀ m ≤ u) (hhi : u < exhaustionMax t₀ m) :
+    min (edist (f.toFun u) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun u))
+      ≤ 2 * SkorokhodSpace.modulusBased t₀ m f δ := by
+  rw [SkorokhodSpace.modulusBased]
+  simp only [ENNReal.mul_iInf_of_ne two_ne_zero ENNReal.ofNat_ne_top]
+  refine le_iInf fun n => le_iInf fun t => le_iInf fun ht => ?_
+  exact SkorokhodSpace.min_edist_le_two_mul_subdivisionOsc f ht.1.1 ht.1.2.2.2 h1 h2 hspan
+    (le_trans ht.1.2.1 hlo) (lt_of_lt_of_le hhi ht.1.2.2.1)
+
+/-- **The clipped distance to the middle value sees both jumps of the witness that
+defeats the coordinates.**  At the path `SkorokhodSpace.twoJump γ`, whose two jumps
+sit in different coordinates, the single test function
+`SkorokhodSpace.clipDist (1, 0)` --- the clipped distance to the value **between**
+the two jumps --- produces a real valued path of modulus at least `1` at every
+scale `δ > γ`, while `SkorokhodSpace.clipFst` and `SkorokhodSpace.clipSnd` produce
+paths of modulus `0`.
+
+So the refutation of
+`SkorokhodSpace.exists_isCompact_modulusBased_postcomp_eq_zero` is a refutation of
+families that recover the *metric*, and **not** of the family the roadmap named,
+the clipped distances to the points of a net: the point `(1, 0)` is a value of the
+path and lies in every net of the unit square fine enough to matter.  What the
+witness really shows is that a test function has to be chosen after the path, and
+`SkorokhodSpace.min_edist_postcomp_clipDist` says which one.
+
+The image path is `1` before the time `1`, `0` between the jumps and `1` after
+the second, so both displacements are `1` and
+`SkorokhodSpace.one_le_modulus_of_twoStep` applies to it verbatim. -/
+theorem SkorokhodSpace.one_le_modulus_postcomp_clipDist_twoJump {γ δ : ℝ}
+    (hγ0 : 0 < γ) (hγδ : γ < δ) :
+    (1 : ℝ≥0∞) ≤ SkorokhodSpace.modulus (0 : ℝ) 3
+      (SkorokhodSpace.postcomp (SkorokhodSpace.clipDist ((1 : ℝ), (0 : ℝ))).toContinuousMap
+        (SkorokhodSpace.twoJump γ)) δ := by
+  have hmid : (SkorokhodSpace.postcomp
+      (SkorokhodSpace.clipDist ((1 : ℝ), (0 : ℝ))).toContinuousMap
+      (SkorokhodSpace.twoJump γ)).toFun 1 = 0 := by
+    rw [SkorokhodSpace.postcomp_toFun, BoundedContinuousFunction.coe_toContinuousMap,
+      SkorokhodSpace.twoJump_one hγ0, SkorokhodSpace.clipDist_self]
+  refine SkorokhodSpace.one_le_modulus_of_twoStep hγ0 hγδ (fun s hs => ?_) ?_
+  · rw [hmid, SkorokhodSpace.postcomp_toFun, BoundedContinuousFunction.coe_toContinuousMap,
+      SkorokhodSpace.twoJump_of_lt_one hγ0 hs, SkorokhodSpace.clipDist_apply,
+      min_eq_right (by rw [dist_comm]; exact SkorokhodSpace.one_le_dist_firstJump)]
+    rw [Real.dist_eq]
+    norm_num
+  · rw [hmid, SkorokhodSpace.postcomp_toFun, BoundedContinuousFunction.coe_toContinuousMap,
+      SkorokhodSpace.twoJump_one_add hγ0, SkorokhodSpace.clipDist_apply,
+      min_eq_right SkorokhodSpace.one_le_dist_secondJump]
+    rw [Real.dist_eq]
+    norm_num
+
+/-- The same for the based modulus, which is the one the criterion reads. -/
+theorem SkorokhodSpace.one_le_modulusBased_postcomp_clipDist_twoJump {γ δ : ℝ}
+    (hγ0 : 0 < γ) (hγδ : γ < δ) :
+    (1 : ℝ≥0∞) ≤ SkorokhodSpace.modulusBased (0 : ℝ) 3
+      (SkorokhodSpace.postcomp (SkorokhodSpace.clipDist ((1 : ℝ), (0 : ℝ))).toContinuousMap
+        (SkorokhodSpace.twoJump γ)) δ :=
+  le_trans (SkorokhodSpace.one_le_modulus_postcomp_clipDist_twoJump hγ0 hγδ)
+    (SkorokhodSpace.modulus_le_modulusBased _ _ _ _)
+
+/-! ### One break to a window: what the three point modulus really says
+
+The chain that reduces `SkorokhodSpace.modulusBased` to the three point quantity
+has its two easy links proved above.  The remaining one is the passage from the
+three point quantity **back** to a subdivision, and it is the only step of the
+reduction that has to *construct* something.
+
+**What is proved here is its first half, and it is a structure theorem.**  Read
+the three point hypothesis on a window `[u, v]` --- for every triple
+`u ≤ t₁ ≤ t ≤ t₂ ≤ v`, `min (edist (f t) (f t₁)) (edist (f t₂) (f t)) < η` ---
+and it says exactly this:
+
+> the window carries **one** break.  There is a single time `τ ∈ [u, v]` with
+> `f` within `η` of `f u` strictly before `τ`, and within `η` of `f τ` from `τ`
+> on.
+
+That is `SkorokhodSpace.exists_forall_edist_lt_of_forall_min_edist_lt`.  The
+proof takes `τ` to be the first time the displacement from `f u` reaches `η` ---
+a real infimum, attained because the path is right continuous --- and then reads
+the hypothesis **once**, at the triple `(u, τ, t₂)`: the first displacement of
+that triple is `≥ η` by the choice of `τ`, so the second is `< η`, and that is
+the second clause.  The hypothesis is used at a single triple and the rest is
+the infimum.
+
+**The proof the roadmap named for the remaining link does not close, and this is
+where it breaks.**  That proof grows the cells greedily from their left ends:
+let `σ 0` be the left end of the window and `σ (k+1)` the last time the
+displacement from `f (σ k)` stays `≤ η`.  Each cell then has oscillation `≤ η`,
+which is better than the `2 * η` asked for --- but the cells are **not** longer
+than `δ`.  What the hypothesis gives is that no *two* consecutive cells fit
+inside a window of span `δ`, because both `σ (k+1)` and `σ (k+2)` are
+displacements of at least `η` from their own cell's start, and the triple
+`(σ k, σ (k+1), σ (k+2))` would then have both of its displacements `≥ η`.  So
+the subdivision has to be thinned to every other node, and **that is the step
+that fails**: the merged cell `[σ k, σ (k+2))` measures its oscillation from
+`f (σ k)`, and for a time `r` in the second half this costs
+`edist (f r) (f (σ (k+1))) + edist (f (σ (k+1))) (f (σ k))`.  The first summand
+is `≤ η`; the second is the displacement **at the break**, and the hypothesis
+says nothing about it.  A path may jump by any amount at `σ (k+1)` without
+violating the three point condition --- the condition forbids two large
+displacements in one window of span `δ`, not one.
+
+The structure theorem is the precise form of that statement: it says the
+displacement at the break is the **only** quantity the hypothesis leaves free.
+`SkorokhodSpace.edist_le_of_forall_min_edist_lt` puts it that way, bounding the
+oscillation over the whole window by `edist (f τ) (f u) + η`.
+
+**What the remaining link needs instead**, and it is written here so that a next
+run does not rediscover the greedy: the nodes must be put at the **jumps**, not
+at the greedy stops.  Two jumps of size `≥ 2 * η` cannot lie within one window of
+span `δ`, so the large jumps of a compact window are more than `δ` apart, and
+they are finitely many (`IsCadlag.finite_largeLeftJumpSet_inter`).
+
+*The size is `2 * η` and not `η`, and the reason is worth one sentence, because
+the naive triple does not give it.*  With jumps at `p < q` one would like to read
+the hypothesis at `(t₁, p, q)` with `t₁` below `p`; its second displacement is
+`edist (f q) (f p)`, which the jump at `q` does not bound --- the path may return
+to `f p` just before `q`.  What works is two passages to the left limit instead
+of one.  Reading the hypothesis at `(t₁, t, q)` with `t₁ ↑ p` and `t ↑ q` gives
+`edist (leftLim f q) (leftLim f p) < η`, the second displacement being the jump
+at `q`; reading it at `(t₁, p, t₂)` with `t₂ ↑ q` gives
+`edist (leftLim f q) (f p) < η`, the first displacement being the jump at `p`.
+The triangle inequality then bounds the jump at `p` by `2 * η`.
+
+Between two consecutive large jumps the window is filled with a uniform grid of
+`⌈(q - p) / (2 * δ)⌉` cells, whose lengths then lie in `(δ, 2 * δ]`.  Each such
+cell has oscillation `≤ 4 * η` by the structure theorem: its break `τ` carries a
+jump smaller than `2 * η`, the left limit at `τ` is within `η` of the cell's left
+end by the first clause, so the displacement at the break is below `3 * η`, and
+`SkorokhodSpace.edist_le_of_forall_min_edist_lt` adds the last `η`.
+
+So the link that route proves is
+`modulusBased t₀ m f δ ≤ 4 * η` from the three point quantity at span `2 * δ`,
+and **neither** number is the one the roadmap wrote down.  The span `2 * δ` is
+not an artefact: a path drifting at the largest slope the hypothesis at span `δ`
+allows moves by nearly `2 * η` across a cell of length `δ`, so the hypothesis has
+to be read at the larger span.  The constant `4` is not claimed to be optimal ---
+the classical bound is `2` --- and for the consumer it does not matter: the
+criterion asks that the modulus **vanish** as `δ → 0`, and a fixed factor passes
+through that unchanged, exactly as the factor `2` of
+`SkorokhodSpace.min_edist_le_two_mul_modulusBased` does in the other direction. -/
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **A window on which the three point quantity is small carries one break.**
+There is a time `τ` in `[u, v]` before which the path stays within `η` of its
+value at `u`, and from which on it stays within `η` of its value at `τ`.
+
+The break is `sInf {t ∈ [u, v] | η ≤ edist (f t) (f u)}`, and right continuity is
+what makes the infimum a *minimum*: were the displacement at `τ` itself below
+`η`, it would stay below `η` on an interval `Ioo τ w` as well
+(`mem_nhdsGT_iff_exists_Ioo_subset`, `Mathlib/Topology/Order/LeftRightNhds.lean:104`),
+and then no point of the set would lie below `w`, putting its infimum above `τ`.
+With the break in hand the hypothesis is read **once**, at the triple
+`(u, τ, t₂)`.
+
+If the displacement never reaches `η` the break is `v` and the second clause is
+the single point `v`, where the displacement is `0`; that is why the statement
+does not have to distinguish the two cases for its consumer. -/
+theorem SkorokhodSpace.exists_forall_edist_lt_of_forall_min_edist_lt
+    (f : D(ℝ, E)) {u v : ℝ} (huv : u ≤ v) {η : ℝ≥0∞} (hη : 0 < η)
+    (h : ∀ t₁ t t₂ : ℝ, u ≤ t₁ → t₁ ≤ t → t ≤ t₂ → t₂ ≤ v →
+      min (edist (f.toFun t) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun t)) < η) :
+    ∃ τ ∈ Set.Icc u v,
+      (∀ r ∈ Set.Ico u τ, edist (f.toFun r) (f.toFun u) < η) ∧
+      (∀ r ∈ Set.Icc τ v, edist (f.toFun r) (f.toFun τ) < η) := by
+  classical
+  set S : Set ℝ := {t | t ∈ Set.Icc u v ∧ η ≤ edist (f.toFun t) (f.toFun u)} with hSdef
+  by_cases hSne : S.Nonempty
+  · have hbdd : BddBelow S := ⟨u, fun x hx => hx.1.1⟩
+    set τ := sInf S with hτdef
+    have hτlb : ∀ x ∈ S, τ ≤ x := fun x hx => csInf_le hbdd hx
+    have hτu : u ≤ τ := le_csInf hSne fun x hx => hx.1.1
+    have hτv : τ ≤ v := by
+      obtain ⟨x, hx⟩ := hSne
+      exact le_trans (hτlb x hx) hx.1.2
+    have hfirst : ∀ r ∈ Set.Ico u τ, edist (f.toFun r) (f.toFun u) < η := by
+      intro r hr
+      by_contra hcon
+      push Not at hcon
+      exact absurd (hτlb r ⟨⟨hr.1, le_trans hr.2.le hτv⟩, hcon⟩) (not_le.2 hr.2)
+    have hbreak : η ≤ edist (f.toFun τ) (f.toFun u) := by
+      by_contra hcon
+      push Not at hcon
+      have hE : Filter.Tendsto (fun r => edist (f.toFun r) (f.toFun u)) (𝓝[>] τ)
+          (𝓝 (edist (f.toFun τ) (f.toFun u))) :=
+        Filter.Tendsto.edist (f.isCadlag.isRightContinuous τ) tendsto_const_nhds
+      obtain ⟨w, hw, hsub⟩ := mem_nhdsGT_iff_exists_Ioo_subset.1
+        (hE (isOpen_Iio.mem_nhds hcon))
+      refine absurd (le_csInf hSne fun x hx => ?_) (not_le.2 hw)
+      rcases eq_or_lt_of_le (hτlb x hx) with heq | hlt
+      · exact absurd hx.2 (not_le.2 (heq ▸ hcon))
+      · by_contra hxw
+        push Not at hxw
+        exact absurd hx.2 (not_le.2 (hsub ⟨hlt, hxw⟩))
+    refine ⟨τ, ⟨hτu, hτv⟩, hfirst, fun r hr => ?_⟩
+    rcases min_lt_iff.1 (h u τ r le_rfl hτu hr.1 hr.2) with h1 | h2
+    · exact absurd hbreak (not_le.2 h1)
+    · exact h2
+  · refine ⟨v, ⟨huv, le_rfl⟩, fun r hr => ?_, fun r hr => ?_⟩
+    · by_contra hcon
+      push Not at hcon
+      exact hSne ⟨r, ⟨hr.1, hr.2.le⟩, hcon⟩
+    · rw [le_antisymm hr.2 hr.1, edist_self]
+      exact hη
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The oscillation of such a window is the displacement at its break, and
+nothing else.**  This is the triangle inequality on the second clause of
+`SkorokhodSpace.exists_forall_edist_lt_of_forall_min_edist_lt`, and it is the
+form in which the structure theorem is consumed: the three point hypothesis
+bounds the oscillation of the window by `η` **plus one displacement**, the one at
+the single break, and leaves that displacement entirely free.
+
+So a consumer that can bound the jump at the break --- because it has put its
+nodes at the large jumps and is looking at a cell between two of them --- gets
+`2 * η` for the whole cell, and a consumer that cannot gets nothing.  That is the
+whole difficulty of the remaining link of the chain, stated as an inequality. -/
+theorem SkorokhodSpace.edist_le_of_forall_min_edist_lt
+    (f : D(ℝ, E)) {u v : ℝ} (huv : u ≤ v) {η : ℝ≥0∞} (hη : 0 < η)
+    (h : ∀ t₁ t t₂ : ℝ, u ≤ t₁ → t₁ ≤ t → t ≤ t₂ → t₂ ≤ v →
+      min (edist (f.toFun t) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun t)) < η) :
+    ∃ τ ∈ Set.Icc u v, ∀ r ∈ Set.Icc u v,
+      edist (f.toFun r) (f.toFun u) ≤ edist (f.toFun τ) (f.toFun u) + η := by
+  obtain ⟨τ, hτ, hfirst, hsecond⟩ :=
+    SkorokhodSpace.exists_forall_edist_lt_of_forall_min_edist_lt f huv hη h
+  refine ⟨τ, hτ, fun r hr => ?_⟩
+  rcases lt_or_ge r τ with hlt | hge
+  · exact le_trans (hfirst r ⟨hr.1, hlt⟩).le le_add_self
+  · calc edist (f.toFun r) (f.toFun u)
+        ≤ edist (f.toFun r) (f.toFun τ) + edist (f.toFun τ) (f.toFun u) := edist_triangle _ _ _
+      _ ≤ η + edist (f.toFun τ) (f.toFun u) := add_le_add (hsecond r ⟨hge, hr.2⟩).le le_rfl
+      _ = edist (f.toFun τ) (f.toFun u) + η := add_comm _ _
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **Two balls hold the window.**  The same statement read as a covering: every
+value the path takes on `[u, v]` is within `η` either of `f u` or of `f τ`.
+
+This is the form in which the structure theorem refutes a reading of the three
+point hypothesis that a consumer might be tempted by --- that a small three point
+quantity makes the path *nearly constant* on a window of span `δ`.  It does not:
+it makes the path nearly constant on **two** pieces, and the two values may be
+arbitrarily far apart. -/
+theorem SkorokhodSpace.exists_forall_edist_lt_or_edist_lt
+    (f : D(ℝ, E)) {u v : ℝ} (huv : u ≤ v) {η : ℝ≥0∞} (hη : 0 < η)
+    (h : ∀ t₁ t t₂ : ℝ, u ≤ t₁ → t₁ ≤ t → t ≤ t₂ → t₂ ≤ v →
+      min (edist (f.toFun t) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun t)) < η) :
+    ∃ τ ∈ Set.Icc u v, ∀ r ∈ Set.Icc u v,
+      edist (f.toFun r) (f.toFun u) < η ∨ edist (f.toFun r) (f.toFun τ) < η := by
+  obtain ⟨τ, hτ, hfirst, hsecond⟩ :=
+    SkorokhodSpace.exists_forall_edist_lt_of_forall_min_edist_lt f huv hη h
+  refine ⟨τ, hτ, fun r hr => ?_⟩
+  rcases lt_or_ge r τ with hlt | hge
+  · exact Or.inl (hfirst r ⟨hr.1, hlt⟩)
+  · exact Or.inr (hsecond r ⟨hge, hr.2⟩)
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **A jump next to a jump is small**: if the three point quantity is below `η`
+on `[u, v]` and the path jumps by more than `η` at some `q` of the window, then
+its jump at **every** earlier time of the window is at most `2 * η`.
+
+This is the second pillar of the construction that replaces the greedy
+subdivision: it says the large jumps are isolated from one another, so that nodes
+put at them are more than the span apart.
+
+**And it is the place where one triple is not enough.**  The reading one reaches
+for is at `(t₁, p, q)` with `t₁` below `p`: its second displacement is
+`edist (f q) (f p)`, and the jump at `q` does not bound that --- the path may
+return to `f p` just before `q`.  What works is two readings that both run their
+outer time up to `q`, and the only property of `q` used in either is that
+`edist (f q) (f t)` exceeds `η` for `t` close enough to `q` from the left, which
+is the jump there through `IsCadlag.tendsto_nhdsLT_leftLim`
+(`Mathlib/Topology/Order/Cadlag.lean:165`).  At `(p, t, q)` the first
+displacement is then below `η`, and `t ↑ q` turns it into
+`edist (leftLim f q) (f p) ≤ η`; at `(t₁, t, q)` with `t₁ < p` the same reading
+gives `edist (leftLim f q) (f t₁) ≤ η`, and `t₁ ↑ p` turns *that* into
+`edist (leftLim f q) (leftLim f p) ≤ η`.  The triangle inequality between the two
+is the statement.
+
+The strictness of the hypothesis at `q` is what makes the eventual bound
+available: from `η ≤ edist (f q) (leftLim f q)` alone the displacement
+`edist (f q) (f t)` need not reach `η` at any `t < q`. -/
+theorem SkorokhodSpace.jump_le_two_mul_of_forall_min_edist_lt
+    (f : D(ℝ, E)) {u v : ℝ} {η : ℝ≥0∞}
+    (h : ∀ t₁ t t₂ : ℝ, u ≤ t₁ → t₁ ≤ t → t ≤ t₂ → t₂ ≤ v →
+      min (edist (f.toFun t) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun t)) < η)
+    {p q : ℝ} (hup : u < p) (hpq : p < q) (hqv : q ≤ v)
+    (hq : η < edist (f.toFun q) (Function.leftLim f.toFun q)) :
+    edist (f.toFun p) (Function.leftLim f.toFun p) ≤ 2 * η := by
+  have hlim : ∀ x : ℝ, Filter.Tendsto f.toFun (𝓝[<] x) (𝓝 (Function.leftLim f.toFun x)) :=
+    fun x => f.isCadlag.tendsto_nhdsLT_leftLim x
+  -- The displacement to `f q` exceeds `η` on a left neighbourhood of `q`.
+  have hqev : ∀ᶠ t in 𝓝[<] q, η < edist (f.toFun q) (f.toFun t) :=
+    (Filter.Tendsto.edist tendsto_const_nhds (hlim q)) (isOpen_Ioi.mem_nhds hq)
+  have hqlt : ∀ᶠ t in 𝓝[<] q, t < q := eventually_mem_nhdsWithin
+  have hqgt : ∀ᶠ t in 𝓝[<] q, p < t :=
+    Filter.Eventually.filter_mono nhdsWithin_le_nhds (eventually_gt_nhds hpq)
+  -- Reading the hypothesis at `(t₁, t, q)` for `t` close to `q` from the left.
+  have hkey : ∀ t₁ : ℝ, u ≤ t₁ → t₁ ≤ p →
+      edist (Function.leftLim f.toFun q) (f.toFun t₁) ≤ η := by
+    intro t₁ hu1 h1p
+    refine le_of_tendsto (Filter.Tendsto.edist (hlim q) tendsto_const_nhds) ?_
+    filter_upwards [hqev, hqlt, hqgt] with t htq htlt htgt
+    rcases min_lt_iff.1 (h t₁ t q hu1 (le_trans h1p htgt.le) htlt.le hqv) with hA | hB
+    · exact hA.le
+    · exact absurd hB (not_lt.2 htq.le)
+  have hA : edist (Function.leftLim f.toFun q) (f.toFun p) ≤ η := hkey p hup.le le_rfl
+  have hB : edist (Function.leftLim f.toFun q) (Function.leftLim f.toFun p) ≤ η := by
+    have hple : (𝓝[<] p) ≤ 𝓝 p := nhdsWithin_le_nhds
+    have hpu : ∀ᶠ t₁ in 𝓝[<] p, u < t₁ :=
+      Filter.Eventually.filter_mono hple (eventually_gt_nhds hup)
+    have hpp : ∀ᶠ t₁ in 𝓝[<] p, t₁ < p := eventually_mem_nhdsWithin
+    refine le_of_tendsto (Filter.Tendsto.edist tendsto_const_nhds (hlim p)) ?_
+    filter_upwards [hpu, hpp] with t₁ htu htp
+    exact hkey t₁ htu.le htp.le
+  calc edist (f.toFun p) (Function.leftLim f.toFun p)
+      ≤ edist (f.toFun p) (Function.leftLim f.toFun q)
+        + edist (Function.leftLim f.toFun q) (Function.leftLim f.toFun p) := edist_triangle _ _ _
+    _ ≤ η + η := add_le_add (by rw [edist_comm]; exact hA) hB
+    _ = 2 * η := (two_mul η).symm
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **A window whose jumps are all small has oscillation at most `4 * η`.**  This
+is the cell estimate of the replacement route, and it is the structure theorem
+read once more: the break `τ` of
+`SkorokhodSpace.exists_forall_edist_lt_of_forall_min_edist_lt` carries a jump of
+at most `2 * η` by hypothesis, its left limit lies within `η` of the window's left
+end by the first clause --- a passage to the limit `r ↑ τ`, which is where `τ > u`
+is used --- so the displacement at the break is below `3 * η`, and the second
+clause adds the last `η`.
+
+The hypothesis is asked at every `p` of `Set.Ioc u v` and **not** at `u` itself:
+a jump at the left endpoint of a cell is not seen by that cell, the cells of
+`SkorokhodSpace.subdivisionOsc` being half open.  That is the whole reason the
+nodes of a subdivision belong at the large jumps. -/
+theorem SkorokhodSpace.edist_le_four_mul_of_forall_min_edist_lt
+    (f : D(ℝ, E)) {u v : ℝ} (huv : u ≤ v) {η : ℝ≥0∞} (hη : 0 < η)
+    (h : ∀ t₁ t t₂ : ℝ, u ≤ t₁ → t₁ ≤ t → t ≤ t₂ → t₂ ≤ v →
+      min (edist (f.toFun t) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun t)) < η)
+    (hjump : ∀ p : ℝ, u < p → p ≤ v →
+      edist (f.toFun p) (Function.leftLim f.toFun p) ≤ 2 * η)
+    {r : ℝ} (hr : r ∈ Set.Icc u v) :
+    edist (f.toFun r) (f.toFun u) ≤ 4 * η := by
+  obtain ⟨τ, hτ, hfirst, hsecond⟩ :=
+    SkorokhodSpace.exists_forall_edist_lt_of_forall_min_edist_lt f huv hη h
+  have hηle : η ≤ 4 * η := by
+    have hsplit : (4 : ℝ≥0∞) * η = η + 3 * η := by ring
+    rw [hsplit]
+    exact le_self_add
+  have hbreak : edist (f.toFun τ) (f.toFun u) ≤ 3 * η := by
+    rcases eq_or_lt_of_le hτ.1 with hu | hu
+    · rw [← hu, edist_self]
+      exact zero_le
+    · have hlim : edist (Function.leftLim f.toFun τ) (f.toFun u) ≤ η := by
+        refine le_of_tendsto (Filter.Tendsto.edist
+          (f.isCadlag.tendsto_nhdsLT_leftLim τ) tendsto_const_nhds) ?_
+        have hlt : ∀ᶠ s in 𝓝[<] τ, s < τ := eventually_mem_nhdsWithin
+        have hgt : ∀ᶠ s in 𝓝[<] τ, u < s :=
+          Filter.Eventually.filter_mono nhdsWithin_le_nhds (eventually_gt_nhds hu)
+        filter_upwards [hlt, hgt] with s hs1 hs2
+        exact (hfirst s ⟨hs2.le, hs1⟩).le
+      calc edist (f.toFun τ) (f.toFun u)
+          ≤ edist (f.toFun τ) (Function.leftLim f.toFun τ)
+            + edist (Function.leftLim f.toFun τ) (f.toFun u) := edist_triangle _ _ _
+        _ ≤ 2 * η + η := add_le_add (hjump τ hu hτ.2) hlim
+        _ = 3 * η := by ring
+  rcases lt_or_ge r τ with hlt | hge
+  · exact le_trans (hfirst r ⟨hr.1, hlt⟩).le hηle
+  · calc edist (f.toFun r) (f.toFun u)
+        ≤ edist (f.toFun r) (f.toFun τ) + edist (f.toFun τ) (f.toFun u) := edist_triangle _ _ _
+      _ ≤ η + 3 * η := add_le_add (hsecond r ⟨hge, hr.2⟩).le hbreak
+      _ = 4 * η := by ring
+
+/-! ### The base point is charged, and the link as stated is false
+
+The cell estimate above is the last **calculation** the replacement route needs.
+What it does not supply, and what no calculation can, is a subdivision whose
+cells all satisfy its hypothesis: `SkorokhodSpace.IsSubdivisionBased` demands the
+base point `t₀` among the nodes **and** every gap longer than `δ`, and those two
+demands together forbid a node at a jump sitting in `Set.Ioo t₀ (t₀ + δ)`.  Such
+a jump is therefore charged in full to the cell that begins at `t₀`.
+
+**That is not a gap in the proof but a refutation of the statement.**  The unit
+step `SkorokhodSpace.step`, whose single jump sits at the time `1`, has three
+point quantity `0` --- at **every** span, not merely at `2 * δ`
+(`SkorokhodSpace.min_edist_step_eq_zero`) --- and based modulus at least `1` at
+every `δ ≥ 1` (`SkorokhodSpace.one_le_modulusBased_step`).  So no inequality
+`modulusBased t₀ m f δ ≤ C * η` holds with a finite constant, for any reading of
+the span; that is
+`SkorokhodSpace.not_forall_modulusBased_le_mul_of_forall_min_edist_lt`.
+
+**What the corrected link has to say**, and it is the shape the classical
+statement has on `[0, ∞)`, where the base point is the left end of the window and
+the term is written `sup_{t < δ} d(x t, x 0)`: a boundary term at the base point,
+
+> `modulusBased t₀ m f δ ≤ 4 * η + 2 * SkorokhodSpace.basePointOsc t₀ f (2 * δ)`,
+
+whose two summands are one for the cell that begins at `t₀` and one for the cell
+that ends there.  Both are needed and for the same reason on both sides: a node
+within `δ` of `t₀` is forbidden, so a jump of either of the two intervals cannot
+be put at a cell boundary.
+
+**The correction does not reach the consumer, and that is why the criterion
+survives.**  `SkorokhodSpace.isTightMeasureSet_iff` asks that the modulus
+**vanish** as `δ → 0`, and `SkorokhodSpace.tendsto_basePointOsc` says the
+boundary term does.  The right hand summand tends to `0` by right continuity at
+`t₀` and the left hand one by the existence of the left limit there --- it is
+measured against `Function.leftLim f t₀` and not against `f t₀`, which is what
+makes a path that jumps **at** the base point harmless: that jump sits at the
+left endpoint of the cell beginning at `t₀` and is not seen by it.  Measured
+against `f t₀` the term would not vanish, and the criterion would be false for
+every path with a jump at the base point; that is
+`SkorokhodSpace.iSup_edist_step_left_eq_one`, and it is why the two halves are
+measured against different points.
+
+**For a family the two terms must vanish uniformly**, and that is a real
+hypothesis rather than a formality: it is the statement that the paths of the
+family do not accumulate displacement at the one time the subdivisions are pinned
+at.  `SkorokhodSpace.not_isCompact_closure_of_jumps_at_basePoint` is the same
+phenomenon seen from the other side, and this is the second place where the base
+point is not a normalisation. -/
+
+/-- **The unit step has three point quantity `0`**, at every triple and with no
+restriction on the span: of the two displacements one is always between two times
+on the same side of the jump.  It is `SkorokhodSpace.step` that refutes the link,
+and this is the half of the refutation that says the hypothesis holds. -/
+theorem SkorokhodSpace.min_edist_step_eq_zero {t₁ t t₂ : ℝ} (h1 : t₁ ≤ t) (h2 : t ≤ t₂) :
+    min (edist (SkorokhodSpace.step.toFun t) (SkorokhodSpace.step.toFun t₁))
+      (edist (SkorokhodSpace.step.toFun t₂) (SkorokhodSpace.step.toFun t)) = 0 := by
+  rcases le_or_gt (1 : ℝ) t with ht | ht
+  · have hval : SkorokhodSpace.step.toFun t₂ = SkorokhodSpace.step.toFun t := by
+      rw [SkorokhodSpace.step_apply, SkorokhodSpace.step_apply, ite_eq_left ht,
+        ite_eq_left (ht.trans h2)]
+    rw [hval, edist_self]
+    exact min_eq_right zero_le
+  · have hval : SkorokhodSpace.step.toFun t₁ = SkorokhodSpace.step.toFun t := by
+      rw [SkorokhodSpace.step_apply, SkorokhodSpace.step_apply,
+        ite_eq_right (not_le.2 (lt_of_le_of_lt h1 ht)), ite_eq_right (not_le.2 ht)]
+    rw [hval, edist_self]
+    exact min_eq_left zero_le
+
+/-- **The unit step has based modulus at least `1` at every `δ ≥ 1`**, and the
+reason is the base point alone.  A based subdivision carries a node at `0`, that
+node is not the last one because the window reaches `3`, and the gap to the next
+node exceeds `δ ≥ 1`.  So the time `1`, where the path jumps, lies in the cell
+that **begins** at `0`, and that cell sees the whole jump.
+
+No sparseness beyond `δ ≥ 1` is used and no upper bound on `δ` is needed: once
+`δ` exceeds the diameter of the window there is no based subdivision at all and
+the modulus is `⊤`. -/
+theorem SkorokhodSpace.one_le_modulusBased_step {δ : ℝ} (hδ : 1 ≤ δ) :
+    (1 : ℝ≥0∞) ≤ SkorokhodSpace.modulusBased (0 : ℝ) 3 SkorokhodSpace.step δ := by
+  refine le_iInf fun n => le_iInf fun t => le_iInf fun ht => ?_
+  obtain ⟨⟨hmono, h0, hlast, hgap⟩, j, hj⟩ := ht
+  have hmax3 : (3 : ℝ) ≤ exhaustionMax (0 : ℝ) 3 := by
+    rw [exhaustionMax_real]
+    norm_num
+  have hjlast : j ≠ Fin.last n := by
+    intro hcon
+    rw [hcon] at hj
+    have h3 : (3 : ℝ) ≤ t (Fin.last n) := le_trans hmax3 hlast
+    rw [hj] at h3
+    linarith
+  obtain ⟨k, rfl⟩ := Fin.eq_castSucc_of_ne_last hjlast
+  have hmono' : t k.castSucc < t k.succ := hmono (Fin.castSucc_lt_succ (i := k))
+  have hgapk := hgap k
+  rw [Real.dist_eq, hj, abs_of_nonpos (by linarith), zero_sub, neg_neg] at hgapk
+  have hmem : (1 : ℝ) ∈ Set.Ico (t k.castSucc) (t k.succ) := by
+    rw [hj]
+    exact ⟨by norm_num, by linarith⟩
+  have hle : edist (SkorokhodSpace.step.toFun 1) (SkorokhodSpace.step.toFun (t k.castSucc))
+      ≤ SkorokhodSpace.subdivisionOsc SkorokhodSpace.step t := by
+    rw [SkorokhodSpace.subdivisionOsc]
+    exact le_iSup_of_le k (le_iSup₂_of_le (1 : ℝ) hmem le_rfl)
+  refine le_trans (SkorokhodSpace.one_le_edist_of_one_le_dist ?_) hle
+  rw [hj, SkorokhodSpace.step_apply, SkorokhodSpace.step_apply, ite_eq_left le_rfl,
+    ite_eq_right (by norm_num), Real.dist_eq]
+  norm_num
+
+/-- **The link the roadmap named is false**, and no constant repairs it: the unit
+step satisfies the three point hypothesis for **every** positive level `η` and at
+every span, and its based modulus at `δ = 1` is at least `1`.
+
+The quantified hypothesis here is the *global* one --- the outer times are not
+confined to the window --- so the refutation is of the strongest reading of the
+link, and a fortiori of the windowed one that
+`SkorokhodSpace.min_edist_le_two_mul_modulusBased` produces.  The constant `C` is
+arbitrary and the span factor `c` is arbitrary, which is what says that neither
+the `4` nor the `2 * δ` of the route was the mistake.
+
+What is missing is the boundary term at the base point, written out at the head
+of this section. -/
+theorem SkorokhodSpace.not_forall_modulusBased_le_mul_of_forall_min_edist_lt
+    {C : ℝ≥0∞} (hC : C ≠ ⊤) (c : ℝ) :
+    ¬ ∀ (f : D(ℝ, ℝ)) (δ : ℝ) (η : ℝ≥0∞), 0 < δ → 0 < η →
+        (∀ t₁ t t₂ : ℝ, t₁ ≤ t → t ≤ t₂ → t₂ - t₁ ≤ c * δ →
+          min (edist (f.toFun t) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun t)) < η) →
+        SkorokhodSpace.modulusBased (0 : ℝ) 3 f δ ≤ C * η := by
+  intro hcon
+  obtain ⟨η, hη0, hηC⟩ : ∃ η : ℝ≥0∞, 0 < η ∧ C * η < 1 := by
+    rcases eq_or_ne C 0 with rfl | hC0
+    · exact ⟨1, zero_lt_one, by rw [zero_mul]; exact zero_lt_one⟩
+    · refine ⟨C⁻¹ / 2,
+        ENNReal.div_pos (ENNReal.inv_pos.2 hC).ne' ENNReal.ofNat_ne_top, ?_⟩
+      rw [← mul_div_assoc, ENNReal.mul_inv_cancel hC0 hC]
+      exact ENNReal.half_lt_self one_ne_zero ENNReal.one_ne_top
+  have hstep := hcon SkorokhodSpace.step 1 η zero_lt_one hη0
+    (fun t₁ t t₂ hle1 hle2 _ => by
+      rw [SkorokhodSpace.min_edist_step_eq_zero hle1 hle2]
+      exact hη0)
+  exact absurd (le_trans (SkorokhodSpace.one_le_modulusBased_step le_rfl) hstep)
+    (not_le.2 hηC)
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The boundary term at the base point**: the oscillation of `f` over the two
+intervals of length `δ` adjoining `t₀`, the one on the right measured against
+`f t₀` and the one on the left against `Function.leftLim f t₀`.
+
+It is the term the link of Milestone 8 is missing, by
+`SkorokhodSpace.not_forall_modulusBased_le_mul_of_forall_min_edist_lt`, and it is
+what the classical statement on `[0, ∞)` writes as `sup_{t < δ} d(x t, x 0)`,
+where base point and window edge coincide and only the right half occurs.
+
+**The two halves are measured against different points, and that is the whole
+design.**  The cell that ends at `t₀` does not contain `t₀`, the cells of
+`SkorokhodSpace.subdivisionOsc` being half open, so the jump **at** the base
+point is not charged to it --- and against `Function.leftLim f t₀` the term
+vanishes with `δ`, while against `f t₀` it would not.  That is
+`SkorokhodSpace.tendsto_basePointOsc` together with
+`SkorokhodSpace.iSup_edist_step_left_eq_one`. -/
+noncomputable def SkorokhodSpace.basePointOsc (t₀ : ℝ) (f : D(ℝ, E)) (δ : ℝ) : ℝ≥0∞ :=
+  (⨆ r ∈ Set.Ico (t₀ - δ) t₀, edist (f.toFun r) (Function.leftLim f.toFun t₀))
+    + ⨆ r ∈ Set.Ico t₀ (t₀ + δ), edist (f.toFun r) (f.toFun t₀)
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The boundary term vanishes**, and this is why the correction does not reach
+the consumer: `SkorokhodSpace.isTightMeasureSet_iff` asks that the modulus vanish
+as `δ → 0`, and a summand that vanishes with it changes nothing.
+
+One half is right continuity at `t₀` and the other the existence of the left
+limit there; both are read through `mem_nhdsGE_iff_exists_Ico_subset'`
+(`Mathlib/Topology/Order/LeftRightNhds.lean:288`) and
+`mem_nhdsLT_iff_exists_Ioo_subset'` (`:214`), which turn a neighbourhood into the
+interval a supremum needs.
+
+**For a family this has to be required uniformly**, and then it is a hypothesis
+and not a formality: it says the paths of the family accumulate no displacement
+at the one time at which the subdivisions are pinned. -/
+theorem SkorokhodSpace.tendsto_basePointOsc (t₀ : ℝ) (f : D(ℝ, E)) :
+    Filter.Tendsto (SkorokhodSpace.basePointOsc t₀ f) (𝓝[>] (0 : ℝ)) (𝓝 0) := by
+  rw [ENNReal.tendsto_nhds_zero]
+  intro ε hε
+  have hε2 : 0 < ε / 2 := ENNReal.half_pos hε.ne'
+  obtain ⟨u, hu, hsubR⟩ : ∃ u, t₀ < u ∧
+      ∀ r ∈ Set.Ico t₀ u, edist (f.toFun r) (f.toFun t₀) ≤ ε / 2 := by
+    have h2 : Filter.Tendsto f.toFun (𝓝[≥] t₀) (𝓝 (f.toFun t₀)) :=
+      continuousWithinAt_Ioi_iff_Ici.1 (f.isCadlag.isRightContinuous t₀)
+    have h3 : Filter.Tendsto (fun r => edist (f.toFun r) (f.toFun t₀)) (𝓝[≥] t₀) (𝓝 0) := by
+      have h4 := Filter.Tendsto.edist h2 (tendsto_const_nhds (x := f.toFun t₀))
+      rwa [edist_self] at h4
+    obtain ⟨u, hu, hsub⟩ := (mem_nhdsGE_iff_exists_Ico_subset' (lt_add_one t₀)).1
+      (ENNReal.tendsto_nhds_zero.1 h3 (ε / 2) hε2)
+    exact ⟨u, hu, fun r hr => hsub hr⟩
+  obtain ⟨l, hl, hsubL⟩ : ∃ l, l < t₀ ∧
+      ∀ r ∈ Set.Ioo l t₀, edist (f.toFun r) (Function.leftLim f.toFun t₀) ≤ ε / 2 := by
+    have h3 : Filter.Tendsto (fun r => edist (f.toFun r) (Function.leftLim f.toFun t₀))
+        (𝓝[<] t₀) (𝓝 0) := by
+      have h4 := Filter.Tendsto.edist (f.isCadlag.tendsto_nhdsLT_leftLim t₀)
+        (tendsto_const_nhds (x := Function.leftLim f.toFun t₀))
+      rwa [edist_self] at h4
+    obtain ⟨l, hl, hsub⟩ := (mem_nhdsLT_iff_exists_Ioo_subset' (sub_one_lt t₀)).1
+      (ENNReal.tendsto_nhds_zero.1 h3 (ε / 2) hε2)
+    exact ⟨l, hl, fun r hr => hsub hr⟩
+  have hpos : (0 : ℝ) < min (u - t₀) (t₀ - l) := lt_min (by linarith) (by linarith)
+  filter_upwards [Filter.Eventually.filter_mono nhdsWithin_le_nhds (Iio_mem_nhds hpos)]
+    with δ hδ
+  have hδ' : δ < min (u - t₀) (t₀ - l) := hδ
+  have hL : (⨆ r ∈ Set.Ico (t₀ - δ) t₀, edist (f.toFun r) (Function.leftLim f.toFun t₀))
+      ≤ ε / 2 := by
+    refine iSup₂_le fun r hr => hsubL r ⟨?_, hr.2⟩
+    have : δ < t₀ - l := lt_of_lt_of_le hδ' (min_le_right _ _)
+    have := hr.1
+    linarith
+  have hR : (⨆ r ∈ Set.Ico t₀ (t₀ + δ), edist (f.toFun r) (f.toFun t₀)) ≤ ε / 2 := by
+    refine iSup₂_le fun r hr => hsubR r ⟨hr.1, ?_⟩
+    have : δ < u - t₀ := lt_of_lt_of_le hδ' (min_le_left _ _)
+    have := hr.2
+    linarith
+  calc SkorokhodSpace.basePointOsc t₀ f δ ≤ ε / 2 + ε / 2 := add_le_add hL hR
+    _ = ε := ENNReal.add_halves ε
+
+/-- **The left half of the boundary term has to be measured against the left
+limit.**  At the unit step and the base point `1` --- the time at which it jumps
+--- the same supremum taken against `f t₀` is `1` at **every** `δ > 0`, so it does
+not vanish and `SkorokhodSpace.tendsto_basePointOsc` would be false with that
+reading.
+
+Against `Function.leftLim SkorokhodSpace.step.toFun 1`, which is `0`
+(`SkorokhodSpace.leftLim_step`), the same supremum is `0`.  The difference is the
+jump at the base point, and the reason it may be dropped is that the cell ending
+at `t₀` does not contain `t₀`. -/
+theorem SkorokhodSpace.iSup_edist_step_left_eq_one {δ : ℝ} (hδ : 0 < δ) :
+    (⨆ r ∈ Set.Ico (1 - δ) (1 : ℝ),
+      edist (SkorokhodSpace.step.toFun r) (SkorokhodSpace.step.toFun 1)) = 1 := by
+  have hval : ∀ r : ℝ, r < 1 →
+      edist (SkorokhodSpace.step.toFun r) (SkorokhodSpace.step.toFun 1) = 1 := by
+    intro r hr
+    rw [SkorokhodSpace.step_apply, SkorokhodSpace.step_apply, ite_eq_right (not_le.2 hr),
+      ite_eq_left le_rfl, edist_dist, Real.dist_eq]
+    norm_num
+  refine le_antisymm (iSup₂_le fun r hr => le_of_eq (hval r hr.2)) ?_
+  exact le_iSup₂_of_le (1 - δ / 2) ⟨by linarith, by linarith⟩
+    (le_of_eq (hval _ (by linarith)).symm)
 
 /-! ## Milestone 9: the nonnegative index inside the real one
 

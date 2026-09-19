@@ -10508,9 +10508,65 @@ had no declaration at all, and they are needed in this order:
    bounds the oscillation of a subdivision only by that of one it **refines**, so
    a common refinement is what is needed — and that a common refinement cannot be
    had with a sparseness chosen before the paths is **proved**, 2026-09-19, as
-   `SkorokhodSpace.exists_isSubdivisionBased_pair_forall_not_cells`. What remains
-   open, and what a run at this item starts from, is written out at the item in
+   `SkorokhodSpace.exists_isSubdivisionBased_pair_forall_not_cells`.
+
+   **Both routes the roadmap had named are now refuted**, the second on 2026-09-19
+   as well. The fallback was Ethier–Kurtz' subdivision-free three point modulus
+   `w''`, and it fails on the same witness: a path of `D(ℝ, ℝ × ℝ)` with **two
+   jumps in different coordinates**, by
+   `SkorokhodSpace.exists_isCompact_modulusBased_postcomp_eq_zero` and
+   `SkorokhodSpace.exists_min_edist_postcomp_eq_zero`. What is refuted is a family
+   that recovers the metric of the value space on the compact set — granted even
+   with equality there. The criterion itself stands, because it quantifies over a
+   **dense** class, which contains functions seeing both jumps at once; a proof has
+   therefore to choose its test function **after** the path.
+
+   **And that proof has a shape now, 2026-09-19.** The refutation is narrower than
+   it read: it does not touch the family this roadmap names, the clipped distances
+   `y ↦ min (dist y x_j) 1` to the points of a net. At the very witness that
+   defeats the coordinates, the clipped distance to the value **between** the two
+   jumps has image path `1, 0, 1` and modulus at least `1`
+   (`SkorokhodSpace.one_le_modulus_postcomp_clipDist_twoJump`), because the three
+   point quantity compares both displacements to the **common middle value** and
+   the distance to that value reads both at once —
+   `SkorokhodSpace.min_edist_postcomp_clipDist`, with **equality** up to the clip,
+   so at the level `min η 1`, which depends on `η` alone. The passage has three
+   links, of which **two are proved**: the reduction to the middle value
+   (`SkorokhodSpace.min_edist_postcomp_clipDist`,
+   `SkorokhodSpace.le_min_dist_of_dist_clipDist_le`) and the easy half of the
+   comparison with the modulus
+   (`SkorokhodSpace.min_edist_le_two_mul_modulusBased`). The open one is the
+   **hard** half of Ethier–Kurtz' comparison of `w'` with `w''`, and that is what
+   a run at this item builds. It is written out at the item in
    `SkorokhodSpace/README.md`, Milestone 8; it is not an application of item 2.
+
+   Its **first half stands** since 2026-09-19:
+   `SkorokhodSpace.exists_forall_edist_lt_of_forall_min_edist_lt`, that a window
+   on which the three point quantity is below `η` carries exactly **one break**.
+   The greedy subdivision that the item named for the second half does **not**
+   close it — merging two greedy cells crosses that break, and the displacement
+   at a break is the one quantity the hypothesis leaves free. The replacement
+   puts the nodes at the large jumps instead — that they are far enough apart is
+   `SkorokhodSpace.jump_le_two_mul_of_forall_min_edist_lt`, proved the same day —
+   and its cell estimate is
+   `SkorokhodSpace.edist_le_four_mul_of_forall_min_edist_lt`: a window whose
+   jumps are all at most `2 * η` has oscillation at most `4 * η`.
+
+   **And the item as stated is false, 2026-09-19.** A based subdivision carries
+   the base point among its nodes and has every gap longer than `δ`, so a jump in
+   `Set.Ioo t₀ (t₀ + δ)` sits at no cell boundary and is charged in full to the
+   cell beginning at `t₀`. The unit step, whose three point quantity is `0` at
+   every triple and every span, has based modulus at least `1`
+   (`SkorokhodSpace.not_forall_modulusBased_le_mul_of_forall_min_edist_lt`), so no
+   finite constant repairs it. The link carries a **boundary term at the base
+   point** — the term the classical statement on `[0, ∞)` writes as
+   `sup_{t < δ} d(x t, x 0)` — with the left half measured against
+   `leftLim f t₀`. It is `SkorokhodSpace.basePointOsc`, it vanishes as `δ → 0`
+   (`SkorokhodSpace.tendsto_basePointOsc`), so the consumer is unaffected, and
+   against `f t₀` it would not vanish
+   (`SkorokhodSpace.iSup_edist_step_left_eq_one`); for a family the vanishing is
+   a hypothesis and not a formality. It is written out at the item in
+   `SkorokhodSpace/README.md`, Milestone 8.
 
 Only then does `isTight_map_postcomp_of_exists_martingale` have a conclusion it
 can reach, and `isRelativelyCompact_of_approx` an input. **The order of work is

@@ -3344,13 +3344,178 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   hypothesis controls the image law of each `h_i` separately, that is the
   marginals, and a subdivision for the vector path is exactly what is missing.
 
-  What is left to look at, and it is the first question of a run at this item, is
-  Ethier–Kurtz' subdivision-free modulus `w''`, the three point quantity
-  `sup min (d (x t) (x t₁)) (d (x t₂) (x t))` over `t₁ ≤ t ≤ t₂` of span `δ`.
-  **It is not immediate either**, and the reason is worth recording so that no run
-  assumes it: under `d ≈ max over i`, `min (max a) (max b)` is not bounded by
-  `max over i of min (a i) (b i)` — take `a = (1,0)`, `b = (0,1)`, where the left
-  side is `1` and the right side is `0`.
+  **The second route is refuted as well, 2026-09-19, and by the same witness.**
+  What was left to look at was Ethier–Kurtz' subdivision-free modulus `w''`, the
+  three point quantity `sup min (d (x t) (x t₁)) (d (x t₂) (x t))` over
+  `t₁ ≤ t ≤ t₂` of span `δ`; it was the candidate because it is read at one time
+  triple and needs no common refinement. It does not carry, and what stood here as
+  a remark about vectors — under `d ≈ max over i`, `min (max a) (max b)` is not
+  bounded by `max over i of min (a i) (b i)`, take `a = (1,0)`, `b = (0,1)` — is
+  now a statement about paths.
+
+  The witness is one path with **two jumps in different coordinates**,
+  `SkorokhodSpace.twoJump γ` in `D(ℝ, ℝ × ℝ)`: the first coordinate steps from `0`
+  to `1` at time `1`, the second at `1 + γ`. Two theorems read it, one per route:
+
+  * `SkorokhodSpace.exists_isCompact_modulusBased_postcomp_eq_zero` — for every
+    `0 < δ < 1` there are a path of `D(ℝ, ℝ × ℝ)` and a compact `K` containing
+    every one of its values such that two **bounded continuous** functions
+    (`SkorokhodSpace.clipFst`, `SkorokhodSpace.clipSnd`) recover the metric of
+    `ℝ × ℝ` on `K` *with equality*, both image paths have `modulusBased` equal to
+    `0` at scale `δ`, and the path itself has `modulusBased` at least `1`. The
+    finite family is granted the best form of its own hypothesis and the inference
+    still fails.
+  * `SkorokhodSpace.exists_min_edist_postcomp_eq_zero` — at the triple
+    `1 - γ < 1 < 1 + γ`, of span `2 γ`, the three point quantity of the path is at
+    least `1` and that of **both** images is exactly `0`.
+
+  The mechanism is one sentence: each image sees one of the two jumps and is blind
+  to the other, so each image is a single step and each has modulus `0`, while the
+  pair has two jumps at distance `γ` that no `δ`-sparse subdivision separates.
+  That last is `SkorokhodSpace.one_le_modulus_twoJump`, and it needs no upper bound
+  on `δ` — beyond the diameter of the window there is no subdivision at all and the
+  modulus is `⊤`, which is the `ℝ≥0∞` valuation of `SkorokhodSpace.modulus` paying
+  for itself a third time.
+
+  **What is *not* refuted is the criterion**, and the difference is the whole
+  content. It quantifies over a **dense** class `H`, and `H` contains functions
+  that see both jumps at once: `p ↦ p.1 + 2 * p.2` separates `(0,0)`, `(1,0)`,
+  `(1,1)`, so its image path has two jumps at distance `γ` and a modulus of its
+  own. A proof must therefore choose its test function **after** the path.
+
+  **And what is refuted is narrower than it was stated to be, 2026-09-19.** The
+  two theorems above rule out a finite family that **recovers the metric** on the
+  compact set, which is what `clipFst` and `clipSnd` do. They do **not** rule out
+  the family this roadmap actually names — the clipped distances
+  `y ↦ min (dist y x_j) 1` to the points of a net.
+  `SkorokhodSpace.one_le_modulus_postcomp_clipDist_twoJump` is the check, at the
+  very path that refutes the other family: the single function
+  `SkorokhodSpace.clipDist (1, 0)`, the clipped distance to the value **between**
+  the two jumps, has image path `1, 0, 1` and modulus at least `1`.
+
+  The reason is that the three point quantity compares both displacements to the
+  **common middle value**, and the distance to that one value turns both
+  comparisons into differences of its own values at once.
+  `SkorokhodSpace.min_edist_postcomp_clipDist` says so with **equality** up to the
+  clip: the image quantity is the quantity of the path, capped at `1`. So the
+  level is `min η 1` — a function of `η` alone, not of the path, not of a compact
+  set, not of a net — which is the uniformity that had to be checked before
+  anything was built.
+
+  **The passage now has three links, and two of them are proved.**
+
+  1. `modulusBased` large ⟹ three point quantity large. The **hard** half of
+     Ethier–Kurtz' comparison of `w'` with `w''`, and the only link that is open.
+     Its **first half is proved**, and it is a structure theorem:
+     `SkorokhodSpace.exists_forall_edist_lt_of_forall_min_edist_lt` says that a
+     window on which the three point quantity is below `η` carries exactly **one
+     break** — a single time `τ` before which the path stays within `η` of its
+     value at the window's left end, and from which on it stays within `η` of its
+     value at `τ`. The break is the first time the displacement reaches `η`, an
+     infimum that right continuity makes a minimum, and the hypothesis is then
+     read at a **single** triple `(u, τ, t₂)`.
+     `SkorokhodSpace.edist_le_of_forall_min_edist_lt` is the same statement as an
+     oscillation bound: `edist (f τ) (f u) + η`, the displacement **at** the break
+     plus `η`.
+
+     **The greedy subdivision that this item named until 2026-09-19 does not
+     close the link, and the structure theorem says why.** Greedy cells — each
+     run from its left endpoint as far as the oscillation allows — have
+     oscillation `≤ η`, but they are not longer than `δ`; what the hypothesis
+     gives is that no *two consecutive* cells fit in a window of span `δ`. So the
+     nodes have to be thinned to every other one, and the merged cell measures
+     its oscillation from the far left endpoint, which costs the displacement at
+     the break in between — and that displacement is precisely the quantity the
+     three point hypothesis leaves free. A path may jump by any amount at one
+     time without violating it; the condition forbids two large displacements in
+     one window, not one.
+
+     **What the link needs instead**, written out at the section in
+     `SkorokhodSpace/Suggested.lean`: nodes at the jumps of size `> 2 * η`, which
+     are more than `δ` apart under the hypothesis and finitely many in a compact
+     window (`IsCadlag.finite_largeLeftJumpSet_inter`). That they are far apart is
+     `SkorokhodSpace.jump_le_two_mul_of_forall_min_edist_lt`, **proved**: a jump
+     larger than `η` at one time of the window bounds the jump at every earlier
+     time of it by `2 * η`. The threshold is `2 * η` and not `η`, and the reason
+     is worth keeping: the naive triple `(t₁, p, q)` at two jumps has
+     `edist (f q) (f p)` for its second displacement, which the jump at `q` does
+     not bound — the path may return to `f p` just before `q`. Both readings that
+     do work run their outer time up to `q`, and the only property of `q` either
+     uses is that `edist (f q) (f t)` exceeds `η` on a left neighbourhood, which
+     is why the hypothesis there is **strict**. Between two consecutive such jumps
+     the
+     window is filled with a uniform grid of `⌈(q-p)/(2*δ)⌉` cells, whose lengths
+     lie in `(δ, 2*δ]` and whose oscillation the structure theorem bounds by
+     `4 * η`. Two numbers of the original
+     statement change with it: the hypothesis is read at span `2 * δ`, not `δ` —
+     a path drifting at the largest slope the hypothesis at span `δ` allows moves
+     by nearly `2 * η` across a cell of length `δ` — and the constant the route
+     gives is `4`, not `2`. Neither matters to the consumer, which asks only that
+     the modulus vanish as `δ → 0`.
+
+     Of that route the **cell estimate** is proved,
+     `SkorokhodSpace.edist_le_four_mul_of_forall_min_edist_lt`: a window whose
+     jumps are all at most `2 * η` — the hypothesis asked on `Set.Ioc u v` and not
+     at `u`, a cell not seeing the jump at its own left endpoint — has oscillation
+     at most `4 * η`.
+
+     **And the base point, which that route called its one point to decide, is
+     not a point to decide but a refutation, 2026-09-19.**
+     `SkorokhodSpace.IsSubdivisionBased` demands the base point among the nodes
+     **and** every gap longer than `δ`; a jump in `Set.Ioo t₀ (t₀ + δ)` can
+     therefore be put at no cell boundary, and is charged in full to the cell
+     beginning at `t₀`. The unit step `SkorokhodSpace.step` has three point
+     quantity `0` at every triple and every span
+     (`SkorokhodSpace.min_edist_step_eq_zero`) and based modulus at least `1` at
+     every `δ ≥ 1` (`SkorokhodSpace.one_le_modulusBased_step`), so **no** finite
+     constant and no reading of the span makes the link true:
+     `SkorokhodSpace.not_forall_modulusBased_le_mul_of_forall_min_edist_lt`,
+     proved with the global hypothesis and hence against the strongest reading.
+
+     **The link carries a boundary term at the base point**, which is what the
+     classical statement on `[0, ∞)` writes as `sup_{t < δ} d(x t, x 0)` and what
+     this roadmap never had:
+
+     > `modulusBased t₀ m f δ ≤ 4 * η + 2 * ⨆ r ∈ Set.Ico (t₀ - 2*δ) t₀, edist (f r) (leftLim f t₀) + ⨆ r ∈ Set.Ico t₀ (t₀ + 2*δ), edist (f r) (f t₀)`,
+
+     one summand for the cell beginning at `t₀` and one for the cell ending
+     there, both sides suffering the same defect. The left one is measured
+     against `leftLim f t₀` and **not** against `f t₀`: a jump **at** the base
+     point sits at the left endpoint of the cell beginning there and is not seen
+     by it, and measured against `f t₀` the term would not vanish and the
+     criterion would be false for every path jumping at `t₀`.
+
+     The term is `SkorokhodSpace.basePointOsc`, and that it **vanishes** is
+     `SkorokhodSpace.tendsto_basePointOsc`, proved: the correction does not reach
+     the consumer, which asks only that the modulus vanish as `δ → 0`, the right
+     summand doing so by right continuity and the left one by the existence of
+     the left limit. That the left one must be read against `leftLim f t₀` is
+     `SkorokhodSpace.iSup_edist_step_left_eq_one`, also proved: at the unit step
+     and the base point `1` the same supremum against `f t₀` is `1` at every `δ`.
+     For a **family** the vanishing has to be uniform, and that is a hypothesis
+     and not a formality — it says the paths do not accumulate displacement at
+     the one time the subdivisions are pinned at.
+     `SkorokhodSpace.not_isCompact_closure_of_jumps_at_basePoint` is the same
+     phenomenon from the other side.
+
+     What is left of the route is the assembly, in the corrected shape: the two
+     theorems above, the cell estimate, the finiteness of the large jumps, a
+     uniform grid, and the `Fin`-bookkeeping of an `IsSubdivisionBased`.
+  2. Three point quantity of the path ⟹ the same for the image under
+     `SkorokhodSpace.clipDist (f t)`, capped at `1`
+     (`SkorokhodSpace.min_edist_postcomp_clipDist`), and in the form a dense `H`
+     supplies it, `SkorokhodSpace.le_min_dist_of_dist_clipDist_le`: a test
+     function uniformly within `ρ` of the clipped distance to a point within `ρ`
+     of the middle value still sees both displacements, up to `4 * ρ`. Two of the
+     four `ρ` pay for the net, two for the density.
+  3. Three point quantity of the image large ⟹ its `modulusBased` large. The
+     **easy** half, `SkorokhodSpace.min_edist_le_two_mul_modulusBased`: in a
+     `δ`-sparse subdivision the cell holding `t` holds `t₁` as well, or else it
+     holds `t₂`, the span being at most `δ` and the cell longer.
+
+  Links 2 and 3 hold at a **fixed** `δ`, which is what makes the chain usable:
+  the `δ` a consumer chooses for the path is the `δ` the hypothesis is read at for
+  the image, and nothing is asked to be refined.
 
 **Acceptance examples.**
 
