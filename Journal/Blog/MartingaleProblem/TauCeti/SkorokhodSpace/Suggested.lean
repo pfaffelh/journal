@@ -10816,6 +10816,57 @@ theorem SkorokhodSpace.tendsto_finiteDimensional_of_tendsto
   refine hf (SkorokhodSpace.continuousAt_evalPi_of_forall_notMem_leftJumpSet fun i hi => ?_)
   exact hcon (Set.mem_iUnion.2 ⟨i, hi⟩)
 
+/-- **The same read as a convergence of integrals**, which is the form in which
+the finite dimensional distributions are compared throughout Milestone 8: if
+`μ n → ν` weakly and `ν` does not charge a jump at any of the finitely many times
+`t i`, then
+`∫ ∏ i, F i (f (t i)) dμ n → ∫ ∏ i, F i (f (t i)) dν`
+for every finite family of bounded continuous `F i`.
+
+**The integrand is not continuous on `D(ι, E)`** --- evaluation at `t i` is
+continuous only at the paths that do not jump there --- so this is not weak
+convergence tested against a bounded continuous function, and
+`ProbabilityMeasure.tendsto_iff_forall_integral_tendsto` does not apply to it
+directly.  What is done instead is to push the laws forward to `κ → E`, where the
+integrand **is** bounded continuous: the product of the `F i` composed with the
+coordinate projections, `BoundedContinuousFunction.compContinuous` with
+`continuous_apply`, the factors multiplied in `E →ᵇ ℝ`'s `CommRing`.  The theorem
+above carries the convergence to the image laws, `tendsto_iff_forall_integral_tendsto`
+tests it against that function, and `integral_map` brings the two integrals back.
+
+The index is a `Fintype` and not merely `Countable`, because the integrand is a
+**finite product**; the theorem above is the countable statement and is not
+weakened by this one. -/
+theorem SkorokhodSpace.tendsto_integral_evalPi_of_tendsto
+    {κ : Type*} [Fintype κ]
+    {γ : Type*} {L : Filter γ} [L.IsCountablyGenerated]
+    {μ : γ → ProbabilityMeasure D(ι, E)} {ν : ProbabilityMeasure D(ι, E)}
+    (hconv : Tendsto μ L (𝓝 ν)) (F : κ → (E →ᵇ ℝ)) (t : κ → ι)
+    (ht : ∀ i, (ν : Measure D(ι, E))
+      {f : D(ι, E) | Function.leftLim f.toFun (t i) = f.toFun (t i)} = 1) :
+    Tendsto (fun n => ∫ f, ∏ i, F i (f.toFun (t i)) ∂(μ n : Measure D(ι, E))) L
+      (𝓝 (∫ f, ∏ i, F i (f.toFun (t i)) ∂(ν : Measure D(ι, E)))) := by
+  classical
+  set ev : D(ι, E) → (κ → E) := fun f i => f.toFun (t i) with hevdef
+  have hevm : Measurable ev := SkorokhodSpace.measurable_evalPi t
+  have hlim : Tendsto (fun n => (μ n).map ev) L (𝓝 (ν.map ev)) :=
+    SkorokhodSpace.tendsto_finiteDimensional_of_tendsto t hconv ht (fun _ => rfl) rfl
+  set G : (κ → E) →ᵇ ℝ :=
+    ∏ i : κ, (F i).compContinuous ⟨fun x : κ → E => x i, continuous_apply i⟩ with hGdef
+  have hGapp : ∀ x : κ → E, G x = ∏ i, F i (x i) := by
+    intro x
+    rw [hGdef, BoundedContinuousFunction.prod_apply]
+    rfl
+  have htrans : ∀ σ : ProbabilityMeasure D(ι, E),
+      (∫ x, G x ∂((σ.map ev : ProbabilityMeasure (κ → E)) : Measure (κ → E)))
+        = ∫ f, ∏ i, F i (f.toFun (t i)) ∂(σ : Measure D(ι, E)) := by
+    intro σ
+    rw [ProbabilityMeasure.toMeasure_map,
+      integral_map hevm.aemeasurable G.continuous.measurable.aestronglyMeasurable]
+    exact integral_congr_ae (Eventually.of_forall fun f => hGapp (ev f))
+  have hkey := ProbabilityMeasure.tendsto_iff_forall_integral_tendsto.1 hlim G
+  simpa only [htrans] using hkey
+
 /-- **The same for random variables**, on Mathlib's
 `MeasureTheory.TendstoInDistribution`: path valued variables converging in
 distribution have their finite dimensional marginals converging in distribution,
@@ -11826,6 +11877,110 @@ theorem SkorokhodSpace.exists_time_liminf_measure_setOf_exists_edist_lt {K : Set
   exact liminf_le_of_frequently_le' (Frequently.of_forall fun n =>
     SkorokhodSpace.lintegral_measure_setOf_exists_edist_lt_le hM hδ0 hδ1 h (μ n) (hμ n))
 
+/-- **A Lebesgue integral over a window is unchanged when the window and the
+integrand are translated together.**  Read from left to right it turns the
+integral of a *shifted* integrand over `[b, c)` into the integral of the
+integrand itself over the shifted window `[a + b, a + c)`.
+
+That is what a **common** shift of finitely many prescribed times asks for: the
+integrand `r ↦ g (t i + r)` runs over `[0, η)` while `g` runs over the `i`-th
+window `[t i, t i + η)`, so a bound holding on every window bounds the sum of the
+shifted integrands over the one window `[0, η)`.
+
+It is `measurePreserving_add_left` on `volume` and nothing else, the interval
+being carried along by `Set.preimage`: an `Ico` is the preimage of an `Ico` under
+a translation. -/
+theorem setLIntegral_Ico_const_add {g : ℝ → ℝ≥0∞} (hg : Measurable g) (a b c : ℝ) :
+    ∫⁻ r in Set.Ico b c, g (a + r) = ∫⁻ u in Set.Ico (a + b) (a + c), g u := by
+  have hpre : (fun r : ℝ => a + r) ⁻¹' Set.Ico (a + b) (a + c) = Set.Ico b c := by
+    ext r; simp
+  have h := (measurePreserving_add_left volume a).setLIntegral_comp_preimage
+    (s := Set.Ico (a + b) (a + c)) measurableSet_Ico hg
+  rw [hpre] at h
+  exact h
+
+/-- **Good times for a finite family of prescribed times and a whole sequence of
+laws at once, along a subsequence.**  To times `t : κ → ℝ` over a finite `κ`,
+each carrying the window `[t i, t i + η)` inside `[-M, M)`, there is a family `s`
+with `s i ∈ [t i, t i + η)` at which, **frequently in `n`**, *every* coordinate
+of the `n`-th law charges a large right oscillation with probability less than
+`β`.
+
+**The times are chosen by a common shift, and that is what makes the statement
+possible.**  `SkorokhodSpace.exists_times_forall_measure_setOf_exists_edist_lt`
+chooses the coordinates independently of one another, which for a *single* law
+costs nothing.  For a sequence it would produce one subsequence per coordinate,
+and there is no reason for finitely many subsequences obtained that way to meet.
+What is done instead is to look for `s i = t i + r` with **one** `r ∈ [0, η)`:
+the bad sets of the coordinates are then read at a single point, the sum over `κ`
+of their measures is a function of `r` alone, and its integral over `[0, η)` is
+`#κ` times the bound of
+`SkorokhodSpace.lintegral_measure_setOf_exists_edist_lt_le`, by
+`setLIntegral_Ico_const_add`, each summand's integral being an integral over that
+coordinate's own window.  That is where the factor `Fintype.card κ` of the
+hypothesis comes from, and it is paid, as everywhere in this section, by making
+the span `δ'` smaller.
+
+**The `∃ᶠ` is not a weakening one may repair**, for the reason recorded at
+`SkorokhodSpace.exists_time_liminf_measure_setOf_exists_edist_lt`: Fatou carries
+the bound to the `liminf` of the integrands and no further, `∫ limsup ≤ limsup ∫`
+being false.  A time good along a subsequence is what an argument comparing
+subsequential limits has at its disposal anyway.
+
+The finiteness of `κ` is essential here and is not a convenience, unlike in
+`SkorokhodSpace.exists_times_forall_measure_setOf_exists_edist_lt`, where the
+index is arbitrary: over an infinite index the sum of the bounds is infinite and
+no span is small enough. -/
+theorem SkorokhodSpace.exists_times_frequently_forall_measure_setOf_exists_edist_lt
+    {κ : Type*} [Fintype κ] {K : Set D(ℝ, E)} {M δ δ' η : ℝ}
+    (hM : 1 ≤ M) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) {c : ℝ≥0∞}
+    (h : (⨆ f ∈ K, SkorokhodSpace.modulusBased (0 : ℝ) M f δ) < c)
+    (μ : ℕ → Measure D(ℝ, E)) [∀ n, IsProbabilityMeasure (μ n)] (hμ : ∀ n, (μ n) Kᶜ = 0)
+    {t : κ → ℝ} (ht : ∀ i, Set.Ico (t i) (t i + η) ⊆ Set.Ico (-M) M) {β : ℝ≥0∞}
+    (hβ : (Fintype.card κ : ℝ≥0∞) * (((⌈2 * (M + 1) / δ⌉₊ : ℝ≥0∞) + 1) * ENNReal.ofReal δ')
+      < β * ENNReal.ofReal η) :
+    ∃ s : κ → ℝ, (∀ i, s i ∈ Set.Ico (t i) (t i + η)) ∧
+      ∃ᶠ n in atTop, ∀ i, (μ n) {f : D(ℝ, E) | ∃ r ∈ Set.Ico (s i) (s i + δ'),
+        4 * c < edist (f.toFun r) (f.toFun (s i))} < β := by
+  classical
+  set g : ℕ → ℝ → ℝ≥0∞ := fun n u => (μ n) {f : D(ℝ, E) |
+    ∃ r ∈ Set.Ico u (u + δ'), 4 * c < edist (f.toFun r) (f.toFun u)} with hgdef
+  have hgm : ∀ n, Measurable (g n) := fun n =>
+    measurable_measure_prodMk_left
+      (SkorokhodSpace.measurableSet_setOf_exists_edist_lt (E := E) δ' (4 * c))
+  have hsm : ∀ (n : ℕ) (i : κ), Measurable fun r : ℝ => g n (t i + r) :=
+    fun n i => (hgm n).comp (measurable_const_add (t i))
+  have hGm : ∀ n : ℕ, Measurable fun r : ℝ => ∑ i : κ, g n (t i + r) :=
+    fun n => Finset.measurable_fun_sum _ fun i _ => hsm n i
+  have hbnd : ∀ (n : ℕ) (i : κ), ∫⁻ r in Set.Ico (0 : ℝ) η, g n (t i + r)
+      ≤ ((⌈2 * (M + 1) / δ⌉₊ : ℝ≥0∞) + 1) * ENNReal.ofReal δ' := by
+    intro n i
+    rw [setLIntegral_Ico_const_add (hgm n) (t i) 0 η, add_zero]
+    exact le_trans (lintegral_mono_set (ht i))
+      (SkorokhodSpace.lintegral_measure_setOf_exists_edist_lt_le hM hδ0 hδ1 h (μ n) (hμ n))
+  have hGint : ∀ n : ℕ, ∫⁻ r in Set.Ico (0 : ℝ) η, (∑ i : κ, g n (t i + r))
+      ≤ (Fintype.card κ : ℝ≥0∞)
+        * (((⌈2 * (M + 1) / δ⌉₊ : ℝ≥0∞) + 1) * ENNReal.ofReal δ') := by
+    intro n
+    rw [lintegral_finsetSum _ fun i _ => hsm n i]
+    calc ∑ _i : κ, ∫⁻ r in Set.Ico (0 : ℝ) η, g n (t _i + r)
+        ≤ ∑ _i : κ, ((⌈2 * (M + 1) / δ⌉₊ : ℝ≥0∞) + 1) * ENNReal.ofReal δ' :=
+          Finset.sum_le_sum fun i _ => hbnd n i
+      _ = (Fintype.card κ : ℝ≥0∞)
+            * (((⌈2 * (M + 1) / δ⌉₊ : ℝ≥0∞) + 1) * ENNReal.ofReal δ') := by
+          rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
+  have hfat : ∫⁻ r in Set.Ico (0 : ℝ) η, liminf (fun n => ∑ i : κ, g n (t i + r)) atTop
+      ≤ (Fintype.card κ : ℝ≥0∞)
+        * (((⌈2 * (M + 1) / δ⌉₊ : ℝ≥0∞) + 1) * ENNReal.ofReal δ') :=
+    le_trans (lintegral_liminf_le hGm)
+      (liminf_le_of_frequently_le' (Frequently.of_forall hGint))
+  obtain ⟨r, hr, hlt⟩ := exists_mem_Ico_lt_of_setLIntegral_le' (Measurable.liminf hGm) hfat
+    (by rwa [sub_zero])
+  refine ⟨fun i => t i + r, fun i => ⟨by linarith [hr.1], by linarith [hr.2]⟩, ?_⟩
+  refine (frequently_lt_of_liminf_lt (h := hlt)).mono fun n hn i => ?_
+  exact lt_of_le_of_lt (Finset.single_le_sum (f := fun i : κ => g n (t i + r))
+    (fun j _ => by simp) (Finset.mem_univ i)) hn
+
 /-! ### From the bad times to the one dimensional distributions
 
 The section above produces a *time* at which the law charges a large right
@@ -12421,6 +12576,167 @@ theorem SkorokhodSpace.exists_times_forall_dist_integral_evalPi_le_of_isCompact_
           rw [div_le_one (by positivity)]; linarith
         nlinarith [hε.le]
 
+/-- **The same for a sequence of laws, and the estimate holds along a
+subsequence.**  For a sequence `μ` of laws all carried by the same `A` with
+compact closure, a finite family `F : κ → (E →ᵇ ℝ)`, prescribed times `t : κ → ℝ`
+of the window `[-m, m − 1)`, a reach `η ∈ (0, 1]` and an `ε > 0`, there are times
+`s i ∈ [t i, t i + η)` and a span `δ' > 0` such that **for infinitely many `n`**
+and every family `s' i ∈ [s i, s i + δ')`
+`|∫ ∏ F i (f (s' i)) dμₙ − ∫ ∏ F i (f (s i)) dμₙ| ≤ ε`.
+
+**This is the piece EK 3.7.8(b) needs that the single law version does not
+supply.**  There the times of the hypothesis and the times of the conclusion are
+different, and the displacement from one to the other has to be paid *uniformly
+in the sequence*, since the sequence is what the limit is taken along; a
+displacement bought for each `μₙ` separately, at times depending on `n`, compares
+nothing.  The times here do not depend on `n`, and what does is the set of `n` at
+which the bound holds.
+
+**Why the conclusion is `∃ᶠ` and why that is enough.**  A time good for *every*
+member of the sequence at once need not exist, by the reason recorded at
+`SkorokhodSpace.exists_time_liminf_measure_setOf_exists_edist_lt`.  What the
+argument of EK 3.7.8(b) compares are subsequential limits, and a subsequence of a
+subsequence is one, so a bound holding frequently along the sequence is spent
+exactly as a bound holding always would be.
+
+The constants are those of
+`SkorokhodSpace.exists_times_forall_dist_integral_evalPi_le_of_isCompact_closure`,
+and only the span differs: it carries the extra factor `#κ + 1`, which is the
+price of
+`SkorokhodSpace.exists_times_frequently_forall_measure_setOf_exists_edist_lt`
+reading all coordinates at one shift.  Since the span is the last constant chosen
+and is free, the passage from one law to a sequence costs nothing else. -/
+theorem SkorokhodSpace.exists_times_frequently_dist_integral_evalPi_le_of_isCompact_closure
+    [CompleteSpace E] {κ : Type*} [Fintype κ] {A : Set D(ℝ, E)} (hA : IsCompact (closure A))
+    (μ : ℕ → Measure D(ℝ, E)) [∀ n, IsProbabilityMeasure (μ n)] (hμ : ∀ n, (μ n) Aᶜ = 0)
+    (F : κ → (E →ᵇ ℝ)) (m : ℕ) (hm : 1 ≤ m) {t : κ → ℝ}
+    (ht : ∀ i, t i ∈ Set.Ico (-(m : ℝ)) ((m : ℝ) - 1))
+    {η : ℝ} (hη0 : 0 < η) (hη1 : η ≤ 1) {ε : ℝ} (hε : 0 < ε) :
+    ∃ s : κ → ℝ, (∀ i, s i ∈ Set.Ico (t i) (t i + η)) ∧ ∃ δ' > 0,
+      ∃ᶠ n in atTop, ∀ s' : κ → ℝ, (∀ i, s' i ∈ Set.Ico (s i) (s i + δ')) →
+        |(∫ f, ∏ i, F i (f.toFun (s' i)) ∂(μ n))
+          - ∫ f, ∏ i, F i (f.toFun (s i)) ∂(μ n)| ≤ ε := by
+  classical
+  have hM1 : (1 : ℝ) ≤ (m : ℝ) := by exact_mod_cast hm
+  have hM0 : (0 : ℝ) < (m : ℝ) := lt_of_lt_of_le zero_lt_one hM1
+  set N : ℕ := Fintype.card κ with hNdef
+  set C : ℝ := 1 + ∑ i, ‖F i‖ with hCdef
+  have hsum0 : (0 : ℝ) ≤ ∑ i, ‖F i‖ := Finset.sum_nonneg fun i _ => norm_nonneg _
+  have hC : 1 ≤ C := by rw [hCdef]; linarith
+  have hC0 : (0 : ℝ) < C := lt_of_lt_of_le zero_lt_one hC
+  have hCF : ∀ i, ‖F i‖ ≤ C := by
+    intro i
+    have hle := Finset.single_le_sum (f := fun j => ‖F j‖)
+      (fun j _ => norm_nonneg (F j)) (Finset.mem_univ i)
+    rw [hCdef]; linarith
+  set Dc : ℝ := C ^ N * ((N : ℝ) + 1) with hDdef
+  have hD0 : 0 < Dc := by rw [hDdef]; positivity
+  have hε₀ : (0 : ℝ) < ε / (2 * Dc) := by positivity
+  set S : Set E := {x | ∃ f ∈ A, ∃ r ∈ exhaustion (0 : ℝ) ((m + 1 : ℕ) : ℝ),
+    f.toFun r = x} with hSdef
+  have hval : IsCompact (closure S) :=
+    ((SkorokhodSpace.isCompact_closure_iff A).1 hA (m + 1)).1
+  obtain ⟨a, ha0, hFa⟩ :=
+    exists_forall_mem_dist_le_of_isCompact_closure hval F hε₀ Finset.univ
+  set c : ℝ≥0∞ := a / 4 with hcdef
+  have hc0 : 0 < c := ENNReal.div_pos ha0.ne' (by simp)
+  have h4c : 4 * c ≤ a := ENNReal.mul_div_le
+  have hFc : ∀ i, ∀ x ∈ S, ∀ y ∈ S, edist x y ≤ 4 * c →
+      dist (F i x) (F i y) ≤ ε / (2 * Dc) :=
+    fun i x hx y hy hxy => hFa i (Finset.mem_univ i) x hx y hy (le_trans hxy h4c)
+  have hten := ((SkorokhodSpace.isCompact_closure_iff A).1 hA m).2
+  have hev1 : ∀ᶠ d in 𝓝[>] (0 : ℝ),
+      (⨆ f ∈ A, SkorokhodSpace.modulusBased (0 : ℝ) (m : ℝ) f d) < c :=
+    hten.eventually_lt_const hc0
+  have hev2 : ∀ᶠ d in 𝓝[>] (0 : ℝ), d ≤ 1 :=
+    nhdsWithin_le_nhds (eventually_le_nhds (by norm_num : (0 : ℝ) < 1))
+  have hev3 : ∀ᶠ d in 𝓝[>] (0 : ℝ), d ∈ Set.Ioi (0 : ℝ) := eventually_mem_nhdsWithin
+  obtain ⟨δ, ⟨hδlt, hδ1⟩, hδ0'⟩ := ((hev1.and hev2).and hev3).exists
+  have hδ0 : (0 : ℝ) < δ := Set.mem_Ioi.1 hδ0'
+  set b : ℝ := ε / (4 * Dc * C) with hbdef
+  have hb0 : 0 < b := by rw [hbdef]; positivity
+  set β : ℝ≥0∞ := ENNReal.ofReal b with hβdef
+  have hβreal : β.toReal = b := ENNReal.toReal_ofReal hb0.le
+  set n₀ : ℕ := ⌈2 * ((m : ℝ) + 1) / δ⌉₊ with hn₀def
+  have hn₀pos : (0 : ℝ) < (n₀ : ℝ) + 1 := by positivity
+  set δ' : ℝ := min 1 (b * η / (2 * ((N : ℝ) + 1) * ((n₀ : ℝ) + 1))) with hδ'def
+  have hδ'0 : 0 < δ' := lt_min one_pos (by positivity)
+  have hδ'1 : δ' ≤ 1 := min_le_left _ _
+  have hkey : (N : ℝ) * (((n₀ : ℝ) + 1) * δ') < b * η := by
+    have hA1 : ((N : ℝ) + 1) ≠ 0 := by positivity
+    have hB1 : ((n₀ : ℝ) + 1) ≠ 0 := by positivity
+    have h5 : (N : ℝ) * (((n₀ : ℝ) + 1) * δ') ≤ b * η / 2 := by
+      calc (N : ℝ) * (((n₀ : ℝ) + 1) * δ')
+          ≤ (N : ℝ) * (((n₀ : ℝ) + 1)
+              * (b * η / (2 * ((N : ℝ) + 1) * ((n₀ : ℝ) + 1)))) :=
+            mul_le_mul_of_nonneg_left
+              (mul_le_mul_of_nonneg_left (min_le_right _ _) hn₀pos.le) (Nat.cast_nonneg N)
+        _ = ((N : ℝ) / ((N : ℝ) + 1)) * (b * η / 2) := by field_simp
+        _ ≤ 1 * (b * η / 2) := by
+            refine mul_le_mul_of_nonneg_right ?_ (by positivity)
+            rw [div_le_one (by positivity)]; linarith
+        _ = b * η / 2 := one_mul _
+    have hbη : 0 < b * η := mul_pos hb0 hη0
+    linarith
+  have hβN : (N : ℝ≥0∞) * (((n₀ : ℝ≥0∞) + 1) * ENNReal.ofReal δ')
+      < β * ENNReal.ofReal η := by
+    have hL : (N : ℝ≥0∞) * (((n₀ : ℝ≥0∞) + 1) * ENNReal.ofReal δ')
+        = ENNReal.ofReal ((N : ℝ) * (((n₀ : ℝ) + 1) * δ')) := by
+      rw [ENNReal.ofReal_mul (Nat.cast_nonneg N), ENNReal.ofReal_mul hn₀pos.le,
+        ENNReal.ofReal_add (Nat.cast_nonneg n₀) zero_le_one,
+        ENNReal.ofReal_natCast, ENNReal.ofReal_one, ENNReal.ofReal_natCast]
+    have hR : β * ENNReal.ofReal η = ENNReal.ofReal (b * η) := by
+      rw [hβdef, ← ENNReal.ofReal_mul hb0.le]
+    rw [hL, hR]
+    exact (ENNReal.ofReal_lt_ofReal_iff (by positivity)).2 hkey
+  have htsub : ∀ i, Set.Ico (t i) (t i + η) ⊆ Set.Ico (-(m : ℝ)) (m : ℝ) := by
+    intro i r hr
+    exact ⟨le_trans (ht i).1 hr.1, by linarith [hr.2, (ht i).2]⟩
+  obtain ⟨s, hs, hfreq⟩ :=
+    SkorokhodSpace.exists_times_frequently_forall_measure_setOf_exists_edist_lt hM1 hδ0 hδ1
+      hδlt μ hμ htsub hβN
+  have hKS : ∀ f ∈ A, ∀ i, ∀ r ∈ Set.Ico (s i) (s i + δ'), f.toFun r ∈ S := by
+    intro f hf i r hr
+    refine ⟨f, hf, r, ?_, rfl⟩
+    have hball : ((m + 1 : ℕ) : ℝ) = (m : ℝ) + 1 := by push_cast; ring
+    rw [exhaustion, hball, Metric.mem_closedBall, Real.dist_eq, max_eq_left (by linarith)]
+    rw [abs_le]
+    refine ⟨by linarith [hr.1, (hs i).1, (ht i).1], ?_⟩
+    have h1 : s i < t i + η := (hs i).2
+    have h2 : t i < (m : ℝ) - 1 := (ht i).2
+    linarith [hr.2]
+  refine ⟨s, hs, δ', hδ'0, hfreq.mono fun n hn s' hs' => ?_⟩
+  refine le_trans (SkorokhodSpace.dist_integral_evalPi_le_of_forall_dist_le (μ n) (hμ n) F hC
+    hCF hε₀.le hKS hFc hs') ?_
+  have hterm : ∀ i : κ, ε / (2 * Dc) + 2 * C * ((μ n) {f : D(ℝ, E) |
+      ∃ r ∈ Set.Ico (s i) (s i + δ'),
+        4 * c < edist (f.toFun r) (f.toFun (s i))}).toReal ≤ ε / Dc := by
+    intro i
+    have hle : ((μ n) {f : D(ℝ, E) | ∃ r ∈ Set.Ico (s i) (s i + δ'),
+        4 * c < edist (f.toFun r) (f.toFun (s i))}).toReal ≤ b := by
+      rw [← hβreal]
+      exact ENNReal.toReal_mono ENNReal.ofReal_ne_top (hn i).le
+    have hCb : 2 * C * b = ε / (2 * Dc) := by
+      rw [hbdef]; field_simp; ring
+    have h2 : ε / Dc = ε / (2 * Dc) + ε / (2 * Dc) := by field_simp; ring
+    nlinarith [mul_le_mul_of_nonneg_left hle (by positivity : (0:ℝ) ≤ 2 * C)]
+  calc C ^ N * ∑ i, (ε / (2 * Dc) + 2 * C * ((μ n) {f : D(ℝ, E) |
+          ∃ r ∈ Set.Ico (s i) (s i + δ'),
+            4 * c < edist (f.toFun r) (f.toFun (s i))}).toReal)
+      ≤ C ^ N * ∑ _i : κ, (ε / Dc) :=
+        mul_le_mul_of_nonneg_left (Finset.sum_le_sum fun i _ => hterm i) (pow_nonneg hC0.le _)
+    _ = C ^ N * ((N : ℝ) * (ε / Dc)) := by
+        rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul, hNdef]
+    _ ≤ ε := by
+        have hCN : (C : ℝ) ^ N ≠ 0 := by positivity
+        have hN1 : ((N : ℝ) + 1) ≠ 0 := by positivity
+        have hEq : C ^ N * ((N : ℝ) * (ε / Dc)) = ((N : ℝ) / ((N : ℝ) + 1)) * ε := by
+          rw [hDdef]; field_simp
+        rw [hEq]
+        have hfrac : (N : ℝ) / ((N : ℝ) + 1) ≤ 1 := by
+          rw [div_le_one (by positivity)]; linarith
+        nlinarith [hε.le]
+
 /-- **Conditioning a probability measure on a set of almost full mass moves a
 bounded integral by at most twice the missing mass times the bound.**
 
@@ -12602,6 +12918,108 @@ theorem SkorokhodSpace.exists_times_forall_dist_integral_evalPi_le_of_measure_co
   have h2 := hcmp s
   have h3 := hb s' hs'
   rw [abs_sub_comm (∫ f, ∏ i, F i (f.toFun (s i)) ∂ν)]
+  linarith
+
+/-- **The uniform displacement estimate under a bound on the missing mass**, and
+this is the form in which a **tight** family is reached.
+
+`SkorokhodSpace.exists_times_frequently_dist_integral_evalPi_le_of_isCompact_closure`
+hypothesises `μ n Aᶜ = 0` for every `n`.  What
+`SkorokhodSpace.exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure`
+delivers for a relatively compact family of laws is `μ Kᶜ ≤ ε₀` for a given
+positive `ε₀`, and for `ε₀ = 0` nothing; the members of a tight family have in
+general no relatively compact carrier of full measure, so without this step the
+uniform estimate applies to none of them.
+
+The passage is the one of
+`SkorokhodSpace.exists_times_forall_dist_integral_evalPi_le_of_measure_compl_le`,
+made once for each member of the sequence: the estimate is bought for the
+conditional laws `(μ n (closure A))⁻¹ • (μ n).restrict (closure A)`, which are
+carried by `closure A`, and carried back by
+`MeasureTheory.abs_integral_sub_integral_smul_restrict_le`.  The comparison is
+made **inside** the `∃ᶠ`, at the one `n` the frequently bound names, so the
+conditioning costs nothing in the quantifier: the times and the span are those of
+the conditional sequence and do not depend on `n`.
+
+`8 * (∏ i, ‖F i‖) * ε₀ ≤ ε` divides `ε` as in the single law version --- half to
+the estimate for the conditional laws, the other half to the two comparisons at
+`2 * (∏ i, ‖F i‖) * ε₀` each. -/
+theorem SkorokhodSpace.exists_times_frequently_dist_integral_evalPi_le_of_measure_compl_le
+    [CompleteSpace E] {κ : Type*} [Fintype κ] {A : Set D(ℝ, E)} (hA : IsCompact (closure A))
+    (μ : ℕ → Measure D(ℝ, E)) [∀ n, IsProbabilityMeasure (μ n)]
+    {ε₀ : ℝ} (hε₀0 : 0 ≤ ε₀) (hε₀1 : ε₀ < 1) (hμ : ∀ n, (μ n) Aᶜ ≤ ENNReal.ofReal ε₀)
+    (F : κ → (E →ᵇ ℝ)) (m : ℕ) (hm : 1 ≤ m) {t : κ → ℝ}
+    (ht : ∀ i, t i ∈ Set.Ico (-(m : ℝ)) ((m : ℝ) - 1))
+    {η : ℝ} (hη0 : 0 < η) (hη1 : η ≤ 1) {ε : ℝ} (hε : 0 < ε)
+    (hcomp : 8 * (∏ i, ‖F i‖) * ε₀ ≤ ε) :
+    ∃ s : κ → ℝ, (∀ i, s i ∈ Set.Ico (t i) (t i + η)) ∧ ∃ δ' > 0,
+      ∃ᶠ n in atTop, ∀ s' : κ → ℝ, (∀ i, s' i ∈ Set.Ico (s i) (s i + δ')) →
+        |(∫ f, ∏ i, F i (f.toFun (s' i)) ∂(μ n))
+          - ∫ f, ∏ i, F i (f.toFun (s i)) ∂(μ n)| ≤ ε := by
+  classical
+  have hBc : IsCompact (closure (closure A)) := by rw [closure_closure]; exact hA
+  have hBm : MeasurableSet (closure A) := isClosed_closure.measurableSet
+  have hμB : ∀ n, (μ n) (closure A)ᶜ ≤ ENNReal.ofReal ε₀ := fun n =>
+    le_trans (measure_mono (compl_subset_compl.2 subset_closure)) (hμ n)
+  have hqle : ∀ n, ((μ n) (closure A)ᶜ).toReal ≤ ε₀ := by
+    intro n
+    have h := ENNReal.toReal_mono ENNReal.ofReal_ne_top (hμB n)
+    rwa [ENNReal.toReal_ofReal hε₀0] at h
+  have hBtop : ∀ n, (μ n) (closure A) ≠ ⊤ := fun n => measure_ne_top _ _
+  have hptoReal : ∀ n, ((μ n) (closure A)).toReal + ((μ n) (closure A)ᶜ).toReal = 1 := by
+    intro n
+    rw [← ENNReal.toReal_add (hBtop n) (measure_ne_top _ _), measure_add_measure_compl hBm,
+      measure_univ, ENNReal.toReal_one]
+  have hp0 : ∀ n, 0 < ((μ n) (closure A)).toReal := by
+    intro n
+    linarith [hptoReal n, hqle n]
+  have hBne0 : ∀ n, (μ n) (closure A) ≠ 0 := by
+    intro n h
+    have hpos := hp0 n
+    rw [h, ENNReal.toReal_zero] at hpos
+    exact lt_irrefl 0 hpos
+  set ν : ℕ → Measure D(ℝ, E) :=
+    fun n => ((μ n) (closure A))⁻¹ • (μ n).restrict (closure A) with hνdef
+  have hνn : ∀ n, ν n = ((μ n) (closure A))⁻¹ • (μ n).restrict (closure A) := fun n => rfl
+  have hprob : ∀ n, IsProbabilityMeasure (ν n) := by
+    intro n
+    constructor
+    rw [hνn n, Measure.smul_apply, Measure.restrict_apply_univ, smul_eq_mul,
+      ENNReal.inv_mul_cancel (hBne0 n) (hBtop n)]
+  have hνB : ∀ n, (ν n) (closure A)ᶜ = 0 := by
+    intro n
+    rw [hνn n, Measure.smul_apply, Measure.restrict_apply' hBm, smul_eq_mul]
+    simp
+  obtain ⟨s, hs, δ', hδ'0, hb⟩ :=
+    SkorokhodSpace.exists_times_frequently_dist_integral_evalPi_le_of_isCompact_closure hBc ν
+      hνB F m hm ht hη0 hη1 (half_pos hε)
+  have hmeas : ∀ u : κ → ℝ, Measurable fun f : D(ℝ, E) => ∏ i, F i (f.toFun (u i)) :=
+    fun u => Finset.measurable_prod _ fun i _ =>
+      (F i).continuous.measurable.comp (SkorokhodSpace.measurable_eval (u i))
+  have hbdd : ∀ (u : κ → ℝ) (f : D(ℝ, E)), |∏ i, F i (f.toFun (u i))| ≤ ∏ i, ‖F i‖ := by
+    intro u f
+    rw [Finset.abs_prod]
+    refine Finset.prod_le_prod₀ (fun i _ => abs_nonneg _) fun i _ => ?_
+    simpa [Real.norm_eq_abs] using (F i).norm_coe_le_norm (f.toFun (u i))
+  have htri : ∀ a b c d : ℝ, |a - d| ≤ |a - b| + |b - c| + |c - d| := by
+    intro a b c d
+    calc |a - d| ≤ |a - b| + |b - d| := abs_sub_le _ _ _
+      _ ≤ |a - b| + (|b - c| + |c - d|) := by linarith [abs_sub_le b c d]
+      _ = |a - b| + |b - c| + |c - d| := by ring
+  refine ⟨s, hs, δ', hδ'0, hb.mono fun n hn s' hs' => ?_⟩
+  have hcmp : ∀ u : κ → ℝ,
+      |(∫ f, ∏ i, F i (f.toFun (u i)) ∂(μ n)) - ∫ f, ∏ i, F i (f.toFun (u i)) ∂(ν n)|
+        ≤ 2 * (∏ i, ‖F i‖) * ε₀ := by
+    intro u
+    have h := MeasureTheory.abs_integral_sub_integral_smul_restrict_le (μ n) hBm (hqle n) hε₀1
+      (hmeas u) (hbdd u)
+    rwa [← hνn n] at h
+  refine le_trans (htri _ (∫ f, ∏ i, F i (f.toFun (s' i)) ∂(ν n))
+    (∫ f, ∏ i, F i (f.toFun (s i)) ∂(ν n)) _) ?_
+  have h1 := hcmp s'
+  have h2 := hcmp s
+  have h3 := hn s' hs'
+  rw [abs_sub_comm (∫ f, ∏ i, F i (f.toFun (s i)) ∂(ν n))]
   linarith
 
 /-! ### Two laws that agree along a dense set of times
@@ -12976,3 +13394,315 @@ theorem SkorokhodSpace.eq_of_forall_exists_mem_Ico_dist_integral_evalPi_le [Comp
       Finset.prod_coe_sort s (fun t => F t (f.toFun t)))
   rw [← hcongr μ, ← hcongr ν]
   exact hkey
+
+/-! ### Milestone 8: the convergence of the finite dimensional distributions suffices
+
+The three statements below are Ethier--Kurtz, Theorem 3.7.8(b) and its two
+halves.  The first is the estimate that all of Milestones 7 and 8 was built for,
+the second identifies a subsequential limit, and the third is the theorem.
+
+**What the proof compares, and why it is not three terms but five.**  Two families
+of times are available and neither serves both laws.  The hypothesis gives the
+finite dimensional distributions of `ν` only along `T`; weak convergence
+`μ nₖ → ρ` gives those of `ρ` only at times `ρ` does not charge with a jump
+(`SkorokhodSpace.tendsto_integral_evalPi_of_tendsto`); and
+`SkorokhodSpace.exists_countable_dense_forall_setOf_leftLim_ne_one` exhibits a
+law and a countable dense `T` sharing **no** such time.  Both families have
+therefore to be reached by displacement and from a common place, which is what
+the chain below does.
+
+**The limit `ν` is asked for nothing beyond the hypothesis.**  It occurs in the
+first term alone and needs neither a carrier of small complement nor a continuity
+time; the displacement is spent on `ρ`, which lies in `closure S` and is
+therefore covered by the compact set of paths.  That is what makes the theorem
+provable at all: of `ν` nothing is known but the hypothesis. -/
+
+/-- **The estimate of EK 3.7.8(b).**  For a relatively compact family `S` of laws,
+a sequence in it converging weakly to `ρ`, a law `ν` whose finite dimensional
+distributions along a dense `T` are the limits of those of the sequence, and a
+finite family `F` of bounded continuous functions with prescribed times `t`: to
+every `ε > 0` and every reach `η > 0` there are times `u i ∈ [t i, t i + η)` at
+which the finite dimensional integrals of `ν` and of `ρ` differ by at most `ε`.
+
+That is exactly the hypothesis of
+`SkorokhodSpace.eq_of_forall_exists_mem_Ico_dist_integral_evalPi_le`, and the
+theorem below is the two put together.
+
+**The chain, and the order in which the four times are produced**, which the proof
+forces and which is worth recording:
+
+1. the level `ε₀` of the missing mass, from `ε` and `∏ i, ‖F i‖`, and the compact
+   set `K` of paths carrying every member of `closure S` up to `ε₀`
+   (`SkorokhodSpace.exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure`,
+   applied to `closure S` and not to `S`, so that `ρ` is covered as well);
+2. the displacement for `ρ` alone at the prescribed times `t` with reach `η₀/2`:
+   times `sρ` and a span `δρ`;
+3. the displacement uniform in the sequence at the prescribed times `sρ` with
+   reach at most `δρ`: times `s`, a span `δ`, and a set of `n` that is frequent;
+4. a time family `u ∈ T` in `(s i, s i + w)` with `w` small enough for the three
+   windows at once, by density of `T`; and a family `u'` in the same window at
+   which `ρ` has no fixed discontinuity, by
+   `SkorokhodSpace.exists_countable_dense_continuity`.
+
+The estimate at the times `u` is then
+`|∫ ∏ F i (f (u i)) dν − ∫ … dρ|`
+`≤ |∫ … dν − ∫ … dμ n| + |∫ … dμ n − ∫ ∏ F i (f (u' i)) dμ n|`
+`+ |∫ ∏ F i (f (u' i)) dμ n − ∫ ∏ F i (f (u' i)) dρ| + |∫ ∏ F i (f (u' i)) dρ − ∫ … dρ|`,
+the four terms bounded by `ε/4` each: the first and the third by the two
+convergences, taken at an `n` large enough, the second and the fourth by the two
+displacements read twice, at `u` and at `u'`, with pivots `s` and `sρ`.  The `n`
+is produced by `Filter.Frequently.and_eventually`: the second term holds
+frequently, the first and third eventually.
+
+The span `w` is one for all coordinates, `κ` being finite; it is the smallest of
+`δ`, of what is left of `δρ` after `s i` has moved away from `sρ i`, and of what
+is left of `η` after `s i` has moved away from `t i`. -/
+theorem SkorokhodSpace.exists_times_mem_Ico_dist_integral_evalPi_le_of_tendsto
+    [CompleteSpace E] {κ : Type} [hκf : Fintype κ]
+    {S : Set (ProbabilityMeasure D(ℝ, E))} (hS : IsCompact (closure S))
+    {μ : ℕ → ProbabilityMeasure D(ℝ, E)} (hμS : ∀ n, μ n ∈ S)
+    {ρ : ProbabilityMeasure D(ℝ, E)} (hρ : Tendsto μ atTop (𝓝 ρ))
+    {ν : ProbabilityMeasure D(ℝ, E)} {T : Set ℝ} (hT : Dense T)
+    (hfdd : ∀ (α : Type) (_ : Fintype α) (F : α → (E →ᵇ ℝ)) (t : α → ℝ), (∀ i, t i ∈ T) →
+      Tendsto (fun n => ∫ f, ∏ i, F i (f.toFun (t i)) ∂(μ n : Measure D(ℝ, E))) atTop
+        (𝓝 (∫ f, ∏ i, F i (f.toFun (t i)) ∂(ν : Measure D(ℝ, E)))))
+    (F : κ → (E →ᵇ ℝ)) (t : κ → ℝ) {ε : ℝ} (hε : 0 < ε) {η : ℝ} (hη : 0 < η) :
+    ∃ u : κ → ℝ, (∀ i, u i ∈ Set.Ico (t i) (t i + η)) ∧
+      |(∫ f, ∏ i, F i (f.toFun (u i)) ∂(ν : Measure D(ℝ, E)))
+        - ∫ f, ∏ i, F i (f.toFun (u i)) ∂(ρ : Measure D(ℝ, E))| ≤ ε := by
+  classical
+  have hρmem : ρ ∈ closure S :=
+    mem_closure_of_tendsto hρ (Eventually.of_forall fun n => hμS n)
+  have hScl : IsCompact (closure (closure S)) := by rw [closure_closure]; exact hS
+  obtain ⟨Cρ, -, hCρd, hCρ⟩ :=
+    SkorokhodSpace.exists_countable_dense_continuity (ρ : Measure D(ℝ, E))
+  set P : ℝ := ∏ i, ‖F i‖ with hPdef
+  have hP0 : 0 ≤ P := Finset.prod_nonneg fun i _ => norm_nonneg _
+  set η₀ : ℝ := min η 1 with hη₀def
+  have hη₀0 : 0 < η₀ := lt_min hη one_pos
+  have hη₀1 : η₀ ≤ 1 := min_le_right _ _
+  have hη₀η : η₀ ≤ η := min_le_left _ _
+  -- a window containing all the prescribed times
+  obtain ⟨m, hm1, hm⟩ : ∃ m : ℕ, 1 ≤ m ∧ ∀ i, t i ∈ Set.Ico (-(m : ℝ)) ((m : ℝ) - 1) := by
+    refine ⟨(Finset.univ.sup fun i => ⌈|t i|⌉₊) + 2, by omega, fun i => ?_⟩
+    have h1 : |t i| ≤ ((Finset.univ.sup fun j => ⌈|t j|⌉₊ : ℕ) : ℝ) := by
+      refine le_trans (Nat.le_ceil _) ?_
+      exact_mod_cast Finset.le_sup (f := fun j => ⌈|t j|⌉₊) (Finset.mem_univ i)
+    have h2 : -|t i| ≤ t i := neg_abs_le _
+    have h3 : t i ≤ |t i| := le_abs_self _
+    constructor
+    · push_cast; linarith
+    · push_cast; linarith
+  -- the level of the missing mass
+  set ε₀ : ℝ := min (1 / 2) (ε / (8 * (8 * P + 1))) with hε₀def
+  have hε₀0 : 0 < ε₀ := lt_min (by norm_num) (by positivity)
+  have hε₀1 : ε₀ < 1 := lt_of_le_of_lt (min_le_left _ _) (by norm_num)
+  have hε₀comp : 8 * P * ε₀ ≤ ε / 8 := by
+    have h1 : ε₀ ≤ ε / (8 * (8 * P + 1)) := min_le_right _ _
+    have hd : (0 : ℝ) < 8 * (8 * P + 1) := by positivity
+    have h4 : ε₀ * (8 * (8 * P + 1)) ≤ ε := by
+      rw [← le_div_iff₀ hd]; exact h1
+    nlinarith [hε₀0.le, hP0]
+  -- the compact set of paths carrying the whole family up to `ε₀`
+  obtain ⟨K, hKc, -, hKmass⟩ :=
+    SkorokhodSpace.exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure hScl
+      (ε := ENNReal.ofReal ε₀) (by simpa using hε₀0)
+  have hKcl : IsCompact (closure K) := by rw [hKc.isClosed.closure_eq]; exact hKc
+  have hKρ : (ρ : Measure D(ℝ, E)) Kᶜ ≤ ENNReal.ofReal ε₀ := hKmass ρ hρmem
+  have hKμ : ∀ n, (μ n : Measure D(ℝ, E)) Kᶜ ≤ ENNReal.ofReal ε₀ :=
+    fun n => hKmass (μ n) (subset_closure (hμS n))
+  -- the displacement for the subsequential limit
+  obtain ⟨sρ, hsρ, δρ, hδρ0, hbρ⟩ :=
+    SkorokhodSpace.exists_times_forall_dist_integral_evalPi_le_of_measure_compl_le hKcl
+      (ρ : Measure D(ℝ, E)) hε₀0.le hε₀1 hKρ F m hm1 hm (by positivity : (0 : ℝ) < η₀ / 2)
+      (by linarith : η₀ / 2 ≤ 1) (by positivity : (0 : ℝ) < ε / 8) hε₀comp
+  have hmsρ : ∀ i, sρ i ∈ Set.Ico (-((m + 1 : ℕ) : ℝ)) (((m + 1 : ℕ) : ℝ) - 1) := by
+    intro i
+    have h1 := (hsρ i).1
+    have h2 := (hsρ i).2
+    have h3 := (hm i).1
+    have h4 := (hm i).2
+    constructor
+    · push_cast; linarith
+    · push_cast; linarith
+  -- the displacement uniform in the sequence
+  set η₁ : ℝ := min (η₀ / 2) (min δρ 1) with hη₁def
+  have hη₁0 : 0 < η₁ := lt_min (by positivity) (lt_min hδρ0 one_pos)
+  have hη₁1 : η₁ ≤ 1 := le_trans (min_le_right _ _) (min_le_right _ _)
+  obtain ⟨s, hs, δ, hδ0, hbfreq⟩ :=
+    SkorokhodSpace.exists_times_frequently_dist_integral_evalPi_le_of_measure_compl_le hKcl
+      (fun n => (μ n : Measure D(ℝ, E))) hε₀0.le hε₀1 hKμ F (m + 1) (by omega) hmsρ
+      hη₁0 hη₁1 (by positivity : (0 : ℝ) < ε / 8) hε₀comp
+  -- one span serving all coordinates and all three windows
+  have hpos : ∀ i : κ, 0 < min δ (min (δρ - (s i - sρ i)) (t i + η - s i)) := by
+    intro i
+    refine lt_min hδ0 (lt_min ?_ ?_)
+    · have h1 := (hs i).2
+      have h2 : η₁ ≤ δρ := le_trans (min_le_right _ _) (min_le_left _ _)
+      linarith
+    · have h1 := (hs i).2
+      have h2 : η₁ ≤ η₀ / 2 := min_le_left _ _
+      have h3 := (hsρ i).2
+      linarith
+  obtain ⟨w, hw0, hw⟩ : ∃ w : ℝ, 0 < w ∧ ∀ i : κ,
+      w ≤ min δ (min (δρ - (s i - sρ i)) (t i + η - s i)) := by
+    set g : κ → ℝ := fun i => min δ (min (δρ - (s i - sρ i)) (t i + η - s i)) with hgdef
+    set A : Finset ℝ := insert δ (Finset.univ.image g) with hAdef
+    have hAne : A.Nonempty := ⟨δ, Finset.mem_insert_self _ _⟩
+    refine ⟨A.min' hAne, ?_, fun i => A.min'_le _ (Finset.mem_insert_of_mem
+      (Finset.mem_image_of_mem g (Finset.mem_univ i)))⟩
+    have hmem := A.min'_mem hAne
+    rcases Finset.mem_insert.1 hmem with h | h
+    · rw [h]; exact hδ0
+    · obtain ⟨i, -, hi⟩ := Finset.mem_image.1 h
+      rw [← hi]; exact hpos i
+  have hlt : ∀ i : κ, s i < s i + w := fun i => by linarith
+  choose u huT huI using fun i : κ => hT.exists_between (hlt i)
+  choose u' hu'C hu'I using fun i : κ => hCρd.exists_between (hlt i)
+  -- the three memberships of a time of the common window
+  have hwin : ∀ v : κ → ℝ, (∀ i, v i ∈ Set.Ioo (s i) (s i + w)) →
+      (∀ i, v i ∈ Set.Ico (s i) (s i + δ)) ∧ (∀ i, v i ∈ Set.Ico (sρ i) (sρ i + δρ)) ∧
+        (∀ i, v i ∈ Set.Ico (t i) (t i + η)) := by
+    intro v hv
+    refine ⟨fun i => ⟨(hv i).1.le, ?_⟩, fun i => ⟨?_, ?_⟩, fun i => ⟨?_, ?_⟩⟩
+    · have h1 := (hv i).2
+      have h2 := le_trans (hw i) (min_le_left _ _)
+      linarith
+    · exact le_trans (hs i).1 (hv i).1.le
+    · have h1 := (hv i).2
+      have h2 := le_trans (hw i) (le_trans (min_le_right _ _) (min_le_left _ _))
+      linarith
+    · exact le_trans (hsρ i).1 (le_trans (hs i).1 (hv i).1.le)
+    · have h1 := (hv i).2
+      have h2 := le_trans (hw i) (le_trans (min_le_right _ _) (min_le_right _ _))
+      linarith
+  obtain ⟨huδ, huρ, huη⟩ := hwin u huI
+  obtain ⟨hu'δ, hu'ρ, -⟩ := hwin u' hu'I
+  -- the two convergences
+  have hT1 : Tendsto (fun n => ∫ f, ∏ i, F i (f.toFun (u i)) ∂(μ n : Measure D(ℝ, E))) atTop
+      (𝓝 (∫ f, ∏ i, F i (f.toFun (u i)) ∂(ν : Measure D(ℝ, E)))) :=
+    hfdd κ hκf F u huT
+  have hT4 : Tendsto (fun n => ∫ f, ∏ i, F i (f.toFun (u' i)) ∂(μ n : Measure D(ℝ, E))) atTop
+      (𝓝 (∫ f, ∏ i, F i (f.toFun (u' i)) ∂(ρ : Measure D(ℝ, E)))) :=
+    SkorokhodSpace.tendsto_integral_evalPi_of_tendsto hρ F u' fun i => hCρ _ (hu'C i)
+  have hev : ∀ᶠ n in atTop,
+      |(∫ f, ∏ i, F i (f.toFun (u i)) ∂(ν : Measure D(ℝ, E)))
+          - ∫ f, ∏ i, F i (f.toFun (u i)) ∂(μ n : Measure D(ℝ, E))| ≤ ε / 4
+        ∧ |(∫ f, ∏ i, F i (f.toFun (u' i)) ∂(μ n : Measure D(ℝ, E)))
+          - ∫ f, ∏ i, F i (f.toFun (u' i)) ∂(ρ : Measure D(ℝ, E))| ≤ ε / 4 := by
+    have h1 := hT1.eventually (Metric.closedBall_mem_nhds
+      (∫ f, ∏ i, F i (f.toFun (u i)) ∂(ν : Measure D(ℝ, E))) (by positivity : (0 : ℝ) < ε / 4))
+    have h2 := hT4.eventually (Metric.closedBall_mem_nhds
+      (∫ f, ∏ i, F i (f.toFun (u' i)) ∂(ρ : Measure D(ℝ, E))) (by positivity : (0 : ℝ) < ε / 4))
+    filter_upwards [h1, h2] with n hn1 hn2
+    refine ⟨?_, ?_⟩
+    · rw [abs_sub_comm]
+      simpa [Real.dist_eq] using hn1
+    · simpa [Real.dist_eq] using hn2
+  obtain ⟨n, hnfreq, hnev⟩ := (hbfreq.and_eventually hev).exists
+  refine ⟨u, huη, ?_⟩
+  have habs : ∀ x y z : ℝ, |x - z| ≤ |x - y| + |z - y| := by
+    intro x y z
+    calc |x - z| ≤ |x - y| + |y - z| := abs_sub_le _ _ _
+      _ = |x - y| + |z - y| := by rw [abs_sub_comm y z]
+  have htri4 : ∀ a b c d e : ℝ, |a - e| ≤ |a - b| + |b - c| + |c - d| + |d - e| := by
+    intro a b c d e
+    calc |a - e| ≤ |a - b| + |b - e| := abs_sub_le _ _ _
+      _ ≤ |a - b| + (|b - c| + |c - e|) := by linarith [abs_sub_le b c e]
+      _ ≤ |a - b| + (|b - c| + (|c - d| + |d - e|)) := by linarith [abs_sub_le c d e]
+      _ = |a - b| + |b - c| + |c - d| + |d - e| := by ring
+  have hbc : |(∫ f, ∏ i, F i (f.toFun (u i)) ∂(μ n : Measure D(ℝ, E)))
+      - ∫ f, ∏ i, F i (f.toFun (u' i)) ∂(μ n : Measure D(ℝ, E))| ≤ ε / 4 := by
+    have h1 := hnfreq u huδ
+    have h2 := hnfreq u' hu'δ
+    have h3 := habs (∫ f, ∏ i, F i (f.toFun (u i)) ∂(μ n : Measure D(ℝ, E)))
+      (∫ f, ∏ i, F i (f.toFun (s i)) ∂(μ n : Measure D(ℝ, E)))
+      (∫ f, ∏ i, F i (f.toFun (u' i)) ∂(μ n : Measure D(ℝ, E)))
+    linarith
+  have hde : |(∫ f, ∏ i, F i (f.toFun (u' i)) ∂(ρ : Measure D(ℝ, E)))
+      - ∫ f, ∏ i, F i (f.toFun (u i)) ∂(ρ : Measure D(ℝ, E))| ≤ ε / 4 := by
+    have h1 := hbρ u' hu'ρ
+    have h2 := hbρ u huρ
+    have h3 := habs (∫ f, ∏ i, F i (f.toFun (u' i)) ∂(ρ : Measure D(ℝ, E)))
+      (∫ f, ∏ i, F i (f.toFun (sρ i)) ∂(ρ : Measure D(ℝ, E)))
+      (∫ f, ∏ i, F i (f.toFun (u i)) ∂(ρ : Measure D(ℝ, E)))
+    linarith
+  have h5 := htri4 (∫ f, ∏ i, F i (f.toFun (u i)) ∂(ν : Measure D(ℝ, E)))
+    (∫ f, ∏ i, F i (f.toFun (u i)) ∂(μ n : Measure D(ℝ, E)))
+    (∫ f, ∏ i, F i (f.toFun (u' i)) ∂(μ n : Measure D(ℝ, E)))
+    (∫ f, ∏ i, F i (f.toFun (u' i)) ∂(ρ : Measure D(ℝ, E)))
+    (∫ f, ∏ i, F i (f.toFun (u i)) ∂(ρ : Measure D(ℝ, E)))
+  linarith [hnev.1, hnev.2]
+
+/-- **A subsequential limit is the limit.**  Under the hypotheses of EK 3.7.8(b),
+a weak limit `ρ` of the sequence itself is the law `ν` whose finite dimensional
+distributions along `T` the sequence approaches.
+
+It is the estimate above at every finite family of times and test functions,
+closed by `SkorokhodSpace.eq_of_forall_exists_mem_Ico_dist_integral_evalPi_le`,
+and then `ProbabilityMeasure.toMeasure_injective`
+(`Mathlib/MeasureTheory/Measure/ProbabilityMeasure.lean:146`) to state it where
+the theorem below wants it.
+
+The `Fintype` instance is passed by name rather than found by instance search: the
+reduction quantifies over `(_ : Fintype κ)` **explicitly**, so what it hands over
+is a hypothesis and not an instance, and a `haveI` would introduce a *second* one,
+under which the two products `∏ i, …` are no longer the same term. -/
+theorem SkorokhodSpace.eq_of_tendsto_of_forall_tendsto_integral_evalPi
+    [CompleteSpace E] {S : Set (ProbabilityMeasure D(ℝ, E))} (hS : IsCompact (closure S))
+    {μ : ℕ → ProbabilityMeasure D(ℝ, E)} (hμS : ∀ n, μ n ∈ S)
+    {ρ : ProbabilityMeasure D(ℝ, E)} (hρ : Tendsto μ atTop (𝓝 ρ))
+    {ν : ProbabilityMeasure D(ℝ, E)} {T : Set ℝ} (hT : Dense T)
+    (hfdd : ∀ (α : Type) (_ : Fintype α) (F : α → (E →ᵇ ℝ)) (t : α → ℝ), (∀ i, t i ∈ T) →
+      Tendsto (fun n => ∫ f, ∏ i, F i (f.toFun (t i)) ∂(μ n : Measure D(ℝ, E))) atTop
+        (𝓝 (∫ f, ∏ i, F i (f.toFun (t i)) ∂(ν : Measure D(ℝ, E))))) :
+    ν = ρ := by
+  refine ProbabilityMeasure.toMeasure_injective ?_
+  refine SkorokhodSpace.eq_of_forall_exists_mem_Ico_dist_integral_evalPi_le _ _ ?_
+  intro κ hκ F t ε hε η hη
+  exact SkorokhodSpace.exists_times_mem_Ico_dist_integral_evalPi_le_of_tendsto
+    (hκf := hκ) hS hμS hρ hT hfdd F t hε hη
+
+/-- **Ethier--Kurtz, Theorem 3.7.8(b).**  Let `S : Set (ProbabilityMeasure D(ℝ, E))`
+have compact closure, let every `μ n` lie in `S`, let `T ⊆ ℝ` be dense, and let the
+finite dimensional distributions along finite families of times of `T` converge to
+those of `ν`.  Then `μ n → ν` weakly.
+
+**The hypothesis is relative compactness and not tightness**, and that is not a
+weakening for its own sake: what the proof uses is a convergent subsequence and
+nothing else.  Tightness enters only through
+`SkorokhodSpace.exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure`,
+which derives it from the compactness of the closure by Prokhorov's converse half.
+
+A convergent subsequence is had because `ProbabilityMeasure D(ℝ, E)` is
+metrizable, `MeasureTheory.instMetrizableSpaceProbabilityMeasure` read on
+`SkorokhodSpace.instSeparableSpace` of Milestone 5; that is where separability is
+spent a second time.  `Filter.tendsto_of_subseq_tendsto` then reduces the
+convergence to the identification of every subsequential limit, which is the item
+above.
+
+**Both `T`'s density and the oscillation bound are spent, and neither replaces the
+other.**  Density makes the times of a finite family approachable from the right;
+the oscillation bound, through the two displacement estimates, makes the approach
+cost little and makes it uniform in the sequence.  That the first alone does not
+suffice is `SkorokhodSpace.exists_countable_dense_forall_setOf_leftLim_ne_one`:
+there is a law and a countable dense `T` no time of which is a continuity time of
+the law. -/
+theorem SkorokhodSpace.tendsto_of_isCompact_closure_of_tendsto_finiteDimensional
+    [CompleteSpace E] {S : Set (ProbabilityMeasure D(ℝ, E))} (hS : IsCompact (closure S))
+    {μ : ℕ → ProbabilityMeasure D(ℝ, E)} (hμS : ∀ n, μ n ∈ S)
+    {ν : ProbabilityMeasure D(ℝ, E)} {T : Set ℝ} (hT : Dense T)
+    (hfdd : ∀ (α : Type) (_ : Fintype α) (F : α → (E →ᵇ ℝ)) (t : α → ℝ), (∀ i, t i ∈ T) →
+      Tendsto (fun n => ∫ f, ∏ i, F i (f.toFun (t i)) ∂(μ n : Measure D(ℝ, E))) atTop
+        (𝓝 (∫ f, ∏ i, F i (f.toFun (t i)) ∂(ν : Measure D(ℝ, E))))) :
+    Tendsto μ atTop (𝓝 ν) := by
+  refine tendsto_of_subseq_tendsto fun ns hns => ?_
+  obtain ⟨ρ, -, φ, hφ, hconv⟩ :=
+    hS.tendsto_subseq (x := fun k => μ (ns k)) fun k => subset_closure (hμS (ns k))
+  have hconv' : Tendsto (fun k => μ (ns (φ k))) atTop (𝓝 ρ) := hconv
+  have hsub : Tendsto (fun k => ns (φ k)) atTop atTop := hns.comp hφ.tendsto_atTop
+  have hνρ : ν = ρ :=
+    SkorokhodSpace.eq_of_tendsto_of_forall_tendsto_integral_evalPi hS
+      (fun k => hμS (ns (φ k))) hconv' hT
+      (fun α hα F t htT => (hfdd α hα F t htT).comp hsub)
+  exact ⟨φ, hνρ ▸ hconv'⟩

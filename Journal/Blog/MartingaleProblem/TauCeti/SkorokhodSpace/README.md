@@ -2312,6 +2312,30 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   `v4.33.1`; on master it is a deprecated alias of `Measurable.of_eval`
   (deprecated 2026-08-20), which `v4.33.1` does not have, so the two versions
   have no common spelling here.
+* `SkorokhodSpace.tendsto_integral_evalPi_of_tendsto` — stage (A), **proved
+  2026-09-19**. The same read as a convergence of **integrals**, which is the
+  form in which the finite dimensional distributions are compared throughout this
+  milestone: if `μ n → ν` weakly and `ν` charges no jump at any of the finitely
+  many `t i`, then `∫ ∏ i, F i (f (t i)) dμ n → ∫ ∏ i, F i (f (t i)) dν` for
+  every finite family of bounded continuous `F i`.
+
+  **The integrand is not continuous on `D(ι, E)`**, evaluation at `t i` being
+  continuous only at the paths that do not jump there, so this is not weak
+  convergence tested against a bounded continuous function and
+  `ProbabilityMeasure.tendsto_iff_forall_integral_tendsto`
+  (`Mathlib/MeasureTheory/Measure/ProbabilityMeasure.lean:365`) does not apply to
+  it directly. The laws are therefore pushed forward to `κ → E`, where the
+  integrand **is** bounded continuous — the product of the `F i` composed with
+  the coordinate projections, by `BoundedContinuousFunction.compContinuous`
+  (`Mathlib/Topology/ContinuousMap/Bounded/Basic.lean:334`) and
+  `continuous_apply`, the factors multiplied in the `CommRing` of `E →ᵇ ℝ` —, the
+  item above carries the convergence to the image laws, and `integral_map` brings
+  the two integrals back.
+
+  The index is a `Fintype` and not merely `Countable`, the integrand being a
+  finite product; the item above is the countable statement and is not weakened
+  by this one. This is the fourth link of the chain of EK 3.7.8(b) below, the one
+  that compares the sequence with its own subsequential limit.
 * `SkorokhodSpace.tendstoInDistribution_evalPi` and
   `SkorokhodSpace.tendstoInDistribution_eval` — stage (A),
   **proved 2026-09-18**. The same for random variables, on Mathlib's
@@ -2323,7 +2347,7 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   `TendstoInDistribution.continuous_comp`. The two also instantiate the image
   measures that the theorem above leaves as data, so that form is not vacuous.
 * `SkorokhodSpace.tendsto_of_isCompact_closure_of_tendsto_finiteDimensional` —
-  stage (A). Let `S : Set (ProbabilityMeasure (D ι E))` have compact closure,
+  stage (A), **proved 2026-09-19**. Let `S : Set (ProbabilityMeasure (D ι E))` have compact closure,
   let every `μ n` lie in `S`, and let `T ⊆ ι` be dense and such that the finite
   dimensional distributions along every finite subset of `T` converge to those
   of `μ`. Then `μ n → μ` weakly. This is Ethier–Kurtz, Theorem 3.7.8(b), and
@@ -2364,27 +2388,81 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   is what makes the approach uniform in the sequence. Both are spent, and neither
   replaces the other.
 
-  **What is left of the theorem, named.** The identification of the subsequential
+  **How the theorem is proved, named.** The identification of the subsequential
   limit is `SkorokhodSpace.eq_of_forall_exists_mem_Ico_dist_integral_evalPi_le`
   below: it asks only that for every finite family of times and test functions,
   every `ε > 0` and every reach `η > 0` there be times within `η` to the right at
-  which `μ` and `ν` differ by at most `ε`. The remainder is therefore a single
-  estimate, and the pieces it is to be assembled from are
+  which `μ` and `ν` differ by at most `ε`. The remainder is a single estimate,
+  `SkorokhodSpace.exists_times_mem_Ico_dist_integral_evalPi_le_of_tendsto` below,
+  and the pieces it is assembled from are
   `exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure` for a compact
   set of paths carrying the whole family up to `ε₀`,
   `exists_times_forall_dist_integral_evalPi_le_of_measure_compl_le` for the
   displacement, the hypothesis along `T` for the passage to the limit in `n`, and
-  — the one piece that is **not** yet stated at the level of the finite
-  dimensional distributions — the same displacement estimate **uniformly in the
-  sequence**. At the level of the bad times that uniform statement is proved,
-  `SkorokhodSpace.exists_time_liminf_measure_setOf_exists_edist_lt`, and its
-  conclusion is a `liminf` and so a time good along a *subsequence*; that is
-  enough here, a subsequence of a subsequence being one. Lifting it from the bad
-  times to the integrals is
+  the same displacement estimate **uniformly in the sequence**. At the level of
+  the bad times the uniform statement is
+  `SkorokhodSpace.exists_time_liminf_measure_setOf_exists_edist_lt`, whose
+  conclusion is a `liminf` and so a time good along a *subsequence* — enough
+  here, a subsequence of a subsequence being one. Lifted from the bad times to
+  the integrals it is
   `SkorokhodSpace.exists_times_frequently_dist_integral_evalPi_le_of_isCompact_closure`
   below, which is
   `exists_times_forall_dist_integral_evalPi_le_of_isCompact_closure` with the
-  single law replaced by the sequence.
+  single law replaced by the sequence, the coordinates read at a **common shift**
+  so that one subsequence serves them all; in the form a tight family is reached
+  in, it is
+  `SkorokhodSpace.exists_times_frequently_dist_integral_evalPi_le_of_measure_compl_le`.
+
+  **The assembly is a chain of five terms and two pivots.** In this paragraph `μ`
+  is the law the sequence is to converge to and `ν` a subsequential limit; in the
+  statements below the two are called `ν` and `ρ`. The reason it is not three is that
+  the times of `T` are of no use to `ν` and the continuity times of `ν` are of no
+  use to the hypothesis: weak convergence `μ nₖ → ν` yields the finite
+  dimensional distributions of `ν` only at times it does not charge with a jump
+  (`SkorokhodSpace.tendsto_finiteDimensional_of_tendsto`), while the hypothesis
+  yields those of `μ` only at times of `T`, and
+  `SkorokhodSpace.exists_countable_dense_forall_setOf_leftLim_ne_one` exhibits a
+  law and a countable dense `T` sharing **no** such time. Both families of times
+  have therefore to be reached by displacement, and from a common place. The
+  order in which the constants are produced is forced:
+
+  1. `exists_times_forall_dist_integral_evalPi_le_of_measure_compl_le` on `ν`
+     alone, at the prescribed times `t` with reach `η/2`: times `s_ν` and a span
+     `δ_ν`;
+  2. `exists_times_frequently_dist_integral_evalPi_le_of_measure_compl_le` on the
+     sequence, at the prescribed times `s_ν` with reach at most `δ_ν`: times `s`
+     and a span `δ`, and a set of `n` that is frequent;
+  3. a time family `u ∈ T` inside `[s i, s i + min δ δ_ν')`, by density of `T`;
+  4. a time family `u'` in the same window at which `ν` has no fixed
+     discontinuity, by `SkorokhodSpace.exists_countable_dense_continuity`, whose
+     set of such times is countable and **dense**, so it meets any window.
+
+  The estimate at the times `u` — which are the times the identification is
+  applied at — is then
+
+      |∫ ∏ F i (f (u i)) dμ − ∫ ∏ F i (f (u i)) dν|
+        ≤ |∫ … dμ − ∫ … dμ n|            (→ 0, u ∈ T, the hypothesis)
+        + |∫ … dμ n − ∫ ∏ F i (f (s i)) dμ n|    (≤ ε/4, frequently in n)
+        + |∫ ∏ F i (f (s i)) dμ n − ∫ ∏ F i (f (u' i)) dμ n|  (≤ ε/4, same n)
+        + |∫ ∏ F i (f (u' i)) dμ n − ∫ ∏ F i (f (u' i)) dν|   (→ 0, u' a
+                                                   continuity time of ν)
+        + |∫ ∏ F i (f (u' i)) dν − ∫ ∏ F i (f (u i)) dν|      (≤ ε/2, both
+                                                   times in ν's own span,
+                                                   pivoted at `s_ν`),
+
+  the second and third terms pivoting at `s` and the last at `s_ν`. The first
+  term is the hypothesis along `T`; the second and third are
+  `exists_times_frequently_dist_integral_evalPi_le_of_measure_compl_le`; the
+  fourth is `SkorokhodSpace.tendsto_integral_evalPi_of_tendsto` above; the fifth
+  is `exists_times_forall_dist_integral_evalPi_le_of_measure_compl_le` on `ν`.
+  **`μ`, the limit whose existence is to be shown, is asked for nothing beyond
+  the hypothesis** — it appears in the first term only, and needs neither a
+  carrier of small complement nor a continuity time; the displacement is spent on
+  `ν`, which lies in `closure S` and is therefore covered by the compact set.
+  What the step costs beyond its ingredients is the bookkeeping of the four
+  windows and the production of one `n` at which the second, third and fourth
+  terms hold together — `Filter.Frequently.and_eventually`, the second holding
+  frequently and the first and third eventually.
 
   **The compact set is to be asked of `closure S` and not of `S`.** The
   conclusion of `exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure`
@@ -2651,6 +2729,49 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   use here. What the interchange of the two limits may spend is therefore a time
   good along a **subsequence** — which is what an argument comparing
   subsequential limits has at its disposal in any case.
+* `setLIntegral_Ico_const_add` — stage (A), **proved 2026-09-19**. A Lebesgue
+  integral over a window is unchanged when the window and the integrand are
+  translated together: `∫⁻ r in [b, c), g (a + r) = ∫⁻ u in [a + b, a + c), g u`.
+  It is `measurePreserving_add_left` on `volume`, the `to_additive` of
+  `measurePreserving_mul_left` (`Mathlib/MeasureTheory/Group/Measure.lean:86`),
+  read through `MeasureTheory.MeasurePreserving.setLIntegral_comp_preimage`
+  (`Mathlib/MeasureTheory/Integral/Lebesgue/Map.lean:125`), the interval being
+  carried along by `Set.preimage`. It names neither the path space nor a law and
+  is here only because the item below needs the windows of finitely many
+  coordinates to be read as one.
+* `SkorokhodSpace.exists_times_frequently_forall_measure_setOf_exists_edist_lt` —
+  stage (A), **proved 2026-09-19**. Good times for a finite family of prescribed
+  times **and** a whole sequence of laws at once: to `t : κ → ℝ` over a finite
+  `κ`, each carrying `[t i, t i + η)` inside `[-M, M)`, there is a family `s`
+  with `s i ∈ [t i, t i + η)` at which, **frequently in `n`**, every coordinate
+  of the `n`-th law charges a large right oscillation with probability less
+  than `β`.
+
+  **The times are chosen by a common shift, and that is what makes the statement
+  possible at all.** `exists_times_forall_measure_setOf_exists_edist_lt` chooses
+  the coordinates independently of one another, which for a *single* law costs
+  nothing; for a sequence it would produce one subsequence per coordinate, and
+  finitely many subsequences obtained that way have no reason to meet. What is
+  looked for instead is `s i = t i + r` with **one** `r ∈ [0, η)`: the bad sets
+  of the coordinates are then read at a single point, the sum over `κ` of their
+  measures is a function of `r` alone, and its integral over `[0, η)` is `#κ`
+  times the bound of `lintegral_measure_setOf_exists_edist_lt_le` — by
+  `setLIntegral_Ico_const_add`, each summand's integral being an integral over
+  that coordinate's own window. That is where the factor `Fintype.card κ` of the
+  hypothesis comes from, and it is paid, as everywhere in this section, by making
+  the span `δ'` smaller. Fatou then gives one `r` at which the `liminf` of the
+  sums is below `β`, and `frequently_lt_of_liminf_lt` reads it.
+
+  **The order of the two quantifiers is fixed by the proof and is not free.** The
+  span `δ'` is a parameter of the statement and is chosen before anything else,
+  the `liminf` sitting at the shift `r` alone; a span depending on `n` would not
+  survive the passage to the subsequence, the bad sets being defined in terms of
+  it.
+
+  The finiteness of `κ` is essential here, unlike in
+  `exists_times_forall_measure_setOf_exists_edist_lt`, where the index is
+  arbitrary: over an infinite index the sum of the bounds is infinite and no span
+  is small enough.
 * `SkorokhodSpace.integral_abs_sub_eval_le_of_forall_dist_le` and
   `SkorokhodSpace.dist_integral_eval_le_of_forall_dist_le` — stage (A),
   **proved 2026-09-18**. The passage from the bad times to the one dimensional
@@ -2827,14 +2948,25 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   comparable to `ε` it says nothing, and it should not, a law being free to put
   mass `ε₀` on paths of arbitrarily wild oscillation.
 * `SkorokhodSpace.exists_times_frequently_dist_integral_evalPi_le_of_isCompact_closure`
-  — stage (A). The displacement estimate **uniformly in a sequence of laws**: for
-  a set `K` of paths with compact closure over which the modulus of Milestone 7
-  is small, a sequence `μ n` of laws with `μ n Kᶜ = 0`, a finite family
-  `F : κ → (E →ᵇ ℝ)`, prescribed times `t : κ → ℝ` of the window `[-m, m − 1)`, a
-  reach `η ∈ (0, 1]` and an `ε > 0`, there are times `s i ∈ [t i, t i + η)` and a
-  span `δ' > 0` such that **for infinitely many `n`** and every family
-  `s' i ∈ [s i, s i + δ')`,
+  — stage (A), **proved 2026-09-19**. The displacement estimate **uniformly in a
+  sequence of laws**: for `A ⊆ D(ℝ, E)` with compact closure, a sequence `μ n` of
+  laws with `μ n Aᶜ = 0`, a finite family `F : κ → (E →ᵇ ℝ)`, prescribed times
+  `t : κ → ℝ` of the window `[-m, m − 1)`, a reach `η ∈ (0, 1]` and an `ε > 0`,
+  there are times `s i ∈ [t i, t i + η)` and a span `δ' > 0` such that **for
+  infinitely many `n`** and every family `s' i ∈ [s i, s i + δ')`,
   `|∫ ∏ F i (f (s' i)) dμ n − ∫ ∏ F i (f (s i)) dμ n| ≤ ε`.
+
+  Nothing is asked of the `F i` beyond boundedness and continuity, and nothing of
+  the modulus: it is discharged from the compactness of the closure of the values
+  over a bounded window, exactly as in the single law version.
+
+  **This is the piece EK 3.7.8(b) needs that the single law version does not
+  supply.** There the times of the hypothesis and the times of the conclusion are
+  different, and the displacement from one to the other has to be paid uniformly
+  in the sequence, the sequence being what the limit is taken along; a
+  displacement bought for each `μ n` separately, at times depending on `n`,
+  compares nothing. The times here do not depend on `n`, and what does is the set
+  of `n` at which the bound holds.
 
   **The conclusion is `∃ᶠ` and not `∀`, and that is not a weakening to be
   repaired.** A time good for every member of a sequence at once need not exist:
@@ -2850,9 +2982,31 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
 
   The constants are those of
   `exists_times_forall_dist_integral_evalPi_le_of_isCompact_closure` and are not
-  chosen afresh: they depend on `K`, `F`, `m`, `η` and `ε` and on no law, which is
-  what makes the uniform statement possible at all. The span is fixed before the
-  time, the `liminf` sitting at the time alone.
+  chosen afresh: they depend on `A`, `F`, `m`, `η` and `ε` and on no law, which is
+  what makes the uniform statement possible at all. **Only the span differs**, and
+  it carries the extra factor `#κ + 1` — the price of the common shift of
+  `exists_times_frequently_forall_measure_setOf_exists_edist_lt`. Since the span
+  is the last constant chosen and is free, the passage from one law to a sequence
+  costs nothing else. The span is fixed before the time, the `liminf` sitting at
+  the shift alone.
+* `SkorokhodSpace.exists_times_frequently_dist_integral_evalPi_le_of_measure_compl_le`
+  — stage (A), **proved 2026-09-19**. The same under a bound `μ n Aᶜ ≤ ε₀` on the
+  missing mass in place of a carrier of full measure, and **this is the form in
+  which a tight family is reached**: what
+  `exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure` delivers for a
+  relatively compact family is `μ Kᶜ ≤ ε₀` for a given positive `ε₀` and for
+  `ε₀ = 0` nothing, so without this step the uniform estimate applies to no member
+  of such a family.
+
+  The passage is that of
+  `exists_times_forall_dist_integral_evalPi_le_of_measure_compl_le`, made for each
+  member of the sequence: the estimate is bought for the conditional laws
+  `(μ n (closure A))⁻¹ • (μ n).restrict (closure A)` and carried back by
+  `MeasureTheory.abs_integral_sub_integral_smul_restrict_le`. The comparison is
+  made **inside** the `∃ᶠ`, at the one `n` the frequently bound names, so the
+  conditioning costs nothing in the quantifier: the times and the span are those
+  of the conditional sequence and are independent of `n`. The hypothesis
+  `8 (∏ i, ‖F i‖) ε₀ ≤ ε` divides `ε` as in the single law version.
 * `SkorokhodSpace.tendsto_integral_evalPi_of_forall_tendsto_nhdsGE` — stage (A),
   **proved 2026-09-19**. The finite dimensional distributions of a law on
   `D(ℝ, E)` are right continuous in the times: if `s k i → t i` within
@@ -2901,6 +3055,39 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   remainder is the bookkeeping of the moving times — the estimate no longer has
   to be arranged at a fixed family of times, and the statement it has to be
   arranged for is a single inequality.
+* `SkorokhodSpace.exists_times_mem_Ico_dist_integral_evalPi_le_of_tendsto` —
+  stage (A), **proved 2026-09-19**. The estimate of EK 3.7.8(b): for a relatively
+  compact `S`, a sequence in it converging weakly to `ρ`, a law `ν` whose finite
+  dimensional distributions along a dense `T` are the limits of those of the
+  sequence, a finite family `F` with prescribed times `t`, an `ε > 0` and a reach
+  `η > 0`, there are times `u i ∈ [t i, t i + η)` at which the finite dimensional
+  integrals of `ν` and of `ρ` differ by at most `ε`. It is the five term chain
+  described at the theorem above, and it is what that theorem's hypothesis asks
+  for, verbatim.
+
+  Two things that a reader will look for. The window `[-m, m − 1)` that the
+  displacement estimates ask of the prescribed times is **produced**, not
+  hypothesised: `κ` being finite, `m = (sup ⌈|t i|⌉) + 2` serves, and the empty
+  `κ` is not a special case. And the span `w` inside which the two time families
+  `u` and `u'` are chosen is **one for all coordinates** — the least of `δ`, of
+  what is left of `δ_ρ` after `s i` has moved away from `sρ i`, and of what is
+  left of `η` after `s i` has moved away from `t i`, obtained as the minimum of a
+  `Finset` of positive reals to which `δ` is added so that it is nonempty when
+  `κ` is not.
+* `SkorokhodSpace.eq_of_tendsto_of_forall_tendsto_integral_evalPi` — stage (A),
+  **proved 2026-09-19**. A weak limit `ρ` of the sequence itself is the law `ν`
+  whose finite dimensional distributions along `T` the sequence approaches. It is
+  the item above at every finite family, closed by the reduction, and then
+  `ProbabilityMeasure.toMeasure_injective`
+  (`Mathlib/MeasureTheory/Measure/ProbabilityMeasure.lean:146`) to state it in
+  `ProbabilityMeasure`, which is where the theorem wants it.
+
+  **The `Fintype` instance is passed by name and not found by instance search.**
+  The reduction quantifies over `(_ : Fintype κ)` *explicitly*, so what it hands
+  over is a hypothesis and not an instance; a `haveI` introduces a **second**
+  one, and under two instances the two products `∏ i, …` are no longer the same
+  term — not for `exact`, and not for `linarith`'s atoms either. Naming the
+  instance binder of the item above and passing it is the whole fix.
 * `SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional` — stage (A).
   The same conclusion for a tight family, from the previous item and
   `isCompact_closure_of_isTightMeasureSet`.
