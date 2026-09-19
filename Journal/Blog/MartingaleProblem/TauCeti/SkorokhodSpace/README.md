@@ -3344,13 +3344,47 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   hypothesis controls the image law of each `h_i` separately, that is the
   marginals, and a subdivision for the vector path is exactly what is missing.
 
-  What is left to look at, and it is the first question of a run at this item, is
-  Ethier–Kurtz' subdivision-free modulus `w''`, the three point quantity
-  `sup min (d (x t) (x t₁)) (d (x t₂) (x t))` over `t₁ ≤ t ≤ t₂` of span `δ`.
-  **It is not immediate either**, and the reason is worth recording so that no run
-  assumes it: under `d ≈ max over i`, `min (max a) (max b)` is not bounded by
-  `max over i of min (a i) (b i)` — take `a = (1,0)`, `b = (0,1)`, where the left
-  side is `1` and the right side is `0`.
+  **The second route is refuted as well, 2026-09-19, and by the same witness.**
+  What was left to look at was Ethier–Kurtz' subdivision-free modulus `w''`, the
+  three point quantity `sup min (d (x t) (x t₁)) (d (x t₂) (x t))` over
+  `t₁ ≤ t ≤ t₂` of span `δ`; it was the candidate because it is read at one time
+  triple and needs no common refinement. It does not carry, and what stood here as
+  a remark about vectors — under `d ≈ max over i`, `min (max a) (max b)` is not
+  bounded by `max over i of min (a i) (b i)`, take `a = (1,0)`, `b = (0,1)` — is
+  now a statement about paths.
+
+  The witness is one path with **two jumps in different coordinates**,
+  `SkorokhodSpace.twoJump γ` in `D(ℝ, ℝ × ℝ)`: the first coordinate steps from `0`
+  to `1` at time `1`, the second at `1 + γ`. Two theorems read it, one per route:
+
+  * `SkorokhodSpace.exists_isCompact_modulusBased_postcomp_eq_zero` — for every
+    `0 < δ < 1` there are a path of `D(ℝ, ℝ × ℝ)` and a compact `K` containing
+    every one of its values such that two **bounded continuous** functions
+    (`SkorokhodSpace.clipFst`, `SkorokhodSpace.clipSnd`) recover the metric of
+    `ℝ × ℝ` on `K` *with equality*, both image paths have `modulusBased` equal to
+    `0` at scale `δ`, and the path itself has `modulusBased` at least `1`. The
+    finite family is granted the best form of its own hypothesis and the inference
+    still fails.
+  * `SkorokhodSpace.exists_min_edist_postcomp_eq_zero` — at the triple
+    `1 - γ < 1 < 1 + γ`, of span `2 γ`, the three point quantity of the path is at
+    least `1` and that of **both** images is exactly `0`.
+
+  The mechanism is one sentence: each image sees one of the two jumps and is blind
+  to the other, so each image is a single step and each has modulus `0`, while the
+  pair has two jumps at distance `γ` that no `δ`-sparse subdivision separates.
+  That last is `SkorokhodSpace.one_le_modulus_twoJump`, and it needs no upper bound
+  on `δ` — beyond the diameter of the window there is no subdivision at all and the
+  modulus is `⊤`, which is the `ℝ≥0∞` valuation of `SkorokhodSpace.modulus` paying
+  for itself a third time.
+
+  **What is *not* refuted is the criterion**, and the difference is the whole
+  content. It quantifies over a **dense** class `H`, and `H` contains functions
+  that see both jumps at once: `p ↦ p.1 + 2 * p.2` separates `(0,0)`, `(1,0)`,
+  `(1,1)`, so its image path has two jumps at distance `γ` and a modulus of its
+  own. What both theorems rule out is the passage through **finitely many** `h i`
+  read off a net of the compact set, which is the only passage the roadmap had
+  described. A proof must therefore choose its test function **after** the path —
+  and that, rather than a third modulus, is where a run at this item starts.
 
 **Acceptance examples.**
 

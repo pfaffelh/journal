@@ -26,7 +26,7 @@ empty proposition.
 
 **Status: type-checked** with `lake env lean` against Mathlib `upstream/master`
 `94ef6b89544e58e90f119da869f3fb48d1da0f4c` (Lean `4.35.0-rc2`), last on
-2026-09-18, with `autoImplicit=false` and `relaxedAutoImplicit=false` as Mathlib
+2026-09-19, with `autoImplicit=false` and `relaxedAutoImplicit=false` as Mathlib
 itself builds, and **free of `sorry` since the thirteenth run of 2026-09-09**.  Every
 declaration elaborates and every one of them is proved; `#print axioms` on
 `SkorokhodSpace.isCompact_closure_iff`, the last statement to be discharged,
@@ -14646,6 +14646,392 @@ theorem SkorokhodSpace.isTightMeasureSet_map_postcomp {E' : Type*} [MetricSpace 
       exact ⟨μ i, ⟨i, rfl⟩, rfl⟩
   rw [← him]
   exact htight.map (SkorokhodSpace.continuous_postcomp h)
+
+/-! ### What a finite family of test functions cannot see
+
+The converse half of `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` would
+like to read the modulus of a path off the moduli of finitely many real valued
+images `h 1 ∘ f, …, h N ∘ f`, the `h i` chosen out of the dense class so that they
+recover the metric of `E` on a compact set carrying the path.  The section
+above refutes the route through a **common refinement** of the `N` subdivisions;
+this one refutes the reduction itself, and it refutes it for **both** moduli at
+once --- the subdivision modulus `SkorokhodSpace.modulusBased` and
+Ethier--Kurtz' subdivision free three point quantity `w''`, which was the only
+route left after that refutation.
+
+The witness is one path with **two jumps in different coordinates**:
+`SkorokhodSpace.twoJump γ` in `D(ℝ, ℝ × ℝ)` steps from `0` to `1` in the first
+coordinate at time `1` and in the second at time `1 + γ`.  Each coordinate alone
+is a single step and has based modulus `0` at every scale below `1`; the pair has
+two jumps at distance `γ`, and no `δ`-sparse subdivision separates them once
+`γ < δ`, so its modulus is at least `1`.  All values lie in the unit square, which
+is compact, and there the two clipped coordinates `SkorokhodSpace.clipFst` and
+`SkorokhodSpace.clipSnd` --- **bounded** continuous, which is what the criterion's
+test class `E →ᵇ ℝ` asks and the coordinate projections do not satisfy --- recover
+the metric of `ℝ × ℝ` **exactly**, by
+`SkorokhodSpace.dist_eq_max_dist_clip`.  So no hypothesis of the route is
+weakened; what fails is the inference.
+
+This is the remark that under `d ≈ max over i` the quantity `min (max a) (max b)`
+is not bounded by `max over i of min (a i) (b i)` --- with `a = (1, 0)` and
+`b = (0, 1)`, the left side `1` and the right side `0` --- realized as **paths**
+rather than as vectors, and that is the point of stating it here: as a remark
+about vectors it says nothing about the path space, while
+`SkorokhodSpace.exists_min_edist_postcomp_eq_zero` exhibits the three times
+`1 - γ < 1 < 1 + γ`, of span `2 γ`, at which the three point quantity of the path
+is `1` and that of both images is `0`.
+
+**The criterion itself is not refuted**, and the difference is the whole content.
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` quantifies over a **dense**
+class `H`, and `H` contains functions that see both jumps at once: `p ↦ p.1 + 2 * p.2`
+separates the three values `(0, 0)`, `(1, 0)`, `(1, 1)`, so its image path has two
+jumps at distance `γ` and a modulus of its own.  What the two theorems below rule
+out is the passage through **finitely many** `h i` read off a net of the compact
+set: such a family recovers the metric and still does not recover the modulus,
+because the two comparisons attain their maximum at **different** `i`.  A proof of
+the criterion therefore has to choose its test function **after** the path, and
+that is the shape a run at that item starts from. -/
+
+/-- **The path with two jumps in different coordinates.**  In `D(ℝ, ℝ × ℝ)`: the
+first coordinate steps from `0` to `1` at time `1`, the second at time `1 + γ`.
+Each coordinate is a `SkorokhodSpace.stepAt`, and the pair is càdlàg by Mathlib's
+`IsCadlag.continuous_comp₂` (`Mathlib/Topology/Order/Cadlag.lean:128`), the
+pairing being continuous. -/
+noncomputable def SkorokhodSpace.twoJump (γ : ℝ) : D(ℝ, ℝ × ℝ) where
+  toFun := fun t => ((SkorokhodSpace.stepAt (1 : ℝ) (1 : ℝ) 0).toFun t,
+    (SkorokhodSpace.stepAt (1 + γ) (1 : ℝ) 0).toFun t)
+  isCadlag := IsCadlag.continuous_comp₂ (φ := fun a b => ((a, b) : ℝ × ℝ))
+    (SkorokhodSpace.stepAt (1 : ℝ) (1 : ℝ) 0).isCadlag
+    (SkorokhodSpace.stepAt (1 + γ) (1 : ℝ) 0).isCadlag (by fun_prop)
+
+@[simp]
+theorem SkorokhodSpace.twoJump_apply (γ t : ℝ) :
+    (SkorokhodSpace.twoJump γ).toFun t
+      = (if (1 : ℝ) ≤ t then 1 else 0, if 1 + γ ≤ t then 1 else 0) := rfl
+
+/-- A real number clipped into `[0, 1]`.  It is the identity there, which is all
+the two test functions below use, and it is what makes them **bounded**: the test
+class of `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` is `E →ᵇ ℝ`, and
+the coordinate projections of `ℝ × ℝ` are not in it. -/
+noncomputable def SkorokhodSpace.clip01 (x : ℝ) : ℝ := max (min x 1) 0
+
+theorem SkorokhodSpace.continuous_clip01 : Continuous SkorokhodSpace.clip01 :=
+  (continuous_id.min continuous_const).max continuous_const
+
+theorem SkorokhodSpace.clip01_nonneg (x : ℝ) : 0 ≤ SkorokhodSpace.clip01 x := le_max_right _ _
+
+theorem SkorokhodSpace.clip01_le_one (x : ℝ) : SkorokhodSpace.clip01 x ≤ 1 :=
+  max_le (min_le_right _ _) zero_le_one
+
+theorem SkorokhodSpace.clip01_eq_self {x : ℝ} (h : x ∈ Set.Icc (0 : ℝ) 1) :
+    SkorokhodSpace.clip01 x = x := by
+  rw [SkorokhodSpace.clip01, min_eq_left h.2, max_eq_left h.1]
+
+@[simp] theorem SkorokhodSpace.clip01_zero : SkorokhodSpace.clip01 0 = 0 := by
+  rw [SkorokhodSpace.clip01]; norm_num
+
+@[simp] theorem SkorokhodSpace.clip01_one : SkorokhodSpace.clip01 1 = 1 := by
+  rw [SkorokhodSpace.clip01]; norm_num
+
+/-- **The first coordinate as a bounded continuous function**, clipped to `[0, 1]`.
+With `SkorokhodSpace.clipSnd` it is the finite test family of the refutation
+below.  `BoundedContinuousFunction.mkOfBound`
+(`Mathlib/Topology/ContinuousMap/Bounded/Basic.lean:119`) is what turns the bound
+on the values into an element of `(ℝ × ℝ) →ᵇ ℝ`. -/
+noncomputable def SkorokhodSpace.clipFst : (ℝ × ℝ) →ᵇ ℝ :=
+  BoundedContinuousFunction.mkOfBound
+    ⟨fun p => SkorokhodSpace.clip01 p.1,
+      SkorokhodSpace.continuous_clip01.comp continuous_fst⟩ 1 (fun p q => by
+      simp only [ContinuousMap.coe_mk]
+      rw [Real.dist_eq, abs_le]
+      constructor <;>
+        linarith [SkorokhodSpace.clip01_nonneg p.1, SkorokhodSpace.clip01_le_one p.1,
+          SkorokhodSpace.clip01_nonneg q.1, SkorokhodSpace.clip01_le_one q.1])
+
+/-- **The second coordinate as a bounded continuous function**, clipped to
+`[0, 1]`. -/
+noncomputable def SkorokhodSpace.clipSnd : (ℝ × ℝ) →ᵇ ℝ :=
+  BoundedContinuousFunction.mkOfBound
+    ⟨fun p => SkorokhodSpace.clip01 p.2,
+      SkorokhodSpace.continuous_clip01.comp continuous_snd⟩ 1 (fun p q => by
+      simp only [ContinuousMap.coe_mk]
+      rw [Real.dist_eq, abs_le]
+      constructor <;>
+        linarith [SkorokhodSpace.clip01_nonneg p.2, SkorokhodSpace.clip01_le_one p.2,
+          SkorokhodSpace.clip01_nonneg q.2, SkorokhodSpace.clip01_le_one q.2])
+
+@[simp] theorem SkorokhodSpace.clipFst_apply (p : ℝ × ℝ) :
+    SkorokhodSpace.clipFst p = SkorokhodSpace.clip01 p.1 := rfl
+
+@[simp] theorem SkorokhodSpace.clipSnd_apply (p : ℝ × ℝ) :
+    SkorokhodSpace.clipSnd p = SkorokhodSpace.clip01 p.2 := rfl
+
+/-- **On the unit square the two clipped coordinates recover the metric exactly**,
+not merely up to an error.  This is what makes the refutation below one of the
+*inference* and not of the hypothesis: the route that fails is granted the best
+finite family there is, and the estimate it would have to run on --- `dist` bounded
+by the maximum of the two image distances --- holds with equality. -/
+theorem SkorokhodSpace.dist_eq_max_dist_clip {p q : ℝ × ℝ}
+    (hp : p ∈ Set.Icc (0 : ℝ) 1 ×ˢ Set.Icc (0 : ℝ) 1)
+    (hq : q ∈ Set.Icc (0 : ℝ) 1 ×ˢ Set.Icc (0 : ℝ) 1) :
+    dist p q = max (dist (SkorokhodSpace.clipFst p) (SkorokhodSpace.clipFst q))
+      (dist (SkorokhodSpace.clipSnd p) (SkorokhodSpace.clipSnd q)) := by
+  rw [Prod.dist_eq, SkorokhodSpace.clipFst_apply, SkorokhodSpace.clipFst_apply,
+    SkorokhodSpace.clipSnd_apply, SkorokhodSpace.clipSnd_apply,
+    SkorokhodSpace.clip01_eq_self hp.1, SkorokhodSpace.clip01_eq_self hp.2,
+    SkorokhodSpace.clip01_eq_self hq.1, SkorokhodSpace.clip01_eq_self hq.2]
+
+/-- **A path with a single step has based modulus `0`** on the window
+`exhaustion 0 3`, at every scale below the two gaps the step leaves.  The
+subdivision is `![-4, 0, x, 4]`: it carries the base point `0` among its nodes, as
+`SkorokhodSpace.IsSubdivisionBased` demands, it overshoots the window at both ends,
+which the corrected `SkorokhodSpace.IsSubdivision` permits, and the path is
+constant on each of its three cells, so the oscillation is `0` on the nose.  The
+two hypotheses `δ < x` and `δ < 4 - x` are its sparseness and nothing else.
+
+Stated through `hf` rather than for `SkorokhodSpace.stepAt` itself, because its
+consumers are the **post compositions** of `SkorokhodSpace.twoJump`, and reading
+them as step paths would need an equality of paths where an equality of values
+suffices. -/
+theorem SkorokhodSpace.modulusBased_eq_zero_of_step {f : D(ℝ, ℝ)} {x δ a b : ℝ}
+    (hf : ∀ t : ℝ, f.toFun t = if x ≤ t then a else b)
+    (hx0 : 0 < x) (hx4 : x < 4) (hδx : δ < x) (hδ4 : δ < 4 - x) :
+    SkorokhodSpace.modulusBased (0 : ℝ) 3 f δ = 0 := by
+  have hd : ∀ a b d : ℝ, a + d < b → d < dist a b := by
+    intro a b d h
+    rw [Real.dist_eq, abs_sub_comm]
+    exact lt_of_lt_of_le (by linarith) (le_abs_self _)
+  have hmin4 : (-4 : ℝ) ≤ exhaustionMin (0 : ℝ) 3 := by
+    have h := (isLeast_exhaustionMin (0 : ℝ) 3).1
+    rw [exhaustion, Metric.mem_closedBall, Real.dist_eq, abs_le] at h
+    norm_num at h
+    linarith [h.1]
+  have hmax4 : exhaustionMax (0 : ℝ) 3 ≤ 4 := by
+    have h := (isGreatest_exhaustionMax (0 : ℝ) 3).1
+    rw [exhaustion, Metric.mem_closedBall, Real.dist_eq, abs_le] at h
+    norm_num at h
+    linarith [h.2]
+  refine le_antisymm ?_ zero_le
+  refine iInf_le_of_le 3 (iInf_le_of_le ![-4, 0, x, 4]
+    (iInf_le_of_le ⟨⟨?_, ?_, ?_, ?_⟩, ?_⟩ ?_))
+  · rw [Fin.strictMono_iff_lt_succ]
+    intro i; fin_cases i <;> simp <;> linarith
+  · simpa using hmin4
+  · simpa using hmax4
+  · intro i
+    fin_cases i <;> simp <;>
+      first
+        | linarith
+        | (rw [abs_of_pos hx0]; linarith)
+        | exact hd _ _ _ (by linarith)
+  · exact ⟨1, by norm_num⟩
+  · rw [SkorokhodSpace.subdivisionOsc]
+    refine iSup_le fun i => iSup₂_le fun s hs => ?_
+    obtain ⟨h1, h2⟩ := hs
+    rw [hf s, hf _]
+    fin_cases i
+    · have hh2 : s < (0 : ℝ) := by simpa using h2
+      show edist (if x ≤ s then a else b) (if x ≤ (-4 : ℝ) then a else b) ≤ 0
+      rw [ite_eq_right (not_le.2 (by linarith)), ite_eq_right (not_le.2 (by linarith)), edist_self]
+    · have hh2 : s < x := by simpa using h2
+      show edist (if x ≤ s then a else b) (if x ≤ (0 : ℝ) then a else b) ≤ 0
+      rw [ite_eq_right (not_le.2 (by linarith)), ite_eq_right (not_le.2 (by linarith)), edist_self]
+    · have hh1 : x ≤ s := by simpa using h1
+      show edist (if x ≤ s then a else b) (if x ≤ x then a else b) ≤ 0
+      rw [ite_eq_left hh1, ite_eq_left (le_refl x), edist_self]
+
+/-- From a real distance to the extended one, at the single value the refutation
+reads. -/
+theorem SkorokhodSpace.one_le_edist_of_one_le_dist {p q : ℝ × ℝ} (h : 1 ≤ dist p q) :
+    (1 : ℝ≥0∞) ≤ edist p q := by
+  rw [edist_dist, ← ENNReal.ofReal_one]
+  exact ENNReal.ofReal_le_ofReal h
+
+/-- Below the first jump `SkorokhodSpace.twoJump` sits at the origin. -/
+theorem SkorokhodSpace.twoJump_of_lt_one {γ s : ℝ} (hγ0 : 0 < γ) (hs : s < 1) :
+    (SkorokhodSpace.twoJump γ).toFun s = ((0 : ℝ), (0 : ℝ)) := by
+  simp only [SkorokhodSpace.twoJump_apply, Prod.mk.injEq]
+  exact ⟨ite_eq_right (not_le.2 hs), ite_eq_right (not_le.2 (by linarith))⟩
+
+/-- Between the two jumps only the first coordinate has moved. -/
+theorem SkorokhodSpace.twoJump_one {γ : ℝ} (hγ0 : 0 < γ) :
+    (SkorokhodSpace.twoJump γ).toFun 1 = ((1 : ℝ), (0 : ℝ)) := by
+  simp only [SkorokhodSpace.twoJump_apply, Prod.mk.injEq]
+  exact ⟨ite_eq_left le_rfl, ite_eq_right (not_le.2 (by linarith))⟩
+
+/-- At the second jump both coordinates have moved. -/
+theorem SkorokhodSpace.twoJump_one_add {γ : ℝ} (hγ0 : 0 < γ) :
+    (SkorokhodSpace.twoJump γ).toFun (1 + γ) = ((1 : ℝ), (1 : ℝ)) := by
+  simp only [SkorokhodSpace.twoJump_apply, Prod.mk.injEq]
+  exact ⟨ite_eq_left (by linarith), ite_eq_left le_rfl⟩
+
+/-- The first jump costs `1` in the metric of `ℝ × ℝ`, and it is the **first**
+coordinate that pays. -/
+theorem SkorokhodSpace.one_le_dist_firstJump :
+    (1 : ℝ) ≤ dist ((1 : ℝ), (0 : ℝ)) ((0 : ℝ), (0 : ℝ)) := by
+  rw [Prod.dist_eq]
+  norm_num [Real.dist_eq]
+
+/-- The second jump costs `1` as well, and it is the **second** coordinate that
+pays.  That the two are paid by different coordinates is the whole mechanism of
+the refutation: each image path sees one of the two jumps and is blind to the
+other. -/
+theorem SkorokhodSpace.one_le_dist_secondJump :
+    (1 : ℝ) ≤ dist ((1 : ℝ), (1 : ℝ)) ((1 : ℝ), (0 : ℝ)) := by
+  rw [Prod.dist_eq]
+  norm_num [Real.dist_eq]
+
+/-- **Two jumps closer than `δ` cost the modulus `1`.**  For `0 < γ < δ` the path
+`SkorokhodSpace.twoJump γ` has `SkorokhodSpace.modulus` at least `1` on the window
+`exhaustion 0 3` at scale `δ`, hence so has its based modulus by
+`SkorokhodSpace.modulus_le_modulusBased`.
+
+The proof is one case distinction and no estimate.  Any `δ`-sparse subdivision
+covers the window, so `exists_mem_Ico_of_strictMono` gives the cell that contains
+the time `1`, and its left endpoint `c` is at most `1`.  If `c < 1` the path is
+still at the origin there while it is at `(1, 0)` at time `1`, and the cell sees
+the first jump.  If `c = 1` then sparseness puts the right endpoint beyond
+`1 + δ > 1 + γ`, so the same cell contains the time `1 + γ`, where the path is at
+`(1, 1)` while at its left endpoint it is at `(1, 0)`, and the cell sees the second
+jump.  Either way the oscillation over that one cell is at least `1`.
+
+**No upper bound on `δ` is needed.**  Once `δ` exceeds the diameter of the window
+there is no `δ`-sparse subdivision at all and the modulus is `⊤`; that the
+statement survives this is the `ℝ≥0∞` valuation of `SkorokhodSpace.modulus`
+paying for itself a third time. -/
+theorem SkorokhodSpace.one_le_modulus_twoJump {γ δ : ℝ} (hγ0 : 0 < γ) (hγδ : γ < δ) :
+    (1 : ℝ≥0∞) ≤ SkorokhodSpace.modulus (0 : ℝ) 3 (SkorokhodSpace.twoJump γ) δ := by
+  refine le_iInf fun n => le_iInf fun t => le_iInf fun ht => ?_
+  have hmin0 : exhaustionMin (0 : ℝ) 3 ≤ 0 :=
+    (isLeast_exhaustionMin (0 : ℝ) 3).2 (mem_exhaustion_self (0 : ℝ) 3)
+  have hmax3 : (3 : ℝ) ≤ exhaustionMax (0 : ℝ) 3 := by
+    refine (isGreatest_exhaustionMax (0 : ℝ) 3).2 ?_
+    rw [exhaustion, Metric.mem_closedBall, Real.dist_eq]
+    norm_num
+  have h0 : t 0 ≤ (1 : ℝ) := le_trans ht.2.1 (le_trans hmin0 (by norm_num))
+  have hlast : (1 : ℝ) < t (Fin.last n) :=
+    lt_of_lt_of_le (by norm_num) (le_trans hmax3 ht.2.2.1)
+  obtain ⟨k, hk⟩ := exists_mem_Ico_of_strictMono ht.1 h0 hlast
+  rcases lt_or_eq_of_le hk.1 with hc | hc
+  · have hle : edist ((SkorokhodSpace.twoJump γ).toFun 1)
+        ((SkorokhodSpace.twoJump γ).toFun (t k.castSucc))
+        ≤ SkorokhodSpace.subdivisionOsc (SkorokhodSpace.twoJump γ) t := by
+      rw [SkorokhodSpace.subdivisionOsc]
+      exact le_iSup_of_le k (le_iSup₂_of_le (1 : ℝ) hk le_rfl)
+    refine le_trans ?_ hle
+    refine SkorokhodSpace.one_le_edist_of_one_le_dist ?_
+    rw [SkorokhodSpace.twoJump_one hγ0, SkorokhodSpace.twoJump_of_lt_one hγ0 hc]
+    exact SkorokhodSpace.one_le_dist_firstJump
+  · have hgap := ht.2.2.2 k
+    have hlt : t k.castSucc < t k.succ := ht.1 (Fin.castSucc_lt_succ (i := k))
+    have hgap' : (1 : ℝ) + δ < t k.succ := by
+      rw [Real.dist_eq, abs_of_nonpos (by linarith), hc] at hgap
+      linarith
+    have hmem : (1 : ℝ) + γ ∈ Set.Ico (t k.castSucc) (t k.succ) := by
+      rw [← hc]
+      exact ⟨by linarith, by linarith⟩
+    have hle : edist ((SkorokhodSpace.twoJump γ).toFun (1 + γ))
+        ((SkorokhodSpace.twoJump γ).toFun (t k.castSucc))
+        ≤ SkorokhodSpace.subdivisionOsc (SkorokhodSpace.twoJump γ) t := by
+      rw [SkorokhodSpace.subdivisionOsc]
+      exact le_iSup_of_le k (le_iSup₂_of_le ((1 : ℝ) + γ) hmem le_rfl)
+    refine le_trans ?_ hle
+    refine SkorokhodSpace.one_le_edist_of_one_le_dist ?_
+    rw [hc, SkorokhodSpace.twoJump_one_add hγ0, SkorokhodSpace.twoJump_one hγ0]
+    exact SkorokhodSpace.one_le_dist_secondJump
+
+/-- **A finite family of bounded continuous test functions does not control the
+modulus, even when it recovers the metric exactly on a compact set carrying every
+value of the path.**
+
+For every `0 < δ < 1` there are a path `f` of `D(ℝ, ℝ × ℝ)` and a compact
+`K ⊆ ℝ × ℝ` containing every value of `f` such that
+
+* the two bounded continuous `SkorokhodSpace.clipFst`, `SkorokhodSpace.clipSnd`
+  recover the metric of `ℝ × ℝ` on `K` with equality;
+* both image paths have based modulus `0` at scale `δ` on the window
+  `exhaustion 0 3`;
+* and `f` itself has based modulus at least `1` there.
+
+So the step the converse half of
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` would take --- pass from
+small moduli of the images to a small modulus of the path --- is false, and it is
+false under the strongest form of its own hypothesis.  The witness is
+`SkorokhodSpace.twoJump (δ / 4)`, and what defeats the family is that its two
+jumps sit in different coordinates: each image sees one of them and is blind to the
+other, so each image is a single step.
+
+**What this does not touch** is the criterion, which quantifies over a dense class
+and therefore over functions that see both jumps; the section header says which
+one does it here.  What it rules out is the route through a finite net, and with
+`SkorokhodSpace.exists_isSubdivisionBased_pair_forall_not_cells` above it rules out
+both routes that the roadmap named. -/
+theorem SkorokhodSpace.exists_isCompact_modulusBased_postcomp_eq_zero
+    {δ : ℝ} (hδ0 : 0 < δ) (hδ1 : δ < 1) :
+    ∃ (f : D(ℝ, ℝ × ℝ)) (K : Set (ℝ × ℝ)), IsCompact K ∧ (∀ t : ℝ, f.toFun t ∈ K) ∧
+      (∀ p ∈ K, ∀ q ∈ K, dist p q
+        = max (dist (SkorokhodSpace.clipFst p) (SkorokhodSpace.clipFst q))
+          (dist (SkorokhodSpace.clipSnd p) (SkorokhodSpace.clipSnd q))) ∧
+      SkorokhodSpace.modulusBased (0 : ℝ) 3
+        (SkorokhodSpace.postcomp SkorokhodSpace.clipFst.toContinuousMap f) δ = 0 ∧
+      SkorokhodSpace.modulusBased (0 : ℝ) 3
+        (SkorokhodSpace.postcomp SkorokhodSpace.clipSnd.toContinuousMap f) δ = 0 ∧
+      1 ≤ SkorokhodSpace.modulusBased (0 : ℝ) 3 f δ := by
+  refine ⟨SkorokhodSpace.twoJump (δ / 4), Set.Icc (0 : ℝ) 1 ×ˢ Set.Icc (0 : ℝ) 1,
+    (isCompact_Icc.prod isCompact_Icc), fun t => ?_, fun p hp q hq =>
+      SkorokhodSpace.dist_eq_max_dist_clip hp hq, ?_, ?_, ?_⟩
+  · rw [SkorokhodSpace.twoJump_apply]
+    constructor <;> split_ifs <;> norm_num
+  · refine SkorokhodSpace.modulusBased_eq_zero_of_step (x := 1) (a := 1) (b := 0)
+      (fun t => ?_) (by norm_num) (by norm_num) (by linarith) (by linarith)
+    simp only [SkorokhodSpace.postcomp_toFun, BoundedContinuousFunction.coe_toContinuousMap,
+      SkorokhodSpace.clipFst_apply, SkorokhodSpace.twoJump_apply]
+    split_ifs <;> simp
+  · refine SkorokhodSpace.modulusBased_eq_zero_of_step (x := 1 + δ / 4) (a := 1) (b := 0)
+      (fun t => ?_) (by linarith) (by linarith) (by linarith) (by linarith)
+    simp only [SkorokhodSpace.postcomp_toFun, BoundedContinuousFunction.coe_toContinuousMap,
+      SkorokhodSpace.clipSnd_apply, SkorokhodSpace.twoJump_apply]
+    split_ifs <;> simp
+  · exact le_trans (SkorokhodSpace.one_le_modulus_twoJump (by linarith) (by linarith))
+      (SkorokhodSpace.modulus_le_modulusBased _ _ _ _)
+
+/-- **The three point quantity fares no better**, and this is what closes the
+route the roadmap had left open after the refutation of the common refinement.
+
+Ethier--Kurtz' `w''` is read at a triple `t₁ ≤ t ≤ t₂` of span at most `δ` as
+`min (d (f t) (f t₁)) (d (f t₂) (f t))`; it is subdivision free, which is why it
+was the candidate.  For every `δ > 0` there are a path of `D(ℝ, ℝ × ℝ)` and such a
+triple --- `1 - δ/4 < 1 < 1 + δ/4`, of span `δ/2` --- at which that quantity is at
+least `1` for the path and exactly `0` for **both** images under
+`SkorokhodSpace.clipFst` and `SkorokhodSpace.clipSnd`.
+
+It is the inequality of the roadmap's remark made concrete: `min (max a) (max b)`
+against `max over i of min (a i) (b i)` with `a = (1, 0)` and `b = (0, 1)`, only
+now the two vectors are the two displacements of an actual càdlàg path, so the
+failure is one of the path space and not of an auxiliary estimate.  The path is
+the same `SkorokhodSpace.twoJump (δ / 4)` as above, and the two refutations are
+therefore one witness and not two. -/
+theorem SkorokhodSpace.exists_min_edist_postcomp_eq_zero {δ : ℝ} (hδ0 : 0 < δ) :
+    ∃ (f : D(ℝ, ℝ × ℝ)) (t₁ t t₂ : ℝ), t₁ ≤ t ∧ t ≤ t₂ ∧ t₂ - t₁ ≤ δ ∧
+      1 ≤ min (edist (f.toFun t) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun t)) ∧
+      min (edist (SkorokhodSpace.clipFst (f.toFun t)) (SkorokhodSpace.clipFst (f.toFun t₁)))
+        (edist (SkorokhodSpace.clipFst (f.toFun t₂)) (SkorokhodSpace.clipFst (f.toFun t))) = 0 ∧
+      min (edist (SkorokhodSpace.clipSnd (f.toFun t)) (SkorokhodSpace.clipSnd (f.toFun t₁)))
+        (edist (SkorokhodSpace.clipSnd (f.toFun t₂)) (SkorokhodSpace.clipSnd (f.toFun t))) = 0 := by
+  have hγ0 : (0 : ℝ) < δ / 4 := by linarith
+  have hlt : 1 - δ / 4 < (1 : ℝ) := by linarith
+  have h0 := SkorokhodSpace.twoJump_of_lt_one hγ0 hlt
+  have h1 := SkorokhodSpace.twoJump_one hγ0
+  have h2 := SkorokhodSpace.twoJump_one_add hγ0
+  refine ⟨SkorokhodSpace.twoJump (δ / 4), 1 - δ / 4, 1, 1 + δ / 4, by linarith, by linarith,
+    by linarith, ?_, ?_, ?_⟩
+  · rw [h0, h1, h2]
+    exact le_min (SkorokhodSpace.one_le_edist_of_one_le_dist SkorokhodSpace.one_le_dist_firstJump)
+      (SkorokhodSpace.one_le_edist_of_one_le_dist SkorokhodSpace.one_le_dist_secondJump)
+  · rw [h0, h1, h2]
+    simp
+  · rw [h0, h1, h2]
+    simp
 
 /-! ## Milestone 9: the nonnegative index inside the real one
 

@@ -10508,8 +10508,20 @@ had no declaration at all, and they are needed in this order:
    bounds the oscillation of a subdivision only by that of one it **refines**, so
    a common refinement is what is needed — and that a common refinement cannot be
    had with a sparseness chosen before the paths is **proved**, 2026-09-19, as
-   `SkorokhodSpace.exists_isSubdivisionBased_pair_forall_not_cells`. What remains
-   open, and what a run at this item starts from, is written out at the item in
+   `SkorokhodSpace.exists_isSubdivisionBased_pair_forall_not_cells`.
+
+   **Both routes the roadmap had named are now refuted**, the second on 2026-09-19
+   as well. The fallback was Ethier–Kurtz' subdivision-free three point modulus
+   `w''`, and it fails on the same witness: a path of `D(ℝ, ℝ × ℝ)` with **two
+   jumps in different coordinates**, by
+   `SkorokhodSpace.exists_isCompact_modulusBased_postcomp_eq_zero` and
+   `SkorokhodSpace.exists_min_edist_postcomp_eq_zero`. What is refuted is the
+   passage through **finitely many** test functions read off a net of the compact
+   set — granted even a family that recovers the metric of the value space with
+   equality there. The criterion itself stands, because it quantifies over a
+   **dense** class, which contains functions seeing both jumps at once; a proof has
+   therefore to choose its test function **after** the path. That is what a run at
+   this item starts from, and it is written out at the item in
    `SkorokhodSpace/README.md`, Milestone 8; it is not an application of item 2.
 
 Only then does `isTight_map_postcomp_of_exists_martingale` have a conclusion it
