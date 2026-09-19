@@ -16131,6 +16131,200 @@ theorem SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt
       (fun t₁ x t₂ h1 h2 h3 h4 => h t₁ x t₂ h2 h3 (by linarith [hspan i, hs.2]))
       (fun p hp1 hp2 => hJ p ⟨hp1, lt_of_le_of_lt hp2 hs.2⟩) ⟨hs.1, le_rfl⟩) le_self_add
 
+/-! ### The node-placing rule
+
+The combinatorial half of the corrected link is a single rule, and it is stated
+for an **abstract** `δ`-separated set `J` rather than for the large jumps of a
+path: nothing about `D(ℝ, E)` enters it, and the only property of `J` it uses is
+that two of its points are at least `2 * δ` apart.  For the large jumps that is
+`SkorokhodSpace.two_mul_le_sub_of_forall_min_edist_lt`, and
+`SkorokhodSpace.separated_setOf_lt_edist_leftLim` is the one line that hands it
+over.
+
+**The gap of the rule lies in `(δ, 2 * δ]` with no hypothesis whatever**
+(`SkorokhodSpace.lt_nextNode`, `SkorokhodSpace.nextNode_le`), and that is what
+skipping over `Set.Ioc x (x + δ)` rather than looking into it buys.  The
+separation is needed only for the two statements about jumps, and there it is
+needed twice over:
+
+* `SkorokhodSpace.notMem_Ioo_nextNode` --- the cell `Set.Ioo x (nextNode J δ x)`
+  meets `J` nowhere, **under** the invariant `J ∩ Set.Ioc x (x + δ) = ∅`;
+* `SkorokhodSpace.notMem_Ioc_nextNode` --- the invariant holds again at
+  `nextNode J δ x`, and this one needs **no** invariant at its input.
+
+The asymmetry between the two is the whole reason the rule works at the base
+point.  The invariant is unavailable there --- a jump may sit anywhere in
+`Set.Ioc t₀ (t₀ + δ)` --- so the first cell is not jump free, which is exactly the
+cell `SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt` exempts; and the
+second statement re-establishes the invariant from the first node on, without
+having needed it.  The exemption and the defect of the construction are one fact
+seen from two sides.
+
+**The middle case of the rule is the one that is easy to miss.**  Without it a
+node at `x + 2 * δ` may land within `δ` of a jump, and then the two demands on a
+based subdivision --- gaps longer than `δ`, nodes at the large jumps --- exclude
+each other in the *interior* of the window and not merely at the base point.
+Halving the distance to the offending jump puts the next node more than `δ` short
+of it, and the following step reaches it.
+
+The `q` of each case is **chosen** and not formed as an infimum: `J` carries no
+topology here, so an infimum over it need not be attained --- and none is needed,
+because each of the two windows has length `δ` and the separation puts at most
+one point of `J` in it. -/
+
+open Classical in
+/-- **The node-placing rule.**  From a node `x`, the next node is the point of `J`
+in `Set.Ioc (x + δ) (x + 2 * δ)` if there is one; otherwise the midpoint between
+`x` and the point of `J` in `Set.Ioc (x + 2 * δ) (x + 3 * δ)` if there is one;
+otherwise `x + 2 * δ`.
+
+The first window **begins** at `x + δ` and not at `x`: a point of `J` within `δ`
+of `x` could not be a node of a based subdivision at all, the gaps being longer
+than `δ`, so the rule steps over it instead of trying to reach it.  That is what
+makes the gap of the rule unconditionally larger than `δ`. -/
+noncomputable def SkorokhodSpace.nextNode (J : Set ℝ) (δ x : ℝ) : ℝ :=
+  if h : ∃ q, q ∈ J ∧ q ∈ Set.Ioc (x + δ) (x + 2 * δ) then h.choose
+  else if h' : ∃ q, q ∈ J ∧ q ∈ Set.Ioc (x + 2 * δ) (x + 3 * δ) then (x + h'.choose) / 2
+  else x + 2 * δ
+
+/-- The gap of the rule exceeds `δ`, in all three cases and with no hypothesis on
+`J`.  In the middle case it is the halving that gives it: the point of `J` lies
+beyond `x + 2 * δ`, so the midpoint lies beyond `x + δ`. -/
+theorem SkorokhodSpace.lt_nextNode (J : Set ℝ) {δ : ℝ} (hδ : 0 < δ) (x : ℝ) :
+    x + δ < SkorokhodSpace.nextNode J δ x := by
+  rw [SkorokhodSpace.nextNode]
+  split_ifs with h1 h2
+  · exact h1.choose_spec.2.1
+  · have := h2.choose_spec.2.1
+    linarith
+  · linarith
+
+/-- The gap of the rule is at most `2 * δ`, which is what
+`SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt` asks of a subdivision.
+In the middle case the midpoint of `x` and a point of `Set.Ioc (x + 2 * δ)
+(x + 3 * δ)` is at most `x + 3 * δ / 2`. -/
+theorem SkorokhodSpace.nextNode_le (J : Set ℝ) {δ : ℝ} (hδ : 0 < δ) (x : ℝ) :
+    SkorokhodSpace.nextNode J δ x ≤ x + 2 * δ := by
+  rw [SkorokhodSpace.nextNode]
+  split_ifs with h1 h2
+  · exact h1.choose_spec.2.2
+  · have := h2.choose_spec.2.2
+    linarith
+  · exact le_rfl
+
+/-- **The rule re-establishes its own invariant**, and this is the statement that
+needs no invariant at its input --- which is why the rule may be started at the
+base point, where none is available.
+
+The three cases are three readings of the separation.  If the next node is itself
+a point of `J`, nothing of `J` lies within `2 * δ` of it, let alone within `δ`.
+If it is a midpoint, the point `q` it was formed from lies more than `δ` beyond
+it, and any other point of `J` within `δ` of it would lie in
+`Set.Ioc (x + 2 * δ) (x + 5 * δ / 2)` --- the first window being empty puts it
+beyond `x + 2 * δ` --- hence within `δ` of `q`, which the separation forbids.  And
+if it is `x + 2 * δ`, the interval in question is the second window, empty by the
+case. -/
+theorem SkorokhodSpace.notMem_Ioc_nextNode {J : Set ℝ} {δ : ℝ} (hδ : 0 < δ)
+    (hsep : ∀ p ∈ J, ∀ q ∈ J, p < q → 2 * δ ≤ q - p) (x : ℝ) {p : ℝ} (hp : p ∈ J) :
+    p ∉ Set.Ioc (SkorokhodSpace.nextNode J δ x)
+      (SkorokhodSpace.nextNode J δ x + δ) := by
+  intro hmem
+  revert hmem
+  rw [SkorokhodSpace.nextNode]
+  split_ifs with h1 h2
+  · intro hmem
+    have hq := h1.choose_spec
+    have := hsep _ hq.1 p hp hmem.1
+    have := hmem.2
+    linarith
+  · intro hmem
+    set q := h2.choose with hqdef
+    have hq := h2.choose_spec
+    have hq1 : q ∈ J := hq.1
+    have hq2 : x + 2 * δ < q := hq.2.1
+    have hq3 : q ≤ x + 3 * δ := hq.2.2
+    have hg1 : x + δ ≤ (x + q) / 2 := by linarith
+    have hg2 : (x + q) / 2 ≤ x + 3 * δ / 2 := by linarith
+    have hqg : (x + q) / 2 + δ < q := by linarith
+    have hpq : p ≠ q := by
+      intro hcon
+      rw [hcon] at hmem
+      linarith [hmem.2]
+    have hp1 : x + δ < p := lt_of_le_of_lt hg1 hmem.1
+    have hp2 : p ≤ x + 5 * δ / 2 := by linarith [hmem.2]
+    have hp3 : x + 2 * δ < p := by
+      by_contra hcon
+      push Not at hcon
+      exact h1 ⟨p, hp, hp1, hcon⟩
+    rcases lt_or_gt_of_ne hpq with hlt | hgt
+    · have := hsep p hp q hq1 hlt
+      linarith
+    · have := hsep q hq1 p hp hgt
+      linarith
+  · intro hmem
+    exact h2 ⟨p, hp, hmem.1, by linarith [hmem.2]⟩
+
+/-- **The cell the rule opens carries no point of `J` in its interior**, under the
+invariant at the node it starts from.
+
+The invariant clears `Set.Ioc x (x + δ)`; beyond that the three cases clear the
+rest.  If the next node is a point `q` of `J`, a further point of `J` below it
+and beyond `x + δ` would be within `δ` of `q`.  Otherwise the first window is
+empty, so a point of `J` beyond `x + δ` is beyond `x + 2 * δ` --- and the next
+node is at most `x + 3 * δ / 2` in the middle case, and exactly `x + 2 * δ` in
+the last. -/
+theorem SkorokhodSpace.notMem_Ioo_nextNode {J : Set ℝ} {δ : ℝ} (hδ : 0 < δ)
+    (hsep : ∀ p ∈ J, ∀ q ∈ J, p < q → 2 * δ ≤ q - p) {x : ℝ}
+    (hI : ∀ r ∈ J, r ∉ Set.Ioc x (x + δ)) {p : ℝ} (hp : p ∈ J) :
+    p ∉ Set.Ioo x (SkorokhodSpace.nextNode J δ x) := by
+  intro hmem
+  revert hmem
+  rw [SkorokhodSpace.nextNode]
+  split_ifs with h1 h2
+  · intro hmem
+    have hq := h1.choose_spec
+    have hp1 : x + δ < p := by
+      by_contra hcon
+      push Not at hcon
+      exact hI p hp ⟨hmem.1, hcon⟩
+    have := hsep p hp _ hq.1 hmem.2
+    have := hq.2.2
+    linarith
+  · intro hmem
+    have hq := h2.choose_spec
+    have hp1 : x + δ < p := by
+      by_contra hcon
+      push Not at hcon
+      exact hI p hp ⟨hmem.1, hcon⟩
+    have hp3 : x + 2 * δ < p := by
+      by_contra hcon
+      push Not at hcon
+      exact h1 ⟨p, hp, hp1, hcon⟩
+    have := hq.2.2
+    have := hmem.2
+    linarith
+  · intro hmem
+    have hp1 : x + δ < p := by
+      by_contra hcon
+      push Not at hcon
+      exact hI p hp ⟨hmem.1, hcon⟩
+    exact h1 ⟨p, hp, hp1, le_of_lt hmem.2⟩
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The large jumps of a path are a set the rule may be run on.**  This is the
+one line that connects `SkorokhodSpace.nextNode` --- which knows nothing of paths
+--- to the three point hypothesis, and it is
+`SkorokhodSpace.two_mul_le_sub_of_forall_min_edist_lt` read as a property of the
+set rather than of a pair. -/
+theorem SkorokhodSpace.separated_setOf_lt_edist_leftLim
+    (f : D(ℝ, E)) {δ : ℝ} {η : ℝ≥0∞}
+    (h : ∀ t₁ t t₂ : ℝ, t₁ ≤ t → t ≤ t₂ → t₂ - t₁ ≤ 2 * δ →
+      min (edist (f.toFun t) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun t)) < η) :
+    ∀ p ∈ {r : ℝ | 2 * η < edist (f.toFun r) (Function.leftLim f.toFun r)},
+      ∀ q ∈ {r : ℝ | 2 * η < edist (f.toFun r) (Function.leftLim f.toFun r)},
+        p < q → 2 * δ ≤ q - p :=
+  fun _ hp _ hq hpq => SkorokhodSpace.two_mul_le_sub_of_forall_min_edist_lt f h hpq hp hq
+
 /-! ## Milestone 9: the nonnegative index inside the real one
 
 Everything above about the modulus and about tightness is stated over the index

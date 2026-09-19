@@ -3535,9 +3535,23 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
      cell the analytic half exempts, so the rule starts at `t₀` unconditioned.
      The middle case is the one that is easy to miss: without it a node at
      `x + 2 * δ` may land within `δ` of a jump, and then no admissible node
-     reaches that jump. What is left after the rule is `Fin`-bookkeeping: the
-     mirror rule to the left, strict monotonicity of the joined enumeration, and
-     a count of steps covering the window, each step being longer than `δ`.
+     reaches that jump.
+
+     **The rule is built**, 2026-09-19: `SkorokhodSpace.nextNode`, with
+     `SkorokhodSpace.lt_nextNode` and `SkorokhodSpace.nextNode_le` for the gap —
+     unconditionally in `(δ, 2 * δ]` — and `SkorokhodSpace.notMem_Ioo_nextNode`
+     and `SkorokhodSpace.notMem_Ioc_nextNode` for the jumps. It is stated over an
+     abstract `2 * δ`-separated set `J`, nothing of `D(ℝ, E)` entering it, and
+     `SkorokhodSpace.separated_setOf_lt_edist_leftLim` is the one line that hands
+     the large jumps of a path to it. The asymmetry of the two jump statements is
+     what makes the rule run at the base point: the invariant is unavailable
+     there and the second statement does not need it, so it is re-established
+     from the first node on.
+
+     What is left is the iteration and the `Fin`-bookkeeping: the mirror rule to
+     the left — not `nextNode` read at `-x`, the cells being half open — strict
+     monotonicity of the joined enumeration, and a count of steps covering the
+     window, each step being longer than `δ`.
   2. Three point quantity of the path ⟹ the same for the image under
      `SkorokhodSpace.clipDist (f t)`, capped at `1`
      (`SkorokhodSpace.min_edist_postcomp_clipDist`), and in the form a dense `H`

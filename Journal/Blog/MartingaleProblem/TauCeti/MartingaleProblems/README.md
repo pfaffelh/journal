@@ -10576,10 +10576,13 @@ had no declaration at all, and they are needed in this order:
    — using neither monotonicity nor coverage nor sparseness. That the corrected
    inequality survives its own counterexample is
    `SkorokhodSpace.one_le_four_mul_add_two_mul_basePointOsc_step`. What is left is
-   the *existence* of such a subdivision, and the node-placing rule that produces
-   it, together with the separation
-   `SkorokhodSpace.two_mul_le_sub_of_forall_min_edist_lt` it rests on, is written
-   out at the item in `SkorokhodSpace/README.md`, Milestone 8.
+   the *existence* of such a subdivision. The node-placing rule that produces it
+   is built the same day — `SkorokhodSpace.nextNode` with `lt_nextNode`,
+   `nextNode_le`, `notMem_Ioo_nextNode` and `notMem_Ioc_nextNode`, over an
+   abstract `2 * δ`-separated set, and
+   `SkorokhodSpace.separated_setOf_lt_edist_leftLim` handing it the large jumps
+   of a path — so what remains is the iteration and the `Fin`-bookkeeping. It is
+   written out at the item in `SkorokhodSpace/README.md`, Milestone 8.
 
 Only then does `isTight_map_postcomp_of_exists_martingale` have a conclusion it
 can reach, and `isRelativelyCompact_of_approx` an input. **The order of work is
