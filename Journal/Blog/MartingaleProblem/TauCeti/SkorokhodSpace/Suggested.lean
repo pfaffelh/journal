@@ -14410,3 +14410,59 @@ theorem SkorokhodSpace.tendstoInDistribution_eval_of_isTight_of_tendsto_finiteDi
   SkorokhodSpace.tendstoInDistribution_eval
     (SkorokhodSpace.tendstoInDistribution_of_isTight_of_tendsto_finiteDimensional_nnreal
       hX hZ htight hT hT0 hfdd) s hs
+
+/-! ### Tightness crosses in both directions, and that is what fixes the index of a criterion
+
+The transport above carries tightness **forward**, and that is the direction
+`SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional_nnreal` needs: it holds a
+hypothesis over `D(ℝ≥0, E)` and feeds a theorem stated over `D(ℝ, E)`.
+
+A tightness *criterion* runs the other way.  Everything built on
+`SkorokhodSpace.isCompact_closure_iff` of Milestone 7 lives over `ℝ`, that criterion being false
+over an index with gaps (`SkorokhodSpace.not_isCompact_closure_of_rigid`), so a theorem that
+**produces** tightness produces it over `ℝ`, while its consumer -- the roadmap
+**MartingaleProblems** -- wants it over `ℝ≥0`.  The statement below is what settles that: tightness
+comes back along the embedding as well, so a criterion is stated once, over `ℝ`, and is not
+crossed. -/
+
+omit [MeasurableSpace E] [BorelSpace E] in
+/-- **Tightness travels backward along the embedding**, so the crossing is an equivalence for
+tightness and not merely a transport.
+
+The image is closed, so a compact `K ⊆ D(ℝ, E)` has a compact preimage
+(`Topology.IsClosedEmbedding.isCompact_preimage`,
+`Mathlib/Topology/Compactness/Compact.lean:1017`, whose content is that `K` meets the range in a
+closed and hence compact set on which the map is a homeomorphism).  The mass outside the preimage
+is exactly the mass the image law puts outside `K`, by `MeasureTheory.Measure.map_apply` at the
+measurable set `Kᶜ`, so the same `ε` serves and no estimate is lost.
+
+**Why the direction matters.**  With this statement a tightness criterion over the index `ℝ`
+serves a consumer over `ℝ≥0` without being restated: the consumer crosses its family once, applies
+the criterion, and comes back.  The `ℝ≥0`-form of Milestone 8 above had to be written out because
+it carries a **hypothesis** across, and a hypothesis crosses only forward; a criterion carries a
+conclusion, and a conclusion crosses backward.  That is the whole rule, and it is why the
+statements that read `SkorokhodSpace.isCompact_closure_iff` are not to be duplicated over `ℝ≥0`. -/
+theorem SkorokhodSpace.isTightMeasureSet_of_isTightMeasureSet_map_extendNNReal [CompleteSpace E]
+    {γ : Type*} {μ : γ → Measure D(ℝ≥0, E)}
+    (h : IsTightMeasureSet {(μ i).map SkorokhodSpace.extendNNReal | i}) :
+    IsTightMeasureSet {μ i | i} := by
+  have hemb : Topology.IsClosedEmbedding (SkorokhodSpace.extendNNReal (E := E)) :=
+    SkorokhodSpace.isClosedEmbedding_extendNNReal
+  have hmeas : Measurable (SkorokhodSpace.extendNNReal (E := E)) := hemb.continuous.measurable
+  rw [isTightMeasureSet_iff_exists_isCompact_measure_compl_le] at h ⊢
+  intro ε hε
+  obtain ⟨K, hK, hKle⟩ := h ε hε
+  refine ⟨SkorokhodSpace.extendNNReal ⁻¹' K, hemb.isCompact_preimage hK, ?_⟩
+  rintro ν ⟨i, rfl⟩
+  rw [← Set.preimage_compl, ← Measure.map_apply hmeas hK.isClosed.measurableSet.compl]
+  exact hKle _ ⟨i, rfl⟩
+
+omit [MeasurableSpace E] [BorelSpace E] in
+/-- **Tightness of a family on `D(ℝ≥0, E)` is tightness of the crossed family.**  The two
+transports read as one equivalence, and that is the form in which a consumer whose processes run
+over `ℝ≥0` states its hypothesis and receives its conclusion. -/
+theorem SkorokhodSpace.isTightMeasureSet_map_extendNNReal_iff [CompleteSpace E]
+    {γ : Type*} {μ : γ → Measure D(ℝ≥0, E)} :
+    IsTightMeasureSet {(μ i).map SkorokhodSpace.extendNNReal | i} ↔ IsTightMeasureSet {μ i | i} :=
+  ⟨SkorokhodSpace.isTightMeasureSet_of_isTightMeasureSet_map_extendNNReal,
+    SkorokhodSpace.isTightMeasureSet_map_extendNNReal⟩

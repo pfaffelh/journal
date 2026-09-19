@@ -3394,9 +3394,39 @@ each of them by `0`, which is a time of `T`.
   `ℝ≥0` as it stands. What had to be crossed is the index of the *criterion*,
   which is `isCompact_closure_iff` of Milestone 7 and everything above it.
 
+**Tightness crosses in both directions, and that is what fixes the index of a
+criterion.**
+
+* `SkorokhodSpace.isTightMeasureSet_of_isTightMeasureSet_map_extendNNReal` —
+  tightness travels **backward** along the embedding. The image being closed, a
+  compact `K ⊆ D(ℝ, E)` has a compact preimage
+  (`Topology.IsClosedEmbedding.isCompact_preimage`,
+  `Mathlib/Topology/Compactness/Compact.lean:1017`), and the mass outside the
+  preimage is the mass the image law puts outside `K`, by
+  `MeasureTheory.Measure.map_apply` at `Kᶜ`. The same `ε` serves.
+* `SkorokhodSpace.isTightMeasureSet_map_extendNNReal_iff` — the two transports
+  read as one equivalence.
+
+**The rule this settles, and it applies to every statement of Milestones 7 and 8
+that a consumer over `ℝ≥0` would otherwise ask to have duplicated.** A
+*hypothesis* crosses only forward; a *conclusion* crosses backward. The
+`ℝ≥0`-form of Milestone 8 had to be written out because it carries the
+convergence of the finite dimensional distributions across as a hypothesis, and
+that one does not travel at all — a dense `T ⊆ ℝ≥0` is not dense in `ℝ`. A
+tightness *criterion* carries a conclusion: it is therefore stated once, over
+`ℝ`, where `isCompact_closure_iff` is available, and a consumer whose processes
+run over `ℝ≥0` crosses its family, applies the criterion, and comes back. Nothing
+of it is to be restated over `ℝ≥0`.
+
 **Acceptance example.** `SkorokhodSpace.extendNNReal (jumpPathD …)` of the
 roadmap **MartingaleProblems**, Milestone 6: the path law of the jump
 construction, which lives on `D(ℝ≥0, E)`, read on `D(ℝ, E)`. It is the family
 for which the index crossing was built, and the statement to be checked on it is
 that its coordinate at a nonnegative time is unchanged by the crossing, which is
-`extendNNReal_apply` together with `Real.toNNReal_coe`.
+`extendNNReal_apply` together with `Real.toNNReal_coe`. It is proved
+(2026-09-19) in **MartingaleProblems** as `extendNNReal_jumpPathD_toFun`, and
+with it the whole chain: `map_eval_map_extendNNReal_map_jumpPathD` for the
+coordinate of the crossed law, `map_eval_map_extendNNReal_map_jumpPathD_poisson`
+for the independent control against `ProbabilityTheory.poissonMeasure`, and
+`isTightMeasureSet_map_extendNNReal_map_jumpPathD` for the tightness transport,
+whose hypothesis is there discharged on data.

@@ -33387,6 +33387,163 @@ theorem eq_map_jumpPathD_poisson_of_forall_dense (P : Measure D(ℝ≥0, ℕ)) [
   eq_map_jumpPathD_of_forall_dense measurable_poissonRate poissonJumpKernel
     (Measure.dirac 0) P hT h
 
+/-! ### The path law of the jump construction, read on the real index
+
+Milestones 7 and 8 of the roadmap **SkorokhodSpace** are stated over the index `ℝ`, the compactness
+criterion `SkorokhodSpace.isCompact_closure_iff` being false over an index with gaps, while the
+processes here live over `ℝ≥0`.  Milestone 9 there is the passage between the two indices,
+`SkorokhodSpace.extendNNReal`, together with the three transports along it -- tightness forward,
+weak convergence backward, and the coordinate at a nonnegative time.
+
+**Until here that passage had no law to carry.**  The five statements of that milestone are about a
+family of measures on `D(ℝ≥0, E)`, and this development produces exactly one such family,
+`(jumpMeasure mu nu).map (jumpPathD lam)`.  What follows sends it through, and the first two
+statements are the acceptance example the milestone names.
+
+**What the crossing costs at a nonnegative time is nothing**, and that is the content of
+`extendNNReal_jumpPathD_toFun`: `Real.toNNReal` is a retraction of `ℝ` onto `ℝ≥0`, so the
+coordinate of the extended path at `(t : ℝ)` is the coordinate of the original at `t`.  At a
+negative time the extended path is constant equal to the value at `0`; that is not a defect of the
+crossing but the absence of a time of the model, and it is the reason the `ℝ≥0`-form of
+Milestone 8 there asks `(0 : ℝ≥0) ∈ T`. -/
+
+/-- **The crossing does not move a coordinate at a nonnegative time.**  This is
+`SkorokhodSpace.extendNNReal_apply` together with `Real.toNNReal_coe`, and it is stated at the
+jump path rather than at a general element of `D(ℝ≥0, E)` because it is the form every statement
+below uses: a time of the model is a time of `ℝ≥0`, and reading it on `ℝ` changes nothing. -/
+theorem extendNNReal_jumpPathD_toFun [MetricSpace E] [BorelSpace E] [PolishSpace E]
+    [CompleteSpace E] {lam : E → ℝ} (ω : (ℕ → E) × (ℕ → ℝ)) (t : ℝ≥0) :
+    (SkorokhodSpace.extendNNReal (jumpPathD lam ω)).toFun (t : ℝ)
+      = (jumpPathD lam ω).toFun t := by
+  rw [SkorokhodSpace.extendNNReal_apply, Real.toNNReal_coe]
+
+/-- **On the good set the crossed path is the process**, at every time of `ℝ≥0` read on `ℝ`.  Two
+steps and no hypothesis beyond the one `jumpPathD` already carries: the crossing by
+`extendNNReal_jumpPathD_toFun`, the identification by `jumpPathD_toFun_of_mem`. -/
+theorem extendNNReal_jumpPathD_toFun_of_mem [MetricSpace E] [BorelSpace E] [PolishSpace E]
+    [CompleteSpace E] {lam : E → ℝ} {ω : (ℕ → E) × (ℕ → ℝ)} (hω : ω ∈ CadlagSetE lam) (t : ℝ≥0) :
+    (SkorokhodSpace.extendNNReal (jumpPathD lam ω)).toFun (t : ℝ)
+      = jumpProcessE lam (t : ℝ) ω := by
+  rw [extendNNReal_jumpPathD_toFun, jumpPathD_toFun_of_mem hω]
+
+/-- **The crossed path map is measurable.**  The crossing is an isometry
+(`SkorokhodSpace.isometry_extendNNReal`) and therefore continuous, and `measurable_jumpPathD` is
+the map below it.  Stated because every push forward below needs it by name. -/
+theorem measurable_extendNNReal_jumpPathD [MetricSpace E] [BorelSpace E] [PolishSpace E]
+    [CompleteSpace E] {lam : E → ℝ} (hlam : Measurable lam) :
+    Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ SkorokhodSpace.extendNNReal (jumpPathD lam ω) :=
+  SkorokhodSpace.isometry_extendNNReal.continuous.measurable.comp (measurable_jumpPathD hlam)
+
+/-- **The law of the crossed path is a probability measure.** -/
+theorem isProbabilityMeasure_map_extendNNReal_map_jumpPathD [MetricSpace E] [BorelSpace E]
+    [PolishSpace E] [CompleteSpace E] {lam : E → ℝ} (hlam : Measurable lam) (mu : Kernel E E)
+    [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] :
+    IsProbabilityMeasure
+      (((jumpMeasure mu nu).map (jumpPathD lam)).map (SkorokhodSpace.extendNNReal (E := E))) := by
+  have : IsProbabilityMeasure ((jumpMeasure mu nu).map (jumpPathD lam)) :=
+    isProbabilityMeasure_map_jumpPathD hlam mu nu
+  exact (Measure.isProbabilityMeasure_map_iff
+    SkorokhodSpace.isometry_extendNNReal.continuous.measurable.aemeasurable).2 inferInstance
+
+/-- **The coordinate of the crossed law at a nonnegative time is the law of the process.**  This is
+`map_eval_map_jumpPathD` read through the crossing, and the reading is the composition of the two
+maps: the evaluation of `D(ℝ, E)` at `(t : ℝ)` precomposed with `SkorokhodSpace.extendNNReal` is
+the evaluation of `D(ℝ≥0, E)` at `t`, which is `extendNNReal_jumpPathD_toFun` at the level of the
+space rather than of one path.
+
+**So nothing of the law is lost in the crossing**, and that is what makes the passage usable: a
+statement proved about the process -- `jumpMeasure_map_jumpProcessE_zero` at the start,
+`poissonMeasure` at the Poisson rate -- is a statement about the law on `D(ℝ, E)` as well, at every
+time the model has. -/
+theorem map_eval_map_extendNNReal_map_jumpPathD [MetricSpace E] [BorelSpace E] [PolishSpace E]
+    [CompleteSpace E] {lam : E → ℝ} (hlam : Measurable lam) (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu]
+    (hne : ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam) (t : ℝ≥0) :
+    (((jumpMeasure mu nu).map (jumpPathD lam)).map (SkorokhodSpace.extendNNReal (E := E))).map
+        (fun f : D(ℝ, E) ↦ f.toFun (t : ℝ))
+      = (jumpMeasure mu nu).map (jumpProcessE lam (t : ℝ)) := by
+  have hext : Measurable (SkorokhodSpace.extendNNReal (E := E)) :=
+    SkorokhodSpace.isometry_extendNNReal.continuous.measurable
+  rw [Measure.map_map (SkorokhodSpace.measurable_eval (E := E) (t : ℝ)) hext]
+  have hcomp : ((fun f : D(ℝ, E) ↦ f.toFun (t : ℝ)) ∘ SkorokhodSpace.extendNNReal)
+      = fun f : D(ℝ≥0, E) ↦ f.toFun t := by
+    funext f
+    rw [Function.comp_apply, SkorokhodSpace.extendNNReal_apply, Real.toNNReal_coe]
+  rw [hcomp]
+  exact map_eval_map_jumpPathD hlam mu nu hne t
+
+/-- **The Poisson instance of the crossed law, and it is the independent control.**  The law of the
+Poisson path on `D(ℝ, ℕ)` -- a space over the index of Milestones 7 and 8 -- has at every
+nonnegative time the marginal `ProbabilityTheory.poissonMeasure t`, into whose definition nothing
+of this development enters.
+
+It is `map_eval_map_jumpPathD_poisson` carried across, and it says two things at once: the bundle
+`MetricSpace`, `BorelSpace`, `PolishSpace`, `CompleteSpace` that the crossing asks of the state
+space is dischargeable on data, and the crossing does not change what the law says. -/
+theorem map_eval_map_extendNNReal_map_jumpPathD_poisson (t : ℝ≥0) :
+    (((jumpMeasure poissonJumpKernel (Measure.dirac 0)).map (jumpPathD poissonRate)).map
+        (SkorokhodSpace.extendNNReal (E := ℕ))).map (fun f : D(ℝ, ℕ) ↦ f.toFun (t : ℝ))
+      = poissonMeasure t := by
+  rw [map_eval_map_extendNNReal_map_jumpPathD measurable_poissonRate poissonJumpKernel
+    (Measure.dirac 0) ae_mem_nonExplosiveE_poisson t, jumpMeasure_map_jumpProcessE_poisson t]
+
+/-- **The path law of the jump construction is tight**, on `D(ℝ≥0, E)`.  A single finite measure on
+a complete second countable metric space is tight (`MeasureTheory.isTightMeasureSet_singleton`,
+`Mathlib/MeasureTheory/Measure/Tight.lean:99`), and `D(ℝ≥0, E)` is one by
+`SkorokhodSpace.instCompleteSpace` and `SkorokhodSpace.instSeparableSpace` of Milestone 5 there.
+
+This is the hypothesis the tightness transport of Milestone 9 asks for, and it is stated so that
+the next theorem discharges it on data rather than assuming it. -/
+theorem isTightMeasureSet_map_jumpPathD [MetricSpace E] [BorelSpace E] [PolishSpace E]
+    [CompleteSpace E] {lam : E → ℝ} (hlam : Measurable lam) (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] :
+    IsTightMeasureSet {(jumpMeasure mu nu).map (jumpPathD lam)} := by
+  have : IsProbabilityMeasure ((jumpMeasure mu nu).map (jumpPathD lam)) :=
+    isProbabilityMeasure_map_jumpPathD hlam mu nu
+  exact isTightMeasureSet_singleton
+
+/-- **The tightness transport of Milestone 9, inhabited on the law of the jump construction.**  The
+family is the constant one at `(jumpMeasure mu nu).map (jumpPathD lam)`, and the conclusion is the
+tightness of its image on `D(ℝ, E)`.
+
+**What this is and what it is not.**  It is not a new estimate: the conclusion also follows from
+`MeasureTheory.isTightMeasureSet_singleton` applied on `D(ℝ, E)` directly, that space being
+complete and second countable as well.  What it is, is the first passage of a law of this
+development through `SkorokhodSpace.isTightMeasureSet_map_extendNNReal` -- the hypothesis of that
+theorem is here discharged on data, and the family form `{μ i | i}` it is stated in is matched
+against a measure actually produced here.  That is the same service
+`map_eval_map_jumpPathD_poisson` performs for the coordinate: a statement that is right is made
+applicable by being applied once. -/
+theorem isTightMeasureSet_map_extendNNReal_map_jumpPathD [MetricSpace E] [BorelSpace E]
+    [PolishSpace E] [CompleteSpace E] {lam : E → ℝ} (hlam : Measurable lam) (mu : Kernel E E)
+    [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] :
+    IsTightMeasureSet
+      {((jumpMeasure mu nu).map (jumpPathD lam)).map (SkorokhodSpace.extendNNReal (E := E))} := by
+  have hsingle := isTightMeasureSet_map_jumpPathD hlam mu nu
+  have h1 : {((fun _ : Unit ↦ (jumpMeasure mu nu).map (jumpPathD lam)) i) | i}
+      = ({(jumpMeasure mu nu).map (jumpPathD lam)} : Set (Measure D(ℝ≥0, E))) := by
+    ext m
+    rw [Set.mem_singleton_iff]
+    constructor
+    · rintro ⟨-, rfl⟩
+      rfl
+    · rintro rfl
+      exact ⟨(), rfl⟩
+  have h2 := SkorokhodSpace.isTightMeasureSet_map_extendNNReal
+    (μ := fun _ : Unit ↦ (jumpMeasure mu nu).map (jumpPathD lam)) (by rw [h1]; exact hsingle)
+  have h3 : {((fun _ : Unit ↦ (jumpMeasure mu nu).map (jumpPathD lam)) i).map
+        (SkorokhodSpace.extendNNReal (E := E)) | i}
+      = ({((jumpMeasure mu nu).map (jumpPathD lam)).map (SkorokhodSpace.extendNNReal (E := E))} :
+          Set (Measure D(ℝ, E))) := by
+    ext m
+    rw [Set.mem_singleton_iff]
+    constructor
+    · rintro ⟨-, rfl⟩
+      rfl
+    · rintro rfl
+      exact ⟨(), rfl⟩
+  rwa [h3] at h2
+
 /-- **A test process of the path space, composed with the path map, is a test process of the
 construction.**  Membership in `mpFamily` is transported as an identity of the defining data: the
 pair `p` is the same pair, because the coordinate of the image is the process by `rfl`. -/
