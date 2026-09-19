@@ -6875,6 +6875,21 @@ the answer is the strongest one available, and it is proved (2026-09-18):
   approximating variables beyond the convergence itself; they need not be jump
   constructions.
 
+  **What these two still ask for, and where it comes from.** Their hypothesis is
+  weak convergence *on the path space*, and an approximating family delivers
+  convergence of the finite dimensional distributions along one dense set of
+  times. The two are bridged by
+  `SkorokhodSpace.tendstoInDistribution_eval_of_isTight_of_tendsto_finiteDimensional`
+  (**SkorokhodSpace** Milestone 8, 2026-09-19), which adds tightness to the
+  convergence along a dense `T` and returns the marginal at every time the limit
+  law does not charge with a jump — in particular at times outside `T`, which is
+  the whole point, since a time of the index set need stand in no relation to `T`
+  at all. That bridge is stated over the index `ℝ`, inherited from
+  `SkorokhodSpace.isCompact_closure_iff` of Milestone 7 there, while `jumpPathD`
+  lands in `D(ℝ≥0, E)`; `SkorokhodSpace.isClosedEmbedding_extendNNReal` is the
+  item that joins the two, and it joins them once for all 53 declarations of that
+  file which stand over `ℝ`.
+
 * `jumpFiltrationE_eq_comap_jumpPath` and `measurable_pathFiltration_jumpPath`:
   the natural filtration of the construction **is** the pull back of
   `pathFiltration` along `jumpPath`, by `naturalFiltration_comp`, so the path map

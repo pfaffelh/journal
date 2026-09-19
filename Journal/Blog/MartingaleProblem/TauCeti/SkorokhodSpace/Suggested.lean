@@ -13706,3 +13706,129 @@ theorem SkorokhodSpace.tendsto_of_isCompact_closure_of_tendsto_finiteDimensional
       (fun k => hμS (ns (φ k))) hconv' hT
       (fun α hα F t htT => (hfdd α hα F t htT).comp hsub)
   exact ⟨φ, hνρ ▸ hconv'⟩
+
+/-- **Ethier--Kurtz, Theorem 3.7.8(b) for a tight sequence.**  The theorem above
+under the hypothesis a reader meets it with: `μ` tight rather than relatively
+compact.
+
+Prokhorov's forward half, `isCompact_closure_of_isTightMeasureSet`
+(`Mathlib/MeasureTheory/Measure/Prokhorov.lean:530`), is the whole proof; it asks
+of the path space nothing but `[T2Space]` and `[BorelSpace]`, both of which
+`SkorokhodSpace.instMetricSpace` and the Borel instance of Milestone 6 give.  The
+hypotheses on `E` are therefore not those of this step but those of the theorem
+above, which spends completeness and second countability on the *converse* half
+through `exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure`.
+
+**The set is the range of the sequence**, and that is the form both the
+hypothesis and `fact:relcompact` are reached in; for a tight *family* of which
+the sequence is a part, the theorem above with `S` that family is the statement. -/
+theorem SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional
+    [CompleteSpace E] {μ : ℕ → ProbabilityMeasure D(ℝ, E)}
+    (htight : IsTightMeasureSet {((μ n : ProbabilityMeasure D(ℝ, E)) : Measure D(ℝ, E)) | n})
+    {ν : ProbabilityMeasure D(ℝ, E)} {T : Set ℝ} (hT : Dense T)
+    (hfdd : ∀ (α : Type) (_ : Fintype α) (F : α → (E →ᵇ ℝ)) (t : α → ℝ), (∀ i, t i ∈ T) →
+      Tendsto (fun n => ∫ f, ∏ i, F i (f.toFun (t i)) ∂(μ n : Measure D(ℝ, E))) atTop
+        (𝓝 (∫ f, ∏ i, F i (f.toFun (t i)) ∂(ν : Measure D(ℝ, E))))) :
+    Tendsto μ atTop (𝓝 ν) := by
+  have hset : {((ρ : ProbabilityMeasure D(ℝ, E)) : Measure D(ℝ, E)) | ρ ∈ Set.range μ}
+      = {((μ n : ProbabilityMeasure D(ℝ, E)) : Measure D(ℝ, E)) | n} := by
+    ext m
+    constructor
+    · rintro ⟨ρ, ⟨n, rfl⟩, rfl⟩
+      exact ⟨n, rfl⟩
+    · rintro ⟨n, rfl⟩
+      exact ⟨μ n, ⟨n, rfl⟩, rfl⟩
+  refine SkorokhodSpace.tendsto_of_isCompact_closure_of_tendsto_finiteDimensional
+    (S := Set.range μ) (isCompact_closure_of_isTightMeasureSet ?_) (fun n => ⟨n, rfl⟩) hT hfdd
+  rw [hset]
+  exact htight
+
+/-- **The same for random variables.**  Path valued variables whose laws are tight
+and whose finite dimensional distributions along a dense `T` converge to those of
+`Z` converge to `Z` in distribution, on Mathlib's
+`MeasureTheory.TendstoInDistribution`.
+
+This is the theorem above read on the sample spaces, `Measure.map` carrying the
+one form to the other; `integral_map` is where the hypothesis `hX` is spent, and
+the integrand is measurable rather than continuous, being
+`SkorokhodSpace.measurable_eval` at each of the finitely many times followed by
+the bounded continuous `F i`.
+
+**The coercion of `ProbabilityMeasure` is not to be rewritten through.**  The goal
+of the `tendsto` field carries `↑⟨(P n).map (X n), _⟩`, and a `simp only` at it
+fails with an application type mismatch, the subtype not reducing at `implicit`
+transparency.  The equality of the integrals is therefore established *beside* the
+goal and `exact` closes it by definitional unfolding. -/
+theorem SkorokhodSpace.tendstoInDistribution_of_isTight_of_tendsto_finiteDimensional
+    [CompleteSpace E]
+    {Ω : ℕ → Type*} {mΩ : ∀ n, MeasurableSpace (Ω n)}
+    {P : (n : ℕ) → Measure (Ω n)} [∀ n, IsProbabilityMeasure (P n)]
+    {Ω₀ : Type*} {mΩ₀ : MeasurableSpace Ω₀} {P₀ : Measure Ω₀} [IsProbabilityMeasure P₀]
+    {X : (n : ℕ) → Ω n → D(ℝ, E)} {Z : Ω₀ → D(ℝ, E)}
+    (hX : ∀ n, AEMeasurable (X n) (P n)) (hZ : AEMeasurable Z P₀)
+    (htight : IsTightMeasureSet {(P n).map (X n) | n})
+    {T : Set ℝ} (hT : Dense T)
+    (hfdd : ∀ (α : Type) (_ : Fintype α) (F : α → (E →ᵇ ℝ)) (t : α → ℝ), (∀ i, t i ∈ T) →
+      Tendsto (fun n => ∫ ω, ∏ i, F i ((X n ω).toFun (t i)) ∂(P n)) atTop
+        (𝓝 (∫ ω, ∏ i, F i ((Z ω).toFun (t i)) ∂P₀))) :
+    TendstoInDistribution X atTop Z P P₀ where
+  forall_aemeasurable := hX
+  aemeasurable_limit := hZ
+  tendsto := by
+    refine SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional
+      (μ := fun n => ⟨(P n).map (X n), inferInstance⟩)
+      (ν := ⟨P₀.map Z, inferInstance⟩) htight hT ?_
+    intro α hα F t htT
+    have hm : Measurable (fun f : D(ℝ, E) => ∏ i, F i (f.toFun (t i))) :=
+      Finset.measurable_prod _ fun i _ =>
+        (F i).continuous.measurable.comp (SkorokhodSpace.measurable_eval (t i))
+    have h1 : ∀ n : ℕ, ∫ f, ∏ i, F i (f.toFun (t i)) ∂((P n).map (X n))
+        = ∫ ω, ∏ i, F i ((X n ω).toFun (t i)) ∂(P n) := fun n =>
+      integral_map (hX n) hm.aestronglyMeasurable
+    have h2 : ∫ f, ∏ i, F i (f.toFun (t i)) ∂(P₀.map Z)
+        = ∫ ω, ∏ i, F i ((Z ω).toFun (t i)) ∂P₀ :=
+      integral_map hZ hm.aestronglyMeasurable
+    have hfun : (fun n : ℕ => ∫ f, ∏ i, F i (f.toFun (t i)) ∂((P n).map (X n)))
+        = fun n : ℕ => ∫ ω, ∏ i, F i ((X n ω).toFun (t i)) ∂(P n) := funext h1
+    have key : Tendsto (fun n : ℕ => ∫ f, ∏ i, F i (f.toFun (t i)) ∂((P n).map (X n))) atTop
+        (𝓝 (∫ f, ∏ i, F i (f.toFun (t i)) ∂(P₀.map Z))) := by
+      rw [hfun, h2]
+      exact hfdd α hα F t htT
+    exact key
+
+/-- **The marginal at a time that need not lie in `T`**, and this is Milestone 8
+as a supplier for Milestone 10 of the roadmap **MartingaleProblems**.
+
+Hypothesis (a) of `mpSolution_of_tendsto` is convergence in distribution of the
+value at *each* time of the index set `D` it runs over, and what an approximating
+family delivers is convergence of the finite dimensional distributions along
+**one** dense set of times.  The two are not the same statement, and the gap is
+not cosmetic: `SkorokhodSpace.exists_countable_dense_forall_setOf_leftLim_ne_one`
+exhibits a law and a countable dense `T` no time of which is a continuity time of
+the law, so a time of `D` may stand in no useful relation to `T` whatever.
+
+What closes the gap is the theorem above, and only it: tightness together with
+convergence along `T` gives weak convergence on the path space, which is a
+statement about no particular time, and
+`SkorokhodSpace.tendstoInDistribution_eval` reads the marginal off it at every
+time the limit law does not charge with a jump.  Those times are dense by
+`SkorokhodSpace.exists_countable_dense_continuity` and their complement is
+countable by `SkorokhodSpace.countable_setOf_measure_leftJump_ne_zero`, so the
+conclusion is available at all but countably many `s`. -/
+theorem SkorokhodSpace.tendstoInDistribution_eval_of_isTight_of_tendsto_finiteDimensional
+    [CompleteSpace E]
+    {Ω : ℕ → Type*} {mΩ : ∀ n, MeasurableSpace (Ω n)}
+    {P : (n : ℕ) → Measure (Ω n)} [∀ n, IsProbabilityMeasure (P n)]
+    {Ω₀ : Type*} {mΩ₀ : MeasurableSpace Ω₀} {P₀ : Measure Ω₀} [IsProbabilityMeasure P₀]
+    {X : (n : ℕ) → Ω n → D(ℝ, E)} {Z : Ω₀ → D(ℝ, E)}
+    (hX : ∀ n, AEMeasurable (X n) (P n)) (hZ : AEMeasurable Z P₀)
+    (htight : IsTightMeasureSet {(P n).map (X n) | n})
+    {T : Set ℝ} (hT : Dense T)
+    (hfdd : ∀ (α : Type) (_ : Fintype α) (F : α → (E →ᵇ ℝ)) (t : α → ℝ), (∀ i, t i ∈ T) →
+      Tendsto (fun n => ∫ ω, ∏ i, F i ((X n ω).toFun (t i)) ∂(P n)) atTop
+        (𝓝 (∫ ω, ∏ i, F i ((Z ω).toFun (t i)) ∂P₀)))
+    (s : ℝ) (hs : P₀ {ω | Function.leftLim (Z ω).toFun s = (Z ω).toFun s} = 1) :
+    TendstoInDistribution (fun n ω => (X n ω).toFun s) atTop (fun ω => (Z ω).toFun s) P P₀ :=
+  SkorokhodSpace.tendstoInDistribution_eval
+    (SkorokhodSpace.tendstoInDistribution_of_isTight_of_tendsto_finiteDimensional
+      hX hZ htight hT hfdd) s hs
