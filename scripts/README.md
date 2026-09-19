@@ -136,6 +136,22 @@ Laufbericht.
 * **`check_axioms_master.py`** ist `check_axioms.py` gegen denselben Worktree.
   Es braucht den `.olean`-Baum, den `check_master.py` anlegt, und ist deshalb
   nach ihm zu laufen.
+* **`dev_check_master.py`** ist `dev_check.py` gegen denselben Worktree: es
+  übersetzt **eine Arbeitsdatei**, die `TauCetiRoadmap.…Suggested` importiert,
+  gegen die schon gebauten `.olean`. Das dauert Sekunden statt der knapp zwei
+  Minuten eines vollen Kettendurchlaufs und ist der Weg, auf dem eine neue
+  Deklaration entsteht, ehe sie in die Roadmap gehängt wird. Es braucht
+  denselben `.olean`-Baum und ist deshalb ebenfalls nach `check_master.py` zu
+  laufen; die Arbeitsdatei landet in `<worktree>/TauCetiRoadmap/_Dev.lean`, das
+  `check_master.py` zu Beginn jedes Durchlaufs leert, ein Zwischenstand kann
+  also nicht in eine verbindliche Prüfung geraten.
+
+  **Verbindlich bleibt `check_master.py`**, ungefiltert und über die ganze
+  Datei.
+
+  ```
+  python3 scripts/dev_check_master.py scratch/neu.lean
+  ```
 * **`show_master_errors.py`** zeigt die Meldungen eines `check_master.py`-Laufs
   **ungekürzt**, wahlweise auf einen Zeilenbereich eingeschränkt;
   **`master_error_families.py`** gruppiert sie nach dem Kopf der Anwendung, in

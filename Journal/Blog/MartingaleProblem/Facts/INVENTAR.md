@@ -40463,3 +40463,207 @@ Lauf schlägt auch keinen vor — gefunden wurde es beim Lesen.
    `Clock.IsProgressive`.
    *Worauf es ruht:* auf dem berichtigten Absatz dieses Laufs.
    *Warum jetzt:* solange die Stelle frisch ist. Es ist ein Absatz, kein Lauf.
+
+### 2026-09-19, vierter Lauf des Tages — Vorschlag 1 steht, aber der Weg, den die Roadmap dafür vorgesehen hatte, wird nicht gebraucht: die Gleichheit zweier Gesetze längs einer dichten Zeitmenge ruht nicht auf der Rechtsstabilität, sondern auf der Borelstruktur, und sie verlangt **keine** kompakte Einschließung
+
+**Acht neue Deklarationen** und **eine bestehende zum Korollar umgeschrieben**,
+alle in `TauCeti/SkorokhodSpace/Suggested.lean` (+228 Zeilen, 12 401 → 12 629).
+Alle drei Roadmap-Dateien durch `scripts/check_master.py` gegen
+`94ef6b89544e58e90f119da869f3fb48d1da0f4c`: **0 Fehler, 0 `sorry`, 0 veraltete
+Namen**, Warnungen 18 / **35** / 106, rc 0. Die acht neuen Namen mit
+`scripts/check_axioms_master.py` auf `propext`, `Classical.choice`, `Quot.sound`
+und nichts sonst. Die Punkte stehen in `SkorokhodSpace/README.md`,
+Meilenstein 6, mit einem Querverweis in Meilenstein 8.
+
+Angegangen war Vorschlag 1 des Vorlaufs,
+`SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq`. Er steht — und
+zwar mit **weniger** Voraussetzungen, als der Vorschlag ihm zugedacht hatte. Das
+ist der Befund des Laufs.
+
+#### Der Befund: die Rechtsstabilität wird nicht gebraucht
+
+Der Vorschlag las: „stimmen zwei Gesetze `μ ν` auf `D(ℝ, E)`, **beide getragen
+von einer Menge mit kompaktem Abschluß**, in den endlichdimensionalen
+Verteilungen längs einer dichten Menge `T ⊆ ℝ` überein, so sind sie gleich", und
+nannte als Unterbau die Aussage des einundzwanzigsten Laufs des 2026-09-18
+**zweimal** — für `μ` und für `ν` —, dazu
+`exists_time_mem_Ico_forall_measure_setOf_exists_edist_lt` für eine *gemeinsame*
+gute Zeit. Der Lauf hat diesen Weg nicht genommen, weil er nicht nötig ist:
+
+> Die Koordinaten einer **abzählbaren rechtsdichten** Zeitmenge erzeugen bereits
+> die ganze Borelstruktur von `D(ι, E)`.
+
+Das steht seit dem 2026-09-09 in der Datei, nur an einer Menge, die der Beweis
+selbst herstellt (`exists_countable_rightDense`). Gibt man die Menge statt dessen
+vor, so ist die Gleichheit zweier Gesetze ein Satz über ein multiplikatives
+System und nichts weiter: `ext_of_forall_integral_eq_of_isMulSystem`
+(**WeakConvergence** M5) auf die endlichdimensionalen Testfunktionen längs `T`.
+
+**Was damit entfällt**, und es ist nicht wenig:
+
+* die **kompakte Einschließung** beider Gesetze — `μ Aᶜ = 0` für ein `A` mit
+  `IsCompact (closure A)` kommt in der Aussage nicht mehr vor;
+* der **Stetigkeitsmodul** der Pfade und die ganze Konstantenkette
+  `C → Dc → a → δ → b → δ'` des Teleskops;
+* die Frage, ob zwei Gesetze **dieselbe** verschobene Zeit haben können. Der
+  Vorlauf hatte sie ausdrücklich gestellt, im selben Lauf mit „ja" beantwortet
+  und die Eingabe dafür gebaut. Die Antwort bleibt richtig; die Frage stellt sich
+  auf diesem Weg nicht.
+
+**Wo die Rechtsstabilität sehr wohl gebraucht wird**, und das ist der Grund, aus
+dem sie kein Leerlauf war: dort, wo die Zeiten der *Voraussetzung* und die Zeiten
+der *Behauptung* verschiedene sind. Das ist EK 3.7.8(b) — der Vergleich eines
+Teilfolgenlimes mit der Konvergenz längs `T` —, und dort ist der Übergang
+zwischen den beiden Zeitfamilien eine Approximation. Hier sind es dieselben
+Zeiten, und die Dichtheit wird auf die **Borelstruktur** verwandt statt auf eine
+Approximation. Der Querverweis steht jetzt an beiden Stellen der README, damit
+ein späterer Lauf die eine Aussage nicht für die andere hält.
+
+#### Die acht Deklarationen
+
+* **`SkorokhodSpace.borel_eq_iSup_comap_eval_of_countable_rightDense`** —
+  `borel D(ι,E) = ⨆ t ∈ D, comap (eval t) (borel E)` für **jede** abzählbare
+  rechtsdichte `D`. Der Beweis ist der des bestehenden Satzes, mit `D` als
+  Parameter statt als Erzeugnis; `iSup₂` statt `iSup`, und
+  `le_iSup₂_of_le (t : ι) t.2` an der Stelle, an der vorher `le_iSup_of_le` stand.
+* **`SkorokhodSpace.borel_eq_iSup_comap_eval`** ist damit ein **Korollar** von
+  vier Zeilen und keine zweite Fassung des Beweises. Die Datei hat dadurch eine
+  Warnung weniger (36 → 35).
+* **`SkorokhodSpace.evalFuns T`** — die endlichdimensionalen Testfunktionen längs
+  `T`: `f ↦ ∏ t ∈ s, F t (f t)` über einem `Finset ι` innerhalb von `T`, mit
+  `F : ι → (E →ᵇ ℝ)`.
+
+  **Warum ein `Finset` und kein `Fintype`-Index**, und das ist die einzige
+  Entwurfsentscheidung des Laufs: `SkorokhodSpace.dist_integral_evalPi_le_of_forall_dist_le`
+  und die ganze Kette von Meilenstein 8 indizieren mit `κ → ℝ` und `[Fintype κ]`.
+  Eine solche Familie braucht **nicht injektiv** zu sein, und das Produkt zweier
+  solcher Produkte ist ein Produkt über eine Zeitfamilie mit Wiederholungen —
+  von dieser Gestalt erst wieder, wenn die wiederholten Faktoren
+  zusammenmultipliziert sind. Genau das tut ein `Finset` von vornherein. Daß die
+  zusammengesetzten Faktoren wieder in der Klasse liegen, ist
+  `BoundedContinuousFunction.instCommRing`
+  (`Topology/ContinuousMap/Bounded/Normed.lean:464`), und mehr wird von `E` dafür
+  nicht verlangt.
+* **`isMulSystem_evalFuns`**, **`measurable_of_mem_evalFuns`**,
+  **`bounded_of_mem_evalFuns`** — die drei Voraussetzungen von
+  `ext_of_forall_integral_eq_of_isMulSystem`, die kein Maß nennen. Das
+  Zusammensetzen über `s₁ ∪ s₂` mit `1` als stillem Faktor ist zweimal
+  `Finset.prod_subset` und einmal `Finset.prod_mul_distrib`.
+* **`generateFromFuns_evalFuns`** — längs einer abzählbaren rechtsdichten
+  Zeitmenge erzeugt die Klasse die Borelstruktur. Die eine Inklusion ist die
+  Meßbarkeit; die andere ist der Satz oben, gefolgt an jeder Zeit von
+  `generateFromFuns_comp` und `generateFromFuns_setOf_continuous_bounded` (beide
+  **WeakConvergence** M5): eine Funktion *einer* Koordinate ist ein Produkt über
+  einen Singleton, und `BoundedContinuousFunction.ofNormedAddCommGroup`
+  (`Normed.lean:118`) macht aus stetig-und-beschränkt ein `E →ᵇ ℝ`.
+* **`eq_of_forall_rightDense_forall_integral_evalPi_eq`** — die Aussage über
+  allgemeinem Index, mit `T` abzählbar und rechtsdicht.
+* **`eq_of_forall_dense_forall_integral_evalPi_eq`** — dieselbe über `ℝ`, mit
+  **`Dense T`** und sonst nichts.
+
+#### Warum über `ℝ` aus `Dense T` beides folgt, und warum nicht allgemein
+
+Die Voraussetzung des allgemeinen Satzes ist zweiteilig: `T` abzählbar, und
+`∀ t, t ∈ T ∨ (𝓝[T ∩ Ioi t] t).NeBot`. Über `ℝ` fällt beides aus `Dense T`:
+
+* **abzählbar** durch `Dense.exists_countable_dense_subset`
+  (`Mathlib/Topology/Bases.lean:671`, am Quelltext nachgesehen): eine dichte
+  Teilmenge von `ℝ` hat eine abzählbare dichte Teilmenge, weil der Unterraum
+  separabel ist. Die Zeitmenge des Satzes ist deshalb **nicht** als abzählbar
+  vorausgesetzt — die Voraussetzung wird auf endlichen Teilmengen geprüft, eine
+  größere Zeitmenge ist also eine stärkere Voraussetzung, und die abzählbare
+  Teilmenge ist die Stelle, an der sie wirklich ausgegeben wird;
+* **rechtsdicht** weil jedes Intervall `(t, t+ε)` offen und nichtleer ist.
+
+Der **erste Zweig** der Bedingung — `t ∈ T` — ist über `ℝ` nie nötig, weil `ℝ`
+keinen rechtsisolierten Punkt hat. Über allgemeinem Index ist er es, und genau
+dafür steht der Gegenzeuge im Doc-Kommentar von `measurableEmbedding_piDense`:
+auf `ι = Set.Icc (0:ℝ) 1` ist `Set.Ico 0 1 ∩ ℚ` abzählbar und dicht, und die
+Einbettung ist dort **nicht** injektiv. Die allgemeine Fassung trägt die
+Bedingung deshalb weiter; die `ℝ`-Fassung ist ein Korollar und keine Abschwächung
+auf Verdacht.
+
+#### Ein Werkzeug, und es ist der Grund, warum der Lauf reichte
+
+`scripts/dev_check_master.py` — was `dev_check.py` zu `check_suggested.py` ist,
+nur gegen den master-Worktree: es übersetzt **eine Arbeitsdatei** gegen die schon
+gebauten `.olean` unter `<worktree>/_lean_master`. Eine Datei, die
+`TauCetiRoadmap.SkorokhodSpace.Suggested` importiert, braucht dafür **drei
+Sekunden**; der volle Durchlauf der Kette braucht 107. Die acht Deklarationen
+dieses Laufs sind in einer solchen Datei entstanden und erst danach in die
+Roadmap gehängt; der volle Durchlauf lief dreimal — als Ausgangsstand, nach dem
+Eingriff und am Ende.
+
+Die Arbeitsdatei wird nach `<worktree>/TauCetiRoadmap/_Dev.lean` kopiert, und das
+ist dasselbe Verzeichnis, das `check_master.py` zu Beginn jedes Durchlaufs leert
+— ein Zwischenstand kann also nicht in einer verbindlichen Prüfung landen.
+**Verbindlich bleibt `check_master.py`**, ungefiltert und über die ganze Datei;
+das steht im Doc-Kommentar des neuen Skripts.
+
+#### Geprüft
+
+* `scripts/check_master.py`, drei volle Durchläufe (Ausgangsstand, nach dem
+  Eingriff, und noch einmal am Ende): 0 Fehler, 0 `sorry`, 0 veraltete Namen in
+  allen drei Dateien; Warnungen vorher 18 / 36 / 106, nachher 18 / **35** / 106,
+  rc 0.
+* `scripts/check_axioms_master.py SkorokhodSpace` auf alle acht neuen Namen und
+  auf das umgeschriebene `borel_eq_iSup_comap_eval`: alle auf `propext`,
+  `Classical.choice`, `Quot.sound`.
+* `scripts/check_duplicates.py`: **2 235** geprüfte eigene Deklarationen (vorher
+  2 227, also genau die acht neuen), **34** Treffer — unverändert. Keiner der
+  neuen Namen kollidiert mit der Bibliothek.
+* Die Mathlib-Fundstellen `Topology/Bases.lean:671`,
+  `Topology/ContinuousMap/Bounded/Normed.lean:118` und `:464` einzeln am
+  Quelltext von `94ef6b89544` nachgesehen.
+
+#### Eine Berichtigung am Rande
+
+`Finset.prod_le_prod` verlangt auf `master` **eine** Voraussetzung
+(`Algebra/Order/BigOperators/Group/Finset.lean:111`, über `MulLeftMono`); die
+Fassung mit Nichtnegativität heißt dort `Finset.prod_le_prod₀`
+(`Algebra/Order/BigOperators/GroupWithZero/Finset.lean:39`). Das ist dieselbe
+Familie, die schon am 2026-09-18 unter den sechzehn Fehlern des ersten
+master-Durchlaufs stand; sie fällt nur nicht auf, weil `prod_le_prod` nicht
+veraltet ist, sondern **etwas anderes** bedeutet als auf v4.33.1. Ein Prüfer
+dafür gibt es nicht und dieser Lauf schlägt auch keinen vor — es ist kein
+verschwundener Name, sondern ein verschobener.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **EK 3.7.8(b) selbst**, jetzt wo beide Hälften dastehen:
+   `SkorokhodSpace.tendsto_of_isCompact_closure_of_tendsto_finiteDimensional` in
+   der Fassung mit *dichter* Zeitmenge — konvergieren die endlichdimensionalen
+   Verteilungen längs einer dichten `T` und ist die Folge straff, so konvergiert
+   sie in Verteilung auf `D(ℝ, E)`.
+   *Worauf es ruht:* auf
+   `exists_times_forall_dist_integral_evalPi_le_of_isCompact_closure`
+   (2026-09-18) für die Verschiebung der Zeiten nach rechts, auf
+   `exists_time_liminf_measure_setOf_exists_edist_lt` für die Folge (Zeit längs
+   einer **Teilfolge**, und das ist die Grenze des Weges), und auf dem Satz
+   dieses Laufs für die **Identifikation** des Limes: zwei Teilfolgenlimiten
+   stimmen längs `T` überein, also sind sie gleich. Das ist der Schritt, für den
+   der Vorlauf die Rechtsstabilität zweimal vorgesehen hatte, und er ist die
+   Stelle, an der sie wirklich gebraucht wird.
+   *Warum jetzt:* es ist der einzige noch offene Punkt von Meilenstein 8, und
+   seine beiden Eingaben sind seit diesem Lauf vollständig.
+
+2. **Die Eindeutigkeit des Pfadgesetzes der Sprungkonstruktion als Zeuge.**
+   `MartingaleProblems` hat seit dem 2026-09-18 `jumpPathD`, das Pfadgesetz auf
+   `D(ℝ≥0, E)`, und die Roadmaps haben jetzt einen Satz, der ein solches Gesetz
+   aus seinen endlichdimensionalen Verteilungen bestimmt — aber noch keinen
+   Zeugen, der beides zusammenbringt.
+   *Was:* `jumpPathD_law_eq_of_forall_dense` — zwei Sprungkonstruktionen mit
+   denselben Daten und derselben Anfangsverteilung haben dasselbe Pfadgesetz,
+   weil ihre endlichdimensionalen Verteilungen längs ℚ übereinstimmen.
+   *Worauf es ruht:* auf `eq_of_forall_dense_forall_integral_evalPi_eq` dieses
+   Laufs, auf dem Index `ℝ≥0` statt `ℝ` — und das ist die erste zu klärende
+   Frage, denn die `ℝ`-Fassung ist über `ℝ` geführt; über `ℝ≥0` ist der Punkt `0`
+   nicht rechtsisoliert, die allgemeine Fassung greift also, aber die Abzählbar­
+   keit ist dort eigens zu liefern.
+   *Warum jetzt:* der Satz dieses Laufs hat noch keinen Verbraucher, und eine
+   Aussage ohne Verbraucher ist nach der Rechnung dieses Inventars die Lage, in
+   der `SkorokhodSpace` zehntausend Zeilen lang war.
+
+3. **`dist_eq_sub_of_le` in einen Namensraum bringen**, unverändert vom Vorlauf.
+   Es ist die letzte Deklaration der Roadmaps mit einem generischen Namen im
+   Wurzelnamensraum, und dieser Lauf hat sie nicht berührt.

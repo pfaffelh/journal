@@ -1,6 +1,6 @@
 # Deklarationen, die es auf `94ef6b89544e58e90f119da869f3fb48d1da0f4c` schon geben könnte
 
-* geprüfte eigene Deklarationen: **2227**
+* geprüfte eigene Deklarationen: **2235**
 * Treffer auf dem letzten Namensbestandteil: **34**
 * als zu allgemein übergangen (kurz oder generisch): 23
 
@@ -8,10 +8,10 @@ Ein Treffer ist ein **Anhaltspunkt**, keine Doppelung. Er sagt, daß Mathlib ein
 
 | unsere Deklaration | Stelle | gleichnamig auf `master` |
 | --- | --- | --- |
-| `SkorokhodSpace.borel_eq_iSup_comap_eval` | `SkorokhodSpace/Suggested.lean:7334` | `ContinuousMap.borel_eq_iSup_comap_eval` (`Mathlib/MeasureTheory/Constructions/BorelSpace/ContinuousMap.lean:77`) |
+| `SkorokhodSpace.borel_eq_iSup_comap_eval` | `SkorokhodSpace/Suggested.lean:7373` | `ContinuousMap.borel_eq_iSup_comap_eval` (`Mathlib/MeasureTheory/Constructions/BorelSpace/ContinuousMap.lean:77`) |
 | `dist_eq_sub_of_le` | `SkorokhodSpace/Suggested.lean:448` | `Nat.dist_eq_sub_of_le` (`Mathlib/Data/Nat/Dist.lean:35`) |
 | `IsCadlag.eq_of_eqOn_dense` | `SkorokhodSpace/Suggested.lean:1081` | `MonoidHom.eq_of_eqOn_dense` (`Mathlib/Algebra/Group/Subgroup/Ker.lean:407`); `MulHom.eq_of_eqOn_dense` (`Mathlib/Algebra/Group/Subsemigroup/Basic.lean:261`); `FirstOrder.Language.Hom.eq_of_eqOn_dense` (`Mathlib/ModelTheory/Substructures.lean:855`) |
-| `SkorokhodSpace.isCompact_closure_iff` | `SkorokhodSpace/Suggested.lean:10295` | `Pi.isCompact_closure_iff` (`Mathlib/Topology/Separation/Hausdorff.lean:618`) |
+| `SkorokhodSpace.isCompact_closure_iff` | `SkorokhodSpace/Suggested.lean:10316` | `Pi.isCompact_closure_iff` (`Mathlib/Topology/Separation/Hausdorff.lean:618`) |
 | `TimeChange.norm_mul_le` | `SkorokhodSpace/Suggested.lean:2070` | `norm_mul_le` (`Mathlib/Analysis/Normed/Ring/Basic.lean:218`); `FreeGroup.norm_mul_le` (`Mathlib/GroupTheory/FreeGroup/Reduce.lean:447`) |
 | `IsDetermining.comp_fst` | `MartingaleProblems/Suggested.lean:6110` | `Asymptotics.IsBigO.comp_fst` (`Mathlib/Analysis/Asymptotics/Prod.lean:105`); `Asymptotics.IsLittleO.comp_fst` (`Mathlib/Analysis/Asymptotics/Prod.lean:113`); `Asymptotics.IsTheta.comp_fst` (`Mathlib/Analysis/Asymptotics/Theta.lean:311`) |
 | `MeasureTheory.Filtration.comp_apply` | `MartingaleProblems/Suggested.lean:2043` | `AlgHom.comp_apply` (`Mathlib/Algebra/Algebra/Hom.lean:265`); `NonUnitalAlgHom.comp_apply` (`Mathlib/Algebra/Algebra/NonUnitalHom.lean:306`); `AlgCat.comp_apply` (`Mathlib/Algebra/Category/AlgCat/Basic.lean:112`) |
@@ -41,4 +41,4 @@ Ein Treffer ist ein **Anhaltspunkt**, keine Doppelung. Er sagt, daß Mathlib ein
 | `SkorokhodSpace.instMetricSpace` | `SkorokhodSpace/Suggested.lean:4056` | `Circle.instMetricSpace` (`Mathlib/Analysis/Complex/Circle.lean:65`); `Unitization.instMetricSpace` (`Mathlib/Analysis/Normed/Algebra/Unitization.lean:230`); `BoundedContinuousFunction.instMetricSpace` (`Mathlib/Topology/ContinuousMap/Bounded/Basic.lean:205`) |
 | `SkorokhodSpace.instSeparableSpace` | `SkorokhodSpace/Suggested.lean:6753` | `DomMulAct.instSeparableSpace` (`Mathlib/Topology/Algebra/Constructions/DomMulAct.lean:100`); `ContinuousMap.instSeparableSpace` (`Mathlib/Topology/ContinuousMap/SecondCountableSpace.lean:108`) |
 | `SkorokhodSpace.metricSpace` | `SkorokhodSpace/Suggested.lean:3494` | `spectralNorm.metricSpace` (`Mathlib/Analysis/Normed/Unbundled/SpectralNorm.lean:905`); `Padic.metricSpace` (`Mathlib/NumberTheory/Padics/PadicNumbers.lean:784`); `Subtype.metricSpace` (`Mathlib/Topology/MetricSpace/Basic.lean:111`) |
-| `TimeChange.toNNReal` | `SkorokhodSpace/Suggested.lean:7456` | `ContinuousMap.toNNReal` (`Mathlib/Analysis/CStarAlgebra/ContinuousFunctionalCalculus/Unique.lean:67`); `ContinuousMapZero.toNNReal` (`Mathlib/Analysis/CStarAlgebra/ContinuousFunctionalCalculus/Unique.lean:233`); `ENNReal.toNNReal` (`Mathlib/Basic/ENNReal/Basic.lean:226`) |
+| `TimeChange.toNNReal` | `SkorokhodSpace/Suggested.lean:7477` | `ContinuousMap.toNNReal` (`Mathlib/Analysis/CStarAlgebra/ContinuousFunctionalCalculus/Unique.lean:67`); `ContinuousMapZero.toNNReal` (`Mathlib/Analysis/CStarAlgebra/ContinuousFunctionalCalculus/Unique.lean:233`); `ENNReal.toNNReal` (`Mathlib/Basic/ENNReal/Basic.lean:226`) |

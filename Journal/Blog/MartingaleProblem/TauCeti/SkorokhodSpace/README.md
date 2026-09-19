@@ -1633,10 +1633,16 @@ over a shrinking family and is therefore an infimum.
   (2026-09-09), so the hypothesis above is not vacuous. The right isolated
   points are countable — each carries a basic open set of which it is the
   greatest element — and adjoining them to a countable dense set is enough.
+* `SkorokhodSpace.borel_eq_iSup_comap_eval_of_countable_rightDense`:
+  `borel (D ι E) = ⨆ t ∈ D, MeasurableSpace.comap (eval t) (borel E)` for **any**
+  countable right dense `D`. Proved (2026-09-19), one inclusion from
+  `measurable_eval` and the other from the embedding above. The set of times is a
+  parameter and not something the proof produces, and that is what carries a
+  hypothesis tested only at the times of a prescribed set to the whole Borel
+  structure.
 * `SkorokhodSpace.borel_eq_iSup_comap_eval`:
   `borel (D ι E) = ⨆ t, MeasurableSpace.comap (eval t) (borel E)`. Proved
-  (2026-09-09), one inclusion from `measurable_eval` and the other from the
-  embedding at a countable right dense set.
+  (2026-09-09), the item above at the set `exists_countable_rightDense` supplies.
 * `SkorokhodSpace.measurable_of_measurable_eval`: a map `G : α → D(ι, E)` is
   measurable as soon as every coordinate `a ↦ (G a) t` is. Proved (2026-09-18),
   as the identity above read as a criterion. It is the direction in which a
@@ -1644,11 +1650,44 @@ over a shrinking family and is therefore an infimum.
   space**, and it is the one that spends the countable core: `measurable_eval` is
   the converse and asks nothing of the index. The first consumer is `jumpPathD`
   of the roadmap **MartingaleProblems**, Milestone 6.
-* Consequences, each stated separately: a Borel probability measure on `D ι E`
-  is determined by its finite dimensional distributions along a countable dense
-  set; a map into `D ι E` is measurable if and only if all its coordinates along
-  such a set are; two processes with paths in `D ι E` that are modifications of
-  each other induce the same law.
+* `SkorokhodSpace.evalFuns`: the finite dimensional test functions along a set of
+  times `T` — products `f ↦ ∏ t ∈ s, F t (f t)` over a `Finset ι` inside `T`,
+  with `F : ι → (E →ᵇ ℝ)`. Defined (2026-09-19). The index is a `Finset` and not
+  a type with a `Fintype` instance, and that is what makes the family closed
+  under multiplication: a family of times with repetitions is again of this shape
+  only once the repeated factors have been multiplied together, which is what a
+  `Finset` does for one. `E →ᵇ ℝ` being a `CommRing` is all that this asks of `E`.
+* `SkorokhodSpace.isMulSystem_evalFuns`, `SkorokhodSpace.measurable_of_mem_evalFuns`
+  and `SkorokhodSpace.bounded_of_mem_evalFuns`: the class is multiplicative, and
+  its members are measurable and bounded. Proved (2026-09-19). These are the three
+  hypotheses of `ext_of_forall_integral_eq_of_isMulSystem` (**WeakConvergence**
+  Milestone 5) that do not mention a measure.
+* `SkorokhodSpace.generateFromFuns_evalFuns`: along a countable right dense set of
+  times the class generates the Borel structure of `D ι E`. Proved (2026-09-19),
+  from the identity above followed, at each time, by `generateFromFuns_comp` and
+  `generateFromFuns_setOf_continuous_bounded`: a function of one coordinate is a
+  product over a singleton.
+* `SkorokhodSpace.eq_of_forall_rightDense_forall_integral_evalPi_eq`: two laws on
+  `D ι E` that agree in their finite dimensional distributions along a countable
+  right dense set of times are equal. Proved (2026-09-19).
+* `SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq`: the same on the
+  index `ℝ` with the hypothesis on the times reduced to plain **density**. Proved
+  (2026-09-19). A dense subset of `ℝ` has a countable dense subset, and a dense
+  set accumulates at every point from the right; `ℝ` has no right isolated point
+  for the first branch of the right density condition to catch. The set of times
+  is *not* asked to be countable — the hypothesis is tested on finite subsets, so
+  a larger set is a stronger hypothesis.
+
+  **Neither law is asked to be carried by a set with compact closure**, and no
+  modulus of continuity appears. That is the difference between identifying two
+  laws and comparing a law with a limit: the stability of the finite dimensional
+  distributions to the right, Milestone 8, is what one needs when the times of
+  the hypothesis and the times of the conclusion are different; here they are the
+  same, and the density is spent on the Borel structure instead.
+* Consequences, each stated separately: a map into `D ι E` is measurable if and
+  only if all its coordinates along a countable right dense set are; two
+  processes with paths in `D ι E` that are modifications of each other induce the
+  same law.
 
 **Acceptance examples.**
 
@@ -2682,6 +2721,15 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   `(m − 1) + η + δ' ≤ m + 1`. The empty `κ` is not excluded: both products are the
   empty product `1`, and the factor `#κ + 1` in `Dc` is what keeps the last step
   free of a division by `#κ`.
+
+  **What this item is *not* for.** Identifying two laws that agree along a dense
+  set of times does not go through it, and asks neither for compact closure nor
+  for a modulus: that is
+  `SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq` of Milestone 6,
+  and it spends the density on the Borel structure instead. What this item
+  answers is the question in which the times of the hypothesis and the times of
+  the conclusion are *different* — comparing a subsequential limit with the
+  convergence along `T`, which is EK 3.7.8(b).
 * `SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional` — stage (A).
   The same conclusion for a tight family, from the previous item and
   `isCompact_closure_of_isTightMeasureSet`.
