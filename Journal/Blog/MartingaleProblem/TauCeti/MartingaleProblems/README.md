@@ -10600,6 +10600,44 @@ had no declaration at all, and they are needed in this order:
    closed. It is written out at the item in `SkorokhodSpace/README.md`,
    Milestone 8.
 
+   **And the boundary term costs the criterion no hypothesis of its own**, the
+   same day, which is what the closing of the link left to decide. It is closed
+   from above by `SkorokhodSpace.basePointOsc_le_three_mul_modulusBased` —
+   `basePointOsc 0 f δ ≤ 3 * modulusBased 0 m f δ` for `m > 0`, a based
+   subdivision having the base point among its nodes and every gap longer than
+   `δ` — so a family whose image moduli are controlled has its image boundary
+   terms controlled with them. And from below it travels under post-composition
+   with the **same** test functions link 2 uses, except that it needs **two**
+   centres and not one: its left half is measured against `leftLim f t₀` and its
+   right half against `f t₀`, and both values lie in the compact set compact
+   containment supplies, the left limit because a compact set is closed
+   (`SkorokhodSpace.leftLim_postcomp`,
+   `SkorokhodSpace.min_iSup_edist_le_iSup_edist_postcomp`,
+   `SkorokhodSpace.min_iSup_edist_leftLim_le_iSup_edist_leftLim_postcomp`). So
+   the earlier reading of this item — that for a family the vanishing of the
+   boundary term is a hypothesis and not a formality — is **corrected**: it is a
+   consequence of the hypothesis the criterion already carries.
+
+   **And the chain is composed the same day**, into the three statements the
+   converse half reads: `SkorokhodSpace.min_edist_le_two_mul_modulusBased_postcomp`
+   for the three point quantity and
+   `SkorokhodSpace.min_iSup_edist_le_three_mul_modulusBased_postcomp` with
+   `SkorokhodSpace.min_iSup_edist_leftLim_le_three_mul_modulusBased_postcomp` for
+   the two halves of the boundary term. Each bounds a quantity of the path that
+   link 1 asks about, capped at `1` and up to `4 * ρ`, by the based modulus of
+   **one** image path — which is the quantity the hypothesis of this item
+   controls. What is left is the bookkeeping of the net and of the exceptional
+   sets, not the chain.
+
+   **And link 2 asked more of its test function than a consumer has**, until the
+   same day: `SkorokhodSpace.le_min_dist_of_dist_clipDist_le` demanded the bound
+   `dist (h y) (clipDist x y) ≤ ρ` at *every* `y ∈ E`, while the class `H` is
+   dense only for uniform convergence **on compact sets**. The statements now ask
+   it at the points they read — the three of the triple, the two the boundary
+   term measures against, the path's values over the window — all of which lie in
+   the compact set compact containment supplies. The positivity of `ρ` went with
+   it, having never been used.
+
 Only then does `isTight_map_postcomp_of_exists_martingale` have a conclusion it
 can reach, and `isRelativelyCompact_of_approx` an input. **The order of work is
 therefore Milestone 8 of SkorokhodSpace first**, and what is left of it is item

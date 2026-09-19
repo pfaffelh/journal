@@ -3492,9 +3492,14 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
      the left limit. That the left one must be read against `leftLim f t₀` is
      `SkorokhodSpace.iSup_edist_step_left_eq_one`, also proved: at the unit step
      and the base point `1` the same supremum against `f t₀` is `1` at every `δ`.
-     For a **family** the vanishing has to be uniform, and that is a hypothesis
-     and not a formality — it says the paths do not accumulate displacement at
-     the one time the subdivisions are pinned at.
+     For a **family** the vanishing has to be uniform, and this item read that
+     for a while as a hypothesis the criterion would have to carry. It is **not**
+     one, 2026-09-19: it follows from the hypothesis the criterion already has,
+     by `SkorokhodSpace.basePointOsc_le_three_mul_modulusBased` on the image side
+     and the two transport statements below. What remains true is that the
+     uniformity is a real condition on the family and not a formality — it says
+     the paths do not accumulate displacement at the one time the subdivisions
+     are pinned at, and
      `SkorokhodSpace.not_isCompact_closure_of_jumps_at_basePoint` is the same
      phenomenon from the other side.
 
@@ -3593,6 +3598,63 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
      `Real.dist_eq`. It is stated at the base point `0`, which is where the chain
      reads it; over a general base point the two window endpoints would have to
      be computed afresh, and no consumer asks for it.
+
+     **And the boundary term costs the criterion no hypothesis of its own**,
+     2026-09-19, which is the question the closing of the link raised and which
+     had to be answered before the converse half was built. It is closed from
+     both sides.
+
+     *From above it is the modulus.*
+     `SkorokhodSpace.basePointOsc_le_three_mul_modulusBased` —
+     `basePointOsc 0 f δ ≤ 3 * modulusBased 0 m f δ` for `m > 0`. A based
+     subdivision has the base point among its nodes and every gap longer than
+     `δ`, so the cell beginning at `t₀` contains `Set.Ico t₀ (t₀ + δ)` entire and
+     the cell ending there contains `Set.Ico (t₀ - δ) t₀` entire. The factor is
+     `3` and not `2`: the left cell measures from its own left endpoint while the
+     term measures against `Function.leftLim f t₀`, and that costs one triangle
+     inequality, the left limit being reached by `le_of_tendsto` along `𝓝[<] t₀`.
+     The hypothesis `0 < m` is used and is what puts the base point strictly
+     inside the window, so that it has both a predecessor and a successor among
+     the nodes; a consumer reads the statement at `m + 1`.
+     `SkorokhodSpace.basePointOsc_le_three_mul_subdivisionOsc` is the same at a
+     single subdivision.
+
+     *From below it travels under post-composition*, and with the **same** test
+     functions link 2 uses. What it needs and the three point quantity does not
+     is **two** centres: the left half is measured against
+     `Function.leftLim f t₀` and the right half against `f t₀`, and no single
+     centre serves both. Both values lie in the compact set compact containment
+     supplies — the left limit because a compact set is closed — so the same
+     finite net serves both. `SkorokhodSpace.leftLim_postcomp` is what makes the
+     left half readable: the left limit passes through post-composition with a
+     continuous map, so the image path's own boundary term is what is bounded.
+     The two halves are
+     `SkorokhodSpace.min_edist_le_edist_postcomp_add` and
+     `SkorokhodSpace.min_edist_leftLim_le_edist_leftLim_postcomp_add` pointwise,
+     `SkorokhodSpace.min_iSup_edist_le_iSup_edist_postcomp` and
+     `SkorokhodSpace.min_iSup_edist_leftLim_le_iSup_edist_leftLim_postcomp` under
+     the supremum.
+
+     **The two halves are not added into one statement**, and that is not
+     laziness: `min (L + R) 2 ≤ min L 1 + min R 1` is false — at `L = 5`, `R = 0`
+     the left side is `2` and the right side `1` — so a capped statement about
+     the sum says less than the two capped statements about the summands. A
+     consumer that wants the sum small argues that one summand is large.
+
+     The one displacement estimate both link 2 and the boundary term rest on is
+     `SkorokhodSpace.sub_le_dist_of_dist_clipDist_le`, stated once and spent
+     twice at one centre by `le_min_dist_of_dist_clipDist_le` and once at each of
+     two by the boundary term. It asks **no** positivity of `ρ`.
+
+     **And the hypothesis on the test function was too strong until 2026-09-19.**
+     `le_min_dist_of_dist_clipDist_le` asked `∀ y, dist (h y) (clipDist x y) ≤ ρ`
+     — a bound at *every* point of `E`. The class `H` of the criterion is dense
+     for uniform convergence **on compact sets**, so that bound is not what a
+     consumer has. The statements now ask it only where they read it: at the
+     three points of the triple, at the two values the boundary term is measured
+     against, and at the path's values over the window. All of those lie in the
+     compact set compact containment supplies, which is exactly where the density
+     delivers.
   2. Three point quantity of the path ⟹ the same for the image under
      `SkorokhodSpace.clipDist (f t)`, capped at `1`
      (`SkorokhodSpace.min_edist_postcomp_clipDist`), and in the form a dense `H`
@@ -3608,6 +3670,24 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   Links 2 and 3 hold at a **fixed** `δ`, which is what makes the chain usable:
   the `δ` a consumer chooses for the path is the `δ` the hypothesis is read at for
   the image, and nothing is asked to be refined.
+
+  **The chain is composed, 2026-09-19**, into the three statements the converse
+  half actually reads — each bounding a quantity of the path that link 1 asks
+  about, capped at `1` and up to `4 * ρ`, by the based modulus of **one** image
+  path, which is the quantity the hypothesis controls:
+
+  * `SkorokhodSpace.min_edist_le_two_mul_modulusBased_postcomp` — the three point
+    quantity, links 2 and 3 composed, constant `2`;
+  * `SkorokhodSpace.min_iSup_edist_le_three_mul_modulusBased_postcomp` and
+    `SkorokhodSpace.min_iSup_edist_leftLim_le_three_mul_modulusBased_postcomp` —
+    the two halves of the boundary term, the transport followed by
+    `basePointOsc_le_three_mul_modulusBased`, constant `3`.
+
+  What is left for the converse half is therefore **not** the chain but the
+  bookkeeping: choose `ρ` from `η`, a finite `ρ`-net of the compact set compact
+  containment supplies, one `h_j ∈ H` per net point, and let the exceptional sets
+  of the `N` applications add up to `ε`. The order of the choices is `ε`, `m`,
+  `η`, `ρ`, `K`, `N`, `δ`, and it does not commute.
 
 **Acceptance examples.**
 
