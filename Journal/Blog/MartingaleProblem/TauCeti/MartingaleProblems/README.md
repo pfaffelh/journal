@@ -10581,8 +10581,19 @@ had no declaration at all, and they are needed in this order:
    `nextNode_le`, `notMem_Ioo_nextNode` and `notMem_Ioc_nextNode`, over an
    abstract `2 * δ`-separated set, and
    `SkorokhodSpace.separated_setOf_lt_edist_leftLim` handing it the large jumps
-   of a path — so what remains is the iteration and the `Fin`-bookkeeping. It is
-   written out at the item in `SkorokhodSpace/README.md`, Milestone 8.
+   of a path.
+
+   **The combinatorial half is complete the same day**:
+   `SkorokhodSpace.exists_subdivision_of_separated` produces, for a
+   `2 * δ`-separated set and any window radius, a strictly increasing
+   `t : Fin (n + 1) → ℝ` that contains the base point, covers the window, has
+   every gap in `(δ, 2 * δ]`, and misses the set in the interior of every cell but
+   the two at the base point — which is the conjunction of what
+   `SkorokhodSpace.IsSubdivisionBased` and
+   `SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt` ask for. What remains
+   of item 3 is to read the one as the other over the window of `exhaustionMin`
+   and `exhaustionMax`. It is written out at the item in
+   `SkorokhodSpace/README.md`, Milestone 8.
 
 Only then does `isTight_map_postcomp_of_exists_martingale` have a conclusion it
 can reach, and `isRelativelyCompact_of_approx` an input. **The order of work is

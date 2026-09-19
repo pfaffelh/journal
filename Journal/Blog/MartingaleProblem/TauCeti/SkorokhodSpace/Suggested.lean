@@ -16325,6 +16325,403 @@ theorem SkorokhodSpace.separated_setOf_lt_edist_leftLim
         p < q → 2 * δ ≤ q - p :=
   fun _ hp _ hq hpq => SkorokhodSpace.two_mul_le_sub_of_forall_min_edist_lt f h hpq hp hq
 
+/-! ### The iteration of the rule, and its mirror
+
+`SkorokhodSpace.nextNode` places one node; a subdivision needs a sequence of them
+in both directions from the base point.  Forward that is plain iteration, and the
+two statements about jumps carry over **without an induction**: the invariant is
+re-established at every node by `SkorokhodSpace.notMem_Ioc_nextNode`, which needs
+none at its input, so the cell opened at `SkorokhodSpace.node J δ x₀ (k + 1)` is
+free of `J` by one application of `SkorokhodSpace.notMem_Ioo_nextNode`.  Only the
+cell opened at `SkorokhodSpace.node J δ x₀ 0 = x₀` is left out, and that is the
+cell `SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt` charges to the
+boundary term.  Induction is used for one thing only, and it is not about jumps:
+`SkorokhodSpace.add_mul_le_node`, the linear growth that makes a window be
+covered after finitely many steps.
+
+**The mirror rule is the forward rule reflected, and the half openness that
+looked like an obstruction is the reason it works.**  The cells of
+`SkorokhodSpace.subdivisionOsc` are `Set.Ico`, so a jump at the *left* endpoint of
+a cell is carried by the node sitting there and only the interior must be free of
+`J`.  Going right the rule therefore reaches for a point of `J` in
+`Set.Ioc (x + δ) (x + 2 * δ)` --- far endpoint included, near one not --- and going
+left it must reach for one in `Set.Ico (x - 2 * δ) (x - δ)`.  Those two windows
+are exchanged by `x ↦ -x`, which is exactly what exchanges `Set.Ioc` with
+`Set.Ico`.  So no second rule is written and no second proof: `SkorokhodSpace.prevNode`
+is `SkorokhodSpace.nextNode` read on the reflected set, and each of its four
+statements is its forward counterpart with `neg` pushed through.
+
+The reflected set is written out as `SkorokhodSpace.negSet` rather than taken as
+the pointwise `-J` of the `Set` algebra: only membership is ever used, and
+`SkorokhodSpace.mem_negSet` is `Iff.rfl`. -/
+
+/-- The nodes to the right of `x₀`: the rule iterated. -/
+noncomputable def SkorokhodSpace.node (J : Set ℝ) (δ x₀ : ℝ) (k : ℕ) : ℝ :=
+  (SkorokhodSpace.nextNode J δ)^[k] x₀
+
+@[simp] theorem SkorokhodSpace.node_zero (J : Set ℝ) (δ x₀ : ℝ) :
+    SkorokhodSpace.node J δ x₀ 0 = x₀ := rfl
+
+/-- The step of the iteration, written with the rule applied **last**, which is
+the form in which the statements about a single step are used. -/
+theorem SkorokhodSpace.node_succ (J : Set ℝ) (δ x₀ : ℝ) (k : ℕ) :
+    SkorokhodSpace.node J δ x₀ (k + 1)
+      = SkorokhodSpace.nextNode J δ (SkorokhodSpace.node J δ x₀ k) :=
+  Function.iterate_succ_apply' _ _ _
+
+/-- Every gap of the iteration exceeds `δ`, which is the sparseness
+`SkorokhodSpace.IsSubdivision` asks for. -/
+theorem SkorokhodSpace.add_lt_node_succ (J : Set ℝ) {δ : ℝ} (hδ : 0 < δ) (x₀ : ℝ) (k : ℕ) :
+    SkorokhodSpace.node J δ x₀ k + δ < SkorokhodSpace.node J δ x₀ (k + 1) := by
+  rw [SkorokhodSpace.node_succ]
+  exact SkorokhodSpace.lt_nextNode J hδ _
+
+/-- Every gap of the iteration is at most `2 * δ`, which is the span
+`SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt` asks for. -/
+theorem SkorokhodSpace.node_succ_sub_le (J : Set ℝ) {δ : ℝ} (hδ : 0 < δ) (x₀ : ℝ) (k : ℕ) :
+    SkorokhodSpace.node J δ x₀ (k + 1) - SkorokhodSpace.node J δ x₀ k ≤ 2 * δ := by
+  have := SkorokhodSpace.nextNode_le J hδ (SkorokhodSpace.node J δ x₀ k)
+  rw [SkorokhodSpace.node_succ]
+  linarith
+
+theorem SkorokhodSpace.strictMono_node (J : Set ℝ) {δ : ℝ} (hδ : 0 < δ) (x₀ : ℝ) :
+    StrictMono (SkorokhodSpace.node J δ x₀) := by
+  refine strictMono_nat_of_lt_succ fun k => ?_
+  have := SkorokhodSpace.add_lt_node_succ J hδ x₀ k
+  linarith
+
+/-- **The iteration grows at least linearly**, so finitely many steps cover any
+window by the Archimedean property.  This is the one induction of the section,
+and it is about the gaps and not about the jumps. -/
+theorem SkorokhodSpace.add_mul_le_node (J : Set ℝ) {δ : ℝ} (hδ : 0 < δ) (x₀ : ℝ) (k : ℕ) :
+    x₀ + k * δ ≤ SkorokhodSpace.node J δ x₀ k := by
+  induction k with
+  | zero => simp
+  | succ k ih =>
+      have := SkorokhodSpace.add_lt_node_succ J hδ x₀ k
+      push_cast
+      linarith
+
+/-- **The invariant holds at every node but the first**, and there is no
+induction in it: `SkorokhodSpace.notMem_Ioc_nextNode` needs no invariant at its
+input, so one application at the previous node suffices. -/
+theorem SkorokhodSpace.notMem_Ioc_node_succ {J : Set ℝ} {δ : ℝ} (hδ : 0 < δ)
+    (hsep : ∀ p ∈ J, ∀ q ∈ J, p < q → 2 * δ ≤ q - p) (x₀ : ℝ) (k : ℕ) {p : ℝ}
+    (hp : p ∈ J) :
+    p ∉ Set.Ioc (SkorokhodSpace.node J δ x₀ (k + 1))
+      (SkorokhodSpace.node J δ x₀ (k + 1) + δ) := by
+  rw [SkorokhodSpace.node_succ]
+  exact SkorokhodSpace.notMem_Ioc_nextNode hδ hsep _ hp
+
+/-- **Every cell of the iteration but the first is free of `J` in its interior.**
+The first cell, the one opened at `x₀`, is not --- and it is the cell
+`SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt` exempts. -/
+theorem SkorokhodSpace.notMem_Ioo_node_succ {J : Set ℝ} {δ : ℝ} (hδ : 0 < δ)
+    (hsep : ∀ p ∈ J, ∀ q ∈ J, p < q → 2 * δ ≤ q - p) (x₀ : ℝ) (k : ℕ) {p : ℝ}
+    (hp : p ∈ J) :
+    p ∉ Set.Ioo (SkorokhodSpace.node J δ x₀ (k + 1))
+      (SkorokhodSpace.node J δ x₀ (k + 1 + 1)) := by
+  rw [SkorokhodSpace.node_succ J δ x₀ (k + 1)]
+  exact SkorokhodSpace.notMem_Ioo_nextNode hδ hsep
+    (fun r hr => SkorokhodSpace.notMem_Ioc_node_succ hδ hsep x₀ k hr) hp
+
+/-- The reflection of a set of times.  Only membership in it is ever used, so it
+is `{r | -r ∈ J}` and not the pointwise `-J`. -/
+def SkorokhodSpace.negSet (J : Set ℝ) : Set ℝ := {r : ℝ | -r ∈ J}
+
+@[simp] theorem SkorokhodSpace.mem_negSet {J : Set ℝ} {r : ℝ} :
+    r ∈ SkorokhodSpace.negSet J ↔ -r ∈ J := Iff.rfl
+
+theorem SkorokhodSpace.neg_mem_negSet {J : Set ℝ} {p : ℝ} (hp : p ∈ J) :
+    -p ∈ SkorokhodSpace.negSet J := by
+  rw [SkorokhodSpace.mem_negSet, neg_neg]; exact hp
+
+/-- Separation is invariant under the reflection, the reflection reversing the
+order and preserving distances. -/
+theorem SkorokhodSpace.separated_negSet {J : Set ℝ} {δ : ℝ}
+    (hsep : ∀ p ∈ J, ∀ q ∈ J, p < q → 2 * δ ≤ q - p) :
+    ∀ p ∈ SkorokhodSpace.negSet J, ∀ q ∈ SkorokhodSpace.negSet J,
+      p < q → 2 * δ ≤ q - p := by
+  intro p hp q hq hpq
+  rw [SkorokhodSpace.mem_negSet] at hp hq
+  have := hsep (-q) hq (-p) hp (by linarith)
+  linarith
+
+/-- **The mirror rule**, and it is the rule itself read on the reflected set.
+Unfolded it says: from a node `x`, the previous node is the point of `J` in
+`Set.Ico (x - 2 * δ) (x - δ)` if there is one; otherwise the midpoint between `x`
+and the point of `J` in `Set.Ico (x - 3 * δ) (x - 2 * δ)` if there is one;
+otherwise `x - 2 * δ`.  The windows are half open towards the base point and
+closed away from it, the other way round from the forward rule, because a jump at
+a node is carried by the cell that node opens. -/
+noncomputable def SkorokhodSpace.prevNode (J : Set ℝ) (δ x : ℝ) : ℝ :=
+  -(SkorokhodSpace.nextNode (SkorokhodSpace.negSet J) δ (-x))
+
+theorem SkorokhodSpace.prevNode_lt (J : Set ℝ) {δ : ℝ} (hδ : 0 < δ) (x : ℝ) :
+    SkorokhodSpace.prevNode J δ x < x - δ := by
+  have := SkorokhodSpace.lt_nextNode (SkorokhodSpace.negSet J) hδ (-x)
+  rw [SkorokhodSpace.prevNode]
+  linarith
+
+theorem SkorokhodSpace.le_prevNode (J : Set ℝ) {δ : ℝ} (hδ : 0 < δ) (x : ℝ) :
+    x - 2 * δ ≤ SkorokhodSpace.prevNode J δ x := by
+  have := SkorokhodSpace.nextNode_le (SkorokhodSpace.negSet J) hδ (-x)
+  rw [SkorokhodSpace.prevNode]
+  linarith
+
+/-- The mirror of `SkorokhodSpace.notMem_Ioc_nextNode`, and the invariant is
+mirrored with it: what must be clear to the left of a node is
+`Set.Ico (x - δ) x`. -/
+theorem SkorokhodSpace.notMem_Ico_prevNode {J : Set ℝ} {δ : ℝ} (hδ : 0 < δ)
+    (hsep : ∀ p ∈ J, ∀ q ∈ J, p < q → 2 * δ ≤ q - p) (x : ℝ) {p : ℝ} (hp : p ∈ J) :
+    p ∉ Set.Ico (SkorokhodSpace.prevNode J δ x - δ) (SkorokhodSpace.prevNode J δ x) := by
+  intro hmem
+  rw [SkorokhodSpace.prevNode] at hmem
+  exact SkorokhodSpace.notMem_Ioc_nextNode hδ (SkorokhodSpace.separated_negSet hsep) (-x)
+    (SkorokhodSpace.neg_mem_negSet hp) ⟨by linarith [hmem.2], by linarith [hmem.1]⟩
+
+theorem SkorokhodSpace.notMem_Ioo_prevNode {J : Set ℝ} {δ : ℝ} (hδ : 0 < δ)
+    (hsep : ∀ p ∈ J, ∀ q ∈ J, p < q → 2 * δ ≤ q - p) {x : ℝ}
+    (hI : ∀ r ∈ J, r ∉ Set.Ico (x - δ) x) {p : ℝ} (hp : p ∈ J) :
+    p ∉ Set.Ioo (SkorokhodSpace.prevNode J δ x) x := by
+  intro hmem
+  rw [SkorokhodSpace.prevNode] at hmem
+  refine SkorokhodSpace.notMem_Ioo_nextNode hδ (SkorokhodSpace.separated_negSet hsep)
+    (x := -x) (fun r hr hr' => ?_) (SkorokhodSpace.neg_mem_negSet hp)
+    ⟨by linarith [hmem.2], by linarith [hmem.1]⟩
+  rw [SkorokhodSpace.mem_negSet] at hr
+  exact hI (-r) hr ⟨by linarith [hr'.2], by linarith [hr'.1]⟩
+
+/-- The nodes to the left of `x₀`.  It is the forward iteration on the reflected
+set, and `SkorokhodSpace.pnode_succ` says that this is the mirror rule
+iterated. -/
+noncomputable def SkorokhodSpace.pnode (J : Set ℝ) (δ x₀ : ℝ) (k : ℕ) : ℝ :=
+  -(SkorokhodSpace.node (SkorokhodSpace.negSet J) δ (-x₀) k)
+
+@[simp] theorem SkorokhodSpace.pnode_zero (J : Set ℝ) (δ x₀ : ℝ) :
+    SkorokhodSpace.pnode J δ x₀ 0 = x₀ := by
+  simp [SkorokhodSpace.pnode]
+
+theorem SkorokhodSpace.pnode_succ (J : Set ℝ) (δ x₀ : ℝ) (k : ℕ) :
+    SkorokhodSpace.pnode J δ x₀ (k + 1)
+      = SkorokhodSpace.prevNode J δ (SkorokhodSpace.pnode J δ x₀ k) := by
+  simp only [SkorokhodSpace.pnode, SkorokhodSpace.prevNode, SkorokhodSpace.node_succ, neg_neg]
+
+theorem SkorokhodSpace.pnode_succ_add_lt (J : Set ℝ) {δ : ℝ} (hδ : 0 < δ) (x₀ : ℝ) (k : ℕ) :
+    SkorokhodSpace.pnode J δ x₀ (k + 1) + δ < SkorokhodSpace.pnode J δ x₀ k := by
+  have := SkorokhodSpace.add_lt_node_succ (SkorokhodSpace.negSet J) hδ (-x₀) k
+  simp only [SkorokhodSpace.pnode]
+  linarith
+
+theorem SkorokhodSpace.sub_pnode_succ_le (J : Set ℝ) {δ : ℝ} (hδ : 0 < δ) (x₀ : ℝ) (k : ℕ) :
+    SkorokhodSpace.pnode J δ x₀ k - SkorokhodSpace.pnode J δ x₀ (k + 1) ≤ 2 * δ := by
+  have := SkorokhodSpace.node_succ_sub_le (SkorokhodSpace.negSet J) hδ (-x₀) k
+  simp only [SkorokhodSpace.pnode]
+  linarith
+
+theorem SkorokhodSpace.strictAnti_pnode (J : Set ℝ) {δ : ℝ} (hδ : 0 < δ) (x₀ : ℝ) :
+    StrictAnti (SkorokhodSpace.pnode J δ x₀) := by
+  intro a b hab
+  have := SkorokhodSpace.strictMono_node (SkorokhodSpace.negSet J) hδ (-x₀) hab
+  simp only [SkorokhodSpace.pnode]
+  linarith
+
+theorem SkorokhodSpace.pnode_le_sub_mul (J : Set ℝ) {δ : ℝ} (hδ : 0 < δ) (x₀ : ℝ) (k : ℕ) :
+    SkorokhodSpace.pnode J δ x₀ k ≤ x₀ - k * δ := by
+  have := SkorokhodSpace.add_mul_le_node (SkorokhodSpace.negSet J) hδ (-x₀) k
+  simp only [SkorokhodSpace.pnode]
+  linarith
+
+/-- **Every cell to the left of the base point but the first is free of `J` in its
+interior**, the mirror of `SkorokhodSpace.notMem_Ioo_node_succ`.  The first one,
+`Set.Ioo (SkorokhodSpace.pnode J δ x₀ 1) x₀`, is the cell that *ends* at the base
+point, and it is the second of the two
+`SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt` exempts. -/
+theorem SkorokhodSpace.notMem_Ioo_pnode_succ {J : Set ℝ} {δ : ℝ} (hδ : 0 < δ)
+    (hsep : ∀ p ∈ J, ∀ q ∈ J, p < q → 2 * δ ≤ q - p) (x₀ : ℝ) (k : ℕ) {p : ℝ}
+    (hp : p ∈ J) :
+    p ∉ Set.Ioo (SkorokhodSpace.pnode J δ x₀ (k + 1 + 1))
+      (SkorokhodSpace.pnode J δ x₀ (k + 1)) := by
+  intro hmem
+  simp only [SkorokhodSpace.pnode] at hmem
+  exact SkorokhodSpace.notMem_Ioo_node_succ hδ (SkorokhodSpace.separated_negSet hsep) (-x₀) k
+    (SkorokhodSpace.neg_mem_negSet hp) ⟨by linarith [hmem.2], by linarith [hmem.1]⟩
+
+/-! ### The two sequences joined, and the subdivision they make
+
+The two half sequences are joined at the base point by
+`SkorokhodSpace.nodeSeq J δ x₀ a`, which runs the mirror rule `a` times to the
+left of `x₀` and then the forward rule forever to the right.  It is indexed by `ℕ`
+and not by `Fin`, and that is deliberate: every statement about it is proved over
+`ℕ`, where `omega` settles the index arithmetic, and `Fin` enters exactly once, in
+`SkorokhodSpace.exists_subdivision_of_separated`, by composing with `Fin.val`.
+
+**The join is not a case distinction in disguise.**  At the meeting point the two
+branches agree — `SkorokhodSpace.pnode J δ x₀ 0` and `SkorokhodSpace.node J δ x₀ 0`
+are both `x₀` — and `SkorokhodSpace.nodeSeq_of_ge` says so: above `a` the sequence
+is the forward one, *including* at `a` itself, where the definition takes the
+other branch.  That is what removes the middle case from every proof below and
+leaves two, not three.
+
+**Two cells are exempt from the jump condition and they are the two at the base
+point**, `SkorokhodSpace.nodeSeq J δ x₀ a (a - 1)` to `x₀` and `x₀` to
+`SkorokhodSpace.nodeSeq J δ x₀ a (a + 1)`.  The disjunction of
+`SkorokhodSpace.cell_nodeSeq` is written in exactly the form
+`SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt` asks for, so the two
+halves of the corrected link meet without an intermediate statement. -/
+
+/-- The nodes of both directions in one sequence, the base point sitting at the
+index `a`. -/
+noncomputable def SkorokhodSpace.nodeSeq (J : Set ℝ) (δ x₀ : ℝ) (a i : ℕ) : ℝ :=
+  if i ≤ a then SkorokhodSpace.pnode J δ x₀ (a - i) else SkorokhodSpace.node J δ x₀ (i - a)
+
+theorem SkorokhodSpace.nodeSeq_of_le (J : Set ℝ) (δ x₀ : ℝ) {a i : ℕ} (h : i ≤ a) :
+    SkorokhodSpace.nodeSeq J δ x₀ a i = SkorokhodSpace.pnode J δ x₀ (a - i) := by
+  rw [SkorokhodSpace.nodeSeq, ite_eq_left h]
+
+theorem SkorokhodSpace.nodeSeq_of_lt (J : Set ℝ) (δ x₀ : ℝ) {a i : ℕ} (h : a < i) :
+    SkorokhodSpace.nodeSeq J δ x₀ a i = SkorokhodSpace.node J δ x₀ (i - a) := by
+  rw [SkorokhodSpace.nodeSeq, ite_eq_right (by omega : ¬ (i ≤ a))]
+
+@[simp] theorem SkorokhodSpace.nodeSeq_self (J : Set ℝ) (δ x₀ : ℝ) (a : ℕ) :
+    SkorokhodSpace.nodeSeq J δ x₀ a a = x₀ := by
+  rw [SkorokhodSpace.nodeSeq_of_le _ _ _ (le_refl a), Nat.sub_self,
+    SkorokhodSpace.pnode_zero]
+
+/-- **The two branches agree at the join**, so the forward reading is valid from
+the index `a` on and not only above it.  This is what leaves two cases and not
+three in every statement below. -/
+theorem SkorokhodSpace.nodeSeq_of_ge (J : Set ℝ) (δ x₀ : ℝ) {a i : ℕ} (h : a ≤ i) :
+    SkorokhodSpace.nodeSeq J δ x₀ a i = SkorokhodSpace.node J δ x₀ (i - a) := by
+  rcases Nat.lt_or_ge a i with h' | h'
+  · exact SkorokhodSpace.nodeSeq_of_lt J δ x₀ h'
+  · have hia : i = a := le_antisymm h' h
+    subst hia
+    rw [SkorokhodSpace.nodeSeq_self, Nat.sub_self, SkorokhodSpace.node_zero]
+
+theorem SkorokhodSpace.add_lt_nodeSeq_succ (J : Set ℝ) {δ : ℝ} (hδ : 0 < δ) (x₀ : ℝ)
+    (a i : ℕ) :
+    SkorokhodSpace.nodeSeq J δ x₀ a i + δ < SkorokhodSpace.nodeSeq J δ x₀ a (i + 1) := by
+  rcases Nat.lt_or_ge i a with hlt | hge
+  · rw [SkorokhodSpace.nodeSeq_of_le _ _ _ (le_of_lt hlt),
+      SkorokhodSpace.nodeSeq_of_le _ _ _ (by omega : i + 1 ≤ a)]
+    obtain ⟨k, hk1, hk2⟩ : ∃ k, a - i = k + 1 ∧ a - (i + 1) = k :=
+      ⟨a - (i + 1), by omega, rfl⟩
+    rw [hk1, hk2]
+    exact SkorokhodSpace.pnode_succ_add_lt J hδ x₀ k
+  · rw [SkorokhodSpace.nodeSeq_of_ge _ _ _ hge,
+      SkorokhodSpace.nodeSeq_of_ge _ _ _ (by omega : a ≤ i + 1)]
+    have hs : i + 1 - a = (i - a) + 1 := by omega
+    rw [hs]
+    exact SkorokhodSpace.add_lt_node_succ J hδ x₀ (i - a)
+
+theorem SkorokhodSpace.strictMono_nodeSeq (J : Set ℝ) {δ : ℝ} (hδ : 0 < δ) (x₀ : ℝ)
+    (a : ℕ) : StrictMono (SkorokhodSpace.nodeSeq J δ x₀ a) := by
+  refine strictMono_nat_of_lt_succ fun i => ?_
+  have := SkorokhodSpace.add_lt_nodeSeq_succ J hδ x₀ a i
+  linarith
+
+theorem SkorokhodSpace.nodeSeq_succ_sub_le (J : Set ℝ) {δ : ℝ} (hδ : 0 < δ) (x₀ : ℝ)
+    (a i : ℕ) :
+    SkorokhodSpace.nodeSeq J δ x₀ a (i + 1) - SkorokhodSpace.nodeSeq J δ x₀ a i ≤ 2 * δ := by
+  rcases Nat.lt_or_ge i a with hlt | hge
+  · rw [SkorokhodSpace.nodeSeq_of_le _ _ _ (le_of_lt hlt),
+      SkorokhodSpace.nodeSeq_of_le _ _ _ (by omega : i + 1 ≤ a)]
+    obtain ⟨k, hk1, hk2⟩ : ∃ k, a - i = k + 1 ∧ a - (i + 1) = k :=
+      ⟨a - (i + 1), by omega, rfl⟩
+    rw [hk1, hk2]
+    exact SkorokhodSpace.sub_pnode_succ_le J hδ x₀ k
+  · rw [SkorokhodSpace.nodeSeq_of_ge _ _ _ hge,
+      SkorokhodSpace.nodeSeq_of_ge _ _ _ (by omega : a ≤ i + 1)]
+    have hs : i + 1 - a = (i - a) + 1 := by omega
+    rw [hs]
+    exact SkorokhodSpace.node_succ_sub_le J hδ x₀ (i - a)
+
+/-- **The cell condition, in the very shape the analytic half asks for.**  Either
+the cell begins at the base point, or it ends there, or its interior misses `J`;
+and the first two alternatives occur for exactly one index each. -/
+theorem SkorokhodSpace.cell_nodeSeq {J : Set ℝ} {δ : ℝ} (hδ : 0 < δ)
+    (hsep : ∀ p ∈ J, ∀ q ∈ J, p < q → 2 * δ ≤ q - p) (x₀ : ℝ) (a i : ℕ) :
+    SkorokhodSpace.nodeSeq J δ x₀ a i = x₀ ∨
+      SkorokhodSpace.nodeSeq J δ x₀ a (i + 1) = x₀ ∨
+      ∀ p ∈ J, p ∉ Set.Ioo (SkorokhodSpace.nodeSeq J δ x₀ a i)
+        (SkorokhodSpace.nodeSeq J δ x₀ a (i + 1)) := by
+  rcases lt_trichotomy i a with hlt | heq | hgt
+  · rcases Nat.lt_or_ge (i + 1) a with h1 | h1
+    · refine Or.inr (Or.inr fun p hp => ?_)
+      rw [SkorokhodSpace.nodeSeq_of_le _ _ _ (le_of_lt hlt),
+        SkorokhodSpace.nodeSeq_of_le _ _ _ (by omega : i + 1 ≤ a)]
+      obtain ⟨k, hk1, hk2⟩ : ∃ k, a - i = k + 1 + 1 ∧ a - (i + 1) = k + 1 :=
+        ⟨a - i - 2, by omega, by omega⟩
+      rw [hk1, hk2]
+      exact SkorokhodSpace.notMem_Ioo_pnode_succ hδ hsep x₀ k hp
+    · refine Or.inr (Or.inl ?_)
+      have : i + 1 = a := by omega
+      rw [this, SkorokhodSpace.nodeSeq_self]
+  · exact Or.inl (by rw [heq, SkorokhodSpace.nodeSeq_self])
+  · refine Or.inr (Or.inr fun p hp => ?_)
+    rw [SkorokhodSpace.nodeSeq_of_lt _ _ _ hgt,
+      SkorokhodSpace.nodeSeq_of_lt _ _ _ (by omega : a < i + 1)]
+    obtain ⟨k, hk1, hk2⟩ : ∃ k, i - a = k + 1 ∧ i + 1 - a = k + 1 + 1 :=
+      ⟨i - a - 1, by omega, by omega⟩
+    rw [hk1, hk2]
+    exact SkorokhodSpace.notMem_Ioo_node_succ hδ hsep x₀ k hp
+
+theorem SkorokhodSpace.nodeSeq_zero_le (J : Set ℝ) {δ : ℝ} (hδ : 0 < δ) (x₀ : ℝ) (a : ℕ) :
+    SkorokhodSpace.nodeSeq J δ x₀ a 0 ≤ x₀ - a * δ := by
+  rw [SkorokhodSpace.nodeSeq_of_le _ _ _ (Nat.zero_le a), Nat.sub_zero]
+  exact SkorokhodSpace.pnode_le_sub_mul J hδ x₀ a
+
+theorem SkorokhodSpace.le_nodeSeq_add (J : Set ℝ) {δ : ℝ} (hδ : 0 < δ) (x₀ : ℝ) (a b : ℕ) :
+    x₀ + b * δ ≤ SkorokhodSpace.nodeSeq J δ x₀ a (a + b) := by
+  rw [SkorokhodSpace.nodeSeq_of_ge _ _ _ (by omega : a ≤ a + b), Nat.add_sub_cancel_left]
+  exact SkorokhodSpace.add_mul_le_node J hδ x₀ b
+
+/-- **The combinatorial half of the corrected link, entire.**  For a `2 * δ`
+separated set `J` and any window radius `u` there is a finite, strictly
+increasing family of times that contains `x₀`, covers `Set.Icc (x₀ - u) (x₀ + u)`,
+has every gap in `(δ, 2 * δ]`, and misses `J` in the interior of every cell but the
+two at `x₀`.
+
+Those are precisely the hypotheses of
+`SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt` together with those of
+`SkorokhodSpace.IsSubdivisionBased`, and `J` is instantiated at the large jumps of
+a path by `SkorokhodSpace.separated_setOf_lt_edist_leftLim`.
+
+The number of nodes on each side is one Archimedean choice, `u / δ < a`, and the
+two sides are given the same count, there being no reason to distinguish them. -/
+theorem SkorokhodSpace.exists_subdivision_of_separated {J : Set ℝ} {δ : ℝ} (hδ : 0 < δ)
+    (hsep : ∀ p ∈ J, ∀ q ∈ J, p < q → 2 * δ ≤ q - p) (x₀ u : ℝ) :
+    ∃ (n : ℕ) (t : Fin (n + 1) → ℝ), StrictMono t ∧ x₀ ∈ Set.range t ∧
+      t 0 ≤ x₀ - u ∧ x₀ + u ≤ t (Fin.last n) ∧
+      (∀ i : Fin n, δ < t i.succ - t i.castSucc) ∧
+      (∀ i : Fin n, t i.succ - t i.castSucc ≤ 2 * δ) ∧
+      (∀ i : Fin n, t i.castSucc = x₀ ∨ t i.succ = x₀ ∨
+        ∀ p ∈ J, p ∉ Set.Ioo (t i.castSucc) (t i.succ)) := by
+  obtain ⟨a, ha⟩ := exists_nat_gt (u / δ)
+  have hau : u < a * δ := by
+    rw [div_lt_iff₀ hδ] at ha
+    exact ha
+  refine ⟨a + a, fun i => SkorokhodSpace.nodeSeq J δ x₀ a (i : ℕ), ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · exact fun i j hij => SkorokhodSpace.strictMono_nodeSeq J hδ x₀ a hij
+  · exact ⟨⟨a, by omega⟩, SkorokhodSpace.nodeSeq_self J δ x₀ a⟩
+  · have := SkorokhodSpace.nodeSeq_zero_le J hδ x₀ a
+    simp only [Fin.val_zero] at *
+    linarith
+  · have := SkorokhodSpace.le_nodeSeq_add J hδ x₀ a a
+    simp only [Fin.val_last]
+    linarith
+  · intro i
+    have := SkorokhodSpace.add_lt_nodeSeq_succ J hδ x₀ a (i : ℕ)
+    simp only [Fin.val_succ, Fin.val_castSucc]
+    linarith
+  · intro i
+    simp only [Fin.val_succ, Fin.val_castSucc]
+    exact SkorokhodSpace.nodeSeq_succ_sub_le J hδ x₀ a (i : ℕ)
+  · intro i
+    simp only [Fin.val_succ, Fin.val_castSucc]
+    exact SkorokhodSpace.cell_nodeSeq hδ hsep x₀ a (i : ℕ)
+
 /-! ## Milestone 9: the nonnegative index inside the real one
 
 Everything above about the modulus and about tightness is stated over the index

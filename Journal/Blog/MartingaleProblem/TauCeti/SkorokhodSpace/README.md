@@ -3548,10 +3548,45 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
      there and the second statement does not need it, so it is re-established
      from the first node on.
 
-     What is left is the iteration and the `Fin`-bookkeeping: the mirror rule to
-     the left — not `nextNode` read at `-x`, the cells being half open — strict
-     monotonicity of the joined enumeration, and a count of steps covering the
-     window, each step being longer than `δ`.
+     **The combinatorial half is complete**, 2026-09-19. The rule is iterated by
+     `SkorokhodSpace.node`, with `SkorokhodSpace.strictMono_node`,
+     `SkorokhodSpace.node_succ_sub_le` for the span, and
+     `SkorokhodSpace.add_mul_le_node` for the linear growth that covers a window
+     after finitely many steps. The two statements about jumps —
+     `SkorokhodSpace.notMem_Ioc_node_succ` and
+     `SkorokhodSpace.notMem_Ioo_node_succ` — carry over **without an induction**,
+     one application of the single-step statements at the previous node being
+     enough, because the invariant is re-established unconditionally. The one
+     induction of the section is about the gaps and not about the jumps.
+
+     **The mirror rule *is* `nextNode` read at `-x`**, on the reflected set
+     `SkorokhodSpace.negSet`, and the half openness that looked like an
+     obstruction is the reason. A jump at a node is carried by the cell that node
+     opens, the cells being `Set.Ico`, so going right the rule reaches into
+     `Set.Ioc (x + δ) (x + 2 * δ)` and going left into
+     `Set.Ico (x - 2 * δ) (x - δ)` — and `x ↦ -x` is exactly what exchanges those
+     two. `SkorokhodSpace.prevNode` is therefore one line, and its four
+     statements — `SkorokhodSpace.prevNode_lt`, `SkorokhodSpace.le_prevNode`,
+     `SkorokhodSpace.notMem_Ico_prevNode`,
+     `SkorokhodSpace.notMem_Ioo_prevNode` — are their forward counterparts with
+     `neg` pushed through. The left iteration is `SkorokhodSpace.pnode`.
+
+     The two half sequences are joined at the base point by
+     `SkorokhodSpace.nodeSeq`, indexed by `ℕ`; the branches agree at the join
+     (`SkorokhodSpace.nodeSeq_of_ge`), which leaves two cases and not three in
+     every statement about it. `SkorokhodSpace.cell_nodeSeq` is the cell
+     condition in the exact disjunctive shape the analytic half asks for, so the
+     two halves meet without an intermediate statement.
+     `SkorokhodSpace.exists_subdivision_of_separated` is the combinatorial half
+     entire: for a `2 * δ`-separated `J` and any window radius, a strictly
+     increasing `t : Fin (n + 1) → ℝ` containing the base point, covering the
+     window, with every gap in `(δ, 2 * δ]` and every cell but the two at the
+     base point missing `J` in its interior. `Fin` enters there and nowhere else.
+
+     What is left is to read those conclusions as
+     `SkorokhodSpace.IsSubdivisionBased t₀ M δ t` — the window of `exhaustionMin`
+     and `exhaustionMax` read over the index `ℝ` — and to feed the pair to
+     `SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt`.
   2. Three point quantity of the path ⟹ the same for the image under
      `SkorokhodSpace.clipDist (f t)`, capped at `1`
      (`SkorokhodSpace.min_edist_postcomp_clipDist`), and in the form a dense `H`
