@@ -16722,6 +16722,61 @@ theorem SkorokhodSpace.exists_subdivision_of_separated {J : Set ℝ} {δ : ℝ} 
     simp only [Fin.val_succ, Fin.val_castSucc]
     exact SkorokhodSpace.cell_nodeSeq hδ hsep x₀ a (i : ℕ)
 
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The corrected link of Milestone 8, entire.**  A path whose three point
+quantity stays below `η` on every window of span `2 * δ` has
+
+`modulusBased 0 m f δ ≤ 4 * η + 2 * SkorokhodSpace.basePointOsc 0 f (2 * δ)`,
+
+and the boundary term is not slack: without it the statement is false at the unit
+step for every finite constant
+(`SkorokhodSpace.not_forall_modulusBased_le_mul_of_forall_min_edist_lt`).  It does
+not reach the consumer, `SkorokhodSpace.isTightMeasureSet_iff` asking only that
+the modulus vanish and `SkorokhodSpace.tendsto_basePointOsc` saying the boundary
+term does.
+
+The proof is the two halves meeting.
+`SkorokhodSpace.exists_subdivision_of_separated`, run on the times where the jump
+exceeds `2 * η` — separated by
+`SkorokhodSpace.separated_setOf_lt_edist_leftLim` — produces the subdivision, and
+`SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt` says what it costs.
+Nothing else is computed: the window is `exhaustionMin_real` and
+`exhaustionMax_real` at the base point `0`, and the sparseness of
+`SkorokhodSpace.IsSubdivision` is the gap bound read through `Real.dist_eq`.
+
+**It is stated at the base point `0`**, which is where the chain reads it
+(`SkorokhodSpace.one_le_modulusBased_step`,
+`SkorokhodSpace.min_edist_le_two_mul_modulusBased`); over a general base point the
+two window endpoints would have to be computed afresh, and no consumer asks for
+it. -/
+theorem SkorokhodSpace.modulusBased_le_of_forall_min_edist_lt
+    (f : D(ℝ, E)) {δ : ℝ} (hδ : 0 < δ) {η : ℝ≥0∞} (hη : 0 < η) (m : ℝ)
+    (h : ∀ t₁ t t₂ : ℝ, t₁ ≤ t → t ≤ t₂ → t₂ - t₁ ≤ 2 * δ →
+      min (edist (f.toFun t) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun t)) < η) :
+    SkorokhodSpace.modulusBased (0 : ℝ) m f δ
+      ≤ 4 * η + 2 * SkorokhodSpace.basePointOsc (0 : ℝ) f (2 * δ) := by
+  obtain ⟨n, t, hmono, hmem, hlo, hhi, hgap, hspan, hcell⟩ :=
+    SkorokhodSpace.exists_subdivision_of_separated hδ
+      (SkorokhodSpace.separated_setOf_lt_edist_leftLim f h) (0 : ℝ) (max m 0)
+  have hsub : SkorokhodSpace.IsSubdivisionBased (0 : ℝ) m δ t := by
+    refine ⟨⟨hmono, ?_, ?_, fun i => ?_⟩, hmem⟩
+    · rw [exhaustionMin_real]
+      linarith [hlo]
+    · rw [exhaustionMax_real]
+      linarith [hhi]
+    · rw [Real.dist_eq, abs_sub_comm, abs_of_nonneg (by linarith [hgap i])]
+      exact hgap i
+  rw [SkorokhodSpace.modulusBased]
+  refine le_trans (iInf_le_of_le n (iInf_le_of_le t (iInf_le_of_le hsub le_rfl))) ?_
+  refine SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt f hη h (0 : ℝ) hspan
+    fun i => ?_
+  rcases hcell i with hL | hR | hJ
+  · exact Or.inl hL
+  · exact Or.inr (Or.inl hR)
+  · refine Or.inr (Or.inr fun p hp => ?_)
+    by_contra hcon
+    exact hJ p (not_le.mp hcon) hp
+
 /-! ## Milestone 9: the nonnegative index inside the real one
 
 Everything above about the modulus and about tightness is stated over the index

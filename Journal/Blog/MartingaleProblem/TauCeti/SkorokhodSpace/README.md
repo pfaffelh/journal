@@ -3583,10 +3583,16 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
      window, with every gap in `(δ, 2 * δ]` and every cell but the two at the
      base point missing `J` in its interior. `Fin` enters there and nowhere else.
 
-     What is left is to read those conclusions as
-     `SkorokhodSpace.IsSubdivisionBased t₀ M δ t` — the window of `exhaustionMin`
-     and `exhaustionMax` read over the index `ℝ` — and to feed the pair to
-     `SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt`.
+     **The corrected link is closed**, 2026-09-19, in the same run:
+     `SkorokhodSpace.modulusBased_le_of_forall_min_edist_lt` —
+     `modulusBased 0 m f δ ≤ 4 * η + 2 * SkorokhodSpace.basePointOsc 0 f (2 * δ)`
+     for a path whose three point quantity stays below `η` on every window of
+     span `2 * δ`. Nothing is computed in it beyond the two halves meeting: the
+     window is `exhaustionMin_real` and `exhaustionMax_real`, and the sparseness
+     of `SkorokhodSpace.IsSubdivision` is the gap bound read through
+     `Real.dist_eq`. It is stated at the base point `0`, which is where the chain
+     reads it; over a general base point the two window endpoints would have to
+     be computed afresh, and no consumer asks for it.
   2. Three point quantity of the path ⟹ the same for the image under
      `SkorokhodSpace.clipDist (f t)`, capped at `1`
      (`SkorokhodSpace.min_edist_postcomp_clipDist`), and in the form a dense `H`

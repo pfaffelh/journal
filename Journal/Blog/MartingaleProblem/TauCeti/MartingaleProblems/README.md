@@ -10590,10 +10590,15 @@ had no declaration at all, and they are needed in this order:
    every gap in `(δ, 2 * δ]`, and misses the set in the interior of every cell but
    the two at the base point — which is the conjunction of what
    `SkorokhodSpace.IsSubdivisionBased` and
-   `SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt` ask for. What remains
-   of item 3 is to read the one as the other over the window of `exhaustionMin`
-   and `exhaustionMax`. It is written out at the item in
-   `SkorokhodSpace/README.md`, Milestone 8.
+   `SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt` ask for.
+
+   **And the two halves are joined the same day**:
+   `SkorokhodSpace.modulusBased_le_of_forall_min_edist_lt` gives
+   `modulusBased 0 m f δ ≤ 4 * η + 2 * SkorokhodSpace.basePointOsc 0 f (2 * δ)`
+   for a path whose three point quantity stays below `η` on every window of span
+   `2 * δ`, at the base point `0`, which is where the chain reads it. The link is
+   closed. It is written out at the item in `SkorokhodSpace/README.md`,
+   Milestone 8.
 
 Only then does `isTight_map_postcomp_of_exists_martingale` have a conclusion it
 can reach, and `isRelativelyCompact_of_approx` an input. **The order of work is
