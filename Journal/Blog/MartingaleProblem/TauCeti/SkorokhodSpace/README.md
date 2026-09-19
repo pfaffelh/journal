@@ -3431,14 +3431,19 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
      one window, not one.
 
      **What the link needs instead**, written out at the section in
-     `SkorokhodSpace/Suggested.lean`: nodes at the jumps of size `≥ 2 * η`, which
+     `SkorokhodSpace/Suggested.lean`: nodes at the jumps of size `> 2 * η`, which
      are more than `δ` apart under the hypothesis and finitely many in a compact
-     window (`IsCadlag.finite_largeLeftJumpSet_inter`). The threshold is `2 * η`
-     and not `η`, and the reason is worth keeping: the naive triple `(t₁, p, q)`
-     at two jumps has `edist (f q) (f p)` for its second displacement, which the
-     jump at `q` does not bound — the path may return to `f p` just before `q`.
-     It takes **two** passages to the left limit, one at each jump, and the
-     triangle inequality between them. Between two consecutive such jumps the
+     window (`IsCadlag.finite_largeLeftJumpSet_inter`). That they are far apart is
+     `SkorokhodSpace.jump_le_two_mul_of_forall_min_edist_lt`, **proved**: a jump
+     larger than `η` at one time of the window bounds the jump at every earlier
+     time of it by `2 * η`. The threshold is `2 * η` and not `η`, and the reason
+     is worth keeping: the naive triple `(t₁, p, q)` at two jumps has
+     `edist (f q) (f p)` for its second displacement, which the jump at `q` does
+     not bound — the path may return to `f p` just before `q`. Both readings that
+     do work run their outer time up to `q`, and the only property of `q` either
+     uses is that `edist (f q) (f t)` exceeds `η` on a left neighbourhood, which
+     is why the hypothesis there is **strict**. Between two consecutive such jumps
+     the
      window is filled with a uniform grid of `⌈(q-p)/(2*δ)⌉` cells, whose lengths
      lie in `(δ, 2*δ]` and whose oscillation the structure theorem bounds by
      `4 * η`. Two numbers of the original
@@ -3447,6 +3452,14 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
      by nearly `2 * η` across a cell of length `δ` — and the constant the route
      gives is `4`, not `2`. Neither matters to the consumer, which asks only that
      the modulus vanish as `δ → 0`.
+
+     **Of that route no calculation is left open**, only the assembly: the two
+     theorems above, the finiteness of the large jumps, a uniform grid, and the
+     `Fin`-bookkeeping of an `IsSubdivisionBased`. The one point to decide there
+     is the **base point**, which the grid does not meet and which the predicate
+     demands among the nodes; inserting it afterwards may leave a cell shorter
+     than `δ`, the same edge case `SkorokhodSpace.IsSubdivisionBased.trim` handles
+     at the window's ends.
   2. Three point quantity of the path ⟹ the same for the image under
      `SkorokhodSpace.clipDist (f t)`, capped at `1`
      (`SkorokhodSpace.min_edist_postcomp_clipDist`), and in the form a dense `H`

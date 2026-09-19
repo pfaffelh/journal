@@ -10546,9 +10546,11 @@ had no declaration at all, and they are needed in this order:
    The greedy subdivision that the item named for the second half does **not**
    close it — merging two greedy cells crosses that break, and the displacement
    at a break is the one quantity the hypothesis leaves free. The replacement
-   puts the nodes at the large jumps instead; it reads the hypothesis at span
-   `2 * δ` and yields the constant `4`, and neither change reaches a consumer,
-   which asks only that the modulus vanish as `δ → 0`.
+   puts the nodes at the large jumps instead — that they are far enough apart is
+   `SkorokhodSpace.jump_le_two_mul_of_forall_min_edist_lt`, proved the same day —
+   and it reads the hypothesis at span `2 * δ` and yields the constant `4`;
+   neither change reaches a consumer, which asks only that the modulus vanish as
+   `δ → 0`. What is left of the item is the assembly, not a calculation.
 
 Only then does `isTight_map_postcomp_of_exists_martingale` have a conclusion it
 can reach, and `isRelativelyCompact_of_approx` an input. **The order of work is

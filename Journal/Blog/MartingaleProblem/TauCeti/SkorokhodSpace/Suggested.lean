@@ -15556,6 +15556,71 @@ theorem SkorokhodSpace.exists_forall_edist_lt_or_edist_lt
   · exact Or.inl (hfirst r ⟨hr.1, hlt⟩)
   · exact Or.inr (hsecond r ⟨hge, hr.2⟩)
 
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **A jump next to a jump is small**: if the three point quantity is below `η`
+on `[u, v]` and the path jumps by more than `η` at some `q` of the window, then
+its jump at **every** earlier time of the window is at most `2 * η`.
+
+This is the second pillar of the construction that replaces the greedy
+subdivision: it says the large jumps are isolated from one another, so that nodes
+put at them are more than the span apart.
+
+**And it is the place where one triple is not enough.**  The reading one reaches
+for is at `(t₁, p, q)` with `t₁` below `p`: its second displacement is
+`edist (f q) (f p)`, and the jump at `q` does not bound that --- the path may
+return to `f p` just before `q`.  What works is two readings that both run their
+outer time up to `q`, and the only property of `q` used in either is that
+`edist (f q) (f t)` exceeds `η` for `t` close enough to `q` from the left, which
+is the jump there through `IsCadlag.tendsto_nhdsLT_leftLim`
+(`Mathlib/Topology/Order/Cadlag.lean:165`).  At `(p, t, q)` the first
+displacement is then below `η`, and `t ↑ q` turns it into
+`edist (leftLim f q) (f p) ≤ η`; at `(t₁, t, q)` with `t₁ < p` the same reading
+gives `edist (leftLim f q) (f t₁) ≤ η`, and `t₁ ↑ p` turns *that* into
+`edist (leftLim f q) (leftLim f p) ≤ η`.  The triangle inequality between the two
+is the statement.
+
+The strictness of the hypothesis at `q` is what makes the eventual bound
+available: from `η ≤ edist (f q) (leftLim f q)` alone the displacement
+`edist (f q) (f t)` need not reach `η` at any `t < q`. -/
+theorem SkorokhodSpace.jump_le_two_mul_of_forall_min_edist_lt
+    (f : D(ℝ, E)) {u v : ℝ} {η : ℝ≥0∞}
+    (h : ∀ t₁ t t₂ : ℝ, u ≤ t₁ → t₁ ≤ t → t ≤ t₂ → t₂ ≤ v →
+      min (edist (f.toFun t) (f.toFun t₁)) (edist (f.toFun t₂) (f.toFun t)) < η)
+    {p q : ℝ} (hup : u < p) (hpq : p < q) (hqv : q ≤ v)
+    (hq : η < edist (f.toFun q) (Function.leftLim f.toFun q)) :
+    edist (f.toFun p) (Function.leftLim f.toFun p) ≤ 2 * η := by
+  have hlim : ∀ x : ℝ, Filter.Tendsto f.toFun (𝓝[<] x) (𝓝 (Function.leftLim f.toFun x)) :=
+    fun x => f.isCadlag.tendsto_nhdsLT_leftLim x
+  -- The displacement to `f q` exceeds `η` on a left neighbourhood of `q`.
+  have hqev : ∀ᶠ t in 𝓝[<] q, η < edist (f.toFun q) (f.toFun t) :=
+    (Filter.Tendsto.edist tendsto_const_nhds (hlim q)) (isOpen_Ioi.mem_nhds hq)
+  have hqlt : ∀ᶠ t in 𝓝[<] q, t < q := eventually_mem_nhdsWithin
+  have hqgt : ∀ᶠ t in 𝓝[<] q, p < t :=
+    Filter.Eventually.filter_mono nhdsWithin_le_nhds (eventually_gt_nhds hpq)
+  -- Reading the hypothesis at `(t₁, t, q)` for `t` close to `q` from the left.
+  have hkey : ∀ t₁ : ℝ, u ≤ t₁ → t₁ ≤ p →
+      edist (Function.leftLim f.toFun q) (f.toFun t₁) ≤ η := by
+    intro t₁ hu1 h1p
+    refine le_of_tendsto (Filter.Tendsto.edist (hlim q) tendsto_const_nhds) ?_
+    filter_upwards [hqev, hqlt, hqgt] with t htq htlt htgt
+    rcases min_lt_iff.1 (h t₁ t q hu1 (le_trans h1p htgt.le) htlt.le hqv) with hA | hB
+    · exact hA.le
+    · exact absurd hB (not_lt.2 htq.le)
+  have hA : edist (Function.leftLim f.toFun q) (f.toFun p) ≤ η := hkey p hup.le le_rfl
+  have hB : edist (Function.leftLim f.toFun q) (Function.leftLim f.toFun p) ≤ η := by
+    have hple : (𝓝[<] p) ≤ 𝓝 p := nhdsWithin_le_nhds
+    have hpu : ∀ᶠ t₁ in 𝓝[<] p, u < t₁ :=
+      Filter.Eventually.filter_mono hple (eventually_gt_nhds hup)
+    have hpp : ∀ᶠ t₁ in 𝓝[<] p, t₁ < p := eventually_mem_nhdsWithin
+    refine le_of_tendsto (Filter.Tendsto.edist tendsto_const_nhds (hlim p)) ?_
+    filter_upwards [hpu, hpp] with t₁ htu htp
+    exact hkey t₁ htu.le htp.le
+  calc edist (f.toFun p) (Function.leftLim f.toFun p)
+      ≤ edist (f.toFun p) (Function.leftLim f.toFun q)
+        + edist (Function.leftLim f.toFun q) (Function.leftLim f.toFun p) := edist_triangle _ _ _
+    _ ≤ η + η := add_le_add (by rw [edist_comm]; exact hA) hB
+    _ = 2 * η := (two_mul η).symm
+
 /-! ## Milestone 9: the nonnegative index inside the real one
 
 Everything above about the modulus and about tightness is stated over the index
