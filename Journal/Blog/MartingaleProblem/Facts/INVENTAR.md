@@ -100,7 +100,7 @@ unserer Konstruktion. Daher:
 | `fact:jacodmemin` | 1 | Continuous mapping, Jacod--M'emin; CPS, Theorem 2.9 | bewusst | nicht formalisiert; `rem:augvsws` begründet, warum Augmentierung genügt |
 | `fact:picard` | 1 | Picard--Lindel"of for SDEs | bewusst | SDE-Weg wird zitiert, nicht bewiesen (§7.5) |
 | `fact:pseudopath` | 1 | Pseudo-paths; MZ, Section~1 and Lemma~1 | Roadmap | MartingaleProblems M11. **Am 2026-09-08, elfter Lauf, sind alle drei Teile als tragend erkannt, und zwar für einen Zweck, den das Manuskript ihnen nicht gibt**: (i) und (iii) machen die Inklusion $\DE \hookrightarrow M_E[0,\infty)$ zu einem Homöomorphismus auf ihr Bild mit Spur-$\sigma$-Algebra $\sigma(\pi_u)$, und (ii) — in der Lesart „$\gamma(\DE)$ ist borelsch im kompakten $\Prob([0,\infty]\times\hat E)$", nicht in der Lesart „nicht polnisch" — macht zusammen mit der Injektivität von $\gamma$ auf ganz $M_E$ den Raum $\DE$ zu einer **Borelmenge von $M_E$**. Das ist es, was Schritt 1 von `thm:MZconv` über den polnischen Raum $M_E$ (Kurtz 1991, S. 1022) laufen läßt. Die Injektivität von $\gamma$ auf $M_E$ steht wörtlich im Fact („identifies two paths exactly when they agree $\lambda$-a.e."); das Manuskript zieht daraus nur die schwächere Folgerung für $\DE$ |
-| `fact:relcompact` | 1 | Relative compactness, I; EK, Theorem 3.9.1 | Roadmap | SkorokhodSpace M8, `isTightMeasureSet_iff_forall_postcomp` mit `continuous_postcomp`. **Stand 2026-09-19, dreizehnter Lauf:** von diesem Beleg ist die zweite Hälfte keine Ankündigung mehr — `SkorokhodSpace.postcomp`, `SkorokhodSpace.measurable_postcomp` und `SkorokhodSpace.continuous_postcomp` sind bewiesen und gehen durch `check_master.py`, ebenso die Vorwärtsrichtung der Reduktion als `SkorokhodSpace.isTightMeasureSet_map_postcomp`. Offen ist die Rückrichtung, und sie geht nicht ohne `SkorokhodSpace.isTightMeasureSet_iff`, das Straffheitskriterium auf Maßebene; ohne kompakte Einschließung ist sie **falsch**, und der Zeuge steht im README von Meilenstein 8. Die Wohldefiniertheit, die dieselbe Zeile früher als eigene Arbeit führte, ist Mathlibs `IsCadlag.continuous_comp` (`Mathlib/Topology/Order/Cadlag.lean:119`, geprüft gegen `94ef6b89544`) |
+| `fact:relcompact` | 1 | Relative compactness, I; EK, Theorem 3.9.1 | Roadmap | SkorokhodSpace M8, `isTightMeasureSet_iff_forall_postcomp` mit `continuous_postcomp`. **Stand 2026-09-19, dreizehnter Lauf:** von diesem Beleg ist die zweite Hälfte keine Ankündigung mehr — `SkorokhodSpace.postcomp`, `SkorokhodSpace.measurable_postcomp` und `SkorokhodSpace.continuous_postcomp` sind bewiesen und gehen durch `check_master.py`, ebenso die Vorwärtsrichtung der Reduktion als `SkorokhodSpace.isTightMeasureSet_map_postcomp`. Offen ist die Rückrichtung, und sie geht nicht ohne `SkorokhodSpace.isTightMeasureSet_iff`, das Straffheitskriterium auf Maßebene; ohne kompakte Einschließung ist sie **falsch**, und der Zeuge steht im README von Meilenstein 8. Die Wohldefiniertheit, die dieselbe Zeile früher als eigene Arbeit führte, ist Mathlibs `IsCadlag.continuous_comp` (`Mathlib/Topology/Order/Cadlag.lean:119`, geprüft gegen `94ef6b89544`). **Stand 2026-09-19, vierzehnter Lauf: `SkorokhodSpace.isTightMeasureSet_iff` ist bewiesen** — mit `SkorokhodSpace.modulusBased_mono` als einziger neuer Eingabe, durch `check_master.py` gegen `94ef6b89544`, `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound`. Damit ruht der Beleg dieser Zeile auf **einer** offenen Aussage, der Rückrichtung der Reduktion, und deren Bruchstelle ist nicht bloß benannt, sondern in Lean widerlegt: jedes Testfunktional liefert seine **eigene** `δ`-dünne Unterteilung, das Kriterium verlangt eine, die der ganzen endlichen Familie dient, und `SkorokhodSpace.exists_isSubdivisionBased_pair_forall_not_cells` zeigt, daß eine gemeinsame Verfeinerung mit einer **vor** den Pfaden gewählten Dünnheit nicht existiert (die Mechanik dazu ist `SkorokhodSpace.exists_eq_castSucc_of_cells`: eine Verfeinerung trägt jeden inneren Knoten). Übrig ist der Dreipunktmodul `w''` von Ethier--Kurtz, und auch er ist nicht geschenkt |
 | `fact:stoppingtimes` | 1 | EK, Propositions 2.1.2 and 2.1.4; eqref{T2b} | Mathlib | `MeasureTheory.IsStoppingTime` in `Probability/Process/Stopping.lean` |
 | `fact:strookvaradhan` | 1 | Stroock--Varadhan; KA, Theorem 32.7 | bewusst | SDE-Weg wird zitiert, nicht bewiesen (§7.5) |
 | `fact:yamadawatanabe` | 1 | Yamada--Watanabe | bewusst | SDE-Weg wird zitiert, nicht bewiesen (§7.5) |
@@ -42707,3 +42707,280 @@ Nachweis, daß `isCompact_closure_iff` auf sie paßt — keine Maßtheorie mehr.
    *(Der Mathlib-Vorschlag `IsCompact.exists_pos_forall_dist_image_lt` ist in
    diesem Lauf schon eingetragen, als siebenundzwanzigste Lücke in `TODO.md`
    Punkt 8; er ist kein Vorschlag mehr, sondern erledigt.)*
+
+### 2026-09-19, vierzehnter Lauf des Tages — Vorschlag 1 steht, und mit ihm fällt der Befund des zwölften Laufs: `SkorokhodSpace` hat jetzt eine Deklaration, die Straffheit aus etwas anderem als Straffheit macht; der Preis war **eine** neue Eingabe, und es ist keine Maßtheorie, sondern die Monotonie des Moduls. Vorschlag 2 ist statt dessen **widerlegt**: der Weg, den er genommen hätte, führt über eine gemeinsame Verfeinerung, die es gleichmäßig nicht gibt
+
+**Bearbeitet:** Vorschlag 1 des Vorlaufs, `SkorokhodSpace.isTightMeasureSet_iff`
+— Punkt 2 der drei fehlenden Aussagen von Meilenstein 8 von `SkorokhodSpace`,
+um den Meilenstein 11 von `MartingaleProblems` seit dem zwölften Lauf ansteht.
+Vorschlag 2 ist nicht angefangen, und der Grund ist ein Befund; er steht unten.
+
+**Vier Deklarationen**, alle in `TauCeti/SkorokhodSpace/Suggested.lean`:
+
+* `SkorokhodSpace.modulusBased_mono` — der basierte Modul ist monoton in `δ`,
+  neben `SkorokhodSpace.modulus_le_modulusBased` eingefügt;
+* `SkorokhodSpace.isTightMeasureSet_iff` — das Straffheitskriterium auf
+  Maßebene, im Abschnitt „From a set of paths to a set of measures", hinter den
+  beiden Nahtstellen des Vorlaufs;
+* `SkorokhodSpace.exists_eq_castSucc_of_cells` und
+  `SkorokhodSpace.exists_isSubdivisionBased_pair_forall_not_cells` — die
+  Mechanik und die Widerlegung zur gemeinsamen Verfeinerung, im neuen Abschnitt
+  „What a refinement costs, and why it cannot be had uniformly" hinter
+  `SkorokhodSpace.subdivisionOsc_le_two_mul_of_cells`. Sie gehören zur
+  **Begründung**, warum Vorschlag 2 des Vorlaufs nicht angefangen ist, und
+  stehen deshalb nicht bloß im Bericht.
+
+#### Die Aussage, und warum sie so und nicht wie im README gestellt ist
+
+Das README hatte sie als „ein Kompaktum `K` und eine Funktion `δ ↦ η δ`, die
+gegen `0` geht" angekündigt. Gestellt ist sie in der Gestalt, die der Beweis
+beider Richtungen wirklich braucht und die Ethier--Kurtz 3.7.2 hat — zwei
+Quantoren statt einer Funktion:
+
+> `IsTightMeasureSet S` genau dann, wenn für jedes `ε > 0` und jeden
+> Fensterradius `m`
+> * ein Kompaktum `K ⊆ E` existiert mit
+>   `μ {f | ∀ t ∈ exhaustion 0 m, f t ∈ K}ᶜ ≤ ε` für jedes `μ ∈ S`, und
+> * zu **jeder** Stufe `η > 0` ein Radius `δ > 0` existiert mit
+>   `μ {f | η ≤ modulusBased 0 m f δ} ≤ ε` für jedes `μ ∈ S`.
+
+Die Funktion `η ↦ δ` ist damit nicht Datum der Aussage, sondern fällt in der
+Rückrichtung durch `choose` an. Das ist kein Kosmetikum: die Hinrichtung
+*liefert* zu jedem `η` ein `δ`, sie liefert keine benannte Funktion, und eine
+Aussage, die eine verlangte, hätte in der Hinrichtung eine Auswahl vorschreiben
+müssen, die niemand liest.
+
+#### Beide Richtungen sind `isCompact_closure_iff`, und sie verbrauchen es entgegengesetzt
+
+`SkorokhodSpace.isCompact_closure_iff` von Meilenstein 7 hatte bis zu diesem Lauf
+**keinen einzigen Verbraucher**. Jetzt hat es zwei, in einer Deklaration.
+
+* **Hin** (straff ⟹ die zwei Bedingungen) ist kurz. Ein Kompaktum `K` von
+  Pfaden, das von jedem Maß alles bis auf `ε` trägt, erfüllt das Kriterium von
+  Meilenstein 7, und beide Bedingungen werden daran mit `measure_mono`
+  abgelesen: die Ausnahmemenge jeder von beiden liegt in `Kᶜ`. Für die zweite
+  ist der Schritt `Filter.Tendsto.eventually_lt_const` zusammen mit
+  `eventually_mem_nhdsWithin` — der Grenzwert über `𝓝[>] 0` liefert **ein**
+  brauchbares `δ`, und es ist positiv, weil der Filter innerhalb von `Ioi 0`
+  sitzt.
+* **Zurück** ist die Arbeit, und sie ist eine Konstruktion: aus einer
+  **zweifach** indizierten Familie von Bedingungen wird **eine** Menge von
+  Pfaden.
+
+#### Die Konstruktion, und die Zahl, die sie kostet
+
+Indiziert wird mit `Nat.unpair`: zu `n` gehören der Fensterradius
+`(Nat.unpair n).1`, die Stufe `((Nat.unpair n).2 + 1)⁻¹` und die Toleranz
+`ε * 2⁻¹ ^ (n + 2)` für **jede** der beiden Bedingungen. Die Menge ist
+
+    ⋂ n, V n ∩ W n
+
+mit `V n` der Wertebedingung und `W n` der Modulbedingung. `measure_compl_iInter_le`
+des Vorlaufs bezahlt sie: die beiden Toleranzen bei `n` summieren sich zu
+`ε * 2⁻¹ ^ (n + 1)`, und die geometrische Reihe darüber ist `ε` — **auf die
+Null**, nicht bloß `≤ ε`. Das ist der Grund für die Wahl `n + 2` und nicht
+`n + 1`: mit `n + 1` bliebe `2 ε` stehen und die Aussage verlöre einen Faktor,
+den ein Leser nachrechnen müßte.
+
+Die Kompaktheit des Abschlusses ist Meilenstein 7 rückwärts, und beide Klauseln
+werden an **einem** Index abgelesen: die Werte an `Nat.pair m 0`, weil die
+Wertebedingung nicht von der Stufe abhängt, und der Modul an `Nat.pair m k` für
+ein `k` mit `((k : ℝ≥0∞) + 1)⁻¹ ≤ η`, das `ENNReal.exists_inv_nat_lt` liefert.
+
+#### Der Befund: die Eingabe, die fehlte, ist nicht maßtheoretisch
+
+Der Vorlauf hatte geschrieben, nach den beiden Nahtstellen sei „keine
+Maßtheorie mehr" übrig, sondern nur noch die Konstruktion der Menge. Das stimmt,
+und es war unvollständig. Was fehlte, ist:
+
+> **`SkorokhodSpace.modulusBased_mono`** — der basierte Modul ist monoton in `δ`.
+
+Und zwar an genau einer Stelle: die Rückrichtung hat je Stufe **eine** Bedingung
+bei **einem** Radius `δ n`, und das Kriterium von Meilenstein 7 verlangt einen
+**Grenzwert** für `δ → 0⁺`. Ohne die Monotonie sagt eine Bedingung bei `δ n`
+über kleinere Radien nichts, und die Aussage bräche an dieser Stelle
+auseinander. Der Beweis ist der von `SkorokhodSpace.modulus_mono` mit einer
+Klammer mehr — der Knoten am Basispunkt übersteht die Abschwächung unberührt —,
+und daß er trotzdem nicht dastand, hat einen Grund: `modulus_mono` war seit
+Meilenstein 7 da, und die Berichtigung auf `modulusBased` hat die
+Abschätzungen von Meilenstein 7 mitgenommen, die Monotonie aber nicht, weil bis
+heute nichts sie las.
+
+**Die Lehre, und sie ist die des dreizehnten Laufs von der anderen Seite:** dort
+standen zwei von drei Vorschlägen schon in der Bibliothek; hier stand die
+fehlende Eingabe schon in der eigenen Datei — nur für den **falschen** Modul.
+Eine Berichtigung, die eine Definition austauscht, erbt ihre Sätze nicht.
+
+#### Vier Einzelheiten, die ein nächster Lauf sonst wiederfindet
+
+* **`ENNReal.mul_pos` ist an dieser Stelle nicht anwendbar**: es verlangt
+  `PosMulStrictMono ℝ≥0∞`, und die Instanz wird nicht gefunden. Zu nehmen ist
+  `pos_iff_ne_zero` (die allgemeine Ordnungsaussage, unqualifiziert) mit
+  `mul_ne_zero` und `pow_ne_zero`; `ENNReal.inv_ne_zero` liefert den Faktor.
+* **`rw [← mul_assoc]` greift von außen nach innen.** In
+  `ε * (2 * (2⁻¹ * x))` trifft es zuerst die **äußere** Klammer und liefert
+  `ε * 2 * (2⁻¹ * x)`; für die innere braucht es ein zweites `← mul_assoc`. Wer
+  die Klammerung von Hand umstellt, zählt die Vorkommen und verläßt sich nicht
+  auf eines.
+* **`ENNReal.tsum_geometric_two` ist die Reihe, die man hier will**
+  (`∑' n, (2⁻¹ : ℝ≥0∞) ^ n = 2`,
+  `Mathlib/Analysis/SpecificLimits/Basic.lean`), und mit
+  `ENNReal.tsum_mul_right` und `pow_succ` ist `∑' n, (2⁻¹) ^ (n + 1) = 1` drei
+  Zeilen. Über `ENNReal.tsum_geometric` und `one_sub_inv_two` geht es auch, ist
+  aber länger.
+* **`Set.mem_ofPred_eq` ist der Name auf `master`**, nicht `Set.mem_setOf_eq`;
+  er wird gebraucht, um `(W n)ᶜ` mit `not_lt` in die Gestalt zu bringen, in der
+  die Voraussetzung sie liefert.
+
+#### Warum Vorschlag 2 nicht angefangen ist, und was dabei herauskam
+
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` ist **nicht** das
+Kriterium von heute, angewandt. Die erste Klausel ist die kompakte Einschließung
+wörtlich; die zweite ist die Arbeit, und ihre Bruchstelle ist benennbar:
+
+> Jedes Testfunktional `h` liefert seine **eigene** `δ`-dünne basierte
+> Unterteilung, und das Kriterium verlangt **eine**, die der ganzen endlichen
+> Familie zugleich dient.
+
+`SkorokhodSpace.subdivisionOsc_le_two_mul_of_cells` schätzt die Oszillation einer
+Unterteilung nur gegen die einer ab, die sie **verfeinert** — mit dem Faktor `2`,
+der dort als scharf ausgewiesen ist. Gebraucht wird also eine **gemeinsame
+Verfeinerung**, und die muß jeden inneren Knoten jeder der `N` Unterteilungen
+tragen.
+
+**Und hier ist der Befund, und er ist nicht „offen", sondern in Lean
+widerlegt:** eine gemeinsame Verfeinerung gibt es immer, und sie nützt nichts. Zu
+**gegebenen** Unterteilungen hat die Vereinigung eine kleinste positive Lücke und
+ist unterhalb davon dünn; das Kriterium verlangt aber eine Dünnheit `δ'`, die
+**vor** den Pfaden gewählt wird, und die gibt es nicht.
+
+Zwei Deklarationen sagen das, beide im selben Lauf bewiesen und durch
+`check_master.py`:
+
+* `SkorokhodSpace.exists_eq_castSucc_of_cells` — **eine Verfeinerung trägt jeden
+  inneren Knoten der Unterteilung, die sie verfeinert.** Das ist die ganze
+  Mechanik, und es ist das einzige, wozu sich die Zellenbedingung punktweise
+  benutzen läßt: die `r`-Zelle, die den Knoten enthält, liegt in einer `t`-Zelle,
+  die strikte Monotonie von `t` weist sie als die vom Knoten eröffnete aus, und
+  deren linker Rand ist dann `≤` und `≥` der Knoten — das zweite, weil eine Zelle
+  nichtleer ist. Vom Pfadraum geht nichts ein, und die Dünnheit von `t` auch
+  nicht.
+* `SkorokhodSpace.exists_isSubdivisionBased_pair_forall_not_cells` — zu **jedem**
+  `δ' > 0` zwei basierte `1/2`-dünne Unterteilungen von `exhaustion 0 3` ohne
+  `δ'`-dünne gemeinsame Verfeinerung, nämlich `![-4, 0, 1, 4]` und
+  `![-4, 0, 1 + γ, 4]` mit `γ = min (δ'/2) 1`. Die widerlegte Klasse ist die
+  größere: die gemeinsame Verfeinerung muß **nicht** basiert sein.
+
+**Der Ausweg über `ℝ^N` trägt nicht**, und das ist die zweite Hälfte des Befundes:
+die Voraussetzung beherrscht das Bildgesetz **jedes einzelnen** `h_i`, also die
+Randverteilungen, und eine Unterteilung für den Vektorpfad ist genau das, was
+fehlt.
+
+Was übrigbleibt, ist der subdivisionsfreie Modul `w''` von Ethier--Kurtz, die
+Dreipunktgröße `sup min (d (x t) (x t₁)) (d (x t₂) (x t))`. **Auch sie ist nicht
+geschenkt**, und der Grund gehört aufgeschrieben, damit ihn kein Lauf übersieht:
+unter `d ≈ max über i` ist `min (max a) (max b)` **nicht** durch
+`max über i von min (a i) (b i)` beschränkt — mit `a = (1,0)` und `b = (0,1)`
+steht links `1` und rechts `0`. Das steht so an beiden README, und der Vorschlag
+1 unten sagt, was damit als erstes zu prüfen ist.
+
+**Und der Zeuge steht in Lean und nicht bloß im Bericht**, weil ein Befund, der
+nur in einem Laufbericht steht, in drei Läufen wieder erschlossen wird. Dasselbe
+Muster wie bei `not_isCompact_closure_of_jumps_at_basePoint` und
+`not_tendsto_iSup_modulusPinned`, den beiden Widerlegungen, die die Gestalt von
+`modulusBased` festgelegt haben.
+
+#### Eingetragen
+
+* `SkorokhodSpace/Suggested.lean`: der Abschnittskopf „From a set of paths to a
+  set of measures" sagt jetzt, daß das Kriterium selbst dort steht und die
+  einzige Aussage der Datei ist, die Straffheit aus etwas anderem als
+  Straffheit gewinnt; der Kopf von „Milestone 8, stage (A)" sagt nicht mehr,
+  `isTightMeasureSet_iff` sei „not in this file"; und hinter
+  `subdivisionOsc_le_two_mul_of_cells` steht der neue Abschnitt „What a
+  refinement costs, and why it cannot be had uniformly" mit den beiden
+  Aussagen zur gemeinsamen Verfeinerung.
+* `SkorokhodSpace/README.md`, Meilenstein 8: der Punkt `isTightMeasureSet_iff`
+  ist auf **proved 2026-09-19** gesetzt und nennt die Gestalt, beide Richtungen,
+  die Indizierung, die Rolle von `modulusBased_mono` und die Herkunft der
+  Vollständigkeit von `E`; der Punkt `isTightMeasureSet_iff_forall_postcomp`
+  nennt die Bruchstelle oben.
+* `MartingaleProblems/README.md`, Meilenstein 11: Punkt 2 der drei fehlenden
+  Aussagen ist geschlossen; der Absatz darüber sagt, daß der Befund des zwölften
+  Laufs — keine Deklaration in `SkorokhodSpace` gewinnt Straffheit aus etwas
+  anderem — damit abgetragen ist, und nennt die Aussage, die ihn abträgt. Offen
+  ist von den dreien nur noch Punkt 3.
+* `Facts/INVENTAR.md`: die Zeile `fact:relcompact` sagt, daß ihr Beleg jetzt auf
+  **einer** offenen Aussage ruht, und nennt deren Bruchstelle.
+
+#### Geprüft
+
+* `scripts/check_master.py`: rc 0, 0 Fehler, 0 `sorry`, 0 veraltet, Warnungen
+  18 / 35 / 106 — **unverändert** gegenüber dem Vorlauf. Mathlib
+  `94ef6b89544e58e90f119da869f3fb48d1da0f4c` (2026-09-18), Lean 4.35.0-rc2.
+* `scripts/check_axioms_master.py` auf alle vier neuen Namen: `propext`,
+  `Classical.choice`, `Quot.sound`.
+* `scripts/check_duplicates.py`: 2 312 geprüfte eigene Deklarationen (vier mehr
+  als im Vorlauf), 37 Treffer auf dem letzten Namensbestandteil — **unverändert**,
+  also kein neuer Namenskonflikt.
+* `scripts/extract_citations.py`, `scripts/check_cited_lines.py`: 291 gepaarte
+  Fundstellen, 291 stimmen, 0 verschoben, 0 tot.
+* `scripts/check_negatives.py`: 43 Behauptungen, 0 mit unerwarteten Treffern.
+* Die benutzten Mathlib-Namen am Quelltext von `94ef6b89544` nachgesehen:
+  `Mathlib/MeasureTheory/Measure/Tight.lean:55` (`IsTightMeasureSet`), `:60`
+  (`isTightMeasureSet_iff_exists_isCompact_measure_compl_le`),
+  `Mathlib/Topology/Instances/ENNReal/Lemmas.lean:238`
+  (`ENNReal.tendsto_nhds_zero`),
+  `Mathlib/Basic/ENNReal/Inv.lean:650` (`ENNReal.exists_inv_nat_lt`), `:584`
+  (`one_sub_inv_two`), `:280` (`ENNReal.inv_pos`),
+  `Mathlib/Analysis/SpecificLimits/Basic.lean:403` (`ENNReal.tsum_geometric`),
+  `:416` (`ENNReal.tsum_geometric_add_one`), `:429`
+  (`ENNReal.tsum_geometric_two`),
+  `Mathlib/Topology/Algebra/InfiniteSum/ENNReal.lean:189`
+  (`ENNReal.tsum_mul_right`),
+  `Mathlib/Data/Nat/Pairing.lean:74` (`Nat.pairEquiv`, mit `Nat.unpair_pair`).
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Der Dreipunktmodul `w''` und sein Anschluß an `modulusBased`** — die
+   Aussage, ohne die `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` nicht
+   anfangen kann, nachdem die gemeinsame Verfeinerung in diesem Lauf widerlegt
+   ist.
+
+   *Die Aussage:* `SkorokhodSpace.modulusThree t₀ u f δ` als
+   `⨆ über t₁ ≤ t ≤ t₂ mit dist t₁ t₂ ≤ δ, min (edist (f t) (f t₁)) (edist (f t₂) (f t))`,
+   und dazu die beiden Abschätzungen, die sie an `modulusBased` binden — die
+   leichte Richtung `modulusThree ≤ modulusBased` punktweise, und die schwere,
+   in der aus kleinem `modulusThree` eine Unterteilung gebaut wird. Sie ist
+   Ethier--Kurtz 3.6.4 und ist **subdivisionsfrei**, was der ganze Grund ist, sie
+   zu wollen: sie wird an **einem** Zeitpaar gelesen und braucht keine gemeinsame
+   Verfeinerung für endlich viele Pfade.
+
+   *Worauf sie ruht:* `SkorokhodSpace.subdivisionOsc`, `exhaustion` und
+   `IsSubdivisionBased`; von der Datei ist nichts weiter nötig.
+
+   *Warum jetzt:* sie ist der einzige noch nicht widerlegte Weg zu Punkt 3 von
+   Meilenstein 8, und damit zu Meilenstein 11 von `MartingaleProblems`. **Und sie
+   ist nicht geschenkt:** unter `d ≈ max über i` ist `min (max a) (max b)` nicht
+   durch `max über i von min (a i) (b i)` beschränkt — `a = (1,0)`, `b = (0,1)`,
+   links `1`, rechts `0`. Der erste Schritt eines Laufs ist deshalb, an dieser
+   Ungleichung zu prüfen, ob die Reduktion über `w''` überhaupt trägt, **ehe**
+   `modulusThree` gebaut wird. Fällt auch das negativ aus, so ist das die dritte
+   Widerlegung in Folge und die Aussage von Punkt 3 selbst ist neu zu stellen.
+
+2. **`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp`** selbst, sobald
+   Vorschlag 1 entschieden ist. Die Hinrichtung steht seit dem dreizehnten Lauf
+   (`isTightMeasureSet_map_postcomp`), die erste Klausel der Rückrichtung ist die
+   Voraussetzung wörtlich, und das Akzeptanzbeispiel, das die kompakte
+   Einschließung als unentbehrlich ausweist (`S = {δ (fun _ ↦ (n : ℝ))}`), steht
+   im README von Meilenstein 8 und ist mitzunehmen.
+
+3. **Eine Leerheitsprobe für `isTightMeasureSet_iff` an Daten.** Das Kriterium
+   ist bewiesen und an nichts angewandt; dieselbe Lücke, die der zwölfte Lauf für
+   die Straffheit überhaupt gefunden hatte, besteht damit eine Ebene höher fort.
+   Der billigste Zeuge ist die **Gegenprobe**, die im README von Meilenstein 8
+   schon ausformuliert dasteht: `S = {δ (1_{[1,∞)} + 1_{[1+1/n,∞)})}` hat
+   kompakte Einschließung in `{0,1,2}` und ist **nicht** straff, weil die
+   Modulbedingung an genau dieser Familie scheitert. Sie prüft, daß das Kriterium
+   **beide** Klauseln braucht, und sie ist die einzige Probe, die das kann — eine
+   straffe Familie zeigt nur, daß beide Klauseln zugleich haltbar sind.

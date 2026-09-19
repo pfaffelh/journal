@@ -2312,27 +2312,41 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
 **Stating this milestone's items so that they read as suppliers of `hcont` and
 `hsep` — and not as convergence theorems of their own — is part of the work.**
 
-* `SkorokhodSpace.isTightMeasureSet_iff` — stage (B). A set of laws is tight if
-  and only if for every `ε > 0` and `m` there are a compact `K ⊆ E` and a
-  function `δ ↦ η δ` tending to `0` with
-  `μ {f | ∀ t ∈ B m, f t ∈ K} ≥ 1 - ε` and
-  `μ {f | modulus m f δ ≥ η δ} ≤ ε`, uniformly over the set. Combine
-  Milestone 7 with `MeasureTheory.isTightMeasureSet_of_isCompact_closure` and
-  its converse `isCompact_closure_of_isTightMeasureSet`; the completeness of
-  `E` is what the first of the two asks for.
+* `SkorokhodSpace.isTightMeasureSet_iff` — stage (B), **proved 2026-09-19**. A
+  set `S` of laws on `D(ℝ, E)` is tight if and only if, for every `ε > 0` and
+  every window radius `m`, there is a compact `K ⊆ E` with
+  `μ {f | ∀ t ∈ exhaustion 0 m, f t ∈ K}ᶜ ≤ ε` for every `μ ∈ S`, and for every
+  level `η > 0` a radius `δ > 0` with
+  `μ {f | η ≤ modulusBased 0 m f δ} ≤ ε` for every `μ ∈ S`. That is
+  Ethier–Kurtz 3.7.2 at the level of laws, and it is the **only** statement of
+  the file that produces tightness from something other than tightness.
 
-  **Two of its inputs are proved, 2026-09-19, and they settle the question the
-  statement would otherwise stumble over.** `isTightMeasureSet_of_forall_exists_isCompact_closure`
-  is the joint between the two milestones — a set of *paths* with compact
-  closure carrying all but `ε` of every measure of the family makes the family
-  tight — and `measure_compl_iInter_le` is the countable bookkeeping over window
-  radius and tolerance. **Neither needs the sets to be measurable**, and that is
-  the point: `{f | η ≤ modulusBased t₀ u f δ}` is an infimum over an
-  uncountable family of subdivisions and nothing here shows it is Borel, but a
-  Mathlib `Measure` is defined on every set, so `measure_mono` and
-  `measure_iUnion_le` apply as they stand. What is left of the item is the
-  construction of the set and the verification that `isCompact_closure_iff`
-  applies to it — no measure theory.
+  **Both halves are `isCompact_closure_iff` of Milestone 7**, which until this
+  item had no consumer at all, and they spend it in opposite directions. Forward
+  it is short: a compact set of paths `K` carrying all but `ε` of every measure
+  satisfies the criterion of Milestone 7, and the exceptional set of each of the
+  two conditions is contained in `Kᶜ`. Backward it is the construction of **one**
+  set of paths out of a doubly indexed family of conditions — indexed by `n`
+  through `Nat.unpair`, window radius `(n.unpair).1`, level
+  `((n.unpair).2 + 1)⁻¹`, tolerance `ε * 2⁻¹ ^ (n + 2)` for each of the two
+  conditions — whose exceptional set `measure_compl_iInter_le` pays for, the two
+  tolerances at index `n` adding to `ε * 2⁻¹ ^ (n + 1)` and the geometric series
+  to `ε` on the nose.
+
+  The step at which a countable family of conditions becomes the **limit** the
+  criterion of Milestone 7 asks for is `SkorokhodSpace.modulusBased_mono`, proved
+  with it: the based modulus is monotone in `δ` for the same reason `modulus_mono`
+  is, the node at the base point surviving the weakening untouched, so a bound at
+  one radius is a bound at every smaller one.
+
+  **No measurability of any of these sets is needed, and none is available**:
+  `{f | η ≤ modulusBased t₀ u f δ}` is an infimum over an uncountable family of
+  subdivisions and nothing here shows it is Borel. A Mathlib `Measure` is defined
+  on every set, and that is what `isTightMeasureSet_of_forall_exists_isCompact_closure`
+  — the joint between the two milestones — and `measure_compl_iInter_le` are
+  stated to exploit. The completeness of `E` is inherited from Milestone 7, whose
+  converse half produces a totally bounded set and needs a complete space to call
+  its closure compact.
 * `SkorokhodSpace.tendsto_finiteDimensional_of_tendsto` — stage (A),
   **proved 2026-09-18**. If `μ n → μ` weakly then, for every **countable** family
   `t : α → ι` of points at which the limit has no fixed discontinuity — that is
@@ -3299,8 +3313,44 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   `H ⊆ E →ᵇ ℝ` be dense in the topology of uniform convergence on compact sets.
   Then `S` is tight if and only if `(· .map (postcomp h)) '' S` is tight in
   `D ι ℝ` for every `h ∈ H`. The forward direction is the previous item; the
-  converse is Milestone 7 applied to the modulus, which compact containment plus
-  a dense `H` recovers from the real-valued moduli.
+  converse reads `SkorokhodSpace.isTightMeasureSet_iff`, whose first clause is
+  the compact containment hypothesis verbatim and whose second has to be
+  recovered from the real-valued moduli.
+
+  **That recovery is the work, it is not the criterion applied, and the obstacle
+  is named rather than guessed.** On a compact `K` the metric of `E` is recovered
+  from finitely many `h ∈ H` — a finite `ε`-net of `K` and the functions
+  `y ↦ min (dist y x_j) 1` approximated out of `H` — so what is wanted is a
+  subdivision on whose cells *all* of `h_1 ∘ f, …, h_N ∘ f` oscillate little. Each
+  `h_i` supplies its **own** `δ`-sparse based subdivision, and
+  `SkorokhodSpace.subdivisionOsc_le_two_mul_of_cells` bounds the oscillation of a
+  subdivision only by that of one it **refines** — the factor `2` being the price
+  of moving the left endpoint, and sharp. So a common refinement is what is
+  needed, and a common refinement must carry every interior node of every `t^i`.
+
+  **A common refinement exists and is useless, and that is proved, 2026-09-19.**
+  `SkorokhodSpace.exists_eq_castSucc_of_cells` is the mechanism — a refinement
+  carries every interior node of the subdivision it refines — and
+  `SkorokhodSpace.exists_isSubdivisionBased_pair_forall_not_cells` is the
+  refutation: for **every** `δ' > 0` there are two based `1/2`-sparse subdivisions
+  of `exhaustion 0 3` admitting no `δ'`-sparse common refinement, namely
+  `![-4, 0, 1, 4]` and `![-4, 0, 1 + γ, 4]` with `γ = min (δ'/2) 1`. For *given*
+  subdivisions a common refinement does exist — the union of the nodes is sparse
+  below its smallest gap — so what is refuted is exactly what a criterion of the
+  form `∃ δ, ∀ paths` needs: a sparseness chosen before the paths. The refuted
+  class is the larger one, the common refinement not being required to be based.
+
+  **Reading the family as one path into `ℝ^N` does not help either**: the
+  hypothesis controls the image law of each `h_i` separately, that is the
+  marginals, and a subdivision for the vector path is exactly what is missing.
+
+  What is left to look at, and it is the first question of a run at this item, is
+  Ethier–Kurtz' subdivision-free modulus `w''`, the three point quantity
+  `sup min (d (x t) (x t₁)) (d (x t₂) (x t))` over `t₁ ≤ t ≤ t₂` of span `δ`.
+  **It is not immediate either**, and the reason is worth recording so that no run
+  assumes it: under `d ≈ max over i`, `min (max a) (max b)` is not bounded by
+  `max over i of min (a i) (b i)` — take `a = (1,0)`, `b = (0,1)`, where the left
+  side is `1` and the right side is `0`.
 
 **Acceptance examples.**
 

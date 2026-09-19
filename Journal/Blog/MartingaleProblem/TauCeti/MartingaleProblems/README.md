@@ -10456,13 +10456,14 @@ that one does not cross at all, a dense `T ⊆ ℝ≥0` not being dense in `ℝ`
 nothing of this milestone is to be restated over `ℝ≥0`.
 
 **What has to exist in SkorokhodSpace before this milestone can begin, checked at
-the source 2026-09-19.** In `SkorokhodSpace/Suggested.lean` the predicate
-`IsTightMeasureSet` occurs only ever as a **hypothesis** or in the two transports
-of Milestone 9, which carry tightness along the index crossing and therefore ask
-for it as well: no declaration there produces tightness from anything but
-tightness. Three named items of
-**SkorokhodSpace** Milestone 8 that this milestone consumes have no declaration
-at all, and they are needed in this order:
+the source 2026-09-19.** The finding of the twelfth run of that day was that in
+`SkorokhodSpace/Suggested.lean` the predicate `IsTightMeasureSet` occurred only
+ever as a **hypothesis** or in the transports of Milestone 9, which carry
+tightness along the index crossing and therefore ask for it as well: **no
+declaration there produced tightness from anything but tightness.** It is
+`SkorokhodSpace.isTightMeasureSet_iff` that removes that, and it is item 2 below.
+Three named items of **SkorokhodSpace** Milestone 8 that this milestone consumes
+had no declaration at all, and they are needed in this order:
 
 1. `SkorokhodSpace.postcomp` with `SkorokhodSpace.continuous_postcomp` and
    `Measurable (postcomp h)` — the map `f ↦ h ∘ f` for continuous `h : E → E'`.
@@ -10490,19 +10491,31 @@ at all, and they are needed in this order:
 2. `SkorokhodSpace.isTightMeasureSet_iff` — the tightness criterion at the level
    of measures, compact containment together with the modulus condition. This is
    the statement `isCompact_closure_iff` of Milestone 7 is *for*, and it is the
-   one every item below reads. **Two of its inputs are proved since
-   2026-09-19**, `isTightMeasureSet_of_forall_exists_isCompact_closure` and
-   `measure_compl_iInter_le`, and with them the item asks for no measure theory
-   and no measurability of the modulus sets: what is left is the construction of
-   a set of paths with compact closure out of the two conditions.
+   one every item below reads. **Proved 2026-09-19**, together with
+   `SkorokhodSpace.modulusBased_mono`, which is the step at which the countable
+   family of conditions becomes the limit Milestone 7 asks for. Its two
+   measure theoretic inputs, `isTightMeasureSet_of_forall_exists_isCompact_closure`
+   and `measure_compl_iInter_le`, hold for arbitrary — in particular non
+   measurable — sets, and that is what let the criterion be stated over the
+   modulus sets at all. **This item is therefore closed**, and with it the finding
+   that held this milestone up: `SkorokhodSpace` now has a declaration that
+   produces tightness from something other than tightness.
 3. `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` — the reduction to real
-   valued paths, whose forward direction is item 1 and whose converse is item 2.
+   valued paths, whose forward direction is item 1 and whose converse reads item
+   2. **The only one of the three still open**, and its converse is not item 2
+   applied: each test function `h` supplies its own `δ`-sparse subdivision, and
+   one subdivision has to serve them all. `SkorokhodSpace.subdivisionOsc_le_two_mul_of_cells`
+   bounds the oscillation of a subdivision only by that of one it **refines**, so
+   a common refinement is what is needed — and that a common refinement cannot be
+   had with a sparseness chosen before the paths is **proved**, 2026-09-19, as
+   `SkorokhodSpace.exists_isSubdivisionBased_pair_forall_not_cells`. What remains
+   open, and what a run at this item starts from, is written out at the item in
+   `SkorokhodSpace/README.md`, Milestone 8; it is not an application of item 2.
 
 Only then does `isTight_map_postcomp_of_exists_martingale` have a conclusion it
 can reach, and `isRelativelyCompact_of_approx` an input. **The order of work is
-therefore Milestone 8 of SkorokhodSpace first**, and the first run at it is item
-1, which is self contained and answers no question of this milestone but unblocks
-both of the others.
+therefore Milestone 8 of SkorokhodSpace first**, and what is left of it is item
+3 alone.
 
 * `mpSolution_of_tendsto_cadlag`: let `A ⊆ Cb(E) × Cb(E)` and let `A n` be
   relations between bounded measurable functions such that for every `(f,g) ∈ A`
