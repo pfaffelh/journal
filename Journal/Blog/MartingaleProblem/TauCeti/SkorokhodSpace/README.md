@@ -3498,3 +3498,117 @@ coordinate of the crossed law, `map_eval_map_extendNNReal_map_jumpPathD_poisson`
 for the independent control against `ProbabilityTheory.poissonMeasure`, and
 `isTightMeasureSet_map_extendNNReal_map_jumpPathD` for the tightness transport,
 whose hypothesis is there discharged on data.
+
+## Milestone 10: Aldous' tightness criterion, and what it does not see
+
+*Added 2026-09-19 at the author's request, out of a conversation rather than a
+run. Optional: nothing in **MartingaleProblems** depends on it, and the route to
+tightness that this roadmap actually takes is Milestone 7 plus Milestone 8. It is
+here because it is the criterion practitioners reach for, and because writing it
+down settles what our generality costs and what it does not.*
+
+**The criterion.** For càdlàg processes `X n` adapted to filtrations `𝓕 n`, with
+compact containment, and with
+
+```
+∀ ε T > 0,  lim_{δ→0} limsup_n  sup over stopping times τ ≤ T and θ ≤ δ
+              P ( d (X n (τ + θ)) (X n τ) > ε )  =  0
+```
+
+the laws of `X n` are tight in `D ι E`.
+
+**Proof, in outline, so that a run does not rediscover it.** Fix `ε`. Put
+`τ 0 = ⊥` and `τ (k+1) = inf {t > τ k | d (X t) (X (τ k)) > ε}`. These are
+stopping times, and they *are* the subdivision: between consecutive ones the path
+moves by at most `ε`, so `modulusBased ≤ 2ε` as soon as no two of them lie within
+`δ` and finitely many lie below `T` — the second following from the first, with
+at most `T/δ` of them.
+
+That they do not crowd is the whole of it, and it is the step Aldous solves by a
+**second application of the hypothesis at a random time**: with
+`σ = min (τ (k+1)) (τ k + δ)`, itself a bounded stopping time, the triangle
+inequality
+
+```
+d (X σ) (X (τ k))  ≤  d (X σ) (X (τ k + δ))  +  d (X (τ k + δ)) (X (τ k))
+```
+
+reduces a displacement *inside* the window to two comparisons with a **fixed**
+increment, one from `τ k` and one from `σ`, and the hypothesis bounds both —
+which it can only do because it quantifies over *all* stopping times. That
+quantifier is not decoration: at fixed times the condition follows from
+convergence of the finite dimensional distributions and gives no tightness at
+all, a jump at a random location having probability zero at every fixed time.
+The interleaving of `lim_δ` and `limsup_n` in that step is the one place to check
+against a source (Billingsley, 2nd ed., Theorem 16.10, or Jacod--Shiryaev
+VI.4.5) before writing a signature.
+
+**Index hypotheses, and they are not this roadmap's.** Milestone 1 asks `ι` for a
+metric additive along the order (`AdditiveDist`), `ProperSpace` and
+`OrderTopology` — a condition on the *geometry* of `ι`, which the modulus needs.
+Aldous needs neither: no metric on `ι` occurs in the statement, the metric being
+on `E`. What it needs instead is an **addition** `τ + θ` — that is \eqref{T4} of
+the manuscript — and a **filtration with stopping times** over `ι`. So the two
+criteria are incomparable, and this milestone is the only one here that mentions
+a probability measure in its hypothesis rather than in its conclusion. It may
+therefore belong in **MartingaleProblems**, where the stopping time machinery of
+its Milestone 9 already stands.
+
+**What the criterion does not see, and why that is Aldous' limit and not ours.**
+It is sufficient, not necessary, and it fails exactly at **fixed times of
+discontinuity**. The witness is one line: `X ≡ Set.indicator (Set.Ici 1) 1`,
+deterministic and the same for every `n`, is trivially tight, while with
+`τ = 1 - δ` and `θ = δ` the displacement `d (X 1) (X (1-δ)) = 1` for every `δ`.
+
+Such processes are exactly what a clock with atoms produces, and this roadmap
+admits them. The resolution is *not* to patch Aldous but to note that he is a
+sufficient condition for something we already have: `modulusBased` is an
+**infimum over subdivisions**, so the nodes may be laid where the jumps are, and
+on the witness above the subdivision `{…, 1, …}` gives `modulusBased = 0`. The
+implication chain is
+
+```
+Aldous ⟹ modulusBased → 0 in probability ⟹ tightness
+```
+
+and the second half is Milestone 7 together with Milestone 8. Only the first half
+breaks at fixed discontinuities, and only the first half is dispensable. This is
+the same role Billingsley's modified modulus `w''` plays, which takes the
+*minimum* of the two one-sided oscillations and is therefore blind to one jump
+per window; our infimum over subdivisions achieves it directly.
+
+**If an atom-tolerant Aldous is wanted**, the clause is small and needs no new
+notion. The atom set `A` of a clock is deterministic and countable — from
+`q (Set.Iic t) ≠ ∞` only countably many atoms lie in each window — so ask the
+condition only on windows that miss it,
+
+```
+P ( d (X n (τ + θ)) (X n τ) > ε  ∧  Clock.interval q c τ (τ + θ) ∩ A = ∅ )
+```
+
+and put the atoms among the subdivision nodes. That is the same device as
+`thm:absconvaug` of the manuscript: deterministic exceptional times are **named
+and carried**, where random ones would force a new mode of convergence
+(`rem:augvsws`). The hypothesis under which the verification from a martingale
+problem goes through is already in **MartingaleProblems** Milestone 1 and is not
+invented for this: optional sampling gives
+
+```
+𝔼[ f (X (τ+θ)) − f (X τ) | 𝓕 τ ]  ≤  C · q (Clock.interval q c τ (τ+θ))
+```
+
+for `|g| ≤ C`, and that tends to `0` precisely under `Clock.IsContinuousFor` —
+the condition that replaced atomlessness in `isQuasiLeftContinuous_of_isMPSolutionFor`
+on 2026-09-17.
+
+**Acceptance examples.**
+
+* The deterministic step above: tight, `modulusBased = 0`, Aldous' condition
+  false. This is the instance on which a claim that the criterion is necessary
+  would be checked.
+* A jump process of **MartingaleProblems** Milestone 4 under `lebesgueClock`:
+  the rate bound gives `C` and `lebesgueClock_isContinuousFor_optional` gives the
+  limit, so the criterion applies and must return the tightness that
+  `isTightMeasureSet_map_extendNNReal_map_jumpPathD` already has by another
+  route. Two routes to the same conclusion is what makes this milestone
+  checkable.
