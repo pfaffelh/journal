@@ -10568,6 +10568,38 @@ had no declaration at all, and they are needed in this order:
    a hypothesis and not a formality. It is written out at the item in
    `SkorokhodSpace/README.md`, Milestone 8.
 
+   **In the corrected shape the link splits, and its analytic half stands**,
+   2026-09-19: `SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt` says what
+   a *given* subdivision costs — every gap at most `2 * δ`, every cell either free
+   of jumps larger than `2 * η` in its interior or adjoining the base point, and
+   the oscillation is at most `4 * η + 2 * SkorokhodSpace.basePointOsc t₀ f (2*δ)`
+   — using neither monotonicity nor coverage nor sparseness. That the corrected
+   inequality survives its own counterexample is
+   `SkorokhodSpace.one_le_four_mul_add_two_mul_basePointOsc_step`. What is left is
+   the *existence* of such a subdivision. The node-placing rule that produces it
+   is built the same day — `SkorokhodSpace.nextNode` with `lt_nextNode`,
+   `nextNode_le`, `notMem_Ioo_nextNode` and `notMem_Ioc_nextNode`, over an
+   abstract `2 * δ`-separated set, and
+   `SkorokhodSpace.separated_setOf_lt_edist_leftLim` handing it the large jumps
+   of a path.
+
+   **The combinatorial half is complete the same day**:
+   `SkorokhodSpace.exists_subdivision_of_separated` produces, for a
+   `2 * δ`-separated set and any window radius, a strictly increasing
+   `t : Fin (n + 1) → ℝ` that contains the base point, covers the window, has
+   every gap in `(δ, 2 * δ]`, and misses the set in the interior of every cell but
+   the two at the base point — which is the conjunction of what
+   `SkorokhodSpace.IsSubdivisionBased` and
+   `SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt` ask for.
+
+   **And the two halves are joined the same day**:
+   `SkorokhodSpace.modulusBased_le_of_forall_min_edist_lt` gives
+   `modulusBased 0 m f δ ≤ 4 * η + 2 * SkorokhodSpace.basePointOsc 0 f (2 * δ)`
+   for a path whose three point quantity stays below `η` on every window of span
+   `2 * δ`, at the base point `0`, which is where the chain reads it. The link is
+   closed. It is written out at the item in `SkorokhodSpace/README.md`,
+   Milestone 8.
+
 Only then does `isTight_map_postcomp_of_exists_martingale` have a conclusion it
 can reach, and `isRelativelyCompact_of_approx` an input. **The order of work is
 therefore Milestone 8 of SkorokhodSpace first**, and what is left of it is item

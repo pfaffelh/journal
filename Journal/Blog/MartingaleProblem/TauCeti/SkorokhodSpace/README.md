@@ -3498,9 +3498,101 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
      `SkorokhodSpace.not_isCompact_closure_of_jumps_at_basePoint` is the same
      phenomenon from the other side.
 
-     What is left of the route is the assembly, in the corrected shape: the two
-     theorems above, the cell estimate, the finiteness of the large jumps, a
-     uniform grid, and the `Fin`-bookkeeping of an `IsSubdivisionBased`.
+     **The corrected link splits in two, and the analytic half is proved**,
+     2026-09-19: `SkorokhodSpace.subdivisionOsc_le_of_forall_min_edist_lt` says
+     what a *given* subdivision costs. It asks two things of it — every gap at
+     most `2 * δ`, and every cell either free of jumps larger than `2 * η` in its
+     **interior** or adjoining the base point — and returns
+     `4 * η + 2 * SkorokhodSpace.basePointOsc t₀ f (2 * δ)`. Neither strict
+     monotonicity, nor coverage of the window, nor sparseness is used, so the
+     theorem is independent of `SkorokhodSpace.IsSubdivisionBased`. The exemption
+     it grants the two cells at `t₀` is exactly the one the refutation forces and
+     no wider, and the factor `2` on the left cell is not slack: that cell
+     compares two *different* times of `Set.Ico (t₀ - 2*δ) t₀`, and the only
+     value available to route between them is `Function.leftLim f t₀`
+     (`SkorokhodSpace.edist_le_two_mul_basePointOsc`).
+
+     That the corrected inequality survives its own counterexample is
+     `SkorokhodSpace.one_le_four_mul_add_two_mul_basePointOsc_step`: at the unit
+     step and `δ = 1` the right hand side is at least `1` at every level `η`,
+     which is the lower bound `SkorokhodSpace.one_le_modulusBased_step` puts on
+     the left hand side.
+
+     **What is left is the combinatorial half**: a `t : Fin (n + 1) → ℝ` with
+     `SkorokhodSpace.IsSubdivisionBased t₀ M δ t`, every gap in `(δ, 2 * δ]`, and
+     no jump larger than `2 * η` in the interior of any cell but the two at `t₀`.
+     The node-placing rule that produces it is written out at its section in
+     `SkorokhodSpace/Suggested.lean`: from a node `x`, the next node is the jump
+     in `Set.Ioc (x + δ) (x + 2*δ)` if there is one; otherwise `(x + q) / 2` for
+     the jump `q` in `Set.Ioc (x + 2*δ) (x + 3*δ)` if there is one; otherwise
+     `x + 2 * δ`. Its gap lies in `(δ, 2 * δ]` in all three cases **with no
+     hypothesis at all**, which is what skipping over `Set.Ioc x (x + δ)` instead
+     of looking into it buys; the invariant `J ∩ Set.Ioc x (x + δ) = ∅` is needed
+     only for the jump-freeness, and the rule re-establishes it at its own output
+     in each case, out of `SkorokhodSpace.two_mul_le_sub_of_forall_min_edist_lt`
+     — two large jumps are at least `2 * δ` apart — and nothing else. The
+     invariant is unavailable at the base point itself, which is precisely the
+     cell the analytic half exempts, so the rule starts at `t₀` unconditioned.
+     The middle case is the one that is easy to miss: without it a node at
+     `x + 2 * δ` may land within `δ` of a jump, and then no admissible node
+     reaches that jump.
+
+     **The rule is built**, 2026-09-19: `SkorokhodSpace.nextNode`, with
+     `SkorokhodSpace.lt_nextNode` and `SkorokhodSpace.nextNode_le` for the gap —
+     unconditionally in `(δ, 2 * δ]` — and `SkorokhodSpace.notMem_Ioo_nextNode`
+     and `SkorokhodSpace.notMem_Ioc_nextNode` for the jumps. It is stated over an
+     abstract `2 * δ`-separated set `J`, nothing of `D(ℝ, E)` entering it, and
+     `SkorokhodSpace.separated_setOf_lt_edist_leftLim` is the one line that hands
+     the large jumps of a path to it. The asymmetry of the two jump statements is
+     what makes the rule run at the base point: the invariant is unavailable
+     there and the second statement does not need it, so it is re-established
+     from the first node on.
+
+     **The combinatorial half is complete**, 2026-09-19. The rule is iterated by
+     `SkorokhodSpace.node`, with `SkorokhodSpace.strictMono_node`,
+     `SkorokhodSpace.node_succ_sub_le` for the span, and
+     `SkorokhodSpace.add_mul_le_node` for the linear growth that covers a window
+     after finitely many steps. The two statements about jumps —
+     `SkorokhodSpace.notMem_Ioc_node_succ` and
+     `SkorokhodSpace.notMem_Ioo_node_succ` — carry over **without an induction**,
+     one application of the single-step statements at the previous node being
+     enough, because the invariant is re-established unconditionally. The one
+     induction of the section is about the gaps and not about the jumps.
+
+     **The mirror rule *is* `nextNode` read at `-x`**, on the reflected set
+     `SkorokhodSpace.negSet`, and the half openness that looked like an
+     obstruction is the reason. A jump at a node is carried by the cell that node
+     opens, the cells being `Set.Ico`, so going right the rule reaches into
+     `Set.Ioc (x + δ) (x + 2 * δ)` and going left into
+     `Set.Ico (x - 2 * δ) (x - δ)` — and `x ↦ -x` is exactly what exchanges those
+     two. `SkorokhodSpace.prevNode` is therefore one line, and its four
+     statements — `SkorokhodSpace.prevNode_lt`, `SkorokhodSpace.le_prevNode`,
+     `SkorokhodSpace.notMem_Ico_prevNode`,
+     `SkorokhodSpace.notMem_Ioo_prevNode` — are their forward counterparts with
+     `neg` pushed through. The left iteration is `SkorokhodSpace.pnode`.
+
+     The two half sequences are joined at the base point by
+     `SkorokhodSpace.nodeSeq`, indexed by `ℕ`; the branches agree at the join
+     (`SkorokhodSpace.nodeSeq_of_ge`), which leaves two cases and not three in
+     every statement about it. `SkorokhodSpace.cell_nodeSeq` is the cell
+     condition in the exact disjunctive shape the analytic half asks for, so the
+     two halves meet without an intermediate statement.
+     `SkorokhodSpace.exists_subdivision_of_separated` is the combinatorial half
+     entire: for a `2 * δ`-separated `J` and any window radius, a strictly
+     increasing `t : Fin (n + 1) → ℝ` containing the base point, covering the
+     window, with every gap in `(δ, 2 * δ]` and every cell but the two at the
+     base point missing `J` in its interior. `Fin` enters there and nowhere else.
+
+     **The corrected link is closed**, 2026-09-19, in the same run:
+     `SkorokhodSpace.modulusBased_le_of_forall_min_edist_lt` —
+     `modulusBased 0 m f δ ≤ 4 * η + 2 * SkorokhodSpace.basePointOsc 0 f (2 * δ)`
+     for a path whose three point quantity stays below `η` on every window of
+     span `2 * δ`. Nothing is computed in it beyond the two halves meeting: the
+     window is `exhaustionMin_real` and `exhaustionMax_real`, and the sparseness
+     of `SkorokhodSpace.IsSubdivision` is the gap bound read through
+     `Real.dist_eq`. It is stated at the base point `0`, which is where the chain
+     reads it; over a general base point the two window endpoints would have to
+     be computed afresh, and no consumer asks for it.
   2. Three point quantity of the path ⟹ the same for the image under
      `SkorokhodSpace.clipDist (f t)`, capped at `1`
      (`SkorokhodSpace.min_edist_postcomp_clipDist`), and in the form a dense `H`
