@@ -8097,8 +8097,34 @@ and 11 use them.
   times `σ ⊓ τ`, and the same argument gives the submartingale form.
 * Doob's inequalities in continuous time. The supremum
   `fun ω ↦ ⨆ t ∈ Set.Iic T, ‖Y t ω‖` is measurable because right continuity
-  makes it the supremum over `Set.Iic T ∩ D`; state that reduction as a lemma of
-  its own. Then `MeasureTheory.maximal_ineq_of_rightContinuous`, the continuous
+  makes it the supremum over `Set.Iic T ∩ D`; that reduction is a lemma of its
+  own and it is **proved, 2026-09-20**, as
+  `biSup_enorm_Iic_eq_of_isRightContinuous`, together with
+  `measurable_biSup_enorm_of_countable`. Three things are fixed by it and none
+  of them was visible from the phrase above.
+
+  **The supremum is taken in `ℝ≥0∞` and not in `ℝ`.** Over `ℝ` the supremum of
+  a family that is not bounded above is `0` (`Real.iSup_of_not_bddAbove`), so
+  `⨆ t ∈ S, |Y t ω|` vanishes on exactly the set where the path escapes, and a
+  condition `∫ ω, (⨆ t ∈ S, |Y t ω|) ∂P < ε` is satisfied by the families it is
+  written to exclude. `biSup_eq_zero_of_not_bddAbove` states the junk value and
+  `biSup_natCast_eq_zero` witnesses that its hypothesis is inhabited. This is
+  the fifth instance of the pattern the standing rule on non-explosion names,
+  and it decides the shape of the approximability condition of Milestone 11.
+
+  **The right endpoint of the window is not reached by a dense set.** Nothing
+  inside `Set.Iic T` approaches `T` from the right, so the reduction is to
+  `insert T (Set.Iic T ∩ D)` and not to `Set.Iic T ∩ D`. It is the asymmetry
+  `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` is stated to avoid, paid
+  for here by the `insert` rather than by enlarging the window.
+
+  **Countability is what makes the quantity measurable at all.** In the binder
+  form `⨆ t ∈ W` the supremum runs over the whole index, so Mathlib's
+  `Measurable.iSup` — which asks `[Countable ι]` — does not apply over an
+  uncountable window; `iSup_subtype'` and the countable `D` are the step, and
+  the reduction above is what supplies `D`.
+
+  Then `MeasureTheory.maximal_ineq_of_rightContinuous`, the continuous
   time form of `MeasureTheory.maximal_ineq` for a non-negative right continuous
   submartingale, and `Submartingale.eLpNorm_iSup_le`, Doob's `Lᵖ` inequality
   `eLpNorm (fun ω ↦ ⨆ t ∈ Set.Iic T, Y t ω) p P ≤ (p / (p - 1)) * eLpNorm (Y T) p P`
@@ -10795,13 +10821,43 @@ has to be chosen once for all `n`. What stands:
   `𝓐 n = {(Y, Z) ∈ 𝓛 n × 𝓛 n | Martingale (fun t ↦ Y t - ∫ s in Clock.interval q c 0 t, Z s) (𝓕 n) (P n)}`.
   Call `f : E →ᵇ ℝ` *approximable* when for all `ε, T > 0` there are
   `(Y n, Z n) ∈ 𝓐 n` with
-  `⨆ n, 𝔼[⨆ t ∈ Set.Iic T ∩ D, |Y n t - f (X n t)|] < ε` and
+  `⨆ n, ∫⁻ ω, ⨆ t ∈ Set.Iic T ∩ D, ‖Y n t ω - f (X n t ω)‖ₑ ∂(P n) < ε` and
   `⨆ n, 𝔼[eLpNorm (Set.Iic T).indicator (Z n) p] < ∞` for some `1 < p ≤ ∞`.
   Then for every `f` in the sup-norm closure of the approximable functions the
   laws of `postcomp f ∘ X n` are tight in `D ι ℝ`, and the laws of
   `(f 1, …, f k) ∘ X n` are tight in `D ι (Fin k → ℝ)`. The `𝕂`-valued case is
   the real one applied to `Re f` and `Im f` together with the `Fin k` form.
   This is where the continuous time Doob inequalities of Milestone 9 are used.
+
+  **The first condition is a lower integral in `ℝ≥0∞`, and that is not
+  cosmetic.** Written over `ℝ` as `𝔼[⨆ t ∈ Set.Iic T ∩ D, |Y n t - f (X n t)|]`
+  it is satisfied by a family whose approximation error is *unbounded* on the
+  window, because `Real.iSup_of_not_bddAbove` makes the supremum `0` there and
+  the integral with it. The witness is `biSup_natCast_eq_zero` of Milestone 9,
+  and the honest form is the one above: in `ℝ≥0∞` an unbounded supremum is `⊤`
+  and the condition excludes exactly what it is meant to. The same reading
+  applies to the second condition, which is already an `eLpNorm` and therefore
+  already in `ℝ≥0∞`.
+
+  **What the criterion may assume about the supremum, and what it has to prove.**
+  The quantity is measurable because `D` is countable
+  (`measurable_biSup_enorm_of_countable`), and it is the supremum over the whole
+  window because the paths are right continuous
+  (`biSup_enorm_Iic_eq_of_isRightContinuous`, which reads the right endpoint
+  separately). What the criterion has to produce from it is the maximal
+  estimate, and its discrete half is available over an arbitrary linear order
+  since 2026-09-20: `Submartingale.mul_measReal_exists_ge_abs_le_countable`,
+  `ε * P {ω | ∃ s ∈ S, ε ≤ |Y s ω|} ≤ 2 𝔼[(Y T)⁺] - 𝔼[Y R]` for countable `S`
+  between `R` and `T`. It answers the question this milestone opened — whether
+  Mathlib's `maximal_ineq`, which is indexed by `ℕ` and reads a `Finset.sup'`,
+  can be dragged along `D`: it can, through `Filtration.comp`,
+  `Finset.monoEnum` and continuity from below, and the passage needs no
+  measurability of the level set. What is still missing is the `Lᵖ` half,
+  `Submartingale.eLpNorm_iSup_le`, which Mathlib does not have for any index
+  (checked 2026-09-20 against `dec5b2b780537b6eaf7f5e5f000c12f7387fb24d`: the
+  docstring of `maximal_ineq` says the `Lᵖ` inequality "will be proved in an
+  upcoming PR", and `eLpNorm` occurs in `Mathlib/Probability/Martingale/` only
+  in `BorelCantelli.lean` and `Convergence.lean`).
 * `isRelativelyCompact_of_approx`: if `E` is Polish, the domain of `A` contains
   an algebra separating points and vanishing nowhere, the approximation holds
   for each `(f,g) ∈ A`, and `{X n}` satisfies compact containment, then `{X n}`

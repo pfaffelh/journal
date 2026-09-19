@@ -2562,9 +2562,250 @@ theorem Submartingale.ae_exists_tendsto_nhdsWithin [TopologicalSpace ι] [OrderT
   exact fun t ↦ ⟨exists_tendsto_nhdsWithin_Iio_of_hasUpcrossings_bound h1 h2 t,
     exists_tendsto_nhdsWithin_Ioi_of_hasUpcrossings_bound h1 h2 t⟩
 
+/-! ### Doob's maximal inequality over a countable time set
+
+`Submartingale.ae_bddOn` above uses a bound it does not state, and the bound is
+the statement Milestone 11 asks for: Mathlib's `maximal_ineq` carried from `ℕ` to
+a countable set of times of an arbitrary linear order.  It is written out here,
+in the same two sided real valued shape as the two `ℕ`-indexed halves it rests
+on, because the level set of a family of times is what a tightness argument
+reads and a `Finset.sup'` is not.
+
+**The hypothesis `R ≤ T` is not implied by the other two, and only the empty time
+set needs it.**  For `S` nonempty it follows from `hRS` and `hST` at any `s ∈ S`;
+for `S = ∅` the left hand side is `0` and the right hand side may be negative --
+take `T < R`, `Y T = -1` and `Y R = 5`, which is a submartingale, and the bound
+would read `0 ≤ -5`.  Carrying `R ≤ T` is therefore cheaper than carrying
+`S.Nonempty`, and it is what the consumer has. -/
+theorem Submartingale.mul_measReal_exists_ge_abs_le_countable {P : Measure Ω} [IsFiniteMeasure P]
+    {Y : ι → Ω → ℝ} {𝓕 : Filtration ι m} (hY : Submartingale Y 𝓕 P)
+    {S : Set ι} (hS : S.Countable) {R T : ι} (hRT : R ≤ T)
+    (hRS : ∀ s ∈ S, R ≤ s) (hST : ∀ s ∈ S, s ≤ T) {ε : ℝ} (hε : 0 ≤ ε) :
+    ε * P.real {ω | ∃ s ∈ S, ε ≤ |Y s ω|}
+      ≤ (∫ ω, (Y T ω)⁺ ∂P) + ((∫ ω, (Y T ω)⁺ ∂P) - ∫ ω, Y R ω ∂P) := by
+  classical
+  set c : ℝ := (∫ ω, (Y T ω)⁺ ∂P) + ((∫ ω, (Y T ω)⁺ ∂P) - ∫ ω, Y R ω ∂P) with hc
+  -- the constant is non negative, and this is where `R ≤ T` is spent
+  have hRTint : ∫ ω, Y R ω ∂P ≤ ∫ ω, (Y T ω)⁺ ∂P := by
+    have h := hY.setIntegral_le (i := R) (j := T) hRT (s := (Set.univ : Set Ω)) MeasurableSet.univ
+    simp only [Measure.restrict_univ] at h
+    refine h.trans (integral_mono (hY.integrable T) ((hY.integrable T).pos_part) ?_)
+    intro ω; exact le_posPart _
+  have hc0 : 0 ≤ c := by
+    have h0 : 0 ≤ ∫ ω, (Y T ω)⁺ ∂P := integral_nonneg fun ω ↦ posPart_nonneg _
+    rw [hc]; linarith
+  rcases S.eq_empty_or_nonempty with rfl | hne
+  · have hempty : {ω : Ω | ∃ s ∈ (∅ : Set ι), ε ≤ |Y s ω|} = ∅ := by simp
+    rw [hempty]
+    simpa using hc0
+  rcases eq_or_lt_of_le hε with rfl | hpos
+  · simpa using hc0
+  obtain ⟨σ, rfl⟩ := hS.exists_eq_range hne
+  set F : ℕ → Finset ι := fun N ↦ (Finset.range (N + 1)).image σ with hF
+  have hFne : ∀ N, (F N).Nonempty := by
+    intro N
+    refine ⟨σ 0, ?_⟩
+    simp only [hF, Finset.mem_image, Finset.mem_range]
+    exact ⟨0, by omega, rfl⟩
+  have hFsub : ∀ N, ∀ x ∈ F N, x ∈ Set.range σ := by
+    intro N x hx
+    simp only [hF, Finset.mem_image, Finset.mem_range] at hx
+    obtain ⟨p, -, rfl⟩ := hx
+    exact ⟨p, rfl⟩
+  have hFmono : Monotone F := by
+    intro N M hNM x hx
+    simp only [hF, Finset.mem_image, Finset.mem_range] at hx ⊢
+    obtain ⟨p, hp, hpx⟩ := hx
+    exact ⟨p, by omega, hpx⟩
+  -- the uniform bound over the finite pieces
+  have key : ∀ N, ε * P.real {ω | ∃ t ∈ F N, ε ≤ |Y t ω|} ≤ c := by
+    intro N
+    set e : ℕ → ι := Finset.monoEnum (hFne N) with he
+    have hemono : Monotone e := Finset.monotone_monoEnum (hFne N)
+    have hemem : ∀ i, e i ∈ F N := Finset.monoEnum_mem (hFne N)
+    set g : ℕ → Ω → ℝ := fun i ω ↦ Y (e i) ω with hg
+    have hgsub : Submartingale g (𝓕.comp hemono) P := hY.comp_monotone hemono
+    set n : ℕ := (F N).card with hn
+    set B₁ : Set Ω := {ω | ∃ k ≤ n, ε ≤ g k ω} with hB₁
+    set B₂ : Set Ω := {ω | ∃ k ≤ n, g k ω ≤ -ε} with hB₂
+    have hsubset : {ω | ∃ t ∈ F N, ε ≤ |Y t ω|} ⊆ B₁ ∪ B₂ := by
+      rintro ω ⟨t, htF, hta⟩
+      obtain ⟨i, hi, hie⟩ := Finset.exists_lt_card_monoEnum_eq (hFne N) htF
+      rcases le_or_gt ε (Y t ω) with h | h
+      · refine Or.inl ⟨i, by omega, ?_⟩
+        show ε ≤ Y (e i) ω
+        rw [he, hie]; exact h
+      · refine Or.inr ⟨i, by omega, ?_⟩
+        show Y (e i) ω ≤ -ε
+        rw [he, hie]
+        rcases abs_cases (Y t ω) with ⟨habs, -⟩ | ⟨habs, -⟩
+        · rw [habs] at hta; linarith
+        · rw [habs] at hta; linarith
+    have hmeas : ε * P.real {ω | ∃ t ∈ F N, ε ≤ |Y t ω|} ≤ ε * P.real B₁ + ε * P.real B₂ := by
+      have h1 : P.real {ω | ∃ t ∈ F N, ε ≤ |Y t ω|} ≤ P.real B₁ + P.real B₂ :=
+        le_trans (measureReal_mono hsubset (measure_ne_top _ _)) (measureReal_union_le _ _)
+      nlinarith [h1]
+    have hb1 : ε * P.real B₁ ≤ ∫ ω, (g n ω)⁺ ∂P :=
+      hgsub.mul_measReal_exists_ge_le_integral_posPart ε n
+    have hb2 : ε * P.real B₂ ≤ (∫ ω, (g n ω)⁺ ∂P) - ∫ ω, g 0 ω ∂P :=
+      hgsub.mul_measReal_exists_le_neg_le_integral_posPart_sub ε n
+    have hgn : ∫ ω, (g n ω)⁺ ∂P ≤ ∫ ω, (Y T ω)⁺ ∂P := by
+      have h := hY.pos.setIntegral_le (i := e n) (j := T) (hST _ (hFsub N _ (hemem n)))
+        (s := (Set.univ : Set Ω)) MeasurableSet.univ
+      simpa using h
+    have hg0 : ∫ ω, Y R ω ∂P ≤ ∫ ω, g 0 ω ∂P := by
+      have h := hY.setIntegral_le (i := R) (j := e 0) (hRS _ (hFsub N _ (hemem 0)))
+        (s := (Set.univ : Set Ω)) MeasurableSet.univ
+      simpa using h
+    rw [hc]
+    linarith
+  -- the passage to the whole time set, by continuity from below and not by Fatou
+  set A : ℕ → Set Ω := fun N ↦ {ω | ∃ t ∈ F N, ε ≤ |Y t ω|} with hA
+  have hAmono : Monotone A := by
+    intro N M hNM ω hω
+    obtain ⟨t, ht, hta⟩ := hω
+    exact ⟨t, hFmono hNM ht, hta⟩
+  have hAunion : {ω | ∃ s ∈ Set.range σ, ε ≤ |Y s ω|} = ⋃ N, A N := by
+    ext ω
+    constructor
+    · rintro ⟨t, ⟨p, rfl⟩, hta⟩
+      refine Set.mem_iUnion.2 ⟨p, ⟨σ p, ?_, hta⟩⟩
+      simp only [hF, Finset.mem_image, Finset.mem_range]
+      exact ⟨p, by omega, rfl⟩
+    · rintro hω
+      obtain ⟨N, t, ht, hta⟩ := Set.mem_iUnion.1 hω
+      exact ⟨t, hFsub N _ ht, hta⟩
+  have hle : P {ω | ∃ s ∈ Set.range σ, ε ≤ |Y s ω|} ≤ ENNReal.ofReal (c / ε) := by
+    rw [hAunion, hAmono.measure_iUnion]
+    refine iSup_le fun N ↦ ?_
+    have h1 : P.real (A N) ≤ c / ε := by
+      rw [le_div_iff₀ hpos, mul_comm]
+      exact key N
+    rw [← ENNReal.ofReal_toReal (measure_ne_top P (A N))]
+    exact ENNReal.ofReal_le_ofReal h1
+  have hreal : P.real {ω | ∃ s ∈ Set.range σ, ε ≤ |Y s ω|} ≤ c / ε := by
+    rw [measureReal_def]
+    calc (P {ω | ∃ s ∈ Set.range σ, ε ≤ |Y s ω|}).toReal
+        ≤ (ENNReal.ofReal (c / ε)).toReal := ENNReal.toReal_mono ENNReal.ofReal_ne_top hle
+      _ = c / ε := ENNReal.toReal_ofReal (by positivity)
+  calc ε * P.real {ω | ∃ s ∈ Set.range σ, ε ≤ |Y s ω|} ≤ ε * (c / ε) :=
+        mul_le_mul_of_nonneg_left hreal hε
+    _ = c := by field_simp
+
 end MeasureTheory
 
 end DoobUpcrossingBound
+
+/-! ## Milestone 9: the supremum of a process over a window
+
+Milestone 11 tests its approximating martingales through
+`𝔼[⨆ t ∈ Set.Iic T ∩ D, |Y t - f (X t)|]`, and Milestone 9 states Doob's
+inequalities through `⨆ t ∈ Set.Iic T, ‖Y t‖`.  Both are suprema over a set of
+times under an integral, so before either can be used two questions have to be
+answered, and this section answers them.
+
+**The first is measurability, and countability settles it** --
+`measurable_biSup_enorm_of_countable`, which is Mathlib's `Measurable.iSup` after
+`iSup_subtype'`.  Over an uncountable window the binder form `⨆ t ∈ W` is a
+supremum over the whole index and Mathlib's lemma does not apply; the reduction
+to a countable set is therefore not a convenience but the step that makes the
+quantity measurable at all.
+
+**The second is the junk value, and it is not harmless.**  Over `ℝ` the supremum
+of a family that is not bounded above is `0` (`Real.iSup_of_not_bddAbove`), so
+`⨆ t ∈ S, |Y t ω|` **vanishes exactly where the path escapes**:
+`biSup_eq_zero_of_not_bddAbove`, with `biSup_natCast_eq_zero` as the witness that
+the hypothesis of that lemma is not empty.  An approximability condition written
+as `∫ ω, (⨆ t ∈ S, |Y t ω| ) ∂P < ε` over `ℝ` is therefore satisfied by a family
+whose paths run to infinity, which is the opposite of what it is meant to
+express.  The suprema of this development are consequently taken in `ℝ≥0∞`, where
+an unbounded family has the supremum `⊤` and the condition says what it means;
+this is the same reason the lifting of `cumulativeRateF` was made in Milestone 4.
+
+**The reduction to the countable set is the third item**, and it is the one
+Milestone 9 names: for a right continuous path the window supremum is already
+attained along a dense subset -- **together with the right endpoint**, which a
+dense set does not reach, and which `SkorokhodSpace.forall_mem_Icc_of_forall_mem_dense`
+therefore reads separately.  That is `biSup_enorm_Iic_eq_of_isRightContinuous`. -/
+
+section WindowSupremum
+
+/-- **The supremum over a countable set of times is measurable.**  Nothing but
+countability enters, and the value is taken in `ℝ≥0∞` so that no boundedness
+hypothesis is needed.  `iSup_subtype'` is what turns the binder form -- a
+supremum over the whole index -- into a supremum over the countable subtype
+Mathlib's `Measurable.iSup` asks for. -/
+theorem measurable_biSup_enorm_of_countable {ι : Type*} {S : Set ι} (hS : S.Countable)
+    {Y : ι → Ω → ℝ} (hY : ∀ s ∈ S, Measurable (Y s)) :
+    Measurable fun ω ↦ ⨆ s ∈ S, ‖Y s ω‖ₑ := by
+  have : Countable S := hS.to_subtype
+  have h : (fun ω ↦ ⨆ s ∈ S, ‖Y s ω‖ₑ) = fun ω ↦ ⨆ s : S, ‖Y (s : ι) ω‖ₑ := by
+    ext ω; rw [iSup_subtype']
+  rw [h]
+  exact Measurable.iSup fun s ↦ (hY s s.2).enorm
+
+/-- **The real supremum of an unbounded family is `0`**, and this is why the
+suprema of this section are taken in `ℝ≥0∞`.  The hypothesis is the unboundedness
+of the values *on `S`*; the binder form adds the value `sSup ∅ = 0` at every time
+outside `S`, which cannot restore boundedness. -/
+theorem biSup_eq_zero_of_not_bddAbove {ι : Type*} {S : Set ι} {g : ι → ℝ}
+    (h : ¬ BddAbove (g '' S)) : ⨆ t ∈ S, g t = 0 := by
+  refine Real.iSup_of_not_bddAbove ?_
+  rintro ⟨c, hc⟩
+  refine h ⟨c, ?_⟩
+  rintro x ⟨t, htS, rfl⟩
+  have := hc (Set.mem_range_self t)
+  rwa [ciSup_pos htS] at this
+
+/-- The witness that the previous lemma is not vacuous, and the smallest one:
+the supremum of the naturals inside `ℝ` is `0`.  Read at a process, it says that
+`∫ ω, (⨆ t ∈ S, |Y t ω|) ∂P = 0` for a process whose paths are unbounded on `S`,
+so that an approximability condition stated over `ℝ` is satisfied by exactly the
+families it is meant to exclude. -/
+theorem biSup_natCast_eq_zero : ⨆ n ∈ (Set.univ : Set ℕ), (n : ℝ) = 0 := by
+  refine biSup_eq_zero_of_not_bddAbove ?_
+  rintro ⟨c, hc⟩
+  obtain ⟨n, hn⟩ := exists_nat_gt c
+  exact absurd (hc ⟨n, Set.mem_univ n, rfl⟩) (not_le.2 hn)
+
+/-- **The window supremum of a right continuous path is read along a dense set
+together with the right endpoint.**  This is the reduction Milestone 9 asks for
+as a statement of its own, and with the previous lemma it is what makes
+`ω ↦ ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ` measurable: the right hand side is a supremum
+over a countable set as soon as `D` is countable.
+
+The right endpoint is **not** redundant.  Nothing inside the window approaches
+`T` from the right, so a dense `D` says nothing about the value there; that is
+the same asymmetry `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` is stated
+to avoid, and here it is paid for by the `insert` rather than by enlarging the
+window.  Only right continuity of the path is used, and the values are taken in
+`ℝ≥0∞`, where the supremum of an unbounded path is `⊤` and not `0`. -/
+theorem biSup_enorm_Iic_eq_of_isRightContinuous {ι : Type*} [LinearOrder ι] [TopologicalSpace ι]
+    [OrderTopology ι] [DenselyOrdered ι] [OrderBot ι]
+    {Y : ι → Ω → ℝ} {D : Set ι} (hD : Dense D) {T : ι} {ω : Ω}
+    (hY : IsRightContinuous fun t ↦ Y t ω) :
+    ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ = ⨆ t ∈ insert T (Set.Iic T ∩ D), ‖Y t ω‖ₑ := by
+  refine le_antisymm ?_ ?_
+  · set c : ENNReal := ⨆ t ∈ insert T (Set.Iic T ∩ D), ‖Y t ω‖ₑ with hc
+    have hmem : ∀ t ∈ Set.Iic T, ‖Y t ω‖ₑ ∈ Set.Iic c := by
+      have := SkorokhodSpace.forall_mem_Icc_of_forall_mem_dense (K := Set.Iic c) isClosed_Iic hD
+        (a := ⊥) (b := T) (f := fun t ↦ ‖Y t ω‖ₑ)
+        (hY.continuous_comp continuous_enorm) ?_ ?_
+      · intro t ht
+        exact this t ⟨bot_le, ht⟩
+      · rintro t ⟨ht, htD⟩
+        exact le_iSup₂ (f := fun t (_ : t ∈ insert T (Set.Iic T ∩ D)) ↦ ‖Y t ω‖ₑ) t
+          (Set.mem_insert_of_mem _ ⟨Set.mem_Icc.1 ht |>.2, htD⟩)
+      · intro _
+        exact le_iSup₂ (f := fun t (_ : t ∈ insert T (Set.Iic T ∩ D)) ↦ ‖Y t ω‖ₑ) T
+          (Set.mem_insert _ _)
+    exact iSup₂_le fun t ht ↦ hmem t ht
+  · refine biSup_mono ?_
+    rintro t (rfl | ⟨ht, -⟩)
+    · exact Set.mem_Iic.2 le_rfl
+    · exact ht
+
+end WindowSupremum
 
 /-! ## Milestone 9: the regularizing class and quasi-left-continuity
 

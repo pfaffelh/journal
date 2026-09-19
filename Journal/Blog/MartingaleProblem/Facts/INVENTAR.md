@@ -45039,3 +45039,200 @@ Pfadraumfassung schon lokalisiert hatte.
    der Markovungleichung an `𝔼[X T] = λT` kommt, **gleichmäßig in `n`**, sobald
    die Raten gleichmäßig beschränkt sind. Das ist eine Rechnung und keine
    Theorie, und sie prüft die Definition dort, wo sie etwas behauptet.
+
+### 2026-09-20, erster Lauf des Tages — die Vorfrage von Vorschlag 1 ist beantwortet, und beide Hälften der Antwort sind Sätze: Mathlibs Maximalungleichung läßt sich längs `D` ziehen und das Supremum über `D` ist meßbar — aber **über `ℝ` sagt es die Unwahrheit**, und die Approximierbarkeitsbedingung des Meilensteins 11 war dadurch von genau den Familien erfüllt, die sie ausschließen soll
+
+**Bearbeitet:** Vorschlag 1 des Vorlaufs, `isTight_map_postcomp_of_exists_martingale`
+— genauer die Vorfrage, die er dem Lauf ausdrücklich voranstellte:
+
+> „ob die Abzählbarkeit von `D` das Supremum schon meßbar macht und ob Mathlibs
+> Maximalungleichung über einem **diskreten** Index sich längs `D` darüber
+> ziehen läßt — das ist dieselbe Frage, an der Meilenstein 9 hängt, und sie
+> einmal zu beantworten entlastet beide."
+
+Sie ist beantwortet, und zwar mit **fünf** Deklarationen statt mit einem Absatz.
+Vier neue in `MartingaleProblems/Suggested.lean` (ein neuer Abschnitt
+`WindowSupremum` und ein Satz am Ende von `DoobUpcrossingBound`), dazu zwei in
+`SkorokhodSpace/Suggested.lean` **verallgemeinert**.
+
+#### Die Antwort auf die erste Hälfte: ja, und Mathlib hat sie
+
+`measurable_biSup_enorm_of_countable`. Mathlibs `Measurable.iSup`
+(`MeasureTheory/Constructions/BorelSpace/Order.lean:909`) verlangt `[Countable ι]`
+über einer bedingt vollständigen linearen Ordnung mit Ordnungstopologie und
+zweitem Abzählbarkeitsaxiom, und `ℝ≥0∞` hat alles davon. Der Schritt, den ein
+Lauf dabei übersieht, ist ein anderer:
+
+> **In der Binderform `⨆ t ∈ W` läuft das Supremum über den *ganzen* Index.**
+> `Measurable.iSup` greift darauf nicht, auch wenn `W` abzählbar ist; erst
+> `iSup_subtype'` macht daraus ein Supremum über den abzählbaren Untertyp.
+
+Die Abzählbarkeit von `D` macht das Supremum also meßbar, aber nicht von selbst:
+sie muß durch eine Umschreibung hindurch, und die Reduktion des Fensters auf `D`
+ist es, die `D` überhaupt erst liefert.
+
+#### Die Antwort auf die zweite Hälfte: ja, und der Weg stand schon im Beweis eines anderen Satzes
+
+`Submartingale.mul_measReal_exists_ge_abs_le_countable`:
+
+> `ε * P {ω | ∃ s ∈ S, ε ≤ |Y s ω|} ≤ 𝔼[(Y T)⁺] + (𝔼[(Y T)⁺] − 𝔼[Y R])`
+> für abzählbares `S` zwischen `R` und `T`, über beliebiger linearer Ordnung.
+
+Mathlibs `maximal_ineq` (`Probability/Martingale/OptionalStopping.lean:144` auf
+`master`) ist über `ℕ` und über `Finset.sup'`; der Übergang geht über
+`Filtration.comp`, `Finset.monoEnum` und die Stetigkeit von unten, also über
+dieselben drei Bausteine, mit denen der Aufkreuzungsteil des Meilensteins 9
+seinen Index gewechselt hat. **Kein Schritt verlangt die Meßbarkeit der
+Niveaumenge** — sie wird nur von oben abgeschätzt und ihr Maß als `Measure.real`
+gelesen.
+
+Der Satz ist nicht neu bewiesen, sondern **freigelegt**: er stand als `have key`
+mitsamt der Vereinigung im Beweis von `Submartingale.ae_bddOn` vom 2026-09-17 und
+war dort nicht ausgesprochen. Das ist der Grund, aus dem die Vorfrage des
+Vorlaufs mit „ja" zu beantworten war, ehe eine Zeile geschrieben wurde; was
+fehlte, war die Aussage, nicht das Argument.
+
+**Eine Voraussetzung ist dabei hinzugekommen, und sie ist kein Formfehler:**
+`hRT : R ≤ T`. Für nichtleeres `S` folgt sie aus den beiden anderen an jedem
+`s ∈ S`; für `S = ∅` ist sie **nötig**, und der Zeuge steht im Doc-Kommentar:
+mit `T < R`, `Y T = −1`, `Y R = 5` — einem Submartingal — lautete die Schranke
+`0 ≤ −5`. `S.Nonempty` zu verlangen wäre die Alternative und für den Verbraucher
+teurer.
+
+#### Der Befund, den keine der beiden Hälften vorhersah: das Supremum über `ℝ` lügt
+
+`biSup_eq_zero_of_not_bddAbove`, mit `biSup_natCast_eq_zero` als Zeuge:
+
+> Über `ℝ` ist das Supremum einer **nach oben unbeschränkten** Familie `0`
+> (`Real.iSup_of_not_bddAbove`). Also ist `⨆ t ∈ S, |Y t ω|` **genau dort `0`,
+> wo der Pfad entweicht**.
+
+Und damit trifft es die Aussage, um die dieser Vorschlag geht. Die
+Approximierbarkeitsbedingung von `isTight_map_postcomp_of_exists_martingale`
+lautete im Meilenstein
+
+> `⨆ n, 𝔼[⨆ t ∈ Set.Iic T ∩ D, |Y n t − f (X n t)|] < ε`,
+
+und in dieser Gestalt ist sie **von einer Folge erfüllt, deren
+Approximationsfehler auf dem Fenster unbeschränkt ist**: der Integrand ist dort
+`0`, das Integral also klein. Das ist das Gegenteil dessen, was sie ausdrücken
+soll — eine Hypothese, die um so leichter zu erfüllen ist, je schlechter die
+Approximation. Der Meilenstein ist berichtigt; die Bedingung steht jetzt als
+unteres Integral in `ℝ≥0∞`:
+
+> `⨆ n, ∫⁻ ω, ⨆ t ∈ Set.Iic T ∩ D, ‖Y n t ω − f (X n t ω)‖ₑ ∂(P n) < ε`.
+
+Das ist die **fünfte** Instanz des Musters, das die stehende Regel zur
+Nichtexplosion benennt (`sInf ∅ = 0`, `x / 0 = 0`, der Bochner-Müllwert,
+`stepIndex` jenseits der Explosion — und jetzt `sSup` einer unbeschränkten Menge
+in `ℝ`), und die erste, die eine **Hypothese** statt einer Konklusion still wahr
+gemacht hat. `⊤` in `ℝ≥0∞` sagt auch hier die Wahrheit, und die Hebung ist
+dieselbe wie die von `cumulativeRateF` im Meilenstein 4.
+
+#### Die Reduktion, die Meilenstein 9 als eigene Aussage bestellt hatte
+
+`biSup_enorm_Iic_eq_of_isRightContinuous`:
+
+> `⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ = ⨆ t ∈ insert T (Set.Iic T ∩ D), ‖Y t ω‖ₑ`
+> für rechtsstetige Pfade und dichtes `D`.
+
+Der `insert` ist nicht Zierat: an den **rechten Endpunkt** des Fensters kommt von
+rechts nichts heran, was noch im Fenster liegt, und eine dichte Menge erreicht
+ihn nicht. Das ist wörtlich die Asymmetrie, die der vierundzwanzigste Lauf des
+2026-09-19 an `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` gefunden hat;
+dort wurde sie durch Vergrößern des Fensters bezahlt, hier durch den `insert`.
+
+#### Was dabei an `SkorokhodSpace` zu ändern war, und warum es kein Nebenweg ist
+
+Die beiden Fensterlemmata des Vorlaufs standen unter dem `variable`-Block ihres
+Abschnitts und trugen damit `[MetricSpace ι]` **und** `[MetricSpace E]`, obwohl
+ihr Beweis nur `closure_Ioo`, `Dense.open_subset_closure_inter`,
+`IsRightContinuous` und `IsClosed.mem_of_tendsto` liest. Der Verbraucher dieses
+Laufs nimmt Pfade mit Werten in **`ℝ≥0∞`**, und `ℝ≥0∞` ist kein metrischer Raum:
+unter der alten Fassung war das Lemma für ihn unerreichbar, und das Argument
+wäre zum zweiten Mal geschrieben worden.
+
+`SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` und
+`SkorokhodSpace.forall_mem_Icc_of_forall_mem_dense` stehen deshalb jetzt in einem
+eigenen Abschnitt `DenseWindow` über **eigenen** Variablen: der Index eine dicht
+geordnete lineare Ordnung mit Ordnungstopologie, die Werte ein beliebiger
+topologischer Raum. Die `omit`-Zeilen entfallen damit ersatzlos, die bisherigen
+Verbraucher übersetzen unverändert, und die Zahl der Warnungen ist gleich
+geblieben.
+
+#### Geprüft
+
+* `scripts/check_master.py`: rc 0, **0 Fehler**, 0 `sorry`, 0 veraltet,
+  Warnungen 18 / 35 / 106 — **unverändert** gegenüber dem Vorlauf, also hat die
+  Verallgemeinerung in `SkorokhodSpace` keine ungenutzte Abschnittsvariable
+  hinterlassen. Mathlib `94ef6b89544e58e90f119da869f3fb48d1da0f4c` (2026-09-18),
+  Lean 4.35.0-rc2.
+* `scripts/check_axioms_master.py` auf alle sieben neuen und geänderten
+  Deklarationen: `propext`, `Classical.choice`, `Quot.sound`, ohne Ausnahme.
+* `scripts/check_duplicates.py`: 2 451 geprüfte eigene Deklarationen (fünf mehr),
+  37 Treffer auf dem letzten Namensbestandteil — **unverändert**.
+* `scripts/check_negatives.py`: 43 Behauptungen, 0 mit unerwarteten Treffern.
+* `scripts/extract_citations.py`, `scripts/check_cited_lines.py`: 304 gepaarte
+  Fundstellen, 0 verschoben, 0 tot.
+* Die Negativaussage dieses Laufs ist am Quelltext von `upstream/master`
+  (`dec5b2b780537b6eaf7f5e5f000c12f7387fb24d`, 2026-09-18, in diesem Lauf frisch
+  geholt) nachgeprüft: **Doobs `Lᵖ`-Ungleichung gibt es in Mathlib für keinen
+  Index.** `eLpNorm` kommt in `Mathlib/Probability/Martingale/` nur in
+  `BorelCantelli.lean` und `Convergence.lean` vor, und der Doc-Kommentar von
+  `maximal_ineq` sagt es selbst: die `Lᵖ`-Fassung „will be proved in an upcoming
+  PR".
+* Neu benutzte Mathlib-Namen, am Quelltext belegt: `Measurable.iSup`
+  (`MeasureTheory/Constructions/BorelSpace/Order.lean:909`), `iSup_subtype'`
+  (`Order/CompleteLattice/Basic.lean:454`), `biSup_mono` (`ibid.:297`),
+  `Real.iSup_of_not_bddAbove`
+  (`Algebra/Order/Archimedean/Real/Basic.lean:184`, dort als
+  `iSup_of_not_bddAbove` im Namensraum `Real`), `ciSup_pos`,
+  `Integrable.pos_part` (`MeasureTheory/Function/L1Space/Integrable.lean:949`),
+  `IsRightContinuous.continuous_comp` (`Topology/Order/Cadlag.lean:39`),
+  `Monotone.measure_iUnion`.
+
+#### Eingetragen
+
+* `MartingaleProblems/Suggested.lean`:
+  `Submartingale.mul_measReal_exists_ge_abs_le_countable` am Ende von
+  `DoobUpcrossingBound`, und der neue Abschnitt `WindowSupremum` mit
+  `measurable_biSup_enorm_of_countable`, `biSup_eq_zero_of_not_bddAbove`,
+  `biSup_natCast_eq_zero` und `biSup_enorm_Iic_eq_of_isRightContinuous`.
+* `SkorokhodSpace/Suggested.lean`: Abschnitt `DenseWindow`, die beiden
+  Fensterlemmata über eigenen Variablen.
+* `MartingaleProblems/README.md`: Meilenstein 9, der dritte Punkt (die
+  Reduktion, der Müllwert, die Abzählbarkeit); Meilenstein 11, die
+  Approximierbarkeitsbedingung in `ℝ≥0∞` und der Stand der Maximalungleichung.
+* `SkorokhodSpace/README.md`: Meilenstein 9, der Absatz zu den Fensterlemmata.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`Submartingale.eLpNorm_iSup_le` über `ℕ`**, Doobs `Lᵖ`-Ungleichung im
+   diskreten Fall — und *nur* im diskreten. Sie ist die einzige noch fehlende
+   Zutat von `isTight_map_postcomp_of_exists_martingale`, die Mathlib in keiner
+   Fassung hat, und sie ist von der Zeitachse unabhängig: der Übergang auf ein
+   abzählbares `S` ist nach diesem Lauf derselbe wie bei der Maximalungleichung
+   (`Filtration.comp`, `Finset.monoEnum`, Stetigkeit von unten), und über `ℝ≥0∞`
+   ist der Grenzübergang monoton und braucht nichts weiter.
+
+   *Worauf sie ruht:* auf `MeasureTheory.maximal_ineq`, das Mathlib hat, und auf
+   der Schichtformel `∫⁻ f^p = ∫₀^∞ p λ^(p−1) μ {f ≥ λ} dλ`. **Das ist der
+   Punkt, der zuerst zu prüfen ist und nicht zu raten:** ob Mathlib die
+   Schichtformel in der Gestalt hat, die der Beweis braucht, oder ob der Weg über
+   `MeasureTheory.lintegral_lintegral` und Fubini von Hand geht. Findet sie sich,
+   ist der Satz ein Lauf; findet sie sich nicht, ist die Bruchstelle benannt und
+   gehört als eigener Punkt in den Meilenstein 9.
+2. **Die stetigzeitliche Maximalungleichung `maximal_ineq_of_rightContinuous`**,
+   und sie ist nach diesem Lauf eine Zusammensetzung und keine Analysis mehr: aus
+   `biSup_enorm_Iic_eq_of_isRightContinuous` (das Fenstersupremum wird längs
+   `insert T (Set.Iic T ∩ D)` gelesen) und
+   `Submartingale.mul_measReal_exists_ge_abs_le_countable` (die abzählbare Menge
+   trägt die Schranke). Die eine Stelle, an der zu rechnen ist, ist der Übergang
+   von `{ω | ∃ s ∈ S, ε ≤ |Y s ω|}` auf `{ω | ε ≤ ⨆ s ∈ S, ‖Y s ω‖ₑ}`: das
+   Supremum erreicht das Niveau selbst nicht, sondern nur jedes kleinere, die
+   Schranke ist deshalb an `ε' < ε` zu lesen und danach im Grenzwert
+   zusammenzuziehen. Das ist eine Zeile Maßtheorie und keine fehlende Eingabe.
+3. **Die zweite Hälfte von Vorschlag 2 des Vorlaufs bleibt stehen** — die
+   gleichmäßige Fassung von `CompactContainment` an einer nichttrivialen Folge
+   von Sprungprozessen vorführen. Sie ist von diesem Lauf unberührt und war schon
+   dort als Rechnung und nicht als Theorie beschrieben.

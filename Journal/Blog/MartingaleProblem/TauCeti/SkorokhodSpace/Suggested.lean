@@ -18294,8 +18294,18 @@ uncountable intersection of coordinate conditions -- and it is
 that a càdlàg path on a window is determined there by a countable dense set
 together with the right endpoint. -/
 
-omit [AdditiveDist ι] [ProperSpace ι] [BasePoint ι] [MeasurableSpace E] [BorelSpace E]
-  [PolishSpace E] in
+section DenseWindow
+
+/-! Neither side of the two statements below is the space of this file: the index
+is an arbitrary densely ordered topological one and the values lie in an
+arbitrary topological space.  They are therefore stated over fresh variables
+rather than over the section's `ι` and `E`, whose metrics the proof never reads.
+The generalisation is not idle: the consumer in **MartingaleProblems** Milestone 9
+applies them to `ℝ≥0∞`-valued paths, and `ℝ≥0∞` carries no metric. -/
+
+variable {ι' : Type*} [LinearOrder ι'] [TopologicalSpace ι'] [OrderTopology ι']
+  [DenselyOrdered ι'] {X : Type*} [TopologicalSpace X]
+
 /-- **A right continuous path that stays in a closed set along a dense subset of
 a window stays in it on the whole window**, in the half open form -- which is the
 primitive one, because on `Set.Ico a b` every point has points of the window
@@ -18307,13 +18317,15 @@ trivial because `S` is dense and `Set.Ioo t b` is open and nonempty; that is
 continuity is used, so the statement holds for a càglàd function read backwards
 and for a continuous one without change.
 
-The index is an arbitrary densely ordered one and not `ℝ`: the two consumers are
-over `ℝ` (the measurability of the window set below) and over `ℝ≥0` (the
-translation of compact containment in **MartingaleProblems** Milestone 11), and
-nothing in the proof knows which. -/
-theorem SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense [DenselyOrdered ι]
-    {K : Set E} (hK : IsClosed K) {S : Set ι} (hS : Dense S) {a b : ι}
-    {f : ι → E} (hf : IsRightContinuous f)
+The index is an arbitrary densely ordered one and not `ℝ`, and the value space an
+arbitrary topological one and not this file's `E`: the three consumers are over
+`ℝ` (the measurability of the window set below), over `ℝ≥0` (the translation of
+compact containment in **MartingaleProblems** Milestone 11) and over `ℝ≥0` with
+values in `ℝ≥0∞` (the window supremum of **MartingaleProblems** Milestone 9),
+and nothing in the proof knows which. -/
+theorem SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense
+    {K : Set X} (hK : IsClosed K) {S : Set ι'} (hS : Dense S) {a b : ι'}
+    {f : ι' → X} (hf : IsRightContinuous f)
     (hmem : ∀ t ∈ Set.Ico a b ∩ S, f t ∈ K) :
     ∀ t ∈ Set.Ico a b, f t ∈ K := by
   rintro t ⟨hat, htb⟩
@@ -18336,15 +18348,13 @@ theorem SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense [DenselyOrdered ι]
   refine hK.mem_of_tendsto htend ?_
   filter_upwards [self_mem_nhdsWithin] with x hx using hmem x (hsub hx)
 
-omit [AdditiveDist ι] [ProperSpace ι] [BasePoint ι] [MeasurableSpace E] [BorelSpace E]
-  [PolishSpace E] in
 /-- **The same on the closed window** -- with the right endpoint read separately,
 and necessarily so: nothing approaches `b` from the right *inside* `[a, b]`.  The
 hypothesis `hb` is where that is paid for, and a consumer that cannot pay it
 enlarges the window instead and uses the half open form above. -/
-theorem SkorokhodSpace.forall_mem_Icc_of_forall_mem_dense [DenselyOrdered ι]
-    {K : Set E} (hK : IsClosed K) {S : Set ι} (hS : Dense S) {a b : ι}
-    {f : ι → E} (hf : IsRightContinuous f)
+theorem SkorokhodSpace.forall_mem_Icc_of_forall_mem_dense
+    {K : Set X} (hK : IsClosed K) {S : Set ι'} (hS : Dense S) {a b : ι'}
+    {f : ι' → X} (hf : IsRightContinuous f)
     (hmem : ∀ t ∈ Set.Icc a b ∩ S, f t ∈ K) (hb : a ≤ b → f b ∈ K) :
     ∀ t ∈ Set.Icc a b, f t ∈ K := by
   rintro t ⟨hat, htb⟩
@@ -18352,6 +18362,8 @@ theorem SkorokhodSpace.forall_mem_Icc_of_forall_mem_dense [DenselyOrdered ι]
   · exact hb hat
   · exact SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense hK hS hf
       (fun x hx => hmem x ⟨Set.Ico_subset_Icc_self hx.1, hx.2⟩) t ⟨hat, htb'⟩
+
+end DenseWindow
 
 /-- **The window set is measurable**, and this is what lets a bound on it be
 carried from a measure to a measure it is the image of.

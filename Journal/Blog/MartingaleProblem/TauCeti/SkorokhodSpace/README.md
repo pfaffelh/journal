@@ -3997,6 +3997,17 @@ which restates anything:
   rather than `ℝ`, because the two consumers are over `ℝ` (the measurability
   above) and over `ℝ≥0`, and nothing in the proof knows which.
 
+  **Neither side carries a metric, since 2026-09-20.** The index asks for a
+  topology with the order topology and the values for a topology, and that is
+  all the proof reads: `closure_Ioo`, `Dense.open_subset_closure_inter`,
+  `IsRightContinuous` and `IsClosed.mem_of_tendsto`. The two statements are
+  therefore written over variables of their own and not over this file's `ι`
+  and `E`, whose metrics they inherited only from the section they stood in.
+  The third consumer is what forced it: the window supremum of
+  **MartingaleProblems** Milestone 9 applies them to `ℝ≥0∞`-valued paths, and
+  `ℝ≥0∞` is no metric space, so under the old statement the lemma was
+  unavailable to it and the argument would have been written twice.
+
 A consumer who cannot pay `hb` — and the one in Milestone 11 cannot, the value at
 the right endpoint of a window being exactly what a dense set does not reach —
 enlarges the window instead and reads the half open form. That is free wherever
