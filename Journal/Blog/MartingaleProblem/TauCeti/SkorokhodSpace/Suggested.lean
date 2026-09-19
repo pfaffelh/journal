@@ -12830,3 +12830,149 @@ theorem SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq [CompleteSpa
     mem_closure_iff.1 (mem_closure_iff_nhdsWithin_neBot.2 (nhdsGT_neBot t)) o ho hto
   obtain ⟨x, hxD, hx⟩ := hDd.exists_mem_open (ho.inter isOpen_Ioi) h1
   exact ⟨x, hx.1, hxD, hx.2⟩
+
+/-! ### Identifying two laws from times that are only approximately right
+
+The section above identifies two laws from times at which their finite
+dimensional distributions **agree**, and the oscillation chain of Milestone 8
+produces times at which they agree only **approximately** and which it is not
+free to place: a good time is produced near a prescribed one, never at it, and
+the tolerance and the displacement both shrink only as the estimate is bought
+afresh.  What EK 3.7.8(b) has in hand is therefore, for each `ε > 0` and each
+reach `η > 0`, *some* family of times within `η` to the right of the prescribed
+ones at which the two laws differ by at most `ε` -- and the family moves with
+`ε`.
+
+This section closes that gap, and the closure is right continuity of the paths:
+the map carrying a family of times to the corresponding finite dimensional
+integral is right continuous, so a tolerance and a displacement that shrink
+together force agreement **at** the prescribed times.  Nothing else of the
+Skorokhod structure is used, and no compactness. -/
+
+/-- **The finite dimensional distributions of a law on `D(ℝ, E)` are right
+continuous in the times.**  If `s k i → t i` within `[t i, ∞)` for each `i` of a
+finite family, then
+`∫ ∏ i, F i (f (s k i)) dμ → ∫ ∏ i, F i (f (t i)) dμ`.
+
+Dominated convergence with the constant bound `∏ i, ‖F i‖`, which is integrable
+because the measure is finite.  The pointwise statement is right continuity of the
+path at each coordinate, `continuousWithinAt_Ioi_iff_Ici` turning Mathlib's
+`IsRightContinuous` -- stated on `Set.Ioi` -- into the form on `Set.Ici` that a
+sequence allowed to sit at `t i` needs, then the continuity of `F i` and
+`tendsto_finsetProd` over the finitely many coordinates.
+
+**The filter `𝓝[≥] (t i)` and not `𝓝[>] (t i)`** is what the consumer produces:
+the good times of the oscillation chain lie in `Set.Ico (t i) (t i + η)`, which
+contains `t i`, and a hypothesis excluding it would have to be discharged by hand
+at every use.  Left limits are not involved, and the statement is false with the
+times approached from the left, a path being free to jump at `t i`. -/
+theorem SkorokhodSpace.tendsto_integral_evalPi_of_forall_tendsto_nhdsGE
+    {κ : Type*} [Fintype κ] (μ : Measure D(ℝ, E)) [IsFiniteMeasure μ]
+    (F : κ → (E →ᵇ ℝ)) {t : κ → ℝ} {s : ℕ → κ → ℝ}
+    (hs : ∀ i, Tendsto (fun k => s k i) atTop (𝓝[≥] (t i))) :
+    Tendsto (fun k => ∫ f, ∏ i, F i (f.toFun (s k i)) ∂μ) atTop
+      (𝓝 (∫ f, ∏ i, F i (f.toFun (t i)) ∂μ)) := by
+  classical
+  have hmeas : ∀ u : κ → ℝ,
+      AEStronglyMeasurable (fun f : D(ℝ, E) => ∏ i, F i (f.toFun (u i))) μ := by
+    intro u
+    exact (Finset.measurable_prod _ fun i _ =>
+      (F i).continuous.measurable.comp (SkorokhodSpace.measurable_eval (u i))).aestronglyMeasurable
+  have hbdd : ∀ (u : κ → ℝ) (f : D(ℝ, E)), ‖∏ i, F i (f.toFun (u i))‖ ≤ ∏ i, ‖F i‖ := by
+    intro u f
+    rw [Real.norm_eq_abs, Finset.abs_prod]
+    refine Finset.prod_le_prod₀ (fun i _ => abs_nonneg _) fun i _ => ?_
+    simpa [Real.norm_eq_abs] using (F i).norm_coe_le_norm (f.toFun (u i))
+  refine MeasureTheory.tendsto_integral_of_dominated_convergence _ (fun k => hmeas (s k))
+    (integrable_const _) (fun k => Eventually.of_forall (hbdd (s k)))
+    (Eventually.of_forall fun f => ?_)
+  refine tendsto_finsetProd _ fun i _ => ?_
+  have hpath : Tendsto (fun k => f.toFun (s k i)) atTop (𝓝 (f.toFun (t i))) :=
+    (continuousWithinAt_Ioi_iff_Ici.1 (f.isCadlag.isRightContinuous (t i))).tendsto.comp (hs i)
+  exact ((F i).continuous.tendsto (f.toFun (t i))).comp hpath
+
+/-- **Two laws whose finite dimensional distributions can be matched arbitrarily
+well at times arbitrarily close on the right to prescribed ones agree at the
+prescribed times.**  If for every `ε > 0` and every `η > 0` there are times
+`u i ∈ [t i, t i + η)` with
+`|∫ ∏ i, F i (f (u i)) dμ - ∫ ∏ i, F i (f (u i)) dν| ≤ ε`,
+then the two integrals at the times `t` themselves are equal.
+
+**The times are allowed to move with `ε`, and that is the whole point.**  The
+oscillation chain of Milestone 8 buys its estimate one `ε` at a time and places
+the good times where the bad times leave room; it can promise neither a time
+independent of `ε` nor the prescribed time itself.  Taking `ε = η = 1/(k+1)` turns
+its output into a sequence of families converging to `t` from the right at which
+the two laws differ by `1/(k+1)`, and
+`SkorokhodSpace.tendsto_integral_evalPi_of_forall_tendsto_nhdsGE` carries both
+sides to the limit.
+
+No compactness, no modulus and no density: only right continuity of the paths and
+the finiteness of the two measures. -/
+theorem SkorokhodSpace.integral_evalPi_eq_of_forall_exists_mem_Ico
+    {κ : Type*} [Fintype κ] (μ ν : Measure D(ℝ, E)) [IsFiniteMeasure μ] [IsFiniteMeasure ν]
+    (F : κ → (E →ᵇ ℝ)) (t : κ → ℝ)
+    (h : ∀ ε > 0, ∀ η > 0, ∃ u : κ → ℝ, (∀ i, u i ∈ Set.Ico (t i) (t i + η)) ∧
+      |(∫ f, ∏ i, F i (f.toFun (u i)) ∂μ) - ∫ f, ∏ i, F i (f.toFun (u i)) ∂ν| ≤ ε) :
+    (∫ f, ∏ i, F i (f.toFun (t i)) ∂μ) = ∫ f, ∏ i, F i (f.toFun (t i)) ∂ν := by
+  classical
+  have hpos : ∀ k : ℕ, (0 : ℝ) < 1 / ((k : ℝ) + 1) := fun k => by positivity
+  choose u hu hbound using fun k : ℕ => h _ (hpos k) _ (hpos k)
+  have hzero : Tendsto (fun k : ℕ => 1 / ((k : ℝ) + 1)) atTop (𝓝 0) :=
+    tendsto_one_div_add_atTop_nhds_zero_nat
+  have hs : ∀ i, Tendsto (fun k => u k i) atTop (𝓝[≥] (t i)) := by
+    intro i
+    refine tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within _ ?_
+      (Eventually.of_forall fun k => (hu k i).1)
+    have hupper : Tendsto (fun k : ℕ => t i + 1 / ((k : ℝ) + 1)) atTop (𝓝 (t i)) := by
+      simpa using tendsto_const_nhds.add hzero
+    exact tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hupper
+      (fun k => (hu k i).1) (fun k => (hu k i).2.le)
+  have hμ := SkorokhodSpace.tendsto_integral_evalPi_of_forall_tendsto_nhdsGE μ F hs
+  have hν := SkorokhodSpace.tendsto_integral_evalPi_of_forall_tendsto_nhdsGE ν F hs
+  have hzero' : Tendsto (fun k => (∫ f, ∏ i, F i (f.toFun (u k i)) ∂μ)
+      - ∫ f, ∏ i, F i (f.toFun (u k i)) ∂ν) atTop (𝓝 0) :=
+    squeeze_zero_norm (fun k => by simpa [Real.norm_eq_abs] using hbound k) hzero
+  have := tendsto_nhds_unique (hμ.sub hν) hzero'
+  linarith [this]
+
+/-- **Two laws on `D(ℝ, E)` that can be matched arbitrarily well at times
+arbitrarily close on the right to any prescribed ones are equal.**
+
+This is `SkorokhodSpace.integral_evalPi_eq_of_forall_exists_mem_Ico` at every
+finite family of times, followed by
+`SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq` along the dense set
+`Set.univ`: the previous statement gives the finite dimensional distributions at
+*all* times, so no density has to be arranged and none is lost.
+
+**This is the reduction of EK 3.7.8(b), and it is what makes the remainder of
+that theorem a single estimate.**  Comparing a subsequential limit `ν` with the
+limit `μ` along `T` may not be done at the times of `T` -- those need not be
+continuity times of `ν`, and
+`SkorokhodSpace.exists_countable_dense_forall_setOf_leftLim_ne_one` shows that a
+countable dense `T` may miss all of them.  What is available instead is the
+oscillation bound of Milestone 7, which moves the times to the right at a cost
+that the compactness controls; it produces exactly the hypothesis here, and this
+statement absorbs the fact that the times it produces move with the tolerance.
+
+The hypothesis quantifies over `κ : Type` and not over `Type*`, because the only
+index it is applied at is the coercion of a `Finset ℝ`, which lives in `Type`. -/
+theorem SkorokhodSpace.eq_of_forall_exists_mem_Ico_dist_integral_evalPi_le [CompleteSpace E]
+    (μ ν : Measure D(ℝ, E)) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
+    (h : ∀ (κ : Type) (_ : Fintype κ) (F : κ → (E →ᵇ ℝ)) (t : κ → ℝ), ∀ ε > 0, ∀ η > 0,
+      ∃ u : κ → ℝ, (∀ i, u i ∈ Set.Ico (t i) (t i + η)) ∧
+        |(∫ f, ∏ i, F i (f.toFun (u i)) ∂μ) - ∫ f, ∏ i, F i (f.toFun (u i)) ∂ν| ≤ ε) :
+    μ = ν := by
+  classical
+  refine SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq dense_univ μ ν ?_
+  intro s _ F
+  have hkey := SkorokhodSpace.integral_evalPi_eq_of_forall_exists_mem_Ico (κ := {x // x ∈ s})
+    μ ν (fun i => F i.1) (fun i => i.1)
+    (fun ε hε η hη => h {x // x ∈ s} inferInstance (fun i => F i.1) (fun i => i.1) ε hε η hη)
+  have hcongr : ∀ ρ : Measure D(ℝ, E),
+      (∫ f, ∏ i : {x // x ∈ s}, F i.1 (f.toFun i.1) ∂ρ)
+        = ∫ f, ∏ t ∈ s, F t (f.toFun t) ∂ρ := fun ρ =>
+    integral_congr_ae (Eventually.of_forall fun f =>
+      Finset.prod_coe_sort s (fun t => F t (f.toFun t)))
+  rw [← hcongr μ, ← hcongr ν]
+  exact hkey

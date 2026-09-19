@@ -2364,6 +2364,36 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   is what makes the approach uniform in the sequence. Both are spent, and neither
   replaces the other.
 
+  **What is left of the theorem, named.** The identification of the subsequential
+  limit is `SkorokhodSpace.eq_of_forall_exists_mem_Ico_dist_integral_evalPi_le`
+  below: it asks only that for every finite family of times and test functions,
+  every `ε > 0` and every reach `η > 0` there be times within `η` to the right at
+  which `μ` and `ν` differ by at most `ε`. The remainder is therefore a single
+  estimate, and the pieces it is to be assembled from are
+  `exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure` for a compact
+  set of paths carrying the whole family up to `ε₀`,
+  `exists_times_forall_dist_integral_evalPi_le_of_measure_compl_le` for the
+  displacement, the hypothesis along `T` for the passage to the limit in `n`, and
+  — the one piece that is **not** yet stated at the level of the finite
+  dimensional distributions — the same displacement estimate **uniformly in the
+  sequence**. At the level of the bad times that uniform statement is proved,
+  `SkorokhodSpace.exists_time_liminf_measure_setOf_exists_edist_lt`, and its
+  conclusion is a `liminf` and so a time good along a *subsequence*; that is
+  enough here, a subsequence of a subsequence being one. Lifting it from the bad
+  times to the integrals is
+  `SkorokhodSpace.exists_times_frequently_dist_integral_evalPi_le_of_isCompact_closure`
+  below, which is
+  `exists_times_forall_dist_integral_evalPi_le_of_isCompact_closure` with the
+  single law replaced by the sequence.
+
+  **The compact set is to be asked of `closure S` and not of `S`.** The
+  conclusion of `exists_isCompact_tendsto_iSup_modulusBased_of_isCompact_closure`
+  is `∀ μ ∈ S, μ Kᶜ ≤ ε` and says nothing about the subsequential limit `ν`,
+  which is the second of the two laws to be compared. Applying it to `closure S`
+  — its hypothesis being `closure_closure` read on the one at hand — covers `ν`
+  as well, and the portmanteau detour through `limsup μₙ K ≤ ν K` is not needed.
+  It is the same move by which the item above passes from `A` to `closure A`.
+
   **In what sense the oscillation bound is uniform, and in what sense it is
   not.** It is not a uniform right modulus at a fixed time: to a compact set `K`
   of paths, a time `t` and an `ε > 0` there need be **no** `δ > 0` with
@@ -2796,6 +2826,81 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   for and not `ε`. It is **not** a statement that `ε₀` may be dropped: at `ε₀`
   comparable to `ε` it says nothing, and it should not, a law being free to put
   mass `ε₀` on paths of arbitrarily wild oscillation.
+* `SkorokhodSpace.exists_times_frequently_dist_integral_evalPi_le_of_isCompact_closure`
+  — stage (A). The displacement estimate **uniformly in a sequence of laws**: for
+  a set `K` of paths with compact closure over which the modulus of Milestone 7
+  is small, a sequence `μ n` of laws with `μ n Kᶜ = 0`, a finite family
+  `F : κ → (E →ᵇ ℝ)`, prescribed times `t : κ → ℝ` of the window `[-m, m − 1)`, a
+  reach `η ∈ (0, 1]` and an `ε > 0`, there are times `s i ∈ [t i, t i + η)` and a
+  span `δ' > 0` such that **for infinitely many `n`** and every family
+  `s' i ∈ [s i, s i + δ')`,
+  `|∫ ∏ F i (f (s' i)) dμ n − ∫ ∏ F i (f (s i)) dμ n| ≤ ε`.
+
+  **The conclusion is `∃ᶠ` and not `∀`, and that is not a weakening to be
+  repaired.** A time good for every member of a sequence at once need not exist:
+  each law's bad times are of small Lebesgue measure but their union over the
+  sequence may cover the window, and the inequality that would be needed,
+  `∫ limsup ≤ limsup ∫`, is false — Mathlib's `limsup_lintegral_le` states the
+  converse. The `liminf` form at the level of the bad times,
+  `SkorokhodSpace.exists_time_liminf_measure_setOf_exists_edist_lt`, is what this
+  item lifts, and a time good along a subsequence is what the consumer has at its
+  disposal anyway, being an argument about subsequential limits. The finite
+  version with `∀` is `exists_time_mem_Ico_forall_measure_setOf_exists_edist_lt`,
+  and the factor it pays is the cardinality.
+
+  The constants are those of
+  `exists_times_forall_dist_integral_evalPi_le_of_isCompact_closure` and are not
+  chosen afresh: they depend on `K`, `F`, `m`, `η` and `ε` and on no law, which is
+  what makes the uniform statement possible at all. The span is fixed before the
+  time, the `liminf` sitting at the time alone.
+* `SkorokhodSpace.tendsto_integral_evalPi_of_forall_tendsto_nhdsGE` — stage (A),
+  **proved 2026-09-19**. The finite dimensional distributions of a law on
+  `D(ℝ, E)` are right continuous in the times: if `s k i → t i` within
+  `[t i, ∞)` for each `i` of a finite family, then
+  `∫ ∏ i, F i (f (s k i)) dμ → ∫ ∏ i, F i (f (t i)) dμ`.
+
+  Dominated convergence with the constant bound `∏ i, ‖F i‖`, integrable because
+  the measure is finite; pointwise it is right continuity of the path at each
+  coordinate, `continuousWithinAt_Ioi_iff_Ici` turning Mathlib's
+  `IsRightContinuous` — stated on `Set.Ioi` — into the form on `Set.Ici` that a
+  family of times allowed to sit at `t i` needs, and then `tendsto_finsetProd`.
+  The filter is `𝓝[≥] (t i)` and not `𝓝[>] (t i)` because the good times of the
+  oscillation chain lie in `Set.Ico (t i) (t i + η)`, which contains `t i`.
+  Nothing holds with the times approached from the left: a path is free to jump
+  at `t i`.
+* `SkorokhodSpace.integral_evalPi_eq_of_forall_exists_mem_Ico` — stage (A),
+  **proved 2026-09-19**. If for every `ε > 0` and every `η > 0` there are times
+  `u i ∈ [t i, t i + η)` with
+  `|∫ ∏ i, F i (f (u i)) dμ − ∫ ∏ i, F i (f (u i)) dν| ≤ ε`, then the two finite
+  dimensional integrals at the times `t` themselves are **equal**.
+
+  **The times are allowed to move with `ε`, and that is the whole point.** The
+  oscillation chain buys its estimate one `ε` at a time and places the good times
+  where the bad times leave room; it can promise neither a time independent of
+  `ε` nor the prescribed time itself, and
+  `exists_times_forall_dist_integral_evalPi_le_of_isCompact_closure` says so in
+  its own statement. Reading its output at `ε = η = 1/(k+1)` gives a sequence of
+  families converging to `t` from the right at which the two laws differ by
+  `1/(k+1)`, and the right continuity above carries both sides to the limit. No
+  compactness, no modulus and no density enter; only right continuity of the
+  paths and the finiteness of the two measures.
+* `SkorokhodSpace.eq_of_forall_exists_mem_Ico_dist_integral_evalPi_le` — stage
+  (A), **proved 2026-09-19**. Two laws on `D(ℝ, E)` that can be matched
+  arbitrarily well at times arbitrarily close on the right to *any* prescribed
+  ones are equal. This is the previous item at every finite family of times,
+  followed by `SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq` of
+  Milestone 6 along `Set.univ`: the previous item gives the finite dimensional
+  distributions at all times, so no density has to be arranged and none is lost.
+
+  **This is the reduction of EK 3.7.8(b), and it says what remains of that
+  theorem.** Comparing a subsequential limit `ν` with the limit `μ` along `T` may
+  not be done at the times of `T`, by
+  `SkorokhodSpace.exists_countable_dense_forall_setOf_leftLim_ne_one`; the
+  oscillation bound moves the times to the right at a cost the compactness
+  controls, and produces exactly this hypothesis. What this item removes from the
+  remainder is the bookkeeping of the moving times — the estimate no longer has
+  to be arranged at a fixed family of times, and the statement it has to be
+  arranged for is a single inequality.
 * `SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional` — stage (A).
   The same conclusion for a tight family, from the previous item and
   `isCompact_closure_of_isTightMeasureSet`.
