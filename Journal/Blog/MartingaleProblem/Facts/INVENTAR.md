@@ -49585,3 +49585,248 @@ standen schon da.
 Bequemlichkeit, sondern der einzige Weg, und die Voraussetzung an `f²` — die
 Abgeschlossenheit der approximierbaren Funktionen unter Produkten — ist damit
 nicht mehr durch einen Absatz begründet, sondern durch einen Satz.
+
+### 2026-09-20, dreiundzwanzigster Lauf des Tages — die Vorfrage des Vorlaufs ist beantwortet, und die Antwort widerlegt seinen Vorschlag: die Divergenz ist echt, aber sie ist **kein** Befund über die Kette, sondern über **eine** ihrer Aussagen; der fehlende Satz heißt nicht Aldous, sondern **Horizont**, und er ruht auf derselben Quadratidentität, die schon dasteht
+
+**Bearbeitet:** die Vorfrage des zweiundzwanzigsten Laufs — nachrechnen, ob die
+Divergenz der naiven Zusammensetzung wirklich besteht — und danach der Satz, der
+statt des vorgeschlagenen gebraucht wird. Weiter am ersten Punkt der Kette des
+Meilensteins 11 von `MartingaleProblems`, wie angeordnet. Kein Meilenstein 8,
+kein Meilenstein 14, kein C.5/G.
+
+#### Die Vorfrage, und sie ist mit **ja und nein** zu beantworten
+
+**Ja, die Rechnung des Vorlaufs stimmt.** Setzt man die Konklusion von
+`mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le` (Zeile 42604) mit der
+von `lintegral_ofReal_dist_le_sqrt_of_biSup_le` (43944) an einem Summanden
+zusammen, so ist jeder Summand höchstens `ofReal √(S.toReal)` mit
+`S = O(ofReal δ ^ (1 − 1/q) · K) + O(ε_approx)` — die Potenz ist die von
+`IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le` (43387), am
+Quelltext nachgesehen und nicht aus dem Gedächtnis. Also
+
+```
+(u/δ) · √(C · δ^(1−1/q))  =  u √C · δ^((1−1/q)/2 − 1),
+```
+
+und der Exponent ist für **jedes** `q ∈ (1, ∞]` negativ, weil
+`(1−1/q)/2 ≤ 1/2 < 1`. Die Schranke divergiert für `δ → 0`.
+
+**Nein, das ist keine Aussage über die Kette.** Die Voraussetzung `N ≈ u/δ` ist
+nicht der Kette eigen, sondern **einer einzigen** ihrer Aussagen:
+`hN : u.toNNReal ≤ N • δ.toNNReal` steht in
+`measure_setOf_lt_modulusBased_le_gap` (42561) und wandert von dort in die
+`_of_le`-Fassung. Eine Stufe höher, in
+`mul_measure_setOf_lt_modulusBased_le_lintegral_dist` (42518), ist `N`
+**freigestellt** — die Aussage trägt kein `hN` — und lautet
+
+```
+ofReal ε * μ {ofReal ε < modulusBased 0 u (extendNNReal (Φ ω)) δ}
+  ≤ ∑_{k<N} ∫⁻ ofReal (dist (X β_k) (X α_k))
+    + ofReal ε * μ {oscHitSeq X ε N < u.toNNReal}.
+```
+
+In dieser Gestalt ist die Reihenfolge der Quantoren die klassische: **erst `N`,
+dann `δ`.** Der Horizontterm hängt von `δ` überhaupt nicht ab; ist er für großes
+`N` klein, so darf `δ` danach gegen Null gehen, und `N · √(C δ^(1−1/q))` tut es
+mit, weil `N` inzwischen festliegt. Es divergiert also nicht die Zusammensetzung,
+sondern die Zusammensetzung **unter `hN`**.
+
+**Was der siebzehnte Lauf dieses Tages darüber gesagt hat, ist damit
+berichtigt.** Er hat `hN` eingeführt und zur Begründung geschrieben, der
+Horizontterm sei „von einer Gestalt, von der keine Maximalungleichung spricht",
+und `hN` mache aus zwei zu schätzenden Größen eine. Es ist umgekehrt: der
+Horizontterm ist von genau der Gestalt, von der die **Quadratidentität** dieses
+Meilensteins spricht, und `hN` hat die einzige Größe, die sich gutartig
+abschätzen läßt, gegen eine ersetzt, die es nicht tut. Die Aussage bleibt richtig
+und bleibt stehen; was fällt, ist ihre Rolle als der Weg.
+
+#### Also der fehlende Satz, und er ist **nicht** `modulusBased_le_of_forall_stoppingTime`
+
+Der Vorlauf hat vorgeschlagen, Aldous' zweite Anwendung der Voraussetzung **an
+einer zufälligen Zeit** zu bauen, weil dort der Faktor `N` verschwinde. Nach der
+obigen Rechnung wird er dafür nicht gebraucht: der Faktor `N` ist nicht zu
+vermeiden, sondern zu **bezahlen**, und bezahlt wird er vom Horizontterm.
+
+*Und der Vorschlag war überdies schwerer, als er aussah.* Die dort vorgesehene
+Zeit `τ_κ` — `κ` der erste Index mit einer Lücke — ist **keine Stoppzeit**: ob
+bei `k` eine Lücke ist, entscheidet sich erst bei `τ_{k+1}`, also nach `τ_k`. Das
+ist kein Beweisdetail, sondern der Grund, warum der klassische Beweis den Umweg
+über die Dreiecksungleichung mit einem *festen* Zuwachs geht. Wer den Weg doch
+nimmt, fange mit diesem Punkt an.
+
+**Der Satz, der statt dessen fehlt**, ist die quantitative Fassung von „die
+`ε`-Schwingungszeiten häufen sich nicht", und zwar **gleichmäßig in der
+Familie** — denn punktweise ist sie umsonst (ein càdlàg-Pfad hat auf `[0,u]` nur
+endlich viele `ε`-Schwingungen, also `{τ_N < u} ↓ ∅`, und Stetigkeit von oben
+gäbe `μ {τ_N < u} → 0`; das ist für Straffheit wertlos, weil die Geschwindigkeit
+vom einzelnen Mitglied der Familie abhinge).
+
+Die Rechnung dafür ist die folgende, und sie kommt **ohne `δ` aus**:
+
+1. `{τ_N < u} ⊆ {τ_{k+1} < u}` für jedes `k < N`, nach `monotone_oscHitSeq`.
+   Also `N · μ {τ_N < u} ≤ ∑_{k<N} μ {τ_{k+1} < u}`.
+2. Auf `{τ_{k+1} < u}` ist `dist (X (τ_{k+1})) (X (τ_k)) ≥ ε`
+   (`le_dist_stoppedValue_oscHitSeq`), also gibt Markov **mit dem Quadrat**
+   `ofReal ε ^ 2 · μ {τ_{k+1} < u} ≤ ∫⁻ (ofReal (dist (X β_k) (X α_k)))^2`
+   mit `α_k = min (τ_k) u` und `β_k = min (τ_{k+1}) u`.
+3. Und **hier ist der Gewinn:** diese Fenster sind nicht `δ`-gekappt, sondern
+   **aufeinanderfolgend** — `β_k` ist wörtlich `α_{k+1}` —, also zerlegen sie
+   `[⊥, u]`. Die Quadratidentität `ofReal_integral_sq_sub_le` schätzt jeden
+   Summanden durch zwei Kompensatorzuwächse ab, und diese summieren sich über
+   aufeinanderfolgende Fenster zu höchstens `∫⁻ ∫_{(0,u]} |Z| ≤ u^(1−1/q) K`,
+   **unabhängig von `N`**.
+
+Heraus kommt
+
+```
+μ {τ_N < u}  ≤  (1/ε²) · [ c · u^(1−1/q) · K · const / N  +  (2 ε' + 4 c ε_approx) ].
+```
+
+Kein `δ` darin, `N` frei wählbar, und die Konstanten hängen nur von `c = ‖f‖`,
+`u`, `q` und `K` ab — also von den Daten der Klasse `𝓐 n` und nicht vom einzelnen
+Mitglied. Das ist die Gleichmäßigkeit, die Straffheit verlangt.
+
+**Warum mit dem Quadrat und nicht mit der ersten Potenz.** Über die erste Potenz
+liefe die Abschätzung auf `∑_{k<N} √(…)` hinaus und damit auf `O(√N)`; erst das
+Quadrat läßt die Summe der Kompensatorzuwächse stehen, und nur *sie* ist über
+disjunkte Fenster `O(1)`. Der Vorlauf hat das für den Lückenweg schon
+ausgerechnet — dort half es nichts, weil die Fenster dort alle die Länge `δ`
+haben und `N δ = u` das `δ` wegkürzt. Beim Horizontterm ist es umgekehrt: es gibt
+kein `δ`, das sich wegkürzen könnte, die Summe bleibt `O(1)`, und links steht
+`N`.
+
+*(Der vorige Abschnitt ist eine Rechnung auf Papier und als solche
+gekennzeichnet; was davon in Lean steht, sagt der nächste.)*
+
+#### Was gebaut ist
+
+**Fünf** neue Deklarationen in `TauCeti/MartingaleProblems/Suggested.lean`, in
+einem neuen Abschnitt „The horizon probability" am Ende der Datei. Die Schritte 1
+und 2 der obigen Rechnung stehen damit in Lean; Schritt 3 — die Summation der
+Kompensatorzuwächse über aufeinanderfolgende Fenster — ist der Vorschlag für den
+nächsten Lauf.
+
+* `setOf_oscHitSeq_lt_subset_dist` — die Inklusion
+  `{τ (k+1) < u} ⊆ {ε ≤ dist (X β_k) (X α_k)}` mit `α_k = min (τ k) u` und
+  `β_k = min (τ (k+1)) u`. Beide Minima werden links angenommen, und der Rest
+  ist `le_dist_stoppedValue_oscHitSeq`.
+* `stronglyMeasurable_dist_stoppedValue_oscHitSeqCap` — beide Zeiten sind durch
+  `u` beschränkt (`min_le_right`, zweimal), also
+  `stronglyMeasurable_stoppedValue_of_le` bei `𝓕 u` für beide.
+* `sq_mul_measure_setOf_oscHitSeq_lt_le` — Markov **am Quadrat** darauf. Das
+  Horizontereignis wird nicht als meßbar verlangt, wie beim Lückenereignis auch.
+* `nsmul_measure_setOf_oscHitSeq_lt_le_sum` — der Zählschritt
+  `N · μ {τ N < u} ≤ ∑_{k<N} μ {τ (k+1) < u}`. Er ist `monotone_oscHitSeq` und
+  sonst nichts: keine Topologie auf dem Index, keine Voraussetzung an `X`, nicht
+  einmal `0 ≤ ε`.
+* `mul_measure_setOf_oscHitSeq_lt_le_sum_lintegral` — beide zusammen, in der
+  Gestalt, die der Verbraucher liest.
+
+**Geprüft:** `scripts/check_master.py` meldet für die ganze Kette **0 Fehler,
+0 `sorry`, 0 veraltete Namen** (Mathlib `94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `v4.35.0-rc2`). Die Warnungen sind 18 / 35 / **112** und damit **unverändert**
+gegenüber dem vor dem Lauf eigens gemessenen Stand — die beiden
+`unusedSectionVars`, die der Entwurf erzeugt hatte, sind durch `omit`-Zeilen
+abgetragen. Alle fünf hängen nach `check_axioms_master.py` auf `propext`,
+`Classical.choice`, `Quot.sound` und auf nichts sonst. `check_cited_lines.py`:
+**357 von 357** gepaarten Fundstellen stimmen, 0 tote, 0 verschoben.
+`check_duplicates.py` und `check_own_names.py` finden zu den neuen Namen nichts
+(2626 eigene Deklarationen, fünf mehr als vor dem Lauf). `check_negatives.py`:
+**48** Behauptungen, 0 mit unerwarteten Treffern — unverändert, denn dieser Lauf
+stellt keine neue Behauptung über Mathlibs Bestand auf.
+
+#### Drei Befunde
+
+* **`ℝ≥0∞` steht in dieser Datei im Code nicht zur Verfügung**, obwohl es
+  101mal darin vorkommt — sämtlich in Doc-Kommentaren. Geöffnet ist nur
+  `open scoped NNReal` (Zeile 639), und die Notation `ℝ≥0∞` liegt im Bereich
+  `ENNReal`. Der Fehler, den das gibt, heißt `expected token` und zeigt auf die
+  Spalte des `∞`, sagt also nicht, was fehlt. Zu schreiben ist `ENNReal`, wie es
+  die Datei überall sonst tut. *(Dasselbe gilt für eine Arbeitsdatei, die die
+  Kette importiert: Bereiche werden nicht mitimportiert, `open scoped ENNReal`
+  ist dort eigens zu setzen.)*
+* **Der Binder `_k` ist in der Summennotation kein zulässiger Name.**
+  `∑ _k ∈ Finset.range N, f` scheitert mit demselben `expected token`. Wer eine
+  Summe über einen ungenutzten Index schreibt, nehme einen gewöhnlichen Namen;
+  der Linter beschwert sich darüber nicht.
+* **Die ungekappte Zelle ist billiger als die Lückenzelle, und zwar an den
+  Typklassen.** Die Lückenzelle braucht `AddCommMonoid ι`,
+  `CanonicallyOrderedAdd ι`, `Sub ι`, `OrderedSub ι`, `AddLeftReflectLE ι` und
+  `IsStoppingTime.add_const_of_orderedSub` — alles nur, um `α + δ` zu bilden.
+  Die Horizontzelle braucht davon **nichts**: `min (τ k) u` ist eine Stoppzeit,
+  weil `isStoppingTime_oscHitSeqCap` es sagt, und beschränkt, weil
+  `min_le_right` es sagt. Der Horizontweg ist also nicht nur der konvergente,
+  sondern auch der voraussetzungsärmere.
+
+#### Wo der erste Punkt der Kette jetzt steht
+
+| Größe | Stand |
+| --- | --- |
+| alles Deterministische bis zur Modulabschätzung | steht |
+| Markov auf den Lückenereignissen, über `N` summiert | steht |
+| optionales Sampling zwischen zwei Stoppzeiten | steht |
+| Martingalzuwachs gegen ein Gewicht aus der Vergangenheit | steht |
+| Zuwachs → Kompensatorzuwachs (Quasimartingal) | steht |
+| Quadratidentität, Cauchy–Schwarz, Hölder am Kompensator | steht |
+| die Klasse `𝓐 n` als Prädikat samt fünf Folgerungen | steht |
+| die Approximationsfehler-Hypothese, ungewichtet und gewichtet | steht |
+| die Quadratidentität am Prozeß — (9.26) selbst | steht |
+| die Brücke von der `ℝ≥0∞`-Schranke zurück zu Cauchy–Schwarz | steht |
+| **der Horizontterm: Inklusion, Markov am Quadrat, Zählschritt** | **steht, dieser Lauf** |
+| die Summe der Kompensatorzuwächse über **aufeinanderfolgende** Fenster | **fehlt**, siehe Vorschlag |
+| der Zusammenbau: erst `N` aus dem Horizont, dann `δ` in der Lückensumme | offen |
+
+`modulusBased_le_of_forall_stoppingTime` steht **nicht** mehr in dieser Tabelle:
+nach dem Befund oben braucht der erste Punkt der Kette ihn nicht. Er bleibt in
+`SkorokhodSpace/README.md`, Meilenstein 10, als der schärfere Weg stehen, und
+der dortige Satz, er sei „das eine Statement, das die Kette braucht", ist
+berichtigt.
+
+#### Vorschlag für den nächsten Lauf
+
+**`IsApproximatingPair.sum_lintegral_enorm_compensator_sub_le` — die Summe der
+Kompensatorzuwächse über eine aufsteigende Kette von Stoppzeiten.**
+
+> Ist `⊥ = σ 0 ≤ σ 1 ≤ … ≤ σ N ≤ u` eine Kette von Stoppzeiten, so ist
+> `∑_{k<N} ∫⁻ ω, ‖C (σ (k+1) ω) ω − C (σ k ω) ω‖ₑ ∂P ≤ ENNReal.ofReal u ^ (1 − 1/q) * K`.
+
+**Worauf sie ruht.** `IsApproximatingPair.enorm_compensator_sub_le` (Zeile 43310)
+schätzt einen einzelnen Zuwachs durch `∫_{(σ k, σ (k+1)]} |Z|` ab; die Summe
+darüber ist die Additivität des Mengenintegrals längs aneinandergrenzender
+Intervalle, und `setIntegral_Ioc_sub_setIntegral_Ioc` (43151) ist die Hälfte
+davon, die schon dasteht. Der Hölderschritt ist danach **einer** statt `N`, und
+zwar derselbe, den `lintegral_enorm_compensator_sub_le` (43341) für ein Fenster
+führt — über dem Fenster `(⊥, u]` statt über `(α, β]`.
+
+**Warum sie jetzt dran ist.** Sie ist die **einzige** fehlende Eingabe des
+Horizontterms: `mul_measure_setOf_oscHitSeq_lt_le_sum_lintegral` steht seit
+diesem Lauf, `ofReal_integral_sq_sub_le` schätzt jeden seiner Summanden durch
+zwei Kompensatorzuwächse ab, und was fehlt, ist die Aussage, daß diese Zuwächse
+**über aufeinanderfolgende Fenster** nicht mit `N` wachsen. Ohne sie ist der
+Horizontterm `O(1)` statt `O(1/N)`, und der erste Punkt der Kette bleibt offen;
+mit ihr ist der Rest Einsetzen.
+
+**Die Vorfrage dazu ist in diesem Lauf schon beantwortet, am Quelltext, und sie
+entscheidet den Ansatzpunkt.** `enorm_compensator_sub_le` (43310) hat Hölder
+**bereits angewandt**: es liefert
+`ofReal δ ^ (1−1/q) * eLpNorm (Z · ω) q (ℙ|_(0,T])`, nicht `∫_{(a,b]} |Z|`.
+Darüber zu summieren trüge nicht — es gäbe `∑_k δ_k^(1−1/q)`, und das wächst
+über `N` Fenster wie `N^(1/q) · u^(1−1/q)`, also wieder mit `N`.
+
+**Der Satz setzt deshalb eine Stufe tiefer an, bei `compensator_sub_eq`
+(43292)**, das den Zuwachs als `∫ s in Set.Ioc a b, Z s ω` schreibt, ohne jede
+Abschätzung. Die Reihenfolge ist dann:
+
+1. je Zelle `‖C (σ (k+1)) ω − C (σ k) ω‖ₑ ≤ ∫⁻_{(σ k, σ (k+1)]} ‖Z‖ₑ`,
+2. Summe über `k` = `∫⁻_{(⊥, σ N]} ‖Z‖ₑ ≤ ∫⁻_{(0, u]} ‖Z‖ₑ` — Additivität des
+   Mengenintegrals längs aneinandergrenzender `Ioc`, wovon
+   `setIntegral_Ioc_sub_setIntegral_Ioc` (43151) die eine Hälfte schon ist,
+3. und **erst jetzt** Hölder, *einmal*, mit
+   `enorm_setIntegral_le_rpow_mul_eLpNorm` (43095) über dem ganzen Fenster
+   `(0, u]`: `≤ ofReal u ^ (1−1/q) * eLpNorm …`, dann
+   `IsApproximatingPair.lintegral_eLpNorm_le` gegen `K`.
+
+Der Unterschied zwischen „Hölder je Zelle" und „Hölder einmal über allen" ist
+genau der Unterschied zwischen `O(N^(1/q))` und `O(1)`, und damit zwischen einem
+Horizontterm, der nichts nützt, und einem, der den ersten Punkt der Kette
+schließt.

@@ -4109,14 +4109,33 @@ whose hypothesis is there discharged on data.
 run, as the criterion practitioners reach for and as a record of what our
 generality costs and what it does not.*
 
-*And since 2026-09-20 it is not an aside: one statement of it,
-`SkorokhodSpace.modulusBased_le_of_forall_stoppingTime`, is the link
-**MartingaleProblems** Milestone 11 reads, the tenth run of that day having
-measured that the whole remaining content of
-`isTight_map_postcomp_of_exists_martingale` is the modulus condition. The route
-to tightness itself is unchanged — Milestone 7 plus Milestone 8 — and what this
+*And since 2026-09-20 it is not an aside: the tenth run of that day measured that
+the whole remaining content of `isTight_map_postcomp_of_exists_martingale` in
+**MartingaleProblems** Milestone 11 is the modulus condition. The route to
+tightness itself is unchanged — Milestone 7 plus Milestone 8 — and what this
 milestone supplies is the passage from an increment bound at stopping times,
 which a Doob estimate gives, to the modulus.*
+
+*Which statement of it that chain reads was **decided against the first answer**
+on 2026-09-20, twenty-third run, and the correction is kept because it points at
+a real trap. `SkorokhodSpace.modulusBased_le_of_forall_stoppingTime` below is
+Aldous' criterion with the union bound avoided, by reading the hypothesis at a
+**random** index; the run before had proposed it as the one theorem still
+missing, on the ground that the composition in **MartingaleProblems** diverges.
+The composition does diverge — but only under the condition `u ≤ N • δ` of
+`MeasureTheory.measure_setOf_lt_modulusBased_le_gap`, which ties `N` to `δ`. One
+stage above, the count is free, the horizon summand does not mention `δ`, and
+the quantifiers stand in the classical order: `N` first, `δ` afterwards. What
+that chain reads is therefore a **horizon** bound, built in
+**MartingaleProblems** on the same day, and not this statement. Aldous at a
+random time remains the sharper route and remains stated here; it is not the
+route that chain needs.*
+
+*And a warning for whoever builds it: `τ κ` for `κ` the first index with a gap
+is **not a stopping time** — whether stage `k` has a gap is decided at
+`τ (k+1)`, after `τ k`. That is why the classical proof detours through the
+triangle inequality with a **fixed** increment, and it is the first thing to
+settle.*
 
 **The criterion.** For càdlàg processes `X n` adapted to filtrations `𝓕 n`, with
 compact containment, and with
@@ -4188,7 +4207,7 @@ the same role Billingsley's modified modulus `w''` plays, which takes the
 *minimum* of the two one-sided oscillations and is therefore blind to one jump
 per window; our infimum over subdivisions achieves it directly.
 
-**The one statement of this milestone that the chain actually needs, named**,
+**The statement of this milestone that carries its probabilistic half, named**,
 2026-09-20:
 
 * `SkorokhodSpace.modulusBased_le_of_forall_stoppingTime` — the implication
@@ -4200,12 +4219,12 @@ per window; our infimum over subdivisions achieves it directly.
   `δ`, `T` and `ε` alone. Its proof is the outline above; its step from a named
   subdivision to the modulus is `SkorokhodSpace.modulusBased_le_subdivisionOsc`
   of Milestone 9, and its stopping time machinery is Milestone 9 of
-  **MartingaleProblems**. It is what
-  `isTight_map_postcomp_of_exists_martingale` of **MartingaleProblems**
-  Milestone 11 consumes: that item's whole remaining content is the modulus
-  condition, and a Doob estimate delivers exactly the increment bound above.
-  Its doc comment must say that the implication is one way only — the
-  deterministic step below refutes the converse.
+  **MartingaleProblems**. Its doc comment must say that the implication is one
+  way only — the deterministic step below refutes the converse — and it must say
+  that `isTight_map_postcomp_of_exists_martingale` of **MartingaleProblems**
+  Milestone 11 does **not** read it: that item reaches the modulus by paying the
+  union bound and settling the horizon separately, measured 2026-09-20. This
+  statement is the sharper route and is not the one that item needs.
 
 **Its deterministic half, built 2026-09-20 and free of probability.** The
 statement above splits along the line every proof about this modulus does: a

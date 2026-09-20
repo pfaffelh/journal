@@ -11678,12 +11678,79 @@ has to be chosen once for all `n`. What stands:
     ≤ 2 * ∑ k ∈ Finset.range N, ∫⁻ ω, ENNReal.ofReal (dist (X β_k ω) (X α_k ω)) ∂μ.
   ```
 
-  What is left of this item is therefore **one** quantity and no longer two:
-  how the martingale hypothesis makes those `N` lower integrals small,
-  uniformly in the family. That is where Doob from Milestone 9 is spent, and
-  the count `N` is the deterministic `SkorokhodSpace.card_le_of_gapped` read
-  against the condition `u ≤ N • δ`, which is no restriction on a consumer, who
-  chooses `N` after `δ` and `u`.
+  **And this reduction to one quantity is a detour, measured 2026-09-20 and
+  recorded here because it was written the other way round.** The condition
+  `u ≤ N • δ` ties the count to the radius, `N ≈ u / δ`, and under that tie the
+  composition of this estimate with
+  `lintegral_ofReal_dist_le_sqrt_of_biSup_le` **diverges**: each summand is at
+  most `ENNReal.ofReal √(S.toReal)` with `S = O(ofReal δ ^ (1 - 1/q) * K)`, so
+  the sum is `O(δ^((1-1/q)/2 - 1))` and the exponent is negative for every
+  `q ∈ (1, ∞]`. The route that converges is the statement one stage **above**,
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_lintegral_dist`, whose
+  `N` is free:
+
+  ```
+  ENNReal.ofReal ε * μ {ω | ENNReal.ofReal ε < modulusBased 0 u (extendNNReal (Φ ω)) δ}
+    ≤ ∑ k ∈ Finset.range N, ∫⁻ ω, ENNReal.ofReal (dist (X β_k ω) (X α_k ω)) ∂μ
+      + ENNReal.ofReal ε * μ {ω | oscHitSeq X ε N ω < u.toNNReal}.
+  ```
+
+  There the quantifiers stand in the classical order — **`N` first, then
+  `δ`** — because the horizon summand does not mention `δ` at all. The two
+  quantities are therefore the right shape and the single one is not, and the
+  item is finished by bounding the horizon separately, which is the block
+  "The horizon probability" below. `MeasureTheory.measure_setOf_lt_modulusBased_le_gap`
+  and its consumer remain true and remain here; what falls is their role as the
+  route.
+
+  What is left of this item is therefore two quantities: how the martingale
+  hypothesis makes those `N` lower integrals small, uniformly in the family, and
+  how it makes the horizon probability small uniformly for large `N`. That is
+  where Doob from Milestone 9 is spent, and the count `N` is the deterministic
+  `SkorokhodSpace.card_le_of_gapped` where the `δ`-tied route is taken.
+
+  **And the horizon probability is bounded, 2026-09-20**, in the block "The
+  horizon probability", which is the second of the two quantities and the one
+  that makes `N` a free parameter:
+
+  ```
+  N * (ENNReal.ofReal ε ^ 2 * μ {ω | oscHitSeq X ε N ω < u})
+    ≤ ∑ k ∈ Finset.range N, ∫⁻ ω, ENNReal.ofReal (dist (X β_k ω) (X α_k ω)) ^ 2 ∂μ
+  ```
+
+  — `MeasureTheory.mul_measure_setOf_oscHitSeq_lt_le_sum_lintegral`, with
+  `α_k = min (τ k) u` and `β_k = min (τ (k+1)) u`, both stopping times bounded by
+  `u`. **`δ` does not occur in it**, which is the whole reason for it: a
+  consumer fixes `N` from this estimate first and lets `δ` tend to zero
+  afterwards, in the gap sum, where `N` is by then a constant.
+
+  It is three steps and each is cheap.
+  `MeasureTheory.setOf_oscHitSeq_lt_subset_dist` is the inclusion
+  `{τ (k+1) < u} ⊆ {ε ≤ dist (X β_k) (X α_k)}`, which is
+  `le_dist_stoppedValue_oscHitSeq` with both minima attained on the left;
+  `MeasureTheory.sq_mul_measure_setOf_oscHitSeq_lt_le` is Markov **at the
+  square** on it, measurable by
+  `MeasureTheory.stronglyMeasurable_dist_stoppedValue_oscHitSeqCap`; and
+  `MeasureTheory.nsmul_measure_setOf_oscHitSeq_lt_le_sum` is the counting step
+  `N * μ {τ N < u} ≤ ∑_{k<N} μ {τ (k+1) < u}`, which is `monotone_oscHitSeq` and
+  nothing else.
+
+  **Three things about it are worth recording.** The first: the cells here are
+  **consecutive** and not `δ`-capped — `β_k` is literally `α_{k+1}` — so the
+  compensator increments that
+  `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le` bounds sum over
+  them to the increment over `[⊥, u]`, that is to `u ^ (1 - 1/q) * K`,
+  **independently of `N`**; against the `N` on the left that is a horizon bound
+  `O(1/N)`, with constants depending only on `‖f‖`, `u`, `q` and `K` and hence
+  uniform in the family. The second: the estimate is at the **square** because
+  over the first power each summand would carry a square root by
+  `lintegral_ofReal_dist_le_sqrt_of_biSup_le` and a sum of `N` square roots is
+  `O(√N)` even when the sum under them is `O(1)`. The third: the uncapped cell
+  asks for **neither** an addition on the index nor
+  `MeasureTheory.IsStoppingTime.add_const_of_orderedSub`, so this block carries
+  none of the algebraic hypotheses on `ι` that the gap block carries — two
+  applications of `MeasureTheory.isStoppingTime_oscHitSeqCap` and `min_le_right`
+  twice are the whole stopping time content.
 
   **A naming trap that cost a compile and is recorded so it costs no other.**
   The countable dense set of the début theorem is called `D` throughout this
