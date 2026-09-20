@@ -11237,6 +11237,53 @@ has to be chosen once for all `n`. What stands:
   compactness to convergence once Milestone 6 supplies uniqueness. Each of the
   five items is used exactly once and in this order, which is the acceptance
   test for the milestone as a chain.
+
+  **What the five items reach, stated exactly, 2026-09-20.** They give
+  tightness, relative compactness, and that *every limit point solves the
+  martingale problem for* `f ↦ f''/2`. They do **not** give `X n ⇒ Brownian
+  motion`, and the two missing steps are named here so that no run reports the
+  weaker statement under the stronger name.
+
+  * **Uniqueness for `f ↦ f''/2` is not available from anything built here.**
+    The obstruction is *not* that `f''` is unbounded — it is not, and
+    `mpFamily` takes pairs of bounded functions, so the family is in order. It
+    is that `integral_mul_eq_expJumpApply_of_isMPSolution`, the route to
+    `honedim` in Milestone 4, runs on the exponential series `∑ tᵏ Aᵏ f / k!`
+    and needs `‖A f‖ ≤ C ‖f‖` **uniformly**, so that iteration gives
+    `abs_iterate_jumpApply_le`, `‖Aᵏ f‖ ≤ (2L)ᵏ ‖f‖`. For `A = d²/dx² / 2` one
+    has `Aᵏ f = 2⁻ᵏ f⁽²ᵏ⁾` and no such `C` exists over `Cc^∞`: a function small
+    in sup norm may have a large second derivative. The series does not
+    converge and the proof fails at its first step. That is the whole content
+    of calling the generator unbounded, and it is why Hille--Yosida replaces
+    the series by the resolvent.
+
+    Three routes to the missing `honedim`, of which the third is the one this
+    roadmap can take:
+
+    1. **Hille--Yosida** (Ethier--Kurtz 4.4.1) — excluded by design, see
+       `rem:noch1`; it belongs to the **OneParameterSemigroups** roadmap.
+    2. **Duality** — Milestone 8, unstarted.
+    3. **Directly, through the Fourier transform.** `honedim` asks only that
+       two solutions with the same initial law have the same one-dimensional
+       distributions. Under the Fourier transform `A` becomes multiplication by
+       `-ξ²/2`, and the martingale property turns the identification into an
+       ordinary differential equation in `t` for each fixed `ξ`, whose solution
+       is `exp (-t ξ² / 2)` times the initial characteristic function. This
+       avoids both the series and the semigroup theory. Mathlib supplies
+       `Real.fourierIntegral` and `ProbabilityTheory.gaussianReal`
+       (`Mathlib/Probability/Distributions/Gaussian/Real.lean:222`), and the
+       characteristic function of `gaussianReal 0 t` is the needed one. **This
+       is a self-contained point and is not part of the chain above**; state it
+       as its own item rather than letting Donsker depend on an unpaid input.
+
+  * **Identifying the limit with Brownian motion is a second step.** Mathlib
+    `master` carries `Mathlib/Probability/BrownianMotion/` (548 lines,
+    `IsPreBrownianReal` and `IsBrownianReal`), but those are predicates about
+    covariance, Gaussian processes and independent increments, and **nothing
+    there mentions a martingale problem**. The bridge "solves the martingale
+    problem for `f''/2` ⟹ `IsBrownianReal`" exists in no roadmap. It is the
+    natural consumer of the Fourier route above, the same computation giving
+    both the uniqueness and the Gaussian marginals.
 * **The times `D` must avoid the fixed discontinuities.** In
   `mpSolution_of_tendsto_cadlag`, `D` is taken to be the set of times at which
   the limit has no fixed discontinuity. On the pair
