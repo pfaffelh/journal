@@ -16440,6 +16440,89 @@ theorem integral_stoppedValue_eq (hY : Martingale Y 𝓕 P) (hprog : IsStronglyP
   simp only [hconst] at hconv
   exact tendsto_nhds_unique hconv tendsto_const_nhds
 
+/-! ### The same identity with no bound on the paths
+
+The theorem above pays for the passage to the limit with a bound on the paths over the window,
+and that bound is what makes the convergence dominated.  It is not needed: the approximating
+values are themselves conditional expectations of the **single** integrable function `Y j`, and a
+family of conditional expectations of one integrable function is uniformly integrable
+(`MeasureTheory.Integrable.uniformIntegrable_condExp`).  Uniform integrability together with the
+pointwise convergence gives the `L¹` convergence by Vitali
+(`MeasureTheory.tendsto_Lp_finite_of_tendsto_ae`), and with it the integrability of the limit
+(`MeasureTheory.UniformIntegrable.integrable_of_ae_tendsto`), which the dominated form got for
+free from the constant majorant.
+
+So the window bound disappears and **nothing takes its place**: what remains is right continuity
+of the paths, and that is used only for the pointwise convergence.  Progressivity disappears too,
+because the measurability of each approximating value now comes from the conditional expectation
+it is almost everywhere equal to and not from `stronglyMeasurable_stoppedValue_of_le`. -/
+
+/-- **The dyadic approximations converge pointwise.**  This is the limit step of
+`integral_stoppedValue_eq`, stated on its own because the unbounded form below uses it twice. -/
+theorem tendsto_stoppedValue_dyadStop
+    (hrc : ∀ (ω : Ω) (s : ℝ≥0), Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
+    {j : ℝ≥0} {ρ : Ω → ENNReal} (hρj : ∀ ω, ρ ω ≤ (j : ENNReal)) (ω : Ω) :
+    Tendsto (fun n ↦ stoppedValue Y (dyadStop j ρ n) ω) atTop (𝓝 (stoppedValue Y ρ ω)) := by
+  have hne : ρ ω ≠ ⊤ := ne_top_of_le_ne_top (by simp) (hρj ω)
+  simp only [stoppedValue, untopA_eq_toNNReal hne]
+  exact (hrc ω (ρ ω).toNNReal).comp (tendsto_dyadStop hρj ω)
+
+/-- **The dyadic approximations of a martingale at a bounded stopping time are uniformly
+integrable**, and nothing beyond the martingale property is used.
+
+Each of them is almost everywhere the conditional expectation of the *same* function `Y j`, by
+optional sampling at a stopping time of countable range, and conditional expectations of one
+integrable function for an arbitrary family of sub-σ-algebras are uniformly integrable.  This is
+the replacement for the window bound of `integral_stoppedValue_eq`. -/
+theorem uniformIntegrable_stoppedValue_dyadStop (hY : Martingale Y 𝓕 P)
+    {j : ℝ≥0} {ρ : Ω → ENNReal} (hρ : IsStoppingTime 𝓕 ρ) (hρj : ∀ ω, ρ ω ≤ (j : ENNReal)) :
+    UniformIntegrable (fun n ↦ stoppedValue Y (dyadStop j ρ n)) 1 P := by
+  have key : ∀ n : ℕ, stoppedValue Y (dyadStop j ρ n)
+      =ᵐ[P] P[Y j | (isStoppingTime_dyadStop hρ hρj n).measurableSpace] := fun n ↦
+    hY.stoppedValue_ae_eq_condExp_of_le_const_of_countable_range
+      (isStoppingTime_dyadStop hρ hρj n) (dyadStop_le j ρ n) (countable_range_dyadStop j ρ n)
+  exact UniformIntegrable.ae_eq
+    ((hY.integrable j).uniformIntegrable_condExp (fun n : ℕ ↦
+      (isStoppingTime_dyadStop hρ hρj n).measurableSpace_le_of_le (dyadStop_le j ρ n)))
+    fun n ↦ (key n).symm
+
+/-- **The value of a right continuous martingale at a bounded stopping time is integrable**, with
+no bound on the paths.  This is the statement the dominated form of `integral_stoppedValue_eq`
+obtained for free from its constant majorant, and it is what has to be supplied once the majorant
+is gone. -/
+theorem integrable_stoppedValue_of_rightContinuous (hY : Martingale Y 𝓕 P)
+    (hrc : ∀ (ω : Ω) (s : ℝ≥0), Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
+    {j : ℝ≥0} {ρ : Ω → ENNReal} (hρ : IsStoppingTime 𝓕 ρ) (hρj : ∀ ω, ρ ω ≤ (j : ENNReal)) :
+    Integrable (stoppedValue Y ρ) P :=
+  (uniformIntegrable_stoppedValue_dyadStop hY hρ hρj).integrable_of_ae_tendsto
+    (Filter.Eventually.of_forall (tendsto_stoppedValue_dyadStop hrc hρj))
+
+/-- **The expectation of a right continuous martingale at a bounded stopping time**, with no bound
+on the paths and no progressivity.
+
+Compared with `integral_stoppedValue_eq` the hypotheses `hprog` and `hbdd` are both gone; the
+proof is the same approximation with Vitali convergence in place of dominated convergence. -/
+theorem integral_stoppedValue_eq_of_rightContinuous (hY : Martingale Y 𝓕 P)
+    (hrc : ∀ (ω : Ω) (s : ℝ≥0), Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
+    {j : ℝ≥0} {ρ : Ω → ENNReal} (hρ : IsStoppingTime 𝓕 ρ) (hρj : ∀ ω, ρ ω ≤ (j : ENNReal)) :
+    ∫ ω, stoppedValue Y ρ ω ∂P = ∫ ω, Y j ω ∂P := by
+  set F : ℕ → Ω → ℝ := fun n ↦ stoppedValue Y (dyadStop j ρ n) with hF
+  have hUI : UniformIntegrable F 1 P := uniformIntegrable_stoppedValue_dyadStop hY hρ hρj
+  have hlim : ∀ᵐ ω ∂P, Tendsto (fun n ↦ F n ω) atTop (𝓝 (stoppedValue Y ρ ω)) :=
+    Filter.Eventually.of_forall (tendsto_stoppedValue_dyadStop hrc hρj)
+  have hgint : Integrable (stoppedValue Y ρ) P := hUI.integrable_of_ae_tendsto hlim
+  have hL1 : Tendsto (fun n ↦ eLpNorm (F n - stoppedValue Y ρ) 1 P) atTop (𝓝 0) :=
+    tendsto_Lp_finite_of_tendsto_ae le_rfl ENNReal.one_ne_top
+      (fun n ↦ hUI.aestronglyMeasurable n) (memLp_one_iff_integrable.2 hgint) hUI.1 hlim
+  have hconv : Tendsto (fun n ↦ ∫ ω, F n ω ∂P) atTop (𝓝 (∫ ω, stoppedValue Y ρ ω ∂P)) :=
+    tendsto_integral_of_L1' _
+      (Filter.Eventually.of_forall fun n ↦ memLp_one_iff_integrable.1 (hUI.memLp n)) hL1
+  have hconst : ∀ n, ∫ ω, F n ω ∂P = ∫ ω, Y j ω ∂P := fun n ↦
+    integral_stoppedValue_eq_of_countable_range hY (isStoppingTime_dyadStop hρ hρj n)
+      (dyadStop_le j ρ n) (countable_range_dyadStop j ρ n)
+  simp only [hconst] at hconv
+  exact tendsto_nhds_unique hconv tendsto_const_nhds
+
 /-! ### From the expectation form of optional sampling to the conditional form
 
 The expectation identity above is not what a proof at stopping times uses;
@@ -16470,17 +16553,21 @@ for *all* bounded stopping times, and the theorem is stated over any index that
 form**, over any index for which the stopped value is measurable for the
 σ-algebra of the stopping time.
 
-The bound `C` is read twice and is not a convenience: it makes `Y j` and every
-stopped value integrable under a finite measure, and integrability of both sides
-is what the characterisation of the conditional expectation by its set integrals
-asks for.  No right continuity and no martingale property enter -- both sit
-inside the hypothesis `hint`. -/
+Integrability is read twice -- of `Z j` and of every bounded stopped value -- because
+integrability of both sides is what the characterisation of the conditional expectation by its
+set integrals asks for.  It is a hypothesis and not a bound on the paths: the bounded form
+supplies it from a window bound, the right continuous form of
+`integrable_stoppedValue_of_rightContinuous` from uniform integrability, and the statement
+should not prefer one of them.  No right continuity and no martingale property enter -- both sit
+inside the hypotheses `hint` and `hstint`. -/
 theorem stoppedValue_ae_eq_condExp_of_forall_integral_eq
     {ι : Type*} [LinearOrder ι] [MeasurableSpace ι] [TopologicalSpace ι] [OrderTopology ι]
     [SecondCountableTopology ι] [BorelSpace ι] [Nonempty ι]
     {𝓖 : Filtration ι m} {P : Measure Ω} [IsFiniteMeasure P] {Z : ι → Ω → ℝ}
-    (hprog : IsStronglyProgressive 𝓖 Z) {j : ι} {C : ℝ}
-    (hbdd : ∀ s ≤ j, ∀ ω, |Z s ω| ≤ C)
+    (hprog : IsStronglyProgressive 𝓖 Z) {j : ι}
+    (hZjint : Integrable (Z j) P)
+    (hstint : ∀ ρ : Ω → WithTop ι, IsStoppingTime 𝓖 ρ → (∀ ω, ρ ω ≤ (j : WithTop ι)) →
+      Integrable (stoppedValue Z ρ) P)
     (hint : ∀ ρ : Ω → WithTop ι, IsStoppingTime 𝓖 ρ → (∀ ω, ρ ω ≤ (j : WithTop ι)) →
       ∫ ω, stoppedValue Z ρ ω ∂P = ∫ ω, Z j ω ∂P)
     {σ : Ω → WithTop ι} (hσ : IsStoppingTime 𝓖 σ) (hσj : ∀ ω, σ ω ≤ (j : WithTop ι)) :
@@ -16489,15 +16576,7 @@ theorem stoppedValue_ae_eq_condExp_of_forall_integral_eq
   have hle : hσ.measurableSpace ≤ m := hσ.measurableSpace_le_of_le hσj
   have hmeas : Measurable[hσ.measurableSpace] (stoppedValue Z σ) :=
     measurable_stoppedValue hprog hσ
-  have hbd' : ∀ ω, |stoppedValue Z σ ω| ≤ C := fun ω ↦
-    hbdd _ (WithTop.untopA_le (hσj ω)) ω
-  have hσint : Integrable (stoppedValue Z σ) P :=
-    (integrable_const C).mono' ((hmeas.mono hle le_rfl).stronglyMeasurable.aestronglyMeasurable)
-      (Eventually.of_forall fun ω ↦ by simpa [Real.norm_eq_abs] using hbd' ω)
-  have hZjint : Integrable (Z j) P :=
-    (integrable_const C).mono'
-      (((hprog.stronglyAdapted j).mono (𝓖.le j)).aestronglyMeasurable)
-      (Eventually.of_forall fun ω ↦ by simpa [Real.norm_eq_abs] using hbdd j le_rfl ω)
+  have hσint : Integrable (stoppedValue Z σ) P := hstint σ hσ hσj
   refine ae_eq_condExp_of_forall_setIntegral_eq hle hZjint
     (fun S _ _ ↦ hσint.integrableOn) ?_
     hmeas.stronglyMeasurable.aestronglyMeasurable
@@ -16524,14 +16603,7 @@ theorem stoppedValue_ae_eq_condExp_of_forall_integral_eq
       rw [huniv]
       exact (𝓖.mono hjt' _ hSj).compl
     · simp [hjt]
-  have hρmeas : Measurable[𝓖 j] (stoppedValue Z ρ) :=
-    (stronglyMeasurable_stoppedValue_of_le hprog hρst hρj).measurable
-  have hρbd : ∀ ω, |stoppedValue Z ρ ω| ≤ C := fun ω ↦
-    hbdd _ (WithTop.untopA_le (hρj ω)) ω
-  have hρint : Integrable (stoppedValue Z ρ) P :=
-    (integrable_const C).mono'
-      ((hρmeas.mono (𝓖.le j) le_rfl).stronglyMeasurable.aestronglyMeasurable)
-      (Eventually.of_forall fun ω ↦ by simpa [Real.norm_eq_abs] using hρbd ω)
+  have hρint : Integrable (stoppedValue Z ρ) P := hstint ρ hρst hρj
   have hρval : ∀ ω, stoppedValue Z ρ ω = S.piecewise (stoppedValue Z σ) (Z j) ω := by
     intro ω
     by_cases h : ω ∈ S <;> simp [stoppedValue, hρdef, Set.piecewise, h]
@@ -16550,46 +16622,49 @@ theorem stoppedValue_ae_eq_condExp_of_forall_integral_eq
   exact add_right_cancel h3
 
 /-- **Optional sampling in continuous time, conditional form**: the value of a
-bounded right continuous martingale at a bounded stopping time is the
-conditional expectation of its terminal value for the σ-algebra of that stopping
-time.  The hypotheses are those of `integral_stoppedValue_eq`, and nothing is
-added: the passage is the auxiliary stopping time described above. -/
+right continuous martingale at a bounded stopping time is the conditional
+expectation of its terminal value for the σ-algebra of that stopping time.
+
+No bound on the paths is asked for.  The two integrability inputs of
+`stoppedValue_ae_eq_condExp_of_forall_integral_eq` are the martingale property itself and
+`integrable_stoppedValue_of_rightContinuous`, and the expectation identity is
+`integral_stoppedValue_eq_of_rightContinuous`; the passage is the auxiliary stopping time
+described above. -/
 theorem stoppedValue_ae_eq_condExp (hY : Martingale Y 𝓕 P) (hprog : IsStronglyProgressive 𝓕 Y)
     (hrc : ∀ (ω : Ω) (s : ℝ≥0), Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
-    {j : ℝ≥0} {C : ℝ} (hbdd : ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C)
+    {j : ℝ≥0}
     {σ : Ω → ENNReal} (hσ : IsStoppingTime 𝓕 σ) (hσj : ∀ ω, σ ω ≤ (j : ENNReal)) :
     stoppedValue Y σ =ᵐ[P] P[Y j | hσ.measurableSpace] :=
-  stoppedValue_ae_eq_condExp_of_forall_integral_eq hprog hbdd
-    (fun _ hρ hρj ↦ integral_stoppedValue_eq hY hprog hrc hbdd hρ hρj) hσ hσj
+  stoppedValue_ae_eq_condExp_of_forall_integral_eq hprog (hY.integrable j)
+    (fun _ hρ hρj ↦ integrable_stoppedValue_of_rightContinuous hY hrc hρ hρj)
+    (fun _ hρ hρj ↦ integral_stoppedValue_eq_of_rightContinuous hY hrc hρ hρj) hσ hσj
 
 /-- **`IsOptionalSamplingFor` holds over `ℝ≥0`**, for a bounded right continuous martingale.
 
 `IsOptionalSamplingFor` is a hypothesis of `isQuasiLeftContinuous_of_isRegularizingClass` and of
 `isQuasiLeftContinuous_of_isMPSolutionFor` because over a general index the martingale property
 does not give optional sampling; this is the statement that the index `ℝ≥0` pays for it.  The
-proof is `stoppedValue_ae_eq_condExp` with the level chosen by the bound: the definition
-quantifies over a time `t` and a stopping time below it, and `hbdd` produces a constant at that
-very `t`.
+proof is `stoppedValue_ae_eq_condExp` at the time the definition quantifies over, and nothing
+else: `ENNReal` is `WithTop ℝ≥0`, so the stopping time of the definition is the stopping time of
+the theorem.
 
-The bound is the local one -- a constant per level, not one constant for all time -- which is
-what `mpFamily` supplies, and `ENNReal` is `WithTop ℝ≥0`, so the stopping time of the definition
-is the stopping time of the theorem. -/
+**No bound on the paths is asked for.**  Until the fourth run of 2026-09-20 there was a fourth
+hypothesis, a constant per level, and it was there because the expectation identity behind
+`stoppedValue_ae_eq_condExp` was proved by dominated convergence.  Vitali convergence needs no
+majorant, so the hypothesis is gone; a consumer that has the bound anyway -- `mpFamily` supplies
+one -- simply no longer has to produce it. -/
 theorem isOptionalSamplingFor_of_martingale (hY : Martingale Y 𝓕 P)
     (hprog : IsStronglyProgressive 𝓕 Y)
-    (hrc : ∀ (ω : Ω) (s : ℝ≥0), Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
-    (hbdd : ∀ j : ℝ≥0, ∃ C, ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C) :
-    IsOptionalSamplingFor Y 𝓕 P := by
-  intro t σ hσ hσt
-  obtain ⟨C, hC⟩ := hbdd t
-  exact stoppedValue_ae_eq_condExp hY hprog hrc hC hσ hσt
+    (hrc : ∀ (ω : Ω) (s : ℝ≥0), Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω))) :
+    IsOptionalSamplingFor Y 𝓕 P :=
+  fun _ _ hσ hσt ↦ stoppedValue_ae_eq_condExp hY hprog hrc hσ hσt
 
 /-- **Emptiness check for `isOptionalSamplingFor_of_martingale`.**  The zero process satisfies
-the four hypotheses, so the conclusion is not vacuous. -/
+the three hypotheses, so the conclusion is not vacuous. -/
 theorem isOptionalSamplingFor_zero :
     IsOptionalSamplingFor (fun (_ : ℝ≥0) (_ : Ω) ↦ (0 : ℝ)) 𝓕 P :=
   isOptionalSamplingFor_of_martingale (martingale_zero ℝ 𝓕 P)
     (isStronglyProgressive_const 𝓕 0) (fun _ _ ↦ tendsto_const_nhds)
-    (fun _ ↦ ⟨0, fun _ _ _ ↦ by simp⟩)
 
 /-- **`IsStronglyMeasurableAlongStoppingTimes` holds over `ℝ≥0` for a real valued progressive
 process**, and it is Mathlib's `measurable_stoppedValue` with nothing added.
@@ -16610,22 +16685,27 @@ theorem isStronglyMeasurableAlongStoppingTimes_of_isStronglyProgressive {C : ℝ
 
 /-! ### The stopped martingale theorem -/
 
-/-- **The stopped process of a martingale is a martingale**, in continuous time. -/
+/-- **The stopped process of a martingale is a martingale**, in continuous time.
+
+The hypotheses are the martingale property, progressivity and right continuity of the paths, and
+**no bound on the paths**.  Until the fourth run of 2026-09-20 there was a fourth hypothesis, a
+constant per window, and it was there because the expectation identity at a bounded stopping time
+was proved by dominated convergence against that constant.
+`integral_stoppedValue_eq_of_rightContinuous` proves it by Vitali convergence instead, so the
+bound has no consumer left here: it is replaced by the uniform integrability of the dyadic
+approximations, which is free, and by `integrable_stoppedValue_of_rightContinuous` where the
+constant majorant used to give integrability. -/
 theorem martingale_stoppedProcess (hY : Martingale Y 𝓕 P) (hprog : IsStronglyProgressive 𝓕 Y)
     (hrc : ∀ (ω : Ω) (s : ℝ≥0), Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
-    (hbdd : ∀ j : ℝ≥0, ∃ C, ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C)
     {τ : Ω → ENNReal} (hτ : IsStoppingTime 𝓕 τ) :
     Martingale (stoppedProcess Y τ) 𝓕 P := by
   have hadp := hprog.stronglyAdapted_stoppedProcess hτ
   refine ⟨hadp, fun i j hij ↦ ?_⟩
-  obtain ⟨C, hC⟩ := hbdd j
   have hSPeq : ∀ (k : ℝ≥0) (ω : Ω),
       stoppedProcess Y τ k ω = Y ((min (k : ENNReal) (τ ω)).untopA) ω := fun _ _ ↦ rfl
-  have hSPbd : ∀ (k : ℝ≥0), k ≤ j → ∀ ω, |stoppedProcess Y τ k ω| ≤ C := fun k hk ω ↦ by
-    rw [hSPeq]
-    exact hC _ ((WithTop.untopA_le (min_le_left (k : ENNReal) (τ ω))).trans hk) ω
-  have hint : ∀ (k : ℝ≥0), k ≤ j → Integrable (stoppedProcess Y τ k) P := fun k hk ↦
-    integrable_of_abs_le ((hadp k).mono (𝓕.le k)).measurable (hSPbd k hk)
+  have hint : ∀ (k : ℝ≥0), k ≤ j → Integrable (stoppedProcess Y τ k) P := fun k _ ↦
+    integrable_stoppedValue_of_rightContinuous hY hrc ((isStoppingTime_const 𝓕 k).min hτ)
+      (fun _ ↦ min_le_left _ _)
   refine (ae_eq_condExp_of_forall_setIntegral_eq (𝓕.le i) (hint j le_rfl)
     (fun S _ _ ↦ (hint i hij).integrableOn) ?_ (hadp i).aestronglyMeasurable).symm
   intro S hS _
@@ -16654,9 +16734,9 @@ theorem martingale_stoppedProcess (hY : Martingale Y 𝓕 P) (hprog : IsStrongly
     · rw [hρdef, Set.piecewise_eq_of_notMem _ _ _ hω]
       exact hij'
   have hkey : ∫ ω, stoppedValue Y ρ ω ∂P = ∫ ω, Y j ω ∂P :=
-    integral_stoppedValue_eq hY hprog hrc hC hρst hρj
+    integral_stoppedValue_eq_of_rightContinuous hY hrc hρst hρj
   have hconst : ∫ ω, Y i ω ∂P = ∫ ω, Y j ω ∂P := by
-    have h := integral_stoppedValue_eq (Y := Y) hY hprog hrc hC
+    have h := integral_stoppedValue_eq_of_rightContinuous (Y := Y) hY hrc
       (ρ := fun _ ↦ (i : ENNReal)) (isStoppingTime_const 𝓕 i) (fun _ ↦ hij')
     simpa only [show (stoppedValue Y (fun _ : Ω ↦ (i : ENNReal))) = Y i from rfl] using h
   have hvalB : ∀ ω ∈ B, stoppedValue Y ρ ω = stoppedProcess Y τ j ω := by
@@ -16669,15 +16749,9 @@ theorem martingale_stoppedProcess (hY : Martingale Y 𝓕 P) (hprog : IsStrongly
     intro ω hω
     simp only [stoppedValue, hρdef, Set.piecewise_eq_of_notMem _ _ _ hω]
     rfl
-  have hYint : ∀ (k : ℝ≥0), k ≤ j → Integrable (Y k) P := fun k hk ↦
-    integrable_of_abs_le ((hY.stronglyMeasurable k).mono (𝓕.le k)).measurable
-      (fun ω ↦ hC k hk ω)
+  have hYint : ∀ (k : ℝ≥0), k ≤ j → Integrable (Y k) P := fun k _ ↦ hY.integrable k
   have hρint : Integrable (stoppedValue Y ρ) P :=
-    integrable_of_abs_le
-      ((stronglyMeasurable_stoppedValue_of_le hprog hρst hρj).mono (𝓕.le j)).measurable
-      (fun ω ↦ by
-        show |Y ((ρ ω).untopA) ω| ≤ C
-        exact hC _ (WithTop.untopA_le (hρj ω)) ω)
+    integrable_stoppedValue_of_rightContinuous hY hrc hρst hρj
   have hsplit1 : ∫ ω in B, stoppedProcess Y τ j ω ∂P + ∫ ω in Bᶜ, Y i ω ∂P
       = ∫ ω, Y j ω ∂P := by
     rw [← hkey, ← integral_add_compl hBm hρint,
@@ -16717,22 +16791,21 @@ theorem martingale_stoppedProcess (hY : Martingale Y 𝓕 P) (hprog : IsStrongly
   rw [hsp i hij, hsp j le_rfl, hB2, hB1, setIntegral_congr_fun hA₀m hA₀eq]
 
 /-- **Emptiness check: the hypotheses are jointly satisfiable.**  The zero process is a
-martingale, is progressive, has constant -- hence right continuous -- paths and is bounded by
-`0` at every level, so the theorem is not a statement about an empty class. -/
+martingale, is progressive and has constant -- hence right continuous -- paths, so the theorem
+is not a statement about an empty class. -/
 theorem martingale_stoppedProcess_zero {τ : Ω → ENNReal} (hτ : IsStoppingTime 𝓕 τ) :
     Martingale (stoppedProcess (fun (_ : ℝ≥0) (_ : Ω) ↦ (0 : ℝ)) τ) 𝓕 P :=
   martingale_stoppedProcess (martingale_zero ℝ 𝓕 P) (isStronglyProgressive_const 𝓕 0)
-    (fun _ _ ↦ tendsto_const_nhds) (fun _ ↦ ⟨0, fun _ _ _ ↦ by simp⟩) hτ
+    (fun _ _ ↦ tendsto_const_nhds) hτ
 
 /-- **Consistency check: at `τ = ⊤` the conclusion is the hypothesis.**  A stopping time that
 never occurs must leave the process alone, and this is the instance at which an inverted `min`
 or a misread `untopA` in the bookkeeping above would show. -/
 theorem martingale_of_martingale_stoppedProcess_top (hY : Martingale Y 𝓕 P)
     (hprog : IsStronglyProgressive 𝓕 Y)
-    (hrc : ∀ (ω : Ω) (s : ℝ≥0), Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
-    (hbdd : ∀ j : ℝ≥0, ∃ C, ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C) :
+    (hrc : ∀ (ω : Ω) (s : ℝ≥0), Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω))) :
     Martingale Y 𝓕 P := by
-  have h := martingale_stoppedProcess hY hprog hrc hbdd
+  have h := martingale_stoppedProcess hY hprog hrc
     (τ := fun _ ↦ (⊤ : WithTop ℝ≥0)) (by simp [IsStoppingTime])
   rwa [stoppedProcess_const_top] at h
 
@@ -17147,9 +17220,11 @@ theorem abs_setIntegral_compensatorE_le {lam : E → ℝ} {g : E → ℝ} {D : �
 /-- **A test process of the local jump martingale problem is bounded on every bounded stretch of
 time**, by `C + 2LC·j` with `C` a bound for the test function and `L` one for the rate.
 
-This is the third hypothesis of `martingale_stoppedProcess` and the fourth of
-`isOptionalSamplingFor_of_martingale`, and it is *local* -- one constant per level, not one
-constant for all time, which is all either statement asks for and all that is true: the
+Since the fourth run of 2026-09-20 this is a hypothesis of **neither**
+`martingale_stoppedProcess` nor `isOptionalSamplingFor_of_martingale`; both passed to the limit
+by dominated convergence against this constant and now pass to it by Vitali convergence.  It is
+kept because it is true and because it is the statement a window argument wants, and it is
+*local* -- one constant per level, not one constant for all time, which is all that is true: the
 compensator grows with the window.
 
 Nothing is assumed about the state space.  The two positivity facts the estimate needs, `0 ≤ L`
@@ -17192,12 +17267,13 @@ theorem is applied to.  Applied to the truncated rate `truncRate lam n`, whose h
 (`measurableSet_lt_rateTime_truncRate`), it gives the martingale of the `n`-th level of the local
 problem.
 
-The three hypotheses of `martingale_stoppedProcess` are exactly the three statements of this
-section: `isStronglyProgressive_mpFamily_jumpProcessE`,
-`tendsto_nhdsGE_mpFamily_jumpProcessE` and the window bound
-`abs_setIntegral_compensatorE_le`.  Uniform integrability does not occur -- the window bound is
-`C + 2LC·j`, a constant, so the passage to the limit inside `martingale_stoppedProcess` is
-dominated convergence with a constant majorant. -/
+The two hypotheses `martingale_stoppedProcess` asks of a process are two statements of this
+section: `isStronglyProgressive_mpFamily_jumpProcessE` and
+`tendsto_nhdsGE_mpFamily_jumpProcessE`.  The window bound
+`exists_bound_mpFamily_jumpProcessE` is **not** among them since the fourth run of 2026-09-20 --
+the passage to the limit inside `martingale_stoppedProcess` is Vitali convergence and needs no
+majorant -- and the bound is kept for its own sake, as the statement that the test process is
+bounded by `C + 2LC·j` over a window. -/
 theorem martingale_stoppedProcess_mpFamily_jumpProcessE {lam : E → ℝ} (hlam : Measurable lam)
     {L : ℝ} (hlam0 : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L)
     (nu : Measure E) [IsProbabilityMeasure nu]
@@ -17210,19 +17286,18 @@ theorem martingale_stoppedProcess_mpFamily_jumpProcessE {lam : E → ℝ} (hlam 
   have hmart := jumpProcessE_isMPSolution hlam hlam0 hL mu nu Y hY
   have hprog := isStronglyProgressive_mpFamily_jumpProcessE hlam (fun x ↦ (hlam0 x).le) hL hY
   have hrcY := tendsto_nhdsGE_mpFamily_jumpProcessE hlam (fun x ↦ (hlam0 x).le) hL hY
-  exact martingale_stoppedProcess hmart hprog hrcY
-    (exists_bound_mpFamily_jumpProcessE (fun x ↦ (hlam0 x).le) hL hY) hτ
+  exact martingale_stoppedProcess hmart hprog hrcY hτ
 
 /-- **Optional sampling holds for the test processes of the local jump martingale problem.**  The
 hypothesis `hOS` of `isQuasiLeftContinuous_of_isMPSolutionFor` on the data of Milestone 4, and the
 place where the concrete index `ℝ≥0` pays for what a general index does not give.
 
-The four inputs of `isOptionalSamplingFor_of_martingale` are the four statements this section
+The three inputs of `isOptionalSamplingFor_of_martingale` are three statements this section
 produces: the martingale property is `jumpProcessE_isMPSolution`, the progressivity is
-`isStronglyProgressive_mpFamily_jumpProcessE`, the right continuity of the paths is
-`tendsto_nhdsGE_mpFamily_jumpProcessE`, and the local bound is
-`exists_bound_mpFamily_jumpProcessE`.  They are the same four that
-`martingale_stoppedProcess_mpFamily_jumpProcessE` spends, which is why this costs no hypothesis
+`isStronglyProgressive_mpFamily_jumpProcessE`, and the right continuity of the paths is
+`tendsto_nhdsGE_mpFamily_jumpProcessE`.  They are three of the four that
+`martingale_stoppedProcess_mpFamily_jumpProcessE` spends -- the local bound
+`exists_bound_mpFamily_jumpProcessE` is not among them -- which is why this costs no hypothesis
 beyond the ones already carried. -/
 theorem isOptionalSamplingFor_mpFamily_jumpProcessE {lam : E → ℝ} (hlam : Measurable lam)
     {L : ℝ} (hlam0 : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L)
@@ -17234,7 +17309,6 @@ theorem isOptionalSamplingFor_mpFamily_jumpProcessE {lam : E → ℝ} (hlam : Me
   isOptionalSamplingFor_of_martingale (jumpProcessE_isMPSolution hlam hlam0 hL mu nu Y hY)
     (isStronglyProgressive_mpFamily_jumpProcessE hlam (fun x ↦ (hlam0 x).le) hL hY)
     (tendsto_nhdsGE_mpFamily_jumpProcessE hlam (fun x ↦ (hlam0 x).le) hL hY)
-    (exists_bound_mpFamily_jumpProcessE (fun x ↦ (hlam0 x).le) hL hY)
 
 /-- **The hitting time of the running supremum is a stopping time of the *truncated*
 filtration** as well as of the local one.  `isStoppingTime_rateTime` says it for
@@ -18329,7 +18403,7 @@ variable {mu : Kernel E E} [IsMarkovKernel mu]
 /-- **The stopped martingale theorem at a rate with zeros.**  Word for word
 `martingale_stoppedProcess_mpFamily_jumpProcessE`, with the positivity of the rate replaced by its
 nonnegativity together with the normalisation of the jump kernel at the absorbing states; the
-positivity was spent only in `jumpProcessE_isMPSolution`, and the three inputs of
+positivity was spent only in `jumpProcessE_isMPSolution`, and the two inputs of
 `martingale_stoppedProcess` never asked for more than `0 ≤ lam`. -/
 theorem martingale_stoppedProcess_mpFamily_jumpProcessE_of_nonneg [MeasurableEq E]
     {lam : E → ℝ} (hlam : Measurable lam) {L : ℝ} (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
@@ -18344,33 +18418,7 @@ theorem martingale_stoppedProcess_mpFamily_jumpProcessE_of_nonneg [MeasurableEq 
   have hmart := jumpProcessE_isMPSolution_of_nonneg hlam hlam0 hL mu habs nu Y hY
   have hprog := isStronglyProgressive_mpFamily_jumpProcessE hlam hlam0 hL hY
   have hrcY := tendsto_nhdsGE_mpFamily_jumpProcessE hlam hlam0 hL hY
-  have hnem : Nonempty E := by
-    by_contra hcon
-    rw [not_nonempty_iff] at hcon
-    have h0 : nu Set.univ = 0 := by rw [Set.univ_eq_empty_iff.2 hcon, measure_empty]
-    rw [measure_univ] at h0
-    exact one_ne_zero h0
-  obtain ⟨x0⟩ := hnem
-  have hL0 : (0 : ℝ) ≤ L := (hlam0 x0).trans (hL x0)
-  obtain ⟨p, ⟨hf, ⟨C, hC⟩, hp2⟩, hYeq⟩ := hY
-  have hC0 : (0 : ℝ) ≤ C := (abs_nonneg _).trans (hC x0)
-  have hgb : ∀ x, |p.2 x| ≤ 2 * L * C := by
-    rw [hp2]; exact fun x ↦ abs_jumpApply_le hlam0 hL hC x
-  have hcoef : (0 : ℝ) ≤ 2 * L * C := mul_nonneg (mul_nonneg (by norm_num) hL0) hC0
-  have hbdd : ∀ j : ℝ≥0, ∃ C', ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C' := by
-    intro j
-    refine ⟨C + 2 * L * C * (j : ℝ), fun s hs ω ↦ ?_⟩
-    have hb := abs_setIntegral_compensatorE_le (lam := lam) hgb s ω
-    have h1 := hC (jumpProcessE lam (s : ℝ) ω)
-    have h2 := abs_sub (p.1 (jumpProcessE lam (s : ℝ) ω))
-      (∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ s,
-        p.2 (jumpProcessE lam (u : ℝ) ω) ∂lebesgueClock.q)
-    have hsj : ((s : ℝ)) ≤ (j : ℝ) := by exact_mod_cast hs
-    have hmul : 2 * L * C * (s : ℝ) ≤ 2 * L * C * (j : ℝ) :=
-      mul_le_mul_of_nonneg_left hsj hcoef
-    rw [hYeq s ω]
-    linarith
-  exact martingale_stoppedProcess hmart hprog hrcY hbdd hτ
+  exact martingale_stoppedProcess hmart hprog hrcY hτ
 
 /-- **The truncated rate has the same zeros as the rate**, from the level `1` on: the truncation
 is a minimum with a positive number. -/
@@ -23415,24 +23463,30 @@ end PathRightContinuous
 
 /-! ### The window bound, and where the Hawkes assembly stands
 
-`martingale_stoppedProcess` asks for three things, and the two above are the first two.  The third
-is `hbdd : ∀ j, ∃ C, ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C` -- **one constant that works at every sample
-point**, and it is what replaces uniform integrability in that theorem: the passage to the limit
-inside it is dominated convergence with a constant majorant.
+`martingale_stoppedProcess` asked for three things until the fourth run of 2026-09-20, and the
+third was `hbdd : ∀ j, ∃ C, ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C` -- **one constant that works at every
+sample point** -- because the passage to the limit inside it was dominated convergence with a
+constant majorant.
 
-`bdd_mpFamilyF_of_bdd` supplies it from a bound on the compensating integrand, and for the Hawkes
-process **that bound does not exist**: `jumpApplyF` carries the rate itself, and
+For the Hawkes process **that bound does not exist**: `jumpApplyF` carries the rate itself, and
 `∫₀ᵗ (ν + ∑_{T k < u} φ (u − T k)) du` is unbounded in the sample point at every fixed `t`, however
 small `t` is -- a sample point whose first jumps are early and crowded has a large window integral.
 No hypothesis on `φ` repairs this; it is not the non explosion but the unboundedness of the rate.
+That is why the section below builds the bound only under a bound on the compensating integrand
+(`bdd_mpFamilyF_of_bdd`), which the Hawkes data do not satisfy.
 
-So the third input is not to be obtained in this shape, and the way out is the one the state
-dependent case took at exactly this point: **truncate the rate and localize**.  There
-`jumpProcessE_isMPSolution` is proved under `lam ≤ L`, `truncRate lam n` makes that hypothesis true
-at every level, `rateTime lam n` is the localizing sequence, and
+**This obstruction is gone, and it is gone at the source.**  The passage to the limit is Vitali
+convergence, whose input is the uniform integrability of conditional expectations of the single
+function `Y j` (`uniformIntegrable_stoppedValue_dyadStop`), and that holds for every martingale.
+`martingale_stoppedProcess` therefore asks the Hawkes test process for progressivity and right
+continuity and for nothing else.  The bounds of this section keep their own value -- they say
+what they say, uniformly in the sample point -- but they are no longer the thing that stands
+between the Hawkes assembly and the stopped martingale theorem.
+
+The localization is still wanted, and for a different reason: `jumpProcessE_isMPSolution` is
+proved under `lam ≤ L`, `truncRate lam n` makes that hypothesis true at every level, and
 `stoppedProcess_mpFamily_truncRate_eq` identifies the stopped test processes of the two problems.
-The path dependent counterpart of `truncRate` and of `rateTime` is what the assembly needs, and it
-is the next item of this section. -/
+The path dependent counterpart of `truncRate` and of `rateTime` is what the assembly needs. -/
 
 section PathWindowBound
 
@@ -23454,9 +23508,10 @@ theorem abs_setIntegral_compensatorF_le {Ω : Type*} {W : ℝ → Ω → ℝ} {D
     show ((⊥ : ℝ≥0) : ℝ) = 0 from rfl, sub_zero,
     ENNReal.toReal_ofReal (NNReal.coe_nonneg t)] at hle
 
-/-- **The third input of `martingale_stoppedProcess` for a path dependent test process**: at a
-**uniformly** bounded compensating integrand the test process is bounded by `C + D · j` on every
-time window `[0, j]`, uniformly in the sample point.
+/-- **A window bound for a path dependent test process**: at a **uniformly** bounded compensating
+integrand the test process is bounded by `C + D · j` on every time window `[0, j]`, uniformly in
+the sample point.  This was the third input of `martingale_stoppedProcess` until the fourth run of
+2026-09-20, and that theorem no longer asks for it.
 
 The hypothesis is a bound in `(u, ω)` together, and that is where the Hawkes case fails; see the
 paragraph above.  The statement is stated all the same, because it is what the *truncated* path
@@ -23584,7 +23639,7 @@ theorem cumulativeRateF_truncRateF_of_le (h : t ≤ rateInverse Λ ω a) :
   rw [cumulativeRateF_truncRateF, min_eq_left h]
 
 /-- **The cumulated mass of the truncated rate never exceeds the level**, at every time and every
-sample point.  This is the statement the window bound of `martingale_stoppedProcess` needs, and it
+sample point.  This is the statement the window bound above needs, and it
 is uniform in the time -- the truncated problem carries no more mass after the hitting time,
 whereas the state dependent cap keeps accumulating at rate `n`. -/
 theorem cumulativeRateF_truncRateF_le
@@ -23745,8 +23800,8 @@ theorem abs_setIntegral_compensatorF_le_of_cumulated {W : ℝ → Ω → ℝ} {D
   rw [integral_const_mul]
   exact mul_le_mul_of_nonneg_left (hB (t : ℝ)) hD
 
-/-- **The third input of `martingale_stoppedProcess` for a path dependent test process, from a
-bound on the mass.**  The counterpart of `bdd_mpFamilyF_of_bdd` at a compensating integrand
+/-- **A window bound for a path dependent test process, from a bound on the mass.**
+The counterpart of `bdd_mpFamilyF_of_bdd` at a compensating integrand
 dominated by the rate: the test process is bounded by `C + D · B` on **every** time window, not
 only on `[0, j]` with a constant that grows with `j`.
 

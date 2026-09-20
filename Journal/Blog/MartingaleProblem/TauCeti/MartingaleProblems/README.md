@@ -8095,6 +8095,45 @@ and 11 use them.
   `Filtration ℕ` and real valued processes, and `Locally` is never instantiated
   at a martingale. The proof is the first item applied at the bounded stopping
   times `σ ⊓ τ`, and the same argument gives the submartingale form.
+
+  Over the index `ℝ≥0` this is **proved, 2026-09-20**, as
+  `martingale_stoppedProcess`: for a progressive right continuous martingale and
+  any stopping time the stopped process is a martingale. Three things about it
+  are worth saying here because none of them is visible from the statement.
+
+  **It carries no bound on the paths.** Until the fourth run of that day it did,
+  one constant per time window, because the expectation identity at a bounded
+  stopping time was reached by dominated convergence against that constant. The
+  bound is gone and nothing replaces it. The dyadic approximations of the stopped
+  value are, each of them, the conditional expectation of the **one** function
+  `Y j` for the σ-algebra of the approximating time
+  (`uniformIntegrable_stoppedValue_dyadStop`, from Mathlib's
+  `MeasureTheory.Integrable.uniformIntegrable_condExp`), so the family is
+  uniformly integrable for every martingale and Vitali convergence
+  (`MeasureTheory.tendsto_Lp_finite_of_tendsto_ae`) does what dominated
+  convergence did. That is the classical hypothesis of the theorem, and here it
+  costs nothing because it is not assumed but derived.
+
+  **Integrability of the stopped value is then a theorem and not a by-product**,
+  `integrable_stoppedValue_of_rightContinuous`; the constant majorant used to
+  give it for free.
+
+  **Right continuity is what remains**, and it is used at one place only, the
+  pointwise convergence of the approximations. Progressivity is used for the
+  adaptedness of the stopped process and for the measurability of the stopped
+  value for the σ-algebra of the stopping time, and nowhere else.
+
+  What the `ℝ≥0` proof does use and a general `ι` does not have is the dyadic
+  approximation of the stopping time from above. The replacement over an
+  arbitrary `ι` is an increasing sequence of finite subsets of `D` exhausting `D`
+  and the first element of the `n`-th of them above the time; this is a stopping
+  time of finite range, it decreases to the original when `D` is order dense, and
+  Mathlib's countable range optional sampling
+  (`Martingale.stoppedValue_ae_eq_condExp_of_le_const_of_countable_range`) is
+  stated over an arbitrary `[LinearOrder ι] [OrderTopology ι]
+  [FirstCountableTopology ι]`, so it applies there unchanged. Order density of
+  `D` is an assumption the `ℝ≥0` form does not need to state and the general form
+  does.
 * Doob's inequalities in continuous time. The supremum
   `fun ω ↦ ⨆ t ∈ Set.Iic T, ‖Y t ω‖` is measurable because right continuity
   makes it the supremum over `Set.Iic T ∩ D`; that reduction is a lemma of its

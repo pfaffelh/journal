@@ -45777,3 +45777,185 @@ Grenzübergang zu einer dominierten Konvergenz mit konstanter Majorante.
 3. **Die zweite Hälfte von Vorschlag 2 des Vorvorvorlaufs bleibt stehen** — die
    gleichmäßige Fassung von `CompactContainment` an einer nichttrivialen Folge
    von Sprungprozessen vorführen. Sie ist von diesem Lauf unberührt.
+
+### 2026-09-20, vierter Lauf des Tages — Vorschlag 2 steht, und er ist mehr geworden als bestellt: die gleichgradige Integrierbarkeit, die den gestoppten Martingalsatz von seiner Fensterschranke befreien sollte, ist **geschenkt** — sie ist die der bedingten Erwartungen *einer* Funktion —, und damit fällt die Schranke nicht nur aus diesem Satz, sondern aus der ganzen Kette unter ihm, bis hinunter zu der Stelle, an der die Hawkes-Montage seit jeher hängt
+
+**Bearbeitet:** Vorschlag 2 des Vorlaufs. Vorschlag 1 (die 48 qualifizierten
+Namen) ist **nicht** angefaßt und bleibt stehen; Vorschlag 3 ebenso.
+
+Vier neue Deklarationen in `MartingaleProblems/Suggested.lean`, **sieben
+Deklarationen mit abgeschwächten Voraussetzungen**, sechs berichtigte
+Doc-Kommentare, ein neuer Absatz in Meilenstein 9. Die Warnungszahlen sind
+unverändert (18 / 35 / 106).
+
+#### Die Vorfrage des Vorlaufs, und die Antwort ist zweiteilig
+
+Der Vorlauf hatte aufgegeben, **vor** dem Beweis zu klären, ob der Index von
+`ℝ≥0` auf beliebiges `ι` gehoben werden kann, ohne die dyadische Approximation
+der Stoppzeit zu verlieren. Die Antwort:
+
+> **Die dyadische Approximation geht über beliebigem `ι` verloren, und sie wird
+> nicht gebraucht.** Was gebraucht wird, ist *irgendeine* Folge von Stoppzeiten
+> mit abzählbarem Wertebereich, die von oben gegen `τ` fällt. Über `ι` mit
+> abzählbarem dichten `D` ist das: eine aufsteigende Folge endlicher Teilmengen
+> `D_n ⊆ D` mit `⋃ D_n = D`, und `τ_n ω =` das kleinste Element von `D_n`
+> oberhalb `τ ω`. Das ist eine Stoppzeit **endlichen** Wertebereichs, und sie
+> fällt gegen `τ`, sobald `D` **ordnungsdicht** ist.
+
+Mathlibs Eingabe dafür,
+`Martingale.stoppedValue_ae_eq_condExp_of_le_const_of_countable_range`
+(`Probability/Martingale/OptionalSampling.lean:90`), steht über
+`[LinearOrder ι] [TopologicalSpace ι] [OrderTopology ι] [FirstCountableTopology ι]`
+und verlangt vom Wertebereich nur Abzählbarkeit — sie greift dort unverändert.
+Der Preis der allgemeinen Fassung ist also **eine Voraussetzung, die die
+`ℝ≥0`-Fassung nicht aussprechen muß**: die Ordnungsdichtheit von `D`. Das steht
+so in Meilenstein 9.
+
+**Der Lauf hat die allgemeine Fassung trotzdem nicht gebaut**, und der Grund ist
+der eigentliche Befund: beim Nachsehen, wo die Fensterschranke im `ℝ≥0`-Beweis
+verbraucht wird, stellte sich heraus, daß sie sich ersatzlos streichen läßt. Das
+ist der billigere und der weiter reichende Eingriff, und er war zuerst zu tun.
+
+#### Der Befund: die gleichgradige Integrierbarkeit ist keine Voraussetzung, sondern eine Rechnung
+
+Der Vorlauf hatte angesagt, an die Stelle der gleichmäßigen Fensterschranke trete
+die gleichgradige Integrierbarkeit, **zu holen** aus
+`Martingale.measure_iSup_norm_le` und `Martingale.ae_biSup_enorm_lt_top`, den
+beiden Sätzen des Vorlaufs. Das ist der klassische Weg, und er wird nicht
+gebraucht. Keiner der beiden Sätze kommt im Beweis vor.
+
+> Die dyadischen Näherungen `stoppedValue Y (dyadStop j ρ n)` sind, jede von
+> ihnen, fast sicher die bedingte Erwartung **derselben einen** Funktion `Y j` —
+> für die σ-Algebra der jeweiligen Näherungszeit. Das ist genau das, was
+> `stoppedValue_ae_eq_condExp_of_le_const_of_countable_range` sagt, und es steht
+> im bisherigen Beweis schon da: er benutzt es, um `∫ F n = ∫ Y j` zu bekommen.
+> Und bedingte Erwartungen **einer** integrierbaren Funktion für eine beliebige
+> Familie von Unter-σ-Algebren sind gleichgradig integrierbar, das ist
+> `MeasureTheory.Integrable.uniformIntegrable_condExp`
+> (`MeasureTheory/Function/ConditionalExpectation/Real.lean:304`).
+
+Also hängt `uniformIntegrable_stoppedValue_dyadStop` an nichts als der
+Martingaleigenschaft. Der Rest ist Bibliothek:
+`MeasureTheory.tendsto_Lp_finite_of_tendsto_ae` (Vitali,
+`UniformIntegrable.lean:540`) macht aus punktweiser Konvergenz die
+`L¹`-Konvergenz, `MeasureTheory.UniformIntegrable.integrable_of_ae_tendsto`
+(`ibid.:1006`) gibt die Integrierbarkeit des Grenzwerts, die der dominierte Weg
+von seiner konstanten Majorante geschenkt bekam, und
+`MeasureTheory.tendsto_integral_of_L1'` (`Integral/Bochner/Basic.lean:387`)
+zieht die Integrale nach.
+
+**Was daraus folgt, ist nicht eine Aussage, sondern eine Kette.** Die
+Fensterschranke war Voraussetzung von
+
+* `integral_stoppedValue_eq` → daneben steht jetzt
+  `integral_stoppedValue_eq_of_rightContinuous` (neu, **ohne** Schranke und
+  **ohne** `IsStronglyProgressive`: die Meßbarkeit der Näherungen kommt von der
+  bedingten Erwartung, der sie f.s. gleichen),
+* `stoppedValue_ae_eq_condExp_of_forall_integral_eq` → die Schranke ist durch
+  **zwei Integrierbarkeitsvoraussetzungen** ersetzt; das ist die schwächere
+  Bedingung und die ehrlichere, denn gebraucht wurde die Schranke dort nur, um
+  sie herzustellen,
+* `stoppedValue_ae_eq_condExp`, `isOptionalSamplingFor_of_martingale`,
+  `martingale_stoppedProcess`, `martingale_of_martingale_stoppedProcess_top` →
+  in allen vieren **ersatzlos gestrichen**,
+* und in den Verbrauchern `isOptionalSamplingFor_mpFamily_jumpProcessE`,
+  `martingale_stoppedProcess_mpFamily_jumpProcessE` und
+  `martingale_stoppedProcess_mpFamily_jumpProcessE_of_nonneg` entfällt damit die
+  Pflicht, sie zu liefern. Im letzten fiel dabei eine zwanzigzeilige Herleitung
+  der Schranke ganz weg.
+
+`martingale_stoppedProcess` verlangt damit von einem Prozeß **zwei** Dinge:
+`IsStronglyProgressive` und Rechtsstetigkeit der Pfade. Die Rechtsstetigkeit
+wird an **einer** Stelle gelesen, der punktweisen Konvergenz der Näherungen; die
+Progressivität an zweien, der Adaptiertheit des gestoppten Prozesses und der
+Meßbarkeit des gestoppten Wertes für die σ-Algebra der Stoppzeit.
+
+#### Und damit fällt eine Blockade, die seit dem Anfang von Teil C dasteht
+
+Der Abschnitt „The window bound, and where the Hawkes assembly stands" in
+`Suggested.lean` hielt fest, `martingale_stoppedProcess` verlange drittens
+`hbdd`, und **für die Hawkes-Daten gebe es diese Schranke nicht**: `jumpApplyF`
+trägt die Rate selbst, und `∫₀ᵗ (ν + ∑ φ (u − T k)) du` ist zu **jedem** festen
+`t` unbeschränkt im Stichprobenpunkt, weil ein Punkt mit frühen und dichten
+ersten Sprüngen ein großes Fensterintegral hat. Der Abschnitt schloß: „So the
+third input is not to be obtained in this shape."
+
+Diese Eingabe wird jetzt nicht mehr verlangt. Der Abschnitt ist entsprechend
+umgeschrieben, und die beiden Fensterschranken darunter (`bdd_mpFamilyF_of_bdd`
+und die Fassung aus einer Massenschranke) bleiben als das stehen, was sie sagen,
+aber nicht mehr als das, was zwischen der Hawkes-Montage und dem gestoppten
+Martingalsatz steht.
+
+**Und hier ist zu sagen, was damit *nicht* gezeigt ist**, sonst liest sich der
+Befund größer, als er ist. Die Lokalisierung über `truncRate` bleibt gewollt,
+und aus einem anderen Grund: `jumpProcessE_isMPSolution` ist unter `lam ≤ L`
+bewiesen, und *diese* Schranke ist von der Fensterschranke verschieden und fällt
+nicht mit ihr. Gefallen ist eine von mehreren Hürden, und zwar die, die der
+Abschnitt als in dieser Gestalt unerreichbar benannt hatte.
+
+#### Geprüft
+
+* `scripts/check_master.py`: rc 0, **0 Fehler**, 0 `sorry`, 0 veraltet,
+  Warnungen 18 / 35 / 106 — **unverändert** gegenüber dem Vorlauf. Mathlib
+  `94ef6b89544e58e90f119da869f3fb48d1da0f4c` (2026-09-18), Lean 4.35.0-rc2.
+* `scripts/check_axioms_master.py` auf alle vier neuen und auf die drei
+  abgeschwächten Kernaussagen (`stoppedValue_ae_eq_condExp`,
+  `isOptionalSamplingFor_of_martingale`, `martingale_stoppedProcess`):
+  `propext`, `Classical.choice`, `Quot.sound`, ohne Ausnahme.
+* Neu benutzte Mathlib-Namen, am Quelltext von `upstream/master` belegt:
+  `MeasureTheory.Integrable.uniformIntegrable_condExp`
+  (`MeasureTheory/Function/ConditionalExpectation/Real.lean:304`),
+  `MeasureTheory.tendsto_Lp_finite_of_tendsto_ae`
+  (`MeasureTheory/Function/UniformIntegrable.lean:540`),
+  `MeasureTheory.UniformIntegrable.ae_eq` (`ibid.:755`),
+  `MeasureTheory.UniformIntegrable.integrable_of_ae_tendsto` (`ibid.:1006`),
+  `MeasureTheory.UniformIntegrable.memLp` (`ibid.:94`),
+  `MeasureTheory.UniformIntegrable.aestronglyMeasurable` (`ibid.:99`),
+  `MeasureTheory.tendsto_integral_of_L1'`
+  (`MeasureTheory/Integral/Bochner/Basic.lean:387`),
+  `MeasureTheory.Martingale.integrable` (`Probability/Martingale/Basic.lean:97`),
+  `ProbabilityTheory.IsStoppingTime.min` (`Probability/Process/Stopping.lean:360`).
+* **Der Zeilensaldo ist da negativ, wo er es sein soll**: 189 Zeilen hinzu, 134
+  fort, und von den 189 sind 39 Roadmap-Text und der größere Teil des Restes
+  Doc-Kommentar. Der Beweisteil ist kürzer geworden.
+
+#### Eingetragen
+
+* `MartingaleProblems/Suggested.lean`: der Abschnitt „The same identity with no
+  bound on the paths" mit `tendsto_stoppedValue_dyadStop`,
+  `uniformIntegrable_stoppedValue_dyadStop`,
+  `integrable_stoppedValue_of_rightContinuous` und
+  `integral_stoppedValue_eq_of_rightContinuous`; die abgeschwächten Signaturen;
+  sechs berichtigte Doc-Kommentare, darunter der Abschnitt zur Hawkes-Montage.
+* `MartingaleProblems/README.md`: Meilenstein 9, der Absatz zum gestoppten
+  Martingalsatz über `ℝ≥0` und zur Frage des allgemeinen Index.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die 48 qualifizierten Namen aus `own_names.md` durchgehen** — Vorschlag 1
+   des Vorlaufs, unberührt geblieben und jetzt mit einer Zeile weniger: die drei
+   Zeilen zum Stoppen sind zur Hälfte eingelöst, denn `martingale_stoppedProcess`
+   deckt die Sache von `Martingale.stoppedProcess_of_rightContinuous` über `ℝ≥0`
+   ab und der Meilenstein sagt das jetzt. Offen bleiben die `IsStable`-Verpackung
+   und der allgemeine Index. Schätzung: ein Lauf.
+
+2. **`isStable_martingale_rightContinuous` über `ℝ≥0`**, die Verpackung von
+   `martingale_stoppedProcess` als `ProbabilityTheory.IsStable`. Sie ist jetzt
+   zum ersten Mal ohne Kunstgriff formulierbar: die stabile Eigenschaft ist die
+   Konjunktion „Martingal **und** progressiv **und** rechtsstetige Pfade", und
+   bis zu diesem Lauf hätte die Fensterschranke als vierter Konjunkt mitgeführt
+   werden müssen — eine Eigenschaft, die unter Stoppen zwar erhalten bleibt, die
+   Konjunktion aber künstlich macht. Der Ertrag steht in Meilenstein 9
+   ausgeschrieben: `ProbabilityTheory.IsStable.locally` gibt dann ohne weiteres,
+   daß ein gestopptes lokales Martingal ein lokales Martingal ist, und
+   `IsLocalMPSolution` von Meilenstein 2 ist unter Stoppen erhalten, **ohne** daß
+   eine lokalisierende Folge von Hand gebaut wird. Zu prüfen ist vorher, ob
+   `IsStable` den Indikator `{ω | ⊥ < τ ω}` in der Gestalt verlangt, die
+   `martingale_indicator_bot` liefert. Schätzung: ein halber bis ein Lauf.
+
+3. **Erst danach die allgemeine Fassung über beliebigem `ι`**, mit der
+   Ordnungsdichtheit von `D` als benannter Voraussetzung und der endlichen
+   Approximation aus `D_n` an der Stelle von `dyadStop`. Sie ist jetzt eine
+   Übersetzung und keine Erschließung mehr: die vier Schritte des Beweises
+   (Approximation, gleichgradige Integrierbarkeit, Vitali, Hilfsstoppzeit)
+   stehen, und keiner von ihnen außer dem ersten benutzt die reelle Struktur.
