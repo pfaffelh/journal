@@ -43975,3 +43975,248 @@ theorem lintegral_ofReal_dist_le_sqrt_of_biSup_le {ι : Type*} {W : Set ι}
     (le_trans (ofReal_integral_sq_sub_le ha hb hε hε' hVb hIV2 hIY2 hIVc hIYc) hS)
 
 end SquareAtProcess
+
+/-! ### The horizon probability
+
+`mul_measure_setOf_lt_modulusBased_le_lintegral_dist` leaves two quantities, the `N` increments
+over the `δ`-capped cells and the **horizon** probability `μ {ω | oscHitSeq X ε N ω < u}`, and
+the statements here are the second one.  They are what makes the count `N` a free parameter
+instead of a function of `δ`, and that is what makes the item converge.
+
+**Why the free `N` matters, and it is a computation and not a preference.** Under
+`hN : u ≤ N • δ` of `measure_setOf_lt_modulusBased_le_gap` the horizon summand disappears into
+the gap sum, at the price `N ≈ u / δ`.  Each gap summand is at most
+`ENNReal.ofReal √(S.toReal)` with `S = O(ENNReal.ofReal δ ^ (1 - 1/q) * K)`, by
+`lintegral_ofReal_dist_le_sqrt_of_biSup_le` and
+`IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le`, so the sum is
+`O(δ ^ ((1 - 1/q)/2 - 1))` and the exponent is negative for every `q ∈ (1, ∞]`: the bound
+diverges as `δ → 0`.  With `N` free the quantifiers stand in the classical order, `N` first and
+`δ` afterwards, because **the horizon summand does not mention `δ`**.
+
+**And the horizon is of the shape this milestone's square identity speaks about**, which is the
+content of these statements: below the horizon every step of the recursion is a genuine
+displacement by `ε`, and the cells it happens in are not `δ`-capped but **consecutive** --
+`min (oscHitSeq X ε (k+1) ω) u` is literally the left endpoint of the next cell.  A sum over
+consecutive cells of compensator increments is bounded by the increment over the whole of
+`[⊥, u]`, hence by `u ^ (1 - 1/q) * K`, and it does not grow with `N`.  Dividing by the `N` on
+the left gives a horizon bound `O(1/N)` whose constants are those of the class `𝓐 n` and not of
+its individual member, which is the uniformity tightness asks for.
+
+**Markov is applied to the square and not to the distance**, and that is the whole reason the
+sum stays bounded.  Over the first power each summand would carry a square root by
+Cauchy--Schwarz and the sum would be `O(√N)`; over the square the summands are the compensator
+increments themselves, and only *those* telescope.
+
+**Almost nothing here is new work.** The inclusion is `le_dist_stoppedValue_oscHitSeq`, the
+stopping times are `isStoppingTime_oscHitSeqCap` at two consecutive stages, and the counting
+step is `monotone_oscHitSeq`.  What had to be noticed is that the uncapped cell asks for
+*neither* the addition on the index *nor* `IsStoppingTime.add_const_of_orderedSub`, so this
+block carries none of the algebraic hypotheses the gap block carries.
+-/
+
+namespace MeasureTheory
+
+variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
+variable {ι : Type*} [ConditionallyCompleteLinearOrder ι] [OrderBot ι]
+  [TopologicalSpace ι] [OrderTopology ι] [NoMaxOrder ι] [Nonempty ι]
+  [MeasurableSpace ι] [SecondCountableTopology ι] [BorelSpace ι]
+  [DenselyOrdered ι] [FirstCountableTopology ι]
+variable {E : Type*} [MetricSpace E] [MeasurableSpace E] [BorelSpace E]
+  [SecondCountableTopology E]
+
+omit [NoMaxOrder ι] [MeasurableSpace ι] [SecondCountableTopology ι] [BorelSpace ι]
+  [DenselyOrdered ι] [FirstCountableTopology ι] [MeasurableSpace E] [BorelSpace E]
+  [SecondCountableTopology E] in
+/-- **Below the horizon the recursion has really moved**, which is the horizon counterpart of
+`setOf_oscHitSeq_gap_subset_dist`:
+
+```
+{ω | τ (k+1) ω < u} ⊆ {ω | ε ≤ dist (stoppedValue X (min (τ (k+1)) u) ω)
+                                    (stoppedValue X (min (τ k) u) ω)}.
+```
+
+**It is cheaper than the gap inclusion in exactly one way, and the way is the point.**  There
+the right hand time is `min (τ (k+1)) (min (τ k) u + δ)` and the `δ` has to be carried through
+the minimum; here it is `min (τ (k+1)) u`, which is the left endpoint of the *next* cell, so
+the cells of this inclusion are **consecutive** and a sum over them telescopes.  That is what
+makes the horizon estimable at all, and it is why this block asks for no addition on the index.
+
+Both minima are attained on the left: `τ (k+1) ω < u` by hypothesis and `τ k ω ≤ τ (k+1) ω` by
+`oscHitSeq_le_succ`.  The finiteness the standing rule asks of an `sInf`-totalised function is
+supplied by the horizon, as everywhere in this chain.  Right continuity of the paths is what
+`le_dist_stoppedValue_oscHitSeq` spends, and `0 < ε` is not used. -/
+theorem setOf_oscHitSeq_lt_subset_dist
+    {X : ι → Ω → E} {ε : ℝ}
+    (hcont : ∀ ω, ∀ t : ι, ContinuousWithinAt (fun s => X s ω) (Set.Ici t) t)
+    (k : ℕ) (u : ι) :
+    {ω | oscHitSeq X ε (k + 1) ω < (u : WithTop ι)}
+      ⊆ {ω | ε ≤ dist
+          (stoppedValue X (fun ω => min (oscHitSeq X ε (k + 1) ω) (u : WithTop ι)) ω)
+          (stoppedValue X (fun ω => min (oscHitSeq X ε k ω) (u : WithTop ι)) ω)} := by
+  intro ω hω
+  have h : oscHitSeq X ε (k + 1) ω < (u : WithTop ι) := hω
+  have hk : oscHitSeq X ε k ω < (u : WithTop ι) :=
+    lt_of_le_of_lt (oscHitSeq_le_succ X ε k ω) h
+  have hαeq : min (oscHitSeq X ε k ω) (u : WithTop ι) = oscHitSeq X ε k ω :=
+    min_eq_left hk.le
+  have hβeq : min (oscHitSeq X ε (k + 1) ω) (u : WithTop ι) = oscHitSeq X ε (k + 1) ω :=
+    min_eq_left h.le
+  obtain ⟨t, ht⟩ := WithTop.ne_top_iff_exists.1 (ne_top_of_lt h)
+  have hval : ((oscHitSeq X ε (k + 1) ω).untopA : ι) = t := by rw [← ht]; simp
+  show ε ≤ dist (X (min (oscHitSeq X ε (k + 1) ω) (u : WithTop ι)).untopA ω)
+      (X (min (oscHitSeq X ε k ω) (u : WithTop ι)).untopA ω)
+  rw [hβeq, hαeq, hval]
+  exact le_dist_stoppedValue_oscHitSeq (hcont ω) ht.symm
+
+/-- **The distance between the values at two consecutive capped hitting times is strongly
+measurable**, which is `stronglyMeasurable_dist_stoppedValue_oscHitSeqGap` with the gap cell
+replaced by the full one.  Both times are bounded by `u` -- `min_le_right` twice, where the gap
+version needed `oscHitSeqGap_le_coe` and a bound `u + δ` -- so
+`stronglyMeasurable_stoppedValue_of_le` applies at `𝓕 u` for each and
+`StronglyMeasurable.dist` joins them.
+
+`IsStronglyProgressive X` is spent here a second time, as it is there; the recursion itself
+spent it on the anchor of `measurableSet_mem_oscSet`.  No hypothesis on a measure enters. -/
+theorem stronglyMeasurable_dist_stoppedValue_oscHitSeqCap
+    {𝓕 : Filtration ι mΩ} [𝓕.IsRightContinuous]
+    {X : ι → Ω → E} {ε : ℝ} {D : Set ι} (hDc : D.Countable) (hDd : Dense D)
+    (hX : IsStronglyProgressive 𝓕 X)
+    (hcont : ∀ ω, ∀ t : ι, ContinuousWithinAt (fun s => X s ω) (Set.Ici t) t)
+    (k : ℕ) (u : ι) :
+    StronglyMeasurable fun ω =>
+      dist (stoppedValue X (fun ω => min (oscHitSeq X ε (k + 1) ω) (u : WithTop ι)) ω)
+        (stoppedValue X (fun ω => min (oscHitSeq X ε k ω) (u : WithTop ι)) ω) := by
+  have hβ : StronglyMeasurable[𝓕 u] (stoppedValue X
+      (fun ω => min (oscHitSeq X ε (k + 1) ω) (u : WithTop ι))) :=
+    stronglyMeasurable_stoppedValue_of_le hX
+      (isStoppingTime_oscHitSeqCap hDc hDd hX hcont (k + 1) u)
+      (fun ω => min_le_right _ _)
+  have hα : StronglyMeasurable[𝓕 u] (stoppedValue X
+      (fun ω => min (oscHitSeq X ε k ω) (u : WithTop ι))) :=
+    stronglyMeasurable_stoppedValue_of_le hX
+      (isStoppingTime_oscHitSeqCap hDc hDd hX hcont k u)
+      (fun ω => min_le_right _ _)
+  exact (hβ.mono (𝓕.le _)).dist (hα.mono (𝓕.le _))
+
+/-- **Markov's inequality on the horizon event, at the square**:
+
+```
+ENNReal.ofReal ε ^ 2 * μ {ω | τ (k+1) ω < u}
+  ≤ ∫⁻ ω, ENNReal.ofReal (dist (stoppedValue X (min (τ (k+1)) u) ω)
+                               (stoppedValue X (min (τ k) u) ω)) ^ 2 ∂μ.
+```
+
+**The square is not a convenience.**  Over the first power the consumer would reach the
+integrand only through `lintegral_ofReal_dist_le_sqrt_of_biSup_le`, that is through a square
+root, and a sum of `N` square roots is `O(√N)` even when the sum under them is `O(1)`.  Over the
+square the summands are, by `ofReal_integral_sq_sub_le`, compensator increments over
+**consecutive** cells, and those sum to the increment over `[⊥, u]` no matter how large `N` is.
+
+As in `measure_setOf_oscHitSeq_gap_le` the horizon event is **not** asked to be measurable: the
+inclusion `setOf_oscHitSeq_lt_subset_dist` is read through `measure_mono` into the level set of
+the measurable integrand, where `mul_meas_ge_le_lintegral` applies.  `0 < ε` is not used; at a
+non-positive level the statement is true and empty. -/
+theorem sq_mul_measure_setOf_oscHitSeq_lt_le
+    {𝓕 : Filtration ι mΩ} [𝓕.IsRightContinuous] (μ : Measure Ω)
+    {X : ι → Ω → E} {ε : ℝ} {D : Set ι} (hDc : D.Countable) (hDd : Dense D)
+    (hX : IsStronglyProgressive 𝓕 X)
+    (hcont : ∀ ω, ∀ t : ι, ContinuousWithinAt (fun s => X s ω) (Set.Ici t) t)
+    (k : ℕ) (u : ι) :
+    ENNReal.ofReal ε ^ 2 * μ {ω | oscHitSeq X ε (k + 1) ω < (u : WithTop ι)}
+      ≤ ∫⁻ ω, ENNReal.ofReal (dist
+          (stoppedValue X (fun ω => min (oscHitSeq X ε (k + 1) ω) (u : WithTop ι)) ω)
+          (stoppedValue X (fun ω => min (oscHitSeq X ε k ω) (u : WithTop ι)) ω)) ^ 2 ∂μ := by
+  refine le_trans ?_ (mul_meas_ge_le_lintegral (μ := μ)
+    (((stronglyMeasurable_dist_stoppedValue_oscHitSeqCap hDc hDd hX hcont
+      k u).measurable.ennreal_ofReal).pow_const 2) (ENNReal.ofReal ε ^ 2))
+  refine mul_le_mul_right (measure_mono fun ω hω => ?_) _
+  show ENNReal.ofReal ε ^ 2 ≤ ENNReal.ofReal (dist _ _) ^ 2
+  gcongr
+  exact setOf_oscHitSeq_lt_subset_dist hcont k u hω
+
+omit [TopologicalSpace ι] [OrderTopology ι] [NoMaxOrder ι] [MeasurableSpace ι]
+  [SecondCountableTopology ι] [BorelSpace ι] [DenselyOrdered ι] [FirstCountableTopology ι]
+  [MeasurableSpace E] [BorelSpace E] [SecondCountableTopology E] in
+/-- **The horizon event at stage `N` is contained in the horizon event at every earlier stage**,
+counted:
+
+```
+N * μ {ω | τ N ω < u} ≤ ∑ k ∈ Finset.range N, μ {ω | τ (k+1) ω < u}.
+```
+
+This is `monotone_oscHitSeq` and nothing else, and it is where the factor `N` that the estimate
+of `mul_measure_setOf_lt_modulusBased_le_lintegral_dist` carries is **paid for** rather than
+avoided: the left hand side grows with `N` while the right hand side, once each summand is
+turned into a compensator increment over a consecutive cell, does not.
+
+**Nothing here is probabilistic and nothing analytic** -- no topology on the index, no
+hypothesis on `X`, not even `0 ≤ ε`; only the monotonicity of the recursion in its stage, which
+`oscHitSeq_le_succ` gives unconditionally. -/
+theorem nsmul_measure_setOf_oscHitSeq_lt_le_sum (μ : Measure Ω) (X : ι → Ω → E) (ε : ℝ)
+    (N : ℕ) (u : ι) :
+    (N : ENNReal) * μ {ω | oscHitSeq X ε N ω < (u : WithTop ι)}
+      ≤ ∑ k ∈ Finset.range N, μ {ω | oscHitSeq X ε (k + 1) ω < (u : WithTop ι)} := by
+  have h : ∀ k ∈ Finset.range N,
+      μ {ω | oscHitSeq X ε N ω < (u : WithTop ι)}
+        ≤ μ {ω | oscHitSeq X ε (k + 1) ω < (u : WithTop ι)} := by
+    intro k hk
+    refine measure_mono fun ω hω => ?_
+    exact lt_of_le_of_lt (monotone_oscHitSeq X ε ω (Finset.mem_range.1 hk)) hω
+  calc (N : ENNReal) * μ {ω | oscHitSeq X ε N ω < (u : WithTop ι)}
+      = ∑ j ∈ Finset.range N, μ {ω | oscHitSeq X ε N ω < (u : WithTop ι)} := by
+        rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+    _ ≤ _ := Finset.sum_le_sum h
+
+/-- **The horizon probability in one inequality**, and it is the second of the two quantities
+`mul_measure_setOf_lt_modulusBased_le_lintegral_dist` leaves:
+
+```
+N * (ENNReal.ofReal ε ^ 2 * μ {ω | oscHitSeq X ε N ω < u})
+  ≤ ∑ k ∈ Finset.range N, ∫⁻ ω, ENNReal.ofReal (dist (X β_k ω) (X α_k ω)) ^ 2 ∂μ
+```
+
+with `α_k = min (τ k) u` and `β_k = min (τ (k+1)) u` stopping times bounded by `u`, satisfying
+`α_k ≤ β_k` and -- this is the point -- `β_k = α_{k+1}`.
+
+**`δ` does not occur.**  That is the whole reason for this statement: a consumer may fix `N`
+from it first, at a size that makes the right hand side over `N` small, and only then let `δ`
+tend to zero in the gap sum, where `N` is by then a constant.  Under the condition
+`u ≤ N • δ` of `measure_setOf_lt_modulusBased_le_gap` that order is impossible and the
+composition diverges.
+
+**What the consumer still has to do, and it is one estimate and not `N` of them.**  Each
+summand is `ofReal_integral_sq_sub_le` at the pair `(α_k, β_k)` -- a real process, which is what
+`SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` hands it -- giving two approximation errors
+and two increments of the approximants; the increments are
+`IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le`, and summed over consecutive cells
+the compensator increments they bound are at most the increment over `[⊥, u]`, hence
+`u ^ (1 - 1/q) * K`.  The approximation errors are `N` copies of a quantity the approximability
+condition makes arbitrarily small *after* `N` is fixed, so they survive the division by `N`
+as themselves.  The horizon bound that comes out is
+`O(1/N) + O(ε_approx)`, divided by `ε ^ 2`, with constants depending only on `‖f‖`, `u`, `q`
+and `K`. -/
+theorem mul_measure_setOf_oscHitSeq_lt_le_sum_lintegral
+    {𝓕 : Filtration ι mΩ} [𝓕.IsRightContinuous] (μ : Measure Ω)
+    {X : ι → Ω → E} {ε : ℝ} {D : Set ι} (hDc : D.Countable) (hDd : Dense D)
+    (hX : IsStronglyProgressive 𝓕 X)
+    (hcont : ∀ ω, ∀ t : ι, ContinuousWithinAt (fun s => X s ω) (Set.Ici t) t)
+    (N : ℕ) (u : ι) :
+    (N : ENNReal) * (ENNReal.ofReal ε ^ 2
+        * μ {ω | oscHitSeq X ε N ω < (u : WithTop ι)})
+      ≤ ∑ k ∈ Finset.range N, ∫⁻ ω, ENNReal.ofReal (dist
+          (stoppedValue X (fun ω => min (oscHitSeq X ε (k + 1) ω) (u : WithTop ι)) ω)
+          (stoppedValue X (fun ω => min (oscHitSeq X ε k ω) (u : WithTop ι)) ω)) ^ 2 ∂μ := by
+  calc (N : ENNReal) * (ENNReal.ofReal ε ^ 2 * μ {ω | oscHitSeq X ε N ω < (u : WithTop ι)})
+      = ENNReal.ofReal ε ^ 2
+          * ((N : ENNReal) * μ {ω | oscHitSeq X ε N ω < (u : WithTop ι)}) := by ring
+    _ ≤ ENNReal.ofReal ε ^ 2
+          * ∑ k ∈ Finset.range N, μ {ω | oscHitSeq X ε (k + 1) ω < (u : WithTop ι)} := by
+        gcongr
+        exact nsmul_measure_setOf_oscHitSeq_lt_le_sum μ X ε N u
+    _ = ∑ k ∈ Finset.range N,
+          ENNReal.ofReal ε ^ 2 * μ {ω | oscHitSeq X ε (k + 1) ω < (u : WithTop ι)} :=
+        Finset.mul_sum _ _ _
+    _ ≤ _ := Finset.sum_le_sum fun k _ =>
+        sq_mul_measure_setOf_oscHitSeq_lt_le μ hDc hDd hX hcont k u
+
+end MeasureTheory
