@@ -391,6 +391,54 @@ isTight_map_postcomp_of_exists_martingale   (verbraucht Doob aus Meilenstein 9)
 und ihr Akzeptanztest ist **Donsker**, bei dem die vier je genau einmal und in
 dieser Reihenfolge vorkommen.
 
+**EIN EINGESCHOBENER LAUF, vom Nutzer am 2026-09-20 angeordnet — genau einer.**
+
+> **Frage: Hat die Dualität außerhalb der Markov-Welt eine Chance?**
+> Zu beantworten an der Kettenidentität, ohne Meilenstein 8 anzufangen.
+
+**Warum die Frage gestellt ist und warum sie billig ist.** Die
+Dualitätsidentität selbst ist **Markov-frei**: der Hauptsatz von Meilenstein 8
+verlangt nur zwei unabhängige meßbare Prozesse und je eine Martingaleigenschaft
+(`f (X t, y) - ∫ g (X s, y)` Martingal für jedes `y`, und symmetrisch), kein
+Schiftsystem und keine Halbgruppe; die Kettenidentität darunter ist rein formal,
+"no analysis, no hypothesis on the staircase beyond monotonicity".
+
+Was **nicht** Markov-frei ist, ist ihr Nutzen. `cor:uniqviadual` geht von der
+Dualität über die *eindimensionalen* Verteilungen zu `thm:absuniq`, und das
+braucht das Schiftsystem. Das Manuskript sagt es beim Volterra-Beispiel
+(`ex:volterra`) ausdrücklich: dort gibt es kein Schiftsystem, und "nor do
+`thm:absstrongmarkov` or Section 7, both of which use the shift".
+
+**Der Ansatz, und er ist benannt statt geraten.** Es gibt einen zweiten,
+Markov-freien Weg von eindimensionalen zu endlichdimensionalen Verteilungen:
+`prop:uniqfromprop` über `PropagatesAgreement`, und der gilt für Volterra
+ausdrücklich. Die Lücke ist genau eine: `PropagatesAgreement` verlangt die
+Übereinstimmung der **`Z`-gewichteten** eindimensionalen Verteilungen, Dualität
+liefert die **ungewichteten**.
+
+**Aufgabe des Laufs, in dieser Reihenfolge:**
+
+1. **Die Kettenidentität mit Gewicht hinschreiben und prüfen, ob sie trägt.**
+   Also `chain_identity` mit `Φ s t = 𝔼[Z * f (X s, Y t)]` für ein beschränktes,
+   `𝓕 s₀`-meßbares `Z`. Die Frage ist, ob die beiden Zuwachsrelationen dann noch
+   gelten -- in der `X`-Richtung sollte `Z` durch die Martingaleigenschaft
+   durchgehen, solange `s ≥ s₀`; in der `Y`-Richtung ist `Z` von `Y` unabhängig.
+   **Genau dort liegt die Entscheidung**, und sie ist nachzurechnen, nicht zu
+   behaupten.
+2. **Wenn sie trägt:** die gewichtete Dualität aussprechen und prüfen, ob daraus
+   `PropagatesAgreement` folgt -- das ist die eigentliche Frage des Nutzers.
+3. **Wenn sie nicht trägt:** einen **Zeugen** bauen, der zeigt woran, und ihn
+   benennen. Ein begründetes Nein ist hier so wertvoll wie ein Ja.
+
+**Hinweis, der Zeit spart:** die Kettenidentität trägt bereits einen
+multiplikativen Faktor, `exp (∫_0^s α (X u))` in `eq:dual1`/`eq:dual2`. Sie kann
+also mit Gewichten umgehen; zu klären ist, ob ein *nicht* von `X` allein
+abhängendes, bloß `𝓕 s₀`-meßbares Gewicht dasselbe leistet.
+
+**Umfang: ein Lauf.** Danach zurück zu Meilenstein 11, unabhängig vom Ausgang.
+Es wird **kein** Meilenstein 8 begonnen, keine Volterra-Theorie und keine
+Task-23-Aussage angefaßt.
+
 **MEILENSTEIN 14 IST GEPARKT.** Der erste Block der kausalen Faltung (21
 Deklarationen, `section CausalConvolution`) **bleibt stehen** — er ist sauber
 und ohne `sorry`, und ihn zurückzunehmen wäre Verschwendung. Aber es kommt
