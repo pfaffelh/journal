@@ -11353,12 +11353,41 @@ has to be chosen once for all `n`. What stands:
   right continuous filtration, so a consumer without `[𝓕.IsRightContinuous]`
   passes to `𝓕₊` and must have its increment bound at `𝓕₊`-stopping times.
 
-  **What remains before the recursion may be written down** is one hypothesis
-  of `MeasureTheory.measurableSet_mem_oscSet`: that the anchor `c = X ∘ σ`
-  agrees, on `{σ < q}`, with an `𝓕 q`-measurable function. That is the
-  `𝓕_σ`-measurability of the stopped value together with
-  `MeasureTheory.IsStoppingTime.measurableSet_inter_lt`, and it is the only
-  place where the progressive measurability of `X` enters the criterion.
+  **And the recursion itself stands**, 2026-09-20, in the section „The Aldous
+  hitting recursion": `MeasureTheory.oscHitSeq` with `oscHitSeq_zero`,
+  `oscHitSeq_succ`, and its four properties
+  `MeasureTheory.oscHitSeq_le_succ`, `MeasureTheory.monotone_oscHitSeq`,
+  `MeasureTheory.dist_stoppedValue_oscHitSeq_le` and
+  `MeasureTheory.isStoppingTime_oscHitSeq`, on the two general lemmas
+  `MeasureTheory.le_debutTime_oscSet` and `MeasureTheory.lt_debutTime_oscSet`.
+  The anchor of step `k+1` is Mathlib's own `MeasureTheory.stoppedValue`, whose
+  `WithTop.untopA` is never read here — `oscSet X σ c ε ω ⊆ {t | σ ω < t}` is
+  empty when `σ ω = ⊤`, so the recursion stays at `⊤` once it has run off the
+  end, with no case distinction and no finiteness hypothesis.
+
+  **The one open hypothesis of `MeasureTheory.measurableSet_mem_oscSet` is
+  discharged inside the induction, and it is the only analytic input.** The
+  anchor `stoppedValue X (τ k)` agrees on `{τ k < q}` with
+  `stoppedValue X (min (τ k) q)`, which is `𝓕 q`-measurable by
+  `MeasureTheory.stronglyMeasurable_stoppedValue_of_le`
+  (`Probability/Process/Stopping.lean:1016`), the minimum being a stopping time
+  bounded by `q` through `MeasureTheory.IsStoppingTime.min_const` (`:365`); that
+  is where `IsStronglyProgressive X` enters and the single step needed only
+  `Adapted X`. The anchor itself is `MeasureTheory.stoppedValue` (`:797`), whose
+  definition `u (τ ω).untopA ω` is why the `⊤` case needs no clause here.
+
+  **What the recursion delivers and what it does not.** Of the three hypotheses
+  `SkorokhodSpace.modulusBased_le_of_forall_gapped` asks for, two are now free:
+  the cell bound is `dist_stoppedValue_oscHitSeq_le` — stated on the half-open
+  interval, its left endpoint included at the cost of `0 ≤ ε` — and strict
+  monotonicity is `MeasureTheory.lt_oscHitSeq_succ`. The third, `δ`-sparseness,
+  is the probabilistic estimate and is what remains of this item.
+
+  **Strict monotonicity is not free and its price is named.** The début of a
+  right-open set need not be attained, so `le_debutTime_oscSet` alone leaves
+  `τ k = τ (k+1)` possible. `lt_debutTime_oscSet` excludes it from `0 < ε`
+  together with right continuity at `τ k`, and it is false for `ε = 0`. It
+  needs no `OrderBot` on the index.
 
   **The bound is `ε` and not `2 ε`**, because `SkorokhodSpace.subdivisionOsc`
   measures each cell from its left endpoint where Billingsley's `w'` takes the

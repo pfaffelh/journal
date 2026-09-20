@@ -41380,3 +41380,209 @@ theorem measurableSet_mem_oscSet {𝓕 : Filtration ι mΩ} {X : ι → Ω → E
   exact measurableSet_lt measurable_const ((hX q).dist hg)
 
 end MeasureTheory
+
+namespace MeasureTheory
+
+/-! ### The Aldous hitting recursion
+
+The times Aldous' criterion evaluates its increment bound at are
+
+```
+τ 0 = ⊥,   τ (k+1) = inf {t > τ k | ε < dist (X t) (X (τ k))},
+```
+
+and the section above has everything the single step needs.  What is left is to iterate it, and
+the iteration raises three questions which are answered here and not in a footnote.
+
+**Where the anchor comes from, and why `⊤` costs nothing.**  The reference value of step `k+1` is
+`stoppedValue X (τ k)`, which is Mathlib's own `MeasureTheory.stoppedValue` and therefore reads
+`WithTop.untopA` — an arbitrary value — at the sample points where `τ k = ⊤`.  That value is
+never read: `oscSet X σ c ε ω` is contained in `{t | σ ω < t}`, which is empty when `σ ω = ⊤`, so
+the anchor enters the set only through sample points at which it is the value of the path at a
+genuine time.  This is the place the standing rule of the project asks to be named, and it is
+named: not "harmless", but *the set the anchor is used in is empty there*.
+
+**The recursion is monotone unconditionally and strictly only under a hypothesis.**
+`oscHitSeq_le_succ` holds with no assumption at all, because every element of `oscSet` lies
+strictly after `σ`.  Strictness is a different matter and is `lt_debutTime_oscSet`: the début
+could coincide with `σ ω` — an infimum of a right-open set need not be attained — and what
+excludes it is that the anchor is the value of the path at `σ ω` together with right continuity.
+It costs `0 < ε`, and it is false for `ε = 0`.
+
+**The stopping time property is the induction, and one hypothesis is discharged in it.**
+`measurableSet_mem_oscSet` asks that the anchor agree, before `q`, with an `𝓕 q`-measurable
+function.  For `c = stoppedValue X (τ k)` that function is `stoppedValue X (min (τ k) q)`: it is
+`𝓕 q`-measurable by `MeasureTheory.stronglyMeasurable_stoppedValue_of_le`, since `min (τ k) q` is
+a stopping time bounded by `q`, and it agrees with `c` on `{τ k < q}` because the minimum is
+attained on the left there.  This is the **only** place where the progressive measurability of
+`X` is spent, and it is why `isStoppingTime_oscHitSeq` asks for `IsStronglyProgressive` where the
+single step asked only for `Adapted`. -/
+
+variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
+variable {ι : Type*} [ConditionallyCompleteLinearOrder ι] [OrderBot ι]
+variable {E : Type*} [MetricSpace E]
+
+omit [OrderBot ι] in
+/-- **The début of `oscSet` is never before `σ`.**  Every element of the set lies strictly after
+`σ ω`, so the infimum is at least `σ ω`; where the set is empty the début is `⊤` and the claim is
+trivial.  No topology and no measure. -/
+theorem le_debutTime_oscSet {X : ι → Ω → E} {σ : Ω → WithTop ι} {c : Ω → E} {ε : ℝ} (ω : Ω) :
+    σ ω ≤ debutTime (oscSet X σ c ε) ω := by
+  by_cases hne : (oscSet X σ c ε ω).Nonempty
+  · obtain ⟨t₀, ht₀⟩ := hne
+    rw [debutTime_of_nonempty ⟨t₀, ht₀⟩]
+    obtain ⟨s, hs⟩ := WithTop.ne_top_iff_exists.1 (ne_top_of_lt ht₀.1)
+    rw [← hs, WithTop.coe_le_coe]
+    refine le_csInf ⟨t₀, ht₀⟩ fun t ht => ?_
+    have h1 := ht.1
+    rw [← hs] at h1
+    exact_mod_cast h1.le
+  · rw [debutTime_of_eq_empty (Set.not_nonempty_iff_eq_empty.1 hne)]
+    exact le_top
+
+variable [TopologicalSpace ι] [OrderTopology ι] [NoMaxOrder ι]
+
+omit [OrderBot ι] in
+/-- **The début of `oscSet` is strictly after `σ`** when the anchor is the value of the path at
+`σ` and the path is right continuous at that time.
+
+Without this the recursion could stand still, and the reason is not a technicality: the infimum
+of a right-open set is in general not attained, so `le_debutTime_oscSet` alone leaves the two
+times equal.  What rules that out is that `dist (X t ω) (c ω) = 0` at the anchor, so right
+continuity keeps the path within `ε` of it on a right neighbourhood, and `oscSet` is empty there.
+
+`0 < ε` is used and cannot be dropped: for `ε = 0` the set may accumulate at `t` from the right
+and the début is `t` itself. -/
+theorem lt_debutTime_oscSet {X : ι → Ω → E} {σ : Ω → WithTop ι} {c : Ω → E} {ε : ℝ} {ω : Ω}
+    (hε : 0 < ε) (hcont : ∀ t : ι, ContinuousWithinAt (fun s => X s ω) (Set.Ici t) t)
+    {t : ι} (hσ : σ ω = (t : WithTop ι)) (hc : c ω = X t ω) :
+    (t : WithTop ι) < debutTime (oscSet X σ c ε) ω := by
+  rcases lt_or_ge (t : WithTop ι) (debutTime (oscSet X σ c ε) ω) with h | h
+  · exact h
+  exfalso
+  have hge : (t : WithTop ι) ≤ debutTime (oscSet X σ c ε) ω := by
+    rw [← hσ]; exact le_debutTime_oscSet ω
+  have heq : debutTime (oscSet X σ c ε) ω = (t : WithTop ι) := le_antisymm h hge
+  have hne : (oscSet X σ c ε ω).Nonempty := by
+    by_contra hemp
+    rw [debutTime_of_eq_empty (Set.not_nonempty_iff_eq_empty.1 hemp)] at heq
+    exact absurd heq (by simp)
+  rw [debutTime_of_nonempty hne] at heq
+  have hinf : sInf (oscSet X σ c ε ω) = t := by exact_mod_cast heq
+  have hcont' : ContinuousWithinAt (fun s => dist (X s ω) (c ω)) (Set.Ici t) t :=
+    (hcont t).dist continuousWithinAt_const
+  have hmem : {s | dist (X s ω) (c ω) < ε} ∈ 𝓝[≥] t :=
+    hcont'.preimage_mem_nhdsWithin (Iio_mem_nhds (by rw [hc, dist_self]; exact hε))
+  obtain ⟨v, hv, hsub⟩ := mem_nhdsGE_iff_exists_Ico_subset.1 hmem
+  obtain ⟨a, haA, hav⟩ := exists_lt_of_csInf_lt hne (by rw [hinf]; exact hv)
+  have hta : t < a := by
+    have h1 := haA.1
+    rw [hσ] at h1
+    exact_mod_cast h1
+  exact absurd haA.2 (not_lt.2 (hsub ⟨hta.le, hav⟩).le)
+
+variable [Nonempty ι]
+
+/-- **The Aldous hitting recursion**: `τ 0 = ⊥` and `τ (k+1)` is the first time after `τ k` at
+which the path has moved by more than `ε` away from its value at `τ k`.
+
+The anchor is Mathlib's `MeasureTheory.stoppedValue`, which reads an arbitrary value where the
+stopping time is `⊤`.  That value never reaches the set: `oscSet X σ c ε ω ⊆ {t | σ ω < t}` is
+empty when `σ ω = ⊤`, so `oscHitSeq X ε (k+1) ω = ⊤` there regardless of the anchor, which is
+also the right answer — the recursion has run off the end and stays there. -/
+noncomputable def oscHitSeq (X : ι → Ω → E) (ε : ℝ) : ℕ → Ω → WithTop ι
+  | 0 => fun _ => ((⊥ : ι) : WithTop ι)
+  | k + 1 => debutTime (oscSet X (oscHitSeq X ε k) (stoppedValue X (oscHitSeq X ε k)) ε)
+
+omit [TopologicalSpace ι] [OrderTopology ι] [NoMaxOrder ι] in
+@[simp]
+theorem oscHitSeq_zero (X : ι → Ω → E) (ε : ℝ) :
+    oscHitSeq X ε 0 = fun _ => ((⊥ : ι) : WithTop ι) := rfl
+
+omit [TopologicalSpace ι] [OrderTopology ι] [NoMaxOrder ι] in
+theorem oscHitSeq_succ (X : ι → Ω → E) (ε : ℝ) (k : ℕ) :
+    oscHitSeq X ε (k + 1)
+      = debutTime (oscSet X (oscHitSeq X ε k) (stoppedValue X (oscHitSeq X ε k)) ε) := rfl
+
+omit [TopologicalSpace ι] [OrderTopology ι] [NoMaxOrder ι] in
+/-- **The recursion is monotone**, and unconditionally so: this is `le_debutTime_oscSet` and needs
+neither a positive `ε` nor any regularity of the paths. -/
+theorem oscHitSeq_le_succ (X : ι → Ω → E) (ε : ℝ) (k : ℕ) (ω : Ω) :
+    oscHitSeq X ε k ω ≤ oscHitSeq X ε (k + 1) ω := by
+  rw [oscHitSeq_succ]
+  exact le_debutTime_oscSet ω
+
+omit [TopologicalSpace ι] [OrderTopology ι] [NoMaxOrder ι] in
+theorem monotone_oscHitSeq (X : ι → Ω → E) (ε : ℝ) (ω : Ω) :
+    Monotone fun k => oscHitSeq X ε k ω :=
+  monotone_nat_of_le_succ fun k => oscHitSeq_le_succ X ε k ω
+
+omit [TopologicalSpace ι] [OrderTopology ι] [NoMaxOrder ι] in
+/-- **The cell bound of Aldous' criterion for the recursion**: on `[τ k, τ (k+1))` the path stays
+within `ε` of its value at `τ k`.
+
+This is what `SkorokhodSpace.modulusBased_le_of_forall_gapped` asks of each of its cells, with
+`c = ENNReal.ofReal ε`, and it is the half-open interval and not the open one: the left endpoint
+is included, where the distance is `0` and the only hypothesis spent is `0 ≤ ε`. -/
+theorem dist_stoppedValue_oscHitSeq_le {X : ι → Ω → E} {ε : ℝ} (hε : 0 ≤ ε) {k : ℕ} {ω : Ω}
+    {s : ι} (h1 : oscHitSeq X ε k ω ≤ (s : WithTop ι))
+    (h2 : (s : WithTop ι) < oscHitSeq X ε (k + 1) ω) :
+    dist (X s ω) (stoppedValue X (oscHitSeq X ε k) ω) ≤ ε := by
+  rcases eq_or_lt_of_le h1 with h | h
+  · have hval : stoppedValue X (oscHitSeq X ε k) ω = X s ω := by
+      simp [stoppedValue, h]
+    rw [hval, dist_self]
+    exact hε
+  · rw [oscHitSeq_succ] at h2
+    exact dist_le_of_lt_debutTime_oscSet h h2
+
+/-- **The recursion advances strictly** as long as it has not run off the end.
+
+This is what the `δ`-sparseness hypothesis of `SkorokhodSpace.modulusBased_le_of_forall_gapped`
+rests on; the sparseness itself is the probabilistic half of the criterion and is not this
+theorem, but without strict monotonicity there would be nothing to be sparse. -/
+theorem lt_oscHitSeq_succ {X : ι → Ω → E} {ε : ℝ} (hε : 0 < ε) {k : ℕ} {ω : Ω}
+    (hcont : ∀ t : ι, ContinuousWithinAt (fun s => X s ω) (Set.Ici t) t)
+    {t : ι} (ht : oscHitSeq X ε k ω = (t : WithTop ι)) :
+    (t : WithTop ι) < oscHitSeq X ε (k + 1) ω := by
+  rw [oscHitSeq_succ]
+  exact lt_debutTime_oscSet hε hcont ht (by simp [stoppedValue, ht])
+
+variable [MeasurableSpace ι] [SecondCountableTopology ι] [BorelSpace ι]
+  [DenselyOrdered ι] [FirstCountableTopology ι]
+  [MeasurableSpace E] [BorelSpace E] [SecondCountableTopology E]
+
+/-- **The Aldous hitting times are stopping times.**
+
+The induction is on the step, and each step is `isStoppingTime_debutTime` with its three inputs
+discharged by the section above: right-openness by `isRightOpen_oscSet`, measurability of the
+slices by `measurableSet_mem_oscSet`, and the induction hypothesis for the stopping time the step
+starts from.
+
+The anchor hypothesis of `measurableSet_mem_oscSet` is discharged here, and it is the only place
+where `IsStronglyProgressive` is used: `stoppedValue X (min (τ k) q)` is `𝓕 q`-measurable by
+`MeasureTheory.stronglyMeasurable_stoppedValue_of_le`, and on `{τ k < q}` it agrees with
+`stoppedValue X (τ k)` because the minimum is attained on the left.
+
+The filtration is asked to be right continuous for the reason given at `isStoppingTime_debutTime`:
+`{début ≤ i}` is an intersection over times strictly to the right of `i`.  A consumer without it
+passes to `MeasureTheory.Filtration.rightCont 𝓕`, at the price that its increment bound has to
+hold at `𝓕₊`-stopping times. -/
+theorem isStoppingTime_oscHitSeq {𝓕 : Filtration ι mΩ} [𝓕.IsRightContinuous]
+    {X : ι → Ω → E} {ε : ℝ} {D : Set ι} (hDc : D.Countable) (hDd : Dense D)
+    (hX : IsStronglyProgressive 𝓕 X)
+    (hcont : ∀ ω, ∀ t : ι, ContinuousWithinAt (fun s => X s ω) (Set.Ici t) t) (k : ℕ) :
+    IsStoppingTime 𝓕 (oscHitSeq X ε k) := by
+  induction k with
+  | zero => exact isStoppingTime_const 𝓕 ⊥
+  | succ k ih =>
+    rw [oscHitSeq_succ]
+    refine isStoppingTime_debutTime hDc hDd (isRightOpen_oscSet hcont) fun q _ => ?_
+    refine measurableSet_mem_oscSet ih hX.stronglyAdapted.adapted q
+      ⟨stoppedValue X fun ω => min (oscHitSeq X ε k ω) q, ?_, ?_⟩
+    · exact (stronglyMeasurable_stoppedValue_of_le hX (ih.min_const q)
+        fun ω => min_le_right _ _).measurable
+    · intro ω hω
+      simp only [stoppedValue, min_eq_left hω.le]
+
+end MeasureTheory

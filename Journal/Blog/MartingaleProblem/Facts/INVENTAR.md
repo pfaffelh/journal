@@ -47432,3 +47432,173 @@ Entscheidung ist vor dem ersten Beweis zu treffen, nicht danach.
 aufeinanderfolgende Trefferzeiten nicht dicht liegen —, und diese Abschätzung ist
 die zweite Anwendung derselben Zuwachsschranke, die der Punkt ohnehin
 voraussetzt. Alles Deterministische darunter steht dann.
+
+### 2026-09-20, dreizehnter Lauf des Tages — die Aldous-Rekursion steht, und von den drei Voraussetzungen, die der Verbraucher an seine Zeiten stellt, sind jetzt **zwei ohne Wahrscheinlichkeit** eingelöst; die strikte Monotonie war dabei nicht umsonst, und der Grund ist, daß ein Infimum einer rechtsoffenen Menge nicht angenommen werden muß
+
+**Bearbeitet:** der Vorschlag des Vorlaufs, `isStoppingTime_oscHitSeq` — also
+weiter am ersten Punkt der Kette des Meilensteins 11 von `MartingaleProblems`,
+wie angeordnet. Kein Meilenstein 8, kein Meilenstein 14, kein C.5/G. **Zehn**
+Deklarationen, alle in `TauCeti/MartingaleProblems/Suggested.lean`, ein neuer
+Abschnitt „The Aldous hitting recursion" unmittelbar hinter dem Débutsatz des
+Vorlaufs.
+
+**Geprüft:** `scripts/check_master.py` meldet für die ganze Kette **0 Fehler,
+0 `sorry`, 0 veraltete Namen** (Mathlib `94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `v4.35.0-rc2`; 18 / 35 / 109 Warnungen, **dieselben Zahlen wie vor dem
+Lauf** — die fünf `omit`-Zeilen sind dafür gesetzt). Alle zehn hängen nach
+`check_axioms_master.py` an `propext`, `Classical.choice`, `Quot.sound` und an
+nichts sonst. `scripts/check_cited_lines.py`: **323 von 323** gepaarten
+Fundstellen stimmen (drei mehr als vor dem Lauf, das sind die drei neuen
+Zitate), 0 tote. `check_duplicates.py` und `check_own_names.py` finden zu den
+zehn neuen Namen nichts.
+
+#### Was gebaut ist
+
+**Zwei allgemeine Aussagen über den Début der Auslenkungsmenge**, beide ohne
+Bezug auf die Rekursion:
+
+* `MeasureTheory.le_debutTime_oscSet` — der Début liegt nie vor `σ`. Das ist
+  die Monotonie und sie ist **voraussetzungslos**: kein `ε > 0`, keine
+  Regularität der Pfade, keine Topologie, kein Maß, und nach dem Linter nicht
+  einmal `OrderBot` auf dem Index.
+* `MeasureTheory.lt_debutTime_oscSet` — der Début liegt **echt** nach `σ`, wenn
+  der Bezugswert der Pfadwert bei `σ` ist und der Pfad dort rechtsstetig. Das
+  ist die Aussage, die nicht umsonst war, siehe den ersten Befund.
+
+**Die Rekursion und ihre vier Eigenschaften:**
+
+* `MeasureTheory.oscHitSeq` mit `oscHitSeq_zero` und `oscHitSeq_succ` — die
+  Folge `τ 0 = ⊥`, `τ (k+1) = debutTime (oscSet X (τ k) (stoppedValue X (τ k)) ε)`.
+* `MeasureTheory.oscHitSeq_le_succ` und `MeasureTheory.monotone_oscHitSeq` — die
+  Monotonie, geerbt und ebenso voraussetzungslos.
+* `MeasureTheory.dist_stoppedValue_oscHitSeq_le` — die **Zellenschranke**, und
+  zwar auf dem **halboffenen** Intervall `[τ k, τ (k+1))`, also genau in der
+  Gestalt, die `SkorokhodSpace.modulusBased_le_of_forall_gapped` von jeder Zelle
+  verlangt. Der linke Randpunkt kostet `0 ≤ ε` und sonst nichts.
+* `MeasureTheory.lt_oscHitSeq_succ` — die **strikte** Monotonie, aus
+  `lt_debutTime_oscSet`.
+* `MeasureTheory.isStoppingTime_oscHitSeq` — der Satz, um den es ging.
+
+#### Vier Befunde
+
+* **Der Müllwert kostete diesmal wirklich nichts, und zwar nachweisbar.** Der
+  Vorlauf hatte als Falle benannt, daß `τ (k+1) = ⊤` zulässig und häufig ist und
+  die Rekursion den Bezugswert dann nicht unbesehen weiterreichen darf — mit der
+  Alternative, entweder die Endlichkeit bis zur Stufe `N` in die Hypothese zu
+  nehmen oder `X` auf `WithTop ι` fortzusetzen. **Keines von beidem war nötig**,
+  und der Grund ist eine Zeile Mengenalgebra: `oscSet X σ c ε ω ⊆ {t | σ ω < t}`
+  ist **leer**, sobald `σ ω = ⊤`, also geht der Bezugswert dort in gar nichts
+  ein. Genommen ist deshalb Mathlibs eigenes `MeasureTheory.stoppedValue`, das
+  seit dem `WithTop`-Umbau `u (τ ω).untopA ω` ist und bei `⊤` einen beliebigen
+  Wert liest. Das ist die Stelle, die die stehende Regel des Auftrags benannt
+  haben will, und sie ist benannt — nicht mit „harmlos", sondern mit *die Menge,
+  in der der Wert gebraucht wird, ist dort leer*. Die Rekursion bleibt bei `⊤`
+  stehen, sobald sie einmal dort ist, und das ist die richtige Antwort und keine
+  Notlösung.
+* **Die strikte Monotonie ist nicht dieselbe Aussage wie die Monotonie, und der
+  Unterschied ist der Grund, aus dem sie einen eigenen Satz braucht.** Der
+  Début einer rechtsoffenen Menge muß **nicht angenommen** werden: `(a, b)`
+  enthält um jeden seiner Punkte ein Intervall `[t, v)` und hat das Infimum `a`,
+  das nicht dazugehört. `le_debutTime_oscSet` läßt also `τ k = τ (k+1)` offen,
+  und in dem Fall wäre die Folge der Zeiten für `card_le_of_gapped` unbrauchbar.
+  Was es ausschließt, ist, daß der Bezugswert der Pfadwert **bei** `τ k` ist:
+  dann ist der Abstand dort `0`, die Rechtsstetigkeit hält ihn auf einer
+  Rechtsumgebung unter `ε`, und `oscSet` ist auf dieser Umgebung leer. Es kostet
+  `0 < ε` und ist für `ε = 0` **falsch**. Das steht so an der Deklaration.
+* **Die progressive Meßbarkeit tritt an genau einer Stelle ein, und sie tritt
+  erst mit der Rekursion ein.** Der Einzelschritt
+  (`measurableSet_mem_oscSet`) verlangt von `X` nur `Adapted`; was er zusätzlich
+  verlangt, ist eine Hypothese über den Bezugswert, und sie ist es, die
+  `IsStronglyProgressive` braucht. Eingelöst ist sie in der Induktion durch
+  `stoppedValue X (min (τ k) q)`: das ist `𝓕 q`-meßbar nach
+  `MeasureTheory.stronglyMeasurable_stoppedValue_of_le`
+  (`Probability/Process/Stopping.lean:1016`), weil `min (τ k) q` nach
+  `MeasureTheory.IsStoppingTime.min_const` (`:365`) eine durch `q` beschränkte
+  Stoppzeit ist, und es stimmt auf `{τ k < q}` mit `stoppedValue X (τ k)`
+  überein, weil das Minimum dort links angenommen wird. Der Weg, den der Vorlauf
+  angesagt hatte — `IsStoppingTime.measurableSet_inter_lt` samt
+  `𝓕_τ`-Meßbarkeit des gestoppten Wertes —, wird dabei **nicht** gebraucht; die
+  Schranke `min (τ k) q ≤ q` ist der ganze Inhalt, und sie ist billiger.
+* **Der Linter hat eine Abschwächung gefunden, die von Hand nicht aufgefallen
+  wäre.** `lt_debutTime_oscSet` braucht **kein** `OrderBot` auf dem Index, und
+  `le_debutTime_oscSet` auch nicht: beide gehen über `le_csInf` und
+  `exists_lt_of_csInf_lt`, und keines davon fragt nach `BddBelow`. Nur
+  `debutTime_le_of_mem` aus dem Vorlauf braucht es. Das ist nach der stehenden
+  Regel des Auftrags ein Befund und kein Stilpunkt: die Aussage trägt jetzt die
+  schwächere Voraussetzung, und die `omit`-Zeile ist der Beleg dafür, daß sie
+  wirklich nicht gebraucht wird.
+
+#### Wo der Punkt jetzt steht
+
+Von den **drei** Voraussetzungen, die
+`SkorokhodSpace.modulusBased_le_of_forall_gapped` an seine Zeiten stellt, sind
+nach diesem Lauf zwei eingelöst und ohne jede Wahrscheinlichkeit:
+
+| Voraussetzung | Stand |
+| --- | --- |
+| Zellenschranke `hosc` | `dist_stoppedValue_oscHitSeq_le` |
+| strikte Monotonie `hmono` | `lt_oscHitSeq_succ` |
+| `δ`-Dünnheit `hgap` | offen, und **das** ist die wahrscheinlichkeitstheoretische Abschätzung |
+
+Dazu kommt `hmax`, daß die Rekursion den Horizont überhaupt überschreitet; das
+ist die Endlichkeitsfrage des nächsten Vorschlags.
+
+#### Was in die Roadmaps eingetragen ist
+
+`MartingaleProblems/README.md`, Meilenstein 11, am Punkt
+`isTight_map_postcomp_of_exists_martingale`: der Absatz „What remains before the
+recursion may be written down" ist ersetzt durch den Stand — die zehn
+Deklarationen, die Tabelle der drei Voraussetzungen, der Preis der strikten
+Monotonie, und die drei neuen Mathlib-Fundstellen mit Zeile.
+`SkorokhodSpace/README.md`, Meilenstein 10: ein Absatz hinter dem Müllwertabsatz,
+der sagt, was die Rekursion dem dortigen Satz liefert und was nicht.
+
+#### Vorschlag für den nächsten Lauf
+
+**Die deterministische Hälfte von Aldous' Kriterium zu *einer* Aussage
+zusammenziehen:
+`MeasureTheory.modulusBased_extendNNReal_le_of_oscHitSeq` — sind die
+Trefferzeiten bis zur Stufe `N` endlich, `δ`-dünn, und überschreitet die `N`-te
+den Horizont, so ist der Modul des Pfades höchstens `ENNReal.ofReal ε`.**
+
+Die Aussage, benannt:
+
+> Für `ι = ℝ≥0`, einen Pfad `f : D(ℝ≥0, E)` mit `f.toFun = fun t => X t ω`,
+> `0 ≤ δ < u` und `N : ℕ` gelte: `oscHitSeq X ε k ω ≠ ⊤` für `k ≤ N`,
+> `δ < dist (τ k) (τ (k+1))` für `k < N`, und `u ≤ τ N`. Dann ist
+> `SkorokhodSpace.modulusBased 0 u (SkorokhodSpace.extendNNReal f) δ
+> ≤ ENNReal.ofReal ε`.
+
+**Worauf sie ruht, und alles davon steht.** Der Verbraucher ist
+`SkorokhodSpace.modulusBased_extendNNReal_le_of_forall_gapped`
+(`SkorokhodSpace/Suggested.lean:19026`), der genau diese vier Eingaben in
+`ℝ≥0`-Gestalt verlangt: `hτ0` ist `oscHitSeq_zero`, `hmono` ist
+`lt_oscHitSeq_succ`, `hosc` ist `dist_stoppedValue_oscHitSeq_le` —
+`edist ≤ ENNReal.ofReal ε` aus `dist ≤ ε` über `edist_le_ofReal` —, und `hgap`
+und `hmax` stehen in der Hypothese, weil sie die probabilistische Hälfte sind.
+
+**Und die Entscheidung, die vor dem ersten Beweis zu treffen ist**, ist dieselbe
+wie beim Début und hat dieselbe Antwort: der Verbraucher will `τ : ℕ → ℝ≥0`,
+die Rekursion liefert `WithTop ℝ≥0`. Die Endlichkeit bis zur Stufe `N` gehört
+deshalb **in die Hypothese** und nicht in eine `untopD`-Abkürzung — nach der
+stehenden Regel des Auftrags, und hier mit einem zweiten Grund: `⊤` an einer
+Stufe `k ≤ N` heißt, daß der Pfad sich nach `τ k` nie wieder um mehr als `ε`
+bewegt, und dann ist `hmax` gerade **nicht** erfüllbar. Die beiden Hypothesen
+hängen zusammen, und das gehört an die Deklaration.
+
+**Warum jetzt.** Mit ihr ist der erste Punkt der Kette des Meilensteins 11 auf
+**eine** Aussage reduziert, in der noch ein Maß vorkommt — die `δ`-Dünnheit —,
+und alles Deterministische steht dann in einer einzigen Kette von
+`isStoppingTime_oscHitSeq` bis zum Modul. Sie ist außerdem der erste Verbraucher
+von `SkorokhodSpace` aus `MartingaleProblems` heraus, also die Probe darauf, daß
+die am 2026-09-17 gefallene Dateigrenze trägt.
+
+#### Eine Auffälligkeit am Werkzeug, nicht an der Mathematik
+
+`scripts/check_master.py --keep` läßt seinen Baum `<worktree>/_check_<pid>/`
+stehen, und das ist so gewollt; aufgeräumt wird er aber von niemandem. Am
+2026-09-20 standen in `~/Code/lean/mathlib-master` **33** solcher Bäume, davon
+zwei aus diesem Lauf und 31 aus früheren. Dieser Lauf hat seine beiden eigenen
+gelöscht und die fremden
+**nicht** angefaßt; wer das Skript das nächste Mal anrührt, sollte ihm ein Aufräumen
+alter Bäume beigeben — etwa alle, deren Prozeß nicht mehr läuft.
