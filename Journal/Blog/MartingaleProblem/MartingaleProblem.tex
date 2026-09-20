@@ -5253,8 +5253,11 @@ results apply and which fail.
     stability theorem for Volterra equations obtained from it;
   \item Theorem~\ref{thm:absuniq} does \emph{not} apply, and the conclusion is
     false: a Volterra process is not Markov.  Nor do
-    Theorem~\ref{thm:absstrongmarkov} or Section~\ref{sec:duality}, both of which
-    use the shift.  Section~\ref{ssec:localuniq} applies as soon as a restart
+    Theorem~\ref{thm:absstrongmarkov} or Section~\ref{sec:duality} --- but for
+    Section~\ref{sec:duality} the reason given here is the wrong one, and
+    Remark~\ref{rem:dualnonmarkov} replaces it: the shift is dispensable, and what
+    blocks the duality is that a state-based dual carries the Markov property
+    with it.  Section~\ref{ssec:localuniq} applies as soon as a restart
     kernel is available.
   \end{itemize}
 \end{example}
@@ -7509,6 +7512,62 @@ We can now close the circle with Section~\ref{sec:uniqueness}.
   for $(A,\delta_x)$ by Theorem~\ref{thm:uniqueness}\ref{it:uniq_a}.  Now apply
   Theorem~\ref{thm:uniqueness}.
 \end{proof}
+
+\begin{remark}[Duality outside the Markov world: the obstruction is not the shift]
+  \label{rem:dualnonmarkov}
+  Example~\ref{ex:volterra} records that Section~\ref{sec:duality} does not reach
+  a Volterra process, and gives as the reason that this section uses the shift.
+  The conclusion stands; the reason does not, and the correction is worth having
+  because it says where the boundary really lies.
+
+  \emph{The shift is dispensable.}  Corollary~\ref{cor:uniqviadual} passes from
+  the duality to uniqueness through Theorem~\ref{thm:absuniq}, which needs a
+  shift system.  It need not: the weight may be carried through the whole
+  argument.  Write $\Phi^Z(s,t) = E[Z \cdot f(X_s,Y_t)]$ for $Z \geq 0$ bounded
+  and $\Filt^X_{s_0}$-measurable.  Both increment relations survive --- the one
+  in $X$ for $s \geq s_0$, which is Lemma~\ref{lem:restartmemory}, and the one in
+  $Y$ because reweighting the first factor of a product leaves the second
+  independent with its law unchanged.  The weighted identity then feeds
+  \eqref{eq:propagation} directly, and Proposition~\ref{prop:uniqfromprop}
+  gives uniqueness for every initial law \emph{with no shift system, no
+  determining set and no appeal to Theorem~\ref{thm:absuniq}}.  Of
+  Corollary~\ref{cor:uniqviadual} only hypothesis (i), the separating family,
+  survives.
+
+  Two things are not free in that passage, and both are recorded rather than
+  glossed: the weighted version consumes the full \emph{martingale} property in
+  $X$, where the unweighted one consumes only constancy of the mean; and the
+  weight must be measurable for the filtration of $X$ alone.  The latter is not
+  a convenience.  With $E_1 = \{*\}$, $E_2 = \R$, $f(x,y) = y$, $h = 0$ and $Y$
+  the martingale that is $0$ at $\bot$ and a fair sign from time $1$, one has
+  $\gamma_2 = 0$ while $Z = 1 + Y_1$ gives $\Phi^Z(\bot,\bot) = 0$ and
+  $\Phi^Z(\bot,1) = 1$: a weight that reads the dual process breaks the second
+  increment relation at the first step.
+
+  \emph{What does block it.}  Take $Z$ the indicator of a set in
+  $\Filt^X_s$.  The weighted identity then reads
+  \[
+    E\bigl[ f(X_t,y) \bigm| \Filt^X_s \bigr] \;=\; \Lambda_{s,t,y}(X_s) ,
+  \]
+  which is the Markov property.  \emph{A dual whose $X$-side is a function of the
+  state carries the Markov property with it}, so it cannot be had for a process
+  that is not Markov, and Example~\ref{ex:volterra} is out of reach for that
+  reason and not for want of a shift.
+
+  \emph{The room that is left.}  What the weighted identity actually consumes is
+  not $g = h$ but a conditional balance,
+  \[
+    E\bigl[ g_r(X,\cdot) - h(X_r,\cdot) \bigm| \Filt^X_{s_0} \bigr] \;=\; 0 ,
+  \]
+  which admits a path-dependent $g$.  That is the exact opening for a duality
+  outside the Markov world, and \textbf{no instance of it is known}.  Finding one,
+  or showing there is none, is the question this remark leaves open.
+
+  \emph{Status.}  Of the chain above, the generic step
+  \eqref{eq:propagation}-from-a-transfer-operator is formalized; the
+  duality-specific instantiation, the witness and the conditional balance are
+  stated in the roadmap and not yet proved.
+\end{remark}
 
 \begin{remark}[Status and boundary of the atomic case]
   \label{rem:statusboundary}
