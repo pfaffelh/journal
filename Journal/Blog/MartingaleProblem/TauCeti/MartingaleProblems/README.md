@@ -6577,6 +6577,16 @@ of determining sets and of `restart`.
   and `weightedLaw_const_mul`, that the weighted law is positively homogeneous
   in the weight. These two are what the normalisation of `lem:propagation`
   consists of: the first is "take `h ≡ 1`", the second is "divide by `E[Z]`".
+* `isFiniteMeasure_weightedLaw` and `propagatesAgreement_of_transfer`: a
+  weighted law is finite when the weight is bounded and the measure is, and a
+  set propagates agreement as soon as the integral of each member of a
+  separating family against the weighted law at `t` is the integral of some
+  function against the weighted law at `s`, by a map that does not depend on
+  the member of `N`. Nothing is asked of that map — no measurability, no
+  boundedness, no integrability — because equal measures integrate every
+  function alike. It is the interface through which duality reaches
+  `prop:uniqfromprop`; see `duality_weighted` in Milestone 8, whose transfer
+  operator is `Λ s t y x = 𝔼[f (x, Y^y T)]`.
 * `measure_cylinder_inter_eq_of_propagatesAgreement`: the induction over a
   chain, with the top coordinate's set a separate argument. That separation is
   the content of the step -- the induction hypothesis is used with the top set
@@ -7316,6 +7326,79 @@ this milestone speaks about `Locally`, which is declared under it.
   chain the `κ` condition forces `κ = 0`, which is `atomGrid_symm`; on a finite
   partial order with nonnegative masses it forces the defect to vanish, which is
   `dualityDefect_eq_zero_of_nonneg`.
+**Duality under a weight.** The identity of `chain_identity` carries a
+multiplicative weight, and the four points below are what that buys: the route
+from duality to uniqueness that does not pass through a shift system. The
+weight sits on the first factor, the staircase starts where the weight is
+measurable, and the dual time is the one that matches the clock mass.
+
+* `chain_identity` is stated above with the staircase running from `(⊥, t)` to
+  `(t, ⊥)`; the telescoping reads neither endpoint, so the statement is the one
+  for an arbitrary monotone `s` and antitone `t` with the same length,
+  ```
+  Φ (s m) (t m) - Φ (s 0) (t 0)
+    = ∑ k, (∫ r in Ico (s k) (s (k+1)), γ₁ r (t (k+1)) ∂q
+            - ∫ r in Ico (t (k+1)) (t k), γ₂ (s k) r ∂q)
+  ```
+  and the form above is its instance. A least element of `ι` is needed for
+  `duality_defect_eq_integral`, which reads `Iio ⊥ = ∅`, and for nothing else in
+  this group.
+* `duality_weighted`: with the data of `duality_of_atomless`, a time `s₀`, a
+  bounded non-negative `𝓕^X s₀`-measurable `Z`, a time `s' ≥ s₀` and the dual
+  time `T` determined by `q (Ico s₀ s') = q (Ico ⊥ T)`,
+  ```
+  𝔼[Z * f (X s', Y ⊥)] = 𝔼[Z * f (X s₀, Y T)] .
+  ```
+  The martingale property in the `X` direction is read on `[s₀, ∞)` only, which
+  is what `lem:restartmemory` supplies for the reweighted measure: `Z • P` is a
+  solution from `s₀` onwards, by the tower property and nothing else. Three
+  ingredients. The `X` increments are `integral_smul_martingale_eq` of
+  Milestone 5, which is already proved and already free of the shift. The `Y`
+  increments are unchanged, because a weight on the first factor leaves the
+  second factor independent and its law untouched:
+  `MeasureTheory.prod_withDensity_left`
+  (`MeasureTheory/Measure/WithDensity.lean:701`) is that step in measure form.
+  The conclusion is `duality_of_atomless` on the rectangle
+  `Icc s₀ s' ×ˢ Icc ⊥ T`.
+
+  The condition on `T` is not a hypothesis on the clock but the definition of
+  the dual time: it is `rem:haarrole`'s clock time anti-diagonal
+  `Q (s k) + Q (t k) = Q (s') `, which `eq:cancel` wants and which translation
+  invariance of `q` is one way to obtain. At `s₀ = ⊥` it holds with `T = s'`
+  for every clock, and that is why `duality` does not name it. Under Lebesgue
+  measure it is `T = s' - s₀`.
+* `not_secondIncrement_of_weight_on_dual`: the weight has to sit on the first
+  factor. Take `E₁ = Unit`, `E₂ = ℝ`, `f x y = y`, `h = 0`, and for `Y` the
+  martingale with `Y ⊥ = 0` and `Y t` a fair sign for `t ≥ 1`; then `γ₂ = 0`
+  while `Z = 1 + Y 1` gives `Φ^Z ⊥ ⊥ = 0` and `Φ^Z ⊥ 1 = 1`. So the second
+  increment relation fails for a weight that reads the dual process, and it
+  fails at the first step and not in a limit. This is the witness for the
+  measurability hypothesis of `duality_weighted`, and it is why that hypothesis
+  is `𝓕^X s₀` and not the filtration of the product.
+* `propagatesAgreement_of_duality`: the weighted laws of `X` under the members
+  of a solution set are related by the transfer operator
+  `Λ s t y x = 𝔼[f (x, Y^y T)]`, so `propagatesAgreement_of_transfer` of
+  Milestone 6 applies and the set propagates agreement. With
+  `eq_of_propagatesAgreement` this is `cor:uniqviadual` — uniqueness for every
+  initial law — through `prop:uniqfromprop`, with no shift system, no
+  determining set and no appeal to `thm:absuniq`. The separating hypothesis
+  `cor:uniqviadual`(i) is the only hypothesis of that corollary which survives.
+* `isMarkov_of_duality`: the same identity with `Z` an indicator of a set in
+  `𝓕^X s` reads `𝔼[f (X t, y) | 𝓕^X s] = Λ s t y (X s)`, so a solution which
+  has a dual is Markov, over a countable separating family and with one null
+  set for all of it. The Markov property is therefore a *consequence* of
+  possessing a state-based dual and not a hypothesis anywhere in this route —
+  which also says how far the route reaches: a dual whose `X` side is a
+  function of the state carries the Markov property with it.
+* `duality_weighted_of_condExp`: the balance condition the weighted identity
+  actually consumes is `γ₁ = γ₂` *after* weighting, that is
+  `𝔼[Z * (g r (X, Y t) - h (X r, Y t))] = 0` for the weight at hand, and over
+  all bounded `𝓕^X s₀`-measurable weights this is
+  `𝔼[g r (X, ·) - h (X r, ·) | 𝓕^X s₀] = 0`. It admits a path dependent `g`,
+  and it is the exact room the identity leaves outside the Markov world. The
+  conclusion is that of `duality_weighted`, and the proof is the same chain,
+  which reads the balance nowhere else.
+
 * `atomGrid_symm`: let `M : ℕ`, let `m : ℕ → ℝ` with `m i ≠ 0` for
   `1 ≤ i` and `i ≤ M - 1`, and let `Φ : ℕ → ℕ → ℝ` satisfy
   `m j * (Φ (i+1) j - Φ i j) = m i * (Φ i (j+1) - Φ i j)` for
@@ -11524,28 +11607,81 @@ condition and not a change of carrier that makes the convolution causal.
   `tsum_eq_zero_add'` against `ENNReal.summable` — no convergence question
   arises. The second form `r = φ + r ⋆ₗ φ` is this one and `lconvolution_comm`.
 * `setLIntegral_volterraResolvent_lt_top`: if `a < 1` on a window of length `d`
-  then `∫⁻ t in Set.Icc 0 d, r t < ⊤`; and
-  `setLIntegral_volterraResolvent_lt_top_of_locallyFinite`, the same on **every**
-  window, for a kernel whose mass on some window of positive length is below `1`
-  and whose mass on every window is finite. The step from the short window to
-  every window is causality and nothing else: the resolvent on `[0, (k+1) d]` is
-  determined by the kernel on `[0, (k+1) d]`, and the geometric bound is applied
-  block by block. This is the step the Neumann series of a normed algebra
-  (`NormedRing.inverse_one_sub`, `Mathlib/Analysis/Normed/Ring/Units.lean`)
-  cannot take: it asks `‖φ‖ < 1` globally, and a locally integrable kernel on the
-  half line has no such norm.
-* `exists_setLIntegral_lt_one`: a kernel with `∫⁻ t in Set.Icc 0 d, φ t < ⊤` for
-  every `d` and `φ` vanishing at `0` in the sense of the window mass has a window
-  of positive length with mass below `1`, by the continuity of the measure from
-  above. This is the hypothesis of the previous item discharged on local
-  integrability alone, and it is where "locally integrable" becomes "the resolvent
-  exists".
-* `renewal_eq_add_lconvolution_volterraResolvent`: `m = m₀ + r ⋆ₗ m₀` is the
-  unique causal solution of `m = m₀ + φ ⋆ₗ m` that is finite on every window.
-  Uniqueness is the difference of two solutions against the geometric bound;
-  existence is the associativity and the defining equation of `r`.
-  `renewal_lt_top`: if `m₀` is bounded on every window and the resolvent has
-  finite window mass, then so has `m`.
+  then `∫⁻ t in Set.Icc 0 d, r t < ⊤`, the geometric bound read off the series.
+* `expDamp l φ := fun t ↦ ENNReal.ofReal (Real.exp (-(l * t))) * φ t`, the
+  exponential damping, with `expDamp_apply`, `measurable_expDamp`,
+  `IsCausal.expDamp`, `expDamp_zero`, `convPow_expDamp` and
+  `volterraResolvent_expDamp`. The one that carries the milestone is
+  `lconvolution_expDamp : expDamp l f ⋆ₗ expDamp l g = expDamp l (f ⋆ₗ g)`, and
+  it asks **nothing** — not causality, not measurability, not finiteness —
+  because `e^{-l s} ⬝ e^{-l (t - s)} = e^{-l t}` is an identity of real numbers
+  and not a property of the half line. The damping is what replaces the short
+  window: it keeps the window and makes the mass small by weighting.
+* `exists_setLIntegral_expDamp_lt_one`: a measurable kernel with finite mass on
+  `[0, c]` has a damping `l ≥ 0` whose damped mass on that window is below `1`,
+  by the monotone convergence theorem for nonincreasing sequences (`lintegral_iInf'`)
+  along `l = 0, 1, 2, …`. Neither causality nor any behaviour of the kernel at the
+  origin is asked for: the damped masses decrease to the mass of `{0}`, which is
+  `0` because `{0}` is Lebesgue null (`Real.volume_singleton`). Two almost sure
+  conditions enter and each is needed — the sequence is antitone only where
+  `0 ≤ t`, and it decreases to `0` only where the kernel is **finite**, since
+  `e^{-l t} ⬝ ⊤ = ⊤` for every `l`.
+* `setLIntegral_volterraResolvent_lt_top_of_ne_top`: the resolvent has finite mass
+  on a window as soon as the kernel has, on that window alone and with no
+  hypothesis on the kernel anywhere else; and
+  `setLIntegral_volterraResolvent_lt_top_of_locallyFinite`, the same quantified
+  over the window, which is the form the renewal equation consumes. This is where
+  "locally integrable" becomes "the resolvent exists", and it is the step the
+  Neumann series of a normed algebra (`NormedRing.inverse_one_sub`,
+  `Mathlib/Analysis/Normed/Ring/Units.lean`) cannot take: it asks `‖φ‖ < 1`
+  globally, and a locally integrable kernel on the half line has no such norm.
+  It is taken by damping and not by a block decomposition: bounding the mass of
+  the `n`-th power on `[0, K d]` through the mass on `[0, d]` costs a binomial
+  count of the ways `n` blocks distribute over `K`, and the damping replaces that
+  count by a single limit — and pays twice, because it removes the hypothesis
+  `a < 1` from the conclusion instead of discharging it.
+* `lconvolution_add` and `add_lconvolution`, the distributivity of the lower
+  integral convolution over addition, each asking the measurability of the one
+  integrand that is split off and nothing else. Mathlib does not have them:
+  `Mathlib/Analysis/LConvolution.lean` carries `mlconvolution_def`,
+  `zero_mlconvolution`, `mlconvolution_zero`, `measurable_mlconvolution`,
+  `aemeasurable_mlconvolution`, `mlconvolution_assoc₀`, `mlconvolution_assoc`
+  and `mlconvolution_comm`, and no distributivity. They belong in Mathlib beside
+  the associativity, and they ask strictly less than it does.
+* `renewal_eq_add_lconvolution_volterraResolvent`: `m₀ + r ⋆ₗ m₀` solves
+  `m = m₀ + φ ⋆ₗ m`, by the distributivity, the associativity and the defining
+  equation of `r` read backwards. Neither causality nor finiteness is a
+  hypothesis: over `ℝ≥0∞` the equation holds whether or not its solution is
+  finite, which is why the finiteness is a separate statement and not a
+  precondition for writing the equation down.
+* `renewal_lt_top`: the solution has finite mass on every window on which `φ`
+  and `m₀` have — window by window, with the hypotheses about the **same**
+  window as the conclusion. This is the statement the seam with Milestone 4
+  consumes.
+* `lconvolution_mono`, the monotonicity of the convolution in its second
+  argument, which over `ℝ≥0∞` is `lintegral_mono` and nothing else;
+  `lconvolution_finset_sum` and `finset_sum_lconvolution`, the distributivity
+  over a finite sum on either side, by induction over the `Finset`; and
+  `lconvolution_volterraResolvent_left`, the series of the powers convolved with
+  the inhomogeneity, by `lintegral_tsum`.
+* `renewal_le_of_eq`: every solution of `m = m₀ + φ ⋆ₗ m` dominates
+  `m₀ + r ⋆ₗ m₀`; the resolvent solution is the **smallest** one. This is the
+  half of the uniqueness that needs no subtraction, which is why it is stated
+  separately and proved first: each partial sum of the series is below every
+  solution, by induction through the equation, and the passage to the limit is
+  `ENNReal.tsum_eq_iSup_nat` and `ENNReal.add_iSup`. Neither causality nor
+  finiteness enters — the bound holds for **any** solution, including one that
+  is `⊤` somewhere.
+* `renewal_ae_eq_of_eq`: two solutions that are causal and have finite mass on
+  every window agree almost everywhere. This is the one statement of the
+  milestone where the truncated subtraction of `ℝ≥0∞` is a real obstacle and not
+  a notational one: the difference of a solution and the minimal one solves the
+  homogeneous equation only where both are finite, so the argument runs against
+  `lintegral_sub`, whose two hypotheses are exactly the finiteness the statement
+  carries and the pointwise bound `renewal_le_of_eq` supplies. The conclusion is
+  almost everywhere and not pointwise, and it is honest that way: two solutions
+  that differ on a Lebesgue null set have the same convolutions and cannot be
+  told apart by the equation.
 
 **The seam with Milestone 4, and it is two statements and not one.** The
 resolvent gives `𝔼[N t] < ∞` only once the mean intensity of the linear Hawkes
