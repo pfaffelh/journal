@@ -8081,15 +8081,25 @@ and 11 use them.
   martingale `Y` and a stopping time `τ` for `𝓕`, the stopped process
   `stoppedProcess (fun t ↦ {ω | ⊥ < τ ω}.indicator (Y t)) τ` is a martingale;
   and `isStable_martingale_rightContinuous`, the packaged
-  `ProbabilityTheory.IsStable 𝓕 (fun Z ↦ Martingale Z 𝓕 P ∧ ∀ᵐ ω ∂P, ∀ t, ContinuousWithinAt (Z · ω) (Set.Ici t) t)`.
-  The conjunction is what is stable, because right continuity is preserved by
-  stopping and is the hypothesis under which the martingale half holds. Then
-  `ProbabilityTheory.IsStable.locally` of
+  `ProbabilityTheory.IsStable 𝓕 (fun Z ↦ Martingale Z 𝓕 P ∧ IsStronglyProgressive 𝓕 Z ∧ ∀ᵐ ω ∂P, ∀ t, Tendsto (fun r ↦ Z r ω) (𝓝[≥] t) (𝓝 (Z t ω)))`.
+  The conjunction is what is stable, and it has **three** members and not two:
+  the martingale half holds under the other two together, and each of the two
+  survives stopping on its own — progressivity by Mathlib's
+  `IsStronglyProgressive.stoppedProcess` and the indicator step
+  `isStronglyProgressive_indicator`, right continuity by
+  `tendsto_nhdsGE_stoppedProcess`. Then `ProbabilityTheory.IsStable.locally` of
   `Mathlib/Probability/Process/LocalProperty.lean` gives at once that a stopped
-  local martingale is a local martingale, and `IsStable.locally_and_iff` splits
-  the conjunction again; so `IsLocalMPSolution` of Milestone 2 is preserved by
-  stopping without any further work, and no localizing sequence is constructed
-  by hand. Mathlib has the localization scaffolding but nothing about the
+  local martingale is a local martingale, and `ProbabilityTheory.Locally.mono`
+  forgets the two conjuncts the consumer does not read
+  (`locally_martingale_stoppedProcess`); so `IsLocalMPSolution` of Milestone 2 is
+  preserved by stopping without any further work, and no localizing sequence is
+  constructed by hand.
+
+  **The conjunction is not split again.** `ProbabilityTheory.IsStable.locally_and_iff`
+  asks that each side be stable on its own, and the martingale property alone is
+  not: it is precisely the conjunct whose proof consumes the other two. The
+  direction the consumer needs is the one `Locally.mono` supplies, and it is the
+  only one available here. Mathlib has the localization scaffolding but nothing about the
   martingale property in it: `Submartingale.stoppedProcess` of
   `Mathlib/Probability/Martingale/OptionalStopping.lean` is stated for
   `Filtration ℕ` and real valued processes, and `Locally` is never instantiated
@@ -8123,6 +8133,24 @@ and 11 use them.
   adaptedness of the stopped process and for the measurability of the stopped
   value for the σ-algebra of the stopping time, and nowhere else.
 
+  **And right continuity is asked almost everywhere, 2026-09-20.** Until the
+  fifth run of that day it was asked at every sample point, and that is more
+  than the proof spends: the convergence of the approximations is consumed by
+  Vitali, which quantifies almost everywhere. `tendsto_stoppedValue_dyadStop` is
+  therefore stated at **one** sample point and `ae_tendsto_stoppedValue_dyadStop`
+  gathers it; the whole chain from there
+  (`integrable_stoppedValue_of_rightContinuous`,
+  `integral_stoppedValue_eq_of_rightContinuous`, `stoppedValue_ae_eq_condExp`,
+  `isOptionalSamplingFor_of_martingale`, `martingale_stoppedProcess`) carries
+  `∀ᵐ ω ∂P`. The difference is not cosmetic: right continuity of the test
+  process of the path dependent construction holds exactly on the non explosion
+  set, because `tendsto_nhdsGE_mpFamilyF_hawkes` produces it out of the local
+  integrability of the rate along the path and that integrability **is** the non
+  explosion at the sample point
+  (`not_intervalIntegrable_hawkesSelfRate_of_not_summable`). The everywhere form
+  was therefore a hypothesis the Hawkes data cannot supply, and the almost
+  everywhere form is one the almost sure non explosion discharges.
+
   What the `ℝ≥0` proof does use and a general `ι` does not have is the dyadic
   approximation of the stopping time from above. The replacement over an
   arbitrary `ι` is an increasing sequence of finite subsets of `D` exhausting `D`
@@ -8134,6 +8162,33 @@ and 11 use them.
   [FirstCountableTopology ι]`, so it applies there unchanged. Order density of
   `D` is an assumption the `ℝ≥0` form does not need to state and the general form
   does.
+
+  **The packaging is proved over `ℝ≥0` as well, 2026-09-20**, as
+  `isStable_martingale_rightContinuous`, with `stableMartingaleProp_zero` for the
+  inhabitedness of the property and `locally_martingale_stoppedProcess` for the
+  consequence. Two things about it were not visible from the item above.
+
+  **The indicator costs a lemma on the progressive side.** The process `IsStable`
+  quantifies over carries `{ω | ⊥ < τ ω}.indicator` in front of the stopping, so
+  besides `martingale_indicator_bot` on the martingale side there has to be
+  `isStronglyProgressive_indicator` on the other. It does not touch the product
+  σ-algebra of the definition of `IsStronglyProgressive`: the indicator is the
+  product with the time independent process `fun _ ω ↦ S.indicator 1 ω`, which is
+  progressive by `StronglyAdapted.isStronglyProgressive_of_continuous` because it
+  is adapted and constant in time, and `IsStronglyProgressive.mul` finishes. The
+  set lies in `𝓕 ⊥` because it is the complement of `{ω | τ ω ≤ ⊥}`.
+
+  **Right continuity survives stopping, and the two cases are not symmetric.**
+  `tendsto_nhdsGE_stoppedProcess` holds at every sample point and asks nothing of
+  the stopping time. Where the time has occurred the stopped path is constant on
+  the right and the limit is trivial; where it has not, the stopped path agrees
+  with the path on a right neighbourhood, and the neighbourhood exists because
+  `ENNReal` is densely ordered — some `c` lies strictly between the time and the
+  stopping time, it is finite because it lies below the latter, and `Set.Ico s c`
+  is the neighbourhood (`Ico_mem_nhdsGE`,
+  `Mathlib/Topology/Order/OrderClosed.lean:357`, the `to_dual` of
+  `Ioc_mem_nhdsLE`). This is the only place the order structure of the index
+  enters.
 * Doob's inequalities in continuous time. The supremum
   `fun ω ↦ ⨆ t ∈ Set.Iic T, ‖Y t ω‖` is measurable because right continuity
   makes it the supremum over `Set.Iic T ∩ D`; that reduction is a lemma of its

@@ -45959,3 +45959,182 @@ Abschnitt als in dieser Gestalt unerreichbar benannt hatte.
    Übersetzung und keine Erschließung mehr: die vier Schritte des Beweises
    (Approximation, gleichgradige Integrierbarkeit, Vitali, Hilfsstoppzeit)
    stehen, und keiner von ihnen außer dem ersten benutzt die reelle Struktur.
+
+### 2026-09-20, fünfter Lauf des Tages — Vorschlag 2 steht, und beim Nachsehen, wo seine Voraussetzung verbraucht wird, fiel die zweite von zwei Hürden der Hawkes-Montage: die Rechtsstetigkeit wird nur **fast sicher** gelesen, und in der punktweisen Gestalt war sie für die Hawkes-Daten gar nicht zu haben
+
+**Bearbeitet:** Vorschlag 2 des Vorlaufs. Vorschlag 1 (die qualifizierten Namen
+aus `own_names.md`) ist **nicht** angefaßt und bleibt stehen; Vorschlag 3 (die
+allgemeine Fassung über beliebigem `ι`) ebenso.
+
+Fünf neue Deklarationen und ein neuer Abschnitt `StableMartingale` in
+`MartingaleProblems/Suggested.lean`, **acht Deklarationen mit abgeschwächter
+Voraussetzung**, vier berichtigte Doc-Kommentare, drei neue Absätze in
+Meilenstein 9. Die Warnungszahlen sind unverändert (18 / 35 / 106).
+
+#### Teil 1: die Verpackung, und sie ist eine Konjunktion aus **drei** Aussagen
+
+`isStable_martingale_rightContinuous` steht — `martingale_stoppedProcess` in der
+Gestalt, die Mathlibs Lokalisierungs-API liest. Die Roadmap hatte dafür eine
+Konjunktion aus **zwei** Aussagen angesagt, Martingaleigenschaft und
+Rechtsstetigkeit. Das ist eine zu wenig: `martingale_stoppedProcess` verlangt
+`IsStronglyProgressive` als dritte, und alle drei überleben das Stoppen, jede
+aus einem eigenen Grund.
+
+* Die Martingalhälfte ist `martingale_stoppedProcess` selbst, zusammen mit
+  `martingale_indicator_bot` für den Indikator, den `IsStable` mitführt.
+* Die Progressivität ist Mathlibs `IsStronglyProgressive.stoppedProcess` und —
+  neu — `isStronglyProgressive_indicator` für den Indikator. Der Beweis faßt
+  die Produkt-σ-Algebra der Definition **nicht** an: der Indikator ist das
+  Produkt mit dem zeitunabhängigen Prozeß `fun _ ω ↦ S.indicator 1 ω`, der nach
+  `StronglyAdapted.isStronglyProgressive_of_continuous` progressiv ist, weil er
+  adaptiert und in der Zeit konstant ist, und `IsStronglyProgressive.mul`
+  schließt.
+* Die Rechtsstetigkeit ist `tendsto_nhdsGE_stoppedProcess`, und ihre beiden
+  Fälle sind **nicht symmetrisch**. Wo die Stoppzeit schon eingetreten ist, ist
+  der gestoppte Pfad rechts konstant. Wo nicht, stimmt er auf einer
+  Rechtsumgebung mit dem Pfad überein, und die Umgebung gibt es, weil `ENNReal`
+  dicht geordnet ist: ein `c` liegt echt zwischen `s` und `τ ω`, es ist endlich,
+  weil es unter `τ ω` liegt, und `Set.Ico s c` ist die Umgebung.
+
+**Die Konjunktion läßt sich nicht wieder zerlegen**, und die Roadmap hatte das
+Gegenteil versprochen. `ProbabilityTheory.IsStable.locally_and_iff` verlangt,
+daß **jede** Seite für sich stabil ist, und die Martingaleigenschaft allein ist
+es nicht — sie ist gerade der Konjunkt, dessen Beweis die beiden anderen
+verbraucht. Was der Verbraucher braucht, ist die eine Richtung, die
+`ProbabilityTheory.Locally.mono` gibt, und sie steht als
+`locally_martingale_stoppedProcess`: ein gestopptes lokales Martingal ist ein
+lokales Martingal, ohne daß eine lokalisierende Folge von Hand gebaut wird.
+(Die Aussage, `IsStable 𝓕 (fun Z ↦ Martingale Z 𝓕 P)` sei **falsch**, wird
+hier *nicht* erhoben; ein Zeuge dafür bräuchte eine nichtmeßbare Menge und ist
+nicht geführt. Berichtet ist nur, daß sie nicht bewiesen ist und daß die
+Zerlegung ohne sie nicht geht.)
+
+#### Teil 2, und er war nicht bestellt: die Rechtsstetigkeit ist eine `∀ᵐ`-Aussage
+
+Beim Nachsehen, **wo** die Rechtsstetigkeit im Beweis von
+`martingale_stoppedProcess` verbraucht wird, stellte sich heraus: an genau einer
+Stelle, der Konvergenz der dyadischen Näherungen, und diese Konvergenz wird von
+**Vitali** gelesen (`MeasureTheory.tendsto_Lp_finite_of_tendsto_ae`), der fast
+überall quantifiziert. Die punktweise Fassung wurde also nie ausgegeben.
+
+`tendsto_stoppedValue_dyadStop` trägt die Rechtsstetigkeit deshalb jetzt **an
+einem Stichprobenpunkt**, `ae_tendsto_stoppedValue_dyadStop` sammelt sie mit
+einem `filter_upwards`, und die ganze Kette darüber trägt `∀ᵐ ω ∂P`:
+`integrable_stoppedValue_of_rightContinuous`,
+`integral_stoppedValue_eq_of_rightContinuous`, das ältere dominierte
+`integral_stoppedValue_eq`, `stoppedValue_ae_eq_condExp`,
+`isOptionalSamplingFor_of_martingale`, `martingale_stoppedProcess`,
+`martingale_of_martingale_stoppedProcess_top`. Die Verbraucher mit der
+punktweisen Fassung reichen `Filter.Eventually.of_forall` nach; das sind fünf
+Stellen und je eine Zeile.
+
+**Und damit fällt die zweite von zwei Hürden der Hawkes-Montage.** Der Vorlauf
+hatte die Fensterschranke gestrichen und festgehalten,
+`martingale_stoppedProcess` verlange vom Hawkes-Testprozeß nur noch
+Progressivität und Rechtsstetigkeit. Die Rechtsstetigkeit hatte er dabei nicht
+nachgesehen, und sie war **in der verlangten Gestalt nicht zu haben**:
+`tendsto_nhdsGE_mpFamilyF_hawkes` erzeugt sie an einem Stichprobenpunkt `ω` aus
+`hint`, der lokalen Integrierbarkeit der Rate längs jenes Pfades, und `hint`
+**ist** die Nichtexplosion an `ω`
+(`not_intervalIntegrable_hawkesSelfRate_of_not_summable`, 26. Lauf) — also eine
+fast sichere und keine überall gültige Aussage. Die Voraussetzung war ein
+Quantorenfehler, kein Rechenproblem, und sie ist weg.
+
+Was damit **nicht** gezeigt ist: die Montage selbst. Die Lokalisierung über
+`truncRate` bleibt gewollt, weil `jumpProcessE_isMPSolution` unter `lam ≤ L`
+bewiesen ist und das eine andere Schranke ist; und der pfadabhängige Gegenpart
+von `truncRate` und `rateTime` fehlt weiter. Gefallen ist die zweite von zwei
+benannten Hürden, nicht die Montage.
+
+#### Ein Nebenfund, und er ist eine **Bestätigung**, keine Neuigkeit
+
+Der neu zitierte Mathlib-Name `Ico_mem_nhdsGE`
+(`Mathlib/Topology/Order/OrderClosed.lean:357`, das `@[to_dual]` von
+`Ioc_mem_nhdsLE`) erscheint in `scripts/_citations/own_names.md` als
+**ungedeckt**, obwohl er existiert und der Beweis ihn benutzt. Das ist die
+Lücke, die der erste Lauf des 2026-09-19 gemessen hat (8 866 Namen, 3,7 %):
+`scripts/mathlib_index.py` liest die Quelle und kennt von `@[to_dual]` und
+`@[to_additive]` nur die Formen, in denen der erzeugte Name **ausgeschrieben**
+ist (`TRANS`, Zeile 42); die bloßen Attribute erzeugen Namen, die der Index
+nicht sieht. Zwei Zeugen aus dem Index selbst: `Ioc_mem_nhdsLE` steht drin,
+`Ico_mem_nhdsGE` nicht; `Finset.prod_le_prod` steht drin, `Finset.sum_le_sum`
+nicht. Eine unabhängige untere Schranke für den Umfang: auf `master` stehen
+**7 491** Zeilen `@[to_additive]` und **1 736** Zeilen `@[to_dual]` ohne
+Argument, zusammen 9 227 — verträglich mit den gemessenen 8 866.
+
+Für diesen Lauf heißt das nur: die neue Zeile in `own_names.md` zu
+`Ico_mem_nhdsGE` ist ein Fehlalarm und nicht abzuarbeiten.
+
+#### Geprüft
+
+* `scripts/check_master.py`: rc 0, **0 Fehler**, 0 `sorry`, 0 veraltet,
+  Warnungen 18 / 35 / 106 — **unverändert** gegenüber dem Vorlauf. Mathlib
+  `94ef6b89544e58e90f119da869f3fb48d1da0f4c` (2026-09-18), Lean 4.35.0-rc2.
+  (Zwischendurch stand die Zahl bei 107, weil
+  `ae_tendsto_stoppedValue_dyadStop` `[IsFiniteMeasure P]` nicht braucht; ein
+  `omit` davor bringt sie zurück.)
+* `scripts/check_axioms_master.py` auf alle fünf neuen und auf neun geänderte
+  Deklarationen: `propext`, `Classical.choice`, `Quot.sound`, ohne Ausnahme.
+* Neu benutzte Mathlib-Namen, am Quelltext von `upstream/master` belegt:
+  `ProbabilityTheory.IsStable` (`Probability/Process/LocalProperty.lean:142`),
+  `ProbabilityTheory.IsStable.locally` (`ibid.:153`),
+  `ProbabilityTheory.Locally.mono` (`ibid.:120`),
+  `StronglyAdapted.isStronglyProgressive_of_continuous`
+  (`Probability/Process/Adapted.lean:365`),
+  `IsStronglyProgressive.mul` (`ibid.:293`),
+  `IsStronglyProgressive.stoppedProcess`
+  (`Probability/Process/Stopping.lean:987`),
+  `Ico_mem_nhdsGE` (`Topology/Order/OrderClosed.lean:357`, das `to_dual` von
+  `Ioc_mem_nhdsLE`).
+* Zeilensaldo: `Suggested.lean` +237 / −34, `README.md` +63 / −8; der größere
+  Teil der 237 ist Doc-Kommentar, die fünf Beweise zusammen sind rund 60 Zeilen.
+
+#### Eingetragen
+
+* `MartingaleProblems/Suggested.lean`: der Abschnitt `StableMartingale` mit
+  `isStronglyProgressive_indicator`, `tendsto_nhdsGE_stoppedProcess`,
+  `isStable_martingale_rightContinuous`, `stableMartingaleProp_zero` und
+  `locally_martingale_stoppedProcess`; `ae_tendsto_stoppedValue_dyadStop`; die
+  acht abgeschwächten Signaturen; die berichtigten Doc-Kommentare zum
+  Abschnittskopf von `StoppedMartingale`, zu `martingale_stoppedProcess` und zum
+  Abschnitt „The window bound, and where the Hawkes assembly stands".
+* `MartingaleProblems/README.md`: Meilenstein 9, der Punkt zur Stabilität
+  (dreigliedrige Konjunktion, keine Zerlegung) und zwei neue Absätze — zur
+  `∀ᵐ`-Fassung und zu den beiden neuen Nebenaussagen.
+* `.gitignore`: `/scripts/_dev_*.lean` — die Entwurfsdateien von
+  `dev_check_master.py` sind kein Ergebnis und gehören nicht in die Geschichte.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die Rechtsstetigkeit des Hawkes-Testprozesses als `∀ᵐ`-Aussage
+   hinschreiben**, und damit den ersten der beiden Eingänge von
+   `martingale_stoppedProcess` für die Hawkes-Daten einlösen. Sie ruht auf drei
+   Aussagen, die alle stehen: `tendsto_nhdsGE_mpFamilyF_hawkes` (punktweise, mit
+   `hint`), `not_intervalIntegrable_hawkesSelfRate_of_not_summable` (das `hint`
+   *ist* die Nichtexplosion) und der fast sicheren Nichtexplosion der
+   beschränkten nichtlinearen Daten. Sie ist jetzt dran, weil die Voraussetzung,
+   an der sie scheiterte, in diesem Lauf verschwunden ist, und weil sie mißt, ob
+   die Diagnose stimmt. Zu prüfen, **ehe** gebaut wird: unter welchem Maß die
+   vorhandene f.s.-Nichtexplosion steht und ob es dasselbe ist, unter dem der
+   Testprozeß ein Martingal sein soll — das ist die Stelle, an der ein
+   Quantorenfehler wiederkehren könnte. Schätzung: ein halber bis ein Lauf.
+
+2. **Die Progressivität des Hawkes-Testprozesses**, der zweite Eingang. Sie ist
+   keine f.s.-Aussage und kann es nicht sein (`IsStronglyProgressive` ist eine
+   Eigenschaft des Paares aus Prozeß und Filtration), also ist sie **an jedem**
+   Stichprobenpunkt zu führen. Der markovsche Gegenpart
+   `isStronglyProgressive_mpFamily_jumpProcessE` ist die Vorlage, und der
+   Unterschied ist derselbe wie bei der Rechtsstetigkeit: dort trägt die
+   beschränkte Rate den Kompensator, hier nicht. Ob es ohne eine Schranke geht
+   oder ob der **gestoppte** Prozeß genommen werden muß — wie im lokalen
+   markovschen Fall, wo genau das der Ausweg war —, ist die erste zu
+   begründende Entscheidung. Schätzung: ein Lauf.
+
+3. **Erst danach die allgemeine Fassung über beliebigem `ι`** (Vorschlag 3 des
+   Vorlaufs, unverändert gültig), mit der Ordnungsdichtheit von `D` als
+   benannter Voraussetzung. Sie ist jetzt eine Übersetzung: die vier Schritte
+   des Beweises stehen, und nur der erste — die dyadische Approximation —
+   benutzt die reelle Struktur. Dazu kommt, was dieser Lauf hinzugefügt hat:
+   `tendsto_nhdsGE_stoppedProcess` benutzt die dichte Ordnung von `ENNReal`, die
+   allgemeine Fassung braucht dafür `[DenselyOrdered ι]` oder einen anderen
+   Zugang zur Rechtsumgebung.

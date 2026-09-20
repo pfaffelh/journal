@@ -4,6 +4,10 @@
 /axcheck_tmp.lean
 /axcheck.lean
 /ax_check.lean
+# Entwurfsdateien für `scripts/dev_check_master.py`: eine Deklaration wird dort
+# probiert und danach in die Roadmap überführt; der Entwurf selbst ist kein
+# Ergebnis und gehört nicht in die Geschichte.
+/scripts/_dev_*.lean
 logs/
 .facts.lock
 
