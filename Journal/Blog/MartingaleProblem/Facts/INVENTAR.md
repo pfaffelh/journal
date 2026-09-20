@@ -50289,3 +50289,226 @@ nicht braucht — hier eine zusätzliche Voraussetzung an den Index einträgt.
 **Und danach ist der erste Punkt der Kette zusammenzusetzen**: erst `N` aus dem
 Horizontterm, dann `δ` aus diesem, und das ist die Reihenfolge, die der
 dreiundzwanzigste Lauf als die einzige konvergente benannt hat.
+
+### 2026-09-21, zweiter Lauf des Tages — der Lückenterm steht, und der Vorschlag, den er einlösen sollte, war **falsch**: die Summe geht mit `δ ↓ 0` nicht gegen null, sondern gegen den Approximationsfehler, und das ist keine Schwäche, sondern die Reihenfolge der Quantoren
+
+**Bearbeitet:** der Lückenterm des ersten Punktes der Kette des Meilensteins 11
+von `MartingaleProblems` — der erste Summand von
+`mul_measure_setOf_lt_modulusBased_le_lintegral_dist`, also die `N` Zuwächse
+über die **`δ`-gekappten** Zellen. Wie angeordnet: kein Meilenstein 8, kein
+Meilenstein 14, kein C.5/G.
+
+#### Was gebaut ist
+
+**Fünf** neue Deklarationen in `TauCeti/MartingaleProblems/Suggested.lean`,
+317 Zeilen, in einem neuen Abschnitt „The gap term" und zwei Einschüben bei
+ihren Nachbarn.
+
+* `lintegral_ofReal_dist_le_sqrt_of_lintegral_sq_le` — Cauchy–Schwarz,
+  abgelesen von einer Schranke an `∫⁻ ofReal (dist ·)²` statt an
+  `ofReal (∫ (·)²)`. Steht neben `lintegral_ofReal_dist_le_sqrt_toReal_of_le`,
+  weil es dessen dritte Gestalt ist.
+* `MeasureTheory.untopA_oscHitSeqGap_le_add` — die Kürze der Lückenzelle, **im
+  Index** gelesen:
+  `(min (τ (k+1)) (min (τ k) u + δ)).untopA ≤ (min (τ k) u).untopA + δ`.
+  Steht neben `untopA_oscHitSeqCap_le` und `untopA_oscHitSeqCap_le_succ`; der
+  Müllwert ist aus demselben Grund ungelesen, nämlich der Kappung.
+* `MeasureTheory.lintegral_ofReal_dist_le_sqrt_of_isApproximatingPair` — die
+  Zelle, **nach** Hölder:
+  ```
+  ∫⁻ ω, ofReal (dist (V β ω) (V α ω)) ∂P
+    ≤ ofReal √(((1 + 2 c) * (ofReal δ ^ (1 − 1/q) * K) + (2 ε' + 4 c ε)).toReal)
+  ```
+  für Stoppzeiten `α ≤ β ≤ j ≤ T` mit Werten im Fenster `W` und Abstand höchstens
+  `δ`.
+* `MeasureTheory.sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair`
+  — die Summe über die `N` Lückenzellen, `N` mal dieselbe Schranke, unter
+  `u + δ ≤ T` und mit den Fehlern auf dem Fenster `Set.Iic (u + δ)`.
+* `MeasureTheory.tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` — was die Schranke
+  bei festem `N` mit `δ ↓ 0` tut.
+
+**Geprüft:** `scripts/check_master.py` meldet für die ganze Kette **0 Fehler,
+0 `sorry`, 0 veraltete Namen** (Mathlib `94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `v4.35.0-rc2`). Die Warnungen sind 18 / 35 / 112 und damit **unverändert**
+gegenüber dem vor dem Lauf eigens gemessenen Stand. Alle fünf hängen nach
+`check_axioms_master.py` auf `propext`, `Classical.choice`, `Quot.sound` und auf
+nichts sonst. `check_cited_lines.py`: **379 von 379** gepaarten Fundstellen
+stimmen (eine mehr als vor dem Lauf), 0 tote, 0 verschoben.
+`check_duplicates.py` und `check_own_names.py` finden zu den neuen Namen nichts
+(2642 eigene Deklarationen, fünf mehr als vor dem Lauf).
+`check_negatives.py`: **49** Behauptungen, 0 mit unerwarteten Treffern — dieser
+Lauf hat **keine** neue Negativaussage aufgestellt. `check.py` meldet `clean`.
+
+#### Der Vorschlag des Vorlaufs ist widerlegt, und das ist das Ergebnis des Laufs
+
+Verlangt war
+
+```
+Tendsto (fun δ ↦ ∑ k ∈ Finset.range N, ∫⁻ ω, ofReal (dist (X β_k^δ ω) (X α_k ω)) ∂μ)
+  (𝓝[>] 0) (𝓝 0)
+```
+
+bei festem `N`. **Das ist falsch**, und der Grund steht in der Zelle selbst: die
+Zellen sind Zuwächse von `V`, und `V` ist nur über die Approximanten `Y` und
+`Y'` bekannt. Die Schranke der Summe ist
+
+```
+N * ofReal √(((1 + 2 c) * (ofReal δ ^ (1 − 1/q) * K) + (2 ε' + 4 c ε)).toReal),
+```
+
+und mit `δ ↓ 0` geht sie gegen `N * ofReal √((2 ε' + 4 c ε).toReal)`, nicht gegen
+null. Was `δ` wegnimmt, ist der **Kompensatoranteil** `ofReal δ^(1−1/q) * K`, und
+sonst nichts.
+
+**Das ist keine Schwäche der Abschätzung, sondern die Reihenfolge der
+Quantoren**, und sie ist jetzt an drei Stellen sichtbar: `N` kommt aus dem
+Horizontterm, dessen erster Summand `O(1/N)` ist; `δ` kommt aus diesem Lauf bei
+festem `N`; `ε` und `ε'` kommen **zuletzt**, aus der Approximierbarkeitsbedingung,
+die sie für *gegebenes* `N` und `δ` klein macht. \EK{} sagen dasselbe bei (9.28)
+— „`ε` is then chosen depending on `δ`". Der Vorschlag des Vorlaufs hatte die
+Fehlerglieder beim Abschätzen der Zelle schlicht nicht mitgeführt; sie stehen in
+`lintegral_ofReal_dist_le_sqrt_of_biSup_le` ausdrücklich da.
+
+Der Satz, der es sagt, ist `tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero`, und er
+ist als Grenzwert *gegen den Fehler* formuliert und nicht gegen null. Eine
+Aussage mit dem Grenzwert `0` wäre bei festem Paar von Approximanten falsch.
+
+#### Die Vorfrage des Vorlaufs, beantwortet
+
+Gefragt war, „ob die `δ`-gekappte Zelle dieselben Integrierbarkeitseingaben
+verlangt wie die des Horizontterms, oder ob `IsStoppingTime.add_const_of_orderedSub`
+— das der Horizontblock ausdrücklich nicht braucht — hier eine zusätzliche
+Voraussetzung an den Index einträgt."
+
+**Weder noch, und der Preis sitzt an einer dritten Stelle.**
+
+* `IsStoppingTime.add_const_of_orderedSub` trägt **nichts** ein. Es wird allein
+  von `isStoppingTime_oscHitSeqGap` gelesen, das seit langem bewiesen dasteht,
+  und der Index ist hier konkret `ℝ≥0`; die algebraischen Voraussetzungen an
+  `ι`, die der allgemeine Lückenblock führt, sind an dieser Stelle Instanzen.
+* Die Integrierbarkeitseingaben sind **dieselben**, aber an **zwei** Sorten von
+  Zeiten statt an einer: der Horizontterm liest die gestoppten `Y`, `Y'` nur an
+  den gekappten Zeiten, die Lückenzelle an den gekappten *und* an den
+  Lückenzeiten. Vier Hypothesen statt zwei, und keine davon neuer Art.
+* **Der Preis sitzt am Fenster.** Das rechte Ende einer Lückenzelle überschießt
+  den Horizont um bis zu `δ` (`oscHitSeqGap_le_coe`), also sind die
+  Approximationsfehler auf `Set.Iic (u + δ)` zu lesen und nicht auf
+  `Set.Iic u`, und die Voraussetzung heißt `u + δ ≤ T` statt `u ≤ T`. Das ist
+  die einzige Stelle, an der sich die beiden Blöcke im Fenster unterscheiden.
+
+#### Der angesagte Weg ist **nicht** gegangen worden, und das hat eine Aussage gespart
+
+Der Vorschlag nannte `lintegral_ofReal_dist_le_sqrt_of_biSup_le` als den Satz für
+den einzelnen Summanden. Genommen ist statt dessen die Zelle des
+**Horizontblocks**, `lintegral_ofReal_dist_sq_le_of_isApproximatingPair`, gefolgt
+von einer neuen Brücke. Der Grund ist nachrechenbar und nicht Geschmack:
+
+* `lintegral_ofReal_dist_le_sqrt_of_biSup_le` verlangt fünf Integrierbarkeiten
+  (`hm`, `hIV2`, `hIY2`, `hIVc`, `hIYc`) **als Hypothesen**, die die Zelle des
+  Horizontblocks aus `hV` und der Schranke `c` selbst herleitet. Über sie zu
+  gehen hieße, diese Herleitung ein zweites Mal zu schreiben.
+* Und sie führt die Konstanten ein zweites Mal. So steht `1 + 2 c` an **einer**
+  Stelle, und die beiden Blöcke teilen sich ihre Arithmetik.
+
+Was dafür neu gebraucht wurde, ist eine Zeile Mathematik:
+`lintegral_ofReal_dist_le_sqrt_of_lintegral_sq_le`. Die vorhandene Brücke
+`lintegral_ofReal_dist_le_sqrt_toReal_of_le` liest ihre Schranke an
+`ofReal (∫ (f−g)²)`, die Zelle des Horizontblocks liefert sie an
+`∫⁻ ofReal (dist f g)²`; die beiden sind gleich, aber nur über
+`ofReal_integral_eq_lintegral_ofReal` und `sq_abs`, und das ist eine Gleichheit,
+die ausgeführt werden muß und die Integrierbarkeit des Quadrats verlangt. Einmal
+ausgeführt, liest der Lückenblock die Zelle des Horizontblocks **unverändert**.
+
+#### Zwei kleinere Befunde
+
+* **`ε ≠ ⊤` und `ε' ≠ ⊤` stehen hier und nicht im Horizontblock**, und der
+  Grund ist die Wurzel: `Real.sqrt S.toReal` liest `toReal`, und `toReal ⊤ = 0`
+  machte die Behauptung falsch statt leer. Der Horizontterm bleibt ganz in
+  `ℝ≥0∞` und braucht sie nicht. Es ist dieselbe Stelle, an der schon
+  `lintegral_ofReal_dist_le_sqrt_toReal_of_le` sein `S ≠ ⊤` verlangt.
+* **`finiteness` trägt die Endlichkeit, wenn die eine harte Eingabe dasteht.**
+  `(1 + 2 * ofReal c) * (ofReal δ ^ (1 − 1/q) * K) + (2 ε' + 4 c ε) ≠ ⊤` geht
+  durch, sobald `ofReal δ ^ (1 − 1/q) ≠ ⊤` als `have` davorsteht; die Taktik
+  findet den `rpow` nicht selbst, alles andere schon. Das spart hier acht
+  Zeilen `ENNReal.add_ne_top`/`mul_ne_top` und ist für jeden weiteren Term
+  dieser Bauart die Abkürzung.
+
+#### Wo der erste Punkt der Kette jetzt steht
+
+| Größe | Stand |
+| --- | --- |
+| alles Deterministische bis zur Modulabschätzung | steht |
+| Markov auf den Lückenereignissen, über `N` summiert | steht |
+| optionales Sampling zwischen zwei Stoppzeiten | steht |
+| Martingalzuwachs gegen ein Gewicht aus der Vergangenheit | steht |
+| Zuwachs → Kompensatorzuwachs (Quasimartingal) | steht |
+| Quadratidentität, Cauchy–Schwarz, Hölder am Kompensator | steht |
+| die Klasse `𝓐 n` als Prädikat samt acht Folgerungen | steht |
+| die Quadratidentität am Prozeß — (9.26) selbst | steht |
+| der Horizontterm mit `N` im Nenner, in Verbrauchergestalt | steht |
+| **die Lückenzelle nach Hölder** | **steht, dieser Lauf** |
+| **die Lückensumme bei festem `N`** | **steht, dieser Lauf** |
+| **was die Lückenschranke mit `δ ↓ 0` tut** | **steht, dieser Lauf** |
+| der Zusammenbau beider Summanden zur Modulabschätzung | offen |
+
+**Beide Summanden sind damit abgeschätzt**, jeder durch Konstanten der Klasse —
+`u`, `q`, `K`, `c` — und die beiden Fehler. Was bleibt, ist, sie in *einer*
+Ungleichung zusammenzuführen.
+
+#### Was dieser Lauf **nicht** gemacht hat
+
+Den Grenzwert der **Summe** selbst, also `limsup_{δ↓0} ∑ … ≤ N √(2ε' + 4cε)`. Er
+ist keine Zusammensetzung der beiden gebauten Sätze, weil die Fehlerhypothese
+`hε` das Fenster `Set.Iic (u + δ)` nennt und damit von `δ` abhängt: um sie für
+alle `δ ≤ δ₀` aus *einer* Hypothese bei `δ₀` zu bekommen, braucht es die
+Monotonie des `⨆ t ∈ ·` im Fenster (`biSup_mono` unter `lintegral_mono`), vier
+Zeilen, und dazu den Übergang von `𝓝[>] (0 : ℝ≥0)` auf `𝓝[>] (0 : ℝ)`, weil die
+Summe ihr `δ` in `ℝ≥0` führt und die Grenzwertaussage in `ℝ`. Beides ist billig
+und keines ist nötig für den Zusammenbau, der als nächstes ansteht — dort wird
+`δ` festgehalten, nicht gegen null geschickt. Es ist hier benannt, damit kein
+Lauf es für eine Lücke hält.
+
+#### Vorschlag für den nächsten Lauf
+
+**Der Zusammenbau des ersten Punktes:
+`mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair` — die ganze
+probabilistische Substanz des Straffheitskriteriums in *einer* Ungleichung, mit
+beiden Summanden durch Konstanten der Klasse beschränkt.**
+
+> Für einen reellwertigen, beschränkten, rechtsstetigen und progressiv meßbaren
+> Prozeß `V` mit Pfadabbildung `Φ`, zwei Paare der Klasse mit gemeinsamen
+> `q`, `T`, `K`, `0 < ε₀`, `N ≠ 0` und `δ < u` mit `u + δ ≤ T`:
+> ```
+> ofReal ε₀ * μ {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ ω)) δ}
+>   ≤ N * ofReal √(((1 + 2 c) * (ofReal δ ^ (1 − 1/q) * K) + A).toReal)
+>     + (ofReal u ^ (1 − 1/q) * K * (1 + 2 ofReal c) / N + A) / ofReal ε₀
+> ```
+> mit `A = 2 ε' + 4 ofReal c * ε`.
+
+**Warum jetzt, und warum es billig ist.** Es ist `le_trans` von
+`mul_measure_setOf_lt_modulusBased_le_lintegral_dist` — der Fassung mit
+**freiem** `N`, nicht der mit `u ≤ N • δ` — gefolgt von `add_le_add` der beiden
+Sätze, die dieser und der Vorlauf gebaut haben:
+`sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair` für den
+ersten Summanden und
+`measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair` für den zweiten. Es
+ist keine neue Abschätzung, und der dreiundzwanzigste Lauf des 2026-09-20 hat
+die Reihenfolge, in der die beiden zusammengehen, bereits als die einzige
+konvergente benannt.
+
+**Worauf zu achten ist, und es ist eine Typfrage und keine Mathematik.**
+`mul_measure_setOf_lt_modulusBased_le_lintegral_dist` führt `u δ : ℝ` und
+schreibt die Zeiten mit `Real.toNNReal`; die beiden Schranken führen sie als
+`ℝ≥0`. Der Übergang ist `Real.toNNReal_coe` bei `u = ((u₀ : ℝ≥0) : ℝ)`, also
+eine Instanziierung und kein Umbau — aber sie ist **vor** dem `le_trans` zu
+machen, denn `rw` findet das Muster unter `min` und `oscHitSeq` sonst nicht;
+das ist dieselbe Falle, die der achtzehnte Lauf des 2026-09-10 unter
+„`ENNReal` und `WithTop ℝ≥0` sind für `rw` nicht dasselbe" notiert hat.
+
+**Und die Grenze, die dabei zu nennen ist.** Der Zusammenbau steht über einem
+**reellwertigen** `V`, weil `IsApproximatingPair` reellwertig ist; das
+Kriterium selbst spricht über `E`-wertige Pfade. Die Brücke ist die trennende
+Klasse von Meilenstein 11 — je `f` aus ihr ein `V = f ∘ X` —, und sie ist
+der Punkt **danach**, nicht Teil dieses Zusammenbaus. Das gehört an die
+Deklaration und in die README, damit kein Lauf den Zusammenbau für den ganzen
+Punkt hält.

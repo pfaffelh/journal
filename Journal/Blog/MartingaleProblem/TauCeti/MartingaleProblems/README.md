@@ -11856,6 +11856,62 @@ has to be chosen once for all `n`. What stands:
   weight of the cross term, the integrability of the stopped values and their
   products.
 
+  **The gap term, 2026-09-21, and the limit it has is not `0`.** The block "The
+  gap term" carries the other of the two quantities
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_lintegral_dist` leaves —
+  the **first summand** of its right hand side: the `N` increments over the
+  **`δ`-capped** cells `α_k = min (τ k) u`, `β_k = min (τ (k+1)) (α_k + δ)`.
+
+  ```
+  ∑ k ∈ range N, ∫⁻ ω, ofReal (dist (V β_k ω) (V α_k ω)) ∂P
+    ≤ N * ofReal √(((1 + 2 c) * (ofReal δ ^ (1 - 1/q) * K) + (2 ε' + 4 c ε)).toReal)
+  ```
+
+  — `MeasureTheory.sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair`,
+  for `u + δ ≤ T` and the errors read on the window `Set.Iic (u + δ)`. The cell
+  is `MeasureTheory.lintegral_ofReal_dist_le_sqrt_of_isApproximatingPair`.
+
+  **Here Hölder is applied per cell, and that is right, whereas at the horizon
+  it was wrong.** The horizon cells are consecutive and `N` of them span one
+  window of length `u`, so estimating each separately would pay `N^{1/q}` and
+  `IsApproximatingPair.sum_lintegral_enorm_compensator_sub_le` sums them first.
+  The gap cells are **separated by the gaps**, are not a chain, and `N` is a
+  constant here — so
+  `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le` is the right
+  estimate and its `δ^{1-1/q}` is what vanishes. The two blocks therefore use
+  the two forms of the same passage, and that is why both forms exist.
+
+  **What does not vanish, and it is a correction of the previous run's
+  proposal.** As `δ ↓ 0` at fixed `N` the bound tends to
+  `N √(2 ε' + 4 c ε)` and **not** to `0` —
+  `MeasureTheory.tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero`. The cells are
+  increments of `V`, and `V` is known only through the approximants `Y` and
+  `Y'`; shrinking the window removes the compensator part and nothing else. The
+  order of the quantifiers is therefore `N`, then `δ`, then `ε`: `N` from the
+  horizon term, whose first summand is `O(1/N)`; `δ` from here at that fixed
+  `N`; and `ε`, `ε'` last, from the approximability condition of \EK, Theorem
+  9.4, which asks them to be small for *given* `N` and `δ`. \EK{} say the same
+  at (9.28) — "`ε` is then chosen depending on `δ`".
+
+  **The window is `Set.Iic (u + δ)` and not `Set.Iic u`**, because the right
+  endpoint of a gap cell overshoots the horizon by at most `δ`
+  (`MeasureTheory.oscHitSeqGap_le_coe`), and the approximation errors are read
+  wherever the times take their values. That is the one place the two blocks
+  differ in their window, and it is why the hypothesis is `u + δ ≤ T`.
+
+  **Two statements were factored out for this.**
+  `MeasureTheory.lintegral_ofReal_dist_le_sqrt_of_lintegral_sq_le` is
+  Cauchy--Schwarz read from a bound on `∫⁻ ofReal (dist ·) ²`, the side the
+  horizon block produces, rather than on `ofReal (∫ (·)²)`, the side
+  `lintegral_ofReal_dist_le_sqrt_toReal_of_le` reads; performing the equality
+  once there is what lets the gap block use the horizon block's cell statement
+  unchanged. And `MeasureTheory.untopA_oscHitSeqGap_le_add` is the shortness of
+  the gap cell read **in the index**,
+  `(min (τ (k+1)) (min (τ k) u + δ)).untopA ≤ (min (τ k) u).untopA + δ`, which
+  is what the Hölder step asks and what the consecutive cells cannot give. Its
+  junk value is unread for the same reason as its two siblings: the cap, not a
+  hypothesis.
+
   **A naming trap that cost a compile and is recorded so it costs no other.**
   The countable dense set of the début theorem is called `D` throughout this
   development, and `D(ι, E)` is the notation for the path space; a section or
