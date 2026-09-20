@@ -11454,6 +11454,106 @@ has to be chosen once for all `n`. What stands:
   supply monotonicity. The convenient form
   `MeasureTheory.modulusBased_extendNNReal_le_of_oscHitSeq` is its corollary.
 
+  **And the implication is read as a set inclusion**, 2026-09-20:
+  `MeasureTheory.setOf_lt_modulusBased_subset_oscHitSeq`. For a family of paths
+  `Φ : Ω → D(ℝ≥0, E)` with `(Φ ω).toFun = fun t ↦ X t ω`, `0 ≤ ε` and
+  `0 ≤ δ < u`,
+
+  ```
+  {ω | ENNReal.ofReal ε < SkorokhodSpace.modulusBased 0 u
+        (SkorokhodSpace.extendNNReal (Φ ω)) δ}
+    ⊆ (⋃ k ∈ Finset.range N,
+        {ω | oscHitSeq X ε (k+1) ω ≤ oscHitSeq X ε k ω + ↑δ.toNNReal})
+      ∪ {ω | oscHitSeq X ε N ω < ↑u.toNNReal}.
+  ```
+
+  It is the contrapositive of the general form and **of that form only**: with
+  the form that asks finiteness up to and including `N`, a third and alien term
+  `{ω | oscHitSeq X ε N ω = ⊤}` would stand on the right and its probability
+  would have to be estimated separately; here `⊤` at stage `N` belongs to the
+  good side. The gap events force the finiteness below `N` on their own, because
+  `⊤ + δ < x` is false in `WithTop ℝ≥0`, so
+  `MeasureTheory.exists_coe_oscHitSeq_of_ne_top` is not used in its proof; the
+  last time is the `N`-th hitting time **cut off** at a point beyond the horizon,
+  which is finite whether or not the recursion has run off the end.
+
+  **And the estimate itself**, 2026-09-20:
+  `MeasureTheory.measure_setOf_lt_modulusBased_le_oscHitSeq`, three lines from
+  the inclusion and **with no measurability hypothesis at all**,
+
+  ```
+  μ {ω | ENNReal.ofReal ε < modulusBased 0 u (extendNNReal (Φ ω)) δ}
+    ≤ ∑ k ∈ Finset.range N,
+        μ {ω | oscHitSeq X ε (k+1) ω ≤ oscHitSeq X ε k ω + ↑δ.toNNReal}
+      + μ {ω | oscHitSeq X ε N ω < ↑u.toNNReal}.
+  ```
+
+  Neither the modulus nor the gap events are asked to be measurable, because
+  `MeasureTheory.measure_mono` (`MeasureTheory/OuterMeasure/Basic.lean:51`) and
+  `MeasureTheory.measure_biUnion_finset_le` (`:80`) are stated for
+  `OuterMeasureClass` and hold of arbitrary sets; the right hand side of
+  `SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` applies its measure in
+  exactly that way. A consumer reads the criterion's set
+  `{f | η ≤ modulusBased 0 u f δ}` through this at any `ε` with
+  `ENNReal.ofReal ε < η`.
+
+  Two estimates are therefore left for a measure, one per kind of summand: the
+  **gap** probabilities, `N` of them, which is where Doob from Milestone 9 is
+  consumed, and the single **horizon** probability. How many terms of the first
+  kind there can be is the deterministic `card_le_of_gapped` of
+  **SkorokhodSpace**.
+
+  **And the gap events are made estimable**, 2026-09-20:
+  `MeasureTheory.le_dist_stoppedValue_oscHitSeq`, with the general
+  `MeasureTheory.le_dist_debutTime_oscSet` underneath it. If the paths are right
+  continuous and `oscHitSeq X ε (k+1) ω = (t : WithTop ι)` is a time, then
+
+  ```
+  ε ≤ dist (X t ω) (stoppedValue X (oscHitSeq X ε k) ω).
+  ```
+
+  This is the counterpart of `MeasureTheory.dist_stoppedValue_oscHitSeq_le` —
+  below `τ (k+1)` the path stays within `ε` of the anchor, **at** `τ (k+1)` it is
+  at least `ε` away — and neither is the negation of the other, since `oscSet` is
+  defined by a *strict* inequality. It is what turns the gap event
+  `{τ (k+1) ≤ τ k + δ}` into the quantity Aldous' criterion hypothesises about:
+  with `σ = min (τ (k+1)) (τ k + δ)`, a stopping time with `τ k ≤ σ ≤ τ k + δ`,
+  the gap event lies in
+  `{ω | ε ≤ dist (stoppedValue X σ ω) (stoppedValue X (τ k) ω)}`.
+
+  **And this is where the right continuity of the paths is really paid.** The
+  deterministic half does not use it; `MeasureTheory.lt_oscHitSeq_succ` uses it
+  only to say that the gap hypothesis is not vacuous. Here it carries the
+  argument: `oscSet` is right-open, so `ε < dist` is witnessed only strictly to
+  the right of the début, an infimum of a right-open set need not be attained,
+  and the value at the début is reached by a passage to the limit along
+  `𝓝[oscSet X σ c ε ω] t`. That filter is `NeBot` because a greatest lower bound
+  lies in the closure of its set (`IsGLB.mem_closure`,
+  `Topology/Order/IsLUB.lean:55`), so no sequence and no first countability are
+  needed; what does not survive the limit is the strictness. `0 < ε` is not used
+  either.
+
+  **What is missing for the stopping time `σ` above is a Mathlib lemma, and the
+  gap is measured.** `σ = min (τ (k+1)) (τ k + δ)` is a stopping time by
+  `MeasureTheory.IsStoppingTime.min` once `fun ω ↦ τ k ω + δ` is one, and over
+  `ℝ≥0` Mathlib has no such statement. There are exactly two lemmas of that
+  shape, and both are unusable here:
+  `MeasureTheory.IsStoppingTime.add_const`
+  (`Probability/Process/Stopping.lean:389`), which asks `[AddGroup ι]`, and
+  `MeasureTheory.IsStoppingTime.add_const'` (`:403`), which asks
+  `[Countable ι]`. `ℝ≥0` is neither. The statement that is wanted is the one over
+  a canonically ordered additive monoid with truncated subtraction: for `i ≤ j`
+  the set `{τ + i ≤ j}` is `{τ ≤ j - i}` as in the group case, and for `j < i` it
+  is empty because `i ≤ τ ω + i`. The equivalence `a + i ≤ j ↔ a ≤ j - i` is
+  false over `ℝ≥0` without `i ≤ j`, which is why the group proof does not
+  transfer verbatim.
+
+  **The times are written in the `WithTop ℝ≥0` shape** — `↑δ.toNNReal` rather
+  than `ENNReal.ofReal δ` — because that is where `oscHitSeq` takes its values.
+  The two types are the same, but the `binop%` elaborator does not place a
+  `WithTop ℝ≥0` and an `ℝ≥0∞` under one `+`, and a statement mixing them fails to
+  elaborate.
+
   **Strict monotonicity is not free and its price is named.** The début of a
   right-open set need not be attained, so `le_debutTime_oscSet` alone leaves
   `τ k = τ (k+1)` possible. `lt_debutTime_oscSet` excludes it from `0 < ε`

@@ -41352,6 +41352,45 @@ theorem isRightOpen_oscSet {X : ι → Ω → E} {σ : Ω → WithTop ι} {c : �
   obtain ⟨v, hv, hsub⟩ := mem_nhdsGE_iff_exists_Ico_subset.1 hmem
   exact ⟨v, hv, fun s hs => ⟨lt_of_lt_of_le ht.1 (by exact_mod_cast hs.1), hsub hs⟩⟩
 
+omit [NoMaxOrder ι] in
+/-- **At the début itself the path has already moved by `ε`**, whenever the début is a time and
+the paths are right continuous.
+
+This is the converse direction to `dist_le_of_lt_debutTime_oscSet` and, unlike it, it is not
+free.  `oscSet` is right-open, so the strict inequality `ε < dist` is witnessed only at times
+*strictly to the right* of the début; an infimum of a right-open set need not be attained, and
+the value at the début is reached only by a passage to the limit from the right.  Right
+continuity of the paths is exactly what carries it, and what survives the limit is the
+non-strict `ε ≤ dist`.
+
+The limit is taken along `𝓝[oscSet X σ c ε ω] t`, which is `NeBot` because a greatest lower
+bound lies in the closure of its set (`IsGLB.mem_closure`); no sequence and no first
+countability.
+
+This is the statement that makes the gap events of Aldous' criterion estimable: it turns
+"the recursion advanced by at most `δ`" into "the path moved by `ε` between two stopping times
+at distance at most `δ`", which is the quantity the criterion hypothesises about. -/
+theorem le_dist_debutTime_oscSet {X : ι → Ω → E} {σ : Ω → WithTop ι} {c : Ω → E} {ε : ℝ} {ω : Ω}
+    (hcont : ∀ t : ι, ContinuousWithinAt (fun s => X s ω) (Set.Ici t) t)
+    {t : ι} (ht : debutTime (oscSet X σ c ε) ω = (t : WithTop ι)) :
+    ε ≤ dist (X t ω) (c ω) := by
+  have hne : (oscSet X σ c ε ω).Nonempty := by
+    by_contra hemp
+    rw [debutTime_of_eq_empty (Set.not_nonempty_iff_eq_empty.1 hemp)] at ht
+    exact absurd ht (by simp)
+  rw [debutTime_of_nonempty hne] at ht
+  have hinf : sInf (oscSet X σ c ε ω) = t := by exact_mod_cast ht
+  have hbdd : BddBelow (oscSet X σ c ε ω) := ⟨⊥, fun _ _ => bot_le⟩
+  have hglb : IsGLB (oscSet X σ c ε ω) t := hinf ▸ isGLB_csInf hne hbdd
+  have hsub : oscSet X σ c ε ω ⊆ Set.Ici t := fun _ hs => hglb.1 hs
+  have hnb : (𝓝[oscSet X σ c ε ω] t).NeBot :=
+    mem_closure_iff_nhdsWithin_neBot.1 (hglb.mem_closure hne)
+  have hc0 : ContinuousWithinAt (fun s => dist (X s ω) (c ω)) (Set.Ici t) t :=
+    (hcont t).dist continuousWithinAt_const
+  have hc : ContinuousWithinAt (fun s => dist (X s ω) (c ω)) (oscSet X σ c ε ω) t :=
+    hc0.mono hsub
+  exact ge_of_tendsto hc (eventually_mem_nhdsWithin.mono fun _ hs => hs.2.le)
+
 variable [FirstCountableTopology ι] [MeasurableSpace E] [BorelSpace E] [SecondCountableTopology E]
 
 omit [OrderBot ι] [NoMaxOrder ι] in
@@ -41548,6 +41587,26 @@ theorem lt_oscHitSeq_succ {X : ι → Ω → E} {ε : ℝ} (hε : 0 < ε) {k : �
   rw [oscHitSeq_succ]
   exact lt_debutTime_oscSet hε hcont ht (by simp [stoppedValue, ht])
 
+omit [NoMaxOrder ι] in
+/-- **At each hitting time the path really has moved by `ε`**, and this is the half of the
+recursion that the probabilistic estimate reads.
+
+It is `le_dist_debutTime_oscSet` applied to the step, and it is the counterpart of
+`dist_stoppedValue_oscHitSeq_le`: below `τ (k+1)` the path stays within `ε` of the anchor, and
+**at** `τ (k+1)` it is at least `ε` away from it.  Neither statement is the negation of the
+other, because the two inequalities are on different sides of the strict one the set is defined
+by, and it is right continuity which closes the gap at the endpoint.
+
+`0 < ε` is not used.  What is used is the finiteness of `τ (k+1)`, carried as the hypothesis
+`ht` in accordance with the standing rule: at a sample point where the recursion has run off the
+end there is no time at which anything happens, and the statement is empty rather than false. -/
+theorem le_dist_stoppedValue_oscHitSeq {X : ι → Ω → E} {ε : ℝ} {ω : Ω}
+    (hcont : ∀ t : ι, ContinuousWithinAt (fun s => X s ω) (Set.Ici t) t)
+    {k : ℕ} {t : ι} (ht : oscHitSeq X ε (k + 1) ω = (t : WithTop ι)) :
+    ε ≤ dist (X t ω) (stoppedValue X (oscHitSeq X ε k) ω) := by
+  rw [oscHitSeq_succ] at ht
+  exact le_dist_debutTime_oscSet hcont ht
+
 omit [TopologicalSpace ι] [OrderTopology ι] [NoMaxOrder ι] in
 /-- **Once the recursion has run off the end it stays there**, so finiteness at a stage is
 finiteness at every earlier one.  This is `monotone_oscHitSeq` read contrapositively, and it is
@@ -41650,6 +41709,13 @@ from right continuity, is here a **consequence of `hgap`**: the times are weakly
 (`oscHitSeq_le_succ`) and a positive gap makes them distinct.  `lt_oscHitSeq_succ` is therefore not
 an input of the deterministic half but the reason `hgap` is not vacuous, and that is where the
 right continuity of the paths is really spent.
+
+**And the implication is read backwards as a set inclusion**,
+`setOf_lt_modulusBased_subset_oscHitSeq`, which is the shape a measure is applied to.  Its
+right hand side is a finite union of gap events and one horizon event, and nothing about it is
+asked to be measurable: `SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` applies its measure
+as an outer measure, so `measure_mono` and `measure_biUnion_finset_le` carry the inclusion over
+to the estimate.
 -/
 
 namespace MeasureTheory
@@ -41756,5 +41822,158 @@ theorem modulusBased_extendNNReal_le_of_oscHitSeq
   have hg := hgap k hk
   rw [Real.dist_eq, abs_of_nonpos (sub_nonpos.2 hc)] at hg
   linarith
+
+/-- **The set inclusion that turns the deterministic half into a complement.**
+
+The sample points at which the modulus of the path exceeds `ε` are covered by the `N` events
+"the recursion failed to advance by more than `δ` at step `k`", together with the single event
+"the recursion has not overtaken the horizon `u` by stage `N`".
+
+This is the contrapositive of `modulusBased_extendNNReal_le_of_oscHitSeq_le`, and of **that**
+form only: with the form that asks finiteness up to and including `N` a third and alien term
+`{ω | oscHitSeq X ε N ω = ⊤}` would stand on the right, and its probability would have to be
+estimated separately.  Here `⊤` at stage `N` belongs to the good side, because everything is
+`≤ ⊤`.
+
+**The gap events force the finiteness below `N` by themselves**, so
+`exists_coe_oscHitSeq_of_ne_top` is not applied here: `WithTop ℝ≥0` carries an addition, and in
+it `⊤ + δ < x` is false.  The only work left is the case distinction at stage `N`, and it is
+done by taking as the last time the `N`-th hitting time **cut off** at a point beyond the
+horizon -- finite whether or not the recursion has run off the end, and so far out that neither
+the gap nor the horizon notices the cut.
+
+`↑δ.toNNReal` is `ENNReal.ofReal δ`, and it is written in the `WithTop ℝ≥0` shape because that
+is where the times live: the two types are the same, but the `binop%` elaborator does not place
+a `WithTop ℝ≥0` and an `ℝ≥0∞` under one `+`.
+
+What follows from this needs no measurability of the modulus: the right hand side of
+`SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` applies the image measure as an **outer**
+measure to an arbitrary set, so `measure_mono` and `measure_biUnion_finset_le` turn the
+inclusion into a bound by `N` gap probabilities plus one, which is the quantity that criterion
+asks to be small. -/
+theorem setOf_lt_modulusBased_subset_oscHitSeq
+    {X : ℝ≥0 → Ω → E} {ε : ℝ} (hε : 0 ≤ ε) {Φ : Ω → D(ℝ≥0, E)}
+    (hΦ : ∀ ω, (Φ ω).toFun = fun t => X t ω)
+    {u δ : ℝ} (hδ : 0 ≤ δ) (hδu : δ < u) (N : ℕ) :
+    {ω | ENNReal.ofReal ε
+        < SkorokhodSpace.modulusBased (0 : ℝ) u (SkorokhodSpace.extendNNReal (Φ ω)) δ}
+      ⊆ (⋃ k ∈ Finset.range N,
+          {ω | oscHitSeq X ε (k + 1) ω
+              ≤ oscHitSeq X ε k ω + ((Real.toNNReal δ : ℝ≥0) : WithTop ℝ≥0)})
+        ∪ {ω | oscHitSeq X ε N ω < ((Real.toNNReal u : ℝ≥0) : WithTop ℝ≥0)} := by
+  intro ω hω
+  by_contra hmem
+  rw [Set.mem_union, not_or] at hmem
+  obtain ⟨h1, h2⟩ := hmem
+  have hu : ((Real.toNNReal u : ℝ≥0) : WithTop ℝ≥0) ≤ oscHitSeq X ε N ω := not_lt.1 h2
+  have hgap : ∀ k < N,
+      oscHitSeq X ε k ω + ((Real.toNNReal δ : ℝ≥0) : WithTop ℝ≥0) < oscHitSeq X ε (k + 1) ω :=
+    fun k hk => not_le.1 fun h => h1 (Set.mem_iUnion₂.2 ⟨k, Finset.mem_range.2 hk, h⟩)
+  have hu0 : (0 : ℝ) < u := lt_of_le_of_lt hδ hδu
+  -- The two passages between `WithTop ℝ≥0` and `ℝ`, used three times below.
+  have hrl : ∀ a b : ℝ≥0,
+      (a : WithTop ℝ≥0) + ((Real.toNNReal δ : ℝ≥0) : WithTop ℝ≥0) < (b : WithTop ℝ≥0) →
+      (a : ℝ) + δ < (b : ℝ) := by
+    intro a b h
+    rw [← WithTop.coe_add, WithTop.coe_lt_coe] at h
+    have h' : ((a + Real.toNNReal δ : ℝ≥0) : ℝ) < (b : ℝ) := by exact_mod_cast h
+    rwa [NNReal.coe_add, Real.coe_toNNReal δ hδ] at h'
+  have hru : ∀ b : ℝ≥0, ((Real.toNNReal u : ℝ≥0) : WithTop ℝ≥0) ≤ (b : WithTop ℝ≥0) →
+      u ≤ (b : ℝ) := by
+    intro b h
+    rw [WithTop.coe_le_coe] at h
+    have h' : ((Real.toNNReal u : ℝ≥0) : ℝ) ≤ (b : ℝ) := by exact_mod_cast h
+    rwa [Real.coe_toNNReal u hu0.le] at h'
+  -- `N = 0` is impossible: the recursion starts at `⊥` and `u` is positive.
+  obtain ⟨M, rfl⟩ : ∃ M, N = M + 1 := by
+    cases N with
+    | zero =>
+      exfalso
+      have h : ((Real.toNNReal u : ℝ≥0) : WithTop ℝ≥0) ≤ ((⊥ : ℝ≥0) : WithTop ℝ≥0) := hu
+      have h' := hru ⊥ h
+      simp only [bot_eq_zero, NNReal.coe_zero] at h'
+      linarith
+    | succ M => exact ⟨M, rfl⟩
+  -- Below the last stage the times are finite, because `⊤ + δ < x` is false.
+  have hne : ∀ k ≤ M, oscHitSeq X ε k ω ≠ ⊤ := by
+    intro k hk htop
+    have h := hgap k (Nat.lt_succ_of_le hk)
+    rw [htop, WithTop.top_add] at h
+    exact not_top_lt h
+  have hσ : ∀ k ≤ M, oscHitSeq X ε k ω
+      = (((oscHitSeq X ε k ω).untopA : ℝ≥0) : WithTop ℝ≥0) := by
+    intro k hk
+    rw [WithTop.untopA_eq_untop (hne k hk), WithTop.coe_untop]
+  -- The last time: the `M+1`-st hitting time, cut off at a point beyond the horizon.
+  set B : ℝ≥0 := max ((oscHitSeq X ε M ω).untopA + Real.toNNReal δ + 1) (Real.toNNReal u)
+    with hBdef
+  set W : WithTop ℝ≥0 := min (oscHitSeq X ε (M + 1) ω) ((B : ℝ≥0) : WithTop ℝ≥0) with hWdef
+  have hWne : W ≠ ⊤ := by
+    intro h
+    have hle : W ≤ ((B : ℝ≥0) : WithTop ℝ≥0) := by rw [hWdef]; exact min_le_right _ _
+    rw [h, top_le_iff] at hle
+    exact WithTop.coe_ne_top hle
+  have hWcoe : ((W.untopA : ℝ≥0) : WithTop ℝ≥0) = W := by
+    rw [WithTop.untopA_eq_untop hWne, WithTop.coe_untop]
+  refine absurd (modulusBased_extendNNReal_le_of_oscHitSeq_le (X := X) hε (Φ ω) (hΦ ω) hδ hδu
+    (N := M + 1)
+    (τ := fun k => if k ≤ M then (oscHitSeq X ε k ω).untopA else W.untopA)
+    ?_ ?_ ?_ ?_) (not_le.2 hω)
+  · intro k hk
+    rw [ite_eq_left (Nat.lt_succ_iff.1 hk)]
+    exact hσ k (Nat.lt_succ_iff.1 hk)
+  · rw [ite_eq_right (by omega : ¬ M + 1 ≤ M), hWcoe, hWdef]
+    exact min_le_left _ _
+  · intro k hk
+    rcases Nat.lt_succ_iff_lt_or_eq.1 hk with h | h
+    · rw [ite_eq_left h.le, ite_eq_left (Nat.succ_le_of_lt h)]
+      refine hrl _ _ ?_
+      rw [← hσ k h.le, ← hσ (k + 1) (Nat.succ_le_of_lt h)]
+      exact hgap k (Nat.lt_succ_of_lt h)
+    · rw [h, ite_eq_left (le_refl M), ite_eq_right (by omega : ¬ M + 1 ≤ M)]
+      refine hrl _ _ ?_
+      rw [hWcoe, hWdef]
+      refine lt_min ?_ ?_
+      · rw [← hσ M (le_refl M)]
+        exact hgap M (Nat.lt_succ_self M)
+      · rw [← WithTop.coe_add, WithTop.coe_lt_coe, hBdef]
+        exact lt_of_lt_of_le (lt_add_one _) (le_max_left _ _)
+  · rw [ite_eq_right (by omega : ¬ M + 1 ≤ M)]
+    refine hru _ ?_
+    rw [hWcoe, hWdef]
+    refine le_min hu ?_
+    rw [WithTop.coe_le_coe, hBdef]
+    exact le_max_right _ _
+
+/-- **And the estimate the tightness criterion reads**, three lines from the inclusion and
+without a single measurability hypothesis.
+
+Neither the modulus nor the gap events are asked to be measurable sets: `measure_mono` and
+`measure_biUnion_finset_le` are stated for `OuterMeasureClass` and hold of arbitrary sets, so a
+measure applied to them is its outer measure and the inclusion carries over unchanged.
+
+The right hand side has exactly two kinds of summand, and that is the division of labour of the
+probabilistic half: `N` **gap** probabilities — that the recursion advanced by at most `δ` at a
+given step, which is what a maximal inequality is for — and one **horizon** probability, that
+the `N`-th time has not passed `u`.  How many terms the first kind may have is the
+deterministic `card_le_of_gapped`.
+
+A consumer of `SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` reads its set
+`{f | η ≤ SkorokhodSpace.modulusBased 0 u f δ}` through this at any `ε` with
+`ENNReal.ofReal ε < η`, the passage being `measure_mono` once more. -/
+theorem measure_setOf_lt_modulusBased_le_oscHitSeq {mΩ : MeasurableSpace Ω} (μ : Measure Ω)
+    {X : ℝ≥0 → Ω → E} {ε : ℝ} (hε : 0 ≤ ε) {Φ : Ω → D(ℝ≥0, E)}
+    (hΦ : ∀ ω, (Φ ω).toFun = fun t => X t ω)
+    {u δ : ℝ} (hδ : 0 ≤ δ) (hδu : δ < u) (N : ℕ) :
+    μ {ω | ENNReal.ofReal ε
+        < SkorokhodSpace.modulusBased (0 : ℝ) u (SkorokhodSpace.extendNNReal (Φ ω)) δ}
+      ≤ (∑ k ∈ Finset.range N,
+            μ {ω | oscHitSeq X ε (k + 1) ω
+                ≤ oscHitSeq X ε k ω + ((Real.toNNReal δ : ℝ≥0) : WithTop ℝ≥0)})
+          + μ {ω | oscHitSeq X ε N ω < ((Real.toNNReal u : ℝ≥0) : WithTop ℝ≥0)} := by
+  refine le_trans (measure_mono (setOf_lt_modulusBased_subset_oscHitSeq hε hΦ hδ hδu N)) ?_
+  refine le_trans (measure_union_le _ _) ?_
+  gcongr
+  exact measure_biUnion_finset_le _ _
 
 end MeasureTheory
