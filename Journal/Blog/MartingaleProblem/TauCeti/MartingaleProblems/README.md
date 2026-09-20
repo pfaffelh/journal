@@ -11232,7 +11232,10 @@ has to be chosen once for all `n`. What stands:
   `(Y n, Z n) ∈ 𝓐 n` with
   `⨆ n, ∫⁻ ω, ⨆ t ∈ Set.Iic T ∩ D, ‖Y n t ω - f (X n t ω)‖ₑ ∂(P n) < ε` and
   `⨆ n, 𝔼[eLpNorm (Set.Iic T).indicator (Z n) p] < ∞` for some `1 < p ≤ ∞`.
-  Then for every `f` in the sup-norm closure of the approximable functions the
+  Let the approximable functions be closed under products — the reason is below,
+  under „The one remaining quantity", and it is a witness and not a
+  convenience. Then for every `f` in the sup-norm closure of the approximable
+  functions the
   laws of `postcomp f ∘ X n` are tight in `D ι ℝ`, and the laws of
   `(f 1, …, f k) ∘ X n` are tight in `D ι (Fin k → ℝ)`. The `𝕂`-valued case is
   the real one applied to `Re f` and `Im f` together with the `Fin k` form.
@@ -11412,6 +11415,302 @@ has to be chosen once for all `n`. What stands:
   monotonicity is `MeasureTheory.lt_oscHitSeq_succ`. The third, `δ`-sparseness,
   is the probabilistic estimate and is what remains of this item.
 
+  **And the deterministic half is now one implication**, 2026-09-20:
+  `MeasureTheory.modulusBased_extendNNReal_le_of_oscHitSeq`. If the Aldous times
+  of `X` at level `ε` are finite up to stage `N` at a sample point, `δ`-sparse
+  below `N`, and have overtaken the horizon `u` at `N`, then
+  `SkorokhodSpace.modulusBased 0 u (SkorokhodSpace.extendNNReal f) δ ≤
+  ENNReal.ofReal ε` for any càdlàg `f` with `f.toFun = fun t ↦ X t ω`.
+  Everything in the criterion that does not mention a measure now stands in one
+  chain from
+  `MeasureTheory.isStoppingTime_oscHitSeq` to the modulus, and the single
+  hypothesis of that implication which a measure has to discharge is `hgap`.
+
+  **It spends neither `0 < ε` nor any regularity of the paths, and that relocates
+  where the right continuity is paid.** Strict monotonicity of the times is a
+  *consequence* of `hgap` there: the times are weakly monotone for free
+  (`MeasureTheory.oscHitSeq_le_succ`) and a positive gap makes consecutive ones
+  distinct. `MeasureTheory.lt_oscHitSeq_succ` is therefore not an input of the
+  deterministic half but the reason `hgap` is not vacuous — the probabilistic
+  estimate has to bound the probability that a gap is *short*, and without strict
+  monotonicity the gap could be `0` with probability one.
+
+  **Finiteness is carried in the hypothesis and not in a `WithTop.untopA`.** The
+  standing rule of this development applies to `debutTime` as to every other
+  function totalised by `sInf`, and the two lemmas that make it cheap are
+  `MeasureTheory.oscHitSeq_ne_top_of_le` — finiteness at a stage is finiteness at
+  every earlier one, `monotone_oscHitSeq` read contrapositively — and
+  `MeasureTheory.exists_coe_oscHitSeq_of_ne_top`, which turns the single
+  statement `oscHitSeq X ε N ω ≠ ⊤` into the `ℝ≥0`-valued times up to `N`.
+
+  **At the last stage, however, `⊤` is the *good* case**, and the general form
+  `MeasureTheory.modulusBased_extendNNReal_le_of_oscHitSeq_le` says so: it asks
+  finiteness only *below* `N` and asks of the last time only that it lie at or
+  before the `N`-th hitting time. Where the recursion is `⊤` at `N` the path
+  never again moves by more than `ε` after the previous time, so any point beyond
+  the horizon closes the subdivision and the modulus is bounded a fortiori; a
+  statement that asks the times to be `ℝ≥0`-valued up to and including `N`
+  excludes exactly that case. Its gap hypothesis is the ordered
+  `τ k + δ < τ (k+1)` rather than the `dist` form — not a strengthening, since
+  under the monotonicity of the recursion the two agree, but what makes the last
+  cell go through, where `hlast` is an inequality in the wrong direction to
+  supply monotonicity. The convenient form
+  `MeasureTheory.modulusBased_extendNNReal_le_of_oscHitSeq` is its corollary.
+
+  **And the implication is read as a set inclusion**, 2026-09-20:
+  `MeasureTheory.setOf_lt_modulusBased_subset_oscHitSeq`. For a family of paths
+  `Φ : Ω → D(ℝ≥0, E)` with `(Φ ω).toFun = fun t ↦ X t ω`, `0 ≤ ε` and
+  `0 ≤ δ < u`,
+
+  ```
+  {ω | ENNReal.ofReal ε < SkorokhodSpace.modulusBased 0 u
+        (SkorokhodSpace.extendNNReal (Φ ω)) δ}
+    ⊆ (⋃ k ∈ Finset.range N,
+        ({ω | oscHitSeq X ε (k+1) ω ≤ oscHitSeq X ε k ω + ↑δ.toNNReal}
+          ∩ {ω | oscHitSeq X ε k ω < ↑u.toNNReal}))
+      ∪ {ω | oscHitSeq X ε N ω < ↑u.toNNReal}.
+  ```
+
+  It is the contrapositive of the general form and **of that form only**: with
+  the form that asks finiteness up to and including `N`, a third and alien term
+  `{ω | oscHitSeq X ε N ω = ⊤}` would stand on the right and its probability
+  would have to be estimated separately; here `⊤` at stage `N` belongs to the
+  good side. The last time is the `k₀`-th hitting time **cut off** at a point
+  beyond the horizon, which is finite whether or not the recursion has run off
+  the end, and `MeasureTheory.exists_coe_oscHitSeq_of_ne_top` is not used in the
+  proof.
+
+  **The horizon condition inside each gap event is not decoration.** Without
+  `{ω | oscHitSeq X ε k ω < ↑u.toNNReal}` the gap event contains every sample
+  point at which `oscHitSeq X ε k ω = ⊤`, since `⊤ ≤ ⊤ + δ` holds in
+  `WithTop ℝ≥0`. Those are the *good* points — the path never again moves by more
+  than `ε` — and an estimate of the unrestricted event would have to bound their
+  probability, which is neither small nor what a maximal inequality produces. It
+  is also what carries the proof: the subdivision stops not at `N` but at the
+  **first** stage `k₀ ≤ N` at which the horizon has been overtaken, below which
+  every time is `< u` and therefore finite.
+
+  **And the estimate itself**, 2026-09-20:
+  `MeasureTheory.measure_setOf_lt_modulusBased_le_oscHitSeq`, three lines from
+  the inclusion and **with no measurability hypothesis at all**,
+
+  ```
+  μ {ω | ENNReal.ofReal ε < modulusBased 0 u (extendNNReal (Φ ω)) δ}
+    ≤ ∑ k ∈ Finset.range N,
+        μ ({ω | oscHitSeq X ε (k+1) ω ≤ oscHitSeq X ε k ω + ↑δ.toNNReal}
+            ∩ {ω | oscHitSeq X ε k ω < ↑u.toNNReal})
+      + μ {ω | oscHitSeq X ε N ω < ↑u.toNNReal}.
+  ```
+
+  Neither the modulus nor the gap events are asked to be measurable, because
+  `MeasureTheory.measure_mono` (`MeasureTheory/OuterMeasure/Basic.lean:51`) and
+  `MeasureTheory.measure_biUnion_finset_le` (`:80`) are stated for
+  `OuterMeasureClass` and hold of arbitrary sets; the right hand side of
+  `SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` applies its measure in
+  exactly that way. A consumer reads the criterion's set
+  `{f | η ≤ modulusBased 0 u f δ}` through this at any `ε` with
+  `ENNReal.ofReal ε < η`.
+
+  Two estimates are therefore left for a measure, one per kind of summand: the
+  **gap** probabilities, `N` of them, which is where Doob from Milestone 9 is
+  consumed, and the single **horizon** probability. How many terms of the first
+  kind there can be is the deterministic `card_le_of_gapped` of
+  **SkorokhodSpace**.
+
+  **And the gap events are made estimable**, 2026-09-20:
+  `MeasureTheory.le_dist_stoppedValue_oscHitSeq`, with the general
+  `MeasureTheory.le_dist_debutTime_oscSet` underneath it. If the paths are right
+  continuous and `oscHitSeq X ε (k+1) ω = (t : WithTop ι)` is a time, then
+
+  ```
+  ε ≤ dist (X t ω) (stoppedValue X (oscHitSeq X ε k) ω).
+  ```
+
+  This is the counterpart of `MeasureTheory.dist_stoppedValue_oscHitSeq_le` —
+  below `τ (k+1)` the path stays within `ε` of the anchor, **at** `τ (k+1)` it is
+  at least `ε` away — and neither is the negation of the other, since `oscSet` is
+  defined by a *strict* inequality. It is what turns the gap event
+  `{τ (k+1) ≤ τ k + δ}` into the quantity Aldous' criterion hypothesises about,
+  and `MeasureTheory.setOf_oscHitSeq_gap_subset_dist` below is that passage
+  written out — together with the horizon hypothesis it needs.
+
+  **And this is where the right continuity of the paths is really paid.** The
+  deterministic half does not use it; `MeasureTheory.lt_oscHitSeq_succ` uses it
+  only to say that the gap hypothesis is not vacuous. Here it carries the
+  argument: `oscSet` is right-open, so `ε < dist` is witnessed only strictly to
+  the right of the début, an infimum of a right-open set need not be attained,
+  and the value at the début is reached by a passage to the limit along
+  `𝓝[oscSet X σ c ε ω] t`. That filter is `NeBot` because a greatest lower bound
+  lies in the closure of its set (`IsGLB.mem_closure`,
+  `Topology/Order/IsLUB.lean:55`), so no sequence and no first countability are
+  needed; what does not survive the limit is the strictness. `0 < ε` is not used
+  either.
+
+  **The Mathlib lemma the stopping time `σ` above needs is supplied here**,
+  2026-09-20: `MeasureTheory.IsStoppingTime.add_const_of_orderedSub`.
+  `σ = min (τ (k+1)) (τ k + δ)` is a stopping time by
+  `MeasureTheory.IsStoppingTime.min` once `fun ω ↦ τ k ω + δ` is one, and over
+  `ℝ≥0` Mathlib has no such statement. There are exactly two lemmas of that
+  shape, and both are unusable here:
+  `MeasureTheory.IsStoppingTime.add_const`
+  (`Probability/Process/Stopping.lean:389`), which asks `[AddGroup ι]`, and
+  `MeasureTheory.IsStoppingTime.add_const'` (`:403`), which asks
+  `[Countable ι]`. `ℝ≥0` is neither. The statement here is the one over a
+  canonically ordered additive monoid with truncated subtraction,
+
+  ```
+  [AddCommMonoid ι] [LinearOrder ι] [CanonicallyOrderedAdd ι]
+  [Sub ι] [OrderedSub ι] [AddLeftReflectLE ι] :
+    IsStoppingTime f τ → ∀ i : ι, IsStoppingTime f fun ω ↦ τ ω + i,
+  ```
+
+  and its proof is a case distinction the group proof does not need: for `i ≤ j`
+  the set `{τ + i ≤ j}` is `{τ ≤ j - i}` by `le_tsub_iff_right`, carried by the
+  filtration because `tsub_le_self`, and for `j < i` it is **empty** because
+  `i ≤ τ ω + i` in a canonically ordered monoid. The equivalence
+  `a + i ≤ j ↔ a ≤ j - i` is false over `ℝ≥0` without `i ≤ j` — the right hand
+  side becomes `a ≤ 0` — which is why the group proof does not transfer verbatim.
+  `AddLeftReflectLE` is what `le_tsub_iff_right` asks for and is an instance over
+  `ℝ≥0`.
+
+  **And the gap event is turned into the distance between two stopping times**,
+  2026-09-20: `MeasureTheory.setOf_oscHitSeq_gap_subset_dist`. With
+  `α = min (τ k) u` and `β = min (τ (k+1)) (α + δ)` — both stopping times, with
+  `α ≤ β ≤ α + δ` and both bounded by `u + δ` —
+
+  ```
+  {ω | τ (k+1) ω ≤ τ k ω + δ} ∩ {ω | τ k ω < u}
+    ⊆ {ω | ε ≤ dist (stoppedValue X β ω) (stoppedValue X α ω)}.
+  ```
+
+  On the intersection both minima are attained on the left, so `β ω = τ (k+1) ω`
+  and `α ω = τ k ω`, and the statement is
+  `MeasureTheory.le_dist_stoppedValue_oscHitSeq`. The finiteness of `τ (k+1) ω`
+  is not a further hypothesis but follows from `τ (k+1) ω ≤ τ k ω + δ` with
+  `τ k ω` finite. `0 < ε` is not used; right continuity of the paths is.
+
+  **The horizon hypothesis cannot be dropped**, and the reason is the standing
+  rule of this development: without it the gap event contains the sample points
+  at which `τ k ω = ⊤`, where `⊤ ≤ ⊤ + δ` holds and the conclusion is plainly
+  false. This is why
+  `MeasureTheory.setOf_lt_modulusBased_subset_oscHitSeq` carries the horizon into
+  each of its gap events.
+
+  **And the two times are what the criterion asks for**, 2026-09-20:
+  `MeasureTheory.isStoppingTime_oscHitSeqCap` and
+  `MeasureTheory.isStoppingTime_oscHitSeqGap` say that `α` and `β` are stopping
+  times — the first by `MeasureTheory.IsStoppingTime.min_const`, the second by
+  `MeasureTheory.IsStoppingTime.min` over
+  `MeasureTheory.IsStoppingTime.add_const_of_orderedSub`, which is where that
+  lemma is spent. Their order relations are deterministic and carry no
+  hypothesis on `X` at all:
+  `MeasureTheory.oscHitSeqCap_le_oscHitSeqGap` (`α ≤ β`, from
+  `oscHitSeq_le_succ` and `le_self_add`),
+  `MeasureTheory.oscHitSeqGap_le_add` (`β ≤ α + δ`, `min_le_right`) and
+  `MeasureTheory.oscHitSeqGap_le_coe` (`β ≤ u + δ`). The last is why the cap at
+  `u` earns its place twice over: it excludes the explosion set from the gap
+  event, and it is what makes the times **bounded**, which is what Doob's
+  inequalities and optional sampling ask of a stopping time.
+
+  **And Markov's inequality is applied on the gap event**, 2026-09-20:
+  `MeasureTheory.measure_setOf_oscHitSeq_gap_le`, in the shape Mathlib states
+  it — the level as a **factor on the left** and not a reciprocal on the right,
+
+  ```
+  ENNReal.ofReal ε * μ ({ω | τ (k+1) ω ≤ τ k ω + δ} ∩ {ω | τ k ω < u})
+    ≤ ∫⁻ ω, ENNReal.ofReal (dist (stoppedValue X β ω) (stoppedValue X α ω)) ∂μ.
+  ```
+
+  It is `MeasureTheory.mul_meas_ge_le_lintegral`
+  (`MeasureTheory/Integral/Lebesgue/Markov.lean:59`; the `₀` form with
+  `AEMeasurable` at `:52`) applied to the **level set** of the distance, with
+  `MeasureTheory.measure_mono` along
+  `MeasureTheory.setOf_oscHitSeq_gap_subset_dist` carrying the gap event into
+  it. The gap event is therefore **not asked to be measurable** — only the
+  distance of the two stopped values is, which is
+  `MeasureTheory.stronglyMeasurable_dist_stoppedValue_oscHitSeqGap`, and its
+  input is `MeasureTheory.stronglyMeasurable_stoppedValue_of_le`
+  (`Probability/Process/Stopping.lean:1016`) at the bounds `u` and `u + δ`.
+  That is the third time the cap at the horizon pays for itself: it excludes
+  the explosion set, it makes the times bounded, and it is what makes them
+  measurable at a fixed index of the filtration. `0 < ε` is not used; at
+  `ε ≤ 0` the statement is true and empty.
+
+  **And the gap summands are discharged in the estimate itself**, 2026-09-20:
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_lintegral_dist`,
+
+  ```
+  ENNReal.ofReal ε * μ {ω | ENNReal.ofReal ε < modulusBased 0 u (extendNNReal (Φ ω)) δ}
+    ≤ ∑ k ∈ Finset.range N, ∫⁻ ω, ENNReal.ofReal (dist (X β_k ω) (X α_k ω)) ∂μ
+      + ENNReal.ofReal ε * μ {ω | oscHitSeq X ε N ω < ↑u.toNNReal},
+  ```
+
+  which is `measure_setOf_lt_modulusBased_le_oscHitSeq` with the inequality
+  above summed over the `N` gap terms. **The level multiplies rather than
+  divides**: `ENNReal` division is total and therefore lies where the level is
+  `0` or `⊤`, so in the product form the statement carries no positivity
+  hypothesis at all and a consumer divides at a level it has already assumed
+  positive.
+
+  **And the horizon summand is removed rather than estimated**, 2026-09-20:
+  `MeasureTheory.setOf_oscHitSeq_lt_subset_iUnion_gap`. If the horizon lies
+  within the reach of `N` steps of size `δ`, that is `u ≤ N • δ`, then
+
+  ```
+  {ω | τ N ω < u}
+    ⊆ ⋃ k ∈ Finset.range N, ({ω | τ (k+1) ω ≤ τ k ω + δ} ∩ {ω | τ k ω < u}),
+  ```
+
+  because a recursion all of whose steps exceed `δ` is past `N • δ ≥ u` at
+  stage `N`, and every earlier time is below `u` by `monotone_oscHitSeq`, which
+  supplies the horizon condition of the gap event for free. **Nothing in it is
+  probabilistic and nothing analytic**: no measure, no topology on the index,
+  no hypothesis on `X`, not even `0 ≤ ε`. Its base case is `oscHitSeq_zero`
+  with `⊥ = 0`, which `CanonicallyOrderedAdd` forces.
+
+  `MeasureTheory.measure_setOf_lt_modulusBased_le_gap` is the estimate that
+  follows, with the two occurrences of the same union as a factor `2`, and
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le` is
+  the whole probabilistic content of this item in one inequality,
+
+  ```
+  ENNReal.ofReal ε * μ {ω | ENNReal.ofReal ε < modulusBased 0 u (extendNNReal (Φ ω)) δ}
+    ≤ 2 * ∑ k ∈ Finset.range N, ∫⁻ ω, ENNReal.ofReal (dist (X β_k ω) (X α_k ω)) ∂μ.
+  ```
+
+  What is left of this item is therefore **one** quantity and no longer two:
+  how the martingale hypothesis makes those `N` lower integrals small,
+  uniformly in the family. That is where Doob from Milestone 9 is spent, and
+  the count `N` is the deterministic `SkorokhodSpace.card_le_of_gapped` read
+  against the condition `u ≤ N • δ`, which is no restriction on a consumer, who
+  chooses `N` after `δ` and `u`.
+
+  **A naming trap that cost a compile and is recorded so it costs no other.**
+  The countable dense set of the début theorem is called `D` throughout this
+  development, and `D(ι, E)` is the notation for the path space; a section or
+  argument named `D` shadows the notation, and a statement mentioning both
+  fails with a synthesis error about `LE (MeasurableSpace ?m → Type)` that
+  names neither. In
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_lintegral_dist` the dense
+  set is therefore `S`.
+
+  **And the order lemmas of Mathlib do not have the shape a memory supplies.**
+  `mul_le_mul_left'` and `add_le_add_left'` do **not** exist — neither on
+  `master` nor on v4.33.1. What exists is
+  `mul_le_mul_right (bc : b ≤ c) (a : α) : a * b ≤ a * c` and
+  `mul_le_mul_left (bc : b ≤ c) (a : α) : b * a ≤ c * a`
+  (`Algebra/Order/Monoid/Unbundled/Basic.lean:61` and `:69`), with their
+  `to_additive` images. The suffix names the side on which the **varying**
+  argument stands, so `add_le_add_left (h : b ≤ c) (a) : b + a ≤ c + a` adds
+  the constant on the *right* — the reverse of what the word suggests, and the
+  reverse of the older convention a memory is likely to supply.
+
+  **The times are written in the `WithTop ℝ≥0` shape** — `↑δ.toNNReal` rather
+  than `ENNReal.ofReal δ` — because that is where `oscHitSeq` takes its values.
+  The two types are the same, but the `binop%` elaborator does not place a
+  `WithTop ℝ≥0` and an `ℝ≥0∞` under one `+`, and a statement mixing them fails to
+  elaborate.
+
   **Strict monotonicity is not free and its price is named.** The début of a
   right-open set need not be attained, so `le_debutTime_oscSet` alone leaves
   `τ k = τ (k+1)` possible. `lt_debutTime_oscSet` excludes it from `0 < ε`
@@ -11428,6 +11727,84 @@ has to be chosen once for all `n`. What stands:
   read through the clipped distance to the value between them — which has compact
   containment in one line and is not tight. The quantity that fails there is
   exactly the one the martingale hypothesis of this item is for.
+
+  **The one remaining quantity is not bounded by what the martingale hypothesis
+  says about `f` alone**, 2026-09-20, and this fixes the shape the criterion has
+  to take. After
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le` what
+  is left is `∫ |Y β - Y α|` for the real process `Y = f ∘ X` and the two
+  stopping times. Write `Y = M + C` with `M` a martingale and `C` the
+  compensator. The compensator part is Hölder: `|C β - C α| ≤ ∫_α^{α+δ} |Z|` and
+  hence `O(δ^{1-1/p})` from the `eLpNorm` bound the criterion carries. **The
+  martingale part is not small at all.** A martingale with a jump of size `1` at
+  a deterministic time has `∫ |M β - M α| = 1` for `α` just below the jump and
+  `β` at it, for **every** `δ > 0`, while `sup_t ∫ |M t| ≤ 1` and its
+  compensator is `0`; both hypotheses of `𝓐 n` hold and the quantity does not go
+  to zero. What the martingale property gives is not the increment but its
+  integral against a weight from the past, and that is
+  `integral_mul_stoppedValue_sub_eq_zero` below.
+
+  **The passage to the increment is the square, and it costs `f²`.** With `D`
+  the compensator of `Y²` — that is, with `(f², g₂) ∈ A` supplying a second pair
+  `(Y², D) ∈ 𝓐 n` — the increment of the square and the cross term are both
+  compensator increments,
+
+  ```
+  ∫ (Y β - Y α)² = ∫ (D β - D α) - 2 ∫ Y α * (C β - C α),
+  ```
+
+  because `(Y β - Y α)² = (Y β² - Y α²) - 2 Y α (Y β - Y α)` and the martingale
+  parts of both terms integrate away — the first against the weight `1`, the
+  second against the weight `Y α`, which is bounded and `𝓕_α`-measurable.
+  Hölder makes both right hand terms `O(δ^{1-1/p})`, and Cauchy–Schwarz turns
+  the left hand side into `∫ |Y β - Y α|`. **Doob is not spent at this point**;
+  what is spent is optional sampling between two stopping times, the pull out
+  property of the conditional expectation, and Hölder.
+
+  **Hence the approximable functions are to be closed under products.** The
+  criterion may not be stated for an arbitrary set of approximable `f` and its
+  sup-norm closure: the estimate above reads the hypothesis at `f²` as well, so
+  what the criterion quantifies over is a **subalgebra**, which is what
+  `isRelativelyCompact_of_approx` below asks for anyway and what makes the two
+  items fit. The witness above shows this is not a convenience — with `f`
+  alone the conclusion of the intermediate estimate is false.
+
+  **And optional sampling between two stopping times is supplied**, 2026-09-20,
+  because Mathlib has it for no index this development uses.
+  `MeasureTheory.Martingale.stoppedValue_ae_eq_condExp_of_le`
+  (`Probability/Martingale/OptionalSampling.lean:141`) carries `[Countable ι]`,
+  the countable range form (`ibid.:121`) asks both times to have countable
+  range, and the section titled *Optional Sampling* (`ibid.:158`) runs under
+  `[LocallyFiniteOrder ι]` and `[DiscreteTopology ι]`. The four declarations
+  that close the gap are
+
+  * `stoppedValue_ae_eq_condExp_stoppedValue` —
+    `stoppedValue Y α =ᵐ[P] P[stoppedValue Y β | 𝓕_α]` for a right continuous
+    martingale over `ℝ≥0` and `α ≤ β ≤ j`. It is the tower property over the one
+    time form `stoppedValue_ae_eq_condExp` of Milestone 9, with
+    `MeasureTheory.condExp_condExp_of_le`
+    (`MeasureTheory/Function/ConditionalExpectation/Basic.lean:345`) along
+    `MeasureTheory.IsStoppingTime.measurableSpace_mono`
+    (`Probability/Process/Stopping.lean:464`); **no analysis is added** to what
+    the one time form already paid for.
+  * `integral_mul_stoppedValue_eq` —
+    `∫ W * stoppedValue Y β = ∫ W * stoppedValue Y α` for `W` bounded and
+    `𝓕_α`-measurable, by `MeasureTheory.integral_condExp` (`ibid.:237`) and the
+    pull out property `MeasureTheory.condExp_stronglyMeasurable_mul_of_bound`
+    (`MeasureTheory/Function/ConditionalExpectation/PullOut.lean:260`). `W` is
+    bounded rather than integrable because that is the pull out form which needs
+    no integrability of the product, and the consumer has the bound.
+  * `integral_mul_stoppedValue_sub_eq_zero` — the same with the increment on one
+    side, `∫ W * (stoppedValue Y β - stoppedValue Y α) = 0`.
+  * `integral_mul_stoppedValue_sub_eq_compensator` — the quasimartingale form,
+    `∫ W * (Y β - Y α) = ∫ W * (C β - C α)` whenever `Y - C` is a right
+    continuous martingale. It asks two integrabilities and they are about `Y`,
+    not about `C`: the stopped values of the martingale are integrable for free
+    by `integrable_stoppedValue_of_rightContinuous`, and those of `C` are the
+    difference.
+
+  What is left of this item after them is `integral_sq_stoppedValue_sub_eq`, the
+  display above, and the two Hölder estimates under it.
 * `isRelativelyCompact_of_approx`: if `E` is Polish, the domain of `A` contains
   an algebra separating points and vanishing nowhere, the approximation holds
   for each `(f,g) ∈ A`, and `{X n}` satisfies compact containment, then `{X n}`

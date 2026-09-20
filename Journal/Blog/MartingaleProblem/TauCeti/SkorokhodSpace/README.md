@@ -4297,6 +4297,46 @@ recursion supplies two without any probability:
 `0 < ε` and right continuity, since the début of a right-open set need not be
 attained. The `δ`-sparseness is the one that stays probabilistic.
 
+**And `SkorokhodSpace.modulusBased_extendNNReal_le_of_forall_gapped` is
+consumed**, 2026-09-20:
+`MeasureTheory.modulusBased_extendNNReal_le_of_oscHitSeq` in
+**MartingaleProblems** feeds it the recursion and keeps only the `δ`-sparseness
+in the hypothesis, so the whole deterministic half of the criterion is one
+implication. Two things about it are worth recording here, because they are
+statements about the consumer of *this* milestone. The first: it does not use
+`MeasureTheory.lt_oscHitSeq_succ`, because the strict monotonicity this
+theorem asks for follows from its own `hgap` together with the unconditional
+`MeasureTheory.oscHitSeq_le_succ`; the right continuity of the paths is spent
+not here but in showing that `hgap` can hold at all. The second: the times are
+handed over as an `ℝ≥0`-valued sequence under an explicit finiteness
+hypothesis, produced from one statement by
+`MeasureTheory.exists_coe_oscHitSeq_of_ne_top`, and not by reading
+`WithTop.untopA`. At the **last** stage that finiteness is not wanted at all,
+and the general form `MeasureTheory.modulusBased_extendNNReal_le_of_oscHitSeq_le`
+drops it: `⊤` there means the path never again moves by more than `ε`, so any
+point beyond the horizon closes the subdivision and `hmax` and `hosc` of this
+theorem are met a fortiori. That general form asks its gap in the ordered shape
+`τ k + δ < τ (k+1)` instead of through `dist`, because the last cell gets no
+monotonicity from the recursion; under the monotonicity the two shapes agree.
+
+**And the consumer reads it as a complement**, 2026-09-20:
+`MeasureTheory.setOf_lt_modulusBased_subset_oscHitSeq` in **MartingaleProblems**
+is the contrapositive, an inclusion of the set where
+`SkorokhodSpace.modulusBased 0 u (SkorokhodSpace.extendNNReal (Φ ω)) δ` exceeds
+`ENNReal.ofReal ε` in `N` gap events plus one horizon event — each gap event cut
+down to the sample points at which the recursion has not yet passed `u`, which
+is what makes it estimable at all. What that says about
+*this* milestone is that no measurability of
+`SkorokhodSpace.modulusBased` is needed on the way from the criterion to the
+estimate: `SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` applies its measure
+as an **outer** measure to an arbitrary set, and
+`MeasureTheory.measure_mono` (`MeasureTheory/OuterMeasure/Basic.lean:51`) with
+`MeasureTheory.measure_biUnion_finset_le` (`:80`) is the whole passage, carried
+out in `MeasureTheory.measure_setOf_lt_modulusBased_le_oscHitSeq`. The question
+whether the modulus is a measurable function of the path does not arise and is
+not answered here. `card_le_of_gapped` of this milestone is what bounds the
+number of summands the estimate then has.
+
 **And the bound is `c`, not `2 c`.** `SkorokhodSpace.subdivisionOsc` measures each
 cell from its **left endpoint**, where Billingsley's `w'` takes the diameter of
 the cell, so the passage from an `ε`-controlled hitting recursion to the modulus
