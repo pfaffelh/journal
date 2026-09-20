@@ -11310,6 +11310,60 @@ has to be chosen once for all `n`. What stands:
   `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal`, and the two must
   not be confused.
 
+  **And the route from the Doob estimate to that quantity is named, its
+  deterministic half built 2026-09-20.** What a maximal estimate gives is a bound
+  on increments at stopping times; what the display above asks for is a bound on
+  the modulus. The passage between them is Aldous' criterion, whose statement for
+  this chain is `SkorokhodSpace.modulusBased_le_of_forall_stoppingTime` of
+  **SkorokhodSpace** Milestone 10. Its deterministic half — everything in it that
+  does not mention a measure — is
+  `SkorokhodSpace.modulusBased_le_of_forall_gapped` with its two feeders
+  `SkorokhodSpace.subdivisionOsc_le_of_forall_cell` and
+  `SkorokhodSpace.modulusBased_le_of_forall_cell`, the counting bounds
+  `mul_le_dist_of_gapped` and `card_le_of_gapped`, and the specialisation to the
+  index this item has,
+  `SkorokhodSpace.modulusBased_extendNNReal_le_of_forall_gapped`. They take the
+  hitting times as a sequence `τ : ℕ → ℝ≥0` with a count `N`, which is the shape
+  those times have, and ask of them only what a second application of the
+  increment bound at a random time delivers: that consecutive ones do not lie
+  within `δ`. What is left for this item is therefore that one probabilistic
+  estimate, and the count of terms in the union it is summed over is
+  `card_le_of_gapped`.
+
+  **And the times are stopping times**, 2026-09-20, which is what had to hold
+  before that estimate could be evaluated at them at all. They are the hitting
+  times of an **open** set, so this is the début theorem, and Mathlib has only
+  the discrete case — both `MeasureTheory.Adapted.isStoppingTime_hittingBtwn`
+  and `MeasureTheory.Adapted.isStoppingTime_hittingAfter` carry `[Countable ι]`
+  and `[WellFoundedLT ι]`, and the words `debut` and `début` do not occur in
+  the library. What Mathlib *does* have is the reduction the theorem is proved
+  by, `MeasureTheory.isStoppingTime_of_measurableSet_lt_of_isRightContinuous`
+  together with `MeasureTheory.Filtration.rightCont`; the missing passage is
+  from a right-open random set to `{τ < i} ∈ 𝓕 i`, and it is
+  `MeasureTheory.setOf_debutTime_lt_eq` — pure order topology, one density
+  argument. The four declarations that carry this are
+  `MeasureTheory.debutTime` with `MeasureTheory.isStoppingTime_debutTime`, and
+  for the oscillation set `MeasureTheory.isRightOpen_oscSet`,
+  `MeasureTheory.measurableSet_mem_oscSet` and the cell bound
+  `MeasureTheory.dist_le_of_lt_debutTime_oscSet`; they stand under „The début of
+  a right-open random set" and „The Aldous hitting times as an instance of the
+  début".
+
+  **The price is named and not hidden**: the times are stopping times for the
+  right continuous filtration, so a consumer without `[𝓕.IsRightContinuous]`
+  passes to `𝓕₊` and must have its increment bound at `𝓕₊`-stopping times.
+
+  **What remains before the recursion may be written down** is one hypothesis
+  of `MeasureTheory.measurableSet_mem_oscSet`: that the anchor `c = X ∘ σ`
+  agrees, on `{σ < q}`, with an `𝓕 q`-measurable function. That is the
+  `𝓕_σ`-measurability of the stopped value together with
+  `MeasureTheory.IsStoppingTime.measurableSet_inter_lt`, and it is the only
+  place where the progressive measurability of `X` enters the criterion.
+
+  **The bound is `ε` and not `2 ε`**, because `SkorokhodSpace.subdivisionOsc`
+  measures each cell from its left endpoint where Billingsley's `w'` takes the
+  diameter.
+
   **And the remaining half is not a formality.**
   `SkorokhodSpace.not_isTightMeasureSet_twoJumpImageLaw` exhibits a family of
   image laws under a bounded post-composition — two jumps approaching each other,

@@ -4207,6 +4207,95 @@ per window; our infimum over subdivisions achieves it directly.
   Its doc comment must say that the implication is one way only — the
   deterministic step below refutes the converse.
 
+**Its deterministic half, built 2026-09-20 and free of probability.** The
+statement above splits along the line every proof about this modulus does: a
+deterministic half, which turns a family of times into a bound on
+`SkorokhodSpace.modulusBased`, and a probabilistic half, which says that those
+times do not crowd. The first is these five, stated so that the second plugs into
+them without seeing the path space — the times arrive as a sequence `τ : ℕ → ι`
+with a count `N`, which is the shape hitting times have.
+
+* `SkorokhodSpace.subdivisionOsc_le_of_forall_cell` — a cellwise bound bounds the
+  oscillation of a subdivision. It is the `iSup` unfolded in the direction
+  opposite to `SkorokhodSpace.dist_le_of_subdivisionOsc_le`.
+* `SkorokhodSpace.modulusBased_le_of_forall_cell` — the interface: name a based
+  subdivision, bound its cells, and the modulus is bounded. It is the previous
+  one composed with `SkorokhodSpace.modulusBased_le_subdivisionOsc`.
+* `SkorokhodSpace.modulusBased_le_of_forall_gapped` — the deterministic half
+  proper. An increasing, `δ`-sparse sequence `τ` of times up to a stage `N`, which
+  starts at or before the window, ends at or after it, passes through the base
+  point, and carries oscillation at most `c` on each cell, bounds the modulus by
+  `c`. With `τ (k+1) = inf {t > τ k | dist (X t) (X (τ k)) > ε}` the cell bound
+  holds with `c = ENNReal.ofReal ε` by the definition of the infimum, and the two
+  remaining hypotheses are exactly the probabilistic content of the criterion.
+* `mul_le_dist_of_gapped` and `card_le_of_gapped` — a `δ`-sparse chain of `N`
+  steps spans at least `N * δ`, so at most `L / δ` of them fit into a span `L`.
+  The index metric is additive along the order, so this is the sum of the gaps.
+  Aldous needs it twice: it makes the count `N` above finite, and it turns a bound
+  on the probability that **one** gap is short into a bound on the probability
+  that **some** gap is short.
+
+**Two things the outline above does not say, and both are about the base point.**
+
+The first is that `SkorokhodSpace.IsSubdivisionBased` asks for `t₀` among the
+nodes, so the recursion has to *start* there and not at the window's left edge.
+Inserting `t₀` afterwards is not available: splitting a cell at an interior point
+leaves the second piece measured from the new node, which costs a factor `2`
+(`SkorokhodSpace.subdivisionOsc_le_two_mul_of_cells`), and — decisively — it
+destroys the `δ`-sparseness the construction exists to produce. The hypothesis
+`hbase` is therefore where the base point enters the criterion.
+
+The second is that on the index the processes have it costs nothing.
+`SkorokhodSpace.modulusBased_extendNNReal_le_of_forall_gapped` asks for the times
+on `ℝ≥0` alone, starting at `0`: `SkorokhodSpace.extendNNReal` is constant on the
+negative half line, so the window `exhaustion 0 u` carries one free cell to the
+left of `0`, of oscillation `0` and sparse as soon as `δ < u` — the regime the
+criterion runs in anyway, `SkorokhodSpace.modulusBased_mono` carrying a bound at
+one radius down to every smaller one.
+
+**What the probabilistic half still has to supply, and where Mathlib stops.**
+The hitting times `τ (k+1) = inf {t > τ k | ε < dist (X t) (X (τ k))}` are the
+hitting times of an **open** set, so that they are stopping times is the début
+theorem. Mathlib has only the discrete case, checked at the source on
+`94ef6b89544e58e90f119da869f3fb48d1da0f4c`:
+`MeasureTheory.Adapted.isStoppingTime_hittingBtwn` and
+`MeasureTheory.Adapted.isStoppingTime_hittingAfter`
+(`Probability/Process/HittingTime.lean:399` and `:412`) both carry
+`[Countable ι]` and `[WellFoundedLT ι]`, and the words `debut` and `début` do not
+occur in the library.
+
+**The choice is made, and the début theorem is built**, 2026-09-20, in
+**MartingaleProblems** under „The début of a right-open random set":
+`MeasureTheory.isStoppingTime_debutTime` reads the début of a random set which
+contains an interval `[t, v)` around each of its points as a stopping time for a
+**right continuous** filtration, and `MeasureTheory.isRightOpen_oscSet`,
+`MeasureTheory.measurableSet_mem_oscSet` and
+`MeasureTheory.dist_le_of_lt_debutTime_oscSet` are its three inputs for the
+oscillation set. The infimum along a countable dense set was rejected, and the
+reason is the cell bound: between two such times the path could still move by
+more than `ε` at an instant outside the dense set, so the very property these
+times are formed for would be lost. What the right continuous filtration costs
+the consumer is that its increment bound has to hold at `𝓕₊`-stopping times, and
+that is said at the declaration.
+
+**And the junk value is settled in the same breath.** `sInf ∅ = 0`, and the set
+is empty as soon as the path never again moves by more than `ε` after `τ k`; then
+`τ (k+1)` would be `0` and therefore *below* `τ k`, so the monotonicity that
+`SkorokhodSpace.modulusBased_le_of_forall_gapped` asks for fails. This is the
+same shape as `stepIndex` in **MartingaleProblems**, where the junk value
+silently destroyed monotonicity in the time. `MeasureTheory.debutTime` is
+therefore `WithTop ι` valued and `MeasureTheory.debutTime_of_eq_empty` says that
+the empty case gives `⊤`.
+
+**And the bound is `c`, not `2 c`.** `SkorokhodSpace.subdivisionOsc` measures each
+cell from its **left endpoint**, where Billingsley's `w'` takes the diameter of
+the cell, so the passage from an `ε`-controlled hitting recursion to the modulus
+does not pay the classical factor `2`. The conclusion of
+`SkorokhodSpace.modulusBased_le_of_forall_stoppingTime` above is therefore to read
+`ε` where the outline wrote `2 ε`. This is the second time this factor has been
+found not to be owed; the first was the composition of the two maximal estimates
+on 2026-09-20.
+
 **If an atom-tolerant Aldous is wanted**, the clause is small and needs no new
 notion. The atom set `A` of a clock is deterministic and countable — from
 `q (Set.Iic t) ≠ ∞` only countably many atoms lie in each window — so ask the

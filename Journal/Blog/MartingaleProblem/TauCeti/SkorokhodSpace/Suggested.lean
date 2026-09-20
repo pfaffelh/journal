@@ -18836,3 +18836,253 @@ theorem SkorokhodSpace.not_isTightMeasureSet_twoJumpImageLaw :
     rwa [Set.indicator_of_mem hmem, Pi.one_apply] at hd
   have h2 : (2 : ℝ≥0∞)⁻¹ < 1 := ENNReal.inv_lt_one.2 (by norm_num)
   exact absurd (h1.trans h) (not_le.2 h2)
+
+/-! ### The Aldous subdivision, deterministically
+
+Milestone 10 reads Aldous' criterion as the implication
+
+```
+Aldous ⟹ modulusBased small in probability ⟹ tightness
+```
+
+whose second half is Milestones 7 and 8.  The first half splits along the same
+line every proof about this modulus does: a **deterministic** half, which turns a
+family of times into a bound on `SkorokhodSpace.modulusBased`, and a
+**probabilistic** half, which says that those times do not crowd.  The block
+below is the deterministic half, and it is stated so that the probabilistic half
+plugs into it without seeing the path space: the times arrive as a sequence
+`τ : ℕ → ι` with a count `N`, which is the shape hitting times have, and what is
+asked of them is exactly what a second application of the hypothesis at a random
+time delivers.
+
+Two things are recorded here that the outline of Milestone 10 does not say, and
+both are about the **base point**.
+
+The first is that `SkorokhodSpace.IsSubdivisionBased` asks for `t₀` among the
+nodes, so the Aldous recursion has to *start* there and not at the window's left
+edge.  Inserting `t₀` afterwards is not available: splitting a cell at an
+interior point leaves the second piece measured from the new node, which costs a
+factor `2` in the oscillation, and --- decisively --- it destroys the
+`δ`-sparseness that the whole construction exists to produce.  The hypothesis
+`hbase` of `SkorokhodSpace.modulusBased_le_of_forall_gapped` is therefore not
+bookkeeping; it is where the base point enters the criterion.
+
+The second is that on the index the processes actually have it costs nothing.
+`SkorokhodSpace.extendNNReal` is constant on the negative half line, so the
+window `exhaustion 0 u` of the extended path carries one free cell to the left of
+`0` --- of oscillation `0`, and sparse as soon as `δ < u`, which is the regime the
+criterion runs in anyway.  That is
+`SkorokhodSpace.modulusBased_extendNNReal_le_of_forall_gapped`, and it asks for
+the times on `ℝ≥0` alone, starting at `0`. -/
+
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] [MeasurableSpace E] [BorelSpace E]
+  [PolishSpace E] [BasePoint ι] in
+/-- **A cellwise bound bounds the oscillation of a subdivision**, and it is the
+`iSup` unfolded in the direction opposite to
+`SkorokhodSpace.dist_le_of_subdivisionOsc_le`.  Every construction that produces
+a subdivision produces it cell by cell, so this is the form in which such a
+construction is read. -/
+theorem SkorokhodSpace.subdivisionOsc_le_of_forall_cell (f : D(ι, E)) {n : ℕ}
+    {t : Fin (n + 1) → ι} {c : ℝ≥0∞}
+    (h : ∀ i : Fin n, ∀ s ∈ Set.Ico (t i.castSucc) (t i.succ),
+      edist (f.toFun s) (f.toFun (t i.castSucc)) ≤ c) :
+    SkorokhodSpace.subdivisionOsc f t ≤ c :=
+  iSup_le fun i => iSup_le fun s => iSup_le fun hs => h i s hs
+
+omit [AdditiveDist ι] [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- **A based subdivision with small cells bounds the modulus.**  This is
+`SkorokhodSpace.modulusBased_le_subdivisionOsc` composed with
+`SkorokhodSpace.subdivisionOsc_le_of_forall_cell`, and it is the interface every
+sufficient condition for tightness meets: name a subdivision, bound its cells,
+and the modulus is bounded.  The subdivision may depend on the path --- that is
+the whole freedom of this modulus, and `SkorokhodSpace.twoJump` below shows that
+without it the bound is false. -/
+theorem SkorokhodSpace.modulusBased_le_of_forall_cell (t₀ : ι) {u δ : ℝ} (f : D(ι, E))
+    {n : ℕ} {t : Fin (n + 1) → ι} {c : ℝ≥0∞}
+    (ht : SkorokhodSpace.IsSubdivisionBased t₀ u δ t)
+    (h : ∀ i : Fin n, ∀ s ∈ Set.Ico (t i.castSucc) (t i.succ),
+      edist (f.toFun s) (f.toFun (t i.castSucc)) ≤ c) :
+    SkorokhodSpace.modulusBased t₀ u f δ ≤ c :=
+  (SkorokhodSpace.modulusBased_le_subdivisionOsc t₀ f ht).trans
+    (SkorokhodSpace.subdivisionOsc_le_of_forall_cell f h)
+
+omit [AdditiveDist ι] [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- **The deterministic half of Aldous' criterion.**  A sequence of times
+`τ : ℕ → ι`, increasing and `δ`-sparse up to a stage `N`, starting at or before
+the window and ending at or after it, passing through the base point, and
+carrying oscillation at most `c` on each of its cells, bounds
+`SkorokhodSpace.modulusBased` by `c`.
+
+This is the statement Aldous' hitting times meet.  With
+`τ 0 = exhaustionMin t₀ u` and `τ (k+1) = inf {t > τ k | dist (X t) (X (τ k)) > ε}`
+the cell bound holds with `c = ENNReal.ofReal ε` by the definition of the
+infimum, and the two remaining hypotheses --- sparseness and the finiteness of
+`N` --- are the probabilistic content of the criterion, the first from a second
+application of the increment bound at the stopping time `min (τ (k+1)) (τ k + δ)`
+and the second from `card_le_of_gapped` below.
+
+**The oscillation is `c` and not `2 c`.**  `SkorokhodSpace.subdivisionOsc`
+measures each cell from its **left endpoint**, where Billingsley's `w'` takes the
+diameter of the cell, so the passage from an `ε`-controlled hitting recursion to
+the modulus does not pay the classical factor `2`.  The factor reappears only
+when a node is inserted into a finished subdivision, which is
+`SkorokhodSpace.subdivisionOsc_le_two_mul_of_cells`.
+
+**The base point is a hypothesis and not a consequence.**  `hbase` cannot be
+arranged after the fact: a node inserted into a cell both doubles the bound and
+breaks the `δ`-sparseness of the two pieces it creates.  The recursion has to be
+started so that `t₀` is one of its times, which on a half line it is; see
+`SkorokhodSpace.modulusBased_extendNNReal_le_of_forall_gapped`. -/
+theorem SkorokhodSpace.modulusBased_le_of_forall_gapped (t₀ : ι) {u δ : ℝ} (f : D(ι, E))
+    {c : ℝ≥0∞} {N : ℕ} {τ : ℕ → ι}
+    (hmono : ∀ k < N, τ k < τ (k + 1))
+    (hgap : ∀ k < N, δ < dist (τ k) (τ (k + 1)))
+    (hmin : τ 0 ≤ exhaustionMin t₀ u)
+    (hmax : exhaustionMax t₀ u ≤ τ N)
+    (hbase : ∃ k ≤ N, τ k = t₀)
+    (hosc : ∀ k < N, ∀ s ∈ Set.Ico (τ k) (τ (k + 1)),
+      edist (f.toFun s) (f.toFun (τ k)) ≤ c) :
+    SkorokhodSpace.modulusBased t₀ u f δ ≤ c := by
+  set t : Fin (N + 1) → ι := fun i => τ (i : ℕ) with htdef
+  have hsm : StrictMono t := by
+    rw [Fin.strictMono_iff_lt_succ]
+    intro i
+    simpa [htdef] using hmono i i.isLt
+  have hsub : SkorokhodSpace.IsSubdivisionBased t₀ u δ t := by
+    refine ⟨⟨hsm, ?_, ?_, ?_⟩, ?_⟩
+    · simpa [htdef] using hmin
+    · simpa [htdef] using hmax
+    · intro i
+      simpa [htdef] using hgap i i.isLt
+    · obtain ⟨k, hkN, hk⟩ := hbase
+      exact ⟨⟨k, by omega⟩, hk⟩
+  refine SkorokhodSpace.modulusBased_le_of_forall_cell t₀ f hsub ?_
+  intro i s hs
+  simp only [htdef, Fin.val_castSucc, Fin.val_succ] at hs ⊢
+  exact hosc i i.isLt s hs
+
+omit [OrderTopology ι] [ProperSpace ι] [BasePoint ι] in
+/-- **A `δ`-sparse chain of `N` steps spans at least `N * δ`.**  The index metric
+is additive along the order (`AdditiveDist`), so the distance from the first time
+to the last is the sum of the gaps, and each gap exceeds `δ`.
+
+Aldous' criterion needs it twice over: it is what makes the count `N` of
+`SkorokhodSpace.modulusBased_le_of_forall_gapped` finite, and it is what turns a
+bound on the probability that **one** gap is short into a bound on the
+probability that **some** gap is short. -/
+theorem mul_le_dist_of_gapped {τ : ℕ → ι} {δ : ℝ} {N : ℕ}
+    (hmono : ∀ k < N, τ k ≤ τ (k + 1))
+    (hgap : ∀ k < N, δ < dist (τ k) (τ (k + 1))) :
+    (N : ℝ) * δ ≤ dist (τ 0) (τ N) := by
+  induction N with
+  | zero => simp
+  | succ N ih =>
+    have hmono' : ∀ k < N, τ k ≤ τ (k + 1) := fun k hk => hmono k (by omega)
+    have hgap' : ∀ k < N, δ < dist (τ k) (τ (k + 1)) := fun k hk => hgap k (by omega)
+    have hchain : τ 0 ≤ τ N := by
+      have key : ∀ m, m ≤ N → τ 0 ≤ τ m := by
+        intro m
+        induction m with
+        | zero => exact fun _ => le_rfl
+        | succ m ih2 => exact fun hm => le_trans (ih2 (by omega)) (hmono' m (by omega))
+      exact key N le_rfl
+    have hstep : τ N ≤ τ (N + 1) := hmono N (by omega)
+    have hadd : dist (τ 0) (τ (N + 1)) = dist (τ 0) (τ N) + dist (τ N) (τ (N + 1)) :=
+      AdditiveDist.dist_add hchain hstep
+    have h1 := ih hmono' hgap'
+    have h2 := hgap N (by omega)
+    rw [hadd]
+    push_cast
+    nlinarith
+
+omit [OrderTopology ι] [ProperSpace ι] [BasePoint ι] in
+/-- **How many `δ`-sparse steps fit into a span `L`**, which is
+`mul_le_dist_of_gapped` divided by `δ`.  It is the deterministic bound on the
+number of hitting times below the horizon, and so on the number of terms in the
+union that the probabilistic half of Aldous' criterion estimates. -/
+theorem card_le_of_gapped {τ : ℕ → ι} {δ L : ℝ} {N : ℕ} (hδ : 0 < δ)
+    (hmono : ∀ k < N, τ k ≤ τ (k + 1))
+    (hgap : ∀ k < N, δ < dist (τ k) (τ (k + 1)))
+    (hL : dist (τ 0) (τ N) ≤ L) :
+    (N : ℝ) ≤ L / δ := by
+  rw [le_div_iff₀ hδ]
+  exact (mul_le_dist_of_gapped hmono hgap).trans hL
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The deterministic half of Aldous' criterion on the extended half line**,
+which is the index the processes of Milestone 11 of **MartingaleProblems** have:
+their paths reach `D(ℝ, E)` through `SkorokhodSpace.extendNNReal`, and their
+times live on `ℝ≥0`.
+
+Here the base point costs nothing.  `SkorokhodSpace.extendNNReal f` is constant on
+the negative half line, so the cell from `exhaustionMin 0 u` to `0` has
+oscillation `0` and is `δ`-sparse as soon as `δ < u`; the times themselves are
+asked for on `ℝ≥0` only, and starting at `0`, which is where a hitting recursion
+on a half line starts anyway.
+
+The hypothesis `δ < u` is not a restriction: the criterion asserts a bound for all
+small `δ` at a fixed window radius, and `SkorokhodSpace.modulusBased_mono` carries
+a bound at one radius down to every smaller one. -/
+theorem SkorokhodSpace.modulusBased_extendNNReal_le_of_forall_gapped
+    {u δ : ℝ} (hδ : 0 ≤ δ) (hδu : δ < u) (f : D(ℝ≥0, E)) {c : ℝ≥0∞} {N : ℕ} {τ : ℕ → ℝ≥0}
+    (hτ0 : τ 0 = 0)
+    (hmono : ∀ k < N, τ k < τ (k + 1))
+    (hgap : ∀ k < N, δ < dist ((τ k : ℝ≥0) : ℝ) ((τ (k + 1) : ℝ≥0) : ℝ))
+    (hmax : u ≤ ((τ N : ℝ≥0) : ℝ))
+    (hosc : ∀ k < N, ∀ s ∈ Set.Ico (τ k) (τ (k + 1)),
+      edist (f.toFun s) (f.toFun (τ k)) ≤ c) :
+    SkorokhodSpace.modulusBased (0 : ℝ) u (SkorokhodSpace.extendNNReal f) δ ≤ c := by
+  have hu0 : (0 : ℝ) < u := lt_of_le_of_lt hδ hδu
+  have hmaxu : max u 0 = u := max_eq_left hu0.le
+  set σ : ℕ → ℝ := fun k => Nat.rec (-max u 0) (fun k _ => ((τ k : ℝ≥0) : ℝ)) k with hσdef
+  have hσ0 : σ 0 = -max u 0 := rfl
+  have hσsucc : ∀ k, σ (k + 1) = ((τ k : ℝ≥0) : ℝ) := fun k => rfl
+  refine SkorokhodSpace.modulusBased_le_of_forall_gapped (0 : ℝ) (SkorokhodSpace.extendNNReal f)
+    (N := N + 1) (τ := σ) ?_ ?_ ?_ ?_ ?_ ?_
+  · intro k hk
+    match k with
+    | 0 =>
+      rw [hσ0, hσsucc 0, hτ0]
+      simp [hmaxu, hu0]
+    | (k + 1) =>
+      rw [hσsucc k, hσsucc (k + 1)]
+      exact_mod_cast hmono k (by omega)
+  · intro k hk
+    match k with
+    | 0 =>
+      rw [hσ0, hσsucc 0, hτ0]
+      simp only [NNReal.coe_zero, hmaxu, Real.dist_eq, sub_zero, abs_neg, abs_of_nonneg hu0.le]
+      exact hδu
+    | (k + 1) =>
+      rw [hσsucc k, hσsucc (k + 1)]
+      exact hgap k (by omega)
+  · rw [hσ0, exhaustionMin_real]
+  · rw [exhaustionMax_real, hmaxu, hσsucc N]
+    exact hmax
+  · exact ⟨1, by omega, by simpa [hτ0] using hσsucc 0⟩
+  · intro k hk s hs
+    match k with
+    | 0 =>
+      have hs0 : s < 0 := by
+        have h2 := hs.2
+        rw [hσsucc 0, hτ0] at h2
+        simpa using h2
+      rw [hσ0]
+      have h1 : Real.toNNReal s = 0 := Real.toNNReal_of_nonpos hs0.le
+      have h2 : Real.toNNReal (-max u 0) = 0 :=
+        Real.toNNReal_of_nonpos (by simp [hu0.le])
+      simp only [SkorokhodSpace.extendNNReal_apply, h1, h2, edist_self]
+      exact bot_le
+    | (k + 1) =>
+      rw [hσsucc k, hσsucc (k + 1)] at hs
+      rw [hσsucc k]
+      have hnn : (0 : ℝ) ≤ s := le_trans (τ k).coe_nonneg hs.1
+      have hcoe : ((Real.toNNReal s : ℝ≥0) : ℝ) = s := Real.coe_toNNReal s hnn
+      have hmem : Real.toNNReal s ∈ Set.Ico (τ k) (τ (k + 1)) := by
+        constructor
+        · rw [← NNReal.coe_le_coe, hcoe]
+          exact hs.1
+        · rw [← NNReal.coe_lt_coe, hcoe]
+          exact hs.2
+      have h3 := hosc k (by omega) _ hmem
+      simpa [SkorokhodSpace.extendNNReal_apply, Real.toNNReal_coe] using h3
