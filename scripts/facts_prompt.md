@@ -363,20 +363,60 @@ A sind bewiesen und gelten unabhängig vom Weg.
 **REIHENFOLGE AB 2026-09-14 ABENDS, vom Nutzer angeordnet: erst der
 Pfadraum, dann Meilenstein 3, dann zurück zu C.5/G.**
 
-> **`jumpPath` → Meilenstein 3 → Meilenstein 9 → C.5/G**
+> **Meilenstein 11, seine vier Hauptpunkte, in der Reihenfolge der Kette.
+> Nichts anderes, bis Donsker steht.**
 
-*(Stand 2026-09-19: `jumpPath` steht, Meilenstein 3 steht, Meilenstein 9 von
-`MartingaleProblems` trägt kein `sorry` mehr, und Meilenstein 8 von
-`SkorokhodSpace` ist seit dem achten Lauf des Tages vollständig — EK 3.7.8(b)
-eingeschlossen. **Der nächste Punkt dieser Reihe ist Meilenstein 11**, die
-Skorokhod-Instanzen, und er ist jetzt zum ersten Mal nicht mehr blockiert: die
-càdlàg-Modifikation, die Quasi-Linksstetigkeit, der Konvergenzsatz und die
-fdd-Konvergenz stehen alle. Die Kette des Meilensteins ist
-`isTight_map_postcomp_of_exists_martingale` →
-`isRelativelyCompact_of_approx` → `mpSolution_of_tendsto_cadlag` →
-`tendsto_of_isRelativelyCompact_of_unique`, und ihr Akzeptanztest ist **Donsker**,
-bei dem die vier je genau einmal und in dieser Reihenfolge vorkommen. Erst
-danach C.5/G.)*
+**Anweisung des Nutzers vom 2026-09-20 früh, und sie berichtigt einen Abdrift.**
+Gemessen an diesem Morgen: von den vier Hauptpunkten des Meilensteins existiert
+**keiner**.
+
+| | |
+| --- | --- |
+| `isTight_map_postcomp_of_exists_martingale` | fehlt |
+| `isRelativelyCompact_of_approx` | fehlt |
+| `mpSolution_of_tendsto_cadlag` | fehlt |
+| `tendsto_of_isRelativelyCompact_of_unique` | fehlt |
+
+Gebaut ist die **Vorarbeit** — `UniformCompactContainment` samt Äquivalenz, der
+Indexübergang, und in `SkorokhodSpace` alles, worauf die vier zeigen: dessen
+zehn Meilensteine sind vollständig. Die Kette ist
+
+```
+isTight_map_postcomp_of_exists_martingale   (verbraucht Doob aus Meilenstein 9)
+  → isRelativelyCompact_of_approx           (Stone-Weierstrass + compact containment)
+  → mpSolution_of_tendsto_cadlag            (aus Meilenstein 10)
+  → tendsto_of_isRelativelyCompact_of_unique (Eindeutigkeit aus Meilenstein 6)
+```
+
+und ihr Akzeptanztest ist **Donsker**, bei dem die vier je genau einmal und in
+dieser Reihenfolge vorkommen.
+
+**MEILENSTEIN 14 IST GEPARKT.** Der erste Block der kausalen Faltung (21
+Deklarationen, `section CausalConvolution`) **bleibt stehen** — er ist sauber
+und ohne `sorry`, und ihn zurückzunehmen wäre Verschwendung. Aber es kommt
+nichts hinzu, bis Meilenstein 11 steht.
+
+**Wie es zu dem Abdrift kam, damit er sich nicht wiederholt.** Es war keine
+Anweisungsverletzung, sondern eine Verkettung: Meilenstein 11 braucht die
+Doob-Ungleichungen in stetiger Zeit, also Meilenstein 9; beim Ausbau dort fielen
+zwei Voraussetzungen von `martingale_stoppedProcess` weg (die Fensterschranke,
+weil die gleichgradige Integrierbarkeit über
+`Integrable.uniformIntegrable_condExp` geschenkt ist, und die punktweise
+Rechtsstetigkeit, weil Vitali nur f.ü. quantifiziert); und **genau diese beiden
+waren die zwei benannten Hindernisse des Hawkes-Zusammenbaus**. Das zu bemerken
+war richtig. Falsch war der nächste Schritt: den Nebenertrag zur Hauptsache zu
+machen.
+
+**Daraus die Regel: ein Nebenertrag gehört in den Bericht, nicht in den
+Vorschlag für den nächsten Lauf.** Wer beim Arbeiten an A bemerkt, daß ein
+Hindernis von B gefallen ist, schreibt das auf und arbeitet an A weiter. Das
+gilt namentlich für C.5/G und Meilenstein 14, und es gilt, bis der Nutzer die
+Reihenfolge ändert.
+
+*(Der frühere Pfeil dieser Zeile lautete `jumpPath → Meilenstein 3 →
+Meilenstein 9 → C.5/G`. `jumpPath`, Meilenstein 3 und Meilenstein 9 stehen;
+C.5/G bleibt hinter Meilenstein 11.)*
+
 
 *(Fortgeschrieben 2026-09-15, vom Nutzer angeordnet. Der Pfadraum selbst ist am
 2026-09-14 im sechsten Lauf gebaut: `RightContinuousPath E`, `pathShift`, und
