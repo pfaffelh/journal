@@ -43102,6 +43102,82 @@ theorem enorm_setIntegral_le_rpow_mul_eLpNorm
 
 end CompensatorHolder
 
+/-! ### Summing over a chain of consecutive windows
+
+The horizon estimate of Milestone 11 sums `N` compensator increments over cells that are
+**consecutive** -- the right endpoint of one is the left endpoint of the next -- and the whole
+point of that shape is that the sum does not grow with `N`.  Two statements carry it, and neither
+mentions a compensator: one moves a finite sum out of a lower integral, the other telescopes a
+sum of set integrals over adjacent `Set.Ioc`.
+
+**Where the order of the two matters, and it is the difference between `O(1)` and `O(N^{1/q})`.**
+`IsApproximatingPair.enorm_compensator_sub_le` has Hölder applied *already*, and summing that over
+`N` cells of lengths `δ_k` gives `∑_k δ_k^{1-1/q}`, which for `N` equal cells is
+`N^{1/q} · u^{1-1/q}` and grows.  The chain below therefore sums **first**, at the level of
+`MeasureTheory.enorm_integral_le_lintegral_enorm` where no exponent has been taken yet, and
+applies Hölder **once**, over the whole window `(0, u]`. -/
+
+section LintegralChain
+
+/-- **A finite sum of lower integrals is at most the lower integral of the sum.**
+
+This is `MeasureTheory.le_lintegral_add` (`MeasureTheory/Integral/Lebesgue/Add.lean:273`)
+iterated, and the direction is the one that is free: the lower integral is the supremum over the
+simple functions below the integrand, and such a supremum is **super**additive.  The reverse
+inequality is false without measurability, `not_forall_lintegral_add_le` below being the witness,
+which is why `MeasureTheory.lintegral_finsetSum`
+(`MeasureTheory/Integral/Lebesgue/Add.lean:356`) asks `Measurable` of every summand and
+`MeasureTheory.lintegral_finsetSum'` (`:343`) asks `AEMeasurable`.
+
+**Mathlib has the inequality for two summands and not for a `Finset`** -- checked 2026-09-20
+against `94ef6b89544e58e90f119da869f3fb48d1da0f4c`, where `le_lintegral_add` is the only
+statement of that direction in the library.  It is a gap of its own, elementary and
+hypothesis-free, and it belongs in `TODO.md` point 8.
+
+It is read here because the horizon estimate integrates a sum of `N` compensator increments whose
+summands carry **no** measurability in `ω`: the times are values of a recursion and the density
+`Z` is not asked to be jointly measurable, exactly as in
+`IsApproximatingPair.lintegral_enorm_compensator_sub_le`. -/
+theorem le_lintegral_finsetSum {α : Type*} {mα : MeasurableSpace α} {μ : Measure α}
+    {ι : Type*} (s : Finset ι) (f : ι → α → ENNReal) :
+    ∑ i ∈ s, ∫⁻ a, f i a ∂μ ≤ ∫⁻ a, ∑ i ∈ s, f i a ∂μ := by
+  classical
+  refine Finset.induction_on s (by simp) ?_
+  intro i s hi ih
+  simp_rw [Finset.sum_insert hi]
+  exact le_trans (add_le_add_right ih _) (le_lintegral_add _ _)
+
+/-- **A sum of set integrals over adjacent half open intervals telescopes.**
+
+```
+∑ k ∈ Finset.range N, ∫⁻ s in Set.Ioc (a k) (a (k+1)), g s ∂ν = ∫⁻ s in Set.Ioc (a 0) (a N), g s ∂ν
+```
+
+for `a` monotone, `g` arbitrary and `ν` arbitrary.  It is `MeasureTheory.lintegral_union`
+(`MeasureTheory/Integral/Lebesgue/Basic.lean:615`) along `Set.Ioc_union_Ioc_eq_Ioc`
+(`Mathlib/Order/Interval/Set/LinearOrder.lean:382`), and **no measurability of `g`** is asked
+for, `lintegral_union` needing only that the second set be measurable.
+
+`setIntegral_Ioc_sub_setIntegral_Ioc` is the Bochner counterpart of one step of this induction,
+and it does carry an integrability hypothesis, because a Bochner integral of a non integrable
+function is the junk value `0` and the splitting would be false.  In `ℝ≥0∞` there is nothing to
+assume: the statement is an identity of suprema. -/
+theorem sum_lintegral_Ioc_succ {ν : Measure ℝ} {g : ℝ → ENNReal} {a : ℕ → ℝ}
+    (ha : Monotone a) (N : ℕ) :
+    ∑ k ∈ Finset.range N, ∫⁻ s in Set.Ioc (a k) (a (k + 1)), g s ∂ν
+      = ∫⁻ s in Set.Ioc (a 0) (a N), g s ∂ν := by
+  induction N with
+  | zero => simp
+  | succ n ih =>
+      have hdisj : Disjoint (Set.Ioc (a 0) (a n)) (Set.Ioc (a n) (a (n + 1))) := by
+        rw [Set.disjoint_left]
+        rintro x ⟨-, hx2⟩ ⟨hx3, -⟩
+        exact absurd hx3 (not_lt.2 hx2)
+      rw [Finset.sum_range_succ, ih, ← lintegral_union measurableSet_Ioc hdisj,
+        Set.Ioc_union_Ioc_eq_Ioc (ha (Nat.zero_le n)) (ha (Nat.le_succ n))]
+
+end LintegralChain
+
 /-! ### The class `𝓐 n` of the tightness criterion
 
 Every analytic ingredient of the first item of Milestone 11 is proved above, and each carries its
@@ -43421,6 +43497,125 @@ theorem enorm_integral_mul_stoppedValue_sub_le [IsFiniteMeasure P]
         lintegral_const_mul' _ _ ENNReal.ofReal_ne_top
     _ ≤ ENNReal.ofReal c * (ENNReal.ofReal δ ^ (1 - 1 / q.toReal) * K) :=
         mul_le_mul_right (h.lintegral_enorm_compensator_sub_le hab hbT hδ) _
+
+/-- **The compensator increment over a window, before Hölder.**
+
+```
+‖C b ω - C a ω‖ₑ ≤ ∫⁻ s in Set.Ioc (a : ℝ) (b : ℝ), ‖Z s ω‖ₑ
+```
+
+for `a ≤ b ≤ T`.  It is `IsApproximatingPair.compensator_sub_eq` followed by
+`MeasureTheory.enorm_integral_le_lintegral_enorm`, and it is `enorm_compensator_sub_le` with the
+last step left undone.
+
+**That last step is undone on purpose.**  Over a single window it costs nothing to take it, and
+`enorm_compensator_sub_le` does; over a *chain* of windows it is what makes the sum grow, because
+`∑_k δ_k^{1-1/q}` over `N` cells of total length `u` is `N^{1/q} u^{1-1/q}`.  The lower integral
+on the right hand side, by contrast, is additive along adjacent intervals, so a chain of them is
+one integral and Hölder is applied once at the end. -/
+theorem enorm_compensator_sub_le_lintegral (h : IsApproximatingPair 𝓕 P q T K Y C Z) {ω : Ω}
+    (hω : IntegrableOn (fun s ↦ Z s ω) (Set.Ioc (0 : ℝ) (T : ℝ))) {a b : ℝ≥0}
+    (hab : a ≤ b) (hbT : b ≤ T) :
+    ‖C b ω - C a ω‖ₑ ≤ ∫⁻ s in Set.Ioc (a : ℝ) (b : ℝ), ‖Z s ω‖ₑ := by
+  rw [h.compensator_sub_eq hω hab hbT]
+  exact enorm_integral_le_lintegral_enorm _
+
+/-- **The compensator increments over a chain of consecutive windows, at one sample point**:
+
+```
+∑ k ∈ Finset.range N, ‖C (σ (k+1)) ω - C (σ k) ω‖ₑ
+  ≤ ENNReal.ofReal u ^ (1 - 1/q.toReal) * eLpNorm (Z · ω) q (ℙ|_(0,T])
+```
+
+for any `σ : ℕ → ℝ≥0` increasing in its stage with `σ N ≤ u ≤ T`.
+
+**The right hand side does not mention `N`**, and that is the whole statement: the `N` cells are
+consecutive, so the `N` lower integrals are one lower integral over `(σ 0, σ N]`, and Hölder is
+applied to *it*.  Compare `enorm_compensator_sub_le`, which bounds a single cell of length `δ` by
+`δ^{1-1/q}`: summing that form over `N` cells gives `N^{1/q} u^{1-1/q}` and is useless here.
+
+**`σ 0 = 0` is not a hypothesis**, and no lower bound on `σ 0` is: the chain telescopes to the
+integral over `(σ 0, σ N]`, and `σ 0 ≥ 0` holds in `ℝ≥0` by fiat, so the enlargement to `(0, u]`
+is free.  The monotonicity is asked in the successor form `σ k ≤ σ (k+1)`, which is the form a
+recursion has -- `MeasureTheory.oscHitSeq_le_succ` at the consumer -- and `monotone_nat_of_le_succ`
+does the rest.
+
+Nothing of the filtration, of the martingale or of the measure `P` enters, as in
+`enorm_compensator_sub_le`. -/
+theorem sum_enorm_compensator_sub_le (h : IsApproximatingPair 𝓕 P q T K Y C Z) {ω : Ω}
+    (hω : IntegrableOn (fun s ↦ Z s ω) (Set.Ioc (0 : ℝ) (T : ℝ)))
+    {N : ℕ} {σ : ℕ → ℝ≥0} (hσ : ∀ k, σ k ≤ σ (k + 1))
+    {u : ℝ≥0} (huN : σ N ≤ u) (huT : u ≤ T) :
+    ∑ k ∈ Finset.range N, ‖C (σ (k + 1)) ω - C (σ k) ω‖ₑ
+      ≤ ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal)
+        * eLpNorm (fun s ↦ Z s ω) q (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ))) := by
+  have hmono : Monotone σ := monotone_nat_of_le_succ hσ
+  have hmonoR : Monotone fun k ↦ ((σ k : ℝ)) := fun i j hij ↦ by exact_mod_cast hmono hij
+  have hcell : ∀ k ∈ Finset.range N,
+      ‖C (σ (k + 1)) ω - C (σ k) ω‖ₑ
+        ≤ ∫⁻ s in Set.Ioc ((σ k : ℝ)) ((σ (k + 1) : ℝ)), ‖Z s ω‖ₑ := by
+    intro k hk
+    have hkT : σ (k + 1) ≤ T :=
+      le_trans (le_trans (hmono (Nat.succ_le_of_lt (Finset.mem_range.1 hk))) huN) huT
+    exact h.enorm_compensator_sub_le_lintegral hω (hσ k) hkT
+  calc ∑ k ∈ Finset.range N, ‖C (σ (k + 1)) ω - C (σ k) ω‖ₑ
+      ≤ ∑ k ∈ Finset.range N, ∫⁻ s in Set.Ioc ((σ k : ℝ)) ((σ (k + 1) : ℝ)), ‖Z s ω‖ₑ :=
+        Finset.sum_le_sum hcell
+    _ = ∫⁻ s in Set.Ioc ((σ 0 : ℝ)) ((σ N : ℝ)), ‖Z s ω‖ₑ := sum_lintegral_Ioc_succ hmonoR N
+    _ ≤ ∫⁻ s in Set.Ioc (0 : ℝ) (u : ℝ), ‖Z s ω‖ₑ :=
+        lintegral_mono_set (Set.Ioc_subset_Ioc (σ 0).coe_nonneg (by exact_mod_cast huN))
+    _ ≤ _ := by
+        have hle := lintegral_enorm_le_rpow_mul_eLpNorm (Z := fun s ↦ Z s ω) (q := q)
+          (le_of_lt h.one_lt_exponent) (a := 0) (b := (u : ℝ)) (S := Set.Ioc (0 : ℝ) (T : ℝ))
+          hω.aestronglyMeasurable (Set.Ioc_subset_Ioc le_rfl (by exact_mod_cast huT))
+        simpa using hle
+
+/-- **The compensator increments over a chain of consecutive windows, integrated**, and this is
+the statement that makes the horizon term of Milestone 11 an `O(1/N)`:
+
+```
+∑ k ∈ Finset.range N, ∫⁻ ω, ‖C (σ (k+1) ω) ω - C (σ k ω) ω‖ₑ ∂P
+  ≤ ENNReal.ofReal u ^ (1 - 1/q.toReal) * K
+```
+
+for *arbitrary* `σ : ℕ → Ω → ℝ≥0` increasing in its stage with `σ N ω ≤ u ≤ T`.
+
+**`N` does not occur on the right.**  That is what
+`MeasureTheory.mul_measure_setOf_oscHitSeq_lt_le_sum_lintegral` needs and what
+`lintegral_enorm_compensator_sub_le` cannot give: the latter bounds each of `N` cells by
+`δ^{1-1/q} K`, which over `N ≈ u/δ` cells is `u δ^{-1/q} K` and diverges as `δ ↓ 0`.  The
+divergence is not of the chain but of the `δ`-capped cell; consecutive cells have no `δ`.
+
+**No stopping time and no measurability of `σ` is asked for**, exactly as in
+`lintegral_enorm_compensator_sub_le`, and for the same reason -- what is read of the times is
+their values.  A consumer reads them at `σ k ω = (min (oscHitSeq X ε k ω) u).untopA`, whose
+monotonicity in `k` is `MeasureTheory.oscHitSeq_le_succ` and whose bound by `u` is
+`min_le_right`.
+
+**Where the measurability that is nevertheless needed sits**, and it is not on `σ`: moving the
+finite sum out of the lower integral is `le_lintegral_finsetSum`, the superadditive direction,
+which is free.  Had the inequality run the other way it would be false, by
+`not_forall_lintegral_add_le`. -/
+theorem sum_lintegral_enorm_compensator_sub_le (h : IsApproximatingPair 𝓕 P q T K Y C Z)
+    {N : ℕ} {σ : ℕ → Ω → ℝ≥0} (hσ : ∀ k ω, σ k ω ≤ σ (k + 1) ω)
+    {u : ℝ≥0} (huN : ∀ ω, σ N ω ≤ u) (huT : u ≤ T) :
+    ∑ k ∈ Finset.range N, ∫⁻ ω, ‖C (σ (k + 1) ω) ω - C (σ k ω) ω‖ₑ ∂P
+      ≤ ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * K := by
+  have hc : ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) ≠ ⊤ :=
+    (ENNReal.rpow_lt_top_of_nonneg (le_of_lt (one_sub_one_div_toReal_pos h.one_lt_exponent))
+      ENNReal.ofReal_ne_top).ne
+  calc ∑ k ∈ Finset.range N, ∫⁻ ω, ‖C (σ (k + 1) ω) ω - C (σ k ω) ω‖ₑ ∂P
+      ≤ ∫⁻ ω, ∑ k ∈ Finset.range N, ‖C (σ (k + 1) ω) ω - C (σ k ω) ω‖ₑ ∂P :=
+        le_lintegral_finsetSum _ _
+    _ ≤ ∫⁻ ω, ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal)
+          * eLpNorm (fun s ↦ Z s ω) q (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ))) ∂P := by
+        refine lintegral_mono_ae ?_
+        filter_upwards [h.ae_integrableOn] with ω hω
+        exact h.sum_enorm_compensator_sub_le hω (fun k ↦ hσ k ω) (huN ω) huT
+    _ = ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal)
+          * ∫⁻ ω, eLpNorm (fun s ↦ Z s ω) q (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ))) ∂P :=
+        lintegral_const_mul' _ _ hc
+    _ ≤ _ := mul_le_mul_right h.lintegral_eLpNorm_le _
 
 end IsApproximatingPair
 
@@ -44218,5 +44413,47 @@ theorem mul_measure_setOf_oscHitSeq_lt_le_sum_lintegral
         Finset.mul_sum _ _ _
     _ ≤ _ := Finset.sum_le_sum fun k _ =>
         sq_mul_measure_setOf_oscHitSeq_lt_le μ hDc hDd hX hcont k u
+
+omit [TopologicalSpace ι] [OrderTopology ι] [NoMaxOrder ι] [MeasurableSpace ι]
+  [SecondCountableTopology ι] [BorelSpace ι] [DenselyOrdered ι] [FirstCountableTopology ι]
+  [MeasurableSpace E] [BorelSpace E] [SecondCountableTopology E] in
+/-- **The capped hitting time, read in the index rather than in `WithTop ι`**, is bounded by the
+horizon:
+
+```
+(min (oscHitSeq X ε k ω) (u : WithTop ι)).untopA ≤ u.
+```
+
+`stoppedValue X (fun ω ↦ min (oscHitSeq X ε k ω) u) ω` is by definition `X` at exactly this
+value, so the statement is the bridge between the times of the block above, which live in
+`WithTop ι`, and the times of `IsApproximatingPair.sum_lintegral_enorm_compensator_sub_le`, which
+live in the index itself because a compensator is indexed by the filtration.
+
+It is `WithTop.untopA_le` (`Mathlib/Order/WithBot.lean:659`, the dual of `le_unbotA`) applied to
+`min_le_right`, and **nothing about the recursion enters** -- no `ε`, no path, no measurability.
+The junk value of `untopA` at `⊤` is never read, and the reason is not a non-explosion hypothesis
+but the cap: `min (·) u` is below `u` and therefore below `⊤` at every sample point. -/
+theorem untopA_oscHitSeqCap_le (X : ι → Ω → E) (ε : ℝ) (k : ℕ) (u : ι) (ω : Ω) :
+    (min (oscHitSeq X ε k ω) (u : WithTop ι)).untopA ≤ u :=
+  WithTop.untopA_le (min_le_right _ _)
+
+omit [TopologicalSpace ι] [OrderTopology ι] [NoMaxOrder ι] [MeasurableSpace ι]
+  [SecondCountableTopology ι] [BorelSpace ι] [DenselyOrdered ι] [FirstCountableTopology ι]
+  [MeasurableSpace E] [BorelSpace E] [SecondCountableTopology E] in
+/-- **The capped hitting times increase in their stage, read in the index**, which is the second
+of the two hypotheses `IsApproximatingPair.sum_lintegral_enorm_compensator_sub_le` asks of its
+chain, and it is asked in exactly this successor form.
+
+`WithTop.untopA_mono` (`Mathlib/Order/WithBot.lean:483`, the dual of `unbotA_mono`) needs the
+**larger** of the two to be below `⊤`, and the cap supplies that: `min (·) u ≤ u < ⊤`.  Without
+the cap the statement would be false in the direction that matters -- past the end of the
+recursion `oscHitSeq` is `⊤`, whose `untopA` is the junk value, and the sequence would fall
+rather than rise.  That is the same trap `not_stepIndex_mono_time` records for `stepIndex`, and
+here it is closed by the cap instead of by a hypothesis. -/
+theorem untopA_oscHitSeqCap_le_succ (X : ι → Ω → E) (ε : ℝ) (k : ℕ) (u : ι) (ω : Ω) :
+    (min (oscHitSeq X ε k ω) (u : WithTop ι)).untopA
+      ≤ (min (oscHitSeq X ε (k + 1) ω) (u : WithTop ι)).untopA := by
+  refine WithTop.untopA_mono ?_ (min_le_min (oscHitSeq_le_succ X ε k ω) le_rfl)
+  exact ne_top_of_le_ne_top (WithTop.coe_ne_top) (min_le_right _ _)
 
 end MeasureTheory

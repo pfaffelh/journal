@@ -11737,12 +11737,15 @@ has to be chosen once for all `n`. What stands:
 
   **Three things about it are worth recording.** The first: the cells here are
   **consecutive** and not `δ`-capped — `β_k` is literally `α_{k+1}` — so the
-  compensator increments that
-  `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le` bounds sum over
-  them to the increment over `[⊥, u]`, that is to `u ^ (1 - 1/q) * K`,
-  **independently of `N`**; against the `N` on the left that is a horizon bound
-  `O(1/N)`, with constants depending only on `‖f‖`, `u`, `q` and `K` and hence
-  uniform in the family. The second: the estimate is at the **square** because
+  compensator increments sum over them to the increment over `[⊥, u]`, that is
+  to `u ^ (1 - 1/q) * K`, **independently of `N`**; against the `N` on the left
+  that is a horizon bound `O(1/N)`, with constants depending only on `‖f‖`, `u`,
+  `q` and `K` and hence uniform in the family. That summation is
+  `IsApproximatingPair.sum_lintegral_enorm_compensator_sub_le`, proved
+  2026-09-20 and described under the class `𝓐 n` below; it is **not**
+  `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le` summed, because
+  that statement has Hölder applied per cell and per-cell Hölder grows like
+  `N^{1/q}`. The second: the estimate is at the **square** because
   over the first power each summand would carry a square root by
   `lintegral_ofReal_dist_le_sqrt_of_biSup_le` and a sum of `N` square roots is
   `O(√N)` even when the sum under them is `O(1)`. The third: the uncapped cell
@@ -11751,6 +11754,27 @@ has to be chosen once for all `n`. What stands:
   none of the algebraic hypotheses on `ι` that the gap block carries — two
   applications of `MeasureTheory.isStoppingTime_oscHitSeqCap` and `min_le_right`
   twice are the whole stopping time content.
+
+  **And the bridge between the two index conventions, 2026-09-20.** The times of
+  this block live in `WithTop ι`, because a hitting time need not be attained;
+  the times of `IsApproximatingPair` live in the index itself, because a
+  compensator is indexed by the filtration.
+  `MeasureTheory.untopA_oscHitSeqCap_le` and
+  `MeasureTheory.untopA_oscHitSeqCap_le_succ` carry the capped times across —
+  `(min (oscHitSeq X ε k ω) u).untopA ≤ u` and the same increasing in `k` — and
+  they are exactly the two hypotheses
+  `IsApproximatingPair.sum_lintegral_enorm_compensator_sub_le` asks of its
+  chain; the identification of the `stoppedValue` time with the transported one
+  is `rfl`. They are `WithTop.untopA_le` (`Mathlib/Order/WithBot.lean:659`) and
+  `WithTop.untopA_mono` (`:483`), the duals of `le_unbotA` and `unbotA_mono`.
+
+  **The junk value of `untopA` is not read, and the reason is named**: it is not
+  a non-explosion hypothesis but the cap, `min (·) u ≤ u < ⊤` at every sample
+  point. Without the cap the second statement would be **false** in the
+  direction that matters — past the end of the recursion `oscHitSeq` is `⊤`,
+  whose `untopA` is junk, and the sequence would fall rather than rise. That is
+  the trap `MeasureTheory.not_stepIndex_mono_time` records for `stepIndex`, here
+  closed by the cap rather than by a hypothesis.
 
   **A naming trap that cost a compile and is recorded so it costs no other.**
   The countable dense set of the début theorem is called `D` throughout this
@@ -11995,7 +12019,7 @@ has to be chosen once for all `n`. What stands:
     the measurability of an `eLpNorm` in a parameter. It is a Mathlib gap of
     its own and belongs in `TODO.md` point 8.
 
-  Four consequences are proved with it, and each is a link the assembly reads:
+  Seven consequences are proved with it, and each is a link the assembly reads:
   `IsApproximatingPair.ae_integrableOn`, the only place the horizon's finite
   length is spent; `IsApproximatingPair.compensator_sub_eq`, the increment of
   the compensator as the integral of the density over the window, through
@@ -12007,6 +12031,57 @@ has to be chosen once for all `n`. What stands:
   **arbitrary** `a b : Ω → ℝ≥0` with `a ≤ b ≤ T` and `b - a ≤ δ` — no stopping
   time and no measurability of `a`, `b`, the lower integral being monotone
   without either.
+
+  **And the chain of consecutive windows, 2026-09-20**, which is what the
+  horizon term reads and what the `δ`-capped cell cannot give:
+
+  ```
+  ∑ k ∈ Finset.range N, ∫⁻ ω, ‖C (σ (k+1) ω) ω - C (σ k ω) ω‖ₑ ∂P
+    ≤ ENNReal.ofReal u ^ (1 - 1/q) * K
+  ```
+
+  — `IsApproximatingPair.sum_lintegral_enorm_compensator_sub_le`, for
+  **arbitrary** `σ : ℕ → Ω → ℝ≥0` with `σ k ω ≤ σ (k+1) ω` and `σ N ω ≤ u ≤ T`.
+  **`N` does not occur on the right**, and that is the statement: over `N` cells
+  of length `δ` the previous item gives `N ofReal δ ^ (1-1/q) K`, which under the
+  tie `N ≈ u/δ` is `u δ^{-1/q} K` and diverges as `δ ↓ 0`; consecutive cells
+  have no `δ` to diverge in.
+
+  **Where the order of the steps decides the exponent.**
+  `IsApproximatingPair.enorm_compensator_sub_le` has Hölder applied already, and
+  summing *that* over `N` cells of lengths `δ_k` gives `∑_k δ_k^{1-1/q}`, hence
+  `N^{1/q} u^{1-1/q}` for equal cells — it still grows. The chain therefore
+  starts one step lower, at
+  `IsApproximatingPair.enorm_compensator_sub_le_lintegral`, which is
+  `IsApproximatingPair.compensator_sub_eq` followed by
+  `MeasureTheory.enorm_integral_le_lintegral_enorm` and takes **no** exponent;
+  `sum_lintegral_Ioc_succ` telescopes the `N` lower integrals into the one over
+  `(σ 0, σ N]` — `MeasureTheory.lintegral_union`
+  (`MeasureTheory/Integral/Lebesgue/Basic.lean:615`) along
+  `Set.Ioc_union_Ioc_eq_Ioc`
+  (`Mathlib/Order/Interval/Set/LinearOrder.lean:382`), with no measurability of
+  the integrand — and Hölder is applied **once**, over `(0, u]`.
+  `IsApproximatingPair.sum_enorm_compensator_sub_le` is that chain at one sample
+  point.
+
+  **Two economies worth recording.** `σ 0 = 0` is *not* a hypothesis and no
+  lower bound on `σ 0` is: the chain telescopes to `(σ 0, σ N]`, and `σ 0 ≥ 0`
+  holds in `ℝ≥0` by fiat. And the monotonicity is asked in the successor form
+  `σ k ≤ σ (k+1)`, which is the form a recursion has —
+  `MeasureTheory.oscHitSeq_le_succ` at the consumer — `monotone_nat_of_le_succ`
+  doing the rest.
+
+  **A Mathlib gap sits in the passage and is elementary**: moving the finite sum
+  out of the lower integral is the **superadditive** direction, free of
+  measurability, and Mathlib has it for two summands only —
+  `MeasureTheory.le_lintegral_add`
+  (`MeasureTheory/Integral/Lebesgue/Add.lean:273`) is the sole declaration of
+  the shape `le_lintegral…` in the library, checked 2026-09-20 against
+  `94ef6b89544e58e90f119da869f3fb48d1da0f4c`, while
+  `MeasureTheory.lintegral_finsetSum` (`:356`) is the equality under
+  `Measurable`. The `Finset` version is proved here as `le_lintegral_finsetSum`,
+  by induction, and it belongs in `TODO.md` point 8. The hypothesis is not
+  removable in the other direction: `not_forall_lintegral_add_le` is the witness.
 
   **The two halves are joined by
   `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le`**: for stopping

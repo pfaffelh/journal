@@ -353,6 +353,19 @@ CLAIMS_TODO8 = [
      '|eLpNorm.*prod_right',
      ['Mathlib/'],
      []),
+    ('le-lintegral-finset-sum',
+     'MartingaleProblems/Suggested.lean, `le_lintegral_finsetSum`; '
+     'MartingaleProblems/README.md, Meilenstein 11',
+     'Die **Superadditivität** des unteren Integrals — `∑ ∫⁻ f i ≤ ∫⁻ ∑ f i`, '
+     'die Richtung, die ohne Meßbarkeit gilt — steht in Mathlib nur für **zwei** '
+     'Summanden, als `MeasureTheory.le_lintegral_add` '
+     '(`MeasureTheory/Integral/Lebesgue/Add.lean:273`); eine `Finset`-Fassung '
+     'gibt es nicht, und `lintegral_finsetSum` (`:356`) ist die Gleichheit unter '
+     '`Measurable`. Es ist keine weitere Deklaration `le_lintegral…` in der '
+     'ganzen Bibliothek.',
+     'theorem le_lintegral|lemma le_lintegral',
+     ['Mathlib/'],
+     ['Mathlib/MeasureTheory/Integral/Lebesgue/Add.lean']),
 ]
 
 

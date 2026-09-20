@@ -353,7 +353,15 @@ Suche `condExp.*stoppedValue|stoppedValue.*condExp` unter `Mathlib/`: **16 Treff
 Suche `measurable_eLpNorm|eLpNorm_prod|stronglyMeasurable_eLpNorm|eLpNorm.*prod_right` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
 
 
+## `le-lintegral-finset-sum` — MartingaleProblems/Suggested.lean, `le_lintegral_finsetSum`; MartingaleProblems/README.md, Meilenstein 11
+
+> Die **Superadditivität** des unteren Integrals — `∑ ∫⁻ f i ≤ ∫⁻ ∑ f i`, die Richtung, die ohne Meßbarkeit gilt — steht in Mathlib nur für **zwei** Summanden, als `MeasureTheory.le_lintegral_add` (`MeasureTheory/Integral/Lebesgue/Add.lean:273`); eine `Finset`-Fassung gibt es nicht, und `lintegral_finsetSum` (`:356`) ist die Gleichheit unter `Measurable`. Es ist keine weitere Deklaration `le_lintegral…` in der ganzen Bibliothek.
+
+Suche `theorem le_lintegral|lemma le_lintegral` unter `Mathlib/`: **1 Treffer** in 1 Dateien — wie erwartet.
+
+* `Mathlib/MeasureTheory/Integral/Lebesgue/Add.lean`
+
 ## Zusammenfassung
 
-48 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
+49 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
 

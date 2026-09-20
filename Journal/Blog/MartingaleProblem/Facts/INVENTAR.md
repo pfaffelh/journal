@@ -49830,3 +49830,225 @@ Der Unterschied zwischen „Hölder je Zelle" und „Hölder einmal über allen"
 genau der Unterschied zwischen `O(N^(1/q))` und `O(1)`, und damit zwischen einem
 Horizontterm, der nichts nützt, und einem, der den ersten Punkt der Kette
 schließt.
+
+### 2026-09-20, vierundzwanzigster Lauf des Tages — der Vorschlag des Vorlaufs steht, und mit ihm ist die letzte Eingabe des Horizontterms bezahlt; die Vorfrage war richtig gestellt, und **eine** Voraussetzung, die der Vorschlag noch führte, ist dabei ersatzlos weggefallen: der Kettenanfang muß nicht bei `0` liegen
+
+**Bearbeitet:** `IsApproximatingPair.sum_lintegral_enorm_compensator_sub_le` —
+die Summe der Kompensatorzuwächse über eine aufsteigende Kette von Zeiten, die
+einzige fehlende Eingabe des Horizontterms. Weiter am ersten Punkt der Kette des
+Meilensteins 11 von `MartingaleProblems`, wie angeordnet. Kein Meilenstein 8,
+kein Meilenstein 14, kein C.5/G.
+
+#### Was gebaut ist
+
+**Sieben** neue Deklarationen in `TauCeti/MartingaleProblems/Suggested.lean`, in
+drei Blöcken: ein neuer Abschnitt `LintegralChain` zwischen `CompensatorHolder`
+und der Klasse `𝓐 n`, drei Sätze am Ende des Namensraums
+`IsApproximatingPair`, und zwei am Ende des Blockes „The horizon probability" —
+die Vorfrage, die der Vorschlag für den *nächsten* Lauf stellte, ist in diesem
+schon beantwortet.
+
+* `le_lintegral_finsetSum` — `∑ i ∈ s, ∫⁻ a, f i a ∂μ ≤ ∫⁻ a, ∑ i ∈ s, f i a ∂μ`
+  für beliebige `f`, ohne jede Meßbarkeit. Das ist `le_lintegral_add` iteriert,
+  und es ist eine **Mathlib-Lücke**, siehe unten.
+* `sum_lintegral_Ioc_succ` — `∑_{k<N} ∫⁻_{(a k, a (k+1)]} g = ∫⁻_{(a 0, a N]} g`
+  für monotones `a`, beliebiges `g` und beliebiges Maß. `lintegral_union`
+  (`MeasureTheory/Integral/Lebesgue/Basic.lean:615`) längs
+  `Set.Ioc_union_Ioc_eq_Ioc` (`Mathlib/Order/Interval/Set/LinearOrder.lean:382`),
+  und **keine Integrierbarkeit** — anders als bei
+  `setIntegral_Ioc_sub_setIntegral_Ioc`, dem Bochner-Gegenstück eines Schrittes
+  dieser Induktion, wo der Müllwert `0` des nichtintegrierbaren Falles die
+  Zerlegung falsch machte. In `ℝ≥0∞` ist nichts vorauszusetzen: die Aussage ist
+  eine Identität von Suprema.
+* `IsApproximatingPair.enorm_compensator_sub_le_lintegral` — der Zellschritt
+  **vor** Hölder, `‖C b ω − C a ω‖ₑ ≤ ∫⁻_{(a,b]} ‖Z s ω‖ₑ`. Das ist
+  `compensator_sub_eq` und `enorm_integral_le_lintegral_enorm`, also
+  `enorm_compensator_sub_le` mit dem letzten Schritt **nicht** getan.
+* `IsApproximatingPair.sum_enorm_compensator_sub_le` — die Kette an *einem*
+  Stichprobenpunkt, `∑_{k<N} ‖C (σ (k+1)) ω − C (σ k) ω‖ₑ ≤ ofReal u ^ (1−1/q) ·
+  eLpNorm (Z · ω) q (ℙ|_(0,T])`, für `σ k ≤ σ (k+1)` und `σ N ≤ u ≤ T`.
+* `IsApproximatingPair.sum_lintegral_enorm_compensator_sub_le` — dasselbe
+  integriert, `≤ ofReal u ^ (1−1/q) * K`, für **beliebige** `σ : ℕ → Ω → ℝ≥0`.
+  Keine Stoppzeit, keine Meßbarkeit von `σ`, wie bei
+  `lintegral_enorm_compensator_sub_le` und aus demselben Grund.
+* `MeasureTheory.untopA_oscHitSeqCap_le` — `(min (oscHitSeq X ε k ω) u).untopA ≤ u`,
+  also `WithTop.untopA_le` (`Mathlib/Order/WithBot.lean:659`) auf `min_le_right`.
+* `MeasureTheory.untopA_oscHitSeqCap_le_succ` — dieselben Zeiten steigen in der
+  Stufe, `WithTop.untopA_mono` (`:483`) mit der Kappung als `≠ ⊤`.
+
+Die beiden letzten sind **die Brücke**: die Zeiten des Horizontblocks leben in
+`WithTop ι`, die des Kompensators im Index selbst, weil ein Kompensator von der
+Filtration indiziert ist. `stoppedValue X (fun ω ↦ min (oscHitSeq X ε k ω) u) ω`
+ist definitionsgleich `X ((min (oscHitSeq X ε k ω) u).untopA) ω`, also ist die
+Identifikation `rfl` und die beiden Sätze sind genau die zwei Voraussetzungen,
+die `sum_lintegral_enorm_compensator_sub_le` an seine Kette stellt.
+
+**Der vorgeschriebene Weg ist gegangen worden, und er war der richtige.** Die
+Vorfrage des Vorlaufs — ob bei `enorm_compensator_sub_le` (Hölder schon
+angewandt) oder eine Stufe tiefer bei `compensator_sub_eq` anzusetzen sei — war
+richtig beantwortet: „Hölder je Zelle" gibt `∑_k δ_k^(1−1/q)`, über `N` gleiche
+Zellen also `N^(1/q) · u^(1−1/q)`, und das wächst. Angesetzt ist deshalb bei
+`compensator_sub_eq`, summiert wird unter dem unteren Integral, und Hölder kommt
+**einmal** am Schluß, über `(0, u]`.
+
+**Geprüft:** `scripts/check_master.py` meldet für die ganze Kette **0 Fehler,
+0 `sorry`, 0 veraltete Namen** (Mathlib `94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `v4.35.0-rc2`). Die Warnungen sind 18 / 35 / **112** und damit **unverändert**
+gegenüber dem vor dem Lauf eigens gemessenen Stand. Alle sieben hängen nach
+`check_axioms_master.py` auf `propext`, `Classical.choice`, `Quot.sound` und auf
+nichts sonst. `check_cited_lines.py`: **362 von 362** gepaarten Fundstellen
+stimmen (elf mehr als vor dem Lauf, es sind die elf neuen Zitate), 0 tote,
+0 verschoben. `check_duplicates.py` und `check_own_names.py` finden zu den neuen
+Namen nichts (2633 eigene Deklarationen, sieben mehr als vor dem Lauf).
+`check_negatives.py`: **49** Behauptungen — eine mehr, siehe den nächsten
+Abschnitt —, 0 mit unerwarteten Treffern.
+
+#### Die Mathlib-Lücke, und sie ist die dreißigste von `TODO.md` Punkt 8
+
+**Die Superadditivität des unteren Integrals steht in Mathlib nur für zwei
+Summanden.** `MeasureTheory.le_lintegral_add`
+(`MeasureTheory/Integral/Lebesgue/Add.lean:273`) ist — geprüft am 2026-09-20
+gegen `94ef6b89544e58e90f119da869f3fb48d1da0f4c` — die **einzige** Deklaration
+der Gestalt `le_lintegral…` in der ganzen Bibliothek; eine `Finset`-Fassung gibt
+es nicht. Was es gibt, ist die **Gleichheit** unter Meßbarkeit:
+`lintegral_finsetSum` (`:356`) verlangt `Measurable` jedes Summanden,
+`lintegral_finsetSum'` (`:343`) `AEMeasurable`.
+
+Die Lücke ist hier nicht Bequemlichkeit, sondern notwendig: die Summanden des
+Horizontterms tragen in `ω` **keine** Meßbarkeit. Die Zeiten sind Werte einer
+Rekursion, und `IsApproximatingPair` verlangt von der Dichte `Z` keine
+gemeinsame Meßbarkeit — genau deshalb steht ja
+`lintegral_enorm_compensator_sub_le` ohne jede Voraussetzung an seine beiden
+Zeiten. Die umgekehrte Ungleichung wäre an derselben Stelle falsch; der Zeuge
+dafür, `not_forall_lintegral_add_le`, steht in derselben Datei, hundert Zeilen
+weiter unten.
+
+Die Behauptung ist als `le-lintegral-finset-sum` in `scripts/check_negatives.py`
+eingetragen und wird damit künftig bei jedem Lauf mitgeprüft; der Eintrag in
+`TODO.md` Punkt 8 ist gesetzt, die Überschrift dort von neunundzwanzig auf
+dreißig geändert.
+
+#### Vier Befunde
+
+* **`check_own_names.py` sieht `to_dual`-erzeugte Namen nur dann, wenn das
+  Attribut den Namen ausschreibt** — ein Befund über unser Werkzeug, nicht über
+  Mathlib. `WithTop.untopA_le` steht im Index, weil in `Mathlib/Order/WithBot.lean`
+  `@[to_dual untopA_le]` über `le_unbotA` steht; `WithTop.untopA_mono` steht
+  **nicht** darin, weil dort bloß `@[to_dual]` über `unbotA_mono` steht und der
+  Name erst beim Elaborieren entsteht. Die Deklaration gibt es trotzdem: sie ist
+  in diesem Lauf in `untopA_oscHitSeqCap_le_succ` **benutzt** und übersetzt. Die
+  Zeile im Bericht von `check_own_names.py` ist also ein Fehlalarm, und wer sie
+  künftig sieht, jage ihr nicht nach — er prüfe statt dessen, ob das zugehörige
+  `unbot`-Gegenstück existiert.
+* **Der Kettenanfang muß nicht bei `0` liegen, und die Voraussetzung `⊥ = σ 0`
+  des Vorschlags ist ersatzlos weggefallen.** Die Kette teleskopiert zu
+  `∫⁻_{(σ 0, σ N]}`, und die Vergrößerung auf `(0, u]` ist umsonst, weil
+  `σ 0 ≥ 0` in `ℝ≥0` nicht zu beweisen, sondern wahr ist. Das ist keine
+  Kosmetik: der Verbraucher liest `σ k ω = (min (oscHitSeq X ε k ω) u).untopA`,
+  und `oscHitSeq X ε 0 = ⊥` ist zwar wahr (`oscHitSeq_zero`), aber es wäre eine
+  weitere Eingabe, die durch das `min` und durch `untopA` hindurchzutragen wäre.
+  Ebenso ist die Monotonie in der **Nachfolgergestalt** `σ k ≤ σ (k+1)` verlangt,
+  weil das die Gestalt ist, die eine Rekursion hat (`oscHitSeq_le_succ`);
+  `monotone_nat_of_le_succ` tut den Rest im Beweis statt beim Verbraucher.
+* **`add_le_add_left` und `add_le_add_right` heißen umgekehrt, als man rät, und
+  das kostete den einzigen Fehldurchlauf dieses Laufs.** In
+  `Mathlib/Algebra/Order/Monoid/Unbundled/Basic.lean:61` steht
+  `mul_le_mul_right [MulLeftMono α] (bc : b ≤ c) (a : α) : a * b ≤ a * c`, mit
+  `@[to_additive]` darüber. Der Zusatz benennt also, **welcher Operand variiert**,
+  nicht, auf welcher Seite die feste Größe steht: wer `c + a ≤ c + b` will,
+  schreibt `add_le_add_right`. Der Fehler, den die falsche Wahl gibt, ist ein
+  `Application type mismatch`, der die richtige Form gar nicht nennt.
+* **Der Unterschied zwischen `enorm_compensator_sub_le` und
+  `enorm_compensator_sub_le_lintegral` ist der ganze Ertrag dieses Laufs, und er
+  ist eine Zeile.** Beide fangen bei `compensator_sub_eq` an; der eine wendet
+  `enorm_setIntegral_le_rpow_mul_eLpNorm` an und hat damit den Exponenten schon
+  genommen, der andere bleibt bei `enorm_integral_le_lintegral_enorm` stehen. Die
+  Aussage, die den Horizontterm schließt, hängt nicht an einer Abschätzung,
+  sondern daran, **wann** eine schon vorhandene angewandt wird. Wer eine
+  Abschätzung je Zelle führt, bezahlt `N^(1/q)`; wer erst summiert und dann
+  einmal abschätzt, bezahlt nichts.
+
+#### Wo der erste Punkt der Kette jetzt steht
+
+| Größe | Stand |
+| --- | --- |
+| alles Deterministische bis zur Modulabschätzung | steht |
+| Markov auf den Lückenereignissen, über `N` summiert | steht |
+| optionales Sampling zwischen zwei Stoppzeiten | steht |
+| Martingalzuwachs gegen ein Gewicht aus der Vergangenheit | steht |
+| Zuwachs → Kompensatorzuwachs (Quasimartingal) | steht |
+| Quadratidentität, Cauchy–Schwarz, Hölder am Kompensator | steht |
+| die Klasse `𝓐 n` als Prädikat samt sieben Folgerungen | steht |
+| die Approximationsfehler-Hypothese, ungewichtet und gewichtet | steht |
+| die Quadratidentität am Prozeß — (9.26) selbst | steht |
+| die Brücke von der `ℝ≥0∞`-Schranke zurück zu Cauchy–Schwarz | steht |
+| der Horizontterm: Inklusion, Markov am Quadrat, Zählschritt | steht |
+| **die Summe der Kompensatorzuwächse über aufeinanderfolgende Fenster** | **steht, dieser Lauf** |
+| **die Brücke von `WithTop ι` in den Index für die gekappten Zeiten** | **steht, dieser Lauf** |
+| der Zusammenbau: erst `N` aus dem Horizont, dann `δ` in der Lückensumme | offen |
+
+**Es ist keine analytische Größe mehr offen.** Was bleibt, ist der Zusammenbau,
+und der Vorschlag unten sagt, welche Gestalt sein erster Schritt hat.
+
+#### Vorschlag für den nächsten Lauf
+
+**`measure_setOf_oscHitSeq_lt_le_of_isApproximatingPair` — der Horizontterm als
+eine Schranke, in der `N` im Nenner steht.**
+
+> Für zwei Paare `(Y, C, Z)` nahe `f ∘ X` und `(Y', C', Z')` nahe `f² ∘ X` mit
+> gemeinsamen `q`, `T`, `K`, für `‖f‖ ≤ c` und die beiden Approximationsfehler
+> `ε`, `ε'` ist
+> ```
+> N * (ENNReal.ofReal ε₀ ^ 2 * μ {ω | oscHitSeq X ε₀ N ω < u})
+>   ≤ ofReal u ^ (1 − 1/q) * K * (1 + 4 * ofReal c) + N * (2 * ε' + 4 * ofReal c * ε).
+> ```
+
+**Worauf sie ruht, und es steht alles da.**
+`mul_measure_setOf_oscHitSeq_lt_le_sum_lintegral` gibt die linke Seite gegen
+`∑_{k<N} ∫⁻ ofReal (dist (X β_k) (X α_k))²`; `ofReal_integral_sq_sub_le`
+zerlegt jeden Summanden in vier Teile, zwei Approximationsfehler und zwei
+Zuwächse der Approximanten; `integral_mul_stoppedValue_sub_eq_compensator` macht
+aus jedem Zuwachs einen Kompensatorzuwachs, und **über diese summiert seit
+diesem Lauf `sum_lintegral_enorm_compensator_sub_le`**, mit
+`σ k ω = (min (oscHitSeq X ε₀ k ω) u).untopA`, dessen Monotonie
+`oscHitSeq_le_succ` ist und dessen Schranke `min_le_right`.
+
+**Warum sie jetzt dran ist.** Sie ist der erste Schritt des Zusammenbaus und der
+einzige, in dem die beiden Hälften des Punktes — das Deterministische über
+`oscHitSeq` und das Analytische über `IsApproximatingPair` — auf **einer**
+Aussage zusammenkommen. Steht sie, so ist der Rest die Wahl von `N` und dann von
+`δ`, in dieser Reihenfolge, und die ist nach dem Befund des dreiundzwanzigsten
+Laufs die einzige, die konvergiert. Der Term `N * ε_approx` ist dabei kein
+Defekt, sondern die Reihenfolge selbst: die Approximierbarkeitsbedingung wird
+**nach** der Wahl von `N` gelesen.
+
+**Die Vorfrage dieses Vorschlags ist in diesem Lauf schon beantwortet, und zwar
+in Lean.** Die beiden Summen laufen über verschiedene Gestalten desselben Index:
+der Zählschritt liefert `∑_{k<N}` über die Zellen `(α_k, β_k)` mit
+`β_k = α_{k+1}`, wobei `α_k = fun ω ↦ min (oscHitSeq X ε₀ k ω) (u : WithTop ι)`
+in `WithTop ι` lebt, während `C` seine Zeiten im Index selbst liest. Daß
+`σ k ω := (min (oscHitSeq X ε₀ k ω) (u : WithTop ι)).untopA` die drei
+Voraussetzungen einlöst, steht jetzt da: `untopA_oscHitSeqCap_le` gibt
+`σ N ω ≤ u`, `untopA_oscHitSeqCap_le_succ` gibt `σ k ω ≤ σ (k+1) ω`, und die
+Identifikation der `stoppedValue`-Zeit mit `σ` ist `rfl`. **Es gibt dabei keine
+Fallunterscheidung nach `⊤`**, und der Grund ist nicht eine
+Nichtexplosionshypothese, sondern die Kappung: `min (·) u ≤ u < ⊤` an jedem
+Stichprobenpunkt. Der Müllwert von `untopA` wird nicht gelesen, und die Stelle
+ist benannt statt „harmlos" genannt.
+
+**Und die zweite Vorfrage — die Typidentität von Index und Kompensatorindex —
+ist ebenfalls beantwortet, und zwar durch eine Probe statt durch eine
+Vermutung.** Der Horizontblock steht über einem allgemeinen `ι` mit elf
+Instanzen (`ConditionallyCompleteLinearOrder`, `OrderBot`, `TopologicalSpace`,
+`OrderTopology`, `NoMaxOrder`, `Nonempty`, `MeasurableSpace`,
+`SecondCountableTopology`, `BorelSpace`, `DenselyOrdered`,
+`FirstCountableTopology`), `IsApproximatingPair` dagegen über `ℝ≥0`. Der
+Zusammenbau ist also bei `ι = ℝ≥0` zu führen, und **`mul_measure_setOf_oscHitSeq_lt_le_sum_lintegral`
+ist in diesem Lauf bei `ι = ℝ≥0` als `example` ausgeschrieben und übersetzt**:
+alle elf Instanzen werden gefunden, es fehlt keine. Die Probe ist nicht
+aufgehoben — sie stand in einer Arbeitsdatei und gehört nicht in die Roadmap —,
+aber ihr Ergebnis steht hier, damit der nächste Lauf sie nicht wiederholt.
+
+Der fünfzehnte Lauf dieses Tages hat festgehalten, daß `WithTop ℝ≥0` und `ℝ≥0∞`
+nicht unter *ein* `+` kommen; hier wird nicht addiert, aber die Grenze ist
+dieselbe, und `untopA` ist die Stelle, an der sie überschritten wird.
