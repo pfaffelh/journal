@@ -534,7 +534,9 @@ Four more on 2026-09-14, in `section PropagationFromOnedim` and `section Uniquen
 (`lem:propagation`) joins the two blocks, and `subsingleton_mpSolutions_of_unique_onedim` is
 `thm:absuniq`(b).  The two inputs are `weightedLaw_univ`, which reads the manuscript's "take
 `h ≡ 1`" off the hypothesis, and `weightedLaw_const_mul`, which makes the normalisation
-`E^P[Z] = 1` a change of variables.  Every statement from `PropagatesAgreement` to
+`E^P[Z] = 1` a change of variables.  Both are facts about `weightedLaw` and about nothing else,
+and they stand in `section Propagation` next to the definition rather than here: they carry no
+shift, and `propagatesAgreement_of_transfer` reads the first of them.  Every statement from `PropagatesAgreement` to
 `thm:absuniq`(b) is now proved; the two `sorry`s this remark was written against are both closed,
 the file carries none since the nineteenth run of 2026-09-17.
 
@@ -33346,6 +33348,33 @@ theorem weightedLaw_indicator_apply {π : ι → F → E} {t : ι} (hπ : Measur
   rw [h1, withDensity_indicator_one hA, Measure.map_apply hπ hC,
     Measure.restrict_apply (hπ hC), Set.inter_comm]
 
+omit [Preorder ι] [OrderBot ι] in
+/-- The total mass of a weighted law is the mass of the density, and in particular it does not
+depend on the time at which the coordinate is read.  This is the manuscript's "taking `h ≡ 1`
+gives `c := E^P[Z] = E^Q[Z]`", and it is the only consequence of the hypothesis of
+`PropagatesAgreement` that is used before the restart. -/
+theorem weightedLaw_univ {π : ι → F → E} {t : ι} (hπ : Measurable (π t)) (P : Measure F)
+    (Z : F → ℝ) :
+    weightedLaw π P Z t Set.univ = ∫⁻ f, ENNReal.ofReal (Z f) ∂P := by
+  unfold weightedLaw
+  rw [Measure.map_apply hπ MeasurableSet.univ, Set.preimage_univ,
+    withDensity_apply _ MeasurableSet.univ, Measure.restrict_univ]
+
+omit [Preorder ι] [OrderBot ι] in
+/-- The weighted law is positively homogeneous in the weight.  This is what makes the
+normalisation `E^P[Z] = 1` of the manuscript proof a change of variables and not a restriction:
+one proves the conclusion for `Z / c` and multiplies back. -/
+theorem weightedLaw_const_mul (π : ι → F → E) (P : Measure F) {Z : F → ℝ} (hZm : Measurable Z)
+    {a : ℝ} (ha : 0 ≤ a) {t : ι} (hπ : Measurable (π t)) :
+    weightedLaw π P (fun f ↦ a * Z f) t = ENNReal.ofReal a • weightedLaw π P Z t := by
+  unfold weightedLaw
+  have h1 : (fun f ↦ ENNReal.ofReal (a * Z f))
+      = (ENNReal.ofReal a) • (fun f ↦ ENNReal.ofReal (Z f)) := by
+    funext f
+    simp only [Pi.smul_apply, smul_eq_mul]
+    exact ENNReal.ofReal_mul ha
+  rw [h1, withDensity_smul _ hZm.ennreal_ofReal, Measure.map_smul _ hπ.aemeasurable]
+
 /-- **Propagation of agreement**, `def:propagation`.  A set `N` of measures propagates agreement
 if, for every weight `Z` observed up to `s`, agreement of the `Z`-weighted law of the coordinate
 at `s` forces agreement of the `Z`-weighted law of the coordinate at every later `t`.
@@ -33450,6 +33479,73 @@ theorem measure_cylinder_eq_of_propagatesAgreement
         n B hB (B n) (hB n)
       rw [Finset.range_add_one, Finset.set_biInter_insert, Set.inter_comm]
       exact h
+
+/-! ### A transfer operator propagates agreement
+
+`prop:uniqfromprop` consumes `PropagatesAgreement` and nothing else, and the two statements
+below give the cheapest sufficient condition for it: that the weighted law at the later time be
+*read off* the weighted law at the earlier one, against a separating family, by a map that does
+not depend on the member of `N`.
+
+Duality is the source of such a map.  The duality identity of `thm:duality`, run under the
+weight rather than under `P` itself, reads
+`E^P[Z f (X s', y)] = E^P[Z (F y T) (X s)]` with `F y T x = E[f (x, Y^y T)]` and `T` the dual
+time, and that is exactly the shape below, with `Λ s s' y = F y T`.  Isolating it here records
+what the deduction to `PropagatesAgreement` costs, which is nothing: no martingale, no dual
+process, no shift system and no Markov property occurs in either proof.  What a *shift* is
+needed for is `lem:propagation`, which reads its hypothesis about the shifted problems at time
+`⊥` and must transport the restarted object back to `⊥` to do so (`rem:restartnomarkov`); a
+transfer operator is read at `s` and `t` where they stand, so nothing is transported. -/
+
+omit [OrderBot ι] in
+/-- A weighted law is a finite measure as soon as the weight is bounded above and the measure is
+finite; its total mass is `weightedLaw_univ`, at most `b * P univ`.  This is what lets a
+separating family be applied to the weighted laws, which are finite measures and, except after
+the normalisation of `weightedLaw_const_mul`, not probability measures. -/
+theorem isFiniteMeasure_weightedLaw {t : ι} (hπ : Measurable (π t)) (P : Measure F)
+    [IsFiniteMeasure P] {Z : F → ℝ} {b : ℝ} (hZb : ∀ g, Z g ≤ b) :
+    IsFiniteMeasure (weightedLaw π P Z t) := by
+  constructor
+  rw [weightedLaw_univ hπ]
+  calc ∫⁻ g, ENNReal.ofReal (Z g) ∂P ≤ ∫⁻ _, ENNReal.ofReal b ∂P :=
+        lintegral_mono fun g ↦ ENNReal.ofReal_le_ofReal (hZb g)
+    _ = ENNReal.ofReal b * P Set.univ := by rw [lintegral_const]
+    _ < ⊤ := ENNReal.mul_lt_top ENNReal.ofReal_lt_top (measure_lt_top P _)
+
+omit [OrderBot ι] in
+/-- **A transfer operator propagates agreement.**  If the integral of each `f y` against the
+weighted law at `t` is the integral of a function `Λ s t y` -- one and the same for every member
+of `N` -- against the weighted law at `s`, and the family `f` separates the finite measures of
+equal mass, then `N` propagates agreement.
+
+The separating hypothesis is stated for finite measures *of equal mass* rather than for
+probability measures, which is the same condition by positive homogeneity, and it is used in
+that form because the weighted laws are not normalised.  The mass hypothesis is free here:
+`weightedLaw_univ` says the mass does not depend on the time, so agreement at `s` carries it to
+`t`.  This is `cor:uniqviadual`(i), and it is the only hypothesis of that corollary which
+survives into this statement.
+
+Nothing is asked of `Λ` -- no measurability, no boundedness, no integrability.  Two equal
+measures integrate every function alike, and that is the whole proof. -/
+theorem propagatesAgreement_of_transfer {Y : Type*} (hfin : ∀ P ∈ N, IsFiniteMeasure P)
+    (hπ : ∀ t : ι, Measurable (π t)) (f : Y → E → ℝ)
+    (hsep : ∀ μ ν : Measure E, IsFiniteMeasure μ → IsFiniteMeasure ν →
+      μ Set.univ = ν Set.univ → (∀ y, ∫ x, f y x ∂μ = ∫ x, f y x ∂ν) → μ = ν)
+    (Λ : ι → ι → Y → E → ℝ)
+    (htransfer : ∀ P ∈ N, ∀ s t : ι, s ≤ t → ∀ Z : F → ℝ, (∀ g, 0 ≤ Z g) →
+      (∃ b, ∀ g, Z g ≤ b) → StronglyMeasurable[𝓕₀ s] Z → ∀ y,
+        ∫ x, f y x ∂(weightedLaw π P Z t) = ∫ x, Λ s t y x ∂(weightedLaw π P Z s)) :
+    PropagatesAgreement 𝓕₀ π N := by
+  intro P hP Q hQ s t hst Z hZ0 hZb hZm hagree
+  haveI := hfin P hP
+  haveI := hfin Q hQ
+  obtain ⟨b, hb⟩ := hZb
+  refine hsep _ _ (isFiniteMeasure_weightedLaw (hπ t) P hb)
+    (isFiniteMeasure_weightedLaw (hπ t) Q hb) ?_ fun y ↦ ?_
+  · rw [weightedLaw_univ (hπ t), weightedLaw_univ (hπ t),
+      ← weightedLaw_univ (hπ s) P Z, ← weightedLaw_univ (hπ s) Q Z, hagree]
+  · rw [htransfer P hP s t hst Z hZ0 ⟨b, hb⟩ hZm y,
+      htransfer Q hQ s t hst Z hZ0 ⟨b, hb⟩ hZm y, hagree]
 
 end Propagation
 
@@ -33572,32 +33668,6 @@ section PropagationFromOnedim
 variable {ι : Type*} [Preorder ι] [OrderBot ι] [AddCommMonoid ι] [AddLeftMono ι]
 variable {E : Type*} [MeasurableSpace E]
 variable {F : Type*} [mF : MeasurableSpace F] {π : ι → F → E}
-
-omit [Preorder ι] [OrderBot ι] [AddCommMonoid ι] [AddLeftMono ι] in
-/-- The total mass of a weighted law is the mass of the density, and in particular it does not
-depend on the time at which the coordinate is read.  This is the manuscript's "taking `h ≡ 1`
-gives `c := E^P[Z] = E^Q[Z]`", and it is the only consequence of the hypothesis of
-`PropagatesAgreement` that is used before the restart. -/
-theorem weightedLaw_univ {t : ι} (hπ : Measurable (π t)) (P : Measure F) (Z : F → ℝ) :
-    weightedLaw π P Z t Set.univ = ∫⁻ f, ENNReal.ofReal (Z f) ∂P := by
-  unfold weightedLaw
-  rw [Measure.map_apply hπ MeasurableSet.univ, Set.preimage_univ,
-    withDensity_apply _ MeasurableSet.univ, Measure.restrict_univ]
-
-omit [Preorder ι] [OrderBot ι] [AddCommMonoid ι] [AddLeftMono ι] in
-/-- The weighted law is positively homogeneous in the weight.  This is what makes the
-normalisation `E^P[Z] = 1` of the manuscript proof a change of variables and not a restriction:
-one proves the conclusion for `Z / c` and multiplies back. -/
-theorem weightedLaw_const_mul (π : ι → F → E) (P : Measure F) {Z : F → ℝ} (hZm : Measurable Z)
-    {a : ℝ} (ha : 0 ≤ a) {t : ι} (hπ : Measurable (π t)) :
-    weightedLaw π P (fun f ↦ a * Z f) t = ENNReal.ofReal a • weightedLaw π P Z t := by
-  unfold weightedLaw
-  have h1 : (fun f ↦ ENNReal.ofReal (a * Z f))
-      = (ENNReal.ofReal a) • (fun f ↦ ENNReal.ofReal (Z f)) := by
-    funext f
-    simp only [Pi.smul_apply, smul_eq_mul]
-    exact ENNReal.ofReal_mul ha
-  rw [h1, withDensity_smul _ hZm.ennreal_ofReal, Measure.map_smul _ hπ.aemeasurable]
 
 /-- **`lem:propagation`**: under a shift system, uniqueness of the one dimensional laws of the
 shifted problems propagates agreement.

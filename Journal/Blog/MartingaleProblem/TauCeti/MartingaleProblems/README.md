@@ -6577,6 +6577,16 @@ of determining sets and of `restart`.
   and `weightedLaw_const_mul`, that the weighted law is positively homogeneous
   in the weight. These two are what the normalisation of `lem:propagation`
   consists of: the first is "take `h ≡ 1`", the second is "divide by `E[Z]`".
+* `isFiniteMeasure_weightedLaw` and `propagatesAgreement_of_transfer`: a
+  weighted law is finite when the weight is bounded and the measure is, and a
+  set propagates agreement as soon as the integral of each member of a
+  separating family against the weighted law at `t` is the integral of some
+  function against the weighted law at `s`, by a map that does not depend on
+  the member of `N`. Nothing is asked of that map — no measurability, no
+  boundedness, no integrability — because equal measures integrate every
+  function alike. It is the interface through which duality reaches
+  `prop:uniqfromprop`; see `duality_weighted` in Milestone 8, whose transfer
+  operator is `Λ s t y x = 𝔼[f (x, Y^y T)]`.
 * `measure_cylinder_inter_eq_of_propagatesAgreement`: the induction over a
   chain, with the top coordinate's set a separate argument. That separation is
   the content of the step -- the induction hypothesis is used with the top set
@@ -7316,6 +7326,79 @@ this milestone speaks about `Locally`, which is declared under it.
   chain the `κ` condition forces `κ = 0`, which is `atomGrid_symm`; on a finite
   partial order with nonnegative masses it forces the defect to vanish, which is
   `dualityDefect_eq_zero_of_nonneg`.
+**Duality under a weight.** The identity of `chain_identity` carries a
+multiplicative weight, and the four points below are what that buys: the route
+from duality to uniqueness that does not pass through a shift system. The
+weight sits on the first factor, the staircase starts where the weight is
+measurable, and the dual time is the one that matches the clock mass.
+
+* `chain_identity` is stated above with the staircase running from `(⊥, t)` to
+  `(t, ⊥)`; the telescoping reads neither endpoint, so the statement is the one
+  for an arbitrary monotone `s` and antitone `t` with the same length,
+  ```
+  Φ (s m) (t m) - Φ (s 0) (t 0)
+    = ∑ k, (∫ r in Ico (s k) (s (k+1)), γ₁ r (t (k+1)) ∂q
+            - ∫ r in Ico (t (k+1)) (t k), γ₂ (s k) r ∂q)
+  ```
+  and the form above is its instance. A least element of `ι` is needed for
+  `duality_defect_eq_integral`, which reads `Iio ⊥ = ∅`, and for nothing else in
+  this group.
+* `duality_weighted`: with the data of `duality_of_atomless`, a time `s₀`, a
+  bounded non-negative `𝓕^X s₀`-measurable `Z`, a time `s' ≥ s₀` and the dual
+  time `T` determined by `q (Ico s₀ s') = q (Ico ⊥ T)`,
+  ```
+  𝔼[Z * f (X s', Y ⊥)] = 𝔼[Z * f (X s₀, Y T)] .
+  ```
+  The martingale property in the `X` direction is read on `[s₀, ∞)` only, which
+  is what `lem:restartmemory` supplies for the reweighted measure: `Z • P` is a
+  solution from `s₀` onwards, by the tower property and nothing else. Three
+  ingredients. The `X` increments are `integral_smul_martingale_eq` of
+  Milestone 5, which is already proved and already free of the shift. The `Y`
+  increments are unchanged, because a weight on the first factor leaves the
+  second factor independent and its law untouched:
+  `MeasureTheory.prod_withDensity_left`
+  (`MeasureTheory/Measure/WithDensity.lean:701`) is that step in measure form.
+  The conclusion is `duality_of_atomless` on the rectangle
+  `Icc s₀ s' ×ˢ Icc ⊥ T`.
+
+  The condition on `T` is not a hypothesis on the clock but the definition of
+  the dual time: it is `rem:haarrole`'s clock time anti-diagonal
+  `Q (s k) + Q (t k) = Q (s') `, which `eq:cancel` wants and which translation
+  invariance of `q` is one way to obtain. At `s₀ = ⊥` it holds with `T = s'`
+  for every clock, and that is why `duality` does not name it. Under Lebesgue
+  measure it is `T = s' - s₀`.
+* `not_secondIncrement_of_weight_on_dual`: the weight has to sit on the first
+  factor. Take `E₁ = Unit`, `E₂ = ℝ`, `f x y = y`, `h = 0`, and for `Y` the
+  martingale with `Y ⊥ = 0` and `Y t` a fair sign for `t ≥ 1`; then `γ₂ = 0`
+  while `Z = 1 + Y 1` gives `Φ^Z ⊥ ⊥ = 0` and `Φ^Z ⊥ 1 = 1`. So the second
+  increment relation fails for a weight that reads the dual process, and it
+  fails at the first step and not in a limit. This is the witness for the
+  measurability hypothesis of `duality_weighted`, and it is why that hypothesis
+  is `𝓕^X s₀` and not the filtration of the product.
+* `propagatesAgreement_of_duality`: the weighted laws of `X` under the members
+  of a solution set are related by the transfer operator
+  `Λ s t y x = 𝔼[f (x, Y^y T)]`, so `propagatesAgreement_of_transfer` of
+  Milestone 6 applies and the set propagates agreement. With
+  `eq_of_propagatesAgreement` this is `cor:uniqviadual` — uniqueness for every
+  initial law — through `prop:uniqfromprop`, with no shift system, no
+  determining set and no appeal to `thm:absuniq`. The separating hypothesis
+  `cor:uniqviadual`(i) is the only hypothesis of that corollary which survives.
+* `isMarkov_of_duality`: the same identity with `Z` an indicator of a set in
+  `𝓕^X s` reads `𝔼[f (X t, y) | 𝓕^X s] = Λ s t y (X s)`, so a solution which
+  has a dual is Markov, over a countable separating family and with one null
+  set for all of it. The Markov property is therefore a *consequence* of
+  possessing a state-based dual and not a hypothesis anywhere in this route —
+  which also says how far the route reaches: a dual whose `X` side is a
+  function of the state carries the Markov property with it.
+* `duality_weighted_of_condExp`: the balance condition the weighted identity
+  actually consumes is `γ₁ = γ₂` *after* weighting, that is
+  `𝔼[Z * (g r (X, Y t) - h (X r, Y t))] = 0` for the weight at hand, and over
+  all bounded `𝓕^X s₀`-measurable weights this is
+  `𝔼[g r (X, ·) - h (X r, ·) | 𝓕^X s₀] = 0`. It admits a path dependent `g`,
+  and it is the exact room the identity leaves outside the Markov world. The
+  conclusion is that of `duality_weighted`, and the proof is the same chain,
+  which reads the balance nowhere else.
+
 * `atomGrid_symm`: let `M : ℕ`, let `m : ℕ → ℝ` with `m i ≠ 0` for
   `1 ≤ i` and `i ≤ M - 1`, and let `Φ : ℕ → ℕ → ℝ` satisfy
   `m j * (Φ (i+1) j - Φ i j) = m i * (Φ i (j+1) - Φ i j)` for

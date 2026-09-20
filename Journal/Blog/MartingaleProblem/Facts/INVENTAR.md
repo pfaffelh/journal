@@ -46738,3 +46738,210 @@ definitionsgleich, aber nicht unifizierbar. Zu nehmen ist ein `funext` mit
 
 3. **Erst danach Gruppe A für den beschränkten Fall** (Vorschlag 3 des Vorlaufs,
    unverändert gültig) und die allgemeine Fassung über beliebigem `ι`.
+
+### 2026-09-20, neunter Lauf des Tages — der eingeschobene Lauf zur gewichteten Dualität: die Kettenidentität trägt das Gewicht, und zwar aus einem benennbaren Grund; **aber was sie dann sagt, ist die Markoveigenschaft selbst** — die Dualität verläßt die Markov-Welt nicht, sie verläßt das **Schiftsystem**
+
+**Bearbeitet:** der eine vom Nutzer am 2026-09-20 eingeschobene Lauf, Frage
+„Hat die Dualität außerhalb der Markov-Welt eine Chance?", in der
+vorgeschriebenen Reihenfolge: (1) die Kettenidentität mit Gewicht nachrechnen,
+(2) bei Tragfähigkeit die gewichtete Dualität aussprechen und auf
+`PropagatesAgreement` prüfen, (3) bei Nichttragfähigkeit einen Zeugen bauen.
+Meilenstein 8 ist **nicht** begonnen, keine Volterra-Theorie und keine
+Task-23-Aussage angefaßt. Mathlib-Stand: `upstream/master` `b1007d8abfd`
+(2026-09-19), frisch geholt.
+
+#### Die Antwort in einem Satz
+
+> **Das Gewicht geht durch, das Schiftsystem fällt weg, die Markoveigenschaft
+> nicht — sie fällt heraus.**
+
+Die gewichtete Identität trägt, und sie liefert `PropagatesAgreement`, also
+Eindeutigkeit über `prop:uniqfromprop` statt über `thm:absuniq`: **ohne
+Schiftsystem, ohne bestimmende Menge, ohne Reindizierung**. Aber dieselbe
+Identität, mit einem Indikator als Gewicht gelesen, ist
+`𝔼[f (X t, y) | 𝓕^X s] = Λ s t y (X s)`, und das **ist** die Markoveigenschaft.
+Ein zustandsbasierter Dualer trägt sie also mit sich; er befreit nicht von ihr.
+Für `ex:volterra` heißt das: die Dualität hilft dort nicht, weil sie das
+Schiftsystem bräuchte — das braucht sie auf diesem Weg gerade nicht —, sondern
+weil ein Dualer, der die Markoveigenschaft nach sich zieht, für einen
+pfadabhängigen Prozeß keiner sein kann. Das ist ein **anderer** Grund als der
+im Manuskript genannte, und er ist der schärfere.
+
+#### 1. Die beiden Zuwachsrelationen unter Gewicht, nachgerechnet
+
+Sei `Φ^Z s t = 𝔼[Z · f (X s, Y t)]` mit `Z` beschränkt, `≥ 0` und
+`𝓕^X s₀`-meßbar.
+
+**Die `X`-Richtung trägt für `s₀ ≤ s ≤ s'`.** Mit
+`M t = f (X t, y) − ∫_0^t g (X u, y) du` ist `𝔼[Z (M s' − M s)] = 0`, weil `Z`
+beschränkt und `𝓕 s`-meßbar ist; Fubini zieht `Z` unter das Zeitintegral, und
+es steht `Φ^Z s' t − Φ^Z s t = ∫_{Ico s s'} 𝔼[Z g (X r, Y t)] dr`. Das ist
+`lem:restartmemory` des Manuskripts — „Restarting is not where the Markov
+structure enters", `rem:restartnomarkov` — und es steht **in Lean bereits
+bewiesen** als `integral_smul_martingale_eq`
+(`MartingaleProblems/Suggested.lean`, Milestone-5-Block): dort für `restart`
+gebaut, aber selbst schiftfrei.
+
+**Und hier ist eine Verschärfung der Voraussetzung, die zu nennen ist:** die
+ungewichtete Dualität verbraucht in der `X`-Richtung nur die *Konstanz des
+Erwartungswerts* von `M`, nicht die Martingaleigenschaft. Die gewichtete
+verbraucht die Martingaleigenschaft. Wer die Dualität je unter einer
+Mittelwert-Hypothese führen will, verliert genau das Gewicht.
+
+**Die `Y`-Richtung trägt, weil `Z` von `Y` unabhängig ist.** Für festes `x` gibt
+die `Y`-Seite `𝔼[f (x, Y t')] − 𝔼[f (x, Y t)] = ∫_t^{t'} 𝔼[h (x, Y r)] dr`;
+integriert gegen das Bild von `Z • P` unter `X s` steht
+`Φ^Z s t' − Φ^Z s t = ∫_{Ico t t'} 𝔼[Z h (X s, Y r)] dr`. Verbraucht wird
+allein, daß eine Umgewichtung des **ersten** Faktors den zweiten unabhängig und
+seine Verteilung unverändert läßt, und das steht in Mathlib:
+`MeasureTheory.prod_withDensity_left` — **ohne** `Measure.` im Namen, obwohl die
+Datei `Measure/WithDensity.lean` heißt und die Aussage über `Measure.prod`
+spricht; die einzige `namespace`-Zeile der Datei ist `MeasureTheory` —
+(`Mathlib/MeasureTheory/Measure/WithDensity.lean:701`, Stand `b1007d8abfd`),
+`(μ.withDensity f).prod ν = (μ.prod ν).withDensity (fun z ↦ f z.1)` unter
+`[SFinite ν]`. Die `Y`-Richtung verbraucht **keine** Martingaleigenschaft über
+den Mittelwert hinaus, genau wie ungewichtet.
+
+**Eine Negativaussage, geprüft und nicht vermutet:** die *Prozeß*fassung von
+`lem:restartmemory` — „ein Martingal bleibt unter Umgewichtung mit einer
+beschränkten, für die Vergangenheit bei `r` meßbaren Dichte ein Martingal, von
+`r` an" — hat Mathlib nicht. Auf `b1007d8abfd` kommt `withDensity` in
+`Mathlib/Probability/Martingale/` und in `Mathlib/Probability/Process/`
+**überhaupt nicht** vor. Gebraucht wird sie auf diesem Weg auch nicht: die
+Kettenidentität liest nur Erwartungswerte, und dafür genügt die Integralform
+`integral_smul_martingale_eq`. Wer den gewichteten Weg je über bedingte
+Erwartungen führen will statt über Erwartungswerte, baut sie zuerst.
+
+#### 2. Wo es nicht umsonst ist — zwei Stellen, beide benannt
+
+**(a) Die Kettenidentität steht in der Roadmap enger, als ihr Beweis ist.** Sie
+ist dort mit der Treppe von `(⊥, t)` nach `(t, ⊥)` formuliert. Die gewichtete
+Anwendung braucht die Treppe von `(s₀, T)` nach `(s', ⊥)`. Das Teleskop liest
+**keinen** der beiden Endpunkte: die Aussage gilt für beliebige monotone `s` und
+antitone `t` gleicher Länge, und die Fassung der Roadmap ist ihre Instanz. Das
+kleinste Element wird in dieser Gruppe nur von `duality_defect_eq_integral`
+gebraucht, das `Iio ⊥ = ∅` liest. Die Roadmap ist entsprechend berichtigt.
+
+**(b) Die duale Zeit ist nicht `s' − s₀`, sondern die Zeit gleicher Uhrmasse.**
+Die Folgerung `Φ^Z s' ⊥ = Φ^Z s₀ T` liest in der transportierten Gestalt
+`Ψ (a,b) = F (a+b)` und gilt genau dann, wenn `Q s' − Q s₀ = Q T`, also wenn das
+`X`-Fenster und das `Y`-Fenster **dieselbe `q`-Masse** tragen. Das ist keine
+Voraussetzung an die Uhr, sondern die Definition von `T`; es ist die
+Antidiagonale in Uhrzeit aus `rem:haarrole`, `Q (s k) + Q (t k) = Q s'`, die
+`eq:cancel` verlangt. Bei `s₀ = ⊥` ist sie mit `T = s'` für jede Uhr erfüllt —
+**deshalb kommt sie in `duality` nicht vor**, und deshalb wird sie beim
+Verschieben des Fußpunkts zum ersten Mal sichtbar. Unter Lebesgue ist sie
+`T = s' − s₀`, und `rem:haarrole` sagt bereits, daß Translationsinvarianz *eine*
+Weise ist, sie zu bekommen, und nicht die Sache selbst.
+
+#### 3. Der Zeuge: das Gewicht muß auf dem ersten Faktor sitzen
+
+Ein `𝓕 s₀`-meßbares Gewicht der **Produktfiltration** genügt nicht, und es
+scheitert nicht in einem Grenzübergang, sondern im ersten Schritt. Nimm
+`E₁ = Unit`, `E₂ = ℝ`, `f x y = y`, `h = 0`, und für `Y` das Martingal mit
+`Y ⊥ = 0` und `Y t` ein faires Vorzeichen für `t ≥ 1`. Dann ist `γ₂ = 0`, aber
+mit `Z = 1 + Y 1` — beschränkt, nichtnegativ, `σ (Y 1)`-meßbar — ist
+`Φ^Z ⊥ ⊥ = 𝔼[(1 + Y 1) · 0] = 0` und `Φ^Z ⊥ 1 = 𝔼[(1 + Y 1) Y 1] = 1`. Die
+zweite Zuwachsrelation ist verletzt. Also ist die Meßbarkeitsvoraussetzung
+`𝓕^X s₀` und nicht `𝓕 s₀`, und sie ist scharf. In der Roadmap steht das als
+`not_secondIncrement_of_weight_on_dual`.
+
+#### 4. `PropagatesAgreement` folgt — und der Schritt dahin ist bewiesen
+
+Die gewichtete Dualität liefert
+`∫ f (·, y) d(weightedLaw P Z t) = ∫ Λ s t y d(weightedLaw P Z s)` mit
+`Λ s t y x = 𝔼[f (x, Y^y T)]`, und `Λ` hängt **nicht** von `P` ab. Genau das
+ist die Schnittstelle, und sie ist als eigene Aussage jetzt in Lean bewiesen:
+
+* **`propagatesAgreement_of_transfer`** — hat jedes `f y` an der gewichteten
+  Verteilung zur Zeit `t` dasselbe Integral wie ein `Λ s t y` an der zur Zeit
+  `s`, mit einem für alle Mitglieder von `N` gleichen `Λ`, und trennt die
+  Familie `f` die endlichen Maße gleicher Masse, so propagiert `N`
+  Übereinstimmung. **An `Λ` wird nichts verlangt** — keine Meßbarkeit, keine
+  Beschränktheit, keine Integrierbarkeit: zwei gleiche Maße integrieren jede
+  Funktion gleich, und das ist der ganze Beweis.
+* **`isFiniteMeasure_weightedLaw`** — die Eingabe dazu, weil die gewichteten
+  Verteilungen endliche und keine Wahrscheinlichkeitsmaße sind.
+
+**Geprüft:** `scripts/check_master.py` meldet für die ganze Kette **0 Fehler,
+0 `sorry`, 0 veraltete Namen** (Mathlib `94ef6b89544`, Lean `v4.35.0-rc2`;
+18 / 35 / 109 Warnungen, eine mehr als vor dem Lauf, und sie ist ein
+`unusedSectionVars` aus den neuen Deklarationen, also keine Veraltung). Alle
+vier betroffenen Deklarationen — die zwei neuen und die zwei verschobenen —
+hängen nach `check_axioms_master.py` an `propext`, `Classical.choice`,
+`Quot.sound` und an nichts sonst.
+
+Die Trennungsvoraussetzung ist für endliche Maße **gleicher Masse** formuliert,
+was durch positive Homogenität dasselbe ist wie Trennung für `Prob(E)`, also
+wörtlich `cor:uniqviadual`(i); die Massengleichheit ist umsonst, weil
+`weightedLaw_univ` sagt, daß die Masse nicht von der Zeit abhängt. Damit ist
+`cor:uniqviadual`(i) die **einzige** Voraussetzung jenes Korollars, die diesen
+Weg überlebt.
+
+**Nebenbefund, und er betrifft den Bestand:** `weightedLaw_univ` und
+`weightedLaw_const_mul` standen im Abschnitt `PropagationFromOnedim`, also in
+der **markovschen** Hälfte, obwohl beide vier `omit`-Zeilen trugen und die
+README sie seit jeher in der markovfreien Gruppe aufzählt. Sie sind in den
+Abschnitt `Propagation` verschoben; die `omit`-Zeilen schrumpfen dabei von vier
+Klassen auf zwei. Roadmap und Datei sagen damit dasselbe.
+
+#### 5. Und der Befund, der die Frage des Laufs beantwortet
+
+Setzt man in die gewichtete Dualität `Z = 1_G` mit `G ∈ 𝓕^X s`, so steht
+
+> `𝔼[1_G f (X t, y)] = 𝔼[1_G Λ s t y (X s)]`, also
+> `𝔼[f (X t, y) | 𝓕^X s] = Λ s t y (X s)` f.s.,
+
+und über einer abzählbaren trennenden Familie — eine Nullmenge für alle, wie in
+`lem:disint` — ist das die **Markoveigenschaft** von `X`. Sie ist auf diesem Weg
+also weder Voraussetzung noch Ergebnis eines Umwegs über `thm:absuniq`, sondern
+fällt in einer Zeile aus der Identität selbst. Das ist die Richtung, die
+`cor:uniqviadual` behauptet, und der Weg dorthin ist kürzer als der des
+Manuskripts — aber es ist zugleich die Grenze der Reichweite:
+
+> **Ein zustandsbasierter Dualer zwingt jede Lösung in die Markov-Welt.** Für
+> einen pfadabhängigen Prozeß kann es ihn deshalb nicht geben, und das ist der
+> Grund, aus dem die Dualität `ex:volterra` nicht erreicht — nicht das
+> Schiftsystem.
+
+**Was übrigbleibt, und es ist nicht nichts.** Die Kettenidentität liest die
+Bilanz `γ₁ = γ₂` nur unter dem Gewicht, also als
+`𝔼[Z (g_r (X, Y t) − h (X r, Y t))] = 0`; über alle zulässigen Gewichte ist das
+`𝔼[g_r (X, ·) − h (X r, ·) | 𝓕^X s₀] = 0`, eine **bedingte** und keine
+punktweise Identität, und sie läßt ein pfadabhängiges `g` zu. Das ist der genaue
+Spielraum außerhalb der Markov-Welt; er steht als
+`duality_weighted_of_condExp` in der Roadmap, und **keine Instanz davon ist
+bekannt** — das Manuskript liefert keine, und dieser Lauf hat keine gesucht.
+
+#### Was in die Roadmap eingetragen ist
+
+`MartingaleProblems/README.md`, Meilenstein 8, neuer Block „Duality under a
+weight": die Berichtigung von `chain_identity` auf beliebige Endpunkte,
+`duality_weighted`, `not_secondIncrement_of_weight_on_dual`,
+`propagatesAgreement_of_duality`, `isMarkov_of_duality` und
+`duality_weighted_of_condExp`. In Meilenstein 6, markovfreie Gruppe, die beiden
+in diesem Lauf bewiesenen Aussagen.
+
+#### Vorschlag für den nächsten Lauf
+
+**Zurück zu Meilenstein 11, wie angeordnet, und dort an den ersten Punkt der
+Kette: `isTight_map_postcomp_of_exists_martingale`.** Er ist der einzige der
+vier, dessen Eingabe vollständig dasteht — die Doob-Ungleichungen in stetiger
+Zeit sind seit dem zweiten und dritten Lauf dieses Tages bewiesen, und
+`UniformCompactContainment` samt Äquivalenz und Indexübergang liegt seit dem
+Vorlauf zu Meilenstein 11. Die drei folgenden Punkte hängen an ihm und nicht
+umgekehrt.
+
+Von diesem Lauf ist für Meilenstein 11 **nichts** zu übernehmen; er war
+eingeschoben und ist abgeschlossen. Der einzige Faden, den er hinterläßt, ist
+`duality_weighted_of_condExp`, und der gehört nach Meilenstein 8, wenn dieser
+begonnen wird.
+
+#### Eine Beobachtung am Rande, nicht angefaßt
+
+In `~/Code/lean/mathlib-master` liegen **25** Verzeichnisse `_check_*` mit
+zusammen **1413 MB** — die Arbeitsbäume von `check_master.py`, die nur bei
+`--keep` oder nach einem Abbruch stehenbleiben; das Skript räumt sonst über
+`atexit` auf. Dieser Lauf hat den seinen entfernt und die übrigen
+**stehengelassen**, weil sie nicht seine sind. Sie sind regenerierbar und
+kosten nichts als Platz; ob sie fallen, entscheidet der Nutzer.
