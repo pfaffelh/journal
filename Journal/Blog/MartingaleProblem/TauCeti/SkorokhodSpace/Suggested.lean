@@ -18621,3 +18621,204 @@ theorem SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal [CompleteSpa
     · rintro ⟨i, rfl⟩
       exact ⟨(μ i).map SkorokhodSpace.extendNNReal, ⟨i, rfl⟩, hstep i⟩
   rw [himg, SkorokhodSpace.isTightMeasureSet_map_extendNNReal_iff]
+
+/-! ### Where compact containment is free, and what is left when it is
+
+The criterion **MartingaleProblems** Milestone 11 opens with,
+`isTight_map_postcomp_of_exists_martingale`, concludes the tightness of the laws
+of `postcomp f ∘ X n` for a **bounded** `f`.  The block below says that the first
+conjunct of `SkorokhodSpace.isTightMeasureSet_iff` costs that conclusion nothing,
+so that a run at the item is left with the modulus condition and with nothing
+else; and the witness at the end says that what is left is not nothing. -/
+
+omit [AdditiveDist ι] [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- **One subdivision suffices, and it may be chosen after the path.**
+`SkorokhodSpace.modulusBased` is an infimum over based subdivisions, so naming
+*one* of them bounds it.  This is the shape in which every upper bound on the
+modulus is produced, and it is written out because the witness at the end of this
+block says that the converse reading is false: a subdivision fixed **before** the
+path is of no use, both jumps of `SkorokhodSpace.twoJump` lying inside one cell
+of every subdivision whose cells are wider than their separation. -/
+theorem SkorokhodSpace.modulusBased_le_subdivisionOsc (t₀ : ι) {u δ : ℝ} (f : D(ι, E))
+    {n : ℕ} {t : Fin (n + 1) → ι} (ht : SkorokhodSpace.IsSubdivisionBased t₀ u δ t) :
+    SkorokhodSpace.modulusBased t₀ u f δ ≤ SkorokhodSpace.subdivisionOsc f t :=
+  iInf_le_of_le n (iInf_le_of_le t (iInf_le _ ht))
+
+/-- **Compact containment is free on the image side.**  A bounded continuous
+`h : E →ᵇ ℝ` sends every value into the compact interval `Set.Icc (-‖h‖) ‖h‖`, so
+the window set of an image law is not merely charged with high probability but
+carries the whole mass, at every window and for every member of the family.
+
+**No hypothesis at all is read of `μ`** -- not finiteness, not tightness, and in
+particular not compact containment of `μ` itself, which is a genuine condition:
+`SkorokhodSpace.isCompactContained_const` locates it in the uniformity in the
+index, and the family of constant paths at height `n` fails it.
+
+The one thing the proof needs is that the window set is **measurable**, because
+the bound travels to the image law along `MeasureTheory.Measure.map_apply` and
+`MeasureTheory.Measure.le_map_apply` points the other way, bounding an image
+measure from below.  That is the only index-specific input, and it is why it
+stands here as a hypothesis and the two indices are served by the corollaries
+below rather than by a proof each. -/
+theorem SkorokhodSpace.isCompactContained_map_postcomp_of_measurableSet
+    [CompleteSpace E] [SkorokhodSpace.HasCountableCore ι] {γ : Type*}
+    (μ : γ → Measure D(ι, E)) (h : E →ᵇ ℝ) (t₀ : ι)
+    (hmeas : ∀ u : ℝ, MeasurableSet
+      {g : D(ι, ℝ) | ∀ s ∈ exhaustion t₀ u, g.toFun s ∈ Set.Icc (-‖h‖) ‖h‖}) :
+    SkorokhodSpace.IsCompactContained t₀
+      fun i => (μ i).map (SkorokhodSpace.postcomp h.toContinuousMap) := by
+  intro ε hε m
+  refine ⟨Set.Icc (-‖h‖) ‖h‖, isCompact_Icc, fun i => ?_⟩
+  rw [Measure.map_apply (SkorokhodSpace.measurable_postcomp _) (hmeas (m : ℝ)).compl]
+  have hempty : (SkorokhodSpace.postcomp (ι := ι) (E := E) h.toContinuousMap) ⁻¹'
+      {g : D(ι, ℝ) | ∀ s ∈ exhaustion t₀ (m : ℝ), g.toFun s ∈ Set.Icc (-‖h‖) ‖h‖}ᶜ = ∅ := by
+    ext f
+    simp only [Set.mem_preimage, Set.mem_compl_iff, Set.mem_ofPred_eq, Set.mem_empty_iff_false,
+      iff_false, not_not]
+    intro s _
+    have hb := h.norm_coe_le_norm (f.toFun s)
+    rw [SkorokhodSpace.postcomp_toFun]
+    exact Set.mem_Icc.2 (abs_le.1 (by simpa [Real.norm_eq_abs] using hb))
+  rw [hempty]
+  simp
+
+/-- The instance over `ℝ≥0`, which is the index the processes of
+**MartingaleProblems** have. -/
+theorem SkorokhodSpace.isCompactContained_map_postcomp_nnreal [CompleteSpace E] {γ : Type*}
+    (μ : γ → Measure D(ℝ≥0, E)) (h : E →ᵇ ℝ) :
+    SkorokhodSpace.IsCompactContained (0 : ℝ≥0)
+      fun i => (μ i).map (SkorokhodSpace.postcomp h.toContinuousMap) :=
+  SkorokhodSpace.isCompactContained_map_postcomp_of_measurableSet μ h 0
+    fun _ => SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion_nnreal isClosed_Icc _
+
+/-- The instance over `ℝ`, which is the index the modulus is read over. -/
+theorem SkorokhodSpace.isCompactContained_map_postcomp_real [CompleteSpace E] {γ : Type*}
+    (μ : γ → Measure D(ℝ, E)) (h : E →ᵇ ℝ) :
+    SkorokhodSpace.IsCompactContained (0 : ℝ)
+      fun i => (μ i).map (SkorokhodSpace.postcomp h.toContinuousMap) :=
+  SkorokhodSpace.isCompactContained_map_postcomp_of_measurableSet μ h 0
+    fun _ => SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion isClosed_Icc _ _
+
+/-- **Under compact containment tightness is the modulus condition alone**, over
+the index the processes have.
+
+It is `SkorokhodSpace.isTightMeasureSet_iff` with its first conjunct discharged
+once by the hypothesis, and with the family crossed by
+`SkorokhodSpace.isTightMeasureSet_map_extendNNReal_iff`.  Nothing of Milestones 7
+and 8 is restated: the rule of this milestone applies, a conclusion crossing
+backward and a hypothesis forward.
+
+**The modulus is still read on `D(ℝ, E)`**, and that is not an oversight.
+`SkorokhodSpace.isCompact_closure_iff` is false over an index with gaps
+(`SkorokhodSpace.not_isCompact_closure_of_rigid`), so the modulus is a quantity
+of the *extended* path; no `ℝ≥0`-native modulus is introduced, here or
+anywhere. -/
+theorem SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal [CompleteSpace E] {γ : Type*}
+    {μ : γ → Measure D(ℝ≥0, E)} (hcc : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) μ) :
+    IsTightMeasureSet {μ i | i} ↔ ∀ ε : ℝ≥0∞, 0 < ε → ∀ m : ℕ, ∀ η : ℝ≥0∞, 0 < η →
+      ∃ δ : ℝ, 0 < δ ∧ ∀ i, (μ i).map SkorokhodSpace.extendNNReal
+        {f : D(ℝ, E) | η ≤ SkorokhodSpace.modulusBased (0 : ℝ) (m : ℝ) f δ} ≤ ε := by
+  rw [← SkorokhodSpace.isTightMeasureSet_map_extendNNReal_iff,
+    SkorokhodSpace.isTightMeasureSet_iff]
+  constructor
+  · intro h ε hε m η hη
+    obtain ⟨δ, hδ, hle⟩ := (h ε hε m).2 η hη
+    exact ⟨δ, hδ, fun i => hle _ ⟨i, rfl⟩⟩
+  · intro h ε hε m
+    refine ⟨hcc.map_extendNNReal ε hε m, fun η hη => ?_⟩
+    obtain ⟨δ, hδ, hle⟩ := h ε hε m η hη
+    refine ⟨δ, hδ, ?_⟩
+    rintro ν ⟨i, rfl⟩
+    exact hle i
+
+/-- **The tightness of a bounded real image is the modulus condition and nothing
+else** -- an equivalence with no hypothesis whatever, the two statements above
+composed.
+
+This is the shape **MartingaleProblems** Milestone 11 reads.  What
+`isTight_map_postcomp_of_exists_martingale` has to produce from its martingale
+approximation is the right hand side here, and that is the whole of what it has
+to produce; the compact containment its consumers carry is spent on the
+**original** family, in `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal`,
+and not on the images. -/
+theorem SkorokhodSpace.isTightMeasureSet_map_postcomp_iff [CompleteSpace E] {γ : Type*}
+    (μ : γ → Measure D(ℝ≥0, E)) (h : E →ᵇ ℝ) :
+    IsTightMeasureSet {(μ i).map (SkorokhodSpace.postcomp h.toContinuousMap) | i}
+      ↔ ∀ ε : ℝ≥0∞, 0 < ε → ∀ m : ℕ, ∀ η : ℝ≥0∞, 0 < η → ∃ δ : ℝ, 0 < δ ∧ ∀ i,
+          ((μ i).map (SkorokhodSpace.postcomp h.toContinuousMap)).map
+              SkorokhodSpace.extendNNReal
+            {f : D(ℝ, ℝ) | η ≤ SkorokhodSpace.modulusBased (0 : ℝ) (m : ℝ) f δ} ≤ ε :=
+  SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal
+    (SkorokhodSpace.isCompactContained_map_postcomp_nnreal μ h)
+
+/-- **The witness that the modulus condition carries all the content.**  The two
+jumps of Milestone 8 at distance `(n+1)⁻¹`, read through the clipped distance to
+the value **between** them -- the test function that sees both jumps at once, and
+the one on which the coordinatewise route was refuted
+(`SkorokhodSpace.one_le_modulusBased_postcomp_clipDist_twoJump`).
+
+The family is written as a family of **image laws under a bounded
+post-composition**, which is the shape the criterion of Milestone 11 reads, so
+that the two statements below apply to it without translation. -/
+noncomputable def SkorokhodSpace.twoJumpImageLaw (n : ℕ) : Measure D(ℝ, ℝ) :=
+  (Measure.dirac (SkorokhodSpace.twoJump (((n : ℝ) + 1)⁻¹))).map
+    (SkorokhodSpace.postcomp (SkorokhodSpace.clipDist ((1 : ℝ), (0 : ℝ))).toContinuousMap)
+
+/-- The witness has compact containment, by the theorem above and in one line. -/
+theorem SkorokhodSpace.isCompactContained_twoJumpImageLaw :
+    SkorokhodSpace.IsCompactContained (0 : ℝ) SkorokhodSpace.twoJumpImageLaw :=
+  SkorokhodSpace.isCompactContained_map_postcomp_real _ _
+
+/-- **And it is not tight.**  So the equivalence above is no triviality: its
+right hand side fails on a family whose left conjunct holds for nothing, and the
+quantity a run at **MartingaleProblems** Milestone 11 has to produce from its
+martingale hypothesis is exactly the one that fails here.
+
+The criterion is read at `ε = 2⁻¹`, `m = 3` and `η = 1`, and at the one `n` with
+`(n+1)⁻¹ < δ`; the measure of the modulus set is `1` because the law is a Dirac
+at a path lying in it, and `MeasureTheory.Measure.le_dirac_apply` gives that
+**without** the set being measurable, which matters because the modulus sets are
+among those this roadmap never asserts measurable.
+
+**And `MeasureTheory.Measure.map_dirac` is not usable on a path space**: it asks
+`MeasurableSingletonClass` of both spaces, and the instance search for it on
+`D(ℝ, ℝ × ℝ)` does not terminate -- it exhausts two million heartbeats without an
+answer.  `MeasureTheory.Measure.map_dirac'`, which asks measurability of the map
+instead, is the one to take, and `SkorokhodSpace.measurable_postcomp` supplies
+its hypothesis. -/
+theorem SkorokhodSpace.not_isTightMeasureSet_twoJumpImageLaw :
+    ¬ IsTightMeasureSet {SkorokhodSpace.twoJumpImageLaw n | n : ℕ} := by
+  intro htight
+  obtain ⟨-, hmod⟩ := SkorokhodSpace.isTightMeasureSet_iff.1 htight 2⁻¹
+    (ENNReal.inv_pos.2 (by norm_num)) 3
+  obtain ⟨δ, hδ, hle⟩ := hmod 1 one_pos
+  obtain ⟨n, hn⟩ := exists_nat_gt δ⁻¹
+  have hγ0 : (0 : ℝ) < ((n : ℝ) + 1)⁻¹ := by positivity
+  have hγδ : ((n : ℝ) + 1)⁻¹ < δ := by
+    rw [inv_lt_comm₀ (by positivity) hδ]
+    exact lt_trans hn (by linarith)
+  have hmap : SkorokhodSpace.twoJumpImageLaw n
+      = Measure.dirac (SkorokhodSpace.postcomp
+          (SkorokhodSpace.clipDist ((1 : ℝ), (0 : ℝ))).toContinuousMap
+          (SkorokhodSpace.twoJump (((n : ℝ) + 1)⁻¹))) :=
+    Measure.map_dirac' (SkorokhodSpace.measurable_postcomp _) _
+  have h := hle _ ⟨n, rfl⟩
+  rw [hmap] at h
+  have hmem : SkorokhodSpace.postcomp
+      (SkorokhodSpace.clipDist ((1 : ℝ), (0 : ℝ))).toContinuousMap
+      (SkorokhodSpace.twoJump (((n : ℝ) + 1)⁻¹))
+      ∈ {f : D(ℝ, ℝ) | (1 : ℝ≥0∞) ≤ SkorokhodSpace.modulusBased (0 : ℝ) ((3 : ℕ) : ℝ) f δ} := by
+    have := SkorokhodSpace.one_le_modulusBased_postcomp_clipDist_twoJump hγ0 hγδ
+    simpa using this
+  have h1 : (1 : ℝ≥0∞) ≤ Measure.dirac (SkorokhodSpace.postcomp
+      (SkorokhodSpace.clipDist ((1 : ℝ), (0 : ℝ))).toContinuousMap
+      (SkorokhodSpace.twoJump (((n : ℝ) + 1)⁻¹)))
+      {f : D(ℝ, ℝ) | (1 : ℝ≥0∞) ≤ SkorokhodSpace.modulusBased (0 : ℝ) ((3 : ℕ) : ℝ) f δ} := by
+    have hd := MeasureTheory.Measure.le_dirac_apply
+      (s := {f : D(ℝ, ℝ) | (1 : ℝ≥0∞) ≤ SkorokhodSpace.modulusBased (0 : ℝ) ((3 : ℕ) : ℝ) f δ})
+      (a := SkorokhodSpace.postcomp
+        (SkorokhodSpace.clipDist ((1 : ℝ), (0 : ℝ))).toContinuousMap
+        (SkorokhodSpace.twoJump (((n : ℝ) + 1)⁻¹)))
+    rwa [Set.indicator_of_mem hmem, Pi.one_apply] at hd
+  have h2 : (2 : ℝ≥0∞)⁻¹ < 1 := ENNReal.inv_lt_one.2 (by norm_num)
+  exact absurd (h1.trans h) (not_le.2 h2)
