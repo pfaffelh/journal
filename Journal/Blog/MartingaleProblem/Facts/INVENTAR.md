@@ -46526,3 +46526,215 @@ Aussagen und nicht eine; daran hat dieser Lauf nichts geändert.
 3. **Erst danach Gruppe A für den beschränkten Fall** (Vorschlag 1 des Vorlaufs,
    unverändert gültig) und die allgemeine Fassung über beliebigem `ι`
    (Vorschlag 3 des Vorlaufs, ebenfalls unberührt).
+
+### 2026-09-20, achter Lauf des Tages — Meilenstein 14 steht bis auf **eine** Aussage, und der vorgeschriebene Weg ist **nicht** gegangen worden: die Blockzerlegung ist durch eine **exponentielle Dämpfung** ersetzt, die die Voraussetzung `a < 1` nicht einlöst, sondern ersatzlos streicht; dazu zwei weitere Mathlib-Lücken derselben Familie und die Einsicht, daß die Eindeutigkeit in zwei Hälften zerfällt, von denen nur die zweite an der abgeschnittenen Subtraktion hängt
+
+**Bearbeitet:** Vorschlag 1 des Vorlaufs (`exists_setLIntegral_lt_one` und
+`setLIntegral_volterraResolvent_lt_top_of_locallyFinite`) und Vorschlag 2
+(`renewal_eq_add_lconvolution_volterraResolvent` samt `renewal_lt_top`) — und
+danach, weil beide billiger waren als veranschlagt, die **Minimalität** der
+Resolventenlösung, also die eine Hälfte der Eindeutigkeit, die ohne die
+abgeschnittene Subtraktion auskommt. Vorschlag 3 (Gruppe A für den beschränkten
+Fall) und die allgemeine Fassung über beliebigem `ι` sind nicht angefaßt und
+bleiben unverändert stehen.
+
+**20 neue Deklarationen** im Abschnitt `CausalConvolution` von
+`MartingaleProblems/Suggested.lean` (+337 Zeilen, −0), dazu die Neufassung von
+fünf Punkten des Meilensteins 14 in `MartingaleProblems/README.md` (+75/−22).
+
+#### Die Entscheidung, die der Vorlauf verlangt hat, und sie ist gegen seinen eigenen Entwurf gefallen
+
+Der Vorlauf hat aufgetragen, **vor dem ersten Beweisschritt** zu begründen, ob die
+Fortsetzung vom kurzen Fenster auf jedes über `convPow_add` oder über eine
+Induktion an der Resolventengleichung läuft, und hat richtig bemerkt, daß der
+zweite Weg im Kreis liefe. Die Begründung, und sie verwirft **beide**:
+
+> **Die Blockzerlegung ist teuer, und sie ist unnötig.** Um
+> `∫⁻_{[0,Kd]} convPow φ n` durch `a = ∫⁻_{[0,d]} φ` zu beschränken, genügt die
+> Submultiplikativität nicht: sie gibt `(∫⁻_{[0,Kd]} φ)^{n+1}`, und diese Zahl ist
+> für großes `K` über `1`, die Reihe divergiert. Die richtige Schranke zählt, auf
+> wie viele Weisen sich `n` Faltungsfaktoren auf `K` Blöcke verteilen, also einen
+> Binomialkoeffizienten. Das ist Buchhaltung über zwei Indizes.
+>
+> **Die exponentielle Dämpfung macht dieselbe Arbeit in einer Zeile.** Setzt man
+> `expDamp l f t = e^{-l t} · f t`, so ist das Gewicht **multiplikativ längs der
+> Faltung** — `e^{-l s} · e^{-l (t-s)} = e^{-l t}` —, also
+> `expDamp l f ⋆ₗ expDamp l g = expDamp l (f ⋆ₗ g)`, und dieselbe Gleichung gilt
+> für jede Potenz und für die Resolvente. Das Fenster bleibt stehen, und klein
+> gemacht wird die **Masse**, nicht das Fenster.
+
+Diese eine Gleichung, `lconvolution_expDamp`, trägt den ganzen Weg, und sie
+verlangt **nichts**: keine Kausalität, keine Meßbarkeit, keine Endlichkeit. Der
+Grund ist, daß `-(l s) + -(l (t-s)) = -(l t)` eine Identität reeller Zahlen ist
+und keine Eigenschaft der Halbachse.
+
+**Und der Weg zahlt zweimal.** Er löst die Voraussetzung `a < 1` nicht ein, er
+**streicht sie**: für ein festes Fenster `[0,c]` gibt es immer eine Dämpfung, unter
+der die Masse dort unter `1` fällt, sofern sie überhaupt endlich ist. Die
+Aussage, die den Meilenstein trägt, heißt deshalb jetzt
+
+`setLIntegral_volterraResolvent_lt_top_of_ne_top` — *die Resolvente hat endliche
+Masse auf einem Fenster, sobald der Kern sie dort hat* —, und sie sagt **nichts**
+über den Kern außerhalb dieses einen Fensters. Die vom Meilenstein bestellte
+Fassung `…_of_locallyFinite` ist ihr Korollar, drei Zeilen; die beiden sind
+getrennt gehalten, weil erst die scharfe zeigt, daß die Fenster nicht miteinander
+reden.
+
+#### Was das mit `exists_setLIntegral_lt_one` macht
+
+Der Punkt ist aus dem Meilenstein **gestrichen**, und nicht, weil er falsch wäre.
+Er war die Brücke „lokal integrierbar → kurzes Fenster mit Masse unter `1`", und
+über die Dämpfung führt kein Weg mehr über ein kurzes Fenster. Nichts verbraucht
+ihn noch. An seine Stelle tritt `exists_setLIntegral_expDamp_lt_one`, dieselbe
+Brücke mit dem Grenzübergang im **Gewicht** statt in der Fensterlänge.
+
+Dabei fällt eine Voraussetzung fort, die der Meilenstein verlangt hatte: „`φ`
+verschwindet bei `0` im Sinne der Fenstermasse". Sie ist überflüssig, und zwar
+strukturell — die gedämpften Massen fallen gegen die Masse von `{0}`, und die ist
+`0`, weil `{0}` Lebesgue-Nullmenge ist (`Real.volume_singleton`), was immer der
+Kern dort tut. Auch die Kausalität wird nicht gebraucht.
+
+**Was statt dessen wirklich gebraucht wird, und es sind zwei fast sichere
+Bedingungen, jede an einer anderen Stelle:** die Folge ist nur dort antiton, wo
+`0 ≤ t` ist, und sie fällt nur dort gegen `0`, wo der Kern **endlich** ist, denn
+`e^{-l t} · ⊤ = ⊤` für jedes `l`. Die zweite ist genau das, was die endliche
+Fenstermasse liefert (`ae_lt_top`), und sie ist die Stelle, an der ein Kern mit
+Wert `⊤` auf einer Nullmenge geduldet und einer mit Wert `⊤` auf einer Menge
+positiven Maßes ausgeschlossen wird. Beides zusammen ist `lintegral_iInf'`.
+
+#### Die zweite Mathlib-Lücke, und sie steht neben der ersten
+
+Der Vorlauf hat `support_lconvolution_subset` als fehlend belegt. Für die
+Erneuerungsgleichung fehlt eine zweite, und sie ist noch elementarer: **die
+Faltung distribuiert in Mathlib nicht über die Addition.**
+`Mathlib/Analysis/LConvolution.lean` trägt `mlconvolution_def`,
+`zero_mlconvolution`, `mlconvolution_zero`, `measurable_mlconvolution`,
+`aemeasurable_mlconvolution`, `mlconvolution_assoc₀`, `mlconvolution_assoc` und
+`mlconvolution_comm` — und keine Distributivität; `git grep` über
+`94ef6b89544` gibt für `lconvolution_add`, `add_lconvolution` und
+`mlconvolution_add` je **null** Treffer in `Mathlib/`. Gebaut sind hier
+`lconvolution_add` und `add_lconvolution`, jede mit der Meßbarkeit des **einen**
+Integranden, der abgespalten wird, und sonst nichts — also strikt weniger als die
+Assoziativität verlangt.
+
+#### Was die Erneuerungsgleichung kostet, nachdem die Distributivität dasteht
+
+Vier Zeilen. `renewal_eq_add_lconvolution_volterraResolvent` ist
+`lconvolution_add`, `lconvolution_assoc`, `add_lconvolution` und
+`volterraResolvent_eq` rückwärts gelesen, und sie trägt **keine** Kausalität,
+**keine** Endlichkeit und keine Bedingung an die Masse von `φ` — nur die
+Meßbarkeit von Kern und Inhomogenität. Über `ℝ≥0∞` gilt die Gleichung, ob ihre
+Lösung endlich ist oder nicht, und genau dafür ist der Meilenstein dort gestellt.
+
+`renewal_lt_top` ist die Endlichkeit, wieder fensterweise: beide Voraussetzungen
+handeln von **demselben** Fenster wie die Konklusion.
+
+#### Die Eindeutigkeit, geteilt — und die eine Hälfte steht
+
+Der Vorlauf hat die Bruchstelle der Eindeutigkeit richtig vorhergesagt: die
+abgeschnittene Subtraktion. Der Befund dieses Laufs ist, daß sie **nur die eine
+Hälfte** betrifft, und die andere ist im selben Lauf bewiesen:
+
+* `renewal_le_of_eq` — *jede* Lösung dominiert `m₀ + r ⋆ₗ m₀`, die
+  Resolventenlösung ist die **kleinste**. Das kommt **ohne** Subtraktion aus:
+  jede Partialsumme der Reihe liegt unter jeder Lösung, per Induktion durch die
+  Gleichung hindurch (`φ ⋆ₗ (m₀ + (∑_{k<n} φ^k) ⋆ₗ m₀) = (∑_{k<n+1} φ^k) ⋆ₗ m₀`,
+  also Distributivität, Assoziativität und `Finset.sum_range_succ'`), und der
+  Grenzübergang ist `ENNReal.tsum_eq_iSup_nat` und `ENNReal.add_iSup`.
+  **Weder Kausalität noch Endlichkeit gehen ein** — die Schranke gilt für *jede*
+  Lösung, auch für eine, die irgendwo `⊤` ist. Die dafür nötige Distributivität
+  über eine endliche Summe ist in beiden Richtungen gebaut
+  (`lconvolution_finset_sum`, `finset_sum_lconvolution`); sie ist die dritte
+  Mathlib-Lücke derselben Familie.
+* `renewal_ae_eq_of_eq` — zwei kausale, fensterweise endliche Lösungen stimmen
+  **fast überall** überein. Hier ist die Subtraktion unvermeidlich: die Differenz
+  einer Lösung und der minimalen löst die homogene Gleichung nur dort, wo beide
+  endlich sind, also läuft der Beweis gegen `lintegral_sub`, dessen beide
+  Voraussetzungen genau die Endlichkeit sind, die die Aussage trägt, und die
+  punktweise Schranke, die `renewal_le_of_eq` seit diesem Lauf liefert. Das ist
+  der Grund, aus dem die Minimalität zuerst gebaut wurde und nicht bloß, weil sie
+  billiger war. Und die Konklusion ist fast überall und nicht punktweise,
+  und das ist ehrlich: zwei Lösungen, die sich auf einer Nullmenge unterscheiden,
+  haben dieselben Faltungen und sind an der Gleichung nicht zu trennen.
+
+Die **Naht** zu Meilenstein 4 ist von diesem Lauf nicht berührt und bleibt zwei
+Aussagen (`lintegral_hawkesSelfRate_eq_add_lconvolution` und
+`lintegral_stepIndex_hawkesJumpTime_lt_top`).
+
+#### Geprüft
+
+* `scripts/check_master.py`: rc 0, **0 Fehler**, 0 `sorry`, 0 veraltet,
+  Warnungen 18 / 35 / 106 — **unverändert** gegenüber dem Vorlauf, obwohl 337
+  Zeilen hinzugekommen sind, und dreimal im Lauf gemessen (nach der Dämpfung,
+  nach der Erneuerungsgleichung, nach der Minimalität). Mathlib
+  `94ef6b89544e58e90f119da869f3fb48d1da0f4c` (2026-09-18), Lean 4.35.0-rc2. Der
+  Stand vor dem Eingriff ist eigens gemessen worden und war derselbe.
+* `scripts/check_axioms_master.py` auf **alle 20** neuen Deklarationen:
+  `propext`, `Classical.choice`, `Quot.sound`, ohne Ausnahme.
+* `scripts/check_cited_lines.py`: 314 gepaarte Fundstellen, **0 verschoben, 0
+  tot**.
+* `scripts/check_negatives.py`: 45 Behauptungen, 0 mit unerwarteten Treffern.
+* `scripts/check_duplicates.py`: 2525 geprüfte eigene Deklarationen, und keine
+  der 20 neuen taucht unter den 39 Treffern auf.
+* `scripts/check_own_names.py`: 404 → **402** ungedeckte Namen. Fortgefallen sind
+  `exists_setLIntegral_lt_one` (gestrichen),
+  `setLIntegral_volterraResolvent_lt_top_of_locallyFinite`,
+  `renewal_eq_add_lconvolution_volterraResolvent`, `renewal_lt_top` und
+  `renewal_le_of_eq` (jetzt bewiesen); neu sind `renewal_ae_eq_of_eq` als
+  einziger offener Punkt des Meilensteins und `mlconvolution_assoc₀`.
+  **Der letzte ist ein Artefakt des Index und keine Lücke:** die Deklaration
+  steht auf `94ef6b89544` in `Mathlib/Analysis/LConvolution.lean:115`, am
+  Quelltext nachgesehen; der Index des Skripts führt sie nicht, vermutlich wegen
+  des tiefgestellten `₀` im Namen.
+
+#### Ein Werkzeugbefund
+
+`gcongr` ist in diesem Abschnitt dreimal an einer Stelle eingesprungen, an der
+der Entwurf einen Schritt von Hand vorgesehen hatte: bei
+`ofReal (exp (-(n·t))) · f t ≤ ofReal (exp (-(m·t))) · f t` erledigt es die
+Monotonie von `ofReal`, von `exp` und der Multiplikation selbst und läßt nur
+`0 ≤ t` stehen. Wer dort `ENNReal.ofReal_le_ofReal (Real.exp_le_exp.2 …)`
+hinschreibt, bekommt einen Typfehler gegen das Restziel — **erst `gcongr` laufen
+lassen und dann sehen, was übrigbleibt**, nicht umgekehrt.
+
+Dasselbe in der anderen Richtung bei `congr 1`: im Induktionsschritt von
+`renewal_le_of_eq` bleibt scheinbar
+`∑_{k<n} φ ⋆ₗ convPow φ k = ∑_{k<n} convPow φ (k+1)` zu zeigen, und der
+naheliegende `Finset.sum_congr` mit `convPow_succ` meldet **„No goals to be
+solved"** — `convPow_succ` ist `rfl`, also erledigt `congr 1` die Summe von
+selbst. Ohne `congr 1` bleibt das Ziel dagegen offen, weil `rw` am Ende nur
+syntaktisch schließt. Die Regel für beide Fälle ist dieselbe: **das Restziel
+lesen, nicht vorhersagen.**
+
+Und eine Stelle, an der die `Pi`-Schreibweise nicht durchgeht:
+`Measurable (∑ k ∈ Finset.range n, convPow φ k)` ist für
+`Finset.measurable_sum` **kein** passendes Ziel — dessen Konklusion ist
+`Measurable fun a => ∑ i ∈ s, f i a`, und die beiden sind zwar
+definitionsgleich, aber nicht unifizierbar. Zu nehmen ist ein `funext` mit
+`Finset.sum_apply` und danach `rw`.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`renewal_ae_eq_of_eq`** — die fast sichere Eindeutigkeit, und damit der
+   **letzte** offene Punkt des Meilensteins 14 vor der Naht. Sie ist jetzt dran,
+   weil ihre Eingabe seit diesem Lauf dasteht: `lintegral_sub` verlangt zweierlei
+   — die Endlichkeit des abgezogenen Integrals, die die Aussage als Hypothese
+   trägt, und die punktweise Ungleichung fast überall, und die ist genau
+   `renewal_le_of_eq`. **Vor dem ersten Beweisschritt zu klären:** die Differenz
+   `m − (m₀ + r ⋆ₗ m₀)` erfüllt die homogene Gleichung `d = φ ⋆ₗ d` nur, wenn
+   `φ ⋆ₗ m − φ ⋆ₗ M = φ ⋆ₗ (m − M)` gilt, und das ist wieder `lintegral_sub`,
+   diesmal **unter** dem Faltungsintegral und damit für fast jedes `x` einzeln.
+   Ob das über die punktweise Endlichkeit von `φ ⋆ₗ M` geht oder über die
+   gedämpfte Fassung, in der alles beschränkt ist, ist die Entscheidung des
+   Laufs, und sie ist zu begründen. Schätzung: ein bis zwei Läufe.
+
+2. **Die Naht zu Meilenstein 4**, also
+   `lintegral_hawkesSelfRate_eq_add_lconvolution` und
+   `lintegral_stepIndex_hawkesJumpTime_lt_top`. Sie ist von diesem Lauf nicht
+   berührt und bleibt zwei Aussagen; die erste ist Tonelli gegen das Zählmaß der
+   Sprungzeiten und braucht die Eindeutigkeit **nicht**, die zweite ist
+   `renewal_lt_top` auf diese Daten angewandt. Sie darf vor Vorschlag 1 gehen,
+   wenn dieser hängenbleibt.
+
+3. **Erst danach Gruppe A für den beschränkten Fall** (Vorschlag 3 des Vorlaufs,
+   unverändert gültig) und die allgemeine Fassung über beliebigem `ι`.

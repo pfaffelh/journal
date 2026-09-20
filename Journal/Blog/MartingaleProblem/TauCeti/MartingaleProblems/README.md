@@ -11477,28 +11477,81 @@ condition and not a change of carrier that makes the convolution causal.
   `tsum_eq_zero_add'` against `ENNReal.summable` — no convergence question
   arises. The second form `r = φ + r ⋆ₗ φ` is this one and `lconvolution_comm`.
 * `setLIntegral_volterraResolvent_lt_top`: if `a < 1` on a window of length `d`
-  then `∫⁻ t in Set.Icc 0 d, r t < ⊤`; and
-  `setLIntegral_volterraResolvent_lt_top_of_locallyFinite`, the same on **every**
-  window, for a kernel whose mass on some window of positive length is below `1`
-  and whose mass on every window is finite. The step from the short window to
-  every window is causality and nothing else: the resolvent on `[0, (k+1) d]` is
-  determined by the kernel on `[0, (k+1) d]`, and the geometric bound is applied
-  block by block. This is the step the Neumann series of a normed algebra
-  (`NormedRing.inverse_one_sub`, `Mathlib/Analysis/Normed/Ring/Units.lean`)
-  cannot take: it asks `‖φ‖ < 1` globally, and a locally integrable kernel on the
-  half line has no such norm.
-* `exists_setLIntegral_lt_one`: a kernel with `∫⁻ t in Set.Icc 0 d, φ t < ⊤` for
-  every `d` and `φ` vanishing at `0` in the sense of the window mass has a window
-  of positive length with mass below `1`, by the continuity of the measure from
-  above. This is the hypothesis of the previous item discharged on local
-  integrability alone, and it is where "locally integrable" becomes "the resolvent
-  exists".
-* `renewal_eq_add_lconvolution_volterraResolvent`: `m = m₀ + r ⋆ₗ m₀` is the
-  unique causal solution of `m = m₀ + φ ⋆ₗ m` that is finite on every window.
-  Uniqueness is the difference of two solutions against the geometric bound;
-  existence is the associativity and the defining equation of `r`.
-  `renewal_lt_top`: if `m₀` is bounded on every window and the resolvent has
-  finite window mass, then so has `m`.
+  then `∫⁻ t in Set.Icc 0 d, r t < ⊤`, the geometric bound read off the series.
+* `expDamp l φ := fun t ↦ ENNReal.ofReal (Real.exp (-(l * t))) * φ t`, the
+  exponential damping, with `expDamp_apply`, `measurable_expDamp`,
+  `IsCausal.expDamp`, `expDamp_zero`, `convPow_expDamp` and
+  `volterraResolvent_expDamp`. The one that carries the milestone is
+  `lconvolution_expDamp : expDamp l f ⋆ₗ expDamp l g = expDamp l (f ⋆ₗ g)`, and
+  it asks **nothing** — not causality, not measurability, not finiteness —
+  because `e^{-l s} ⬝ e^{-l (t - s)} = e^{-l t}` is an identity of real numbers
+  and not a property of the half line. The damping is what replaces the short
+  window: it keeps the window and makes the mass small by weighting.
+* `exists_setLIntegral_expDamp_lt_one`: a measurable kernel with finite mass on
+  `[0, c]` has a damping `l ≥ 0` whose damped mass on that window is below `1`,
+  by the monotone convergence theorem for nonincreasing sequences (`lintegral_iInf'`)
+  along `l = 0, 1, 2, …`. Neither causality nor any behaviour of the kernel at the
+  origin is asked for: the damped masses decrease to the mass of `{0}`, which is
+  `0` because `{0}` is Lebesgue null (`Real.volume_singleton`). Two almost sure
+  conditions enter and each is needed — the sequence is antitone only where
+  `0 ≤ t`, and it decreases to `0` only where the kernel is **finite**, since
+  `e^{-l t} ⬝ ⊤ = ⊤` for every `l`.
+* `setLIntegral_volterraResolvent_lt_top_of_ne_top`: the resolvent has finite mass
+  on a window as soon as the kernel has, on that window alone and with no
+  hypothesis on the kernel anywhere else; and
+  `setLIntegral_volterraResolvent_lt_top_of_locallyFinite`, the same quantified
+  over the window, which is the form the renewal equation consumes. This is where
+  "locally integrable" becomes "the resolvent exists", and it is the step the
+  Neumann series of a normed algebra (`NormedRing.inverse_one_sub`,
+  `Mathlib/Analysis/Normed/Ring/Units.lean`) cannot take: it asks `‖φ‖ < 1`
+  globally, and a locally integrable kernel on the half line has no such norm.
+  It is taken by damping and not by a block decomposition: bounding the mass of
+  the `n`-th power on `[0, K d]` through the mass on `[0, d]` costs a binomial
+  count of the ways `n` blocks distribute over `K`, and the damping replaces that
+  count by a single limit — and pays twice, because it removes the hypothesis
+  `a < 1` from the conclusion instead of discharging it.
+* `lconvolution_add` and `add_lconvolution`, the distributivity of the lower
+  integral convolution over addition, each asking the measurability of the one
+  integrand that is split off and nothing else. Mathlib does not have them:
+  `Mathlib/Analysis/LConvolution.lean` carries `mlconvolution_def`,
+  `zero_mlconvolution`, `mlconvolution_zero`, `measurable_mlconvolution`,
+  `aemeasurable_mlconvolution`, `mlconvolution_assoc₀`, `mlconvolution_assoc`
+  and `mlconvolution_comm`, and no distributivity. They belong in Mathlib beside
+  the associativity, and they ask strictly less than it does.
+* `renewal_eq_add_lconvolution_volterraResolvent`: `m₀ + r ⋆ₗ m₀` solves
+  `m = m₀ + φ ⋆ₗ m`, by the distributivity, the associativity and the defining
+  equation of `r` read backwards. Neither causality nor finiteness is a
+  hypothesis: over `ℝ≥0∞` the equation holds whether or not its solution is
+  finite, which is why the finiteness is a separate statement and not a
+  precondition for writing the equation down.
+* `renewal_lt_top`: the solution has finite mass on every window on which `φ`
+  and `m₀` have — window by window, with the hypotheses about the **same**
+  window as the conclusion. This is the statement the seam with Milestone 4
+  consumes.
+* `lconvolution_mono`, the monotonicity of the convolution in its second
+  argument, which over `ℝ≥0∞` is `lintegral_mono` and nothing else;
+  `lconvolution_finset_sum` and `finset_sum_lconvolution`, the distributivity
+  over a finite sum on either side, by induction over the `Finset`; and
+  `lconvolution_volterraResolvent_left`, the series of the powers convolved with
+  the inhomogeneity, by `lintegral_tsum`.
+* `renewal_le_of_eq`: every solution of `m = m₀ + φ ⋆ₗ m` dominates
+  `m₀ + r ⋆ₗ m₀`; the resolvent solution is the **smallest** one. This is the
+  half of the uniqueness that needs no subtraction, which is why it is stated
+  separately and proved first: each partial sum of the series is below every
+  solution, by induction through the equation, and the passage to the limit is
+  `ENNReal.tsum_eq_iSup_nat` and `ENNReal.add_iSup`. Neither causality nor
+  finiteness enters — the bound holds for **any** solution, including one that
+  is `⊤` somewhere.
+* `renewal_ae_eq_of_eq`: two solutions that are causal and have finite mass on
+  every window agree almost everywhere. This is the one statement of the
+  milestone where the truncated subtraction of `ℝ≥0∞` is a real obstacle and not
+  a notational one: the difference of a solution and the minimal one solves the
+  homogeneous equation only where both are finite, so the argument runs against
+  `lintegral_sub`, whose two hypotheses are exactly the finiteness the statement
+  carries and the pointwise bound `renewal_le_of_eq` supplies. The conclusion is
+  almost everywhere and not pointwise, and it is honest that way: two solutions
+  that differ on a Lebesgue null set have the same convolutions and cannot be
+  told apart by the equation.
 
 **The seam with Milestone 4, and it is two statements and not one.** The
 resolvent gives `𝔼[N t] < ∞` only once the mean intensity of the linear Hawkes

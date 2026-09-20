@@ -40735,4 +40735,341 @@ theorem setLIntegral_volterraResolvent_lt_top {f : ℝ → ENNReal} (hf : IsCaus
         ENNReal.tsum_geometric_add_one _
     _ < ⊤ := ENNReal.mul_lt_top hatop (ENNReal.inv_lt_top.2 hpos)
 
+/-- **The exponential damping of a kernel**, `t ↦ e^{-l t} f t`.
+
+It is the device that replaces the short window.  The naive route from "locally finite" to "the
+resolvent is finite" shrinks the window until the kernel has mass below `1` on it and then walks
+from that window to every window block by block; the damping keeps the window and makes the mass
+small by weighting instead, and the walk disappears.  What makes it work is that the weight is
+**multiplicative along the convolution** -- `e^{-l s} e^{-l (t - s)} = e^{-l t}` -- so damping
+commutes with every operation of this section, and it does so with no hypothesis at all, not even
+causality: the identity `s + (t - s) = t` holds on the whole line. -/
+noncomputable def expDamp (l : ℝ) (f : ℝ → ENNReal) : ℝ → ENNReal :=
+  fun t => ENNReal.ofReal (Real.exp (-(l * t))) * f t
+
+theorem expDamp_apply (l : ℝ) (f : ℝ → ENNReal) (t : ℝ) :
+    expDamp l f t = ENNReal.ofReal (Real.exp (-(l * t))) * f t := rfl
+
+theorem measurable_expDamp {f : ℝ → ENNReal} (hf : Measurable f) (l : ℝ) :
+    Measurable (expDamp l f) :=
+  (ENNReal.measurable_ofReal.comp
+    (Real.measurable_exp.comp ((measurable_id.const_mul l).neg))).mul hf
+
+theorem IsCausal.expDamp {f : ℝ → ENNReal} (hf : IsCausal f) (l : ℝ) :
+    IsCausal (_root_.expDamp l f) := fun t ht => by
+  simp [_root_.expDamp, hf t ht]
+
+@[simp] theorem expDamp_zero (f : ℝ → ENNReal) : expDamp 0 f = f := by
+  funext t
+  simp [expDamp]
+
+/-- **The damping passes through the convolution**, and this statement is the reason the whole
+device works.  It asks **nothing**: not causality, not measurability, not finiteness.  The weight
+of the convolution variable and the weight of its complement multiply to the weight of the
+argument because `-(l s) + -(l (t - s)) = -(l t)`, and that is an identity of real numbers and
+not a property of the half line. -/
+theorem lconvolution_expDamp (l : ℝ) (f g : ℝ → ENNReal) :
+    expDamp l f ⋆ₗ expDamp l g = expDamp l (f ⋆ₗ g) := by
+  funext t
+  rw [lconvolution_def, expDamp_apply, lconvolution_def,
+    ← lintegral_const_mul' _ _ ENNReal.ofReal_ne_top]
+  refine lintegral_congr fun y => ?_
+  have hs : ENNReal.ofReal (Real.exp (-(l * y))) * ENNReal.ofReal (Real.exp (-(l * (-y + t))))
+      = ENNReal.ofReal (Real.exp (-(l * t))) := by
+    rw [← ENNReal.ofReal_mul (Real.exp_nonneg _), ← Real.exp_add]
+    congr 2
+    ring
+  simp only [expDamp_apply]
+  calc ENNReal.ofReal (Real.exp (-(l * y))) * f y
+        * (ENNReal.ofReal (Real.exp (-(l * (-y + t)))) * g (-y + t))
+      = (ENNReal.ofReal (Real.exp (-(l * y))) * ENNReal.ofReal (Real.exp (-(l * (-y + t)))))
+        * (f y * g (-y + t)) := by ring
+    _ = ENNReal.ofReal (Real.exp (-(l * t))) * (f y * g (-y + t)) := by rw [hs]
+
+theorem convPow_expDamp (l : ℝ) (f : ℝ → ENNReal) (n : ℕ) :
+    convPow (expDamp l f) n = expDamp l (convPow f n) := by
+  induction n with
+  | zero => rfl
+  | succ n ih => rw [convPow_succ, ih, lconvolution_expDamp, ← convPow_succ]
+
+/-- **The resolvent of the damped kernel is the damped resolvent.**  Termwise it is the previous
+statement, and the sum comes out by `ENNReal.tsum_mul_left`, which asks nothing. -/
+theorem volterraResolvent_expDamp (l : ℝ) (f : ℝ → ENNReal) :
+    volterraResolvent (expDamp l f) = expDamp l (volterraResolvent f) := by
+  funext t
+  simp only [volterraResolvent, convPow_expDamp, expDamp_apply]
+  rw [ENNReal.tsum_mul_left]
+
+/-- **A damping that makes the window mass small**, and the only hypotheses are the measurability
+of the kernel and the finiteness of its mass on the **one** window in question.
+
+Causality is not asked for, and neither is any behaviour of the kernel at the origin: the
+damped masses decrease to the mass of `{0}`, which is `0` because `{0}` is Lebesgue null
+(`Real.volume_singleton`), whatever the kernel does there.  That is one hypothesis fewer than the
+milestone had asked for, and the reason is that the limit is taken in the **weight** and not in
+the window, so the origin never has to be excluded by hand.
+
+The proof is the monotone convergence theorem for nonincreasing sequences (`lintegral_iInf'`)
+along `l = 0, 1, 2, …`.  Two almost sure conditions enter and each is needed: the sequence is
+antitone only where `0 ≤ t`, and it decreases to `0` only where the kernel is **finite**, since
+`e^{-l t} ⬝ ⊤ = ⊤` for every `l`.  The second is exactly what the finite window mass provides
+(`ae_lt_top`), and it is the place where a kernel with an infinite value on a null set is
+tolerated and one with an infinite value on a set of positive measure is not. -/
+theorem exists_setLIntegral_expDamp_lt_one {f : ℝ → ENNReal} (hfm : Measurable f) {c : ℝ}
+    (hc : ∫⁻ t in Set.Icc 0 c, f t ≠ ⊤) :
+    ∃ l : ℝ, 0 ≤ l ∧ ∫⁻ t in Set.Icc 0 c, expDamp l f t < 1 := by
+  have hmem : ∀ᵐ t ∂(volume.restrict (Set.Icc (0:ℝ) c)), t ∈ Set.Icc (0:ℝ) c :=
+    self_mem_ae_restrict measurableSet_Icc
+  have hmeas : ∀ n : ℕ, Measurable (expDamp (n : ℝ) f) := fun n => measurable_expDamp hfm _
+  have hfin : ∫⁻ t in Set.Icc 0 c, expDamp ((0 : ℕ) : ℝ) f t ≠ ⊤ := by
+    simpa [expDamp_apply] using hc
+  have hanti : ∀ᵐ t ∂(volume.restrict (Set.Icc (0:ℝ) c)),
+      Antitone fun n : ℕ => expDamp (n : ℝ) f t := by
+    filter_upwards [hmem] with t ht m n hmn
+    simp only [expDamp_apply]
+    gcongr
+    exact ht.1
+  have hlt : ∀ᵐ t ∂(volume.restrict (Set.Icc (0:ℝ) c)), f t < ⊤ := ae_lt_top hfm hc
+  have hne0 : ∀ᵐ t ∂(volume.restrict (Set.Icc (0:ℝ) c)), t ≠ 0 := by
+    rw [ae_iff]
+    have hset : {t : ℝ | ¬ t ≠ 0} = {(0 : ℝ)} := by ext t; simp
+    rw [hset]
+    exact le_antisymm ((Measure.restrict_apply_le _ _).trans_eq Real.volume_singleton) zero_le
+  have hiInf : ∀ᵐ t ∂(volume.restrict (Set.Icc (0:ℝ) c)),
+      ⨅ n : ℕ, expDamp (n : ℝ) f t = 0 := by
+    filter_upwards [hmem, hlt, hne0, hanti] with t ht htop ht0 hat
+    have htpos : 0 < t := lt_of_le_of_ne ht.1 (Ne.symm ht0)
+    have h1 : Tendsto (fun n : ℕ => -((n : ℝ) * t)) atTop atBot :=
+      tendsto_neg_atTop_atBot.comp (Tendsto.atTop_mul_const htpos tendsto_natCast_atTop_atTop)
+    have h2 : Tendsto (fun n : ℕ => ENNReal.ofReal (Real.exp (-((n : ℝ) * t)))) atTop (𝓝 0) := by
+      simpa using ENNReal.tendsto_ofReal (Real.tendsto_exp_atBot.comp h1)
+    have h3 : Tendsto (fun n : ℕ => expDamp (n : ℝ) f t) atTop (𝓝 0) := by
+      simpa [expDamp_apply] using ENNReal.Tendsto.mul_const h2 (Or.inr htop.ne)
+    exact tendsto_nhds_unique (tendsto_atTop_iInf hat) h3
+  have hkey : ⨅ n : ℕ, ∫⁻ t in Set.Icc 0 c, expDamp (n : ℝ) f t = 0 := by
+    rw [← lintegral_iInf' (fun n => (hmeas n).aemeasurable) hanti hfin]
+    calc ∫⁻ t in Set.Icc 0 c, ⨅ n : ℕ, expDamp (n : ℝ) f t
+        = ∫⁻ _t in Set.Icc 0 c, (0 : ENNReal) := lintegral_congr_ae hiInf
+      _ = 0 := lintegral_zero
+  have hlt1 : (⨅ n : ℕ, ∫⁻ t in Set.Icc 0 c, expDamp (n : ℝ) f t) < 1 := by
+    rw [hkey]; exact zero_lt_one
+  obtain ⟨n, hn⟩ := iInf_lt_iff.1 hlt1
+  exact ⟨(n : ℝ), Nat.cast_nonneg n, hn⟩
+
+/-- **The resolvent has finite mass on a window as soon as the kernel has**, and on that window
+alone: nothing is asked about the kernel anywhere else, and the hypothesis `a < 1` of
+`setLIntegral_volterraResolvent_lt_top` is gone.
+
+This is the statement that turns "locally integrable" into "the resolvent exists", and it is the
+whole passage in one step.  Damp the kernel until its mass on `[0, c]` falls below `1`
+(`exists_setLIntegral_expDamp_lt_one`), apply the geometric bound to the damped kernel, and read
+the result back: on `[0, c]` the weight is bounded below by `e^{-l c}`, so the undamped resolvent
+exceeds the damped one by at most the factor `e^{l c}`, which is finite.
+
+**Why this and not the block decomposition.**  The route the milestone first described -- a short
+window with mass below `1`, then every window by causality applied block by block -- has to bound
+the mass of the `n`-th power on `[0, K d]` in terms of the mass on `[0, d]`, and that bound is
+not the geometric one: it grows with `K` and needs a binomial count of the ways `n` blocks of the
+window can be distributed.  The damping replaces that count by a single limit, and it pays twice,
+because it also removes the hypothesis `a < 1` from the conclusion instead of discharging it. -/
+theorem setLIntegral_volterraResolvent_lt_top_of_ne_top {f : ℝ → ENNReal} (hf : IsCausal f)
+    (hfm : Measurable f) {c : ℝ} (hc : ∫⁻ t in Set.Icc 0 c, f t ≠ ⊤) :
+    ∫⁻ t in Set.Icc 0 c, volterraResolvent f t < ⊤ := by
+  obtain ⟨l, hl0, hl⟩ := exists_setLIntegral_expDamp_lt_one hfm hc
+  have hdamp := setLIntegral_volterraResolvent_lt_top (hf.expDamp l) (measurable_expDamp hfm l) hl
+  rw [volterraResolvent_expDamp] at hdamp
+  have hbound : ∀ t ∈ Set.Icc (0 : ℝ) c, volterraResolvent f t
+      ≤ ENNReal.ofReal (Real.exp (l * c)) * expDamp l (volterraResolvent f) t := by
+    intro t ht
+    have hid : ENNReal.ofReal (Real.exp (l * t)) * expDamp l (volterraResolvent f) t
+        = volterraResolvent f t := by
+      rw [expDamp_apply, ← mul_assoc, ← ENNReal.ofReal_mul (Real.exp_nonneg _), ← Real.exp_add,
+        add_neg_cancel, Real.exp_zero, ENNReal.ofReal_one, one_mul]
+    rw [← hid]
+    gcongr
+    exact ht.2
+  calc ∫⁻ t in Set.Icc 0 c, volterraResolvent f t
+      ≤ ∫⁻ t in Set.Icc 0 c,
+          ENNReal.ofReal (Real.exp (l * c)) * expDamp l (volterraResolvent f) t := by
+        refine lintegral_mono_ae ?_
+        filter_upwards [self_mem_ae_restrict (measurableSet_Icc (a := (0:ℝ)) (b := c))] with t ht
+        exact hbound t ht
+    _ = ENNReal.ofReal (Real.exp (l * c))
+          * ∫⁻ t in Set.Icc 0 c, expDamp l (volterraResolvent f) t :=
+        lintegral_const_mul' _ _ ENNReal.ofReal_ne_top
+    _ < ⊤ := ENNReal.mul_lt_top ENNReal.ofReal_lt_top hdamp
+
+/-- **A locally finite causal kernel has a locally finite resolvent.**  The form the renewal
+equation consumes, and it is the previous statement quantified over the window; the two are
+worth separating because the sharp one shows that the windows do not talk to each other. -/
+theorem setLIntegral_volterraResolvent_lt_top_of_locallyFinite {f : ℝ → ENNReal} (hf : IsCausal f)
+    (hfm : Measurable f) (hloc : ∀ c : ℝ, ∫⁻ t in Set.Icc 0 c, f t ≠ ⊤) (c : ℝ) :
+    ∫⁻ t in Set.Icc 0 c, volterraResolvent f t < ⊤ :=
+  setLIntegral_volterraResolvent_lt_top_of_ne_top hf hfm (hloc c)
+
+/-- **The convolution distributes over addition on the right.**  Mathlib does not have this:
+`Mathlib/Analysis/LConvolution.lean` carries `mlconvolution_def`, `zero_mlconvolution`,
+`mlconvolution_zero`, `measurable_mlconvolution`, `aemeasurable_mlconvolution`,
+`mlconvolution_assoc₀`, `mlconvolution_assoc` and `mlconvolution_comm`, and no distributivity.
+It belongs there beside the associativity, and it asks strictly less than the associativity does
+-- only the measurability of the one integrand that is split off. -/
+theorem lconvolution_add {f g h : ℝ → ENNReal} (hf : Measurable f) (hg : Measurable g) :
+    f ⋆ₗ (g + h) = f ⋆ₗ g + f ⋆ₗ h := by
+  funext x
+  simp only [lconvolution_def, Pi.add_apply]
+  calc ∫⁻ y, f y * (g (-y + x) + h (-y + x))
+      = ∫⁻ y, (f y * g (-y + x) + f y * h (-y + x)) :=
+        lintegral_congr fun y => mul_add _ _ _
+    _ = (∫⁻ y, f y * g (-y + x)) + ∫⁻ y, f y * h (-y + x) :=
+        lintegral_add_left (hf.mul (hg.comp (measurable_neg.add_const x))) _
+
+/-- **The convolution distributes over addition on the left.**  Not a consequence of the right
+hand one and `lconvolution_comm` without an invariance hypothesis on the measure; over `volume`
+it would be, and it is cheaper to prove it directly. -/
+theorem add_lconvolution {f g h : ℝ → ENNReal} (hf : Measurable f) (hh : Measurable h) :
+    (f + g) ⋆ₗ h = f ⋆ₗ h + g ⋆ₗ h := by
+  funext x
+  simp only [lconvolution_def, Pi.add_apply]
+  calc ∫⁻ y, (f y + g y) * h (-y + x)
+      = ∫⁻ y, (f y * h (-y + x) + g y * h (-y + x)) :=
+        lintegral_congr fun y => add_mul _ _ _
+    _ = (∫⁻ y, f y * h (-y + x)) + ∫⁻ y, g y * h (-y + x) :=
+        lintegral_add_left (hf.mul (hh.comp (measurable_neg.add_const x))) _
+
+/-- **The renewal equation is solved by the resolvent**, and the statement is hypothesis-poor:
+only the measurability of the kernel and of the inhomogeneity, no causality, no finiteness, no
+condition on the mass of `φ`.  Over `ℝ≥0∞` the equation holds whether or not its
+solution is finite, and that is the point of stating the milestone there -- the finiteness is a
+separate statement (`renewal_lt_top`) and not a precondition for writing the equation down.
+
+The proof is the distributivity, the associativity, and `volterraResolvent_eq` read backwards:
+`φ ⋆ₗ (m₀ + r ⋆ₗ m₀) = (φ + φ ⋆ₗ r) ⋆ₗ m₀ = r ⋆ₗ m₀`. -/
+theorem renewal_eq_add_lconvolution_volterraResolvent {φ m₀ : ℝ → ENNReal}
+    (hφ : Measurable φ) (hm₀ : Measurable m₀) :
+    m₀ + volterraResolvent φ ⋆ₗ m₀ = m₀ + φ ⋆ₗ (m₀ + volterraResolvent φ ⋆ₗ m₀) := by
+  have hr : Measurable (volterraResolvent φ) := measurable_volterraResolvent hφ
+  rw [lconvolution_add hφ hm₀, lconvolution_assoc hφ hr hm₀,
+    ← add_lconvolution hφ hm₀, ← volterraResolvent_eq hφ]
+
+/-- **The solution is finite on every window on which the data are.**  This is the statement the
+seam with Milestone 4 consumes: `𝔼[N t] < ∞` for the linear Hawkes process is this finiteness for
+`φ` the self exciting kernel and `m₀ t = ν t`.
+
+Window by window again, and the two hypotheses are about the **same** window as the conclusion. -/
+theorem renewal_lt_top {φ m₀ : ℝ → ENNReal} (hφ : IsCausal φ) (hφm : Measurable φ)
+    (hm₀ : IsCausal m₀) (hm₀m : Measurable m₀) {c : ℝ}
+    (hφc : ∫⁻ t in Set.Icc 0 c, φ t ≠ ⊤) (hm₀c : ∫⁻ t in Set.Icc 0 c, m₀ t ≠ ⊤) :
+    ∫⁻ t in Set.Icc 0 c, (m₀ + volterraResolvent φ ⋆ₗ m₀) t < ⊤ := by
+  have hr : ∫⁻ t in Set.Icc 0 c, volterraResolvent φ t < ⊤ :=
+    setLIntegral_volterraResolvent_lt_top_of_ne_top hφ hφm hφc
+  have hsub : ∫⁻ t in Set.Icc 0 c, (volterraResolvent φ ⋆ₗ m₀) t
+      ≤ (∫⁻ t in Set.Icc 0 c, volterraResolvent φ t) * ∫⁻ t in Set.Icc 0 c, m₀ t :=
+    setLIntegral_lconvolution_le hφ.volterraResolvent hm₀ (measurable_volterraResolvent hφm)
+      hm₀m c
+  have hsplit : ∫⁻ t in Set.Icc 0 c, (m₀ + volterraResolvent φ ⋆ₗ m₀) t
+      = (∫⁻ t in Set.Icc 0 c, m₀ t) + ∫⁻ t in Set.Icc 0 c, (volterraResolvent φ ⋆ₗ m₀) t := by
+    simp only [Pi.add_apply]
+    exact lintegral_add_left hm₀m _
+  rw [hsplit]
+  refine ENNReal.add_lt_top.2 ⟨lt_top_iff_ne_top.2 hm₀c, ?_⟩
+  exact lt_of_le_of_lt hsub (ENNReal.mul_lt_top hr (lt_top_iff_ne_top.2 hm₀c))
+
+/-- **The convolution is monotone in its second argument**, and over `ℝ≥0∞` that is
+`lintegral_mono` and nothing else: no measurability, no finiteness, no causality. -/
+theorem lconvolution_mono {f g h : ℝ → ENNReal} (hgh : g ≤ h) : f ⋆ₗ g ≤ f ⋆ₗ h := by
+  intro x
+  simp only [lconvolution_def]
+  exact lintegral_mono fun y => by gcongr; exact hgh _
+
+/-- **Distributivity over a finite sum on the right**, by induction over the `Finset`. -/
+theorem lconvolution_finset_sum {ι : Type*} {f : ℝ → ENNReal} {g : ι → ℝ → ENNReal}
+    (hf : Measurable f) (hg : ∀ i, Measurable (g i)) (s : Finset ι) :
+    f ⋆ₗ (∑ i ∈ s, g i) = ∑ i ∈ s, f ⋆ₗ g i := by
+  classical
+  induction s using Finset.induction with
+  | empty => simp [lconvolution_zero]
+  | insert a s ha ih =>
+      rw [Finset.sum_insert ha, Finset.sum_insert ha, lconvolution_add hf (hg a), ih]
+
+/-- **Distributivity over a finite sum on the left.** -/
+theorem finset_sum_lconvolution {ι : Type*} {f : ι → ℝ → ENNReal} {h : ℝ → ENNReal}
+    (hf : ∀ i, Measurable (f i)) (hh : Measurable h) (s : Finset ι) :
+    (∑ i ∈ s, f i) ⋆ₗ h = ∑ i ∈ s, f i ⋆ₗ h := by
+  classical
+  induction s using Finset.induction with
+  | empty => simp [zero_lconvolution]
+  | insert a s ha ih =>
+      rw [Finset.sum_insert ha, Finset.sum_insert ha, add_lconvolution (hf a) hh, ih]
+
+/-- **The resolvent convolved with the inhomogeneity is the series of the powers convolved with
+it.**  The interchange is `lintegral_tsum`, which over `ℝ≥0∞` asks measurability alone; this is
+the same step as in `volterraResolvent_eq`, taken on the other side. -/
+theorem lconvolution_volterraResolvent_left {φ : ℝ → ENNReal} (hφ : Measurable φ)
+    {m₀ : ℝ → ENNReal} (hm₀ : Measurable m₀) (x : ℝ) :
+    (volterraResolvent φ ⋆ₗ m₀) x = ∑' n : ℕ, (convPow φ n ⋆ₗ m₀) x := by
+  rw [lconvolution_def]
+  have hstep : ∀ y : ℝ, volterraResolvent φ y * m₀ (-y + x)
+      = ∑' n : ℕ, convPow φ n y * m₀ (-y + x) := fun y => by
+    rw [volterraResolvent, ENNReal.tsum_mul_right]
+  simp_rw [hstep]
+  rw [lintegral_tsum (f := fun (n : ℕ) (y : ℝ) => convPow φ n y * m₀ (-y + x))
+    (fun n => ((measurable_convPow hφ n).mul
+      (hm₀.comp (measurable_neg.add_const x))).aemeasurable)]
+  exact tsum_congr fun n => by rw [lconvolution_def]
+
+/-- **The resolvent solution is the smallest one**: every solution of `m = m₀ + φ ⋆ₗ m`
+dominates `m₀ + r ⋆ₗ m₀`.
+
+This is the half of the uniqueness that **needs no subtraction**, and that is why it is stated
+separately and proved first.  Each partial sum of the series is below every solution, by
+induction: substituting the bound for `n` into the right hand side of the equation produces the
+bound for `n + 1`, because `φ ⋆ₗ (m₀ + (∑_{k<n} φ^k) ⋆ₗ m₀) = (∑_{k<n+1} φ^k) ⋆ₗ m₀`, which is
+the distributivity, the associativity and `Finset.sum_range_succ'`.  The passage to the limit is
+then `ENNReal.tsum_eq_iSup_nat` and `ENNReal.add_iSup`, and neither asks anything.
+
+No causality and no finiteness enter anywhere: over `ℝ≥0∞` the bound holds for **any** solution,
+including one that is `⊤` somewhere. -/
+theorem renewal_le_of_eq {φ m₀ m : ℝ → ENNReal} (hφ : Measurable φ) (hm₀ : Measurable m₀)
+    (hm : m = m₀ + φ ⋆ₗ m) :
+    m₀ + volterraResolvent φ ⋆ₗ m₀ ≤ m := by
+  have hmS : ∀ n : ℕ, Measurable (∑ k ∈ Finset.range n, convPow φ k) := by
+    intro n
+    have heq : (∑ k ∈ Finset.range n, convPow φ k)
+        = fun a => ∑ k ∈ Finset.range n, convPow φ k a :=
+      funext fun a => Finset.sum_apply _ _ _
+    rw [heq]
+    exact Finset.measurable_sum _ fun k _ => measurable_convPow hφ k
+  have hstep : ∀ n : ℕ, m₀ + (∑ k ∈ Finset.range n, convPow φ k) ⋆ₗ m₀ ≤ m := by
+    intro n
+    induction n with
+    | zero =>
+        intro x
+        have h0 : ((0 : ℝ → ENNReal) ⋆ₗ m₀) x = 0 := by rw [zero_lconvolution]; rfl
+        simp only [Finset.range_zero, Finset.sum_empty, Pi.add_apply, h0, add_zero]
+        conv_rhs => rw [hm]
+        exact le_self_add
+    | succ n ih =>
+        have hkey : φ ⋆ₗ (m₀ + (∑ k ∈ Finset.range n, convPow φ k) ⋆ₗ m₀)
+            = (∑ k ∈ Finset.range (n + 1), convPow φ k) ⋆ₗ m₀ := by
+          rw [lconvolution_add hφ hm₀, lconvolution_assoc hφ (hmS n) hm₀,
+            ← add_lconvolution hφ hm₀]
+          congr 1
+          rw [lconvolution_finset_sum hφ (fun k => measurable_convPow hφ k),
+            Finset.sum_range_succ' (fun k => convPow φ k) n, convPow_zero, add_comm]
+          congr 1
+        calc m₀ + (∑ k ∈ Finset.range (n + 1), convPow φ k) ⋆ₗ m₀
+            = m₀ + φ ⋆ₗ (m₀ + (∑ k ∈ Finset.range n, convPow φ k) ⋆ₗ m₀) := by rw [hkey]
+          _ ≤ m₀ + φ ⋆ₗ m := add_le_add (le_refl m₀) (lconvolution_mono (f := φ) ih)
+          _ = m := hm.symm
+  intro x
+  have hsum : (volterraResolvent φ ⋆ₗ m₀) x
+      = ⨆ N : ℕ, ((∑ k ∈ Finset.range N, convPow φ k) ⋆ₗ m₀) x := by
+    rw [lconvolution_volterraResolvent_left hφ hm₀ x, ENNReal.tsum_eq_iSup_nat]
+    refine iSup_congr fun N => ?_
+    rw [finset_sum_lconvolution (fun k => measurable_convPow hφ k) hm₀]
+    simp
+  simp only [Pi.add_apply, hsum]
+  rw [ENNReal.add_iSup]
+  exact iSup_le fun N => hstep N x
+
 end CausalConvolution
