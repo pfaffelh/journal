@@ -42960,3 +42960,327 @@ theorem enorm_setIntegral_le_rpow_mul_eLpNorm
   (enorm_integral_le_lintegral_enorm Z).trans (lintegral_enorm_le_rpow_mul_eLpNorm hq hZ hsub)
 
 end CompensatorHolder
+
+/-! ### The class `𝓐 n` of the tightness criterion
+
+Every analytic ingredient of the first item of Milestone 11 is proved above, and each carries its
+hypotheses singly, because until now it was not settled which they are.  This section writes down
+the predicate that binds them: membership of a pair `(Y, Z)` in the class `𝓐 n` of
+\EK, Theorem 9.4, together with the `L^q` bound that (9.26) reads on it.
+
+**The compensator is carried as a density and not as an absolutely continuous function**, and the
+choice is at the consumer rather than at the proof.  Mathlib has the other shape --
+`MeasureTheory.AbsolutelyContinuousOnInterval.integral_deriv_eq_sub`
+(`MeasureTheory/Integral/IntervalIntegral/AbsolutelyContinuousFun.lean:225`) is the fundamental
+theorem of calculus for absolutely continuous functions, so an absolutely continuous compensator
+*is* an indefinite integral, of `deriv (C · ω)` -- but that passage happens at one sample point,
+and it hands back no joint measurability of `(s, ω) ↦ deriv (C · ω) s`.  The density form is
+therefore not the weaker one in substance, and it is the one
+`lintegral_enorm_le_rpow_mul_eLpNorm` and `enorm_setIntegral_le_rpow_mul_eLpNorm` read without a
+step in between; \EK{} state their hypothesis on a density as well.
+
+**Two pairs, not one squared.**  A consumer of this predicate holds *two* of its instances, one
+approximating `f ∘ X` and one approximating `f² ∘ X`, with densities and exponents of their own
+-- that is what (9.26) reads, its four summands being the two approximation errors and the two
+`L^q` norms.  The second approximant is **not** the square of the first: membership in `𝓐 n` at
+`f²` supplies some `Y'` near `f² ∘ X`, and nothing makes it equal `Y²`.  So
+`integral_sq_stoppedValue_sub_eq` above, which asks literally for `Y² - D` to be a martingale, is
+a special case that the criterion cannot invoke; the assembly reads
+`integral_mul_stoppedValue_sub_eq_compensator` twice instead, at the weight `1` for the pair near
+`f²` and at the weight `f ∘ X α` for the pair near `f`.
+`IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le` below is that statement, at an
+arbitrary bounded weight from the past, so that both readings are one theorem.
+
+**Where `1 < q` is spent, and it is one place.**  The exponent of the window length is
+`1 - 1/q.toReal`, and `one_sub_one_div_toReal_pos` is the only statement of this section that
+uses the strict inequality.  It is what makes `tendsto_ofReal_rpow_mul_nhdsGT_zero` true, hence
+what lets the sum over the `N ≈ u/δ` windows of
+`mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le` vanish with `δ`.  At `q = 1` the
+exponent is `0`, the bound is the constant `K`, and the criterion is false -- \EK,
+Remark 9.5(a), with the two state chain of rate `n` as the witness. -/
+
+section ApproximatingPair
+
+/-- **Splitting the indefinite integral at an intermediate point.**
+`(∫_{(0,b]} f) - ∫_{(0,a]} f = ∫_{(a,b]} f` for `0 ≤ a ≤ b` and `f` integrable on `(0,b]`.
+
+It is `MeasureTheory.setIntegral_union` along `Set.Ioc_union_Ioc_eq_Ioc`, and the only reason it
+is stated is that the compensator of `IsApproximatingPair` is an indefinite integral from `0`
+while every estimate below reads its increment over a moving window. -/
+theorem setIntegral_Ioc_sub_setIntegral_Ioc {f : ℝ → ℝ} {a b : ℝ} (ha : 0 ≤ a) (hab : a ≤ b)
+    (hf : IntegrableOn f (Set.Ioc (0 : ℝ) b)) :
+    (∫ s in Set.Ioc (0 : ℝ) b, f s) - ∫ s in Set.Ioc (0 : ℝ) a, f s
+      = ∫ s in Set.Ioc a b, f s := by
+  have hunion : Set.Ioc (0 : ℝ) a ∪ Set.Ioc a b = Set.Ioc (0 : ℝ) b :=
+    Set.Ioc_union_Ioc_eq_Ioc ha hab
+  have hdisj : Disjoint (Set.Ioc (0 : ℝ) a) (Set.Ioc a b) := by
+    rw [Set.disjoint_left]
+    rintro x ⟨-, hx2⟩ ⟨hx3, -⟩
+    exact absurd hx3 (not_lt.2 hx2)
+  have h1 : IntegrableOn f (Set.Ioc (0 : ℝ) a) :=
+    hf.mono_set (Set.Ioc_subset_Ioc_right hab)
+  have h2 : IntegrableOn f (Set.Ioc a b) := by
+    refine hf.mono_set ?_
+    rw [← hunion]
+    exact Set.subset_union_right
+  rw [← hunion, setIntegral_union hdisj measurableSet_Ioc h1 h2]
+  ring
+
+/-- **The exponent of the window length is positive, and this is the whole content of `1 < q`.**
+
+The statement is true at `q = ⊤` as well, where `q.toReal = 0` and `1/0 = 0` make the exponent
+`1`: the junk value of `ENNReal.toReal` at `⊤` is read here and it says the right thing, the
+`L^∞` bound over a window of length `δ` being `δ` times the essential supremum.  At `q = 1` the
+exponent is `0` and the statement is false, which is exactly \EK, Remark 9.5(a). -/
+theorem one_sub_one_div_toReal_pos {q : ENNReal} (hq : 1 < q) : 0 < 1 - 1 / q.toReal := by
+  rcases eq_or_ne q ⊤ with hqt | hqt
+  · simp [hqt]
+  · have h1 : (1 : ℝ) < q.toReal := by
+      rw [show (1 : ℝ) = (1 : ENNReal).toReal by simp]
+      exact ENNReal.toReal_lt_toReal (by simp) hqt |>.2 hq
+    have : 1 / q.toReal < 1 := by
+      rw [div_lt_one (by linarith)]
+      exact h1
+    linarith
+
+/-- **The bound of the criterion vanishes with the window.**
+
+```
+Tendsto (fun δ : ℝ ↦ ENNReal.ofReal δ ^ (1 - 1/q.toReal) * K) (𝓝[>] 0) (𝓝 0)
+```
+
+for `1 < q` and `K ≠ ⊤`.  This is the statement the assembly of the first item of Milestone 11
+ends on: the sum of `N` window bounds is `N * ENNReal.ofReal δ ^ (1 - 1/q.toReal) * K` with
+`N ≈ u/δ`, so the exponent has to exceed `0` strictly for the product to vanish, and
+`one_sub_one_div_toReal_pos` says it does exactly when `1 < q`.
+
+It is `ENNReal.tendsto_const_mul_rpow_nhds_zero_of_pos` composed with the continuity of
+`ENNReal.ofReal`; the restriction to `𝓝[>] 0` is cosmetic, the two sided limit holding as well,
+and it is written this way because a consumer chooses a positive `δ`. -/
+theorem tendsto_ofReal_rpow_mul_nhdsGT_zero {q : ENNReal} (hq : 1 < q) {K : ENNReal}
+    (hK : K ≠ ⊤) :
+    Tendsto (fun δ : ℝ ↦ ENNReal.ofReal δ ^ (1 - 1 / q.toReal) * K) (𝓝[>] (0 : ℝ)) (𝓝 0) := by
+  have h1 : Tendsto (fun δ : ℝ ↦ ENNReal.ofReal δ) (𝓝[>] (0 : ℝ)) (𝓝 0) := by
+    have h : Tendsto (fun δ : ℝ ↦ ENNReal.ofReal δ) (𝓝[>] (0 : ℝ))
+        (𝓝 (ENNReal.ofReal (0 : ℝ))) :=
+      (ENNReal.continuous_ofReal.tendsto (0 : ℝ)).mono_left nhdsWithin_le_nhds
+    simpa using h
+  have h2 : Tendsto (fun x : ENNReal ↦ K * x ^ (1 - 1 / q.toReal)) (𝓝 0) (𝓝 0) :=
+    ENNReal.tendsto_const_mul_rpow_nhds_zero_of_pos hK (one_sub_one_div_toReal_pos hq)
+  refine (h2.comp h1).congr fun δ ↦ ?_
+  simp only [Function.comp_apply]
+  exact mul_comm _ _
+
+variable {Ω : Type*} {m : MeasurableSpace Ω}
+
+/-- **The class the tightness criterion of Milestone 11 quantifies over**, written as a predicate
+on one pair.  `IsApproximatingPair 𝓕 P q T K Y C Z` says that `Y` is a quasimartingale over
+`ℝ≥0` whose compensator `C` is the indefinite integral of the density `Z`, and that the `L^q`
+norm of `Z` over the horizon `(0, T]` has mean at most `K`.  It is membership of `(Y, Z)` in
+\EK's class `𝓐 n` together with the bound that display (9.26) reads on it.
+
+**`K` is a parameter, and that is what makes uniformity in the family expressible.**  The
+criterion asks for `⨆ n, 𝔼[eLpNorm (Z n) q] < ∞`; a family of pairs satisfying this predicate
+with **one and the same** `K` has that supremum bounded, and a consumer never has to speak of the
+supremum itself.  The same holds for `T` and for `q`.
+
+**Why `ae_memLp` is a field beside `lintegral_eLpNorm_le`, and it is not redundant.**  A finite
+mean does not make a function almost everywhere finite unless the function is measurable, and the
+measurability in question is that of `ω ↦ eLpNorm (fun s ↦ Z s ω) q ν`.  **Mathlib has no such
+statement** -- checked 2026-09-20 against `94ef6b89544e58e90f119da869f3fb48d1da0f4c`: neither
+`Mathlib/MeasureTheory/Integral/Prod.lean` nor the `LpSeminorm` directory carries the
+measurability of an `eLpNorm` in a parameter, in any shape.  Asking `MemLp` almost surely instead
+costs a consumer nothing -- it is what a jointly measurable `Z` of finite mean norm has -- and it
+is what `IsApproximatingPair.ae_integrableOn` needs.
+
+**What is *not* a field, and why.**  No boundedness of `Y`, none of `Z`, and no integrability of
+the stopped values: the estimates below read the compensator alone, and the statements that read
+`Y` -- `integral_mul_stoppedValue_sub_eq_compensator` and its consumers -- take their
+integrability hypotheses separately, a consumer holding them from a bounded `f`. -/
+structure IsApproximatingPair (𝓕 : Filtration ℝ≥0 m) (P : Measure Ω) (q : ENNReal) (T K : ℝ≥0)
+    (Y C : ℝ≥0 → Ω → ℝ) (Z : ℝ → Ω → ℝ) : Prop where
+  /-- The exponent is strictly above `1`; this is \EK, Remark 9.5(a), and it is read exactly
+  once, in `one_sub_one_div_toReal_pos`. -/
+  one_lt_exponent : 1 < q
+  /-- `Y` is progressively measurable, which is what makes its value at a stopping time a weight
+  from the past. -/
+  progressive : IsStronglyProgressive 𝓕 Y
+  /-- The compensated process is progressively measurable. -/
+  progressive_sub : IsStronglyProgressive 𝓕 fun t ω ↦ Y t ω - C t ω
+  /-- `Y - C` is a martingale: this is the membership in `𝓐 n`. -/
+  martingale : Martingale (fun t ω ↦ Y t ω - C t ω) 𝓕 P
+  /-- Almost every path of `Y - C` is right continuous, which is what optional sampling over
+  `ℝ≥0` costs. -/
+  rightContinuous : ∀ᵐ ω ∂P, ∀ s : ℝ≥0,
+    Tendsto (fun r ↦ Y r ω - C r ω) (𝓝[≥] s) (𝓝 (Y s ω - C s ω))
+  /-- The compensator is the indefinite integral of the density `Z` from `0`. -/
+  compensator_eq : ∀ (t : ℝ≥0) (ω : Ω), C t ω = ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), Z s ω
+  /-- Almost every path of the density lies in `L^q` of the horizon; the docstring of the
+  structure says why this is not a consequence of the next field. -/
+  ae_memLp : ∀ᵐ ω ∂P, MemLp (fun s ↦ Z s ω) q (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ)))
+  /-- The mean of that `L^q` norm is at most `K`; this is the second condition of (9.26). -/
+  lintegral_eLpNorm_le :
+    ∫⁻ ω, eLpNorm (fun s ↦ Z s ω) q (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ))) ∂P ≤ K
+
+namespace IsApproximatingPair
+
+variable {𝓕 : Filtration ℝ≥0 m} {P : Measure Ω} {q : ENNReal} {T K : ℝ≥0}
+variable {Y C : ℝ≥0 → Ω → ℝ} {Z : ℝ → Ω → ℝ}
+
+/-- **Almost every path of the density is integrable on the horizon.**
+
+This is where the horizon being of finite length is used, and nowhere else: `MemLp.mono_exponent`
+over a finite measure turns `L^q` into `L¹` for `q ≥ 1`, and `memLp_one_iff_integrable` names the
+result.  It is what makes the increment of the compensator an integral over the window rather
+than a difference of two junk values. -/
+theorem ae_integrableOn (h : IsApproximatingPair 𝓕 P q T K Y C Z) :
+    ∀ᵐ ω ∂P, IntegrableOn (fun s ↦ Z s ω) (Set.Ioc (0 : ℝ) (T : ℝ)) := by
+  have hfin : IsFiniteMeasure (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ))) := by
+    constructor
+    rw [Measure.restrict_apply_univ, Real.volume_Ioc]
+    exact ENNReal.ofReal_lt_top
+  filter_upwards [h.ae_memLp] with ω hω
+  exact memLp_one_iff_integrable.1 (hω.mono_exponent (le_of_lt h.one_lt_exponent))
+
+/-- **The increment of the compensator over a window is the integral of the density there**:
+`C b ω - C a ω = ∫_{(a,b]} Z s ω` for `a ≤ b ≤ T`.
+
+The hypothesis is integrability of the path of `Z` on the *horizon*, not on the window, because
+that is the form `IsApproximatingPair.ae_integrableOn` delivers and because the window moves
+while the horizon does not. -/
+theorem compensator_sub_eq (h : IsApproximatingPair 𝓕 P q T K Y C Z) {ω : Ω}
+    (hω : IntegrableOn (fun s ↦ Z s ω) (Set.Ioc (0 : ℝ) (T : ℝ))) {a b : ℝ≥0}
+    (hab : a ≤ b) (hbT : b ≤ T) :
+    C b ω - C a ω = ∫ s in Set.Ioc (a : ℝ) (b : ℝ), Z s ω := by
+  rw [h.compensator_eq, h.compensator_eq]
+  exact setIntegral_Ioc_sub_setIntegral_Ioc a.coe_nonneg (by exact_mod_cast hab)
+    (hω.mono_set (Set.Ioc_subset_Ioc_right (by exact_mod_cast hbT)))
+
+/-- **The compensator increment over a short window, at one sample point.**
+
+```
+‖C b ω - C a ω‖ₑ ≤ ENNReal.ofReal δ ^ (1 - 1/q.toReal) * eLpNorm (Z · ω) q (ℙ|_(0,T])
+```
+
+whenever `a ≤ b ≤ T` and `b - a ≤ δ`.  It is `enorm_setIntegral_le_rpow_mul_eLpNorm` read at the
+window, followed by the monotonicity of `x ↦ x ^ (1 - 1/q.toReal)`, which is where the
+non-negativity of the exponent -- and hence `1 ≤ q` -- is used.  Nothing of the filtration, of
+the martingale or of the measure `P` enters. -/
+theorem enorm_compensator_sub_le (h : IsApproximatingPair 𝓕 P q T K Y C Z) {ω : Ω}
+    (hω : IntegrableOn (fun s ↦ Z s ω) (Set.Ioc (0 : ℝ) (T : ℝ))) {a b : ℝ≥0}
+    (hab : a ≤ b) (hbT : b ≤ T) {δ : ℝ} (hδ : (b : ℝ) - (a : ℝ) ≤ δ) :
+    ‖C b ω - C a ω‖ₑ
+      ≤ ENNReal.ofReal δ ^ (1 - 1 / q.toReal)
+        * eLpNorm (fun s ↦ Z s ω) q (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ))) := by
+  rw [h.compensator_sub_eq hω hab hbT]
+  refine le_trans (enorm_setIntegral_le_rpow_mul_eLpNorm (le_of_lt h.one_lt_exponent)
+    hω.aestronglyMeasurable ?_) ?_
+  · exact Set.Ioc_subset_Ioc a.coe_nonneg (by exact_mod_cast hbT)
+  · exact mul_le_mul_left (ENNReal.rpow_le_rpow (ENNReal.ofReal_le_ofReal hδ)
+      (le_of_lt (one_sub_one_div_toReal_pos h.one_lt_exponent))) _
+
+/-- **The compensator increment over a short window, integrated**, and this is the statement in
+which `K` earns its place:
+
+```
+∫⁻ ω, ‖C (b ω) ω - C (a ω) ω‖ₑ ∂P ≤ ENNReal.ofReal δ ^ (1 - 1/q.toReal) * K
+```
+
+for *arbitrary* `a b : Ω → ℝ≥0` with `a ω ≤ b ω ≤ T` and `b ω - a ω ≤ δ`.
+
+**No stopping time and no measurability of `a` and `b` is asked for**, and none is available to
+be asked for: the estimate is the pathwise one integrated, and the lower integral is monotone
+without any hypothesis on its integrand.  A consumer reads it at `a ω = (α ω).untopA` and
+`b ω = (β ω).untopA` for two stopping times, and that is a choice of the consumer, not of this
+statement.
+
+The right hand side depends on the pair only through `q`, `K` and `δ`, so a family of pairs
+sharing `q`, `T` and `K` has the bound **uniformly** -- which is the condition
+`isTight_map_postcomp_of_exists_martingale` carries as `⨆ n`. -/
+theorem lintegral_enorm_compensator_sub_le (h : IsApproximatingPair 𝓕 P q T K Y C Z)
+    {a b : Ω → ℝ≥0} (hab : ∀ ω, a ω ≤ b ω) (hbT : ∀ ω, b ω ≤ T)
+    {δ : ℝ} (hδ : ∀ ω, (b ω : ℝ) - (a ω : ℝ) ≤ δ) :
+    ∫⁻ ω, ‖C (b ω) ω - C (a ω) ω‖ₑ ∂P
+      ≤ ENNReal.ofReal δ ^ (1 - 1 / q.toReal) * K := by
+  have hc : ENNReal.ofReal δ ^ (1 - 1 / q.toReal) ≠ ⊤ :=
+    (ENNReal.rpow_lt_top_of_nonneg (le_of_lt (one_sub_one_div_toReal_pos h.one_lt_exponent))
+      ENNReal.ofReal_ne_top).ne
+  calc ∫⁻ ω, ‖C (b ω) ω - C (a ω) ω‖ₑ ∂P
+      ≤ ∫⁻ ω, ENNReal.ofReal δ ^ (1 - 1 / q.toReal)
+          * eLpNorm (fun s ↦ Z s ω) q (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ))) ∂P := by
+        refine lintegral_mono_ae ?_
+        filter_upwards [h.ae_integrableOn] with ω hω
+        exact h.enorm_compensator_sub_le hω (hab ω) (hbT ω) (hδ ω)
+    _ = ENNReal.ofReal δ ^ (1 - 1 / q.toReal)
+          * ∫⁻ ω, eLpNorm (fun s ↦ Z s ω) q (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ))) ∂P :=
+        lintegral_const_mul' _ _ hc
+    _ ≤ ENNReal.ofReal δ ^ (1 - 1 / q.toReal) * K :=
+        mul_le_mul_right h.lintegral_eLpNorm_le _
+
+/-- **The martingale increment against a bounded weight from the past, bounded uniformly.**
+
+```
+‖∫ ω, W ω * (Y β ω - Y α ω) ∂P‖ₑ ≤ ENNReal.ofReal c * (ENNReal.ofReal δ ^ (1 - 1/q.toReal) * K)
+```
+
+for stopping times `α ≤ β ≤ j ≤ T` whose windows are at most `δ` long, and for `W` bounded by `c`
+and measurable for `𝓕_α`.
+
+**This is the one statement of the first item of Milestone 11 that joins its two halves.**  The
+left hand side is what `integral_mul_stoppedValue_sub_eq_compensator` turns into a compensator
+increment -- the martingale part of `Y` being invisible to a weight from the past -- and the
+right hand side is what `IsApproximatingPair.lintegral_enorm_compensator_sub_le` makes small,
+uniformly in a family sharing `q`, `T` and `K`.  Between them there is only
+`MeasureTheory.enorm_integral_le_lintegral_enorm`.
+
+**The two weights the assembly uses are both instances.**  At `W = 1` and the pair approximating
+`f² ∘ X` it bounds the increment of the square; at `W = f ∘ X α` -- bounded by `‖f‖` and
+`𝓕_α`-measurable, `X` being adapted -- and the pair approximating `f ∘ X` it bounds the cross
+term.  That is \EK, display (9.26), whose two `L^q` summands are exactly these two, with two
+exponents and two densities.  It is *not* `integral_sq_stoppedValue_sub_eq`: there the second
+pair has to be `(Y², D)`, while the approximant of `f²` supplied by the class is some `Y'` and
+not the square of the approximant of `f`.
+
+The statement is in `ℝ≥0∞` because its right hand side is, and because it is read beside
+`mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le`, which is too. -/
+theorem enorm_integral_mul_stoppedValue_sub_le [IsFiniteMeasure P]
+    (h : IsApproximatingPair 𝓕 P q T K Y C Z)
+    {j : ℝ≥0} {α β : Ω → ENNReal} (hα : IsStoppingTime 𝓕 α) (hβ : IsStoppingTime 𝓕 β)
+    (hαβ : α ≤ β) (hβj : ∀ ω, β ω ≤ (j : ENNReal)) (hjT : j ≤ T)
+    {δ : ℝ} (hδ : ∀ ω, (((β ω).untopA : ℝ≥0) : ℝ) - (((α ω).untopA : ℝ≥0) : ℝ) ≤ δ)
+    (hYα : Integrable (stoppedValue Y α) P) (hYβ : Integrable (stoppedValue Y β) P)
+    {W : Ω → ℝ} (hW : StronglyMeasurable[hα.measurableSpace] W) {c : ℝ}
+    (hWb : ∀ ω, ‖W ω‖ ≤ c) :
+    ‖∫ ω, W ω * (stoppedValue Y β ω - stoppedValue Y α ω) ∂P‖ₑ
+      ≤ ENNReal.ofReal c * (ENNReal.ofReal δ ^ (1 - 1 / q.toReal) * K) := by
+  have hβne : ∀ ω, β ω ≠ ⊤ := fun ω ↦ ne_top_of_le_ne_top (by simp) (hβj ω)
+  have hαne : ∀ ω, α ω ≠ ⊤ := fun ω ↦ ne_top_of_le_ne_top (hβne ω) (hαβ ω)
+  have hab : ∀ ω, (α ω).untopA ≤ (β ω).untopA := by
+    intro ω
+    have hle := hαβ ω
+    rw [← coe_untopA (hαne ω), ← coe_untopA (hβne ω)] at hle
+    exact ENNReal.coe_le_coe.1 hle
+  have hbT : ∀ ω, (β ω).untopA ≤ T := by
+    intro ω
+    have hle : β ω ≤ (T : ENNReal) := (hβj ω).trans (by exact_mod_cast hjT)
+    rw [← coe_untopA (hβne ω)] at hle
+    exact ENNReal.coe_le_coe.1 hle
+  rw [integral_mul_stoppedValue_sub_eq_compensator h.martingale h.progressive_sub
+    h.rightContinuous hα hβ hαβ hβj hYα hYβ hW hWb]
+  refine le_trans (enorm_integral_le_lintegral_enorm _) ?_
+  calc ∫⁻ ω, ‖W ω * (stoppedValue C β ω - stoppedValue C α ω)‖ₑ ∂P
+      ≤ ∫⁻ ω, ENNReal.ofReal c
+          * ‖C ((β ω).untopA) ω - C ((α ω).untopA) ω‖ₑ ∂P := by
+        refine lintegral_mono fun ω ↦ ?_
+        rw [enorm_mul]
+        refine mul_le_mul_left ?_ _
+        rw [Real.enorm_eq_ofReal_abs]
+        exact ENNReal.ofReal_le_ofReal (by simpa [Real.norm_eq_abs] using hWb ω)
+    _ = ENNReal.ofReal c * ∫⁻ ω, ‖C ((β ω).untopA) ω - C ((α ω).untopA) ω‖ₑ ∂P :=
+        lintegral_const_mul' _ _ ENNReal.ofReal_ne_top
+    _ ≤ ENNReal.ofReal c * (ENNReal.ofReal δ ^ (1 - 1 / q.toReal) * K) :=
+        mul_le_mul_right (h.lintegral_enorm_compensator_sub_le hab hbT hδ) _
+
+end IsApproximatingPair
+
+end ApproximatingPair

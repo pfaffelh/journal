@@ -11898,11 +11898,92 @@ has to be chosen once for all `n`. What stands:
   are estimates on one real function over one window, read at a fixed sample
   point before anything is integrated over `Ω`.
 
-  What is left of this item is therefore the **assembly**: the class `𝓐 n`
-  itself, the passage from the pathwise estimate to the bound on `∫_Ω` through
-  its `sup_n` hypothesis, and the choice of `N`, `δ` and `ε` in
+  **And the class `𝓐 n` is written down**, 2026-09-20, as the predicate
+  `IsApproximatingPair 𝓕 P q T K Y C Z`: `Y - C` a right continuous martingale
+  over `ℝ≥0`, `C t ω = ∫_{(0,t]} Z s ω`, and
+  `∫⁻ ω, eLpNorm (Z · ω) q (ℙ|_(0,T]) ≤ K`. It is membership of the pair
+  `(Y, Z)` in \EK's class together with the bound display (9.26) reads on it.
+
+  * **`K` is a parameter of the predicate, and that is how uniformity in the
+    family is expressed.** The criterion asks `⨆ n, 𝔼[eLpNorm (Z n) q] < ∞`; a
+    family satisfying the predicate with one and the same `K` has that
+    supremum bounded, and no statement below has to quantify over the family.
+  * **The compensator is carried as a density, and the alternative is
+    recorded rather than dismissed.** Mathlib has the fundamental theorem of
+    calculus for absolutely continuous functions,
+    `MeasureTheory.AbsolutelyContinuousOnInterval.integral_deriv_eq_sub`
+    (`MeasureTheory/Integral/IntervalIntegral/AbsolutelyContinuousFun.lean:225`),
+    so an absolutely continuous compensator *is* an indefinite integral, of
+    `deriv (C · ω)`. What that passage does not hand back is joint
+    measurability of `(s, ω) ↦ deriv (C · ω) s`, so the density form is not
+    the weaker one in substance; it is also the one
+    `enorm_setIntegral_le_rpow_mul_eLpNorm` reads with no step in between.
+  * **The almost sure `MemLp` of the density is a field beside the bound on
+    its mean, and it is not redundant.** A finite mean makes a function almost
+    everywhere finite only if it is measurable, and the measurability at issue
+    is that of `ω ↦ eLpNorm (fun s ↦ Z s ω) q ν`. **Mathlib has that for no
+    exponent and in no shape** — checked 2026-09-20 against
+    `94ef6b89544e58e90f119da869f3fb48d1da0f4c`: neither
+    `MeasureTheory/Integral/Prod.lean` nor the directory `LpSeminorm/` carries
+    the measurability of an `eLpNorm` in a parameter. It is a Mathlib gap of
+    its own and belongs in `TODO.md` point 8.
+
+  Four consequences are proved with it, and each is a link the assembly reads:
+  `IsApproximatingPair.ae_integrableOn`, the only place the horizon's finite
+  length is spent; `IsApproximatingPair.compensator_sub_eq`, the increment of
+  the compensator as the integral of the density over the window, through
+  `setIntegral_Ioc_sub_setIntegral_Ioc`;
+  `IsApproximatingPair.enorm_compensator_sub_le`, the Hölder bound at one
+  sample point; and
+  `IsApproximatingPair.lintegral_enorm_compensator_sub_le`, the same
+  integrated, `∫⁻ ω, ‖C (b ω) ω - C (a ω) ω‖ₑ ≤ ofReal δ ^ (1 - 1/q) * K` for
+  **arbitrary** `a b : Ω → ℝ≥0` with `a ≤ b ≤ T` and `b - a ≤ δ` — no stopping
+  time and no measurability of `a`, `b`, the lower integral being monotone
+  without either.
+
+  **The two halves are joined by
+  `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le`**: for stopping
+  times `α ≤ β ≤ j ≤ T` with windows at most `δ` long and a weight `W` bounded
+  by `c` and `𝓕_α`-measurable,
+  `‖∫ W (Y β - Y α)‖ₑ ≤ ofReal c * (ofReal δ ^ (1 - 1/q) * K)`. Between
+  `integral_mul_stoppedValue_sub_eq_compensator` on the left and the previous
+  item on the right there is only
+  `MeasureTheory.enorm_integral_le_lintegral_enorm`.
+
+  **Where `1 < q` is spent, and it is one statement.**
+  `one_sub_one_div_toReal_pos` — the exponent `1 - 1/q.toReal` is positive,
+  true at `q = ⊤` as well, false at `q = 1` — and
+  `tendsto_ofReal_rpow_mul_nhdsGT_zero`, that `ofReal δ ^ (1 - 1/q) * K → 0` as
+  `δ ↓ 0` for `K ≠ ⊤`. That is what lets the sum over `N ≈ u/δ` windows vanish,
+  and it is exactly \EK, Remark 9.5(a).
+
+  **A correction to this item, 2026-09-20: the second pair is `(Y', D)` and not
+  `(Y², D)`.** The paragraph above on the square reads the hypothesis "with
+  `(f², g₂) ∈ A` supplying a second pair `(Y², D) ∈ 𝓐 n`", and that is stronger
+  than what the class delivers: membership at `f²` supplies some `Y'` near
+  `f² ∘ X`, and nothing makes it the square of the approximant `Y` of `f`.
+  \EK's (9.26) reads `Y'_α` and `Z'_α` with an exponent `p'` of their own —
+  four summands, two approximation errors and two `L^q` norms. Hence
+  `integral_sq_stoppedValue_sub_eq`, which asks literally for `Y² - D` to be a
+  martingale, is a special case the criterion **cannot invoke**; the assembly
+  reads `integral_mul_stoppedValue_sub_eq_compensator` twice instead, at the
+  weight `1` for the pair near `f²` and at the weight `f ∘ X α` — bounded by
+  `‖f‖` and `𝓕_α`-measurable, `X` being adapted — for the pair near `f`. Both
+  are instances of
+  `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le`, which is why
+  that statement carries an arbitrary bounded weight from the past. What
+  survives of the earlier reading is the conclusion that made it: the
+  approximable functions still have to be closed under products, because the
+  estimate reads the hypothesis at `f²` as well.
+
+  What is left of this item is therefore the **assembly**: the approximation
+  error of (9.26) — `⨆ n, ∫⁻ ω, ⨆ t ≤ T, ‖Y n t ω - f (X n t ω)‖ₑ < ε`, the one
+  hypothesis of the criterion that no statement yet reads — the passage from
+  the two weighted bounds to `∫⁻ dist (X β) (X α)`, and the choice of `N`, `δ`
+  and `ε` in
   `mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le`. Every analytic
-  ingredient it consumes now exists.
+  ingredient it consumes now exists, and the predicate that binds them does
+  too.
 * `isRelativelyCompact_of_approx`: if `E` is Polish, the domain of `A` contains
   an algebra separating points and vanishing nowhere, the approximation holds
   for each `(f,g) ∈ A`, and `{X n}` satisfies compact containment, then `{X n}`

@@ -340,6 +340,19 @@ CLAIMS_TODO8 = [
      'condExp.*stoppedValue|stoppedValue.*condExp',
      ['Mathlib/'],
      ['Mathlib/Probability/Martingale/OptionalSampling.lean']),
+    ('elpnorm-measurable-in-parameter',
+     'MartingaleProblems/Suggested.lean, `IsApproximatingPair`; '
+     'MartingaleProblems/README.md, Meilenstein 11',
+     'Die Meßbarkeit einer `eLpNorm` **im Parameter** — also von '
+     '`ω ↦ eLpNorm (fun s ↦ Z s ω) q ν` für gemeinsam meßbares `Z` — steht in '
+     'Mathlib in keiner Fassung; weder `MeasureTheory/Integral/Prod.lean` noch '
+     'das Verzeichnis `LpSeminorm/` trägt sie. Deshalb ist die f.s. '
+     '`MemLp`-Eigenschaft ein eigenes Feld von `IsApproximatingPair` und keine '
+     'Folge der Schranke an den Mittelwert.',
+     'measurable_eLpNorm|eLpNorm_prod|stronglyMeasurable_eLpNorm'
+     '|eLpNorm.*prod_right',
+     ['Mathlib/'],
+     []),
 ]
 
 

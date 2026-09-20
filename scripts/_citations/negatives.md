@@ -346,7 +346,14 @@ Suche `condExp.*stoppedValue|stoppedValue.*condExp` unter `Mathlib/`: **16 Treff
 
 * `Mathlib/Probability/Martingale/OptionalSampling.lean`
 
+## `elpnorm-measurable-in-parameter` — MartingaleProblems/Suggested.lean, `IsApproximatingPair`; MartingaleProblems/README.md, Meilenstein 11
+
+> Die Meßbarkeit einer `eLpNorm` **im Parameter** — also von `ω ↦ eLpNorm (fun s ↦ Z s ω) q ν` für gemeinsam meßbares `Z` — steht in Mathlib in keiner Fassung; weder `MeasureTheory/Integral/Prod.lean` noch das Verzeichnis `LpSeminorm/` trägt sie. Deshalb ist die f.s. `MemLp`-Eigenschaft ein eigenes Feld von `IsApproximatingPair` und keine Folge der Schranke an den Mittelwert.
+
+Suche `measurable_eLpNorm|eLpNorm_prod|stronglyMeasurable_eLpNorm|eLpNorm.*prod_right` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
 ## Zusammenfassung
 
-47 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
+48 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
 

@@ -1082,6 +1082,26 @@ steht in seinem Dateikopf: es prüft Zeichenketten, nicht Aussagen.
   Diskretisierung der Stoppzeit, ohne Schranke an die Pfade. Beides gehört
   neben die drei vorhandenen.
 
+* **Die Meßbarkeit einer `eLpNorm` im Parameter.** Für gemeinsam meßbares
+  `Z : ℝ × Ω → ℝ` ist `ω ↦ eLpNorm (fun s ↦ Z s ω) q ν` meßbar; in Mathlib steht
+  das für **keinen** Exponenten und in keiner Gestalt. Geprüft am 2026-09-20
+  gegen `94ef6b89544e58e90f119da869f3fb48d1da0f4c`: weder
+  `MeasureTheory/Integral/Prod.lean` — das die Meßbarkeit des Bochner-Integrals
+  im Parameter trägt (`StronglyMeasurable.integral_prod_left`) — noch das
+  Verzeichnis `MeasureTheory/Function/LpSeminorm/` hat sie; die Muster
+  `measurable_eLpNorm`, `stronglyMeasurable_eLpNorm` und `eLpNorm_prod` haben
+  über ganz `Mathlib/` null Treffer. Für endliches `q` ist es
+  `Measurable.lintegral_prod_right` samt `rpow`, für `q = ⊤` das wesentliche
+  Supremum und damit der eigentliche Fall.
+
+  Aufgefallen beim Hinschreiben von `IsApproximatingPair`
+  (`TauCeti/MartingaleProblems/Suggested.lean`, Meilenstein 11): ohne diese
+  Aussage folgt aus einer Schranke an `∫⁻ ω, eLpNorm (Z · ω) q ν ∂P` **nicht**,
+  daß die `eLpNorm` f.s. endlich ist, und die f.s. `MemLp`-Eigenschaft muß
+  eigens vorausgesetzt werden statt hergeleitet. Sie ist damit die erste Lücke
+  dieses Punktes, die eine unserer **Definitionen** belastet und nicht bloß
+  einen Beweis.
+
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine
 lokal endliche lineare Ordnung geschrieben ist und `Traj.lean` auf `ℕ` festliegt.

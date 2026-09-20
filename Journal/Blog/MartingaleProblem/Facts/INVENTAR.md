@@ -48926,3 +48926,183 @@ ist in `L¹` nicht klein" in Lean bauen (`Ω = Bool` mit
 `AtomWitness.coinMeasure`, Filtration `⊥` unterhalb von `1` und `⊤` darüber).
 Damit wäre die Notwendigkeit der Voraussetzung an `f²` ein Satz statt eines
 Absatzes.
+
+### 2026-09-20, zwanzigster Lauf des Tages — das Prädikat `IsApproximatingPair` steht, und beim Hinschreiben ist eine Aussage der Roadmap **zu stark** befunden worden: der zweite Approximant ist nicht das Quadrat des ersten, und die Quadratidentität des Vorlaufs ist damit ein Satz, den der Verbraucher gar nicht aufrufen kann
+
+**Bearbeitet:** der Vorschlag des neunzehnten Laufs, die Klasse `𝓐 n` als
+Prädikat — also weiter am ersten Punkt der Kette des Meilensteins 11 von
+`MartingaleProblems`, wie angeordnet. Kein Meilenstein 8, kein Meilenstein 14,
+kein C.5/G. **Acht** neue Deklarationen (eine Struktur mit acht Feldern und
+sieben Sätze), alle in `TauCeti/MartingaleProblems/Suggested.lean`, 324 Zeilen
+mit den Doc-Kommentaren.
+
+**Geprüft:** `scripts/check_master.py` meldet für die ganze Kette **0 Fehler,
+0 `sorry`, 0 veraltete Namen** (Mathlib `94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `v4.35.0-rc2`; 18 / 35 / 109 Warnungen, **dieselben Zahlen wie vor dem
+Lauf**). Alle acht hängen nach `check_axioms_master.py` auf `propext`,
+`Classical.choice`, `Quot.sound` und auf nichts sonst.
+`scripts/check_cited_lines.py`: **347 von 347** gepaarten Fundstellen stimmen,
+0 tote, 0 verschoben, 0 mitten im Rumpf. `check_duplicates.py` (2603 eigene
+Deklarationen, neun mehr als vor dem Lauf) und `check_own_names.py` finden zu
+den neuen Namen nichts. `check_negatives.py`: **48** Behauptungen — eine mehr
+als vor dem Lauf, siehe unten —, 0 mit unerwarteten Treffern.
+
+#### Die Vorfrage des Vorlaufs, und sie ist am Verbraucher entschieden
+
+Gefragt war, ob der Kompensator als **unbestimmtes Integral einer Dichte** oder
+als **absolutstetige Funktion** mit `eLpNorm`-Schranke an ihrer Ableitung
+geführt wird. Genommen ist die Dichtefassung, und der Grund ist nicht
+Bequemlichkeit: Mathlib hat den Hauptsatz für absolutstetige Funktionen,
+`MeasureTheory.AbsolutelyContinuousOnInterval.integral_deriv_eq_sub`
+(`MeasureTheory/Integral/IntervalIntegral/AbsolutelyContinuousFun.lean:225`),
+**ein absolutstetiger Kompensator ist also ohnehin ein unbestimmtes Integral**,
+nämlich das von `deriv (C · ω)`. Die allgemeinere Fassung ist deshalb nicht
+allgemeiner in der Sache; was sie kostet, ist die gemeinsame Meßbarkeit von
+`(s, ω) ↦ deriv (C · ω) s`, die jener Satz nicht zurückgibt, weil er an *einem*
+Stichprobenpunkt läuft. Dazu kommt, daß die Dichtefassung die ist, an die
+`enorm_setIntegral_le_rpow_mul_eLpNorm` ohne Zwischenschritt anschließt, und
+die, in der Ethier–Kurtz ihre Hypothese stellen.
+
+#### Was gebaut ist
+
+* `IsApproximatingPair 𝓕 P q T K Y C Z` — die Struktur. `Y - C` ein
+  rechtsstetiges Martingal über `ℝ≥0`, `C t ω = ∫_{(0,t]} Z s ω`, und
+  `∫⁻ ω, eLpNorm (Z · ω) q (ℙ|_(0,T]) ∂P ≤ K`. Acht Felder, jedes einzeln
+  belegt durch die Aussage, die es liest.
+* `IsApproximatingPair.ae_integrableOn`, `…compensator_sub_eq`,
+  `…enorm_compensator_sub_le`, `…lintegral_enorm_compensator_sub_le` — die vier
+  Glieder von der Struktur zur integrierten Hölder-Schranke.
+* `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le` — die Fuge:
+  `‖∫ W (Y β - Y α)‖ₑ ≤ ofReal c * (ofReal δ ^ (1 - 1/q) * K)` für Stoppzeiten
+  `α ≤ β ≤ j ≤ T` mit Fenstern der Länge höchstens `δ` und ein `𝓕_α`-meßbares,
+  durch `c` beschränktes Gewicht.
+* `setIntegral_Ioc_sub_setIntegral_Ioc`, `one_sub_one_div_toReal_pos`,
+  `tendsto_ofReal_rpow_mul_nhdsGT_zero` — die drei Hilfsaussagen, alle ohne
+  Wahrscheinlichkeit.
+
+#### Fünf Befunde
+
+* **Der zweite Approximant ist `Y'` und nicht `Y²`, und damit ist die
+  Quadratidentität des Vorlaufs ein Satz, den der Verbraucher nicht aufrufen
+  kann.** Die Roadmap las die Hypothese bisher als „mit `(f², g₂) ∈ A`, das ein
+  zweites Paar `(Y², D) ∈ 𝓐 n` liefert". Das ist stärker als das, was die
+  Klasse hergibt: die Mitgliedschaft bei `f²` liefert *irgendein* `Y'` nahe
+  `f² ∘ X`, und nichts macht daraus das Quadrat des Approximanten `Y` von `f`.
+  Ethier–Kurtz (9.26) liest denn auch `Y'_α` und `Z'_α` mit einem **eigenen**
+  Exponenten `p'` — vier Summanden, zwei Approximationsfehler und zwei
+  `L^q`-Normen. `integral_sq_stoppedValue_sub_eq`, das wörtlich `Y² - D` als
+  Martingal verlangt, bleibt richtig, ist aber ein Sonderfall ohne Verbraucher;
+  der Zusammenbau ruft statt dessen zweimal
+  `integral_mul_stoppedValue_sub_eq_compensator` auf, am Gewicht `1` für das
+  Paar nahe `f²` und am Gewicht `f ∘ X α` für das Paar nahe `f`. **Genau
+  deshalb** trägt `enorm_integral_mul_stoppedValue_sub_le` ein beliebiges
+  beschränktes Gewicht aus der Vergangenheit und nicht das eine. Was von der
+  früheren Lesart bleibt, ist der Schluß, der sie veranlaßt hat: die
+  approximierbaren Funktionen müssen unter Produkten abgeschlossen sein, denn
+  die Abschätzung liest die Hypothese auch bei `f²`. Die Roadmap ist berichtigt.
+
+* **Eine neue Mathlib-Lücke, und es ist die erste, die eine unserer
+  *Definitionen* belastet.** Die Meßbarkeit einer `eLpNorm` **im Parameter** —
+  `ω ↦ eLpNorm (fun s ↦ Z s ω) q ν` für gemeinsam meßbares `Z` — steht in
+  Mathlib für keinen Exponenten und in keiner Gestalt: weder in
+  `MeasureTheory/Integral/Prod.lean`, das die Meßbarkeit des **Bochner**-Integrals
+  im Parameter trägt (`StronglyMeasurable.integral_prod_left`), noch im
+  Verzeichnis `LpSeminorm/`; die Muster `measurable_eLpNorm`,
+  `stronglyMeasurable_eLpNorm`, `eLpNorm_prod` haben über ganz `Mathlib/` null
+  Treffer. Die Folge ist unmittelbar: aus `∫⁻ ω, eLpNorm (Z · ω) q ν ∂P ≤ K`
+  mit `K ≠ ⊤` folgt **nicht**, daß die `eLpNorm` f.s. endlich ist — dafür
+  bräuchte `ae_lt_top` die Meßbarkeit —, und die f.s. `MemLp`-Eigenschaft ist
+  deshalb ein **eigenes Feld** der Struktur. Sie ist als Negativaussage
+  `elpnorm-measurable-in-parameter` in `scripts/check_negatives.py` eingetragen
+  und steht als zusätzliche Lücke unter `TODO.md` Punkt 8.
+
+* **`K` als Parameter des Prädikats ist es, was die Gleichmäßigkeit in `n`
+  ausdrückbar macht.** Das Kriterium verlangt `⨆ n, 𝔼[eLpNorm (Z n) q] < ∞`;
+  eine Familie, die das Prädikat mit **einem und demselben** `K` erfüllt, hat
+  dieses Supremum beschränkt, und keine der fünf Folgerungen muß über die
+  Familie quantifizieren. Dasselbe gilt für `T` und `q`. Das ist der Grund,
+  warum das Prädikat fünf Parameter trägt und nicht zwei.
+
+* **Die integrierte Hölder-Schranke braucht keine Stoppzeit und keine
+  Meßbarkeit der Fenstergrenzen**, und das war nicht vorhergesehen.
+  `lintegral_enorm_compensator_sub_le` steht für **beliebige**
+  `a b : Ω → ℝ≥0` mit `a ≤ b ≤ T` und `b - a ≤ δ`: die Abschätzung ist die
+  punktweise, integriert, und das untere Integral ist monoton ohne jede
+  Voraussetzung an seinen Integranden. Die Stoppzeiten treten erst dort auf, wo
+  die **Martingaleigenschaft** gelesen wird, also in
+  `enorm_integral_mul_stoppedValue_sub_le`. Die Trennung ist der Grund, warum
+  der Beweis dort drei Zeilen lang ist.
+
+* **`1 < q` wird an genau einer Stelle verbraucht**, und sie hat jetzt einen
+  Namen: `one_sub_one_div_toReal_pos`. Der Satz ist auch bei `q = ⊤` wahr, wo
+  `q.toReal = 0` und `1/0 = 0` den Exponenten zu `1` machen — der Müllwert von
+  `ENNReal.toReal` sagt hier ausnahmsweise die Wahrheit, denn die
+  `L^∞`-Schranke über einem Fenster der Länge `δ` ist `δ` mal das wesentliche
+  Supremum. Bei `q = 1` ist der Exponent `0` und der Satz falsch, und das ist
+  wörtlich Ethier–Kurtz, Bemerkung 9.5(a). `tendsto_ofReal_rpow_mul_nhdsGT_zero`
+  zieht daraus, was der Zusammenbau am Ende braucht.
+
+#### Wo der Punkt jetzt steht
+
+| Größe | Stand |
+| --- | --- |
+| alles Deterministische bis zur Modulabschätzung | steht |
+| Markov auf den Lückenereignissen, über `N` summiert | steht |
+| optionales Sampling zwischen zwei Stoppzeiten | steht |
+| Martingalzuwachs gegen ein Gewicht aus der Vergangenheit | steht |
+| Zuwachs → Kompensatorzuwachs (Quasimartingal) | steht |
+| Quadratidentität, Cauchy–Schwarz, Hölder am Kompensator | steht |
+| die Klasse `𝓐 n` als Prädikat samt fünf Folgerungen | steht, dieser Lauf |
+| die Fuge `‖∫ W (Y β - Y α)‖ₑ ≤ …` | steht, dieser Lauf |
+| die **Approximationsfehler**-Hypothese von (9.26) | **noch von keiner Aussage gelesen** |
+| der Zusammenbau: der Übergang zu `∫⁻ dist (X β) (X α)`, die Wahl von `N, δ, ε` | **offen** |
+
+#### Vorschlag für den nächsten Lauf
+
+**Die Approximationsfehler-Hypothese hinschreiben und den Übergang von `Y` zu
+`f ∘ X` beweisen.** Das ist die einzige Hypothese des Kriteriums, die noch von
+keiner einzigen Aussage gelesen wird, und sie ist der Grund, warum der
+Zusammenbau noch nicht geführt werden kann: alle bisherigen Abschätzungen
+sprechen über `Y`, und das Ziel
+`mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le` spricht über `X`.
+
+Die Aussage, benannt:
+
+> `lintegral_enorm_sub_le_of_biSup_le` — ist
+> `∫⁻ ω, ⨆ t ∈ Set.Iic T ∩ S, ‖Y t ω - f (X t ω)‖ₑ ∂P ≤ ε` und sind `α, β` zwei
+> Zeiten mit Werten in `Set.Iic T ∩ S`, so ist
+> `∫⁻ ω, ‖f (X (β ω) ω) - f (X (α ω) ω)‖ₑ ∂P
+>    ≤ ∫⁻ ω, ‖Y (β ω) ω - Y (α ω) ω‖ₑ ∂P + 2 * ε`.
+
+**Worauf sie ruht, und es steht alles da.** Die Dreiecksungleichung in `ℝ≥0∞`
+(`enorm_sub_le` und `lintegral_add_left`), die Monotonie des unteren Integrals,
+und die Beobachtung, daß `‖Y (α ω) ω - f (X (α ω) ω)‖ₑ` unter dem Supremum
+liegt, sobald `α ω` im Indexbereich liegt — also wieder **keine Meßbarkeit der
+Zeiten**, wie schon bei `lintegral_enorm_compensator_sub_le`. Der Faktor `2`
+sind die beiden Enden, und er ist geschuldet, anders als der Faktor `2` des
+elften Laufs.
+
+**Warum sie jetzt dran ist.** Mit ihr und der Fuge dieses Laufs steht die Kette
+von der Modulabschätzung bis zu den Hypothesen des Kriteriums lückenlos in
+Aussagen über `X`, und der Zusammenbau ist danach die Wahl dreier Zahlen. Ohne
+sie ist jede weitere Abschätzung eine über `Y`, und `Y` kommt in der Konklusion
+des Satzes nicht vor.
+
+**Die Vorfrage, die dabei nicht zu raten ist:** ob das Supremum über
+`Set.Iic T` oder über `Set.Iic T ∩ S` mit abzählbarem `S` genommen wird. Die
+Roadmap schreibt die abzählbare Gestalt, weil nur dann
+`measurable_biSup_enorm_of_countable` greift; für die **Monotonie** des unteren
+Integrals wird die Meßbarkeit aber gar nicht gebraucht, und über ganz
+`Set.Iic T` wäre die Hypothese stärker und damit für den Verbraucher teurer.
+Und es hängt mehr daran als die Bequemlichkeit: die Zeiten `α, β`, die der
+Verbraucher einsetzt, sind **Trefferzeiten** und haben im allgemeinen keine
+Werte in `S`. Entweder ist die Rechtsstetigkeit also schon hier zu lesen
+(`biSup_enorm_Iic_eq_of_isRightContinuous` steht bereit) oder die Aussage steht
+über ganz `Set.Iic T` und die abzählbare Gestalt bleibt dem Kriterium. Das ist
+die eigentliche Entscheidung des nächsten Laufs, und sie ist am Verbraucher zu
+treffen.
+
+**Ein zweiter, kleinerer Punkt, falls der erste früher fertig ist als gedacht:**
+er steht unverändert aus dem achtzehnten Lauf — den Zeugen „der Martingalanteil
+ist in `L¹` nicht klein" in Lean bauen (`Ω = Bool` mit
+`AtomWitness.coinMeasure`, Filtration `⊥` unterhalb von `1` und `⊤` darüber).
