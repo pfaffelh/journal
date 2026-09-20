@@ -5313,6 +5313,8 @@ results apply and which fail.
     & --- \\
   Theorem~\ref{thm:absconv}, Theorem~\ref{thm:clockchange}
     & Proposition~\ref{prop:haar} and Section~\ref{ssec:dualcont} \\
+  Corollary~\ref{cor:uniqviadual} (\textbf{uniqueness via duality}), moved here
+    2026-09-20; see below & --- \\
   \bottomrule
   \end{tabular}
 
@@ -5326,6 +5328,33 @@ results apply and which fail.
   Markovian --- the Markov property, the reduction to one-dimensional
   distributions, pasting, duality --- so nothing in it could have been avoided by
   a better argument.
+
+  \emph{That last sentence is false for the duality row, and the way it is false
+  is worth the space.}  Uniqueness via duality does \textbf{not} need the shift
+  system.  Carrying a bounded $\Filt^X_{s_0}$-measurable weight $Z$ through the
+  chain identity --- both increment relations survive, see
+  Remark~\ref{rem:dualnonmarkov} --- delivers \eqref{eq:propagation} directly,
+  and Proposition~\ref{prop:uniqfromprop} from the \emph{left} column then gives
+  uniqueness for every initial law.  So the route through
+  Theorem~\ref{thm:absuniq} was avoidable after all, by exactly the kind of
+  better argument the sentence denied, and
+  Corollary~\ref{cor:uniqviadual} belongs in the left column with only its
+  separating hypothesis intact.
+
+  \emph{And yet the spirit of the sentence survives, for a reason the shift was
+  hiding.}  The conclusion of the duality route is Markovian all the same, and
+  now necessarily so: with $Z$ the indicator of a set in $\Filt^X_s$ the weighted
+  identity reads $E[f(X_t,y) \mid \Filt^X_s] = \Lambda_{s,t,y}(X_s)$.  A dual
+  whose $X$-side is a function of the state \emph{carries the Markov property
+  with it}, whatever route is taken.  The Markov structure in
+  Section~\ref{sec:duality} was therefore never in the shift; it is in the
+  duality function, and removing the shift makes that visible rather than
+  removing it.
+
+  What this relocates, it also opens: the identity consumes not $g = h$ but the
+  conditional balance of Remark~\ref{rem:dualnonmarkov}, which admits a
+  path-dependent $g$ and for which no instance is known.  That, and not the
+  shift, is where a duality outside the Markov world would have to live.
 \end{remark}
 
 \subsection{The Markovian case}
