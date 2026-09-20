@@ -1,9 +1,9 @@
 # Zitierte eigene Namen ohne Deckung
 
 * Mathlib-Index: `94ef6b89544e58e90f119da869f3fb48d1da0f4c`
-* Zitate in den vier `README.md`: 8898
+* Zitate in den vier `README.md`: 8903
 * davon Fließtext (Taktiken, Schlüsselwörter): 66
-* ohne Deckung in Mathlib **und** in unseren `Suggested.lean`: 410
+* ohne Deckung in Mathlib **und** in unseren `Suggested.lean`: 411
 
 ## 1. Qualifizierte Namen ohne Deckung
 
@@ -57,7 +57,7 @@ Der Namensraum existiert, der Name nicht.  Das ist im Regelfall ein **offener Pu
 | `SkorokhodSpace.isClosed_range_continuous` | `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:1533` |
 | `SkorokhodSpace.isCompact_closure_iff_nnreal` | `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:1944` |
 | `SkorokhodSpace.isCompact_closure_of_compactContainment` | `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:2168` |
-| `SkorokhodSpace.modulusBased_le_of_forall_stoppingTime` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11317`, `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:4102`, `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:4183`, `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:4249` |
+| `SkorokhodSpace.modulusBased_le_of_forall_stoppingTime` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11317`, `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:4102`, `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:4183`, `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:4270` |
 | `SkorokhodSpace.tendsto_of_tendsto_uniformly` | `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:1036` |
 | `Summable.tendsto_sum_tsum_nat` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8018` |
 
@@ -211,6 +211,7 @@ Prüfliste, von Hand durchzugehen: Notationen, Feldnamen, Hilfsvariablen aus dem
 | `countingProcess` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:2534` |
 | `crossGrid_eq_zero_of_bddFlux` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7779`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7810`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7834`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7839` |
 | `d_m` | `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:2357` |
+| `debut` | `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:4253` |
 | `dec5b2b780537b6eaf7f5e5f000c12f7387fb24d` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8522`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11276` |
 | `decl` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11531` |
 | `dissipative` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11528` |

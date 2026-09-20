@@ -11330,6 +11330,36 @@ has to be chosen once for all `n`. What stands:
   estimate, and the count of terms in the union it is summed over is
   `card_le_of_gapped`.
 
+  **And the times are stopping times**, 2026-09-20, which is what had to hold
+  before that estimate could be evaluated at them at all. They are the hitting
+  times of an **open** set, so this is the début theorem, and Mathlib has only
+  the discrete case — both `MeasureTheory.Adapted.isStoppingTime_hittingBtwn`
+  and `MeasureTheory.Adapted.isStoppingTime_hittingAfter` carry `[Countable ι]`
+  and `[WellFoundedLT ι]`, and the words `debut` and `début` do not occur in
+  the library. What Mathlib *does* have is the reduction the theorem is proved
+  by, `MeasureTheory.isStoppingTime_of_measurableSet_lt_of_isRightContinuous`
+  together with `MeasureTheory.Filtration.rightCont`; the missing passage is
+  from a right-open random set to `{τ < i} ∈ 𝓕 i`, and it is
+  `MeasureTheory.setOf_debutTime_lt_eq` — pure order topology, one density
+  argument. The four declarations that carry this are
+  `MeasureTheory.debutTime` with `MeasureTheory.isStoppingTime_debutTime`, and
+  for the oscillation set `MeasureTheory.isRightOpen_oscSet`,
+  `MeasureTheory.measurableSet_mem_oscSet` and the cell bound
+  `MeasureTheory.dist_le_of_lt_debutTime_oscSet`; they stand under „The début of
+  a right-open random set" and „The Aldous hitting times as an instance of the
+  début".
+
+  **The price is named and not hidden**: the times are stopping times for the
+  right continuous filtration, so a consumer without `[𝓕.IsRightContinuous]`
+  passes to `𝓕₊` and must have its increment bound at `𝓕₊`-stopping times.
+
+  **What remains before the recursion may be written down** is one hypothesis
+  of `MeasureTheory.measurableSet_mem_oscSet`: that the anchor `c = X ∘ σ`
+  agrees, on `{σ < q}`, with an `𝓕 q`-measurable function. That is the
+  `𝓕_σ`-measurability of the stopped value together with
+  `MeasureTheory.IsStoppingTime.measurableSet_inter_lt`, and it is the only
+  place where the progressive measurability of `X` enters the criterion.
+
   **The bound is `ε` and not `2 ε`**, because `SkorokhodSpace.subdivisionOsc`
   measures each cell from its left endpoint where Billingsley's `w'` takes the
   diameter.

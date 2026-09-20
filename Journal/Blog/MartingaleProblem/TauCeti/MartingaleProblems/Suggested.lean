@@ -41143,3 +41143,240 @@ theorem renewal_le_of_eq {φ m₀ m : ℝ → ENNReal} (hφ : Measurable φ) (hm
   exact iSup_le fun N => hstep N x
 
 end CausalConvolution
+
+namespace MeasureTheory
+
+/-! ### The début of a right-open random set
+
+Aldous' criterion, whose deterministic half is
+`SkorokhodSpace.modulusBased_le_of_forall_gapped` of **SkorokhodSpace** Milestone 10, is fed by
+the times
+
+```
+τ 0 = ⊥,   τ (k+1) = inf {t > τ k | ε < dist (X t) (X (τ k))}.
+```
+
+Before any increment bound may be evaluated at them, they have to be stopping times, and that is
+the hitting time of an **open** set, so it is the début theorem and not the discrete hitting time
+API.  Two things were checked at the source before this block was written, and they decide its
+shape.
+
+**Mathlib has no début theorem.**  `MeasureTheory.Adapted.isStoppingTime_hittingBtwn` and
+`MeasureTheory.Adapted.isStoppingTime_hittingAfter` both carry `[Countable ι]` and
+`[WellFoundedLT ι]`, so they are the discrete case; the strings `debut` and `début` do not occur
+in the library.
+
+**But it has the reduction the début theorem is proved by.**
+`MeasureTheory.isStoppingTime_of_measurableSet_lt_of_isRightContinuous` turns
+`{τ < i} ∈ 𝓕 i` into `IsStoppingTime 𝓕 τ` for a right-continuous filtration, and
+`MeasureTheory.Filtration.rightCont` with `MeasureTheory.Filtration.IsRightContinuous` supplies
+such filtrations — `𝓕₊` is right-continuous by an instance.  What is missing is only the passage
+from a right-open random set to that hypothesis, and that passage is `setOf_debutTime_lt_eq`
+below: it is pure order topology and costs one density argument.
+
+**The decision, and what it costs the consumer.**  The times are stopping times for the
+right-continuous filtration and not in general for `𝓕` itself.  The alternative — taking the
+infimum along a countable dense set from the start — was rejected because it destroys the cell
+bound, which is the only reason these times are formed: between two such times the path could
+still move by more than `ε` at an instant outside the dense set.  So `isStoppingTime_debutTime`
+asks `[𝓕.IsRightContinuous]`, and a consumer who does not have it passes to `𝓕₊`, at the price
+that its increment bound must hold at `𝓕₊`-stopping times.
+
+**And the garbage value is in the statement, not in a footnote.**  `sInf ∅ = 0` would make the
+recursion fall below itself as soon as the path never moves by more than `ε` again.  `debutTime`
+is therefore `WithTop ι`-valued and returns `⊤` on the empty set — the honest value — and
+`debutTime_of_eq_empty` is the lemma that says so. -/
+
+variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
+variable {ι : Type*} [ConditionallyCompleteLinearOrder ι]
+
+open scoped Classical in
+/-- The **début** of a family `A` of random sets of times: the first element of `A ω`, and `⊤` if
+there is none.
+
+The `WithTop` is not decoration.  A real-valued `sInf` would return `sInf ∅ = 0` where the set is
+empty, which is smaller than every time in it; a recursion built on such a value loses its
+monotonicity at exactly the sample points where the construction is supposed to stop. -/
+noncomputable def debutTime (A : Ω → Set ι) (ω : Ω) : WithTop ι :=
+  if (A ω).Nonempty then ((sInf (A ω) : ι) : WithTop ι) else ⊤
+
+theorem debutTime_of_nonempty {A : Ω → Set ι} {ω : Ω} (h : (A ω).Nonempty) :
+    debutTime A ω = ((sInf (A ω) : ι) : WithTop ι) := by
+  classical
+  simp only [debutTime]
+  split_ifs
+  rfl
+
+/-- **Where the set is empty the début is `⊤`**, and not a number that looks like a time. -/
+theorem debutTime_of_eq_empty {A : Ω → Set ι} {ω : Ω} (h : A ω = ∅) :
+    debutTime A ω = ⊤ := by
+  classical
+  simp only [debutTime]
+  split_ifs with h'
+  · exact absurd h (Set.Nonempty.ne_empty h')
+  · rfl
+
+variable [OrderBot ι]
+
+theorem debutTime_le_of_mem {A : Ω → Set ι} {ω : Ω} {t : ι} (ht : t ∈ A ω) :
+    debutTime A ω ≤ (t : WithTop ι) := by
+  rw [debutTime_of_nonempty ⟨t, ht⟩]
+  exact_mod_cast csInf_le (OrderBot.bddBelow _) ht
+
+/-- **Below the début nothing has happened.**  This is the whole content of the cell bound in
+Aldous' criterion, and it needs no topology: it is the definition of an infimum. -/
+theorem notMem_of_lt_debutTime {A : Ω → Set ι} {ω : Ω} {t : ι}
+    (ht : (t : WithTop ι) < debutTime A ω) : t ∉ A ω :=
+  fun h => absurd (debutTime_le_of_mem h) (not_le.2 ht)
+
+variable [TopologicalSpace ι] [OrderTopology ι] [DenselyOrdered ι]
+
+/-- **The début of a right-open set is approached along any dense set.**
+
+A set which contains an interval `[t, v)` around each of its points is met by every dense set
+arbitrarily soon after each of its points, so its infimum is already the infimum over the dense
+set.  This is the step that makes the début measurable: it replaces an uncountable union over all
+times by a countable one, and it is the only place where the right continuity of the paths is
+spent. -/
+theorem debutTime_lt_iff_exists {A : Ω → Set ι} {D : Set ι} (hD : Dense D)
+    (hopen : ∀ ω, ∀ t ∈ A ω, ∃ v, t < v ∧ Set.Ico t v ⊆ A ω) (i : ι) (ω : Ω) :
+    debutTime A ω < (i : WithTop ι) ↔ ∃ q ∈ D, q < i ∧ q ∈ A ω := by
+  constructor
+  · intro h
+    by_cases hne : (A ω).Nonempty
+    · rw [debutTime_of_nonempty hne, WithTop.coe_lt_coe] at h
+      obtain ⟨t, htA, hti⟩ := exists_lt_of_csInf_lt hne h
+      obtain ⟨v, htv, hsub⟩ := hopen ω t htA
+      obtain ⟨q, hqD, hq⟩ := hD.exists_between (lt_min htv hti)
+      exact ⟨q, hqD, lt_of_lt_of_le hq.2 (min_le_right _ _),
+        hsub ⟨hq.1.le, lt_of_lt_of_le hq.2 (min_le_left _ _)⟩⟩
+    · rw [debutTime_of_eq_empty (Set.not_nonempty_iff_eq_empty.1 hne)] at h
+      exact absurd h (by simp)
+  · rintro ⟨q, _, hqi, hqA⟩
+    exact lt_of_le_of_lt (debutTime_le_of_mem hqA) (by exact_mod_cast hqi)
+
+/-- `debutTime_lt_iff_exists` as an identity of sets, which is the form
+`MeasureTheory.isStoppingTime_of_measurableSet_lt_of_isRightContinuous` consumes. -/
+theorem setOf_debutTime_lt_eq {A : Ω → Set ι} {D : Set ι} (hD : Dense D)
+    (hopen : ∀ ω, ∀ t ∈ A ω, ∃ v, t < v ∧ Set.Ico t v ⊆ A ω) (i : ι) :
+    {ω | debutTime A ω < (i : WithTop ι)} = ⋃ q ∈ {q ∈ D | q < i}, {ω | q ∈ A ω} := by
+  ext ω
+  rw [Set.mem_iUnion₂]
+  refine Iff.trans (debutTime_lt_iff_exists hD hopen i ω) ?_
+  exact ⟨fun ⟨q, hqD, hqi, hqA⟩ => ⟨q, ⟨hqD, hqi⟩, hqA⟩,
+    fun ⟨q, ⟨hqD, hqi⟩, hqA⟩ => ⟨q, hqD, hqi, hqA⟩⟩
+
+variable [NoMaxOrder ι] [FirstCountableTopology ι]
+
+/-- **The début theorem for right-open random sets.**  If each `A ω` contains an interval `[t, v)`
+around each of its points, and each slice `{ω | q ∈ A ω}` along a countable dense set of times is
+in the filtration at that time, then the début of `A` is a stopping time.
+
+This is the continuous-time hitting time result the discrete
+`MeasureTheory.Adapted.isStoppingTime_hittingAfter` does not give, and Mathlib has it in no form:
+both of its hitting time results carry `[Countable ι]` and `[WellFoundedLT ι]`.
+
+Right continuity of the filtration is not a convenience here.  `{debutTime A < i}` is the
+countable union above, so it lies in `𝓕 i`; `{debutTime A ≤ i}` is an intersection over times
+strictly to the right of `i`, and only a right-continuous filtration contains it.  A consumer
+without it applies the theorem to `MeasureTheory.Filtration.rightCont 𝓕`, which is
+right-continuous by instance. -/
+theorem isStoppingTime_debutTime {𝓕 : Filtration ι mΩ} [𝓕.IsRightContinuous]
+    {A : Ω → Set ι} {D : Set ι} (hDc : D.Countable) (hDd : Dense D)
+    (hopen : ∀ ω, ∀ t ∈ A ω, ∃ v, t < v ∧ Set.Ico t v ⊆ A ω)
+    (hmeas : ∀ q ∈ D, MeasurableSet[𝓕 q] {ω | q ∈ A ω}) :
+    IsStoppingTime 𝓕 (debutTime A) := by
+  refine MeasureTheory.isStoppingTime_of_measurableSet_lt_of_isRightContinuous fun i => ?_
+  rw [setOf_debutTime_lt_eq hDd hopen i]
+  refine MeasurableSet.biUnion (Set.Countable.mono (fun q hq => hq.1) hDc) fun q hq => ?_
+  exact 𝓕.mono hq.2.le _ (hmeas q hq.1)
+
+end MeasureTheory
+
+namespace MeasureTheory
+
+/-! ### The Aldous hitting times as an instance of the début
+
+The set whose début Aldous' criterion takes is the set of times after `σ` at which the path has
+moved by more than `ε` away from a reference value `c`.  Its three inputs to
+`isStoppingTime_debutTime` are discharged separately below, and they separate cleanly:
+
+* right-openness is exactly the **right continuity of the paths** (`isRightOpen_oscSet`);
+* the slices are in the filtration because `X` is **adapted** and because `c` agrees, before `q`,
+  with an `𝓕 q`-measurable function (`measurableSet_mem_oscSet`);
+* and the cell bound, which is what the criterion is for, needs neither
+  (`dist_le_of_lt_debutTime_oscSet`).
+
+The hypothesis on `c` in `measurableSet_mem_oscSet` is stated as it is because that is what the
+recursion delivers and no more: `c = X ∘ σ` is `𝓕_σ`-measurable, and an `𝓕_σ`-measurable function
+restricted to `{σ < q}` agrees there with an `𝓕 q`-measurable one.  Stating it that way keeps the
+progressive measurability of `X` out of this theorem, where it would be the only analytic
+hypothesis. -/
+
+variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
+variable {ι : Type*} [ConditionallyCompleteLinearOrder ι] [OrderBot ι]
+variable {E : Type*} [MetricSpace E]
+
+/-- The set of times after `σ` at which `X` has moved by more than `ε` away from `c`. -/
+def oscSet (X : ι → Ω → E) (σ : Ω → WithTop ι) (c : Ω → E) (ε : ℝ) (ω : Ω) : Set ι :=
+  {t | σ ω < (t : WithTop ι) ∧ ε < dist (X t ω) (c ω)}
+
+/-- **The cell bound of Aldous' criterion**: strictly below the début of `oscSet` the path stays
+within `ε` of `c`.  This is what `SkorokhodSpace.modulusBased_le_of_forall_gapped` asks of each of
+its cells, with `c = ENNReal.ofReal ε`, and it is free: no topology, no measure, no
+adaptedness. -/
+theorem dist_le_of_lt_debutTime_oscSet {X : ι → Ω → E} {σ : Ω → WithTop ι} {c : Ω → E} {ε : ℝ}
+    {ω : Ω} {s : ι} (h1 : σ ω < (s : WithTop ι))
+    (h2 : (s : WithTop ι) < debutTime (oscSet X σ c ε) ω) :
+    dist (X s ω) (c ω) ≤ ε := by
+  by_contra h
+  exact notMem_of_lt_debutTime h2 ⟨h1, not_le.1 h⟩
+
+variable [TopologicalSpace ι] [OrderTopology ι] [NoMaxOrder ι]
+
+omit [OrderBot ι] in
+/-- **Right continuity of the paths makes `oscSet` right-open**, which is the hypothesis
+`isStoppingTime_debutTime` needs and the only place the regularity of the paths is used.
+
+Note what is *not* needed: nothing about the left limits, and nothing at points other than the one
+under consideration.  The set `{y | ε < dist y (c ω)}` is open, so a path which is right continuous
+at `t` stays in it on a right neighbourhood of `t`. -/
+theorem isRightOpen_oscSet {X : ι → Ω → E} {σ : Ω → WithTop ι} {c : Ω → E} {ε : ℝ}
+    (hX : ∀ ω, ∀ t : ι, ContinuousWithinAt (fun s => X s ω) (Set.Ici t) t) (ω : Ω) :
+    ∀ t ∈ oscSet X σ c ε ω, ∃ v, t < v ∧ Set.Ico t v ⊆ oscSet X σ c ε ω := by
+  intro t ht
+  have hcont : ContinuousWithinAt (fun s => dist (X s ω) (c ω)) (Set.Ici t) t :=
+    (hX ω t).dist continuousWithinAt_const
+  have hmem : {s | ε < dist (X s ω) (c ω)} ∈ 𝓝[≥] t :=
+    hcont.preimage_mem_nhdsWithin (Ioi_mem_nhds ht.2)
+  obtain ⟨v, hv, hsub⟩ := mem_nhdsGE_iff_exists_Ico_subset.1 hmem
+  exact ⟨v, hv, fun s hs => ⟨lt_of_lt_of_le ht.1 (by exact_mod_cast hs.1), hsub hs⟩⟩
+
+variable [FirstCountableTopology ι] [MeasurableSpace E] [BorelSpace E] [SecondCountableTopology E]
+
+omit [OrderBot ι] [NoMaxOrder ι] in
+/-- **The measurability step**: each slice of `oscSet` lies in the filtration at its own time.
+
+The slice is the intersection of `{σ < q}`, which is in `𝓕 q` because `σ` is a stopping time, with
+a set built from `X q` and `c`.  The hypothesis on `c` is the minimum that makes the second factor
+`𝓕 q`-measurable, and in the Aldous recursion it is discharged by the `𝓕_σ`-measurability of the
+stopped value together with `MeasureTheory.IsStoppingTime.measurableSet_inter_lt`. -/
+theorem measurableSet_mem_oscSet {𝓕 : Filtration ι mΩ} {X : ι → Ω → E} {σ : Ω → WithTop ι}
+    {c : Ω → E} {ε : ℝ} (hσ : IsStoppingTime 𝓕 σ) (hX : Adapted 𝓕 X) (q : ι)
+    (hc : ∃ g : Ω → E, Measurable[𝓕 q] g ∧ ∀ ω, σ ω < (q : WithTop ι) → c ω = g ω) :
+    MeasurableSet[𝓕 q] {ω | q ∈ oscSet X σ c ε ω} := by
+  obtain ⟨g, hg, hcg⟩ := hc
+  have hset : {ω | q ∈ oscSet X σ c ε ω}
+      = {ω | σ ω < (q : WithTop ι)} ∩ {ω | ε < dist (X q ω) (g ω)} := by
+    ext ω
+    show (σ ω < (q : WithTop ι) ∧ ε < dist (X q ω) (c ω)) ↔ _
+    refine ⟨fun h => ⟨h.1, ?_⟩, fun h => ⟨h.1, ?_⟩⟩
+    · show ε < dist (X q ω) (g ω)
+      rw [← hcg ω h.1]; exact h.2
+    · rw [hcg ω h.1]; exact h.2
+  rw [hset]
+  refine (hσ.measurableSet_lt q).inter ?_
+  let _ : MeasurableSpace Ω := 𝓕 q
+  exact measurableSet_lt measurable_const ((hX q).dist hg)
+
+end MeasureTheory

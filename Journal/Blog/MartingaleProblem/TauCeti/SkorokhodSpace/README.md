@@ -4251,17 +4251,30 @@ theorem. Mathlib has only the discrete case, checked at the source on
 `MeasureTheory.Adapted.isStoppingTime_hittingAfter`
 (`Probability/Process/HittingTime.lean:399` and `:412`) both carry
 `[Countable ι]` and `[WellFoundedLT ι]`, and the words `debut` and `début` do not
-occur in the library. Over `ℝ≥0` the recursion therefore needs either the right
-continuous filtration or a hitting time along a countable dense set, and that
-choice is to be made before the first proof and not after it.
+occur in the library.
 
-**And the junk value is to be settled in the same breath.** `sInf ∅ = 0`, and the
-set is empty as soon as the path never again moves by more than `ε` after `τ k`;
-then `τ (k+1)` is `0` and therefore *below* `τ k`, so the monotonicity that
-`SkorokhodSpace.modulusBased_le_of_forall_gapped` asks for fails. Either the
-times are `ℝ≥0∞` valued with `⊤` as the honest value, or finiteness stands in the
-hypothesis. This is the same shape as `stepIndex` in **MartingaleProblems**, where
-the junk value silently destroyed monotonicity in the time.
+**The choice is made, and the début theorem is built**, 2026-09-20, in
+**MartingaleProblems** under „The début of a right-open random set":
+`MeasureTheory.isStoppingTime_debutTime` reads the début of a random set which
+contains an interval `[t, v)` around each of its points as a stopping time for a
+**right continuous** filtration, and `MeasureTheory.isRightOpen_oscSet`,
+`MeasureTheory.measurableSet_mem_oscSet` and
+`MeasureTheory.dist_le_of_lt_debutTime_oscSet` are its three inputs for the
+oscillation set. The infimum along a countable dense set was rejected, and the
+reason is the cell bound: between two such times the path could still move by
+more than `ε` at an instant outside the dense set, so the very property these
+times are formed for would be lost. What the right continuous filtration costs
+the consumer is that its increment bound has to hold at `𝓕₊`-stopping times, and
+that is said at the declaration.
+
+**And the junk value is settled in the same breath.** `sInf ∅ = 0`, and the set
+is empty as soon as the path never again moves by more than `ε` after `τ k`; then
+`τ (k+1)` would be `0` and therefore *below* `τ k`, so the monotonicity that
+`SkorokhodSpace.modulusBased_le_of_forall_gapped` asks for fails. This is the
+same shape as `stepIndex` in **MartingaleProblems**, where the junk value
+silently destroyed monotonicity in the time. `MeasureTheory.debutTime` is
+therefore `WithTop ι` valued and `MeasureTheory.debutTime_of_eq_empty` says that
+the empty case gives `⊤`.
 
 **And the bound is `c`, not `2 c`.** `SkorokhodSpace.subdivisionOsc` measures each
 cell from its **left endpoint**, where Billingsley's `w'` takes the diameter of
