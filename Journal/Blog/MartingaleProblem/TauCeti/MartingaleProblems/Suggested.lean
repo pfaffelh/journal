@@ -29334,6 +29334,211 @@ theorem hawkesFiltrationH_augment_eq_hawkesPathFiltrationH_augment (hhm : Measur
 
 end BoundedHawkesFiltration
 
+/-! ### The two regularity inputs of the stopped martingale theorem, discharged
+
+`martingale_stoppedProcess` asks three things of a test process: the martingale property,
+progressivity, and right continuity of the paths almost everywhere.  The second and the third are
+regularity and the first is the theorem, and this section settles the two regularity ones for the
+bounded nonlinear Hawkes process -- **at every sample point, with no null set and no non
+explosion**.
+
+**Against the linear case the difference is exactly one hypothesis, and it is the one that was in
+the way.**  `isStronglyProgressive_mpFamilyF_hawkesStepPath` already holds on the data of
+`ex:hawkes` alone; the measurability layer never needed the non explosion, and its doc comment says
+so.  `tendsto_nhdsGE_mpFamilyF_hawkesStepPath` does not: it produces the right continuity at a
+sample point `ω` out of `hint`, the interval integrability of the self referential rate along that
+path, and `hint` **is** the non explosion at `ω`
+(`not_intervalIntegrable_hawkesSelfRate_of_not_summable`).  In the linear case that hypothesis has
+to be carried, and discharging it almost everywhere is the renewal equation and the Volterra
+resolvent -- theory this development does not have.
+
+Here it is `intervalIntegrable_hawkesSelfRateH`, which holds at every sample point from the
+measurability of the two data and the two bounds.  So the conclusion is the pointwise one, and a
+consumer who needs the almost everywhere form of `martingale_stoppedProcess` supplies
+`Filter.Eventually.of_forall`.
+
+`martingale_stoppedProcess_mpFamilyF_hawkesStepPathH` is the three of them together, and it is what
+the section is for: for the bounded nonlinear Hawkes process the **only** input of the stopped
+martingale theorem that is not discharged is the martingale property itself.  The four hypotheses on
+`h` are the ones `BoundedHawkesWitness` discharges twice, at `rateCap` and at `rateSat`. -/
+
+section BoundedHawkesInputs
+
+variable {E : Type*} [MeasurableSpace E] {ν c L : ℝ} {φ h : ℝ → ℝ}
+
+/-- **The bounded nonlinear Hawkes rate is jointly measurable for its own filtration.**  The
+counterpart of `measurable_uncurry_hawkesSelfRate_hawkesFiltration`, and the nonlinearity costs one
+composition: `measurable_uncurry_pointRate_pointFiltration` produces the self exciting sum, the
+baseline is added to it, and `h` is applied to the result -- which is the whole reason the bounded
+case can put a nonlinearity there at all, that it sits **outside** the window integral. -/
+theorem measurable_uncurry_hawkesSelfRateH_hawkesFiltrationH (hhm : Measurable h)
+    (hφm : Measurable φ) (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (i : ℝ≥0) :
+    Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod
+        (hawkesFiltrationH (E := E) hhm hφm hφ hcpos hc hL i)]
+      fun p : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) ↦ hawkesSelfRateH h ν φ (min (p.1 : ℝ) (i : ℝ)) p.2 :=
+  hhm.comp (measurable_const.add
+    (measurable_uncurry_pointRate_pointFiltration
+      (measurable_hawkesJumpTimeH_apply hhm hφm hφ hcpos hc hL)
+      (fun n ↦ (measurable_pi_apply n).comp measurable_fst)
+      (fun ω n ↦ hawkesJumpTimeH_nonneg h ν φ ω.2 ω (n + 1)) hφm i))
+
+/-- **And so is the integrand of the path dependent generator**, at a jump kernel that reads the
+state alone -- the case of `ex:hawkes`, where only the rate is self exciting. -/
+theorem measurable_uncurry_hawkesJumpApplyFH_hawkesFiltrationH (hhm : Measurable h)
+    (hφm : Measurable φ) (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) {g : E → ℝ} (hg : Measurable g) (i : ℝ≥0) :
+    Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod
+        (hawkesFiltrationH (E := E) hhm hφm hφ hcpos hc hL i)]
+      fun p : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) ↦
+        hawkesSelfRateH h ν φ (min (p.1 : ℝ) (i : ℝ)) p.2
+          * g (stepPath (hawkesJumpTimeH h ν φ p.2.2 p.2) p.2.1 (min (p.1 : ℝ) (i : ℝ))) :=
+  (measurable_uncurry_hawkesSelfRateH_hawkesFiltrationH hhm hφm hφ hcpos hc hL i).mul
+    (measurable_uncurry_hawkesStepPathH_hawkesFiltrationH hhm hφm hφ hcpos hc hL hg i)
+
+/-- **The compensating window of the bounded nonlinear generator is measurable for the past.** -/
+theorem measurable_compensator_hawkesJumpApplyFH_hawkesFiltrationH (hhm : Measurable h)
+    (hφm : Measurable φ) (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) {g : E → ℝ} (hg : Measurable g) (cl : Clock.Conv) (i : ℝ≥0) :
+    Measurable[hawkesFiltrationH (E := E) hhm hφm hφ hcpos hc hL i]
+      fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ∫ u in lebesgueClock.interval cl ⊥ i,
+        hawkesSelfRateH h ν φ (u : ℝ) ω
+          * g (stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (u : ℝ)) ∂lebesgueClock.q :=
+  measurable_compensator_of_uncurry_min
+    (W := fun u ω ↦ hawkesSelfRateH h ν φ u ω
+      * g (stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 u)) cl i
+    (measurable_uncurry_hawkesJumpApplyFH_hawkesFiltrationH hhm hφm hφ hcpos hc hL hg i)
+
+/-- **The test processes of the bounded nonlinear Hawkes martingale problem are strongly
+progressive**, for `hawkesFiltrationH` -- the one filtration the bounded case has.  The first of the
+two regularity inputs of `martingale_stoppedProcess`.
+
+Like its linear counterpart the proof spends no bound on the rate: `mpFamilyF` asks its hypotheses
+of the **integrand**, and joint measurability of the integrand is what
+`isStronglyProgressive_of_measurable_uncurry_mpFamilyF` consumes.  The four hypotheses on `h` are
+here because `hawkesFiltrationH` carries them in the argument of its definition, not because the
+argument needs them. -/
+theorem isStronglyProgressive_mpFamilyF_hawkesStepPathH (hhm : Measurable h)
+    (hφm : Measurable φ) (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (mu : Kernel E E) [IsMarkovKernel mu] (cl : Clock.Conv)
+    {Y : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ}
+    (hY : Y ∈ mpFamilyF
+      (jumpOperatorF (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦ hawkesSelfRateH h ν φ (s : ℝ) ω)
+        (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+          mu (stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (s : ℝ)))
+        (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+          stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (s : ℝ)))
+      lebesgueClock cl
+      (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+        stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (s : ℝ))) :
+    IsStronglyProgressive (hawkesFiltrationH (E := E) hhm hφm hφ hcpos hc hL) Y := by
+  obtain ⟨p, ⟨hf, ⟨C, hC⟩, hp2⟩, hYeq⟩ := hY
+  have hg : Measurable fun x ↦ ∫ y, (p.1 y - p.1 x) ∂(mu x) :=
+    measurable_integral_sub_kernel hf hC
+  refine isStronglyProgressive_of_measurable_uncurry_mpFamilyF (c := cl) (f := p.1)
+    (X := fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+      stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (s : ℝ))
+    (W := fun (u : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) ↦ hawkesSelfRateH h ν φ u ω
+      * ∫ y, (p.1 y - p.1 (stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 u))
+          ∂(mu (stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 u)))
+    (fun s ω ↦ ?_) (fun t ↦ ?_) (fun t ↦ ?_)
+  · rw [hYeq s ω, hp2]
+    rfl
+  · have hmeas := measurable_uncurry_hawkesStepPathH_hawkesFiltrationH hhm hφm hφ hcpos hc hL hf t
+    simpa only [NNReal.coe_min] using hmeas
+  · exact measurable_uncurry_hawkesJumpApplyFH_hawkesFiltrationH hhm hφm hφ hcpos hc hL hg t
+
+/-- **The paths of the test processes of the bounded nonlinear Hawkes problem are right
+continuous**, at **every** sample point.  The second regularity input of
+`martingale_stoppedProcess`, and the place where the discharge of `hint` is worth something rather
+than merely tidier.
+
+`tendsto_nhdsGE_of_intervalIntegrable_mpFamilyF` asks for the interval integrability of the
+compensating integrand along the path, and in the linear case that hypothesis has to be carried:
+`tendsto_nhdsGE_mpFamilyF_hawkesStepPath` takes it as `hint`, and `hint` is the non explosion
+(`not_intervalIntegrable_hawkesSelfRate_of_not_summable`).  Here it is
+`intervalIntegrable_hawkesSelfRateH`, a consequence of the two bounds, and the bounded test function
+of `mpFamilyF` carries the second factor (`abs_integral_sub_kernel_le`).
+
+So the statement is quantified over `ω` and not over a set of full measure, and there is no measure
+in it at all. -/
+theorem tendsto_nhdsGE_mpFamilyF_hawkesStepPathH (hhm : Measurable h)
+    (hφm : Measurable φ) (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (mu : Kernel E E) [IsMarkovKernel mu]
+    {Y : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ}
+    (hY : Y ∈ mpFamilyF
+      (jumpOperatorF (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦ hawkesSelfRateH h ν φ (s : ℝ) ω)
+        (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+          mu (stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (s : ℝ)))
+        (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+          stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (s : ℝ)))
+      lebesgueClock Clock.Conv.optional
+      (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+        stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (s : ℝ)))
+    (ω : (ℕ → E) × (ℕ → ℝ)) (s : ℝ≥0) :
+    Tendsto (fun r : ℝ≥0 ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)) := by
+  obtain ⟨p, ⟨hf, ⟨C, hC⟩, hp2⟩, hYeq⟩ := hY
+  have hstep : Measurable fun u : ℝ ↦ stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 u :=
+    measurable_stepPath_comp (u := fun u : ℝ ↦ u) measurable_id (fun _ ↦ measurable_const)
+      fun _ ↦ measurable_const
+  have hg : Measurable fun x : E ↦ ∫ y, (p.1 y - p.1 x) ∂(mu x) :=
+    measurable_integral_sub_kernel hf hC
+  refine tendsto_nhdsGE_of_intervalIntegrable_mpFamilyF (f := p.1)
+    (X := fun (r : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+      stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (r : ℝ))
+    (W := fun (u : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) ↦ hawkesSelfRateH h ν φ u ω
+      * ∫ y, (p.1 y - p.1 (stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 u))
+          ∂(mu (stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 u)))
+    ω (fun r ω' ↦ ?_) (fun s' ↦ ?_) ?_ ?_ s
+  · rw [hYeq r ω', hp2]
+    rfl
+  · have hcoe : Tendsto (fun r : ℝ≥0 ↦ (r : ℝ)) (𝓝[≥] s') (𝓝[≥] ((s' : ℝ))) :=
+      tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within _
+        ((NNReal.continuous_coe.tendsto s').mono_left nhdsWithin_le_nhds)
+        (by filter_upwards [self_mem_nhdsWithin] with r hr using NNReal.coe_le_coe.2 hr)
+    filter_upwards [hcoe.eventually
+      (eventuallyEq_nhdsGE_stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (s' : ℝ))] with r hr
+    rw [hr]
+  · exact (measurable_hawkesSelfRateH_time hhm hφm ω).mul (hg.comp hstep)
+  · exact fun r ↦ intervalIntegrable_mul_bdd
+      (intervalIntegrable_hawkesSelfRateH hhm hφm hφ hc hcpos.le hL ω r) (hg.comp hstep)
+      (fun x ↦ abs_integral_sub_kernel_le hC _)
+
+/-- **A martingale test process of the bounded nonlinear Hawkes problem stays a martingale when it
+is stopped.**  The three inputs of `martingale_stoppedProcess` together, and the shape the statement
+takes once the two regularity ones are discharged: **the martingale property is the only hypothesis
+left that is not about the data.**
+
+Nothing is asked of the stopping time beyond being one, nothing of `P` beyond finiteness, and
+nothing of the sample point at all -- the right continuity is pointwise here, so
+`Filter.Eventually.of_forall` is what connects it to the almost everywhere form the theorem
+reads. -/
+theorem martingale_stoppedProcess_mpFamilyF_hawkesStepPathH (hhm : Measurable h)
+    (hφm : Measurable φ) (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (mu : Kernel E E) [IsMarkovKernel mu]
+    {P : Measure ((ℕ → E) × (ℕ → ℝ))} [IsFiniteMeasure P]
+    {Y : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ}
+    (hY : Y ∈ mpFamilyF
+      (jumpOperatorF (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦ hawkesSelfRateH h ν φ (s : ℝ) ω)
+        (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+          mu (stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (s : ℝ)))
+        (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+          stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (s : ℝ)))
+      lebesgueClock Clock.Conv.optional
+      (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+        stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (s : ℝ)))
+    (hmart : Martingale Y (hawkesFiltrationH (E := E) hhm hφm hφ hcpos hc hL) P)
+    {τ : ((ℕ → E) × (ℕ → ℝ)) → ENNReal}
+    (hτ : IsStoppingTime (hawkesFiltrationH (E := E) hhm hφm hφ hcpos hc hL) τ) :
+    Martingale (stoppedProcess Y τ) (hawkesFiltrationH (E := E) hhm hφm hφ hcpos hc hL) P :=
+  martingale_stoppedProcess hmart
+    (isStronglyProgressive_mpFamilyF_hawkesStepPathH hhm hφm hφ hcpos hc hL mu
+      Clock.Conv.optional hY)
+    (Filter.Eventually.of_forall fun ω s ↦
+      tendsto_nhdsGE_mpFamilyF_hawkesStepPathH hhm hφm hφ hcpos hc hL mu hY ω s) hτ
+
+end BoundedHawkesInputs
+
 /-! ### The law of the first jump time, and here it is unconditional
 
 `jumpMeasure_lt_jumpTimeF_hawkesSelfRate_one` is the one statement of `section PathDependent` at

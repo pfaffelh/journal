@@ -124,6 +124,20 @@ Suche `smul_right_injective|smul_left_cancel|smul_right_inj|smul_eq_smul_iff` un
 Suche `isStronglyProgressive.*[Rr]ight|progMeasurable.*[Rr]ight|[Rr]ightContinuous.*[Pp]rogressive` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
 
 
+## `volterra-resolvent` — MartingaleProblems/README.md, Meilenstein 14
+
+> Die Volterra-Resolvente eines Kerns in `L¹_loc` und die Erneuerungsgleichung `m = m₀ + φ ⋆ m` kommen in Mathlib nicht vor. Vorhanden sind die Faltung (`MeasureTheory.convolution`, `MeasureTheory.lconvolution`) und die Neumann-Reihe in einer normierten Algebra (`NormedRing.inverse_one_sub`), die `‖φ‖ < 1` **global** verlangt; der kausale Trick — auf einem kurzen Fenster arbeiten und fortschreiten — braucht das gerade nicht.
+
+Suche `volterra|Volterra|[Rr]enewal|resolventKernel|resolvent_kernel` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
+## `lconvolution-support` — MartingaleProblems/README.md, Meilenstein 14
+
+> Die Trägerinklusion `support (f ⋆ₗ[μ] g) ⊆ support f + support g` steht für die Bochner-Faltung (`support_convolution_subset`, `Mathlib/Analysis/Convolution.lean`) und **nicht** für `lconvolution`. Sie ist es, die eine Faltung auf der Halbachse kausal macht.
+
+Suche `support_lconvolution|support_mlconvolution|lconvolution.*support|mlconvolution.*support` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
 ## Die zweiundzwanzig Lücken von `TODO.md` Punkt 8
 
 ## `traj-homogeneity` — TODO.md Punkt 8, erste Lücke
@@ -319,5 +333,5 @@ Suche `setIntegral.*[Mm]artingale|[Mm]artingale.*setIntegral` unter `Mathlib/Pro
 
 ## Zusammenfassung
 
-43 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
+45 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
 

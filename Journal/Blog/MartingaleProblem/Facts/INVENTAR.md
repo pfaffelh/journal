@@ -46138,3 +46138,208 @@ Für diesen Lauf heißt das nur: die neue Zeile in `own_names.md` zu
    `tendsto_nhdsGE_stoppedProcess` benutzt die dichte Ordnung von `ENNReal`, die
    allgemeine Fassung braucht dafür `[DenselyOrdered ι]` oder einen anderen
    Zugang zur Rechtsumgebung.
+
+### 2026-09-20, sechster Lauf des Tages — Vorschlag 1 ist beantwortet, und die Antwort ist eine Verschiebung: die `∀ᵐ`-Fassung, die der Vorlauf freigemacht hat, kann der **lineare** Hawkes-Prozeß nicht einlösen, weil ihre Eingabe im Bestand nicht steht und ihr Beweis die Volterra-Resolvente ist — im **beschränkten nichtlinearen** Fall ist sie punktweise zu haben, und damit stehen dort beide Regularitätseingaben des gestoppten Martingalsatzes
+
+**Bearbeitet:** Vorschlag 1 des Vorlaufs. Vorschlag 2 (die Progressivität des
+Hawkes-Testprozesses) ist beim Nachsehen **gegenstandslos** gewesen, siehe unten;
+Vorschlag 3 (die allgemeine Fassung über beliebigem `ι`) ist nicht angefaßt und
+bleibt unverändert stehen.
+
+Sechs neue Deklarationen in einem neuen Abschnitt `BoundedHawkesInputs` von
+`MartingaleProblems/Suggested.lean`, ein neuer Abschnitt und zwei Berichtigungen
+in `MartingaleProblems/README.md`. Die Warnungszahlen sind unverändert
+(18 / 35 / 106).
+
+#### Die Vorfrage, und sie war die Aufgabe
+
+Der Vorschlag verlangte ausdrücklich, **ehe** gebaut wird zu prüfen, unter
+welchem Maß die vorhandene f.s. Nichtexplosion steht und ob es dasselbe ist, unter
+dem der Testprozeß ein Martingal sein soll. Der Befund ist schärfer als die Frage:
+
+> **Für den linearen Hawkes-Prozeß steht im ganzen Bestand keine f.s.
+> Nichtexplosion.**
+
+Nachgesehen wurde nach der Aussage und nicht nach der Vokabel: `hawkesSelfRate`
+kommt in 25 Signaturen unter einer Intervallintegrierbarkeit vor, in **keiner**
+davon unter einem `∀ᵐ`, und es gibt überhaupt keinen Satz der Form
+`∀ᵐ ω ∂(jumpMeasure mu nu), ∀ r, IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u ω) volume 0 r`.
+Die Frage nach dem Maß stellt sich damit nicht — es fehlt nicht das passende Maß,
+sondern die Aussage. Und ihr Beweis ist genau die Theorie, die dieses Projekt
+nicht anfängt: die Erneuerungsgleichung `m = μ₀ + φ * m` und die
+Volterra-Resolvente, an der `thm:pathjumpMP`(b) ohnehin hängt.
+
+**Der Quantorenfehler des Vorlaufs ist also behoben und die Eingabe fehlt
+weiterhin.** Das ist kein Widerspruch: der Vorlauf hat `martingale_stoppedProcess`
+von einer Voraussetzung befreit, die für die Hawkes-Daten *unerfüllbar* war
+(Rechtsstetigkeit an jedem Stichprobenpunkt); zurück bleibt eine, die *erfüllbar,
+aber unbewiesen* ist. Das ist ein Fortschritt und keine Lösung, und es gehört so
+gesagt.
+
+#### Wo die Aussage zu haben ist, und dort ist sie sogar punktweise
+
+Im **beschränkten nichtlinearen** Fall ist `intervalIntegrable_hawkesSelfRateH`
+seit dem 2026-09-12 an *jedem* Stichprobenpunkt bewiesen, aus der Meßbarkeit der
+beiden Daten und den beiden Schranken an `h`. Der Lauf hat deshalb die
+Rechtsstetigkeit dort geführt, wo sie ohne Volterra zu haben ist:
+
+* `measurable_uncurry_hawkesSelfRateH_hawkesFiltrationH` — die beschränkte
+  nichtlineare Rate ist gemeinsam meßbar für `hawkesFiltrationH`. Der Gegenpart
+  von `measurable_uncurry_hawkesSelfRate_hawkesFiltration`; die Nichtlinearität
+  kostet **eine Komposition und sonst nichts**, weil sie außerhalb des
+  Fensterintegrals sitzt und `measurable_uncurry_pointRate_pointFiltration`
+  deshalb unverändert trägt.
+* `measurable_uncurry_hawkesJumpApplyFH_hawkesFiltrationH`,
+  `measurable_compensator_hawkesJumpApplyFH_hawkesFiltrationH` — Integrand und
+  Kompensationsfenster.
+* **`isStronglyProgressive_mpFamilyF_hawkesStepPathH`** — die erste
+  Regularitätseingabe.
+* **`tendsto_nhdsGE_mpFamilyF_hawkesStepPathH`** — die zweite, **an jedem
+  Stichprobenpunkt und ohne jedes Maß in der Aussage**. Das ist der ganze
+  Unterschied zum linearen Satz, der an derselben Stelle `hint` trägt.
+* **`martingale_stoppedProcess_mpFamilyF_hawkesStepPathH`** — die drei Eingaben
+  zusammen. Für den beschränkten nichtlinearen Hawkes-Prozeß ist damit **die
+  einzige verbleibende Hypothese des gestoppten Martingalsatzes, die nicht von den
+  Daten handelt, die Martingaleigenschaft selbst.**
+
+Die vier Bedingungen an `h`, unter denen das steht, sind die, die
+`BoundedHawkesWitness` zweimal einlöst — an `rateCap L = min · L` und an
+`rateSat L = L * (1 − exp (−·))`. Der Abschnitt steht also nicht über einer
+unbelegten Voraussetzungsfläche.
+
+#### Ein Vorschlag des Vorlaufs war gegenstandslos, und das ist der zweite Befund
+
+Vorschlag 2 lautete, die **Progressivität** des Hawkes-Testprozesses zu beweisen,
+und nannte den markovschen Gegenpart als Vorlage. Sie steht seit dem 2026-09-11 als
+`isStronglyProgressive_mpFamilyF_hawkesStepPath` (Zeile 23442) und trägt nichts
+als die Daten von `ex:hawkes` und die Markoveigenschaft des Sprungkerns — der
+Doc-Kommentar der Rechtsstetigkeit zwei Abschnitte weiter sagt es selbst
+(„with `isStronglyProgressive_mpFamilyF_hawkesStepPath` this is everything
+`martingale_stoppedProcess` asks of them"). Die dort vermutete Schwierigkeit — ob
+es ohne Ratenschranke geht oder der gestoppte Prozeß genommen werden muß — tritt
+nicht auf, und der Grund steht im Doc-Kommentar des allgemeinen Satzes:
+`mpFamilyF` fragt seine Voraussetzungen dem **Integranden** ab, `mpFamily` dem
+**Prozeß**, und eine Voraussetzung am Integranden *ist* schon die gemeinsame
+Meßbarkeit, die das parametrisierte Bochner-Integral will.
+
+#### Zwei Berichtigungen in der Roadmap, beide an Negativaussagen über eigene Sätze
+
+1. In der Nichtexplosionsliste des Abhängigkeitsbaums (Meilenstein 4) stand als
+   Stelle 6: „Sie wird an *jedem* Stichprobenpunkt gebraucht, nicht fast sicher —
+   weil `martingale_stoppedProcess` seine Rechtsstetigkeit unter einem `∀ ω`
+   fragt." Das ist seit dem fünften Lauf dieses Tages falsch. Die Stelle ist
+   durchgestrichen und mit dem Grund versehen — und mit dem Zusatz, daß sie ihre
+   Schärfe verliert und **nicht ihren Ort**: die f.s. Nichtexplosion des linearen
+   Falls fehlt weiterhin.
+2. Der Absatz zur „dritten Eingabe" von `martingale_stoppedProcess` („For the
+   Hawkes process this third input does not exist") stand unberichtigt, obwohl der
+   vierte Lauf dieses Tages die Fensterschranke aus dem Satz entfernt hat. Er
+   trägt jetzt die Berichtigung, samt dem Hinweis, daß
+   `abs_setIntegral_compensatorF_le` und `bdd_mpFamilyF_of_bdd` ihren eigenen Wert
+   behalten und die Lokalisierung über `truncRateF` aus einem *anderen* Grund
+   gewollt bleibt (`jumpProcessE_isMPSolution` ist unter `lam ≤ L` bewiesen).
+
+#### Geprüft
+
+* `scripts/check_master.py`: rc 0, **0 Fehler**, 0 `sorry`, 0 veraltet,
+  Warnungen 18 / 35 / 106 — **unverändert** gegenüber dem Vorlauf. Mathlib
+  `94ef6b89544e58e90f119da869f3fb48d1da0f4c` (2026-09-18), Lean 4.35.0-rc2.
+  Der Stand vor dem Eingriff wurde eigens gemessen und war derselbe.
+* `scripts/check_axioms_master.py` auf alle sechs neuen Deklarationen:
+  `propext`, `Classical.choice`, `Quot.sound`, ohne Ausnahme.
+* `scripts/check_own_names.py`: 391 → 392 nach dem Lean-Teil, und der eine neue
+  Name war `BoundedHawkesInputs`, ein **Abschnittsname** — dieselbe Klasse von
+  Fehlalarmen, unter der `BoundedHawkesWitness`, `BoundedHawkesLaw` und
+  `LocalAssembly` schon stehen. Nach der Eintragung von Meilenstein 14 steht die
+  Zahl bei **412**; die zwanzig hinzugekommenen sind die dort benannten, noch
+  unbewiesenen Aussagen, also genau das, was der Kopf jenes Berichts als den
+  Regelfall bezeichnet („im Regelfall ein **offener Punkt** der Roadmap und kein
+  Fehler").
+* `scripts/check_negatives.py`: die beiden Negativaussagen des neuen
+  Meilensteins sind als `volterra-resolvent` und `lconvolution-support` in das
+  Skript eingetragen, damit sie künftig maschinell mitlaufen. **45** Behauptungen
+  geprüft, 0 mit unerwarteten Treffern.
+* Keine neuen Mathlib-Namen. Die sechs Beweise laufen auf eigenen Sätzen, die
+  alle vor diesem Lauf standen.
+* Zeilensaldo: `Suggested.lean` +205 / −0, `README.md` +180 / −4 (davon rund 115
+  der neue Meilenstein 14), `scripts/check_negatives.py` +18 / −0.
+
+#### Und die Lücke, die dabei benannt wurde: **Meilenstein 14** ist eingetragen
+
+Weil dieser Lauf die fehlende Eingabe zum ersten Mal *isoliert* hat, ist sie noch
+im selben Lauf in die Roadmap eingetragen worden statt in einen Bericht — als
+neuer **Meilenstein 14, „causal convolution and the Volterra resolvent"** in
+`MartingaleProblems/README.md`.
+
+**Die Negativaussage ist nachgeprüft**, und zwar auf einem *frischeren* Stand als
+dem, gegen den die Kette gebaut wird: `git grep -il` über `upstream/master` bei
+`dec5b2b7805` gibt für „volterra", „renewal" und „resolvent kernel" je **null**
+Treffer in `Mathlib/`.
+
+**Der Entwurf hat beim Nachsehen den Zuschnitt gewechselt, und das ist der dritte
+Befund des Laufs.** Angesagt war die Volterra-Theorie in `ℝ` mit der
+Neumann-Reihe, und der Grund, aus dem
+`NormedRing.inverse_one_sub` (`Mathlib/Analysis/Normed/Ring/Units.lean:98`) nicht
+trägt, steht seit langem in der Roadmap: es verlangt `‖φ‖ < 1` global, und ein
+lokal integrierbarer Kern auf der Halbachse hat keine solche Norm. Beim Nachsehen
+fand sich jedoch **`MeasureTheory.lconvolution`**
+(`Mathlib/Analysis/LConvolution.lean:50`, das `to_additive` von `mlconvolution`),
+die Faltung über dem **unteren Integral** und mit Werten in `ℝ≥0∞` — und dort
+kostet die ganze algebraische Schicht nichts:
+
+* `lconvolution_assoc` (`:130`) verlangt **Meßbarkeit und sonst nichts**;
+* `lconvolution_comm` (`:143`) verlangt von den beiden Funktionen **gar nichts**,
+  sondern die Invarianz des Maßes, die das Lebesguemaß auf `ℝ` hat.
+
+Damit ist der Meilenstein in `ℝ≥0∞` formuliert — dieselbe Entscheidung wie
+viermal zuvor in dieser Entwicklung, und aus demselben Grund: `⊤` ist die wahre
+Masse eines Fensters, während ein Bochner-Integral einer nichtintegrierbaren
+Funktion `0` zurückgibt und lügt. Die Frage nach der **Konvergenz** der
+Neumann-Reihe entfällt dabei ganz (eine Reihe nichtnegativer Terme in `ℝ≥0∞`
+konvergiert immer); übrig bleibt die Frage nach ihrer **Endlichkeit**, und das ist
+die geometrische Fensterschranke `∫⁻_{[0,d]} φ^{⋆n} ≤ a^n` mit
+`a = ∫⁻_{[0,d]} φ`, der ganze analytische Gehalt des Meilensteins.
+
+Eine Mathlib-Lücke fiel dabei nebenbei an und steht im Meilenstein benannt: die
+Trägerinklusion `support (f ⋆ₗ[μ] g) ⊆ support f + support g` gibt es für die
+Bochner-Faltung (`support_convolution_subset`,
+`Mathlib/Analysis/Convolution.lean:672`) und **nicht** für `lconvolution`. Sie
+gehört neben die vorhandene, und sie ist es, die die Faltung *kausal* macht.
+
+Der Meilenstein nennt außerdem die **Naht** zu Meilenstein 4, und sie sind zwei
+Aussagen und nicht eine: die Resolvente gibt `𝔼[N t] < ∞` erst, wenn bewiesen
+ist, daß die mittlere Intensität die Erneuerungsgleichung *erfüllt*, und das ist
+eine Aussage über die Konstruktion und keine über Faltung.
+
+Alle vier zitierten Mathlib-Zeilennummern sind gegen `94ef6b89544` (den Stand, an
+dem die Kette hängt) nachgeschlagen und stimmen; `scripts/check_cited_lines.py`
+meldet 313 gepaarte Fundstellen, 0 verschoben, 0 tot.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Gruppe A für den beschränkten Fall**, also `E[D_n | ℋ_n] = 0` — die
+   Martingaleigenschaft selbst, und nach diesem Lauf die **einzige** offene
+   Eingabe von `martingale_stoppedProcess_mpFamilyF_hawkesStepPathH`. Sie ist
+   jetzt dran, weil um sie herum nichts mehr offen ist: die Filtration ist
+   gewählt und eindeutig (`hawkesFiltrationH_augment_eq_hawkesPathFiltrationH_augment`),
+   die Zeugen stehen, das Gesetz der ersten Sprungzeit steht, die Zeitänderung in
+   Verteilung steht (`jumpMeasure_map_cumulativeRateF_jumpTimeF_hawkesSelfRateH`),
+   und die beiden Regularitätseingaben stehen seit diesem Lauf. Die Entscheidung,
+   die vor dem ersten Beweisschritt zu begründen ist: ob der Weg über die
+   `D_n`-Zerlegung geht oder über die Zeitverwandlung, die der Nutzer für den
+   linearen Fall ausdrücklich als den allgemeineren Weg genannt hat und die im
+   beschränkten Fall schon dasteht. Schätzung: zwei bis drei Läufe.
+
+2. **Der erste Block von Meilenstein 14 in Lean**, also `IsCausal`,
+   `IsCausal.lconvolution` (die Trägerinklusion, die Mathlib für `lconvolution`
+   nicht hat), `lconvolution_eq_setLIntegral_Icc`, `convPow` und
+   `setLIntegral_convPow_le`. Er ist jetzt dran, weil er **vollständig von den
+   Sprungprozessen unabhängig** ist — kein `hawkes`, kein `jumpMeasure`, keine
+   Filtration —, weil `lconvolution_assoc` und `lconvolution_comm` ihn
+   voraussetzungsfrei tragen, und weil `setLIntegral_convPow_le` der einzige
+   analytische Schritt des ganzen Meilensteins ist: geht er durch, ist der Rest
+   Buchhaltung, und geht er nicht durch, ist das früh und billig zu erfahren.
+   Schätzung: ein Lauf.
+
+3. **Erst danach die allgemeine Fassung über beliebigem `ι`** (Vorschlag 3 des
+   Vorlaufs, unverändert gültig und von diesem Lauf nicht berührt).

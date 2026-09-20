@@ -2947,6 +2947,15 @@ A concrete family of solutions, built without any of the theory above. Index
     localize**, as `jumpProcessE_isMPSolution` under `lam ≤ L`, `truncRate lam n`, `rateTime lam n`
     and `stoppedProcess_mpFamily_truncRate_eq` do there. The path dependent truncation is the next
     item, and it truncates something else; see there.
+
+    *(Berichtigung, 2026-09-20, vierter Lauf: `martingale_stoppedProcess` hat diese dritte Eingabe
+    nicht mehr. Der Grenzübergang in seinem Beweis ist Vitali-Konvergenz statt dominierter
+    Konvergenz, und deren Eingabe — die gleichgradige Integrierbarkeit bedingter Erwartungen einer
+    einzigen Funktion — ist für jedes Martingal umsonst. `abs_setIntegral_compensatorF_le` und
+    `bdd_mpFamilyF_of_bdd` behalten ihren eigenen Wert und sagen, was sie sagen, gleichmäßig im
+    Stichprobenpunkt; sie stehen nur nicht mehr zwischen der Hawkes-Montage und dem gestoppten
+    Martingalsatz. Die Lokalisierung über `truncRateF` bleibt aus einem anderen Grund gewollt:
+    `jumpProcessE_isMPSolution` ist unter `lam ≤ L` bewiesen.)*
   * `truncRateF`, `truncRateF_of_lt`, `cumulativeRateF_truncRateF`,
     `cumulativeRateF_truncRateF_le` and `rateInverse_truncRateF_of_le`: **the path dependent rate,
     switched off at the hitting time of its own cumulated rate.** **In Lean** on 2026-09-11,
@@ -4267,10 +4276,17 @@ Sie tritt an **sechs** Stellen auf, nicht an vier:
    jedes `r` ist, ist die Nichtexplosion (offener Punkt 10).
 5. **Identifikation des Prozesses mit dem Stufenpfad** — `hawkesProcess_eq_stepPath`
    trägt `hint` (offener Punkt 14).
-6. **Sie wird an *jedem* Stichprobenpunkt gebraucht, nicht fast sicher** — weil
-   `martingale_stoppedProcess` seine Rechtsstetigkeit unter einem `∀ ω` fragt.
-   Das ist die schärfste Gestalt, in der sie auftritt, und sie ist der Grund, aus
-   dem offener Punkt 0 eine Vorfrage und keine Randnotiz ist.
+6. ~~**Sie wird an *jedem* Stichprobenpunkt gebraucht, nicht fast sicher** — weil
+   `martingale_stoppedProcess` seine Rechtsstetigkeit unter einem `∀ ω` fragt.~~
+   *(Hinfällig seit dem fünften Lauf des 2026-09-20: `martingale_stoppedProcess`
+   liest die Rechtsstetigkeit `∀ᵐ ω ∂P`, weil der Grenzübergang in seinem Beweis
+   Vitali-Konvergenz ist und die fast überall quantifiziert. Die punktweise
+   Fassung wurde nie ausgegeben. Damit ist die Nichtexplosion hier eine
+   f.s.-Aussage wie überall sonst, und offener Punkt 0 verliert seine Schärfe —
+   **aber nicht seinen Ort**: die f.s. Nichtexplosion des linearen
+   Hawkes-Prozesses steht im Bestand nicht, und ihr Beweis ist die
+   Volterra-Resolvente. Im beschränkten nichtlinearen Fall ist sie punktweise da,
+   siehe `tendsto_nhdsGE_mpFamilyF_hawkesStepPathH`.)*
 
 **Was daraus folgt, und es ist der Befund dieses Abschnitts:** die Nichtexplosion
 ist im pfadabhängigen Fall **keine Voraussetzung, die man an den Anfang stellen und
@@ -5555,6 +5571,57 @@ die das Manuskript im linearen Fall über die Volterra-Resolvente abarbeitet.
 sechs Aussagen, der Rumpf des Satzes. Nach diesem Lauf ist sie die einzige offene
 Gruppe des beschränkten Falls, für die noch eine Entscheidung aussteht: die
 Filtration ist gewählt, die Zeugen stehen, und das erste Maßresultat ist da.
+
+### Die beiden Regularitätseingaben des gestoppten Martingalsatzes, erledigt
+
+*(2026-09-20, sechster Lauf des Tages. Abschnitt `BoundedHawkesInputs`.)*
+
+`martingale_stoppedProcess` fragt einen Testprozeß dreierlei: die
+Martingaleigenschaft, Progressivität und fast sichere Rechtsstetigkeit der Pfade.
+Zwei davon sind Regularität und eines ist der Satz, und für den beschränkten
+nichtlinearen Hawkes-Prozeß stehen die beiden Regularitätseingaben jetzt — **an
+jedem Stichprobenpunkt, ohne Nullmenge und ohne Nichtexplosion**.
+
+* `measurable_uncurry_hawkesSelfRateH_hawkesFiltrationH` — die beschränkte
+  nichtlineare Rate ist gemeinsam meßbar für `hawkesFiltrationH`. Der
+  Gegenpart von `measurable_uncurry_hawkesSelfRate_hawkesFiltration`, und die
+  Nichtlinearität kostet eine Komposition: sie sitzt **außerhalb** des
+  Fensterintegrals, deshalb trägt `measurable_uncurry_pointRate_pointFiltration`
+  weiterhin die ganze Arbeit.
+* `measurable_uncurry_hawkesJumpApplyFH_hawkesFiltrationH`,
+  `measurable_compensator_hawkesJumpApplyFH_hawkesFiltrationH` — Integrand und
+  Kompensationsfenster.
+* **`isStronglyProgressive_mpFamilyF_hawkesStepPathH`** — die erste Eingabe.
+* **`tendsto_nhdsGE_mpFamilyF_hawkesStepPathH`** — die zweite, und hier liegt der
+  Unterschied zum linearen Fall. Dort trägt
+  `tendsto_nhdsGE_mpFamilyF_hawkesStepPath` die Voraussetzung `hint`, die
+  Intervallintegrierbarkeit der selbstbezüglichen Rate längs des Pfades, und
+  `hint` **ist** die Nichtexplosion an diesem Stichprobenpunkt
+  (`not_intervalIntegrable_hawkesSelfRate_of_not_summable`). Hier ist es
+  `intervalIntegrable_hawkesSelfRateH`, eine Folge der beiden Schranken. Die
+  Aussage ist deshalb über `ω` allquantifiziert und enthält **überhaupt kein
+  Maß**.
+* **`martingale_stoppedProcess_mpFamilyF_hawkesStepPathH`** — die drei zusammen.
+  Sie ist die Gestalt, die der Satz annimmt, sobald die Regularität erledigt ist:
+  **die einzige verbleibende Hypothese, die nicht von den Daten handelt, ist die
+  Martingaleigenschaft selbst.**
+
+**Warum der lineare Fall die `∀ᵐ`-Fassung nicht einlöst, obwohl sie seit dem
+fünften Lauf desselben Tages zur Verfügung steht.** `martingale_stoppedProcess`
+liest die Rechtsstetigkeit seit dann fast sicher, also wäre die f.s.
+Nichtexplosion des linearen Hawkes-Prozesses die passende Eingabe — und die gibt
+es im Bestand **nicht**: es steht keine Aussage der Form
+`∀ᵐ ω ∂(jumpMeasure mu nu), ∀ r, IntervalIntegrable (hawkesSelfRate ν φ · ω) …` da,
+und ihr Beweis ist die Erneuerungsgleichung `m = μ₀ + φ * m` samt
+Volterra-Resolvente, die dieses Projekt ausdrücklich nicht anfängt. Der
+Quantorenfehler ist behoben und die Eingabe fehlt weiterhin; erledigt ist die
+Aussage dort, wo sie ohne jene Theorie zu haben ist, und das ist der beschränkte
+Fall.
+
+**Was dabei auffiel und eine ältere Ansage berichtigt:** die Progressivität des
+*linearen* Hawkes-Testprozesses ist nicht offen und war es nie —
+`isStronglyProgressive_mpFamilyF_hawkesStepPath` steht bewiesen und trägt nichts
+als die Daten von `ex:hawkes` und die Markoveigenschaft des Sprungkerns.
 
 ### Das Einfrieren: die bedingte Erwartung eines Ereignisses, das Vergangenheit und frische Wartezeit mischt
 
@@ -11319,3 +11386,112 @@ functions on `E` with the sup norm.
   the clock of Milestone 1. With `fullGenerator_isDissipative` this is the
   converse of the previous item, and the two together say that the operators
   arising from Markov processes are exactly the dissipative ones.
+
+## Milestone 14: causal convolution and the Volterra resolvent
+
+The renewal equation `m = m₀ + φ ⋆ m` on `[0,∞)`, and the resolvent that solves
+it. It is the one piece of analysis the jump processes of Milestone 4 need and do
+not have: `thm:pathjumpMP`(b) carries `𝔼[N t] < ∞` as a hypothesis, the manuscript
+discharges it for the linear Hawkes process through this equation, and the
+statement that discharges it is the **only** input missing from an otherwise
+complete chain — for the bounded nonlinear process the corresponding chain is
+closed (`martingale_stoppedProcess_mpFamilyF_hawkesStepPathH`), and the linear one
+stops here.
+
+**Mathlib has none of it.** `git grep -il` over `upstream/master` gives zero hits
+in `Mathlib/` for `volterra`, for `renewal` and for `resolvent kernel`. What is
+there is the convolution itself, in two forms, and the second of them changes the
+design of this milestone:
+
+* `MeasureTheory.convolution` (`Mathlib/Analysis/Convolution.lean:402`), Bochner
+  valued, with `ConvolutionExistsAt` (`:155`) as its side condition and
+  `convolution_assoc` (`:927`) carrying integrability hypotheses.
+* `MeasureTheory.lconvolution` (`Mathlib/Analysis/LConvolution.lean:50`, the
+  `to_additive` of `mlconvolution`, notation `f ⋆ₗ[μ] g`), `ℝ≥0∞` valued and
+  defined by a lower integral. Its associativity `lconvolution_assoc` (`:130`)
+  asks for **measurability and nothing else**, and its commutativity
+  `lconvolution_comm` (`:143`) asks nothing of the two functions at all — it asks
+  invariance of the measure, which Lebesgue measure on `ℝ` has.
+
+**The milestone is therefore stated in `ℝ≥0∞`,** and that is the same decision
+the rest of this development has taken four times: a value of `⊤` is the true mass
+of a window and not a junk value, while a Bochner integral of a non integrable
+function is `0` and lies. Here it buys the whole algebraic layer for free. The
+question that remains is not whether the Neumann series converges — a sum of
+non-negative terms in `ℝ≥0∞` always does — but whether it is **finite**, and that
+is where the local mass of the kernel enters and where the work is.
+
+State everything for `ι = ℝ` with `volume` and functions vanishing on
+`(-∞, 0)`; the half line is a sub-semigroup and not a group, so it is the support
+condition and not a change of carrier that makes the convolution causal.
+
+* `IsCausal f`, the predicate `∀ t < 0, f t = 0` for `f : ℝ → ℝ≥0∞`, with
+  `isCausal_zero`, `IsCausal.add`, `IsCausal.lconvolution` and
+  `IsCausal.indicator`. Mathlib has the support statement for the Bochner
+  convolution (`support_convolution_subset`,
+  `Mathlib/Analysis/Convolution.lean:672`) and **not** for `lconvolution`; that
+  inclusion, `Function.support (f ⋆ₗ[μ] g) ⊆ Function.support f + Function.support g`,
+  is the content of `IsCausal.lconvolution` and belongs in Mathlib beside the
+  Bochner one.
+* `lconvolution_eq_setLIntegral_Icc`: for causal `f` and `g`,
+  `(f ⋆ₗ g) t = ∫⁻ s in Set.Icc 0 t, f s * g (t - s)` for `0 ≤ t`, and `0`
+  below. This is the form every later statement reads, and it is the only place
+  where the causality is unfolded.
+* `convPow f n`, the `n`-fold causal convolution power with `convPow f 0` the
+  unit, together with `convPow_succ`, `convPow_add` and the causality of each
+  power. The unit of the algebra is **not** a function — the convolution algebra
+  on the half line has no `L¹` unit — so `convPow f 0` is defined by the
+  equation `convPow f 0 ⋆ₗ g = g` for causal `g` and the power is defined from
+  `convPow f 1 = f` upwards. The statements are the semigroup law and nothing
+  more.
+* `setLIntegral_convPow_le`: `∫⁻ t in Set.Icc 0 d, convPow φ n t ≤ a ^ n` where
+  `a = ∫⁻ t in Set.Icc 0 d, φ t`. The geometric bound on the window, by
+  induction on `n` and Tonelli — and it is the **whole** analytic content of the
+  milestone. Over `ℝ≥0∞` it needs no integrability hypothesis; it needs the
+  causality, so that the inner window is contained in the outer one.
+* `volterraResolvent φ := fun t ↦ ∑' n, convPow φ (n + 1) t`, and
+  `volterraResolvent_eq`: `r = φ + φ ⋆ₗ r` and `r = φ + r ⋆ₗ φ`, from the
+  semigroup law and `ENNReal.tsum_eq_add_tsum_ite`
+  (`Mathlib/Topology/Algebra/InfiniteSum/ENNReal.lean:294`) — no convergence
+  question arises, and the two forms are `lconvolution_comm`.
+* `setLIntegral_volterraResolvent_lt_top`: if `a < 1` on a window of length `d`
+  then `∫⁻ t in Set.Icc 0 d, r t < ⊤`; and
+  `setLIntegral_volterraResolvent_lt_top_of_locallyFinite`, the same on **every**
+  window, for a kernel whose mass on some window of positive length is below `1`
+  and whose mass on every window is finite. The step from the short window to
+  every window is causality and nothing else: the resolvent on `[0, (k+1) d]` is
+  determined by the kernel on `[0, (k+1) d]`, and the geometric bound is applied
+  block by block. This is the step the Neumann series of a normed algebra
+  (`NormedRing.inverse_one_sub`, `Mathlib/Analysis/Normed/Ring/Units.lean`)
+  cannot take: it asks `‖φ‖ < 1` globally, and a locally integrable kernel on the
+  half line has no such norm.
+* `exists_setLIntegral_lt_one`: a kernel with `∫⁻ t in Set.Icc 0 d, φ t < ⊤` for
+  every `d` and `φ` vanishing at `0` in the sense of the window mass has a window
+  of positive length with mass below `1`, by the continuity of the measure from
+  above. This is the hypothesis of the previous item discharged on local
+  integrability alone, and it is where "locally integrable" becomes "the resolvent
+  exists".
+* `renewal_eq_add_lconvolution_volterraResolvent`: `m = m₀ + r ⋆ₗ m₀` is the
+  unique causal solution of `m = m₀ + φ ⋆ₗ m` that is finite on every window.
+  Uniqueness is the difference of two solutions against the geometric bound;
+  existence is the associativity and the defining equation of `r`.
+  `renewal_lt_top`: if `m₀` is bounded on every window and the resolvent has
+  finite window mass, then so has `m`.
+
+**The seam with Milestone 4, and it is two statements and not one.** The
+resolvent gives `𝔼[N t] < ∞` only once the mean intensity of the linear Hawkes
+process is known to *satisfy* the renewal equation, and that is a statement about
+the construction and not about convolution:
+
+* `lintegral_hawkesSelfRate_eq_add_lconvolution`: the mean of the cumulated rate
+  of `ex:hawkes` satisfies `m = m₀ + φ ⋆ₗ m` with `m₀ t = ν * t`, by Tonelli
+  against the counting measure of the jump times and the definition of
+  `hawkesSelfRate`. Stated in `ℝ≥0∞` it needs no finiteness in advance, which is
+  the point: the equation holds whether or not its solution is finite.
+* `lintegral_stepIndex_hawkesJumpTime_lt_top`, the conclusion `𝔼[N t] < ∞`; and
+  from it `ae_intervalIntegrable_hawkesSelfRate`, the almost sure interval
+  integrability of the self referential rate, which by
+  `not_intervalIntegrable_hawkesSelfRate_of_not_summable` **is** the almost sure
+  non explosion of the linear Hawkes process. That is the statement Milestone 4
+  carries as a hypothesis in six places, and it is the reason this milestone
+  exists.

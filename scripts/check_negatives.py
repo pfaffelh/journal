@@ -122,6 +122,24 @@ CLAIMS = [
      'isStronglyProgressive.*[Rr]ight|progMeasurable.*[Rr]ight'
      '|[Rr]ightContinuous.*[Pp]rogressive',
      'Mathlib/'),
+    ('volterra-resolvent', 'MartingaleProblems/README.md, Meilenstein 14',
+     'Die Volterra-Resolvente eines Kerns in `L¹_loc` und die '
+     'Erneuerungsgleichung `m = m₀ + φ ⋆ m` kommen in Mathlib nicht vor. '
+     'Vorhanden sind die Faltung (`MeasureTheory.convolution`, '
+     '`MeasureTheory.lconvolution`) und die Neumann-Reihe in einer normierten '
+     'Algebra (`NormedRing.inverse_one_sub`), die `‖φ‖ < 1` **global** '
+     'verlangt; der kausale Trick — auf einem kurzen Fenster arbeiten und '
+     'fortschreiten — braucht das gerade nicht.',
+     'volterra|Volterra|[Rr]enewal|resolventKernel|resolvent_kernel',
+     'Mathlib/'),
+    ('lconvolution-support', 'MartingaleProblems/README.md, Meilenstein 14',
+     'Die Trägerinklusion `support (f ⋆ₗ[μ] g) ⊆ support f + support g` steht '
+     'für die Bochner-Faltung (`support_convolution_subset`, '
+     '`Mathlib/Analysis/Convolution.lean`) und **nicht** für `lconvolution`. '
+     'Sie ist es, die eine Faltung auf der Halbachse kausal macht.',
+     'support_lconvolution|support_mlconvolution|lconvolution.*support'
+     '|mlconvolution.*support',
+     'Mathlib/'),
 ]
 
 
