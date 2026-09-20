@@ -47106,3 +47106,165 @@ Unstetigkeitsstellen, und der Zeuge dafür steht in Meilenstein 10 (die
 deterministische Stufe). Das ist kein Hindernis für diesen Weg, weil die
 Implikation nur in der Richtung „Aldous ⟹ Modulus" gebraucht wird; es ist aber
 im Doc-Kommentar zu sagen, damit niemand die Umkehrung liest.
+
+### 2026-09-20, elfter Lauf des Tages — die deterministische Hälfte von Aldous' Kriterium steht, und beim Hinschreiben ist eine Voraussetzung aufgetaucht, die der Umriß nicht hatte: **der Basispunkt muß am Anfang der Rekursion stehen, nicht am Ende**; dafür ist der klassische Faktor `2` nicht geschuldet
+
+**Bearbeitet:** der Vorschlag des Vorlaufs,
+`SkorokhodSpace.modulusBased_le_of_forall_stoppingTime` — also weiter am ersten
+Punkt der Kette des Meilensteins 11 von `MartingaleProblems`, wie angeordnet.
+Kein Meilenstein 8, kein Meilenstein 14, kein C.5/G. **Sechs** Deklarationen,
+alle in `TauCeti/SkorokhodSpace/Suggested.lean`, neuer Abschnitt „The Aldous
+subdivision, deterministically".
+
+**Geprüft:** `scripts/check_master.py` meldet für die ganze Kette **0 Fehler,
+0 `sorry`, 0 veraltete Namen** (Mathlib `94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `v4.35.0-rc2`; 18 / 35 / 109 Warnungen, **dieselben Zahlen wie vor dem
+Lauf**). Alle sechs hängen nach `check_axioms_master.py` an `propext`,
+`Classical.choice`, `Quot.sound` und an nichts sonst.
+`scripts/check_cited_lines.py`: **320 von 320** gepaarten Fundstellen stimmen,
+0 tote — zwei mehr als vor dem Lauf, nämlich die beiden neu zitierten Zeilen von
+`Probability/Process/HittingTime.lean`, die damit maschinell belegt sind.
+`check_duplicates.py` und `check_own_names.py` finden zu den sechs neuen Namen
+nichts.
+
+#### Was gebaut ist
+
+Der Satz, den der Vorlauf vorgeschlagen hat, zerfällt längs derselben Linie wie
+jeder Beweis über diesen Modulus: in eine **deterministische** Hälfte, die aus
+einer Familie von Zeiten eine Schranke an `SkorokhodSpace.modulusBased` macht,
+und eine **probabilistische**, die sagt, daß diese Zeiten nicht dicht liegen.
+Gebaut ist die erste, und zwar so, daß die zweite anschließt, ohne den Pfadraum
+zu sehen: die Zeiten kommen als Folge `τ : ℕ → ι` mit einer Anzahl `N` — die
+Gestalt, die Trefferzeiten haben.
+
+* `SkorokhodSpace.subdivisionOsc_le_of_forall_cell` — eine zellenweise Schranke
+  schränkt die Oszillation einer Unterteilung ein. Das `iSup` in der Richtung
+  ausgepackt, die `SkorokhodSpace.dist_le_of_subdivisionOsc_le` nicht hat.
+* `SkorokhodSpace.modulusBased_le_of_forall_cell` — die Schnittstelle: eine
+  basierte Unterteilung benennen, ihre Zellen abschätzen, und der Modulus steht.
+* `SkorokhodSpace.modulusBased_le_of_forall_gapped` — die deterministische
+  Hälfte selbst. Eine wachsende, `δ`-dünne Folge bis zu einer Stufe `N`, die vor
+  dem Fenster anfängt, dahinter aufhört, durch den Basispunkt geht und auf jeder
+  Zelle Oszillation höchstens `c` trägt, schränkt den Modulus durch `c` ein. Mit
+  `τ (k+1) = inf {t > τ k | dist (X t) (X (τ k)) > ε}` ist die Zellenschranke
+  `c = ENNReal.ofReal ε` die Definition des Infimums, und die beiden übrigen
+  Voraussetzungen sind genau der probabilistische Inhalt des Kriteriums.
+* `mul_le_dist_of_gapped` und `card_le_of_gapped` — eine `δ`-dünne Kette von `N`
+  Schritten spannt mindestens `N * δ`, also passen höchstens `L / δ` davon in
+  eine Spannweite `L`. Das ist `AdditiveDist.dist_add` und eine Induktion.
+* `SkorokhodSpace.modulusBased_extendNNReal_le_of_forall_gapped` — dasselbe über
+  dem Index, den die Prozesse des Meilensteins 11 wirklich haben.
+
+#### Der Befund, und er ist eine Voraussetzung, die im Umriß fehlte
+
+> **`SkorokhodSpace.IsSubdivisionBased` verlangt den Basispunkt unter den
+> Knoten, und nachträglich ist er nicht einzufügen. Die Aldous-Rekursion muß
+> also bei `t₀` *anfangen* und nicht am linken Fensterrand.**
+
+Der Umriß in `SkorokhodSpace/README.md`, Meilenstein 10, setzt `τ 0 = ⊥`. Das
+genügt über dem einseitigen Index von Ethier–Kurtz, wo Basispunkt und linker
+Rand zusammenfallen, und über unserem zweiseitigen nicht. Und die naheliegende
+Reparatur — den Knoten hinterher einschieben — gibt es nicht: ein in eine Zelle
+eingeschobener Knoten läßt das zweite Stück von ihm aus gemessen, kostet also
+den Faktor `2` (`SkorokhodSpace.subdivisionOsc_le_two_mul_of_cells`), und
+zerstört, was entscheidend ist, die `δ`-Dünnheit der beiden Stücke, die die
+ganze Konstruktion herstellen soll. Die Hypothese `hbase` ist deshalb keine
+Buchhaltung, sondern die Stelle, an der der Basispunkt in das Kriterium eintritt.
+
+**Über dem Index der Prozesse kostet das nichts**, und das ist die sechste
+Deklaration. `SkorokhodSpace.extendNNReal f` ist auf der negativen Halbachse
+konstant; das Fenster `exhaustion 0 u` trägt also links von `0` **eine freie
+Zelle** — Oszillation `0`, und dünn, sobald `δ < u`, was das Regime des
+Kriteriums ohnehin ist (`SkorokhodSpace.modulusBased_mono` trägt eine Schranke
+bei einem Radius auf jeden kleineren herunter). Die Zeiten werden dann allein
+auf `ℝ≥0` verlangt, beginnend bei `0` — dort, wo eine Trefferzeitrekursion auf
+einer Halbachse ohnehin anfängt.
+
+#### Der zweite Befund: der Faktor `2` ist nicht geschuldet
+
+`SkorokhodSpace.subdivisionOsc` mißt jede Zelle **von ihrem linken Endpunkt**,
+wo Billingsleys `w'` den Durchmesser der Zelle nimmt. Der Übergang von einer
+`ε`-kontrollierten Trefferzeitrekursion zum Modulus zahlt den klassischen Faktor
+`2` deshalb nicht: die Konklusion von
+`SkorokhodSpace.modulusBased_le_of_forall_stoppingTime` liest `ε`, wo der Umriß
+`2 ε` schrieb. Beide READMEs sind entsprechend berichtigt. Das ist das zweite
+Mal an diesem Tag, daß dieser Faktor sich als nicht geschuldet erweist — das
+erste war die Zusammensetzung der beiden Maximalabschätzungen im dritten Lauf.
+
+#### Was damit noch fehlt, und es ist **eine** Aussage
+
+Von `SkorokhodSpace.modulusBased_le_of_forall_stoppingTime` fehlt genau die
+probabilistische Hälfte:
+
+> `P (τ (k+1) ≤ τ k + δ  ∧  τ k ≤ T) ≤ 2 γ` für jedes `k`,
+
+also die Aussage, daß zwei aufeinanderfolgende Trefferzeiten nicht dicht liegen.
+Sie ist die zweite Anwendung der Zuwachsschranke, an der beschränkten Stoppzeit
+`σ = min (τ (k+1)) (τ k + δ)`, über die Dreiecksungleichung
+`d (X σ) (X (τ k)) ≤ d (X σ) (X (τ k + δ)) + d (X (τ k + δ)) (X (τ k))`. Alles
+darüber — die Summation über `k`, die Anzahl der Terme, der Schluß auf den
+Modulus — steht seit diesem Lauf.
+
+#### Was in die Roadmaps eingetragen ist
+
+`SkorokhodSpace/README.md`, Meilenstein 10: neuer Block unter der Nennung von
+`modulusBased_le_of_forall_stoppingTime`, mit den sechs Deklarationen, den beiden
+Befunden und der Berichtigung des Faktors. `MartingaleProblems/README.md`,
+Meilenstein 11, am Punkt `isTight_map_postcomp_of_exists_martingale`: die Route
+vom Doob-Ergebnis zur Modulusbedingung ist benannt, ihre deterministische Hälfte
+als gebaut vermerkt, und gesagt, welche **eine** probabilistische Abschätzung der
+Punkt noch zu leisten hat.
+
+#### Vorschlag für den nächsten Lauf
+
+**Die fehlende probabilistische Hälfte, und zwar an ihrer schwierigsten Stelle
+zuerst: `isStoppingTime_oscHit` — die Trefferzeiten der `ε`-Auslenkung sind
+Stoppzeiten.**
+
+Die Aussage, benannt:
+
+> Für einen an `𝓕` adaptierten Prozeß `X` mit rechtsstetigen Pfaden über
+> `ι = ℝ≥0` sind die durch `τ 0 = 0` und
+> `τ (k+1) = sInf {t > τ k | ε < dist (X t) (X (τ k))}` erklärten Zeiten
+> Stoppzeiten bezüglich der **rechtsstetig gemachten** Filtration, und sie
+> erfüllen die Zellenschranke von
+> `SkorokhodSpace.modulusBased_le_of_forall_gapped` mit
+> `c = ENNReal.ofReal ε`.
+
+**Worauf sie ruht.** Die Zellenschranke ist die billige Hälfte und braucht keine
+Wahrscheinlichkeit: für `τ k ≤ s < τ (k+1)` ist `s` kein Element der Menge, deren
+Infimum `τ (k+1)` ist, also `dist (X s) (X (τ k)) ≤ ε` — `notMem_of_lt_csInf` und
+sonst nichts. Die Stoppzeiteigenschaft ist die teure: es ist die Trefferzeit
+einer **offenen** Menge, also der Débutsatz — **und Mathlib hat ihn nicht.** Das
+ist in diesem Lauf noch am Quelltext geprüft, gegen
+`94ef6b89544e58e90f119da869f3fb48d1da0f4c`:
+`MeasureTheory.Adapted.isStoppingTime_hittingBtwn`
+(`Probability/Process/HittingTime.lean:399`) und
+`MeasureTheory.Adapted.isStoppingTime_hittingAfter` (`:412`) tragen **beide**
+`[Countable ι]` und `[WellFoundedLT ι]`, sind also der diskrete Fall; die
+Zeichenketten `debut` und `début` kommen in der ganzen Bibliothek nicht vor.
+
+Über `ℝ≥0` braucht die Rekursion deshalb entweder die **rechtsstetig gemachte**
+Filtration oder die Trefferzeit längs einer abzählbaren dichten Menge. Diese
+Entscheidung ist der erste Punkt des Laufs; fällt sie auf die erste, so ist
+**auch** zu sagen, was sie die Verbraucher kostet — es ist dieselbe
+Augmentierungsfrage, die im Hawkes-Zweig seit dem 25. Lauf offen steht. Und wenn
+der Satz gebaut wird, ist er ein Kandidat für `TODO.md` Punkt 8: eine Lücke in
+Mathlibs Kernschicht, gefunden beim Bauen, mit einer nachgeprüften
+Negativaussage.
+
+**Und die Falle, die dabei sichtbar zu halten ist:** `sInf ∅ = 0`. Die Menge ist
+leer, sobald der Pfad sich nach `τ k` nie wieder um mehr als `ε` bewegt, und dann
+gibt `τ (k+1)` den Müllwert `0` zurück — **kleiner** als `τ k`, die Monotonie
+fällt. Nach der stehenden Regel des Auftrags trägt die Aussage die Fallunter-
+scheidung von Anfang an: entweder `τ` ist `ℝ≥0∞`-wertig mit `⊤` als ehrlichem
+Wert, oder die Endlichkeit steht in der Hypothese. Das ist dieselbe Stelle, an
+der `stepIndex` am 2026-09-18 gescheitert ist, und sie ist hier vor dem ersten
+Beweis zu entscheiden, nicht danach.
+
+**Warum jetzt.** Sie ist die einzige Eingabe von
+`SkorokhodSpace.modulusBased_le_of_forall_gapped`, die nicht gebaut ist und nicht
+aus der Zuwachsschranke folgt: die Dünnheit kommt aus der Hypothese von Aldous,
+die Anzahl aus `card_le_of_gapped`, die Zellenschranke aus der Definition — nur
+daß die Zeiten überhaupt Stoppzeiten sind, muß eigens gezeigt werden, und ohne
+das darf die Zuwachsschranke gar nicht erst an ihnen ausgewertet werden.

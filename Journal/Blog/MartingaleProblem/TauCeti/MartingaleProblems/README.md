@@ -11310,6 +11310,30 @@ has to be chosen once for all `n`. What stands:
   `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal`, and the two must
   not be confused.
 
+  **And the route from the Doob estimate to that quantity is named, its
+  deterministic half built 2026-09-20.** What a maximal estimate gives is a bound
+  on increments at stopping times; what the display above asks for is a bound on
+  the modulus. The passage between them is Aldous' criterion, whose statement for
+  this chain is `SkorokhodSpace.modulusBased_le_of_forall_stoppingTime` of
+  **SkorokhodSpace** Milestone 10. Its deterministic half — everything in it that
+  does not mention a measure — is
+  `SkorokhodSpace.modulusBased_le_of_forall_gapped` with its two feeders
+  `SkorokhodSpace.subdivisionOsc_le_of_forall_cell` and
+  `SkorokhodSpace.modulusBased_le_of_forall_cell`, the counting bounds
+  `mul_le_dist_of_gapped` and `card_le_of_gapped`, and the specialisation to the
+  index this item has,
+  `SkorokhodSpace.modulusBased_extendNNReal_le_of_forall_gapped`. They take the
+  hitting times as a sequence `τ : ℕ → ℝ≥0` with a count `N`, which is the shape
+  those times have, and ask of them only what a second application of the
+  increment bound at a random time delivers: that consecutive ones do not lie
+  within `δ`. What is left for this item is therefore that one probabilistic
+  estimate, and the count of terms in the union it is summed over is
+  `card_le_of_gapped`.
+
+  **The bound is `ε` and not `2 ε`**, because `SkorokhodSpace.subdivisionOsc`
+  measures each cell from its left endpoint where Billingsley's `w'` takes the
+  diameter.
+
   **And the remaining half is not a formality.**
   `SkorokhodSpace.not_isTightMeasureSet_twoJumpImageLaw` exhibits a family of
   image laws under a bounded post-composition — two jumps approaching each other,
