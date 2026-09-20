@@ -4287,6 +4287,16 @@ silently destroyed monotonicity in the time. `MeasureTheory.debutTime` is
 therefore `WithTop ι` valued and `MeasureTheory.debutTime_of_eq_empty` says that
 the empty case gives `⊤`.
 
+**And the recursion is built on it**, 2026-09-20, in **MartingaleProblems** under
+„The Aldous hitting recursion": `MeasureTheory.oscHitSeq` with
+`MeasureTheory.isStoppingTime_oscHitSeq`. Of the three hypotheses
+`SkorokhodSpace.modulusBased_le_of_forall_gapped` asks of its times, the
+recursion supplies two without any probability:
+`MeasureTheory.dist_stoppedValue_oscHitSeq_le` is the cell bound and
+`MeasureTheory.lt_oscHitSeq_succ` the strict monotonicity, the latter from
+`0 < ε` and right continuity, since the début of a right-open set need not be
+attained. The `δ`-sparseness is the one that stays probabilistic.
+
 **And the bound is `c`, not `2 c`.** `SkorokhodSpace.subdivisionOsc` measures each
 cell from its **left endpoint**, where Billingsley's `w'` takes the diameter of
 the cell, so the passage from an `ε`-controlled hitting recursion to the modulus
