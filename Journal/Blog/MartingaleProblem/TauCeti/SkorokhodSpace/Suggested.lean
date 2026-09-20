@@ -6863,6 +6863,20 @@ variable [MeasurableSpace E] [BorelSpace E] [PolishSpace E]
 noncomputable instance : MeasurableSpace D(ι, E) := borel _
 instance : BorelSpace D(ι, E) := ⟨rfl⟩
 
+/-- **Single paths are measurable.**  `D(ι, E)` is a metric space, hence `T1`, and it carries the
+Borel structure of that metric, so this is `isClosed_singleton.measurableSet`.
+
+It is stated rather than left to instance search, and the reason is measured: the search *does*
+find it through `OpensMeasurableSpace.toMeasurableSingletonClass`, in seconds and under the
+default heartbeat limit, when asked directly.  Inside the elaboration of
+`MeasureTheory.Measure.map_dirac` it does not -- there it runs with metavariables and reaches the
+limit after about ten seconds, which is what made the twenty-first run of 2026-09-20 record
+`map_dirac` as unusable on a path space and reach for `map_dirac'` instead.  The defect was never
+in the class; it was in the search inside that application, and naming the instance here removes
+it. -/
+instance : MeasurableSingletonClass D(ι, E) :=
+  ⟨fun _ => isClosed_singleton.measurableSet⟩
+
 omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
 /-- **A good radius is produced, never chosen.**  `SkorokhodSpace.distWith` is
 not monotone in the radius --- that is why Milestone 4 integrates over the radius

@@ -4065,14 +4065,25 @@ theorem above, in one line
 not a triviality: the quantity that fails here is exactly the one a run at
 Milestone 11 has to produce.
 
-**A Mathlib finding from that proof, and it costs a run an hour if it is not
-written down.** `MeasureTheory.Measure.map_dirac` asks
-`MeasurableSingletonClass` of **both** spaces, and the instance search for it on
-`D(ℝ, ℝ × ℝ)` does not terminate — two million heartbeats without an answer, and
-the error points at the theorem header rather than at the instance.
-`MeasureTheory.Measure.map_dirac'`
+**A finding from that proof, corrected on 2026-09-20 after the author asked
+whether the class is not simply true.** It is, and the correction is worth
+keeping because the first reading blamed the wrong thing.
+`MeasureTheory.Measure.map_dirac` asks `MeasurableSingletonClass` of **both**
+spaces; elaborating it on `D(ℝ, ℝ × ℝ)` reaches the heartbeat limit, with the
+error pointing at the theorem header rather than at the instance, and the first
+report concluded that the instance search does not terminate on a path space.
+
+That conclusion was wrong. `D(ι, E)` is a metric space, hence `T1`, and carries
+the Borel structure of that metric, so `MeasurableSingletonClass` holds by
+`isClosed_singleton.measurableSet` — and Mathlib's
+`OpensMeasurableSpace.toMeasurableSingletonClass` finds it, in seconds and under
+the default heartbeat limit, when it is asked directly. What reaches the limit
+is the search *inside* that application, where it runs with metavariables. The
+instance is therefore stated in `Suggested.lean` next to the `BorelSpace` one,
+which makes `map_dirac` usable; `MeasureTheory.Measure.map_dirac'`
 (`Mathlib/MeasureTheory/Measure/Dirac/Basic.lean:36`), which asks measurability
-of the map instead, is the one to take on a path space.
+of the map instead, remains available and is the cheaper one where the map is
+at hand anyway.
 `MeasureTheory.Measure.le_dirac_apply`
 (`Mathlib/MeasureTheory/Measure/Dirac/Def.lean:34`) is the other half,
 and it is what lets the measure of a modulus set be bounded below **without** the
