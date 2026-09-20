@@ -330,6 +330,16 @@ CLAIMS_TODO8 = [
      'OrderedSub',
      ['Mathlib/Probability/'],
      []),
+    ('optional-sampling-two-times-nnreal',
+     'MartingaleProblems/README.md, Meilenstein 11; TODO.md Punkt 8',
+     'Optionales Sampling zwischen **zwei** Stoppzeiten steht in Mathlib nur in '
+     '`Probability/Martingale/OptionalSampling.lean`, und dort in drei '
+     'Fassungen, die alle `ℝ≥0` aussperren (`[Countable ι]`, abzählbarer '
+     'Wertebereich beider Zeiten, `[DiscreteTopology ι]`). In keiner anderen '
+     'Datei kommen `condExp` und `stoppedValue` in derselben Zeile vor.',
+     'condExp.*stoppedValue|stoppedValue.*condExp',
+     ['Mathlib/'],
+     ['Mathlib/Probability/Martingale/OptionalSampling.lean']),
 ]
 
 

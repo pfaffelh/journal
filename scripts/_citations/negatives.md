@@ -338,7 +338,15 @@ Suche `setIntegral.*[Mm]artingale|[Mm]artingale.*setIntegral` unter `Mathlib/Pro
 Suche `OrderedSub` unter `Mathlib/Probability/`: **0 Treffer** in 0 Dateien — wie erwartet.
 
 
+## `optional-sampling-two-times-nnreal` — MartingaleProblems/README.md, Meilenstein 11; TODO.md Punkt 8
+
+> Optionales Sampling zwischen **zwei** Stoppzeiten steht in Mathlib nur in `Probability/Martingale/OptionalSampling.lean`, und dort in drei Fassungen, die alle `ℝ≥0` aussperren (`[Countable ι]`, abzählbarer Wertebereich beider Zeiten, `[DiscreteTopology ι]`). In keiner anderen Datei kommen `condExp` und `stoppedValue` in derselben Zeile vor.
+
+Suche `condExp.*stoppedValue|stoppedValue.*condExp` unter `Mathlib/`: **16 Treffer** in 1 Dateien — wie erwartet.
+
+* `Mathlib/Probability/Martingale/OptionalSampling.lean`
+
 ## Zusammenfassung
 
-46 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
+47 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
 

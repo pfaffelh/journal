@@ -42511,3 +42511,197 @@ theorem mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le (μ : Measure 
     measure_setOf_oscHitSeq_gap_le μ hSc hSd hX hcont k (Real.toNNReal δ) (Real.toNNReal u)) _
 
 end MeasureTheory
+
+/-! ### Optional sampling between two stopping times, and the martingale increment against a
+weight from the past
+
+`mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le` leaves exactly one quantity for the
+martingale hypothesis of `isTight_map_postcomp_of_exists_martingale`: the lower integral of
+`dist (X β ω) (X α ω)` for two bounded stopping times `α ≤ β ≤ α + δ`.  Read at the real valued
+process `Y = f ∘ X` of the criterion that is `∫ |Y β - Y α|`, and the four statements of this
+section are the first half of what makes it small.
+
+**What they say, and what they deliberately do not.**  `Y` splits as a martingale `M` plus the
+compensator `C`, and `∫ |M β - M α|` is **not** small -- a martingale with a jump at a
+deterministic time has `∫ |M β - M α| = 1` for `α` just below and `β` at the jump, however small
+`δ` is, while `sup_t ∫ |M t|` stays bounded and its compensator is `0`.  The martingale increment
+is therefore not controlled in `L¹`; what *is* controlled is its integral against any bounded
+weight measurable for the past, and that is `integral_mul_stoppedValue_sub_eq_zero`.  The passage
+from there to the increment itself is the **square**, and it needs the martingale hypothesis for
+`f²` as well as for `f`; that is recorded in Milestone 11 of the README together with the shape
+the criterion has to take because of it.
+
+**The conditional form of optional sampling between two stopping times is a gap in Mathlib.**
+`MeasureTheory.Martingale.stoppedValue_ae_eq_condExp_of_le`
+(`Probability/Martingale/OptionalSampling.lean:141`) carries `[Countable ι]`, its countable range
+form `ibid.:121` asks both times to have countable range, and the section from `ibid.:158` runs
+under `[LocallyFiniteOrder ι]` and `[DiscreteTopology ι]`.  Over `ℝ≥0` none of the three applies,
+and `stoppedValue_ae_eq_condExp_stoppedValue` supplies it from the one time form
+`stoppedValue_ae_eq_condExp` proved above -- the tower property and nothing else. -/
+
+section TwoTimeSampling
+
+variable {Ω : Type*} {m : MeasurableSpace Ω}
+variable {𝓕 : Filtration ℝ≥0 m} {P : Measure Ω} [IsFiniteMeasure P] {Y : ℝ≥0 → Ω → ℝ}
+
+/-- **Optional sampling between two stopping times, in continuous time.**  For a right continuous
+martingale over `ℝ≥0` and bounded stopping times `α ≤ β ≤ j`,
+
+```
+stoppedValue Y α =ᵐ[P] P[stoppedValue Y β | 𝓕_α].
+```
+
+The proof is the tower property: both stopped values are the conditional expectation of the
+*same* function `Y j`, by `stoppedValue_ae_eq_condExp`, and
+`MeasureTheory.condExp_condExp_of_le` collapses the iterated conditional expectation along
+`MeasureTheory.IsStoppingTime.measurableSpace_mono`
+(`Probability/Process/Stopping.lean:464`).  No analysis is added to what the one time form
+already cost; the whole continuous time content sits in `stoppedValue_ae_eq_condExp`.
+
+Mathlib's forms of this statement all exclude `ℝ≥0`, see the section docstring. -/
+theorem stoppedValue_ae_eq_condExp_stoppedValue
+    (hY : Martingale Y 𝓕 P) (hprog : IsStronglyProgressive 𝓕 Y)
+    (hrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
+    {j : ℝ≥0} {α β : Ω → ENNReal} (hα : IsStoppingTime 𝓕 α) (hβ : IsStoppingTime 𝓕 β)
+    (hαβ : α ≤ β) (hβj : ∀ ω, β ω ≤ (j : ENNReal)) :
+    stoppedValue Y α =ᵐ[P] P[stoppedValue Y β | hα.measurableSpace] := by
+  have hαj : ∀ ω, α ω ≤ (j : ENNReal) := fun ω ↦ (hαβ ω).trans (hβj ω)
+  have h1 : stoppedValue Y α =ᵐ[P] P[Y j | hα.measurableSpace] :=
+    stoppedValue_ae_eq_condExp hY hprog hrc hα hαj
+  have h2 : stoppedValue Y β =ᵐ[P] P[Y j | hβ.measurableSpace] :=
+    stoppedValue_ae_eq_condExp hY hprog hrc hβ hβj
+  have h3 : P[stoppedValue Y β | hα.measurableSpace]
+      =ᵐ[P] P[P[Y j | hβ.measurableSpace] | hα.measurableSpace] := condExp_congr_ae h2
+  refine h1.trans (Filter.EventuallyEq.trans ?_ h3.symm)
+  exact (condExp_condExp_of_le (hα.measurableSpace_mono hβ hαβ)
+    (hβ.measurableSpace_le_of_le hβj)).symm
+
+/-- **A bounded weight from the past does not see the martingale increment.**  For `W` bounded and
+`𝓕_α`-measurable,
+
+```
+∫ ω, W ω * stoppedValue Y β ω ∂P = ∫ ω, W ω * stoppedValue Y α ω ∂P.
+```
+
+The proof is `MeasureTheory.integral_condExp`
+(`MeasureTheory/Function/ConditionalExpectation/Basic.lean:237`) followed by the pull out property
+`MeasureTheory.condExp_stronglyMeasurable_mul_of_bound`
+(`MeasureTheory/Function/ConditionalExpectation/PullOut.lean:260`) and the statement above.
+
+**`W` is asked to be bounded and not merely integrable**, because the pull out property in the
+form that needs no integrability of the product is the bounded one; a consumer supplies the bound
+from the boundedness of the test function it is testing with, which is where this is applied. -/
+theorem integral_mul_stoppedValue_eq
+    (hY : Martingale Y 𝓕 P) (hprog : IsStronglyProgressive 𝓕 Y)
+    (hrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
+    {j : ℝ≥0} {α β : Ω → ENNReal} (hα : IsStoppingTime 𝓕 α) (hβ : IsStoppingTime 𝓕 β)
+    (hαβ : α ≤ β) (hβj : ∀ ω, β ω ≤ (j : ENNReal))
+    {W : Ω → ℝ} (hW : StronglyMeasurable[hα.measurableSpace] W) {c : ℝ}
+    (hWb : ∀ ω, ‖W ω‖ ≤ c) :
+    ∫ ω, W ω * stoppedValue Y β ω ∂P = ∫ ω, W ω * stoppedValue Y α ω ∂P := by
+  have hαj : ∀ ω, α ω ≤ (j : ENNReal) := fun ω ↦ (hαβ ω).trans (hβj ω)
+  have hle : hα.measurableSpace ≤ m := hα.measurableSpace_le_of_le hαj
+  have hβint : Integrable (stoppedValue Y β) P :=
+    integrable_stoppedValue_of_rightContinuous hY hrc hβ hβj
+  have hbound : ∀ᵐ ω ∂P, ‖W ω‖ ≤ c := Filter.Eventually.of_forall hWb
+  have key : P[W * stoppedValue Y β | hα.measurableSpace]
+      =ᵐ[P] W * P[stoppedValue Y β | hα.measurableSpace] :=
+    condExp_stronglyMeasurable_mul_of_bound hle hW hβint c hbound
+  have hstep : ∫ ω, W ω * stoppedValue Y β ω ∂P
+      = ∫ ω, W ω * P[stoppedValue Y β | hα.measurableSpace] ω ∂P :=
+    Eq.trans (integral_condExp hle (f := W * stoppedValue Y β)).symm (integral_congr_ae key)
+  refine hstep.trans (integral_congr_ae ?_)
+  filter_upwards [stoppedValue_ae_eq_condExp_stoppedValue hY hprog hrc hα hβ hαβ hβj] with ω hω
+  rw [hω]
+
+/-- **The same statement with the increment on one side**, which is the form a consumer uses:
+
+```
+∫ ω, W ω * (stoppedValue Y β ω - stoppedValue Y α ω) ∂P = 0.
+```
+
+Splitting the integral is what asks for the integrability of both stopped values, and that is
+`integrable_stoppedValue_of_rightContinuous` -- uniform integrability of the dyadic
+approximations, no bound on the paths. -/
+theorem integral_mul_stoppedValue_sub_eq_zero
+    (hY : Martingale Y 𝓕 P) (hprog : IsStronglyProgressive 𝓕 Y)
+    (hrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
+    {j : ℝ≥0} {α β : Ω → ENNReal} (hα : IsStoppingTime 𝓕 α) (hβ : IsStoppingTime 𝓕 β)
+    (hαβ : α ≤ β) (hβj : ∀ ω, β ω ≤ (j : ENNReal))
+    {W : Ω → ℝ} (hW : StronglyMeasurable[hα.measurableSpace] W) {c : ℝ}
+    (hWb : ∀ ω, ‖W ω‖ ≤ c) :
+    ∫ ω, W ω * (stoppedValue Y β ω - stoppedValue Y α ω) ∂P = 0 := by
+  have hαj : ∀ ω, α ω ≤ (j : ENNReal) := fun ω ↦ (hαβ ω).trans (hβj ω)
+  have hle : hα.measurableSpace ≤ m := hα.measurableSpace_le_of_le hαj
+  have hbound : ∀ᵐ ω ∂P, ‖W ω‖ ≤ c := Filter.Eventually.of_forall hWb
+  have hWae : AEStronglyMeasurable W P := (hW.mono hle).aestronglyMeasurable
+  have hβint : Integrable (stoppedValue Y β) P :=
+    integrable_stoppedValue_of_rightContinuous hY hrc hβ hβj
+  have hαint : Integrable (stoppedValue Y α) P :=
+    integrable_stoppedValue_of_rightContinuous hY hrc hα hαj
+  have hmβ : Integrable (fun ω ↦ W ω * stoppedValue Y β ω) P := hβint.bdd_mul hWae hbound
+  have hmα : Integrable (fun ω ↦ W ω * stoppedValue Y α ω) P := hαint.bdd_mul hWae hbound
+  have hsplit : ∫ ω, W ω * (stoppedValue Y β ω - stoppedValue Y α ω) ∂P
+      = ∫ ω, W ω * stoppedValue Y β ω ∂P - ∫ ω, W ω * stoppedValue Y α ω ∂P := by
+    rw [← integral_sub hmβ hmα]
+    exact integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ by ring)
+  rw [hsplit, integral_mul_stoppedValue_eq hY hprog hrc hα hβ hαβ hβj hW hWb, sub_self]
+
+/-- **The increment of a quasimartingale against a weight from the past is the increment of its
+compensator.**  If `Y - C` is a right continuous martingale and `W` is bounded and
+`𝓕_α`-measurable, then
+
+```
+∫ ω, W ω * (stoppedValue Y β ω - stoppedValue Y α ω) ∂P
+  = ∫ ω, W ω * (stoppedValue C β ω - stoppedValue C α ω) ∂P.
+```
+
+This is the statement the tightness criterion of Milestone 11 spends twice: at `W = 1`, where it
+turns the increment of the square into the increment of the second compensator, and at
+`W = stoppedValue Y α`, where it turns the cross term into the first compensator.  The right hand
+side is what Hölder's inequality makes `O(δ^{1-1/p})` from an `eLpNorm` bound on the density of
+`C`, so this is the passage from the martingale hypothesis to a quantity that is small with the
+window.
+
+**Only two integrability hypotheses are asked for**, and they are about `Y`, not about `C`: the
+stopped values of the martingale are integrable for free
+(`integrable_stoppedValue_of_rightContinuous`), and those of `C` are then the difference. -/
+theorem integral_mul_stoppedValue_sub_eq_compensator
+    {Y C : ℝ≥0 → Ω → ℝ}
+    (hM : Martingale (fun t ω ↦ Y t ω - C t ω) 𝓕 P)
+    (hMprog : IsStronglyProgressive 𝓕 fun t ω ↦ Y t ω - C t ω)
+    (hMrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0,
+      Tendsto (fun r ↦ Y r ω - C r ω) (𝓝[≥] s) (𝓝 (Y s ω - C s ω)))
+    {j : ℝ≥0} {α β : Ω → ENNReal} (hα : IsStoppingTime 𝓕 α) (hβ : IsStoppingTime 𝓕 β)
+    (hαβ : α ≤ β) (hβj : ∀ ω, β ω ≤ (j : ENNReal))
+    (hYα : Integrable (stoppedValue Y α) P) (hYβ : Integrable (stoppedValue Y β) P)
+    {W : Ω → ℝ} (hW : StronglyMeasurable[hα.measurableSpace] W) {c : ℝ}
+    (hWb : ∀ ω, ‖W ω‖ ≤ c) :
+    ∫ ω, W ω * (stoppedValue Y β ω - stoppedValue Y α ω) ∂P
+      = ∫ ω, W ω * (stoppedValue C β ω - stoppedValue C α ω) ∂P := by
+  have hαj : ∀ ω, α ω ≤ (j : ENNReal) := fun ω ↦ (hαβ ω).trans (hβj ω)
+  have hle : hα.measurableSpace ≤ m := hα.measurableSpace_le_of_le hαj
+  have hbound : ∀ᵐ ω ∂P, ‖W ω‖ ≤ c := Filter.Eventually.of_forall hWb
+  have hWae : AEStronglyMeasurable W P := (hW.mono hle).aestronglyMeasurable
+  have hMα : Integrable (stoppedValue (fun t ω ↦ Y t ω - C t ω) α) P :=
+    integrable_stoppedValue_of_rightContinuous hM hMrc hα hαj
+  have hMβ : Integrable (stoppedValue (fun t ω ↦ Y t ω - C t ω) β) P :=
+    integrable_stoppedValue_of_rightContinuous hM hMrc hβ hβj
+  have hCα : Integrable (stoppedValue C α) P :=
+    (hYα.sub hMα).congr (Filter.Eventually.of_forall fun ω ↦ by
+      simp only [Pi.sub_apply, stoppedValue]; ring)
+  have hCβ : Integrable (stoppedValue C β) P :=
+    (hYβ.sub hMβ).congr (Filter.Eventually.of_forall fun ω ↦ by
+      simp only [Pi.sub_apply, stoppedValue]; ring)
+  have hmY : Integrable (fun ω ↦ W ω * (stoppedValue Y β ω - stoppedValue Y α ω)) P :=
+    (hYβ.sub hYα).bdd_mul hWae hbound
+  have hmC : Integrable (fun ω ↦ W ω * (stoppedValue C β ω - stoppedValue C α ω)) P :=
+    (hCβ.sub hCα).bdd_mul hWae hbound
+  have hzero := integral_mul_stoppedValue_sub_eq_zero hM hMprog hMrc hα hβ hαβ hβj hW hWb
+  have hcomb : ∫ ω, W ω * (stoppedValue Y β ω - stoppedValue Y α ω) ∂P
+      - ∫ ω, W ω * (stoppedValue C β ω - stoppedValue C α ω) ∂P = 0 := by
+    refine Eq.trans (integral_sub hmY hmC).symm (Eq.trans (integral_congr_ae ?_) hzero)
+    exact Filter.Eventually.of_forall fun ω ↦ by simp only [stoppedValue]; ring
+  exact sub_eq_zero.mp hcomb
+
+end TwoTimeSampling

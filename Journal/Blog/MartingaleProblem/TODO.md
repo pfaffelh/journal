@@ -250,7 +250,7 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Achtundzwanzig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Neunundzwanzig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
 Alle zweiundzwanzig beim Beweisen aufgefallen, und die ersten vier sind kleine,
 in sich abgeschlossene Beiträge. Sie gehören thematisch zu
@@ -1056,6 +1056,31 @@ steht in seinem Dateikopf: es prüft Zeichenketten, nicht Aussagen.
   `i ≤ j` falsch — rechts steht dann `a ≤ 0` —, und daran scheitert der wörtliche
   Übertrag. Sie hat mit diesem Projekt nichts zu tun und gehört neben die beiden
   vorhandenen.
+
+* **Optionales Sampling zwischen *zwei* Stoppzeiten, in stetiger Zeit.** Der
+  neunundzwanzigste, gefunden und bewiesen am 2026-09-20 im achtzehnten Lauf;
+  gegen `upstream/master` `94ef6b89544` (2026-09-18) nachgeprüft.
+
+  Gebraucht wird: sind `α ≤ β ≤ j` Stoppzeiten und ist `Y` ein rechtsstetiges
+  Martingal, so ist `stoppedValue Y α =ᵐ[P] P[stoppedValue Y β | 𝓕_α]`. Mathlib
+  hat davon **drei** Fassungen, und alle drei sperren `ℝ≥0` aus:
+  `MeasureTheory.Martingale.stoppedValue_ae_eq_condExp_of_le`
+  (`Mathlib/Probability/Martingale/OptionalSampling.lean:141`) verlangt
+  `[Countable ι]`; `…_of_le_of_countable_range` (`:121`) verlangt einen
+  abzählbaren Wertebereich von **beiden** Zeiten; und der Abschnitt, der dort
+  *Optional Sampling* heißt (`:158`), läuft unter `[LocallyFiniteOrder ι]`,
+  `[DiscreteTopology ι]` und `[OrderBot ι]`. Gesucht wurde nach dem Gegenstand
+  und nicht nach dem Namen: `condExp` und `stoppedValue` kommen über ganz
+  `Mathlib/` in **keiner** Datei außer dieser gemeinsam in einer Zeile vor.
+
+  Die fehlende Fassung ist die über `ℝ≥0`, bewiesen als
+  `stoppedValue_ae_eq_condExp_stoppedValue` in
+  `TauCeti/MartingaleProblems/Suggested.lean`. Ihr Beweis ist der Turmschluß
+  über der Einzeitfassung und fügt keine Analysis hinzu; was Mathlib fehlt, ist
+  die **Einzeitfassung** in stetiger Zeit, und die ist in derselben Datei
+  `stoppedValue_ae_eq_condExp` — Vitali-Konvergenz längs der dyadischen
+  Diskretisierung der Stoppzeit, ohne Schranke an die Pfade. Beides gehört
+  neben die drei vorhandenen.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine

@@ -48519,3 +48519,211 @@ braucht an dieser Stelle die bedingte Erwartung und die Hölder-Ungleichung.
 **Welches von beiden es ist, ist am Beweis zu entscheiden und im Bericht zu
 sagen** — es entscheidet, ob Meilenstein 9 an dieser Stelle wirklich verbraucht
 wird oder erst im zweiten Punkt der Kette.
+
+### 2026-09-20, achtzehnter Lauf des Tages — die Vorfrage des Vorlaufs ist beantwortet, und die Antwort ist **keine von beiden**: weder Doob noch Hölder allein tragen die letzte offene Größe, weil der Martingalanteil des Zuwachses in `L¹` **gar nicht klein ist**; der Weg ist das Quadrat, und es kostet die Voraussetzung an `f²`
+
+**Bearbeitet:** der Vorschlag des siebzehnten Laufs,
+`lintegral_dist_stoppedValue_le_of_martingale` — also weiter am ersten Punkt der
+Kette des Meilensteins 11 von `MartingaleProblems`, wie angeordnet. Kein
+Meilenstein 8, kein Meilenstein 14, kein C.5/G. **Vier** neue Deklarationen,
+alle in `TauCeti/MartingaleProblems/Suggested.lean`.
+
+**Geprüft:** `scripts/check_master.py` meldet für die ganze Kette **0 Fehler,
+0 `sorry`, 0 veraltete Namen** (Mathlib `94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `v4.35.0-rc2`; 18 / 35 / 109 Warnungen, **dieselben Zahlen wie vor dem
+Lauf**). Alle vier hängen nach `check_axioms_master.py` auf `propext`,
+`Classical.choice`, `Quot.sound` und auf nichts sonst.
+`scripts/check_cited_lines.py`: **342 von 342** gepaarten Fundstellen stimmen,
+0 tote. `check_duplicates.py` (2589 eigene Deklarationen) und
+`check_own_names.py` finden zu den vier neuen Namen nichts.
+`check_negatives.py`: **47** Behauptungen — eine mehr als vor dem Lauf, die neue
+ist die Mathlib-Lücke unten —, 0 mit unerwarteten Treffern.
+
+#### Die Vorfrage, und warum sie falsch gestellt war
+
+Der Vorlauf hatte gefragt, ob die Abschätzung von
+`∫⁻ dist (stoppedValue Y β) (stoppedValue Y α)` über **Doob** oder über den
+**Kompensator und Hölder** geht. Beides setzt voraus, daß die Größe unter den
+Voraussetzungen des Punktes überhaupt klein wird. **Sie wird es nicht.**
+
+Zerlege `Y = M + C` mit `M` Martingal und `C` dem Kompensator. Der
+Kompensatoranteil ist Hölder und `O(δ^{1-1/p})`, wie angesagt. Der
+Martingalanteil ist es nicht, und der Zeuge ist elementar:
+
+> Ein Martingal mit einem Sprung der Höhe `1` zu einer **festen** Zeit `t₀` hat
+> `∫ |M β - M α| = 1` für `α` knapp unter `t₀` und `β = t₀`, und zwar für
+> **jedes** `δ > 0`. Zugleich ist `sup_t ∫ |M t| ≤ 1` und sein Kompensator ist
+> `0`, also sind beide Bedingungen von `𝓐 n` erfüllt.
+
+Der Martingalzuwachs ist in `L¹` also nicht kontrolliert. Kontrolliert ist sein
+Integral gegen ein **Gewicht aus der Vergangenheit**, und das ist alles, was die
+Martingaleigenschaft an dieser Stelle hergibt.
+
+#### Der Ausweg, und er ist benannt statt geraten: das Quadrat
+
+Mit `D` dem Kompensator von `Y²` — also mit `(f², g₂) ∈ A` und dem zweiten Paar
+`(Y², D) ∈ 𝓐 n` — gilt
+
+```
+∫ (Y β - Y α)² = ∫ (D β - D α) - 2 ∫ Y α * (C β - C α),
+```
+
+denn `(Y β - Y α)² = (Y β² - Y α²) - 2 Y α (Y β - Y α)`, und **beide**
+Martingalanteile integrieren sich weg: der erste gegen das Gewicht `1`, der
+zweite gegen das Gewicht `Y α`, das beschränkt und `𝓕_α`-meßbar ist. Hölder
+macht beide rechten Terme `O(δ^{1-1/p})`, Cauchy–Schwarz macht daraus
+`∫ |Y β - Y α|`.
+
+**Damit ist die Vorfrage beantwortet, und in beide Richtungen mit einem Nein:**
+Doob wird an dieser Stelle **nicht** verbraucht, und Hölder allein reicht auch
+nicht. Verbraucht werden optionales Sampling zwischen **zwei** Stoppzeiten, die
+Ausklammereigenschaft der bedingten Erwartung und Hölder. Ob Meilenstein 9 im
+ersten Punkt der Kette überhaupt verbraucht wird, ist damit offen; der Umriß
+hatte es behauptet.
+
+#### Und der Preis: die Testfunktionen müssen unter Produkten abgeschlossen sein
+
+Der Punkt war bisher formuliert als „für jedes `f` im Supremumsnormabschluß der
+approximierbaren Funktionen". Das ist **zu stark**: die Abschätzung liest die
+Voraussetzung an `f²` mit. Was der Punkt quantifiziert, ist eine
+**Unteralgebra** — genau das, was `isRelativelyCompact_of_approx` darunter
+ohnehin verlangt, und das ist der Grund, aus dem die beiden Punkte
+zusammenpassen. Der Zeuge oben zeigt, daß das keine Bequemlichkeit ist: mit `f`
+allein ist die Zwischenaussage **falsch**.
+
+`MartingaleProblems/README.md`, Meilenstein 11, ist entsprechend berichtigt —
+die Aussage des Punktes trägt jetzt den Zusatz, und der Absatz „The one
+remaining quantity" führt Zeuge, Rechnung und Folgerung aus.
+
+#### Was gebaut ist
+
+**Optionales Sampling zwischen zwei Stoppzeiten fehlt in Mathlib für jeden
+Index, den diese Entwicklung benutzt** — nachgesehen, nicht vermutet:
+`MeasureTheory.Martingale.stoppedValue_ae_eq_condExp_of_le`
+(`Probability/Martingale/OptionalSampling.lean:141`) trägt `[Countable ι]`, die
+Fassung mit abzählbarem Wertebereich (`ibid.:121`) verlangt ihn von **beiden**
+Zeiten, und der Abschnitt, der dort *Optional Sampling* heißt (`ibid.:158`),
+läuft unter `[LocallyFiniteOrder ι]` und `[DiscreteTopology ι]`. Über `ℝ≥0`
+greift keine der drei.
+
+* `stoppedValue_ae_eq_condExp_stoppedValue` —
+  `stoppedValue Y α =ᵐ[P] P[stoppedValue Y β | 𝓕_α]` für ein rechtsstetiges
+  Martingal über `ℝ≥0` und `α ≤ β ≤ j`. Der Beweis ist der Turmschluß über der
+  Einzeitfassung `stoppedValue_ae_eq_condExp` des vierten Laufs dieses Tages,
+  mit `condExp_condExp_of_le`
+  (`MeasureTheory/Function/ConditionalExpectation/Basic.lean:345`) längs
+  `IsStoppingTime.measurableSpace_mono`
+  (`Probability/Process/Stopping.lean:464`). **Es kommt keine Analysis hinzu**:
+  der ganze stetigzeitliche Gehalt sitzt in der Einzeitfassung, und diese hat
+  seit dem vierten Lauf keine Fensterschranke mehr.
+
+* `integral_mul_stoppedValue_eq` —
+  `∫ W * stoppedValue Y β = ∫ W * stoppedValue Y α` für beschränktes,
+  `𝓕_α`-meßbares `W`. `integral_condExp` (`ibid.:237`) und die
+  Ausklammereigenschaft `condExp_stronglyMeasurable_mul_of_bound`
+  (`MeasureTheory/Function/ConditionalExpectation/PullOut.lean:260`).
+
+* `integral_mul_stoppedValue_sub_eq_zero` — dasselbe mit dem Zuwachs auf einer
+  Seite, `∫ W * (stoppedValue Y β - stoppedValue Y α) = 0`.
+
+* `integral_mul_stoppedValue_sub_eq_compensator` — die Quasimartingalfassung,
+  `∫ W * (Y β - Y α) = ∫ W * (C β - C α)`, sobald `Y - C` ein rechtsstetiges
+  Martingal ist. Sie verlangt **zwei** Integrierbarkeiten, und beide sind über
+  `Y` und nicht über `C`: die gestoppten Werte des Martingals sind nach
+  `integrable_stoppedValue_of_rightContinuous` umsonst integrierbar, die von `C`
+  sind dann die Differenz.
+
+Die Lücke ist als **neunundzwanzigster** Punkt in `TODO.md` Punkt 8 eingetragen
+und als Behauptung `optional-sampling-two-times-nnreal` in
+`scripts/check_negatives.py` hinterlegt, damit sie nicht unbemerkt falsch wird:
+über ganz `Mathlib/` kommen `condExp` und `stoppedValue` in **keiner** Datei
+außer `OptionalSampling.lean` in derselben Zeile vor.
+
+#### Drei Befunde
+
+* **`W` ist beschränkt und nicht bloß integrierbar, und das ist die richtige
+  Wahl.** Die Ausklammereigenschaft in der Fassung, die *keine* Integrierbarkeit
+  des Produkts verlangt, ist die beschränkte
+  (`condExp_stronglyMeasurable_mul_of_bound`); die Fassungen
+  `condExp_mul_of_stronglyMeasurable_left` und ihre Geschwister (`ibid.:244 ff.`)
+  verlangen `Integrable (f * g)` als eigene Voraussetzung, die ein Verbraucher
+  dann doch aus einer Schranke bezöge. Und der Verbraucher hat die Schranke: das
+  Gewicht des Kreuzterms ist `Y α = f (X α)` mit beschränktem `f`.
+
+* **`rw` scheitert an `ENNReal` gegen `WithTop ℝ≥0` zum zweiten Mal, und an
+  derselben Stelle wie im fünfzehnten Lauf.** `rw [← integral_condExp hle]`
+  findet das Muster nicht („Did not find an occurrence of the pattern", gefolgt
+  von „Application type mismatch: `β` has type `Ω → ENNReal` but is expected to
+  have type `Ω → WithTop ℝ≥0`"), obwohl die beiden Typen dieselben sind.
+  `Eq.trans` mit `exact` trifft es. Die Regel des achtzehnten Laufs lautet
+  deshalb wie die des fünfzehnten: **nicht am Ziel rewriten, sondern das Ziel
+  treffen** — und sie gilt namentlich für `integral_condExp`, dessen Argument
+  die Stoppzeit nur mittelbar enthält.
+
+* **`Integrable.congr` will `Pi.sub_apply` sehen.** `(hYα.sub hMα).congr h`
+  verlangt `h` über `(stoppedValue Y α - stoppedValue M α) ω`, nicht über
+  `stoppedValue Y α ω - stoppedValue M α ω`; `simp only [stoppedValue]` allein
+  entfaltet die Punktweise nicht und läßt ein Ziel stehen, dessen linke Seite
+  eine Funktionendifferenz an einer Stelle ist. `simp only [Pi.sub_apply,
+  stoppedValue]` schließt es. Das ist dieselbe Familie wie der
+  Notationsbefund des siebzehnten Laufs: eine syntaktische Suche entfaltet eine
+  Definition nicht.
+
+#### Wo der Punkt jetzt steht
+
+| Größe | Stand |
+| --- | --- |
+| alles Deterministische bis zur Modulabschätzung | steht |
+| Markov auf den Lückenereignissen, über `N` summiert | steht |
+| optionales Sampling zwischen zwei Stoppzeiten | steht, dieser Lauf |
+| Martingalzuwachs gegen ein Gewicht aus der Vergangenheit | steht, dieser Lauf |
+| Zuwachs → Kompensatorzuwachs (Quasimartingal) | steht, dieser Lauf |
+| `∫ (Y β - Y α)² = ∫ (D β - D α) - 2 ∫ Y α (C β - C α)` | **offen** |
+| die beiden Hölder-Abschätzungen darunter | **offen** |
+| `∫ \|Y β - Y α\|` aus dem Quadrat, Cauchy–Schwarz | **offen** |
+
+#### Vorschlag für den nächsten Lauf
+
+**`integral_sq_stoppedValue_sub_eq` — die Quadratidentität, und sie ist der
+Schlußstein des ersten Punktes der Kette.**
+
+Die Aussage, benannt: sind `Y - C` und `Y² - D` rechtsstetige Martingale über
+`ℝ≥0`, ist `Y` beschränkt und progressiv, und sind `α ≤ β ≤ j` Stoppzeiten, so
+
+```
+∫ ω, (stoppedValue Y β ω - stoppedValue Y α ω)^2 ∂P
+  = ∫ ω, (stoppedValue D β ω - stoppedValue D α ω) ∂P
+    - 2 * ∫ ω, stoppedValue Y α ω * (stoppedValue C β ω - stoppedValue C α ω) ∂P.
+```
+
+**Worauf sie ruht, und es steht alles da.** Der erste Summand ist
+`integral_mul_stoppedValue_sub_eq_compensator` am Gewicht `W = 1` für das Paar
+`(Y², D)` — daß `stoppedValue (fun t ω ↦ Y t ω ^ 2) γ ω = (stoppedValue Y γ ω)^2`
+ist, ist `rfl`. Der zweite ist dieselbe Aussage am Gewicht
+`W = stoppedValue Y α`, das nach `measurable_stoppedValue` (`ibid.:1044`) für
+`hα.measurableSpace` meßbar und nach der Schranke an `Y` beschränkt ist. Die
+Zerlegung `(b - a)² = (b² - a²) - 2a(b - a)` ist `ring`.
+
+**Warum sie jetzt dran ist.** Sie ist die einzige Aussage zwischen dem, was
+dieser Lauf gebaut hat, und der Größe, die der Punkt braucht; danach sind nur
+noch die beiden Hölder-Abschätzungen an den Kompensatoren zu führen, und die
+kennen keine Stoppzeit mehr. Und sie ist der Ort, an dem die Voraussetzung an
+`f²` zum ersten Mal wirklich gelesen wird — bis hierher steht sie nur in der
+README.
+
+**Die Vorfrage, die dabei nicht zu raten ist:** ob die Beschränktheit von `Y`
+als eigene Hypothese hineingehört oder ob die Integrierbarkeit von
+`stoppedValue (Y²) γ` und die Meßbarkeit von `stoppedValue Y α` genügen. Die
+Schranke wird an **zwei** Stellen gebraucht — für `W` beschränkt im Kreuzterm
+und für die Integrierbarkeit des Quadrats —, und beide Male ist sie beim
+Verbraucher vorhanden (`f : E →ᵇ ℝ`). Ob die Aussage trotzdem ohne sie
+auskommt, ist am Beweis zu entscheiden und im Bericht zu sagen; die stehende
+Regel der minimalen Voraussetzungen verlangt die Frage, nicht die Antwort.
+
+**Ein zweiter, kleinerer Punkt, falls der erste früher fertig ist als gedacht:**
+den Zeugen des Absatzes „Die Vorfrage" in Lean bauen. `Ω = Bool` mit
+`AtomWitness.coinMeasure`, `Y r ω = if r < 1 then 0 else (if ω then 1 else -1)`,
+die Filtration `⊥` unterhalb von `1` und `⊤` darüber; die Martingaleigenschaft
+ist `condExp_bot'` und eine Rechnung mit zwei Atomen. Damit stünde die Aussage
+„der Martingalanteil ist in `L¹` nicht klein" als Satz und nicht als Absatz, und
+die Voraussetzung `f²` wäre in Lean belegt statt in der README behauptet.

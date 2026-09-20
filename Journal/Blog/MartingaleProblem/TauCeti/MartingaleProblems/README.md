@@ -11232,7 +11232,10 @@ has to be chosen once for all `n`. What stands:
   `(Y n, Z n) ∈ 𝓐 n` with
   `⨆ n, ∫⁻ ω, ⨆ t ∈ Set.Iic T ∩ D, ‖Y n t ω - f (X n t ω)‖ₑ ∂(P n) < ε` and
   `⨆ n, 𝔼[eLpNorm (Set.Iic T).indicator (Z n) p] < ∞` for some `1 < p ≤ ∞`.
-  Then for every `f` in the sup-norm closure of the approximable functions the
+  Let the approximable functions be closed under products — the reason is below,
+  under „The one remaining quantity", and it is a witness and not a
+  convenience. Then for every `f` in the sup-norm closure of the approximable
+  functions the
   laws of `postcomp f ∘ X n` are tight in `D ι ℝ`, and the laws of
   `(f 1, …, f k) ∘ X n` are tight in `D ι (Fin k → ℝ)`. The `𝕂`-valued case is
   the real one applied to `Re f` and `Im f` together with the `Fin k` form.
@@ -11724,6 +11727,84 @@ has to be chosen once for all `n`. What stands:
   read through the clipped distance to the value between them — which has compact
   containment in one line and is not tight. The quantity that fails there is
   exactly the one the martingale hypothesis of this item is for.
+
+  **The one remaining quantity is not bounded by what the martingale hypothesis
+  says about `f` alone**, 2026-09-20, and this fixes the shape the criterion has
+  to take. After
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le` what
+  is left is `∫ |Y β - Y α|` for the real process `Y = f ∘ X` and the two
+  stopping times. Write `Y = M + C` with `M` a martingale and `C` the
+  compensator. The compensator part is Hölder: `|C β - C α| ≤ ∫_α^{α+δ} |Z|` and
+  hence `O(δ^{1-1/p})` from the `eLpNorm` bound the criterion carries. **The
+  martingale part is not small at all.** A martingale with a jump of size `1` at
+  a deterministic time has `∫ |M β - M α| = 1` for `α` just below the jump and
+  `β` at it, for **every** `δ > 0`, while `sup_t ∫ |M t| ≤ 1` and its
+  compensator is `0`; both hypotheses of `𝓐 n` hold and the quantity does not go
+  to zero. What the martingale property gives is not the increment but its
+  integral against a weight from the past, and that is
+  `integral_mul_stoppedValue_sub_eq_zero` below.
+
+  **The passage to the increment is the square, and it costs `f²`.** With `D`
+  the compensator of `Y²` — that is, with `(f², g₂) ∈ A` supplying a second pair
+  `(Y², D) ∈ 𝓐 n` — the increment of the square and the cross term are both
+  compensator increments,
+
+  ```
+  ∫ (Y β - Y α)² = ∫ (D β - D α) - 2 ∫ Y α * (C β - C α),
+  ```
+
+  because `(Y β - Y α)² = (Y β² - Y α²) - 2 Y α (Y β - Y α)` and the martingale
+  parts of both terms integrate away — the first against the weight `1`, the
+  second against the weight `Y α`, which is bounded and `𝓕_α`-measurable.
+  Hölder makes both right hand terms `O(δ^{1-1/p})`, and Cauchy–Schwarz turns
+  the left hand side into `∫ |Y β - Y α|`. **Doob is not spent at this point**;
+  what is spent is optional sampling between two stopping times, the pull out
+  property of the conditional expectation, and Hölder.
+
+  **Hence the approximable functions are to be closed under products.** The
+  criterion may not be stated for an arbitrary set of approximable `f` and its
+  sup-norm closure: the estimate above reads the hypothesis at `f²` as well, so
+  what the criterion quantifies over is a **subalgebra**, which is what
+  `isRelativelyCompact_of_approx` below asks for anyway and what makes the two
+  items fit. The witness above shows this is not a convenience — with `f`
+  alone the conclusion of the intermediate estimate is false.
+
+  **And optional sampling between two stopping times is supplied**, 2026-09-20,
+  because Mathlib has it for no index this development uses.
+  `MeasureTheory.Martingale.stoppedValue_ae_eq_condExp_of_le`
+  (`Probability/Martingale/OptionalSampling.lean:141`) carries `[Countable ι]`,
+  the countable range form (`ibid.:121`) asks both times to have countable
+  range, and the section titled *Optional Sampling* (`ibid.:158`) runs under
+  `[LocallyFiniteOrder ι]` and `[DiscreteTopology ι]`. The four declarations
+  that close the gap are
+
+  * `stoppedValue_ae_eq_condExp_stoppedValue` —
+    `stoppedValue Y α =ᵐ[P] P[stoppedValue Y β | 𝓕_α]` for a right continuous
+    martingale over `ℝ≥0` and `α ≤ β ≤ j`. It is the tower property over the one
+    time form `stoppedValue_ae_eq_condExp` of Milestone 9, with
+    `MeasureTheory.condExp_condExp_of_le`
+    (`MeasureTheory/Function/ConditionalExpectation/Basic.lean:345`) along
+    `MeasureTheory.IsStoppingTime.measurableSpace_mono`
+    (`Probability/Process/Stopping.lean:464`); **no analysis is added** to what
+    the one time form already paid for.
+  * `integral_mul_stoppedValue_eq` —
+    `∫ W * stoppedValue Y β = ∫ W * stoppedValue Y α` for `W` bounded and
+    `𝓕_α`-measurable, by `MeasureTheory.integral_condExp` (`ibid.:237`) and the
+    pull out property `MeasureTheory.condExp_stronglyMeasurable_mul_of_bound`
+    (`MeasureTheory/Function/ConditionalExpectation/PullOut.lean:260`). `W` is
+    bounded rather than integrable because that is the pull out form which needs
+    no integrability of the product, and the consumer has the bound.
+  * `integral_mul_stoppedValue_sub_eq_zero` — the same with the increment on one
+    side, `∫ W * (stoppedValue Y β - stoppedValue Y α) = 0`.
+  * `integral_mul_stoppedValue_sub_eq_compensator` — the quasimartingale form,
+    `∫ W * (Y β - Y α) = ∫ W * (C β - C α)` whenever `Y - C` is a right
+    continuous martingale. It asks two integrabilities and they are about `Y`,
+    not about `C`: the stopped values of the martingale are integrable for free
+    by `integrable_stoppedValue_of_rightContinuous`, and those of `C` are the
+    difference.
+
+  What is left of this item after them is `integral_sq_stoppedValue_sub_eq`, the
+  display above, and the two Hölder estimates under it.
 * `isRelativelyCompact_of_approx`: if `E` is Polish, the domain of `A` contains
   an algebra separating points and vanishing nowhere, the approximation holds
   for each `(f,g) ∈ A`, and `{X n}` satisfies compact containment, then `{X n}`
