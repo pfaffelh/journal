@@ -11609,6 +11609,99 @@ has to be chosen once for all `n`. What stands:
   event, and it is what makes the times **bounded**, which is what Doob's
   inequalities and optional sampling ask of a stopping time.
 
+  **And Markov's inequality is applied on the gap event**, 2026-09-20:
+  `MeasureTheory.measure_setOf_oscHitSeq_gap_le`, in the shape Mathlib states
+  it — the level as a **factor on the left** and not a reciprocal on the right,
+
+  ```
+  ENNReal.ofReal ε * μ ({ω | τ (k+1) ω ≤ τ k ω + δ} ∩ {ω | τ k ω < u})
+    ≤ ∫⁻ ω, ENNReal.ofReal (dist (stoppedValue X β ω) (stoppedValue X α ω)) ∂μ.
+  ```
+
+  It is `MeasureTheory.mul_meas_ge_le_lintegral`
+  (`MeasureTheory/Integral/Lebesgue/Markov.lean:59`; the `₀` form with
+  `AEMeasurable` at `:52`) applied to the **level set** of the distance, with
+  `MeasureTheory.measure_mono` along
+  `MeasureTheory.setOf_oscHitSeq_gap_subset_dist` carrying the gap event into
+  it. The gap event is therefore **not asked to be measurable** — only the
+  distance of the two stopped values is, which is
+  `MeasureTheory.stronglyMeasurable_dist_stoppedValue_oscHitSeqGap`, and its
+  input is `MeasureTheory.stronglyMeasurable_stoppedValue_of_le`
+  (`Probability/Process/Stopping.lean:1016`) at the bounds `u` and `u + δ`.
+  That is the third time the cap at the horizon pays for itself: it excludes
+  the explosion set, it makes the times bounded, and it is what makes them
+  measurable at a fixed index of the filtration. `0 < ε` is not used; at
+  `ε ≤ 0` the statement is true and empty.
+
+  **And the gap summands are discharged in the estimate itself**, 2026-09-20:
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_lintegral_dist`,
+
+  ```
+  ENNReal.ofReal ε * μ {ω | ENNReal.ofReal ε < modulusBased 0 u (extendNNReal (Φ ω)) δ}
+    ≤ ∑ k ∈ Finset.range N, ∫⁻ ω, ENNReal.ofReal (dist (X β_k ω) (X α_k ω)) ∂μ
+      + ENNReal.ofReal ε * μ {ω | oscHitSeq X ε N ω < ↑u.toNNReal},
+  ```
+
+  which is `measure_setOf_lt_modulusBased_le_oscHitSeq` with the inequality
+  above summed over the `N` gap terms. **The level multiplies rather than
+  divides**: `ENNReal` division is total and therefore lies where the level is
+  `0` or `⊤`, so in the product form the statement carries no positivity
+  hypothesis at all and a consumer divides at a level it has already assumed
+  positive.
+
+  **And the horizon summand is removed rather than estimated**, 2026-09-20:
+  `MeasureTheory.setOf_oscHitSeq_lt_subset_iUnion_gap`. If the horizon lies
+  within the reach of `N` steps of size `δ`, that is `u ≤ N • δ`, then
+
+  ```
+  {ω | τ N ω < u}
+    ⊆ ⋃ k ∈ Finset.range N, ({ω | τ (k+1) ω ≤ τ k ω + δ} ∩ {ω | τ k ω < u}),
+  ```
+
+  because a recursion all of whose steps exceed `δ` is past `N • δ ≥ u` at
+  stage `N`, and every earlier time is below `u` by `monotone_oscHitSeq`, which
+  supplies the horizon condition of the gap event for free. **Nothing in it is
+  probabilistic and nothing analytic**: no measure, no topology on the index,
+  no hypothesis on `X`, not even `0 ≤ ε`. Its base case is `oscHitSeq_zero`
+  with `⊥ = 0`, which `CanonicallyOrderedAdd` forces.
+
+  `MeasureTheory.measure_setOf_lt_modulusBased_le_gap` is the estimate that
+  follows, with the two occurrences of the same union as a factor `2`, and
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le` is
+  the whole probabilistic content of this item in one inequality,
+
+  ```
+  ENNReal.ofReal ε * μ {ω | ENNReal.ofReal ε < modulusBased 0 u (extendNNReal (Φ ω)) δ}
+    ≤ 2 * ∑ k ∈ Finset.range N, ∫⁻ ω, ENNReal.ofReal (dist (X β_k ω) (X α_k ω)) ∂μ.
+  ```
+
+  What is left of this item is therefore **one** quantity and no longer two:
+  how the martingale hypothesis makes those `N` lower integrals small,
+  uniformly in the family. That is where Doob from Milestone 9 is spent, and
+  the count `N` is the deterministic `SkorokhodSpace.card_le_of_gapped` read
+  against the condition `u ≤ N • δ`, which is no restriction on a consumer, who
+  chooses `N` after `δ` and `u`.
+
+  **A naming trap that cost a compile and is recorded so it costs no other.**
+  The countable dense set of the début theorem is called `D` throughout this
+  development, and `D(ι, E)` is the notation for the path space; a section or
+  argument named `D` shadows the notation, and a statement mentioning both
+  fails with a synthesis error about `LE (MeasurableSpace ?m → Type)` that
+  names neither. In
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_lintegral_dist` the dense
+  set is therefore `S`.
+
+  **And the order lemmas of Mathlib do not have the shape a memory supplies.**
+  `mul_le_mul_left'` and `add_le_add_left'` do **not** exist — neither on
+  `master` nor on v4.33.1. What exists is
+  `mul_le_mul_right (bc : b ≤ c) (a : α) : a * b ≤ a * c` and
+  `mul_le_mul_left (bc : b ≤ c) (a : α) : b * a ≤ c * a`
+  (`Algebra/Order/Monoid/Unbundled/Basic.lean:61` and `:69`), with their
+  `to_additive` images. The suffix names the side on which the **varying**
+  argument stands, so `add_le_add_left (h : b ≤ c) (a) : b + a ≤ c + a` adds
+  the constant on the *right* — the reverse of what the word suggests, and the
+  reverse of the older convention a memory is likely to supply.
+
   **The times are written in the `WithTop ℝ≥0` shape** — `↑δ.toNNReal` rather
   than `ENNReal.ofReal δ` — because that is where `oscHitSeq` takes its values.
   The two types are the same, but the `binop%` elaborator does not place a

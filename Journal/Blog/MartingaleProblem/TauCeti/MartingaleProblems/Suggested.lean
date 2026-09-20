@@ -42181,6 +42181,62 @@ theorem oscHitSeqGap_le_coe {X : ι → Ω → E} {ε : ℝ}
   gcongr
   exact min_le_right _ _
 
+omit [TopologicalSpace ι] [OrderTopology ι] in
+/-- **The horizon event is itself a union of gap events**, and that is what removes the second
+kind of summand from the estimate rather than bounding it.
+
+If the `N`-th hitting time has not passed the horizon `u`, and `u ≤ N • δ`, then some step below
+`N` advanced by at most `δ` — for if every step advanced by more than `δ`, the `N`-th time would
+be at least `N • δ ≥ u`.  And every time below `N` is then below `u` too, by
+`monotone_oscHitSeq`, so the horizon condition of the gap event comes for free:
+
+```
+{ω | τ N ω < u}
+  ⊆ ⋃ k ∈ Finset.range N, ({ω | τ (k+1) ω ≤ τ k ω + δ} ∩ {ω | τ k ω < u}).
+```
+
+**Nothing here is probabilistic and nothing is analytic**: no measure, no topology on the index,
+no hypothesis on `X`, not even `0 ≤ ε`.  It is the counting argument that says a recursion which
+is `δ`-sparse cannot stay below a horizon it has had `N` steps to leave, and the standing rule is
+respected without a finiteness hypothesis because `τ N ω < u` supplies it.
+
+The base of the induction is `oscHitSeq_zero` together with `⊥ = 0`, which is what
+`CanonicallyOrderedAdd` gives: `0 ≤ ⊥` and `bot_le` force them equal, so the `0`-th time starts
+the count at `0`. -/
+theorem setOf_oscHitSeq_lt_subset_iUnion_gap [AddCommMonoid ι] [CanonicallyOrderedAdd ι]
+    (X : ι → Ω → E) (ε : ℝ) {N : ℕ} {δ u : ι} (hu : u ≤ N • δ) :
+    {ω | oscHitSeq X ε N ω < (u : WithTop ι)}
+      ⊆ ⋃ k ∈ Finset.range N,
+          ({ω | oscHitSeq X ε (k + 1) ω ≤ oscHitSeq X ε k ω + (δ : WithTop ι)}
+            ∩ {ω | oscHitSeq X ε k ω < (u : WithTop ι)}) := by
+  intro ω hω
+  have hωlt : oscHitSeq X ε N ω < (u : WithTop ι) := hω
+  by_contra hcon
+  simp only [Set.mem_iUnion, Finset.mem_range, Set.mem_inter_iff, Set.mem_ofPred_eq,
+    not_exists, not_and] at hcon
+  have hhor : ∀ k, k ≤ N → oscHitSeq X ε k ω < (u : WithTop ι) := fun k hk =>
+    lt_of_le_of_lt (monotone_oscHitSeq X ε ω hk) hωlt
+  have hgap : ∀ k, k < N →
+      oscHitSeq X ε k ω + (δ : WithTop ι) < oscHitSeq X ε (k + 1) ω := by
+    intro k hk
+    exact not_le.1 fun h => absurd (hhor k hk.le) (hcon k hk h)
+  have key : ∀ k, k ≤ N → (((k • δ : ι)) : WithTop ι) ≤ oscHitSeq X ε k ω := by
+    intro k
+    induction k with
+    | zero =>
+      intro _
+      rw [zero_nsmul, oscHitSeq_zero]
+      exact WithTop.coe_le_coe.2 zero_le
+    | succ k ih =>
+      intro hk
+      calc ((((k + 1) • δ : ι)) : WithTop ι)
+          = (((k • δ : ι)) : WithTop ι) + (δ : WithTop ι) := by
+            rw [succ_nsmul, WithTop.coe_add]
+        _ ≤ oscHitSeq X ε k ω + (δ : WithTop ι) :=
+            add_le_add_left (ih (Nat.le_of_succ_le hk)) _
+        _ ≤ oscHitSeq X ε (k + 1) ω := (hgap k hk).le
+  exact absurd hωlt (not_lt.2 (le_trans (WithTop.coe_le_coe.2 hu) (key N le_rfl)))
+
 end MeasureTheory
 
 namespace MeasureTheory
@@ -42224,5 +42280,234 @@ theorem isStoppingTime_oscHitSeqGap [AddCommMonoid ι] [CanonicallyOrderedAdd ι
   (isStoppingTime_oscHitSeq hDc hDd hX hcont (k + 1)).min
     (IsStoppingTime.add_const_of_orderedSub
       (isStoppingTime_oscHitSeqCap hDc hDd hX hcont k u) δ)
+
+/-! ### Markov's inequality on the gap event
+
+`setOf_oscHitSeq_gap_subset_dist` puts the gap event inside a level set of the distance between
+the values at the two stopping times, and the three lemmas above say that those times are
+bounded stopping times.  That is exactly what a Markov inequality consumes, and the two
+statements here are the passage.
+
+The gap event itself is **never asked to be measurable**, and that is not an oversight: the
+inclusion is read through `MeasureTheory.measure_mono` into the level set of a measurable
+function, and Markov's inequality is applied there.  What has to be measurable is the distance
+of the two stopped values, and that is `stronglyMeasurable_stoppedValue_of_le` — for which the
+boundedness `oscHitSeqGap_le_coe` is the input, so the cap at the horizon pays for itself a
+third time.
+-/
+
+/-- **The distance between the two stopped values is strongly measurable.**
+
+Both times are bounded — `α ≤ u` by `min_le_right` and `β ≤ u + δ` by `oscHitSeqGap_le_coe` — so
+`MeasureTheory.stronglyMeasurable_stoppedValue_of_le` gives each stopped value as
+`𝓕`-measurable at the bound, `MeasureTheory.Filtration.le` carries it to `mΩ`, and
+`MeasureTheory.StronglyMeasurable.dist` combines them.
+
+This is where `IsStronglyProgressive X` is spent a second time; the recursion itself spent it on
+the anchor of `measurableSet_mem_oscSet`.  No hypothesis on the measure enters, and the
+statement is about the two times of `setOf_oscHitSeq_gap_subset_dist` and no others. -/
+theorem stronglyMeasurable_dist_stoppedValue_oscHitSeqGap
+    [AddCommMonoid ι] [CanonicallyOrderedAdd ι] [Sub ι] [OrderedSub ι] [AddLeftReflectLE ι]
+    {𝓕 : Filtration ι mΩ} [𝓕.IsRightContinuous]
+    {X : ι → Ω → E} {ε : ℝ} {D : Set ι} (hDc : D.Countable) (hDd : Dense D)
+    (hX : IsStronglyProgressive 𝓕 X)
+    (hcont : ∀ ω, ∀ t : ι, ContinuousWithinAt (fun s => X s ω) (Set.Ici t) t)
+    (k : ℕ) (δ u : ι) :
+    StronglyMeasurable fun ω =>
+      dist (stoppedValue X (fun ω => min (oscHitSeq X ε (k + 1) ω)
+            (min (oscHitSeq X ε k ω) (u : WithTop ι) + (δ : WithTop ι))) ω)
+        (stoppedValue X (fun ω => min (oscHitSeq X ε k ω) (u : WithTop ι)) ω) := by
+  have hβ : StronglyMeasurable[𝓕 (u + δ)] (stoppedValue X
+      (fun ω => min (oscHitSeq X ε (k + 1) ω)
+        (min (oscHitSeq X ε k ω) (u : WithTop ι) + (δ : WithTop ι)))) :=
+    stronglyMeasurable_stoppedValue_of_le hX
+      (isStoppingTime_oscHitSeqGap hDc hDd hX hcont k δ u)
+      (fun ω => oscHitSeqGap_le_coe k δ u ω)
+  have hα : StronglyMeasurable[𝓕 u] (stoppedValue X
+      (fun ω => min (oscHitSeq X ε k ω) (u : WithTop ι))) :=
+    stronglyMeasurable_stoppedValue_of_le hX
+      (isStoppingTime_oscHitSeqCap hDc hDd hX hcont k u)
+      (fun ω => min_le_right _ _)
+  exact (hβ.mono (𝓕.le _)).dist (hα.mono (𝓕.le _))
+
+/-- **Markov's inequality on the gap event**, in the shape Mathlib states it: the level stands on
+the left as a factor and not on the right as a reciprocal.
+
+```
+ENNReal.ofReal ε * μ ({ω | τ (k+1) ω ≤ τ k ω + δ} ∩ {ω | τ k ω < u})
+  ≤ ∫⁻ ω, ENNReal.ofReal (dist (stoppedValue X β ω) (stoppedValue X α ω)) ∂μ
+```
+
+The proof is `MeasureTheory.mul_meas_ge_le_lintegral` applied to the *level set* of the distance
+together with `MeasureTheory.measure_mono` along `setOf_oscHitSeq_gap_subset_dist`; the gap event
+is therefore not asked to be measurable, only to be contained in that level set.
+
+`0 < ε` is not used.  For `ε ≤ 0` the statement is true and empty, since `ENNReal.ofReal ε = 0`
+then; it is the consumer that reads it at a positive level.
+
+What this reduces the first kind of summand of
+`measure_setOf_lt_modulusBased_le_oscHitSeq` to is a quantity Aldous' criterion speaks about
+directly — an increment of the process between two bounded stopping times differing by at most
+`δ` — and that is where the martingale hypothesis of
+`isTight_map_postcomp_of_exists_martingale` enters through the Doob inequalities. -/
+theorem measure_setOf_oscHitSeq_gap_le
+    [AddCommMonoid ι] [CanonicallyOrderedAdd ι] [Sub ι] [OrderedSub ι] [AddLeftReflectLE ι]
+    {𝓕 : Filtration ι mΩ} [𝓕.IsRightContinuous] (μ : Measure Ω)
+    {X : ι → Ω → E} {ε : ℝ} {D : Set ι} (hDc : D.Countable) (hDd : Dense D)
+    (hX : IsStronglyProgressive 𝓕 X)
+    (hcont : ∀ ω, ∀ t : ι, ContinuousWithinAt (fun s => X s ω) (Set.Ici t) t)
+    (k : ℕ) (δ u : ι) :
+    ENNReal.ofReal ε
+        * μ ({ω | oscHitSeq X ε (k + 1) ω ≤ oscHitSeq X ε k ω + (δ : WithTop ι)}
+            ∩ {ω | oscHitSeq X ε k ω < (u : WithTop ι)})
+      ≤ ∫⁻ ω, ENNReal.ofReal (dist
+          (stoppedValue X (fun ω => min (oscHitSeq X ε (k + 1) ω)
+            (min (oscHitSeq X ε k ω) (u : WithTop ι) + (δ : WithTop ι))) ω)
+          (stoppedValue X (fun ω => min (oscHitSeq X ε k ω) (u : WithTop ι)) ω)) ∂μ := by
+  refine le_trans ?_ (mul_meas_ge_le_lintegral (μ := μ)
+    ((stronglyMeasurable_dist_stoppedValue_oscHitSeqGap hDc hDd hX hcont
+      k δ u).measurable.ennreal_ofReal) (ENNReal.ofReal ε))
+  refine mul_le_mul_right (measure_mono fun ω hω => ?_) _
+  exact ENNReal.ofReal_le_ofReal (setOf_oscHitSeq_gap_subset_dist hcont k δ u hω)
+
+end MeasureTheory
+
+namespace MeasureTheory
+
+variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
+variable {E : Type*} [MetricSpace E] [MeasurableSpace E] [BorelSpace E]
+  [SecondCountableTopology E]
+
+/-- **The modulus estimate with the gap summands discharged**, which is the first of the two
+estimates `measure_setOf_lt_modulusBased_le_oscHitSeq` left for a measure.
+
+```
+ENNReal.ofReal ε * μ {ω | ENNReal.ofReal ε < modulusBased 0 u (extendNNReal (Φ ω)) δ}
+  ≤ ∑ k ∈ Finset.range N, ∫⁻ ω, ENNReal.ofReal (dist (X β_k ω) (X α_k ω)) ∂μ
+    + ENNReal.ofReal ε * μ {ω | oscHitSeq X ε N ω < ↑u.toNNReal}
+```
+
+with `α_k = min (τ k) u.toNNReal` and `β_k = min (τ (k+1)) (α_k + δ.toNNReal)`.
+
+**The statement is multiplied through by the level rather than divided by it.**  `ENNReal`
+division is total and therefore lies where the level is `0` or `⊤`; in the product form the
+statement is true at every `ε` without a positivity hypothesis, and a consumer who wants the
+quotient divides at a level it has already assumed positive.
+
+What is left after this is the **horizon** probability `μ {ω | oscHitSeq X ε N ω < ↑u.toNNReal}`,
+the single summand of the second kind, and the question how the martingale hypothesis of
+`isTight_map_postcomp_of_exists_martingale` makes the `N` lower integrals small — uniformly in
+the family and with `N` bounded by the deterministic `SkorokhodSpace.card_le_of_gapped`.
+
+**The countable dense set may not be called `D` here**, because `D(ℝ≥0, E)` is the notation for
+the path space and a section variable of that name shadows it; it is `S` in this statement and
+`D` everywhere the path space does not occur. -/
+theorem mul_measure_setOf_lt_modulusBased_le_lintegral_dist (μ : Measure Ω)
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous]
+    {X : ℝ≥0 → Ω → E} {ε : ℝ} (hε : 0 ≤ ε) {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hX : IsStronglyProgressive 𝓕 X)
+    (hcont : ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s => X s ω) (Set.Ici t) t)
+    {Φ : Ω → D(ℝ≥0, E)} (hΦ : ∀ ω, (Φ ω).toFun = fun t => X t ω)
+    {u δ : ℝ} (hδ : 0 ≤ δ) (hδu : δ < u) (N : ℕ) :
+    ENNReal.ofReal ε * μ {ω | ENNReal.ofReal ε
+          < SkorokhodSpace.modulusBased (0 : ℝ) u (SkorokhodSpace.extendNNReal (Φ ω)) δ}
+      ≤ (∑ k ∈ Finset.range N, ∫⁻ ω, ENNReal.ofReal (dist
+            (stoppedValue X (fun ω => min (oscHitSeq X ε (k + 1) ω)
+              (min (oscHitSeq X ε k ω) ((Real.toNNReal u : ℝ≥0) : WithTop ℝ≥0)
+                + ((Real.toNNReal δ : ℝ≥0) : WithTop ℝ≥0))) ω)
+            (stoppedValue X (fun ω => min (oscHitSeq X ε k ω)
+              ((Real.toNNReal u : ℝ≥0) : WithTop ℝ≥0)) ω)) ∂μ)
+          + ENNReal.ofReal ε
+              * μ {ω | oscHitSeq X ε N ω < ((Real.toNNReal u : ℝ≥0) : WithTop ℝ≥0)} := by
+  refine le_trans (mul_le_mul_right
+    (measure_setOf_lt_modulusBased_le_oscHitSeq μ hε hΦ hδ hδu N) _) ?_
+  rw [mul_add, Finset.mul_sum]
+  exact add_le_add_left (Finset.sum_le_sum fun k _ =>
+    measure_setOf_oscHitSeq_gap_le μ hSc hSd hX hcont k (Real.toNNReal δ) (Real.toNNReal u)) _
+
+omit [MeasurableSpace E] [BorelSpace E] [SecondCountableTopology E] in
+/-- **The horizon summand removed rather than estimated.**  Once the horizon lies within the
+reach of `N` steps of size `δ` — `u ≤ N • δ` — the second kind of summand of
+`measure_setOf_lt_modulusBased_le_oscHitSeq` is itself covered by the first kind, and the whole
+estimate is
+
+```
+μ {ω | ENNReal.ofReal ε < modulusBased 0 u (extendNNReal (Φ ω)) δ}
+  ≤ 2 * ∑ k ∈ Finset.range N,
+      μ ({ω | τ (k+1) ω ≤ τ k ω + δ} ∩ {ω | τ k ω < u}).
+```
+
+The factor `2` is the two occurrences of the same union and nothing deeper.  The passage is
+`setOf_oscHitSeq_lt_subset_iUnion_gap` with `measure_mono` and
+`MeasureTheory.measure_biUnion_finset_le`, so this too asks nothing to be measurable.
+
+**This is what makes the item a single estimate.**  Before it there were two quantities to
+bound, one of them — the horizon probability — of a shape no maximal inequality speaks about;
+after it there is one, and Aldous' criterion speaks about exactly that one.  The condition
+`u ≤ N • δ` is no restriction on a consumer, who chooses `N` after `δ` and `u`. -/
+theorem measure_setOf_lt_modulusBased_le_gap (μ : Measure Ω)
+    {X : ℝ≥0 → Ω → E} {ε : ℝ} (hε : 0 ≤ ε) {Φ : Ω → D(ℝ≥0, E)}
+    (hΦ : ∀ ω, (Φ ω).toFun = fun t => X t ω)
+    {u δ : ℝ} (hδ : 0 ≤ δ) (hδu : δ < u) {N : ℕ}
+    (hN : Real.toNNReal u ≤ N • Real.toNNReal δ) :
+    μ {ω | ENNReal.ofReal ε
+          < SkorokhodSpace.modulusBased (0 : ℝ) u (SkorokhodSpace.extendNNReal (Φ ω)) δ}
+      ≤ 2 * ∑ k ∈ Finset.range N,
+          μ ({ω | oscHitSeq X ε (k + 1) ω
+                ≤ oscHitSeq X ε k ω + ((Real.toNNReal δ : ℝ≥0) : WithTop ℝ≥0)}
+              ∩ {ω | oscHitSeq X ε k ω < ((Real.toNNReal u : ℝ≥0) : WithTop ℝ≥0)}) := by
+  refine le_trans (measure_setOf_lt_modulusBased_le_oscHitSeq μ hε hΦ hδ hδu N) ?_
+  have h2 : μ {ω | oscHitSeq X ε N ω < ((Real.toNNReal u : ℝ≥0) : WithTop ℝ≥0)}
+      ≤ ∑ k ∈ Finset.range N,
+          μ ({ω | oscHitSeq X ε (k + 1) ω
+                ≤ oscHitSeq X ε k ω + ((Real.toNNReal δ : ℝ≥0) : WithTop ℝ≥0)}
+              ∩ {ω | oscHitSeq X ε k ω < ((Real.toNNReal u : ℝ≥0) : WithTop ℝ≥0)}) :=
+    le_trans (measure_mono (setOf_oscHitSeq_lt_subset_iUnion_gap X ε hN))
+      (measure_biUnion_finset_le _ _)
+  rw [two_mul]
+  exact add_le_add_right h2 _
+
+/-- **The whole probabilistic content of the tightness criterion, in one inequality.**
+
+```
+ENNReal.ofReal ε * μ {ω | ENNReal.ofReal ε < modulusBased 0 u (extendNNReal (Φ ω)) δ}
+  ≤ 2 * ∑ k ∈ Finset.range N, ∫⁻ ω, ENNReal.ofReal (dist (X β_k ω) (X α_k ω)) ∂μ
+```
+
+with `α_k = min (τ k) u.toNNReal` and `β_k = min (τ (k+1)) (α_k + δ.toNNReal)` stopping times
+satisfying `α_k ≤ β_k ≤ α_k + δ.toNNReal ≤ u.toNNReal + δ.toNNReal`.
+
+The right hand side is the *only* thing
+`isTight_map_postcomp_of_exists_martingale` still has to make small, and it is a quantity
+Aldous' criterion speaks about directly: the increment of the process between two bounded
+stopping times differing by at most `δ`.  Everything between the modulus and it — the
+subdivision, the hitting recursion, the début, the horizon — is discharged, and none of it asked
+for a measurable modulus or a measurable gap event.
+
+A consumer chooses `N` with `u ≤ N • δ` and reads the criterion's set
+`{f | η ≤ modulusBased 0 u f δ}` at any `ε` with `ENNReal.ofReal ε < η`; the bound is then
+uniform in the family as soon as the lower integrals are, which is what the martingale
+hypothesis together with the Doob inequalities of Milestone 9 delivers. -/
+theorem mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le (μ : Measure Ω)
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous]
+    {X : ℝ≥0 → Ω → E} {ε : ℝ} (hε : 0 ≤ ε) {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hX : IsStronglyProgressive 𝓕 X)
+    (hcont : ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s => X s ω) (Set.Ici t) t)
+    {Φ : Ω → D(ℝ≥0, E)} (hΦ : ∀ ω, (Φ ω).toFun = fun t => X t ω)
+    {u δ : ℝ} (hδ : 0 ≤ δ) (hδu : δ < u) {N : ℕ}
+    (hN : Real.toNNReal u ≤ N • Real.toNNReal δ) :
+    ENNReal.ofReal ε * μ {ω | ENNReal.ofReal ε
+          < SkorokhodSpace.modulusBased (0 : ℝ) u (SkorokhodSpace.extendNNReal (Φ ω)) δ}
+      ≤ 2 * ∑ k ∈ Finset.range N, ∫⁻ ω, ENNReal.ofReal (dist
+            (stoppedValue X (fun ω => min (oscHitSeq X ε (k + 1) ω)
+              (min (oscHitSeq X ε k ω) ((Real.toNNReal u : ℝ≥0) : WithTop ℝ≥0)
+                + ((Real.toNNReal δ : ℝ≥0) : WithTop ℝ≥0))) ω)
+            (stoppedValue X (fun ω => min (oscHitSeq X ε k ω)
+              ((Real.toNNReal u : ℝ≥0) : WithTop ℝ≥0)) ω)) ∂μ := by
+  refine le_trans (mul_le_mul_right
+    (measure_setOf_lt_modulusBased_le_gap μ hε hΦ hδ hδu hN) _) ?_
+  rw [mul_left_comm, Finset.mul_sum]
+  exact mul_le_mul_right (Finset.sum_le_sum fun k _ =>
+    measure_setOf_oscHitSeq_gap_le μ hSc hSd hX hcont k (Real.toNNReal δ) (Real.toNNReal u)) _
 
 end MeasureTheory
