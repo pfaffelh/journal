@@ -11761,6 +11761,52 @@ has to be chosen once for all `n`. What stands:
   what is spent is optional sampling between two stopping times, the pull out
   property of the conditional expectation, and Hölder.
 
+  **This is Ethier--Kurtz's own proof, and it was rediscovered rather than read.
+  Recorded 2026-09-20 so that no run derives it a third time.** \EK, Theorem
+  9.4 is the item stated here, and its proof (p. 147) is the estimate above,
+  with displays worth citing by number:
+
+  * (9.26) defines the dominating variable, and it reads the approximants of
+    **both** `f` and `f²`:
+    `γ_α(δ) = 2 sup |f²(X_α) - Y'_α| + 4‖f‖ sup |f(X_α) - Y_α|
+              + δ^{1/q'} ‖Z'_α‖_{p',T+1} + 2‖f‖ δ^{1/q} ‖Z_α‖_{p,T+1}`,
+    the suprema over `[0, T+1] ∩ ℚ` and `1/p + 1/q = 1`, `1/p' + 1/q' = 1`.
+  * (9.27) is the conclusion,
+    `𝔼[(f(X_α(t+u)) - f(X_α(t)))² | 𝓕_t] ≤ 𝔼[γ_α(δ) | 𝓕_t]`
+    for `0 ≤ t ≤ T`, `0 ≤ u ≤ δ`, and it holds for all real `t, u` and not
+    merely rational ones **by right continuity of `X_α`**.
+  * (9.28) bounds `sup_α 𝔼[γ_α(δ)]`, and `ε` is then chosen depending on `δ`.
+  * Remark 9.5(a): **`p = 1` is not sufficient**, with a two-state Markov chain
+    of rate `n` as the witness — whose finite dimensional distributions converge
+    to those of the zero process while the family does not converge in
+    distribution. That is what makes `p ∈ (1,∞]` a hypothesis and not a
+    convenience.
+  * Remark 9.5(b): for *sequences* the `sup_α` in both conditions may be
+    replaced by `limsup_α`.
+
+  **Where \EK{} go next, and where this roadmap does not.** They feed (9.27)
+  into \EK, Theorem 8.6, their conditional-moment criterion for relative
+  compactness, whose condition (b) asks
+
+  ```
+  𝔼[q^β (X_α(t+u)) (X_α(t)) * q^β (X_α(t)) (X_α(t-v)) | 𝓕^α_t] ≤ 𝔼[γ_α(δ) | 𝓕^α_t]
+  ```
+
+  — the **product of a forward and a backward increment**, which is Billingsley's
+  `w''` in conditional form; Remark 8.7(a) is what lets the one-sided (9.27)
+  serve, and Theorem 8.8 gives sufficient conditions for the `γ_α`.
+
+  This roadmap reaches the modulus through **Aldous** instead
+  (**SkorokhodSpace** Milestone 10), and the choice is recorded rather than
+  implied. It was not made against 8.6 on the merits: by the time (9.27) was in
+  hand, the début theorem, `oscHitSeq` and the deterministic half
+  `modulusBased_le_of_forall_gapped` already stood, so two of the three
+  hypotheses of the Aldous route were discharged and none of 8.6 existed.
+  Both routes consume (9.27) and neither is more general; 8.6 would additionally
+  need the backward increment and the passage of Remark 8.7(a). **If a run finds
+  the remaining `δ`-sparseness estimate expensive, 8.6 is the alternative to
+  weigh, and this paragraph is the place to start.**
+
   **Hence the approximable functions are to be closed under products.** The
   criterion may not be stated for an arbitrary set of approximable `f` and its
   sup-norm closure: the estimate above reads the hypothesis at `f²` as well, so
