@@ -11776,6 +11776,86 @@ has to be chosen once for all `n`. What stands:
   the trap `MeasureTheory.not_stepIndex_mono_time` records for `stepIndex`, here
   closed by the cap rather than by a hypothesis.
 
+  **And the two halves joined, 2026-09-21 — the horizon term with `N` in the
+  denominator.** The block "The horizon term, assembled" carries the first
+  statement of this item in which the deterministic half over `oscHitSeq` and
+  the analytic half over `IsApproximatingPair` occur together:
+
+  ```
+  N * (ENNReal.ofReal ε₀ ^ 2 * P {ω | oscHitSeq V ε₀ N ω < u})
+    ≤ ofReal u ^ (1 - 1/q) * K * (1 + 2 * ofReal c) + N * (2 ε' + 4 ofReal c ε)
+  ```
+
+  — `MeasureTheory.measure_setOf_oscHitSeq_lt_le_of_isApproximatingPair`, for a
+  real process `V` bounded by `c`, progressively measurable and with right
+  continuous paths, and two pairs of the class with common `q`, `T`, `K`
+  approximating `V` and `V²` on the window `Set.Iic u` up to `ε` and `ε'`.
+  Divided by `N` the first summand is `O(1/N)` with constants of the class and
+  not of its member; the second is the approximation error, which the division
+  leaves as it is. **That is the order of the quantifiers**: `N` from the first
+  summand, then `ε` against `N`, then `δ` in the gap sum, where `N` is a
+  constant. `δ` does not occur in the statement at all.
+
+  The cell of the chain is
+  `MeasureTheory.lintegral_ofReal_dist_sq_le_of_isApproximatingPair`, which is
+  `ofReal_integral_sq_sub_le` read at two stopping times with the two
+  increments of the approximants left as **lower integrals of compensator
+  increments** rather than as Hölder bounds — that being what
+  `IsApproximatingPair.sum_lintegral_enorm_compensator_sub_le` can sum over a
+  chain and what `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le`
+  cannot. Of the recursion the assembly reads three facts and no more:
+  `MeasureTheory.isStoppingTime_oscHitSeqCap`,
+  `MeasureTheory.untopA_oscHitSeqCap_le` and
+  `MeasureTheory.untopA_oscHitSeqCap_le_succ`. A different recursion with those
+  three is served by the same two statements.
+
+  **The constant is `1 + 2 c`, not `1 + 4 c`.** The increment of the square is
+  read at the weight `1` and contributes one compensator increment of the
+  second pair; the cross term is read at the weight `V` and carries the factor
+  `2` of `(v_b - v_a)² = (v_b² - v_a²) - 2 v_a (v_b - v_a)`, hence `2 c` times
+  the compensator increment of the first pair. The `4` in front of `c ε` is
+  that `2` times the `2` of the two ends of the window at which the
+  approximation error is read.
+
+  **One statement had to be factored out for this, and the factoring is a
+  finding.** `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le_lintegral`
+  is `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le` with the
+  Hölder step left undone, `‖∫ W (Y β - Y α)‖ₑ ≤ ofReal c * ∫⁻ ‖C β - C α‖ₑ`,
+  and it carries **neither the horizon `T` nor a window length `δ`**: both are
+  read by the Hölder step alone. So optional sampling and the invisibility of
+  the martingale part to a weight from the past hold over *any* bounded
+  stopping times whatever, and the uniform version is the composition of this
+  one with `IsApproximatingPair.lintegral_enorm_compensator_sub_le`. The
+  relation is that of `IsApproximatingPair.enorm_compensator_sub_le_lintegral`
+  to `IsApproximatingPair.enorm_compensator_sub_le`, one level up.
+
+  **And the same bound in the shape its consumer reads**,
+  `MeasureTheory.measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair`:
+
+  ```
+  ofReal ε₀ * P {ω | oscHitSeq V ε₀ N ω < u}
+    ≤ (ofReal u ^ (1 - 1/q) * K * (1 + 2 ofReal c) / N + (2 ε' + 4 ofReal c ε)) / ofReal ε₀
+  ```
+
+  for `0 < ε₀` and `N ≠ 0`. The shape is read off
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_lintegral_dist`, whose
+  second summand is `ofReal ε * μ {oscHitSeq X ε N < u}` — the level in the
+  **first** power and with no factor `N` — while the statement above it carries
+  `N * ofReal ε₀ ^ 2`, because Markov is applied at the square and the counting
+  step makes the `N`. The two divisions are `ENNReal.mul_le_mul_iff_left` with
+  `ENNReal.div_mul_cancel` (`Mathlib/Basic/ENNReal/Inv.lean:176`) and
+  `ENNReal.le_div_iff_mul_le` (`:369`); neither is ever carried out on the right
+  hand side, which is why no finiteness beyond `N ≠ 0` and `0 < ε₀` is asked.
+
+  **And a passage that is not cosmetic.** The horizon block produces
+  `∫⁻ ω, ofReal (dist …) ^ 2 ∂P` and the square identity produces
+  `ofReal (∫ ω, (…)² ∂P)`; the two are the same only through
+  `MeasureTheory.ofReal_integral_eq_lintegral_ofReal`
+  (`MeasureTheory/Integral/Bochner/Basic.lean:734`), which asks the square to be
+  integrable. That is where the bound on `V` is spent a fourth time, after the
+  weight of the cross term, the integrability of the stopped values and their
+  products.
+
   **A naming trap that cost a compile and is recorded so it costs no other.**
   The countable dense set of the début theorem is called `D` throughout this
   development, and `D(ι, E)` is the notation for the path space; a section or
@@ -12249,6 +12329,21 @@ has to be chosen once for all `n`. What stands:
   consumer is this item, its inputs are the stopping time machinery of
   Milestone 9, and a filtration occurs in its hypothesis — the three reasons
   that milestone itself gives for the move.
+
+  **A correction to the two paragraphs above, 2026-09-21.** They name
+  `SkorokhodSpace.modulusBased_le_of_forall_stoppingTime` as *the* statement
+  between the present state and this item, and that is no longer what the
+  computation shows. The divergence they record is real, but it is a finding
+  about **one** of the two routes, not about the item: it belongs to
+  `MeasureTheory.measure_setOf_lt_modulusBased_le_gap`, which ties `N` to `δ` by
+  `u ≤ N • δ` and thereby forbids choosing `N` first. The route with a **free**
+  `N` — `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_lintegral_dist`,
+  which leaves the horizon probability standing as a second summand instead of
+  absorbing it — has no such tie, and its horizon summand is bounded by
+  `MeasureTheory.measure_setOf_oscHitSeq_lt_le_of_isApproximatingPair` with
+  `N` in the denominator. The Aldous route stays in the roadmap as the second
+  way and is not withdrawn; what is withdrawn is the claim that it is the
+  **only** one.
 
   **Why the square is the only route, as a theorem and no longer as a
   paragraph**, 2026-09-20. That the martingale part of the increment is not

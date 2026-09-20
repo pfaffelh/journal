@@ -50052,3 +50052,240 @@ aber ihr Ergebnis steht hier, damit der nächste Lauf sie nicht wiederholt.
 Der fünfzehnte Lauf dieses Tages hat festgehalten, daß `WithTop ℝ≥0` und `ℝ≥0∞`
 nicht unter *ein* `+` kommen; hier wird nicht addiert, aber die Grenze ist
 dieselbe, und `untopA` ist die Stelle, an der sie überschritten wird.
+
+### 2026-09-21, erster Lauf des Tages — der Vorschlag des Vorlaufs steht, und mit ihm treffen sich die beiden Hälften des ersten Punktes zum ersten Mal in **einer** Aussage; die Konstante des Vorschlags war dabei zu groß, und bezahlt wurde das mit einer Abtrennung, die zwei Voraussetzungen ersatzlos verliert
+
+**Bearbeitet:** `measure_setOf_oscHitSeq_lt_le_of_isApproximatingPair` — der
+Horizontterm als Schranke, in der `N` im Nenner steht. Weiter am ersten Punkt
+der Kette des Meilensteins 11 von `MartingaleProblems`, wie angeordnet. Kein
+Meilenstein 8, kein Meilenstein 14, kein C.5/G.
+
+#### Was gebaut ist
+
+**Vier** neue Deklarationen in `TauCeti/MartingaleProblems/Suggested.lean`, und
+ein vorhandener Beweis, der dabei von neunzehn Zeilen auf drei zusammengeht.
+Die vierte ist der Vorschlag, den dieser Lauf für den nächsten gestellt hatte;
+er ist im selben Lauf eingelöst worden, weil er nach dem Satz darüber nur noch
+zwei Divisionen war.
+
+* `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le_lintegral` — der
+  Martingalzuwachs gegen ein Gewicht aus der Vergangenheit, **vor** Hölder:
+  `‖∫ ω, W ω * (Y β ω − Y α ω) ∂P‖ₑ ≤ ofReal c * ∫⁻ ω, ‖C (β ω) ω − C (α ω) ω‖ₑ ∂P`.
+  Er steht **vor** `enorm_integral_mul_stoppedValue_sub_le`, das jetzt seine
+  Komposition mit `lintegral_enorm_compensator_sub_le` ist.
+* `MeasureTheory.lintegral_ofReal_dist_sq_le_of_isApproximatingPair` — die Zelle:
+  ```
+  ∫⁻ ω, ofReal (dist (stoppedValue V β ω) (stoppedValue V α ω)) ^ 2 ∂P
+    ≤ (∫⁻ ‖C' β − C' α‖ₑ + 2 ofReal c * ∫⁻ ‖C β − C α‖ₑ) + (2 ε' + 4 ofReal c * ε)
+  ```
+  für Stoppzeiten `α ≤ β ≤ j` mit Werten im Fenster, zwei Paare der Klasse und
+  `‖V‖ ≤ c`.
+* `MeasureTheory.measure_setOf_oscHitSeq_lt_le_of_isApproximatingPair` — der
+  Zusammenbau:
+  ```
+  N * (ofReal ε₀ ^ 2 * P {ω | oscHitSeq V ε₀ N ω < u})
+    ≤ ofReal u ^ (1 − 1/q) * K * (1 + 2 * ofReal c) + N * (2 ε' + 4 * ofReal c * ε).
+  ```
+* `MeasureTheory.measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair` —
+  dasselbe in der Gestalt, die der Verbraucher liest, für `0 < ε₀` und `N ≠ 0`:
+  ```
+  ofReal ε₀ * P {ω | oscHitSeq V ε₀ N ω < u}
+    ≤ (ofReal u ^ (1 − 1/q) * K * (1 + 2 ofReal c) / N + (2 ε' + 4 ofReal c ε)) / ofReal ε₀.
+  ```
+
+**Geprüft:** `scripts/check_master.py` meldet für die ganze Kette **0 Fehler,
+0 `sorry`, 0 veraltete Namen** (Mathlib `94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `v4.35.0-rc2`). Die Warnungen sind 18 / 35 / **112** und damit **unverändert**
+gegenüber dem vor dem Lauf eigens gemessenen Stand. Alle vier neuen und der
+umgebaute alte hängen nach `check_axioms_master.py` auf `propext`,
+`Classical.choice`, `Quot.sound` und auf nichts sonst. `check_cited_lines.py`:
+**378 von 378** gepaarten Fundstellen stimmen (sechzehn mehr als vor dem Lauf,
+es sind die neuen Zitate), 0 tote, 0 verschoben. `check_duplicates.py` und
+`check_own_names.py` finden zu den neuen Namen nichts (2637 eigene
+Deklarationen, vier mehr als vor dem Lauf; die Zahl der ungedeckten Namen bleibt
+bei 424). `check_negatives.py`: **49** Behauptungen, 0 mit unerwarteten
+Treffern — dieser Lauf hat **keine** neue Negativaussage aufgestellt.
+`check.py` meldet `clean`.
+
+#### Die Konstante des Vorschlags war zu groß, und der Grund ist nachrechenbar
+
+Der Vorschlag des Vorlaufs nannte `(1 + 4 * ofReal c)`; heraus kommt
+`(1 + 2 * ofReal c)`, und das ist nicht Kosmetik, sondern die Buchführung der
+beiden Gewichte:
+
+* der Zuwachs des **Quadrats** wird am Gewicht `1` gelesen und liefert den
+  Kompensatorzuwachs des zweiten Paares **einmal**;
+* der **Kreuzterm** wird am Gewicht `V` gelesen und trägt den Faktor `2` der
+  Identität `(v_b − v_a)² = (v_b² − v_a²) − 2 v_a (v_b − v_a)`, also
+  `2 * ofReal c` mal den Kompensatorzuwachs des ersten Paares.
+
+Der Faktor `4` vor `c ε` ist dieselbe `2` mal die `2` der beiden Fensterenden,
+an denen der Approximationsfehler gelesen wird. Beide Zahlen sind damit
+*erklärt* und nicht bloß hingeschrieben, und die schärfere Konstante ist
+genommen, weil die Regel der minimalen Voraussetzungen für Konstanten ebenso
+gilt.
+
+#### Vier Befunde
+
+* **Eine Zusage der Roadmap ist beim Nachrechnen falsch geworden und ist
+  berichtigt.** `MartingaleProblems/README.md` nennt an zwei Stellen
+  `SkorokhodSpace.modulusBased_le_of_forall_stoppingTime` als **den** Satz
+  zwischen dem jetzigen Stand und diesem Punkt — einen Namen, den keine der
+  drei `Suggested.lean` führt und den `check_own_names.py` seit langem als
+  ungedeckt meldet. Die Divergenz, auf die sich die Zusage stützt, ist echt,
+  aber sie ist ein Befund über **einen** der beiden Wege: sie gehört
+  `measure_setOf_lt_modulusBased_le_gap`, das `N` durch `u ≤ N • δ` an `δ`
+  bindet. Der Weg mit **freiem** `N` —
+  `mul_measure_setOf_lt_modulusBased_le_lintegral_dist`, das den Horizontterm
+  als zweiten Summanden stehenläßt statt ihn in die Lückensumme zu schlucken —
+  hat die Bindung nicht: bei festem `N` ist die Lückensumme `N · √(δ^{1−1/q})`
+  und geht mit `δ ↓ 0` gegen null, und der Horizontterm ist seit diesem Lauf
+  `O(1/N)`. Die Roadmap sagt das an einer dritten Stelle bereits richtig; die
+  beiden alten Absätze sind stehengeblieben und widersprachen ihr. Sie tragen
+  jetzt die Berichtigung, und der Aldous-Weg bleibt als **zweiter** Weg
+  stehen — zurückgenommen ist nur, daß er der einzige sei.
+* **Die abgetrennte Aussage trägt weder den Horizont `T` noch eine Fensterlänge
+  `δ`, und das ist der eigentliche Ertrag der Abtrennung.** Beide werden
+  **allein** vom Hölder-Schritt gelesen. Der Übergang vom Martingalzuwachs zum
+  Kompensatorzuwachs — optionales Sampling, und die Unsichtbarkeit des
+  Martingalanteils für ein Gewicht aus der Vergangenheit — gilt also über
+  **beliebigen** beschränkten Stoppzeiten. Das ist dieselbe Beobachtung, die
+  der Vorlauf eine Stufe tiefer gemacht hat, bei
+  `enorm_compensator_sub_le_lintegral` gegen `enorm_compensator_sub_le`, und sie
+  wiederholt sich hier auf der Ebene darüber: **wer eine Abschätzung je Zelle
+  führt, bezahlt `N^{1/q}`; wer erst summiert, bezahlt nichts.**
+* **Die Brücke von `∫⁻ ofReal(dist)²` zu `ofReal (∫ (·)²)` ist keine
+  Umschreibung.** Der Horizontblock erzeugt das eine, die Quadratidentität
+  schätzt das andere ab, und zusammen kommen sie nur über
+  `MeasureTheory.ofReal_integral_eq_lintegral_ofReal`
+  (`MeasureTheory/Integral/Bochner/Basic.lean:734`), das die **Integrierbarkeit
+  des Quadrats** verlangt. Das ist die vierte Stelle, an der die Schranke an `V`
+  bezahlt — nach dem Gewicht des Kreuzterms, der Integrierbarkeit der
+  gestoppten Werte und der ihres Produktes. Ohne sie stünden links und rechts
+  zwei verschiedene Größen.
+* **`mul_le_mul_left` und `mul_le_mul_right` noch einmal, und diesmal beim
+  Umbau eines fremden Beweises.** Der Vorlauf hat die Regel notiert — der
+  Zusatz benennt, **welcher Operand variiert** —, und beim Kürzen von
+  `enorm_integral_mul_stoppedValue_sub_le` ist sie trotzdem verletzt worden:
+  der letzte Schritt geht von `ofReal c * X` zu `ofReal c * Y`, der variierende
+  Operand steht rechts, also `mul_le_mul_right`. Der Befund ist nicht die Regel,
+  sondern **wo man sie verliert**: nicht beim Schreiben einer neuen Zeile,
+  sondern beim Zusammenziehen einer fremden `calc`-Kette, deren letzter Schritt
+  den Namen schon richtig führte. **Die Abhilfe ist, den ersetzten Schritt zu
+  lesen statt ihn zu raten.**
+
+  *Was dieser Lauf dazu **nicht** sagen kann:* der erste Durchlauf von
+  `check_master.py` ist nach mehreren Minuten ohne Meldung abgebrochen worden,
+  und ich habe die Ursache dem falschen Zusatz zugeschrieben. Das war eine
+  Fehlablesung der Uhr — der Neudurchlauf mit der Berichtigung braucht **88
+  Sekunden** gegen 87 vor dem Lauf, und über den abgebrochenen ist damit
+  **nichts** bewiesen. Er ist abgebrochen worden, ehe er etwas gemeldet hat.
+
+#### Wo der erste Punkt der Kette jetzt steht
+
+| Größe | Stand |
+| --- | --- |
+| alles Deterministische bis zur Modulabschätzung | steht |
+| Markov auf den Lückenereignissen, über `N` summiert | steht |
+| optionales Sampling zwischen zwei Stoppzeiten | steht |
+| Martingalzuwachs gegen ein Gewicht aus der Vergangenheit | steht |
+| Zuwachs → Kompensatorzuwachs (Quasimartingal) | steht |
+| Quadratidentität, Cauchy–Schwarz, Hölder am Kompensator | steht |
+| die Klasse `𝓐 n` als Prädikat samt acht Folgerungen | steht |
+| die Approximationsfehler-Hypothese, ungewichtet und gewichtet | steht |
+| die Quadratidentität am Prozeß — (9.26) selbst | steht |
+| die Summe der Kompensatorzuwächse über aufeinanderfolgende Fenster | steht |
+| die Brücke von `WithTop ι` in den Index für die gekappten Zeiten | steht |
+| **die Zelle: Quadratzuwachs gegen zwei Kompensatorzuwächse** | **steht, dieser Lauf** |
+| **der Horizontterm mit `N` im Nenner** | **steht, dieser Lauf** |
+| **der Horizontterm in der Gestalt, die der Verbraucher liest (`ofReal ε * μ`)** | **steht, dieser Lauf** |
+| der Lückenterm und die Wahl von `δ` | offen |
+
+**Der Horizontterm ist damit fertig.** Was von dem einen Punkt bleibt, ist der
+**Lückenterm** — der erste Summand von
+`mul_measure_setOf_lt_modulusBased_le_lintegral_dist` — und die Wahl von `δ`
+darin, bei festem `N`.
+
+**Die Voraussetzung, die dieser Punkt erbt und nicht neu aufmacht:** `hcont`
+verlangt die Rechtsstetigkeit der Pfade von `V` an **jedem** Stichprobenpunkt,
+nicht bloß fast sicher. Sie kommt aus dem Débutsatz über `oscHitSeq` und stand
+schon in `mul_measure_setOf_oscHitSeq_lt_le_sum_lintegral`; der Befund des
+fünften Laufs vom 2026-09-20, daß die Rechtsstetigkeit im gestoppten
+Martingalsatz nur `∀ᵐ` gelesen wird, betrifft eine andere Stelle und hebt diese
+nicht auf. Sie ist hier zu vermerken, damit kein Lauf sie für neu hält.
+
+#### Die Gestalt für den Verbraucher, im selben Lauf eingelöst
+
+Der Vorschlag, den dieser Lauf für den nächsten hatte —
+`measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair` —, ist im selben
+Lauf gebaut, weil nach dem Satz darüber nur zwei Divisionen blieben.
+
+**Warum genau diese Gestalt, und sie ist abgelesen und nicht gewählt.**
+`MeasureTheory.mul_measure_setOf_lt_modulusBased_le_lintegral_dist` — die
+Fassung mit **freiem** `N`, nicht die mit der Bindung `u ≤ N • δ` — läßt genau
+zwei Summanden stehen, und ihr zweiter ist
+
+```
+ENNReal.ofReal ε * μ {ω | oscHitSeq X ε N ω < u},
+```
+
+also `ofReal ε` in der **ersten** Potenz und **ohne** den Faktor `N`. Der Satz
+darüber steht mit `N * ofReal ε₀ ^ 2` davor, weil Markov am Quadrat angewandt
+wird und der Zählschritt das `N` erzeugt. Die Umformung ist daher kein
+Kosmetikschritt, sondern die Anpassung an den einzigen Verbraucher.
+
+**Und die Vorfrage, die der Vorschlag gestellt hatte, ist mit dem zweiten der
+beiden Wege beantwortet.** Gefragt war, ob `(B + N * A) / N = B / N + A` über
+`ENNReal.add_div` auszurechnen sei oder ob die Ungleichung gleich in der
+Gestalt `X ≤ B / N + A` zu führen sei. Es ist das zweite, und der Grund ist der
+vermutete: in `ℝ≥0∞` zieht jede ausgeführte Division eine Nebenbedingung nach
+sich, eine Ungleichung keine. Gebraucht sind daher nur
+`ENNReal.mul_le_mul_iff_left` mit `ENNReal.div_mul_cancel`
+(`Mathlib/Basic/ENNReal/Inv.lean:176`) für die Division durch `N` und
+`ENNReal.le_div_iff_mul_le` (`:369`) für die durch `ofReal ε₀`; `N ≠ 0` und
+`0 < ε₀` lösen alle vier Seitenbedingungen ein, und rechts wird **nie**
+dividiert. `ENNReal.add_div` (`:505`) und `ENNReal.mul_div_cancel` (`:188`),
+die der Vorschlag noch nannte, kommen im Beweis nicht vor.
+
+#### Vorschlag für den nächsten Lauf
+
+**Der Lückenterm bei festem `N`: `tendsto_sum_lintegral_ofReal_dist_oscHitSeqGap_nhdsGT_zero`
+— daß der erste Summand von
+`mul_measure_setOf_lt_modulusBased_le_lintegral_dist` mit `δ ↓ 0` gegen null
+geht, bei **festem** `N`.**
+
+> Für festes `N` und die Daten des Satzes dieses Laufs:
+> ```
+> Tendsto (fun δ ↦ ∑ k ∈ Finset.range N, ∫⁻ ω, ofReal (dist (X β_k^δ ω) (X α_k ω)) ∂μ)
+>   (𝓝[>] 0) (𝓝 0)
+> ```
+> mit `α_k = min (τ k) u` und `β_k^δ = min (τ (k+1)) (α_k + δ)`, den
+> `δ`-gekappten Zellen des Lückenblocks.
+
+**Warum sie jetzt dran ist, und warum sie bei festem `N` überhaupt geht.** Der
+Befund des dreiundzwanzigsten Laufs — daß die Zusammensetzung divergiert —
+gehört der Fassung mit der Bindung `u ≤ N • δ`, wo `N ≈ u/δ` mitwächst. Bei
+**freiem** `N` ist `N` eine Konstante, jeder der `N` Summanden ist nach
+`lintegral_ofReal_dist_le_sqrt_of_biSup_le` und
+`IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le` durch
+`ofReal √(S.toReal)` mit `S = O(ofReal δ ^ (1−1/q))` beschränkt, und
+`tendsto_ofReal_rpow_mul_nhdsGT_zero` — schon bewiesen, und die Stelle, an der
+`1 < q` ein zweites Mal bezahlt — macht daraus null. **Hier ist die Zelle
+`δ`-gekappt und Hölder je Zelle ist richtig**, anders als beim Horizontterm:
+die `N` Zellen sind nicht aufeinanderfolgend, sondern durch Lücken getrennt,
+und `N` wächst nicht.
+
+**Worauf sie ruht.** `MeasureTheory.measure_setOf_oscHitSeq_gap_le` und
+`lintegral_ofReal_dist_le_sqrt_of_biSup_le` für den einzelnen Summanden,
+`IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le` für die beiden
+Zuwächse darin — das ist die Fassung **mit** Hölder, die der Horizontterm nicht
+gebrauchen konnte und die hier die richtige ist —, und
+`tendsto_ofReal_rpow_mul_nhdsGT_zero` für den Grenzübergang. Zu klären ist
+**eine** Sache: ob die `δ`-gekappte Zelle dieselben Integrierbarkeitseingaben
+verlangt wie die des Horizontterms, oder ob
+`IsStoppingTime.add_const_of_orderedSub` — das der Horizontblock ausdrücklich
+nicht braucht — hier eine zusätzliche Voraussetzung an den Index einträgt.
+
+**Und danach ist der erste Punkt der Kette zusammenzusetzen**: erst `N` aus dem
+Horizontterm, dann `δ` aus diesem, und das ist die Reihenfolge, die der
+dreiundzwanzigste Lauf als die einzige konvergente benannt hat.
