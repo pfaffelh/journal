@@ -45553,3 +45553,227 @@ Schichtformel bis zu der Gestalt, die das Manuskript benutzt. Was bleibt:
 3. **Die zweite Hälfte von Vorschlag 2 des Vorvorlaufs bleibt stehen** — die
    gleichmäßige Fassung von `CompactContainment` an einer nichttrivialen Folge
    von Sprungprozessen vorführen. Sie ist von diesem Lauf unberührt.
+
+### 2026-09-20, dritter Lauf des Tages — beide Vorschläge stehen, und Vorschlag 1 hat den Weg gewechselt, den der Vorlauf ihm vorgeschrieben hatte: die angesagte Zusammensetzung hätte den klassischen Faktor `1` gegen `2` eingetauscht; dazu ein Werkzeug, das den Nebenfund dieses Laufs künftig maschinell macht — die Roadmap versprach an einer Stelle einen Satz unter einem Namen, den kein Lauf je geschrieben hat
+
+**Bearbeitet:** die Vorschläge 2 (die Entscheidung) und 1 (der Satz) des
+Vorlaufs, in dieser Reihenfolge, wie der Vorlauf es verlangt hatte.
+
+Vier neue Deklarationen in `MartingaleProblems/Suggested.lean`, eine neue
+Prüfung (`scripts/check_own_names.py`), zwei Absätze in Meilenstein 9 und zwei
+berichtigte Akzeptanzbeispiele. **Die Warnungszahlen sind unverändert**
+(18 / 35 / 106), also hat keine der vier eine Warnung hinterlassen.
+
+#### Vorschlag 2 ist entschieden, und die Entscheidung ist gegen die `eLpNorm`-Fassung
+
+Der Vorlauf hatte sie ausdrücklich **vor** Vorschlag 1 gestellt, weil sie
+dessen Gestalt mitbestimmt. Die Entscheidung ist: **die Fensterungleichungen
+bleiben in `ℝ≥0∞`, eine `eLpNorm`-Fassung wird nicht nachgereicht**, und
+Meilenstein 9 sagt das jetzt mit Begründung, statt die Fassung zu nennen.
+
+Der Grund ist nicht Aufwand. `eLpNorm` wird von einer **reellwertigen**
+Funktion genommen, und jede reellwertige Kodierung des Fenstersupremums liest
+`0`, wo der Pfad entweicht; eine `eLpNorm`-Fassung müßte also die fast sichere
+Endlichkeit des Supremums als Voraussetzung tragen und sagte dann nicht mehr
+als die `ℝ≥0∞`-Fassung, aus der sie abgeleitet wäre. Der Verbraucher,
+Meilenstein 11, liest ohnehin in `ℝ≥0∞`.
+
+**Was die Entscheidung kostenlos macht, ist aber ein Satz und keine Ansage**,
+und er ist eingetragen: `Martingale.ae_biSup_enorm_lt_top`. Für ein
+rechtsstetiges Martingal über einem endlichen Maß ist das Fenstersupremum f.s.
+endlich, ohne jede Voraussetzung über die Martingaleigenschaft hinaus. Der
+Beweis ist Markov längs der ganzen Zahlen: die Entweichmenge liegt in **jeder**
+Niveaumenge `{ENNReal.ofReal n ≤ ⨆ t ∈ Set.Iic T, ‖X t ω‖ₑ}`, deren Maß die
+Maximalungleichung durch `𝔼‖X T‖ / n` beschränkt, und `c / n → 0`. Damit
+verliert die `ℝ≥0∞`-Gestalt nichts: wer eine reelle Zahl will, nimmt `.toReal`
+und **weiß**, daß er keinen Müllwert liest.
+
+Keine Meßbarkeit der Entweichmenge geht dabei ein — `measureReal_mono` ist
+Monotonie des äußeren Maßes —, `measurable_biSup_enorm_of_countable` ist also
+auch hier keine Eingabe.
+
+#### Vorschlag 1 steht, aber **nicht** als die Zusammensetzung, die der Vorlauf angesagt hatte, und das ist der Befund des Laufs
+
+Der Vorlauf hatte geschrieben, `Martingale.measure_iSup_norm_le` sei „jetzt
+dieselbe Zusammensetzung wie die `Lᵖ`-Fassung — `Martingale.submartingale_norm`
+und dann `Submartingale.mul_measReal_le_biSup_enorm_le`". Die erste Hälfte
+stimmt, die zweite nicht, und der Unterschied ist die Konstante.
+
+> `Submartingale.mul_measReal_le_biSup_enorm_le` ist die **zweiseitige**
+> Fassung: sie liest die Niveaumenge von `|Y|` und bezahlt dafür mit
+> `2 𝔼[(Y T)⁺] − 𝔼[Y ⊥]`. Auf `Y = ‖X ·‖` gelesen gibt das
+> `2 𝔼‖X T‖ − 𝔼‖X ⊥‖`, und das ist **mindestens** `𝔼‖X T‖`, weil `‖X ·‖` ein
+> Submartingal ist. Der klassische Faktor `1` wäre auf diesem Weg verloren.
+
+Die Aussage, die der Meilenstein nennt und die das Manuskript benutzt, ist
+`ε · P {ε ≤ ⨆ t ≤ T, ‖X t‖} ≤ 𝔼‖X T‖`, also mit `1`. Sie ruht auf der
+**einseitigen lokalisierten** Schranke des Vorlaufs,
+`Submartingale.mul_measReal_exists_ge_le_setIntegral_countable`: für ein
+**nichtnegatives** Submartingal braucht es keinen Betrag, die einseitige
+Schranke greift unmittelbar, und ihre rechte Seite ist ein Integral über die
+Niveaumenge, das durch `𝔼[Y T]` nach oben abgeschätzt wird.
+
+Eingetragen sind deshalb zuerst die beiden Fensterschranken für nichtnegative
+Submartingale:
+
+* `Submartingale.mul_measReal_lt_biSup_enorm_le_of_nonneg` (striktes Niveau,
+  das primitive) und
+* `Submartingale.mul_measReal_le_biSup_enorm_le_of_nonneg` (nicht-striktes
+  Niveau, das Korollar längs `𝓝[<] ε`).
+
+Sie sind **nicht** die zweiseitigen Sätze mit `0 ≤ Y` spezialisiert: sie laufen
+durch eine andere diskrete Eingabe. Und sie erben von ihr zweierlei — sie haben
+**keine** untere Schranke am Fenster und **keinen** Term bei `⊥`, weil die
+Einseitigkeit beides ersetzt hat. Das ist dieselbe Buchführung, die der Vorlauf
+für die lokalisierte Fassung über `ℕ` aufgeschrieben hat, eine Stufe höher.
+
+`Martingale.measure_iSup_norm_le` ist dann die Anwendung auf `‖X ·‖` und nichts
+sonst, mit derselben Begegnung zweier Normen wie bei der `Lᵖ`-Fassung
+(`Real.enorm_eq_ofReal` und `ofReal_norm`) und mit der Rechtsstetigkeit, die von
+den Pfaden von `X` verlangt und über `IsRightContinuous.continuous_comp` auf die
+Norm getragen wird.
+
+**Der Vorlauf hatte eine halbe Stunde geschätzt und als möglichen Mehraufwand
+die Umschreibung zwischen `P.real` und `ENNReal` benannt.** Die war es nicht —
+sie kommt gar nicht vor, weil beide Seiten schon in `Measure.real` stehen. Was
+es war, ist die Wahl der Eingabe, und sie ist keine Geschmacksfrage: die
+angesagte hätte einen anderen Satz bewiesen.
+
+#### Ein Nebenfund, der nicht auf der Liste stand: die Roadmap versprach einen Satz unter einem Namen, den es nicht gibt
+
+Beim Anschließen fiel das Akzeptanzbeispiel „Doob's `Lᵖ` inequality, computed"
+von Meilenstein 9 auf. Es verlangte, daß **`Martingale.eLpNorm_iSup_norm_le`**
+für die Brownsche Bewegung `𝔼[(⨆ t ≤ T, |Y t|)²] ≤ 4 𝔼[Y T²]` gebe. Diese
+Deklaration steht in **keiner** unserer vier `Suggested.lean` und hat auch nie
+darin gestanden; was den Dienst tut, ist
+`Martingale.lintegral_biSup_enorm_rpow_le` vom Vorlauf, mit `r = 2` und der
+Konstanten `(r/(r−1))^r = 4`. Das Beispiel ist berichtigt, und ein zweites ist
+danebengestellt, das die Konstante der **Maximal**-Ungleichung prüft — genau die
+Unterscheidung, an der dieser Lauf beinahe hängengeblieben wäre: auf denselben
+Daten gibt die zweiseitige Fassung `2 𝔼|Y T|`, und das Beispiel scheitert an ihr.
+
+**Der Fund war Zufall, und das ist der eigentliche Befund.** Er ist beim Lesen
+aufgefallen und von keiner Prüfung. `scripts/check_cited_names.py` prüft die
+zitierten **Mathlib**-Namen und sagt in seinem eigenen Doc-Kommentar, ein
+Fehlschlag heiße nichts, der Name „kann auch unsere eigene Roadmap-Vokabel
+sein" — genau dort fiel dieser hinein.
+
+#### Also ein neues Werkzeug: `scripts/check_own_names.py`
+
+Es sammelt jedes in Backticks gesetzte Zitat der vier `README.md` und meldet
+das, was **weder** in Mathlib `94ef6b89544` **noch** in einer unserer vier
+`Suggested.lean` gedeckt ist. Die Deckung wird nachsichtig geprüft — der letzte
+Namensbestandteil genügt —, die gemeldete Zahl ist also eine **untere
+Schranke**.
+
+Der erste Durchlauf: **8 605 Zitate**, davon 65 Fließtext, **390 ohne Deckung**,
+und darunter **48 qualifizierte** — Name mit Punkt, Namensraum vorhanden, Name
+nicht.
+
+**Und hier ist die Grenze des Werkzeugs zu benennen, sonst liest es sich
+falsch.** Eine Tau-Ceti-Roadmap *benennt* Aussagen, die noch zu beweisen sind;
+ein Name ohne Deklaration ist deshalb im Regelfall ein **offener Punkt** und
+kein Fehler. Die 48 sind die Liste der offenen Zusagen, nicht 48 Fehler, und das
+Skript gibt aus diesem Grund **immer rc 0** — eine Zahl, die im Normalbetrieb
+nicht null ist, taugt nicht als Abbruchbedingung. Was es leistet, ist die Stelle
+zu benennen, an der ein Lauf nachsieht, ob eine Zusage inzwischen **unter einem
+anderen Namen** dasteht. Das ist der Fall von oben.
+
+#### Ein zweiter solcher Fall, in derselben Liste, und er betrifft eine Angabe des Auftrags
+
+Unter den 48 stehen `Martingale.stoppedProcess_of_rightContinuous` und
+`isStable_martingale_rightContinuous`, die beiden Namen des Stabilitätspunkts
+von Meilenstein 9. Der Auftrag hält fest, „optionales Sampling in stetiger Zeit
+und die Stabilität unter Stoppen stehen seit dem 2026-09-10". Nachgesehen:
+
+* Was **steht**, ist `martingale_stoppedProcess`
+  (`MartingaleProblems/Suggested.lean:16614`) — der gestoppte Prozeß eines
+  Martingals ist ein Martingal, in stetiger Zeit.
+* Was es **nicht** ist, ist der Punkt, den die Roadmap nennt. Der bewiesene Satz
+  steht über dem Index `ℝ≥0` und nicht über beliebigem `ι`, er verlangt
+  `IsStronglyProgressive` **und** eine über jedes Fenster **gleichmäßige**
+  Schranke `∀ j, ∃ C, ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C` statt der Rechtsstetigkeit, und
+  die Verpackung als `ProbabilityTheory.IsStable` gibt es nicht.
+* Die beiden Punkte zum optionalen Sampling in stetiger Zeit
+  (`Submartingale.stoppedValue_min_le_condExp` und
+  `Martingale.stoppedValue_min_ae_eq_condExp_of_rightContinuous`) stehen
+  ebenfalls nicht; was an der einen Stelle benutzt wird, ist Mathlibs
+  **diskretes** `stoppedValue_min_ae_eq_condExp` (`:38095`).
+
+Das ist kein Widerspruch im Code und keine falsche Aussage in der Roadmap — die
+Punkte sind dort in Roadmap-Stimme formuliert, also als offen erkennbar. Es ist
+eine **Unschärfe in der Buchführung des Auftrags**, und sie ist hier notiert,
+damit der nächste Lauf nicht auf eine Eingabe baut, die er für vorhanden hält.
+Die Aussage, auf die sich der Auftrag beruft, existiert; ihre Voraussetzungen
+sind stärker als die der Roadmap-Fassung, und die gleichmäßige Fensterschranke
+ist genau die, von der der Auftrag an anderer Stelle sagt, sie mache den
+Grenzübergang zu einer dominierten Konvergenz mit konstanter Majorante.
+
+#### Geprüft
+
+* `scripts/check_master.py`: rc 0, **0 Fehler**, 0 `sorry`, 0 veraltet,
+  Warnungen 18 / 35 / 106 — **unverändert** gegenüber dem Vorlauf. Mathlib
+  `94ef6b89544e58e90f119da869f3fb48d1da0f4c` (2026-09-18), Lean 4.35.0-rc2.
+* `scripts/check_axioms_master.py` auf alle vier neuen Deklarationen: `propext`,
+  `Classical.choice`, `Quot.sound`, ohne Ausnahme.
+* `scripts/check_duplicates.py`: 2 468 geprüfte eigene Deklarationen (vier
+  mehr), 37 Treffer auf dem letzten Namensbestandteil — **unverändert**.
+* `scripts/check_negatives.py`: 43 Behauptungen, 0 mit unerwarteten Treffern.
+* `scripts/extract_citations.py`, `scripts/check_cited_lines.py`: 308 gepaarte
+  Fundstellen, 0 verschoben, 0 tot.
+* `scripts/check_own_names.py` (neu): 8 605 Zitate, 390 ohne Deckung, davon 48
+  qualifiziert; rc 0 nach Bauart.
+* Neu benutzte Mathlib-Namen, am Quelltext von `upstream/master` belegt:
+  `MeasureTheory.setIntegral_le_integral`
+  (`MeasureTheory/Integral/Bochner/Set.lean:744`), `posPart_nonneg` und
+  `posPart_eq_self` (`Algebra/Order/Group/PosPart.lean:75` und `:86`, beide
+  `to_additive` von `one_le_oneLePart` bzw. `oneLePart_eq_self`),
+  `measureReal_eq_zero_iff` (`MeasureTheory/Measure/Real.lean:40`),
+  `tendsto_const_div_atTop_nhds_zero_nat`.
+* **Eine Veraltung, die beim Schreiben auffiel und gleich vermieden ist:**
+  `Set.mem_setOf_eq` ist auf `master` zugunsten von `Set.mem_ofPred_eq`
+  veraltet. Der erste Entwurf dieses Laufs benutzte es zweimal; die Prüfung
+  meldete beide, ehe irgend etwas eingetragen war. Das ist das zweite Mal seit
+  dem 2026-09-18, daß die Warnungsspalte trägt.
+
+#### Eingetragen
+
+* `MartingaleProblems/Suggested.lean`: die beiden `_of_nonneg`-Fensterschranken
+  im Abschnitt „Doob's maximal inequality in continuous time", und
+  `Martingale.measure_iSup_norm_le` samt `Martingale.ae_biSup_enorm_lt_top` am
+  Ende des `namespace MeasureTheory` von Meilenstein 9.
+* `MartingaleProblems/README.md`: Meilenstein 9, der Absatz zur Konstanten der
+  Maximalungleichung und der zur Entscheidung gegen die `eLpNorm`-Fassung; die
+  beiden Akzeptanzbeispiele.
+* `scripts/check_own_names.py` und `scripts/_citations/own_names.md`.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die 48 qualifizierten Namen aus `own_names.md` einmal ganz durchgehen**,
+   und zwar mit **einer** Frage je Zeile: steht die Aussage inzwischen unter
+   einem anderen Namen? Wo ja, ist die `README.md` zu berichtigen, wie es dieser
+   Lauf an einer Stelle getan hat; wo nein, ist der Name ein offener Punkt und
+   bleibt stehen. Das ist Buchhaltung, aber es ist die Buchhaltung, die dieser
+   Lauf durch Zufall angefangen hat, und sie ist der billigste Weg zu einer
+   Roadmap, die hält, was ihr Text verspricht. Schätzung: ein Lauf. **Zuerst die
+   drei Zeilen zum Stoppen** (`Martingale.stoppedProcess_of_rightContinuous`,
+   `isStable_martingale_rightContinuous`,
+   `Submartingale.stoppedValue_min_le_condExp`), weil der Auftrag sie für
+   erledigt hält und der nächste Lauf sonst auf sie baut.
+
+2. **`Martingale.stoppedProcess_of_rightContinuous` in der Gestalt, die die
+   Roadmap nennt.** Das ist die Aussage aus Punkt 1, die am ehesten reif ist,
+   und sie ist jetzt reifer als am 2026-09-10: der Unterschied zum bewiesenen
+   `martingale_stoppedProcess` ist die **gleichmäßige Fensterschranke**, die
+   dort die dominierte Konvergenz trägt, und an ihre Stelle träte die
+   gleichgradige Integrierbarkeit — die aus `Martingale.measure_iSup_norm_le`
+   und `Martingale.ae_biSup_enorm_lt_top` dieses Laufs zu holen ist. Das ist der
+   erste Verbraucher der beiden neuen Sätze und zugleich die Probe darauf, ob
+   sie in der richtigen Gestalt stehen. Zu klären ist dabei **vor** dem Beweis,
+   ob der Index von `ℝ≥0` auf beliebiges `ι` gehoben werden kann, ohne die
+   dyadische Approximation der Stoppzeit zu verlieren, die der alte Beweis
+   benutzt; die Antwort ist zu begründen, nicht zu raten.
+
+3. **Die zweite Hälfte von Vorschlag 2 des Vorvorvorlaufs bleibt stehen** — die
+   gleichmäßige Fassung von `CompactContainment` an einer nichttrivialen Folge
+   von Sprungprozessen vorführen. Sie ist von diesem Lauf unberührt.

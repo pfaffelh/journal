@@ -3088,6 +3088,92 @@ theorem Submartingale.mul_measReal_le_biSup_enorm_le
         mul_le_mul_of_nonneg_left (measureReal_mono hsub (measure_ne_top _ _)) hx0
     _ ≤ _ := hY.mul_measReal_lt_biSup_enorm_le hD hDc hpath hx0
 
+/-- **Doob's maximal inequality in continuous time for a non-negative
+submartingale**, at a strict level and with the constant `1`.
+
+It is *not* the previous theorem specialised to a non-negative `Y`.  The two
+run through different discrete inputs and the constants differ: the two sided
+form above reads the level set of `|Y|` and pays `2 𝔼[(Y T)⁺] - 𝔼[Y ⊥]` for it,
+while a non-negative `Y` needs no absolute value and the **localised one sided**
+bound `Submartingale.mul_measReal_exists_ge_le_setIntegral_countable` applies
+directly, giving `𝔼[Y T]`.  Since `𝔼[Y ⊥] ≤ 𝔼[Y T]` for a submartingale, the
+bound above is at least `𝔼[Y T]` and generally larger, so routing the
+non-negative case through it would lose the classical constant.
+
+That the localised bound is available is what makes this cheap, and the price
+of using it is that the lower end of the window plays no part: there is no
+`𝔼[Y ⊥]` term here and no lower bound on the times, the one sidedness having
+replaced both. -/
+theorem Submartingale.mul_measReal_lt_biSup_enorm_le_of_nonneg
+    {ι : Type*} [LinearOrder ι] [TopologicalSpace ι] [OrderTopology ι] [DenselyOrdered ι]
+    [OrderBot ι] {P : Measure Ω} [IsFiniteMeasure P]
+    {Y : ι → Ω → ℝ} {𝓕 : Filtration ι m} (hY : Submartingale Y 𝓕 P)
+    (hY0 : ∀ i ω, 0 ≤ Y i ω)
+    {D : Set ι} (hD : Dense D) (hDc : D.Countable) {T : ι}
+    (hpath : ∀ ω, IsRightContinuous fun t ↦ Y t ω) {ε : ℝ} (hε : 0 ≤ ε) :
+    ε * P.real {ω | ENNReal.ofReal ε < ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ} ≤ ∫ ω, Y T ω ∂P := by
+  classical
+  have hSc : (insert T (Set.Iic T ∩ D)).Countable :=
+    (hDc.mono Set.inter_subset_right).insert T
+  have hST : ∀ s ∈ insert T (Set.Iic T ∩ D), s ≤ T := by
+    rintro s (rfl | ⟨hs, -⟩)
+    · exact le_rfl
+    · exact hs
+  have hsub : {ω | ENNReal.ofReal ε < ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ}
+      ⊆ {ω | ∃ s ∈ insert T (Set.Iic T ∩ D), ε ≤ Y s ω} := by
+    intro ω hω
+    have hω' : ENNReal.ofReal ε < ⨆ t ∈ insert T (Set.Iic T ∩ D), ‖Y t ω‖ₑ := by
+      rw [← biSup_enorm_Iic_eq_of_isRightContinuous hD (hpath ω)]
+      exact hω
+    rw [lt_iSup_iff] at hω'
+    obtain ⟨t, ht⟩ := hω'
+    rw [lt_iSup_iff] at ht
+    obtain ⟨htS, ht⟩ := ht
+    refine ⟨t, htS, ?_⟩
+    rw [Real.enorm_eq_ofReal (hY0 t ω)] at ht
+    exact ((ENNReal.ofReal_lt_ofReal_iff_of_nonneg hε).1 ht).le
+  have hposint : Integrable (fun ω ↦ (Y T ω)⁺) P := (hY.integrable T).pos_part
+  calc ε * P.real {ω | ENNReal.ofReal ε < ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ}
+      ≤ ε * P.real {ω | ∃ s ∈ insert T (Set.Iic T ∩ D), ε ≤ Y s ω} :=
+        mul_le_mul_of_nonneg_left (measureReal_mono hsub (measure_ne_top _ _)) hε
+    _ ≤ ∫ ω in {ω | ∃ s ∈ insert T (Set.Iic T ∩ D), ε ≤ Y s ω}, (Y T ω)⁺ ∂P :=
+        hY.mul_measReal_exists_ge_le_setIntegral_countable hSc hST hε
+    _ ≤ ∫ ω, (Y T ω)⁺ ∂P :=
+        setIntegral_le_integral hposint (Filter.Eventually.of_forall fun ω ↦ posPart_nonneg _)
+    _ = ∫ ω, Y T ω ∂P :=
+        integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ posPart_eq_self.2 (hY0 T ω))
+
+/-- **Doob's maximal inequality in continuous time for a non-negative
+submartingale**, at a non-strict level.  It stands to the previous theorem as
+`Submartingale.mul_measReal_le_biSup_enorm_le` stands to
+`Submartingale.mul_measReal_lt_biSup_enorm_le`, and for the same reason: the
+window supremum need not be attained, so the strict level is the primitive and
+the non-strict one is read off it along `𝓝[<] ε`. -/
+theorem Submartingale.mul_measReal_le_biSup_enorm_le_of_nonneg
+    {ι : Type*} [LinearOrder ι] [TopologicalSpace ι] [OrderTopology ι] [DenselyOrdered ι]
+    [OrderBot ι] {P : Measure Ω} [IsFiniteMeasure P]
+    {Y : ι → Ω → ℝ} {𝓕 : Filtration ι m} (hY : Submartingale Y 𝓕 P)
+    (hY0 : ∀ i ω, 0 ≤ Y i ω)
+    {D : Set ι} (hD : Dense D) (hDc : D.Countable) {T : ι}
+    (hpath : ∀ ω, IsRightContinuous fun t ↦ Y t ω) {ε : ℝ} (hε : 0 < ε) :
+    ε * P.real {ω | ENNReal.ofReal ε ≤ ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ} ≤ ∫ ω, Y T ω ∂P := by
+  classical
+  have hlim : Filter.Tendsto
+      (fun x : ℝ ↦ x * P.real {ω | ENNReal.ofReal ε ≤ ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ})
+      (𝓝[<] ε) (𝓝 (ε * P.real {ω | ENNReal.ofReal ε ≤ ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ})) :=
+    ((continuous_id.mul continuous_const).tendsto ε).mono_left nhdsWithin_le_nhds
+  refine le_of_tendsto hlim ?_
+  filter_upwards [Ioo_mem_nhdsLT hε] with x hx
+  have hx0 : (0 : ℝ) ≤ x := hx.1.le
+  have hsub : {ω | ENNReal.ofReal ε ≤ ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ}
+      ⊆ {ω | ENNReal.ofReal x < ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ} := by
+    intro ω hω
+    exact lt_of_lt_of_le ((ENNReal.ofReal_lt_ofReal_iff_of_nonneg hx0).2 hx.2) hω
+  calc x * P.real {ω | ENNReal.ofReal ε ≤ ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ}
+      ≤ x * P.real {ω | ENNReal.ofReal x < ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ} :=
+        mul_le_mul_of_nonneg_left (measureReal_mono hsub (measure_ne_top _ _)) hx0
+    _ ≤ _ := hY.mul_measReal_lt_biSup_enorm_le_of_nonneg hY0 hD hDc hpath hx0
+
 /-! ### Doob's `Lᵖ` inequality
 
 Mathlib has the maximal inequality and not the `Lᵖ` one; the docstring of
@@ -3698,6 +3784,98 @@ theorem Martingale.lintegral_biSup_enorm_rpow_le
   have h := hX.submartingale_norm.lintegral_biSup_enorm_rpow_le
     (fun i ω ↦ norm_nonneg _) hD hDc (T := T) hpath' hr hLr'
   simpa only [hnorm] using h
+
+/-- **Doob's maximal inequality for a right continuous martingale**, in the form
+the manuscript uses: `ε · P {ε ≤ ⨆ t ≤ T, ‖X t‖} ≤ 𝔼‖X T‖`, with the classical
+constant `1` and no term at the bottom of the window.
+
+It is the same composition as the `Lᵖ` corollary above -- `submartingale_norm`
+and then the window bound for a non-negative submartingale -- and the choice of
+*which* window bound is where the constant is decided.
+`Submartingale.mul_measReal_le_biSup_enorm_le`, the two sided form, would give
+`2 𝔼‖X T‖ - 𝔼‖X ⊥‖` here, which is at least `𝔼‖X T‖` because `‖X ·‖` is a
+submartingale; the non-negative form
+`Submartingale.mul_measReal_le_biSup_enorm_le_of_nonneg` gives the classical
+bound, because `‖X ·‖` needs no absolute value and the localised one sided
+estimate applies to it directly.
+
+The level is read in `ℝ≥0∞` on the left, as everywhere in this block: a real
+valued encoding of the window supremum is `0` where the path escapes, and the
+inequality would then be satisfied for a reason that has nothing to do with the
+martingale. -/
+theorem Martingale.measure_iSup_norm_le
+    {ι : Type*} [LinearOrder ι] [TopologicalSpace ι] [OrderTopology ι] [DenselyOrdered ι]
+    [OrderBot ι] {P : Measure Ω} [IsFiniteMeasure P]
+    {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [CompleteSpace E]
+    {X : ι → Ω → E} {𝓕 : Filtration ι m} (hX : Martingale X 𝓕 P)
+    {D : Set ι} (hD : Dense D) (hDc : D.Countable) {T : ι}
+    (hpath : ∀ ω, IsRightContinuous fun t ↦ X t ω) {ε : ℝ} (hε : 0 < ε) :
+    ε * P.real {ω | ENNReal.ofReal ε ≤ ⨆ t ∈ Set.Iic T, ‖X t ω‖ₑ} ≤ ∫ ω, ‖X T ω‖ ∂P := by
+  have hnorm : ∀ t ω, ‖(‖X t ω‖ : ℝ)‖ₑ = ‖X t ω‖ₑ := by
+    intro t ω
+    rw [Real.enorm_eq_ofReal (norm_nonneg _), ofReal_norm]
+  have hpath' : ∀ ω, IsRightContinuous fun t ↦ ‖X t ω‖ := fun ω ↦
+    (hpath ω).continuous_comp continuous_norm
+  have h := hX.submartingale_norm.mul_measReal_le_biSup_enorm_le_of_nonneg
+    (fun i ω ↦ norm_nonneg _) hD hDc (T := T) hpath' hε
+  simpa only [hnorm] using h
+
+/-- **The window supremum of a right continuous martingale is almost surely
+finite**, with no integrability hypothesis beyond the martingale property.
+
+This is the statement that settles what shape the window inequalities are given
+in.  They are stated in `ℝ≥0∞` because every real valued encoding of the
+supremum lies where the path escapes; this theorem says that the set where it
+escapes is null, so the `ℝ≥0∞` form loses nothing -- a consumer who wants a real
+number may take `.toReal` and knows it is not reading a junk value.  An
+`eLpNorm` form of `Submartingale.lintegral_biSup_enorm_rpow_le` would have to
+carry exactly this almost sure finiteness, and would then say no more than the
+`ℝ≥0∞` form it is derived from, which is why none is stated.
+
+The proof is Markov's inequality read along the integers: the escape set lies in
+every level set `{ENNReal.ofReal n ≤ ⨆}`, whose measure is at most `𝔼‖X T‖ / n`
+by `Martingale.measure_iSup_norm_le`, and `c / n → 0`.  No measurability of the
+escape set is used -- `measureReal_mono` is monotonicity of the outer measure --
+so `measurable_biSup_enorm_of_countable` is not an input here either. -/
+theorem Martingale.ae_biSup_enorm_lt_top
+    {ι : Type*} [LinearOrder ι] [TopologicalSpace ι] [OrderTopology ι] [DenselyOrdered ι]
+    [OrderBot ι] {P : Measure Ω} [IsFiniteMeasure P]
+    {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [CompleteSpace E]
+    {X : ι → Ω → E} {𝓕 : Filtration ι m} (hX : Martingale X 𝓕 P)
+    {D : Set ι} (hD : Dense D) (hDc : D.Countable) {T : ι}
+    (hpath : ∀ ω, IsRightContinuous fun t ↦ X t ω) :
+    ∀ᵐ ω ∂P, (⨆ t ∈ Set.Iic T, ‖X t ω‖ₑ) < ⊤ := by
+  set c : ℝ := ∫ ω, ‖X T ω‖ ∂P with hc
+  set A : Set Ω := {ω | ⨆ t ∈ Set.Iic T, ‖X t ω‖ₑ = ⊤} with hA
+  have hkey : ∀ n : ℕ, 0 < n → P.real A ≤ c / n := by
+    intro n hn
+    have hn0 : (0 : ℝ) < n := by exact_mod_cast hn
+    have hsub : A ⊆ {ω | ENNReal.ofReal (n : ℝ) ≤ ⨆ t ∈ Set.Iic T, ‖X t ω‖ₑ} := by
+      intro ω hω
+      simp only [Set.mem_ofPred_eq] at hω ⊢
+      rw [hω]
+      exact le_top
+    have h1 : (n : ℝ) * P.real A
+        ≤ (n : ℝ) * P.real {ω | ENNReal.ofReal (n : ℝ) ≤ ⨆ t ∈ Set.Iic T, ‖X t ω‖ₑ} :=
+      mul_le_mul_of_nonneg_left (measureReal_mono hsub (measure_ne_top _ _)) hn0.le
+    have h2 := hX.measure_iSup_norm_le hD hDc (T := T) hpath hn0
+    rw [le_div_iff₀ hn0, mul_comm]
+    exact h1.trans h2
+  have htend : Filter.Tendsto (fun n : ℕ ↦ c / n) Filter.atTop (𝓝 0) :=
+    tendsto_const_div_atTop_nhds_zero_nat c
+  have hzero : P.real A = 0 :=
+    le_antisymm
+      (ge_of_tendsto htend (by
+        filter_upwards [Filter.eventually_gt_atTop 0] with n hn using hkey n hn))
+      measureReal_nonneg
+  have hPA : P A = 0 := by
+    rwa [measureReal_eq_zero_iff (measure_ne_top _ _)] at hzero
+  rw [ae_iff]
+  have hset : {ω | ¬ (⨆ t ∈ Set.Iic T, ‖X t ω‖ₑ) < ⊤} = A := by
+    ext ω
+    simp only [hA, Set.mem_ofPred_eq, not_lt, top_le_iff]
+  rw [hset]
+  exact hPA
 
 end MeasureTheory
 

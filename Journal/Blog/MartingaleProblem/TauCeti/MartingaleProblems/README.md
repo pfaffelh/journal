@@ -8242,8 +8242,34 @@ and 11 use them.
 
   The form the manuscript uses is the corollary for a right continuous
   martingale `X`, applied to the non-negative submartingale `‖X ·‖`:
-  `Martingale.lintegral_biSup_enorm_rpow_le` and `Martingale.measure_iSup_norm_le`,
-  and each is that application and nothing more.
+  `Martingale.lintegral_biSup_enorm_rpow_le` and `Martingale.measure_iSup_norm_le`
+  (`2026-09-20`), and each is that application and nothing more.
+
+  **The maximal corollary carries the constant `1`, and that decides which
+  window bound it is an application of.** `Martingale.measure_iSup_norm_le` is
+  `ε * P {ω | ENNReal.ofReal ε ≤ ⨆ t ∈ Set.Iic T, ‖X t ω‖ₑ} ≤ 𝔼‖X T‖`. Read
+  through the two sided `Submartingale.mul_measReal_le_biSup_enorm_le` it would
+  be `2 𝔼‖X T‖ - 𝔼‖X ⊥‖` instead, which is at least `𝔼‖X T‖` because `‖X ·‖` is
+  a submartingale, so the classical constant would be lost. The one sided
+  window bounds `Submartingale.mul_measReal_lt_biSup_enorm_le_of_nonneg` and
+  `Submartingale.mul_measReal_le_biSup_enorm_le_of_nonneg` (`2026-09-20`) are
+  what it is an application of: for a non-negative submartingale no absolute
+  value is needed, so the localised one sided estimate applies directly and the
+  bound is `𝔼[Y T]`. They are not the two sided theorems specialised — the
+  discrete inputs differ — and, like the localised estimate they rest on, they
+  have no lower bound on the window and no term at `⊥`.
+
+  **No `eLpNorm` form of the window inequality is stated, and that is a
+  decision and not an omission.** `eLpNorm` is taken of a real valued function,
+  and the real valued encodings of the window supremum all read `0` where the
+  path escapes, so such a form would have to carry the almost sure finiteness
+  of the supremum as a hypothesis. That finiteness is a theorem here,
+  `Martingale.ae_biSup_enorm_lt_top` (`2026-09-20`): the escape set lies in
+  every level set `{ENNReal.ofReal n ≤ ⨆ t ∈ Set.Iic T, ‖X t ω‖ₑ}`, whose
+  measure the maximal inequality bounds by `𝔼‖X T‖ / n`. So the `ℝ≥0∞` form
+  loses nothing — a consumer may take `.toReal` and know it is not reading a
+  junk value — while an `eLpNorm` form would say no more than the form it is
+  derived from. Milestone 11, the consumer, reads in `ℝ≥0∞` anyway.
 
   **That `‖X ·‖` is a submartingale is itself a gap in Mathlib**, closed here as
   `Martingale.submartingale_norm` (`2026-09-20`): the strings
@@ -9534,12 +9560,23 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   item fails on it, and must therefore be carried. `τ ⊓ T` for fixed `T` is the
   bounded instance on which the first item does apply.
 * **Doob's `Lᵖ` inequality, computed.** For `Y` a standard Brownian motion and
-  `p = 2`, `Martingale.eLpNorm_iSup_norm_le` must give
-  `𝔼[(⨆ t ∈ Set.Iic T, |Y t|) ^ 2] ≤ 4 * 𝔼[Y T ^ 2] = 4 * T`. The measurability
-  of the supremum here is exactly the reduction to `Set.Iic T ∩ ℚ` that the
-  milestone states as a lemma of its own; without right continuity the supremum
-  over an uncountable set need not be measurable, which is why that reduction is
-  an item and not a step.
+  `r = 2`, `Martingale.lintegral_biSup_enorm_rpow_le` must give
+  `∫⁻ ω, (⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ) ^ 2 ≤ 4 * ∫⁻ ω, ‖Y T ω‖ₑ ^ 2 = 4 * T`, the
+  constant being `(r/(r-1))^r = 4`. The measurability of the supremum here is
+  exactly the reduction to `Set.Iic T ∩ ℚ` that the milestone states as a lemma
+  of its own; without right continuity the supremum over an uncountable set need
+  not be measurable, which is why that reduction is an item and not a step. The
+  quantities are lower integrals and not `eLpNorm`s, for the reason given in the
+  milestone: a real valued encoding of the window supremum reads `0` where the
+  path escapes. That the escape set is null here is
+  `Martingale.ae_biSup_enorm_lt_top` and not an assumption.
+* **Doob's maximal inequality, computed, and the constant is the point.** For
+  the same `Y`, `Martingale.measure_iSup_norm_le` must give
+  `ε * P {ω | ε ≤ ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ} ≤ 𝔼|Y T|`, with `1` and not `2` in
+  front of the right hand side. The two sided window bound
+  `Submartingale.mul_measReal_le_biSup_enorm_le` gives `2 𝔼|Y T| - 𝔼[Y 0]` on
+  these data, which is `2 𝔼|Y T|`; the example is what distinguishes the two
+  routes, and it fails for the two sided one.
 * **The coin at an atom, which separates the two theorems of this milestone.**
   `E = Bool`, `q = Measure.dirac 1`, and the solution that flips a fair coin at
   time `1` and is constant on either side. It **has** a càdlàg modification —
