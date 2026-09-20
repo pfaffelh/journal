@@ -2947,6 +2947,15 @@ A concrete family of solutions, built without any of the theory above. Index
     localize**, as `jumpProcessE_isMPSolution` under `lam ≤ L`, `truncRate lam n`, `rateTime lam n`
     and `stoppedProcess_mpFamily_truncRate_eq` do there. The path dependent truncation is the next
     item, and it truncates something else; see there.
+
+    *(Berichtigung, 2026-09-20, vierter Lauf: `martingale_stoppedProcess` hat diese dritte Eingabe
+    nicht mehr. Der Grenzübergang in seinem Beweis ist Vitali-Konvergenz statt dominierter
+    Konvergenz, und deren Eingabe — die gleichgradige Integrierbarkeit bedingter Erwartungen einer
+    einzigen Funktion — ist für jedes Martingal umsonst. `abs_setIntegral_compensatorF_le` und
+    `bdd_mpFamilyF_of_bdd` behalten ihren eigenen Wert und sagen, was sie sagen, gleichmäßig im
+    Stichprobenpunkt; sie stehen nur nicht mehr zwischen der Hawkes-Montage und dem gestoppten
+    Martingalsatz. Die Lokalisierung über `truncRateF` bleibt aus einem anderen Grund gewollt:
+    `jumpProcessE_isMPSolution` ist unter `lam ≤ L` bewiesen.)*
   * `truncRateF`, `truncRateF_of_lt`, `cumulativeRateF_truncRateF`,
     `cumulativeRateF_truncRateF_le` and `rateInverse_truncRateF_of_le`: **the path dependent rate,
     switched off at the hitting time of its own cumulated rate.** **In Lean** on 2026-09-11,
@@ -4267,10 +4276,17 @@ Sie tritt an **sechs** Stellen auf, nicht an vier:
    jedes `r` ist, ist die Nichtexplosion (offener Punkt 10).
 5. **Identifikation des Prozesses mit dem Stufenpfad** — `hawkesProcess_eq_stepPath`
    trägt `hint` (offener Punkt 14).
-6. **Sie wird an *jedem* Stichprobenpunkt gebraucht, nicht fast sicher** — weil
-   `martingale_stoppedProcess` seine Rechtsstetigkeit unter einem `∀ ω` fragt.
-   Das ist die schärfste Gestalt, in der sie auftritt, und sie ist der Grund, aus
-   dem offener Punkt 0 eine Vorfrage und keine Randnotiz ist.
+6. ~~**Sie wird an *jedem* Stichprobenpunkt gebraucht, nicht fast sicher** — weil
+   `martingale_stoppedProcess` seine Rechtsstetigkeit unter einem `∀ ω` fragt.~~
+   *(Hinfällig seit dem fünften Lauf des 2026-09-20: `martingale_stoppedProcess`
+   liest die Rechtsstetigkeit `∀ᵐ ω ∂P`, weil der Grenzübergang in seinem Beweis
+   Vitali-Konvergenz ist und die fast überall quantifiziert. Die punktweise
+   Fassung wurde nie ausgegeben. Damit ist die Nichtexplosion hier eine
+   f.s.-Aussage wie überall sonst, und offener Punkt 0 verliert seine Schärfe —
+   **aber nicht seinen Ort**: die f.s. Nichtexplosion des linearen
+   Hawkes-Prozesses steht im Bestand nicht, und ihr Beweis ist die
+   Volterra-Resolvente. Im beschränkten nichtlinearen Fall ist sie punktweise da,
+   siehe `tendsto_nhdsGE_mpFamilyF_hawkesStepPathH`.)*
 
 **Was daraus folgt, und es ist der Befund dieses Abschnitts:** die Nichtexplosion
 ist im pfadabhängigen Fall **keine Voraussetzung, die man an den Anfang stellen und
@@ -5555,6 +5571,57 @@ die das Manuskript im linearen Fall über die Volterra-Resolvente abarbeitet.
 sechs Aussagen, der Rumpf des Satzes. Nach diesem Lauf ist sie die einzige offene
 Gruppe des beschränkten Falls, für die noch eine Entscheidung aussteht: die
 Filtration ist gewählt, die Zeugen stehen, und das erste Maßresultat ist da.
+
+### Die beiden Regularitätseingaben des gestoppten Martingalsatzes, erledigt
+
+*(2026-09-20, sechster Lauf des Tages. Abschnitt `BoundedHawkesInputs`.)*
+
+`martingale_stoppedProcess` fragt einen Testprozeß dreierlei: die
+Martingaleigenschaft, Progressivität und fast sichere Rechtsstetigkeit der Pfade.
+Zwei davon sind Regularität und eines ist der Satz, und für den beschränkten
+nichtlinearen Hawkes-Prozeß stehen die beiden Regularitätseingaben jetzt — **an
+jedem Stichprobenpunkt, ohne Nullmenge und ohne Nichtexplosion**.
+
+* `measurable_uncurry_hawkesSelfRateH_hawkesFiltrationH` — die beschränkte
+  nichtlineare Rate ist gemeinsam meßbar für `hawkesFiltrationH`. Der
+  Gegenpart von `measurable_uncurry_hawkesSelfRate_hawkesFiltration`, und die
+  Nichtlinearität kostet eine Komposition: sie sitzt **außerhalb** des
+  Fensterintegrals, deshalb trägt `measurable_uncurry_pointRate_pointFiltration`
+  weiterhin die ganze Arbeit.
+* `measurable_uncurry_hawkesJumpApplyFH_hawkesFiltrationH`,
+  `measurable_compensator_hawkesJumpApplyFH_hawkesFiltrationH` — Integrand und
+  Kompensationsfenster.
+* **`isStronglyProgressive_mpFamilyF_hawkesStepPathH`** — die erste Eingabe.
+* **`tendsto_nhdsGE_mpFamilyF_hawkesStepPathH`** — die zweite, und hier liegt der
+  Unterschied zum linearen Fall. Dort trägt
+  `tendsto_nhdsGE_mpFamilyF_hawkesStepPath` die Voraussetzung `hint`, die
+  Intervallintegrierbarkeit der selbstbezüglichen Rate längs des Pfades, und
+  `hint` **ist** die Nichtexplosion an diesem Stichprobenpunkt
+  (`not_intervalIntegrable_hawkesSelfRate_of_not_summable`). Hier ist es
+  `intervalIntegrable_hawkesSelfRateH`, eine Folge der beiden Schranken. Die
+  Aussage ist deshalb über `ω` allquantifiziert und enthält **überhaupt kein
+  Maß**.
+* **`martingale_stoppedProcess_mpFamilyF_hawkesStepPathH`** — die drei zusammen.
+  Sie ist die Gestalt, die der Satz annimmt, sobald die Regularität erledigt ist:
+  **die einzige verbleibende Hypothese, die nicht von den Daten handelt, ist die
+  Martingaleigenschaft selbst.**
+
+**Warum der lineare Fall die `∀ᵐ`-Fassung nicht einlöst, obwohl sie seit dem
+fünften Lauf desselben Tages zur Verfügung steht.** `martingale_stoppedProcess`
+liest die Rechtsstetigkeit seit dann fast sicher, also wäre die f.s.
+Nichtexplosion des linearen Hawkes-Prozesses die passende Eingabe — und die gibt
+es im Bestand **nicht**: es steht keine Aussage der Form
+`∀ᵐ ω ∂(jumpMeasure mu nu), ∀ r, IntervalIntegrable (hawkesSelfRate ν φ · ω) …` da,
+und ihr Beweis ist die Erneuerungsgleichung `m = μ₀ + φ * m` samt
+Volterra-Resolvente, die dieses Projekt ausdrücklich nicht anfängt. Der
+Quantorenfehler ist behoben und die Eingabe fehlt weiterhin; erledigt ist die
+Aussage dort, wo sie ohne jene Theorie zu haben ist, und das ist der beschränkte
+Fall.
+
+**Was dabei auffiel und eine ältere Ansage berichtigt:** die Progressivität des
+*linearen* Hawkes-Testprozesses ist nicht offen und war es nie —
+`isStronglyProgressive_mpFamilyF_hawkesStepPath` steht bewiesen und trägt nichts
+als die Daten von `ex:hawkes` und die Markoveigenschaft des Sprungkerns.
 
 ### Das Einfrieren: die bedingte Erwartung eines Ereignisses, das Vergangenheit und frische Wartezeit mischt
 
@@ -8081,33 +8148,307 @@ and 11 use them.
   martingale `Y` and a stopping time `τ` for `𝓕`, the stopped process
   `stoppedProcess (fun t ↦ {ω | ⊥ < τ ω}.indicator (Y t)) τ` is a martingale;
   and `isStable_martingale_rightContinuous`, the packaged
-  `ProbabilityTheory.IsStable 𝓕 (fun Z ↦ Martingale Z 𝓕 P ∧ ∀ᵐ ω ∂P, ∀ t, ContinuousWithinAt (Z · ω) (Set.Ici t) t)`.
-  The conjunction is what is stable, because right continuity is preserved by
-  stopping and is the hypothesis under which the martingale half holds. Then
-  `ProbabilityTheory.IsStable.locally` of
+  `ProbabilityTheory.IsStable 𝓕 (fun Z ↦ Martingale Z 𝓕 P ∧ IsStronglyProgressive 𝓕 Z ∧ ∀ᵐ ω ∂P, ∀ t, Tendsto (fun r ↦ Z r ω) (𝓝[≥] t) (𝓝 (Z t ω)))`.
+  The conjunction is what is stable, and it has **three** members and not two:
+  the martingale half holds under the other two together, and each of the two
+  survives stopping on its own — progressivity by Mathlib's
+  `IsStronglyProgressive.stoppedProcess` and the indicator step
+  `isStronglyProgressive_indicator`, right continuity by
+  `tendsto_nhdsGE_stoppedProcess`. Then `ProbabilityTheory.IsStable.locally` of
   `Mathlib/Probability/Process/LocalProperty.lean` gives at once that a stopped
-  local martingale is a local martingale, and `IsStable.locally_and_iff` splits
-  the conjunction again; so `IsLocalMPSolution` of Milestone 2 is preserved by
-  stopping without any further work, and no localizing sequence is constructed
-  by hand. Mathlib has the localization scaffolding but nothing about the
+  local martingale is a local martingale, and `ProbabilityTheory.Locally.mono`
+  forgets the two conjuncts the consumer does not read
+  (`locally_martingale_stoppedProcess`); so `IsLocalMPSolution` of Milestone 2 is
+  preserved by stopping without any further work, and no localizing sequence is
+  constructed by hand.
+
+  **The conjunction is not split again.** `ProbabilityTheory.IsStable.locally_and_iff`
+  asks that each side be stable on its own, and the martingale property alone is
+  not: it is precisely the conjunct whose proof consumes the other two. The
+  direction the consumer needs is the one `Locally.mono` supplies, and it is the
+  only one available here. Mathlib has the localization scaffolding but nothing about the
   martingale property in it: `Submartingale.stoppedProcess` of
   `Mathlib/Probability/Martingale/OptionalStopping.lean` is stated for
   `Filtration ℕ` and real valued processes, and `Locally` is never instantiated
   at a martingale. The proof is the first item applied at the bounded stopping
   times `σ ⊓ τ`, and the same argument gives the submartingale form.
+
+  Over the index `ℝ≥0` this is **proved, 2026-09-20**, as
+  `martingale_stoppedProcess`: for a progressive right continuous martingale and
+  any stopping time the stopped process is a martingale. Three things about it
+  are worth saying here because none of them is visible from the statement.
+
+  **It carries no bound on the paths.** Until the fourth run of that day it did,
+  one constant per time window, because the expectation identity at a bounded
+  stopping time was reached by dominated convergence against that constant. The
+  bound is gone and nothing replaces it. The dyadic approximations of the stopped
+  value are, each of them, the conditional expectation of the **one** function
+  `Y j` for the σ-algebra of the approximating time
+  (`uniformIntegrable_stoppedValue_dyadStop`, from Mathlib's
+  `MeasureTheory.Integrable.uniformIntegrable_condExp`), so the family is
+  uniformly integrable for every martingale and Vitali convergence
+  (`MeasureTheory.tendsto_Lp_finite_of_tendsto_ae`) does what dominated
+  convergence did. That is the classical hypothesis of the theorem, and here it
+  costs nothing because it is not assumed but derived.
+
+  **Integrability of the stopped value is then a theorem and not a by-product**,
+  `integrable_stoppedValue_of_rightContinuous`; the constant majorant used to
+  give it for free.
+
+  **Right continuity is what remains**, and it is used at one place only, the
+  pointwise convergence of the approximations. Progressivity is used for the
+  adaptedness of the stopped process and for the measurability of the stopped
+  value for the σ-algebra of the stopping time, and nowhere else.
+
+  **And right continuity is asked almost everywhere, 2026-09-20.** Until the
+  fifth run of that day it was asked at every sample point, and that is more
+  than the proof spends: the convergence of the approximations is consumed by
+  Vitali, which quantifies almost everywhere. `tendsto_stoppedValue_dyadStop` is
+  therefore stated at **one** sample point and `ae_tendsto_stoppedValue_dyadStop`
+  gathers it; the whole chain from there
+  (`integrable_stoppedValue_of_rightContinuous`,
+  `integral_stoppedValue_eq_of_rightContinuous`, `stoppedValue_ae_eq_condExp`,
+  `isOptionalSamplingFor_of_martingale`, `martingale_stoppedProcess`) carries
+  `∀ᵐ ω ∂P`. The difference is not cosmetic: right continuity of the test
+  process of the path dependent construction holds exactly on the non explosion
+  set, because `tendsto_nhdsGE_mpFamilyF_hawkes` produces it out of the local
+  integrability of the rate along the path and that integrability **is** the non
+  explosion at the sample point
+  (`not_intervalIntegrable_hawkesSelfRate_of_not_summable`). The everywhere form
+  was therefore a hypothesis the Hawkes data cannot supply, and the almost
+  everywhere form is one the almost sure non explosion discharges.
+
+  What the `ℝ≥0` proof does use and a general `ι` does not have is the dyadic
+  approximation of the stopping time from above. The replacement over an
+  arbitrary `ι` is an increasing sequence of finite subsets of `D` exhausting `D`
+  and the first element of the `n`-th of them above the time; this is a stopping
+  time of finite range, it decreases to the original when `D` is order dense, and
+  Mathlib's countable range optional sampling
+  (`Martingale.stoppedValue_ae_eq_condExp_of_le_const_of_countable_range`) is
+  stated over an arbitrary `[LinearOrder ι] [OrderTopology ι]
+  [FirstCountableTopology ι]`, so it applies there unchanged. Order density of
+  `D` is an assumption the `ℝ≥0` form does not need to state and the general form
+  does.
+
+  **The packaging is proved over `ℝ≥0` as well, 2026-09-20**, as
+  `isStable_martingale_rightContinuous`, with `stableMartingaleProp_zero` for the
+  inhabitedness of the property and `locally_martingale_stoppedProcess` for the
+  consequence. Two things about it were not visible from the item above.
+
+  **The indicator costs a lemma on the progressive side.** The process `IsStable`
+  quantifies over carries `{ω | ⊥ < τ ω}.indicator` in front of the stopping, so
+  besides `martingale_indicator_bot` on the martingale side there has to be
+  `isStronglyProgressive_indicator` on the other. It does not touch the product
+  σ-algebra of the definition of `IsStronglyProgressive`: the indicator is the
+  product with the time independent process `fun _ ω ↦ S.indicator 1 ω`, which is
+  progressive by `StronglyAdapted.isStronglyProgressive_of_continuous` because it
+  is adapted and constant in time, and `IsStronglyProgressive.mul` finishes. The
+  set lies in `𝓕 ⊥` because it is the complement of `{ω | τ ω ≤ ⊥}`.
+
+  **Right continuity survives stopping, and the two cases are not symmetric.**
+  `tendsto_nhdsGE_stoppedProcess` holds at every sample point and asks nothing of
+  the stopping time. Where the time has occurred the stopped path is constant on
+  the right and the limit is trivial; where it has not, the stopped path agrees
+  with the path on a right neighbourhood, and the neighbourhood exists because
+  `ENNReal` is densely ordered — some `c` lies strictly between the time and the
+  stopping time, it is finite because it lies below the latter, and `Set.Ico s c`
+  is the neighbourhood (`Ico_mem_nhdsGE`,
+  `Mathlib/Topology/Order/OrderClosed.lean:357`, the `to_dual` of
+  `Ioc_mem_nhdsLE`). This is the only place the order structure of the index
+  enters.
 * Doob's inequalities in continuous time. The supremum
   `fun ω ↦ ⨆ t ∈ Set.Iic T, ‖Y t ω‖` is measurable because right continuity
-  makes it the supremum over `Set.Iic T ∩ D`; state that reduction as a lemma of
-  its own. Then `MeasureTheory.maximal_ineq_of_rightContinuous`, the continuous
-  time form of `MeasureTheory.maximal_ineq` for a non-negative right continuous
-  submartingale, and `Submartingale.eLpNorm_iSup_le`, Doob's `Lᵖ` inequality
-  `eLpNorm (fun ω ↦ ⨆ t ∈ Set.Iic T, Y t ω) p P ≤ (p / (p - 1)) * eLpNorm (Y T) p P`
-  for `1 < p < ∞` and `Y` a non-negative submartingale. Mathlib has neither, and
-  the `Lᵖ` inequality is to be proved for `Filtration ℕ` from `maximal_ineq`
-  first and then transferred by the same approximation. The form the manuscript
-  uses is the corollary for a right continuous martingale `X`, applied to the
-  non-negative submartingale `‖X ·‖`; state `Martingale.measure_iSup_norm_le` and
-  `Martingale.eLpNorm_iSup_norm_le` for it.
+  makes it the supremum over `Set.Iic T ∩ D`; that reduction is a lemma of its
+  own and it is **proved, 2026-09-20**, as
+  `biSup_enorm_Iic_eq_of_isRightContinuous`, together with
+  `measurable_biSup_enorm_of_countable`. Three things are fixed by it and none
+  of them was visible from the phrase above.
+
+  **The supremum is taken in `ℝ≥0∞` and not in `ℝ`.** Over `ℝ` the supremum of
+  a family that is not bounded above is `0` (`Real.iSup_of_not_bddAbove`), so
+  `⨆ t ∈ S, |Y t ω|` vanishes on exactly the set where the path escapes, and a
+  condition `∫ ω, (⨆ t ∈ S, |Y t ω|) ∂P < ε` is satisfied by the families it is
+  written to exclude. `biSup_eq_zero_of_not_bddAbove` states the junk value and
+  `biSup_natCast_eq_zero` witnesses that its hypothesis is inhabited. This is
+  the fifth instance of the pattern the standing rule on non-explosion names,
+  and it decides the shape of the approximability condition of Milestone 11.
+
+  **The right endpoint of the window is not reached by a dense set.** Nothing
+  inside `Set.Iic T` approaches `T` from the right, so the reduction is to
+  `insert T (Set.Iic T ∩ D)` and not to `Set.Iic T ∩ D`. It is the asymmetry
+  `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` is stated to avoid, paid
+  for here by the `insert` rather than by enlarging the window.
+
+  **Countability is what makes the quantity measurable at all.** In the binder
+  form `⨆ t ∈ W` the supremum runs over the whole index, so Mathlib's
+  `Measurable.iSup` — which asks `[Countable ι]` — does not apply over an
+  uncountable window; `iSup_subtype'` and the countable `D` are the step, and
+  the reduction above is what supplies `D`.
+
+  **Doob's maximal inequality in continuous time**, `2026-09-20`. It is the
+  composition of the reduction above with the countable time bound, and no
+  analysis is left in it: `Submartingale.mul_measReal_lt_biSup_enorm_le` reads
+  the window supremum along `insert T (Set.Iic T ∩ D)` and hands that countable
+  set to `Submartingale.mul_measReal_exists_ge_abs_le_countable`.
+
+  **The strict level is the primitive and the non-strict level is the
+  corollary**, which is the reverse of the usual order and is forced by the
+  supremum: from `ENNReal.ofReal ε < ⨆ s ∈ S, ‖Y s ω‖ₑ` a time at which the
+  level is exceeded can be produced, and from `ENNReal.ofReal ε ≤ ⨆ s ∈ S,
+  ‖Y s ω‖ₑ` it cannot, the supremum not being attained.
+  `Submartingale.mul_measReal_le_biSup_enorm_le` recovers the classical form by
+  reading the strict one at every `x < ε` and letting `x` increase along
+  `𝓝[<] ε`. Neither form uses measurability of the level set: both sides read
+  `Measure.real`, and the passage between the level sets is `measureReal_mono`.
+
+  **Doob's `Lᵖ` inequality**, `2026-09-20`, in three statements, of which the
+  middle one carries no probability. `lintegral_rpow_le_of_weak_type` says that
+  a non-negative measurable `M` whose level sets obey
+  `ENNReal.ofReal t * μ {a | t ≤ M a} ≤ ∫⁻ a in {a | t ≤ M a}, ENNReal.ofReal (g a)`
+  at every `t > 0` obeys `∫⁻ M ^ p ≤ (p/(p-1))^p * ∫⁻ g ^ p` for `1 < p`,
+  provided `∫⁻ M ^ p ≠ ⊤`. It is the whole of Doob's `Lᵖ` inequality except for
+  the input, and it is stated over a bare measure space so that the discrete and
+  the continuous time forms share one proof; it is split into
+  `lintegral_rpow_le_mul_lintegral_mul_rpow`, which produces the intermediate
+  bound by `M ^ (p-1)`, and `lintegral_rpow_le_of_le_mul_lintegral_mul_rpow`,
+  which is Hölder against `q = p/(p-1)` and the cancellation of `A ^ (1/q)`.
+
+  **The level sets are read non-strictly here and strictly in the maximal
+  inequality above**, and that is deliberate: Mathlib's `maximal_ineq` is stated
+  at `{ε ≤ f*}` and the layer cake formula exists in both forms
+  (`lintegral_rpow_eq_lintegral_meas_le_mul`, `…_lt_mul`), so the non-strict
+  reading consumes the martingale input as it stands.
+
+  **Fubini does not appear, and that is what makes the proof short.** The usual
+  argument exchanges `∫ dt` with `∫ dμ` after inserting the weak type bound.
+  Here the exchange is Mathlib's own layer cake formula read a second time under
+  the weighted measure `ν = μ.withDensity (ENNReal.ofReal ∘ g)`: `ν {t ≤ M}`
+  *is* `∫⁻_{t ≤ M} g` by `withDensity_apply`, so
+  `lintegral_comp_eq_lintegral_meas_le_mul ν` with weight `t ^ (p-2)` performs
+  the exchange in one step and `lintegral_withDensity_eq_lintegral_mul` reads the
+  result back under `μ`. Neither `lintegral_lintegral_swap` nor a Lebesgue
+  integral of `t ^ (p-2)` over an interval is used; the inner integral is the
+  Bochner `integral_rpow`.
+
+  **The finiteness hypothesis is where the cancellation happens** and is carried,
+  not derived: the proof ends at `A ≤ C · B^(1/p) · A^(1/q)` and divides by
+  `A^(1/q)`.
+
+  `Submartingale.lintegral_rpow_range_sup'_le` is the instance over `ℕ`: for a
+  non-negative submartingale, `∫⁻ (f*)^p ≤ (p/(p-1))^p * ∫⁻ (f n)^p` with
+  `f* = (Finset.range (n+1)).sup' _ fun k ↦ f k ω`, the shape `maximal_ineq`
+  produces, and `Submartingale.eLpNorm_range_sup'_le` is the same statement as
+  `‖f*‖ₚ ≤ p/(p-1) · ‖f n‖ₚ`. The passage between the two shapes is
+  `eLpNorm_le_of_lintegral_rpow_le`, which is where the two conventions meet:
+  `eLpNorm` reads `‖·‖ₑ` and the core reads `ENNReal.ofReal`, and for a
+  non-negative function these agree by `Real.enorm_eq_ofReal`.
+
+  **The continuous time instance is stated in `ℝ≥0∞` and reached by monotone
+  convergence, not by a continuous time weak type bound** (`2026-09-20`).
+  `Submartingale.lintegral_biSup_enorm_rpow_le`,
+  `∫⁻ ω, (⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ)^r ≤ (r/(r-1))^r · ∫⁻ ω, ‖Y T ω‖ₑ^r` for a
+  non-negative right continuous submartingale, `1 < r`, and each `Y t` in `Lʳ`.
+
+  Three things fix that shape. **Every real valued encoding of the window
+  supremum carries a junk value** — `(⨆ t, ‖Y t ω‖ₑ).toReal` is `0` where the
+  path escapes, and so is `⨆ t, Y t ω` read in `ℝ` by
+  `biSup_eq_zero_of_not_bddAbove` — so the conclusion is taken in `ℝ≥0∞`, where
+  the escaping paths contribute `⊤`. **The finiteness of the supremum is then
+  not a hypothesis but a consequence**, monotone convergence giving the bound
+  also where both sides are `⊤`. And **no localised weak type bound in
+  continuous time is needed**: the level set `{ENNReal.ofReal t ≤ ⨆ s ∈ S, ‖Y s‖ₑ}`
+  is the decreasing intersection of the sets `{∃ s ∈ S, t' ≤ Y s}` over
+  `t' ↑ t`, so that route runs through `tendsto_measure_iInter_atTop`
+  (`MeasureTheory/Measure/Continuity.lean:220`) and
+  `tendsto_setIntegral_of_antitone` (`MeasureTheory/Integral/Bochner/Set.lean:299`),
+  and the route through the finite pieces avoids both.
+
+  The step the proof turns on: enumerate `S = insert T (Set.Iic T ∩ D)` so that
+  the **first** time is `T`, which is possible because `T ∈ S`; then `T` lies in
+  every finite piece, every time of `S` lies below `T`, and the largest time of
+  every piece is `T`. The instance over `ℕ` therefore bounds each piece by
+  `Y T` directly, with no need for the monotonicity of `r ↦ ‖Y r‖ₚ` and hence
+  no conditional Jensen inequality. Its finiteness hypothesis over a finite
+  piece follows from `Lʳ` of the members, the maximum being one of them. The
+  passage to the limit is `lintegral_iSup`
+  (`MeasureTheory/Integral/Lebesgue/Add.lean:36`) together with
+  `ENNReal.orderIsoRpow` (`Analysis/SpecialFunctions/Pow/NNReal.lean:788`),
+  which is an order isomorphism and therefore commutes with suprema, and the
+  supremum over the pieces is the window supremum by
+  `biSup_enorm_Iic_eq_of_isRightContinuous`.
+
+  **What the `Lᵖ` inequality consumes is a localised bound, and that is a
+  distinction the maximal inequalities above do not make.** The right hand side
+  of `lintegral_rpow_le_of_weak_type` is `∫⁻ a in {t ≤ M a}, g a` and not a
+  constant, and a constant would be useless there: inserted into the layer cake
+  it gives `∫⁻ M^p ≤ C · ∫⁻ t^(p-2) dt`, which diverges. Mathlib's
+  `maximal_ineq` is localised in exactly this sense, and since `2026-09-20` so
+  are `Submartingale.mul_measReal_exists_ge_le_setIntegral` over `ℕ` and
+  `Submartingale.mul_measReal_exists_ge_le_setIntegral_countable` over an
+  arbitrary linear order,
+  `ε * P {ω | ∃ s ∈ S, ε ≤ Y s ω} ≤ ∫ ω in {ω | ∃ s ∈ S, ε ≤ Y s ω}, (Y T ω)⁺`
+  for countable `S` bounded above by `T`. Two steps separate the localised bound
+  from the global one and only two: over a finite piece the level set lies in
+  the filtration at the largest time of that piece, so the submartingale
+  property carries the integral from there to `T`; and the integrals over the
+  increasing pieces are dominated by the integral over their union, the
+  integrand being non-negative. `Submartingale.mul_measReal_exists_ge_le_integral_posPart`
+  is now the one line weakening of the first.
+
+  **The localised form has no lower bound on `S` and is one sided**, where the
+  global one has a lower bound and is two sided. Both differences have the same
+  cause: the minimal inequality, which is what spends the lower bound, would
+  localise to the level set of `-Y`, a *different* set, and the two bounds could
+  not be added.
+
+  The form the manuscript uses is the corollary for a right continuous
+  martingale `X`, applied to the non-negative submartingale `‖X ·‖`:
+  `Martingale.lintegral_biSup_enorm_rpow_le` and `Martingale.measure_iSup_norm_le`
+  (`2026-09-20`), and each is that application and nothing more.
+
+  **The maximal corollary carries the constant `1`, and that decides which
+  window bound it is an application of.** `Martingale.measure_iSup_norm_le` is
+  `ε * P {ω | ENNReal.ofReal ε ≤ ⨆ t ∈ Set.Iic T, ‖X t ω‖ₑ} ≤ 𝔼‖X T‖`. Read
+  through the two sided `Submartingale.mul_measReal_le_biSup_enorm_le` it would
+  be `2 𝔼‖X T‖ - 𝔼‖X ⊥‖` instead, which is at least `𝔼‖X T‖` because `‖X ·‖` is
+  a submartingale, so the classical constant would be lost. The one sided
+  window bounds `Submartingale.mul_measReal_lt_biSup_enorm_le_of_nonneg` and
+  `Submartingale.mul_measReal_le_biSup_enorm_le_of_nonneg` (`2026-09-20`) are
+  what it is an application of: for a non-negative submartingale no absolute
+  value is needed, so the localised one sided estimate applies directly and the
+  bound is `𝔼[Y T]`. They are not the two sided theorems specialised — the
+  discrete inputs differ — and, like the localised estimate they rest on, they
+  have no lower bound on the window and no term at `⊥`.
+
+  **No `eLpNorm` form of the window inequality is stated, and that is a
+  decision and not an omission.** `eLpNorm` is taken of a real valued function,
+  and the real valued encodings of the window supremum all read `0` where the
+  path escapes, so such a form would have to carry the almost sure finiteness
+  of the supremum as a hypothesis. That finiteness is a theorem here,
+  `Martingale.ae_biSup_enorm_lt_top` (`2026-09-20`): the escape set lies in
+  every level set `{ENNReal.ofReal n ≤ ⨆ t ∈ Set.Iic T, ‖X t ω‖ₑ}`, whose
+  measure the maximal inequality bounds by `𝔼‖X T‖ / n`. So the `ℝ≥0∞` form
+  loses nothing — a consumer may take `.toReal` and know it is not reading a
+  junk value — while an `eLpNorm` form would say no more than the form it is
+  derived from. Milestone 11, the consumer, reads in `ℝ≥0∞` anyway.
+
+  **That `‖X ·‖` is a submartingale is itself a gap in Mathlib**, closed here as
+  `Martingale.submartingale_norm` (`2026-09-20`): the strings
+  `submartingale_abs`, `Martingale.abs`, `Martingale.norm` and `convex` do not
+  occur in `Mathlib/Probability/Martingale/` (checked 2026-09-20 against
+  `dec5b2b780537b6eaf7f5e5f000c12f7387fb24d`). Its input does exist there and
+  is what makes the proof three lines: `MeasureTheory.norm_condExp_le`
+  (`MeasureTheory/Function/ConditionalExpectation/CondJensen.lean:246`), the
+  conditional Jensen inequality for the norm, stated with no integrability
+  hypothesis. The statement is for a Banach space valued martingale rather than
+  a real one because that costs nothing — `norm_condExp_le` is already there.
+
+  Two norms meet in the corollary and the meeting is the only computation in
+  it: the submartingale theorem reads `‖Y t ω‖ₑ` of the *real* process
+  `Y t ω = ‖X t ω‖`, and that is `‖X t ω‖ₑ` because the norm is non-negative.
+  Right continuity is asked of the paths of `X` and carried to `‖X ·‖` by
+  `IsRightContinuous.continuous_comp`, which is weaker than asking it of the
+  norm and is what a càdlàg martingale supplies.
 * Oscillation of a real function along a one sided filter, which is the
   deterministic content of regularization and carries no probability at all.
   `HasUpcrossings a b g S n` says that `g` runs through an increasing tuple
@@ -9380,12 +9721,23 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   item fails on it, and must therefore be carried. `τ ⊓ T` for fixed `T` is the
   bounded instance on which the first item does apply.
 * **Doob's `Lᵖ` inequality, computed.** For `Y` a standard Brownian motion and
-  `p = 2`, `Martingale.eLpNorm_iSup_norm_le` must give
-  `𝔼[(⨆ t ∈ Set.Iic T, |Y t|) ^ 2] ≤ 4 * 𝔼[Y T ^ 2] = 4 * T`. The measurability
-  of the supremum here is exactly the reduction to `Set.Iic T ∩ ℚ` that the
-  milestone states as a lemma of its own; without right continuity the supremum
-  over an uncountable set need not be measurable, which is why that reduction is
-  an item and not a step.
+  `r = 2`, `Martingale.lintegral_biSup_enorm_rpow_le` must give
+  `∫⁻ ω, (⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ) ^ 2 ≤ 4 * ∫⁻ ω, ‖Y T ω‖ₑ ^ 2 = 4 * T`, the
+  constant being `(r/(r-1))^r = 4`. The measurability of the supremum here is
+  exactly the reduction to `Set.Iic T ∩ ℚ` that the milestone states as a lemma
+  of its own; without right continuity the supremum over an uncountable set need
+  not be measurable, which is why that reduction is an item and not a step. The
+  quantities are lower integrals and not `eLpNorm`s, for the reason given in the
+  milestone: a real valued encoding of the window supremum reads `0` where the
+  path escapes. That the escape set is null here is
+  `Martingale.ae_biSup_enorm_lt_top` and not an assumption.
+* **Doob's maximal inequality, computed, and the constant is the point.** For
+  the same `Y`, `Martingale.measure_iSup_norm_le` must give
+  `ε * P {ω | ε ≤ ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ} ≤ 𝔼|Y T|`, with `1` and not `2` in
+  front of the right hand side. The two sided window bound
+  `Submartingale.mul_measReal_le_biSup_enorm_le` gives `2 𝔼|Y T| - 𝔼[Y 0]` on
+  these data, which is `2 𝔼|Y T|`; the example is what distinguishes the two
+  routes, and it fails for the two sided one.
 * **The coin at an atom, which separates the two theorems of this milestone.**
   `E = Bool`, `q = Measure.dirac 1`, and the solution that flips a fair coin at
   time `1` and is constant on either side. It **has** a càdlàg modification —
@@ -10715,16 +11067,57 @@ about the index. What a run at Milestone 11 now holds:
   `SkorokhodSpace.isCompactContained_const` shows it is free for one law repeated,
   which locates the condition where it belongs, in the uniformity in `n`.
 
-**What is therefore left to this milestone at that point is the translation of
-`CompactContainment` itself**, and it is the fourth difference and no longer the
-first three: a family `X n` of processes over `ℝ≥0`, each satisfying
+**The translation of `CompactContainment` itself is the fourth difference, and it
+is done, 2026-09-19.** A family `X n` of processes over `ℝ≥0`, each satisfying
 `CompactContainment` with its own compact sets, does **not** give
 `SkorokhodSpace.IsCompactContained` of the family of path laws — the compact set
-has to be chosen once for all `n`. The item that states this is therefore a
-*uniform* hypothesis on the family, `CompactContainment` being its instance at a
-single `n`, and the path laws enter through the path map; over the one sided
-window of `CompactContainment` the two agree, the negative half of the two sided
-window being answered by the time `0`.
+has to be chosen once for all `n`. What stands:
+
+* `UniformCompactContainment` — the hypothesis, kept **verbatim from
+  `CompactContainment`** except for the quantifier order, so that
+  `UniformCompactContainment.compactContainment` is the instance at a single `n`
+  and not a second translation. It is `∃ K, ∀ n` where `CompactContainment` at
+  each `n` is `∀ n, ∃ K`, and that is its whole content.
+* It is stated about **path space valued variables**
+  `X : (n : γ) → Ω n → D(ℝ≥0, E)` and not about processes `ι → Ω n → E`, and the
+  reason is measured rather than aesthetic: this file has no general path map of
+  a process into `D(ℝ≥0, E)` and cannot have a **total** one — a process with
+  only almost surely càdlàg paths needs a value on the exceptional set, which is
+  why `jumpPathD` puts `SkorokhodSpace.const` there. The two statements of
+  Milestone 6 that this milestone consumes,
+  `tendstoInDistribution_evalPi_jumpPathD` and
+  `tendstoInDistribution_eval_jumpPathD`, already quantify over path space valued
+  variables for the same reason; the hypothesis is stated where the chain reads
+  it.
+* `isCompactContained_map_of_uniformCompactContainment` — the passage to
+  `SkorokhodSpace.IsCompactContained` of the image laws. It spends exactly two
+  things and both are named: `Dense D`, which buys the times of the window
+  outside `D`, and the measurability of `X n`, which carries the bound to the
+  image law by `MeasureTheory.Measure.map_apply` at the window set — measurable
+  by `SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion_nnreal`. The set
+  `{ω | ∀ t ∈ Set.Iic T ∩ D, X n ω t ∈ K}` is **not** asserted measurable and is
+  not used as if it were: it is only bounded above by the measurable preimage of
+  the window.
+* **The window is bought at a horizon one unit longer**, and that is the shape of
+  the argument rather than a convenience. The value at the right endpoint of a
+  closed window is what a dense set does not reach, so the closed form of the
+  dense window lemma cannot be used; the uniform hypothesis is applied at `m + 1`
+  and `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` reads `[0, m]` inside
+  the half open `[0, m+1)`. The enlargement is free because the hypothesis is
+  quantified over all horizons.
+* `uniformCompactContainment_of_isCompactContained_map` and
+  `uniformCompactContainment_iff_isCompactContained_map` — the converse, for any
+  `D` whatever and **without density**, and hence the equivalence. This is what
+  says the uniform hypothesis is the right one and not merely a sufficient one:
+  it is the hypothesis the criterion carries, in the shape a consumer of this
+  file can discharge. The level is halved and capped below `1` because
+  `CompactContainment` asks a strict inequality where the path space form gives a
+  weak one.
+* `uniformCompactContainment_of_forall_map_eq` — the emptiness test, and it
+  locates the condition: a family all of whose members have the **same** law has
+  the hypothesis for nothing, by `SkorokhodSpace.isCompactContained_const`. A
+  single process never fails it; what the hypothesis excludes is the escape of
+  mass **along the index**.
 
 * `mpSolution_of_tendsto_cadlag`: let `A ⊆ Cb(E) × Cb(E)` and let `A n` be
   relations between bounded measurable functions such that for every `(f,g) ∈ A`
@@ -10754,13 +11147,58 @@ window being answered by the time `0`.
   `𝓐 n = {(Y, Z) ∈ 𝓛 n × 𝓛 n | Martingale (fun t ↦ Y t - ∫ s in Clock.interval q c 0 t, Z s) (𝓕 n) (P n)}`.
   Call `f : E →ᵇ ℝ` *approximable* when for all `ε, T > 0` there are
   `(Y n, Z n) ∈ 𝓐 n` with
-  `⨆ n, 𝔼[⨆ t ∈ Set.Iic T ∩ D, |Y n t - f (X n t)|] < ε` and
+  `⨆ n, ∫⁻ ω, ⨆ t ∈ Set.Iic T ∩ D, ‖Y n t ω - f (X n t ω)‖ₑ ∂(P n) < ε` and
   `⨆ n, 𝔼[eLpNorm (Set.Iic T).indicator (Z n) p] < ∞` for some `1 < p ≤ ∞`.
   Then for every `f` in the sup-norm closure of the approximable functions the
   laws of `postcomp f ∘ X n` are tight in `D ι ℝ`, and the laws of
   `(f 1, …, f k) ∘ X n` are tight in `D ι (Fin k → ℝ)`. The `𝕂`-valued case is
   the real one applied to `Re f` and `Im f` together with the `Fin k` form.
   This is where the continuous time Doob inequalities of Milestone 9 are used.
+
+  **The first condition is a lower integral in `ℝ≥0∞`, and that is not
+  cosmetic.** Written over `ℝ` as `𝔼[⨆ t ∈ Set.Iic T ∩ D, |Y n t - f (X n t)|]`
+  it is satisfied by a family whose approximation error is *unbounded* on the
+  window, because `Real.iSup_of_not_bddAbove` makes the supremum `0` there and
+  the integral with it. The witness is `biSup_natCast_eq_zero` of Milestone 9,
+  and the honest form is the one above: in `ℝ≥0∞` an unbounded supremum is `⊤`
+  and the condition excludes exactly what it is meant to. The same reading
+  applies to the second condition, which is already an `eLpNorm` and therefore
+  already in `ℝ≥0∞`.
+
+  **What the criterion may assume about the supremum, and what it has to prove.**
+  The quantity is measurable because `D` is countable
+  (`measurable_biSup_enorm_of_countable`), and it is the supremum over the whole
+  window because the paths are right continuous
+  (`biSup_enorm_Iic_eq_of_isRightContinuous`, which reads the right endpoint
+  separately). What the criterion has to produce from it is the maximal
+  estimate, and its discrete half is available over an arbitrary linear order
+  since 2026-09-20: `Submartingale.mul_measReal_exists_ge_abs_le_countable`,
+  `ε * P {ω | ∃ s ∈ S, ε ≤ |Y s ω|} ≤ 2 𝔼[(Y T)⁺] - 𝔼[Y R]` for countable `S`
+  between `R` and `T`. It answers the question this milestone opened — whether
+  Mathlib's `maximal_ineq`, which is indexed by `ℕ` and reads a `Finset.sup'`,
+  can be dragged along `D`: it can, through `Filtration.comp`,
+  `Finset.monoEnum` and continuity from below, and the passage needs no
+  measurability of the level set. Its continuous time form is
+  `Submartingale.mul_measReal_lt_biSup_enorm_le` and
+  `Submartingale.mul_measReal_le_biSup_enorm_le` of Milestone 9, which read the
+  window supremum directly.
+
+  The `Lᵖ` half is `lintegral_rpow_le_of_weak_type` of Milestone 9, which turns
+  either maximal estimate into `∫⁻ M^p ≤ (p/(p-1))^p ∫⁻ g^p` and carries no
+  probability, together with its instance over `ℕ`,
+  `Submartingale.lintegral_rpow_range_sup'_le`, its `eLpNorm` form
+  `Submartingale.eLpNorm_range_sup'_le`, and the window bound itself,
+  `Submartingale.lintegral_biSup_enorm_rpow_le`. Mathlib has none of these for
+  any index (checked 2026-09-20 against
+  `dec5b2b780537b6eaf7f5e5f000c12f7387fb24d`: the docstring of `maximal_ineq`
+  says the `Lᵖ` inequality "will be proved in an upcoming PR", and `eLpNorm`
+  occurs in `Mathlib/Probability/Martingale/` only in `BorelCantelli.lean` and
+  `Convergence.lean`).
+
+  **The window bound is read in `ℝ≥0∞`, and this criterion is to read it there
+  too.** Its approximability condition is already a lower integral in `ℝ≥0∞`
+  for the same reason — a real valued supremum vanishes where the path escapes
+  — so the two fit without a `toReal` anywhere between them.
 * `isRelativelyCompact_of_approx`: if `E` is Polish, the domain of `A` contains
   an algebra separating points and vanishing nowhere, the approximation holds
   for each `(f,g) ∈ A`, and `{X n}` satisfies compact containment, then `{X n}`
@@ -10948,3 +11386,134 @@ functions on `E` with the sup norm.
   the clock of Milestone 1. With `fullGenerator_isDissipative` this is the
   converse of the previous item, and the two together say that the operators
   arising from Markov processes are exactly the dissipative ones.
+
+## Milestone 14: causal convolution and the Volterra resolvent
+
+The renewal equation `m = m₀ + φ ⋆ m` on `[0,∞)`, and the resolvent that solves
+it. It is the one piece of analysis the jump processes of Milestone 4 need and do
+not have: `thm:pathjumpMP`(b) carries `𝔼[N t] < ∞` as a hypothesis, the manuscript
+discharges it for the linear Hawkes process through this equation, and the
+statement that discharges it is the **only** input missing from an otherwise
+complete chain — for the bounded nonlinear process the corresponding chain is
+closed (`martingale_stoppedProcess_mpFamilyF_hawkesStepPathH`), and the linear one
+stops here.
+
+**Mathlib has none of it.** `git grep -il` over `upstream/master` gives zero hits
+in `Mathlib/` for `volterra`, for `renewal` and for `resolvent kernel`. What is
+there is the convolution itself, in two forms, and the second of them changes the
+design of this milestone:
+
+* `MeasureTheory.convolution` (`Mathlib/Analysis/Convolution.lean:402`), Bochner
+  valued, with `ConvolutionExistsAt` (`:155`) as its side condition and
+  `convolution_assoc` (`:927`) carrying integrability hypotheses.
+* `MeasureTheory.lconvolution` (`Mathlib/Analysis/LConvolution.lean:50`, the
+  `to_additive` of `mlconvolution`, notation `f ⋆ₗ[μ] g`), `ℝ≥0∞` valued and
+  defined by a lower integral. Its associativity `lconvolution_assoc` (`:130`)
+  asks for **measurability and nothing else**, and its commutativity
+  `lconvolution_comm` (`:143`) asks nothing of the two functions at all — it asks
+  invariance of the measure, which Lebesgue measure on `ℝ` has.
+
+**The milestone is therefore stated in `ℝ≥0∞`,** and that is the same decision
+the rest of this development has taken four times: a value of `⊤` is the true mass
+of a window and not a junk value, while a Bochner integral of a non integrable
+function is `0` and lies. Here it buys the whole algebraic layer for free. The
+question that remains is not whether the Neumann series converges — a sum of
+non-negative terms in `ℝ≥0∞` always does — but whether it is **finite**, and that
+is where the local mass of the kernel enters and where the work is.
+
+State everything for `ι = ℝ` with `volume` and functions vanishing on
+`(-∞, 0)`; the half line is a sub-semigroup and not a group, so it is the support
+condition and not a change of carrier that makes the convolution causal.
+
+* `support_lconvolution_subset`:
+  `Function.support (f ⋆ₗ[μ] g) ⊆ Function.support f + Function.support g`, over
+  an arbitrary measurable additive group and an arbitrary measure. Mathlib has
+  this for the Bochner convolution (`support_convolution_subset`,
+  `Mathlib/Analysis/Convolution.lean:672`) and **not** for `lconvolution`; it
+  belongs in Mathlib beside the Bochner one, and it is the weaker of the two —
+  the Bochner statement lives among `ConvolutionExistsAt` side conditions, and
+  this one asks nothing at all, not measurability of the two functions and not
+  `SFinite` of the measure, because a lower integral of a pointwise vanishing
+  function is `0` whatever the measure does.
+* `IsCausal f`, the predicate `∀ t < 0, f t = 0` for `f : ℝ → ℝ≥0∞`, with
+  `isCausal_iff_support_subset`, `isCausal_zero`, `IsCausal.add`,
+  `IsCausal.indicator` and `IsCausal.lconvolution`. The last one is the support
+  inclusion above together with `Set.Ici 0 + Set.Ici 0 ⊆ Set.Ici 0`, which is
+  `add_nonneg`; no measure theory enters a second time.
+* `lconvolution_eq_setLIntegral_Icc`: for causal `f` and `g`,
+  `(f ⋆ₗ g) t = ∫⁻ s in Set.Icc 0 t, f s * g (t - s)`, for **every** `t`. The
+  sign of `t` is not a hypothesis: below `0` both sides vanish, the left by
+  `IsCausal.lconvolution` and the right because the window is empty. This is
+  the form every later statement reads, and it is the only place where the
+  causality is unfolded.
+* `convPow f n`, the causal convolution power, **indexed from one**: `convPow f n`
+  is the `(n+1)`-fold convolution, so `convPow f 0 = f` and
+  `convPow f 1 = f ⋆ₗ f`, with `convPow_zero`, `convPow_succ`,
+  `IsCausal.convPow`, `measurable_convPow` and the semigroup law
+  `convPow_add : convPow f (m + n + 1) = convPow f m ⋆ₗ convPow f n`. The shift
+  is the **absence of a unit** and not a convention: the convolution algebra on
+  the half line has no `L¹` unit — the unit is the Dirac mass at `0`, a measure
+  and not a function — so there is no `f ^⋆ 0` to name, and naming one would
+  mean naming a junk value and then excluding it from the semigroup law.
+  Shifting the index removes the case distinction instead of hiding it, and no
+  statement of this milestone carries `1 ≤ n`.
+* `setLIntegral_lconvolution_le`:
+  `∫⁻ t in Set.Icc 0 d, (f ⋆ₗ g) t ≤ (∫⁻ t in Set.Icc 0 d, f t) * ∫⁻ t in Set.Icc 0 d, g t`
+  for causal measurable `f` and `g`. The submultiplicativity of the window mass,
+  by Tonelli against the restricted measure and the translation invariance of
+  Lebesgue measure — and it is the **whole** analytic content of the milestone.
+  Over `ℝ≥0∞` it carries no integrability hypothesis; it carries the causality
+  of both factors, and each is spent at a different place: that of `g` replaces
+  the translated window by the window and kills the shifts beyond `d`, that of
+  `f` kills the negative half line.
+* `setLIntegral_convPow_le`: `∫⁻ t in Set.Icc 0 d, convPow φ n t ≤ a ^ (n + 1)`
+  where `a = ∫⁻ t in Set.Icc 0 d, φ t`, by induction over the previous item.
+  The exponent is `n + 1` because the index is, and this is the step the Neumann
+  series of a normed algebra cannot take: nothing global is asked of the kernel,
+  only its mass on the one window.
+* `volterraResolvent φ := fun t ↦ ∑' n, convPow φ n t`, with
+  `IsCausal.volterraResolvent` and `measurable_volterraResolvent`, and
+  `volterraResolvent_eq`: `r = φ + φ ⋆ₗ r`, from the semigroup law and
+  `tsum_eq_zero_add'` against `ENNReal.summable` — no convergence question
+  arises. The second form `r = φ + r ⋆ₗ φ` is this one and `lconvolution_comm`.
+* `setLIntegral_volterraResolvent_lt_top`: if `a < 1` on a window of length `d`
+  then `∫⁻ t in Set.Icc 0 d, r t < ⊤`; and
+  `setLIntegral_volterraResolvent_lt_top_of_locallyFinite`, the same on **every**
+  window, for a kernel whose mass on some window of positive length is below `1`
+  and whose mass on every window is finite. The step from the short window to
+  every window is causality and nothing else: the resolvent on `[0, (k+1) d]` is
+  determined by the kernel on `[0, (k+1) d]`, and the geometric bound is applied
+  block by block. This is the step the Neumann series of a normed algebra
+  (`NormedRing.inverse_one_sub`, `Mathlib/Analysis/Normed/Ring/Units.lean`)
+  cannot take: it asks `‖φ‖ < 1` globally, and a locally integrable kernel on the
+  half line has no such norm.
+* `exists_setLIntegral_lt_one`: a kernel with `∫⁻ t in Set.Icc 0 d, φ t < ⊤` for
+  every `d` and `φ` vanishing at `0` in the sense of the window mass has a window
+  of positive length with mass below `1`, by the continuity of the measure from
+  above. This is the hypothesis of the previous item discharged on local
+  integrability alone, and it is where "locally integrable" becomes "the resolvent
+  exists".
+* `renewal_eq_add_lconvolution_volterraResolvent`: `m = m₀ + r ⋆ₗ m₀` is the
+  unique causal solution of `m = m₀ + φ ⋆ₗ m` that is finite on every window.
+  Uniqueness is the difference of two solutions against the geometric bound;
+  existence is the associativity and the defining equation of `r`.
+  `renewal_lt_top`: if `m₀` is bounded on every window and the resolvent has
+  finite window mass, then so has `m`.
+
+**The seam with Milestone 4, and it is two statements and not one.** The
+resolvent gives `𝔼[N t] < ∞` only once the mean intensity of the linear Hawkes
+process is known to *satisfy* the renewal equation, and that is a statement about
+the construction and not about convolution:
+
+* `lintegral_hawkesSelfRate_eq_add_lconvolution`: the mean of the cumulated rate
+  of `ex:hawkes` satisfies `m = m₀ + φ ⋆ₗ m` with `m₀ t = ν * t`, by Tonelli
+  against the counting measure of the jump times and the definition of
+  `hawkesSelfRate`. Stated in `ℝ≥0∞` it needs no finiteness in advance, which is
+  the point: the equation holds whether or not its solution is finite.
+* `lintegral_stepIndex_hawkesJumpTime_lt_top`, the conclusion `𝔼[N t] < ∞`; and
+  from it `ae_intervalIntegrable_hawkesSelfRate`, the almost sure interval
+  integrability of the self referential rate, which by
+  `not_intervalIntegrable_hawkesSelfRate_of_not_summable` **is** the almost sure
+  non explosion of the linear Hawkes process. That is the statement Milestone 4
+  carries as a hypothesis in six places, and it is the reason this milestone
+  exists.

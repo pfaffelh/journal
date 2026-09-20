@@ -23,6 +23,7 @@ import Mathlib.MeasureTheory.Function.Floor
 import Mathlib.Analysis.Calculus.Deriv.Slope
 import Mathlib.Probability.Kernel.Composition.IntegralCompProd
 import Mathlib.Analysis.SpecialFunctions.Exponential
+import Mathlib.Analysis.SpecialFunctions.Pow.Integral
 import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 import Mathlib.Algebra.Group.ForwardDiff
 import Mathlib.Analysis.Normed.Ring.InfiniteSum
@@ -40,6 +41,7 @@ import Mathlib.MeasureTheory.Function.ConditionalExpectation.Real
 import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
 import Mathlib.MeasureTheory.Function.ConvergenceInDistribution
 import Mathlib.Probability.Martingale.Convergence
+import Mathlib.Analysis.LConvolution
 
 /-!
 # Suggested signatures for the martingale problems roadmap
@@ -2283,19 +2285,26 @@ the lower bound `∫ Y R ≤ ∫ Y (min F)`, which is what the submartingale pro
 gives over a finite piece `F` and what has to be uniform in the piece.  Under
 `[OrderBot ι]`, the index of Milestone 9's last block, `R = ⊥` serves. -/
 
-/-- **Doob's maximal inequality**, real valued and without a sign assumption on
-the process: the submartingale reaches the level `ε` at some time below `n` with
-probability at most `∫ (f n)⁺ / ε`.
+/-- **Doob's maximal inequality, localised**: the mass of the level set is
+bounded by the integral of `f n` **over that level set** and not over the whole
+space.
 
-Mathlib's `maximal_ineq` is this bound in `ℝ≥0∞` for a non-negative
-submartingale; here the level set is `{ω | ∃ k ≤ n, ε ≤ f k ω}` rather than a
-`Finset.sup'`, which is the form in which the countable time set consumes it, and
-`(f n)⁺` on the right replaces the non-negativity on the left.  Nothing is
-assumed of `ε`. -/
-theorem Submartingale.mul_measReal_exists_ge_le_integral_posPart {m : MeasurableSpace Ω}
+The distinction is not cosmetic, and it decides which theorems can consume the
+bound.  Doob's `Lᵖ` inequality needs the localised form -- the right hand side
+of `lintegral_rpow_le_of_weak_type` is an integral over the level set -- while
+the regularization argument of this section needs only the global one.
+Mathlib's `maximal_ineq` is localised in exactly this sense;
+`Submartingale.mul_measReal_exists_ge_le_integral_posPart` below is the global
+weakening, and the two differ by one application of `setIntegral_le_integral`.
+
+Here the level set is `{ω | ∃ k ≤ n, ε ≤ f k ω}` rather than a `Finset.sup'`,
+which is the form in which a countable time set consumes it, and nothing is
+assumed of `ε` or of the sign of the process. -/
+theorem Submartingale.mul_measReal_exists_ge_le_setIntegral {m : MeasurableSpace Ω}
     {μ : Measure Ω} [IsFiniteMeasure μ] {𝒢 : Filtration ℕ m} {f : ℕ → Ω → ℝ}
     (hsub : Submartingale f 𝒢 μ) (ε : ℝ) (n : ℕ) :
-    ε * μ.real {ω | ∃ k ≤ n, ε ≤ f k ω} ≤ ∫ ω, (f n ω)⁺ ∂μ := by
+    ε * μ.real {ω | ∃ k ≤ n, ε ≤ f k ω}
+      ≤ ∫ ω in {ω | ∃ k ≤ n, ε ≤ f k ω}, f n ω ∂μ := by
   classical
   set s : Set ℝ := {y : ℝ | ε ≤ y} with hs
   set τ : Ω → ℕ∞ := fun ω ↦ ((hittingBtwn f s 0 n ω : ℕ) : ℕ∞) with hτdef
@@ -2317,7 +2326,6 @@ theorem Submartingale.mul_measReal_exists_ge_le_integral_posPart {m : Measurable
       measurableSet_le measurable_const ((hsub.stronglyMeasurable k).measurable.le (𝒢.le k))
   have hstop_int : Integrable (stoppedValue f τ) μ := hsub.integrable_stoppedValue hτ hbdd
   have hfn_int : Integrable (f n) μ := hsub.integrable n
-  have hpos_int : Integrable (fun ω ↦ (f n ω)⁺) μ := hfn_int.pos_part
   have hA1 : ε * μ.real A ≤ ∫ ω in A, stoppedValue f τ ω ∂μ := by
     have hle : ∀ ω ∈ A, ε ≤ stoppedValue f τ ω := by
       intro ω hω
@@ -2341,14 +2349,36 @@ theorem Submartingale.mul_measReal_exists_ge_le_integral_posPart {m : Measurable
   have hsplit' : ∫ ω, f n ω ∂μ = ∫ ω in A, f n ω ∂μ + ∫ ω in Aᶜ, f n ω ∂μ :=
     (integral_add_compl hAmeas hfn_int).symm
   rw [hsplit, hA2, hsplit'] at hmono
-  have hfin : ∫ ω in A, f n ω ∂μ ≤ ∫ ω, (f n ω)⁺ ∂μ :=
-    le_trans (setIntegral_mono_on hfn_int.integrableOn hpos_int.integrableOn hAmeas
-        (fun ω _ ↦ le_posPart _))
-      (setIntegral_le_integral hpos_int (Filter.Eventually.of_forall fun ω ↦ posPart_nonneg _))
-  have h1 : ε * μ.real A ≤ ∫ ω in A, f n ω ∂μ :=
-    hA1.trans (by linarith [hmono] :
-      ∫ ω in A, stoppedValue f τ ω ∂μ ≤ ∫ ω in A, f n ω ∂μ)
-  linarith
+  exact hA1.trans (by linarith [hmono] :
+    ∫ ω in A, stoppedValue f τ ω ∂μ ≤ ∫ ω in A, f n ω ∂μ)
+
+/-- **Doob's maximal inequality**, real valued and without a sign assumption on
+the process: the submartingale reaches the level `ε` at some time below `n` with
+probability at most `∫ (f n)⁺ / ε`.
+
+This is the localised bound above weakened once, and the weakening is what makes
+the right hand side independent of `ε`: the integral over the level set is at
+most the integral of the positive part over everything.  Mathlib's
+`maximal_ineq` is the localised bound in `ℝ≥0∞` for a non-negative
+submartingale; `(f n)⁺` on the right here replaces that non-negativity. -/
+theorem Submartingale.mul_measReal_exists_ge_le_integral_posPart {m : MeasurableSpace Ω}
+    {μ : Measure Ω} [IsFiniteMeasure μ] {𝒢 : Filtration ℕ m} {f : ℕ → Ω → ℝ}
+    (hsub : Submartingale f 𝒢 μ) (ε : ℝ) (n : ℕ) :
+    ε * μ.real {ω | ∃ k ≤ n, ε ≤ f k ω} ≤ ∫ ω, (f n ω)⁺ ∂μ := by
+  classical
+  set A : Set Ω := {ω | ∃ k ≤ n, ε ≤ f k ω} with hA
+  have hAmeas : MeasurableSet A := by
+    have hrw : A = ⋃ k ∈ Set.Iic n, {ω | ε ≤ f k ω} := by
+      ext ω; simp [hA]
+    rw [hrw]
+    exact MeasurableSet.biUnion (Set.to_countable _) fun k _ ↦
+      measurableSet_le measurable_const ((hsub.stronglyMeasurable k).measurable.le (𝒢.le k))
+  have hfn_int : Integrable (f n) μ := hsub.integrable n
+  have hpos_int : Integrable (fun ω ↦ (f n ω)⁺) μ := hfn_int.pos_part
+  refine (hsub.mul_measReal_exists_ge_le_setIntegral ε n).trans ?_
+  exact le_trans (setIntegral_mono_on hfn_int.integrableOn hpos_int.integrableOn hAmeas
+      (fun ω _ ↦ le_posPart _))
+    (setIntegral_le_integral hpos_int (Filter.Eventually.of_forall fun ω ↦ posPart_nonneg _))
 
 /-- **Doob's minimal inequality for a submartingale.**  Mathlib has no version of
 it: the string `inf'` does not occur in `Mathlib/Probability/Martingale/`.
@@ -2562,9 +2592,1293 @@ theorem Submartingale.ae_exists_tendsto_nhdsWithin [TopologicalSpace ι] [OrderT
   exact fun t ↦ ⟨exists_tendsto_nhdsWithin_Iio_of_hasUpcrossings_bound h1 h2 t,
     exists_tendsto_nhdsWithin_Ioi_of_hasUpcrossings_bound h1 h2 t⟩
 
+/-! ### Doob's maximal inequality over a countable time set
+
+`Submartingale.ae_bddOn` above uses a bound it does not state, and the bound is
+the statement Milestone 11 asks for: Mathlib's `maximal_ineq` carried from `ℕ` to
+a countable set of times of an arbitrary linear order.  It is written out here,
+in the same two sided real valued shape as the two `ℕ`-indexed halves it rests
+on, because the level set of a family of times is what a tightness argument
+reads and a `Finset.sup'` is not.
+
+**The hypothesis `R ≤ T` is not implied by the other two, and only the empty time
+set needs it.**  For `S` nonempty it follows from `hRS` and `hST` at any `s ∈ S`;
+for `S = ∅` the left hand side is `0` and the right hand side may be negative --
+take `T < R`, `Y T = -1` and `Y R = 5`, which is a submartingale, and the bound
+would read `0 ≤ -5`.  Carrying `R ≤ T` is therefore cheaper than carrying
+`S.Nonempty`, and it is what the consumer has. -/
+theorem Submartingale.mul_measReal_exists_ge_abs_le_countable {P : Measure Ω} [IsFiniteMeasure P]
+    {Y : ι → Ω → ℝ} {𝓕 : Filtration ι m} (hY : Submartingale Y 𝓕 P)
+    {S : Set ι} (hS : S.Countable) {R T : ι} (hRT : R ≤ T)
+    (hRS : ∀ s ∈ S, R ≤ s) (hST : ∀ s ∈ S, s ≤ T) {ε : ℝ} (hε : 0 ≤ ε) :
+    ε * P.real {ω | ∃ s ∈ S, ε ≤ |Y s ω|}
+      ≤ (∫ ω, (Y T ω)⁺ ∂P) + ((∫ ω, (Y T ω)⁺ ∂P) - ∫ ω, Y R ω ∂P) := by
+  classical
+  set c : ℝ := (∫ ω, (Y T ω)⁺ ∂P) + ((∫ ω, (Y T ω)⁺ ∂P) - ∫ ω, Y R ω ∂P) with hc
+  -- the constant is non negative, and this is where `R ≤ T` is spent
+  have hRTint : ∫ ω, Y R ω ∂P ≤ ∫ ω, (Y T ω)⁺ ∂P := by
+    have h := hY.setIntegral_le (i := R) (j := T) hRT (s := (Set.univ : Set Ω)) MeasurableSet.univ
+    simp only [Measure.restrict_univ] at h
+    refine h.trans (integral_mono (hY.integrable T) ((hY.integrable T).pos_part) ?_)
+    intro ω; exact le_posPart _
+  have hc0 : 0 ≤ c := by
+    have h0 : 0 ≤ ∫ ω, (Y T ω)⁺ ∂P := integral_nonneg fun ω ↦ posPart_nonneg _
+    rw [hc]; linarith
+  rcases S.eq_empty_or_nonempty with rfl | hne
+  · have hempty : {ω : Ω | ∃ s ∈ (∅ : Set ι), ε ≤ |Y s ω|} = ∅ := by simp
+    rw [hempty]
+    simpa using hc0
+  rcases eq_or_lt_of_le hε with rfl | hpos
+  · simpa using hc0
+  obtain ⟨σ, rfl⟩ := hS.exists_eq_range hne
+  set F : ℕ → Finset ι := fun N ↦ (Finset.range (N + 1)).image σ with hF
+  have hFne : ∀ N, (F N).Nonempty := by
+    intro N
+    refine ⟨σ 0, ?_⟩
+    simp only [hF, Finset.mem_image, Finset.mem_range]
+    exact ⟨0, by omega, rfl⟩
+  have hFsub : ∀ N, ∀ x ∈ F N, x ∈ Set.range σ := by
+    intro N x hx
+    simp only [hF, Finset.mem_image, Finset.mem_range] at hx
+    obtain ⟨p, -, rfl⟩ := hx
+    exact ⟨p, rfl⟩
+  have hFmono : Monotone F := by
+    intro N M hNM x hx
+    simp only [hF, Finset.mem_image, Finset.mem_range] at hx ⊢
+    obtain ⟨p, hp, hpx⟩ := hx
+    exact ⟨p, by omega, hpx⟩
+  -- the uniform bound over the finite pieces
+  have key : ∀ N, ε * P.real {ω | ∃ t ∈ F N, ε ≤ |Y t ω|} ≤ c := by
+    intro N
+    set e : ℕ → ι := Finset.monoEnum (hFne N) with he
+    have hemono : Monotone e := Finset.monotone_monoEnum (hFne N)
+    have hemem : ∀ i, e i ∈ F N := Finset.monoEnum_mem (hFne N)
+    set g : ℕ → Ω → ℝ := fun i ω ↦ Y (e i) ω with hg
+    have hgsub : Submartingale g (𝓕.comp hemono) P := hY.comp_monotone hemono
+    set n : ℕ := (F N).card with hn
+    set B₁ : Set Ω := {ω | ∃ k ≤ n, ε ≤ g k ω} with hB₁
+    set B₂ : Set Ω := {ω | ∃ k ≤ n, g k ω ≤ -ε} with hB₂
+    have hsubset : {ω | ∃ t ∈ F N, ε ≤ |Y t ω|} ⊆ B₁ ∪ B₂ := by
+      rintro ω ⟨t, htF, hta⟩
+      obtain ⟨i, hi, hie⟩ := Finset.exists_lt_card_monoEnum_eq (hFne N) htF
+      rcases le_or_gt ε (Y t ω) with h | h
+      · refine Or.inl ⟨i, by omega, ?_⟩
+        show ε ≤ Y (e i) ω
+        rw [he, hie]; exact h
+      · refine Or.inr ⟨i, by omega, ?_⟩
+        show Y (e i) ω ≤ -ε
+        rw [he, hie]
+        rcases abs_cases (Y t ω) with ⟨habs, -⟩ | ⟨habs, -⟩
+        · rw [habs] at hta; linarith
+        · rw [habs] at hta; linarith
+    have hmeas : ε * P.real {ω | ∃ t ∈ F N, ε ≤ |Y t ω|} ≤ ε * P.real B₁ + ε * P.real B₂ := by
+      have h1 : P.real {ω | ∃ t ∈ F N, ε ≤ |Y t ω|} ≤ P.real B₁ + P.real B₂ :=
+        le_trans (measureReal_mono hsubset (measure_ne_top _ _)) (measureReal_union_le _ _)
+      nlinarith [h1]
+    have hb1 : ε * P.real B₁ ≤ ∫ ω, (g n ω)⁺ ∂P :=
+      hgsub.mul_measReal_exists_ge_le_integral_posPart ε n
+    have hb2 : ε * P.real B₂ ≤ (∫ ω, (g n ω)⁺ ∂P) - ∫ ω, g 0 ω ∂P :=
+      hgsub.mul_measReal_exists_le_neg_le_integral_posPart_sub ε n
+    have hgn : ∫ ω, (g n ω)⁺ ∂P ≤ ∫ ω, (Y T ω)⁺ ∂P := by
+      have h := hY.pos.setIntegral_le (i := e n) (j := T) (hST _ (hFsub N _ (hemem n)))
+        (s := (Set.univ : Set Ω)) MeasurableSet.univ
+      simpa using h
+    have hg0 : ∫ ω, Y R ω ∂P ≤ ∫ ω, g 0 ω ∂P := by
+      have h := hY.setIntegral_le (i := R) (j := e 0) (hRS _ (hFsub N _ (hemem 0)))
+        (s := (Set.univ : Set Ω)) MeasurableSet.univ
+      simpa using h
+    rw [hc]
+    linarith
+  -- the passage to the whole time set, by continuity from below and not by Fatou
+  set A : ℕ → Set Ω := fun N ↦ {ω | ∃ t ∈ F N, ε ≤ |Y t ω|} with hA
+  have hAmono : Monotone A := by
+    intro N M hNM ω hω
+    obtain ⟨t, ht, hta⟩ := hω
+    exact ⟨t, hFmono hNM ht, hta⟩
+  have hAunion : {ω | ∃ s ∈ Set.range σ, ε ≤ |Y s ω|} = ⋃ N, A N := by
+    ext ω
+    constructor
+    · rintro ⟨t, ⟨p, rfl⟩, hta⟩
+      refine Set.mem_iUnion.2 ⟨p, ⟨σ p, ?_, hta⟩⟩
+      simp only [hF, Finset.mem_image, Finset.mem_range]
+      exact ⟨p, by omega, rfl⟩
+    · rintro hω
+      obtain ⟨N, t, ht, hta⟩ := Set.mem_iUnion.1 hω
+      exact ⟨t, hFsub N _ ht, hta⟩
+  have hle : P {ω | ∃ s ∈ Set.range σ, ε ≤ |Y s ω|} ≤ ENNReal.ofReal (c / ε) := by
+    rw [hAunion, hAmono.measure_iUnion]
+    refine iSup_le fun N ↦ ?_
+    have h1 : P.real (A N) ≤ c / ε := by
+      rw [le_div_iff₀ hpos, mul_comm]
+      exact key N
+    rw [← ENNReal.ofReal_toReal (measure_ne_top P (A N))]
+    exact ENNReal.ofReal_le_ofReal h1
+  have hreal : P.real {ω | ∃ s ∈ Set.range σ, ε ≤ |Y s ω|} ≤ c / ε := by
+    rw [measureReal_def]
+    calc (P {ω | ∃ s ∈ Set.range σ, ε ≤ |Y s ω|}).toReal
+        ≤ (ENNReal.ofReal (c / ε)).toReal := ENNReal.toReal_mono ENNReal.ofReal_ne_top hle
+      _ = c / ε := ENNReal.toReal_ofReal (by positivity)
+  calc ε * P.real {ω | ∃ s ∈ Set.range σ, ε ≤ |Y s ω|} ≤ ε * (c / ε) :=
+        mul_le_mul_of_nonneg_left hreal hε
+    _ = c := by field_simp
+
+/-- **Doob's maximal inequality over a countable set of times, localised**: the
+right hand side is the integral of `(Y T)⁺` **over the level set** and not over
+the whole space.
+
+This is the form Doob's `Lᵖ` inequality consumes, and the previous theorem is
+not: `lintegral_rpow_le_of_weak_type` reads
+`∫⁻ a in {t ≤ M a}, g a` at every level, and a bound by a constant is useless
+there -- inserted into the layer cake it would give `∫⁻ M^p ≤ C · ∫⁻ t^(p-2) dt`,
+which diverges at `0` for `p < 2` and at `∞` always.
+
+**Two steps are added to the proof of the global bound, and only two.** Over a
+finite piece `F` the localised discrete inequality gives the integral of
+`Y (max F)` over the level set of that piece; the level set lies in
+`𝓕 (max F)`, being a finite union of sets `{ε ≤ Y t}` with `t ≤ max F`, so the
+submartingale property carries the integral from `max F` to `T`; and the
+integrals over the increasing pieces are dominated by the integral over the
+union, the integrand being non-negative.
+
+**No lower bound on `S` is needed**, unlike in the global two sided version:
+the minimal inequality, which is what spends `R`, does not occur here. What is
+lost instead is the two sidedness -- the level set is `{∃ s ∈ S, ε ≤ Y s ω}`
+and not `{∃ s ∈ S, ε ≤ |Y s ω|}`, because the localised bound over the level
+set of `-Y` would be an integral over a *different* set. -/
+theorem Submartingale.mul_measReal_exists_ge_le_setIntegral_countable
+    {P : Measure Ω} [IsFiniteMeasure P]
+    {Y : ι → Ω → ℝ} {𝓕 : Filtration ι m} (hY : Submartingale Y 𝓕 P)
+    {S : Set ι} (hS : S.Countable) {T : ι} (hST : ∀ s ∈ S, s ≤ T) {ε : ℝ} (hε : 0 ≤ ε) :
+    ε * P.real {ω | ∃ s ∈ S, ε ≤ Y s ω}
+      ≤ ∫ ω in {ω | ∃ s ∈ S, ε ≤ Y s ω}, (Y T ω)⁺ ∂P := by
+  classical
+  have hYmeas : ∀ s : ι, Measurable (Y s) := fun s ↦
+    (hY.stronglyMeasurable s).measurable.le (𝓕.le s)
+  have hposint : Integrable (fun ω ↦ (Y T ω)⁺) P := (hY.integrable T).pos_part
+  rcases S.eq_empty_or_nonempty with rfl | hne
+  · have hempty : {ω : Ω | ∃ s ∈ (∅ : Set ι), ε ≤ Y s ω} = ∅ := by simp
+    rw [hempty]
+    simp
+  obtain ⟨σ, rfl⟩ := hS.exists_eq_range hne
+  set F : ℕ → Finset ι := fun N ↦ (Finset.range (N + 1)).image σ with hF
+  have hFne : ∀ N, (F N).Nonempty := by
+    intro N
+    refine ⟨σ 0, ?_⟩
+    simp only [hF, Finset.mem_image, Finset.mem_range]
+    exact ⟨0, by omega, rfl⟩
+  have hFsub : ∀ N, ∀ x ∈ F N, x ∈ Set.range σ := by
+    intro N x hx
+    simp only [hF, Finset.mem_image, Finset.mem_range] at hx
+    obtain ⟨p, -, rfl⟩ := hx
+    exact ⟨p, rfl⟩
+  have hFmono : Monotone F := by
+    intro N M hNM x hx
+    simp only [hF, Finset.mem_image, Finset.mem_range] at hx ⊢
+    obtain ⟨p, hp, hpx⟩ := hx
+    exact ⟨p, by omega, hpx⟩
+  set A : ℕ → Set Ω := fun N ↦ {ω | ∃ t ∈ F N, ε ≤ Y t ω} with hAdef
+  set B : Set Ω := {ω | ∃ s ∈ Set.range σ, ε ≤ Y s ω} with hBdef
+  have hAmeas : ∀ N, MeasurableSet (A N) := by
+    intro N
+    have hrw : A N = ⋃ t ∈ (F N : Set ι), {ω | ε ≤ Y t ω} := by
+      ext ω; simp [hAdef]
+    rw [hrw]
+    exact MeasurableSet.biUnion (F N).countable_toSet fun t _ ↦
+      measurableSet_le measurable_const (hYmeas t)
+  have hAB : ∀ N, A N ⊆ B := by
+    intro N ω hω
+    obtain ⟨t, ht, hta⟩ := hω
+    exact ⟨t, hFsub N _ ht, hta⟩
+  have key : ∀ N, ε * P.real (A N) ≤ ∫ ω in B, (Y T ω)⁺ ∂P := by
+    intro N
+    set e : ℕ → ι := Finset.monoEnum (hFne N) with he
+    have hemono : Monotone e := Finset.monotone_monoEnum (hFne N)
+    have hemem : ∀ i, e i ∈ F N := Finset.monoEnum_mem (hFne N)
+    set g : ℕ → Ω → ℝ := fun i ω ↦ Y (e i) ω with hg
+    have hgsub : Submartingale g (𝓕.comp hemono) P := hY.comp_monotone hemono
+    set n : ℕ := (F N).card with hn
+    have hle_en : ∀ t ∈ F N, t ≤ e n := by
+      intro t ht
+      obtain ⟨i, hi, hie⟩ := Finset.exists_lt_card_monoEnum_eq (hFne N) ht
+      rw [← hie]
+      exact hemono (by omega)
+    have hAsub : A N ⊆ {ω | ∃ k ≤ n, ε ≤ g k ω} := by
+      rintro ω ⟨t, htF, hta⟩
+      obtain ⟨i, hi, hie⟩ := Finset.exists_lt_card_monoEnum_eq (hFne N) htF
+      refine ⟨i, by omega, ?_⟩
+      show ε ≤ Y (e i) ω
+      rw [he, hie]
+      exact hta
+    have hsupset : {ω | ∃ k ≤ n, ε ≤ g k ω} ⊆ A N := by
+      rintro ω ⟨k, -, hk⟩
+      exact ⟨e k, hemem k, hk⟩
+    have hAeq : A N = {ω | ∃ k ≤ n, ε ≤ g k ω} := Set.Subset.antisymm hAsub hsupset
+    have hdisc := hgsub.mul_measReal_exists_ge_le_setIntegral ε n
+    rw [← hAeq] at hdisc
+    have hAfil : MeasurableSet[𝓕 (e n)] (A N) := by
+      have hrw : A N = ⋃ t ∈ (F N : Set ι), {ω | ε ≤ Y t ω} := by
+        ext ω; simp [hAdef]
+      rw [hrw]
+      refine MeasurableSet.biUnion (F N).countable_toSet fun t ht ↦ ?_
+      exact (𝓕.mono (hle_en t ht)) _
+        (measurableSet_le measurable_const (hY.stronglyMeasurable t).measurable)
+    have hcarry : ∫ ω in A N, Y (e n) ω ∂P ≤ ∫ ω in A N, Y T ω ∂P :=
+      hY.setIntegral_le (hST _ (hFsub N _ (hemem n))) hAfil
+    have hpos : ∫ ω in A N, Y T ω ∂P ≤ ∫ ω in A N, (Y T ω)⁺ ∂P :=
+      setIntegral_mono_on (hY.integrable T).integrableOn hposint.integrableOn (hAmeas N)
+        (fun ω _ ↦ le_posPart _)
+    have hgrow : ∫ ω in A N, (Y T ω)⁺ ∂P ≤ ∫ ω in B, (Y T ω)⁺ ∂P :=
+      setIntegral_mono_set hposint.integrableOn
+        (Filter.Eventually.of_forall fun ω ↦ posPart_nonneg _)
+        (Filter.Eventually.of_forall fun ω hω ↦ hAB N hω)
+    have hgn : ∫ ω in A N, g n ω ∂P = ∫ ω in A N, Y (e n) ω ∂P := rfl
+    rw [hgn] at hdisc
+    linarith
+  have hAmono : Monotone A := by
+    intro N M hNM ω hω
+    obtain ⟨t, ht, hta⟩ := hω
+    exact ⟨t, hFmono hNM ht, hta⟩
+  have hBunion : B = ⋃ N, A N := by
+    ext ω
+    constructor
+    · rintro ⟨t, ⟨p, rfl⟩, hta⟩
+      refine Set.mem_iUnion.2 ⟨p, ⟨σ p, ?_, hta⟩⟩
+      simp only [hF, Finset.mem_image, Finset.mem_range]
+      exact ⟨p, by omega, rfl⟩
+    · rintro hω
+      obtain ⟨N, hN⟩ := Set.mem_iUnion.1 hω
+      exact hAB N hN
+  set c : ℝ := ∫ ω in B, (Y T ω)⁺ ∂P with hc
+  have hc0 : 0 ≤ c := integral_nonneg fun ω ↦ posPart_nonneg _
+  rcases eq_or_lt_of_le hε with rfl | hpos
+  · simpa using hc0
+  have hle : P B ≤ ENNReal.ofReal (c / ε) := by
+    rw [hBunion, hAmono.measure_iUnion]
+    refine iSup_le fun N ↦ ?_
+    have h1 : P.real (A N) ≤ c / ε := by
+      rw [le_div_iff₀ hpos, mul_comm]
+      exact key N
+    rw [← ENNReal.ofReal_toReal (measure_ne_top P (A N))]
+    exact ENNReal.ofReal_le_ofReal h1
+  have hreal : P.real B ≤ c / ε := by
+    rw [measureReal_def]
+    calc (P B).toReal ≤ (ENNReal.ofReal (c / ε)).toReal :=
+          ENNReal.toReal_mono ENNReal.ofReal_ne_top hle
+      _ = c / ε := ENNReal.toReal_ofReal (by positivity)
+  calc ε * P.real B ≤ ε * (c / ε) := mul_le_mul_of_nonneg_left hreal hε
+    _ = c := by field_simp
+
 end MeasureTheory
 
 end DoobUpcrossingBound
+
+/-! ## Milestone 9: the supremum of a process over a window
+
+Milestone 11 tests its approximating martingales through
+`𝔼[⨆ t ∈ Set.Iic T ∩ D, |Y t - f (X t)|]`, and Milestone 9 states Doob's
+inequalities through `⨆ t ∈ Set.Iic T, ‖Y t‖`.  Both are suprema over a set of
+times under an integral, so before either can be used two questions have to be
+answered, and this section answers them.
+
+**The first is measurability, and countability settles it** --
+`measurable_biSup_enorm_of_countable`, which is Mathlib's `Measurable.iSup` after
+`iSup_subtype'`.  Over an uncountable window the binder form `⨆ t ∈ W` is a
+supremum over the whole index and Mathlib's lemma does not apply; the reduction
+to a countable set is therefore not a convenience but the step that makes the
+quantity measurable at all.
+
+**The second is the junk value, and it is not harmless.**  Over `ℝ` the supremum
+of a family that is not bounded above is `0` (`Real.iSup_of_not_bddAbove`), so
+`⨆ t ∈ S, |Y t ω|` **vanishes exactly where the path escapes**:
+`biSup_eq_zero_of_not_bddAbove`, with `biSup_natCast_eq_zero` as the witness that
+the hypothesis of that lemma is not empty.  An approximability condition written
+as `∫ ω, (⨆ t ∈ S, |Y t ω| ) ∂P < ε` over `ℝ` is therefore satisfied by a family
+whose paths run to infinity, which is the opposite of what it is meant to
+express.  The suprema of this development are consequently taken in `ℝ≥0∞`, where
+an unbounded family has the supremum `⊤` and the condition says what it means;
+this is the same reason the lifting of `cumulativeRateF` was made in Milestone 4.
+
+**The reduction to the countable set is the third item**, and it is the one
+Milestone 9 names: for a right continuous path the window supremum is already
+attained along a dense subset -- **together with the right endpoint**, which a
+dense set does not reach, and which `SkorokhodSpace.forall_mem_Icc_of_forall_mem_dense`
+therefore reads separately.  That is `biSup_enorm_Iic_eq_of_isRightContinuous`. -/
+
+section WindowSupremum
+
+/-- **The supremum over a countable set of times is measurable.**  Nothing but
+countability enters, and the value is taken in `ℝ≥0∞` so that no boundedness
+hypothesis is needed.  `iSup_subtype'` is what turns the binder form -- a
+supremum over the whole index -- into a supremum over the countable subtype
+Mathlib's `Measurable.iSup` asks for. -/
+theorem measurable_biSup_enorm_of_countable {ι : Type*} {S : Set ι} (hS : S.Countable)
+    {Y : ι → Ω → ℝ} (hY : ∀ s ∈ S, Measurable (Y s)) :
+    Measurable fun ω ↦ ⨆ s ∈ S, ‖Y s ω‖ₑ := by
+  have : Countable S := hS.to_subtype
+  have h : (fun ω ↦ ⨆ s ∈ S, ‖Y s ω‖ₑ) = fun ω ↦ ⨆ s : S, ‖Y (s : ι) ω‖ₑ := by
+    ext ω; rw [iSup_subtype']
+  rw [h]
+  exact Measurable.iSup fun s ↦ (hY s s.2).enorm
+
+/-- **The real supremum of an unbounded family is `0`**, and this is why the
+suprema of this section are taken in `ℝ≥0∞`.  The hypothesis is the unboundedness
+of the values *on `S`*; the binder form adds the value `sSup ∅ = 0` at every time
+outside `S`, which cannot restore boundedness. -/
+theorem biSup_eq_zero_of_not_bddAbove {ι : Type*} {S : Set ι} {g : ι → ℝ}
+    (h : ¬ BddAbove (g '' S)) : ⨆ t ∈ S, g t = 0 := by
+  refine Real.iSup_of_not_bddAbove ?_
+  rintro ⟨c, hc⟩
+  refine h ⟨c, ?_⟩
+  rintro x ⟨t, htS, rfl⟩
+  have := hc (Set.mem_range_self t)
+  rwa [ciSup_pos htS] at this
+
+/-- The witness that the previous lemma is not vacuous, and the smallest one:
+the supremum of the naturals inside `ℝ` is `0`.  Read at a process, it says that
+`∫ ω, (⨆ t ∈ S, |Y t ω|) ∂P = 0` for a process whose paths are unbounded on `S`,
+so that an approximability condition stated over `ℝ` is satisfied by exactly the
+families it is meant to exclude. -/
+theorem biSup_natCast_eq_zero : ⨆ n ∈ (Set.univ : Set ℕ), (n : ℝ) = 0 := by
+  refine biSup_eq_zero_of_not_bddAbove ?_
+  rintro ⟨c, hc⟩
+  obtain ⟨n, hn⟩ := exists_nat_gt c
+  exact absurd (hc ⟨n, Set.mem_univ n, rfl⟩) (not_le.2 hn)
+
+/-- **The window supremum of a right continuous path is read along a dense set
+together with the right endpoint.**  This is the reduction Milestone 9 asks for
+as a statement of its own, and with the previous lemma it is what makes
+`ω ↦ ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ` measurable: the right hand side is a supremum
+over a countable set as soon as `D` is countable.
+
+The right endpoint is **not** redundant.  Nothing inside the window approaches
+`T` from the right, so a dense `D` says nothing about the value there; that is
+the same asymmetry `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` is stated
+to avoid, and here it is paid for by the `insert` rather than by enlarging the
+window.  Only right continuity of the path is used, and the values are taken in
+`ℝ≥0∞`, where the supremum of an unbounded path is `⊤` and not `0`. -/
+theorem biSup_enorm_Iic_eq_of_isRightContinuous {ι : Type*} [LinearOrder ι] [TopologicalSpace ι]
+    [OrderTopology ι] [DenselyOrdered ι] [OrderBot ι]
+    {Y : ι → Ω → ℝ} {D : Set ι} (hD : Dense D) {T : ι} {ω : Ω}
+    (hY : IsRightContinuous fun t ↦ Y t ω) :
+    ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ = ⨆ t ∈ insert T (Set.Iic T ∩ D), ‖Y t ω‖ₑ := by
+  refine le_antisymm ?_ ?_
+  · set c : ENNReal := ⨆ t ∈ insert T (Set.Iic T ∩ D), ‖Y t ω‖ₑ with hc
+    have hmem : ∀ t ∈ Set.Iic T, ‖Y t ω‖ₑ ∈ Set.Iic c := by
+      have := SkorokhodSpace.forall_mem_Icc_of_forall_mem_dense (K := Set.Iic c) isClosed_Iic hD
+        (a := ⊥) (b := T) (f := fun t ↦ ‖Y t ω‖ₑ)
+        (hY.continuous_comp continuous_enorm) ?_ ?_
+      · intro t ht
+        exact this t ⟨bot_le, ht⟩
+      · rintro t ⟨ht, htD⟩
+        exact le_iSup₂ (f := fun t (_ : t ∈ insert T (Set.Iic T ∩ D)) ↦ ‖Y t ω‖ₑ) t
+          (Set.mem_insert_of_mem _ ⟨Set.mem_Icc.1 ht |>.2, htD⟩)
+      · intro _
+        exact le_iSup₂ (f := fun t (_ : t ∈ insert T (Set.Iic T ∩ D)) ↦ ‖Y t ω‖ₑ) T
+          (Set.mem_insert _ _)
+    exact iSup₂_le fun t ht ↦ hmem t ht
+  · refine biSup_mono ?_
+    rintro t (rfl | ⟨ht, -⟩)
+    · exact Set.mem_Iic.2 le_rfl
+    · exact ht
+
+end WindowSupremum
+
+/-! ### Doob's maximal inequality in continuous time
+
+The two lemmas below are the composition the previous section was written for,
+and no analysis is left in them: the window supremum is read along the countable
+set `insert T (Set.Iic T ∩ D)` by `biSup_enorm_Iic_eq_of_isRightContinuous`, and
+that countable set carries the bound by
+`Submartingale.mul_measReal_exists_ge_abs_le_countable`.  Mathlib's
+`maximal_ineq` is indexed by `ℕ` and reads a `Finset.sup'`; this is its
+continuous time form, over an arbitrary densely ordered index with a bottom
+element.
+
+**The strict level is the primitive one and the non-strict level is the
+corollary**, which is the opposite of the usual order of presentation and is
+forced by the shape of the supremum: from `ENNReal.ofReal ε < ⨆ s ∈ S, ‖Y s ω‖ₑ`
+one *gets* a time `s ∈ S` at which the level is exceeded, whereas from
+`ENNReal.ofReal ε ≤ ⨆ s ∈ S, ‖Y s ω‖ₑ` one gets nothing -- the supremum need not
+be attained.  The non-strict form is recovered by reading the strict one at every
+`x < ε` and letting `x` increase, which is where the finiteness of the measure is
+spent a second time.
+
+**No measurability of the level set is used, in either form.**  Both sides read
+the measure of the level set through `Measure.real`, and the passage from the
+smaller set to the larger one is `measureReal_mono`, which is monotonicity of the
+outer measure.  That the level set *is* measurable is
+`measurable_biSup_enorm_of_countable` together with the reduction, but it is not
+needed here, and saying so is cheaper than carrying the hypothesis. -/
+
+namespace MeasureTheory
+
+/-- **Doob's maximal inequality in continuous time**, at a strict level: for a
+right continuous submartingale the supremum of `‖Y‖` over the whole window
+`Set.Iic T` obeys the bound that
+`Submartingale.mul_measReal_exists_ge_abs_le_countable` gives over a countable
+set of times.
+
+No non-negativity of `Y` is assumed -- `(Y T)⁺` on the right replaces it, exactly
+as in the discrete halves -- and the lower end of the window is `⊥`, which is
+what the term `∫ Y ⊥` is.  `D` is dense and countable; it is not required to
+contain `T`, and it is not required to be disjoint from anything. -/
+theorem Submartingale.mul_measReal_lt_biSup_enorm_le
+    {ι : Type*} [LinearOrder ι] [TopologicalSpace ι] [OrderTopology ι] [DenselyOrdered ι]
+    [OrderBot ι] {P : Measure Ω} [IsFiniteMeasure P]
+    {Y : ι → Ω → ℝ} {𝓕 : Filtration ι m} (hY : Submartingale Y 𝓕 P)
+    {D : Set ι} (hD : Dense D) (hDc : D.Countable) {T : ι}
+    (hpath : ∀ ω, IsRightContinuous fun t ↦ Y t ω) {ε : ℝ} (hε : 0 ≤ ε) :
+    ε * P.real {ω | ENNReal.ofReal ε < ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ}
+      ≤ (∫ ω, (Y T ω)⁺ ∂P) + ((∫ ω, (Y T ω)⁺ ∂P) - ∫ ω, Y ⊥ ω ∂P) := by
+  classical
+  have hSc : (insert T (Set.Iic T ∩ D)).Countable :=
+    (hDc.mono Set.inter_subset_right).insert T
+  have hST : ∀ s ∈ insert T (Set.Iic T ∩ D), s ≤ T := by
+    rintro s (rfl | ⟨hs, -⟩)
+    · exact le_rfl
+    · exact hs
+  have hsub : {ω | ENNReal.ofReal ε < ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ}
+      ⊆ {ω | ∃ s ∈ insert T (Set.Iic T ∩ D), ε ≤ |Y s ω|} := by
+    intro ω hω
+    have hω' : ENNReal.ofReal ε < ⨆ t ∈ insert T (Set.Iic T ∩ D), ‖Y t ω‖ₑ := by
+      rw [← biSup_enorm_Iic_eq_of_isRightContinuous hD (hpath ω)]
+      exact hω
+    rw [lt_iSup_iff] at hω'
+    obtain ⟨t, ht⟩ := hω'
+    rw [lt_iSup_iff] at ht
+    obtain ⟨htS, ht⟩ := ht
+    refine ⟨t, htS, ?_⟩
+    rw [Real.enorm_eq_ofReal_abs] at ht
+    exact ((ENNReal.ofReal_lt_ofReal_iff_of_nonneg hε).1 ht).le
+  calc ε * P.real {ω | ENNReal.ofReal ε < ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ}
+      ≤ ε * P.real {ω | ∃ s ∈ insert T (Set.Iic T ∩ D), ε ≤ |Y s ω|} :=
+        mul_le_mul_of_nonneg_left (measureReal_mono hsub (measure_ne_top _ _)) hε
+    _ ≤ _ := hY.mul_measReal_exists_ge_abs_le_countable hSc bot_le (fun s _ ↦ bot_le) hST hε
+
+/-- **Doob's maximal inequality in continuous time**, at a non-strict level.
+
+This is the classical form, and it is a corollary and not the primitive: the
+supremum over the window need not be attained, so a non-strict level yields no
+time at which it is reached.  What the proof does instead is read the strict form
+at every `x ∈ Set.Ioo 0 ε` -- the level set at `ε` is contained in the strict
+level set at `x` -- and let `x` increase to `ε` along `𝓝[<] ε`, which is where
+`0 < ε` is used and where the bound, being independent of `x`, passes to the
+limit. -/
+theorem Submartingale.mul_measReal_le_biSup_enorm_le
+    {ι : Type*} [LinearOrder ι] [TopologicalSpace ι] [OrderTopology ι] [DenselyOrdered ι]
+    [OrderBot ι] {P : Measure Ω} [IsFiniteMeasure P]
+    {Y : ι → Ω → ℝ} {𝓕 : Filtration ι m} (hY : Submartingale Y 𝓕 P)
+    {D : Set ι} (hD : Dense D) (hDc : D.Countable) {T : ι}
+    (hpath : ∀ ω, IsRightContinuous fun t ↦ Y t ω) {ε : ℝ} (hε : 0 < ε) :
+    ε * P.real {ω | ENNReal.ofReal ε ≤ ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ}
+      ≤ (∫ ω, (Y T ω)⁺ ∂P) + ((∫ ω, (Y T ω)⁺ ∂P) - ∫ ω, Y ⊥ ω ∂P) := by
+  classical
+  have hlim : Filter.Tendsto
+      (fun x : ℝ ↦ x * P.real {ω | ENNReal.ofReal ε ≤ ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ})
+      (𝓝[<] ε) (𝓝 (ε * P.real {ω | ENNReal.ofReal ε ≤ ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ})) :=
+    ((continuous_id.mul continuous_const).tendsto ε).mono_left nhdsWithin_le_nhds
+  refine le_of_tendsto hlim ?_
+  filter_upwards [Ioo_mem_nhdsLT hε] with x hx
+  have hx0 : (0 : ℝ) ≤ x := hx.1.le
+  have hsub : {ω | ENNReal.ofReal ε ≤ ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ}
+      ⊆ {ω | ENNReal.ofReal x < ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ} := by
+    intro ω hω
+    exact lt_of_lt_of_le ((ENNReal.ofReal_lt_ofReal_iff_of_nonneg hx0).2 hx.2) hω
+  calc x * P.real {ω | ENNReal.ofReal ε ≤ ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ}
+      ≤ x * P.real {ω | ENNReal.ofReal x < ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ} :=
+        mul_le_mul_of_nonneg_left (measureReal_mono hsub (measure_ne_top _ _)) hx0
+    _ ≤ _ := hY.mul_measReal_lt_biSup_enorm_le hD hDc hpath hx0
+
+/-- **Doob's maximal inequality in continuous time for a non-negative
+submartingale**, at a strict level and with the constant `1`.
+
+It is *not* the previous theorem specialised to a non-negative `Y`.  The two
+run through different discrete inputs and the constants differ: the two sided
+form above reads the level set of `|Y|` and pays `2 𝔼[(Y T)⁺] - 𝔼[Y ⊥]` for it,
+while a non-negative `Y` needs no absolute value and the **localised one sided**
+bound `Submartingale.mul_measReal_exists_ge_le_setIntegral_countable` applies
+directly, giving `𝔼[Y T]`.  Since `𝔼[Y ⊥] ≤ 𝔼[Y T]` for a submartingale, the
+bound above is at least `𝔼[Y T]` and generally larger, so routing the
+non-negative case through it would lose the classical constant.
+
+That the localised bound is available is what makes this cheap, and the price
+of using it is that the lower end of the window plays no part: there is no
+`𝔼[Y ⊥]` term here and no lower bound on the times, the one sidedness having
+replaced both. -/
+theorem Submartingale.mul_measReal_lt_biSup_enorm_le_of_nonneg
+    {ι : Type*} [LinearOrder ι] [TopologicalSpace ι] [OrderTopology ι] [DenselyOrdered ι]
+    [OrderBot ι] {P : Measure Ω} [IsFiniteMeasure P]
+    {Y : ι → Ω → ℝ} {𝓕 : Filtration ι m} (hY : Submartingale Y 𝓕 P)
+    (hY0 : ∀ i ω, 0 ≤ Y i ω)
+    {D : Set ι} (hD : Dense D) (hDc : D.Countable) {T : ι}
+    (hpath : ∀ ω, IsRightContinuous fun t ↦ Y t ω) {ε : ℝ} (hε : 0 ≤ ε) :
+    ε * P.real {ω | ENNReal.ofReal ε < ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ} ≤ ∫ ω, Y T ω ∂P := by
+  classical
+  have hSc : (insert T (Set.Iic T ∩ D)).Countable :=
+    (hDc.mono Set.inter_subset_right).insert T
+  have hST : ∀ s ∈ insert T (Set.Iic T ∩ D), s ≤ T := by
+    rintro s (rfl | ⟨hs, -⟩)
+    · exact le_rfl
+    · exact hs
+  have hsub : {ω | ENNReal.ofReal ε < ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ}
+      ⊆ {ω | ∃ s ∈ insert T (Set.Iic T ∩ D), ε ≤ Y s ω} := by
+    intro ω hω
+    have hω' : ENNReal.ofReal ε < ⨆ t ∈ insert T (Set.Iic T ∩ D), ‖Y t ω‖ₑ := by
+      rw [← biSup_enorm_Iic_eq_of_isRightContinuous hD (hpath ω)]
+      exact hω
+    rw [lt_iSup_iff] at hω'
+    obtain ⟨t, ht⟩ := hω'
+    rw [lt_iSup_iff] at ht
+    obtain ⟨htS, ht⟩ := ht
+    refine ⟨t, htS, ?_⟩
+    rw [Real.enorm_eq_ofReal (hY0 t ω)] at ht
+    exact ((ENNReal.ofReal_lt_ofReal_iff_of_nonneg hε).1 ht).le
+  have hposint : Integrable (fun ω ↦ (Y T ω)⁺) P := (hY.integrable T).pos_part
+  calc ε * P.real {ω | ENNReal.ofReal ε < ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ}
+      ≤ ε * P.real {ω | ∃ s ∈ insert T (Set.Iic T ∩ D), ε ≤ Y s ω} :=
+        mul_le_mul_of_nonneg_left (measureReal_mono hsub (measure_ne_top _ _)) hε
+    _ ≤ ∫ ω in {ω | ∃ s ∈ insert T (Set.Iic T ∩ D), ε ≤ Y s ω}, (Y T ω)⁺ ∂P :=
+        hY.mul_measReal_exists_ge_le_setIntegral_countable hSc hST hε
+    _ ≤ ∫ ω, (Y T ω)⁺ ∂P :=
+        setIntegral_le_integral hposint (Filter.Eventually.of_forall fun ω ↦ posPart_nonneg _)
+    _ = ∫ ω, Y T ω ∂P :=
+        integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ posPart_eq_self.2 (hY0 T ω))
+
+/-- **Doob's maximal inequality in continuous time for a non-negative
+submartingale**, at a non-strict level.  It stands to the previous theorem as
+`Submartingale.mul_measReal_le_biSup_enorm_le` stands to
+`Submartingale.mul_measReal_lt_biSup_enorm_le`, and for the same reason: the
+window supremum need not be attained, so the strict level is the primitive and
+the non-strict one is read off it along `𝓝[<] ε`. -/
+theorem Submartingale.mul_measReal_le_biSup_enorm_le_of_nonneg
+    {ι : Type*} [LinearOrder ι] [TopologicalSpace ι] [OrderTopology ι] [DenselyOrdered ι]
+    [OrderBot ι] {P : Measure Ω} [IsFiniteMeasure P]
+    {Y : ι → Ω → ℝ} {𝓕 : Filtration ι m} (hY : Submartingale Y 𝓕 P)
+    (hY0 : ∀ i ω, 0 ≤ Y i ω)
+    {D : Set ι} (hD : Dense D) (hDc : D.Countable) {T : ι}
+    (hpath : ∀ ω, IsRightContinuous fun t ↦ Y t ω) {ε : ℝ} (hε : 0 < ε) :
+    ε * P.real {ω | ENNReal.ofReal ε ≤ ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ} ≤ ∫ ω, Y T ω ∂P := by
+  classical
+  have hlim : Filter.Tendsto
+      (fun x : ℝ ↦ x * P.real {ω | ENNReal.ofReal ε ≤ ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ})
+      (𝓝[<] ε) (𝓝 (ε * P.real {ω | ENNReal.ofReal ε ≤ ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ})) :=
+    ((continuous_id.mul continuous_const).tendsto ε).mono_left nhdsWithin_le_nhds
+  refine le_of_tendsto hlim ?_
+  filter_upwards [Ioo_mem_nhdsLT hε] with x hx
+  have hx0 : (0 : ℝ) ≤ x := hx.1.le
+  have hsub : {ω | ENNReal.ofReal ε ≤ ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ}
+      ⊆ {ω | ENNReal.ofReal x < ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ} := by
+    intro ω hω
+    exact lt_of_lt_of_le ((ENNReal.ofReal_lt_ofReal_iff_of_nonneg hx0).2 hx.2) hω
+  calc x * P.real {ω | ENNReal.ofReal ε ≤ ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ}
+      ≤ x * P.real {ω | ENNReal.ofReal x < ⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ} :=
+        mul_le_mul_of_nonneg_left (measureReal_mono hsub (measure_ne_top _ _)) hx0
+    _ ≤ _ := hY.mul_measReal_lt_biSup_enorm_le_of_nonneg hY0 hD hDc hpath hx0
+
+/-! ### Doob's `Lᵖ` inequality
+
+Mathlib has the maximal inequality and not the `Lᵖ` one; the docstring of
+`maximal_ineq` says so itself ("will be proved in an upcoming PR"), and
+`eLpNorm` occurs in `Mathlib/Probability/Martingale/` only in
+`BorelCantelli.lean` and `Convergence.lean`.  What Mathlib *does* have is the
+whole analytic apparatus the proof runs on, and the shape of the three lemmas
+below is fixed by that.
+
+**The martingale property enters once, as a weak type bound, and then not
+again.**  `lintegral_rpow_le_of_weak_type` carries no filtration, no
+submartingale and no probability: it says that a non-negative `M` whose level
+sets obey `t · μ {t ≤ M} ≤ ∫⁻_{t ≤ M} g` obeys `‖M‖ₚ ≤ p/(p-1) · ‖g‖ₚ`.  That is
+the whole of Doob's `Lᵖ` inequality except for the input, and stating it
+separately is what lets the discrete and the continuous time forms share a
+proof: the discrete input is Mathlib's `maximal_ineq`, the continuous time one
+is `Submartingale.mul_measReal_le_biSup_enorm_le` above.
+
+**The level sets are read non-strictly, and that is not a matter of taste.**
+Mathlib's `maximal_ineq` is stated at `{ε ≤ f*}`, and the layer cake formula
+exists in both forms (`lintegral_rpow_eq_lintegral_meas_le_mul` and
+`…_lt_mul`); taking the non-strict one throughout means the martingale input is
+consumed as it stands, with no passage between the two level sets.
+
+**Fubini does not appear, and that is the one non-obvious step.**  The usual
+proof exchanges `∫ dt` with `∫ dμ` after inserting the weak type bound.  Here
+the exchange is performed by Mathlib's own layer cake formula, read a second
+time under the **weighted measure** `ν = μ.withDensity (ENNReal.ofReal ∘ g)`:
+`ν {t ≤ M}` *is* `∫⁻_{t ≤ M} g` by `withDensity_apply`, so
+`lintegral_comp_eq_lintegral_meas_le_mul ν` with weight `t ^ (p-2)` turns
+`∫⁻ t in Ioi 0, (∫⁻_{t ≤ M} g) · t^(p-2)` into `∫⁻ (∫₀^M t^(p-2) dt) dν` in one
+step, and `lintegral_withDensity_eq_lintegral_mul` reads it back under `μ`.
+Neither `lintegral_lintegral_swap` nor a Lebesgue integral of `t ^ (p-2)` over an
+interval is needed; the inner integral is the Bochner `integral_rpow`, which
+Mathlib has.
+
+**The finiteness hypothesis is where the cancellation happens.**  The proof ends
+with `A ≤ C · B^(1/p) · A^(1/q)` and divides by `A^(1/q)`, which requires
+`A ≠ ⊤`.  It is carried as a hypothesis rather than derived: over an infinite
+measure it is a genuine assumption, and in the martingale instance below it is
+what `Memℒp (f k) p` for `k ≤ n` would supply. -/
+
+/-- The first half of Doob's `Lᵖ` inequality: the layer cake, the weak type
+bound inserted one level at a time, and the layer cake again under the weighted
+measure.  Only the *first* power is produced here -- the right hand side still
+carries `M ^ (p-1)` and is not yet an `Lᵖ` norm.
+
+`g` is not assumed non-negative: it enters only through `ENNReal.ofReal (g a)`,
+which is the positive part, and the hypothesis `hweak` is about that. -/
+theorem lintegral_rpow_le_mul_lintegral_mul_rpow
+    {α : Type*} [MeasurableSpace α] {μ : Measure α} {M g : α → ℝ}
+    (hM : Measurable M) (hg : Measurable g)
+    (hM0 : ∀ a, 0 ≤ M a)
+    {p : ℝ} (hp : 1 < p)
+    (hweak : ∀ t : ℝ, 0 < t →
+      ENNReal.ofReal t * μ {a | t ≤ M a} ≤ ∫⁻ a in {a | t ≤ M a}, ENNReal.ofReal (g a) ∂μ) :
+    ∫⁻ a, ENNReal.ofReal (M a ^ p) ∂μ
+      ≤ ENNReal.ofReal (p / (p - 1))
+        * ∫⁻ a, ENNReal.ofReal (g a) * ENNReal.ofReal (M a ^ (p - 1)) ∂μ := by
+  have hp0 : (0:ℝ) < p := by linarith
+  have hp1 : (0:ℝ) < p - 1 := by linarith
+  have hr : (-1:ℝ) < p - 2 := by linarith
+  set ν : Measure α := μ.withDensity (fun a ↦ ENNReal.ofReal (g a)) with hν
+  have hMset : ∀ t : ℝ, MeasurableSet {a | t ≤ M a} := fun t ↦
+    measurableSet_le measurable_const hM
+  have hlayer : ∫⁻ a, ENNReal.ofReal (M a ^ p) ∂μ
+      = ENNReal.ofReal p * ∫⁻ t in Ioi 0, μ {a | t ≤ M a} * ENNReal.ofReal (t ^ (p - 1)) :=
+    lintegral_rpow_eq_lintegral_meas_le_mul μ (Filter.Eventually.of_forall hM0)
+      hM.aemeasurable hp0
+  have hstep : ∫⁻ t in Ioi 0, μ {a | t ≤ M a} * ENNReal.ofReal (t ^ (p - 1))
+      ≤ ∫⁻ t in Ioi 0, ν {a | t ≤ M a} * ENNReal.ofReal (t ^ (p - 2)) := by
+    refine setLIntegral_mono' measurableSet_Ioi ?_
+    intro t ht
+    have ht0 : (0:ℝ) < t := ht
+    have hsplit : t ^ (p - 1) = t * t ^ (p - 2) := by
+      have h := Real.rpow_add ht0 1 (p - 2)
+      rw [Real.rpow_one] at h
+      have h12 : (1:ℝ) + (p - 2) = p - 1 := by ring
+      rw [h12] at h
+      exact h
+    calc μ {a | t ≤ M a} * ENNReal.ofReal (t ^ (p - 1))
+        = ENNReal.ofReal t * μ {a | t ≤ M a} * ENNReal.ofReal (t ^ (p - 2)) := by
+          rw [hsplit, ENNReal.ofReal_mul ht0.le]; ring
+      _ ≤ (∫⁻ a in {a | t ≤ M a}, ENNReal.ofReal (g a) ∂μ) * ENNReal.ofReal (t ^ (p - 2)) :=
+          mul_le_mul_left (hweak t ht0) _
+      _ = ν {a | t ≤ M a} * ENNReal.ofReal (t ^ (p - 2)) := by
+          rw [hν, withDensity_apply _ (hMset t)]
+  have hlayer2 : ∫⁻ a, ENNReal.ofReal (∫ t in (0:ℝ)..(M a), t ^ (p - 2)) ∂ν
+      = ∫⁻ t in Ioi 0, ν {a | t ≤ M a} * ENNReal.ofReal (t ^ (p - 2)) := by
+    refine lintegral_comp_eq_lintegral_meas_le_mul ν (Filter.Eventually.of_forall hM0)
+      hM.aemeasurable (fun t _ ↦ intervalIntegral.intervalIntegrable_rpow' hr) ?_
+    filter_upwards [self_mem_ae_restrict (measurableSet_Ioi : MeasurableSet (Ioi (0:ℝ)))]
+      with t ht using Real.rpow_nonneg (le_of_lt ht) _
+  have hinner : ∀ a, ∫ t in (0:ℝ)..(M a), t ^ (p - 2) = M a ^ (p - 1) / (p - 1) := by
+    intro a
+    rw [integral_rpow (Or.inl hr)]
+    have h1 : p - 2 + 1 = p - 1 := by ring
+    rw [h1, Real.zero_rpow (by linarith : p - 1 ≠ 0), sub_zero]
+  have hmeas2 : Measurable fun a ↦ ENNReal.ofReal (M a ^ (p - 1) / (p - 1)) := by
+    fun_prop
+  have hwd : ∫⁻ a, ENNReal.ofReal (M a ^ (p - 1) / (p - 1)) ∂ν
+      = ∫⁻ a, ENNReal.ofReal (g a) * ENNReal.ofReal (M a ^ (p - 1) / (p - 1)) ∂μ := by
+    rw [hν, lintegral_withDensity_eq_lintegral_mul _
+      (by fun_prop : Measurable fun a ↦ ENNReal.ofReal (g a)) hmeas2]
+    rfl
+  have hconst : ∀ a : α, ENNReal.ofReal (g a) * ENNReal.ofReal (M a ^ (p - 1) / (p - 1))
+      = ENNReal.ofReal (1 / (p - 1)) *
+        (ENNReal.ofReal (g a) * ENNReal.ofReal (M a ^ (p - 1))) := by
+    intro a
+    have h1 : M a ^ (p - 1) / (p - 1) = 1 / (p - 1) * M a ^ (p - 1) := by ring
+    rw [h1, ENNReal.ofReal_mul (by positivity)]
+    ring
+  calc ∫⁻ a, ENNReal.ofReal (M a ^ p) ∂μ
+      = ENNReal.ofReal p * ∫⁻ t in Ioi 0, μ {a | t ≤ M a} * ENNReal.ofReal (t ^ (p - 1)) := hlayer
+    _ ≤ ENNReal.ofReal p * ∫⁻ t in Ioi 0, ν {a | t ≤ M a} * ENNReal.ofReal (t ^ (p - 2)) :=
+        mul_le_mul_right hstep _
+    _ = ENNReal.ofReal p * ∫⁻ a, ENNReal.ofReal (∫ t in (0:ℝ)..(M a), t ^ (p - 2)) ∂ν := by
+        rw [hlayer2]
+    _ = ENNReal.ofReal p * ∫⁻ a, ENNReal.ofReal (M a ^ (p - 1) / (p - 1)) ∂ν := by
+        simp_rw [hinner]
+    _ = ENNReal.ofReal p
+          * ∫⁻ a, ENNReal.ofReal (g a) * ENNReal.ofReal (M a ^ (p - 1) / (p - 1)) ∂μ := by
+        rw [hwd]
+    _ = ENNReal.ofReal (p / (p - 1))
+          * ∫⁻ a, ENNReal.ofReal (g a) * ENNReal.ofReal (M a ^ (p - 1)) ∂μ := by
+        simp_rw [hconst]
+        rw [lintegral_const_mul' _ _ ENNReal.ofReal_ne_top, ← mul_assoc,
+          ← ENNReal.ofReal_mul hp0.le]
+        congr 2
+        field_simp
+
+/-- The second half: Hölder against the conjugate exponent `q = p/(p-1)`, and
+the cancellation of `A ^ (1/q)`.
+
+Both halves of the exponent bookkeeping happen here.  `(ofReal (M a ^ (p-1))) ^ q
+= ofReal (M a ^ p)` because `(p-1) · q = p`, so Hölder returns the *same*
+quantity that is being bounded, and `A = A ^ (1/p) · A ^ (1/q)` because
+`1/p + 1/q = 1`; the finiteness `hfin` and `A ≠ 0` are exactly what make that
+factor cancellable. -/
+theorem lintegral_rpow_le_of_le_mul_lintegral_mul_rpow
+    {α : Type*} [MeasurableSpace α] {μ : Measure α} {M g : α → ℝ}
+    (hM : Measurable M) (hg : Measurable g)
+    (hM0 : ∀ a, 0 ≤ M a) (hg0 : ∀ a, 0 ≤ g a)
+    {p : ℝ} (hp : 1 < p)
+    (hfin : ∫⁻ a, ENNReal.ofReal (M a ^ p) ∂μ ≠ ⊤)
+    (hmain : ∫⁻ a, ENNReal.ofReal (M a ^ p) ∂μ
+      ≤ ENNReal.ofReal (p / (p - 1))
+        * ∫⁻ a, ENNReal.ofReal (g a) * ENNReal.ofReal (M a ^ (p - 1)) ∂μ) :
+    ∫⁻ a, ENNReal.ofReal (M a ^ p) ∂μ
+      ≤ ENNReal.ofReal ((p / (p - 1)) ^ p) * ∫⁻ a, ENNReal.ofReal (g a ^ p) ∂μ := by
+  have hp0 : (0:ℝ) < p := by linarith
+  have hp1 : (0:ℝ) < p - 1 := by linarith
+  have hp1' : p - 1 ≠ 0 := ne_of_gt hp1
+  set q : ℝ := p / (p - 1) with hq
+  have hq0 : (0:ℝ) < q := by rw [hq]; positivity
+  have hpq : p.HolderConjugate q := (Real.holderConjugate_iff_eq_conjExponent hp).mpr hq
+  have hgp : ∀ a, ENNReal.ofReal (g a) ^ p = ENNReal.ofReal (g a ^ p) := fun a ↦
+    ENNReal.ofReal_rpow_of_nonneg (hg0 a) hp0.le
+  have hMq : ∀ a, ENNReal.ofReal (M a ^ (p - 1)) ^ q = ENNReal.ofReal (M a ^ p) := by
+    intro a
+    rw [ENNReal.ofReal_rpow_of_nonneg (Real.rpow_nonneg (hM0 a) _) hq0.le,
+      ← Real.rpow_mul (hM0 a)]
+    congr 2
+    rw [hq]
+    field_simp
+  have hhol : ∫⁻ a, ENNReal.ofReal (g a) * ENNReal.ofReal (M a ^ (p - 1)) ∂μ
+      ≤ (∫⁻ a, ENNReal.ofReal (g a ^ p) ∂μ) ^ (1 / p)
+        * (∫⁻ a, ENNReal.ofReal (M a ^ p) ∂μ) ^ (1 / q) := by
+    have h := ENNReal.lintegral_mul_le_Lp_mul_Lq μ hpq
+      (f := fun a ↦ ENNReal.ofReal (g a)) (g := fun a ↦ ENNReal.ofReal (M a ^ (p - 1)))
+      (ENNReal.measurable_ofReal.comp hg).aemeasurable
+      (by fun_prop : Measurable fun a ↦ ENNReal.ofReal (M a ^ (p - 1))).aemeasurable
+    simp only [Pi.mul_apply] at h
+    simp only [hgp, hMq] at h
+    exact h
+  set A : ENNReal := ∫⁻ a, ENNReal.ofReal (M a ^ p) ∂μ with hA
+  set B : ENNReal := ∫⁻ a, ENNReal.ofReal (g a ^ p) ∂μ with hB
+  have hchain : A ≤ ENNReal.ofReal q * (B ^ (1 / p) * A ^ (1 / q)) :=
+    hmain.trans (mul_le_mul_right hhol _)
+  rcases eq_or_ne A 0 with h0 | h0
+  · simp [h0]
+  have hAq0 : A ^ (1 / q) ≠ 0 := by
+    intro h
+    rcases ENNReal.rpow_eq_zero_iff.1 h with ⟨h1, -⟩ | ⟨h1, -⟩
+    · exact h0 h1
+    · exact hfin h1
+  have hAqtop : A ^ (1 / q) ≠ ⊤ := by
+    intro h
+    rcases ENNReal.rpow_eq_top_iff.1 h with ⟨h1, -⟩ | ⟨h1, -⟩
+    · exact h0 h1
+    · exact hfin h1
+  have hinv : 1 / p + 1 / q = 1 := by
+    have h := hpq.inv_add_inv_eq_inv
+    rw [inv_one] at h
+    rw [one_div, one_div]
+    exact h
+  have hsplitA : A = A ^ (1 / p) * A ^ (1 / q) := by
+    rw [← ENNReal.rpow_add _ _ h0 hfin, hinv, ENNReal.rpow_one]
+  have hcancel : A ^ (1 / p) ≤ ENNReal.ofReal q * B ^ (1 / p) := by
+    rw [← ENNReal.mul_le_mul_iff_left hAq0 hAqtop]
+    calc A ^ (1 / p) * A ^ (1 / q) = A := hsplitA.symm
+      _ ≤ ENNReal.ofReal q * (B ^ (1 / p) * A ^ (1 / q)) := hchain
+      _ = ENNReal.ofReal q * B ^ (1 / p) * A ^ (1 / q) := by ring
+  have hfinal := ENNReal.rpow_le_rpow hcancel hp0.le
+  rw [← ENNReal.rpow_mul, ENNReal.mul_rpow_of_nonneg _ _ hp0.le, ← ENNReal.rpow_mul] at hfinal
+  simp only [one_div, inv_mul_cancel₀ (ne_of_gt hp0), ENNReal.rpow_one] at hfinal
+  rwa [ENNReal.ofReal_rpow_of_nonneg hq0.le hp0.le] at hfinal
+
+/-- **Doob's `Lᵖ` inequality, the measure theoretic core**: a weak type bound at
+every level upgrades to the `Lᵖ` bound with the constant `(p/(p-1))^p`.
+
+No filtration, no submartingale, no probability -- the martingale property
+enters only through `hweak`, and any other source of a weak type bound serves as
+well.  That is why it is stated here and instantiated twice: at Mathlib's
+`maximal_ineq` for the index `ℕ`, and at
+`Submartingale.mul_measReal_le_biSup_enorm_le` for a right continuous process
+over a densely ordered index. -/
+theorem lintegral_rpow_le_of_weak_type
+    {α : Type*} [MeasurableSpace α] {μ : Measure α} {M g : α → ℝ}
+    (hM : Measurable M) (hg : Measurable g)
+    (hM0 : ∀ a, 0 ≤ M a) (hg0 : ∀ a, 0 ≤ g a)
+    {p : ℝ} (hp : 1 < p)
+    (hfin : ∫⁻ a, ENNReal.ofReal (M a ^ p) ∂μ ≠ ⊤)
+    (hweak : ∀ t : ℝ, 0 < t →
+      ENNReal.ofReal t * μ {a | t ≤ M a} ≤ ∫⁻ a in {a | t ≤ M a}, ENNReal.ofReal (g a) ∂μ) :
+    ∫⁻ a, ENNReal.ofReal (M a ^ p) ∂μ
+      ≤ ENNReal.ofReal ((p / (p - 1)) ^ p) * ∫⁻ a, ENNReal.ofReal (g a ^ p) ∂μ :=
+  lintegral_rpow_le_of_le_mul_lintegral_mul_rpow hM hg hM0 hg0 hp hfin
+    (lintegral_rpow_le_mul_lintegral_mul_rpow hM hg hM0 hp hweak)
+
+/-- **Doob's `Lᵖ` inequality over `ℕ`**, the instance the milestone asks for
+first: for a non-negative submartingale the running maximum over `Finset.range
+(n+1)` obeys `‖f*‖ₚ ≤ p/(p-1) · ‖f n‖ₚ`, in the `∫⁻ · ^ p` form.
+
+The maximum is Mathlib's `Finset.sup'`, which is the shape `maximal_ineq`
+produces; the passage to a supremum over an arbitrary countable set of times is
+`Submartingale.mul_measReal_exists_ge_abs_le_countable` and does not belong
+here.  The finiteness hypothesis is carried and not derived: it is the `Lᵖ`
+integrability of the maximum, which over a finite index range follows from that
+of the `f k` but is not part of `Submartingale`. -/
+theorem Submartingale.lintegral_rpow_range_sup'_le {μ : Measure Ω} [IsFiniteMeasure μ]
+    {𝒢 : Filtration ℕ m} {f : ℕ → Ω → ℝ} (hsub : Submartingale f 𝒢 μ) (hnonneg : 0 ≤ f)
+    {p : ℝ} (hp : 1 < p) (n : ℕ)
+    (hfin : ∫⁻ ω, ENNReal.ofReal (((Finset.range (n + 1)).sup' Finset.nonempty_range_add_one
+      fun k ↦ f k ω) ^ p) ∂μ ≠ ⊤) :
+    ∫⁻ ω, ENNReal.ofReal (((Finset.range (n + 1)).sup' Finset.nonempty_range_add_one
+        fun k ↦ f k ω) ^ p) ∂μ
+      ≤ ENNReal.ofReal ((p / (p - 1)) ^ p) * ∫⁻ ω, ENNReal.ofReal (f n ω ^ p) ∂μ := by
+  classical
+  set M : Ω → ℝ := fun ω ↦ (Finset.range (n + 1)).sup' Finset.nonempty_range_add_one
+    fun k ↦ f k ω with hMdef
+  have hfmeas : ∀ k, Measurable (f k) := fun k ↦
+    (hsub.stronglyMeasurable k).measurable.le (𝒢.le k)
+  have hM : Measurable M := Finset.measurable_range_sup'' fun k _ ↦ hfmeas k
+  have hM0 : ∀ ω, 0 ≤ M ω := by
+    intro ω
+    refine le_trans (hnonneg 0 ω) ?_
+    exact Finset.le_sup' (fun k ↦ f k ω) (Finset.mem_range.2 (Nat.succ_pos n))
+  refine lintegral_rpow_le_of_weak_type hM (hfmeas n) hM0 (fun ω ↦ hnonneg n ω) hp hfin ?_
+  intro t ht
+  have hcoe : ((t.toNNReal : ℝ≥0) : ℝ) = t := Real.coe_toNNReal t ht.le
+  have hkey := maximal_ineq hsub hnonneg (ε := t.toNNReal) n
+  rw [hcoe] at hkey
+  have hint : ENNReal.ofReal (∫ ω in {ω | t ≤ (Finset.range (n + 1)).sup'
+        Finset.nonempty_range_add_one fun k ↦ f k ω}, f n ω ∂μ)
+      = ∫⁻ ω in {ω | t ≤ (Finset.range (n + 1)).sup'
+        Finset.nonempty_range_add_one fun k ↦ f k ω}, ENNReal.ofReal (f n ω) ∂μ :=
+    ofReal_integral_eq_lintegral_ofReal (hsub.integrable n).integrableOn
+      (Filter.Eventually.of_forall fun ω ↦ hnonneg n ω)
+  rw [hint] at hkey
+  simp only [hMdef]
+  exact hkey
+
+/-- **The `∫⁻ · ^ p` form read as an `eLpNorm`.**  Nothing probabilistic and
+nothing about maxima: a bound `∫⁻ M^r ≤ C^r · ∫⁻ g^r` at `r = p.toReal` is the
+bound `‖M‖ₚ ≤ C · ‖g‖ₚ` raised to the power `r`, and the lemma is the passage
+back.
+
+It is stated separately because it is where the two conventions meet.
+`eLpNorm` reads `‖·‖ₑ` and the core reads `ENNReal.ofReal`; for a non-negative
+function these agree (`Real.enorm_eq_ofReal`), and that agreement is the whole
+content.  `p = 0` and `p = ⊤` are excluded because `eLpNorm` is defined by cases
+there and the identity fails. -/
+theorem eLpNorm_le_of_lintegral_rpow_le {α : Type*} [MeasurableSpace α] {μ : Measure α}
+    {M g : α → ℝ} (hMm : AEStronglyMeasurable M μ) (hgm : AEStronglyMeasurable g μ)
+    (hM0 : ∀ a, 0 ≤ M a) (hg0 : ∀ a, 0 ≤ g a)
+    {p : ENNReal} (hp0 : p ≠ 0) (hptop : p ≠ ⊤) {C : ℝ} (hC : 0 ≤ C)
+    (h : ∫⁻ a, ENNReal.ofReal (M a ^ p.toReal) ∂μ
+      ≤ ENNReal.ofReal (C ^ p.toReal) * ∫⁻ a, ENNReal.ofReal (g a ^ p.toReal) ∂μ) :
+    eLpNorm M p μ ≤ ENNReal.ofReal C * eLpNorm g p μ := by
+  have hr : 0 < p.toReal := ENNReal.toReal_pos hp0 hptop
+  have hMe : ∀ a, ‖M a‖ₑ ^ p.toReal = ENNReal.ofReal (M a ^ p.toReal) := fun a ↦ by
+    rw [Real.enorm_eq_ofReal (hM0 a), ENNReal.ofReal_rpow_of_nonneg (hM0 a) hr.le]
+  have hge : ∀ a, ‖g a‖ₑ ^ p.toReal = ENNReal.ofReal (g a ^ p.toReal) := fun a ↦ by
+    rw [Real.enorm_eq_ofReal (hg0 a), ENNReal.ofReal_rpow_of_nonneg (hg0 a) hr.le]
+  rw [eLpNorm_eq_lintegral_rpow_enorm_toReal hp0 hptop hMm,
+    eLpNorm_eq_lintegral_rpow_enorm_toReal hp0 hptop hgm]
+  simp only [hMe, hge]
+  calc (∫⁻ a, ENNReal.ofReal (M a ^ p.toReal) ∂μ) ^ (1 / p.toReal)
+      ≤ (ENNReal.ofReal (C ^ p.toReal)
+          * ∫⁻ a, ENNReal.ofReal (g a ^ p.toReal) ∂μ) ^ (1 / p.toReal) :=
+        ENNReal.rpow_le_rpow h (by positivity)
+    _ = ENNReal.ofReal C * (∫⁻ a, ENNReal.ofReal (g a ^ p.toReal) ∂μ) ^ (1 / p.toReal) := by
+        rw [ENNReal.mul_rpow_of_nonneg _ _ (by positivity),
+          ENNReal.ofReal_rpow_of_nonneg (Real.rpow_nonneg hC _) (by positivity)]
+        congr 2
+        rw [← Real.rpow_mul hC, mul_one_div, div_self (ne_of_gt hr), Real.rpow_one]
+
+/-- **Doob's `Lᵖ` inequality over `ℕ` in the form the milestone names**:
+`‖f*‖ₚ ≤ p/(p-1) · ‖f n‖ₚ` for a non-negative submartingale and `1 < p < ∞`.
+
+The finiteness hypothesis is now `eLpNorm f* p μ ≠ ⊤`, which is the natural one
+to have, and the passage to the hypothesis of the core is the observation that
+an infinite `∫⁻ (f*)^r` makes the `eLpNorm` infinite -- the exponent `1/r` is
+positive, so `⊤ ^ (1/r) = ⊤`. -/
+theorem Submartingale.eLpNorm_range_sup'_le {μ : Measure Ω} [IsFiniteMeasure μ]
+    {𝒢 : Filtration ℕ m} {f : ℕ → Ω → ℝ} (hsub : Submartingale f 𝒢 μ) (hnonneg : 0 ≤ f)
+    {p : ENNReal} (hp : 1 < p) (hptop : p ≠ ⊤) (n : ℕ)
+    (hfin : eLpNorm (fun ω ↦ (Finset.range (n + 1)).sup' Finset.nonempty_range_add_one
+      fun k ↦ f k ω) p μ ≠ ⊤) :
+    eLpNorm (fun ω ↦ (Finset.range (n + 1)).sup' Finset.nonempty_range_add_one
+        fun k ↦ f k ω) p μ
+      ≤ ENNReal.ofReal (p.toReal / (p.toReal - 1)) * eLpNorm (f n) p μ := by
+  classical
+  have hp0 : p ≠ 0 := ne_of_gt (lt_trans zero_lt_one hp)
+  have hr1 : 1 < p.toReal := by
+    have h := (ENNReal.toReal_lt_toReal (by simp) hptop).2 hp
+    simpa using h
+  have hr : 0 < p.toReal := lt_trans zero_lt_one hr1
+  have hfmeas : ∀ k, Measurable (f k) := fun k ↦
+    (hsub.stronglyMeasurable k).measurable.le (𝒢.le k)
+  have hM : Measurable fun ω ↦ (Finset.range (n + 1)).sup' Finset.nonempty_range_add_one
+      fun k ↦ f k ω := Finset.measurable_range_sup'' fun k _ ↦ hfmeas k
+  have hM0 : ∀ ω, 0 ≤ (Finset.range (n + 1)).sup' Finset.nonempty_range_add_one
+      fun k ↦ f k ω := by
+    intro ω
+    refine le_trans (hnonneg 0 ω) ?_
+    exact Finset.le_sup' (fun k ↦ f k ω) (Finset.mem_range.2 (Nat.succ_pos n))
+  have hMe : ∀ ω, ‖(Finset.range (n + 1)).sup' Finset.nonempty_range_add_one
+      fun k ↦ f k ω‖ₑ ^ p.toReal
+      = ENNReal.ofReal (((Finset.range (n + 1)).sup' Finset.nonempty_range_add_one
+        fun k ↦ f k ω) ^ p.toReal) := fun ω ↦ by
+    rw [Real.enorm_eq_ofReal (hM0 ω), ENNReal.ofReal_rpow_of_nonneg (hM0 ω) hr.le]
+  have hlin : ∫⁻ ω, ENNReal.ofReal (((Finset.range (n + 1)).sup'
+      Finset.nonempty_range_add_one fun k ↦ f k ω) ^ p.toReal) ∂μ ≠ ⊤ := by
+    intro htop
+    refine hfin ?_
+    rw [eLpNorm_eq_lintegral_rpow_enorm_toReal hp0 hptop hM.aestronglyMeasurable]
+    simp only [hMe, htop]
+    exact ENNReal.top_rpow_of_pos (by positivity)
+  refine eLpNorm_le_of_lintegral_rpow_le hM.aestronglyMeasurable
+    (hfmeas n).aestronglyMeasurable hM0 (fun ω ↦ hnonneg n ω) hp0 hptop
+    (by positivity) ?_
+  exact hsub.lintegral_rpow_range_sup'_le hnonneg hr1 n hlin
+
+/-- **Doob's `Lᵖ` inequality in continuous time**, for a non-negative right
+continuous submartingale and the supremum over the whole window `Set.Iic T`.
+
+**The statement is in `ℝ≥0∞`, and that is forced.**  Every real valued encoding
+of the window supremum carries a junk value: `(⨆ t, ‖Y t ω‖ₑ).toReal` is `0`
+where the path escapes, and so is `⨆ t, Y t ω` read in `ℝ`, by
+`biSup_eq_zero_of_not_bddAbove`.  In `ℝ≥0∞` the escaping paths contribute `⊤`
+and the inequality says what it means there too.
+
+**No weak type bound in continuous time is used, and no finiteness of the
+supremum is assumed.**  The proof runs along the finite pieces of the countable
+time set and passes to the limit by monotone convergence; the finiteness of the
+`Lʳ` norm of the supremum, which the measure theoretic core needs, is therefore
+never required of the supremum itself but only of each `Y t` -- that is `hLr`,
+and it is the usual hypothesis.  Monotone convergence also gives the bound where
+both sides are `⊤`.
+
+**The enumeration is arranged so that `T` comes first**, which is the step the
+proof turns on.  `T` then lies in *every* finite piece, and since every time of
+the window lies below `T`, the largest time of every piece is `T`; the instance
+over `ℕ` therefore bounds each piece by `Y T` directly.  Without that
+arrangement one would have to know that `‖Y ·‖ᵣ` is non-decreasing along the
+submartingale, which is the conditional Jensen inequality.
+
+The passage `(⨆ N, u N) ^ r = ⨆ N, u N ^ r` is `ENNReal.orderIsoRpow`, an order
+isomorphism, through `OrderIso.map_iSup`. -/
+theorem Submartingale.lintegral_biSup_enorm_rpow_le
+    {ι : Type*} [LinearOrder ι] [TopologicalSpace ι] [OrderTopology ι] [DenselyOrdered ι]
+    [OrderBot ι] {P : Measure Ω} [IsFiniteMeasure P]
+    {Y : ι → Ω → ℝ} {𝓕 : Filtration ι m} (hY : Submartingale Y 𝓕 P) (hnonneg : 0 ≤ Y)
+    {D : Set ι} (hD : Dense D) (hDc : D.Countable) {T : ι}
+    (hpath : ∀ ω, IsRightContinuous fun t ↦ Y t ω)
+    {r : ℝ} (hr : 1 < r)
+    (hLr : ∀ t, ∫⁻ ω, ‖Y t ω‖ₑ ^ r ∂P ≠ ⊤) :
+    ∫⁻ ω, (⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ) ^ r ∂P
+      ≤ ENNReal.ofReal ((r / (r - 1)) ^ r) * ∫⁻ ω, ‖Y T ω‖ₑ ^ r ∂P := by
+  classical
+  have hr0 : (0:ℝ) < r := lt_trans zero_lt_one hr
+  have hY0 : ∀ t ω, 0 ≤ Y t ω := fun t ω ↦ hnonneg t ω
+  have hYe : ∀ t ω, ‖Y t ω‖ₑ = ENNReal.ofReal (Y t ω) := fun t ω ↦ Real.enorm_eq_ofReal (hY0 t ω)
+  have hYmeas : ∀ t : ι, Measurable (Y t) := fun t ↦
+    (hY.stronglyMeasurable t).measurable.le (𝓕.le t)
+  have hSc : (insert T (Set.Iic T ∩ D)).Countable := (hDc.mono Set.inter_subset_right).insert T
+  obtain ⟨σ, hσ⟩ : ∃ σ : ℕ → ι, insert T (Set.Iic T ∩ D) = Set.range σ :=
+    hSc.exists_eq_range ⟨T, Set.mem_insert _ _⟩
+  set ρ : ℕ → ι := fun n ↦ if n = 0 then T else σ (n - 1) with hρ
+  have hρmem : ∀ n, ρ n ∈ insert T (Set.Iic T ∩ D) := by
+    intro n
+    by_cases h : n = 0
+    · simp [hρ, h]
+    · have hn : ρ n = σ (n - 1) := by simp [hρ, h]
+      rw [hn, hσ]
+      exact ⟨n - 1, rfl⟩
+  have hρsurj : ∀ s ∈ insert T (Set.Iic T ∩ D), ∃ k, ρ k = s := by
+    intro s hs
+    rw [hσ] at hs
+    obtain ⟨k, rfl⟩ := hs
+    exact ⟨k + 1, by simp [hρ]⟩
+  have hρle : ∀ n, ρ n ≤ T := by
+    intro n
+    rcases hρmem n with h | ⟨h, -⟩
+    · exact le_of_eq h
+    · exact h
+  have hρ0 : ρ 0 = T := by simp [hρ]
+  set F : ℕ → Finset ι := fun N ↦ (Finset.range (N + 1)).image ρ with hF
+  have hFne : ∀ N, (F N).Nonempty := by
+    intro N
+    exact ⟨ρ 0, by simp only [hF, Finset.mem_image, Finset.mem_range]; exact ⟨0, by omega, rfl⟩⟩
+  have hFmem : ∀ N, ∀ t ∈ F N, ∃ k ≤ N, ρ k = t := by
+    intro N t ht
+    simp only [hF, Finset.mem_image, Finset.mem_range] at ht
+    obtain ⟨k, hk, hkt⟩ := ht
+    exact ⟨k, by omega, hkt⟩
+  have hFle : ∀ N, ∀ t ∈ F N, t ≤ T := by
+    intro N t ht
+    obtain ⟨k, -, rfl⟩ := hFmem N t ht
+    exact hρle k
+  have hTF : ∀ N, T ∈ F N := by
+    intro N
+    simp only [hF, Finset.mem_image, Finset.mem_range]
+    exact ⟨0, by omega, hρ0⟩
+  set M : ℕ → Ω → ℝ := fun N ω ↦ (F N).sup' (hFne N) fun t ↦ Y t ω with hM
+  have hMmem : ∀ N ω, ∃ t ∈ F N, M N ω = Y t ω := by
+    intro N ω
+    obtain ⟨t, ht, hteq⟩ := Finset.exists_mem_eq_sup' (hFne N) (fun t ↦ Y t ω)
+    exact ⟨t, ht, hteq⟩
+  have hM0 : ∀ N ω, 0 ≤ M N ω := by
+    intro N ω
+    obtain ⟨t, -, hteq⟩ := hMmem N ω
+    rw [hteq]; exact hY0 t ω
+  have hMmeas : ∀ N, Measurable (M N) := by
+    intro N
+    have h := Finset.measurable_sup' (hFne N) (f := Y) (fun t _ ↦ hYmeas t)
+    convert! h using 1
+    ext ω
+    simp [hM]
+  have keyN : ∀ N, ∫⁻ ω, ENNReal.ofReal (M N ω ^ r) ∂P
+      ≤ ENNReal.ofReal ((r / (r - 1)) ^ r) * ∫⁻ ω, ENNReal.ofReal (Y T ω ^ r) ∂P := by
+    intro N
+    set e : ℕ → ι := Finset.monoEnum (hFne N) with he
+    have hemono : Monotone e := Finset.monotone_monoEnum (hFne N)
+    have hemem : ∀ i, e i ∈ F N := Finset.monoEnum_mem (hFne N)
+    set n : ℕ := (F N).card with hn
+    have hen : e n = T := by
+      obtain ⟨i, hi, hie⟩ := Finset.exists_lt_card_monoEnum_eq (hFne N) (hTF N)
+      refine le_antisymm (hFle N _ (hemem n)) ?_
+      rw [← hie]
+      exact hemono (by omega)
+    set g : ℕ → Ω → ℝ := fun i ω ↦ Y (e i) ω with hg
+    have hgsub : Submartingale g (𝓕.comp hemono) P := hY.comp_monotone hemono
+    have hg0 : (0 : ℕ → Ω → ℝ) ≤ g := fun i ω ↦ hY0 (e i) ω
+    have hsupeq : ∀ ω, (Finset.range (n + 1)).sup' Finset.nonempty_range_add_one
+        (fun k ↦ g k ω) = M N ω := by
+      intro ω
+      refine le_antisymm ?_ ?_
+      · refine Finset.sup'_le _ _ fun k _ ↦ ?_
+        exact Finset.le_sup' (fun t ↦ Y t ω) (hemem k)
+      · refine Finset.sup'_le _ _ fun t ht ↦ ?_
+        obtain ⟨i, hi, hie⟩ := Finset.exists_lt_card_monoEnum_eq (hFne N) ht
+        have hti : Y t ω = g i ω := by rw [hg]; simp only; rw [he, hie]
+        rw [hti]
+        exact Finset.le_sup' (fun k ↦ g k ω) (Finset.mem_range.2 (by omega))
+    have hfin : ∫⁻ ω, ENNReal.ofReal (((Finset.range (n + 1)).sup'
+        Finset.nonempty_range_add_one fun k ↦ g k ω) ^ r) ∂P ≠ ⊤ := by
+      have hbound : ∀ ω, ENNReal.ofReal (((Finset.range (n + 1)).sup'
+          Finset.nonempty_range_add_one fun k ↦ g k ω) ^ r)
+          ≤ ∑ k ∈ Finset.range (n + 1), ENNReal.ofReal (g k ω ^ r) := by
+        intro ω
+        obtain ⟨k, hk, hkeq⟩ := Finset.exists_mem_eq_sup'
+          (Finset.nonempty_range_add_one (n := n)) (fun k ↦ g k ω)
+        rw [hkeq]
+        exact Finset.single_le_sum (f := fun k ↦ ENNReal.ofReal (g k ω ^ r))
+          (fun _ _ ↦ zero_le) hk
+      have hsum : ∫⁻ ω, (∑ k ∈ Finset.range (n + 1), ENNReal.ofReal (g k ω ^ r)) ∂P
+          = ∑ k ∈ Finset.range (n + 1), ∫⁻ ω, ENNReal.ofReal (g k ω ^ r) ∂P := by
+        refine lintegral_finsetSum _ fun k _ ↦ ?_
+        have hgk : Measurable (g k) := hYmeas (e k)
+        fun_prop
+      have hne : ∀ k, ∫⁻ ω, ENNReal.ofReal (g k ω ^ r) ∂P ≠ ⊤ := by
+        intro k
+        have h := hLr (e k)
+        have hrw : ∀ ω, ‖Y (e k) ω‖ₑ ^ r = ENNReal.ofReal (Y (e k) ω ^ r) := by
+          intro ω
+          rw [hYe, ENNReal.ofReal_rpow_of_nonneg (hY0 (e k) ω) hr0.le]
+        simp only [hrw] at h
+        exact h
+      refine ne_top_of_le_ne_top ?_ ((lintegral_mono hbound).trans_eq hsum)
+      exact ENNReal.sum_ne_top.2 fun k _ ↦ hne k
+    have hinst := hgsub.lintegral_rpow_range_sup'_le hg0 hr n hfin
+    simp only [hsupeq] at hinst
+    have hgnT : ∀ ω, g n ω = Y T ω := by intro ω; rw [hg]; simp only; rw [hen]
+    simp only [hgnT] at hinst
+    exact hinst
+  have hMmono : ∀ ω, Monotone fun N ↦ ENNReal.ofReal (M N ω ^ r) := by
+    intro ω N N' hNN'
+    refine ENNReal.ofReal_le_ofReal (Real.rpow_le_rpow (hM0 N ω) ?_ hr0.le)
+    refine Finset.sup'_le _ _ fun t ht ↦ ?_
+    refine Finset.le_sup' (fun t ↦ Y t ω) ?_
+    obtain ⟨k, hk, rfl⟩ := hFmem N t ht
+    simp only [hF, Finset.mem_image, Finset.mem_range]
+    exact ⟨k, by omega, rfl⟩
+  have hrpowSup : ∀ u : ℕ → ENNReal, (⨆ N, (u N) ^ r) = (⨆ N, u N) ^ r := by
+    intro u
+    have h := (ENNReal.orderIsoRpow r hr0).map_iSup u
+    simp only [ENNReal.orderIsoRpow_apply] at h
+    exact h.symm
+  have hiSup : ∀ ω, (⨆ N, ENNReal.ofReal (M N ω ^ r))
+      = (⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ) ^ r := by
+    intro ω
+    have h1 : ∀ N, ENNReal.ofReal (M N ω ^ r) = (ENNReal.ofReal (M N ω)) ^ r := fun N ↦
+      (ENNReal.ofReal_rpow_of_nonneg (hM0 N ω) hr0.le).symm
+    have h2 : (⨆ N, ENNReal.ofReal (M N ω)) = ⨆ t ∈ insert T (Set.Iic T ∩ D), ‖Y t ω‖ₑ := by
+      refine le_antisymm (iSup_le fun N ↦ ?_) ?_
+      · obtain ⟨t, ht, hteq⟩ := hMmem N ω
+        rw [hteq, ← hYe]
+        refine le_iSup₂ (f := fun t (_ : t ∈ insert T (Set.Iic T ∩ D)) ↦ ‖Y t ω‖ₑ) t ?_
+        obtain ⟨k, -, rfl⟩ := hFmem N t ht
+        exact hρmem k
+      · refine iSup₂_le fun t ht ↦ ?_
+        obtain ⟨k, rfl⟩ := hρsurj t ht
+        rw [hYe]
+        refine le_trans (ENNReal.ofReal_le_ofReal ?_) (le_iSup (fun N ↦ ENNReal.ofReal (M N ω)) k)
+        refine Finset.le_sup' (fun t ↦ Y t ω) ?_
+        simp only [hF, Finset.mem_image, Finset.mem_range]
+        exact ⟨k, by omega, rfl⟩
+    simp only [h1]
+    rw [hrpowSup (fun N ↦ ENNReal.ofReal (M N ω)), h2,
+      biSup_enorm_Iic_eq_of_isRightContinuous hD (hpath ω)]
+  calc ∫⁻ ω, (⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ) ^ r ∂P
+      = ∫⁻ ω, ⨆ N, ENNReal.ofReal (M N ω ^ r) ∂P := lintegral_congr fun ω ↦ (hiSup ω).symm
+    _ = ⨆ N, ∫⁻ ω, ENNReal.ofReal (M N ω ^ r) ∂P := by
+        refine lintegral_iSup (fun N ↦ ?_) (fun N N' hNN' ω ↦ hMmono ω hNN')
+        have hMN := hMmeas N
+        fun_prop
+    _ ≤ ENNReal.ofReal ((r / (r - 1)) ^ r) * ∫⁻ ω, ENNReal.ofReal (Y T ω ^ r) ∂P :=
+        iSup_le keyN
+    _ = ENNReal.ofReal ((r / (r - 1)) ^ r) * ∫⁻ ω, ‖Y T ω‖ₑ ^ r ∂P := by
+        congr 1
+        refine lintegral_congr fun ω ↦ ?_
+        rw [hYe, ENNReal.ofReal_rpow_of_nonneg (hY0 T ω) hr0.le]
+
+/-- **The norm of a martingale is a submartingale.**  Mathlib does not have it:
+the strings `submartingale_abs`, `Martingale.abs`, `Martingale.norm` and
+`convex` do not occur in `Mathlib/Probability/Martingale/`.  What it does have
+is the input, `MeasureTheory.norm_condExp_le`
+(`MeasureTheory/Function/ConditionalExpectation/CondJensen.lean:246`), the
+conditional Jensen inequality for the norm, stated with no integrability
+hypothesis at all; against it the proof is three lines, and the martingale
+property enters only as `μ[X j | 𝓕 i] =ᵐ X i`.
+
+It is stated for a Banach space valued martingale rather than for a real one,
+because that costs nothing: `norm_condExp_le` is already stated there. -/
+theorem Martingale.submartingale_norm {ι : Type*} [Preorder ι] {E : Type*}
+    [NormedAddCommGroup E] [NormedSpace ℝ E] [CompleteSpace E]
+    {𝓕 : Filtration ι m} {μ : Measure Ω} {X : ι → Ω → E} (hX : Martingale X 𝓕 μ) :
+    Submartingale (fun i ω ↦ ‖X i ω‖) 𝓕 μ := by
+  refine ⟨fun i ↦ (hX.stronglyMeasurable i).norm, fun i j hij ↦ ?_,
+    fun i ↦ (hX.integrable i).norm⟩
+  filter_upwards [hX.condExp_ae_eq hij, norm_condExp_le (m := 𝓕 i) (μ := μ) (X j)] with ω h1 h2
+  show ‖X i ω‖ ≤ _
+  rw [← h1]
+  exact h2
+
+/-- **Doob's `Lᵖ` inequality for a right continuous martingale**, which is the
+form the manuscript uses: it is the submartingale theorem above applied to
+`‖X ·‖`, and nothing else happens in the proof.
+
+The one thing to watch is that two norms meet: the theorem for submartingales
+reads `‖Y t ω‖ₑ` of the *real* process `Y t ω = ‖X t ω‖`, and that is `‖X t ω‖ₑ`
+because the norm is non-negative (`Real.enorm_eq_ofReal` and `ofReal_norm`).
+Right continuity is asked of the paths of `X` and carried to `‖X ·‖` by
+`IsRightContinuous.continuous_comp`, which is weaker than asking it of the
+norm directly and is what a càdlàg martingale supplies. -/
+theorem Martingale.lintegral_biSup_enorm_rpow_le
+    {ι : Type*} [LinearOrder ι] [TopologicalSpace ι] [OrderTopology ι] [DenselyOrdered ι]
+    [OrderBot ι] {P : Measure Ω} [IsFiniteMeasure P]
+    {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [CompleteSpace E]
+    {X : ι → Ω → E} {𝓕 : Filtration ι m} (hX : Martingale X 𝓕 P)
+    {D : Set ι} (hD : Dense D) (hDc : D.Countable) {T : ι}
+    (hpath : ∀ ω, IsRightContinuous fun t ↦ X t ω)
+    {r : ℝ} (hr : 1 < r)
+    (hLr : ∀ t, ∫⁻ ω, ‖X t ω‖ₑ ^ r ∂P ≠ ⊤) :
+    ∫⁻ ω, (⨆ t ∈ Set.Iic T, ‖X t ω‖ₑ) ^ r ∂P
+      ≤ ENNReal.ofReal ((r / (r - 1)) ^ r) * ∫⁻ ω, ‖X T ω‖ₑ ^ r ∂P := by
+  have hnorm : ∀ t ω, ‖(‖X t ω‖ : ℝ)‖ₑ = ‖X t ω‖ₑ := by
+    intro t ω
+    rw [Real.enorm_eq_ofReal (norm_nonneg _), ofReal_norm]
+  have hLr' : ∀ t, ∫⁻ ω, ‖(‖X t ω‖ : ℝ)‖ₑ ^ r ∂P ≠ ⊤ := by
+    intro t
+    simpa only [hnorm] using hLr t
+  have hpath' : ∀ ω, IsRightContinuous fun t ↦ ‖X t ω‖ := fun ω ↦
+    (hpath ω).continuous_comp continuous_norm
+  have h := hX.submartingale_norm.lintegral_biSup_enorm_rpow_le
+    (fun i ω ↦ norm_nonneg _) hD hDc (T := T) hpath' hr hLr'
+  simpa only [hnorm] using h
+
+/-- **Doob's maximal inequality for a right continuous martingale**, in the form
+the manuscript uses: `ε · P {ε ≤ ⨆ t ≤ T, ‖X t‖} ≤ 𝔼‖X T‖`, with the classical
+constant `1` and no term at the bottom of the window.
+
+It is the same composition as the `Lᵖ` corollary above -- `submartingale_norm`
+and then the window bound for a non-negative submartingale -- and the choice of
+*which* window bound is where the constant is decided.
+`Submartingale.mul_measReal_le_biSup_enorm_le`, the two sided form, would give
+`2 𝔼‖X T‖ - 𝔼‖X ⊥‖` here, which is at least `𝔼‖X T‖` because `‖X ·‖` is a
+submartingale; the non-negative form
+`Submartingale.mul_measReal_le_biSup_enorm_le_of_nonneg` gives the classical
+bound, because `‖X ·‖` needs no absolute value and the localised one sided
+estimate applies to it directly.
+
+The level is read in `ℝ≥0∞` on the left, as everywhere in this block: a real
+valued encoding of the window supremum is `0` where the path escapes, and the
+inequality would then be satisfied for a reason that has nothing to do with the
+martingale. -/
+theorem Martingale.measure_iSup_norm_le
+    {ι : Type*} [LinearOrder ι] [TopologicalSpace ι] [OrderTopology ι] [DenselyOrdered ι]
+    [OrderBot ι] {P : Measure Ω} [IsFiniteMeasure P]
+    {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [CompleteSpace E]
+    {X : ι → Ω → E} {𝓕 : Filtration ι m} (hX : Martingale X 𝓕 P)
+    {D : Set ι} (hD : Dense D) (hDc : D.Countable) {T : ι}
+    (hpath : ∀ ω, IsRightContinuous fun t ↦ X t ω) {ε : ℝ} (hε : 0 < ε) :
+    ε * P.real {ω | ENNReal.ofReal ε ≤ ⨆ t ∈ Set.Iic T, ‖X t ω‖ₑ} ≤ ∫ ω, ‖X T ω‖ ∂P := by
+  have hnorm : ∀ t ω, ‖(‖X t ω‖ : ℝ)‖ₑ = ‖X t ω‖ₑ := by
+    intro t ω
+    rw [Real.enorm_eq_ofReal (norm_nonneg _), ofReal_norm]
+  have hpath' : ∀ ω, IsRightContinuous fun t ↦ ‖X t ω‖ := fun ω ↦
+    (hpath ω).continuous_comp continuous_norm
+  have h := hX.submartingale_norm.mul_measReal_le_biSup_enorm_le_of_nonneg
+    (fun i ω ↦ norm_nonneg _) hD hDc (T := T) hpath' hε
+  simpa only [hnorm] using h
+
+/-- **The window supremum of a right continuous martingale is almost surely
+finite**, with no integrability hypothesis beyond the martingale property.
+
+This is the statement that settles what shape the window inequalities are given
+in.  They are stated in `ℝ≥0∞` because every real valued encoding of the
+supremum lies where the path escapes; this theorem says that the set where it
+escapes is null, so the `ℝ≥0∞` form loses nothing -- a consumer who wants a real
+number may take `.toReal` and knows it is not reading a junk value.  An
+`eLpNorm` form of `Submartingale.lintegral_biSup_enorm_rpow_le` would have to
+carry exactly this almost sure finiteness, and would then say no more than the
+`ℝ≥0∞` form it is derived from, which is why none is stated.
+
+The proof is Markov's inequality read along the integers: the escape set lies in
+every level set `{ENNReal.ofReal n ≤ ⨆}`, whose measure is at most `𝔼‖X T‖ / n`
+by `Martingale.measure_iSup_norm_le`, and `c / n → 0`.  No measurability of the
+escape set is used -- `measureReal_mono` is monotonicity of the outer measure --
+so `measurable_biSup_enorm_of_countable` is not an input here either. -/
+theorem Martingale.ae_biSup_enorm_lt_top
+    {ι : Type*} [LinearOrder ι] [TopologicalSpace ι] [OrderTopology ι] [DenselyOrdered ι]
+    [OrderBot ι] {P : Measure Ω} [IsFiniteMeasure P]
+    {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [CompleteSpace E]
+    {X : ι → Ω → E} {𝓕 : Filtration ι m} (hX : Martingale X 𝓕 P)
+    {D : Set ι} (hD : Dense D) (hDc : D.Countable) {T : ι}
+    (hpath : ∀ ω, IsRightContinuous fun t ↦ X t ω) :
+    ∀ᵐ ω ∂P, (⨆ t ∈ Set.Iic T, ‖X t ω‖ₑ) < ⊤ := by
+  set c : ℝ := ∫ ω, ‖X T ω‖ ∂P with hc
+  set A : Set Ω := {ω | ⨆ t ∈ Set.Iic T, ‖X t ω‖ₑ = ⊤} with hA
+  have hkey : ∀ n : ℕ, 0 < n → P.real A ≤ c / n := by
+    intro n hn
+    have hn0 : (0 : ℝ) < n := by exact_mod_cast hn
+    have hsub : A ⊆ {ω | ENNReal.ofReal (n : ℝ) ≤ ⨆ t ∈ Set.Iic T, ‖X t ω‖ₑ} := by
+      intro ω hω
+      simp only [Set.mem_ofPred_eq] at hω ⊢
+      rw [hω]
+      exact le_top
+    have h1 : (n : ℝ) * P.real A
+        ≤ (n : ℝ) * P.real {ω | ENNReal.ofReal (n : ℝ) ≤ ⨆ t ∈ Set.Iic T, ‖X t ω‖ₑ} :=
+      mul_le_mul_of_nonneg_left (measureReal_mono hsub (measure_ne_top _ _)) hn0.le
+    have h2 := hX.measure_iSup_norm_le hD hDc (T := T) hpath hn0
+    rw [le_div_iff₀ hn0, mul_comm]
+    exact h1.trans h2
+  have htend : Filter.Tendsto (fun n : ℕ ↦ c / n) Filter.atTop (𝓝 0) :=
+    tendsto_const_div_atTop_nhds_zero_nat c
+  have hzero : P.real A = 0 :=
+    le_antisymm
+      (ge_of_tendsto htend (by
+        filter_upwards [Filter.eventually_gt_atTop 0] with n hn using hkey n hn))
+      measureReal_nonneg
+  have hPA : P A = 0 := by
+    rwa [measureReal_eq_zero_iff (measure_ne_top _ _)] at hzero
+  rw [ae_iff]
+  have hset : {ω | ¬ (⨆ t ∈ Set.Iic T, ‖X t ω‖ₑ) < ⊤} = A := by
+    ext ω
+    simp only [hA, Set.mem_ofPred_eq, not_lt, top_le_iff]
+  rw [hset]
+  exact hPA
+
+end MeasureTheory
 
 /-! ## Milestone 9: the regularizing class and quasi-left-continuity
 
@@ -14922,11 +16236,17 @@ time.
 
 The passage is the dyadic approximation from above, `dyadStop`, and it costs one hypothesis that
 the discrete theory does not need: the paths must be right continuous, because the approximating
-times decrease to the true one, and the process must be bounded on each window, because the
-pointwise limit has to be an `L¹` limit.  Both are cheap for the jump construction -- its paths
-are locally constant from the right (`eventuallyEq_nhdsGE_stepPath_comp`) and its test processes
-are bounded by `C + 2LC·t` (`integrable_mpFamily_jumpProcess`) -- and uniform integrability, the
-usual hypothesis of the classical theorem, is not needed at all.
+times decrease to the true one.  That is cheap for the jump construction, whose paths are
+locally constant from the right (`eventuallyEq_nhdsGE_stepPath_comp`), and uniform integrability,
+the usual hypothesis of the classical theorem, is not needed at all -- it is derived.
+
+**Right continuity is asked almost everywhere and not at every sample point.**  Until the fifth
+run of 2026-09-20 it was asked everywhere, and that was more than the proof spends: the
+convergence of the approximations is read by Vitali, which quantifies almost everywhere.  The
+difference is not cosmetic for the path dependent construction, where right continuity of the
+test process holds exactly on the non explosion set
+(`tendsto_nhdsGE_of_intervalIntegrable_mpFamilyF`, whose integrability hypothesis *is* the non
+explosion at the one sample point) and therefore almost everywhere and not everywhere.
 
 **The martingale identity is proved without ever conditioning on a stopping time σ-algebra.**
 The naive route -- optional sampling for `min i τ` and `min j τ`, then a tower step -- does not
@@ -15094,7 +16414,7 @@ theorem integral_stoppedValue_eq_of_countable_range (hY : Martingale Y 𝓕 P)
 
 /-- **The expectation of a bounded right continuous martingale at a bounded stopping time.** -/
 theorem integral_stoppedValue_eq (hY : Martingale Y 𝓕 P) (hprog : IsStronglyProgressive 𝓕 Y)
-    (hrc : ∀ (ω : Ω) (s : ℝ≥0), Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
+    (hrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
     {j : ℝ≥0} {C : ℝ} (hbdd : ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C)
     {ρ : Ω → ENNReal} (hρ : IsStoppingTime 𝓕 ρ) (hρj : ∀ ω, ρ ω ≤ (j : ENNReal)) :
     ∫ ω, stoppedValue Y ρ ω ∂P = ∫ ω, Y j ω ∂P := by
@@ -15109,18 +16429,118 @@ theorem integral_stoppedValue_eq (hY : Martingale Y 𝓕 P) (hprog : IsStronglyP
       rw [untopA_eq_toNNReal (hne' n ω), dyadStop, ENNReal.toNNReal_coe]
       exact min_le_left _ _
     simpa [hF, stoppedValue, Real.norm_eq_abs] using hbdd _ h1 ω
-  have hlim : ∀ ω, Tendsto (fun n ↦ F n ω) atTop (𝓝 (stoppedValue Y ρ ω)) := fun ω ↦ by
+  have hlim : ∀ᵐ ω ∂P, Tendsto (fun n ↦ F n ω) atTop (𝓝 (stoppedValue Y ρ ω)) := by
+    filter_upwards [hrc] with ω hω
     have hne : ρ ω ≠ ⊤ := ne_top_of_le_ne_top (by simp) (hρj ω)
     have hh : ∀ n, F n ω = Y ((dyadStop j ρ n ω).toNNReal) ω := fun n ↦ by
       rw [hF]
       simp only [stoppedValue]
       rw [untopA_eq_toNNReal (hne' n ω)]
     simp only [hh, stoppedValue, untopA_eq_toNNReal hne]
-    exact (hrc ω (ρ ω).toNNReal).comp (tendsto_dyadStop hρj ω)
+    exact (hω (ρ ω).toNNReal).comp (tendsto_dyadStop hρj ω)
   have hconv : Tendsto (fun n ↦ ∫ ω, F n ω ∂P) atTop (𝓝 (∫ ω, stoppedValue Y ρ ω ∂P)) :=
     tendsto_integral_of_dominated_convergence (fun _ ↦ C) hFmeas (integrable_const C)
-      (fun n ↦ Filter.Eventually.of_forall (hFbd n))
-      (Filter.Eventually.of_forall hlim)
+      (fun n ↦ Filter.Eventually.of_forall (hFbd n)) hlim
+  have hconst : ∀ n, ∫ ω, F n ω ∂P = ∫ ω, Y j ω ∂P := fun n ↦
+    integral_stoppedValue_eq_of_countable_range hY (isStoppingTime_dyadStop hρ hρj n)
+      (dyadStop_le j ρ n) (countable_range_dyadStop j ρ n)
+  simp only [hconst] at hconv
+  exact tendsto_nhds_unique hconv tendsto_const_nhds
+
+/-! ### The same identity with no bound on the paths
+
+The theorem above pays for the passage to the limit with a bound on the paths over the window,
+and that bound is what makes the convergence dominated.  It is not needed: the approximating
+values are themselves conditional expectations of the **single** integrable function `Y j`, and a
+family of conditional expectations of one integrable function is uniformly integrable
+(`MeasureTheory.Integrable.uniformIntegrable_condExp`).  Uniform integrability together with the
+pointwise convergence gives the `L¹` convergence by Vitali
+(`MeasureTheory.tendsto_Lp_finite_of_tendsto_ae`), and with it the integrability of the limit
+(`MeasureTheory.UniformIntegrable.integrable_of_ae_tendsto`), which the dominated form got for
+free from the constant majorant.
+
+So the window bound disappears and **nothing takes its place**: what remains is right continuity
+of the paths, and that is used only for the pointwise convergence.  Progressivity disappears too,
+because the measurability of each approximating value now comes from the conditional expectation
+it is almost everywhere equal to and not from `stronglyMeasurable_stoppedValue_of_le`. -/
+
+/-- **The dyadic approximations converge, at a sample point at which the path is right
+continuous.**  This is the limit step of `integral_stoppedValue_eq`, stated on its own because
+the unbounded form below uses it twice.
+
+Right continuity is asked **at the one sample point** and not of the process, and that is not
+bookkeeping: everything downstream of this statement reads the convergence through an almost
+everywhere quantifier, so the sample point form is what lets the hypothesis of the whole chain be
+an almost everywhere statement.  `ae_tendsto_stoppedValue_dyadStop` is the passage. -/
+theorem tendsto_stoppedValue_dyadStop {j : ℝ≥0} {ρ : Ω → ENNReal}
+    (hρj : ∀ ω, ρ ω ≤ (j : ENNReal)) (ω : Ω)
+    (hrc : ∀ s : ℝ≥0, Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω))) :
+    Tendsto (fun n ↦ stoppedValue Y (dyadStop j ρ n) ω) atTop (𝓝 (stoppedValue Y ρ ω)) := by
+  have hne : ρ ω ≠ ⊤ := ne_top_of_le_ne_top (by simp) (hρj ω)
+  simp only [stoppedValue, untopA_eq_toNNReal hne]
+  exact (hrc (ρ ω).toNNReal).comp (tendsto_dyadStop hρj ω)
+
+omit [IsFiniteMeasure P] in
+/-- **The dyadic approximations converge almost everywhere, for an almost everywhere right
+continuous process.**  One `filter_upwards` over the statement above, and the reason the whole
+chain below carries `∀ᵐ` and not `∀`. -/
+theorem ae_tendsto_stoppedValue_dyadStop
+    (hrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
+    {j : ℝ≥0} {ρ : Ω → ENNReal} (hρj : ∀ ω, ρ ω ≤ (j : ENNReal)) :
+    ∀ᵐ ω ∂P, Tendsto (fun n ↦ stoppedValue Y (dyadStop j ρ n) ω) atTop
+      (𝓝 (stoppedValue Y ρ ω)) := by
+  filter_upwards [hrc] with ω hω using tendsto_stoppedValue_dyadStop hρj ω hω
+
+/-- **The dyadic approximations of a martingale at a bounded stopping time are uniformly
+integrable**, and nothing beyond the martingale property is used.
+
+Each of them is almost everywhere the conditional expectation of the *same* function `Y j`, by
+optional sampling at a stopping time of countable range, and conditional expectations of one
+integrable function for an arbitrary family of sub-σ-algebras are uniformly integrable.  This is
+the replacement for the window bound of `integral_stoppedValue_eq`. -/
+theorem uniformIntegrable_stoppedValue_dyadStop (hY : Martingale Y 𝓕 P)
+    {j : ℝ≥0} {ρ : Ω → ENNReal} (hρ : IsStoppingTime 𝓕 ρ) (hρj : ∀ ω, ρ ω ≤ (j : ENNReal)) :
+    UniformIntegrable (fun n ↦ stoppedValue Y (dyadStop j ρ n)) 1 P := by
+  have key : ∀ n : ℕ, stoppedValue Y (dyadStop j ρ n)
+      =ᵐ[P] P[Y j | (isStoppingTime_dyadStop hρ hρj n).measurableSpace] := fun n ↦
+    hY.stoppedValue_ae_eq_condExp_of_le_const_of_countable_range
+      (isStoppingTime_dyadStop hρ hρj n) (dyadStop_le j ρ n) (countable_range_dyadStop j ρ n)
+  exact UniformIntegrable.ae_eq
+    ((hY.integrable j).uniformIntegrable_condExp (fun n : ℕ ↦
+      (isStoppingTime_dyadStop hρ hρj n).measurableSpace_le_of_le (dyadStop_le j ρ n)))
+    fun n ↦ (key n).symm
+
+/-- **The value of a right continuous martingale at a bounded stopping time is integrable**, with
+no bound on the paths.  This is the statement the dominated form of `integral_stoppedValue_eq`
+obtained for free from its constant majorant, and it is what has to be supplied once the majorant
+is gone. -/
+theorem integrable_stoppedValue_of_rightContinuous (hY : Martingale Y 𝓕 P)
+    (hrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
+    {j : ℝ≥0} {ρ : Ω → ENNReal} (hρ : IsStoppingTime 𝓕 ρ) (hρj : ∀ ω, ρ ω ≤ (j : ENNReal)) :
+    Integrable (stoppedValue Y ρ) P :=
+  (uniformIntegrable_stoppedValue_dyadStop hY hρ hρj).integrable_of_ae_tendsto
+    (ae_tendsto_stoppedValue_dyadStop hrc hρj)
+
+/-- **The expectation of a right continuous martingale at a bounded stopping time**, with no bound
+on the paths and no progressivity.
+
+Compared with `integral_stoppedValue_eq` the hypotheses `hprog` and `hbdd` are both gone; the
+proof is the same approximation with Vitali convergence in place of dominated convergence. -/
+theorem integral_stoppedValue_eq_of_rightContinuous (hY : Martingale Y 𝓕 P)
+    (hrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
+    {j : ℝ≥0} {ρ : Ω → ENNReal} (hρ : IsStoppingTime 𝓕 ρ) (hρj : ∀ ω, ρ ω ≤ (j : ENNReal)) :
+    ∫ ω, stoppedValue Y ρ ω ∂P = ∫ ω, Y j ω ∂P := by
+  set F : ℕ → Ω → ℝ := fun n ↦ stoppedValue Y (dyadStop j ρ n) with hF
+  have hUI : UniformIntegrable F 1 P := uniformIntegrable_stoppedValue_dyadStop hY hρ hρj
+  have hlim : ∀ᵐ ω ∂P, Tendsto (fun n ↦ F n ω) atTop (𝓝 (stoppedValue Y ρ ω)) :=
+    ae_tendsto_stoppedValue_dyadStop hrc hρj
+  have hgint : Integrable (stoppedValue Y ρ) P := hUI.integrable_of_ae_tendsto hlim
+  have hL1 : Tendsto (fun n ↦ eLpNorm (F n - stoppedValue Y ρ) 1 P) atTop (𝓝 0) :=
+    tendsto_Lp_finite_of_tendsto_ae le_rfl ENNReal.one_ne_top
+      (fun n ↦ hUI.aestronglyMeasurable n) (memLp_one_iff_integrable.2 hgint) hUI.1 hlim
+  have hconv : Tendsto (fun n ↦ ∫ ω, F n ω ∂P) atTop (𝓝 (∫ ω, stoppedValue Y ρ ω ∂P)) :=
+    tendsto_integral_of_L1' _
+      (Filter.Eventually.of_forall fun n ↦ memLp_one_iff_integrable.1 (hUI.memLp n)) hL1
   have hconst : ∀ n, ∫ ω, F n ω ∂P = ∫ ω, Y j ω ∂P := fun n ↦
     integral_stoppedValue_eq_of_countable_range hY (isStoppingTime_dyadStop hρ hρj n)
       (dyadStop_le j ρ n) (countable_range_dyadStop j ρ n)
@@ -15157,17 +16577,21 @@ for *all* bounded stopping times, and the theorem is stated over any index that
 form**, over any index for which the stopped value is measurable for the
 σ-algebra of the stopping time.
 
-The bound `C` is read twice and is not a convenience: it makes `Y j` and every
-stopped value integrable under a finite measure, and integrability of both sides
-is what the characterisation of the conditional expectation by its set integrals
-asks for.  No right continuity and no martingale property enter -- both sit
-inside the hypothesis `hint`. -/
+Integrability is read twice -- of `Z j` and of every bounded stopped value -- because
+integrability of both sides is what the characterisation of the conditional expectation by its
+set integrals asks for.  It is a hypothesis and not a bound on the paths: the bounded form
+supplies it from a window bound, the right continuous form of
+`integrable_stoppedValue_of_rightContinuous` from uniform integrability, and the statement
+should not prefer one of them.  No right continuity and no martingale property enter -- both sit
+inside the hypotheses `hint` and `hstint`. -/
 theorem stoppedValue_ae_eq_condExp_of_forall_integral_eq
     {ι : Type*} [LinearOrder ι] [MeasurableSpace ι] [TopologicalSpace ι] [OrderTopology ι]
     [SecondCountableTopology ι] [BorelSpace ι] [Nonempty ι]
     {𝓖 : Filtration ι m} {P : Measure Ω} [IsFiniteMeasure P] {Z : ι → Ω → ℝ}
-    (hprog : IsStronglyProgressive 𝓖 Z) {j : ι} {C : ℝ}
-    (hbdd : ∀ s ≤ j, ∀ ω, |Z s ω| ≤ C)
+    (hprog : IsStronglyProgressive 𝓖 Z) {j : ι}
+    (hZjint : Integrable (Z j) P)
+    (hstint : ∀ ρ : Ω → WithTop ι, IsStoppingTime 𝓖 ρ → (∀ ω, ρ ω ≤ (j : WithTop ι)) →
+      Integrable (stoppedValue Z ρ) P)
     (hint : ∀ ρ : Ω → WithTop ι, IsStoppingTime 𝓖 ρ → (∀ ω, ρ ω ≤ (j : WithTop ι)) →
       ∫ ω, stoppedValue Z ρ ω ∂P = ∫ ω, Z j ω ∂P)
     {σ : Ω → WithTop ι} (hσ : IsStoppingTime 𝓖 σ) (hσj : ∀ ω, σ ω ≤ (j : WithTop ι)) :
@@ -15176,15 +16600,7 @@ theorem stoppedValue_ae_eq_condExp_of_forall_integral_eq
   have hle : hσ.measurableSpace ≤ m := hσ.measurableSpace_le_of_le hσj
   have hmeas : Measurable[hσ.measurableSpace] (stoppedValue Z σ) :=
     measurable_stoppedValue hprog hσ
-  have hbd' : ∀ ω, |stoppedValue Z σ ω| ≤ C := fun ω ↦
-    hbdd _ (WithTop.untopA_le (hσj ω)) ω
-  have hσint : Integrable (stoppedValue Z σ) P :=
-    (integrable_const C).mono' ((hmeas.mono hle le_rfl).stronglyMeasurable.aestronglyMeasurable)
-      (Eventually.of_forall fun ω ↦ by simpa [Real.norm_eq_abs] using hbd' ω)
-  have hZjint : Integrable (Z j) P :=
-    (integrable_const C).mono'
-      (((hprog.stronglyAdapted j).mono (𝓖.le j)).aestronglyMeasurable)
-      (Eventually.of_forall fun ω ↦ by simpa [Real.norm_eq_abs] using hbdd j le_rfl ω)
+  have hσint : Integrable (stoppedValue Z σ) P := hstint σ hσ hσj
   refine ae_eq_condExp_of_forall_setIntegral_eq hle hZjint
     (fun S _ _ ↦ hσint.integrableOn) ?_
     hmeas.stronglyMeasurable.aestronglyMeasurable
@@ -15211,14 +16627,7 @@ theorem stoppedValue_ae_eq_condExp_of_forall_integral_eq
       rw [huniv]
       exact (𝓖.mono hjt' _ hSj).compl
     · simp [hjt]
-  have hρmeas : Measurable[𝓖 j] (stoppedValue Z ρ) :=
-    (stronglyMeasurable_stoppedValue_of_le hprog hρst hρj).measurable
-  have hρbd : ∀ ω, |stoppedValue Z ρ ω| ≤ C := fun ω ↦
-    hbdd _ (WithTop.untopA_le (hρj ω)) ω
-  have hρint : Integrable (stoppedValue Z ρ) P :=
-    (integrable_const C).mono'
-      ((hρmeas.mono (𝓖.le j) le_rfl).stronglyMeasurable.aestronglyMeasurable)
-      (Eventually.of_forall fun ω ↦ by simpa [Real.norm_eq_abs] using hρbd ω)
+  have hρint : Integrable (stoppedValue Z ρ) P := hstint ρ hρst hρj
   have hρval : ∀ ω, stoppedValue Z ρ ω = S.piecewise (stoppedValue Z σ) (Z j) ω := by
     intro ω
     by_cases h : ω ∈ S <;> simp [stoppedValue, hρdef, Set.piecewise, h]
@@ -15237,46 +16646,50 @@ theorem stoppedValue_ae_eq_condExp_of_forall_integral_eq
   exact add_right_cancel h3
 
 /-- **Optional sampling in continuous time, conditional form**: the value of a
-bounded right continuous martingale at a bounded stopping time is the
-conditional expectation of its terminal value for the σ-algebra of that stopping
-time.  The hypotheses are those of `integral_stoppedValue_eq`, and nothing is
-added: the passage is the auxiliary stopping time described above. -/
+right continuous martingale at a bounded stopping time is the conditional
+expectation of its terminal value for the σ-algebra of that stopping time.
+
+No bound on the paths is asked for.  The two integrability inputs of
+`stoppedValue_ae_eq_condExp_of_forall_integral_eq` are the martingale property itself and
+`integrable_stoppedValue_of_rightContinuous`, and the expectation identity is
+`integral_stoppedValue_eq_of_rightContinuous`; the passage is the auxiliary stopping time
+described above. -/
 theorem stoppedValue_ae_eq_condExp (hY : Martingale Y 𝓕 P) (hprog : IsStronglyProgressive 𝓕 Y)
-    (hrc : ∀ (ω : Ω) (s : ℝ≥0), Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
-    {j : ℝ≥0} {C : ℝ} (hbdd : ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C)
+    (hrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
+    {j : ℝ≥0}
     {σ : Ω → ENNReal} (hσ : IsStoppingTime 𝓕 σ) (hσj : ∀ ω, σ ω ≤ (j : ENNReal)) :
     stoppedValue Y σ =ᵐ[P] P[Y j | hσ.measurableSpace] :=
-  stoppedValue_ae_eq_condExp_of_forall_integral_eq hprog hbdd
-    (fun _ hρ hρj ↦ integral_stoppedValue_eq hY hprog hrc hbdd hρ hρj) hσ hσj
+  stoppedValue_ae_eq_condExp_of_forall_integral_eq hprog (hY.integrable j)
+    (fun _ hρ hρj ↦ integrable_stoppedValue_of_rightContinuous hY hrc hρ hρj)
+    (fun _ hρ hρj ↦ integral_stoppedValue_eq_of_rightContinuous hY hrc hρ hρj) hσ hσj
 
 /-- **`IsOptionalSamplingFor` holds over `ℝ≥0`**, for a bounded right continuous martingale.
 
 `IsOptionalSamplingFor` is a hypothesis of `isQuasiLeftContinuous_of_isRegularizingClass` and of
 `isQuasiLeftContinuous_of_isMPSolutionFor` because over a general index the martingale property
 does not give optional sampling; this is the statement that the index `ℝ≥0` pays for it.  The
-proof is `stoppedValue_ae_eq_condExp` with the level chosen by the bound: the definition
-quantifies over a time `t` and a stopping time below it, and `hbdd` produces a constant at that
-very `t`.
+proof is `stoppedValue_ae_eq_condExp` at the time the definition quantifies over, and nothing
+else: `ENNReal` is `WithTop ℝ≥0`, so the stopping time of the definition is the stopping time of
+the theorem.
 
-The bound is the local one -- a constant per level, not one constant for all time -- which is
-what `mpFamily` supplies, and `ENNReal` is `WithTop ℝ≥0`, so the stopping time of the definition
-is the stopping time of the theorem. -/
+**No bound on the paths is asked for.**  Until the fourth run of 2026-09-20 there was a fourth
+hypothesis, a constant per level, and it was there because the expectation identity behind
+`stoppedValue_ae_eq_condExp` was proved by dominated convergence.  Vitali convergence needs no
+majorant, so the hypothesis is gone; a consumer that has the bound anyway -- `mpFamily` supplies
+one -- simply no longer has to produce it. -/
 theorem isOptionalSamplingFor_of_martingale (hY : Martingale Y 𝓕 P)
     (hprog : IsStronglyProgressive 𝓕 Y)
-    (hrc : ∀ (ω : Ω) (s : ℝ≥0), Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
-    (hbdd : ∀ j : ℝ≥0, ∃ C, ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C) :
-    IsOptionalSamplingFor Y 𝓕 P := by
-  intro t σ hσ hσt
-  obtain ⟨C, hC⟩ := hbdd t
-  exact stoppedValue_ae_eq_condExp hY hprog hrc hC hσ hσt
+    (hrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω))) :
+    IsOptionalSamplingFor Y 𝓕 P :=
+  fun _ _ hσ hσt ↦ stoppedValue_ae_eq_condExp hY hprog hrc hσ hσt
 
 /-- **Emptiness check for `isOptionalSamplingFor_of_martingale`.**  The zero process satisfies
-the four hypotheses, so the conclusion is not vacuous. -/
+the three hypotheses, so the conclusion is not vacuous. -/
 theorem isOptionalSamplingFor_zero :
     IsOptionalSamplingFor (fun (_ : ℝ≥0) (_ : Ω) ↦ (0 : ℝ)) 𝓕 P :=
   isOptionalSamplingFor_of_martingale (martingale_zero ℝ 𝓕 P)
-    (isStronglyProgressive_const 𝓕 0) (fun _ _ ↦ tendsto_const_nhds)
-    (fun _ ↦ ⟨0, fun _ _ _ ↦ by simp⟩)
+    (isStronglyProgressive_const 𝓕 0)
+    (Filter.Eventually.of_forall fun _ _ ↦ tendsto_const_nhds)
 
 /-- **`IsStronglyMeasurableAlongStoppingTimes` holds over `ℝ≥0` for a real valued progressive
 process**, and it is Mathlib's `measurable_stoppedValue` with nothing added.
@@ -15297,22 +16710,35 @@ theorem isStronglyMeasurableAlongStoppingTimes_of_isStronglyProgressive {C : ℝ
 
 /-! ### The stopped martingale theorem -/
 
-/-- **The stopped process of a martingale is a martingale**, in continuous time. -/
+/-- **The stopped process of a martingale is a martingale**, in continuous time.
+
+The hypotheses are the martingale property, progressivity and **almost everywhere** right
+continuity of the paths, and **no bound on the paths**.  Until the fourth run of 2026-09-20 there
+was a fourth hypothesis, a constant per window, and it was there because the expectation identity
+at a bounded stopping time was proved by dominated convergence against that constant.
+`integral_stoppedValue_eq_of_rightContinuous` proves it by Vitali convergence instead, so the
+bound has no consumer left here: it is replaced by the uniform integrability of the dyadic
+approximations, which is free, and by `integrable_stoppedValue_of_rightContinuous` where the
+constant majorant used to give integrability.
+
+**And right continuity is read almost everywhere**, since the fifth run of the same day.  Vitali
+convergence quantifies almost everywhere, so the everywhere form was never spent; what the proof
+uses is `tendsto_stoppedValue_dyadStop` at a sample point, gathered by
+`ae_tendsto_stoppedValue_dyadStop`.  A consumer with the everywhere form supplies
+`Filter.Eventually.of_forall`; a consumer whose paths are right continuous only off a null set --
+the path dependent construction, where the null set is the explosion -- can now apply the theorem
+at all. -/
 theorem martingale_stoppedProcess (hY : Martingale Y 𝓕 P) (hprog : IsStronglyProgressive 𝓕 Y)
-    (hrc : ∀ (ω : Ω) (s : ℝ≥0), Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
-    (hbdd : ∀ j : ℝ≥0, ∃ C, ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C)
+    (hrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
     {τ : Ω → ENNReal} (hτ : IsStoppingTime 𝓕 τ) :
     Martingale (stoppedProcess Y τ) 𝓕 P := by
   have hadp := hprog.stronglyAdapted_stoppedProcess hτ
   refine ⟨hadp, fun i j hij ↦ ?_⟩
-  obtain ⟨C, hC⟩ := hbdd j
   have hSPeq : ∀ (k : ℝ≥0) (ω : Ω),
       stoppedProcess Y τ k ω = Y ((min (k : ENNReal) (τ ω)).untopA) ω := fun _ _ ↦ rfl
-  have hSPbd : ∀ (k : ℝ≥0), k ≤ j → ∀ ω, |stoppedProcess Y τ k ω| ≤ C := fun k hk ω ↦ by
-    rw [hSPeq]
-    exact hC _ ((WithTop.untopA_le (min_le_left (k : ENNReal) (τ ω))).trans hk) ω
-  have hint : ∀ (k : ℝ≥0), k ≤ j → Integrable (stoppedProcess Y τ k) P := fun k hk ↦
-    integrable_of_abs_le ((hadp k).mono (𝓕.le k)).measurable (hSPbd k hk)
+  have hint : ∀ (k : ℝ≥0), k ≤ j → Integrable (stoppedProcess Y τ k) P := fun k _ ↦
+    integrable_stoppedValue_of_rightContinuous hY hrc ((isStoppingTime_const 𝓕 k).min hτ)
+      (fun _ ↦ min_le_left _ _)
   refine (ae_eq_condExp_of_forall_setIntegral_eq (𝓕.le i) (hint j le_rfl)
     (fun S _ _ ↦ (hint i hij).integrableOn) ?_ (hadp i).aestronglyMeasurable).symm
   intro S hS _
@@ -15341,9 +16767,9 @@ theorem martingale_stoppedProcess (hY : Martingale Y 𝓕 P) (hprog : IsStrongly
     · rw [hρdef, Set.piecewise_eq_of_notMem _ _ _ hω]
       exact hij'
   have hkey : ∫ ω, stoppedValue Y ρ ω ∂P = ∫ ω, Y j ω ∂P :=
-    integral_stoppedValue_eq hY hprog hrc hC hρst hρj
+    integral_stoppedValue_eq_of_rightContinuous hY hrc hρst hρj
   have hconst : ∫ ω, Y i ω ∂P = ∫ ω, Y j ω ∂P := by
-    have h := integral_stoppedValue_eq (Y := Y) hY hprog hrc hC
+    have h := integral_stoppedValue_eq_of_rightContinuous (Y := Y) hY hrc
       (ρ := fun _ ↦ (i : ENNReal)) (isStoppingTime_const 𝓕 i) (fun _ ↦ hij')
     simpa only [show (stoppedValue Y (fun _ : Ω ↦ (i : ENNReal))) = Y i from rfl] using h
   have hvalB : ∀ ω ∈ B, stoppedValue Y ρ ω = stoppedProcess Y τ j ω := by
@@ -15356,15 +16782,9 @@ theorem martingale_stoppedProcess (hY : Martingale Y 𝓕 P) (hprog : IsStrongly
     intro ω hω
     simp only [stoppedValue, hρdef, Set.piecewise_eq_of_notMem _ _ _ hω]
     rfl
-  have hYint : ∀ (k : ℝ≥0), k ≤ j → Integrable (Y k) P := fun k hk ↦
-    integrable_of_abs_le ((hY.stronglyMeasurable k).mono (𝓕.le k)).measurable
-      (fun ω ↦ hC k hk ω)
+  have hYint : ∀ (k : ℝ≥0), k ≤ j → Integrable (Y k) P := fun k _ ↦ hY.integrable k
   have hρint : Integrable (stoppedValue Y ρ) P :=
-    integrable_of_abs_le
-      ((stronglyMeasurable_stoppedValue_of_le hprog hρst hρj).mono (𝓕.le j)).measurable
-      (fun ω ↦ by
-        show |Y ((ρ ω).untopA) ω| ≤ C
-        exact hC _ (WithTop.untopA_le (hρj ω)) ω)
+    integrable_stoppedValue_of_rightContinuous hY hrc hρst hρj
   have hsplit1 : ∫ ω in B, stoppedProcess Y τ j ω ∂P + ∫ ω in Bᶜ, Y i ω ∂P
       = ∫ ω, Y j ω ∂P := by
     rw [← hkey, ← integral_add_compl hBm hρint,
@@ -15404,22 +16824,21 @@ theorem martingale_stoppedProcess (hY : Martingale Y 𝓕 P) (hprog : IsStrongly
   rw [hsp i hij, hsp j le_rfl, hB2, hB1, setIntegral_congr_fun hA₀m hA₀eq]
 
 /-- **Emptiness check: the hypotheses are jointly satisfiable.**  The zero process is a
-martingale, is progressive, has constant -- hence right continuous -- paths and is bounded by
-`0` at every level, so the theorem is not a statement about an empty class. -/
+martingale, is progressive and has constant -- hence right continuous -- paths, so the theorem
+is not a statement about an empty class. -/
 theorem martingale_stoppedProcess_zero {τ : Ω → ENNReal} (hτ : IsStoppingTime 𝓕 τ) :
     Martingale (stoppedProcess (fun (_ : ℝ≥0) (_ : Ω) ↦ (0 : ℝ)) τ) 𝓕 P :=
   martingale_stoppedProcess (martingale_zero ℝ 𝓕 P) (isStronglyProgressive_const 𝓕 0)
-    (fun _ _ ↦ tendsto_const_nhds) (fun _ ↦ ⟨0, fun _ _ _ ↦ by simp⟩) hτ
+    (Filter.Eventually.of_forall fun _ _ ↦ tendsto_const_nhds) hτ
 
 /-- **Consistency check: at `τ = ⊤` the conclusion is the hypothesis.**  A stopping time that
 never occurs must leave the process alone, and this is the instance at which an inverted `min`
 or a misread `untopA` in the bookkeeping above would show. -/
 theorem martingale_of_martingale_stoppedProcess_top (hY : Martingale Y 𝓕 P)
     (hprog : IsStronglyProgressive 𝓕 Y)
-    (hrc : ∀ (ω : Ω) (s : ℝ≥0), Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
-    (hbdd : ∀ j : ℝ≥0, ∃ C, ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C) :
+    (hrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω))) :
     Martingale Y 𝓕 P := by
-  have h := martingale_stoppedProcess hY hprog hrc hbdd
+  have h := martingale_stoppedProcess hY hprog hrc
     (τ := fun _ ↦ (⊤ : WithTop ℝ≥0)) (by simp [IsStoppingTime])
   rwa [stoppedProcess_const_top] at h
 
@@ -15834,9 +17253,11 @@ theorem abs_setIntegral_compensatorE_le {lam : E → ℝ} {g : E → ℝ} {D : �
 /-- **A test process of the local jump martingale problem is bounded on every bounded stretch of
 time**, by `C + 2LC·j` with `C` a bound for the test function and `L` one for the rate.
 
-This is the third hypothesis of `martingale_stoppedProcess` and the fourth of
-`isOptionalSamplingFor_of_martingale`, and it is *local* -- one constant per level, not one
-constant for all time, which is all either statement asks for and all that is true: the
+Since the fourth run of 2026-09-20 this is a hypothesis of **neither**
+`martingale_stoppedProcess` nor `isOptionalSamplingFor_of_martingale`; both passed to the limit
+by dominated convergence against this constant and now pass to it by Vitali convergence.  It is
+kept because it is true and because it is the statement a window argument wants, and it is
+*local* -- one constant per level, not one constant for all time, which is all that is true: the
 compensator grows with the window.
 
 Nothing is assumed about the state space.  The two positivity facts the estimate needs, `0 ≤ L`
@@ -15879,12 +17300,13 @@ theorem is applied to.  Applied to the truncated rate `truncRate lam n`, whose h
 (`measurableSet_lt_rateTime_truncRate`), it gives the martingale of the `n`-th level of the local
 problem.
 
-The three hypotheses of `martingale_stoppedProcess` are exactly the three statements of this
-section: `isStronglyProgressive_mpFamily_jumpProcessE`,
-`tendsto_nhdsGE_mpFamily_jumpProcessE` and the window bound
-`abs_setIntegral_compensatorE_le`.  Uniform integrability does not occur -- the window bound is
-`C + 2LC·j`, a constant, so the passage to the limit inside `martingale_stoppedProcess` is
-dominated convergence with a constant majorant. -/
+The two hypotheses `martingale_stoppedProcess` asks of a process are two statements of this
+section: `isStronglyProgressive_mpFamily_jumpProcessE` and
+`tendsto_nhdsGE_mpFamily_jumpProcessE`.  The window bound
+`exists_bound_mpFamily_jumpProcessE` is **not** among them since the fourth run of 2026-09-20 --
+the passage to the limit inside `martingale_stoppedProcess` is Vitali convergence and needs no
+majorant -- and the bound is kept for its own sake, as the statement that the test process is
+bounded by `C + 2LC·j` over a window. -/
 theorem martingale_stoppedProcess_mpFamily_jumpProcessE {lam : E → ℝ} (hlam : Measurable lam)
     {L : ℝ} (hlam0 : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L)
     (nu : Measure E) [IsProbabilityMeasure nu]
@@ -15897,19 +17319,18 @@ theorem martingale_stoppedProcess_mpFamily_jumpProcessE {lam : E → ℝ} (hlam 
   have hmart := jumpProcessE_isMPSolution hlam hlam0 hL mu nu Y hY
   have hprog := isStronglyProgressive_mpFamily_jumpProcessE hlam (fun x ↦ (hlam0 x).le) hL hY
   have hrcY := tendsto_nhdsGE_mpFamily_jumpProcessE hlam (fun x ↦ (hlam0 x).le) hL hY
-  exact martingale_stoppedProcess hmart hprog hrcY
-    (exists_bound_mpFamily_jumpProcessE (fun x ↦ (hlam0 x).le) hL hY) hτ
+  exact martingale_stoppedProcess hmart hprog (Filter.Eventually.of_forall hrcY) hτ
 
 /-- **Optional sampling holds for the test processes of the local jump martingale problem.**  The
 hypothesis `hOS` of `isQuasiLeftContinuous_of_isMPSolutionFor` on the data of Milestone 4, and the
 place where the concrete index `ℝ≥0` pays for what a general index does not give.
 
-The four inputs of `isOptionalSamplingFor_of_martingale` are the four statements this section
+The three inputs of `isOptionalSamplingFor_of_martingale` are three statements this section
 produces: the martingale property is `jumpProcessE_isMPSolution`, the progressivity is
-`isStronglyProgressive_mpFamily_jumpProcessE`, the right continuity of the paths is
-`tendsto_nhdsGE_mpFamily_jumpProcessE`, and the local bound is
-`exists_bound_mpFamily_jumpProcessE`.  They are the same four that
-`martingale_stoppedProcess_mpFamily_jumpProcessE` spends, which is why this costs no hypothesis
+`isStronglyProgressive_mpFamily_jumpProcessE`, and the right continuity of the paths is
+`tendsto_nhdsGE_mpFamily_jumpProcessE`.  They are three of the four that
+`martingale_stoppedProcess_mpFamily_jumpProcessE` spends -- the local bound
+`exists_bound_mpFamily_jumpProcessE` is not among them -- which is why this costs no hypothesis
 beyond the ones already carried. -/
 theorem isOptionalSamplingFor_mpFamily_jumpProcessE {lam : E → ℝ} (hlam : Measurable lam)
     {L : ℝ} (hlam0 : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L)
@@ -15920,8 +17341,8 @@ theorem isOptionalSamplingFor_mpFamily_jumpProcessE {lam : E → ℝ} (hlam : Me
     IsOptionalSamplingFor Y (jumpFiltrationE lam hlam) (jumpMeasure mu nu) :=
   isOptionalSamplingFor_of_martingale (jumpProcessE_isMPSolution hlam hlam0 hL mu nu Y hY)
     (isStronglyProgressive_mpFamily_jumpProcessE hlam (fun x ↦ (hlam0 x).le) hL hY)
-    (tendsto_nhdsGE_mpFamily_jumpProcessE hlam (fun x ↦ (hlam0 x).le) hL hY)
-    (exists_bound_mpFamily_jumpProcessE (fun x ↦ (hlam0 x).le) hL hY)
+    (Filter.Eventually.of_forall
+      (tendsto_nhdsGE_mpFamily_jumpProcessE hlam (fun x ↦ (hlam0 x).le) hL hY))
 
 /-- **The hitting time of the running supremum is a stopping time of the *truncated*
 filtration** as well as of the local one.  `isStoppingTime_rateTime` says it for
@@ -16217,6 +17638,167 @@ theorem martingale_of_martingale_of_stopped {𝓖 𝓗 : Filtration ℝ≥0 m} {
 end Tower
 
 end LocalAssembly
+
+section StableMartingale
+
+/-! ## The stopped martingale theorem as a stable property
+
+`martingale_stoppedProcess` says that stopping preserves the martingale property; Mathlib's
+`ProbabilityTheory.IsStable` is the predicate that says exactly this about a property of
+processes, and `ProbabilityTheory.IsStable.locally` turns it into the statement that stopping
+preserves the *local* property.  This section performs the packaging over the index `ℝ≥0`.
+
+**Why it stands here and not in `StoppedMartingale`.**  The process `IsStable` quantifies over is
+not `stoppedProcess Z τ` but `stoppedProcess (fun i ↦ {ω | ⊥ < τ ω}.indicator (Z i)) τ`, and the
+indicator is cut out by `martingale_indicator_bot`, which is declared in `Tower` above.  Nothing
+else in this section depends on the jump construction.
+
+**What is stable is a conjunction of three statements and not of two.**  The roadmap named two,
+the martingale property and right continuity of the paths, and that is one short:
+`martingale_stoppedProcess` asks a process for `IsStronglyProgressive` as well, and its docstring
+records where each of the two non-martingale hypotheses is spent.  All three survive stopping,
+each for its own reason -- the martingale half is `martingale_stoppedProcess` itself,
+progressivity is Mathlib's `IsStronglyProgressive.stoppedProcess` together with
+`isStronglyProgressive_indicator`, and right continuity is `tendsto_nhdsGE_stoppedProcess` -- so
+the conjunction is stable and no conjunct can be dropped from it.
+
+The third conjunct is the **almost everywhere** form, as in `martingale_stoppedProcess`.  Its
+stability is the sample point statement `tendsto_nhdsGE_stoppedProcess` under a
+`filter_upwards`: the null set on which right continuity fails is the same before and after
+stopping, because stopping does not move a path off the set where it is well behaved.
+
+**The conjunction cannot be split again.**  `ProbabilityTheory.IsStable.locally_and_iff` asks
+that *each* side be stable, and the martingale property alone is not known to be: it is precisely
+the conjunct whose proof consumes the other two.  What the consumer needs is the one direction
+`ProbabilityTheory.Locally.mono` supplies, and `locally_martingale_stoppedProcess` is that
+direction: a process that is locally a right continuous progressive martingale is, after
+stopping, locally a martingale -- which is the shape `IsLocalMPSolution` of Milestone 2 reads. -/
+
+variable {Ω : Type*} {m : MeasurableSpace Ω}
+variable {𝓕 : Filtration ℝ≥0 m} {P : Measure Ω} [IsFiniteMeasure P] {Y : ℝ≥0 → Ω → ℝ}
+
+/-- **An event of `𝓕 ⊥` may be cut out of a progressive process.**  This is the progressive
+counterpart of `martingale_indicator_bot`, and it is what the indicator in the definition of
+`ProbabilityTheory.IsStable` costs on the progressivity side.
+
+The proof does not touch the product σ-algebra of the definition: the indicator is the product
+with the time independent process `fun _ ω ↦ S.indicator 1 ω`, which is progressive because it is
+adapted and constant -- hence continuous -- in time
+(`StronglyAdapted.isStronglyProgressive_of_continuous`), and `IsStronglyProgressive.mul` does the
+rest. -/
+theorem isStronglyProgressive_indicator (hprog : IsStronglyProgressive 𝓕 Y) {S : Set Ω}
+    (hS : MeasurableSet[𝓕 ⊥] S) :
+    IsStronglyProgressive 𝓕 (fun i ↦ S.indicator (Y i)) := by
+  have hind : IsStronglyProgressive 𝓕 (fun (_ : ℝ≥0) ω ↦ S.indicator (fun _ ↦ (1 : ℝ)) ω) :=
+    StronglyAdapted.isStronglyProgressive_of_continuous
+      (fun _ ↦ stronglyMeasurable_const.indicator (𝓕.mono bot_le _ hS))
+      (fun _ ↦ continuous_const)
+  have heq : (fun i ↦ S.indicator (Y i))
+      = fun i ω ↦ Y i ω * S.indicator (fun _ ↦ (1 : ℝ)) ω := by
+    funext i ω
+    by_cases hω : ω ∈ S
+    · simp [Set.indicator_of_mem hω]
+    · simp [Set.indicator_of_notMem hω]
+  rw [heq]
+  exact hprog.mul hind
+
+/-- **Right continuity of the paths survives stopping**, at every sample point and with no
+hypothesis on the stopping time.
+
+The two cases are the whole proof and they are not symmetric.  Where the time has already
+occurred, `τ ω ≤ s`, the stopped path is constant on `Set.Ici s` and the limit is trivial.  Where
+it has not, `s < τ ω`, the stopped path agrees with the path itself on a right neighbourhood of
+`s`, and the neighbourhood exists because `ENNReal` is densely ordered: some `c` lies strictly
+between `s` and `τ ω`, it is finite because it is below `τ ω`, and `Set.Ico s c` is the
+neighbourhood (`Ico_mem_nhdsGE`).  This is the only place the order structure of the index is
+used. -/
+theorem tendsto_nhdsGE_stoppedProcess {τ : Ω → ENNReal} (ω : Ω)
+    (hrc : ∀ s : ℝ≥0, Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω))) (s : ℝ≥0) :
+    Tendsto (fun r ↦ stoppedProcess Y τ r ω) (𝓝[≥] s) (𝓝 (stoppedProcess Y τ s ω)) := by
+  have hSP : ∀ k : ℝ≥0, stoppedProcess Y τ k ω = Y ((min (k : ENNReal) (τ ω)).untopA) ω :=
+    fun _ ↦ rfl
+  rcases le_or_gt (τ ω) (s : ENNReal) with hle | hlt
+  · refine Tendsto.congr' ?_ tendsto_const_nhds
+    filter_upwards [self_mem_nhdsWithin] with r hr
+    have hr' : (s : ENNReal) ≤ (r : ENNReal) := by exact_mod_cast hr
+    rw [hSP, hSP, min_eq_right (hle.trans hr'), min_eq_right hle]
+  · obtain ⟨c, hsc, hcτ⟩ := exists_between hlt
+    have hcne : c ≠ ⊤ := ne_top_of_lt hcτ
+    lift c to ℝ≥0 using hcne
+    have hsc' : s < c := by exact_mod_cast hsc
+    have hval : stoppedProcess Y τ s ω = Y s ω := by
+      rw [hSP, min_eq_left hlt.le]
+      rfl
+    rw [hval]
+    refine Tendsto.congr' ?_ (hrc s)
+    filter_upwards [Ico_mem_nhdsGE hsc'] with r hr
+    have hrτ : (r : ENNReal) < τ ω := lt_trans (by exact_mod_cast hr.2) hcτ
+    rw [hSP, min_eq_left hrτ.le]
+    rfl
+
+/-- **The martingale property, progressivity and right continuity of the paths form a stable
+property**, in the sense of `ProbabilityTheory.IsStable`, over the index `ℝ≥0`.
+
+This is `martingale_stoppedProcess` in the packaging the localization API of
+`Mathlib/Probability/Process/LocalProperty.lean` reads.  The indicator of `{ω | ⊥ < τ ω}` that
+`IsStable` carries is not cosmetic: the first member of a localizing sequence may stop at once,
+and then the stopped process has to be cut down to the event that it has not.  The set lies in
+`𝓕 ⊥` because it is the complement of `{ω | τ ω ≤ ⊥}`, which is the defining property of a
+stopping time read at `⊥`. -/
+theorem isStable_martingale_rightContinuous :
+    IsStable 𝓕 (fun Z : ℝ≥0 → Ω → ℝ ↦ Martingale Z 𝓕 P ∧ IsStronglyProgressive 𝓕 Z ∧
+      ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ Z r ω) (𝓝[≥] s) (𝓝 (Z s ω))) := by
+  rintro Z ⟨hmart, hprog, hrc⟩ τ hτ
+  set S : Set Ω := {ω | ⊥ < τ ω} with hSdef
+  have hS : MeasurableSet[𝓕 ⊥] S := by
+    have hcompl : S = {ω | τ ω ≤ ((⊥ : ℝ≥0) : ENNReal)}ᶜ := by
+      ext ω
+      show (⊥ : WithTop ℝ≥0) < τ ω ↔ ¬ τ ω ≤ ((⊥ : ℝ≥0) : ENNReal)
+      exact not_le.symm
+    rw [hcompl]
+    exact (hτ ⊥).compl
+  have hprogS : IsStronglyProgressive 𝓕 (fun i ↦ S.indicator (Z i)) :=
+    isStronglyProgressive_indicator hprog hS
+  have hrcS : ∀ᵐ ω ∂P, ∀ s : ℝ≥0,
+      Tendsto (fun r ↦ S.indicator (Z r) ω) (𝓝[≥] s) (𝓝 (S.indicator (Z s) ω)) := by
+    filter_upwards [hrc] with ω hω s
+    by_cases hmem : ω ∈ S
+    · simpa only [Set.indicator_of_mem hmem] using hω s
+    · simp only [Set.indicator_of_notMem hmem]
+      exact tendsto_const_nhds
+  refine ⟨?_, hprogS.stoppedProcess hτ, ?_⟩
+  · exact martingale_indicator_bot (martingale_stoppedProcess hmart hprog hrc hτ) hS
+  · filter_upwards [hrcS] with ω hω s using tendsto_nhdsGE_stoppedProcess ω hω s
+
+omit [IsFiniteMeasure P] in
+/-- **Emptiness check: the stable property is inhabited.**  The zero process is a martingale, is
+progressive and has constant -- hence right continuous -- paths.  `IsStable` is a universally
+quantified statement and would hold vacuously of a property no process has. -/
+theorem stableMartingaleProp_zero :
+    (fun Z : ℝ≥0 → Ω → ℝ ↦ Martingale Z 𝓕 P ∧ IsStronglyProgressive 𝓕 Z ∧
+        ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ Z r ω) (𝓝[≥] s) (𝓝 (Z s ω)))
+      (fun _ _ ↦ (0 : ℝ)) :=
+  ⟨martingale_zero ℝ 𝓕 P, isStronglyProgressive_const 𝓕 0,
+    Filter.Eventually.of_forall fun _ _ ↦ tendsto_const_nhds⟩
+
+/-- **A stopped local martingale is a local martingale**, and no localizing sequence is built by
+hand: `ProbabilityTheory.IsStable.locally` carries the localizing sequence of the hypothesis
+through the stopping, and `ProbabilityTheory.Locally.mono` forgets the two conjuncts the
+consumer does not read.
+
+The hypothesis is the *local* form of the conjunction and not of the martingale property alone,
+and it has to be: the conjunction is what is stable.  This is the statement under which
+`IsLocalMPSolution` of Milestone 2 is preserved by stopping. -/
+theorem locally_martingale_stoppedProcess {Z : ℝ≥0 → Ω → ℝ}
+    (hZ : Locally (fun W ↦ Martingale W 𝓕 P ∧ IsStronglyProgressive 𝓕 W ∧
+      ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ W r ω) (𝓝[≥] s) (𝓝 (W s ω))) 𝓕 Z P)
+    {τ : Ω → ENNReal} (hτ : IsStoppingTime 𝓕 τ) :
+    Locally (fun W ↦ Martingale W 𝓕 P) 𝓕
+      (stoppedProcess (fun i ↦ {ω | ⊥ < τ ω}.indicator (Z i)) τ) P :=
+  Locally.mono (fun _ h ↦ h.1)
+    (isStable_martingale_rightContinuous.locally (P := P) Z hZ τ hτ)
+
+end StableMartingale
 
 section LocalSolution
 
@@ -17016,7 +18598,7 @@ variable {mu : Kernel E E} [IsMarkovKernel mu]
 /-- **The stopped martingale theorem at a rate with zeros.**  Word for word
 `martingale_stoppedProcess_mpFamily_jumpProcessE`, with the positivity of the rate replaced by its
 nonnegativity together with the normalisation of the jump kernel at the absorbing states; the
-positivity was spent only in `jumpProcessE_isMPSolution`, and the three inputs of
+positivity was spent only in `jumpProcessE_isMPSolution`, and the two inputs of
 `martingale_stoppedProcess` never asked for more than `0 ≤ lam`. -/
 theorem martingale_stoppedProcess_mpFamily_jumpProcessE_of_nonneg [MeasurableEq E]
     {lam : E → ℝ} (hlam : Measurable lam) {L : ℝ} (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
@@ -17031,33 +18613,7 @@ theorem martingale_stoppedProcess_mpFamily_jumpProcessE_of_nonneg [MeasurableEq 
   have hmart := jumpProcessE_isMPSolution_of_nonneg hlam hlam0 hL mu habs nu Y hY
   have hprog := isStronglyProgressive_mpFamily_jumpProcessE hlam hlam0 hL hY
   have hrcY := tendsto_nhdsGE_mpFamily_jumpProcessE hlam hlam0 hL hY
-  have hnem : Nonempty E := by
-    by_contra hcon
-    rw [not_nonempty_iff] at hcon
-    have h0 : nu Set.univ = 0 := by rw [Set.univ_eq_empty_iff.2 hcon, measure_empty]
-    rw [measure_univ] at h0
-    exact one_ne_zero h0
-  obtain ⟨x0⟩ := hnem
-  have hL0 : (0 : ℝ) ≤ L := (hlam0 x0).trans (hL x0)
-  obtain ⟨p, ⟨hf, ⟨C, hC⟩, hp2⟩, hYeq⟩ := hY
-  have hC0 : (0 : ℝ) ≤ C := (abs_nonneg _).trans (hC x0)
-  have hgb : ∀ x, |p.2 x| ≤ 2 * L * C := by
-    rw [hp2]; exact fun x ↦ abs_jumpApply_le hlam0 hL hC x
-  have hcoef : (0 : ℝ) ≤ 2 * L * C := mul_nonneg (mul_nonneg (by norm_num) hL0) hC0
-  have hbdd : ∀ j : ℝ≥0, ∃ C', ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C' := by
-    intro j
-    refine ⟨C + 2 * L * C * (j : ℝ), fun s hs ω ↦ ?_⟩
-    have hb := abs_setIntegral_compensatorE_le (lam := lam) hgb s ω
-    have h1 := hC (jumpProcessE lam (s : ℝ) ω)
-    have h2 := abs_sub (p.1 (jumpProcessE lam (s : ℝ) ω))
-      (∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ s,
-        p.2 (jumpProcessE lam (u : ℝ) ω) ∂lebesgueClock.q)
-    have hsj : ((s : ℝ)) ≤ (j : ℝ) := by exact_mod_cast hs
-    have hmul : 2 * L * C * (s : ℝ) ≤ 2 * L * C * (j : ℝ) :=
-      mul_le_mul_of_nonneg_left hsj hcoef
-    rw [hYeq s ω]
-    linarith
-  exact martingale_stoppedProcess hmart hprog hrcY hbdd hτ
+  exact martingale_stoppedProcess hmart hprog (Filter.Eventually.of_forall hrcY) hτ
 
 /-- **The truncated rate has the same zeros as the rate**, from the level `1` on: the truncation
 is a minimum with a positive number. -/
@@ -22102,24 +23658,39 @@ end PathRightContinuous
 
 /-! ### The window bound, and where the Hawkes assembly stands
 
-`martingale_stoppedProcess` asks for three things, and the two above are the first two.  The third
-is `hbdd : ∀ j, ∃ C, ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C` -- **one constant that works at every sample
-point**, and it is what replaces uniform integrability in that theorem: the passage to the limit
-inside it is dominated convergence with a constant majorant.
+`martingale_stoppedProcess` asked for three things until the fourth run of 2026-09-20, and the
+third was `hbdd : ∀ j, ∃ C, ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C` -- **one constant that works at every
+sample point** -- because the passage to the limit inside it was dominated convergence with a
+constant majorant.
 
-`bdd_mpFamilyF_of_bdd` supplies it from a bound on the compensating integrand, and for the Hawkes
-process **that bound does not exist**: `jumpApplyF` carries the rate itself, and
+For the Hawkes process **that bound does not exist**: `jumpApplyF` carries the rate itself, and
 `∫₀ᵗ (ν + ∑_{T k < u} φ (u − T k)) du` is unbounded in the sample point at every fixed `t`, however
 small `t` is -- a sample point whose first jumps are early and crowded has a large window integral.
 No hypothesis on `φ` repairs this; it is not the non explosion but the unboundedness of the rate.
+That is why the section below builds the bound only under a bound on the compensating integrand
+(`bdd_mpFamilyF_of_bdd`), which the Hawkes data do not satisfy.
 
-So the third input is not to be obtained in this shape, and the way out is the one the state
-dependent case took at exactly this point: **truncate the rate and localize**.  There
-`jumpProcessE_isMPSolution` is proved under `lam ≤ L`, `truncRate lam n` makes that hypothesis true
-at every level, `rateTime lam n` is the localizing sequence, and
+**This obstruction is gone, and it is gone at the source.**  The passage to the limit is Vitali
+convergence, whose input is the uniform integrability of conditional expectations of the single
+function `Y j` (`uniformIntegrable_stoppedValue_dyadStop`), and that holds for every martingale.
+`martingale_stoppedProcess` therefore asks the Hawkes test process for progressivity and right
+continuity and for nothing else.  The bounds of this section keep their own value -- they say
+what they say, uniformly in the sample point -- but they are no longer the thing that stands
+between the Hawkes assembly and the stopped martingale theorem.
+
+**And the right continuity it asks for is the one the Hawkes data have.**  Until the fifth run
+of 2026-09-20 the hypothesis was right continuity at **every** sample point, and the Hawkes test
+process does not have that: `tendsto_nhdsGE_mpFamilyF_hawkes` produces it at a sample point `ω`
+out of `hint`, the local integrability of the rate along that path, and `hint` **is** the non
+explosion at `ω` (`not_intervalIntegrable_hawkesSelfRate_of_not_summable`), which holds almost
+everywhere and not everywhere.  The hypothesis is now `∀ᵐ ω ∂P`, so the almost sure non
+explosion discharges it directly, and the second of the two remaining inputs is no longer a
+mismatch of quantifiers.
+
+The localization is still wanted, and for a different reason: `jumpProcessE_isMPSolution` is
+proved under `lam ≤ L`, `truncRate lam n` makes that hypothesis true at every level, and
 `stoppedProcess_mpFamily_truncRate_eq` identifies the stopped test processes of the two problems.
-The path dependent counterpart of `truncRate` and of `rateTime` is what the assembly needs, and it
-is the next item of this section. -/
+The path dependent counterpart of `truncRate` and of `rateTime` is what the assembly needs. -/
 
 section PathWindowBound
 
@@ -22141,9 +23712,10 @@ theorem abs_setIntegral_compensatorF_le {Ω : Type*} {W : ℝ → Ω → ℝ} {D
     show ((⊥ : ℝ≥0) : ℝ) = 0 from rfl, sub_zero,
     ENNReal.toReal_ofReal (NNReal.coe_nonneg t)] at hle
 
-/-- **The third input of `martingale_stoppedProcess` for a path dependent test process**: at a
-**uniformly** bounded compensating integrand the test process is bounded by `C + D · j` on every
-time window `[0, j]`, uniformly in the sample point.
+/-- **A window bound for a path dependent test process**: at a **uniformly** bounded compensating
+integrand the test process is bounded by `C + D · j` on every time window `[0, j]`, uniformly in
+the sample point.  This was the third input of `martingale_stoppedProcess` until the fourth run of
+2026-09-20, and that theorem no longer asks for it.
 
 The hypothesis is a bound in `(u, ω)` together, and that is where the Hawkes case fails; see the
 paragraph above.  The statement is stated all the same, because it is what the *truncated* path
@@ -22271,7 +23843,7 @@ theorem cumulativeRateF_truncRateF_of_le (h : t ≤ rateInverse Λ ω a) :
   rw [cumulativeRateF_truncRateF, min_eq_left h]
 
 /-- **The cumulated mass of the truncated rate never exceeds the level**, at every time and every
-sample point.  This is the statement the window bound of `martingale_stoppedProcess` needs, and it
+sample point.  This is the statement the window bound above needs, and it
 is uniform in the time -- the truncated problem carries no more mass after the hitting time,
 whereas the state dependent cap keeps accumulating at rate `n`. -/
 theorem cumulativeRateF_truncRateF_le
@@ -22432,8 +24004,8 @@ theorem abs_setIntegral_compensatorF_le_of_cumulated {W : ℝ → Ω → ℝ} {D
   rw [integral_const_mul]
   exact mul_le_mul_of_nonneg_left (hB (t : ℝ)) hD
 
-/-- **The third input of `martingale_stoppedProcess` for a path dependent test process, from a
-bound on the mass.**  The counterpart of `bdd_mpFamilyF_of_bdd` at a compensating integrand
+/-- **A window bound for a path dependent test process, from a bound on the mass.**
+The counterpart of `bdd_mpFamilyF_of_bdd` at a compensating integrand
 dominated by the rate: the test process is bounded by `C + D · B` on **every** time window, not
 only on `[0, j]` with a constant that grows with `j`.
 
@@ -27762,6 +29334,211 @@ theorem hawkesFiltrationH_augment_eq_hawkesPathFiltrationH_augment (hhm : Measur
     (ae_move_jumpMeasure_poissonJumpKernel nu)
 
 end BoundedHawkesFiltration
+
+/-! ### The two regularity inputs of the stopped martingale theorem, discharged
+
+`martingale_stoppedProcess` asks three things of a test process: the martingale property,
+progressivity, and right continuity of the paths almost everywhere.  The second and the third are
+regularity and the first is the theorem, and this section settles the two regularity ones for the
+bounded nonlinear Hawkes process -- **at every sample point, with no null set and no non
+explosion**.
+
+**Against the linear case the difference is exactly one hypothesis, and it is the one that was in
+the way.**  `isStronglyProgressive_mpFamilyF_hawkesStepPath` already holds on the data of
+`ex:hawkes` alone; the measurability layer never needed the non explosion, and its doc comment says
+so.  `tendsto_nhdsGE_mpFamilyF_hawkesStepPath` does not: it produces the right continuity at a
+sample point `ω` out of `hint`, the interval integrability of the self referential rate along that
+path, and `hint` **is** the non explosion at `ω`
+(`not_intervalIntegrable_hawkesSelfRate_of_not_summable`).  In the linear case that hypothesis has
+to be carried, and discharging it almost everywhere is the renewal equation and the Volterra
+resolvent -- theory this development does not have.
+
+Here it is `intervalIntegrable_hawkesSelfRateH`, which holds at every sample point from the
+measurability of the two data and the two bounds.  So the conclusion is the pointwise one, and a
+consumer who needs the almost everywhere form of `martingale_stoppedProcess` supplies
+`Filter.Eventually.of_forall`.
+
+`martingale_stoppedProcess_mpFamilyF_hawkesStepPathH` is the three of them together, and it is what
+the section is for: for the bounded nonlinear Hawkes process the **only** input of the stopped
+martingale theorem that is not discharged is the martingale property itself.  The four hypotheses on
+`h` are the ones `BoundedHawkesWitness` discharges twice, at `rateCap` and at `rateSat`. -/
+
+section BoundedHawkesInputs
+
+variable {E : Type*} [MeasurableSpace E] {ν c L : ℝ} {φ h : ℝ → ℝ}
+
+/-- **The bounded nonlinear Hawkes rate is jointly measurable for its own filtration.**  The
+counterpart of `measurable_uncurry_hawkesSelfRate_hawkesFiltration`, and the nonlinearity costs one
+composition: `measurable_uncurry_pointRate_pointFiltration` produces the self exciting sum, the
+baseline is added to it, and `h` is applied to the result -- which is the whole reason the bounded
+case can put a nonlinearity there at all, that it sits **outside** the window integral. -/
+theorem measurable_uncurry_hawkesSelfRateH_hawkesFiltrationH (hhm : Measurable h)
+    (hφm : Measurable φ) (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (i : ℝ≥0) :
+    Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod
+        (hawkesFiltrationH (E := E) hhm hφm hφ hcpos hc hL i)]
+      fun p : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) ↦ hawkesSelfRateH h ν φ (min (p.1 : ℝ) (i : ℝ)) p.2 :=
+  hhm.comp (measurable_const.add
+    (measurable_uncurry_pointRate_pointFiltration
+      (measurable_hawkesJumpTimeH_apply hhm hφm hφ hcpos hc hL)
+      (fun n ↦ (measurable_pi_apply n).comp measurable_fst)
+      (fun ω n ↦ hawkesJumpTimeH_nonneg h ν φ ω.2 ω (n + 1)) hφm i))
+
+/-- **And so is the integrand of the path dependent generator**, at a jump kernel that reads the
+state alone -- the case of `ex:hawkes`, where only the rate is self exciting. -/
+theorem measurable_uncurry_hawkesJumpApplyFH_hawkesFiltrationH (hhm : Measurable h)
+    (hφm : Measurable φ) (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) {g : E → ℝ} (hg : Measurable g) (i : ℝ≥0) :
+    Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod
+        (hawkesFiltrationH (E := E) hhm hφm hφ hcpos hc hL i)]
+      fun p : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) ↦
+        hawkesSelfRateH h ν φ (min (p.1 : ℝ) (i : ℝ)) p.2
+          * g (stepPath (hawkesJumpTimeH h ν φ p.2.2 p.2) p.2.1 (min (p.1 : ℝ) (i : ℝ))) :=
+  (measurable_uncurry_hawkesSelfRateH_hawkesFiltrationH hhm hφm hφ hcpos hc hL i).mul
+    (measurable_uncurry_hawkesStepPathH_hawkesFiltrationH hhm hφm hφ hcpos hc hL hg i)
+
+/-- **The compensating window of the bounded nonlinear generator is measurable for the past.** -/
+theorem measurable_compensator_hawkesJumpApplyFH_hawkesFiltrationH (hhm : Measurable h)
+    (hφm : Measurable φ) (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) {g : E → ℝ} (hg : Measurable g) (cl : Clock.Conv) (i : ℝ≥0) :
+    Measurable[hawkesFiltrationH (E := E) hhm hφm hφ hcpos hc hL i]
+      fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ∫ u in lebesgueClock.interval cl ⊥ i,
+        hawkesSelfRateH h ν φ (u : ℝ) ω
+          * g (stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (u : ℝ)) ∂lebesgueClock.q :=
+  measurable_compensator_of_uncurry_min
+    (W := fun u ω ↦ hawkesSelfRateH h ν φ u ω
+      * g (stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 u)) cl i
+    (measurable_uncurry_hawkesJumpApplyFH_hawkesFiltrationH hhm hφm hφ hcpos hc hL hg i)
+
+/-- **The test processes of the bounded nonlinear Hawkes martingale problem are strongly
+progressive**, for `hawkesFiltrationH` -- the one filtration the bounded case has.  The first of the
+two regularity inputs of `martingale_stoppedProcess`.
+
+Like its linear counterpart the proof spends no bound on the rate: `mpFamilyF` asks its hypotheses
+of the **integrand**, and joint measurability of the integrand is what
+`isStronglyProgressive_of_measurable_uncurry_mpFamilyF` consumes.  The four hypotheses on `h` are
+here because `hawkesFiltrationH` carries them in the argument of its definition, not because the
+argument needs them. -/
+theorem isStronglyProgressive_mpFamilyF_hawkesStepPathH (hhm : Measurable h)
+    (hφm : Measurable φ) (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (mu : Kernel E E) [IsMarkovKernel mu] (cl : Clock.Conv)
+    {Y : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ}
+    (hY : Y ∈ mpFamilyF
+      (jumpOperatorF (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦ hawkesSelfRateH h ν φ (s : ℝ) ω)
+        (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+          mu (stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (s : ℝ)))
+        (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+          stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (s : ℝ)))
+      lebesgueClock cl
+      (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+        stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (s : ℝ))) :
+    IsStronglyProgressive (hawkesFiltrationH (E := E) hhm hφm hφ hcpos hc hL) Y := by
+  obtain ⟨p, ⟨hf, ⟨C, hC⟩, hp2⟩, hYeq⟩ := hY
+  have hg : Measurable fun x ↦ ∫ y, (p.1 y - p.1 x) ∂(mu x) :=
+    measurable_integral_sub_kernel hf hC
+  refine isStronglyProgressive_of_measurable_uncurry_mpFamilyF (c := cl) (f := p.1)
+    (X := fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+      stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (s : ℝ))
+    (W := fun (u : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) ↦ hawkesSelfRateH h ν φ u ω
+      * ∫ y, (p.1 y - p.1 (stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 u))
+          ∂(mu (stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 u)))
+    (fun s ω ↦ ?_) (fun t ↦ ?_) (fun t ↦ ?_)
+  · rw [hYeq s ω, hp2]
+    rfl
+  · have hmeas := measurable_uncurry_hawkesStepPathH_hawkesFiltrationH hhm hφm hφ hcpos hc hL hf t
+    simpa only [NNReal.coe_min] using hmeas
+  · exact measurable_uncurry_hawkesJumpApplyFH_hawkesFiltrationH hhm hφm hφ hcpos hc hL hg t
+
+/-- **The paths of the test processes of the bounded nonlinear Hawkes problem are right
+continuous**, at **every** sample point.  The second regularity input of
+`martingale_stoppedProcess`, and the place where the discharge of `hint` is worth something rather
+than merely tidier.
+
+`tendsto_nhdsGE_of_intervalIntegrable_mpFamilyF` asks for the interval integrability of the
+compensating integrand along the path, and in the linear case that hypothesis has to be carried:
+`tendsto_nhdsGE_mpFamilyF_hawkesStepPath` takes it as `hint`, and `hint` is the non explosion
+(`not_intervalIntegrable_hawkesSelfRate_of_not_summable`).  Here it is
+`intervalIntegrable_hawkesSelfRateH`, a consequence of the two bounds, and the bounded test function
+of `mpFamilyF` carries the second factor (`abs_integral_sub_kernel_le`).
+
+So the statement is quantified over `ω` and not over a set of full measure, and there is no measure
+in it at all. -/
+theorem tendsto_nhdsGE_mpFamilyF_hawkesStepPathH (hhm : Measurable h)
+    (hφm : Measurable φ) (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (mu : Kernel E E) [IsMarkovKernel mu]
+    {Y : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ}
+    (hY : Y ∈ mpFamilyF
+      (jumpOperatorF (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦ hawkesSelfRateH h ν φ (s : ℝ) ω)
+        (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+          mu (stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (s : ℝ)))
+        (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+          stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (s : ℝ)))
+      lebesgueClock Clock.Conv.optional
+      (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+        stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (s : ℝ)))
+    (ω : (ℕ → E) × (ℕ → ℝ)) (s : ℝ≥0) :
+    Tendsto (fun r : ℝ≥0 ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)) := by
+  obtain ⟨p, ⟨hf, ⟨C, hC⟩, hp2⟩, hYeq⟩ := hY
+  have hstep : Measurable fun u : ℝ ↦ stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 u :=
+    measurable_stepPath_comp (u := fun u : ℝ ↦ u) measurable_id (fun _ ↦ measurable_const)
+      fun _ ↦ measurable_const
+  have hg : Measurable fun x : E ↦ ∫ y, (p.1 y - p.1 x) ∂(mu x) :=
+    measurable_integral_sub_kernel hf hC
+  refine tendsto_nhdsGE_of_intervalIntegrable_mpFamilyF (f := p.1)
+    (X := fun (r : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+      stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (r : ℝ))
+    (W := fun (u : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) ↦ hawkesSelfRateH h ν φ u ω
+      * ∫ y, (p.1 y - p.1 (stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 u))
+          ∂(mu (stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 u)))
+    ω (fun r ω' ↦ ?_) (fun s' ↦ ?_) ?_ ?_ s
+  · rw [hYeq r ω', hp2]
+    rfl
+  · have hcoe : Tendsto (fun r : ℝ≥0 ↦ (r : ℝ)) (𝓝[≥] s') (𝓝[≥] ((s' : ℝ))) :=
+      tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within _
+        ((NNReal.continuous_coe.tendsto s').mono_left nhdsWithin_le_nhds)
+        (by filter_upwards [self_mem_nhdsWithin] with r hr using NNReal.coe_le_coe.2 hr)
+    filter_upwards [hcoe.eventually
+      (eventuallyEq_nhdsGE_stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (s' : ℝ))] with r hr
+    rw [hr]
+  · exact (measurable_hawkesSelfRateH_time hhm hφm ω).mul (hg.comp hstep)
+  · exact fun r ↦ intervalIntegrable_mul_bdd
+      (intervalIntegrable_hawkesSelfRateH hhm hφm hφ hc hcpos.le hL ω r) (hg.comp hstep)
+      (fun x ↦ abs_integral_sub_kernel_le hC _)
+
+/-- **A martingale test process of the bounded nonlinear Hawkes problem stays a martingale when it
+is stopped.**  The three inputs of `martingale_stoppedProcess` together, and the shape the statement
+takes once the two regularity ones are discharged: **the martingale property is the only hypothesis
+left that is not about the data.**
+
+Nothing is asked of the stopping time beyond being one, nothing of `P` beyond finiteness, and
+nothing of the sample point at all -- the right continuity is pointwise here, so
+`Filter.Eventually.of_forall` is what connects it to the almost everywhere form the theorem
+reads. -/
+theorem martingale_stoppedProcess_mpFamilyF_hawkesStepPathH (hhm : Measurable h)
+    (hφm : Measurable φ) (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (mu : Kernel E E) [IsMarkovKernel mu]
+    {P : Measure ((ℕ → E) × (ℕ → ℝ))} [IsFiniteMeasure P]
+    {Y : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ}
+    (hY : Y ∈ mpFamilyF
+      (jumpOperatorF (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦ hawkesSelfRateH h ν φ (s : ℝ) ω)
+        (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+          mu (stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (s : ℝ)))
+        (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+          stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (s : ℝ)))
+      lebesgueClock Clock.Conv.optional
+      (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+        stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 (s : ℝ)))
+    (hmart : Martingale Y (hawkesFiltrationH (E := E) hhm hφm hφ hcpos hc hL) P)
+    {τ : ((ℕ → E) × (ℕ → ℝ)) → ENNReal}
+    (hτ : IsStoppingTime (hawkesFiltrationH (E := E) hhm hφm hφ hcpos hc hL) τ) :
+    Martingale (stoppedProcess Y τ) (hawkesFiltrationH (E := E) hhm hφm hφ hcpos hc hL) P :=
+  martingale_stoppedProcess hmart
+    (isStronglyProgressive_mpFamilyF_hawkesStepPathH hhm hφm hφ hcpos hc hL mu
+      Clock.Conv.optional hY)
+    (Filter.Eventually.of_forall fun ω s ↦
+      tendsto_nhdsGE_mpFamilyF_hawkesStepPathH hhm hφm hφ hcpos hc hL mu hY ω s) hτ
+
+end BoundedHawkesInputs
 
 /-! ### The law of the first jump time, and here it is unconditional
 
@@ -38422,3 +40199,540 @@ theorem mpSolution_of_tendsto_map_jumpPath_cylinders [MeasurableEq E] {lam : E �
   by_cases hx : x ∈ A <;> simp [hx]
 
 end ConvergenceProbe
+
+/-! ### Milestone 11: compact containment of a family, and its path space form
+
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal` -- the criterion every item of
+Milestone 11 reads -- carries `SkorokhodSpace.IsCompactContained` as a hypothesis, and that is a
+predicate on a **family of laws on the path space**.  What this file has is `CompactContainment`,
+a predicate on **one process** under **one** measure, over the one sided window `Set.Iic T ∩ D`
+and with a real level.  The twenty-third run of 2026-09-19 settled three of the four differences
+inside **SkorokhodSpace** -- the complement against `1 -`, `ℝ≥0∞` against `ℝ`, and the two sided
+window against the one sided one, the last by
+`SkorokhodSpace.preimage_extendNNReal_setOf_forall_mem_exhaustion`, which is an equality of sets.
+The fourth is left here and is not translation: **the compact set has to be chosen once for the
+whole family**, and `CompactContainment` cannot say that, being about one process.
+
+This section states the uniform hypothesis, `UniformCompactContainment`, and derives the path
+space form from it.  Three decisions, and each is against a shape that looked equally natural.
+
+* It is stated about **path space valued variables** `X : (n : γ) → Ω n → D(ℝ≥0, E)` and not
+  about processes `ι → Ω n → E`.  The reason is measured and not aesthetic: this file has **no**
+  general path map of a process into `D(ℝ≥0, E)` and cannot have a total one -- a process with
+  only almost surely càdlàg paths needs a value on the exceptional set, which is why `jumpPathD`
+  puts `SkorokhodSpace.const` there.  The two statements of the previous section that Milestone
+  11 consumes, `tendstoInDistribution_evalPi_jumpPathD` and `tendstoInDistribution_eval_jumpPathD`,
+  already quantify over path space valued variables for the same reason; the hypothesis is stated
+  where the chain reads it.
+* Everything else is kept **verbatim from `CompactContainment`** -- the real level, the `1 -`, the
+  one sided window along `D` -- so that `UniformCompactContainment.compactContainment` is the
+  instance at a single `n` and not a second translation.
+* The passage to `SkorokhodSpace.IsCompactContained` asks `Dense D`, and asks it **only in that
+  direction**.  It is what buys the times of the window that lie outside `D`, and it is bought at
+  a window one unit longer: the closed window `[0, m]` sits inside the half open `[0, m+1)`, where
+  every time has points of `D` strictly to its right and no endpoint has to be read separately.
+  That is `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense`, and the enlargement is free because
+  compact containment is quantified over all horizons.
+
+And the two are **equivalent**, which is the honest form of the translation: the uniform
+hypothesis is not stronger than the path space one, so nothing is given away by stating it in the
+shape a consumer of this file can discharge. -/
+
+section UniformCompactContainment
+
+variable {E : Type*} [MetricSpace E] [MeasurableSpace E] [BorelSpace E] [PolishSpace E]
+variable {γ : Type*} {Ω : γ → Type*} {mΩ : ∀ n, MeasurableSpace (Ω n)}
+
+/-- **Compact containment, uniformly in the index.**  For every level and every horizon there is
+**one** compact set of the value space that every member of the family meets along the window with
+probability more than `1 - ε`.
+
+The quantifier order is the whole content: `∃ K, ∀ n` and not `∀ n, ∃ K`.  The second is
+`CompactContainment` at each `n` separately, and it does not give tightness -- the constant paths
+at height `n` satisfy it and are not tight. -/
+def UniformCompactContainment (X : (n : γ) → Ω n → D(ℝ≥0, E)) (P : (n : γ) → Measure (Ω n))
+    (D : Set ℝ≥0) : Prop :=
+  ∀ ε : ℝ, 0 < ε → ∀ T : ℝ≥0, ∃ K : Set E, IsCompact K ∧ ∀ n,
+    1 - ε < (P n {ω | ∀ t ∈ Set.Iic T ∩ D, (X n ω).toFun t ∈ K}).toReal
+
+variable {P : (n : γ) → Measure (Ω n)} {X : (n : γ) → Ω n → D(ℝ≥0, E)} {D : Set ℝ≥0}
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **`CompactContainment` is the instance at a single index**, and by construction: the two
+statements differ only in where the compact set is quantified.  This is what makes the uniform
+hypothesis readable for a consumer who has the one process version. -/
+theorem UniformCompactContainment.compactContainment (h : UniformCompactContainment X P D)
+    (n : γ) :
+    CompactContainment (fun (t : ℝ≥0) (ω : Ω n) => (X n ω).toFun t) (P n) D := by
+  intro ε hε T
+  obtain ⟨K, hK, hKle⟩ := h ε hε T
+  exact ⟨K, hK, hKle n⟩
+
+/-- **The path space form of the uniform hypothesis**, and the statement Milestone 11 hands to
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal`.
+
+Two things are spent and named.  `Dense D` carries the window from `D` to all of it, along the
+half open enlargement `[0, m+1)` -- `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense`, whose
+hypothesis is bought by applying the uniform hypothesis at the horizon `m + 1`.  And the
+measurability of `X n` carries the bound from the sample space to the image law: that is
+`MeasureTheory.Measure.map_apply` at the window set, which is measurable by
+`SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion_nnreal` because a compact set in a
+metric space is closed.
+
+The set `{ω | ∀ t ∈ Set.Iic T ∩ D, X n ω t ∈ K}` is **not** asserted measurable, and is not used
+as if it were: it is only ever bounded from above by the measurable preimage of the window, and
+the complement is taken of that one. -/
+theorem isCompactContained_map_of_uniformCompactContainment [CompleteSpace E]
+    [∀ n, IsProbabilityMeasure (P n)] (hD : Dense D) (hXm : ∀ n, Measurable (X n))
+    (h : UniformCompactContainment X P D) :
+    SkorokhodSpace.IsCompactContained (0 : ℝ≥0) (fun n => (P n).map (X n)) := by
+  intro ε hε m
+  obtain ⟨r, hr, hrle⟩ : ∃ r : ℝ, 0 < r ∧ ENNReal.ofReal r ≤ ε := by
+    rcases eq_or_ne ε ⊤ with rfl | hne
+    · exact ⟨1, one_pos, le_top⟩
+    · exact ⟨ε.toReal, ENNReal.toReal_pos hε.ne' hne, by rw [ENNReal.ofReal_toReal hne]⟩
+  obtain ⟨K, hK, hKle⟩ := h r hr ((m : ℝ≥0) + 1)
+  refine ⟨K, hK, fun n => ?_⟩
+  set W : Set D(ℝ≥0, E) :=
+    {f : D(ℝ≥0, E) | ∀ t ∈ exhaustion (0 : ℝ≥0) (m : ℝ), f.toFun t ∈ K} with hW
+  set S : Set (Ω n) :=
+    {ω | ∀ t ∈ Set.Iic ((m : ℝ≥0) + 1) ∩ D, (X n ω).toFun t ∈ K} with hS
+  have hWm : MeasurableSet W :=
+    SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion_nnreal hK.isClosed _
+  have hSW : S ⊆ (X n) ⁻¹' W := by
+    intro ω hω
+    have hmem : ∀ t ∈ Set.Ico (0 : ℝ≥0) ((m : ℝ≥0) + 1) ∩ D, (X n ω).toFun t ∈ K := by
+      rintro t ⟨ht, htD⟩
+      exact hω t ⟨ht.2.le, htD⟩
+    have hall := SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense hK.isClosed hD
+      (X n ω).isCadlag.isRightContinuous hmem
+    intro t ht
+    refine hall t ⟨zero_le, ?_⟩
+    have ht' : t ≤ (m : ℝ≥0) := by
+      have hiff := mem_exhaustion_zero_nnreal_iff (u := (m : ℝ≥0)) (t := t)
+      simp only [NNReal.coe_natCast] at hiff
+      exact hiff.1 ht
+    exact lt_of_le_of_lt ht' (lt_add_one _)
+  have hstep : ((P n).map (X n)) Wᶜ ≤ 1 - (P n) S := by
+    rw [Measure.map_apply (hXm n) hWm.compl, Set.preimage_compl,
+      prob_compl_eq_one_sub (hWm.preimage (hXm n))]
+    exact tsub_le_tsub_left (measure_mono hSW) 1
+  refine hstep.trans (le_trans ?_ hrle)
+  have hPS : (P n) S ≠ ⊤ := measure_ne_top _ _
+  rw [tsub_le_iff_right]
+  have hreal : (1 : ℝ) ≤ r + ((P n) S).toReal := by
+    have hn := hKle n
+    simp only [← hS] at hn
+    linarith
+  calc (1 : ENNReal) = ENNReal.ofReal 1 := by simp
+    _ ≤ ENNReal.ofReal (r + ((P n) S).toReal) := ENNReal.ofReal_le_ofReal hreal
+    _ = ENNReal.ofReal r + (P n) S := by
+        rw [ENNReal.ofReal_add hr.le ENNReal.toReal_nonneg, ENNReal.ofReal_toReal hPS]
+
+/-- **And back**, for any `D` whatever and without density: the window at radius `⌈T⌉₊` contains
+`Set.Iic T`, so the path space bound is already a bound along `D`.  The level is halved, and
+capped below `1`, because `CompactContainment` asks a **strict** inequality and the path space
+form gives a weak one.
+
+This is what says the uniform hypothesis is the right one and not merely a sufficient one: it is
+equivalent to the hypothesis the criterion carries. -/
+theorem uniformCompactContainment_of_isCompactContained_map [CompleteSpace E]
+    [∀ n, IsProbabilityMeasure (P n)] (hXm : ∀ n, Measurable (X n))
+    (h : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) (fun n => (P n).map (X n))) :
+    UniformCompactContainment X P D := by
+  intro ε hε T
+  set δ : ℝ := min (ε / 2) (1 / 2) with hδ
+  have hδpos : 0 < δ := lt_min (by linarith) (by norm_num)
+  have hδlt : δ < ε := lt_of_le_of_lt (min_le_left _ _) (by linarith)
+  have hδone : δ ≤ 1 := le_trans (min_le_right _ _) (by norm_num)
+  obtain ⟨K, hK, hKle⟩ := h (ENNReal.ofReal δ) (ENNReal.ofReal_pos.2 hδpos) ⌈(T : ℝ≥0)⌉₊
+  refine ⟨K, hK, fun n => ?_⟩
+  set W : Set D(ℝ≥0, E) :=
+    {f : D(ℝ≥0, E) | ∀ t ∈ exhaustion (0 : ℝ≥0) ((⌈(T : ℝ≥0)⌉₊ : ℕ) : ℝ), f.toFun t ∈ K} with hW
+  have hWm : MeasurableSet W :=
+    SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion_nnreal hK.isClosed _
+  have hWle : (1 : ENNReal) - ENNReal.ofReal δ ≤ ((P n).map (X n)) W := by
+    have hc : ((P n).map (X n)) Wᶜ = 1 - ((P n).map (X n)) W := prob_compl_eq_one_sub hWm
+    have hn := hKle n
+    rw [hc] at hn
+    rw [tsub_le_iff_right] at hn ⊢
+    rwa [add_comm] at hn
+  have hsub : (X n) ⁻¹' W ⊆ {ω | ∀ t ∈ Set.Iic T ∩ D, (X n ω).toFun t ∈ K} := by
+    intro ω hω t ht
+    refine hω t ?_
+    have hTm : T ≤ (⌈(T : ℝ≥0)⌉₊ : ℝ≥0) := Nat.le_ceil T
+    have htle : t ≤ ((⌈(T : ℝ≥0)⌉₊ : ℕ) : ℝ≥0) := le_trans ht.1 hTm
+    have h2 := (mem_exhaustion_zero_nnreal_iff
+      (u := ((⌈(T : ℝ≥0)⌉₊ : ℕ) : ℝ≥0)) (t := t)).2 htle
+    simpa only [NNReal.coe_natCast] using h2
+  have hmono : ((P n).map (X n)) W ≤ (P n) {ω | ∀ t ∈ Set.Iic T ∩ D, (X n ω).toFun t ∈ K} := by
+    rw [Measure.map_apply (hXm n) hWm]
+    exact measure_mono hsub
+  have hfin : (P n) {ω | ∀ t ∈ Set.Iic T ∩ D, (X n ω).toFun t ∈ K} ≠ ⊤ := measure_ne_top _ _
+  have hR := ENNReal.toReal_mono hfin (hWle.trans hmono)
+  rw [ENNReal.toReal_sub_of_le (by simpa using ENNReal.ofReal_le_one.2 hδone) (by simp),
+    ENNReal.toReal_ofReal hδpos.le, ENNReal.toReal_one] at hR
+  linarith
+
+/-- **The translation, as an equivalence.**  Under density of the time set and measurability of
+the variables the uniform hypothesis of this file and the path space hypothesis of the tightness
+criterion are the same condition. -/
+theorem uniformCompactContainment_iff_isCompactContained_map [CompleteSpace E]
+    [∀ n, IsProbabilityMeasure (P n)] (hD : Dense D) (hXm : ∀ n, Measurable (X n)) :
+    UniformCompactContainment X P D ↔
+      SkorokhodSpace.IsCompactContained (0 : ℝ≥0) (fun n => (P n).map (X n)) :=
+  ⟨isCompactContained_map_of_uniformCompactContainment hD hXm,
+    uniformCompactContainment_of_isCompactContained_map hXm⟩
+
+/-- **The emptiness test, and it locates the condition.**  A family whose members all have the
+**same** law has the uniform hypothesis for nothing -- one finite law on the Polish space
+`D(ℝ≥0, E)` is tight, which is `SkorokhodSpace.isCompactContained_const`.  So what the hypothesis
+excludes is not any particular process but the escape of mass **along the index**, and a single
+process never fails it.
+
+Nothing is asked of `D`: this direction is the one that needs no density. -/
+theorem uniformCompactContainment_of_forall_map_eq [CompleteSpace E] [Nonempty γ]
+    [∀ n, IsProbabilityMeasure (P n)] (hXm : ∀ n, Measurable (X n))
+    {ν : Measure D(ℝ≥0, E)} (hν : ∀ n, (P n).map (X n) = ν) :
+    UniformCompactContainment X P D := by
+  have hprob : IsProbabilityMeasure ν := by
+    rw [← hν Classical.ofNonempty]; infer_instance
+  refine uniformCompactContainment_of_isCompactContained_map hXm ?_
+  have hfun : (fun n => (P n).map (X n)) = fun _ : γ => ν := funext hν
+  rw [hfun]
+  exact SkorokhodSpace.isCompactContained_const ν
+
+end UniformCompactContainment
+
+/-! ## Causal convolution and the Volterra resolvent
+
+Milestone 14.  The renewal equation `m = m₀ + φ ⋆ m` on `[0,∞)` and the resolvent that solves it
+are the one piece of analysis the jump processes of Milestone 4 need and do not have:
+`thm:pathjumpMP`(b) carries `𝔼[N t] < ∞` as a hypothesis, and for the **linear** Hawkes process
+the manuscript discharges that hypothesis through this equation.  Mathlib has none of it --
+`git grep -il` over `upstream/master` gives zero hits in `Mathlib/` for `volterra`, for `renewal`
+and for `resolvent kernel`.
+
+**Everything here is stated in `ℝ≥0∞`,** and that is the same decision the rest of this
+development has taken four times before.  `MeasureTheory.lconvolution`
+(`Mathlib/Analysis/LConvolution.lean:50`, notation `f ⋆ₗ[μ] g`) is defined by a lower integral;
+its associativity `lconvolution_assoc` (`:130`) asks measurability and nothing else, and its
+commutativity `lconvolution_comm` (`:143`) asks nothing of the two functions at all -- it asks
+invariance of the measure, which Lebesgue measure on `ℝ` has.  The whole algebraic layer is
+therefore free, and a value of `⊤` is the true mass of a window, where a Bochner integral of a
+non integrable function returns `0` and lies.  The question that remains is not whether the
+Neumann series converges -- a sum of non-negative terms in `ℝ≥0∞` always does -- but whether it
+is **finite**, and that is where the local mass of the kernel enters and where the work is. -/
+
+section CausalConvolution
+
+open scoped Pointwise in
+/-- **The support of a lower integral convolution**, and the statement asks for nothing at all:
+not measurability of the two functions, not `SFinite` of the measure, not a topology on the
+group.  The integrand `f y * g (-y + x)` vanishes at *every* `y` as soon as `x` lies outside the
+sumset, because a `y` at which both factors are nonzero exhibits `x = y + (-y + x)` as a sum.
+
+Mathlib has the corresponding statement for the Bochner convolution
+(`support_convolution_subset`, `Mathlib/Analysis/Convolution.lean:672`) and **not** for
+`lconvolution`.  This one belongs beside it, and it is the weaker hypothesis of the two: the
+Bochner statement lives among `ConvolutionExistsAt` side conditions, and here there are none,
+because a lower integral of a function that vanishes pointwise is `0` whatever the measure
+does. -/
+theorem support_lconvolution_subset {G : Type*} [AddGroup G] [MeasurableSpace G]
+    (f g : G → ENNReal) (μ : Measure G) :
+    Function.support (f ⋆ₗ[μ] g) ⊆ Function.support f + Function.support g := by
+  intro x hx
+  by_contra hmem
+  refine hx ?_
+  have hzero : (fun y => f y * g (-y + x)) = fun _ => (0 : ENNReal) := by
+    funext y
+    rcases eq_or_ne (f y) 0 with hf | hf
+    · simp [hf]
+    · rcases eq_or_ne (g (-y + x)) 0 with hg | hg
+      · simp [hg]
+      · have hsum : y + (-y + x) ∈ Function.support f + Function.support g :=
+          Set.add_mem_add (Function.mem_support.2 hf) (Function.mem_support.2 hg)
+        rw [add_neg_cancel_left] at hsum
+        exact absurd hsum hmem
+  rw [lconvolution_def, hzero]
+  simp
+
+/-- A function on the line is **causal** when it vanishes strictly before the origin.
+
+The half line is a sub-semigroup of `ℝ` and not a subgroup, so it is this support condition --
+and not a change of carrier -- that makes the convolution causal.  Everything in this section is
+consequently stated for `ℝ` with `volume`, which is where the renewal equation lives, and the
+causality is carried as a hypothesis rather than built into the type. -/
+def IsCausal (f : ℝ → ENNReal) : Prop := ∀ t < (0 : ℝ), f t = 0
+
+/-- **Causality read as a support condition**, which is the form the convolution statement
+below consumes. -/
+theorem isCausal_iff_support_subset {f : ℝ → ENNReal} :
+    IsCausal f ↔ Function.support f ⊆ Set.Ici 0 := by
+  constructor
+  · intro h x hx
+    by_contra hlt
+    exact hx (h x (not_le.1 hlt))
+  · intro h t ht
+    by_contra hne
+    exact absurd (h hne) (not_le.2 ht)
+
+theorem isCausal_zero : IsCausal 0 := fun _ _ => rfl
+
+theorem IsCausal.add {f g : ℝ → ENNReal} (hf : IsCausal f) (hg : IsCausal g) : IsCausal (f + g) :=
+  fun t ht => by simp [hf t ht, hg t ht]
+
+/-- **The indicator of a set inside the half line is causal**, which is how the kernels of the
+renewal equation are built. -/
+theorem IsCausal.indicator {s : Set ℝ} (hs : s ⊆ Set.Ici 0) (f : ℝ → ENNReal) :
+    IsCausal (s.indicator f) := fun _t ht =>
+  Set.indicator_of_notMem (fun hts => absurd (hs hts) (not_le.2 ht)) _
+
+open scoped Pointwise in
+/-- **Causality is stable under convolution**, for an arbitrary measure on the line.  The proof
+is the support inclusion above together with `Set.Ici 0 + Set.Ici 0 ⊆ Set.Ici 0`, which is
+`add_nonneg`; no measure theory enters a second time. -/
+theorem IsCausal.lconvolution {f g : ℝ → ENNReal} (hf : IsCausal f) (hg : IsCausal g)
+    (μ : Measure ℝ) : IsCausal (f ⋆ₗ[μ] g) := by
+  rw [isCausal_iff_support_subset] at hf hg ⊢
+  refine (support_lconvolution_subset f g μ).trans ?_
+  refine (Set.add_subset_add hf hg).trans ?_
+  rw [Set.add_subset_iff]
+  exact fun a ha b hb => Set.mem_Ici.2 (add_nonneg ha hb)
+
+/-- **The window form of the convolution**, and it is the only place in this section where the
+causality is unfolded: every later statement reads the convolution in this shape.
+
+No sign hypothesis on `t` is needed, and that is one hypothesis fewer than the milestone had
+asked for.  For `t < 0` both sides are `0` -- the left by `IsCausal.lconvolution`, the right
+because `Set.Icc 0 t` is then empty -- so the one statement covers the whole line. -/
+theorem lconvolution_eq_setLIntegral_Icc {f g : ℝ → ENNReal} (hf : IsCausal f) (hg : IsCausal g)
+    {t : ℝ} :
+    (f ⋆ₗ g) t = ∫⁻ s in Set.Icc 0 t, f s * g (t - s) := by
+  rw [lconvolution_def, ← lintegral_indicator measurableSet_Icc]
+  refine lintegral_congr fun s => ?_
+  rcases le_or_gt 0 s with hs | hs
+  · rcases le_or_gt s t with hst | hst
+    · rw [Set.indicator_of_mem (Set.mem_Icc.2 ⟨hs, hst⟩), neg_add_eq_sub]
+    · rw [Set.indicator_of_notMem (fun h => absurd h.2 (not_le.2 hst)),
+        hg _ (by linarith), mul_zero]
+  · rw [Set.indicator_of_notMem (fun h => absurd h.1 (not_le.2 hs)), hf _ hs, zero_mul]
+
+/-- **The window mass of a convolution is submultiplicative**, and this is the whole analytic
+content of the milestone.  Over `ℝ≥0∞` it carries no integrability hypothesis whatever; what it
+carries is the causality of **both** factors, and each is spent at a different place.
+
+The proof swaps the two integrals by Tonelli against the restricted measure and then reads the
+inner one, `∫⁻ t in Icc 0 d, g (-s + t)`, by translation invariance as `∫⁻ u, A (u + s) * g u`
+with `A` the indicator of the window.  Causality of `g` then does two things at once: for
+`0 ≤ s` it says the translated window may be replaced by the window itself, because a point `u`
+with `u + s` inside the window and `u` outside it has `u < 0`; and for `d < s` it says the
+translated window contributes nothing at all.  Causality of `f` kills the remaining half line
+`s < 0`, and what is left is the window mass of `f` times the window mass of `g`. -/
+theorem setLIntegral_lconvolution_le {f g : ℝ → ENNReal} (hf : IsCausal f) (hg : IsCausal g)
+    (hfm : Measurable f) (hgm : Measurable g) (d : ℝ) :
+    ∫⁻ t in Set.Icc 0 d, (f ⋆ₗ g) t
+      ≤ (∫⁻ t in Set.Icc 0 d, f t) * ∫⁻ t in Set.Icc 0 d, g t := by
+  set b : ENNReal := ∫⁻ t in Set.Icc 0 d, g t with hb
+  set A : ℝ → ENNReal := (Set.Icc (0:ℝ) d).indicator (fun _ => (1:ENNReal)) with hA
+  set I : ℝ → ENNReal := fun s => ∫⁻ t in Set.Icc 0 d, g (-s + t) with hI
+  have hswap : ∫⁻ t in Set.Icc 0 d, (f ⋆ₗ g) t = ∫⁻ s, f s * I s := by
+    have hmeas : AEMeasurable (Function.uncurry fun t s => f s * g (-s + t))
+        ((volume.restrict (Set.Icc 0 d)).prod volume) :=
+      ((hfm.comp measurable_snd).mul
+        (hgm.comp (measurable_snd.neg.add measurable_fst))).aemeasurable
+    calc ∫⁻ t in Set.Icc 0 d, (f ⋆ₗ g) t
+        = ∫⁻ t in Set.Icc 0 d, ∫⁻ s, f s * g (-s + t) := by
+          simp only [lconvolution_def]
+      _ = ∫⁻ s, ∫⁻ t in Set.Icc 0 d, f s * g (-s + t) := lintegral_lintegral_swap hmeas
+      _ = ∫⁻ s, f s * I s := by
+          refine lintegral_congr fun s => ?_
+          exact lintegral_const_mul _ (hgm.comp (measurable_id.const_add (-s)))
+  rw [hswap]
+  have hIeq : ∀ s : ℝ, I s = ∫⁻ u, A (u + s) * g u := by
+    intro s
+    have h1 : I s = ∫⁻ t, A t * g (-s + t) := by
+      show (∫⁻ t in Set.Icc 0 d, g (-s + t)) = ∫⁻ t, A t * g (-s + t)
+      rw [← lintegral_indicator measurableSet_Icc]
+      refine lintegral_congr fun t => ?_
+      by_cases htm : t ∈ Set.Icc (0:ℝ) d
+      · rw [Set.indicator_of_mem htm, hA, Set.indicator_of_mem htm, one_mul]
+      · rw [Set.indicator_of_notMem htm, hA, Set.indicator_of_notMem htm, zero_mul]
+    have h2 : ∫⁻ t, A t * g (-s + t) = ∫⁻ u, A (u + s) * g (-s + (u + s)) :=
+      (lintegral_add_right_eq_self (fun t => A t * g (-s + t)) s).symm
+    have h3 : ∀ u : ℝ, A (u + s) * g (-s + (u + s)) = A (u + s) * g u := by
+      intro u
+      congr 2
+      ring
+    rw [h1, h2]
+    simp_rw [h3]
+  have hIle : ∀ s : ℝ, 0 ≤ s → I s ≤ b := by
+    intro s hs
+    rw [hIeq s, hb, ← lintegral_indicator measurableSet_Icc]
+    refine lintegral_mono fun u => ?_
+    by_cases hus : u + s ∈ Set.Icc (0:ℝ) d
+    · rw [hA, Set.indicator_of_mem hus, one_mul]
+      by_cases hu : u ∈ Set.Icc (0:ℝ) d
+      · rw [Set.indicator_of_mem hu]
+      · have hneg : u < 0 := by
+          by_contra hge
+          exact hu (Set.mem_Icc.2 ⟨not_lt.1 hge, by linarith [hus.2]⟩)
+        rw [Set.indicator_of_notMem hu, hg u hneg]
+    · rw [hA, Set.indicator_of_notMem hus, zero_mul]
+      exact zero_le
+  have hIzero : ∀ s : ℝ, d < s → I s = 0 := by
+    intro s hs
+    rw [hIeq s]
+    have hfun : ∀ u : ℝ, A (u + s) * g u = 0 := by
+      intro u
+      by_cases hus : u + s ∈ Set.Icc (0:ℝ) d
+      · rw [hA, Set.indicator_of_mem hus, one_mul]
+        exact hg u (by linarith [hus.2])
+      · rw [hA, Set.indicator_of_notMem hus, zero_mul]
+    simp_rw [hfun]
+    simp
+  have hpt : ∀ s : ℝ, f s * I s ≤ (Set.Icc (0:ℝ) d).indicator f s * b := by
+    intro s
+    rcases lt_or_ge s 0 with hs | hs
+    · rw [hf s hs, zero_mul]; exact zero_le
+    · rcases le_or_gt s d with hsd | hsd
+      · rw [Set.indicator_of_mem (Set.mem_Icc.2 ⟨hs, hsd⟩)]
+        exact by gcongr; exact hIle s hs
+      · rw [hIzero s hsd, mul_zero]; exact zero_le
+  calc ∫⁻ s, f s * I s
+      ≤ ∫⁻ s, (Set.Icc (0:ℝ) d).indicator f s * b := lintegral_mono hpt
+    _ = (∫⁻ s, (Set.Icc (0:ℝ) d).indicator f s) * b :=
+        lintegral_mul_const _ (hfm.indicator measurableSet_Icc)
+    _ = (∫⁻ t in Set.Icc 0 d, f t) * b := by rw [lintegral_indicator measurableSet_Icc]
+
+/-- **The causal convolution power**, and the index is shifted by one: `convPow f n` is the
+`(n+1)`-fold convolution of `f` with itself, so `convPow f 0 = f` and `convPow f 1 = f ⋆ₗ f`.
+
+The shift is not a convention but the **absence of a unit**.  The convolution algebra on the
+half line has no `L¹` unit -- the unit is the Dirac mass at `0`, which is a measure and not a
+function -- so there is no `f ^⋆ 0` to name, and a definition that named one would have to give
+it a junk value and then exclude that value from the semigroup law.  Shifting the index removes
+the case distinction rather than hiding it: every statement below holds for **every** `n`, and
+none of them carries `1 ≤ n`. -/
+noncomputable def convPow (f : ℝ → ENNReal) : ℕ → (ℝ → ENNReal)
+  | 0 => f
+  | n + 1 => f ⋆ₗ convPow f n
+
+@[simp] theorem convPow_zero (f : ℝ → ENNReal) : convPow f 0 = f := rfl
+
+theorem convPow_succ (f : ℝ → ENNReal) (n : ℕ) : convPow f (n + 1) = f ⋆ₗ convPow f n := rfl
+
+theorem IsCausal.convPow {f : ℝ → ENNReal} (hf : IsCausal f) (n : ℕ) : IsCausal (convPow f n) := by
+  induction n with
+  | zero => exact hf
+  | succ n ih => exact hf.lconvolution ih volume
+
+theorem measurable_convPow {f : ℝ → ENNReal} (hf : Measurable f) (n : ℕ) :
+    Measurable (convPow f n) := by
+  induction n with
+  | zero => exact hf
+  | succ n ih => exact measurable_lconvolution volume hf ih
+
+/-- **The semigroup law.**  With the shifted index it reads `m + n + 1` on the left, and that is
+the honest form: `convPow f m` and `convPow f n` are the `(m+1)`- and `(n+1)`-fold powers, so
+their convolution is the `(m+n+2)`-fold one.  The proof is `lconvolution_assoc`, which over
+`ℝ≥0∞` asks measurability and nothing else. -/
+theorem convPow_add {f : ℝ → ENNReal} (hf : Measurable f) (m n : ℕ) :
+    convPow f (m + n + 1) = convPow f m ⋆ₗ convPow f n := by
+  induction m with
+  | zero => rw [Nat.zero_add, convPow_succ, convPow_zero]
+  | succ m ih =>
+      have hstep : m + 1 + n + 1 = (m + n + 1) + 1 := by omega
+      rw [hstep, convPow_succ, ih, convPow_succ]
+      exact lconvolution_assoc hf (measurable_convPow hf m) (measurable_convPow hf n)
+
+/-- **The geometric bound on the window**: the mass of the `n`-th power on `[0,d]` is at most the
+corresponding power of the mass of the kernel on `[0,d]`.  It is an induction over the
+submultiplicativity above, and it is what makes the resolvent finite.
+
+This is the step the Neumann series of a normed algebra cannot take.
+`NormedRing.inverse_one_sub` (`Mathlib/Analysis/Normed/Ring/Units.lean:98`) asks `‖φ‖ < 1`
+globally, and a locally integrable kernel on the half line has no such norm; here nothing global
+is asked, only the mass on the one window `[0,d]`. -/
+theorem setLIntegral_convPow_le {f : ℝ → ENNReal} (hf : IsCausal f) (hfm : Measurable f) (d : ℝ)
+    (n : ℕ) :
+    ∫⁻ t in Set.Icc 0 d, convPow f n t ≤ (∫⁻ t in Set.Icc 0 d, f t) ^ (n + 1) := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+      rw [convPow_succ]
+      refine le_trans (setLIntegral_lconvolution_le hf (hf.convPow n) hfm
+        (measurable_convPow hfm n) d) ?_
+      calc (∫⁻ t in Set.Icc 0 d, f t) * ∫⁻ t in Set.Icc 0 d, convPow f n t
+          ≤ (∫⁻ t in Set.Icc 0 d, f t) * (∫⁻ t in Set.Icc 0 d, f t) ^ (n + 1) :=
+            by gcongr
+        _ = (∫⁻ t in Set.Icc 0 d, f t) ^ (n + 1 + 1) := by ring
+
+/-- **The Volterra resolvent**, the Neumann series of the kernel, summed from the first power
+because there is no zeroth one to start at.
+
+No convergence question arises: a series of non-negative terms in `ℝ≥0∞` always converges.  The
+question that remains is whether the sum is **finite**, and that is
+`setLIntegral_volterraResolvent_lt_top`. -/
+noncomputable def volterraResolvent (f : ℝ → ENNReal) : ℝ → ENNReal :=
+  fun t => ∑' n : ℕ, convPow f n t
+
+theorem IsCausal.volterraResolvent {f : ℝ → ENNReal} (hf : IsCausal f) :
+    IsCausal (volterraResolvent f) := by
+  intro t ht
+  have hzero : ∀ n : ℕ, _root_.convPow f n t = 0 := fun n => hf.convPow n t ht
+  simp [_root_.volterraResolvent, hzero]
+
+theorem measurable_volterraResolvent {f : ℝ → ENNReal} (hf : Measurable f) :
+    Measurable (volterraResolvent f) := by
+  show Measurable fun t => ∑' n : ℕ, convPow f n t
+  simp_rw [ENNReal.tsum_eq_iSup_sum]
+  exact .iSup fun s => s.measurable_fun_sum fun n _ => measurable_convPow hf n
+
+/-- **The resolvent equation**, `r = f + f ⋆ₗ r`.  It is the semigroup law and the splitting off
+of the first term of the series, and nothing else; the exchange of the sum with the lower
+integral is `lintegral_tsum`, which over `ℝ≥0∞` asks measurability alone.
+
+The second form, `r = f + r ⋆ₗ f`, is this one together with `lconvolution_comm`, which asks
+nothing of the two functions and only the invariance of the measure. -/
+theorem volterraResolvent_eq {f : ℝ → ENNReal} (hf : Measurable f) :
+    volterraResolvent f = f + f ⋆ₗ volterraResolvent f := by
+  funext t
+  have hconv : (f ⋆ₗ volterraResolvent f) t = ∑' n : ℕ, convPow f (n + 1) t := by
+    rw [lconvolution_def]
+    have hstep : ∀ y : ℝ, f y * volterraResolvent f (-y + t)
+        = ∑' n : ℕ, f y * convPow f n (-y + t) := by
+      intro y
+      rw [volterraResolvent, ENNReal.tsum_mul_left]
+    simp_rw [hstep]
+    rw [lintegral_tsum (f := fun (n : ℕ) (y : ℝ) => f y * convPow f n (-y + t))
+      (fun n => (hf.mul
+        ((measurable_convPow hf n).comp (measurable_neg.add_const t))).aemeasurable)]
+    refine tsum_congr fun n => ?_
+    rw [convPow_succ, lconvolution_def]
+  rw [Pi.add_apply, hconv, volterraResolvent,
+    tsum_eq_zero_add' (f := fun n : ℕ => convPow f n t) ENNReal.summable, convPow_zero]
+
+/-- **The geometric bound makes the resolvent finite on a short window**: if the kernel has mass
+below `1` on `[0,d]`, then the resolvent has finite mass there.
+
+The hypothesis is about **one** window and not about the kernel globally, and that is the whole
+point of stating the milestone this way: a kernel that is locally integrable and has no atom at
+the origin always has such a window, and the passage from the short window to every window is
+causality applied block by block. -/
+theorem setLIntegral_volterraResolvent_lt_top {f : ℝ → ENNReal} (hf : IsCausal f)
+    (hfm : Measurable f) {d : ℝ} (ha : (∫⁻ t in Set.Icc 0 d, f t) < 1) :
+    ∫⁻ t in Set.Icc 0 d, volterraResolvent f t < ⊤ := by
+  have hatop : (∫⁻ t in Set.Icc 0 d, f t) < ⊤ := lt_trans ha ENNReal.one_lt_top
+  have hpos : 0 < 1 - ∫⁻ t in Set.Icc 0 d, f t := tsub_pos_of_lt ha
+  calc ∫⁻ t in Set.Icc 0 d, volterraResolvent f t
+      = ∑' n : ℕ, ∫⁻ t in Set.Icc 0 d, convPow f n t := by
+        simp only [volterraResolvent]
+        exact lintegral_tsum fun n => (measurable_convPow hfm n).aemeasurable
+    _ ≤ ∑' n : ℕ, (∫⁻ t in Set.Icc 0 d, f t) ^ (n + 1) :=
+        ENNReal.tsum_le_tsum fun n => setLIntegral_convPow_le hf hfm d n
+    _ = (∫⁻ t in Set.Icc 0 d, f t) * (1 - ∫⁻ t in Set.Icc 0 d, f t)⁻¹ :=
+        ENNReal.tsum_geometric_add_one _
+    _ < ⊤ := ENNReal.mul_lt_top hatop (ENNReal.inv_lt_top.2 hpos)
+
+end CausalConvolution

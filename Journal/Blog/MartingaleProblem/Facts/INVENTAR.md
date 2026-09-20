@@ -44828,3 +44828,1701 @@ zwei Minuten, und die Axiomprüfung oben lief darüber.
    Eingabe aus `SkorokhodSpace` mehr aufgehalten — nur noch an Punkt 1 oben und an
    den stetigzeitlichen Doob-Ungleichungen von Meilenstein 9, die es ausdrücklich
    verbraucht.
+
+### 2026-09-19, vierundzwanzigster Lauf des Tages — Vorschlag 1 steht, und die Entscheidung, die er zu begründen aufgab, ist gegen die Pfadabbildung gefallen; dazu der Befund, daß die Übersetzung nicht bloß hinreichend, sondern eine **Äquivalenz** ist, und daß die Fensterfrage nicht am Index hängt, sondern am **rechten Endpunkt**
+
+**Bearbeitet:** Vorschlag 1 des Vorlaufs — „die gleichmäßige Fassung von
+`CompactContainment` in `MartingaleProblems`, und der Weg von ihr zu
+`SkorokhodSpace.IsCompactContained` der Pfadgesetze". Das ist der vierte und
+letzte der vier Unterschiede, die zwischen Meilenstein 11 und seiner ersten
+Aussage standen.
+
+Fünf Deklarationen am Ende von `MartingaleProblems/Suggested.lean` (ein neuer
+Abschnitt `UniformCompactContainment`, die Definition und vier Sätze) und vier in
+`SkorokhodSpace/Suggested.lean`, Meilenstein 9 — davon zwei neu, eine
+verallgemeinert und eine aus ihr hergeleitet.
+
+#### Die Entscheidung, die der Vorlauf zu begründen aufgab
+
+Der Vorlauf hatte zwei Lesarten benannt und verlangt, die Wahl sei zu begründen,
+nicht zu raten. Sie ist gefallen, und zwar gegen die Pfadabbildung:
+
+> **Die gleichmäßige Fassung steht über pfadraumwertigen Zufallsgrößen
+> `X : (n : γ) → Ω n → D(ℝ≥0, E)`, nicht über Prozessen `ι → Ω n → E`.**
+
+Der Grund ist nicht Bequemlichkeit, sondern eine Unmöglichkeit: eine allgemeine
+Pfadabbildung eines Prozesses in `D(ℝ≥0, E)` kann **nicht total** sein. Ein
+Prozeß mit nur f.s. càdlàg-Pfaden braucht auf der Ausnahmemenge einen Wert, und
+genau deshalb setzt `jumpPathD` dort `SkorokhodSpace.const`. Eine Aussage über
+Prozesse müßte die Ausnahmemenge mitführen; eine über pfadraumwertige Größen
+nicht. Und die beiden Aussagen des Meilensteins 6, die Meilenstein 11 ohnehin
+verbraucht — `tendstoInDistribution_evalPi_jumpPathD` und
+`tendstoInDistribution_eval_jumpPathD` —, quantifizieren aus demselben Grund
+bereits über pfadraumwertige Größen. Die Hypothese steht damit dort, wo die Kette
+sie liest.
+
+`CompactContainment` bleibt trotzdem die **Instanz bei festem `n`**
+(`UniformCompactContainment.compactContainment`), und zwar wörtlich: die
+Definition ist Zeichen für Zeichen die von `CompactContainment` — reelles
+Niveau, `1 - ε`, einseitiges Fenster längs `D` — mit der einen Änderung, um die
+es geht.
+
+> Der ganze Inhalt der gleichmäßigen Fassung ist die **Reihenfolge der
+> Quantoren**: `∃ K, ∀ n` statt `∀ n, ∃ K`.
+
+#### Der Befund, und er stand in keinem Vorschlag: die Übersetzung ist eine Äquivalenz
+
+Der Auftrag verlangte nur den Weg von der gleichmäßigen Fassung zu
+`SkorokhodSpace.IsCompactContained`. Die Gegenrichtung ist im selben Lauf
+mitbewiesen, und sie ist **billiger als die Hinrichtung**, weil sie ohne
+Dichtheit auskommt:
+
+> `uniformCompactContainment_iff_isCompactContained_map` — unter `Dense D` und
+> Meßbarkeit der `X n` sind die gleichmäßige Fassung dieser Datei und die
+> Pfadraumfassung des Kriteriums **dieselbe Bedingung**.
+
+Das ist die ehrliche Gestalt der Übersetzung. Ohne die Rückrichtung stünde da
+eine hinreichende Bedingung, und ein Leser müßte glauben, daß nichts verschenkt
+wird; mit ihr ist es nachgewiesen. Sie kostet eine Halbierung des Niveaus und
+eine Deckelung unter `1` — `CompactContainment` verlangt eine **strikte**
+Ungleichung, die Pfadraumfassung gibt eine schwache —, und sonst nichts.
+
+Zusammen mit `SkorokhodSpace.isCompactContained_of_isTightMeasureSet` des
+Vorlaufs heißt das: die gleichmäßige Fassung folgt aus der Straffheit, die das
+Kriterium schließt. Sie ist also an keiner Stelle eine Verschärfung.
+
+#### Der zweite Befund: die Fensterfrage hängt am rechten Endpunkt, nicht am Index
+
+Der Vorlauf hatte den Fensterübergang `Set.Iic T ∩ D → exhaustion 0 m` als
+Indexfrage geführt und mit
+`SkorokhodSpace.preimage_extendNNReal_setOf_forall_mem_exhaustion` erledigt. Das
+ist richtig für den Übergang `ℝ≥0 → ℝ`. Was dabei **nicht** erledigt war und
+diesen Lauf aufgehalten hat, ist der Übergang von `D` auf alle Zeiten:
+
+> **Ein Pfad, der längs einer dichten Menge in einem abgeschlossenen `K` bleibt,
+> bleibt darin auf dem **halboffenen** Fenster — am **rechten Endpunkt** eines
+> abgeschlossenen aber nicht.** An ihn kommt von rechts nichts heran, was noch im
+> Fenster liegt.
+
+`SkorokhodSpace.forall_mem_Icc_of_forall_mem_dense` des dreiundzwanzigsten Laufs
+trägt dafür die Voraussetzung `hb : a ≤ b → f b ∈ K`, und **der Verbraucher hier
+kann sie nicht bezahlen**: der Wert am rechten Endpunkt ist gerade das, was eine
+dichte Menge nicht erreicht. Die Antwort ist nicht, `hb` zu erzwingen, sondern
+das Fenster zu vergrößern:
+
+* `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` — die **halboffene** Fassung
+  ist die primitive; auf `Set.Ico a b` hat jeder Punkt Fensterpunkte echt rechts
+  von sich, und `hb` verschwindet ersatzlos. Die abgeschlossene Fassung steht
+  jetzt in drei Zeilen darüber, mit derselben Signatur wie zuvor.
+* Der Beweis in Meilenstein 11 wendet die gleichmäßige Hypothese am Horizont
+  `m + 1` an und liest `[0, m]` im halboffenen `[0, m+1)`. **Die Vergrößerung ist
+  umsonst**, weil die Hypothese über alle Horizonte quantifiziert ist.
+
+Beide Fassungen stehen jetzt über einem **beliebigen dicht geordneten** Index
+statt über `ℝ`. Das ist keine Verallgemeinerung auf Verdacht: die beiden
+Verbraucher sind über `ℝ` (die Meßbarkeit des Fensters) und über `ℝ≥0` (dieser
+Lauf), und im Beweis kommt der Index nur über `closure_Ioo`,
+`Dense.open_subset_closure_inter` und `IsRightContinuous` vor, die alle nichts
+von `ℝ` wissen.
+
+#### Wo die Meßbarkeit sitzt, und wo sie ausdrücklich nicht verlangt wird
+
+Der Vorlauf hatte festgehalten, daß compact containment als einzige Aussage
+seines Meilensteins die Meßbarkeit der Fenstermenge braucht, weil eine Schranke
+**zurück** wandert. Dieser Lauf ist der Verbraucher davon, und die Buchführung
+ist es wert, benannt zu werden:
+
+* `SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion_nnreal` — die
+  `ℝ≥0`-Fassung, die aus der `ℝ`-Fassung über die Urbildgleichheit fällt und
+  nichts zweimal beweist. Beide Richtungen des Laufs gehen über
+  `MeasureTheory.Measure.map_apply` und verlangen sie.
+* **Die Menge `{ω | ∀ t ∈ Set.Iic T ∩ D, X n ω t ∈ K}` ist dagegen nirgends als
+  meßbar behauptet**, und sie wird auch nicht so benutzt: sie wird nur von oben
+  durch das meßbare Urbild des Fensters abgeschätzt, und das Komplement wird von
+  *diesem* genommen. Der erste Entwurf des Beweises hatte `P n Sᶜ ≤ 1 - P n S`
+  benutzt — das ist für eine nicht meßbare Menge **falsch**, weil das äußere Maß
+  subadditiv und nicht superadditiv ist, und der Beweis ist daran gescheitert,
+  ehe er stand. Das ist dieselbe Falle, vor der der Doc-Kommentar von
+  `CompactContainment.ae_exists_isCompact` seit dem 2026-09-07 warnt.
+* `mem_exhaustion_zero_nnreal_iff` — über `ℝ≥0` ist das Fenster am Basispunkt
+  `Set.Iic`; die Kugel hat keine negative Hälfte zu erreichen.
+
+#### Die Leerheitsprobe, an der Stelle, an der sie diesmal etwas sagt
+
+`uniformCompactContainment_of_forall_map_eq`: eine Familie, deren Glieder alle
+**dasselbe** Gesetz haben, hat die Bedingung umsonst — über die Rückrichtung und
+`SkorokhodSpace.isCompactContained_const`. Ein einzelner Prozeß fällt also nie
+durch. Was die Bedingung ausschließt, ist allein das Entweichen der Masse **längs
+des Index**, und damit sitzt sie genau dort, wo der Vorlauf sie für die
+Pfadraumfassung schon lokalisiert hatte.
+
+#### Geprüft
+
+* `scripts/check_master.py`: rc 0, **0 Fehler**, 0 `sorry`, 0 veraltet,
+  Warnungen 18 / 35 / 106 — **unverändert** gegenüber dem Vorlauf. Mathlib
+  `94ef6b89544e58e90f119da869f3fb48d1da0f4c` (2026-09-18), Lean 4.35.0-rc2.
+  Die beiden neuen `unusedSectionVars`, die der erste Durchlauf hinterließ, sind
+  durch `omit`-Zeilen an den beiden betroffenen Deklarationen beseitigt und nicht
+  durch Wegsehen; im Fall von `SkorokhodSpace` waren es `[AdditiveDist ι]`,
+  `[ProperSpace ι]`, `[BasePoint ι]`, die die Verallgemeinerung des Index
+  überflüssig gemacht hat.
+* `scripts/check_axioms_master.py` auf alle neun neuen und geänderten
+  Deklarationen: `propext`, `Classical.choice`, `Quot.sound`, ohne Ausnahme.
+* `scripts/check_duplicates.py`: 2 446 geprüfte eigene Deklarationen (neun mehr),
+  37 Treffer auf dem letzten Namensbestandteil — **unverändert**, also kollidiert
+  kein neuer Name.
+* `scripts/check_negatives.py`: 43 Behauptungen, 0 mit unerwarteten Treffern.
+* `scripts/extract_citations.py`, `scripts/check_cited_lines.py`: **304**
+  gepaarte Fundstellen (eine mehr), 0 verschoben, 0 tot.
+* Die neu benutzten Mathlib-Namen sind am Quelltext des gebundenen Commits
+  belegt: `closure_Ioo` (`Mathlib/Topology/Order/DenselyOrdered.lean:74`, über
+  `[LinearOrder] [OrderTopology] [DenselyOrdered]` und damit über `ℝ≥0`),
+  `MeasurableSet.preimage` (`Mathlib/MeasureTheory/MeasurableSpace/Basic.lean:312`),
+  `tsub_le_iff_right` (`Mathlib/Algebra/Order/Sub/Defs.lean:63`),
+  `MeasureTheory.prob_compl_eq_one_sub`, `ENNReal.toReal_sub_of_le`, `Nat.le_ceil`.
+  Zwei Namen, die ein früherer Lauf aus dem Gedächtnis genommen hätte, gibt es
+  auf `master` **nicht**: `ENNReal.sub_le_iff_le_add` (es ist `tsub_le_iff_right`)
+  und `isProbabilityMeasure_map` — letzteres ist überflüssig geworden, weil
+  `IsProbabilityMeasure (Measure.map f μ)` seit `Probability.lean:124` eine
+  **Instanz ohne Meßbarkeitsvoraussetzung** ist.
+
+#### Eingetragen
+
+* `MartingaleProblems/Suggested.lean`: neuer Abschnitt „Milestone 11: compact
+  containment of a family, and its path space form" am Ende, fünf Deklarationen.
+* `SkorokhodSpace/Suggested.lean`, Meilenstein 9:
+  `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` (neu),
+  `SkorokhodSpace.forall_mem_Icc_of_forall_mem_dense` (über `ι` verallgemeinert
+  und aus der ersten hergeleitet), `mem_exhaustion_zero_nnreal_iff` und
+  `SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion_nnreal` (neu).
+* `MartingaleProblems/README.md`, Meilenstein 11, an der Stelle, die der Vorlauf
+  für diesen Punkt offengelassen hatte.
+* `SkorokhodSpace/README.md`, Meilenstein 9, vor dem Akzeptanzbeispiel.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`isTight_map_postcomp_of_exists_martingale`**, die erste eigentliche Aussage
+   des Meilensteins 11. Sie ist Vorschlag 2 des Vorlaufs und Vorschlag 1 des
+   Vorvorlaufs, unverändert in der Sache — und sie ist jetzt an **keiner**
+   Eingabe aus `SkorokhodSpace` mehr aufgehalten und an keiner Übersetzung mehr.
+
+   *Worauf sie ruht:* auf
+   `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal` (Meilenstein 9
+   dort, 2026-09-19), dessen Hypothese dieser Lauf liefert, und auf den
+   stetigzeitlichen Doob-Ungleichungen des Meilensteins 9 von
+   `MartingaleProblems`, die sie ausdrücklich verbraucht und die **fehlen**.
+
+   *Woran es daher klemmt, und es ist zu prüfen und nicht zu vermuten:* die
+   Definition der Approximierbarkeit im Meilenstein verlangt
+   `𝔼[⨆ t ∈ Set.Iic T ∩ D, |Y n t - f (X n t)|] < ε` — ein Supremum über eine
+   Zeitmenge unter dem Erwartungswert, also genau die Größe, die Doobs
+   Maximalungleichung in stetiger Zeit abschätzt. Der erste Schritt eines Laufs
+   an diesem Punkt ist deshalb nicht der Satz, sondern die Frage, ob die
+   Abzählbarkeit von `D` das Supremum schon meßbar macht und ob Mathlibs
+   Maximalungleichung über einem **diskreten** Index sich längs `D` darüber
+   ziehen läßt — das ist dieselbe Frage, an der Meilenstein 9 hängt (dort für
+   die Aufkreuzungen statt für das Maximum), und sie einmal zu beantworten
+   entlastet beide.
+2. **Die gleichmäßige Fassung an Daten vorführen**, und zwar an den Daten, die
+   der Meilenstein ohnehin hat: `jumpPathD` für eine Folge von Sprungprozessen
+   mit gemeinsam beschränkter Rate. `uniformCompactContainment_of_forall_map_eq`
+   zeigt die Bedingung nur für eine **konstante** Familie, also gerade für den
+   Fall, in dem die Gleichmäßigkeit nichts fordert. Ein Zeuge mit wirklich
+   verschiedenen Gliedern fehlt, und ohne ihn ist nicht vorgeführt, daß die
+   Bedingung an einer nichttrivialen Approximationsfolge erfüllbar ist.
+
+   *Worauf er ruht:* auf `jumpPathD`, auf `ae_mem_nonExplosiveE` für beschränkte
+   Raten und auf einem Zustandsraum, in dem die erreichbare Menge kompakt ist —
+   der billigste Fall ist `E` selbst kompakt, wo jede Familie die Bedingung mit
+   `K = Set.univ` erfüllt, und der ist als Probe zu schwach. Der erste
+   nichttriviale ist der Poissonprozeß auf `ℕ`, wo `K = Set.Icc 0 N` mit `N` aus
+   der Markovungleichung an `𝔼[X T] = λT` kommt, **gleichmäßig in `n`**, sobald
+   die Raten gleichmäßig beschränkt sind. Das ist eine Rechnung und keine
+   Theorie, und sie prüft die Definition dort, wo sie etwas behauptet.
+
+### 2026-09-20, erster Lauf des Tages — die Vorfrage von Vorschlag 1 ist beantwortet, und beide Hälften der Antwort sind Sätze: Mathlibs Maximalungleichung läßt sich längs `D` ziehen und das Supremum über `D` ist meßbar — aber **über `ℝ` sagt es die Unwahrheit**, und die Approximierbarkeitsbedingung des Meilensteins 11 war dadurch von genau den Familien erfüllt, die sie ausschließen soll
+
+**Bearbeitet:** Vorschlag 1 des Vorlaufs, `isTight_map_postcomp_of_exists_martingale`
+— genauer die Vorfrage, die er dem Lauf ausdrücklich voranstellte:
+
+> „ob die Abzählbarkeit von `D` das Supremum schon meßbar macht und ob Mathlibs
+> Maximalungleichung über einem **diskreten** Index sich längs `D` darüber
+> ziehen läßt — das ist dieselbe Frage, an der Meilenstein 9 hängt, und sie
+> einmal zu beantworten entlastet beide."
+
+Sie ist beantwortet, und zwar mit **fünf** Deklarationen statt mit einem Absatz.
+Vier neue in `MartingaleProblems/Suggested.lean` (ein neuer Abschnitt
+`WindowSupremum` und ein Satz am Ende von `DoobUpcrossingBound`), dazu zwei in
+`SkorokhodSpace/Suggested.lean` **verallgemeinert**.
+
+#### Die Antwort auf die erste Hälfte: ja, und Mathlib hat sie
+
+`measurable_biSup_enorm_of_countable`. Mathlibs `Measurable.iSup`
+(`MeasureTheory/Constructions/BorelSpace/Order.lean:909`) verlangt `[Countable ι]`
+über einer bedingt vollständigen linearen Ordnung mit Ordnungstopologie und
+zweitem Abzählbarkeitsaxiom, und `ℝ≥0∞` hat alles davon. Der Schritt, den ein
+Lauf dabei übersieht, ist ein anderer:
+
+> **In der Binderform `⨆ t ∈ W` läuft das Supremum über den *ganzen* Index.**
+> `Measurable.iSup` greift darauf nicht, auch wenn `W` abzählbar ist; erst
+> `iSup_subtype'` macht daraus ein Supremum über den abzählbaren Untertyp.
+
+Die Abzählbarkeit von `D` macht das Supremum also meßbar, aber nicht von selbst:
+sie muß durch eine Umschreibung hindurch, und die Reduktion des Fensters auf `D`
+ist es, die `D` überhaupt erst liefert.
+
+#### Die Antwort auf die zweite Hälfte: ja, und der Weg stand schon im Beweis eines anderen Satzes
+
+`Submartingale.mul_measReal_exists_ge_abs_le_countable`:
+
+> `ε * P {ω | ∃ s ∈ S, ε ≤ |Y s ω|} ≤ 𝔼[(Y T)⁺] + (𝔼[(Y T)⁺] − 𝔼[Y R])`
+> für abzählbares `S` zwischen `R` und `T`, über beliebiger linearer Ordnung.
+
+Mathlibs `maximal_ineq` (`Probability/Martingale/OptionalStopping.lean:144` auf
+`master`) ist über `ℕ` und über `Finset.sup'`; der Übergang geht über
+`Filtration.comp`, `Finset.monoEnum` und die Stetigkeit von unten, also über
+dieselben drei Bausteine, mit denen der Aufkreuzungsteil des Meilensteins 9
+seinen Index gewechselt hat. **Kein Schritt verlangt die Meßbarkeit der
+Niveaumenge** — sie wird nur von oben abgeschätzt und ihr Maß als `Measure.real`
+gelesen.
+
+Der Satz ist nicht neu bewiesen, sondern **freigelegt**: er stand als `have key`
+mitsamt der Vereinigung im Beweis von `Submartingale.ae_bddOn` vom 2026-09-17 und
+war dort nicht ausgesprochen. Das ist der Grund, aus dem die Vorfrage des
+Vorlaufs mit „ja" zu beantworten war, ehe eine Zeile geschrieben wurde; was
+fehlte, war die Aussage, nicht das Argument.
+
+**Eine Voraussetzung ist dabei hinzugekommen, und sie ist kein Formfehler:**
+`hRT : R ≤ T`. Für nichtleeres `S` folgt sie aus den beiden anderen an jedem
+`s ∈ S`; für `S = ∅` ist sie **nötig**, und der Zeuge steht im Doc-Kommentar:
+mit `T < R`, `Y T = −1`, `Y R = 5` — einem Submartingal — lautete die Schranke
+`0 ≤ −5`. `S.Nonempty` zu verlangen wäre die Alternative und für den Verbraucher
+teurer.
+
+#### Der Befund, den keine der beiden Hälften vorhersah: das Supremum über `ℝ` lügt
+
+`biSup_eq_zero_of_not_bddAbove`, mit `biSup_natCast_eq_zero` als Zeuge:
+
+> Über `ℝ` ist das Supremum einer **nach oben unbeschränkten** Familie `0`
+> (`Real.iSup_of_not_bddAbove`). Also ist `⨆ t ∈ S, |Y t ω|` **genau dort `0`,
+> wo der Pfad entweicht**.
+
+Und damit trifft es die Aussage, um die dieser Vorschlag geht. Die
+Approximierbarkeitsbedingung von `isTight_map_postcomp_of_exists_martingale`
+lautete im Meilenstein
+
+> `⨆ n, 𝔼[⨆ t ∈ Set.Iic T ∩ D, |Y n t − f (X n t)|] < ε`,
+
+und in dieser Gestalt ist sie **von einer Folge erfüllt, deren
+Approximationsfehler auf dem Fenster unbeschränkt ist**: der Integrand ist dort
+`0`, das Integral also klein. Das ist das Gegenteil dessen, was sie ausdrücken
+soll — eine Hypothese, die um so leichter zu erfüllen ist, je schlechter die
+Approximation. Der Meilenstein ist berichtigt; die Bedingung steht jetzt als
+unteres Integral in `ℝ≥0∞`:
+
+> `⨆ n, ∫⁻ ω, ⨆ t ∈ Set.Iic T ∩ D, ‖Y n t ω − f (X n t ω)‖ₑ ∂(P n) < ε`.
+
+Das ist die **fünfte** Instanz des Musters, das die stehende Regel zur
+Nichtexplosion benennt (`sInf ∅ = 0`, `x / 0 = 0`, der Bochner-Müllwert,
+`stepIndex` jenseits der Explosion — und jetzt `sSup` einer unbeschränkten Menge
+in `ℝ`), und die erste, die eine **Hypothese** statt einer Konklusion still wahr
+gemacht hat. `⊤` in `ℝ≥0∞` sagt auch hier die Wahrheit, und die Hebung ist
+dieselbe wie die von `cumulativeRateF` im Meilenstein 4.
+
+#### Die Reduktion, die Meilenstein 9 als eigene Aussage bestellt hatte
+
+`biSup_enorm_Iic_eq_of_isRightContinuous`:
+
+> `⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ = ⨆ t ∈ insert T (Set.Iic T ∩ D), ‖Y t ω‖ₑ`
+> für rechtsstetige Pfade und dichtes `D`.
+
+Der `insert` ist nicht Zierat: an den **rechten Endpunkt** des Fensters kommt von
+rechts nichts heran, was noch im Fenster liegt, und eine dichte Menge erreicht
+ihn nicht. Das ist wörtlich die Asymmetrie, die der vierundzwanzigste Lauf des
+2026-09-19 an `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` gefunden hat;
+dort wurde sie durch Vergrößern des Fensters bezahlt, hier durch den `insert`.
+
+#### Was dabei an `SkorokhodSpace` zu ändern war, und warum es kein Nebenweg ist
+
+Die beiden Fensterlemmata des Vorlaufs standen unter dem `variable`-Block ihres
+Abschnitts und trugen damit `[MetricSpace ι]` **und** `[MetricSpace E]`, obwohl
+ihr Beweis nur `closure_Ioo`, `Dense.open_subset_closure_inter`,
+`IsRightContinuous` und `IsClosed.mem_of_tendsto` liest. Der Verbraucher dieses
+Laufs nimmt Pfade mit Werten in **`ℝ≥0∞`**, und `ℝ≥0∞` ist kein metrischer Raum:
+unter der alten Fassung war das Lemma für ihn unerreichbar, und das Argument
+wäre zum zweiten Mal geschrieben worden.
+
+`SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` und
+`SkorokhodSpace.forall_mem_Icc_of_forall_mem_dense` stehen deshalb jetzt in einem
+eigenen Abschnitt `DenseWindow` über **eigenen** Variablen: der Index eine dicht
+geordnete lineare Ordnung mit Ordnungstopologie, die Werte ein beliebiger
+topologischer Raum. Die `omit`-Zeilen entfallen damit ersatzlos, die bisherigen
+Verbraucher übersetzen unverändert, und die Zahl der Warnungen ist gleich
+geblieben.
+
+#### Geprüft
+
+* `scripts/check_master.py`: rc 0, **0 Fehler**, 0 `sorry`, 0 veraltet,
+  Warnungen 18 / 35 / 106 — **unverändert** gegenüber dem Vorlauf, also hat die
+  Verallgemeinerung in `SkorokhodSpace` keine ungenutzte Abschnittsvariable
+  hinterlassen. Mathlib `94ef6b89544e58e90f119da869f3fb48d1da0f4c` (2026-09-18),
+  Lean 4.35.0-rc2.
+* `scripts/check_axioms_master.py` auf alle sieben neuen und geänderten
+  Deklarationen: `propext`, `Classical.choice`, `Quot.sound`, ohne Ausnahme.
+* `scripts/check_duplicates.py`: 2 451 geprüfte eigene Deklarationen (fünf mehr),
+  37 Treffer auf dem letzten Namensbestandteil — **unverändert**.
+* `scripts/check_negatives.py`: 43 Behauptungen, 0 mit unerwarteten Treffern.
+* `scripts/extract_citations.py`, `scripts/check_cited_lines.py`: 304 gepaarte
+  Fundstellen, 0 verschoben, 0 tot.
+* Die Negativaussage dieses Laufs ist am Quelltext von `upstream/master`
+  (`dec5b2b780537b6eaf7f5e5f000c12f7387fb24d`, 2026-09-18, in diesem Lauf frisch
+  geholt) nachgeprüft: **Doobs `Lᵖ`-Ungleichung gibt es in Mathlib für keinen
+  Index.** `eLpNorm` kommt in `Mathlib/Probability/Martingale/` nur in
+  `BorelCantelli.lean` und `Convergence.lean` vor, und der Doc-Kommentar von
+  `maximal_ineq` sagt es selbst: die `Lᵖ`-Fassung „will be proved in an upcoming
+  PR".
+* Neu benutzte Mathlib-Namen, am Quelltext belegt: `Measurable.iSup`
+  (`MeasureTheory/Constructions/BorelSpace/Order.lean:909`), `iSup_subtype'`
+  (`Order/CompleteLattice/Basic.lean:454`), `biSup_mono` (`ibid.:297`),
+  `Real.iSup_of_not_bddAbove`
+  (`Algebra/Order/Archimedean/Real/Basic.lean:184`, dort als
+  `iSup_of_not_bddAbove` im Namensraum `Real`), `ciSup_pos`,
+  `Integrable.pos_part` (`MeasureTheory/Function/L1Space/Integrable.lean:949`),
+  `IsRightContinuous.continuous_comp` (`Topology/Order/Cadlag.lean:39`),
+  `Monotone.measure_iUnion`.
+
+#### Eingetragen
+
+* `MartingaleProblems/Suggested.lean`:
+  `Submartingale.mul_measReal_exists_ge_abs_le_countable` am Ende von
+  `DoobUpcrossingBound`, und der neue Abschnitt `WindowSupremum` mit
+  `measurable_biSup_enorm_of_countable`, `biSup_eq_zero_of_not_bddAbove`,
+  `biSup_natCast_eq_zero` und `biSup_enorm_Iic_eq_of_isRightContinuous`.
+* `SkorokhodSpace/Suggested.lean`: Abschnitt `DenseWindow`, die beiden
+  Fensterlemmata über eigenen Variablen.
+* `MartingaleProblems/README.md`: Meilenstein 9, der dritte Punkt (die
+  Reduktion, der Müllwert, die Abzählbarkeit); Meilenstein 11, die
+  Approximierbarkeitsbedingung in `ℝ≥0∞` und der Stand der Maximalungleichung.
+* `SkorokhodSpace/README.md`: Meilenstein 9, der Absatz zu den Fensterlemmata.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`Submartingale.eLpNorm_iSup_le` über `ℕ`**, Doobs `Lᵖ`-Ungleichung im
+   diskreten Fall — und *nur* im diskreten. Sie ist die einzige noch fehlende
+   Zutat von `isTight_map_postcomp_of_exists_martingale`, die Mathlib in keiner
+   Fassung hat, und sie ist von der Zeitachse unabhängig: der Übergang auf ein
+   abzählbares `S` ist nach diesem Lauf derselbe wie bei der Maximalungleichung
+   (`Filtration.comp`, `Finset.monoEnum`, Stetigkeit von unten), und über `ℝ≥0∞`
+   ist der Grenzübergang monoton und braucht nichts weiter.
+
+   *Worauf sie ruht:* auf `MeasureTheory.maximal_ineq`, das Mathlib hat, und auf
+   der Schichtformel `∫⁻ f^p = ∫₀^∞ p λ^(p−1) μ {f ≥ λ} dλ`. **Das ist der
+   Punkt, der zuerst zu prüfen ist und nicht zu raten:** ob Mathlib die
+   Schichtformel in der Gestalt hat, die der Beweis braucht, oder ob der Weg über
+   `MeasureTheory.lintegral_lintegral` und Fubini von Hand geht. Findet sie sich,
+   ist der Satz ein Lauf; findet sie sich nicht, ist die Bruchstelle benannt und
+   gehört als eigener Punkt in den Meilenstein 9.
+2. **Die stetigzeitliche Maximalungleichung `maximal_ineq_of_rightContinuous`**,
+   und sie ist nach diesem Lauf eine Zusammensetzung und keine Analysis mehr: aus
+   `biSup_enorm_Iic_eq_of_isRightContinuous` (das Fenstersupremum wird längs
+   `insert T (Set.Iic T ∩ D)` gelesen) und
+   `Submartingale.mul_measReal_exists_ge_abs_le_countable` (die abzählbare Menge
+   trägt die Schranke). Die eine Stelle, an der zu rechnen ist, ist der Übergang
+   von `{ω | ∃ s ∈ S, ε ≤ |Y s ω|}` auf `{ω | ε ≤ ⨆ s ∈ S, ‖Y s ω‖ₑ}`: das
+   Supremum erreicht das Niveau selbst nicht, sondern nur jedes kleinere, die
+   Schranke ist deshalb an `ε' < ε` zu lesen und danach im Grenzwert
+   zusammenzuziehen. Das ist eine Zeile Maßtheorie und keine fehlende Eingabe.
+3. **Die zweite Hälfte von Vorschlag 2 des Vorlaufs bleibt stehen** — die
+   gleichmäßige Fassung von `CompactContainment` an einer nichttrivialen Folge
+   von Sprungprozessen vorführen. Sie ist von diesem Lauf unberührt und war schon
+   dort als Rechnung und nicht als Theorie beschrieben.
+
+### 2026-09-20, zweiter Lauf des Tages — Doobs `Lᵖ`-Ungleichung steht, und der Weg dahin war nicht der angesagte: **die Schichtformel ein zweites Mal, unter dem gewichteten Maß**, ersetzt Fubini ganz; dazu die stetigzeitliche Maximalungleichung, bei der das **strikte** Niveau das primitive ist
+
+**Bearbeitet:** die Vorschläge 1 und 2 des Vorlaufs, beide, und in der
+umgekehrten Reihenfolge ihrer Numerierung, weil Vorschlag 2 die Eingabe von
+Vorschlag 1 im stetigzeitlichen Fall ist.
+
+Dreizehn neue Deklarationen in `MartingaleProblems/Suggested.lean` und eine
+umgebaute, zwei neue Abschnitte unter Meilenstein 9 (`Doob's maximal inequality
+in continuous time` und `Doob's Lᵖ inequality`), ein neuer Import
+(`Mathlib.Analysis.SpecialFunctions.Pow.Integral`). **Der Satz, den der
+Meilenstein bestellt hatte, steht** — Doobs `Lᵖ`-Ungleichung über dem ganzen
+Fenster `Set.Iic T`, nicht bloß über `ℕ`.
+
+#### Die Vorfrage von Vorschlag 1 ist mit „ja" zu beantworten, und zwar in beiden Fassungen
+
+Der Vorlauf hatte sie ausdrücklich als das genannt, was „zuerst zu prüfen ist
+und nicht zu raten": ob Mathlib die Schichtformel in der Gestalt hat, die der
+Beweis braucht. Es hat sie, und in zwei zueinander passenden Fassungen:
+
+* `MeasureTheory.lintegral_rpow_eq_lintegral_meas_le_mul`
+  (`Analysis/SpecialFunctions/Pow/Integral.lean:57`) und `…_lt_mul`
+  (`ibid.:91`):
+  `∫⁻ ω, ofReal (f ω ^ p) = ofReal p * ∫⁻ t in Ioi 0, μ {t ≤ f} * ofReal (t^(p-1))`,
+  ohne σ-Endlichkeit, für `AEMeasurable f` und `0 ≤ᵐ f`.
+* `MeasureTheory.lintegral_comp_eq_lintegral_meas_le_mul`
+  (`MeasureTheory/Integral/Layercake.lean:394`) und `…_lt_mul` (`ibid.:478`):
+  dieselbe Formel mit **beliebigem Gewicht** `g`, also
+  `∫⁻ ω, ofReal (∫ t in 0..f ω, g t) = ∫⁻ t in Ioi 0, μ {t ≤ f} * ofReal (g t)`.
+
+Damit war der Satz ein Lauf, wie der Vorlauf geschätzt hatte. Was er **nicht**
+vorhergesehen hatte, ist, daß die zweite Fassung den Fubini-Schritt ganz
+überflüssig macht.
+
+#### Der Befund: Fubini kommt nicht vor
+
+Der Lehrbuchbeweis setzt die Schwachtypschranke in die Schichtformel ein und
+vertauscht dann `∫ dt` mit `∫ dμ`. Der Vorlauf hatte dafür
+`lintegral_lintegral_swap` und ein Lebesgue-Integral von `t^(p-2)` über ein
+Intervall eingeplant — beides teuer. Beides entfällt:
+
+> Setzt man `ν = μ.withDensity (ENNReal.ofReal ∘ g)`, so **ist** `ν {t ≤ M}`
+> gleich `∫⁻_{t ≤ M} g` (`withDensity_apply`), und die Schichtformel mit
+> Gewicht `t^(p-2)`, **unter `ν` gelesen**, leistet die Vertauschung in einem
+> Schritt. `lintegral_withDensity_eq_lintegral_mul` liest das Ergebnis wieder
+> unter `μ`.
+
+Das innere Integral ist damit ein **Bochnersches** Intervallintegral,
+`∫ t in 0..M a, t^(p-2) = M a^(p-1)/(p-1)`, und dafür hat Mathlib
+`integral_rpow` und `intervalIntegral.intervalIntegrable_rpow'`. Die
+Bruchstelle, die der Vorlauf benannt hatte, gibt es nicht — sie war eine
+Bruchstelle des Lehrbuchwegs und nicht des Satzes.
+
+#### Was eingetragen ist
+
+* `lintegral_rpow_le_mul_lintegral_mul_rpow` — die Schichtformel, die
+  Schwachtypschranke Niveau für Niveau, die Schichtformel unter `ν`. Ergebnis
+  ist die Zwischenschranke durch `∫⁻ g · M^(p-1)`. **`g` wird nicht als
+  nichtnegativ vorausgesetzt**: es geht nur durch `ENNReal.ofReal (g a)` ein,
+  also durch seinen Positivteil, und die Hypothese spricht von diesem.
+* `lintegral_rpow_le_of_le_mul_lintegral_mul_rpow` — Hölder gegen
+  `q = p/(p-1)` und die Kürzung von `A^(1/q)`.
+* `lintegral_rpow_le_of_weak_type` — beide zusammen. **Sie trägt keine
+  Filtration, kein Submartingal und keine Wahrscheinlichkeit**: eine
+  nichtnegative meßbare `M`, deren Niveaumengen
+  `ofReal t * μ {t ≤ M} ≤ ∫⁻_{t ≤ M} ofReal g` für alle `t > 0` erfüllen,
+  erfüllt `∫⁻ M^p ≤ (p/(p-1))^p * ∫⁻ g^p`. Das ist der ganze Satz bis auf die
+  Eingabe, und deshalb steht er über einem nackten Maßraum: der diskrete und
+  der stetigzeitliche Fall teilen sich einen Beweis.
+* `Submartingale.lintegral_rpow_range_sup'_le` — die Instanz über `ℕ`, aus
+  Mathlibs `maximal_ineq` und `ofReal_integral_eq_lintegral_ofReal`.
+* `eLpNorm_le_of_lintegral_rpow_le` und `Submartingale.eLpNorm_range_sup'_le` —
+  dieselbe Instanz in der Gestalt, die der Meilenstein nennt,
+  `‖f*‖ₚ ≤ p/(p-1) · ‖f n‖ₚ`. Das erste ist die Stelle, an der die beiden
+  Schreibweisen aufeinandertreffen: `eLpNorm` liest `‖·‖ₑ`, der Kern liest
+  `ENNReal.ofReal`, und für eine nichtnegative Funktion stimmen sie überein
+  (`Real.enorm_eq_ofReal`).
+* `Submartingale.mul_measReal_lt_biSup_enorm_le` und
+  `Submartingale.mul_measReal_le_biSup_enorm_le` — Vorschlag 2, die
+  stetigzeitliche Maximalungleichung, und sie ist eine reine Zusammensetzung:
+  `biSup_enorm_Iic_eq_of_isRightContinuous` liest das Fenstersupremum längs
+  `insert T (Set.Iic T ∩ D)`, und diese abzählbare Menge trägt die Schranke
+  durch `Submartingale.mul_measReal_exists_ge_abs_le_countable`.
+
+#### Und ein Befund, der beim Anschließen auffiel: die Maximalungleichung dieses Projekts ist **nicht lokalisiert**, und die `Lᵖ`-Ungleichung braucht das
+
+`lintegral_rpow_le_of_weak_type` liest auf der rechten Seite
+`∫⁻ a in {t ≤ M a}, g a` — ein Integral **über die Niveaumenge**. Eine Schranke
+durch eine *Konstante* ist dort wertlos: in die Schichtformel eingesetzt gäbe
+sie `∫⁻ M^p ≤ C · ∫⁻ t^(p-2) dt`, und dieses Integral divergiert. Mathlibs
+`maximal_ineq` ist in genau diesem Sinn lokalisiert; unsere
+`mul_measReal_exists_ge_abs_le_countable` und die beiden stetigzeitlichen
+Fassungen sind es **nicht**, ihre rechte Seite ist `2 𝔼[(Y T)⁺] − 𝔼[Y R]`.
+
+Der Befund ist eingelöst, nicht nur notiert:
+
+* `Submartingale.mul_measReal_exists_ge_le_setIntegral` über `ℕ`. Sie steckte
+  bereits im Beweis der globalen Fassung und war dort nicht ausgesprochen —
+  dasselbe Muster wie beim Vorlauf, wo `mul_measReal_exists_ge_abs_le_countable`
+  als `have key` im Beweis von `ae_bddOn` stand.
+  `mul_measReal_exists_ge_le_integral_posPart` ist jetzt ihre einzeilige
+  Abschwächung, und der Beweis ist um dreißig Zeilen kürzer.
+* `Submartingale.mul_measReal_exists_ge_le_setIntegral_countable` über einer
+  beliebigen linearen Ordnung. **Zwei Schritte** trennen sie von der globalen
+  Fassung und nur zwei: die Niveaumenge eines endlichen Stücks liegt in
+  `𝓕 (max F)`, weil sie eine endliche Vereinigung von `{ε ≤ Y t}` mit
+  `t ≤ max F` ist — damit trägt die Submartingaleigenschaft das Integral von
+  `max F` nach `T` —, und die Integrale über die wachsenden Stücke werden vom
+  Integral über die Vereinigung dominiert, weil der Integrand nichtnegativ ist.
+
+**Der Preis ist die Einseitigkeit, und er hat denselben Grund wie der Wegfall
+der unteren Schranke.** Die lokalisierte Fassung hat keine untere
+Ordnungsschranke an `S` und spricht von `{∃ s ∈ S, ε ≤ Y s ω}` statt von
+`{∃ s ∈ S, ε ≤ |Y s ω|}`. Beides kommt daher, daß die **Minimalungleichung**,
+die die untere Schranke verbraucht, lokalisiert über die Niveaumenge von `−Y`
+liefe — einer *anderen* Menge —, und die beiden Schranken sich dann nicht
+addieren ließen.
+
+#### Und der Satz über dem ganzen Fenster, `Submartingale.lintegral_biSup_enorm_rpow_le` — **nicht** über eine stetigzeitliche Schwachtypschranke, sondern über monotone Konvergenz
+
+> `∫⁻ ω, (⨆ t ∈ Set.Iic T, ‖Y t ω‖ₑ) ^ r ∂P`
+> `  ≤ ENNReal.ofReal ((r/(r-1))^r) * ∫⁻ ω, ‖Y T ω‖ₑ ^ r ∂P`
+> für ein nichtnegatives rechtsstetiges Submartingal, `1 < r`, und `Y t ∈ Lʳ`
+> für jedes `t`.
+
+Der naheliegende Weg — die lokalisierte Maximalungleichung nach stetiger Zeit
+tragen und den Kern darauf anwenden — ist **nicht** gegangen worden, und die
+Begründung ist kein Aufwandsargument, sondern eine über Müllwerte:
+
+* **Die Aussage steht in `ℝ≥0∞`, und das ist erzwungen.** Jede reellwertige
+  Kodierung des Fenstersupremums lügt an den entweichenden Pfaden:
+  `(⨆ t, ‖Y t ω‖ₑ).toReal` ist dort `0`, und `⨆ t, Y t ω` in `ℝ` ebenfalls
+  (`biSup_eq_zero_of_not_bddAbove` des Vorlaufs). Der Kern
+  `lintegral_rpow_le_of_weak_type` ist reellwertig und kann das
+  Fenstersupremum deshalb gar nicht lesen. Das, und nicht die
+  Maximalungleichung, war die eigentliche Hürde.
+* **Die Endlichkeit des Supremums ist damit keine Voraussetzung**, sondern
+  fällt ab: monotone Konvergenz gibt die Schranke auch dort, wo beide Seiten
+  `⊤` sind. Die einzige neue Hypothese ist `Y t ∈ Lʳ` für jedes einzelne `t`,
+  und die ist die übliche.
+* **Die stetigzeitliche Schwachtypschranke wird gar nicht gebraucht.** Sie wäre
+  der teure Weg: die Niveaumenge `{ofReal t ≤ ⨆ s ∈ S, ‖Y s‖ₑ}` ist der
+  *absteigende* Durchschnitt der Mengen `{∃ s ∈ S, t' ≤ Y s}` über `t' ↑ t`,
+  und man bräuchte `tendsto_measure_iInter_atTop` **und**
+  `tendsto_setIntegral_of_antitone` — beide vorhanden, aber beide vermeidbar.
+
+**Der Schritt, auf den es ankommt, ist eine Umnumerierung.** Die Aufzählung von
+`S = insert T (Set.Iic T ∩ D)` wird so umgebaut, daß `ρ 0 = T` ist. Dann liegt
+`T` in **jedem** endlichen Stück, und weil alle Zeiten von `S` unter `T` liegen,
+ist die größte Zeit jedes Stücks `T`. Die Instanz über `ℕ` schätzt damit
+unmittelbar durch `Y T` ab. Ohne diesen Kunstgriff müßte man zeigen, daß
+`t ↦ ‖Y t‖ᵣ` wächst, und das ist die bedingte Jensen-Ungleichung.
+
+Der Grenzübergang ist `lintegral_iSup` zusammen mit `ENNReal.orderIsoRpow` —
+einer **Ordnungsisomorphie**, also mit `OrderIso.map_iSup` verträglich mit
+Suprema —, und daß das Supremum über die Stücke das Fenstersupremum ist, ist
+`biSup_enorm_Iic_eq_of_isRightContinuous` des Vorlaufs.
+
+#### Und die Gestalt, die das Manuskript wirklich benutzt, steht auch — mitsamt der Mathlib-Lücke, die dafür zu schließen war
+
+`Martingale.lintegral_biSup_enorm_rpow_le`: dieselbe Ungleichung für ein
+rechtsstetiges **Martingal** `X`, angewandt auf das nichtnegative Submartingal
+`‖X ·‖`.
+
+Daß `‖X ·‖` ein Submartingal ist, **hat Mathlib nicht** — die Zeichenketten
+`submartingale_abs`, `Martingale.abs`, `Martingale.norm` und `convex` kommen in
+`Mathlib/Probability/Martingale/` nicht vor (geprüft 2026-09-20 an
+`dec5b2b780537b6eaf7f5e5f000c12f7387fb24d`). Die **Eingabe** dazu hat es aber,
+und deshalb ist der Beweis drei Zeilen lang: `MeasureTheory.norm_condExp_le`
+(`MeasureTheory/Function/ConditionalExpectation/CondJensen.lean:246`), die
+bedingte Jensen-Ungleichung für die Norm, und zwar **ohne jede
+Integrierbarkeitsvoraussetzung**. `Martingale.submartingale_norm` ist damit
+eingetragen, für ein banachraumwertiges Martingal, weil das nichts kostet —
+`norm_condExp_le` steht dort schon so.
+
+Zu beachten ist beim Anschließen nur, daß **zwei Normen aufeinandertreffen**:
+der Submartingalsatz liest `‖Y t ω‖ₑ` des *reellen* Prozesses
+`Y t ω = ‖X t ω‖`, und das ist `‖X t ω‖ₑ`, weil die Norm nichtnegativ ist. Die
+Rechtsstetigkeit wird von den Pfaden von `X` verlangt und mit
+`IsRightContinuous.continuous_comp` auf `‖X ·‖` getragen — schwächer, als sie
+von der Norm zu verlangen, und genau das, was ein càdlàg-Martingal liefert.
+
+#### Vier Entscheidungen, die nicht ästhetisch sind
+
+**Die Niveaumengen der `Lᵖ`-Ungleichung werden nicht-strikt gelesen.** Mathlibs
+`maximal_ineq` steht über `{ε ≤ f*}`, und die Schichtformel gibt es in beiden
+Fassungen. Liest man durchweg nicht-strikt, so wird die Martingaleingabe
+**unverändert** verbraucht und es ist kein Übergang zwischen den beiden
+Niveaumengen zu führen. Der erste Entwurf dieses Laufs stand strikt und hätte
+genau diesen Übergang gekostet.
+
+**In der Maximalungleichung dagegen ist das *strikte* Niveau das primitive**,
+und das ist die Umkehrung der üblichen Darstellungsreihenfolge. Der Grund ist
+die Gestalt des Supremums: aus `ofReal ε < ⨆ s ∈ S, ‖Y s ω‖ₑ` **bekommt** man
+eine Zeit, an der das Niveau überschritten wird, aus `ofReal ε ≤ ⨆` bekommt man
+keine, weil das Supremum nicht angenommen zu werden braucht. Die klassische
+nicht-strikte Fassung ist deshalb das Korollar: man liest die strikte an jedem
+`x < ε` und läßt `x` längs `𝓝[<] ε` wachsen.
+
+**Die Endlichkeit `∫⁻ M^p ≠ ⊤` wird getragen, nicht hergeleitet.** Der Beweis
+endet bei `A ≤ C · B^(1/p) · A^(1/q)` und teilt durch `A^(1/q)`. Über einem
+unendlichen Maß ist das eine echte Voraussetzung; in der Instanz über `ℕ` ist
+sie die `Lᵖ`-Integrierbarkeit des Maximums, die aus der der `f k` folgt, aber
+nicht Teil von `Submartingale` ist. Nicht behauptet wird, daß sie **nötig** ist
+— dafür fehlt ein Zeuge, und ohne Zeugen steht hier keine Notwendigkeit.
+
+**Keine der beiden Maximalungleichungen benutzt die Meßbarkeit der
+Niveaumenge.** Beide Seiten lesen `Measure.real`, und der Übergang zwischen den
+Mengen ist `measureReal_mono`, also Monotonie des äußeren Maßes. Daß die
+Niveaumenge meßbar *ist*, sagt `measurable_biSup_enorm_of_countable` des
+Vorlaufs mitsamt der Reduktion; gebraucht wird es hier nicht.
+
+#### Geprüft
+
+* `scripts/check_master.py`: rc 0, **0 Fehler**, 0 `sorry`, 0 veraltet,
+  Warnungen 18 / 35 / 106 — **unverändert** gegenüber dem Vorlauf, also haben
+  die vierzehn neuen und umgebauten Deklarationen keine einzige Warnung
+  hinterlassen. Mathlib `94ef6b89544e58e90f119da869f3fb48d1da0f4c`
+  (2026-09-18), Lean 4.35.0-rc2.
+* **Die Warnungsspalte hat sich in diesem Lauf zum ersten Mal bewährt.** Ein
+  Zwischenstand stand bei 107 Warnungen, davon **1 veraltet**, und das Skript
+  ist mit rc 1 ausgestiegen: `HasSubset.Subset.eventuallyLE` ist auf `master`
+  veraltet zugunsten von `LE.le.eventuallySubset`. Ersetzt ist es durch
+  `Filter.Eventually.of_forall`, was keinen der beiden Namen braucht. Das ist
+  genau der Fall, für den die Spalte am 2026-09-18 angelegt wurde: unter 106
+  Warnungen wäre die eine nicht aufgefallen.
+* `scripts/check_axioms_master.py` auf alle vierzehn: `propext`,
+  `Classical.choice`, `Quot.sound`, ohne Ausnahme.
+* `scripts/check_duplicates.py`: 2 464 geprüfte eigene Deklarationen (dreizehn
+  mehr), 37 Treffer auf dem letzten Namensbestandteil — **unverändert**.
+* `scripts/check_negatives.py`: 43 Behauptungen, 0 mit unerwarteten Treffern.
+* `scripts/extract_citations.py`, `scripts/check_cited_lines.py`: 308 gepaarte
+  Fundstellen (vier mehr, aus den neuen Absätzen der Roadmap), 0 verschoben,
+  0 tot.
+* Die Negativaussage bleibt stehen und ist am Quelltext von `upstream/master`
+  (`dec5b2b780537b6eaf7f5e5f000c12f7387fb24d`) geprüft: **Doobs
+  `Lᵖ`-Ungleichung hat Mathlib für keinen Index.** Was es hat, ist der ganze
+  analytische Unterbau, und das ist der Grund, aus dem der Satz billig war.
+* Neu benutzte Mathlib-Namen, am Quelltext belegt:
+  `lintegral_rpow_eq_lintegral_meas_le_mul`
+  (`Analysis/SpecialFunctions/Pow/Integral.lean:57`),
+  `lintegral_comp_eq_lintegral_meas_le_mul`
+  (`MeasureTheory/Integral/Layercake.lean:394`),
+  `lintegral_withDensity_eq_lintegral_mul`
+  (`MeasureTheory/Measure/WithDensity.lean:398`),
+  `ENNReal.lintegral_mul_le_Lp_mul_Lq`
+  (`MeasureTheory/Integral/MeanInequalities.lean:202`),
+  `Real.holderConjugate_iff_eq_conjExponent`
+  (`Basic/Real/ConjExponents.lean:203`),
+  `ENNReal.mul_le_mul_iff_left` (`Basic/ENNReal/Operations.lean:79`),
+  `ENNReal.ofReal_rpow_of_nonneg`
+  (`Analysis/SpecialFunctions/Pow/NNReal.lean:964`),
+  `ofReal_integral_eq_lintegral_ofReal`
+  (`MeasureTheory/Integral/Bochner/Basic.lean:734`),
+  `Finset.measurable_range_sup''` (`MeasureTheory/Order/Lattice.lean:211`),
+  `Finset.nonempty_range_add_one` (`Data/Finset/Range.lean:116`),
+  `integral_rpow`, `intervalIntegral.intervalIntegrable_rpow'`,
+  `Ioo_mem_nhdsLT` (`Topology/Order/OrderClosed.lean:282`),
+  `Real.enorm_eq_ofReal_abs` (`Analysis/Normed/Group/Real.lean:110`),
+  `Real.enorm_eq_ofReal` (`ibid.:104`),
+  `eLpNorm_eq_lintegral_rpow_enorm_toReal`
+  (`MeasureTheory/Function/LpSeminorm/Defs.lean:115`),
+  `ENNReal.orderIsoRpow` (`Analysis/SpecialFunctions/Pow/NNReal.lean:788`),
+  `lintegral_iSup` (`MeasureTheory/Integral/Lebesgue/Add.lean:36`),
+  `Finset.measurable_sup'` (`MeasureTheory/Order/Lattice.lean:200`),
+  `Finset.exists_mem_eq_sup'` (`Data/Finset/Lattice/Fold.lean:764`),
+  `setIntegral_mono_set` (`MeasureTheory/Integral/Bochner/Set.lean:739`),
+  `Submartingale.setIntegral_le` (`Probability/Martingale/Basic.lean:242`),
+  `Set.Countable.exists_eq_range`, `lintegral_finsetSum`,
+  `Monotone.measure_iUnion`.
+* **Eine Namensänderung auf `master`, die einen Lauf kosten kann:**
+  `mul_le_mul_left'` und `mul_le_mul_right'` gibt es dort nicht mehr. Die
+  Lemmata heißen jetzt `mul_le_mul_right (bc : b ≤ c) (a) : a * b ≤ a * c` und
+  `mul_le_mul_left (bc : b ≤ c) (a) : b * a ≤ c * a`
+  (`Algebra/Order/Monoid/Unbundled/Basic.lean:60` und `:69`) — die Seitenangabe
+  hat dabei ihre Bedeutung **getauscht**: sie benennt jetzt die Seite, auf der
+  der gemeinsame Faktor steht.
+
+#### Eingetragen
+
+* `MartingaleProblems/Suggested.lean`: die beiden neuen Abschnitte am Ende des
+  `namespace MeasureTheory` von Meilenstein 9, die beiden lokalisierten
+  Maximalungleichungen im Abschnitt `DoobUpcrossingBound`, und der Import.
+* `MartingaleProblems/README.md`: Meilenstein 9, der Absatz zur
+  Maximalungleichung, der neue zur `Lᵖ`-Ungleichung und der zur Lokalisierung;
+  Meilenstein 11, der Stand der beiden Hälften.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+Die `Lᵖ`-Hälfte des Meilensteins 9 ist mit diesem Lauf zu Ende — von der
+Schichtformel bis zu der Gestalt, die das Manuskript benutzt. Was bleibt:
+
+1. **`Martingale.measure_iSup_norm_le`**, die *Maximal*-Ungleichung in
+   derselben Gestalt: `ε * P {ω | ε ≤ ⨆ t ∈ Set.Iic T, ‖X t ω‖} ≤ 𝔼‖X T‖` für
+   ein rechtsstetiges Martingal. Sie ist jetzt dieselbe Zusammensetzung wie die
+   `Lᵖ`-Fassung — `Martingale.submartingale_norm` und dann
+   `Submartingale.mul_measReal_le_biSup_enorm_le` — und ist die letzte
+   Deklaration, die Meilenstein 9 für sein Gesicht 1 nennt und die noch nicht
+   dasteht. Sie sollte eine halbe Stunde kosten; kostet sie mehr, ist der Grund
+   die Umschreibung zwischen `P.real` und `ENNReal`, und die ist zu benennen.
+
+2. **`Submartingale.eLpNorm_iSup_le` — und die Frage, ob es sie überhaupt geben
+   soll.** Meilenstein 9 nennt die Fensterungleichung auch in `eLpNorm`-Gestalt,
+   aber `eLpNorm` ist reellwertig, und jede reellwertige Kodierung des
+   Fenstersupremums trägt einen Müllwert. Die `ℝ≥0∞`-Fassung steht seit diesem
+   Lauf. Zu entscheiden ist, ob die `eLpNorm`-Fassung unter der **f.s.
+   Endlichkeit** des Supremums nachgereicht wird — die aus
+   `mul_measReal_le_biSup_enorm_le` folgt, indem man
+   `P.real {ofReal ε ≤ ⨆} ≤ c/ε` über `ε → ∞` liest — oder ob der Meilenstein
+   ganz auf die `ℝ≥0∞`-Gestalt umgestellt wird. Der Verbraucher, Meilenstein 11,
+   liest ohnehin in `ℝ≥0∞`; das spricht für das Zweite, und dann ist der Punkt
+   eine Roadmap-Änderung und kein Beweis. **Diese Entscheidung gehört vor
+   Punkt 1**, weil sie die Gestalt von dessen Aussage mitbestimmt.
+
+3. **Die zweite Hälfte von Vorschlag 2 des Vorvorlaufs bleibt stehen** — die
+   gleichmäßige Fassung von `CompactContainment` an einer nichttrivialen Folge
+   von Sprungprozessen vorführen. Sie ist von diesem Lauf unberührt.
+
+### 2026-09-20, dritter Lauf des Tages — beide Vorschläge stehen, und Vorschlag 1 hat den Weg gewechselt, den der Vorlauf ihm vorgeschrieben hatte: die angesagte Zusammensetzung hätte den klassischen Faktor `1` gegen `2` eingetauscht; dazu ein Werkzeug, das den Nebenfund dieses Laufs künftig maschinell macht — die Roadmap versprach an einer Stelle einen Satz unter einem Namen, den kein Lauf je geschrieben hat
+
+**Bearbeitet:** die Vorschläge 2 (die Entscheidung) und 1 (der Satz) des
+Vorlaufs, in dieser Reihenfolge, wie der Vorlauf es verlangt hatte.
+
+Vier neue Deklarationen in `MartingaleProblems/Suggested.lean`, eine neue
+Prüfung (`scripts/check_own_names.py`), zwei Absätze in Meilenstein 9 und zwei
+berichtigte Akzeptanzbeispiele. **Die Warnungszahlen sind unverändert**
+(18 / 35 / 106), also hat keine der vier eine Warnung hinterlassen.
+
+#### Vorschlag 2 ist entschieden, und die Entscheidung ist gegen die `eLpNorm`-Fassung
+
+Der Vorlauf hatte sie ausdrücklich **vor** Vorschlag 1 gestellt, weil sie
+dessen Gestalt mitbestimmt. Die Entscheidung ist: **die Fensterungleichungen
+bleiben in `ℝ≥0∞`, eine `eLpNorm`-Fassung wird nicht nachgereicht**, und
+Meilenstein 9 sagt das jetzt mit Begründung, statt die Fassung zu nennen.
+
+Der Grund ist nicht Aufwand. `eLpNorm` wird von einer **reellwertigen**
+Funktion genommen, und jede reellwertige Kodierung des Fenstersupremums liest
+`0`, wo der Pfad entweicht; eine `eLpNorm`-Fassung müßte also die fast sichere
+Endlichkeit des Supremums als Voraussetzung tragen und sagte dann nicht mehr
+als die `ℝ≥0∞`-Fassung, aus der sie abgeleitet wäre. Der Verbraucher,
+Meilenstein 11, liest ohnehin in `ℝ≥0∞`.
+
+**Was die Entscheidung kostenlos macht, ist aber ein Satz und keine Ansage**,
+und er ist eingetragen: `Martingale.ae_biSup_enorm_lt_top`. Für ein
+rechtsstetiges Martingal über einem endlichen Maß ist das Fenstersupremum f.s.
+endlich, ohne jede Voraussetzung über die Martingaleigenschaft hinaus. Der
+Beweis ist Markov längs der ganzen Zahlen: die Entweichmenge liegt in **jeder**
+Niveaumenge `{ENNReal.ofReal n ≤ ⨆ t ∈ Set.Iic T, ‖X t ω‖ₑ}`, deren Maß die
+Maximalungleichung durch `𝔼‖X T‖ / n` beschränkt, und `c / n → 0`. Damit
+verliert die `ℝ≥0∞`-Gestalt nichts: wer eine reelle Zahl will, nimmt `.toReal`
+und **weiß**, daß er keinen Müllwert liest.
+
+Keine Meßbarkeit der Entweichmenge geht dabei ein — `measureReal_mono` ist
+Monotonie des äußeren Maßes —, `measurable_biSup_enorm_of_countable` ist also
+auch hier keine Eingabe.
+
+#### Vorschlag 1 steht, aber **nicht** als die Zusammensetzung, die der Vorlauf angesagt hatte, und das ist der Befund des Laufs
+
+Der Vorlauf hatte geschrieben, `Martingale.measure_iSup_norm_le` sei „jetzt
+dieselbe Zusammensetzung wie die `Lᵖ`-Fassung — `Martingale.submartingale_norm`
+und dann `Submartingale.mul_measReal_le_biSup_enorm_le`". Die erste Hälfte
+stimmt, die zweite nicht, und der Unterschied ist die Konstante.
+
+> `Submartingale.mul_measReal_le_biSup_enorm_le` ist die **zweiseitige**
+> Fassung: sie liest die Niveaumenge von `|Y|` und bezahlt dafür mit
+> `2 𝔼[(Y T)⁺] − 𝔼[Y ⊥]`. Auf `Y = ‖X ·‖` gelesen gibt das
+> `2 𝔼‖X T‖ − 𝔼‖X ⊥‖`, und das ist **mindestens** `𝔼‖X T‖`, weil `‖X ·‖` ein
+> Submartingal ist. Der klassische Faktor `1` wäre auf diesem Weg verloren.
+
+Die Aussage, die der Meilenstein nennt und die das Manuskript benutzt, ist
+`ε · P {ε ≤ ⨆ t ≤ T, ‖X t‖} ≤ 𝔼‖X T‖`, also mit `1`. Sie ruht auf der
+**einseitigen lokalisierten** Schranke des Vorlaufs,
+`Submartingale.mul_measReal_exists_ge_le_setIntegral_countable`: für ein
+**nichtnegatives** Submartingal braucht es keinen Betrag, die einseitige
+Schranke greift unmittelbar, und ihre rechte Seite ist ein Integral über die
+Niveaumenge, das durch `𝔼[Y T]` nach oben abgeschätzt wird.
+
+Eingetragen sind deshalb zuerst die beiden Fensterschranken für nichtnegative
+Submartingale:
+
+* `Submartingale.mul_measReal_lt_biSup_enorm_le_of_nonneg` (striktes Niveau,
+  das primitive) und
+* `Submartingale.mul_measReal_le_biSup_enorm_le_of_nonneg` (nicht-striktes
+  Niveau, das Korollar längs `𝓝[<] ε`).
+
+Sie sind **nicht** die zweiseitigen Sätze mit `0 ≤ Y` spezialisiert: sie laufen
+durch eine andere diskrete Eingabe. Und sie erben von ihr zweierlei — sie haben
+**keine** untere Schranke am Fenster und **keinen** Term bei `⊥`, weil die
+Einseitigkeit beides ersetzt hat. Das ist dieselbe Buchführung, die der Vorlauf
+für die lokalisierte Fassung über `ℕ` aufgeschrieben hat, eine Stufe höher.
+
+`Martingale.measure_iSup_norm_le` ist dann die Anwendung auf `‖X ·‖` und nichts
+sonst, mit derselben Begegnung zweier Normen wie bei der `Lᵖ`-Fassung
+(`Real.enorm_eq_ofReal` und `ofReal_norm`) und mit der Rechtsstetigkeit, die von
+den Pfaden von `X` verlangt und über `IsRightContinuous.continuous_comp` auf die
+Norm getragen wird.
+
+**Der Vorlauf hatte eine halbe Stunde geschätzt und als möglichen Mehraufwand
+die Umschreibung zwischen `P.real` und `ENNReal` benannt.** Die war es nicht —
+sie kommt gar nicht vor, weil beide Seiten schon in `Measure.real` stehen. Was
+es war, ist die Wahl der Eingabe, und sie ist keine Geschmacksfrage: die
+angesagte hätte einen anderen Satz bewiesen.
+
+#### Ein Nebenfund, der nicht auf der Liste stand: die Roadmap versprach einen Satz unter einem Namen, den es nicht gibt
+
+Beim Anschließen fiel das Akzeptanzbeispiel „Doob's `Lᵖ` inequality, computed"
+von Meilenstein 9 auf. Es verlangte, daß **`Martingale.eLpNorm_iSup_norm_le`**
+für die Brownsche Bewegung `𝔼[(⨆ t ≤ T, |Y t|)²] ≤ 4 𝔼[Y T²]` gebe. Diese
+Deklaration steht in **keiner** unserer vier `Suggested.lean` und hat auch nie
+darin gestanden; was den Dienst tut, ist
+`Martingale.lintegral_biSup_enorm_rpow_le` vom Vorlauf, mit `r = 2` und der
+Konstanten `(r/(r−1))^r = 4`. Das Beispiel ist berichtigt, und ein zweites ist
+danebengestellt, das die Konstante der **Maximal**-Ungleichung prüft — genau die
+Unterscheidung, an der dieser Lauf beinahe hängengeblieben wäre: auf denselben
+Daten gibt die zweiseitige Fassung `2 𝔼|Y T|`, und das Beispiel scheitert an ihr.
+
+**Der Fund war Zufall, und das ist der eigentliche Befund.** Er ist beim Lesen
+aufgefallen und von keiner Prüfung. `scripts/check_cited_names.py` prüft die
+zitierten **Mathlib**-Namen und sagt in seinem eigenen Doc-Kommentar, ein
+Fehlschlag heiße nichts, der Name „kann auch unsere eigene Roadmap-Vokabel
+sein" — genau dort fiel dieser hinein.
+
+#### Also ein neues Werkzeug: `scripts/check_own_names.py`
+
+Es sammelt jedes in Backticks gesetzte Zitat der vier `README.md` und meldet
+das, was **weder** in Mathlib `94ef6b89544` **noch** in einer unserer vier
+`Suggested.lean` gedeckt ist. Die Deckung wird nachsichtig geprüft — der letzte
+Namensbestandteil genügt —, die gemeldete Zahl ist also eine **untere
+Schranke**.
+
+Der erste Durchlauf: **8 605 Zitate**, davon 65 Fließtext, **390 ohne Deckung**,
+und darunter **48 qualifizierte** — Name mit Punkt, Namensraum vorhanden, Name
+nicht.
+
+**Und hier ist die Grenze des Werkzeugs zu benennen, sonst liest es sich
+falsch.** Eine Tau-Ceti-Roadmap *benennt* Aussagen, die noch zu beweisen sind;
+ein Name ohne Deklaration ist deshalb im Regelfall ein **offener Punkt** und
+kein Fehler. Die 48 sind die Liste der offenen Zusagen, nicht 48 Fehler, und das
+Skript gibt aus diesem Grund **immer rc 0** — eine Zahl, die im Normalbetrieb
+nicht null ist, taugt nicht als Abbruchbedingung. Was es leistet, ist die Stelle
+zu benennen, an der ein Lauf nachsieht, ob eine Zusage inzwischen **unter einem
+anderen Namen** dasteht. Das ist der Fall von oben.
+
+#### Ein zweiter solcher Fall, in derselben Liste, und er betrifft eine Angabe des Auftrags
+
+Unter den 48 stehen `Martingale.stoppedProcess_of_rightContinuous` und
+`isStable_martingale_rightContinuous`, die beiden Namen des Stabilitätspunkts
+von Meilenstein 9. Der Auftrag hält fest, „optionales Sampling in stetiger Zeit
+und die Stabilität unter Stoppen stehen seit dem 2026-09-10". Nachgesehen:
+
+* Was **steht**, ist `martingale_stoppedProcess`
+  (`MartingaleProblems/Suggested.lean:16614`) — der gestoppte Prozeß eines
+  Martingals ist ein Martingal, in stetiger Zeit.
+* Was es **nicht** ist, ist der Punkt, den die Roadmap nennt. Der bewiesene Satz
+  steht über dem Index `ℝ≥0` und nicht über beliebigem `ι`, er verlangt
+  `IsStronglyProgressive` **und** eine über jedes Fenster **gleichmäßige**
+  Schranke `∀ j, ∃ C, ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C` statt der Rechtsstetigkeit, und
+  die Verpackung als `ProbabilityTheory.IsStable` gibt es nicht.
+* Die beiden Punkte zum optionalen Sampling in stetiger Zeit
+  (`Submartingale.stoppedValue_min_le_condExp` und
+  `Martingale.stoppedValue_min_ae_eq_condExp_of_rightContinuous`) stehen
+  ebenfalls nicht; was an der einen Stelle benutzt wird, ist Mathlibs
+  **diskretes** `stoppedValue_min_ae_eq_condExp` (`:38095`).
+
+Das ist kein Widerspruch im Code und keine falsche Aussage in der Roadmap — die
+Punkte sind dort in Roadmap-Stimme formuliert, also als offen erkennbar. Es ist
+eine **Unschärfe in der Buchführung des Auftrags**, und sie ist hier notiert,
+damit der nächste Lauf nicht auf eine Eingabe baut, die er für vorhanden hält.
+Die Aussage, auf die sich der Auftrag beruft, existiert; ihre Voraussetzungen
+sind stärker als die der Roadmap-Fassung, und die gleichmäßige Fensterschranke
+ist genau die, von der der Auftrag an anderer Stelle sagt, sie mache den
+Grenzübergang zu einer dominierten Konvergenz mit konstanter Majorante.
+
+#### Geprüft
+
+* `scripts/check_master.py`: rc 0, **0 Fehler**, 0 `sorry`, 0 veraltet,
+  Warnungen 18 / 35 / 106 — **unverändert** gegenüber dem Vorlauf. Mathlib
+  `94ef6b89544e58e90f119da869f3fb48d1da0f4c` (2026-09-18), Lean 4.35.0-rc2.
+* `scripts/check_axioms_master.py` auf alle vier neuen Deklarationen: `propext`,
+  `Classical.choice`, `Quot.sound`, ohne Ausnahme.
+* `scripts/check_duplicates.py`: 2 468 geprüfte eigene Deklarationen (vier
+  mehr), 37 Treffer auf dem letzten Namensbestandteil — **unverändert**.
+* `scripts/check_negatives.py`: 43 Behauptungen, 0 mit unerwarteten Treffern.
+* `scripts/extract_citations.py`, `scripts/check_cited_lines.py`: 308 gepaarte
+  Fundstellen, 0 verschoben, 0 tot.
+* `scripts/check_own_names.py` (neu): 8 605 Zitate, 390 ohne Deckung, davon 48
+  qualifiziert; rc 0 nach Bauart.
+* Neu benutzte Mathlib-Namen, am Quelltext von `upstream/master` belegt:
+  `MeasureTheory.setIntegral_le_integral`
+  (`MeasureTheory/Integral/Bochner/Set.lean:744`), `posPart_nonneg` und
+  `posPart_eq_self` (`Algebra/Order/Group/PosPart.lean:75` und `:86`, beide
+  `to_additive` von `one_le_oneLePart` bzw. `oneLePart_eq_self`),
+  `measureReal_eq_zero_iff` (`MeasureTheory/Measure/Real.lean:40`),
+  `tendsto_const_div_atTop_nhds_zero_nat`.
+* **Eine Veraltung, die beim Schreiben auffiel und gleich vermieden ist:**
+  `Set.mem_setOf_eq` ist auf `master` zugunsten von `Set.mem_ofPred_eq`
+  veraltet. Der erste Entwurf dieses Laufs benutzte es zweimal; die Prüfung
+  meldete beide, ehe irgend etwas eingetragen war. Das ist das zweite Mal seit
+  dem 2026-09-18, daß die Warnungsspalte trägt.
+
+#### Eingetragen
+
+* `MartingaleProblems/Suggested.lean`: die beiden `_of_nonneg`-Fensterschranken
+  im Abschnitt „Doob's maximal inequality in continuous time", und
+  `Martingale.measure_iSup_norm_le` samt `Martingale.ae_biSup_enorm_lt_top` am
+  Ende des `namespace MeasureTheory` von Meilenstein 9.
+* `MartingaleProblems/README.md`: Meilenstein 9, der Absatz zur Konstanten der
+  Maximalungleichung und der zur Entscheidung gegen die `eLpNorm`-Fassung; die
+  beiden Akzeptanzbeispiele.
+* `scripts/check_own_names.py` und `scripts/_citations/own_names.md`.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die 48 qualifizierten Namen aus `own_names.md` einmal ganz durchgehen**,
+   und zwar mit **einer** Frage je Zeile: steht die Aussage inzwischen unter
+   einem anderen Namen? Wo ja, ist die `README.md` zu berichtigen, wie es dieser
+   Lauf an einer Stelle getan hat; wo nein, ist der Name ein offener Punkt und
+   bleibt stehen. Das ist Buchhaltung, aber es ist die Buchhaltung, die dieser
+   Lauf durch Zufall angefangen hat, und sie ist der billigste Weg zu einer
+   Roadmap, die hält, was ihr Text verspricht. Schätzung: ein Lauf. **Zuerst die
+   drei Zeilen zum Stoppen** (`Martingale.stoppedProcess_of_rightContinuous`,
+   `isStable_martingale_rightContinuous`,
+   `Submartingale.stoppedValue_min_le_condExp`), weil der Auftrag sie für
+   erledigt hält und der nächste Lauf sonst auf sie baut.
+
+2. **`Martingale.stoppedProcess_of_rightContinuous` in der Gestalt, die die
+   Roadmap nennt.** Das ist die Aussage aus Punkt 1, die am ehesten reif ist,
+   und sie ist jetzt reifer als am 2026-09-10: der Unterschied zum bewiesenen
+   `martingale_stoppedProcess` ist die **gleichmäßige Fensterschranke**, die
+   dort die dominierte Konvergenz trägt, und an ihre Stelle träte die
+   gleichgradige Integrierbarkeit — die aus `Martingale.measure_iSup_norm_le`
+   und `Martingale.ae_biSup_enorm_lt_top` dieses Laufs zu holen ist. Das ist der
+   erste Verbraucher der beiden neuen Sätze und zugleich die Probe darauf, ob
+   sie in der richtigen Gestalt stehen. Zu klären ist dabei **vor** dem Beweis,
+   ob der Index von `ℝ≥0` auf beliebiges `ι` gehoben werden kann, ohne die
+   dyadische Approximation der Stoppzeit zu verlieren, die der alte Beweis
+   benutzt; die Antwort ist zu begründen, nicht zu raten.
+
+3. **Die zweite Hälfte von Vorschlag 2 des Vorvorvorlaufs bleibt stehen** — die
+   gleichmäßige Fassung von `CompactContainment` an einer nichttrivialen Folge
+   von Sprungprozessen vorführen. Sie ist von diesem Lauf unberührt.
+
+### 2026-09-20, vierter Lauf des Tages — Vorschlag 2 steht, und er ist mehr geworden als bestellt: die gleichgradige Integrierbarkeit, die den gestoppten Martingalsatz von seiner Fensterschranke befreien sollte, ist **geschenkt** — sie ist die der bedingten Erwartungen *einer* Funktion —, und damit fällt die Schranke nicht nur aus diesem Satz, sondern aus der ganzen Kette unter ihm, bis hinunter zu der Stelle, an der die Hawkes-Montage seit jeher hängt
+
+**Bearbeitet:** Vorschlag 2 des Vorlaufs. Vorschlag 1 (die 48 qualifizierten
+Namen) ist **nicht** angefaßt und bleibt stehen; Vorschlag 3 ebenso.
+
+Vier neue Deklarationen in `MartingaleProblems/Suggested.lean`, **sieben
+Deklarationen mit abgeschwächten Voraussetzungen**, sechs berichtigte
+Doc-Kommentare, ein neuer Absatz in Meilenstein 9. Die Warnungszahlen sind
+unverändert (18 / 35 / 106).
+
+#### Die Vorfrage des Vorlaufs, und die Antwort ist zweiteilig
+
+Der Vorlauf hatte aufgegeben, **vor** dem Beweis zu klären, ob der Index von
+`ℝ≥0` auf beliebiges `ι` gehoben werden kann, ohne die dyadische Approximation
+der Stoppzeit zu verlieren. Die Antwort:
+
+> **Die dyadische Approximation geht über beliebigem `ι` verloren, und sie wird
+> nicht gebraucht.** Was gebraucht wird, ist *irgendeine* Folge von Stoppzeiten
+> mit abzählbarem Wertebereich, die von oben gegen `τ` fällt. Über `ι` mit
+> abzählbarem dichten `D` ist das: eine aufsteigende Folge endlicher Teilmengen
+> `D_n ⊆ D` mit `⋃ D_n = D`, und `τ_n ω =` das kleinste Element von `D_n`
+> oberhalb `τ ω`. Das ist eine Stoppzeit **endlichen** Wertebereichs, und sie
+> fällt gegen `τ`, sobald `D` **ordnungsdicht** ist.
+
+Mathlibs Eingabe dafür,
+`Martingale.stoppedValue_ae_eq_condExp_of_le_const_of_countable_range`
+(`Probability/Martingale/OptionalSampling.lean:90`), steht über
+`[LinearOrder ι] [TopologicalSpace ι] [OrderTopology ι] [FirstCountableTopology ι]`
+und verlangt vom Wertebereich nur Abzählbarkeit — sie greift dort unverändert.
+Der Preis der allgemeinen Fassung ist also **eine Voraussetzung, die die
+`ℝ≥0`-Fassung nicht aussprechen muß**: die Ordnungsdichtheit von `D`. Das steht
+so in Meilenstein 9.
+
+**Der Lauf hat die allgemeine Fassung trotzdem nicht gebaut**, und der Grund ist
+der eigentliche Befund: beim Nachsehen, wo die Fensterschranke im `ℝ≥0`-Beweis
+verbraucht wird, stellte sich heraus, daß sie sich ersatzlos streichen läßt. Das
+ist der billigere und der weiter reichende Eingriff, und er war zuerst zu tun.
+
+#### Der Befund: die gleichgradige Integrierbarkeit ist keine Voraussetzung, sondern eine Rechnung
+
+Der Vorlauf hatte angesagt, an die Stelle der gleichmäßigen Fensterschranke trete
+die gleichgradige Integrierbarkeit, **zu holen** aus
+`Martingale.measure_iSup_norm_le` und `Martingale.ae_biSup_enorm_lt_top`, den
+beiden Sätzen des Vorlaufs. Das ist der klassische Weg, und er wird nicht
+gebraucht. Keiner der beiden Sätze kommt im Beweis vor.
+
+> Die dyadischen Näherungen `stoppedValue Y (dyadStop j ρ n)` sind, jede von
+> ihnen, fast sicher die bedingte Erwartung **derselben einen** Funktion `Y j` —
+> für die σ-Algebra der jeweiligen Näherungszeit. Das ist genau das, was
+> `stoppedValue_ae_eq_condExp_of_le_const_of_countable_range` sagt, und es steht
+> im bisherigen Beweis schon da: er benutzt es, um `∫ F n = ∫ Y j` zu bekommen.
+> Und bedingte Erwartungen **einer** integrierbaren Funktion für eine beliebige
+> Familie von Unter-σ-Algebren sind gleichgradig integrierbar, das ist
+> `MeasureTheory.Integrable.uniformIntegrable_condExp`
+> (`MeasureTheory/Function/ConditionalExpectation/Real.lean:304`).
+
+Also hängt `uniformIntegrable_stoppedValue_dyadStop` an nichts als der
+Martingaleigenschaft. Der Rest ist Bibliothek:
+`MeasureTheory.tendsto_Lp_finite_of_tendsto_ae` (Vitali,
+`UniformIntegrable.lean:540`) macht aus punktweiser Konvergenz die
+`L¹`-Konvergenz, `MeasureTheory.UniformIntegrable.integrable_of_ae_tendsto`
+(`ibid.:1006`) gibt die Integrierbarkeit des Grenzwerts, die der dominierte Weg
+von seiner konstanten Majorante geschenkt bekam, und
+`MeasureTheory.tendsto_integral_of_L1'` (`Integral/Bochner/Basic.lean:387`)
+zieht die Integrale nach.
+
+**Was daraus folgt, ist nicht eine Aussage, sondern eine Kette.** Die
+Fensterschranke war Voraussetzung von
+
+* `integral_stoppedValue_eq` → daneben steht jetzt
+  `integral_stoppedValue_eq_of_rightContinuous` (neu, **ohne** Schranke und
+  **ohne** `IsStronglyProgressive`: die Meßbarkeit der Näherungen kommt von der
+  bedingten Erwartung, der sie f.s. gleichen),
+* `stoppedValue_ae_eq_condExp_of_forall_integral_eq` → die Schranke ist durch
+  **zwei Integrierbarkeitsvoraussetzungen** ersetzt; das ist die schwächere
+  Bedingung und die ehrlichere, denn gebraucht wurde die Schranke dort nur, um
+  sie herzustellen,
+* `stoppedValue_ae_eq_condExp`, `isOptionalSamplingFor_of_martingale`,
+  `martingale_stoppedProcess`, `martingale_of_martingale_stoppedProcess_top` →
+  in allen vieren **ersatzlos gestrichen**,
+* und in den Verbrauchern `isOptionalSamplingFor_mpFamily_jumpProcessE`,
+  `martingale_stoppedProcess_mpFamily_jumpProcessE` und
+  `martingale_stoppedProcess_mpFamily_jumpProcessE_of_nonneg` entfällt damit die
+  Pflicht, sie zu liefern. Im letzten fiel dabei eine zwanzigzeilige Herleitung
+  der Schranke ganz weg.
+
+`martingale_stoppedProcess` verlangt damit von einem Prozeß **zwei** Dinge:
+`IsStronglyProgressive` und Rechtsstetigkeit der Pfade. Die Rechtsstetigkeit
+wird an **einer** Stelle gelesen, der punktweisen Konvergenz der Näherungen; die
+Progressivität an zweien, der Adaptiertheit des gestoppten Prozesses und der
+Meßbarkeit des gestoppten Wertes für die σ-Algebra der Stoppzeit.
+
+#### Und damit fällt eine Blockade, die seit dem Anfang von Teil C dasteht
+
+Der Abschnitt „The window bound, and where the Hawkes assembly stands" in
+`Suggested.lean` hielt fest, `martingale_stoppedProcess` verlange drittens
+`hbdd`, und **für die Hawkes-Daten gebe es diese Schranke nicht**: `jumpApplyF`
+trägt die Rate selbst, und `∫₀ᵗ (ν + ∑ φ (u − T k)) du` ist zu **jedem** festen
+`t` unbeschränkt im Stichprobenpunkt, weil ein Punkt mit frühen und dichten
+ersten Sprüngen ein großes Fensterintegral hat. Der Abschnitt schloß: „So the
+third input is not to be obtained in this shape."
+
+Diese Eingabe wird jetzt nicht mehr verlangt. Der Abschnitt ist entsprechend
+umgeschrieben, und die beiden Fensterschranken darunter (`bdd_mpFamilyF_of_bdd`
+und die Fassung aus einer Massenschranke) bleiben als das stehen, was sie sagen,
+aber nicht mehr als das, was zwischen der Hawkes-Montage und dem gestoppten
+Martingalsatz steht.
+
+**Und hier ist zu sagen, was damit *nicht* gezeigt ist**, sonst liest sich der
+Befund größer, als er ist. Die Lokalisierung über `truncRate` bleibt gewollt,
+und aus einem anderen Grund: `jumpProcessE_isMPSolution` ist unter `lam ≤ L`
+bewiesen, und *diese* Schranke ist von der Fensterschranke verschieden und fällt
+nicht mit ihr. Gefallen ist eine von mehreren Hürden, und zwar die, die der
+Abschnitt als in dieser Gestalt unerreichbar benannt hatte.
+
+#### Geprüft
+
+* `scripts/check_master.py`: rc 0, **0 Fehler**, 0 `sorry`, 0 veraltet,
+  Warnungen 18 / 35 / 106 — **unverändert** gegenüber dem Vorlauf. Mathlib
+  `94ef6b89544e58e90f119da869f3fb48d1da0f4c` (2026-09-18), Lean 4.35.0-rc2.
+* `scripts/check_axioms_master.py` auf alle vier neuen und auf die drei
+  abgeschwächten Kernaussagen (`stoppedValue_ae_eq_condExp`,
+  `isOptionalSamplingFor_of_martingale`, `martingale_stoppedProcess`):
+  `propext`, `Classical.choice`, `Quot.sound`, ohne Ausnahme.
+* Neu benutzte Mathlib-Namen, am Quelltext von `upstream/master` belegt:
+  `MeasureTheory.Integrable.uniformIntegrable_condExp`
+  (`MeasureTheory/Function/ConditionalExpectation/Real.lean:304`),
+  `MeasureTheory.tendsto_Lp_finite_of_tendsto_ae`
+  (`MeasureTheory/Function/UniformIntegrable.lean:540`),
+  `MeasureTheory.UniformIntegrable.ae_eq` (`ibid.:755`),
+  `MeasureTheory.UniformIntegrable.integrable_of_ae_tendsto` (`ibid.:1006`),
+  `MeasureTheory.UniformIntegrable.memLp` (`ibid.:94`),
+  `MeasureTheory.UniformIntegrable.aestronglyMeasurable` (`ibid.:99`),
+  `MeasureTheory.tendsto_integral_of_L1'`
+  (`MeasureTheory/Integral/Bochner/Basic.lean:387`),
+  `MeasureTheory.Martingale.integrable` (`Probability/Martingale/Basic.lean:97`),
+  `ProbabilityTheory.IsStoppingTime.min` (`Probability/Process/Stopping.lean:360`).
+* **Der Zeilensaldo ist da negativ, wo er es sein soll**: 189 Zeilen hinzu, 134
+  fort, und von den 189 sind 39 Roadmap-Text und der größere Teil des Restes
+  Doc-Kommentar. Der Beweisteil ist kürzer geworden.
+
+#### Eingetragen
+
+* `MartingaleProblems/Suggested.lean`: der Abschnitt „The same identity with no
+  bound on the paths" mit `tendsto_stoppedValue_dyadStop`,
+  `uniformIntegrable_stoppedValue_dyadStop`,
+  `integrable_stoppedValue_of_rightContinuous` und
+  `integral_stoppedValue_eq_of_rightContinuous`; die abgeschwächten Signaturen;
+  sechs berichtigte Doc-Kommentare, darunter der Abschnitt zur Hawkes-Montage.
+* `MartingaleProblems/README.md`: Meilenstein 9, der Absatz zum gestoppten
+  Martingalsatz über `ℝ≥0` und zur Frage des allgemeinen Index.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die 48 qualifizierten Namen aus `own_names.md` durchgehen** — Vorschlag 1
+   des Vorlaufs, unberührt geblieben und jetzt mit einer Zeile weniger: die drei
+   Zeilen zum Stoppen sind zur Hälfte eingelöst, denn `martingale_stoppedProcess`
+   deckt die Sache von `Martingale.stoppedProcess_of_rightContinuous` über `ℝ≥0`
+   ab und der Meilenstein sagt das jetzt. Offen bleiben die `IsStable`-Verpackung
+   und der allgemeine Index. Schätzung: ein Lauf.
+
+2. **`isStable_martingale_rightContinuous` über `ℝ≥0`**, die Verpackung von
+   `martingale_stoppedProcess` als `ProbabilityTheory.IsStable`. Sie ist jetzt
+   zum ersten Mal ohne Kunstgriff formulierbar: die stabile Eigenschaft ist die
+   Konjunktion „Martingal **und** progressiv **und** rechtsstetige Pfade", und
+   bis zu diesem Lauf hätte die Fensterschranke als vierter Konjunkt mitgeführt
+   werden müssen — eine Eigenschaft, die unter Stoppen zwar erhalten bleibt, die
+   Konjunktion aber künstlich macht. Der Ertrag steht in Meilenstein 9
+   ausgeschrieben: `ProbabilityTheory.IsStable.locally` gibt dann ohne weiteres,
+   daß ein gestopptes lokales Martingal ein lokales Martingal ist, und
+   `IsLocalMPSolution` von Meilenstein 2 ist unter Stoppen erhalten, **ohne** daß
+   eine lokalisierende Folge von Hand gebaut wird. Zu prüfen ist vorher, ob
+   `IsStable` den Indikator `{ω | ⊥ < τ ω}` in der Gestalt verlangt, die
+   `martingale_indicator_bot` liefert. Schätzung: ein halber bis ein Lauf.
+
+3. **Erst danach die allgemeine Fassung über beliebigem `ι`**, mit der
+   Ordnungsdichtheit von `D` als benannter Voraussetzung und der endlichen
+   Approximation aus `D_n` an der Stelle von `dyadStop`. Sie ist jetzt eine
+   Übersetzung und keine Erschließung mehr: die vier Schritte des Beweises
+   (Approximation, gleichgradige Integrierbarkeit, Vitali, Hilfsstoppzeit)
+   stehen, und keiner von ihnen außer dem ersten benutzt die reelle Struktur.
+
+### 2026-09-20, fünfter Lauf des Tages — Vorschlag 2 steht, und beim Nachsehen, wo seine Voraussetzung verbraucht wird, fiel die zweite von zwei Hürden der Hawkes-Montage: die Rechtsstetigkeit wird nur **fast sicher** gelesen, und in der punktweisen Gestalt war sie für die Hawkes-Daten gar nicht zu haben
+
+**Bearbeitet:** Vorschlag 2 des Vorlaufs. Vorschlag 1 (die qualifizierten Namen
+aus `own_names.md`) ist **nicht** angefaßt und bleibt stehen; Vorschlag 3 (die
+allgemeine Fassung über beliebigem `ι`) ebenso.
+
+Fünf neue Deklarationen und ein neuer Abschnitt `StableMartingale` in
+`MartingaleProblems/Suggested.lean`, **acht Deklarationen mit abgeschwächter
+Voraussetzung**, vier berichtigte Doc-Kommentare, drei neue Absätze in
+Meilenstein 9. Die Warnungszahlen sind unverändert (18 / 35 / 106).
+
+#### Teil 1: die Verpackung, und sie ist eine Konjunktion aus **drei** Aussagen
+
+`isStable_martingale_rightContinuous` steht — `martingale_stoppedProcess` in der
+Gestalt, die Mathlibs Lokalisierungs-API liest. Die Roadmap hatte dafür eine
+Konjunktion aus **zwei** Aussagen angesagt, Martingaleigenschaft und
+Rechtsstetigkeit. Das ist eine zu wenig: `martingale_stoppedProcess` verlangt
+`IsStronglyProgressive` als dritte, und alle drei überleben das Stoppen, jede
+aus einem eigenen Grund.
+
+* Die Martingalhälfte ist `martingale_stoppedProcess` selbst, zusammen mit
+  `martingale_indicator_bot` für den Indikator, den `IsStable` mitführt.
+* Die Progressivität ist Mathlibs `IsStronglyProgressive.stoppedProcess` und —
+  neu — `isStronglyProgressive_indicator` für den Indikator. Der Beweis faßt
+  die Produkt-σ-Algebra der Definition **nicht** an: der Indikator ist das
+  Produkt mit dem zeitunabhängigen Prozeß `fun _ ω ↦ S.indicator 1 ω`, der nach
+  `StronglyAdapted.isStronglyProgressive_of_continuous` progressiv ist, weil er
+  adaptiert und in der Zeit konstant ist, und `IsStronglyProgressive.mul`
+  schließt.
+* Die Rechtsstetigkeit ist `tendsto_nhdsGE_stoppedProcess`, und ihre beiden
+  Fälle sind **nicht symmetrisch**. Wo die Stoppzeit schon eingetreten ist, ist
+  der gestoppte Pfad rechts konstant. Wo nicht, stimmt er auf einer
+  Rechtsumgebung mit dem Pfad überein, und die Umgebung gibt es, weil `ENNReal`
+  dicht geordnet ist: ein `c` liegt echt zwischen `s` und `τ ω`, es ist endlich,
+  weil es unter `τ ω` liegt, und `Set.Ico s c` ist die Umgebung.
+
+**Die Konjunktion läßt sich nicht wieder zerlegen**, und die Roadmap hatte das
+Gegenteil versprochen. `ProbabilityTheory.IsStable.locally_and_iff` verlangt,
+daß **jede** Seite für sich stabil ist, und die Martingaleigenschaft allein ist
+es nicht — sie ist gerade der Konjunkt, dessen Beweis die beiden anderen
+verbraucht. Was der Verbraucher braucht, ist die eine Richtung, die
+`ProbabilityTheory.Locally.mono` gibt, und sie steht als
+`locally_martingale_stoppedProcess`: ein gestopptes lokales Martingal ist ein
+lokales Martingal, ohne daß eine lokalisierende Folge von Hand gebaut wird.
+(Die Aussage, `IsStable 𝓕 (fun Z ↦ Martingale Z 𝓕 P)` sei **falsch**, wird
+hier *nicht* erhoben; ein Zeuge dafür bräuchte eine nichtmeßbare Menge und ist
+nicht geführt. Berichtet ist nur, daß sie nicht bewiesen ist und daß die
+Zerlegung ohne sie nicht geht.)
+
+#### Teil 2, und er war nicht bestellt: die Rechtsstetigkeit ist eine `∀ᵐ`-Aussage
+
+Beim Nachsehen, **wo** die Rechtsstetigkeit im Beweis von
+`martingale_stoppedProcess` verbraucht wird, stellte sich heraus: an genau einer
+Stelle, der Konvergenz der dyadischen Näherungen, und diese Konvergenz wird von
+**Vitali** gelesen (`MeasureTheory.tendsto_Lp_finite_of_tendsto_ae`), der fast
+überall quantifiziert. Die punktweise Fassung wurde also nie ausgegeben.
+
+`tendsto_stoppedValue_dyadStop` trägt die Rechtsstetigkeit deshalb jetzt **an
+einem Stichprobenpunkt**, `ae_tendsto_stoppedValue_dyadStop` sammelt sie mit
+einem `filter_upwards`, und die ganze Kette darüber trägt `∀ᵐ ω ∂P`:
+`integrable_stoppedValue_of_rightContinuous`,
+`integral_stoppedValue_eq_of_rightContinuous`, das ältere dominierte
+`integral_stoppedValue_eq`, `stoppedValue_ae_eq_condExp`,
+`isOptionalSamplingFor_of_martingale`, `martingale_stoppedProcess`,
+`martingale_of_martingale_stoppedProcess_top`. Die Verbraucher mit der
+punktweisen Fassung reichen `Filter.Eventually.of_forall` nach; das sind fünf
+Stellen und je eine Zeile.
+
+**Und damit fällt die zweite von zwei Hürden der Hawkes-Montage.** Der Vorlauf
+hatte die Fensterschranke gestrichen und festgehalten,
+`martingale_stoppedProcess` verlange vom Hawkes-Testprozeß nur noch
+Progressivität und Rechtsstetigkeit. Die Rechtsstetigkeit hatte er dabei nicht
+nachgesehen, und sie war **in der verlangten Gestalt nicht zu haben**:
+`tendsto_nhdsGE_mpFamilyF_hawkes` erzeugt sie an einem Stichprobenpunkt `ω` aus
+`hint`, der lokalen Integrierbarkeit der Rate längs jenes Pfades, und `hint`
+**ist** die Nichtexplosion an `ω`
+(`not_intervalIntegrable_hawkesSelfRate_of_not_summable`, 26. Lauf) — also eine
+fast sichere und keine überall gültige Aussage. Die Voraussetzung war ein
+Quantorenfehler, kein Rechenproblem, und sie ist weg.
+
+Was damit **nicht** gezeigt ist: die Montage selbst. Die Lokalisierung über
+`truncRate` bleibt gewollt, weil `jumpProcessE_isMPSolution` unter `lam ≤ L`
+bewiesen ist und das eine andere Schranke ist; und der pfadabhängige Gegenpart
+von `truncRate` und `rateTime` fehlt weiter. Gefallen ist die zweite von zwei
+benannten Hürden, nicht die Montage.
+
+#### Ein Nebenfund, und er ist eine **Bestätigung**, keine Neuigkeit
+
+Der neu zitierte Mathlib-Name `Ico_mem_nhdsGE`
+(`Mathlib/Topology/Order/OrderClosed.lean:357`, das `@[to_dual]` von
+`Ioc_mem_nhdsLE`) erscheint in `scripts/_citations/own_names.md` als
+**ungedeckt**, obwohl er existiert und der Beweis ihn benutzt. Das ist die
+Lücke, die der erste Lauf des 2026-09-19 gemessen hat (8 866 Namen, 3,7 %):
+`scripts/mathlib_index.py` liest die Quelle und kennt von `@[to_dual]` und
+`@[to_additive]` nur die Formen, in denen der erzeugte Name **ausgeschrieben**
+ist (`TRANS`, Zeile 42); die bloßen Attribute erzeugen Namen, die der Index
+nicht sieht. Zwei Zeugen aus dem Index selbst: `Ioc_mem_nhdsLE` steht drin,
+`Ico_mem_nhdsGE` nicht; `Finset.prod_le_prod` steht drin, `Finset.sum_le_sum`
+nicht. Eine unabhängige untere Schranke für den Umfang: auf `master` stehen
+**7 491** Zeilen `@[to_additive]` und **1 736** Zeilen `@[to_dual]` ohne
+Argument, zusammen 9 227 — verträglich mit den gemessenen 8 866.
+
+Für diesen Lauf heißt das nur: die neue Zeile in `own_names.md` zu
+`Ico_mem_nhdsGE` ist ein Fehlalarm und nicht abzuarbeiten.
+
+#### Geprüft
+
+* `scripts/check_master.py`: rc 0, **0 Fehler**, 0 `sorry`, 0 veraltet,
+  Warnungen 18 / 35 / 106 — **unverändert** gegenüber dem Vorlauf. Mathlib
+  `94ef6b89544e58e90f119da869f3fb48d1da0f4c` (2026-09-18), Lean 4.35.0-rc2.
+  (Zwischendurch stand die Zahl bei 107, weil
+  `ae_tendsto_stoppedValue_dyadStop` `[IsFiniteMeasure P]` nicht braucht; ein
+  `omit` davor bringt sie zurück.)
+* `scripts/check_axioms_master.py` auf alle fünf neuen und auf neun geänderte
+  Deklarationen: `propext`, `Classical.choice`, `Quot.sound`, ohne Ausnahme.
+* Neu benutzte Mathlib-Namen, am Quelltext von `upstream/master` belegt:
+  `ProbabilityTheory.IsStable` (`Probability/Process/LocalProperty.lean:142`),
+  `ProbabilityTheory.IsStable.locally` (`ibid.:153`),
+  `ProbabilityTheory.Locally.mono` (`ibid.:120`),
+  `StronglyAdapted.isStronglyProgressive_of_continuous`
+  (`Probability/Process/Adapted.lean:365`),
+  `IsStronglyProgressive.mul` (`ibid.:293`),
+  `IsStronglyProgressive.stoppedProcess`
+  (`Probability/Process/Stopping.lean:987`),
+  `Ico_mem_nhdsGE` (`Topology/Order/OrderClosed.lean:357`, das `to_dual` von
+  `Ioc_mem_nhdsLE`).
+* Zeilensaldo: `Suggested.lean` +237 / −34, `README.md` +63 / −8; der größere
+  Teil der 237 ist Doc-Kommentar, die fünf Beweise zusammen sind rund 60 Zeilen.
+
+#### Eingetragen
+
+* `MartingaleProblems/Suggested.lean`: der Abschnitt `StableMartingale` mit
+  `isStronglyProgressive_indicator`, `tendsto_nhdsGE_stoppedProcess`,
+  `isStable_martingale_rightContinuous`, `stableMartingaleProp_zero` und
+  `locally_martingale_stoppedProcess`; `ae_tendsto_stoppedValue_dyadStop`; die
+  acht abgeschwächten Signaturen; die berichtigten Doc-Kommentare zum
+  Abschnittskopf von `StoppedMartingale`, zu `martingale_stoppedProcess` und zum
+  Abschnitt „The window bound, and where the Hawkes assembly stands".
+* `MartingaleProblems/README.md`: Meilenstein 9, der Punkt zur Stabilität
+  (dreigliedrige Konjunktion, keine Zerlegung) und zwei neue Absätze — zur
+  `∀ᵐ`-Fassung und zu den beiden neuen Nebenaussagen.
+* `.gitignore`: `/scripts/_dev_*.lean` — die Entwurfsdateien von
+  `dev_check_master.py` sind kein Ergebnis und gehören nicht in die Geschichte.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die Rechtsstetigkeit des Hawkes-Testprozesses als `∀ᵐ`-Aussage
+   hinschreiben**, und damit den ersten der beiden Eingänge von
+   `martingale_stoppedProcess` für die Hawkes-Daten einlösen. Sie ruht auf drei
+   Aussagen, die alle stehen: `tendsto_nhdsGE_mpFamilyF_hawkes` (punktweise, mit
+   `hint`), `not_intervalIntegrable_hawkesSelfRate_of_not_summable` (das `hint`
+   *ist* die Nichtexplosion) und der fast sicheren Nichtexplosion der
+   beschränkten nichtlinearen Daten. Sie ist jetzt dran, weil die Voraussetzung,
+   an der sie scheiterte, in diesem Lauf verschwunden ist, und weil sie mißt, ob
+   die Diagnose stimmt. Zu prüfen, **ehe** gebaut wird: unter welchem Maß die
+   vorhandene f.s.-Nichtexplosion steht und ob es dasselbe ist, unter dem der
+   Testprozeß ein Martingal sein soll — das ist die Stelle, an der ein
+   Quantorenfehler wiederkehren könnte. Schätzung: ein halber bis ein Lauf.
+
+2. **Die Progressivität des Hawkes-Testprozesses**, der zweite Eingang. Sie ist
+   keine f.s.-Aussage und kann es nicht sein (`IsStronglyProgressive` ist eine
+   Eigenschaft des Paares aus Prozeß und Filtration), also ist sie **an jedem**
+   Stichprobenpunkt zu führen. Der markovsche Gegenpart
+   `isStronglyProgressive_mpFamily_jumpProcessE` ist die Vorlage, und der
+   Unterschied ist derselbe wie bei der Rechtsstetigkeit: dort trägt die
+   beschränkte Rate den Kompensator, hier nicht. Ob es ohne eine Schranke geht
+   oder ob der **gestoppte** Prozeß genommen werden muß — wie im lokalen
+   markovschen Fall, wo genau das der Ausweg war —, ist die erste zu
+   begründende Entscheidung. Schätzung: ein Lauf.
+
+3. **Erst danach die allgemeine Fassung über beliebigem `ι`** (Vorschlag 3 des
+   Vorlaufs, unverändert gültig), mit der Ordnungsdichtheit von `D` als
+   benannter Voraussetzung. Sie ist jetzt eine Übersetzung: die vier Schritte
+   des Beweises stehen, und nur der erste — die dyadische Approximation —
+   benutzt die reelle Struktur. Dazu kommt, was dieser Lauf hinzugefügt hat:
+   `tendsto_nhdsGE_stoppedProcess` benutzt die dichte Ordnung von `ENNReal`, die
+   allgemeine Fassung braucht dafür `[DenselyOrdered ι]` oder einen anderen
+   Zugang zur Rechtsumgebung.
+
+### 2026-09-20, sechster Lauf des Tages — Vorschlag 1 ist beantwortet, und die Antwort ist eine Verschiebung: die `∀ᵐ`-Fassung, die der Vorlauf freigemacht hat, kann der **lineare** Hawkes-Prozeß nicht einlösen, weil ihre Eingabe im Bestand nicht steht und ihr Beweis die Volterra-Resolvente ist — im **beschränkten nichtlinearen** Fall ist sie punktweise zu haben, und damit stehen dort beide Regularitätseingaben des gestoppten Martingalsatzes
+
+**Bearbeitet:** Vorschlag 1 des Vorlaufs. Vorschlag 2 (die Progressivität des
+Hawkes-Testprozesses) ist beim Nachsehen **gegenstandslos** gewesen, siehe unten;
+Vorschlag 3 (die allgemeine Fassung über beliebigem `ι`) ist nicht angefaßt und
+bleibt unverändert stehen.
+
+Sechs neue Deklarationen in einem neuen Abschnitt `BoundedHawkesInputs` von
+`MartingaleProblems/Suggested.lean`, ein neuer Abschnitt und zwei Berichtigungen
+in `MartingaleProblems/README.md`. Die Warnungszahlen sind unverändert
+(18 / 35 / 106).
+
+#### Die Vorfrage, und sie war die Aufgabe
+
+Der Vorschlag verlangte ausdrücklich, **ehe** gebaut wird zu prüfen, unter
+welchem Maß die vorhandene f.s. Nichtexplosion steht und ob es dasselbe ist, unter
+dem der Testprozeß ein Martingal sein soll. Der Befund ist schärfer als die Frage:
+
+> **Für den linearen Hawkes-Prozeß steht im ganzen Bestand keine f.s.
+> Nichtexplosion.**
+
+Nachgesehen wurde nach der Aussage und nicht nach der Vokabel: `hawkesSelfRate`
+kommt in 25 Signaturen unter einer Intervallintegrierbarkeit vor, in **keiner**
+davon unter einem `∀ᵐ`, und es gibt überhaupt keinen Satz der Form
+`∀ᵐ ω ∂(jumpMeasure mu nu), ∀ r, IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u ω) volume 0 r`.
+Die Frage nach dem Maß stellt sich damit nicht — es fehlt nicht das passende Maß,
+sondern die Aussage. Und ihr Beweis ist genau die Theorie, die dieses Projekt
+nicht anfängt: die Erneuerungsgleichung `m = μ₀ + φ * m` und die
+Volterra-Resolvente, an der `thm:pathjumpMP`(b) ohnehin hängt.
+
+**Der Quantorenfehler des Vorlaufs ist also behoben und die Eingabe fehlt
+weiterhin.** Das ist kein Widerspruch: der Vorlauf hat `martingale_stoppedProcess`
+von einer Voraussetzung befreit, die für die Hawkes-Daten *unerfüllbar* war
+(Rechtsstetigkeit an jedem Stichprobenpunkt); zurück bleibt eine, die *erfüllbar,
+aber unbewiesen* ist. Das ist ein Fortschritt und keine Lösung, und es gehört so
+gesagt.
+
+#### Wo die Aussage zu haben ist, und dort ist sie sogar punktweise
+
+Im **beschränkten nichtlinearen** Fall ist `intervalIntegrable_hawkesSelfRateH`
+seit dem 2026-09-12 an *jedem* Stichprobenpunkt bewiesen, aus der Meßbarkeit der
+beiden Daten und den beiden Schranken an `h`. Der Lauf hat deshalb die
+Rechtsstetigkeit dort geführt, wo sie ohne Volterra zu haben ist:
+
+* `measurable_uncurry_hawkesSelfRateH_hawkesFiltrationH` — die beschränkte
+  nichtlineare Rate ist gemeinsam meßbar für `hawkesFiltrationH`. Der Gegenpart
+  von `measurable_uncurry_hawkesSelfRate_hawkesFiltration`; die Nichtlinearität
+  kostet **eine Komposition und sonst nichts**, weil sie außerhalb des
+  Fensterintegrals sitzt und `measurable_uncurry_pointRate_pointFiltration`
+  deshalb unverändert trägt.
+* `measurable_uncurry_hawkesJumpApplyFH_hawkesFiltrationH`,
+  `measurable_compensator_hawkesJumpApplyFH_hawkesFiltrationH` — Integrand und
+  Kompensationsfenster.
+* **`isStronglyProgressive_mpFamilyF_hawkesStepPathH`** — die erste
+  Regularitätseingabe.
+* **`tendsto_nhdsGE_mpFamilyF_hawkesStepPathH`** — die zweite, **an jedem
+  Stichprobenpunkt und ohne jedes Maß in der Aussage**. Das ist der ganze
+  Unterschied zum linearen Satz, der an derselben Stelle `hint` trägt.
+* **`martingale_stoppedProcess_mpFamilyF_hawkesStepPathH`** — die drei Eingaben
+  zusammen. Für den beschränkten nichtlinearen Hawkes-Prozeß ist damit **die
+  einzige verbleibende Hypothese des gestoppten Martingalsatzes, die nicht von den
+  Daten handelt, die Martingaleigenschaft selbst.**
+
+Die vier Bedingungen an `h`, unter denen das steht, sind die, die
+`BoundedHawkesWitness` zweimal einlöst — an `rateCap L = min · L` und an
+`rateSat L = L * (1 − exp (−·))`. Der Abschnitt steht also nicht über einer
+unbelegten Voraussetzungsfläche.
+
+#### Ein Vorschlag des Vorlaufs war gegenstandslos, und das ist der zweite Befund
+
+Vorschlag 2 lautete, die **Progressivität** des Hawkes-Testprozesses zu beweisen,
+und nannte den markovschen Gegenpart als Vorlage. Sie steht seit dem 2026-09-11 als
+`isStronglyProgressive_mpFamilyF_hawkesStepPath` (Zeile 23442) und trägt nichts
+als die Daten von `ex:hawkes` und die Markoveigenschaft des Sprungkerns — der
+Doc-Kommentar der Rechtsstetigkeit zwei Abschnitte weiter sagt es selbst
+(„with `isStronglyProgressive_mpFamilyF_hawkesStepPath` this is everything
+`martingale_stoppedProcess` asks of them"). Die dort vermutete Schwierigkeit — ob
+es ohne Ratenschranke geht oder der gestoppte Prozeß genommen werden muß — tritt
+nicht auf, und der Grund steht im Doc-Kommentar des allgemeinen Satzes:
+`mpFamilyF` fragt seine Voraussetzungen dem **Integranden** ab, `mpFamily` dem
+**Prozeß**, und eine Voraussetzung am Integranden *ist* schon die gemeinsame
+Meßbarkeit, die das parametrisierte Bochner-Integral will.
+
+#### Zwei Berichtigungen in der Roadmap, beide an Negativaussagen über eigene Sätze
+
+1. In der Nichtexplosionsliste des Abhängigkeitsbaums (Meilenstein 4) stand als
+   Stelle 6: „Sie wird an *jedem* Stichprobenpunkt gebraucht, nicht fast sicher —
+   weil `martingale_stoppedProcess` seine Rechtsstetigkeit unter einem `∀ ω`
+   fragt." Das ist seit dem fünften Lauf dieses Tages falsch. Die Stelle ist
+   durchgestrichen und mit dem Grund versehen — und mit dem Zusatz, daß sie ihre
+   Schärfe verliert und **nicht ihren Ort**: die f.s. Nichtexplosion des linearen
+   Falls fehlt weiterhin.
+2. Der Absatz zur „dritten Eingabe" von `martingale_stoppedProcess` („For the
+   Hawkes process this third input does not exist") stand unberichtigt, obwohl der
+   vierte Lauf dieses Tages die Fensterschranke aus dem Satz entfernt hat. Er
+   trägt jetzt die Berichtigung, samt dem Hinweis, daß
+   `abs_setIntegral_compensatorF_le` und `bdd_mpFamilyF_of_bdd` ihren eigenen Wert
+   behalten und die Lokalisierung über `truncRateF` aus einem *anderen* Grund
+   gewollt bleibt (`jumpProcessE_isMPSolution` ist unter `lam ≤ L` bewiesen).
+
+#### Geprüft
+
+* `scripts/check_master.py`: rc 0, **0 Fehler**, 0 `sorry`, 0 veraltet,
+  Warnungen 18 / 35 / 106 — **unverändert** gegenüber dem Vorlauf. Mathlib
+  `94ef6b89544e58e90f119da869f3fb48d1da0f4c` (2026-09-18), Lean 4.35.0-rc2.
+  Der Stand vor dem Eingriff wurde eigens gemessen und war derselbe.
+* `scripts/check_axioms_master.py` auf alle sechs neuen Deklarationen:
+  `propext`, `Classical.choice`, `Quot.sound`, ohne Ausnahme.
+* `scripts/check_own_names.py`: 391 → 392 nach dem Lean-Teil, und der eine neue
+  Name war `BoundedHawkesInputs`, ein **Abschnittsname** — dieselbe Klasse von
+  Fehlalarmen, unter der `BoundedHawkesWitness`, `BoundedHawkesLaw` und
+  `LocalAssembly` schon stehen. Nach der Eintragung von Meilenstein 14 steht die
+  Zahl bei **412**; die zwanzig hinzugekommenen sind die dort benannten, noch
+  unbewiesenen Aussagen, also genau das, was der Kopf jenes Berichts als den
+  Regelfall bezeichnet („im Regelfall ein **offener Punkt** der Roadmap und kein
+  Fehler").
+* `scripts/check_negatives.py`: die beiden Negativaussagen des neuen
+  Meilensteins sind als `volterra-resolvent` und `lconvolution-support` in das
+  Skript eingetragen, damit sie künftig maschinell mitlaufen. **45** Behauptungen
+  geprüft, 0 mit unerwarteten Treffern.
+* Keine neuen Mathlib-Namen. Die sechs Beweise laufen auf eigenen Sätzen, die
+  alle vor diesem Lauf standen.
+* Zeilensaldo: `Suggested.lean` +205 / −0, `README.md` +180 / −4 (davon rund 115
+  der neue Meilenstein 14), `scripts/check_negatives.py` +18 / −0.
+
+#### Und die Lücke, die dabei benannt wurde: **Meilenstein 14** ist eingetragen
+
+Weil dieser Lauf die fehlende Eingabe zum ersten Mal *isoliert* hat, ist sie noch
+im selben Lauf in die Roadmap eingetragen worden statt in einen Bericht — als
+neuer **Meilenstein 14, „causal convolution and the Volterra resolvent"** in
+`MartingaleProblems/README.md`.
+
+**Die Negativaussage ist nachgeprüft**, und zwar auf einem *frischeren* Stand als
+dem, gegen den die Kette gebaut wird: `git grep -il` über `upstream/master` bei
+`dec5b2b7805` gibt für „volterra", „renewal" und „resolvent kernel" je **null**
+Treffer in `Mathlib/`.
+
+**Der Entwurf hat beim Nachsehen den Zuschnitt gewechselt, und das ist der dritte
+Befund des Laufs.** Angesagt war die Volterra-Theorie in `ℝ` mit der
+Neumann-Reihe, und der Grund, aus dem
+`NormedRing.inverse_one_sub` (`Mathlib/Analysis/Normed/Ring/Units.lean:98`) nicht
+trägt, steht seit langem in der Roadmap: es verlangt `‖φ‖ < 1` global, und ein
+lokal integrierbarer Kern auf der Halbachse hat keine solche Norm. Beim Nachsehen
+fand sich jedoch **`MeasureTheory.lconvolution`**
+(`Mathlib/Analysis/LConvolution.lean:50`, das `to_additive` von `mlconvolution`),
+die Faltung über dem **unteren Integral** und mit Werten in `ℝ≥0∞` — und dort
+kostet die ganze algebraische Schicht nichts:
+
+* `lconvolution_assoc` (`:130`) verlangt **Meßbarkeit und sonst nichts**;
+* `lconvolution_comm` (`:143`) verlangt von den beiden Funktionen **gar nichts**,
+  sondern die Invarianz des Maßes, die das Lebesguemaß auf `ℝ` hat.
+
+Damit ist der Meilenstein in `ℝ≥0∞` formuliert — dieselbe Entscheidung wie
+viermal zuvor in dieser Entwicklung, und aus demselben Grund: `⊤` ist die wahre
+Masse eines Fensters, während ein Bochner-Integral einer nichtintegrierbaren
+Funktion `0` zurückgibt und lügt. Die Frage nach der **Konvergenz** der
+Neumann-Reihe entfällt dabei ganz (eine Reihe nichtnegativer Terme in `ℝ≥0∞`
+konvergiert immer); übrig bleibt die Frage nach ihrer **Endlichkeit**, und das ist
+die geometrische Fensterschranke `∫⁻_{[0,d]} φ^{⋆n} ≤ a^n` mit
+`a = ∫⁻_{[0,d]} φ`, der ganze analytische Gehalt des Meilensteins.
+
+Eine Mathlib-Lücke fiel dabei nebenbei an und steht im Meilenstein benannt: die
+Trägerinklusion `support (f ⋆ₗ[μ] g) ⊆ support f + support g` gibt es für die
+Bochner-Faltung (`support_convolution_subset`,
+`Mathlib/Analysis/Convolution.lean:672`) und **nicht** für `lconvolution`. Sie
+gehört neben die vorhandene, und sie ist es, die die Faltung *kausal* macht.
+
+Der Meilenstein nennt außerdem die **Naht** zu Meilenstein 4, und sie sind zwei
+Aussagen und nicht eine: die Resolvente gibt `𝔼[N t] < ∞` erst, wenn bewiesen
+ist, daß die mittlere Intensität die Erneuerungsgleichung *erfüllt*, und das ist
+eine Aussage über die Konstruktion und keine über Faltung.
+
+Alle vier zitierten Mathlib-Zeilennummern sind gegen `94ef6b89544` (den Stand, an
+dem die Kette hängt) nachgeschlagen und stimmen; `scripts/check_cited_lines.py`
+meldet 313 gepaarte Fundstellen, 0 verschoben, 0 tot.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Gruppe A für den beschränkten Fall**, also `E[D_n | ℋ_n] = 0` — die
+   Martingaleigenschaft selbst, und nach diesem Lauf die **einzige** offene
+   Eingabe von `martingale_stoppedProcess_mpFamilyF_hawkesStepPathH`. Sie ist
+   jetzt dran, weil um sie herum nichts mehr offen ist: die Filtration ist
+   gewählt und eindeutig (`hawkesFiltrationH_augment_eq_hawkesPathFiltrationH_augment`),
+   die Zeugen stehen, das Gesetz der ersten Sprungzeit steht, die Zeitänderung in
+   Verteilung steht (`jumpMeasure_map_cumulativeRateF_jumpTimeF_hawkesSelfRateH`),
+   und die beiden Regularitätseingaben stehen seit diesem Lauf. Die Entscheidung,
+   die vor dem ersten Beweisschritt zu begründen ist: ob der Weg über die
+   `D_n`-Zerlegung geht oder über die Zeitverwandlung, die der Nutzer für den
+   linearen Fall ausdrücklich als den allgemeineren Weg genannt hat und die im
+   beschränkten Fall schon dasteht. Schätzung: zwei bis drei Läufe.
+
+2. **Der erste Block von Meilenstein 14 in Lean**, also `IsCausal`,
+   `IsCausal.lconvolution` (die Trägerinklusion, die Mathlib für `lconvolution`
+   nicht hat), `lconvolution_eq_setLIntegral_Icc`, `convPow` und
+   `setLIntegral_convPow_le`. Er ist jetzt dran, weil er **vollständig von den
+   Sprungprozessen unabhängig** ist — kein `hawkes`, kein `jumpMeasure`, keine
+   Filtration —, weil `lconvolution_assoc` und `lconvolution_comm` ihn
+   voraussetzungsfrei tragen, und weil `setLIntegral_convPow_le` der einzige
+   analytische Schritt des ganzen Meilensteins ist: geht er durch, ist der Rest
+   Buchhaltung, und geht er nicht durch, ist das früh und billig zu erfahren.
+   Schätzung: ein Lauf.
+
+3. **Erst danach die allgemeine Fassung über beliebigem `ι`** (Vorschlag 3 des
+   Vorlaufs, unverändert gültig und von diesem Lauf nicht berührt).
+
+### 2026-09-20, siebter Lauf des Tages — Meilenstein 14 steht bis zur Resolvente, und der Entwurf hat an zwei Stellen nachgegeben: die Faltungspotenz hat **keine nullte**, und die Fensterform braucht **kein** Vorzeichen; dazu ein Satz, der in Mathlib fehlt und dort nichts voraussetzt
+
+**Bearbeitet:** Vorschlag 2 des Vorlaufs (der erste Block von Meilenstein 14).
+Vorschlag 1 (Gruppe A für den beschränkten Fall) und Vorschlag 3 (die allgemeine
+Fassung über beliebigem `ι`) sind nicht angefaßt und bleiben unverändert stehen.
+
+**21 neue Deklarationen** in einem neuen Abschnitt `CausalConvolution` von
+`MartingaleProblems/Suggested.lean`, dazu ein `import Mathlib.Analysis.LConvolution`
+und die Neufassung von fünf Punkten des Meilensteins 14 in
+`MartingaleProblems/README.md`. Der Block ist gebaut, weil er **vollständig von
+den Sprungprozessen unabhängig** ist — kein `hawkes`, kein `jumpMeasure`, keine
+Filtration — und weil der einzige analytische Schritt darin früh und billig zu
+prüfen war.
+
+#### Was steht
+
+Die Kette geht weiter, als der Vorschlag bestellt hatte: er endete bei
+`setLIntegral_convPow_le`, und da der geometrische Schritt durchging, ist die
+Resolvente im selben Lauf mitgenommen.
+
+* `support_lconvolution_subset` — die Trägerinklusion
+  `support (f ⋆ₗ[μ] g) ⊆ support f + support g`. **Sie setzt nichts voraus**:
+  keine Meßbarkeit der beiden Funktionen, kein `SFinite` des Maßes, keine
+  Topologie, nur eine meßbare additive Gruppe. Der Grund ist, daß der Integrand
+  an *jedem* `y` verschwindet, sobald `x` außerhalb der Summenmenge liegt — ein
+  `y`, an dem beide Faktoren ungleich Null sind, weist `x = y + (-y + x)` als
+  Summe aus. Das ist die Lücke, die der Vorlauf benannt hatte; Mathlib hat sie
+  für die Bochner-Faltung (`support_convolution_subset`,
+  `Mathlib/Analysis/Convolution.lean:672`) und dort **mit**
+  `ConvolutionExistsAt`-Nebenbedingungen.
+* `IsCausal` samt `isCausal_iff_support_subset`, `isCausal_zero`,
+  `IsCausal.add`, `IsCausal.indicator` und `IsCausal.lconvolution`. Die letzte
+  ist die Trägerinklusion und `Set.Ici 0 + Set.Ici 0 ⊆ Set.Ici 0`, also
+  `add_nonneg`, und sonst nichts.
+* `lconvolution_eq_setLIntegral_Icc` — die Fensterform.
+* `setLIntegral_lconvolution_le` — die Submultiplikativität der Fenstermasse,
+  der analytische Kern.
+* `convPow`, `convPow_zero`, `convPow_succ`, `IsCausal.convPow`,
+  `measurable_convPow`, `convPow_add`, `setLIntegral_convPow_le`.
+* `volterraResolvent`, `IsCausal.volterraResolvent`,
+  `measurable_volterraResolvent`, `volterraResolvent_eq`,
+  `setLIntegral_volterraResolvent_lt_top`.
+
+#### Der erste Befund: die Faltungspotenz hat keine nullte, und der Entwurf hat das zu verstecken versucht
+
+Der Meilenstein schrieb vor: „`convPow f 0` ist durch die Gleichung
+`convPow f 0 ⋆ₗ g = g` für kausales `g` definiert, und die Potenz ist von
+`convPow f 1 = f` aufwärts definiert." Das ist **in Lean nicht ausführbar**, und
+zwar nicht aus einem technischen Grund: die Faltungsalgebra auf der Halbachse hat
+keine `L¹`-Einheit — die Einheit ist das Diracmaß in `0`, ein Maß und keine
+Funktion —, also gibt es keine Funktion, die jene Gleichung erfüllt. Der Entwurf
+hätte einen Müllwert benennen und ihn danach aus dem Halbgruppengesetz
+ausschließen müssen; das ist genau das Muster, das diese Entwicklung viermal
+Geld gekostet hat.
+
+Gebaut ist deshalb die **um eins verschobene** Potenz: `convPow f n` ist die
+`(n+1)`-fache Faltung, `convPow f 0 = f`. Das Halbgruppengesetz liest sich dann
+`convPow f (m + n + 1) = convPow f m ⋆ₗ convPow f n` und die geometrische
+Schranke `≤ a ^ (n + 1)`. **Die Verschiebung beseitigt die Fallunterscheidung,
+statt sie zu verbergen:** keine Aussage dieses Meilensteins trägt `1 ≤ n`, und
+keine trägt einen Müllwert. Der Meilenstein ist entsprechend berichtigt.
+
+#### Der zweite Befund: die Fensterform braucht kein Vorzeichen
+
+Der Meilenstein verlangte `lconvolution_eq_setLIntegral_Icc` „für `0 ≤ t`, und
+`0` darunter", also zwei Aussagen. Es ist eine: unterhalb von `0` verschwinden
+**beide** Seiten — die linke nach `IsCausal.lconvolution`, die rechte, weil
+`Set.Icc 0 t` dann leer ist. Die Voraussetzung `0 ≤ t` ist gestrichen. Das ist
+eine Abschwächung nach der stehenden Regel und sie ist belegt, nicht vermutet:
+der Beweis führt die Fallunterscheidung über das Vorzeichen von `s` und nicht
+über das von `t`.
+
+#### Wo die Kausalität wirklich verbraucht wird, und es sind drei verschiedene Stellen
+
+Der Meilenstein sagte zur geometrischen Schranke, sie brauche „die Kausalität,
+damit das innere Fenster im äußeren enthalten ist". Das ist die richtige
+Anschauung und nennt die Stellen nicht. Im Beweis von
+`setLIntegral_lconvolution_le` — Tonelli gegen das eingeschränkte Maß, dann das
+innere Integral `∫⁻ t in Icc 0 d, g (-s + t)` über die Translationsinvarianz als
+`∫⁻ u, A (u + s) * g u` gelesen — wird sie dreimal und jedesmal für etwas anderes
+gebraucht:
+
+1. Kausalität von `g`, für `0 ≤ s`: ein `u` mit `u + s` im Fenster und `u`
+   außerhalb hat `u < 0`, also darf das verschobene Fenster durch das Fenster
+   ersetzt werden.
+2. Kausalität von `g`, für `d < s`: dann liegt jedes solche `u` unter `0`, das
+   verschobene Fenster trägt **gar nichts** bei. Ohne diesen Punkt wäre die
+   äußere Integration über die ganze Halbachse zu führen und die Schranke falsch
+   — `f` kann jenseits von `d` beliebig groß sein.
+3. Kausalität von `f`: sie erledigt die negative Halbachse `s < 0`.
+
+Punkt 2 ist der, den die Anschauung „inneres Fenster im äußeren" nicht abdeckt,
+und er ist der Grund, aus dem die Aussage die Kausalität **beider** Faktoren
+trägt und nicht nur die eines.
+
+#### Ein Werkzeugbefund, der jeden künftigen Lauf betrifft
+
+`ℝ≥0∞` ist in `MartingaleProblems/Suggested.lean` **keine verfügbare Notation** —
+die 85 Vorkommen stehen sämtlich in Kommentaren, und der Code schreibt `ENNReal`
+aus. Die Datei öffnet `NNReal`, nicht `ENNReal`. Wer dort neuen Code schreibt,
+schreibt `ENNReal`; der neue Abschnitt tut das und öffnet nichts hinzu.
+
+Ebenso: die punktweise Addition von Mengen (`Function.support f + Function.support g`)
+verlangt `open scoped Pointwise`. Sie ist **nicht** dateiweit geöffnet, sondern
+mit `open scoped Pointwise in` vor den beiden Deklarationen, die sie brauchen —
+dateiweit hätte sie die Bedeutung von `+` in 40 000 Zeilen fremden Codes
+verändern können.
+
+Und drei Mathlib-Namen, die frühere Läufe noch kennen könnten, sind auf `master`
+fort: `le_or_lt` (jetzt `le_or_gt`), `lt_or_le` (jetzt `lt_or_ge`) und
+`mul_le_mul_left'` (nicht mehr auflösbar; `gcongr` tut es). `zero_le` hat sein
+Argument implizit bekommen, `zero_le _` bricht. `Measurable.ennreal_tsum` ist
+seit dem 2026-04-30 veraltet, und **die Veraltungsnachricht zeigt ins Leere**:
+sie verweist auf `Measurable.tsum` in
+`Mathlib/MeasureTheory/Constructions/Polish/Basic.lean`, und dort steht kein
+solcher Name (`git grep` gegen `94ef6b89544`: null Treffer für `tsum` in dieser
+Datei). `measurable_volterraResolvent` führt den Beweis deshalb selbst, über
+`ENNReal.tsum_eq_iSup_sum` und `Finset.measurable_fun_sum` — dieselben zwei
+Zeilen, die im veralteten Mathlib-Satz stehen.
+
+#### Was der Block **nicht** leistet
+
+Er ist reine Faltungsalgebra und berührt die Sprungprozesse an keiner Stelle.
+Offen bleiben im Meilenstein 14 die vier Punkte, die dahinter kommen:
+`setLIntegral_volterraResolvent_lt_top_of_locallyFinite` (die Fortsetzung von
+einem kurzen Fenster auf jedes, blockweise), `exists_setLIntegral_lt_one` (die
+Existenz des kurzen Fensters aus lokaler Integrierbarkeit),
+`renewal_eq_add_lconvolution_volterraResolvent` samt `renewal_lt_top`, und die
+beiden Nahtaussagen zur Konstruktion (`lintegral_hawkesSelfRate_eq_add_lconvolution`
+und `lintegral_stepIndex_hawkesJumpTime_lt_top`). Die Naht ist weiterhin zwei
+Aussagen und nicht eine; daran hat dieser Lauf nichts geändert.
+
+#### Geprüft
+
+* `scripts/check_master.py`: rc 0, **0 Fehler**, 0 `sorry`, 0 veraltet,
+  Warnungen 18 / 35 / 106 — **unverändert** gegenüber dem Vorlauf, obwohl 334
+  Zeilen hinzugekommen sind. Mathlib
+  `94ef6b89544e58e90f119da869f3fb48d1da0f4c` (2026-09-18), Lean 4.35.0-rc2. Der
+  Stand vor dem Eingriff ist eigens gemessen worden und war derselbe.
+* `scripts/check_axioms_master.py` auf **alle 21** neuen Deklarationen:
+  `propext`, `Classical.choice`, `Quot.sound`, ohne Ausnahme.
+* `scripts/check_cited_lines.py`: 314 gepaarte Fundstellen, **0 verschoben, 0
+  tot** (313 vor dem Lauf; die eine neue ist `Mathlib/Analysis/LConvolution.lean`).
+* `scripts/check_negatives.py`: 45 Behauptungen, 0 mit unerwarteten Treffern.
+* `scripts/check_own_names.py`: 412 → **404** ungedeckte Namen. Die acht, die
+  fortgefallen sind, sind die Namen des Meilensteins 14, die jetzt als
+  Deklarationen dastehen; der Rest der dort benannten Aussagen bleibt offen und
+  gehört, wie der Kopf jenes Berichts sagt, zum Regelfall.
+* Keine Doppelung: `git grep` über `upstream/master` gibt für `IsCausal`,
+  `def convPow` und `support_lconvolution` je **null** Treffer in `Mathlib/`.
+* Zeilensaldo: `Suggested.lean` +334 / −0, `README.md` +49 / −27.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`exists_setLIntegral_lt_one` und
+   `setLIntegral_volterraResolvent_lt_top_of_locallyFinite`** — die beiden
+   Punkte, die aus „lokal integrierbar" „die Resolvente existiert" machen. Sie
+   sind jetzt dran, weil ihre einzige Eingabe seit diesem Lauf dasteht
+   (`setLIntegral_volterraResolvent_lt_top`) und weil sie zusammen die
+   **Voraussetzungsfläche des Meilensteins auf eine einzige Bedingung
+   reduzieren**: lokale Endlichkeit der Fenstermassen. Der erste ist die
+   Stetigkeit des Maßes von oben längs `Set.Icc 0 (1/n)` und sollte billig sein;
+   der zweite ist die eigentliche Arbeit und geht blockweise — der Punkt, an dem
+   zu entscheiden ist, ob die Blockzerlegung über `convPow_add` oder über eine
+   Induktion an der Resolventengleichung läuft. **Diese Entscheidung ist vor dem
+   ersten Beweisschritt zu begründen**, denn der zweite Weg braucht die
+   Eindeutigkeit, die selbst erst in
+   `renewal_eq_add_lconvolution_volterraResolvent` bewiesen wird, und liefe damit
+   im Kreis. Schätzung: ein bis zwei Läufe.
+
+2. **`renewal_eq_add_lconvolution_volterraResolvent`** — die Erneuerungsgleichung
+   selbst, Existenz und Eindeutigkeit. Existenz ist `lconvolution_assoc` und
+   `volterraResolvent_eq`; Eindeutigkeit ist die Differenz zweier Lösungen gegen
+   die geometrische Schranke, und **dort wird die Subtraktion in `ℝ≥0∞` zum
+   Problem** — die Differenz zweier Lösungen ist nur dann eine Lösung der
+   homogenen Gleichung, wenn beide endlich sind, und das ist genau die
+   Voraussetzung, die der Punkt trägt. Das ist vor dem Beweis zu prüfen und nicht
+   beim Beweisen zu entdecken.
+
+3. **Erst danach Gruppe A für den beschränkten Fall** (Vorschlag 1 des Vorlaufs,
+   unverändert gültig) und die allgemeine Fassung über beliebigem `ι`
+   (Vorschlag 3 des Vorlaufs, ebenfalls unberührt).

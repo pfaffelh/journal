@@ -3973,6 +3973,46 @@ stands as stated for the mathematics; what it did not say, and now does, is that
 a criterion carrying a hypothesis needs a wrapper that crosses it, and that the
 wrapper is bookkeeping rather than a second proof.
 
+**The window over `ℝ≥0`, and the half open form of the dense window lemma**,
+2026-09-19, added for the consumer in **MartingaleProblems** Milestone 11 and
+stated here because both are about the path space. Three statements, none of
+which restates anything:
+
+* `mem_exhaustion_zero_nnreal_iff` — at the base point `0` the window over `ℝ≥0`
+  is `Set.Iic`, the ball having no negative half to reach. It is the shape in
+  which a process over `ℝ≥0` meets its window.
+* `SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion_nnreal` — the window
+  set over `ℝ≥0` is measurable, which is the `ℝ`-statement carried along
+  `SkorokhodSpace.preimage_extendNNReal_setOf_forall_mem_exhaustion`; that
+  identity being an equality of sets, nothing is proved twice. It is what lets a
+  bound travel **back** from an image law to the law of the variable, which
+  `MeasureTheory.Measure.map_apply` asks measurability for and
+  `MeasureTheory.Measure.le_map_apply` does not supply.
+* `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` — the dense window lemma in
+  its **half open** form, which is the primitive one: on `Set.Ico a b` every
+  point has points of the window strictly to its right, so no endpoint is read
+  separately and the hypothesis `hb` of the closed form disappears. The closed
+  form `SkorokhodSpace.forall_mem_Icc_of_forall_mem_dense` is now three lines on
+  top of it, and both are stated over an arbitrary **densely ordered** index
+  rather than `ℝ`, because the two consumers are over `ℝ` (the measurability
+  above) and over `ℝ≥0`, and nothing in the proof knows which.
+
+  **Neither side carries a metric, since 2026-09-20.** The index asks for a
+  topology with the order topology and the values for a topology, and that is
+  all the proof reads: `closure_Ioo`, `Dense.open_subset_closure_inter`,
+  `IsRightContinuous` and `IsClosed.mem_of_tendsto`. The two statements are
+  therefore written over variables of their own and not over this file's `ι`
+  and `E`, whose metrics they inherited only from the section they stood in.
+  The third consumer is what forced it: the window supremum of
+  **MartingaleProblems** Milestone 9 applies them to `ℝ≥0∞`-valued paths, and
+  `ℝ≥0∞` is no metric space, so under the old statement the lemma was
+  unavailable to it and the argument would have been written twice.
+
+A consumer who cannot pay `hb` — and the one in Milestone 11 cannot, the value at
+the right endpoint of a window being exactly what a dense set does not reach —
+enlarges the window instead and reads the half open form. That is free wherever
+the hypothesis is quantified over all horizons.
+
 **Acceptance example.** `SkorokhodSpace.extendNNReal (jumpPathD …)` of the
 roadmap **MartingaleProblems**, Milestone 6: the path law of the jump
 construction, which lives on `D(ℝ≥0, E)`, read on `D(ℝ, E)`. It is the family
