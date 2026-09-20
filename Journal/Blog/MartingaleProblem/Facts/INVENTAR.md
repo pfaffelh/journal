@@ -47602,3 +47602,194 @@ zwei aus diesem Lauf und 31 aus früheren. Dieser Lauf hat seine beiden eigenen
 gelöscht und die fremden
 **nicht** angefaßt; wer das Skript das nächste Mal anrührt, sollte ihm ein Aufräumen
 alter Bäume beigeben — etwa alle, deren Prozeß nicht mehr läuft.
+
+### 2026-09-20, vierzehnter Lauf des Tages — die deterministische Hälfte von Aldous' Kriterium ist **eine** Implikation; beim Hinschreiben ist eine Voraussetzung weggefallen, die der Vorschlag noch vorgesehen hatte, und eine Zusage des Vorlaufs hat sich als falsch erwiesen
+
+**Bearbeitet:** der Vorschlag des Vorlaufs,
+`modulusBased_extendNNReal_le_of_oscHitSeq` — also weiter am ersten Punkt der
+Kette des Meilensteins 11 von `MartingaleProblems`, wie angeordnet. Kein
+Meilenstein 8, kein Meilenstein 14, kein C.5/G. **Vier** Deklarationen, alle in
+`TauCeti/MartingaleProblems/Suggested.lean`; die vierte ist der Vorschlag des
+Laufs selbst, zur Hälfte noch im selben Lauf eingelöst, siehe „Nachtrag".
+
+**Geprüft:** `scripts/check_master.py` meldet für die ganze Kette **0 Fehler,
+0 `sorry`, 0 veraltete Namen** (Mathlib `94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `v4.35.0-rc2`; 18 / 35 / 109 Warnungen, **dieselben Zahlen wie vor dem
+Lauf**, die beiden `omit`-Zeilen sind dafür gesetzt). Alle drei hängen nach
+`check_axioms_master.py` an `propext`, `Classical.choice`, `Quot.sound` und an
+nichts sonst. `scripts/check_cited_lines.py`: **323 von 323** gepaarten
+Fundstellen stimmen, 0 tote — unverändert, weil dieser Lauf keine neue
+Zeilenfundstelle gesetzt hat. `check_duplicates.py` und `check_own_names.py`
+finden zu den drei neuen Namen nichts.
+
+#### Was gebaut ist
+
+*(Drei Deklarationen; die vierte steht unter „Nachtrag", weil sie auf einem
+Befund dieses Laufs beruht und nicht auf dem Vorschlag, mit dem er anfing.)*
+
+* `MeasureTheory.modulusBased_extendNNReal_le_of_oscHitSeq` — der Satz, um den
+  es ging. Sind die Aldous-Zeiten von `X` zum Niveau `ε` an der Stelle `ω` bis
+  zur Stufe `N` endlich, unterhalb `N` `δ`-dünn, und überholt die `N`-te den
+  Horizont `u`, so ist
+  `SkorokhodSpace.modulusBased 0 u (SkorokhodSpace.extendNNReal f) δ
+  ≤ ENNReal.ofReal ε` für jedes càdlàg `f` mit `f.toFun = fun t => X t ω`.
+* `MeasureTheory.oscHitSeq_ne_top_of_le` — Endlichkeit an einer Stufe ist
+  Endlichkeit an jeder früheren. Das ist `monotone_oscHitSeq`, kontrapositiv
+  gelesen, und verlangt nichts über das hinaus, was `oscHitSeq` selbst verlangt.
+* `MeasureTheory.exists_coe_oscHitSeq_of_ne_top` — aus der **einen** Aussage
+  `oscHitSeq X ε N ω ≠ ⊤` die `ι`-wertigen Zeiten bis zur Stufe `N`. Das ist
+  die Brücke, die die stehende Regel des Auftrags billig macht: die Endlichkeit
+  steht in der Hypothese und nicht in einer `untopA`-Abkürzung, kostet den
+  Verbraucher aber nur eine Zeile.
+
+#### Vier Befunde
+
+* **Die strikte Monotonie ist in diesem Satz *keine* Eingabe, sondern eine
+  Folge — und damit kostet die ganze deterministische Hälfte weder `0 < ε` noch
+  Rechtsstetigkeit der Pfade.** Der Vorschlag des Vorlaufs hatte
+  `lt_oscHitSeq_succ` als Eingabe für `hmono` vorgesehen. Gebraucht wird es
+  nicht: `oscHitSeq_le_succ` gibt `τ k ≤ τ (k+1)` umsonst, und `hgap` — das der
+  Verbraucher ohnehin verlangt — macht die beiden verschieden, weil `dist x x = 0`
+  und `0 ≤ δ` ist. Damit **verschiebt sich, wo die Rechtsstetigkeit bezahlt
+  wird**: nicht im Satz, sondern in der Aussage, daß `hgap` überhaupt eintreten
+  kann. Ohne strikte Monotonie wäre der Abstand mit Wahrscheinlichkeit `1` gleich
+  `0`, und die probabilistische Abschätzung, die gerade `P (Abstand ≤ δ)` klein
+  machen soll, hätte nichts zu schätzen. `lt_oscHitSeq_succ` bleibt also stehen
+  und ist nicht überflüssig — es ist nur keine Voraussetzung dieses Satzes,
+  sondern der Grund, aus dem dessen Voraussetzung nicht leer ist. Das steht so
+  an der Deklaration und in beiden README.
+* **Die Endlichkeit und `hmax` fallen zusammen, und deshalb ist keine von beiden
+  versteckt.** `⊤` an einer Stufe `k ≤ N` heißt, daß der Pfad sich nach `τ k`
+  nie wieder um mehr als `ε` bewegt; dann ist `hmax` — daß die Zeiten den
+  Horizont überholen — gerade **nicht** erfüllbar. Die beiden Hypothesen hängen
+  also aneinander, und das ist der zweite Grund (neben der stehenden Regel),
+  aus dem die Endlichkeit in der Hypothese steht und nicht in einer
+  `WithTop.untopA`-Lesart. Zugleich ist das die Stelle, an der der Satz noch
+  **nicht** scharf ist, siehe den Vorschlag unten: der `⊤`-Fall ist in Wahrheit
+  der *gute* Fall.
+* **`simp` normalisiert die Einbettung `ℝ≥0 → WithTop ℝ≥0` in die
+  `ℝ≥0∞`-Schreibweise, und danach greift `WithTop.untopD_coe` nicht mehr.**
+  Derselbe Taktikaufruf `simp [stoppedValue, h]`, der in
+  `dist_stoppedValue_oscHitSeq_le` über einem **allgemeinen** Index den
+  Ankerwert auflöst, läßt über `ℝ≥0` das Ziel
+  `X (↑(τ k)).untopA ω = X (τ k) ω` stehen — und `rfl` schließt es auch nicht,
+  obwohl `WithTop.untopD_coe` als `rfl` bewiesen und `@[simp]` ist. Der Grund
+  ist, daß `WithTop ℝ≥0` **dieselbe Type wie `ℝ≥0∞`** ist und die
+  `simp`-Normalform der Einbettung dort nicht `WithTop.some` heißt. Genommen ist
+  deshalb `show` auf die entfaltete Gestalt und `congrArg` mit
+  `WithTop.untopD_coe` von Hand. Das ist keine Eigenart dieses Beweises:
+  **jede** künftige Aussage, die einen `WithTop ι`-Wert über `ι = ℝ≥0` ausliest,
+  trifft darauf, und der Umweg ist zwei Zeilen.
+* **Eine Zusage des Vorlaufs war falsch, und sie ist berichtigt statt
+  wiederholt.** Der Vorschlag des dreizehnten Laufs nannte diesen Satz „den
+  ersten Verbraucher von `SkorokhodSpace` aus `MartingaleProblems` heraus" und
+  damit die Probe darauf, daß die am 2026-09-17 gefallene Dateigrenze trägt. Das
+  stimmt nicht: `SkorokhodSpace.` steht **78 mal** in
+  `TauCeti/MartingaleProblems/Suggested.lean`, davon in Beweisen etwa
+  `SkorokhodSpace.isTightMeasureSet_map_extendNNReal` (Zeile 35373) und
+  `SkorokhodSpace.isCompactContained_const` (Zeile 40473). Die Dateigrenze ist
+  längst und mehrfach überschritten; dieser Satz ist ein Verbraucher unter
+  vielen. Die Behauptung ist aus dem Eintrag in `MartingaleProblems/README.md`
+  entfernt worden, ehe sie dort stehenblieb.
+
+#### Wo der Punkt jetzt steht
+
+Von den drei Voraussetzungen, die
+`SkorokhodSpace.modulusBased_le_of_forall_gapped` an seine Zeiten stellt, steht
+nach diesem Lauf keine mehr einzeln da: sie sind in **einer** Implikation
+zusammengefaßt, deren offene Hypothesen genau die Größen sind, die ein Maß zu
+schätzen hat.
+
+| Hypothese von `modulusBased_extendNNReal_le_of_oscHitSeq` | Stand |
+| --- | --- |
+| `hfin` (Endlichkeit bis `N`) | Hypothese; aus **einer** Aussage über `exists_coe_oscHitSeq_of_ne_top` |
+| `hgap` (`δ`-Dünnheit) | Hypothese; **die** probabilistische Abschätzung |
+| `hmax` (Horizont überholt) | Hypothese; die Endlichkeitsfrage, mit `hfin` verkoppelt |
+| `hτ0`, `hmono`, `hosc` | eingelöst, ohne Wahrscheinlichkeit |
+
+Damit steht alles Deterministische des ersten Punktes der Kette in einer Linie
+von `isStoppingTime_oscHitSeq` bis zum Modul.
+
+#### Was in die Roadmaps eingetragen ist
+
+`MartingaleProblems/README.md`, Meilenstein 11, am Punkt
+`isTight_map_postcomp_of_exists_martingale`: drei Absätze hinter „What the
+recursion delivers and what it does not" — der neue Satz, die Verschiebung der
+Rechtsstetigkeit, und die Endlichkeit samt ihren beiden Hilfssätzen.
+`SkorokhodSpace/README.md`, Meilenstein 10: ein Absatz hinter dem Absatz zur
+Rekursion, der sagt, was der Verbraucher von
+`modulusBased_extendNNReal_le_of_forall_gapped` wirklich verbraucht und was
+nicht.
+
+#### Nachtrag desselben Laufs — die Unschärfe aus dem zweiten Befund ist behoben
+
+Der zweite Befund oben hatte benannt, daß der Satz den `⊤`-Fall ausschließt,
+obwohl der in Wahrheit der **gute** Fall ist. Das ist im selben Lauf geheilt, und
+zwar so, daß der Satz oben als Korollar stehenbleibt:
+
+* `MeasureTheory.modulusBased_extendNNReal_le_of_oscHitSeq_le` — dieselbe
+  Konklusion, aber die Endlichkeit wird nur **unterhalb** `N` verlangt, und von
+  der letzten Zeit nur, daß sie **bei oder vor** der `N`-ten Trefferzeit liegt
+  (`(τ N : WithTop ℝ≥0) ≤ oscHitSeq X ε N ω`). Ist die Rekursion bei `N` gleich
+  `⊤`, so bewegt sich der Pfad nach der vorletzten Zeit nie wieder um mehr als
+  `ε`; jeder Punkt jenseits des Horizonts schließt dann die Unterteilung, und die
+  Schranke gilt erst recht.
+* `MeasureTheory.modulusBased_extendNNReal_le_of_oscHitSeq` ist jetzt sein
+  Korollar — `hlast` als Gleichheit, und der Übergang von der `dist`-Dünnheit zur
+  geordneten ist die Monotonie der Rekursion.
+
+**Und dabei ist eine Entscheidung gefallen, die zu begründen und nicht zu raten
+war:** die allgemeine Fassung verlangt die Dünnheit in der **geordneten** Gestalt
+`τ k + δ < τ (k+1)` statt über `dist`. Das ist keine Verschärfung — unter der
+Monotonie sagen beide dasselbe —, aber es ist nötig, und der Grund steht an der
+letzten Zelle: dort gibt die Rekursion **keine** Monotonie her, weil `hlast` eine
+Ungleichung in der anderen Richtung ist. Die `dist`-Gestalt allein läßt
+`τ (N-1)` und `τ N` in beliebiger Ordnung, und die Unterteilung wäre keine.
+
+Geprüft wie oben: ganze Kette 0 Fehler, 0 `sorry`, 0 veraltete Namen, Warnungen
+unverändert 18 / 35 / 109; alle **vier** Deklarationen auf `propext`,
+`Classical.choice`, `Quot.sound`.
+
+#### Vorschlag für den nächsten Lauf
+
+**Die Mengeninklusion, die aus dem Satz das Komplement macht:
+`MeasureTheory.setOf_lt_modulusBased_subset_oscHitSeq`.**
+
+Die Aussage, benannt: für `Φ : Ω → D(ℝ≥0, E)` mit
+`(Φ ω).toFun = fun t => X t ω`, `0 ≤ ε`, `0 ≤ δ < u` und `N : ℕ`
+
+> `{ω | ENNReal.ofReal ε < SkorokhodSpace.modulusBased 0 u
+>   (SkorokhodSpace.extendNNReal (Φ ω)) δ}`
+> `⊆ (⋃ k < N, {ω | oscHitSeq X ε (k+1) ω ≤ oscHitSeq X ε k ω + ENNReal.ofReal δ})`
+> `∪ {ω | oscHitSeq X ε N ω < ENNReal.ofReal u}`.
+
+**Warum sie jetzt billig ist, und erst jetzt.** Sie ist die Kontraposition von
+`modulusBased_extendNNReal_le_of_oscHitSeq_le`, und **nur** von dieser Fassung:
+mit der Fassung, die die Endlichkeit bis einschließlich `N` verlangt, stünde auf
+der rechten Seite noch ein drittes, artfremdes Glied `{oscHitSeq X ε N ω = ⊤}`,
+und dessen Wahrscheinlichkeit hätte eigens geschätzt werden müssen. Nach dem
+Nachtrag entfällt es: `⊤` bei `N` erfüllt `ENNReal.ofReal u ≤ oscHitSeq X ε N ω`
+und gehört damit zur guten Seite.
+
+**Worauf sie ruht.** `WithTop ℝ≥0` ist `ℝ≥0∞`, hat also eine Addition, und in ihr
+ist `⊤ + δ < x` falsch — die Dünnheit in dieser Gestalt erzwingt die Endlichkeit
+für `k < N` von selbst, so daß `exists_coe_oscHitSeq_of_ne_top` die `ℝ≥0`-wertigen
+Zeiten liefert und an der Stufe `N` entweder `oscHitSeq X ε N ω` selbst oder,
+wenn das `⊤` ist, ein beliebiger Punkt jenseits von `u` genommen wird. **Die
+Fallunterscheidung an der Stufe `N` ist die einzige Arbeit**, und sie ist
+Buchhaltung.
+
+**Und was unmittelbar daraus folgt**, ohne jede Meßbarkeit des Moduls: die rechte
+Seite von `SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` wendet das Maß als
+**äußeres** Maß auf eine beliebige Menge an, also genügen `measure_mono` und
+`measure_iUnion_le`, um aus der Inklusion die Abschätzung
+
+> `P {ω | η ≤ modulusBased 0 u (extendNNReal (Φ ω)) δ}`
+> `≤ ∑ k < N, P {ω | oscHitSeq X ε (k+1) ω ≤ oscHitSeq X ε k ω + ENNReal.ofReal δ}`
+> `+ P {ω | oscHitSeq X ε N ω < ENNReal.ofReal u}`
+
+zu machen — und **das** ist genau die Größe, die
+`isTightMeasureSet_map_postcomp_iff` klein haben will. Die Zahl der Glieder ist
+`card_le_of_gapped`, das seit dem 2026-09-20 dasteht. Damit bleiben für die
+probabilistische Hälfte genau **zwei** Abschätzungen übrig — eine je Summandenart
+—, und die erste ist die, die Doob aus Meilenstein 9 verbraucht.

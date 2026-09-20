@@ -11412,6 +11412,48 @@ has to be chosen once for all `n`. What stands:
   monotonicity is `MeasureTheory.lt_oscHitSeq_succ`. The third, `δ`-sparseness,
   is the probabilistic estimate and is what remains of this item.
 
+  **And the deterministic half is now one implication**, 2026-09-20:
+  `MeasureTheory.modulusBased_extendNNReal_le_of_oscHitSeq`. If the Aldous times
+  of `X` at level `ε` are finite up to stage `N` at a sample point, `δ`-sparse
+  below `N`, and have overtaken the horizon `u` at `N`, then
+  `SkorokhodSpace.modulusBased 0 u (SkorokhodSpace.extendNNReal f) δ ≤
+  ENNReal.ofReal ε` for any càdlàg `f` with `f.toFun = fun t ↦ X t ω`.
+  Everything in the criterion that does not mention a measure now stands in one
+  chain from
+  `MeasureTheory.isStoppingTime_oscHitSeq` to the modulus, and the single
+  hypothesis of that implication which a measure has to discharge is `hgap`.
+
+  **It spends neither `0 < ε` nor any regularity of the paths, and that relocates
+  where the right continuity is paid.** Strict monotonicity of the times is a
+  *consequence* of `hgap` there: the times are weakly monotone for free
+  (`MeasureTheory.oscHitSeq_le_succ`) and a positive gap makes consecutive ones
+  distinct. `MeasureTheory.lt_oscHitSeq_succ` is therefore not an input of the
+  deterministic half but the reason `hgap` is not vacuous — the probabilistic
+  estimate has to bound the probability that a gap is *short*, and without strict
+  monotonicity the gap could be `0` with probability one.
+
+  **Finiteness is carried in the hypothesis and not in a `WithTop.untopA`.** The
+  standing rule of this development applies to `debutTime` as to every other
+  function totalised by `sInf`, and the two lemmas that make it cheap are
+  `MeasureTheory.oscHitSeq_ne_top_of_le` — finiteness at a stage is finiteness at
+  every earlier one, `monotone_oscHitSeq` read contrapositively — and
+  `MeasureTheory.exists_coe_oscHitSeq_of_ne_top`, which turns the single
+  statement `oscHitSeq X ε N ω ≠ ⊤` into the `ℝ≥0`-valued times up to `N`.
+
+  **At the last stage, however, `⊤` is the *good* case**, and the general form
+  `MeasureTheory.modulusBased_extendNNReal_le_of_oscHitSeq_le` says so: it asks
+  finiteness only *below* `N` and asks of the last time only that it lie at or
+  before the `N`-th hitting time. Where the recursion is `⊤` at `N` the path
+  never again moves by more than `ε` after the previous time, so any point beyond
+  the horizon closes the subdivision and the modulus is bounded a fortiori; a
+  statement that asks the times to be `ℝ≥0`-valued up to and including `N`
+  excludes exactly that case. Its gap hypothesis is the ordered
+  `τ k + δ < τ (k+1)` rather than the `dist` form — not a strengthening, since
+  under the monotonicity of the recursion the two agree, but what makes the last
+  cell go through, where `hlast` is an inequality in the wrong direction to
+  supply monotonicity. The convenient form
+  `MeasureTheory.modulusBased_extendNNReal_le_of_oscHitSeq` is its corollary.
+
   **Strict monotonicity is not free and its price is named.** The début of a
   right-open set need not be attained, so `le_debutTime_oscSet` alone leaves
   `τ k = τ (k+1)` possible. `lt_debutTime_oscSet` excludes it from `0 < ε`

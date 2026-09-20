@@ -41548,6 +41548,35 @@ theorem lt_oscHitSeq_succ {X : ι → Ω → E} {ε : ℝ} (hε : 0 < ε) {k : �
   rw [oscHitSeq_succ]
   exact lt_debutTime_oscSet hε hcont ht (by simp [stoppedValue, ht])
 
+omit [TopologicalSpace ι] [OrderTopology ι] [NoMaxOrder ι] in
+/-- **Once the recursion has run off the end it stays there**, so finiteness at a stage is
+finiteness at every earlier one.  This is `monotone_oscHitSeq` read contrapositively, and it is
+what lets a consumer carry a *single* finiteness hypothesis instead of one per stage. -/
+theorem oscHitSeq_ne_top_of_le {X : ι → Ω → E} {ε : ℝ} {ω : Ω} {k N : ℕ} (hkN : k ≤ N)
+    (h : oscHitSeq X ε N ω ≠ ⊤) : oscHitSeq X ε k ω ≠ ⊤ := by
+  intro hk
+  have hle : oscHitSeq X ε k ω ≤ oscHitSeq X ε N ω := monotone_oscHitSeq X ε ω hkN
+  rw [hk, top_le_iff] at hle
+  exact h hle
+
+omit [TopologicalSpace ι] [OrderTopology ι] [NoMaxOrder ι] in
+/-- **Below a finite stage the recursion is a sequence in the index itself.**
+
+The standing rule of this development is that a function totalised by `sInf` carries its
+finiteness in the hypothesis rather than in a `untopD` abbreviation, and this is the lemma that
+makes that cheap: one hypothesis `oscHitSeq X ε N ω ≠ ⊤` produces the `ι`-valued times that
+`modulusBased_extendNNReal_le_of_oscHitSeq` asks for, for every stage up to `N` at once.
+
+The two hypotheses of that theorem are not independent, and this is where one sees it: `⊤` at a
+stage `k ≤ N` says the path never again moves by more than `ε` after stage `k`, and then the
+horizon is never overtaken either. -/
+theorem exists_coe_oscHitSeq_of_ne_top {X : ι → Ω → E} {ε : ℝ} {ω : Ω} {N : ℕ}
+    (h : oscHitSeq X ε N ω ≠ ⊤) :
+    ∃ τ : ℕ → ι, ∀ k ≤ N, oscHitSeq X ε k ω = (τ k : WithTop ι) :=
+  ⟨fun k => (oscHitSeq X ε k ω).untopA, fun k hk => by
+    show oscHitSeq X ε k ω = ((oscHitSeq X ε k ω).untopA : WithTop ι)
+    rw [WithTop.untopA_eq_untop (oscHitSeq_ne_top_of_le hk h), WithTop.coe_untop]⟩
+
 variable [MeasurableSpace ι] [SecondCountableTopology ι] [BorelSpace ι]
   [DenselyOrdered ι] [FirstCountableTopology ι]
   [MeasurableSpace E] [BorelSpace E] [SecondCountableTopology E]
@@ -41584,5 +41613,148 @@ theorem isStoppingTime_oscHitSeq {𝓕 : Filtration ι mΩ} [𝓕.IsRightContinu
         fun ω => min_le_right _ _).measurable
     · intro ω hω
       simp only [stoppedValue, min_eq_left hω.le]
+
+end MeasureTheory
+
+/-!
+### The deterministic half of Aldous' criterion, on the recursion
+
+Everything in Aldous' criterion that does not mention a measure is now one implication, and this
+is it: the hitting recursion feeds `SkorokhodSpace.modulusBased_extendNNReal_le_of_forall_gapped`
+and what is left over is the `δ`-sparseness of the times, which is the probabilistic half.
+
+**The index is `ℝ≥0` and the path space is `D(ℝ, E)`,** because that is the shape the families of
+Milestone 11 have: their times live on the half line and their laws are read in `D(ℝ, E)` through
+`SkorokhodSpace.extendNNReal`.  The process and the path are tied together by a hypothesis,
+`f.toFun = fun t => X t ω`, and not by a construction; a family whose paths are càdlàg only almost
+surely is read into the path space by a case distinction, and this theorem is then applied at the
+sample points where the two agree.
+
+**Finiteness is a hypothesis, and it is not a technicality.**  `hfin` says that the recursion has
+not run off the end before stage `N`, and `exists_coe_oscHitSeq_of_ne_top` produces it from the
+single statement `oscHitSeq X ε N ω ≠ ⊤`.  It is not to be dispensed with by reading
+`WithTop.untopA` and hoping the junk value is not read.
+
+**At the last stage, though, `⊤` is the *good* case, and the general form says so.**  If the
+recursion is `⊤` at `N`, the path never again moves by more than `ε` after the previous time, so
+*any* point beyond the horizon closes the subdivision and the modulus is bounded a fortiori.  A
+statement that asks the times to be `ℝ≥0`-valued *up to and including* `N` excludes exactly that
+case, and `modulusBased_extendNNReal_le_of_oscHitSeq_le` is the form that does not: it asks
+finiteness only *below* `N` and lets the last time be anything at or before the `N`-th hitting
+time.  `modulusBased_extendNNReal_le_of_oscHitSeq` is its corollary and the convenient form.
+
+**What this theorem does *not* spend, and it is worth naming.**  It uses neither `0 < ε` nor any
+regularity of the paths.  Strict monotonicity of the times, which
+`SkorokhodSpace.modulusBased_le_of_forall_gapped` asks for and which `lt_oscHitSeq_succ` proves
+from right continuity, is here a **consequence of `hgap`**: the times are weakly monotone for free
+(`oscHitSeq_le_succ`) and a positive gap makes them distinct.  `lt_oscHitSeq_succ` is therefore not
+an input of the deterministic half but the reason `hgap` is not vacuous, and that is where the
+right continuity of the paths is really spent.
+-/
+
+namespace MeasureTheory
+
+variable {Ω : Type*} {E : Type*} [MetricSpace E]
+
+/-- **The deterministic half of Aldous' criterion for the hitting recursion**, in the form that
+tolerates a recursion which has run off the end.
+
+Finiteness is asked only *below* `N`, and the last time only to lie at or before the `N`-th
+hitting time.  That is what lets the case `oscHitSeq X ε N ω = ⊤` through, and it is the case in
+which the conclusion is easiest: there the path never again moves by more than `ε`, and the
+subdivision is closed by any point beyond the horizon.
+
+This is `SkorokhodSpace.modulusBased_extendNNReal_le_of_forall_gapped` with three of its four
+inputs discharged by the recursion: `hτ0` is `oscHitSeq_zero`, `hosc` is
+`dist_stoppedValue_oscHitSeq_le` — through `edist_le_ofReal`, and on the half-open cell, whose
+left endpoint costs `0 ≤ ε` — and `hmono` follows from `hgap`.  What is left standing in the
+hypothesis is `hgap` itself, the one statement of the criterion that a measure has to produce.
+
+**The gap is asked in the ordered form** `τ k + δ < τ (k+1)` and not through `dist`, and that is
+not a strengthening: under the monotonicity of the recursion the two say the same thing.  It is
+what makes the last cell go through, where the recursion supplies no monotonicity because `hlast`
+is an inequality in the other direction.
+
+The bound is `ε` and not `2 ε`, because `SkorokhodSpace.subdivisionOsc` measures each cell from
+its left endpoint where Billingsley's `w'` takes the diameter. -/
+theorem modulusBased_extendNNReal_le_of_oscHitSeq_le
+    {X : ℝ≥0 → Ω → E} {ε : ℝ} (hε : 0 ≤ ε) {ω : Ω} (f : D(ℝ≥0, E))
+    (hf : f.toFun = fun t => X t ω)
+    {u δ : ℝ} (hδ : 0 ≤ δ) (hδu : δ < u) {N : ℕ} {τ : ℕ → ℝ≥0}
+    (hfin : ∀ k < N, oscHitSeq X ε k ω = (τ k : WithTop ℝ≥0))
+    (hlast : (τ N : WithTop ℝ≥0) ≤ oscHitSeq X ε N ω)
+    (hgap : ∀ k < N, ((τ k : ℝ≥0) : ℝ) + δ < ((τ (k + 1) : ℝ≥0) : ℝ))
+    (hmax : u ≤ ((τ N : ℝ≥0) : ℝ)) :
+    SkorokhodSpace.modulusBased (0 : ℝ) u (SkorokhodSpace.extendNNReal f) δ
+      ≤ ENNReal.ofReal ε := by
+  have hle : ∀ j ≤ N, (τ j : WithTop ℝ≥0) ≤ oscHitSeq X ε j ω := by
+    intro j hj
+    rcases eq_or_lt_of_le hj with h | h
+    · rw [h]; exact hlast
+    · exact le_of_eq (hfin j h).symm
+  have hτ0 : τ 0 = 0 := by
+    have h := hle 0 (Nat.zero_le N)
+    simp only [oscHitSeq_zero, bot_eq_zero] at h
+    have h0 : τ 0 ≤ 0 := by exact_mod_cast h
+    exact le_antisymm h0 zero_le
+  have hmono : ∀ k < N, τ k < τ (k + 1) := by
+    intro k hk
+    have h := hgap k hk
+    have hc : ((τ k : ℝ≥0) : ℝ) < ((τ (k + 1) : ℝ≥0) : ℝ) := by linarith
+    exact_mod_cast hc
+  have hgap' : ∀ k < N, δ < dist ((τ k : ℝ≥0) : ℝ) ((τ (k + 1) : ℝ≥0) : ℝ) := by
+    intro k hk
+    have h := hgap k hk
+    rw [Real.dist_eq, abs_of_nonpos (by linarith)]
+    linarith
+  have hosc : ∀ k < N, ∀ s ∈ Set.Ico (τ k) (τ (k + 1)),
+      edist (f.toFun s) (f.toFun (τ k)) ≤ ENNReal.ofReal ε := by
+    intro k hk s hs
+    have h1 := hfin k hk
+    have h2 : (τ (k + 1) : WithTop ℝ≥0) ≤ oscHitSeq X ε (k + 1) ω := hle (k + 1) hk
+    have hanchor : stoppedValue X (oscHitSeq X ε k) ω = X (τ k) ω := by
+      show X (WithTop.untopA (oscHitSeq X ε k ω)) ω = X (τ k) ω
+      rw [h1]
+      exact congrArg (fun t => X t ω) (WithTop.untopD_coe _ _)
+    have hslt : (s : WithTop ℝ≥0) < (τ (k + 1) : WithTop ℝ≥0) := by exact_mod_cast hs.2
+    have hd : dist (X s ω) (X (τ k) ω) ≤ ε := by
+      have h := dist_stoppedValue_oscHitSeq_le (X := X) (ε := ε) hε (k := k) (ω := ω) (s := s)
+        (by rw [h1]; exact_mod_cast hs.1) (lt_of_lt_of_le hslt h2)
+      rwa [hanchor] at h
+    rw [hf]
+    exact (edist_le_ofReal hε).2 hd
+  exact SkorokhodSpace.modulusBased_extendNNReal_le_of_forall_gapped hδ hδu f hτ0 hmono hgap'
+    hmax hosc
+
+/-- **The deterministic half of Aldous' criterion for the hitting recursion**, in the convenient
+form: the times are the hitting times themselves, finite up to stage `N`, `δ`-sparse below `N` in
+the `dist` shape the consumer of this milestone reads, and overtaking the horizon `u` at `N`.
+
+It is `modulusBased_extendNNReal_le_of_oscHitSeq_le` with `hlast` an equality, the passage from
+the `dist` gap to the ordered one being the monotonicity of the recursion (`oscHitSeq_le_succ`).
+The finiteness up to `N` comes from the single statement `oscHitSeq X ε N ω ≠ ⊤` through
+`exists_coe_oscHitSeq_of_ne_top`. -/
+theorem modulusBased_extendNNReal_le_of_oscHitSeq
+    {X : ℝ≥0 → Ω → E} {ε : ℝ} (hε : 0 ≤ ε) {ω : Ω} (f : D(ℝ≥0, E))
+    (hf : f.toFun = fun t => X t ω)
+    {u δ : ℝ} (hδ : 0 ≤ δ) (hδu : δ < u) {N : ℕ} {τ : ℕ → ℝ≥0}
+    (hfin : ∀ k ≤ N, oscHitSeq X ε k ω = (τ k : WithTop ℝ≥0))
+    (hgap : ∀ k < N, δ < dist ((τ k : ℝ≥0) : ℝ) ((τ (k + 1) : ℝ≥0) : ℝ))
+    (hmax : u ≤ ((τ N : ℝ≥0) : ℝ)) :
+    SkorokhodSpace.modulusBased (0 : ℝ) u (SkorokhodSpace.extendNNReal f) δ
+      ≤ ENNReal.ofReal ε := by
+  refine modulusBased_extendNNReal_le_of_oscHitSeq_le hε f hf hδ hδu
+    (fun k hk => hfin k hk.le) (le_of_eq (hfin N le_rfl).symm) ?_ hmax
+  intro k hk
+  have h1 := hfin k hk.le
+  have h2 := hfin (k + 1) hk
+  have hm : τ k ≤ τ (k + 1) := by
+    have h := oscHitSeq_le_succ X ε k ω
+    rw [h1, h2] at h
+    exact_mod_cast h
+  have hc : ((τ k : ℝ≥0) : ℝ) ≤ ((τ (k + 1) : ℝ≥0) : ℝ) := by exact_mod_cast hm
+  have hg := hgap k hk
+  rw [Real.dist_eq, abs_of_nonpos (sub_nonpos.2 hc)] at hg
+  linarith
 
 end MeasureTheory
