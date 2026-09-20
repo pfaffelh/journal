@@ -1,7 +1,7 @@
 # Zitierte Zeilennummern gegen `94ef6b89544e58e90f119da869f3fb48d1da0f4c`
 
-* geprüft: 347 gepaarte Fundstellen
-* **stimmt: 347**
+* geprüft: 357 gepaarte Fundstellen
+* **stimmt: 357**
 * **verschoben: 0**
 * zielt auf eine andere Deklaration (von Hand): 41
 * ungepaart (von Hand): 71
@@ -25,13 +25,13 @@ Die zitierte Zeile ist die erste Zeile einer anderen Deklaration, ihr Kopf, oder
 * `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8808`: `MeasureTheory/Integral/Lebesgue/Add.lean:231` ist MeasureTheory.lintegral_liminf_le; gepaart wurde `MeasureTheory.lintegral_liminf_le` (`233`)
 * `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:9317`: `Probability/Martingale/Convergence.lean:243` ist `section L1Convergence`; gepaart wurde `MeasureTheory.tendsto_ae_condExp` (`428`)
 * `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11626`: `MeasureTheory/Integral/Lebesgue/Markov.lean:52` ist `theorem mul_meas_ge_le_lintegral₀ {f : α → ℝ≥0∞} (hf : AEMea`; gepaart wurde `MeasureTheory.mul_meas_ge_le_lintegral` (`59`)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:12243`: `Mathlib/Analysis/LConvolution.lean:130` ist MeasureTheory.mlconvolution_assoc; gepaart wurde `MeasureTheory.mlconvolution` (`50`)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:12245`: `Mathlib/Analysis/LConvolution.lean:143` ist MeasureTheory.mlconvolution_comm; gepaart wurde `MeasureTheory.mlconvolution` (`50`)
+* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:12366`: `Mathlib/Analysis/LConvolution.lean:130` ist MeasureTheory.mlconvolution_assoc; gepaart wurde `MeasureTheory.mlconvolution` (`50`)
+* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:12368`: `Mathlib/Analysis/LConvolution.lean:143` ist MeasureTheory.mlconvolution_comm; gepaart wurde `MeasureTheory.mlconvolution` (`50`)
 * `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:2268`: `Probability/Martingale/OptionalStopping.lean:155` ist `ENNReal.ofReal`; gepaart wurde `MeasureTheory.maximal_ineq` (`144`)
 * `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:4091`: `MeasureTheory/Function/ConditionalExpectation/Basic.lean:359` ist MeasureTheory._root_.ContinuousLinearMap.comp_condExp_comm; gepaart wurde `MeasureTheory._root_.ContinuousLinearMap.comp_condExp_comm` (`360`)
 * `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:5388`: `Probability/Martingale/Convergence.lean:243` ist `section L1Convergence`; gepaart wurde `MeasureTheory.tendsto_ae_condExp` (`428`)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:24090`: `Mathlib/Data/ENNReal/Operations.lean:526` ist ENNReal.toReal_sInf; gepaart wurde `ENNReal.ofReal_iInf` (`530`)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:27385`: `MeasureTheory/MeasurableSpace/Constructions.lean:1083` ist MeasurableEq; gepaart wurde `MeasurableEq` (`1084`)
+* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:24203`: `Mathlib/Data/ENNReal/Operations.lean:526` ist ENNReal.toReal_sInf; gepaart wurde `ENNReal.ofReal_iInf` (`530`)
+* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:27498`: `MeasureTheory/MeasurableSpace/Constructions.lean:1083` ist MeasurableEq; gepaart wurde `MeasurableEq` (`1084`)
 * `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:2652`: `Mathlib/Topology/Order/LeftRight.lean:79` ist continuousWithinAt_Ioi_iff_Ici; gepaart wurde `continuousWithinAt_Ioi_iff_Ici` (`81`)
 * `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/Suggested.lean:11486`: `Mathlib/Topology/Order/LeftRight.lean:79` ist continuousWithinAt_Ioi_iff_Ici; gepaart wurde `continuousWithinAt_Ioi_iff_Ici` (`81`)
 * `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:147`: `Mathlib/MeasureTheory/Measure/FiniteMeasureExt.lean:72` ist MeasureTheory.ext_of_forall_mem_subalgebra_integral_eq_of_polish; gepaart wurde `MeasureTheory.ext_of_forall_mem_subalgebra_integral_eq_of_pseudoEMetric_complete_countable` (`36`)
@@ -107,7 +107,7 @@ keine
 | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11702` | `Algebra/Order/Monoid/Unbundled/Basic.lean:61` | Deklarationskopf `mul_le_mul_right` |
 | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11702` | `Algebra/Order/Monoid/Unbundled/Basic.lean:69` | Deklarationskopf `mul_le_mul_left` |
 | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11915` | `MeasureTheory/Integral/IntervalIntegral/AbsolutelyContinuousFun.lean:225` | Deklarationskopf `AbsolutelyContinuousOnInterval.integral_deriv_eq_sub` |
-| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:12241` | `Mathlib/Analysis/LConvolution.lean:50` | Deklarationskopf `MeasureTheory.mlconvolution` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:12364` | `Mathlib/Analysis/LConvolution.lean:50` | Deklarationskopf `MeasureTheory.mlconvolution` |
 | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:770` | `LocalProperty.lean:77` | Deklaration/Abschnitt `variable [LinearOrder ι] {𝓕 : Filtration ι mΩ} {X : ι → Ω → E} {p q : ` |
 | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:771` | `LocalProperty.lean:88` | Deklaration/Abschnitt `variable [OrderBot ι]` |
 | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:1919` | `Probability/Martingale/Convergence.lean:112` | Deklarationskopf `MeasureTheory.not_frequently_of_upcrossings_lt_top` |
@@ -116,16 +116,16 @@ keine
 | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:4157` | `Order/Filter/AtTopBot/Archimedean.lean:147` | anonyme Instanz `instance (priority := 100) atTop_isCountablyGenerated_of_archimedean` |
 | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:4440` | `MeasureTheory/Function/L1Space/Integrable.lean:1085` | Kopf von `MeasureTheory.MemLp.integrable_mul` |
 | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:5392` | `MeasureTheory/Function/ConditionalExpectation/Basic.lean:359` | Kopf von `MeasureTheory._root_.ContinuousLinearMap.comp_condExp_comm` |
-| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:10289` | `MeasureTheory/Constructions/BorelSpace/Basic.lean:717` | Kopf von `NNReal.measurableSpace` |
-| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:29709` | `Mathlib/Probability/BorelCantelli.lean:50` | Deklarationskopf `ProbabilityTheory.iIndepFun.condExp_natural_ae_eq_of_lt` |
-| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:33907` | `MeasureTheory/Function/ConditionalExpectation/PullOut.lean:224` | Signaturfortsetzung von `MeasureTheory.condExp_smul_of_aestronglyMeasurable_left` |
-| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:33907` | `MeasureTheory/Function/ConditionalExpectation/PullOut.lean:230` | Signaturfortsetzung von `MeasureTheory.condExp_smul_of_aestronglyMeasurable_right` |
-| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:37939` | `Analysis/SpecialFunctions/Gaussian/GaussianIntegral.lean:74` | Deklarationskopf `integrableOn_rpow_mul_exp_neg_mul_rpow` |
-| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:37997` | `Analysis/SpecialFunctions/Gaussian/GaussianIntegral.lean:74` | Deklarationskopf `integrableOn_rpow_mul_exp_neg_mul_rpow` |
-| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:40488` | `Mathlib/Analysis/LConvolution.lean:50` | Deklarationskopf `MeasureTheory.mlconvolution` |
-| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:40489` | `Mathlib/Analysis/LConvolution.lean:130` | Deklarationskopf `MeasureTheory.mlconvolution_assoc` |
-| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:40490` | `Mathlib/Analysis/LConvolution.lean:143` | Deklarationskopf `MeasureTheory.mlconvolution_comm` |
-| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:42974` | `MeasureTheory/Integral/IntervalIntegral/AbsolutelyContinuousFun.lean:225` | Deklarationskopf `AbsolutelyContinuousOnInterval.integral_deriv_eq_sub` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:10402` | `MeasureTheory/Constructions/BorelSpace/Basic.lean:717` | Kopf von `NNReal.measurableSpace` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:29822` | `Mathlib/Probability/BorelCantelli.lean:50` | Deklarationskopf `ProbabilityTheory.iIndepFun.condExp_natural_ae_eq_of_lt` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:34020` | `MeasureTheory/Function/ConditionalExpectation/PullOut.lean:224` | Signaturfortsetzung von `MeasureTheory.condExp_smul_of_aestronglyMeasurable_left` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:34020` | `MeasureTheory/Function/ConditionalExpectation/PullOut.lean:230` | Signaturfortsetzung von `MeasureTheory.condExp_smul_of_aestronglyMeasurable_right` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:38052` | `Analysis/SpecialFunctions/Gaussian/GaussianIntegral.lean:74` | Deklarationskopf `integrableOn_rpow_mul_exp_neg_mul_rpow` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:38110` | `Analysis/SpecialFunctions/Gaussian/GaussianIntegral.lean:74` | Deklarationskopf `integrableOn_rpow_mul_exp_neg_mul_rpow` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:40601` | `Mathlib/Analysis/LConvolution.lean:50` | Deklarationskopf `MeasureTheory.mlconvolution` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:40602` | `Mathlib/Analysis/LConvolution.lean:130` | Deklarationskopf `MeasureTheory.mlconvolution_assoc` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:40603` | `Mathlib/Analysis/LConvolution.lean:143` | Deklarationskopf `MeasureTheory.mlconvolution_comm` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:43115` | `MeasureTheory/Integral/IntervalIntegral/AbsolutelyContinuousFun.lean:225` | Deklarationskopf `AbsolutelyContinuousOnInterval.integral_deriv_eq_sub` |
 | `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:519` | `Mathlib/MeasureTheory/Constructions/BorelSpace/Basic.lean:509` | Kopf von `measurable_of_countable_not_continuousAt` |
 | `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:1513` | `Mathlib/Topology/Metrizable/CompletelyMetrizable.lean:172` | anonyme Instanz `instance (priority := 100) _root_.MetricSpace.toIsCompletelyMetrizable` |
 | `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/Suggested.lean:1057` | `MeasureTheory/Constructions/BorelSpace/Basic.lean:509` | Kopf von `measurable_of_countable_not_continuousAt` |
