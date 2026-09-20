@@ -41835,10 +41835,20 @@ form only: with the form that asks finiteness up to and including `N` a third an
 estimated separately.  Here `⊤` at stage `N` belongs to the good side, because everything is
 `≤ ⊤`.
 
-**The gap events force the finiteness below `N` by themselves**, so
-`exists_coe_oscHitSeq_of_ne_top` is not applied here: `WithTop ℝ≥0` carries an addition, and in
-it `⊤ + δ < x` is false.  The only work left is the case distinction at stage `N`, and it is
-done by taking as the last time the `N`-th hitting time **cut off** at a point beyond the
+**Each gap event is cut down to the sample points at which the recursion has not yet passed the
+horizon**, and that restriction is not decoration: without it the event
+`{ω | τ (k+1) ω ≤ τ k ω + δ}` contains every sample point at which `τ k ω = ⊤`, because
+`⊤ ≤ ⊤ + δ`.  Those are the *good* points -- the path never again moves by more than `ε` -- and
+an estimate of the unrestricted event would have to bound their probability, which is neither
+small nor what a maximal inequality produces.  With `{τ k ω < u}` in front, the event lies in
+the range of `setOf_oscHitSeq_gap_subset_dist`, and that is the shape Aldous' criterion reads.
+
+The restriction is also what carries the proof.  The subdivision is stopped not at `N` but at
+the **first** stage `k₀ ≤ N` at which the horizon has been overtaken (`Nat.find`): below it
+every time is `< u` and therefore finite, and at it the horizon condition holds.  Where the
+earlier form of this theorem read the finiteness off the gap events themselves -- `⊤ + δ < x` is
+false in `WithTop ℝ≥0` -- it is now read off `τ k ω < u`, and `exists_coe_oscHitSeq_of_ne_top` is
+still not applied.  The last time is the `k₀`-th hitting time **cut off** at a point beyond the
 horizon -- finite whether or not the recursion has run off the end, and so far out that neither
 the gap nor the horizon notices the cut.
 
@@ -41858,17 +41868,20 @@ theorem setOf_lt_modulusBased_subset_oscHitSeq
     {ω | ENNReal.ofReal ε
         < SkorokhodSpace.modulusBased (0 : ℝ) u (SkorokhodSpace.extendNNReal (Φ ω)) δ}
       ⊆ (⋃ k ∈ Finset.range N,
-          {ω | oscHitSeq X ε (k + 1) ω
-              ≤ oscHitSeq X ε k ω + ((Real.toNNReal δ : ℝ≥0) : WithTop ℝ≥0)})
+          ({ω | oscHitSeq X ε (k + 1) ω
+              ≤ oscHitSeq X ε k ω + ((Real.toNNReal δ : ℝ≥0) : WithTop ℝ≥0)}
+            ∩ {ω | oscHitSeq X ε k ω < ((Real.toNNReal u : ℝ≥0) : WithTop ℝ≥0)}))
         ∪ {ω | oscHitSeq X ε N ω < ((Real.toNNReal u : ℝ≥0) : WithTop ℝ≥0)} := by
+  classical
   intro ω hω
   by_contra hmem
   rw [Set.mem_union, not_or] at hmem
   obtain ⟨h1, h2⟩ := hmem
   have hu : ((Real.toNNReal u : ℝ≥0) : WithTop ℝ≥0) ≤ oscHitSeq X ε N ω := not_lt.1 h2
-  have hgap : ∀ k < N,
+  have hgap : ∀ k < N, oscHitSeq X ε k ω < ((Real.toNNReal u : ℝ≥0) : WithTop ℝ≥0) →
       oscHitSeq X ε k ω + ((Real.toNNReal δ : ℝ≥0) : WithTop ℝ≥0) < oscHitSeq X ε (k + 1) ω :=
-    fun k hk => not_le.1 fun h => h1 (Set.mem_iUnion₂.2 ⟨k, Finset.mem_range.2 hk, h⟩)
+    fun k hk hlt => not_le.1 fun h =>
+      h1 (Set.mem_iUnion₂.2 ⟨k, Finset.mem_range.2 hk, h, hlt⟩)
   have hu0 : (0 : ℝ) < u := lt_of_le_of_lt hδ hδu
   -- The two passages between `WithTop ℝ≥0` and `ℝ`, used three times below.
   have hrl : ∀ a b : ℝ≥0,
@@ -41884,22 +41897,33 @@ theorem setOf_lt_modulusBased_subset_oscHitSeq
     rw [WithTop.coe_le_coe] at h
     have h' : ((Real.toNNReal u : ℝ≥0) : ℝ) ≤ (b : ℝ) := by exact_mod_cast h
     rwa [Real.coe_toNNReal u hu0.le] at h'
-  -- `N = 0` is impossible: the recursion starts at `⊥` and `u` is positive.
-  obtain ⟨M, rfl⟩ : ∃ M, N = M + 1 := by
-    cases N with
+  -- The **first** stage at which the horizon has been overtaken.
+  have hex : ∃ k, ((Real.toNNReal u : ℝ≥0) : WithTop ℝ≥0) ≤ oscHitSeq X ε k ω := ⟨N, hu⟩
+  have hfind := Nat.find_spec hex
+  have hfindN : Nat.find hex ≤ N := Nat.find_min' hex hu
+  have hbelow : ∀ k < Nat.find hex,
+      oscHitSeq X ε k ω < ((Real.toNNReal u : ℝ≥0) : WithTop ℝ≥0) :=
+    fun k hk => not_le.1 (Nat.find_min hex hk)
+  -- It is not stage `0`: the recursion starts at `⊥` and `u` is positive.
+  obtain ⟨M, hM⟩ : ∃ M, Nat.find hex = M + 1 := by
+    cases hf : Nat.find hex with
     | zero =>
       exfalso
-      have h : ((Real.toNNReal u : ℝ≥0) : WithTop ℝ≥0) ≤ ((⊥ : ℝ≥0) : WithTop ℝ≥0) := hu
+      rw [hf] at hfind
+      have h : ((Real.toNNReal u : ℝ≥0) : WithTop ℝ≥0) ≤ ((⊥ : ℝ≥0) : WithTop ℝ≥0) := hfind
       have h' := hru ⊥ h
       simp only [bot_eq_zero, NNReal.coe_zero] at h'
       linarith
     | succ M => exact ⟨M, rfl⟩
-  -- Below the last stage the times are finite, because `⊤ + δ < x` is false.
-  have hne : ∀ k ≤ M, oscHitSeq X ε k ω ≠ ⊤ := by
-    intro k hk htop
-    have h := hgap k (Nat.lt_succ_of_le hk)
-    rw [htop, WithTop.top_add] at h
-    exact not_top_lt h
+  rw [hM] at hfind hfindN hbelow
+  -- Below the last stage the times are finite, because they have not reached `u`.
+  have hne : ∀ k ≤ M, oscHitSeq X ε k ω ≠ ⊤ :=
+    fun k hk => ne_top_of_lt (hbelow k (Nat.lt_succ_of_le hk))
+  have hgapM : ∀ k ≤ M,
+      oscHitSeq X ε k ω + ((Real.toNNReal δ : ℝ≥0) : WithTop ℝ≥0)
+        < oscHitSeq X ε (k + 1) ω :=
+    fun k hk => hgap k (lt_of_lt_of_le (Nat.lt_succ_of_le hk) hfindN)
+      (hbelow k (Nat.lt_succ_of_le hk))
   have hσ : ∀ k ≤ M, oscHitSeq X ε k ω
       = (((oscHitSeq X ε k ω).untopA : ℝ≥0) : WithTop ℝ≥0) := by
     intro k hk
@@ -41929,19 +41953,19 @@ theorem setOf_lt_modulusBased_subset_oscHitSeq
     · rw [ite_eq_left h.le, ite_eq_left (Nat.succ_le_of_lt h)]
       refine hrl _ _ ?_
       rw [← hσ k h.le, ← hσ (k + 1) (Nat.succ_le_of_lt h)]
-      exact hgap k (Nat.lt_succ_of_lt h)
+      exact hgapM k h.le
     · rw [h, ite_eq_left (le_refl M), ite_eq_right (by omega : ¬ M + 1 ≤ M)]
       refine hrl _ _ ?_
       rw [hWcoe, hWdef]
       refine lt_min ?_ ?_
       · rw [← hσ M (le_refl M)]
-        exact hgap M (Nat.lt_succ_self M)
+        exact hgapM M (le_refl M)
       · rw [← WithTop.coe_add, WithTop.coe_lt_coe, hBdef]
         exact lt_of_lt_of_le (lt_add_one _) (le_max_left _ _)
   · rw [ite_eq_right (by omega : ¬ M + 1 ≤ M)]
     refine hru _ ?_
     rw [hWcoe, hWdef]
-    refine le_min hu ?_
+    refine le_min hfind ?_
     rw [WithTop.coe_le_coe, hBdef]
     exact le_max_right _ _
 
@@ -41954,9 +41978,14 @@ measure applied to them is its outer measure and the inclusion carries over unch
 
 The right hand side has exactly two kinds of summand, and that is the division of labour of the
 probabilistic half: `N` **gap** probabilities — that the recursion advanced by at most `δ` at a
-given step, which is what a maximal inequality is for — and one **horizon** probability, that
-the `N`-th time has not passed `u`.  How many terms the first kind may have is the
-deterministic `card_le_of_gapped`.
+given step *while still below the horizon*, which is what a maximal inequality is for — and one
+**horizon** probability, that the `N`-th time has not passed `u`.  How many terms the first kind
+may have is the deterministic `card_le_of_gapped`.
+
+The horizon condition `oscHitSeq X ε k ω < ↑u.toNNReal` inside each gap event is what makes the
+first kind estimable at all; `setOf_oscHitSeq_gap_subset_dist` is the passage from it to the
+`dist` between two stopping times that Aldous' criterion hypothesises about, and the reason it
+cannot be dropped is stated there.
 
 A consumer of `SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` reads its set
 `{f | η ≤ SkorokhodSpace.modulusBased 0 u f δ}` through this at any `ε` with
@@ -41968,12 +41997,232 @@ theorem measure_setOf_lt_modulusBased_le_oscHitSeq {mΩ : MeasurableSpace Ω} (�
     μ {ω | ENNReal.ofReal ε
         < SkorokhodSpace.modulusBased (0 : ℝ) u (SkorokhodSpace.extendNNReal (Φ ω)) δ}
       ≤ (∑ k ∈ Finset.range N,
-            μ {ω | oscHitSeq X ε (k + 1) ω
-                ≤ oscHitSeq X ε k ω + ((Real.toNNReal δ : ℝ≥0) : WithTop ℝ≥0)})
+            μ ({ω | oscHitSeq X ε (k + 1) ω
+                  ≤ oscHitSeq X ε k ω + ((Real.toNNReal δ : ℝ≥0) : WithTop ℝ≥0)}
+                ∩ {ω | oscHitSeq X ε k ω < ((Real.toNNReal u : ℝ≥0) : WithTop ℝ≥0)}))
           + μ {ω | oscHitSeq X ε N ω < ((Real.toNNReal u : ℝ≥0) : WithTop ℝ≥0)} := by
   refine le_trans (measure_mono (setOf_lt_modulusBased_subset_oscHitSeq hε hΦ hδ hδu N)) ?_
   refine le_trans (measure_union_le _ _) ?_
   gcongr
   exact measure_biUnion_finset_le _ _
+
+end MeasureTheory
+
+/-!
+### The gap event as a distance between two stopping times
+
+The estimate above leaves `N` gap probabilities, and this section turns each of them into the
+quantity Aldous' criterion hypothesises about: the distance between the values of the process at
+**two** stopping times `α ≤ β ≤ α + δ`, both bounded by a horizon.
+
+Two things are needed for that, and neither is in Mathlib.  The first is that `α + δ` is a
+stopping time when the index is `ℝ≥0`, which is `IsStoppingTime.add_const_of_orderedSub` below.
+The second is the inclusion itself, `setOf_oscHitSeq_gap_subset_dist`, which is
+`le_dist_stoppedValue_oscHitSeq` read on the gap event.
+-/
+
+namespace MeasureTheory
+
+variable {Ω ι : Type*} {m : MeasurableSpace Ω}
+
+/-- **Shifting a stopping time by a constant, over an index with truncated subtraction.**
+
+Mathlib has this over an additive *group* (`MeasureTheory.IsStoppingTime.add_const`,
+`Probability/Process/Stopping.lean:389`) and over a *countable* canonically ordered index
+(`MeasureTheory.IsStoppingTime.add_const'`, `:403`).  `ℝ≥0` is neither, and it is the index of
+the Aldous recursion, where `fun ω ↦ τ ω + δ` has to be a stopping time for
+`MeasureTheory.IsStoppingTime.min` to produce the second time of the increment bound.
+
+The proof is a case distinction, and it is the case distinction that the group proof does not
+need.  For `i ≤ j` the set `{τ + i ≤ j}` is `{τ ≤ j - i}`, by `le_tsub_iff_right`, and `j - i ≤ j`
+by `tsub_le_self`, so the filtration carries it.  For `j < i` the set is **empty**, because
+`i ≤ τ ω + i` in a canonically ordered monoid.  The equivalence `a + i ≤ j ↔ a ≤ j - i` is false
+over `ℝ≥0` when `j < i` — the right hand side becomes `a ≤ 0` — so the group argument cannot be
+transferred verbatim, and that is the whole content of the second case.
+
+`AddLeftReflectLE` is what `le_tsub_iff_right` asks for and is the cancellation `a + c ≤ b + c →
+a ≤ b`; over `ℝ≥0` it is an instance. -/
+theorem IsStoppingTime.add_const_of_orderedSub
+    [AddCommMonoid ι] [LinearOrder ι] [CanonicallyOrderedAdd ι] [Sub ι] [OrderedSub ι]
+    [AddLeftReflectLE ι] {f : Filtration ι m} {τ : Ω → WithTop ι}
+    (hτ : IsStoppingTime f τ) (i : ι) :
+    IsStoppingTime f fun ω => τ ω + (i : WithTop ι) := by
+  intro j
+  rcases le_or_gt i j with hij | hji
+  · have h_eq : {ω | τ ω + (i : WithTop ι) ≤ (j : WithTop ι)}
+        = {ω | τ ω ≤ ((j - i : ι) : WithTop ι)} := by
+      ext ω
+      show τ ω + (i : WithTop ι) ≤ (j : WithTop ι) ↔ τ ω ≤ ((j - i : ι) : WithTop ι)
+      cases hτω : τ ω with
+      | top => simp
+      | coe a =>
+        rw [← WithTop.coe_add, WithTop.coe_le_coe, WithTop.coe_le_coe]
+        exact (le_tsub_iff_right hij).symm
+    show MeasurableSet[f j] {ω | τ ω + (i : WithTop ι) ≤ (j : WithTop ι)}
+    rw [h_eq]
+    exact f.mono tsub_le_self _ (hτ (j - i))
+  · have h_eq : {ω | τ ω + (i : WithTop ι) ≤ (j : WithTop ι)} = (∅ : Set Ω) := by
+      ext ω
+      simp only [Set.mem_empty_iff_false, iff_false]
+      intro h
+      exact absurd (WithTop.coe_le_coe.1 (le_of_add_le_right h)) (not_le.2 hji)
+    show MeasurableSet[f j] {ω | τ ω + (i : WithTop ι) ≤ (j : WithTop ι)}
+    rw [h_eq]
+    exact @MeasurableSet.empty Ω (f j)
+
+end MeasureTheory
+
+namespace MeasureTheory
+
+variable {Ω : Type*}
+variable {ι : Type*} [ConditionallyCompleteLinearOrder ι] [OrderBot ι]
+  [TopologicalSpace ι] [OrderTopology ι] [Nonempty ι]
+variable {E : Type*} [MetricSpace E]
+
+/-- **The gap event is an event about the distance between two stopping times**, and that is the
+shape Aldous' criterion reads.
+
+With `α = min (τ k) u` and `β = min (τ (k+1)) (α + δ)` — both stopping times bounded by `u + δ`,
+with `α ≤ β ≤ α + δ` — the event that the recursion failed to advance by more than `δ` at step
+`k` *while still below the horizon `u`* is contained in
+`{ω | ε ≤ dist (stoppedValue X β ω) (stoppedValue X α ω)}`.  A Markov inequality applied to the
+right hand side is then exactly the hypothesis of Aldous' criterion.
+
+**The horizon hypothesis `τ k ω < u` is not a convenience and cannot be dropped.**  Without it
+the gap event contains every sample point at which `τ k ω = ⊤`, since `⊤ ≤ ⊤ + δ` holds in
+`WithTop ι`; at such a point there is no time at which anything happened and the conclusion is
+plainly false.  This is the standing rule of the development in its usual shape — a function
+totalised by `sInf` carries its finiteness in the hypothesis — and here the finiteness is
+supplied by the horizon, which `setOf_lt_modulusBased_subset_oscHitSeq` puts into each of its
+gap events for precisely this reason.
+
+On the gap event both minima are attained on the left, so `β ω = τ (k+1) ω` and `α ω = τ k ω`,
+and the statement is `le_dist_stoppedValue_oscHitSeq`.  The finiteness of `τ (k+1) ω` is not a
+further hypothesis: it follows from `τ (k+1) ω ≤ τ k ω + δ` with `τ k ω` finite.
+
+Right continuity of the paths is what `le_dist_stoppedValue_oscHitSeq` spends, and `0 < ε` is
+not used. -/
+theorem setOf_oscHitSeq_gap_subset_dist [AddCommMonoid ι] [CanonicallyOrderedAdd ι]
+    {X : ι → Ω → E} {ε : ℝ}
+    (hcont : ∀ ω, ∀ t : ι, ContinuousWithinAt (fun s => X s ω) (Set.Ici t) t)
+    (k : ℕ) (δ u : ι) :
+    {ω | oscHitSeq X ε (k + 1) ω ≤ oscHitSeq X ε k ω + (δ : WithTop ι)}
+        ∩ {ω | oscHitSeq X ε k ω < (u : WithTop ι)}
+      ⊆ {ω | ε ≤ dist
+          (stoppedValue X (fun ω => min (oscHitSeq X ε (k + 1) ω)
+            (min (oscHitSeq X ε k ω) (u : WithTop ι) + (δ : WithTop ι))) ω)
+          (stoppedValue X (fun ω => min (oscHitSeq X ε k ω) (u : WithTop ι)) ω)} := by
+  rintro ω ⟨h1', h2'⟩
+  have h1 : oscHitSeq X ε (k + 1) ω ≤ oscHitSeq X ε k ω + (δ : WithTop ι) := h1'
+  have h2 : oscHitSeq X ε k ω < (u : WithTop ι) := h2'
+  have hαeq : min (oscHitSeq X ε k ω) (u : WithTop ι) = oscHitSeq X ε k ω :=
+    min_eq_left (le_of_lt h2)
+  have hβeq : min (oscHitSeq X ε (k + 1) ω)
+      (min (oscHitSeq X ε k ω) (u : WithTop ι) + (δ : WithTop ι))
+      = oscHitSeq X ε (k + 1) ω := by
+    rw [hαeq]; exact min_eq_left h1
+  have hkne : oscHitSeq X ε k ω ≠ ⊤ := ne_top_of_lt h2
+  obtain ⟨a, ha⟩ := WithTop.ne_top_iff_exists.1 hkne
+  have hne : oscHitSeq X ε (k + 1) ω ≠ ⊤ := by
+    intro htop
+    rw [htop, ← ha, ← WithTop.coe_add] at h1
+    exact WithTop.coe_ne_top (top_le_iff.1 h1)
+  obtain ⟨t, ht⟩ := WithTop.ne_top_iff_exists.1 hne
+  have hval : ((oscHitSeq X ε (k + 1) ω).untopA : ι) = t := by rw [← ht]; simp
+  show ε ≤ dist (X (min (oscHitSeq X ε (k + 1) ω)
+      (min (oscHitSeq X ε k ω) (u : WithTop ι) + (δ : WithTop ι))).untopA ω)
+      (X (min (oscHitSeq X ε k ω) (u : WithTop ι)).untopA ω)
+  rw [hβeq, hαeq, hval]
+  exact le_dist_stoppedValue_oscHitSeq (hcont ω) ht.symm
+
+/-! ### The two times of the gap event, as Aldous' criterion asks for them
+
+`setOf_oscHitSeq_gap_subset_dist` writes the two times down; the three lemmas here say that they
+are what the criterion hypothesises about — stopping times `α ≤ β ≤ α + δ`, both bounded by
+`u + δ`.  The order relations are deterministic and the stopping time property is the
+composition of four Mathlib lemmas, one of which is
+`IsStoppingTime.add_const_of_orderedSub` above and had to be built.
+-/
+
+omit [TopologicalSpace ι] [OrderTopology ι] in
+/-- **The two times are ordered as the criterion asks**: `α ≤ β`.
+
+`α = min (τ k) u ≤ τ k ≤ τ (k+1)` by `oscHitSeq_le_succ` and `α ≤ α + δ` by `le_self_add`, so
+`α` is below both arguments of the minimum that defines `β`.  No topology, no measure, and no
+hypothesis on `X`. -/
+theorem oscHitSeqCap_le_oscHitSeqGap {X : ι → Ω → E} {ε : ℝ}
+    [AddCommMonoid ι] [CanonicallyOrderedAdd ι] (k : ℕ) (δ u : ι) (ω : Ω) :
+    min (oscHitSeq X ε k ω) (u : WithTop ι)
+      ≤ min (oscHitSeq X ε (k + 1) ω)
+        (min (oscHitSeq X ε k ω) (u : WithTop ι) + (δ : WithTop ι)) :=
+  le_min ((min_le_left _ _).trans (oscHitSeq_le_succ X ε k ω)) le_self_add
+
+omit [TopologicalSpace ι] [OrderTopology ι] in
+/-- **And `β ≤ α + δ`**, which is the other half of the increment condition and is `min_le_right`.
+Named because the consumer reads it, not because it is deep. -/
+theorem oscHitSeqGap_le_add {X : ι → Ω → E} {ε : ℝ} [AddCommMonoid ι] (k : ℕ) (δ u : ι) (ω : Ω) :
+    min (oscHitSeq X ε (k + 1) ω)
+        (min (oscHitSeq X ε k ω) (u : WithTop ι) + (δ : WithTop ι))
+      ≤ min (oscHitSeq X ε k ω) (u : WithTop ι) + (δ : WithTop ι) :=
+  min_le_right _ _
+
+omit [TopologicalSpace ι] [OrderTopology ι] in
+/-- **Both times are bounded by `u + δ`**, and that is what a maximal inequality needs of them:
+Doob's inequalities and optional sampling are stated for stopping times bounded by an index.
+`α ≤ u` is `min_le_right` and `β ≤ α + δ ≤ u + δ`.  The cap at `u` is therefore not only what
+excludes the explosion set from the gap event but also what makes the times usable. -/
+theorem oscHitSeqGap_le_coe {X : ι → Ω → E} {ε : ℝ}
+    [AddCommMonoid ι] [CanonicallyOrderedAdd ι] (k : ℕ) (δ u : ι) (ω : Ω) :
+    min (oscHitSeq X ε (k + 1) ω)
+        (min (oscHitSeq X ε k ω) (u : WithTop ι) + (δ : WithTop ι))
+      ≤ ((u + δ : ι) : WithTop ι) := by
+  refine (min_le_right _ _).trans ?_
+  rw [WithTop.coe_add]
+  gcongr
+  exact min_le_right _ _
+
+end MeasureTheory
+
+namespace MeasureTheory
+
+variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
+variable {ι : Type*} [ConditionallyCompleteLinearOrder ι] [OrderBot ι]
+  [TopologicalSpace ι] [OrderTopology ι] [NoMaxOrder ι] [Nonempty ι]
+  [MeasurableSpace ι] [SecondCountableTopology ι] [BorelSpace ι]
+  [DenselyOrdered ι] [FirstCountableTopology ι]
+variable {E : Type*} [MetricSpace E] [MeasurableSpace E] [BorelSpace E]
+  [SecondCountableTopology E]
+
+/-- **The hitting time capped at the horizon is a stopping time**, which is
+`isStoppingTime_oscHitSeq` and `MeasureTheory.IsStoppingTime.min_const`.  It is the first of the
+two times of `setOf_oscHitSeq_gap_subset_dist`. -/
+theorem isStoppingTime_oscHitSeqCap {𝓕 : Filtration ι mΩ} [𝓕.IsRightContinuous]
+    {X : ι → Ω → E} {ε : ℝ} {D : Set ι} (hDc : D.Countable) (hDd : Dense D)
+    (hX : IsStronglyProgressive 𝓕 X)
+    (hcont : ∀ ω, ∀ t : ι, ContinuousWithinAt (fun s => X s ω) (Set.Ici t) t)
+    (k : ℕ) (u : ι) :
+    IsStoppingTime 𝓕 (fun ω => min (oscHitSeq X ε k ω) (u : WithTop ι)) :=
+  (isStoppingTime_oscHitSeq hDc hDd hX hcont k).min_const u
+
+/-- **And so is the second**, and this is where `IsStoppingTime.add_const_of_orderedSub` is
+spent: `β = min (τ (k+1)) (α + δ)` is a stopping time by `MeasureTheory.IsStoppingTime.min`,
+whose second argument is the shift of `α` by `δ` — and Mathlib's two shift lemmas are unusable
+over `ℝ≥0`, which is why that lemma had to be proved.
+
+Together with `oscHitSeqCap_le_oscHitSeqGap`, `oscHitSeqGap_le_add` and `oscHitSeqGap_le_coe`
+this is the complete input Aldous' criterion asks of its pair of times, and
+`setOf_oscHitSeq_gap_subset_dist` is what connects it to the modulus. -/
+theorem isStoppingTime_oscHitSeqGap [AddCommMonoid ι] [CanonicallyOrderedAdd ι]
+    [Sub ι] [OrderedSub ι] [AddLeftReflectLE ι]
+    {𝓕 : Filtration ι mΩ} [𝓕.IsRightContinuous]
+    {X : ι → Ω → E} {ε : ℝ} {D : Set ι} (hDc : D.Countable) (hDd : Dense D)
+    (hX : IsStronglyProgressive 𝓕 X)
+    (hcont : ∀ ω, ∀ t : ι, ContinuousWithinAt (fun s => X s ω) (Set.Ici t) t)
+    (k : ℕ) (δ u : ι) :
+    IsStoppingTime 𝓕 (fun ω => min (oscHitSeq X ε (k + 1) ω)
+      (min (oscHitSeq X ε k ω) (u : WithTop ι) + (δ : WithTop ι))) :=
+  (isStoppingTime_oscHitSeq hDc hDd hX hcont (k + 1)).min
+    (IsStoppingTime.add_const_of_orderedSub
+      (isStoppingTime_oscHitSeqCap hDc hDd hX hcont k u) δ)
 
 end MeasureTheory

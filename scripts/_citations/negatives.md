@@ -331,7 +331,14 @@ Suche `setIntegral.*[Mm]artingale|[Mm]artingale.*setIntegral` unter `Mathlib/Pro
 * `Mathlib/Probability/Martingale/Basic.lean`
 * `Mathlib/Probability/Martingale/OptionalStopping.lean`
 
+## `stoppingtime-add-const-nnreal` — MartingaleProblems/README.md, Meilenstein 11; TODO.md Punkt 8
+
+> Eine Stoppzeit um eine Konstante zu verschieben, hat in Mathlib genau zwei Fassungen — `IsStoppingTime.add_const` über einer additiven Gruppe und `IsStoppingTime.add_const'` über abzählbarem Index —, und beide sperren `ℝ≥0` aus; `OrderedSub` kommt unter `Mathlib/Probability/` nicht vor.
+
+Suche `OrderedSub` unter `Mathlib/Probability/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
 ## Zusammenfassung
 
-45 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
+46 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
 

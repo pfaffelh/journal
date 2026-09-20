@@ -4323,7 +4323,9 @@ monotonicity from the recursion; under the monotonicity the two shapes agree.
 `MeasureTheory.setOf_lt_modulusBased_subset_oscHitSeq` in **MartingaleProblems**
 is the contrapositive, an inclusion of the set where
 `SkorokhodSpace.modulusBased 0 u (SkorokhodSpace.extendNNReal (Φ ω)) δ` exceeds
-`ENNReal.ofReal ε` in `N` gap events plus one horizon event. What that says about
+`ENNReal.ofReal ε` in `N` gap events plus one horizon event — each gap event cut
+down to the sample points at which the recursion has not yet passed `u`, which
+is what makes it estimable at all. What that says about
 *this* milestone is that no measurability of
 `SkorokhodSpace.modulusBased` is needed on the way from the criterion to the
 estimate: `SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` applies its measure

@@ -11463,7 +11463,8 @@ has to be chosen once for all `n`. What stands:
   {ω | ENNReal.ofReal ε < SkorokhodSpace.modulusBased 0 u
         (SkorokhodSpace.extendNNReal (Φ ω)) δ}
     ⊆ (⋃ k ∈ Finset.range N,
-        {ω | oscHitSeq X ε (k+1) ω ≤ oscHitSeq X ε k ω + ↑δ.toNNReal})
+        ({ω | oscHitSeq X ε (k+1) ω ≤ oscHitSeq X ε k ω + ↑δ.toNNReal}
+          ∩ {ω | oscHitSeq X ε k ω < ↑u.toNNReal}))
       ∪ {ω | oscHitSeq X ε N ω < ↑u.toNNReal}.
   ```
 
@@ -11471,11 +11472,20 @@ has to be chosen once for all `n`. What stands:
   the form that asks finiteness up to and including `N`, a third and alien term
   `{ω | oscHitSeq X ε N ω = ⊤}` would stand on the right and its probability
   would have to be estimated separately; here `⊤` at stage `N` belongs to the
-  good side. The gap events force the finiteness below `N` on their own, because
-  `⊤ + δ < x` is false in `WithTop ℝ≥0`, so
-  `MeasureTheory.exists_coe_oscHitSeq_of_ne_top` is not used in its proof; the
-  last time is the `N`-th hitting time **cut off** at a point beyond the horizon,
-  which is finite whether or not the recursion has run off the end.
+  good side. The last time is the `k₀`-th hitting time **cut off** at a point
+  beyond the horizon, which is finite whether or not the recursion has run off
+  the end, and `MeasureTheory.exists_coe_oscHitSeq_of_ne_top` is not used in the
+  proof.
+
+  **The horizon condition inside each gap event is not decoration.** Without
+  `{ω | oscHitSeq X ε k ω < ↑u.toNNReal}` the gap event contains every sample
+  point at which `oscHitSeq X ε k ω = ⊤`, since `⊤ ≤ ⊤ + δ` holds in
+  `WithTop ℝ≥0`. Those are the *good* points — the path never again moves by more
+  than `ε` — and an estimate of the unrestricted event would have to bound their
+  probability, which is neither small nor what a maximal inequality produces. It
+  is also what carries the proof: the subdivision stops not at `N` but at the
+  **first** stage `k₀ ≤ N` at which the horizon has been overtaken, below which
+  every time is `< u` and therefore finite.
 
   **And the estimate itself**, 2026-09-20:
   `MeasureTheory.measure_setOf_lt_modulusBased_le_oscHitSeq`, three lines from
@@ -11484,7 +11494,8 @@ has to be chosen once for all `n`. What stands:
   ```
   μ {ω | ENNReal.ofReal ε < modulusBased 0 u (extendNNReal (Φ ω)) δ}
     ≤ ∑ k ∈ Finset.range N,
-        μ {ω | oscHitSeq X ε (k+1) ω ≤ oscHitSeq X ε k ω + ↑δ.toNNReal}
+        μ ({ω | oscHitSeq X ε (k+1) ω ≤ oscHitSeq X ε k ω + ↑δ.toNNReal}
+            ∩ {ω | oscHitSeq X ε k ω < ↑u.toNNReal})
       + μ {ω | oscHitSeq X ε N ω < ↑u.toNNReal}.
   ```
 
@@ -11516,10 +11527,9 @@ has to be chosen once for all `n`. What stands:
   below `τ (k+1)` the path stays within `ε` of the anchor, **at** `τ (k+1)` it is
   at least `ε` away — and neither is the negation of the other, since `oscSet` is
   defined by a *strict* inequality. It is what turns the gap event
-  `{τ (k+1) ≤ τ k + δ}` into the quantity Aldous' criterion hypothesises about:
-  with `σ = min (τ (k+1)) (τ k + δ)`, a stopping time with `τ k ≤ σ ≤ τ k + δ`,
-  the gap event lies in
-  `{ω | ε ≤ dist (stoppedValue X σ ω) (stoppedValue X (τ k) ω)}`.
+  `{τ (k+1) ≤ τ k + δ}` into the quantity Aldous' criterion hypothesises about,
+  and `MeasureTheory.setOf_oscHitSeq_gap_subset_dist` below is that passage
+  written out — together with the horizon hypothesis it needs.
 
   **And this is where the right continuity of the paths is really paid.** The
   deterministic half does not use it; `MeasureTheory.lt_oscHitSeq_succ` uses it
@@ -11533,20 +11543,71 @@ has to be chosen once for all `n`. What stands:
   needed; what does not survive the limit is the strictness. `0 < ε` is not used
   either.
 
-  **What is missing for the stopping time `σ` above is a Mathlib lemma, and the
-  gap is measured.** `σ = min (τ (k+1)) (τ k + δ)` is a stopping time by
+  **The Mathlib lemma the stopping time `σ` above needs is supplied here**,
+  2026-09-20: `MeasureTheory.IsStoppingTime.add_const_of_orderedSub`.
+  `σ = min (τ (k+1)) (τ k + δ)` is a stopping time by
   `MeasureTheory.IsStoppingTime.min` once `fun ω ↦ τ k ω + δ` is one, and over
   `ℝ≥0` Mathlib has no such statement. There are exactly two lemmas of that
   shape, and both are unusable here:
   `MeasureTheory.IsStoppingTime.add_const`
   (`Probability/Process/Stopping.lean:389`), which asks `[AddGroup ι]`, and
   `MeasureTheory.IsStoppingTime.add_const'` (`:403`), which asks
-  `[Countable ι]`. `ℝ≥0` is neither. The statement that is wanted is the one over
-  a canonically ordered additive monoid with truncated subtraction: for `i ≤ j`
-  the set `{τ + i ≤ j}` is `{τ ≤ j - i}` as in the group case, and for `j < i` it
-  is empty because `i ≤ τ ω + i`. The equivalence `a + i ≤ j ↔ a ≤ j - i` is
-  false over `ℝ≥0` without `i ≤ j`, which is why the group proof does not
-  transfer verbatim.
+  `[Countable ι]`. `ℝ≥0` is neither. The statement here is the one over a
+  canonically ordered additive monoid with truncated subtraction,
+
+  ```
+  [AddCommMonoid ι] [LinearOrder ι] [CanonicallyOrderedAdd ι]
+  [Sub ι] [OrderedSub ι] [AddLeftReflectLE ι] :
+    IsStoppingTime f τ → ∀ i : ι, IsStoppingTime f fun ω ↦ τ ω + i,
+  ```
+
+  and its proof is a case distinction the group proof does not need: for `i ≤ j`
+  the set `{τ + i ≤ j}` is `{τ ≤ j - i}` by `le_tsub_iff_right`, carried by the
+  filtration because `tsub_le_self`, and for `j < i` it is **empty** because
+  `i ≤ τ ω + i` in a canonically ordered monoid. The equivalence
+  `a + i ≤ j ↔ a ≤ j - i` is false over `ℝ≥0` without `i ≤ j` — the right hand
+  side becomes `a ≤ 0` — which is why the group proof does not transfer verbatim.
+  `AddLeftReflectLE` is what `le_tsub_iff_right` asks for and is an instance over
+  `ℝ≥0`.
+
+  **And the gap event is turned into the distance between two stopping times**,
+  2026-09-20: `MeasureTheory.setOf_oscHitSeq_gap_subset_dist`. With
+  `α = min (τ k) u` and `β = min (τ (k+1)) (α + δ)` — both stopping times, with
+  `α ≤ β ≤ α + δ` and both bounded by `u + δ` —
+
+  ```
+  {ω | τ (k+1) ω ≤ τ k ω + δ} ∩ {ω | τ k ω < u}
+    ⊆ {ω | ε ≤ dist (stoppedValue X β ω) (stoppedValue X α ω)}.
+  ```
+
+  On the intersection both minima are attained on the left, so `β ω = τ (k+1) ω`
+  and `α ω = τ k ω`, and the statement is
+  `MeasureTheory.le_dist_stoppedValue_oscHitSeq`. The finiteness of `τ (k+1) ω`
+  is not a further hypothesis but follows from `τ (k+1) ω ≤ τ k ω + δ` with
+  `τ k ω` finite. `0 < ε` is not used; right continuity of the paths is.
+
+  **The horizon hypothesis cannot be dropped**, and the reason is the standing
+  rule of this development: without it the gap event contains the sample points
+  at which `τ k ω = ⊤`, where `⊤ ≤ ⊤ + δ` holds and the conclusion is plainly
+  false. This is why
+  `MeasureTheory.setOf_lt_modulusBased_subset_oscHitSeq` carries the horizon into
+  each of its gap events.
+
+  **And the two times are what the criterion asks for**, 2026-09-20:
+  `MeasureTheory.isStoppingTime_oscHitSeqCap` and
+  `MeasureTheory.isStoppingTime_oscHitSeqGap` say that `α` and `β` are stopping
+  times — the first by `MeasureTheory.IsStoppingTime.min_const`, the second by
+  `MeasureTheory.IsStoppingTime.min` over
+  `MeasureTheory.IsStoppingTime.add_const_of_orderedSub`, which is where that
+  lemma is spent. Their order relations are deterministic and carry no
+  hypothesis on `X` at all:
+  `MeasureTheory.oscHitSeqCap_le_oscHitSeqGap` (`α ≤ β`, from
+  `oscHitSeq_le_succ` and `le_self_add`),
+  `MeasureTheory.oscHitSeqGap_le_add` (`β ≤ α + δ`, `min_le_right`) and
+  `MeasureTheory.oscHitSeqGap_le_coe` (`β ≤ u + δ`). The last is why the cap at
+  `u` earns its place twice over: it excludes the explosion set from the gap
+  event, and it is what makes the times **bounded**, which is what Doob's
+  inequalities and optional sampling ask of a stopping time.
 
   **The times are written in the `WithTop ℝ≥0` shape** — `↑δ.toNNReal` rather
   than `ENNReal.ofReal δ` — because that is where `oscHitSeq` takes its values.

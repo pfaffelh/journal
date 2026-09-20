@@ -320,6 +320,16 @@ CLAIMS_TODO8 = [
      ['Mathlib/Probability/Martingale/'],
      ['Mathlib/Probability/Martingale/Basic.lean',
       'Mathlib/Probability/Martingale/OptionalStopping.lean']),
+    ('stoppingtime-add-const-nnreal',
+     'MartingaleProblems/README.md, Meilenstein 11; TODO.md Punkt 8',
+     'Eine Stoppzeit um eine Konstante zu verschieben, hat in Mathlib genau '
+     'zwei Fassungen — `IsStoppingTime.add_const` über einer additiven Gruppe '
+     'und `IsStoppingTime.add_const\'` über abzählbarem Index —, und beide '
+     'sperren `ℝ≥0` aus; `OrderedSub` kommt unter `Mathlib/Probability/` nicht '
+     'vor.',
+     'OrderedSub',
+     ['Mathlib/Probability/'],
+     []),
 ]
 
 

@@ -48024,3 +48024,273 @@ genau daran scheitert der wörtliche Übertrag des Gruppenbeweises — das ist d
 Stelle, an der der nächste Lauf aufpassen muß. Steht der Satz, ist er die
 **zehnte** Lücke für `TODO.md` Punkt 8 und die erste, die unmittelbar aus
 Meilenstein 11 kommt.
+
+### 2026-09-20, sechzehnter Lauf des Tages — der Vorschlag des Vorlaufs steht samt der Mathlib-Lücke davor; und beim Hinschreiben ist herausgekommen, daß die Lückenereignisse des fünfzehnten Laufs **so nicht schätzbar** waren: sie enthalten die Stichprobenpunkte, an denen die Rekursion abgelaufen ist, und das sind gerade die guten
+
+**Bearbeitet:** der Vorschlag des fünfzehnten Laufs,
+`setOf_oscHitSeq_gap_subset_dist`, und die Mathlib-Lücke, die davor liegt — also
+weiter am ersten Punkt der Kette des Meilensteins 11 von `MartingaleProblems`,
+wie angeordnet. Kein Meilenstein 8, kein Meilenstein 14, kein C.5/G. **Zwei**
+neue Deklarationen und **zwei** geänderte, alle in
+`TauCeti/MartingaleProblems/Suggested.lean`.
+
+**Geprüft:** `scripts/check_master.py` meldet für die ganze Kette **0 Fehler,
+0 `sorry`, 0 veraltete Namen** (Mathlib `94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `v4.35.0-rc2`; 18 / 35 / 109 Warnungen, **dieselben Zahlen wie vor dem
+Lauf**). Die beiden neuen **und** die beiden geänderten Deklarationen hängen nach
+`check_axioms_master.py` auf `propext`, `Classical.choice`, `Quot.sound` und auf
+nichts sonst. `scripts/check_cited_lines.py`: **332 von 332** gepaarten
+Fundstellen stimmen, 0 tote. `check_duplicates.py` (2574 eigene Deklarationen)
+und `check_own_names.py` finden zu den beiden neuen Namen nichts.
+`check_negatives.py`: **46** Behauptungen, 0 mit unerwarteten Treffern — eine
+mehr als vorher, weil dieser Lauf seine eigene Negativaussage mechanisiert hat.
+
+#### Der Befund, und er kommt vor dem Gebauten, weil er die Aufgabe geändert hat
+
+**Die Lückenereignisse des fünfzehnten Laufs enthalten die Explosionsmenge.**
+`{ω | τ (k+1) ω ≤ τ k ω + δ}` ist an jedem Stichprobenpunkt mit `τ k ω = ⊤`
+erfüllt, denn in `WithTop ℝ≥0` ist `⊤ ≤ ⊤ + δ`. Und das sind gerade die
+**guten** Punkte: dort bewegt sich der Pfad nach `τ (k-1)` nie wieder um mehr
+als `ε`, der Modul ist also klein. Eine Abschätzung des unbeschränkten
+Ereignisses müßte deren Wahrscheinlichkeit mitschätzen, und die ist weder klein
+noch das, was eine Maximalungleichung liefert — der ganze erste Summand der
+Abschätzung des Vorlaufs wäre unbrauchbar gewesen.
+
+Das ist dieselbe Familie wie die vier Müllwertbefunde der stehenden Regel, aber
+in umgekehrter Richtung: hier lügt nicht ein `sInf ∅ = 0`, sondern ein
+**ehrliches** `⊤` macht ein Ereignis still wahr, weil es im Ordnungsvergleich auf
+der falschen Seite steht. Bemerkt wurde es nicht beim Beweisen des Vorschlags,
+sondern beim Hinschreiben seiner Voraussetzung: `le_dist_stoppedValue_oscHitSeq`
+verlangt eine **Zeit**, und auf der Explosionsmenge gibt es keine.
+
+**Die Reparatur ist die klassische und kostete keinen neuen Gedanken:** jedes
+Lückenereignis wird mit `{ω | τ k ω < u}` geschnitten — das ist genau die
+Bedingung, die Billingsleys und Aldous' Fassungen an dieser Stelle tragen und die
+der Umriß des Meilensteins weggelassen hatte. Sie schließt die Explosionsmenge
+aus (`τ k ω < u` ist endlich) und ist zugleich die Schranke, die die beiden
+Stoppzeiten der Aldous-Voraussetzung **beschränkt** macht.
+
+#### Was gebaut ist
+
+* `MeasureTheory.IsStoppingTime.add_const_of_orderedSub` — die Mathlib-Lücke, die
+  der Vorlauf gemessen hatte, geschlossen. Unter
+  `[AddCommMonoid ι] [LinearOrder ι] [CanonicallyOrderedAdd ι] [Sub ι]`
+  `[OrderedSub ι] [AddLeftReflectLE ι]` ist `fun ω ↦ τ ω + i` eine Stoppzeit.
+  Sie ist die **achtundzwanzigste** Lücke für `TODO.md` Punkt 8 (der Vorlauf
+  hatte sie als zehnte gezählt — das war die Zahl aus einer älteren Liste; die
+  Liste in `TODO.md` stand bei 27 und steht jetzt bei 28) und die erste, die
+  unmittelbar aus Meilenstein 11 kommt.
+
+* `MeasureTheory.setOf_oscHitSeq_gap_subset_dist` — der Vorschlag selbst, in der
+  Gestalt, die der Befund oben erzwingt. Mit `α = min (τ k) u` und
+  `β = min (τ (k+1)) (α + δ)`
+
+  ```
+  {ω | τ (k+1) ω ≤ τ k ω + δ} ∩ {ω | τ k ω < u}
+    ⊆ {ω | ε ≤ dist (stoppedValue X β ω) (stoppedValue X α ω)}.
+  ```
+
+  Über beliebigem bedingt vollständigem linear geordnetem `ι` mit `OrderBot`,
+  Ordnungstopologie und kanonisch geordneter Addition — nicht erst über `ℝ≥0`.
+
+**Und zwei geändert**, weil der Befund sie beide betrifft:
+
+* `MeasureTheory.setOf_lt_modulusBased_subset_oscHitSeq` trägt jetzt in jedem
+  seiner `N` Lückenereignisse den Schnitt mit `{ω | τ k ω < ↑u.toNNReal}`. Der
+  Beweis ist **umgebaut, nicht geflickt**: die Unterteilung hört nicht mehr bei
+  `N` auf, sondern bei der **ersten** Stufe `k₀ ≤ N`, an der der Horizont
+  überholt ist (`Nat.find`); unterhalb davon ist jede Zeit `< u` und damit
+  endlich. Wo der Vorlauf die Endlichkeit aus den Lückenereignissen selbst las
+  (`⊤ + δ < x` ist falsch), liest sie dieser aus `τ k ω < u`.
+* `MeasureTheory.measure_setOf_lt_modulusBased_le_oscHitSeq` folgt mit, wörtlich
+  derselbe Vierzeiler.
+
+#### Vier Befunde
+
+* **Der Umbau kostete `Nat.find` und sonst nichts.** Von den rund sechzig Zeilen
+  des Beweises sind fünf ersetzt: die Fallunterscheidung `N = 0` wurde zu
+  `k₀ = 0`, `hne` wechselte die Quelle, und `hgapM` sammelt die
+  Lückenungleichung für `k ≤ M` aus der jetzt zweistelligen Hypothese. Die
+  Konstruktion der letzten Zeit — das Minimum mit einer Schranke jenseits des
+  Horizonts, die eigentliche Arbeit des Vorlaufs — blieb unberührt. Das ist der
+  Ertrag davon, daß der Vorlauf sie **allgemein** in
+  `modulusBased_extendNNReal_le_of_oscHitSeq_le` geführt hatte und nicht an `N`
+  festgemacht.
+* **Die Endlichkeit von `τ (k+1)` ist keine zweite Voraussetzung.** Im
+  Lückenereignis ist `τ (k+1) ω ≤ τ k ω + δ`, und mit endlichem `τ k ω` ist die
+  rechte Seite eine Koerzion; eine Hypothese über `τ (k+1)` kommt im Satz nicht
+  vor. Die stehende Regel ist damit an **einer** Stelle eingelöst und nicht an
+  zweien.
+* **`le_tsub_iff_right` und nicht `tsub_le_iff_right` ist der Angelpunkt, und
+  seine Voraussetzung ist nicht die abgeschnittene Subtraktion, sondern die
+  Kürzbarkeit.** `OrderedSub` allein gibt nur `a - b ≤ c ↔ a ≤ c + b`; die
+  gebrauchte Richtung `b ≤ j - i → b + i ≤ j` verlangt zusätzlich
+  `AddLeftReflectLE` (in Mathlib über `Contravariant.AddLECancellable`,
+  `Mathlib/Algebra/Order/Sub/Unbundled/Basic.lean:204`). Über `ℝ≥0` ist das eine
+  Instanz, aber es ist eine Voraussetzung mehr, als der Vorschlag des Vorlaufs
+  genannt hatte, und sie steht jetzt in der Signatur.
+* **`MeasurableSet.empty` braucht die σ-Algebra ausgeschrieben.** In einem Beweis
+  über `MeasurableSet[f j]` schließt `exact MeasurableSet.empty` nicht, sondern
+  meldet „synthesized type class instance is not definitionally equal": die
+  Instanzensuche nimmt das `m` aus der Umgebung statt des `↑f j` aus dem Ziel. Zu
+  schreiben ist `@MeasurableSet.empty Ω (f j)`. Das ist dieselbe Bauart wie der
+  `binop%`-Befund des Vorlaufs — eine syntaktische Suche, die eine Definition
+  nicht entfaltet —, und es ist die dritte Stelle dieser Familie.
+
+#### Wo der Punkt jetzt steht
+
+| Größe | Stand |
+| --- | --- |
+| alles Deterministische | steht, seit dem vierzehnten Lauf |
+| Zahl der Summanden erster Art | `card_le_of_gapped`, steht |
+| Übergang Modul → Lückenereignisse | steht, jetzt **mit Horizont** |
+| Lückenereignis → `dist` an zwei Zeiten | steht, dieser Lauf |
+| `α`, `β` sind Stoppzeiten mit `α ≤ β ≤ α + δ ≤ u + δ` | offen, nächster Lauf |
+| `μ {ε ≤ dist …}` klein, aus der Martingalvoraussetzung über Doob | offen |
+| `μ {ω \| τ N ω < u}` klein | offen |
+
+#### Was in die Roadmaps eingetragen ist
+
+`MartingaleProblems/README.md`, Meilenstein 11, am Punkt
+`isTight_map_postcomp_of_exists_martingale`: die beiden Formeln mit dem Horizont
+im Lückenereignis, ein Absatz dazu, warum er nicht wegzulassen ist, und der
+Absatz zur Mathlib-Lücke ist von „was fehlt" auf „was hier steht" umgeschrieben,
+mit den Typklassen und der Fallunterscheidung. `SkorokhodSpace/README.md`,
+Meilenstein 10: ein Halbsatz im Absatz zum Verbraucher. `TODO.md`, Punkt 8: die
+achtundzwanzigste Lücke, mit der Prüfung des Negativbefunds am Gegenstand — das
+Muster `IsStoppingTime f fun ω => τ ω + i` über ganz `Mathlib/` gibt genau die
+beiden bekannten Treffer (Zeilen 391 und 407), `OrderedSub` unter
+`Mathlib/Probability/` keinen. `scripts/check_negatives.py`: die Behauptung ist
+als `stoppingtime-add-const-nnreal` mechanisiert.
+
+#### Vorschlag für den nächsten Lauf
+
+**`MeasureTheory.isStoppingTime_oscHitSeqCap` und
+`MeasureTheory.isStoppingTime_oscHitSeqGap` — die beiden Zeiten der obigen
+Inklusion als Stoppzeiten, mit ihrer Ordnungsbeziehung.**
+
+Die Aussagen, benannt: für die Filtration und die Daten von
+`isStoppingTime_oscHitSeq` und `δ u : ℝ≥0`
+
+> `IsStoppingTime 𝓕 (fun ω ↦ min (oscHitSeq X ε k ω) u)` und
+> `IsStoppingTime 𝓕 (fun ω ↦ min (oscHitSeq X ε (k+1) ω) (min (oscHitSeq X ε k ω) u + δ))`,
+> dazu punktweise `α ω ≤ β ω ≤ α ω + δ` und `β ω ≤ u + δ`.
+
+**Warum sie jetzt dran ist.** `setOf_oscHitSeq_gap_subset_dist` schreibt die
+beiden Zeiten hin, sagt aber nichts darüber, daß sie Stoppzeiten sind — und
+genau das ist die Gestalt, in der Aldous' Kriterium seine Voraussetzung stellt:
+zwei **beschränkte** Stoppzeiten mit `α ≤ β ≤ α + δ`. Ohne sie ist die Inklusion
+eine Mengenaussage ohne Verbraucher.
+
+**Worauf sie ruht, und alles steht:** `isStoppingTime_oscHitSeq` für die
+Rekursion, `MeasureTheory.IsStoppingTime.min_const` für die Kappung am Horizont,
+`MeasureTheory.IsStoppingTime.add_const_of_orderedSub` aus diesem Lauf für den
+Zuwachs um `δ`, und `MeasureTheory.IsStoppingTime.min` für das äußere Minimum.
+Die Ordnungsbeziehung ist `monotone_oscHitSeq` und `le_self_add`, beides ohne
+Wahrscheinlichkeit. Es ist der Lauf, für den die Mathlib-Lücke dieses Laufs
+geschlossen wurde, und er sollte billig sein; kostet er mehr, ist das der erste
+Meßwert.
+
+**Und danach ist die Kette bis an die Martingalvoraussetzung heran geschlossen:**
+was dann noch fehlt, ist die Markov-Ungleichung auf
+`{ω | ε ≤ dist (stoppedValue X β ω) (stoppedValue X α ω)}` und die Schranke für
+das Horizontereignis — die beiden Stellen, an denen Doob aus Meilenstein 9
+verbraucht wird.
+
+#### Nachtrag desselben Laufs — der Vorschlag ist im selben Lauf eingelöst, und er war wirklich billig
+
+Fünf weitere Deklarationen, damit **sieben neue und zwei geänderte** in diesem
+Lauf. Die ganze Kette weiterhin **0 Fehler, 0 `sorry`, 0 veraltete Namen**,
+Warnungen unverändert 18 / 35 / 109; alle sieben auf `propext`,
+`Classical.choice`, `Quot.sound`. `check_duplicates.py` zählt jetzt **2579**
+eigene Deklarationen und findet zu keinem der neuen Namen etwas.
+`check_cited_lines.py`: 332 von 332, 0 tote.
+
+* `MeasureTheory.oscHitSeqCap_le_oscHitSeqGap` — `α ≤ β`, aus `oscHitSeq_le_succ`
+  und `le_self_add`.
+* `MeasureTheory.oscHitSeqGap_le_add` — `β ≤ α + δ`, `min_le_right`.
+* `MeasureTheory.oscHitSeqGap_le_coe` — `β ≤ u + δ`.
+* `MeasureTheory.isStoppingTime_oscHitSeqCap` — `α` ist eine Stoppzeit,
+  `isStoppingTime_oscHitSeq` und `IsStoppingTime.min_const`.
+* `MeasureTheory.isStoppingTime_oscHitSeqGap` — `β` ist eine,
+  `IsStoppingTime.min` über `IsStoppingTime.add_const_of_orderedSub`.
+
+Damit steht die **ganze** Voraussetzung, die Aldous' Kriterium an sein Zeitenpaar
+stellt: zwei beschränkte Stoppzeiten mit `α ≤ β ≤ α + δ`, und die Inklusion, die
+das Lückenereignis in ihren Abstand übersetzt.
+
+**Drei Befunde.**
+
+* **Die Kappung am Horizont verdient ihren Platz zweimal.** Sie schließt die
+  Explosionsmenge aus dem Lückenereignis aus — das war der Befund des Hauptteils
+  —, und sie ist es zugleich, die die Zeiten **beschränkt** macht: `β ≤ u + δ`.
+  Doobs Ungleichungen und das optionale Sampling verlangen genau das von einer
+  Stoppzeit. Ein Umriß, der die Kappung als Detail weggelassen hätte, hätte sie
+  zweimal nachträglich einführen müssen.
+* **Punktdefinition schlägt Dotnotation: `IsStoppingTime` ist ein Pi-Typ.**
+  `(h : IsStoppingTime 𝓕 τ).add_const_of_orderedSub δ` schließt nicht, sondern
+  meldet, die Umgebung enthalte `Function.add_const_of_orderedSub` nicht — die
+  Definition `IsStoppingTime f τ := ∀ i, MeasurableSet …` entfaltet sich zu einem
+  Pi-Typ, und die Dotnotation sucht im Namensraum `Function`. Zu schreiben ist
+  der volle Name mit dem Beweis als erstem Argument. Mathlibs eigene
+  `hτ.min_const q` geht dagegen durch, weil es dort in derselben Datei elaboriert
+  wird und die Definition noch reduzibel ist; über die Modulgrenze hinweg nicht
+  mehr.
+* **Und eine Warnung an die Nachwelt, aus einem selbstverschuldeten Fehler
+  dieses Laufs.** Die drei Ordnungsaussagen brauchen `TopologicalSpace ι` und
+  `OrderTopology ι` nicht, und der `unusedSectionVars`-Linter verlangt dafür ein
+  `omit … in`. Dieses `omit` muß **vor** dem Doc-Kommentar stehen, nicht zwischen
+  ihm und dem `theorem` — sonst meldet Lean `unexpected token 'omit'; expected
+  'lemma'`. Beim maschinellen Verschieben der drei Zeilen hat ein zu grob
+  geschriebenes Skript **vier weitere, schon vorhandene** `omit`-Zeilen derselben
+  Gestalt an falsche Stellen getragen; der Fehler fiel erst im Diff auf und ist
+  zurückgenommen. Die Lehre ist die alte: eine textuelle Ersetzung in einer Datei
+  mit 42 000 Zeilen wird an der Zahl der Treffer geprüft, ehe sie geschrieben
+  wird.
+
+#### Wo der Punkt nach dem Nachtrag steht
+
+| Größe | Stand |
+| --- | --- |
+| alles Deterministische | steht |
+| Übergang Modul → Lückenereignisse, mit Horizont | steht |
+| Lückenereignis → `dist` an zwei Zeiten | steht |
+| `α`, `β` Stoppzeiten mit `α ≤ β ≤ α + δ ≤ u + δ` | steht |
+| `μ {ε ≤ dist (X β) (X α)}` klein, aus der Martingalvoraussetzung | **offen** |
+| `μ {ω \| τ N ω < u}` klein | **offen** |
+
+#### Vorschlag für den nächsten Lauf, nach dem Nachtrag
+
+**`MeasureTheory.measure_setOf_oscHitSeq_gap_le` — die Markov-Ungleichung auf dem
+Lückenereignis, und damit der erste der beiden offenen Summanden.**
+
+Die Aussage, benannt: unter den Voraussetzungen von
+`setOf_oscHitSeq_gap_subset_dist` und mit `α`, `β` wie dort
+
+> `ENNReal.ofReal ε * μ ({ω | τ (k+1) ω ≤ τ k ω + δ} ∩ {ω | τ k ω < u})`
+> `≤ ∫⁻ ω, ENNReal.ofReal (dist (stoppedValue X β ω) (stoppedValue X α ω)) ∂μ`,
+> also in der Gestalt, die Mathlibs Markov-Ungleichung hat: das Niveau steht
+> **links als Faktor**, nicht rechts als Kehrwert.
+
+**Warum sie jetzt dran ist.** Alles darunter steht: die Inklusion aus diesem
+Lauf gibt die Menge, die Stoppzeiteigenschaft aus dem Nachtrag gibt den
+Verbraucher, und die Ungleichung selbst ist `mul_meas_ge_le_lintegral`
+(`MeasureTheory/Integral/Lebesgue/Markov.lean:59` auf `94ef6b89544` — der
+Auftrag nennt `:50`, das ist die Zeile eines älteren Standes und gehört beim
+Zitieren berichtigt; daneben steht unter `:52` die `₀`-Fassung mit `AEMeasurable`).
+Damit ist der erste Summand der Abschätzung des fünfzehnten Laufs auf eine
+Größe zurückgeführt, über die **Aldous' Voraussetzung selbst** spricht — und
+`isTight_map_postcomp_of_exists_martingale` hängt dann nur noch am
+Horizontereignis und an der Frage, wie die Martingalvoraussetzung diese Größe
+klein macht.
+
+**Die eine Vorfrage, die dabei zu klären ist und nicht zu raten:** ob die
+Lückenmenge als **meßbar** gebraucht wird. `mul_meas_ge_le_lintegral` steht über
+`{x | c ≤ f x}` für meßbares `f`, unsere Menge ist nur darin **enthalten**; der
+Weg ist also `measure_mono` auf die Niveaumenge von
+`fun ω ↦ ENNReal.ofReal (dist (stoppedValue X β ω) (stoppedValue X α ω))` und die
+Ungleichung dort. Dann ist keine Meßbarkeit des Lückenereignisses nötig — wohl
+aber die des Abstands der beiden gestoppten Werte, und die kommt aus
+`stronglyMeasurable_stoppedValue_of_le`, weil beide Zeiten nach
+`oscHitSeqGap_le_coe` durch `u + δ` beschränkt sind. Genau dafür ist diese
+Schranke da.
