@@ -1,9 +1,9 @@
 # Zitierte eigene Namen ohne Deckung
 
 * Mathlib-Index: `94ef6b89544e58e90f119da869f3fb48d1da0f4c`
-* Zitate in den vier `README.md`: 8718
+* Zitate in den vier `README.md`: 8733
 * davon Fließtext (Taktiken, Schlüsselwörter): 65
-* ohne Deckung in Mathlib **und** in unseren `Suggested.lean`: 412
+* ohne Deckung in Mathlib **und** in unseren `Suggested.lean`: 404
 
 ## 1. Qualifizierte Namen ohne Deckung
 
@@ -49,7 +49,6 @@ Der Namensraum existiert, der Name nicht.  Das ist im Regelfall ein **offener Pu
 | `MeasureTheory.AddContent.isSigmaSubadditive_of_innerRegular` | `Journal/Blog/MartingaleProblem/TauCeti/KolmogorovExtension/README.md:78` |
 | `MeasureTheory.exists_ae_tendsto_of_tendsto` | `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:1470` |
 | `MeasureTheory.isProjectiveLimit_projectiveLimit` | `Journal/Blog/MartingaleProblem/TauCeti/KolmogorovExtension/README.md:131`, `Journal/Blog/MartingaleProblem/TauCeti/KolmogorovExtension/README.md:135` |
-| `MeasureTheory.lconvolution` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11409` |
 | `MeasureTheory.projectiveFamilyContent_isSigmaSubadditive` | `Journal/Blog/MartingaleProblem/TauCeti/KolmogorovExtension/README.md:125` |
 | `MetricSpace.toIsCompletelyMetrizableSpace` | `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:1512` |
 | `Pi.instCompactIccSpace` | `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:1974` |
@@ -108,7 +107,6 @@ Prüfliste, von Hand durchzugehen: Notationen, Feldnamen, Hilfsvariablen aus dem
 | `HasAtomIncrements` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7763`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7810`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7835` |
 | `HasOuterApproxClosed.lean` | `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:24` |
 | `Ico_mem_nhdsGE` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8255` |
-| `IsCausal.lconvolution` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11429`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11434` |
 | `IsLeftContinuous` | `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:8`, `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:369` |
 | `IsMPSolutionFor` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:330` |
 | `IsMPSolutionFor.ae_forall_mem_iInter_of_tendsto` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:9143` |
@@ -172,7 +170,7 @@ Prüfliste, von Hand durchzugehen: Notationen, Feldnamen, Hilfsvariablen aus dem
 | `a218e50f981` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:10252`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:10265`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:10343`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:10426` |
 | `adapted_cadlagModif` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8571`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8598` |
 | `adapted_rightLimWithin` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8596` |
-| `ae_intervalIntegrable_hawkesSelfRate` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11492` |
+| `ae_intervalIntegrable_hawkesSelfRate` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11514` |
 | `ae_left_limit` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8595` |
 | `ae_right_limit` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8595` |
 | `aemeasurable_limit` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:9858`, `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:70`, `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:772` |
@@ -209,7 +207,6 @@ Prüfliste, von Hand durchzugehen: Notationen, Feldnamen, Hilfsvariablen aus dem
 | `condexp_sup` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:10342` |
 | `continuousAt_eval` | `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:1071` |
 | `conv` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:3713` |
-| `convPow_add` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11441` |
 | `countingProcess` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:2534` |
 | `crossGrid_eq_zero_of_bddFlux` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7696`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7727`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7751`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7756` |
 | `d_m` | `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:2357` |
@@ -247,7 +244,7 @@ Prüfliste, von Hand durchzugehen: Notationen, Feldnamen, Hilfsvariablen aus dem
 | `exists_mpSolution_of_dual` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11287` |
 | `exists_process_of_isProjectiveMeasureFamily` | `Journal/Blog/MartingaleProblem/TauCeti/KolmogorovExtension/README.md:172`, `Journal/Blog/MartingaleProblem/TauCeti/KolmogorovExtension/README.md:188` |
 | `exists_projectiveFamily_of_dual` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11284` |
-| `exists_setLIntegral_lt_one` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11468` |
+| `exists_setLIntegral_lt_one` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11490` |
 | `exists_unique_of_bounded` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:1397`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:3725`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:3801`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:6182` |
 | `forall_aemeasurable` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:9869`, `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:70` |
 | `freezing` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:5640` |
@@ -314,7 +311,6 @@ Prüfliste, von Hand durchzugehen: Notationen, Feldnamen, Hilfsvariablen aus dem
 | `inv_sub_fullGenerator_eq_integral` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11364` |
 | `isCadlag_cadlagModif` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8571`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8597` |
 | `isCadlag_const` | `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:411` |
-| `isCausal_zero` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11429` |
 | `isDetermining_products` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:452`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:585`, `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:424` |
 | `isDissipative_of_forall_exists_mpSolution` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11378` |
 | `isGreatest` | `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:198` |
@@ -335,15 +331,13 @@ Prüfliste, von Hand durchzugehen: Notationen, Feldnamen, Hilfsvariablen aus dem
 | `k₀` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7405` |
 | `l1_rightContinuous` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8719`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:9014` |
 | `lam` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:704`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:1090`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:1131`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:1387`, … (22 insgesamt) |
-| `lconvolution` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11432` |
 | `lconvolution_assoc` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11411` |
-| `lconvolution_comm` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11413`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11456` |
-| `lconvolution_eq_setLIntegral_Icc` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11436` |
+| `lconvolution_comm` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11413`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11478` |
 | `limsup_n` | `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:4069` |
 | `linearBirthDeath_masterEquation_zero` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:2057`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:2070` |
-| `lintegral_hawkesSelfRate_eq_add_lconvolution` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11486` |
+| `lintegral_hawkesSelfRate_eq_add_lconvolution` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11508` |
 | `lintegral_natCast` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:10427` |
-| `lintegral_stepIndex_hawkesJumpTime_lt_top` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11491` |
+| `lintegral_stepIndex_hawkesJumpTime_lt_top` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11513` |
 | `lipConst_le_iff` | `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:707` |
 | `localRestart` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7162` |
 | `localizingSystem_of_boundedJumps` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7157`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7176` |
@@ -371,7 +365,7 @@ Prüfliste, von Hand durchzugehen: Notationen, Feldnamen, Hilfsvariablen aus dem
 | `mulVec_one_eq_zero_iff_of_nonneg` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7881` |
 | `m₀` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:10336`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:10350`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:10352`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:10352`, … (5 insgesamt) |
 | `m₂` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:10335`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:10353` |
-| `n` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:356`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:383`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:1210`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:1210`, … (158 insgesamt) |
+| `n` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:356`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:383`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:1210`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:1210`, … (156 insgesamt) |
 | `n'` | `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:2132` |
 | `normOn_mul_le` | `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:727` |
 | `norm_le_of_bddOn_imAxis_of_subexponential` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7669`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7691`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7710`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7807`, … (5 insgesamt) |
@@ -387,14 +381,12 @@ Prüfliste, von Hand durchzugehen: Notationen, Feldnamen, Hilfsvariablen aus dem
 | `q_j` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:4893` |
 | `regularitySet` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8595` |
 | `renewal` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11402` |
-| `renewal_eq_add_lconvolution_volterraResolvent` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11474` |
-| `renewal_lt_top` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11478` |
+| `renewal_eq_add_lconvolution_volterraResolvent` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11496` |
+| `renewal_lt_top` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11500` |
 | `rightContModif` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8596` |
 | `secondCountable_of_proper` | `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:1682` |
 | `selfExciting` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:2534` |
-| `setLIntegral_convPow_le` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11447` |
-| `setLIntegral_volterraResolvent_lt_top` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11457` |
-| `setLIntegral_volterraResolvent_lt_top_of_locallyFinite` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11459` |
+| `setLIntegral_volterraResolvent_lt_top_of_locallyFinite` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11481` |
 | `star_mem'` | `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:156` |
 | `star_trivial` | `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:164` |
 | `stronglyAdapted_cadlagModif` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8598` |
@@ -412,6 +404,7 @@ Prüfliste, von Hand durchzugehen: Notationen, Feldnamen, Hilfsvariablen aus dem
 | `tendsto_of_isRelativelyCompact_of_unique` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11217`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11236` |
 | `to_additive` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:7911`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11410`, `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:2807`, `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:374` |
 | `tsum` | `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:1168` |
+| `tsum_eq_zero_add'` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11477` |
 | `tsum_fintype` | `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:946` |
 | `tsum_measure_lt` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:10428` |
 | `t₀` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:3382`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:3388`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8923`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8924`, … (35 insgesamt) |
@@ -423,7 +416,6 @@ Prüfliste, von Hand durchzugehen: Notationen, Feldnamen, Hilfsvariablen aus dem
 | `v4.33.1` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:3712`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:8752`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:10252`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:10265`, … (7 insgesamt) |
 | `variance_` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:10256` |
 | `volterra` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11402` |
-| `volterraResolvent_eq` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11453` |
 | `w''` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:10867`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:10891`, `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:3348`, `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:3408`, … (5 insgesamt) |
 | `weakDual` | `Journal/Blog/MartingaleProblem/TauCeti/WeakConvergence/README.md:34` |
 | `x₀` | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:1493`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:1495`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:1497`, `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:2732`, … (5 insgesamt) |

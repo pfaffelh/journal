@@ -11425,35 +11425,57 @@ State everything for `ι = ℝ` with `volume` and functions vanishing on
 `(-∞, 0)`; the half line is a sub-semigroup and not a group, so it is the support
 condition and not a change of carrier that makes the convolution causal.
 
+* `support_lconvolution_subset`:
+  `Function.support (f ⋆ₗ[μ] g) ⊆ Function.support f + Function.support g`, over
+  an arbitrary measurable additive group and an arbitrary measure. Mathlib has
+  this for the Bochner convolution (`support_convolution_subset`,
+  `Mathlib/Analysis/Convolution.lean:672`) and **not** for `lconvolution`; it
+  belongs in Mathlib beside the Bochner one, and it is the weaker of the two —
+  the Bochner statement lives among `ConvolutionExistsAt` side conditions, and
+  this one asks nothing at all, not measurability of the two functions and not
+  `SFinite` of the measure, because a lower integral of a pointwise vanishing
+  function is `0` whatever the measure does.
 * `IsCausal f`, the predicate `∀ t < 0, f t = 0` for `f : ℝ → ℝ≥0∞`, with
-  `isCausal_zero`, `IsCausal.add`, `IsCausal.lconvolution` and
-  `IsCausal.indicator`. Mathlib has the support statement for the Bochner
-  convolution (`support_convolution_subset`,
-  `Mathlib/Analysis/Convolution.lean:672`) and **not** for `lconvolution`; that
-  inclusion, `Function.support (f ⋆ₗ[μ] g) ⊆ Function.support f + Function.support g`,
-  is the content of `IsCausal.lconvolution` and belongs in Mathlib beside the
-  Bochner one.
+  `isCausal_iff_support_subset`, `isCausal_zero`, `IsCausal.add`,
+  `IsCausal.indicator` and `IsCausal.lconvolution`. The last one is the support
+  inclusion above together with `Set.Ici 0 + Set.Ici 0 ⊆ Set.Ici 0`, which is
+  `add_nonneg`; no measure theory enters a second time.
 * `lconvolution_eq_setLIntegral_Icc`: for causal `f` and `g`,
-  `(f ⋆ₗ g) t = ∫⁻ s in Set.Icc 0 t, f s * g (t - s)` for `0 ≤ t`, and `0`
-  below. This is the form every later statement reads, and it is the only place
-  where the causality is unfolded.
-* `convPow f n`, the `n`-fold causal convolution power with `convPow f 0` the
-  unit, together with `convPow_succ`, `convPow_add` and the causality of each
-  power. The unit of the algebra is **not** a function — the convolution algebra
-  on the half line has no `L¹` unit — so `convPow f 0` is defined by the
-  equation `convPow f 0 ⋆ₗ g = g` for causal `g` and the power is defined from
-  `convPow f 1 = f` upwards. The statements are the semigroup law and nothing
-  more.
-* `setLIntegral_convPow_le`: `∫⁻ t in Set.Icc 0 d, convPow φ n t ≤ a ^ n` where
-  `a = ∫⁻ t in Set.Icc 0 d, φ t`. The geometric bound on the window, by
-  induction on `n` and Tonelli — and it is the **whole** analytic content of the
-  milestone. Over `ℝ≥0∞` it needs no integrability hypothesis; it needs the
-  causality, so that the inner window is contained in the outer one.
-* `volterraResolvent φ := fun t ↦ ∑' n, convPow φ (n + 1) t`, and
-  `volterraResolvent_eq`: `r = φ + φ ⋆ₗ r` and `r = φ + r ⋆ₗ φ`, from the
-  semigroup law and `ENNReal.tsum_eq_add_tsum_ite`
-  (`Mathlib/Topology/Algebra/InfiniteSum/ENNReal.lean:294`) — no convergence
-  question arises, and the two forms are `lconvolution_comm`.
+  `(f ⋆ₗ g) t = ∫⁻ s in Set.Icc 0 t, f s * g (t - s)`, for **every** `t`. The
+  sign of `t` is not a hypothesis: below `0` both sides vanish, the left by
+  `IsCausal.lconvolution` and the right because the window is empty. This is
+  the form every later statement reads, and it is the only place where the
+  causality is unfolded.
+* `convPow f n`, the causal convolution power, **indexed from one**: `convPow f n`
+  is the `(n+1)`-fold convolution, so `convPow f 0 = f` and
+  `convPow f 1 = f ⋆ₗ f`, with `convPow_zero`, `convPow_succ`,
+  `IsCausal.convPow`, `measurable_convPow` and the semigroup law
+  `convPow_add : convPow f (m + n + 1) = convPow f m ⋆ₗ convPow f n`. The shift
+  is the **absence of a unit** and not a convention: the convolution algebra on
+  the half line has no `L¹` unit — the unit is the Dirac mass at `0`, a measure
+  and not a function — so there is no `f ^⋆ 0` to name, and naming one would
+  mean naming a junk value and then excluding it from the semigroup law.
+  Shifting the index removes the case distinction instead of hiding it, and no
+  statement of this milestone carries `1 ≤ n`.
+* `setLIntegral_lconvolution_le`:
+  `∫⁻ t in Set.Icc 0 d, (f ⋆ₗ g) t ≤ (∫⁻ t in Set.Icc 0 d, f t) * ∫⁻ t in Set.Icc 0 d, g t`
+  for causal measurable `f` and `g`. The submultiplicativity of the window mass,
+  by Tonelli against the restricted measure and the translation invariance of
+  Lebesgue measure — and it is the **whole** analytic content of the milestone.
+  Over `ℝ≥0∞` it carries no integrability hypothesis; it carries the causality
+  of both factors, and each is spent at a different place: that of `g` replaces
+  the translated window by the window and kills the shifts beyond `d`, that of
+  `f` kills the negative half line.
+* `setLIntegral_convPow_le`: `∫⁻ t in Set.Icc 0 d, convPow φ n t ≤ a ^ (n + 1)`
+  where `a = ∫⁻ t in Set.Icc 0 d, φ t`, by induction over the previous item.
+  The exponent is `n + 1` because the index is, and this is the step the Neumann
+  series of a normed algebra cannot take: nothing global is asked of the kernel,
+  only its mass on the one window.
+* `volterraResolvent φ := fun t ↦ ∑' n, convPow φ n t`, with
+  `IsCausal.volterraResolvent` and `measurable_volterraResolvent`, and
+  `volterraResolvent_eq`: `r = φ + φ ⋆ₗ r`, from the semigroup law and
+  `tsum_eq_zero_add'` against `ENNReal.summable` — no convergence question
+  arises. The second form `r = φ + r ⋆ₗ φ` is this one and `lconvolution_comm`.
 * `setLIntegral_volterraResolvent_lt_top`: if `a < 1` on a window of length `d`
   then `∫⁻ t in Set.Icc 0 d, r t < ⊤`; and
   `setLIntegral_volterraResolvent_lt_top_of_locallyFinite`, the same on **every**

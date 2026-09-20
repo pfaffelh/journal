@@ -41,6 +41,7 @@ import Mathlib.MeasureTheory.Function.ConditionalExpectation.Real
 import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
 import Mathlib.MeasureTheory.Function.ConvergenceInDistribution
 import Mathlib.Probability.Martingale.Convergence
+import Mathlib.Analysis.LConvolution
 
 /-!
 # Suggested signatures for the martingale problems roadmap
@@ -40402,3 +40403,336 @@ theorem uniformCompactContainment_of_forall_map_eq [CompleteSpace E] [Nonempty �
   exact SkorokhodSpace.isCompactContained_const ν
 
 end UniformCompactContainment
+
+/-! ## Causal convolution and the Volterra resolvent
+
+Milestone 14.  The renewal equation `m = m₀ + φ ⋆ m` on `[0,∞)` and the resolvent that solves it
+are the one piece of analysis the jump processes of Milestone 4 need and do not have:
+`thm:pathjumpMP`(b) carries `𝔼[N t] < ∞` as a hypothesis, and for the **linear** Hawkes process
+the manuscript discharges that hypothesis through this equation.  Mathlib has none of it --
+`git grep -il` over `upstream/master` gives zero hits in `Mathlib/` for `volterra`, for `renewal`
+and for `resolvent kernel`.
+
+**Everything here is stated in `ℝ≥0∞`,** and that is the same decision the rest of this
+development has taken four times before.  `MeasureTheory.lconvolution`
+(`Mathlib/Analysis/LConvolution.lean:50`, notation `f ⋆ₗ[μ] g`) is defined by a lower integral;
+its associativity `lconvolution_assoc` (`:130`) asks measurability and nothing else, and its
+commutativity `lconvolution_comm` (`:143`) asks nothing of the two functions at all -- it asks
+invariance of the measure, which Lebesgue measure on `ℝ` has.  The whole algebraic layer is
+therefore free, and a value of `⊤` is the true mass of a window, where a Bochner integral of a
+non integrable function returns `0` and lies.  The question that remains is not whether the
+Neumann series converges -- a sum of non-negative terms in `ℝ≥0∞` always does -- but whether it
+is **finite**, and that is where the local mass of the kernel enters and where the work is. -/
+
+section CausalConvolution
+
+open scoped Pointwise in
+/-- **The support of a lower integral convolution**, and the statement asks for nothing at all:
+not measurability of the two functions, not `SFinite` of the measure, not a topology on the
+group.  The integrand `f y * g (-y + x)` vanishes at *every* `y` as soon as `x` lies outside the
+sumset, because a `y` at which both factors are nonzero exhibits `x = y + (-y + x)` as a sum.
+
+Mathlib has the corresponding statement for the Bochner convolution
+(`support_convolution_subset`, `Mathlib/Analysis/Convolution.lean:672`) and **not** for
+`lconvolution`.  This one belongs beside it, and it is the weaker hypothesis of the two: the
+Bochner statement lives among `ConvolutionExistsAt` side conditions, and here there are none,
+because a lower integral of a function that vanishes pointwise is `0` whatever the measure
+does. -/
+theorem support_lconvolution_subset {G : Type*} [AddGroup G] [MeasurableSpace G]
+    (f g : G → ENNReal) (μ : Measure G) :
+    Function.support (f ⋆ₗ[μ] g) ⊆ Function.support f + Function.support g := by
+  intro x hx
+  by_contra hmem
+  refine hx ?_
+  have hzero : (fun y => f y * g (-y + x)) = fun _ => (0 : ENNReal) := by
+    funext y
+    rcases eq_or_ne (f y) 0 with hf | hf
+    · simp [hf]
+    · rcases eq_or_ne (g (-y + x)) 0 with hg | hg
+      · simp [hg]
+      · have hsum : y + (-y + x) ∈ Function.support f + Function.support g :=
+          Set.add_mem_add (Function.mem_support.2 hf) (Function.mem_support.2 hg)
+        rw [add_neg_cancel_left] at hsum
+        exact absurd hsum hmem
+  rw [lconvolution_def, hzero]
+  simp
+
+/-- A function on the line is **causal** when it vanishes strictly before the origin.
+
+The half line is a sub-semigroup of `ℝ` and not a subgroup, so it is this support condition --
+and not a change of carrier -- that makes the convolution causal.  Everything in this section is
+consequently stated for `ℝ` with `volume`, which is where the renewal equation lives, and the
+causality is carried as a hypothesis rather than built into the type. -/
+def IsCausal (f : ℝ → ENNReal) : Prop := ∀ t < (0 : ℝ), f t = 0
+
+/-- **Causality read as a support condition**, which is the form the convolution statement
+below consumes. -/
+theorem isCausal_iff_support_subset {f : ℝ → ENNReal} :
+    IsCausal f ↔ Function.support f ⊆ Set.Ici 0 := by
+  constructor
+  · intro h x hx
+    by_contra hlt
+    exact hx (h x (not_le.1 hlt))
+  · intro h t ht
+    by_contra hne
+    exact absurd (h hne) (not_le.2 ht)
+
+theorem isCausal_zero : IsCausal 0 := fun _ _ => rfl
+
+theorem IsCausal.add {f g : ℝ → ENNReal} (hf : IsCausal f) (hg : IsCausal g) : IsCausal (f + g) :=
+  fun t ht => by simp [hf t ht, hg t ht]
+
+/-- **The indicator of a set inside the half line is causal**, which is how the kernels of the
+renewal equation are built. -/
+theorem IsCausal.indicator {s : Set ℝ} (hs : s ⊆ Set.Ici 0) (f : ℝ → ENNReal) :
+    IsCausal (s.indicator f) := fun _t ht =>
+  Set.indicator_of_notMem (fun hts => absurd (hs hts) (not_le.2 ht)) _
+
+open scoped Pointwise in
+/-- **Causality is stable under convolution**, for an arbitrary measure on the line.  The proof
+is the support inclusion above together with `Set.Ici 0 + Set.Ici 0 ⊆ Set.Ici 0`, which is
+`add_nonneg`; no measure theory enters a second time. -/
+theorem IsCausal.lconvolution {f g : ℝ → ENNReal} (hf : IsCausal f) (hg : IsCausal g)
+    (μ : Measure ℝ) : IsCausal (f ⋆ₗ[μ] g) := by
+  rw [isCausal_iff_support_subset] at hf hg ⊢
+  refine (support_lconvolution_subset f g μ).trans ?_
+  refine (Set.add_subset_add hf hg).trans ?_
+  rw [Set.add_subset_iff]
+  exact fun a ha b hb => Set.mem_Ici.2 (add_nonneg ha hb)
+
+/-- **The window form of the convolution**, and it is the only place in this section where the
+causality is unfolded: every later statement reads the convolution in this shape.
+
+No sign hypothesis on `t` is needed, and that is one hypothesis fewer than the milestone had
+asked for.  For `t < 0` both sides are `0` -- the left by `IsCausal.lconvolution`, the right
+because `Set.Icc 0 t` is then empty -- so the one statement covers the whole line. -/
+theorem lconvolution_eq_setLIntegral_Icc {f g : ℝ → ENNReal} (hf : IsCausal f) (hg : IsCausal g)
+    {t : ℝ} :
+    (f ⋆ₗ g) t = ∫⁻ s in Set.Icc 0 t, f s * g (t - s) := by
+  rw [lconvolution_def, ← lintegral_indicator measurableSet_Icc]
+  refine lintegral_congr fun s => ?_
+  rcases le_or_gt 0 s with hs | hs
+  · rcases le_or_gt s t with hst | hst
+    · rw [Set.indicator_of_mem (Set.mem_Icc.2 ⟨hs, hst⟩), neg_add_eq_sub]
+    · rw [Set.indicator_of_notMem (fun h => absurd h.2 (not_le.2 hst)),
+        hg _ (by linarith), mul_zero]
+  · rw [Set.indicator_of_notMem (fun h => absurd h.1 (not_le.2 hs)), hf _ hs, zero_mul]
+
+/-- **The window mass of a convolution is submultiplicative**, and this is the whole analytic
+content of the milestone.  Over `ℝ≥0∞` it carries no integrability hypothesis whatever; what it
+carries is the causality of **both** factors, and each is spent at a different place.
+
+The proof swaps the two integrals by Tonelli against the restricted measure and then reads the
+inner one, `∫⁻ t in Icc 0 d, g (-s + t)`, by translation invariance as `∫⁻ u, A (u + s) * g u`
+with `A` the indicator of the window.  Causality of `g` then does two things at once: for
+`0 ≤ s` it says the translated window may be replaced by the window itself, because a point `u`
+with `u + s` inside the window and `u` outside it has `u < 0`; and for `d < s` it says the
+translated window contributes nothing at all.  Causality of `f` kills the remaining half line
+`s < 0`, and what is left is the window mass of `f` times the window mass of `g`. -/
+theorem setLIntegral_lconvolution_le {f g : ℝ → ENNReal} (hf : IsCausal f) (hg : IsCausal g)
+    (hfm : Measurable f) (hgm : Measurable g) (d : ℝ) :
+    ∫⁻ t in Set.Icc 0 d, (f ⋆ₗ g) t
+      ≤ (∫⁻ t in Set.Icc 0 d, f t) * ∫⁻ t in Set.Icc 0 d, g t := by
+  set b : ENNReal := ∫⁻ t in Set.Icc 0 d, g t with hb
+  set A : ℝ → ENNReal := (Set.Icc (0:ℝ) d).indicator (fun _ => (1:ENNReal)) with hA
+  set I : ℝ → ENNReal := fun s => ∫⁻ t in Set.Icc 0 d, g (-s + t) with hI
+  have hswap : ∫⁻ t in Set.Icc 0 d, (f ⋆ₗ g) t = ∫⁻ s, f s * I s := by
+    have hmeas : AEMeasurable (Function.uncurry fun t s => f s * g (-s + t))
+        ((volume.restrict (Set.Icc 0 d)).prod volume) :=
+      ((hfm.comp measurable_snd).mul
+        (hgm.comp (measurable_snd.neg.add measurable_fst))).aemeasurable
+    calc ∫⁻ t in Set.Icc 0 d, (f ⋆ₗ g) t
+        = ∫⁻ t in Set.Icc 0 d, ∫⁻ s, f s * g (-s + t) := by
+          simp only [lconvolution_def]
+      _ = ∫⁻ s, ∫⁻ t in Set.Icc 0 d, f s * g (-s + t) := lintegral_lintegral_swap hmeas
+      _ = ∫⁻ s, f s * I s := by
+          refine lintegral_congr fun s => ?_
+          exact lintegral_const_mul _ (hgm.comp (measurable_id.const_add (-s)))
+  rw [hswap]
+  have hIeq : ∀ s : ℝ, I s = ∫⁻ u, A (u + s) * g u := by
+    intro s
+    have h1 : I s = ∫⁻ t, A t * g (-s + t) := by
+      show (∫⁻ t in Set.Icc 0 d, g (-s + t)) = ∫⁻ t, A t * g (-s + t)
+      rw [← lintegral_indicator measurableSet_Icc]
+      refine lintegral_congr fun t => ?_
+      by_cases htm : t ∈ Set.Icc (0:ℝ) d
+      · rw [Set.indicator_of_mem htm, hA, Set.indicator_of_mem htm, one_mul]
+      · rw [Set.indicator_of_notMem htm, hA, Set.indicator_of_notMem htm, zero_mul]
+    have h2 : ∫⁻ t, A t * g (-s + t) = ∫⁻ u, A (u + s) * g (-s + (u + s)) :=
+      (lintegral_add_right_eq_self (fun t => A t * g (-s + t)) s).symm
+    have h3 : ∀ u : ℝ, A (u + s) * g (-s + (u + s)) = A (u + s) * g u := by
+      intro u
+      congr 2
+      ring
+    rw [h1, h2]
+    simp_rw [h3]
+  have hIle : ∀ s : ℝ, 0 ≤ s → I s ≤ b := by
+    intro s hs
+    rw [hIeq s, hb, ← lintegral_indicator measurableSet_Icc]
+    refine lintegral_mono fun u => ?_
+    by_cases hus : u + s ∈ Set.Icc (0:ℝ) d
+    · rw [hA, Set.indicator_of_mem hus, one_mul]
+      by_cases hu : u ∈ Set.Icc (0:ℝ) d
+      · rw [Set.indicator_of_mem hu]
+      · have hneg : u < 0 := by
+          by_contra hge
+          exact hu (Set.mem_Icc.2 ⟨not_lt.1 hge, by linarith [hus.2]⟩)
+        rw [Set.indicator_of_notMem hu, hg u hneg]
+    · rw [hA, Set.indicator_of_notMem hus, zero_mul]
+      exact zero_le
+  have hIzero : ∀ s : ℝ, d < s → I s = 0 := by
+    intro s hs
+    rw [hIeq s]
+    have hfun : ∀ u : ℝ, A (u + s) * g u = 0 := by
+      intro u
+      by_cases hus : u + s ∈ Set.Icc (0:ℝ) d
+      · rw [hA, Set.indicator_of_mem hus, one_mul]
+        exact hg u (by linarith [hus.2])
+      · rw [hA, Set.indicator_of_notMem hus, zero_mul]
+    simp_rw [hfun]
+    simp
+  have hpt : ∀ s : ℝ, f s * I s ≤ (Set.Icc (0:ℝ) d).indicator f s * b := by
+    intro s
+    rcases lt_or_ge s 0 with hs | hs
+    · rw [hf s hs, zero_mul]; exact zero_le
+    · rcases le_or_gt s d with hsd | hsd
+      · rw [Set.indicator_of_mem (Set.mem_Icc.2 ⟨hs, hsd⟩)]
+        exact by gcongr; exact hIle s hs
+      · rw [hIzero s hsd, mul_zero]; exact zero_le
+  calc ∫⁻ s, f s * I s
+      ≤ ∫⁻ s, (Set.Icc (0:ℝ) d).indicator f s * b := lintegral_mono hpt
+    _ = (∫⁻ s, (Set.Icc (0:ℝ) d).indicator f s) * b :=
+        lintegral_mul_const _ (hfm.indicator measurableSet_Icc)
+    _ = (∫⁻ t in Set.Icc 0 d, f t) * b := by rw [lintegral_indicator measurableSet_Icc]
+
+/-- **The causal convolution power**, and the index is shifted by one: `convPow f n` is the
+`(n+1)`-fold convolution of `f` with itself, so `convPow f 0 = f` and `convPow f 1 = f ⋆ₗ f`.
+
+The shift is not a convention but the **absence of a unit**.  The convolution algebra on the
+half line has no `L¹` unit -- the unit is the Dirac mass at `0`, which is a measure and not a
+function -- so there is no `f ^⋆ 0` to name, and a definition that named one would have to give
+it a junk value and then exclude that value from the semigroup law.  Shifting the index removes
+the case distinction rather than hiding it: every statement below holds for **every** `n`, and
+none of them carries `1 ≤ n`. -/
+noncomputable def convPow (f : ℝ → ENNReal) : ℕ → (ℝ → ENNReal)
+  | 0 => f
+  | n + 1 => f ⋆ₗ convPow f n
+
+@[simp] theorem convPow_zero (f : ℝ → ENNReal) : convPow f 0 = f := rfl
+
+theorem convPow_succ (f : ℝ → ENNReal) (n : ℕ) : convPow f (n + 1) = f ⋆ₗ convPow f n := rfl
+
+theorem IsCausal.convPow {f : ℝ → ENNReal} (hf : IsCausal f) (n : ℕ) : IsCausal (convPow f n) := by
+  induction n with
+  | zero => exact hf
+  | succ n ih => exact hf.lconvolution ih volume
+
+theorem measurable_convPow {f : ℝ → ENNReal} (hf : Measurable f) (n : ℕ) :
+    Measurable (convPow f n) := by
+  induction n with
+  | zero => exact hf
+  | succ n ih => exact measurable_lconvolution volume hf ih
+
+/-- **The semigroup law.**  With the shifted index it reads `m + n + 1` on the left, and that is
+the honest form: `convPow f m` and `convPow f n` are the `(m+1)`- and `(n+1)`-fold powers, so
+their convolution is the `(m+n+2)`-fold one.  The proof is `lconvolution_assoc`, which over
+`ℝ≥0∞` asks measurability and nothing else. -/
+theorem convPow_add {f : ℝ → ENNReal} (hf : Measurable f) (m n : ℕ) :
+    convPow f (m + n + 1) = convPow f m ⋆ₗ convPow f n := by
+  induction m with
+  | zero => rw [Nat.zero_add, convPow_succ, convPow_zero]
+  | succ m ih =>
+      have hstep : m + 1 + n + 1 = (m + n + 1) + 1 := by omega
+      rw [hstep, convPow_succ, ih, convPow_succ]
+      exact lconvolution_assoc hf (measurable_convPow hf m) (measurable_convPow hf n)
+
+/-- **The geometric bound on the window**: the mass of the `n`-th power on `[0,d]` is at most the
+corresponding power of the mass of the kernel on `[0,d]`.  It is an induction over the
+submultiplicativity above, and it is what makes the resolvent finite.
+
+This is the step the Neumann series of a normed algebra cannot take.
+`NormedRing.inverse_one_sub` (`Mathlib/Analysis/Normed/Ring/Units.lean:98`) asks `‖φ‖ < 1`
+globally, and a locally integrable kernel on the half line has no such norm; here nothing global
+is asked, only the mass on the one window `[0,d]`. -/
+theorem setLIntegral_convPow_le {f : ℝ → ENNReal} (hf : IsCausal f) (hfm : Measurable f) (d : ℝ)
+    (n : ℕ) :
+    ∫⁻ t in Set.Icc 0 d, convPow f n t ≤ (∫⁻ t in Set.Icc 0 d, f t) ^ (n + 1) := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+      rw [convPow_succ]
+      refine le_trans (setLIntegral_lconvolution_le hf (hf.convPow n) hfm
+        (measurable_convPow hfm n) d) ?_
+      calc (∫⁻ t in Set.Icc 0 d, f t) * ∫⁻ t in Set.Icc 0 d, convPow f n t
+          ≤ (∫⁻ t in Set.Icc 0 d, f t) * (∫⁻ t in Set.Icc 0 d, f t) ^ (n + 1) :=
+            by gcongr
+        _ = (∫⁻ t in Set.Icc 0 d, f t) ^ (n + 1 + 1) := by ring
+
+/-- **The Volterra resolvent**, the Neumann series of the kernel, summed from the first power
+because there is no zeroth one to start at.
+
+No convergence question arises: a series of non-negative terms in `ℝ≥0∞` always converges.  The
+question that remains is whether the sum is **finite**, and that is
+`setLIntegral_volterraResolvent_lt_top`. -/
+noncomputable def volterraResolvent (f : ℝ → ENNReal) : ℝ → ENNReal :=
+  fun t => ∑' n : ℕ, convPow f n t
+
+theorem IsCausal.volterraResolvent {f : ℝ → ENNReal} (hf : IsCausal f) :
+    IsCausal (volterraResolvent f) := by
+  intro t ht
+  have hzero : ∀ n : ℕ, _root_.convPow f n t = 0 := fun n => hf.convPow n t ht
+  simp [_root_.volterraResolvent, hzero]
+
+theorem measurable_volterraResolvent {f : ℝ → ENNReal} (hf : Measurable f) :
+    Measurable (volterraResolvent f) := by
+  show Measurable fun t => ∑' n : ℕ, convPow f n t
+  simp_rw [ENNReal.tsum_eq_iSup_sum]
+  exact .iSup fun s => s.measurable_fun_sum fun n _ => measurable_convPow hf n
+
+/-- **The resolvent equation**, `r = f + f ⋆ₗ r`.  It is the semigroup law and the splitting off
+of the first term of the series, and nothing else; the exchange of the sum with the lower
+integral is `lintegral_tsum`, which over `ℝ≥0∞` asks measurability alone.
+
+The second form, `r = f + r ⋆ₗ f`, is this one together with `lconvolution_comm`, which asks
+nothing of the two functions and only the invariance of the measure. -/
+theorem volterraResolvent_eq {f : ℝ → ENNReal} (hf : Measurable f) :
+    volterraResolvent f = f + f ⋆ₗ volterraResolvent f := by
+  funext t
+  have hconv : (f ⋆ₗ volterraResolvent f) t = ∑' n : ℕ, convPow f (n + 1) t := by
+    rw [lconvolution_def]
+    have hstep : ∀ y : ℝ, f y * volterraResolvent f (-y + t)
+        = ∑' n : ℕ, f y * convPow f n (-y + t) := by
+      intro y
+      rw [volterraResolvent, ENNReal.tsum_mul_left]
+    simp_rw [hstep]
+    rw [lintegral_tsum (f := fun (n : ℕ) (y : ℝ) => f y * convPow f n (-y + t))
+      (fun n => (hf.mul
+        ((measurable_convPow hf n).comp (measurable_neg.add_const t))).aemeasurable)]
+    refine tsum_congr fun n => ?_
+    rw [convPow_succ, lconvolution_def]
+  rw [Pi.add_apply, hconv, volterraResolvent,
+    tsum_eq_zero_add' (f := fun n : ℕ => convPow f n t) ENNReal.summable, convPow_zero]
+
+/-- **The geometric bound makes the resolvent finite on a short window**: if the kernel has mass
+below `1` on `[0,d]`, then the resolvent has finite mass there.
+
+The hypothesis is about **one** window and not about the kernel globally, and that is the whole
+point of stating the milestone this way: a kernel that is locally integrable and has no atom at
+the origin always has such a window, and the passage from the short window to every window is
+causality applied block by block. -/
+theorem setLIntegral_volterraResolvent_lt_top {f : ℝ → ENNReal} (hf : IsCausal f)
+    (hfm : Measurable f) {d : ℝ} (ha : (∫⁻ t in Set.Icc 0 d, f t) < 1) :
+    ∫⁻ t in Set.Icc 0 d, volterraResolvent f t < ⊤ := by
+  have hatop : (∫⁻ t in Set.Icc 0 d, f t) < ⊤ := lt_trans ha ENNReal.one_lt_top
+  have hpos : 0 < 1 - ∫⁻ t in Set.Icc 0 d, f t := tsub_pos_of_lt ha
+  calc ∫⁻ t in Set.Icc 0 d, volterraResolvent f t
+      = ∑' n : ℕ, ∫⁻ t in Set.Icc 0 d, convPow f n t := by
+        simp only [volterraResolvent]
+        exact lintegral_tsum fun n => (measurable_convPow hfm n).aemeasurable
+    _ ≤ ∑' n : ℕ, (∫⁻ t in Set.Icc 0 d, f t) ^ (n + 1) :=
+        ENNReal.tsum_le_tsum fun n => setLIntegral_convPow_le hf hfm d n
+    _ = (∫⁻ t in Set.Icc 0 d, f t) * (1 - ∫⁻ t in Set.Icc 0 d, f t)⁻¹ :=
+        ENNReal.tsum_geometric_add_one _
+    _ < ⊤ := ENNReal.mul_lt_top hatop (ENNReal.inv_lt_top.2 hpos)
+
+end CausalConvolution

@@ -46343,3 +46343,186 @@ meldet 313 gepaarte Fundstellen, 0 verschoben, 0 tot.
 
 3. **Erst danach die allgemeine Fassung über beliebigem `ι`** (Vorschlag 3 des
    Vorlaufs, unverändert gültig und von diesem Lauf nicht berührt).
+
+### 2026-09-20, siebter Lauf des Tages — Meilenstein 14 steht bis zur Resolvente, und der Entwurf hat an zwei Stellen nachgegeben: die Faltungspotenz hat **keine nullte**, und die Fensterform braucht **kein** Vorzeichen; dazu ein Satz, der in Mathlib fehlt und dort nichts voraussetzt
+
+**Bearbeitet:** Vorschlag 2 des Vorlaufs (der erste Block von Meilenstein 14).
+Vorschlag 1 (Gruppe A für den beschränkten Fall) und Vorschlag 3 (die allgemeine
+Fassung über beliebigem `ι`) sind nicht angefaßt und bleiben unverändert stehen.
+
+**21 neue Deklarationen** in einem neuen Abschnitt `CausalConvolution` von
+`MartingaleProblems/Suggested.lean`, dazu ein `import Mathlib.Analysis.LConvolution`
+und die Neufassung von fünf Punkten des Meilensteins 14 in
+`MartingaleProblems/README.md`. Der Block ist gebaut, weil er **vollständig von
+den Sprungprozessen unabhängig** ist — kein `hawkes`, kein `jumpMeasure`, keine
+Filtration — und weil der einzige analytische Schritt darin früh und billig zu
+prüfen war.
+
+#### Was steht
+
+Die Kette geht weiter, als der Vorschlag bestellt hatte: er endete bei
+`setLIntegral_convPow_le`, und da der geometrische Schritt durchging, ist die
+Resolvente im selben Lauf mitgenommen.
+
+* `support_lconvolution_subset` — die Trägerinklusion
+  `support (f ⋆ₗ[μ] g) ⊆ support f + support g`. **Sie setzt nichts voraus**:
+  keine Meßbarkeit der beiden Funktionen, kein `SFinite` des Maßes, keine
+  Topologie, nur eine meßbare additive Gruppe. Der Grund ist, daß der Integrand
+  an *jedem* `y` verschwindet, sobald `x` außerhalb der Summenmenge liegt — ein
+  `y`, an dem beide Faktoren ungleich Null sind, weist `x = y + (-y + x)` als
+  Summe aus. Das ist die Lücke, die der Vorlauf benannt hatte; Mathlib hat sie
+  für die Bochner-Faltung (`support_convolution_subset`,
+  `Mathlib/Analysis/Convolution.lean:672`) und dort **mit**
+  `ConvolutionExistsAt`-Nebenbedingungen.
+* `IsCausal` samt `isCausal_iff_support_subset`, `isCausal_zero`,
+  `IsCausal.add`, `IsCausal.indicator` und `IsCausal.lconvolution`. Die letzte
+  ist die Trägerinklusion und `Set.Ici 0 + Set.Ici 0 ⊆ Set.Ici 0`, also
+  `add_nonneg`, und sonst nichts.
+* `lconvolution_eq_setLIntegral_Icc` — die Fensterform.
+* `setLIntegral_lconvolution_le` — die Submultiplikativität der Fenstermasse,
+  der analytische Kern.
+* `convPow`, `convPow_zero`, `convPow_succ`, `IsCausal.convPow`,
+  `measurable_convPow`, `convPow_add`, `setLIntegral_convPow_le`.
+* `volterraResolvent`, `IsCausal.volterraResolvent`,
+  `measurable_volterraResolvent`, `volterraResolvent_eq`,
+  `setLIntegral_volterraResolvent_lt_top`.
+
+#### Der erste Befund: die Faltungspotenz hat keine nullte, und der Entwurf hat das zu verstecken versucht
+
+Der Meilenstein schrieb vor: „`convPow f 0` ist durch die Gleichung
+`convPow f 0 ⋆ₗ g = g` für kausales `g` definiert, und die Potenz ist von
+`convPow f 1 = f` aufwärts definiert." Das ist **in Lean nicht ausführbar**, und
+zwar nicht aus einem technischen Grund: die Faltungsalgebra auf der Halbachse hat
+keine `L¹`-Einheit — die Einheit ist das Diracmaß in `0`, ein Maß und keine
+Funktion —, also gibt es keine Funktion, die jene Gleichung erfüllt. Der Entwurf
+hätte einen Müllwert benennen und ihn danach aus dem Halbgruppengesetz
+ausschließen müssen; das ist genau das Muster, das diese Entwicklung viermal
+Geld gekostet hat.
+
+Gebaut ist deshalb die **um eins verschobene** Potenz: `convPow f n` ist die
+`(n+1)`-fache Faltung, `convPow f 0 = f`. Das Halbgruppengesetz liest sich dann
+`convPow f (m + n + 1) = convPow f m ⋆ₗ convPow f n` und die geometrische
+Schranke `≤ a ^ (n + 1)`. **Die Verschiebung beseitigt die Fallunterscheidung,
+statt sie zu verbergen:** keine Aussage dieses Meilensteins trägt `1 ≤ n`, und
+keine trägt einen Müllwert. Der Meilenstein ist entsprechend berichtigt.
+
+#### Der zweite Befund: die Fensterform braucht kein Vorzeichen
+
+Der Meilenstein verlangte `lconvolution_eq_setLIntegral_Icc` „für `0 ≤ t`, und
+`0` darunter", also zwei Aussagen. Es ist eine: unterhalb von `0` verschwinden
+**beide** Seiten — die linke nach `IsCausal.lconvolution`, die rechte, weil
+`Set.Icc 0 t` dann leer ist. Die Voraussetzung `0 ≤ t` ist gestrichen. Das ist
+eine Abschwächung nach der stehenden Regel und sie ist belegt, nicht vermutet:
+der Beweis führt die Fallunterscheidung über das Vorzeichen von `s` und nicht
+über das von `t`.
+
+#### Wo die Kausalität wirklich verbraucht wird, und es sind drei verschiedene Stellen
+
+Der Meilenstein sagte zur geometrischen Schranke, sie brauche „die Kausalität,
+damit das innere Fenster im äußeren enthalten ist". Das ist die richtige
+Anschauung und nennt die Stellen nicht. Im Beweis von
+`setLIntegral_lconvolution_le` — Tonelli gegen das eingeschränkte Maß, dann das
+innere Integral `∫⁻ t in Icc 0 d, g (-s + t)` über die Translationsinvarianz als
+`∫⁻ u, A (u + s) * g u` gelesen — wird sie dreimal und jedesmal für etwas anderes
+gebraucht:
+
+1. Kausalität von `g`, für `0 ≤ s`: ein `u` mit `u + s` im Fenster und `u`
+   außerhalb hat `u < 0`, also darf das verschobene Fenster durch das Fenster
+   ersetzt werden.
+2. Kausalität von `g`, für `d < s`: dann liegt jedes solche `u` unter `0`, das
+   verschobene Fenster trägt **gar nichts** bei. Ohne diesen Punkt wäre die
+   äußere Integration über die ganze Halbachse zu führen und die Schranke falsch
+   — `f` kann jenseits von `d` beliebig groß sein.
+3. Kausalität von `f`: sie erledigt die negative Halbachse `s < 0`.
+
+Punkt 2 ist der, den die Anschauung „inneres Fenster im äußeren" nicht abdeckt,
+und er ist der Grund, aus dem die Aussage die Kausalität **beider** Faktoren
+trägt und nicht nur die eines.
+
+#### Ein Werkzeugbefund, der jeden künftigen Lauf betrifft
+
+`ℝ≥0∞` ist in `MartingaleProblems/Suggested.lean` **keine verfügbare Notation** —
+die 85 Vorkommen stehen sämtlich in Kommentaren, und der Code schreibt `ENNReal`
+aus. Die Datei öffnet `NNReal`, nicht `ENNReal`. Wer dort neuen Code schreibt,
+schreibt `ENNReal`; der neue Abschnitt tut das und öffnet nichts hinzu.
+
+Ebenso: die punktweise Addition von Mengen (`Function.support f + Function.support g`)
+verlangt `open scoped Pointwise`. Sie ist **nicht** dateiweit geöffnet, sondern
+mit `open scoped Pointwise in` vor den beiden Deklarationen, die sie brauchen —
+dateiweit hätte sie die Bedeutung von `+` in 40 000 Zeilen fremden Codes
+verändern können.
+
+Und drei Mathlib-Namen, die frühere Läufe noch kennen könnten, sind auf `master`
+fort: `le_or_lt` (jetzt `le_or_gt`), `lt_or_le` (jetzt `lt_or_ge`) und
+`mul_le_mul_left'` (nicht mehr auflösbar; `gcongr` tut es). `zero_le` hat sein
+Argument implizit bekommen, `zero_le _` bricht. `Measurable.ennreal_tsum` ist
+seit dem 2026-04-30 veraltet, und **die Veraltungsnachricht zeigt ins Leere**:
+sie verweist auf `Measurable.tsum` in
+`Mathlib/MeasureTheory/Constructions/Polish/Basic.lean`, und dort steht kein
+solcher Name (`git grep` gegen `94ef6b89544`: null Treffer für `tsum` in dieser
+Datei). `measurable_volterraResolvent` führt den Beweis deshalb selbst, über
+`ENNReal.tsum_eq_iSup_sum` und `Finset.measurable_fun_sum` — dieselben zwei
+Zeilen, die im veralteten Mathlib-Satz stehen.
+
+#### Was der Block **nicht** leistet
+
+Er ist reine Faltungsalgebra und berührt die Sprungprozesse an keiner Stelle.
+Offen bleiben im Meilenstein 14 die vier Punkte, die dahinter kommen:
+`setLIntegral_volterraResolvent_lt_top_of_locallyFinite` (die Fortsetzung von
+einem kurzen Fenster auf jedes, blockweise), `exists_setLIntegral_lt_one` (die
+Existenz des kurzen Fensters aus lokaler Integrierbarkeit),
+`renewal_eq_add_lconvolution_volterraResolvent` samt `renewal_lt_top`, und die
+beiden Nahtaussagen zur Konstruktion (`lintegral_hawkesSelfRate_eq_add_lconvolution`
+und `lintegral_stepIndex_hawkesJumpTime_lt_top`). Die Naht ist weiterhin zwei
+Aussagen und nicht eine; daran hat dieser Lauf nichts geändert.
+
+#### Geprüft
+
+* `scripts/check_master.py`: rc 0, **0 Fehler**, 0 `sorry`, 0 veraltet,
+  Warnungen 18 / 35 / 106 — **unverändert** gegenüber dem Vorlauf, obwohl 334
+  Zeilen hinzugekommen sind. Mathlib
+  `94ef6b89544e58e90f119da869f3fb48d1da0f4c` (2026-09-18), Lean 4.35.0-rc2. Der
+  Stand vor dem Eingriff ist eigens gemessen worden und war derselbe.
+* `scripts/check_axioms_master.py` auf **alle 21** neuen Deklarationen:
+  `propext`, `Classical.choice`, `Quot.sound`, ohne Ausnahme.
+* `scripts/check_cited_lines.py`: 314 gepaarte Fundstellen, **0 verschoben, 0
+  tot** (313 vor dem Lauf; die eine neue ist `Mathlib/Analysis/LConvolution.lean`).
+* `scripts/check_negatives.py`: 45 Behauptungen, 0 mit unerwarteten Treffern.
+* `scripts/check_own_names.py`: 412 → **404** ungedeckte Namen. Die acht, die
+  fortgefallen sind, sind die Namen des Meilensteins 14, die jetzt als
+  Deklarationen dastehen; der Rest der dort benannten Aussagen bleibt offen und
+  gehört, wie der Kopf jenes Berichts sagt, zum Regelfall.
+* Keine Doppelung: `git grep` über `upstream/master` gibt für `IsCausal`,
+  `def convPow` und `support_lconvolution` je **null** Treffer in `Mathlib/`.
+* Zeilensaldo: `Suggested.lean` +334 / −0, `README.md` +49 / −27.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`exists_setLIntegral_lt_one` und
+   `setLIntegral_volterraResolvent_lt_top_of_locallyFinite`** — die beiden
+   Punkte, die aus „lokal integrierbar" „die Resolvente existiert" machen. Sie
+   sind jetzt dran, weil ihre einzige Eingabe seit diesem Lauf dasteht
+   (`setLIntegral_volterraResolvent_lt_top`) und weil sie zusammen die
+   **Voraussetzungsfläche des Meilensteins auf eine einzige Bedingung
+   reduzieren**: lokale Endlichkeit der Fenstermassen. Der erste ist die
+   Stetigkeit des Maßes von oben längs `Set.Icc 0 (1/n)` und sollte billig sein;
+   der zweite ist die eigentliche Arbeit und geht blockweise — der Punkt, an dem
+   zu entscheiden ist, ob die Blockzerlegung über `convPow_add` oder über eine
+   Induktion an der Resolventengleichung läuft. **Diese Entscheidung ist vor dem
+   ersten Beweisschritt zu begründen**, denn der zweite Weg braucht die
+   Eindeutigkeit, die selbst erst in
+   `renewal_eq_add_lconvolution_volterraResolvent` bewiesen wird, und liefe damit
+   im Kreis. Schätzung: ein bis zwei Läufe.
+
+2. **`renewal_eq_add_lconvolution_volterraResolvent`** — die Erneuerungsgleichung
+   selbst, Existenz und Eindeutigkeit. Existenz ist `lconvolution_assoc` und
+   `volterraResolvent_eq`; Eindeutigkeit ist die Differenz zweier Lösungen gegen
+   die geometrische Schranke, und **dort wird die Subtraktion in `ℝ≥0∞` zum
+   Problem** — die Differenz zweier Lösungen ist nur dann eine Lösung der
+   homogenen Gleichung, wenn beide endlich sind, und das ist genau die
+   Voraussetzung, die der Punkt trägt. Das ist vor dem Beweis zu prüfen und nicht
+   beim Beweisen zu entdecken.
+
+3. **Erst danach Gruppe A für den beschränkten Fall** (Vorschlag 1 des Vorlaufs,
+   unverändert gültig) und die allgemeine Fassung über beliebigem `ι`
+   (Vorschlag 3 des Vorlaufs, ebenfalls unberührt).
