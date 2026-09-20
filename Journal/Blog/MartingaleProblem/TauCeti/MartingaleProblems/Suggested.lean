@@ -43284,3 +43284,390 @@ theorem enorm_integral_mul_stoppedValue_sub_le [IsFiniteMeasure P]
 end IsApproximatingPair
 
 end ApproximatingPair
+
+/-! ### From the approximant to the process
+
+Every estimate of the previous section speaks about `Y`, and `Y` does not occur in the conclusion
+of the criterion: what `mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le` asks for is an
+increment of `X`.  The passage between them is the first hypothesis of \EK, (9.26), the one no
+statement above reads -- that the approximant is uniformly close to `f ∘ X` over the horizon in
+the mean,
+
+```
+∫⁻ ω, ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P ≤ ε
+```
+
+with `V t ω = f (X t ω)` at the consumer.  This section writes that passage down.  The bound is
+the triangle inequality at the two ends of the window, so the error enters twice; that factor `2`
+is owed, unlike the factor `2` of
+`IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le`.
+
+**Where the countability of the window really matters, and it is not where it was expected.**
+`IsApproximatingPair.lintegral_enorm_compensator_sub_le` needed no measurability at all, the lower
+integral being monotone without one.  Here it is needed, and the step that needs it is the
+**addition**: the lower integral is not subadditive for arbitrary functions.
+`not_forall_lintegral_add_le` is the witness -- two indicators of complementary non measurable
+sets over the σ-algebra `⊥` on `Bool`, each of lower integral `0` while their sum is the constant
+`1` -- so the measurability hypothesis of `MeasureTheory.lintegral_add_right'` is not a
+convenience of Mathlib's proof.  It follows that the shape of the window is decided here and not
+by taste: either the supremum runs over a countable set, and
+`measurable_biSup_enorm_of_countable` discharges it, or it runs over `Set.Iic T` and right
+continuity reduces it to a countable one.
+
+**Both readings are supplied, and the second is the one the consumer needs.**  The times a
+consumer substitutes are hitting times; they have no reason to take values in a countable set, so
+a statement quantified over a countable window alone would not be applicable.
+`lintegral_enorm_sub_le_of_biSup_Iic_le` therefore reads the whole window and pays for it with
+almost sure right continuity of the paths of `Y - f ∘ X`, which is the hypothesis
+`IsApproximatingPair` carries anyway and which \EK{} spend in the same place -- their (9.27)
+holds for all real times and not merely rational ones by right continuity of the process.
+
+**No stopping time, no adaptedness, no filtration and no finiteness of the measure occurs below.**
+The times are arbitrary functions `Ω → ι`, exactly as in
+`IsApproximatingPair.lintegral_enorm_compensator_sub_le`: what is read of them is their values,
+not their measurability. -/
+
+section ApproximationError
+
+variable {Ω : Type*} {m : MeasurableSpace Ω}
+
+/-- **The lower integral is not subadditive**, and this is why the statements below carry a
+measurability hypothesis where `IsApproximatingPair.lintegral_enorm_compensator_sub_le` carried
+none.
+
+The witness is the smallest one: on `Bool` with the σ-algebra `⊥` and the Dirac measure at
+`true`, the indicators of `{true}` and of `{false}` are not measurable, every `⊥`-measurable
+simple function below either of them is constant and hence `0`, so both lower integrals vanish;
+their sum is the constant `1`, whose lower integral is `1`.
+
+`MeasureTheory.lintegral` (`MeasureTheory/Integral/Lebesgue/Basic.lean:48`) is the supremum over
+the simple functions below the integrand, and such a supremum is **super**additive rather than
+subadditive.  Mathlib's addition lemmas are equalities under a measurability hypothesis for that
+reason: `MeasureTheory.lintegral_add_right'`
+(`MeasureTheory/Integral/Lebesgue/Add.lean:331`) asks `AEMeasurable` of one summand, and the
+inequality is false without it. -/
+theorem not_forall_lintegral_add_le :
+    ¬ ∀ (α : Type) (mα : MeasurableSpace α) (μ : @MeasureTheory.Measure α mα)
+        (f g : α → ENNReal),
+        @lintegral α mα μ (fun x ↦ f x + g x)
+          ≤ @lintegral α mα μ f + @lintegral α mα μ g := by
+  classical
+  intro h
+  let mb : MeasurableSpace Bool := ⊥
+  set μ : Measure Bool := Measure.dirac true with hμ
+  have hzero : ∀ (u : Bool → ENNReal) (x₀ : Bool), u x₀ = 0 → ∫⁻ x, u x ∂μ = 0 := by
+    intro u x₀ hx₀
+    rw [MeasureTheory.lintegral]
+    refine le_antisymm (iSup₂_le fun s hs ↦ ?_) bot_le
+    have hconst : ∀ x, s x = s x₀ := by
+      intro x
+      have hfib : MeasurableSet[mb] (s ⁻¹' {s x₀}) := s.measurableSet_fiber (s x₀)
+      rcases MeasurableSpace.measurableSet_bot_iff.1 hfib with hemp | huniv
+      · exfalso
+        have hx₀mem : x₀ ∈ s ⁻¹' {s x₀} := rfl
+        rw [hemp] at hx₀mem
+        exact hx₀mem
+      · have hxmem : x ∈ s ⁻¹' {s x₀} := by rw [huniv]; trivial
+        exact hxmem
+    have hs0 : ∀ x, s x = 0 := by
+      intro x
+      have hx : s x₀ ≤ u x₀ := hs x₀
+      rw [hx₀, le_zero_iff] at hx
+      rw [hconst x, hx]
+    rw [← MeasureTheory.SimpleFunc.lintegral_eq_lintegral]
+    simp [hs0]
+  have h1 : ∫⁻ x, (if x then (1 : ENNReal) else 0) ∂μ = 0 := hzero _ false (by simp)
+  have h2 : ∫⁻ x, (if x then (0 : ENNReal) else 1) ∂μ = 0 := hzero _ true (by simp)
+  have h3 : ∫⁻ x, ((if x then (1 : ENNReal) else 0) + (if x then (0 : ENNReal) else 1)) ∂μ = 1 := by
+    have hsum : (fun x : Bool ↦ (if x then (1 : ENNReal) else 0) + (if x then (0 : ENNReal) else 1))
+        = fun _ ↦ (1 : ENNReal) := by
+      funext x; cases x <;> simp
+    calc ∫⁻ x, ((if x then (1 : ENNReal) else 0) + (if x then (0 : ENNReal) else 1)) ∂μ
+        = ∫⁻ _ : Bool, (1 : ENNReal) ∂μ := by rw [hsum]
+      _ = 1 := by rw [MeasureTheory.lintegral_const, one_mul, hμ]; exact measure_univ
+  have hcontra := h Bool mb μ (fun x ↦ if x then (1 : ENNReal) else 0)
+    (fun x ↦ if x then (0 : ENNReal) else 1)
+  rw [h1, h2, h3] at hcontra
+  simp at hcontra
+
+/-- **The increment of the process against the increment of its approximant, at one sample
+point**: for two times `a`, `b` of the window `W`,
+
+```
+‖V b ω - V a ω‖ₑ ≤ ‖Y b ω - Y a ω‖ₑ + 2 * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ.
+```
+
+The consumer reads `V t ω = f (X t ω)`; nothing here knows that, and the statement is about two
+real processes and nothing else.  It is the triangle inequality, `enorm_add₃_le`
+(`Analysis/Normed/Group/Basic.lean:632`), followed by the bound of each end by the supremum.  The
+factor `2` counts the two ends and is owed: with the factor `1` the statement is false already
+for a window of two times, the approximant being free to sit `ε` above `V` at one end and `ε`
+below it at the other. -/
+theorem enorm_sub_le_add_two_mul_biSup {ι : Type*} {W : Set ι} {Y V : ι → Ω → ℝ} {ω : Ω}
+    {a b : ι} (ha : a ∈ W) (hb : b ∈ W) :
+    ‖V b ω - V a ω‖ₑ
+      ≤ ‖Y b ω - Y a ω‖ₑ + 2 * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ := by
+  have hsplit : V b ω - V a ω
+      = Y b ω - Y a ω + (Y a ω - V a ω) + (V b ω - Y b ω) := by ring
+  have ha' : ‖Y a ω - V a ω‖ₑ ≤ ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ :=
+    le_iSup₂ (f := fun t (_ : t ∈ W) ↦ ‖Y t ω - V t ω‖ₑ) a ha
+  have hb' : ‖V b ω - Y b ω‖ₑ ≤ ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ := by
+    rw [enorm_sub_rev]
+    exact le_iSup₂ (f := fun t (_ : t ∈ W) ↦ ‖Y t ω - V t ω‖ₑ) b hb
+  calc ‖V b ω - V a ω‖ₑ
+      = ‖Y b ω - Y a ω + (Y a ω - V a ω) + (V b ω - Y b ω)‖ₑ := by rw [hsplit]
+    _ ≤ ‖Y b ω - Y a ω‖ₑ + ‖Y a ω - V a ω‖ₑ + ‖V b ω - Y b ω‖ₑ := enorm_add₃_le
+    _ ≤ ‖Y b ω - Y a ω‖ₑ + (⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ)
+          + ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ := by gcongr
+    _ = ‖Y b ω - Y a ω‖ₑ + 2 * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ := by
+        rw [two_mul, add_assoc]
+
+/-- **The approximation error passes to the increment**, integrated:
+
+```
+∫⁻ ω, ‖V (b ω) ω - V (a ω) ω‖ₑ ∂P ≤ (∫⁻ ω, ‖Y (b ω) ω - Y (a ω) ω‖ₑ ∂P) + 2 * ε
+```
+
+whenever `a` and `b` take their values in the window `W` and the mean of the window supremum of
+`‖Y - V‖` is at most `ε`.
+
+**`a` and `b` are arbitrary functions** -- no stopping time, no measurability, no order between
+them -- because what is read of them is their values.  That is the same economy as in
+`IsApproximatingPair.lintegral_enorm_compensator_sub_le`, and for the same reason: the pointwise
+estimate is integrated by monotonicity of the lower integral.
+
+**The measurability of the supremum, on the other hand, is not an economy that can be made.**
+The step that consumes it is the splitting of the integral of the sum, and the lower integral is
+not subadditive; `not_forall_lintegral_add_le` above is the witness.  It is asked as
+`AEMeasurable` rather than `Measurable` because the two corollaries below discharge it from
+countability in the one case and from an almost sure right continuity in the other. -/
+theorem lintegral_enorm_sub_le_of_biSup_le {ι : Type*} {W : Set ι} {Y V : ι → Ω → ℝ}
+    {P : Measure Ω} {a b : Ω → ι} (ha : ∀ ω, a ω ∈ W) (hb : ∀ ω, b ω ∈ W)
+    (hsup : AEMeasurable (fun ω ↦ ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ) P)
+    {ε : ENNReal} (hε : ∫⁻ ω, ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P ≤ ε) :
+    ∫⁻ ω, ‖V (b ω) ω - V (a ω) ω‖ₑ ∂P
+      ≤ (∫⁻ ω, ‖Y (b ω) ω - Y (a ω) ω‖ₑ ∂P) + 2 * ε := by
+  calc ∫⁻ ω, ‖V (b ω) ω - V (a ω) ω‖ₑ ∂P
+      ≤ ∫⁻ ω, (‖Y (b ω) ω - Y (a ω) ω‖ₑ + 2 * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ) ∂P :=
+        lintegral_mono fun ω ↦ enorm_sub_le_add_two_mul_biSup (ha ω) (hb ω)
+    _ = (∫⁻ ω, ‖Y (b ω) ω - Y (a ω) ω‖ₑ ∂P)
+          + ∫⁻ ω, 2 * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P :=
+        lintegral_add_right' _ (hsup.const_mul 2)
+    _ = (∫⁻ ω, ‖Y (b ω) ω - Y (a ω) ω‖ₑ ∂P)
+          + 2 * ∫⁻ ω, ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P := by
+        rw [lintegral_const_mul' _ _ (by norm_num)]
+    _ ≤ (∫⁻ ω, ‖Y (b ω) ω - Y (a ω) ω‖ₑ ∂P) + 2 * ε := by gcongr
+
+/-- **The same over a countable window**, where the measurability of the supremum is
+`measurable_biSup_enorm_of_countable` and nothing else is needed.
+
+This is the shape \EK{} state -- their suprema run over `[0, T+1] ∩ ℚ` -- and it is the cheap one:
+no topology on the index, no right continuity, no order.  What it does not serve is a consumer
+whose times are hitting times, and that is the next statement. -/
+theorem lintegral_enorm_sub_le_of_biSup_le_of_countable {ι : Type*} {W : Set ι}
+    (hW : W.Countable) {Y V : ι → Ω → ℝ} {P : Measure Ω}
+    (hm : ∀ t ∈ W, Measurable fun ω ↦ Y t ω - V t ω)
+    {a b : Ω → ι} (ha : ∀ ω, a ω ∈ W) (hb : ∀ ω, b ω ∈ W)
+    {ε : ENNReal} (hε : ∫⁻ ω, ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P ≤ ε) :
+    ∫⁻ ω, ‖V (b ω) ω - V (a ω) ω‖ₑ ∂P
+      ≤ (∫⁻ ω, ‖Y (b ω) ω - Y (a ω) ω‖ₑ ∂P) + 2 * ε :=
+  lintegral_enorm_sub_le_of_biSup_le ha hb
+    (measurable_biSup_enorm_of_countable (Y := fun t ω ↦ Y t ω - V t ω) hW hm).aemeasurable hε
+
+/-- **The same over the whole window `Set.Iic T`**, and this is the form the assembly of the first
+item of Milestone 11 reads.
+
+The times a consumer substitutes are hitting times -- the oscillation hitting sequence of the
+Aldous route -- and they take their values wherever the path takes them, so a hypothesis
+quantified over a countable set would not be applicable.  The price is almost sure right
+continuity of the paths of `Y - V`, and it is no price at all: `IsApproximatingPair` carries the
+right continuity of `Y - C` already, and `f ∘ X` is right continuous for a càdlàg `X` and a
+continuous `f`.  \EK{} spend it in exactly this place, their (9.27) holding for all real times
+and not merely for rational ones by right continuity of the process.
+
+The reduction is `biSup_enorm_Iic_eq_of_isRightContinuous` of Milestone 9, which replaces
+`Set.Iic T` by the countable set `insert T (Set.Iic T ∩ D)` -- the right endpoint separately, a
+dense set not reaching it -- and the passage from the countable supremum to the full one holds
+almost everywhere, so what comes out is `AEMeasurable` and not `Measurable`.  Right continuity is
+therefore asked almost surely, which matters here: in this development the right continuity of
+paths is what Vitali convergence delivers, and that is quantified almost everywhere. -/
+theorem lintegral_enorm_sub_le_of_biSup_Iic_le {ι : Type*} [LinearOrder ι] [TopologicalSpace ι]
+    [OrderTopology ι] [DenselyOrdered ι] [OrderBot ι]
+    {Y V : ι → Ω → ℝ} {P : Measure Ω} {T : ι} {D : Set ι} (hD : Dense D) (hDc : D.Countable)
+    (hm : ∀ t ≤ T, Measurable fun ω ↦ Y t ω - V t ω)
+    (hpath : ∀ᵐ ω ∂P, IsRightContinuous fun t ↦ Y t ω - V t ω)
+    {a b : Ω → ι} (ha : ∀ ω, a ω ≤ T) (hb : ∀ ω, b ω ≤ T)
+    {ε : ENNReal} (hε : ∫⁻ ω, ⨆ t ∈ Set.Iic T, ‖Y t ω - V t ω‖ₑ ∂P ≤ ε) :
+    ∫⁻ ω, ‖V (b ω) ω - V (a ω) ω‖ₑ ∂P
+      ≤ (∫⁻ ω, ‖Y (b ω) ω - Y (a ω) ω‖ₑ ∂P) + 2 * ε := by
+  classical
+  have hSc : (insert T (Set.Iic T ∩ D)).Countable :=
+    (hDc.mono Set.inter_subset_right).insert T
+  have hST : ∀ s ∈ insert T (Set.Iic T ∩ D), s ≤ T := by
+    rintro s (rfl | ⟨hs, -⟩)
+    · exact le_rfl
+    · exact hs
+  have hmeas : Measurable fun ω ↦ ⨆ t ∈ insert T (Set.Iic T ∩ D), ‖Y t ω - V t ω‖ₑ :=
+    measurable_biSup_enorm_of_countable (Y := fun t ω ↦ Y t ω - V t ω) hSc
+      fun s hs ↦ hm s (hST s hs)
+  have heq : (fun ω ↦ ⨆ t ∈ insert T (Set.Iic T ∩ D), ‖Y t ω - V t ω‖ₑ)
+      =ᵐ[P] fun ω ↦ ⨆ t ∈ Set.Iic T, ‖Y t ω - V t ω‖ₑ := by
+    filter_upwards [hpath] with ω hω
+    exact (biSup_enorm_Iic_eq_of_isRightContinuous (Y := fun t ω ↦ Y t ω - V t ω) hD hω).symm
+  exact lintegral_enorm_sub_le_of_biSup_le (W := Set.Iic T) ha hb
+    (hmeas.aemeasurable.congr heq) hε
+
+end ApproximationError
+
+/-! ### The two readings of the approximation error the assembly needs
+
+\EK's (9.26) reads the approximation error **twice**, and at two different places of the square
+identity: once at the pair approximating `f² ∘ X`, where it enters the increment of the square
+against the weight `1`, and once at the pair approximating `f ∘ X`, where it enters the cross
+term against the weight `f ∘ X α`.  The preceding section gives the first; this one gives the
+second, and joins the first to the quantity the Aldous route consumes.
+
+**And a finding that is not symmetry: the weighted reading needs no measurability.**  The
+unweighted one splits a *lower* integral of a sum and therefore has to buy
+`MeasureTheory.lintegral_add_right'` with an `AEMeasurable`; the weighted one splits a **Bochner**
+integral, where `MeasureTheory.integral_add` asks integrability of the summands and nothing
+about the supremum, and the remaining tail is bounded by monotonicity of the lower integral
+alone.  `enorm_integral_mul_sub_le_of_biSup_le` below is therefore stated over an arbitrary
+window, with no countability, no topology on the index and no right continuity -- the hypotheses
+`lintegral_enorm_sub_le_of_biSup_Iic_le` had to pay for.
+
+**Why the passage to the metric of `E` does not occur here, checked 2026-09-20.** The conclusion
+of `isTight_map_postcomp_of_exists_martingale` is the tightness of the laws of
+`postcomp f ∘ X n` in `D ι ℝ`, so the modulus of
+`mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le` is read at the **image** path and its
+`dist` is the distance of two reals.  No net of a compact set and no recovery of the metric of
+`E` enters the first item; that recovery is the business of
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp`, the third item of **SkorokhodSpace**
+Milestone 8, and it is a different statement.  `ofReal_dist_eq_enorm_sub` is the whole of the
+junction. -/
+
+section ApproximationErrorWeighted
+
+variable {Ω : Type*} {m : MeasurableSpace Ω}
+
+/-- **The junction to the Aldous route**: for two reals the quantity
+`mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le` integrates is the one every estimate
+of the two preceding sections produces.
+
+It is `Real.dist_eq` (`Topology/MetricSpace/Pseudo/Defs.lean:1119`) followed by
+`Real.enorm_eq_ofReal_abs` (`Analysis/Normed/Group/Real.lean:110`), and it is stated because it
+is the only step between the two, the criterion's modulus being read at the real valued image
+path and not at `X` itself. -/
+theorem ofReal_dist_eq_enorm_sub (x y : ℝ) : ENNReal.ofReal (dist x y) = ‖x - y‖ₑ := by
+  rw [Real.dist_eq, Real.enorm_eq_ofReal_abs]
+
+/-- **The approximation error against the quantity the Aldous route consumes.**
+
+```
+∫⁻ ω, ENNReal.ofReal (dist (V (b ω) ω) (V (a ω) ω)) ∂P
+  ≤ (∫⁻ ω, ENNReal.ofReal (dist (Y (b ω) ω) (Y (a ω) ω)) ∂P) + 2 * ε
+```
+
+This is `lintegral_enorm_sub_le_of_biSup_Iic_le` read through `ofReal_dist_eq_enorm_sub`, and it
+is the form in which the first item of Milestone 11 meets
+`mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le`: there the integrand is
+`ENNReal.ofReal (dist (X β ω) (X α ω))` at the image path, here `V t ω = f (X t ω)`. -/
+theorem lintegral_ofReal_dist_le_of_biSup_Iic_le {ι : Type*} [LinearOrder ι] [TopologicalSpace ι]
+    [OrderTopology ι] [DenselyOrdered ι] [OrderBot ι]
+    {Y V : ι → Ω → ℝ} {P : Measure Ω} {T : ι} {D : Set ι} (hD : Dense D) (hDc : D.Countable)
+    (hm : ∀ t ≤ T, Measurable fun ω ↦ Y t ω - V t ω)
+    (hpath : ∀ᵐ ω ∂P, IsRightContinuous fun t ↦ Y t ω - V t ω)
+    {a b : Ω → ι} (ha : ∀ ω, a ω ≤ T) (hb : ∀ ω, b ω ≤ T)
+    {ε : ENNReal} (hε : ∫⁻ ω, ⨆ t ∈ Set.Iic T, ‖Y t ω - V t ω‖ₑ ∂P ≤ ε) :
+    ∫⁻ ω, ENNReal.ofReal (dist (V (b ω) ω) (V (a ω) ω)) ∂P
+      ≤ (∫⁻ ω, ENNReal.ofReal (dist (Y (b ω) ω) (Y (a ω) ω)) ∂P) + 2 * ε := by
+  simp_rw [ofReal_dist_eq_enorm_sub]
+  exact lintegral_enorm_sub_le_of_biSup_Iic_le hD hDc hm hpath ha hb hε
+
+/-- **The two increments differ by twice the approximation error**, at one sample point:
+
+```
+‖V b ω - V a ω - (Y b ω - Y a ω)‖ₑ ≤ 2 * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ
+```
+
+for `a, b ∈ W`.  This is the same triangle inequality as
+`enorm_sub_le_add_two_mul_biSup`, regrouped so that the difference of the two increments stands
+alone: the increment of `V - Y` is what the weighted estimate below integrates against a bounded
+weight, and the regrouping is what lets it. -/
+theorem enorm_sub_sub_le_two_mul_biSup {ι : Type*} {W : Set ι} {Y V : ι → Ω → ℝ} {ω : Ω}
+    {a b : ι} (ha : a ∈ W) (hb : b ∈ W) :
+    ‖V b ω - V a ω - (Y b ω - Y a ω)‖ₑ ≤ 2 * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ := by
+  have hsplit : V b ω - V a ω - (Y b ω - Y a ω)
+      = (Y a ω - V a ω) - (Y b ω - V b ω) := by ring
+  have ha' : ‖Y a ω - V a ω‖ₑ ≤ ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ :=
+    le_iSup₂ (f := fun t (_ : t ∈ W) ↦ ‖Y t ω - V t ω‖ₑ) a ha
+  have hb' : ‖Y b ω - V b ω‖ₑ ≤ ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ :=
+    le_iSup₂ (f := fun t (_ : t ∈ W) ↦ ‖Y t ω - V t ω‖ₑ) b hb
+  calc ‖V b ω - V a ω - (Y b ω - Y a ω)‖ₑ
+      = ‖(Y a ω - V a ω) - (Y b ω - V b ω)‖ₑ := by rw [hsplit]
+    _ ≤ ‖Y a ω - V a ω‖ₑ + ‖Y b ω - V b ω‖ₑ := enorm_sub_le
+    _ ≤ (⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ) + ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ := by gcongr
+    _ = 2 * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ := (two_mul _).symm
+
+/-- **The approximation error against a bounded weight**, and this is the reading (9.26) makes at
+the cross term:
+
+```
+‖∫ ω, U ω * (V (b ω) ω - V (a ω) ω) ∂P‖ₑ
+  ≤ ‖∫ ω, U ω * (Y (b ω) ω - Y (a ω) ω) ∂P‖ₑ + ENNReal.ofReal c * (2 * ε)
+```
+
+for a weight `U` bounded by `c` and times `a`, `b` with values in the window.  The right hand
+side is then made small by
+`IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le` at the weight `U = f ∘ X α`, which
+is bounded by `‖f‖` and measurable for the past.
+
+**No measurability of the supremum is asked, and that is not an oversight.** The unweighted
+statement `lintegral_enorm_sub_le_of_biSup_le` splits a *lower* integral of a sum and has to buy
+`MeasureTheory.lintegral_add_right'` for it, the lower integral not being subadditive
+(`not_forall_lintegral_add_le`).  Here the splitting happens at the **Bochner** integral, where
+`MeasureTheory.integral_add` asks integrability of the two summands -- which a consumer holds
+from a bounded `f` -- and says nothing about the supremum; what is left is a tail bounded by
+monotonicity of the lower integral alone.  So this statement stands over an arbitrary window,
+with no countability, no topology on the index and no right continuity.
+
+The weight is a plain bounded function and not a conditional expectation or a stopped value:
+what is read of it is its bound, and the consumer supplies the rest. -/
+theorem enorm_integral_mul_sub_le_of_biSup_le {ι : Type*} {W : Set ι} {Y V : ι → Ω → ℝ}
+    {P : Measure Ω} {a b : Ω → ι} (ha : ∀ ω, a ω ∈ W) (hb : ∀ ω, b ω ∈ W)
+    {ε : ENNReal} (hε : ∫⁻ ω, ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P ≤ ε)
+    {U : Ω → ℝ} {c : ℝ} (hUb : ∀ ω, ‖U ω‖ ≤ c)
+    (hV : Integrable (fun ω ↦ U ω * (V (b ω) ω - V (a ω) ω)) P)
+    (hY : Integrable (fun ω ↦ U ω * (Y (b ω) ω - Y (a ω) ω)) P) :
+    ‖∫ ω, U ω * (V (b ω) ω - V (a ω) ω) ∂P‖ₑ
+      ≤ ‖∫ ω, U ω * (Y (b ω) ω - Y (a ω) ω) ∂P‖ₑ + ENNReal.ofReal c * (2 * ε) := by
+  have hdiff : Integrable
+      (fun ω ↦ U ω * (V (b ω) ω - V (a ω) ω - (Y (b ω) ω - Y (a ω) ω))) P := by
+    refine (hV.sub hY).congr (Filter.Eventually.of_forall fun ω ↦ ?_)
+    simp only [Pi.sub_apply]
+    ring
+  have hsum : ∫ ω, U ω * (V (b ω) ω - V (a ω) ω) ∂P
+      = (∫ ω, U ω * (Y (b ω) ω - Y (a ω) ω) ∂P)
+        + ∫ ω, U ω * (V (b ω) ω - V (a ω) ω - (Y (b ω) ω - Y (a ω) ω)) ∂P := by
+    rw [← integral_add hY hdiff]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ ?_)
+    ring
+  have htail : ‖∫ ω, U ω * (V (b ω) ω - V (a ω) ω - (Y (b ω) ω - Y (a ω) ω)) ∂P‖ₑ
+      ≤ ENNReal.ofReal c * (2 * ε) := by
+    refine le_trans (enorm_integral_le_lintegral_enorm _) ?_
+    calc ∫⁻ ω, ‖U ω * (V (b ω) ω - V (a ω) ω - (Y (b ω) ω - Y (a ω) ω))‖ₑ ∂P
+        ≤ ∫⁻ ω, ENNReal.ofReal c * (2 * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ) ∂P := by
+          refine lintegral_mono fun ω ↦ ?_
+          rw [enorm_mul]
+          refine mul_le_mul' ?_ (enorm_sub_sub_le_two_mul_biSup (ha ω) (hb ω))
+          rw [Real.enorm_eq_ofReal_abs]
+          exact ENNReal.ofReal_le_ofReal (by simpa [Real.norm_eq_abs] using hUb ω)
+      _ = ENNReal.ofReal c * ∫⁻ ω, 2 * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P :=
+          lintegral_const_mul' _ _ ENNReal.ofReal_ne_top
+      _ = ENNReal.ofReal c * (2 * ∫⁻ ω, ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P) := by
+          rw [lintegral_const_mul' _ _ (by norm_num)]
+      _ ≤ ENNReal.ofReal c * (2 * ε) := by gcongr
+  rw [hsum]
+  exact le_trans (enorm_add_le _ _) (add_le_add le_rfl htail)
+
+end ApproximationErrorWeighted

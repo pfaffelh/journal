@@ -49106,3 +49106,244 @@ treffen.
 er steht unverändert aus dem achtzehnten Lauf — den Zeugen „der Martingalanteil
 ist in `L¹` nicht klein" in Lean bauen (`Ω = Bool` mit
 `AtomWitness.coinMeasure`, Filtration `⊥` unterhalb von `1` und `⊤` darüber).
+
+### 2026-09-20, einundzwanzigster Lauf des Tages — der Übergang vom Approximanten zum Prozeß steht, in beiden Lesarten von (9.26); die Vorfrage des Vorlaufs ist entschieden (Abzählbarkeit wird für die **Addition** gebraucht, nicht für die Monotonie, mit Zeugen), und der angeblich noch fehlende Übergang zur Metrik von `E` gibt es in diesem Punkt gar nicht
+
+**Bearbeitet:** der Vorschlag des zwanzigsten Laufs, `lintegral_enorm_sub_le_of_biSup_le`
+— also weiter am ersten Punkt der Kette des Meilensteins 11 von
+`MartingaleProblems`, wie angeordnet. Kein Meilenstein 8, kein Meilenstein 14,
+kein C.5/G. **Neun** neue Deklarationen in zwei neuen Abschnitten
+(`ApproximationError`, `ApproximationErrorWeighted`) von
+`TauCeti/MartingaleProblems/Suggested.lean`, 387 Zeilen mit den
+Doc-Kommentaren.
+
+**Geprüft:** `scripts/check_master.py` meldet für die ganze Kette **0 Fehler,
+0 `sorry`, 0 veraltete Namen** (Mathlib `94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `v4.35.0-rc2`; 18 / 35 / 109 Warnungen, **dieselben Zahlen wie vor dem
+Lauf**). Alle neun hängen nach `check_axioms_master.py` auf `propext`,
+`Classical.choice`, `Quot.sound` und auf nichts sonst.
+`scripts/check_cited_lines.py`: **353 von 353** gepaarten Fundstellen stimmen
+(sechs mehr als vor dem Lauf, es sind die sechs neuen), 0 tote, 0 verschoben.
+`check_duplicates.py` (2612 eigene Deklarationen, neun mehr als vor dem Lauf)
+und `check_own_names.py` finden zu den neuen Namen nichts.
+`check_negatives.py`: **48** Behauptungen, 0 mit unerwarteten Treffern —
+unverändert, denn dieser Lauf stellt keine neue Behauptung über Mathlibs
+Bestand auf.
+
+#### Die Vorfrage des Vorlaufs, und die Antwort ist eine andere als die beiden angebotenen
+
+Gefragt war, ob das Supremum über `Set.Iic T` oder über `Set.Iic T ∩ S` mit
+abzählbarem `S` genommen wird, und die Begründung des Vorlaufs lautete: für die
+**Monotonie** des unteren Integrals werde die Meßbarkeit gar nicht gebraucht,
+wie schon bei `lintegral_enorm_compensator_sub_le`.
+
+Das ist richtig und trifft die Sache nicht. Die Abschätzung dieses Laufs ist
+keine reine Monotonie, sondern eine **Addition**: aus
+
+```
+‖V b - V a‖ₑ ≤ ‖Y b - Y a‖ₑ + 2 * ⨆ t ∈ W, ‖Y t - V t‖ₑ
+```
+
+wird die integrierte Fassung erst, wenn das Integral der Summe in die Summe der
+Integrale zerfällt. **Und das untere Integral ist nicht subadditiv.** Es ist als
+Supremum über die einfachen Funktionen unterhalb des Integranden definiert
+(`MeasureTheory.lintegral`, `MeasureTheory/Integral/Lebesgue/Basic.lean:48`),
+und ein solches Supremum ist **super**additiv; Mathlibs Additionslemmata sind
+genau deshalb Gleichungen unter einer Meßbarkeitsvoraussetzung
+(`MeasureTheory.lintegral_add_right'`,
+`MeasureTheory/Integral/Lebesgue/Add.lean:331`).
+
+**Der Zeuge dazu ist gebaut**, `not_forall_lintegral_add_le`, und er ist der
+kleinste: auf `Bool` mit der σ-Algebra `⊥` und dem Diracmaß bei `true` sind die
+Indikatoren von `{true}` und `{false}` nicht meßbar; jede `⊥`-meßbare einfache
+Funktion darunter ist konstant und damit `0`, also sind beide unteren Integrale
+`0`, während ihre Summe die Konstante `1` ist mit unterem Integral `1`. Die
+Voraussetzung ist also keine Bequemlichkeit von Mathlibs Beweis, und die
+Gestalt des Fensters ist damit **entschieden statt gewählt**: entweder das
+Supremum läuft über eine abzählbare Menge, oder es wird auf eine solche
+zurückgeführt.
+
+#### Was gebaut ist
+
+Der erste Abschnitt, `ApproximationError` — die ungewichtete Lesart:
+
+* `not_forall_lintegral_add_le` — das untere Integral ist nicht subadditiv, mit
+  dem Zeugen auf `Bool` über `⊥`.
+* `enorm_sub_le_add_two_mul_biSup` — die punktweise Dreiecksungleichung an den
+  beiden Fensterenden, über `enorm_add₃_le`
+  (`Analysis/Normed/Group/Basic.lean:632`). Der Faktor `2` zählt die zwei Enden
+  und ist geschuldet.
+* `lintegral_enorm_sub_le_of_biSup_le` — dieselbe integriert, für **beliebige**
+  `a b : Ω → ι` mit Werten in `W`: keine Stoppzeit, keine Meßbarkeit der
+  Zeiten, keine Ordnung zwischen ihnen. Die Meßbarkeit des Supremums steht als
+  `AEMeasurable` in der Hypothese, weil die beiden Folgerungen sie auf zwei
+  verschiedene Weisen einlösen.
+* `lintegral_enorm_sub_le_of_biSup_le_of_countable` — die billige Lesart, über
+  `measurable_biSup_enorm_of_countable`. Keine Topologie auf dem Index, keine
+  Rechtsstetigkeit, keine Ordnung. Das ist die Gestalt, in der Ethier–Kurtz die
+  Bedingung stellen (Suprema über `[0, T+1] ∩ ℚ`).
+* `lintegral_enorm_sub_le_of_biSup_Iic_le` — die Lesart, die der Verbraucher
+  braucht: über ganz `Set.Iic T`, bezahlt mit **fast sicherer**
+  Rechtsstetigkeit der Pfade von `Y - f ∘ X`, über
+  `biSup_enorm_Iic_eq_of_isRightContinuous` aus Meilenstein 9.
+
+Der zweite Abschnitt, `ApproximationErrorWeighted` — die gewichtete Lesart und
+die Fuge zum Aldous-Weg:
+
+* `ofReal_dist_eq_enorm_sub` — `ENNReal.ofReal (dist x y) = ‖x - y‖ₑ` für
+  reelle `x, y`, und damit die ganze Fuge zu
+  `mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le`; siehe den
+  Befund darunter.
+* `lintegral_ofReal_dist_le_of_biSup_Iic_le` — die Abschätzung in genau der
+  Gestalt, die jener Satz integriert.
+* `enorm_sub_sub_le_two_mul_biSup` — dieselbe Dreiecksungleichung, so
+  umgruppiert, daß die **Differenz der beiden Zuwächse** allein steht.
+* `enorm_integral_mul_sub_le_of_biSup_le` — die gewichtete Lesart:
+  `‖∫ U (V b - V a)‖ₑ ≤ ‖∫ U (Y b - Y a)‖ₑ + ofReal c * (2 * ε)` für ein durch
+  `c` beschränktes `U`.
+
+#### Sechs Befunde
+
+* **Die abzählbare Fassung allein hätte den Verbraucher nicht bedient, und das
+  ist kein Formfehler, sondern die Sache.** Die Zeiten, die der Zusammenbau
+  einsetzt, sind **Trefferzeiten** — die Oszillations-Trefferfolge des
+  Aldous-Weges —, und sie nehmen ihre Werte, wo der Pfad sie hinträgt. Eine
+  über einer abzählbaren Menge quantifizierte Voraussetzung ist auf sie nicht
+  anwendbar. Der Vorlauf hatte das als Alternative benannt; es ist keine, es
+  ist die Aussage, die gebraucht wird, und die abzählbare Fassung bleibt als
+  die billigere daneben stehen.
+
+* **Die gewichtete Fassung braucht die Meßbarkeit *nicht*, und das ist keine
+  Symmetrie, sondern ein Unterschied im Integralbegriff.** Beim Schreiben war
+  dieselbe Hypothese vorgesehen wie in der ungewichteten; der Linter meldete
+  sie als ungenutzt, und beim Nachsehen ist der Grund deutlich: die
+  ungewichtete Fassung zerlegt ein **unteres** Integral einer Summe und muß
+  dafür `lintegral_add_right'` kaufen, die gewichtete zerlegt ein
+  **Bochner**-Integral, und dort verlangt `integral_add` Integrierbarkeit der
+  Summanden — die der Verbraucher aus einem beschränkten `f` ohnehin hat — und
+  über das Supremum nichts. Was bleibt, ist ein Restglied, das die bloße
+  Monotonie des unteren Integrals erledigt. Die gewichtete Aussage steht
+  deshalb über einem **beliebigen** Fenster: keine Abzählbarkeit, keine
+  Topologie auf dem Index, keine Rechtsstetigkeit.
+
+* **Der angeblich noch fehlende Übergang zur Metrik von `E` gibt es in diesem
+  Punkt nicht, und die frühere Fassung dieses Berichts hatte ihn als nächste
+  Aufgabe vorgesehen.** Nachgesehen am Quelltext: die Konklusion von
+  `isTight_map_postcomp_of_exists_martingale` ist die Straffheit der Gesetze von
+  `postcomp f ∘ X n` in `D ι ℝ`. Der Modul in
+  `mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le` wird also am
+  **Bildpfad** gelesen, und sein `dist` ist der Abstand zweier reeller Zahlen.
+  Kein Netz eines Kompaktums, keine Rückgewinnung der Metrik von `E` aus den
+  Testfunktionen — das ist die Sache von
+  `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp`, Punkt 3 des
+  Meilensteins 8 von **SkorokhodSpace**, und eine andere Aussage. Die ganze
+  Fuge ist `ofReal_dist_eq_enorm_sub`, zwei Umschreibungen lang. **Das ist der
+  wertvollste Befund des Laufs**, weil er einen Lauf spart, der sonst ein Netz
+  und eine kompakte Einschließung gebaut hätte, die dieser Punkt nicht braucht.
+
+* **Die Rechtsstetigkeit wird fast sicher gelesen, und das ist die richtige
+  Seite des Tauschs.** Die Reduktion auf `insert T (Set.Iic T ∩ D)` gilt an
+  jedem Stichprobenpunkt, an dem der Pfad rechtsstetig ist; die Gleichheit der
+  beiden Suprema ist damit eine f.ü.-Aussage, und heraus kommt `AEMeasurable`
+  statt `Measurable` — was für `lintegral_add_right'` genügt. Der Gewinn ist,
+  daß die Hypothese zu dem paßt, was diese Entwicklung liefert: die
+  Rechtsstetigkeit der Pfade kommt hier aus der Vitali-Konvergenz und ist dort
+  f.ü. quantifiziert.
+
+* **Die Meßbarkeit der Prozeßdifferenz wird nur auf dem Fenster verlangt**
+  (`∀ t ≤ T`), nicht für alle `t`. Das ist die schwächste Voraussetzung, unter
+  der die Reduktion trägt, denn `insert T (Set.Iic T ∩ D) ⊆ Set.Iic T`; und es
+  kostet den Verbraucher nichts, weil er ohnehin nur über dem Horizont
+  arbeitet.
+
+* **`V` ist kein `f ∘ X`, und das ist Absicht.** Die Aussagen stehen über
+  **zwei reellen Prozessen** `Y` und `V` und wissen von `f`, von `X` und vom
+  Zustandsraum `E` nichts. Der Verbraucher setzt `V t ω = f (X t ω)`. Das
+  kostet nichts und macht die Aussagen zugleich zu dem, was der zweite
+  Approximant braucht: dort ist `V t ω = f² (X t ω)` und `Y` ein anderer
+  Approximant, und es ist dieselbe Aussage und nicht eine zweite.
+
+#### Wo der Punkt jetzt steht
+
+| Größe | Stand |
+| --- | --- |
+| alles Deterministische bis zur Modulabschätzung | steht |
+| Markov auf den Lückenereignissen, über `N` summiert | steht |
+| optionales Sampling zwischen zwei Stoppzeiten | steht |
+| Martingalzuwachs gegen ein Gewicht aus der Vergangenheit | steht |
+| Zuwachs → Kompensatorzuwachs (Quasimartingal) | steht |
+| Quadratidentität, Cauchy–Schwarz, Hölder am Kompensator | steht |
+| die Klasse `𝓐 n` als Prädikat samt fünf Folgerungen | steht |
+| die Fuge `‖∫ W (Y β - Y α)‖ₑ ≤ …` | steht |
+| die **Approximationsfehler**-Hypothese, ungewichtet | steht, dieser Lauf |
+| dieselbe, gewichtet — der zweite Summand von (9.26) | steht, dieser Lauf |
+| die Fuge zu `∫⁻ ofReal (dist …)` des Aldous-Weges | steht, dieser Lauf |
+| der Zusammenbau: Quadratidentität am Prozeß, dann `N, δ, ε` | **offen** |
+
+**Damit wird jede Hypothese des Kriteriums von mindestens einer Aussage
+gelesen.** Das war bis heute nicht so, und es ist die Schwelle, an der der
+Zusammenbau aufhört, eine Suche zu sein.
+
+#### Vorschlag für den nächsten Lauf
+
+**Die Quadratidentität am Prozeß statt am Approximanten:
+`lintegral_enorm_sub_sq_le_of_isApproximatingPair`.** Das ist der einzige
+Schritt, der zwischen den Bausteinen dieses Laufs und dem Zusammenbau noch
+steht, und er ist jetzt an genau einer Stelle offen.
+
+Die Aussage, benannt:
+
+> `ofReal_integral_sq_sub_le` — sind `V`, `Y`, `Y'` drei reelle Prozesse und
+> `a ≤ b` zwei Zeiten des Fensters, so ist
+> `ENNReal.ofReal (∫ ω, (V (b ω) ω - V (a ω) ω)^2 ∂P)`
+> höchstens die Summe der vier Summanden von \EK{} (9.26) — zweimal der
+> Approximationsfehler und zweimal die `L^q`-Schranke —, gewonnen aus der
+> reellen Identität
+> `(v_b - v_a)^2 = (v_b^2 - v_a^2) - 2 * v_a * (v_b - v_a)`.
+
+**Worauf sie ruht, und es steht alles da.** Die beiden rechten Summanden
+werden je zweimal abgeschätzt, erst der Approximationsfehler, dann der
+Kompensator:
+
+* `v_b^2 - v_a^2` ist der Zuwachs von `f² ∘ X`; über
+  `lintegral_enorm_sub_le_of_biSup_Iic_le` (bzw.
+  `enorm_integral_mul_sub_le_of_biSup_le` am Gewicht `1`) geht er auf den
+  Zuwachs des Approximanten `Y'` nahe `f² ∘ X` über, und der wird von
+  `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le` am Gewicht `1`
+  erledigt.
+* `v_a * (v_b - v_a)` ist der Zuwachs von `f ∘ X` gegen das Gewicht
+  `f (X α)` — beschränkt durch `‖f‖` und meßbar für die Vergangenheit, weil
+  `X` adaptiert ist; `enorm_integral_mul_sub_le_of_biSup_le` an genau diesem
+  Gewicht bringt ihn auf den Zuwachs von `Y`, und derselbe Satz wie oben
+  erledigt ihn.
+
+Der Rückweg vom Quadrat zum Betrag ist Cauchy–Schwarz und steht als
+`lintegral_ofReal_dist_le_sqrt_integral_sq` seit dem Vorlauf in der Datei —
+mit `∫⁻ ofReal (dist (f ω) (g ω)) ≤ ofReal √(∫ (f ω - g ω)^2)` und
+`[IsProbabilityMeasure P]`.
+
+**Warum sie jetzt dran ist.** Sie ist die letzte Aussage vor dem Zusammenbau,
+in der noch etwas zu rechnen ist; was danach kommt — `N ≈ u/δ`, die Summe der
+`N` Fensterschranken, `tendsto_ofReal_rpow_mul_nhdsGT_zero` — ist Buchhaltung
+mit fertigen Bausteinen.
+
+**Die Vorfrage, die dabei nicht zu raten ist, und sie ist enger als sie
+aussieht.** Ob das Quadrat in `ℝ≥0∞` oder in `ℝ` steht, ist **entschieden**:
+`lintegral_ofReal_dist_le_sqrt_integral_sq` liest rechts ein
+Bochner-Integral `∫ ω, (f ω - g ω)^2 ∂P` über `ℝ`, also ist die
+Quadratidentität reell zu führen, und der Übergang zu den
+`ℝ≥0∞`-Abschätzungen dieses Laufs ist `ENNReal.ofReal x ≤ ‖x‖ₑ`. Offen ist
+allein, **woher die Integrierbarkeit des Quadrats kommt**. Sie ist die
+Voraussetzung `h2` jenes Satzes, und der naheliegende Weg ist die
+Beschränktheit von `f`: mit `|f (X β) - f (X α)| ≤ 2‖f‖` ist das Quadrat
+beschränkt und über einem Wahrscheinlichkeitsmaß integrierbar. Zu prüfen ist,
+ob der Verbraucher `f : E →ᵇ ℝ` an dieser Stelle schon in der Hand hat oder ob
+die Schranke als eigene Hypothese mitgeführt werden muß — am Quelltext von
+`isTight_map_postcomp_of_exists_martingale`, nicht am Papier.
+
+**Ein zweiter, kleinerer Punkt, falls der erste früher fertig ist als gedacht:**
+er steht unverändert aus dem achtzehnten Lauf — den Zeugen „der Martingalanteil
+ist in `L¹` nicht klein" in Lean bauen (`Ω = Bool` mit
+`AtomWitness.coinMeasure`, Filtration `⊥` unterhalb von `1` und `⊤` darüber).
+Damit wäre die Notwendigkeit der Voraussetzung an `f²` ein Satz statt eines
+Absatzes.

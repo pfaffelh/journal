@@ -11976,14 +11976,83 @@ has to be chosen once for all `n`. What stands:
   approximable functions still have to be closed under products, because the
   estimate reads the hypothesis at `f²` as well.
 
-  What is left of this item is therefore the **assembly**: the approximation
-  error of (9.26) — `⨆ n, ∫⁻ ω, ⨆ t ≤ T, ‖Y n t ω - f (X n t ω)‖ₑ < ε`, the one
-  hypothesis of the criterion that no statement yet reads — the passage from
-  the two weighted bounds to `∫⁻ dist (X β) (X α)`, and the choice of `N`, `δ`
-  and `ε` in
+  **And the approximation error of (9.26) is read**, 2026-09-20 — the
+  hypothesis `∫⁻ ω, ⨆ t ∈ W, ‖Y t ω - f (X t ω)‖ₑ ∂P ≤ ε`, which until then no
+  statement of this milestone touched. Three statements carry it from the
+  approximant to the process:
+
+  * `enorm_sub_le_add_two_mul_biSup`, the triangle inequality at the two ends
+    of a window, `‖V b ω - V a ω‖ₑ ≤ ‖Y b ω - Y a ω‖ₑ + 2 ⨆ t ∈ W, ‖Y t - V t‖ₑ`
+    for `a, b ∈ W`; the factor `2` counts the ends and is owed.
+  * `lintegral_enorm_sub_le_of_biSup_le`, the same integrated, for
+    **arbitrary** `a b : Ω → ι` with values in `W` — no stopping time, no
+    measurability of the times, exactly the economy of
+    `IsApproximatingPair.lintegral_enorm_compensator_sub_le`.
+  * `lintegral_enorm_sub_le_of_biSup_le_of_countable` and
+    `lintegral_enorm_sub_le_of_biSup_Iic_le`, the two readings of the window.
+
+  **Where the countability of the window is really spent, and it is not where
+  this roadmap said.** The compensator estimate needed no measurability at all,
+  the lower integral being monotone without one; here it is needed, and the
+  step that needs it is the **addition**. The lower integral is not subadditive
+  for arbitrary functions, and `not_forall_lintegral_add_le` is the witness:
+  on `Bool` with the σ-algebra `⊥` and the Dirac measure at `true`, the
+  indicators of `{true}` and of `{false}` each have lower integral `0` while
+  their sum is the constant `1`. So the measurability hypothesis of
+  `MeasureTheory.lintegral_add_right'`
+  (`MeasureTheory/Integral/Lebesgue/Add.lean:331`) is not a convenience of
+  Mathlib's proof, and the window has to be countable — or be reduced to a
+  countable one.
+
+  **The consumer's form is the second**, because the times it substitutes are
+  hitting times and take their values wherever the path takes them: a
+  hypothesis quantified over a countable set would not be applicable to them.
+  `lintegral_enorm_sub_le_of_biSup_Iic_le` reads the whole window `Set.Iic T`
+  and pays with **almost sure** right continuity of the paths of `Y - f ∘ X`,
+  through `biSup_enorm_Iic_eq_of_isRightContinuous` of Milestone 9. \EK{} spend
+  right continuity in exactly this place, their (9.27) holding for all real
+  times and not merely rational ones. That the reduction is only almost
+  everywhere is why the measurability asked of the supremum is `AEMeasurable`
+  and not `Measurable` — and it is the right side of the trade here, since in
+  this development the right continuity of paths is what Vitali convergence
+  delivers, quantified almost everywhere.
+
+  **The error is read twice, and the weighted reading is the cheaper one.**
+  (9.26) reads the approximation error at both pairs: at the pair near `f² ∘ X`
+  against the weight `1`, which is `lintegral_enorm_sub_le_of_biSup_Iic_le`
+  above, and at the pair near `f ∘ X` against the weight `f ∘ X α`, which is
+  `enorm_integral_mul_sub_le_of_biSup_le` through the regrouped triangle
+  inequality `enorm_sub_sub_le_two_mul_biSup`. **The weighted one needs no
+  measurability at all**, and that is not symmetry: it splits a *Bochner*
+  integral, where `MeasureTheory.integral_add` asks integrability of the
+  summands — which a consumer holds from a bounded `f` — and the remaining tail
+  is bounded by monotonicity of the lower integral alone. It therefore stands
+  over an arbitrary window, with no countability, no topology on the index and
+  no right continuity.
+
+  **And the passage to the metric of `E` does not occur in this item at all,
+  checked 2026-09-20.** The conclusion here is the tightness of the laws of
+  `postcomp f ∘ X n` in `D ι ℝ`, so the modulus of
+  `mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le` is read at the
+  **image** path and its `dist` is the distance of two reals.  No net of a
+  compact set and no recovery of the metric of `E` from the test functions
+  enters; that recovery is the business of
+  `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp`, the third item of
+  **SkorokhodSpace** Milestone 8. The whole junction is
+  `ofReal_dist_eq_enorm_sub`, and
+  `lintegral_ofReal_dist_le_of_biSup_Iic_le` is the estimate already written in
+  the shape that statement integrates.
+
+  What is left of this item is therefore the **square identity and the choice
+  of the three numbers**: `(f(X β) - f(X α))² = (f²(X β) - f²(X α))
+  - 2 f(X α) (f(X β) - f(X α))`, whose two right hand terms are the two
+  readings above composed with
+  `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le`; Cauchy–Schwarz
+  back to `∫⁻ |f(X β) - f(X α)|`; and then `N ≈ u/δ`, the sum of the window
+  bounds and `tendsto_ofReal_rpow_mul_nhdsGT_zero` in
   `mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le`. Every analytic
-  ingredient it consumes now exists, and the predicate that binds them does
-  too.
+  ingredient it consumes now exists, the predicate that binds them does too,
+  and every hypothesis of the criterion is now read by some statement.
 * `isRelativelyCompact_of_approx`: if `E` is Polish, the domain of `A` contains
   an algebra separating points and vanishing nowhere, the approximation holds
   for each `(f,g) ∈ A`, and `{X n}` satisfies compact containment, then `{X n}`
