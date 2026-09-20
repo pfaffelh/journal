@@ -42704,4 +42704,259 @@ theorem integral_mul_stoppedValue_sub_eq_compensator
     exact Filter.Eventually.of_forall fun ω ↦ by simp only [stoppedValue]; ring
   exact sub_eq_zero.mp hcomb
 
+/-- **The square identity: the increment of a quasimartingale, squared, is a compensator
+increment plus a cross term.**  If `Y - C` and `Y² - D` are both right continuous martingales and
+`α ≤ β ≤ j` are stopping times, then
+
+```
+∫ (Y β - Y α)² = ∫ (D β - D α) - 2 ∫ Y α * (C β - C α).
+```
+
+This is what carries the tightness criterion of Milestone 11 past the obstruction recorded at the
+section docstring: the increment of a martingale is **not** small in `L¹`, but its integral
+against a bounded weight from the past vanishes, and the square exposes exactly two such weights.
+The identity `(b - a)² = (b² - a²) - 2 a (b - a)` is `ring`; the first term is
+`integral_mul_stoppedValue_sub_eq_compensator` at the weight `1` for the pair `(Y², D)`, the
+second the same statement at the weight `stoppedValue Y α`, which is `hα.measurableSpace`
+measurable by `MeasureTheory.measurable_stoppedValue`
+(`Probability/Process/Stopping.lean:1044`).
+
+**Why the pair `(Y², D)` is a hypothesis and not a consequence.**  Nothing here produces a
+compensator for `Y²` out of one for `Y`; it has to be supplied, and at the consumer that means
+the approximable functions are closed under products.  That is recorded at Milestone 11 of the
+README, with the witness showing that with `f` alone the conclusion is false.
+
+**On the hypotheses.**  Boundedness of `Y` is *not* asked for.  What the proof reads is a bound
+on `stoppedValue Y α` alone -- it is the weight of the cross term, and the pull out property is
+used in its bounded form -- together with integrability of the four stopped values.  A consumer
+with a bounded `Y` gets all five from `integral_sq_stoppedValue_sub_eq_of_bounded` below. -/
+theorem integral_sq_stoppedValue_sub_eq
+    {Y C D : ℝ≥0 → Ω → ℝ}
+    (hM : Martingale (fun t ω ↦ Y t ω - C t ω) 𝓕 P)
+    (hMprog : IsStronglyProgressive 𝓕 fun t ω ↦ Y t ω - C t ω)
+    (hMrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0,
+      Tendsto (fun r ↦ Y r ω - C r ω) (𝓝[≥] s) (𝓝 (Y s ω - C s ω)))
+    (hN : Martingale (fun t ω ↦ Y t ω ^ 2 - D t ω) 𝓕 P)
+    (hNprog : IsStronglyProgressive 𝓕 fun t ω ↦ Y t ω ^ 2 - D t ω)
+    (hNrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0,
+      Tendsto (fun r ↦ Y r ω ^ 2 - D r ω) (𝓝[≥] s) (𝓝 (Y s ω ^ 2 - D s ω)))
+    (hYprog : IsStronglyProgressive 𝓕 Y)
+    {j : ℝ≥0} {α β : Ω → ENNReal} (hα : IsStoppingTime 𝓕 α) (hβ : IsStoppingTime 𝓕 β)
+    (hαβ : α ≤ β) (hβj : ∀ ω, β ω ≤ (j : ENNReal))
+    (hYα : Integrable (stoppedValue Y α) P) (hYβ : Integrable (stoppedValue Y β) P)
+    (hY2α : Integrable (stoppedValue (fun t ω ↦ Y t ω ^ 2) α) P)
+    (hY2β : Integrable (stoppedValue (fun t ω ↦ Y t ω ^ 2) β) P)
+    {c : ℝ} (hYb : ∀ ω, ‖stoppedValue Y α ω‖ ≤ c) :
+    ∫ ω, (stoppedValue Y β ω - stoppedValue Y α ω) ^ 2 ∂P
+      = ∫ ω, (stoppedValue D β ω - stoppedValue D α ω) ∂P
+        - 2 * ∫ ω, stoppedValue Y α ω * (stoppedValue C β ω - stoppedValue C α ω) ∂P := by
+  have hαj : ∀ ω, α ω ≤ (j : ENNReal) := fun ω ↦ (hαβ ω).trans (hβj ω)
+  have hle : hα.measurableSpace ≤ m := hα.measurableSpace_le_of_le hαj
+  have hWsm : StronglyMeasurable[hα.measurableSpace] (stoppedValue Y α) :=
+    (measurable_stoppedValue hYprog hα).stronglyMeasurable
+  have hWae : AEStronglyMeasurable (stoppedValue Y α) P := (hWsm.mono hle).aestronglyMeasurable
+  have hbound : ∀ᵐ ω ∂P, ‖stoppedValue Y α ω‖ ≤ c := Filter.Eventually.of_forall hYb
+  -- the square of the increment, at the weight `1`
+  have hsq := integral_mul_stoppedValue_sub_eq_compensator (Y := fun t ω ↦ Y t ω ^ 2) (C := D)
+    hN hNprog hNrc hα hβ hαβ hβj hY2α hY2β (W := fun _ ↦ (1 : ℝ))
+    stronglyMeasurable_const (c := 1) (fun ω ↦ by simp)
+  simp only [one_mul] at hsq
+  -- the cross term, at the weight `stoppedValue Y α`
+  have hcross := integral_mul_stoppedValue_sub_eq_compensator hM hMprog hMrc hα hβ hαβ hβj
+    hYα hYβ hWsm hYb
+  have hcr : Integrable
+      (fun ω ↦ stoppedValue Y α ω * (stoppedValue Y β ω - stoppedValue Y α ω)) P :=
+    (hYβ.sub' hYα).bdd_mul hWae hbound
+  have h1 : Integrable (fun ω ↦ stoppedValue (fun t ω ↦ Y t ω ^ 2) β ω
+      - stoppedValue (fun t ω ↦ Y t ω ^ 2) α ω) P := hY2β.sub' hY2α
+  have h2 : Integrable (fun ω ↦ 2 * (stoppedValue Y α ω
+      * (stoppedValue Y β ω - stoppedValue Y α ω))) P := hcr.const_mul 2
+  have hsplit : ∫ ω, (stoppedValue Y β ω - stoppedValue Y α ω) ^ 2 ∂P
+      = ∫ ω, (stoppedValue (fun t ω ↦ Y t ω ^ 2) β ω
+          - stoppedValue (fun t ω ↦ Y t ω ^ 2) α ω) ∂P
+        - 2 * ∫ ω, stoppedValue Y α ω * (stoppedValue Y β ω - stoppedValue Y α ω) ∂P := by
+    rw [← integral_const_mul, ← integral_sub h1 h2]
+    exact integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ by
+      simp only [stoppedValue]; ring)
+  rw [hsplit, hsq, hcross]
+
+/-- **The square identity for a bounded process**, which is the form the tightness criterion of
+Milestone 11 uses: there `Y = f ∘ X` for a bounded continuous `f`, so the bound is at hand and the
+four integrabilities are not worth stating.
+
+A global bound on `Y` together with `IsStronglyProgressive 𝓕 Y` discharges every hypothesis of
+`integral_sq_stoppedValue_sub_eq` that is not about the two martingales: the stopped values are
+measurable by `MeasureTheory.measurable_stoppedValue` and bounded by `c`, their squares by `c²`,
+and `integrable_of_abs_le` turns each into integrability against the finite measure. -/
+theorem integral_sq_stoppedValue_sub_eq_of_bounded
+    {Y C D : ℝ≥0 → Ω → ℝ}
+    (hM : Martingale (fun t ω ↦ Y t ω - C t ω) 𝓕 P)
+    (hMprog : IsStronglyProgressive 𝓕 fun t ω ↦ Y t ω - C t ω)
+    (hMrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0,
+      Tendsto (fun r ↦ Y r ω - C r ω) (𝓝[≥] s) (𝓝 (Y s ω - C s ω)))
+    (hN : Martingale (fun t ω ↦ Y t ω ^ 2 - D t ω) 𝓕 P)
+    (hNprog : IsStronglyProgressive 𝓕 fun t ω ↦ Y t ω ^ 2 - D t ω)
+    (hNrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0,
+      Tendsto (fun r ↦ Y r ω ^ 2 - D r ω) (𝓝[≥] s) (𝓝 (Y s ω ^ 2 - D s ω)))
+    (hYprog : IsStronglyProgressive 𝓕 Y)
+    {c : ℝ} (hYb : ∀ t ω, |Y t ω| ≤ c)
+    {j : ℝ≥0} {α β : Ω → ENNReal} (hα : IsStoppingTime 𝓕 α) (hβ : IsStoppingTime 𝓕 β)
+    (hαβ : α ≤ β) (hβj : ∀ ω, β ω ≤ (j : ENNReal)) :
+    ∫ ω, (stoppedValue Y β ω - stoppedValue Y α ω) ^ 2 ∂P
+      = ∫ ω, (stoppedValue D β ω - stoppedValue D α ω) ∂P
+        - 2 * ∫ ω, stoppedValue Y α ω * (stoppedValue C β ω - stoppedValue C α ω) ∂P := by
+  have hαj : ∀ ω, α ω ≤ (j : ENNReal) := fun ω ↦ (hαβ ω).trans (hβj ω)
+  have hmα : Measurable (stoppedValue Y α) :=
+    (measurable_stoppedValue hYprog hα).mono (hα.measurableSpace_le_of_le hαj) le_rfl
+  have hmβ : Measurable (stoppedValue Y β) :=
+    (measurable_stoppedValue hYprog hβ).mono (hβ.measurableSpace_le_of_le hβj) le_rfl
+  have habsα : ∀ ω, |stoppedValue Y α ω| ≤ c := fun ω ↦ hYb _ ω
+  have habsβ : ∀ ω, |stoppedValue Y β ω| ≤ c := fun ω ↦ hYb _ ω
+  have hsqb : ∀ f : Ω → ℝ, (∀ ω, |f ω| ≤ c) → ∀ ω, |f ω ^ 2| ≤ c ^ 2 := by
+    intro f hf ω
+    have h0 := abs_nonneg (f ω)
+    have h1 := hf ω
+    calc |f ω ^ 2| = |f ω| ^ 2 := abs_pow _ _
+      _ ≤ c ^ 2 := by nlinarith
+  exact integral_sq_stoppedValue_sub_eq hM hMprog hMrc hN hNprog hNrc hYprog hα hβ hαβ hβj
+    (integrable_of_abs_le hmα habsα) (integrable_of_abs_le hmβ habsβ)
+    (integrable_of_abs_le (hmα.pow_const 2) (hsqb _ habsα))
+    (integrable_of_abs_le (hmβ.pow_const 2) (hsqb _ habsβ))
+    (fun ω ↦ by simpa [Real.norm_eq_abs] using habsα ω)
+
 end TwoTimeSampling
+
+/-! ### From the square back to the increment
+
+`integral_sq_stoppedValue_sub_eq` delivers the *square* of the increment, and what
+`mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le` asks for is
+`∫⁻ ENNReal.ofReal (dist (X β ω) (X α ω))`.  The passage between them is Cauchy--Schwarz, and it
+knows nothing of stopping times, filtrations or martingales; it is stated here for two arbitrary
+real functions, in exactly the two shapes the two neighbours have. -/
+
+section SquareToIncrement
+
+variable {Ω : Type*} {m : MeasurableSpace Ω} {P : Measure Ω}
+
+/-- **Cauchy--Schwarz, in the shape the tightness criterion needs it**: a lower integral of a
+distance on the left, a Bochner integral of a square on the right.
+
+```
+∫⁻ ω, ENNReal.ofReal (dist (f ω) (g ω)) ∂P ≤ ENNReal.ofReal √(∫ ω, (f ω - g ω)² ∂P).
+```
+
+The proof is the nonnegativity of the variance of `|f - g|` — `ProbabilityTheory.variance_nonneg`
+read through `ProbabilityTheory.variance_eq_sub` — which is `(∫ |f - g|)² ≤ ∫ (f - g)²`, followed
+by `Real.le_sqrt` and `MeasureTheory.ofReal_integral_eq_lintegral_ofReal`.  No inner product
+space and no `eLpNorm` is involved.
+
+**`P` is asked to be a probability measure and not merely finite**, and the reason is visible in
+the statement: over a finite measure the right hand side acquires the factor `√(P univ)`, and the
+consumer is the law of a process, where it is `1`.  Weakening it would buy nothing and would put
+a factor into every application. -/
+theorem lintegral_ofReal_dist_le_sqrt_integral_sq [IsProbabilityMeasure P] {f g : Ω → ℝ}
+    (h : AEStronglyMeasurable (fun ω ↦ f ω - g ω) P)
+    (h2 : Integrable (fun ω ↦ (f ω - g ω) ^ 2) P) :
+    ∫⁻ ω, ENNReal.ofReal (dist (f ω) (g ω)) ∂P
+      ≤ ENNReal.ofReal (Real.sqrt (∫ ω, (f ω - g ω) ^ 2 ∂P)) := by
+  have hmem : MemLp (fun ω ↦ f ω - g ω) 2 P := (memLp_two_iff_integrable_sq h).2 h2
+  have hmemabs : MemLp (fun ω ↦ |f ω - g ω|) 2 P := hmem.abs
+  have hint : Integrable (fun ω ↦ |f ω - g ω|) P := hmemabs.integrable one_le_two
+  have hv := variance_eq_sub hmemabs
+  have hnn := variance_nonneg (fun ω ↦ |f ω - g ω|) P
+  rw [hv] at hnn
+  have habs2 : ∫ ω, (fun ω ↦ |f ω - g ω|) ω ^ 2 ∂P = ∫ ω, (f ω - g ω) ^ 2 ∂P :=
+    integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ sq_abs _)
+  have hsq : (∫ ω, |f ω - g ω| ∂P) ^ 2 ≤ ∫ ω, (f ω - g ω) ^ 2 ∂P := by
+    rw [← habs2]
+    simp only [Pi.pow_apply] at hnn ⊢
+    linarith
+  have hle : ∫ ω, |f ω - g ω| ∂P ≤ Real.sqrt (∫ ω, (f ω - g ω) ^ 2 ∂P) :=
+    (Real.le_sqrt (integral_nonneg fun ω ↦ abs_nonneg _)
+      (integral_nonneg fun ω ↦ sq_nonneg _)).2 hsq
+  have hlint : ∫⁻ ω, ENNReal.ofReal (dist (f ω) (g ω)) ∂P
+      = ENNReal.ofReal (∫ ω, |f ω - g ω| ∂P) := by
+    rw [ofReal_integral_eq_lintegral_ofReal hint
+      (Filter.Eventually.of_forall fun ω ↦ abs_nonneg _)]
+    exact lintegral_congr fun ω ↦ by rw [Real.dist_eq]
+  rw [hlint]
+  exact ENNReal.ofReal_le_ofReal hle
+
+end SquareToIncrement
+
+/-! ### The compensator increment over a short window
+
+The last quantity of the first item of Milestone 11.  `integral_sq_stoppedValue_sub_eq` turns the
+increment of the square into two compensator increments, and this is where they are made small:
+a compensator is the indefinite integral of a density `Z`, and over a window of length `δ` the
+`L¹` norm of a density in `L^q` is `O(δ^{1-1/q})`.
+
+**There is no probability here at all.**  Both statements are about one real function on one
+window, and a consumer reads them at a fixed sample point before integrating over `Ω`.  Nor is
+there a Hölder inequality to prove: `MeasureTheory.eLpNorm_le_eLpNorm_mul_rpow_measure_univ`
+(`MeasureTheory/Function/LpSeminorm/CompareExp.lean:65`) is exactly this estimate, with the
+window length appearing as `μ Set.univ` of the restricted measure. -/
+
+section CompensatorHolder
+
+/-- **The `L¹` norm of an `L^q` density over a window of length `b - a`.**
+
+```
+∫⁻ s in Set.Ioc a b, ‖Z s‖ₑ ≤ ENNReal.ofReal (b - a) ^ (1 - 1/q.toReal) * eLpNorm Z q (ℙ|_S)
+```
+
+for `1 ≤ q` and any `S ⊇ Set.Ioc a b`.  The exponent is nonnegative for `1 ≤ q`, and at `q = ∞`
+it is `1`, the statement then being the bound by the essential supremum times the length.
+
+The proof is `MeasureTheory.eLpNorm_le_eLpNorm_mul_rpow_measure_univ` at `p = 1`, where the left
+hand side is the lower integral by `MeasureTheory.eLpNorm_one_eq_lintegral_enorm` and
+`μ Set.univ` is `b - a` by `MeasureTheory.Measure.restrict_apply_univ` and `Real.volume_Ioc`;
+the passage from the window to `S` is `MeasureTheory.eLpNorm_mono_measure` along
+`MeasureTheory.Measure.restrict_mono`.
+
+**The ambient set `S` is a parameter and not the window**, because that is how a consumer holds
+the hypothesis: the pair `(Y, C) ∈ 𝓐 n` bounds the `L^q` norm of the density on a *horizon*
+`[0, T]`, once, while the window moves. -/
+theorem lintegral_enorm_le_rpow_mul_eLpNorm
+    {Z : ℝ → ℝ} {q : ENNReal} (hq : 1 ≤ q) {a b : ℝ} {S : Set ℝ}
+    (hZ : AEStronglyMeasurable Z (volume.restrict S)) (hsub : Set.Ioc a b ⊆ S) :
+    ∫⁻ s in Set.Ioc a b, ‖Z s‖ₑ
+      ≤ ENNReal.ofReal (b - a) ^ (1 - 1 / q.toReal)
+        * eLpNorm Z q (volume.restrict S) := by
+  have hmono : volume.restrict (Set.Ioc a b) ≤ volume.restrict S :=
+    Measure.restrict_mono hsub le_rfl
+  have hZ' : AEStronglyMeasurable Z (volume.restrict (Set.Ioc a b)) := hZ.mono_measure hmono
+  calc ∫⁻ s in Set.Ioc a b, ‖Z s‖ₑ
+      = eLpNorm Z 1 (volume.restrict (Set.Ioc a b)) := (eLpNorm_one_eq_lintegral_enorm hZ').symm
+    _ ≤ eLpNorm Z q (volume.restrict (Set.Ioc a b))
+          * volume.restrict (Set.Ioc a b) Set.univ ^ (1 / (1 : ENNReal).toReal - 1 / q.toReal) :=
+        eLpNorm_le_eLpNorm_mul_rpow_measure_univ hq hZ'
+    _ = eLpNorm Z q (volume.restrict (Set.Ioc a b))
+          * ENNReal.ofReal (b - a) ^ (1 - 1 / q.toReal) := by
+        rw [Measure.restrict_apply_univ, Real.volume_Ioc, ENNReal.toReal_one, div_one]
+    _ ≤ eLpNorm Z q (volume.restrict S) * ENNReal.ofReal (b - a) ^ (1 - 1 / q.toReal) := by
+        gcongr
+    _ = ENNReal.ofReal (b - a) ^ (1 - 1 / q.toReal) * eLpNorm Z q (volume.restrict S) :=
+        mul_comm _ _
+
+/-- **The compensator increment itself**, which is the previous statement read at the Bochner
+integral:
+
+```
+‖∫ s in Set.Ioc a b, Z s‖ₑ ≤ ENNReal.ofReal (b - a) ^ (1 - 1/q.toReal) * eLpNorm Z q (ℙ|_S).
+```
+
+It is `MeasureTheory.enorm_integral_le_lintegral_enorm`
+(`MeasureTheory/Integral/Bochner/Basic.lean:333`) and nothing else.  **No integrability is
+asked for**, and that is the reason the statement is in `ℝ≥0∞` rather than in `ℝ`: a real valued
+inequality would have to say what `∫` means when `Z` is not integrable, and `‖·‖ₑ` of the garbage
+value `0` is below every bound anyway. -/
+theorem enorm_setIntegral_le_rpow_mul_eLpNorm
+    {Z : ℝ → ℝ} {q : ENNReal} (hq : 1 ≤ q) {a b : ℝ} {S : Set ℝ}
+    (hZ : AEStronglyMeasurable Z (volume.restrict S)) (hsub : Set.Ioc a b ⊆ S) :
+    ‖∫ s in Set.Ioc a b, Z s‖ₑ
+      ≤ ENNReal.ofReal (b - a) ^ (1 - 1 / q.toReal)
+        * eLpNorm Z q (volume.restrict S) :=
+  (enorm_integral_le_lintegral_enorm Z).trans (lintegral_enorm_le_rpow_mul_eLpNorm hq hZ hsub)
+
+end CompensatorHolder

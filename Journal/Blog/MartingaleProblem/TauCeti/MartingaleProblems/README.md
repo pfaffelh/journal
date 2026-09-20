@@ -11849,8 +11849,60 @@ has to be chosen once for all `n`. What stands:
     by `integrable_stoppedValue_of_rightContinuous`, and those of `C` are the
     difference.
 
-  What is left of this item after them is `integral_sq_stoppedValue_sub_eq`, the
-  display above, and the two Hölder estimates under it.
+  **The square identity itself is proved**, 2026-09-20, and with it the return
+  from the square to the increment:
+
+  * `integral_sq_stoppedValue_sub_eq` — the display above, for `Y - C` and
+    `Y² - D` right continuous martingales and `α ≤ β ≤ j`. Its two summands are
+    `integral_mul_stoppedValue_sub_eq_compensator` at the weights `1` and
+    `stoppedValue Y α`, the latter `hα.measurableSpace`-measurable by
+    `MeasureTheory.measurable_stoppedValue`
+    (`Probability/Process/Stopping.lean:1044`), and the algebra
+    `(b - a)² = (b² - a²) - 2 a (b - a)` is `ring`. **Boundedness of `Y` is not
+    among its hypotheses**: what the proof reads is a bound on the *weight*
+    `stoppedValue Y α` alone — the pull out property is used in its bounded form
+    — together with integrability of the four stopped values. Nothing here
+    manufactures a compensator for `Y²` out of one for `Y`; that is the pair the
+    hypothesis supplies, and it is why the approximable functions have to be
+    closed under products.
+  * `integral_sq_stoppedValue_sub_eq_of_bounded` — the same with a global bound
+    `|Y t ω| ≤ c` in place of the five, which is what the consumer has, `Y`
+    being `f ∘ X` for a bounded `f`.
+  * `lintegral_ofReal_dist_le_sqrt_integral_sq` — Cauchy–Schwarz in the two
+    shapes the neighbours have,
+    `∫⁻ ofReal (dist (f ω) (g ω)) ≤ ofReal √(∫ (f ω - g ω)²)`, over a
+    probability measure and for arbitrary real `f, g`. It is the nonnegativity
+    of the variance of `|f - g|` (`ProbabilityTheory.variance_nonneg` through
+    `ProbabilityTheory.variance_eq_sub`), then `Real.le_sqrt` and
+    `MeasureTheory.ofReal_integral_eq_lintegral_ofReal`; no inner product space
+    and no `eLpNorm`. A merely finite measure would carry the factor `√(P univ)`
+    into every application, and the consumer is a law.
+
+  **And the Hölder estimate on the compensator increment is proved**, the same
+  day, in the two shapes the two applications have:
+
+  * `lintegral_enorm_le_rpow_mul_eLpNorm` —
+    `∫⁻ s in Set.Ioc a b, ‖Z s‖ₑ ≤ ofReal (b - a) ^ (1 - 1/q.toReal) *
+    eLpNorm Z q (ℙ|_S)` for `1 ≤ q` and any `S ⊇ Set.Ioc a b`. It is
+    `MeasureTheory.eLpNorm_le_eLpNorm_mul_rpow_measure_univ`
+    (`MeasureTheory/Function/LpSeminorm/CompareExp.lean:65`) at `p = 1`, the
+    window length entering as `μ Set.univ` of the restricted measure. The
+    ambient set is a parameter and not the window, because the hypothesis of
+    `𝓐 n` bounds the density on a horizon once while the window moves.
+  * `enorm_setIntegral_le_rpow_mul_eLpNorm` — the same read at the Bochner
+    integral, `‖∫ s in Set.Ioc a b, Z s‖ₑ ≤ …`, by
+    `MeasureTheory.enorm_integral_le_lintegral_enorm`. It asks **no**
+    integrability, which is why it is stated in `ℝ≥0∞`.
+
+  Neither mentions a probability measure, a filtration or a stopping time: they
+  are estimates on one real function over one window, read at a fixed sample
+  point before anything is integrated over `Ω`.
+
+  What is left of this item is therefore the **assembly**: the class `𝓐 n`
+  itself, the passage from the pathwise estimate to the bound on `∫_Ω` through
+  its `sup_n` hypothesis, and the choice of `N`, `δ` and `ε` in
+  `mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le`. Every analytic
+  ingredient it consumes now exists.
 * `isRelativelyCompact_of_approx`: if `E` is Polish, the domain of `A` contains
   an algebra separating points and vanishing nowhere, the approximation holds
   for each `(f,g) ∈ A`, and `{X n}` satisfies compact containment, then `{X n}`
