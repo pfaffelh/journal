@@ -11353,6 +11353,35 @@ has to be chosen once for all `n`. What stands:
   right continuous filtration, so a consumer without `[𝓕.IsRightContinuous]`
   passes to `𝓕₊` and must have its increment bound at `𝓕₊`-stopping times.
 
+  **Prior art for the general theorem, cited and not presupposed.** The début
+  theorem *without* right-openness — for an arbitrary progressively measurable
+  random set — is developed in the repository `RemyDegenne/brownian-motion`
+  (Apache-2.0, Copyright Rémy Degenne; locally at `~/Code/lean/brownian-motion`,
+  branch `master`, `314f04a`, 2026-08-01) in
+  `BrownianMotion/Choquet/Debut.lean` (581 lines, **no `sorry`**) with
+  `BrownianMotion/Choquet/MeasurableSection.lean` beside it (498 lines, no
+  `sorry`). Its `isStoppingTime_debut` goes the measure-theoretically heavy way,
+  through Choquet capacities and measurable sections
+  (`IsPavingAnalytic.nullMeasurableSet_debut_lt`), carries a `ProgMeasurableSet`
+  layer with its own lemmas for the traces on `Iic`, `Iio`, `Ico`, `Icc`, and
+  pays for the generality with completion — hence the `nullMeasurable` prefixes.
+  It also carries `leastGE`, `leastGT` and `hittingAfter'`.
+
+  **This roadmap deliberately does not need that.** The oscillation sets Aldous
+  hits are right open by construction (`isRightOpen_oscSet`) and the filtration
+  is right continuous by the choice recorded above, so
+  `isStoppingTime_of_measurableSet_lt_of_isRightContinuous` applies directly and
+  the Choquet layer never enters — which is why the point the roadmaps had
+  flagged as this milestone's most expensive cost one order-topology lemma. The
+  general theorem would also cost the completion of the filtration, which
+  nothing here has so far needed.
+
+  The reference is worth keeping for the case this roadmap does **not** cover: a
+  début of a random set that is not right open, or hitting times of general
+  sets. An implementer may consult it and, the licence permitting, draw on it
+  with its copyright header preserved; **nothing here should be accepted merely
+  because it matches that file.**
+
   **What remains before the recursion may be written down** is one hypothesis
   of `MeasureTheory.measurableSet_mem_oscSet`: that the anchor `c = X ∘ σ`
   agrees, on `{σ < q}`, with an `𝓕 q`-measurable function. That is the
