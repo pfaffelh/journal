@@ -46945,3 +46945,164 @@ zusammen **1413 MB** — die Arbeitsbäume von `check_master.py`, die nur bei
 `atexit` auf. Dieser Lauf hat den seinen entfernt und die übrigen
 **stehengelassen**, weil sie nicht seine sind. Sie sind regenerierbar und
 kosten nichts als Platz; ob sie fallen, entscheidet der Nutzer.
+
+### 2026-09-20, zehnter Lauf des Tages — zurück an Meilenstein 11, erster Punkt der Kette: die Hälfte von `isTight_map_postcomp_of_exists_martingale`, die **umsonst** ist, ist bewiesen und abgetrennt — und der Zeuge daneben sagt, daß die andere Hälfte alles trägt
+
+**Bearbeitet:** `MartingaleProblems` Meilenstein 11, erster Punkt der Kette,
+`isTight_map_postcomp_of_exists_martingale`, wie im Auftrag angeordnet und wie
+der Vorlauf vorgeschlagen hat. Kein Meilenstein 8, kein C.5/G, kein
+Meilenstein 14. **Acht** Deklarationen, alle in
+`TauCeti/SkorokhodSpace/Suggested.lean`, weil sie über den Pfadraum reden und
+nicht über Martingale.
+
+**Geprüft:** `scripts/check_master.py` meldet für die ganze Kette **0 Fehler,
+0 `sorry`, 0 veraltete Namen** (Mathlib `94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `v4.35.0-rc2`; 18 / 35 / 109 Warnungen, **dieselben Zahlen wie vor dem
+Lauf** — die neuen Deklarationen haben keine einzige hinzugefügt). Alle sieben
+hängen nach `check_axioms_master.py` an `propext`, `Classical.choice`,
+`Quot.sound` und an nichts sonst — die achte ebenso, eigens nachgeprüft.
+`scripts/check_cited_lines.py`: 318 von 318 gepaarten Fundstellen stimmen,
+0 tote.
+
+#### Der Befund in einem Satz
+
+> **`SkorokhodSpace.isTightMeasureSet_iff` hat zwei Konjunkte, und auf der
+> Bildseite ist das erste geschenkt. Der Punkt des Meilensteins ist deshalb
+> genau das zweite — und das zweite ist nicht nichts.**
+
+Eine beschränkte stetige Testfunktion `f : E →ᵇ ℝ` schickt jeden Wert in das
+**kompakte** Intervall `Set.Icc (-‖f‖) ‖f‖`. Die Fenstermenge eines Bildmaßes
+trägt also nicht bloß viel Masse, sondern die ganze — an jedem Fenster, für
+jedes Mitglied der Familie, und **ohne irgendeine Voraussetzung an die
+Familie**. Damit fällt die Straffheit der Bildgesetze mit der Modulusbedingung
+zusammen, und zwar in einer Äquivalenz **ohne Hypothese**.
+
+#### Die acht Deklarationen
+
+* `SkorokhodSpace.modulusBased_le_subdivisionOsc` — **eine** Unterteilung
+  genügt, und sie darf **nach** dem Pfad gewählt werden.
+  `SkorokhodSpace.modulusBased` ist ein Infimum über basierte Unterteilungen,
+  also ist das `iInf_le` und drei Zeichen Beweis; es stand trotzdem nirgends,
+  obwohl jede obere Schranke an den Modulus diese Gestalt hat. Der Zeuge unten
+  sagt, warum die Umkehrung falsch ist: eine **vorher** festgelegte Unterteilung
+  nützt nichts.
+* `SkorokhodSpace.isCompactContained_map_postcomp_of_measurableSet` — die
+  Aussage über beliebigem Index. Ihre **einzige** Voraussetzung ist, daß die
+  Fenstermenge von `D(ι, ℝ)` meßbar sei, und das ist die eine indexabhängige
+  Eingabe: die Schranke wandert zum Bildmaß über
+  `MeasureTheory.Measure.map_apply`, und `MeasureTheory.Measure.le_map_apply`
+  zeigt in die falsche Richtung — es schätzt ein Bildmaß nach **unten** ab. An
+  der Familie wird nichts verlangt: keine Endlichkeit, keine Straffheit, und
+  namentlich **nicht** die kompakte Einschließung der Familie selbst, die eine
+  echte Bedingung ist (`SkorokhodSpace.isCompactContained_const` verortet sie in
+  der Gleichmäßigkeit im Index).
+* `SkorokhodSpace.isCompactContained_map_postcomp_nnreal` und
+  `SkorokhodSpace.isCompactContained_map_postcomp_real` — die beiden Instanzen,
+  je **eine Zeile**, aus
+  `SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion_nnreal`
+  beziehungsweise `SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion`.
+  Kein zweiter Beweis.
+* `SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal` — unter kompakter
+  Einschließung **ist** Straffheit die Modulusbedingung, über dem Index, den die
+  Prozesse haben. Es ist `SkorokhodSpace.isTightMeasureSet_iff` mit erledigtem
+  erstem Konjunkt und mit der Familie über
+  `SkorokhodSpace.isTightMeasureSet_map_extendNNReal_iff` gekreuzt; nichts aus
+  den Meilensteinen 7 und 8 wird wiederholt. Der Modulus bleibt eine Größe des
+  **fortgesetzten** Pfades — `SkorokhodSpace.isCompact_closure_iff` ist über
+  einem Index mit Lücken falsch, und ein `ℝ≥0`-eigener Modulus wird nicht
+  eingeführt.
+* `SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` — die beiden
+  zusammengesetzt, also eine Äquivalenz **ohne jede Voraussetzung**. Das ist die
+  Gestalt, in der Meilenstein 11 liest.
+* `SkorokhodSpace.twoJumpImageLaw`,
+  `SkorokhodSpace.isCompactContained_twoJumpImageLaw`,
+  `SkorokhodSpace.not_isTightMeasureSet_twoJumpImageLaw` — der Zeuge. Die zwei
+  Sprünge des Meilensteins 8 im Abstand `(n+1)⁻¹`, gelesen durch die
+  abgeschnittene Distanz zum Wert **zwischen** ihnen — die Testfunktion, die
+  beide Sprünge auf einmal sieht. Die Familie hat kompakte Einschließung in
+  einer Zeile und ist **nicht straff**. Die Äquivalenz ist also keine
+  Trivialität, und die Größe, die hier scheitert, ist genau die, die der Punkt
+  des Meilensteins aus seiner Martingalvoraussetzung zu erzeugen hat.
+
+#### Was damit über den Punkt des Meilensteins feststeht
+
+Zu zeigen bleibt, und zwar **ausschließlich**:
+
+> für alle `ε, η > 0` und jeden Fensterradius `m` gibt es `δ > 0` mit
+> `P n {modulusBased 0 m (extendNNReal (postcomp f (X n ·))) δ ≥ η} ≤ ε`
+> für **jedes** `n`.
+
+Und es ist zu betonen, weil es sich leicht verwechselt: die kompakte
+Einschließung, die ein Verbraucher dieses Meilensteins mitbringt
+(`UniformCompactContainment`), wird an der **ursprünglichen** Familie
+verbraucht, in `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal`,
+und nicht an den Bildern. Auf der Bildseite ist nichts zu zahlen.
+
+#### Zwei Mathlib-Befunde, beide gemessen
+
+* **`MeasureTheory.Measure.map_dirac` ist auf einem Pfadraum unbrauchbar.** Es
+  verlangt `MeasurableSingletonClass` von **beiden** Räumen, und die
+  Instanzensuche danach über `D(ℝ, ℝ × ℝ)` **terminiert nicht** — zwei Millionen
+  Heartbeats ohne Antwort, und die Fehlermeldung zeigt auf den Satzkopf und
+  nicht auf die Instanz. Zu nehmen ist `MeasureTheory.Measure.map_dirac'`
+  (`Mathlib/MeasureTheory/Measure/Dirac/Basic.lean:36`), das statt dessen die
+  Meßbarkeit der Abbildung verlangt; `SkorokhodSpace.measurable_postcomp`
+  liefert sie. Das hat in diesem Lauf eine knappe halbe Stunde gekostet, und es
+  steht deshalb auch in `SkorokhodSpace/README.md`, Meilenstein 9.
+* `MeasureTheory.Measure.le_dirac_apply`
+  (`Mathlib/MeasureTheory/Measure/Dirac/Def.lean:34`) ist die andere Hälfte, und
+  sie ist der Grund, warum der Zeuge ohne Meßbarkeit der Modulusmenge auskommt:
+  `s.indicator 1 a ≤ dirac a s` gilt für **beliebiges** `s`. Die Modulusmengen
+  gehören zu denen, die diese Roadmap nirgends meßbar nennt, und das bleibt so.
+
+#### Was in die Roadmaps eingetragen ist
+
+`SkorokhodSpace/README.md`, Meilenstein 9: neuer Block „Where compact
+containment is free, and what is left when it is" mit den sieben Deklarationen,
+den beiden Mathlib-Befunden und dem Zeugen. `MartingaleProblems/README.md`,
+Meilenstein 11, am Punkt `isTight_map_postcomp_of_exists_martingale`: was die
+Schlußfolgerung kostet, gemessen — ein Konjunkt umsonst, das andere die ganze
+Aufgabe —, samt der ausgeschriebenen Zielgröße und der Warnung, die beiden
+kompakten Einschließungen nicht zu verwechseln.
+
+#### Vorschlag für den nächsten Lauf
+
+**Weiter an demselben Punkt, und jetzt an seiner analytischen Hälfte:
+`modulusBased_le_of_forall_stoppingTime` — die Aldous-Bedingung schlägt in die
+Modulusbedingung um.**
+
+Die Aussage, benannt und nicht als Richtung:
+
+> Ist `X : Ω → D(ℝ, E)` adaptiert und gilt für jede Stoppzeit `τ ≤ T` und jedes
+> `θ ≤ δ` die Schranke `P (d (X (τ+θ)) (X τ) > ε) ≤ γ`, so ist
+> `P (modulusBased 0 m (X ·) δ' ≥ 2 ε) ≤ c (T, δ, ε) · γ` mit einem `δ'`, das
+> allein von `δ`, `T` und `ε` abhängt.
+
+**Worauf sie ruht, und es steht alles da.** Der Beweis ist der, den
+`SkorokhodSpace/README.md`, Meilenstein 10, seit dem 2026-09-19 im Umriß
+ausgeschrieben hat, damit ihn kein Lauf neu erschließt: die Trefferzeiten
+`τ 0 = ⊥`, `τ (k+1) = inf {t > τ k | d (X t) (X (τ k)) > ε}` **sind** die
+Unterteilung, die Zellenoszillation ist dann höchstens `2 ε`, und der einzige
+Inhalt ist, daß sie nicht dichter als `δ` liegen — was die Hypothese ein
+**zweites Mal** liefert, an der Stoppzeit `min (τ (k+1)) (τ k + δ)`. Die
+Eingaben: `SkorokhodSpace.modulusBased_le_subdivisionOsc` aus diesem Lauf für
+den Schritt von der Unterteilung zum Modulus, die Stoppzeitmaschinerie aus
+Meilenstein 9 von **MartingaleProblems** (optionales Sampling in stetiger Zeit,
+seit dem 2026-09-10), und `SkorokhodSpace.IsSubdivisionBased` für die Form der
+Unterteilung.
+
+**Warum jetzt und nicht später.** Sie ist die **einzige** fehlende Verbindung
+zwischen dem, was eine Doob-Ungleichung liefert — eine Schranke an Zuwächse an
+Stoppzeiten — und dem, was dieser Lauf als die ganze verbleibende Aufgabe des
+Meilensteinpunkts ausgewiesen hat. Ohne sie ist die Kette von der
+Martingalapproximation zur Straffheit an genau dieser Stelle unterbrochen; mit
+ihr zerfällt `isTight_map_postcomp_of_exists_martingale` in zwei Stücke, von
+denen das erste (Doob) steht und das zweite (die Aldous-Bedingung aus der
+Approximation) eine reine Rechnung an Stoppzeiten ist.
+
+**Und der Preis ist im Umriß schon benannt**: die Aldous-Bedingung ist
+hinreichend und nicht notwendig, sie scheitert an **festen**
+Unstetigkeitsstellen, und der Zeuge dafür steht in Meilenstein 10 (die
+deterministische Stufe). Das ist kein Hindernis für diesen Weg, weil die
+Implikation nur in der Richtung „Aldous ⟹ Modulus" gebraucht wird; es ist aber
+im Doc-Kommentar zu sagen, damit niemand die Umkehrung liest.

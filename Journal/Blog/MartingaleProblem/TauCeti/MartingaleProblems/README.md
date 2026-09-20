@@ -11282,6 +11282,40 @@ has to be chosen once for all `n`. What stands:
   too.** Its approximability condition is already a lower integral in `ℝ≥0∞`
   for the same reason — a real valued supremum vanishes where the path escapes
   — so the two fit without a `toReal` anywhere between them.
+
+  **What the conclusion costs, measured 2026-09-20: one of its two conjuncts is
+  free, and the item is therefore exactly the other one.** The tightness this
+  item asserts is read through `SkorokhodSpace.isTightMeasureSet_iff`, whose
+  first conjunct is compact containment and whose second is the modulus
+  condition. On the **image** side the first is free: `f : E →ᵇ ℝ` sends every
+  value into `Set.Icc (-‖f‖) ‖f‖`, so the window set of the image law carries the
+  whole mass. That is
+  `SkorokhodSpace.isCompactContained_map_postcomp_of_measurableSet` of
+  **SkorokhodSpace** Milestone 9, with **no hypothesis on the family at all**,
+  and its two instances
+  `SkorokhodSpace.isCompactContained_map_postcomp_nnreal` and
+  `SkorokhodSpace.isCompactContained_map_postcomp_real`.
+
+  What this item therefore has to produce, and the **only** thing it has to
+  produce, is the right hand side of
+  `SkorokhodSpace.isTightMeasureSet_map_postcomp_iff`:
+
+  > for every `ε, η > 0` and every window radius `m` there is `δ > 0` with
+  > `P n {modulusBased 0 m (extendNNReal (postcomp f (X n ·))) δ ≥ η} ≤ ε`
+  > for **every** `n`.
+
+  That equivalence carries no hypothesis whatever, so nothing of the consumer's
+  compact containment is spent here; `UniformCompactContainment` is spent on the
+  **original** family, in
+  `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal`, and the two must
+  not be confused.
+
+  **And the remaining half is not a formality.**
+  `SkorokhodSpace.not_isTightMeasureSet_twoJumpImageLaw` exhibits a family of
+  image laws under a bounded post-composition — two jumps approaching each other,
+  read through the clipped distance to the value between them — which has compact
+  containment in one line and is not tight. The quantity that fails there is
+  exactly the one the martingale hypothesis of this item is for.
 * `isRelativelyCompact_of_approx`: if `E` is Polish, the domain of `A` contains
   an algebra separating points and vanishing nowhere, the approximation holds
   for each `(f,g) ∈ A`, and `{X n}` satisfies compact containment, then `{X n}`

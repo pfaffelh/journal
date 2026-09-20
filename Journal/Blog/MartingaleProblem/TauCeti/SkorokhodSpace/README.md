@@ -4013,6 +4013,72 @@ the right endpoint of a window being exactly what a dense set does not reach —
 enlarges the window instead and reads the half open form. That is free wherever
 the hypothesis is quantified over all horizons.
 
+**Where compact containment is free, and what is left when it is**, 2026-09-20,
+added for **MartingaleProblems** Milestone 11 and stated here because it is about
+the path space.
+
+`SkorokhodSpace.isTightMeasureSet_iff` has two conjuncts, and for the *image* of
+a family under a bounded post-composition the first one costs nothing: a bounded
+continuous `h : E →ᵇ ℝ` sends every value into the compact interval
+`Set.Icc (-‖h‖) ‖h‖`, so the window set of an image law carries the whole mass.
+
+* `SkorokhodSpace.modulusBased_le_subdivisionOsc` — and before any of it, the
+  statement that says in which shape the *second* conjunct is ever produced:
+  `modulusBased` is an infimum over based subdivisions, so naming **one** of them
+  bounds it. It is `iInf_le` and three characters of proof, and it stood
+  nowhere, although every upper bound on the modulus has that shape. The witness
+  at the end of this block says why the converse reading is false: a subdivision
+  fixed **before** the path is of no use.
+
+* `SkorokhodSpace.isCompactContained_map_postcomp_of_measurableSet` — the
+  statement, over an arbitrary index and with **no hypothesis at all on the
+  family**: not finiteness, not tightness, and in particular not compact
+  containment of the family itself, which is a genuine condition. Its one
+  hypothesis is that the window set of `D(ι, ℝ)` be measurable, and that is the
+  only index-specific input, because the bound travels to the image law along
+  `MeasureTheory.Measure.map_apply` — `MeasureTheory.Measure.le_map_apply` bounds
+  an image measure from below and is of no use here. The two indices are served
+  by `SkorokhodSpace.isCompactContained_map_postcomp_nnreal` and
+  `SkorokhodSpace.isCompactContained_map_postcomp_real`, one line each, and not
+  by a proof each.
+* `SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal` — with compact
+  containment in hand tightness **is** the modulus condition, over the index the
+  processes have. It restates nothing: it is `isTightMeasureSet_iff` with the
+  first conjunct discharged and the family crossed by
+  `SkorokhodSpace.isTightMeasureSet_map_extendNNReal_iff`. The modulus stays a
+  quantity of the *extended* path, `isCompact_closure_iff` being false over an
+  index with gaps.
+* `SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` — the two composed, and
+  hence an equivalence **with no hypothesis whatever**: the laws of the bounded
+  real images are tight if and only if their moduli are small in probability,
+  uniformly. This is the shape Milestone 11 of **MartingaleProblems** reads, and
+  it fixes what its first item has to produce from a martingale approximation.
+
+**And the remaining half is not nothing**, which is what the witness says.
+`SkorokhodSpace.twoJumpImageLaw` is the family of Dirac laws at the two jumps of
+Milestone 8 at distance `(n+1)⁻¹`, read through the clipped distance to the value
+between them — the test function that sees both jumps at once, and the one on
+which the coordinatewise route was refuted. It has compact containment by the
+theorem above, in one line
+(`SkorokhodSpace.isCompactContained_twoJumpImageLaw`), and it is **not tight**
+(`SkorokhodSpace.not_isTightMeasureSet_twoJumpImageLaw`). So the equivalence is
+not a triviality: the quantity that fails here is exactly the one a run at
+Milestone 11 has to produce.
+
+**A Mathlib finding from that proof, and it costs a run an hour if it is not
+written down.** `MeasureTheory.Measure.map_dirac` asks
+`MeasurableSingletonClass` of **both** spaces, and the instance search for it on
+`D(ℝ, ℝ × ℝ)` does not terminate — two million heartbeats without an answer, and
+the error points at the theorem header rather than at the instance.
+`MeasureTheory.Measure.map_dirac'`
+(`Mathlib/MeasureTheory/Measure/Dirac/Basic.lean:36`), which asks measurability
+of the map instead, is the one to take on a path space.
+`MeasureTheory.Measure.le_dirac_apply`
+(`Mathlib/MeasureTheory/Measure/Dirac/Def.lean:34`) is the other half,
+and it is what lets the measure of a modulus set be bounded below **without** the
+set being measurable — the modulus sets are among those this roadmap never
+asserts measurable.
+
 **Acceptance example.** `SkorokhodSpace.extendNNReal (jumpPathD …)` of the
 roadmap **MartingaleProblems**, Milestone 6: the path law of the jump
 construction, which lives on `D(ℝ≥0, E)`, read on `D(ℝ, E)`. It is the family
@@ -4029,10 +4095,17 @@ whose hypothesis is there discharged on data.
 ## Milestone 10: Aldous' tightness criterion, and what it does not see
 
 *Added 2026-09-19 at the author's request, out of a conversation rather than a
-run. Optional: nothing in **MartingaleProblems** depends on it, and the route to
-tightness that this roadmap actually takes is Milestone 7 plus Milestone 8. It is
-here because it is the criterion practitioners reach for, and because writing it
-down settles what our generality costs and what it does not.*
+run, as the criterion practitioners reach for and as a record of what our
+generality costs and what it does not.*
+
+*And since 2026-09-20 it is not an aside: one statement of it,
+`SkorokhodSpace.modulusBased_le_of_forall_stoppingTime`, is the link
+**MartingaleProblems** Milestone 11 reads, the tenth run of that day having
+measured that the whole remaining content of
+`isTight_map_postcomp_of_exists_martingale` is the modulus condition. The route
+to tightness itself is unchanged — Milestone 7 plus Milestone 8 — and what this
+milestone supplies is the passage from an increment bound at stopping times,
+which a Doob estimate gives, to the modulus.*
 
 **The criterion.** For càdlàg processes `X n` adapted to filtrations `𝓕 n`, with
 compact containment, and with
@@ -4103,6 +4176,25 @@ breaks at fixed discontinuities, and only the first half is dispensable. This is
 the same role Billingsley's modified modulus `w''` plays, which takes the
 *minimum* of the two one-sided oscillations and is therefore blind to one jump
 per window; our infimum over subdivisions achieves it directly.
+
+**The one statement of this milestone that the chain actually needs, named**,
+2026-09-20:
+
+* `SkorokhodSpace.modulusBased_le_of_forall_stoppingTime` — the implication
+  `Aldous ⟹ modulusBased small in probability`, which is the first half of the
+  chain above and the only half that is not already proved elsewhere. For a
+  process adapted to `𝓕`, if every stopping time `τ ≤ T` and every `θ ≤ δ`
+  satisfy `P (d (X (τ+θ)) (X τ) > ε) ≤ γ`, then
+  `P (modulusBased 0 m (X ·) δ' ≥ 2 ε) ≤ c (T, δ, ε) · γ` for a `δ'` depending on
+  `δ`, `T` and `ε` alone. Its proof is the outline above; its step from a named
+  subdivision to the modulus is `SkorokhodSpace.modulusBased_le_subdivisionOsc`
+  of Milestone 9, and its stopping time machinery is Milestone 9 of
+  **MartingaleProblems**. It is what
+  `isTight_map_postcomp_of_exists_martingale` of **MartingaleProblems**
+  Milestone 11 consumes: that item's whole remaining content is the modulus
+  condition, and a Doob estimate delivers exactly the increment bound above.
+  Its doc comment must say that the implication is one way only — the
+  deterministic step below refutes the converse.
 
 **If an atom-tolerant Aldous is wanted**, the clause is small and needs no new
 notion. The atom set `A` of a clock is deterministic and countable — from
