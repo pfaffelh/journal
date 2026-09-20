@@ -49347,3 +49347,241 @@ ist in `L¹` nicht klein" in Lean bauen (`Ω = Bool` mit
 `AtomWitness.coinMeasure`, Filtration `⊥` unterhalb von `1` und `⊤` darüber).
 Damit wäre die Notwendigkeit der Voraussetzung an `f²` ein Satz statt eines
 Absatzes.
+
+### 2026-09-20, zweiundzwanzigster Lauf des Tages — die Quadratidentität am Prozeß steht, und mit ihr ist am ersten Punkt der Kette **keine analytische Größe mehr offen**; beim Nachrechnen des Zusammenbaus, den der Vorlauf „Buchhaltung" genannt hat, kommt aber heraus, daß er **so nicht aufgeht** — die naive Zusammensetzung divergiert, und der Grund ist benennbar
+
+**Bearbeitet:** der Vorschlag des einundzwanzigsten Laufs, die Quadratidentität
+am Prozeß — also weiter am ersten Punkt der Kette des Meilensteins 11 von
+`MartingaleProblems`, wie angeordnet. Kein Meilenstein 8, kein Meilenstein 14,
+kein C.5/G. **Neun** neue Deklarationen in
+`TauCeti/MartingaleProblems/Suggested.lean`: drei zur Hauptsache — eine im
+vorhandenen Abschnitt `SquareToIncrement`, zwei in einem neuen Abschnitt
+`SquareAtProcess` —, und sechs für den Nebenpunkt, den Zeugen im Block
+`AtomWitness` (siehe unten).
+
+**Geprüft:** `scripts/check_master.py` meldet für die ganze Kette **0 Fehler,
+0 `sorry`, 0 veraltete Namen** (Mathlib `94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `v4.35.0-rc2`). Die Warnungen sind 18 / 35 / **112**; vor dem Lauf waren es
+18 / 35 / 109, eigens gemessen. Die drei neuen stammen sämtlich vom Zeugen — nach
+den drei Hauptdeklarationen stand die Zahl noch bei 109, ebenfalls gemessen.
+**Zu welcher Familie sie gehören, ist nicht festgestellt**: `check_master.py`
+zählt Warnungen nur, und der Lauf endete, ehe sie einzeln aufgeschlüsselt waren.
+Das ist als offener Punkt zu lesen und nicht als Vermutung; wer den Zeugen
+anfaßt, sehe zuerst nach. Alle neun hängen nach `check_axioms_master.py` auf
+`propext`, `Classical.choice`, `Quot.sound` und auf nichts sonst. `scripts/check_cited_lines.py`: **355 von 355** gepaarten
+Fundstellen stimmen (zwei mehr als vor dem Lauf, es sind die zwei neuen), 0 tote,
+0 verschoben. `check_duplicates.py` und
+`check_own_names.py` finden zu den neuen Namen nichts (2621 eigene
+Deklarationen, neun mehr als vor dem Lauf). `check_negatives.py`:
+**48** Behauptungen, 0 mit unerwarteten Treffern — unverändert, denn dieser Lauf
+stellt keine neue Behauptung über Mathlibs Bestand auf.
+
+#### Was gebaut ist
+
+* `ofReal_integral_sq_sub_le` — EK (9.26) selbst, am **Prozeß**:
+
+  ```
+  ofReal (∫ (V b - V a)²) ≤ (‖∫ (Y' b - Y' a)‖ₑ + 2 ε')
+                            + 2 (‖∫ V a · (Y b - Y a)‖ₑ + ofReal c · (2 ε))
+  ```
+
+  für `Y` nahe `V`, `Y'` nahe `V²` und `‖V‖ ≤ c`. Die reelle Identität
+  `(v_b − v_a)² = (v_b² − v_a²) − 2 v_a (v_b − v_a)` ist `ring`; der Übergang
+  nach `ℝ≥0∞` ist `Real.ofReal_le_enorm`
+  (`Analysis/Normed/Group/Real.lean:118`) und `enorm_sub_le`. Beide rechten
+  Terme sind **derselbe** Satz, `enorm_integral_mul_sub_le_of_biSup_le`, einmal
+  am Gewicht `1` und einmal am Gewicht `V (a ·) ·`. Deshalb trägt das Fenster
+  hier keine Abzählbarkeit, keine Topologie und keine Rechtsstetigkeit.
+
+* `lintegral_ofReal_dist_le_sqrt_toReal_of_le` — die Brücke, die zwischen den
+  beiden fehlte, und der Vorlauf hatte sie nicht gesehen:
+  `lintegral_ofReal_dist_le_sqrt_integral_sq` liest unter der Wurzel ein
+  **Bochner**-Integral, während jede Abschätzung dieses Meilensteins eine
+  Schranke in `ℝ≥0∞` liefert. Sie ist `ENNReal.ofReal_le_iff_le_toReal`
+  (`Basic/ENNReal/Real.lean:262`), und `S ≠ ⊤` ist geschuldet, weil
+  `toReal ⊤ = 0` die Konklusion sonst falsch machte.
+
+* `lintegral_ofReal_dist_le_sqrt_of_biSup_le` — beide zusammengesetzt, in der
+  Gestalt, die `mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le`
+  integriert.
+
+#### Drei Befunde
+
+* **Die Korrektur des zwanzigsten Laufs ist nicht bloß vermerkt, sondern
+  bezahlt.** Jener Lauf hatte befunden, daß der zweite Approximant nicht das
+  Quadrat des ersten ist und `integral_sq_stoppedValue_sub_eq` deshalb ein Satz
+  bleibt, den der Verbraucher nicht aufrufen kann. Die Auflösung ist, das
+  Quadrat **am Prozeß** zu nehmen statt am Approximanten: dort ist es ein
+  Quadrat per Definition, die beiden Approximanten bleiben unverbunden, und
+  jeder trägt seinen eigenen Fehler `ε` beziehungsweise `ε'`. Die Aussage weiß
+  von `f`, von `X` und von `E` nichts.
+
+* **Die Integrierbarkeit des Quadrats ist keine Voraussetzung**, und damit ist
+  die Vorfrage des Vorlaufs beantwortet — sie lautete, woher sie kommt. Die
+  Antwort ist die Schranke an `V`, die der Satz ohnehin trägt: mit `‖V‖ ≤ c` ist
+  der Zuwachs durch `2c` beschränkt, und `MeasureTheory.Integrable.mono'`
+  (`MeasureTheory/Function/L1Space/Integrable.lean:105`) gegen die Konstante
+  macht aus der Meßbarkeit, die Cauchy--Schwarz sowieso verlangt, die
+  Integrierbarkeit. Am Quelltext nachgesehen, nicht am Papier: der Verbraucher
+  hat `f : E →ᵇ ℝ` (Meilenstein 11, Wortlaut der Approximierbarkeitsbedingung),
+  also `c = ‖f‖`.
+
+* **`S` ist Parameter und nicht die Summe selbst.** Der Verbraucher hält seine
+  Schranke in einer Gestalt, die von `δ`, `q`, `K` und den beiden `ε` abhängt und
+  nicht von den beiden Integralen, und *diese* Schranke ist es, die er gegen
+  Null treiben muß.
+
+#### Der wichtigste Befund, und er ist ein Einwand gegen die eigene Roadmap: **der Zusammenbau ist keine Buchhaltung**
+
+Der Vorlauf hat geschrieben, was nach diesem Punkt komme — „`N ≈ u/δ`, die Summe
+der `N` Fensterschranken, `tendsto_ofReal_rpow_mul_nhdsGT_zero`" — sei
+„Buchhaltung mit fertigen Bausteinen". Beim Zusammenrechnen der Größenordnungen
+geht das **nicht auf**, und zwar schon bei der naiven Zusammensetzung.
+
+Der Verbraucher ist
+`mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le` (Zeile 42491), und
+er sagt
+
+```
+ofReal ε * μ {modulusBased > ε} ≤ 2 * ∑_{k<N} ∫⁻ ofReal (dist (X b_k) (X a_k)),
+```
+
+mit `N` aus `hN : u.toNNReal ≤ N • δ.toNNReal`, also `N ≈ u/δ`. Jeder Summand
+ist nach diesem Lauf höchstens `ofReal √(S.toReal)` mit
+`S = O(δ^(1−1/q)) + O(ε_approx)`. Also ist die rechte Seite
+
+```
+(u/δ) · √(C · δ^(1−1/q))  =  u √C · δ^((1−1/q)/2 − 1),
+```
+
+und der Exponent ist **negativ**, weil `(1−1/q)/2 < 1/2 < 1`. Die Schranke
+divergiert für `δ → 0`, statt zu verschwinden.
+
+**Und die naheliegende Reparatur trägt auch nicht.** Zieht man die Wurzel erst
+*nach* der Summe — Cauchy--Schwarz über `k` mit Zählmaß —, so ist
+`∑_k ∫ |Δ_k| ≤ √N · √(∑_k ∫ Δ_k²)`, und `∑_k ∫ Δ_k²` ist wegen der
+**Disjunktheit** der Fenster `O(1)`: die Kompensatorzuwächse summieren sich über
+disjunkte Fenster zu höchstens `∫⁻ ∫_{(0,u]} |Z| ≤ u^(1−1/q) K`, mit Hölder über
+`k` ebenso — `δ^(1−1/q) · N^(1−1/q) · K = (δN)^(1−1/q) · K = u^(1−1/q) · K`, das
+`δ` kürzt sich weg. Heraus kommt `O(√N) = O(δ^(−1/2))` — besser, aber immer noch
+divergent.
+
+**Woran es also liegt, benannt statt geraten.** Beide Rechnungen bezahlen den
+Faktor `N` dafür, daß über die `N` Fenster eine **Vereinigungsschranke** gelegt
+wird. Der klassische Beweis von Aldous tut das nicht; der Umriß in
+`SkorokhodSpace/README.md`, Meilenstein 10, nennt die Stelle selbst — „eine
+**zweite Anwendung der Voraussetzung an einer zufälligen Zeit**". Die
+Voraussetzung wird nicht an jedem `k` einzeln gelesen, sondern an *einer*
+Stoppzeit. Damit entfällt der Faktor `N`, und genau dieser Schritt ist es, den
+unsere Kette noch nicht hat: `SkorokhodSpace.modulusBased_le_of_forall_stoppingTime`
+steht in **keiner** der drei `Suggested.lean` (nachgesehen 2026-09-20), sondern
+nur in der Roadmap.
+
+**Was das *nicht* heißt.** Es heißt nicht, daß dieser Lauf umsonst war: die drei
+Aussagen sind genau die Abschätzung an **einem** Paar `(a, b)`, und das ist die
+Gestalt, die der Weg über die zufällige Zeit braucht — dort wird sie einmal
+gelesen und nicht `N`-mal. Es heißt auch nicht, daß der Punkt scheitert. Es
+heißt, daß zwischen dem heutigen Stand und
+`isTight_map_postcomp_of_exists_martingale` **ein Satz** liegt und nicht eine
+Rechnung, und daß die Roadmap das bisher anders gesagt hat.
+
+**Und es ist eine Rechnung auf Papier, kein Lean-Beweis.** Sie ist als solche
+gekennzeichnet; widerlegt wird sie am billigsten dadurch, daß jemand den
+fehlenden Gewinn benennt. Der nächste Lauf tut genau das, ehe er etwas baut.
+
+#### Wo der Punkt jetzt steht
+
+| Größe | Stand |
+| --- | --- |
+| alles Deterministische bis zur Modulabschätzung | steht |
+| Markov auf den Lückenereignissen, über `N` summiert | steht |
+| optionales Sampling zwischen zwei Stoppzeiten | steht |
+| Martingalzuwachs gegen ein Gewicht aus der Vergangenheit | steht |
+| Zuwachs → Kompensatorzuwachs (Quasimartingal) | steht |
+| Quadratidentität, Cauchy–Schwarz, Hölder am Kompensator | steht |
+| die Klasse `𝓐 n` als Prädikat samt fünf Folgerungen | steht |
+| die Approximationsfehler-Hypothese, ungewichtet und gewichtet | steht |
+| die **Quadratidentität am Prozeß** — (9.26) selbst | steht, dieser Lauf |
+| die Brücke von der `ℝ≥0∞`-Schranke zurück zu Cauchy–Schwarz | steht, dieser Lauf |
+| beide zusammengesetzt, in der Gestalt des Verbrauchers | steht, dieser Lauf |
+| `modulusBased_le_of_forall_stoppingTime` (Aldous, zufällige Zeit) | **fehlt**, siehe oben |
+| der Zusammenbau: `N`, `δ`, `ε` | **offen**, und nicht Buchhaltung |
+
+#### Vorschlag für den nächsten Lauf
+
+**Zuerst die Vorfrage, dann der Satz. Die Vorfrage ist eine Rechnung und kostet
+keinen Beweis:** nachprüfen, ob die Divergenz oben wirklich besteht, indem man
+die Konklusion von `mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le`
+mit der Konklusion von `lintegral_ofReal_dist_le_sqrt_of_biSup_le` an einem
+Summanden zusammensetzt und die `δ`-Potenzen zählt. Sie ist in einer halben
+Stunde entschieden, und von ihrer Antwort hängt ab, ob der nächste Bauschritt
+`N` heißt oder anders.
+
+**Und der Satz, wenn sie besteht:
+`SkorokhodSpace.modulusBased_le_of_forall_stoppingTime`.** Er steht seit dem
+2026-09-19 ausformuliert in `SkorokhodSpace/README.md`, Meilenstein 10, samt
+Beweisumriß, und er ist die Stelle, an der der Faktor `N` verschwindet:
+
+> Ist `X` an `𝓕` adaptiert und gilt `P (d (X (τ+θ)) (X τ) > ε) ≤ γ` für **jede**
+> Stoppzeit `τ ≤ T` und jedes `θ ≤ δ`, so ist
+> `P (modulusBased 0 m X δ' ≥ 2 ε) ≤ c (T, δ, ε) · γ` mit einem `δ'`, das nur von
+> `δ`, `T` und `ε` abhängt.
+
+**Worauf er ruht, und es steht fast alles da.** Die Aldous-Rekursion `oscHitSeq`
+samt ihren drei Voraussetzungen ist seit dem dreizehnten und vierzehnten Lauf
+dieses Tages gebaut, die deterministische Hälfte seit dem elften, der Ersatz für
+den fehlenden Débutsatz seit dem zwölften. Was fehlt, ist der eine
+wahrscheinlichkeitstheoretische Schritt: die Voraussetzung an
+`σ = min (τ (k+1)) (τ k + δ)` zu lesen statt an jedem `k` einzeln. Die
+Dreiecksungleichung dafür steht im Umriß ausgeschrieben.
+
+**Warum er jetzt dran ist.** Er ist nach dem Befund oben der **einzige** Satz
+zwischen dem heutigen Stand und dem ersten Punkt der Kette, und alles, was dieser
+Lauf gebaut hat, ist genau seine Eingabe: die Abschätzung an *einem* Paar von
+Zeiten. Solange er fehlt, ist der erste Punkt nicht durch Buchhaltung
+erreichbar, und das wäre beim Zusammenbau erst aufgefallen.
+
+**Die Verschiebung zwischen den beiden Roadmaps ist dabei mitzunehmen:** der Satz
+steht heute unter **SkorokhodSpace** Meilenstein 10, und jener Meilenstein sagt
+selbst, er gehöre womöglich nach **MartingaleProblems**, „where the stopping time
+machinery of its Milestone 9 already stands". Nach diesem Lauf ist das
+entschieden: sein einziger Verbraucher steht dort, seine Eingaben stehen dort,
+und die Filtration kommt in seiner Aussage vor. Der nächste Lauf trage ihn
+dorthin um und lasse in `SkorokhodSpace` einen Verweis stehen.
+
+*(Der zweite, kleinere Punkt, der hier bisher stand — der Zeuge „der
+Martingalanteil ist in `L¹` nicht klein" — ist in diesem Lauf mit erledigt und
+steht unten.)*
+
+#### Der Nebenpunkt, und er ist erledigt: der Zeuge des achtzehnten Laufs steht in Lean
+
+Der achtzehnte Lauf hatte in einem Absatz begründet, warum die letzte offene
+Größe des ersten Punktes weder von Doob noch von Hölder getragen wird: der
+**Martingalanteil** des Zuwachses ist in `L¹` nicht klein, nur sein Integral
+gegen ein Gewicht aus der Vergangenheit. Das ist jetzt ein Satz, auf derselben
+Münze, die der Block `AtomWitness` ohnehin führt, und ohne eine einzige neue
+Konstruktion — `coinMeasure`, `coinFiltration` und `integral_coinMeasure`
+standen schon da.
+
+* `coinMartingale u` — die bei `u` geworfene, zentrierte Münze: `0` vor `u`,
+  `±1` ab `u`.
+* `integral_coinMartingale`, `martingale_coinMartingale` — sie ist zentriert und
+  ein Martingal über `coinFiltration u`. Zwei Fälle und keine Theorie, wie bei
+  `isMPSolution_coinProcess`: ab `u` ist die Filtration alles und der Prozeß
+  konstant, davor ist sie `⊥` und die bedingte Erwartung der Mittelwert.
+* `integral_abs_coinMartingale_le` — `sup_t 𝔼|M t| ≤ 1`. Mit dem Kompensator `0`
+  sind damit **beide** Bedingungen der Klasse `𝓐 n` erfüllt, für jeden
+  Exponenten und mit `K = 0`.
+* `integral_abs_coinMartingale_sub_eq_one` — und trotzdem ist
+  `𝔼|M t − M s| = 1`, sobald `s` unter `u` und `t` bei oder über `u` liegt.
+* `exists_integral_abs_coinMartingale_sub_eq_one` — über `ℝ≥0` und mit **fest
+  gewähltem** `u = 1`: zu *jedem* `δ > 0` gibt es ein Zeitpaar im Fenster der
+  Länge `δ`, über dem der `L¹`-Zuwachs `1` ist. Das Martingal hängt nicht von
+  `δ` ab, nur das Fenster wandert — und genau das macht den Zeugen zu einer
+  Aussage über **ein** Mitglied der Klasse statt über eine Familie.
+
+**Was er belegt.** Keine Voraussetzung der Klasse beschränkt den `L¹`-Zuwachs
+über ein kurzes Fenster. Die Quadratidentität dieses Laufs ist also keine
+Bequemlichkeit, sondern der einzige Weg, und die Voraussetzung an `f²` — die
+Abgeschlossenheit der approximierbaren Funktionen unter Produkten — ist damit
+nicht mehr durch einen Absatz begründet, sondern durch einen Satz.

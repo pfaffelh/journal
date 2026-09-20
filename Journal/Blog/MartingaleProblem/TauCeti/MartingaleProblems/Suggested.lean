@@ -6730,6 +6730,119 @@ theorem isMPSolution_coinProcess (u : ι) (hu : ¬ u ≤ (⊥ : ι)) :
       rw [hf, hbefore s hs, condExp_bot]
       exact Filter.Eventually.of_forall fun _ ↦ hzero t
 
+/-! #### The witness that a martingale increment is not small in `L¹`
+
+The eighteenth run of 2026-09-20 found that the last open quantity of the first item of
+Milestone 11 cannot be bounded by Doob or by Hölder, because the **martingale part** of the
+increment is not small in `L¹` at all -- only its integral against a bounded weight from the past
+is.  That was an argument in a paragraph; these five declarations make it a theorem, on the same
+coin the rest of this block uses.
+
+`coinMartingale u` is a martingale over `coinFiltration u` with `sup_t 𝔼|M t| ≤ 1` and
+compensator `0`, so both conditions of \EK's class `𝓐 n` hold of the pair `(M, 0)` with any `q`
+and `K = 0`.  Yet `𝔼|M t - M s| = 1` whenever `s` lies below `u` and `t` at or above it, and
+`exists_integral_abs_coinMartingale_sub_eq_one` chooses such a pair **inside a window of length
+`δ`, for every `δ > 0`, with one and the same martingale**.  So no hypothesis of that class
+bounds the `L¹` increment over a short window, and the square identity of
+`ofReal_integral_sq_sub_le` is not a convenience but the only route. -/
+
+/-- The fair coin flipped at `u`, centred: `0` before `u`, `±1` from `u` on. -/
+def coinMartingale (u : ι) (t : ι) (ω : Bool) : ℝ :=
+  if u ≤ t then (if ω then (1 : ℝ) else -1) else 0
+
+omit [TopologicalSpace ι] [OrderTopology ι] in
+/-- The witness is centred at every time, which is what makes it a martingale below `u`. -/
+theorem integral_coinMartingale (u : ι) (t : ι) :
+    ∫ ω, coinMartingale u t ω ∂coinMeasure = 0 := by
+  simp only [coinMartingale]
+  by_cases ht : u ≤ t
+  · simp only [ite_eq_left ht]
+    rw [integral_coinMeasure]
+    norm_num
+  · simp only [ite_eq_right ht]
+    simp
+
+omit [TopologicalSpace ι] [OrderTopology ι] in
+/-- **The witness is a martingale.**  Two cases and no theory, as in
+`isMPSolution_coinProcess`: from `u` on the filtration is everything and the process is constant,
+below `u` it is `⊥` and the conditional expectation is the mean, which is `0`. -/
+theorem martingale_coinMartingale (u : ι) :
+    Martingale (coinMartingale u) (coinFiltration u) coinMeasure := by
+  refine ⟨fun t ↦ ?_, fun s t hst ↦ ?_⟩
+  · by_cases ht : u ≤ t
+    · have hf : (coinFiltration u) t = (inferInstance : MeasurableSpace Bool) := ite_eq_left ht
+      rw [hf]
+      exact (measurable_of_finite _).stronglyMeasurable
+    · have hf : (coinFiltration u) t = ⊥ := ite_eq_right ht
+      have hz : coinMartingale u t = fun _ ↦ (0 : ℝ) :=
+        funext fun ω ↦ by simp only [coinMartingale]; rw [ite_eq_right ht]
+      rw [hf, hz]
+      exact stronglyMeasurable_const
+  · by_cases hs : u ≤ s
+    · have hYts : coinMartingale u t = coinMartingale u s := funext fun ω ↦ by
+        simp only [coinMartingale]
+        rw [ite_eq_left (hs.trans hst), ite_eq_left hs]
+      have hle : (coinFiltration u) s ≤ (inferInstance : MeasurableSpace Bool) :=
+        (coinFiltration u).le' s
+      have hsm : StronglyMeasurable[(coinFiltration u) s] (coinMartingale u s) := by
+        rw [show (coinFiltration u) s = (inferInstance : MeasurableSpace Bool) from ite_eq_left hs]
+        exact (measurable_of_finite _).stronglyMeasurable
+      rw [hYts, condExp_of_stronglyMeasurable hle hsm (integrable_bool _)]
+    · have hf : (coinFiltration u) s = ⊥ := ite_eq_right hs
+      have hz : coinMartingale u s = fun _ ↦ (0 : ℝ) :=
+        funext fun ω ↦ by simp only [coinMartingale]; rw [ite_eq_right hs]
+      rw [hf, hz, condExp_bot]
+      exact Filter.Eventually.of_forall fun _ ↦ integral_coinMartingale u t
+
+omit [TopologicalSpace ι] [OrderTopology ι] in
+/-- **The first condition of `𝓐 n` holds**: `sup_t 𝔼|M t| ≤ 1 < ∞`.  Together with the
+compensator `0`, which trivially has `eLpNorm 0 = 0`, the pair `(M, 0)` lies in the class for
+every exponent and with `K = 0`. -/
+theorem integral_abs_coinMartingale_le (u : ι) (t : ι) :
+    ∫ ω, |coinMartingale u t ω| ∂coinMeasure ≤ 1 := by
+  rw [integral_coinMeasure]
+  simp only [coinMartingale]
+  by_cases ht : u ≤ t
+  · rw [ite_eq_left ht, ite_eq_left ht]
+    norm_num
+  · rw [ite_eq_right ht, ite_eq_right ht]
+    norm_num
+
+omit [TopologicalSpace ι] [OrderTopology ι] in
+/-- **And the `L¹` increment across `u` is `1`**, independently of how close `s` and `t` are.
+The coin is read at `t` and not at `s`, so the difference is `±1` at both sample points. -/
+theorem integral_abs_coinMartingale_sub_eq_one {u s t : ι} (hs : ¬ u ≤ s) (ht : u ≤ t) :
+    ∫ ω, |coinMartingale u t ω - coinMartingale u s ω| ∂coinMeasure = 1 := by
+  rw [integral_coinMeasure]
+  simp only [coinMartingale]
+  simp only [ite_eq_right hs, ite_eq_left ht]
+  norm_num
+
+end AtomWitness
+
+namespace AtomWitness
+
+/-- **The witness in the form the first item of Milestone 11 needs it**: over `ℝ≥0`, with the
+jump at `u = 1` fixed, *every* window length `δ > 0` contains a pair of times across which the
+`L¹` increment of `coinMartingale 1` is `1`.
+
+The martingale does not depend on `δ`; only the window moves.  That is what makes the finding a
+statement about one member of the class and not about a family, and it is why no choice of `δ`
+can make `𝔼|M t - M s|` small.  What *is* small -- and what
+`IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le` reads -- is the increment against a
+bounded weight from the past, where the martingale property makes it vanish outright. -/
+theorem exists_integral_abs_coinMartingale_sub_eq_one {δ : ℝ≥0} (hδ : 0 < δ) :
+    ∃ s t : ℝ≥0, s ≤ t ∧ t - s ≤ δ ∧
+      ∫ ω, |coinMartingale (1 : ℝ≥0) t ω - coinMartingale (1 : ℝ≥0) s ω| ∂coinMeasure = 1 := by
+  set e : ℝ≥0 := min δ 1 with he
+  have he0 : 0 < e := lt_min hδ one_pos
+  have he1 : e ≤ 1 := min_le_right _ _
+  refine ⟨1 - e, 1, tsub_le_self, ?_, ?_⟩
+  · rw [tsub_tsub_cancel_of_le he1]
+    exact min_le_left _ _
+  · refine integral_abs_coinMartingale_sub_eq_one ?_ le_rfl
+    exact not_le.2 (tsub_lt_self one_pos he0)
+
 end AtomWitness
 
 /-- The sharpness, as a named example and not as a remark: an atom of the clock
@@ -42882,6 +42995,34 @@ theorem lintegral_ofReal_dist_le_sqrt_integral_sq [IsProbabilityMeasure P] {f g 
   rw [hlint]
   exact ENNReal.ofReal_le_ofReal hle
 
+/-- **The same, read from a bound in `ℝ≥0∞`**, which is the side every estimate of this milestone
+produces:
+
+```
+ENNReal.ofReal (∫ ω, (f ω - g ω)² ∂P) ≤ S   ⟹   ∫⁻ ω, ofReal (dist (f ω) (g ω)) ∂P
+                                                  ≤ ENNReal.ofReal √(S.toReal).
+```
+
+`lintegral_ofReal_dist_le_sqrt_integral_sq` has a **Bochner** integral under its root, while
+`ofReal_integral_sq_sub_le` below -- and every estimate it composes -- delivers a bound in
+`ℝ≥0∞`.  This is the whole of the step between them, and it consists of
+`ENNReal.ofReal_le_iff_le_toReal`; `S ≠ ⊤` is asked for because `toReal ⊤ = 0` would otherwise
+make the conclusion false, and a consumer has it because his `S` is a finite sum of finite
+quantities.
+
+The mean square itself is nowhere asked to be small -- it is `S` that the assembly drives to
+zero, and the monotonicity of `Real.sqrt` is what carries that through. -/
+theorem lintegral_ofReal_dist_le_sqrt_toReal_of_le [IsProbabilityMeasure P] {f g : Ω → ℝ}
+    (h : AEStronglyMeasurable (fun ω ↦ f ω - g ω) P)
+    (h2 : Integrable (fun ω ↦ (f ω - g ω) ^ 2) P)
+    {S : ENNReal} (hSne : S ≠ ⊤)
+    (hS : ENNReal.ofReal (∫ ω, (f ω - g ω) ^ 2 ∂P) ≤ S) :
+    ∫⁻ ω, ENNReal.ofReal (dist (f ω) (g ω)) ∂P
+      ≤ ENNReal.ofReal (Real.sqrt S.toReal) := by
+  refine le_trans (lintegral_ofReal_dist_le_sqrt_integral_sq h h2) ?_
+  exact ENNReal.ofReal_le_ofReal
+    (Real.sqrt_le_sqrt ((ENNReal.ofReal_le_iff_le_toReal hSne).1 hS))
+
 end SquareToIncrement
 
 /-! ### The compensator increment over a short window
@@ -43671,3 +43812,166 @@ theorem enorm_integral_mul_sub_le_of_biSup_le {ι : Type*} {W : Set ι} {Y V : �
   exact le_trans (enorm_add_le _ _) (add_le_add le_rfl htail)
 
 end ApproximationErrorWeighted
+
+/-! ### The square identity at the process
+
+Everything above bounds an increment of the **approximant**.  What the tightness criterion has
+to bound is an increment of `f ∘ X` itself, and \EK{} pass from one to the other by the real
+identity
+
+```
+(v_b - v_a)² = (v_b² - v_a²) - 2 v_a (v_b - v_a),
+```
+
+which is display (9.26).  Its two right hand terms are the two readings of the preceding two
+sections: the first is an increment of `f² ∘ X` against the weight `1`, the second an increment
+of `f ∘ X` against the weight `f (X a)`, which is bounded by `‖f‖`.  Each is first moved to the
+corresponding approximant -- that is the approximation error, and it is where `ε` and `ε'` enter
+-- and is then handed to `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le`.  Four
+summands come out, which are exactly the four of (9.26).
+
+**This is not `integral_sq_stoppedValue_sub_eq`, and the difference is the whole reason this
+section exists.**  That statement asks literally for `Y² - D` to be a martingale, that is, for
+the second approximating pair to be the *square* of the first.  The criterion cannot supply it:
+membership in `𝓐 n` at `f²` hands back some `Y'` near `f² ∘ X`, and nothing makes it equal `Y²`.
+Here the square is taken at the **process**, where it is a square by definition, and the two
+approximants stay unrelated -- `Y` near `V` and `Y'` near `V²`, with two errors `ε` and `ε'` of
+their own.
+
+**There is no stopping time, no filtration and no martingale in this section.**  `a` and `b` are
+arbitrary functions into the window; the consumer reads them at two stopping times, and the
+hypotheses that make that legitimate are spent in the statements this one composes, not here. -/
+
+section SquareAtProcess
+
+variable {Ω : Type*} {m : MeasurableSpace Ω}
+
+/-- **\EK, display (9.26), at the process**: the mean square of an increment of `V` is at most
+the four summands, two approximation errors and two increments of the approximants.
+
+```
+ENNReal.ofReal (∫ ω, (V (b ω) ω - V (a ω) ω)² ∂P)
+  ≤ (‖∫ (Y' b - Y' a)‖ₑ + 2 ε') + 2 (‖∫ V a · (Y b - Y a)‖ₑ + ofReal c · (2 ε))
+```
+
+for `Y` approximating `V` and `Y'` approximating `V²` on the window `W`, with `V` bounded by `c`.
+
+The identity `(v_b - v_a)² = (v_b² - v_a²) - 2 v_a (v_b - v_a)` is `ring`; the passage from `ℝ`
+to `ℝ≥0∞` is `Real.ofReal_le_enorm` (`Analysis/Normed/Group/Real.lean:118`) followed by
+`enorm_sub_le`, and the factor `2` in front of the cross term is the one of the identity and not
+a triangle inequality.  Both right hand terms are `enorm_integral_mul_sub_le_of_biSup_le`, at the
+weight `1` and at the weight `V (a ·) ·`; that is why the window carries no countability, no
+topology and no right continuity, the weighted estimate needing none.
+
+**What the consumer does with the right hand side.**  Both `‖∫ …‖ₑ` are of the shape
+`IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le` bounds, at the two pairs of the
+class and at the same two weights, so each becomes `ofReal c · (ofReal δ ^ (1 - 1/q) · K)`; the
+two `ε` are what the approximability condition makes small.  Nothing further is left to
+estimate.
+
+**On the hypotheses.**  Four integrabilities and a bound, and not one of them is avoidable here:
+the two `V` ones are what the identity's `integral_sub` reads, the two `Y` ones what
+`MeasureTheory.integral_add` reads inside the weighted estimate, and the bound `c` is at once
+the bound of the cross term's weight and the only thing this statement knows about `V`.  A
+consumer with `f : E →ᵇ ℝ` holds all five, `c = ‖f‖`. -/
+theorem ofReal_integral_sq_sub_le {ι : Type*} {W : Set ι} {Y Y' V : ι → Ω → ℝ}
+    {P : Measure Ω} {a b : Ω → ι} (ha : ∀ ω, a ω ∈ W) (hb : ∀ ω, b ω ∈ W)
+    {ε ε' : ENNReal}
+    (hε : ∫⁻ ω, ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P ≤ ε)
+    (hε' : ∫⁻ ω, ⨆ t ∈ W, ‖Y' t ω - V t ω ^ 2‖ₑ ∂P ≤ ε')
+    {c : ℝ} (hVb : ∀ t ω, ‖V t ω‖ ≤ c)
+    (hIV2 : Integrable (fun ω ↦ V (b ω) ω ^ 2 - V (a ω) ω ^ 2) P)
+    (hIY2 : Integrable (fun ω ↦ Y' (b ω) ω - Y' (a ω) ω) P)
+    (hIVc : Integrable (fun ω ↦ V (a ω) ω * (V (b ω) ω - V (a ω) ω)) P)
+    (hIYc : Integrable (fun ω ↦ V (a ω) ω * (Y (b ω) ω - Y (a ω) ω)) P) :
+    ENNReal.ofReal (∫ ω, (V (b ω) ω - V (a ω) ω) ^ 2 ∂P)
+      ≤ (‖∫ ω, (Y' (b ω) ω - Y' (a ω) ω) ∂P‖ₑ + 2 * ε')
+        + 2 * (‖∫ ω, V (a ω) ω * (Y (b ω) ω - Y (a ω) ω) ∂P‖ₑ
+                + ENNReal.ofReal c * (2 * ε)) := by
+  set A := ∫ ω, (V (b ω) ω ^ 2 - V (a ω) ω ^ 2) ∂P with hA
+  set B := ∫ ω, V (a ω) ω * (V (b ω) ω - V (a ω) ω) ∂P with hB
+  have hsplit : ∫ ω, (V (b ω) ω - V (a ω) ω) ^ 2 ∂P = A - 2 * B := by
+    rw [hA, hB, ← integral_const_mul, ← integral_sub hIV2 (hIVc.const_mul 2)]
+    exact integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ by ring)
+  -- the increment of the square, at the weight `1`
+  have hsq : ‖A‖ₑ ≤ ‖∫ ω, (Y' (b ω) ω - Y' (a ω) ω) ∂P‖ₑ + 2 * ε' := by
+    have := enorm_integral_mul_sub_le_of_biSup_le (W := W) (Y := Y')
+      (V := fun t ω ↦ V t ω ^ 2) (P := P) ha hb hε' (U := fun _ ↦ (1 : ℝ)) (c := 1)
+      (fun ω ↦ by simp) (by simpa using hIV2) (by simpa using hIY2)
+    simpa [hA] using this
+  -- the cross term, at the weight `V (a ·) ·`
+  have hcross : ‖B‖ₑ ≤ ‖∫ ω, V (a ω) ω * (Y (b ω) ω - Y (a ω) ω) ∂P‖ₑ
+      + ENNReal.ofReal c * (2 * ε) := by
+    have := enorm_integral_mul_sub_le_of_biSup_le (W := W) (Y := Y) (V := V) (P := P)
+      ha hb hε (U := fun ω ↦ V (a ω) ω) (c := c) (fun ω ↦ hVb _ ω) hIVc hIYc
+    simpa [hB] using this
+  calc ENNReal.ofReal (∫ ω, (V (b ω) ω - V (a ω) ω) ^ 2 ∂P)
+      ≤ ‖∫ ω, (V (b ω) ω - V (a ω) ω) ^ 2 ∂P‖ₑ := Real.ofReal_le_enorm _
+    _ = ‖A - 2 * B‖ₑ := by rw [hsplit]
+    _ ≤ ‖A‖ₑ + ‖(2 : ℝ) * B‖ₑ := enorm_sub_le
+    _ = ‖A‖ₑ + 2 * ‖B‖ₑ := by
+        rw [enorm_mul]
+        congr 1
+        simp [Real.enorm_eq_ofReal_abs]
+    _ ≤ (‖∫ ω, (Y' (b ω) ω - Y' (a ω) ω) ∂P‖ₑ + 2 * ε')
+        + 2 * (‖∫ ω, V (a ω) ω * (Y (b ω) ω - Y (a ω) ω) ∂P‖ₑ
+                + ENNReal.ofReal c * (2 * ε)) := by gcongr
+
+/-- **The whole passage, from the two approximants to the quantity the Aldous route integrates.**
+
+```
+∫⁻ ω, ENNReal.ofReal (dist (V (b ω) ω) (V (a ω) ω)) ∂P ≤ ENNReal.ofReal √(S.toReal)
+```
+
+whenever `S` bounds the four summands of `ofReal_integral_sq_sub_le`.  It is that statement
+followed by `lintegral_ofReal_dist_le_sqrt_toReal_of_le`, and it is the form in which the first
+item of Milestone 11 meets
+`mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le`, whose integrand is
+`ENNReal.ofReal (dist (X β ω) (X α ω))` read at the image path.
+
+**`S` is a parameter rather than the sum itself**, and that is what makes the statement usable:
+the assembly holds a bound on the four summands from
+`IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le` and the approximability condition,
+in a shape that depends on `δ`, `q`, `K` and the two `ε` and not on the two integrals, and it is
+*that* bound it needs to drive to zero.
+
+**The integrability of the square is not a hypothesis, and this is where the bound on `V` pays
+for itself a second time.**  With `‖V t ω‖ ≤ c` the increment is bounded by `2c`, its square by
+`(2c)²`, and `MeasureTheory.Integrable.mono'`
+(`MeasureTheory/Function/L1Space/Integrable.lean:105`) against the constant turns the
+measurability that Cauchy--Schwarz asks for anyway into integrability.  The consumer therefore
+carries one hypothesis fewer than the composition would suggest. -/
+theorem lintegral_ofReal_dist_le_sqrt_of_biSup_le {ι : Type*} {W : Set ι}
+    {Y Y' V : ι → Ω → ℝ} {P : Measure Ω} [IsProbabilityMeasure P]
+    {a b : Ω → ι} (ha : ∀ ω, a ω ∈ W) (hb : ∀ ω, b ω ∈ W)
+    {ε ε' : ENNReal}
+    (hε : ∫⁻ ω, ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P ≤ ε)
+    (hε' : ∫⁻ ω, ⨆ t ∈ W, ‖Y' t ω - V t ω ^ 2‖ₑ ∂P ≤ ε')
+    {c : ℝ} (hVb : ∀ t ω, ‖V t ω‖ ≤ c)
+    (hm : AEStronglyMeasurable (fun ω ↦ V (b ω) ω - V (a ω) ω) P)
+    (hIV2 : Integrable (fun ω ↦ V (b ω) ω ^ 2 - V (a ω) ω ^ 2) P)
+    (hIY2 : Integrable (fun ω ↦ Y' (b ω) ω - Y' (a ω) ω) P)
+    (hIVc : Integrable (fun ω ↦ V (a ω) ω * (V (b ω) ω - V (a ω) ω)) P)
+    (hIYc : Integrable (fun ω ↦ V (a ω) ω * (Y (b ω) ω - Y (a ω) ω)) P)
+    {S : ENNReal} (hSne : S ≠ ⊤)
+    (hS : (‖∫ ω, (Y' (b ω) ω - Y' (a ω) ω) ∂P‖ₑ + 2 * ε')
+            + 2 * (‖∫ ω, V (a ω) ω * (Y (b ω) ω - Y (a ω) ω) ∂P‖ₑ
+                    + ENNReal.ofReal c * (2 * ε)) ≤ S) :
+    ∫⁻ ω, ENNReal.ofReal (dist (V (b ω) ω) (V (a ω) ω)) ∂P
+      ≤ ENNReal.ofReal (Real.sqrt S.toReal) := by
+  have hsq : Integrable (fun ω ↦ (V (b ω) ω - V (a ω) ω) ^ 2) P := by
+    refine (integrable_const ((2 * c) ^ 2)).mono' (hm.pow 2) ?_
+    refine Filter.Eventually.of_forall fun ω ↦ ?_
+    have h1 : ‖V (b ω) ω‖ ≤ c := hVb _ _
+    have h2 : ‖V (a ω) ω‖ ≤ c := hVb _ _
+    rw [Real.norm_eq_abs] at h1 h2 ⊢
+    rw [abs_pow]
+    have h3 : |V (b ω) ω - V (a ω) ω| ≤ 2 * c := by
+      refine le_trans (abs_sub _ _) ?_
+      linarith
+    have h4 : (0 : ℝ) ≤ |V (b ω) ω - V (a ω) ω| := abs_nonneg _
+    nlinarith
+  exact lintegral_ofReal_dist_le_sqrt_toReal_of_le hm hsq hSne
+    (le_trans (ofReal_integral_sq_sub_le ha hb hε hε' hVb hIV2 hIY2 hIVc hIYc) hS)
+
+end SquareAtProcess

@@ -12043,16 +12043,86 @@ has to be chosen once for all `n`. What stands:
   `lintegral_ofReal_dist_le_of_biSup_Iic_le` is the estimate already written in
   the shape that statement integrates.
 
-  What is left of this item is therefore the **square identity and the choice
-  of the three numbers**: `(f(X β) - f(X α))² = (f²(X β) - f²(X α))
-  - 2 f(X α) (f(X β) - f(X α))`, whose two right hand terms are the two
-  readings above composed with
-  `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le`; Cauchy–Schwarz
-  back to `∫⁻ |f(X β) - f(X α)|`; and then `N ≈ u/δ`, the sum of the window
-  bounds and `tendsto_ofReal_rpow_mul_nhdsGT_zero` in
-  `mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le`. Every analytic
-  ingredient it consumes now exists, the predicate that binds them does too,
-  and every hypothesis of the criterion is now read by some statement.
+  **The square identity at the process, 2026-09-20**, and with it the last
+  analytic step of this item:
+
+  * `ofReal_integral_sq_sub_le` — display (9.26) itself,
+    `ofReal (∫ (V b - V a)²) ≤ (‖∫ (Y' b - Y' a)‖ₑ + 2 ε')
+    + 2 (‖∫ V a · (Y b - Y a)‖ₑ + ofReal c · (2 ε))` for `Y` near `V` and `Y'`
+    near `V²`, with `V` bounded by `c`. The real identity
+    `(v_b - v_a)² = (v_b² - v_a²) - 2 v_a (v_b - v_a)` is `ring`; both right
+    hand terms are `enorm_integral_mul_sub_le_of_biSup_le`, at the weight `1`
+    and at the weight `V (a ·) ·`, so the window needs no countability, no
+    topology and no right continuity. The four summands are exactly \EK's.
+  * `lintegral_ofReal_dist_le_sqrt_toReal_of_le` — the bridge that was missing
+    between the two: `lintegral_ofReal_dist_le_sqrt_integral_sq` has a Bochner
+    integral under its root while every estimate here produces a bound in
+    `ℝ≥0∞`. It is `ENNReal.ofReal_le_iff_le_toReal`
+    (`Basic/ENNReal/Real.lean:262`), and `S ≠ ⊤` is owed because
+    `toReal ⊤ = 0`.
+  * `lintegral_ofReal_dist_le_sqrt_of_biSup_le` — the two composed, in the
+    shape `mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le`
+    integrates. The bound `S` is a parameter and not the sum itself, because
+    it is `S` that the assembly drives to zero.
+
+  **The square is taken at the process, and that is what makes it available at
+  all.** `integral_sq_stoppedValue_sub_eq` asks for `Y² - D` to be a
+  martingale, which the class does not supply; here the square is a square by
+  definition and the two approximants stay unrelated, each with an error of its
+  own. The correction recorded above is thereby not merely noted but paid for.
+
+  **The integrability of the square is not a hypothesis**, and the bound on `V`
+  pays for itself a second time: `‖V‖ ≤ c` makes the increment `≤ 2c`, and
+  `MeasureTheory.Integrable.mono'`
+  (`MeasureTheory/Function/L1Space/Integrable.lean:105`) against the constant
+  turns the measurability Cauchy–Schwarz asks for anyway into integrability.
+
+  **No quantity of this item is left to estimate at one pair of times.** Every
+  analytic ingredient exists, the predicate that binds them does too, and every
+  hypothesis of the criterion is read by some statement.
+
+  **What is left is not bookkeeping, and this roadmap said otherwise until
+  2026-09-20.** The remaining step was described as `N ≈ u/δ`, the sum of the
+  `N` window bounds, and `tendsto_ofReal_rpow_mul_nhdsGT_zero` in
+  `mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le`. Counting the
+  powers of `δ` shows that this does not close. That consumer bounds
+  `ofReal ε · μ {modulusBased > ε}` by `2 ∑_{k<N} ∫⁻ ofReal (dist …)` with
+  `N ≈ u/δ`; each summand is at most `ofReal √(S.toReal)` with
+  `S = O(δ^(1−1/q))`, so the right hand side is `O(δ^((1−1/q)/2 − 1))`, and the
+  exponent is negative. Summing the squares first and applying Cauchy–Schwarz
+  over `k` does better — the windows are disjoint, so `∑_k ∫ Δ_k² = O(1)` and
+  Hölder over `k` cancels the `δ` exactly — but it still leaves `O(√N)`.
+
+  **Both computations pay the factor `N` for a union bound over the `N`
+  windows, and Aldous does not take one.** The outline of **SkorokhodSpace**
+  Milestone 10 names the step: a *second application of the hypothesis at a
+  random time*, read at one stopping time rather than at each `k`. So the
+  statement between the present state and this item is
+  `SkorokhodSpace.modulusBased_le_of_forall_stoppingTime`, which exists in that
+  roadmap and in none of the three `Suggested.lean`. Everything built for this
+  item is its input: the estimate at **one** pair of times, which that route
+  reads once and not `N` times.
+
+  **And that statement belongs here rather than in SkorokhodSpace.** Its only
+  consumer is this item, its inputs are the stopping time machinery of
+  Milestone 9, and a filtration occurs in its hypothesis — the three reasons
+  that milestone itself gives for the move.
+
+  **Why the square is the only route, as a theorem and no longer as a
+  paragraph**, 2026-09-20. That the martingale part of the increment is not
+  small in `L¹` — so that neither Doob nor Hölder carries this item, and the
+  square identity is not a convenience — is witnessed in Lean, on the coin of
+  `AtomWitness` and with no new construction:
+  `coinMartingale u` is a martingale over `coinFiltration u`
+  (`martingale_coinMartingale`) with `sup_t 𝔼|M t| ≤ 1`
+  (`integral_abs_coinMartingale_le`) and compensator `0`, so the pair `(M, 0)`
+  lies in `𝓐 n` for every exponent and with `K = 0`; yet
+  `𝔼|M t - M s| = 1` across `u` (`integral_abs_coinMartingale_sub_eq_one`), and
+  `exists_integral_abs_coinMartingale_sub_eq_one` finds such a pair **inside a
+  window of length `δ`, for every `δ > 0`, with `u = 1` held fixed**. The
+  martingale does not move with `δ`; only the window does. Hence the closure of
+  the approximable functions under products is a consequence of the estimate
+  and not an assumption of convenience.
 * `isRelativelyCompact_of_approx`: if `E` is Polish, the domain of `A` contains
   an algebra separating points and vanishing nowhere, the approximation holds
   for each `(f,g) ∈ A`, and `{X n}` satisfies compact containment, then `{X n}`
