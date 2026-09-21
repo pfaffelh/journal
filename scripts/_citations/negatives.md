@@ -154,6 +154,20 @@ Suche `measurable[a-z_]*_of_[a-z_]*rightcontinuous|isrightcontinuous[a-z_.]*meas
 * `Mathlib/Probability/Process/Filtration.lean`
 * `Mathlib/Probability/Process/Stopping.lean`
 
+## `tight-uniform-limit` — WeakConvergence/Suggested.lean, `isTightMeasureSet_map_of_forall_exists_dist_le`
+
+> Mathlib transportiert Straffheit längs **einer** Abbildung (`IsTightMeasureSet.map`, für stetige), aber nicht längs eines gleichmäßigen Grenzwertes von Abbildungen.  `isTightMeasureSet_of_tendsto` ist etwas anderes: dort konvergieren die **Maße**, nicht die Abbildung.
+
+Suche `istightmeasureset[a-z_.']*of_forall_exists_dist|istightmeasureset[a-z_.']*tendstouniformly|tendstouniformly[a-z_.']*istight` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
+## `continuousat-finset-prod` — SkorokhodSpace/Suggested.lean, `SkorokhodSpace.continuousAt_of_mem_evalFuns`
+
+> Mathlib hat die Stetigkeit eines endlichen Produkts **an einer Stelle** unter keinem Namen: `continuous_finsetProd` und `continuousOn_finsetProd` stehen in `Mathlib/Topology/Algebra/Monoid.lean`, eine `ContinuousAt`-Fassung nicht.  Zu nehmen ist `tendsto_finsetProd`, weil `ContinuousAt` ein `Tendsto` längs `𝓝 y` ist.
+
+Suche `continuousat_finsetprod|continuousat_finset_prod|continuousat[a-z_.']*\.finsetprod` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
 ## Die zweiundzwanzig Lücken von `TODO.md` Punkt 8
 
 ## `traj-homogeneity` — TODO.md Punkt 8, erste Lücke
@@ -379,5 +393,5 @@ Suche `theorem le_lintegral|lemma le_lintegral` unter `Mathlib/`: **1 Treffer** 
 
 ## Zusammenfassung
 
-51 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
+53 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
 

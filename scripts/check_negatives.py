@@ -166,6 +166,26 @@ CLAIMS = [
      'measurable[a-z_]*_of_[a-z_]*rightcontinuous'
      '|isrightcontinuous[a-z_.]*measurable|iscadlag[a-z_.]*measurable',
      'Mathlib/'),
+    ('tight-uniform-limit', 'WeakConvergence/Suggested.lean, '
+     '`isTightMeasureSet_map_of_forall_exists_dist_le`',
+     'Mathlib transportiert Straffheit längs **einer** Abbildung '
+     '(`IsTightMeasureSet.map`, für stetige), aber nicht längs eines '
+     'gleichmäßigen Grenzwertes von Abbildungen.  `isTightMeasureSet_of_tendsto` '
+     'ist etwas anderes: dort konvergieren die **Maße**, nicht die Abbildung.',
+     'istightmeasureset[a-z_.\']*of_forall_exists_dist'
+     '|istightmeasureset[a-z_.\']*tendstouniformly'
+     '|tendstouniformly[a-z_.\']*istight',
+     'Mathlib/'),
+    ('continuousat-finset-prod', 'SkorokhodSpace/Suggested.lean, '
+     '`SkorokhodSpace.continuousAt_of_mem_evalFuns`',
+     'Mathlib hat die Stetigkeit eines endlichen Produkts **an einer Stelle** '
+     'unter keinem Namen: `continuous_finsetProd` und `continuousOn_finsetProd` '
+     'stehen in `Mathlib/Topology/Algebra/Monoid.lean`, eine `ContinuousAt`-'
+     'Fassung nicht.  Zu nehmen ist `tendsto_finsetProd`, weil `ContinuousAt` '
+     'ein `Tendsto` längs `𝓝 y` ist.',
+     'continuousat_finsetprod|continuousat_finset_prod'
+     '|continuousat[a-z_.\']*\\.finsetprod',
+     'Mathlib/'),
 ]
 
 

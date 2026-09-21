@@ -3842,6 +3842,64 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   `isTightMeasureSet_iff_forall_postcomp` cannot drop the compact containment
   hypothesis, and this is the family that shows it.
 
+### The functionals a martingale problem tests
+
+The consumer of stage (A) is the third item of the chain of
+**MartingaleProblems** Milestone 11: a weak limit of solutions of a martingale
+problem is a solution. It reads its hypothesis through
+`mpSolution_of_tendsto_of_pContinuous` there, in the shape
+`P {ω | ContinuousAt ψ (X ω)} = 1` for the functional
+
+```
+ψ t x = f (x t) - ∫_0^t g (x u) du,
+```
+
+and this part of the milestone says at which paths `ψ t` is continuous. Proved
+2026-09-21.
+
+* `continuousAt_integral_comp` — **the compensator is continuous at every path,
+  with no hypothesis on its jumps.** The times are read through a measurable
+  `φ : α → ι` against a finite `μ`, and the one condition is that `μ` sees a
+  countable set of times through `φ` as a null set. A path has countably many
+  jumps (`countable_leftJumpSet`), so off a `μ`-null set of parameters the
+  values converge, and dominated convergence with the constant majorant `‖g‖`
+  closes it. `continuousAt_setIntegral_toNNReal` is the instance
+  `α = ℝ`, `μ` Lebesgue on `Set.Ioc 0 T`, `φ = Real.toNNReal`, which is the shape
+  in which a martingale problem over `lebesgueClock` writes its compensator.
+* `continuousAt_mpTest` — the whole functional, continuous at every path that
+  does not jump **at the one time it evaluates**. The asymmetry between the two
+  summands is the content: the compensator carries none of the condition, the
+  evaluation all of it, and the evaluation cannot be freed of it —
+  `exists_jump_continuousAt_eval`.
+* `measure_setOf_forall_notMem_leftJumpSet_eq_one` — the passage from the
+  *times* of stage (A) to the *paths*: a law with no fixed discontinuity along a
+  countable set of times gives full mass to the paths jumping at none of them.
+  **No Fubini argument occurs in it**, and none is needed —
+  `exists_countable_dense_continuity` has already made the exceptional times
+  countable, and countability is what a union of null sets asks for.
+  `measure_setOf_forall_notMem_leftJumpSet_comp_eq_one` is the same read through
+  a process rather than through its law, which is the form the consumer writes
+  its hypotheses in; `Measurable X` is not removable there, a non-measurable set
+  of full outer measure having a complement of full outer measure too.
+* `continuousAt_of_mem_evalFuns` — a member of `evalFuns E T` is continuous at
+  every path that jumps at no time of `T`. The condition is asked over the whole
+  of `T` rather than over the `Finset` of the particular member, membership in
+  `evalFuns` being an existential.
+* `measure_setOf_continuousAt_mpTest_eq_one` and
+  `measure_setOf_continuousAt_mpTest_mul_eq_one` — the two halves of the
+  hypothesis, the second for the tested increment multiplied by a member of
+  `evalFuns E T`. The consumer asks its continuity of the **product** and not of
+  the factors, and that is what makes one application of the paths statement
+  answer for all three at once.
+
+**What this leaves for the consumer**, and it is named rather than left open:
+`MeasureTheory.IsDetermining` for the class `evalFuns E (T ∩ Set.Iic s)`. Four of
+the five inputs of `isDetermining_of_generateFromFuns` stand here —
+`isMulSystem_evalFuns`, `measurable_of_mem_evalFuns`, `bounded_of_mem_evalFuns`,
+and the constant `1` as the product over the empty `Finset`. The fifth is the
+**past** form of `generateFromFuns_evalFuns`, which today generates the whole
+Borel structure and not the σ-algebra of the coordinates up to `s`.
+
 ## Milestone 9: the nonnegative index inside the real one
 
 Milestones 7 and 8 are stated over the index `ℝ`. The reason is
@@ -4036,6 +4094,69 @@ exchanged by `SkorokhodSpace.postcomp_extendNNReal`, which is `rfl`. So the rule
 stands as stated for the mathematics; what it did not say, and now does, is that
 a criterion carrying a hypothesis needs a wrapper that crosses it, and that the
 wrapper is bookkeeping rather than a second proof.
+
+**The test class may be thinned to a dense one**, 2026-09-21, and that is what
+separates a criterion from a demand. Both forms above read their right hand side
+at *every* `h : E →ᵇ ℝ`, while the sources of that hypothesis — a generator, an
+algebra of test functions — supply it on a class that is merely dense, and
+Ethier–Kurtz state their criterion with a dense class for that reason. Five
+statements, in two groups: the supremum norm first, because it is the cheaper
+argument, and then the density a generator actually has.
+
+* `SkorokhodSpace.dist_postcomp_le` — two post-compositions of **one** path are
+  at most as far apart as the two maps are, uniformly on the value space. It is
+  the estimate `SkorokhodSpace.distWith_postcomp_le` is not: there the two
+  arguments are two *paths* under one map, here they are two *maps* on one path,
+  and the difference is that the time change may be taken to be the identity.
+  That is the whole proof — the infimum defining `SkorokhodSpace.intDist` is
+  bounded above by its value at `1`, whose logarithmic norm is `0`, the windowed
+  supremum at `1` is a supremum of `dist (h y) (h' y)` over values of the path,
+  and the integral over the radius costs nothing because `∫₀^∞ exp (−u) du = 1`.
+  The bound is carried by a real `C` and not by a norm, so that it applies to
+  `C(E, E')` for a metric `E'` with no algebraic structure; nonnegativity of `C`
+  is not a hypothesis, the path exhibiting a value at which `C` dominates a
+  distance.
+* `SkorokhodSpace.isTightMeasureSet_map_postcomp_of_dense` and
+  `SkorokhodSpace.isTightMeasureSet_of_dense_forall_postcomp_nnreal` — tightness
+  of the real images under a **dense** class gives it under every bounded
+  continuous function, and hence, under compact containment, tightness of the
+  family itself. The first reads no hypothesis of `μ` at all, not even
+  finiteness. Both rest on
+  `MeasureTheory.isTightMeasureSet_map_of_forall_exists_dist_le` of
+  **WeakConvergence**, which turns a uniform approximation of a *map* into
+  tightness of its image laws; completeness of `D(ℝ≥0, ℝ)` is what that
+  statement spends, and it is `SkorokhodSpace.instCompleteSpace`.
+
+**The density a generator has is weaker than that**, and the second group is what
+covers it: a domain such as the compactly supported smooth functions is dense for
+uniform convergence **on compact sets** only, a uniform limit of them vanishing
+at infinity while the constant function does not. Three statements:
+
+* `SkorokhodSpace.dist_postcomp_le_of_forall_mem_exhaustion` — the estimate above
+  read on a window alone: if the two maps agree within `η` at the values the path
+  takes on the window `M`, the two post-compositions are within `η + exp (−M)`.
+  The integral over the window radius is split at `M`; below it the windowed
+  supremum is at most `η` because a smaller window sits inside a larger one, and
+  above it the truncation at `1` leaves `∫_M^∞ exp (−u) du = exp (−M)`. It is the
+  bridge between a hypothesis quantified over all of `E`, which a generator
+  domain cannot meet, and one quantified over the values of a path in a window,
+  which compact containment holds in a compact set.
+* `SkorokhodSpace.isTightMeasureSet_map_postcomp_of_denseOnCompacts` and
+  `SkorokhodSpace.isTightMeasureSet_of_denseOnCompacts_forall_postcomp_nnreal` —
+  the same two conclusions from density on compact sets. Given `δ` and `ε`:
+  choose the window `m` with `exp (−m) < δ/2`, let `Γ` be the compact set that
+  holds the path on that window up to mass `ε`, and let `g` be within `δ/2` of
+  `f` on `Γ`. The exceptional set of
+  `MeasureTheory.isTightMeasureSet_map_of_forall_exists_measure_dist_gt_le` is
+  then contained in the complement of that event, for **every** index at once,
+  and that uniformity is exactly what compact containment says. So compact
+  containment is read twice in the second of them — once as the hypothesis of the
+  equivalence, once inside the approximation — and it is the same hypothesis both
+  times.
+
+  The density is a hypothesis and not an algebra: Stone–Weierstrass is what
+  produces it for a point separating subalgebra and is not used here, which keeps
+  these statements free of any algebraic structure on the test class.
 
 **The window over `ℝ≥0`, and the half open form of the dense window lemma**,
 2026-09-19, added for the consumer in **MartingaleProblems** Milestone 11 and

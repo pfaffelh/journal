@@ -482,6 +482,64 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   compact set. No separation, Borel or finiteness hypothesis enters: the
   complement of the compact set is measured as an outer measure and never has to
   be measurable.
+* Tightness under an approximation of the map, as
+  `MeasureTheory.isTightMeasureSet_map_of_forall_exists_measure_dist_gt_le`: if
+  every member of a family of measurable maps `T n : α → β` pushes the laws
+  `μ i` to a tight family, and `f` is approximated by members of that family in
+  measure — at every error `δ` and every mass `ε` by **one** member and
+  **uniformly in `i`** — then `{(μ i).map f | i}` is tight. The exceptional set
+  is never asked to be measurable: it enters through `measure_union_le` and
+  `measure_mono`, which hold for arbitrary sets, so no second countability of the
+  target and no joint measurability of `dist` is needed.
+
+  `MeasureTheory.isTightMeasureSet_map_of_forall_exists_dist_le` is the uniform
+  case, where the exceptional set is empty. It is stated separately because its
+  hypothesis is checkable without reference to the measures, which is what makes
+  it composable; the general form is what a consumer needs whose approximation is
+  good only **where the mass sits** — uniform convergence on compact sets
+  together with tightness, which is the shape of Ethier–Kurtz's criterion on the
+  path space. Mathlib has
+  `IsTightMeasureSet.map` for one continuous map
+  (`MeasureTheory/Measure/Tight.lean:129`) and nothing for a limit of maps;
+  `isTightMeasureSet_of_tendsto` is a different statement, its convergence being
+  that of the **measures**.
+
+  The two are not variants of one proof. `map` transports one compact set through
+  one map, while here the compact set has to be **built**: the closed thickening
+  of a compact set by the approximation error is compact for no reason at all,
+  and in an infinite dimensional space it is not even totally bounded. The set
+  that works is the intersection over all error scales,
+  `⋂ k, Metric.cthickening (1/(k+1)) (K k)`. It is closed by
+  `Metric.isClosed_cthickening`; it is totally bounded because it lies inside the
+  `k`-th thickening for **every** `k`, so a finite `r/2`-net of `K k` with
+  `1/(k+1) < r/2` is an `r`-net of it; and it is therefore compact by
+  `TotallyBounded.isCompact_of_isClosed`. Completeness of `β` is spent there and
+  nowhere else. The `ε` is distributed over the scales by
+  `ENNReal.exists_pos_sum_of_countable'` and collected by countable
+  subadditivity, as in the previous item.
+
+  The approximating family is indexed by an arbitrary type and not by `ℕ`: the
+  proof chooses one member per error scale, so a sequence buys nothing, and the
+  consumer — a dense class of test functions in **SkorokhodSpace** Milestone 8 —
+  hands over a subtype. Measurability of the maps is what
+  `MeasureTheory.Measure.map_apply` asks on both sides; no continuity is needed,
+  and the target carries only the Borel structure of its metric.
+* Stone–Weierstrass on a compact set, carried back to the bounded functions, as
+  `MeasureTheory.exists_mem_subalgebra_forall_dist_le_of_isCompact`: a subalgebra
+  `A : Subalgebra ℝ (E →ᵇ ℝ)` whose image in `C(E, ℝ)` separates points is, on
+  every compact `Γ ⊆ E` and at every `η > 0`, uniformly within `η` of every
+  bounded continuous function. Mathlib already carries the non-compact case in
+  `ContinuousMap.exists_mem_subalgebra_near_continuous_of_isCompact_of_separatesPoints`
+  (`Topology/ContinuousMap/StoneWeierstrass.lean:323`); what is added is the
+  passage between the two homes of the test class — the hypothesis reads the
+  image of `A` in `C(E, ℝ)`, as `IsSeparating.of_subalgebra` does, while the
+  conclusion produces a member of `A` itself, hence a **bounded** function, which
+  is what every consumer of a test class asks for and `C(E, ℝ)` does not
+  guarantee.
+
+  This is the density a generator's domain actually has. It is not density in the
+  supremum norm: `Cc^∞(ℝ)` is not dense in `ℝ →ᵇ ℝ`, a uniform limit of compactly
+  supported functions vanishing at infinity while the constant `1` does not.
 * Prokhorov used the way Chapter 3 uses it, in two points.
 
   `MeasureTheory.isTightMeasureSet_of_tendsto` — on a Polish `E`, a *convergent*

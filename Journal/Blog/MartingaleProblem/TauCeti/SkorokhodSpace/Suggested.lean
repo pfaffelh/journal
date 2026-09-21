@@ -14553,6 +14553,137 @@ theorem SkorokhodSpace.distWith_postcomp_le {E' : Type*} [MetricSpace E'] (h : C
     ⟨clamp t₀ u (l.toOrderIso t), clamp_mem_exhaustion t₀ u _, rfl⟩
   exact (hunif _ hmem _ (lt_of_le_of_lt hle hd)).le
 
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **Two post-compositions of one path are at most as far apart as the two maps
+are, uniformly on the value space.**  This is the estimate the previous one is
+not: there the two arguments are two **paths** under one map, here they are two
+**maps** on one path, and the difference is that the time change may be taken to
+be the identity.  That is the whole proof: the infimum defining
+`SkorokhodSpace.intDist` is bounded above by its value at `1`, whose logarithmic
+norm is `0` by `TimeChange.norm_one`, and the windowed supremum at `1` is a
+supremum of `dist (h y) (h' y)` over values `y` of the path.  The integral over
+the radius then costs nothing, because `∫_0^∞ exp (-u) du = 1`.
+
+The bound is stated through a uniform bound `C` on the two maps rather than
+through a norm, so that it applies to `C(E, E')` for a metric `E'` with no
+algebraic structure; for `E' = ℝ` and bounded continuous maps the hypothesis is
+`BoundedContinuousFunction.dist_coe_le_dist`.  Nonnegativity of `C` is not a
+hypothesis: the path exhibits a value of `E`, and `C` dominates a distance
+there. -/
+theorem SkorokhodSpace.dist_postcomp_le {E' : Type*} [MetricSpace E']
+    [SecondCountableTopology E'] (h h' : C(E, E')) (x : D(ι, E)) {C : ℝ}
+    (hC : ∀ y : E, dist (h y) (h' y) ≤ C) :
+    dist (SkorokhodSpace.postcomp h x) (SkorokhodSpace.postcomp h' x) ≤ C := by
+  have : Nonempty ι := ⟨basePoint⟩
+  have hC0 : (0 : ℝ) ≤ C := le_trans dist_nonneg (hC (x.toFun basePoint))
+  have hdw : ∀ u : ℝ, SkorokhodSpace.distWith (basePoint : ι) u 1
+      (SkorokhodSpace.postcomp h x) (SkorokhodSpace.postcomp h' x) ≤ C := by
+    intro u
+    refine ciSup_le fun t => ?_
+    simpa [SkorokhodSpace.restrictExhaustion_apply] using hC (x.toFun (clamp basePoint u t))
+  have hiw : SkorokhodSpace.intWith (basePoint : ι) 1
+      (SkorokhodSpace.postcomp h x) (SkorokhodSpace.postcomp h' x) ≤ C := by
+    have hpt : ∀ u : ℝ, Real.exp (-u) * min 1 (SkorokhodSpace.distWith (basePoint : ι) u 1
+        (SkorokhodSpace.postcomp h x) (SkorokhodSpace.postcomp h' x))
+        ≤ Real.exp (-u) * C := fun u =>
+      mul_le_mul_of_nonneg_left ((min_le_right _ _).trans (hdw u)) (Real.exp_pos _).le
+    calc SkorokhodSpace.intWith (basePoint : ι) 1
+          (SkorokhodSpace.postcomp h x) (SkorokhodSpace.postcomp h' x)
+        ≤ ∫ u in Set.Ioi (0:ℝ), Real.exp (-u) * C :=
+          MeasureTheory.integral_mono
+            (SkorokhodSpace.integrableOn_intDist _ _ _ _)
+            ((integrableOn_exp_neg_Ioi 0).mul_const C) hpt
+      _ = C := by
+          rw [MeasureTheory.integral_mul_const, integral_exp_neg_Ioi_zero, one_mul]
+  rw [SkorokhodSpace.dist_eq]
+  refine le_trans (ciInf_le (SkorokhodSpace.bddBelow_range_intDist _ _ _)
+    (1 : TimeChange.fixing (basePoint : ι))) ?_
+  have h1 : ((1 : TimeChange.fixing (basePoint : ι)) : TimeChange ι) = 1 := rfl
+  rw [h1, TimeChange.norm_one]
+  exact max_le hC0 hiw
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The same estimate read on a window alone**, and this is the form a
+generator's domain can meet: the two maps are compared only at the values the
+path takes on the window `M`, and the price of the rest of the time axis is
+`exp (-M)`.
+
+That price is exactly what the metric of Milestone 4 charges for it: the integral
+over the window radius is split at `M`, below `M` the windowed supremum is at
+most `η` because a smaller window sits inside a larger one
+(`exhaustion_subset_of_le`), and above `M` the truncation at `1` leaves
+`∫_M^∞ exp (-u) du = exp (-M)`.  The time change is again the identity, so
+nothing is paid for it.
+
+**Why the unwindowed form is not enough.**  A test function from the domain of a
+generator is dense only for uniform convergence on **compact** sets -- the
+compactly supported smooth functions are not dense in the supremum norm, a
+uniform limit of them vanishing at infinity -- so a hypothesis quantified over
+all of `E` cannot be met.  What can be met is a hypothesis quantified over the
+values of the path in a window, and those are held in a compact set by compact
+containment.  This statement is the bridge between the two. -/
+theorem SkorokhodSpace.dist_postcomp_le_of_forall_mem_exhaustion {E' : Type*} [MetricSpace E']
+    [SecondCountableTopology E'] (h h' : C(E, E')) (x : D(ι, E)) {η M : ℝ} (hη : 0 ≤ η)
+    (hM : 0 ≤ M) (hC : ∀ y ∈ x.toFun '' exhaustion (basePoint : ι) M, dist (h y) (h' y) ≤ η) :
+    dist (SkorokhodSpace.postcomp h x) (SkorokhodSpace.postcomp h' x) ≤ η + Real.exp (-M) := by
+  have : Nonempty ι := ⟨basePoint⟩
+  set F := SkorokhodSpace.postcomp h x with hF
+  set G := SkorokhodSpace.postcomp h' x with hG
+  have hdw : ∀ v : ℝ, v ≤ M → SkorokhodSpace.distWith (basePoint : ι) v 1 F G ≤ η := by
+    intro v hv
+    refine ciSup_le fun t => ?_
+    have hmem : x.toFun (clamp basePoint v t) ∈ x.toFun '' exhaustion (basePoint : ι) M :=
+      ⟨clamp basePoint v t, exhaustion_subset_of_le basePoint hv
+        (clamp_mem_exhaustion _ _ _), rfl⟩
+    simpa [hF, hG, SkorokhodSpace.restrictExhaustion_apply] using hC _ hmem
+  have hint := SkorokhodSpace.integrableOn_intDist (basePoint : ι) 1 F G
+  have h1 : MeasureTheory.IntegrableOn
+      (fun v : ℝ => Real.exp (-v) * min 1 (SkorokhodSpace.distWith (basePoint : ι) v 1 F G))
+      (Set.Ioc 0 M) := hint.mono_set Set.Ioc_subset_Ioi_self
+  have h2 : MeasureTheory.IntegrableOn
+      (fun v : ℝ => Real.exp (-v) * min 1 (SkorokhodSpace.distWith (basePoint : ι) v 1 F G))
+      (Set.Ioi M) := hint.mono_set (Set.Ioi_subset_Ioi hM)
+  have hA : (∫ v in Set.Ioc (0:ℝ) M,
+      Real.exp (-v) * min 1 (SkorokhodSpace.distWith (basePoint : ι) v 1 F G)) ≤ η := by
+    calc (∫ v in Set.Ioc (0:ℝ) M,
+          Real.exp (-v) * min 1 (SkorokhodSpace.distWith (basePoint : ι) v 1 F G))
+        ≤ ∫ v in Set.Ioc (0:ℝ) M, Real.exp (-v) * η :=
+          MeasureTheory.setIntegral_mono_on h1
+            (MeasureTheory.IntegrableOn.mono_set
+              ((integrableOn_exp_neg_Ioi 0).mul_const η) Set.Ioc_subset_Ioi_self)
+            measurableSet_Ioc fun v hv =>
+              mul_le_mul_of_nonneg_left ((min_le_right _ _).trans (hdw v hv.2))
+                (Real.exp_pos _).le
+      _ ≤ ∫ v in Set.Ioi (0:ℝ), Real.exp (-v) * η :=
+          MeasureTheory.setIntegral_mono_set ((integrableOn_exp_neg_Ioi 0).mul_const η)
+            (Filter.Eventually.of_forall fun v => by positivity)
+            (LE.le.eventuallySubset Set.Ioc_subset_Ioi_self)
+      _ = η := by rw [MeasureTheory.integral_mul_const, integral_exp_neg_Ioi_zero, one_mul]
+  have hB : (∫ v in Set.Ioi M,
+      Real.exp (-v) * min 1 (SkorokhodSpace.distWith (basePoint : ι) v 1 F G))
+      ≤ Real.exp (-M) := by
+    calc (∫ v in Set.Ioi M,
+          Real.exp (-v) * min 1 (SkorokhodSpace.distWith (basePoint : ι) v 1 F G))
+        ≤ ∫ v in Set.Ioi M, Real.exp (-v) :=
+          MeasureTheory.setIntegral_mono_on h2 (integrableOn_exp_neg_Ioi M) measurableSet_Ioi
+            fun v _ => by
+              simpa using mul_le_mul_of_nonneg_left (min_le_left (1:ℝ) _) (Real.exp_pos (-v)).le
+      _ = Real.exp (-M) := integral_exp_neg_Ioi M
+  have hiw : SkorokhodSpace.intWith (basePoint : ι) 1 F G ≤ η + Real.exp (-M) := by
+    have hsplit : Set.Ioi (0:ℝ) = Set.Ioc 0 M ∪ Set.Ioi M := (Set.Ioc_union_Ioi_eq_Ioi hM).symm
+    have hdisj : Disjoint (Set.Ioc (0:ℝ) M) (Set.Ioi M) :=
+      Set.disjoint_left.2 fun v hv hv' => absurd hv' (not_lt.2 hv.2)
+    show (∫ v in Set.Ioi (0:ℝ),
+      Real.exp (-v) * min 1 (SkorokhodSpace.distWith (basePoint : ι) v 1 F G)) ≤ _
+    rw [hsplit, MeasureTheory.setIntegral_union hdisj measurableSet_Ioi h1 h2]
+    exact add_le_add hA hB
+  rw [SkorokhodSpace.dist_eq]
+  refine le_trans (ciInf_le (SkorokhodSpace.bddBelow_range_intDist _ _ _)
+    (1 : TimeChange.fixing (basePoint : ι))) ?_
+  have hone : ((1 : TimeChange.fixing (basePoint : ι)) : TimeChange ι) = 1 := rfl
+  rw [hone, TimeChange.norm_one]
+  exact max_le (by positivity) hiw
+
 omit [BasePoint ι] [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
 /-- **The values of a càdlàg path on a window are totally bounded.**  The window
 is a closed ball and `IsCadlag.totallyBounded_image_Icc` speaks of an interval,
@@ -18872,6 +19003,158 @@ theorem SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal [CompleteSpa
       exact ⟨(μ i).map SkorokhodSpace.extendNNReal, ⟨i, rfl⟩, hstep i⟩
   rw [himg, SkorokhodSpace.isTightMeasureSet_map_extendNNReal_iff]
 
+/-- **The test class may be thinned to a dense one.**  Tightness of the real
+images under a class of bounded continuous functions that is dense in the
+supremum norm gives tightness of the images under **every** bounded continuous
+function.
+
+This is what separates a criterion from a demand.  The equivalence above reads
+its right hand side at every `h : E →ᵇ ℝ`, while the sources of that hypothesis
+--- a generator, an algebra of test functions --- produce it on a class that is
+merely dense, and Ethier--Kurtz state their criterion with a dense class for that
+reason.
+
+**The topology of the density is the supremum norm here, and that is stronger
+than what a generator gives.**  A domain such as the compactly supported smooth
+functions is dense for uniform convergence **on compact sets** and not in the
+supremum norm --- a uniform limit of compactly supported functions vanishes at
+infinity, and the constant function does not.  This statement therefore covers
+the classes that are sup-norm dense and not the generator domains; what covers
+those is the approximation **in measure** of
+`MeasureTheory.isTightMeasureSet_map_of_forall_exists_measure_dist_gt_le`
+together with compact containment, of which this is the uniform special case.
+
+The proof is `MeasureTheory.isTightMeasureSet_map_of_forall_exists_dist_le` of the
+roadmap **WeakConvergence** applied to the family indexed by the dense class,
+with `SkorokhodSpace.dist_postcomp_le` as the uniform approximation: two bounded
+continuous functions at supremum distance `δ` post-compose to two paths at
+Skorokhod distance at most `δ`, and this **for every path at once**, which is
+what a uniform approximation of the map means.  Completeness of `D(ℝ≥0, ℝ)` is
+what the general statement spends, and it is `SkorokhodSpace.instCompleteSpace`.
+
+No hypothesis is read of `μ` --- neither finiteness nor compact containment. -/
+theorem SkorokhodSpace.isTightMeasureSet_map_postcomp_of_dense {γ : Type*}
+    {μ : γ → Measure D(ℝ≥0, E)} {H : Set (E →ᵇ ℝ)} (hH : Dense H)
+    (htight : ∀ g ∈ H, IsTightMeasureSet
+      {(μ i).map (SkorokhodSpace.postcomp (BoundedContinuousFunction.toContinuousMap g)) | i})
+    (f : E →ᵇ ℝ) :
+    IsTightMeasureSet {(μ i).map (SkorokhodSpace.postcomp f.toContinuousMap) | i} := by
+  refine MeasureTheory.isTightMeasureSet_map_of_forall_exists_dist_le
+    (T := fun g : H => SkorokhodSpace.postcomp (ι := ℝ≥0)
+      (BoundedContinuousFunction.toContinuousMap (g : E →ᵇ ℝ)))
+    (SkorokhodSpace.measurable_postcomp _) (fun g => SkorokhodSpace.measurable_postcomp _)
+    ?_ (fun g => htight g g.2)
+  intro δ hδ
+  obtain ⟨g, hgH, hgd⟩ := Metric.mem_closure_iff.1 (hH f) δ hδ
+  refine ⟨⟨g, hgH⟩, fun x => SkorokhodSpace.dist_postcomp_le _ _ _ (fun y => ?_)⟩
+  simpa [dist_comm] using (BoundedContinuousFunction.dist_coe_le_dist y).trans hgd.le
+
+/-- **Stage (B) of Milestone 8 over a dense test class**, and the form a
+generator delivers: under compact containment a family of laws on `D(ℝ≥0, E)` is
+tight as soon as the real images under a supremum-norm dense class of bounded
+continuous functions are.
+
+It is the equivalence above composed with the previous statement, and it is
+stated separately because it is the one **MartingaleProblems** Milestone 11
+consumes: the martingale hypothesis that produces tightness of an image is
+available on the domain of a generator, and `Dense` is the weakest thing that
+domain is asked for.
+
+The hypothesis is not a weakening: `SkorokhodSpace.isCompactContained_of_isTightMeasureSet`
+derives compact containment from the conclusion. -/
+theorem SkorokhodSpace.isTightMeasureSet_of_dense_forall_postcomp_nnreal [CompleteSpace E]
+    {γ : Type*} {μ : γ → Measure D(ℝ≥0, E)}
+    (hcc : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) μ)
+    {H : Set (E →ᵇ ℝ)} (hH : Dense H)
+    (htight : ∀ g ∈ H, IsTightMeasureSet
+      {(μ i).map (SkorokhodSpace.postcomp (BoundedContinuousFunction.toContinuousMap g)) | i}) :
+    IsTightMeasureSet {μ i | i} :=
+  (SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal hcc).2
+    (SkorokhodSpace.isTightMeasureSet_map_postcomp_of_dense hH htight)
+
+/-- **The test class thinned to one that is dense on compact sets only**, which
+is the topology a generator's domain is dense in and the form Ethier--Kurtz state
+their criterion in.
+
+It is the previous statement with the uniform approximation replaced by an
+approximation **in measure**, and the replacement is what compact containment
+pays for.  Given `δ` and `ε`: choose a window `m` with `exp (-m) < δ / 2`, let
+`Γ` be the compact set that holds the values of the path on that window up to
+mass `ε`, and let `g ∈ H` be within `δ / 2` of `f` on `Γ`.  On the event that the
+path stays in `Γ`,
+`SkorokhodSpace.dist_postcomp_le_of_forall_mem_exhaustion` gives
+`dist (postcomp g x) (postcomp f x) ≤ δ / 2 + exp (-m) < δ`, so the exceptional
+set of `MeasureTheory.isTightMeasureSet_map_of_forall_exists_measure_dist_gt_le`
+is contained in the complement of that event and carries mass at most `ε` --- for
+**every** `i`, which is the uniformity that statement asks for and which is
+precisely what compact containment provides.
+
+**The hypothesis on `H` is the density and not the algebra.**  Stone--Weierstrass
+is what produces it for a point separating subalgebra, and it is not used here;
+stating the density directly is what keeps this statement free of any algebraic
+structure on the test class. -/
+theorem SkorokhodSpace.isTightMeasureSet_map_postcomp_of_denseOnCompacts {γ : Type*}
+    {μ : γ → Measure D(ℝ≥0, E)} (hcc : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) μ)
+    {H : Set (E →ᵇ ℝ)}
+    (hH : ∀ Γ : Set E, IsCompact Γ → ∀ η : ℝ, 0 < η → ∀ f : E →ᵇ ℝ,
+      ∃ g ∈ H, ∀ y ∈ Γ, dist (g y) (f y) ≤ η)
+    (htight : ∀ g ∈ H, IsTightMeasureSet
+      {(μ i).map (SkorokhodSpace.postcomp (BoundedContinuousFunction.toContinuousMap g)) | i})
+    (f : E →ᵇ ℝ) :
+    IsTightMeasureSet {(μ i).map (SkorokhodSpace.postcomp f.toContinuousMap) | i} := by
+  refine MeasureTheory.isTightMeasureSet_map_of_forall_exists_measure_dist_gt_le
+    (T := fun g : H => SkorokhodSpace.postcomp (ι := ℝ≥0)
+      (BoundedContinuousFunction.toContinuousMap (g : E →ᵇ ℝ)))
+    (SkorokhodSpace.measurable_postcomp _) (fun g => SkorokhodSpace.measurable_postcomp _)
+    ?_ (fun g => htight g g.2)
+  intro δ hδ ε hε
+  obtain ⟨m, hm⟩ := exists_nat_gt (2 / δ)
+  have hpos : (0:ℝ) < Real.exp (m:ℝ) := Real.exp_pos _
+  have hexp : Real.exp (-(m:ℝ)) < δ / 2 := by
+    have hme : (2:ℝ) / δ < Real.exp (m:ℝ) :=
+      lt_of_lt_of_le hm (by linarith [Real.add_one_le_exp ((m:ℝ))])
+    rw [Real.exp_neg, inv_lt_comm₀ hpos (by linarith)]
+    calc (δ / 2)⁻¹ = 2 / δ := by field_simp
+      _ < Real.exp (m:ℝ) := hme
+  obtain ⟨Γ, hΓ, hΓle⟩ := hcc ε hε m
+  obtain ⟨g, hgH, hg⟩ := hH Γ hΓ (δ / 2) (by linarith) f
+  refine ⟨⟨g, hgH⟩, fun i => le_trans (measure_mono ?_) (hΓle i)⟩
+  intro x hx
+  have hx' : δ < dist (SkorokhodSpace.postcomp
+      (BoundedContinuousFunction.toContinuousMap g) x)
+      (SkorokhodSpace.postcomp f.toContinuousMap x) := hx
+  rw [Set.mem_compl_iff]
+  intro hcon
+  have hcon' : ∀ t ∈ exhaustion (basePoint : ℝ≥0) (m : ℝ), x.toFun t ∈ Γ := hcon
+  have hle : dist (SkorokhodSpace.postcomp (BoundedContinuousFunction.toContinuousMap g) x)
+      (SkorokhodSpace.postcomp f.toContinuousMap x) ≤ δ / 2 + Real.exp (-(m:ℝ)) := by
+    refine SkorokhodSpace.dist_postcomp_le_of_forall_mem_exhaustion _ _ _ (by linarith)
+      (Nat.cast_nonneg m) ?_
+    rintro y ⟨t, ht, rfl⟩
+    exact hg _ (hcon' t ht)
+  linarith
+
+/-- **Stage (B) of Milestone 8 at the density a generator has.**  Under compact
+containment a family of laws on `D(ℝ≥0, E)` is tight as soon as the real images
+under a class that is dense **for uniform convergence on compact sets** are.
+
+This is the form **MartingaleProblems** Milestone 11 consumes, and the one that
+`SkorokhodSpace.isTightMeasureSet_of_dense_forall_postcomp_nnreal` is too strong
+to serve: the domain of a generator is not dense in the supremum norm.  Compact
+containment appears twice in it, once as the hypothesis of the equivalence and
+once inside the approximation, and it is the same hypothesis both times. -/
+theorem SkorokhodSpace.isTightMeasureSet_of_denseOnCompacts_forall_postcomp_nnreal
+    [CompleteSpace E] {γ : Type*} {μ : γ → Measure D(ℝ≥0, E)}
+    (hcc : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) μ)
+    {H : Set (E →ᵇ ℝ)}
+    (hH : ∀ Γ : Set E, IsCompact Γ → ∀ η : ℝ, 0 < η → ∀ f : E →ᵇ ℝ,
+      ∃ g ∈ H, ∀ y ∈ Γ, dist (g y) (f y) ≤ η)
+    (htight : ∀ g ∈ H, IsTightMeasureSet
+      {(μ i).map (SkorokhodSpace.postcomp (BoundedContinuousFunction.toContinuousMap g)) | i}) :
+    IsTightMeasureSet {μ i | i} :=
+  (SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal hcc).2
+    (SkorokhodSpace.isTightMeasureSet_map_postcomp_of_denseOnCompacts hcc hH htight)
+
 /-! ### Where compact containment is free, and what is left when it is
 
 The criterion **MartingaleProblems** Milestone 11 opens with,
@@ -19429,3 +19712,274 @@ theorem SkorokhodSpace.modulusBased_extendNNReal_le_of_forall_gapped
           exact hs.2
       have h3 := hosc k (by omega) _ hmem
       simpa [SkorokhodSpace.extendNNReal_apply, Real.toNNReal_coe] using h3
+
+/-! ### Milestone 8: the functionals a martingale problem tests
+
+The third item of the chain of **MartingaleProblems** Milestone 11 --- a weak
+limit of solutions is a solution --- is read through
+`MeasureTheory.mpSolution_of_tendsto_of_pContinuous` of Milestone 10 there, and
+that theorem asks its convergence hypothesis in the shape
+
+> `P {ω | ContinuousAt ψ (X ω)} = 1`
+
+for each functional `ψ` the martingale problem tests.  On the path space those
+functionals are
+
+```
+ψ t x = f (x t) - ∫_0^t g (x u) du,
+```
+
+and this section says at which paths each of the two summands is continuous.
+
+**The two summands are not alike, and the difference is the whole content.**
+Evaluation is continuous at every path that does not jump at the time read
+(`SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet`), and the no-jump
+condition is not removable --- `SkorokhodSpace.exists_jump_continuousAt_eval`
+exhibits a path at which evaluation is discontinuous.  The integral is
+continuous at **every** path, with no hypothesis at all: the exceptional times of
+the limit path form a countable set by `countable_leftJumpSet`, a countable set
+is Lebesgue null, and dominated convergence does the rest.  So the no-jump
+condition is asked at the **one** time the functional evaluates and at no other,
+and the compensator contributes nothing to it.
+
+**Why the proof is sequential and may be.**  `D(ι, E)` is metric by
+`SkorokhodSpace.instMetricSpace`, so `𝓝 x` is countably generated and
+`Filter.tendsto_iff_seq_tendsto` turns continuity into sequential continuity ---
+which is what dominated convergence, a statement about sequences, consumes. -/
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- Along a sequence of paths converging in the Skorokhod metric the values
+converge at every time at which the **limit** path does not jump.  This is
+`SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet` composed with the
+sequence, and it is separated out because the dominated convergence argument
+below reads it once per time and not once per path. -/
+theorem SkorokhodSpace.tendsto_eval_of_tendsto [SecondCountableTopology E]
+    {x : ℕ → D(ι, E)} {y : D(ι, E)} (hx : Tendsto x atTop (𝓝 y))
+    {t : ι} (ht : t ∉ leftJumpSet y.toFun) :
+    Tendsto (fun n => (x n).toFun t) atTop (𝓝 (y.toFun t)) :=
+  (SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet ht).tendsto.comp hx
+
+/-- **The integral of a bounded continuous function along the path is a
+continuous functional of the path, at every path and with no hypothesis on its
+jumps.**
+
+The times are read through a measurable `φ : α → ι` against a finite measure `μ`
+on `α`, which is the shape the consumer has: there `α = ℝ`, `μ` is Lebesgue
+measure restricted to the window, and `φ = Real.toNNReal`.  What is asked of the
+pair is exactly one thing, `hnull`: a countable set of times is seen by the image
+of `μ` under `φ` as a null set.  That is what makes the jumps of the limit path
+invisible, and it is the only place where anything about `μ` is used beyond its
+finiteness.
+
+**No jump condition appears, and that is not an oversight.**  A path has
+countably many jumps (`countable_leftJumpSet`), the set of parameters that read
+them is `μ`-null by `hnull`, and off that set the values converge by
+`SkorokhodSpace.tendsto_eval_of_tendsto`.  Dominated convergence with the
+constant majorant `‖g‖` closes it, the majorant being integrable because `μ` is
+finite.
+
+**The measurability of the integrand is `IsCadlag.measurable`** --- a càdlàg map
+is Borel measurable, proved in Milestone 2 without any linear structure on `E`
+--- composed with `φ` and with the continuous `g`. -/
+theorem SkorokhodSpace.continuousAt_integral_comp [SecondCountableTopology E]
+    [MeasurableSpace ι] [BorelSpace ι] {α : Type*} [MeasurableSpace α]
+    {μ : Measure α} [IsFiniteMeasure μ] {φ : α → ι} (hφ : Measurable φ)
+    (hnull : ∀ J : Set ι, J.Countable → μ (φ ⁻¹' J) = 0)
+    (g : E →ᵇ ℝ) (y : D(ι, E)) :
+    ContinuousAt (fun f : D(ι, E) => ∫ s, g (f.toFun (φ s)) ∂μ) y := by
+  have hmeas : ∀ f : D(ι, E), AEStronglyMeasurable (fun s => g (f.toFun (φ s))) μ :=
+    fun f => (g.continuous.measurable.comp (f.isCadlag.measurable.comp hφ)).aestronglyMeasurable
+  rw [ContinuousAt, Filter.tendsto_iff_seq_tendsto]
+  intro x hx
+  have hae : ∀ᵐ s ∂μ, Tendsto (fun n => g ((x n).toFun (φ s))) atTop (𝓝 (g (y.toFun (φ s)))) := by
+    have h0 : μ (φ ⁻¹' leftJumpSet y.toFun) = 0 := hnull _ (countable_leftJumpSet y.isCadlag)
+    filter_upwards [measure_eq_zero_iff_ae_notMem.1 h0] with s hs
+    exact (g.continuous.tendsto _).comp (SkorokhodSpace.tendsto_eval_of_tendsto hx hs)
+  exact tendsto_integral_of_dominated_convergence (fun _ => ‖g‖)
+    (fun n => hmeas (x n)) (integrable_const _)
+    (fun n => Filter.Eventually.of_forall fun s => g.norm_coe_le_norm _) hae
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **A finite dimensional test function is continuous at every path that jumps
+at none of the times its factors may read.**
+
+The class is `SkorokhodSpace.evalFuns E T`, the multiplicative system that
+Milestone 8 uses to identify two laws; the condition is asked over the whole of
+`T` and not over the `Finset` of the particular member, because membership in
+`evalFuns` is an existential and the `Finset` is not recoverable from the
+function.  For the consumer `T` is countable, and then the condition holds for
+almost every path by
+`SkorokhodSpace.measure_setOf_forall_notMem_leftJumpSet_eq_one`.
+
+`tendsto_finsetProd` is what carries the finitely many factors; there is no
+`continuousAt_finsetProd` in Mathlib, and `ContinuousAt` is a `Tendsto` along
+`𝓝 y`, so the product lemma for filters applies directly. -/
+theorem SkorokhodSpace.continuousAt_of_mem_evalFuns [SecondCountableTopology E]
+    {T : Set ι} {h : D(ι, E) → ℝ} (hh : h ∈ SkorokhodSpace.evalFuns E T)
+    {y : D(ι, E)} (hy : ∀ t ∈ T, t ∉ leftJumpSet y.toFun) :
+    ContinuousAt h y := by
+  obtain ⟨s, F, hs, rfl⟩ := hh
+  exact tendsto_finsetProd s fun t ht =>
+    (F t).continuous.continuousAt.comp
+      (SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet (hy t (hs ht)))
+
+/-- **A law with no fixed discontinuity along a countable set of times gives full
+mass to the paths that jump at none of them.**
+
+This is the step from the *times* of stage (A) of Milestone 8 to the *paths* the
+continuity statements above are read at, and it is a countable intersection of
+sets of full measure --- `measure_biUnion_null_iff` --- and nothing more.  **No
+Fubini argument occurs in it**, and none is needed:
+`SkorokhodSpace.exists_countable_dense_continuity` has already produced a
+countable set of times, and countability is what a union of null sets asks for.
+
+The measurability of the jump event at a fixed time is
+`SkorokhodSpace.measurableSet_leftJump`; it is what allows the passage from
+`μ {leftLim = value} = 1` to `μ {jump} = 0` through `prob_compl_eq_one_iff`, and
+for a non-measurable set that passage is false. -/
+theorem SkorokhodSpace.measure_setOf_forall_notMem_leftJumpSet_eq_one
+    [SecondCountableTopology E]
+    (μ : Measure D(ι, E)) [IsProbabilityMeasure μ] {T : Set ι} (hT : T.Countable)
+    (hgood : ∀ t ∈ T, μ {f : D(ι, E) | Function.leftLim f.toFun t = f.toFun t} = 1) :
+    μ {f : D(ι, E) | ∀ t ∈ T, t ∉ leftJumpSet f.toFun} = 1 := by
+  have hcompl : ∀ t : ι, {f : D(ι, E) | Function.leftLim f.toFun t = f.toFun t}
+      = {f : D(ι, E) | t ∈ leftJumpSet f.toFun}ᶜ := by
+    intro t; ext f; simp [leftJumpSet]
+  have hnull : ∀ t ∈ T, μ {f : D(ι, E) | t ∈ leftJumpSet f.toFun} = 0 := by
+    intro t ht
+    have h := hgood t ht
+    rw [hcompl t] at h
+    exact (prob_compl_eq_one_iff (SkorokhodSpace.measurableSet_leftJump t)).1 h
+  have hset : {f : D(ι, E) | ∀ t ∈ T, t ∉ leftJumpSet f.toFun}
+      = (⋃ t ∈ T, {f : D(ι, E) | t ∈ leftJumpSet f.toFun})ᶜ := by
+    ext f; simp
+  rw [hset, prob_compl_eq_one_iff
+    (MeasurableSet.biUnion hT fun t _ => SkorokhodSpace.measurableSet_leftJump t)]
+  exact (measure_biUnion_null_iff hT).2 hnull
+
+section MPTestFunctional
+
+variable {E : Type*} [MetricSpace E] [MeasurableSpace E] [BorelSpace E] [PolishSpace E]
+
+/-- **The compensator over a window of the nonnegative index is a continuous
+functional of the path**, at every path.
+
+This is `SkorokhodSpace.continuousAt_integral_comp` at the data the consumer has:
+`α = ℝ`, `μ` Lebesgue measure restricted to `Set.Ioc 0 T`, and
+`φ = Real.toNNReal`, which is the exact shape in which the roadmap
+**MartingaleProblems** writes the compensator of a martingale problem over the
+clock `lebesgueClock`.
+
+Discharging `hnull` is one inclusion: a point of `Set.Ioc 0 T` whose truncation
+lies in a countable `J ⊆ ℝ≥0` is the image of that truncation under the
+coercion, because it is nonnegative (`Real.coe_toNNReal`), so the intersection
+lies in the countable set `NNReal.toReal '' J`. -/
+theorem SkorokhodSpace.continuousAt_setIntegral_toNNReal (g : E →ᵇ ℝ) (T : ℝ) (y : D(ℝ≥0, E)) :
+    ContinuousAt (fun f : D(ℝ≥0, E) =>
+      ∫ s in Set.Ioc (0 : ℝ) T, g (f.toFun s.toNNReal)) y := by
+  refine SkorokhodSpace.continuousAt_integral_comp (μ := (volume : Measure ℝ).restrict
+    (Set.Ioc (0 : ℝ) T)) measurable_real_toNNReal ?_ g y
+  intro J hJ
+  rw [Measure.restrict_apply' measurableSet_Ioc]
+  refine measure_mono_null (t := (NNReal.toReal '' J)) ?_ ((hJ.image _).measure_zero _)
+  rintro s ⟨hs, hs2⟩
+  exact ⟨s.toNNReal, hs, Real.coe_toNNReal s hs2.1.le⟩
+
+/-- **The functional a martingale problem tests is continuous at every path that
+does not jump at the time it is read.**
+
+The no-jump condition is asked at `t` alone.  The compensator carries none of it,
+by `SkorokhodSpace.continuousAt_setIntegral_toNNReal`; the evaluation carries all
+of it, by `SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet`.  That
+asymmetry is why the third item of the chain of **MartingaleProblems**
+Milestone 11 quantifies over a set of times and not over a set of paths. -/
+theorem SkorokhodSpace.continuousAt_mpTest (f g : E →ᵇ ℝ) (t : ℝ≥0) {y : D(ℝ≥0, E)}
+    (ht : t ∉ leftJumpSet y.toFun) :
+    ContinuousAt (fun z : D(ℝ≥0, E) =>
+      f (z.toFun t) - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g (z.toFun s.toNNReal)) y :=
+  ((f.continuous.continuousAt).comp
+      (SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet ht)).sub
+    (SkorokhodSpace.continuousAt_setIntegral_toNNReal g (t : ℝ) y)
+
+/-- The sample points whose path jumps at none of a countable set of times carry
+full mass.  This is
+`SkorokhodSpace.measure_setOf_forall_notMem_leftJumpSet_eq_one` read through a
+process rather than through its law, which is the form
+`MeasureTheory.mpSolution_of_tendsto_of_pContinuous` writes its hypotheses in;
+`Measurable X` is what the passage from full measure to null complement asks
+for, and it cannot be dropped, a non-measurable set of full outer measure having
+a complement of full outer measure as well. -/
+theorem SkorokhodSpace.measure_setOf_forall_notMem_leftJumpSet_comp_eq_one
+    {Ω : Type*} [MeasurableSpace Ω] {P : Measure Ω} [IsProbabilityMeasure P]
+    {X : Ω → D(ℝ≥0, E)} (hX : Measurable X) {T : Set ℝ≥0} (hT : T.Countable)
+    (hgood : ∀ t ∈ T, P {ω | Function.leftLim (X ω).toFun t = (X ω).toFun t} = 1) :
+    P {ω | ∀ t ∈ T, t ∉ leftJumpSet (X ω).toFun} = 1 := by
+  have hms : ∀ t : ℝ≥0, MeasurableSet {ω | t ∈ leftJumpSet (X ω).toFun} :=
+    fun t => hX (SkorokhodSpace.measurableSet_leftJump t)
+  have hnull : ∀ t ∈ T, P {ω | t ∈ leftJumpSet (X ω).toFun} = 0 := by
+    intro t ht
+    have h1 := hgood t ht
+    have h : {ω | Function.leftLim (X ω).toFun t = (X ω).toFun t}
+        = {ω | t ∈ leftJumpSet (X ω).toFun}ᶜ := by ext ω; simp [leftJumpSet]
+    rw [h] at h1
+    exact (prob_compl_eq_one_iff (hms t)).1 h1
+  have hset : {ω | ∀ t ∈ T, t ∉ leftJumpSet (X ω).toFun}
+      = (⋃ t ∈ T, {ω | t ∈ leftJumpSet (X ω).toFun})ᶜ := by ext ω; simp
+  rw [hset, prob_compl_eq_one_iff (MeasurableSet.biUnion hT fun t _ => hms t)]
+  exact (measure_biUnion_null_iff hT).2 hnull
+
+/-- **Hypothesis (b) of `MeasureTheory.mpSolution_of_tendsto_of_pContinuous` on
+the path space**: the functional a martingale problem tests is `P`-continuous at
+the limit path, at every time of a countable set at which the law has no fixed
+discontinuity.
+
+Such a set exists for **every** law, and is dense:
+`SkorokhodSpace.exists_countable_dense_continuity`.  So the hypothesis is not a
+restriction on the limit but a choice of the times at which the martingale
+identity is read --- which is what the third item of the chain of
+**MartingaleProblems** Milestone 11 takes for its set `D`. -/
+theorem SkorokhodSpace.measure_setOf_continuousAt_mpTest_eq_one
+    {Ω : Type*} [MeasurableSpace Ω] {P : Measure Ω} [IsProbabilityMeasure P]
+    {X : Ω → D(ℝ≥0, E)} (hX : Measurable X) {T : Set ℝ≥0} (hT : T.Countable)
+    (hgood : ∀ t ∈ T, P {ω | Function.leftLim (X ω).toFun t = (X ω).toFun t} = 1)
+    (f g : E →ᵇ ℝ) {t : ℝ≥0} (ht : t ∈ T) :
+    P {ω | ContinuousAt (fun z : D(ℝ≥0, E) =>
+      f (z.toFun t) - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g (z.toFun s.toNNReal)) (X ω)} = 1 := by
+  refine le_antisymm prob_le_one ?_
+  rw [← SkorokhodSpace.measure_setOf_forall_notMem_leftJumpSet_comp_eq_one hX hT hgood]
+  exact measure_mono fun ω hω => SkorokhodSpace.continuousAt_mpTest f g t (hω t ht)
+
+/-- **The `Z` half of the same hypothesis**: the tested increment, multiplied by a
+finite dimensional test function read at the same countable set of times, is
+`P`-continuous at the limit path.
+
+`MeasureTheory.mpSolution_of_tendsto_of_pContinuous` asks its continuity of the
+**product** and not of the factors, and this is where that pays: the three
+factors are continuous at the same paths, namely those jumping at no time of `T`,
+so one application of
+`SkorokhodSpace.measure_setOf_forall_notMem_leftJumpSet_comp_eq_one` answers for
+all of them at once.
+
+The determining class is `SkorokhodSpace.evalFuns E T` of the section on two laws
+agreeing along a dense set of times.  That it determines the conditional
+expectations --- `MeasureTheory.IsDetermining` --- is not asserted here and is
+the next item; what is asserted is that its members are continuous where they
+have to be. -/
+theorem SkorokhodSpace.measure_setOf_continuousAt_mpTest_mul_eq_one
+    {Ω : Type*} [MeasurableSpace Ω] {P : Measure Ω} [IsProbabilityMeasure P]
+    {X : Ω → D(ℝ≥0, E)} (hX : Measurable X) {T : Set ℝ≥0} (hT : T.Countable)
+    (hgood : ∀ t ∈ T, P {ω | Function.leftLim (X ω).toFun t = (X ω).toFun t} = 1)
+    (f g : E →ᵇ ℝ) {s t : ℝ≥0} (hs : s ∈ T) (ht : t ∈ T)
+    {Z : D(ℝ≥0, E) → ℝ} (hZ : Z ∈ SkorokhodSpace.evalFuns E T) :
+    P {ω | ContinuousAt (fun z : D(ℝ≥0, E) =>
+      ((f (z.toFun t) - ∫ u in Set.Ioc (0 : ℝ) (t : ℝ), g (z.toFun u.toNNReal))
+        - (f (z.toFun s) - ∫ u in Set.Ioc (0 : ℝ) (s : ℝ), g (z.toFun u.toNNReal)))
+      * Z z) (X ω)} = 1 := by
+  refine le_antisymm prob_le_one ?_
+  rw [← SkorokhodSpace.measure_setOf_forall_notMem_leftJumpSet_comp_eq_one hX hT hgood]
+  refine measure_mono fun ω hω => ?_
+  exact ((SkorokhodSpace.continuousAt_mpTest f g t (hω t ht)).sub
+    (SkorokhodSpace.continuousAt_mpTest f g s (hω s hs))).mul
+    (SkorokhodSpace.continuousAt_of_mem_evalFuns hZ hω)
+
+end MPTestFunctional

@@ -11209,6 +11209,35 @@ has to be chosen once for all `n`. What stands:
   `D ι E`, then `X` solves the martingale problem for `A`. Derive it from
   Milestone 10, taking for `D` the set of times at which the limit has no fixed
   discontinuity.
+
+  **The `P`-continuity this derivation needs is proved, 2026-09-21**, in
+  **SkorokhodSpace** Milestone 8, and it decides which of the two versions of
+  Milestone 10 the item reads: `mpSolution_of_tendsto_of_pContinuous`, not
+  `mpSolution_of_tendsto`, because the hypothesis that is available on the path
+  space is weak convergence of the *paths* and the functionals are continuous
+  only off the jumps. The five statements:
+  `SkorokhodSpace.continuousAt_setIntegral_toNNReal`,
+  `SkorokhodSpace.continuousAt_mpTest`,
+  `SkorokhodSpace.measure_setOf_forall_notMem_leftJumpSet_comp_eq_one`,
+  `SkorokhodSpace.measure_setOf_continuousAt_mpTest_eq_one` and
+  `SkorokhodSpace.measure_setOf_continuousAt_mpTest_mul_eq_one`.
+
+  **The compensator carries no jump condition at all**, and that is the finding
+  that shapes the item: `SkorokhodSpace.continuousAt_integral_comp` is continuous
+  at *every* path, the jumps of the limit path being a countable — hence
+  Lebesgue null — set of times. So the set `D` is asked for by the **evaluation**
+  alone, and it is asked at the single time the test function reads. What that
+  leaves open for a run at this item is `MeasureTheory.IsDetermining` for the
+  class `SkorokhodSpace.evalFuns E T` restricted to the past of `s`: the members
+  of that class are the only bounded functionals known to be continuous where
+  they must be, and `isDetermining_of_generateFromFuns` is the criterion they
+  have to meet. Its four inputs are `SkorokhodSpace.isMulSystem_evalFuns`,
+  `SkorokhodSpace.measurable_of_mem_evalFuns`,
+  `SkorokhodSpace.bounded_of_mem_evalFuns` and the constant `1` — the product
+  over the empty `Finset` — and what is missing is the fifth,
+  `generateFromFuns (evalFuns E (T ∩ Set.Iic s)) = ⨆ r ≤ s, comap (eval r)`, the
+  **past** form of `SkorokhodSpace.generateFromFuns_evalFuns`, which today is
+  stated for the whole Borel structure.
 * `mpSolution_of_tendsto_cadlag_of_pathwise`: the same with the uniform
   convergence of `f n` and `g n` replaced by
   `𝔼^{P n}‖(f n - f) (X n t)‖ → 0` and
@@ -11240,6 +11269,16 @@ has to be chosen once for all `n`. What stands:
   `(f 1, …, f k) ∘ X n` are tight in `D ι (Fin k → ℝ)`. The `𝕂`-valued case is
   the real one applied to `Re f` and `Im f` together with the `Fin k` form.
   This is where the continuous time Doob inequalities of Milestone 9 are used.
+
+  **The name under which it stands, 2026-09-21.** The general form, taking the
+  two pairs and the two errors as hypotheses, is
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair`;
+  the form whose hypothesis is a **martingale** and whose error is zero is
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_martingale`. Both carry
+  `IsTightMeasureSet` in the name because that is the conclusion and because the
+  file names its statements after it throughout. What is still open of the item
+  as stated here is the passage to the **sup-norm closure** of the approximable
+  functions and the `Fin k` valued form; the single real `f` is done.
 
   **The first condition is a lower integral in `ℝ≥0∞`, and that is not
   cosmetic.** Written over `ℝ` as `𝔼[⨆ t ∈ Set.Iic T ∩ D, |Y n t - f (X n t)|]`
@@ -12846,13 +12885,15 @@ has to be chosen once for all `n`. What stands:
   condition on the class the approximants are drawn from, and this milestone
   states it there.
 
-  **What remains of this item is the step above the pairs**: the two pairs are
-  hypotheses of the statement, and what produces them is the martingale
-  approximation together with the closure of the approximable functions under
-  products, which is what makes the **second** pair approximate `f²` and not `f`.
-  That closure is a witness and not a convenience — the second approximant is not
-  the square of the first — and it is where the continuous time Doob inequalities
-  of Milestone 9 are used. Everything below it is built.
+  **The step above the pairs** is what produces them: for an *exact* solution it
+  is the martingale hypothesis read twice, at `f` and at `f²`, and that is
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_martingale` below. For
+  *approximants* it is the martingale approximation together with the closure of
+  the approximable functions under products, which is what makes the **second**
+  pair approximate `f²` and not `f`. That closure is a witness and not a
+  convenience — the second approximant is not the square of the first — and it is
+  where the continuous time Doob inequalities of Milestone 9 are used.
+  Everything below it is built.
 
   **The class is inhabited, 2026-09-21.**
   `MeasureTheory.isApproximatingPair_of_martingale`: a process `X` that is
@@ -12951,6 +12992,128 @@ has to be chosen once for all `n`. What stands:
   the same Mathlib lemma with the integrand **strongly measurable and real
   valued** instead, and it costs the construction nothing.
 
+  **The item stands for a family of solutions, 2026-09-21.**
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_martingale`: a family
+  `X i` of processes on one filtered probability space, strongly progressive
+  with right continuous paths, for which **both**
+  `f ∘ X i - ∫ g ∘ X i` and `(f ∘ X i)² - ∫ g' ∘ X i` are martingales, has tight
+  laws for `postcomp f ∘ X i` in `D(ℝ≥0, ℝ)`. Read at a generator, `g = A f` and
+  `g' = A (f²)`; the second hypothesis is not implied by the first, and `g'` is
+  not `g²`.
+
+  **This is the first item's own shape — a martingale hypothesis in, tightness
+  out — and what it adds over
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair`
+  is that the approximation error is zero.** `Y` is `f ∘ X i` itself and `Y'` is
+  `(f ∘ X i)²`, so both errors vanish identically and the `ε` of the criterion is
+  never spent. A consumer whose processes only *approximately* solve the problem
+  — Donsker's, whose random walks solve no martingale problem at all — calls the
+  bounded pair form directly; this one is the exact case, and it is the one the
+  acceptance examples of Milestone 4 meet.
+
+  **The two pairs come from one statement, and no product on `E →ᵇ ℝ` is used.**
+  `MeasureTheory.isApproximatingPair_of_martingale` is stated for a **merely
+  continuous** tested function, boundedness of it being read in no field of the
+  class: `progressive` and `progressive_sub` are measurability, `rightContinuous`
+  is continuity, `martingale` is the hypothesis, and the three fields carrying a
+  bound read the **density** alone. So it applies at `f` and at `f²` alike, the
+  second through `Continuous.pow`, and the closure of the approximable functions
+  under products — which the paragraph above names as what the second pair
+  needs — is not what an exact solution requires. What the consumer does need is
+  a bound on each approximant, and there `‖f‖` and `‖f‖²` are read; that is the
+  one place boundedness of `f` enters.
+
+  **What the two pairs do not share is the constant**: they are
+  `T' ^ q.toReal⁻¹ * ‖g‖₊` and `T' ^ q.toReal⁻¹ * ‖g'‖₊`, while the criterion
+  asks for one `K`. `MeasureTheory.IsApproximatingPair.mono_K` at the maximum
+  joins them, and it is the whole dependence of the class on that parameter: `K`
+  occurs in exactly one field and there as an upper bound. No monotonicity in `T`
+  or `q` holds in its place — the horizon is the measure of the window in two
+  fields at once, and the exponent is read in `one_lt_exponent`. The three
+  quantities the criterion leaves free are then **chosen**: `q = 2`, the horizon
+  `u + 1` for the window `u` handed down, and `K` the maximum above.
+
+  **And the seam to the next item, the same day.**
+  `MeasureTheory.isTightMeasureSet_map_of_forall_martingale`: under compact
+  containment of `{P.map (Φ i)}` at `0`, and with the two martingale hypotheses
+  available at **every** `f : E →ᵇ ℝ`, the laws of the `E` valued paths
+  themselves are tight in `D(ℝ≥0, E)`. That is what
+  `isRelativelyCompact_of_approx` consumes; the real images are not. The proof is
+  one application of `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal`
+  of **SkorokhodSpace** Milestone 8, whose right hand side is literally the
+  conclusion of the previous statement quantified over `h`, and no new estimate
+  occurs in it.
+
+  **The price is the quantifier, and it is paid, 2026-09-21.**
+  `MeasureTheory.isTightMeasureSet_map_of_dense_forall_martingale`: the two
+  martingale hypotheses are read on a class `H : Set (E →ᵇ ℝ)` that is merely
+  **dense in the supremum norm**, and the conclusion is unchanged. The statement
+  above is the case `H = Set.univ`, kept because it is the form in which the
+  hypothesis is checked when a problem is posed at every test function. The class
+  `H` is asked to be closed under nothing: `g` and `g'` are quantified inside, so
+  `g'` answers for `f²` without `f²` having to lie in `H`.
+
+  **And the density a generator really has, the same day.**
+  `MeasureTheory.isTightMeasureSet_map_of_denseOnCompacts_forall_martingale`: the
+  class `H` is asked to be dense for **uniform convergence on compact sets**
+  only. That correction is not cosmetic — the domain of a generator is *not*
+  dense in the supremum norm: `Cc^∞(ℝ)` is not dense in `ℝ →ᵇ ℝ`, a uniform limit
+  of compactly supported functions vanishing at infinity while the constant `1`
+  does not. So the sup-norm form above is met by no diffusion, and this one is
+  the statement the acceptance examples use.
+
+  **What pays for the weaker density is compact containment**, and it is read
+  twice in the same hypothesis: once to lift the tightness of the real images
+  back to the family, and once to hold the values of the path on a window inside
+  a compact `Γ ⊆ E` up to mass `ε`, where the approximation is good. Outside the
+  window the Skorokhod metric is damped by `exp (−u)`, and that is the whole
+  estimate: `SkorokhodSpace.dist_postcomp_le_of_forall_mem_exhaustion` compares
+  two post-compositions on the values of the path in a window alone, at the price
+  `exp (−M)`. The general engine underneath is
+  `MeasureTheory.isTightMeasureSet_map_of_forall_exists_measure_dist_gt_le` of
+  **WeakConvergence**, which asks for the approximation only **in measure and
+  uniformly in the index**; the sup-norm form is its special case with an empty
+  exceptional set.
+
+  **And the data a martingale problem is actually posed with, the same day.**
+  `MeasureTheory.isTightMeasureSet_map_of_subalgebra_forall_martingale`: no
+  density hypothesis at all, but a point separating subalgebra
+  `A : Subalgebra ℝ (E →ᵇ ℝ)` — the domain of the generator. Its density on
+  compact sets is supplied by
+  `MeasureTheory.exists_mem_subalgebra_forall_dist_le_of_isCompact` of
+  **WeakConvergence**, which is Stone–Weierstrass on a compact set carried from
+  `C(E, ℝ)` back to the bounded functions.
+
+  **The first item of the chain is therefore complete at the quantifier the
+  acceptance examples meet**, and the three weakenings it took are not three
+  conveniences: a generator gives the martingale property on an *algebra*, an
+  algebra is dense only on *compact sets*, and density on compact sets suffices
+  only because *compact containment* holds the paths there. The countable dense
+  set `S` of times is unrelated to any of this — it lives in the index, not in
+  the test class. What remains of the item is the `Fin k` valued form.
+
+  **What made the first of the three weakenings possible is one estimate and one
+  general fact**, both outside this file.
+  `SkorokhodSpace.dist_postcomp_le` of **SkorokhodSpace** Milestone 8: two
+  post-compositions of *one* path are at most as far apart as the two maps are on
+  the value space, because the time change may be taken to be the identity, its
+  logarithmic norm is `0`, and `∫₀^∞ exp (−u) du = 1`. That is a **uniform**
+  approximation of the map `postcomp`, and
+  `MeasureTheory.isTightMeasureSet_map_of_forall_exists_dist_le` of
+  **WeakConvergence** turns a uniform approximation of a map into tightness of
+  its image laws. The compact set there has to be built rather than transported:
+  the closed thickening of a compact set by the approximation error is compact
+  for no reason at all, and the set that works is the intersection over all error
+  scales, `⋂ k, cthickening (1/(k+1)) (K k)`.
+
+  **A naming correction made at the same time, 2026-09-21.** The class and all
+  of `namespace IsApproximatingPair` stood at the **root** namespace while
+  twenty-two docstrings in the file cited them as
+  `MeasureTheory.IsApproximatingPair…` — a name a reader could not look up. The
+  section now opens `namespace MeasureTheory`, which is where the rest of the
+  milestone lives, and the citations are true. Nothing of the mathematics
+  changed; the file builds with 0 errors and 0 `sorry` as before.
+
 * `isRelativelyCompact_of_approx`: if `E` is Polish, the domain of `A` contains
   an algebra separating points and vanishing nowhere, the approximation holds
   for each `(f,g) ∈ A`, and `{X n}` satisfies compact containment, then `{X n}`
@@ -12966,6 +13129,37 @@ has to be chosen once for all `n`. What stands:
   points. The previous item makes each `postcomp f ∘ X n` tight; and
   `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` of Milestone 8 there
   lifts that back to `{X n}`.
+
+  **The item stands in the exact case, 2026-09-21.**
+  `MeasureTheory.isCompact_closure_of_subalgebra_forall_martingale`: under the
+  hypotheses of the previous item — a point separating subalgebra, the martingale
+  property on it, and compact containment — the laws of the paths have compact
+  closure in the weak topology of `ProbabilityMeasure D(ℝ≥0, E)`. There is no new
+  estimate in it: the tightness is the previous item, and the passage from
+  tightness to compact closure is Prokhorov, which Mathlib has as
+  `isCompact_closure_of_isTightMeasureSet`
+  (`MeasureTheory/Measure/Prokhorov.lean:530`) and which asks only `T2` of the
+  space. Neither Polishness of the path space nor completeness is read there;
+  they are read upstream, in the tightness.
+
+  **What the item costs is the crossing of two types.** Tightness is stated for a
+  set of `Measure`, Prokhorov concludes about a set of `ProbabilityMeasure`, and
+  the set is therefore written as a comprehension over `ProbabilityMeasure` — the
+  coercion is matched rather than constructed.
+
+  **And a junk value that happens to say the truth.** Mathlib's instance
+  `IsProbabilityMeasure (Measure.map f μ)`
+  (`MeasureTheory/Measure/Typeclasses/Probability.lean:124`) carries no
+  measurability hypothesis: where `f` is not a.e. measurable, `Measure.map`
+  returns a Dirac measure, and a Dirac measure is a probability measure. So the
+  instance is free for a reason that has nothing to do with the path map. What
+  makes `P.map (Φ i)` the law of the path rather than that Dirac is
+  `MeasureTheory.measurable_pathOfProcess`, and it is read in the tightness.
+
+  What remains of the item is the approximate case — processes that only nearly
+  solve the problem, Donsker's random walks among them — which calls the bounded
+  pair form of the first item instead of its martingale form, and the
+  identification of the limit points, which is the next item.
 * `tendsto_of_isRelativelyCompact_of_unique`: with uniqueness from Milestone 6
   or Milestone 8, relative compactness upgrades to convergence.
 * Convergence in measure as a second mode: the space of càdlàg paths with the
