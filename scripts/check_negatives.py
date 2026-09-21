@@ -424,6 +424,35 @@ CLAIMS_TODO8 = [
      'theorem le_lintegral|lemma le_lintegral',
      ['Mathlib/'],
      ['Mathlib/MeasureTheory/Integral/Lebesgue/Add.lean']),
+    ('abs-of-martingale-is-submartingale',
+     'MartingaleProblems/Suggested.lean, `Martingale.submartingale_abs`; '
+     'MartingaleProblems/README.md, Meilenstein 11',
+     'Daß der **Betrag** eines Martingals ein Untermartingal ist, steht in '
+     'Mathlib in keiner Fassung: `Mathlib/Probability/Martingale/Basic.lean` '
+     'trägt `Submartingale.pos` für den Positivteil und `Submartingale.sup` für '
+     'das Supremum zweier, und im ganzen Verzeichnis '
+     '`Mathlib/Probability/Martingale/` kommt `abs` in genau einem Namen vor, '
+     '`Submartingale.exists_tendsto_of_abs_bddAbove_aux`. Am 2026-09-21 mit '
+     '`example … := by exact?` gegen den master-Worktree geprüft: `exact?` '
+     'schließt das Ziel nicht.',
+     'abs_submartingale|submartingale_abs|Martingale.abs',
+     ['Mathlib/'],
+     []),
+    ('maximal-ineq-event-form',
+     'MartingaleProblems/Suggested.lean, `Martingale.measure_exists_abs_ge_le`; '
+     'MartingaleProblems/README.md, Meilenstein 11',
+     'Die Maximalungleichung in **Ereignisgestalt** — '
+     '`ε · P {∃ k ≤ N, ε ≤ |f k|} ≤ ∫ |f N|` — steht in Mathlib nicht. '
+     'Vorhanden ist `MeasureTheory.maximal_ineq` '
+     '(`Mathlib/Probability/Martingale/OptionalStopping.lean:144`) über '
+     '`Finset.sup'"'"'` und mit dem Integral über dem Ereignis selbst; die '
+     'beiden Umformungen (`Finset.le_sup'"'"'_iff` und '
+     '`MeasureTheory.setIntegral_le_integral`) bleiben dem Verbraucher. Am '
+     '2026-09-21 mit `example … := by exact?` gegen den master-Worktree '
+     'geprüft: `exact?` schließt das Ziel nicht.',
+     'measure_exists_abs|maximal_ineq_event|measure_le_of_maximal',
+     ['Mathlib/'],
+     []),
 ]
 
 

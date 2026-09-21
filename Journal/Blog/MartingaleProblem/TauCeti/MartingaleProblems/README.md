@@ -13442,17 +13442,42 @@ has to be chosen once for all `n`. What stands:
   left for the walks is to exhibit their approximating pairs, which is an
   instance and not an item.
 
-  **Of the compact containment, the reduction is done and the estimate is
-  not, 2026-09-21.** `SkorokhodSpace.isCompactContained_of_forall_exists_bound`
+  **Of the compact containment, everything that is about path space is
+  done, 2026-09-21.** `SkorokhodSpace.isCompactContained_of_forall_exists_bound`
   of **SkorokhodSpace** Milestone 8 turns the hypothesis `hcc` — which every
   statement of this milestone carries and which until then had only the
   constant family as a witness — into a uniform bound on the **path maximum
-  over a window**, for `E` a `ProperSpace` and hence for `E = ℝ`. What is left
-  for the walks is that bound, and it is Doob's maximal inequality over the
-  **discrete** index, `MeasureTheory.maximal_ineq`
-  (`Mathlib/Probability/Martingale/OptionalStopping.lean:144`): the passage
-  from the discrete maximum to the window maximum is an equality, a step path
-  taking on a window exactly the values of its nodes.
+  over a window**, for `E` a `ProperSpace` and hence for `E = ℝ`. Four
+  statements carry it the rest of the way:
+
+  * `Martingale.submartingale_abs` — the absolute value of a martingale is a
+    submartingale, which Mathlib does not have. It is `Submartingale.sup` read
+    at `f ⊔ (-f)`.
+  * `Martingale.measure_exists_abs_ge_le` — Doob's maximal inequality in event
+    form, `ε · P {∃ k ≤ N, ε ≤ |f k|} ≤ ∫ |f N|`. Mathlib's
+    `MeasureTheory.maximal_ineq`
+    (`Mathlib/Probability/Martingale/OptionalStopping.lean:144`) states it about
+    `Finset.sup'` and bounds it by the integral over the event; both shapes cost
+    a consumer a step, and neither corollary is in Mathlib.
+  * `isCompactContained_map_stepPath` — the reduction of the window maximum to
+    the maximum over the nodes, for a family of step path laws with
+    deterministic nodes. It is an **equality of events** and not an estimate: a
+    time of the window lies below the node past the window, so `stepIndex_le`
+    puts its index among the finitely many named ones. No monotonicity of the
+    nodes and no non explosion enter.
+  * `isCompactContained_map_stepPath_of_martingale` — the two composed, and the
+    form the acceptance example meets: nodes, a martingale at them, and an `L¹`
+    bound on the martingale at the last node, uniformly in the index.
+
+  **What is left for the walks is not about path space.** Two inputs, and
+  Mathlib has neither: that the partial sums of independent centred integrable
+  variables are a martingale for their natural filtration — `condExp_indep_eq`
+  (`Mathlib/Probability/ConditionalExpectation.lean:42`) and
+  `ProbabilityTheory.iIndepFun.indepFun_finset`
+  (`Mathlib/Probability/Independence/Basic.lean:796`) are the pieces — and that
+  `∫ |S N| ≤ √N` for unit variance, by Cauchy–Schwarz and the additivity of the
+  variance. With them the acceptance example is `√(m + 1)` for the constant and
+  `⌈n · m⌉` for the node past the window.
 * Convergence in measure as a second mode: the space of càdlàg paths with the
   topology of convergence in Lebesgue measure, in which the coordinates are
   nowhere continuous, and `mpSolution_of_tendsto_inMeasure`, obtained from
