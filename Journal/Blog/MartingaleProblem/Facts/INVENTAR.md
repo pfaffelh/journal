@@ -54372,3 +54372,335 @@ Familie über `{n // 0 < n}` läuft oder über `ℕ` mit `n + 1`; das zweite ist
 billiger und dieselbe Abkürzung, die der achtzehnte Lauf des 2026-09-10 bei
 `rateTime` genommen hat — die Stufe, an der ein Nenner verschwindet, kommt dann
 gar nicht vor.
+
+### 2026-09-21, zweiundzwanzigster Lauf des Tages — die Kompaktheitseinschließung der Irrfahrten steht, und damit ist der erste der drei Restposten des Akzeptanztests erledigt; die Vorfrage des Vorlaufs war die richtige, und ihre Antwort macht **beide** vorhergesagten Konstanten überflüssig; dazu, unvorhergesehen, die **Naht** zwischen den zwei Beschreibungen des Irrfahrtspfades
+
+**Der Vorschlag des Vorlaufs steht und ging beim ersten Durchlauf durch.**
+`isCompactContained_rescaledWalk` ist, wie angesagt, ein Einsetzen: jede
+Voraussetzung von `isCompactContained_map_stepPath_of_martingale` wird von einer
+Aussage bezahlt, die über ihr in derselben Datei steht, und keine neue
+Abschätzung wird geführt.
+
+**Vier neue Deklarationen** in `TauCeti/MartingaleProblems/Suggested.lean`,
+Meilenstein 11, im Abschnitt `WalkContainment`; in der zweiten Hälfte dieses
+Laufs kommen neun weitere hinzu — sieben zum Prozeß und, im Nachtrag am
+Ende, zwei zum Martingal in stetiger Zeit. Zusammen **405 neue Zeilen**
+einschließlich der Doc-Kommentare, dazu 117 geänderte Zeilen in
+`MartingaleProblems/README.md`.
+
+| Deklaration | was sie sagt |
+| --- | --- |
+| `isCompactContained_rescaledWalk` | **die Kompaktheitseinschließung der reskalierten Irrfahrten** |
+| `stepIndex_natCast_div` | der Stufenindex eines arithmetischen Gitters ist eine Abrundung |
+| `stepPath_natCast_div` | und damit der Treppenpfad darüber eine Formel ohne `sInf` |
+| `stepPath_rescaledWalk_eq` | die beiden Beschreibungen des Irrfahrtspfades sind derselbe Pfad |
+
+Die Kette geht durch `python3 scripts/check_master.py` mit **0 Fehlern, 0
+`sorry`** in allen drei Dateien; die Warnungszahlen sind 18 / 38 / 112 (davon
+veraltet 0), also **unverändert** gegenüber dem Vorlauf — die 405 neuen Zeilen
+haben keine einzige Warnung erzeugt. Alle dreizehn sind mit
+`check_axioms_master.py` geprüft und hängen an `propext`, `Classical.choice`,
+`Quot.sound` und an nichts sonst. `check_negatives.py` prüft **59**
+Behauptungen und meldet keinen unerwarteten Treffer (eine davon ist in der
+zweiten Hälfte dieses Laufs neu), `check_duplicates.py` findet zu keinem der
+dreizehn Namen einen
+Mathlib-Namensvetter, `check_own_names.py` deckt jeden in der `README.md` neu
+zitierten Namen, `check_cited_lines.py` meldet **431 von 431** stimmenden
+Zeilenangaben und **0** tote Fundstellen, `check.py` meldet `clean`
+(142 Seiten).
+
+Mathlib-Stand des Übersetzens: `94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+2026-09-18; Lean 4.35.0-rc2. Die Gegenprobe gegen v4.33.1 ist wie angesagt rot
+und in diesem Lauf **nicht** nachgemessen worden.
+
+#### Die Vorfrage des Vorlaufs war die richtige, und ihre Antwort spart mehr als sie sollte
+
+Der Vorlauf hatte zu klären verlangt, ob der Index bei `0` beginnt, und die
+Abkürzung „über `ℕ` mit `n + 1`" empfohlen. Sie ist genommen, und sie zahlt
+zweimal:
+
+* **Der Müllwert kommt nicht vor.** Bei `n = 0` wäre `n⁻¹ᐟ²` der Wert `1/0 = 0`
+  und der Knotenabstand `k/0 = 0` ebenfalls: jeder Knoten `0`, jeder Wert `0`,
+  der Pfad konstant. Die Aussage wäre wahr und über eine Familie, die nicht die
+  Irrfahrten sind. Mit der Skalierung `(n + 1)⁻¹ᐟ²` und den Knoten `k/(n+1)`
+  gibt es die Stufe nicht.
+* **Und die beiden vorhergesagten Konstanten fallen weg.** Der Meilenstein
+  führte den Knoten jenseits des Fensters als `⌈n · m⌉` und die Schranke als
+  `√(m + 1)`. Beides ist zu groß. Das Fenster endet bei der **ganzen Zahl** `m`,
+  also ist `(n + 1) * m` selbst ein Knoten und der nächste schon jenseits; es
+  ist zu runden nichts, und `√((n + 1) * m) / √(n + 1) = √m` ist eine
+  **Gleichheit**. Der Knoten ist damit der kleinstmögliche und die Konstante
+  `√m` — beides steht berichtigt in der `README.md`.
+
+#### Die Stelle, an der die Gleichmäßigkeit hängt, und sie ist eine Entscheidung und kein Detail
+
+`isCompactContained_map_stepPath_of_martingale` verlangt die `L¹`-Schranke
+**gleichmäßig im Index**. Beide Eingaben des Vorlaufs sprechen über
+Zuwachsfolgen, und es ist zu entscheiden, welche von beiden die **skalierten**
+Zuwächse `(n+1)⁻¹ᐟ² ξ k` sieht:
+
+> Das Martingal wird an den **skalierten** Zuwächsen genommen, die `L¹`-Schranke
+> an den **unskalierten**, und der Faktor wird aus dem Integral gezogen.
+
+Umgekehrt ginge es nicht. `integral_abs_sum_le_sqrt_of_iIndepFun` schätzt durch
+`√N` ab, wobei `N` die Zahl der Summanden ist; an den skalierten Zuwächsen
+angewandt gäbe das `√((n+1)m)`, was mit `n` wächst — und die Gleichmäßigkeit in
+`n` ist der ganze Inhalt des Prädikats. An den unskalierten angewandt und den
+Faktor davor gezogen, gibt es `√((n+1)m)/√(n+1) = √m`. Der Schritt, der beim
+Martingal dafür zu zahlen ist, ist der Durchgang des Faktors durch die
+Unabhängigkeit (`ProbabilityTheory.iIndepFun.comp`), die Integrierbarkeit
+(`Integrable.const_mul`) und die Zentrierung; das ist der einzige
+Zwischenschritt des ganzen Beweises.
+
+#### Der unvorhergesehene Ertrag: die beiden Beschreibungen des Irrfahrtspfades waren noch nicht dieselbe
+
+Beim Hinschreiben der Signatur fällt auf, daß dieser Meilenstein den
+Irrfahrtspfad in **zwei** Gestalten liest, und daß nichts sie bisher verbindet:
+
+* `isCompactContained_map_stepPath` und alles darüber lesen ihn als
+  **Treppenpfad**, `hΦ : (Φ i ω).toFun = stepPath (T i) (Y i ω)` — weil die
+  Schranke an das Fenstermaximum eine Schranke über die **Knoten** ist.
+* `isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair` und die ganze
+  Straffheitsseite lesen ihn als **Prozeß**,
+  `hΦ : (Φ i ω).toFun = fun t ↦ X i t ω` — weil Progressivität und
+  Rechtsstetigkeit Eigenschaften eines Prozesses sind.
+
+Donsker braucht **ein** `Φ`, das beides erfüllt. Die Naht ist jetzt da und ist
+billig, weil das Gitter arithmetisch ist:
+
+> `stepIndex_natCast_div`: für die Knoten `T k = k / c` mit `c > 0` ist
+> `stepIndex T t = ⌊t · c⌋₊`.
+
+Der Beweis ist `Nat.floor_lt` und sonst nichts: `{k | t < (k+1)/c}` ist
+`{k | ⌊t·c⌋₊ ≤ k}`, und das Infimum einer Aufwärtsmenge von `ℕ` ist ihr
+kleinstes Element. Daraus ist `stepPath_rescaledWalk_eq` ein `funext`, und auf
+seiner rechten Seite steht der klassische Donskerprozeß
+`(n+1)⁻¹ᐟ² ∑_{j < ⌊t(n+1)⌋} ξ j` — **keine zweite Konstruktion, sondern
+dieselbe ohne `sInf`**.
+
+**Zwei Dinge, die dabei festzuhalten sind.**
+
+* **Es ist keine Instanz von `stepIndex_div_const`** (Zeile 37749), obwohl der
+  Name das nahelegt. Jener Satz reskaliert eine **beliebige** Knotenfolge und
+  landet wieder bei einem Stufenindex, `stepIndex (T/c) t = stepIndex T (t·c)`;
+  was den Index hier **ausliest**, ist, daß die Knoten die natürlichen Zahlen
+  sind. Der Namensteil `natCast` steht deshalb im neuen Namen und nicht
+  `const`.
+* **Der Müllwert `sInf ∅ = 0` wird nicht gelesen, und die Stelle ist benannt**,
+  wie die stehende Regel es verlangt: das Gitter ist unbeschränkt, also ist
+  `{k | t < T (k+1)}` von der Antwort selbst bewohnt. Eine Voraussetzung dazu
+  steht nicht in der Signatur, weil keine nötig ist — derselbe Befund wie bei
+  `isCompactContained_map_stepPath`, wo `hN` die Bewohntheit *lokal*
+  hinschreibt; hier gibt sie das Gitter umsonst her. Der Index ist `ℝ≥0`, weil
+  dort der Pfadraum lebt, und **nicht**, weil die Aussage sonst falsch wäre:
+  über `ℝ` gilt sie ebenso, bei negativem `t` sind beide Seiten `0`. Was der
+  Beweis von `ℝ≥0` liest, ist allein die Nichtnegativität, die `Nat.floor_lt`
+  verlangt; über `ℝ` wäre dieser eine Fall von Hand abzuspalten.
+
+### Die zweite Hälfte desselben Laufs: der Irrfahrtspfad als **Prozeß**, und damit ist von der Straffheitsseite alles bezahlt, was nicht Approximation ist
+
+Die Naht hat sichtbar gemacht, was der Straffheitsseite an den Irrfahrten noch
+fehlt, und es ist wenig: neben den approximierenden Paaren verlangt
+`isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair` nur, daß der
+Prozeß **stark progressiv** über einer **rechtsstetigen** Filtration ist und
+**rechtsstetige Pfade** hat. Beides ist in diesem Lauf noch gebaut, und damit
+ist der letzte Restposten der Straffheitsseite allein die Paare.
+
+**Sieben weitere Deklarationen** in `TauCeti/MartingaleProblems/Suggested.lean`,
+Meilenstein 11, im Abschnitt `WalkContainment`, unter der neuen Überschrift „The
+walk as a process, which is what the other half of the milestone reads":
+
+| Deklaration | was sie sagt |
+| --- | --- |
+| `floorFiltration`, `floorFiltration_apply` | die Filtration des Gitters, bei `t` die Stufe `⌊t · c⌋₊` |
+| `isRightContinuous_floorFiltration` | und sie ist **rechtsstetig** |
+| `continuousWithinAt_stepPath_nnreal` | ein Treppenpfad über `ℝ≥0` ist rechtsstetig, in der Gestalt der Straffheitssätze |
+| `stepIndex_coe_nnreal` | der Stufenindex ist über `ℝ` und über `ℝ≥0` derselbe |
+| `isStronglyProgressive_stepPath_natCastDiv` | der Gitter-Treppenpfad ist stark progressiv |
+| `continuousWithinAt_rescaledWalk`, `isStronglyProgressive_rescaledWalk` | die beiden Instanzen für die Irrfahrt |
+
+Alle dreizehn Deklarationen des Laufs sind mit `check_axioms_master.py` geprüft und
+hängen an `propext`, `Classical.choice`, `Quot.sound` und an nichts sonst; die
+Kette geht durch `check_master.py` mit 0 Fehlern, 0 `sorry` und unveränderten
+Warnungszahlen 18 / 38 / 112 (davon veraltet 0).
+
+#### Die Vorfrage, die dieser Lauf sich selbst gestellt hatte, ist mit **Ja** beantwortet, und die Antwort war nicht die erwartete
+
+Gefragt war, ob die Filtration der Irrfahrt **rechtsstetig** ist — die Sorge
+war, daß die Abrundung an einem Gitterpunkt `t = k/c` springt und die
+σ-Algebren rechts davon echt größer sind. **Das ist falsch, und zwar aus dem
+Grund, aus dem die Abrundung selbst rechtsstetig ist:** `⌊s · c⌋₊` ist auf der
+ganzen Zelle `[k/c, (k+1)/c)` gleich `k`, und ein Gitterpunkt ist keine
+Ausnahme, weil die Zelle dort **beginnt**. Es genügt also **ein einziges**
+`s > t` unterhalb von `(⌊t·c⌋₊ + 1)/c`, um das Infimum `⨅ s > t, 𝓕 s` zu
+erreichen; ein Grenzübergang kommt nicht vor.
+
+Die Sorge hätte gegolten, wenn die Filtration über dem **abgeschlossenen**
+Fenster gebildet wäre, also über `⌈t · c⌉₊`. Die Entscheidung zwischen beiden
+ist damit getroffen und nicht geraten: es ist die Abrundung.
+
+`MeasureTheory.Filtration.rightCont_eq` gibt die Infimumsgestalt über `ℝ≥0` ohne
+Fallunterscheidung, weil der Index dicht geordnet ist und kein Maximum hat.
+
+#### Die Lücke, die dabei sichtbar wird, und sie ist die neunundfünfzigste Negativaussage
+
+> **Mathlib hat keine Umindizierung einer Filtration längs einer monotonen
+> Abbildung.**
+
+Die Konstruktionen in `Mathlib/Probability/Process/Filtration.lean` sind
+`const`, `filtrationOfSet`, `natural`, `piLE`, `piFinset` und
+`cylinderEventsCompl`, und keine davon ändert den Index; am 2026-09-21 am
+Quelltext nachgesehen. `Filtration.natural` ist über dem indiziert, worüber der
+Prozeß indiziert ist, eine diskret indizierte Filtration bleibt also diskret
+indiziert. Ein Prozeß, der auf den Zellen `[k/c, (k+1)/c)` konstant ist, hat
+aber nichts, woran er adaptiert sein könnte, als eine Filtration, die auf
+denselben Zellen konstant ist. Die Behauptung steht jetzt als
+`filtration-reindex` in `scripts/check_negatives.py`; die Definition selbst ist
+drei Zeilen, weil eine `Filtration` von der Umindizierung nichts verlangt als
+Monotonie.
+
+#### Zwei Befunde zum Beweis, beide gegen die eigene Erwartung
+
+* **Die exakte Indexformel wird im Meßbarkeitsschritt gar nicht gebraucht.**
+  Erwartet war, daß `stepIndex_natCast_div` aus der ersten Hälfte dort einginge;
+  gebraucht wird nur die **Ungleichung** `stepIndex T r ≤ ⌊t · c⌋₊` für `r ≤ t`,
+  und die ist `stepIndex_le` an `Nat.lt_floor_add_one`. Der Satz überlebte also
+  ein bloß wachsendes Gitter. Verbraucht wird die Formel allein beim Abgleich
+  der **beiden Zeitachsen** — `measurable_uncurry_min_of_eventuallyEq`, der
+  einzige Weg zur gemeinsamen Meßbarkeit, den ein lokal konstanter Prozeß hat,
+  ist über `ℝ` formuliert, die Filtration und der Pfadraum über `ℝ≥0` — und das
+  ist `stepIndex_coe_nnreal`.
+* **Die Rechtsstetigkeit ist nicht die càdlàg-Eigenschaft noch einmal.** Ein
+  Treppenpfad ist von rechts **lokal konstant**, was stärker und billiger ist;
+  `eventuallyEq_nhdsGE_stepPath_comp` sagt es, und über die Knoten wird dabei
+  **nichts** vorausgesetzt — weder Monotonie noch Unbeschränktheit, weil eine
+  konstante Funktion rechtsstetig ist, gleichviel welche Konstante.
+
+#### Und die Stelle, an der die beiden Hälften des Meilensteins sich treffen
+
+`isStronglyProgressive_rescaledWalk` läuft über **dieselbe** Filtration, auf der
+das Martingal von `martingale_partialSum_of_iIndepFun` lebt, nur längs der
+Abrundung umindiziert. Das ist keine Schreibweise, sondern die Bedingung dafür,
+daß die Irrfahrt den beiden Hälften dieses Meilensteins mit **einem** Objekt
+begegnet: die Kompaktheitseinschließung verlangt ein Martingal über einer
+diskreten Filtration, die Straffheit Progressivität über einer stetigen, und
+hätte die zweite eine Filtration verlangt, die die erste nicht trägt, so stünden
+zwei Prozesse da, wo einer gemeint ist.
+
+#### Wo der Akzeptanztest am Ende dieses Laufs steht
+
+| Was Donsker noch fehlt | Stand |
+| --- | --- |
+| Kompaktheitseinschließung der Irrfahrten | **steht, samt der Naht zur Prozeßgestalt** |
+| Irrfahrt als Prozeß: Progressivität, Rechtsstetigkeit, rechtsstetige Filtration | **steht** |
+| die approximierenden Paare der Irrfahrten | offen, und der einzige Restposten der Straffheitsseite |
+| Eindeutigkeit für `f ↦ f''/2` (Fourier) | offen, eigener Punkt |
+| Quantifizierung von `Sol` über die Algebra | offen, klein |
+
+#### Vorschlag für den nächsten Lauf
+
+**Die approximierenden Paare der reskalierten Irrfahrten** — die Hypothese
+`happ` von `isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair`, auf
+die Daten der Irrfahrt eingelöst, in `MartingaleProblems/Suggested.lean`,
+Meilenstein 11.
+
+> Für `g : ℝ →ᵇ ℝ` und die Irrfahrt `X n` ist zu jedem `u > 0` ein Tripel
+> `(q, T', K)` mit `u < T'` anzugeben und zu jedem `n` und `ε > 0` zwei Paare
+> der Klasse `MeasureTheory.IsApproximatingPair`, deren Fehler gegen
+> `g (X n t)` und `g (X n t) ^ 2` unter `ε` bleibt.
+
+**Warum jetzt.** Nach diesem Lauf ist es der **einzige** noch offene Punkt der
+Straffheitsseite; die beiden anderen Restposten des Akzeptanztests — der
+Fourierpunkt und die Quantifizierung von `Sol` — hängen nicht daran und sind
+eigene Aufgaben. Und es ist der Punkt, an dem sich entscheidet, ob die Klasse
+`IsApproximatingPair` für einen Prozeß trägt, der **kein** Martingalproblem
+löst; bisher hat sie genau einen Zeugen, `isApproximatingPair_of_martingale`,
+und der ist der exakte Fall mit Fehler `0`.
+
+**Worauf es ruht, und alles davon steht:**
+
+1. `isStronglyProgressive_rescaledWalk` und `continuousWithinAt_rescaledWalk`
+   aus diesem Lauf sind zwei der drei Voraussetzungen des Satzes; die dritte,
+   `[𝓕.IsRightContinuous]`, ist `isRightContinuous_floorFiltration`.
+2. `martingale_partialSum_of_iIndepFun` gibt das **diskrete** Martingal, und die
+   Doob-Zerlegung von `g ∘ X n` längs des Gitters gibt das, um das es geht:
+   `M k = g (S k) - ∑_{j<k} 𝔼[g (S (j+1)) - g (S j) | 𝓕 j]`.
+3. `stepPath_rescaledWalk_eq` schreibt beide als Prozesse über `ℝ≥0`.
+
+**Die Vorfrage ist in diesem Lauf noch am Quelltext gelesen worden, und sie
+verschiebt den Punkt: der Fehler wird nicht dort gemessen, wo ich ihn vermutet
+hatte.** `MeasureTheory.IsApproximatingPair` (Zeile 43353) verlangt von dem Paar
+**keine** Näherung, sondern drei exakte Eigenschaften:
+
+* `martingale` — `Y - C` ist ein Martingal in stetiger Zeit, **exakt**;
+* `compensator_eq` — `C t ω = ∫ s in Set.Ioc 0 t, Z s ω`, der Kompensator ist
+  also **absolut stetig**, während der Kompensator eines Sprungprozesses mit
+  festen Sprungzeiten rein atomar ist;
+* `lintegral_eLpNorm_le` — `∫⁻ ω, eLpNorm (Z · ω) q (Ioc 0 T) ∂P ≤ K` mit
+  `q > 1`.
+
+Genähert wird erst eine Stufe höher, in `happ`, und dort gegen `g ∘ X i` und
+**nicht** gegen die Martingaleigenschaft.
+
+**Was daraus für die Irrfahrt folgt, und es ist zu entscheiden und nicht zu
+raten.** Das natürliche Paar ist `Y t = M_{⌊t c⌋} + C t` mit `M` der diskreten
+Doob-Zerlegung und `C` der stückweise linearen Interpolation des atomaren
+Kompensators `A`; dann ist `Y - C = M ∘ ⌊·⌋` und das ist nach dem Satz, den der
+nächste Lauf ohnehin braucht — **ein diskretes Martingal, längs der Abrundung
+umindiziert, ist ein Martingal in stetiger Zeit für `floorFiltration`** —
+wirklich ein Martingal. Der Fehler gegen `g ∘ X i` ist dann genau der
+**Interpolationsfehler** `|C t − A_{⌊t c⌋}|`, also höchstens ein einzelner
+Kompensatorzuwachs `|𝔼[g (S (j+1)) − g (S j) | 𝓕 j]|`.
+
+**Und der wird bei festem `n` nicht klein.** Ihn durch Verteilen des Sprungs auf
+ein Intervall der Länge `δ` zu drücken, kostet `eLpNorm ≈ |ΔA| · δ^{1/q − 1}`,
+was für `q > 1` mit `δ ↓ 0` divergiert — und `K` ist in `happ` **vor** `i` und
+`ε` gewählt. Die Quantorenstellung `∀ i, ∀ ε > 0` verlangt also bei **festem**
+Index beliebig gute Näherung, und dafür sehe ich auf dieser Konstruktion keinen
+Weg.
+
+**Damit ist die erste Aufgabe des nächsten Laufs nicht das Bauen, sondern das
+Entscheiden**, und zwar zwischen zwei Lesarten:
+
+1. Es gibt ein besseres Paar als das oben beschriebene, und dann ist es
+   anzugeben.
+2. Die Quantorenstellung von `happ` ist für die Irrfahrten zu stark, und die
+   Näherung gehört **längs des Index**, wie \EK (9.26) sie führt — der Fehler
+   geht mit `n → ∞` gegen null und nicht bei festem `n` mit `ε ↓ 0`. Dann ist
+   `isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair` in seiner
+   Quantorenstellung zu prüfen und gegebenenfalls zu berichtigen; die vier
+   Dichtestufen darüber reichen die Voraussetzung nur durch, der Eingriff wäre
+   also an **einer** Stelle.
+
+Zu prüfen ist das am Beweis von
+`isApproximable_of_forall_exists_bounded_pair`, der der einzige Verbraucher von
+`happ` ist: liest er das `ε` bei festem `i`, oder reicht ihm eine Folge? Das ist
+eine halbe Stunde Lesen und entscheidet, ob der nächste Lauf eine Instanz baut
+oder eine Signatur berichtigt. **Ein begründetes „die Voraussetzung ist zu
+stark" ist hier so viel wert wie die Instanz**, denn sie steht in vier weiteren
+Signaturen dieses Meilensteins.
+
+**Der Nebenertrag, der dabei in jedem Fall anfällt, ist in diesem Lauf noch
+gebaut**, weil er von der Entscheidung nicht abhängt:
+
+| Deklaration | was sie sagt |
+| --- | --- |
+| `martingale_floorFiltration_of_martingale` | ein Martingal über `ℕ`, längs `⌊· * c⌋₊` umindiziert, ist ein Martingal über `ℝ≥0` für `floorFiltration` |
+| `martingale_rescaledWalk` | und die reskalierte Irrfahrt ist eines |
+
+Von der Umindizierung wird dabei **nichts** gebraucht als ihre Monotonie: die
+beiden Felder von `MeasureTheory.Martingale` sind die Adaptiertheit, das ist die
+diskrete bei `⌊t · c⌋₊`, und die Turmgleichung, das ist die diskrete an einem
+Paar von Stufen, das die Abrundung schon ordnet. Keine gleichgradige
+Integrierbarkeit, kein Grenzübergang — der Prozeß nimmt nur die abzählbar vielen
+Werte an, die er vorher annahm. Zwei Zeilen Beweis.
+
+**Damit trägt die Irrfahrt über *einer* Filtration alles, was die beiden Hälften
+dieses Meilensteins von einem Prozeß verlangen:** die Martingaleigenschaft, die
+Progressivität, rechtsstetige Pfade und eine rechtsstetige Filtration. Was sie
+**nicht** trägt, ist eine Lösung eines Martingalproblems — eine reskalierte
+Irrfahrt löst keines, und genau deshalb hat dieser Meilenstein einen
+approximativen Fall.
+
+**Damit sind es dreizehn Deklarationen und 405 neue Zeilen in diesem Lauf**, und
+die Zahlen der ersten Hälfte oben sind entsprechend zu lesen.

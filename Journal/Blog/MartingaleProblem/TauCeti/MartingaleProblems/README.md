@@ -13431,10 +13431,11 @@ has to be chosen once for all `n`. What stands:
   identity off it.
 
   **What Donsker still needs is not a seam**, and it is named here so that the
-  joining is not mistaken for the acceptance test. Two things, each its own item:
-  **compact containment** for the rescaled random walks; and the **uniqueness**
-  for `f ↦ f''/2`, which is the self-contained Fourier point stated below. A
-  third, smaller: the predicate `Sol` of the fourth item has to be quantified
+  joining is not mistaken for the acceptance test. One item: the **uniqueness**
+  for `f ↦ f''/2`, which is the self-contained Fourier point stated below. The
+  **compact containment** for the rescaled random walks stood beside it until
+  2026-09-21 and is now proved, as `isCompactContained_rescaledWalk`. A
+  smaller one: the predicate `Sol` of the fourth item has to be quantified
   over the algebra, the seams above being stated for one pair `(f, g)`. The
   **approximate** case of the second item stood in this list until 2026-09-21
   and is now proved, as
@@ -13442,13 +13443,17 @@ has to be chosen once for all `n`. What stands:
   left for the walks is to exhibit their approximating pairs, which is an
   instance and not an item.
 
-  **Of the compact containment, everything that is about path space is
-  done, 2026-09-21.** `SkorokhodSpace.isCompactContained_of_forall_exists_bound`
+  **The compact containment is done, 2026-09-21, and in twelve statements, of
+  which only four name path space at all: five are probability over `ℕ` and
+  Mathlib has none of them, and three are the seam between the two descriptions
+  of the walk.**
+  `SkorokhodSpace.isCompactContained_of_forall_exists_bound`
   of **SkorokhodSpace** Milestone 8 turns the hypothesis `hcc` — which every
   statement of this milestone carries and which until then had only the
   constant family as a witness — into a uniform bound on the **path maximum
-  over a window**, for `E` a `ProperSpace` and hence for `E = ℝ`. Four
-  statements carry it the rest of the way:
+  over a window**, for `E` a `ProperSpace` and hence for `E = ℝ`. Eleven
+  statements carry it the rest of the way, and the family of the walks is the
+  first witness of the predicate that is not constant:
 
   * `Martingale.submartingale_abs` — the absolute value of a martingale is a
     submartingale, which Mathlib does not have. It is `Submartingale.sup` read
@@ -13501,9 +13506,101 @@ has to be chosen once for all `n`. What stands:
     second summand of `ProbabilityTheory.variance_eq_sub` (`:226`) so that the
     variance of the sum is `∫ (∑ k < N, ξ k) ^ 2`. **No martingale enters**,
     which is why it and the martingale above are two statements.
+  * `isCompactContained_rescaledWalk` — **the instance, proved 2026-09-21**: for
+    independent centred `ξ j` of variance at most `1` and the walk of index `n`
+    with nodes `k / (n + 1)` and values `(n + 1)⁻¹ᐟ² ∑ j < k, ξ j`, the family of
+    path laws is compactly contained. Every hypothesis of
+    `isCompactContained_map_stepPath_of_martingale` is discharged by one of the
+    statements above it, and no new estimate is made. The martingale is taken at
+    the **scaled** increments and the `L¹` bound at the **unscaled** ones, the
+    factor being pulled out of the integral; feeding the scaled increments to the
+    bound as well would give `√N` in place of `√N / √(n + 1)` and lose the
+    uniformity in `n`, which is the whole content of the predicate.
+  * `stepIndex_natCast_div`, `stepPath_natCast_div` and
+    `stepPath_rescaledWalk_eq` — **the seam Donsker runs across**, proved
+    2026-09-21. The compact containment reads the walk as a **step path**,
+    because the bound on the window maximum is a bound over the nodes; every
+    tightness statement of this milestone reads it as a **process**
+    `fun t ω ↦ X n t ω`, because progressivity and right continuity are
+    properties of a process. One `Φ` has to meet both, and this identity is what
+    lets it: over the grid `T k = k / c` with `c > 0` the step index is the floor
+    `⌊t · c⌋`, so the step path of the walk **is**
+    `(n + 1)⁻¹ᐟ² ∑ j < ⌊t (n + 1)⌋, ξ j`, the classical Donsker process written
+    without `sInf`. It is not an instance of `stepIndex_div_const`, which
+    rescales an arbitrary sequence of nodes and leaves a step index standing;
+    what reads the index off is that the nodes are the natural numbers. The junk
+    value `sInf ∅ = 0` is not reached and no hypothesis says so — the grid is
+    unbounded, so the set is inhabited by the answer itself.
 
-  **What is left for the walks is the instance**: the constant is `√(m + 1)`
-  and the node past the window is `⌈n · m⌉`, both by the rescaling.
+  **The node past the window is `(n + 1) * m` and the constant is `√m`**, not the
+  `⌈n · m⌉` and `√(m + 1)` this milestone predicted, and the reason is that the
+  window ends at the **integer** `m`: then `(n + 1) * m` is itself a node, the
+  next one is already past the window, and `√((n + 1) * m) / √(n + 1) = √m` is an
+  equality with no rounding to pay for. The family is indexed by `ℕ` with the
+  scaling `(n + 1)⁻¹ᐟ²`, so that the stage at which the denominator vanishes
+  never occurs — at `n = 0` the junk values would make every node and every value
+  `0`, and the statement would hold of a family that is not the walks.
+
+  **And the walk is a process, 2026-09-21, which is the other half of what the
+  milestone asks of it.** Compact containment is the whole of what the
+  **tightness of the laws** needs from the walks; what
+  `isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair` asks besides the
+  approximating pairs is that the walk be a process — strongly progressive for a
+  right continuous filtration, with right continuous paths. Neither is about
+  approximation, and five statements pay both, so that the remaining item of the
+  acceptance test is the pairs alone:
+
+  * `floorFiltration` and `floorFiltration_apply` — the filtration of an
+    arithmetic grid, at `t` the σ-algebra of the stage `⌊t · c⌋`. **Mathlib has
+    no reindexing of a filtration along a monotone map**: the constructions in
+    `Mathlib/Probability/Process/Filtration.lean` are `const`, `filtrationOfSet`,
+    `natural`, `piLE`, `piFinset` and `cylinderEventsCompl`, and none of them
+    changes the index (checked at the source 2026-09-21). What a `Filtration`
+    asks of the reindexing is monotonicity and nothing else.
+  * `isRightContinuous_floorFiltration` — and it is right continuous, which is
+    the hypothesis the tightness side carries and the one a reindexed filtration
+    is least likely to have. It holds because the floor is right continuous and
+    not by a limit argument: a single `s > t` below `(⌊t · c⌋ + 1) / c` already
+    realises `⨅ s > t, 𝓕 s`, a grid point being no exception since its cell is
+    half open to the right.
+  * `continuousWithinAt_stepPath_nnreal` — a step path over `ℝ≥0` is right
+    continuous in the `ContinuousWithinAt … (Set.Ici t) t` shape the tightness
+    statements read. It is not `IsStepPath.isCadlag` again: a step path is
+    **locally constant** from the right, which is stronger and cheaper, and
+    `eventuallyEq_nhdsGE_stepPath_comp` is it. No hypothesis on the nodes enters.
+  * `stepIndex_coe_nnreal` — the step index of the grid is the same over `ℝ` and
+    over `ℝ≥0`. The bookkeeping is not idle: the only route to joint
+    measurability a locally constant process has,
+    `measurable_uncurry_min_of_eventuallyEq`, is stated over `ℝ`, while the
+    filtration and the path space are over `ℝ≥0`.
+  * `isStronglyProgressive_stepPath_natCastDiv` — a step path over an arithmetic
+    grid is strongly progressive for `floorFiltration`, asking of the values only
+    that they be adapted as a discrete process. **No exact formula for the index
+    is used in the measurability step**, only the bound
+    `stepIndex T r ≤ ⌊t · c⌋` for `r ≤ t`, so the statement would survive a grid
+    that is merely increasing; the exact formula is spent on matching the two
+    time axes and nowhere else.
+  * `continuousWithinAt_rescaledWalk` and `isStronglyProgressive_rescaledWalk` —
+    the two instances, and the second is over the **same** filtration the
+    martingale of `martingale_partialSum_of_iIndepFun` lives on, reindexed by the
+    floor. That is not an accident of spelling: had the tightness side asked for
+    a filtration the compact containment cannot carry, the walk would meet the
+    two halves of this milestone with two different objects.
+  * `martingale_floorFiltration_of_martingale` and `martingale_rescaledWalk` — a
+    discrete martingale reindexed along the floor is a martingale in continuous
+    time, and the walk is one. Nothing is needed of the reindexing but
+    monotonicity: the two fields of `MeasureTheory.Martingale` are adaptedness,
+    which is the discrete one read at `⌊t · c⌋`, and the tower identity, which is
+    the discrete one read at a pair of stages the floor already orders. No
+    uniform integrability and no limit enter, the process taking only the
+    countably many values it took before.
+
+  With these the walk carries, over **one** filtration, everything the two halves
+  of this milestone ask of a process: the martingale property, progressivity,
+  right continuous paths, and a right continuous filtration. What it does not
+  carry is a solution of a martingale problem — a rescaled walk solves none, and
+  that is why this milestone has an approximate case at all.
+
 * Convergence in measure as a second mode: the space of càdlàg paths with the
   topology of convergence in Lebesgue measure, in which the coordinates are
   nowhere continuous, and `mpSolution_of_tendsto_inMeasure`, obtained from

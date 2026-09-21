@@ -486,6 +486,19 @@ CLAIMS_TODO8 = [
      'integral_abs_le_sqrt|sq_integral_le_integral_sq|integral_abs_le_rpow',
      ['Mathlib/'],
      []),
+    ('filtration-reindex',
+     'MartingaleProblems/Suggested.lean, `floorFiltration`; '
+     'MartingaleProblems/README.md, Meilenstein 11',
+     'Mathlib hat keine Umindizierung einer Filtration laengs einer monotonen '
+     'Abbildung. Die Konstruktionen in '
+     '`Mathlib/Probability/Process/Filtration.lean` sind `const`, '
+     '`filtrationOfSet`, `natural`, `piLE`, `piFinset` und '
+     '`cylinderEventsCompl`, und keine davon aendert den Index; am 2026-09-21 '
+     'am Quelltext nachgesehen.',
+     'Filtration.comap|Filtration.reindex|Filtration.comp\\b|reindexFiltration'
+     '|floorFiltration',
+     ['Mathlib/'],
+     []),
 ]
 
 
