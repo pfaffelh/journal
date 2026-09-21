@@ -51858,3 +51858,259 @@ also nur Rechtsstetigkeit **innerhalb** des Fensters. Trägt das, so ist die
 Abschwächung von `IsRightContinuous g` auf „rechtsstetig auf `Set.Iic T'`" der
 erste Schritt und der eigentliche Ertrag; trägt es nicht, so ist zu sagen, an
 welcher Stelle die globale Fassung gelesen wird. **Nicht raten.**
+
+### 2026-09-21, zehnter Lauf des Tages — die Rechtsstetigkeit des Fehlers fällt aus der Hypothese, und ihr Preis ist ein Fenster; damit steht der erste Punkt der Kette auf genau dem, was (9.26) verlangt: zwei Paare, zwei Schranken, zwei Fehler
+
+**Bearbeitet:** der Vorschlag des Vorlaufs, also die Rechtsstetigkeit von
+`Y - g ∘ X` aus den Daten und was darauf ruht. Wie angeordnet: kein
+Meilenstein 8, kein Meilenstein 14, kein C.5/G.
+
+#### Die Vorfrage, und sie war richtig gestellt: der Verbraucher braucht die globale Fassung **nicht**, und er könnte sie auch nicht bekommen
+
+Der Vorlauf hatte aufgetragen, am Quelltext zu entscheiden, ob der Verbraucher
+`IsRightContinuous` global über alle `t : ℝ≥0` liest oder nur im Fenster, und
+verboten, das zu raten.
+
+**Gelesen wird auf `Set.Iic T`, und zwar punktweise.**
+`MeasureTheory.biSup_enorm_Iic_le_biSup_enorm_inter_dense` bildet ein Supremum
+über `Set.Iic T` und wendet für jedes `t ≤ T` das Fensterlemma auf `Set.Ico t T'`
+an; im Beweis von `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` wird die
+Rechtsstetigkeit **an genau dem Punkt** gelesen, den das Lemma gerade in die
+abgeschlossene Menge legt (`hf t`), und an keinem zweiten.
+
+**Und die globale Fassung wäre nicht zu haben.** `C t ω = ∫_{(0,t]} Z s ω` gilt
+nach `compensator_eq` für *jedes* `t`, die Integrierbarkeit des Pfades von `Z`
+steht aber nur auf `Set.Ioc 0 T`; jenseits des Horizonts ist das Integral ein
+Bochner-Müllwert und `C` nirgends stetig. Die Abschwächung ist also nicht
+Kosmetik, sondern die Bedingung dafür, daß die Hypothese überhaupt eingelöst
+werden kann.
+
+**Daraus ein Befund über die Gestalt des Fensterlemmas.** Die Fenster
+`Set.Ico t T'` reichen über `T` hinaus, die quantifizierte Fassung ist hier also
+**unbrauchbar**, obwohl ihr Beweis nur einen Punkt liest. Die primitive Form ist
+die **punktweise**; die quantifizierte ist eine Zeile darüber.
+
+#### Was gebaut ist
+
+**Eine** neue Deklaration in `TauCeti/SkorokhodSpace/Suggested.lean`:
+
+* **`SkorokhodSpace.mem_of_continuousWithinAt_of_forall_mem_dense`** — die
+  punktweise Fassung des Fensterlemmas: liegt `t` im halboffenen Fenster, ist `f`
+  **bei `t`** rechtsstetig und liegen die Werte auf dem dichten Teil des Fensters
+  in der abgeschlossenen Menge, so liegt `f t` darin. Der Beweis ist der
+  bisherige, mit `hf` statt `hf t`.
+  `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` ist jetzt **eine Zeile**
+  darüber; **beide Signaturen bleiben unverändert**, ebenso die der
+  abgeschlossenen Form.
+
+**Zwei** neue Deklarationen in `TauCeti/MartingaleProblems/Suggested.lean`, im
+neuen Abschnitt „The right continuity of the error, from the data":
+
+* **`MeasureTheory.IsApproximatingPair.continuousWithinAt_compensator`** — der
+  Kompensator ist **echt innerhalb** des Horizonts rechtsstetig. Der Kern ist
+  Mathlibs `intervalIntegral.continuousOn_primitive`
+  (`Mathlib/MeasureTheory/Integral/DominatedConvergence.lean:439`, geprüft an
+  `94ef6b89544e58e90f119da869f3fb48d1da0f4c`; **Namensraum `intervalIntegral`**,
+  Zeilen 162–610, nicht `MeasureTheory`), gelesen am Pfad von `Z`, dessen
+  Integrierbarkeit `IsApproximatingPair.ae_integrableOn` liefert. Zwei Übergänge
+  kommen hinzu, und **beide verbrauchen `t < T`**: von
+  `ContinuousOn (Set.Icc 0 T)` auf `ContinuousWithinAt (Set.Ioi t)` über
+  `ContinuousWithinAt.mono_of_mem_nhdsWithin`
+  (`Mathlib/Topology/ContinuousOn.lean:240`) mit `Ioo_mem_nhdsGT`, und die
+  Einbettung `ℝ≥0 → ℝ`, weil `C` über `ℝ≥0` indiziert ist und das Integral über
+  `ℝ` läuft.
+* **`MeasureTheory.IsApproximatingPair.ae_continuousWithinAt_sub`** — die
+  Rechtsstetigkeit von `Y - V` unterhalb des Horizonts, **aus den Daten**. Die
+  Zerlegung `Y - V = (Y - C) + C - V` hat zwei geschenkte Summanden: `Y - C` als
+  **Feld** der Klasse (`rightContinuous`, sogar in der zweiseitigen Gestalt über
+  `Set.Ici t`) und `V` aus der Hypothese. Der dritte ist der Satz darüber.
+
+**Vier** bestehende Deklarationen geändert, alle in Richtung schwächerer
+Hypothesen:
+
+* `MeasureTheory.biSup_enorm_Iic_le_biSup_enorm_inter_dense`:
+  `IsRightContinuous g` → `∀ t ∈ Set.Iic T, ContinuousWithinAt g (Set.Ioi t) t`.
+* `MeasureTheory.isApproximable_of_forall_exists_pair`: die beiden
+  Rechtsstetigkeiten auf `∀ t ≤ T` eingeschränkt — das ist genau, was gelesen
+  wird.
+* `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_exists_pair`: auf
+  `∀ t < T'`, weil dort `T` erst intern durch `exists_between` entsteht und
+  `Set.Iic T ⊆ Set.Iio T'` aus `T < T'` folgt.
+* `MeasureTheory.isApproximable_of_forall_exists_bounded_pair` und
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair`:
+  die beiden Rechtsstetigkeiten **ganz gestrichen**. Sie kosten den Verbraucher
+  nichts Neues: was `ae_continuousWithinAt_sub` von `V` verlangt, ist `hcont`,
+  und das steht in beiden Signaturen ohnehin, weil die Aldous-Zeiten es brauchen.
+  Für den quadrierten Fehler ist es `hcont` unter `ContinuousWithinAt.pow`.
+
+Die ganze Kette geht durch `python3 scripts/check_master.py` mit **0 Fehlern,
+0 `sorry`** in allen drei Dateien; die Warnungszahlen sind **unverändert**
+(18 / 35 / 112, davon veraltet 0). Alle drei neuen und alle vier geänderten
+Deklarationen sind mit `check_axioms_master.py` geprüft und hängen an `propext`,
+`Classical.choice`, `Quot.sound` und an nichts sonst — die beiden nicht
+geänderten Fensterlemmas der `SkorokhodSpace` mitgeprüft, weil ihr Beweis neu
+ist.
+
+Mathlib-Stand: `94ef6b89544e58e90f119da869f3fb48d1da0f4c`, 2026-09-18;
+Lean 4.35.0-rc2.
+
+#### Drei Befunde
+
+* **Eine Hypothese abzuschwächen hieß hier, ein Lemma umzubauen, nicht einen
+  Beweis.** Der Beweis der Rechtsstetigkeit selbst ist drei Zeilen; die Arbeit
+  steckte darin, zu sehen, daß das Fensterlemma in seiner quantifizierten
+  Gestalt die schwächere Hypothese gar nicht annehmen kann. Wer nur die
+  Verbraucherseite ansieht, hält die globale Fassung für nötig und baut sie nie.
+* **`Set.Ioi` und `Set.Ici` sind hier nicht dasselbe, und die Klasse gibt das
+  Stärkere umsonst.** `IsApproximatingPair.rightContinuous` ist über `𝓝[≥] s`
+  formuliert, das Fensterlemma liest `𝓝[>] t`. Die Einschränkung ist
+  `ContinuousWithinAt.mono` und kostet nichts — die umgekehrte Richtung gäbe es
+  nicht, und die Hypothese an `V` ist deshalb bewußt in der `Set.Ici`-Gestalt
+  gehalten, in der ein càdlàg-Pfad sie liefert.
+* **Der Müllwert steht auch hier, und diesmal ist er vorweg benannt.** `C`
+  jenseits des Horizonts ist `∫ f = 0` für nichtintegrierbares `f` — eine der
+  vier Müllwertquellen, die dieser Auftrag führt. Er macht keine Aussage still
+  wahr, weil die Aussage ihn gar nicht erst betritt: der Horizont steht in der
+  Hypothese `t < T`. Das ist die Bauart, die die stehende Regel vom 2026-09-18
+  für `sInf`-getotalisierte Funktionen verlangt, hier auf den Bochner-Müllwert
+  angewandt.
+
+#### Wo der erste Punkt der Kette jetzt steht
+
+| Größe | Stand |
+| --- | --- |
+| alles unterhalb von `IsApproximable` | steht (7. Lauf) |
+| `IsApproximable` aus der Bedingung des Meilensteins | steht (8. Lauf) |
+| der erste Punkt der Kette ohne `IsApproximable` in der Aussage | steht (8. Lauf) |
+| die **vier Integrierbarkeiten** aus der Beschränktheit | steht (9. Lauf) |
+| die **Rechtsstetigkeit** von `Y - g ∘ X` aus den Daten | **steht, dieser Lauf** |
+| die **zwei Paare** aus der Martingalhypothese | offen |
+
+Die Hypothese von
+`isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair` verlangt je
+Fehler noch **sechs** Stücke, und es sind genau die von \EK{} (9.26): zwei
+Paare, zwei Schranken, zwei Fehler. Was bleibt, ist der Schritt **über** den
+Paaren.
+
+#### Vorschlag für den nächsten Lauf
+
+**`MeasureTheory.isApproximatingPair_of_martingale`**, in
+`MartingaleProblems/Suggested.lean` — das Paar mit **Fehler `0`**, aus einer
+Lösung des Martingalproblems.
+
+> Ist `X` stark progressiv mit rechtsstetigen Pfaden, sind `f g : E →ᵇ ℝ` und ist
+> `fun t ω ↦ f (X t ω) - ∫ s in Set.Ioc (0:ℝ) (t:ℝ), g (X s ω)` ein Martingal
+> über `𝓕`, so ist dieses Tripel ein `IsApproximatingPair 𝓕 P q T K` für jedes
+> `1 < q` und jedes `T`, mit `K` eine Formel in `‖g‖` und `T`.
+
+**Warum jetzt.** Es ist die **einzige** noch offene Größe der Tabelle, und es ist
+der Punkt, an dem der erste Punkt der Kette seinen Namen einlöst:
+`isTight_map_postcomp_of_exists_martingale` heißt so, weil die Eingabe ein
+*Martingal* sein soll und kein Paar einer Klasse. Nachgesehen 2026-09-21: eine
+Konstruktion eines `IsApproximatingPair` aus irgendwelchen Daten steht in der
+Datei **nirgends** — die Klasse ist bisher nur verbraucht, nie hergestellt. Das
+ist dieselbe Leerheitsfrage, die bei `Shift` gestellt wurde: eine Struktur, von
+der niemand weiß, ob sie bewohnt ist, trägt einen Meilenstein nicht.
+
+**Worauf er ruht, und es ist alles gebaut oder Mathlib:** `compensator_eq` wird
+die Definition von `C` und damit `rfl`; `progressive` ist
+`IsStronglyProgressive.continuous_comp` an `g.continuous`, wie es
+`isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair` schon rechnet;
+`rightContinuous` ist die Rechtsstetigkeit von `f ∘ X` zusammen mit
+`IsApproximatingPair.continuousWithinAt_compensator` dieses Laufs — **in der
+Gegenrichtung gelesen**, also `Y - C` rechtsstetig aus `Y` rechtsstetig und `C`
+stetig; `ae_memLp` und `lintegral_eLpNorm_le` sind die Schranke `‖g‖` unter
+`BoundedContinuousFunction.norm_coe_le_norm` gegen `eLpNorm_le_of_ae_bound` auf
+einem Maßraum endlicher Masse.
+
+**Zwei Dinge sind am Quelltext zu entscheiden, ehe gebaut wird.**
+
+1. **Die Konstante.** `eLpNorm_le_of_ae_bound` gibt `(μ univ) ^ (1/p) * c`, und
+   `(volume (Set.Ioc 0 T)) ^ (1/q)` wird erst nach `Real.volume_Ioc` zu
+   `ENNReal.ofReal T ^ (1/q.toReal)`. Die Umrechnung ist der ganze
+   Rechenaufwand, und sie entscheidet, ob `K` in der Aussage als **Formel** oder
+   als **Hypothese** steht. Für die Uniformität in der Familie ist das nicht
+   gleichgültig: der Meilenstein braucht **ein** `K` für alle `i`, und eine
+   Formel in `‖g‖` und `T` liefert es, eine Hypothese nicht.
+2. **Die Rechtsstetigkeit von `Y - C`, und ob die Gegenrichtung von
+   `continuousWithinAt_compensator` überhaupt reicht.** Das Feld der Klasse ist
+   über `𝓝[≥] s` formuliert, also über `Set.Ici s`, und der Satz dieses Laufs
+   gibt nur `Set.Ioi t` und nur für `t < T`. Ob das Feld aus den Daten
+   herstellbar ist oder ob die Klasse an dieser Stelle eine Hypothese braucht,
+   ist die erste Frage des Laufs — sie ist am Feld nachzulesen und **nicht zu
+   raten**; fällt sie negativ aus, so ist das ein Befund über die Klasse und
+   nicht über den Satz.
+
+#### Nachtrag desselben Laufs: die Vorfragen des Vorschlags sind beantwortet, und zwar gebaut statt behauptet
+
+Der Vorschlag oben nennt zwei Dinge, die „am Quelltext zu entscheiden, ehe
+gebaut wird" sind. Beide sind in diesem Lauf entschieden, und die Entscheidung
+liegt als Lean vor: **drei** weitere Deklarationen am Ende von
+`TauCeti/MartingaleProblems/Suggested.lean`, im Abschnitt „What a *bounded*
+density gives, and it is the three fields an inhabitant needs".
+
+**Antwort auf Frage 2 (die Rechtsstetigkeit von `Y - C`): ja, und der Grund ist
+die Beschränktheit.** Das Feld `IsApproximatingPair.rightContinuous` ist über
+**alle** `s : ℝ≥0` quantifiziert; `continuousWithinAt_compensator` dieses Laufs
+hört am Horizont auf. Der Unterschied ist nicht der Satz, sondern die
+Voraussetzung: eine **beschränkte** meßbare Dichte ist auf *jedem* Fenster
+integrierbar, nicht nur auf `Set.Ioc 0 T`, und ihr unbestimmtes Integral ist
+deshalb auf der ganzen Halbgeraden stetig.
+
+* **`MeasureTheory.continuous_setIntegral_Ioc_zero_of_bounded`** — genau das:
+  `Continuous fun t : ℝ≥0 ↦ ∫ s in Set.Ioc 0 (t:ℝ), Z s` für beschränktes
+  meßbares `Z`. Der Kern ist Mathlibs `intervalIntegral.continuous_primitive`,
+  dessen Voraussetzung — Intervallintegrierbarkeit über *jedes* Endpunktpaar —
+  `MeasureTheory.Measure.integrableOn_of_bounded`
+  (`Mathlib/MeasureTheory/Integral/IntegrableOn.lean:713`, geprüft an
+  `94ef6b89544e58e90f119da869f3fb48d1da0f4c`) am endlichen Maß von `Set.uIoc`
+  liefert; `intervalIntegral.integral_of_le` schreibt `∫ in 0..t` in
+  `∫ in Set.Ioc 0 t` um, und `0 ≤ t` ist über `ℝ≥0` umsonst.
+
+**Antwort auf Frage 1 (die Konstante): eine Formel, keine Hypothese.**
+
+* **`MeasureTheory.eLpNorm_le_of_bounded_Ioc`** —
+  `eLpNorm Z q (volume|_(0,T]) ≤ (T : ENNReal) ^ q.toReal⁻¹ * ENNReal.ofReal c`.
+  Es ist `eLpNorm_le_of_ae_bound`
+  (`Mathlib/MeasureTheory/Function/LpSeminorm/Basic.lean:424`) mit
+  `Real.volume_Ioc` für die Masse des Fensters. Damit hat eine Familie von
+  Paaren mit **einer** Schranke an die Dichten **ein** gemeinsames `K`, und das
+  ist genau die Uniformität, auf der der Meilenstein ruht.
+* **`MeasureTheory.memLp_of_bounded_Ioc`** — das Feld `ae_memLp`, und es gilt an
+  *jedem* Stichprobenpunkt; der f.s.-Quantor dieses Feldes wird von dieser
+  Quelle also nicht verbraucht. `MemLp` ist definitionsgemäß `eLpNorm … < ∞`
+  (`Mathlib/MeasureTheory/Function/LpSeminorm/Defs.lean:149`), der Beweis
+  deshalb die Endlichkeit der rechten Seite oben.
+
+Alle drei gehen durch `python3 scripts/check_master.py` (0 Fehler, 0 `sorry`,
+Warnungen unverändert 18 / 35 / 112) und durch `check_axioms_master.py` auf
+`propext`, `Classical.choice`, `Quot.sound`.
+
+**Zwei Befunde, die der nächste Lauf nicht mehr erschließen muß.**
+
+* **Die Dichte der Klasse ist über `ℝ` indiziert, jeder Prozeß des Meilensteins
+  über `ℝ≥0`.** Wer ein Paar baut, schreibt also `Z s ω = g (X s.toNNReal ω)`.
+  Der Müllwert auf `s ≤ 0` wird nie gelesen, weil das Integral von
+  `compensator_eq` über `Set.Ioc 0 t` läuft. Das ist nie aufgefallen, weil die
+  Klasse bis heute nur verbraucht und nie hergestellt wurde.
+* **Das Feld, das die drei Sätze *nicht* decken, ist `progressive_sub`** — die
+  progressive Meßbarkeit von `Y - C`, also die gemeinsame Meßbarkeit des
+  Kompensators. Dafür steht `MeasureTheory.stronglyMeasurable_integral_comp`
+  (Zeile 903) bereit, und es ist der einzige echte Preis, der in der
+  Konstruktion übrig ist. `progressive` selbst ist
+  `IsStronglyProgressive.continuous_comp` (Zeile 45300), `compensator_eq` wird
+  `rfl`, und `martingale` ist die Hypothese, also das Martingalproblem selbst.
+
+Der Vorschlag für den nächsten Lauf bleibt damit stehen, aber ohne Vorfragen:
+**`MeasureTheory.isApproximatingPair_of_martingale` bauen**, mit
+`progressive_sub` als einzigem offenen Feld und den drei Sätzen dieses Nachtrags
+für die drei, die von der Beschränktheit leben.
+
+**Und eine Berichtigung der Zählung des neunten Laufs.** Er meldete „zehn
+Verpflichtungen je Fehler werden sechs"; es waren nach ihm **acht** — zwei
+Paare, zwei Schranken, zwei Rechtsstetigkeiten, zwei Fehler. Erst mit diesem
+Lauf sind es sechs, und die Rechnung geht jetzt auf: zehn (zwei Paare, zwei
+Rechtsstetigkeiten, zwei Fehler, vier Integrierbarkeiten) werden sechs (zwei
+Paare, zwei Schranken, zwei Fehler). Das ist keine Kleinigkeit der Buchführung,
+sondern die Probe darauf, daß nichts unter der Hand hinzugekommen ist: übrig
+bleibt genau, was \EK{} (9.26) verlangt.
