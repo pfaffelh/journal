@@ -12782,6 +12782,43 @@ has to be chosen once for all `n`. What stands:
   `IsApproximatingPair.rightContinuous`, which gives the right continuity of
   `Y - C` and would need the continuity of the indefinite integral `C` on top.
 
+  **The four integrabilities are discharged from a bound on the approximants,
+  2026-09-21, and that bound is what the class was always meant to supply.** The
+  docstring of `MeasureTheory.IsApproximatingPair` records under „What is *not* a
+  field, and why" that no integrability of the stopped values belongs to the
+  class, „a consumer holding them from a bounded `f`";
+  `MeasureTheory.IsApproximatingPair.integrable_stoppedValue_of_bounded` is that
+  sentence as a theorem — a bounded approximant has an integrable stopped value
+  at every stopping time bounded by an index — and its whole proof is Mathlib's
+  `MeasureTheory.stronglyMeasurable_stoppedValue_of_le`
+  (`Probability/Process/Stopping.lean:1016`) against `integrable_const`. Of the
+  measure it reads finiteness and not normalisation.
+
+  **Both Aldous times carry the bound the statement needs, and they carried it
+  before the question was asked.** The capped time is below `u` by
+  `min_le_right`; the gapped time is below `((u + δ : ℝ≥0) : WithTop ℝ≥0)` by
+  `MeasureTheory.oscHitSeqGap_le_coe`, which has stood since the times were
+  built. So the capped and the gapped case are one statement applied twice
+  (`MeasureTheory.IsApproximatingPair.integrable_stoppedValue_oscHitSeqCap`,
+  `…_oscHitSeqGap`) and not two shapes: the sum `α + δ` is formed in
+  `WithTop ℝ≥0` throughout, and the split between that type and `ℝ≥0∞` recorded
+  at `setOf_lt_modulusBased_subset_oscHitSeq` does not arise.
+
+  **Ten obligations per error become six.**
+  `MeasureTheory.isApproximable_of_forall_exists_bounded_pair` and
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair`
+  are the two statements above with the four families of integrabilities
+  replaced by one bound on each approximant; the two bounds are separate and
+  nothing compares them. In the general form the dense set of the errors and the
+  countable dense set of the times are kept apart — density alone is read of the
+  first, countability alone of the second — and the tightness statement takes
+  them equal, as it does already.
+
+  **The bound is not derivable from the bound on `f`.** `Y` approximates `f ∘ X`
+  in `L¹` of a supremum, which constrains no path of `Y` pointwise. It is a
+  condition on the class the approximants are drawn from, and this milestone
+  states it there.
+
   **What remains of this item is the step above the pairs**: the two pairs are
   hypotheses of the statement, and what produces them is the martingale
   approximation together with the closure of the approximable functions under
