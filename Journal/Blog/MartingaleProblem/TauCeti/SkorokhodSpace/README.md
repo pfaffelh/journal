@@ -2063,6 +2063,23 @@ over a shrinking family and is therefore an infimum.
   statement about an **image measure** needs, `MeasureTheory.Measure.map_apply`
   asking measurability and `MeasureTheory.Measure.le_map_apply` running the wrong
   way.
+* `SkorokhodSpace.measure_map_postcomp_setOf_le_modulusBased_le` and
+  `SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le`:
+  **the passage from the sample space to the image law.** Proved (2026-09-21),
+  and they spend the sandwich above. For `Φ : Ω → D(ℝ≥0, E)` measurable,
+  `g : E →ᵇ ℝ` and `u < u'`, a bound
+  `P {ω | η ≤ modulusBased 0 u' (postcomp g (extendNNReal (Φ ω))) δ} ≤ ε` gives
+  `((P.map Φ).map (postcomp g)).map extendNNReal {f | η ≤ modulusBased 0 u f δ} ≤ ε`;
+  and read at `u = m`, `u' = m + 1` for every `m : ℕ` this is exactly the right
+  hand side of `SkorokhodSpace.isTightMeasureSet_map_postcomp_iff`, so the
+  tightness of the image laws follows with no further hypothesis.
+
+  The two layers are pushed forward together by
+  `MeasureTheory.Measure.map_map`, which is where their measurability is spent:
+  `SkorokhodSpace.measurable_postcomp` for the value change and
+  `SkorokhodSpace.isometry_extendNNReal` for the index change. The two orders of
+  the layers are the **same map**, `SkorokhodSpace.postcomp_extendNNReal` being
+  `rfl`, so nothing is rewritten between the hypothesis and the conclusion.
 * `dist_first_last_eq_sum`: under `AdditiveDist ι` the gaps of a monotone tuple
   telescope, `dist (t 0) (t (Fin.last n)) = ∑ i, dist (t i.castSucc) (t i.succ)`.
   Proved (2026-09-09). Monotonicity is the real hypothesis — strictness is not

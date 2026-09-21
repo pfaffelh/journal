@@ -51318,3 +51318,543 @@ entscheidet, ob `setOf_le_modulusBased_subset` unmittelbar paßt oder ob daneben
 eine Fassung mit `<` zu stellen ist. **Am Quelltext von
 `SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` zu entscheiden, nicht zu
 raten.**
+
+### 2026-09-21, siebter Lauf des Tages — der Übergang ans Bildmaß steht, und die beiden Hälften des Straffheitskriteriums sind **zusammengefügt**; die Vorfrage des Vorlaufs war die richtige, ihre Antwort hat die Arbeit aber nicht verkürzt, sondern an die andere Naht verlagert — und dort stand eine **Quantorenfrage**, die kein Lauf bisher benannt hatte
+
+**Bearbeitet:** der Vorschlag des Vorlaufs, also
+`SkorokhodSpace.measure_map_postcomp_setOf_le_modulusBased_le`, im Meilenstein 11
+von `MartingaleProblems`. Wie angeordnet: kein Meilenstein 8, kein Meilenstein
+14, kein C.5/G.
+
+#### Die Vorfrage des Vorlaufs, am Quelltext entschieden
+
+Der Vorlauf hatte aufgetragen, **vor** dem Bauen zu klären, ob das Kriterium
+seine Modulmenge mit `η ≤ modulusBased` oder mit `ofReal ε₀ < modulusBased`
+liest, und ausdrücklich verboten, das zu raten. Die Antwort steht in
+`SkorokhodSpace/Suggested.lean:18980`, in
+`SkorokhodSpace.isTightMeasureSet_map_postcomp_iff`:
+
+```lean
+{f : D(ℝ, ℝ) | η ≤ SkorokhodSpace.modulusBased (0 : ℝ) (m : ℝ) f δ} ≤ ε
+```
+
+Es ist **`≤`**, und zwar in beiden Fassungen des Kriteriums
+(`isTightMeasureSet_iff_modulusBased_nnreal` ebenso). Damit paßt
+`SkorokhodSpace.setOf_le_modulusBased_subset` unmittelbar, und die Fassung mit
+`<`, die der Vorlauf daneben für möglich hielt, wird **nicht** gebraucht.
+
+**Und hier ist der Punkt, den die Vorfrage nicht vorhergesehen hat:** die
+Strenge ist gar kein Gegenstand dieses Satzes. Sie sitzt an der *anderen* Naht —
+zwischen der Stichprobenschranke
+`exists_forall_measure_setOf_lt_modulusBased_postcomp_le_of_forall_isApproximable`
+(`MartingaleProblems/Suggested.lean:45847`), die `ofReal ε₀ < …` liefert, und der
+Hypothese dieses Satzes. Der Übergang ans Bildmaß ist in der Schwelle
+**uniform**: er trägt `η` unverändert durch und stellt an es keine Bedingung. Die
+Vorfrage war richtig gestellt, ihre Antwort hat die Arbeit aber nicht verkürzt,
+sondern verlagert — die Umrechnung `ofReal ε₀ < η` gehört zum nächsten Punkt und
+nicht zu diesem.
+
+#### Was gebaut ist
+
+**Zwei** neue Deklarationen in `TauCeti/SkorokhodSpace/Suggested.lean`, im neuen
+Abschnitt „From the sample space to the image law", unmittelbar hinter dem Zeugen
+`not_isTightMeasureSet_twoJumpImageLaw`:
+
+* **`SkorokhodSpace.measure_map_postcomp_setOf_le_modulusBased_le`** — der
+  Übergang selbst. Für `Φ : Ω → D(ℝ≥0, E)` meßbar, `g : E →ᵇ ℝ` und `u < u'`:
+
+  ```
+  P {ω | η ≤ modulusBased 0 u' (postcomp g (extendNNReal (Φ ω))) δ} ≤ ε
+    → ((P.map Φ).map (postcomp g)).map extendNNReal
+        {f | η ≤ modulusBased 0 u f δ} ≤ ε
+  ```
+
+* **`SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le`** —
+  dasselbe in der Gestalt, die das Kriterium liest: aus einer Schranke bei
+  `(m : ℝ) + 1` für jedes `m : ℕ` folgt
+  `IsTightMeasureSet {(P.map (Φ i)).map (postcomp g) | i}`, ohne jede weitere
+  Voraussetzung. Die kompakte Einschließung kommt nicht vor; sie ist innerhalb
+  der Äquivalenz von `isCompactContained_map_postcomp_nnreal` ein für allemal
+  bezahlt.
+
+Und **zwei** in `TauCeti/MartingaleProblems/Suggested.lean`, im neuen Abschnitt
+„The two halves joined" am Dateiende:
+
+* **`MeasureTheory.measurable_pathOfProcess`** — die Meßbarkeit der Pfadabbildung
+  ist **keine** Voraussetzung, sondern folgt aus den Daten:
+  `IsStronglyProgressive.stronglyAdapted` macht jedes `X i t` meßbar, und
+  `SkorokhodSpace.measurable_of_measurable_eval` setzt die Koordinaten zusammen.
+* **`MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_isApproximable`** —
+  **die beiden Hälften des Kriteriums unter einer Aussage.** Aus der
+  Approximierbarkeit an jedem Fensterradius folgt die Straffheit der
+  Bildgesetze `{(P.map (Φ i)).map (postcomp g) | i}`.
+
+Die ganze Kette geht durch `python3 scripts/check_master.py` mit **0 Fehlern,
+0 `sorry`** in allen drei Dateien; die Warnungszahlen sind **unverändert**
+(18 / 35 / 112, davon veraltet 0). Alle vier Deklarationen sind mit
+`check_axioms_master.py` geprüft und hängen an `propext`, `Classical.choice`,
+`Quot.sound` und an nichts sonst.
+
+Mathlib-Stand: `94ef6b89544e58e90f119da869f3fb48d1da0f4c`, 2026-09-18;
+Lean 4.35.0-rc2.
+
+#### Die Quantorenfrage, und sie ist der eigentliche Fund des Laufs
+
+Beim Zusammenfügen kam heraus, was an den beiden Hälften **nicht** zusammenpaßt,
+und es ist nicht die Schwelle, um die der Vorlauf sich sorgte:
+
+> Das Kriterium quantifiziert `m : ℕ` **unbeschränkt**.
+> `MeasureTheory.IsApproximable` trägt ein **festes** `T`, und die
+> Stichprobenschranke verlangt `u < T`.
+
+Ein einziges Tripel `(q, T, K)` bedient also nur endlich viele `m`. Die Hypothese
+der Zusammenfügung muß über den Horizont quantifizieren — zu jedem Fensterradius
+sein eigenes `q`, `T`, `K` —, und **das ist keine Verschärfung**: der Meilenstein
+11 formuliert die Approximierbarkeit von jeher als „for all `ε, T > 0` there are
+`(Y n, Z n) ∈ 𝓐 n`". Die Lean-Aussage bei festem `T` ist die innere; sie wird
+**umhüllt und nicht geändert**. Hätte ein Lauf das erst beim Verbraucher bemerkt,
+so hätte er die Stichprobenschranke umgeschrieben, statt sie zu benutzen.
+
+Die Schwelle dagegen war so billig, wie der Vorlauf sie geschätzt hatte:
+`ENNReal.lt_iff_exists_real_btwn` gibt zu `0 < η` ein reelles `ε₀` mit
+`0 < ofReal ε₀ < η`, **ohne Endlichkeitsvoraussetzung**, also auch für `η = ⊤`;
+danach ist `{η ≤ ·} ⊆ {ofReal ε₀ < ·}` und `measure_mono` schließt. Das war am
+Quelltext zu prüfen und ist geprüft.
+
+#### Vier Befunde
+
+* **Der Satz ging im ersten Durchlauf durch, und das ist kein Zufall, sondern
+  der Ertrag des Vorlaufs.** Die drei Zutaten — Meßbarkeit, Einklemmung,
+  abgeschlossene Einbettung — waren so zugeschnitten, daß der Beweis eine
+  `calc`-Kette aus vier Schritten ist und keinen einzigen eigenen Gedanken mehr
+  braucht. Wo ein Lauf das nächste Mal so vorbereitet vorfindet, ist die
+  Schätzung „ein halber Lauf" richtig und nicht optimistisch.
+* **Die Vertauschung der beiden Schichten kostet nichts, und zwar wörtlich
+  nichts.** Die Hypothese liest `postcomp g (extendNNReal (Φ ω))`, die Konklusion
+  schiebt längs `extendNNReal ∘ postcomp g ∘ Φ` vor. `postcomp_extendNNReal` ist
+  `rfl`, also sind beide **definitionsgleich**, und zwischen Hypothese und
+  Konklusion wird nicht ein einziges Mal umgeschrieben — das abschließende
+  `measure_mono` nimmt die eine Gestalt für die andere ohne Vermittlung.
+* **Der Basispunkt macht hier keine Schwierigkeit, entgegen dem Muster.** Die
+  Meßbarkeit steht über `(basePoint : ι)`, die Modulmengen des Kriteriums über
+  `(0 : ℝ)`; `Real.instBasePoint` ist `⟨0⟩`, und die Elaboration findet das
+  selbst. Das ist bemerkenswert, weil die Datei zwei benannte Fälle führt, in
+  denen eine solche Definitionsgleichheit **nicht** gefunden wurde
+  (`ENNReal` gegen `WithTop ℝ≥0` beim `rw`, und `Clock` mit seinem
+  `MeasurableSpace` als Feld). Der Unterschied ist, daß hier mit `exact`
+  gearbeitet wird und dort mit `rw`: die Instanzprojektion entfaltet sich bei
+  normaler Transparenz, das Muster eines `rw` wird syntaktisch gesucht.
+* **Eine Deklaration, die in der Arbeitsdatei übersetzt, übersetzt darum noch
+  nicht in der Roadmap — und der Grund ist die `variable`-Zeile.** Beide
+  Zusammenfügungssätze gingen in einer Arbeitsdatei unter `scripts/_dev_*.lean`
+  (nicht versioniert, siehe `.gitignore`) im ersten Durchlauf durch und
+  scheiterten in `MartingaleProblems/Suggested.lean` mit **neun** Fehlern, davon
+  sechs `synthInstanceFailed`. Die Ursache ist nicht der
+  Beweis: am Dateiende steht `variable {E : Type*} [MetricSpace E]` und sonst
+  nichts, während die Arbeitsdatei `[MeasurableSpace E] [BorelSpace E]
+  [PolishSpace E]` in ihrem Kopf führte. Die vier Instanzen sind jetzt an den
+  beiden Deklarationen ausgeschrieben. **Wer eine Arbeitsdatei benutzt, gleicht
+  ihren Kopf mit der `variable`-Zeile an der Einfügestelle ab**, sonst mißt
+  `dev_check_master.py` eine andere Aussage als die, die eingefügt wird.
+
+#### Wo der erste Punkt der Kette jetzt steht
+
+| Größe | Stand |
+| --- | --- |
+| alles Deterministische bis zur Modulabschätzung | steht |
+| der Zusammenbau beider Summanden, auch am Bildpfad | steht |
+| die drei Grenzübergänge in der Ordnung `N`, `δ`, `ε` | steht |
+| die Ungleichung am Bildpfad, gleichmäßig über die Familie | steht |
+| die Meßbarkeit des Moduls | steht |
+| die Einklemmung für den Übergang ans Bildmaß | steht |
+| **der Übergang vom Stichprobenraum an das Bildmaß, ausgeführt** | **steht, dieser Lauf** |
+| **das Kriterium, an der Stichprobenseite abgeschlossen** | **steht, dieser Lauf** |
+| **die Umrechnung `ofReal ε₀ < η` zwischen den beiden Hälften** | **steht, dieser Lauf** |
+| **der unbeschränkte Horizont: `m : ℕ` gegen ein festes `T`** | **steht, dieser Lauf** |
+| der Weg von der Martingalhypothese zu `IsApproximable` | offen |
+| `isTight_map_postcomp_of_exists_martingale` selbst | offen |
+
+**Damit ist am ersten Punkt der Kette alles gebaut, was unterhalb von
+`IsApproximable` liegt.** Was offen bleibt, liegt **oberhalb**: die
+Approximierbarkeit selbst ist noch nirgends aus einer Martingalvoraussetzung
+hergestellt.
+
+#### Vorschlag für den nächsten Lauf
+
+**`isApproximable_of_exists_martingale`**, in
+`MartingaleProblems/Suggested.lean` — der Weg von der Martingalhypothese des
+Meilensteins 11 zu `MeasureTheory.IsApproximable`.
+
+> Zu `f : E →ᵇ ℝ` approximierbar im Sinn des Meilensteins — also mit
+> `(Y n, Z n) ∈ 𝓐 n`, `⨆ n ∫⁻ ω, ⨆ t ∈ Set.Iic T ∩ D, ‖Y n t ω - f (X n t ω)‖ₑ < ε`
+> und `⨆ n 𝔼[eLpNorm (Set.Iic T).indicator (Z n) p] < ∞` — die Aussage
+> `IsApproximable 𝓕 P q T K (fun t ω ↦ f (X n t ω)) ε₀ u`.
+
+**Warum jetzt.** Es ist die **einzige** verbliebene Eingabe des ersten Punktes
+der Kette. Seit diesem Lauf gilt: hat ein Verbraucher die Approximierbarkeit an
+jedem Horizont, so hat er die Straffheit — in *einer* Aussage und ohne weitere
+Arbeit. Alles, was noch zwischen dem Meilenstein und
+`isTight_map_postcomp_of_exists_martingale` steht, ist dieser eine Schritt.
+
+**Worauf er ruht, und es ist alles gebaut:** `IsApproximatingPair` (der
+Vorlauf des 20. Laufs vom 2026-09-20), die Quadratidentität am Prozeß (22. Lauf),
+und die vier Integrierbarkeiten, die `IsApproximable` in seinem Feld
+`exists_approximants` führt. Die Struktur verlangt **zwei** Paare — eines für `V`
+und eines für `V²` —, und das ist der Punkt, an dem der 20. Lauf eine
+Roadmap-Aussage als zu stark befunden hat: der zweite Approximant ist **nicht**
+das Quadrat des ersten. Wer diesen Schritt geht, hat also beide Paare aus der
+Martingalhypothese zu gewinnen, und die Hypothese des Meilensteins gibt sie über
+die Abgeschlossenheit der approximierbaren Funktionen unter **Produkten** — die
+dort ausdrücklich als Zeuge und nicht als Bequemlichkeit geführt wird.
+
+**Zu prüfen, ehe gebaut wird, und es ist am Quelltext zu entscheiden:** ob das
+`D` der Meilensteinformulierung (`Set.Iic T ∩ D`, die abzählbare Zeitmenge) mit
+dem `S` der Stichprobenschranke (`hSc : S.Countable`, `hSd : Dense S`)
+zusammenfällt oder ob zwischen ihnen ein Übergang steht. `IsApproximable` liest
+sein Supremum über **ganz** `Set.Iic T`, nicht über einen abzählbaren Schnitt;
+`biSup_enorm_Iic_eq_of_isRightContinuous` ist die Stelle, an der die
+Rechtsstetigkeit die beiden gleichsetzt, und ob sie hier schon oder erst dort
+verbraucht wird, entscheidet die Gestalt der Hypothese. **Nicht raten.**
+
+### 2026-09-21, achter Lauf des Tages — die Vorfrage des Vorlaufs ist am Quelltext entschieden, und ihre Antwort ist ein **Befund gegen den Meilenstein selbst**: seine Approximierbarkeitsbedingung und `IsApproximable` sind nicht dieselbe Bedingung, der Unterschied ist der rechte Randpunkt, und was ihn schließt ist ein Quantor, den der Meilenstein längst führt
+
+**Bearbeitet:** der Vorschlag des Vorlaufs, also der Weg von der
+Approximierbarkeit des Meilensteins 11 zu `MeasureTheory.IsApproximable`. Wie
+angeordnet: kein Meilenstein 8, kein Meilenstein 14, kein C.5/G.
+
+#### Die Vorfrage, und sie war die richtige
+
+Der Vorlauf hatte aufgetragen, **vor** dem Bauen am Quelltext zu entscheiden, ob
+das `D` der Meilensteinformulierung (`Set.Iic T ∩ D`) mit dem `S` der
+Stichprobenschranke (`hSc : S.Countable`, `hSd : Dense S`) zusammenfällt, und
+ausdrücklich verboten, das zu raten. Beide Antworten stehen im Quelltext:
+
+* **`S` und `D` sind zwei Rollen desselben Objekts, und die Rollen verlangen
+  Verschiedenes.** `S` wird in die Stoppzeiteigenschaft der
+  Aldous-Trefferzeiten verbraucht — `isStoppingTime_oscHitSeqCap` und
+  `isStoppingTime_oscHitSeqGap` (`MartingaleProblems/Suggested.lean:45072`,
+  `:45073`), über `measure_setOf_oscHitSeq_gap_le` —, und dort wird seine
+  **Abzählbarkeit** gelesen. Das `D` der Approximierbarkeit kommt dort nirgends
+  vor; von ihm wird im Übergang nur die **Dichtheit** gebraucht.
+  Der Quelltext sagt zur Benennung selbst etwas, und es ist zu beachten: der
+  Doc-Kommentar von `mul_measure_setOf_lt_modulusBased_le_lintegral_dist`
+  (`:42515`) hält fest, daß die abzählbare dichte Menge „may not be called `D`
+  here", weil `D(ℝ≥0, E)` die Notation des Pfadraums ist und eine
+  Abschnittsvariable dieses Namens sie verdeckt — „it is `S` in this statement
+  and `D` everywhere the path space does not occur". Der Lauf hat sich danach
+  gerichtet: die allgemeine Aussage nennt sie `D` und führt sie frei, die
+  zusammengesetzte nennt sie `S` und **setzt die beiden gleich**, weil ein
+  Verbraucher von der Unterscheidung nichts hat.
+* **Die Fenster sind nicht dieselben, und das ist kein Formfehler.**
+  `IsApproximable` liest seine beiden Fehler über **ganz** `Set.Iic T`
+  (`:45470`, `:45471`), der Meilenstein über `Set.Iic T ∩ D`.
+
+#### Der Befund, und er ist der Ertrag des Laufs
+
+> **Die Bedingung des Meilensteins am Horizont `T` gibt `IsApproximable` am
+> Horizont `T` nicht.** Der Unterschied ist der rechte Randpunkt.
+
+`biSup_enorm_Iic_eq_of_isRightContinuous` (`:2961`) sagt für einen
+rechtsstetigen Pfad `⨆_{Iic T} = ⨆_{insert T (Iic T ∩ D)}`, und das `insert T`
+ist dort ausdrücklich als **nicht redundant** vermerkt: von innen nähert sich
+dem rechten Ende nichts von rechts, eine dichte Menge erreicht es also nicht.
+Ein Pfad, der genau bei `T` springt, wird von der einen Bedingung gesehen und
+von der anderen nicht. Die Meilensteinbedingung ist damit **echt schwächer**.
+
+**Was die Lücke schließt, ist kein neuer Satz, sondern ein Quantor, den der
+Meilenstein längst führt.** Er verlangt die Approximierbarkeit „for all
+`ε, T > 0`", die Bedingung steht also auch an einem **echt größeren** Horizont
+`T' > T` zur Verfügung, und dort greift die dichte Menge über `T` hinaus nach
+rechts. Mehr ist nicht nötig: der Randpunkt des kleineren Fensters liegt im
+Inneren des größeren und wird nicht mehr eigens gelesen.
+
+#### Was gebaut ist
+
+**Vier** neue Deklarationen in `TauCeti/MartingaleProblems/Suggested.lean`, im
+neuen Abschnitt „The approximability condition as the milestone states it" am
+Dateiende (194 Zeilen):
+
+* **`MeasureTheory.biSup_enorm_Iic_le_biSup_enorm_inter_dense`** — der
+  Fensterübergang. Für dichtes `D`, `T < T'` und rechtsstetiges `g`:
+  `⨆ t ∈ Set.Iic T, ‖g t‖ₑ ≤ ⨆ t ∈ Set.Iic T' ∩ D, ‖g t‖ₑ`. Der ganze Beweis ist
+  `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` an der abgeschlossenen
+  Menge `Set.Iic c`, angewandt bei jedem `t ≤ T` mit dem Fenster
+  `Set.Ico t T'`.
+* **`MeasureTheory.IsApproximatingPair.mono_horizon`** — ein approximierendes
+  Paar am Horizont `T'` ist eines an jedem kürzeren Horizont, mit **demselben**
+  `q` und **demselben** `K`. Sechs der acht Felder nennen den Horizont gar
+  nicht; die beiden übrigen lesen ihn nur durch
+  `Measure.restrict_mono_set` hindurch.
+* **`MeasureTheory.isApproximable_of_forall_exists_pair`** — der Übergang
+  selbst. Alles außer den beiden Fehlern geht unverändert durch; die Fehler
+  sind der neue Fensterübergang unter `lintegral_mono_ae`.
+* **`MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_exists_pair`** —
+  **der erste Punkt der Kette ohne `IsApproximable` in der Aussage.** Aus der
+  Bedingung, wie der Meilenstein sie schreibt, an jedem Fensterradius und an
+  einem Horizont darüber, folgt die Straffheit der Bildgesetze
+  `{(P.map (Φ i)).map (postcomp g) | i}`. Das Zwischenglied `u < T < T'` kommt
+  aus `exists_between`; die dichte Menge ist hier das `S` der
+  Straffheitsschätzung und keine zweite, aus dem Grund im vorigen Absatz.
+
+Die ganze Kette geht durch `python3 scripts/check_master.py` mit **0 Fehlern,
+0 `sorry`** in allen drei Dateien; die Warnungszahlen sind **unverändert**
+(18 / 35 / 112, davon veraltet 0). Alle vier Deklarationen sind mit
+`check_axioms_master.py` geprüft und hängen an `propext`, `Classical.choice`,
+`Quot.sound` und an nichts sonst.
+
+Mathlib-Stand: `94ef6b89544e58e90f119da869f3fb48d1da0f4c`, 2026-09-18;
+Lean 4.35.0-rc2.
+
+#### Vier Befunde
+
+* **Die halboffene Fassung ist die brauchbare, und das war im Quelltext schon
+  gesagt.** `SkorokhodSpace.forall_mem_Icc_of_forall_mem_dense` trägt die
+  Hypothese `hb : a ≤ b → f b ∈ K`, also genau den Randpunkt, den man nicht
+  hat; ihr Doc-Kommentar sagt: „a consumer that cannot pay it enlarges the
+  window instead and uses the half open form above". Der Lauf hat nichts
+  anderes getan, als dieser Anweisung zu folgen. Nebenertrag: weil die
+  halboffene Fassung bei jedem `t` mit `Set.Ico t T'` angewandt wird statt bei
+  `⊥` mit `Set.Ico ⊥ T'`, braucht die neue Aussage **kein** `OrderBot` am
+  Index.
+* **Die Rechtsstetigkeit ist eine Hypothese und steht *innerhalb* des
+  Existenzquantors.** `Y` hängt vom Fehler ab, also kann sie nicht davorstehen.
+  Sie ist **nicht** aus `IsApproximatingPair.rightContinuous` gewonnen: das
+  Feld gibt die Rechtsstetigkeit von `Y - C`, und um daraus die von `Y - V` zu
+  bekommen, bräuchte man die Stetigkeit des unbestimmten Integrals `C` obendrauf.
+  Der Meilenstein nannte diesen Preis bisher „no price at all"; das ist für
+  `f ∘ X` bei càdlàg `X` richtig, für `Y` aber nicht ohne Zusatzschritt, und so
+  steht es jetzt an der Deklaration.
+* **Die Monotonie im Horizont verbessert die Konstante nicht, und das ist der
+  Grund, aus dem sie benutzbar ist.** `IsApproximable` lebt davon, daß `q`, `T`
+  und `K` allen Fehlern **gemeinsam** sind; ein Übergang, der `K` verkleinerte,
+  wäre für den Zusammenbau wertlos. `eLpNorm_mono_measure` gibt die Ungleichung
+  in der richtigen Richtung, ohne an `K` zu rühren.
+* **Eine Arbeitsdatei braucht die `open scoped`-Zeile der Zieldatei, nicht nur
+  deren `variable`-Zeile.** Der Vorlauf hatte die `variable`-Falle benannt;
+  dieser Lauf ist in die Schwesterfalle gelaufen: `E →ᵇ ℝ` scheitert in einer
+  Arbeitsdatei mit `elaboration function for Mathlib.Tactic.superscriptTerm has
+  not been implemented`, weil `BoundedContinuousFunction` nicht geöffnet ist —
+  eine Fehlermeldung, die nach einem kaputten Lean aussieht und eine fehlende
+  Notation ist. In `MartingaleProblems/Suggested.lean` steht die Notation über
+  die Importkette zur Verfügung; in einer frischen Datei nicht.
+
+#### Wo der erste Punkt der Kette jetzt steht
+
+| Größe | Stand |
+| --- | --- |
+| alles unterhalb von `IsApproximable` | steht (7. Lauf) |
+| der Fensterübergang vom dichten `D` zum ganzen `Set.Iic T` | **steht, dieser Lauf** |
+| die Monotonie des approximierenden Paares im Horizont | **steht, dieser Lauf** |
+| `IsApproximable` aus der Bedingung des Meilensteins | **steht, dieser Lauf** |
+| der erste Punkt der Kette ohne `IsApproximable` in der Aussage | **steht, dieser Lauf** |
+| die **zwei Paare** aus der Martingalhypothese, also die Abgeschlossenheit unter Produkten | offen |
+| die vier Integrierbarkeiten aus der Beschränktheit von `g` | offen |
+| die Rechtsstetigkeit von `Y - g ∘ X` aus den Daten | offen |
+
+**Damit ist der erste Punkt der Kette bis auf seine Hypothesen gebaut.** Was
+offen bleibt, ist genau das, was die Paare *herstellt* — und das ist keine
+Buchhaltung, sondern der Ort der Doob-Ungleichungen des Meilensteins 9.
+
+#### Vorschlag für den nächsten Lauf
+
+**`MeasureTheory.IsApproximatingPair.integrable_stoppedValue_of_bounded`**, in
+`MartingaleProblems/Suggested.lean` — die **vier Integrierbarkeiten** der
+Hypothese aus der Beschränktheit von `Y` an den Stoppzeiten.
+
+> Für `h : IsApproximatingPair 𝓕 P q T K Y C Z` und eine Stoppzeit `σ` mit
+> `σ ≤ (j : WithTop ℝ≥0)` für ein `j : ℝ≥0` ist `stoppedValue Y σ` integrierbar,
+> sobald `Y` gleichmäßig beschränkt ist.
+
+**Warum jetzt.** Von den drei offenen Größen der Tabelle oben ist das die
+einzige, die **keine** neue Mathematik verlangt, und sie ist in der Hypothese
+des ersten Punktes **viermal** ausgeschrieben — zweimal an
+`min (oscHitSeq …) u` und zweimal an der gekappten Fassung mit `+ δ`. Solange
+sie dort stehen, muß jeder Verbraucher sie vier Mal einzeln erzeugen; steht der
+Satz, ist es vier Mal derselbe Aufruf. Der Meilenstein selbst führt sie
+ausdrücklich als Preis, den „a consumer holding them from a bounded `f`"
+bezahlt (Doc-Kommentar von `IsApproximatingPair`, „What is *not* a field, and
+why") — also ist die Beschränktheit die vorgesehene Quelle und nicht eine
+Bequemlichkeit.
+
+**Worauf er ruht, und es ist alles gebaut:**
+`MeasureTheory.stronglyMeasurable_stoppedValue_of_le` — die starke Meßbarkeit
+des gestoppten Wertes unter einer Schranke an die Stoppzeit, und sie ist
+**Mathlibs**, nicht unsere
+(`Mathlib/Probability/Process/Stopping.lean:1016`, geprüft an
+`94ef6b89544e58e90f119da869f3fb48d1da0f4c`); in
+`lintegral_ofReal_dist_le_sqrt_of_isApproximatingPair` wird sie bereits so
+benutzt —,
+`IsApproximatingPair.progressive`, und `Integrable.mono'` gegen die Konstante.
+Für den Verbraucher ist `Y = g ∘ X` beschränkt durch `‖g‖`
+(`BoundedContinuousFunction.norm_coe_le_norm`), und für die *Approximanten* `Y`
+ist die Beschränktheit eine Voraussetzung, die der Meilenstein an seine Klasse
+`𝓛 n` ohnehin stellt.
+
+**Zu prüfen, ehe gebaut wird, und es ist am Quelltext zu entscheiden:** ob die
+vier Stoppzeiten der Hypothese die Schranke `≤ (j : WithTop ℝ≥0)` überhaupt
+haben. Die ersten beiden sind `min (oscHitSeq V ε₀ k ω) u`, also durch `u`
+beschränkt, und das ist offensichtlich. Die anderen beiden sind
+`min (oscHitSeq V ε₀ (k+1) ω) (min (oscHitSeq V ε₀ k ω) u + δ)`, also durch
+`u + δ` beschränkt — **aber in `WithTop ℝ≥0`**, und der 15. Lauf des 2026-09-20
+hat festgehalten, daß `WithTop ℝ≥0` und `ℝ≥0∞` „nicht unter *ein* `+`" kommen.
+Ob die Schranke `u + δ` in `WithTop ℝ≥0` ohne Umweg zu haben ist oder ob dafür
+erst eine Hilfsaussage nötig ist, entscheidet, ob der Satz eine Stoppzeit oder
+zwei Gestalten braucht. **Nicht raten.**
+
+### 2026-09-21, neunter Lauf des Tages — der Vorschlag des Vorlaufs steht, und seine Vorfrage war am Quelltext **längst beantwortet**: die Schranke, um die er bat, steht seit dem Tag, an dem die Zeiten gebaut wurden; damit fallen die vier Integrierbarkeiten aus dem ersten Punkt der Kette, und zehn Verpflichtungen je Fehler werden sechs
+
+**Bearbeitet:** der Vorschlag des Vorlaufs, also
+`MeasureTheory.IsApproximatingPair.integrable_stoppedValue_of_bounded` und was
+darauf ruht. Wie angeordnet: kein Meilenstein 8, kein Meilenstein 14, kein
+C.5/G.
+
+#### Die Vorfrage, und die Antwort stand im Bestand
+
+Der Vorlauf hatte aufgetragen, **vor** dem Bauen am Quelltext zu entscheiden, ob
+die vier Stoppzeiten der Hypothese die Schranke `≤ (j : WithTop ℝ≥0)` überhaupt
+haben, und ausdrücklich verboten, das zu raten. Er hatte dabei die
+Gap-Zeit für den schwierigen Fall gehalten, weil ihre Schranke `u + δ` **in
+`WithTop ℝ≥0`** zu bilden wäre und der 15. Lauf des 2026-09-20 festgehalten
+hatte, daß `WithTop ℝ≥0` und `ℝ≥0∞` „nicht unter *ein* `+`" kommen.
+
+**Die Frage war richtig gestellt und ihre Antwort war schon da.**
+`MeasureTheory.oscHitSeqGap_le_coe` (`MartingaleProblems/Suggested.lean:42287`)
+sagt genau
+
+```
+min (oscHitSeq X ε (k+1) ω) (min (oscHitSeq X ε k ω) ↑u + ↑δ) ≤ ((u + δ : ι) : WithTop ι)
+```
+
+also die Schranke bereits **in der coercierten Gestalt**, die der neue Satz
+verlangt; sein Beweis ist `WithTop.coe_add` unter `gcongr`, und `WithTop.coe_add`
+ist in Mathlib `rfl`
+(`Mathlib/Algebra/Order/Monoid/Unbundled/WithTop.lean:104`, geprüft an
+`94ef6b89544e58e90f119da869f3fb48d1da0f4c`). Der Satz steht dort seit dem Tag,
+an dem die Aldous-Zeiten gebaut wurden, und sein Doc-Kommentar nennt den Grund
+vorweg: „Doob's inequalities and optional sampling are stated for stopping times
+bounded by an index."
+
+**Der Riß, den der Vorlauf fürchtete, tritt hier nicht auf.** Er tritt auf, wo
+ein `WithTop ℝ≥0` und ein `ℝ≥0∞` unter *ein* `+` sollen — so vermerkt an
+`MeasureTheory.setOf_lt_modulusBased_subset_oscHitSeq`. Hier liegen **beide**
+Summanden von `α + δ` in `WithTop ℝ≥0`. Also **eine** Gestalt des Satzes und
+nicht zwei, und die gekappte wie die gelückte Zeit sind zweimal derselbe Aufruf.
+
+#### Was gebaut ist
+
+**Fünf** neue Deklarationen in `TauCeti/MartingaleProblems/Suggested.lean`, im
+neuen Abschnitt „The four integrabilities, from a bound on the approximants" am
+Dateiende (176 Zeilen):
+
+* **`MeasureTheory.IsApproximatingPair.integrable_stoppedValue_of_bounded`** —
+  der Baustein. Für ein Paar der Klasse, eine Stoppzeit `σ ≤ (j : WithTop ℝ≥0)`
+  und ein gleichmäßig beschränktes `Y` ist `stoppedValue Y σ` integrierbar. Der
+  ganze Beweis ist Mathlibs
+  `MeasureTheory.stronglyMeasurable_stoppedValue_of_le`
+  (`Mathlib/Probability/Process/Stopping.lean:1016`) gegen `integrable_const`.
+  Vom Maß wird **Endlichkeit** gelesen und nicht Normiertheit, also steht dort
+  `[IsFiniteMeasure P]`.
+* **`…integrable_stoppedValue_oscHitSeqCap`** und **`…_oscHitSeqGap`** — der
+  Baustein an den beiden Aldous-Zeiten, mit `min_le_right` und
+  `oscHitSeqGap_le_coe` als Schranken.
+* **`MeasureTheory.isApproximable_of_forall_exists_bounded_pair`** — die
+  Bedingung des Meilensteins mit den vier Integrierbarkeitsfamilien ersetzt
+  durch **eine Schranke je Approximant**. Die beiden Schranken sind getrennt;
+  nichts im Beweis vergleicht sie.
+* **`MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair`**
+  — der erste Punkt der Kette in derselben Gestalt.
+
+Die ganze Kette geht durch `python3 scripts/check_master.py` mit **0 Fehlern,
+0 `sorry`** in allen drei Dateien; die Warnungszahlen sind **unverändert**
+(18 / 35 / 112, davon veraltet 0). Alle fünf Deklarationen sind mit
+`check_axioms_master.py` geprüft und hängen an `propext`, `Classical.choice`,
+`Quot.sound` und an nichts sonst.
+
+Mathlib-Stand: `94ef6b89544e58e90f119da869f3fb48d1da0f4c`, 2026-09-18;
+Lean 4.35.0-rc2.
+
+#### Vier Befunde
+
+* **Die Klasse hat ihre eigene Auskunft eingelöst.** Der Doc-Kommentar von
+  `IsApproximatingPair` führt unter „What is *not* a field, and why" aus, daß
+  keine Integrierbarkeit der gestoppten Werte zur Klasse gehört, weil die
+  Abschätzungen den Kompensator allein lesen und die Aussagen, die `Y` lesen,
+  ihre Integrierbarkeit „a consumer holding them from a bounded `f`" beziehen.
+  Dieser Lauf hat nichts anderes getan, als den Halbsatz zu einem Satz zu
+  machen. **Der Bestand wußte, was fehlt; er hatte es nur nicht bewiesen.**
+* **Die Schranke an die Stoppzeit ist keine Bequemlichkeit.**
+  `stoppedValue Y σ` ist `𝓕 j`-meßbar für `σ ≤ j` und für nichts Kleineres; ohne
+  Schranke stünde die Aussage über dem oberen Ende der Filtration, wo die
+  Filtration nichts sagt. Das ist der Grund, aus dem der Baustein die Schranke
+  in der Aussage trägt und nicht im Beweis beschafft.
+* **Die Beschränktheit ist aus der Fehlerschranke *nicht* zu gewinnen.** `Y`
+  nähert sich `g ∘ X` in `L¹` eines Supremums; das schränkt keinen Pfad von `Y`
+  punktweise ein. Sie ist eine Bedingung an die **Klasse**, aus der die
+  Approximanten gezogen werden, und der Meilenstein stellt sie dort. Wer sie für
+  ableitbar hielte, hätte einen anderen Satz.
+* **Zwei dichte Mengen, zwei Rollen, und in der allgemeinen Fassung getrennt.**
+  Die Dichtheit allein wird am Fensterübergang gelesen, die Abzählbarkeit allein
+  am Début der Oszillationsmengen. `isApproximable_of_forall_exists_bounded_pair`
+  hält sie deshalb auseinander — das ist die schwächere Hypothese —, und die
+  Straffheitsaussage darüber setzt sie gleich, wie sie es schon tat.
+
+#### Wo der erste Punkt der Kette jetzt steht
+
+| Größe | Stand |
+| --- | --- |
+| alles unterhalb von `IsApproximable` | steht (7. Lauf) |
+| `IsApproximable` aus der Bedingung des Meilensteins | steht (8. Lauf) |
+| der erste Punkt der Kette ohne `IsApproximable` in der Aussage | steht (8. Lauf) |
+| die **vier Integrierbarkeiten** aus der Beschränktheit | **steht, dieser Lauf** |
+| die Rechtsstetigkeit von `Y - g ∘ X` aus den Daten | offen |
+| die **zwei Paare** aus der Martingalhypothese (Abgeschlossenheit unter Produkten) | offen |
+
+Von den drei offenen Größen des Vorlaufs ist eine bezahlt. Was bleibt, ist eine
+Regularitätsaussage — und dann der Ort, an dem die Doob-Ungleichungen des
+Meilensteins 9 verbraucht werden.
+
+#### Vorschlag für den nächsten Lauf
+
+**`MeasureTheory.IsApproximatingPair.ae_isRightContinuous_sub_of_continuous`**,
+in `MartingaleProblems/Suggested.lean` — die **Rechtsstetigkeit von `Y - g ∘ X`**
+aus den Daten, also die zweitletzte offene Größe der Tabelle.
+
+> Ist `(Y, C, Z)` ein Paar der Klasse und `X` rechtsstetig mit `g` stetig, so ist
+> `∀ᵐ ω ∂P, IsRightContinuous fun t ↦ Y t ω - g (X t ω)` — **auf dem Fenster**,
+> in dem `C` stetig ist.
+
+**Warum jetzt.** Es ist die einzige der beiden offenen Größen, die **keine neue
+Mathematik** verlangt, und sie steht in beiden neuen Aussagen zweimal
+ausgeschrieben, an `Y` und an `Y'`. Die Zerlegung ist
+
+```
+Y - g ∘ X = (Y - C) + C - g ∘ X,
+```
+
+und von den drei Summanden sind zwei geschenkt: `Y - C` ist rechtsstetig als
+**Feld der Klasse** (`IsApproximatingPair.rightContinuous`), und `g ∘ X` ist es
+aus `hcont` und `g.continuous`, wie es schon in
+`isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair` gerechnet wird.
+Bleibt `C`, und dafür steht der Satz in Mathlib:
+**`intervalIntegral.continuousOn_primitive`**
+(`Mathlib/MeasureTheory/Integral/DominatedConvergence.lean:439`, geprüft an
+`94ef6b89544e58e90f119da869f3fb48d1da0f4c`) —
+`IntegrableOn f (Icc a b) μ → ContinuousOn (fun x ↦ ∫ t in Ioc a x, f t ∂μ) (Icc a b)`,
+und das ist **wörtlich** die Gestalt von `IsApproximatingPair.compensator_eq`,
+dessen Integrierbarkeitsvoraussetzung `IsApproximatingPair.ae_integrableOn` f.s.
+liefert. Achtung auf den Namensraum: die Aussage liegt in
+`namespace intervalIntegral` (Zeilen 162–610), **nicht** in `MeasureTheory`.
+
+**Zu prüfen, ehe gebaut wird, und es ist am Quelltext zu entscheiden:**
+`IsRightContinuous` ist in den beiden neuen Aussagen **global** über alle
+`t : ℝ≥0` gefordert, die Stetigkeit von `C` ist aber nur **bis zum Horizont** zu
+haben — `ae_integrableOn` gibt die Integrierbarkeit von `Z` nur auf
+`Set.Ioc 0 T`, jenseits davon ist `C` ein Bochner-Müllwert. Die Frage ist
+deshalb nicht, ob der Beweis geht, sondern **ob der Verbraucher die globale
+Fassung überhaupt braucht**:
+`MeasureTheory.biSup_enorm_Iic_le_biSup_enorm_inter_dense` wendet
+`SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` auf `Set.Ico t T'` an, liest
+also nur Rechtsstetigkeit **innerhalb** des Fensters. Trägt das, so ist die
+Abschwächung von `IsRightContinuous g` auf „rechtsstetig auf `Set.Iic T'`" der
+erste Schritt und der eigentliche Ertrag; trägt es nicht, so ist zu sagen, an
+welcher Stelle die globale Fassung gelesen wird. **Nicht raten.**

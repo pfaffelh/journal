@@ -19052,6 +19052,113 @@ theorem SkorokhodSpace.not_isTightMeasureSet_twoJumpImageLaw :
   have h2 : (2 : ℝ≥0∞)⁻¹ < 1 := ENNReal.inv_lt_one.2 (by norm_num)
   exact absurd (h1.trans h) (not_le.2 h2)
 
+/-! ### From the sample space to the image law
+
+The criterion above measures a set of **paths** under the image law
+`((μ i).map (postcomp g)).map extendNNReal`; what a martingale estimate produces
+is a bound on a set of **sample points** under `P`.  The two statements below are
+that passage, and they are the whole of it.
+
+**Why it is not `MeasureTheory.Measure.map_apply` and nothing else.**  That lemma
+asks the set be measurable, and the modulus sets are among those this roadmap
+never asserts measurable --- deliberately, the countable-family route being
+closed (`SkorokhodSpace.measurable_eval` cannot compute this infimum, for the
+reason recorded above `SkorokhodSpace.isSubdivisionBased_of_le`).  The one
+statement over an arbitrary set, `MeasureTheory.Measure.le_map_apply`, runs the
+wrong way: a bound on the preimage is not a bound on the image law.
+
+**What carries instead is the sandwich.**  The set the criterion reads sits
+inside the Borel set of `SkorokhodSpace.measurable_iInf_modulusBased`
+(`SkorokhodSpace.setOf_le_modulusBased_subset`), and that one sits inside the
+modulus set at **any larger window radius**
+(`SkorokhodSpace.setOf_le_iInf_modulusBased_subset`).  So a bound at radius `u'`
+over the sample space yields a bound at every `u < u'` over the image law, and
+the measurability is spent in the middle where it exists.
+
+**The step in the radius is free at the consumer.**  The criterion quantifies
+over all `m : ℕ`, so the step is `m ↦ m + 1`; that is the second statement, and
+it is why the first is stated with two radii rather than one.
+
+**Both orders of the two layers are the same map.**  The hypothesis reads
+`postcomp g (extendNNReal (Φ ω))` and the conclusion pushes forward along
+`extendNNReal ∘ postcomp g ∘ Φ`; these agree by
+`SkorokhodSpace.postcomp_extendNNReal`, which is `rfl`, so no rewriting occurs
+between them. -/
+
+/-- **The passage from the sample space to the image law.**  A bound on the
+modulus set at window radius `u'` over the sample space is a bound on the modulus
+set at every smaller radius `u` under the image law.
+
+The proof is the sandwich of the section comment: monotonicity into the Borel set
+of `SkorokhodSpace.measurable_iInf_modulusBased`, then
+`MeasureTheory.Measure.map_apply` there, then monotonicity of the preimage back
+into the modulus set at `u'`.  `MeasureTheory.Measure.map_map` composes the two
+layers beforehand, and this is where their measurability is used:
+`SkorokhodSpace.measurable_postcomp` for the value change and
+`SkorokhodSpace.isometry_extendNNReal` for the index change. -/
+theorem SkorokhodSpace.measure_map_postcomp_setOf_le_modulusBased_le [CompleteSpace E]
+    {Ω : Type*} [MeasurableSpace Ω] (P : Measure Ω)
+    {Φ : Ω → D(ℝ≥0, E)} (hΦ : Measurable Φ) (g : E →ᵇ ℝ)
+    {u u' δ : ℝ} (hu0 : 0 ≤ u) (hδ0 : 0 ≤ δ) (huu : u < u') {η ε : ℝ≥0∞}
+    (h : P {ω | η ≤ SkorokhodSpace.modulusBased (0 : ℝ) u'
+        (SkorokhodSpace.postcomp g.toContinuousMap
+          (SkorokhodSpace.extendNNReal (Φ ω))) δ} ≤ ε) :
+    (((P.map Φ).map (SkorokhodSpace.postcomp g.toContinuousMap)).map
+        SkorokhodSpace.extendNNReal)
+        {f : D(ℝ, ℝ) | η ≤ SkorokhodSpace.modulusBased (0 : ℝ) u f δ} ≤ ε := by
+  classical
+  have hE : Measurable (SkorokhodSpace.extendNNReal (E := ℝ)) :=
+    SkorokhodSpace.isometry_extendNNReal.continuous.measurable
+  have hp : Measurable (SkorokhodSpace.postcomp (ι := ℝ≥0) (E := E) g.toContinuousMap) :=
+    SkorokhodSpace.measurable_postcomp _
+  have hTm : MeasurableSet
+      {f : D(ℝ, ℝ) | η ≤ ⨅ v ∈ Set.Ioi u, SkorokhodSpace.modulusBased (0 : ℝ) v f δ} :=
+    measurableSet_le measurable_const
+      (SkorokhodSpace.measurable_iInf_modulusBased (ι := ℝ) (E := ℝ) hu0 hδ0)
+  rw [Measure.map_map hp hΦ, Measure.map_map hE (hp.comp hΦ)]
+  calc (P.map (SkorokhodSpace.extendNNReal ∘
+          (SkorokhodSpace.postcomp g.toContinuousMap ∘ Φ)))
+        {f : D(ℝ, ℝ) | η ≤ SkorokhodSpace.modulusBased (0 : ℝ) u f δ}
+      ≤ (P.map (SkorokhodSpace.extendNNReal ∘
+          (SkorokhodSpace.postcomp g.toContinuousMap ∘ Φ)))
+        {f : D(ℝ, ℝ) | η ≤ ⨅ v ∈ Set.Ioi u, SkorokhodSpace.modulusBased (0 : ℝ) v f δ} :=
+        measure_mono (SkorokhodSpace.setOf_le_modulusBased_subset (0 : ℝ))
+    _ = P ((SkorokhodSpace.extendNNReal ∘
+          (SkorokhodSpace.postcomp g.toContinuousMap ∘ Φ)) ⁻¹'
+        {f : D(ℝ, ℝ) | η ≤ ⨅ v ∈ Set.Ioi u, SkorokhodSpace.modulusBased (0 : ℝ) v f δ}) :=
+        Measure.map_apply (hE.comp (hp.comp hΦ)) hTm
+    _ ≤ P {ω | η ≤ SkorokhodSpace.modulusBased (0 : ℝ) u'
+        (SkorokhodSpace.postcomp g.toContinuousMap
+          (SkorokhodSpace.extendNNReal (Φ ω))) δ} :=
+        measure_mono fun ω hω =>
+          SkorokhodSpace.setOf_le_iInf_modulusBased_subset (0 : ℝ) huu hω
+    _ ≤ ε := h
+
+/-- **The criterion, discharged at the sample space.**  This is the shape
+**MartingaleProblems** Milestone 11 produces and the form in which
+`SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` is consumed: the modulus
+bound is asked at radius `m + 1` and the criterion is served at `m`, the step in
+the radius being the one the statement above charges and the quantification over
+`m : ℕ` making it free.
+
+No compact containment appears, that conjunct being discharged once and for all
+by `SkorokhodSpace.isCompactContained_map_postcomp_nnreal` inside the
+equivalence. -/
+theorem SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le
+    [CompleteSpace E] {Ω : Type*} [MeasurableSpace Ω] (P : Measure Ω) {γ : Type*}
+    {Φ : γ → Ω → D(ℝ≥0, E)} (hΦ : ∀ i, Measurable (Φ i)) (g : E →ᵇ ℝ)
+    (h : ∀ ε : ℝ≥0∞, 0 < ε → ∀ m : ℕ, ∀ η : ℝ≥0∞, 0 < η → ∃ δ : ℝ, 0 < δ ∧ ∀ i,
+      P {ω | η ≤ SkorokhodSpace.modulusBased (0 : ℝ) ((m : ℝ) + 1)
+          (SkorokhodSpace.postcomp g.toContinuousMap
+            (SkorokhodSpace.extendNNReal (Φ i ω))) δ} ≤ ε) :
+    IsTightMeasureSet
+      {(P.map (Φ i)).map (SkorokhodSpace.postcomp g.toContinuousMap) | i} := by
+  rw [SkorokhodSpace.isTightMeasureSet_map_postcomp_iff]
+  intro ε hε m η hη
+  obtain ⟨δ, hδ, hle⟩ := h ε hε m η hη
+  exact ⟨δ, hδ, fun i => SkorokhodSpace.measure_map_postcomp_setOf_le_modulusBased_le
+    P (hΦ i) g (Nat.cast_nonneg m) hδ.le (by linarith) (hle i)⟩
+
 /-! ### The Aldous subdivision, deterministically
 
 Milestone 10 reads Aldous' criterion as the implication

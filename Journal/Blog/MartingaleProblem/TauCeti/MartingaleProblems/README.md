@@ -12691,6 +12691,142 @@ has to be chosen once for all `n`. What stands:
   larger infimum for a path that jumps outside that set: every such subdivision
   has the jump in the interior of a cell.
 
+  **The passage is carried out, 2026-09-21, and the criterion is closed on the
+  sample side.** `SkorokhodSpace.measure_map_postcomp_setOf_le_modulusBased_le`
+  is the change of measure --- a bound on the modulus set at radius `u'` over
+  `P` is a bound at every `u < u'` under
+  `((P.map Φ).map (postcomp g)).map extendNNReal` --- and
+  `SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le`
+  is that in the shape the criterion reads: a bound at `(m : ℝ) + 1` for every
+  `m : ℕ` gives `IsTightMeasureSet {(P.map (Φ i)).map (postcomp g) | i}` with no
+  further hypothesis. Both layers are pushed forward at once by
+  `MeasureTheory.Measure.map_map`, the two orders of `postcomp` and
+  `extendNNReal` being definitionally equal by
+  `SkorokhodSpace.postcomp_extendNNReal`.
+
+  **The two halves are joined, 2026-09-21**, by
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_isApproximable`: from
+  approximability at every window radius follows the tightness of the image laws
+  `{(P.map (Φ i)).map (postcomp g) | i}`. The measurability of the path map is
+  not among its hypotheses, being implied by the progressivity
+  (`MeasureTheory.measurable_pathOfProcess`).
+
+  Two seams were crossed there, and neither is analytic. The first is the
+  **threshold**: the sample bound reads `ofReal ε₀ < modulusBased …` and the
+  criterion `η ≤ modulusBased …`, so an `ε₀` below `η` is chosen and
+  `measure_mono` closes; `ENNReal.lt_iff_exists_real_btwn` produces it for every
+  `η > 0` including `η = ⊤`, carrying no finiteness hypothesis. The change of
+  measure carries `η` through unchanged and puts no condition on it, which is why
+  the strictness is settled at this seam and not at the other.
+
+  The second is the **horizon**, and it is the one that shapes the statement: the
+  criterion quantifies `m : ℕ` unboundedly while `MeasureTheory.IsApproximable`
+  carries a fixed `T` with `u < T`, so a single triple `(q, T, K)` serves only
+  finitely many `m`. The hypothesis therefore quantifies over the window --- to
+  every radius its own `q`, `T`, `K` --- which is not a strengthening but the
+  form this milestone states above, „for all `ε, T > 0` there are
+  `(Y n, Z n) ∈ 𝓐 n`". The fixed-`T` statement is wrapped, not altered.
+
+  **The condition of this item and `MeasureTheory.IsApproximable` are not the
+  same condition, 2026-09-21, and the difference is the right endpoint.** The
+  display above reads its errors over `Set.Iic T ∩ D` for a countable `D`, which
+  is the form under which the quantity is measurable; `IsApproximable` reads them
+  over the whole window `Set.Iic T`, which is the form the assembly needs, the
+  times substituted into it being hitting times. For a right continuous path the
+  window supremum is determined by a dense set **together with the value at the
+  right end** — that is the `insert T` of
+  `biSup_enorm_Iic_eq_of_isRightContinuous` — so a path that jumps exactly at `T`
+  is seen by the second condition and not by the first. The condition at horizon
+  `T` therefore does **not** give `IsApproximable` at `T`.
+
+  **What closes that gap is the quantifier this item already carries**, and it
+  costs nothing: the condition holds „for all `ε, T > 0`", so it is available at
+  a strictly larger horizon `T' > T`, and there the dense set reaches past `T`
+  from the right. That is
+  `MeasureTheory.biSup_enorm_Iic_le_biSup_enorm_inter_dense`, whose whole proof
+  is `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` at the closed set
+  `Set.Iic c` — the **half open** form, the one that reads no endpoint at all,
+  and it is why the lemma needs no `OrderBot` on the index. Enlarging the horizon
+  is free on the other side too, an approximating pair at `T'` being one at `T`
+  with the same `q` and the same `K`
+  (`MeasureTheory.IsApproximatingPair.mono_horizon`), and the consumer asks
+  `u < T` anyway, so `u < T < T'` comes from `exists_between`.
+
+  **The countable set `D` of the display and the `S` of the tightness estimate
+  are two roles of one object, and the roles read different things of it.** `S`
+  enters the début of the oscillation sets, where its **countability** makes the
+  Aldous hitting times stopping times; `D` enters nowhere but the error suprema,
+  and of it the passage reads only **density** — its countability is what makes
+  the milestone's quantity measurable and is nowhere used in this direction.
+  `MeasureTheory.isApproximable_of_forall_exists_pair` keeps them apart and
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_exists_pair` takes them
+  equal, a consumer having no use for the distinction. The naming follows the
+  rule already recorded at
+  `mul_measure_setOf_lt_modulusBased_le_lintegral_dist`: the set is `S` wherever
+  the path space notation `D(ℝ≥0, E)` occurs and `D` everywhere else.
+
+  **The passage is carried out, 2026-09-21**, as
+  `MeasureTheory.isApproximable_of_forall_exists_pair`, and composed with the
+  two seams above it gives the item with `IsApproximable` no longer in its
+  statement:
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_exists_pair` — from
+  the condition of this display, at every window radius and at a horizon
+  exceeding it, follows the tightness of the image laws
+  `{(P.map (Φ i)).map (postcomp g) | i}`.
+
+  **Right continuity of `Y - f ∘ X` is a hypothesis there and is carried inside
+  the existential**, `Y` depending on the error. It is the same price
+  `MeasureTheory.lintegral_enorm_sub_le_of_biSup_Iic_le` pays and at the same
+  place — \EK's (9.27) holds for all real times and not merely for rational ones
+  by right continuity. It is **not** derived from
+  `IsApproximatingPair.rightContinuous`, which gives the right continuity of
+  `Y - C` and would need the continuity of the indefinite integral `C` on top.
+
+  **The four integrabilities are discharged from a bound on the approximants,
+  2026-09-21, and that bound is what the class was always meant to supply.** The
+  docstring of `MeasureTheory.IsApproximatingPair` records under „What is *not* a
+  field, and why" that no integrability of the stopped values belongs to the
+  class, „a consumer holding them from a bounded `f`";
+  `MeasureTheory.IsApproximatingPair.integrable_stoppedValue_of_bounded` is that
+  sentence as a theorem — a bounded approximant has an integrable stopped value
+  at every stopping time bounded by an index — and its whole proof is Mathlib's
+  `MeasureTheory.stronglyMeasurable_stoppedValue_of_le`
+  (`Probability/Process/Stopping.lean:1016`) against `integrable_const`. Of the
+  measure it reads finiteness and not normalisation.
+
+  **Both Aldous times carry the bound the statement needs, and they carried it
+  before the question was asked.** The capped time is below `u` by
+  `min_le_right`; the gapped time is below `((u + δ : ℝ≥0) : WithTop ℝ≥0)` by
+  `MeasureTheory.oscHitSeqGap_le_coe`, which has stood since the times were
+  built. So the capped and the gapped case are one statement applied twice
+  (`MeasureTheory.IsApproximatingPair.integrable_stoppedValue_oscHitSeqCap`,
+  `…_oscHitSeqGap`) and not two shapes: the sum `α + δ` is formed in
+  `WithTop ℝ≥0` throughout, and the split between that type and `ℝ≥0∞` recorded
+  at `setOf_lt_modulusBased_subset_oscHitSeq` does not arise.
+
+  **Ten obligations per error become six.**
+  `MeasureTheory.isApproximable_of_forall_exists_bounded_pair` and
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair`
+  are the two statements above with the four families of integrabilities
+  replaced by one bound on each approximant; the two bounds are separate and
+  nothing compares them. In the general form the dense set of the errors and the
+  countable dense set of the times are kept apart — density alone is read of the
+  first, countability alone of the second — and the tightness statement takes
+  them equal, as it does already.
+
+  **The bound is not derivable from the bound on `f`.** `Y` approximates `f ∘ X`
+  in `L¹` of a supremum, which constrains no path of `Y` pointwise. It is a
+  condition on the class the approximants are drawn from, and this milestone
+  states it there.
+
+  **What remains of this item is the step above the pairs**: the two pairs are
+  hypotheses of the statement, and what produces them is the martingale
+  approximation together with the closure of the approximable functions under
+  products, which is what makes the **second** pair approximate `f²` and not `f`.
+  That closure is a witness and not a convenience — the second approximant is not
+  the square of the first — and it is where the continuous time Doob inequalities
+  of Milestone 9 are used. Everything below it is built.
+
 * `isRelativelyCompact_of_approx`: if `E` is Polish, the domain of `A` contains
   an algebra separating points and vanishing nowhere, the approximation holds
   for each `(f,g) ∈ A`, and `{X n}` satisfies compact containment, then `{X n}`
