@@ -12854,9 +12854,66 @@ has to be chosen once for all `n`. What stands:
   the square of the first — and it is where the continuous time Doob inequalities
   of Milestone 9 are used. Everything below it is built.
 
-  **The class has to be inhabited, and three of its eight fields are settled,
-  2026-09-21.** Every statement of this item so far *consumes*
-  `MeasureTheory.IsApproximatingPair`; none produces one, and that is the
+  **The class is inhabited, 2026-09-21.**
+  `MeasureTheory.isApproximatingPair_of_martingale`: a process `X` that is
+  strongly progressive with right continuous paths and for which
+  `fun t ω ↦ f (X t ω) - ∫ s in Set.Ioc 0 t, g (X s.toNNReal ω)` is a martingale
+  gives a pair of the class, with `Y = f ∘ X`, density `Z = g ∘ X`, compensator
+  the indefinite integral, and constant `K = T ^ q.toReal⁻¹ * ‖g‖₊` — a
+  **formula** in the data, which is the uniformity this item rests on: a family
+  of processes tested with one `g` has one `K`. The error against `f ∘ X` is
+  zero, so the approximation condition is met by the process itself whenever `f`
+  and `g` are bounded continuous, which is what a bounded generator supplies. The
+  hypothesis is the martingale problem, and the conclusion is membership in
+  \EK's class `𝓐 n`.
+
+  **`E` carries a topology and nothing else** — no σ-algebra, no metric, no
+  completeness. Every object read is a *real* functional of the path, so the
+  joint measurability of the `E` valued path is never needed; that is what
+  `measurable_uncurry_min_of_rightContinuous`, stated for real valued processes
+  for exactly this reason, buys.
+
+  Four statements of general use carry it, and three of them are about no
+  filtration and no measure:
+
+  * `MeasureTheory.tendsto_nhdsGE_comp_toNNReal` — right continuity survives the
+    clamp `Real.toNNReal`, which is what turns a process indexed by `ℝ≥0` into a
+    density indexed by `ℝ`.
+  * `MeasureTheory.measurable_of_tendsto_nhdsGE` — a right continuous real
+    function of a real variable is Borel measurable. **Mathlib has this in no
+    shape**, checked 2026-09-21 against
+    `94ef6b89544e58e90f119da869f3fb48d1da0f4c`:
+    `Mathlib/Topology/Order/Cadlag.lean`, where `IsRightContinuous` and
+    `IsCadlag` live, carries no measurability at all, and the occurrences of
+    `IsRightContinuous` outside it are about filtrations. What Mathlib has is
+    `Monotone.measurable`, which is how a `StieltjesFunction` becomes
+    measurable — monotonicity, not right continuity — and a càdlàg path is
+    neither monotone nor continuous. It is a named Mathlib gap and belongs in
+    `TODO.md` item 8.
+  * `MeasureTheory.continuous_setIntegral_Ioc_zero_real_of_bounded` — the
+    previous item's continuity at a *real* upper end, where the dyadic argument
+    reads it and where negative times occur.
+  * `MeasureTheory.stronglyMeasurable_integral_uncurry` —
+    `StronglyMeasurable.integral_prod_left` packaged for a σ-algebra that is not
+    an instance. It is the companion of
+    `MeasureTheory.stronglyMeasurable_integral_comp`, and the difference decides
+    the hypotheses of the whole item: that one asks for a **measurable** map into
+    a measurable space, this one for a **strongly measurable** real valued
+    integrand, and only the second is available over an `E` with no σ-algebra.
+
+  **The one field that is work is `progressive_sub`**, and it is two steps. Below
+  a fixed `t` the window `Set.Ioc 0 r` lies in `Set.Ioc 0 t`, so the integrand
+  may be replaced by the **cut** integrand `g (X (min s.toNNReal t) ω)`, jointly
+  strongly measurable for `Borel ℝ ⊗ 𝓕 t` because `IsStronglyProgressive` says
+  exactly that on `Set.Iic t × Ω`; the packaging above integrates it out. That
+  gives measurability at each fixed time below `t`, and
+  `measurable_uncurry_min_of_rightContinuous` turns it into joint measurability,
+  its second hypothesis being the right continuity of the paths — the same one
+  the field `rightContinuous` asks for.
+
+  **Three of its eight fields were settled separately, and they are the ones a
+  bounded density gives.** Every statement of this item before that *consumed*
+  `MeasureTheory.IsApproximatingPair` and none produced one, which is the
   emptiness question `Shift` was held to in Milestone 6. The intended inhabitant
   is \EK's own: for `f` in the domain and `g` its image under the generator,
   `Y = f ∘ X`, `Z = g ∘ X`, `C` the indefinite integral of `Z`, the martingale
@@ -12878,14 +12935,21 @@ has to be chosen once for all `n`. What stands:
     *every* sample point, so that field's almost sure quantifier is not used by
     this source.
 
-  **Two observations for whoever builds the pair.** The density of the class is
-  indexed by `ℝ` and every process of this milestone by `ℝ≥0`, so a consumer
-  writes `Z s ω = g (X s.toNNReal ω)`; the junk on `s ≤ 0` is never read, the
-  integral of `compensator_eq` running over `Set.Ioc 0 t`. And the field that is
-  **not** covered by the three above is `progressive_sub`, the progressive
-  measurability of `Y - C`: it asks for the joint measurability of the
-  compensator, which is `MeasureTheory.stronglyMeasurable_integral_comp` and the
-  one genuine cost left in the construction.
+  The density of the class is indexed by `ℝ` and every process of this milestone
+  by `ℝ≥0`, so a consumer writes `Z s ω = g (X s.toNNReal ω)`; the junk on
+  `s ≤ 0` is never read, the integral of `compensator_eq` running over
+  `Set.Ioc 0 t`.
+
+  **And a correction of the route to `progressive_sub`**, which is the one field
+  the three above do not cover. The tool named for it was
+  `MeasureTheory.stronglyMeasurable_integral_comp`, and it does not reach: that
+  statement asks for `Measurable (uncurry W)` into a **measurable space** and a
+  measurable function on it, which over an `E` with no σ-algebra is not
+  available, and demanding one would make the whole item carry a hypothesis on
+  `E` that nothing in its proof reads.
+  `MeasureTheory.stronglyMeasurable_integral_uncurry` is the same packaging of
+  the same Mathlib lemma with the integrand **strongly measurable and real
+  valued** instead, and it costs the construction nothing.
 
 * `isRelativelyCompact_of_approx`: if `E` is Polish, the domain of `A` contains
   an algebra separating points and vanishing nowhere, the approximation holds

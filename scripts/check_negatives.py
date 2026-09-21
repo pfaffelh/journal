@@ -152,6 +152,20 @@ CLAIMS = [
      'IsStronglyProgressive.continuous_comp|StronglyAdapted.continuous_comp'
      '|IsProgressive.continuous_comp',
      'Mathlib/'),
+    ('rightcontinuous-measurable', 'MartingaleProblems/README.md, Meilenstein 11, '
+     'und `MartingaleProblems/Suggested.lean`, `measurable_of_tendsto_nhdsGE`',
+     'Daß eine **rechtsstetige** reelle Funktion einer reellen Veränderlichen '
+     'Borel-meßbar ist, steht in Mathlib nicht. '
+     '`Mathlib/Topology/Order/Cadlag.lean`, wo `IsRightContinuous` und '
+     '`IsCadlag` wohnen, ist eine Topologiedatei und trägt überhaupt keine '
+     'Meßbarkeit; die Vorkommen von `IsRightContinuous` außerhalb davon sind '
+     'die in `Probability/Process/` und handeln von **Filtrationen**, nicht von '
+     'Pfaden.  Vorhanden ist `Monotone.measurable` — so wird eine '
+     '`StieltjesFunction` meßbar, über die Monotonie und nicht über die '
+     'Rechtsstetigkeit —, und ein càdlàg-Pfad ist weder monoton noch stetig.',
+     'measurable[a-z_]*_of_[a-z_]*rightcontinuous'
+     '|isrightcontinuous[a-z_.]*measurable|iscadlag[a-z_.]*measurable',
+     'Mathlib/'),
 ]
 
 
@@ -421,6 +435,13 @@ if __name__ == '__main__':
         'doob-Lp': ['Mathlib/Probability/Martingale/OptionalStopping.lean'],
         'first-order-pde': ['Mathlib/Analysis/Distribution/Sobolev.lean',
                             'Mathlib/Analysis/InnerProductSpace/LaxMilgram.lean'],
+        # Beide Treffer sind Aussagen über **Filtrationen**: die Meßbarkeit
+        # einer Menge für eine rechtsstetige Filtration und das Stoppzeit-
+        # kriterium darüber.  Von der Meßbarkeit eines rechtsstetigen *Pfades*
+        # handelt keiner.
+        'rightcontinuous-measurable': [
+            'Mathlib/Probability/Process/Filtration.lean',
+            'Mathlib/Probability/Process/Stopping.lean'],
     }
     out += ['## Die Behauptungen der Roadmaps', '']
     for key, where, claim, pat, pf in CLAIMS:
