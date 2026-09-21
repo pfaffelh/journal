@@ -79,6 +79,27 @@ shutil.rmtree(RUNDIR, ignore_errors=True)
 KEEP = os.environ.get('CHECK_MASTER_KEEP') == '1' or '--keep' in sys.argv[1:]
 if not KEEP:
     atexit.register(shutil.rmtree, RUNDIR, True)
+
+# Verwaiste Baeume raeumen.  `atexit` greift nicht, wenn der Aufrufer abgebrochen
+# wird, und mit `--keep` greift es gar nicht: am 2026-09-21 standen **93** Baeume
+# zu je 30-64 MB unter dem Worktree, mehrere Gigabyte.  Beim Start deshalb alles
+# entfernen, dessen PID nicht mehr laeuft -- der eigene und die fremder laufender
+# Aufrufe bleiben stehen, sodass parallele Laeufe sich weiterhin nicht stoeren.
+for _d in os.listdir(MW):
+    if not _d.startswith('_check_'):
+        continue
+    try:
+        _pid = int(_d[len('_check_'):])
+    except ValueError:
+        continue
+    if _pid == os.getpid():
+        continue
+    try:
+        os.kill(_pid, 0)
+    except ProcessLookupError:
+        shutil.rmtree(os.path.join(MW, _d), ignore_errors=True)
+    except PermissionError:
+        pass
 for f in FILES:
     os.makedirs(os.path.join(SRCDIR, f), exist_ok=True)
     shutil.copy(os.path.join(BASE, f, 'Suggested.lean'),
