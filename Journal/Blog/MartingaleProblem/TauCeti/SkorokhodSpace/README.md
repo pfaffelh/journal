@@ -4077,6 +4077,25 @@ the right endpoint of a window being exactly what a dense set does not reach —
 enlarges the window instead and reads the half open form. That is free wherever
 the hypothesis is quantified over all horizons.
 
+* `SkorokhodSpace.mem_of_continuousWithinAt_of_forall_mem_dense` — the
+  **pointwise** form, and it is the primitive one: to place *one* value `f t` in
+  the closed set, what is read of `f` is `ContinuousWithinAt f (Set.Ioi t) t`,
+  at that point and nowhere else, and of `t` that it lies in the half open
+  window. The two quantified forms above are one line and three lines on top of
+  it and their statements are unchanged.
+
+  **The pointwise form is not a refinement for its own sake**, and the consumer
+  that forced it names the difference. `MeasureTheory.biSup_enorm_Iic_le_biSup_enorm_inter_dense`
+  in **MartingaleProblems** Milestone 11 reads a supremum over `Set.Iic T` and
+  must therefore take the windows `Set.Ico t T'` with `T < T'`; its function is
+  the error `Y - V` of an approximating pair, whose right continuity stops at
+  the horizon because the compensator is an indefinite integral and past the
+  horizon a Bochner junk value. The windows reach past the set on which the
+  consumer has anything to say, so the quantified form is unusable there and
+  the pointwise form is exactly right. Under the quantified form alone the
+  hypothesis would have had to be strengthened to right continuity on the line
+  — which no approximating pair supplies.
+
 **Where compact containment is free, and what is left when it is**, 2026-09-20,
 added for **MartingaleProblems** Milestone 11 and stated here because it is about
 the path space.

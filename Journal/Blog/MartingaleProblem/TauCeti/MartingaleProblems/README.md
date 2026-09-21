@@ -12744,9 +12744,9 @@ has to be chosen once for all `n`. What stands:
   a strictly larger horizon `T' > T`, and there the dense set reaches past `T`
   from the right. That is
   `MeasureTheory.biSup_enorm_Iic_le_biSup_enorm_inter_dense`, whose whole proof
-  is `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` at the closed set
-  `Set.Iic c` — the **half open** form, the one that reads no endpoint at all,
-  and it is why the lemma needs no `OrderBot` on the index. Enlarging the horizon
+  is `SkorokhodSpace.mem_of_continuousWithinAt_of_forall_mem_dense` at the closed
+  set `Set.Iic c` — the **half open** window, which reads no endpoint at all, and
+  it is why the lemma needs no `OrderBot` on the index. Enlarging the horizon
   is free on the other side too, an approximating pair at `T'` being one at `T`
   with the same `q` and the same `K`
   (`MeasureTheory.IsApproximatingPair.mono_horizon`), and the consumer asks
@@ -12774,13 +12774,38 @@ has to be chosen once for all `n`. What stands:
   exceeding it, follows the tightness of the image laws
   `{(P.map (Φ i)).map (postcomp g) | i}`.
 
-  **Right continuity of `Y - f ∘ X` is a hypothesis there and is carried inside
-  the existential**, `Y` depending on the error. It is the same price
-  `MeasureTheory.lintegral_enorm_sub_le_of_biSup_Iic_le` pays and at the same
-  place — \EK's (9.27) holds for all real times and not merely for rational ones
-  by right continuity. It is **not** derived from
-  `IsApproximatingPair.rightContinuous`, which gives the right continuity of
-  `Y - C` and would need the continuity of the indefinite integral `C` on top.
+  **Right continuity of `Y - f ∘ X` is a hypothesis of the general statement and
+  is carried inside the existential**, `Y` depending on the error. It is the same
+  price `MeasureTheory.lintegral_enorm_sub_le_of_biSup_Iic_le` pays and at the
+  same place — \EK's (9.27) holds for all real times and not merely for rational
+  ones by right continuity.
+
+  **It is derived from the data in the bounded form, 2026-09-21, and the derivation
+  costs a window.** `IsApproximatingPair.rightContinuous` gives the right
+  continuity of `Y - C`, so what is missing is the continuity of the indefinite
+  integral `C`, and that is
+  `MeasureTheory.IsApproximatingPair.continuousWithinAt_compensator`: Mathlib's
+  `intervalIntegral.continuousOn_primitive`
+  (`MeasureTheory/Integral/DominatedConvergence.lean:439` — the statement lives
+  in namespace `intervalIntegral`, not in `MeasureTheory`) at the path of `Z`,
+  whose integrability on the horizon is `IsApproximatingPair.ae_integrableOn`,
+  followed by `ContinuousWithinAt.mono_of_mem_nhdsWithin` to pass from
+  `Set.Icc 0 T` to `Set.Ioi t` and by the coercion `ℝ≥0 → ℝ`.
+
+  **The window is not an artefact of the proof.** `C t ω` is `∫_{(0,t]} Z s ω`
+  for every `t`, and the integrability of the path of `Z` is known only on the
+  horizon; past it the integral is a Bochner junk value and `C` need not be
+  continuous anywhere. So
+  `MeasureTheory.IsApproximatingPair.ae_continuousWithinAt_sub` gives the right
+  continuity of `Y - V` **strictly inside the horizon** and cannot give more.
+  That is why the statements of this item read right continuity on `Set.Iic T`
+  rather than on the line, and why the dense window lemma had to be restated
+  pointwise: the windows `Set.Ico t T'` it takes reach past `T`.
+
+  **What the derivation asks of `V` is already in the signature**: continuity
+  from the right of every path, which is what the oscillation hitting times need
+  anyway and what a càdlàg path composed with a continuous `f` delivers. For the
+  squared error it is `ContinuousWithinAt.pow`.
 
   **The four integrabilities are discharged from a bound on the approximants,
   2026-09-21, and that bound is what the class was always meant to supply.** The
@@ -12808,8 +12833,10 @@ has to be chosen once for all `n`. What stands:
   `MeasureTheory.isApproximable_of_forall_exists_bounded_pair` and
   `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair`
   are the two statements above with the four families of integrabilities
-  replaced by one bound on each approximant; the two bounds are separate and
-  nothing compares them. In the general form the dense set of the errors and the
+  replaced by one bound on each approximant and the two right continuities
+  discharged from the data; the two bounds are separate and nothing compares
+  them. What is left is what (9.26) asks for and nothing else: **two pairs, two
+  bounds, two errors**. In the general form the dense set of the errors and the
   countable dense set of the times are kept apart — density alone is read of the
   first, countability alone of the second — and the tightness statement takes
   them equal, as it does already.
@@ -12826,6 +12853,39 @@ has to be chosen once for all `n`. What stands:
   That closure is a witness and not a convenience — the second approximant is not
   the square of the first — and it is where the continuous time Doob inequalities
   of Milestone 9 are used. Everything below it is built.
+
+  **The class has to be inhabited, and three of its eight fields are settled,
+  2026-09-21.** Every statement of this item so far *consumes*
+  `MeasureTheory.IsApproximatingPair`; none produces one, and that is the
+  emptiness question `Shift` was held to in Milestone 6. The intended inhabitant
+  is \EK's own: for `f` in the domain and `g` its image under the generator,
+  `Y = f ∘ X`, `Z = g ∘ X`, `C` the indefinite integral of `Z`, the martingale
+  field being the martingale problem itself and the error **zero**. Three fields
+  are then statements about a bounded measurable density and about nothing else:
+
+  * `MeasureTheory.continuous_setIntegral_Ioc_zero_of_bounded` — the indefinite
+    integral of a bounded measurable function is continuous in its upper end over
+    `ℝ≥0`. This is what meets `IsApproximatingPair.rightContinuous`, and it is
+    needed in this shape: that field is quantified over **all** `s : ℝ≥0`, while
+    `IsApproximatingPair.continuousWithinAt_compensator` stops at the horizon
+    because its density is known integrable only there. **Boundedness is what
+    buys the line**, integrability then holding on every window.
+  * `MeasureTheory.eLpNorm_le_of_bounded_Ioc` — the `L^q` norm over the horizon is
+    at most `T ^ q.toReal⁻¹ * c`. So the constant `K` is a **formula** in the
+    bound and the horizon and not a hypothesis, which is what the uniformity of
+    this item needs: one `K` for the whole family.
+  * `MeasureTheory.memLp_of_bounded_Ioc` — the field `ae_memLp`, and it holds at
+    *every* sample point, so that field's almost sure quantifier is not used by
+    this source.
+
+  **Two observations for whoever builds the pair.** The density of the class is
+  indexed by `ℝ` and every process of this milestone by `ℝ≥0`, so a consumer
+  writes `Z s ω = g (X s.toNNReal ω)`; the junk on `s ≤ 0` is never read, the
+  integral of `compensator_eq` running over `Set.Ioc 0 t`. And the field that is
+  **not** covered by the three above is `progressive_sub`, the progressive
+  measurability of `Y - C`: it asks for the joint measurability of the
+  compensator, which is `MeasureTheory.stronglyMeasurable_integral_comp` and the
+  one genuine cost left in the construction.
 
 * `isRelativelyCompact_of_approx`: if `E` is Polish, the domain of `A` contains
   an algebra separating points and vanishing nowhere, the approximation holds

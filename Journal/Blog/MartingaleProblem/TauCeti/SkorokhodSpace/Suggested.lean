@@ -18535,29 +18535,29 @@ applies them to `ℝ≥0∞`-valued paths, and `ℝ≥0∞` carries no metric. -
 variable {ι' : Type*} [LinearOrder ι'] [TopologicalSpace ι'] [OrderTopology ι']
   [DenselyOrdered ι'] {X : Type*} [TopologicalSpace X]
 
-/-- **A right continuous path that stays in a closed set along a dense subset of
-a window stays in it on the whole window**, in the half open form -- which is the
-primitive one, because on `Set.Ico a b` every point has points of the window
-strictly to its right and no endpoint has to be read separately.
+/-- **The pointwise form**, and it is the primitive one: to place *one* value
+`f t` in the closed set, what is read of `f` is right continuity **at `t`
+alone**, and of `t` that it lies in the half open window.
+
+Stating it this way is not a refinement for its own sake.  A consumer who has
+right continuity only on a set smaller than the window -- as
+`MeasureTheory.IsApproximatingPair` does, whose compensator is an indefinite
+integral and is continuous only strictly inside the horizon -- cannot use the
+quantified form below at all, because the window it must take reaches past the
+set on which it has anything to say.  Here it applies the statement at each
+point it has, and the window is free.
 
 The one sided limit is taken along `S ∩ Set.Ioo t b`, and the filter is not
 trivial because `S` is dense and `Set.Ioo t b` is open and nonempty; that is
 `Dense.open_subset_closure_inter` together with `closure_Ioo`.  Only right
 continuity is used, so the statement holds for a càglàd function read backwards
-and for a continuous one without change.
-
-The index is an arbitrary densely ordered one and not `ℝ`, and the value space an
-arbitrary topological one and not this file's `E`: the three consumers are over
-`ℝ` (the measurability of the window set below), over `ℝ≥0` (the translation of
-compact containment in **MartingaleProblems** Milestone 11) and over `ℝ≥0` with
-values in `ℝ≥0∞` (the window supremum of **MartingaleProblems** Milestone 9),
-and nothing in the proof knows which. -/
-theorem SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense
-    {K : Set X} (hK : IsClosed K) {S : Set ι'} (hS : Dense S) {a b : ι'}
-    {f : ι' → X} (hf : IsRightContinuous f)
-    (hmem : ∀ t ∈ Set.Ico a b ∩ S, f t ∈ K) :
-    ∀ t ∈ Set.Ico a b, f t ∈ K := by
-  rintro t ⟨hat, htb⟩
+and for a continuous one without change. -/
+theorem SkorokhodSpace.mem_of_continuousWithinAt_of_forall_mem_dense
+    {K : Set X} (hK : IsClosed K) {S : Set ι'} (hS : Dense S) {a b t : ι'}
+    {f : ι' → X} (hf : ContinuousWithinAt f (Set.Ioi t) t)
+    (hmem : ∀ s ∈ Set.Ico a b ∩ S, f s ∈ K) (ht : t ∈ Set.Ico a b) :
+    f t ∈ K := by
+  obtain ⟨hat, htb⟩ := ht
   have hsub : S ∩ Set.Ioo t b ⊆ Set.Ico a b ∩ S := by
     rintro x ⟨hxS, hxt, hxb⟩
     exact ⟨⟨hat.trans hxt.le, hxb⟩, hxS⟩
@@ -18573,9 +18573,30 @@ theorem SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense
     (mem_closure_iff_nhdsWithin_neBot (s := S ∩ Set.Ioo t b) (x := t)).1 hcl
   have hmono : S ∩ Set.Ioo t b ⊆ Set.Ioi t := by rintro x ⟨-, hxt, -⟩; exact hxt
   have htend : Tendsto f (𝓝[S ∩ Set.Ioo t b] t) (𝓝 (f t)) :=
-    (hf t : Tendsto f (𝓝[Set.Ioi t] t) (𝓝 (f t))).mono_left (nhdsWithin_mono t hmono)
+    (hf : Tendsto f (𝓝[Set.Ioi t] t) (𝓝 (f t))).mono_left (nhdsWithin_mono t hmono)
   refine hK.mem_of_tendsto htend ?_
   filter_upwards [self_mem_nhdsWithin] with x hx using hmem x (hsub hx)
+
+/-- **A right continuous path that stays in a closed set along a dense subset of
+a window stays in it on the whole window**, in the half open form -- which is the
+one to reach for on a window, because on `Set.Ico a b` every point has points of
+the window strictly to its right and no endpoint has to be read separately.
+
+It is `SkorokhodSpace.mem_of_continuousWithinAt_of_forall_mem_dense` at each
+point of the window, and that is the whole proof.
+
+The index is an arbitrary densely ordered one and not `ℝ`, and the value space an
+arbitrary topological one and not this file's `E`: the three consumers are over
+`ℝ` (the measurability of the window set below), over `ℝ≥0` (the translation of
+compact containment in **MartingaleProblems** Milestone 11) and over `ℝ≥0` with
+values in `ℝ≥0∞` (the window supremum of **MartingaleProblems** Milestone 9),
+and nothing in the proof knows which. -/
+theorem SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense
+    {K : Set X} (hK : IsClosed K) {S : Set ι'} (hS : Dense S) {a b : ι'}
+    {f : ι' → X} (hf : IsRightContinuous f)
+    (hmem : ∀ t ∈ Set.Ico a b ∩ S, f t ∈ K) :
+    ∀ t ∈ Set.Ico a b, f t ∈ K :=
+  fun t ht ↦ SkorokhodSpace.mem_of_continuousWithinAt_of_forall_mem_dense hK hS (hf t) hmem ht
 
 /-- **The same on the closed window** -- with the right endpoint read separately,
 and necessarily so: nothing approaches `b` from the right *inside* `[a, b]`.  The

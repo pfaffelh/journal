@@ -46055,12 +46055,15 @@ them equal, and nothing here asks him to.  `D` is asked dense and **not** counta
 countability being what makes the milestone's quantity measurable and being nowhere read in this
 direction of the passage.
 
-**Right continuity of `Y - V` is a hypothesis and is carried inside the existential**, because
-`Y` depends on the error.  It is the same price
+**Right continuity of `Y - V` is a hypothesis of the general statements of this section and is
+carried inside the existential**, because `Y` depends on the error.  It is the same price
 `MeasureTheory.lintegral_enorm_sub_le_of_biSup_Iic_le` pays, and it is paid at the same place:
 \EK's (9.27) holds for all real times and not merely for rational ones by right continuity.  It
-is **not** derived here from `IsApproximatingPair.rightContinuous`, which gives the right
-continuity of `Y - C` and would need the continuity of the indefinite integral `C` on top. -/
+is **not** free: `IsApproximatingPair.rightContinuous` gives the right continuity of `Y - C` and
+needs the continuity of the indefinite integral `C` on top -- which is
+`MeasureTheory.IsApproximatingPair.continuousWithinAt_compensator` in the section below, where
+the hypothesis is discharged from the data.  What the discharge costs is the **window**: the
+statements here therefore read right continuity on `Set.Iic T` and not on the line. -/
 
 /-- **A window supremum is dominated by the supremum over a dense set of a strictly larger
 window**, for a right continuous function.
@@ -46073,19 +46076,28 @@ from the right, so the value at the right end is not seen, and
 `T < T'` the endpoint of the smaller window lies in the interior of the larger and no separate
 reading is needed.
 
-The proof is `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` at the closed set `Set.Iic c`,
-applied at each `t ≤ T` with the window `Set.Ico t T'`; the half open form is what lets the
-statement be made without an `OrderBot` on the index. -/
+The proof is `SkorokhodSpace.mem_of_continuousWithinAt_of_forall_mem_dense` at the closed set
+`Set.Iic c`, applied at each `t ≤ T` with the window `Set.Ico t T'`; the half open form is what
+lets the statement be made without an `OrderBot` on the index.
+
+**Right continuity is asked on `Set.Iic T` and not on the line**, and that is not a refinement
+for its own sake: the consumer that has to supply it --
+`MeasureTheory.IsApproximatingPair.ae_continuousWithinAt_sub` -- has nothing to say outside the
+horizon, where the compensator is an indefinite integral of a function no longer known to be
+integrable and hence a Bochner junk value.  The windows `Set.Ico t T'` do reach past `T`, so the
+quantified form `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` cannot be used here; the
+pointwise form can, because it reads `g` at the point it places and nowhere else. -/
 theorem biSup_enorm_Iic_le_biSup_enorm_inter_dense {ι : Type*} [LinearOrder ι]
     [TopologicalSpace ι] [OrderTopology ι] [DenselyOrdered ι]
     {D : Set ι} (hD : Dense D) {T T' : ι} (hT : T < T')
-    {g : ι → ℝ} (hg : IsRightContinuous g) :
+    {g : ι → ℝ} (hg : ∀ t ∈ Set.Iic T, ContinuousWithinAt g (Set.Ioi t) t) :
     ⨆ t ∈ Set.Iic T, ‖g t‖ₑ ≤ ⨆ t ∈ Set.Iic T' ∩ D, ‖g t‖ₑ := by
   set c : ENNReal := ⨆ t ∈ Set.Iic T' ∩ D, ‖g t‖ₑ with hc
   refine iSup₂_le fun t ht ↦ ?_
   have htT' : t < T' := lt_of_le_of_lt ht hT
-  refine SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense (K := Set.Iic c) isClosed_Iic hD
-    (f := fun s ↦ ‖g s‖ₑ) (hg.continuous_comp continuous_enorm) ?_ t ⟨le_rfl, htT'⟩
+  refine SkorokhodSpace.mem_of_continuousWithinAt_of_forall_mem_dense (K := Set.Iic c)
+    isClosed_Iic hD (f := fun s ↦ ‖g s‖ₑ)
+    (continuous_enorm.continuousAt.comp_continuousWithinAt (hg t ht)) ?_ ⟨le_rfl, htT'⟩
   rintro s ⟨⟨-, hs⟩, hsD⟩
   exact le_iSup₂ (f := fun s (_ : s ∈ Set.Iic T' ∩ D) ↦ ‖g s‖ₑ) s ⟨hs.le, hsD⟩
 
@@ -46126,6 +46138,11 @@ oscillation hitting times of `V`, which the horizon does not see.  The two error
 `MeasureTheory.biSup_enorm_Iic_le_biSup_enorm_inter_dense` under `lintegral_mono_ae`, and the
 almost sure quantifier of that step is where the two right continuity hypotheses are spent.
 
+**Right continuity is asked on `Set.Iic T` only**, which is exactly what that step reads: the
+suprema on the left run over `Set.Iic T`, and the window lemma places one value at a time.  A
+consumer holding it on the line passes `fun t _ ↦ h t`; a consumer holding it from an
+approximating pair -- where it stops at the horizon -- could not pass anything stronger.
+
 **`T < T'` is strict and cannot be relaxed**, for the reason in the section comment: at `T = T'`
 the value at the right endpoint is not seen along `D`. -/
 theorem isApproximable_of_forall_exists_pair {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω}
@@ -46134,8 +46151,8 @@ theorem isApproximable_of_forall_exists_pair {𝓕 : Filtration ℝ≥0 mΩ} {P 
     (h : ∀ ε : ENNReal, 0 < ε →
       ∃ Y C Y' C' : ℝ≥0 → Ω → ℝ, ∃ Z Z' : ℝ → Ω → ℝ,
         IsApproximatingPair 𝓕 P q T' K Y C Z ∧ IsApproximatingPair 𝓕 P q T' K Y' C' Z'
-        ∧ (∀ᵐ ω ∂P, IsRightContinuous fun t ↦ Y t ω - V t ω)
-        ∧ (∀ᵐ ω ∂P, IsRightContinuous fun t ↦ Y' t ω - V t ω ^ 2)
+        ∧ (∀ᵐ ω ∂P, ∀ t ≤ T, ContinuousWithinAt (fun s ↦ Y s ω - V s ω) (Set.Ioi t) t)
+        ∧ (∀ᵐ ω ∂P, ∀ t ≤ T, ContinuousWithinAt (fun s ↦ Y' s ω - V s ω ^ 2) (Set.Ioi t) t)
         ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ D, ‖Y t ω - V t ω‖ₑ ∂P ≤ ε
         ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ D, ‖Y' t ω - V t ω ^ 2‖ₑ ∂P ≤ ε
         ∧ (∀ k : ℕ, Integrable
@@ -46191,8 +46208,10 @@ theorem isTightMeasureSet_map_postcomp_of_forall_exists_pair [MeasurableSpace E]
       ∀ i, ∀ ε : ENNReal, 0 < ε →
         ∃ Y C Y' C' : ℝ≥0 → Ω → ℝ, ∃ Z Z' : ℝ → Ω → ℝ,
           IsApproximatingPair 𝓕 P q T' K Y C Z ∧ IsApproximatingPair 𝓕 P q T' K Y' C' Z'
-          ∧ (∀ᵐ ω ∂P, IsRightContinuous fun t ↦ Y t ω - g (X i t ω))
-          ∧ (∀ᵐ ω ∂P, IsRightContinuous fun t ↦ Y' t ω - g (X i t ω) ^ 2)
+          ∧ (∀ᵐ ω ∂P, ∀ t < T',
+              ContinuousWithinAt (fun s ↦ Y s ω - g (X i s ω)) (Set.Ioi t) t)
+          ∧ (∀ᵐ ω ∂P, ∀ t < T',
+              ContinuousWithinAt (fun s ↦ Y' s ω - g (X i s ω) ^ 2) (Set.Ioi t) t)
           ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ S, ‖Y t ω - g (X i t ω)‖ₑ ∂P ≤ ε
           ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ S, ‖Y' t ω - g (X i t ω) ^ 2‖ₑ ∂P ≤ ε
           ∧ (∀ k : ℕ, Integrable (stoppedValue Y
@@ -46213,7 +46232,12 @@ theorem isTightMeasureSet_map_postcomp_of_forall_exists_pair [MeasurableSpace E]
   intro ε₀ hε₀ u hu
   obtain ⟨q, T', K, huT', h⟩ := happ ε₀ hε₀ u hu
   obtain ⟨T, huT, hTT'⟩ := exists_between huT'
-  exact ⟨q, T, K, huT, fun i ↦ isApproximable_of_forall_exists_pair hTT' hSd (h i)⟩
+  refine ⟨q, T, K, huT, fun i ↦ isApproximable_of_forall_exists_pair hTT' hSd fun ε hε ↦ ?_⟩
+  obtain ⟨Y, C, Y', C', Z, Z', hp, hp', hrc, hrc', herr, herr', hi1, hi2, hi3, hi4⟩ := h i ε hε
+  exact ⟨Y, C, Y', C', Z, Z', hp, hp',
+    hrc.mono fun ω hω t ht ↦ hω t (lt_of_le_of_lt ht hTT'),
+    hrc'.mono fun ω hω t ht ↦ hω t (lt_of_le_of_lt ht hTT'),
+    herr, herr', hi1, hi2, hi3, hi4⟩
 
 /-! ### The four integrabilities, from a bound on the approximants
 
@@ -46309,6 +46333,100 @@ theorem IsApproximatingPair.integrable_stoppedValue_oscHitSeqGap
   h.integrable_stoppedValue_of_bounded (isStoppingTime_oscHitSeqGap hSc hSd hV hcont k δ u)
     (fun ω ↦ oscHitSeqGap_le_coe k δ u ω) hYb
 
+/-! ### The right continuity of the error, from the data
+
+`MeasureTheory.isApproximable_of_forall_exists_pair` carries two almost sure right continuity
+hypotheses, one per error, and the section comment above it says why they are not free: the class
+gives the right continuity of `Y - C` and not of `Y`, and `C` is an indefinite integral whose
+continuity is a separate statement.  This section proves that statement and discharges both
+hypotheses, so that a consumer supplies the data and nothing about paths of processes he did not
+build.
+
+**The window is the price, and it is not an artefact of the proof.**  `C t ω` is
+`∫_{(0,t]} Z s ω` for *every* `t`, and integrability of the path of `Z` is known only on the
+horizon `Set.Ioc 0 T`; past it the integral is a Bochner junk value and `C` need not be
+continuous anywhere.  Right continuity of `Y - V` is therefore had **strictly inside the
+horizon** and nowhere else.  That is exactly what
+`MeasureTheory.biSup_enorm_Iic_le_biSup_enorm_inter_dense` reads, once its own hypothesis is
+stated pointwise, and it is why the horizon of the pairs has to exceed the window: `t ≤ T < T'`.
+
+**Nothing here is an almost sure statement about `V`.**  The continuity of the paths of `V` is
+asked of every sample point, as it is in
+`MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_isApproximable`, where it comes from a
+càdlàg path and a continuous `g`.  The almost sure quantifier enters only through the two fields
+`IsApproximatingPair.rightContinuous` and `IsApproximatingPair.ae_memLp` of the class. -/
+
+/-- **The compensator is right continuous strictly inside the horizon.**
+
+`C` is the indefinite integral of `Z` from `0`, so this is Mathlib's
+`intervalIntegral.continuousOn_primitive` -- note the namespace: the statement lives in
+`intervalIntegral` and not in `MeasureTheory` -- read at the path of `Z`, whose integrability on
+the horizon is `IsApproximatingPair.ae_integrableOn`.
+
+Two passages are needed on top of it and both are where `t < T` is spent.  Mathlib's statement
+gives `ContinuousOn` on `Set.Icc 0 T`, and the conclusion wanted is a `ContinuousWithinAt` on
+`Set.Ioi t`, which is not a subset of the horizon: the two agree near `t` because
+`Set.Ioo t T` is a neighbourhood of `t` within `Set.Ioi t` and lies in `Set.Icc 0 T`, which is
+`ContinuousWithinAt.mono_of_mem_nhdsWithin`.  And the index of `C` is `ℝ≥0` while the integral
+runs over `ℝ`, so the coercion is composed in; it is continuous and maps `Set.Ioi t` into
+`Set.Ioi (t : ℝ)`.
+
+**At `t = T` the statement is false in general** and not merely unproved: nothing bounds the
+integral of `Z` past the horizon. -/
+theorem IsApproximatingPair.continuousWithinAt_compensator
+    {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} {q : ENNReal} {T K : ℝ≥0}
+    {Y C : ℝ≥0 → Ω → ℝ} {Z : ℝ → Ω → ℝ} (h : IsApproximatingPair 𝓕 P q T K Y C Z)
+    {ω : Ω} (hω : IntegrableOn (fun s ↦ Z s ω) (Set.Ioc (0 : ℝ) (T : ℝ)))
+    {t : ℝ≥0} (ht : t < T) :
+    ContinuousWithinAt (fun s ↦ C s ω) (Set.Ioi t) t := by
+  have htT : (t : ℝ) < (T : ℝ) := by exact_mod_cast ht
+  have hIcc : IntegrableOn (fun s ↦ Z s ω) (Set.Icc (0 : ℝ) (T : ℝ)) :=
+    hω.congr_set_ae Ioc_ae_eq_Icc.symm
+  have hcon : ContinuousOn (fun r : ℝ ↦ ∫ s in Set.Ioc (0 : ℝ) r, Z s ω)
+      (Set.Icc (0 : ℝ) (T : ℝ)) := intervalIntegral.continuousOn_primitive hIcc
+  have h1 : ContinuousWithinAt (fun r : ℝ ↦ ∫ s in Set.Ioc (0 : ℝ) r, Z s ω)
+      (Set.Ioi (t : ℝ)) (t : ℝ) := by
+    refine (hcon _ ⟨t.coe_nonneg, htT.le⟩).mono_of_mem_nhdsWithin ?_
+    exact mem_of_superset (Ioo_mem_nhdsGT htT)
+      fun x hx ↦ ⟨t.coe_nonneg.trans hx.1.le, hx.2.le⟩
+  have h2 : ContinuousWithinAt (fun s : ℝ≥0 ↦ (s : ℝ)) (Set.Ioi t) t :=
+    NNReal.continuous_coe.continuousWithinAt
+  exact (h1.comp h2 fun x hx ↦ by exact_mod_cast hx).congr
+    (fun s _ ↦ h.compensator_eq s ω) (h.compensator_eq t ω)
+
+/-- **The right continuity of the error `Y - V`, strictly inside the horizon, from the data.**
+This is the hypothesis that
+`MeasureTheory.isApproximable_of_forall_exists_pair` carries twice per error, and it is here
+derived rather than assumed.
+
+The decomposition is `Y - V = (Y - C) + C - V` and two of the three summands are given:
+`Y - C` is right continuous almost surely as a **field** of the class
+(`IsApproximatingPair.rightContinuous`, which even gives the two sided form on `Set.Ici t`), and
+`V` is right continuous by hypothesis at every sample point.  The third is
+`MeasureTheory.IsApproximatingPair.continuousWithinAt_compensator`, and it is the whole content.
+
+**The hypothesis on `V` is `ContinuousWithinAt … (Set.Ici t) t` and not `IsRightContinuous`**,
+because that is the form a càdlàg path in `D(ℝ≥0, E)` composed with a continuous `g` delivers and
+the form `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_isApproximable` already asks of
+its processes; restricting it to `Set.Ioi t` is `ContinuousWithinAt.mono`. -/
+theorem IsApproximatingPair.ae_continuousWithinAt_sub
+    {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} {q : ENNReal} {T K : ℝ≥0}
+    {Y C : ℝ≥0 → Ω → ℝ} {Z : ℝ → Ω → ℝ} (h : IsApproximatingPair 𝓕 P q T K Y C Z)
+    {V : ℝ≥0 → Ω → ℝ}
+    (hV : ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ V s ω) (Set.Ici t) t) :
+    ∀ᵐ ω ∂P, ∀ t : ℝ≥0, t < T →
+      ContinuousWithinAt (fun s ↦ Y s ω - V s ω) (Set.Ioi t) t := by
+  filter_upwards [h.ae_integrableOn, h.rightContinuous] with ω hint hrc
+  intro t ht
+  have hC : ContinuousWithinAt (fun s ↦ C s ω) (Set.Ioi t) t :=
+    h.continuousWithinAt_compensator hint ht
+  have hYC : ContinuousWithinAt (fun s ↦ Y s ω - C s ω) (Set.Ioi t) t :=
+    ContinuousWithinAt.mono (hrc t) Set.Ioi_subset_Ici_self
+  have hVt : ContinuousWithinAt (fun s ↦ V s ω) (Set.Ioi t) t :=
+    (hV ω t).mono Set.Ioi_subset_Ici_self
+  refine ((hYC.add hC).sub hVt).congr (fun s _ ↦ ?_) ?_ <;>
+    simp only [Pi.add_apply, Pi.sub_apply] <;> ring
+
 /-- **The approximability condition from *bounded* approximants**: the hypothesis of
 `MeasureTheory.isApproximable_of_forall_exists_pair` with its four families of integrabilities
 replaced by one bound on each approximant.
@@ -46321,9 +46439,13 @@ reads, countability alone is what the début of the oscillation sets reads, and 
 one set for both uses it twice.  `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair`
 is that consumer.
 
-**What is *not* discharged here** is the pair of right continuity hypotheses.  They stand inside
-the existential because `Y` depends on the error, and boundedness does not imply them: they are
-\EK's (9.27) holding at all real times and not merely along `D`. -/
+**The two right continuity hypotheses are discharged here too**, by
+`MeasureTheory.IsApproximatingPair.ae_continuousWithinAt_sub` at the horizon `T'` of the pairs,
+and they cost the consumer nothing he is not already paying: what that statement asks of `V` is
+`hcont`, which stands in this signature anyway because the oscillation hitting times need it.
+The passage from `t < T'` to `t ≤ T` is `hTT'`, and it is the second place where the horizon
+having to exceed the window is read.  For the squared error the hypothesis is `hcont` composed
+with squaring, which is `ContinuousWithinAt.pow`. -/
 theorem isApproximable_of_forall_exists_bounded_pair {𝓕 : Filtration ℝ≥0 mΩ}
     [𝓕.IsRightContinuous] {P : Measure Ω} [IsFiniteMeasure P]
     {q : ENNReal} {T T' K : ℝ≥0} (hTT' : T < T') {D : Set ℝ≥0} (hDd : Dense D)
@@ -46335,25 +46457,29 @@ theorem isApproximable_of_forall_exists_bounded_pair {𝓕 : Filtration ℝ≥0 
       ∃ Y C Y' C' : ℝ≥0 → Ω → ℝ, ∃ Z Z' : ℝ → Ω → ℝ, ∃ c c' : ℝ,
         IsApproximatingPair 𝓕 P q T' K Y C Z ∧ IsApproximatingPair 𝓕 P q T' K Y' C' Z'
         ∧ (∀ t ω, ‖Y t ω‖ ≤ c) ∧ (∀ t ω, ‖Y' t ω‖ ≤ c')
-        ∧ (∀ᵐ ω ∂P, IsRightContinuous fun t ↦ Y t ω - V t ω)
-        ∧ (∀ᵐ ω ∂P, IsRightContinuous fun t ↦ Y' t ω - V t ω ^ 2)
         ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ D, ‖Y t ω - V t ω‖ₑ ∂P ≤ ε
         ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ D, ‖Y' t ω - V t ω ^ 2‖ₑ ∂P ≤ ε) :
     IsApproximable 𝓕 P q T K V ε₀ u := by
   refine isApproximable_of_forall_exists_pair hTT' hDd fun ε hε ↦ ?_
-  obtain ⟨Y, C, Y', C', Z, Z', c, c', hp, hp', hYb, hY'b, hrc, hrc', herr, herr'⟩ := h ε hε
-  exact ⟨Y, C, Y', C', Z, Z', hp, hp', hrc, hrc', herr, herr',
+  obtain ⟨Y, C, Y', C', Z, Z', c, c', hp, hp', hYb, hY'b, herr, herr'⟩ := h ε hε
+  refine ⟨Y, C, Y', C', Z, Z', hp, hp', ?_, ?_, herr, herr',
     fun k ↦ hp.integrable_stoppedValue_oscHitSeqCap hSc hSd hV hcont hYb ε₀ k u,
     fun k ↦ hp'.integrable_stoppedValue_oscHitSeqCap hSc hSd hV hcont hY'b ε₀ k u,
     fun δ k ↦ hp.integrable_stoppedValue_oscHitSeqGap hSc hSd hV hcont hYb ε₀ k δ u,
     fun δ k ↦ hp'.integrable_stoppedValue_oscHitSeqGap hSc hSd hV hcont hY'b ε₀ k δ u⟩
+  · filter_upwards [hp.ae_continuousWithinAt_sub hcont] with ω hω t ht
+    exact hω t (lt_of_le_of_lt ht hTT')
+  · filter_upwards [hp'.ae_continuousWithinAt_sub (V := fun s ω ↦ V s ω ^ 2)
+      fun ω t ↦ (hcont ω t).pow 2] with ω hω t ht
+    exact hω t (lt_of_le_of_lt ht hTT')
 
 /-- **The first item of Milestone 11 from bounded approximants**, and this is the form in which a
 consumer of the criterion meets it: per error two pairs of the class
-`MeasureTheory.IsApproximatingPair`, a bound on each approximant, the right continuity of the two
-differences, and the two errors read along a countable dense set of times at a horizon exceeding
-the window.  Ten obligations become six, and the four that go are the ones no consumer of \EK's
-Theorem 9.4 would recognise.
+`MeasureTheory.IsApproximatingPair`, a bound on each approximant, and the two errors read along a
+countable dense set of times at a horizon exceeding the window.  **Six obligations**, and the
+four integrabilities and the two right continuities that have gone are the ones no consumer of
+\EK's Theorem 9.4 would recognise: (9.26) asks for the two pairs, the bound and the two errors,
+and for nothing else.
 
 It is `MeasureTheory.isApproximable_of_forall_exists_bounded_pair` under
 `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_isApproximable`, with `exists_between`
@@ -46376,8 +46502,6 @@ theorem isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair [Measurable
         ∃ Y C Y' C' : ℝ≥0 → Ω → ℝ, ∃ Z Z' : ℝ → Ω → ℝ, ∃ c c' : ℝ,
           IsApproximatingPair 𝓕 P q T' K Y C Z ∧ IsApproximatingPair 𝓕 P q T' K Y' C' Z'
           ∧ (∀ t ω, ‖Y t ω‖ ≤ c) ∧ (∀ t ω, ‖Y' t ω‖ ≤ c')
-          ∧ (∀ᵐ ω ∂P, IsRightContinuous fun t ↦ Y t ω - g (X i t ω))
-          ∧ (∀ᵐ ω ∂P, IsRightContinuous fun t ↦ Y' t ω - g (X i t ω) ^ 2)
           ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ S, ‖Y t ω - g (X i t ω)‖ₑ ∂P ≤ ε
           ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ S, ‖Y' t ω - g (X i t ω) ^ 2‖ₑ ∂P ≤ ε) :
     IsTightMeasureSet
@@ -46390,5 +46514,98 @@ theorem isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair [Measurable
     ((hX i).continuous_comp g.continuous)
     (fun ω t ↦ g.continuous.continuousWithinAt.comp (hcont i ω t) (Set.mapsTo_univ _ _))
     (h i)⟩
+
+/-! ### What a *bounded* density gives, and it is the three fields an inhabitant needs
+
+Every statement of this milestone so far **consumes** `MeasureTheory.IsApproximatingPair`; none
+produces one, and a class no one has inhabited carries a milestone no further than `Shift` did
+before its first witness.  The intended inhabitant is \EK's: for `f` in the domain of the
+generator and `g` its image, `Y = f ∘ X`, `Z = g ∘ X` and `C` the indefinite integral of `Z`, the
+martingale field being the martingale problem itself and the error being **zero**.
+
+Three of the eight fields are then statements about a **bounded measurable density** and about
+nothing else, and they are proved here.  What they settle is the question the horizon raises:
+
+**A bounded density is integrable past the horizon, so its indefinite integral is continuous
+everywhere** -- not merely strictly inside the horizon, as
+`MeasureTheory.IsApproximatingPair.continuousWithinAt_compensator` gives for a density known
+integrable only on `Set.Ioc 0 T`.  The field `IsApproximatingPair.rightContinuous` is quantified
+over **all** `s : ℝ≥0` and could not be met otherwise; boundedness is what meets it.  The horizon
+survives only in the other two fields, where it is the measure of the window and hence the
+constant.
+
+**And the constant is a formula and not a hypothesis**, which is what the milestone needs: it
+asks for **one** `K` shared by the whole family, and
+`MeasureTheory.eLpNorm_le_of_bounded_Ioc` produces `T ^ q.toReal⁻¹ * c` from the bound `c` alone.
+
+**The density is indexed by `ℝ` and the process by `ℝ≥0`.**  A consumer building `Z` from a
+process therefore writes `Z s ω = g (X s.toNNReal ω)`, and the junk on `s ≤ 0` is never read: the
+integral of `compensator_eq` runs over `Set.Ioc 0 t`.  Nothing below knows about the process, so
+the three statements are about a plain function of a real variable. -/
+
+/-- **The indefinite integral of a bounded measurable function is continuous**, as a function of
+the upper end running over `ℝ≥0`.
+
+This is `intervalIntegral.continuous_primitive` (`MeasureTheory/Integral/DominatedConvergence.lean`)
+at base point `0`, whose hypothesis -- interval integrability over *every* pair of endpoints --
+is `MeasureTheory.Measure.integrableOn_of_bounded` (`MeasureTheory/Integral/IntegrableOn.lean:713`)
+at the finite measure of `Set.uIoc`.  The rewriting `∫ s in 0..t = ∫ s in Set.Ioc 0 t` is
+`intervalIntegral.integral_of_le` and needs `0 ≤ t`, which over `ℝ≥0` is free.
+
+**Why this is stated and not read off `IsApproximatingPair.continuousWithinAt_compensator`.**
+That statement carries `t < T` because its density is integrable only on the horizon.  Here
+integrability holds on every window, so the conclusion is continuity on the line and two sided,
+which is what the field `IsApproximatingPair.rightContinuous` -- quantified over all `s` and
+formulated over `𝓝[≥] s` -- asks for. -/
+theorem continuous_setIntegral_Ioc_zero_of_bounded {Z : ℝ → ℝ} {c : ℝ}
+    (hmeas : Measurable Z) (hb : ∀ s, ‖Z s‖ ≤ c) :
+    Continuous fun t : ℝ≥0 ↦ ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), Z s := by
+  have hint : ∀ a b : ℝ, IntervalIntegrable Z volume a b := by
+    intro a b
+    rw [intervalIntegrable_iff]
+    refine Measure.integrableOn_of_bounded ?_ hmeas.aestronglyMeasurable
+      (Filter.Eventually.of_forall fun s ↦ hb s)
+    simp [Set.uIoc, Real.volume_Ioc]
+  have hc : Continuous fun b : ℝ ↦ ∫ s in (0 : ℝ)..b, Z s :=
+    intervalIntegral.continuous_primitive hint 0
+  have heq : (fun t : ℝ≥0 ↦ ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), Z s)
+      = fun t : ℝ≥0 ↦ ∫ s in (0 : ℝ)..(t : ℝ), Z s := by
+    funext t
+    exact (intervalIntegral.integral_of_le t.coe_nonneg).symm
+  rw [heq]
+  exact hc.comp NNReal.continuous_coe
+
+/-- **The `L^q` norm of a bounded measurable function over the horizon**, and this is where the
+constant `K` of `MeasureTheory.IsApproximatingPair` comes from.
+
+It is `eLpNorm_le_of_ae_bound` (`MeasureTheory/Function/LpSeminorm/Basic.lean:424`) together with
+`Real.volume_Ioc` for the mass of the window.  **The bound is a formula in `T`, `q` and the bound
+on the density**, and it holds for every `q` at once, so a family of pairs with a common bound
+has a common `K` -- which is what the uniformity of the milestone rests on and what a hypothesis
+`hK` would not supply. -/
+theorem eLpNorm_le_of_bounded_Ioc {Z : ℝ → ℝ} {c : ℝ} (hmeas : Measurable Z)
+    (hb : ∀ s, ‖Z s‖ ≤ c) (q : ENNReal) (T : ℝ≥0) :
+    eLpNorm Z q (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ)))
+      ≤ (T : ENNReal) ^ q.toReal⁻¹ * ENNReal.ofReal c := by
+  refine le_trans (eLpNorm_le_of_ae_bound hmeas.aestronglyMeasurable
+    (Filter.Eventually.of_forall fun s ↦ hb s)) ?_
+  gcongr
+  rw [Measure.restrict_apply_univ, Real.volume_Ioc, sub_zero, ENNReal.ofReal_coe_nnreal]
+
+/-- **A bounded measurable function lies in `L^q` of the horizon**, which is the field
+`IsApproximatingPair.ae_memLp` -- and it holds at *every* sample point, so the almost sure
+quantifier of that field is not used by this source.
+
+`MemLp` is by definition `eLpNorm … < ∞` (`MeasureTheory/Function/LpSeminorm/Defs.lean:149`), so
+this is `MeasureTheory.eLpNorm_le_of_bounded_Ioc` and the finiteness of its right hand side; the
+exponent `q.toReal⁻¹` is non-negative whatever `q` is, `⊤` included, which is why no hypothesis
+on `q` appears. -/
+theorem memLp_of_bounded_Ioc {Z : ℝ → ℝ} {c : ℝ} (hmeas : Measurable Z)
+    (hb : ∀ s, ‖Z s‖ ≤ c) (q : ENNReal) (T : ℝ≥0) :
+    MemLp Z q (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ))) :=
+  lt_of_le_of_lt (eLpNorm_le_of_bounded_Ioc hmeas hb q T)
+    (ENNReal.mul_lt_top
+      (ENNReal.rpow_lt_top_of_nonneg (inv_nonneg.2 ENNReal.toReal_nonneg) ENNReal.coe_ne_top)
+      ENNReal.ofReal_lt_top)
 
 end MeasureTheory
