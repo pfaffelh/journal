@@ -12665,13 +12665,31 @@ has to be chosen once for all `n`. What stands:
     `SkorokhodSpace.postcomp g ∘ Φ i`, which is no embedding, `g` not being
     injective.
 
-  The next item therefore decides one of two things, and the decision is a
-  finding either way: whether `fun f ↦ SkorokhodSpace.modulusBased t₀ u f δ` is
-  measurable on `D(ℝ, ℝ)`, or whether the modulus condition of
-  `SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal` is to be restated so
-  that a producer may discharge it on preimages. The second is not a weakening
-  for free: by `MeasureTheory.Measure.le_map_apply` the preimage form is the
-  **weaker** hypothesis, so the criterion would have to be reproved under it.
+  **The measurability is decided, 2026-09-21, and the answer is the first of the
+  two: the second option is not needed and the criterion is not to be restated.**
+  `SkorokhodSpace.measurable_iInf_modulusBased` of **SkorokhodSpace**,
+  Milestone 7, is the Borel function, and it is *not*
+  `fun f ↦ SkorokhodSpace.modulusBased t₀ u f δ` itself but the right limit of
+  that in the window radius,
+  `fun f ↦ ⨅ u' ∈ Set.Ioi u, SkorokhodSpace.modulusBased t₀ u' f δ`. The
+  sandwich `SkorokhodSpace.setOf_le_modulusBased_subset` and
+  `SkorokhodSpace.setOf_le_iInf_modulusBased_subset` puts the set the criterion
+  reads between two sets of the Borel function, so a producer who holds a bound
+  at radius `u'` pays for the passage with the single step from `u` to `u'` and
+  with nothing else. The consumer here quantifies over all `m : ℕ`, so the step
+  is `m ↦ m + 1` and is free.
+
+  What makes the right limit necessary rather than an artefact: the time change
+  that carries a subdivision from one path to a nearby one *moves the window*, so
+  the subdivision has to cover a strictly larger radius than the conclusion
+  speaks of. The loss in the **sparseness** — the other loss of
+  `SkorokhodSpace.modulusBased_le_of_edist_le` — does go away, a fixed
+  subdivision having finitely many gaps each strictly wider than `δ`.
+
+  **And the route through a countable family is closed, which is why this one is
+  taken.** Restricting the nodes to a countable dense set computes a strictly
+  larger infimum for a path that jumps outside that set: every such subdivision
+  has the jump in the interior of a cell.
 
 * `isRelativelyCompact_of_approx`: if `E` is Polish, the domain of `A` contains
   an algebra separating points and vanishing nowhere, the approximation holds

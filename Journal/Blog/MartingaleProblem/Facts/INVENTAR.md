@@ -51117,3 +51117,204 @@ umschreiben. Das ist **keine** freie Abschwächung: nach
 Hypothese, das Kriterium müßte unter ihr neu bewiesen werden, und das ist ein
 eigener Lauf im Meilenstein 8 von `SkorokhodSpace`. Wer dorthin ausweicht, sagt
 im Bericht, woran die Meßbarkeit gescheitert ist.
+
+### 2026-09-21, sechster Lauf des Tages — die Meßbarkeit ist entschieden, und die Entscheidung **widerlegt eine Negativaussage**, die zweimal in der Datei stand: der Modul ist Borel-meßbar, sobald der Fensterradius seinen Rechtslimes bekommt
+
+**Bearbeitet:** der Vorschlag des Vorlaufs, also
+`SkorokhodSpace.measurable_modulusBased`, im Meilenstein 7 von `SkorokhodSpace`
+und als Einlösung des offenen Punktes im Meilenstein 11 von
+`MartingaleProblems`. Wie angeordnet: kein Meilenstein 8, kein Meilenstein 14,
+kein C.5/G.
+
+#### Der Fund, und er ist der wertvollste, den ein Lauf haben kann
+
+`SkorokhodSpace/Suggested.lean` trug an **zwei** Stellen die Behauptung, die
+Modulmengen seien nicht als Borelmengen zu erkennen:
+
+> „The modulus sets `{f | η ≤ modulusBased t₀ u f δ}` are infima over an
+> *uncountable* family of subdivisions, **so no argument is available that they
+> are Borel**" (vor dem Lauf Zeile 14042)
+
+und
+
+> „**No measurability of any of these sets is needed, and none is available**"
+> (vor dem Lauf Zeile 14098),
+
+und dieselbe Behauptung noch einmal im `README.md` von `SkorokhodSpace`. Sie ist
+**falsch**. Alle drei Stellen sind berichtigt; der Halbsatz, den sie eigentlich
+tragen sollten — daß das *Kriterium* die Frage nicht zu stellen braucht, weil ein
+Mathlib-`Measure` auf jeder Menge definiert ist — steht unverändert da.
+
+#### Was gebaut ist
+
+**Sieben** neue Deklarationen in `TauCeti/SkorokhodSpace/Suggested.lean`, im neuen
+Abschnitt „The based modulus is Borel measurable in the path", unmittelbar nach
+`SkorokhodSpace.tendsto_iSup_modulusBased_of_isCompact`.
+
+* `SkorokhodSpace.isSubdivisionBased_of_le` und
+  `SkorokhodSpace.modulusBased_mono_window` — der Modul **wächst mit dem
+  Fensterradius**. Eine Unterteilung, die das größere Fenster überdeckt,
+  überdeckt das kleinere; `antitone_exhaustionMin` und `monotone_exhaustionMax`
+  sind der ganze Beweis. Das Gegenstück zu `modulusBased_mono`, der Monotonie
+  in `δ`.
+* `SkorokhodSpace.eventually_modulusBased_lt` — die Halbstetigkeit in ihrer
+  Arbeitsform: ist `modulusBased t₀ u' g δ < c` und `u < u'`, so gilt
+  `modulusBased t₀ u f δ < c` für alle `f` einer Umgebung von `g`.
+* `SkorokhodSpace.upperSemicontinuous_iInf_modulusBased` — und daraus
+* `SkorokhodSpace.measurable_iInf_modulusBased`:
+  ```
+  Measurable fun f : D(ι, E) ↦ ⨅ u' ∈ Set.Ioi u, modulusBased basePoint u' f δ
+  ```
+* `SkorokhodSpace.setOf_le_modulusBased_subset` und
+  `SkorokhodSpace.setOf_le_iInf_modulusBased_subset` — die **Einklemmung**, die
+  ein Verbraucher liest:
+  ```
+  {f | η ≤ modulusBased t₀ u  f δ}
+    ⊆ {f | η ≤ ⨅ v ∈ Ioi u, modulusBased t₀ v f δ}
+    ⊆ {f | η ≤ modulusBased t₀ u' f δ}       für jedes u' > u.
+  ```
+
+**Geprüft:** `scripts/check_master.py` meldet für die ganze Kette **0 Fehler,
+0 `sorry`, 0 veraltete Namen** (Mathlib `94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `v4.35.0-rc2`). Die Warnungen sind 18 / 35 / 112 und damit **unverändert**
+gegenüber dem vor dem Lauf eigens gemessenen Stand; die sieben neuen
+Deklarationen erzeugen keine. Alle sieben hängen nach `check_axioms_master.py`
+auf `propext`, `Classical.choice`, `Quot.sound` und auf nichts sonst.
+`check_cited_lines.py`: **401 von 401** gepaarten Fundstellen stimmen (eine mehr
+als vor dem Lauf), 0 tote, 0 verschoben. `check_duplicates.py`: 2660 eigene
+Deklarationen, genau sieben mehr, und zu keinem der sieben neuen Namen ein
+Treffer. `check_negatives.py`: 50 Behauptungen, 0 mit unerwarteten Treffern.
+`check_citations.py`: dieselben fünf Auffälligkeiten wie vorher, alle
+„master ja, v4.33.1 nein" und damit erwartet. `check.py` meldet `clean`.
+`check_suggested.py` ist **nicht** gelaufen; seine Fehler sind seit dem
+2026-09-18 zu berichten und nicht zu beheben.
+
+#### Warum der abzählbare Weg wirklich verschlossen ist
+
+Der Vorlauf hat die Vorfrage gestellt, „ob dieses Infimum über eine
+**abzählbare** Familie läuft oder abzählbar ausgeschöpft werden kann". Die
+Antwort ist **nein**, und sie ist kein Beweisnotstand, sondern eine Eigenschaft
+der Sache:
+
+> Läßt man nur Knoten aus einer abzählbaren dichten Menge zu, so ist das Infimum
+> für einen Pfad, der **außerhalb** dieser Menge springt, **echt größer**. Jede
+> solche Unterteilung trägt den Sprung im Inneren einer Zelle, ihre Oszillation
+> ist also durch die Sprunghöhe nach unten beschränkt; eine Unterteilung mit
+> einem Knoten an der Sprungstelle sieht nichts.
+
+`SkorokhodSpace.measurable_eval` ist also nicht auf diesem Weg auszugeben. Das
+steht so im neuen Abschnittskommentar, damit kein Lauf ihn noch einmal versucht.
+
+#### Was statt dessen trägt, und welche der beiden Einbußen verschwindet
+
+Das Werkzeug lag seit dem 2026-09-09 da: `SkorokhodSpace.modulusBased_le_of_edist_le`
+sagt, daß **eine** basierte Unterteilung **eines** Pfades den Modul **jedes**
+Pfades seiner Kugel beschränkt, mit zwei Einbußen — `2 η` in der Oszillation und
+`exp (-γ)` in der Dünnbesetztheit. Der Lauf hat gemessen, welche davon
+wegzubekommen ist:
+
+* **Die Dünnbesetztheit kostet nichts.** Eine *feste* Unterteilung hat endlich
+  viele Lücken, jede **echt** größer als `δ`; also ist ihr Minimum `δ + κ` mit
+  `κ > 0`, und für kleines `γ` ist die transportierte Unterteilung wieder
+  `δ`-dünn. `eventually_modulusBased_lt` wählt dieses `γ` über die Stetigkeit von
+  `γ ↦ exp (-γ) * d` bei `0` und `Filter.Tendsto.eventually_const_lt`.
+* **Das Fenster kostet einen Schritt, und der bleibt.** Die Zeitänderung
+  *verschiebt das Fenster*: die Bedingung `u + (exp γ - 1) * (2 * u) ≤ u'` ist
+  für `u > 0` nur mit `u' > u` erfüllbar. Die Unterteilung muß also einen echt
+  größeren Radius überdecken als den, von dem die Konklusion spricht.
+
+  **Und dieser Schritt ist nicht wegzuschieben, indem man die Unterteilung
+  aufbläst.** Wer ihre äußeren Knoten nach außen zieht, vergrößert die erste und
+  letzte Zelle, und die Oszillation über der vergrößerten Zelle ist durch nichts
+  beschränkt. `modulusBased t₀ u' f δ` ist deshalb *wirklich* größer als
+  `modulusBased t₀ u f δ` und nicht bloß beweistechnisch.
+
+Der Modul bei festem Radius ist also **nicht** oberhalbstetig; sein
+**Rechtslimes im Radius** ist es, und `UpperSemicontinuous.measurable`
+(`MeasureTheory/Constructions/BorelSpace/Order.lean:649`) macht daraus die
+Meßbarkeit.
+
+#### Was das für den Verbraucher heißt — der Punkt, an dem der Vorlauf stehengeblieben war
+
+Der Vorlauf hatte die Bruchstelle so benannt: `Measure.map_apply` verlangt
+Meßbarkeit, `Measure.map_apply₀` Nullmeßbarkeit, und `Measure.le_map_apply` läuft
+in die falsche Richtung. Mit der Einklemmung ist sie geschlossen, **ohne** das
+Kriterium abzuschwächen:
+
+> Die Menge, die das Kriterium liest, liegt in einer **Borelmenge**, und diese
+> liegt in der Modulmenge zum nächstgrößeren Radius. Ein Erzeuger, der eine
+> Schranke bei `u'` hat, löst damit eine *meßbare* Bedingung bei jedem `u < u'`
+> ein. Der Verbraucher im Meilenstein 11 quantifiziert über alle `m : ℕ`; der
+> Schritt ist also `m ↦ m + 1` und **umsonst**.
+
+Der zweite Ausweg, den der Vorlauf benannt und ausdrücklich nicht gegangen war —
+die Modulbedingung auf Urbilder umzuschreiben und das Kriterium darunter neu zu
+beweisen — wird damit **nicht gebraucht**. Das steht so im Meilenstein 11 von
+`MartingaleProblems/README.md`.
+
+#### Zwei Kleinigkeiten, die beim Hinschreiben aufgetreten sind
+
+**`Finset.univ_nonempty` bleibt im Elaborator stecken, wenn der Wertebereich von
+`sup'` erst vom Funktionsargument kommt.** Steht der Ausdruck
+`Finset.univ.sup' Finset.univ_nonempty (fun i : Fin (n+1) ↦ dist (t i) t₀)` als
+Argument einer Funktion, deren Parametertyp nicht sofort propagiert wird, so
+meldet Lean `typeclass instance problem is stuck: SemilatticeSup ?m`. Der Ausweg
+ist, den Wert **einmal** über ein `obtain ⟨w, hw0, hmem⟩ : ∃ w : ℝ, …` zu
+benennen und im ganzen Beweis nur noch `w` zu schreiben; das ist auch der
+lesbarere Beweis.
+
+**`omit … in` gehört vor den Doc-Kommentar, nicht dazwischen.** Steht es
+zwischen `/-- … -/` und `theorem`, so sagt Lean
+`unexpected token 'omit'; expected 'lemma'`.
+
+#### Wo der erste Punkt der Kette jetzt steht
+
+| Größe | Stand |
+| --- | --- |
+| alles Deterministische bis zur Modulabschätzung | steht |
+| der Zusammenbau beider Summanden, auch am Bildpfad | steht |
+| die drei Grenzübergänge in der Ordnung `N`, `δ`, `ε` | steht |
+| die Ungleichung am Bildpfad, gleichmäßig über die Familie | steht |
+| **die Meßbarkeit des Moduls** | **steht, dieser Lauf** |
+| **die Einklemmung für den Übergang ans Bildmaß** | **steht, dieser Lauf** |
+| der Übergang vom Stichprobenraum an das Bildmaß, ausgeführt | offen |
+| der Rückweg von der trennenden Klasse zur Metrik von `E` | offen |
+| `isTight_map_postcomp_of_exists_martingale` selbst | offen |
+
+#### Vorschlag für den nächsten Lauf
+
+**Den Übergang ans Bildmaß jetzt ausführen:
+`SkorokhodSpace.measure_map_postcomp_setOf_le_modulusBased_le`.**
+
+> Für `Φ : Ω → D(ℝ≥0, E)` meßbar, `g : E →ᵇ ℝ` und `P` ein Wahrscheinlichkeitsmaß:
+> ```
+> P {ω | ofReal ε₀ < modulusBased 0 (m+1) (postcomp g (extendNNReal (Φ ω))) δ} ≤ η
+>   → ((P.map Φ).map (postcomp g)).map extendNNReal
+>       {f | ofReal ε₀ ≤ modulusBased 0 m f δ} ≤ η
+> ```
+
+**Warum jetzt.** Es ist der erste Lauf, in dem alle drei Zutaten dastehen und
+nichts mehr zu entscheiden ist:
+
+1. die **Meßbarkeit** aus diesem Lauf, über die Einklemmung mit `m` und `m + 1`;
+2. die **abgeschlossene Einbettung** `SkorokhodSpace.extendNNReal`, die nach dem
+   Befund des fünften Laufs dieses Tages *jede* Menge durchläßt
+   (`MeasurableEmbedding.map_apply`) und den Indexübergang umsonst macht;
+3. die **gleichmäßige Schranke am Stichprobenraum**, ebenfalls aus dem fünften
+   Lauf (`exists_forall_measure_setOf_lt_modulusBased_postcomp_le_of_forall_isApproximable`).
+
+Die Schicht `postcomp g`, die keine Einbettung ist, wird über
+`MeasureTheory.Measure.map_apply` genommen — und das darf sie jetzt, weil die
+Zielmenge meßbar ist. Danach steht
+`SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` offen, und
+`isTight_map_postcomp_of_exists_martingale` ist nur noch die Zusammenfassung der
+beiden Bedingungen des Kriteriums.
+
+**Zu prüfen, ehe gebaut wird, und es ist eine Zeile Quelltext:** ob das Kriterium
+seine Modulmenge mit `η ≤ modulusBased` oder mit `ofReal ε₀ < modulusBased`
+liest. Der fünfte Lauf hat notiert, daß beides vorkommt und der Übergang „billig"
+sei; billig ist er, aber er ist zu machen, und die Richtung der Ungleichung
+entscheidet, ob `setOf_le_modulusBased_subset` unmittelbar paßt oder ob daneben
+eine Fassung mit `<` zu stellen ist. **Am Quelltext von
+`SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` zu entscheiden, nicht zu
+raten.**

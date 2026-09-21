@@ -2020,6 +2020,49 @@ over a shrinking family and is therefore an infimum.
   `IsCadlag.exists_subdivision` to `IsCadlag.exists_subdivision_through`. With
   `isCompact_closure_values_of_isCompact` this closes the forward direction of
   `isCompact_closure_iff`.
+* `SkorokhodSpace.isSubdivisionBased_of_le` and
+  `SkorokhodSpace.modulusBased_mono_window`: **the based modulus grows with the
+  window radius.** Proved (2026-09-21). A subdivision that covers the larger
+  window covers the smaller one, `exhaustionMin` being antitone and
+  `exhaustionMax` monotone, so the infimum at the smaller radius runs over more
+  subdivisions. It is the monotonicity that the measurability below is stated
+  with, and it stands beside `modulusBased_mono`, the monotonicity in `δ`.
+* `SkorokhodSpace.eventually_modulusBased_lt`,
+  `SkorokhodSpace.upperSemicontinuous_iInf_modulusBased` and
+  `SkorokhodSpace.measurable_iInf_modulusBased`: **the based modulus is Borel
+  measurable in the path, once the window radius is given its right limit.**
+  Proved (2026-09-21), and they withdraw a claim that stood twice in the file —
+  that no argument for the measurability of the modulus sets is available.
+
+  The function that is measurable is
+  `fun f ↦ ⨅ u' ∈ Set.Ioi u, SkorokhodSpace.modulusBased t₀ u' f δ`, and it is
+  measurable because it is upper semicontinuous;
+  `UpperSemicontinuous.measurable`
+  (`MeasureTheory/Constructions/BorelSpace/Order.lean:649`) does the rest. The
+  semicontinuity is `SkorokhodSpace.modulusBased_le_of_edist_le` read at a fixed
+  subdivision of the path in question: that estimate loses `exp (-γ)` in the
+  sparseness and one unit of window radius, and only the second loss survives.
+  The first does not, because a *fixed* subdivision has finitely many gaps, each
+  strictly wider than `δ`, so a small enough `γ` leaves the transported
+  subdivision `δ`-sparse — `eventually_modulusBased_lt` picks that `γ` by
+  continuity, together with the one the window needs.
+
+  **The countable-family route is closed, and that is why this one is taken.**
+  Restricting the nodes to a countable dense set computes a strictly larger
+  infimum for a path that jumps at a time outside that set: every such
+  subdivision carries the jump in the interior of a cell, so its oscillation is
+  bounded below by the jump, while a subdivision with a node at the jump time
+  sees nothing. `SkorokhodSpace.measurable_eval` cannot be spent that way.
+* `SkorokhodSpace.setOf_le_modulusBased_subset` and
+  `SkorokhodSpace.setOf_le_iInf_modulusBased_subset`: **the sandwich a consumer
+  reads.** Proved (2026-09-21). `{f | η ≤ modulusBased t₀ u f δ}` sits inside the
+  Borel set of the previous item, which sits inside
+  `{f | η ≤ modulusBased t₀ u' f δ}` for every `u' > u`. So a producer with a
+  bound at one radius discharges a measurable condition at any smaller one, and
+  the passage costs a step in the radius and nothing else. This is what a
+  statement about an **image measure** needs, `MeasureTheory.Measure.map_apply`
+  asking measurability and `MeasureTheory.Measure.le_map_apply` running the wrong
+  way.
 * `dist_first_last_eq_sum`: under `AdditiveDist ι` the gaps of a monotone tuple
   telescope, `dist (t 0) (t (Fin.last n)) = ∑ i, dist (t i.castSucc) (t i.succ)`.
   Proved (2026-09-09). Monotonicity is the real hypothesis — strictness is not
@@ -2339,9 +2382,13 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   is, the node at the base point surviving the weakening untouched, so a bound at
   one radius is a bound at every smaller one.
 
-  **No measurability of any of these sets is needed, and none is available**:
+  **No measurability of any of these sets is needed**:
   `{f | η ≤ modulusBased t₀ u f δ}` is an infimum over an uncountable family of
-  subdivisions and nothing here shows it is Borel. A Mathlib `Measure` is defined
+  subdivisions, and this criterion does not ask whether it is Borel. It is not
+  beyond reach — the earlier version of this paragraph said it was, and
+  `SkorokhodSpace.measurable_iInf_modulusBased` of Milestone 7 (2026-09-21)
+  sandwiches the set between two Borel ones at neighbouring window radii. A
+  Mathlib `Measure` is defined
   on every set, and that is what `isTightMeasureSet_of_forall_exists_isCompact_closure`
   — the joint between the two milestones — and `measure_compl_iInter_le` are
   stated to exploit. The completeness of `E` is inherited from Milestone 7, whose
