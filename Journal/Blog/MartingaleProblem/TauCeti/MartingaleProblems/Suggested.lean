@@ -45936,4 +45936,89 @@ theorem exists_forall_measure_setOf_lt_modulusBased_postcomp_le_of_forall_isAppr
     _ ≤ (ENNReal.ofReal ε₀)⁻¹ * θ := mul_le_mul_right hb _
     _ = η := by rw [hθdef, ← mul_assoc, ENNReal.inv_mul_cancel he0 ENNReal.ofReal_ne_top, one_mul]
 
+/-! ### The two halves joined
+
+The statement above bounds a set of **sample points** under `P`;
+`SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le` turns
+such a bound into the tightness of the **image laws**.  Between them lie exactly
+two seams, and neither is analytic.
+
+**The threshold.**  The statement above reads `ofReal ε₀ < modulusBased …`, the
+criterion reads `η ≤ modulusBased …`.  An `ε₀` with `ofReal ε₀ < η` makes the
+second set a subset of the first, and `measure_mono` closes it.  Such an `ε₀`
+exists for every `η > 0` including `η = ⊤`, `ENNReal.lt_iff_exists_real_btwn`
+producing a real strictly between `0` and `η` without a finiteness hypothesis.
+The change of measure carries `η` through unchanged and puts no condition on it,
+which is why the strictness is settled here and not there.
+
+**The horizon.**  The criterion quantifies `m : ℕ` unboundedly, while
+`MeasureTheory.IsApproximable` carries a fixed `T` and the statement above asks
+`u < T`; one triple `(q, T, K)` therefore serves only finitely many `m`.  The
+hypothesis below quantifies over the window accordingly --- to every radius its
+own `q`, `T`, `K` --- and that is not a strengthening but the form in which
+approximability is stated in the first place, „for all `ε, T > 0` there are
+approximating pairs".  The fixed-`T` statement is wrapped, not altered.
+
+**The measurability of the path map is not a hypothesis**, being already implied
+by the data: `MeasureTheory.IsStronglyProgressive.stronglyAdapted` makes each
+`X i t` measurable and `SkorokhodSpace.measurable_of_measurable_eval` assembles
+the coordinates.  That is `MeasureTheory.measurable_pathOfProcess`. -/
+
+/-- **The path map of a progressive process is measurable.**  The path space
+carries the initial σ-algebra of its coordinates, so this is the progressivity
+read once per coordinate and nothing more.
+
+It is stated separately because the hypothesis `hΦ` --- that `Φ` has the process
+for its coordinates --- is the one every statement of this block carries, and a
+consumer should not have to produce the measurability a second time. -/
+theorem measurable_pathOfProcess [MeasurableSpace E] [BorelSpace E] [PolishSpace E]
+    [CompleteSpace E] {𝓕 : Filtration ℝ≥0 mΩ}
+    {X : ℝ≥0 → Ω → E} (hX : IsStronglyProgressive 𝓕 X)
+    {Φ : Ω → D(ℝ≥0, E)} (hΦ : ∀ ω, (Φ ω).toFun = fun t ↦ X t ω) :
+    Measurable Φ :=
+  SkorokhodSpace.measurable_of_measurable_eval fun t => by
+    have : (fun ω => (Φ ω).toFun t) = X t := funext fun ω => by rw [hΦ ω]
+    rw [this]
+    exact ((hX.stronglyAdapted t).mono (𝓕.le t)).measurable
+
+/-- **Tightness of the image laws from approximability at every horizon.**  This
+is the first item of Milestone 11 with its martingale hypothesis already spent:
+what remains between it and `isTight_map_postcomp_of_exists_martingale` is the
+passage from the martingale approximation to `MeasureTheory.IsApproximable`,
+which is where the continuous time Doob inequalities of Milestone 9 are used.
+
+The proof is the two seams of the section comment and nothing else: the window
+`u = m + 1` is produced in `ℝ≥0`, the hypothesis is read there, and the threshold
+is crossed by `measure_mono`. -/
+theorem isTightMeasureSet_map_postcomp_of_forall_isApproximable [MeasurableSpace E]
+    [BorelSpace E] [PolishSpace E] [CompleteSpace E]
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {γ : Type*} {X : γ → ℝ≥0 → Ω → E} {g : E →ᵇ ℝ}
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hX : ∀ i, IsStronglyProgressive 𝓕 (X i))
+    (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ X i s ω) (Set.Ici t) t)
+    {Φ : γ → Ω → D(ℝ≥0, E)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ X i t ω)
+    (happ : ∀ ε₀ : ℝ, 0 < ε₀ → ∀ u : ℝ≥0, 0 < u → ∃ q : ENNReal, ∃ T K : ℝ≥0, u < T ∧
+      ∀ i, IsApproximable 𝓕 P q T K (fun t ω ↦ g (X i t ω)) ε₀ u) :
+    IsTightMeasureSet
+      {(P.map (Φ i)).map (SkorokhodSpace.postcomp g.toContinuousMap) | i} := by
+  refine SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le P
+    (fun i => measurable_pathOfProcess (hX i) (hΦ i)) g ?_
+  intro ε hε m η hη
+  obtain ⟨ε₀, hε₀0, hlt, hltη⟩ := ENNReal.lt_iff_exists_real_btwn.1 hη
+  have hε₀ : 0 < ε₀ := ENNReal.ofReal_pos.1 hlt
+  set u : ℝ≥0 := (m : ℝ≥0) + 1 with hu
+  have hu0 : 0 < u := by positivity
+  have hucoe : ((u : ℝ≥0) : ℝ) = (m : ℝ) + 1 := by
+    rw [hu]; push_cast; ring
+  obtain ⟨q, T, K, huT, happ'⟩ := happ ε₀ hε₀ u hu0
+  obtain ⟨δ, hδ0, hle⟩ :=
+    exists_forall_measure_setOf_lt_modulusBased_postcomp_le_of_forall_isApproximable
+      happ' hSc hSd hX hcont hΦ hu0 huT hε₀ hε
+  refine ⟨δ, hδ0, fun i => le_trans (measure_mono ?_) (hle i)⟩
+  intro ω hω
+  show ENNReal.ofReal ε₀ < _
+  rw [hucoe]
+  exact lt_of_lt_of_le hltη hω
+
 end MeasureTheory

@@ -51318,3 +51318,200 @@ entscheidet, ob `setOf_le_modulusBased_subset` unmittelbar paßt oder ob daneben
 eine Fassung mit `<` zu stellen ist. **Am Quelltext von
 `SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` zu entscheiden, nicht zu
 raten.**
+
+### 2026-09-21, siebter Lauf des Tages — der Übergang ans Bildmaß steht, und die beiden Hälften des Straffheitskriteriums sind **zusammengefügt**; die Vorfrage des Vorlaufs war die richtige, ihre Antwort hat die Arbeit aber nicht verkürzt, sondern an die andere Naht verlagert — und dort stand eine **Quantorenfrage**, die kein Lauf bisher benannt hatte
+
+**Bearbeitet:** der Vorschlag des Vorlaufs, also
+`SkorokhodSpace.measure_map_postcomp_setOf_le_modulusBased_le`, im Meilenstein 11
+von `MartingaleProblems`. Wie angeordnet: kein Meilenstein 8, kein Meilenstein
+14, kein C.5/G.
+
+#### Die Vorfrage des Vorlaufs, am Quelltext entschieden
+
+Der Vorlauf hatte aufgetragen, **vor** dem Bauen zu klären, ob das Kriterium
+seine Modulmenge mit `η ≤ modulusBased` oder mit `ofReal ε₀ < modulusBased`
+liest, und ausdrücklich verboten, das zu raten. Die Antwort steht in
+`SkorokhodSpace/Suggested.lean:18980`, in
+`SkorokhodSpace.isTightMeasureSet_map_postcomp_iff`:
+
+```lean
+{f : D(ℝ, ℝ) | η ≤ SkorokhodSpace.modulusBased (0 : ℝ) (m : ℝ) f δ} ≤ ε
+```
+
+Es ist **`≤`**, und zwar in beiden Fassungen des Kriteriums
+(`isTightMeasureSet_iff_modulusBased_nnreal` ebenso). Damit paßt
+`SkorokhodSpace.setOf_le_modulusBased_subset` unmittelbar, und die Fassung mit
+`<`, die der Vorlauf daneben für möglich hielt, wird **nicht** gebraucht.
+
+**Und hier ist der Punkt, den die Vorfrage nicht vorhergesehen hat:** die
+Strenge ist gar kein Gegenstand dieses Satzes. Sie sitzt an der *anderen* Naht —
+zwischen der Stichprobenschranke
+`exists_forall_measure_setOf_lt_modulusBased_postcomp_le_of_forall_isApproximable`
+(`MartingaleProblems/Suggested.lean:45847`), die `ofReal ε₀ < …` liefert, und der
+Hypothese dieses Satzes. Der Übergang ans Bildmaß ist in der Schwelle
+**uniform**: er trägt `η` unverändert durch und stellt an es keine Bedingung. Die
+Vorfrage war richtig gestellt, ihre Antwort hat die Arbeit aber nicht verkürzt,
+sondern verlagert — die Umrechnung `ofReal ε₀ < η` gehört zum nächsten Punkt und
+nicht zu diesem.
+
+#### Was gebaut ist
+
+**Zwei** neue Deklarationen in `TauCeti/SkorokhodSpace/Suggested.lean`, im neuen
+Abschnitt „From the sample space to the image law", unmittelbar hinter dem Zeugen
+`not_isTightMeasureSet_twoJumpImageLaw`:
+
+* **`SkorokhodSpace.measure_map_postcomp_setOf_le_modulusBased_le`** — der
+  Übergang selbst. Für `Φ : Ω → D(ℝ≥0, E)` meßbar, `g : E →ᵇ ℝ` und `u < u'`:
+
+  ```
+  P {ω | η ≤ modulusBased 0 u' (postcomp g (extendNNReal (Φ ω))) δ} ≤ ε
+    → ((P.map Φ).map (postcomp g)).map extendNNReal
+        {f | η ≤ modulusBased 0 u f δ} ≤ ε
+  ```
+
+* **`SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le`** —
+  dasselbe in der Gestalt, die das Kriterium liest: aus einer Schranke bei
+  `(m : ℝ) + 1` für jedes `m : ℕ` folgt
+  `IsTightMeasureSet {(P.map (Φ i)).map (postcomp g) | i}`, ohne jede weitere
+  Voraussetzung. Die kompakte Einschließung kommt nicht vor; sie ist innerhalb
+  der Äquivalenz von `isCompactContained_map_postcomp_nnreal` ein für allemal
+  bezahlt.
+
+Und **zwei** in `TauCeti/MartingaleProblems/Suggested.lean`, im neuen Abschnitt
+„The two halves joined" am Dateiende:
+
+* **`MeasureTheory.measurable_pathOfProcess`** — die Meßbarkeit der Pfadabbildung
+  ist **keine** Voraussetzung, sondern folgt aus den Daten:
+  `IsStronglyProgressive.stronglyAdapted` macht jedes `X i t` meßbar, und
+  `SkorokhodSpace.measurable_of_measurable_eval` setzt die Koordinaten zusammen.
+* **`MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_isApproximable`** —
+  **die beiden Hälften des Kriteriums unter einer Aussage.** Aus der
+  Approximierbarkeit an jedem Fensterradius folgt die Straffheit der
+  Bildgesetze `{(P.map (Φ i)).map (postcomp g) | i}`.
+
+Die ganze Kette geht durch `python3 scripts/check_master.py` mit **0 Fehlern,
+0 `sorry`** in allen drei Dateien; die Warnungszahlen sind **unverändert**
+(18 / 35 / 112, davon veraltet 0). Alle vier Deklarationen sind mit
+`check_axioms_master.py` geprüft und hängen an `propext`, `Classical.choice`,
+`Quot.sound` und an nichts sonst.
+
+Mathlib-Stand: `94ef6b89544e58e90f119da869f3fb48d1da0f4c`, 2026-09-18;
+Lean 4.35.0-rc2.
+
+#### Die Quantorenfrage, und sie ist der eigentliche Fund des Laufs
+
+Beim Zusammenfügen kam heraus, was an den beiden Hälften **nicht** zusammenpaßt,
+und es ist nicht die Schwelle, um die der Vorlauf sich sorgte:
+
+> Das Kriterium quantifiziert `m : ℕ` **unbeschränkt**.
+> `MeasureTheory.IsApproximable` trägt ein **festes** `T`, und die
+> Stichprobenschranke verlangt `u < T`.
+
+Ein einziges Tripel `(q, T, K)` bedient also nur endlich viele `m`. Die Hypothese
+der Zusammenfügung muß über den Horizont quantifizieren — zu jedem Fensterradius
+sein eigenes `q`, `T`, `K` —, und **das ist keine Verschärfung**: der Meilenstein
+11 formuliert die Approximierbarkeit von jeher als „for all `ε, T > 0` there are
+`(Y n, Z n) ∈ 𝓐 n`". Die Lean-Aussage bei festem `T` ist die innere; sie wird
+**umhüllt und nicht geändert**. Hätte ein Lauf das erst beim Verbraucher bemerkt,
+so hätte er die Stichprobenschranke umgeschrieben, statt sie zu benutzen.
+
+Die Schwelle dagegen war so billig, wie der Vorlauf sie geschätzt hatte:
+`ENNReal.lt_iff_exists_real_btwn` gibt zu `0 < η` ein reelles `ε₀` mit
+`0 < ofReal ε₀ < η`, **ohne Endlichkeitsvoraussetzung**, also auch für `η = ⊤`;
+danach ist `{η ≤ ·} ⊆ {ofReal ε₀ < ·}` und `measure_mono` schließt. Das war am
+Quelltext zu prüfen und ist geprüft.
+
+#### Vier Befunde
+
+* **Der Satz ging im ersten Durchlauf durch, und das ist kein Zufall, sondern
+  der Ertrag des Vorlaufs.** Die drei Zutaten — Meßbarkeit, Einklemmung,
+  abgeschlossene Einbettung — waren so zugeschnitten, daß der Beweis eine
+  `calc`-Kette aus vier Schritten ist und keinen einzigen eigenen Gedanken mehr
+  braucht. Wo ein Lauf das nächste Mal so vorbereitet vorfindet, ist die
+  Schätzung „ein halber Lauf" richtig und nicht optimistisch.
+* **Die Vertauschung der beiden Schichten kostet nichts, und zwar wörtlich
+  nichts.** Die Hypothese liest `postcomp g (extendNNReal (Φ ω))`, die Konklusion
+  schiebt längs `extendNNReal ∘ postcomp g ∘ Φ` vor. `postcomp_extendNNReal` ist
+  `rfl`, also sind beide **definitionsgleich**, und zwischen Hypothese und
+  Konklusion wird nicht ein einziges Mal umgeschrieben — das abschließende
+  `measure_mono` nimmt die eine Gestalt für die andere ohne Vermittlung.
+* **Der Basispunkt macht hier keine Schwierigkeit, entgegen dem Muster.** Die
+  Meßbarkeit steht über `(basePoint : ι)`, die Modulmengen des Kriteriums über
+  `(0 : ℝ)`; `Real.instBasePoint` ist `⟨0⟩`, und die Elaboration findet das
+  selbst. Das ist bemerkenswert, weil die Datei zwei benannte Fälle führt, in
+  denen eine solche Definitionsgleichheit **nicht** gefunden wurde
+  (`ENNReal` gegen `WithTop ℝ≥0` beim `rw`, und `Clock` mit seinem
+  `MeasurableSpace` als Feld). Der Unterschied ist, daß hier mit `exact`
+  gearbeitet wird und dort mit `rw`: die Instanzprojektion entfaltet sich bei
+  normaler Transparenz, das Muster eines `rw` wird syntaktisch gesucht.
+* **Eine Deklaration, die in der Arbeitsdatei übersetzt, übersetzt darum noch
+  nicht in der Roadmap — und der Grund ist die `variable`-Zeile.** Beide
+  Zusammenfügungssätze gingen in einer Arbeitsdatei unter `scripts/_dev_*.lean`
+  (nicht versioniert, siehe `.gitignore`) im ersten Durchlauf durch und
+  scheiterten in `MartingaleProblems/Suggested.lean` mit **neun** Fehlern, davon
+  sechs `synthInstanceFailed`. Die Ursache ist nicht der
+  Beweis: am Dateiende steht `variable {E : Type*} [MetricSpace E]` und sonst
+  nichts, während die Arbeitsdatei `[MeasurableSpace E] [BorelSpace E]
+  [PolishSpace E]` in ihrem Kopf führte. Die vier Instanzen sind jetzt an den
+  beiden Deklarationen ausgeschrieben. **Wer eine Arbeitsdatei benutzt, gleicht
+  ihren Kopf mit der `variable`-Zeile an der Einfügestelle ab**, sonst mißt
+  `dev_check_master.py` eine andere Aussage als die, die eingefügt wird.
+
+#### Wo der erste Punkt der Kette jetzt steht
+
+| Größe | Stand |
+| --- | --- |
+| alles Deterministische bis zur Modulabschätzung | steht |
+| der Zusammenbau beider Summanden, auch am Bildpfad | steht |
+| die drei Grenzübergänge in der Ordnung `N`, `δ`, `ε` | steht |
+| die Ungleichung am Bildpfad, gleichmäßig über die Familie | steht |
+| die Meßbarkeit des Moduls | steht |
+| die Einklemmung für den Übergang ans Bildmaß | steht |
+| **der Übergang vom Stichprobenraum an das Bildmaß, ausgeführt** | **steht, dieser Lauf** |
+| **das Kriterium, an der Stichprobenseite abgeschlossen** | **steht, dieser Lauf** |
+| **die Umrechnung `ofReal ε₀ < η` zwischen den beiden Hälften** | **steht, dieser Lauf** |
+| **der unbeschränkte Horizont: `m : ℕ` gegen ein festes `T`** | **steht, dieser Lauf** |
+| der Weg von der Martingalhypothese zu `IsApproximable` | offen |
+| `isTight_map_postcomp_of_exists_martingale` selbst | offen |
+
+**Damit ist am ersten Punkt der Kette alles gebaut, was unterhalb von
+`IsApproximable` liegt.** Was offen bleibt, liegt **oberhalb**: die
+Approximierbarkeit selbst ist noch nirgends aus einer Martingalvoraussetzung
+hergestellt.
+
+#### Vorschlag für den nächsten Lauf
+
+**`isApproximable_of_exists_martingale`**, in
+`MartingaleProblems/Suggested.lean` — der Weg von der Martingalhypothese des
+Meilensteins 11 zu `MeasureTheory.IsApproximable`.
+
+> Zu `f : E →ᵇ ℝ` approximierbar im Sinn des Meilensteins — also mit
+> `(Y n, Z n) ∈ 𝓐 n`, `⨆ n ∫⁻ ω, ⨆ t ∈ Set.Iic T ∩ D, ‖Y n t ω - f (X n t ω)‖ₑ < ε`
+> und `⨆ n 𝔼[eLpNorm (Set.Iic T).indicator (Z n) p] < ∞` — die Aussage
+> `IsApproximable 𝓕 P q T K (fun t ω ↦ f (X n t ω)) ε₀ u`.
+
+**Warum jetzt.** Es ist die **einzige** verbliebene Eingabe des ersten Punktes
+der Kette. Seit diesem Lauf gilt: hat ein Verbraucher die Approximierbarkeit an
+jedem Horizont, so hat er die Straffheit — in *einer* Aussage und ohne weitere
+Arbeit. Alles, was noch zwischen dem Meilenstein und
+`isTight_map_postcomp_of_exists_martingale` steht, ist dieser eine Schritt.
+
+**Worauf er ruht, und es ist alles gebaut:** `IsApproximatingPair` (der
+Vorlauf des 20. Laufs vom 2026-09-20), die Quadratidentität am Prozeß (22. Lauf),
+und die vier Integrierbarkeiten, die `IsApproximable` in seinem Feld
+`exists_approximants` führt. Die Struktur verlangt **zwei** Paare — eines für `V`
+und eines für `V²` —, und das ist der Punkt, an dem der 20. Lauf eine
+Roadmap-Aussage als zu stark befunden hat: der zweite Approximant ist **nicht**
+das Quadrat des ersten. Wer diesen Schritt geht, hat also beide Paare aus der
+Martingalhypothese zu gewinnen, und die Hypothese des Meilensteins gibt sie über
+die Abgeschlossenheit der approximierbaren Funktionen unter **Produkten** — die
+dort ausdrücklich als Zeuge und nicht als Bequemlichkeit geführt wird.
+
+**Zu prüfen, ehe gebaut wird, und es ist am Quelltext zu entscheiden:** ob das
+`D` der Meilensteinformulierung (`Set.Iic T ∩ D`, die abzählbare Zeitmenge) mit
+dem `S` der Stichprobenschranke (`hSc : S.Countable`, `hSd : Dense S`)
+zusammenfällt oder ob zwischen ihnen ein Übergang steht. `IsApproximable` liest
+sein Supremum über **ganz** `Set.Iic T`, nicht über einen abzählbaren Schnitt;
+`biSup_enorm_Iic_eq_of_isRightContinuous` ist die Stelle, an der die
+Rechtsstetigkeit die beiden gleichsetzt, und ob sie hier schon oder erst dort
+verbraucht wird, entscheidet die Gestalt der Hypothese. **Nicht raten.**

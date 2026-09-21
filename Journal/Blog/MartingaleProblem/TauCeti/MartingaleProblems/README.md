@@ -12691,6 +12691,47 @@ has to be chosen once for all `n`. What stands:
   larger infimum for a path that jumps outside that set: every such subdivision
   has the jump in the interior of a cell.
 
+  **The passage is carried out, 2026-09-21, and the criterion is closed on the
+  sample side.** `SkorokhodSpace.measure_map_postcomp_setOf_le_modulusBased_le`
+  is the change of measure --- a bound on the modulus set at radius `u'` over
+  `P` is a bound at every `u < u'` under
+  `((P.map Φ).map (postcomp g)).map extendNNReal` --- and
+  `SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le`
+  is that in the shape the criterion reads: a bound at `(m : ℝ) + 1` for every
+  `m : ℕ` gives `IsTightMeasureSet {(P.map (Φ i)).map (postcomp g) | i}` with no
+  further hypothesis. Both layers are pushed forward at once by
+  `MeasureTheory.Measure.map_map`, the two orders of `postcomp` and
+  `extendNNReal` being definitionally equal by
+  `SkorokhodSpace.postcomp_extendNNReal`.
+
+  **The two halves are joined, 2026-09-21**, by
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_isApproximable`: from
+  approximability at every window radius follows the tightness of the image laws
+  `{(P.map (Φ i)).map (postcomp g) | i}`. The measurability of the path map is
+  not among its hypotheses, being implied by the progressivity
+  (`MeasureTheory.measurable_pathOfProcess`).
+
+  Two seams were crossed there, and neither is analytic. The first is the
+  **threshold**: the sample bound reads `ofReal ε₀ < modulusBased …` and the
+  criterion `η ≤ modulusBased …`, so an `ε₀` below `η` is chosen and
+  `measure_mono` closes; `ENNReal.lt_iff_exists_real_btwn` produces it for every
+  `η > 0` including `η = ⊤`, carrying no finiteness hypothesis. The change of
+  measure carries `η` through unchanged and puts no condition on it, which is why
+  the strictness is settled at this seam and not at the other.
+
+  The second is the **horizon**, and it is the one that shapes the statement: the
+  criterion quantifies `m : ℕ` unboundedly while `MeasureTheory.IsApproximable`
+  carries a fixed `T` with `u < T`, so a single triple `(q, T, K)` serves only
+  finitely many `m`. The hypothesis therefore quantifies over the window --- to
+  every radius its own `q`, `T`, `K` --- which is not a strengthening but the
+  form this milestone states above, „for all `ε, T > 0` there are
+  `(Y n, Z n) ∈ 𝓐 n`". The fixed-`T` statement is wrapped, not altered.
+
+  **What remains of this item is the step above `IsApproximable`**, namely
+  `isApproximable_of_exists_martingale`: the passage from the martingale
+  hypothesis to `MeasureTheory.IsApproximable`, which is where the continuous
+  time Doob inequalities of Milestone 9 are used. Everything below it is built.
+
 * `isRelativelyCompact_of_approx`: if `E` is Polish, the domain of `A` contains
   an algebra separating points and vanishing nowhere, the approximation holds
   for each `(f,g) ∈ A`, and `{X n}` satisfies compact containment, then `{X n}`
