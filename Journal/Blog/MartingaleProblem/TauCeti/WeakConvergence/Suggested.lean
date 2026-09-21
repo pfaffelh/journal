@@ -531,6 +531,41 @@ theorem IsSeparating.of_subalgebra [PseudoEMetricSpace E] [BorelSpace E] [Comple
   exact ext_of_forall_mem_subalgebra_integral_eq_of_pseudoEMetric_complete_countable (𝕜 := ℝ) hsep'
     fun g hg => hμν g ⟨g, hg, rfl⟩
 
+omit [MeasurableSpace E] in
+/-- **A point separating subalgebra of `E →ᵇ ℝ` is dense on every compact set**,
+and this is the density a generator's domain has: not the supremum norm, in which
+`Cc^∞(ℝ)` is not dense --- a uniform limit of compactly supported functions
+vanishes at infinity and the constant function does not --- but uniform
+convergence on compact sets.
+
+Mathlib's Stone--Weierstrass already carries the non compact case, in
+`ContinuousMap.exists_mem_subalgebra_near_continuous_of_isCompact_of_separatesPoints`
+(`Topology/ContinuousMap/StoneWeierstrass.lean:323`), which restricts to the
+compact set itself.  What is added here is the passage between the two homes of
+the test class: the hypothesis is stated about the image of `A` in `C(E, ℝ)`,
+which is the same reading as `IsSeparating.of_subalgebra` above, while the
+conclusion produces a member of `A` itself --- a **bounded** function, which is
+what every consumer of a test class asks for and what `C(E, ℝ)` does not
+guarantee.
+
+It is the input `SkorokhodSpace.isTightMeasureSet_of_denseOnCompacts_forall_postcomp_nnreal`
+of **SkorokhodSpace** Milestone 8 asks for, and with it the tightness criterion
+of **MartingaleProblems** Milestone 11 reads its martingale hypothesis on a
+subalgebra. -/
+theorem exists_mem_subalgebra_forall_dist_le_of_isCompact [TopologicalSpace E]
+    (A : Subalgebra ℝ (E →ᵇ ℝ))
+    (hsep : (A.map (BoundedContinuousFunction.toContinuousMapₐ ℝ)).SeparatesPoints)
+    {Γ : Set E} (hΓ : IsCompact Γ) {η : ℝ} (hη : 0 < η) (f : E →ᵇ ℝ) :
+    ∃ g ∈ A, ∀ y ∈ Γ, dist (g y) (f y) ≤ η := by
+  obtain ⟨g, hgA, hg⟩ :=
+    ContinuousMap.exists_mem_subalgebra_near_continuous_of_isCompact_of_separatesPoints
+      hsep (BoundedContinuousFunction.toContinuousMapₐ ℝ f) hΓ hη
+  obtain ⟨g₀, hg₀A, rfl⟩ := Subalgebra.mem_map.1 hgA
+  refine ⟨g₀, hg₀A, fun y hy => ?_⟩
+  have hy' := hg y hy
+  rw [Real.dist_eq]
+  simpa [BoundedContinuousFunction.coe_toContinuousMapₐ] using hy'.le
+
 /-- A bounded continuous function is integrable against a finite measure. -/
 lemma integrable_of_continuous_of_bounded [TopologicalSpace E] [OpensMeasurableSpace E]
     {ρ : Measure E} [IsFiniteMeasure ρ] {g : E → ℝ} {C : ℝ}
@@ -2007,6 +2042,147 @@ theorem isConvergenceDetermining_pi [Countable ι] [∀ i, TopologicalSpace (S i
     exact ⟨C, hC⟩
 
 end Pi
+
+section UniformApproximation
+
+/-- **Tightness of the image laws survives an approximation of the map that is
+uniform in the index of the family.**  If every map of a family `T` pushes the
+laws `μ i` to a tight family, and `f` is approximated by members of that family
+in measure --- at every error `δ` and every mass `ε`, by **one** member and
+**uniformly in `i`** --- then the laws pushed by `f` are tight as well.
+
+Missing from Mathlib, which has `IsTightMeasureSet.map` for a *continuous* map
+(`MeasureTheory/Measure/Tight.lean:129`) and nothing for a limit of maps.
+`isTightMeasureSet_of_tendsto` is a different statement: there the **measures**
+converge, not the map.
+
+`map` transports one compact set through one map, while here the compact set has
+to be **built**, and the obvious candidate --- the closed thickening of a compact
+set by the approximation error --- is compact for no reason at all.  In an
+infinite dimensional space it is not even totally bounded, containing a ball.
+
+The set that works is the intersection of countably many such thickenings, one
+for each error `1 / (k + 1)`:
+
+  `⋂ k, Metric.cthickening (1 / (k + 1)) (K k)`.
+
+It is closed by `Metric.isClosed_cthickening`, totally bounded because it lies
+inside the `k`-th thickening for **every** `k` and a finite net of `K k` at scale
+`r / 2` is a net of that thickening at scale `r`, and hence compact by
+`TotallyBounded.isCompact_of_isClosed`.  Completeness of the target enters here
+and only here.  The `ε` is distributed over the `k` by
+`ENNReal.exists_pos_sum_of_countable'` and collected again by countable
+subadditivity, exactly as in `IsTightMeasureSet.pi`; each scale spends half of
+its share on the approximation and half on the tightness of the approximant.
+
+**The exceptional set is never asked to be measurable.**  It enters through
+`measure_union_le` and `measure_mono`, both of which hold for arbitrary sets, so
+no second countability of the target and no joint measurability of `dist` is
+needed.
+
+The family `T` is indexed by an arbitrary type and not by `ℕ`: the proof chooses
+one member per error scale, so nothing is gained by asking the approximants to
+come in a sequence, and the consumer -- a dense class of test functions -- hands
+over a subtype.
+
+Measurability of the maps is what `MeasureTheory.Measure.map_apply` asks for on
+both sides; no continuity is needed, and the target carries only the Borel
+structure of its metric. -/
+theorem isTightMeasureSet_map_of_forall_exists_measure_dist_gt_le
+    {α β γ : Type*} [MeasurableSpace α] [MetricSpace β] [CompleteSpace β]
+    [MeasurableSpace β] [OpensMeasurableSpace β]
+    {ι' : Type*} {μ : γ → Measure α} {T : ι' → α → β} {f : α → β}
+    (hf : Measurable f) (hT : ∀ n, Measurable (T n))
+    (happrox : ∀ δ : ℝ, 0 < δ → ∀ ε : ℝ≥0∞, 0 < ε →
+      ∃ n, ∀ i, μ i {x | δ < dist (T n x) (f x)} ≤ ε)
+    (htight : ∀ n, IsTightMeasureSet {(μ i).map (T n) | i}) :
+    IsTightMeasureSet {(μ i).map f | i} := by
+  rw [isTightMeasureSet_iff_exists_isCompact_measure_compl_le]
+  intro ε hε
+  obtain ⟨δ, hδpos, hδsum⟩ := ENNReal.exists_pos_sum_of_countable' hε.ne' ℕ
+  have key : ∀ k : ℕ, ∃ (n : ι') (K : Set β), IsCompact K ∧
+      (∀ i, μ i {x | 1 / (k + 1 : ℝ) < dist (T n x) (f x)} ≤ δ k / 2) ∧
+      ∀ i, (μ i).map (T n) Kᶜ ≤ δ k / 2 := by
+    intro k
+    obtain ⟨n, hn⟩ := happrox (1 / (k + 1 : ℝ)) (by positivity) (δ k / 2)
+      (ENNReal.half_pos (hδpos k).ne')
+    obtain ⟨K, hK, hKle⟩ :=
+      (isTightMeasureSet_iff_exists_isCompact_measure_compl_le.1 (htight n)) (δ k / 2)
+        (ENNReal.half_pos (hδpos k).ne')
+    exact ⟨n, K, hK, hn, fun i => hKle _ ⟨i, rfl⟩⟩
+  choose n K hKcomp hdist hKmeas using key
+  set A : Set β := ⋂ k : ℕ, Metric.cthickening (1 / (k + 1 : ℝ)) (K k) with hA
+  have hAclosed : IsClosed A := isClosed_iInter fun k => Metric.isClosed_cthickening
+  have hAtb : TotallyBounded A := by
+    refine Metric.totallyBounded_iff.mpr fun r hr => ?_
+    obtain ⟨k, hk⟩ := exists_nat_one_div_lt (show (0:ℝ) < r / 2 by linarith)
+    obtain ⟨t, htfin, htsub⟩ :=
+      Metric.totallyBounded_iff.1 (hKcomp k).totallyBounded (r / 2) (by linarith)
+    refine ⟨t, htfin, fun z hz => ?_⟩
+    have hz' : z ∈ Metric.cthickening (1 / (k + 1 : ℝ)) (K k) := Set.mem_iInter.1 hz k
+    have hz'' : z ∈ Metric.thickening (r / 2) (K k) :=
+      Metric.cthickening_subset_thickening' (by linarith) hk (K k) hz'
+    obtain ⟨w, hwK, hzw⟩ := Metric.mem_thickening_iff.1 hz''
+    obtain ⟨y, hyt, hwy⟩ := Set.mem_iUnion₂.1 (htsub hwK)
+    refine Set.mem_iUnion₂.2 ⟨y, hyt, ?_⟩
+    rw [Metric.mem_ball] at hwy ⊢
+    calc dist z y ≤ dist z w + dist w y := dist_triangle _ _ _
+      _ < r / 2 + r / 2 := add_lt_add hzw hwy
+      _ = r := by ring
+  refine ⟨A, hAtb.isCompact_of_isClosed hAclosed, ?_⟩
+  rintro ν ⟨i, rfl⟩
+  have hsub : ∀ k : ℕ, f ⁻¹' (Metric.cthickening (1 / (k + 1 : ℝ)) (K k))ᶜ
+      ⊆ {x | 1 / (k + 1 : ℝ) < dist (T (n k) x) (f x)} ∪ (T (n k)) ⁻¹' (K k)ᶜ := by
+    intro k x hx
+    by_contra hcon
+    simp only [Set.mem_union, Set.mem_ofPred_eq, Set.mem_preimage, Set.mem_compl_iff,
+      not_or, not_lt, not_not] at hcon
+    exact hx (Metric.mem_cthickening_of_dist_le _ _ _ _ hcon.2
+      (by rw [dist_comm]; exact hcon.1))
+  have hstep : ∀ k : ℕ, μ i (f ⁻¹' (Metric.cthickening (1 / (k + 1 : ℝ)) (K k))ᶜ) ≤ δ k := by
+    intro k
+    refine le_trans (le_trans (measure_mono (hsub k)) (measure_union_le _ _)) ?_
+    have h2 : μ i ((T (n k)) ⁻¹' (K k)ᶜ) ≤ δ k / 2 := by
+      have := hKmeas k i
+      rwa [Measure.map_apply (hT (n k)) (hKcomp k).isClosed.measurableSet.compl] at this
+    calc μ i {x | 1 / (k + 1 : ℝ) < dist (T (n k) x) (f x)} + μ i ((T (n k)) ⁻¹' (K k)ᶜ)
+        ≤ δ k / 2 + δ k / 2 := add_le_add (hdist k i) h2
+      _ = δ k := ENNReal.add_halves _
+  calc ((μ i).map f) Aᶜ = μ i (f ⁻¹' Aᶜ) := by
+        rw [Measure.map_apply hf hAclosed.measurableSet.compl]
+    _ = μ i (⋃ k : ℕ, f ⁻¹' (Metric.cthickening (1 / (k + 1 : ℝ)) (K k))ᶜ) := by
+        rw [hA]; simp [Set.compl_iInter, Set.preimage_iUnion]
+    _ ≤ ∑' k : ℕ, μ i (f ⁻¹' (Metric.cthickening (1 / (k + 1 : ℝ)) (K k))ᶜ) := measure_iUnion_le _
+    _ ≤ ∑' k : ℕ, δ k := ENNReal.tsum_le_tsum hstep
+    _ ≤ ε := hδsum.le
+
+/-- **The uniform case**, and the one a dense class of test functions meets: the
+approximation holds at every point, so the exceptional set is empty and no mass
+has to be spent on it.
+
+It is stated separately because its hypothesis is checkable without any reference
+to the measures, which is what makes it composable: a consumer proves a uniform
+estimate on the maps once and applies it to every family of laws.  The general
+form above is what a consumer needs whose approximation is only good **where the
+mass sits** -- uniform convergence on compact sets together with tightness, the
+shape Ethier--Kurtz's criterion for the path space has. -/
+theorem isTightMeasureSet_map_of_forall_exists_dist_le
+    {α β γ : Type*} [MeasurableSpace α] [MetricSpace β] [CompleteSpace β]
+    [MeasurableSpace β] [OpensMeasurableSpace β]
+    {ι' : Type*} {μ : γ → Measure α} {T : ι' → α → β} {f : α → β}
+    (hf : Measurable f) (hT : ∀ n, Measurable (T n))
+    (happrox : ∀ δ : ℝ, 0 < δ → ∃ n, ∀ x, dist (T n x) (f x) ≤ δ)
+    (htight : ∀ n, IsTightMeasureSet {(μ i).map (T n) | i}) :
+    IsTightMeasureSet {(μ i).map f | i} := by
+  refine isTightMeasureSet_map_of_forall_exists_measure_dist_gt_le hf hT (fun δ hδ ε hε => ?_)
+    htight
+  obtain ⟨n, hn⟩ := happrox δ hδ
+  refine ⟨n, fun i => ?_⟩
+  have hempty : {x | δ < dist (T n x) (f x)} = (∅ : Set α) := by
+    ext x; simpa using not_lt.2 (hn x)
+  simp [hempty]
+
+end UniformApproximation
 
 /-- The conditional form, and the one place where a separating class is used
 against a σ-algebra rather than against a second measure.  It is the last step of

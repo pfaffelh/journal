@@ -52453,3 +52453,346 @@ Fehlerabschätzung hat — ein Negativbefund dort gehört in `check_negatives.py
 **Worauf er ruht, und es ist alles gebaut:** die beiden Sätze dieses Laufs, und
 `SkorokhodSpace.distWith_postcomp_le` als der Ort, an dem die Frage zu stellen
 ist.
+
+### 2026-09-21, dreizehnter Lauf des Tages — der Abschluß in der Supremumsnorm steht, und die Falle war nicht die Analysis, sondern die **Kompaktheit**: die Verdickung einer kompakten Menge ist nicht kompakt, und die Menge, die es tut, ist der Durchschnitt über alle Fehlerskalen
+
+**Der erste Punkt der Kette von Meilenstein 11 liest die Martingalhypothese jetzt
+auf einer bloß dichten Klasse.** Damit ist die letzte benannte Lücke dieses
+Punktes geschlossen; was von ihm bleibt, ist die `Fin k`-wertige Fassung.
+
+**Dreizehn** neue Deklarationen, verteilt auf alle drei Dateien der Kette, in
+Abhängigkeitsordnung:
+
+| Datei | Deklaration |
+| --- | --- |
+| `WeakConvergence` | `MeasureTheory.isTightMeasureSet_map_of_forall_exists_measure_dist_gt_le` |
+| `WeakConvergence` | `MeasureTheory.isTightMeasureSet_map_of_forall_exists_dist_le` |
+| `SkorokhodSpace` | `SkorokhodSpace.dist_postcomp_le` |
+| `SkorokhodSpace` | `SkorokhodSpace.dist_postcomp_le_of_forall_mem_exhaustion` |
+| `SkorokhodSpace` | `SkorokhodSpace.isTightMeasureSet_map_postcomp_of_dense` |
+| `SkorokhodSpace` | `SkorokhodSpace.isTightMeasureSet_of_dense_forall_postcomp_nnreal` |
+| `SkorokhodSpace` | `SkorokhodSpace.isTightMeasureSet_map_postcomp_of_denseOnCompacts` |
+| `SkorokhodSpace` | `SkorokhodSpace.isTightMeasureSet_of_denseOnCompacts_forall_postcomp_nnreal` |
+| `MartingaleProblems` | `MeasureTheory.isTightMeasureSet_map_of_dense_forall_martingale` |
+| `MartingaleProblems` | `MeasureTheory.isTightMeasureSet_map_of_denseOnCompacts_forall_martingale` |
+| `WeakConvergence` | `MeasureTheory.exists_mem_subalgebra_forall_dist_le_of_isCompact` |
+| `MartingaleProblems` | `MeasureTheory.isTightMeasureSet_map_of_subalgebra_forall_martingale` |
+| `MartingaleProblems` | `MeasureTheory.isCompact_closure_of_subalgebra_forall_martingale` |
+
+Die Kette geht durch `python3 scripts/check_master.py` mit **0 Fehlern, 0
+`sorry`** in allen drei Dateien, die Warnungszahlen sind **unverändert**
+(18 / 35 / 112, davon veraltet 0). Alle dreizehn sind mit `check_axioms_master.py`
+geprüft und hängen an `propext`, `Classical.choice`, `Quot.sound` und an nichts
+sonst. `check_negatives.py` meldet über **52** Behauptungen — eine neue ist
+dazugekommen — keinen unerwarteten Treffer.
+
+Mathlib-Stand: `94ef6b89544e58e90f119da869f3fb48d1da0f4c`, 2026-09-18;
+Lean 4.35.0-rc2.
+
+#### Was der Vorlauf vorgeschlagen hatte, und woran er die Aufgabe falsch geschnitten hatte
+
+Der zwölfte Lauf hatte die Stabilität **in `MartingaleProblems`** vorgesehen und
+sie an einer Folge `f n → f` formuliert. Beides ist beim Bauen anders geworden,
+und beides aus einem benennbaren Grund:
+
+* **Die Aussage ist keine über Testfunktionen, sondern eine über Abbildungen.**
+  Was gebraucht wird, ist: *straffe Bildmaße überleben eine gleichmäßige
+  Approximation der Abbildung*. Darin kommt weder `postcomp` noch der
+  Skorokhodraum vor. Sie steht deshalb in `WeakConvergence`, neben
+  `IsTightMeasureSet.pi`, und ist ein Kandidat für Mathlib selbst.
+* **Die approximierende Familie braucht keine Folge zu sein.** Der Beweis wählt
+  **ein** Glied je Fehlerskala `1/(k+1)`; der Index darf daher ein beliebiger Typ
+  sein. Beim Verbraucher ist er der Untertyp der dichten Klasse, und die
+  Umrechnung „dicht ⇒ Folge" entfällt ersatzlos.
+
+Der Vorlauf hatte außerdem gefragt, ob `SkorokhodSpace.distWith_postcomp_le` der
+richtige Anschluß sei, und selbst geantwortet, er sei es nicht — „er mißt zwei
+**Pfade** unter *einem* Test, nicht zwei Tests an einem Pfad". Das war richtig,
+und der fehlende Satz ist `SkorokhodSpace.dist_postcomp_le`.
+
+#### Der Satz, der billig war, und warum er es war
+
+`SkorokhodSpace.dist_postcomp_le`: sind zwei stetige Abbildungen `h, h'` auf dem
+Wertebereich überall höchstens `C` voneinander entfernt, so sind
+`postcomp h x` und `postcomp h' x` in `D(ι, E')` höchstens `C` voneinander
+entfernt — **für jeden Pfad `x`**.
+
+Der Beweis ist vier Zeilen Mathematik: das Infimum über die Zeitwechsel wird
+oben durch seinen Wert bei `1` abgeschätzt, `TimeChange.norm_one` macht den
+ersten Summanden des `max` zu `0`, das gefensterte Supremum bei `1` ist ein
+Supremum von `dist (h y) (h' y)` über Werte des Pfades, und das Integral über den
+Radius kostet nichts, weil `∫₀^∞ exp (−u) du = 1` ist
+(`integral_exp_neg_Ioi_zero`). **Daß die Zeitverzerrung die Identität sein darf,
+ist der ganze Unterschied** zum Satz daneben: dort läuft sie über zwei Pfade und
+muß geschätzt werden, hier bleibt der Pfad derselbe und nur die Abbildung ändert
+sich.
+
+Die Schranke ist durch eine reelle Zahl `C` getragen und nicht durch eine Norm,
+damit der Satz auch für `C(E, E')` mit metrischem `E'` ohne algebraische
+Struktur gilt. `0 ≤ C` ist **keine** Voraussetzung: der Pfad weist einen Wert
+von `E` vor, und dort dominiert `C` einen Abstand.
+
+#### Der Satz, der teuer war, und die Falle darin
+
+`MeasureTheory.isTightMeasureSet_map_of_forall_exists_dist_le` — und hier lag die
+eigentliche Arbeit, an einer Stelle, an der man sie auf Papier nicht sieht.
+
+Der naheliegende Beweis lautet: nimm `n` mit `dist (T n x) (f x) ≤ δ` für alle
+`x`, nimm das kompakte `K` zu `T n`, und nimm als kompakte Menge für `f` die
+**abgeschlossene Verdickung** `cthickening δ K`. Dann liegt `f x` darin, sobald
+`T n x ∈ K` ist, und fertig.
+
+**Das ist falsch, und zwar nicht knapp.** Die Verdickung einer kompakten Menge
+ist im allgemeinen nicht kompakt; in einem unendlichdimensionalen Raum ist sie
+nicht einmal totalbeschränkt, denn sie enthält eine Kugel. Und `D(ℝ≥0, ℝ)`, der
+Raum, um den es hier geht, ist unendlichdimensional.
+
+Die Menge, die es tut, ist der **Durchschnitt über alle Fehlerskalen**:
+
+```
+⋂ k, Metric.cthickening (1/(k+1)) (K k)
+```
+
+Sie ist abgeschlossen (`Metric.isClosed_cthickening`), und sie ist
+totalbeschränkt, weil sie für **jedes** `k` in der `k`-ten Verdickung liegt: zu
+`r > 0` wähle `k` mit `1/(k+1) < r/2`, dann ist ein endliches `r/2`-Netz von
+`K k` ein `r`-Netz von ihr. Also ist sie kompakt
+(`TotallyBounded.isCompact_of_isClosed`), und **dort und nur dort** wird die
+Vollständigkeit des Zielraums verbraucht. Das `ε` wird über die Skalen verteilt
+(`ENNReal.exists_pos_sum_of_countable'`) und durch abzählbare Subadditivität
+wieder eingesammelt — dieselbe Buchführung wie in `IsTightMeasureSet.pi`, und
+dieselbe wie in Mathlibs eigenem Beweis der Rückrichtung von Prokhorov
+(`MeasureTheory/Measure/Prokhorov.lean:688`), der die Bauart bestätigt.
+
+#### Und die Fassung, die der nächste Punkt brauchen wird — im selben Lauf mitgebaut
+
+Beim Aufschreiben des Vorschlags für den nächsten Lauf (unten) kam heraus, daß
+die gleichmäßige Fassung für `isRelativelyCompact_of_approx` **nicht reicht**:
+Stone–Weierstraß gibt Dichtheit nur lokal gleichmäßig, und `Cc^∞` liegt in der
+Supremumsnorm nicht dicht in `C_b` — die konstante Funktion `1` ist kein
+gleichmäßiger Grenzwert kompakt getragener Funktionen. Die Fassung, die dann
+trägt, ist die **stochastische**:
+
+`MeasureTheory.isTightMeasureSet_map_of_forall_exists_measure_dist_gt_le` —
+statt `dist (T n x) (f x) ≤ δ` **für alle `x`** steht dort
+`μ i {x | δ < dist (T n x) (f x)} ≤ ε` **für alle `i`**, also Approximation in
+Maß, gleichmäßig im Index der Familie. Der Beweis ändert sich an genau einer
+Stelle: die Inklusion
+`f⁻¹ (cthickening δₖ Kₖ)ᶜ ⊆ {δₖ < dist} ∪ T⁻¹ Kₖᶜ` ersetzt die frühere, und
+jede Skala gibt die Hälfte ihres Anteils an die Approximation und die Hälfte an
+die Straffheit des Approximanten (`ENNReal.add_halves`).
+
+**Die Ausnahmemenge wird dabei nirgends als meßbar verlangt.** Sie geht über
+`measure_union_le` und `measure_mono` ein, die beide für **beliebige** Mengen
+gelten; damit braucht der Satz weder Zweitabzählbarkeit des Zielraums noch die
+gemeinsame Meßbarkeit von `dist`. Das ist kein Detail, sondern der Grund, aus
+dem die allgemeine Fassung nicht teurer ist als die gleichmäßige.
+
+Die gleichmäßige Fassung ist jetzt ihr Korollar (die Ausnahmemenge ist leer) und
+bleibt stehen, weil ihre Voraussetzung **ohne jeden Bezug auf die Maße** prüfbar
+ist — das macht sie zusammensetzbar, und die drei Sätze in `SkorokhodSpace`
+lesen weiterhin sie.
+
+**Die neue Negativaussage**, in `check_negatives.py` unter
+`tight-uniform-limit`: Mathlib transportiert Straffheit längs **einer**
+Abbildung (`IsTightMeasureSet.map`, `MeasureTheory/Measure/Tight.lean:129`, für
+stetige), aber nicht längs eines gleichmäßigen Grenzwertes von Abbildungen.
+`isTightMeasureSet_of_tendsto` ist etwas anderes: dort konvergieren die **Maße**,
+nicht die Abbildung. Das Muster ist geprüft und gibt null Treffer.
+
+#### Was der Verbraucher jetzt verlangt, und was er nicht mehr verlangt
+
+`MeasureTheory.isTightMeasureSet_map_of_dense_forall_martingale`:
+
+> Eine Familie `X i` auf *einem* filtrierten Wahrscheinlichkeitsraum, stark
+> progressiv mit rechtsstetigen Pfaden, kompakt enthalten, für die zu jedem `f`
+> aus einer **supremumsnorm-dichten** Klasse `H ⊆ E →ᵇ ℝ` beide Prozesse
+> `f ∘ X i - ∫ g ∘ X i` und `(f ∘ X i)² - ∫ g' ∘ X i` Martingale sind, hat
+> straffe Verteilungen in `D(ℝ≥0, E)`.
+
+Der vorige Satz ist der Fall `H = Set.univ` und bleibt stehen, weil er die
+Gestalt ist, in der die Voraussetzung geprüft wird, wenn das Problem an jeder
+Testfunktion gestellt ist.
+
+**Und `H` ist unter nichts abgeschlossen zu fordern.** `g` und `g'` sind
+**innen** quantifiziert; `g'` antwortet für `f²`, ohne daß `f²` in `H` liegen
+müßte. Das ist der Grund, aus dem der Erzeugerbereich einer Diffusion
+(`Cc^∞`) die Voraussetzung erfüllt, obwohl er unter Quadrieren nicht
+abgeschlossen ist.
+
+#### Die Naht zu Punkt 2, im selben Lauf gefunden **und** geschlossen
+
+Beim Aufschreiben des Vorschlags kam der Befund, der den Lauf verlängert hat:
+**die Supremumsnorm ist zu stark, und zwar für jeden Erzeugerbereich.** Der
+Beleg ist ein Einzeiler: `Cc^∞(ℝ)` liegt in `ℝ →ᵇ ℝ` nicht dicht, denn ein
+gleichmäßiger Grenzwert kompakt getragener Funktionen verschwindet im
+Unendlichen, und die konstante Funktion `1` tut das nicht. Also erfüllt **keine**
+Diffusion die Voraussetzung `Dense H`, und die drei Sätze mit der Supremumsnorm
+wären richtig und auf nichts anwendbar geblieben — dieselbe Lage wie bei `Shift`
+vor dem 2026-09-14, und dieselbe Art Befund.
+
+Ethier–Kurtz stellen ihr Kriterium darum mit Dichtheit in der Topologie der
+**gleichmäßigen Konvergenz auf Kompakta** auf. Die vier Deklarationen, die das
+einlösen:
+
+* **`SkorokhodSpace.dist_postcomp_le_of_forall_mem_exhaustion`** — dieselbe
+  Abschätzung, aber nur über die Werte des Pfades **im Fenster `M`** gelesen, zum
+  Preis `exp (−M)`. Das Integral über den Fensterradius wird bei `M` geteilt:
+  unterhalb ist das gefensterte Supremum höchstens `η`, weil ein kleineres
+  Fenster in einem größeren liegt (`exhaustion_subset_of_le`), oberhalb läßt die
+  Abschneidung bei `1` gerade `∫_M^∞ exp (−u) du = exp (−M)` übrig. Die
+  Zeitverzerrung ist wieder die Identität, kostet also nichts.
+* **`SkorokhodSpace.isTightMeasureSet_map_postcomp_of_denseOnCompacts`** und
+  **`…_of_denseOnCompacts_forall_postcomp_nnreal`** — und hier zahlt die kompakte
+  Enthaltenheit. Zu `δ` und `ε`: wähle das Fenster `m` mit `exp (−m) < δ/2`, laß
+  `Γ` die kompakte Menge sein, die den Pfad auf diesem Fenster bis auf Masse `ε`
+  hält, und `g` innerhalb `δ/2` von `f` auf `Γ`. Auf dem Ereignis, daß der Pfad in
+  `Γ` bleibt, ist der Abstand der beiden Bildpfade `≤ δ/2 + exp (−m) < δ`; die
+  Ausnahmemenge liegt also im Komplement dieses Ereignisses und hat Masse `≤ ε`
+  — **für jedes `i` zugleich**, und genau diese Gleichmäßigkeit ist es, was die
+  kompakte Enthaltenheit aussagt und was der allgemeine Satz verlangt.
+* **`MeasureTheory.isTightMeasureSet_map_of_denseOnCompacts_forall_martingale`**
+  — der Verbraucher. Die kompakte Enthaltenheit steht darin **zweimal in
+  derselben Hypothese**: einmal, um die Straffheit der reellen Bilder auf die
+  Familie zurückzuheben, und einmal, um die Werte des Pfades im Fenster
+  festzuhalten.
+
+**Was dabei ausdrücklich *nicht* in den Aussagen steht, ist Stone–Weierstraß.**
+Die Dichtheit ist Hypothese, die Testklasse trägt damit keine algebraische
+Struktur, und die Instanziierung für eine punktetrennende Unteralgebra ist Sache
+des nächsten Punktes.
+
+#### Und die letzte Eingabe, ebenfalls im selben Lauf: Stone–Weierstraß
+
+Die Dichtheit auf Kompakta ist in den drei Sätzen oben **Hypothese**, nicht
+Algebra — das hält sie frei von algebraischer Struktur. Wer sie liefert, ist
+Stone–Weierstraß, und Mathlib trägt bereits den nichtkompakten Fall:
+`ContinuousMap.exists_mem_subalgebra_near_continuous_of_isCompact_of_separatesPoints`
+(`Topology/ContinuousMap/StoneWeierstrass.lean:323`) schränkt selbst auf die
+Kompaktmenge ein. Es war also **nichts** von der Analysis nachzubauen.
+
+Was zu tun blieb, ist der Übergang zwischen den beiden Wohnorten der Testklasse:
+`MeasureTheory.exists_mem_subalgebra_forall_dist_le_of_isCompact` liest die
+Voraussetzung am Bild von `A` in `C(E, ℝ)` — dieselbe Lesart wie
+`IsSeparating.of_subalgebra` daneben — und liefert ein Element von `A` selbst,
+also eine **beschränkte** Funktion. Genau das verlangt jeder Verbraucher einer
+Testklasse, und `C(E, ℝ)` gibt es nicht her. Sechs Zeilen Beweis.
+
+Damit steht **`MeasureTheory.isTightMeasureSet_map_of_subalgebra_forall_martingale`**:
+keine Dichtheitsvoraussetzung mehr, sondern eine punktetrennende Unteralgebra —
+der Bereich des Erzeugers.
+
+#### Wo der erste Punkt der Kette jetzt steht
+
+| Größe | Stand |
+| --- | --- |
+| alles unterhalb von `IsApproximable` | steht (7. Lauf) |
+| `IsApproximable` aus der Bedingung des Meilensteins | steht (8. Lauf) |
+| die vier Integrierbarkeiten, die Rechtsstetigkeit | steht (9./10. Lauf) |
+| beide Paare, die Straffheit von `postcomp f ∘ X` | steht (11./12. Lauf) |
+| die Hebung auf `{P.map (Φ i)}` in `D(ℝ≥0, E)` | steht (12. Lauf) |
+| **der Abschluß in der Supremumsnorm** | **steht, dieser Lauf** |
+| **die Dichtheit auf Kompakta** | **steht, dieser Lauf** |
+| **die punktetrennende Unteralgebra, also der Erzeugerbereich** | **steht, dieser Lauf** |
+| die `Fin k`-wertige Fassung | offen |
+
+**Der erste Punkt der Kette ist damit an dem Quantor angekommen, den die
+Akzeptanzbeispiele erfüllen**, und die drei Abschwächungen sind keine drei
+Bequemlichkeiten: ein Erzeuger gibt die Martingaleigenschaft auf einer
+**Algebra**, eine Algebra ist nur auf **Kompakta** dicht, und Dichtheit auf
+Kompakta genügt nur, weil die **kompakte Enthaltenheit** die Pfade dort festhält.
+Jede der drei ist an ihrer Stelle erzwungen.
+
+#### Und der **zweite** Punkt der Kette, ebenfalls in diesem Lauf
+
+`MeasureTheory.isCompact_closure_of_subalgebra_forall_martingale` — unter
+denselben Voraussetzungen wie die Straffheit haben die Pfadverteilungen
+**kompakten Abschluß** in der schwachen Topologie von
+`ProbabilityMeasure D(ℝ≥0, E)`. Das ist `isRelativelyCompact_of_approx` des
+Meilensteins im exakten Fall.
+
+Es steckt **keine neue Abschätzung** darin. Prohorov steht in Mathlib als
+`isCompact_closure_of_isTightMeasureSet`
+(`MeasureTheory/Measure/Prokhorov.lean:530`) und verlangt nur `T2` — `D(ℝ≥0, E)`
+ist metrisch, also frei; weder Polnischsein des Pfadraums noch Vollständigkeit
+wird **dort** gelesen, sondern stromaufwärts in der Straffheit.
+
+Was der Satz wirklich kostet, ist der **Typübergang**: Straffheit ist über einer
+Menge von `Measure` formuliert, Prohorov schließt über einer von
+`ProbabilityMeasure`. Die Menge ist darum als Komprehension über
+`ProbabilityMeasure` geschrieben und nicht als Bild — so wird die Koerzion
+**gematcht** statt konstruiert, und der Beweis ist ein `ext` mit zwei Zeilen.
+
+**Ein Müllwert, der ausnahmsweise die Wahrheit sagt, und er gehört benannt.**
+Mathlibs Instanz `IsProbabilityMeasure (Measure.map f μ)`
+(`MeasureTheory/Measure/Typeclasses/Probability.lean:124`) trägt **keine**
+Meßbarkeitsvoraussetzung: wo `f` nicht f.ü. meßbar ist, gibt `Measure.map` ein
+**Diracmaß** zurück, und ein Diracmaß ist ein Wahrscheinlichkeitsmaß. Die Instanz
+ist also geschenkt, und zwar aus einem Grund, der mit der Pfadabbildung nichts zu
+tun hat. Was `P.map (Φ i)` zur Verteilung des Pfades macht statt zu diesem Dirac,
+ist `MeasureTheory.measurable_pathOfProcess`, und das wird in der Straffheit
+gelesen. Das ist die fünfte Instanz des Musters aus der stehenden Regel — und die
+erste, bei der der Müllwert nicht lügt, sondern nur eine andere Frage beantwortet
+als die gestellte.
+
+#### Wo die Kette von Meilenstein 11 nach diesem Lauf steht
+
+| Punkt | Stand |
+| --- | --- |
+| `isTight_map_postcomp_of_exists_martingale` | **steht**, bis auf die `Fin k`-Fassung |
+| `isRelativelyCompact_of_approx` | **steht im exakten Fall**; der approximative fehlt |
+| `mpSolution_of_tendsto_cadlag` | fehlt |
+| `tendsto_of_isRelativelyCompact_of_unique` | fehlt |
+
+Am Morgen dieses Tages existierte von den vier Hauptpunkten **keiner**.
+
+#### Vorschlag für den nächsten Lauf
+
+**`mpSolution_of_tendsto_cadlag`, der dritte Punkt der Kette**, in
+`MartingaleProblems/Suggested.lean`.
+
+> Konvergieren die Verteilungen `P.map (Φ n)` in `ProbabilityMeasure D(ℝ≥0, E)`
+> schwach gegen `ν`, und löst jedes `X n` das Martingalproblem zu `A`, so löst
+> der Koordinatenprozeß unter `ν` dasselbe Martingalproblem.
+
+**Warum jetzt.** Die beiden ersten Punkte stehen; dieser ist der, der aus der
+relativen Kompaktheit einen **Satz über Lösungen** macht, und ohne ihn ist der
+kompakte Abschluß des vorigen Punktes eine Aussage über Maße und über nichts
+sonst. Der Unterbau ist gebaut: Meilenstein 10 trägt `mpSolution_of_tendsto` und
+`mpSolution_of_tendsto_of_pContinuous` seit dem 2026-09-17 ohne `sorry`, in
+voller Allgemeinheit über einem beliebigen Zustandsraum.
+
+**Was zuerst zu klären ist und nicht zu raten:** `mpSolution_of_tendsto` ist über
+`X : Ω → F` mit *einem* Zustandsraum `F` formuliert und liest die Konvergenz an
+den **eindimensionalen** Funktionalen `Y₀ r ∘ X`. Für den Pfadraum ist `F` der
+Pfadraum selbst und `X` die Koordinatenabbildung; zu prüfen ist, ob die
+Hypothese (a) — Konvergenz in Verteilung der `Y₀ r (X' n ·)` — aus der schwachen
+Konvergenz auf `D(ℝ≥0, E)` folgt, und das ist **genau dann** der Fall, wenn die
+Auswertung `eval r` fast überall `ν`-stetig ist. Das ist die
+**Sprungstellenbedingung**, und sie ist nicht kosmetisch: Meilenstein 8 von
+**SkorokhodSpace** hat dafür den ganzen Abschnitt „the times at which a law has
+no fixed discontinuity" (Zeile 10817), und die Menge der guten Zeiten ist
+ko-abzählbar. Der Lauf hat also **zuerst** nachzusehen, welche Aussage dort
+bereitsteht — die Stetigkeit von `eval r` außerhalb einer abzählbaren Menge —,
+und **danach** zu entscheiden, ob `D` (die dichte Zeitmenge der
+Martingalhypothese) aus ihr gewählt wird oder ob sie als Hypothese mitläuft.
+
+**Die Falle, und sie ist benannt und in Lean belegt:** die Auswertung
+`eval r : D(ℝ≥0, E) → E` ist in der Skorokhodtopologie **nicht stetig**.
+`SkorokhodSpace.exists_jump_continuousAt_eval` (Zeile 4214) führt einen Pfad
+vor, an dem sie es nicht ist. Was stattdessen gilt, steht ebenfalls schon da:
+`SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet` (Zeile 11110) —
+**stetig an jedem `g`, dessen Pfad bei `t` nicht springt**. Das ist die
+punktweise Fassung; was der dritte Kettenpunkt braucht, ist ihre
+maßtheoretische: `ν`-fast jeder Pfad springt bei `t` nicht, für alle `t`
+außerhalb einer abzählbaren Menge. Ob Meilenstein 8 diese Fassung schon trägt
+oder ob sie aus `countable_leftJumpSet` und Fubini erst zu bauen ist, ist die
+erste Frage des Laufs.
+
+`SkorokhodSpace.continuous_postcomp` ist **kein** Gegenbeispiel zur Unstetigkeit
+— dort wird der Wertebereich nachgeschaltet, nicht die Zeit ausgewertet.
+
+**Worauf er ruht, und es ist alles gebaut:** die dreizehn Deklarationen dieses
+Laufs, `MeasureTheory.mpSolution_of_tendsto` und
+`mpSolution_of_tendsto_of_pContinuous` aus Meilenstein 10, und der Abschnitt über
+die festen Unstetigkeitsstellen aus **SkorokhodSpace** Meilenstein 8.

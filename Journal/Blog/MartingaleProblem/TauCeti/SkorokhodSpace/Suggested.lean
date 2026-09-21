@@ -14553,6 +14553,137 @@ theorem SkorokhodSpace.distWith_postcomp_le {E' : Type*} [MetricSpace E'] (h : C
     ⟨clamp t₀ u (l.toOrderIso t), clamp_mem_exhaustion t₀ u _, rfl⟩
   exact (hunif _ hmem _ (lt_of_le_of_lt hle hd)).le
 
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **Two post-compositions of one path are at most as far apart as the two maps
+are, uniformly on the value space.**  This is the estimate the previous one is
+not: there the two arguments are two **paths** under one map, here they are two
+**maps** on one path, and the difference is that the time change may be taken to
+be the identity.  That is the whole proof: the infimum defining
+`SkorokhodSpace.intDist` is bounded above by its value at `1`, whose logarithmic
+norm is `0` by `TimeChange.norm_one`, and the windowed supremum at `1` is a
+supremum of `dist (h y) (h' y)` over values `y` of the path.  The integral over
+the radius then costs nothing, because `∫_0^∞ exp (-u) du = 1`.
+
+The bound is stated through a uniform bound `C` on the two maps rather than
+through a norm, so that it applies to `C(E, E')` for a metric `E'` with no
+algebraic structure; for `E' = ℝ` and bounded continuous maps the hypothesis is
+`BoundedContinuousFunction.dist_coe_le_dist`.  Nonnegativity of `C` is not a
+hypothesis: the path exhibits a value of `E`, and `C` dominates a distance
+there. -/
+theorem SkorokhodSpace.dist_postcomp_le {E' : Type*} [MetricSpace E']
+    [SecondCountableTopology E'] (h h' : C(E, E')) (x : D(ι, E)) {C : ℝ}
+    (hC : ∀ y : E, dist (h y) (h' y) ≤ C) :
+    dist (SkorokhodSpace.postcomp h x) (SkorokhodSpace.postcomp h' x) ≤ C := by
+  have : Nonempty ι := ⟨basePoint⟩
+  have hC0 : (0 : ℝ) ≤ C := le_trans dist_nonneg (hC (x.toFun basePoint))
+  have hdw : ∀ u : ℝ, SkorokhodSpace.distWith (basePoint : ι) u 1
+      (SkorokhodSpace.postcomp h x) (SkorokhodSpace.postcomp h' x) ≤ C := by
+    intro u
+    refine ciSup_le fun t => ?_
+    simpa [SkorokhodSpace.restrictExhaustion_apply] using hC (x.toFun (clamp basePoint u t))
+  have hiw : SkorokhodSpace.intWith (basePoint : ι) 1
+      (SkorokhodSpace.postcomp h x) (SkorokhodSpace.postcomp h' x) ≤ C := by
+    have hpt : ∀ u : ℝ, Real.exp (-u) * min 1 (SkorokhodSpace.distWith (basePoint : ι) u 1
+        (SkorokhodSpace.postcomp h x) (SkorokhodSpace.postcomp h' x))
+        ≤ Real.exp (-u) * C := fun u =>
+      mul_le_mul_of_nonneg_left ((min_le_right _ _).trans (hdw u)) (Real.exp_pos _).le
+    calc SkorokhodSpace.intWith (basePoint : ι) 1
+          (SkorokhodSpace.postcomp h x) (SkorokhodSpace.postcomp h' x)
+        ≤ ∫ u in Set.Ioi (0:ℝ), Real.exp (-u) * C :=
+          MeasureTheory.integral_mono
+            (SkorokhodSpace.integrableOn_intDist _ _ _ _)
+            ((integrableOn_exp_neg_Ioi 0).mul_const C) hpt
+      _ = C := by
+          rw [MeasureTheory.integral_mul_const, integral_exp_neg_Ioi_zero, one_mul]
+  rw [SkorokhodSpace.dist_eq]
+  refine le_trans (ciInf_le (SkorokhodSpace.bddBelow_range_intDist _ _ _)
+    (1 : TimeChange.fixing (basePoint : ι))) ?_
+  have h1 : ((1 : TimeChange.fixing (basePoint : ι)) : TimeChange ι) = 1 := rfl
+  rw [h1, TimeChange.norm_one]
+  exact max_le hC0 hiw
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The same estimate read on a window alone**, and this is the form a
+generator's domain can meet: the two maps are compared only at the values the
+path takes on the window `M`, and the price of the rest of the time axis is
+`exp (-M)`.
+
+That price is exactly what the metric of Milestone 4 charges for it: the integral
+over the window radius is split at `M`, below `M` the windowed supremum is at
+most `η` because a smaller window sits inside a larger one
+(`exhaustion_subset_of_le`), and above `M` the truncation at `1` leaves
+`∫_M^∞ exp (-u) du = exp (-M)`.  The time change is again the identity, so
+nothing is paid for it.
+
+**Why the unwindowed form is not enough.**  A test function from the domain of a
+generator is dense only for uniform convergence on **compact** sets -- the
+compactly supported smooth functions are not dense in the supremum norm, a
+uniform limit of them vanishing at infinity -- so a hypothesis quantified over
+all of `E` cannot be met.  What can be met is a hypothesis quantified over the
+values of the path in a window, and those are held in a compact set by compact
+containment.  This statement is the bridge between the two. -/
+theorem SkorokhodSpace.dist_postcomp_le_of_forall_mem_exhaustion {E' : Type*} [MetricSpace E']
+    [SecondCountableTopology E'] (h h' : C(E, E')) (x : D(ι, E)) {η M : ℝ} (hη : 0 ≤ η)
+    (hM : 0 ≤ M) (hC : ∀ y ∈ x.toFun '' exhaustion (basePoint : ι) M, dist (h y) (h' y) ≤ η) :
+    dist (SkorokhodSpace.postcomp h x) (SkorokhodSpace.postcomp h' x) ≤ η + Real.exp (-M) := by
+  have : Nonempty ι := ⟨basePoint⟩
+  set F := SkorokhodSpace.postcomp h x with hF
+  set G := SkorokhodSpace.postcomp h' x with hG
+  have hdw : ∀ v : ℝ, v ≤ M → SkorokhodSpace.distWith (basePoint : ι) v 1 F G ≤ η := by
+    intro v hv
+    refine ciSup_le fun t => ?_
+    have hmem : x.toFun (clamp basePoint v t) ∈ x.toFun '' exhaustion (basePoint : ι) M :=
+      ⟨clamp basePoint v t, exhaustion_subset_of_le basePoint hv
+        (clamp_mem_exhaustion _ _ _), rfl⟩
+    simpa [hF, hG, SkorokhodSpace.restrictExhaustion_apply] using hC _ hmem
+  have hint := SkorokhodSpace.integrableOn_intDist (basePoint : ι) 1 F G
+  have h1 : MeasureTheory.IntegrableOn
+      (fun v : ℝ => Real.exp (-v) * min 1 (SkorokhodSpace.distWith (basePoint : ι) v 1 F G))
+      (Set.Ioc 0 M) := hint.mono_set Set.Ioc_subset_Ioi_self
+  have h2 : MeasureTheory.IntegrableOn
+      (fun v : ℝ => Real.exp (-v) * min 1 (SkorokhodSpace.distWith (basePoint : ι) v 1 F G))
+      (Set.Ioi M) := hint.mono_set (Set.Ioi_subset_Ioi hM)
+  have hA : (∫ v in Set.Ioc (0:ℝ) M,
+      Real.exp (-v) * min 1 (SkorokhodSpace.distWith (basePoint : ι) v 1 F G)) ≤ η := by
+    calc (∫ v in Set.Ioc (0:ℝ) M,
+          Real.exp (-v) * min 1 (SkorokhodSpace.distWith (basePoint : ι) v 1 F G))
+        ≤ ∫ v in Set.Ioc (0:ℝ) M, Real.exp (-v) * η :=
+          MeasureTheory.setIntegral_mono_on h1
+            (MeasureTheory.IntegrableOn.mono_set
+              ((integrableOn_exp_neg_Ioi 0).mul_const η) Set.Ioc_subset_Ioi_self)
+            measurableSet_Ioc fun v hv =>
+              mul_le_mul_of_nonneg_left ((min_le_right _ _).trans (hdw v hv.2))
+                (Real.exp_pos _).le
+      _ ≤ ∫ v in Set.Ioi (0:ℝ), Real.exp (-v) * η :=
+          MeasureTheory.setIntegral_mono_set ((integrableOn_exp_neg_Ioi 0).mul_const η)
+            (Filter.Eventually.of_forall fun v => by positivity)
+            (LE.le.eventuallySubset Set.Ioc_subset_Ioi_self)
+      _ = η := by rw [MeasureTheory.integral_mul_const, integral_exp_neg_Ioi_zero, one_mul]
+  have hB : (∫ v in Set.Ioi M,
+      Real.exp (-v) * min 1 (SkorokhodSpace.distWith (basePoint : ι) v 1 F G))
+      ≤ Real.exp (-M) := by
+    calc (∫ v in Set.Ioi M,
+          Real.exp (-v) * min 1 (SkorokhodSpace.distWith (basePoint : ι) v 1 F G))
+        ≤ ∫ v in Set.Ioi M, Real.exp (-v) :=
+          MeasureTheory.setIntegral_mono_on h2 (integrableOn_exp_neg_Ioi M) measurableSet_Ioi
+            fun v _ => by
+              simpa using mul_le_mul_of_nonneg_left (min_le_left (1:ℝ) _) (Real.exp_pos (-v)).le
+      _ = Real.exp (-M) := integral_exp_neg_Ioi M
+  have hiw : SkorokhodSpace.intWith (basePoint : ι) 1 F G ≤ η + Real.exp (-M) := by
+    have hsplit : Set.Ioi (0:ℝ) = Set.Ioc 0 M ∪ Set.Ioi M := (Set.Ioc_union_Ioi_eq_Ioi hM).symm
+    have hdisj : Disjoint (Set.Ioc (0:ℝ) M) (Set.Ioi M) :=
+      Set.disjoint_left.2 fun v hv hv' => absurd hv' (not_lt.2 hv.2)
+    show (∫ v in Set.Ioi (0:ℝ),
+      Real.exp (-v) * min 1 (SkorokhodSpace.distWith (basePoint : ι) v 1 F G)) ≤ _
+    rw [hsplit, MeasureTheory.setIntegral_union hdisj measurableSet_Ioi h1 h2]
+    exact add_le_add hA hB
+  rw [SkorokhodSpace.dist_eq]
+  refine le_trans (ciInf_le (SkorokhodSpace.bddBelow_range_intDist _ _ _)
+    (1 : TimeChange.fixing (basePoint : ι))) ?_
+  have hone : ((1 : TimeChange.fixing (basePoint : ι)) : TimeChange ι) = 1 := rfl
+  rw [hone, TimeChange.norm_one]
+  exact max_le (by positivity) hiw
+
 omit [BasePoint ι] [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
 /-- **The values of a càdlàg path on a window are totally bounded.**  The window
 is a closed ball and `IsCadlag.totallyBounded_image_Icc` speaks of an interval,
@@ -18871,6 +19002,158 @@ theorem SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal [CompleteSpa
     · rintro ⟨i, rfl⟩
       exact ⟨(μ i).map SkorokhodSpace.extendNNReal, ⟨i, rfl⟩, hstep i⟩
   rw [himg, SkorokhodSpace.isTightMeasureSet_map_extendNNReal_iff]
+
+/-- **The test class may be thinned to a dense one.**  Tightness of the real
+images under a class of bounded continuous functions that is dense in the
+supremum norm gives tightness of the images under **every** bounded continuous
+function.
+
+This is what separates a criterion from a demand.  The equivalence above reads
+its right hand side at every `h : E →ᵇ ℝ`, while the sources of that hypothesis
+--- a generator, an algebra of test functions --- produce it on a class that is
+merely dense, and Ethier--Kurtz state their criterion with a dense class for that
+reason.
+
+**The topology of the density is the supremum norm here, and that is stronger
+than what a generator gives.**  A domain such as the compactly supported smooth
+functions is dense for uniform convergence **on compact sets** and not in the
+supremum norm --- a uniform limit of compactly supported functions vanishes at
+infinity, and the constant function does not.  This statement therefore covers
+the classes that are sup-norm dense and not the generator domains; what covers
+those is the approximation **in measure** of
+`MeasureTheory.isTightMeasureSet_map_of_forall_exists_measure_dist_gt_le`
+together with compact containment, of which this is the uniform special case.
+
+The proof is `MeasureTheory.isTightMeasureSet_map_of_forall_exists_dist_le` of the
+roadmap **WeakConvergence** applied to the family indexed by the dense class,
+with `SkorokhodSpace.dist_postcomp_le` as the uniform approximation: two bounded
+continuous functions at supremum distance `δ` post-compose to two paths at
+Skorokhod distance at most `δ`, and this **for every path at once**, which is
+what a uniform approximation of the map means.  Completeness of `D(ℝ≥0, ℝ)` is
+what the general statement spends, and it is `SkorokhodSpace.instCompleteSpace`.
+
+No hypothesis is read of `μ` --- neither finiteness nor compact containment. -/
+theorem SkorokhodSpace.isTightMeasureSet_map_postcomp_of_dense {γ : Type*}
+    {μ : γ → Measure D(ℝ≥0, E)} {H : Set (E →ᵇ ℝ)} (hH : Dense H)
+    (htight : ∀ g ∈ H, IsTightMeasureSet
+      {(μ i).map (SkorokhodSpace.postcomp (BoundedContinuousFunction.toContinuousMap g)) | i})
+    (f : E →ᵇ ℝ) :
+    IsTightMeasureSet {(μ i).map (SkorokhodSpace.postcomp f.toContinuousMap) | i} := by
+  refine MeasureTheory.isTightMeasureSet_map_of_forall_exists_dist_le
+    (T := fun g : H => SkorokhodSpace.postcomp (ι := ℝ≥0)
+      (BoundedContinuousFunction.toContinuousMap (g : E →ᵇ ℝ)))
+    (SkorokhodSpace.measurable_postcomp _) (fun g => SkorokhodSpace.measurable_postcomp _)
+    ?_ (fun g => htight g g.2)
+  intro δ hδ
+  obtain ⟨g, hgH, hgd⟩ := Metric.mem_closure_iff.1 (hH f) δ hδ
+  refine ⟨⟨g, hgH⟩, fun x => SkorokhodSpace.dist_postcomp_le _ _ _ (fun y => ?_)⟩
+  simpa [dist_comm] using (BoundedContinuousFunction.dist_coe_le_dist y).trans hgd.le
+
+/-- **Stage (B) of Milestone 8 over a dense test class**, and the form a
+generator delivers: under compact containment a family of laws on `D(ℝ≥0, E)` is
+tight as soon as the real images under a supremum-norm dense class of bounded
+continuous functions are.
+
+It is the equivalence above composed with the previous statement, and it is
+stated separately because it is the one **MartingaleProblems** Milestone 11
+consumes: the martingale hypothesis that produces tightness of an image is
+available on the domain of a generator, and `Dense` is the weakest thing that
+domain is asked for.
+
+The hypothesis is not a weakening: `SkorokhodSpace.isCompactContained_of_isTightMeasureSet`
+derives compact containment from the conclusion. -/
+theorem SkorokhodSpace.isTightMeasureSet_of_dense_forall_postcomp_nnreal [CompleteSpace E]
+    {γ : Type*} {μ : γ → Measure D(ℝ≥0, E)}
+    (hcc : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) μ)
+    {H : Set (E →ᵇ ℝ)} (hH : Dense H)
+    (htight : ∀ g ∈ H, IsTightMeasureSet
+      {(μ i).map (SkorokhodSpace.postcomp (BoundedContinuousFunction.toContinuousMap g)) | i}) :
+    IsTightMeasureSet {μ i | i} :=
+  (SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal hcc).2
+    (SkorokhodSpace.isTightMeasureSet_map_postcomp_of_dense hH htight)
+
+/-- **The test class thinned to one that is dense on compact sets only**, which
+is the topology a generator's domain is dense in and the form Ethier--Kurtz state
+their criterion in.
+
+It is the previous statement with the uniform approximation replaced by an
+approximation **in measure**, and the replacement is what compact containment
+pays for.  Given `δ` and `ε`: choose a window `m` with `exp (-m) < δ / 2`, let
+`Γ` be the compact set that holds the values of the path on that window up to
+mass `ε`, and let `g ∈ H` be within `δ / 2` of `f` on `Γ`.  On the event that the
+path stays in `Γ`,
+`SkorokhodSpace.dist_postcomp_le_of_forall_mem_exhaustion` gives
+`dist (postcomp g x) (postcomp f x) ≤ δ / 2 + exp (-m) < δ`, so the exceptional
+set of `MeasureTheory.isTightMeasureSet_map_of_forall_exists_measure_dist_gt_le`
+is contained in the complement of that event and carries mass at most `ε` --- for
+**every** `i`, which is the uniformity that statement asks for and which is
+precisely what compact containment provides.
+
+**The hypothesis on `H` is the density and not the algebra.**  Stone--Weierstrass
+is what produces it for a point separating subalgebra, and it is not used here;
+stating the density directly is what keeps this statement free of any algebraic
+structure on the test class. -/
+theorem SkorokhodSpace.isTightMeasureSet_map_postcomp_of_denseOnCompacts {γ : Type*}
+    {μ : γ → Measure D(ℝ≥0, E)} (hcc : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) μ)
+    {H : Set (E →ᵇ ℝ)}
+    (hH : ∀ Γ : Set E, IsCompact Γ → ∀ η : ℝ, 0 < η → ∀ f : E →ᵇ ℝ,
+      ∃ g ∈ H, ∀ y ∈ Γ, dist (g y) (f y) ≤ η)
+    (htight : ∀ g ∈ H, IsTightMeasureSet
+      {(μ i).map (SkorokhodSpace.postcomp (BoundedContinuousFunction.toContinuousMap g)) | i})
+    (f : E →ᵇ ℝ) :
+    IsTightMeasureSet {(μ i).map (SkorokhodSpace.postcomp f.toContinuousMap) | i} := by
+  refine MeasureTheory.isTightMeasureSet_map_of_forall_exists_measure_dist_gt_le
+    (T := fun g : H => SkorokhodSpace.postcomp (ι := ℝ≥0)
+      (BoundedContinuousFunction.toContinuousMap (g : E →ᵇ ℝ)))
+    (SkorokhodSpace.measurable_postcomp _) (fun g => SkorokhodSpace.measurable_postcomp _)
+    ?_ (fun g => htight g g.2)
+  intro δ hδ ε hε
+  obtain ⟨m, hm⟩ := exists_nat_gt (2 / δ)
+  have hpos : (0:ℝ) < Real.exp (m:ℝ) := Real.exp_pos _
+  have hexp : Real.exp (-(m:ℝ)) < δ / 2 := by
+    have hme : (2:ℝ) / δ < Real.exp (m:ℝ) :=
+      lt_of_lt_of_le hm (by linarith [Real.add_one_le_exp ((m:ℝ))])
+    rw [Real.exp_neg, inv_lt_comm₀ hpos (by linarith)]
+    calc (δ / 2)⁻¹ = 2 / δ := by field_simp
+      _ < Real.exp (m:ℝ) := hme
+  obtain ⟨Γ, hΓ, hΓle⟩ := hcc ε hε m
+  obtain ⟨g, hgH, hg⟩ := hH Γ hΓ (δ / 2) (by linarith) f
+  refine ⟨⟨g, hgH⟩, fun i => le_trans (measure_mono ?_) (hΓle i)⟩
+  intro x hx
+  have hx' : δ < dist (SkorokhodSpace.postcomp
+      (BoundedContinuousFunction.toContinuousMap g) x)
+      (SkorokhodSpace.postcomp f.toContinuousMap x) := hx
+  rw [Set.mem_compl_iff]
+  intro hcon
+  have hcon' : ∀ t ∈ exhaustion (basePoint : ℝ≥0) (m : ℝ), x.toFun t ∈ Γ := hcon
+  have hle : dist (SkorokhodSpace.postcomp (BoundedContinuousFunction.toContinuousMap g) x)
+      (SkorokhodSpace.postcomp f.toContinuousMap x) ≤ δ / 2 + Real.exp (-(m:ℝ)) := by
+    refine SkorokhodSpace.dist_postcomp_le_of_forall_mem_exhaustion _ _ _ (by linarith)
+      (Nat.cast_nonneg m) ?_
+    rintro y ⟨t, ht, rfl⟩
+    exact hg _ (hcon' t ht)
+  linarith
+
+/-- **Stage (B) of Milestone 8 at the density a generator has.**  Under compact
+containment a family of laws on `D(ℝ≥0, E)` is tight as soon as the real images
+under a class that is dense **for uniform convergence on compact sets** are.
+
+This is the form **MartingaleProblems** Milestone 11 consumes, and the one that
+`SkorokhodSpace.isTightMeasureSet_of_dense_forall_postcomp_nnreal` is too strong
+to serve: the domain of a generator is not dense in the supremum norm.  Compact
+containment appears twice in it, once as the hypothesis of the equivalence and
+once inside the approximation, and it is the same hypothesis both times. -/
+theorem SkorokhodSpace.isTightMeasureSet_of_denseOnCompacts_forall_postcomp_nnreal
+    [CompleteSpace E] {γ : Type*} {μ : γ → Measure D(ℝ≥0, E)}
+    (hcc : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) μ)
+    {H : Set (E →ᵇ ℝ)}
+    (hH : ∀ Γ : Set E, IsCompact Γ → ∀ η : ℝ, 0 < η → ∀ f : E →ᵇ ℝ,
+      ∃ g ∈ H, ∀ y ∈ Γ, dist (g y) (f y) ≤ η)
+    (htight : ∀ g ∈ H, IsTightMeasureSet
+      {(μ i).map (SkorokhodSpace.postcomp (BoundedContinuousFunction.toContinuousMap g)) | i}) :
+    IsTightMeasureSet {μ i | i} :=
+  (SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal hcc).2
+    (SkorokhodSpace.isTightMeasureSet_map_postcomp_of_denseOnCompacts hcc hH htight)
 
 /-! ### Where compact containment is free, and what is left when it is
 

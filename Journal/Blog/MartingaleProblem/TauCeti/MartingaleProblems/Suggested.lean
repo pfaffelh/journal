@@ -47032,4 +47032,186 @@ theorem isTightMeasureSet_map_of_forall_martingale {E : Type*} [MeasurableSpace 
   obtain ⟨g, g', h1, h2⟩ := hmart h
   exact isTightMeasureSet_map_postcomp_of_forall_martingale hSc hSd hX hcont hΦ h1 h2
 
+/-- **The first item of the chain, at the quantifier a generator can meet.**  The martingale
+hypothesis is read on a class `H` of bounded continuous functions that is merely **dense in the
+supremum norm**, and not at every bounded continuous function.
+
+This is the statement the milestone asked for, and the step it adds to the previous one is
+`SkorokhodSpace.isTightMeasureSet_of_dense_forall_postcomp_nnreal` of Milestone 8: tightness of
+an image law is stable under uniform approximation of the test function, because post-composition
+moves a path by at most the supremum distance of the two functions
+(`SkorokhodSpace.dist_postcomp_le`) -- uniformly in the path, which is what the general stability
+statement `MeasureTheory.isTightMeasureSet_map_of_forall_exists_dist_le` of the roadmap
+**WeakConvergence** consumes.
+
+**Why the weakening is the point and not a refinement.**  A generator is given on a domain, and
+its domain is not all of `E →ᵇ ℝ`; for the acceptance examples of Milestone 4 it is an algebra of
+smooth or of finitely supported functions, dense and nothing more.  The previous statement is the
+case `H = Set.univ` of this one, and it is kept because it is the form in which the hypothesis is
+checked when a problem is posed at every test function.
+
+**What is not weakened:** `g` and `g'` are still quantified inside, so the class `H` is asked to
+be closed under nothing at all -- in particular not under squaring, since `g'` answers for
+`f ^ 2` without `f ^ 2` having to lie in `H`. -/
+theorem isTightMeasureSet_map_of_dense_forall_martingale {E : Type*} [MeasurableSpace E]
+    [MetricSpace E] [BorelSpace E] [PolishSpace E] [CompleteSpace E]
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {γ : Type*} {X : γ → ℝ≥0 → Ω → E}
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hX : ∀ i, IsStronglyProgressive 𝓕 (X i))
+    (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ X i s ω) (Set.Ici t) t)
+    {Φ : γ → Ω → D(ℝ≥0, E)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ X i t ω)
+    (hcc : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) fun i ↦ P.map (Φ i))
+    {H : Set (E →ᵇ ℝ)} (hH : Dense H)
+    (hmart : ∀ f ∈ H, ∃ g g' : E →ᵇ ℝ,
+      (∀ i, Martingale (fun t ω ↦ f (X i t ω)
+        - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g (X i s.toNNReal ω)) 𝓕 P)
+      ∧ ∀ i, Martingale (fun t ω ↦ f (X i t ω) ^ 2
+        - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g' (X i s.toNNReal ω)) 𝓕 P) :
+    IsTightMeasureSet {P.map (Φ i) | i} := by
+  refine SkorokhodSpace.isTightMeasureSet_of_dense_forall_postcomp_nnreal hcc hH fun f hf ↦ ?_
+  obtain ⟨g, g', h1, h2⟩ := hmart f hf
+  exact isTightMeasureSet_map_postcomp_of_forall_martingale hSc hSd hX hcont hΦ h1 h2
+
+/-- **The first item of the chain at the quantifier a generator really has.**  The
+martingale hypothesis is read on a class `H` that is dense for **uniform
+convergence on compact sets**, and not in the supremum norm.
+
+This is the statement, and not the one above, that the acceptance examples meet.
+The domain of a generator is not dense in the supremum norm: the compactly
+supported smooth functions are not, a uniform limit of them vanishing at infinity
+while the constant function does not.  Dense on compact sets they are, and that
+is what Stone--Weierstrass delivers for a point separating subalgebra.
+
+**Compact containment is what pays for the weaker density**, and it is read twice
+in the same hypothesis: once to lift the tightness of the real images back to the
+family, and once to hold the values of the path on a window inside a compact set,
+where the approximation is good.  Outside the window the Skorokhod metric is
+damped by `exp (-u)`, and that is the whole estimate --- it is carried out in
+`SkorokhodSpace.dist_postcomp_le_of_forall_mem_exhaustion` and consumed by
+`SkorokhodSpace.isTightMeasureSet_of_denseOnCompacts_forall_postcomp_nnreal`,
+whose general engine is the approximation **in measure** of
+`MeasureTheory.isTightMeasureSet_map_of_forall_exists_measure_dist_gt_le` of the
+roadmap **WeakConvergence**.
+
+**`H` is still asked to be closed under nothing.**  `g` and `g'` are quantified
+inside, so the generator answers for `f²` without `f²` having to lie in `H`. -/
+theorem isTightMeasureSet_map_of_denseOnCompacts_forall_martingale {E : Type*}
+    [MeasurableSpace E] [MetricSpace E] [BorelSpace E] [PolishSpace E] [CompleteSpace E]
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {γ : Type*} {X : γ → ℝ≥0 → Ω → E}
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hX : ∀ i, IsStronglyProgressive 𝓕 (X i))
+    (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ X i s ω) (Set.Ici t) t)
+    {Φ : γ → Ω → D(ℝ≥0, E)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ X i t ω)
+    (hcc : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) fun i ↦ P.map (Φ i))
+    {H : Set (E →ᵇ ℝ)}
+    (hH : ∀ Γ : Set E, IsCompact Γ → ∀ η : ℝ, 0 < η → ∀ f : E →ᵇ ℝ,
+      ∃ g ∈ H, ∀ y ∈ Γ, dist (g y) (f y) ≤ η)
+    (hmart : ∀ f ∈ H, ∃ g g' : E →ᵇ ℝ,
+      (∀ i, Martingale (fun t ω ↦ f (X i t ω)
+        - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g (X i s.toNNReal ω)) 𝓕 P)
+      ∧ ∀ i, Martingale (fun t ω ↦ f (X i t ω) ^ 2
+        - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g' (X i s.toNNReal ω)) 𝓕 P) :
+    IsTightMeasureSet {P.map (Φ i) | i} := by
+  refine SkorokhodSpace.isTightMeasureSet_of_denseOnCompacts_forall_postcomp_nnreal hcc hH
+    fun f hf ↦ ?_
+  obtain ⟨g, g', h1, h2⟩ := hmart f hf
+  exact isTightMeasureSet_map_postcomp_of_forall_martingale hSc hSd hX hcont hΦ h1 h2
+
+/-- **The first item of the chain at the data a martingale problem is posed with:
+a point separating subalgebra.**  No density hypothesis appears; the domain of the
+generator is an algebra, and that is all that is asked of it.
+
+It is the previous statement with its density supplied by
+`MeasureTheory.exists_mem_subalgebra_forall_dist_le_of_isCompact` of the roadmap
+**WeakConvergence**, which is Stone--Weierstrass on a compact set carried from
+`C(E, ℝ)` back to `E →ᵇ ℝ`.  Nothing else changes, and in particular the second
+density --- the countable dense set `S` of times --- is untouched: the two are
+unrelated, one living in the test class and the other in the index.
+
+**This is the form the acceptance examples meet**, and the reason the chain
+needed three weakenings rather than one: a generator gives the martingale
+property on an algebra, an algebra is dense only on compact sets, and density on
+compact sets suffices only because compact containment holds the paths there. -/
+theorem isTightMeasureSet_map_of_subalgebra_forall_martingale {E : Type*}
+    [MeasurableSpace E] [MetricSpace E] [BorelSpace E] [PolishSpace E] [CompleteSpace E]
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {γ : Type*} {X : γ → ℝ≥0 → Ω → E}
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hX : ∀ i, IsStronglyProgressive 𝓕 (X i))
+    (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ X i s ω) (Set.Ici t) t)
+    {Φ : γ → Ω → D(ℝ≥0, E)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ X i t ω)
+    (hcc : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) fun i ↦ P.map (Φ i))
+    (A : Subalgebra ℝ (E →ᵇ ℝ))
+    (hsep : (A.map (BoundedContinuousFunction.toContinuousMapₐ ℝ)).SeparatesPoints)
+    (hmart : ∀ f ∈ A, ∃ g g' : E →ᵇ ℝ,
+      (∀ i, Martingale (fun t ω ↦ f (X i t ω)
+        - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g (X i s.toNNReal ω)) 𝓕 P)
+      ∧ ∀ i, Martingale (fun t ω ↦ f (X i t ω) ^ 2
+        - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g' (X i s.toNNReal ω)) 𝓕 P) :
+    IsTightMeasureSet {P.map (Φ i) | i} :=
+  isTightMeasureSet_map_of_denseOnCompacts_forall_martingale hSc hSd hX hcont hΦ hcc
+    (H := (A : Set (E →ᵇ ℝ)))
+    (fun _ hΓ _ hη f => exists_mem_subalgebra_forall_dist_le_of_isCompact A hsep hΓ hη f)
+    hmart
+
+/-- **The second item of the chain, `isRelativelyCompact_of_approx`, in the exact
+case**: the laws of the paths have compact closure in the weak topology of
+`ProbabilityMeasure D(ℝ≥0, E)`.
+
+There is no new estimate in it.  The tightness is the previous statement, and the
+passage from tightness to compact closure is Prokhorov, which Mathlib has as
+`isCompact_closure_of_isTightMeasureSet` (`MeasureTheory/Measure/Prokhorov.lean:530`)
+and asks only `T2` of the space --- `D(ℝ≥0, E)` is metric, so that is free, and
+neither Polishness of the path space nor completeness is read **here**; they are
+read upstream, in the tightness.
+
+**What the statement really costs is the crossing of the two types.**  Tightness
+is stated for a set of `Measure`, Prokhorov concludes about a set of
+`ProbabilityMeasure`, and the two are different types with a coercion between
+them.  The set is therefore written as a comprehension over `ProbabilityMeasure`
+rather than as a range, which is what lets the coercion be matched instead of
+constructed.
+
+**A junk value that happens to say the truth, and it is worth naming.**  Mathlib's
+instance `IsProbabilityMeasure (Measure.map f μ)`
+(`MeasureTheory/Measure/Typeclasses/Probability.lean:124`) carries **no**
+measurability hypothesis: where `f` is not a.e. measurable, `Measure.map` returns
+a Dirac measure, and a Dirac measure is a probability measure.  So the instance is
+free, and it is free for a reason that has nothing to do with the path map.  What
+makes `P.map (Φ i)` the law of the path rather than that Dirac is
+`MeasureTheory.measurable_pathOfProcess`, which the data already supply; the
+tightness hypothesis reads it, and this statement inherits it from there. -/
+theorem isCompact_closure_of_subalgebra_forall_martingale {E : Type*}
+    [MeasurableSpace E] [MetricSpace E] [BorelSpace E] [PolishSpace E] [CompleteSpace E]
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {γ : Type*} {X : γ → ℝ≥0 → Ω → E}
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hX : ∀ i, IsStronglyProgressive 𝓕 (X i))
+    (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ X i s ω) (Set.Ici t) t)
+    {Φ : γ → Ω → D(ℝ≥0, E)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ X i t ω)
+    (hcc : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) fun i ↦ P.map (Φ i))
+    (A : Subalgebra ℝ (E →ᵇ ℝ))
+    (hsep : (A.map (BoundedContinuousFunction.toContinuousMapₐ ℝ)).SeparatesPoints)
+    (hmart : ∀ f ∈ A, ∃ g g' : E →ᵇ ℝ,
+      (∀ i, Martingale (fun t ω ↦ f (X i t ω)
+        - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g (X i s.toNNReal ω)) 𝓕 P)
+      ∧ ∀ i, Martingale (fun t ω ↦ f (X i t ω) ^ 2
+        - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g' (X i s.toNNReal ω)) 𝓕 P) :
+    IsCompact (closure {ν : ProbabilityMeasure D(ℝ≥0, E) |
+      ∃ i, (ν : Measure D(ℝ≥0, E)) = P.map (Φ i)}) := by
+  have hprob : ∀ i, IsProbabilityMeasure (P.map (Φ i)) := fun i => inferInstance
+  refine isCompact_closure_of_isTightMeasureSet ?_
+  have hset : {(ν : Measure D(ℝ≥0, E)) | ν ∈ {ν : ProbabilityMeasure D(ℝ≥0, E) |
+      ∃ i, (ν : Measure D(ℝ≥0, E)) = P.map (Φ i)}} = {P.map (Φ i) | i} := by
+    ext σ
+    constructor
+    · rintro ⟨ν, ⟨i, hi⟩, rfl⟩
+      exact ⟨i, hi.symm⟩
+    · rintro ⟨i, rfl⟩
+      exact ⟨⟨P.map (Φ i), hprob i⟩, ⟨i, rfl⟩, rfl⟩
+  rw [hset]
+  exact isTightMeasureSet_map_of_subalgebra_forall_martingale hSc hSd hX hcont hΦ hcc A hsep hmart
+
 end MeasureTheory
