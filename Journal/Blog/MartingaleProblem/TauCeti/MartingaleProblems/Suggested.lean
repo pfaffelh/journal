@@ -46506,7 +46506,17 @@ form allows and as the naming rule of this file asks where `D(ℝ≥0, E)` occur
 
 **The bound on the approximants is not derivable from the bound on `g`.**  `Y` approximates
 `g ∘ X` in `L¹` of a supremum, which constrains no path of `Y` pointwise; the boundedness is a
-condition on the class the approximants are drawn from, and the milestone states it there. -/
+condition on the class the approximants are drawn from, and the milestone states it there.
+
+**The modulus error `ε₀` is not among the obligations, and that is a statement about the class
+and not an omission.**  `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_isApproximable`
+asks for its triple `(q, T, K)` **per** `ε₀`, because `MeasureTheory.IsApproximable` carries the
+error in its own signature; but `MeasureTheory.isApproximable_of_forall_exists_bounded_pair`
+takes `ε₀` implicitly and constrains it nowhere -- the pairs and the two errors already give
+`IsApproximable … ε₀ u` for **every** `ε₀`.  Carrying the quantifier here would therefore have
+asked a consumer for data that is never read, and the two statements are equivalent with it and
+without.  It was dropped on 2026-09-21, when the approximate case of the second item of the
+chain was drawn from this one and would have had to repeat the vacuous quantifier four times. -/
 theorem isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair [MeasurableSpace E]
     [BorelSpace E] [PolishSpace E] [CompleteSpace E]
     {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
@@ -46515,7 +46525,7 @@ theorem isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair [Measurable
     (hX : ∀ i, IsStronglyProgressive 𝓕 (X i))
     (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ X i s ω) (Set.Ici t) t)
     {Φ : γ → Ω → D(ℝ≥0, E)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ X i t ω)
-    (happ : ∀ ε₀ : ℝ, 0 < ε₀ → ∀ u : ℝ≥0, 0 < u → ∃ q : ENNReal, ∃ T' K : ℝ≥0, u < T' ∧
+    (happ : ∀ u : ℝ≥0, 0 < u → ∃ q : ENNReal, ∃ T' K : ℝ≥0, u < T' ∧
       ∀ i, ∀ ε : ENNReal, 0 < ε →
         ∃ Y C Y' C' : ℝ≥0 → Ω → ℝ, ∃ Z Z' : ℝ → Ω → ℝ, ∃ c c' : ℝ,
           IsApproximatingPair 𝓕 P q T' K Y C Z ∧ IsApproximatingPair 𝓕 P q T' K Y' C' Z'
@@ -46525,8 +46535,8 @@ theorem isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair [Measurable
     IsTightMeasureSet
       {(P.map (Φ i)).map (SkorokhodSpace.postcomp g.toContinuousMap) | i} := by
   refine isTightMeasureSet_map_postcomp_of_forall_isApproximable hSc hSd hX hcont hΦ ?_
-  intro ε₀ hε₀ u hu
-  obtain ⟨q, T', K, huT', h⟩ := happ ε₀ hε₀ u hu
+  intro _ _ u hu
+  obtain ⟨q, T', K, huT', h⟩ := happ u hu
   obtain ⟨T, huT, hTT'⟩ := exists_between huT'
   exact ⟨q, T, K, huT, fun i ↦ isApproximable_of_forall_exists_bounded_pair hTT' hSd hSc hSd
     ((hX i).continuous_comp g.continuous)
@@ -46970,7 +46980,7 @@ theorem isTightMeasureSet_map_postcomp_of_forall_martingale {E : Type*} [Measura
     IsTightMeasureSet
       {(P.map (Φ i)).map (SkorokhodSpace.postcomp f.toContinuousMap) | i} := by
   refine isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair hSc hSd hX hcont hΦ ?_
-  intro ε₀ hε₀ u hu
+  intro u hu
   refine ⟨2, u + 1, (u + 1) ^ (2 : ENNReal).toReal⁻¹ * max ‖g‖₊ ‖g'‖₊,
     lt_add_of_pos_right _ one_pos, fun i ε hε ↦ ?_⟩
   refine ⟨fun t ω ↦ f (X i t ω),
@@ -47259,6 +47269,256 @@ theorem isCompact_closure_range_of_subalgebra_forall_martingale {E : Type*}
       exact ⟨i, Subtype.ext hi.symm⟩
   rw [hset]
   exact isCompact_closure_of_subalgebra_forall_martingale hSc hSd hX hcont hΦ hcc A hsep hmart
+
+/-! ### The same four steps in the approximate case, which is the case Donsker is in
+
+Everything above reads the martingale property **exactly**, and a rescaled random walk does not
+have it: it has it up to an error that vanishes with the scale.  The four liftings are therefore
+drawn a second time, from the hypothesis the tightness proof really consumes -- the two
+approximating pairs with their bound and their two errors, which is
+`MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair`.
+
+**No estimate is repeated.**  The martingale hypothesis is evaluated on the whole route at
+**one** place, that statement, which turns it into the pairs through
+`MeasureTheory.isApproximatingPair_of_martingale` with the error `0`; the four steps above only
+pass it on.  So the four steps below are the same four lines of lifting with the same three
+inputs -- `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal`,
+`SkorokhodSpace.isTightMeasureSet_of_dense_forall_postcomp_nnreal`,
+`SkorokhodSpace.isTightMeasureSet_of_denseOnCompacts_forall_postcomp_nnreal` and
+`MeasureTheory.exists_mem_subalgebra_forall_dist_le_of_isCompact` -- and the exact case stays
+proved where it is rather than being re-derived through the approximate one.
+
+**The approximation data may depend on the test function, and that is read off the source and
+not assumed.**  All three density statements take their hypothesis in the shape
+`∀ g ∈ H, IsTightMeasureSet {…}`: one self-contained conclusion per test function, with nothing
+shared between two of them.  The exponent `q`, the horizon `T'` and the constant `K` are
+therefore chosen **after** `f`, and the density step, which compares test functions in the
+supremum distance (`SkorokhodSpace.dist_postcomp_le`) and never looks at their approximants,
+does not notice.  Had it been otherwise, the family would have had to carry one horizon for the
+whole algebra, and a generator does not supply that. -/
+
+/-- **The first item of the chain in the approximate case, at every bounded continuous test
+function.**  The martingale hypothesis is replaced by the approximating pairs it is only ever
+used to produce, and what comes out is again tightness of the laws of the `E` valued paths.
+
+It is `MeasureTheory.isTightMeasureSet_map_of_forall_martingale` with that replacement, and the
+lifting is the same one application of
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal`.
+
+**Why the approximate case is not a refinement.**  The exact case reaches no rescaled random
+walk, and therefore reaches no acceptance test of this milestone; `MeasureTheory.IsApproximatingPair`
+carries the error in its signature, so this is the statement an approximating family meets and
+the exact one is the case error `= 0`. -/
+theorem isTightMeasureSet_map_of_forall_exists_bounded_pair {E : Type*} [MeasurableSpace E]
+    [MetricSpace E] [BorelSpace E] [PolishSpace E] [CompleteSpace E]
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {γ : Type*} {X : γ → ℝ≥0 → Ω → E}
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hX : ∀ i, IsStronglyProgressive 𝓕 (X i))
+    (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ X i s ω) (Set.Ici t) t)
+    {Φ : γ → Ω → D(ℝ≥0, E)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ X i t ω)
+    (hcc : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) fun i ↦ P.map (Φ i))
+    (happ : ∀ f : E →ᵇ ℝ, ∀ u : ℝ≥0, 0 < u → ∃ q : ENNReal, ∃ T' K : ℝ≥0, u < T' ∧
+      ∀ i, ∀ ε : ENNReal, 0 < ε →
+        ∃ Y C Y' C' : ℝ≥0 → Ω → ℝ, ∃ Z Z' : ℝ → Ω → ℝ, ∃ c c' : ℝ,
+          IsApproximatingPair 𝓕 P q T' K Y C Z ∧ IsApproximatingPair 𝓕 P q T' K Y' C' Z'
+          ∧ (∀ t ω, ‖Y t ω‖ ≤ c) ∧ (∀ t ω, ‖Y' t ω‖ ≤ c')
+          ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ S, ‖Y t ω - f (X i t ω)‖ₑ ∂P ≤ ε
+          ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ S, ‖Y' t ω - f (X i t ω) ^ 2‖ₑ ∂P ≤ ε) :
+    IsTightMeasureSet {P.map (Φ i) | i} := by
+  refine (SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal hcc).2 fun h ↦ ?_
+  exact isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair hSc hSd hX hcont hΦ (happ h)
+
+/-- **The first item in the approximate case at the quantifier a generator can meet**: the pairs
+are asked only on a class `H` that is **dense in the supremum norm**.
+
+It is the previous statement with `SkorokhodSpace.isTightMeasureSet_of_dense_forall_postcomp_nnreal`
+of Milestone 8 in front of it -- exactly as
+`MeasureTheory.isTightMeasureSet_map_of_dense_forall_martingale` is that statement in front of
+the exact case -- and the previous one is its case `H = Set.univ`.
+
+**`H` is asked to be closed under nothing**, squaring included: the second pair answers for
+`f ^ 2` without `f ^ 2` having to lie in `H`. -/
+theorem isTightMeasureSet_map_of_dense_forall_exists_bounded_pair {E : Type*} [MeasurableSpace E]
+    [MetricSpace E] [BorelSpace E] [PolishSpace E] [CompleteSpace E]
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {γ : Type*} {X : γ → ℝ≥0 → Ω → E}
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hX : ∀ i, IsStronglyProgressive 𝓕 (X i))
+    (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ X i s ω) (Set.Ici t) t)
+    {Φ : γ → Ω → D(ℝ≥0, E)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ X i t ω)
+    (hcc : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) fun i ↦ P.map (Φ i))
+    {H : Set (E →ᵇ ℝ)} (hH : Dense H)
+    (happ : ∀ f ∈ H, ∀ u : ℝ≥0, 0 < u → ∃ q : ENNReal, ∃ T' K : ℝ≥0, u < T' ∧
+      ∀ i, ∀ ε : ENNReal, 0 < ε →
+        ∃ Y C Y' C' : ℝ≥0 → Ω → ℝ, ∃ Z Z' : ℝ → Ω → ℝ, ∃ c c' : ℝ,
+          IsApproximatingPair 𝓕 P q T' K Y C Z ∧ IsApproximatingPair 𝓕 P q T' K Y' C' Z'
+          ∧ (∀ t ω, ‖Y t ω‖ ≤ c) ∧ (∀ t ω, ‖Y' t ω‖ ≤ c')
+          ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ S, ‖Y t ω - f (X i t ω)‖ₑ ∂P ≤ ε
+          ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ S, ‖Y' t ω - f (X i t ω) ^ 2‖ₑ ∂P ≤ ε) :
+    IsTightMeasureSet {P.map (Φ i) | i} := by
+  refine SkorokhodSpace.isTightMeasureSet_of_dense_forall_postcomp_nnreal hcc hH fun f hf ↦ ?_
+  exact isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair hSc hSd hX hcont hΦ
+    (happ f hf)
+
+/-- **The first item in the approximate case at the quantifier a generator really has**: `H` is
+dense for **uniform convergence on compact sets** only, which is what the domain of a generator
+is and what Stone--Weierstrass gives for a point separating subalgebra.
+
+Compact containment pays for the weaker density and is read twice in the same hypothesis: once
+to lift the tightness of the real images back to the family, and once to hold the values of the
+path on a window inside a compact set, where the approximation is good.  That accounting is the
+same as in the exact case and is carried out in
+`SkorokhodSpace.isTightMeasureSet_of_denseOnCompacts_forall_postcomp_nnreal`. -/
+theorem isTightMeasureSet_map_of_denseOnCompacts_forall_exists_bounded_pair {E : Type*}
+    [MeasurableSpace E] [MetricSpace E] [BorelSpace E] [PolishSpace E] [CompleteSpace E]
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {γ : Type*} {X : γ → ℝ≥0 → Ω → E}
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hX : ∀ i, IsStronglyProgressive 𝓕 (X i))
+    (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ X i s ω) (Set.Ici t) t)
+    {Φ : γ → Ω → D(ℝ≥0, E)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ X i t ω)
+    (hcc : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) fun i ↦ P.map (Φ i))
+    {H : Set (E →ᵇ ℝ)}
+    (hH : ∀ Γ : Set E, IsCompact Γ → ∀ η : ℝ, 0 < η → ∀ f : E →ᵇ ℝ,
+      ∃ g ∈ H, ∀ y ∈ Γ, dist (g y) (f y) ≤ η)
+    (happ : ∀ f ∈ H, ∀ u : ℝ≥0, 0 < u → ∃ q : ENNReal, ∃ T' K : ℝ≥0, u < T' ∧
+      ∀ i, ∀ ε : ENNReal, 0 < ε →
+        ∃ Y C Y' C' : ℝ≥0 → Ω → ℝ, ∃ Z Z' : ℝ → Ω → ℝ, ∃ c c' : ℝ,
+          IsApproximatingPair 𝓕 P q T' K Y C Z ∧ IsApproximatingPair 𝓕 P q T' K Y' C' Z'
+          ∧ (∀ t ω, ‖Y t ω‖ ≤ c) ∧ (∀ t ω, ‖Y' t ω‖ ≤ c')
+          ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ S, ‖Y t ω - f (X i t ω)‖ₑ ∂P ≤ ε
+          ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ S, ‖Y' t ω - f (X i t ω) ^ 2‖ₑ ∂P ≤ ε) :
+    IsTightMeasureSet {P.map (Φ i) | i} := by
+  refine SkorokhodSpace.isTightMeasureSet_of_denseOnCompacts_forall_postcomp_nnreal hcc hH
+    fun f hf ↦ ?_
+  exact isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair hSc hSd hX hcont hΦ
+    (happ f hf)
+
+/-- **The first item in the approximate case at the data a martingale problem is posed with: a
+point separating subalgebra.**  No density hypothesis appears;
+`MeasureTheory.exists_mem_subalgebra_forall_dist_le_of_isCompact` of the roadmap
+**WeakConvergence** supplies the density of the previous statement, and that is
+Stone--Weierstrass on a compact set carried from `C(E, ℝ)` back to `E →ᵇ ℝ`.
+
+**This is the form Donsker meets, and the reason the approximate case had to be drawn at all.**
+For the rescaled random walks the algebra is the compactly supported smooth functions, the exact
+martingale property holds at no scale, and what tends to zero with the scale are the two errors
+of the pairs. -/
+theorem isTightMeasureSet_map_of_subalgebra_forall_exists_bounded_pair {E : Type*}
+    [MeasurableSpace E] [MetricSpace E] [BorelSpace E] [PolishSpace E] [CompleteSpace E]
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {γ : Type*} {X : γ → ℝ≥0 → Ω → E}
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hX : ∀ i, IsStronglyProgressive 𝓕 (X i))
+    (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ X i s ω) (Set.Ici t) t)
+    {Φ : γ → Ω → D(ℝ≥0, E)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ X i t ω)
+    (hcc : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) fun i ↦ P.map (Φ i))
+    (A : Subalgebra ℝ (E →ᵇ ℝ))
+    (hsep : (A.map (BoundedContinuousFunction.toContinuousMapₐ ℝ)).SeparatesPoints)
+    (happ : ∀ f ∈ A, ∀ u : ℝ≥0, 0 < u → ∃ q : ENNReal, ∃ T' K : ℝ≥0, u < T' ∧
+      ∀ i, ∀ ε : ENNReal, 0 < ε →
+        ∃ Y C Y' C' : ℝ≥0 → Ω → ℝ, ∃ Z Z' : ℝ → Ω → ℝ, ∃ c c' : ℝ,
+          IsApproximatingPair 𝓕 P q T' K Y C Z ∧ IsApproximatingPair 𝓕 P q T' K Y' C' Z'
+          ∧ (∀ t ω, ‖Y t ω‖ ≤ c) ∧ (∀ t ω, ‖Y' t ω‖ ≤ c')
+          ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ S, ‖Y t ω - f (X i t ω)‖ₑ ∂P ≤ ε
+          ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ S, ‖Y' t ω - f (X i t ω) ^ 2‖ₑ ∂P ≤ ε) :
+    IsTightMeasureSet {P.map (Φ i) | i} :=
+  isTightMeasureSet_map_of_denseOnCompacts_forall_exists_bounded_pair hSc hSd hX hcont hΦ hcc
+    (H := (A : Set (E →ᵇ ℝ)))
+    (fun _ hΓ _ hη f => exists_mem_subalgebra_forall_dist_le_of_isCompact A hsep hΓ hη f)
+    happ
+
+/-- **The second item of the chain, `isRelativelyCompact_of_approx`, in the approximate case**:
+the laws of the paths of an *approximating* family have compact closure in the weak topology of
+`ProbabilityMeasure D(ℝ≥0, E)`.
+
+There is no new estimate in it -- the tightness is the previous statement and the passage to
+compact closure is Prokhorov, `isCompact_closure_of_isTightMeasureSet`
+(`MeasureTheory/Measure/Prokhorov.lean:530`) -- and the two observations recorded at
+`MeasureTheory.isCompact_closure_of_subalgebra_forall_martingale` hold here word for word: the
+crossing of the types `Measure` and `ProbabilityMeasure`, which is why the set is written as a
+comprehension, and the junk value of `Measure.map` that happens to say the truth. -/
+theorem isCompact_closure_of_subalgebra_forall_exists_bounded_pair {E : Type*}
+    [MeasurableSpace E] [MetricSpace E] [BorelSpace E] [PolishSpace E] [CompleteSpace E]
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {γ : Type*} {X : γ → ℝ≥0 → Ω → E}
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hX : ∀ i, IsStronglyProgressive 𝓕 (X i))
+    (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ X i s ω) (Set.Ici t) t)
+    {Φ : γ → Ω → D(ℝ≥0, E)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ X i t ω)
+    (hcc : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) fun i ↦ P.map (Φ i))
+    (A : Subalgebra ℝ (E →ᵇ ℝ))
+    (hsep : (A.map (BoundedContinuousFunction.toContinuousMapₐ ℝ)).SeparatesPoints)
+    (happ : ∀ f ∈ A, ∀ u : ℝ≥0, 0 < u → ∃ q : ENNReal, ∃ T' K : ℝ≥0, u < T' ∧
+      ∀ i, ∀ ε : ENNReal, 0 < ε →
+        ∃ Y C Y' C' : ℝ≥0 → Ω → ℝ, ∃ Z Z' : ℝ → Ω → ℝ, ∃ c c' : ℝ,
+          IsApproximatingPair 𝓕 P q T' K Y C Z ∧ IsApproximatingPair 𝓕 P q T' K Y' C' Z'
+          ∧ (∀ t ω, ‖Y t ω‖ ≤ c) ∧ (∀ t ω, ‖Y' t ω‖ ≤ c')
+          ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ S, ‖Y t ω - f (X i t ω)‖ₑ ∂P ≤ ε
+          ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ S, ‖Y' t ω - f (X i t ω) ^ 2‖ₑ ∂P ≤ ε) :
+    IsCompact (closure {ν : ProbabilityMeasure D(ℝ≥0, E) |
+      ∃ i, (ν : Measure D(ℝ≥0, E)) = P.map (Φ i)}) := by
+  have hprob : ∀ i, IsProbabilityMeasure (P.map (Φ i)) := fun i => inferInstance
+  refine isCompact_closure_of_isTightMeasureSet ?_
+  have hset : {(ν : Measure D(ℝ≥0, E)) | ν ∈ {ν : ProbabilityMeasure D(ℝ≥0, E) |
+      ∃ i, (ν : Measure D(ℝ≥0, E)) = P.map (Φ i)}} = {P.map (Φ i) | i} := by
+    ext σ
+    constructor
+    · rintro ⟨ν, ⟨i, hi⟩, rfl⟩
+      exact ⟨i, hi.symm⟩
+    · rintro ⟨i, rfl⟩
+      exact ⟨⟨P.map (Φ i), hprob i⟩, ⟨i, rfl⟩, rfl⟩
+  rw [hset]
+  exact isTightMeasureSet_map_of_subalgebra_forall_exists_bounded_pair hSc hSd hX hcont hΦ hcc
+    A hsep happ
+
+/-- **The second item in the approximate case in the form the fourth item reads it**: the *range*
+of the path laws rather than the set of measures that are one of them.
+
+It is `MeasureTheory.isCompact_closure_range_of_subalgebra_forall_martingale` with the
+approximate hypothesis, by the same `Set.ext` and `Subtype.ext` and with the same type
+ascription on the range -- `ProbabilityMeasure` being a `def` on a subtype, the anonymous
+constructor folds back to it and `closure` then finds no topology.  The consumer is
+`MeasureTheory.tendsto_of_isRelativelyCompact_of_unique`.
+
+**With this the approximate case of the second item is complete**, and the chain of Milestone 11
+joins for approximating families exactly as it does for exact ones: the seams
+`MeasureTheory.mpSolution_of_tendsto_cadlag_of_subseq` and
+`MeasureTheory.mpSolution_of_tendsto_cadlag_of_subseq_pathOfProcess` read the same conclusion,
+and they never ask how the compactness was obtained. -/
+theorem isCompact_closure_range_of_subalgebra_forall_exists_bounded_pair {E : Type*}
+    [MeasurableSpace E] [MetricSpace E] [BorelSpace E] [PolishSpace E] [CompleteSpace E]
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {γ : Type*} {X : γ → ℝ≥0 → Ω → E}
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hX : ∀ i, IsStronglyProgressive 𝓕 (X i))
+    (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ X i s ω) (Set.Ici t) t)
+    {Φ : γ → Ω → D(ℝ≥0, E)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ X i t ω)
+    (hcc : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) fun i ↦ P.map (Φ i))
+    (A : Subalgebra ℝ (E →ᵇ ℝ))
+    (hsep : (A.map (BoundedContinuousFunction.toContinuousMapₐ ℝ)).SeparatesPoints)
+    (happ : ∀ f ∈ A, ∀ u : ℝ≥0, 0 < u → ∃ q : ENNReal, ∃ T' K : ℝ≥0, u < T' ∧
+      ∀ i, ∀ ε : ENNReal, 0 < ε →
+        ∃ Y C Y' C' : ℝ≥0 → Ω → ℝ, ∃ Z Z' : ℝ → Ω → ℝ, ∃ c c' : ℝ,
+          IsApproximatingPair 𝓕 P q T' K Y C Z ∧ IsApproximatingPair 𝓕 P q T' K Y' C' Z'
+          ∧ (∀ t ω, ‖Y t ω‖ ≤ c) ∧ (∀ t ω, ‖Y' t ω‖ ≤ c')
+          ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ S, ‖Y t ω - f (X i t ω)‖ₑ ∂P ≤ ε
+          ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ S, ‖Y' t ω - f (X i t ω) ^ 2‖ₑ ∂P ≤ ε) :
+    IsCompact (closure ((Set.range fun i ↦ (⟨P.map (Φ i), inferInstance⟩ :
+      ProbabilityMeasure D(ℝ≥0, E))) : Set (ProbabilityMeasure D(ℝ≥0, E)))) := by
+  have hset : ((Set.range fun i ↦ (⟨P.map (Φ i), inferInstance⟩ :
+        ProbabilityMeasure D(ℝ≥0, E))) : Set (ProbabilityMeasure D(ℝ≥0, E)))
+      = {ν : ProbabilityMeasure D(ℝ≥0, E) | ∃ i, (ν : Measure D(ℝ≥0, E)) = P.map (Φ i)} := by
+    ext ν
+    constructor
+    · rintro ⟨i, rfl⟩
+      exact ⟨i, rfl⟩
+    · rintro ⟨i, hi⟩
+      exact ⟨i, Subtype.ext hi.symm⟩
+  rw [hset]
+  exact isCompact_closure_of_subalgebra_forall_exists_bounded_pair hSc hSd hX hcont hΦ hcc
+    A hsep happ
 
 /-! ### Milestone 10: the determining class the third item of the chain can use
 

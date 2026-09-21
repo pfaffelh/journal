@@ -18937,6 +18937,45 @@ theorem SkorokhodSpace.isCompactContained_const [CompleteSpace E]
   rw [hsing]
   exact isTightMeasureSet_singleton
 
+omit [MeasurableSpace E] [BorelSpace E] in
+/-- **How a family that moves meets the condition**: by a uniform bound on the
+**path maximum over a window**, and nothing else.
+
+`SkorokhodSpace.isCompactContained_const` is the only other witness and has a
+constant family; it shows where the condition lives and not how to satisfy it.
+This one is the reduction a consumer uses.  Every statement of
+**MartingaleProblems** Milestone 11 carries compact containment as a hypothesis,
+and for a family of processes what is available is not a compact subset of `E`
+but an estimate on `sup over the window of dist (X t) x₀` -- Doob's maximal
+inequality, in the acceptance example.
+
+**`ProperSpace E` is what turns the estimate into the predicate, and it is the
+weakest hypothesis that does.**  The predicate asks for a **compact** `K ⊆ E`
+holding the path on the window; the estimate produces a **bounded** set.  Closed
+balls being compact is exactly the gap, and that is `ProperSpace`.  Without it
+the implication fails for the same reason it fails in an infinite dimensional
+Hilbert space, where the closed unit ball is bounded and not compact.
+
+**It is not an extra demand on the section.**  `ProperSpace E` implies
+`CompleteSpace E` (`Mathlib/Topology/MetricSpace/ProperSpace.lean:104`) and
+`SecondCountableTopology E` (`:66`), hence the Polishness this section assumes;
+so at this statement the ambient hypothesis is subsumed rather than added to.
+`E = ℝ` is the instance the acceptance example uses, and it is an instance and
+not the statement: the reduction has nothing to do with the line.
+
+**The base point is an argument and not a hypothesis on `E`.**  The bound is
+read against one point, any point, and which one is the consumer's business; a
+`Nonempty E` is implied by giving it and is not asked for separately. -/
+theorem SkorokhodSpace.isCompactContained_of_forall_exists_bound [ProperSpace E]
+    {γ : Type*} {t₀ : ι} {μ : γ → Measure D(ι, E)} (x₀ : E)
+    (h : ∀ ε : ℝ≥0∞, 0 < ε → ∀ m : ℕ, ∃ R : ℝ, ∀ i,
+      μ i {f : D(ι, E) | ∀ t ∈ exhaustion t₀ (m : ℝ),
+        dist (f.toFun t) x₀ ≤ R}ᶜ ≤ ε) :
+    SkorokhodSpace.IsCompactContained t₀ μ := by
+  intro ε hε m
+  obtain ⟨R, hR⟩ := h ε hε m
+  exact ⟨Metric.closedBall x₀ R, isCompact_closedBall x₀ R, hR⟩
+
 omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
 /-- **Post-composition and the index crossing commute**, and definitionally: both
 sides send `t` to `h (f t.toNNReal)`.  It is the identity that lets the criterion

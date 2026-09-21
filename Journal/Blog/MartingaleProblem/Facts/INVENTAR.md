@@ -53754,3 +53754,210 @@ entscheiden, ehe die Signatur geschrieben wird, und nicht zu raten.
 `isTightMeasureSet_map_postcomp_of_forall_isApproximable`,
 `isApproximatingPair_of_martingale` (als Beleg, daß die Klasse bewohnt ist und
 der exakte Fall ein Sonderfall bleibt), und die vier Stufen selbst.
+
+### 2026-09-21, neunzehnter Lauf des Tages — der approximative Fall des zweiten Kettenpunktes steht, und damit **alle vier Kettenpunkte**; dazu der erste Zeuge für die Kompaktheitseinschließung, der sich bewegt; und beim Hinschreiben kommt heraus, daß die Paarhypothese einen Quantor trug, den **kein Beweis liest**
+
+**Der Vorschlag des Vorlaufs steht, und er ging beim ersten Durchlauf durch.**
+Gebaut sind **sechs** Deklarationen statt der zwei vorgeschlagenen, denn die
+beiden verlangten ruhen auf den vier Stufen, und die Stufen sind einzeln
+aufzuschreiben — der exakte Fall hat sie auch einzeln.
+
+**Sechs neue Deklarationen** in `TauCeti/MartingaleProblems/Suggested.lean`,
+Meilenstein 11, im neuen Abschnitt „The same four steps in the approximate case,
+which is the case Donsker is in"; **250 Zeilen** einschließlich der
+Doc-Kommentare, dazu **eine Abschwächung** an zwei bestehenden Deklarationen.
+
+| Deklaration | was sie sagt |
+| --- | --- |
+| `isTightMeasureSet_map_of_forall_exists_bounded_pair` | Stufe 1: an jeder beschränkt-stetigen Testfunktion |
+| `isTightMeasureSet_map_of_dense_forall_exists_bounded_pair` | Stufe 2: auf einer supremumsdichten Klasse |
+| `isTightMeasureSet_map_of_denseOnCompacts_forall_exists_bounded_pair` | Stufe 3: auf einer kompakt-dichten Klasse |
+| `isTightMeasureSet_map_of_subalgebra_forall_exists_bounded_pair` | Stufe 4: an einer punktetrennenden Unteralgebra |
+| `isCompact_closure_of_subalgebra_forall_exists_bounded_pair` | **der zweite Kettenpunkt, approximativ** |
+| `isCompact_closure_range_of_subalgebra_forall_exists_bounded_pair` | derselbe in der Gestalt, die der vierte liest |
+
+Die Kette geht durch `python3 scripts/check_master.py` mit **0 Fehlern, 0
+`sorry`** in allen drei Dateien; die Warnungszahlen sind 18 / 38 / 112 (davon
+veraltet 0), also **unverändert** gegenüber dem Vorlauf — die 250 neuen Zeilen
+haben keine einzige Warnung erzeugt. Alle sechs neuen und die zwei geänderten
+Deklarationen sind mit `check_axioms_master.py` geprüft und hängen an `propext`,
+`Classical.choice`, `Quot.sound` und an nichts sonst. `check_negatives.py`
+meldet über **54** Behauptungen keinen unerwarteten Treffer,
+`check_duplicates.py` findet zu keinem der sechs Namen einen Mathlib-Namensvetter,
+`check_own_names.py` deckt jeden in der `README.md` neu zitierten Namen,
+`check_cited_lines.py` meldet 415 von 415 stimmenden Zeilenangaben und **0** tote
+Fundstellen, `check.py` meldet `clean` (142 Seiten).
+
+Mathlib-Stand des Übersetzens: `94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+2026-09-18; Lean 4.35.0-rc2. Die Negativaussagen und die Zeilenangaben sind
+gegen frisch geholtes `upstream/master`
+`09712d488fdbecc0b1d9248a283cf2aa31081b55` geprüft.
+
+Die Gegenprobe gegen v4.33.1 ist wie angesagt rot und in diesem Lauf **nicht**
+nachgemessen worden; sie ist zu berichten und nicht zu beheben.
+
+#### Die Frage, die der Vorlauf vor der Signatur zu klären verlangt hatte
+
+Sie lautete: darf das Tripel `(q, T', K)` von der Testfunktion abhängen, wenn
+diese beim Hochziehen auf eine Algebra allquantifiziert wird? **Ja, und die
+Antwort steht im Quelltext und mußte nicht erarbeitet werden.** Alle drei
+Dichteschritte von Meilenstein 8 — `isTightMeasureSet_iff_forall_postcomp_nnreal`,
+`isTightMeasureSet_of_dense_forall_postcomp_nnreal`,
+`isTightMeasureSet_of_denseOnCompacts_forall_postcomp_nnreal` — nehmen ihre
+Voraussetzung in der Gestalt `∀ g ∈ H, IsTightMeasureSet {…}`: **eine in sich
+geschlossene Folgerung je Testfunktion**, ohne irgend etwas, das zwei von ihnen
+teilen. Exponent, Horizont und Konstante werden also **nach** `f` gewählt, und
+der Dichteschritt, der Testfunktionen in der Supremumsdistanz vergleicht und
+ihre Approximanten nie ansieht, bemerkt es nicht.
+
+Wäre es anders, so müßte die Familie **einen** Horizont für die ganze Algebra
+tragen, und ein Erzeuger liefert den nicht. Die Frage war also die richtige;
+die Antwort hat nichts gekostet.
+
+#### Der Befund, und er ist einer gegen die bestehende Fassung: ein Quantor, den kein Beweis liest
+
+`isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair` trug bis heute
+
+```lean
+(happ : ∀ ε₀ : ℝ, 0 < ε₀ → ∀ u : ℝ≥0, 0 < u → ∃ q : ENNReal, ∃ T' K : ℝ≥0, u < T' ∧ …)
+```
+
+und **`ε₀` kommt in seinem Rumpf nicht vor**. Das ist kein Schönheitsfehler,
+sondern eine Aussage über die Klasse:
+`isApproximable_of_forall_exists_bounded_pair` nimmt den Modulfehler als
+`{ε₀ : ℝ}` **implizit** und schränkt ihn nirgends ein — die beiden Paare, die
+Schranke und die beiden Fehler geben `IsApproximable … ε₀ u` für **jedes**
+`ε₀`. Die beiden Lesarten sind damit logisch äquivalent (`(∀ ε₀ > 0, Q) ↔ Q`,
+wenn `Q` das `ε₀` nicht nennt); nichts wird abgeschwächt und nichts verstärkt.
+
+**Warum er trotzdem weg mußte.** Er hätte sich in den vier neuen Stufen
+viermal wiederholt und jeden Verbraucher — namentlich Donsker — nach Daten
+gefragt, die kein Beweis ansieht. Die Änderung kostet zwei Zeilen: im Beweis
+`intro ε₀ hε₀ u hu` → `intro _ _ u hu`, und in
+`isTightMeasureSet_map_postcomp_of_forall_martingale`, dem einzigen Verbraucher,
+`intro ε₀ hε₀ u hu` → `intro u hu`.
+
+**Wo der Quantor echt ist, und das gehört dazu gesagt:** eine Stufe tiefer, bei
+`isTightMeasureSet_map_postcomp_of_forall_isApproximable`, wird das Tripel
+wirklich je `ε₀` gebraucht, denn `IsApproximable` trägt den Fehler in der
+eigenen Signatur. Der Quantor war also von dort geerbt und nicht erfunden.
+Beides steht jetzt im Doc-Kommentar der Deklaration, damit ein späterer Lauf
+ihn nicht arglos wiederherstellt.
+
+#### Was der exakte Fall dabei bleibt, und warum nichts doppelt bewiesen ist
+
+Die Martingalhypothese wird auf dem ganzen Weg an **genau einer** Stelle
+ausgewertet, nämlich in
+`isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair` selbst, wohin
+`isTightMeasureSet_map_postcomp_of_forall_martingale` sie über
+`isApproximatingPair_of_martingale` mit dem Fehler `0` einspeist. Die vier
+Stufen darüber reichen sie nur durch. Die sechs neuen Deklarationen sind darum
+**dasselbe Hochziehen** wie ihre exakten Gegenstücke, und der exakte Fall
+bleibt stehen, wo er steht, statt durch den approximativen umgeleitet zu
+werden. Das war die Vorhersage des Vorlaufs („Zu tun ist, die vier Stufen neu
+zu ziehen, nicht, eine neue Abschätzung zu führen"), und sie ist eingetreten:
+keiner der sechs Beweise ist länger als zwei Schritte.
+
+#### Wo die Kette von Meilenstein 11 am Ende dieses Laufs steht
+
+| Punkt | Stand |
+| --- | --- |
+| `isTight_map_postcomp_of_exists_martingale` | steht, bis auf die `Fin k`-Fassung |
+| `isRelativelyCompact_of_approx` | **steht, exakt und approximativ — fertig** |
+| `mpSolution_of_tendsto_cadlag` | steht, mit Aufsatz |
+| `tendsto_of_isRelativelyCompact_of_unique` | steht, abstrakt |
+| die Nähte dazwischen | stehen |
+
+**Alle vier Kettenpunkte stehen jetzt in der Gestalt, die der Akzeptanztest
+liest.** Was Donsker noch fehlt, ist damit nichts mehr aus der Kette selbst,
+sondern dreierlei von außen, und es steht so in `MartingaleProblems/README.md`:
+die **Kompaktheitseinschließung** der reskalierten Irrfahrten — deren Reduktion
+auf eine Schranke an das Pfadmaximum unten in diesem Lauf noch bewiesen wird,
+so daß nur die Schranke selbst offen bleibt —, die **Eindeutigkeit** für
+`f ↦ f''/2` (der Fourierpunkt), und — klein — die Quantifizierung des
+Prädikats `Sol` über die Algebra, denn die Nähte stehen für **ein** Paar
+`(f, g)`. Dazu, und das ist eine Instanz und kein Punkt, sind die
+approximierenden Paare der Irrfahrten anzugeben.
+
+#### Im selben Lauf noch: die Kompaktheitseinschließung bekommt ihren ersten Zeugen, der sich bewegt
+
+Der erste der drei verbliebenen Punkte des Akzeptanztests war im Zeitbudget
+noch unterzubringen, und er ist es:
+**`SkorokhodSpace.isCompactContained_of_forall_exists_bound`**, in
+`SkorokhodSpace/Suggested.lean`, Meilenstein 8, unmittelbar hinter
+`isCompactContained_const`.
+
+> Ist `E` ein `ProperSpace` und `x₀ : E` ein beliebiger Aufpunkt, so gilt
+> `IsCompactContained t₀ μ`, sobald es zu jedem `ε > 0` und jedem `m` ein
+> `R : ℝ` gibt mit
+> `μ i {γ | ∀ t ∈ exhaustion t₀ m, dist (γ.toFun t) x₀ ≤ R}ᶜ ≤ ε` für **jedes**
+> `i` — eine gleichmäßige Schranke an das Pfadmaximum auf einem Fenster.
+
+Gegen `check_master.py` 0 Fehler, 0 `sorry`, und die Warnungszahlen bleiben bei
+18 / 38 / 112: der `omit` von `[MeasurableSpace E] [BorelSpace E]` hält die
+beiden `unusedSectionVars` heraus, die der Satz sonst erzeugt hätte.
+`check_axioms_master.py` gibt `propext`, `Classical.choice`, `Quot.sound`.
+
+**Warum er gebraucht wurde.** Die Kompaktheitseinschließung trägt **jede**
+Stufe des zweiten Kettenpunktes — sie steht in allen sechs neuen Signaturen
+dieses Laufs als `hcc` —, und der einzige Zeuge war bis heute
+`isCompactContained_const` mit einer **konstanten** Familie. Die Bedingung war
+also bewohnt und war noch von keiner Familie erfüllt worden, die sich bewegt.
+Das ist derselbe Integritätsmangel, den `Shift` vor seinem ersten Zeugen hatte.
+
+**Was der Beweis ist, und warum er so kurz ist.** Drei Zeilen: das gesuchte
+kompakte `K` ist `Metric.closedBall x₀ R`, und die beiden Mengen sind
+**definitionsgleich**, weil `y ∈ Metric.closedBall x₀ R` und
+`dist y x₀ ≤ R` dieselbe Aussage sind. Es ist kein `simp` nötig und kein
+Umschreiben; `exact` trifft.
+
+**Und die Voraussetzung ist die schwächste, unter der die Reduktion überhaupt
+gilt.** Das Prädikat verlangt ein **kompaktes** `K ⊆ E`, die Schranke liefert
+eine **beschränkte** Menge; daß abgeschlossene Bälle kompakt sind, ist genau
+die Lücke, und das ist `ProperSpace`. Ohne sie scheitert der Schluß aus dem
+Grund, aus dem er im unendlichdimensionalen Hilbertraum scheitert. **Eine
+zusätzliche Forderung an den Abschnitt ist es nicht:** `ProperSpace E` zieht
+`CompleteSpace E` (`Mathlib/Topology/MetricSpace/ProperSpace.lean:104`) und
+`SecondCountableTopology E` (`:66`) nach sich, also gerade das Polnischsein,
+das der Abschnitt ohnehin voraussetzt — am Quelltext nachgesehen und nicht aus
+dem Gedächtnis. `E = ℝ` ist eine Instanz der Aussage und nicht die Aussage.
+
+#### Vorschlag für den nächsten Lauf
+
+**`MeasureTheory.isCompactContained_rescaledWalk`** — die
+Kompaktheitseinschließung für die **reskalierten Irrfahrten**, in
+`MartingaleProblems/Suggested.lean`, Meilenstein 11, als Akzeptanzbeispiel und
+nicht als eigener Meilensteinpunkt.
+
+> `E = ℝ`, `X n t = n⁻¹ᐟ² * ∑ k < ⌊n t⌋, ξ k` für i.i.d. zentrierte `ξ k` mit
+> Varianz `1`. Dann erfüllt die Familie der Pfadgesetze die Voraussetzung von
+> `SkorokhodSpace.isCompactContained_of_forall_exists_bound` mit `x₀ = 0`.
+
+**Warum jetzt.** Nach diesem Lauf ist es der einzige Punkt des Akzeptanztests,
+der weder Fourier noch Buchhaltung ist, und der Satz darüber steht seit heute
+bereit: die Reduktion auf das Pfadmaximum ist bewiesen, es fehlt die Schranke
+an das Pfadmaximum selbst.
+
+**Woraus die Schranke kommt, und es ist Mathlib-Material.** Doobs
+Maximalungleichung über dem **diskreten** Index:
+`MeasureTheory.maximal_ineq`
+(`Mathlib/Probability/Martingale/OptionalStopping.lean:144`), für ein
+`Submartingale` mit `0 ≤ f`; angewandt auf `|S_k|` oder auf `S_k²` über die
+Untermartingaleigenschaft der Partialsummen. Der Übergang vom diskreten
+Maximum zum Fenstermaximum ist dabei **keine Näherung, sondern eine
+Gleichheit**: ein Treppenpfad nimmt auf `exhaustion 0 m` genau die Werte
+seiner Stützstellen an.
+
+**Die Stelle, an der es hätte klemmen können, ist geprüft und klemmt nicht.**
+Die Frage war, ob die reskalierte Irrfahrt in dieser Entwicklung überhaupt als
+Treppenpfad dasteht: `stepPath` und `isStepPath_jumpProcessF` sind aus
+Meilenstein 4 und für Sprungprozesse mit **zufälligen** Sprungzeiten gebaut,
+die Irrfahrt springt zu **festen** Zeiten `k/n`. Sie ist eine Instanz, und
+zwar ohne jede Anpassung: `stepPath (T : ℕ → α) (y : ℕ → E)` nimmt die
+Sprungzeiten als **beliebige** Folge in einem linear geordneten `α`, und
+`isStepPath_stepPath` verlangt von ihr nur `StrictMono` und
+`∀ s, ∃ k, s < T (k + 1)`. Für `T k = k / n` mit `n ≠ 0` über `ℝ≥0` sind
+beides Einzeiler (`div_lt_div_of_pos_right`, `exists_nat_gt` mit
+`lt_div_iff₀`); als Probe gegen `master` übersetzt, `rc=0`. Der nächste Lauf
+braucht also **keine** eigene Konstruktion und kann unmittelbar bei der
+Schranke anfangen.
