@@ -427,7 +427,14 @@ Suche `partialSum|partial_sum_martingale|martingale_sum_range` unter `Mathlib/Pr
 Suche `integral_abs_le_sqrt|sq_integral_le_integral_sq|integral_abs_le_rpow` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
 
 
+## `filtration-reindex` — MartingaleProblems/Suggested.lean, `floorFiltration`; MartingaleProblems/README.md, Meilenstein 11
+
+> Mathlib hat keine Umindizierung einer Filtration laengs einer monotonen Abbildung. Die Konstruktionen in `Mathlib/Probability/Process/Filtration.lean` sind `const`, `filtrationOfSet`, `natural`, `piLE`, `piFinset` und `cylinderEventsCompl`, und keine davon aendert den Index; am 2026-09-21 am Quelltext nachgesehen.
+
+Suche `Filtration.comap|Filtration.reindex|Filtration.comp\b|reindexFiltration|floorFiltration` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
 ## Zusammenfassung
 
-58 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
+59 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
 
