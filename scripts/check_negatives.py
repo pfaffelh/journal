@@ -186,6 +186,18 @@ CLAIMS = [
      'continuousat_finsetprod|continuousat_finset_prod'
      '|continuousat[a-z_.\']*\\.finsetprod',
      'Mathlib/'),
+    ('martingale-smaller-filtration', 'MartingaleProblems/Suggested.lean, '
+     '`MeasureTheory.tendsto_integral_mpTest_sub_mul_of_approx` und '
+     '`MeasureTheory.comap_pathOfProcess_le_of_stronglyAdapted`',
+     'Mathlib hat keinen Satz, der ein Martingal von einer Filtration auf eine '
+     '**kleinere** trägt, für die es adaptiert bleibt (der Turmschluß).  '
+     'Gesucht wurde am 2026-09-21 nicht nach der Vokabel, sondern nach der '
+     'Gestalt: in ganz `Mathlib/Probability/` steht **keine** Aussage mit zwei '
+     'Filtrationen im Satz; `Mathlib/Probability/Martingale/Basic.lean` hält '
+     'die Filtration über die ganze Datei fest.',
+     'mono_filtration|martingale_of_le_filtration|martingale\\.mono\\b'
+     '|submartingale\\.mono_filtration',
+     'Mathlib/'),
 ]
 
 
@@ -462,6 +474,11 @@ if __name__ == '__main__':
         'rightcontinuous-measurable': [
             'Mathlib/Probability/Process/Filtration.lean',
             'Mathlib/Probability/Process/Stopping.lean'],
+        # Ein Namensvetter und nichts weiter: `strictMono_filtration` ist die
+        # strenge Monotonie einer Körperturmfiltration und enthält das Muster
+        # `mono_filtration` als Teilzeichenkette.  Von Martingalen handelt die
+        # Datei nicht.
+        'martingale-smaller-filtration': ['Mathlib/FieldTheory/CardinalEmb.lean'],
     }
     out += ['## Die Behauptungen der Roadmaps', '']
     for key, where, claim, pat, pf in CLAIMS:

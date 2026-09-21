@@ -11225,13 +11225,127 @@ has to be chosen once for all `n`. What stands:
   single process never fails it; what the hypothesis excludes is the escape of
   mass **along the index**.
 
-* `mpSolution_of_tendsto_cadlag`: let `A ⊆ Cb(E) × Cb(E)` and let `A n` be
-  relations between bounded measurable functions such that for every `(f,g) ∈ A`
-  there are `(f n, g n) ∈ A n` with `‖f n - f‖ → 0` and `‖g n - g‖ → 0`. If `X n`
-  solves the martingale problem for `A n` with càdlàg paths and `X n → X` in
-  `D ι E`, then `X` solves the martingale problem for `A`. Derive it from
-  Milestone 10, taking for `D` the set of times at which the limit has no fixed
-  discontinuity.
+* `SkorokhodSpace.mpTest` — the functional a martingale problem tests, read on
+  the path space: `f (z t) - ∫_0^t g (z u) du` as a function of the path alone.
+  It is defined in **SkorokhodSpace** Milestone 8, before any filtration exists,
+  because the statements about *where it is continuous* are statements about the
+  path space and nothing else.
+* `rightDense_of_dense` — over a densely ordered index without a greatest
+  element, plain density **is** right density. The right density that
+  `isDetermining_evalFuns` and
+  `SkorokhodSpace.borel_eq_iSup_comap_eval_of_countable_rightDense` ask of a set
+  of times is strictly stronger in general — an index with a right isolated
+  point separates the two — and over `ℝ` and `ℝ≥0` it is not. This is what makes
+  the time set of the third item free:
+  `SkorokhodSpace.exists_countable_dense_continuity` delivers `Dense` and not
+  right dense, and the gap is one line.
+* `cadlagFiltration` — the coordinate filtration of `D(ℝ≥0, E)`, `naturalFiltration`
+  at `SkorokhodSpace.measurable_eval`, with `cadlagFiltration_eq` and
+  `measurable_cadlagFiltration`.
+* `naturalFiltration_comp_eq_comap` — the natural filtration of the path of a
+  process **is** the coordinate past pulled back along the path map. This is what
+  says the filtration hypothesis of the two items below is inhabited at the
+  canonical choice; the proof is that `MeasurableSpace.comap` commutes with a
+  supremum and with a composition.
+* `tendsto_toNNReal_nhdsGE`, `tendsto_comp_toNNReal_nhdsGE` and
+  `measurable_compensator_cadlagFiltration` — the compensator is measurable for
+  the coordinate past at the time the window ends. This is the expensive half of
+  the adaptedness, and it is `measurable_uncurry_min_of_rightContinuous` of
+  Milestone 4 read at a càdlàg path instead of a step path: the truncation
+  `min u t` keeps every coordinate the integrand reads below `t`, and off the
+  window it changes nothing. **Only right continuity is spent**; no left limit
+  is read, which is why the item below asks its no jump condition at the single
+  time the *evaluation* reads.
+* `measurable_mpTest` and `abs_mpTest_le` — the tested functional is measurable
+  for the past at the time it is read, and bounded by `‖f‖ + ‖g‖ * t` uniformly
+  in the time below `t` and **in the path**. The bound is the counterpart of
+  `abs_mpFamily_coordinate_le` over the càdlàg path space, and it is what makes
+  the integrability and the uniform integrability of
+  `mpSolution_of_tendsto` carry no information here: the tails above it are not
+  small but zero.
+* `mpSolution_of_tendsto_cadlag`: let `X n` have càdlàg paths, let their laws
+  converge weakly to the law of `X` on `D(ℝ≥0, E)`, let `T` be countable, right
+  dense and free of fixed discontinuities of the limit law, and let the tested
+  increments
+  `∫ (mpTest f g t (X n) - mpTest f g s (X n)) * Z (X n) d(P n)`
+  tend to `0` for every `Z` of `SkorokhodSpace.evalFuns E (insert s (T ∩ Set.Iic s))`.
+  Then `X` satisfies the martingale identity of the martingale problem to
+  `(f, g)` along `T`. **Proved 2026-09-21.**
+
+  **The filtration is a hypothesis and is the coordinate past pulled back along
+  the path map.** That is the weakest form: it is what
+  `isDetermining_evalFuns` reads, it is what makes the tested process adapted,
+  and it leaves the consumer free in how the filtration is built;
+  `naturalFiltration_comp_eq_comap` inhabits it. **Adaptedness is not a
+  hypothesis** and is derived from it.
+
+  **What the consumer supplies is the vanishing of the tested increments and
+  nothing else that is analytic.** The other three hypotheses of
+  `mpSolution_of_tendsto_of_pContinuous` are discharged from the path space
+  alone — integrability and uniform integrability from `abs_mpTest_le`,
+  `P`-continuity from **SkorokhodSpace** Milestone 8, and the determining
+  property from `isDetermining_evalFuns`.
+* `SkorokhodSpace.integrableOn_mpTest_integrand`,
+  `SkorokhodSpace.mpTest_sub` and `abs_mpTest_sub_mpTest_le` — the tested
+  functional is **linear in the pair it tests**, and the error of testing with
+  the wrong pair is `‖f - f'‖ + ‖g - g'‖ * t`, uniformly in the time below `t`
+  and **in the path**. The first two are statements about the path space alone
+  and stand in **SkorokhodSpace** Milestone 8; the third is the second read
+  through `abs_mpTest_le`. The integrability is what makes the linearity a
+  statement about the *integrals* and not only about the integrands, the
+  Bochner integral of a non integrable function being `0`; it is
+  `IsCadlag.measurable` of **SkorokhodSpace** Milestone 2 together with the
+  bound `‖g‖` on a window of finite measure. **Boundedness of `f'` and `g'` is
+  not read**, only of the differences, which is what makes the error vanish
+  along an approximating sequence.
+* `measurable_cadlagFiltration_of_mem_evalFuns` — a finite dimensional test
+  function of times below `s` is measurable for the coordinate past at `s`.
+  This is `measurable_cadlagFiltration` at each factor and
+  `Finset.measurable_prod`; the hypothesis is on the set of times, so
+  `insert s (T ∩ Set.Iic s)` qualifies.
+* `tendsto_integral_mpTest_sub_mul_of_approx` — the tested increments of an
+  approximating family vanish, which is the hypothesis `hzero` of the previous
+  item. **Proved 2026-09-21.**
+
+  The approximants are martingale solutions to the pairs `(f' n, g' n)` and are
+  tested with the limiting pair `(f, g)`. **The step is an estimate and not a
+  limit theorem**, and that is what makes it cheap: the exact increment, tested
+  with `(f' n, g' n)` against a test function of the past, integrates to
+  **zero** and not to something small, by
+  `integral_sub_mul_eq_zero_of_martingale`; what is left is bounded pointwise
+  by `2 * (‖f - f' n‖ + ‖g - g' n‖ * t) * ‖Z‖`, uniformly in `n` and in the
+  sample point, and the limit is `squeeze_zero_norm`.
+
+  **The filtration of the approximants is read at exactly one place**, the
+  measurability of `Z ∘ X' n` for the past at `s`, and the hypothesis `h𝓕'` is
+  the same as `h𝓕` of the previous item, one for each `n`;
+  `naturalFiltration_comp_eq_comap` inhabits it. **The times carry no
+  hypothesis here at all**: only `S ⊆ Set.Iic s` is read, so countability,
+  right density and the absence of fixed discontinuities belong to the previous
+  item alone.
+* `mpSolution_of_tendsto_cadlag_of_approx`: the wrapper in which the
+  approximants solve an approximating problem rather than the limiting one. If
+  the `X' n` are martingale solutions to the pairs `(f' n, g' n)` with
+  `‖f - f' n‖ → 0` and `‖g - g' n‖ → 0`, and their path laws converge weakly on
+  `D(ℝ≥0, E)`, then the limit satisfies the martingale identity of the
+  martingale problem to `(f, g)` along `T`. It is the previous two items
+  composed, and it adds nothing analytic. **Proved 2026-09-21.**
+
+  **Its two filtration hypotheses point in opposite directions, and that is
+  what makes the chain join, 2026-09-21.** The one on the limit is an
+  *equality* — the coordinate past pulled back along the path map — because the
+  determining class has to generate that filtration. The one on the
+  approximants is an *inclusion*: all that is read of it is that a finite
+  dimensional test function of the past be measurable, so the filtration of the
+  approximants has only to **contain** the coordinate past. The weaker form is
+  not a nicety. The filtration the second item hands over is **right
+  continuous**, and the natural filtration of a càdlàg path is not; with an
+  equality the two items could be joined only by carrying a martingale from the
+  given filtration down to the natural one, which is true by the tower property
+  but is a theorem, and Mathlib has none (checked 2026-09-21 at
+  `Mathlib/Probability/Martingale/Basic.lean`, where the filtration is fixed
+  throughout the file). `comap_pathOfProcess_le_of_stronglyAdapted` is the
+  inclusion at the data of the second item, and it is three rewrites.
 
   **The `P`-continuity this derivation needs is proved, 2026-09-21**, in
   **SkorokhodSpace** Milestone 8, and it decides which of the two versions of
@@ -11258,11 +11372,12 @@ has to be chosen once for all `n`. What stands:
   hypotheses of `mpSolution_of_tendsto_of_pContinuous` are met by **one and the
   same** class, which was the obstruction: the earlier witnesses for
   `IsDetermining` take all bounded measurable functions of the past, or
-  indicators, and neither is continuous anywhere it has to be. What a run at this
-  item still has to supply is the bookkeeping of
-  `mpSolution_of_tendsto_of_pContinuous` — the integrability and uniform
-  integrability of the tested functionals along the approximating sequence, and
-  the convergence of their integrals.
+  indicators, and neither is continuous anywhere it has to be. The remaining
+  bookkeeping of `mpSolution_of_tendsto_of_pContinuous` — the integrability and
+  the uniform integrability of the tested functionals along the approximating
+  sequence — is `abs_mpTest_le`, whose tails are zero rather than small; the
+  convergence of the integrals is what `mpSolution_of_tendsto_cadlag` carries as
+  its hypothesis and `mpSolution_of_tendsto_cadlag_of_approx` discharges.
 * `mpSolution_of_tendsto_cadlag_of_pathwise`: the same with the uniform
   convergence of `f n` and `g n` replaced by
   `𝔼^{P n}‖(f n - f) (X n t)‖ → 0` and
@@ -13186,7 +13301,106 @@ has to be chosen once for all `n`. What stands:
   pair form of the first item instead of its martingale form, and the
   identification of the limit points, which is the next item.
 * `tendsto_of_isRelativelyCompact_of_unique`: with uniqueness from Milestone 6
-  or Milestone 8, relative compactness upgrades to convergence.
+  or Milestone 8, relative compactness upgrades to convergence. **Proved
+  2026-09-21.**
+
+  **It carries no measure theory**, and it is stated for an arbitrary space and
+  an arbitrary predicate `Sol`: the second item supplies the compact closure,
+  the third supplies "every limit of a convergent subsequence is a solution",
+  Milestone 6 supplies "there is at most one solution", and nothing else of the
+  chain enters. The separation is what makes the two probabilistic inputs
+  replaceable.
+
+  **Two hypotheses a first reading expects and that are not there.** There is
+  **no metrizability**: `Filter.tendsto_of_subseq_tendsto` holds over an
+  arbitrary filter on an arbitrary type and asks only that the *index* filter
+  be countably generated, and the sequential compactness of a compact set is
+  `IsCompact.tendsto_subseq` under `FirstCountableTopology`, strictly weaker.
+  And there is **no monotonicity of the extracted subsequence**: the hypothesis
+  quantifies over every map `ℕ → ℕ` that tends to infinity, which is the weaker
+  thing for the consumer to prove, the third item knowing nothing about the
+  order of its index — only that the index escapes, which is what carries a
+  hypothesis like `‖f - f' n‖ → 0` from the family to the subsequence.
+* `tendstoInDistribution_id_of_tendsto` — the bridge between the fourth item
+  and the third. The fourth speaks of the *laws* and the third of the
+  *processes*, asking for `TendstoInDistribution`, which names a limiting
+  random variable; a compactness argument produces a measure and no process.
+  The identity of the path space under the limiting law is that process,
+  because `Measure.map id` is the measure itself. **Nothing is constructed** —
+  the canonical space is the path space, which is already there. **Proved
+  2026-09-21.**
+* `mpSolution_of_tendsto_cadlag_of_subseq` — the seam between the fourth item
+  and the third, and it is `hlim` of the fourth written out for the càdlàg
+  chain: if the path laws of an approximating family converge along a
+  subsequence to `ν`, then the identity of the path space, read under `ν`,
+  satisfies the martingale identity to `(f, g)` along a countable dense set of
+  times. **Proved 2026-09-21.**
+
+  **Three of the inputs of `mpSolution_of_tendsto_cadlag_of_approx` are produced
+  here rather than asked of the consumer.** The *process* of the limit is the
+  identity, by the bridge above; its *filtration* is `cadlagFiltration`, and
+  the hypothesis is `MeasurableSpace.comap_id` at `cadlagFiltration_eq`, which
+  is what `naturalFiltration_comp_eq_comap` says at the identity; and the
+  *times* come from `SkorokhodSpace.exists_countable_dense_continuity` at the
+  **limit law**, with `rightDense_of_dense` turning their density into right
+  density.
+
+  **That is why `T` is existentially quantified in the conclusion** rather than
+  being a parameter: the limit is known only after the extraction, so no set of
+  times can be fixed before it. The shape costs nothing at the fourth item,
+  whose uniqueness input from Milestone 6 reads `IsMPSolution` and asks nothing
+  about the times.
+
+  **A subsequence of an approximating family is again one**, and that is the
+  whole of the remaining bookkeeping — the data are composed with `ns`, and the
+  hypotheses transport by substitution. The two norm convergences transport
+  because the index escapes, and that is the single place at which
+  `Tendsto ns atTop atTop` of the fourth item is paid out.
+* `mpSolution_of_tendsto_cadlag_of_subseq_pathOfProcess` — the same seam at the
+  data the **second** item produces, and the form the Donsker assembly reads:
+  one probability space, one right continuous filtration, a sequence of adapted
+  processes with their path maps, and one pair `(f, g)` throughout.
+  **Proved 2026-09-21.**
+
+  Three substitutions and no analysis. The spaces being constant, the
+  approximating pairs are constant and the two norm convergences are `‖f - f‖`;
+  the filtration hypothesis is `comap_pathOfProcess_le_of_stronglyAdapted`,
+  which is where the inclusion form is spent; and the tested functional at a
+  path built from a process is the martingale of the second item on the nose,
+  `SkorokhodSpace.mpTest` being the evaluation minus the compensator.
+
+  Two things it does **not** ask, both checked at the source. Progressivity: the
+  second item states `IsStronglyProgressive` because its tightness needs it,
+  while this item reads only `StronglyAdapted`, for the measurability of the
+  path map and for the filtration inclusion. And a hypothesis it does carry:
+  `CompleteSpace E`, entering here for the first time in the chain and only
+  through `SkorokhodSpace.measurable_of_measurable_eval` — the second item
+  carries it for the same reason, so it is not a new demand.
+
+  **The bookkeeping of the set between the second item and the fourth is done
+  too**, as `isCompact_closure_range_of_subalgebra_forall_martingale`: the
+  second item concludes about `closure {ν | ∃ i, ν = P.map (Φ i)}` and the
+  fourth reads `closure (Set.range μ)`, and the two sets are equal by `Set.ext`
+  followed by `Subtype.ext`. No hypothesis is added or dropped. The type
+  ascription on the range is not decoration — `ProbabilityMeasure` is a `def`
+  on a subtype, and the anonymous constructor folds back to it, whereupon
+  `closure` finds no topology; it is the same trap as the `β :=` at
+  `tendstoInDistribution_id_of_tendsto`.
+
+  With it **the four items join, and between them nothing is left to write**:
+  the second delivers the compact closure in the shape the fourth consumes, the
+  fourth extracts a subsequence, the seams above turn its limit into a process
+  with a filtration and a set of times, and the third reads the martingale
+  identity off it.
+
+  **What Donsker still needs is not a seam**, and it is named here so that the
+  joining is not mistaken for the acceptance test. Three things, each its own
+  item: the **approximate** case of the second item, since rescaled random walks
+  solve the martingale problem only nearly and the exact case does not reach
+  them; **compact containment** for those walks; and the **uniqueness** for
+  `f ↦ f''/2`, which is the self-contained Fourier point stated below. A fourth,
+  smaller: the predicate `Sol` of the fourth item has to be quantified over the
+  algebra, the seams above being stated for one pair `(f, g)`.
 * Convergence in measure as a second mode: the space of càdlàg paths with the
   topology of convergence in Lebesgue measure, in which the coordinates are
   nowhere continuous, and `mpSolution_of_tendsto_inMeasure`, obtained from

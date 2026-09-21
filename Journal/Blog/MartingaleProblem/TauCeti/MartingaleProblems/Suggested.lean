@@ -47214,6 +47214,52 @@ theorem isCompact_closure_of_subalgebra_forall_martingale {E : Type*}
   rw [hset]
   exact isTightMeasureSet_map_of_subalgebra_forall_martingale hSc hSd hX hcont hΦ hcc A hsep hmart
 
+/-- **The second item of the chain in the form the fourth item reads it**: the
+*range* of the path laws rather than the set of measures that are one of them.
+
+The two sets are the same, and the identity is `Set.ext` followed by
+`Subtype.ext`.  It is written down because
+`MeasureTheory.tendsto_of_isRelativelyCompact_of_unique` is stated for a family
+`μ : ℕ → F` and asks for `IsCompact (closure (Set.range μ))`, while the previous
+item concludes about a comprehension.  **No hypothesis is added or dropped**, and
+there is no mathematics in the step.
+
+**The type ascription on the range is not decoration.**  `ProbabilityMeasure` is
+a `def` on a subtype, and `⟨P.map (Φ i), inferInstance⟩` folds back to that
+subtype while elaborating, whereupon `closure` finds no topology on it.  The
+ascription pins the element type.  The same trap is recorded at
+`MeasureTheory.tendstoInDistribution_id_of_tendsto`, where it takes the form
+`Tendsto (β := ProbabilityMeasure F)`. -/
+theorem isCompact_closure_range_of_subalgebra_forall_martingale {E : Type*}
+    [MeasurableSpace E] [MetricSpace E] [BorelSpace E] [PolishSpace E] [CompleteSpace E]
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {γ : Type*} {X : γ → ℝ≥0 → Ω → E}
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hX : ∀ i, IsStronglyProgressive 𝓕 (X i))
+    (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ X i s ω) (Set.Ici t) t)
+    {Φ : γ → Ω → D(ℝ≥0, E)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ X i t ω)
+    (hcc : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) fun i ↦ P.map (Φ i))
+    (A : Subalgebra ℝ (E →ᵇ ℝ))
+    (hsep : (A.map (BoundedContinuousFunction.toContinuousMapₐ ℝ)).SeparatesPoints)
+    (hmart : ∀ f ∈ A, ∃ g g' : E →ᵇ ℝ,
+      (∀ i, Martingale (fun t ω ↦ f (X i t ω)
+        - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g (X i s.toNNReal ω)) 𝓕 P)
+      ∧ ∀ i, Martingale (fun t ω ↦ f (X i t ω) ^ 2
+        - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g' (X i s.toNNReal ω)) 𝓕 P) :
+    IsCompact (closure ((Set.range fun i ↦ (⟨P.map (Φ i), inferInstance⟩ :
+      ProbabilityMeasure D(ℝ≥0, E))) : Set (ProbabilityMeasure D(ℝ≥0, E)))) := by
+  have hset : ((Set.range fun i ↦ (⟨P.map (Φ i), inferInstance⟩ :
+        ProbabilityMeasure D(ℝ≥0, E))) : Set (ProbabilityMeasure D(ℝ≥0, E)))
+      = {ν : ProbabilityMeasure D(ℝ≥0, E) | ∃ i, (ν : Measure D(ℝ≥0, E)) = P.map (Φ i)} := by
+    ext ν
+    constructor
+    · rintro ⟨i, rfl⟩
+      exact ⟨i, rfl⟩
+    · rintro ⟨i, hi⟩
+      exact ⟨i, Subtype.ext hi.symm⟩
+  rw [hset]
+  exact isCompact_closure_of_subalgebra_forall_martingale hSc hSd hX hcont hΦ hcc A hsep hmart
+
 /-! ### Milestone 10: the determining class the third item of the chain can use
 
 `mpSolution_of_tendsto_of_pContinuous` asks two things of one and the same class
@@ -47287,5 +47333,795 @@ theorem isDetermining_evalFuns {X : Ω → D(ι, E)} {𝓕 : Filtration ι m} {T
   exact measurable_generateFromFuns_of_mem hZ
 
 end PathDetermining
+
+/-! ### Milestone 11: the third item of the chain
+
+`MeasureTheory.mpSolution_of_tendsto_of_pContinuous` asks four things of the
+approximating family, and over the càdlàg path space three of them are now
+discharged once and for all: the tested functional is bounded on a bounded time
+window, so its tails are **zero** and both the integrability and the uniform
+integrability are free; it is continuous at every path that does not jump at the
+time it is read, so `P`-continuity is a statement about the *law* and not about
+the family; and the finite dimensional test functions of the past are a
+determining class.  What is left for the consumer is the fourth, the vanishing of
+the tested increments, and that is the martingale property of the approximants.
+
+**The filtration is a hypothesis, `h𝓕`, and it is the coordinate past pulled back
+along the path map.**  That is the weakest form: it is what
+`MeasureTheory.isDetermining_evalFuns` reads, it is what makes the tested process
+adapted, and it does not force the consumer to use any particular construction of
+the filtration.  `MeasureTheory.naturalFiltration_comp_eq_comap` shows that the
+natural filtration of the coordinates of the path satisfies it, so the hypothesis
+is inhabited at the canonical choice and costs nothing there.
+
+**Adaptedness is not a hypothesis** and is derived from `h𝓕`.  Its expensive half
+is the compensator, and the joint measurability that carries it is
+`measurable_uncurry_min_of_rightContinuous` of Milestone 4 -- the same
+generalisation that the jump construction uses, read here at a càdlàg path
+instead of a step path.  Nothing of the jump construction enters; what is used is
+right continuity of the path and nothing else. -/
+
+open scoped _root_.BoundedContinuousFunction
+
+section CadlagChain
+
+variable {E : Type*} [MetricSpace E] [MeasurableSpace E] [BorelSpace E] [PolishSpace E]
+
+/-- **Over a densely ordered index without a greatest element, plain density is
+already right density.**
+
+The right density `∀ t, t ∈ T ∨ (𝓝[T ∩ Set.Ioi t] t).NeBot` is what
+`isDetermining_evalFuns` and
+`SkorokhodSpace.borel_eq_iSup_comap_eval_of_countable_rightDense` ask of a set of
+times, and it is strictly stronger than `Dense T` in general -- an index with a
+right isolated point separates the two.  Over `ℝ`, `ℝ≥0` and every other densely
+ordered index it does not, and the reason is one line: a neighbourhood from the
+right contains an interval `Set.Ioo t u`, which is open and, by dense ordering,
+nonempty, so a dense set meets it.
+
+**This is what makes the time set of the third item of the chain free.**
+`SkorokhodSpace.exists_countable_dense_continuity` produces a countable `T` that
+is `Dense` and carries no fixed discontinuity of a given law; right density is
+not among its conclusions and is not to be asked of the consumer separately. -/
+theorem rightDense_of_dense {ι' : Type*} [LinearOrder ι'] [TopologicalSpace ι']
+    [OrderTopology ι'] [DenselyOrdered ι'] [NoMaxOrder ι'] {T : Set ι'} (hT : Dense T) (t : ι') :
+    t ∈ T ∨ (𝓝[T ∩ Set.Ioi t] t).NeBot := by
+  right
+  rw [Set.inter_comm, nhdsWithin_inter']
+  refine Filter.inf_principal_neBot_iff.2 fun U hU ↦ ?_
+  obtain ⟨u, htu, hsub⟩ := mem_nhdsGT_iff_exists_Ioo_subset.1 hU
+  obtain ⟨v, hv1, hv2⟩ := exists_between htu
+  obtain ⟨w, hw⟩ := hT.inter_open_nonempty (Set.Ioo t u) isOpen_Ioo ⟨v, hv1, hv2⟩
+  exact ⟨w, hsub hw.1, hw.2⟩
+
+/-- **The coordinate filtration of the càdlàg path space.**
+
+This is `naturalFiltration` at the evaluations, and it is the filtration that
+`MeasureTheory.isDetermining_evalFuns` names through its hypothesis `h𝓕`.
+`SkorokhodSpace.measurable_eval` is what makes the family measurable, and it is
+the only input; no topology of the index and no completeness of `E` is read.
+
+Mathlib's `MeasureTheory.Filtration.natural` is not used, for the reason recorded
+at `naturalFiltration`: it asks for `StronglyMeasurable` and hence for a topology
+and a Borel structure on the state space tied together, while the construction
+needs only measurability. -/
+noncomputable def cadlagFiltration :
+    Filtration ℝ≥0 (inferInstance : MeasurableSpace D(ℝ≥0, E)) :=
+  naturalFiltration (fun r (f : D(ℝ≥0, E)) ↦ f.toFun r)
+    (fun r ↦ SkorokhodSpace.measurable_eval r)
+
+/-- The σ-algebra of the coordinate filtration at a time is the supremum of the
+pull backs of the coordinates below it, and the identity is `rfl`. -/
+theorem cadlagFiltration_eq (s : ℝ≥0) :
+    (cadlagFiltration (E := E) s : MeasurableSpace D(ℝ≥0, E))
+      = ⨆ r ∈ Set.Iic s, MeasurableSpace.comap (fun f : D(ℝ≥0, E) ↦ f.toFun r) inferInstance :=
+  rfl
+
+/-- Every coordinate below a time is measurable for the coordinate past at that
+time. -/
+theorem measurable_cadlagFiltration {u v : ℝ≥0} (huv : u ≤ v) :
+    Measurable[cadlagFiltration (E := E) v] (fun f : D(ℝ≥0, E) ↦ f.toFun u) :=
+  measurable_naturalFiltration (fun r ↦ SkorokhodSpace.measurable_eval r) huv
+
+variable {Ω : Type*} {m : MeasurableSpace Ω}
+
+/-- **The natural filtration of the path of a process is the coordinate past
+pulled back along the path map**, which is the hypothesis `h𝓕` of
+`MeasureTheory.isDetermining_evalFuns` and of
+`MeasureTheory.mpSolution_of_tendsto_cadlag`.
+
+It says that the hypothesis is inhabited at the canonical choice, and the whole
+proof is that `MeasurableSpace.comap` commutes with a supremum and with a
+composition. -/
+theorem naturalFiltration_comp_eq_comap {X : Ω → D(ℝ≥0, E)} (hX : Measurable X) (s : ℝ≥0) :
+    (naturalFiltration (fun r ω ↦ (X ω).toFun r)
+        (fun r ↦ (SkorokhodSpace.measurable_eval r).comp hX) s : MeasurableSpace Ω)
+      = MeasurableSpace.comap X (⨆ r ∈ Set.Iic s,
+          MeasurableSpace.comap (fun f : D(ℝ≥0, E) ↦ f.toFun r) inferInstance) := by
+  rw [MeasurableSpace.comap_iSup]
+  refine iSup_congr fun r ↦ ?_
+  rw [MeasurableSpace.comap_iSup]
+  exact iSup_congr fun _ ↦ (MeasurableSpace.comap_comp (g := X)
+    (f := fun z : D(ℝ≥0, E) ↦ z.toFun r)).symm
+
+omit [PolishSpace E] in
+/-- **The coordinate past of a path lies under every filtration to which the
+process is adapted.**  This is the hypothesis `h𝓕'` of
+`MeasureTheory.mpSolution_of_tendsto_cadlag_of_approx` at the data the second
+item of the chain produces.
+
+`MeasureTheory.naturalFiltration_comp_eq_comap` inhabits that hypothesis at the
+natural filtration, and this inhabits it at every larger one.  **The second is
+what the chain needs, and the first would not do**:
+`MeasureTheory.isCompact_closure_of_subalgebra_forall_martingale` asks for a
+right continuous filtration, and the natural filtration of a càdlàg path is not
+right continuous.  Were `h𝓕'` an equality, joining the two items would require
+carrying a martingale from the given filtration down to the natural one -- true
+by the tower property, but a theorem, and one Mathlib does not have.
+
+The proof is `MeasurableSpace.comap_comp` at each coordinate and nothing else;
+the adaptedness is read at the coordinate `q` and moved up to `r` by
+`MeasureTheory.Filtration.mono`. -/
+theorem comap_pathOfProcess_le_of_stronglyAdapted {𝓕 : Filtration ℝ≥0 m}
+    {X : ℝ≥0 → Ω → E} (hX : StronglyAdapted 𝓕 X)
+    {Φ : Ω → D(ℝ≥0, E)} (hΦ : ∀ ω, (Φ ω).toFun = fun t ↦ X t ω) (r : ℝ≥0) :
+    MeasurableSpace.comap Φ (⨆ q ∈ Set.Iic r,
+        MeasurableSpace.comap (fun z : D(ℝ≥0, E) ↦ z.toFun q) inferInstance)
+      ≤ (𝓕 r : MeasurableSpace Ω) := by
+  rw [MeasurableSpace.comap_iSup]
+  refine iSup_le fun q ↦ ?_
+  rw [MeasurableSpace.comap_iSup]
+  refine iSup_le fun hq ↦ ?_
+  rw [MeasurableSpace.comap_comp]
+  have hfun : (fun z : D(ℝ≥0, E) ↦ z.toFun q) ∘ Φ = X q :=
+    funext fun ω ↦ by simp only [Function.comp_apply, hΦ ω]
+  rw [hfun]
+  exact (hX q).measurable.comap_le.trans (𝓕.mono hq)
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- Truncation to the nonnegative reals carries the neighbourhood from the right
+to the neighbourhood from the right.  Continuity gives the limit and monotonicity
+keeps the approximants on the right side; both are needed, the second because a
+filter within a half line is not produced by continuity alone. -/
+theorem tendsto_toNNReal_nhdsGE (s : ℝ) :
+    Tendsto Real.toNNReal (𝓝[≥] s) (𝓝[≥] s.toNNReal) :=
+  tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within _
+    ((continuous_real_toNNReal.tendsto s).mono_left nhdsWithin_le_nhds)
+    (eventually_mem_nhdsWithin.mono fun _ hr ↦
+      Set.mem_Ici.2 (Real.toNNReal_mono (Set.mem_Ici.1 hr)))
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The integrand of the compensator is right continuous in the time**, at every
+real time and along every path.
+
+This is the hypothesis `hrc` of `measurable_uncurry_min_of_rightContinuous` at the
+data of the path space, and the three steps are the three factors: truncation
+carries the right filter (`tendsto_toNNReal_nhdsGE`), the path is right continuous
+(`IsCadlag.isRightContinuous`), and the test function is continuous.
+
+**No left limit is read.**  The whole of `IsCadlag` that the compensator uses is
+its right continuity, which is why the statement of the third item of the chain
+asks the no jump condition only at the time the *evaluation* reads. -/
+theorem tendsto_comp_toNNReal_nhdsGE (g : E →ᵇ ℝ) (z : D(ℝ≥0, E)) (s : ℝ) :
+    Tendsto (fun r : ℝ ↦ g (z.toFun r.toNNReal)) (𝓝[≥] s) (𝓝 (g (z.toFun s.toNNReal))) :=
+  (g.continuous.continuousAt.tendsto.comp
+    (continuousWithinAt_Ioi_iff_Ici.1 (z.isCadlag.isRightContinuous s.toNNReal))).comp
+    (tendsto_toNNReal_nhdsGE s)
+
+/-- **The compensator is measurable for the coordinate past**, and this is the
+expensive half of the adaptedness of the tested process.
+
+It asks for the joint measurability of the integrand **relative to the
+sub-σ-algebra** `cadlagFiltration t`, which `measurable_uncurry_min_of_rightContinuous`
+supplies because the window ends at `t`: the truncation `min u t` is what keeps
+every coordinate the integrand reads below `t`, and off the window it changes
+nothing, `setIntegral_congr_fun` removing it again.
+
+This is the counterpart over the càdlàg path space of
+`RightContinuousPath.measurable_compensator_coordinate`, and the two have the same
+proof with a different reason for the right continuity -- there local constancy of
+a step path, here `IsCadlag`. -/
+theorem measurable_compensator_cadlagFiltration (g : E →ᵇ ℝ) (t : ℝ≥0) :
+    Measurable[cadlagFiltration (E := E) t] fun z : D(ℝ≥0, E) ↦
+      ∫ u in Set.Ioc (0 : ℝ) (t : ℝ), g (z.toFun u.toNNReal) := by
+  have hmeas : ∀ r : ℝ, r ≤ (t : ℝ) →
+      Measurable[cadlagFiltration (E := E) t] fun z : D(ℝ≥0, E) ↦ g (z.toFun r.toNNReal) := by
+    intro r hr
+    have hle : r.toNNReal ≤ t := by
+      rw [← Real.toNNReal_coe (r := t)]
+      exact Real.toNNReal_mono hr
+    exact g.continuous.measurable.comp (measurable_cadlagFiltration hle)
+  have hW := measurable_uncurry_min_of_rightContinuous (ι' := ℝ) (φ := id) measurable_id
+    (𝓖 := cadlagFiltration (E := E) t)
+    (G := fun r (z : D(ℝ≥0, E)) ↦ g (z.toFun r.toNNReal)) (t := (t : ℝ)) hmeas
+    (fun z s ↦ tendsto_comp_toNNReal_nhdsGE g z s)
+  have hsm : StronglyMeasurable[cadlagFiltration (E := E) t] fun z : D(ℝ≥0, E) ↦
+      ∫ u in Set.Ioc (0 : ℝ) (t : ℝ), g (z.toFun (min u (t : ℝ)).toNNReal) :=
+    @stronglyMeasurable_integral_comp ℝ _ (D(ℝ≥0, E)) (cadlagFiltration (E := E) t) ℝ _ ℝ _
+      ((volume : Measure ℝ).restrict (Set.Ioc (0 : ℝ) (t : ℝ))) _
+      (fun u z ↦ g (z.toFun (min u (t : ℝ)).toNNReal)) hW id measurable_id
+  have hcongr : (fun z : D(ℝ≥0, E) ↦
+        ∫ u in Set.Ioc (0 : ℝ) (t : ℝ), g (z.toFun (min u (t : ℝ)).toNNReal))
+      = fun z : D(ℝ≥0, E) ↦ ∫ u in Set.Ioc (0 : ℝ) (t : ℝ), g (z.toFun u.toNNReal) := by
+    funext z
+    refine setIntegral_congr_fun measurableSet_Ioc fun u hu ↦ ?_
+    rw [min_eq_left hu.2]
+  rw [← hcongr]
+  exact hsm.measurable
+
+/-- **The tested functional is measurable for the coordinate past at the time it is
+read.**  The state term is `measurable_cadlagFiltration` at `u = v = t`, the
+compensator is `measurable_compensator_cadlagFiltration`. -/
+theorem measurable_mpTest (f g : E →ᵇ ℝ) (t : ℝ≥0) :
+    Measurable[cadlagFiltration (E := E) t] (SkorokhodSpace.mpTest f g t) :=
+  (f.continuous.measurable.comp (measurable_cadlagFiltration le_rfl)).sub
+    (measurable_compensator_cadlagFiltration g t)
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The tested functional is bounded on a bounded time window, uniformly in the
+time and in the path**, by `‖f‖ + ‖g‖ * t`.
+
+This is the counterpart of `abs_mpFamily_coordinate_le` over the càdlàg path space
+and it is what makes hypotheses (b) and the integrability of
+`MeasureTheory.mpSolution_of_tendsto` carry **no information** here: the bound is
+uniform in the path, so it survives composition with any map into the path space
+and integration against any probability measure, and the tails above it are not
+small but zero.
+
+The mass of the window is its right endpoint because the measure is Lebesgue
+measure; that is the only place the clock of the martingale problem is read, and
+it is read as a number. -/
+theorem abs_mpTest_le (f g : E →ᵇ ℝ) {r t : ℝ≥0} (hr : r ≤ t) (z : D(ℝ≥0, E)) :
+    |SkorokhodSpace.mpTest f g r z| ≤ ‖f‖ + ‖g‖ * (t : ℝ) := by
+  rw [SkorokhodSpace.mpTest]
+  have hwin := norm_setIntegral_le_of_norm_le_const (μ := (volume : Measure ℝ))
+    (s := Set.Ioc (0 : ℝ) (r : ℝ)) (f := fun u : ℝ ↦ g (z.toFun u.toNNReal)) (C := ‖g‖)
+    (by rw [Real.volume_Ioc]; exact ENNReal.ofReal_lt_top)
+    (fun u _ ↦ g.norm_coe_le_norm _)
+  rw [Real.norm_eq_abs, measureReal_def, Real.volume_Ioc, sub_zero,
+    ENNReal.toReal_ofReal r.coe_nonneg] at hwin
+  have hst : |f (z.toFun r)| ≤ ‖f‖ := by
+    simpa [Real.norm_eq_abs] using f.norm_coe_le_norm (z.toFun r)
+  have hmono : ‖g‖ * (r : ℝ) ≤ ‖g‖ * (t : ℝ) :=
+    mul_le_mul_of_nonneg_left (by exact_mod_cast hr) (norm_nonneg g)
+  have hsub := abs_sub (f (z.toFun r))
+    (∫ u in Set.Ioc (0 : ℝ) (r : ℝ), g (z.toFun u.toNNReal))
+  linarith
+
+omit [PolishSpace E] in
+/-- **The error of testing with the wrong pair is the norm of the difference of
+the pairs**, uniformly in the time below `t` and in the path.
+
+`SkorokhodSpace.mpTest_sub` turns the difference of the two tested functionals
+into the functional tested with the difference of the pairs, and `abs_mpTest_le`
+bounds that.  **No boundedness of `f'` or `g'` is read** -- only of `f - f'` and
+`g - g'`, which is what makes the bound go to zero along an approximating
+sequence.
+
+This is the whole analytic content of
+`MeasureTheory.mpSolution_of_tendsto_cadlag_of_approx`: that item is an estimate
+and not a limit theorem. -/
+theorem abs_mpTest_sub_mpTest_le (f g f' g' : E →ᵇ ℝ) {r t : ℝ≥0} (hr : r ≤ t) (z : D(ℝ≥0, E)) :
+    |SkorokhodSpace.mpTest f g r z - SkorokhodSpace.mpTest f' g' r z|
+      ≤ ‖f - f'‖ + ‖g - g'‖ * (t : ℝ) := by
+  rw [SkorokhodSpace.mpTest_sub]
+  exact abs_mpTest_le _ _ hr z
+
+/-- **A finite dimensional test function of times below `s` is measurable for the
+coordinate past at `s`.**
+
+It is the counterpart for the class `SkorokhodSpace.evalFuns` of
+`measurable_cadlagFiltration`, and the proof is that one at each factor followed
+by `Finset.measurable_prod`.  The hypothesis is on the set of times and not on
+the function, which is why the consumer may feed it
+`insert s (T ∩ Set.Iic s)`: that set is contained in `Set.Iic s` because `s` is
+and the intersection is. -/
+theorem measurable_cadlagFiltration_of_mem_evalFuns {s : ℝ≥0} {S : Set ℝ≥0} (hS : S ⊆ Set.Iic s)
+    {Z : D(ℝ≥0, E) → ℝ} (hZ : Z ∈ SkorokhodSpace.evalFuns E S) :
+    Measurable[cadlagFiltration (E := E) s] Z := by
+  obtain ⟨u, F, hu, rfl⟩ := hZ
+  exact Finset.measurable_prod u fun r hr ↦
+    (F r).continuous.measurable.comp (measurable_cadlagFiltration (hS (hu hr)))
+
+/-- **The third item of the chain of Milestone 11.**  If the laws of the paths of
+the approximating processes converge weakly to the law of `X` on the càdlàg path
+space, and the tested increments of the approximants vanish in the limit, then the
+limit satisfies the martingale identity of the martingale problem to `(f, g)`
+along `T`.
+
+**What the consumer has to supply is `hzero` and nothing else that is analytic.**
+The other three hypotheses of `MeasureTheory.mpSolution_of_tendsto_of_pContinuous`
+are discharged here from the path space alone: integrability and uniform
+integrability from `abs_mpTest_le`, whose tails are zero rather than small;
+`P`-continuity from `SkorokhodSpace.measure_setOf_continuousAt_mpTest_eq_one` and
+its companion for the product; and the determining property from
+`MeasureTheory.isDetermining_evalFuns`.  `hzero` is the martingale property of the
+approximants, read at the times of `T` and against the finite dimensional test
+functions of the past, and it is where the approximating family says something
+about itself.
+
+**The times.**  `T` is countable, right dense, and carries no fixed discontinuity
+of the limit law -- `hgood`.  Such a `T` exists for **every** law, by
+`SkorokhodSpace.exists_countable_dense_continuity`, so none of the three is a
+restriction on the limit; they are a choice of the times at which the identity is
+read.  Right density is what the determining class asks for and nothing else asks
+for; countability is what the null sets of `hgood` ask for.
+
+**Why the class is indexed by `insert s (T ∩ Set.Iic s)`.**  That is the index
+`MeasureTheory.isDetermining_evalFuns` carries, for the reason recorded there; the
+continuity statements are proved for the class along `T`, and
+`SkorokhodSpace.evalFuns_insert_Iic_subset` is the passage, its hypothesis `s ∈ T`
+being free because the identity is read at times of `T`.
+
+**The conclusion is the martingale identity along `T` and not adaptedness or
+integrability**, which is the shape `MeasureTheory.IsDetermining` produces and the
+shape the fourth item of the chain consumes. -/
+theorem mpSolution_of_tendsto_cadlag
+    {Ω' : ℕ → Type*} {m' : ∀ n, MeasurableSpace (Ω' n)} {P' : ∀ n, @Measure (Ω' n) (m' n)}
+    [∀ n, IsProbabilityMeasure (P' n)] {P : Measure Ω} [IsProbabilityMeasure P]
+    {X : Ω → D(ℝ≥0, E)} {X' : ∀ n, Ω' n → D(ℝ≥0, E)}
+    (hX : Measurable X) (hX' : ∀ n, @Measurable (Ω' n) _ (m' n) _ (X' n))
+    (hweak : TendstoInDistribution X' atTop X P' P)
+    {𝓕 : Filtration ℝ≥0 m}
+    (h𝓕 : ∀ s : ℝ≥0, (𝓕 s : MeasurableSpace Ω)
+      = MeasurableSpace.comap X (⨆ r ∈ Set.Iic s,
+          MeasurableSpace.comap (fun z : D(ℝ≥0, E) ↦ z.toFun r) inferInstance))
+    {T : Set ℝ≥0} (hT : T.Countable)
+    (hTr : ∀ t : ℝ≥0, t ∈ T ∨ (𝓝[T ∩ Set.Ioi t] t).NeBot)
+    (hgood : ∀ t ∈ T, P {ω | Function.leftLim (X ω).toFun t = (X ω).toFun t} = 1)
+    (f g : E →ᵇ ℝ)
+    (hzero : ∀ s ∈ T, ∀ t ∈ T, s ≤ t →
+      ∀ Z ∈ SkorokhodSpace.evalFuns E (insert s (T ∩ Set.Iic s)),
+        Tendsto (fun n ↦ ∫ ω, (SkorokhodSpace.mpTest f g t (X' n ω)
+          - SkorokhodSpace.mpTest f g s (X' n ω)) * Z (X' n ω) ∂(P' n)) atTop (𝓝 0)) :
+    ∀ s ∈ T, ∀ t ∈ T, s ≤ t →
+      P[fun ω ↦ SkorokhodSpace.mpTest f g t (X ω) | 𝓕 s]
+        =ᵐ[P] fun ω ↦ SkorokhodSpace.mpTest f g s (X ω) := by
+  have hfilt : ∀ r : ℝ≥0, Measurable[cadlagFiltration (E := E) r]
+      (SkorokhodSpace.mpTest f g r) := measurable_mpTest f g
+  have hglob : ∀ r : ℝ≥0, Measurable (SkorokhodSpace.mpTest (E := E) f g r) := fun r ↦
+    (hfilt r).mono ((cadlagFiltration (E := E)).le r) le_rfl
+  have hbound : ∀ {r t : ℝ≥0}, r ≤ t → ∀ z : D(ℝ≥0, E),
+      |SkorokhodSpace.mpTest f g r z| ≤ ‖f‖ + ‖g‖ * (t : ℝ) := fun hr z ↦ abs_mpTest_le f g hr z
+  have hadp : ∀ Y ∈ ({fun t ω ↦ SkorokhodSpace.mpTest f g t (X ω)} : Set (ℝ≥0 → Ω → ℝ)),
+      StronglyAdapted 𝓕 Y := by
+    rintro Y rfl i
+    have hm : Measurable[(𝓕 i : MeasurableSpace Ω)]
+        fun ω ↦ SkorokhodSpace.mpTest f g i (X ω) := by
+      rw [h𝓕 i]
+      exact (hfilt i).comp (comap_measurable X)
+    exact hm.stronglyMeasurable
+  refine mpSolution_of_tendsto_of_pContinuous (𝕂 := ℝ) (F := D(ℝ≥0, E)) (D := T)
+    (𝓧 := {fun t ω ↦ SkorokhodSpace.mpTest f g t (X ω)})
+    (𝓧₀ := fun t ↦ {SkorokhodSpace.mpTest f g t})
+    (𝓩 := fun s ↦ SkorokhodSpace.evalFuns E (insert s (T ∩ Set.Iic s)))
+    (P' := P') (X' := X') hX hX' ?_ (isDetermining_evalFuns hTr h𝓕 hadp) hweak ?_ _ rfl
+  · intro r Z hZ
+    obtain ⟨C, hC⟩ := SkorokhodSpace.bounded_of_mem_evalFuns Z hZ
+    exact ⟨SkorokhodSpace.measurable_of_mem_evalFuns Z hZ, C, fun x ↦ by
+      simpa [Real.norm_eq_abs] using hC x⟩
+  · rintro Y rfl
+    refine ⟨fun t ↦ SkorokhodSpace.mpTest f g t, fun t ↦ rfl,
+      fun t ↦ (hglob t).stronglyMeasurable, fun t ω ↦ rfl, fun t ht ↦ ⟨?_, ?_, ?_, ?_⟩⟩
+    · exact fun n r _ ↦ integrable_of_abs_le ((hglob r).comp (hX' n))
+        fun ω ↦ hbound le_rfl _
+    · exact fun r hr ↦ SkorokhodSpace.measure_setOf_continuousAt_mpTest_eq_one hX hT hgood f g hr.1
+    · intro ε hε
+      refine ⟨‖f‖ + ‖g‖ * (t : ℝ) + 1, by positivity, fun n r hr ↦ ?_⟩
+      have hvanish : ∀ ω : Ω' n,
+          max (‖SkorokhodSpace.mpTest f g r (X' n ω)‖ - (‖f‖ + ‖g‖ * (t : ℝ) + 1)) 0 = 0 := by
+        intro ω
+        refine max_eq_right ?_
+        have hb := hbound hr.2 (X' n ω)
+        rw [Real.norm_eq_abs]
+        linarith
+      simp only [hvanish, integral_zero]
+      exact hε.le
+    · intro s hs Z hZ
+      refine ⟨?_, hzero s hs.1 t ht hs.2 Z hZ⟩
+      exact SkorokhodSpace.measure_setOf_continuousAt_mpTest_mul_eq_one hX hT hgood f g hs.1 ht
+        (SkorokhodSpace.evalFuns_insert_Iic_subset hs.1 hZ)
+
+/-- **The tested increments of an approximating family vanish**, which is the
+hypothesis `hzero` of `MeasureTheory.mpSolution_of_tendsto_cadlag`.
+
+The approximants solve the martingale problem to the *approximating* pairs
+`(f' n, g' n)`, and they are tested with the *limiting* pair `(f, g)`; the claim
+is that the discrepancy goes to zero as soon as `‖f - f' n‖ → 0` and
+`‖g - g' n‖ → 0`.
+
+**It is an estimate and not a limit theorem**, and that is what makes it cheap.
+The exact increment, tested with `(f' n, g' n)` against a test function of the
+past, integrates to **zero** -- not to something small -- by
+`integral_sub_mul_eq_zero_of_martingale`; what is left is the difference of the
+two tested increments, and `abs_mpTest_sub_mpTest_le` bounds it pointwise by
+`2 * (‖f - f' n‖ + ‖g - g' n‖ * t)`, uniformly in `n` and in the sample point.
+Multiplying by the bound of `SkorokhodSpace.bounded_of_mem_evalFuns` and
+integrating against a probability measure changes nothing, and the limit is
+`squeeze_zero_norm`.
+
+**Where the filtration of the approximants is read**, and it is the only place:
+the martingale property is applied against `Z ∘ X' n`, which has to be
+measurable for the past of the approximant at `s`.  That is
+`measurable_cadlagFiltration_of_mem_evalFuns` composed with `comap_measurable`
+and then coarsened along `h𝓕'`.
+
+**`h𝓕'` is an inclusion and not an equality, and the difference is what makes the
+item usable.**  The filtration of the approximants has only to **contain** the
+coordinate past pulled back along the path map; it is not required to be it.
+The proof reads the hypothesis in one direction only -- a σ-algebra for which
+`Z ∘ X' n` is measurable may be any larger one -- and the consumer of the chain
+has no other kind: the second item,
+`isCompact_closure_of_subalgebra_forall_martingale`, asks for a **right
+continuous** filtration, and the natural filtration of a càdlàg path is not
+right continuous.  Requiring equality here would have forced a passage from the
+given filtration to the natural one, which is a genuine theorem -- a martingale
+for a filtration is a martingale for any smaller one it stays adapted to, by the
+tower property -- and Mathlib has no such lemma (checked 2026-09-21 against
+`Mathlib/Probability/Martingale/Basic.lean`, where the filtration is fixed
+throughout).  The inclusion avoids it altogether.
+
+**This is where `h𝓕'` differs from `h𝓕` of the previous item**, which does need
+the equality: it feeds `MeasureTheory.isDetermining_evalFuns`, and a determining
+class has to *generate* the filtration, not merely be measurable for it.  The
+asymmetry is not an oversight but the two directions of the same identity being
+read in two different places.  `naturalFiltration_comp_eq_comap` inhabits both,
+so the canonical choice costs nothing in either.
+
+**The times carry no hypothesis at all here.**  Only `S ⊆ Set.Iic s` is read, so
+the statement is about a single pair `s ≤ t` and a single test function;
+countability, right density and the absence of fixed discontinuities are read by
+the previous item and not by this one. -/
+theorem tendsto_integral_mpTest_sub_mul_of_approx
+    {Ω' : ℕ → Type*} {m' : ∀ n, MeasurableSpace (Ω' n)} {P' : ∀ n, @Measure (Ω' n) (m' n)}
+    [∀ n, IsProbabilityMeasure (P' n)]
+    {X' : ∀ n, Ω' n → D(ℝ≥0, E)} (hX' : ∀ n, @Measurable (Ω' n) _ (m' n) _ (X' n))
+    {𝓕' : ∀ n, @Filtration (Ω' n) ℝ≥0 _ (m' n)}
+    (h𝓕' : ∀ n, ∀ r : ℝ≥0, MeasurableSpace.comap (X' n) (⨆ q ∈ Set.Iic r,
+        MeasurableSpace.comap (fun z : D(ℝ≥0, E) ↦ z.toFun q) inferInstance)
+      ≤ ((𝓕' n) r : MeasurableSpace (Ω' n)))
+    {f g : E →ᵇ ℝ} {f' g' : ℕ → (E →ᵇ ℝ)}
+    (hmart : ∀ n, @Martingale (Ω' n) ℝ ℝ≥0 _ (m' n) _ _
+      (fun r ω ↦ SkorokhodSpace.mpTest (f' n) (g' n) r (X' n ω)) (𝓕' n) (P' n))
+    (hf : Tendsto (fun n ↦ ‖f - f' n‖) atTop (𝓝 0))
+    (hg : Tendsto (fun n ↦ ‖g - g' n‖) atTop (𝓝 0))
+    {s t : ℝ≥0} (hst : s ≤ t) {S : Set ℝ≥0} (hS : S ⊆ Set.Iic s)
+    {Z : D(ℝ≥0, E) → ℝ} (hZ : Z ∈ SkorokhodSpace.evalFuns E S) :
+    Tendsto (fun n ↦ ∫ ω, (SkorokhodSpace.mpTest f g t (X' n ω)
+      - SkorokhodSpace.mpTest f g s (X' n ω)) * Z (X' n ω) ∂(P' n)) atTop (𝓝 0) := by
+  obtain ⟨C, hC⟩ := SkorokhodSpace.bounded_of_mem_evalFuns Z hZ
+  -- the bound of the test function is raised to a nonnegative one, the path space
+  -- being possibly empty and `C` then unconstrained
+  set C₀ : ℝ := max C 0 with hC₀def
+  have hC₀ : ∀ z, |Z z| ≤ C₀ := fun z ↦ (hC z).trans (le_max_left _ _)
+  have hC₀0 : (0 : ℝ) ≤ C₀ := le_max_right _ _
+  have hglob : ∀ (a b : E →ᵇ ℝ) (r : ℝ≥0), Measurable (SkorokhodSpace.mpTest (E := E) a b r) :=
+    fun a b r ↦ (measurable_mpTest a b r).mono ((cadlagFiltration (E := E)).le r) le_rfl
+  have hZm : Measurable Z := SkorokhodSpace.measurable_of_mem_evalFuns Z hZ
+  have hexact : ∀ n, ∫ ω, (SkorokhodSpace.mpTest (f' n) (g' n) t (X' n ω)
+      - SkorokhodSpace.mpTest (f' n) (g' n) s (X' n ω)) * Z (X' n ω) ∂(P' n) = 0 := by
+    intro n
+    refine integral_sub_mul_eq_zero_of_martingale (𝕂 := ℝ) (hmart n) hst ?_ (b := C₀) ?_
+    · have hm : Measurable[((𝓕' n) s : MeasurableSpace (Ω' n))] fun ω ↦ Z (X' n ω) :=
+        ((measurable_cadlagFiltration_of_mem_evalFuns hS hZ).comp
+          (comap_measurable (X' n))).mono (h𝓕' n s) le_rfl
+      exact hm.stronglyMeasurable
+    · exact fun ω ↦ by simpa [Real.norm_eq_abs] using hC₀ (X' n ω)
+  have hint : ∀ (a b : E →ᵇ ℝ) (n : ℕ), Integrable[m' n]
+      (fun ω ↦ (SkorokhodSpace.mpTest a b t (X' n ω)
+        - SkorokhodSpace.mpTest a b s (X' n ω)) * Z (X' n ω)) (P' n) := by
+    intro a b n
+    refine integrable_of_abs_le (C := 2 * (‖a‖ + ‖b‖ * (t : ℝ)) * C₀)
+      ((((hglob a b t).comp (hX' n)).sub ((hglob a b s).comp (hX' n))).mul
+        (hZm.comp (hX' n))) fun ω ↦ ?_
+    rw [abs_mul]
+    refine mul_le_mul ?_ (hC₀ _) (abs_nonneg _) (by positivity)
+    refine (abs_sub _ _).trans ?_
+    have h1 := abs_mpTest_le a b (le_refl t) (X' n ω)
+    have h2 := abs_mpTest_le a b hst (X' n ω)
+    linarith
+  have herr : ∀ n, |∫ ω, (SkorokhodSpace.mpTest f g t (X' n ω)
+      - SkorokhodSpace.mpTest f g s (X' n ω)) * Z (X' n ω) ∂(P' n)|
+      ≤ 2 * (‖f - f' n‖ + ‖g - g' n‖ * (t : ℝ)) * C₀ := by
+    intro n
+    have hsplit : ∫ ω, (SkorokhodSpace.mpTest f g t (X' n ω)
+        - SkorokhodSpace.mpTest f g s (X' n ω)) * Z (X' n ω) ∂(P' n)
+        = ∫ ω, ((SkorokhodSpace.mpTest f g t (X' n ω)
+            - SkorokhodSpace.mpTest f g s (X' n ω)) * Z (X' n ω)
+          - (SkorokhodSpace.mpTest (f' n) (g' n) t (X' n ω)
+            - SkorokhodSpace.mpTest (f' n) (g' n) s (X' n ω)) * Z (X' n ω)) ∂(P' n) := by
+      rw [integral_sub (hint f g n) (hint (f' n) (g' n) n), hexact n, sub_zero]
+    rw [hsplit]
+    refine abs_integral_le_of_abs_le fun ω ↦ ?_
+    have hrw : (SkorokhodSpace.mpTest f g t (X' n ω)
+          - SkorokhodSpace.mpTest f g s (X' n ω)) * Z (X' n ω)
+        - (SkorokhodSpace.mpTest (f' n) (g' n) t (X' n ω)
+          - SkorokhodSpace.mpTest (f' n) (g' n) s (X' n ω)) * Z (X' n ω)
+        = ((SkorokhodSpace.mpTest f g t (X' n ω)
+              - SkorokhodSpace.mpTest (f' n) (g' n) t (X' n ω))
+          - (SkorokhodSpace.mpTest f g s (X' n ω)
+              - SkorokhodSpace.mpTest (f' n) (g' n) s (X' n ω))) * Z (X' n ω) := by ring
+    rw [hrw, abs_mul]
+    refine mul_le_mul ?_ (hC₀ _) (abs_nonneg _) (by positivity)
+    refine (abs_sub _ _).trans ?_
+    have h1 := abs_mpTest_sub_mpTest_le f g (f' n) (g' n) (le_refl t) (X' n ω)
+    have h2 := abs_mpTest_sub_mpTest_le f g (f' n) (g' n) hst (X' n ω)
+    linarith
+  refine squeeze_zero_norm (fun n ↦ by simpa [Real.norm_eq_abs] using herr n) ?_
+  have hlim : Tendsto (fun n ↦ 2 * (‖f - f' n‖ + ‖g - g' n‖ * (t : ℝ)) * C₀) atTop
+      (𝓝 (2 * ((0 : ℝ) + 0 * (t : ℝ)) * C₀)) :=
+    ((hf.add (hg.mul_const _)).const_mul 2).mul_const C₀
+  simpa using hlim
+
+/-- **The third item of the chain of Milestone 11, in the form the chain uses
+it**: the approximants solve an *approximating* martingale problem rather than
+the limiting one.
+
+If the `X' n` are martingale solutions to the pairs `(f' n, g' n)` with
+`‖f - f' n‖ → 0` and `‖g - g' n‖ → 0`, and if their path laws converge weakly on
+`D(ℝ≥0, E)`, then the limit satisfies the martingale identity of the martingale
+problem to `(f, g)` along `T`.
+
+It is `mpSolution_of_tendsto_cadlag` with its hypothesis `hzero` discharged by
+`tendsto_integral_mpTest_sub_mul_of_approx`, the set of times of that item being
+`insert s (T ∩ Set.Iic s)`, which lies below `s`.  **Nothing analytic is added**;
+the step is the estimate recorded at the previous declaration.
+
+**The two filtration hypotheses point in opposite directions, and neither is
+avoidable.**  `h𝓕` of the limit is an equality, because the determining class has
+to generate that filtration; `h𝓕'` of the approximants is an inclusion, because
+all that is read of it is the measurability of a test function of the past.  The
+second is the weaker demand on the consumer, and deliberately so: the filtration
+the second item of the chain hands over is right continuous and therefore
+strictly larger than the natural one. -/
+theorem mpSolution_of_tendsto_cadlag_of_approx
+    {Ω' : ℕ → Type*} {m' : ∀ n, MeasurableSpace (Ω' n)} {P' : ∀ n, @Measure (Ω' n) (m' n)}
+    [∀ n, IsProbabilityMeasure (P' n)] {P : Measure Ω} [IsProbabilityMeasure P]
+    {X : Ω → D(ℝ≥0, E)} {X' : ∀ n, Ω' n → D(ℝ≥0, E)}
+    (hX : Measurable X) (hX' : ∀ n, @Measurable (Ω' n) _ (m' n) _ (X' n))
+    (hweak : TendstoInDistribution X' atTop X P' P)
+    {𝓕 : Filtration ℝ≥0 m}
+    (h𝓕 : ∀ s : ℝ≥0, (𝓕 s : MeasurableSpace Ω)
+      = MeasurableSpace.comap X (⨆ r ∈ Set.Iic s,
+          MeasurableSpace.comap (fun z : D(ℝ≥0, E) ↦ z.toFun r) inferInstance))
+    {𝓕' : ∀ n, @Filtration (Ω' n) ℝ≥0 _ (m' n)}
+    (h𝓕' : ∀ n, ∀ r : ℝ≥0, MeasurableSpace.comap (X' n) (⨆ q ∈ Set.Iic r,
+        MeasurableSpace.comap (fun z : D(ℝ≥0, E) ↦ z.toFun q) inferInstance)
+      ≤ ((𝓕' n) r : MeasurableSpace (Ω' n)))
+    {T : Set ℝ≥0} (hT : T.Countable)
+    (hTr : ∀ t : ℝ≥0, t ∈ T ∨ (𝓝[T ∩ Set.Ioi t] t).NeBot)
+    (hgood : ∀ t ∈ T, P {ω | Function.leftLim (X ω).toFun t = (X ω).toFun t} = 1)
+    (f g : E →ᵇ ℝ) {f' g' : ℕ → (E →ᵇ ℝ)}
+    (hmart : ∀ n, @Martingale (Ω' n) ℝ ℝ≥0 _ (m' n) _ _
+      (fun r ω ↦ SkorokhodSpace.mpTest (f' n) (g' n) r (X' n ω)) (𝓕' n) (P' n))
+    (hf : Tendsto (fun n ↦ ‖f - f' n‖) atTop (𝓝 0))
+    (hg : Tendsto (fun n ↦ ‖g - g' n‖) atTop (𝓝 0)) :
+    ∀ s ∈ T, ∀ t ∈ T, s ≤ t →
+      P[fun ω ↦ SkorokhodSpace.mpTest f g t (X ω) | 𝓕 s]
+        =ᵐ[P] fun ω ↦ SkorokhodSpace.mpTest f g s (X ω) :=
+  mpSolution_of_tendsto_cadlag hX hX' hweak h𝓕 hT hTr hgood f g
+    fun _s _ _ _ hst _Z hZ ↦ tendsto_integral_mpTest_sub_mul_of_approx hX' h𝓕' hmart hf hg hst
+      (Set.insert_subset (Set.mem_Iic.2 le_rfl) Set.inter_subset_right) hZ
+
+/-- **The fourth item of the chain of Milestone 11: relative compactness and
+uniqueness give convergence.**
+
+If the sequence `μ` has compact closure, if the limit of *every* convergent
+subsequence solves `Sol`, and if `Sol` has `μ₀` for its only solution, then `μ`
+converges to `μ₀`.
+
+**It is a statement of general topology and carries no measure theory**, which
+is why it is written for an arbitrary `F` and an arbitrary predicate `Sol`
+rather than for laws on the path space: the third item of the chain is what
+supplies `hlim`, the uniqueness of Milestone 6 is what supplies `huniq`, and the
+second item is what supplies `hcpt`.  Nothing else of the chain enters, and the
+separation makes the two probabilistic inputs replaceable.
+
+**Two hypotheses that a first reading expects and that are not there.**
+
+* **No metrizability of `F`.**  `Filter.tendsto_of_subseq_tendsto`
+  (`Mathlib/Order/Filter/AtTopBot/CountablyGenerated.lean:125`) holds for an
+  arbitrary filter on an arbitrary type and asks only that the *index* filter be
+  countably generated, which `atTop` on `ℕ` is.  What the proof does need is
+  that a compact set be sequentially compact, and that is
+  `IsCompact.tendsto_subseq` under `[FirstCountableTopology F]` -- strictly
+  weaker than metrizability and the minimal hypothesis here.
+* **No monotonicity of the extracted subsequence.**  `hlim` quantifies over
+  every map `ℕ → ℕ` that tends to infinity and not over the strictly monotone
+  ones.  That is the weaker hypothesis to prove for the consumer -- the third
+  item of the chain knows nothing about the order of its index, only that the
+  index escapes -- and the proof never uses the monotonicity that
+  `IsCompact.tendsto_subseq` happens to deliver.  **Tending to infinity is not
+  removable**, and it is not free either: it is what carries a hypothesis like
+  `‖f - f' n‖ → 0` from the family to the subsequence, and it is available
+  because `Filter.tendsto_of_subseq_tendsto` hands it over and
+  `StrictMono.tendsto_atTop` preserves it under the extraction. -/
+theorem tendsto_of_isRelativelyCompact_of_unique {F : Type*} [TopologicalSpace F]
+    [FirstCountableTopology F] {μ : ℕ → F} {μ₀ : F} {Sol : F → Prop}
+    (hcpt : IsCompact (closure (Set.range μ)))
+    (hlim : ∀ ns : ℕ → ℕ, Tendsto ns atTop atTop →
+      ∀ ν : F, Tendsto (fun n ↦ μ (ns n)) atTop (𝓝 ν) → Sol ν)
+    (huniq : ∀ ν, Sol ν → ν = μ₀) :
+    Tendsto μ atTop (𝓝 μ₀) := by
+  refine Filter.tendsto_of_subseq_tendsto fun ns hns ↦ ?_
+  obtain ⟨ν, -, φ, hφmono, hφ⟩ :=
+    hcpt.tendsto_subseq (x := fun n ↦ μ (ns n)) fun n ↦ subset_closure ⟨ns n, rfl⟩
+  exact ⟨φ, huniq ν (hlim (fun n ↦ ns (φ n)) (hns.comp hφmono.tendsto_atTop) ν hφ) ▸ hφ⟩
+
+omit [MeasurableSpace E] [BorelSpace E] in
+/-- **The canonical process is the bridge between the fourth item of the chain
+and the third.**
+
+The fourth item speaks of the *laws* and the third of the *processes*: it asks
+for `MeasureTheory.TendstoInDistribution`, which names a limiting random
+variable.  The limit a compactness argument produces is a measure and no
+process, and this is what closes the gap -- the identity of the path space,
+under the limiting law, is a process with that law, because `Measure.map id` is
+the measure itself.
+
+Nothing is constructed: the canonical space is the path space, which is already
+there, and `Measure.map_id` is the whole proof of the third field.  The measure
+`ν` is taken as a `ProbabilityMeasure` and not as a `Measure` with an instance,
+because that is the type in which the compactness of the second item and the
+limit of `tendsto_of_isRelativelyCompact_of_unique` are stated. -/
+theorem tendstoInDistribution_id_of_tendsto
+    {Ω' : ℕ → Type*} {m' : ∀ n, MeasurableSpace (Ω' n)} {P' : ∀ n, @Measure (Ω' n) (m' n)}
+    [∀ n, IsProbabilityMeasure (P' n)]
+    {X' : ∀ n, Ω' n → D(ℝ≥0, E)} (hX' : ∀ n, @Measurable (Ω' n) _ (m' n) _ (X' n))
+    {ν : ProbabilityMeasure D(ℝ≥0, E)}
+    (h : Tendsto (β := ProbabilityMeasure D(ℝ≥0, E))
+      (fun n ↦ ⟨(P' n).map (X' n), inferInstance⟩) atTop (𝓝 ν)) :
+    TendstoInDistribution X' atTop (id : D(ℝ≥0, E) → D(ℝ≥0, E)) P'
+      (ν : Measure D(ℝ≥0, E)) where
+  forall_aemeasurable n := (hX' n).aemeasurable
+  aemeasurable_limit := aemeasurable_id
+  tendsto := by
+    have he : (⟨(ν : Measure D(ℝ≥0, E)).map id, inferInstance⟩ :
+        ProbabilityMeasure D(ℝ≥0, E)) = ν := Subtype.ext Measure.map_id
+    rw [he]
+    exact h
+
+/-- **The seam of the chain of Milestone 11: the limit along a subsequence of the
+path laws is a solution.**
+
+This is the hypothesis `hlim` of
+`MeasureTheory.tendsto_of_isRelativelyCompact_of_unique`, written out for the
+càdlàg chain.  If the laws of the paths of an approximating family converge along
+a subsequence to `ν`, then the identity of the path space, read under `ν`,
+satisfies the martingale identity of the martingale problem to `(f, g)` along a
+countable dense set of times.
+
+**Three inputs of `MeasureTheory.mpSolution_of_tendsto_cadlag_of_approx` are
+produced here rather than asked of the consumer**, and each for its own reason.
+
+* The *process* of the limit is the identity of the path space.  A compactness
+  argument yields a measure and no random variable, and
+  `MeasureTheory.tendstoInDistribution_id_of_tendsto` is what turns the one into
+  the other; nothing is constructed.
+* Its *filtration* is `cadlagFiltration`, and the hypothesis `h𝓕` is
+  `MeasurableSpace.comap_id` applied to `cadlagFiltration_eq`.  That is the
+  content of `naturalFiltration_comp_eq_comap` at the identity: the canonical
+  choice inhabits the hypothesis without any work.
+* The *times* come from `SkorokhodSpace.exists_countable_dense_continuity` at the
+  **limit law**, and `rightDense_of_dense` turns their density into the right
+  density the third item reads.  **This is why `T` is existentially quantified in
+  the conclusion rather than being a parameter**: the limit is known only after
+  the extraction, so no set of times can be fixed before it.  The shape is the one
+  a `Sol` of the fourth item takes, and it costs nothing there, the uniqueness of
+  Milestone 6 reading `IsMPSolution` and asking nothing about the times.
+
+**A subsequence of an approximating family is again one, and that is the whole of
+the remaining bookkeeping**: the data are composed with `ns`, and `h𝓕'` and
+`hmart` transport by substitution.  The two norm convergences transport because
+`hns` says the index escapes -- and this is the single place at which the
+hypothesis `Tendsto ns atTop atTop` of
+`MeasureTheory.tendsto_of_isRelativelyCompact_of_unique` is paid out.  It is
+carried there for exactly this, the proof of that item not needing it.
+
+**Note the direction of `h𝓕'`.**  The filtration of the approximants has only to
+**contain** the coordinate past pulled back along the path map, while `h𝓕` of the
+limit is an equality; the reason for the asymmetry is recorded at
+`MeasureTheory.tendsto_integral_mpTest_sub_mul_of_approx`, and it is what lets
+the right continuous filtration of the second item of the chain be handed over
+unchanged. -/
+theorem mpSolution_of_tendsto_cadlag_of_subseq
+    {Ω' : ℕ → Type*} {m' : ∀ n, MeasurableSpace (Ω' n)} {P' : ∀ n, @Measure (Ω' n) (m' n)}
+    [∀ n, IsProbabilityMeasure (P' n)]
+    {X' : ∀ n, Ω' n → D(ℝ≥0, E)} (hX' : ∀ n, @Measurable (Ω' n) _ (m' n) _ (X' n))
+    {𝓕' : ∀ n, @Filtration (Ω' n) ℝ≥0 _ (m' n)}
+    (h𝓕' : ∀ n, ∀ r : ℝ≥0, MeasurableSpace.comap (X' n) (⨆ q ∈ Set.Iic r,
+        MeasurableSpace.comap (fun z : D(ℝ≥0, E) ↦ z.toFun q) inferInstance)
+      ≤ ((𝓕' n) r : MeasurableSpace (Ω' n)))
+    (f g : E →ᵇ ℝ) {f' g' : ℕ → (E →ᵇ ℝ)}
+    (hmart : ∀ n, @Martingale (Ω' n) ℝ ℝ≥0 _ (m' n) _ _
+      (fun r ω ↦ SkorokhodSpace.mpTest (f' n) (g' n) r (X' n ω)) (𝓕' n) (P' n))
+    (hf : Tendsto (fun n ↦ ‖f - f' n‖) atTop (𝓝 0))
+    (hg : Tendsto (fun n ↦ ‖g - g' n‖) atTop (𝓝 0))
+    {ns : ℕ → ℕ} (hns : Tendsto ns atTop atTop)
+    {ν : ProbabilityMeasure D(ℝ≥0, E)}
+    (hlim : Tendsto (β := ProbabilityMeasure D(ℝ≥0, E))
+      (fun k ↦ ⟨(P' (ns k)).map (X' (ns k)), inferInstance⟩) atTop (𝓝 ν)) :
+    ∃ T : Set ℝ≥0, T.Countable ∧ Dense T ∧
+      ∀ s ∈ T, ∀ t ∈ T, s ≤ t →
+        (ν : Measure D(ℝ≥0, E))[fun z ↦ SkorokhodSpace.mpTest f g t z | cadlagFiltration s]
+          =ᵐ[(ν : Measure D(ℝ≥0, E))] fun z ↦ SkorokhodSpace.mpTest f g s z := by
+  obtain ⟨T, hTc, hTd, hTgood⟩ :=
+    SkorokhodSpace.exists_countable_dense_continuity (ι := ℝ≥0) (ν : Measure D(ℝ≥0, E))
+  refine ⟨T, hTc, hTd, ?_⟩
+  have h𝓕 : ∀ s : ℝ≥0, (cadlagFiltration (E := E) s : MeasurableSpace D(ℝ≥0, E))
+      = MeasurableSpace.comap (id : D(ℝ≥0, E) → D(ℝ≥0, E)) (⨆ r ∈ Set.Iic s,
+          MeasurableSpace.comap (fun z : D(ℝ≥0, E) ↦ z.toFun r) inferInstance) := by
+    intro s
+    rw [cadlagFiltration_eq, MeasurableSpace.comap_id]
+  exact mpSolution_of_tendsto_cadlag_of_approx (X := id) (X' := fun k ↦ X' (ns k))
+    measurable_id (fun k ↦ hX' (ns k))
+    (tendstoInDistribution_id_of_tendsto (fun k ↦ hX' (ns k)) hlim)
+    h𝓕 (fun k ↦ h𝓕' (ns k)) hTc (rightDense_of_dense hTd) hTgood f g
+    (f' := fun k ↦ f' (ns k)) (g' := fun k ↦ g' (ns k)) (fun k ↦ hmart (ns k))
+    (by simpa [Function.comp_def] using hf.comp hns)
+    (by simpa [Function.comp_def] using hg.comp hns)
+
+/-- **The seam at the data the second item of the chain produces.**
+
+`MeasureTheory.mpSolution_of_tendsto_cadlag_of_subseq` lets the approximants live
+on different probability spaces and solve different problems.  What
+`MeasureTheory.isCompact_closure_of_subalgebra_forall_martingale` hands over is
+narrower and more usual: **one** space, **one** right continuous filtration, a
+sequence of adapted processes with their path maps, and the martingale property
+for the same pair `(f, g)` throughout.  This is that instance, and it is the form
+the Donsker assembly reads.
+
+**Three substitutions and no analysis.**  The spaces are constant, so the
+approximating pairs are constant too and the two norm convergences are `‖f - f‖`;
+the filtration hypothesis is
+`MeasureTheory.comap_pathOfProcess_le_of_stronglyAdapted`, which is where the
+inclusion form of `h𝓕'` is spent; and the tested functional at a path built from
+a process is the martingale of the second item on the nose,
+`SkorokhodSpace.mpTest` being the evaluation minus the compensator and `hΦ`
+rewriting both.
+
+**`CompleteSpace E` enters here and not before**, and only through the
+measurability of the path map, which
+`SkorokhodSpace.measurable_of_measurable_eval` asks it for.  The second item
+carries it for the same reason, so it is not a new demand at this seam.
+
+**Adaptedness suffices, and progressivity is not read.**  The second item states
+its process hypothesis as `MeasureTheory.IsStronglyProgressive`, which it needs
+for the tightness; here only `MeasureTheory.StronglyAdapted` is used, both for
+the measurability of the path map and for the filtration inclusion. -/
+theorem mpSolution_of_tendsto_cadlag_of_subseq_pathOfProcess [CompleteSpace E]
+    {𝓕 : Filtration ℝ≥0 m} {P : Measure Ω} [IsProbabilityMeasure P]
+    {X : ℕ → ℝ≥0 → Ω → E} (hX : ∀ n, StronglyAdapted 𝓕 (X n))
+    {Φ : ℕ → Ω → D(ℝ≥0, E)} (hΦ : ∀ n, ∀ ω, (Φ n ω).toFun = fun t ↦ X n t ω)
+    (f g : E →ᵇ ℝ)
+    (hmart : ∀ n, Martingale (fun t ω ↦ f (X n t ω)
+      - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g (X n s.toNNReal ω)) 𝓕 P)
+    {ns : ℕ → ℕ} (hns : Tendsto ns atTop atTop)
+    {ν : ProbabilityMeasure D(ℝ≥0, E)}
+    (hlim : Tendsto (β := ProbabilityMeasure D(ℝ≥0, E))
+      (fun k ↦ ⟨P.map (Φ (ns k)), inferInstance⟩) atTop (𝓝 ν)) :
+    ∃ T : Set ℝ≥0, T.Countable ∧ Dense T ∧
+      ∀ s ∈ T, ∀ t ∈ T, s ≤ t →
+        (ν : Measure D(ℝ≥0, E))[fun z ↦ SkorokhodSpace.mpTest f g t z | cadlagFiltration s]
+          =ᵐ[(ν : Measure D(ℝ≥0, E))] fun z ↦ SkorokhodSpace.mpTest f g s z := by
+  have hmeas : ∀ n, Measurable (Φ n) := fun n ↦
+    SkorokhodSpace.measurable_of_measurable_eval fun t ↦ by
+      have he : (fun ω ↦ (Φ n ω).toFun t) = X n t := funext fun ω ↦ by rw [hΦ n ω]
+      rw [he]
+      exact ((hX n t).mono (𝓕.le t)).measurable
+  refine mpSolution_of_tendsto_cadlag_of_subseq (Ω' := fun _ ↦ Ω) (m' := fun _ ↦ m)
+    (P' := fun _ ↦ P) (X' := fun n ↦ Φ n) (fun n ↦ hmeas n) (𝓕' := fun _ ↦ 𝓕)
+    (fun n r ↦ comap_pathOfProcess_le_of_stronglyAdapted (hX n) (hΦ n) r)
+    f g (f' := fun _ ↦ f) (g' := fun _ ↦ g) (fun n ↦ ?_) ?_ ?_ hns hlim
+  · have he : (fun r ω ↦ SkorokhodSpace.mpTest f g r (Φ n ω))
+        = fun t ω ↦ f (X n t ω) - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g (X n s.toNNReal ω) := by
+      funext t ω
+      simp only [SkorokhodSpace.mpTest, hΦ n ω]
+    rw [he]
+    exact hmart n
+  · simp
+  · simp
+
+end CadlagChain
 
 end MeasureTheory

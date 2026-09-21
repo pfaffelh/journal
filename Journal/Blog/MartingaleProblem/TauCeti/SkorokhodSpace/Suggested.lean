@@ -19857,9 +19857,79 @@ theorem SkorokhodSpace.measure_setOf_forall_notMem_leftJumpSet_eq_one
     (MeasurableSet.biUnion hT fun t _ => SkorokhodSpace.measurableSet_leftJump t)]
   exact (measure_biUnion_null_iff hT).2 hnull
 
+section MPTestDef
+
+variable {E : Type*} [MetricSpace E]
+
+/-- **The functional a martingale problem tests, read on the path space.**  For a
+pair `(f, g)` of bounded continuous functions of the state it is the state term
+minus the compensator, `f (z t) - ∫_0^t g (z u) du`, as a function of the path
+alone.
+
+The window is written over `ℝ` and the path read through `Real.toNNReal` because
+the integral is a Lebesgue integral over the real line while the index of the path
+space is `ℝ≥0`; on `Set.Ioc 0 t` the truncation is the identity, and that is the
+only place the coercion is read.  This is the same functional that the roadmap
+**MartingaleProblems** builds as a member of `mpFamily` over `lebesgueClock` in
+the optional convention, written here without the clock so that the statements
+about *where it is continuous* can be made before any filtration exists. -/
+noncomputable def SkorokhodSpace.mpTest (f g : E →ᵇ ℝ) (t : ℝ≥0) (z : D(ℝ≥0, E)) : ℝ :=
+  f (z.toFun t) - ∫ u in Set.Ioc (0 : ℝ) (t : ℝ), g (z.toFun u.toNNReal)
+
+end MPTestDef
+
 section MPTestFunctional
 
 variable {E : Type*} [MetricSpace E] [MeasurableSpace E] [BorelSpace E] [PolishSpace E]
+
+omit [PolishSpace E] in
+/-- **The integrand of the compensator is integrable over the window.**
+
+Three ingredients and nothing else: the window has finite Lebesgue measure, the
+integrand is bounded by `‖g‖`, and it is measurable because a càdlàg map is Borel
+measurable (`IsCadlag.measurable` of Milestone 2) composed with `Real.toNNReal`
+and with the continuous `g`.
+
+It is what makes `SkorokhodSpace.mpTest_sub` a statement about the integrals and
+not only about the integrands: without it the two compensators cannot be
+subtracted under one integral sign, the Bochner integral of a non integrable
+function being `0`. -/
+theorem SkorokhodSpace.integrableOn_mpTest_integrand (g : E →ᵇ ℝ) (z : D(ℝ≥0, E)) (r : ℝ≥0) :
+    IntegrableOn (fun u : ℝ => g (z.toFun u.toNNReal)) (Set.Ioc (0 : ℝ) (r : ℝ)) volume := by
+  have : IsFiniteMeasure ((volume : Measure ℝ).restrict (Set.Ioc (0 : ℝ) (r : ℝ))) := by
+    constructor
+    rw [Measure.restrict_apply_univ]
+    exact measure_Ioc_lt_top
+  have hmeas : Measurable fun u : ℝ => g (z.toFun u.toNNReal) :=
+    g.continuous.measurable.comp (z.isCadlag.measurable.comp measurable_real_toNNReal)
+  exact Integrable.mono' (integrable_const ‖g‖) hmeas.aestronglyMeasurable
+    (Filter.Eventually.of_forall fun u => by
+      simpa [Real.norm_eq_abs] using g.norm_coe_le_norm (z.toFun u.toNNReal))
+
+omit [PolishSpace E] in
+/-- **The tested functional is linear in the pair it tests**, and this is the whole
+of the passage from an approximating martingale problem to the limiting one: the
+increment tested with `(f, g)` is the increment tested with `(f', g')` plus the
+increment tested with the *difference* of the two pairs.
+
+The state term is linear for nothing, the compensator because the two integrands
+are integrable (`SkorokhodSpace.integrableOn_mpTest_integrand`).  Together with
+`MeasureTheory.abs_mpTest_le` read at `(f - f', g - g')` it turns the error of
+testing with the wrong pair into `‖f - f'‖ + ‖g - g'‖ * t`, uniformly in the
+path. -/
+theorem SkorokhodSpace.mpTest_sub (f g f' g' : E →ᵇ ℝ) (r : ℝ≥0) (z : D(ℝ≥0, E)) :
+    SkorokhodSpace.mpTest f g r z - SkorokhodSpace.mpTest f' g' r z
+      = SkorokhodSpace.mpTest (f - f') (g - g') r z := by
+  rw [SkorokhodSpace.mpTest, SkorokhodSpace.mpTest, SkorokhodSpace.mpTest]
+  have hint : ∫ u in Set.Ioc (0 : ℝ) (r : ℝ), (g - g') (z.toFun u.toNNReal)
+      = (∫ u in Set.Ioc (0 : ℝ) (r : ℝ), g (z.toFun u.toNNReal))
+        - ∫ u in Set.Ioc (0 : ℝ) (r : ℝ), g' (z.toFun u.toNNReal) := by
+    rw [← integral_sub (SkorokhodSpace.integrableOn_mpTest_integrand g z r)
+      (SkorokhodSpace.integrableOn_mpTest_integrand g' z r)]
+    rfl
+  rw [hint]
+  simp only [BoundedContinuousFunction.coe_sub, Pi.sub_apply]
+  ring
 
 /-- **The compensator over a window of the nonnegative index is a continuous
 functional of the path**, at every path.
@@ -19895,8 +19965,7 @@ asymmetry is why the third item of the chain of **MartingaleProblems**
 Milestone 11 quantifies over a set of times and not over a set of paths. -/
 theorem SkorokhodSpace.continuousAt_mpTest (f g : E →ᵇ ℝ) (t : ℝ≥0) {y : D(ℝ≥0, E)}
     (ht : t ∉ leftJumpSet y.toFun) :
-    ContinuousAt (fun z : D(ℝ≥0, E) =>
-      f (z.toFun t) - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g (z.toFun s.toNNReal)) y :=
+    ContinuousAt (SkorokhodSpace.mpTest f g t) y :=
   ((f.continuous.continuousAt).comp
       (SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet ht)).sub
     (SkorokhodSpace.continuousAt_setIntegral_toNNReal g (t : ℝ) y)
@@ -19943,8 +20012,7 @@ theorem SkorokhodSpace.measure_setOf_continuousAt_mpTest_eq_one
     {X : Ω → D(ℝ≥0, E)} (hX : Measurable X) {T : Set ℝ≥0} (hT : T.Countable)
     (hgood : ∀ t ∈ T, P {ω | Function.leftLim (X ω).toFun t = (X ω).toFun t} = 1)
     (f g : E →ᵇ ℝ) {t : ℝ≥0} (ht : t ∈ T) :
-    P {ω | ContinuousAt (fun z : D(ℝ≥0, E) =>
-      f (z.toFun t) - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g (z.toFun s.toNNReal)) (X ω)} = 1 := by
+    P {ω | ContinuousAt (SkorokhodSpace.mpTest f g t) (X ω)} = 1 := by
   refine le_antisymm prob_le_one ?_
   rw [← SkorokhodSpace.measure_setOf_forall_notMem_leftJumpSet_comp_eq_one hX hT hgood]
   exact measure_mono fun ω hω => SkorokhodSpace.continuousAt_mpTest f g t (hω t ht)
@@ -19972,9 +20040,7 @@ theorem SkorokhodSpace.measure_setOf_continuousAt_mpTest_mul_eq_one
     (f g : E →ᵇ ℝ) {s t : ℝ≥0} (hs : s ∈ T) (ht : t ∈ T)
     {Z : D(ℝ≥0, E) → ℝ} (hZ : Z ∈ SkorokhodSpace.evalFuns E T) :
     P {ω | ContinuousAt (fun z : D(ℝ≥0, E) =>
-      ((f (z.toFun t) - ∫ u in Set.Ioc (0 : ℝ) (t : ℝ), g (z.toFun u.toNNReal))
-        - (f (z.toFun s) - ∫ u in Set.Ioc (0 : ℝ) (s : ℝ), g (z.toFun u.toNNReal)))
-      * Z z) (X ω)} = 1 := by
+      (SkorokhodSpace.mpTest f g t z - SkorokhodSpace.mpTest f g s z) * Z z) (X ω)} = 1 := by
   refine le_antisymm prob_le_one ?_
   rw [← SkorokhodSpace.measure_setOf_forall_notMem_leftJumpSet_comp_eq_one hX hT hgood]
   refine measure_mono fun ω hω => ?_
