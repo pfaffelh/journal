@@ -413,7 +413,21 @@ Suche `abs_submartingale|submartingale_abs|Martingale.abs` unter `Mathlib/`: **0
 Suche `measure_exists_abs|maximal_ineq_event|measure_le_of_maximal` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
 
 
+## `partial-sum-martingale` — MartingaleProblems/Suggested.lean, `martingale_partialSum_of_iIndepFun`; MartingaleProblems/README.md, Meilenstein 11
+
+> Daß die **Partialsummen** unabhängiger, zentrierter, integrierbarer Größen ein Martingal bilden, steht in Mathlib in keiner Fassung: `partialSum` kommt unter `Mathlib/Probability/` in keinem Deklarationsnamen vor. Vorhanden sind die Bausteine — `ProbabilityTheory.iIndepFun.indep_comap_natural_of_lt` (`Mathlib/Probability/BorelCantelli.lean:43`) und `MeasureTheory.condExp_indep_eq` (`Mathlib/Probability/ConditionalExpectation.lean:42`) —, nicht aber der Satz. Am 2026-09-21 mit `example … := by exact?` gegen den master-Worktree geprüft: `exact?` schließt das Ziel nicht.
+
+Suche `partialSum|partial_sum_martingale|martingale_sum_range` unter `Mathlib/Probability/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
+## `integral-abs-le-sqrt-integral-sq` — MartingaleProblems/Suggested.lean, `integral_abs_le_sqrt_integral_sq`; MartingaleProblems/README.md, Meilenstein 11
+
+> Die reelle Gestalt `∫ |f| ≤ √(∫ f ^ 2)` über einem Wahrscheinlichkeitsmaß steht in Mathlib nicht. Vorhanden ist der Vergleich über `eLpNorm` (`MeasureTheory.eLpNorm_le_eLpNorm_of_exponent_le`, `Mathlib/MeasureTheory/Function/LpSeminorm/CompareExp.lean:115`) und Hölder über `(∫ f ^ p) ^ (1 / p)` (`MeasureTheory.integral_mul_le_Lp_mul_Lq_of_nonneg`, `Mathlib/MeasureTheory/Integral/Bochner/Basic.lean:1225`); die Umrechnung in beide Richtungen bleibt dem Verbraucher. Am 2026-09-21 mit `example … := by exact?` gegen den master-Worktree geprüft, in der Jensen- wie in der Wurzelgestalt: `exact?` schließt beide Ziele nicht.
+
+Suche `integral_abs_le_sqrt|sq_integral_le_integral_sq|integral_abs_le_rpow` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
 ## Zusammenfassung
 
-56 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
+58 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
 

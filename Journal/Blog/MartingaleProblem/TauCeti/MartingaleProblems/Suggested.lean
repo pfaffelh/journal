@@ -48569,6 +48569,167 @@ theorem isCompactContained_map_stepPath_of_martingale {γ : Type*}
   obtain ⟨k, hk, hlt⟩ := hω
   exact ⟨k, hk, le_of_lt (by simpa [Real.dist_eq] using hlt)⟩
 
+/-- **The partial sums of independent centred integrable summands are a
+martingale**, which is the one hypothesis
+`isCompactContained_map_stepPath_of_martingale` asks of the family it is applied
+to, and which Mathlib does not carry: the statement is closed by no
+`exact?` against `master` `94ef6b89544`, and `partialSum` occurs in no
+declaration name under `Mathlib/Probability/`.
+
+**The filtration is the natural one of the sums and not of the summands**, and
+the difference decides the statement.  `MeasureTheory.Filtration.natural ξ` at
+`n` is `σ (ξ 0, …, ξ n)`
+(`Mathlib/Probability/Process/Filtration.lean:395`), which already holds the
+increment `ξ n` that the step from `∑ k < n` to `∑ k < n + 1` adds; over it the
+process is adapted, and its conditional expectation at `n + 1` is
+`∑ k < n, ξ k + ξ n`.  The natural filtration of the sums is
+`σ (S 0, …, S n) = σ (ξ 0, …, ξ (n - 1))`, which is what the martingale property
+reads.  The consumer takes either, its filtration being an implicit argument.
+
+**What carries the step** is
+`ProbabilityTheory.iIndepFun.indep_comap_natural_of_lt`
+(`Mathlib/Probability/BorelCantelli.lean:43`), which makes `ξ (m + 1)`
+independent of `Filtration.natural ξ m`, together with
+`MeasureTheory.condExp_indep_eq`.  The passage from the one filtration to the
+other is the inclusion `𝒢 (m + 1) ≤ Filtration.natural ξ m`, each `S j` with
+`j ≤ m + 1` being a sum of increments of index at most `m`.  At `n = 0` there is
+no increment to condition away: `𝒢 0` is the σ-algebra of the constant
+`S 0 = 0`, hence `⊥`, and `ProbabilityTheory.indep_bot_right` serves.
+
+**`IsProbabilityMeasure P` is a conclusion and not a hypothesis**, being read off
+the independence by `ProbabilityTheory.iIndepFun.isProbabilityMeasure`. -/
+theorem martingale_partialSum_of_iIndepFun {P : Measure Ω} {ξ : ℕ → Ω → ℝ}
+    (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hint : ∀ k, Integrable (ξ k) P) (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0) :
+    Martingale (fun n ω ↦ ∑ k ∈ Finset.range n, ξ k ω)
+      (Filtration.natural (fun n ω ↦ ∑ k ∈ Finset.range n, ξ k ω)
+        (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ hmeas k)) P := by
+  have : IsProbabilityMeasure P := hind.isProbabilityMeasure
+  set Sm : ∀ n, StronglyMeasurable fun ω ↦ ∑ k ∈ Finset.range n, ξ k ω :=
+    fun n ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ hmeas k with hSm
+  set 𝒢 : Filtration ℕ mΩ := Filtration.natural (fun n ω ↦ ∑ k ∈ Finset.range n, ξ k ω) Sm
+    with h𝒢
+  -- the past of the walk at `n + 1` sits inside the past of the increments at `n`
+  have hle : ∀ n, 𝒢 (n + 1) ≤ Filtration.natural ξ hmeas n := by
+    intro n
+    refine iSup₂_le fun j hj ↦ ?_
+    refine Measurable.comap_le (StronglyMeasurable.measurable ?_)
+    refine Finset.stronglyMeasurable_fun_sum (m := Filtration.natural ξ hmeas n) _ fun k hk ↦ ?_
+    have hkn : k ≤ n := by
+      have := Finset.mem_range.1 hk
+      omega
+    exact (Filtration.stronglyAdapted_natural hmeas k).mono
+      ((Filtration.natural ξ hmeas).mono hkn)
+  have hindep : ∀ n, Indep (MeasurableSpace.comap (ξ n) inferInstance) (𝒢 n) P := by
+    intro n
+    cases n with
+    | zero =>
+      refine indep_of_indep_of_le_right (indep_bot_right _) ?_
+      refine iSup₂_le fun j hj ↦ ?_
+      have hj0 : j = 0 := Nat.le_zero.1 hj
+      subst hj0
+      simp
+    | succ m =>
+      exact indep_of_indep_of_le_right
+        (hind.indep_comap_natural_of_lt hmeas (Nat.lt_succ_self m)) (hle m)
+  refine martingale_nat (Filtration.stronglyAdapted_natural Sm) (fun n ↦ ?_) (fun n ↦ ?_)
+  · exact integrable_finsetSum _ fun k _ ↦ hint k
+  · have hsplit : (fun ω ↦ ∑ k ∈ Finset.range (n + 1), ξ k ω)
+        = (fun ω ↦ ∑ k ∈ Finset.range n, ξ k ω) + ξ n := by
+      funext ω; simp [Finset.sum_range_succ]
+    rw [hsplit]
+    have hadd := condExp_add (μ := P) (m := 𝒢 n)
+      (integrable_finsetSum (Finset.range n) fun k _ ↦ hint k) (hint n)
+    have hfirst : P[(fun ω ↦ ∑ k ∈ Finset.range n, ξ k ω) | 𝒢 n]
+        = fun ω ↦ ∑ k ∈ Finset.range n, ξ k ω :=
+      condExp_of_stronglyMeasurable (𝒢.le n) (Filtration.stronglyAdapted_natural Sm n)
+        (integrable_finsetSum _ fun k _ ↦ hint k)
+    have hsecond : P[ξ n | 𝒢 n] =ᵐ[P] fun _ ↦ (0 : ℝ) := by
+      refine (condExp_indep_eq (hmeas n).measurable.comap_le (𝒢.le n)
+        (Measurable.of_comap_le le_rfl).stronglyMeasurable (hindep n)).trans ?_
+      simp [hcent n]
+    filter_upwards [hadd, hsecond] with ω h1 h3
+    simp [h1, hfirst, h3]
+
+/-- **The `L¹` norm is below the `L²` norm on a probability space**, in the real
+valued shape a consumer reads: `∫ |f| ≤ √(∫ f ^ 2)`.
+
+Mathlib states the comparison about `eLpNorm`
+(`MeasureTheory.eLpNorm_le_eLpNorm_of_exponent_le`,
+`Mathlib/MeasureTheory/Function/LpSeminorm/CompareExp.lean:115`) and Hölder
+about `(∫ f ^ p) ^ (1 / p)`
+(`MeasureTheory.integral_mul_le_Lp_mul_Lq_of_nonneg`,
+`Mathlib/MeasureTheory/Integral/Bochner/Basic.lean:1225`); neither is this, and
+this is closed by no `exact?` against `master` `94ef6b89544`.
+
+**The proof is not Cauchy--Schwarz but the nonnegativity of a variance**, which
+is cheaper by the whole `ENNReal.rpow` computation that the two shapes above
+would cost: `ProbabilityTheory.variance_eq_sub`
+(`Mathlib/Probability/Moments/Variance.lean:226`) reads
+`Var[|f|] = P[|f| ^ 2] - P[|f|] ^ 2`, the first summand is `∫ f ^ 2` by
+`sq_abs`, and `ProbabilityTheory.variance_nonneg` (`:204`) says the difference
+is nonnegative.  `Real.le_sqrt_of_sq_le` (`Mathlib/Analysis/Real/Sqrt.lean:258`)
+takes it from there, and it asks for no sign of the left side. -/
+theorem integral_abs_le_sqrt_integral_sq {P : Measure Ω} [IsProbabilityMeasure P]
+    {f : Ω → ℝ} (hf : MemLp f 2 P) :
+    ∫ ω, |f ω| ∂P ≤ Real.sqrt (∫ ω, f ω ^ 2 ∂P) := by
+  have habs : MemLp (fun ω ↦ |f ω|) 2 P := hf.abs
+  have h0 : (0 : ℝ) ≤ variance (fun ω ↦ |f ω|) P := variance_nonneg _ _
+  rw [variance_eq_sub habs] at h0
+  have hsq : P[(fun ω ↦ |f ω|) ^ 2] = ∫ ω, f ω ^ 2 ∂P := by
+    simp [Pi.pow_apply, sq_abs]
+  rw [hsq] at h0
+  exact Real.le_sqrt_of_sq_le (by linarith)
+
+/-- **The `L¹` bound on the partial sum of independent centred summands of
+variance at most one**, `∫ |∑ k < N, ξ k| ≤ √N`, which is the second and last
+input `isCompactContained_map_stepPath_of_martingale` asks of the rescaled
+random walks, the first being `martingale_partialSum_of_iIndepFun`.
+
+**No martingale enters**, which is why this and the martingale above are two
+statements and not one: the bound is the additivity of the variance under
+independence and the comparison of the two norms, and it holds at each `N`
+separately.
+
+**The hypotheses are the weakest the argument reads.**  The variances are
+bounded by `1` and not equal to it, so that the statement covers a triangular
+array as well as an i.i.d. sequence; independence is used only pairwise, through
+`ProbabilityTheory.IndepFun.variance_sum`
+(`Mathlib/Probability/Moments/Variance.lean:424`), although `iIndepFun` is what
+a consumer has; and the centring enters at one place only, killing the second
+summand of `ProbabilityTheory.variance_eq_sub` so that the variance of the sum
+**is** `∫ (∑ k < N, ξ k) ^ 2`. -/
+theorem integral_abs_sum_le_sqrt_of_iIndepFun {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} (hind : iIndepFun ξ P) (hLp : ∀ k, MemLp (ξ k) 2 P)
+    (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0) (hvar : ∀ k, variance (ξ k) P ≤ 1) (N : ℕ) :
+    ∫ ω, |∑ k ∈ Finset.range N, ξ k ω| ∂P ≤ Real.sqrt N := by
+  have hfun : (∑ k ∈ Finset.range N, ξ k) = fun ω ↦ ∑ k ∈ Finset.range N, ξ k ω := by
+    funext ω; simp
+  have hS : MemLp (fun ω ↦ ∑ k ∈ Finset.range N, ξ k ω) 2 P :=
+    memLp_finsetSum _ fun k _ ↦ hLp k
+  have hmean : ∫ ω, (∑ k ∈ Finset.range N, ξ k ω) ∂P = 0 := by
+    rw [integral_finsetSum _ fun k _ ↦ (hLp k).integrable one_le_two]
+    simp [hcent]
+  have hvarsum : variance (fun ω ↦ ∑ k ∈ Finset.range N, ξ k ω) P
+      = ∑ k ∈ Finset.range N, variance (ξ k) P := by
+    rw [← hfun]
+    exact IndepFun.variance_sum (fun k _ ↦ hLp k)
+      (fun i _ j _ hij ↦ hind.indepFun hij)
+  have hsq : ∫ ω, (∑ k ∈ Finset.range N, ξ k ω) ^ 2 ∂P ≤ (N : ℝ) := by
+    have h := variance_eq_sub hS
+    rw [hvarsum] at h
+    have hle : ∑ k ∈ Finset.range N, variance (ξ k) P ≤ (N : ℝ) := by
+      refine le_trans (Finset.sum_le_sum fun k _ ↦ hvar k) ?_
+      simp
+    have hP : P[(fun ω ↦ ∑ k ∈ Finset.range N, ξ k ω) ^ 2]
+        = ∫ ω, (∑ k ∈ Finset.range N, ξ k ω) ^ 2 ∂P := by
+      simp [Pi.pow_apply]
+    rw [hP, hmean] at h
+    simp only [ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, zero_pow, sub_zero] at h
+    linarith [h ▸ hle]
+  refine le_trans (integral_abs_le_sqrt_integral_sq hS) ?_
+  exact Real.sqrt_le_sqrt hsq
+
 end WalkContainment
 
 end MeasureTheory

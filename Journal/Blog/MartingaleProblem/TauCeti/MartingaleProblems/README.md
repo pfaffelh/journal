@@ -13468,16 +13468,42 @@ has to be chosen once for all `n`. What stands:
   * `isCompactContained_map_stepPath_of_martingale` — the two composed, and the
     form the acceptance example meets: nodes, a martingale at them, and an `L¹`
     bound on the martingale at the last node, uniformly in the index.
+  * `martingale_partialSum_of_iIndepFun` — the partial sums `n ↦ ∑ k < n, ξ k`
+    of independent centred integrable summands are a martingale, which Mathlib
+    does not have. **The filtration is the natural one of the sums and not of
+    the summands**, and the difference decides the statement:
+    `MeasureTheory.Filtration.natural ξ`
+    (`Mathlib/Probability/Process/Filtration.lean:395`) at `n` is
+    `σ (ξ 0, …, ξ n)` and so holds the increment that the step from `n` to
+    `n + 1` adds, over which the conditional expectation at `n + 1` is
+    `∑ k < n, ξ k + ξ n`. The step is
+    `ProbabilityTheory.iIndepFun.indep_comap_natural_of_lt`
+    (`Mathlib/Probability/BorelCantelli.lean:43`) together with
+    `MeasureTheory.condExp_indep_eq`
+    (`Mathlib/Probability/ConditionalExpectation.lean:42`), carried from the one
+    filtration to the other by the inclusion
+    `𝒢 (m + 1) ≤ Filtration.natural ξ m`.
+  * `integral_abs_le_sqrt_integral_sq` — `∫ |f| ≤ √(∫ f ^ 2)` on a probability
+    space, which Mathlib carries about `eLpNorm`
+    (`MeasureTheory.eLpNorm_le_eLpNorm_of_exponent_le`,
+    `Mathlib/MeasureTheory/Function/LpSeminorm/CompareExp.lean:115`) and about
+    `(∫ f ^ p) ^ (1 / p)`
+    (`MeasureTheory.integral_mul_le_Lp_mul_Lq_of_nonneg`,
+    `Mathlib/MeasureTheory/Integral/Bochner/Basic.lean:1225`) but not in this
+    shape. It is **the nonnegativity of the variance of `|f|`** and not
+    Cauchy–Schwarz, which saves the whole `ENNReal.rpow` computation the other
+    two shapes would cost.
+  * `integral_abs_sum_le_sqrt_of_iIndepFun` — `∫ |∑ k < N, ξ k| ≤ √N` for
+    independent centred summands of variance at most `1`. It is the previous
+    read at the sum together with
+    `ProbabilityTheory.IndepFun.variance_sum`
+    (`Mathlib/Probability/Moments/Variance.lean:424`), the centring killing the
+    second summand of `ProbabilityTheory.variance_eq_sub` (`:226`) so that the
+    variance of the sum is `∫ (∑ k < N, ξ k) ^ 2`. **No martingale enters**,
+    which is why it and the martingale above are two statements.
 
-  **What is left for the walks is not about path space.** Two inputs, and
-  Mathlib has neither: that the partial sums of independent centred integrable
-  variables are a martingale for their natural filtration — `condExp_indep_eq`
-  (`Mathlib/Probability/ConditionalExpectation.lean:42`) and
-  `ProbabilityTheory.iIndepFun.indepFun_finset`
-  (`Mathlib/Probability/Independence/Basic.lean:796`) are the pieces — and that
-  `∫ |S N| ≤ √N` for unit variance, by Cauchy–Schwarz and the additivity of the
-  variance. With them the acceptance example is `√(m + 1)` for the constant and
-  `⌈n · m⌉` for the node past the window.
+  **What is left for the walks is the instance**: the constant is `√(m + 1)`
+  and the node past the window is `⌈n · m⌉`, both by the rescaling.
 * Convergence in measure as a second mode: the space of càdlàg paths with the
   topology of convergence in Lebesgue measure, in which the coordinates are
   nowhere continuous, and `mpSolution_of_tendsto_inMeasure`, obtained from

@@ -54148,3 +54148,227 @@ Instanz** und verdrängt die des Abschnitts; `P : Measure Ω`, danach
 geschrieben, lebt dann über `m₂` statt über `mΩ`, und `P.trim hle₂` scheitert
 mit einer Typfehlermeldung, die auf die Stelle nicht hinweist. Die Binder für
 das Maß gehören **vor** die für die σ-Algebren.
+
+### 2026-09-21, einundzwanzigster Lauf des Tages — der Vorschlag des Vorlaufs steht, aber **seine Aussage war falsch**: über der Filtration, die er nannte, ist die Partialsumme kein Martingal; dazu die zweite Eingabe gleich mit, und bei ihr ist der als teuerste Stelle benannte Weg gar nicht nötig gewesen
+
+**Der Vorschlag war `martingale_partialSum_of_iIndepFun`, und er ist
+eingelöst — aber nicht in der Gestalt, in der er dastand.** Der Vorlauf hatte
+geschrieben:
+
+> Dann ist `fun n ω ↦ ∑ k ∈ Finset.range n, ξ k ω` ein Martingal für
+> `MeasureTheory.Filtration.natural ξ`.
+
+Das ist **nicht wahr**, und der Grund ist eine Verschiebung um eins.
+`Filtration.natural ξ` bei `n` ist `σ (ξ 0, …, ξ n)`
+(`Mathlib/Probability/Process/Filtration.lean:395`, `seq i := ⨆ j ≤ i, comap (u j)`),
+und `∑ k ∈ Finset.range n` läuft über `k < n`. Die σ-Algebra enthält also
+gerade den Zuwachs `ξ n`, den der Schritt von `n` nach `n + 1` hinzufügt; über
+ihr ist
+
+`P[S (n+1) | 𝓕 n] = S n + P[ξ n | 𝓕 n] = S n + ξ n`,
+
+weil `ξ n` bei `n` schon meßbar ist. Adaptiert ist der Prozeß, Martingal ist er
+nicht. Die Filtration, die die Martingaleigenschaft liest, ist die natürliche
+**der Summen**: `σ (S 0, …, S n) = σ (ξ 0, …, ξ (n−1))`, und `S 0 = 0` ist die
+leere Summe, so daß am Anfang nichts verlorengeht.
+
+**Das kostet nichts beim Verbraucher.** `isCompactContained_map_stepPath_of_martingale`
+führt seine Filtration als **implizites** Argument (`{𝒢 : γ → Filtration ℕ mΩ}`)
+und liest sie nur in `hmart`; welche es ist, fragt er nicht. Die Berichtigung
+ist deshalb eine der Aussage und nicht der Kette.
+
+**Nachdem das stand, war noch Zeit, und der Lauf hat den eigenen Vorschlag für
+den nächsten gleich mit eingelöst** — die `L¹`-Schranke, also die **zweite und
+letzte** Eingabe, die `isCompactContained_map_stepPath_of_martingale` von der
+Irrfahrt noch verlangt hat. Der Bericht dazu steht unten unter „Die zweite
+Hälfte".
+
+**Drei Deklarationen** in `TauCeti/MartingaleProblems/Suggested.lean`,
+Meilenstein 11, Abschnitt `WalkContainment`; **161 Zeilen** einschließlich der
+Doc-Kommentare (82 für die erste, 79 für die beiden anderen).
+
+| Deklaration | was sie sagt |
+| --- | --- |
+| `martingale_partialSum_of_iIndepFun` | die Partialsummen unabhängiger, zentrierter, integrierbarer Größen sind ein Martingal für die natürliche Filtration **der Summen** |
+| `integral_abs_le_sqrt_integral_sq` | `∫ \|f\| ≤ √(∫ f²)` auf einem Wahrscheinlichkeitsraum |
+| `integral_abs_sum_le_sqrt_of_iIndepFun` | `∫ \|∑ k < N, ξ k\| ≤ √N` bei Varianzen `≤ 1` |
+
+Die Kette geht durch `python3 scripts/check_master.py` mit **0 Fehlern, 0
+`sorry`** in allen drei Dateien; die Warnungszahlen sind 18 / 38 / 112 (davon
+veraltet 0), also **unverändert** gegenüber dem Vorlauf — die 161 neuen Zeilen
+haben keine einzige Warnung erzeugt. `check_axioms_master.py` meldet für alle
+drei `propext`, `Classical.choice`, `Quot.sound` und nichts sonst.
+`check_negatives.py` prüft jetzt **58** Behauptungen (zwei davon in diesem Lauf
+neu) und meldet keinen unerwarteten Treffer, `check_duplicates.py` findet zu
+keinem der drei Namen einen Mathlib-Namensvetter, `check_own_names.py` deckt
+jeden in der `README.md` neu zitierten Namen (unverändert 436 ohne Deckung),
+`check_cited_lines.py` meldet **431 von 431** stimmenden Zeilenangaben und **0**
+tote Fundstellen, `check.py` meldet `clean` (142 Seiten).
+
+Mathlib-Stand des Übersetzens: `94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+2026-09-18; Lean 4.35.0-rc2. Die Gegenprobe gegen v4.33.1 ist wie angesagt rot
+und in diesem Lauf **nicht** nachgemessen worden.
+
+#### Der zweite Befund: drei der vier vorgeprüften Bausteine werden nicht gebraucht, weil Mathlib den Schritt schon fertig hat
+
+Der Vorlauf hatte vier Bausteine einzeln gegen `master` übersetzt
+(`scripts/_dev_walk4.lean`, `rc=0`) und damit die Suche ersparen wollen. Drei
+davon kommen im Beweis **nicht** vor, und zwar weil es einen kürzeren Weg gibt,
+den der Vorlauf übersehen hat:
+
+> **`ProbabilityTheory.iIndepFun.indep_comap_natural_of_lt`**
+> (`Mathlib/Probability/BorelCantelli.lean:43`) —
+> `Indep (comap (f j)) (Filtration.natural f hf i) μ` für `i < j`.
+
+Das ist genau die σ-Algebra-Unabhängigkeit, für die der Vorschlag
+`iIndepFun.indepFun_finset`, `Filtration.natural_eq_comap` und
+`MeasurableSpace.comap`-Buchhaltung vorgesehen hatte — zusammengesetzt und
+bewiesen, seit Mathlib das zweite Borel–Cantelli-Lemma trägt. Gebraucht wird von
+den vieren nur der letzte, `condExp_indep_eq`, und auch die Monotonie ist die
+andere von beiden: **`indep_of_indep_of_le_right`**, nicht `_left`, weil die zu
+verkleinernde σ-Algebra die des Bedingens ist.
+
+Daneben steht im selben Abschnitt `iIndepFun.condExp_natural_ae_eq_of_lt`
+(`:50`), das den ganzen bedingten Erwartungswert fertig liefert. Es trägt hier
+**nicht**, und der Grund ist derselbe wie oben: es bedingt unter
+`Filtration.natural ξ`, also unter der falschen Filtration. Benutzbar ist die
+Stufe darunter.
+
+**Die Lehre, und sie ist die des Musters „Mathlib nennt es anders":** die
+Vorprobe des Vorlaufs hat nach den *Teilen* gesucht und sie gefunden; nach dem
+*zusammengesetzten* Schritt hat sie nicht gesucht, weil er unter „Borel–Cantelli"
+abgelegt ist und nicht unter „Martingal". Wer eine Unabhängigkeitsaussage über
+eine natürliche Filtration braucht, sieht in
+`Mathlib/Probability/BorelCantelli.lean` nach, ehe er sie zusammensetzt.
+
+#### Was die Nichtexplosionsregel hier verlangt und was sie nicht verlangt
+
+Keine der vier `sInf`-getotalisierten Funktionen kommt vor; die Aussage ist eine
+über `ℕ` und trägt keinen Müllwert. Die einzige Stelle, an der eine
+Fallunterscheidung nötig war, ist `n = 0`, und sie ist keine Ausnahme, sondern
+eine Rechnung: `𝒢 0` ist die σ-Algebra der Konstanten `S 0 = 0`, also `⊥`, und
+`ProbabilityTheory.indep_bot_right` schließt sie. Es gibt bei `n = 0` keinen
+Zuwachs wegzubedingen.
+
+#### Die Negativaussage, mit `exact?` belegt
+
+**Mathlib hat das Martingal der Partialsummen in keiner Fassung.** `partialSum`
+kommt unter `Mathlib/Probability/` in keinem Deklarationsnamen vor, und die
+Probe
+
+```lean
+example {P : Measure Ω} {ξ : ℕ → Ω → ℝ}
+    (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hint : ∀ k, Integrable (ξ k) P) (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0) :
+    Martingale (fun n ω ↦ ∑ k ∈ Finset.range n, ξ k ω)
+      (Filtration.natural (fun n ω ↦ ∑ k ∈ Finset.range n, ξ k ω)
+        (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ hmeas k)) P := by
+  exact?
+```
+
+meldet gegen den master-Worktree „`exact?` could not close the goal"
+(`scripts/_dev_walk5probe.lean`). Die Behauptung steht jetzt in
+`scripts/check_negatives.py` als `partial-sum-martingale`, damit ein späterer
+Mathlib-Stand sie widerlegen kann, ohne daß ein Lauf danach suchen muß.
+
+#### Eine Kleinigkeit, die Zeit kostet, wenn man sie nicht kennt
+
+`MeasureTheory.integrable_finset_sum` ist auf `master` **veraltet** und heißt
+`MeasureTheory.integrable_finsetSum`; ebenso liefert
+`condExp_of_stronglyMeasurable` eine **Gleichheit** und keine `=ᵐ`-Aussage, so
+daß ein `have` mit `=ᵐ[P]` daran scheitert. Beides meldet der Übersetzer
+deutlich, aber beides kostet einen Durchlauf.
+
+### Die zweite Hälfte: die `L¹`-Schranke, und die Vorfrage, die der Lauf sich selbst gestellt hatte, ist mit **„weder noch"** beantwortet
+
+Die Vorfrage war, ob der Weg über `eLpNorm` oder über Hölder geht. Beide
+Antworten sind falsch, und das ist der Ertrag dieser Hälfte:
+
+> **`∫ |f| ≤ √(∫ f²)` ist die Nichtnegativität der Varianz von `|f|`.**
+
+Denn `ProbabilityTheory.variance_eq_sub`
+(`Mathlib/Probability/Moments/Variance.lean:226`) liest
+`Var[|f|] = P[|f|²] − P[|f|]²`, der erste Summand ist `∫ f²` durch `sq_abs`,
+und `variance_nonneg` (`:204`) sagt, daß die Differenz `≥ 0` ist. Der Rest ist
+`Real.le_sqrt_of_sq_le` (`Mathlib/Analysis/Real/Sqrt.lean:258`), das **kein**
+Vorzeichen der linken Seite verlangt. Vier Zeilen Beweis.
+
+Die beiden vorgesehenen Wege — `eLpNorm_le_eLpNorm_of_exponent_le`
+(`Mathlib/MeasureTheory/Function/LpSeminorm/CompareExp.lean:115`) und
+`integral_mul_le_Lp_mul_Lq_of_nonneg`
+(`Mathlib/MeasureTheory/Integral/Bochner/Basic.lean:1225`) mit `g ≡ 1`) — hätten
+beide die `ENNReal.rpow`-Rechnung gekostet, die der Vorschlag als „die teuerste
+Stelle" benannt hatte. Sie fällt ersatzlos weg. **Die Vorfrage war richtig
+gestellt und hat sich bezahlt gemacht**, aber nicht, weil sie eine der beiden
+Antworten fand, sondern weil sie verhindert hat, daß der Lauf die erste nahm.
+
+**Beide Fassungen sind mit `exact?` als Mathlib-Lücke belegt** — die
+Jensen-Gestalt `(∫ |f|)² ≤ ∫ f²` und die Wurzelgestalt —, beide scheitern gegen
+den master-Worktree (`scripts/_dev_walk6probe.lean`). Die Behauptung steht als
+`integral-abs-le-sqrt-integral-sq` in `scripts/check_negatives.py`.
+
+**Die Voraussetzungen der Summenfassung sind so schwach, wie der Beweis sie
+liest**, und zwei davon sind schwächer als der Vorschlag sie führte: die
+Varianzen sind durch `1` **beschränkt** und nicht gleich `1`, so daß auch ein
+Dreiecksschema getragen wird; und die Unabhängigkeit wird nur **paarweise**
+benutzt, weil `IndepFun.variance_sum` (`:424`) nur sie verlangt — `iIndepFun`
+steht in der Signatur allein deshalb, weil der Verbraucher es hat.
+
+**Eine Falle, die einen Durchlauf gekostet hat:** `memLp_finsetSum` und
+`memLp_finsetSum'` unterscheiden sich in der **Gestalt der Summe**, nicht in der
+Stärke — das ungestrichene gibt `MemLp (fun a ↦ ∑ i ∈ s, f i a)`, das
+gestrichene `MemLp (∑ i ∈ s, f i)`
+(`Mathlib/MeasureTheory/Function/LpSeminorm/TriangleInequality.lean:179` und
+`:192`). Die übliche Lesart des Strichs ist hier die umgekehrte.
+`IndepFun.variance_sum` dagegen spricht über die **Pi-Summe**, so daß zwischen
+den beiden ein `funext` steht.
+
+#### Wo der Akzeptanztest am Ende dieses Laufs steht
+
+| Was Donsker noch fehlt | Stand |
+| --- | --- |
+| Kompaktheitseinschließung der Irrfahrten | **alle drei Teile stehen** — Pfadraum, Martingal, `L¹`-Schranke; es fehlt nur noch das Einsetzen |
+| Eindeutigkeit für `f ↦ f''/2` (Fourier) | offen, eigener Punkt |
+| Quantifizierung von `Sol` über die Algebra | offen, klein |
+| die approximierenden Paare der Irrfahrten | offen, Instanz |
+
+#### Vorschlag für den nächsten Lauf
+
+**`isCompactContained_rescaledWalk`** — die Kompaktheitseinschließung der
+reskalierten Irrfahrten, in `MartingaleProblems/Suggested.lean`,
+Meilenstein 11.
+
+> Für i.i.d. zentrierte `ξ k` der Varianz `1` und die reskalierte Irrfahrt
+> `Φ n ω = stepPath (fun k ↦ (k : ℝ≥0) / n) fun k ↦ n⁻¹ᐟ² * ∑ j < k, ξ j ω` ist
+> `SkorokhodSpace.IsCompactContained 0 fun n ↦ P.map (Φ n)`.
+
+**Warum jetzt.** Es ist **kein neuer Satz**, sondern das Einsetzen in
+`isCompactContained_map_stepPath_of_martingale`, dessen beide Hypothesen dieser
+Lauf gebaut hat, und es ist der erste Punkt der Kette, der seinen
+Akzeptanzzeugen bekommt. Der Punkt steht seit dem zwanzigsten Lauf des
+2026-09-20 als „es fehlen zwei Aussagen über `ℕ`" in der Liste; es fehlt jetzt
+keine mehr.
+
+**Worauf es ruht, und alles davon steht:**
+
+1. **`martingale_partialSum_of_iIndepFun`** liefert `hmart`, angewandt auf die
+   skalierten Zuwächse `fun k ω ↦ n⁻¹ᐟ² * ξ k ω`; die Skalierung geht durch
+   `iIndepFun`, `Integrable` und die Zentrierung hindurch, das ist der einzige
+   Zwischenschritt.
+2. **`integral_abs_sum_le_sqrt_of_iIndepFun`** liefert `hC` mit
+   `C m = √(m + 1)`: die Varianz des skalierten Zuwachses ist `1/n ≤ 1`, und
+   `√(N n m) / √n ≤ √(m + 1)` für `N n m = ⌈n · m⌉` ist eine Rechnung in `ℝ`.
+3. **`hN`**, der Knoten jenseits des Fensters, ist `⌈n · m⌉` und die
+   Ungleichung `(m : ℝ≥0) < (⌈n · m⌉ + 1) / n`; sie ist eine Rechnung in `ℝ≥0`
+   und braucht `0 < n`.
+4. Daß die reskalierte Irrfahrt als `stepPath` dasteht, ist seit dem
+   neunzehnten Lauf des 2026-09-20 gegen `master` übersetzt.
+
+**Die Vorfrage, die zu klären ist, ehe gebaut wird:** ob der Index `n` bei `0`
+beginnt. `isCompactContained_map_stepPath_of_martingale` quantifiziert über eine
+beliebige Indexmenge `γ`, und bei `n = 0` ist die Skalierung `n⁻¹ᐟ²` der
+Müllwert `1/0 = 0` und der Knotenabstand ebenfalls. Zu entscheiden ist, ob die
+Familie über `{n // 0 < n}` läuft oder über `ℕ` mit `n + 1`; das zweite ist
+billiger und dieselbe Abkürzung, die der achtzehnte Lauf des 2026-09-10 bei
+`rateTime` genommen hat — die Stufe, an der ein Nenner verschwindet, kommt dann
+gar nicht vor.
