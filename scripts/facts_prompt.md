@@ -439,6 +439,50 @@ abhängendes, bloß `𝓕 s₀`-meßbares Gewicht dasselbe leistet.
 Es wird **kein** Meilenstein 8 begonnen, keine Volterra-Theorie und keine
 Task-23-Aussage angefaßt.
 
+**GEMESSEN AM 2026-09-21, damit kein Lauf es neu erhebt: `IsRightContinuous`
+und `IsCadlag` sind unter Summe und Differenz abgeschlossen.**
+
+Der Quelltext von `Mathlib/Topology/Order/Cadlag.lean` zeigt nur die
+**multiplikativen** Lemmata:
+
+```lean
+@[to_additive (attr := to_fun (attr := to_dual))]
+lemma IsRightContinuous.mul [Mul Y] [ContinuousMul Y] …
+@[to_additive (attr := to_fun (attr := to_dual))]
+lemma IsCadlag.mul [Mul Y] [ContinuousMul Y] …
+```
+
+Das Attribut erzeugt `IsRightContinuous.add`, `IsCadlag.add`, und aus `div'`
+entsteht `sub`. **Kompiliert, nicht vermutet** — die drei Proben
+
+```lean
+example (hf : IsRightContinuous f) (hg : IsRightContinuous g) :
+    IsRightContinuous (f + g) := hf.add hg
+example (hf : IsCadlag f) (hg : IsCadlag g) : IsCadlag (f + g) := hf.add hg
+example (hf : IsCadlag f) (hg : IsCadlag g) : IsCadlag (f - g) := hf.sub hg
+```
+
+gehen gegen `master` durch, unter `[AddGroup Y] [IsTopologicalAddGroup Y]`.
+(Nebenbei: `TopologicalAddGroup` heißt auf master `IsTopologicalAddGroup`.)
+Verfügbar ist damit die ganze Familie — `add`, `sub`, `neg`, `const_vadd`, dazu
+`const`, `continuous_comp`, `continuous_comp₂`, `Continuous.isCadlag`.
+
+**Unmittelbare Folge für den nächsten Lauf.** Die Rechtsstetigkeit von
+`Y - g ∘ X` ist damit `IsRightContinuous.sub`: `Y` nach Voraussetzung,
+`g ∘ X` über `IsRightContinuous.continuous_comp`. Der Weg über
+`intervalIntegral.continuousOn_primitive` wird nur für den **Kompensator**
+gebraucht, nicht für die Differenz.
+
+**Und die Regel dahinter, zum dritten Mal:** ein durch `@[to_additive]` (oder
+`@[to_dual]`, `@[to_fun]`) erzeugter Name steht in **keiner** `theorem`-Zeile.
+Ein Grep nach `theorem <name>` liefert dort einen **falschen Negativbefund** —
+so geschehen bei `Set.indicator_of_notMem` (2026-09-13), bei
+`frequently_lt_of_liminf_lt` (2026-09-18) und beinahe hier. Wer eine additive
+Variante vermißt, sucht nach dem **multiplikativen** Namen und sieht nach, ob
+ein Attribut darübersteht; und wer eine Negativaussage über einen solchen Namen
+aufschreiben will, probiert sie vorher mit `example … := by exact?` gegen den
+master-Worktree.
+
 **MEILENSTEIN 14 IST GEPARKT.** Der erste Block der kausalen Faltung (21
 Deklarationen, `section CausalConvolution`) **bleibt stehen** — er ist sauber
 und ohne `sorry`, und ihn zurückzunehmen wäre Verschwendung. Aber es kommt
