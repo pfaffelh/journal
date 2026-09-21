@@ -168,6 +168,14 @@ Suche `istightmeasureset[a-z_.']*of_forall_exists_dist|istightmeasureset[a-z_.']
 Suche `continuousat_finsetprod|continuousat_finset_prod|continuousat[a-z_.']*\.finsetprod` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
 
 
+## `martingale-smaller-filtration` — MartingaleProblems/Suggested.lean, `MeasureTheory.tendsto_integral_mpTest_sub_mul_of_approx` und `MeasureTheory.comap_pathOfProcess_le_of_stronglyAdapted`
+
+> Mathlib hat keinen Satz, der ein Martingal von einer Filtration auf eine **kleinere** trägt, für die es adaptiert bleibt (der Turmschluß).  Gesucht wurde am 2026-09-21 nicht nach der Vokabel, sondern nach der Gestalt: in ganz `Mathlib/Probability/` steht **keine** Aussage mit zwei Filtrationen im Satz; `Mathlib/Probability/Martingale/Basic.lean` hält die Filtration über die ganze Datei fest.
+
+Suche `mono_filtration|martingale_of_le_filtration|martingale\.mono\b|submartingale\.mono_filtration` unter `Mathlib/`: **3 Treffer** in 1 Dateien — wie erwartet.
+
+* `Mathlib/FieldTheory/CardinalEmb.lean`
+
 ## Die zweiundzwanzig Lücken von `TODO.md` Punkt 8
 
 ## `traj-homogeneity` — TODO.md Punkt 8, erste Lücke
@@ -393,5 +401,5 @@ Suche `theorem le_lintegral|lemma le_lintegral` unter `Mathlib/`: **1 Treffer** 
 
 ## Zusammenfassung
 
-53 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
+54 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
 

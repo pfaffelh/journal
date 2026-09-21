@@ -53561,3 +53561,196 @@ kommen:**
 **Worauf er ruht, und es ist alles gebaut:** die acht Deklarationen dieses Laufs,
 `isCompact_closure_of_subalgebra_forall_martingale` (zweiter Punkt, exakter
 Fall), und `SkorokhodSpace.exists_countable_dense_continuity`.
+
+### 2026-09-21, achtzehnter Lauf des Tages — die Naht steht, und mit ihr noch drei; beim Hinschreiben kommt heraus, daß eine Voraussetzung der Kette **zu stark** war, und ohne deren Abschwächung hätte die Kette an ihrer eigenen Rechtsstetigkeit nicht zusammengepaßt
+
+**Der Vorschlag des Vorlaufs steht, und er ging beim ersten Durchlauf durch.**
+`MeasureTheory.mpSolution_of_tendsto_cadlag_of_subseq` ist `hlim` des vierten
+Kettenpunktes, ausgeschrieben für die càdlàg-Kette: konvergieren die Pfadgesetze
+einer approximierenden Familie längs einer Teilfolge gegen `ν`, so erfüllt die
+Identität des Pfadraums unter `ν` die Martingalgleichung zu `(f, g)` längs einer
+abzählbaren dichten Zeitmenge. Danach war im Zeitbudget Raum für drei weitere.
+
+**Vier neue Deklarationen** in `TauCeti/MartingaleProblems/Suggested.lean`,
+Meilenstein 11, und **eine Abschwächung** an zwei bestehenden; die Datei wächst
+dabei um 248 Zeilen, Doc-Kommentare eingerechnet:
+
+| Deklaration | was sie sagt |
+| --- | --- |
+| `comap_pathOfProcess_le_of_stronglyAdapted` | die Koordinatenvergangenheit des Pfades liegt unter **jeder** Filtration, für die der Prozeß adaptiert ist |
+| `mpSolution_of_tendsto_cadlag_of_subseq` | **die Naht: `hlim` des vierten Kettenpunktes** |
+| `mpSolution_of_tendsto_cadlag_of_subseq_pathOfProcess` | dieselbe Naht an den Daten des **zweiten** Kettenpunktes |
+| `isCompact_closure_range_of_subalgebra_forall_martingale` | der zweite Kettenpunkt in der Gestalt, die der vierte liest |
+
+Die Kette geht durch `python3 scripts/check_master.py` mit **0 Fehlern, 0
+`sorry`** in allen drei Dateien; die Warnungszahlen sind 18 / 38 / 112 (davon
+veraltet 0), also **unverändert** gegenüber dem Vorlauf. Alle vier neuen und die
+zwei geänderten Deklarationen sind mit `check_axioms_master.py` geprüft und
+hängen an `propext`, `Classical.choice`, `Quot.sound` und an nichts sonst.
+`check_negatives.py` meldet über **54** Behauptungen keinen unerwarteten Treffer,
+`check_duplicates.py` findet zu keinem der vier Namen einen Mathlib-Namensvetter,
+`check_own_names.py` deckt jeden neu zitierten Namen, `check.py` meldet `clean`
+(142 Seiten).
+
+Mathlib-Stand des Übersetzens: `94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+2026-09-18; Lean 4.35.0-rc2. Die Negativaussagen sind gegen frisches
+`upstream/master` `b1007d8abfd0c776eb8a75e8f6bf26db5eae4a69` geprüft.
+
+Die Gegenprobe gegen v4.33.1 ist wie angesagt rot und in diesem Lauf **nicht**
+nachgemessen worden; sie ist zu berichten und nicht zu beheben.
+
+#### Die drei Klemmstellen, die der Vorlauf vorhergesagt hatte, waren keine
+
+Er hatte drei genannt, „in der Reihenfolge, in der sie kommen". Alle drei sind
+eingetreten wie beschrieben und haben zusammen nichts gekostet: die Teilfolge
+einer approximierenden Familie ist eine (Einsetzen), die Normkonvergenz überlebt
+die Teilfolge (`hf.comp hns`), und das `T` gehört zum Grenzgesetz. Der dritte
+Punkt war der einzige mit einer Entscheidung darin, und sie ist so gefallen, wie
+der Vorlauf es für am ehesten hielt: **`T` wird existenzquantifiziert**. Am
+Quelltext von Meilenstein 6 nachgesehen — `subsingleton_mpSolutions_of_unique_onedim`
+liest `IsMPSolution` und fragt nach keinen Zeiten —, also kostet die Gestalt am
+vierten Kettenpunkt nichts. Sie ist hier aber **nicht frei**: der Limes ist erst
+nach der Extraktion bekannt, also kann keine Zeitmenge vor ihm festgelegt werden.
+
+#### Der Befund, und er ist einer gegen die Kette selbst: `h𝓕'` war zu stark
+
+Beim Instanziieren an den Daten des zweiten Kettenpunktes fiel auf, daß die
+beiden Filtrationsvoraussetzungen des dritten **nicht gleich** sein dürfen.
+
+* `h𝓕` am **Limes** ist eine Gleichheit, und muß es sein: sie speist
+  `isDetermining_evalFuns`, und eine determinierende Klasse muß die Filtration
+  **erzeugen**.
+* `h𝓕'` an den **Approximanten** stand bis heute ebenfalls als Gleichheit, wird
+  im Beweis aber nur **in einer Richtung** gelesen — an genau einer Stelle, der
+  Meßbarkeit von `Z ∘ X' n` für die Vergangenheit bei `s`. Dafür genügt, daß die
+  Filtration der Approximanten die Punktvergangenheit **enthält**.
+
+**Und die stärkere Fassung hätte die Kette nicht zusammenkommen lassen.** Der
+zweite Kettenpunkt, `isCompact_closure_of_subalgebra_forall_martingale`, verlangt
+eine **rechtsstetige** Filtration (`[𝓕.IsRightContinuous]`), und die natürliche
+Filtration eines càdlàg-Pfades ist nicht rechtsstetig. Unter der Gleichheit
+hätte man ein Martingal von der gegebenen Filtration auf die natürliche
+**hinuntertragen** müssen — nach dem Turmschluß wahr, aber ein Satz.
+
+`tendsto_integral_mpTest_sub_mul_of_approx` und
+`mpSolution_of_tendsto_cadlag_of_approx` tragen `h𝓕'` daher ab heute als
+Inklusion; der Beweis verliert dabei ein `rw` und gewinnt ein `Measurable.mono`.
+`comap_pathOfProcess_le_of_stronglyAdapted` löst die Inklusion an den Daten des
+zweiten Punktes ein, in drei Umschreibungen.
+
+#### Die Negativaussage, und wie sie geprüft wurde
+
+> **Mathlib hat keinen Satz, der ein Martingal von einer Filtration auf eine
+> kleinere trägt, für die es adaptiert bleibt.**
+
+Gesucht wurde nach der **Gestalt** und nicht nach der Vokabel, wie es die Regel
+für Negativbefunde verlangt: in ganz `Mathlib/Probability/` steht **keine**
+Aussage, in deren Satz zwei Filtrationen vorkommen — die Treffer auf
+`Filtration.*Filtration` sind Klassendefinitionen (`SigmaFiniteFiltration`,
+`Filtration.rightCont`) und Stoppzeitaussagen mit *einer* Filtration;
+`Mathlib/Probability/Martingale/Basic.lean` hält `ℱ` über die ganze Datei als
+Sektionsvariable fest, und keiner seiner Sätze (`add`, `neg`, `sub`, `smul`,
+`condExp_ae_eq`, `martingale_nat`, `martingale_of_setIntegral_eq_succ`, …) ändert
+sie. Die Behauptung steht ab heute als `martingale-smaller-filtration` in
+`scripts/check_negatives.py` und wird damit bei jedem Lauf nachgeprüft; ihre eine
+bekannte und harmlose Fundstelle ist `Mathlib/FieldTheory/CardinalEmb.lean`, wo
+`strictMono_filtration` das Muster als Teilzeichenkette enthält und von
+Körpertürmen handelt.
+
+**Sie wird nicht in `TODO.md` Punkt 8 eingetragen**, denn dieser Lauf hat sie
+nicht gebraucht: die Abschwächung von `h𝓕'` macht sie entbehrlich. Sie steht als
+Begründung an der Deklaration, damit ein späterer Lauf die Gleichheit nicht
+arglos wiederherstellt.
+
+#### Drei Kleinigkeiten, die Zeit kosten, wenn man sie nicht kennt
+
+* **`ProbabilityMeasure` ist ein `def` auf einem Subtyp**, und
+  `⟨P.map (Φ i), inferInstance⟩` faltet sich beim Elaborieren dorthin zurück,
+  worauf `closure` keine Topologie mehr findet. In
+  `isCompact_closure_range_of_subalgebra_forall_martingale` ist darum die
+  **Menge** typisiert, `(… : Set (ProbabilityMeasure D(ℝ≥0, E)))`. Es ist
+  dieselbe Falle, die der Vorlauf bei `tendstoInDistribution_id_of_tendsto` als
+  `Tendsto (β := …)` notiert hat — die zweite Gestalt ist hier aufgeschrieben.
+* **`CompleteSpace E` tritt erst am Pfadabbild in die Kette ein**, und nur dort:
+  `SkorokhodSpace.measurable_of_measurable_eval` verlangt es. Der zweite
+  Kettenpunkt trägt es aus demselben Grund, also ist es an dieser Naht keine
+  neue Forderung. Die Naht selbst (`mpSolution_of_tendsto_cadlag_of_subseq`)
+  trägt es **nicht**.
+* **Adaptiertheit genügt, Progressivität wird nicht gelesen.** Der zweite
+  Kettenpunkt führt `IsStronglyProgressive`, weil seine Straffheit es braucht;
+  `mpSolution_of_tendsto_cadlag_of_subseq_pathOfProcess` liest nur
+  `StronglyAdapted` — für die Meßbarkeit des Pfadabbilds und für die
+  Filtrationsinklusion.
+
+#### Wo die Kette von Meilenstein 11 am Ende dieses Laufs steht
+
+| Punkt | Stand |
+| --- | --- |
+| `isTight_map_postcomp_of_exists_martingale` | steht, bis auf die `Fin k`-Fassung |
+| `isRelativelyCompact_of_approx` | steht im exakten Fall, jetzt auch in der `Set.range`-Gestalt; der **approximative Fall fehlt** |
+| `mpSolution_of_tendsto_cadlag` | steht, mit Aufsatz |
+| `tendsto_of_isRelativelyCompact_of_unique` | steht, abstrakt |
+| **die Nähte dazwischen** | **stehen** |
+
+**Zwischen den vier Punkten ist damit nichts mehr zu schreiben.** Der zweite
+liefert den kompakten Abschluß in der Gestalt, die der vierte liest; der vierte
+zieht eine Teilfolge; die beiden Nähte machen aus ihrem Limes einen Prozeß mit
+Filtration und Zeitmenge; der dritte liest die Martingalgleichung daran ab.
+
+**Was Donsker noch fehlt, ist keine Naht**, und es steht so in
+`MartingaleProblems/README.md`, damit das Zusammenfügen nicht mit dem
+Akzeptanztest verwechselt wird: der **approximative** Fall des zweiten Punktes,
+die **Kompaktheitseinschließung** der reskalierten Irrfahrten, die
+**Eindeutigkeit** für `f ↦ f''/2` (der Fourierpunkt), und — klein — die
+Quantifizierung des Prädikats `Sol` über die Algebra, die Nähte oben stehen für
+**ein** Paar `(f, g)`.
+
+#### Vorschlag für den nächsten Lauf
+
+**`MeasureTheory.isTightMeasureSet_map_of_subalgebra_forall_exists_bounded_pair`**
+und darüber
+**`MeasureTheory.isCompact_closure_range_of_subalgebra_forall_exists_bounded_pair`**
+— der **approximative Fall des zweiten Kettenpunktes**, in
+`MartingaleProblems/Suggested.lean`, Meilenstein 11.
+
+> Statt der exakten Martingaleigenschaft für jedes `f` der Algebra wird das Paar
+> vorausgesetzt, das der Straffheitsbeweis wirklich verbraucht: zu jedem `ε₀`
+> und jedem Horizont zwei `IsApproximatingPair` mit beschränkten Zustandstermen,
+> deren Abstand zu `g ∘ X i` und `(g ∘ X i)²` im unteren Integral klein ist.
+
+**Warum jetzt.** Es ist der **einzige** der vier Punkte, der noch unvollständig
+ist, und es ist der, den Donsker braucht: reskalierte Irrfahrten lösen das
+Martingalproblem nur **näherungsweise**, der exakte Fall erreicht sie nicht.
+Solange er fehlt, ist der Akzeptanztest nicht bloß unbezahlt, sondern nicht
+einmal formulierbar.
+
+**Warum er billig sein sollte, und das ist am Quelltext geprüft.** Die
+Martingalhypothese wird auf dem ganzen Weg an **genau einer** Stelle
+ausgewertet: `isTightMeasureSet_map_postcomp_of_forall_martingale` (Zeile 46958)
+reicht sie sofort an `isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair`
+(Zeile 46510) weiter und rechnet dafür die Konstanten
+`⟨2, u + 1, (u + 1) ^ (2 : ENNReal).toReal⁻¹ * max ‖g‖₊ ‖g'‖₊⟩` aus. Die Stufen
+darüber — `_of_forall_` (47016), `_of_dense_forall_` (47056),
+`_of_denseOnCompacts_forall_` (47099), `_of_subalgebra_forall_` (47137) — fassen
+`hmart` nur an, um es durchzureichen: der Dichteschritt ist
+`SkorokhodSpace.isTightMeasureSet_of_dense_forall_postcomp_nnreal`, der
+Algebraschritt `exists_mem_subalgebra_forall_dist_le_of_isCompact`, und beide
+sehen die Hypothese nicht an. **Zu tun ist also, die vier Stufen mit der
+Paarhypothese statt der Martingalhypothese neu zu ziehen**, nicht, eine neue
+Abschätzung zu führen.
+
+**Die Frage, die dabei zuerst zu klären ist, und sie ist nicht Buchhaltung:**
+`happ` von `isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair` steht
+für **ein** festes `g`, das Tripel `(q, T', K)` aber **vor** dem Index `i`. Beim
+Hochziehen auf eine Algebra wird `g` allquantifiziert, und dann ist zu
+entscheiden, ob `(q, T', K)` von `g` abhängen darf. Der Dichteschritt vergleicht
+Testfunktionen in der Supremumsnorm und **nicht** ihre Approximationsdaten; er
+sollte also tragen. Das ist am Quelltext von
+`SkorokhodSpace.isTightMeasureSet_of_dense_forall_postcomp_nnreal` zu
+entscheiden, ehe die Signatur geschrieben wird, und nicht zu raten.
+
+**Worauf er ruht, und es ist alles gebaut:**
+`isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair`,
+`isTightMeasureSet_map_postcomp_of_forall_isApproximable`,
+`isApproximatingPair_of_martingale` (als Beleg, daß die Klasse bewohnt ist und
+der exakte Fall ein Sonderfall bleibt), und die vier Stufen selbst.
