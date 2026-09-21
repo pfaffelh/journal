@@ -11988,10 +11988,11 @@ has to be chosen once for all `n`. What stands:
 
   **What the assembly is not.** It stands over a real valued `V`, or over one
   test function `g` at a time, and it is one inequality at one `(N, δ, ε₀)`. The
-  criterion needs it uniformly over the family and with the three limits taken
-  in the order `N`, `δ`, `ε` — and it needs the passage from the countable
-  separating family back to the metric of `E`, which the three transports above
-  supply. Those are the items after this one.
+  criterion needs it uniformly over the family — and it needs the passage from
+  the countable separating family back to the metric of `E`, which the three
+  transports above supply. The three limits in the order `N`, `δ`, `ε` are the
+  item "The approximability condition" at the end of this milestone; uniformity
+  over the family is the one after that.
 
   **Two statements were factored out for this.**
   `MeasureTheory.lintegral_ofReal_dist_le_sqrt_of_lintegral_sq_le` is
@@ -12510,6 +12511,94 @@ has to be chosen once for all `n`. What stands:
   martingale does not move with `δ`; only the window does. Hence the closure of
   the approximable functions under products is a consequence of the estimate
   and not an assumption of convenience.
+* **The approximability condition, and the order of the three limits.**
+  `MeasureTheory.IsApproximable 𝓕 P q T K V ε₀ u`: to every positive error
+  there are two pairs of the class `MeasureTheory.IsApproximatingPair` with one
+  and the same `q`, `T`, `K`, approximating `V` and `V²` to within that error on
+  the horizon `Set.Iic T`, together with the four integrabilities of their
+  stopped values. This is \EK, Theorem 9.4, written as a predicate on the
+  process it approximates, so that a consumer never has to speak of
+  `⨆ n, 𝔼[eLpNorm (Z n) q] < ∞`.
+
+  **The errors are read on one fixed window and this is the decision the
+  predicate makes.** The assembly reads them on `Set.Iic (u + δ)`, which moves
+  with `δ`, and a hypothesis that moves with the variable of a limit is not one
+  a limit can be taken under. `Set.Iic T` is the natural fixed window because
+  `u + δ ≤ T` is asked anyway, and the passage back is one line,
+  `MeasureTheory.lintegral_biSup_Iic_mono`, the `biSup_mono` under
+  `lintegral_mono` the assembly already wrote once. That lemma is stated over an
+  abstract `F : ℝ≥0 → Ω → ENNReal` and not inline, because inline the same four
+  lines run into a `whnf` timeout of 200000 heartbeats: the elaboration carries
+  the integrand along.
+
+  **`ε₀` and `u` are parameters of the predicate, and that is the weakest form
+  it has.** The four integrabilities stand at the stopped values along
+  `MeasureTheory.oscHitSeq V ε₀` capped at `u`, so they see `ε₀` and `u`, and no
+  reformulation on a window hides that. Quantifying instead over all times
+  bounded by `T` would ask for an integrable supremum over the horizon, which is
+  strictly more. The window `δ` *is* quantified inside, because it is the
+  variable of the second limit and a consumer may not be asked for a hypothesis
+  per value of it.
+
+  **The third limit, once and for all:**
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximable` is the
+  assembly with `A = 2 ε' + 4 ofReal c * ε` replaced by `0`,
+
+  ```
+  ofReal ε₀ * P {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ ω)) δ}
+    ≤ N * ofReal √(((1 + 2 c) * (ofReal δ ^ (1 - 1/q) * K)).toReal)
+      + ofReal u ^ (1 - 1/q) * K * (1 + 2 ofReal c) / N / ofReal ε₀
+  ```
+
+  the statement in which the approximants no longer occur. The limit runs along
+  the sequence of errors `(n : ℝ≥0∞)⁻¹` under `ge_of_tendsto` over `atTop`, whose
+  `NeBot` is free, and nothing is lost by it: the left hand side does not depend
+  on the approximants, so a bound holding at each `n` passes to the limit. What
+  is proved is the continuity of the right hand side at `A = 0`, which is
+  `ENNReal.tendsto_toReal` at the finite
+  `(1 + 2 c) * (ofReal δ ^ (1 - 1/q) * K)` and `ENNReal.Tendsto.div_const`.
+
+  **And then the first two:**
+  `MeasureTheory.tendsto_measure_setOf_lt_modulusBased_of_isApproximable`,
+
+  ```
+  Tendsto (fun δ : ℝ≥0 ↦ P {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ ω)) δ})
+    (𝓝[>] 0) (𝓝 0)
+  ```
+
+  for `0 < u`, `u < T`, `0 < ε₀`. This is the probabilistic content of \EK,
+  Theorem 9.4. **The order of the limits is the proof and is visible in it**:
+  given a target `η`, the count `N` is chosen first from the horizon term
+  `B / N / ofReal ε₀`, which is `O(1/N)` and does not see `δ`; the window `δ`
+  second, at that fixed `N`, from
+  `MeasureTheory.tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` at `A = 0`; and the
+  error is already gone. `ENNReal.add_halves` adds the two halves.
+
+  **Both horizon hypotheses are strict and each is spent once.** `0 < u` is what
+  makes `δ < u` hold near `0`; `u < T` is what makes `u + δ ≤ T` hold there. A
+  non-strict `u ≤ T` would leave no room for `δ`, and the statement would be
+  about an empty set of admissible windows.
+
+  **A limit Mathlib has for every division semiring and not for `ℝ≥0∞`.**
+  `tendsto_const_div_atTop_nhds_zero_nat`
+  (`Mathlib/Analysis/SpecificLimits/Basic.lean:52`) asks `DivisionSemiring 𝕜`,
+  which `ℝ≥0∞` is not — `⊤` has no inverse — so the horizon term is brought to
+  `ENNReal.tendsto_inv_nat_nhds_zero`
+  (`Mathlib/Topology/Instances/ENNReal/Lemmas.lean:484`) by `div_eq_mul_inv` and
+  one `ring`. That is a typeclass boundary and not a gap in the library.
+
+  **And the same at an image path**,
+  `MeasureTheory.tendsto_measure_setOf_lt_modulusBased_postcomp_of_isApproximable`,
+  for a bounded continuous `g : E →ᵇ ℝ` and an `E`-valued `X` with `g ∘ X`
+  approximable: the same limit for
+  `SkorokhodSpace.postcomp g (SkorokhodSpace.extendNNReal (Φ ω))`. It is the
+  statement above at `V = g ∘ X` and the four steps of the passage are those of
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_postcomp_le_of_isApproximatingPair`.
+  This is the shape `isTight_map_postcomp_of_exists_martingale` consumes, one
+  test function at a time; what still separates the two is the uniformity over
+  the family, and the constants `u`, `q`, `K`, `‖g‖` of the bound behind it are
+  there precisely because none of them belongs to a member.
+
 * `isRelativelyCompact_of_approx`: if `E` is Polish, the domain of `A` contains
   an algebra separating points and vanishing nowhere, the approximation holds
   for each `(f,g) ∈ A`, and `{X n}` satisfies compact containment, then `{X n}`

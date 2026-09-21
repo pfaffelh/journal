@@ -1,7 +1,7 @@
 # Deklarationen, die es auf `94ef6b89544e58e90f119da869f3fb48d1da0f4c` schon geben könnte
 
-* geprüfte eigene Deklarationen: **2645**
-* Treffer auf dem letzten Namensbestandteil: **40**
+* geprüfte eigene Deklarationen: **2651**
+* Treffer auf dem letzten Namensbestandteil: **41**
 * als zu allgemein übergangen (kurz oder generisch): 25
 
 Ein Treffer ist ein **Anhaltspunkt**, keine Doppelung. Er sagt, daß Mathlib einen Satz mit demselben letzten Namensbestandteil hat — nachzusehen ist, ob es dieselbe Aussage ist.
@@ -11,6 +11,7 @@ Ein Treffer ist ein **Anhaltspunkt**, keine Doppelung. Er sagt, daß Mathlib ein
 | `AdditiveDist.dist_eq_sub_of_le` | `SkorokhodSpace/Suggested.lean:448` | `Nat.dist_eq_sub_of_le` (`Mathlib/Data/Nat/Dist.lean:35`) |
 | `SkorokhodSpace.borel_eq_iSup_comap_eval` | `SkorokhodSpace/Suggested.lean:7394` | `ContinuousMap.borel_eq_iSup_comap_eval` (`Mathlib/MeasureTheory/Constructions/BorelSpace/ContinuousMap.lean:77`) |
 | `IsCadlag.eq_of_eqOn_dense` | `SkorokhodSpace/Suggested.lean:1088` | `MonoidHom.eq_of_eqOn_dense` (`Mathlib/Algebra/Group/Subgroup/Ker.lean:407`); `MulHom.eq_of_eqOn_dense` (`Mathlib/Algebra/Group/Subsemigroup/Basic.lean:261`); `FirstOrder.Language.Hom.eq_of_eqOn_dense` (`Mathlib/ModelTheory/Substructures.lean:855`) |
+| `MeasureTheory.IsApproximable.one_lt_exponent` | `MartingaleProblems/Suggested.lean:45487` | `AddMonoid.one_lt_exponent` (`Mathlib/GroupTheory/Exponent.lean:426 (to_dual/to_additive)`); `one_lt_exponent` (`Mathlib/GroupTheory/Exponent.lean:427`) |
 | `SkorokhodSpace.isCompact_closure_iff` | `SkorokhodSpace/Suggested.lean:10507` | `Pi.isCompact_closure_iff` (`Mathlib/Topology/Separation/Hausdorff.lean:618`) |
 | `TimeChange.norm_mul_le` | `SkorokhodSpace/Suggested.lean:2077` | `norm_mul_le` (`Mathlib/Analysis/Normed/Ring/Basic.lean:218`); `FreeGroup.norm_mul_le` (`Mathlib/GroupTheory/FreeGroup/Reduce.lean:447`) |
 | `IsDetermining.comp_fst` | `MartingaleProblems/Suggested.lean:7539` | `Asymptotics.IsBigO.comp_fst` (`Mathlib/Analysis/Asymptotics/Prod.lean:105`); `Asymptotics.IsLittleO.comp_fst` (`Mathlib/Analysis/Asymptotics/Prod.lean:113`); `Asymptotics.IsTheta.comp_fst` (`Mathlib/Analysis/Asymptotics/Theta.lean:311`) |

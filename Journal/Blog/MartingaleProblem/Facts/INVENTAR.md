@@ -50711,3 +50711,211 @@ entscheiden und nicht zu raten.
 Gleichmäßigkeit über die Familie ist der Punkt danach, und sie ist es, für die
 die Konstanten `u`, `q`, `K`, `c` in der Schranke dieses Laufs stehen — keine
 davon gehört einem Mitglied.
+
+### 2026-09-21, vierter Lauf des Tages — die drei Grenzübergänge stehen als **ein** Satz, und die Vorfrage des Vorlaufs ist mit einem Nein beantwortet: die vier Integrierbarkeiten lassen sich **nicht** auf ein Fenster ziehen, weil sie an den Stoppzeiten stehen; was sich ziehen läßt, sind die Fehler — und genau das reicht
+
+**Bearbeitet:** der Vorschlag des Vorlaufs, also die Approximierbarkeitsbedingung
+als Prädikat und die Ordnung der drei Grenzübergänge daran, im Meilenstein 11 von
+`MartingaleProblems`. Wie angeordnet: kein Meilenstein 8, kein Meilenstein 14,
+kein C.5/G.
+
+#### Was gebaut ist
+
+**Fünf** neue Deklarationen in `TauCeti/MartingaleProblems/Suggested.lean`, im
+neuen Abschnitt „The approximability condition, and the order of the three
+limits".
+
+* `MeasureTheory.lintegral_biSup_Iic_mono` — das Fenster unter dem Integral
+  eines Supremums darf vergrößert werden. Eine Zeile, `biSup_mono` unter
+  `lintegral_mono`, und der **Grund, aus dem sie eine eigene Deklaration ist**,
+  steht im Vorlauf: inline unter dem Integranden läuft dasselbe Argument in
+  einen `whnf`-Timeout (200000 Heartbeats). Jetzt steht es einmal, über einem
+  abstrakten `F : ℝ≥0 → Ω → ENNReal`, und der Zusammenbau wie der neue Satz
+  rufen es auf.
+* `MeasureTheory.IsApproximable 𝓕 P q T K V ε₀ u` — das Prädikat: zu **jedem**
+  positiven Fehler zwei Paare der Klasse `IsApproximatingPair` mit gemeinsamem
+  `q`, `T`, `K`, die `V` und `V²` auf `Set.Iic T` bis auf diesen Fehler
+  approximieren, samt den vier Integrierbarkeiten der gestoppten Werte.
+* `MeasureTheory.IsApproximable.one_lt_exponent` — `1 < q`, am Paar bei `ε = 1`
+  abgelesen. Nötig nur, weil die Paare hinter einem Existenzquantor sitzen.
+* `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximable` — der
+  **dritte** Grenzübergang, ein für allemal: der Zusammenbau mit
+  `A = 2 ε' + 4 ofReal c * ε` durch `0` ersetzt.
+  ```
+  ofReal ε₀ * P {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ ω)) δ}
+    ≤ N * ofReal √(((1 + 2 c) * (ofReal δ ^ (1 − 1/q) * K)).toReal)
+      + ofReal u ^ (1 − 1/q) * K * (1 + 2 ofReal c) / N / ofReal ε₀
+  ```
+* `MeasureTheory.tendsto_measure_setOf_lt_modulusBased_of_isApproximable` — die
+  **ersten beiden**, und damit die ganze probabilistische Substanz des
+  Straffheitskriteriums als *ein* Grenzwert:
+  ```
+  Tendsto (fun δ : ℝ≥0 ↦ P {ω | ofReal ε₀
+      < modulusBased 0 u (extendNNReal (Φ ω)) δ}) (𝓝[>] 0) (𝓝 0)
+  ```
+  für `0 < u`, `u < T`, `0 < ε₀`.
+* `MeasureTheory.tendsto_measure_setOf_lt_modulusBased_postcomp_of_isApproximable`
+  — dasselbe am Bildpfad, für `g : E →ᵇ ℝ`. Das ist die Gestalt, die
+  `isTight_map_postcomp_of_exists_martingale` verbraucht.
+
+**Geprüft:** `scripts/check_master.py` meldet für die ganze Kette **0 Fehler,
+0 `sorry`, 0 veraltete Namen** (Mathlib `94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `v4.35.0-rc2`). Die Warnungen sind 18 / 35 / 112 und damit **unverändert**
+gegenüber dem vor dem Lauf eigens gemessenen Stand — die fünf neuen
+Deklarationen erzeugen keine. Alle fünf hängen nach `check_axioms_master.py` auf
+`propext`, `Classical.choice`, `Quot.sound` und auf nichts sonst.
+`check_cited_lines.py`: **396 von 396** gepaarten Fundstellen stimmen (fünf mehr
+als vor dem Lauf, das sind genau die neu zitierten), 0 tote, 0 verschoben.
+`check_duplicates.py` findet zu den neuen Namen nur einen Namensvetter auf dem
+letzten Bestandteil (`one_lt_exponent` aus `Mathlib/GroupTheory/Exponent.lean`,
+also derselbe, den `IsApproximatingPair.one_lt_exponent` schon hat; 2651 eigene
+Deklarationen, sechs mehr als vor dem Lauf). `check_negatives.py`: **50**
+Behauptungen, 0 mit unerwarteten Treffern. `check_citations.py`: 116 Pfade,
+dieselben fünf Auffälligkeiten wie vorher, alle „master ja, v4.33.1 nein" und
+damit erwartet. `check.py` meldet `clean`. `check_suggested.py` ist **nicht**
+gelaufen; seine Fehler sind seit dem 2026-09-18 zu berichten und nicht zu
+beheben, und der Bestand hat sich durch diesen Lauf in dieser Hinsicht nicht
+geändert.
+
+#### Die Vorfrage des Vorlaufs, und sie ist mit einem Nein beantwortet
+
+Der Vorlauf hat aufgetragen zu prüfen, **ob sich die vier Integrierbarkeiten
+über `n` gleichmäßig formulieren lassen** — „sie stehen an den Stoppzeiten und
+nicht an einem Fenster, und das ist am Quelltext zu entscheiden und nicht zu
+raten". Der Befund:
+
+> **Nein. Die Fehler lassen sich auf ein Fenster ziehen, die
+> Integrierbarkeiten nicht — und deshalb trägt das Prädikat `ε₀` und `u`.**
+
+Der Grund steht in der Aussage selbst: die vier Integrierbarkeiten sind die der
+gestoppten Werte von `Y` und `Y'` **längs `oscHitSeq V ε₀`, gekappt bei `u`**.
+`ε₀` und `u` stehen in der Stoppzeit, nicht im Integranden; kein Umschreiben auf
+ein Fenster entfernt sie. Was es an Auswegen gäbe, ist einer, und er ist teurer:
+die Integrierbarkeit für **alle** durch `T` beschränkten Zeiten zu verlangen.
+Das ist der Sache nach ein integrierbares Supremum über den Horizont und damit
+echt mehr, als der Zusammenbau liest — die stehende Regel dieser Roadmap
+verlangt die schwächste Voraussetzung, unter der die Aussage gilt, und das sind
+die vier.
+
+**Das Fenster `δ` ist dagegen im Prädikat quantifiziert**, und das ist keine
+Bequemlichkeit, sondern die Reihenfolge der Quantoren: `δ` ist die Variable des
+zweiten Grenzübergangs, und ein Verbraucher darf nicht gebeten werden, für jeden
+ihrer Werte eine eigene Voraussetzung zu beschaffen.
+
+**Die Fehler dagegen gehen aufs feste Fenster**, wie der Vorlauf vorausgesagt
+hat, und die Vorhersage über den Weg trifft zu: `Set.Iic T` ist die Wahl, weil
+`u + δ ≤ T` ohnehin verlangt ist, und der Rückweg ist dasselbe `biSup_mono` unter
+`lintegral_mono`, das der Vorlauf einmal geschrieben hat — nur diesmal als
+eigener Satz, `lintegral_biSup_Iic_mono`, und nicht inline.
+
+#### Was sich beim Hinschreiben als billiger erwiesen hat als angesagt
+
+**Der dritte Grenzübergang läuft längs einer Folge und nicht längs eines
+Filters, und das kostet nichts.** Der naheliegende Weg wäre `𝓝[>] (0 : ENNReal)`
+gewesen, was ein `NeBot` verlangt hätte; genommen sind die Fehler
+`ε = ε' = (n : ℝ≥0∞)⁻¹` und `ge_of_tendsto` über `atTop`, dessen `NeBot`
+geschenkt ist. Verloren geht dabei nichts, und der Grund ist sauber zu benennen:
+**die linke Seite der Ungleichung hängt von den Approximanten gar nicht ab.** Sie
+ist für jedes `n` dieselbe Zahl, und deshalb überträgt sich eine für jedes `n`
+gültige Schranke auf den Grenzwert.
+
+**Und der eigentliche Inhalt des dritten Übergangs ist eine Stetigkeit.** Die
+rechte Seite ist stetig in `A` bei `A = 0`: der erste Summand über
+`ENNReal.tendsto_toReal`, wofür `(1 + 2 c) * (ofReal δ ^ (1 − 1/q) * K)` endlich
+sein muß — das ist `ENNReal.rpow_ne_top_of_nonneg` am nichtnegativen Exponenten
+`one_sub_one_div_toReal_pos`, die zweite Stelle, an der `1 < q` bezahlt wird —,
+der zweite über `ENNReal.Tendsto.div_const` und `ofReal ε₀ ≠ 0`.
+
+**Beide Horizontvoraussetzungen sind strikt, und jede wird genau einmal
+verbraucht.** `0 < u` ist, was `δ < u` in der Nähe von `0` gelten läßt; `u < T`
+ist, was `u + δ ≤ T` dort gelten läßt. Ein nichtstriktes `u ≤ T` ließe für `δ`
+keinen Platz, und die Aussage stünde über einer leeren Menge zugelassener
+Fenster. Das ist nicht dieselbe Falle wie die des 24. Laufs — dort fiel eine
+Voraussetzung weg —, sondern die umgekehrte: hier muß eine **verschärft**
+werden, damit der Grenzübergang überhaupt einen Definitionsbereich hat.
+
+#### Eine Typklassengrenze, die keine Bibliothekslücke ist
+
+`tendsto_const_div_atTop_nhds_zero_nat`
+(`Mathlib/Analysis/SpecificLimits/Basic.lean:52`) gibt `Tendsto (fun n : ℕ ↦ C / n) atTop (𝓝 0)`
+— aber unter `[DivisionSemiring 𝕜]`, und `ℝ≥0∞` ist keine: `⊤` hat kein
+Inverses. Der Horizontterm `B / N / ofReal ε₀` ist also **nicht** durch Zitat
+erledigt. Vorhanden und einschlägig ist `ENNReal.tendsto_inv_nat_nhds_zero`
+(`Mathlib/Topology/Instances/ENNReal/Lemmas.lean:484`), und der Weg dorthin ist
+`div_eq_mul_inv` und ein `ring`.
+
+**Das ist ausdrücklich als Beobachtung und nicht als Negativaussage
+aufgeschrieben** und deshalb **nicht** in `scripts/check_negatives.py`
+eingetragen: die Bibliothek hat den Satz, in der allgemeinsten Form, die ihre
+Typklassen zulassen; was fehlt, ist die Instanz, und `ℝ≥0∞` kann sie nicht
+haben. Eine Zeile „Mathlib hat X nicht" wäre hier irreführend, und die Zahl der
+geprüften Behauptungen bleibt bei 50.
+
+#### Der Übergang `ℝ≥0` → `ℝ` unter dem Grenzwert
+
+Der Modul nimmt ein reelles Fenster, `IsApproximatingPair` ein nichtnegatives;
+die Aussage steht daher über `ℝ≥0` und die Hilfsaussage
+`tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` über `ℝ`. Der Übergang ist
+`tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within`
+(`Mathlib/Topology/NhdsWithin.lean:470`): die Einbettung trägt `𝓝[>] 0` nach
+`𝓝[>] 0`, weil sie stetig ist und die Positivität erhält. Das ist der billige
+Zwilling der Grenze, die der 15. Lauf des 2026-09-20 gezogen hat
+(`WithTop ℝ≥0` und `ℝ≥0∞` kommen nicht unter *ein* `+`) — hier gehen die beiden
+Indexlesarten zusammen, weil nur eine Ordnung und keine Addition im Spiel ist.
+
+#### Wo der erste Punkt der Kette jetzt steht
+
+| Größe | Stand |
+| --- | --- |
+| alles Deterministische bis zur Modulabschätzung | steht |
+| die beiden Summanden, jeder für sich abgeschätzt | steht |
+| der Zusammenbau beider Summanden, auch am Bildpfad | steht |
+| **die Approximierbarkeitsbedingung als Prädikat** | **steht, dieser Lauf** |
+| **die drei Grenzübergänge in der Ordnung `N`, `δ`, `ε`** | **steht, dieser Lauf** |
+| **derselbe Grenzwert am Bildpfad** | **steht, dieser Lauf** |
+| gleichmäßig über die Familie | offen |
+| der Rückweg von der trennenden Klasse zur Metrik von `E` | offen (die drei Transporte stehen, der Verbraucher nicht) |
+| `isTight_map_postcomp_of_exists_martingale` selbst | offen |
+
+#### Vorschlag für den nächsten Lauf
+
+**Die Gleichmäßigkeit über die Familie:
+`tendsto_measure_setOf_lt_modulusBased_postcomp_of_forall_isApproximable`.**
+
+> Für eine Familie `X : ι → ℝ≥0 → Ω → E` von Prozessen über **einem** Raum, die
+> alle dieselbe Bedingung mit **gemeinsamen** `q`, `T`, `K` erfüllen
+> (`∀ i, IsApproximable 𝓕 P q T K (fun t ω ↦ g (X i t ω)) ε₀ u`), und ein festes
+> `g : E →ᵇ ℝ`:
+> ```
+> ∀ ε₀ > 0, ∀ η > 0, ∃ δ > 0, ∀ i,
+>   P {ω | ofReal ε₀ < modulusBased 0 u (postcomp g (extendNNReal (Φ i ω))) δ} ≤ η.
+> ```
+
+**Warum jetzt.** Der Satz dieses Laufs ist *ein* Grenzwert für *ein* Mitglied,
+und die Schranke, aus der er kommt, hängt **nach Konstruktion** von keinem
+Mitglied ab: in
+`mul_measure_setOf_lt_modulusBased_le_of_isApproximable` stehen rechts nur `u`,
+`q`, `K`, `c`, `N`, `δ` und `ε₀`. Die Gleichmäßigkeit ist deshalb kein neuer
+Beweis, sondern die **richtige Quantorenstellung an derselben Ungleichung**: `N`
+und `δ` werden aus den gemeinsamen Konstanten gewählt, nicht aus dem Mitglied.
+Das ist derselbe Schritt, den der Zusammenbau des dritten Laufs für die beiden
+Summanden getan hat, eine Ebene höher.
+
+**Worauf zu achten ist, und es ist die eigentliche Entscheidung.** Der Satz
+dieses Laufs ist als `Tendsto` formuliert, und ein `Tendsto` je Mitglied gibt
+**keine** Gleichmäßigkeit. Die uniforme Fassung muß deshalb an der *Ungleichung*
+ansetzen und nicht am Grenzwert — also an
+`mul_measure_setOf_lt_modulusBased_le_of_isApproximable`, mit `N` und `δ` vor
+`i` quantifiziert. **Zu prüfen ist, ob dabei `ε₀` und `u` im Prädikat stören**:
+sie sind Parameter von `IsApproximable`, und die Familie muß sie teilen; bei `u`
+ist das harmlos (ein Horizont für alle), bei `ε₀` ist zu entscheiden, ob die
+Hypothese `∀ ε₀ > 0, ∀ i, IsApproximable … ε₀ u` lauten muß oder ob ein einziges
+`ε₀` genügt, weil der Verbraucher es sich ohnehin vorgeben läßt. Das ist am
+Quelltext von `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal` zu
+entscheiden und nicht zu raten.
+
+**Und die Grenze, die dabei zu nennen ist.** Auch danach bleibt das Kriterium
+über **ein** `g`. Der Rückweg von der abzählbaren trennenden Klasse zur Metrik
+von `E` ist der Punkt danach; die drei Transporte
+`SkorokhodSpace.min_edist_le_two_mul_modulusBased_postcomp` und seine beiden
+Geschwister stehen dafür bereit, ein Verbraucher von ihnen nicht.
