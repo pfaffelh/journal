@@ -12727,10 +12727,68 @@ has to be chosen once for all `n`. What stands:
   form this milestone states above, „for all `ε, T > 0` there are
   `(Y n, Z n) ∈ 𝓐 n`". The fixed-`T` statement is wrapped, not altered.
 
-  **What remains of this item is the step above `IsApproximable`**, namely
-  `isApproximable_of_exists_martingale`: the passage from the martingale
-  hypothesis to `MeasureTheory.IsApproximable`, which is where the continuous
-  time Doob inequalities of Milestone 9 are used. Everything below it is built.
+  **The condition of this item and `MeasureTheory.IsApproximable` are not the
+  same condition, 2026-09-21, and the difference is the right endpoint.** The
+  display above reads its errors over `Set.Iic T ∩ D` for a countable `D`, which
+  is the form under which the quantity is measurable; `IsApproximable` reads them
+  over the whole window `Set.Iic T`, which is the form the assembly needs, the
+  times substituted into it being hitting times. For a right continuous path the
+  window supremum is determined by a dense set **together with the value at the
+  right end** — that is the `insert T` of
+  `biSup_enorm_Iic_eq_of_isRightContinuous` — so a path that jumps exactly at `T`
+  is seen by the second condition and not by the first. The condition at horizon
+  `T` therefore does **not** give `IsApproximable` at `T`.
+
+  **What closes that gap is the quantifier this item already carries**, and it
+  costs nothing: the condition holds „for all `ε, T > 0`", so it is available at
+  a strictly larger horizon `T' > T`, and there the dense set reaches past `T`
+  from the right. That is
+  `MeasureTheory.biSup_enorm_Iic_le_biSup_enorm_inter_dense`, whose whole proof
+  is `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` at the closed set
+  `Set.Iic c` — the **half open** form, the one that reads no endpoint at all,
+  and it is why the lemma needs no `OrderBot` on the index. Enlarging the horizon
+  is free on the other side too, an approximating pair at `T'` being one at `T`
+  with the same `q` and the same `K`
+  (`MeasureTheory.IsApproximatingPair.mono_horizon`), and the consumer asks
+  `u < T` anyway, so `u < T < T'` comes from `exists_between`.
+
+  **The countable set `D` of the display and the `S` of the tightness estimate
+  are two roles of one object, and the roles read different things of it.** `S`
+  enters the début of the oscillation sets, where its **countability** makes the
+  Aldous hitting times stopping times; `D` enters nowhere but the error suprema,
+  and of it the passage reads only **density** — its countability is what makes
+  the milestone's quantity measurable and is nowhere used in this direction.
+  `MeasureTheory.isApproximable_of_forall_exists_pair` keeps them apart and
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_exists_pair` takes them
+  equal, a consumer having no use for the distinction. The naming follows the
+  rule already recorded at
+  `mul_measure_setOf_lt_modulusBased_le_lintegral_dist`: the set is `S` wherever
+  the path space notation `D(ℝ≥0, E)` occurs and `D` everywhere else.
+
+  **The passage is carried out, 2026-09-21**, as
+  `MeasureTheory.isApproximable_of_forall_exists_pair`, and composed with the
+  two seams above it gives the item with `IsApproximable` no longer in its
+  statement:
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_exists_pair` — from
+  the condition of this display, at every window radius and at a horizon
+  exceeding it, follows the tightness of the image laws
+  `{(P.map (Φ i)).map (postcomp g) | i}`.
+
+  **Right continuity of `Y - f ∘ X` is a hypothesis there and is carried inside
+  the existential**, `Y` depending on the error. It is the same price
+  `MeasureTheory.lintegral_enorm_sub_le_of_biSup_Iic_le` pays and at the same
+  place — \EK's (9.27) holds for all real times and not merely for rational ones
+  by right continuity. It is **not** derived from
+  `IsApproximatingPair.rightContinuous`, which gives the right continuity of
+  `Y - C` and would need the continuity of the indefinite integral `C` on top.
+
+  **What remains of this item is the step above the pairs**: the two pairs are
+  hypotheses of the statement, and what produces them is the martingale
+  approximation together with the closure of the approximable functions under
+  products, which is what makes the **second** pair approximate `f²` and not `f`.
+  That closure is a witness and not a convenience — the second approximant is not
+  the square of the first — and it is where the continuous time Doob inequalities
+  of Milestone 9 are used. Everything below it is built.
 
 * `isRelativelyCompact_of_approx`: if `E` is Polish, the domain of `A` contains
   an algebra separating points and vanishing nowhere, the approximation holds

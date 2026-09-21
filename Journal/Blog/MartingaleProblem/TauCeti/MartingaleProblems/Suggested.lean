@@ -46021,4 +46021,198 @@ theorem isTightMeasureSet_map_postcomp_of_forall_isApproximable [MeasurableSpace
   rw [hucoe]
   exact lt_of_lt_of_le hltη hω
 
+/-! ### The approximability condition as the milestone states it
+
+`MeasureTheory.IsApproximable` reads its two approximation errors as suprema over the **whole**
+window `Set.Iic T`, and that is what the assembly needs, the times substituted into it being
+hitting times which take their values wherever the path takes them.  The milestone states the
+condition differently: its errors are suprema over `Set.Iic T ∩ D` for a **countable** `D`, which
+is the form \EK{} write and the only form under which the quantity is measurable without an
+argument.  This section is the passage between the two, and it has exactly one content.
+
+**The two are not the same condition, and the difference is the right endpoint.**  For a right
+continuous path the window supremum is determined by a dense set *together with the value at the
+right end* -- `biSup_enorm_Iic_eq_of_isRightContinuous` says so, with the `insert T` that no dense
+set reaches.  A condition read on `Set.Iic T ∩ D` alone therefore says **strictly less** than one
+read on `Set.Iic T`: a path that jumps exactly at `T` is seen by the second and not by the first.
+So the milestone's condition at the horizon `T` does *not* give
+`MeasureTheory.IsApproximable` at `T`.
+
+**What closes the gap is the quantifier the milestone already carries**, and it costs nothing:
+approximability is asked „for all `ε, T > 0`", so the condition is available at a **strictly
+larger** horizon `T' > T`, and there the dense set does reach past `T` from the right.  That is
+`MeasureTheory.biSup_enorm_Iic_le_biSup_enorm_inter_dense`, whose whole proof is
+`SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` at the closed set `Set.Iic c` -- the *half
+open* form, which is the one that reads no endpoint at all.  Enlarging the horizon is free on the
+other side too, an approximating pair at `T'` being one at `T`
+(`MeasureTheory.IsApproximatingPair.mono_horizon`), and the consumer of the criterion asks
+`u < T` anyway, so `u < T < T'` is had from `exists_between`.
+
+**The countable set `D` of this section is not the `S` of the tightness estimate.**  `S` carries
+`hSc`, `hSd` and enters the début of the oscillation sets, where it makes the Aldous hitting
+times stopping times; `D` enters nowhere but the error suprema.  A consumer may of course take
+them equal, and nothing here asks him to.  `D` is asked dense and **not** countable, the
+countability being what makes the milestone's quantity measurable and being nowhere read in this
+direction of the passage.
+
+**Right continuity of `Y - V` is a hypothesis and is carried inside the existential**, because
+`Y` depends on the error.  It is the same price
+`MeasureTheory.lintegral_enorm_sub_le_of_biSup_Iic_le` pays, and it is paid at the same place:
+\EK's (9.27) holds for all real times and not merely for rational ones by right continuity.  It
+is **not** derived here from `IsApproximatingPair.rightContinuous`, which gives the right
+continuity of `Y - C` and would need the continuity of the indefinite integral `C` on top. -/
+
+/-- **A window supremum is dominated by the supremum over a dense set of a strictly larger
+window**, for a right continuous function.
+
+This is the passage from the milestone's approximability condition, whose suprema run over
+`Set.Iic T' ∩ D`, to `MeasureTheory.IsApproximable`, whose suprema run over the whole window
+`Set.Iic T`.  The horizon has to grow **strictly**: on `Set.Iic T' ∩ D` nothing approaches `T'`
+from the right, so the value at the right end is not seen, and
+`biSup_enorm_Iic_eq_of_isRightContinuous` reads it separately for exactly that reason.  With
+`T < T'` the endpoint of the smaller window lies in the interior of the larger and no separate
+reading is needed.
+
+The proof is `SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense` at the closed set `Set.Iic c`,
+applied at each `t ≤ T` with the window `Set.Ico t T'`; the half open form is what lets the
+statement be made without an `OrderBot` on the index. -/
+theorem biSup_enorm_Iic_le_biSup_enorm_inter_dense {ι : Type*} [LinearOrder ι]
+    [TopologicalSpace ι] [OrderTopology ι] [DenselyOrdered ι]
+    {D : Set ι} (hD : Dense D) {T T' : ι} (hT : T < T')
+    {g : ι → ℝ} (hg : IsRightContinuous g) :
+    ⨆ t ∈ Set.Iic T, ‖g t‖ₑ ≤ ⨆ t ∈ Set.Iic T' ∩ D, ‖g t‖ₑ := by
+  set c : ENNReal := ⨆ t ∈ Set.Iic T' ∩ D, ‖g t‖ₑ with hc
+  refine iSup₂_le fun t ht ↦ ?_
+  have htT' : t < T' := lt_of_le_of_lt ht hT
+  refine SkorokhodSpace.forall_mem_Ico_of_forall_mem_dense (K := Set.Iic c) isClosed_Iic hD
+    (f := fun s ↦ ‖g s‖ₑ) (hg.continuous_comp continuous_enorm) ?_ t ⟨le_rfl, htT'⟩
+  rintro s ⟨⟨-, hs⟩, hsD⟩
+  exact le_iSup₂ (f := fun s (_ : s ∈ Set.Iic T' ∩ D) ↦ ‖g s‖ₑ) s ⟨hs.le, hsD⟩
+
+/-- **An approximating pair at a horizon is one at every shorter horizon**, with the same `q` and
+the same constant `K`.
+
+Six of the eight fields do not mention the horizon at all; the two that do read it only through
+the restriction of Lebesgue measure to `Set.Ioc 0 T`, which is monotone in `T`.  The constant is
+**not** improved in the passage -- it is the same `K` -- and that is what makes the statement
+usable inside `MeasureTheory.IsApproximable`, whose whole point is that `q`, `T` and `K` are
+common to all errors. -/
+theorem IsApproximatingPair.mono_horizon {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} {q : ENNReal}
+    {T T' K : ℝ≥0} {Y C : ℝ≥0 → Ω → ℝ} {Z : ℝ → Ω → ℝ}
+    (h : IsApproximatingPair 𝓕 P q T' K Y C Z) (hTT' : T ≤ T') :
+    IsApproximatingPair 𝓕 P q T K Y C Z := by
+  have hsub : Set.Ioc (0 : ℝ) (T : ℝ) ⊆ Set.Ioc (0 : ℝ) (T' : ℝ) :=
+    Set.Ioc_subset_Ioc_right (by exact_mod_cast hTT')
+  have hle : (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ)))
+      ≤ volume.restrict (Set.Ioc (0 : ℝ) (T' : ℝ)) := Measure.restrict_mono_set volume hsub
+  refine
+    { one_lt_exponent := h.one_lt_exponent
+      progressive := h.progressive
+      progressive_sub := h.progressive_sub
+      martingale := h.martingale
+      rightContinuous := h.rightContinuous
+      compensator_eq := h.compensator_eq
+      ae_memLp := ?_
+      lintegral_eLpNorm_le := ?_ }
+  · filter_upwards [h.ae_memLp] with ω hω using hω.mono_measure hle
+  · exact le_trans (lintegral_mono fun ω ↦ eLpNorm_mono_measure _ hle) h.lintegral_eLpNorm_le
+
+/-- **The approximability condition of `MeasureTheory.IsApproximable` from the milestone's own
+hypothesis**, which reads its errors along a dense set and at a strictly larger horizon.
+
+Everything but the two errors is passed through unchanged: the pairs shrink their horizon by
+`MeasureTheory.IsApproximatingPair.mono_horizon`, and the four integrabilities stand at the
+oscillation hitting times of `V`, which the horizon does not see.  The two errors are
+`MeasureTheory.biSup_enorm_Iic_le_biSup_enorm_inter_dense` under `lintegral_mono_ae`, and the
+almost sure quantifier of that step is where the two right continuity hypotheses are spent.
+
+**`T < T'` is strict and cannot be relaxed**, for the reason in the section comment: at `T = T'`
+the value at the right endpoint is not seen along `D`. -/
+theorem isApproximable_of_forall_exists_pair {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω}
+    {q : ENNReal} {T T' K : ℝ≥0} (hTT' : T < T') {D : Set ℝ≥0} (hD : Dense D)
+    {V : ℝ≥0 → Ω → ℝ} {ε₀ : ℝ} {u : ℝ≥0}
+    (h : ∀ ε : ENNReal, 0 < ε →
+      ∃ Y C Y' C' : ℝ≥0 → Ω → ℝ, ∃ Z Z' : ℝ → Ω → ℝ,
+        IsApproximatingPair 𝓕 P q T' K Y C Z ∧ IsApproximatingPair 𝓕 P q T' K Y' C' Z'
+        ∧ (∀ᵐ ω ∂P, IsRightContinuous fun t ↦ Y t ω - V t ω)
+        ∧ (∀ᵐ ω ∂P, IsRightContinuous fun t ↦ Y' t ω - V t ω ^ 2)
+        ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ D, ‖Y t ω - V t ω‖ₑ ∂P ≤ ε
+        ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ D, ‖Y' t ω - V t ω ^ 2‖ₑ ∂P ≤ ε
+        ∧ (∀ k : ℕ, Integrable
+            (stoppedValue Y (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) P)
+        ∧ (∀ k : ℕ, Integrable
+            (stoppedValue Y' (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) P)
+        ∧ (∀ (δ : ℝ≥0) (k : ℕ), Integrable (stoppedValue Y (fun ω ↦ min (oscHitSeq V ε₀ (k + 1) ω)
+            (min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) P)
+        ∧ (∀ (δ : ℝ≥0) (k : ℕ), Integrable (stoppedValue Y' (fun ω ↦ min (oscHitSeq V ε₀ (k + 1) ω)
+            (min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) P)) :
+    IsApproximable 𝓕 P q T K V ε₀ u := by
+  refine ⟨fun ε hε ↦ ?_⟩
+  obtain ⟨Y, C, Y', C', Z, Z', hp, hp', hrc, hrc', herr, herr', hi1, hi2, hi3, hi4⟩ := h ε hε
+  refine ⟨Y, C, Y', C', Z, Z', hp.mono_horizon hTT'.le, hp'.mono_horizon hTT'.le, ?_, ?_,
+    hi1, hi2, hi3, hi4⟩
+  · refine le_trans (lintegral_mono_ae ?_) herr
+    filter_upwards [hrc] with ω hω
+    exact biSup_enorm_Iic_le_biSup_enorm_inter_dense hD hTT' hω
+  · refine le_trans (lintegral_mono_ae ?_) herr'
+    filter_upwards [hrc'] with ω hω
+    exact biSup_enorm_Iic_le_biSup_enorm_inter_dense hD hTT' hω
+
+/-- **Tightness of the image laws straight from the milestone's approximability condition.**  This
+is the first item of Milestone 11 with `MeasureTheory.IsApproximable` no longer appearing in the
+statement: the hypothesis is the condition as the milestone writes it, two pairs of the class
+`MeasureTheory.IsApproximatingPair` per error, the errors read along a countable dense set of
+times and at a horizon exceeding the window.
+
+It is `MeasureTheory.isApproximable_of_forall_exists_pair` under
+`MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_isApproximable`, with `exists_between`
+producing the intermediate horizon `u < T < T'` that the consumer of the criterion asks for.
+
+**The errors are read along the `S` of the tightness estimate and not along a second dense
+set**, although the two are different parameters below: `S` carries the countability the début
+of the oscillation sets needs, the error suprema carry only its density, and a statement with
+two of them would ask a consumer for a distinction he has no use for.  The general form, where
+the two are separate, is `MeasureTheory.isApproximable_of_forall_exists_pair`; it can afford the
+name `D` because the path space notation `D(ℝ≥0, E)` does not occur in it.
+
+**What is still not in the hypothesis and has to come from elsewhere**: that the *second* pair
+approximates `V²` and not `V`.  The milestone produces it from the closure of the approximable
+functions under products, which is a hypothesis of the item there and, as the run of 2026-09-20
+found, not a formality -- the second approximant is not the square of the first. -/
+theorem isTightMeasureSet_map_postcomp_of_forall_exists_pair [MeasurableSpace E]
+    [BorelSpace E] [PolishSpace E] [CompleteSpace E]
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {γ : Type*} {X : γ → ℝ≥0 → Ω → E} {g : E →ᵇ ℝ}
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hX : ∀ i, IsStronglyProgressive 𝓕 (X i))
+    (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ X i s ω) (Set.Ici t) t)
+    {Φ : γ → Ω → D(ℝ≥0, E)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ X i t ω)
+    (happ : ∀ ε₀ : ℝ, 0 < ε₀ → ∀ u : ℝ≥0, 0 < u → ∃ q : ENNReal, ∃ T' K : ℝ≥0, u < T' ∧
+      ∀ i, ∀ ε : ENNReal, 0 < ε →
+        ∃ Y C Y' C' : ℝ≥0 → Ω → ℝ, ∃ Z Z' : ℝ → Ω → ℝ,
+          IsApproximatingPair 𝓕 P q T' K Y C Z ∧ IsApproximatingPair 𝓕 P q T' K Y' C' Z'
+          ∧ (∀ᵐ ω ∂P, IsRightContinuous fun t ↦ Y t ω - g (X i t ω))
+          ∧ (∀ᵐ ω ∂P, IsRightContinuous fun t ↦ Y' t ω - g (X i t ω) ^ 2)
+          ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ S, ‖Y t ω - g (X i t ω)‖ₑ ∂P ≤ ε
+          ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ S, ‖Y' t ω - g (X i t ω) ^ 2‖ₑ ∂P ≤ ε
+          ∧ (∀ k : ℕ, Integrable (stoppedValue Y
+              (fun ω ↦ min (oscHitSeq (fun t ω ↦ g (X i t ω)) ε₀ k ω) (u : WithTop ℝ≥0))) P)
+          ∧ (∀ k : ℕ, Integrable (stoppedValue Y'
+              (fun ω ↦ min (oscHitSeq (fun t ω ↦ g (X i t ω)) ε₀ k ω) (u : WithTop ℝ≥0))) P)
+          ∧ (∀ (δ : ℝ≥0) (k : ℕ), Integrable (stoppedValue Y
+              (fun ω ↦ min (oscHitSeq (fun t ω ↦ g (X i t ω)) ε₀ (k + 1) ω)
+                (min (oscHitSeq (fun t ω ↦ g (X i t ω)) ε₀ k ω) (u : WithTop ℝ≥0)
+                  + (δ : WithTop ℝ≥0)))) P)
+          ∧ (∀ (δ : ℝ≥0) (k : ℕ), Integrable (stoppedValue Y'
+              (fun ω ↦ min (oscHitSeq (fun t ω ↦ g (X i t ω)) ε₀ (k + 1) ω)
+                (min (oscHitSeq (fun t ω ↦ g (X i t ω)) ε₀ k ω) (u : WithTop ℝ≥0)
+                  + (δ : WithTop ℝ≥0)))) P)) :
+    IsTightMeasureSet
+      {(P.map (Φ i)).map (SkorokhodSpace.postcomp g.toContinuousMap) | i} := by
+  refine isTightMeasureSet_map_postcomp_of_forall_isApproximable hSc hSd hX hcont hΦ ?_
+  intro ε₀ hε₀ u hu
+  obtain ⟨q, T', K, huT', h⟩ := happ ε₀ hε₀ u hu
+  obtain ⟨T, huT, hTT'⟩ := exists_between huT'
+  exact ⟨q, T, K, huT, fun i ↦ isApproximable_of_forall_exists_pair hTT' hSd (h i)⟩
+
 end MeasureTheory
