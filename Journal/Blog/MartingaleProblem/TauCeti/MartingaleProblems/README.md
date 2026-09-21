@@ -13564,14 +13564,53 @@ has to be chosen once for all `n`. What stands:
        is a self-contained point and is not part of the chain above**; state it
        as its own item rather than letting Donsker depend on an unpaid input.
 
-  * **Identifying the limit with Brownian motion is a second step.** Mathlib
-    `master` carries `Mathlib/Probability/BrownianMotion/` (548 lines,
-    `IsPreBrownianReal` and `IsBrownianReal`), but those are predicates about
-    covariance, Gaussian processes and independent increments, and **nothing
-    there mentions a martingale problem**. The bridge "solves the martingale
-    problem for `f''/2` ⟹ `IsBrownianReal`" exists in no roadmap. It is the
-    natural consumer of the Fourier route above, the same computation giving
-    both the uniqueness and the Gaussian marginals.
+  * **Identifying the limit with Brownian motion is a second step, and Mathlib
+    meets it halfway. Checked at the source 2026-09-21.** Mathlib `master`
+    carries `Mathlib/Probability/BrownianMotion/` (548 lines) and it defines
+    Brownian motion exactly by the covariance the author asked about:
+
+    ```lean
+    def covMatrix (I : Finset ℝ≥0) : Matrix I I ℝ := .of fun s t ↦ min s t
+    lemma covMatrix_apply (s t : I) : covMatrix I s t = min s.1 t.1 := rfl
+
+    structure IsPreBrownianReal (X : ℝ≥0 → Ω → ℝ) (P : Measure Ω) : Prop where
+      hasLaw : ∀ I : Finset ℝ≥0, HasLaw (fun ω ↦ I.restrict (X · ω)) (projectiveFamily I) P
+
+    structure IsBrownianReal (X : ℝ≥0 → Ω → ℝ) (P : Measure Ω) : Prop
+        extends IsPreBrownianReal X P where
+      cont : ∀ᵐ ω ∂P, Continuous (X · ω)
+    ```
+
+    So `IsBrownianReal` is *all finite dimensional laws are centred Gaussian
+    with covariance `s ⊓ t`, plus almost surely continuous paths*, with
+    `IsGaussianProcess.isPreBrownianReal_of_covariance` as the entry point and
+    `IsBrownianReal.smul`, `.shift`, `.neg` available. **Nothing there mentions
+    a martingale problem**, so the bridge is ours; but what it has to produce is
+    named, not vague.
+
+    **The bridge is the Fourier computation, applied once more.** To be shown:
+    a solution of the martingale problem for `f ↦ f''/2` started at `0` has all
+    finite dimensional laws centred Gaussian with covariance `s ⊓ t`.
+
+    1. *One time.* With `f = fun x ↦ exp (I * ξ * x)` the martingale property
+       becomes `d/dt (μ t).charFun ξ = -(ξ^2/2) * (μ t).charFun ξ`, so
+       `(μ t).charFun ξ = exp (-t * ξ^2 / 2)`, which is `gaussianReal 0 t`.
+       This is literally the uniqueness item above; one computation serves both.
+    2. *Finitely many times.* The same equation between consecutive times,
+       together with the Markov property — which Milestone 6 supplies **as a
+       conclusion** once the uniqueness of (1) is in hand — gives independent
+       increments with `X t - X s ~ gaussianReal 0 (t - s)`, hence
+       `Cov (X s) (X t) = s ⊓ t`. That is `IsPreBrownianReal`.
+    3. *Continuity of the paths* is the one part the Fourier computation does
+       **not** give. Our limit points live in `D(ℝ≥0, ℝ)` and are a priori only
+       càdlàg, so `IsBrownianReal.cont` needs the jump heights to vanish in the
+       limit. That is \EK, Section 3.10, "Convergence to a process in
+       `C_E[0,∞)`", through the functional
+       `J x = ∫ e^{-u} (sup_{t ≤ u} r (x t) (x (t-)) ⊓ 1) du`, which is
+       continuous on `D_E[0,∞)` by \EK, Proposition 3.5.3 and vanishes exactly
+       on the continuous paths. **This is its own item** and is not part of the
+       chain; a run must not report `IsPreBrownianReal` under the name
+       `IsBrownianReal`.
 * **The times `D` must avoid the fixed discontinuities.** In
   `mpSolution_of_tendsto_cadlag`, `D` is taken to be the set of times at which
   the limit has no fixed discontinuity. On the pair
