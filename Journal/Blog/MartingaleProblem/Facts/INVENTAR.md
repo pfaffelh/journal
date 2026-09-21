@@ -55075,3 +55075,187 @@ Irrfahrten. Für sie ist `IsApproximable` bei jedem `n` falsch
 (`not_isApproximable_indicator_Ici` und der Befund des dreiundzwanzigsten Laufs),
 `IsEventuallyApproximable` aber gerade nicht — und erst das macht aus den fünf
 wahren Konditionalaussagen dieses Meilensteins anwendbare Sätze.
+
+### 2026-09-22, erster Lauf des Tages — der Fehler steht jetzt **außerhalb** des Index, und damit ist die Straffheitsseite des Meilensteins nicht mehr leer: eine Familie, von der **kein Glied** approximierbar ist, ist hier straff
+
+Der Vorlauf hatte als benanntes Ziel `MeasureTheory.IsEventuallyApproximable`
+hinterlassen — dieselbe Struktur wie `IsApproximable`, aber über eine Familie und
+mit dem Fehler außen — und dazu die Stelle benannt, an der es klemmen könne: die
+Paarungleichung trage den Fehler `A` auf der rechten Seite, der vorhandene Beweis
+nehme aber `(G + A) ≠ ⊤` und die Stetigkeit der Wurzel **im Grenzwert** und nicht
+bei festem `A`.
+
+**Die Stelle klemmt nicht, und der Grund ist, daß sie schon vorgesehen war.**
+`MeasureTheory.tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` ist seit dem
+2026-09-21 mit **freiem `A`** bewiesen und liefert als Grenzwert ausdrücklich
+`N · ofReal √(A.toReal)` und nicht `0`; der Lauf, der sie bewiesen hat, hat im
+Doc-Kommentar festgehalten, daß eine Fassung mit Grenzwert `0` falsch wäre. Damit
+war die einzige Eingabe, die der Vorlauf als ungeprüft benannt hatte, bereits
+da. Es war nichts nachzurechnen und nichts abzuschwächen.
+
+#### Was gebaut ist — acht Deklarationen
+
+| Deklaration | was sie sagt |
+| --- | --- |
+| `MeasureTheory.IsEventuallyApproximable` | zu jedem Fehler ein **endliches** `G : Set γ`, außerhalb dessen jedes Glied zwei Paare mit gemeinsamen `q`, `T`, `K` zu **diesem** Fehler hat |
+| `MeasureTheory.isEventuallyApproximable_of_tendsto_zero_cofinite` | die Eingangsform: **jedes** Glied hat Paare, deren Fehler längs `cofinite` verschwindet |
+| `MeasureTheory.isEventuallyApproximable_of_forall_isApproximable` | Approximierbarkeit außerhalb eines endlichen `G` gibt sie, bei unbeweglichem `G` — also ist sie eine Abschwächung und keine andere Bedingung |
+| `MeasureTheory.exists_finite_forall_measure_setOf_lt_modulusBased_postcomp_le_of_isEventuallyApproximable` | die gleichmäßige Modulschranke: **ein** Ausnahmeindexsatz und **ein** Fenster für alle Glieder außerhalb |
+| `MeasureTheory.isTightMeasureSet_map_postcomp_of_isEventuallyApproximable` | die Straffheit der Bildgesetze daraus |
+| `MeasureTheory.isApproximatingPair_zero` | das Nullpaar ist ein Paar der Klasse |
+| `MeasureTheory.not_isApproximable_scaledStep` | **kein** Glied der skalierten Treppenfamilie ist approximierbar |
+| `MeasureTheory.isEventuallyApproximable_scaledStep` | dieselbe Familie **ist** eventuell approximierbar |
+
+`check_master.py` nach dem Einbau: **0 Fehler, 0 `sorry`**, Warnungen unverändert
+18 / 38 / 112, davon veraltet 0 — der Einbau erzeugt also keine einzige neue
+Warnung. Alle acht mit `check_axioms_master.py` geprüft und auf `propext`,
+`Classical.choice`, `Quot.sound` und nichts sonst. Die Punkte stehen in
+`MartingaleProblems/README.md`, Meilenstein 11.
+
+#### Der Inhalt, und er ist eine Vertauschung der Quantorenreihenfolge
+
+Die ganze Kette darüber wählt in der Reihenfolge **`N`, `δ`, `ε`**: der Zähler
+zuerst (der Horizontterm ist `O(1/N)`), das Fenster danach, und der Fehler
+zuletzt, „für gegebenes `N` und `δ`" — so sagen es \EK{} bei (9.28), und so steht
+es im Doc-Kommentar von
+`mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair`.
+
+**Hier ist sie `N`, `ε`, `δ`.** Der Grund ist zwingend und nicht Geschmack: die
+Ausnahmemenge `G` entsteht *mit* dem Fehler, und der Verbraucher
+`SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le_off_finite`
+verlangt `∃ G, G.Finite ∧ ∃ δ, …` — also `G` **vor** `δ`. Wer den Fehler zuletzt
+wählte, hätte die Ausnahmemenge hinter dem Fenster und könnte sie dort nicht mehr
+herausreichen.
+
+Daß die vertauschte Reihenfolge trägt, ist genau die Aussage mit freiem `A`: bei
+festem `a₀` geht der Gapterm gegen `N · √a₀` statt gegen `0`, also wird `a₀` so
+klein gewählt, daß dieser Grenzwert **echt** unter seinem Anteil am Budget liegt,
+und das Fenster drückt den Term dann darunter. Das Budget
+`θ = ofReal ε₀ * η` zerfällt in `θ/2` für den Gapterm und zweimal `θ/4` für den
+Horizont- und den Fehlerterm.
+
+**Drei Kleinigkeiten, die beim Hinschreiben Zeit gekostet haben und die
+aufzuschreiben sie spart:**
+
+* **`η = ⊤` ist zuerst zu erledigen.** Sonst ist `θ = ⊤` und `θ/4 < θ/2` ist
+  falsch; die Strenge der Halbierung wird aber gebraucht, weil der Gapterm nur
+  *strikt* unter die Schranke gebracht werden kann.
+* **Der Exponent `1 < q` sitzt im Paar und ist nur über die Ausnahmemenge
+  erreichbar.** Er wird beim Fehler `1` geholt; erschöpft die dortige
+  Ausnahmemenge den Index, so ist die Konklusion leer und `δ = 1` tut es.
+* **`ENNReal.mul_div_cancel'` ist nicht, was der Name vermuten läßt.** Auf
+  `master` (`Mathlib/Basic/ENNReal/Inv.lean:184`) trägt es
+  `(ha₀ : a = 0 → b = 0) (ha : a = ∞ → b = 0)`; die Fassung mit `a ≠ 0`,
+  `a ≠ ∞` heißt `ENNReal.mul_div_cancel` (`:188`). Gebraucht wird sie, weil der
+  Fehler als `a₀ / (2 + 4 ofReal ‖g‖)` gewählt wird, damit die Kombination
+  `2 ε' + 4 ofReal ‖g‖ ε` der Paarungleichung **auf den Kopf** `a₀` ist.
+
+#### Und der Befund, um den es eigentlich geht: die Aussage ist nicht leer, und die davor waren es für diesen Zweck
+
+Der dreiundzwanzigste Lauf des 2026-09-21 hatte gezeigt, daß eine reskalierte
+Irrfahrt bei **festem** Index durch **nichts** approximierbar ist, und der Grund
+ist nicht die Irrfahrt, sondern der deterministische Sprung. Der vierundzwanzigste
+hat daraus gefolgert, daß keine endliche Ausnahmemenge hilft: `IsApproximable`
+quantifiziert den Fehler in sich, ein Glied ist also zu jedem Fehler
+approximierbar oder zu keinem.
+
+**Dieser Lauf hat den Zeugen dazu gebaut, und er ist billiger als die Irrfahrt.**
+Die Familie der deterministischen Treppen zur festen Zeit `b` mit der Höhe
+`(i+1)⁻¹`:
+
+* `not_isApproximable_scaledStep` — **kein** Glied ist approximierbar, über
+  `not_isApproximable_of_eqOn_Ico_of_integral_ne`: das Glied ruht auf
+  `Set.Ico 0 b` und bewegt seinen Mittelwert um `(i+1)⁻¹ ≠ 0` darüber hinweg.
+* `isEventuallyApproximable_scaledStep` — die **Familie** ist eventuell
+  approximierbar, und zwar durch das **Nullpaar**. Approximiert wird gar nichts;
+  die Glieder sind bloß klein, und der Fehler der Approximation ist ihre eigene
+  Höhe. Die Ausnahmemenge ist das Anfangsstück `Set.Iio M` der Indizes, deren
+  Höhe den Fehler übersteigt.
+
+Damit ist diese Familie durch
+`isTightMeasureSet_map_postcomp_of_isEventuallyApproximable` straff und durch
+**keinen** der beiden Sätze davor erreichbar. Das ist die Schärfe der
+Abschwächung, in Lean und nicht im Doc-Kommentar.
+
+Der Zeuge trägt die **Gestalt** der reskalierten Irrfahrt — Sprunghöhe gegen
+Null, deterministischer Sprungzeitpunkt — und nicht die Irrfahrt selbst; was er
+belegt, ist die Quantorenstruktur. Das steht so an der Deklaration, damit kein
+Lauf ihn für mehr nimmt, als er ist.
+
+#### Ein Nebenbefund zu den Zitaten, aufgeschrieben und nicht verfolgt
+
+`upstream/master` in `~/Code/lean/mathlib4` steht auf `09712d488fd`
+(2026-09-21), vier Tage frischer als der Worktree `~/Code/lean/mathlib-master`
+(`94ef6b89544`, 2026-09-18), gegen den `check_master.py` übersetzt. Auf dem
+frischeren Stand sind die `ENNReal`-Dateien nach `Mathlib/Basic/ENNReal/`
+gewandert: `ENNReal.add_div`, `ENNReal.div_pos` und `ENNReal.mul_div_cancel`
+stehen dort in `Mathlib/Basic/ENNReal/Inv.lean` (Zeilen 505, 226, 188), während
+`Mathlib/Data/ENNReal/Inv.lean` auf demselben Stand **fünf Zeilen** lang ist und
+keinen dieser Namen mehr führt — also ein reiner Weiterleitungsstummel.
+
+**Das ist nicht in diesem Lauf zu verfolgen** — unsere Zitatprüfung läuft gegen
+den Worktree, und der ist maßgeblich, solange er es ist. Aber es ist eine
+Verschiebung, die **jede** Dateiangabe zu `ENNReal` in den vier `README.md`
+betrifft, und sie gehört an die Stelle, an der der nächste Zitatlauf sie findet.
+
+#### Die Eingangsform ist im selben Lauf noch gebaut — eine achte Deklaration
+
+Der Vorschlag, der hier zunächst für den nächsten Lauf stand, ist eingelöst
+worden, weil der Beweis die Umschreibung **einer** Äquivalenz ist und im ersten
+Anlauf durchging:
+
+> `MeasureTheory.isEventuallyApproximable_of_tendsto_zero_cofinite` — **jedes**
+> Glied hat Paare mit gemeinsamen `q`, `T`, `K`, und ihr Fehler `e i` geht längs
+> `Filter.cofinite` gegen `0`. Daraus `IsEventuallyApproximable`.
+
+Das ist die Gestalt, in der \EK{} (9.26) lesen und in der ein Verbraucher die
+Bedingung hat: *„es gibt Approximanten, deren Fehler mit dem Index
+verschwindet"*, nicht *„zu jedem Fehler eine Ausnahmemenge"*. Die zweite ist die,
+mit der sich rechnen läßt; die erste ist die, die dasteht.
+
+**Der ganze Inhalt ist `Filter.eventually_cofinite`**
+(`Mathlib/Order/Filter/Cofinite.lean:49`, am Quelltext von `94ef6b89544` **und**
+`09712d488fd` nachgesehen, dort dieselbe Zeile): `∀ᶠ i in cofinite, e i ≤ ε` ist
+`{i | ¬ e i ≤ ε}.Finite`, und das **ist** die Ausnahmemenge zum Fehler `ε`. Es
+wird nichts abgeschätzt; es sind zwei Lesarten einer Endlichkeit. Der Index
+braucht dafür keine Voraussetzung.
+
+**`cofinite` und nicht `atTop`**, und das ist keine Geschmacksfrage: die Struktur
+verlangt eine **endliche** Ausnahmemenge, und genau das heißt `cofinite`, während
+`atTop` es nur über einer Ordnung sagt. Für `γ = ℕ` fallen beide zusammen
+(`Nat.cofinite_eq_atTop`).
+
+`check_master.py` nach dem zweiten Einbau: **0 Fehler, 0 `sorry`**, Warnungen
+weiterhin 18 / 38 / 112, davon veraltet 0. Auch diese Deklaration mit
+`check_axioms_master.py` geprüft, `propext`, `Classical.choice`, `Quot.sound`.
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+> `MeasureTheory.isEventuallyApproximable_rescaledWalk` — der Akzeptanztest
+> selbst: die reskalierten Irrfahrten erfüllen `IsEventuallyApproximable`, und
+> damit sind ihre Bildgesetze straff.
+
+**Worauf es ruht, und das meiste davon steht.** Die Eingangsform
+`isEventuallyApproximable_of_tendsto_zero_cofinite` nimmt der Aussage die ganze
+Quantorenarbeit ab: zu zeigen bleibt, daß das `n`-te Glied Paare mit Fehler
+`e n → 0` hat. Der naheliegende Ansatz ist, das Glied durch sich selbst zu
+approximieren — steht die Martingaleigenschaft der reskalierten Partialsumme über
+der gewählten Filtration, so ist `Y = V`, `C = 0`, `Z = 0` ein Paar mit Fehler
+`0` — während für das Quadrat der Kompensator der quadratischen Variation
+einzusetzen ist. Das ist die eine wirkliche Rechnung des Vorhabens, und sie ist
+zu machen, nicht zu behaupten.
+
+**Die Stelle, an der es klemmen kann, benannt, und sie ist nicht die
+Approximation.** Der einundzwanzigste Lauf des 2026-09-21 hat gezeigt, daß die
+Partialsumme über der dort genannten Filtration **kein** Martingal ist; die
+Filtration ist also zuerst festzuhalten, und zwar die, unter der die Rechnung
+dieses Laufs steht. Und `IsApproximatingPair` verlangt `1 < q` samt
+`∫⁻ eLpNorm (Z ·) q ≤ K` **gleichmäßig über die Familie** — für `Z ≡ 0` ist das
+frei, für den Kompensator des Quadrats nicht, und dort ist die Schranke `K` an
+der Skalierung nachzurechnen. Das ist der Punkt, an dem sich entscheidet, ob der
+Akzeptanztest ein Lauf ist oder drei.
+
+**Was dabei nicht noch einmal zu erheben ist:** daß die Irrfahrt bei festem Index
+durch nichts approximierbar ist (dreiundzwanzigster Lauf des 2026-09-21), und daß
+keine endliche Ausnahmemenge das repariert (vierundzwanzigster). Beides ist
+gemessen; der neue Satz umgeht es und widerlegt es nicht.

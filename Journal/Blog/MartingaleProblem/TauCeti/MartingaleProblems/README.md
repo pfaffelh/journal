@@ -12880,17 +12880,78 @@ has to be chosen once for all `n`. What stands:
   criterion there is an equivalence, so it gives as well as takes — and there the
   exemption is consumed one horizon at a time.
 
-  **What it still does not reach, and it is the same wall as above.** The error
-  `ε` remains quantified inside `MeasureTheory.IsApproximable`. The lever for
-  moving it out is named and stands:
-  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair`
-  carries the error of the approximants as an explicit summand `A` on its right
-  hand side, and
+  **What it still does not reach, and the three items below do.** The error `ε`
+  remains quantified inside `MeasureTheory.IsApproximable`, so a member is
+  approximable to every error or to none. The lever for moving it out is
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair`,
+  which carries the error of the approximants as an explicit summand `A` on its
+  right hand side, while
   `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximable` discards
-  it in a limit along `ε = (n : ℝ≥0∞)⁻¹`. A family approximable only to within an
-  error going to zero **with the index** produces the same inequality with an `A`
-  that vanishes along the index, and the present item is what turns such an
-  inequality into tightness.
+  it in a limit along `ε = (n : ℝ≥0∞)⁻¹`.
+* **The error quantified outside the index.**
+  `MeasureTheory.IsEventuallyApproximable 𝓕 P q T K V ε₀ u` for a family
+  `V : γ → ℝ≥0 → Ω → ℝ`: to every positive error a **finite** `G : Set γ`, off
+  which every member has two pairs of `MeasureTheory.IsApproximatingPair`, with
+  one and the same `q`, `T`, `K` for the whole family and every error,
+  approximating it and its square to within that error, together with the four
+  integrabilities the assembly reads. The exceptional set moves with the error;
+  the constants do not, and that is what the uniformity over the family rests
+  on.
+
+  `MeasureTheory.isEventuallyApproximable_of_forall_isApproximable` reads the
+  relation to the condition above: approximability off a finite set is this
+  condition at a `G` that does not move, so this is a weakening of that and not
+  a different condition.
+
+  **The form a consumer arrives with is the other one**, and it is the same
+  statement: `MeasureTheory.isEventuallyApproximable_of_tendsto_zero_cofinite`
+  asks that **every** member have pairs, their error `e i` going to zero along
+  `Filter.cofinite`. The exchange is the equivalence `Filter.eventually_cofinite`
+  (`Mathlib/Order/Filter/Cofinite.lean:49`) and nothing else — `{i | ¬ e i ≤ ε}`
+  finite *is* the exceptional set at the error `ε`. `Filter.cofinite` and not
+  `Filter.atTop`: the structure asks for a finite set, and `atTop` says that only
+  for an ordered index, the two agreeing on `ℕ` by `Nat.cofinite_eq_atTop`.
+* **Tightness of the image laws from eventual approximability.**
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_isEventuallyApproximable`:
+  the conclusion of the two items above under
+  `MeasureTheory.IsEventuallyApproximable` at every horizon. Under it is the
+  uniform estimate
+  `MeasureTheory.exists_finite_forall_measure_setOf_lt_modulusBased_postcomp_le_of_isEventuallyApproximable`,
+  which produces one exceptional set and one window serving every member outside
+  it.
+
+  **The order of the three choices is `N`, `ε`, `δ`, and not `N`, `δ`, `ε`.**
+  The chain above sends the error to zero in a limit and after that limit the
+  approximants no longer occur; here the error survives into the estimate, so
+  the count is chosen first at no window, the **error** second — which is where
+  the exceptional set is born, hence before the window — and the window last at
+  that error, from
+  `MeasureTheory.tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` at `A = a₀` rather
+  than at `A = 0`. That limit is `N · √a₀` and not `0`, so the error is chosen
+  to leave it strictly below its share of the budget. The statement with a free
+  `A` was proved before this item and is what it reads.
+
+  The budget `θ = ofReal ε₀ * η` is split as `θ/2` for the gap term and twice
+  `θ/4` for the horizon term and the error term; `η = ⊤` is disposed of first,
+  so the halves are strict. The exponent `1 < q` is read off a member through
+  the exceptional set at the error `1`, and an exceptional set exhausting the
+  index makes the conclusion vacuous.
+* **The witness that the exchange of quantifiers is not idle.** The family of
+  deterministic unit steps at a fixed time `b` of height `(i+1)⁻¹`,
+  `i : ℕ`. `MeasureTheory.not_isApproximable_scaledStep` says **no** member of
+  it is approximable — the obstruction of
+  `MeasureTheory.not_isApproximable_indicator_Ici`, an atom of the compensator
+  at a deterministic time, which no error absorbs at a fixed member — while
+  `MeasureTheory.isEventuallyApproximable_scaledStep` says the family is
+  eventually approximable, the approximants being the zero pair
+  (`MeasureTheory.isApproximatingPair_zero`) and the exceptional set the initial
+  segment of indices whose height exceeds the error.
+
+  It is therefore tight by the item above and reached by neither of the two
+  items before it, which is the strictness of the weakening. The same shape is
+  what a family of rescaled random walks has, with the height of a single jump
+  in place of `(i+1)⁻¹`; what the witness establishes is the quantifier
+  structure and not that particular family.
 * **The same estimate uniformly over the family.**
   `MeasureTheory.exists_forall_measure_setOf_lt_modulusBased_postcomp_le_of_forall_isApproximable`:
   for a family `X : γ → ℝ≥0 → Ω → E` over **one** probability space, all
