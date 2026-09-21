@@ -45759,4 +45759,181 @@ theorem tendsto_measure_setOf_lt_modulusBased_postcomp_of_isApproximable
     (fun ω ↦ by ext t; rw [SkorokhodSpace.postcomp_toFun, hΦ ω]; rfl)
     (fun t ω ↦ g.norm_coe_le_norm _) hu huT hε₀
 
+/-- **The assembly at an image path**, the inequality of which the limit above is the limit.
+
+It is `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximable` at `V = g ∘ X`, with
+the bound `c = ‖g‖` supplied rather than assumed, and it stands here because the **uniform**
+statement below has to be proved at the inequality and not at the limit.  The four steps of the
+passage are those of
+`MeasureTheory.tendsto_measure_setOf_lt_modulusBased_postcomp_of_isApproximable`. -/
+theorem mul_measure_setOf_lt_modulusBased_postcomp_le_of_isApproximable
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K : ℝ≥0} {X : ℝ≥0 → Ω → E} {g : E →ᵇ ℝ} {ε₀ : ℝ} {u : ℝ≥0}
+    (happ : IsApproximable 𝓕 P q T K (fun t ω ↦ g (X t ω)) ε₀ u)
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hX : IsStronglyProgressive 𝓕 X)
+    (hcont : ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ X s ω) (Set.Ici t) t)
+    {Φ : Ω → D(ℝ≥0, E)} (hΦ : ∀ ω, (Φ ω).toFun = fun t ↦ X t ω)
+    {δ : ℝ≥0} (hδu : δ < u) (huT : u + δ ≤ T) (hε₀ : 0 < ε₀)
+    {N : ℕ} (hN : N ≠ 0) :
+    ENNReal.ofReal ε₀ * P {ω | ENNReal.ofReal ε₀
+          < SkorokhodSpace.modulusBased (0 : ℝ) (u : ℝ)
+              (SkorokhodSpace.postcomp g.toContinuousMap
+                (SkorokhodSpace.extendNNReal (Φ ω))) (δ : ℝ)}
+      ≤ (N : ENNReal) * ENNReal.ofReal (Real.sqrt
+            (((1 + 2 * ENNReal.ofReal ‖g‖)
+                * (ENNReal.ofReal (δ : ℝ) ^ (1 - 1 / q.toReal) * (K : ENNReal))).toReal))
+        + ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * (K : ENNReal)
+            * (1 + 2 * ENNReal.ofReal ‖g‖) / N / ENNReal.ofReal ε₀ := by
+  have hpost : ∀ ω, SkorokhodSpace.postcomp g.toContinuousMap
+      (SkorokhodSpace.extendNNReal (Φ ω))
+      = SkorokhodSpace.extendNNReal
+          (SkorokhodSpace.postcomp g.toContinuousMap (Φ ω)) := fun ω ↦
+    SkorokhodSpace.postcomp_extendNNReal _ _
+  simp only [hpost]
+  exact mul_measure_setOf_lt_modulusBased_le_of_isApproximable happ hSc hSd
+    (hX.continuous_comp g.continuous)
+    (fun ω t ↦ g.continuous.continuousWithinAt.comp (hcont ω t) (Set.mapsTo_univ _ _))
+    (fun ω ↦ by ext t; rw [SkorokhodSpace.postcomp_toFun, hΦ ω]; rfl)
+    (fun t ω ↦ g.norm_coe_le_norm _) hδu huT hε₀ hN
+
+/-- **The modulus estimate uniformly over a family**, which is the form the tightness criterion
+reads: for a family `X : γ → ℝ≥0 → Ω → E` of processes over **one** probability space, all
+approximable with the **same** `q`, `T`, `K`, and one bounded continuous `g : E →ᵇ ℝ`,
+
+```
+∀ η > 0, ∃ δ > 0, ∀ i,
+  P {ω | ofReal ε₀ < modulusBased 0 u (postcomp g (extendNNReal (Φ i ω))) δ} ≤ η.
+```
+
+**It is not the limit above stated for each member, and it cannot be.**  A `Tendsto` per member
+gives a `δ` per member; the criterion needs one `δ` for all of them.  The uniform statement is
+therefore proved at the *inequality*
+`MeasureTheory.mul_measure_setOf_lt_modulusBased_postcomp_le_of_isApproximable`, with the count
+`N` and the window `δ` quantified **before** the member.  That this is possible is not an extra
+argument but a reading of that inequality: on its right hand side stand `u`, `q`, `K`, `‖g‖`,
+`N`, `δ` and `ε₀`, and **no member occurs**.  The common `q`, `T`, `K` of
+`MeasureTheory.IsApproximable` are what make that true, and they are the whole content of the
+uniformity.
+
+**One `ε₀` and one `u` suffice, and that is read off the consumer rather than guessed.**
+`SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` quantifies its bound `ε`, its horizon `m` and
+its threshold `η` **outside** the `∃ δ`; a consumer therefore arrives with all three already
+fixed and instantiates this statement once for each triple.  Asking instead for
+`∀ ε₀ > 0, ∀ i, IsApproximable … ε₀ u` inside the hypothesis would be strictly stronger and buy
+nothing.
+
+**The empty family carries no exponent, and no hypothesis is added for it.**  `1 < q` is read off
+a member (`MeasureTheory.IsApproximable.one_lt_exponent`), so an empty `γ` has none to read it
+from; there the conclusion is vacuous and `δ = 1` serves.  Carrying `1 < q` as a hypothesis would
+burden the nonempty case with something it already has.
+
+**The window is produced in `ℝ` and not in `ℝ≥0`**, because that is the shape the consumer reads.
+It exists because `𝓝[>] (0 : ℝ≥0)` is `NeBot` -- `nhdsGT_neBot`,
+`Mathlib/Topology/Order/DenselyOrdered.lean:222`, `ℝ≥0` having no maximum -- so the three
+eventualities (positivity by `self_mem_nhdsWithin`, the two window conditions, and the smallness
+of the gap term) may be met at one point.
+
+**What still separates this from the criterion.**  The criterion measures a set of *paths* under
+the image law `((μ i).map (postcomp g)).map extendNNReal`, and this statement measures a set of
+*sample points* under `P`; and its threshold enters as `η ≤ modulusBased …` where this one has
+`ofReal ε₀ < modulusBased …`.  The strictness is bridged by choosing `ε₀` below the threshold;
+the change of measure is the next item and is not formal.  `MeasureTheory.Measure.map_apply`
+asks the set be measurable, and the one statement over an arbitrary set,
+`MeasureTheory.Measure.le_map_apply`, runs the wrong way -- a bound on the preimage is not a
+bound on the image law.  The index crossing is free, `SkorokhodSpace.extendNNReal` being a
+closed and hence measurable embedding, so what remains is the layer
+`SkorokhodSpace.postcomp g`, which is none, `g` not being injective. -/
+theorem exists_forall_measure_setOf_lt_modulusBased_postcomp_le_of_forall_isApproximable
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K : ℝ≥0} {γ : Type*} {X : γ → ℝ≥0 → Ω → E} {g : E →ᵇ ℝ}
+    {ε₀ : ℝ} {u : ℝ≥0}
+    (happ : ∀ i, IsApproximable 𝓕 P q T K (fun t ω ↦ g (X i t ω)) ε₀ u)
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hX : ∀ i, IsStronglyProgressive 𝓕 (X i))
+    (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ X i s ω) (Set.Ici t) t)
+    {Φ : γ → Ω → D(ℝ≥0, E)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ X i t ω)
+    (hu : 0 < u) (huT : u < T) (hε₀ : 0 < ε₀) {η : ENNReal} (hη : 0 < η) :
+    ∃ δ : ℝ, 0 < δ ∧ ∀ i, P {ω | ENNReal.ofReal ε₀
+        < SkorokhodSpace.modulusBased (0 : ℝ) (u : ℝ)
+            (SkorokhodSpace.postcomp g.toContinuousMap
+              (SkorokhodSpace.extendNNReal (Φ i ω))) δ} ≤ η := by
+  rcases isEmpty_or_nonempty γ with hγ | hγ
+  · exact ⟨1, one_pos, fun i ↦ (hγ.false i).elim⟩
+  have hq : 1 < q := (happ (Classical.arbitrary γ)).one_lt_exponent
+  have he0 : ENNReal.ofReal ε₀ ≠ 0 := (ENNReal.ofReal_pos.2 hε₀).ne'
+  set B : ENNReal := ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * (K : ENNReal)
+      * (1 + 2 * ENNReal.ofReal ‖g‖) with hBdef
+  have hBtop : B ≠ ⊤ := by
+    rw [hBdef]
+    exact ENNReal.mul_ne_top
+      (ENNReal.mul_ne_top
+        (ENNReal.rpow_ne_top_of_nonneg (one_sub_one_div_toReal_pos hq).le ENNReal.ofReal_ne_top)
+        ENNReal.coe_ne_top) (by finiteness)
+  set θ : ENNReal := ENNReal.ofReal ε₀ * η with hθdef
+  have hθ : θ ≠ 0 := (ENNReal.mul_pos he0 hη.ne').ne'
+  have hhalf : (0 : ENNReal) < θ / 2 := ENNReal.half_pos hθ
+  -- the horizon term, chosen first and at no window
+  have hhor : Tendsto (fun n : ℕ ↦ B / n / ENNReal.ofReal ε₀) atTop (𝓝 0) := by
+    have hfin : B / ENNReal.ofReal ε₀ ≠ ⊤ := ENNReal.div_ne_top hBtop he0
+    have := ENNReal.Tendsto.const_mul (a := B / ENNReal.ofReal ε₀)
+      ENNReal.tendsto_inv_nat_nhds_zero (Or.inr hfin)
+    rw [mul_zero] at this
+    refine this.congr fun n ↦ ?_
+    simp only [div_eq_mul_inv]
+    ring
+  obtain ⟨n, hn⟩ := Filter.eventually_atTop.1
+    ((ENNReal.tendsto_nhds_zero.1 hhor) (θ / 2) hhalf)
+  have hN : (n + 1 : ℕ) ≠ 0 := Nat.succ_ne_zero n
+  have hhor' : B / (n + 1 : ℕ) / ENNReal.ofReal ε₀ ≤ θ / 2 := hn (n + 1) (by omega)
+  -- the window, chosen second, at that fixed count and still before the member
+  have hwin : ∀ᶠ δ : ℝ≥0 in 𝓝[>] 0, δ < u ∧ u + δ ≤ T := by
+    have h1 : ∀ᶠ δ : ℝ≥0 in 𝓝 0, δ < u := eventually_lt_nhds hu
+    have h2 : ∀ᶠ δ : ℝ≥0 in 𝓝 0, u + δ ≤ T := by
+      have : Tendsto (fun δ : ℝ≥0 ↦ u + δ) (𝓝 0) (𝓝 (u + 0)) :=
+        (continuous_const.add continuous_id).tendsto 0
+      rw [add_zero] at this
+      exact (this.eventually_lt_const huT).mono fun δ hδ ↦ hδ.le
+    exact ((h1.and h2)).filter_mono nhdsWithin_le_nhds
+  have hgap : Tendsto (fun δ : ℝ≥0 ↦ ((n + 1 : ℕ) : ENNReal) * ENNReal.ofReal (Real.sqrt
+        (((1 + 2 * ENNReal.ofReal ‖g‖)
+          * (ENNReal.ofReal (δ : ℝ) ^ (1 - 1 / q.toReal) * (K : ENNReal))).toReal)))
+      (𝓝[>] 0) (𝓝 0) := by
+    have hcoe : Tendsto (fun δ : ℝ≥0 ↦ (δ : ℝ)) (𝓝[>] (0 : ℝ≥0)) (𝓝[>] (0 : ℝ)) := by
+      refine tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within _ ?_ ?_
+      · simpa using (NNReal.continuous_coe.tendsto (0 : ℝ≥0)).mono_left nhdsWithin_le_nhds
+      · filter_upwards [self_mem_nhdsWithin] with δ hδ
+        simp only [Set.mem_Ioi] at hδ ⊢
+        exact_mod_cast hδ
+    have h := (tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero (K := K) (c := ‖g‖) hq
+      (A := 0) (by finiteness) (n + 1)).comp hcoe
+    simpa [Function.comp_def] using h
+  obtain ⟨δ, hδ0, hδwin, hδgap⟩ : ∃ δ : ℝ≥0, 0 < δ ∧ (δ < u ∧ u + δ ≤ T) ∧
+      ((n + 1 : ℕ) : ENNReal) * ENNReal.ofReal (Real.sqrt
+        (((1 + 2 * ENNReal.ofReal ‖g‖)
+          * (ENNReal.ofReal (δ : ℝ) ^ (1 - 1 / q.toReal) * (K : ENNReal))).toReal)) ≤ θ / 2 := by
+    obtain ⟨δ, ⟨hw, hg⟩, hp⟩ :=
+      ((hwin.and ((ENNReal.tendsto_nhds_zero.1 hgap) (θ / 2) hhalf)).and
+        self_mem_nhdsWithin).exists
+    exact ⟨δ, hp, hw, hg⟩
+  refine ⟨(δ : ℝ), by exact_mod_cast hδ0, fun i ↦ ?_⟩
+  have key := mul_measure_setOf_lt_modulusBased_postcomp_le_of_isApproximable (happ i) hSc hSd
+    (hX i) (hcont i) (hΦ i) hδwin.1 hδwin.2 hε₀ hN
+  have hb : ENNReal.ofReal ε₀ * P {ω | ENNReal.ofReal ε₀
+      < SkorokhodSpace.modulusBased (0 : ℝ) (u : ℝ)
+          (SkorokhodSpace.postcomp g.toContinuousMap
+            (SkorokhodSpace.extendNNReal (Φ i ω))) (δ : ℝ)} ≤ θ :=
+    le_trans key (le_trans (add_le_add hδgap hhor') (le_of_eq (ENNReal.add_halves θ)))
+  calc P {ω | ENNReal.ofReal ε₀
+        < SkorokhodSpace.modulusBased (0 : ℝ) (u : ℝ)
+            (SkorokhodSpace.postcomp g.toContinuousMap
+              (SkorokhodSpace.extendNNReal (Φ i ω))) (δ : ℝ)}
+      = (ENNReal.ofReal ε₀)⁻¹ * (ENNReal.ofReal ε₀ * P {ω | ENNReal.ofReal ε₀
+          < SkorokhodSpace.modulusBased (0 : ℝ) (u : ℝ)
+              (SkorokhodSpace.postcomp g.toContinuousMap
+                (SkorokhodSpace.extendNNReal (Φ i ω))) (δ : ℝ)}) := by
+        rw [← mul_assoc, ENNReal.inv_mul_cancel he0 ENNReal.ofReal_ne_top, one_mul]
+    _ ≤ (ENNReal.ofReal ε₀)⁻¹ * θ := mul_le_mul_right hb _
+    _ = η := by rw [hθdef, ← mul_assoc, ENNReal.inv_mul_cancel he0 ENNReal.ofReal_ne_top, one_mul]
+
 end MeasureTheory

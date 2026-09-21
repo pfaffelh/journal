@@ -50919,3 +50919,201 @@ entscheiden und nicht zu raten.
 von `E` ist der Punkt danach; die drei Transporte
 `SkorokhodSpace.min_edist_le_two_mul_modulusBased_postcomp` und seine beiden
 Geschwister stehen dafür bereit, ein Verbraucher von ihnen nicht.
+
+### 2026-09-21, fünfter Lauf des Tages — die Gleichmäßigkeit über die Familie steht, und sie kostet keinen neuen Beweis, sondern eine Quantorenstellung; die Vorfrage des Vorlaufs ist am Quelltext entschieden, und beim Übergang zum Verbraucher wird eine Grenze sichtbar, von der **eine Hälfte umsonst** ist
+
+**Bearbeitet:** der Vorschlag des Vorlaufs, also die Gleichmäßigkeit des
+Modulkriteriums über die Familie, im Meilenstein 11 von `MartingaleProblems`.
+Wie angeordnet: kein Meilenstein 8, kein Meilenstein 14, kein C.5/G.
+
+#### Was gebaut ist
+
+**Zwei** neue Deklarationen in `TauCeti/MartingaleProblems/Suggested.lean`, am
+Ende des Abschnitts „The approximability condition, and the order of the three
+limits".
+
+* `MeasureTheory.mul_measure_setOf_lt_modulusBased_postcomp_le_of_isApproximable`
+  — die **Ungleichung** am Bildpfad, also
+  `mul_measure_setOf_lt_modulusBased_le_of_isApproximable` bei `V = g ∘ X` mit
+  `c = ‖g‖`. Sie steht aus einem einzigen Grund da: die gleichmäßige Fassung ist
+  an der Ungleichung zu führen und nicht am Grenzwert, und am Bildpfad gab es
+  bisher nur den Grenzwert.
+* `MeasureTheory.exists_forall_measure_setOf_lt_modulusBased_postcomp_le_of_forall_isApproximable`
+  — die Aussage des Laufs. Für eine Familie `X : γ → ℝ≥0 → Ω → E` über **einem**
+  Wahrscheinlichkeitsraum, alle approximierbar mit **denselben** `q`, `T`, `K`,
+  und ein festes `g : E →ᵇ ℝ`:
+  ```
+  ∀ η > 0, ∃ δ > 0, ∀ i,
+    P {ω | ofReal ε₀ < modulusBased 0 u (postcomp g (extendNNReal (Φ i ω))) δ} ≤ η.
+  ```
+
+**Geprüft:** `scripts/check_master.py` meldet für die ganze Kette **0 Fehler,
+0 `sorry`, 0 veraltete Namen** (Mathlib `94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `v4.35.0-rc2`). Die Warnungen sind 18 / 35 / 112 und damit **unverändert**
+gegenüber dem vor dem Lauf eigens gemessenen Stand; die beiden neuen
+Deklarationen erzeugen keine. Beide hängen nach `check_axioms_master.py` auf
+`propext`, `Classical.choice`, `Quot.sound` und auf nichts sonst.
+`check_cited_lines.py`: **400 von 400** gepaarten Fundstellen stimmen (vier mehr
+als vor dem Lauf), 0 tote, 0 verschoben. `check_duplicates.py`: 2653 eigene
+Deklarationen, genau zwei mehr, und zu den beiden neuen Namen kein Treffer.
+`check_negatives.py`: **50** Behauptungen, 0 mit unerwarteten Treffern.
+`check_citations.py`: dieselben fünf Auffälligkeiten wie vorher, alle
+„master ja, v4.33.1 nein" und damit erwartet; die drei in diesem Lauf neu
+zitierten Mathlib-Dateien sind nicht darunter. `check.py` meldet `clean`.
+`check_suggested.py` ist **nicht** gelaufen; seine Fehler sind seit dem
+2026-09-18 zu berichten und nicht zu beheben, und der Bestand hat sich durch
+diesen Lauf in dieser Hinsicht nicht geändert.
+
+#### Die Vorfrage des Vorlaufs, und sie ist am Quelltext entschieden
+
+Der Vorlauf hat aufgetragen zu prüfen, „ob die Hypothese `∀ ε₀ > 0, ∀ i,
+IsApproximable … ε₀ u` lauten muß oder ob ein einziges `ε₀` genügt" — und
+ausdrücklich: „das ist am Quelltext von
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal` zu entscheiden und
+nicht zu raten". Der maßgebliche Quelltext ist der von
+`SkorokhodSpace.isTightMeasureSet_map_postcomp_iff`, das die Modulbedingung
+ausspricht, und er sagt:
+
+```lean
+∀ ε : ℝ≥0∞, 0 < ε → ∀ m : ℕ, ∀ η : ℝ≥0∞, 0 < η → ∃ δ : ℝ, 0 < δ ∧ ∀ i, …
+```
+
+> **Ein einziges `ε₀` genügt, und ein einziges `u` ebenso.** Die Schranke `ε`,
+> der Horizont `m` und die Schwelle `η` stehen alle drei **außerhalb** des
+> `∃ δ`. Ein Verbraucher kommt also mit allen dreien schon festgelegt an und
+> ruft die Aussage einmal je Tripel auf.
+
+Die stärkere Hypothese wäre damit nicht nur überflüssig, sondern nach der
+stehenden Regel dieser Roadmap falsch gewählt. Dieselbe Lesart entscheidet
+zugleich, daß `δ` in `ℝ` und nicht in `ℝ≥0` zu liefern ist.
+
+#### Warum die Gleichmäßigkeit kein Beweis ist, sondern eine Quantorenstellung
+
+Der Vorlauf hat vorausgesagt, die Schranke hänge „nach Konstruktion von keinem
+Mitglied ab", und das trifft zu: auf der rechten Seite von
+`mul_measure_setOf_lt_modulusBased_le_of_isApproximable` stehen `u`, `q`, `K`,
+`c`, `N`, `δ` und `ε₀`, und **kein Mitglied kommt vor**. Der Beweis der
+gleichmäßigen Fassung ist deshalb der des Grenzwertes, nur mit `N` und `δ`
+**vor** `i` gewählt: `N` aus dem Horizontterm, `δ` aus dem Lückenterm bei diesem
+`N`, und erst dann `intro i`. Die gemeinsamen `q`, `T`, `K` von
+`IsApproximable` sind der ganze Inhalt der Gleichmäßigkeit — sie sind genau die
+Stelle, an der die Klasse verbietet, daß die Konstanten mit dem Mitglied
+wandern.
+
+**Und der Grund, aus dem der Grenzwert des Vorlaufs dafür nicht taugt**, ist der
+vom Vorlauf benannte und hat sich bestätigt: ein `Tendsto` je Mitglied gibt ein
+`δ` je Mitglied. Die Aussage mußte an der Ungleichung ansetzen, und deshalb ist
+die erste der beiden neuen Deklarationen überhaupt entstanden.
+
+#### Zwei Kleinigkeiten, die beim Hinschreiben aufgetreten sind
+
+**Die leere Familie trägt keinen Exponenten, und dafür wird keine Voraussetzung
+hinzugenommen.** `1 < q` wird an einem Mitglied abgelesen
+(`IsApproximable.one_lt_exponent`), ein leeres `γ` hat keines; dort ist die
+Konklusion leer und `δ = 1` tut es. `1 < q` als Hypothese zu führen wäre
+bequemer und würde den nichtleeren Fall mit etwas belasten, das er schon hat —
+also `rcases isEmpty_or_nonempty γ` und zwei Zeilen.
+
+**Der Zeuge für `δ` existiert, weil `𝓝[>] (0 : ℝ≥0)` `NeBot` ist.** Drei
+Eventualitäten — Positivität (`self_mem_nhdsWithin`), die beiden
+Fensterbedingungen, und die Kleinheit des Lückenterms — werden an *einem* Punkt
+eingelöst, und das geht über `Filter.Eventually.exists`. Die Instanz ist
+`nhdsGT_neBot` (`Mathlib/Topology/Order/DenselyOrdered.lean:222`), und sie
+greift, weil `ℝ≥0` kein Maximum hat.
+
+#### Ein Mathlib-Name, den jede Erinnerung anders hat
+
+`mul_le_mul_left'` **gibt es auf `master` nicht mehr**, und der Elaborator sagt
+das mit `Unknown identifier`. Nachgesehen in
+`Mathlib/Algebra/Order/Monoid/Unbundled/Basic.lean` auf `94ef6b89544`: die
+Aussage `b ≤ c → a * b ≤ a * c` heißt dort **`mul_le_mul_right`** (Zeile 61),
+und `mul_le_mul_left` (Zeile 69) ist die andere Seite, `b ≤ c → b * a ≤ c * a`.
+Ein Apostroph-Name `mul_le_mul_left'` steht in der ganzen Bibliothek nur noch
+als Teil von `le_of_mul_le_mul_left'`. Das kostete einen Durchlauf und ist eine
+Umbenennung, die sich mit keinem Gedächtnis erledigen läßt.
+
+**Nicht** als Negativaussage in `scripts/check_negatives.py` eingetragen: es ist
+eine Umbenennung und keine Lücke, die Bibliothek hat den Satz. Die Zahl der
+geprüften Behauptungen bleibt bei 50.
+
+#### Die Grenze zum Verbraucher, nachgesehen statt geschätzt — und eine Hälfte davon ist umsonst
+
+Was die neue Aussage von
+`SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` trennt, ist zweierlei: die
+Schwelle steht dort als `η ≤ modulusBased …` und hier als
+`ofReal ε₀ < modulusBased …`, und dort wird eine Menge von **Pfaden** unter dem
+Bildmaß gemessen, hier eine Menge von **Stichprobenpunkten** unter `P`. Das
+erste ist billig — `ε₀` unterhalb der Schwelle wählen. Das zweite ist es nicht,
+und es ist am 2026-09-21 am Quelltext geprüft:
+
+* `MeasureTheory.Measure.map_apply` (`MeasureTheory/Measure/Map.lean:170`)
+  verlangt, daß die Menge meßbar ist; `Measure.map_apply₀` (`:157`) verlangt
+  Nullmeßbarkeit für das Bildmaß. Die Modulmengen sind unter denen, die diese
+  Roadmap nie als meßbar behauptet.
+* Die **einzige** Aussage über eine beliebige Menge ist
+  `MeasureTheory.Measure.le_map_apply` (`:218`), `μ (f ⁻¹' s) ≤ μ.map f s`, und
+  sie läuft in die **falsche Richtung**: wer eine Schranke am Urbild hat, hat
+  damit keine am Bildmaß.
+* **Eine der beiden Schichten ist aber umsonst, und das ist der Fund des
+  Absatzes.** `MeasurableEmbedding.map_apply` (`:271`) gilt für **beliebige**
+  Mengen, und `SkorokhodSpace.extendNNReal` ist eine meßbare Einbettung, weil es
+  eine abgeschlossene ist: `SkorokhodSpace.isClosedEmbedding_extendNNReal` mit
+  `Topology.IsClosedEmbedding.measurableEmbedding`
+  (`MeasureTheory/Constructions/BorelSpace/Basic.lean:684`). Der Indexübergang
+  kostet an dieser Stelle also **nichts**. Übrig bleibt die Schicht
+  `SkorokhodSpace.postcomp g ∘ Φ i`, und die ist keine Einbettung, weil `g`
+  nicht injektiv ist.
+
+Der Befund steht ausgeschrieben in `MartingaleProblems/README.md`,
+Meilenstein 11, am neuen Punkt.
+
+#### Wo der erste Punkt der Kette jetzt steht
+
+| Größe | Stand |
+| --- | --- |
+| alles Deterministische bis zur Modulabschätzung | steht |
+| die beiden Summanden, jeder für sich abgeschätzt | steht |
+| der Zusammenbau beider Summanden, auch am Bildpfad | steht |
+| die Approximierbarkeitsbedingung als Prädikat | steht |
+| die drei Grenzübergänge in der Ordnung `N`, `δ`, `ε` | steht |
+| derselbe Grenzwert am Bildpfad | steht |
+| **die Ungleichung am Bildpfad** | **steht, dieser Lauf** |
+| **gleichmäßig über die Familie** | **steht, dieser Lauf** |
+| der Übergang vom Stichprobenraum an das Bildmaß | offen, Bruchstelle benannt |
+| der Rückweg von der trennenden Klasse zur Metrik von `E` | offen (die drei Transporte stehen, der Verbraucher nicht) |
+| `isTight_map_postcomp_of_exists_martingale` selbst | offen |
+
+#### Vorschlag für den nächsten Lauf
+
+**Der Übergang vom Stichprobenraum an das Bildmaß, und die Entscheidung, die
+dabei zu treffen ist: `SkorokhodSpace.measurable_modulusBased`.**
+
+> `Measurable (fun f : D(ℝ, E) ↦ SkorokhodSpace.modulusBased t₀ u f δ)`
+
+**Warum jetzt.** Es ist die einzige Größe, die zwischen der Aussage dieses Laufs
+und `SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` steht, und nach dem
+Abschnitt oben ist sie es wirklich: die Schwelle ist eine Zeile, der
+Indexübergang ist über die abgeschlossene Einbettung umsonst, und was bleibt,
+ist genau eine Meßbarkeit. Ohne sie ist der erste Punkt der Kette nicht
+abschließbar, gleichgültig wieviel Analysis darunter steht — und es steht
+inzwischen alle.
+
+**Die Vorfrage, und sie ist vor dem ersten Beweisschritt zu beantworten.**
+`modulusBased t₀ u f δ` ist ein **Infimum über Unterteilungen** eines Supremums
+von Abständen. Zu entscheiden ist, ob dieses Infimum über eine **abzählbare**
+Familie läuft oder abzählbar ausgeschöpft werden kann — dann ist die
+Meßbarkeit `measurable_iInf` über stetige Glieder und billig. Läuft es das
+nicht, so ist der Weg ein anderer, und dann ist zu prüfen, ob `modulusBased`
+in `f` **oberhalbstetig** ist; das gäbe die Meßbarkeit ohne Abzählbarkeit.
+`SkorokhodSpace.modulusBased_le_of_edist_le` ist die vorhandene Stetigkeit in
+der Pfadvariablen und der erste Ort, an dem nachzusehen ist. **Beides ist am
+Quelltext zu entscheiden und nicht zu raten.**
+
+**Und der Ausweg, falls beides nicht trägt, ist zu benennen und nicht zu
+gehen.** Man könnte die Modulbedingung von
+`SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal` auf Urbilder
+umschreiben. Das ist **keine** freie Abschwächung: nach
+`MeasureTheory.Measure.le_map_apply` ist die Urbildfassung die *schwächere*
+Hypothese, das Kriterium müßte unter ihr neu bewiesen werden, und das ist ein
+eigener Lauf im Meilenstein 8 von `SkorokhodSpace`. Wer dorthin ausweicht, sagt
+im Bericht, woran die Meßbarkeit gescheitert ist.

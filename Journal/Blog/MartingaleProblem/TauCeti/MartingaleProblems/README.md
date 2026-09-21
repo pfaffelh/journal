@@ -12598,6 +12598,80 @@ has to be chosen once for all `n`. What stands:
   test function at a time; what still separates the two is the uniformity over
   the family, and the constants `u`, `q`, `K`, `‖g‖` of the bound behind it are
   there precisely because none of them belongs to a member.
+* **The same estimate uniformly over the family.**
+  `MeasureTheory.exists_forall_measure_setOf_lt_modulusBased_postcomp_le_of_forall_isApproximable`:
+  for a family `X : γ → ℝ≥0 → Ω → E` over **one** probability space, all
+  approximable with the **same** `q`, `T`, `K`, and one `g : E →ᵇ ℝ`,
+
+  ```
+  ∀ η > 0, ∃ δ > 0, ∀ i,
+    P {ω | ofReal ε₀ < modulusBased 0 u (postcomp g (extendNNReal (Φ i ω))) δ} ≤ η.
+  ```
+
+  **It is not the limit above stated for each member.** A `Tendsto` per member
+  gives a `δ` per member, and the criterion needs one `δ` for all of them. The
+  uniform statement is therefore proved at the *inequality*,
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_postcomp_le_of_isApproximable`
+  — the assembly at an image path, which stands for this reason and for no other
+  — with `N` and `δ` quantified before the member. That this is possible is a
+  reading of that inequality and not a further argument: on its right hand side
+  stand `u`, `q`, `K`, `‖g‖`, `N`, `δ` and `ε₀`, and **no member occurs**. The
+  common `q`, `T`, `K` of `MeasureTheory.IsApproximable` are the whole content of
+  the uniformity.
+
+  **One `ε₀` and one `u` suffice, and that is read off the consumer.**
+  `SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` quantifies its bound `ε`,
+  its horizon `m` and its threshold `η` **outside** the `∃ δ`, so a consumer
+  arrives with all three fixed and instantiates once per triple. Asking instead
+  for `∀ ε₀ > 0, ∀ i, IsApproximable … ε₀ u` would be strictly stronger and buy
+  nothing.
+
+  **The empty family carries no exponent, and no hypothesis is added for it.**
+  `1 < q` is read off a member
+  (`MeasureTheory.IsApproximable.one_lt_exponent`), so an empty `γ` has none to
+  read it from; there the conclusion is vacuous and `δ = 1` serves. Carrying
+  `1 < q` as a hypothesis would burden the nonempty case with what it already
+  has.
+
+  **The window is produced in `ℝ`**, the shape the consumer reads, and it exists
+  because `𝓝[>] (0 : ℝ≥0)` is `NeBot` — `nhdsGT_neBot`,
+  `Mathlib/Topology/Order/DenselyOrdered.lean:222`, `ℝ≥0` having no maximum — so
+  positivity, the two window conditions and the smallness of the gap term are met
+  at one point.
+
+  **What still separates this from the criterion**, and it is two things and not
+  one. The criterion measures a set of *paths* under the image law
+  `((μ i).map (postcomp g)).map extendNNReal`; this measures a set of *sample
+  points* under `P`. And its threshold enters as `η ≤ modulusBased …` where this
+  one has `ofReal ε₀ < modulusBased …`. The strictness is bridged by taking `ε₀`
+  below the threshold; the change of measure is the next item, and it is not
+  formal. Checked at the source, 2026-09-21:
+
+  - `MeasureTheory.Measure.map_apply` (`MeasureTheory/Measure/Map.lean:170`) asks
+    the set be measurable, and `MeasureTheory.Measure.map_apply₀` (`:157`) asks
+    it be null measurable for the image measure. The modulus sets are among those
+    this roadmap never asserts measurable.
+  - The only statement over an **arbitrary** set is
+    `MeasureTheory.Measure.le_map_apply` (`:218`),
+    `μ (f ⁻¹' s) ≤ μ.map f s`, and it runs the **wrong way**: a producer who has
+    a bound on the preimage does not thereby have one on the image law.
+  - **One of the two layers is nevertheless free.**
+    `MeasurableEmbedding.map_apply` (`:271`) holds for arbitrary sets, and
+    `SkorokhodSpace.extendNNReal` is a measurable embedding because it is a
+    closed one (`SkorokhodSpace.isClosedEmbedding_extendNNReal` with
+    `Topology.IsClosedEmbedding.measurableEmbedding`,
+    `MeasureTheory/Constructions/BorelSpace/Basic.lean:684`). So the index
+    crossing costs nothing here, and what remains is the layer
+    `SkorokhodSpace.postcomp g ∘ Φ i`, which is no embedding, `g` not being
+    injective.
+
+  The next item therefore decides one of two things, and the decision is a
+  finding either way: whether `fun f ↦ SkorokhodSpace.modulusBased t₀ u f δ` is
+  measurable on `D(ℝ, ℝ)`, or whether the modulus condition of
+  `SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal` is to be restated so
+  that a producer may discharge it on preimages. The second is not a weakening
+  for free: by `MeasureTheory.Measure.le_map_apply` the preimage form is the
+  **weaker** hypothesis, so the criterion would have to be reproved under it.
 
 * `isRelativelyCompact_of_approx`: if `E` is Polish, the domain of `A` contains
   an algebra separating points and vanishing nowhere, the approximation holds
