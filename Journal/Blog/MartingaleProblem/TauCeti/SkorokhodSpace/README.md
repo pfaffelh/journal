@@ -3866,6 +3866,10 @@ and this part of the milestone says at which paths `ψ t` is continuous. Proved
   closes it. `continuousAt_setIntegral_toNNReal` is the instance
   `α = ℝ`, `μ` Lebesgue on `Set.Ioc 0 T`, `φ = Real.toNNReal`, which is the shape
   in which a martingale problem over `lebesgueClock` writes its compensator.
+* `mpTest` — the functional itself, `f (z t) - ∫_0^t g (z u) du` as a function
+  of the path alone. It is written without a clock and without a filtration,
+  because where it is continuous is a question about the path space and nothing
+  else; **MartingaleProblems** Milestone 11 is where it acquires both.
 * `continuousAt_mpTest` — the whole functional, continuous at every path that
   does not jump **at the one time it evaluates**. The asymmetry between the two
   summands is the content: the compensator carries none of the condition, the

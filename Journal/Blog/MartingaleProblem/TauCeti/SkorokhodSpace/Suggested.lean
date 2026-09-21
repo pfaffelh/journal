@@ -19857,6 +19857,27 @@ theorem SkorokhodSpace.measure_setOf_forall_notMem_leftJumpSet_eq_one
     (MeasurableSet.biUnion hT fun t _ => SkorokhodSpace.measurableSet_leftJump t)]
   exact (measure_biUnion_null_iff hT).2 hnull
 
+section MPTestDef
+
+variable {E : Type*} [MetricSpace E]
+
+/-- **The functional a martingale problem tests, read on the path space.**  For a
+pair `(f, g)` of bounded continuous functions of the state it is the state term
+minus the compensator, `f (z t) - ∫_0^t g (z u) du`, as a function of the path
+alone.
+
+The window is written over `ℝ` and the path read through `Real.toNNReal` because
+the integral is a Lebesgue integral over the real line while the index of the path
+space is `ℝ≥0`; on `Set.Ioc 0 t` the truncation is the identity, and that is the
+only place the coercion is read.  This is the same functional that the roadmap
+**MartingaleProblems** builds as a member of `mpFamily` over `lebesgueClock` in
+the optional convention, written here without the clock so that the statements
+about *where it is continuous* can be made before any filtration exists. -/
+noncomputable def SkorokhodSpace.mpTest (f g : E →ᵇ ℝ) (t : ℝ≥0) (z : D(ℝ≥0, E)) : ℝ :=
+  f (z.toFun t) - ∫ u in Set.Ioc (0 : ℝ) (t : ℝ), g (z.toFun u.toNNReal)
+
+end MPTestDef
+
 section MPTestFunctional
 
 variable {E : Type*} [MetricSpace E] [MeasurableSpace E] [BorelSpace E] [PolishSpace E]
@@ -19895,8 +19916,7 @@ asymmetry is why the third item of the chain of **MartingaleProblems**
 Milestone 11 quantifies over a set of times and not over a set of paths. -/
 theorem SkorokhodSpace.continuousAt_mpTest (f g : E →ᵇ ℝ) (t : ℝ≥0) {y : D(ℝ≥0, E)}
     (ht : t ∉ leftJumpSet y.toFun) :
-    ContinuousAt (fun z : D(ℝ≥0, E) =>
-      f (z.toFun t) - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g (z.toFun s.toNNReal)) y :=
+    ContinuousAt (SkorokhodSpace.mpTest f g t) y :=
   ((f.continuous.continuousAt).comp
       (SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet ht)).sub
     (SkorokhodSpace.continuousAt_setIntegral_toNNReal g (t : ℝ) y)
@@ -19943,8 +19963,7 @@ theorem SkorokhodSpace.measure_setOf_continuousAt_mpTest_eq_one
     {X : Ω → D(ℝ≥0, E)} (hX : Measurable X) {T : Set ℝ≥0} (hT : T.Countable)
     (hgood : ∀ t ∈ T, P {ω | Function.leftLim (X ω).toFun t = (X ω).toFun t} = 1)
     (f g : E →ᵇ ℝ) {t : ℝ≥0} (ht : t ∈ T) :
-    P {ω | ContinuousAt (fun z : D(ℝ≥0, E) =>
-      f (z.toFun t) - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g (z.toFun s.toNNReal)) (X ω)} = 1 := by
+    P {ω | ContinuousAt (SkorokhodSpace.mpTest f g t) (X ω)} = 1 := by
   refine le_antisymm prob_le_one ?_
   rw [← SkorokhodSpace.measure_setOf_forall_notMem_leftJumpSet_comp_eq_one hX hT hgood]
   exact measure_mono fun ω hω => SkorokhodSpace.continuousAt_mpTest f g t (hω t ht)
@@ -19972,9 +19991,7 @@ theorem SkorokhodSpace.measure_setOf_continuousAt_mpTest_mul_eq_one
     (f g : E →ᵇ ℝ) {s t : ℝ≥0} (hs : s ∈ T) (ht : t ∈ T)
     {Z : D(ℝ≥0, E) → ℝ} (hZ : Z ∈ SkorokhodSpace.evalFuns E T) :
     P {ω | ContinuousAt (fun z : D(ℝ≥0, E) =>
-      ((f (z.toFun t) - ∫ u in Set.Ioc (0 : ℝ) (t : ℝ), g (z.toFun u.toNNReal))
-        - (f (z.toFun s) - ∫ u in Set.Ioc (0 : ℝ) (s : ℝ), g (z.toFun u.toNNReal)))
-      * Z z) (X ω)} = 1 := by
+      (SkorokhodSpace.mpTest f g t z - SkorokhodSpace.mpTest f g s z) * Z z) (X ω)} = 1 := by
   refine le_antisymm prob_le_one ?_
   rw [← SkorokhodSpace.measure_setOf_forall_notMem_leftJumpSet_comp_eq_one hX hT hgood]
   refine measure_mono fun ω hω => ?_

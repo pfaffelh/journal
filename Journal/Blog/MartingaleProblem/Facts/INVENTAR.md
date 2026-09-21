@@ -53133,3 +53133,185 @@ einen neuen Begriff:**
 die neun des vierzehnten, `mpSolution_of_tendsto_of_pContinuous` und
 `abs_mpFamily_coordinate_le` aus Meilenstein 10, und der Abschnitt über die
 festen Unstetigkeitsstellen aus **SkorokhodSpace** Meilenstein 8.
+
+### 2026-09-21, sechzehnter Lauf des Tages — der dritte Punkt der Kette steht unter seinem eigenen Namen; die erste Frage des Laufs war richtig gestellt (eine Filtration auf `D(ι, E)` gab es nicht), und eine Voraussetzung, die der Vorschlag noch führte, ist ersatzlos weggefallen: die Adaptiertheit
+
+**`MeasureTheory.mpSolution_of_tendsto_cadlag` steht.** Konvergieren die Pfade
+der Approximanten in Verteilung gegen `X` auf `D(ℝ≥0, E)` und verschwinden ihre
+getesteten Zuwächse im Limes, so erfüllt `X` die Martingalgleichung des
+Martingalproblems zu `(f, g)` längs `T`. Damit hat der dritte Punkt der Kette von
+Meilenstein 11 seinen Satz und nicht nur seine beiden Eingaben.
+
+**Zwölf** neue Deklarationen, elf in `MartingaleProblems/Suggested.lean`,
+Meilenstein 11, im neuen Abschnitt „the third item of the chain" (294 Zeilen),
+und eine in `SkorokhodSpace/Suggested.lean`, Meilenstein 8:
+
+| Deklaration | was sie sagt |
+| --- | --- |
+| `SkorokhodSpace.mpTest` | das getestete Funktional als **Definition**, ohne Uhr und ohne Filtration |
+| `rightDense_of_dense` | über dicht geordnetem Index **ist** Dichtheit schon Rechtsdichtheit |
+| `cadlagFiltration` | die Koordinatenfiltration von `D(ℝ≥0, E)` |
+| `cadlagFiltration_eq` | ihre σ-Algebra als Supremum, `rfl` |
+| `measurable_cadlagFiltration` | jede frühere Koordinate ist für sie meßbar |
+| `naturalFiltration_comp_eq_comap` | die natürliche Filtration des Pfades **ist** die zurückgeholte Koordinatenvergangenheit |
+| `tendsto_toNNReal_nhdsGE` | die Abschneidung trägt den Rechtsfilter |
+| `tendsto_comp_toNNReal_nhdsGE` | der Integrand des Kompensators ist rechtsstetig in der Zeit |
+| `measurable_compensator_cadlagFiltration` | **der Kompensator ist für die Vergangenheit meßbar** |
+| `measurable_mpTest` | und mit ihm das ganze Funktional |
+| `abs_mpTest_le` | es ist durch `‖f‖ + ‖g‖ * t` beschränkt, gleichmäßig **im Pfad** |
+| `mpSolution_of_tendsto_cadlag` | **der dritte Punkt der Kette** |
+
+Die Kette geht durch `python3 scripts/check_master.py` mit **0 Fehlern, 0
+`sorry`** in allen drei Dateien; die Warnungszahlen sind 18 / 38 / 112 (davon
+veraltet 0), also **unverändert** gegenüber dem Vorlauf. Alle zwölf sind mit
+`check_axioms_master.py` geprüft und hängen an `propext`, `Classical.choice`,
+`Quot.sound` und an nichts sonst. `check_negatives.py` meldet über 53
+Behauptungen keinen unerwarteten Treffer, `check_duplicates.py` findet zu keinem
+der zwölf Namen einen Mathlib-Namensvetter, `check_own_names.py` deckt jeden neu
+zitierten Namen bis auf den eigens als offen eingetragenen
+`mpSolution_of_tendsto_cadlag_of_approx`, `check.py` meldet `clean`.
+
+Mathlib-Stand: `94ef6b89544e58e90f119da869f3fb48d1da0f4c`, 2026-09-18;
+Lean 4.35.0-rc2.
+
+**Die Gegenprobe gegen v4.33.1** (`check_suggested.py`) ist wie angesagt rot und
+unverändert: 54 Fehler in `WeakConvergence`, die beiden anderen Dateien nur mit
+dem Folgefehler der fehlenden `.olean`. Das ist zu berichten und nicht zu
+beheben.
+
+#### Die erste Frage des Laufs, und sie war richtig gestellt
+
+Der Vorlauf hatte als erste Frage gestellt, ob eine Koordinatenfiltration auf dem
+Pfadraum schon gebaut ist, und verlangt, das am Quelltext zu beantworten statt zu
+raten. **Die Antwort ist nein, und zwar deutlicher als erwartet:** in
+`SkorokhodSpace/Suggested.lean` kommt das Wort `Filtration` auf 20 000 Zeilen
+**kein einziges Mal** vor. Was es gibt, ist `RightContinuousPath.pathFiltration`
+— aber das ist der Treppenpfadraum von Meilenstein 4 und nicht `D(ι, E)`.
+
+**Und sie hat entschieden, wo die Filtration hingehört.** Nicht nach
+SkorokhodSpace: `naturalFiltration` steht in `MartingaleProblems/Suggested.lean`,
+und SkorokhodSpace liegt in der Kette davor. `cadlagFiltration` steht darum in
+MartingaleProblems, obwohl sie eine Aussage über den Pfadraum ist. Mathlibs
+`MeasureTheory.Filtration.natural` scheidet aus dem Grund aus, der bei
+`naturalFiltration` steht — sie verlangt `StronglyMeasurable` und damit eine
+Topologie, die die Konstruktion nicht liest.
+
+#### Der Befund: die Adaptiertheit ist keine Voraussetzung
+
+Der Vorschlag des Vorlaufs führte die Adaptiertheit als eigenen Punkt, und beim
+Treppenpfadraum ist sie die teure Hälfte gewesen
+(`measurable_compensator_coordinate`). **Hier fällt sie ersatzlos weg**, und der
+Grund ist, welche Gestalt die Filtrationsvoraussetzung hat:
+
+> `h𝓕` sagt, daß `𝓕 s` die längs des Pfadabbildes zurückgeholte
+> Koordinatenvergangenheit ist. Wer das voraussetzt, hat die Adaptiertheit
+> schon: das getestete Funktional ist für `cadlagFiltration t` meßbar, und die
+> Zurückholung einer meßbaren Funktion längs `comap` ist `comap_measurable`.
+
+`h𝓕` ist also **nicht** die bequemere, sondern die schwächere Voraussetzung: sie
+läßt dem Verbraucher frei, wie er die Filtration baut, und bezahlt die
+Adaptiertheit mit. `naturalFiltration_comp_eq_comap` zeigt, daß sie an der
+kanonischen Wahl bewohnt ist, und ihr Beweis ist, daß `MeasurableSpace.comap`
+mit Supremum und Verkettung vertauscht.
+
+#### Der zweite Befund: der Kompensator liest von `IsCadlag` nur die Hälfte
+
+Die teure Hälfte, die beim Treppenpfadraum stand, ist hier **derselbe Satz**:
+`measurable_uncurry_min_of_rightContinuous` aus Meilenstein 4, unverändert, nur
+mit einem càdlàg-Pfad statt eines Treppenpfades gefüttert. Die Verallgemeinerung,
+die der Sprungkonstruktion zuliebe geschrieben wurde, reicht bis hierher.
+
+**Und sie liest von `IsCadlag` nur die Rechtsstetigkeit.** Kein linker Grenzwert
+kommt im Beweis des Kompensators vor. Das ist dieselbe Asymmetrie, die der
+vierzehnte Lauf an der Stetigkeit gefunden hat, jetzt an der Meßbarkeit: die
+Sprungbedingung sitzt ganz bei der **Auswertung** und gar nicht beim
+Kompensator.
+
+Was die Umschreibung leistet, ist eine Zeile Mengenalgebra: ein Fenster, das bei
+`t` endet, liest jede Koordinate unter `t`, sobald man den Integranden bei `t`
+abschneidet (`min u t`); auf dem Fenster ändert das Abschneiden nichts, und
+`setIntegral_congr_fun` nimmt es wieder weg.
+
+#### Der dritte Befund, und er berichtigt den Meilenstein
+
+Die Roadmap führte `mpSolution_of_tendsto_cadlag` bisher **mit** der
+approximierenden Relation: `A n → A` mit `‖f n - f‖ → 0`. Das ist nicht, was der
+Satz jetzt sagt, und der Unterschied ist zu benennen statt zu verwischen.
+
+* **Gebaut ist der Kern:** aus „die getesteten Zuwächse verschwinden" folgt die
+  Martingalgleichung, mit allen Pfadraum-Voraussetzungen abgegolten. Das ist,
+  was die Kette an dieser Stelle verbraucht, und es ist allgemeiner — es legt
+  nicht fest, *warum* die Zuwächse verschwinden.
+* **Ausgegliedert und als eigener Punkt eingetragen ist der Aufsatz:**
+  `mpSolution_of_tendsto_cadlag_of_approx`, der aus `‖f n - f‖ → 0` und der
+  exakten Martingaleigenschaft der Approximanten die Hypothese `hzero`
+  herleitet. Er ist eine **Abschätzung und kein Grenzwertsatz**: der mit
+  `(f, g)` getestete Zuwachs unterscheidet sich vom exakten, mit `(f n, g n)`
+  getesteten, um höchstens `(2‖f n - f‖ + 2t‖g n - g‖) * ‖Z‖`, gleichmäßig in
+  `n` und im Stichprobenpunkt.
+
+Beide stehen jetzt benannt im Meilenstein, einer bewiesen, einer offen. Das ist
+ehrlicher als ein Haken an einer Aussage, die so nicht bewiesen ist.
+
+#### Ein vierter, klein und für den nächsten Verbraucher
+
+**Rechtsdichtheit ist über `ℝ≥0` umsonst.** `isDetermining_evalFuns` verlangt von
+der Zeitmenge Rechtsdichtheit, `SkorokhodSpace.exists_countable_dense_continuity`
+liefert `Dense` — und der Unterschied ist über einem dicht geordneten Index ohne
+größtes Element **keiner**: eine Rechtsumgebung enthält ein `Set.Ioo t u`, das
+offen und nichtleer ist, also von einer dichten Menge getroffen wird.
+`rightDense_of_dense` sagt das in fünf Zeilen. Über einem Index mit einem
+rechtsisolierten Punkt fallen die beiden auseinander, und deshalb steht die
+Voraussetzung dort, wo sie steht.
+
+Damit sind die drei Bedingungen an `T` — abzählbar, rechtsdicht, ohne feste
+Unstetigkeit — aus **einer** Existenzaussage zu beziehen.
+
+#### Wo die Kette von Meilenstein 11 nach diesem Lauf steht
+
+| Punkt | Stand |
+| --- | --- |
+| `isTight_map_postcomp_of_exists_martingale` | steht, bis auf die `Fin k`-Fassung |
+| `isRelativelyCompact_of_approx` | steht im exakten Fall; der approximative fehlt |
+| `mpSolution_of_tendsto_cadlag` | **steht**; der Aufsatz `…_of_approx` fehlt |
+| `tendsto_of_isRelativelyCompact_of_unique` | fehlt |
+
+#### Vorschlag für den nächsten Lauf
+
+**`MeasureTheory.mpSolution_of_tendsto_cadlag_of_approx`**, der Aufsatz des
+dritten Kettenpunktes, in `MartingaleProblems/Suggested.lean`.
+
+> Lösen die `X n` das Martingalproblem zu `(f n, g n)` mit `‖f n - f‖ → 0` und
+> `‖g n - g‖ → 0`, so verschwinden ihre mit `(f, g)` getesteten Zuwächse — also
+> gilt `hzero`, und `mpSolution_of_tendsto_cadlag` greift.
+
+**Warum jetzt.** Es ist der letzte offene Teil des dritten Kettenpunktes, und er
+ist kein neuer Begriff, sondern eine Dreiecksungleichung unter einem Integral.
+Der vierte Kettenpunkt kommt danach, weil die Reihenfolge des Meilensteins die
+Kettenordnung ist.
+
+**Was zu tun ist, in dieser Reihenfolge:**
+
+1. **Die Zerlegung hinschreiben.** `mpTest f g t z - mpTest f g s z` ist der
+   exakte Zuwachs `mpTest (f n) (g n) t z - mpTest (f n) (g n) s z` plus vier
+   Fehlerglieder: zwei Zustandsterme `(f - f n) (z t)` und `(f - f n) (z s)` und
+   zwei Kompensatorterme `∫_0^t (g - g n)` und `∫_0^s (g - g n)`. Jedes ist
+   punktweise durch `‖f - f n‖` beziehungsweise `t ‖g - g n‖` beschränkt.
+2. **Gegen `Z` integrieren.** `SkorokhodSpace.bounded_of_mem_evalFuns` gibt die
+   Schranke an `Z`, und das Integral gegen ein Wahrscheinlichkeitsmaß erbt sie;
+   `abs_integral_le_of_abs_le` steht dafür schon in der Datei.
+3. **Der exakte Teil ist null**, nicht klein — er ist die Martingaleigenschaft
+   der Approximanten, gelesen über `𝓕 n` und an einer `𝓕 n s`-meßbaren
+   Testfunktion. **Die erste zu klärende Frage ist, woran `Z (X' n ·)` seine
+   `𝓕 n s`-Meßbarkeit bekommt**: `Z` ist ein endliches Produkt von Koordinaten
+   aus `insert s (T ∩ Set.Iic s)`, also über `measurable_cadlagFiltration` und
+   `naturalFiltration_comp_eq_comap` meßbar für die Koordinatenvergangenheit der
+   Approximanten — aber nur, wenn deren Filtration ebenfalls von dieser Gestalt
+   ist. Ob das als Voraussetzung `h𝓕'` mitgeführt oder aus der Adaptiertheit
+   gewonnen wird, ist am Quelltext zu entscheiden, nicht zu raten.
+4. **Den Grenzübergang** als `squeeze_zero` gegen die Summe der vier Schranken.
+
+**Worauf er ruht, und es ist alles gebaut:** die zwölf Deklarationen dieses
+Laufs, `abs_mpTest_le` und `abs_integral_le_of_abs_le`, und
+`SkorokhodSpace.bounded_of_mem_evalFuns` aus **SkorokhodSpace** Meilenstein 8.
+

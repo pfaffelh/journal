@@ -11225,13 +11225,80 @@ has to be chosen once for all `n`. What stands:
   single process never fails it; what the hypothesis excludes is the escape of
   mass **along the index**.
 
-* `mpSolution_of_tendsto_cadlag`: let `A ⊆ Cb(E) × Cb(E)` and let `A n` be
-  relations between bounded measurable functions such that for every `(f,g) ∈ A`
-  there are `(f n, g n) ∈ A n` with `‖f n - f‖ → 0` and `‖g n - g‖ → 0`. If `X n`
-  solves the martingale problem for `A n` with càdlàg paths and `X n → X` in
-  `D ι E`, then `X` solves the martingale problem for `A`. Derive it from
-  Milestone 10, taking for `D` the set of times at which the limit has no fixed
-  discontinuity.
+* `SkorokhodSpace.mpTest` — the functional a martingale problem tests, read on
+  the path space: `f (z t) - ∫_0^t g (z u) du` as a function of the path alone.
+  It is defined in **SkorokhodSpace** Milestone 8, before any filtration exists,
+  because the statements about *where it is continuous* are statements about the
+  path space and nothing else.
+* `rightDense_of_dense` — over a densely ordered index without a greatest
+  element, plain density **is** right density. The right density that
+  `isDetermining_evalFuns` and
+  `SkorokhodSpace.borel_eq_iSup_comap_eval_of_countable_rightDense` ask of a set
+  of times is strictly stronger in general — an index with a right isolated
+  point separates the two — and over `ℝ` and `ℝ≥0` it is not. This is what makes
+  the time set of the third item free:
+  `SkorokhodSpace.exists_countable_dense_continuity` delivers `Dense` and not
+  right dense, and the gap is one line.
+* `cadlagFiltration` — the coordinate filtration of `D(ℝ≥0, E)`, `naturalFiltration`
+  at `SkorokhodSpace.measurable_eval`, with `cadlagFiltration_eq` and
+  `measurable_cadlagFiltration`.
+* `naturalFiltration_comp_eq_comap` — the natural filtration of the path of a
+  process **is** the coordinate past pulled back along the path map. This is what
+  says the filtration hypothesis of the two items below is inhabited at the
+  canonical choice; the proof is that `MeasurableSpace.comap` commutes with a
+  supremum and with a composition.
+* `tendsto_toNNReal_nhdsGE`, `tendsto_comp_toNNReal_nhdsGE` and
+  `measurable_compensator_cadlagFiltration` — the compensator is measurable for
+  the coordinate past at the time the window ends. This is the expensive half of
+  the adaptedness, and it is `measurable_uncurry_min_of_rightContinuous` of
+  Milestone 4 read at a càdlàg path instead of a step path: the truncation
+  `min u t` keeps every coordinate the integrand reads below `t`, and off the
+  window it changes nothing. **Only right continuity is spent**; no left limit
+  is read, which is why the item below asks its no jump condition at the single
+  time the *evaluation* reads.
+* `measurable_mpTest` and `abs_mpTest_le` — the tested functional is measurable
+  for the past at the time it is read, and bounded by `‖f‖ + ‖g‖ * t` uniformly
+  in the time below `t` and **in the path**. The bound is the counterpart of
+  `abs_mpFamily_coordinate_le` over the càdlàg path space, and it is what makes
+  the integrability and the uniform integrability of
+  `mpSolution_of_tendsto` carry no information here: the tails above it are not
+  small but zero.
+* `mpSolution_of_tendsto_cadlag`: let `X n` have càdlàg paths, let their laws
+  converge weakly to the law of `X` on `D(ℝ≥0, E)`, let `T` be countable, right
+  dense and free of fixed discontinuities of the limit law, and let the tested
+  increments
+  `∫ (mpTest f g t (X n) - mpTest f g s (X n)) * Z (X n) d(P n)`
+  tend to `0` for every `Z` of `SkorokhodSpace.evalFuns E (insert s (T ∩ Set.Iic s))`.
+  Then `X` satisfies the martingale identity of the martingale problem to
+  `(f, g)` along `T`. **Proved 2026-09-21.**
+
+  **The filtration is a hypothesis and is the coordinate past pulled back along
+  the path map.** That is the weakest form: it is what
+  `isDetermining_evalFuns` reads, it is what makes the tested process adapted,
+  and it leaves the consumer free in how the filtration is built;
+  `naturalFiltration_comp_eq_comap` inhabits it. **Adaptedness is not a
+  hypothesis** and is derived from it.
+
+  **What the consumer supplies is the vanishing of the tested increments and
+  nothing else that is analytic.** The other three hypotheses of
+  `mpSolution_of_tendsto_of_pContinuous` are discharged from the path space
+  alone — integrability and uniform integrability from `abs_mpTest_le`,
+  `P`-continuity from **SkorokhodSpace** Milestone 8, and the determining
+  property from `isDetermining_evalFuns`.
+* `mpSolution_of_tendsto_cadlag_of_approx`: the wrapper in which the
+  approximants solve an approximating problem rather than the limiting one. Let
+  `A ⊆ Cb(E) × Cb(E)` and let `A n` be relations between bounded measurable
+  functions such that for every `(f,g) ∈ A` there are `(f n, g n) ∈ A n` with
+  `‖f n - f‖ → 0` and `‖g n - g‖ → 0`. If `X n` solves the martingale problem
+  for `A n` with càdlàg paths and `X n → X` in `D(ℝ≥0, E)`, then the hypothesis
+  `hzero` of the previous item holds for every `(f,g) ∈ A`, and hence `X` solves
+  the martingale problem for `A`.
+
+  The step is a bound and not a limit theorem: the increment tested with
+  `(f, g)` differs from the exact martingale increment tested with `(f n, g n)`
+  by at most `(2 ‖f n - f‖ + 2 t ‖g n - g‖) * ‖Z‖`, uniformly in `n` and in the
+  sample point, so the vanishing is the convergence of the two norms. It rests
+  on `abs_mpTest_le` and on `SkorokhodSpace.bounded_of_mem_evalFuns`.
 
   **The `P`-continuity this derivation needs is proved, 2026-09-21**, in
   **SkorokhodSpace** Milestone 8, and it decides which of the two versions of
@@ -11258,11 +11325,12 @@ has to be chosen once for all `n`. What stands:
   hypotheses of `mpSolution_of_tendsto_of_pContinuous` are met by **one and the
   same** class, which was the obstruction: the earlier witnesses for
   `IsDetermining` take all bounded measurable functions of the past, or
-  indicators, and neither is continuous anywhere it has to be. What a run at this
-  item still has to supply is the bookkeeping of
-  `mpSolution_of_tendsto_of_pContinuous` — the integrability and uniform
-  integrability of the tested functionals along the approximating sequence, and
-  the convergence of their integrals.
+  indicators, and neither is continuous anywhere it has to be. The remaining
+  bookkeeping of `mpSolution_of_tendsto_of_pContinuous` — the integrability and
+  the uniform integrability of the tested functionals along the approximating
+  sequence — is `abs_mpTest_le`, whose tails are zero rather than small; the
+  convergence of the integrals is what `mpSolution_of_tendsto_cadlag` carries as
+  its hypothesis and `mpSolution_of_tendsto_cadlag_of_approx` discharges.
 * `mpSolution_of_tendsto_cadlag_of_pathwise`: the same with the uniform
   convergence of `f n` and `g n` replaced by
   `𝔼^{P n}‖(f n - f) (X n t)‖ → 0` and
