@@ -46609,3 +46609,290 @@ theorem memLp_of_bounded_Ioc {Z : ℝ → ℝ} {c : ℝ} (hmeas : Measurable Z)
       ENNReal.ofReal_lt_top)
 
 end MeasureTheory
+
+/-! ### The first inhabitant of `MeasureTheory.IsApproximatingPair`
+
+Everything above **consumes** the class; this produces one, and it produces the one \EK{} intend:
+for a solution of a martingale problem, `Y = f ∘ X`, the density `Z = g ∘ X` and the compensator
+its indefinite integral, the martingale field being the martingale problem itself.  The error
+against `f ∘ X` is then **zero**, so the approximation condition of Milestone 11 is met by the
+process itself whenever `f` and `g` are bounded continuous -- which is what a bounded generator
+supplies.
+
+**Why this is not bookkeeping.**  `MeasureTheory.IsApproximatingPair` is a structure with eight
+fields, and a structure nobody has inhabited carries a milestone no further than `Shift` did
+before its first witness.  Two of the eight are hypotheses of the statement (`one_lt_exponent`,
+`martingale`), one is `rfl` (`compensator_eq`), three were settled for a bounded density in the
+previous section, and `progressive` is one application of
+`MeasureTheory.IsStronglyProgressive.continuous_comp`.  The eighth, `progressive_sub`, is the
+whole price, and it is paid here.
+
+**What is asked of the process, and it is the least that lets the words be written:** `E` carries
+a topology and nothing else -- no σ-algebra, no metric, no completeness.  The reason is that
+every object in sight is a **real** functional of `X`: `f ∘ X`, `g ∘ X` and an integral of the
+latter.  Joint measurability of the `E` valued path is never needed, and the dyadic argument of
+`measurable_uncurry_min_of_rightContinuous` -- whose docstring says exactly this -- is what makes
+the compensator jointly measurable without it.
+
+**The constant is a formula.**  `K = T ^ q.toReal⁻¹ * ‖g‖₊`, so a family of processes tested with
+**one** `g` has one `K`, which is the uniformity Milestone 11 rests on.
+
+Four statements of general use come first; none of them mentions a filtration or a measure. -/
+
+namespace MeasureTheory
+
+variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
+
+open scoped _root_.BoundedContinuousFunction
+
+/-- **Right continuity survives the clamp `Real.toNNReal`.**
+
+The processes of this milestone are indexed by `ℝ≥0` and the density of
+`MeasureTheory.IsApproximatingPair` by `ℝ`, so a consumer writes `Z s ω = g (X s.toNNReal ω)`;
+this is what right continuity of that composite means.  Below `0` the clamp is constant, so the
+statement holds at negative times as well, and the junk there is never read -- the integral of
+`IsApproximatingPair.compensator_eq` runs over `Set.Ioc 0 t`.
+
+The hypothesis is `ContinuousWithinAt … (Set.Ici t) t` at every `t`, which is the form a càdlàg
+path delivers and the form
+`MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_isApproximable` already asks of its
+processes. -/
+theorem tendsto_nhdsGE_comp_toNNReal {α : Type*} [TopologicalSpace α] {u : ℝ≥0 → α}
+    (hu : ∀ t : ℝ≥0, ContinuousWithinAt u (Set.Ici t) t) (s : ℝ) :
+    Tendsto (fun r : ℝ ↦ u r.toNNReal) (𝓝[≥] s) (𝓝 (u s.toNNReal)) := by
+  refine Filter.Tendsto.comp (hu s.toNNReal) ?_
+  refine tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within _
+    ((continuous_real_toNNReal.tendsto s).mono_left nhdsWithin_le_nhds) ?_
+  filter_upwards [self_mem_nhdsWithin] with r hr
+  exact Real.toNNReal_le_toNNReal hr
+
+/-- **A right continuous real function of a real variable is Borel measurable.**
+
+**Mathlib does not have this** -- checked 2026-09-21 against
+`94ef6b89544e58e90f119da869f3fb48d1da0f4c`.  `Mathlib/Topology/Order/Cadlag.lean`, where
+`IsRightContinuous` and `IsCadlag` live, is a topology file and carries no measurability at all;
+the occurrences of `IsRightContinuous` outside it are the three in `Probability/Process/` and
+they are about *filtrations*.  What Mathlib does have is `Monotone.measurable`, which is how a
+`StieltjesFunction` is measurable -- monotonicity, not right continuity.  A càdlàg path is
+neither monotone nor continuous, so neither route reaches it.
+
+It is needed three times below, because the path `s ↦ g (X s.toNNReal ω)` of the
+density is known right continuous and nothing else, while
+`MeasureTheory.memLp_of_bounded_Ioc`, `MeasureTheory.eLpNorm_le_of_bounded_Ioc` and
+`MeasureTheory.continuous_setIntegral_Ioc_zero_of_bounded` all ask for `Measurable`.
+
+The proof is the dyadic approximation from the right, `s ↦ (⌊s 2ⁿ⌋ + 1)/2ⁿ`: each approximant is
+measurable because it factors through `Int.floor` and a function on a discrete space, the
+approximants converge to `s` from **strictly above** -- so along `𝓝[≥] s`, where the hypothesis
+lives -- and `measurable_of_tendsto_metrizable` passes to the limit.  It is the argument of
+`measurable_uncurry_min_of_rightContinuous` with the sample point deleted. -/
+theorem measurable_of_tendsto_nhdsGE {u : ℝ → ℝ}
+    (hu : ∀ s : ℝ, Tendsto u (𝓝[≥] s) (𝓝 (u s))) : Measurable u := by
+  have hstep : ∀ n : ℕ, Measurable fun s : ℝ ↦ u ((((⌊s * 2 ^ n⌋ : ℤ) : ℝ) + 1) / 2 ^ n) := by
+    intro n
+    have hF : Measurable fun k : ℤ ↦ u (((k : ℝ) + 1) / 2 ^ n) := Measurable.of_discrete
+    exact hF.comp (Int.measurable_floor.comp (measurable_id.mul_const _))
+  refine measurable_of_tendsto_metrizable hstep (tendsto_pi_nhds.2 fun s ↦ ?_)
+  show Tendsto (fun n : ℕ ↦ u ((((⌊s * 2 ^ n⌋ : ℤ) : ℝ) + 1) / 2 ^ n)) atTop (𝓝 (u s))
+  refine (hu s).comp ?_
+  have hlt : ∀ n : ℕ, s ≤ (((⌊s * 2 ^ n⌋ : ℤ) : ℝ) + 1) / 2 ^ n := by
+    intro n
+    rw [le_div_iff₀ (by positivity : (0:ℝ) < 2 ^ n)]
+    exact (Int.lt_floor_add_one (s * 2 ^ n)).le
+  have hub : ∀ n : ℕ, (((⌊s * 2 ^ n⌋ : ℤ) : ℝ) + 1) / 2 ^ n ≤ s + (2:ℝ)⁻¹ ^ n := by
+    intro n
+    rw [div_le_iff₀ (by positivity : (0:ℝ) < 2 ^ n)]
+    have h1 : ((⌊s * 2 ^ n⌋ : ℤ) : ℝ) ≤ s * 2 ^ n := Int.floor_le _
+    have h2 : ((2 : ℝ)⁻¹) ^ n * 2 ^ n = 1 := by rw [← mul_pow]; norm_num
+    nlinarith [h1, h2]
+  refine tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within _ ?_
+    (Filter.Eventually.of_forall hlt)
+  have h0 : Tendsto (fun n : ℕ ↦ s + (2:ℝ)⁻¹ ^ n) atTop (𝓝 (s + 0)) :=
+    tendsto_const_nhds.add (tendsto_pow_atTop_nhds_zero_of_lt_one (by norm_num) (by norm_num))
+  rw [add_zero] at h0
+  exact tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds h0 hlt hub
+
+/-- **The indefinite integral of a bounded measurable function from `0`, as a function of a real
+upper end**, and it is continuous on the whole line.
+
+`MeasureTheory.continuous_setIntegral_Ioc_zero_of_bounded` is the same statement with the upper
+end running over `ℝ≥0`; this one is read at the *real* index of the dyadic argument below, where
+negative times occur.  Below `0` the window `Set.Ioc 0 r` is empty and the integral is `0`, which
+is the value of `∫ in 0..0`, so the whole function is `r ↦ ∫ in 0..(max r 0)` and hence
+continuous. -/
+theorem continuous_setIntegral_Ioc_zero_real_of_bounded {Z : ℝ → ℝ} {c : ℝ}
+    (hmeas : Measurable Z) (hb : ∀ s, ‖Z s‖ ≤ c) :
+    Continuous fun r : ℝ ↦ ∫ s in Set.Ioc (0 : ℝ) r, Z s := by
+  have hint : ∀ a b : ℝ, IntervalIntegrable Z volume a b := by
+    intro a b
+    rw [intervalIntegrable_iff]
+    refine Measure.integrableOn_of_bounded ?_ hmeas.aestronglyMeasurable
+      (Filter.Eventually.of_forall fun s ↦ hb s)
+    simp [Set.uIoc, Real.volume_Ioc]
+  have hc : Continuous fun b : ℝ ↦ ∫ s in (0 : ℝ)..b, Z s :=
+    intervalIntegral.continuous_primitive hint 0
+  have heq : (fun r : ℝ ↦ ∫ s in Set.Ioc (0 : ℝ) r, Z s)
+      = fun r : ℝ ↦ ∫ s in (0 : ℝ)..(max r 0), Z s := by
+    funext r
+    rcases le_total 0 r with h | h
+    · rw [max_eq_left h, intervalIntegral.integral_of_le h]
+    · rw [max_eq_right h, intervalIntegral.integral_same,
+        Set.Ioc_eq_empty (not_lt.2 h), setIntegral_empty]
+  rw [heq]
+  exact hc.comp (continuous_id.max continuous_const)
+
+/-- **`MeasureTheory.StronglyMeasurable.integral_prod_left`, packaged for a σ-algebra that is not
+an instance.**
+
+The companion of `MeasureTheory.stronglyMeasurable_integral_comp`, and the difference is the one
+that matters here: that statement asks for a **measurable** map into a measurable space and a
+measurable function on it, this one for a **strongly measurable** real valued integrand.  A
+consumer whose values live in a bare topological space -- `g ∘ X` for a bounded continuous
+`g : E →ᵇ ℝ` over an `E` with no σ-algebra -- can meet the second and not the first. -/
+theorem stronglyMeasurable_integral_uncurry {α : Type*} [MeasurableSpace α]
+    {β : Type*} (mβ : MeasurableSpace β) (μ : Measure α) [SFinite μ] {W : α → β → ℝ}
+    (hW : StronglyMeasurable[(inferInstance : MeasurableSpace α).prod mβ]
+      (Function.uncurry W)) :
+    StronglyMeasurable[mβ] fun y ↦ ∫ x, W x y ∂μ := by
+  let _ : MeasurableSpace β := mβ
+  exact MeasureTheory.StronglyMeasurable.integral_prod_left hW
+
+/-- **A solution of a martingale problem with bounded continuous data is a pair of the class**,
+with `Y = f ∘ X`, the density `Z = g ∘ X` and the compensator its indefinite integral -- and the
+constant `K = T ^ q.toReal⁻¹ * ‖g‖₊`, a formula in the data and not a hypothesis.
+
+This is the first inhabitant of `MeasureTheory.IsApproximatingPair`, and it is \EK's: read at
+`f` in the domain of a generator and `g = A f`, the martingale hypothesis **is** the martingale
+problem, and the error against `f ∘ X` that
+`MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair` measures is zero.
+
+**Only a topology on `E`.**  Neither σ-algebra nor metric nor completeness appears, because every
+object read is a real functional of the path.  In particular `progressive_sub` -- the joint
+measurability of the compensator, and the only field that is work -- goes through
+`measurable_uncurry_min_of_rightContinuous`, which is stated for real valued processes precisely
+so that a bare `E` suffices.
+
+**Where each field comes from.**  `progressive` is
+`MeasureTheory.IsStronglyProgressive.continuous_comp`; `compensator_eq` is `rfl`;
+`ae_memLp` and `lintegral_eLpNorm_le` are `MeasureTheory.memLp_of_bounded_Ioc` and
+`MeasureTheory.eLpNorm_le_of_bounded_Ioc` at the bound `‖g‖`, both holding at **every** sample
+point, so the almost sure quantifiers are not spent; `rightContinuous` is the right continuity of
+`f ∘ X` against the continuity of the compensator, which is where the boundedness of `g` is
+read a second time.
+
+**The one real price is `progressive_sub`**, and it is two steps.  Below a fixed `t` the window
+`Set.Ioc 0 r` lies in `Set.Ioc 0 t`, so the integrand may be replaced by the **cut** integrand
+`g (X (min s.toNNReal t) ω)`, which is jointly strongly measurable for `Borel ℝ ⊗ 𝓕 t` because
+`IsStronglyProgressive` says exactly that on `Set.Iic t × Ω`;
+`MeasureTheory.stronglyMeasurable_integral_uncurry` then integrates it out.  That gives
+measurability of the test process at each **fixed** time below `t`, and
+`measurable_uncurry_min_of_rightContinuous` turns it into joint measurability, its second
+hypothesis being the right continuity of the paths -- the same one the field
+`rightContinuous` asks for. -/
+theorem isApproximatingPair_of_martingale {E : Type*} [TopologicalSpace E]
+    {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} (hq : 1 < q) {T : ℝ≥0}
+    {X : ℝ≥0 → Ω → E} {f g : E →ᵇ ℝ}
+    (hX : IsStronglyProgressive 𝓕 X)
+    (hcont : ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ X s ω) (Set.Ici t) t)
+    (hmart : Martingale (fun t ω ↦ f (X t ω)
+      - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g (X s.toNNReal ω)) 𝓕 P) :
+    IsApproximatingPair 𝓕 P q T (T ^ q.toReal⁻¹ * ‖g‖₊)
+      (fun t ω ↦ f (X t ω))
+      (fun t ω ↦ ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g (X s.toNNReal ω))
+      (fun s ω ↦ g (X s.toNNReal ω)) := by
+  have hZrc : ∀ ω : Ω, ∀ s : ℝ, Tendsto (fun r : ℝ ↦ g (X r.toNNReal ω)) (𝓝[≥] s)
+      (𝓝 (g (X s.toNNReal ω))) := fun ω s ↦
+    (g.continuous.tendsto _).comp (tendsto_nhdsGE_comp_toNNReal (hcont ω) s)
+  have hZm : ∀ ω : Ω, Measurable fun s : ℝ ↦ g (X s.toNNReal ω) := fun ω ↦
+    measurable_of_tendsto_nhdsGE (hZrc ω)
+  have hZb : ∀ ω : Ω, ∀ s : ℝ, ‖g (X s.toNNReal ω)‖ ≤ ‖g‖ := fun ω s ↦ g.norm_coe_le_norm _
+  refine
+    { one_lt_exponent := hq
+      progressive := hX.continuous_comp f.continuous
+      progressive_sub := ?_
+      martingale := hmart
+      rightContinuous := ?_
+      compensator_eq := fun t ω ↦ rfl
+      ae_memLp := Filter.Eventually.of_forall fun ω ↦
+        memLp_of_bounded_Ioc (hZm ω) (hZb ω) q T
+      lintegral_eLpNorm_le := ?_ }
+  · refine isStronglyProgressive_of_measurable_uncurry_min fun t ↦ ?_
+    obtain ⟨G, hG⟩ : ∃ G : ℝ → Ω → ℝ, ∀ r ω, G r ω =
+        f (X r.toNNReal ω) - ∫ s in Set.Ioc (0 : ℝ) r, g (X s.toNNReal ω) := ⟨_, fun _ _ ↦ rfl⟩
+    have hmeas : ∀ r : ℝ, r ≤ (t : ℝ) → Measurable[𝓕 t] (G r) := by
+      intro r hr
+      have hrt : r.toNNReal ≤ t := Real.toNNReal_le_iff_le_coe.2 hr
+      have h1 : StronglyMeasurable[𝓕 t] fun ω ↦ f (X r.toNNReal ω) :=
+        f.continuous.comp_stronglyMeasurable
+          ((hX.stronglyAdapted r.toNNReal).mono (𝓕.mono hrt))
+      have hψ : Measurable[(inferInstance : MeasurableSpace ℝ).prod (𝓕 t),
+          Subtype.instMeasurableSpace.prod (𝓕 t)]
+          fun p : ℝ × Ω ↦
+            ((⟨min p.1.toNNReal t, Set.mem_Iic.2 (min_le_right _ _)⟩ : Set.Iic t), p.2) :=
+        Measurable.prodMk
+          (Measurable.subtype_mk
+            ((measurable_real_toNNReal.comp measurable_fst).min measurable_const))
+          measurable_snd
+      have huncurry : StronglyMeasurable[(inferInstance : MeasurableSpace ℝ).prod (𝓕 t)]
+          (Function.uncurry fun (s : ℝ) (ω : Ω) ↦ g (X (min s.toNNReal t) ω)) :=
+        g.continuous.comp_stronglyMeasurable ((hX t).comp_measurable hψ)
+      have h2 : StronglyMeasurable[𝓕 t]
+          fun ω ↦ ∫ s in Set.Ioc (0 : ℝ) r, g (X (min s.toNNReal t) ω) :=
+        stronglyMeasurable_integral_uncurry (𝓕 t)
+          (volume.restrict (Set.Ioc (0 : ℝ) r)) huncurry
+      have hfun : G r = fun ω ↦ f (X r.toNNReal ω)
+          - ∫ s in Set.Ioc (0 : ℝ) r, g (X (min s.toNNReal t) ω) := by
+        funext ω
+        rw [hG]
+        congr 1
+        refine setIntegral_congr_fun measurableSet_Ioc fun s hs ↦ ?_
+        rw [min_eq_left (Real.toNNReal_le_iff_le_coe.2 (hs.2.trans hr))]
+      rw [hfun]
+      exact (h1.sub h2).measurable
+    have hrc : ∀ (ω : Ω) (s : ℝ), Tendsto (fun r ↦ G r ω) (𝓝[≥] s) (𝓝 (G s ω)) := by
+      intro ω s
+      simp only [hG]
+      have h1 : Tendsto (fun r : ℝ ↦ f (X r.toNNReal ω)) (𝓝[≥] s) (𝓝 (f (X s.toNNReal ω))) :=
+        (f.continuous.tendsto _).comp (tendsto_nhdsGE_comp_toNNReal (hcont ω) s)
+      have h2 : Tendsto (fun r : ℝ ↦ ∫ u in Set.Ioc (0 : ℝ) r, g (X u.toNNReal ω)) (𝓝[≥] s)
+          (𝓝 (∫ u in Set.Ioc (0 : ℝ) s, g (X u.toNNReal ω))) :=
+        ((continuous_setIntegral_Ioc_zero_real_of_bounded (hZm ω) (hZb ω)).tendsto s).mono_left
+          nhdsWithin_le_nhds
+      exact h1.sub h2
+    have key : Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod (𝓕 t)]
+        fun p : ℝ≥0 × Ω ↦ G (min (p.1 : ℝ) (t : ℝ)) p.2 :=
+      measurable_uncurry_min_of_rightContinuous (φ := fun u : ℝ≥0 ↦ (u : ℝ))
+        measurable_coe_nnreal_real hmeas hrc
+    have heq : (fun p : ℝ≥0 × Ω ↦ G (min (p.1 : ℝ) (t : ℝ)) p.2)
+        = fun p : ℝ≥0 × Ω ↦ f (X (min p.1 t) p.2)
+          - ∫ s in Set.Ioc (0 : ℝ) ((min p.1 t : ℝ≥0) : ℝ), g (X s.toNNReal p.2) := by
+      funext p
+      rw [hG, ← NNReal.coe_min, Real.toNNReal_coe]
+    rw [heq] at key
+    exact key
+  · refine Filter.Eventually.of_forall fun ω s ↦ ?_
+    have h1 : Tendsto (fun r : ℝ≥0 ↦ f (X r ω)) (𝓝[≥] s) (𝓝 (f (X s ω))) :=
+      (f.continuous.tendsto _).comp (hcont ω s)
+    have h2 : Tendsto (fun r : ℝ≥0 ↦ ∫ u in Set.Ioc (0 : ℝ) (r : ℝ), g (X u.toNNReal ω))
+        (𝓝[≥] s) (𝓝 (∫ u in Set.Ioc (0 : ℝ) (s : ℝ), g (X u.toNNReal ω))) :=
+      ((continuous_setIntegral_Ioc_zero_of_bounded (hZm ω) (hZb ω)).tendsto s).mono_left
+        nhdsWithin_le_nhds
+    exact h1.sub h2
+  · have hcoe : ((T ^ q.toReal⁻¹ * ‖g‖₊ : ℝ≥0) : ENNReal)
+        = (T : ENNReal) ^ q.toReal⁻¹ * ENNReal.ofReal ‖g‖ := by
+      rw [ENNReal.coe_mul, ENNReal.coe_rpow_of_nonneg _ (inv_nonneg.2 ENNReal.toReal_nonneg),
+        ← coe_nnnorm, ENNReal.ofReal_coe_nnreal]
+    have hpt : ∀ ω : Ω, eLpNorm (fun s ↦ g (X s.toNNReal ω)) q
+        (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ)))
+        ≤ ((T ^ q.toReal⁻¹ * ‖g‖₊ : ℝ≥0) : ENNReal) := by
+      intro ω
+      rw [hcoe]
+      exact eLpNorm_le_of_bounded_Ioc (hZm ω) (hZb ω) q T
+    calc ∫⁻ ω, eLpNorm (fun s ↦ g (X s.toNNReal ω)) q
+            (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ))) ∂P
+        ≤ ∫⁻ _ : Ω, ((T ^ q.toReal⁻¹ * ‖g‖₊ : ℝ≥0) : ENNReal) ∂P := lintegral_mono hpt
+      _ = ((T ^ q.toReal⁻¹ * ‖g‖₊ : ℝ≥0) : ENNReal) := by
+          rw [lintegral_const, measure_univ, mul_one]
+
+end MeasureTheory

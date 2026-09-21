@@ -145,6 +145,15 @@ Suche `support_lconvolution|support_mlconvolution|lconvolution.*support|mlconvol
 Suche `IsStronglyProgressive.continuous_comp|StronglyAdapted.continuous_comp|IsProgressive.continuous_comp` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
 
 
+## `rightcontinuous-measurable` — MartingaleProblems/README.md, Meilenstein 11, und `MartingaleProblems/Suggested.lean`, `measurable_of_tendsto_nhdsGE`
+
+> Daß eine **rechtsstetige** reelle Funktion einer reellen Veränderlichen Borel-meßbar ist, steht in Mathlib nicht. `Mathlib/Topology/Order/Cadlag.lean`, wo `IsRightContinuous` und `IsCadlag` wohnen, ist eine Topologiedatei und trägt überhaupt keine Meßbarkeit; die Vorkommen von `IsRightContinuous` außerhalb davon sind die in `Probability/Process/` und handeln von **Filtrationen**, nicht von Pfaden.  Vorhanden ist `Monotone.measurable` — so wird eine `StieltjesFunction` meßbar, über die Monotonie und nicht über die Rechtsstetigkeit —, und ein càdlàg-Pfad ist weder monoton noch stetig.
+
+Suche `measurable[a-z_]*_of_[a-z_]*rightcontinuous|isrightcontinuous[a-z_.]*measurable|iscadlag[a-z_.]*measurable` unter `Mathlib/`: **5 Treffer** in 2 Dateien — wie erwartet.
+
+* `Mathlib/Probability/Process/Filtration.lean`
+* `Mathlib/Probability/Process/Stopping.lean`
+
 ## Die zweiundzwanzig Lücken von `TODO.md` Punkt 8
 
 ## `traj-homogeneity` — TODO.md Punkt 8, erste Lücke
@@ -370,5 +379,5 @@ Suche `theorem le_lintegral|lemma le_lintegral` unter `Mathlib/`: **1 Treffer** 
 
 ## Zusammenfassung
 
-50 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
+51 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
 

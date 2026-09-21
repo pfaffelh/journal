@@ -52114,3 +52114,153 @@ Rechtsstetigkeiten, zwei Fehler, vier Integrierbarkeiten) werden sechs (zwei
 Paare, zwei Schranken, zwei Fehler). Das ist keine Kleinigkeit der Buchführung,
 sondern die Probe darauf, daß nichts unter der Hand hinzugekommen ist: übrig
 bleibt genau, was \EK{} (9.26) verlangt.
+
+### 2026-09-21, elfter Lauf des Tages — die Klasse ist **bewohnt**: eine Lösung des Martingalproblems ist ein Paar, mit der Konstanten als Formel; und der Weg, den der Vorlauf für das eine offene Feld genannt hatte, trägt nicht — er hätte dem ganzen Punkt eine σ-Algebra auf `E` aufgebürdet, die kein Beweis liest
+
+**`MeasureTheory.isApproximatingPair_of_martingale` steht.** Der Vorschlag des
+zehnten Laufs ist eingelöst, und mit ihm die Leerheitsfrage, die seit dem
+`Shift`-Befund über Meilenstein 6 auch über diesem Punkt stand: bis zu diesem
+Lauf hat **keine** Deklaration der Datei ein `MeasureTheory.IsApproximatingPair`
+hergestellt, die Klasse war ausschließlich verbraucht.
+
+> Ist `X` stark progressiv mit rechtsstetigen Pfaden, sind `f g : E →ᵇ ℝ` und ist
+> `fun t ω ↦ f (X t ω) - ∫ s in Set.Ioc 0 t, g (X s.toNNReal ω)` ein Martingal
+> über `𝓕`, so ist dieses Tripel ein `IsApproximatingPair 𝓕 P q T K` für jedes
+> `1 < q` und jedes `T`, mit `K = T ^ q.toReal⁻¹ * ‖g‖₊`.
+
+Fünf Deklarationen am Ende von `TauCeti/MartingaleProblems/Suggested.lean`, in
+einem neuen Abschnitt „The first inhabitant of
+`MeasureTheory.IsApproximatingPair`". Die ganze Kette geht durch
+`python3 scripts/check_master.py` mit **0 Fehlern, 0 `sorry`** in allen drei
+Dateien; die Warnungszahlen sind **unverändert** (18 / 35 / 112, davon veraltet
+0). Alle fünf sind mit `check_axioms_master.py` geprüft und hängen an `propext`,
+`Classical.choice`, `Quot.sound` und an nichts sonst.
+
+Mathlib-Stand: `94ef6b89544e58e90f119da869f3fb48d1da0f4c`, 2026-09-18;
+Lean 4.35.0-rc2.
+
+#### Die vier Bausteine, und drei von ihnen kennen weder Filtration noch Maß
+
+* **`MeasureTheory.tendsto_nhdsGE_comp_toNNReal`** — die Rechtsstetigkeit
+  übersteht den Klemmschritt `Real.toNNReal`. Das ist die Naht zwischen dem
+  Index der Prozesse (`ℝ≥0`) und dem der Dichte (`ℝ`), die der Nachtrag des
+  zehnten Laufs benannt hatte.
+* **`MeasureTheory.measurable_of_tendsto_nhdsGE`** — eine rechtsstetige reelle
+  Funktion einer reellen Veränderlichen ist Borel-meßbar. Der Beweis ist die
+  dyadische Näherung von oben, also das Argument von
+  `measurable_uncurry_min_of_rightContinuous` **ohne** den Stichprobenpunkt.
+* **`MeasureTheory.continuous_setIntegral_Ioc_zero_real_of_bounded`** — dasselbe
+  wie `continuous_setIntegral_Ioc_zero_of_bounded` des Vorlaufs, aber am
+  **reellen** oberen Ende, wo das dyadische Argument es liest und wo negative
+  Zeiten vorkommen. Unterhalb von `0` ist das Fenster leer, das Integral also
+  `0`, und das ist gerade der Wert von `∫ in 0..0`.
+* **`MeasureTheory.stronglyMeasurable_integral_uncurry`** — die Verpackung von
+  `StronglyMeasurable.integral_prod_left` für eine σ-Algebra, die keine Instanz
+  ist.
+
+#### Eine neue Negativaussage, geprüft und mechanisiert
+
+**Mathlib hat die Meßbarkeit einer rechtsstetigen Funktion in keiner Fassung**,
+nachgesehen am `94ef6b89544e58e90f119da869f3fb48d1da0f4c`:
+`Mathlib/Topology/Order/Cadlag.lean`, wo `IsRightContinuous` und `IsCadlag`
+wohnen, ist eine Topologiedatei und trägt überhaupt keine Meßbarkeit; die
+Vorkommen von `IsRightContinuous` außerhalb davon stehen in
+`Probability/Process/Filtration.lean` und `Probability/Process/Stopping.lean`
+und handeln von **Filtrationen**, nicht von Pfaden. Vorhanden ist
+`Monotone.measurable`
+(`Mathlib/MeasureTheory/Constructions/BorelSpace/Order.lean:790`) — so wird eine
+`StieltjesFunction` meßbar, über die **Monotonie** und nicht über die
+Rechtsstetigkeit —, und ein càdlàg-Pfad ist weder monoton noch stetig.
+
+Die Aussage steht als `rightcontinuous-measurable` in
+`scripts/check_negatives.py`, mit den beiden bekannten und harmlosen Treffern
+benannt; der Lauf meldet über **51** Behauptungen keinen unerwarteten Treffer.
+
+#### Drei Befunde
+
+* **Der Weg, den der Vorlauf für `progressive_sub` genannt hatte, trägt nicht —
+  und das ist kein Formfehler, sondern eine Voraussetzung an `E`.** Benannt war
+  `MeasureTheory.stronglyMeasurable_integral_comp` (Zeile 903). Dieser Satz
+  verlangt `Measurable (Function.uncurry W)` für ein `W` mit Werten in einem
+  **meßbaren Raum** und dazu `Measurable g` darauf. Über einem `E`, das nur eine
+  Topologie trägt, gibt es beides nicht, und beides zu verlangen hieße, dem
+  ganzen Punkt eine σ-Algebra, eine Metrik und `BorelSpace E` aufzubürden, die
+  **kein** Beweis darin liest. Die Verpackung dieses Laufs nimmt statt dessen
+  einen **stark meßbaren reellwertigen** Integranden und kostet nichts. Der
+  Unterschied ist die ganze Voraussetzungsfläche der Aussage.
+* **Und deshalb steht über `E` nichts als `[TopologicalSpace E]`.** Jeder
+  gelesene Gegenstand ist ein **reelles** Funktional des Pfades — `f ∘ X`,
+  `g ∘ X` und ein Integral des zweiten —, die gemeinsame Meßbarkeit des
+  `E`-wertigen Pfades kommt nirgends vor. Genau das sagt der Doc-Kommentar von
+  `measurable_uncurry_min_of_rightContinuous` seit dem Tag seiner Entstehung,
+  und hier wird er zum ersten Mal in dieser Richtung gebraucht: er ist für
+  reellwertige Prozesse formuliert, *damit* ein nacktes `E` reicht.
+* **Die beiden Vorfragen des Vorschlags waren schon im Nachtrag des zehnten
+  Laufs entschieden, und die Entscheidungen haben gehalten.** `K` ist eine
+  Formel (`T ^ q.toReal⁻¹ * ‖g‖₊`) und keine Hypothese, und das Feld
+  `rightContinuous` — über **alle** `s : ℝ≥0` quantifiziert — wird von der
+  Beschränktheit der Dichte erreicht und nicht von
+  `IsApproximatingPair.continuousWithinAt_compensator`, das am Horizont aufhört.
+  Von den acht Feldern sind zwei Hypothesen (`one_lt_exponent`, `martingale`),
+  eines `rfl` (`compensator_eq`), drei der Nachtrag des Vorlaufs, eines eine
+  Zeile (`progressive`), und `progressive_sub` ist die Arbeit.
+
+#### `progressive_sub`, in zwei Schritten
+
+Unterhalb eines festen `t` liegt das Fenster `Set.Ioc 0 r` in `Set.Ioc 0 t`, der
+Integrand darf also durch den **abgeschnittenen** ersetzt werden,
+`g (X (min s.toNNReal t) ω)`. Dieser ist für `Borel ℝ ⊗ 𝓕 t` gemeinsam stark
+meßbar, weil `IsStronglyProgressive` genau das auf `Set.Iic t × Ω` sagt; die
+Verpackung integriert ihn aus. Das gibt die Meßbarkeit des Testprozesses zu
+jeder **festen** Zeit unterhalb `t`, und
+`measurable_uncurry_min_of_rightContinuous` macht daraus die gemeinsame — seine
+zweite Voraussetzung ist die Rechtsstetigkeit der Pfade, also dieselbe, die das
+Feld `rightContinuous` verlangt.
+
+#### Wo der erste Punkt der Kette jetzt steht
+
+| Größe | Stand |
+| --- | --- |
+| alles unterhalb von `IsApproximable` | steht (7. Lauf) |
+| `IsApproximable` aus der Bedingung des Meilensteins | steht (8. Lauf) |
+| der erste Punkt der Kette ohne `IsApproximable` in der Aussage | steht (8. Lauf) |
+| die **vier Integrierbarkeiten** aus der Beschränktheit | steht (9. Lauf) |
+| die **Rechtsstetigkeit** von `Y - g ∘ X` aus den Daten | steht (10. Lauf) |
+| **ein Paar aus einer Lösung des Martingalproblems** | **steht, dieser Lauf** |
+| die **zwei Paare** einer Familie aus der Martingalhypothese | offen |
+
+#### Vorschlag für den nächsten Lauf
+
+**`MeasureTheory.isApproximatingPair_sq_of_martingale`**, in
+`MartingaleProblems/Suggested.lean` — das **zweite** Paar, das den Fehler gegen
+`(g ∘ X)²` mißt.
+
+> Ist außerdem
+> `fun t ω ↦ f (X t ω) ^ 2 - ∫ s in Set.Ioc 0 t, g' (X s.toNNReal ω)`
+> ein Martingal für ein `g' : E →ᵇ ℝ`, so ist auch dieses Tripel ein
+> `IsApproximatingPair 𝓕 P q T K'`, mit `K' = T ^ q.toReal⁻¹ * ‖g'‖₊`.
+
+**Warum jetzt.** Die Hypothese von
+`isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair` verlangt je Fehler
+**zwei** Paare, und sie verlangt sie mit **einem und demselben** `K`. Das erste
+steht seit diesem Lauf; das zweite ist kein neuer Beweis, sondern **dieselbe**
+Konstruktion an `f²` statt an `f` — und `f² : E →ᵇ ℝ` ist
+`BoundedContinuousFunction.mul` an `f` mit sich selbst, also eine Zeile.
+
+**Was dabei zu prüfen ist und nicht zu raten:** ob das gemeinsame `K` als
+Maximum der beiden Formeln zu nehmen ist oder ob die Monotonie von
+`IsApproximatingPair.lintegral_eLpNorm_le` in `K` eigens auszusprechen ist —
+letzteres wäre ein eigenes, sehr kurzes Lemma (`IsApproximatingPair.mono_K`) und
+ist am Strukturfeld nachzulesen, nicht am Verbraucher.
+
+**Worauf er ruht, und es ist alles gebaut:** die fünf Deklarationen dieses
+Laufs, wörtlich, und `BoundedContinuousFunction.mul` für `f²`. Und die Bemerkung
+des Meilensteins, daß der zweite Approximant **nicht** das Quadrat des ersten
+ist: `g'` ist der Erzeuger angewandt auf `f²`, nicht `g²`, und die Aussage darf
+das nicht stillschweigend verwechseln.
+
+**Und danach ist der erste Punkt der Kette an seinem Namen angekommen:**
+`isTight_map_postcomp_of_exists_martingale` heißt so, weil die Eingabe eine
+**Lösung eines Martingalproblems** sein soll und kein Paar einer Klasse. Mit
+beiden Paaren aus der Martingalhypothese ist die Umbenennung keine Umbenennung
+mehr, sondern eine Ableitung.

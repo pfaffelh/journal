@@ -1126,6 +1126,33 @@ Dateikopf: es prüft Zeichenketten, nicht Aussagen.
   vorausgesetzt. Die umgekehrte Ungleichung wäre an derselben Stelle falsch,
   wofür `not_forall_lintegral_add_le` in derselben Datei der Zeuge ist.
 
+* **Eine rechtsstetige Funktion ist meßbar.** Für `u : ℝ → ℝ` mit
+  `∀ s, Tendsto u (𝓝[≥] s) (𝓝 (u s))` ist `Measurable u`. Der Beweis ist die
+  dyadische Näherung von oben: `u (⌊s·2ⁿ⌋+1)/2ⁿ` ist meßbar, weil es über
+  `Int.floor` und eine Funktion auf einem diskreten Raum faktorisiert, die
+  Näherung liegt **echt oberhalb** von `s` und konvergiert, also greift
+  `measurable_of_tendsto_metrizable`. Vier Zeilen.
+
+  Geprüft am 2026-09-21 gegen `94ef6b89544e58e90f119da869f3fb48d1da0f4c`:
+  `Mathlib/Topology/Order/Cadlag.lean`, wo `IsRightContinuous` und `IsCadlag`
+  seit #43352 wohnen, ist eine **Topologiedatei** und trägt überhaupt keine
+  Meßbarkeit; die Vorkommen von `IsRightContinuous` außerhalb davon stehen in
+  `Probability/Process/Filtration.lean` und `Probability/Process/Stopping.lean`
+  und handeln von **Filtrationen**, nicht von Pfaden. Was Mathlib hat, ist
+  `Monotone.measurable`
+  (`MeasureTheory/Constructions/BorelSpace/Order.lean:790`) — so wird eine
+  `StieltjesFunction` meßbar, über die **Monotonie** —, und ein càdlàg-Pfad ist
+  weder monoton noch stetig. Die richtige Fassung für Mathlib wäre die über
+  `IsRightContinuous` und über einem zweitabzählbaren metrisierbaren Wertebereich,
+  also `IsRightContinuous.measurable` neben `IsCadlag.measurable`.
+
+  Aufgefallen beim Bau des ersten Bewohners von `IsApproximatingPair`
+  (`TauCeti/MartingaleProblems/Suggested.lean`,
+  `isApproximatingPair_of_martingale`, Meilenstein 11): der Pfad der Dichte
+  `s ↦ g (X s.toNNReal ω)` ist rechtsstetig und sonst nichts, und die drei
+  Sätze über beschränkte Dichten verlangen alle `Measurable`. Steht dort als
+  `measurable_of_tendsto_nhdsGE`.
+
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine
 lokal endliche lineare Ordnung geschrieben ist und `Traj.lean` auf `ℕ` festliegt.
