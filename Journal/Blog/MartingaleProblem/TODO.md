@@ -250,7 +250,7 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Dreißig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Einunddreißig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
 Alle zweiundzwanzig beim Beweisen aufgefallen, und die ersten vier sind kleine,
 in sich abgeschlossene Beiträge. Sie gehören thematisch zu
@@ -264,8 +264,9 @@ Die Prüfung ist mechanisiert und wiederholbar — `scripts/check_negatives.py`
 führt jede Behauptung mit ihrem Suchmuster und den Dateien, in denen ein Treffer
 bekannt und harmlos ist, und meldet jeden Treffer daneben; der Lauf vom
 2026-09-18 meldet über **42** Behauptungen keinen, der vom 2026-09-20 über
-**49** ebenfalls keinen. Was das Skript nicht leistet, steht in seinem
-Dateikopf: es prüft Zeichenketten, nicht Aussagen.
+**49** ebenfalls keinen, und der vom 2026-09-21 über **60** ebenfalls keinen.
+Was das Skript nicht leistet, steht in seinem Dateikopf: es prüft
+Zeichenketten, nicht Aussagen.
 
 * **Zeithomogenität von `Kernel.traj`.** Daß die Verschiebung einer homogenen
   Markovkette wieder dieselbe Kette ist, steht dort nicht — weder in `v4.33.1`
@@ -1152,6 +1153,35 @@ Dateikopf: es prüft Zeichenketten, nicht Aussagen.
   `s ↦ g (X s.toNNReal ω)` ist rechtsstetig und sonst nichts, und die drei
   Sätze über beschränkte Dichten verlangen alle `Measurable`. Steht dort als
   `measurable_of_tendsto_nhdsGE`.
+
+* **Eine endliche Menge endlicher Maße ist straff.**
+  `Mathlib/MeasureTheory/Measure/Tight.lean` hat die beiden Enden und nicht die
+  Mitte: `isTightMeasureSet_singleton` (`:99`) und, innerhalb von
+  `namespace IsTightMeasureSet`, `of_compactSpace` (`:109`), `subset` (`:114`),
+  `union` (`:119`), `inter` (`:125`), `map` (`:129`), `prodMk` (`:143`). Das
+  Wort `Finite` kommt in der ganzen Datei **nur** in den Doc-Kommentaren der
+  Einzelmaß-Aussagen vor; die Iteration von `union` über eine endliche Menge
+  steht nirgends.
+
+  Geprüft am 2026-09-21 gegen `94ef6b89544e58e90f119da869f3fb48d1da0f4c`, und
+  zwar nach der Regel, die dieser Punkt schon dreimal gekostet hat: gesucht wurde
+  nach dem **letzten Namensbestandteil innerhalb der Datei**, nicht nach dem
+  qualifizierten Namen — `union` steht dort als `protected lemma union` und der
+  Name `IsTightMeasureSet.union` kommt in der Quelle nirgends vor.
+
+  Der Beweis sind vier Zeilen: jedes Glied hat nach
+  `isTightMeasureSet_singleton` seine kompakte Menge, und die Vereinigung
+  endlich vieler kompakter Mengen ist kompakt
+  (`Set.Finite.isCompact_biUnion`). Steht bei uns als
+  `isTightMeasureSet_of_finite`, daneben
+  `isTightMeasureSet_range_of_finite_compl` — eine Familie ist straff, sobald
+  sie es außerhalb endlich vieler Indizes ist —, beides in
+  `TauCeti/MartingaleProblems/Suggested.lean`, Meilenstein 11. Der Platz in
+  Mathlib ist unmittelbar neben `union`, von dem es die Iteration ist.
+
+  Aufgefallen beim Bau der Straffheit einer Familie, von der nur alle bis auf
+  endlich viele Glieder approximierbar sind
+  (`isTightMeasureSet_map_postcomp_of_isApproximable_off_finite`).
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine

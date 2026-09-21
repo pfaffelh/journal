@@ -46316,6 +46316,185 @@ theorem isTightMeasureSet_map_postcomp_of_forall_isApproximable [MeasurableSpace
   rw [hucoe]
   exact lt_of_lt_of_le hltη hω
 
+/-! ### Finitely many members may be exempted, and the exemption cannot be made to move
+
+`MeasureTheory.not_isApproximable_indicator_Ici` says that a process which jumps at a
+**deterministic** time is approximable by no pair, so a family of such processes satisfies the
+hypothesis of `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_isApproximable` at no
+member at all.  \EK{} quantify (9.26) along the index, and this section is that reading: the
+estimate is asked of all but finitely many members, and the exceptions are tight one by one,
+a single finite measure on a complete second countable metric space being tight.
+
+**Mathlib has the two ends and not the middle**, checked at the source on 2026-09-21 against
+`94ef6b89544`: `MeasureTheory.isTightMeasureSet_singleton`
+(`Mathlib/MeasureTheory/Measure/Tight.lean:99`) and
+`MeasureTheory.IsTightMeasureSet.union` (`:119`, a `protected lemma union` inside
+`namespace IsTightMeasureSet`, which is why a search for the qualified name finds nothing),
+together with `.subset` (`:114`), `.inter` (`:125`) and `of_compactSpace` (`:109`).  The word
+`Finite` occurs in that file only in the docstrings of the singleton statements: **a finite set
+of finite measures is not there**, and `MeasureTheory.isTightMeasureSet_of_finite` below fills
+that in.  It belongs next to `union`, of which it is the iterate.
+
+**The exceptional set is data of the statement and not a filter.**  The hypothesis of
+`MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_isApproximable` reads
+`∀ ε₀, ∀ u, ∃ q T K, ∀ i`, so a filter phrasing `∀ᶠ i in F` could only sit innermost, and along
+the route of the first statement below the exceptional set may not move: that route splits the
+family once and for all, and a split varying with the horizon `m : ℕ` --- which the consumer
+quantifies unboundedly --- would union to an infinite exceptional set.  `Filter.cofinite`
+therefore buys nothing there.  A moving exemption is the second statement, and it takes the
+other route, through the equivalence of the criterion. -/
+
+/-- **A finite set of finite measures is tight.**  Each member has its own compact set with
+`MeasureTheory.isTightMeasureSet_singleton`, and the union of finitely many compact sets is
+compact; no member is asked to be a probability measure and no relation between them is used.
+
+This is `MeasureTheory.IsTightMeasureSet.union` iterated, and it is stated because the iteration
+is not in `Mathlib/MeasureTheory/Measure/Tight.lean`, whose only finiteness is that of the
+measures themselves. -/
+theorem isTightMeasureSet_of_finite {α : Type*} [MeasurableSpace α] [TopologicalSpace α]
+    [TopologicalSpace.IsCompletelyPseudoMetrizableSpace α] [SecondCountableTopology α]
+    [BorelSpace α] {S : Set (Measure α)} (hS : S.Finite)
+    (hfin : ∀ μ ∈ S, IsFiniteMeasure μ) :
+    IsTightMeasureSet S := by
+  rw [isTightMeasureSet_iff_exists_isCompact_measure_compl_le]
+  intro ε hε
+  have hsing : ∀ μ ∈ S, ∃ K : Set α, IsCompact K ∧ μ Kᶜ ≤ ε := by
+    intro μ hμ
+    have : IsFiniteMeasure μ := hfin μ hμ
+    obtain ⟨K, hK, hKle⟩ :=
+      isTightMeasureSet_iff_exists_isCompact_measure_compl_le.1
+        (isTightMeasureSet_singleton (μ := μ)) ε hε
+    exact ⟨K, hK, hKle μ rfl⟩
+  choose! K hK hKle using hsing
+  refine ⟨⋃ μ ∈ S, K μ, hS.isCompact_biUnion hK, fun μ hμ ↦ ?_⟩
+  exact le_trans (measure_mono (compl_subset_compl.2 (subset_biUnion_of_mem hμ))) (hKle μ hμ)
+
+/-- **A family is tight as soon as it is tight off a finite set of indices.**  The range splits
+as the image of `Gᶜ` and the image of `G`, the first tight by hypothesis and the second finite.
+
+The finiteness of the members is asked of **all** of them and not only of the exceptions,
+because the hypothesis is stated on the subtype and the conclusion on the whole index; asking it
+twice would be the same condition written twice. -/
+theorem isTightMeasureSet_range_of_finite_compl {α : Type*} [MeasurableSpace α]
+    [TopologicalSpace α] [TopologicalSpace.IsCompletelyPseudoMetrizableSpace α]
+    [SecondCountableTopology α] [BorelSpace α] {ι : Type*} {ν : ι → Measure α}
+    (hfin : ∀ i, IsFiniteMeasure (ν i)) {G : Set ι} (hG : G.Finite)
+    (h : IsTightMeasureSet (Set.range fun j : (Gᶜ : Set ι) ↦ ν j.1)) :
+    IsTightMeasureSet (Set.range ν) := by
+  have hsplit : Set.range ν = (Set.range fun j : (Gᶜ : Set ι) ↦ ν j.1) ∪ ν '' G := by
+    rw [← Set.image_eq_range, ← Set.image_union, Set.compl_union_self, Set.image_univ]
+  rw [hsplit]
+  refine h.union (isTightMeasureSet_of_finite (hG.image ν) ?_)
+  rintro μ ⟨i, -, rfl⟩
+  exact hfin i
+
+/-- **Tightness of the image laws when all but finitely many members are approximable.**  This is
+`MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_isApproximable` with its hypothesis read
+off `G`, and it is the form in which a family of approximants is stated: the approximation error
+goes to zero **with the family**, the members it does not yet cover being finite in number.
+
+**The two halves are read off two different statements and neither is analytic.**  The members
+outside `G` are handled by the full statement, instantiated at the subtype `↥Gᶜ` --- the
+hypothesis restricts to it verbatim, its constants `q`, `T`, `K` being already uniform in the
+member --- and the members of `G` by
+`MeasureTheory.isTightMeasureSet_range_of_finite_compl`, for which the only thing to supply is
+that each image law is a finite measure.  That it is, is the measurability of the path map
+(`MeasureTheory.measurable_pathOfProcess`) and of `SkorokhodSpace.postcomp`, twice through
+`MeasureTheory.Measure.isProbabilityMeasure_map_iff`.
+
+**What it does not do**, and the acceptance test needs it: the approximation error `ε` is still
+quantified **inside** `MeasureTheory.IsApproximable`, so a member is either approximable to every
+error or to none.  A family whose `n`-th member is approximable to within `ε(n)` with
+`ε(n) → 0` --- which is what a rescaled random walk is --- is exempted by no finite `G`, moving
+or not.  That
+weakening moves the quantifier `∀ ε` of the structure out past the index and is a different
+statement, not an instance of this one. -/
+theorem isTightMeasureSet_map_postcomp_of_isApproximable_off_finite [MeasurableSpace E]
+    [BorelSpace E] [PolishSpace E] [CompleteSpace E]
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {γ : Type*} {X : γ → ℝ≥0 → Ω → E} {g : E →ᵇ ℝ}
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hX : ∀ i, IsStronglyProgressive 𝓕 (X i))
+    (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ X i s ω) (Set.Ici t) t)
+    {Φ : γ → Ω → D(ℝ≥0, E)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ X i t ω)
+    {G : Set γ} (hG : G.Finite)
+    (happ : ∀ ε₀ : ℝ, 0 < ε₀ → ∀ u : ℝ≥0, 0 < u → ∃ q : ENNReal, ∃ T K : ℝ≥0, u < T ∧
+      ∀ i ∉ G, IsApproximable 𝓕 P q T K (fun t ω ↦ g (X i t ω)) ε₀ u) :
+    IsTightMeasureSet
+      {(P.map (Φ i)).map (SkorokhodSpace.postcomp g.toContinuousMap) | i} := by
+  refine isTightMeasureSet_range_of_finite_compl (ν := fun i ↦
+    (P.map (Φ i)).map (SkorokhodSpace.postcomp g.toContinuousMap)) (fun i ↦ ?_) hG ?_
+  · have h1 : IsProbabilityMeasure (P.map (Φ i)) :=
+      (Measure.isProbabilityMeasure_map_iff
+        (measurable_pathOfProcess (hX i) (hΦ i)).aemeasurable).2 inferInstance
+    have h2 : IsProbabilityMeasure ((P.map (Φ i)).map
+        (SkorokhodSpace.postcomp g.toContinuousMap)) :=
+      (Measure.isProbabilityMeasure_map_iff
+        (SkorokhodSpace.measurable_postcomp g.toContinuousMap).aemeasurable).2 h1
+    infer_instance
+  · exact isTightMeasureSet_map_postcomp_of_forall_isApproximable
+      (X := fun j : (Gᶜ : Set γ) ↦ X j.1) (g := g) hSc hSd (fun j ↦ hX j.1)
+      (fun j ↦ hcont j.1) (Φ := fun j : (Gᶜ : Set γ) ↦ Φ j.1) (fun j ↦ hΦ j.1)
+      (by
+        intro ε₀ hε₀ u hu
+        obtain ⟨q, T, K, huT, h'⟩ := happ ε₀ hε₀ u hu
+        exact ⟨q, T, K, huT, fun j ↦ h' j.1 j.2⟩)
+
+/-- **The same, with the exempted set free to move with the window.**  The finite `G` is produced
+inside the hypothesis, after `ε₀` and `u`, so a family whose members become approximable only as
+the accuracy asked is relaxed --- which is the quantification \EK{} give (9.26) --- satisfies it,
+while `MeasureTheory.isTightMeasureSet_map_postcomp_of_isApproximable_off_finite` is its instance
+at a `G` not depending on either.
+
+**Why the move is admissible here and not there.**  The statement above splits the family once
+and for all and needs the split to be the same at every horizon; this one never splits it.  It
+goes through
+`SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le_off_finite`, which
+supplies the exempted members with their own window out of the tightness of their single image
+law, and there the exemption is consumed one horizon at a time.
+
+**What it still does not reach.**  The error `ε` remains quantified inside
+`MeasureTheory.IsApproximable`, so a member is approximable either to every error or to none, and
+`MeasureTheory.not_isApproximable_indicator_Ici` shows there are families with no approximable
+member at all.  Moving that quantifier out past the index is a further step, and its lever is the
+error term `A` of
+`MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair`, which the present
+chain discards in a limit. -/
+theorem isTightMeasureSet_map_postcomp_of_isApproximable_off_finite_window [MeasurableSpace E]
+    [BorelSpace E] [PolishSpace E] [CompleteSpace E]
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {γ : Type*} {X : γ → ℝ≥0 → Ω → E} {g : E →ᵇ ℝ}
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hX : ∀ i, IsStronglyProgressive 𝓕 (X i))
+    (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ X i s ω) (Set.Ici t) t)
+    {Φ : γ → Ω → D(ℝ≥0, E)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ X i t ω)
+    (happ : ∀ ε₀ : ℝ, 0 < ε₀ → ∀ u : ℝ≥0, 0 < u → ∃ G : Set γ, G.Finite ∧
+      ∃ q : ENNReal, ∃ T K : ℝ≥0, u < T ∧
+        ∀ i ∉ G, IsApproximable 𝓕 P q T K (fun t ω ↦ g (X i t ω)) ε₀ u) :
+    IsTightMeasureSet
+      {(P.map (Φ i)).map (SkorokhodSpace.postcomp g.toContinuousMap) | i} := by
+  refine SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le_off_finite P
+    (fun i => measurable_pathOfProcess (hX i) (hΦ i)) g ?_
+  intro ε hε m η hη
+  obtain ⟨ε₀, hε₀0, hlt, hltη⟩ := ENNReal.lt_iff_exists_real_btwn.1 hη
+  have hε₀ : 0 < ε₀ := ENNReal.ofReal_pos.1 hlt
+  set u : ℝ≥0 := (m : ℝ≥0) + 1 with hu
+  have hu0 : 0 < u := by positivity
+  have hucoe : ((u : ℝ≥0) : ℝ) = (m : ℝ) + 1 := by
+    rw [hu]; push_cast; ring
+  obtain ⟨G, hG, q, T, K, huT, happ'⟩ := happ ε₀ hε₀ u hu0
+  refine ⟨G, hG, ?_⟩
+  obtain ⟨δ, hδ0, hle⟩ :=
+    exists_forall_measure_setOf_lt_modulusBased_postcomp_le_of_forall_isApproximable
+      (X := fun j : (Gᶜ : Set γ) ↦ X j.1) (Φ := fun j : (Gᶜ : Set γ) ↦ Φ j.1)
+      (fun j ↦ happ' j.1 j.2) hSc hSd (fun j ↦ hX j.1) (fun j ↦ hcont j.1) (fun j ↦ hΦ j.1)
+      hu0 huT hε₀ hε
+  refine ⟨δ, hδ0, fun i hi => le_trans (measure_mono ?_) (hle ⟨i, hi⟩)⟩
+  intro ω hω
+  show ENNReal.ofReal ε₀ < _
+  rw [hucoe]
+  exact lt_of_lt_of_le hltη hω
+
 /-! ### The approximability condition as the milestone states it
 
 `MeasureTheory.IsApproximable` reads its two approximation errors as suprema over the **whole**

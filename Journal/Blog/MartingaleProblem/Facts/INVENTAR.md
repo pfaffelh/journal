@@ -54865,3 +54865,213 @@ Signatur gehört. Frei ist allgemeiner, aber dann muß der Verbraucher die
 Straffheit der Ausnahmen selbst liefern, und die Aussage ist nur noch
 Buchhaltung. Die Entscheidung ist am Akzeptanztest zu treffen — Donsker hat
 `γ = ℕ` und `F = atTop` — und sie ist zu begründen, nicht zu raten.
+
+### 2026-09-21, vierundzwanzigster Lauf des Tages — die Ausnahme ist gebaut, und die Entscheidung, die der Vorlauf offengelassen hatte, fällt gegen den Filter: der Ausnahmeindex darf sich **nicht** bewegen
+
+Der Vorlauf hatte
+`isTightMeasureSet_map_postcomp_of_eventually_isApproximable` vorgeschlagen und
+ausdrücklich eine Entscheidung mitgegeben: „ob der Filter `F` in der Aussage frei
+bleiben darf oder ob die endliche Ausnahme in die Signatur gehört … sie ist zu
+begründen, nicht zu raten."
+
+**Sie ist begründet, und die Begründung ist schärfer als die Alternative, die der
+Vorlauf gesehen hat.** Es geht nicht darum, ob eine Filterfassung *allgemeiner*
+wäre; es geht darum, daß eine Filterfassung an dieser Stelle **gar nicht
+hinschreibbar** ist, ohne etwas anderes zu behaupten.
+
+#### Warum kein Filter
+
+Die Voraussetzung von
+`MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_isApproximable` lautet
+
+```
+∀ ε₀ > 0, ∀ u > 0, ∃ q T K, u < T ∧ ∀ i, IsApproximable 𝓕 P q T K (g ∘ X i) ε₀ u
+```
+
+— das `∃ q T K` steht **zwischen** `∀ u` und `∀ i`, weil die Konstanten über die
+Familie gleichmäßig sein müssen (das ist der ganze Inhalt der
+Gleichmäßigkeitsaussage darunter). Ein `∀ᶠ i in F` kann deshalb nur ganz innen
+stehen, und dann hängt die Ausnahmemenge von `(ε₀, u)` ab.
+
+**Das darf sie nicht**, und der Grund steht im Verbraucher:
+`SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le`
+quantifiziert den Horizont `m : ℕ` **unbeschränkt** und baut aus allen Radien
+*eine* kompakte Menge. Ausnahmemengen, die mit `m` wandern, vereinigen sich zu
+einer abzählbaren Menge, und dann ist nichts mehr auszunehmen. Die endliche
+Menge `G : Set γ` gehört also **außerhalb jedes Quantors** in die Signatur; sie
+ist damit die schwächste Voraussetzung dieser Bauart, und `Filter.cofinite`
+kauft nichts.
+
+(Nebenbei, damit es nicht noch einmal erhoben wird: die drei Filterfassungen
+sind nicht gleichwertig. `∀ᶠ i in F` mit `cofinite ≤ F` ist äquivalent zur
+Endlichkeit des Komplements — `cofinite ≤ F` heißt `F.sets ⊆ cofinite.sets` —,
+und `∀ᶠ i in cofinite` ist unter ihnen die schwächste Voraussetzung, also die
+stärkste Aussage. Für `γ = ℕ` ist sie über `Nat.cofinite_eq_atTop` von `atTop`
+aus erreichbar. Das alles hilft hier aber nicht, weil die Ausnahme nicht innen
+stehen darf.)
+
+#### Drei Deklarationen, alle gegen `master` übersetzt
+
+| Deklaration | was sie sagt |
+| --- | --- |
+| `MeasureTheory.isTightMeasureSet_of_finite` | eine **endliche** Menge endlicher Maße ist straff |
+| `MeasureTheory.isTightMeasureSet_range_of_finite_compl` | eine Familie ist straff, sobald sie es außerhalb endlich vieler Indizes ist |
+| `MeasureTheory.isTightMeasureSet_map_postcomp_of_isApproximable_off_finite` | die Straffheit der Bildmaße, wenn alle `i ∉ G` approximierbar sind, `G` endlich |
+
+`check_master.py`: 0 Fehler, 0 `sorry`, Warnungen unverändert 18 / 38 / 112,
+davon veraltet 0. Alle drei mit `check_axioms_master.py` geprüft und auf
+`propext`, `Classical.choice`, `Quot.sound` und nichts sonst. Mathlib-Stand
+`94ef6b89544e58e90f119da869f3fb48d1da0f4c`.
+
+Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 11, als eigener
+Eintrag „Finitely many members may be exempted, and the exemption does not move",
+unmittelbar hinter dem Befund des Vorlaufs.
+
+#### Die Negativaussage, und sie ist am Quelltext erhoben
+
+**`Mathlib/MeasureTheory/Measure/Tight.lean` hat die beiden Enden und nicht die
+Mitte.** Vorhanden sind `isTightMeasureSet_singleton` (`:99`) und, innerhalb von
+`namespace IsTightMeasureSet`, `of_compactSpace` (`:109`), `subset` (`:114`),
+`union` (`:119`), `inter` (`:125`), `map` (`:129`), `prodMk` (`:143`). Das Wort
+`Finite` kommt in der ganzen Datei **nur** in den Doc-Kommentaren der
+Einzelmaß-Aussagen vor; die Iteration von `union` über eine endliche Menge steht
+nirgends. Gesucht wurde nach der Regel des Vorlaufs — nach dem **letzten
+Namensbestandteil innerhalb der Datei**, nicht nach dem qualifizierten Namen.
+
+**Sie steht eingetragen** — `TODO.md` Punkt 8, als einunddreißigste Lücke
+(„Eine endliche Menge endlicher Maße ist straff"), und als `tight-finite` in
+`scripts/check_negatives.py`, damit sie künftig mitgeprüft wird. Der Lauf des
+Skripts nach dem Eintrag: **60 Behauptungen, 0 mit unerwarteten Treffern.** Der
+Beweis ist vier Zeilen, und der Platz in Mathlib ist neben `union`.
+
+#### Was der Satz **nicht** erreicht, und das ist der eigentliche Befund des Laufs
+
+Der Vorlauf hatte geschrieben, diese Aussage sei „die einzige Stelle, an der die
+Straffheitsseite des Akzeptanztests noch hängt". **Das stimmt nicht, und es ist
+aus dem eigenen Befund des Vorlaufs ablesbar.**
+
+Sein Zeuge sagt: eine reskalierte Irrfahrt ist bei **jedem** `n` durch **kein**
+Paar approximierbar. `IsApproximable` quantifiziert den Näherungsfehler `ε`
+**in sich** (`exists_approximants : ∀ ε > 0, ∃ …`), ein Glied ist also entweder
+zu jedem Fehler approximierbar oder zu keinem. Eine Familie, deren `n`-tes Glied
+nur bis auf `ε n` approximierbar ist mit `ε n → 0`, wird deshalb durch **kein**
+endliches `G` freigestellt — sie ist an jedem Glied schlecht, nur immer weniger.
+Für Donsker leistet der heute gebaute Satz also nichts.
+
+**Die Abschwächung, die \EK (9.26) wirklich machen, ist eine andere**: das `∀ ε`
+der Struktur wandert **nach außen an den Index vorbei**. Das ist eine andere
+Aussage und keine Instanz der heutigen.
+
+#### Und sie ist erreichbar — der Weg ist in diesem Lauf noch abgesucht und die Bausteine sind benannt
+
+Der Grund, warum es überhaupt geht, steht im Beweis von
+`mul_measure_setOf_lt_modulusBased_le_of_isApproximable`: er liest die
+Approximanten zum Fehler `(n : ℝ≥0∞)⁻¹` und setzt sie in
+`mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair` ein, **das den
+Fehlerterm `A = 2ε' + 4·ofReal c·ε` ausdrücklich auf der rechten Seite trägt**:
+
+```
+ofReal ε₀ * P {…} ≤ N * ofReal √((G + A).toReal) + (B / N + A) / ofReal ε₀
+```
+
+Erst der Grenzübergang `n → ∞` streicht `A`. Eine Familie, die zu **jedem**
+Fehlerniveau nur **schließlich** approximierbar ist, liefert also dieselbe
+Ungleichung mit einem `A`, das mit dem Index verschwindet — die
+Paar-Ungleichung ist der Anschluß, und sie ist bewiesen.
+
+**Was dabei zusätzlich gebraucht wird, und es ist genau eine Aussage.** Die
+Ausnahmemenge darf dann mit `(ε, m, η)` wandern, und nach dem Befund oben
+verträgt `SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le`
+das nicht. Der Ausweg ist **nicht**, die Ausnahmen aus der Konklusion
+herauszunehmen, sondern ihnen die Voraussetzung **einzeln zu beschaffen**: ein
+einzelnes Bildgesetz ist straff (`isTightMeasureSet_singleton`), und
+`SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` ist eine **Äquivalenz**,
+gibt also für jedes einzelne Glied sein eigenes `δ`. Zusammen mit
+`SkorokhodSpace.modulusBased_mono` (`SkorokhodSpace/Suggested.lean:8897`, die
+Monotonie in `δ`, die eine Schranke bei `δ` auf jedes kleinere trägt) ist das
+Minimum aus dem `δ` der guten Glieder und den endlich vielen `δ` der Ausnahmen
+ein `δ`, das allen dient.
+
+#### Und er ist im selben Lauf noch gebaut — drei weitere Deklarationen
+
+Der Vorschlag, der hier zunächst für den nächsten Lauf stand, ist eingelöst
+worden, weil die Bausteine sämtlich dastanden und der Beweis im ersten Anlauf
+durchging.
+
+| Deklaration | Datei | was sie sagt |
+| --- | --- | --- |
+| `Set.Finite.exists_pos_forall_le` | SkorokhodSpace | endlich viele positive Zahlen haben eine positive untere Schranke |
+| `SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le_off_finite` | SkorokhodSpace | das Kriterium mit endlich vielen ausgenommenen Gliedern, **und die Ausnahme darf mit `(ε, m, η)` wandern** |
+| `MeasureTheory.isTightMeasureSet_map_postcomp_of_isApproximable_off_finite_window` | MartingaleProblems | dasselbe eine Stufe höher: `G` entsteht **innerhalb** der Voraussetzung, nach `ε₀` und `u` |
+
+**Der Kunstgriff, und er ist der ganze Inhalt:** die Ausnahmen werden **nicht**
+aus der Konklusion herausgenommen, sondern es wird ihnen die Voraussetzung
+beschafft. Ein einzelnes Bildgesetz ist ein endliches Maß auf einem vollständigen
+zweitabzählbaren metrischen Raum, also straff
+(`MeasureTheory.isTightMeasureSet_singleton`), und
+`SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` ist eine **Äquivalenz** — sie
+gibt also, was sie nimmt, und liefert dem Ausnahmeglied sein eigenes `δ` zu
+genau demselben `(ε, m, η)`. `SkorokhodSpace.modulusBased_mono` trägt eine
+Schranke von einem Fenster auf jedes kleinere, und das Minimum aus dem
+gemeinsamen `δ` und den endlich vielen Ausnahme-`δ` dient allen.
+
+**Damit ist der Befund von oben berichtigt, und zwar in die richtige Richtung:**
+der Verbraucher verträgt eine wandernde Ausnahmemenge doch — nicht, weil die
+kompakte Menge aus allen Radien anders gebaut würde, sondern weil das Kriterium
+**radienweise** verbraucht wird, sobald man es als Äquivalenz liest. Die
+Unmöglichkeit betraf allein den Weg über das Aufspalten der Familie
+(`isTightMeasureSet_range_of_finite_compl`), und der bleibt der elementarere von
+beiden.
+
+`check_master.py` nach dem Einbau: 0 Fehler, 0 `sorry`, Warnungen unverändert
+18 / 38 / 112, davon veraltet 0. Alle sechs Deklarationen des Laufs mit
+`check_axioms_master.py` geprüft und auf `propext`, `Classical.choice`,
+`Quot.sound` und nichts sonst. Die Punkte stehen in
+`MartingaleProblems/README.md`, Meilenstein 11, und in
+`SkorokhodSpace/README.md`, Meilenstein 7.
+
+**`P` ist dabei auf `IsFiniteMeasure` abgeschwächt** — das Kriterium liest von
+`P` nichts als die Straffheit eines einzelnen Bildgesetzes, und die verlangt
+keine Wahrscheinlichkeit.
+
+#### Was jetzt noch fehlt, und es ist genau eine Stelle
+
+Der Fehler `ε` steht weiterhin **in** `IsApproximable`. Der Hebel, ihn
+herauszuziehen, ist benannt und steht:
+`mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair` trägt den Fehler
+der Approximanten als ausdrücklichen Summanden `A` auf der rechten Seite, und
+`mul_measure_setOf_lt_modulusBased_le_of_isApproximable` wirft ihn im Grenzwert
+längs `ε = (n : ℝ≥0∞)⁻¹` weg.
+
+**Vorschlag für den nächsten Lauf, als benanntes Ziel:**
+
+> `MeasureTheory.IsEventuallyApproximable` — dieselbe Struktur wie
+> `MeasureTheory.IsApproximable`, aber über eine **Familie** `X : γ → …` und mit
+> dem Fehler außen: zu jedem `ε > 0` gibt es ein endliches `G : Set γ`, so daß
+> jedes `i ∉ G` zwei Paare der Klasse mit gemeinsamen `q`, `T`, `K` und Fehler
+> `≤ ε` besitzt.
+>
+> Und daraus
+> `MeasureTheory.isTightMeasureSet_map_postcomp_of_isEventuallyApproximable`,
+> über `isTightMeasureSet_map_postcomp_of_isApproximable_off_finite_window`.
+
+**Worauf es ruht, und alles davon steht:** die Paar-Ungleichung mit `A`
+(`mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair`), die Wahl von
+`N` und `δ` **vor** dem Glied im Beweis von
+`exists_forall_measure_setOf_lt_modulusBased_postcomp_le_of_forall_isApproximable`
+— dort wird das dritte Drittel `θ/2` bereits zweigeteilt, es ist also in `θ/3`
+umzuschreiben und der dritte Teil an `A` zu geben —, und das heute gebaute
+Straffheitsende.
+
+**Die Stelle, an der es klemmen kann, benannt:** die Ungleichung mit `A` verlangt
+`(G + A) ≠ ⊤` und die Stetigkeit der Wurzel bei `A ≠ 0`; der vorhandene Beweis
+nimmt beides im Grenzwert und nicht bei festem `A`. Ob die Abschätzung bei festem
+`A` ohne neue Rechnung durchgeht, ist der erste zu prüfende Punkt, und er ist am
+Beweis von `mul_measure_setOf_lt_modulusBased_le_of_isApproximable` (Zeilen
+45850–45865) zu entscheiden, nicht zu raten.
+
+**Und der Akzeptanztest, damit die Aussage nicht leer bleibt:** die reskalierten
+Irrfahrten. Für sie ist `IsApproximable` bei jedem `n` falsch
+(`not_isApproximable_indicator_Ici` und der Befund des dreiundzwanzigsten Laufs),
+`IsEventuallyApproximable` aber gerade nicht — und erst das macht aus den fünf
+wahren Konditionalaussagen dieses Meilensteins anwendbare Sätze.

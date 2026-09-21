@@ -12822,6 +12822,75 @@ has to be chosen once for all `n`. What stands:
   members it does not yet cover being tight one by one. The items themselves are
   true as they stand and are not withdrawn; what changes is which data they are
   applied to.
+* **Finitely many members may be exempted.**
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_isApproximable_off_finite`:
+  the hypothesis of the item above asked of all `i ∉ G` for a finite `G : Set γ`
+  gives the same conclusion. The members outside `G` go through that item,
+  instantiated at the subtype `↥Gᶜ` — its constants `q`, `T`, `K` are already
+  uniform in the member, so the hypothesis restricts verbatim — and the members
+  of `G` are finitely many probability measures.
+
+  Two general statements carry it, and they are about tightness alone:
+  `MeasureTheory.isTightMeasureSet_of_finite`, a finite set of finite measures is
+  tight, and `MeasureTheory.isTightMeasureSet_range_of_finite_compl`, a family is
+  tight as soon as it is tight off a finite set of indices.
+  **Mathlib has the two ends and not the middle**, read at the source on
+  2026-09-21 against `94ef6b89544`: `MeasureTheory.isTightMeasureSet_singleton`
+  (`Mathlib/MeasureTheory/Measure/Tight.lean:99`) and
+  `MeasureTheory.IsTightMeasureSet.union` (`:119`, a `protected lemma union`
+  inside `namespace IsTightMeasureSet`, so the qualified name occurs nowhere in
+  the source), beside `.subset` (`:114`), `.inter` (`:125`) and `of_compactSpace`
+  (`:109`). In that file the word `Finite` occurs only in the docstrings of the
+  singleton statements: the iterate of `union` is not there.
+
+  **The exceptional set is data of the statement and not a filter.** The
+  hypothesis reads `∀ ε₀, ∀ u, ∃ q T K, ∀ i`, so a filter phrasing `∀ᶠ i in F`
+  could only sit innermost, and along *this* route the exceptional set may not
+  move: the proof splits the family once and for all, and a split varying with
+  the horizon `m : ℕ` — which the consumer quantifies unboundedly — would union
+  to an infinite exceptional set. `Filter.cofinite` therefore buys nothing here,
+  and a moving exemption needs the other route, which is the next item.
+
+  (The three filter phrasings are not interchangeable, and the comparison is
+  recorded once so that it is not made again: `∀ᶠ i in F` under `cofinite ≤ F` —
+  that is, `F.sets ⊆ cofinite.sets` — says exactly that the complement is finite,
+  and `∀ᶠ i in cofinite` is the weakest of them, hence the strongest statement.
+  For `γ = ℕ` it is reached from `atTop` by `Nat.cofinite_eq_atTop`.)
+
+  **What it does not reach, stated so that no run mistakes it.** The
+  approximation error `ε` is quantified **inside** `MeasureTheory.IsApproximable`,
+  so a member is approximable either to every error or to none, and by the item
+  above a rescaled random walk is approximable to none. A family whose `n`-th
+  member is approximable only to within some `ε n` with `ε n → 0` is therefore
+  exempted by no finite `G`. That is the weakening \EK (9.26) actually make, it
+  moves the `∀ ε` of the structure out past the index, and it is a different
+  statement rather than an instance of this one.
+* **The exempted set may move with the window.**
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_isApproximable_off_finite_window`:
+  the finite `G` is produced **inside** the hypothesis, after `ε₀` and `u`, so a
+  family whose members become approximable only as the accuracy asked is relaxed
+  satisfies it, and the item above is its instance at a `G` depending on neither.
+
+  **Why the move is admissible here and not there.** The item above splits the
+  family once and for all and needs the split to be the same at every horizon;
+  this one never splits it. It goes through
+  `SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le_off_finite`
+  of **SkorokhodSpace**, Milestone 7, which supplies the exempted members with
+  their own window out of the tightness of their single image law — the
+  criterion there is an equivalence, so it gives as well as takes — and there the
+  exemption is consumed one horizon at a time.
+
+  **What it still does not reach, and it is the same wall as above.** The error
+  `ε` remains quantified inside `MeasureTheory.IsApproximable`. The lever for
+  moving it out is named and stands:
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair`
+  carries the error of the approximants as an explicit summand `A` on its right
+  hand side, and
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximable` discards
+  it in a limit along `ε = (n : ℝ≥0∞)⁻¹`. A family approximable only to within an
+  error going to zero **with the index** produces the same inequality with an `A`
+  that vanishes along the index, and the present item is what turns such an
+  inequality into tightness.
 * **The same estimate uniformly over the family.**
   `MeasureTheory.exists_forall_measure_setOf_lt_modulusBased_postcomp_le_of_forall_isApproximable`:
   for a family `X : γ → ℝ≥0 → Ω → E` over **one** probability space, all

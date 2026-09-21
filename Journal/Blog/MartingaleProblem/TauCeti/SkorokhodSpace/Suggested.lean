@@ -19502,6 +19502,90 @@ theorem SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le
   exact ⟨δ, hδ, fun i => SkorokhodSpace.measure_map_postcomp_setOf_le_modulusBased_le
     P (hΦ i) g (Nat.cast_nonneg m) hδ.le (by linarith) (hle i)⟩
 
+/-- **Finitely many positive reals have a positive lower bound.**  The infimum over the
+associated `Finset` when the set is nonempty, and `1` when it is empty.
+
+The positivity is asked **on `G` only**, which is what a consumer holding a family indexed by all
+of `ι` can supply without a hypothesis off the exceptional set. -/
+theorem Set.Finite.exists_pos_forall_le {ι : Type*} {G : Set ι} (hG : G.Finite) (d : ι → ℝ)
+    (hd : ∀ i ∈ G, 0 < d i) :
+    ∃ c : ℝ, 0 < c ∧ ∀ i ∈ G, c ≤ d i := by
+  classical
+  rcases G.eq_empty_or_nonempty with rfl | ⟨i₀, hi₀⟩
+  · exact ⟨1, one_pos, by simp⟩
+  · have hne : hG.toFinset.Nonempty := ⟨i₀, hG.mem_toFinset.2 hi₀⟩
+    refine ⟨hG.toFinset.inf' hne d, ?_, fun i hi ↦ Finset.inf'_le d (hG.mem_toFinset.2 hi)⟩
+    rw [Finset.lt_inf'_iff]
+    exact fun i hi ↦ hd i (hG.mem_toFinset.1 hi)
+
+/-- **The criterion with finitely many members exempted, and the exemption may move with the
+data.**  This is the statement above with the modulus bound asked only of `i ∉ G` for a finite
+`G : Set γ` which may depend on the bound `ε`, the horizon `m` and the threshold `η`.
+
+**The exceptions are not dropped from the conclusion; their hypothesis is supplied for them.**
+The image law of a single member is a finite measure on a complete second countable metric
+space, hence tight (`MeasureTheory.isTightMeasureSet_singleton`), and
+`SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` is an **equivalence**, so it returns for that
+member its own window `δ` at the very same `(ε, m, η)`.  `SkorokhodSpace.modulusBased_mono`
+carries a bound at a window to every smaller one, so the minimum of the common `δ` and the
+finitely many exceptional ones serves the whole family;
+`Set.Finite.exists_pos_forall_le` is what makes that minimum positive.
+
+**This is the shape in which a family of approximants is stated and the previous one is not.**
+An exceptional set fixed once and for all cannot express „the estimate holds from some index on,
+the index depending on the accuracy asked", which is how \EK{} quantify (9.26); an exceptional
+set that moves with `(ε, m, η)` can.  What forbids the move at the *previous* statement -- that a
+tightness proof builds one compact set out of all radii `m` at once -- is exactly what the
+equivalence above undoes, since it is consumed at one radius at a time.
+
+`P` is asked to be finite and not a probability measure: the tightness of a single image law is
+all that is read of it. -/
+theorem SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le_off_finite
+    [CompleteSpace E] {Ω : Type*} [MeasurableSpace Ω] (P : Measure Ω) [IsFiniteMeasure P]
+    {γ : Type*} {Φ : γ → Ω → D(ℝ≥0, E)} (hΦ : ∀ i, Measurable (Φ i)) (g : E →ᵇ ℝ)
+    (h : ∀ ε : ℝ≥0∞, 0 < ε → ∀ m : ℕ, ∀ η : ℝ≥0∞, 0 < η →
+      ∃ G : Set γ, G.Finite ∧ ∃ δ : ℝ, 0 < δ ∧ ∀ i ∉ G,
+        P {ω | η ≤ SkorokhodSpace.modulusBased (0 : ℝ) ((m : ℝ) + 1)
+            (SkorokhodSpace.postcomp g.toContinuousMap
+              (SkorokhodSpace.extendNNReal (Φ i ω))) δ} ≤ ε) :
+    IsTightMeasureSet
+      {(P.map (Φ i)).map (SkorokhodSpace.postcomp g.toContinuousMap) | i} := by
+  rw [SkorokhodSpace.isTightMeasureSet_map_postcomp_iff]
+  intro ε hε m η hη
+  obtain ⟨G, hG, δ, hδ, hle⟩ := h ε hε m η hη
+  have hgood : ∀ i ∉ G, (((P.map (Φ i)).map (SkorokhodSpace.postcomp g.toContinuousMap)).map
+      SkorokhodSpace.extendNNReal)
+      {f : D(ℝ, ℝ) | η ≤ SkorokhodSpace.modulusBased (0 : ℝ) (m : ℝ) f δ} ≤ ε := fun i hi ↦
+    SkorokhodSpace.measure_map_postcomp_setOf_le_modulusBased_le P (hΦ i) g
+      (Nat.cast_nonneg m) hδ.le (by linarith) (hle i hi)
+  have hsing : ∀ i, ∃ d : ℝ, 0 < d ∧
+      (((P.map (Φ i)).map (SkorokhodSpace.postcomp g.toContinuousMap)).map
+        SkorokhodSpace.extendNNReal)
+        {f : D(ℝ, ℝ) | η ≤ SkorokhodSpace.modulusBased (0 : ℝ) (m : ℝ) f d} ≤ ε := by
+    intro i
+    have hrange : {((fun _ : Unit ↦ P.map (Φ i)) j).map
+          (SkorokhodSpace.postcomp g.toContinuousMap) | j}
+        = ({(P.map (Φ i)).map (SkorokhodSpace.postcomp g.toContinuousMap)} :
+            Set (Measure D(ℝ≥0, ℝ))) := Set.range_const
+    have htight : IsTightMeasureSet {((fun _ : Unit ↦ P.map (Φ i)) j).map
+        (SkorokhodSpace.postcomp g.toContinuousMap) | j} := by
+      rw [hrange]
+      exact isTightMeasureSet_singleton
+    obtain ⟨d, hd, hdle⟩ := (SkorokhodSpace.isTightMeasureSet_map_postcomp_iff
+      (fun _ : Unit ↦ P.map (Φ i)) g).1 htight ε hε m η hη
+    exact ⟨d, hd, hdle ()⟩
+  choose d hd hdle using hsing
+  obtain ⟨c, hc0, hcle⟩ := hG.exists_pos_forall_le d fun i _ ↦ hd i
+  refine ⟨min δ c, lt_min hδ hc0, fun i ↦ ?_⟩
+  by_cases hi : i ∈ G
+  · refine le_trans (measure_mono ?_) (hdle i)
+    intro f hf
+    exact le_trans hf (SkorokhodSpace.modulusBased_mono (0 : ℝ) (m : ℝ) f
+      ((min_le_right δ c).trans (hcle i hi)))
+  · refine le_trans (measure_mono ?_) (hgood i hi)
+    intro f hf
+    exact le_trans hf (SkorokhodSpace.modulusBased_mono (0 : ℝ) (m : ℝ) f (min_le_left δ c))
+
 /-! ### The Aldous subdivision, deterministically
 
 Milestone 10 reads Aldous' criterion as the implication

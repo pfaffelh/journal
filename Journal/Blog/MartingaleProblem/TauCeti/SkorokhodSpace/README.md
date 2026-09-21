@@ -2080,6 +2080,27 @@ over a shrinking family and is therefore an infimum.
   `SkorokhodSpace.isometry_extendNNReal` for the index change. The two orders of
   the layers are the **same map**, `SkorokhodSpace.postcomp_extendNNReal` being
   `rfl`, so nothing is rewritten between the hypothesis and the conclusion.
+* `SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le_off_finite`:
+  **the same criterion with finitely many members exempted, the exempted set free
+  to move with `(ε, m, η)`.** Proved (2026-09-21). The exceptions are not dropped
+  from the conclusion; their hypothesis is supplied for them, a single image law
+  being a finite measure on a complete second countable metric space and hence
+  tight (`MeasureTheory.isTightMeasureSet_singleton`), and
+  `SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` being an **equivalence**,
+  so that it returns that member its own window at the very same `(ε, m, η)`.
+  `SkorokhodSpace.modulusBased_mono` carries a bound at a window to every smaller
+  one, so the minimum of the common window and the finitely many exceptional ones
+  serves the whole family; `Set.Finite.exists_pos_forall_le` is what makes that
+  minimum positive, and it is stated beside it. `P` is asked to be finite and not
+  a probability measure, the tightness of one image law being all that is read of
+  it.
+
+  **This is what makes an estimate „from some index on" usable.** A consumer whose
+  family satisfies the modulus bound only for `i` beyond a threshold depending on
+  the accuracy asked — which is the shape an approximation argument produces —
+  cannot use the previous item, whose exempted set would have to be the same at
+  every horizon and, the horizons being infinitely many, would not stay finite.
+  The equivalence undoes that, being consumed one horizon at a time.
 * `dist_first_last_eq_sum`: under `AdditiveDist ι` the gaps of a monotone tuple
   telescope, `dist (t 0) (t (Fin.last n)) = ∑ i, dist (t i.castSucc) (t i.succ)`.
   Proved (2026-09-09). Monotonicity is the real hypothesis — strictness is not

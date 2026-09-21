@@ -499,6 +499,23 @@ CLAIMS_TODO8 = [
      '|floorFiltration',
      ['Mathlib/'],
      []),
+    ('tight-finite',
+     'TODO.md Punkt 8; MartingaleProblems/Suggested.lean, '
+     '`isTightMeasureSet_of_finite`; MartingaleProblems/README.md, '
+     'Meilenstein 11',
+     'Mathlib hat die Straffheit einer **endlichen** Menge endlicher Masse '
+     'nicht. `Mathlib/MeasureTheory/Measure/Tight.lean` traegt '
+     '`isTightMeasureSet_singleton` (:99) und im Namensraum '
+     '`IsTightMeasureSet` die Aussagen `of_compactSpace` (:109), `subset` '
+     '(:114), `union` (:119), `inter` (:125), `map` (:129), `prodMk` (:143); '
+     'das Wort `Finite` steht dort nur in den Doc-Kommentaren der '
+     'Einzelmass-Aussagen. Am 2026-09-21 am Quelltext nachgesehen, nach dem '
+     'letzten Namensbestandteil **innerhalb der Datei** und nicht nach dem '
+     'qualifizierten Namen.',
+     'isTightMeasureSet_of_finite|IsTightMeasureSet.finite'
+     '|isTightMeasureSet_finite|IsTightMeasureSet.biUnion',
+     ['Mathlib/'],
+     []),
 ]
 
 
