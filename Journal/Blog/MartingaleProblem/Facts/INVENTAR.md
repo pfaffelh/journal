@@ -52264,3 +52264,192 @@ das nicht stillschweigend verwechseln.
 **Lösung eines Martingalproblems** sein soll und kein Paar einer Klasse. Mit
 beiden Paaren aus der Martingalhypothese ist die Umbenennung keine Umbenennung
 mehr, sondern eine Ableitung.
+
+### 2026-09-21, zwölfter Lauf des Tages — der erste Punkt der Kette steht unter seinem eigenen Namen: eine Martingalhypothese hinein, Straffheit heraus; und der vorgeschriebene Weg dorthin war **einer zuviel** — das zweite Paar braucht keinen eigenen Satz, weil die Beschränktheit der getesteten Funktion in **keinem** Feld gelesen wird
+
+**`MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_martingale` steht.**
+Damit ist der **erste der vier Hauptpunkte von Meilenstein 11** in der Gestalt
+da, die sein Name verspricht:
+
+> Eine Familie `X i` auf *einem* filtrierten Wahrscheinlichkeitsraum, stark
+> progressiv mit rechtsstetigen Pfaden, für die **beide** Prozesse
+> `f ∘ X i - ∫ g ∘ X i` und `(f ∘ X i)² - ∫ g' ∘ X i` Martingale sind, hat
+> straffe Verteilungen von `postcomp f ∘ X i` in `D(ℝ≥0, ℝ)`.
+
+Am Erzeuger gelesen ist `g = A f` und `g' = A (f²)`; die zweite Hypothese folgt
+**nicht** aus der ersten, und `g'` ist nicht `g²`.
+
+**Und die Naht zum zweiten Punkt der Kette steht mit**:
+`MeasureTheory.isTightMeasureSet_map_of_forall_martingale` hebt die Straffheit
+von den reellen Bildern auf `{P.map (Φ i)}` selbst in `D(ℝ≥0, E)` — das, was
+`isRelativelyCompact_of_approx` verbraucht. Sie ist der Vorschlag, den dieser
+Lauf für den nächsten hatte, und sie ist im selben Lauf eingelöst; was von ihm
+bleibt, ist die Vorfrage darunter.
+
+Drei neue Deklarationen in `TauCeti/MartingaleProblems/Suggested.lean`
+(`MeasureTheory.IsApproximatingPair.mono_K`, die beiden Sätze), eine
+**abgeschwächte** (`MeasureTheory.isApproximatingPair_of_martingale`) und eine
+Namensberichtigung über den ganzen Abschnitt. Die Kette geht durch
+`python3 scripts/check_master.py` mit **0 Fehlern, 0 `sorry`** in allen drei
+Dateien, die Warnungszahlen sind **unverändert** (18 / 35 / 112, davon veraltet
+0). Alle drei neuen Deklarationen sind mit `check_axioms_master.py` geprüft und
+hängen an `propext`, `Classical.choice`, `Quot.sound` und an nichts sonst.
+`check_negatives.py` meldet über 51 Behauptungen keinen unerwarteten Treffer.
+
+Mathlib-Stand: `94ef6b89544e58e90f119da869f3fb48d1da0f4c`, 2026-09-18;
+Lean 4.35.0-rc2.
+
+#### Der Vorschlag des Vorlaufs ist eingelöst, aber nicht wie vorgesehen
+
+Der elfte Lauf hatte `isApproximatingPair_sq_of_martingale` vorgeschlagen — das
+zweite Paar als **eigenen Satz**, „dieselbe Konstruktion an `f²` statt an `f`",
+mit `BoundedContinuousFunction.mul` für `f²`. Beim Nachsehen, wo die
+Beschränktheit der getesteten Funktion im Beweis eigentlich gelesen wird, kam
+heraus: **nirgends.**
+
+* `progressive` und `progressive_sub` sind Meßbarkeit,
+* `rightContinuous` ist Stetigkeit,
+* `martingale` ist die Hypothese,
+* und die drei Felder, die eine Schranke tragen — `ae_memLp`,
+  `lintegral_eLpNorm_le` und die Konstante `K` selbst — lesen die **Dichte** `g`
+  allein.
+
+`MeasureTheory.isApproximatingPair_of_martingale` ist deshalb auf eine bloß
+**stetige** getestete Funktion abgeschwächt (`{F : E → ℝ} (hF : Continuous F)`
+statt `f : E →ᵇ ℝ`), und damit ist das zweite Paar **derselbe Satz**, angewandt
+an `F ^ 2` über `Continuous.pow`. Kein Produkt auf `E →ᵇ ℝ` kommt vor, kein
+zweiter Satz, und die Zusage des Meilensteins, die Abschließbarkeit der
+approximierbaren Funktionen unter Produkten sei „ein Zeuge und keine
+Bequemlichkeit", ist für den **exakten** Fall gegenstandslos: sie gehört zum
+Approximantenweg, nicht zu diesem. Wo die Beschränktheit von `f` wirklich
+gelesen wird, ist die Schranke an die Approximanten beim Verbraucher (`‖f‖` und
+`‖f‖ ^ 2`), und dort steht sie.
+
+Das ist die stehende Regel „minimale Voraussetzungen" in ihrer nützlichen
+Richtung: die Abschwächung hat den vorgesehenen zweiten Satz **ersetzt**, statt
+ihn zu ergänzen.
+
+#### Die Vorfrage des Vorschlags, und sie war die richtige
+
+Der Vorlauf hatte gefragt, ob das gemeinsame `K` als Maximum zu nehmen oder die
+Monotonie eigens auszusprechen sei. Es ist beides, und zwar in dieser
+Reihenfolge: `MeasureTheory.IsApproximatingPair.mono_K` ist zwei Zeilen — `K`
+kommt in **genau einem** Feld vor, `lintegral_eLpNorm_le`, und dort als obere
+Schranke —, und der Verbraucher liest sie zweimal, am Maximum der beiden
+Formeln `T' ^ q.toReal⁻¹ * ‖g‖₊` und `T' ^ q.toReal⁻¹ * ‖g'‖₊`.
+
+**Eine entsprechende Monotonie in `T` oder in `q` gibt es nicht**, und der
+Doc-Kommentar sagt warum: der Horizont ist in zwei Feldern zugleich das Maß des
+Fensters, und der Exponent wird in `one_lt_exponent` gelesen. Das ist der Grund,
+aus dem `mono_K` allein dasteht und nicht als eine von dreien.
+
+#### Was der Satz über den Verbraucher hinaus leistet: der Fehler ist null
+
+Er geht durch
+`MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair`,
+dessen zwei Fehler `Y - f ∘ X` und `Y' - (f ∘ X)²` sind. Hier ist `Y` gerade
+`f ∘ X` und `Y'` gerade `(f ∘ X)²`, beide Fehler verschwinden **identisch**, und
+das `ε` des Kriteriums wird nie ausgegeben — die beiden Verpflichtungen sind
+`simp`. Die drei Größen, die das Kriterium freiläßt, sind damit frei **wählbar**
+und nicht vorauszusetzen: `q = 2`, der Horizont `u + 1` zum herabgereichten
+Fenster `u`, und `K` das obige Maximum.
+
+**Und das ist zugleich die Grenze des Satzes, damit kein Lauf ihn unter dem
+größeren Namen berichtet.** Donskers Irrfahrten lösen *kein* Martingalproblem;
+für sie ist die Fassung mit den beiden Paaren und den beiden Fehlern zu rufen,
+die seit dem zehnten Lauf steht. Dieser Satz ist der exakte Fall, und er ist
+der, den die Akzeptanzbeispiele von Meilenstein 4 erfüllen.
+
+#### Ein Befund über die Datei selbst, gefunden beim Axiomtest
+
+`#print axioms MeasureTheory.IsApproximatingPair.mono_K` scheiterte an einer
+unbekannten Konstanten — die Klasse und ihr ganzer `namespace
+IsApproximatingPair` standen im **Wurzelnamensraum**, während **22** Stellen der
+Datei sie als `MeasureTheory.IsApproximatingPair…` zitierten. Ein Leser hätte
+keinen dieser Namen aufschlagen können.
+
+Der Abschnitt `section ApproximatingPair` öffnet jetzt `namespace MeasureTheory`,
+wo der Rest des Meilensteins wohnt; damit sind die 22 Zitate wahr, und
+`MeasureTheory.setIntegral_Ioc_sub_setIntegral_Ioc` heißt ebenfalls, wie es
+zitiert wird. An der Mathematik ändert sich nichts, und die Datei übersetzt mit
+denselben Zahlen wie vorher. **Die Regel dahinter:** ein `namespace`, das um
+einen Abschnitt herum fehlt, fällt beim Übersetzen nicht auf — nur beim
+Aufschlagen eines Namens. Der Axiomtest ist die billigste Probe darauf, und er
+gehört für **jede** neue Deklaration gelaufen, nicht nur für die schweren.
+
+#### Eine Elaborationsfalle, die einen Durchlauf gekostet hat
+
+`one_lt_two` geht für `ENNReal` **nicht**: die Instanzensuche verlangt
+`AddLeftStrictMono ENNReal`, die es nicht gibt und nicht geben kann
+(`⊤ + 1 = ⊤ + 2`). In der Entwicklungsdatei war der Fehler unsichtbar, weil dort
+`open … ENNReal …` stand und der Name anders auflöste. Zu schreiben ist
+`(by norm_num : (1 : ENNReal) < 2)`. **Und die Lehre ist allgemeiner:** eine
+Entwicklungsdatei mit anderen `open`-Zeilen als die Zieldatei ist kein Beleg
+dafür, daß der Text in der Zieldatei übersetzt. Verbindlich ist
+`check_master.py` über die ganze Datei, wie die Regel es sagt.
+
+#### Wo der erste Punkt der Kette jetzt steht
+
+| Größe | Stand |
+| --- | --- |
+| alles unterhalb von `IsApproximable` | steht (7. Lauf) |
+| `IsApproximable` aus der Bedingung des Meilensteins | steht (8. Lauf) |
+| die vier Integrierbarkeiten, die Rechtsstetigkeit | steht (9./10. Lauf) |
+| ein Paar aus einer Lösung des Martingalproblems | steht (11. Lauf) |
+| **beide Paare, und daraus die Straffheit von `postcomp f ∘ X`** | **steht, dieser Lauf** |
+| **die Hebung auf `{P.map (Φ i)}` selbst in `D(ℝ≥0, E)`** | **steht, dieser Lauf** |
+| der Abschluß in der Supremumsnorm und die `Fin k`-Fassung | offen |
+
+#### Die Hebung, und was sie kostet
+
+`MeasureTheory.isTightMeasureSet_map_of_forall_martingale` ist **eine Anwendung
+einer Äquivalenz auf einen Satz** und enthält keine neue Abschätzung:
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal`
+(`SkorokhodSpace/Suggested.lean:18835`) hat auf der rechten Seite wörtlich die
+Konklusion des ersten Satzes, quantifiziert über `h : E →ᵇ ℝ`, und verlangt
+nichts als die kompakte Enthaltenheit. Drei Zeilen Beweis.
+
+**Der Preis ist der Quantor, und er ist benannt statt versteckt.** Die Hebung
+liest die Martingalhypothese an **jedem** `f : E →ᵇ ℝ`, während ein Erzeuger sie
+nur auf seinem Bereich hergibt. Der Weg des Meilensteins von dem einen zum
+anderen ist der Abschluß in der Supremumsnorm, und dieser Schritt steht **nicht**
+in der Aussage. Was hier steht, ist die ehrliche Naht: eine Familie, die an jeder
+beschränkten stetigen Funktion vom Martingalproblem getestet wird und kompakt
+enthalten ist, hat straffe Verteilungen in `D(ℝ≥0, E)`.
+
+**Die kompakte Enthaltenheit ist keine Abschwächung**:
+`SkorokhodSpace.isCompactContained_of_isTightMeasureSet` gewinnt sie aus der
+Konklusion zurück, und `SkorokhodSpace.isCompactContained_const` sagt, was sie
+ausschließt — nicht eine einzelne Familie, sondern das Entweichen von Masse
+**längs des Index**.
+
+#### Vorschlag für den nächsten Lauf
+
+**Die Stabilität der Straffheit unter gleichmäßiger Konvergenz der
+Testfunktion**, in `MartingaleProblems/Suggested.lean` — und das ist die letzte
+Lücke des ersten Kettenpunktes.
+
+> Konvergiert `f n → f` in der Supremumsnorm auf `E →ᵇ ℝ` und ist
+> `{(P.map (Φ i)).map (postcomp (f n))}` für jedes `n` straff, so ist es auch
+> `{(P.map (Φ i)).map (postcomp f)}`.
+
+**Warum jetzt.** Beide Sätze dieses Laufs zusammen sagen: aus der
+Martingalhypothese an `f` und `f²` folgt die Straffheit; und aus der Straffheit
+an **jedem** `f` folgt die Straffheit der Familie selbst. Dazwischen klafft
+genau der Abschluß in der Supremumsnorm, den der Meilenstein seit jeher
+vorsieht und den kein Lauf bisher angefaßt hat. Er ist die einzige Stelle, an
+der der erste Kettenpunkt noch mehr verlangt als ein Erzeugerbereich hergibt.
+
+**Was zuerst zu klären ist und nicht zu raten:** an welchem Satz die Stabilität
+hängt. `SkorokhodSpace.distWith_postcomp_le` mißt zwei **Pfade** unter *einem*
+Test, nicht zwei Tests an einem Pfad, ist also nicht unmittelbar der richtige;
+zu suchen ist eine Abschätzung der Skorokhod-Metrik von `postcomp (f n) x` gegen
+`postcomp f x` durch `‖f n - f‖`, bei der die Zeitverzerrung die Identität sein
+darf. Steht sie, so ist der Rest die Stabilität der Straffheit unter
+gleichmäßiger Approximation der **Abbildung**, und dafür ist zu prüfen, ob
+Mathlib etwas in der Art von `IsTightMeasureSet.map` mit einer
+Fehlerabschätzung hat — ein Negativbefund dort gehört in `check_negatives.py`.
+
+**Worauf er ruht, und es ist alles gebaut:** die beiden Sätze dieses Laufs, und
+`SkorokhodSpace.distWith_postcomp_le` als der Ort, an dem die Frage zu stellen
+ist.

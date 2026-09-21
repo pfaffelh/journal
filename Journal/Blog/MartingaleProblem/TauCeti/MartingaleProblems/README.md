@@ -11241,6 +11241,16 @@ has to be chosen once for all `n`. What stands:
   the real one applied to `Re f` and `Im f` together with the `Fin k` form.
   This is where the continuous time Doob inequalities of Milestone 9 are used.
 
+  **The name under which it stands, 2026-09-21.** The general form, taking the
+  two pairs and the two errors as hypotheses, is
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair`;
+  the form whose hypothesis is a **martingale** and whose error is zero is
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_martingale`. Both carry
+  `IsTightMeasureSet` in the name because that is the conclusion and because the
+  file names its statements after it throughout. What is still open of the item
+  as stated here is the passage to the **sup-norm closure** of the approximable
+  functions and the `Fin k` valued form; the single real `f` is done.
+
   **The first condition is a lower integral in `ℝ≥0∞`, and that is not
   cosmetic.** Written over `ℝ` as `𝔼[⨆ t ∈ Set.Iic T ∩ D, |Y n t - f (X n t)|]`
   it is satisfied by a family whose approximation error is *unbounded* on the
@@ -12846,13 +12856,15 @@ has to be chosen once for all `n`. What stands:
   condition on the class the approximants are drawn from, and this milestone
   states it there.
 
-  **What remains of this item is the step above the pairs**: the two pairs are
-  hypotheses of the statement, and what produces them is the martingale
-  approximation together with the closure of the approximable functions under
-  products, which is what makes the **second** pair approximate `f²` and not `f`.
-  That closure is a witness and not a convenience — the second approximant is not
-  the square of the first — and it is where the continuous time Doob inequalities
-  of Milestone 9 are used. Everything below it is built.
+  **The step above the pairs** is what produces them: for an *exact* solution it
+  is the martingale hypothesis read twice, at `f` and at `f²`, and that is
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_martingale` below. For
+  *approximants* it is the martingale approximation together with the closure of
+  the approximable functions under products, which is what makes the **second**
+  pair approximate `f²` and not `f`. That closure is a witness and not a
+  convenience — the second approximant is not the square of the first — and it is
+  where the continuous time Doob inequalities of Milestone 9 are used.
+  Everything below it is built.
 
   **The class is inhabited, 2026-09-21.**
   `MeasureTheory.isApproximatingPair_of_martingale`: a process `X` that is
@@ -12950,6 +12962,73 @@ has to be chosen once for all `n`. What stands:
   `MeasureTheory.stronglyMeasurable_integral_uncurry` is the same packaging of
   the same Mathlib lemma with the integrand **strongly measurable and real
   valued** instead, and it costs the construction nothing.
+
+  **The item stands for a family of solutions, 2026-09-21.**
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_martingale`: a family
+  `X i` of processes on one filtered probability space, strongly progressive
+  with right continuous paths, for which **both**
+  `f ∘ X i - ∫ g ∘ X i` and `(f ∘ X i)² - ∫ g' ∘ X i` are martingales, has tight
+  laws for `postcomp f ∘ X i` in `D(ℝ≥0, ℝ)`. Read at a generator, `g = A f` and
+  `g' = A (f²)`; the second hypothesis is not implied by the first, and `g'` is
+  not `g²`.
+
+  **This is the first item's own shape — a martingale hypothesis in, tightness
+  out — and what it adds over
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair`
+  is that the approximation error is zero.** `Y` is `f ∘ X i` itself and `Y'` is
+  `(f ∘ X i)²`, so both errors vanish identically and the `ε` of the criterion is
+  never spent. A consumer whose processes only *approximately* solve the problem
+  — Donsker's, whose random walks solve no martingale problem at all — calls the
+  bounded pair form directly; this one is the exact case, and it is the one the
+  acceptance examples of Milestone 4 meet.
+
+  **The two pairs come from one statement, and no product on `E →ᵇ ℝ` is used.**
+  `MeasureTheory.isApproximatingPair_of_martingale` is stated for a **merely
+  continuous** tested function, boundedness of it being read in no field of the
+  class: `progressive` and `progressive_sub` are measurability, `rightContinuous`
+  is continuity, `martingale` is the hypothesis, and the three fields carrying a
+  bound read the **density** alone. So it applies at `f` and at `f²` alike, the
+  second through `Continuous.pow`, and the closure of the approximable functions
+  under products — which the paragraph above names as what the second pair
+  needs — is not what an exact solution requires. What the consumer does need is
+  a bound on each approximant, and there `‖f‖` and `‖f‖²` are read; that is the
+  one place boundedness of `f` enters.
+
+  **What the two pairs do not share is the constant**: they are
+  `T' ^ q.toReal⁻¹ * ‖g‖₊` and `T' ^ q.toReal⁻¹ * ‖g'‖₊`, while the criterion
+  asks for one `K`. `MeasureTheory.IsApproximatingPair.mono_K` at the maximum
+  joins them, and it is the whole dependence of the class on that parameter: `K`
+  occurs in exactly one field and there as an upper bound. No monotonicity in `T`
+  or `q` holds in its place — the horizon is the measure of the window in two
+  fields at once, and the exponent is read in `one_lt_exponent`. The three
+  quantities the criterion leaves free are then **chosen**: `q = 2`, the horizon
+  `u + 1` for the window `u` handed down, and `K` the maximum above.
+
+  **And the seam to the next item, the same day.**
+  `MeasureTheory.isTightMeasureSet_map_of_forall_martingale`: under compact
+  containment of `{P.map (Φ i)}` at `0`, and with the two martingale hypotheses
+  available at **every** `f : E →ᵇ ℝ`, the laws of the `E` valued paths
+  themselves are tight in `D(ℝ≥0, E)`. That is what
+  `isRelativelyCompact_of_approx` consumes; the real images are not. The proof is
+  one application of `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal`
+  of **SkorokhodSpace** Milestone 8, whose right hand side is literally the
+  conclusion of the previous statement quantified over `h`, and no new estimate
+  occurs in it.
+
+  **The price is the quantifier, and it is named and not hidden.** The lifting
+  reads the martingale hypothesis at *every* bounded continuous `f`, while a
+  generator supplies it on its domain; the route from the one to the other is the
+  closure of the approximable functions in the sup norm, and that step is **not**
+  in this statement. It is what remains of the item, together with the `Fin k`
+  valued form.
+
+  **A naming correction made at the same time, 2026-09-21.** The class and all
+  of `namespace IsApproximatingPair` stood at the **root** namespace while
+  twenty-two docstrings in the file cited them as
+  `MeasureTheory.IsApproximatingPair…` — a name a reader could not look up. The
+  section now opens `namespace MeasureTheory`, which is where the rest of the
+  milestone lives, and the citations are true. Nothing of the mathematics
+  changed; the file builds with 0 errors and 0 `sorry` as before.
 
 * `isRelativelyCompact_of_approx`: if `E` is Polish, the domain of `A` contains
   an algebra separating points and vanishing nowhere, the approximation holds

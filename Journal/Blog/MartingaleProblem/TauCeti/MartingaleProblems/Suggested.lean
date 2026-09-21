@@ -43252,6 +43252,8 @@ Remark 9.5(a), with the two state chain of rate `n` as the witness. -/
 
 section ApproximatingPair
 
+namespace MeasureTheory
+
 /-- **Splitting the indefinite integral at an intermediate point.**
 `(∫_{(0,b]} f) - ∫_{(0,a]} f = ∫_{(a,b]} f` for `0 ≤ a ≤ b` and `f` integrable on `(0,b]`.
 
@@ -43377,6 +43379,20 @@ namespace IsApproximatingPair
 
 variable {𝓕 : Filtration ℝ≥0 m} {P : Measure Ω} {q : ENNReal} {T K : ℝ≥0}
 variable {Y C : ℝ≥0 → Ω → ℝ} {Z : ℝ → Ω → ℝ}
+
+/-- **The class grows with `K`**, and this is the whole of its dependence on that parameter:
+`K` occurs in exactly one field, `IsApproximatingPair.lintegral_eLpNorm_le`, and there as an
+upper bound.
+
+It is what lets a consumer meet a criterion asking for **one and the same** `K` from two pairs
+whose natural constants differ -- `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_martingale`
+reads it twice, at the maximum of the two.  No monotonicity in `T` or in `q` holds in its place: the
+horizon is the measure of the window in two fields at once, and the exponent is read in
+`one_lt_exponent`. -/
+theorem mono_K {K' : ℝ≥0} (h : IsApproximatingPair 𝓕 P q T K Y C Z) (hK : K ≤ K') :
+    IsApproximatingPair 𝓕 P q T K' Y C Z :=
+  { h with
+    lintegral_eLpNorm_le := h.lintegral_eLpNorm_le.trans (by exact_mod_cast hK) }
 
 /-- **Almost every path of the density is integrable on the horizon.**
 
@@ -43687,6 +43703,8 @@ theorem sum_lintegral_enorm_compensator_sub_le (h : IsApproximatingPair 𝓕 P q
     _ ≤ _ := mul_le_mul_right h.lintegral_eLpNorm_le _
 
 end IsApproximatingPair
+
+end MeasureTheory
 
 end ApproximatingPair
 
@@ -46757,14 +46775,25 @@ theorem stronglyMeasurable_integral_uncurry {α : Type*} [MeasurableSpace α]
   let _ : MeasurableSpace β := mβ
   exact MeasureTheory.StronglyMeasurable.integral_prod_left hW
 
-/-- **A solution of a martingale problem with bounded continuous data is a pair of the class**,
-with `Y = f ∘ X`, the density `Z = g ∘ X` and the compensator its indefinite integral -- and the
-constant `K = T ^ q.toReal⁻¹ * ‖g‖₊`, a formula in the data and not a hypothesis.
+/-- **A solution of a martingale problem is a pair of the class**, with `Y = F ∘ X`, the density
+`Z = g ∘ X` and the compensator its indefinite integral -- and the constant
+`K = T ^ q.toReal⁻¹ * ‖g‖₊`, a formula in the data and not a hypothesis.
 
 This is the first inhabitant of `MeasureTheory.IsApproximatingPair`, and it is \EK's: read at
-`f` in the domain of a generator and `g = A f`, the martingale hypothesis **is** the martingale
-problem, and the error against `f ∘ X` that
+`F` in the domain of a generator and `g = A F`, the martingale hypothesis **is** the martingale
+problem, and the error against `F ∘ X` that
 `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair` measures is zero.
+
+**`F` is asked to be continuous and not bounded, and that is not a generality on suspicion.**
+Boundedness of the tested function is read in **no** field: `progressive` and `progressive_sub`
+are measurability, `rightContinuous` is continuity, `martingale` is the hypothesis, and the three
+fields that carry a bound -- `ae_memLp`, `lintegral_eLpNorm_le` and the constant itself -- read
+the **density** `g` alone.  The consequence is that the square of a tested function needs no
+separate statement: `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_martingale` applies this one at
+`F` and at `F ^ 2` through `Continuous.pow`, and the class `E →ᵇ ℝ` never has to be closed under
+products for it.  A consumer needing `Y` bounded -- and
+`MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair` is one -- carries
+the bound there, where it is used.
 
 **Only a topology on `E`.**  Neither σ-algebra nor metric nor completeness appears, because every
 object read is a real functional of the path.  In particular `progressive_sub` -- the joint
@@ -46777,7 +46806,7 @@ so that a bare `E` suffices.
 `ae_memLp` and `lintegral_eLpNorm_le` are `MeasureTheory.memLp_of_bounded_Ioc` and
 `MeasureTheory.eLpNorm_le_of_bounded_Ioc` at the bound `‖g‖`, both holding at **every** sample
 point, so the almost sure quantifiers are not spent; `rightContinuous` is the right continuity of
-`f ∘ X` against the continuity of the compensator, which is where the boundedness of `g` is
+`F ∘ X` against the continuity of the compensator, which is where the boundedness of `g` is
 read a second time.
 
 **The one real price is `progressive_sub`**, and it is two steps.  Below a fixed `t` the window
@@ -46792,13 +46821,13 @@ hypothesis being the right continuity of the paths -- the same one the field
 theorem isApproximatingPair_of_martingale {E : Type*} [TopologicalSpace E]
     {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} [IsProbabilityMeasure P]
     {q : ENNReal} (hq : 1 < q) {T : ℝ≥0}
-    {X : ℝ≥0 → Ω → E} {f g : E →ᵇ ℝ}
+    {X : ℝ≥0 → Ω → E} {F : E → ℝ} (hF : Continuous F) {g : E →ᵇ ℝ}
     (hX : IsStronglyProgressive 𝓕 X)
     (hcont : ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ X s ω) (Set.Ici t) t)
-    (hmart : Martingale (fun t ω ↦ f (X t ω)
+    (hmart : Martingale (fun t ω ↦ F (X t ω)
       - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g (X s.toNNReal ω)) 𝓕 P) :
     IsApproximatingPair 𝓕 P q T (T ^ q.toReal⁻¹ * ‖g‖₊)
-      (fun t ω ↦ f (X t ω))
+      (fun t ω ↦ F (X t ω))
       (fun t ω ↦ ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g (X s.toNNReal ω))
       (fun s ω ↦ g (X s.toNNReal ω)) := by
   have hZrc : ∀ ω : Ω, ∀ s : ℝ, Tendsto (fun r : ℝ ↦ g (X r.toNNReal ω)) (𝓝[≥] s)
@@ -46809,7 +46838,7 @@ theorem isApproximatingPair_of_martingale {E : Type*} [TopologicalSpace E]
   have hZb : ∀ ω : Ω, ∀ s : ℝ, ‖g (X s.toNNReal ω)‖ ≤ ‖g‖ := fun ω s ↦ g.norm_coe_le_norm _
   refine
     { one_lt_exponent := hq
-      progressive := hX.continuous_comp f.continuous
+      progressive := hX.continuous_comp hF
       progressive_sub := ?_
       martingale := hmart
       rightContinuous := ?_
@@ -46819,12 +46848,12 @@ theorem isApproximatingPair_of_martingale {E : Type*} [TopologicalSpace E]
       lintegral_eLpNorm_le := ?_ }
   · refine isStronglyProgressive_of_measurable_uncurry_min fun t ↦ ?_
     obtain ⟨G, hG⟩ : ∃ G : ℝ → Ω → ℝ, ∀ r ω, G r ω =
-        f (X r.toNNReal ω) - ∫ s in Set.Ioc (0 : ℝ) r, g (X s.toNNReal ω) := ⟨_, fun _ _ ↦ rfl⟩
+        F (X r.toNNReal ω) - ∫ s in Set.Ioc (0 : ℝ) r, g (X s.toNNReal ω) := ⟨_, fun _ _ ↦ rfl⟩
     have hmeas : ∀ r : ℝ, r ≤ (t : ℝ) → Measurable[𝓕 t] (G r) := by
       intro r hr
       have hrt : r.toNNReal ≤ t := Real.toNNReal_le_iff_le_coe.2 hr
-      have h1 : StronglyMeasurable[𝓕 t] fun ω ↦ f (X r.toNNReal ω) :=
-        f.continuous.comp_stronglyMeasurable
+      have h1 : StronglyMeasurable[𝓕 t] fun ω ↦ F (X r.toNNReal ω) :=
+        hF.comp_stronglyMeasurable
           ((hX.stronglyAdapted r.toNNReal).mono (𝓕.mono hrt))
       have hψ : Measurable[(inferInstance : MeasurableSpace ℝ).prod (𝓕 t),
           Subtype.instMeasurableSpace.prod (𝓕 t)]
@@ -46841,7 +46870,7 @@ theorem isApproximatingPair_of_martingale {E : Type*} [TopologicalSpace E]
           fun ω ↦ ∫ s in Set.Ioc (0 : ℝ) r, g (X (min s.toNNReal t) ω) :=
         stronglyMeasurable_integral_uncurry (𝓕 t)
           (volume.restrict (Set.Ioc (0 : ℝ) r)) huncurry
-      have hfun : G r = fun ω ↦ f (X r.toNNReal ω)
+      have hfun : G r = fun ω ↦ F (X r.toNNReal ω)
           - ∫ s in Set.Ioc (0 : ℝ) r, g (X (min s.toNNReal t) ω) := by
         funext ω
         rw [hG]
@@ -46853,8 +46882,8 @@ theorem isApproximatingPair_of_martingale {E : Type*} [TopologicalSpace E]
     have hrc : ∀ (ω : Ω) (s : ℝ), Tendsto (fun r ↦ G r ω) (𝓝[≥] s) (𝓝 (G s ω)) := by
       intro ω s
       simp only [hG]
-      have h1 : Tendsto (fun r : ℝ ↦ f (X r.toNNReal ω)) (𝓝[≥] s) (𝓝 (f (X s.toNNReal ω))) :=
-        (f.continuous.tendsto _).comp (tendsto_nhdsGE_comp_toNNReal (hcont ω) s)
+      have h1 : Tendsto (fun r : ℝ ↦ F (X r.toNNReal ω)) (𝓝[≥] s) (𝓝 (F (X s.toNNReal ω))) :=
+        (hF.tendsto _).comp (tendsto_nhdsGE_comp_toNNReal (hcont ω) s)
       have h2 : Tendsto (fun r : ℝ ↦ ∫ u in Set.Ioc (0 : ℝ) r, g (X u.toNNReal ω)) (𝓝[≥] s)
           (𝓝 (∫ u in Set.Ioc (0 : ℝ) s, g (X u.toNNReal ω))) :=
         ((continuous_setIntegral_Ioc_zero_real_of_bounded (hZm ω) (hZb ω)).tendsto s).mono_left
@@ -46865,15 +46894,15 @@ theorem isApproximatingPair_of_martingale {E : Type*} [TopologicalSpace E]
       measurable_uncurry_min_of_rightContinuous (φ := fun u : ℝ≥0 ↦ (u : ℝ))
         measurable_coe_nnreal_real hmeas hrc
     have heq : (fun p : ℝ≥0 × Ω ↦ G (min (p.1 : ℝ) (t : ℝ)) p.2)
-        = fun p : ℝ≥0 × Ω ↦ f (X (min p.1 t) p.2)
+        = fun p : ℝ≥0 × Ω ↦ F (X (min p.1 t) p.2)
           - ∫ s in Set.Ioc (0 : ℝ) ((min p.1 t : ℝ≥0) : ℝ), g (X s.toNNReal p.2) := by
       funext p
       rw [hG, ← NNReal.coe_min, Real.toNNReal_coe]
     rw [heq] at key
     exact key
   · refine Filter.Eventually.of_forall fun ω s ↦ ?_
-    have h1 : Tendsto (fun r : ℝ≥0 ↦ f (X r ω)) (𝓝[≥] s) (𝓝 (f (X s ω))) :=
-      (f.continuous.tendsto _).comp (hcont ω s)
+    have h1 : Tendsto (fun r : ℝ≥0 ↦ F (X r ω)) (𝓝[≥] s) (𝓝 (F (X s ω))) :=
+      (hF.tendsto _).comp (hcont ω s)
     have h2 : Tendsto (fun r : ℝ≥0 ↦ ∫ u in Set.Ioc (0 : ℝ) (r : ℝ), g (X u.toNNReal ω))
         (𝓝[≥] s) (𝓝 (∫ u in Set.Ioc (0 : ℝ) (s : ℝ), g (X u.toNNReal ω))) :=
       ((continuous_setIntegral_Ioc_zero_of_bounded (hZm ω) (hZb ω)).tendsto s).mono_left
@@ -46894,5 +46923,113 @@ theorem isApproximatingPair_of_martingale {E : Type*} [TopologicalSpace E]
         ≤ ∫⁻ _ : Ω, ((T ^ q.toReal⁻¹ * ‖g‖₊ : ℝ≥0) : ENNReal) ∂P := lintegral_mono hpt
       _ = ((T ^ q.toReal⁻¹ * ‖g‖₊ : ℝ≥0) : ENNReal) := by
           rw [lintegral_const, measure_univ, mul_one]
+
+/-- **The first item of Milestone 11 in the shape its name promises: a martingale hypothesis in,
+tightness out.**
+
+A family `X i` of solutions of one and the same martingale problem, all on one filtered
+probability space and all with right continuous paths, has tight laws for `f ∘ X i` in
+`D(ℝ≥0, ℝ)` as soon as **both** `f` and `f ^ 2` are tested by the problem: `f ∘ X - ∫ g ∘ X` and
+`f ∘ X ^ 2 - ∫ g' ∘ X` are martingales for bounded continuous `g` and `g'`.  Read at a generator,
+`g = A f` and `g' = A (f ^ 2)`, and the second hypothesis is the one \EK{} need for the squared
+error -- it is **not** implied by the first, and `g'` is not `g ^ 2`.
+
+**The approximation error is zero, and that is the whole of what this statement adds.**  It goes
+through `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair`, whose two
+errors are `Y - f ∘ X` and `Y' - (f ∘ X) ^ 2`; here `Y` is `f ∘ X` and `Y'` is `(f ∘ X) ^ 2`, so
+both vanish identically and the `ε` of that criterion is never spent.  A consumer whose processes
+only *approximately* solve the problem -- Donsker's, whose random walks solve no martingale
+problem at all -- calls the bounded pair form directly; this one is the exact case, and it is the
+one the milestone's acceptance examples meet.
+
+**The two pairs come from one statement.**  `MeasureTheory.isApproximatingPair_of_martingale` is
+stated for a merely continuous tested function, so it applies at `f` and at `f ^ 2` alike, the
+second through `Continuous.pow`; no product on `E →ᵇ ℝ` is used, and no separate squared
+statement exists.  What the two pairs do *not* share is the constant: they are
+`T' ^ q.toReal⁻¹ * ‖g‖₊` and `T' ^ q.toReal⁻¹ * ‖g'‖₊`, while the criterion asks for one `K`.
+`MeasureTheory.IsApproximatingPair.mono_K` at the maximum is what joins them, and it is the only
+place in this file where that monotonicity is read.
+
+**The three quantities the criterion leaves free are chosen and not assumed.**  The exponent is
+`q = 2`, the horizon is `u + 1` for the window `u` the criterion hands down, and `K` is the
+maximum above; all three are legitimate because the densities `g ∘ X` and `g' ∘ X` are bounded,
+which is `MeasureTheory.eLpNorm_le_of_bounded_Ioc`.  The bounds on the approximants are `‖f‖` and
+`‖f‖ ^ 2`, and this -- not the pair statement -- is where boundedness of `f` is read. -/
+theorem isTightMeasureSet_map_postcomp_of_forall_martingale {E : Type*} [MeasurableSpace E]
+    [MetricSpace E] [BorelSpace E] [PolishSpace E] [CompleteSpace E]
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {γ : Type*} {X : γ → ℝ≥0 → Ω → E} {f g g' : E →ᵇ ℝ}
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hX : ∀ i, IsStronglyProgressive 𝓕 (X i))
+    (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ X i s ω) (Set.Ici t) t)
+    {Φ : γ → Ω → D(ℝ≥0, E)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ X i t ω)
+    (hmart : ∀ i, Martingale (fun t ω ↦ f (X i t ω)
+      - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g (X i s.toNNReal ω)) 𝓕 P)
+    (hmart' : ∀ i, Martingale (fun t ω ↦ f (X i t ω) ^ 2
+      - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g' (X i s.toNNReal ω)) 𝓕 P) :
+    IsTightMeasureSet
+      {(P.map (Φ i)).map (SkorokhodSpace.postcomp f.toContinuousMap) | i} := by
+  refine isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair hSc hSd hX hcont hΦ ?_
+  intro ε₀ hε₀ u hu
+  refine ⟨2, u + 1, (u + 1) ^ (2 : ENNReal).toReal⁻¹ * max ‖g‖₊ ‖g'‖₊,
+    lt_add_of_pos_right _ one_pos, fun i ε hε ↦ ?_⟩
+  refine ⟨fun t ω ↦ f (X i t ω),
+    fun t ω ↦ ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g (X i s.toNNReal ω),
+    fun t ω ↦ f (X i t ω) ^ 2,
+    fun t ω ↦ ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g' (X i s.toNNReal ω),
+    fun s ω ↦ g (X i s.toNNReal ω), fun s ω ↦ g' (X i s.toNNReal ω),
+    ‖f‖, ‖f‖ ^ 2, ?_, ?_, fun t ω ↦ f.norm_coe_le_norm _, ?_, ?_, ?_⟩
+  · exact (isApproximatingPair_of_martingale (by norm_num : (1 : ENNReal) < 2) f.continuous
+      (hX i) (hcont i) (hmart i)).mono_K (by gcongr; exact le_max_left _ _)
+  · exact (isApproximatingPair_of_martingale (by norm_num : (1 : ENNReal) < 2)
+      (f.continuous.pow 2) (hX i) (hcont i) (hmart' i)).mono_K
+      (by gcongr; exact le_max_right _ _)
+  · intro t ω
+    rw [norm_pow]
+    gcongr
+    exact f.norm_coe_le_norm _
+  · simp
+  · simp
+
+/-- **The seam between the first and the second item of the chain: tightness of the family
+itself.**
+
+`MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_martingale` gives tightness of the
+**real** images `postcomp f ∘ X i`, and that is not what `isRelativelyCompact_of_approx`
+consumes: it wants the laws of the `E` valued paths.  The passage back is
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal` of Milestone 8, whose right hand
+side is literally the conclusion of that statement quantified over `h : E →ᵇ ℝ`, and whose only
+hypothesis is compact containment.  So this is one application of an equivalence to a theorem,
+and no new estimate occurs in it.
+
+**The price is the quantifier, and it is named rather than hidden.**  The lifting reads the
+martingale hypothesis at **every** `h : E →ᵇ ℝ`, while a generator supplies it only on its
+domain; the milestone's route from the one to the other is the closure of the approximable
+functions in the sup norm, and that step is **not** in this statement.  What is stated here is
+therefore the honest joint: a family tested by the martingale problem at every bounded continuous
+function, and compactly contained, has tight laws in `D(ℝ≥0, E)`.
+
+**Compact containment is a hypothesis and not a weakening.**
+`SkorokhodSpace.isCompactContained_of_isTightMeasureSet` derives it from the conclusion, so the
+two are equivalent given the rest; and `SkorokhodSpace.isCompactContained_const` shows what it
+excludes -- not a single family, but the escape of mass along the index. -/
+theorem isTightMeasureSet_map_of_forall_martingale {E : Type*} [MeasurableSpace E]
+    [MetricSpace E] [BorelSpace E] [PolishSpace E] [CompleteSpace E]
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {γ : Type*} {X : γ → ℝ≥0 → Ω → E}
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hX : ∀ i, IsStronglyProgressive 𝓕 (X i))
+    (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ X i s ω) (Set.Ici t) t)
+    {Φ : γ → Ω → D(ℝ≥0, E)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ X i t ω)
+    (hcc : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) fun i ↦ P.map (Φ i))
+    (hmart : ∀ f : E →ᵇ ℝ, ∃ g g' : E →ᵇ ℝ,
+      (∀ i, Martingale (fun t ω ↦ f (X i t ω)
+        - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g (X i s.toNNReal ω)) 𝓕 P)
+      ∧ ∀ i, Martingale (fun t ω ↦ f (X i t ω) ^ 2
+        - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g' (X i s.toNNReal ω)) 𝓕 P) :
+    IsTightMeasureSet {P.map (Φ i) | i} := by
+  refine (SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal hcc).2 fun h ↦ ?_
+  obtain ⟨g, g', h1, h2⟩ := hmart h
+  exact isTightMeasureSet_map_postcomp_of_forall_martingale hSc hSd hX hcont hΦ h1 h2
 
 end MeasureTheory
