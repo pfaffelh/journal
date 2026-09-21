@@ -43702,7 +43702,87 @@ theorem sum_lintegral_enorm_compensator_sub_le (h : IsApproximatingPair 𝓕 P q
         lintegral_const_mul' _ _ hc
     _ ≤ _ := mul_le_mul_right h.lintegral_eLpNorm_le _
 
+/-- **The compensator vanishes at the origin**, the window `(0,0]` being empty.  It is
+`IsApproximatingPair.compensator_eq` at `t = 0` and nothing else, and it is what makes the
+integrability of a single value of the compensator a special case of
+`IsApproximatingPair.lintegral_enorm_compensator_sub_le`. -/
+theorem compensator_zero (h : IsApproximatingPair 𝓕 P q T K Y C Z) (ω : Ω) : C 0 ω = 0 := by
+  rw [h.compensator_eq]
+  simp
+
+/-- **The compensator is strongly measurable**, being the difference of the two progressive
+processes the class carries.
+
+It is not a field, and it need not be: `IsApproximatingPair.progressive` gives `Y` and
+`IsApproximatingPair.progressive_sub` gives `Y - C`, so `C = Y - (Y - C)` is measurable for
+`𝓕 t` and hence for the ambient σ-algebra. -/
+theorem stronglyMeasurable_compensator (h : IsApproximatingPair 𝓕 P q T K Y C Z) (t : ℝ≥0) :
+    StronglyMeasurable (C t) := by
+  have h1 : StronglyMeasurable[𝓕 t] (Y t) := h.progressive.stronglyAdapted t
+  have h2 : StronglyMeasurable[𝓕 t] (fun ω ↦ Y t ω - C t ω) := h.progressive_sub.stronglyAdapted t
+  have h3 : StronglyMeasurable[𝓕 t] (C t) := by
+    have h4 := h1.sub h2
+    have hrw : (Y t - fun ω ↦ Y t ω - C t ω) = C t := by funext ω; simp
+    rwa [hrw] at h4
+  exact h3.mono (𝓕.le t)
+
+/-- **A single value of the compensator is integrable on the horizon.**
+
+The bound is `IsApproximatingPair.lintegral_enorm_compensator_sub_le` at the window `(0, t]` and
+`δ = T`, where `IsApproximatingPair.compensator_zero` removes the lower end; the measurability is
+`IsApproximatingPair.stronglyMeasurable_compensator`.
+
+Together with `MeasureTheory.Martingale.integrable` of the compensated process this makes `Y t`
+itself integrable, which is what any statement about the *mean* of `Y` needs and which no field
+of the class supplies directly. -/
+theorem integrable_compensator [IsProbabilityMeasure P]
+    (h : IsApproximatingPair 𝓕 P q T K Y C Z) {t : ℝ≥0} (htT : t ≤ T) :
+    Integrable (C t) P := by
+  refine ⟨(h.stronglyMeasurable_compensator t).aestronglyMeasurable, ?_⟩
+  rw [hasFiniteIntegral_iff_enorm]
+  have hb := h.lintegral_enorm_compensator_sub_le (a := fun _ ↦ (0 : ℝ≥0)) (b := fun _ ↦ t)
+    (fun _ ↦ (by simp : (0 : ℝ≥0) ≤ t)) (fun _ ↦ htT) (δ := (T : ℝ))
+    (fun _ ↦ by simpa using (by exact_mod_cast htT : (t : ℝ) ≤ (T : ℝ)))
+  simp only [h.compensator_zero, sub_zero] at hb
+  refine lt_of_le_of_lt hb ?_
+  exact ENNReal.mul_lt_top
+    (ENNReal.rpow_lt_top_of_nonneg
+      (le_of_lt (one_sub_one_div_toReal_pos h.one_lt_exponent)) ENNReal.ofReal_ne_top)
+    ENNReal.coe_lt_top
+
 end IsApproximatingPair
+
+/-- **An `L¹` bound on a difference bounds the difference of the means, and makes the second
+function integrable.**
+
+Both halves are needed together and neither is available without the other: the integrability of
+`g` is read off `f - g` having finite `L¹` norm, and the bound on the means is
+`norm_integral_le_integral_norm` followed by
+`MeasureTheory.ofReal_integral_norm_eq_lintegral_enorm`, which is the only passage between the
+`ENNReal` shape in which the approximation errors of
+`MeasureTheory.IsApproximatingPair` are stated and the real shape in which a mean is compared.
+
+It is stated for real valued functions because that is where `MeasureTheory.IsApproximable`
+lives; nothing of the proof would change over a Banach space except the absolute value. -/
+theorem abs_integral_sub_le_of_lintegral_enorm_sub_le {P : Measure Ω} {f g : Ω → ℝ}
+    (hf : Integrable f P) (hg : AEStronglyMeasurable g P) {e : ℝ} (he : 0 ≤ e)
+    (hle : ∫⁻ ω, ‖f ω - g ω‖ₑ ∂P ≤ ENNReal.ofReal e) :
+    Integrable g P ∧ |(∫ ω, f ω ∂P) - ∫ ω, g ω ∂P| ≤ e := by
+  have hd : Integrable (fun ω ↦ f ω - g ω) P := by
+    refine ⟨hf.aestronglyMeasurable.sub hg, ?_⟩
+    rw [hasFiniteIntegral_iff_enorm]
+    exact lt_of_le_of_lt hle ENNReal.ofReal_lt_top
+  have hgi : Integrable g P := by
+    have hrw : g = fun ω ↦ f ω - (f ω - g ω) := by funext ω; ring
+    rw [hrw]; exact hf.sub hd
+  refine ⟨hgi, ?_⟩
+  rw [← integral_sub hf hgi]
+  have h1 : |∫ ω, (f ω - g ω) ∂P| ≤ ∫ ω, ‖f ω - g ω‖ ∂P := by
+    simpa [Real.norm_eq_abs] using norm_integral_le_integral_norm (μ := P) fun ω ↦ f ω - g ω
+  refine h1.trans ?_
+  have h2 : ENNReal.ofReal (∫ ω, ‖f ω - g ω‖ ∂P) ≤ ENNReal.ofReal e := by
+    rw [ofReal_integral_norm_eq_lintegral_enorm hd]; exact hle
+  exact (ENNReal.ofReal_le_ofReal_iff he).1 h2
 
 end MeasureTheory
 
@@ -45507,6 +45587,203 @@ theorem IsApproximable.one_lt_exponent {𝓕 : Filtration ℝ≥0 mΩ} {P : Meas
     (happ : IsApproximable 𝓕 P q T K V ε₀ u) : 1 < q := by
   obtain ⟨Y, C, Y', C', Z, Z', h, -⟩ := happ.exists_approximants 1 one_pos
   exact h.one_lt_exponent
+
+/-! ### What approximability excludes, and it is the deterministic jump
+
+The condition above quantifies its error at a **fixed** process: to every `ε > 0` there are pairs
+approximating `V` to within `ε`.  The three statements of this subsection say what that costs, and
+the answer is sharp enough to decide the form the criterion has to take for a family.
+
+**An approximable process cannot move its mean across a cell on which it rests.**  If `V` is
+constant on `Set.Ico a b` -- the same value at every sample point and at every time of the cell --
+then `∫ V b = ∫ V a`.  The proof is three lines of bookkeeping over one identity:
+
+* the mean of `Y` is the mean of the martingale `Y - C` plus the mean of `C`, and the first does
+  not move between `r` and `b`;
+* the mean of `C` does not move either, by
+  `MeasureTheory.IsApproximatingPair.lintegral_enorm_compensator_sub_le` at the window `(r, b]`,
+  whose bound `ofReal (b - r) ^ (1 - 1/q) * K` goes to zero as `r` climbs to `b` -- and this is
+  where the absolute continuity of the compensator is spent, and the only place;
+* so the mean of `Y` does not move between `r` and `b` either, while `V` has the same mean at `r`
+  as at `a` by hypothesis, and the two approximation errors are `ε`.
+
+**Neither the filtration nor the conditional structure enters.**  Only the *mean* of the
+martingale is read, and the mean of a martingale is constant over any filtration whatever.
+Enlarging `𝓕` -- revealing the increment of a discretely indexed process gradually over the cell,
+say -- therefore does not rescue an approximation; the obstruction is not adaptedness.
+
+**What it excludes is an atom of the compensator at a deterministic time**, and
+`MeasureTheory.not_isApproximable_indicator_Ici` is the smallest instance: the unit step
+`1_{[b,∞)}`, a deterministic process with no randomness at all, is approximable by no pair, over
+no filtration and under no probability measure.  Its compensator is a Dirac mass at `b`, and an
+indefinite integral has no atoms.
+
+**The consequence for the acceptance test of Milestone 11 is that the criteria of this milestone
+are read at a family and never at one member.**  A process whose jumps sit at the deterministic
+times `k / c` -- a rescaled random walk read as a step path is one -- has a purely atomic
+compensator, so `MeasureTheory.IsApproximable` fails for it at *every* index, and the hypothesis
+`happ` of `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_isApproximable` and of the four
+statements above it is unsatisfiable on such data.  \EK{} quantify their (9.26) along the index
+and not at a fixed member, and the statements of this file are to be read the same way: the
+approximation error goes to zero **with the family**, the finitely many members it does not yet
+cover being tight one by one. -/
+
+/-- **An approximable process that rests on a deterministic cell has the same mean at both ends
+of it.**
+
+`V` is asked to be constant on `Set.Ico a b`, as a function of time *and* of the sample point;
+the conclusion is `∫ V b = ∫ V a`.  Nothing else of `V` is used, and of
+`MeasureTheory.IsApproximable` only the two fields that carry the pair approximating `V` itself --
+neither the pair approximating `V²` nor the four integrabilities of the stopped values are read.
+
+**The filtration does not enter**, and that is the point of the statement: what is read of the
+martingale is that its mean is constant, and that holds over any filtration.  A larger `𝓕` is
+therefore no escape.
+
+**Where the absolute continuity of the compensator is spent**: in
+`MeasureTheory.IsApproximatingPair.lintegral_enorm_compensator_sub_le` at the window `(r, b]`,
+whose bound tends to zero as `r ↑ b` because `1 - 1/q` is positive.  A compensator with an atom
+at `b` would have that increment bounded below, and the statement would be false -- which is
+exactly what `MeasureTheory.not_isApproximable_indicator_Ici` exhibits. -/
+theorem IsApproximable.integral_eq_of_eqOn_Ico
+    {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K : ℝ≥0} {V : ℝ≥0 → Ω → ℝ} {ε₀ : ℝ} {u : ℝ≥0}
+    (happ : IsApproximable 𝓕 P q T K V ε₀ u)
+    (hVm : ∀ t : ℝ≥0, AEStronglyMeasurable (V t) P)
+    {a b : ℝ≥0} (hab : a < b) (hbT : b ≤ T)
+    (hV : ∀ r ∈ Set.Ico a b, V r = V a) :
+    ∫ ω, V b ω ∂P = ∫ ω, V a ω ∂P := by
+  have hq : 1 < q := happ.one_lt_exponent
+  set p : ℝ := 1 - 1 / q.toReal with hpdef
+  have hp0 : 0 < p := one_sub_one_div_toReal_pos hq
+  -- the estimate at one approximation error and one time inside the cell
+  have main : ∀ e : ℝ, 0 < e → ∀ r : ℝ≥0, a ≤ r → r < b →
+      |(∫ ω, V b ω ∂P) - ∫ ω, V a ω ∂P|
+        ≤ 2 * e + (ENNReal.ofReal ((b : ℝ) - (r : ℝ)) ^ p * (K : ENNReal)).toReal := by
+    intro e he r har hrb
+    have hrT : r ≤ T := le_trans hrb.le hbT
+    have hrb' : r ≤ b := hrb.le
+    obtain ⟨Y, C, Y', C', Z, Z', h, -, hεT, -, -, -, -, -⟩ :=
+      happ.exists_approximants (ENNReal.ofReal e) (ENNReal.ofReal_pos.2 he)
+    have herr : ∀ t : ℝ≥0, t ≤ T → ∫⁻ ω, ‖Y t ω - V t ω‖ₑ ∂P ≤ ENNReal.ofReal e := by
+      intro t htT
+      refine le_trans (lintegral_mono fun ω ↦ ?_) hεT
+      exact le_iSup₂ (f := fun t (_ : t ∈ Set.Iic T) ↦ ‖Y t ω - V t ω‖ₑ) t (Set.mem_Iic.2 htT)
+    have hYint : ∀ t : ℝ≥0, t ≤ T → Integrable (Y t) P := by
+      intro t htT
+      have h1 : Integrable (fun ω ↦ Y t ω - C t ω) P := h.martingale.integrable t
+      have h2 : Integrable (C t) P := h.integrable_compensator htT
+      have hrw : Y t = fun ω ↦ (Y t ω - C t ω) + C t ω := by funext ω; ring
+      rw [hrw]; exact h1.add h2
+    obtain ⟨-, hbnd⟩ := abs_integral_sub_le_of_lintegral_enorm_sub_le (hYint b hbT)
+      (hVm b) he.le (herr b hbT)
+    obtain ⟨-, hrnd⟩ := abs_integral_sub_le_of_lintegral_enorm_sub_le (hYint r hrT)
+      (hVm r) he.le (herr r hrT)
+    have hCb : Integrable (C b) P := h.integrable_compensator hbT
+    have hCr : Integrable (C r) P := h.integrable_compensator hrT
+    have hBne : ENNReal.ofReal ((b : ℝ) - (r : ℝ)) ^ p * (K : ENNReal) ≠ ⊤ :=
+      ENNReal.mul_ne_top
+        (ENNReal.rpow_ne_top_of_nonneg hp0.le ENNReal.ofReal_ne_top) ENNReal.coe_ne_top
+    have hClint := h.lintegral_enorm_compensator_sub_le (a := fun _ ↦ r) (b := fun _ ↦ b)
+      (fun _ ↦ hrb') (fun _ ↦ hbT) (δ := (b : ℝ) - (r : ℝ)) (fun _ ↦ le_rfl)
+    obtain ⟨-, hCbnd⟩ := abs_integral_sub_le_of_lintegral_enorm_sub_le hCb
+      hCr.aestronglyMeasurable ENNReal.toReal_nonneg
+      (by rw [ENNReal.ofReal_toReal hBne]; exact hClint)
+    have hM : (∫ ω, (Y b ω - C b ω) ∂P) = ∫ ω, (Y r ω - C r ω) ∂P := by
+      have hset := h.martingale.setIntegral_eq hrb' (s := Set.univ) MeasurableSet.univ
+      simpa using hset.symm
+    have hsplitb : (∫ ω, Y b ω ∂P) = (∫ ω, (Y b ω - C b ω) ∂P) + ∫ ω, C b ω ∂P := by
+      rw [← integral_add (h.martingale.integrable b) hCb]; simp
+    have hsplitr : (∫ ω, Y r ω ∂P) = (∫ ω, (Y r ω - C r ω) ∂P) + ∫ ω, C r ω ∂P := by
+      rw [← integral_add (h.martingale.integrable r) hCr]; simp
+    have hYdiff : (∫ ω, Y b ω ∂P) - (∫ ω, Y r ω ∂P)
+        = (∫ ω, C b ω ∂P) - ∫ ω, C r ω ∂P := by rw [hsplitb, hsplitr, hM]; ring
+    have hVra : (∫ ω, V r ω ∂P) = ∫ ω, V a ω ∂P := by rw [hV r ⟨har, hrb⟩]
+    rw [hVra] at hrnd
+    rw [abs_le] at hbnd hrnd hCbnd ⊢
+    constructor <;> linarith [hbnd.1, hbnd.2, hrnd.1, hrnd.2, hCbnd.1, hCbnd.2]
+  -- the error goes to zero, and the time climbs to the right end of the cell
+  set c : ℝ≥0 := b - a with hcdef
+  have hc0 : 0 < c := tsub_pos_of_lt hab
+  have hcb : c ≤ b := tsub_le_self
+  have hccoe : (c : ℝ) = (b : ℝ) - (a : ℝ) := NNReal.coe_sub hab.le
+  have key : ∀ η : ℝ, 0 < η → |(∫ ω, V b ω ∂P) - ∫ ω, V a ω ∂P| ≤ η := by
+    intro η hη
+    have hKtop : (K : ENNReal) ≠ ⊤ := ENNReal.coe_ne_top
+    have h0 : Tendsto (fun x : ENNReal ↦ (K : ENNReal) * x ^ p) (𝓝 0) (𝓝 0) :=
+      ENNReal.tendsto_const_mul_rpow_nhds_zero_of_pos hKtop hp0
+    have hcoe : Tendsto (fun d : ℝ≥0 ↦ (d : ENNReal)) (𝓝 0) (𝓝 0) := by
+      simpa using (ENNReal.continuous_coe.tendsto (0 : ℝ≥0))
+    have hcomp : Tendsto (fun d : ℝ≥0 ↦ (K : ENNReal) * (d : ENNReal) ^ p) (𝓝 0) (𝓝 0) :=
+      h0.comp hcoe
+    have hev : ∀ᶠ d : ℝ≥0 in 𝓝 0, (K : ENNReal) * (d : ENNReal) ^ p
+        ≤ ENNReal.ofReal (η / 2) :=
+      (ENNReal.tendsto_nhds_zero.1 hcomp) _ (ENNReal.ofReal_pos.2 (by linarith))
+    have hev2 : ∀ᶠ d : ℝ≥0 in 𝓝 0, d < c := eventually_lt_nhds hc0
+    obtain ⟨d, ⟨hdK, hdc⟩, hd0⟩ :=
+      (((hev.and hev2).filter_mono nhdsWithin_le_nhds).and
+        (self_mem_nhdsWithin (a := (0 : ℝ≥0)) (s := Set.Ioi 0))).exists
+    have hd0' : (0 : ℝ) < (d : ℝ) := hd0
+    have hdb : d ≤ b := le_trans hdc.le hcb
+    have hscoe : ((b - d : ℝ≥0) : ℝ) = (b : ℝ) - (d : ℝ) := NNReal.coe_sub hdb
+    have hdc' : (d : ℝ) < (b : ℝ) - (a : ℝ) := by rw [← hccoe]; exact_mod_cast hdc
+    have has : a ≤ b - d := by
+      rw [← NNReal.coe_le_coe, hscoe]; linarith
+    have hsb : b - d < b := by
+      rw [← NNReal.coe_lt_coe, hscoe]; linarith
+    have hgap : (b : ℝ) - ((b - d : ℝ≥0) : ℝ) = (d : ℝ) := by rw [hscoe]; ring
+    have hmain := main (η / 4) (by linarith) (b - d) has hsb
+    rw [hgap] at hmain
+    have hsmall : (ENNReal.ofReal (d : ℝ) ^ p * (K : ENNReal)).toReal ≤ η / 2 := by
+      refine ENNReal.toReal_le_of_le_ofReal (by linarith) ?_
+      rw [mul_comm, ENNReal.ofReal_coe_nnreal]
+      exact hdK
+    linarith
+  have hzero : |(∫ ω, V b ω ∂P) - ∫ ω, V a ω ∂P| = 0 := by
+    by_contra hne
+    have hpos : 0 < |(∫ ω, V b ω ∂P) - ∫ ω, V a ω ∂P| :=
+      lt_of_le_of_ne (abs_nonneg _) (Ne.symm hne)
+    have hhalf := key _ (half_pos hpos)
+    linarith
+  have hsub := abs_eq_zero.1 hzero
+  linarith [sub_eq_zero.1 hsub]
+
+/-- **A process that rests on a deterministic cell and moves its mean across it is approximable
+by nothing.**  This is `MeasureTheory.IsApproximable.integral_eq_of_eqOn_Ico` read backwards, and
+it is the form a consumer meets: a criterion of Milestone 11 asked at such a process has an
+unsatisfiable hypothesis. -/
+theorem not_isApproximable_of_eqOn_Ico_of_integral_ne
+    {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K : ℝ≥0} {V : ℝ≥0 → Ω → ℝ} {ε₀ : ℝ} {u : ℝ≥0}
+    (hVm : ∀ t : ℝ≥0, AEStronglyMeasurable (V t) P)
+    {a b : ℝ≥0} (hab : a < b) (hbT : b ≤ T)
+    (hV : ∀ r ∈ Set.Ico a b, V r = V a)
+    (hne : (∫ ω, V b ω ∂P) ≠ ∫ ω, V a ω ∂P) :
+    ¬ IsApproximable 𝓕 P q T K V ε₀ u :=
+  fun happ ↦ hne (happ.integral_eq_of_eqOn_Ico hVm hab hbT hV)
+
+/-- **The unit step at a deterministic time is approximable by nothing**, over no filtration and
+under no probability measure.
+
+This is the smallest witness that `MeasureTheory.IsApproximable` is a restrictive condition and
+not a formality, and it carries no randomness whatever: the process is `1_{[b,∞)}` at every
+sample point.  Its compensator is a Dirac mass at `b`, and the compensator of an approximating
+pair is an indefinite integral, which has no atoms.  The gap between the two is the whole jump
+and does not shrink with the error.
+
+**It is what decides the quantifier order of the criteria of Milestone 11.**  A family whose
+members jump at deterministic times -- the rescaled random walks of the acceptance test are one
+-- meets the hypothesis at no member at all, so the approximation of \EK's (9.26) is to be read
+along the index and not at a fixed member. -/
+theorem not_isApproximable_indicator_Ici
+    {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K : ℝ≥0} {ε₀ : ℝ} {u : ℝ≥0} {a b : ℝ≥0} (hab : a < b) (hbT : b ≤ T) :
+    ¬ IsApproximable 𝓕 P q T K (fun t _ ↦ if t < b then (0 : ℝ) else 1) ε₀ u := by
+  refine not_isApproximable_of_eqOn_Ico_of_integral_ne (fun t ↦ aestronglyMeasurable_const)
+    hab hbT (fun r hr ↦ ?_) ?_
+  · funext ω
+    simp [hr.2, hab]
+  · simp [hab]
 
 /-- **The third of the three limits, taken once and for all**: the assembly with the
 approximation error already sent to zero.

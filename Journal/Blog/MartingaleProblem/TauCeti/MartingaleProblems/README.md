@@ -12777,6 +12777,51 @@ has to be chosen once for all `n`. What stands:
   test function at a time; what still separates the two is the uniformity over
   the family, and the constants `u`, `q`, `K`, `‖g‖` of the bound behind it are
   there precisely because none of them belongs to a member.
+* **What approximability excludes, and it is the deterministic jump.**
+  `MeasureTheory.IsApproximable.integral_eq_of_eqOn_Ico`: if `V` is constant on
+  `Set.Ico a b` — the same value at every time of the cell *and* at every sample
+  point — and `b ≤ T`, then an approximable `V` has `∫ V b = ∫ V a`. With it
+  `MeasureTheory.not_isApproximable_of_eqOn_Ico_of_integral_ne` and the smallest
+  witness, `MeasureTheory.not_isApproximable_indicator_Ici`: the unit step
+  `1_{[b,∞)}`, a process with no randomness whatever, is approximable by no pair.
+
+  **The proof reads the mean of the martingale and nothing else**, so the
+  filtration does not enter: the mean of a martingale is constant over any
+  filtration. Between a time `r` inside the cell and `b` the mean of `Y` moves by
+  the mean of the compensator alone, and that is bounded by
+  `MeasureTheory.IsApproximatingPair.lintegral_enorm_compensator_sub_le` at the
+  window `(r, b]`, whose bound `ofReal (b - r) ^ (1 - 1/q) * K` goes to zero as
+  `r` climbs to `b`. That is where the absolute continuity of the compensator is
+  spent, and it is the only place. Enlarging `𝓕` — revealing the increment of a
+  discretely indexed process gradually across the cell — is therefore no escape;
+  the obstruction is not adaptedness but that an indefinite integral has no
+  atoms, while the compensator of a jump at a *deterministic* time is a Dirac
+  mass.
+
+  **The two auxiliaries it needs are stated for their own sake**, both being
+  what any statement about the mean of an approximating pair wants and neither
+  being a field of the class:
+  `MeasureTheory.IsApproximatingPair.stronglyMeasurable_compensator` — `C` is
+  `Y - (Y - C)`, so the two progressivity fields give it —,
+  `MeasureTheory.IsApproximatingPair.integrable_compensator`, which is the
+  compensator bound at the window `(0, t]` with
+  `MeasureTheory.IsApproximatingPair.compensator_zero` removing the lower end,
+  and the general passage
+  `MeasureTheory.abs_integral_sub_le_of_lintegral_enorm_sub_le` between the
+  `ENNReal` shape of the approximation errors and the real shape of a mean.
+
+  **It fixes the quantifier order the criteria of this milestone are read
+  under.** A family whose members jump at deterministic times has `IsApproximable`
+  at **no** member, so the hypothesis `happ` of
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_isApproximable` and of
+  the four statements above it is unsatisfiable on such data. The rescaled random
+  walks of the acceptance test are such a family: read as step paths they jump at
+  the deterministic times `k / c`, and their compensator along the grid is purely
+  atomic. \EK quantify (9.26) along the index, and so are these items to be read:
+  the approximation error goes to zero **with the family**, the finitely many
+  members it does not yet cover being tight one by one. The items themselves are
+  true as they stand and are not withdrawn; what changes is which data they are
+  applied to.
 * **The same estimate uniformly over the family.**
   `MeasureTheory.exists_forall_measure_setOf_lt_modulusBased_postcomp_le_of_forall_isApproximable`:
   for a family `X : γ → ℝ≥0 → Ω → E` over **one** probability space, all

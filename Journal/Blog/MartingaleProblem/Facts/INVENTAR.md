@@ -54704,3 +54704,164 @@ approximativen Fall.
 
 **Damit sind es dreizehn Deklarationen und 405 neue Zeilen in diesem Lauf**, und
 die Zahlen der ersten Hälfte oben sind entsprechend zu lesen.
+
+### 2026-09-21, dreiundzwanzigster Lauf des Tages — die Entscheidung, die der Vorlauf verlangt hat, ist gefallen, und sie fällt **gegen** die Paarhypothese: eine Irrfahrt ist bei festem Index durch **nichts** approximierbar, und der Grund ist nicht die Irrfahrt, sondern der deterministische Sprung
+
+Der Vorlauf hatte die erste Aufgabe dieses Laufs ausdrücklich nicht auf Bauen,
+sondern auf **Entscheiden** gestellt, und zwei Lesarten benannt:
+
+1. es gibt ein besseres approximierendes Paar als das dort beschriebene, und
+   dann ist es anzugeben;
+2. die Quantorenstellung von `happ` ist für die Irrfahrten zu stark, und die
+   Näherung gehört längs des Index.
+
+**Es ist die zweite, und der Befund ist schärfer als die Vermutung, die zu ihm
+geführt hat.** Der Vorlauf hatte die Kosten am *Interpolationsfehler* gemessen
+und daraus geschlossen, bei festem `n` gehe es nicht. Das Argument war richtig,
+aber zu eng: es rechnete an einer bestimmten Bauart von Paar. Bewiesen ist jetzt
+eine Aussage, die **über alle Paare** läuft, keine Rechnung an einer Konstruktion
+mehr braucht und mit der Irrfahrt nichts mehr zu tun hat.
+
+#### Der Satz
+
+> `MeasureTheory.IsApproximable.integral_eq_of_eqOn_Ico` — ist `V` auf
+> `Set.Ico a b` konstant, und zwar als Funktion der Zeit **und** des
+> Stichprobenpunktes, und ist `b ≤ T`, so hat ein approximierbares `V`
+> `∫ V b = ∫ V a`.
+
+Dazu die Kehrseite `not_isApproximable_of_eqOn_Ico_of_integral_ne` und der
+kleinste Zeuge, `not_isApproximable_indicator_Ici`:
+
+> **Die Einheitsstufe `1_{[b,∞)}` ist durch kein Paar approximierbar** — über
+> keiner Filtration und unter keinem Wahrscheinlichkeitsmaß. Sie trägt keinen
+> Zufall; sie ist an jedem Stichprobenpunkt dieselbe Treppe.
+
+#### Warum der Beweis so wenig liest, und warum das die Tragweite ausmacht
+
+Gelesen wird vom Martingal `Y - C` **allein sein Erwartungswert**, und der ist
+über *jeder* Filtration konstant. Zwischen einer Zeit `r` im Innern der Zelle und
+`b` bewegt sich der Mittelwert von `Y` also nur um den des Kompensators, und der
+ist durch `IsApproximatingPair.lintegral_enorm_compensator_sub_le` am Fenster
+`(r, b]` beschränkt — durch `ofReal (b − r) ^ (1 − 1/q) * K`, was mit `r ↑ b`
+verschwindet, weil `1 − 1/q > 0` ist. Genau dort, und **nur** dort, wird die
+absolute Stetigkeit des Kompensators ausgegeben.
+
+**Daraus folgt dreierlei, und jedes einzelne wäre für sich ein Befund:**
+
+* **Die Filtration ist kein Ausweg.** Die naheliegende Rettung — man vergrößere
+  `𝓕`, so daß der nächste Zuwachs über die Zelle hinweg allmählich sichtbar wird,
+  und dann darf das Martingal innerhalb der Zelle springen — trägt nicht. Der
+  Erwartungswert eines Martingals ist von der Filtration unabhängig.
+* **Es liegt nicht an der Irrfahrt.** Verboten ist ein **Atom des Kompensators zu
+  einer deterministischen Zeit**. Ein unbestimmtes Integral hat keine Atome, der
+  Kompensator eines Sprungs zu fester Zeit ist eine Diracmasse, und die Lücke
+  zwischen beiden ist der ganze Sprung und schrumpft mit dem Fehler nicht.
+* **Ein Sprungprozeß mit *zufälligen* Sprungzeiten ist davon nicht betroffen.**
+  Die Voraussetzung verlangt Konstanz auf einer **deterministischen** Zelle, an
+  *jedem* Stichprobenpunkt. Ein markovscher Sprungprozeß ruht auf zufälligen
+  Intervallen und fällt nicht darunter — was erklärt, warum die Klasse für die
+  Lösungen dieses Projekts brauchbar bleibt und trotzdem die Irrfahrten
+  aussperrt.
+
+#### Was das für den Akzeptanztest heißt
+
+Die reskalierten Irrfahrten springen, als Treppenpfade gelesen, zu den
+deterministischen Zeiten `k / c`, und ihr Kompensator längs des Gitters ist rein
+atomar. Also ist
+`MeasureTheory.IsApproximable 𝓕 P q T K (g ∘ X n) ε₀ u` für **jedes** `n` falsch,
+sobald `g` den Mittelwert über eine Gitterzelle bewegt — und für nichtlineares
+`g` bewegt er sich. Die Hypothese `happ` von
+`isTightMeasureSet_map_postcomp_of_forall_isApproximable` und der vier Aussagen
+darüber ist auf diesen Daten **unerfüllbar**.
+
+**Die fünf Signaturen sind damit nicht falsch und werden nicht zurückgenommen.**
+Sie sind wahre konditionale Aussagen; was sich ändert, ist, auf welche Daten sie
+anwendbar sind. \EK quantifizieren (9.26) längs des Index, und so sind sie zu
+lesen: der Näherungsfehler geht **mit der Familie** gegen null, und die endlich
+vielen Glieder, die er noch nicht erfaßt, sind einzeln straff, weil ein einzelnes
+Maß auf einem polnischen Raum straff ist.
+
+#### Sieben Deklarationen, alle gegen `master` übersetzt
+
+| Deklaration | was sie sagt |
+| --- | --- |
+| `IsApproximatingPair.compensator_zero` | `C 0 = 0`, das Fenster `(0,0]` ist leer |
+| `IsApproximatingPair.stronglyMeasurable_compensator` | `C = Y − (Y − C)`, also aus den beiden Progressivitätsfeldern |
+| `IsApproximatingPair.integrable_compensator` | ein Wert des Kompensators ist integrierbar, aus der Fensterschranke bei `(0,t]` |
+| `abs_integral_sub_le_of_lintegral_enorm_sub_le` | der Übergang von der `ENNReal`-Gestalt der Fehler zur reellen Gestalt eines Mittelwerts, samt Integrierbarkeit |
+| `IsApproximable.integral_eq_of_eqOn_Ico` | **der Satz** |
+| `not_isApproximable_of_eqOn_Ico_of_integral_ne` | seine Kehrseite |
+| `not_isApproximable_indicator_Ici` | **der Zeuge**: die Einheitsstufe |
+
+`check_master.py`: 0 Fehler, 0 `sorry`, Warnungen unverändert 18 / 38 / 112,
+davon veraltet 0. Alle sieben mit `check_axioms_master.py` geprüft und auf
+`propext`, `Classical.choice`, `Quot.sound` und nichts sonst. Mathlib-Stand
+`94ef6b89544e58e90f119da869f3fb48d1da0f4c`.
+
+Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 11, als eigener
+Eintrag „What approximability excludes, and it is the deterministic jump",
+eingefügt vor der Gleichmäßigkeitsaussage, weil die Lesart der Quantoren dort
+entschieden wird.
+
+#### Was dabei **nicht** gebaut wurde, und warum das die richtige Grenze war
+
+Der Vorlauf hatte gesagt, ein begründetes „die Voraussetzung ist zu stark" sei so
+viel wert wie die Instanz. Es ist mehr geworden als eine Begründung — es ist ein
+Satz mit Zeugen —, aber es ist **keine** berichtigte Signatur. Die Berichtigung
+ist der nächste Schritt und nicht dieser, aus einem Grund, der zu nennen ist: sie
+ist nicht die Ersetzung eines Quantors an einer Stelle, sondern verlangt eine
+zweite Zutat, die noch nicht dasteht (siehe den Vorschlag).
+
+#### Vorschlag für den nächsten Lauf
+
+**Die Straffheit einer Familie, die nur *schließlich* approximierbar ist** — in
+`MartingaleProblems/Suggested.lean`, Meilenstein 11:
+
+> `isTightMeasureSet_map_postcomp_of_eventually_isApproximable` — dieselbe
+> Aussage wie `isTightMeasureSet_map_postcomp_of_forall_isApproximable`, aber mit
+> `happ` nur `∀ᶠ i in F` für einen Filter `F` auf `γ`, dessen Komplemente endlich
+> sind, und mit der Straffheit der endlich vielen Ausnahmen aus
+> `MeasureTheory.isTightMeasureSet_singleton`.
+
+**Warum jetzt.** Es ist nach dem Befund dieses Laufs die **einzige** Stelle, an
+der die Straffheitsseite des Akzeptanztests noch hängt; die beiden anderen
+Restposten — der Fourierpunkt und die Quantifizierung von `Sol` — hängen nicht
+daran. Und es ist eine Aussage über die Straffheit allein, ohne jede
+Approximationsrechnung: der ganze Inhalt ist, daß eine Vereinigung einer straffen
+Familie mit endlich vielen einzelnen Maßen straff ist.
+
+**Worauf es ruht, und alles davon steht — die Vorfrage ist in diesem Lauf noch
+beantwortet worden, und mit Nein auf die erwartete Lücke:**
+
+1. `isTightMeasureSet_map_postcomp_of_forall_isApproximable` aus dem Lauf vom
+   2026-09-20 steht und wird nur durchgereicht.
+2. **Mathlib hat die Vereinigung, und sie ist in diesem Lauf noch nachgesehen
+   worden:** `MeasureTheory.IsTightMeasureSet.union`,
+   `Mathlib/MeasureTheory/Measure/Tight.lean:119`, samt `.subset` (`:114`),
+   `.inter` (`:125`) und `of_compactSpace` (`:109`). Es ist also **keine** Lücke
+   und **keine** sechzigste Negativaussage.
+
+   **Und der Weg dahin gehört mit in den Bericht, weil er die Regel des Auftrags
+   zum vierten Mal bestätigt.** Der erste Griff dieses Laufs war ein Grep nach
+   dem **qualifizierten Namen** `IsTightMeasureSet.union`, und der fand nichts:
+   die Aussage steht als `protected lemma union` *innerhalb* von
+   `namespace IsTightMeasureSet`, der qualifizierte Name kommt in der Quelle
+   nirgends vor. Hätte der Lauf das stehenlassen, stünde jetzt eine falsche
+   Negativaussage in der Roadmap — dieselbe Bauart wie bei
+   `Set.indicator_of_notMem` (2026-09-13), `frequently_lt_of_liminf_lt`
+   (2026-09-18) und `IsCadlag.add` (2026-09-21). **Die Regel ist damit zu
+   erweitern:** nicht nur ein durch `@[to_additive]` erzeugter Name fehlt in
+   jeder `theorem`-Zeile, sondern jeder Name, der in seinem eigenen Namensraum
+   deklariert ist. Gesucht wird nach dem **letzten Namensbestandteil** innerhalb
+   der Datei des Begriffs, nicht nach dem Namen, unter dem man ihn aufrufen
+   würde.
+3. `isTightMeasureSet_singleton` für die Ausnahmen — im Projekt schon benutzt
+   (`isTightMeasureSet_map_jumpPathD`), also belegt; mit `union` iteriert deckt
+   es jede endliche Ausnahmemenge.
+
+**Und der Punkt, an dem dieser Vorschlag scheitern könnte, benannt:** ob der
+Filter `F` in der Aussage frei bleiben darf oder ob die endliche Ausnahme in die
+Signatur gehört. Frei ist allgemeiner, aber dann muß der Verbraucher die
+Straffheit der Ausnahmen selbst liefern, und die Aussage ist nur noch
+Buchhaltung. Die Entscheidung ist am Akzeptanztest zu treffen — Donsker hat
+`γ = ℕ` und `F = atTop` — und sie ist zu begründen, nicht zu raten.
