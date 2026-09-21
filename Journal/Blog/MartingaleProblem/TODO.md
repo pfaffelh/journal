@@ -250,7 +250,7 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Einunddreißig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Zweiunddreißig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
 Alle zweiundzwanzig beim Beweisen aufgefallen, und die ersten vier sind kleine,
 in sich abgeschlossene Beiträge. Sie gehören thematisch zu
@@ -1182,6 +1182,35 @@ Zeichenketten, nicht Aussagen.
   Aufgefallen beim Bau der Straffheit einer Familie, von der nur alle bis auf
   endlich viele Glieder approximierbar sind
   (`isTightMeasureSet_map_postcomp_of_isApproximable_off_finite`).
+
+* **Der Kompensator des Quadrats einer Summe unabhängiger Summanden.** Daß
+  `(∑ k < n, ξ k) ^ 2 − ∑ k < n, 𝔼[ξ k ^ 2]` ein Martingal ist — die
+  vorhersagbare quadratische Variation einer diskreten Summe —, steht in Mathlib
+  in **keiner** Fassung. Geprüft am 2026-09-22 gegen `09712d488fd` am Quelltext:
+  unter `Mathlib/Probability/` gibt es keinen Treffer für
+  `QuadraticVariation`, `predictableQuadratic` oder `quadratic variation`, in
+  `Mathlib/Probability/Moments/Variance.lean` kommt `Martingale` **nicht ein
+  einziges Mal** vor, und die Treffer von `sq_sub` unter `Mathlib/Probability/`
+  sind `condVar_ae_eq_condExp_sq_sub_sq_condExp` und seine Verbraucher, also die
+  bedingte Varianz und nicht der Kompensator.
+
+  Was Mathlib hat, ist `ProbabilityTheory.IndepFun.variance_sum`
+  (`Mathlib/Probability/Moments/Variance.lean:424`) — diese Aussage zu **einer**
+  Zeit und mit weggeworfener Bedingung. Sie ist das unbedingte Schattenbild des
+  Satzes und ersetzt ihn nicht: die Martingaleigenschaft ist gerade, daß die
+  Identität nach jedem Anfangsstück noch gilt.
+
+  Steht bei uns als `martingale_sq_partialSum_of_iIndepFun` in
+  `TauCeti/MartingaleProblems/Suggested.lean`, Meilenstein 11, unter
+  Unabhängigkeit, Zentriertheit und `MemLp _ 2`. Der Platz in Mathlib ist neben
+  `Mathlib/Probability/Martingale/Basic.lean`; die für die Bibliothek richtige
+  Fassung ist vermutlich nicht unsere, sondern die bedingte — der Kompensator
+  als `∑ k < n, 𝔼[ξ k ^ 2 | 𝒢 k]` und ohne Unabhängigkeit —, aus der unsere der
+  Sonderfall ist.
+
+  Aufgefallen beim Bau des zweiten Approximanten des Akzeptanztests von
+  Meilenstein 11: `MeasureTheory.IsApproximable` verlangt einen Approximanten des
+  **Quadrats** des Prozesses, und ein Quadrat ist kein Martingal.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine

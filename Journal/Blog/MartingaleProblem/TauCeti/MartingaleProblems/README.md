@@ -13173,6 +13173,20 @@ has to be chosen once for all `n`. What stands:
   (`Probability/Process/Stopping.lean:1016`) against `integrable_const`. Of the
   measure it reads finiteness and not normalisation.
 
+  **And the bound is a majorant, 2026-09-22**, not a constant:
+  `MeasureTheory.IsApproximatingPair.integrable_stoppedValue_of_dominated` asks
+  only for an integrable `g` with `‖Y t ω‖ ≤ g ω` for `t ≤ j`, and the bounded
+  case is its instance at `g` constant. The generalisation is not for its own
+  sake and the acceptance test is what asks for it: a rescaled random walk is
+  **not** bounded, its value at stage `k` being a partial sum of independent
+  summands, while on a bounded stretch of time it is dominated by the sum of the
+  finitely many stage values it can take there, which is integrable. With a
+  constant majorant the class reaches no unbounded approximant, and
+  `MeasureTheory.IsApproximable` demands the four integrabilities of every
+  member of it. The domination is asked **only up to `j`**, `WithTop.untopA_le`
+  putting the reading point of the stopped value below `j`, so nothing is
+  hypothesised about values the statement never looks at.
+
   **Both Aldous times carry the bound the statement needs, and they carried it
   before the question was asked.** The capped time is below `u` by
   `min_le_right`; the gapped time is below `((u + δ : ℝ≥0) : WithTop ℝ≥0)` by
@@ -13769,6 +13783,53 @@ has to be chosen once for all `n`. What stands:
     the discrete one read at a pair of stages the floor already orders. No
     uniform integrability and no limit enter, the process taking only the
     countably many values it took before.
+  * `martingale_sq_partialSum_of_iIndepFun` and `martingale_sq_rescaledWalk`,
+    **2026-09-22** — the compensated square,
+    `(∑ k < n, ξ k) ^ 2 - ∑ k < n, 𝔼[ξ k ^ 2]`, is a martingale for the same
+    filtration, and so is its floor reindexing. It is the second of the two
+    processes the approximability condition asks for: `IsApproximable` wants an
+    approximant of the walk **and** one of its square, and a square is no
+    martingale. **Mathlib has it in no form** — there is no declaration named
+    for the predictable quadratic variation of a discrete martingale, no
+    `sq_sub` lemma about `Martingale`, and no compensator of a square anywhere
+    under `Mathlib/Probability/` (searched at the source of `master`
+    `09712d488fd`; `Mathlib/Probability/Moments/Variance.lean` mentions
+    `Martingale` not once). What Mathlib has is
+    `ProbabilityTheory.IndepFun.variance_sum`, which is this statement read at
+    one time and with the conditioning thrown away. The compensator is the sum
+    of the **second moments**, which under the centring hypothesis are the
+    variances; second moments are what the proof produces. The centring is spent
+    on the cross term and the square integrability on its integrability, one
+    place each, and the *same* independence serves the increment and its square,
+    `ξ n ^ 2` being measurable for the σ-algebra of `ξ n`.
+
+  **And here is what the walk still owes the acceptance test, measured and not
+  guessed.** The compensator above is a **step function of the time**, while
+  `MeasureTheory.IsApproximatingPair` asks its compensator to be
+  `∫_{(0,t]} Z s ω` for a density in `L^q` — and no step function is one. The
+  approximant of the square is therefore not the compensated square itself but
+  the compensated square plus an *absolutely continuous* compensator, the error
+  being the gap between the two. For increments of one common second moment `σ`
+  the absolutely continuous compensator is `t · σ`, its density the constant
+  `σ`, and the gap is `(t - ⌊t (n + 1)⌋ / (n + 1)) · σ ≤ σ / (n + 1)` — uniform
+  in `ω` and in `t`, and vanishing **along the family** and not at a fixed
+  member. That is the reason this milestone carries
+  `MeasureTheory.IsEventuallyApproximable` at all, and it is now measured rather
+  than asserted.
+
+  * `isApproximatingPair_rescaledWalk`, **2026-09-22** — and the first pair is
+    free, which is the other half of the same measurement. The walk approximates
+    itself with the zero compensator, the zero density and the constant `K = 0`,
+    error exactly `0`. It is **an instance of
+    `MeasureTheory.isApproximatingPair_of_martingale` and not a new statement**,
+    read at `F = id` and at the zero generator `g = 0`: that statement asks a
+    process, a continuous `F` and a bounded `g` making `F ∘ X` compensated by
+    the integral of `g ∘ X` a martingale, and a martingale is that with `F` the
+    identity and `g` zero. The walk solves no martingale problem, but `(id, 0)`
+    is admissible data for the statement — **a martingale needs no
+    approximating, being its own approximant.** So the whole cost of the
+    acceptance test sits in the second pair, the square, and a consumer joining
+    the two raises `K` with `MeasureTheory.IsApproximatingPair.mono_K`.
 
   With these the walk carries, over **one** filtration, everything the two halves
   of this milestone ask of a process: the martingale property, progressivity,

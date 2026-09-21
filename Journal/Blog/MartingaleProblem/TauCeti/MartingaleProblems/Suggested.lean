@@ -47200,28 +47200,52 @@ value does not care what is being approximated; `V` enters only as the process w
 hitting sequence provides the times, and of it is asked exactly what that sequence asks -- a
 countable dense set of times, progressive measurability, and right continuity of the paths. -/
 
-/-- **The stopped value of a bounded approximant at a bounded stopping time is integrable.**
+/-- **The stopped value of a dominated approximant at a bounded stopping time is integrable.**
 
 The whole proof is `MeasureTheory.stronglyMeasurable_stoppedValue_of_le` -- Mathlib's, at
-`Probability/Process/Stopping.lean:1016` -- against `integrable_const`, and it is the only place
-where the progressive measurability that the class carries as a field is spent on `Y` itself
-rather than on `Y - C`.
+`Probability/Process/Stopping.lean:1016` -- against `MeasureTheory.Integrable.mono'`, and it is
+the only place where the progressive measurability that the class carries as a field is spent on
+`Y` itself rather than on `Y - C`.
 
 **The bound on the stopping time is what the strong measurability needs and is not a
 convenience.**  `stoppedValue Y σ` is `𝓕 j`-measurable for `σ ≤ j` and for nothing smaller; the
 statement without a bound would have to be carried at the top of the filtration, where the
 filtration says nothing, and the value at a stopping time of an unbounded reach need not be
-measurable at all. -/
+measurable at all.
+
+**The domination is asked only up to `j`**, and that is not a refinement for its own sake: the
+stopped value reads `Y` at `(σ ω).untopA`, which `WithTop.untopA_le` puts below `j`, so a bound
+past the horizon of the stopping time would be a hypothesis about values the statement never
+looks at.
+
+**Why an integrable majorant and not a constant.**  The approximant a consumer arrives with need
+not be bounded -- a rescaled random walk is not, its value at stage `k` being a partial sum of
+independent summands -- while it is dominated on every bounded stretch of time by the sum of the
+finitely many stage values it can take there, which is integrable.  With a constant majorant the
+class would reach no unbounded process, and `MeasureTheory.IsApproximable` demands the four
+integrabilities of *every* member of it. -/
+theorem IsApproximatingPair.integrable_stoppedValue_of_dominated
+    {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} [IsFiniteMeasure P] {q : ENNReal} {T K : ℝ≥0}
+    {Y C : ℝ≥0 → Ω → ℝ} {Z : ℝ → Ω → ℝ} (h : IsApproximatingPair 𝓕 P q T K Y C Z)
+    {σ : Ω → WithTop ℝ≥0} (hσ : IsStoppingTime 𝓕 σ) {j : ℝ≥0}
+    (hσj : ∀ ω, σ ω ≤ (j : WithTop ℝ≥0)) {g : Ω → ℝ} (hg : Integrable g P)
+    (hYb : ∀ t : ℝ≥0, t ≤ j → ∀ ω, ‖Y t ω‖ ≤ g ω) :
+    Integrable (stoppedValue Y σ) P :=
+  hg.mono'
+    (((stronglyMeasurable_stoppedValue_of_le h.progressive hσ hσj).mono
+      (𝓕.le j)).aestronglyMeasurable)
+    (Filter.Eventually.of_forall fun ω ↦ hYb _ (WithTop.untopA_le (hσj ω)) ω)
+
+/-- **The stopped value of a bounded approximant at a bounded stopping time is integrable**, the
+instance of `MeasureTheory.IsApproximatingPair.integrable_stoppedValue_of_dominated` at a
+constant majorant, which a finite measure makes integrable. -/
 theorem IsApproximatingPair.integrable_stoppedValue_of_bounded
     {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} [IsFiniteMeasure P] {q : ENNReal} {T K : ℝ≥0}
     {Y C : ℝ≥0 → Ω → ℝ} {Z : ℝ → Ω → ℝ} (h : IsApproximatingPair 𝓕 P q T K Y C Z)
     {σ : Ω → WithTop ℝ≥0} (hσ : IsStoppingTime 𝓕 σ) {j : ℝ≥0}
     (hσj : ∀ ω, σ ω ≤ (j : WithTop ℝ≥0)) {c : ℝ} (hYb : ∀ t ω, ‖Y t ω‖ ≤ c) :
     Integrable (stoppedValue Y σ) P :=
-  (integrable_const c).mono'
-    (((stronglyMeasurable_stoppedValue_of_le h.progressive hσ hσj).mono
-      (𝓕.le j)).aestronglyMeasurable)
-    (Filter.Eventually.of_forall fun _ ↦ hYb _ _)
+  h.integrable_stoppedValue_of_dominated hσ hσj (integrable_const c) fun t _ ω ↦ hYb t ω
 
 /-- **The first two of the four integrabilities of `MeasureTheory.IsApproximable`**: the stopped
 value of a bounded approximant at the oscillation hitting time capped at the window radius `u`.
@@ -50044,6 +50068,227 @@ theorem martingale_rescaledWalk {P : Measure Ω} {ξ : ℕ → Ω → ℝ}
     (fun k ↦ (hmeas k).const_mul _) hindc (fun k ↦ (hint k).const_mul _) hcentc
   have hcont := martingale_floorFiltration_of_martingale (c := (n : ℝ≥0) + 1) hdisc
   simpa only [Finset.mul_sum] using hcont
+
+/-- **The compensated square of a sum of independent centred summands is a martingale**:
+`(∑ k < n, ξ k) ^ 2 - ∑ k < n, 𝔼[ξ k ^ 2]` is one for the natural filtration of the sums.
+
+**Mathlib has it in no form**, and this is not a matter of spelling: there is no declaration
+named for the predictable quadratic variation of a discrete martingale, no `sq_sub` lemma about
+`Martingale` and no compensator of a square anywhere under `Mathlib/Probability/` (searched at
+the source of `master` `09712d488fd` for `QuadraticVariation`, `predictableQuadratic` and
+`quadratic variation`; `Mathlib/Probability/Moments/Variance.lean` mentions `Martingale` not
+once).  What Mathlib has is the *unconditional* additivity of the variance under independence,
+`ProbabilityTheory.IndepFun.variance_sum`, which is this statement read at one time and with the
+conditioning thrown away.
+
+**The compensator is the sum of the second moments and not of the variances**, and under the
+centring hypothesis the two agree; second moments are what the proof produces, `∫ ξ n ^ 2` being
+the conditional expectation of `ξ n ^ 2` by independence, and the variance would have to be
+converted back at every stage.
+
+**Where the two hypotheses on the summands are spent, one place each.**  The centring kills the
+cross term `2 · S n · ξ n` -- through
+`MeasureTheory.condExp_mul_of_stronglyMeasurable_left`, whose `m`-measurable factor is the sum
+and whose independent factor is the increment -- and the square integrability buys the
+integrability of that cross term, by `MeasureTheory.MemLp.integrable_mul` at the Hölder pair
+`(2, 2)`, and of the square itself, by `MeasureTheory.MemLp.integrable_sq`.  Independence is
+read exactly where it is read in `MeasureTheory.martingale_partialSum_of_iIndepFun`, through
+`ProbabilityTheory.iIndepFun.indep_comap_natural_of_lt`, and the *same* independence serves the
+increment and its square, `ξ n ^ 2` being measurable for the σ-algebra of `ξ n`.
+
+**The constant of the next stage stays with the adapted summand**, which is the one arrangement
+of the decomposition that goes through: writing the step as
+`(S n ^ 2 - ∑ k < n + 1, 𝔼[ξ k ^ 2]) + (2 · S n · ξ n + ξ n ^ 2)` leaves no subtraction in the
+summand whose conditional expectation is computed, and `MeasureTheory.condExp_sub` need not be
+reconciled with `Pi.sub` at all.  With the constant on the other side the proof stalls on a
+`rw` that sees `(f - g) ω` where the goal carries `f ω - g ω`. -/
+theorem martingale_sq_partialSum_of_iIndepFun {P : Measure Ω} {ξ : ℕ → Ω → ℝ}
+    (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hLp : ∀ k, MemLp (ξ k) 2 P) (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0) :
+    Martingale (fun n ω ↦ (∑ k ∈ Finset.range n, ξ k ω) ^ 2
+        - ∑ k ∈ Finset.range n, ∫ ω', ξ k ω' ^ 2 ∂P)
+      (Filtration.natural (fun n ω ↦ ∑ k ∈ Finset.range n, ξ k ω)
+        (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ hmeas k)) P := by
+  have : IsProbabilityMeasure P := hind.isProbabilityMeasure
+  set Sm : ∀ n, StronglyMeasurable fun ω ↦ ∑ k ∈ Finset.range n, ξ k ω :=
+    fun n ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ hmeas k with hSm
+  set 𝒢 : Filtration ℕ mΩ := Filtration.natural (fun n ω ↦ ∑ k ∈ Finset.range n, ξ k ω) Sm
+    with h𝒢
+  have hint : ∀ k, Integrable (ξ k) P := fun k ↦ (hLp k).integrable one_le_two
+  have hSLp : ∀ n, MemLp (fun ω ↦ ∑ k ∈ Finset.range n, ξ k ω) 2 P := fun n ↦
+    memLp_finsetSum _ fun k _ ↦ hLp k
+  -- the past of the walk at `n + 1` sits inside the past of the increments at `n`
+  have hle : ∀ n, 𝒢 (n + 1) ≤ Filtration.natural ξ hmeas n := by
+    intro n
+    refine iSup₂_le fun j hj ↦ ?_
+    refine Measurable.comap_le (StronglyMeasurable.measurable ?_)
+    refine Finset.stronglyMeasurable_fun_sum (m := Filtration.natural ξ hmeas n) _ fun k hk ↦ ?_
+    have hkn : k ≤ n := by
+      have := Finset.mem_range.1 hk
+      omega
+    exact (Filtration.stronglyAdapted_natural hmeas k).mono
+      ((Filtration.natural ξ hmeas).mono hkn)
+  have hindep : ∀ n, Indep (MeasurableSpace.comap (ξ n) inferInstance) (𝒢 n) P := by
+    intro n
+    cases n with
+    | zero =>
+      refine indep_of_indep_of_le_right (indep_bot_right _) ?_
+      refine iSup₂_le fun j hj ↦ ?_
+      have hj0 : j = 0 := Nat.le_zero.1 hj
+      subst hj0
+      simp
+    | succ m =>
+      exact indep_of_indep_of_le_right
+        (hind.indep_comap_natural_of_lt hmeas (Nat.lt_succ_self m)) (hle m)
+  have hadapt : ∀ n, StronglyMeasurable[𝒢 n] fun ω ↦ (∑ k ∈ Finset.range n, ξ k ω) ^ 2
+      - ∑ k ∈ Finset.range n, ∫ ω', ξ k ω' ^ 2 ∂P := fun n ↦
+    ((Filtration.stronglyAdapted_natural Sm n).pow 2).sub stronglyMeasurable_const
+  refine martingale_nat (fun n ↦ ?_) (fun n ↦ ?_) (fun n ↦ ?_)
+  · exact hadapt n
+  · exact ((hSLp n).integrable_sq).sub (integrable_const _)
+  · have hxi : StronglyMeasurable[MeasurableSpace.comap (ξ n) inferInstance] (ξ n) :=
+      (Measurable.of_comap_le le_rfl).stronglyMeasurable
+    -- the cross term: `𝔼[S n · ξ n | 𝒢 n] = S n · 𝔼[ξ n] = 0`
+    have hprodint : Integrable (fun ω ↦ (∑ k ∈ Finset.range n, ξ k ω) * ξ n ω) P :=
+      (hSLp n).integrable_mul (hLp n)
+    have hpull : P[(fun ω ↦ (∑ k ∈ Finset.range n, ξ k ω) * ξ n ω) | 𝒢 n]
+        =ᵐ[P] fun ω ↦ (∑ k ∈ Finset.range n, ξ k ω) * (P[ξ n | 𝒢 n]) ω :=
+      condExp_mul_of_stronglyMeasurable_left (Filtration.stronglyAdapted_natural Sm n)
+        hprodint (hint n)
+    have hxizero : P[ξ n | 𝒢 n] =ᵐ[P] fun _ ↦ (0 : ℝ) := by
+      refine (condExp_indep_eq (hmeas n).measurable.comap_le (𝒢.le n) hxi (hindep n)).trans ?_
+      simp [hcent n]
+    -- the square of the increment: `𝔼[ξ n ^ 2 | 𝒢 n] = 𝔼[ξ n ^ 2]`
+    have hsq : P[(fun ω ↦ ξ n ω ^ 2) | 𝒢 n] =ᵐ[P] fun _ ↦ ∫ ω', ξ n ω' ^ 2 ∂P := by
+      refine (condExp_indep_eq (hmeas n).measurable.comap_le (𝒢.le n) (hxi.pow 2)
+        (hindep n)).trans ?_
+      filter_upwards with ω
+      rfl
+    have hsplit : (fun ω ↦ (∑ k ∈ Finset.range (n + 1), ξ k ω) ^ 2
+          - ∑ k ∈ Finset.range (n + 1), ∫ ω', ξ k ω' ^ 2 ∂P)
+        = (fun ω ↦ (∑ k ∈ Finset.range n, ξ k ω) ^ 2
+            - ∑ k ∈ Finset.range (n + 1), ∫ ω', ξ k ω' ^ 2 ∂P)
+          + ((2 : ℝ) • (fun ω ↦ (∑ k ∈ Finset.range n, ξ k ω) * ξ n ω)
+            + fun ω ↦ ξ n ω ^ 2) := by
+      funext ω
+      simp only [Finset.sum_range_succ, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
+      ring
+    rw [hsplit]
+    have hi1 : Integrable (fun ω ↦ (∑ k ∈ Finset.range n, ξ k ω) ^ 2
+        - ∑ k ∈ Finset.range (n + 1), ∫ ω', ξ k ω' ^ 2 ∂P) P :=
+      ((hSLp n).integrable_sq).sub (integrable_const _)
+    have hia : Integrable ((2 : ℝ) • (fun ω ↦ (∑ k ∈ Finset.range n, ξ k ω) * ξ n ω)) P :=
+      hprodint.smul (2 : ℝ)
+    have hi2 : Integrable ((2 : ℝ) • (fun ω ↦ (∑ k ∈ Finset.range n, ξ k ω) * ξ n ω)
+        + fun ω ↦ ξ n ω ^ 2) P := hia.add ((hLp n).integrable_sq)
+    have hadd := condExp_add (μ := P) (m := 𝒢 n) hi1 hi2
+    have hfirst : P[(fun ω ↦ (∑ k ∈ Finset.range n, ξ k ω) ^ 2
+          - ∑ k ∈ Finset.range (n + 1), ∫ ω', ξ k ω' ^ 2 ∂P) | 𝒢 n]
+        = fun ω ↦ (∑ k ∈ Finset.range n, ξ k ω) ^ 2
+            - ∑ k ∈ Finset.range (n + 1), ∫ ω', ξ k ω' ^ 2 ∂P :=
+      condExp_of_stronglyMeasurable (𝒢.le n)
+        (((Filtration.stronglyAdapted_natural Sm n).pow 2).sub stronglyMeasurable_const) hi1
+    have hrest : P[((2 : ℝ) • (fun ω ↦ (∑ k ∈ Finset.range n, ξ k ω) * ξ n ω)
+          + fun ω ↦ ξ n ω ^ 2) | 𝒢 n] =ᵐ[P] fun _ ↦ ∫ ω', ξ n ω' ^ 2 ∂P := by
+      have h2 := condExp_add (μ := P) (m := 𝒢 n) hia ((hLp n).integrable_sq)
+      have hsmul := condExp_smul (μ := P) (m := 𝒢 n) (2 : ℝ)
+        (fun ω ↦ (∑ k ∈ Finset.range n, ξ k ω) * ξ n ω)
+      filter_upwards [h2, hsmul, hpull, hxizero, hsq] with ω e2 esmul epull exi esq
+      simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul] at e2 esmul ⊢
+      rw [e2, esmul, epull, exi, esq]
+      simp
+    filter_upwards [hadd, hrest] with ω h1 h2
+    simp only [Pi.add_apply] at h1 ⊢
+    rw [h1, hfirst, h2, Finset.sum_range_succ]
+    ring
+
+/-- **The compensated square of the rescaled walk is a martingale in continuous time**, over the
+same filtration `martingale_rescaledWalk` lives on.
+
+It is the second of the two processes the approximability condition of this milestone asks for:
+`MeasureTheory.IsApproximable` wants an approximant of the walk **and** one of its square, and a
+square is no martingale.  What makes it one is subtracting the compensator, and here the
+compensator is the sum of the scaled second moments up to the stage `⌊t · (n + 1)⌋`.
+
+**It is a step function of the time and not an integral, and that is the whole difficulty the
+acceptance test still has to pay.**  `MeasureTheory.IsApproximatingPair` asks its compensator to
+be `∫_{(0,t]} Z s ω` for a density `Z` in `L^q`, and no step function is one.  The approximant
+of the square is therefore **not** this process but this process plus an absolutely continuous
+compensator, and the error of the approximation is the gap between the two -- which is bounded
+by the largest single second moment divided by `n + 1`, hence vanishes along the family and not
+at a fixed member.  That is the reason the milestone carries
+`MeasureTheory.IsEventuallyApproximable` at all, and it is measured here rather than asserted.
+
+The scaling passes through the hypotheses exactly as in `martingale_rescaledWalk`, and the
+square integrability replaces integrability because
+`MeasureTheory.martingale_sq_partialSum_of_iIndepFun` asks for it. -/
+theorem martingale_sq_rescaledWalk {P : Measure Ω} {ξ : ℕ → Ω → ℝ}
+    (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hLp : ∀ k, MemLp (ξ k) 2 P) (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0) (n : ℕ) :
+    Martingale
+      (fun t : ℝ≥0 ↦ fun ω ↦ ((Real.sqrt ((n : ℝ) + 1))⁻¹
+            * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ^ 2
+          - ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊,
+              ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω') ^ 2 ∂P)
+      (floorFiltration (Filtration.natural
+          (fun m ω ↦ ∑ k ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω)
+          (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ (hmeas k).const_mul _))
+        ((n : ℝ≥0) + 1)) P := by
+  have hindc : iIndepFun (fun k ω ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω) P :=
+    hind.comp _ fun _ ↦ measurable_const_mul (Real.sqrt ((n : ℝ) + 1))⁻¹
+  have hcentc : ∀ k, ∫ ω, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω ∂P = 0 := by
+    intro k
+    rw [integral_const_mul, hcent k, mul_zero]
+  have hdisc := martingale_sq_partialSum_of_iIndepFun
+    (fun k ↦ (hmeas k).const_mul _) hindc (fun k ↦ (hLp k).const_mul _) hcentc
+  have hcont := martingale_floorFiltration_of_martingale (c := (n : ℝ≥0) + 1) hdisc
+  simpa only [Finset.mul_sum] using hcont
+
+/-- **The rescaled walk is its own approximant**, with the zero compensator, the zero density and
+the constant `0`, and it is the *first* of the two pairs the approximability condition asks for.
+
+**It is an instance of `MeasureTheory.isApproximatingPair_of_martingale` and not a new statement**,
+read at `F = id` and at the zero generator `g = 0`: that statement asks a process, a continuous
+`F` and a bounded `g` such that `F ∘ X` compensated by the integral of `g ∘ X` is a martingale,
+and a martingale is that with `F` the identity and `g` zero.  The walk solves no martingale
+problem, but `(id, 0)` is admissible data for the statement, and the observation behind the
+instance is the whole of it: **a martingale needs no approximating, being its own approximant with
+error `0`.**
+
+The error is therefore not merely small but exactly zero, so the first of the two errors of
+`MeasureTheory.IsEventuallyApproximable` is free for the walks and the whole cost of the
+acceptance test sits in the second one, the square.  The constant is `K = 0`, and a consumer
+joining the two pairs raises it with `MeasureTheory.IsApproximatingPair.mono_K`.
+
+`IsProbabilityMeasure` is read from the general statement and the independence would give it
+anyway; the square integrability is not needed here, integrability of the increments being all
+the martingale property asks. -/
+theorem isApproximatingPair_rescaledWalk {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hint : ∀ k, Integrable (ξ k) P) (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0)
+    {q : ENNReal} (hq : 1 < q) {T : ℝ≥0} (n : ℕ) :
+    IsApproximatingPair
+      (floorFiltration (Filtration.natural
+          (fun m ω ↦ ∑ k ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω)
+          (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ (hmeas k).const_mul _))
+        ((n : ℝ≥0) + 1)) P q T 0
+      (fun t ω ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+        * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+      (fun _ _ ↦ (0 : ℝ)) (fun _ _ ↦ (0 : ℝ)) := by
+  have hmart : Martingale (fun t : ℝ≥0 ↦ fun ω ↦ id ((Real.sqrt ((n : ℝ) + 1))⁻¹
+        * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+      - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), (0 : BoundedContinuousFunction ℝ ℝ)
+          ((Real.sqrt ((n : ℝ) + 1))⁻¹
+            * ∑ j ∈ Finset.range ⌊s.toNNReal * ((n : ℝ≥0) + 1)⌋₊, ξ j ω))
+      (floorFiltration (Filtration.natural
+          (fun m ω ↦ ∑ k ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω)
+          (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ (hmeas k).const_mul _))
+        ((n : ℝ≥0) + 1)) P := by
+    simpa using martingale_rescaledWalk hmeas hind hint hcent n
+  have h := isApproximatingPair_of_martingale (E := ℝ) (T := T) hq (F := id) continuous_id
+    (g := (0 : BoundedContinuousFunction ℝ ℝ)) (isStronglyProgressive_rescaledWalk hmeas n)
+    (fun ω t ↦ continuousWithinAt_rescaledWalk n ξ ω t) hmart
+  simpa using h
 
 end WalkContainment
 
