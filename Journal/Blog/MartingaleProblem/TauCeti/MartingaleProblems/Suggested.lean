@@ -47214,4 +47214,78 @@ theorem isCompact_closure_of_subalgebra_forall_martingale {E : Type*}
   rw [hset]
   exact isTightMeasureSet_map_of_subalgebra_forall_martingale hSc hSd hX hcont hΦ hcc A hsep hmart
 
+/-! ### Milestone 10: the determining class the third item of the chain can use
+
+`mpSolution_of_tendsto_of_pContinuous` asks two things of one and the same class
+of test variables: that it be **determining** for the filtration, and that its
+members be continuous at almost every path of the limit.  The witnesses built for
+`IsDetermining` before this one -- `isDetermining_of_comap`,
+`isDetermining_indicatorFuns`, `isDetermining_pathCylinders` -- satisfy the first
+and none of them can satisfy the second: the first takes *all* bounded measurable
+functions of the past, and the other two take indicators, which are continuous at
+no point of a boundary.  On the path space the only class of which the continuity
+is known is `SkorokhodSpace.evalFuns` (**SkorokhodSpace** Milestone 8,
+`SkorokhodSpace.continuousAt_of_mem_evalFuns`), so the determining property has to
+be proved for **that** class.  The statement below is that proof, and it is not a
+convenience but the only way the two hypotheses of the third chain item can be met
+at once.
+
+**Why the class is indexed by `insert s (T ∩ Set.Iic s)` and not by `T ∩ Set.Iic s`.**
+`IsDetermining` quantifies over **every** time `s`, so the generation hypothesis
+has to hold at every time; a right dense `T` recovers the coordinates at all
+`r < s` by right continuity of the paths, but at `s` itself there is nothing above
+to approach from, and nothing in the argument produces `f s` from earlier
+coordinates.  Adding the single time `s` costs nothing -- the class stays countably
+indexed when `T` is countable, and `SkorokhodSpace.evalFuns_mono` puts it back
+inside the class along `T` whenever `s ∈ T`, which is the case at every time a
+martingale problem tests. -/
+
+section PathDetermining
+
+variable {ι : Type*} [LinearOrder ι] [MetricSpace ι] [OrderTopology ι]
+  [AdditiveDist ι] [ProperSpace ι] [BasePoint ι]
+variable {E : Type*} [MetricSpace E] [MeasurableSpace E] [BorelSpace E] [PolishSpace E]
+variable {Ω : Type*} {m : MeasurableSpace Ω} {𝕂 : Type*} [RCLike 𝕂]
+
+/-- **The finite dimensional test functions of the past are a determining class on
+the path space.**
+
+Everything is supplied by **SkorokhodSpace** Milestone 8 and fed to
+`isDetermining_of_generateFromFuns`: the class is a multiplicative system
+(`SkorokhodSpace.isMulSystem_evalFuns`), its members are bounded
+(`SkorokhodSpace.bounded_of_mem_evalFuns`), measurable for the past and generating
+it (`SkorokhodSpace.generateFromFuns_evalFuns_Iic`, used twice -- once as the
+generation hypothesis and once to read the measurability off it), and it contains
+the constant `1` (`SkorokhodSpace.one_mem_evalFuns`).
+
+**The filtration is a hypothesis and is the coordinate past.**  `h𝓕` says that
+`𝓕 s` is the pull back along the path map of the σ-algebra of the coordinates up
+to `s`; that is what makes the class live on the right space, and it is the same
+shape of hypothesis that `isDetermining_of_comap` carries.  Strong adaptedness of
+the family cannot be dropped for the reason given at `isDetermining_of_comap`.
+
+**What is asked of the index.**  Right density of `T` from above -- the same
+hypothesis that `SkorokhodSpace.borel_eq_iSup_comap_eval_of_countable_rightDense`
+and `IsCadlag.eq_of_eqOn_dense` carry, and for the same reason: plain density is
+not enough on an index with a right isolated point.  Countability of `T` is **not**
+read here; it is what a consumer wants in order to keep the class small, not what
+the determining property needs. -/
+theorem isDetermining_evalFuns {X : Ω → D(ι, E)} {𝓕 : Filtration ι m} {T : Set ι}
+    (hTr : ∀ t : ι, t ∈ T ∨ (𝓝[T ∩ Set.Ioi t] t).NeBot)
+    (h𝓕 : ∀ s : ι, (𝓕 s : MeasurableSpace Ω)
+      = MeasurableSpace.comap X (⨆ r ∈ Set.Iic s,
+          MeasurableSpace.comap (fun f : D(ι, E) => f.toFun r) inferInstance))
+    {𝓧 : Set (ι → Ω → 𝕂)} (hadp : ∀ Y ∈ 𝓧, StronglyAdapted 𝓕 Y) :
+    IsDetermining (fun s ↦ SkorokhodSpace.evalFuns E (insert s (T ∩ Set.Iic s))) 𝓧 X 𝓕 := by
+  refine isDetermining_of_generateFromFuns h𝓕
+    (fun s => SkorokhodSpace.isMulSystem_evalFuns _) ?_
+    (fun s => SkorokhodSpace.bounded_of_mem_evalFuns)
+    (fun s => SkorokhodSpace.generateFromFuns_evalFuns_Iic hTr s)
+    (fun s => SkorokhodSpace.one_mem_evalFuns _) hadp
+  intro s Z hZ
+  rw [← SkorokhodSpace.generateFromFuns_evalFuns_Iic (E := E) hTr s]
+  exact measurable_generateFromFuns_of_mem hZ
+
+end PathDetermining
+
 end MeasureTheory
