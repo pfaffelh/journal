@@ -1,7 +1,7 @@
 # Deklarationen, die es auf `94ef6b89544e58e90f119da869f3fb48d1da0f4c` schon geben könnte
 
-* geprüfte eigene Deklarationen: **2642**
-* Treffer auf dem letzten Namensbestandteil: **39**
+* geprüfte eigene Deklarationen: **2645**
+* Treffer auf dem letzten Namensbestandteil: **40**
 * als zu allgemein übergangen (kurz oder generisch): 25
 
 Ein Treffer ist ein **Anhaltspunkt**, keine Doppelung. Er sagt, daß Mathlib einen Satz mit demselben letzten Namensbestandteil hat — nachzusehen ist, ob es dieselbe Aussage ist.
@@ -15,6 +15,7 @@ Ein Treffer ist ein **Anhaltspunkt**, keine Doppelung. Er sagt, daß Mathlib ein
 | `TimeChange.norm_mul_le` | `SkorokhodSpace/Suggested.lean:2077` | `norm_mul_le` (`Mathlib/Analysis/Normed/Ring/Basic.lean:218`); `FreeGroup.norm_mul_le` (`Mathlib/GroupTheory/FreeGroup/Reduce.lean:447`) |
 | `IsDetermining.comp_fst` | `MartingaleProblems/Suggested.lean:7539` | `Asymptotics.IsBigO.comp_fst` (`Mathlib/Analysis/Asymptotics/Prod.lean:105`); `Asymptotics.IsLittleO.comp_fst` (`Mathlib/Analysis/Asymptotics/Prod.lean:113`); `Asymptotics.IsTheta.comp_fst` (`Mathlib/Analysis/Asymptotics/Theta.lean:311`) |
 | `MeasureTheory.Filtration.comp_apply` | `MartingaleProblems/Suggested.lean:2047` | `AlgHom.comp_apply` (`Mathlib/Algebra/Algebra/Hom.lean:265`); `NonUnitalAlgHom.comp_apply` (`Mathlib/Algebra/Algebra/NonUnitalHom.lean:306`); `AlgCat.comp_apply` (`Mathlib/Algebra/Category/AlgCat/Basic.lean:112`) |
+| `MeasureTheory.IsStronglyProgressive.continuous_comp` | `MartingaleProblems/Suggested.lean:45300` | `IsCompactOperator.continuous_comp` (`Mathlib/Analysis/Normed/Operator/Compact/Basic.lean:283`); `MeasureTheory.TendstoInDistribution.continuous_comp` (`Mathlib/MeasureTheory/Function/ConvergenceInDistribution.lean:136`); `continuous_comp` (`Mathlib/Tactic/FunProp.lean:91`) |
 | `MeasureTheory.Martingale.comp_continuousLinearMap` | `MartingaleProblems/Suggested.lean:4093` | `ContDiffWithinAt.comp_continuousLinearMap` (`Mathlib/Analysis/Calculus/ContDiff/Basic.lean:394`); `ContDiffOn.comp_continuousLinearMap` (`Mathlib/Analysis/Calculus/ContDiff/Basic.lean:416`); `ContDiff.comp_continuousLinearMap` (`Mathlib/Analysis/Calculus/ContDiff/Basic.lean:420`) |
 | `MeasureTheory.Submartingale.comp_monotone` | `MartingaleProblems/Suggested.lean:2053` | `Antitone.comp_monotone` (`Mathlib/Order/Monotone/Defs.lean:370`) |
 | `MeasureTheory.TendstoInDistribution.continuousAt_comp` | `WeakConvergence/Suggested.lean:2267` | `MapClusterPt.continuousAt_comp` (`Mathlib/Topology/ClusterPt.lean:150`) |

@@ -50512,3 +50512,202 @@ Klasse von Meilenstein 11 — je `f` aus ihr ein `V = f ∘ X` —, und sie ist
 der Punkt **danach**, nicht Teil dieses Zusammenbaus. Das gehört an die
 Deklaration und in die README, damit kein Lauf den Zusammenbau für den ganzen
 Punkt hält.
+
+### 2026-09-21, dritter Lauf des Tages — die beiden Summanden stehen unter **einem** `≤`, und damit ist die ganze probabilistische Substanz des Straffheitskriteriums eine Ungleichung; dazu der Übergang an den Bildpfad, an dem eine Mathlib-Lücke sichtbar wird, die dieselbe Bibliothek an der Nachbarstelle längst gefüllt hat
+
+**Bearbeitet:** der Zusammenbau des ersten Punktes der Kette des Meilensteins 11
+von `MartingaleProblems`, wie vom Vorlauf vorgeschlagen, und danach der Übergang
+an den Bildpfad. Wie angeordnet: kein Meilenstein 8, kein Meilenstein 14, kein
+C.5/G.
+
+#### Was gebaut ist
+
+**Drei** neue Deklarationen in `TauCeti/MartingaleProblems/Suggested.lean`, in
+zwei neuen Abschnitten („The assembly of the two summands", „The assembly at an
+image path").
+
+* `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair` —
+  der Zusammenbau:
+  ```
+  ofReal ε₀ * P {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ ω)) δ}
+    ≤ N * ofReal √(((1 + 2 c) * (ofReal δ ^ (1 − 1/q) * K) + A).toReal)
+      + (ofReal u ^ (1 − 1/q) * K * (1 + 2 ofReal c) / N + A) / ofReal ε₀
+  ```
+  mit `A = 2 ε' + 4 ofReal c * ε`, für `δ < u`, `u + δ ≤ T`, `0 < ε₀`, `N ≠ 0`.
+  Es ist `le_trans` von
+  `mul_measure_setOf_lt_modulusBased_le_lintegral_dist` und `add_le_add` der
+  beiden Blockergebnisse; **keine eigene Abschätzung**.
+* `MeasureTheory.IsStronglyProgressive.continuous_comp` — die progressive
+  Meßbarkeit übersteht die Nachkomposition mit einer stetigen Abbildung. Eine
+  Zeile, `fun i ↦ hg.comp_stronglyMeasurable (hu i)`, und eine Mathlib-Lücke.
+* `MeasureTheory.mul_measure_setOf_lt_modulusBased_postcomp_le_of_isApproximatingPair`
+  — dieselbe Ungleichung am **Bildpfad**
+  `SkorokhodSpace.postcomp g (SkorokhodSpace.extendNNReal (Φ ω))` für
+  `g : E →ᵇ ℝ`, mit `c = ‖g‖`.
+
+**Geprüft:** `scripts/check_master.py` meldet für die ganze Kette **0 Fehler,
+0 `sorry`, 0 veraltete Namen** (Mathlib `94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `v4.35.0-rc2`). Die Warnungen sind 18 / 35 / 112 und damit **unverändert**
+gegenüber dem vor dem Lauf eigens gemessenen Stand. Alle drei hängen nach
+`check_axioms_master.py` auf `propext`, `Classical.choice`, `Quot.sound` und auf
+nichts sonst. `check_cited_lines.py`: **391 von 391** gepaarten Fundstellen
+stimmen (zwölf mehr als vor dem Lauf, das sind genau die neu zitierten), 0 tote,
+0 verschoben. `check_duplicates.py` und `check_own_names.py` finden zu den neuen
+Namen nur Namensvettern auf dem letzten Bestandteil (2645 eigene Deklarationen,
+drei mehr als vor dem Lauf). `check_negatives.py`: **50** Behauptungen — eine
+mehr, die neue —, 0 mit unerwarteten Treffern. `check.py` meldet `clean`.
+
+#### Der Vorschlag des Vorlaufs ist eingelöst, und er war richtig gestellt
+
+Die Vorhersage, es sei `le_trans` plus `add_le_add` und keine neue Abschätzung,
+trifft zu. Die benannte Typfalle — `mul_measure_setOf_lt_modulusBased_le_lintegral_dist`
+führt `u δ : ℝ` und schreibt die Zeiten mit `Real.toNNReal`, die beiden
+Schranken führen sie als `ℝ≥0` — ist genau die Stelle, an der gearbeitet werden
+mußte, und `simp only [Real.toNNReal_coe] at key` erledigt sie in einer Zeile,
+**nachdem** die Aussage bei `u = ((u₀ : ℝ≥0) : ℝ)` instanziiert ist.
+
+**Was der Vorschlag nicht vorgesehen hatte, und es spart zwei Hypothesen.** Die
+beiden Blöcke lesen die Approximationsfehler auf verschiedenen Fenstern —
+`Set.Iic (u + δ)` beim Lückenblock, `Set.Iic u` beim Horizontblock. Die Aussage
+trägt nur das **größere**; das kleinere folgt mit `biSup_mono` unter
+`lintegral_mono`, und aus demselben Grund ist auch `u ≤ T`, das der
+Horizontblock verlangt, keine Hypothese, sondern `le_self_add` gegen `u + δ ≤ T`.
+
+*Und eine Falle beim Hinschreiben dieser vier Zeilen:* `biSup_mono` mit
+`fun t ht ↦ le_trans ht le_self_add` direkt unter `lintegral_mono` **läuft in
+einen `whnf`-Timeout** (200000 Heartbeats), weil die Elaboration den Integranden
+mitschleppt. Zieht man die Monotonie als eigene Aussage über eine **abstrakte**
+Funktion `F : ℝ≥0 → Ω → ENNReal` heraus und schreibt die Mengenmitgliedschaft mit
+`Set.mem_Iic` aus, so übersetzt dasselbe Argument in Sekunden. Das ist keine
+Mathematik, aber es ist der Unterschied zwischen einem Beweis und keinem.
+
+#### Der Bildpfad, und was er kostet
+
+Das Kriterium dieses Meilensteins spricht über die Bildpfade: das ist die
+Gestalt, die `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal` ihm
+gibt und die die drei Transporte
+`SkorokhodSpace.min_edist_le_two_mul_modulusBased_postcomp` und seine beiden
+Geschwister lesen. Der Zusammenbau steht über einem reellwertigen `V`. Der
+Übergang ist vier Schritte, und jeder ist einer:
+
+* progressive Meßbarkeit von `g ∘ X` — **die Mathlib-Lücke, siehe unten**;
+* Rechtsstetigkeit — `hcont` mit der Stetigkeit von `g` zusammengesetzt;
+* die Pfadabbildung — `SkorokhodSpace.postcomp_toFun` gegen `hΦ`;
+* die Schranke `c = ‖g‖` — `BoundedContinuousFunction.norm_coe_le_norm`.
+
+**Und die Indexkreuzung ist umsonst:** `SkorokhodSpace.postcomp_extendNNReal` ist
+`rfl`, die Aussage darf also in beiden Lesarten gelesen werden — als Modul des
+Bildes des erweiterten Pfades, was Meilenstein 8 liefert, oder als Modul der
+Erweiterung des Bildpfades, was der Zusammenbau beweist.
+
+**Zwei Befunde dabei.**
+
+* **An `E` wird nichts Meßbares verlangt.** Der Linter `unusedSectionVars` hat es
+  gemeldet, und es stimmt: der Modul ist durchweg der eines *reellwertigen*
+  Pfades, `E` tritt nur als metrischer Raum auf, in dem der Pfad lebt, und als
+  Definitionsbereich von `g`. Die Borel- und Zweitabzählbarkeitsvoraussetzungen,
+  die das Kriterium führt, gehören zur Straffheitsaussage und nicht zu dieser
+  Abschätzung. Die Aussage steht deshalb in einem eigenen `namespace`-Block mit
+  `[MetricSpace E]` und sonst nichts.
+* **Die Schranke an den Prozeß ist dort eine Folgerung und keine Hypothese.**
+  `IsApproximatingPair` trägt keine; der Zusammenbau verlangt eine, weil die
+  Quadratidentität sie viermal verbraucht — ein `E →ᵇ ℝ` bringt sie mit. Ein
+  Verbraucher des Kriteriums muß sie also nie beschaffen.
+
+#### Die Mathlib-Lücke, und sie ist an der Nachbarstelle längst gefüllt
+
+`MeasureTheory.IsStronglyProgressive.continuous_comp` steht in Mathlib nicht, und
+die Gestalt der Lücke ist der Befund:
+
+| Datei | hat die Abstraktion? |
+| --- | --- |
+| `Mathlib/Topology/Order/Cadlag.lean` | **ja** — `IsCadlag.continuous_comp` (`Mathlib/Topology/Order/Cadlag.lean:119`) und `IsCadlag.continuous_comp₂` (`Mathlib/Topology/Order/Cadlag.lean:128`), aus denen `mul`, `div`, `inv`, `const_smul` abgeleitet sind |
+| `Mathlib/Probability/Process/Adapted.lean` | **nein** — `MeasureTheory.IsStronglyProgressive.mul` (`Mathlib/Probability/Process/Adapted.lean:293`), `MeasureTheory.IsStronglyProgressive.inv` (`Mathlib/Probability/Process/Adapted.lean:323`), `MeasureTheory.IsStronglyProgressive.div'` (`Mathlib/Probability/Process/Adapted.lean:327`) je einzeln bewiesen |
+
+`MeasureTheory.IsStronglyProgressive.comp`
+(`Mathlib/Probability/Process/Adapted.lean:280`) ist die Komposition im
+**Zeitargument** und eine andere Aussage; deshalb der Name `continuous_comp`,
+der auch der ist, den `Cadlag.lean` benutzt. `MeasureTheory.StronglyAdapted.mul`
+(`Mathlib/Probability/Process/Adapted.lean:111`) steht in derselben Lage. Der
+Beweis ist `Continuous.comp_stronglyMeasurable`
+(`Mathlib/MeasureTheory/Function/StronglyMeasurable/Basic.lean:323`), und es wird
+weder eine Ordnungstopologie noch eine meßbare Struktur auf den Werten verlangt,
+nur `Preorder ι` und ein `MeasurableSpace ι`. Die Behauptung ist als
+`progressive-continuous-comp` in `scripts/check_negatives.py` eingetragen und
+wird von jetzt an mitgeprüft.
+
+#### Eine Falle des `open`, die einen Durchlauf gekostet hat
+
+Die Notation `E →ᵇ ℝ` ist `scoped[BoundedContinuousFunction]`, und
+
+```lean
+namespace MeasureTheory
+open scoped BoundedContinuousFunction   -- öffnet MeasureTheory.BoundedContinuousFunction
+```
+
+öffnet **den Namensraum unter `MeasureTheory`**, der existiert und keine Notation
+trägt; der Wurzelnamensraum bleibt stillschweigend zu. Gemeldet wird
+
+```
+elaboration function for `Mathlib.Tactic.superscriptTerm` has not been implemented
+```
+
+— denn `→ᵇ` ist kein Token mehr und `ᵇ` wird als Hochstellung geparst. Die
+Meldung nennt **keine** der beiden Ursachen. Das Heilmittel ist
+`open scoped _root_.BoundedContinuousFunction`; der Linter `ambiguousOpen` sagt
+es in einer Warnung, die neben dem Fehler, den sie verursacht, leicht untergeht.
+Es ist dieselbe Bauart wie die Namensfalle `D` gegen `D(ι, E)`, die der
+Lückenblock notiert hat: ein Name, der zwei Dinge bedeutet, und eine
+Fehlermeldung über ein drittes.
+
+#### Wo der erste Punkt der Kette jetzt steht
+
+| Größe | Stand |
+| --- | --- |
+| alles Deterministische bis zur Modulabschätzung | steht |
+| die beiden Summanden, jeder für sich abgeschätzt | steht |
+| **der Zusammenbau beider Summanden** | **steht, dieser Lauf** |
+| **derselbe am Bildpfad, mit `c = ‖g‖`** | **steht, dieser Lauf** |
+| gleichmäßig über die Familie, in der Ordnung `N`, `δ`, `ε` | offen |
+| der Rückweg von der trennenden Klasse zur Metrik von `E` | offen (die drei Transporte stehen, der Verbraucher nicht) |
+| `isTight_map_postcomp_of_exists_martingale` selbst | offen |
+
+#### Vorschlag für den nächsten Lauf
+
+**Die Approximierbarkeitsbedingung als Prädikat, und die Ordnung der drei
+Grenzübergänge daran: `IsApproximable` und
+`tendsto_measure_setOf_lt_modulusBased_of_isApproximable`.**
+
+> Ein Prädikat `IsApproximable 𝓕 P q T K V` — zu jedem `n : ℕ` gibt es zwei
+> Paare der Klasse `IsApproximatingPair 𝓕 P q T K` mit gemeinsamen `q`, `T`,
+> `K`, deren Fehler auf `Set.Iic T` höchstens `1/n` sind, samt den vier
+> Integrierbarkeiten. Und daraus, für beschränktes rechtsstetiges progressives
+> `V` mit Pfadabbildung `Φ`, `u < T` und jedes `ε₀ > 0`:
+> ```
+> Tendsto (fun δ : ℝ≥0 ↦ P {ω | ofReal ε₀
+>     < modulusBased 0 u (extendNNReal (Φ ω)) δ}) (𝓝[>] 0) (𝓝 0).
+> ```
+
+**Warum jetzt.** Der Zusammenbau dieses Laufs ist *eine* Ungleichung an *einem*
+`(N, δ, ε₀)`; was das Kriterium braucht, ist die Kleinheit, und die entsteht erst
+aus der Reihenfolge `N`, `δ`, `ε`. Diese Reihenfolge steht seit dem zweiten Lauf
+des Tages als Befund da und seit diesem als Ungleichung, aber **nirgends als
+Satz**. Solange sie das nicht ist, muß jeder Verbraucher sie neu ausführen, und
+sie ist genau die Stelle, an der \EK{} bei (9.28) einen Halbsatz stehen haben.
+
+**Worauf zu achten ist, und es ist die eigentliche Entscheidung.** Das Prädikat
+muß die Fehler auf **einem** Fenster festhalten, das groß genug für alle
+zugelassenen `δ` ist — sonst hängt die Hypothese von `δ` ab und der
+Grenzübergang kommt nicht zustande. `Set.Iic T` ist der natürliche Kandidat,
+weil `u + δ ≤ T` ohnehin verlangt ist; dann ist `hε` bei `u + δ` eine Folgerung
+aus der bei `T`, mit demselben `biSup_mono` unter `lintegral_mono`, das dieser
+Lauf schon geschrieben hat. **Zu prüfen ist, ob die vier Integrierbarkeiten
+dasselbe zulassen** — sie stehen an den Stoppzeiten und nicht an einem Fenster,
+und ob sie sich über `n` gleichmäßig formulieren lassen, ist am Quelltext zu
+entscheiden und nicht zu raten.
+
+**Und die Grenze, die dabei zu nennen ist.** Auch das bleibt eine Aussage über
+*ein* `V`, also über *ein* Mitglied der Familie und *eine* Testfunktion. Die
+Gleichmäßigkeit über die Familie ist der Punkt danach, und sie ist es, für die
+die Konstanten `u`, `q`, `K`, `c` in der Schranke dieses Laufs stehen — keine
+davon gehört einem Mitglied.

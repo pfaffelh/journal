@@ -140,6 +140,18 @@ CLAIMS = [
      'support_lconvolution|support_mlconvolution|lconvolution.*support'
      '|mlconvolution.*support',
      'Mathlib/'),
+    ('progressive-continuous-comp', 'MartingaleProblems/Suggested.lean, '
+     '„The assembly at an image path"',
+     'Die Nachkomposition eines progressiv meßbaren Prozesses mit einer '
+     'stetigen Abbildung steht in Mathlib nicht.  '
+     '`Mathlib/Probability/Process/Adapted.lean` beweist '
+     '`IsStronglyProgressive.mul`, `.inv` und `.div\'` einzeln und hat kein '
+     '`continuous_comp`, aus dem sie folgten; `IsStronglyProgressive.comp` ist '
+     'die Komposition im **Zeitargument**.  `Mathlib/Topology/Order/Cadlag.lean` '
+     'hat die Abstraktion als `IsCadlag.continuous_comp` sehr wohl.',
+     'IsStronglyProgressive.continuous_comp|StronglyAdapted.continuous_comp'
+     '|IsProgressive.continuous_comp',
+     'Mathlib/'),
 ]
 
 

@@ -138,6 +138,13 @@ Suche `volterra|Volterra|[Rr]enewal|resolventKernel|resolvent_kernel` unter `Mat
 Suche `support_lconvolution|support_mlconvolution|lconvolution.*support|mlconvolution.*support` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
 
 
+## `progressive-continuous-comp` — MartingaleProblems/Suggested.lean, „The assembly at an image path"
+
+> Die Nachkomposition eines progressiv meßbaren Prozesses mit einer stetigen Abbildung steht in Mathlib nicht.  `Mathlib/Probability/Process/Adapted.lean` beweist `IsStronglyProgressive.mul`, `.inv` und `.div'` einzeln und hat kein `continuous_comp`, aus dem sie folgten; `IsStronglyProgressive.comp` ist die Komposition im **Zeitargument**.  `Mathlib/Topology/Order/Cadlag.lean` hat die Abstraktion als `IsCadlag.continuous_comp` sehr wohl.
+
+Suche `IsStronglyProgressive.continuous_comp|StronglyAdapted.continuous_comp|IsProgressive.continuous_comp` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
 ## Die zweiundzwanzig Lücken von `TODO.md` Punkt 8
 
 ## `traj-homogeneity` — TODO.md Punkt 8, erste Lücke
@@ -363,5 +370,5 @@ Suche `theorem le_lintegral|lemma le_lintegral` unter `Mathlib/`: **1 Treffer** 
 
 ## Zusammenfassung
 
-49 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
+50 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
 

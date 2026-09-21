@@ -45134,4 +45134,258 @@ theorem tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero {q : ENNReal} (hq : 1 < q) {K
       ((Real.continuous_sqrt.tendsto _).comp ((ENNReal.tendsto_toReal hA).comp h2)))
   exact ENNReal.Tendsto.const_mul h5 (Or.inr (ENNReal.natCast_ne_top N))
 
+/-! ### The assembly of the two summands
+
+The horizon block bounds one of the two quantities
+`mul_measure_setOf_lt_modulusBased_le_lintegral_dist` leaves, the gap block the other.  This
+section puts them under one `≤`, and what comes out is the whole probabilistic substance of the
+tightness criterion in a single inequality, with every quantity on the right a constant of the
+class — `u`, `q`, `K`, the bound `c` on the process, the count `N`, the window `δ` — or one of
+the two approximation errors.
+-/
+
+/-- **The whole probabilistic substance of the tightness criterion, in one inequality**:
+
+```
+ofReal ε₀ * P {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ ω)) δ}
+  ≤ N * ofReal √(((1 + 2 c) * (ofReal δ ^ (1 - 1/q) * K) + A).toReal)
+    + (ofReal u ^ (1 - 1/q) * K * (1 + 2 ofReal c) / N + A) / ofReal ε₀
+```
+
+with `A = 2 ε' + 4 ofReal c * ε`, for `δ < u`, `u + δ ≤ T`, `0 < ε₀` and `N ≠ 0`.
+
+It is `le_trans` of `mul_measure_setOf_lt_modulusBased_le_lintegral_dist` followed by
+`add_le_add` of `sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair` and
+`measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair`.  No estimate is made here; the two
+blocks below it are the estimates, and this is the place they meet.
+
+**The version with a free `N` is the one that composes, and the other one diverges.**
+`mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le` removes the horizon summand
+altogether at the price of `u ≤ N • δ`, which is the cheaper statement and looks like the one to
+use.  It is not: under `u ≤ N • δ` the count is forced to grow as `δ` shrinks, and the bound it
+yields is `2 N √((1 + 2c) (δ^{1-1/q} K) + A)` with `N ≥ u/δ`, which is
+`u √C · δ^{(1-1/q)/2 - 1}` and whose exponent is negative for **every** `q`, because
+`(1 - 1/q)/2 ≤ 1/2 < 1` — at `q = ∞` as much as at `q` just above `1`.  Keeping the horizon
+summand is what lets `N` be fixed **before** `δ`, and the horizon summand is affordable exactly
+because it is `O(1/N)`.
+
+**The order of the quantifiers is visible in the statement and is the order of \EK, Theorem
+9.4.**  `N` occurs as a factor of the first summand and in the denominator of the second, so it
+is chosen first, to make the second small; `δ` occurs only in the first, under the exponent
+`1 - 1/q`, so it is chosen second, at that fixed `N`; and `ε`, `ε'` occur in both and are
+touched by neither, so they come last, from the approximability condition, which makes them
+small for *given* `N` and `δ`.  \EK{} say the same at (9.28) — "`ε` is then chosen depending on
+`δ`".  No single one of the three limits is a statement about this inequality; the inequality is
+what makes the three of them compose.
+
+**The two windows are one hypothesis and not two.**  The gap block reads the approximation
+errors on `Set.Iic (u + δ)` and the horizon block on `Set.Iic u`; the statement carries only the
+larger, and the smaller follows by `biSup_mono` under `lintegral_mono`.  For the same reason
+`u ≤ T`, which the horizon block asks, is not a hypothesis either: it is `le_self_add` against
+`u + δ ≤ T`.  The four integrability hypotheses are the gap block's, and the horizon block reads
+the two at the capped times.
+
+**The bound is over a *real valued* `V`, and that is not the criterion yet.**
+`IsApproximatingPair` is a condition on real valued processes, so the modulus here is that of a
+real valued path.  The criterion of this milestone speaks about `E`-valued paths, and the bridge
+is the separating class: one `V = f ∘ X` for each `f` of a countable separating family, with the
+metric of `E` recovered from them.  That passage is the item after this one and no part of this
+assembly. -/
+theorem mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K : ℝ≥0} {V Y C Y' C' : ℝ≥0 → Ω → ℝ} {Z Z' : ℝ → Ω → ℝ}
+    (h : IsApproximatingPair 𝓕 P q T K Y C Z) (h' : IsApproximatingPair 𝓕 P q T K Y' C' Z')
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hV : IsStronglyProgressive 𝓕 V)
+    (hcont : ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ V s ω) (Set.Ici t) t)
+    {Φ : Ω → D(ℝ≥0, ℝ)} (hΦ : ∀ ω, (Φ ω).toFun = fun t ↦ V t ω)
+    {c : ℝ} (hVb : ∀ t ω, ‖V t ω‖ ≤ c)
+    {u δ : ℝ≥0} (hδu : δ < u) (huT : u + δ ≤ T)
+    {ε ε' : ENNReal} (hεne : ε ≠ ⊤) (hε'ne : ε' ≠ ⊤) {ε₀ : ℝ} (hε₀ : 0 < ε₀)
+    (hε : ∫⁻ ω, ⨆ t ∈ Set.Iic (u + δ), ‖Y t ω - V t ω‖ₑ ∂P ≤ ε)
+    (hε' : ∫⁻ ω, ⨆ t ∈ Set.Iic (u + δ), ‖Y' t ω - V t ω ^ 2‖ₑ ∂P ≤ ε')
+    (hYcap : ∀ k : ℕ, Integrable
+      (stoppedValue Y (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) P)
+    (hY'cap : ∀ k : ℕ, Integrable
+      (stoppedValue Y' (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) P)
+    (hYgap : ∀ k : ℕ, Integrable (stoppedValue Y (fun ω ↦ min (oscHitSeq V ε₀ (k + 1) ω)
+      (min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) P)
+    (hY'gap : ∀ k : ℕ, Integrable (stoppedValue Y' (fun ω ↦ min (oscHitSeq V ε₀ (k + 1) ω)
+      (min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) P)
+    {N : ℕ} (hN : N ≠ 0) :
+    ENNReal.ofReal ε₀ * P {ω | ENNReal.ofReal ε₀
+          < SkorokhodSpace.modulusBased (0 : ℝ) (u : ℝ)
+              (SkorokhodSpace.extendNNReal (Φ ω)) (δ : ℝ)}
+      ≤ N * ENNReal.ofReal (Real.sqrt
+            (((1 + 2 * ENNReal.ofReal c)
+                * (ENNReal.ofReal (δ : ℝ) ^ (1 - 1 / q.toReal) * K)
+              + (2 * ε' + 4 * ENNReal.ofReal c * ε)).toReal))
+        + (ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * K * (1 + 2 * ENNReal.ofReal c) / N
+            + (2 * ε' + 4 * ENNReal.ofReal c * ε)) / ENNReal.ofReal ε₀ := by
+  have hwin : ∀ F : ℝ≥0 → Ω → ENNReal, ∫⁻ ω, ⨆ t ∈ Set.Iic u, F t ω ∂P
+      ≤ ∫⁻ ω, ⨆ t ∈ Set.Iic (u + δ), F t ω ∂P := by
+    intro F
+    refine lintegral_mono fun ω ↦ biSup_mono fun t ht ↦ ?_
+    exact Set.mem_Iic.2 (le_trans (Set.mem_Iic.1 ht) le_self_add)
+  have hεu : ∫⁻ ω, ⨆ t ∈ Set.Iic u, ‖Y t ω - V t ω‖ₑ ∂P ≤ ε :=
+    le_trans (hwin fun t ω ↦ ‖Y t ω - V t ω‖ₑ) hε
+  have hε'u : ∫⁻ ω, ⨆ t ∈ Set.Iic u, ‖Y' t ω - V t ω ^ 2‖ₑ ∂P ≤ ε' :=
+    le_trans (hwin fun t ω ↦ ‖Y' t ω - V t ω ^ 2‖ₑ) hε'
+  have key := mul_measure_setOf_lt_modulusBased_le_lintegral_dist P hε₀.le hSc hSd hV hcont hΦ
+    (NNReal.coe_nonneg δ) (by exact_mod_cast hδu : (δ : ℝ) < (u : ℝ)) N
+  simp only [Real.toNNReal_coe] at key
+  refine le_trans key (add_le_add ?_ ?_)
+  · exact sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair h h' hSc hSd hV hcont
+      hVb huT hεne hε'ne hε hε' hYcap hY'cap hYgap hY'gap N
+  · exact measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair h h' hSc hSd hV hcont hVb
+      (le_trans le_self_add huT) hε₀ hεu hε'u hYcap hY'cap hN
+
+end MeasureTheory
+
+/-! ### The assembly at an image path
+
+The criterion of this milestone controls the based modulus of the **image** paths
+`SkorokhodSpace.postcomp g (Φ ω)`, one real valued path for each `g` of a family of bounded
+continuous functions; that is the form
+`SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal` of Milestone 8 hands it, and the
+form the three transports
+`SkorokhodSpace.min_edist_le_two_mul_modulusBased_postcomp` and its two siblings read.  The
+assembly above is over a real valued process and its own path map.  This section is the passage
+between the two, and it is the passage and not an estimate: nothing is bounded here that was not
+bounded there.
+
+**One composition lemma is missing from Mathlib for it**, and the shape of the gap is worth
+naming because the same file pair has the abstraction on one side and not on the other.
+`IsCadlag.continuous_comp` (`Mathlib/Topology/Order/Cadlag.lean:119`) and
+`IsCadlag.continuous_comp₂` (`Mathlib/Topology/Order/Cadlag.lean:128`) are what `IsCadlag.mul`,
+`IsCadlag.div`, `IsCadlag.inv` and `IsCadlag.const_smul` are derived from.  The corresponding
+`MeasureTheory.IsStronglyProgressive.mul`
+(`Mathlib/Probability/Process/Adapted.lean:293`), `MeasureTheory.IsStronglyProgressive.inv`
+(`Mathlib/Probability/Process/Adapted.lean:323`) and `MeasureTheory.IsStronglyProgressive.div'`
+(`Mathlib/Probability/Process/Adapted.lean:327`) are each proved on their own, and there is no
+`continuous_comp` to derive them from; `MeasureTheory.IsStronglyProgressive.comp`
+(`Mathlib/Probability/Process/Adapted.lean:280`) is the composition in the **time** argument and
+a different statement.  `MeasureTheory.StronglyAdapted.mul`
+(`Mathlib/Probability/Process/Adapted.lean:111`) is in the same position.
+
+**And a trap of the `open` that costs a compile and names neither of its causes.**  The notation
+`E →ᵇ ℝ` is `scoped[BoundedContinuousFunction]`, and
+`open scoped BoundedContinuousFunction` **inside** `namespace MeasureTheory` opens
+`MeasureTheory.BoundedContinuousFunction`, which exists and carries no notation; the root
+namespace is then silently not opened.  What the parser reports is
+`elaboration function for Mathlib.Tactic.superscriptTerm has not been implemented`, because
+`→ᵇ` is no longer a token and `ᵇ` is parsed as a superscript.  The remedy is
+`open scoped _root_.BoundedContinuousFunction`, and the linter `ambiguousOpen` says so in a
+warning that is easy to miss beside the error it causes.
+-/
+
+namespace MeasureTheory
+
+variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
+
+/-- **Progressive measurability is preserved by post-composition with a continuous map.**
+
+The one line `fun i ↦ hg.comp_stronglyMeasurable (hu i)`, and the statement Mathlib's
+`Mathlib/Probability/Process/Adapted.lean` does not carry: its `IsStronglyProgressive.mul`,
+`.inv` and `.div'` are three instances of it and are each proved separately, whereas
+`Mathlib/Topology/Order/Cadlag.lean` derives its own `mul`, `div`, `inv` and `const_smul` from
+`IsCadlag.continuous_comp`.  It belongs next to them, and `continuous_comp` is the name that
+avoids `IsStronglyProgressive.comp`, which is the composition in the time argument.
+
+**Neither an order topology nor a measurable structure on the values is asked**, only
+`Preorder ι` for the filtration and a `MeasurableSpace ι` for the definition: the property is a
+strong measurability of a map out of `Set.Iic i × Ω`, and a continuous map composed after a
+strongly measurable one is strongly measurable.  The consumer here reads it at a bounded
+continuous `g : E →ᵇ ℝ`. -/
+protected theorem IsStronglyProgressive.continuous_comp {ι : Type*} [Preorder ι]
+    [MeasurableSpace ι] {β γ : Type*} [TopologicalSpace β] [TopologicalSpace γ]
+    {𝓕 : Filtration ι mΩ} {u : ι → Ω → β} (hu : IsStronglyProgressive 𝓕 u)
+    {g : β → γ} (hg : Continuous g) :
+    IsStronglyProgressive 𝓕 fun i ω ↦ g (u i ω) :=
+  fun i ↦ hg.comp_stronglyMeasurable (hu i)
+
+variable {E : Type*} [MetricSpace E]
+
+open scoped _root_.BoundedContinuousFunction
+
+/-- **The assembly read at an image path**, which is the shape the criterion of this milestone
+consumes:
+
+```
+ofReal ε₀ * P {ω | ofReal ε₀ < modulusBased 0 u (postcomp g (extendNNReal (Φ ω))) δ}
+  ≤ N * ofReal √(((1 + 2 ‖g‖) * (ofReal δ ^ (1 - 1/q) * K) + A).toReal)
+    + (ofReal u ^ (1 - 1/q) * K * (1 + 2 ofReal ‖g‖) / N + A) / ofReal ε₀
+```
+
+with `A = 2 ε' + 4 ofReal ‖g‖ * ε`, for a bounded continuous `g : E →ᵇ ℝ`, an `E`-valued process
+`X` with path map `Φ`, and two approximating pairs for `g ∘ X` and its square.
+
+It is `mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair` at `V = g ∘ X`, and the four
+things the passage has to supply are each one step: progressive measurability by
+`MeasureTheory.IsStronglyProgressive.continuous_comp`, right continuity by composing `hcont`
+with the continuity of `g`, the path map by `SkorokhodSpace.postcomp_toFun` against `hΦ`, and
+the bound `c = ‖g‖` by `BoundedContinuousFunction.norm_coe_le_norm`.
+
+**The bound on the process is not a hypothesis here but a consequence**, and that is the one
+real difference from the statement below it.  `IsApproximatingPair` has no bound of its own; the
+assembly asks for one because the square identity spends it four times, and an `E →ᵇ ℝ` carries
+it.  A consumer of the criterion therefore never has to produce it.
+
+**The index crossing and the post-composition commute definitionally**
+(`SkorokhodSpace.postcomp_extendNNReal`), so the statement may be read either way round: as the
+modulus of the image of the extended path, which is what Milestone 8 hands it, or as the modulus
+of the extension of the image path, which is what the assembly proves.
+
+**Nothing measurable is asked of `E`.** The modulus is that of a real valued path throughout,
+and `E` enters only as the metric space the path lives in and the domain of `g`.  The `Borel`
+and second countability hypotheses that the criterion carries belong to the tightness statement
+it feeds, not to this estimate. -/
+theorem mul_measure_setOf_lt_modulusBased_postcomp_le_of_isApproximatingPair
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K : ℝ≥0} {X : ℝ≥0 → Ω → E} {Y C Y' C' : ℝ≥0 → Ω → ℝ} {Z Z' : ℝ → Ω → ℝ}
+    {g : E →ᵇ ℝ}
+    (h : IsApproximatingPair 𝓕 P q T K Y C Z) (h' : IsApproximatingPair 𝓕 P q T K Y' C' Z')
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hX : IsStronglyProgressive 𝓕 X)
+    (hcont : ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ X s ω) (Set.Ici t) t)
+    {Φ : Ω → D(ℝ≥0, E)} (hΦ : ∀ ω, (Φ ω).toFun = fun t ↦ X t ω)
+    {u δ : ℝ≥0} (hδu : δ < u) (huT : u + δ ≤ T)
+    {ε ε' : ENNReal} (hεne : ε ≠ ⊤) (hε'ne : ε' ≠ ⊤) {ε₀ : ℝ} (hε₀ : 0 < ε₀)
+    (hε : ∫⁻ ω, ⨆ t ∈ Set.Iic (u + δ), ‖Y t ω - g (X t ω)‖ₑ ∂P ≤ ε)
+    (hε' : ∫⁻ ω, ⨆ t ∈ Set.Iic (u + δ), ‖Y' t ω - g (X t ω) ^ 2‖ₑ ∂P ≤ ε')
+    (hYcap : ∀ k : ℕ, Integrable (stoppedValue Y
+      (fun ω ↦ min (oscHitSeq (fun t ω ↦ g (X t ω)) ε₀ k ω) (u : WithTop ℝ≥0))) P)
+    (hY'cap : ∀ k : ℕ, Integrable (stoppedValue Y'
+      (fun ω ↦ min (oscHitSeq (fun t ω ↦ g (X t ω)) ε₀ k ω) (u : WithTop ℝ≥0))) P)
+    (hYgap : ∀ k : ℕ, Integrable (stoppedValue Y
+      (fun ω ↦ min (oscHitSeq (fun t ω ↦ g (X t ω)) ε₀ (k + 1) ω)
+        (min (oscHitSeq (fun t ω ↦ g (X t ω)) ε₀ k ω) (u : WithTop ℝ≥0)
+          + (δ : WithTop ℝ≥0)))) P)
+    (hY'gap : ∀ k : ℕ, Integrable (stoppedValue Y'
+      (fun ω ↦ min (oscHitSeq (fun t ω ↦ g (X t ω)) ε₀ (k + 1) ω)
+        (min (oscHitSeq (fun t ω ↦ g (X t ω)) ε₀ k ω) (u : WithTop ℝ≥0)
+          + (δ : WithTop ℝ≥0)))) P)
+    {N : ℕ} (hN : N ≠ 0) :
+    ENNReal.ofReal ε₀ * P {ω | ENNReal.ofReal ε₀
+          < SkorokhodSpace.modulusBased (0 : ℝ) (u : ℝ)
+              (SkorokhodSpace.postcomp g.toContinuousMap
+                (SkorokhodSpace.extendNNReal (Φ ω))) (δ : ℝ)}
+      ≤ N * ENNReal.ofReal (Real.sqrt
+            (((1 + 2 * ENNReal.ofReal ‖g‖)
+                * (ENNReal.ofReal (δ : ℝ) ^ (1 - 1 / q.toReal) * K)
+              + (2 * ε' + 4 * ENNReal.ofReal ‖g‖ * ε)).toReal))
+        + (ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * K * (1 + 2 * ENNReal.ofReal ‖g‖) / N
+            + (2 * ε' + 4 * ENNReal.ofReal ‖g‖ * ε)) / ENNReal.ofReal ε₀ := by
+  have hpost : ∀ ω, SkorokhodSpace.postcomp g.toContinuousMap
+      (SkorokhodSpace.extendNNReal (Φ ω))
+      = SkorokhodSpace.extendNNReal
+          (SkorokhodSpace.postcomp g.toContinuousMap (Φ ω)) := fun ω ↦
+    SkorokhodSpace.postcomp_extendNNReal _ _
+  simp only [hpost]
+  exact mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair h h' hSc hSd
+    (hX.continuous_comp g.continuous)
+    (fun ω t ↦ g.continuous.continuousWithinAt.comp (hcont ω t) (Set.mapsTo_univ _ _))
+    (fun ω ↦ by ext t; rw [SkorokhodSpace.postcomp_toFun, hΦ ω]; rfl)
+    (fun t ω ↦ g.norm_coe_le_norm _) hδu huT hεne hε'ne hε₀ hε hε' hYcap hY'cap hYgap hY'gap hN
+
 end MeasureTheory

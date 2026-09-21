@@ -11899,6 +11899,100 @@ has to be chosen once for all `n`. What stands:
   wherever the times take their values. That is the one place the two blocks
   differ in their window, and it is why the hypothesis is `u + δ ≤ T`.
 
+  **The two blocks meet, 2026-09-21**, in
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair`:
+
+  ```
+  ofReal ε₀ * P {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ ω)) δ}
+    ≤ N * ofReal √(((1 + 2 c) * (ofReal δ ^ (1 - 1/q) * K) + A).toReal)
+      + (ofReal u ^ (1 - 1/q) * K * (1 + 2 ofReal c) / N + A) / ofReal ε₀
+  ```
+
+  with `A = 2 ε' + 4 ofReal c * ε`, for `δ < u`, `u + δ ≤ T`, `0 < ε₀` and
+  `N ≠ 0`. It is `le_trans` of
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_lintegral_dist` followed by
+  `add_le_add` of the two block results, and it makes no estimate of its own.
+  Every quantity on the right is a constant of the class — `u`, `q`, `K`, the
+  bound `c`, the count `N`, the window `δ` — or one of the two approximation
+  errors.
+
+  **The version with a free `N` is the one that composes, and this is where the
+  other one is ruled out for good.**
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le`
+  removes the horizon summand at the price `u ≤ N • δ`, and the bound it yields
+  is `u √C · δ^{(1-1/q)/2 - 1}`, whose exponent is negative for *every* `q`
+  because `(1 - 1/q)/2 ≤ 1/2 < 1`. Keeping the horizon summand is what lets `N`
+  be fixed before `δ`; that is the computation of the run of 2026-09-20,
+  twenty-third of the day, now standing at the statement it decides.
+
+  **Two windows, one hypothesis.** The statement carries the approximation
+  errors only on `Set.Iic (u + δ)`, the larger of the two windows; the horizon
+  block's `Set.Iic u` version follows by `biSup_mono` under `lintegral_mono`,
+  and its `u ≤ T` by `le_self_add` against `u + δ ≤ T`. The four integrability
+  hypotheses are the gap block's, and the horizon block reads the two at the
+  capped times.
+
+  **And the same at an image path**,
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_postcomp_le_of_isApproximatingPair`,
+  which is the shape this milestone's criterion consumes: for a bounded
+  continuous `g : E →ᵇ ℝ` and an `E`-valued `X` with path map `Φ`, the same
+  inequality for the image path
+  `SkorokhodSpace.postcomp g (SkorokhodSpace.extendNNReal (Φ ω))` with
+  `c = ‖g‖`. That is the form
+  `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal` of Milestone 8
+  hands it and the form the three transports
+  `SkorokhodSpace.min_edist_le_two_mul_modulusBased_postcomp`,
+  `SkorokhodSpace.min_iSup_edist_le_three_mul_modulusBased_postcomp` and
+  `SkorokhodSpace.min_iSup_edist_leftLim_le_three_mul_modulusBased_postcomp`
+  read. The index crossing and the post-composition commute definitionally
+  (`SkorokhodSpace.postcomp_extendNNReal`), so it may be read either way round,
+  and **nothing measurable is asked of `E`**: the modulus is that of a real
+  valued path throughout.
+
+  **The bound on the process is a consequence there and not a hypothesis.**
+  `MeasureTheory.IsApproximatingPair` has no bound of its own, and the assembly
+  asks for one because the square identity spends it four times; an `E →ᵇ ℝ`
+  carries it, so a consumer of the criterion never has to produce it.
+
+  **One composition lemma is missing from Mathlib for that passage**, and the
+  shape of the gap is worth naming because the same pair of files has the
+  abstraction on one side and not on the other.
+  `MeasureTheory.IsStronglyProgressive.continuous_comp` — progressive
+  measurability survives post-composition with a continuous map, one line from
+  `Continuous.comp_stronglyMeasurable` — belongs in
+  `Mathlib/Probability/Process/Adapted.lean` next to
+  `MeasureTheory.IsStronglyProgressive.mul`
+  (`Mathlib/Probability/Process/Adapted.lean:293`),
+  `MeasureTheory.IsStronglyProgressive.inv`
+  (`Mathlib/Probability/Process/Adapted.lean:323`) and
+  `MeasureTheory.IsStronglyProgressive.div'`
+  (`Mathlib/Probability/Process/Adapted.lean:327`), which are three instances of
+  it and are each proved separately; `Mathlib/Topology/Order/Cadlag.lean`
+  derives its own `mul`, `div`, `inv` and `const_smul` from `IsCadlag.continuous_comp`
+  (`Mathlib/Topology/Order/Cadlag.lean:119`). The name avoids
+  `MeasureTheory.IsStronglyProgressive.comp`
+  (`Mathlib/Probability/Process/Adapted.lean:280`), which is the composition in
+  the **time** argument. It asks neither an order topology nor a measurable
+  structure on the values, only `Preorder ι` and a `MeasurableSpace ι`.
+
+  **A trap of the `open` that cost a compile.** The notation `E →ᵇ ℝ` is
+  `scoped[BoundedContinuousFunction]`, and `open scoped BoundedContinuousFunction`
+  **inside** `namespace MeasureTheory` opens `MeasureTheory.BoundedContinuousFunction`,
+  which exists and carries no notation, while the root namespace is silently not
+  opened. The error it produces names neither cause:
+  `elaboration function for Mathlib.Tactic.superscriptTerm has not been implemented`,
+  because `→ᵇ` is no longer a token and `ᵇ` is parsed as a superscript. The
+  remedy is `open scoped _root_.BoundedContinuousFunction`, and the
+  `ambiguousOpen` linter says so in a warning that is easy to miss beside the
+  error it causes.
+
+  **What the assembly is not.** It stands over a real valued `V`, or over one
+  test function `g` at a time, and it is one inequality at one `(N, δ, ε₀)`. The
+  criterion needs it uniformly over the family and with the three limits taken
+  in the order `N`, `δ`, `ε` — and it needs the passage from the countable
+  separating family back to the metric of `E`, which the three transports above
+  supply. Those are the items after this one.
+
   **Two statements were factored out for this.**
   `MeasureTheory.lintegral_ofReal_dist_le_sqrt_of_lintegral_sq_le` is
   Cauchy--Schwarz read from a bound on `∫⁻ ofReal (dist ·) ²`, the side the
