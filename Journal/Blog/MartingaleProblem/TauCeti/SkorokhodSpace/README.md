@@ -4136,6 +4136,38 @@ space is tight (`MeasureTheory.isTightMeasureSet_singleton`,
 nothing. A genuine family need not, and that is the emptiness test for the
 predicate: it is inhabited, and it is not vacuous.
 
+* `SkorokhodSpace.isCompactContained_of_forall_exists_bound` — **how a family
+  that moves meets the condition**, and the reduction a consumer uses. **Proved
+  2026-09-21.** For `E` a `ProperSpace` and any base point `x₀`, compact
+  containment follows from a uniform bound on the **path maximum over a
+  window**: to every `ε > 0` and every `m` there is `R : ℝ` with
+  `μ i {γ | ∀ t ∈ exhaustion t₀ m, dist (γ.toFun t) x₀ ≤ R}ᶜ ≤ ε` for every `i`.
+
+  **`ProperSpace` is exactly the gap and not a convenience.** The predicate asks
+  for a **compact** `K ⊆ E` holding the path on the window; an estimate on the
+  path maximum produces a **bounded** set. Closed balls being compact is the
+  whole difference, and without it the implication fails for the reason it fails
+  in an infinite dimensional Hilbert space, where the closed unit ball is
+  bounded and not compact. It is also not an extra demand on this section:
+  `ProperSpace E` implies `CompleteSpace E`
+  (`Mathlib/Topology/MetricSpace/ProperSpace.lean:104`) and
+  `SecondCountableTopology E` (`:66`), hence the Polishness assumed throughout,
+  so the ambient hypothesis is subsumed rather than added to. `E = ℝ` is an
+  instance of the statement and not the statement: the reduction has nothing to
+  do with the line.
+
+  **Why it was written.** Every statement of **MartingaleProblems**
+  Milestone 11 carries compact containment as a hypothesis, and until this one
+  the only witness was the constant family above — the criterion was inhabited
+  and had never been met by a family that moves. The consumer it is written for
+  is Donsker, where the bound is Doob's maximal inequality over the **discrete**
+  index, Mathlib's `MeasureTheory.maximal_ineq`
+  (`Mathlib/Probability/Martingale/OptionalStopping.lean:144`) for a
+  `Submartingale` with `0 ≤ f`, and where the passage from the discrete maximum
+  to the window maximum is an equality and not an estimate: a step path on a
+  window takes exactly the values of its nodes. That instance is the next item
+  and is not this one.
+
 **The `ℝ≥0`-form of the criterion, and what it does and does not do to the rule
 above.** `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal` states
 stage (B) with **both** sides of the equivalence over `ℝ≥0`, which is the form

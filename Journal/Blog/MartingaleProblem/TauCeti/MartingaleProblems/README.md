@@ -13296,10 +13296,47 @@ has to be chosen once for all `n`. What stands:
   makes `P.map (Φ i)` the law of the path rather than that Dirac is
   `MeasureTheory.measurable_pathOfProcess`, and it is read in the tightness.
 
-  What remains of the item is the approximate case — processes that only nearly
-  solve the problem, Donsker's random walks among them — which calls the bounded
-  pair form of the first item instead of its martingale form, and the
-  identification of the limit points, which is the next item.
+  **The item stands in the approximate case too, 2026-09-21** —
+  `MeasureTheory.isCompact_closure_of_subalgebra_forall_exists_bounded_pair`
+  and, in the shape the fourth item reads,
+  `MeasureTheory.isCompact_closure_range_of_subalgebra_forall_exists_bounded_pair`.
+  Processes that only nearly solve the problem, Donsker's rescaled random walks
+  among them, have no exact martingale property at any scale and are reached by
+  no statement above; what they have is the two approximating pairs with their
+  bound and their two errors, and that is the hypothesis these carry. The four
+  liftings of the first item are drawn a second time from it —
+  `isTightMeasureSet_map_of_forall_exists_bounded_pair`,
+  `…_of_dense_forall_…`, `…_of_denseOnCompacts_forall_…`,
+  `…_of_subalgebra_forall_exists_bounded_pair` — and the exact case stays proved
+  where it is: the two already share their one estimate at
+  `isTightMeasureSet_map_postcomp_of_forall_exists_bounded_pair`, into which the
+  martingale form feeds through `isApproximatingPair_of_martingale` with the
+  error `0`. Nothing is re-derived; each of the four is the same one line of
+  lifting as its exact counterpart.
+
+  **Why the liftings tolerate the weaker hypothesis at all**, and it was read off
+  the source rather than assumed: all three density statements of Milestone 8
+  take their hypothesis as `∀ g ∈ H, IsTightMeasureSet {…}`, one self-contained
+  conclusion per test function with nothing shared between two of them. So the
+  exponent, the horizon and the constant of the approximation may be chosen
+  **after** the test function, and the density step — which compares test
+  functions in the supremum distance and never looks at their approximants —
+  does not notice. Had it been otherwise, the family would have needed one
+  horizon for the whole algebra, and a generator does not supply that.
+
+  **A hypothesis that was asked and never read, removed the same day.** The
+  bounded pair form carried `∀ ε₀ : ℝ, 0 < ε₀ →` in front of its data although
+  `ε₀` occurs nowhere in the body: `isApproximable_of_forall_exists_bounded_pair`
+  takes the modulus error implicitly and constrains it nowhere, the pairs and the
+  two errors already giving `IsApproximable … ε₀ u` for every `ε₀`. The two
+  readings are equivalent, so nothing is weakened or strengthened; what is gone
+  is data a consumer had to supply four times over and that no proof looks at.
+  Only `isTightMeasureSet_map_postcomp_of_forall_isApproximable`, one step
+  further down, genuinely needs its triple per `ε₀`, because
+  `IsApproximable` carries the error in its own signature.
+
+  What remains of the item is the identification of the limit points, which is
+  the next item.
 * `tendsto_of_isRelativelyCompact_of_unique`: with uniqueness from Milestone 6
   or Milestone 8, relative compactness upgrades to convergence. **Proved
   2026-09-21.**
@@ -13394,13 +13431,28 @@ has to be chosen once for all `n`. What stands:
   identity off it.
 
   **What Donsker still needs is not a seam**, and it is named here so that the
-  joining is not mistaken for the acceptance test. Three things, each its own
-  item: the **approximate** case of the second item, since rescaled random walks
-  solve the martingale problem only nearly and the exact case does not reach
-  them; **compact containment** for those walks; and the **uniqueness** for
-  `f ↦ f''/2`, which is the self-contained Fourier point stated below. A fourth,
-  smaller: the predicate `Sol` of the fourth item has to be quantified over the
-  algebra, the seams above being stated for one pair `(f, g)`.
+  joining is not mistaken for the acceptance test. Two things, each its own item:
+  **compact containment** for the rescaled random walks; and the **uniqueness**
+  for `f ↦ f''/2`, which is the self-contained Fourier point stated below. A
+  third, smaller: the predicate `Sol` of the fourth item has to be quantified
+  over the algebra, the seams above being stated for one pair `(f, g)`. The
+  **approximate** case of the second item stood in this list until 2026-09-21
+  and is now proved, as
+  `isCompact_closure_range_of_subalgebra_forall_exists_bounded_pair`; what is
+  left for the walks is to exhibit their approximating pairs, which is an
+  instance and not an item.
+
+  **Of the compact containment, the reduction is done and the estimate is
+  not, 2026-09-21.** `SkorokhodSpace.isCompactContained_of_forall_exists_bound`
+  of **SkorokhodSpace** Milestone 8 turns the hypothesis `hcc` — which every
+  statement of this milestone carries and which until then had only the
+  constant family as a witness — into a uniform bound on the **path maximum
+  over a window**, for `E` a `ProperSpace` and hence for `E = ℝ`. What is left
+  for the walks is that bound, and it is Doob's maximal inequality over the
+  **discrete** index, `MeasureTheory.maximal_ineq`
+  (`Mathlib/Probability/Martingale/OptionalStopping.lean:144`): the passage
+  from the discrete maximum to the window maximum is an equality, a step path
+  taking on a window exactly the values of its nodes.
 * Convergence in measure as a second mode: the space of càdlàg paths with the
   topology of convergence in Lebesgue measure, in which the coordinates are
   nowhere continuous, and `mpSolution_of_tendsto_inMeasure`, obtained from
