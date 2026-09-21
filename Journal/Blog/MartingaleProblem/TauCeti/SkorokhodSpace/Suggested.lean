@@ -19712,3 +19712,274 @@ theorem SkorokhodSpace.modulusBased_extendNNReal_le_of_forall_gapped
           exact hs.2
       have h3 := hosc k (by omega) _ hmem
       simpa [SkorokhodSpace.extendNNReal_apply, Real.toNNReal_coe] using h3
+
+/-! ### Milestone 8: the functionals a martingale problem tests
+
+The third item of the chain of **MartingaleProblems** Milestone 11 --- a weak
+limit of solutions is a solution --- is read through
+`MeasureTheory.mpSolution_of_tendsto_of_pContinuous` of Milestone 10 there, and
+that theorem asks its convergence hypothesis in the shape
+
+> `P {ω | ContinuousAt ψ (X ω)} = 1`
+
+for each functional `ψ` the martingale problem tests.  On the path space those
+functionals are
+
+```
+ψ t x = f (x t) - ∫_0^t g (x u) du,
+```
+
+and this section says at which paths each of the two summands is continuous.
+
+**The two summands are not alike, and the difference is the whole content.**
+Evaluation is continuous at every path that does not jump at the time read
+(`SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet`), and the no-jump
+condition is not removable --- `SkorokhodSpace.exists_jump_continuousAt_eval`
+exhibits a path at which evaluation is discontinuous.  The integral is
+continuous at **every** path, with no hypothesis at all: the exceptional times of
+the limit path form a countable set by `countable_leftJumpSet`, a countable set
+is Lebesgue null, and dominated convergence does the rest.  So the no-jump
+condition is asked at the **one** time the functional evaluates and at no other,
+and the compensator contributes nothing to it.
+
+**Why the proof is sequential and may be.**  `D(ι, E)` is metric by
+`SkorokhodSpace.instMetricSpace`, so `𝓝 x` is countably generated and
+`Filter.tendsto_iff_seq_tendsto` turns continuity into sequential continuity ---
+which is what dominated convergence, a statement about sequences, consumes. -/
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- Along a sequence of paths converging in the Skorokhod metric the values
+converge at every time at which the **limit** path does not jump.  This is
+`SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet` composed with the
+sequence, and it is separated out because the dominated convergence argument
+below reads it once per time and not once per path. -/
+theorem SkorokhodSpace.tendsto_eval_of_tendsto [SecondCountableTopology E]
+    {x : ℕ → D(ι, E)} {y : D(ι, E)} (hx : Tendsto x atTop (𝓝 y))
+    {t : ι} (ht : t ∉ leftJumpSet y.toFun) :
+    Tendsto (fun n => (x n).toFun t) atTop (𝓝 (y.toFun t)) :=
+  (SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet ht).tendsto.comp hx
+
+/-- **The integral of a bounded continuous function along the path is a
+continuous functional of the path, at every path and with no hypothesis on its
+jumps.**
+
+The times are read through a measurable `φ : α → ι` against a finite measure `μ`
+on `α`, which is the shape the consumer has: there `α = ℝ`, `μ` is Lebesgue
+measure restricted to the window, and `φ = Real.toNNReal`.  What is asked of the
+pair is exactly one thing, `hnull`: a countable set of times is seen by the image
+of `μ` under `φ` as a null set.  That is what makes the jumps of the limit path
+invisible, and it is the only place where anything about `μ` is used beyond its
+finiteness.
+
+**No jump condition appears, and that is not an oversight.**  A path has
+countably many jumps (`countable_leftJumpSet`), the set of parameters that read
+them is `μ`-null by `hnull`, and off that set the values converge by
+`SkorokhodSpace.tendsto_eval_of_tendsto`.  Dominated convergence with the
+constant majorant `‖g‖` closes it, the majorant being integrable because `μ` is
+finite.
+
+**The measurability of the integrand is `IsCadlag.measurable`** --- a càdlàg map
+is Borel measurable, proved in Milestone 2 without any linear structure on `E`
+--- composed with `φ` and with the continuous `g`. -/
+theorem SkorokhodSpace.continuousAt_integral_comp [SecondCountableTopology E]
+    [MeasurableSpace ι] [BorelSpace ι] {α : Type*} [MeasurableSpace α]
+    {μ : Measure α} [IsFiniteMeasure μ] {φ : α → ι} (hφ : Measurable φ)
+    (hnull : ∀ J : Set ι, J.Countable → μ (φ ⁻¹' J) = 0)
+    (g : E →ᵇ ℝ) (y : D(ι, E)) :
+    ContinuousAt (fun f : D(ι, E) => ∫ s, g (f.toFun (φ s)) ∂μ) y := by
+  have hmeas : ∀ f : D(ι, E), AEStronglyMeasurable (fun s => g (f.toFun (φ s))) μ :=
+    fun f => (g.continuous.measurable.comp (f.isCadlag.measurable.comp hφ)).aestronglyMeasurable
+  rw [ContinuousAt, Filter.tendsto_iff_seq_tendsto]
+  intro x hx
+  have hae : ∀ᵐ s ∂μ, Tendsto (fun n => g ((x n).toFun (φ s))) atTop (𝓝 (g (y.toFun (φ s)))) := by
+    have h0 : μ (φ ⁻¹' leftJumpSet y.toFun) = 0 := hnull _ (countable_leftJumpSet y.isCadlag)
+    filter_upwards [measure_eq_zero_iff_ae_notMem.1 h0] with s hs
+    exact (g.continuous.tendsto _).comp (SkorokhodSpace.tendsto_eval_of_tendsto hx hs)
+  exact tendsto_integral_of_dominated_convergence (fun _ => ‖g‖)
+    (fun n => hmeas (x n)) (integrable_const _)
+    (fun n => Filter.Eventually.of_forall fun s => g.norm_coe_le_norm _) hae
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **A finite dimensional test function is continuous at every path that jumps
+at none of the times its factors may read.**
+
+The class is `SkorokhodSpace.evalFuns E T`, the multiplicative system that
+Milestone 8 uses to identify two laws; the condition is asked over the whole of
+`T` and not over the `Finset` of the particular member, because membership in
+`evalFuns` is an existential and the `Finset` is not recoverable from the
+function.  For the consumer `T` is countable, and then the condition holds for
+almost every path by
+`SkorokhodSpace.measure_setOf_forall_notMem_leftJumpSet_eq_one`.
+
+`tendsto_finsetProd` is what carries the finitely many factors; there is no
+`continuousAt_finsetProd` in Mathlib, and `ContinuousAt` is a `Tendsto` along
+`𝓝 y`, so the product lemma for filters applies directly. -/
+theorem SkorokhodSpace.continuousAt_of_mem_evalFuns [SecondCountableTopology E]
+    {T : Set ι} {h : D(ι, E) → ℝ} (hh : h ∈ SkorokhodSpace.evalFuns E T)
+    {y : D(ι, E)} (hy : ∀ t ∈ T, t ∉ leftJumpSet y.toFun) :
+    ContinuousAt h y := by
+  obtain ⟨s, F, hs, rfl⟩ := hh
+  exact tendsto_finsetProd s fun t ht =>
+    (F t).continuous.continuousAt.comp
+      (SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet (hy t (hs ht)))
+
+/-- **A law with no fixed discontinuity along a countable set of times gives full
+mass to the paths that jump at none of them.**
+
+This is the step from the *times* of stage (A) of Milestone 8 to the *paths* the
+continuity statements above are read at, and it is a countable intersection of
+sets of full measure --- `measure_biUnion_null_iff` --- and nothing more.  **No
+Fubini argument occurs in it**, and none is needed:
+`SkorokhodSpace.exists_countable_dense_continuity` has already produced a
+countable set of times, and countability is what a union of null sets asks for.
+
+The measurability of the jump event at a fixed time is
+`SkorokhodSpace.measurableSet_leftJump`; it is what allows the passage from
+`μ {leftLim = value} = 1` to `μ {jump} = 0` through `prob_compl_eq_one_iff`, and
+for a non-measurable set that passage is false. -/
+theorem SkorokhodSpace.measure_setOf_forall_notMem_leftJumpSet_eq_one
+    [SecondCountableTopology E]
+    (μ : Measure D(ι, E)) [IsProbabilityMeasure μ] {T : Set ι} (hT : T.Countable)
+    (hgood : ∀ t ∈ T, μ {f : D(ι, E) | Function.leftLim f.toFun t = f.toFun t} = 1) :
+    μ {f : D(ι, E) | ∀ t ∈ T, t ∉ leftJumpSet f.toFun} = 1 := by
+  have hcompl : ∀ t : ι, {f : D(ι, E) | Function.leftLim f.toFun t = f.toFun t}
+      = {f : D(ι, E) | t ∈ leftJumpSet f.toFun}ᶜ := by
+    intro t; ext f; simp [leftJumpSet]
+  have hnull : ∀ t ∈ T, μ {f : D(ι, E) | t ∈ leftJumpSet f.toFun} = 0 := by
+    intro t ht
+    have h := hgood t ht
+    rw [hcompl t] at h
+    exact (prob_compl_eq_one_iff (SkorokhodSpace.measurableSet_leftJump t)).1 h
+  have hset : {f : D(ι, E) | ∀ t ∈ T, t ∉ leftJumpSet f.toFun}
+      = (⋃ t ∈ T, {f : D(ι, E) | t ∈ leftJumpSet f.toFun})ᶜ := by
+    ext f; simp
+  rw [hset, prob_compl_eq_one_iff
+    (MeasurableSet.biUnion hT fun t _ => SkorokhodSpace.measurableSet_leftJump t)]
+  exact (measure_biUnion_null_iff hT).2 hnull
+
+section MPTestFunctional
+
+variable {E : Type*} [MetricSpace E] [MeasurableSpace E] [BorelSpace E] [PolishSpace E]
+
+/-- **The compensator over a window of the nonnegative index is a continuous
+functional of the path**, at every path.
+
+This is `SkorokhodSpace.continuousAt_integral_comp` at the data the consumer has:
+`α = ℝ`, `μ` Lebesgue measure restricted to `Set.Ioc 0 T`, and
+`φ = Real.toNNReal`, which is the exact shape in which the roadmap
+**MartingaleProblems** writes the compensator of a martingale problem over the
+clock `lebesgueClock`.
+
+Discharging `hnull` is one inclusion: a point of `Set.Ioc 0 T` whose truncation
+lies in a countable `J ⊆ ℝ≥0` is the image of that truncation under the
+coercion, because it is nonnegative (`Real.coe_toNNReal`), so the intersection
+lies in the countable set `NNReal.toReal '' J`. -/
+theorem SkorokhodSpace.continuousAt_setIntegral_toNNReal (g : E →ᵇ ℝ) (T : ℝ) (y : D(ℝ≥0, E)) :
+    ContinuousAt (fun f : D(ℝ≥0, E) =>
+      ∫ s in Set.Ioc (0 : ℝ) T, g (f.toFun s.toNNReal)) y := by
+  refine SkorokhodSpace.continuousAt_integral_comp (μ := (volume : Measure ℝ).restrict
+    (Set.Ioc (0 : ℝ) T)) measurable_real_toNNReal ?_ g y
+  intro J hJ
+  rw [Measure.restrict_apply' measurableSet_Ioc]
+  refine measure_mono_null (t := (NNReal.toReal '' J)) ?_ ((hJ.image _).measure_zero _)
+  rintro s ⟨hs, hs2⟩
+  exact ⟨s.toNNReal, hs, Real.coe_toNNReal s hs2.1.le⟩
+
+/-- **The functional a martingale problem tests is continuous at every path that
+does not jump at the time it is read.**
+
+The no-jump condition is asked at `t` alone.  The compensator carries none of it,
+by `SkorokhodSpace.continuousAt_setIntegral_toNNReal`; the evaluation carries all
+of it, by `SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet`.  That
+asymmetry is why the third item of the chain of **MartingaleProblems**
+Milestone 11 quantifies over a set of times and not over a set of paths. -/
+theorem SkorokhodSpace.continuousAt_mpTest (f g : E →ᵇ ℝ) (t : ℝ≥0) {y : D(ℝ≥0, E)}
+    (ht : t ∉ leftJumpSet y.toFun) :
+    ContinuousAt (fun z : D(ℝ≥0, E) =>
+      f (z.toFun t) - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g (z.toFun s.toNNReal)) y :=
+  ((f.continuous.continuousAt).comp
+      (SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet ht)).sub
+    (SkorokhodSpace.continuousAt_setIntegral_toNNReal g (t : ℝ) y)
+
+/-- The sample points whose path jumps at none of a countable set of times carry
+full mass.  This is
+`SkorokhodSpace.measure_setOf_forall_notMem_leftJumpSet_eq_one` read through a
+process rather than through its law, which is the form
+`MeasureTheory.mpSolution_of_tendsto_of_pContinuous` writes its hypotheses in;
+`Measurable X` is what the passage from full measure to null complement asks
+for, and it cannot be dropped, a non-measurable set of full outer measure having
+a complement of full outer measure as well. -/
+theorem SkorokhodSpace.measure_setOf_forall_notMem_leftJumpSet_comp_eq_one
+    {Ω : Type*} [MeasurableSpace Ω] {P : Measure Ω} [IsProbabilityMeasure P]
+    {X : Ω → D(ℝ≥0, E)} (hX : Measurable X) {T : Set ℝ≥0} (hT : T.Countable)
+    (hgood : ∀ t ∈ T, P {ω | Function.leftLim (X ω).toFun t = (X ω).toFun t} = 1) :
+    P {ω | ∀ t ∈ T, t ∉ leftJumpSet (X ω).toFun} = 1 := by
+  have hms : ∀ t : ℝ≥0, MeasurableSet {ω | t ∈ leftJumpSet (X ω).toFun} :=
+    fun t => hX (SkorokhodSpace.measurableSet_leftJump t)
+  have hnull : ∀ t ∈ T, P {ω | t ∈ leftJumpSet (X ω).toFun} = 0 := by
+    intro t ht
+    have h1 := hgood t ht
+    have h : {ω | Function.leftLim (X ω).toFun t = (X ω).toFun t}
+        = {ω | t ∈ leftJumpSet (X ω).toFun}ᶜ := by ext ω; simp [leftJumpSet]
+    rw [h] at h1
+    exact (prob_compl_eq_one_iff (hms t)).1 h1
+  have hset : {ω | ∀ t ∈ T, t ∉ leftJumpSet (X ω).toFun}
+      = (⋃ t ∈ T, {ω | t ∈ leftJumpSet (X ω).toFun})ᶜ := by ext ω; simp
+  rw [hset, prob_compl_eq_one_iff (MeasurableSet.biUnion hT fun t _ => hms t)]
+  exact (measure_biUnion_null_iff hT).2 hnull
+
+/-- **Hypothesis (b) of `MeasureTheory.mpSolution_of_tendsto_of_pContinuous` on
+the path space**: the functional a martingale problem tests is `P`-continuous at
+the limit path, at every time of a countable set at which the law has no fixed
+discontinuity.
+
+Such a set exists for **every** law, and is dense:
+`SkorokhodSpace.exists_countable_dense_continuity`.  So the hypothesis is not a
+restriction on the limit but a choice of the times at which the martingale
+identity is read --- which is what the third item of the chain of
+**MartingaleProblems** Milestone 11 takes for its set `D`. -/
+theorem SkorokhodSpace.measure_setOf_continuousAt_mpTest_eq_one
+    {Ω : Type*} [MeasurableSpace Ω] {P : Measure Ω} [IsProbabilityMeasure P]
+    {X : Ω → D(ℝ≥0, E)} (hX : Measurable X) {T : Set ℝ≥0} (hT : T.Countable)
+    (hgood : ∀ t ∈ T, P {ω | Function.leftLim (X ω).toFun t = (X ω).toFun t} = 1)
+    (f g : E →ᵇ ℝ) {t : ℝ≥0} (ht : t ∈ T) :
+    P {ω | ContinuousAt (fun z : D(ℝ≥0, E) =>
+      f (z.toFun t) - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g (z.toFun s.toNNReal)) (X ω)} = 1 := by
+  refine le_antisymm prob_le_one ?_
+  rw [← SkorokhodSpace.measure_setOf_forall_notMem_leftJumpSet_comp_eq_one hX hT hgood]
+  exact measure_mono fun ω hω => SkorokhodSpace.continuousAt_mpTest f g t (hω t ht)
+
+/-- **The `Z` half of the same hypothesis**: the tested increment, multiplied by a
+finite dimensional test function read at the same countable set of times, is
+`P`-continuous at the limit path.
+
+`MeasureTheory.mpSolution_of_tendsto_of_pContinuous` asks its continuity of the
+**product** and not of the factors, and this is where that pays: the three
+factors are continuous at the same paths, namely those jumping at no time of `T`,
+so one application of
+`SkorokhodSpace.measure_setOf_forall_notMem_leftJumpSet_comp_eq_one` answers for
+all of them at once.
+
+The determining class is `SkorokhodSpace.evalFuns E T` of the section on two laws
+agreeing along a dense set of times.  That it determines the conditional
+expectations --- `MeasureTheory.IsDetermining` --- is not asserted here and is
+the next item; what is asserted is that its members are continuous where they
+have to be. -/
+theorem SkorokhodSpace.measure_setOf_continuousAt_mpTest_mul_eq_one
+    {Ω : Type*} [MeasurableSpace Ω] {P : Measure Ω} [IsProbabilityMeasure P]
+    {X : Ω → D(ℝ≥0, E)} (hX : Measurable X) {T : Set ℝ≥0} (hT : T.Countable)
+    (hgood : ∀ t ∈ T, P {ω | Function.leftLim (X ω).toFun t = (X ω).toFun t} = 1)
+    (f g : E →ᵇ ℝ) {s t : ℝ≥0} (hs : s ∈ T) (ht : t ∈ T)
+    {Z : D(ℝ≥0, E) → ℝ} (hZ : Z ∈ SkorokhodSpace.evalFuns E T) :
+    P {ω | ContinuousAt (fun z : D(ℝ≥0, E) =>
+      ((f (z.toFun t) - ∫ u in Set.Ioc (0 : ℝ) (t : ℝ), g (z.toFun u.toNNReal))
+        - (f (z.toFun s) - ∫ u in Set.Ioc (0 : ℝ) (s : ℝ), g (z.toFun u.toNNReal)))
+      * Z z) (X ω)} = 1 := by
+  refine le_antisymm prob_le_one ?_
+  rw [← SkorokhodSpace.measure_setOf_forall_notMem_leftJumpSet_comp_eq_one hX hT hgood]
+  refine measure_mono fun ω hω => ?_
+  exact ((SkorokhodSpace.continuousAt_mpTest f g t (hω t ht)).sub
+    (SkorokhodSpace.continuousAt_mpTest f g s (hω s hs))).mul
+    (SkorokhodSpace.continuousAt_of_mem_evalFuns hZ hω)
+
+end MPTestFunctional

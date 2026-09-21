@@ -52796,3 +52796,185 @@ erste Frage des Laufs.
 Laufs, `MeasureTheory.mpSolution_of_tendsto` und
 `mpSolution_of_tendsto_of_pContinuous` aus Meilenstein 10, und der Abschnitt über
 die festen Unstetigkeitsstellen aus **SkorokhodSpace** Meilenstein 8.
+
+### 2026-09-21, vierzehnter Lauf des Tages — der Kompensator ist **an jedem Pfad** stetig, und damit fragt der dritte Punkt der Kette die Sprungbedingung nur an der **einen** Zeit, die er ausliest; die Vorfrage des Vorlaufs war am Quelltext längst beantwortet, und ihre Antwort heißt: kein Fubini
+
+**Der dritte Punkt der Kette von Meilenstein 11 — `mpSolution_of_tendsto_cadlag`
+— hat seine analytische Eingabe.** Was er braucht, ist die `P`-Stetigkeit der
+getesteten Funktionale am Grenzpfad, und die steht jetzt, in beiden Hälften.
+
+**Neun** neue Deklarationen, alle in `SkorokhodSpace/Suggested.lean`, Meilenstein
+8, im neuen Abschnitt „the functionals a martingale problem tests":
+
+| Deklaration | was sie sagt |
+| --- | --- |
+| `SkorokhodSpace.tendsto_eval_of_tendsto` | Werte konvergieren längs einer Folge an jeder Nichtsprungstelle des Grenzpfades |
+| `SkorokhodSpace.continuousAt_integral_comp` | **der Kompensator ist an jedem Pfad stetig** |
+| `SkorokhodSpace.continuousAt_of_mem_evalFuns` | ein endlichdimensionales Testfunktional ist an sprungfreien Pfaden stetig |
+| `SkorokhodSpace.measure_setOf_forall_notMem_leftJumpSet_eq_one` | von den Zeiten zu den Pfaden, für ein Gesetz |
+| `SkorokhodSpace.continuousAt_setIntegral_toNNReal` | derselbe Kompensator in der Gestalt des Verbrauchers |
+| `SkorokhodSpace.continuousAt_mpTest` | das ganze Funktional, stetig an Pfaden ohne Sprung bei `t` |
+| `SkorokhodSpace.measure_setOf_forall_notMem_leftJumpSet_comp_eq_one` | dasselbe über einen Prozeß statt über sein Gesetz |
+| `SkorokhodSpace.measure_setOf_continuousAt_mpTest_eq_one` | **Hypothese (b) von `mpSolution_of_tendsto_of_pContinuous`** |
+| `SkorokhodSpace.measure_setOf_continuousAt_mpTest_mul_eq_one` | ihre `Z`-Hälfte, mit dem Produkt statt den Faktoren |
+
+Die Kette geht durch `python3 scripts/check_master.py` mit **0 Fehlern, 0
+`sorry`** in allen drei Dateien; die Warnungszahlen sind 18 / **38** / 112
+(davon veraltet 0), also **drei mehr** als am Vorlauf, sämtlich
+`unusedSectionVars` in den neuen Deklarationen und damit unter der stehenden
+Regel nicht Aufgabe dieses Laufs. Alle neun sind mit `check_axioms_master.py`
+geprüft und hängen an `propext`, `Classical.choice`, `Quot.sound` und an nichts
+sonst. `check_negatives.py` meldet über **53** Behauptungen — eine neue ist
+dazugekommen — keinen unerwarteten Treffer. `check.py` meldet `clean`.
+
+Mathlib-Stand: `94ef6b89544e58e90f119da869f3fb48d1da0f4c`, 2026-09-18;
+Lean 4.35.0-rc2.
+
+#### Die Vorfrage des Vorlaufs, und sie war schon beantwortet
+
+Der dreizehnte Lauf hatte als **erste Frage** dieses Laufs gestellt, ob
+Meilenstein 8 von `SkorokhodSpace` die maßtheoretische Fassung der
+Auswertungsstetigkeit schon trägt — „`ν`-fast jeder Pfad springt bei `t` nicht,
+für alle `t` außerhalb einer abzählbaren Menge" — oder ob sie „aus
+`countable_leftJumpSet` und Fubini erst zu bauen" ist.
+
+**Sie trägt sie, und zwar seit dem 2026-09-18**, unter dem Namen
+`SkorokhodSpace.countable_setOf_measure_leftJump_ne_zero` und darauf
+`exists_countable_dense_continuity`. Und **Fubini kommt darin nicht vor** — der
+Doc-Kommentar des Abschnitts sagt es selbst und begründet es: das klassische
+Argument (Billingsley, Abschnitt 13) integriert die *Zahl* der `ε`-Sprünge im
+Fenster gegen `μ` und braucht dafür deren Meßbarkeit als Funktion des Pfades,
+die aus den Koordinaten nicht zu haben ist; der dortige Beweis gibt statt dessen
+`measure_mono` und Stetigkeit von oben aus, und die einzige Meßbarkeit, die er
+verlangt, ist die der Sprungereignisse selbst.
+
+Was **fehlte**, war nur der letzte Schritt von den Zeiten zu den Pfaden, und der
+ist ein abzählbarer Durchschnitt von Mengen vollen Maßes
+(`measure_biUnion_null_iff`): das ist
+`measure_setOf_forall_notMem_leftJumpSet_eq_one`, sieben Zeilen. Die Vorfrage
+hat den Lauf also nicht gekostet, sondern gespart — und die Regel dahinter ist
+die, die schon dreimal notiert wurde: **erst den Quelltext lesen, dann den
+Aufwand schätzen.**
+
+#### Der Befund, und er ändert die Gestalt des dritten Kettenpunktes
+
+> **Der Kompensator trägt von der Sprungbedingung nichts.**
+
+`continuousAt_integral_comp`: für beschränkt-stetiges `g`, meßbares `φ : α → ι`
+und endliches `μ` auf `α`, das eine abzählbare Zeitmenge durch `φ` als Nullmenge
+sieht, ist
+
+```
+f ↦ ∫ g (f (φ s)) dμ s
+```
+
+an **jedem** Pfad stetig. Kein `t ∉ leftJumpSet`, keine Voraussetzung an den
+Pfad überhaupt.
+
+Der Grund ist zwei Zeilen und war auf Papier nicht zu sehen: ein càdlàg-Pfad
+springt an abzählbar vielen Stellen (`countable_leftJumpSet`), die Parameter,
+die diese auslesen, bilden eine `μ`-Nullmenge, und außerhalb davon konvergieren
+die Werte nach `continuousAt_eval_of_notMem_leftJumpSet`. Dominierte Konvergenz
+mit der **konstanten** Majorante `‖g‖` schließt es; die Endlichkeit von `μ` ist
+alles, was die Majorante integrierbar macht.
+
+**Und die Folge für den Meilenstein:** die Zeitmenge `D`, über die der dritte
+Kettenpunkt quantifiziert, wird von der **Auswertung** verlangt und von ihr
+allein — an der einen Zeit, die die Testfunktion ausliest. Die Roadmap sagte
+bisher bloß „taking for `D` the set of times at which the limit has no fixed
+discontinuity"; jetzt steht dort auch, **warum** es keine größere Menge sein
+muß.
+
+Daß die Auswertung ihre Bedingung wirklich braucht, ist nicht neu und steht
+weiter als `exists_jump_continuousAt_eval` da; der Lauf hat die Formulierung im
+Abschnittskommentar dahin **berichtigt**, daß dieser Zeuge *einen* Pfad vorführt
+und nicht *jeden* Pfad mit Sprung behandelt.
+
+#### Warum der Beweis über Folgen geht, und warum er das darf
+
+Dominierte Konvergenz ist eine Aussage über Folgen, `ContinuousAt` eine über
+Filter. Die Brücke ist `Filter.tendsto_iff_seq_tendsto`, und sie steht zur
+Verfügung, weil `D(ι, E)` durch `SkorokhodSpace.instMetricSpace` metrisch und
+`𝓝 y` damit abzählbar erzeugt ist. Ohne die Metrik wäre das Argument längs
+Netzen zu führen — und Mathlibs Netzfassung
+`tendsto_integral_filter_of_dominated_convergence` verlangt den abzählbar
+erzeugten Filter ohnehin.
+
+#### Eine Mathlib-Lücke, klein und geprüft
+
+**`ContinuousAt` eines endlichen Produkts hat in Mathlib keinen Namen.**
+`continuous_finsetProd` und `continuousOn_finsetProd` stehen in
+`Mathlib/Topology/Algebra/Monoid.lean` (Zeilen 968 und 978), eine
+`ContinuousAt`-Fassung nicht; der Versuch, `continuousAt_finset_prod` zu
+benutzen, gab „Unknown identifier". Zu nehmen ist `tendsto_finsetProd`, weil
+`ContinuousAt h y` definitionsgleich ein `Tendsto` längs `𝓝 y` ist — der Beweis
+von `continuousAt_of_mem_evalFuns` ist damit drei Zeilen. Die Behauptung steht
+seit diesem Lauf in `check_negatives.py` unter `continuousat-finset-prod` und
+gibt null Treffer.
+
+**Nebenbei, und es gehört in die Buchführung gegen `master`:** `NoAtoms` ist
+seit dem 2026-06-09 ein `deprecated alias` von
+`MeasureTheory.NullSingletonClass`
+(`Mathlib/MeasureTheory/Measure/Typeclasses/NullSingletonClass.lean:35`). In
+unseren drei Dateien kommt der alte Name nicht vor; wer ihn schreiben will,
+schreibt den neuen.
+
+#### Wo die Kette von Meilenstein 11 nach diesem Lauf steht
+
+| Punkt | Stand |
+| --- | --- |
+| `isTight_map_postcomp_of_exists_martingale` | steht, bis auf die `Fin k`-Fassung |
+| `isRelativelyCompact_of_approx` | steht im exakten Fall; der approximative fehlt |
+| `mpSolution_of_tendsto_cadlag` | **seine `P`-Stetigkeit steht, dieser Lauf**; es fehlt `IsDetermining` |
+| `tendsto_of_isRelativelyCompact_of_unique` | fehlt |
+
+#### Vorschlag für den nächsten Lauf
+
+**`SkorokhodSpace.generateFromFuns_evalFuns_Iic`** — die **Vergangenheitsfassung**
+von `generateFromFuns_evalFuns`:
+
+> `generateFromFuns (SkorokhodSpace.evalFuns E (T ∩ Set.Iic s))`
+> `= ⨆ r ∈ Set.Iic s, MeasurableSpace.comap (fun f : D(ι, E) => f.toFun r) inferInstance`
+
+für ein abzählbares, von rechts dichtes `T`, und daraus unmittelbar
+`MeasureTheory.isDetermining_evalFuns`.
+
+**Warum jetzt, und warum genau diese Aussage.** Nach diesem Lauf fehlt dem
+dritten Kettenpunkt von allen Eingaben von
+`mpSolution_of_tendsto_of_pContinuous` genau eine: `IsDetermining`. Die
+bestehenden Zeugen dafür (`isDetermining_of_comap`,
+`isDetermining_pathCylinders`) nehmen **alle** beschränkten meßbaren Funktionen
+der Vergangenheit beziehungsweise Indikatoren von Zylindern — und **keine von
+beiden Klassen ist an den Pfaden stetig, an denen sie es sein müßte**. Ein
+Indikator ist es nirgends. Die einzige Klasse, von der die Stetigkeit seit
+diesem Lauf bewiesen ist, ist `evalFuns`, und sie ist damit die einzige, die
+beide Hypothesen zugleich tragen kann. Das ist keine Bequemlichkeit, sondern
+eine Zwangslage, und sie gehört so in den Bericht.
+
+**Worauf sie ruht, und vier der fünf Eingaben stehen:**
+`isDetermining_of_generateFromFuns` (Meilenstein 10 von
+**MartingaleProblems**, `Suggested.lean:39639`) verlangt fünf Dinge von der
+Klasse — multiplikatives System, Meßbarkeit für `𝓖 s`, Beschränktheit, Erzeugung
+von `𝓖 s`, und die konstante `1`. Drei davon stehen wörtlich:
+`SkorokhodSpace.isMulSystem_evalFuns`, `measurable_of_mem_evalFuns`,
+`bounded_of_mem_evalFuns`; die vierte ist das Produkt über die leere `Finset`.
+Offen ist die **Erzeugung**, und nur sie.
+
+**Was daran die Arbeit ist, und es ist benannt:** `generateFromFuns_evalFuns`
+erzeugt heute die **ganze** Borelstruktur von `D(ι, E)` und ruht dafür auf
+`borel_eq_iSup_comap_eval_of_countable_rightDense`. Für die Vergangenheit bei
+`s` gibt es kein solches Lemma, und die Frage, die der Lauf **zuerst** zu klären
+hat, ist nicht die Erzeugung, sondern die **Rechtsdichtheit**: `T ∩ Set.Iic s`
+ist von rechts dicht in `Set.Iic s` nur, wenn `s` selbst darin liegt oder von
+rechts erreicht wird, und `s ∈ T` ist bei einem abzählbaren `T` keine
+Selbstverständlichkeit. Zwei Auswege stehen offen und sind gegeneinander
+abzuwägen, nicht zu raten: `s ∈ T` als Hypothese mitführen — was zulässig ist,
+weil `D` im Verbraucher ohnehin aus `T` gewählt wird —, oder die Erzeugung über
+`Set.Iio s` lesen und den Punkt `s` durch Rechtsstetigkeit des Pfades
+nachliefern.
+
+**Und die Meßbarkeit für `𝓖 s` ist zu prüfen und nicht zu erben:**
+`measurable_of_mem_evalFuns` gibt die Borel-Meßbarkeit auf `D(ι, E)`, nicht die
+für die Vergangenheit; letztere ist `MeasurableSpace.comap`-Meßbarkeit der
+einzelnen Koordinate bei `r ≤ s` und sollte aus `le_iSup` folgen, aber sie steht
+nicht da.

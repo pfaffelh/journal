@@ -3842,6 +3842,64 @@ hypotheses of the theorem. `exists_countable_dense_forall_setOf_leftLim_ne_one`
   `isTightMeasureSet_iff_forall_postcomp` cannot drop the compact containment
   hypothesis, and this is the family that shows it.
 
+### The functionals a martingale problem tests
+
+The consumer of stage (A) is the third item of the chain of
+**MartingaleProblems** Milestone 11: a weak limit of solutions of a martingale
+problem is a solution. It reads its hypothesis through
+`mpSolution_of_tendsto_of_pContinuous` there, in the shape
+`P {ω | ContinuousAt ψ (X ω)} = 1` for the functional
+
+```
+ψ t x = f (x t) - ∫_0^t g (x u) du,
+```
+
+and this part of the milestone says at which paths `ψ t` is continuous. Proved
+2026-09-21.
+
+* `continuousAt_integral_comp` — **the compensator is continuous at every path,
+  with no hypothesis on its jumps.** The times are read through a measurable
+  `φ : α → ι` against a finite `μ`, and the one condition is that `μ` sees a
+  countable set of times through `φ` as a null set. A path has countably many
+  jumps (`countable_leftJumpSet`), so off a `μ`-null set of parameters the
+  values converge, and dominated convergence with the constant majorant `‖g‖`
+  closes it. `continuousAt_setIntegral_toNNReal` is the instance
+  `α = ℝ`, `μ` Lebesgue on `Set.Ioc 0 T`, `φ = Real.toNNReal`, which is the shape
+  in which a martingale problem over `lebesgueClock` writes its compensator.
+* `continuousAt_mpTest` — the whole functional, continuous at every path that
+  does not jump **at the one time it evaluates**. The asymmetry between the two
+  summands is the content: the compensator carries none of the condition, the
+  evaluation all of it, and the evaluation cannot be freed of it —
+  `exists_jump_continuousAt_eval`.
+* `measure_setOf_forall_notMem_leftJumpSet_eq_one` — the passage from the
+  *times* of stage (A) to the *paths*: a law with no fixed discontinuity along a
+  countable set of times gives full mass to the paths jumping at none of them.
+  **No Fubini argument occurs in it**, and none is needed —
+  `exists_countable_dense_continuity` has already made the exceptional times
+  countable, and countability is what a union of null sets asks for.
+  `measure_setOf_forall_notMem_leftJumpSet_comp_eq_one` is the same read through
+  a process rather than through its law, which is the form the consumer writes
+  its hypotheses in; `Measurable X` is not removable there, a non-measurable set
+  of full outer measure having a complement of full outer measure too.
+* `continuousAt_of_mem_evalFuns` — a member of `evalFuns E T` is continuous at
+  every path that jumps at no time of `T`. The condition is asked over the whole
+  of `T` rather than over the `Finset` of the particular member, membership in
+  `evalFuns` being an existential.
+* `measure_setOf_continuousAt_mpTest_eq_one` and
+  `measure_setOf_continuousAt_mpTest_mul_eq_one` — the two halves of the
+  hypothesis, the second for the tested increment multiplied by a member of
+  `evalFuns E T`. The consumer asks its continuity of the **product** and not of
+  the factors, and that is what makes one application of the paths statement
+  answer for all three at once.
+
+**What this leaves for the consumer**, and it is named rather than left open:
+`MeasureTheory.IsDetermining` for the class `evalFuns E (T ∩ Set.Iic s)`. Four of
+the five inputs of `isDetermining_of_generateFromFuns` stand here —
+`isMulSystem_evalFuns`, `measurable_of_mem_evalFuns`, `bounded_of_mem_evalFuns`,
+and the constant `1` as the product over the empty `Finset`. The fifth is the
+**past** form of `generateFromFuns_evalFuns`, which today generates the whole
+Borel structure and not the σ-algebra of the coordinates up to `s`.
+
 ## Milestone 9: the nonnegative index inside the real one
 
 Milestones 7 and 8 are stated over the index `ℝ`. The reason is

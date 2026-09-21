@@ -11209,6 +11209,35 @@ has to be chosen once for all `n`. What stands:
   `D ι E`, then `X` solves the martingale problem for `A`. Derive it from
   Milestone 10, taking for `D` the set of times at which the limit has no fixed
   discontinuity.
+
+  **The `P`-continuity this derivation needs is proved, 2026-09-21**, in
+  **SkorokhodSpace** Milestone 8, and it decides which of the two versions of
+  Milestone 10 the item reads: `mpSolution_of_tendsto_of_pContinuous`, not
+  `mpSolution_of_tendsto`, because the hypothesis that is available on the path
+  space is weak convergence of the *paths* and the functionals are continuous
+  only off the jumps. The five statements:
+  `SkorokhodSpace.continuousAt_setIntegral_toNNReal`,
+  `SkorokhodSpace.continuousAt_mpTest`,
+  `SkorokhodSpace.measure_setOf_forall_notMem_leftJumpSet_comp_eq_one`,
+  `SkorokhodSpace.measure_setOf_continuousAt_mpTest_eq_one` and
+  `SkorokhodSpace.measure_setOf_continuousAt_mpTest_mul_eq_one`.
+
+  **The compensator carries no jump condition at all**, and that is the finding
+  that shapes the item: `SkorokhodSpace.continuousAt_integral_comp` is continuous
+  at *every* path, the jumps of the limit path being a countable — hence
+  Lebesgue null — set of times. So the set `D` is asked for by the **evaluation**
+  alone, and it is asked at the single time the test function reads. What that
+  leaves open for a run at this item is `MeasureTheory.IsDetermining` for the
+  class `SkorokhodSpace.evalFuns E T` restricted to the past of `s`: the members
+  of that class are the only bounded functionals known to be continuous where
+  they must be, and `isDetermining_of_generateFromFuns` is the criterion they
+  have to meet. Its four inputs are `SkorokhodSpace.isMulSystem_evalFuns`,
+  `SkorokhodSpace.measurable_of_mem_evalFuns`,
+  `SkorokhodSpace.bounded_of_mem_evalFuns` and the constant `1` — the product
+  over the empty `Finset` — and what is missing is the fifth,
+  `generateFromFuns (evalFuns E (T ∩ Set.Iic s)) = ⨆ r ≤ s, comap (eval r)`, the
+  **past** form of `SkorokhodSpace.generateFromFuns_evalFuns`, which today is
+  stated for the whole Borel structure.
 * `mpSolution_of_tendsto_cadlag_of_pathwise`: the same with the uniform
   convergence of `f n` and `g n` replaced by
   `𝔼^{P n}‖(f n - f) (X n t)‖ → 0` and

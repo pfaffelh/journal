@@ -176,6 +176,16 @@ CLAIMS = [
      '|istightmeasureset[a-z_.\']*tendstouniformly'
      '|tendstouniformly[a-z_.\']*istight',
      'Mathlib/'),
+    ('continuousat-finset-prod', 'SkorokhodSpace/Suggested.lean, '
+     '`SkorokhodSpace.continuousAt_of_mem_evalFuns`',
+     'Mathlib hat die Stetigkeit eines endlichen Produkts **an einer Stelle** '
+     'unter keinem Namen: `continuous_finsetProd` und `continuousOn_finsetProd` '
+     'stehen in `Mathlib/Topology/Algebra/Monoid.lean`, eine `ContinuousAt`-'
+     'Fassung nicht.  Zu nehmen ist `tendsto_finsetProd`, weil `ContinuousAt` '
+     'ein `Tendsto` längs `𝓝 y` ist.',
+     'continuousat_finsetprod|continuousat_finset_prod'
+     '|continuousat[a-z_.\']*\\.finsetprod',
+     'Mathlib/'),
 ]
 
 
