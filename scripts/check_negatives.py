@@ -424,6 +424,68 @@ CLAIMS_TODO8 = [
      'theorem le_lintegral|lemma le_lintegral',
      ['Mathlib/'],
      ['Mathlib/MeasureTheory/Integral/Lebesgue/Add.lean']),
+    ('abs-of-martingale-is-submartingale',
+     'MartingaleProblems/Suggested.lean, `Martingale.submartingale_abs`; '
+     'MartingaleProblems/README.md, Meilenstein 11',
+     'Daß der **Betrag** eines Martingals ein Untermartingal ist, steht in '
+     'Mathlib in keiner Fassung: `Mathlib/Probability/Martingale/Basic.lean` '
+     'trägt `Submartingale.pos` für den Positivteil und `Submartingale.sup` für '
+     'das Supremum zweier, und im ganzen Verzeichnis '
+     '`Mathlib/Probability/Martingale/` kommt `abs` in genau einem Namen vor, '
+     '`Submartingale.exists_tendsto_of_abs_bddAbove_aux`. Am 2026-09-21 mit '
+     '`example … := by exact?` gegen den master-Worktree geprüft: `exact?` '
+     'schließt das Ziel nicht.',
+     'abs_submartingale|submartingale_abs|Martingale.abs',
+     ['Mathlib/'],
+     []),
+    ('maximal-ineq-event-form',
+     'MartingaleProblems/Suggested.lean, `Martingale.measure_exists_abs_ge_le`; '
+     'MartingaleProblems/README.md, Meilenstein 11',
+     'Die Maximalungleichung in **Ereignisgestalt** — '
+     '`ε · P {∃ k ≤ N, ε ≤ |f k|} ≤ ∫ |f N|` — steht in Mathlib nicht. '
+     'Vorhanden ist `MeasureTheory.maximal_ineq` '
+     '(`Mathlib/Probability/Martingale/OptionalStopping.lean:144`) über '
+     '`Finset.sup'"'"'` und mit dem Integral über dem Ereignis selbst; die '
+     'beiden Umformungen (`Finset.le_sup'"'"'_iff` und '
+     '`MeasureTheory.setIntegral_le_integral`) bleiben dem Verbraucher. Am '
+     '2026-09-21 mit `example … := by exact?` gegen den master-Worktree '
+     'geprüft: `exact?` schließt das Ziel nicht.',
+     'measure_exists_abs|maximal_ineq_event|measure_le_of_maximal',
+     ['Mathlib/'],
+     []),
+    ('partial-sum-martingale',
+     'MartingaleProblems/Suggested.lean, `martingale_partialSum_of_iIndepFun`; '
+     'MartingaleProblems/README.md, Meilenstein 11',
+     'Daß die **Partialsummen** unabhängiger, zentrierter, integrierbarer '
+     'Größen ein Martingal bilden, steht in Mathlib in keiner Fassung: '
+     '`partialSum` kommt unter `Mathlib/Probability/` in keinem '
+     'Deklarationsnamen vor. Vorhanden sind die Bausteine — '
+     '`ProbabilityTheory.iIndepFun.indep_comap_natural_of_lt` '
+     '(`Mathlib/Probability/BorelCantelli.lean:43`) und '
+     '`MeasureTheory.condExp_indep_eq` '
+     '(`Mathlib/Probability/ConditionalExpectation.lean:42`) —, nicht aber der '
+     'Satz. Am 2026-09-21 mit `example … := by exact?` gegen den '
+     'master-Worktree geprüft: `exact?` schließt das Ziel nicht.',
+     'partialSum|partial_sum_martingale|martingale_sum_range',
+     ['Mathlib/Probability/'],
+     []),
+    ('integral-abs-le-sqrt-integral-sq',
+     'MartingaleProblems/Suggested.lean, `integral_abs_le_sqrt_integral_sq`; '
+     'MartingaleProblems/README.md, Meilenstein 11',
+     'Die reelle Gestalt `∫ |f| ≤ √(∫ f ^ 2)` über einem '
+     'Wahrscheinlichkeitsmaß steht in Mathlib nicht. Vorhanden ist der '
+     'Vergleich über `eLpNorm` '
+     '(`MeasureTheory.eLpNorm_le_eLpNorm_of_exponent_le`, '
+     '`Mathlib/MeasureTheory/Function/LpSeminorm/CompareExp.lean:115`) und '
+     'Hölder über `(∫ f ^ p) ^ (1 / p)` '
+     '(`MeasureTheory.integral_mul_le_Lp_mul_Lq_of_nonneg`, '
+     '`Mathlib/MeasureTheory/Integral/Bochner/Basic.lean:1225`); die '
+     'Umrechnung in beide Richtungen bleibt dem Verbraucher. Am 2026-09-21 mit '
+     '`example … := by exact?` gegen den master-Worktree geprüft, in der '
+     'Jensen- wie in der Wurzelgestalt: `exact?` schließt beide Ziele nicht.',
+     'integral_abs_le_sqrt|sq_integral_le_integral_sq|integral_abs_le_rpow',
+     ['Mathlib/'],
+     []),
 ]
 
 

@@ -48384,4 +48384,352 @@ theorem mpSolution_of_tendsto_cadlag_of_subseq_pathOfProcess [CompleteSpace E]
 
 end CadlagChain
 
+/-! ### Compact containment for a family of step paths, and the estimate it runs on
+
+`SkorokhodSpace.isCompactContained_of_forall_exists_bound` of **SkorokhodSpace**
+Milestone 8 turns the hypothesis `hcc`, which every statement of this milestone
+carries, into a uniform bound on the **path maximum over a window**.  This
+section pays that bound for the shape the acceptance example has, in two steps
+that are worth keeping apart because they fail for different reasons.
+
+* The **deterministic** step.  For a step path with deterministic nodes the
+  window maximum is not an approximation of the maximum over the nodes but
+  **equal** to it, because the path takes on the window exactly the values of
+  its nodes.  `MeasureTheory.isCompactContained_map_stepPath` is that reduction,
+  and it reads nothing of the path beyond `MeasureTheory.stepIndex_le`: a time
+  inside the window lies below the node `N + 1`, hence its index is at most `N`.
+  No monotonicity of the nodes is asked for and no non explosion, the window
+  being bounded and the node past it named by hypothesis.
+* The **probabilistic** step.  What bounds the maximum over the nodes is Doob's
+  maximal inequality, and it is applied to `|f|`, which is a non negative
+  submartingale whenever `f` is a martingale.  Mathlib has neither that
+  submartingale nor the maximal inequality in the event form a consumer wants,
+  and both are proved here.
+
+What is left for the walks after this section is the martingale property of
+their partial sums together with an `L¹` bound on the last of them; neither is
+in Mathlib and neither is a statement about path space. -/
+
+section WalkContainment
+
+variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
+
+/-- **The absolute value of a martingale is a submartingale**, and Mathlib does
+not have it: `Mathlib/Probability/Martingale/Basic.lean` carries `Submartingale.pos`
+for the positive part and `Submartingale.sup` for the supremum of two, and stops
+there (checked against `master` `09712d488fd`, 2026-09-21, with `exact?`).
+
+The proof is the second of those two read at `f ⊔ (-f)`, which is `|f|`
+pointwise.  It is stated over an arbitrary preordered index because nothing in it
+is about `ℕ`; the consumer below is at `ℕ`, where Doob's maximal inequality
+lives. -/
+theorem Martingale.submartingale_abs {ι : Type*} [Preorder ι] {P : Measure Ω}
+    {𝒢 : Filtration ι mΩ} {f : ι → Ω → ℝ} (hf : Martingale f 𝒢 P) :
+    Submartingale (fun k ω ↦ |f k ω|) 𝒢 P := by
+  have h := hf.submartingale.sup hf.neg.submartingale
+  have he : (f ⊔ (-f)) = fun k ω ↦ |f k ω| := by
+    funext k ω
+    simp [Pi.sup_apply, Pi.neg_apply, abs_eq_max_neg]
+  rwa [he] at h
+
+/-- **Doob's maximal inequality in the form a consumer reads it**: the measure of
+the event that *some* of the first `N + 1` values of a martingale reaches the
+level `ε`.
+
+`MeasureTheory.maximal_ineq` (`Mathlib/Probability/Martingale/OptionalStopping.lean:144`)
+states the same content about `Finset.sup'` over `Finset.range (N + 1)` and bounds
+it by the integral over the event itself.  Both shapes cost a consumer a step:
+the `sup'` has to be turned into an existential by `Finset.le_sup'_iff`, and the
+set integral into the whole integral by `MeasureTheory.setIntegral_le_integral`,
+which needs the integrand non negative -- it is, being an absolute value.  Mathlib
+has no such corollary (checked against `master` `09712d488fd`, 2026-09-21, with
+`exact?`), and the statement is what turns an `L¹` bound at the *last* index into
+a bound on the *whole* path, which is what compact containment asks for.
+
+**The level is `ℝ≥0` and not `ℝ`**, following `MeasureTheory.maximal_ineq`, and
+the conclusion is in product form rather than as a quotient so that no division
+in `ℝ≥0∞` and no junk value at `ε = 0` appears. -/
+theorem Martingale.measure_exists_abs_ge_le {P : Measure Ω} [IsFiniteMeasure P]
+    {𝒢 : Filtration ℕ mΩ} {f : ℕ → Ω → ℝ} (hf : Martingale f 𝒢 P) (ε : ℝ≥0) (N : ℕ) :
+    (ε : ENNReal) * P {ω | ∃ k ≤ N, (ε : ℝ) ≤ |f k ω|}
+      ≤ ENNReal.ofReal (∫ ω, |f N ω| ∂P) := by
+  have habs : Submartingale (fun k ω ↦ |f k ω|) 𝒢 P := hf.submartingale_abs
+  have hnonneg : (0 : ℕ → Ω → ℝ) ≤ fun k ω ↦ |f k ω| := fun k ω ↦ abs_nonneg _
+  have hset : {ω | ∃ k ≤ N, (ε : ℝ) ≤ |f k ω|}
+      = {ω | (ε : ℝ) ≤ (Finset.range (N + 1)).sup' Finset.nonempty_range_add_one
+          fun k ↦ |f k ω|} := by
+    ext ω
+    simp only [Set.mem_ofPred_eq, Finset.le_sup'_iff, Finset.mem_range, Nat.lt_succ_iff]
+  rw [hset]
+  refine (maximal_ineq habs hnonneg N).trans (ENNReal.ofReal_le_ofReal ?_)
+  exact setIntegral_le_integral (habs.integrable N) (Eventually.of_forall (hnonneg N))
+
+/-- **Compact containment for a family of step path laws with deterministic
+nodes**, from a bound on the nodes alone.
+
+This is `SkorokhodSpace.isCompactContained_of_forall_exists_bound` with its
+window maximum replaced by a maximum over finitely many indices, and the
+replacement is an **equality of events** and not an estimate: a time `t` of the
+window `exhaustion 0 m` satisfies `t ≤ m < T i (N i m + 1)`, so `stepIndex_le`
+puts its index at most `N i m`, and the value of the path at `t` is one of the
+values `Y i ω k`, `k ≤ N i m`.
+
+**The hypotheses are the weakest the argument reads.**  No monotonicity of the
+nodes `T i` enters, `MeasureTheory.stepIndex_le` being a statement about the
+single window that contains the time; and no non explosion enters either, the
+node past the window being named by `hN` -- which is what the standing rule asks
+of every statement about a `sInf` made total, the junk value `sInf ∅ = 0` never
+being reached because the set `{n | t < T i (n + 1)}` is inhabited by `N i m`.
+
+**The path map is data and not a construction.**  `Φ` is given together with
+`hΦ`, saying that its coordinates are the step path, exactly as
+`MeasureTheory.measurable_pathOfProcess` and the seams of this milestone take
+their path maps; a consumer that has built its paths by any route supplies them
+unchanged. -/
+theorem isCompactContained_map_stepPath {E : Type*} [MetricSpace E]
+    [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [ProperSpace E] {γ : Type*}
+    {P : γ → Measure Ω} {T : γ → ℕ → ℝ≥0} {Y : γ → Ω → ℕ → E} {Φ : γ → Ω → D(ℝ≥0, E)}
+    (hΦ : ∀ i ω, (Φ i ω).toFun = stepPath (T i) (Y i ω)) (hΦm : ∀ i, Measurable (Φ i))
+    (x₀ : E) {N : γ → ℕ → ℕ} (hN : ∀ (i : γ) (m : ℕ), (m : ℝ≥0) < T i (N i m + 1))
+    (h : ∀ ε : ENNReal, 0 < ε → ∀ m : ℕ, ∃ R : ℝ, ∀ i,
+      P i {ω | ∃ k ≤ N i m, R < dist (Y i ω k) x₀} ≤ ε) :
+    SkorokhodSpace.IsCompactContained (0 : ℝ≥0) fun i ↦ (P i).map (Φ i) := by
+  refine SkorokhodSpace.isCompactContained_of_forall_exists_bound x₀ ?_
+  intro ε hε m
+  obtain ⟨R, hR⟩ := h ε hε m
+  refine ⟨R, fun i ↦ ?_⟩
+  have hmeas : MeasurableSet {f : D(ℝ≥0, E) | ∀ t ∈ exhaustion (0 : ℝ≥0) (m : ℝ),
+      dist (f.toFun t) x₀ ≤ R} :=
+    SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion_nnreal
+      (Metric.isClosed_closedBall (x := x₀) (ε := R)) (m : ℝ)
+  rw [Measure.map_apply (hΦm i) hmeas.compl]
+  refine le_trans (measure_mono ?_) (hR i)
+  intro ω hω
+  simp only [Set.mem_preimage, Set.mem_compl_iff, Set.mem_ofPred_eq, not_forall,
+    not_le] at hω
+  obtain ⟨t, ht, hlt⟩ := hω
+  have htm : t ≤ (m : ℝ≥0) := by
+    have hmem := mem_exhaustion_zero_nnreal_iff (u := (m : ℝ≥0)) (t := t)
+    rw [NNReal.coe_natCast] at hmem
+    exact hmem.1 ht
+  refine ⟨stepIndex (T i) t, stepIndex_le (htm.trans_lt (hN i m)), ?_⟩
+  rwa [hΦ i ω] at hlt
+
+/-- **And the bound on the nodes from a martingale and an `L¹` estimate at the
+last of them** -- the two statements above composed, and the form the acceptance
+example of Milestone 11 meets.
+
+For the rescaled random walks `Z i` is `k ↦ n⁻¹ᐟ² ∑ j < k, ξ j`, a martingale for
+the natural filtration of the increments, and `C m` may be taken to be
+`√(m + 1)` by Cauchy--Schwarz and the additivity of the variance.  Neither of
+those two is a statement about path space, which is why they are hypotheses here:
+what this milestone owes Donsker is the passage from them to compact containment,
+and that passage is this statement.
+
+**The constant is allowed to depend on the window and not on the index**, which
+is the whole content of the uniformity `SkorokhodSpace.IsCompactContained` asks
+for; a family whose `L¹` bound grew with the index would be exactly the constant
+paths at height `n` that the predicate exists to exclude.
+
+**Where the `ε` is cut off.**  The level `R` is produced from `ε` by
+`ENNReal.exists_nat_gt`, which needs a finite quotient; `ε` is therefore first
+replaced by `min ε 1`, and the conclusion crosses back by `min_le_left`.  It is
+not a weakening -- a bound by `min ε 1` is a bound by `ε` -- and it is the only
+place where the `ℝ≥0∞` valued level of the predicate costs anything. -/
+theorem isCompactContained_map_stepPath_of_martingale {γ : Type*}
+    {P : γ → Measure Ω} [∀ i, IsFiniteMeasure (P i)]
+    {T : γ → ℕ → ℝ≥0} {Z : γ → ℕ → Ω → ℝ} {Φ : γ → Ω → D(ℝ≥0, ℝ)}
+    (hΦ : ∀ i ω, (Φ i ω).toFun = stepPath (T i) fun k ↦ Z i k ω)
+    (hΦm : ∀ i, Measurable (Φ i))
+    {𝒢 : γ → Filtration ℕ mΩ} (hmart : ∀ i, Martingale (Z i) (𝒢 i) (P i))
+    {N : γ → ℕ → ℕ} (hN : ∀ (i : γ) (m : ℕ), (m : ℝ≥0) < T i (N i m + 1))
+    {C : ℕ → ℝ} (hC : ∀ (i : γ) (m : ℕ), ∫ ω, |Z i (N i m) ω| ∂(P i) ≤ C m) :
+    SkorokhodSpace.IsCompactContained (0 : ℝ≥0) fun i ↦ (P i).map (Φ i) := by
+  refine isCompactContained_map_stepPath hΦ hΦm (0 : ℝ) (N := N) hN ?_
+  intro ε hε m
+  set ε' : ENNReal := min ε 1 with hε'
+  have hε'0 : 0 < ε' := lt_min hε one_pos
+  have hε'top : ε' ≠ ⊤ := ne_top_of_le_ne_top ENNReal.one_ne_top (min_le_right _ _)
+  set c : ENNReal := ENNReal.ofReal (C m) with hc
+  obtain ⟨n, hn⟩ := ENNReal.exists_nat_gt (r := c / ε')
+    (ENNReal.div_lt_top ENNReal.ofReal_ne_top hε'0.ne').ne
+  refine ⟨(n : ℝ), fun i ↦ le_trans ?_ (min_le_left ε 1)⟩
+  have hRpos : (0 : ENNReal) < (n : ENNReal) := lt_of_le_of_lt (by simp) hn
+  have hkey : (n : ENNReal) * P i {ω | ∃ k ≤ N i m, ((n : ℝ≥0) : ℝ) ≤ |Z i k ω|} ≤ c := by
+    refine le_trans ((hmart i).measure_exists_abs_ge_le (n : ℝ≥0) (N i m)) ?_
+    exact ENNReal.ofReal_le_ofReal (hC i m)
+  have hmul : c ≤ (n : ENNReal) * ε' := by
+    calc c = c / ε' * ε' := (ENNReal.div_mul_cancel hε'0.ne' hε'top).symm
+      _ ≤ (n : ENNReal) * ε' := mul_le_mul_left hn.le _
+  have hfin : (n : ENNReal) ≠ ⊤ := ENNReal.natCast_ne_top n
+  refine (ENNReal.mul_le_mul_iff_right hRpos.ne' hfin).1 ?_
+  refine le_trans (le_trans ?_ hkey) hmul
+  refine mul_le_mul_right (measure_mono ?_) _
+  intro ω hω
+  obtain ⟨k, hk, hlt⟩ := hω
+  exact ⟨k, hk, le_of_lt (by simpa [Real.dist_eq] using hlt)⟩
+
+/-- **The partial sums of independent centred integrable summands are a
+martingale**, which is the one hypothesis
+`isCompactContained_map_stepPath_of_martingale` asks of the family it is applied
+to, and which Mathlib does not carry: the statement is closed by no
+`exact?` against `master` `94ef6b89544`, and `partialSum` occurs in no
+declaration name under `Mathlib/Probability/`.
+
+**The filtration is the natural one of the sums and not of the summands**, and
+the difference decides the statement.  `MeasureTheory.Filtration.natural ξ` at
+`n` is `σ (ξ 0, …, ξ n)`
+(`Mathlib/Probability/Process/Filtration.lean:395`), which already holds the
+increment `ξ n` that the step from `∑ k < n` to `∑ k < n + 1` adds; over it the
+process is adapted, and its conditional expectation at `n + 1` is
+`∑ k < n, ξ k + ξ n`.  The natural filtration of the sums is
+`σ (S 0, …, S n) = σ (ξ 0, …, ξ (n - 1))`, which is what the martingale property
+reads.  The consumer takes either, its filtration being an implicit argument.
+
+**What carries the step** is
+`ProbabilityTheory.iIndepFun.indep_comap_natural_of_lt`
+(`Mathlib/Probability/BorelCantelli.lean:43`), which makes `ξ (m + 1)`
+independent of `Filtration.natural ξ m`, together with
+`MeasureTheory.condExp_indep_eq`.  The passage from the one filtration to the
+other is the inclusion `𝒢 (m + 1) ≤ Filtration.natural ξ m`, each `S j` with
+`j ≤ m + 1` being a sum of increments of index at most `m`.  At `n = 0` there is
+no increment to condition away: `𝒢 0` is the σ-algebra of the constant
+`S 0 = 0`, hence `⊥`, and `ProbabilityTheory.indep_bot_right` serves.
+
+**`IsProbabilityMeasure P` is a conclusion and not a hypothesis**, being read off
+the independence by `ProbabilityTheory.iIndepFun.isProbabilityMeasure`. -/
+theorem martingale_partialSum_of_iIndepFun {P : Measure Ω} {ξ : ℕ → Ω → ℝ}
+    (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hint : ∀ k, Integrable (ξ k) P) (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0) :
+    Martingale (fun n ω ↦ ∑ k ∈ Finset.range n, ξ k ω)
+      (Filtration.natural (fun n ω ↦ ∑ k ∈ Finset.range n, ξ k ω)
+        (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ hmeas k)) P := by
+  have : IsProbabilityMeasure P := hind.isProbabilityMeasure
+  set Sm : ∀ n, StronglyMeasurable fun ω ↦ ∑ k ∈ Finset.range n, ξ k ω :=
+    fun n ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ hmeas k with hSm
+  set 𝒢 : Filtration ℕ mΩ := Filtration.natural (fun n ω ↦ ∑ k ∈ Finset.range n, ξ k ω) Sm
+    with h𝒢
+  -- the past of the walk at `n + 1` sits inside the past of the increments at `n`
+  have hle : ∀ n, 𝒢 (n + 1) ≤ Filtration.natural ξ hmeas n := by
+    intro n
+    refine iSup₂_le fun j hj ↦ ?_
+    refine Measurable.comap_le (StronglyMeasurable.measurable ?_)
+    refine Finset.stronglyMeasurable_fun_sum (m := Filtration.natural ξ hmeas n) _ fun k hk ↦ ?_
+    have hkn : k ≤ n := by
+      have := Finset.mem_range.1 hk
+      omega
+    exact (Filtration.stronglyAdapted_natural hmeas k).mono
+      ((Filtration.natural ξ hmeas).mono hkn)
+  have hindep : ∀ n, Indep (MeasurableSpace.comap (ξ n) inferInstance) (𝒢 n) P := by
+    intro n
+    cases n with
+    | zero =>
+      refine indep_of_indep_of_le_right (indep_bot_right _) ?_
+      refine iSup₂_le fun j hj ↦ ?_
+      have hj0 : j = 0 := Nat.le_zero.1 hj
+      subst hj0
+      simp
+    | succ m =>
+      exact indep_of_indep_of_le_right
+        (hind.indep_comap_natural_of_lt hmeas (Nat.lt_succ_self m)) (hle m)
+  refine martingale_nat (Filtration.stronglyAdapted_natural Sm) (fun n ↦ ?_) (fun n ↦ ?_)
+  · exact integrable_finsetSum _ fun k _ ↦ hint k
+  · have hsplit : (fun ω ↦ ∑ k ∈ Finset.range (n + 1), ξ k ω)
+        = (fun ω ↦ ∑ k ∈ Finset.range n, ξ k ω) + ξ n := by
+      funext ω; simp [Finset.sum_range_succ]
+    rw [hsplit]
+    have hadd := condExp_add (μ := P) (m := 𝒢 n)
+      (integrable_finsetSum (Finset.range n) fun k _ ↦ hint k) (hint n)
+    have hfirst : P[(fun ω ↦ ∑ k ∈ Finset.range n, ξ k ω) | 𝒢 n]
+        = fun ω ↦ ∑ k ∈ Finset.range n, ξ k ω :=
+      condExp_of_stronglyMeasurable (𝒢.le n) (Filtration.stronglyAdapted_natural Sm n)
+        (integrable_finsetSum _ fun k _ ↦ hint k)
+    have hsecond : P[ξ n | 𝒢 n] =ᵐ[P] fun _ ↦ (0 : ℝ) := by
+      refine (condExp_indep_eq (hmeas n).measurable.comap_le (𝒢.le n)
+        (Measurable.of_comap_le le_rfl).stronglyMeasurable (hindep n)).trans ?_
+      simp [hcent n]
+    filter_upwards [hadd, hsecond] with ω h1 h3
+    simp [h1, hfirst, h3]
+
+/-- **The `L¹` norm is below the `L²` norm on a probability space**, in the real
+valued shape a consumer reads: `∫ |f| ≤ √(∫ f ^ 2)`.
+
+Mathlib states the comparison about `eLpNorm`
+(`MeasureTheory.eLpNorm_le_eLpNorm_of_exponent_le`,
+`Mathlib/MeasureTheory/Function/LpSeminorm/CompareExp.lean:115`) and Hölder
+about `(∫ f ^ p) ^ (1 / p)`
+(`MeasureTheory.integral_mul_le_Lp_mul_Lq_of_nonneg`,
+`Mathlib/MeasureTheory/Integral/Bochner/Basic.lean:1225`); neither is this, and
+this is closed by no `exact?` against `master` `94ef6b89544`.
+
+**The proof is not Cauchy--Schwarz but the nonnegativity of a variance**, which
+is cheaper by the whole `ENNReal.rpow` computation that the two shapes above
+would cost: `ProbabilityTheory.variance_eq_sub`
+(`Mathlib/Probability/Moments/Variance.lean:226`) reads
+`Var[|f|] = P[|f| ^ 2] - P[|f|] ^ 2`, the first summand is `∫ f ^ 2` by
+`sq_abs`, and `ProbabilityTheory.variance_nonneg` (`:204`) says the difference
+is nonnegative.  `Real.le_sqrt_of_sq_le` (`Mathlib/Analysis/Real/Sqrt.lean:258`)
+takes it from there, and it asks for no sign of the left side. -/
+theorem integral_abs_le_sqrt_integral_sq {P : Measure Ω} [IsProbabilityMeasure P]
+    {f : Ω → ℝ} (hf : MemLp f 2 P) :
+    ∫ ω, |f ω| ∂P ≤ Real.sqrt (∫ ω, f ω ^ 2 ∂P) := by
+  have habs : MemLp (fun ω ↦ |f ω|) 2 P := hf.abs
+  have h0 : (0 : ℝ) ≤ variance (fun ω ↦ |f ω|) P := variance_nonneg _ _
+  rw [variance_eq_sub habs] at h0
+  have hsq : P[(fun ω ↦ |f ω|) ^ 2] = ∫ ω, f ω ^ 2 ∂P := by
+    simp [Pi.pow_apply, sq_abs]
+  rw [hsq] at h0
+  exact Real.le_sqrt_of_sq_le (by linarith)
+
+/-- **The `L¹` bound on the partial sum of independent centred summands of
+variance at most one**, `∫ |∑ k < N, ξ k| ≤ √N`, which is the second and last
+input `isCompactContained_map_stepPath_of_martingale` asks of the rescaled
+random walks, the first being `martingale_partialSum_of_iIndepFun`.
+
+**No martingale enters**, which is why this and the martingale above are two
+statements and not one: the bound is the additivity of the variance under
+independence and the comparison of the two norms, and it holds at each `N`
+separately.
+
+**The hypotheses are the weakest the argument reads.**  The variances are
+bounded by `1` and not equal to it, so that the statement covers a triangular
+array as well as an i.i.d. sequence; independence is used only pairwise, through
+`ProbabilityTheory.IndepFun.variance_sum`
+(`Mathlib/Probability/Moments/Variance.lean:424`), although `iIndepFun` is what
+a consumer has; and the centring enters at one place only, killing the second
+summand of `ProbabilityTheory.variance_eq_sub` so that the variance of the sum
+**is** `∫ (∑ k < N, ξ k) ^ 2`. -/
+theorem integral_abs_sum_le_sqrt_of_iIndepFun {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} (hind : iIndepFun ξ P) (hLp : ∀ k, MemLp (ξ k) 2 P)
+    (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0) (hvar : ∀ k, variance (ξ k) P ≤ 1) (N : ℕ) :
+    ∫ ω, |∑ k ∈ Finset.range N, ξ k ω| ∂P ≤ Real.sqrt N := by
+  have hfun : (∑ k ∈ Finset.range N, ξ k) = fun ω ↦ ∑ k ∈ Finset.range N, ξ k ω := by
+    funext ω; simp
+  have hS : MemLp (fun ω ↦ ∑ k ∈ Finset.range N, ξ k ω) 2 P :=
+    memLp_finsetSum _ fun k _ ↦ hLp k
+  have hmean : ∫ ω, (∑ k ∈ Finset.range N, ξ k ω) ∂P = 0 := by
+    rw [integral_finsetSum _ fun k _ ↦ (hLp k).integrable one_le_two]
+    simp [hcent]
+  have hvarsum : variance (fun ω ↦ ∑ k ∈ Finset.range N, ξ k ω) P
+      = ∑ k ∈ Finset.range N, variance (ξ k) P := by
+    rw [← hfun]
+    exact IndepFun.variance_sum (fun k _ ↦ hLp k)
+      (fun i _ j _ hij ↦ hind.indepFun hij)
+  have hsq : ∫ ω, (∑ k ∈ Finset.range N, ξ k ω) ^ 2 ∂P ≤ (N : ℝ) := by
+    have h := variance_eq_sub hS
+    rw [hvarsum] at h
+    have hle : ∑ k ∈ Finset.range N, variance (ξ k) P ≤ (N : ℝ) := by
+      refine le_trans (Finset.sum_le_sum fun k _ ↦ hvar k) ?_
+      simp
+    have hP : P[(fun ω ↦ ∑ k ∈ Finset.range N, ξ k ω) ^ 2]
+        = ∫ ω, (∑ k ∈ Finset.range N, ξ k ω) ^ 2 ∂P := by
+      simp [Pi.pow_apply]
+    rw [hP, hmean] at h
+    simp only [ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, zero_pow, sub_zero] at h
+    linarith [h ▸ hle]
+  refine le_trans (integral_abs_le_sqrt_integral_sq hS) ?_
+  exact Real.sqrt_le_sqrt hsq
+
+end WalkContainment
+
 end MeasureTheory

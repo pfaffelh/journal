@@ -13442,17 +13442,68 @@ has to be chosen once for all `n`. What stands:
   left for the walks is to exhibit their approximating pairs, which is an
   instance and not an item.
 
-  **Of the compact containment, the reduction is done and the estimate is
-  not, 2026-09-21.** `SkorokhodSpace.isCompactContained_of_forall_exists_bound`
+  **Of the compact containment, everything that is about path space is
+  done, 2026-09-21.** `SkorokhodSpace.isCompactContained_of_forall_exists_bound`
   of **SkorokhodSpace** Milestone 8 turns the hypothesis `hcc` — which every
   statement of this milestone carries and which until then had only the
   constant family as a witness — into a uniform bound on the **path maximum
-  over a window**, for `E` a `ProperSpace` and hence for `E = ℝ`. What is left
-  for the walks is that bound, and it is Doob's maximal inequality over the
-  **discrete** index, `MeasureTheory.maximal_ineq`
-  (`Mathlib/Probability/Martingale/OptionalStopping.lean:144`): the passage
-  from the discrete maximum to the window maximum is an equality, a step path
-  taking on a window exactly the values of its nodes.
+  over a window**, for `E` a `ProperSpace` and hence for `E = ℝ`. Four
+  statements carry it the rest of the way:
+
+  * `Martingale.submartingale_abs` — the absolute value of a martingale is a
+    submartingale, which Mathlib does not have. It is `Submartingale.sup` read
+    at `f ⊔ (-f)`.
+  * `Martingale.measure_exists_abs_ge_le` — Doob's maximal inequality in event
+    form, `ε · P {∃ k ≤ N, ε ≤ |f k|} ≤ ∫ |f N|`. Mathlib's
+    `MeasureTheory.maximal_ineq`
+    (`Mathlib/Probability/Martingale/OptionalStopping.lean:144`) states it about
+    `Finset.sup'` and bounds it by the integral over the event; both shapes cost
+    a consumer a step, and neither corollary is in Mathlib.
+  * `isCompactContained_map_stepPath` — the reduction of the window maximum to
+    the maximum over the nodes, for a family of step path laws with
+    deterministic nodes. It is an **equality of events** and not an estimate: a
+    time of the window lies below the node past the window, so `stepIndex_le`
+    puts its index among the finitely many named ones. No monotonicity of the
+    nodes and no non explosion enter.
+  * `isCompactContained_map_stepPath_of_martingale` — the two composed, and the
+    form the acceptance example meets: nodes, a martingale at them, and an `L¹`
+    bound on the martingale at the last node, uniformly in the index.
+  * `martingale_partialSum_of_iIndepFun` — the partial sums `n ↦ ∑ k < n, ξ k`
+    of independent centred integrable summands are a martingale, which Mathlib
+    does not have. **The filtration is the natural one of the sums and not of
+    the summands**, and the difference decides the statement:
+    `MeasureTheory.Filtration.natural ξ`
+    (`Mathlib/Probability/Process/Filtration.lean:395`) at `n` is
+    `σ (ξ 0, …, ξ n)` and so holds the increment that the step from `n` to
+    `n + 1` adds, over which the conditional expectation at `n + 1` is
+    `∑ k < n, ξ k + ξ n`. The step is
+    `ProbabilityTheory.iIndepFun.indep_comap_natural_of_lt`
+    (`Mathlib/Probability/BorelCantelli.lean:43`) together with
+    `MeasureTheory.condExp_indep_eq`
+    (`Mathlib/Probability/ConditionalExpectation.lean:42`), carried from the one
+    filtration to the other by the inclusion
+    `𝒢 (m + 1) ≤ Filtration.natural ξ m`.
+  * `integral_abs_le_sqrt_integral_sq` — `∫ |f| ≤ √(∫ f ^ 2)` on a probability
+    space, which Mathlib carries about `eLpNorm`
+    (`MeasureTheory.eLpNorm_le_eLpNorm_of_exponent_le`,
+    `Mathlib/MeasureTheory/Function/LpSeminorm/CompareExp.lean:115`) and about
+    `(∫ f ^ p) ^ (1 / p)`
+    (`MeasureTheory.integral_mul_le_Lp_mul_Lq_of_nonneg`,
+    `Mathlib/MeasureTheory/Integral/Bochner/Basic.lean:1225`) but not in this
+    shape. It is **the nonnegativity of the variance of `|f|`** and not
+    Cauchy–Schwarz, which saves the whole `ENNReal.rpow` computation the other
+    two shapes would cost.
+  * `integral_abs_sum_le_sqrt_of_iIndepFun` — `∫ |∑ k < N, ξ k| ≤ √N` for
+    independent centred summands of variance at most `1`. It is the previous
+    read at the sum together with
+    `ProbabilityTheory.IndepFun.variance_sum`
+    (`Mathlib/Probability/Moments/Variance.lean:424`), the centring killing the
+    second summand of `ProbabilityTheory.variance_eq_sub` (`:226`) so that the
+    variance of the sum is `∫ (∑ k < N, ξ k) ^ 2`. **No martingale enters**,
+    which is why it and the martingale above are two statements.
+
+  **What is left for the walks is the instance**: the constant is `√(m + 1)`
+  and the node past the window is `⌈n · m⌉`, both by the rescaling.
 * Convergence in measure as a second mode: the space of càdlàg paths with the
   topology of convergence in Lebesgue measure, in which the coordinates are
   nowhere continuous, and `mpSolution_of_tendsto_inMeasure`, obtained from
