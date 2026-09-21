@@ -250,7 +250,7 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Neunundzwanzig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Dreißig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
 Alle zweiundzwanzig beim Beweisen aufgefallen, und die ersten vier sind kleine,
 in sich abgeschlossene Beiträge. Sie gehören thematisch zu
@@ -263,8 +263,9 @@ siebzehnten Lücke steht auf `master` seit dem 2026-08-25. Alle übrigen stehen.
 Die Prüfung ist mechanisiert und wiederholbar — `scripts/check_negatives.py`
 führt jede Behauptung mit ihrem Suchmuster und den Dateien, in denen ein Treffer
 bekannt und harmlos ist, und meldet jeden Treffer daneben; der Lauf vom
-2026-09-18 meldet über **42** Behauptungen keinen. Was das Skript nicht leistet,
-steht in seinem Dateikopf: es prüft Zeichenketten, nicht Aussagen.
+2026-09-18 meldet über **42** Behauptungen keinen, der vom 2026-09-20 über
+**49** ebenfalls keinen. Was das Skript nicht leistet, steht in seinem
+Dateikopf: es prüft Zeichenketten, nicht Aussagen.
 
 * **Zeithomogenität von `Kernel.traj`.** Daß die Verschiebung einer homogenen
   Markovkette wieder dieselbe Kette ist, steht dort nicht — weder in `v4.33.1`
@@ -1101,6 +1102,29 @@ steht in seinem Dateikopf: es prüft Zeichenketten, nicht Aussagen.
   eigens vorausgesetzt werden statt hergeleitet. Sie ist damit die erste Lücke
   dieses Punktes, die eine unserer **Definitionen** belastet und nicht bloß
   einen Beweis.
+
+* **Die Superadditivität des unteren Integrals über eine `Finset`.** Für
+  beliebige `f : ι → α → ℝ≥0∞` und jede endliche Indexmenge ist
+  `∑ i ∈ s, ∫⁻ a, f i a ∂μ ≤ ∫⁻ a, ∑ i ∈ s, f i a ∂μ`, und zwar **ohne jede
+  Meßbarkeitsvoraussetzung**: das untere Integral ist das Supremum über die
+  einfachen Funktionen darunter, und ein solches Supremum ist superadditiv.
+  Mathlib hat das für **zwei** Summanden als `MeasureTheory.le_lintegral_add`
+  (`MeasureTheory/Integral/Lebesgue/Add.lean:273`) und für keine größere
+  Indexmenge; `MeasureTheory.lintegral_finsetSum` (`:356`) und
+  `lintegral_finsetSum'` (`:343`) sind die **Gleichheit** und verlangen dafür
+  `Measurable` beziehungsweise `AEMeasurable` jedes Summanden. Geprüft am
+  2026-09-20 gegen `94ef6b89544e58e90f119da869f3fb48d1da0f4c`: `le_lintegral_add`
+  ist die **einzige** Deklaration der Gestalt `le_lintegral…` in der ganzen
+  Bibliothek. Der Beweis ist eine Induktion über die `Finset` und vier Zeilen
+  lang.
+
+  Aufgefallen beim Zusammenbau des Horizontterms von Meilenstein 11
+  (`TauCeti/MartingaleProblems/Suggested.lean`, `le_lintegral_finsetSum`):
+  dort ist eine Summe von `N` Kompensatorzuwächsen aus dem unteren Integral zu
+  ziehen, deren Summanden in `ω` **keine** Meßbarkeit tragen — die Zeiten sind
+  Werte einer Rekursion, und die Dichte `Z` ist nicht als gemeinsam meßbar
+  vorausgesetzt. Die umgekehrte Ungleichung wäre an derselben Stelle falsch,
+  wofür `not_forall_lintegral_add_le` in derselben Datei der Zeuge ist.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine

@@ -9407,6 +9407,208 @@ theorem SkorokhodSpace.tendsto_iSup_modulusBased_of_isCompact [SecondCountableTo
   rw [h3]
   exact add_le_add (httosc g) le_rfl
 
+/-! ### The based modulus is Borel measurable in the path
+
+**This section withdraws a negative claim that stood twice in this file.**  The
+criterion `SkorokhodSpace.isTightMeasureSet_iff` below is stated so that it never
+has to ask whether its modulus sets are measurable, and the two doc comments
+there said that no argument for their measurability is available, the modulus
+being an infimum over an *uncountable* family of subdivisions.  The first half of
+that is a design decision and stands; the second half is false, and the
+statements below say what is true instead.
+
+**The countable-family route really is closed, and that is worth saying once.**
+Restricting the subdivisions to nodes in a countable dense set does *not* compute
+the same infimum: a path with a jump at a time outside that set has the jump in
+the interior of a cell of every such subdivision, so its oscillation is bounded
+below by the jump, while a subdivision with a node at the jump time sees nothing.
+The infimum over rational subdivisions is therefore strictly larger for such
+paths, and `SkorokhodSpace.measurable_eval` cannot be spent that way.
+
+**What carries instead is semicontinuity, and the tool is already here.**
+`SkorokhodSpace.modulusBased_le_of_edist_le` says that one based subdivision of
+one path bounds the based modulus of every path near it, with two losses: `2 η`
+in the oscillation and `exp (-γ)` in the sparseness.  The loss in the sparseness
+costs nothing, because a *fixed* subdivision has finitely many gaps and each is
+strictly larger than `δ`, so a small enough `γ` leaves it `δ`-sparse
+(`SkorokhodSpace.eventually_modulusBased_lt` chooses that `γ` by continuity).
+The loss in the *window* does not go away: the time change moves the window, so
+the subdivision has to cover a strictly larger radius `u'` than the one the
+conclusion is about.
+
+So the based modulus at a fixed radius is not upper semicontinuous, but its
+**right limit in the radius** is, and that is
+`SkorokhodSpace.upperSemicontinuous_iInf_modulusBased`; `UpperSemicontinuous.measurable`
+turns it into a Borel function.  The set the criterion reads sits between two of
+its sets --- `SkorokhodSpace.setOf_le_modulusBased_subset` and
+`SkorokhodSpace.setOf_le_iInf_modulusBased_subset` --- so a consumer that needs a
+*measurable* set pays for the passage with one unit of window radius and nothing
+else.  That is what a statement about an image measure needs, because
+`MeasureTheory.Measure.map_apply` asks for measurability and
+`MeasureTheory.Measure.le_map_apply` runs the wrong way.
+
+`SkorokhodSpace.modulusBased_mono_window` is the monotonicity that makes the
+sandwich work, and it is the same one-line reading of `IsSubdivision` as
+`SkorokhodSpace.modulusBased_mono`: a subdivision that covers the larger window
+covers the smaller one, so the infimum at the smaller radius runs over more
+subdivisions. -/
+
+omit [AdditiveDist ι] [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- **A based subdivision of the larger window is one of the smaller.** -/
+theorem SkorokhodSpace.isSubdivisionBased_of_le (t₀ : ι) {u u' δ : ℝ} (h : u ≤ u')
+    {n : ℕ} {t : Fin (n + 1) → ι}
+    (ht : SkorokhodSpace.IsSubdivisionBased t₀ u' δ t) :
+    SkorokhodSpace.IsSubdivisionBased t₀ u δ t :=
+  ⟨⟨ht.1.1, ht.1.2.1.trans (antitone_exhaustionMin t₀ h),
+    (monotone_exhaustionMax t₀ h).trans ht.1.2.2.1, ht.1.2.2.2⟩, ht.2⟩
+
+omit [AdditiveDist ι] [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- **The based modulus grows with the window radius.** -/
+theorem SkorokhodSpace.modulusBased_mono_window (t₀ : ι) {u u' : ℝ} (h : u ≤ u') (f : D(ι, E))
+    (δ : ℝ) :
+    SkorokhodSpace.modulusBased t₀ u f δ ≤ SkorokhodSpace.modulusBased t₀ u' f δ :=
+  le_iInf fun n => le_iInf fun t => le_iInf fun ht =>
+    iInf_le_of_le n (iInf_le_of_le t
+      (iInf_le_of_le (SkorokhodSpace.isSubdivisionBased_of_le t₀ h ht) le_rfl))
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The based modulus is upper semicontinuous in the path, once the window is
+given a hair of room.** -/
+theorem SkorokhodSpace.eventually_modulusBased_lt [SecondCountableTopology E]
+    {u u' δ : ℝ} (hu0 : 0 ≤ u) (hδ0 : 0 ≤ δ) (huu : u < u') (g : D(ι, E)) {c : ℝ≥0∞}
+    (h : SkorokhodSpace.modulusBased (basePoint : ι) u' g δ < c) :
+    ∀ᶠ f in 𝓝 g, SkorokhodSpace.modulusBased (basePoint : ι) u f δ < c := by
+  classical
+  obtain ⟨n, t, ht, hosc⟩ :=
+    SkorokhodSpace.exists_isSubdivisionBased_subdivisionOsc_lt (basePoint : ι) u' g h
+  obtain ⟨ε', hε'0, hε'lt⟩ : ∃ ε' : ℝ, 0 < ε' ∧
+      SkorokhodSpace.subdivisionOsc g t + 2 * ENNReal.ofReal ε' < c := by
+    obtain ⟨r, hr0, hrlt⟩ := ENNReal.lt_iff_exists_add_pos_lt.1 hosc
+    have hrR : (0 : ℝ) < (r : ℝ) := by exact_mod_cast hr0
+    have h2 : 2 * ENNReal.ofReal ((r : ℝ) / 2) = (r : ℝ≥0∞) := by
+      rw [show (2 : ℝ≥0∞) = ENNReal.ofReal 2 by simp, ← ENNReal.ofReal_mul (by norm_num),
+        show (2 : ℝ) * ((r : ℝ) / 2) = (r : ℝ) by ring, ENNReal.ofReal_coe_nnreal]
+    exact ⟨(r : ℝ) / 2, by linarith, by rw [h2]; exact hrlt⟩
+  obtain ⟨d, hdlt, hdgap⟩ : ∃ d : ℝ, δ < d ∧
+      SkorokhodSpace.IsSubdivisionBased (basePoint : ι) u' d t := by
+    rcases Nat.eq_zero_or_pos n with rfl | hn
+    · exact ⟨δ + 1, by linarith, ⟨⟨ht.1.1, ht.1.2.1, ht.1.2.2.1, fun i => i.elim0⟩, ht.2⟩⟩
+    · have hne : (Finset.univ : Finset (Fin n)).Nonempty := ⟨⟨0, hn⟩, Finset.mem_univ _⟩
+      have hMlt : δ < Finset.univ.inf' hne fun i => dist (t i.castSucc) (t i.succ) := by
+        rw [Finset.lt_inf'_iff]
+        exact fun i _ => ht.1.2.2.2 i
+      refine ⟨(δ + Finset.univ.inf' hne fun i => dist (t i.castSucc) (t i.succ)) / 2,
+        by linarith, ⟨⟨ht.1.1, ht.1.2.1, ht.1.2.2.1, fun i => ?_⟩, ht.2⟩⟩
+      have h1 : (Finset.univ.inf' hne fun i => dist (t i.castSucc) (t i.succ))
+          ≤ dist (t i.castSucc) (t i.succ) := Finset.inf'_le _ (Finset.mem_univ i)
+      linarith
+  obtain ⟨w, hw0, hmem⟩ : ∃ w : ℝ, 0 ≤ w ∧ ∀ i, t i ∈ exhaustion (basePoint : ι) w := by
+    have hsup : (0 : ℝ) ≤ Finset.univ.sup' Finset.univ_nonempty
+        (fun i : Fin (n + 1) => dist (t i) (basePoint : ι)) :=
+      le_trans dist_nonneg
+        (Finset.le_sup' (fun i : Fin (n + 1) => dist (t i) (basePoint : ι))
+          (Finset.mem_univ (0 : Fin (n + 1))))
+    refine ⟨_, hsup, fun i => ?_⟩
+    rw [exhaustion, Metric.mem_closedBall, max_eq_left hsup]
+    exact Finset.le_sup' (fun i : Fin (n + 1) => dist (t i) (basePoint : ι))
+      (Finset.mem_univ i)
+  obtain ⟨γ, hγ0, hγ1, hγ2⟩ : ∃ γ : ℝ, 0 < γ ∧ δ ≤ Real.exp (-γ) * d ∧
+      u + (Real.exp γ - 1) * (2 * u) ≤ u' := by
+    have hc1 : Tendsto (fun γ : ℝ => Real.exp (-γ) * d) (𝓝 0) (𝓝 d) := by
+      have hcont : Continuous fun γ : ℝ => Real.exp (-γ) * d := by fun_prop
+      simpa using hcont.tendsto 0
+    have hc2 : Tendsto (fun γ : ℝ => u + (Real.exp γ - 1) * (2 * u)) (𝓝 0) (𝓝 u) := by
+      have hcont : Continuous fun γ : ℝ => u + (Real.exp γ - 1) * (2 * u) := by fun_prop
+      simpa using hcont.tendsto 0
+    have h1 : ∀ᶠ γ : ℝ in 𝓝[>] (0 : ℝ), δ < Real.exp (-γ) * d :=
+      (hc1.mono_left nhdsWithin_le_nhds).eventually_const_lt hdlt
+    have h2 : ∀ᶠ γ : ℝ in 𝓝[>] (0 : ℝ), u + (Real.exp γ - 1) * (2 * u) < u' :=
+      (hc2.mono_left nhdsWithin_le_nhds).eventually_lt_const huu
+    obtain ⟨γ, ⟨hγ1, hγ2⟩, hγ0⟩ := ((h1.and h2).and eventually_mem_nhdsWithin).exists
+    exact ⟨γ, hγ0, hγ1.le, hγ2.le⟩
+  have hγexp : (0 : ℝ) ≤ Real.exp γ - 1 := by
+    have := Real.one_le_exp hγ0.le
+    linarith
+  have hprod : (0 : ℝ) ≤ (Real.exp γ - 1) * (2 * w) :=
+    mul_nonneg hγexp (by linarith)
+  obtain ⟨δ₀, hδ₀, hbridge⟩ :=
+    SkorokhodSpace.exists_timeChange_distWith_lt_of_intDist_lt (E := E) (basePoint : ι)
+      (M := w + (Real.exp γ - 1) * (2 * w) + 1)
+      (ε := min γ ε') (by linarith) (lt_min hγ0 hε'0)
+  filter_upwards [Metric.ball_mem_nhds g hδ₀] with f hf
+  have hint : SkorokhodSpace.intDist (basePoint : ι) f g < δ₀ := by
+    rw [← SkorokhodSpace.dist_eq]
+    exact Metric.mem_ball.1 hf
+  obtain ⟨l, hl0, hlnorm, U, hU, hdist⟩ := hbridge f g hint
+  have hUge := hU.1
+  have hwU : w ≤ U := by linarith
+  have hUpos : (0 : ℝ) ≤ U := by linarith
+  have hmoved : ∀ x ∈ exhaustion (basePoint : ι) w,
+      l.toOrderIso x ∈ exhaustion (basePoint : ι) U := by
+    intro x hx
+    have hmove := TimeChange.dist_le_of_norm_le (basePoint : ι) hw0 hl0
+      (hlnorm.le.trans (min_le_left _ _)) hx
+    have hx' : dist x (basePoint : ι) ≤ w := by
+      simpa only [exhaustion, Metric.mem_closedBall, max_eq_left hw0] using hx
+    rw [exhaustion, Metric.mem_closedBall, max_eq_left hUpos]
+    calc dist (l.toOrderIso x) (basePoint : ι)
+        ≤ dist (l.toOrderIso x) x + dist x (basePoint : ι) := dist_triangle _ _ _
+      _ ≤ U := by linarith
+  have hηu : ∀ x ∈ exhaustion (basePoint : ι) w,
+      edist (f.toFun (l.toOrderIso x)) (g.toFun x) ≤ ENNReal.ofReal ε' := by
+    intro x hx
+    refine le_trans (SkorokhodSpace.edist_le_ofReal_distWith (basePoint : ι) U l f g
+      (exhaustion_subset_of_le (basePoint : ι) hwU hx) (hmoved x hx))
+      (ENNReal.ofReal_le_ofReal ?_)
+    exact (hdist.trans_le (min_le_right _ _)).le
+  refine lt_of_le_of_lt ?_ hε'lt
+  exact SkorokhodSpace.modulusBased_le_of_edist_le (basePoint : ι) hu0
+    (le_trans hu0 huu.le) f g hl0 (hlnorm.le.trans (min_le_left _ _)) hγ2
+    (le_trans hδ0 hdlt.le) hγ1 hdgap hmem hηu
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The right limit of the based modulus in the window radius is upper
+semicontinuous in the path.** -/
+theorem SkorokhodSpace.upperSemicontinuous_iInf_modulusBased [SecondCountableTopology E]
+    {u δ : ℝ} (hu0 : 0 ≤ u) (hδ0 : 0 ≤ δ) :
+    UpperSemicontinuous fun f : D(ι, E) =>
+      ⨅ u' ∈ Set.Ioi u, SkorokhodSpace.modulusBased (basePoint : ι) u' f δ := by
+  intro g c hc
+  obtain ⟨u', hu', hlt⟩ : ∃ u', u < u' ∧
+      SkorokhodSpace.modulusBased (basePoint : ι) u' g δ < c := by
+    by_contra hcon
+    refine absurd (le_iInf₂ (fun (v : ℝ) (hv : v ∈ Set.Ioi u) => ?_)) (not_le.2 hc)
+    exact not_lt.1 fun hvlt => hcon ⟨v, hv, hvlt⟩
+  obtain ⟨u'', hu1, hu2⟩ := exists_between hu'
+  filter_upwards [SkorokhodSpace.eventually_modulusBased_lt (u := u'') (u' := u')
+    (le_trans hu0 hu1.le) hδ0 hu2 g hlt] with f hfl
+  exact lt_of_le_of_lt (iInf₂_le u'' hu1) hfl
+
+omit [MeasurableSpace E] [BorelSpace E] in
+/-- **And therefore Borel measurable.** -/
+theorem SkorokhodSpace.measurable_iInf_modulusBased
+    {u δ : ℝ} (hu0 : 0 ≤ u) (hδ0 : 0 ≤ δ) :
+    Measurable fun f : D(ι, E) =>
+      ⨅ u' ∈ Set.Ioi u, SkorokhodSpace.modulusBased (basePoint : ι) u' f δ :=
+  (SkorokhodSpace.upperSemicontinuous_iInf_modulusBased hu0 hδ0).measurable
+
+omit [AdditiveDist ι] [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- The modulus set of the criterion sits inside the measurable one. -/
+theorem SkorokhodSpace.setOf_le_modulusBased_subset (t₀ : ι) {u δ : ℝ} {η : ℝ≥0∞} :
+    {f : D(ι, E) | η ≤ SkorokhodSpace.modulusBased t₀ u f δ}
+      ⊆ {f : D(ι, E) | η ≤ ⨅ u' ∈ Set.Ioi u, SkorokhodSpace.modulusBased t₀ u' f δ} :=
+  fun f hf => le_iInf₂ fun _ hu' =>
+    le_trans hf (SkorokhodSpace.modulusBased_mono_window t₀ (le_of_lt hu') f δ)
+
+omit [AdditiveDist ι] [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- And the measurable one sits inside the modulus set at any larger radius. -/
+theorem SkorokhodSpace.setOf_le_iInf_modulusBased_subset (t₀ : ι) {u u' δ : ℝ} {η : ℝ≥0∞}
+    (h : u < u') :
+    {f : D(ι, E) | η ≤ ⨅ v ∈ Set.Ioi u, SkorokhodSpace.modulusBased t₀ v f δ}
+      ⊆ {f : D(ι, E) | η ≤ SkorokhodSpace.modulusBased t₀ u' f δ} :=
+  fun f hf => le_trans hf (iInf₂_le (f := fun (v : ℝ) (_ : v ∈ Set.Ioi u) =>
+    SkorokhodSpace.modulusBased t₀ v f δ) u' h)
+
 /-! ### Towards the converse: how many nodes a sparse subdivision can have
 
 The converse builds a *finite* net, so it needs a bound on the number of nodes a
@@ -14040,8 +14242,14 @@ Mathlib is defined on *every* set, being an outer measure with a measurability
 predicate attached, so `μ Aᶜ ≤ ε` is a statement about an arbitrary `A` and
 `measure_mono` and `measure_iUnion_le` hold for arbitrary sets.  The modulus
 sets `{f | η ≤ modulusBased t₀ u f δ}` are infima over an *uncountable* family
-of subdivisions, so no argument is available that they are Borel; with these two
-lemmas the criterion never has to ask. -/
+of subdivisions, and with these two lemmas the criterion never has to ask
+whether they are Borel.
+
+**That they are not known to be Borel is no longer the reason**, and the earlier
+version of this comment said it was.  `SkorokhodSpace.measurable_iInf_modulusBased`
+gives a Borel function that sandwiches the modulus between two window radii, so a
+consumer that does need measurability has it for the price of one unit of radius.
+What stands is only that the criterion itself is cheaper without the question. -/
 
 /-- **A set of paths with compact closure that carries all but `ε` of every
 measure of the family makes the family tight.**  The compact set is the closure,
@@ -14094,10 +14302,17 @@ conditions becomes the **limit** that criterion asks for is
 `SkorokhodSpace.modulusBased_mono`: the bound at the radius the hypothesis
 supplies holds at every smaller radius as well.
 
-**No measurability of any of these sets is needed, and none is available**:
-`{f | η ≤ modulusBased 0 m f δ}` is an infimum over an uncountable family of
-subdivisions.  A Mathlib `Measure` is defined on every set, and that is what the
-two lemmas above are stated to exploit.
+**No measurability of any of these sets is needed**: a Mathlib `Measure` is
+defined on every set, and that is what the two lemmas above are stated to
+exploit.  `{f | η ≤ modulusBased 0 m f δ}` is an infimum over an uncountable
+family of subdivisions, and this statement does not claim it is Borel.
+
+It is not claimed to be beyond reach either, and the earlier version of this
+comment did claim that.  The sandwich
+`SkorokhodSpace.setOf_le_modulusBased_subset` ⊆ the Borel set of
+`SkorokhodSpace.measurable_iInf_modulusBased` ⊆
+`SkorokhodSpace.setOf_le_iInf_modulusBased_subset` gives every consumer that
+needs a measurable set one, at the cost of one unit of window radius.
 
 The completeness of `E` is inherited from Milestone 7 and is not avoidable there:
 the converse half of that criterion produces a totally bounded set and needs a

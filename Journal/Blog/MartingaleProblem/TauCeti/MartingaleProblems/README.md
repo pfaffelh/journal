@@ -11737,12 +11737,15 @@ has to be chosen once for all `n`. What stands:
 
   **Three things about it are worth recording.** The first: the cells here are
   **consecutive** and not `δ`-capped — `β_k` is literally `α_{k+1}` — so the
-  compensator increments that
-  `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le` bounds sum over
-  them to the increment over `[⊥, u]`, that is to `u ^ (1 - 1/q) * K`,
-  **independently of `N`**; against the `N` on the left that is a horizon bound
-  `O(1/N)`, with constants depending only on `‖f‖`, `u`, `q` and `K` and hence
-  uniform in the family. The second: the estimate is at the **square** because
+  compensator increments sum over them to the increment over `[⊥, u]`, that is
+  to `u ^ (1 - 1/q) * K`, **independently of `N`**; against the `N` on the left
+  that is a horizon bound `O(1/N)`, with constants depending only on `‖f‖`, `u`,
+  `q` and `K` and hence uniform in the family. That summation is
+  `IsApproximatingPair.sum_lintegral_enorm_compensator_sub_le`, proved
+  2026-09-20 and described under the class `𝓐 n` below; it is **not**
+  `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le` summed, because
+  that statement has Hölder applied per cell and per-cell Hölder grows like
+  `N^{1/q}`. The second: the estimate is at the **square** because
   over the first power each summand would carry a square root by
   `lintegral_ofReal_dist_le_sqrt_of_biSup_le` and a sum of `N` square roots is
   `O(√N)` even when the sum under them is `O(1)`. The third: the uncapped cell
@@ -11751,6 +11754,258 @@ has to be chosen once for all `n`. What stands:
   none of the algebraic hypotheses on `ι` that the gap block carries — two
   applications of `MeasureTheory.isStoppingTime_oscHitSeqCap` and `min_le_right`
   twice are the whole stopping time content.
+
+  **And the bridge between the two index conventions, 2026-09-20.** The times of
+  this block live in `WithTop ι`, because a hitting time need not be attained;
+  the times of `IsApproximatingPair` live in the index itself, because a
+  compensator is indexed by the filtration.
+  `MeasureTheory.untopA_oscHitSeqCap_le` and
+  `MeasureTheory.untopA_oscHitSeqCap_le_succ` carry the capped times across —
+  `(min (oscHitSeq X ε k ω) u).untopA ≤ u` and the same increasing in `k` — and
+  they are exactly the two hypotheses
+  `IsApproximatingPair.sum_lintegral_enorm_compensator_sub_le` asks of its
+  chain; the identification of the `stoppedValue` time with the transported one
+  is `rfl`. They are `WithTop.untopA_le` (`Mathlib/Order/WithBot.lean:659`) and
+  `WithTop.untopA_mono` (`:483`), the duals of `le_unbotA` and `unbotA_mono`.
+
+  **The junk value of `untopA` is not read, and the reason is named**: it is not
+  a non-explosion hypothesis but the cap, `min (·) u ≤ u < ⊤` at every sample
+  point. Without the cap the second statement would be **false** in the
+  direction that matters — past the end of the recursion `oscHitSeq` is `⊤`,
+  whose `untopA` is junk, and the sequence would fall rather than rise. That is
+  the trap `MeasureTheory.not_stepIndex_mono_time` records for `stepIndex`, here
+  closed by the cap rather than by a hypothesis.
+
+  **And the two halves joined, 2026-09-21 — the horizon term with `N` in the
+  denominator.** The block "The horizon term, assembled" carries the first
+  statement of this item in which the deterministic half over `oscHitSeq` and
+  the analytic half over `IsApproximatingPair` occur together:
+
+  ```
+  N * (ENNReal.ofReal ε₀ ^ 2 * P {ω | oscHitSeq V ε₀ N ω < u})
+    ≤ ofReal u ^ (1 - 1/q) * K * (1 + 2 * ofReal c) + N * (2 ε' + 4 ofReal c ε)
+  ```
+
+  — `MeasureTheory.measure_setOf_oscHitSeq_lt_le_of_isApproximatingPair`, for a
+  real process `V` bounded by `c`, progressively measurable and with right
+  continuous paths, and two pairs of the class with common `q`, `T`, `K`
+  approximating `V` and `V²` on the window `Set.Iic u` up to `ε` and `ε'`.
+  Divided by `N` the first summand is `O(1/N)` with constants of the class and
+  not of its member; the second is the approximation error, which the division
+  leaves as it is. **That is the order of the quantifiers**: `N` from the first
+  summand, then `ε` against `N`, then `δ` in the gap sum, where `N` is a
+  constant. `δ` does not occur in the statement at all.
+
+  The cell of the chain is
+  `MeasureTheory.lintegral_ofReal_dist_sq_le_of_isApproximatingPair`, which is
+  `ofReal_integral_sq_sub_le` read at two stopping times with the two
+  increments of the approximants left as **lower integrals of compensator
+  increments** rather than as Hölder bounds — that being what
+  `IsApproximatingPair.sum_lintegral_enorm_compensator_sub_le` can sum over a
+  chain and what `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le`
+  cannot. Of the recursion the assembly reads three facts and no more:
+  `MeasureTheory.isStoppingTime_oscHitSeqCap`,
+  `MeasureTheory.untopA_oscHitSeqCap_le` and
+  `MeasureTheory.untopA_oscHitSeqCap_le_succ`. A different recursion with those
+  three is served by the same two statements.
+
+  **The constant is `1 + 2 c`, not `1 + 4 c`.** The increment of the square is
+  read at the weight `1` and contributes one compensator increment of the
+  second pair; the cross term is read at the weight `V` and carries the factor
+  `2` of `(v_b - v_a)² = (v_b² - v_a²) - 2 v_a (v_b - v_a)`, hence `2 c` times
+  the compensator increment of the first pair. The `4` in front of `c ε` is
+  that `2` times the `2` of the two ends of the window at which the
+  approximation error is read.
+
+  **One statement had to be factored out for this, and the factoring is a
+  finding.** `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le_lintegral`
+  is `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le` with the
+  Hölder step left undone, `‖∫ W (Y β - Y α)‖ₑ ≤ ofReal c * ∫⁻ ‖C β - C α‖ₑ`,
+  and it carries **neither the horizon `T` nor a window length `δ`**: both are
+  read by the Hölder step alone. So optional sampling and the invisibility of
+  the martingale part to a weight from the past hold over *any* bounded
+  stopping times whatever, and the uniform version is the composition of this
+  one with `IsApproximatingPair.lintegral_enorm_compensator_sub_le`. The
+  relation is that of `IsApproximatingPair.enorm_compensator_sub_le_lintegral`
+  to `IsApproximatingPair.enorm_compensator_sub_le`, one level up.
+
+  **And the same bound in the shape its consumer reads**,
+  `MeasureTheory.measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair`:
+
+  ```
+  ofReal ε₀ * P {ω | oscHitSeq V ε₀ N ω < u}
+    ≤ (ofReal u ^ (1 - 1/q) * K * (1 + 2 ofReal c) / N + (2 ε' + 4 ofReal c ε)) / ofReal ε₀
+  ```
+
+  for `0 < ε₀` and `N ≠ 0`. The shape is read off
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_lintegral_dist`, whose
+  second summand is `ofReal ε * μ {oscHitSeq X ε N < u}` — the level in the
+  **first** power and with no factor `N` — while the statement above it carries
+  `N * ofReal ε₀ ^ 2`, because Markov is applied at the square and the counting
+  step makes the `N`. The two divisions are `ENNReal.mul_le_mul_iff_left` with
+  `ENNReal.div_mul_cancel` (`Mathlib/Basic/ENNReal/Inv.lean:176`) and
+  `ENNReal.le_div_iff_mul_le` (`:369`); neither is ever carried out on the right
+  hand side, which is why no finiteness beyond `N ≠ 0` and `0 < ε₀` is asked.
+
+  **And a passage that is not cosmetic.** The horizon block produces
+  `∫⁻ ω, ofReal (dist …) ^ 2 ∂P` and the square identity produces
+  `ofReal (∫ ω, (…)² ∂P)`; the two are the same only through
+  `MeasureTheory.ofReal_integral_eq_lintegral_ofReal`
+  (`MeasureTheory/Integral/Bochner/Basic.lean:734`), which asks the square to be
+  integrable. That is where the bound on `V` is spent a fourth time, after the
+  weight of the cross term, the integrability of the stopped values and their
+  products.
+
+  **The gap term, 2026-09-21, and the limit it has is not `0`.** The block "The
+  gap term" carries the other of the two quantities
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_lintegral_dist` leaves —
+  the **first summand** of its right hand side: the `N` increments over the
+  **`δ`-capped** cells `α_k = min (τ k) u`, `β_k = min (τ (k+1)) (α_k + δ)`.
+
+  ```
+  ∑ k ∈ range N, ∫⁻ ω, ofReal (dist (V β_k ω) (V α_k ω)) ∂P
+    ≤ N * ofReal √(((1 + 2 c) * (ofReal δ ^ (1 - 1/q) * K) + (2 ε' + 4 c ε)).toReal)
+  ```
+
+  — `MeasureTheory.sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair`,
+  for `u + δ ≤ T` and the errors read on the window `Set.Iic (u + δ)`. The cell
+  is `MeasureTheory.lintegral_ofReal_dist_le_sqrt_of_isApproximatingPair`.
+
+  **Here Hölder is applied per cell, and that is right, whereas at the horizon
+  it was wrong.** The horizon cells are consecutive and `N` of them span one
+  window of length `u`, so estimating each separately would pay `N^{1/q}` and
+  `IsApproximatingPair.sum_lintegral_enorm_compensator_sub_le` sums them first.
+  The gap cells are **separated by the gaps**, are not a chain, and `N` is a
+  constant here — so
+  `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le` is the right
+  estimate and its `δ^{1-1/q}` is what vanishes. The two blocks therefore use
+  the two forms of the same passage, and that is why both forms exist.
+
+  **What does not vanish, and it is a correction of the previous run's
+  proposal.** As `δ ↓ 0` at fixed `N` the bound tends to
+  `N √(2 ε' + 4 c ε)` and **not** to `0` —
+  `MeasureTheory.tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero`. The cells are
+  increments of `V`, and `V` is known only through the approximants `Y` and
+  `Y'`; shrinking the window removes the compensator part and nothing else. The
+  order of the quantifiers is therefore `N`, then `δ`, then `ε`: `N` from the
+  horizon term, whose first summand is `O(1/N)`; `δ` from here at that fixed
+  `N`; and `ε`, `ε'` last, from the approximability condition of \EK, Theorem
+  9.4, which asks them to be small for *given* `N` and `δ`. \EK{} say the same
+  at (9.28) — "`ε` is then chosen depending on `δ`".
+
+  **The window is `Set.Iic (u + δ)` and not `Set.Iic u`**, because the right
+  endpoint of a gap cell overshoots the horizon by at most `δ`
+  (`MeasureTheory.oscHitSeqGap_le_coe`), and the approximation errors are read
+  wherever the times take their values. That is the one place the two blocks
+  differ in their window, and it is why the hypothesis is `u + δ ≤ T`.
+
+  **The two blocks meet, 2026-09-21**, in
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair`:
+
+  ```
+  ofReal ε₀ * P {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ ω)) δ}
+    ≤ N * ofReal √(((1 + 2 c) * (ofReal δ ^ (1 - 1/q) * K) + A).toReal)
+      + (ofReal u ^ (1 - 1/q) * K * (1 + 2 ofReal c) / N + A) / ofReal ε₀
+  ```
+
+  with `A = 2 ε' + 4 ofReal c * ε`, for `δ < u`, `u + δ ≤ T`, `0 < ε₀` and
+  `N ≠ 0`. It is `le_trans` of
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_lintegral_dist` followed by
+  `add_le_add` of the two block results, and it makes no estimate of its own.
+  Every quantity on the right is a constant of the class — `u`, `q`, `K`, the
+  bound `c`, the count `N`, the window `δ` — or one of the two approximation
+  errors.
+
+  **The version with a free `N` is the one that composes, and this is where the
+  other one is ruled out for good.**
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_lintegral_dist_of_le`
+  removes the horizon summand at the price `u ≤ N • δ`, and the bound it yields
+  is `u √C · δ^{(1-1/q)/2 - 1}`, whose exponent is negative for *every* `q`
+  because `(1 - 1/q)/2 ≤ 1/2 < 1`. Keeping the horizon summand is what lets `N`
+  be fixed before `δ`; that is the computation of the run of 2026-09-20,
+  twenty-third of the day, now standing at the statement it decides.
+
+  **Two windows, one hypothesis.** The statement carries the approximation
+  errors only on `Set.Iic (u + δ)`, the larger of the two windows; the horizon
+  block's `Set.Iic u` version follows by `biSup_mono` under `lintegral_mono`,
+  and its `u ≤ T` by `le_self_add` against `u + δ ≤ T`. The four integrability
+  hypotheses are the gap block's, and the horizon block reads the two at the
+  capped times.
+
+  **And the same at an image path**,
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_postcomp_le_of_isApproximatingPair`,
+  which is the shape this milestone's criterion consumes: for a bounded
+  continuous `g : E →ᵇ ℝ` and an `E`-valued `X` with path map `Φ`, the same
+  inequality for the image path
+  `SkorokhodSpace.postcomp g (SkorokhodSpace.extendNNReal (Φ ω))` with
+  `c = ‖g‖`. That is the form
+  `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp_nnreal` of Milestone 8
+  hands it and the form the three transports
+  `SkorokhodSpace.min_edist_le_two_mul_modulusBased_postcomp`,
+  `SkorokhodSpace.min_iSup_edist_le_three_mul_modulusBased_postcomp` and
+  `SkorokhodSpace.min_iSup_edist_leftLim_le_three_mul_modulusBased_postcomp`
+  read. The index crossing and the post-composition commute definitionally
+  (`SkorokhodSpace.postcomp_extendNNReal`), so it may be read either way round,
+  and **nothing measurable is asked of `E`**: the modulus is that of a real
+  valued path throughout.
+
+  **The bound on the process is a consequence there and not a hypothesis.**
+  `MeasureTheory.IsApproximatingPair` has no bound of its own, and the assembly
+  asks for one because the square identity spends it four times; an `E →ᵇ ℝ`
+  carries it, so a consumer of the criterion never has to produce it.
+
+  **One composition lemma is missing from Mathlib for that passage**, and the
+  shape of the gap is worth naming because the same pair of files has the
+  abstraction on one side and not on the other.
+  `MeasureTheory.IsStronglyProgressive.continuous_comp` — progressive
+  measurability survives post-composition with a continuous map, one line from
+  `Continuous.comp_stronglyMeasurable` — belongs in
+  `Mathlib/Probability/Process/Adapted.lean` next to
+  `MeasureTheory.IsStronglyProgressive.mul`
+  (`Mathlib/Probability/Process/Adapted.lean:293`),
+  `MeasureTheory.IsStronglyProgressive.inv`
+  (`Mathlib/Probability/Process/Adapted.lean:323`) and
+  `MeasureTheory.IsStronglyProgressive.div'`
+  (`Mathlib/Probability/Process/Adapted.lean:327`), which are three instances of
+  it and are each proved separately; `Mathlib/Topology/Order/Cadlag.lean`
+  derives its own `mul`, `div`, `inv` and `const_smul` from `IsCadlag.continuous_comp`
+  (`Mathlib/Topology/Order/Cadlag.lean:119`). The name avoids
+  `MeasureTheory.IsStronglyProgressive.comp`
+  (`Mathlib/Probability/Process/Adapted.lean:280`), which is the composition in
+  the **time** argument. It asks neither an order topology nor a measurable
+  structure on the values, only `Preorder ι` and a `MeasurableSpace ι`.
+
+  **A trap of the `open` that cost a compile.** The notation `E →ᵇ ℝ` is
+  `scoped[BoundedContinuousFunction]`, and `open scoped BoundedContinuousFunction`
+  **inside** `namespace MeasureTheory` opens `MeasureTheory.BoundedContinuousFunction`,
+  which exists and carries no notation, while the root namespace is silently not
+  opened. The error it produces names neither cause:
+  `elaboration function for Mathlib.Tactic.superscriptTerm has not been implemented`,
+  because `→ᵇ` is no longer a token and `ᵇ` is parsed as a superscript. The
+  remedy is `open scoped _root_.BoundedContinuousFunction`, and the
+  `ambiguousOpen` linter says so in a warning that is easy to miss beside the
+  error it causes.
+
+  **What the assembly is not.** It stands over a real valued `V`, or over one
+  test function `g` at a time, and it is one inequality at one `(N, δ, ε₀)`. The
+  criterion needs it uniformly over the family — and it needs the passage from
+  the countable separating family back to the metric of `E`, which the three
+  transports above supply. The three limits in the order `N`, `δ`, `ε` are the
+  item "The approximability condition" at the end of this milestone; uniformity
+  over the family is the one after that.
+
+  **Two statements were factored out for this.**
+  `MeasureTheory.lintegral_ofReal_dist_le_sqrt_of_lintegral_sq_le` is
+  Cauchy--Schwarz read from a bound on `∫⁻ ofReal (dist ·) ²`, the side the
+  horizon block produces, rather than on `ofReal (∫ (·)²)`, the side
+  `lintegral_ofReal_dist_le_sqrt_toReal_of_le` reads; performing the equality
+  once there is what lets the gap block use the horizon block's cell statement
+  unchanged. And `MeasureTheory.untopA_oscHitSeqGap_le_add` is the shortness of
+  the gap cell read **in the index**,
+  `(min (τ (k+1)) (min (τ k) u + δ)).untopA ≤ (min (τ k) u).untopA + δ`, which
+  is what the Hölder step asks and what the consecutive cells cannot give. Its
+  junk value is unread for the same reason as its two siblings: the cap, not a
+  hypothesis.
 
   **A naming trap that cost a compile and is recorded so it costs no other.**
   The countable dense set of the début theorem is called `D` throughout this
@@ -11995,7 +12250,7 @@ has to be chosen once for all `n`. What stands:
     the measurability of an `eLpNorm` in a parameter. It is a Mathlib gap of
     its own and belongs in `TODO.md` point 8.
 
-  Four consequences are proved with it, and each is a link the assembly reads:
+  Seven consequences are proved with it, and each is a link the assembly reads:
   `IsApproximatingPair.ae_integrableOn`, the only place the horizon's finite
   length is spent; `IsApproximatingPair.compensator_sub_eq`, the increment of
   the compensator as the integral of the density over the window, through
@@ -12007,6 +12262,57 @@ has to be chosen once for all `n`. What stands:
   **arbitrary** `a b : Ω → ℝ≥0` with `a ≤ b ≤ T` and `b - a ≤ δ` — no stopping
   time and no measurability of `a`, `b`, the lower integral being monotone
   without either.
+
+  **And the chain of consecutive windows, 2026-09-20**, which is what the
+  horizon term reads and what the `δ`-capped cell cannot give:
+
+  ```
+  ∑ k ∈ Finset.range N, ∫⁻ ω, ‖C (σ (k+1) ω) ω - C (σ k ω) ω‖ₑ ∂P
+    ≤ ENNReal.ofReal u ^ (1 - 1/q) * K
+  ```
+
+  — `IsApproximatingPair.sum_lintegral_enorm_compensator_sub_le`, for
+  **arbitrary** `σ : ℕ → Ω → ℝ≥0` with `σ k ω ≤ σ (k+1) ω` and `σ N ω ≤ u ≤ T`.
+  **`N` does not occur on the right**, and that is the statement: over `N` cells
+  of length `δ` the previous item gives `N ofReal δ ^ (1-1/q) K`, which under the
+  tie `N ≈ u/δ` is `u δ^{-1/q} K` and diverges as `δ ↓ 0`; consecutive cells
+  have no `δ` to diverge in.
+
+  **Where the order of the steps decides the exponent.**
+  `IsApproximatingPair.enorm_compensator_sub_le` has Hölder applied already, and
+  summing *that* over `N` cells of lengths `δ_k` gives `∑_k δ_k^{1-1/q}`, hence
+  `N^{1/q} u^{1-1/q}` for equal cells — it still grows. The chain therefore
+  starts one step lower, at
+  `IsApproximatingPair.enorm_compensator_sub_le_lintegral`, which is
+  `IsApproximatingPair.compensator_sub_eq` followed by
+  `MeasureTheory.enorm_integral_le_lintegral_enorm` and takes **no** exponent;
+  `sum_lintegral_Ioc_succ` telescopes the `N` lower integrals into the one over
+  `(σ 0, σ N]` — `MeasureTheory.lintegral_union`
+  (`MeasureTheory/Integral/Lebesgue/Basic.lean:615`) along
+  `Set.Ioc_union_Ioc_eq_Ioc`
+  (`Mathlib/Order/Interval/Set/LinearOrder.lean:382`), with no measurability of
+  the integrand — and Hölder is applied **once**, over `(0, u]`.
+  `IsApproximatingPair.sum_enorm_compensator_sub_le` is that chain at one sample
+  point.
+
+  **Two economies worth recording.** `σ 0 = 0` is *not* a hypothesis and no
+  lower bound on `σ 0` is: the chain telescopes to `(σ 0, σ N]`, and `σ 0 ≥ 0`
+  holds in `ℝ≥0` by fiat. And the monotonicity is asked in the successor form
+  `σ k ≤ σ (k+1)`, which is the form a recursion has —
+  `MeasureTheory.oscHitSeq_le_succ` at the consumer — `monotone_nat_of_le_succ`
+  doing the rest.
+
+  **A Mathlib gap sits in the passage and is elementary**: moving the finite sum
+  out of the lower integral is the **superadditive** direction, free of
+  measurability, and Mathlib has it for two summands only —
+  `MeasureTheory.le_lintegral_add`
+  (`MeasureTheory/Integral/Lebesgue/Add.lean:273`) is the sole declaration of
+  the shape `le_lintegral…` in the library, checked 2026-09-20 against
+  `94ef6b89544e58e90f119da869f3fb48d1da0f4c`, while
+  `MeasureTheory.lintegral_finsetSum` (`:356`) is the equality under
+  `Measurable`. The `Finset` version is proved here as `le_lintegral_finsetSum`,
+  by induction, and it belongs in `TODO.md` point 8. The hypothesis is not
+  removable in the other direction: `not_forall_lintegral_add_le` is the witness.
 
   **The two halves are joined by
   `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le`**: for stopping
@@ -12175,6 +12481,21 @@ has to be chosen once for all `n`. What stands:
   Milestone 9, and a filtration occurs in its hypothesis — the three reasons
   that milestone itself gives for the move.
 
+  **A correction to the two paragraphs above, 2026-09-21.** They name
+  `SkorokhodSpace.modulusBased_le_of_forall_stoppingTime` as *the* statement
+  between the present state and this item, and that is no longer what the
+  computation shows. The divergence they record is real, but it is a finding
+  about **one** of the two routes, not about the item: it belongs to
+  `MeasureTheory.measure_setOf_lt_modulusBased_le_gap`, which ties `N` to `δ` by
+  `u ≤ N • δ` and thereby forbids choosing `N` first. The route with a **free**
+  `N` — `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_lintegral_dist`,
+  which leaves the horizon probability standing as a second summand instead of
+  absorbing it — has no such tie, and its horizon summand is bounded by
+  `MeasureTheory.measure_setOf_oscHitSeq_lt_le_of_isApproximatingPair` with
+  `N` in the denominator. The Aldous route stays in the roadmap as the second
+  way and is not withdrawn; what is withdrawn is the claim that it is the
+  **only** one.
+
   **Why the square is the only route, as a theorem and no longer as a
   paragraph**, 2026-09-20. That the martingale part of the increment is not
   small in `L¹` — so that neither Doob nor Hölder carries this item, and the
@@ -12190,6 +12511,186 @@ has to be chosen once for all `n`. What stands:
   martingale does not move with `δ`; only the window does. Hence the closure of
   the approximable functions under products is a consequence of the estimate
   and not an assumption of convenience.
+* **The approximability condition, and the order of the three limits.**
+  `MeasureTheory.IsApproximable 𝓕 P q T K V ε₀ u`: to every positive error
+  there are two pairs of the class `MeasureTheory.IsApproximatingPair` with one
+  and the same `q`, `T`, `K`, approximating `V` and `V²` to within that error on
+  the horizon `Set.Iic T`, together with the four integrabilities of their
+  stopped values. This is \EK, Theorem 9.4, written as a predicate on the
+  process it approximates, so that a consumer never has to speak of
+  `⨆ n, 𝔼[eLpNorm (Z n) q] < ∞`.
+
+  **The errors are read on one fixed window and this is the decision the
+  predicate makes.** The assembly reads them on `Set.Iic (u + δ)`, which moves
+  with `δ`, and a hypothesis that moves with the variable of a limit is not one
+  a limit can be taken under. `Set.Iic T` is the natural fixed window because
+  `u + δ ≤ T` is asked anyway, and the passage back is one line,
+  `MeasureTheory.lintegral_biSup_Iic_mono`, the `biSup_mono` under
+  `lintegral_mono` the assembly already wrote once. That lemma is stated over an
+  abstract `F : ℝ≥0 → Ω → ENNReal` and not inline, because inline the same four
+  lines run into a `whnf` timeout of 200000 heartbeats: the elaboration carries
+  the integrand along.
+
+  **`ε₀` and `u` are parameters of the predicate, and that is the weakest form
+  it has.** The four integrabilities stand at the stopped values along
+  `MeasureTheory.oscHitSeq V ε₀` capped at `u`, so they see `ε₀` and `u`, and no
+  reformulation on a window hides that. Quantifying instead over all times
+  bounded by `T` would ask for an integrable supremum over the horizon, which is
+  strictly more. The window `δ` *is* quantified inside, because it is the
+  variable of the second limit and a consumer may not be asked for a hypothesis
+  per value of it.
+
+  **The third limit, once and for all:**
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximable` is the
+  assembly with `A = 2 ε' + 4 ofReal c * ε` replaced by `0`,
+
+  ```
+  ofReal ε₀ * P {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ ω)) δ}
+    ≤ N * ofReal √(((1 + 2 c) * (ofReal δ ^ (1 - 1/q) * K)).toReal)
+      + ofReal u ^ (1 - 1/q) * K * (1 + 2 ofReal c) / N / ofReal ε₀
+  ```
+
+  the statement in which the approximants no longer occur. The limit runs along
+  the sequence of errors `(n : ℝ≥0∞)⁻¹` under `ge_of_tendsto` over `atTop`, whose
+  `NeBot` is free, and nothing is lost by it: the left hand side does not depend
+  on the approximants, so a bound holding at each `n` passes to the limit. What
+  is proved is the continuity of the right hand side at `A = 0`, which is
+  `ENNReal.tendsto_toReal` at the finite
+  `(1 + 2 c) * (ofReal δ ^ (1 - 1/q) * K)` and `ENNReal.Tendsto.div_const`.
+
+  **And then the first two:**
+  `MeasureTheory.tendsto_measure_setOf_lt_modulusBased_of_isApproximable`,
+
+  ```
+  Tendsto (fun δ : ℝ≥0 ↦ P {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ ω)) δ})
+    (𝓝[>] 0) (𝓝 0)
+  ```
+
+  for `0 < u`, `u < T`, `0 < ε₀`. This is the probabilistic content of \EK,
+  Theorem 9.4. **The order of the limits is the proof and is visible in it**:
+  given a target `η`, the count `N` is chosen first from the horizon term
+  `B / N / ofReal ε₀`, which is `O(1/N)` and does not see `δ`; the window `δ`
+  second, at that fixed `N`, from
+  `MeasureTheory.tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` at `A = 0`; and the
+  error is already gone. `ENNReal.add_halves` adds the two halves.
+
+  **Both horizon hypotheses are strict and each is spent once.** `0 < u` is what
+  makes `δ < u` hold near `0`; `u < T` is what makes `u + δ ≤ T` hold there. A
+  non-strict `u ≤ T` would leave no room for `δ`, and the statement would be
+  about an empty set of admissible windows.
+
+  **A limit Mathlib has for every division semiring and not for `ℝ≥0∞`.**
+  `tendsto_const_div_atTop_nhds_zero_nat`
+  (`Mathlib/Analysis/SpecificLimits/Basic.lean:52`) asks `DivisionSemiring 𝕜`,
+  which `ℝ≥0∞` is not — `⊤` has no inverse — so the horizon term is brought to
+  `ENNReal.tendsto_inv_nat_nhds_zero`
+  (`Mathlib/Topology/Instances/ENNReal/Lemmas.lean:484`) by `div_eq_mul_inv` and
+  one `ring`. That is a typeclass boundary and not a gap in the library.
+
+  **And the same at an image path**,
+  `MeasureTheory.tendsto_measure_setOf_lt_modulusBased_postcomp_of_isApproximable`,
+  for a bounded continuous `g : E →ᵇ ℝ` and an `E`-valued `X` with `g ∘ X`
+  approximable: the same limit for
+  `SkorokhodSpace.postcomp g (SkorokhodSpace.extendNNReal (Φ ω))`. It is the
+  statement above at `V = g ∘ X` and the four steps of the passage are those of
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_postcomp_le_of_isApproximatingPair`.
+  This is the shape `isTight_map_postcomp_of_exists_martingale` consumes, one
+  test function at a time; what still separates the two is the uniformity over
+  the family, and the constants `u`, `q`, `K`, `‖g‖` of the bound behind it are
+  there precisely because none of them belongs to a member.
+* **The same estimate uniformly over the family.**
+  `MeasureTheory.exists_forall_measure_setOf_lt_modulusBased_postcomp_le_of_forall_isApproximable`:
+  for a family `X : γ → ℝ≥0 → Ω → E` over **one** probability space, all
+  approximable with the **same** `q`, `T`, `K`, and one `g : E →ᵇ ℝ`,
+
+  ```
+  ∀ η > 0, ∃ δ > 0, ∀ i,
+    P {ω | ofReal ε₀ < modulusBased 0 u (postcomp g (extendNNReal (Φ i ω))) δ} ≤ η.
+  ```
+
+  **It is not the limit above stated for each member.** A `Tendsto` per member
+  gives a `δ` per member, and the criterion needs one `δ` for all of them. The
+  uniform statement is therefore proved at the *inequality*,
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_postcomp_le_of_isApproximable`
+  — the assembly at an image path, which stands for this reason and for no other
+  — with `N` and `δ` quantified before the member. That this is possible is a
+  reading of that inequality and not a further argument: on its right hand side
+  stand `u`, `q`, `K`, `‖g‖`, `N`, `δ` and `ε₀`, and **no member occurs**. The
+  common `q`, `T`, `K` of `MeasureTheory.IsApproximable` are the whole content of
+  the uniformity.
+
+  **One `ε₀` and one `u` suffice, and that is read off the consumer.**
+  `SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` quantifies its bound `ε`,
+  its horizon `m` and its threshold `η` **outside** the `∃ δ`, so a consumer
+  arrives with all three fixed and instantiates once per triple. Asking instead
+  for `∀ ε₀ > 0, ∀ i, IsApproximable … ε₀ u` would be strictly stronger and buy
+  nothing.
+
+  **The empty family carries no exponent, and no hypothesis is added for it.**
+  `1 < q` is read off a member
+  (`MeasureTheory.IsApproximable.one_lt_exponent`), so an empty `γ` has none to
+  read it from; there the conclusion is vacuous and `δ = 1` serves. Carrying
+  `1 < q` as a hypothesis would burden the nonempty case with what it already
+  has.
+
+  **The window is produced in `ℝ`**, the shape the consumer reads, and it exists
+  because `𝓝[>] (0 : ℝ≥0)` is `NeBot` — `nhdsGT_neBot`,
+  `Mathlib/Topology/Order/DenselyOrdered.lean:222`, `ℝ≥0` having no maximum — so
+  positivity, the two window conditions and the smallness of the gap term are met
+  at one point.
+
+  **What still separates this from the criterion**, and it is two things and not
+  one. The criterion measures a set of *paths* under the image law
+  `((μ i).map (postcomp g)).map extendNNReal`; this measures a set of *sample
+  points* under `P`. And its threshold enters as `η ≤ modulusBased …` where this
+  one has `ofReal ε₀ < modulusBased …`. The strictness is bridged by taking `ε₀`
+  below the threshold; the change of measure is the next item, and it is not
+  formal. Checked at the source, 2026-09-21:
+
+  - `MeasureTheory.Measure.map_apply` (`MeasureTheory/Measure/Map.lean:170`) asks
+    the set be measurable, and `MeasureTheory.Measure.map_apply₀` (`:157`) asks
+    it be null measurable for the image measure. The modulus sets are among those
+    this roadmap never asserts measurable.
+  - The only statement over an **arbitrary** set is
+    `MeasureTheory.Measure.le_map_apply` (`:218`),
+    `μ (f ⁻¹' s) ≤ μ.map f s`, and it runs the **wrong way**: a producer who has
+    a bound on the preimage does not thereby have one on the image law.
+  - **One of the two layers is nevertheless free.**
+    `MeasurableEmbedding.map_apply` (`:271`) holds for arbitrary sets, and
+    `SkorokhodSpace.extendNNReal` is a measurable embedding because it is a
+    closed one (`SkorokhodSpace.isClosedEmbedding_extendNNReal` with
+    `Topology.IsClosedEmbedding.measurableEmbedding`,
+    `MeasureTheory/Constructions/BorelSpace/Basic.lean:684`). So the index
+    crossing costs nothing here, and what remains is the layer
+    `SkorokhodSpace.postcomp g ∘ Φ i`, which is no embedding, `g` not being
+    injective.
+
+  **The measurability is decided, 2026-09-21, and the answer is the first of the
+  two: the second option is not needed and the criterion is not to be restated.**
+  `SkorokhodSpace.measurable_iInf_modulusBased` of **SkorokhodSpace**,
+  Milestone 7, is the Borel function, and it is *not*
+  `fun f ↦ SkorokhodSpace.modulusBased t₀ u f δ` itself but the right limit of
+  that in the window radius,
+  `fun f ↦ ⨅ u' ∈ Set.Ioi u, SkorokhodSpace.modulusBased t₀ u' f δ`. The
+  sandwich `SkorokhodSpace.setOf_le_modulusBased_subset` and
+  `SkorokhodSpace.setOf_le_iInf_modulusBased_subset` puts the set the criterion
+  reads between two sets of the Borel function, so a producer who holds a bound
+  at radius `u'` pays for the passage with the single step from `u` to `u'` and
+  with nothing else. The consumer here quantifies over all `m : ℕ`, so the step
+  is `m ↦ m + 1` and is free.
+
+  What makes the right limit necessary rather than an artefact: the time change
+  that carries a subdivision from one path to a nearby one *moves the window*, so
+  the subdivision has to cover a strictly larger radius than the conclusion
+  speaks of. The loss in the **sparseness** — the other loss of
+  `SkorokhodSpace.modulusBased_le_of_edist_le` — does go away, a fixed
+  subdivision having finitely many gaps each strictly wider than `δ`.
+
+  **And the route through a countable family is closed, which is why this one is
+  taken.** Restricting the nodes to a countable dense set computes a strictly
+  larger infimum for a path that jumps outside that set: every such subdivision
+  has the jump in the interior of a cell.
+
 * `isRelativelyCompact_of_approx`: if `E` is Polish, the domain of `A` contains
   an algebra separating points and vanishing nowhere, the approximation holds
   for each `(f,g) ∈ A`, and `{X n}` satisfies compact containment, then `{X n}`

@@ -140,6 +140,18 @@ CLAIMS = [
      'support_lconvolution|support_mlconvolution|lconvolution.*support'
      '|mlconvolution.*support',
      'Mathlib/'),
+    ('progressive-continuous-comp', 'MartingaleProblems/Suggested.lean, '
+     '„The assembly at an image path"',
+     'Die Nachkomposition eines progressiv meßbaren Prozesses mit einer '
+     'stetigen Abbildung steht in Mathlib nicht.  '
+     '`Mathlib/Probability/Process/Adapted.lean` beweist '
+     '`IsStronglyProgressive.mul`, `.inv` und `.div\'` einzeln und hat kein '
+     '`continuous_comp`, aus dem sie folgten; `IsStronglyProgressive.comp` ist '
+     'die Komposition im **Zeitargument**.  `Mathlib/Topology/Order/Cadlag.lean` '
+     'hat die Abstraktion als `IsCadlag.continuous_comp` sehr wohl.',
+     'IsStronglyProgressive.continuous_comp|StronglyAdapted.continuous_comp'
+     '|IsProgressive.continuous_comp',
+     'Mathlib/'),
 ]
 
 
@@ -353,6 +365,19 @@ CLAIMS_TODO8 = [
      '|eLpNorm.*prod_right',
      ['Mathlib/'],
      []),
+    ('le-lintegral-finset-sum',
+     'MartingaleProblems/Suggested.lean, `le_lintegral_finsetSum`; '
+     'MartingaleProblems/README.md, Meilenstein 11',
+     'Die **Superadditivität** des unteren Integrals — `∑ ∫⁻ f i ≤ ∫⁻ ∑ f i`, '
+     'die Richtung, die ohne Meßbarkeit gilt — steht in Mathlib nur für **zwei** '
+     'Summanden, als `MeasureTheory.le_lintegral_add` '
+     '(`MeasureTheory/Integral/Lebesgue/Add.lean:273`); eine `Finset`-Fassung '
+     'gibt es nicht, und `lintegral_finsetSum` (`:356`) ist die Gleichheit unter '
+     '`Measurable`. Es ist keine weitere Deklaration `le_lintegral…` in der '
+     'ganzen Bibliothek.',
+     'theorem le_lintegral|lemma le_lintegral',
+     ['Mathlib/'],
+     ['Mathlib/MeasureTheory/Integral/Lebesgue/Add.lean']),
 ]
 
 
