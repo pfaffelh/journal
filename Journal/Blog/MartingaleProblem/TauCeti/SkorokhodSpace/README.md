@@ -3870,6 +3870,17 @@ and this part of the milestone says at which paths `ψ t` is continuous. Proved
   of the path alone. It is written without a clock and without a filtration,
   because where it is continuous is a question about the path space and nothing
   else; **MartingaleProblems** Milestone 11 is where it acquires both.
+* `integrableOn_mpTest_integrand` and `mpTest_sub` — the integrand of the
+  compensator is integrable over the window, and the functional is **linear in
+  the pair it tests**: `mpTest f g t z - mpTest f' g' t z = mpTest (f - f') (g - g') t z`.
+  The integrability is what makes the second a statement about the *integrals*
+  and not only about the integrands, the Bochner integral of a non integrable
+  function being `0`; it is `IsCadlag.measurable` of Milestone 2 composed with
+  `Real.toNNReal` and with `g`, together with the bound `‖g‖` on a window of
+  finite Lebesgue measure. This is what **MartingaleProblems** Milestone 11
+  reads when its approximants solve an *approximating* martingale problem:
+  the error of testing with the wrong pair is the norm of the difference of the
+  pairs, and **no boundedness of the approximating pair is spent.**
 * `continuousAt_mpTest` — the whole functional, continuous at every path that
   does not jump **at the one time it evaluates**. The asymmetry between the two
   summands is the content: the compensator carries none of the condition, the

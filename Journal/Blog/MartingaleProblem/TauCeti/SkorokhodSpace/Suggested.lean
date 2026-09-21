@@ -19882,6 +19882,55 @@ section MPTestFunctional
 
 variable {E : Type*} [MetricSpace E] [MeasurableSpace E] [BorelSpace E] [PolishSpace E]
 
+omit [PolishSpace E] in
+/-- **The integrand of the compensator is integrable over the window.**
+
+Three ingredients and nothing else: the window has finite Lebesgue measure, the
+integrand is bounded by `‖g‖`, and it is measurable because a càdlàg map is Borel
+measurable (`IsCadlag.measurable` of Milestone 2) composed with `Real.toNNReal`
+and with the continuous `g`.
+
+It is what makes `SkorokhodSpace.mpTest_sub` a statement about the integrals and
+not only about the integrands: without it the two compensators cannot be
+subtracted under one integral sign, the Bochner integral of a non integrable
+function being `0`. -/
+theorem SkorokhodSpace.integrableOn_mpTest_integrand (g : E →ᵇ ℝ) (z : D(ℝ≥0, E)) (r : ℝ≥0) :
+    IntegrableOn (fun u : ℝ => g (z.toFun u.toNNReal)) (Set.Ioc (0 : ℝ) (r : ℝ)) volume := by
+  have : IsFiniteMeasure ((volume : Measure ℝ).restrict (Set.Ioc (0 : ℝ) (r : ℝ))) := by
+    constructor
+    rw [Measure.restrict_apply_univ]
+    exact measure_Ioc_lt_top
+  have hmeas : Measurable fun u : ℝ => g (z.toFun u.toNNReal) :=
+    g.continuous.measurable.comp (z.isCadlag.measurable.comp measurable_real_toNNReal)
+  exact Integrable.mono' (integrable_const ‖g‖) hmeas.aestronglyMeasurable
+    (Filter.Eventually.of_forall fun u => by
+      simpa [Real.norm_eq_abs] using g.norm_coe_le_norm (z.toFun u.toNNReal))
+
+omit [PolishSpace E] in
+/-- **The tested functional is linear in the pair it tests**, and this is the whole
+of the passage from an approximating martingale problem to the limiting one: the
+increment tested with `(f, g)` is the increment tested with `(f', g')` plus the
+increment tested with the *difference* of the two pairs.
+
+The state term is linear for nothing, the compensator because the two integrands
+are integrable (`SkorokhodSpace.integrableOn_mpTest_integrand`).  Together with
+`MeasureTheory.abs_mpTest_le` read at `(f - f', g - g')` it turns the error of
+testing with the wrong pair into `‖f - f'‖ + ‖g - g'‖ * t`, uniformly in the
+path. -/
+theorem SkorokhodSpace.mpTest_sub (f g f' g' : E →ᵇ ℝ) (r : ℝ≥0) (z : D(ℝ≥0, E)) :
+    SkorokhodSpace.mpTest f g r z - SkorokhodSpace.mpTest f' g' r z
+      = SkorokhodSpace.mpTest (f - f') (g - g') r z := by
+  rw [SkorokhodSpace.mpTest, SkorokhodSpace.mpTest, SkorokhodSpace.mpTest]
+  have hint : ∫ u in Set.Ioc (0 : ℝ) (r : ℝ), (g - g') (z.toFun u.toNNReal)
+      = (∫ u in Set.Ioc (0 : ℝ) (r : ℝ), g (z.toFun u.toNNReal))
+        - ∫ u in Set.Ioc (0 : ℝ) (r : ℝ), g' (z.toFun u.toNNReal) := by
+    rw [← integral_sub (SkorokhodSpace.integrableOn_mpTest_integrand g z r)
+      (SkorokhodSpace.integrableOn_mpTest_integrand g' z r)]
+    rfl
+  rw [hint]
+  simp only [BoundedContinuousFunction.coe_sub, Pi.sub_apply]
+  ring
+
 /-- **The compensator over a window of the nonnegative index is a continuous
 functional of the path**, at every path.
 

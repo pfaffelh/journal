@@ -53315,3 +53315,249 @@ Kettenordnung ist.
 Laufs, `abs_mpTest_le` und `abs_integral_le_of_abs_le`, und
 `SkorokhodSpace.bounded_of_mem_evalFuns` aus **SkorokhodSpace** Meilenstein 8.
 
+
+### 2026-09-21, siebzehnter Lauf des Tages — der dritte Kettenpunkt ist fertig und der **vierte steht ebenfalls**; damit hat jeder der vier Punkte von Meilenstein 11 seinen Satz, und was zwischen ihnen fehlt, ist keine Mathematik mehr, sondern eine Naht
+
+**`MeasureTheory.mpSolution_of_tendsto_cadlag_of_approx` steht.** Lösen die
+Approximanten das Martingalproblem zu den *approximierenden* Paaren
+`(f' n, g' n)` mit `‖f - f' n‖ → 0` und `‖g - g' n‖ → 0`, und konvergieren ihre
+Pfadgesetze schwach auf `D(ℝ≥0, E)`, so erfüllt der Limes die Martingalgleichung
+zum *Grenzpaar* `(f, g)` längs `T`. Damit ist der dritte Punkt der Kette von
+Meilenstein 11 vollständig — Kern und Aufsatz.
+
+**Sechs** neue Deklarationen, zwei in `SkorokhodSpace/Suggested.lean`
+(Meilenstein 8, 49 Zeilen) und vier in `MartingaleProblems/Suggested.lean`
+(Meilenstein 11, 189 Zeilen):
+
+| Deklaration | was sie sagt |
+| --- | --- |
+| `SkorokhodSpace.integrableOn_mpTest_integrand` | der Integrand des Kompensators ist über dem Fenster integrierbar |
+| `SkorokhodSpace.mpTest_sub` | **das getestete Funktional ist linear im getesteten Paar** |
+| `abs_mpTest_sub_mpTest_le` | der Fehler des falschen Paares ist `‖f - f'‖ + ‖g - g'‖ * t`, gleichmäßig im Pfad |
+| `measurable_cadlagFiltration_of_mem_evalFuns` | eine Testfunktion von Zeiten unter `s` ist für die Koordinatenvergangenheit bei `s` meßbar |
+| `tendsto_integral_mpTest_sub_mul_of_approx` | **`hzero` des dritten Kettenpunktes, eingelöst** |
+| `mpSolution_of_tendsto_cadlag_of_approx` | **der dritte Punkt der Kette, mit Aufsatz** |
+
+Die Kette geht durch `python3 scripts/check_master.py` mit **0 Fehlern, 0
+`sorry`** in allen drei Dateien; die Warnungszahlen sind 18 / 38 / 112 (davon
+veraltet 0), also **unverändert** gegenüber dem Vorlauf. Alle sechs sind mit
+`check_axioms_master.py` geprüft und hängen an `propext`, `Classical.choice`,
+`Quot.sound` und an nichts sonst. `check_negatives.py` meldet über 53
+Behauptungen keinen unerwarteten Treffer, `check_duplicates.py` findet zu keinem
+der sechs Namen einen Mathlib-Namensvetter, `check_own_names.py` deckt jeden neu
+zitierten Namen, `check.py` meldet `clean` (142 Seiten).
+
+Mathlib-Stand: `94ef6b89544e58e90f119da869f3fb48d1da0f4c`, 2026-09-18;
+Lean 4.35.0-rc2.
+
+**Die Gegenprobe gegen v4.33.1** (`check_suggested.py`) ist wie angesagt rot und
+**unverändert**: 54 Fehler in `WeakConvergence`, die beiden anderen Dateien nur
+mit dem Folgefehler der fehlenden `.olean`. Das ist zu berichten und nicht zu
+beheben.
+
+#### Die Frage, die der Vorlauf offengelassen hatte, und ihre Antwort
+
+Der Vorlauf hatte als „erste zu klärende Frage" benannt, **woran `Z (X' n ·)`
+seine `𝓕 n s`-Meßbarkeit bekommt**, und verlangt, das am Quelltext zu
+entscheiden statt zu raten. Die Antwort ist: **an derselben Hypothese, die der
+Kern des Kettenpunktes an die Filtration des Limes stellt, einmal je `n`.**
+
+`h𝓕'` sagt, daß `(𝓕' n) r` die längs `X' n` zurückgeholte
+Koordinatenvergangenheit ist — wörtlich `h𝓕` mit `X` durch `X' n` ersetzt. Das
+ist nicht die bequeme, sondern die **notwendige** Wahl, und zwar aus drei
+Gründen, die alle am Quelltext liegen:
+
+* Sie ist **bewohnt**, und zwar durch dieselbe Deklaration wie `h𝓕`:
+  `naturalFiltration_comp_eq_comap`, die der Vorlauf für den Limes gebaut hat,
+  ist in `X` allquantifiziert und greift an `X' n` unverändert.
+* Sie wird an **genau einer** Stelle gelesen — der Meßbarkeit von `Z ∘ X' n` für
+  die Vergangenheit bei `s` —, und dort ist sie
+  `measurable_cadlagFiltration_of_mem_evalFuns` verkettet mit
+  `comap_measurable`. Die Adaptiertheit des getesteten Prozesses der
+  Approximanten wird **nicht** zusätzlich gebraucht: sie steckt schon in
+  `hmart`, dem ersten Feld von `Martingale`.
+* Die naheliegende Alternative — die Filtration der Approximanten frei zu lassen
+  und die Meßbarkeit von `Z ∘ X' n` aus der Martingaleigenschaft zu gewinnen —
+  geht **nicht**, und das ist der eigentliche Befund: aus
+  `StronglyAdapted (𝓕' n) (fun r ω ↦ mpTest (f' n) (g' n) r (X' n ω))` folgt
+  nichts über `Z ∘ X' n`. Das getestete Funktional liest **eine** Koordinate und
+  einen Kompensator; `Z` ist ein endliches Produkt **mehrerer** Koordinaten, und
+  keine Kombination der ersten gibt die zweiten. Eine Aussage über die
+  Filtration ist hier also unvermeidlich, und `h𝓕'` ist die schwächste, die
+  trägt: sie legt nicht fest, wie der Verbraucher seine Filtration baut.
+
+#### Der Befund: der Schritt kostet keine neue Analysis, sondern eine Integrierbarkeit
+
+Der Vorlauf hatte vier Fehlerglieder vorhergesagt — zwei Zustandsterme und zwei
+Kompensatorterme — und für jedes eine punktweise Schranke. Das ist richtig,
+aber es sind nicht vier Abschätzungen, sondern **eine**, sobald man bemerkt, daß
+`mpTest` **linear im getesteten Paar** ist:
+
+> `mpTest f g t z - mpTest f' g' t z = mpTest (f - f') (g - g') t z`
+
+Damit ist `abs_mpTest_le` — die Schranke `‖f‖ + ‖g‖ * t` des Vorlaufs — am Paar
+`(f - f', g - g')` bereits die ganze Abschätzung, und es ist **keine neue
+Analysis zu führen**. Der Preis dafür ist eine Integrierbarkeit, und genau eine:
+`SkorokhodSpace.integrableOn_mpTest_integrand`, damit die beiden Kompensatoren
+unter *einem* Integralzeichen subtrahiert werden dürfen. Ohne sie wäre die
+Linearität falsch, denn das Bochner-Integral eines nichtintegrierbaren
+Integranden ist der Müllwert `0` — dasselbe Muster wie an den vier Stellen, die
+dieses Projekt schon gesammelt hat, diesmal vor dem Beweis bemerkt und nicht
+darin. Sie ist billig: `IsCadlag.measurable` aus **SkorokhodSpace**
+Meilenstein 2, verkettet mit `Real.toNNReal` und mit `g`, dazu die Schranke
+`‖g‖` auf einem Fenster endlichen Maßes.
+
+**Was dabei ersatzlos wegfällt: die Beschränktheit der approximierenden Paare.**
+Gelesen wird `‖f - f' n‖` und `‖g - g' n‖`, nie `‖f' n‖` oder `‖g' n‖`. Eine
+Folge von Paaren mit unbeschränkten Normen ist also zugelassen, solange die
+Differenzen klein werden.
+
+#### Der zweite Befund: der exakte Teil ist null und nicht klein
+
+Das ist der Grund, aus dem der Schritt eine **Abschätzung** ist und kein
+Grenzwertsatz, und es steht so im Doc-Kommentar. Der mit `(f' n, g' n)`
+getestete Zuwachs integriert gegen eine Testfunktion der Vergangenheit **exakt
+zu null** — `integral_sub_mul_eq_zero_of_martingale`, das seit der Arbeit am
+fdd-Kriterium bewiesen dasteht und hier unverändert brauchbar ist. Es bleibt
+allein die Differenz der beiden getesteten Zuwächse, und die ist punktweise
+durch `2 * (‖f - f' n‖ + ‖g - g' n‖ * t) * ‖Z‖` beschränkt. Der Grenzübergang
+ist `squeeze_zero_norm` und sonst nichts: kein dominierter Grenzübergang, keine
+gleichgradige Integrierbarkeit, kein Satz über Maße.
+
+#### Ein dritter, klein und für den nächsten Verbraucher
+
+**Die Schranke der Testfunktion muß angehoben werden.**
+`SkorokhodSpace.bounded_of_mem_evalFuns` liefert ein `C` mit `|Z z| ≤ C` für
+alle `z`, sagt aber **nicht** `0 ≤ C` — und kann es nicht, denn über leerem `E`
+ist `D(ℝ≥0, E)` leer und die Allaussage über kein `z`. Genommen wird darum
+`max C 0`. Das ist eine Zeile, aber es ist die Sorte Zeile, an der ein Beweis
+hängenbleibt, wenn man sie nicht vorhersieht; sie steht als Kommentar an der
+Deklaration.
+
+#### Nachtrag desselben Laufs: der vierte Kettenpunkt steht ebenfalls, abstrakt
+
+Nach dem dritten Punkt war im Zeitbudget noch Raum, und der vierte hat sich als
+billiger erwiesen als angesetzt. **Zwei** weitere Deklarationen in
+`MartingaleProblems/Suggested.lean`, Meilenstein 11:
+
+| Deklaration | was sie sagt |
+| --- | --- |
+| `tendsto_of_isRelativelyCompact_of_unique` | **der vierte Punkt der Kette**: relativ kompakt plus eindeutig gleich konvergent |
+| `tendstoInDistribution_id_of_tendsto` | der kanonische Prozeß als Brücke vom Maß zum Prozeß |
+
+Beide gehen durch `check_master.py` (Zahlen wie oben, 18 / 38 / 112, unverändert)
+und hängen mit `check_axioms_master.py` an `propext`, `Classical.choice`,
+`Quot.sound` und an nichts sonst.
+
+**Der vierte Punkt trägt keine Maßtheorie.** Er ist über einem beliebigen Raum
+`F` und einem beliebigen Prädikat `Sol` formuliert: der zweite Punkt liefert den
+kompakten Abschluß, der dritte „jeder Limes einer konvergenten Teilfolge ist
+eine Lösung", Meilenstein 6 „es gibt höchstens eine Lösung". Das ist keine
+Verallgemeinerung auf Verdacht, sondern die Trennung, die die beiden
+probabilistischen Eingaben austauschbar macht.
+
+**Zwei Voraussetzungen, die eine erste Lesart erwartet und die nicht dastehen —
+beide am Quelltext belegt, nicht geschätzt:**
+
+* **Keine Metrisierbarkeit.** Die Vorfrage oben ist damit nicht nur beantwortet,
+  sondern ausgeräumt: `Filter.tendsto_of_subseq_tendsto`
+  (`Mathlib/Order/Filter/AtTopBot/CountablyGenerated.lean:125`) steht über einem
+  beliebigen Filter auf einem beliebigen Typ. Was der Beweis wirklich braucht,
+  ist die Folgenkompaktheit einer kompakten Menge, und das ist
+  `IsCompact.tendsto_subseq` (`Mathlib/Topology/Sequences.lean:298`) unter
+  `[FirstCountableTopology F]` — **strikt schwächer** als Metrisierbarkeit und
+  die minimale Voraussetzung hier. Punkt 2 der Vorschlagsliste oben ist damit
+  erledigt, und die Antwort ist eine andere als die dort vermutete: die
+  Metrisierbarkeit wird an *keiner* der beiden Stellen gebraucht.
+* **Keine Monotonie der ausgezogenen Teilfolge.** Die Hypothese `hlim`
+  quantifiziert über *jede* Abbildung `ℕ → ℕ`, die gegen unendlich strebt, und
+  nicht über die streng monotonen. Das ist die für den Verbraucher **leichtere**
+  Hypothese — der dritte Punkt weiß nichts über die Ordnung seines Index —, und
+  der Beweis benutzt die Monotonie, die `IsCompact.tendsto_subseq` nebenbei
+  liefert, nur an **einer** Stelle: um `Tendsto ns atTop atTop` über die
+  Extraktion zu retten (`StrictMono.tendsto_atTop`,
+  `Mathlib/Order/Filter/AtTopBot/Tendsto.lean:84`).
+
+  **Das „strebt gegen unendlich" ist nicht wegzulassen, und es ist nicht
+  umsonst.** Der erste Entwurf dieses Laufs hatte es weggelassen, weil der
+  Beweis ohne es durchgeht — `tendsto_of_subseq_tendsto` reicht die
+  Voraussetzung durch, und man muß sie nicht anfassen. Beim Hinschreiben des
+  nächsten Verbrauchers kam heraus, daß genau sie es ist, die eine Hypothese
+  wie `‖f - f' n‖ → 0` von der Familie auf die Teilfolge trägt; ohne sie wäre
+  der vierte Punkt für die Kette unbrauchbar gewesen, obwohl er als Satz
+  stimmt. Eine Hypothese, die der Beweis geschenkt bekommt, an den Verbraucher
+  **weiterzureichen** statt sie zu verschweigen, ist hier also die schwächere
+  Fassung und nicht die stärkere.
+
+**Die Brücke, und warum sie nötig ist.** Der vierte Punkt spricht von den
+*Gesetzen*, der dritte von den *Prozessen*: er verlangt
+`MeasureTheory.TendstoInDistribution`, und das benennt eine Grenzzufallsgröße.
+Was ein Kompaktheitsargument hergibt, ist ein Maß und kein Prozeß.
+`tendstoInDistribution_id_of_tendsto` schließt die Lücke, und es wird dabei
+**nichts konstruiert**: der kanonische Raum ist der Pfadraum, der schon dasteht,
+die Identität darauf ist unter dem Grenzgesetz ein Prozeß mit diesem Gesetz, und
+`Measure.map_id` ist der ganze Beweis des dritten Feldes.
+
+Eine Kleinigkeit, die Zeit kostet, wenn man sie nicht kennt: `ProbabilityMeasure`
+ist ein `def` auf einem Subtyp, und `(⟨ν, inferInstance⟩ : ProbabilityMeasure F)`
+faltet sich beim Elaborieren auf den Subtyp zurück, worauf `𝓝` seine
+`TopologicalSpace`-Instanz nicht mehr findet. Zu schreiben ist
+`Tendsto (β := ProbabilityMeasure F) …`, wie Mathlib es im Feld von
+`TendstoInDistribution` selbst tut.
+
+#### Wo die Kette von Meilenstein 11 am Ende dieses Laufs steht
+
+| Punkt | Stand |
+| --- | --- |
+| `isTight_map_postcomp_of_exists_martingale` | steht, bis auf die `Fin k`-Fassung |
+| `isRelativelyCompact_of_approx` | steht im exakten Fall; der approximative fehlt |
+| `mpSolution_of_tendsto_cadlag` | **steht, mit Aufsatz — fertig** |
+| `tendsto_of_isRelativelyCompact_of_unique` | **steht, abstrakt — die Instanziierung fehlt** |
+
+Alle vier Punkte haben damit ihren Satz; was zwischen ihnen fehlt, sind **nicht**
+mehr Sätze, sondern **eine Naht**.
+
+#### Vorschlag für den nächsten Lauf
+
+**`MeasureTheory.mpSolution_of_tendsto_cadlag_of_subseq`**, die Naht zwischen dem
+vierten und dem dritten Kettenpunkt, in `MartingaleProblems/Suggested.lean`.
+
+> Ist `ν` der Limes einer Teilfolge der Pfadgesetze, so löst die Identität des
+> Pfadraums unter `ν` das Martingalproblem zu `(f, g)` längs eines `T`, das zu
+> `ν` gehört. Das ist die Hypothese `hlim` von
+> `tendsto_of_isRelativelyCompact_of_unique`, ausgeschrieben für die Kette.
+
+**Warum jetzt.** Es ist das einzige, was zwischen den vier Punkten noch fehlt,
+und es ist der Schritt, ohne den der Akzeptanztest (Donsker) nicht durchläuft.
+Alle Eingaben stehen: `tendstoInDistribution_id_of_tendsto` aus diesem Lauf
+macht aus dem Limesmaß einen Prozeß, `mpSolution_of_tendsto_cadlag_of_approx`
+nimmt ihn entgegen, `naturalFiltration_comp_eq_comap` bewohnt `h𝓕` an der
+Identität (dort ist es `cadlagFiltration` selbst), und
+`SkorokhodSpace.exists_countable_dense_continuity` liefert das `T` zum
+*Grenzgesetz*.
+
+**Die drei Punkte, an denen es klemmen kann, in der Reihenfolge, in der sie
+kommen:**
+
+1. **Eine Teilfolge einer approximierenden Familie ist wieder eine.** Zu
+   `ns : ℕ → ℕ` sind `fun k ↦ Ω' (ns k)`, `fun k ↦ m' (ns k)`,
+   `fun k ↦ P' (ns k)`, `fun k ↦ X' (ns k)`, `fun k ↦ 𝓕' (ns k)` zu bilden, und
+   die Hypothesen `h𝓕'`, `hmart` übertragen sich durch Einsetzen. Das sollte
+   Buchhaltung sein; kostet es mehr, ist das der erste Meßwert.
+2. **Die Normkonvergenz überlebt die Teilfolge**, und dafür ist im vierten
+   Punkt schon gesorgt: `hlim` bekommt `Tendsto ns atTop atTop` mitgeliefert,
+   also ist `‖f - f' (ns k)‖ → 0` gerade `hf.comp hns`. Nichts weiter zu tun;
+   die Stelle ist nur genannt, damit sie nicht neu erschlossen wird.
+3. **Das `T` gehört zum Grenzgesetz und nicht zur Folge.**
+   `mpSolution_of_tendsto_cadlag` liest `hgood` am Limes, und der Limes ist erst
+   nach der Extraktion bekannt. Die Quantorenstellung ist also „für jedes `ν`
+   ein eigenes `T`", und das paßt zu `Sol ν := ∀ s ∈ T ν, …` nur, wenn `Sol`
+   das `T` verschluckt. **Zu entscheiden ist, wie `Sol` gefaßt wird** — am
+   ehesten als „es gibt ein `T` mit den drei Eigenschaften, längs dessen die
+   Martingalgleichung gilt", denn die Eindeutigkeit aus Meilenstein 6 fragt
+   ohnehin nicht nach den Zeiten. Das ist am Quelltext von Meilenstein 6 zu
+   prüfen, ehe die Signatur geschrieben wird.
+
+**Worauf er ruht, und es ist alles gebaut:** die acht Deklarationen dieses Laufs,
+`isCompact_closure_of_subalgebra_forall_martingale` (zweiter Punkt, exakter
+Fall), und `SkorokhodSpace.exists_countable_dense_continuity`.
