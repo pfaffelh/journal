@@ -10765,6 +10765,29 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   `Set.univ` ist der Zylinder über der leeren Zeitmenge, der die Konstante `1`
   liefert. Die Zeiten sind durch den Untertyp `Set.Iic s` indiziert und nicht
   durch eine Kette; eine lineare Ordnung wird nirgends verbraucht.
+* `isDetermining_evalFuns`: **die endlichdimensionalen Testfunktionen der
+  Vergangenheit sind eine trennende Menge auf dem Pfadraum.** **In Lean** am
+  2026-09-21, fünfzehnter Lauf. Die Klasse ist
+  `SkorokhodSpace.evalFuns E (insert s (T ∩ Set.Iic s))` über einer von rechts
+  dichten Zeitmenge `T`, und die Filtration ist der Rückzug der
+  Koordinatenvergangenheit längs der Pfadabbildung. Die fünf Eingaben von
+  `isDetermining_of_generateFromFuns` stehen sämtlich in **SkorokhodSpace**
+  Meilenstein 8; die fünfte, die Erzeugung, ist
+  `SkorokhodSpace.generateFromFuns_evalFuns_Iic`.
+  **Das ist keine Bequemlichkeit, sondern eine Zwangslage.** Der dritte Punkt der
+  Kette von Meilenstein 11 verlangt von *einer* Klasse zugleich `IsDetermining`
+  und die `P`-Stetigkeit ihrer Glieder; die früheren Zeugen —
+  `isDetermining_of_comap` (alle beschränkten meßbaren Funktionen der
+  Vergangenheit) und `isDetermining_pathCylinders` (Indikatoren) — erfüllen das
+  erste und können das zweite nicht erfüllen, denn ein Indikator ist an keiner
+  Randstelle stetig. `evalFuns` ist die einzige Klasse, von der beides bewiesen
+  ist.
+  **Die Zeit `s` steht ausdrücklich in der Klasse.** Die Rechtsdichtheit liefert
+  Zeiten *oberhalb* einer gegebenen und gewinnt damit jede Koordinate zu `r < s`
+  zurück; bei `r = s` gibt es innerhalb von `Set.Iic s` nichts mehr oberhalb, und
+  ein Pfad, der bei `s` springt, wird von keiner früheren Koordinate gelesen.
+  `s ∈ T` als Voraussetzung mitzuführen leistete dasselbe und wäre an jeder
+  getesteten Zeit einzulösen; `insert s` kostet nichts und verlangt nichts.
 * `mpSolution_of_tendsto_jumpPath_of_isDetermining` und
   `mpSolution_of_tendsto_jumpPath_cylinders`: **die Probe ein zweites Mal, über
   den Zylindern allein.** **In Lean** am 2026-09-18, zehnter Lauf. Der Kern der
@@ -11226,18 +11249,20 @@ has to be chosen once for all `n`. What stands:
   that shapes the item: `SkorokhodSpace.continuousAt_integral_comp` is continuous
   at *every* path, the jumps of the limit path being a countable — hence
   Lebesgue null — set of times. So the set `D` is asked for by the **evaluation**
-  alone, and it is asked at the single time the test function reads. What that
-  leaves open for a run at this item is `MeasureTheory.IsDetermining` for the
-  class `SkorokhodSpace.evalFuns E T` restricted to the past of `s`: the members
-  of that class are the only bounded functionals known to be continuous where
-  they must be, and `isDetermining_of_generateFromFuns` is the criterion they
-  have to meet. Its four inputs are `SkorokhodSpace.isMulSystem_evalFuns`,
-  `SkorokhodSpace.measurable_of_mem_evalFuns`,
-  `SkorokhodSpace.bounded_of_mem_evalFuns` and the constant `1` — the product
-  over the empty `Finset` — and what is missing is the fifth,
-  `generateFromFuns (evalFuns E (T ∩ Set.Iic s)) = ⨆ r ≤ s, comap (eval r)`, the
-  **past** form of `SkorokhodSpace.generateFromFuns_evalFuns`, which today is
-  stated for the whole Borel structure.
+  alone, and it is asked at the single time the test function reads.
+
+  **The determining class is proved, 2026-09-21**: `MeasureTheory.isDetermining_evalFuns`
+  of Milestone 10 below gives `MeasureTheory.IsDetermining` for
+  `SkorokhodSpace.evalFuns E (insert s (T ∩ Set.Iic s))` whenever `T` is right
+  dense and the filtration is the pull back of the coordinate past. With it, both
+  hypotheses of `mpSolution_of_tendsto_of_pContinuous` are met by **one and the
+  same** class, which was the obstruction: the earlier witnesses for
+  `IsDetermining` take all bounded measurable functions of the past, or
+  indicators, and neither is continuous anywhere it has to be. What a run at this
+  item still has to supply is the bookkeeping of
+  `mpSolution_of_tendsto_of_pContinuous` — the integrability and uniform
+  integrability of the tested functionals along the approximating sequence, and
+  the convergence of their integrals.
 * `mpSolution_of_tendsto_cadlag_of_pathwise`: the same with the uniform
   convergence of `f n` and `g n` replaced by
   `𝔼^{P n}‖(f n - f) (X n t)‖ → 0` and
