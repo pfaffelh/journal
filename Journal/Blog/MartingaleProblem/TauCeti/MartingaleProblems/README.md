@@ -14331,36 +14331,63 @@ has to be chosen once for all `n`. What stands:
   `isEventuallyApproximable_rescaledWalk` is the second one alone and lives on a
   process the estimate then reads through a bounded `g`.
 
-  **The named point this leaves**, and it is what Donsker's tightness now owes:
+  **The conjunction of the two weakenings**, which is the condition the walks do
+  meet, and the chain over it:
 
-  * `MeasureTheory.IsEventuallyApproximableMul` — the conjunction: to every
-    error a finite exceptional set, off which every member has two pairs over
-    **its own** filtration, the first with the **weighted** error and the second
-    with the plain error of the square, at common constants `q`, `T`, `K`, `Kw`.
-    It is `IsEventuallyApproximable` with the two weighted fields of
-    `IsApproximableMul` in place of their plain neighbours, and the filtration
-    indexed as there.
-  * `MeasureTheory.exists_finite_forall_measure_setOf_lt_modulusBased_le_of_isEventuallyApproximableMul`
-    — the uniform modulus estimate over such a family, in the order `N`, `ε`,
-    `δ`, which is the order of
-    `exists_finite_forall_measure_setOf_lt_modulusBased_postcomp_le_of_isEventuallyApproximable`
-    and **not** that of
-    `exists_forall_measure_setOf_lt_modulusBased_le_of_forall_isApproximableMul`:
-    the error survives into the estimate, so the window is chosen last and at
-    that error, from `tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` at `A = a₀`.
-  * `MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul`
-    — the tightness, off a finite exceptional set, through
-    `SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal` and
-    `SkorokhodSpace.measure_map_setOf_le_modulusBased_le`, with the exceptions
-    tight one by one by `isTightMeasureSet_of_finite`.
-  * `MeasureTheory.isEventuallyApproximableMul_rescaledWalk` — the acceptance
-    case. Its inputs all exist: the two pairs, the error
+  ```
+  MeasureTheory.IsEventuallyApproximableMul
+  MeasureTheory.isEventuallyApproximableMul_of_forall_isApproximableMul
+  MeasureTheory.exists_finite_forall_measure_setOf_lt_modulusBased_le_of_isEventuallyApproximableMul
+  MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul
+  ```
+
+  `IsEventuallyApproximableMul` is: to every error a finite exceptional set, off
+  which every member is square integrable at the capped and at the gap times and
+  has two pairs over **its own** filtration, the first with the **weighted**
+  error and the second with the plain error of the square, at common constants
+  `q`, `T`, `K`, `Kw`. It is `IsEventuallyApproximable` with the two weighted
+  fields of `IsApproximableMul` in place of their plain neighbours, and
+  `isEventuallyApproximableMul_of_forall_isApproximableMul` is what says it is a
+  weakening of the latter and not a different condition.
+
+  The modulus estimate is taken in the order `N`, `ε`, `δ`, which is the order of
+  `exists_finite_forall_measure_setOf_lt_modulusBased_postcomp_le_of_isEventuallyApproximable`
+  and **not** that of
+  `exists_forall_measure_setOf_lt_modulusBased_le_of_forall_isApproximableMul`:
+  the error survives into the estimate, so the window is chosen last and at that
+  error, from `tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` at `A = a₀`. The two
+  errors are asked at one and the same `ε = a₀ / 6`, the combination
+  `2 ε' + 4 γ` of
+  `mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair_of_integrable_mul`
+  being `a₀` at that choice; the divisor `2 + 4 ‖g‖` of the bounded twin has
+  disappeared with the bound, the weight being carried inside the error.
+
+  The tightness goes through `SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal`
+  and `SkorokhodSpace.measure_map_setOf_le_modulusBased_le`; the exceptional
+  members are not dropped but paid for, each by `isTightMeasureSet_singleton`
+  read back through that **equivalence** at the same `(ε, m, η)`, with
+  `SkorokhodSpace.modulusBased_mono` and `Set.Finite.exists_pos_forall_le`
+  putting the finitely many windows and the common one under one positive
+  minimum. The compact containment of a singleton subfamily is read off the
+  family's at the same compact set.
+
+  **What this leaves is the acceptance case alone:**
+
+  * `MeasureTheory.isEventuallyApproximableMul_rescaledWalk`. Its inputs all
+    exist: the two pairs, the error
     `lintegral_biSup_enorm_sub_sq_rescaledWalk_le` of the square, the weighted
-    error `0` of the first pair, `Kw = 0` for the vanishing compensator, and the
-    majorants `integrable_majorant_rescaledWalk`,
-    `integrable_majorant_sq_rescaledWalk` for the stopped values — the last in
-    the `MemLp … 2` form the weighted structure asks for, which is the one new
-    thing to check.
+    error `0` of the first pair — the walk being its own approximant, so the
+    weight is integrated against `0` — and `Kw = 0` for the vanishing
+    compensator. The `L²` form of the stopped values, which is where the weighted
+    condition asks more than the plain one, is built:
+    `IsApproximatingPair.memLp_stoppedValue_of_dominated` and
+    `memLp_majorant_rescaledWalk`, the first being
+    `integrable_stoppedValue_of_dominated` with `MemLp.of_le` for
+    `Integrable.mono'` and `le_abs_self` bridging the two sides, the second
+    `integrable_majorant_rescaledWalk` with `memLp_finsetSum` and `MemLp.abs`.
+    `C` is the zero process and costs nothing; `Y` is the walk itself. What
+    remains to write is the weighted twin of
+    `isEventuallyApproximable_of_tendsto_zero_cofinite` and the assembly.
 
   **The alternative, and why it is the more expensive one.** The acceptance
   example below states Donsker with `A = {(f, f''/2) | f ∈ Cc^∞(ℝ)}`, that is,

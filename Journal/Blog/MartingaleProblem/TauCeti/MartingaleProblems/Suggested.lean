@@ -48527,6 +48527,394 @@ theorem isTightMeasureSet_map_postcomp_of_isEventuallyApproximable [MeasurableSp
   rw [hucoe]
   exact lt_of_lt_of_le hltη hω
 
+/-! ### Both weakenings at once, which is the one condition Donsker's walks meet
+
+Two weakenings of `MeasureTheory.IsApproximable` stand above, and each is measured against the
+rescaled random walks of the acceptance test:
+
+* `MeasureTheory.IsApproximableMul` takes the **bound off the process**, carrying the running
+  maximum of `V` under the lower integral of the first error and of the compensator norm;
+* `MeasureTheory.IsEventuallyApproximable` moves the **error outside the index**, asking the
+  pairs only of all but finitely many members and letting that finite set move with the error.
+
+**Neither reaches the walks, and this is proved rather than suspected.**
+`MeasureTheory.not_forall_isApproximableMul_rescaledWalk` says the first does not: at a *fixed*
+mesh the walk rests on the first cell of its own mesh and moves its mean square across it, which
+`MeasureTheory.IsApproximableMul.integral_sq_eq_of_eqOn_Ico` forbids, and no weight touches that
+-- the second pair of the weighted condition approximates `V ^ 2` with the plain error, exactly
+as in the unweighted one.  The second does not reach them either, for the reason its own
+subsection gives: every consumer above it reads a **uniformly bounded** process through the
+bound `‖g‖` of the test function, and the walk at mesh `n` has no bound uniform in `n`.
+
+`MeasureTheory.IsEventuallyApproximableMul` is their conjunction, and it is what the acceptance
+test is stated at.  It is not a third condition: at a constant exceptional set it is
+`MeasureTheory.IsApproximableMul` of each member
+(`MeasureTheory.isEventuallyApproximableMul_of_forall_isApproximableMul`), and with the weight
+dropped and `Kw = 0` its fields are those of `MeasureTheory.IsEventuallyApproximable`.
+
+**The order of the three choices is that of the eventually approximable case and not that of the
+weighted one.**  The weighted chain spends the error inside
+`MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximableMul`, where a member is
+approximable to *every* error and a limit may be taken at the member; here the error survives
+into the estimate, so the count `N` is chosen first, the error second -- before the exceptional
+set, which is born with it -- and the window last, **at that error**, from
+`MeasureTheory.tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` at `A = a₀` rather than at `A = 0`.
+
+**The two errors are one.**  The weighted error of the first pair and the plain error of the
+second enter the estimate only through `2 ε' + 4 γ`, so both are asked at the same `ε` and the
+combination is made to be `a₀` by `ε = a₀ / 6` -- where the unweighted twin needs
+`a₀ / (2 + 4 ofReal ‖g‖)`, the bound of the test function having disappeared with the bound on
+the process.
+
+**The square integrabilities of `V` sit inside the existential and not beside it.**  They are
+properties of the member and not of the approximants, and `MeasureTheory.IsApproximableMul`
+carries them as two fields of its own; here they are asked only of the members the estimate is
+made at, which is the weaker statement and the one the consumer reads. -/
+
+/-- **Both weakenings of the approximability condition at once**: the weight left under the lower
+integral, *and* the error quantified outside the index.
+
+To every positive error there is a **finite** exceptional set `G`, off which every member is
+square integrable at the capped and at the gap times and carries two approximating pairs over
+**its own** filtration -- the first with the *weighted* error, the second with the plain error of
+the square -- at constants `q`, `T`, `K`, `Kw` common to the whole family and to every error.
+
+**It is the conjunction and not a third condition.**
+`MeasureTheory.isEventuallyApproximableMul_of_forall_isApproximableMul` is one direction, and
+`MeasureTheory.IsEventuallyApproximable` is what remains when the weight is dropped and `Kw` set
+to `0`.  Each of the two weakenings alone is unsatisfiable on the rescaled walks of Donsker's
+acceptance test: the first by `MeasureTheory.not_forall_isApproximableMul_rescaledWalk`, the
+second because its consumers read the bound `‖g‖` of a test function that the walk does not
+carry uniformly in its mesh.
+
+**The filtration moves with the member.**  The reason is the one at
+`MeasureTheory.IsEventuallyApproximable` and it is not a generality on suspicion: the rescaled
+walks are martingales over the filtration of their own mesh, and no single filtration serves them
+all without forcing their increments to vanish.
+
+**`Kw` is a parameter of the condition and not of a pair**, as `K` is, and for the same reason:
+both bound a quantity every pair produced at every error and at every member must respect.  It is
+discharged as `Kw = 0` whenever the compensator vanishes, which is the case of a process that is
+its own martingale -- the walk among them. -/
+structure IsEventuallyApproximableMul {γ : Type*} (𝓕 : γ → Filtration ℝ≥0 mΩ) (P : Measure Ω)
+    (q : ENNReal) (T K Kw : ℝ≥0) (V : γ → ℝ≥0 → Ω → ℝ) (ε₀ : ℝ) (u : ℝ≥0) : Prop where
+  /-- To every positive error a finite exceptional set, off which every member is square
+  integrable at the capped and at the gap times and has two approximating pairs over its own
+  filtration and with the common constants, the weighted error of the first pair and the plain
+  error of the second on the horizon, the weighted compensator constant, and the six
+  integrabilities the assembly reads. -/
+  exists_approximants : ∀ ε : ENNReal, 0 < ε → ∃ G : Set γ, G.Finite ∧ ∀ i ∉ G,
+    (∀ k : ℕ, MemLp
+        (stoppedValue (V i) (fun ω ↦ min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+    ∧ (∀ (δ : ℝ≥0) (k : ℕ), MemLp (stoppedValue (V i) (fun ω ↦
+        min (oscHitSeq (V i) ε₀ (k + 1) ω)
+          (min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) 2 P)
+    ∧ ∃ Y C Y' C' : ℝ≥0 → Ω → ℝ, ∃ Z Z' : ℝ → Ω → ℝ,
+      IsApproximatingPair (𝓕 i) P q T K Y C Z ∧ IsApproximatingPair (𝓕 i) P q T K Y' C' Z'
+      ∧ ∫⁻ ω, (⨆ t ∈ Set.Iic T, ‖V i t ω‖ₑ)
+          * ⨆ t ∈ Set.Iic T, ‖Y t ω - V i t ω‖ₑ ∂P ≤ ε
+      ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T, ‖Y' t ω - V i t ω ^ 2‖ₑ ∂P ≤ ε
+      ∧ ∫⁻ ω, (⨆ t ∈ Set.Iic T, ‖V i t ω‖ₑ)
+          * eLpNorm (fun s ↦ Z s ω) q (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ))) ∂P ≤ Kw
+      ∧ (∀ k : ℕ, MemLp
+          (stoppedValue Y (fun ω ↦ min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+      ∧ (∀ k : ℕ, MemLp
+          (stoppedValue C (fun ω ↦ min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+      ∧ (∀ k : ℕ, Integrable
+          (stoppedValue Y' (fun ω ↦ min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0))) P)
+      ∧ (∀ (δ : ℝ≥0) (k : ℕ), MemLp (stoppedValue Y (fun ω ↦
+          min (oscHitSeq (V i) ε₀ (k + 1) ω)
+            (min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) 2 P)
+      ∧ (∀ (δ : ℝ≥0) (k : ℕ), MemLp (stoppedValue C (fun ω ↦
+          min (oscHitSeq (V i) ε₀ (k + 1) ω)
+            (min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) 2 P)
+      ∧ (∀ (δ : ℝ≥0) (k : ℕ), Integrable (stoppedValue Y' (fun ω ↦
+          min (oscHitSeq (V i) ε₀ (k + 1) ω)
+            (min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) P)
+
+/-- **A family weighted approximable off a finite set is eventually weighted approximable**, at
+the same `G` for every error.  This is what makes the conjunction a weakening of
+`MeasureTheory.IsApproximableMul` and not a different condition, and the two square
+integrabilities travel with it because they are fields of the member's own condition. -/
+theorem isEventuallyApproximableMul_of_forall_isApproximableMul {γ : Type*}
+    {𝓕 : γ → Filtration ℝ≥0 mΩ} {P : Measure Ω} {q : ENNReal} {T K Kw : ℝ≥0}
+    {V : γ → ℝ≥0 → Ω → ℝ} {ε₀ : ℝ} {u : ℝ≥0}
+    {G : Set γ} (hG : G.Finite) (h : ∀ i ∉ G, IsApproximableMul (𝓕 i) P q T K Kw (V i) ε₀ u) :
+    IsEventuallyApproximableMul 𝓕 P q T K Kw V ε₀ u :=
+  ⟨fun ε hε ↦ ⟨G, hG, fun i hi ↦
+    ⟨(h i hi).memLp_cap, (h i hi).memLp_gap, (h i hi).exists_approximants ε hε⟩⟩⟩
+
+/-- **The modulus estimate uniformly over an eventually weighted approximable family**, which is
+the shape the tightness criterion reads: one exceptional set and one window serving every member
+outside it, and no bound on any member.
+
+It is `MeasureTheory.exists_finite_forall_measure_setOf_lt_modulusBased_postcomp_le_of_isEventuallyApproximable`
+with the weight in place of the bound, and
+`MeasureTheory.exists_forall_measure_setOf_lt_modulusBased_le_of_forall_isApproximableMul` with
+the error surviving into the estimate.  The three choices are made in the order `N`, `ε`, `δ`,
+and each is made **before** the member:
+
+* the count `N` from `ENNReal.tendsto_inv_nat_nhds_zero` on the horizon term
+  `B / N / ofReal ε₀` with `B = ofReal u ^ (1 - 1/q) * K + 2 (ofReal u ^ (1 - 1/q) * Kw)`, which
+  sees neither the window nor the error;
+* the error from the two limits `N · ofReal √(a.toReal) → 0` and `a / ofReal ε₀ → 0` along
+  `a = k⁻¹`, written as `ε = a₀ / 6` so that the combination `2 ε' + 4 γ` occurring in
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair_of_integrable_mul`
+  **is** `a₀`;
+* the window from `MeasureTheory.tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` at `A = a₀` and
+  `c = 0`, whose limit is `N · ofReal √(a₀.toReal)` and not `0` -- which is why the error has to
+  leave that limit strictly below its budget.
+
+**The divisor is `6` and not `2 + 4 ‖g‖`**, and that is the whole arithmetical trace of removing
+the bound: the weighted error carries the weight inside itself, so no norm of a test function
+enters the combination.
+
+**The fields are stated at `Set.Iic T` and read at `Set.Iic u` and `Set.Iic (u + δ)`**, and both
+narrowings are monotonicity -- `mul_le_mul'` at the weighted field,
+`MeasureTheory.lintegral_biSup_Iic_mono` at the plain one, and `mul_le_mul_left` at `Kw`.
+
+**The exponent is read off a member and the case of no member is disposed of first.**  `1 < q`
+lives in `MeasureTheory.IsApproximatingPair` and is reached through the exceptional set at the
+error `1`; if that set is everything, the conclusion is vacuous and `δ = 1` serves.  `η = ⊤` is
+disposed of first as well, so that `θ = ofReal ε₀ * η` is finite and its halves are strict. -/
+theorem exists_finite_forall_measure_setOf_lt_modulusBased_le_of_isEventuallyApproximableMul
+    {γ : Type*} {𝓕 : γ → Filtration ℝ≥0 mΩ} [∀ i, (𝓕 i).IsRightContinuous]
+    {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K Kw : ℝ≥0} {V : γ → ℝ≥0 → Ω → ℝ} {ε₀ : ℝ} {u : ℝ≥0}
+    (happ : IsEventuallyApproximableMul 𝓕 P q T K Kw V ε₀ u)
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hV : ∀ i, IsStronglyProgressive (𝓕 i) (V i))
+    (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ V i s ω) (Set.Ici t) t)
+    {Φ : γ → Ω → D(ℝ≥0, ℝ)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ V i t ω)
+    (hu : 0 < u) (huT : u < T) (hε₀ : 0 < ε₀) {η : ENNReal} (hη : 0 < η) :
+    ∃ G : Set γ, G.Finite ∧ ∃ δ : ℝ, 0 < δ ∧ ∀ i ∉ G, P {ω | ENNReal.ofReal ε₀
+        < SkorokhodSpace.modulusBased (0 : ℝ) (u : ℝ)
+            (SkorokhodSpace.extendNNReal (Φ i ω)) δ} ≤ η := by
+  rcases eq_or_ne η ⊤ with rfl | hηtop
+  · exact ⟨∅, Set.finite_empty, 1, one_pos, fun i _ ↦ le_top⟩
+  obtain ⟨G₁, hG₁, h₁⟩ := happ.exists_approximants 1 one_pos
+  by_cases hall : ∀ i : γ, i ∈ G₁
+  · exact ⟨G₁, hG₁, 1, one_pos, fun i hi ↦ absurd (hall i) hi⟩
+  push Not at hall
+  obtain ⟨i₀, hi₀⟩ := hall
+  obtain ⟨-, -, Y₀, C₀, Y₀', C₀', Z₀, Z₀', hp₀, -⟩ := h₁ i₀ hi₀
+  have hq : 1 < q := hp₀.one_lt_exponent
+  have hexp : (0 : ℝ) ≤ 1 - 1 / q.toReal := (one_sub_one_div_toReal_pos hq).le
+  have he0 : ENNReal.ofReal ε₀ ≠ 0 := (ENNReal.ofReal_pos.2 hε₀).ne'
+  have hcast : ((K + 2 * Kw : ℝ≥0) : ENNReal) = (K : ENNReal) + 2 * (Kw : ENNReal) := by
+    push_cast
+    ring
+  set B : ENNReal := ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * (K : ENNReal)
+      + 2 * (ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * (Kw : ENNReal)) with hBdef
+  have hBtop : B ≠ ⊤ := by
+    have hrpow : ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) ≠ ⊤ :=
+      ENNReal.rpow_ne_top_of_nonneg hexp ENNReal.ofReal_ne_top
+    rw [hBdef]
+    finiteness
+  set θ : ENNReal := ENNReal.ofReal ε₀ * η with hθdef
+  have hθ : θ ≠ 0 := (ENNReal.mul_pos he0 hη.ne').ne'
+  have hhalf : (0 : ENNReal) < θ / 2 := ENNReal.half_pos hθ
+  have hζ : (0 : ENNReal) < θ / 2 / 2 := ENNReal.half_pos hhalf.ne'
+  -- the count, chosen first and at no window and no error
+  have hhor : Tendsto (fun n : ℕ ↦ B / n / ENNReal.ofReal ε₀) atTop (𝓝 0) := by
+    have hfin : B / ENNReal.ofReal ε₀ ≠ ⊤ := ENNReal.div_ne_top hBtop he0
+    have := ENNReal.Tendsto.const_mul (a := B / ENNReal.ofReal ε₀)
+      ENNReal.tendsto_inv_nat_nhds_zero (Or.inr hfin)
+    rw [mul_zero] at this
+    refine this.congr fun n ↦ ?_
+    simp only [div_eq_mul_inv]
+    ring
+  obtain ⟨n, hn⟩ := Filter.eventually_atTop.1
+    ((ENNReal.tendsto_nhds_zero.1 hhor) (θ / 2 / 2) hζ)
+  have hN : (n + 1 : ℕ) ≠ 0 := Nat.succ_ne_zero n
+  have hhor' : B / (n + 1 : ℕ) / ENNReal.ofReal ε₀ ≤ θ / 2 / 2 := hn (n + 1) (by omega)
+  -- the error, chosen second, at that fixed count and still before the window
+  have hsq : Tendsto (fun k : ℕ ↦ ((n + 1 : ℕ) : ENNReal)
+      * ENNReal.ofReal (Real.sqrt (((k : ENNReal)⁻¹).toReal))) atTop (𝓝 0) := by
+    have h0 : Tendsto (fun k : ℕ ↦ (((k : ENNReal))⁻¹).toReal) atTop (𝓝 0) := by
+      simpa [Function.comp_def] using
+        (ENNReal.tendsto_toReal (by finiteness)).comp ENNReal.tendsto_inv_nat_nhds_zero
+    have h1 : Tendsto (fun k : ℕ ↦ ENNReal.ofReal (Real.sqrt (((k : ENNReal)⁻¹).toReal)))
+        atTop (𝓝 0) := by
+      simpa [Function.comp_def] using (ENNReal.continuous_ofReal.tendsto _).comp
+        ((Real.continuous_sqrt.tendsto _).comp h0)
+    simpa using ENNReal.Tendsto.const_mul h1 (Or.inr (ENNReal.natCast_ne_top (n + 1)))
+  have hdiv : Tendsto (fun k : ℕ ↦ (k : ENNReal)⁻¹ / ENNReal.ofReal ε₀) atTop (𝓝 0) := by
+    have := ENNReal.Tendsto.div_const ENNReal.tendsto_inv_nat_nhds_zero (Or.inr he0)
+    simpa using this
+  obtain ⟨k, ⟨hka, hkb⟩, hk1⟩ :=
+    (((hsq.eventually_lt_const hhalf).and
+      ((ENNReal.tendsto_nhds_zero.1 hdiv) (θ / 2 / 2) hζ)).and
+      (Filter.eventually_ge_atTop 1)).exists
+  set a₀ : ENNReal := (k : ENNReal)⁻¹ with ha₀def
+  have hkne : (k : ENNReal) ≠ 0 := by
+    simpa using (Nat.cast_ne_zero (R := ENNReal)).2 (by omega : k ≠ 0)
+  have ha₀ne : a₀ ≠ 0 := by
+    rw [ha₀def]
+    exact (ENNReal.inv_pos.2 (ENNReal.natCast_ne_top k)).ne'
+  have ha₀top : a₀ ≠ ⊤ := by
+    rw [ha₀def]
+    exact ENNReal.inv_ne_top.2 hkne
+  set ε : ENNReal := a₀ / 6 with hεdef
+  have hεpos : 0 < ε := by
+    rw [hεdef]
+    exact ENNReal.div_pos ha₀ne (by norm_num)
+  have hεne : ε ≠ ⊤ := by
+    rw [hεdef]
+    exact ENNReal.div_ne_top ha₀top (by norm_num)
+  have hA : 2 * ε + 4 * ε = a₀ := by
+    have hr : 2 * ε + 4 * ε = 6 * ε := by ring
+    rw [hr, hεdef, ENNReal.mul_div_cancel (by norm_num) (by norm_num)]
+  obtain ⟨G, hG, hGapp⟩ := happ.exists_approximants ε hεpos
+  -- the window, chosen last and at that error
+  have hwin : ∀ᶠ δ : ℝ≥0 in 𝓝[>] 0, δ < u ∧ u + δ ≤ T := by
+    have h1 : ∀ᶠ δ : ℝ≥0 in 𝓝 0, δ < u := eventually_lt_nhds hu
+    have h2 : ∀ᶠ δ : ℝ≥0 in 𝓝 0, u + δ ≤ T := by
+      have : Tendsto (fun δ : ℝ≥0 ↦ u + δ) (𝓝 0) (𝓝 (u + 0)) :=
+        (continuous_const.add continuous_id).tendsto 0
+      rw [add_zero] at this
+      exact (this.eventually_lt_const huT).mono fun δ hδ ↦ hδ.le
+    exact ((h1.and h2)).filter_mono nhdsWithin_le_nhds
+  have hgap : Tendsto (fun δ : ℝ≥0 ↦ ((n + 1 : ℕ) : ENNReal) * ENNReal.ofReal (Real.sqrt
+        ((ENNReal.ofReal (δ : ℝ) ^ (1 - 1 / q.toReal)
+          * ((K : ENNReal) + 2 * (Kw : ENNReal)) + a₀).toReal)))
+      (𝓝[>] 0) (𝓝 (((n + 1 : ℕ) : ENNReal) * ENNReal.ofReal (Real.sqrt a₀.toReal))) := by
+    have hcoe : Tendsto (fun δ : ℝ≥0 ↦ (δ : ℝ)) (𝓝[>] (0 : ℝ≥0)) (𝓝[>] (0 : ℝ)) := by
+      refine tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within _ ?_ ?_
+      · simpa using (NNReal.continuous_coe.tendsto (0 : ℝ≥0)).mono_left nhdsWithin_le_nhds
+      · filter_upwards [self_mem_nhdsWithin] with δ hδ
+        simp only [Set.mem_Ioi] at hδ ⊢
+        exact_mod_cast hδ
+    have h := (tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero (K := K + 2 * Kw) (c := 0) hq
+      (A := a₀) ha₀top (n + 1)).comp hcoe
+    simpa [Function.comp_def, hcast] using h
+  obtain ⟨δ, ⟨hδwin, hδgap⟩, hδ0⟩ :=
+    ((hwin.and (hgap.eventually_lt_const hka)).and self_mem_nhdsWithin).exists
+  refine ⟨G, hG, (δ : ℝ), by exact_mod_cast hδ0, fun i hi ↦ ?_⟩
+  obtain ⟨hVcap, hVgap, Y, C, Y', C', Z, Z', h, h', hγT, hε'T, hKwT,
+    hYcap, hCcap, hY'cap, hYgap, hCgap, hY'gap⟩ := hGapp i hi
+  have huT' : u ≤ T := le_trans le_self_add hδwin.2
+  have hVmono : ∀ ω, (⨆ t ∈ Set.Iic u, ‖V i t ω‖ₑ) ≤ ⨆ t ∈ Set.Iic T, ‖V i t ω‖ₑ := fun ω ↦
+    biSup_mono fun t ht ↦ Set.mem_Iic.2 (le_trans (Set.mem_Iic.1 ht) huT')
+  have key := mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair_of_integrable_mul
+    h h' hSc hSd (hV i) (hcont i) (hΦ i) hδwin.1 hδwin.2 hεne hεne ENNReal.coe_ne_top hε₀
+    (le_trans (lintegral_mono fun ω ↦ mul_le_mul' (hVmono ω)
+      (biSup_mono fun t ht ↦ Set.mem_Iic.2 (le_trans (Set.mem_Iic.1 ht) hδwin.2))) hγT)
+    ((lintegral_biSup_Iic_mono P (fun t ω ↦ ‖Y' t ω - V i t ω ^ 2‖ₑ) hδwin.2).trans hε'T)
+    (le_trans (lintegral_mono fun ω ↦ mul_le_mul_left (hVmono ω) _) hKwT)
+    hVcap hYcap hCcap hY'cap (hVgap δ) (hYgap δ) (hCgap δ) (hY'gap δ) hN
+  rw [hA] at key
+  have hrhs : ((n + 1 : ℕ) : ENNReal) * ENNReal.ofReal (Real.sqrt
+        ((ENNReal.ofReal (δ : ℝ) ^ (1 - 1 / q.toReal)
+            * ((K : ENNReal) + 2 * (Kw : ENNReal)) + a₀).toReal))
+      + (B / (n + 1 : ℕ) + a₀) / ENNReal.ofReal ε₀ ≤ θ := by
+    have h2 : (B / (n + 1 : ℕ) + a₀) / ENNReal.ofReal ε₀ ≤ θ / 2 := by
+      rw [ENNReal.add_div]
+      exact le_trans (add_le_add hhor' hkb) (le_of_eq (ENNReal.add_halves (θ / 2)))
+    exact le_trans (add_le_add hδgap.le h2) (le_of_eq (ENNReal.add_halves θ))
+  have hb : ENNReal.ofReal ε₀ * P {ω | ENNReal.ofReal ε₀
+      < SkorokhodSpace.modulusBased (0 : ℝ) (u : ℝ)
+          (SkorokhodSpace.extendNNReal (Φ i ω)) (δ : ℝ)} ≤ θ := le_trans key hrhs
+  calc P {ω | ENNReal.ofReal ε₀
+        < SkorokhodSpace.modulusBased (0 : ℝ) (u : ℝ)
+            (SkorokhodSpace.extendNNReal (Φ i ω)) (δ : ℝ)}
+      = (ENNReal.ofReal ε₀)⁻¹ * (ENNReal.ofReal ε₀ * P {ω | ENNReal.ofReal ε₀
+          < SkorokhodSpace.modulusBased (0 : ℝ) (u : ℝ)
+              (SkorokhodSpace.extendNNReal (Φ i ω)) (δ : ℝ)}) := by
+        rw [← mul_assoc, ENNReal.inv_mul_cancel he0 ENNReal.ofReal_ne_top, one_mul]
+    _ ≤ (ENNReal.ofReal ε₀)⁻¹ * θ := mul_le_mul_right hb _
+    _ = η := by rw [hθdef, ← mul_assoc, ENNReal.inv_mul_cancel he0 ENNReal.ofReal_ne_top, one_mul]
+
+/-- **Tightness of the image laws of the real paths, with no bound on the processes and the error
+outside the index.**  This is the tightness statement of Milestone 11 under the weakest of its
+approximability conditions, and the one Donsker's acceptance test is read at.
+
+It stands to `MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isApproximableMul` as
+`MeasureTheory.isTightMeasureSet_map_postcomp_of_isEventuallyApproximable` stands to its own
+bounded twin, and it is the only one of the four that reaches a family of rescaled random walks:
+the other three read either a bound on the process -- which the walk at mesh `n` has, but not
+uniformly in `n` -- or the condition at a fixed member, which
+`MeasureTheory.not_isApproximableMul_rescaledWalk` forbids.
+
+**The exceptional members are not dropped but paid for.**  The image law of a single member is a
+finite measure on a complete second countable metric space, hence tight
+(`MeasureTheory.isTightMeasureSet_singleton`), and
+`SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal` is an **equivalence**, so it returns
+for that member its own window at the very same `(ε, m, η)`.  `SkorokhodSpace.modulusBased_mono`
+carries a bound at a window to every smaller one, and `Set.Finite.exists_pos_forall_le` makes the
+minimum of the common window and the finitely many exceptional ones positive.  The compact
+containment of the singleton subfamily is read off `hcc` at the same compact set.
+
+**The compact containment is a hypothesis and not a consequence**, for the reason it is one at
+`MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isApproximableMul`: the laws of the paths
+themselves are not contained for free, no bounded test function standing between them and the
+state space.  For the rescaled walks it is `MeasureTheory.isCompactContained_rescaledWalk`.
+
+**The two seams are the usual ones**: the window `u = m + 1` is produced in `ℝ≥0` and the
+hypothesis read there, and the threshold is crossed by `measure_mono` at an `ε₀` with
+`ofReal ε₀ < η`, which `ENNReal.lt_iff_exists_real_btwn` supplies for every `η > 0` including
+`η = ⊤`. -/
+theorem isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul
+    {γ : Type*} {𝓕 : γ → Filtration ℝ≥0 mΩ} [∀ i, (𝓕 i).IsRightContinuous]
+    {P : Measure Ω} [IsProbabilityMeasure P] {V : γ → ℝ≥0 → Ω → ℝ}
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hV : ∀ i, IsStronglyProgressive (𝓕 i) (V i))
+    (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ V i s ω) (Set.Ici t) t)
+    {Φ : γ → Ω → D(ℝ≥0, ℝ)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ V i t ω)
+    (hcc : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) fun i ↦ P.map (Φ i))
+    (happ : ∀ ε₀ : ℝ, 0 < ε₀ → ∀ u : ℝ≥0, 0 < u → ∃ q : ENNReal, ∃ T K Kw : ℝ≥0, u < T ∧
+      IsEventuallyApproximableMul 𝓕 P q T K Kw V ε₀ u) :
+    IsTightMeasureSet {P.map (Φ i) | i} := by
+  rw [SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal hcc]
+  intro ε hε m η hη
+  obtain ⟨ε₀, hε₀0, hlt, hltη⟩ := ENNReal.lt_iff_exists_real_btwn.1 hη
+  have hε₀ : 0 < ε₀ := ENNReal.ofReal_pos.1 hlt
+  set u : ℝ≥0 := (m : ℝ≥0) + 1 with hu
+  have hu0 : 0 < u := by positivity
+  have hucoe : ((u : ℝ≥0) : ℝ) = (m : ℝ) + 1 := by
+    rw [hu]; push_cast; ring
+  obtain ⟨q, T, K, Kw, huT, happ'⟩ := happ ε₀ hε₀ u hu0
+  obtain ⟨G, hG, δ, hδ0, hle⟩ :=
+    exists_finite_forall_measure_setOf_lt_modulusBased_le_of_isEventuallyApproximableMul
+      happ' hSc hSd hV hcont hΦ hu0 huT hε₀ hε
+  have hgood : ∀ i ∉ G, ((P.map (Φ i)).map SkorokhodSpace.extendNNReal)
+      {f : D(ℝ, ℝ) | η ≤ SkorokhodSpace.modulusBased (0 : ℝ) (m : ℝ) f δ} ≤ ε := by
+    intro i hi
+    refine SkorokhodSpace.measure_map_setOf_le_modulusBased_le P
+      (measurable_pathOfProcess (hV i) (hΦ i)) (u := (m : ℝ)) (u' := (m : ℝ) + 1)
+      (Nat.cast_nonneg m) hδ0.le (by linarith) ?_
+    refine le_trans (measure_mono ?_) (hle i hi)
+    intro ω hω
+    show ENNReal.ofReal ε₀ < _
+    rw [hucoe]
+    exact lt_of_lt_of_le hltη hω
+  have hsing : ∀ i, ∃ d : ℝ, 0 < d ∧ ((P.map (Φ i)).map SkorokhodSpace.extendNNReal)
+      {f : D(ℝ, ℝ) | η ≤ SkorokhodSpace.modulusBased (0 : ℝ) (m : ℝ) f d} ≤ ε := by
+    intro i
+    have hcci : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) (fun _ : Unit ↦ P.map (Φ i)) := by
+      intro a ha j
+      obtain ⟨Kc, hKc, h⟩ := hcc a ha j
+      exact ⟨Kc, hKc, fun _ ↦ h i⟩
+    have hrange : {(fun _ : Unit ↦ P.map (Φ i)) j | j}
+        = ({P.map (Φ i)} : Set (Measure D(ℝ≥0, ℝ))) := Set.range_const
+    have htight : IsTightMeasureSet {(fun _ : Unit ↦ P.map (Φ i)) j | j} := by
+      rw [hrange]
+      exact isTightMeasureSet_singleton
+    obtain ⟨d, hd, hdle⟩ :=
+      (SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal hcci).1 htight ε hε m η hη
+    exact ⟨d, hd, hdle ()⟩
+  choose d hd hdle using hsing
+  obtain ⟨c, hc0, hcle⟩ := hG.exists_pos_forall_le d fun i _ ↦ hd i
+  refine ⟨min δ c, lt_min hδ0 hc0, fun i ↦ ?_⟩
+  by_cases hi : i ∈ G
+  · refine le_trans (measure_mono ?_) (hdle i)
+    intro f hf
+    exact le_trans hf (SkorokhodSpace.modulusBased_mono (0 : ℝ) (m : ℝ) f
+      ((min_le_right δ c).trans (hcle i hi)))
+  · refine le_trans (measure_mono ?_) (hgood i hi)
+    intro f hf
+    exact le_trans hf (SkorokhodSpace.modulusBased_mono (0 : ℝ) (m : ℝ) f (min_le_left δ c))
+
 /-! ### The witness that the exchange of quantifiers is not idle
 
 A weakening earns its place only if something satisfies it that did not satisfy what it weakens.
@@ -48931,6 +49319,32 @@ theorem IsApproximatingPair.integrable_stoppedValue_of_dominated
     (((stronglyMeasurable_stoppedValue_of_le h.progressive hσ hσj).mono
       (𝓕.le j)).aestronglyMeasurable)
     (Filter.Eventually.of_forall fun ω ↦ hYb _ (WithTop.untopA_le (hσj ω)) ω)
+
+/-- **The same at an `L^p` majorant**, which is what the *weighted* conditions ask where the
+plain ones ask integrability: `MeasureTheory.IsApproximableMul` and
+`MeasureTheory.IsEventuallyApproximableMul` read `V`, `Y` and `C` in `L²` at the capped and at
+the gap times, Cauchy--Schwarz standing there in place of the bound on the process.
+
+The proof is the previous one with `MemLp.of_le` for `Integrable.mono'`, and the only step that
+is not shared is that `MemLp.of_le` compares **norms** on both sides while the domination is
+stated against the majorant itself: `le_abs_self` bridges it, and it is exactly the step that
+makes the hypothesis `‖Y t ω‖ ≤ g ω` -- rather than `≤ ‖g ω‖` -- the weaker one to supply.
+
+The finiteness of `P` is not read here and is not asked for; it is read by the instance at a
+constant majorant below, where a constant has to be in `L^p`. -/
+theorem IsApproximatingPair.memLp_stoppedValue_of_dominated
+    {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} {q : ENNReal} {T K : ℝ≥0} {p : ENNReal}
+    {Y C : ℝ≥0 → Ω → ℝ} {Z : ℝ → Ω → ℝ} (h : IsApproximatingPair 𝓕 P q T K Y C Z)
+    {σ : Ω → WithTop ℝ≥0} (hσ : IsStoppingTime 𝓕 σ) {j : ℝ≥0}
+    (hσj : ∀ ω, σ ω ≤ (j : WithTop ℝ≥0)) {g : Ω → ℝ} (hg : MemLp g p P)
+    (hYb : ∀ t : ℝ≥0, t ≤ j → ∀ ω, ‖Y t ω‖ ≤ g ω) :
+    MemLp (stoppedValue Y σ) p P :=
+  hg.of_le
+    (((stronglyMeasurable_stoppedValue_of_le h.progressive hσ hσj).mono
+      (𝓕.le j)).aestronglyMeasurable)
+    (Filter.Eventually.of_forall fun ω ↦ by
+      rw [Real.norm_eq_abs (g ω)]
+      exact (hYb _ (WithTop.untopA_le (hσj ω)) ω).trans (le_abs_self _))
 
 /-- **The stopped value of a bounded approximant at a bounded stopping time is integrable**, the
 instance of `MeasureTheory.IsApproximatingPair.integrable_stoppedValue_of_dominated` at a
@@ -52256,6 +52670,21 @@ theorem integrable_majorant_rescaledWalk {P : Measure Ω} {ξ : ℕ → Ω → �
     Integrable (fun ω ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
       * ∑ k ∈ Finset.range ⌊j * ((n : ℝ≥0) + 1)⌋₊, |ξ k ω|) P :=
   (integrable_finsetSum _ fun k _ ↦ (hint k).abs).const_mul _
+
+/-- **The same majorant is in `L²` when the increments are**, which is what
+`MeasureTheory.IsEventuallyApproximableMul` asks where
+`MeasureTheory.IsEventuallyApproximable` asked integrability, and what
+`MeasureTheory.IsApproximatingPair.memLp_stoppedValue_of_dominated` consumes.
+
+It is the previous statement with `memLp_finsetSum` for `integrable_finsetSum` and `MemLp.abs`
+for `Integrable.abs`, the sum being finite in both cases.  The hypothesis is
+`hLp : ∀ k, MemLp (ξ k) 2 P`, which the acceptance test carries anyway: it is what the second
+approximating pair of the walk is built from. -/
+theorem memLp_majorant_rescaledWalk {P : Measure Ω} {ξ : ℕ → Ω → ℝ}
+    (hLp : ∀ k, MemLp (ξ k) 2 P) (n : ℕ) (j : ℝ≥0) :
+    MemLp (fun ω ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ k ∈ Finset.range ⌊j * ((n : ℝ≥0) + 1)⌋₊, |ξ k ω|) 2 P :=
+  (memLp_finsetSum _ fun k _ ↦ (hLp k).abs).const_mul _
 
 /-- **The approximant of the square is dominated on a bounded stretch of time by the square of the
 majorant of the walk plus two time-independent terms**, the other half of what

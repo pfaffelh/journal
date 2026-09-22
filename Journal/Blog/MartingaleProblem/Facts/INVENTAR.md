@@ -56899,3 +56899,165 @@ gewichtete Fehler `0` des ersten Paars, `Kw = 0` für den verschwindenden Kompen
 Majoranten `integrable_majorant_rescaledWalk`, `integrable_majorant_sq_rescaledWalk` — letztere
 in der `MemLp … 2`-Gestalt, die die gewichtete Struktur verlangt, und das ist das einzige daran,
 was neu zu prüfen ist.
+
+### 2026-09-22, zwölfter Lauf des Tages — das benannte Ziel steht, und mit ihm der ganze Rest der Kette bis zur Straffheit; beide Beweise gingen im **ersten** Durchlauf durch, und der Grund dafür ist selbst ein Befund: die Konjunktion der beiden Abschwächungen verlangt **keinen** neuen Beweis, sondern nur die richtige Reihenfolge zweier schon geführter
+
+*Sechs Deklarationen, alle in `MartingaleProblems`, alle durch `check_master.py` mit 0 Fehlern und
+0 `sorry`, alle mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft. Die
+Warnungszahlen sind **unverändert** (18 / 38 / 112, davon 0 veraltet), die sechs erzeugen also
+keine einzige.*
+
+**Das benannte Ziel des Vorlaufs war `MeasureTheory.IsEventuallyApproximableMul` samt
+`exists_finite_forall_measure_setOf_lt_modulusBased_le_of_isEventuallyApproximableMul`.** Beide
+stehen. Dazu, im selben Lauf, die beiden, die der Vorlauf als „was danach kommt" benannt hatte —
+bis auf den Akzeptanzfall — und die zwei Bausteine, die dieser noch braucht.
+
+| Zeile | Name |
+| ---: | --- |
+| 48599 | `MeasureTheory.IsEventuallyApproximableMul` |
+| 48639 | `MeasureTheory.isEventuallyApproximableMul_of_forall_isApproximableMul` |
+| 48680 | `MeasureTheory.exists_finite_forall_measure_setOf_lt_modulusBased_le_of_isEventuallyApproximableMul` |
+| 48857 | `MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul` |
+| 49335 | `MeasureTheory.IsApproximatingPair.memLp_stoppedValue_of_dominated` |
+| 52683 | `MeasureTheory.memLp_majorant_rescaledWalk` |
+
+#### Der Befund des Laufs, und er ist der Grund, warum er billig war
+
+**Die Konjunktion der beiden Abschwächungen ist keine dritte Bedingung, sondern die Verschränkung
+zweier bereits geführter Beweise, und die Verschränkung ist an *einer* Zahl ablesbar.** Der
+gewichtete Beweis (`exists_forall_measure_setOf_lt_modulusBased_le_of_forall_isApproximableMul`)
+und der Ausnahmemengenbeweis
+(`exists_finite_forall_measure_setOf_lt_modulusBased_postcomp_le_of_isEventuallyApproximable`)
+unterscheiden sich in nichts als der **Reihenfolge der drei Wahlen** — `N`, `δ` gegen `N`, `ε`,
+`δ` — und in der Konstanten, durch die der Fehler geteilt wird:
+
+* ungewichtet, mit Ausnahmemenge: `ε = a₀ / (2 + 4 ofReal ‖g‖)`, weil die Kombination dort
+  `2 ε' + 4 ofReal ‖g‖ ε` heißt;
+* **gewichtet**, mit Ausnahmemenge: `ε = a₀ / 6`, weil die Kombination `2 ε' + 4 γ` heißt.
+
+Die Norm der Testfunktion verschwindet mit der Schranke am Prozeß — sie steckt im **gewichteten**
+Fehler. Das ist die ganze arithmetische Spur des Weglassens der Schranke, und sie ist der Grund,
+daß der Beweis des Ausnahmemengenfalls Zeile für Zeile übernommen werden konnte, mit `6` an der
+Stelle von `2 + 4 ofReal ‖g‖`.
+
+**Beide Beweise gingen im ersten `dev_check_master.py`-Durchlauf durch** — kein Fehler, keine
+Nachbesserung. Das ist kein Zufall: an beiden Stellen war die Vorarbeit so weit getrieben, daß
+nichts Neues zu entscheiden blieb.
+
+#### Zwei Entscheidungen, die beim Hinschreiben fielen, und beide gehen auf „so schwach wie möglich"
+
+* **Die beiden Quadratintegrierbarkeiten von `V` stehen *innerhalb* des Existenzquantors, nicht
+  daneben.** `IsApproximableMul` trägt sie als zwei eigene Felder, weil dort `V` fest ist; in der
+  Familienfassung wäre „für **jedes** Glied quadratintegrierbar" die bequemere und die stärkere
+  Aussage. Verlangt wird statt dessen nur, was der Verbraucher liest: für die Glieder **außerhalb
+  der Ausnahmemenge**, an der der Fehler gerade steht. Damit hat
+  `IsEventuallyApproximableMul` genau **ein** Feld, und
+  `isEventuallyApproximableMul_of_forall_isApproximableMul` bleibt dieselben drei Zeilen wie sein
+  ungewichteter Zwilling.
+* **Die Straffheit zahlt die Ausnahmen, statt sie fallenzulassen.** Der Weg ist der von
+  `SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le_off_finite`, aber
+  ohne Nachschaltung: das Bildmaß eines einzelnen Gliedes ist ein endliches Maß auf einem
+  vollständigen zweitabzählbaren metrischen Raum, also straff (`isTightMeasureSet_singleton`),
+  und `SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal` ist eine **Äquivalenz**, gibt
+  also demselben Glied zu denselben `(ε, m, η)` sein eigenes Fenster zurück.
+  `SkorokhodSpace.modulusBased_mono` und `Set.Finite.exists_pos_forall_le` bringen die endlich
+  vielen Fenster und das gemeinsame unter ein positives Minimum. Die Kompaktheitseinschließung
+  der einelementigen Teilfamilie ist an derselben kompakten Menge abzulesen wie die der ganzen —
+  drei Zeilen, kein Lemma nötig.
+
+#### Was damit bezahlt ist
+
+Die Straffheitsseite von Donsker hängt jetzt an **einer** Aussage:
+`isEventuallyApproximableMul_rescaledWalk`. Alles darüber steht:
+
+```
+IsEventuallyApproximableMul
+  → exists_finite_forall_measure_setOf_lt_modulusBased_le_of_isEventuallyApproximableMul
+  → isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul
+```
+
+und die Kompaktheitseinschließung, die der letzte als Voraussetzung trägt, ist
+`isCompactContained_rescaledWalk` und steht seit dem 2026-09-21.
+
+#### Prüfung
+
+`scripts/check_master.py` gegen `upstream/master`
+(`94ef6b89544e58e90f119da869f3fb48d1da0f4c`, Lean `4.35.0-rc2`): **0 Fehler, 0 `sorry`** in allen
+drei Dateien, Warnungen **18 / 38 / 112, davon 0 veraltet** — unverändert gegenüber dem Vorlauf.
+`scripts/check_axioms_master.py` (mit `--build`): alle vier auf `propext`, `Classical.choice`,
+`Quot.sound`. `check_cited_lines.py`: **445 gepaarte Fundstellen, 0 verschoben, 0 tot** —
+unverändert.
+
+#### In der Roadmap berichtigt, nicht nur ergänzt
+
+`MartingaleProblems/README.md`, Meilenstein 11: der Abschnitt „The named point this leaves"
+führte die vier Punkte als **offen**. Er nennt jetzt die drei gebauten als Kette, mit der Zahl
+`6` und ihrem Grund und mit dem Weg der Ausnahmezahlung, und läßt den Akzeptanzfall als einzigen
+Punkt stehen. Die dortige Angabe, die Ausnahmen würden „tight one by one by
+`isTightMeasureSet_of_finite`", war eine Vorhersage und ist berichtigt: gebraucht wird
+`isTightMeasureSet_singleton` **und die Rückrichtung der Äquivalenz**, weil aus der Straffheit
+eines Einzelmaßes erst über diese ein *Fenster* wird.
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`MeasureTheory.isEventuallyApproximableMul_rescaledWalk`** — der Akzeptanzfall, und damit die
+ganze Straffheitsseite von Donsker.
+
+*Die Aussage:* die Familie der reskalierten Irrfahrten erfüllt `IsEventuallyApproximableMul` an
+jedem Horizont, mit `Kw = 0` und derselben Konstanten `T ^ q.toReal⁻¹ * ‖σ‖₊` wie
+`isEventuallyApproximable_rescaledWalk`.
+
+*Worauf sie ruht:* wörtlich auf den Eingaben von `isEventuallyApproximable_rescaledWalk` —
+`isApproximatingPair_rescaledWalk`, `isApproximatingPair_sq_rescaledWalk`,
+`lintegral_biSup_enorm_sub_sq_rescaledWalk_le`, `isEventuallyApproximable_of_tendsto_zero_cofinite`
+(beziehungsweise dessen gewichteter Zwilling, der noch zu schreiben ist), die beiden Stoppzeiten
+`isStoppingTime_oscHitSeqCap` und `isStoppingTime_oscHitSeqGap` und die Majoranten
+`abs_rescaledWalk_le_of_le`, `abs_sq_rescaledWalk_le_of_le`.
+
+*Die drei Stellen, an denen es sich vom ungewichteten Zwilling unterscheidet, und nur an diesen:*
+
+1. **Die beiden gewichteten Felder sind geschenkt.** Das erste Paar **ist** die Irrfahrt
+   (`isApproximatingPair_rescaledWalk`), also ist `Y t ω - V t ω = 0` und das Gewicht wird gegen
+   `0` integriert; sein Kompensator ist `0`, also ist `eLpNorm (fun s ↦ Z s ω) q = 0` und
+   `Kw = 0` trägt. Beide Male ist `simp` das ganze Argument, wie schon beim ungewichteten Fehler.
+2. **`Integrable` wird an vier Stellen zu `MemLp … 2`** — und **diese beiden Bausteine sind in
+   diesem Lauf mitgebaut**, damit der nächste sie nicht erst erschließt.
+   `IsEventuallyApproximable` fragt `Y` und `Y'` bloß integrierbar;
+   `IsEventuallyApproximableMul` fragt `V`, `Y` und `C` in `L²` und nur `Y'` integrierbar. `C`
+   ist der Nullprozeß und kostet nichts; `Y` ist die Irrfahrt selbst, also dieselbe Aussage wie
+   für `V`. Die Frage, die der Vorschlag noch offenließ — eigene `MemLp`-Fassung der Dominierung
+   oder `MemLp.of_le` an der gestoppten Funktion —, ist am Quelltext entschieden und lautet:
+   **dieselbe Fassung, ein Zeichen anders.** `integrable_stoppedValue_of_dominated` liest von der
+   Voraussetzung nur die Meßbarkeit der gestoppten Funktion und die punktweise Dominierung, also
+   ist `IsApproximatingPair.memLp_stoppedValue_of_dominated` (Z. 49335) derselbe Beweis mit
+   `MemLp.of_le` statt `Integrable.mono'`. Die **eine** Stelle, an der er nicht wörtlich derselbe
+   ist, ist benannt: `MemLp.of_le` vergleicht auf **beiden** Seiten Normen, die Dominierung steht
+   aber gegen den Majoranten selbst; `le_abs_self` überbrückt das, und genau deshalb bleibt
+   `‖Y t ω‖ ≤ g ω` — und nicht `≤ ‖g ω‖` — die schwächere und damit die richtige Voraussetzung.
+   Die Endlichkeit von `P` wird dabei **nicht** gelesen und ist nicht verlangt; sie steht erst im
+   Sonderfall des konstanten Majoranten.
+3. **Der Majorant ist quadratintegrierbar, weil die Summanden es sind** — ebenfalls gebaut,
+   `memLp_majorant_rescaledWalk` (Z. 52683). `hLp : ∀ k, MemLp (ξ k) 2 P` steht schon in den
+   Voraussetzungen von `isEventuallyApproximable_rescaledWalk`; der Majorant ist eine
+   **endliche** Summe von `|ξ j| / √(n+1)` über `j < ⌊u (n+1)⌋`, also `memLp_finsetSum` an
+   `MemLp.abs` und `MemLp.const_mul` — dieselbe Zeile wie `integrable_majorant_rescaledWalk` mit
+   drei ausgetauschten Namen.
+
+**Damit bleibt für den Akzeptanzfall genau zweierlei zu schreiben:** der gewichtete Zwilling von
+`isEventuallyApproximable_of_tendsto_zero_cofinite` — Buchhaltung, die Felder sind lang und der
+Inhalt ist `Filter.eventually_cofinite` wie dort — und der Zusammenbau selbst, der dieselben
+zwölf Zeilen sind wie bei `isEventuallyApproximable_rescaledWalk`, mit `memLp_stoppedValue_of_dominated`
+an vier der sechs Stellen und `simp` an den beiden gewichteten Feldern.
+
+*Warum jetzt:* weil nach diesem Lauf die ganze Kette über der Bedingung steht und die Bedingung
+auf Donskers Daten noch keinen Zeugen hat — genau die Lage, die die Pfadraumaufgabe bei
+Meilenstein 6 als Integritätsproblem benannt hat, nur eine Ebene höher. Und weil der elfte Lauf
+gezeigt hat, daß **keine** schwächere Bedingung es tut: die Konjunktion ist nicht eine unter
+mehreren, sie ist die einzige.
+
+*Und was danach kommt, damit der übernächste Lauf es nicht neu erschließt:* die Straffheit von
+Donskers Familie als Folgerung —
+`isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul` mit
+`isCompactContained_rescaledWalk` und `isEventuallyApproximableMul_rescaledWalk` eingesetzt — und
+danach der **erste** Kettenpunkt des Meilensteins 11 am selben Beispiel, also der Übergang von
+der Straffheit der Pfadgesetze zur relativen Kompaktheit.
