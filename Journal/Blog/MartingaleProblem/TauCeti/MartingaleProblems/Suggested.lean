@@ -51809,6 +51809,96 @@ theorem isCompactContained_map_stepPath_of_martingale {γ : Type*}
   obtain ⟨k, hk, hlt⟩ := hω
   exact ⟨k, hk, le_of_lt (by simpa [Real.dist_eq] using hlt)⟩
 
+/-- **An increment is independent of the past of the partial sums**, which is the one
+probabilistic input the random walk of the acceptance test reads twice: once for the martingale
+property of the sums (`MeasureTheory.martingale_partialSum_of_iIndepFun`) and once for the
+decoupling of a single cell in Donsker's expansion
+(`MeasureTheory.integral_mul_comp_rescaledWalk_mul_eq_zero`).
+
+**Where the two indices part company.**  Mathlib's
+`ProbabilityTheory.iIndepFun.indep_comap_natural_of_lt`
+(`Mathlib/Probability/BorelCantelli.lean:43`) makes `ξ (m + 1)` independent of
+`Filtration.natural ξ m`, the past of the **summands**.  What a consumer holds is the past of the
+**sums**, and the passage is the inclusion `𝒢 (m + 1) ≤ Filtration.natural ξ m`, each `c · S j`
+with `j ≤ m + 1` being a constant multiple of a sum of increments of index at most `m`.  At
+`n = 0` there is no increment to condition away: `𝒢 0` is the σ-algebra of the constant
+`c · S 0 = 0`, hence `⊥`, and `ProbabilityTheory.indep_bot_right`
+(`Mathlib/Probability/Independence/Basic.lean:350`) serves.
+
+**The scaling factor is carried and costs nothing.**  The filtration is that of `c · S`, for an
+arbitrary real `c`, because that is the one the rescaled walk is written over
+(`MeasureTheory.martingale_rescaledWalk`, `MeasureTheory.isStronglyProgressive_rescaledWalk`);
+`c = 1` gives the unscaled shape after `one_mul`, which is how
+`MeasureTheory.martingale_partialSum_of_iIndepFun` reads it.  **No `c ≠ 0` is asked**: at `c = 0`
+the filtration collapses to `⊥`, where independence is only easier.
+
+**`IsProbabilityMeasure P` is a conclusion and not a hypothesis**, being read off the
+independence by `ProbabilityTheory.iIndepFun.isProbabilityMeasure`.  It is the `n = 0` branch
+that wants it, `indep_bot_right` asking `IsZeroOrProbabilityMeasure`. -/
+theorem indep_comap_natural_partialSum {P : Measure Ω} {ξ : ℕ → Ω → ℝ} (c : ℝ)
+    (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P) (n : ℕ) :
+    Indep (MeasurableSpace.comap (ξ n) inferInstance)
+      (Filtration.natural (fun m ω ↦ ∑ k ∈ Finset.range m, c * ξ k ω)
+        (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ (hmeas k).const_mul c) n) P := by
+  have : IsProbabilityMeasure P := hind.isProbabilityMeasure
+  set 𝒢 : Filtration ℕ mΩ := Filtration.natural
+      (fun m ω ↦ ∑ k ∈ Finset.range m, c * ξ k ω)
+      (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ (hmeas k).const_mul c) with h𝒢
+  have hle : ∀ i, 𝒢 (i + 1) ≤ Filtration.natural ξ hmeas i := by
+    intro i
+    refine iSup₂_le fun j hj ↦ ?_
+    refine Measurable.comap_le (StronglyMeasurable.measurable ?_)
+    refine Finset.stronglyMeasurable_fun_sum (m := Filtration.natural ξ hmeas i) _ fun k hk ↦ ?_
+    have hki : k ≤ i := by
+      have := Finset.mem_range.1 hk
+      omega
+    exact ((Filtration.stronglyAdapted_natural hmeas k).mono
+      ((Filtration.natural ξ hmeas).mono hki)).const_mul c
+  cases n with
+  | zero =>
+    refine indep_of_indep_of_le_right (indep_bot_right _) ?_
+    refine iSup₂_le fun j hj ↦ ?_
+    have hj0 : j = 0 := Nat.le_zero.1 hj
+    subst hj0
+    simp
+  | succ m =>
+    exact indep_of_indep_of_le_right
+      (hind.indep_comap_natural_of_lt hmeas (Nat.lt_succ_self m)) (hle m)
+
+/-- **A centred factor decouples from everything measurable for a σ-algebra it is independent
+of**: `∫ W · X = 0` as soon as `X` is centred and `σ (X)` is independent of a σ-algebra that `W`
+is measurable for.
+
+**No integrability is asked, and that is a property of Mathlib's lemma and not an oversight
+here.**  `ProbabilityTheory.IndepFun.integral_fun_mul_eq_mul_integral`
+(`Mathlib/Probability/Independence/Integration.lean:423`) gives `∫ W · X = P[W] · P[X]` from bare
+`AEStronglyMeasurable`; its proof runs through `ProbabilityTheory.IndepFun.integral_bilin'`
+(`:335`), which splits on the integrability of the product and observes that where that fails,
+one of the two factors fails as well -- so **both sides are then the Bochner junk value `0`**.
+
+**The junk value is therefore read here, and it is read on purpose**: in the degenerate case the
+identity is empty rather than false.  A consumer that wants content supplies what makes the
+product integrable, and for the acceptance test that is boundedness of `W` together with
+integrability of `X = ξ k`, whence `ProbabilityTheory.IndepFun.integrable_mul` (`:358`).  This is
+the one place in the milestone where a hypothesis is *left out* because the junk values on the
+two sides agree, and saying so at the declaration is what the standing rule asks instead of the
+word "harmless".
+
+**The hypothesis on `W` is `comap W ≤ m` and not `Measurable[m] W`**, the two being the same by
+`Measurable.comap_le` and `Measurable.of_comap_le`; the σ-algebra form is what
+`ProbabilityTheory.indep_of_indep_of_le_left`
+(`Mathlib/Probability/Independence/Basic.lean:371`) consumes, and it saves the consumer a
+conversion. -/
+theorem integral_mul_eq_zero_of_indep_comap {P : Measure Ω} {m : MeasurableSpace Ω}
+    {X W : Ω → ℝ} (hindep : Indep (MeasurableSpace.comap X inferInstance) m P)
+    (hW : MeasurableSpace.comap W inferInstance ≤ m)
+    (hXm : AEStronglyMeasurable[mΩ] X P) (hWm : AEStronglyMeasurable[mΩ] W P)
+    (hcent : ∫ ω, X ω ∂P = 0) :
+    ∫ ω, W ω * X ω ∂P = 0 := by
+  have hfun : IndepFun W X P := indep_of_indep_of_le_left hindep.symm hW
+  rw [hfun.integral_fun_mul_eq_mul_integral hWm hXm]
+  simp [hcent]
+
 /-- **The partial sums of independent centred integrable summands are a
 martingale**, which is the one hypothesis
 `isCompactContained_map_stepPath_of_martingale` asks of the family it is applied
@@ -51826,15 +51916,12 @@ process is adapted, and its conditional expectation at `n + 1` is
 `σ (S 0, …, S n) = σ (ξ 0, …, ξ (n - 1))`, which is what the martingale property
 reads.  The consumer takes either, its filtration being an implicit argument.
 
-**What carries the step** is
-`ProbabilityTheory.iIndepFun.indep_comap_natural_of_lt`
-(`Mathlib/Probability/BorelCantelli.lean:43`), which makes `ξ (m + 1)`
-independent of `Filtration.natural ξ m`, together with
-`MeasureTheory.condExp_indep_eq`.  The passage from the one filtration to the
-other is the inclusion `𝒢 (m + 1) ≤ Filtration.natural ξ m`, each `S j` with
-`j ≤ m + 1` being a sum of increments of index at most `m`.  At `n = 0` there is
-no increment to condition away: `𝒢 0` is the σ-algebra of the constant
-`S 0 = 0`, hence `⊥`, and `ProbabilityTheory.indep_bot_right` serves.
+**What carries the step** is `MeasureTheory.indep_comap_natural_partialSum`, read at `c = 1`,
+together with `MeasureTheory.condExp_indep_eq`.  That the increment is independent of the past of
+the **sums** -- and not merely of the past of the summands, which is what Mathlib states -- is the
+whole of the probabilistic content, and it is stated there rather than here because Donsker's
+expansion reads it a second time, in
+`MeasureTheory.integral_mul_comp_rescaledWalk_mul_eq_zero`.
 
 **`IsProbabilityMeasure P` is a conclusion and not a hypothesis**, being read off
 the independence by `ProbabilityTheory.iIndepFun.isProbabilityMeasure`. -/
@@ -51849,29 +51936,10 @@ theorem martingale_partialSum_of_iIndepFun {P : Measure Ω} {ξ : ℕ → Ω →
     fun n ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ hmeas k with hSm
   set 𝒢 : Filtration ℕ mΩ := Filtration.natural (fun n ω ↦ ∑ k ∈ Finset.range n, ξ k ω) Sm
     with h𝒢
-  -- the past of the walk at `n + 1` sits inside the past of the increments at `n`
-  have hle : ∀ n, 𝒢 (n + 1) ≤ Filtration.natural ξ hmeas n := by
-    intro n
-    refine iSup₂_le fun j hj ↦ ?_
-    refine Measurable.comap_le (StronglyMeasurable.measurable ?_)
-    refine Finset.stronglyMeasurable_fun_sum (m := Filtration.natural ξ hmeas n) _ fun k hk ↦ ?_
-    have hkn : k ≤ n := by
-      have := Finset.mem_range.1 hk
-      omega
-    exact (Filtration.stronglyAdapted_natural hmeas k).mono
-      ((Filtration.natural ξ hmeas).mono hkn)
-  have hindep : ∀ n, Indep (MeasurableSpace.comap (ξ n) inferInstance) (𝒢 n) P := by
-    intro n
-    cases n with
-    | zero =>
-      refine indep_of_indep_of_le_right (indep_bot_right _) ?_
-      refine iSup₂_le fun j hj ↦ ?_
-      have hj0 : j = 0 := Nat.le_zero.1 hj
-      subst hj0
-      simp
-    | succ m =>
-      exact indep_of_indep_of_le_right
-        (hind.indep_comap_natural_of_lt hmeas (Nat.lt_succ_self m)) (hle m)
+  -- the increment is independent of the past of the sums; that is the extracted building block,
+  -- read here at `c = 1`
+  have hindep : ∀ n, Indep (MeasurableSpace.comap (ξ n) inferInstance) (𝒢 n) P := fun n ↦ by
+    simpa only [h𝒢, one_mul] using indep_comap_natural_partialSum (P := P) 1 hmeas hind n
   refine martingale_nat (Filtration.stronglyAdapted_natural Sm) (fun n ↦ ?_) (fun n ↦ ?_)
   · exact integrable_finsetSum _ fun k _ ↦ hint k
   · have hsplit : (fun ω ↦ ∑ k ∈ Finset.range (n + 1), ξ k ω)
@@ -53700,6 +53768,70 @@ theorem mpTest_sub_rescaledWalk_eq_sum (f g : ℝ → ℝ) (n : ℕ) (ξ : ℕ �
     integral_comp_rescaledWalk_sub_eq_sum g n ξ ω hst]
   simp only [Finset.sum_sub_distrib]
   ring
+
+/-- **The first order term of Donsker's expansion vanishes, cell by cell** -- and this is where
+probability enters the acceptance test for the first time.
+
+After `MeasureTheory.mpTest_sub_rescaledWalk_eq_sum` the gap of the third item of the chain is a
+sum over cells, the summand of cell `k` being `f (S (k+1)) - f (S k) - (n+1)⁻¹ g (S k)`.  A second
+order Taylor expansion of `f` splits that first difference into a term of **first** order
+`f' (S k) · (n+1)⁻¹ᐟ² ξ k`, a term of second order, and a remainder; the second order term is what
+is held against the compensator and the remainder is estimated, but the first order term **has to
+vanish exactly** -- it is of order `(n+1)⁻¹ᐟ²`, and no estimate makes it go away.  This is that
+statement, with `h = f'` and `Z` the weight the gap is tested against.
+
+**There are two factors in front of `ξ k` and not one**, the path piece `h (S n k)` and the
+weight `Z`, and both are measurable for the past at `k`.  They are merged into a single such
+factor **before** independence is asked.  Asking it first of `ξ k` against `h (S n k)` leaves `Z`
+to be carried through afterwards, which is the same work twice.
+
+**Of the three hypotheses of the acceptance test this is the first statement to read any.**
+`hind` and `hcent` enter here; everything up to and including
+`MeasureTheory.mpTest_sub_rescaledWalk_eq_sum` is an identity at one sample point and used
+neither.
+
+**What it does not read is integrability** -- neither of `ξ k` nor of the product -- and neither
+`h` nor `Z` need be bounded, for the reason set out at
+`MeasureTheory.integral_mul_eq_zero_of_indep_comap`: where the product fails to be integrable,
+both sides are the Bochner junk value `0` and the identity is empty rather than false.
+Boundedness returns at the consumer, which needs the identity to have content.
+
+**The filtration is the one the walk is already written over**, the natural filtration of the
+**scaled** sums that `MeasureTheory.martingale_rescaledWalk` and
+`MeasureTheory.isStronglyProgressive_rescaledWalk` carry.  **It is not `Filtration.natural ξ` at
+`k`**: that σ-algebra holds `ξ k` itself, and over it the statement is false -- `h = 1` and
+`Z = ξ k` turn the left hand side into `∫ ξ k ^ 2`, which is `0` only for a degenerate
+increment. -/
+theorem integral_mul_comp_rescaledWalk_mul_eq_zero {P : Measure Ω} {ξ : ℕ → Ω → ℝ}
+    (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0) (n k : ℕ) {h : ℝ → ℝ} (hh : Measurable h) {Z : Ω → ℝ}
+    (hZ : Measurable[Filtration.natural
+        (fun m ω ↦ ∑ j ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω)
+        (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun j _ ↦ (hmeas j).const_mul _) k] Z) :
+    ∫ ω, h ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω) * ξ k ω * Z ω ∂P = 0 := by
+  set 𝒢 : Filtration ℕ mΩ := Filtration.natural
+      (fun m ω ↦ ∑ j ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω)
+      (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun j _ ↦ (hmeas j).const_mul _) with h𝒢
+  -- the path piece is measurable for the past at `k`
+  have hS : StronglyMeasurable[𝒢 k]
+      fun ω ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω := by
+    have hk := Filtration.stronglyAdapted_natural
+      (u := fun m ω ↦ ∑ j ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω)
+      (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun j _ ↦ (hmeas j).const_mul _) k
+    simpa only [h𝒢, Finset.mul_sum] using hk
+  -- the two factors in front of `ξ k`, merged into one before independence is asked
+  have hW : Measurable[𝒢 k]
+      fun ω ↦ h ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω) * Z ω :=
+    (hh.comp hS.measurable).mul hZ
+  have hrw : (fun ω ↦ h ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)
+        * ξ k ω * Z ω)
+      = fun ω ↦ (h ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω) * Z ω) * ξ k ω := by
+    funext ω; ring
+  rw [hrw]
+  exact integral_mul_eq_zero_of_indep_comap
+    (indep_comap_natural_partialSum _ hmeas hind k) hW.comap_le
+    (hmeas k).aestronglyMeasurable
+    ((hW.mono (𝒢.le k) le_rfl).stronglyMeasurable.aestronglyMeasurable) (hcent k)
 
 end WalkContainment
 

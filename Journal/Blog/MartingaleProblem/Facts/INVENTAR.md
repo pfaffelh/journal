@@ -57648,3 +57648,161 @@ zuerst die Unabhängigkeit von `ξ k` und `h (S n k)` nimmt, muß danach `Z` noc
 hat dieselbe Arbeit zweimal. Die Beschränktheit von `h` und `Z` steht nur für die
 Integrierbarkeit des Produkts da; eine `MemLp 2`-Voraussetzung an `ξ` wird an dieser Stelle noch
 **nicht** gebraucht — sie kommt erst beim Term zweiter Ordnung.
+
+### 2026-09-22, sechzehnter Lauf des Tages — das benannte Ziel steht, aber **seine Aussage war falsch**: die Filtration, die der Vorschlag nannte, enthält den Zuwachs selbst; und die beiden Schranken, die er als Preis der Integrierbarkeit mitgab, werden **nicht gelesen** — Mathlibs Entkopplungslemma kommt ohne aus, weil auf der Ausnahmemenge **beide Seiten der Müllwert** sind
+
+*Drei Deklarationen in `MartingaleProblems`, durch `check_master.py` mit 0 Fehlern und 0 `sorry`,
+alle drei mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft. Die
+Warnungszahlen sind **unverändert** (18 / 38 / 112, davon 0 veraltet). Dazu ein bestehender Beweis
+um 19 Zeilen gekürzt (23 heraus, 4 hinein).*
+
+| Zeile | Name |
+| ---: | --- |
+| 51838 | `MeasureTheory.indep_comap_natural_partialSum` |
+| 51892 | `MeasureTheory.integral_mul_eq_zero_of_indep_comap` |
+| 53805 | `MeasureTheory.integral_mul_comp_rescaledWalk_mul_eq_zero` |
+
+**Das benannte Ziel des Vorlaufs war `integral_mul_comp_rescaledWalk_mul_eq_zero`.** Es steht —
+aber nicht in der Gestalt, in der es aufgeschrieben war.
+
+#### Der erste Befund: die vorgeschlagene Voraussetzung macht die Aussage **falsch**
+
+Der Vorschlag verlangte `Z` meßbar bezüglich `Filtration.natural ξ hmeas k`. Das ist
+`σ (ξ 0, …, ξ k)`, und darin **steckt `ξ k` selbst**. Über dieser σ-Algebra ist die Aussage nicht
+etwa schwer, sondern unwahr: mit `h = 1` und `Z = ξ k` steht links `∫ ξ k ^ 2`, und das ist nur
+für einen ausgearteten Zuwachs `0`.
+
+Es ist derselbe Unterschied, den der Doc-Kommentar von `martingale_partialSum_of_iIndepFun` seit
+dem Tag seiner Entstehung benennt — „**Die Filtration ist die der Summen und nicht die der
+Summanden**, und der Unterschied entscheidet die Aussage" —, und er ist im Vorschlag
+wiedergekehrt, weil dort `Filtration.natural ξ` dastand, wo `Filtration.natural S` hingehört.
+Genommen ist deshalb die Filtration, die die Irrfahrt ohnehin trägt: die natürliche Filtration der
+**skalierten** Summen, über der `martingale_rescaledWalk` und `isStronglyProgressive_rescaledWalk`
+schon stehen. Der Zeuge gegen die andere Lesart steht als Satz im Doc-Kommentar, nicht in Lean —
+er wäre eine eigene Konstruktion einer unabhängigen Familie, und die Rechnung ist eine Zeile.
+
+#### Der zweite Befund, und er nimmt dem Satz zwei Voraussetzungen: **keine Integrierbarkeit, keine Beschränktheit**
+
+Der Vorschlag gab `h` und `Z` beschränkt mit und sagte dazu, die Beschränktheit stehe „nur für die
+Integrierbarkeit des Produkts da". **Sie steht für gar nichts**, und der Grund liegt in Mathlib:
+
+> `ProbabilityTheory.IndepFun.integral_fun_mul_eq_mul_integral`
+> (`Mathlib/Probability/Independence/Integration.lean:423`) gibt
+> `∫ W · X = P[W] · P[X]` aus **bloßer** `AEStronglyMeasurable`.
+
+Der Beweis läuft über `IndepFun.integral_bilin'` (`:335`), und der macht eine Fallunterscheidung
+über die Integrierbarkeit des Produkts: wo sie fehlt, fehlt sie auch einem der beiden Faktoren,
+und dann sind **beide Seiten der Bochner-Müllwert `0`**. Die Gleichung ist dort also wahr und
+leer.
+
+**Das ist zu sagen und nicht zu verschweigen**, und es ist die stehende Regel dieses Auftrags: wo
+ein Müllwert gelesen wird, nennt der Doc-Kommentar die Stelle. Hier ist es der einzige Ort des
+Meilensteins, an dem eine Voraussetzung **weggelassen** wird, weil die Müllwerte beider Seiten
+übereinstimmen — und der Verbraucher, der Inhalt will, liefert die Beschränktheit von `W` und die
+Integrierbarkeit von `ξ k` nach, woraus `ProbabilityTheory.IndepFun.integrable_mul` (`:358`) das
+Produkt integrierbar macht. Die Voraussetzung wandert also vom Satz zum Verbraucher, statt zu
+verschwinden.
+
+Damit trägt `integral_mul_comp_rescaledWalk_mul_eq_zero` von den Voraussetzungen des
+Akzeptanztests genau zwei: `hind` und `hcent`. `hint` kommt nicht vor, und `MemLp 2` erst recht
+nicht.
+
+#### Das Bauteil, um das der Vorlauf gebeten hatte, ist herausgezogen — und es trägt einen Parameter mehr
+
+Der Vorschlag hatte verlangt, den Unabhängigkeitsblock aus `martingale_partialSum_of_iIndepFun`
+(Z. 51863–51874 im alten Stand) nicht nachzubauen, sondern zu benennen. Er heißt jetzt
+`indep_comap_natural_partialSum` und steht **vor** jenem Satz, der ihn seitdem verbraucht; dessen
+Beweis ist dadurch um 19 Zeilen kürzer — 23 heraus, 4 hinein —, und sein Doc-Kommentar verweist
+statt zu wiederholen.
+
+**Der Parameter `c` kostet nichts und war nötig.** Die Irrfahrt ist über der Filtration der
+*skalierten* Summen geschrieben, `c = (n+1)⁻¹ᐟ²`; der alte Verbraucher liest `c = 1`. Beide aus
+einem Satz zu bedienen verlangt den Faktor in der Aussage, und im Beweis kostet er ein
+`.const_mul c` an einer Stelle. Der Rückweg zu `c = 1` ist `simpa only [one_mul]` — geprüft, ehe
+der bestehende Beweis angefaßt wurde, und das war die richtige Reihenfolge: hätte er nicht
+getragen, wäre die Kürzung unterblieben und das Bauteil trotzdem entstanden.
+
+**`c ≠ 0` wird nicht verlangt.** Bei `c = 0` fällt die Filtration auf `⊥` zusammen, und dort ist
+die Unabhängigkeit leichter, nicht schwerer. Das ist keine Kosmetik: eine Voraussetzung `c ≠ 0`
+hätte jeder Verbraucher mitschleppen müssen.
+
+#### Die Falle, die der Vorschlag benannt hatte, ist echt — und sie ist billiger als angesagt
+
+„Es sind **zwei** Faktoren vor `ξ k` und nicht einer" — das stimmt, und die angesagte Ordnung
+(erst zusammenfassen, dann Unabhängigkeit fragen) ist die richtige. Was sie kostet, ist ein
+`funext ω; ring` und ein `Measurable.mul`; der Rest ist die abstrakte Zwischenstufe
+`integral_mul_eq_zero_of_indep_comap`, die von der Irrfahrt nichts weiß und deshalb auch der
+zweiten Hälfte der Lindeberg-Rechnung offensteht.
+
+**Eine Kleinigkeit, die zweimal Zeit gekostet hat und deshalb hier steht:** in einem Satz, der
+neben dem Grundraum `mΩ` eine zweite σ-Algebra `m` im Kontext hat, greift die Instanzensuche von
+`AEStronglyMeasurable X P` auf **`m`** zu und nicht auf `mΩ` — sie nimmt die zuletzt eingeführte.
+Zu schreiben ist `AEStronglyMeasurable[mΩ] X P`; die Notation steht in
+`Mathlib/MeasureTheory/Function/StronglyMeasurable/AEStronglyMeasurable.lean:78` und ist `scoped`.
+Dasselbe gilt für `Measurable.mono`, das **zwei** Ungleichungen nimmt und nicht eine
+(`hW.mono (𝒢.le k) le_rfl`).
+
+#### Prüfung
+
+`scripts/check_master.py` gegen `upstream/master`
+(`94ef6b89544e58e90f119da869f3fb48d1da0f4c`, Lean `4.35.0-rc2`): **0 Fehler, 0 `sorry`** in allen
+drei Dateien, Warnungen **18 / 38 / 112, davon 0 veraltet** — unverändert gegenüber dem Vorlauf.
+`scripts/check_axioms_master.py` über die drei neuen Deklarationen **und** über das gekürzte
+`martingale_partialSum_of_iIndepFun`: `propext`, `Classical.choice`, `Quot.sound`.
+`check_cited_lines.py`: **463 gepaarte Fundstellen, 0 verschoben, 0 tot** (vorher 460).
+`check_duplicates.py`: keiner der drei Namen trifft auf `master`.
+
+#### Wo der Akzeptanztest damit steht
+
+```
+mpTest_sub_rescaledWalk_eq_sum          (die Lücke, zellenweise, ohne Wahrscheinlichkeit)
+  ↳ Erwartungswert davon, Summand je Zelle:
+      · Term erster Ordnung:  integral_mul_comp_rescaledWalk_mul_eq_zero  ← steht seit heute
+      · Term zweiter Ordnung: offen
+      · Restglied:            offen
+      · zwei Randterme:       offen, je ≤ (n+1)⁻¹ ‖g‖
+```
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`MeasureTheory.integral_mul_comp_rescaledWalk_sq_mul_eq_smul`** — der **Term zweiter Ordnung
+einer Zelle**, also der Schritt, an dem das zweite Moment zum ersten Mal vorkommt und an dem sich
+entscheidet, ob der Kompensator getroffen wird.
+
+*Die Aussage:* unter `hind`, `hmeas` und `hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = σ ^ 2` ist für
+`h : ℝ → ℝ` beschränkt und meßbar und `Z` beschränkt und meßbar für die skalierte Vergangenheit
+bei `k`
+
+```
+∫ ω, h (S n k ω) * ξ k ω ^ 2 * Z ω ∂P
+  = σ ^ 2 * ∫ ω, h (S n k ω) * Z ω ∂P .
+```
+
+*Warum sie jetzt dran ist.* Der Summand der Zelle `k` ist
+`f (S (k+1)) − f (S k) − (n+1)⁻¹ g (S k)`, und nach Taylor steht dort
+`f' (S k) · (n+1)⁻¹ᐟ² ξ k + ½ f'' (S k) · (n+1)⁻¹ ξ k ² − (n+1)⁻¹ g (S k) + Rest`. Mit
+`g = ½ σ² f''` — dem Erzeuger der Brownschen Bewegung und dem eigentlichen Gegenstand des
+Akzeptanztests — heben sich der zweite und der dritte Term **exakt** auf, sobald die Aussage oben
+steht: sie ersetzt `ξ k ²` unter dem Integral durch seine Konstante `σ²`, und der Faktor
+`(n+1)⁻¹` ist auf beiden Seiten derselbe. Der Term erster Ordnung ist seit heute weg, die
+Randterme sind eine Abschätzung ohne Entwicklung, und dann bleibt allein das Restglied.
+
+*Worauf sie ruht, und beides steht im eigenen Haus:*
+
+* `MeasureTheory.integral_mul_eq_zero_of_indep_comap` ist **nicht unmittelbar** zu gebrauchen,
+  weil die Aussage keine Nullaussage ist. Zu nehmen ist der Umweg über die Zentrierung:
+  `∫ W · (ξ k ² − σ²) = 0` ist eine Instanz davon mit `X = ξ k ² − σ²`, und die obige folgt durch
+  Ausmultiplizieren. Die Unabhängigkeit von `ξ k ² − σ²` von der Vergangenheit ist die von `ξ k`,
+  hindurchgezogen über `comap (ξ k ^ 2 − σ^2) ≤ comap (ξ k)` mit `Measurable.comap_le` und
+  `ProbabilityTheory.indep_of_indep_of_le_left`
+  (`Mathlib/Probability/Independence/Basic.lean:371`).
+* `MeasureTheory.indep_comap_natural_partialSum` liefert die Unabhängigkeit von `ξ k` gegen die
+  skalierte Vergangenheit, genau wie heute.
+
+*Die Falle, benannt statt entdeckt:* `∫ W · ξ k ² = σ² · ∫ W` verlangt, daß `∫ W` selbst
+existiert, und `W = h (S n k) · Z` ist nur dann integrierbar, wenn `h` **und** `Z` beschränkt
+sind. Anders als heute sind die beiden Schranken hier also zu führen und nicht wegzulassen — die
+rechte Seite ist keine Null, und die Müllwerte der beiden Seiten stimmen nicht mehr überein. Das
+ist der Unterschied zwischen einer Nullaussage und einer Identität, und er gehört in den
+Doc-Kommentar. Ebenso ist `MemLp 2` an `ξ k` hier zum ersten Mal wirklich zu verlangen, damit
+`ξ k ² − σ²` integrierbar ist; heute wurde sie nicht gebraucht.

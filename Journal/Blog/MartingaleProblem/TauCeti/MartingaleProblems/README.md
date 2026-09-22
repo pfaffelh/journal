@@ -14592,6 +14592,80 @@ has to be chosen once for all `n`. What stands:
     expectation of this is taken — which is where the acceptance test now
     stands, and the first place in the computation where they are read.
 
+  * `indep_comap_natural_partialSum` — **an increment is independent of the past
+    of the partial sums**. **Proved 2026-09-22.**
+
+    ```
+    Indep (comap (ξ n)) (Filtration.natural (fun m ω ↦ ∑ k < m, c · ξ k ω) _ n) P
+    ```
+
+    Mathlib's `ProbabilityTheory.iIndepFun.indep_comap_natural_of_lt`
+    (`Mathlib/Probability/BorelCantelli.lean:43`) states it against the past of
+    the **summands**; what every consumer holds is the past of the **sums**, and
+    the passage is the inclusion `𝒢 (m+1) ≤ Filtration.natural ξ m`. The scaling
+    factor `c` is carried and costs nothing, because the rescaled walk is
+    written over the filtration of `c · S` — and no `c ≠ 0` is asked, the
+    filtration collapsing to `⊥` at `c = 0`, where independence is only easier.
+    `IsProbabilityMeasure P` is a conclusion and not a hypothesis.
+
+    It is the one probabilistic input of the walk that is read **twice**, by
+    `martingale_partialSum_of_iIndepFun` at `c = 1` and by
+    `integral_mul_comp_rescaledWalk_mul_eq_zero` at `c = (n+1)⁻¹ᐟ²`.
+
+  * `integral_mul_eq_zero_of_indep_comap` — **a centred factor decouples from
+    everything measurable for a σ-algebra it is independent of**:
+    `∫ W · X = 0` when `X` is centred and `σ (X)` is independent of a σ-algebra
+    `W` is measurable for. **Proved 2026-09-22.**
+
+    **No integrability is asked.**
+    `ProbabilityTheory.IndepFun.integral_fun_mul_eq_mul_integral`
+    (`Mathlib/Probability/Independence/Integration.lean:423`) gives
+    `∫ W · X = P[W] · P[X]` from bare `AEStronglyMeasurable`, its proof running
+    through `ProbabilityTheory.IndepFun.integral_bilin'` (`:335`), which splits
+    on the integrability of the product and observes that where it fails, one of
+    the factors fails too and **both sides are the Bochner junk value `0`**.
+
+    The junk value is therefore read here, and on purpose: in the degenerate
+    case the identity is empty rather than false. A consumer that wants content
+    supplies boundedness of `W` and integrability of `X`, whence
+    `ProbabilityTheory.IndepFun.integrable_mul` (`:358`). This is the one place
+    in the milestone where a hypothesis is left out because the junk values on
+    the two sides agree.
+
+  * `integral_mul_comp_rescaledWalk_mul_eq_zero` — **the first order term of
+    Donsker's expansion vanishes, cell by cell**, and this is where probability
+    enters the acceptance test for the first time. **Proved 2026-09-22.**
+
+    ```
+    ∫ ω, h (S n k ω) · ξ k ω · Z ω ∂P = 0
+    ```
+
+    for `h` measurable and `Z` measurable for the past at `k`. The second order
+    Taylor expansion of `f` splits the increment of the cell into a term of
+    first order `f' (S n k) · (n+1)⁻¹ᐟ² ξ k`, a term of second order and a
+    remainder; the second is held against the compensator and the third is
+    estimated, but the first **has to vanish exactly** — it is of order
+    `(n+1)⁻¹ᐟ²` and no estimate removes it. This is it, with `h = f'` and `Z`
+    the weight the gap is tested against.
+
+    **There are two factors in front of `ξ k` and not one**, the path piece
+    `h (S n k)` and the weight `Z`, both measurable for the past at `k`; they
+    are merged into a single such factor **before** independence is asked, since
+    asking it of `ξ k` against `h (S n k)` alone leaves `Z` to be carried
+    through afterwards.
+
+    Of the three hypotheses of the acceptance test this is the first statement
+    to read any: `hind` and `hcent` enter here, everything above being an
+    identity at one sample point. Integrability is read at neither `ξ k` nor the
+    product, and neither `h` nor `Z` need be bounded, for the reason set out at
+    `integral_mul_eq_zero_of_indep_comap`.
+
+    **The filtration is not `Filtration.natural ξ` at `k`** but that of the
+    scaled sums, which `martingale_rescaledWalk` and
+    `isStronglyProgressive_rescaledWalk` already carry. Over the first the
+    statement is false: that σ-algebra holds `ξ k` itself, and `h = 1`, `Z = ξ k`
+    turn the left hand side into `∫ ξ k ^ 2`.
+
   **Prokhorov, with the crossing of the two types done once**, and the second
   item of the chain on Donsker's data:
 
