@@ -56462,3 +56462,274 @@ dasselbe Maximum hier trägt: die gekappten Zeiten bleiben unter `u`
 `min (τ k ω) u`, also ebenfalls unter `u` — der Weg sollte also derselbe sein, mit `Iic (u+δ)`
 statt `Iic u` im Fehler und `Iic u` im Gewicht. **Das ist am Quelltext zu bestätigen und nicht
 anzunehmen**, und es ist die halbe Arbeit jenes Laufs.
+
+### 2026-09-22, zehnter Lauf des Tages — das benannte Ziel steht, und mit ihm die beiden übrigen durchreichenden Posten *und* die Bedingung samt den drei Grenzübergängen: die Kette trägt die Schranke `hVb` an **keiner** Stelle mehr ohne Zwilling
+
+*Zehn Deklarationen, in zwei Hälften: drei, die die Kette bis zum Zusammenbau schließen, und
+sieben, die daraus die Gestalt machen, in der ein Verbraucher sie antrifft — die Bedingung, die
+drei Grenzübergänge, ein Fenster für die ganze Familie und die Straffheit selbst. Eine davon
+liegt in `SkorokhodSpace`, alle übrigen in `MartingaleProblems`.*
+
+**Das benannte Ziel des Vorlaufs war
+`sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair_of_integrable_mul`**, die
+Lückensumme ohne `hVb`, und vor ihr stand die Frage, ob dasselbe laufende Maximum trägt wie beim
+Horizontterm des achten Laufs. Die Antwort ist **ja**, und weil der Beweis dann billiger war als
+veranschlagt, sind die beiden anderen durchreichenden Posten im selben Lauf mitgegangen.
+
+#### Die Vorfrage, entschieden am Quelltext
+
+**Es trägt, aber nicht aus dem Grund, aus dem es am Horizont trägt, und der Unterschied gehört
+festgehalten.** Am Horizont liegt *jeder* Zellenendpunkt unter `u`, weil alle Zeiten gekappt
+sind. Eine Lückenzelle überschießt den Horizont am **rechten** Ende um bis zu `δ`
+(`oscHitSeqGap_le_coe`) — das ist der Grund, warum ihr Fenster `Set.Iic (u + δ)` ist —, aber **ihr
+Gewicht sitzt am linken Ende**, und das ist `min (oscHitSeq V ε₀ k ω) u`, also gekappt. Damit
+greift `untopA_oscHitSeqCap_le` unverändert, und **eine** Hypothese über
+`⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ` bedient alle `N` Zellen.
+
+Die gewichtete Lückensumme trägt deshalb **zwei verschiedene Fenster**: `Set.Iic u` am Gewicht,
+`Set.Iic (u + δ)` an den Fehlern. Das ist die einzige Unsymmetrie, die die Abschwächung
+hinzufügt; die beschränkte Fassung kennt sie nicht, weil `c` fensterlos ist.
+
+#### Gebaut und übersetzt — drei Deklarationen
+
+Alle drei in `TauCeti/MartingaleProblems/Suggested.lean`, Zeilen **nachher**:
+
+* **`MeasureTheory.measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair_of_integrable_mul`**
+  (Z. 45706) — die Horizontquotientenfassung ohne `hVb`.
+* **`MeasureTheory.sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair_of_integrable_mul`**
+  (Z. 46101) — das benannte Ziel, die Lückensumme mit `γ` und `Kw` statt `c`.
+* **`MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair_of_integrable_mul`**
+  (Z. 46370) — der Zusammenbau der beiden Blöcke, also die ganze probabilistische Substanz des
+  Straffheitskriteriums in einer Ungleichung, ohne Schranke an den Prozeß:
+
+  ```
+  ofReal ε₀ * P {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ ω)) δ}
+    ≤ N * ofReal √((ofReal δ ^ (1 - 1/q) * (K + 2 Kw) + A).toReal)
+      + ((ofReal u ^ (1 - 1/q) * K + 2 * (ofReal u ^ (1 - 1/q) * Kw)) / N + A) / ofReal ε₀,
+  A = 2 ε' + 4 γ
+  ```
+
+**Der Quotient und der Zusammenbau sind keine Schätzungen**, und das ist der Grund, daß sie
+zusammen einen halben Lauf kosteten: der erste ist der Beweis des beschränkten Nachbarn wörtlich
+(die beiden Divisionen lesen den Zähler nicht, `c` steckt dort nur in den Abkürzungen `B` und
+`A`), der zweite ist `le_trans` von `mul_measure_setOf_lt_modulusBased_le_lintegral_dist` und
+`add_le_add` der beiden gewichteten Blöcke.
+
+**Im Zusammenbau fallen die drei Fenster auf zwei Hypothesen zusammen**, wie die zwei in der
+beschränkten Fassung: das Gewicht wird von beiden Blöcken auf `Set.Iic u` gelesen, und das
+kleinere Fehlerfenster des Horizontblocks folgt aus dem größeren des Lückenblocks durch
+`biSup_mono` unter `lintegral_mono` — beim ungewichteten Fehler unmittelbar, beim gewichteten
+über `mul_le_mul_right`, weil dort das Gewicht der **nicht** bewegte Faktor ist.
+
+#### Vier Befunde
+
+* **Die Elaborationsfalle mit `W`, und sie kostete einen Übersetzungsdurchlauf.** In der
+  gewichteten Zelle steht `{W}` **vor** `γ` und dessen Hypothese, in der beschränkten wird `W`
+  durch `hε` festgelegt, das zuerst steht. Wer die gewichtete Zelle mit `hαW`/`hβW` anwendet,
+  läßt `W` als Metavariable stehen, und der Elaborator läuft in einen Timeout bei `isDefEq`
+  (200000 Heartbeats) statt in eine lesbare Fehlermeldung. `(W := Set.Iic (u + δ))` an der
+  Aufrufstelle behebt es; die Lückensumme gibt `(M := fun ω ↦ ⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ)` aus
+  demselben Grund mit. Die Stelle steht jetzt in `MartingaleProblems/README.md`, Meilenstein 11.
+* **Die Aussage *über* dem Zusammenbau braucht keinen Zwilling, und das war aus der Liste der
+  sechs nicht zu sehen.** `mul_measure_setOf_lt_modulusBased_postcomp_le_of_isApproximatingPair`
+  (Z. 46530) nimmt `hVb` **nicht** als Hypothese, sondern löst es selbst ein, mit
+  `BoundedContinuousFunction.norm_coe_le_norm` und `c = ‖g‖`, weil es `V = g ∘ X` liest. Die
+  gewichtete Kette wird deshalb **nicht** über den Nachkompositionsweg verbraucht, sondern am
+  Zusammenbau unmittelbar, an einem `V`, das der Prozeß selbst ist — und das ist der Fall der
+  reskalierten Irrfahrt.
+* **Eine beschränkte Fassung bekommt man aus der gewichteten zurück, und zwar wörtlich.** Mit
+  `‖V t ω‖ ≤ c` ist `γ ≤ ofReal c * ε` und, über `lintegral_const_mul'` gegen
+  `IsApproximatingPair.lintegral_eLpNorm_le`, `Kw ≤ ofReal c * K`; setzt man beides ein, so ist
+  `ofReal δ ^ (1 - 1/q) * (K + 2 c K)` gerade `(1 + 2 c) * (ofReal δ ^ (1 - 1/q) * K)`, also die
+  rechte Seite des beschränkten Nachbarn. Die beschränkten Fassungen bleiben trotzdem stehen —
+  wer eine Schranke hat, will die kürzere Hypothesenliste.
+* **`check_own_names.py` ist auch für *Strukturfelder* blind, und das ist die zweite Familie
+  falscher Negativbefunde desselben Werkzeugs.** Der Index zählt diesen Lauf **445** statt 443;
+  die beiden neuen Einträge sind `isDefEq` (Fließtext, ein Begriff des Elaborators) und
+  `IsApproximatingPair.lintegral_eLpNorm_le` — das aber **existiert**, als Feld der Struktur
+  `IsApproximatingPair` (`Suggested.lean:43504`), und wird von Sätzen der Datei aufgerufen. Nach
+  der `@[to_fun]`-Blindheit des achten Laufs ist das die zweite Bauart, in der
+  ein Eintrag in `own_names.md` **kein** Beleg ist, daß ein Name fehlt. Die Regel bleibt
+  dieselbe: ein fehlender Name wird durch ein scheiterndes `example … := by exact?` gegen den
+  master-Worktree belegt, nicht durch einen Index.
+
+#### Die README ist nachgezogen
+
+`MartingaleProblems/README.md`, Meilenstein 11, in zwei Abschnitten: für die erste Hälfte die
+drei neuen Namen, der Grund, warum das laufende Maximum auch am linken Ende einer Lückenzelle
+trägt, die zwei Fenster der Lückensumme, das Zusammenfallen der drei Fenster im Zusammenbau, die
+Elaborationsfalle mit `W` und der Befund über die Nachkompositionsaussage; für die zweite die
+sechs neuen Namen, die drei Entwurfsentscheidungen, der Grund, warum der Nachkompositionsweg die
+gewichtete Kette nicht trägt, und was für Donskers Straffheit noch fehlt.
+
+`SkorokhodSpace/README.md`, im Block über den Übergang zum Bildmaß: die neue Aussage, warum
+**beide** Formen gebraucht werden und keine die andere ersetzt, und wer die neue verbraucht.
+
+Dazu eine Berichtigung an einer alten Stelle: der Absatz des Meilensteins, der
+`IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le` „die richtige Schätzung je Zelle"
+nennt, trägt jetzt den Befund des neunten Laufs bei sich — er benennt den *Übergang* und keine
+Aussage, die der Beweis aufruft. Die Notiz stand bisher nur im späteren Abschnitt, also nicht
+dort, wo sie gesucht wird.
+
+#### Was von der Kette jetzt noch die Schranke trägt
+
+**Nichts mehr ohne Zwilling.** Die beiden Aussagen, die `c` selbst lasen, haben seit dem achten
+und neunten Lauf je eine Fassung ohne sie; die drei durchreichenden seit diesem. Die Aussage
+darüber löst die Schranke selbst ein und braucht keine.
+
+#### Und weil dabei Zeit übrig war: die Bedingung und die drei Grenzübergänge, also die Gestalt, in der ein Verbraucher die Abschwächung antrifft
+
+Der Zusammenbau ist eine Ungleichung an **einem** Tripel `(N, δ, ε₀)`; was das
+Straffheitskriterium verlangt, ist eine Kleinheit, und die entsteht erst aus den drei
+Grenzübergängen. Vier weitere Deklarationen, alle im selben Lauf übersetzt:
+
+* **`MeasureTheory.IsApproximableMul`** (Z. 47128) — die gewichtete Fassung von
+  `MeasureTheory.IsApproximable` (Z. 46651).
+* **`MeasureTheory.IsApproximableMul.one_lt_exponent`** (Z. 47168).
+* **`MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximableMul`** (Z. 47200) —
+  der dritte Grenzübergang, also der Zusammenbau mit dem Fehler schon bei `0`.
+* **`MeasureTheory.tendsto_measure_setOf_lt_modulusBased_of_isApproximableMul`** (Z. 47301) —
+  alle drei Grenzübergänge, an **einem** Prozeß:
+
+  ```
+  Tendsto (fun δ : ℝ≥0 ↦ P {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ ω)) δ})
+    (𝓝[>] 0) (𝓝 0)
+  ```
+
+Die Ordnung der drei Grenzübergänge — `N`, dann `δ`, dann `ε` — ist unverändert, und der
+Fenstergrenzübergang ist `tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` bei `c = 0` und `K + 2 Kw`
+statt `K`.
+
+**Drei Entscheidungen, die dabei zu treffen waren, und jede ist begründet und nicht
+voreingestellt.**
+
+* **Das Gewicht ist das laufende Maximum am *vollen* Horizont `T`, in beiden gewichteten
+  Feldern, und nicht bei `u`.** Der Zusammenbau liest das Gewicht bei `u ≤ T` und den Fehler des
+  ersten Paars bei `u + δ ≤ T`; steht die Bedingung bei `T`, so dominiert das Feld die
+  Hypothese, beide Verengungen laufen in die richtige Richtung, und `mul_le_mul'` liefert die
+  gewichtete in einem Schritt. Bei `u` formuliert wäre die Bedingung für ihren eigenen
+  Verbraucher zu schwach.
+* **`Kw` ist ein `ℝ≥0` und ein Parameter der Bedingung, nicht eines Paars.** Es spielt die Rolle
+  von `K` — eine Konstante, die jedes bei jedem Fehler erzeugte Paar einhalten muß —, und in
+  `ℝ≥0` macht es die Endlichkeit des ersten Summanden umsonst, was zählt, weil
+  `Real.sqrt S.toReal` `toReal` liest. Es ist außerdem der Grund, daß
+  `tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` bei `K + 2 Kw` überhaupt anwendbar ist: jener
+  Satz nimmt seine Konstante in `ℝ≥0`.
+* **Die beiden Quadratintegrierbarkeiten von `V` sind eigene Felder außerhalb der
+  Existenzaussage**, weil `V` fest ist und sie über die Approximanten nichts sagen; die sechs,
+  die zu den Paaren gehören, bleiben drinnen.
+
+#### Und ein fünftes Stück: ein Fenster für die ganze Familie
+
+**`MeasureTheory.exists_forall_measure_setOf_lt_modulusBased_le_of_forall_isApproximableMul`** —
+
+```
+∃ δ > 0, ∀ i, P {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ i ω)) δ} ≤ η
+```
+
+für eine Familie, deren Mitglieder dieselben Konstanten `q`, `T`, `K`, `Kw` tragen. **Die
+Gleichmäßigkeit wird von den Konstanten getragen und von sonst nichts**: `B` und die
+Fensterschranke sind aus `q`, `T`, `K`, `Kw`, `u` und `ε₀` gebaut, und keine Größe eines Mitglieds
+kommt in einer von beiden vor — deshalb fallen alle drei Wahlen (Anzahl, Fenster, Fehler), ehe das
+Mitglied genannt wird. Der leere Index wird zuerst erledigt, weil der Exponent `1 < q` an einem
+Mitglied gelesen wird.
+
+#### Und, als sechstes und siebtes Stück, die Straffheit selbst — die erste des Meilensteins, die keine Schranke am Prozeß liest
+
+* **`SkorokhodSpace.measure_map_setOf_le_modulusBased_le`**
+  (`SkorokhodSpace/Suggested.lean:19448`) — der Übergang von einer Schranke über den
+  Stichprobenpunkten zu einer am Bildmaß **ohne** Wertewechsel, also
+  `SkorokhodSpace.measure_map_postcomp_setOf_le_modulusBased_le` mit `Measure.map_map` einmal
+  statt zweimal. Das ist der einzige Eingriff dieses Laufs in die zweite Datei der Kette.
+* **`MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isApproximableMul`** —
+
+  ```
+  IsTightMeasureSet {P.map (Φ i) | i}
+  ```
+
+  für eine Familie rechtsstetiger progressiver **reeller** Prozesse, gewichtet approximierbar an
+  jedem Horizont mit Konstanten, die nur vom Horizont abhängen, und mit kompakt eingeschlossenen
+  Bildmaßen.
+
+**Die kompakte Einschließung ist hier eine Hypothese und auf dem Nachkompositionsweg keine**, und
+der Unterschied ist zum zweiten Mal derselbe: die nachkomponierten Bildmaße sind umsonst kompakt
+eingeschlossen, weil das Bild eines beschränkten `g` beschränkt ist; die Maße der Pfade selbst
+sind es nicht. Für die reskalierte Irrfahrt steht sie als `isCompactContained_rescaledWalk`.
+
+**Eine Warnung ist dabei aufgetreten und wurde nicht bloß gezählt, sondern beseitigt**, und der
+Grund ist die stehende Regel über minimale Voraussetzungen: `SkorokhodSpace` meldete
+`unusedSectionVars` für `[MeasurableSpace E]` und `[BorelSpace E]` an der neuen Aussage — sie
+werden wirklich nicht gelesen, denn die σ-Algebra sitzt am Pfadraum und nicht an `E`. Ein
+`omit [MeasurableSpace E] [BorelSpace E] in` davor, wie es die Nachbarn der Datei tragen, nimmt
+zwei überflüssige Instanzen aus der Signatur; die Warnungszahl steht wieder bei 38. **Das ist
+kein Verstoß gegen „unusedSectionVars nicht anfassen"**: jene Regel verbietet, Signaturen zu
+*ändern*, um eine Stilwarnung zu bedienen — hier war die Warnung der Hinweis auf zwei
+Voraussetzungen, die die Aussage nicht braucht.
+
+#### Prüfung, über alle zehn Deklarationen dieses Laufs
+
+`scripts/check_master.py` gegen `upstream/master`
+(`94ef6b89544e58e90f119da869f3fb48d1da0f4c`, Lean `4.35.0-rc2`): **0 Fehler, 0 `sorry`** in allen
+drei Dateien, Warnungen **18 / 38 / 112, davon 0 veraltet** — **unverändert** gegenüber dem
+Vorlauf, also erzeugen die zehn neuen Deklarationen keine einzige Warnung. (Die eine, die
+zwischenzeitlich entstand, ist oben beschrieben und behoben.)
+`scripts/check_axioms_master.py` (mit `--build`, alle mit vollem Namensraum): die neun Sätze auf
+`propext`, `Classical.choice`, `Quot.sound` (die zehnte Deklaration ist die Struktur).
+`check_cited_lines.py`: **445 gepaarte Fundstellen, 0 verschoben, 0 tot** — unverändert.
+`check_own_names.py`: **445**, also genau so viel wie vor dem Lauf, aber mit zwei Bewegungen, die
+sich aufheben: hinzugekommen sind `isDefEq` (Fließtext) und
+`IsApproximatingPair.lintegral_eLpNorm_le` (existiert als Strukturfeld; siehe den vierten Befund
+oben), weggefallen sind zwei Namen, die dieser Lauf gebaut hat. Alle übrigen Zitate des Laufs
+(`isTightMeasureSet_iff_modulusBased_nnreal`, `measure_map_postcomp_setOf_le_modulusBased_le`,
+`measurable_iInf_modulusBased`, `IsCompactContained`, `isCompactContained_rescaledWalk`) sind
+gedeckt.
+
+#### Die zehn Deklarationen, mit Zeilen nachher
+
+| Datei | Zeile | Name |
+| --- | ---: | --- |
+| `MartingaleProblems` | 45706 | `measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair_of_integrable_mul` |
+| `MartingaleProblems` | 46101 | `sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair_of_integrable_mul` |
+| `MartingaleProblems` | 46370 | `mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair_of_integrable_mul` |
+| `MartingaleProblems` | 47128 | `IsApproximableMul` |
+| `MartingaleProblems` | 47168 | `IsApproximableMul.one_lt_exponent` |
+| `MartingaleProblems` | 47200 | `mul_measure_setOf_lt_modulusBased_le_of_isApproximableMul` |
+| `MartingaleProblems` | 47301 | `tendsto_measure_setOf_lt_modulusBased_of_isApproximableMul` |
+| `MartingaleProblems` | 47404 | `exists_forall_measure_setOf_lt_modulusBased_le_of_forall_isApproximableMul` |
+| `MartingaleProblems` | 47840 | `isTightMeasureSet_map_pathOfProcess_of_isApproximableMul` |
+| `SkorokhodSpace` | 19448 | `SkorokhodSpace.measure_map_setOf_le_modulusBased_le` |
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`MeasureTheory.isApproximableMul_rescaledWalk`** — die reskalierte Irrfahrt erfüllt
+`IsApproximableMul` an jedem Horizont, mit `Kw = 0`. Das ist der **Akzeptanzfall** der ganzen
+Abschwächung: mit ihm und `isCompactContained_rescaledWalk` gibt
+`isTightMeasureSet_map_pathOfProcess_of_isApproximableMul` von heute unmittelbar die Straffheit
+der Irrfahrtsfamilie, also die erste Hälfte von Donsker.
+
+*Worauf er ruht:* `isApproximatingPair_rescaledWalk` und `isApproximatingPair_sq_rescaledWalk`
+(beide bewiesen), und sonst nichts Neues an Theorie.
+
+*Warum jetzt:* die gewichtete Kette steht seit diesem Lauf vollständig, von der Zelle bis zur
+Straffheit, und hat **keinen** Verbraucher. Sie wurde für genau diesen Fall gebaut — für einen
+Prozeß, der nicht gleichmäßig beschränkt ist und dessen Paare ihn selbst approximieren, nicht
+eine beschränkte Funktion von ihm. Bleibt der Fall aus, so ist die Abschwächung Theorie über
+einer leeren Voraussetzung, und das ist genau die Lage, die der Meilenstein 6 der
+Pfadraumaufgabe als Integritätsproblem benannt hat.
+
+*Die drei Stellen, die zu klären sind, und nur die erste ist geschenkt:*
+
+1. **Der gewichtete Fehler ist `0`**, weil der Fehler `0` ist: der Doc-Kommentar von
+   `enorm_integral_mul_sub_le_of_lintegral_mul_biSup_le` (Z. 44439) sagt es schon — „ihr eigenes
+   approximierendes Paar hat Fehler genau `0`; das Produkt ist `0` und das Supremum ist `⊤`".
+2. **`Kw = 0` ist eine Aussage über die Dichte `Z` des ersten Paars und nicht über seinen
+   Fehler**, und deshalb nicht mitgeschenkt: zu zeigen ist
+   `eLpNorm (Z (·, ω)) q (volume.restrict (Ioc 0 T)) = 0` f.ü., also ein verschwindender
+   Kompensator. Bei `isApproximatingPair_rescaledWalk` ist die Irrfahrt ihr eigenes Martingal;
+   **am Quelltext nachzusehen**, ob `Z` dort wirklich `0` ist oder nur `C`.
+3. **Die acht `MemLp … 2`-Familien** an den gekappten und den Lückenzeiten. Bei Fehler `0` ist
+   `Y = V`, es sind also Aussagen über die Irrfahrt selbst an einer beschränkten Stoppzeit —
+   endliche Summen von `L²`-Zuwächsen —, aber für `C` und `Y'` sind sie eigens zu führen. **Das
+   ist die eigentliche Arbeit jenes Laufs**, und wenn sie sich als teuer erweist, ist das ein
+   Meßwert und kein Scheitern: er sagt dann, was eine Straffheitsbedingung über einem
+   unbeschränkten Prozeß an Integrierbarkeit wirklich kostet.

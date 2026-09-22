@@ -2080,6 +2080,25 @@ over a shrinking family and is therefore an infimum.
   `SkorokhodSpace.isometry_extendNNReal` for the index change. The two orders of
   the layers are the **same map**, `SkorokhodSpace.postcomp_extendNNReal` being
   `rfl`, so nothing is rewritten between the hypothesis and the conclusion.
+* `SkorokhodSpace.measure_map_setOf_le_modulusBased_le`: **the same passage with
+  no value change.** Proved (2026-09-22). For `Φ : Ω → D(ℝ≥0, E)` measurable and
+  `u < u'`, a bound `P {ω | η ≤ modulusBased 0 u' (extendNNReal (Φ ω)) δ} ≤ ε`
+  gives `((P.map Φ).map extendNNReal) {f | η ≤ modulusBased 0 u f δ} ≤ ε`. The
+  sandwich is the one above and `MeasureTheory.Measure.map_map` composes one
+  layer instead of two, so the only measurability spent is
+  `SkorokhodSpace.isometry_extendNNReal`; `[MeasurableSpace E]` and
+  `[BorelSpace E]` are omitted, the σ-algebra being the path space's and not
+  `E`'s.
+
+  **Both forms are needed and neither subsumes the other.** A criterion reached
+  through a bounded `g : E →ᵇ ℝ` reads the post-composed one; a family whose
+  modulus is controlled at the process itself — which is the case of a process
+  that is **not uniformly bounded**, so that no bounded `g` carries its
+  approximants — reaches tightness through
+  `SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal` instead, and there
+  a post-composition would have to be undone again. **MartingaleProblems**
+  Milestone 11 consumes this one at
+  `isTightMeasureSet_map_pathOfProcess_of_isApproximableMul`.
 * `SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le_off_finite`:
   **the same criterion with finitely many members exempted, the exempted set free
   to move with `(ε, m, η)`.** Proved (2026-09-21). The exceptions are not dropped

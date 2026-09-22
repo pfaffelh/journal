@@ -12060,6 +12060,16 @@ has to be chosen once for all `n`. What stands:
   estimate and its `δ^{1-1/q}` is what vanishes. The two blocks therefore use
   the two forms of the same passage, and that is why both forms exist.
 
+  *This paragraph names the passage and not a statement the proof calls*, and
+  the difference was measured on 2026-09-22, ninth run: the proof of the gap
+  cell reads the two **factors** of that composite separately —
+  `lintegral_ofReal_dist_sq_le_of_isApproximatingPair` leaves the compensator
+  increments standing and `IsApproximatingPair.lintegral_enorm_compensator_sub_le`
+  discharges them, one per cell — so the composite itself is never invoked. That
+  is why weakening the block needed
+  `IsApproximatingPair.lintegral_mul_enorm_compensator_sub_le` and no weighted
+  form of the composite.
+
   **What does not vanish, and it is a correction of the previous run's
   proposal.** As `δ ↓ 0` at fixed `N` the bound tends to
   `N √(2 ε' + 4 c ε)` and **not** to `0` —
@@ -14137,15 +14147,163 @@ has to be chosen once for all `n`. What stands:
   the same parameter in both and is discharged the same way — `Kw = 0` for a
   vanishing compensator, `Kw = ‖Z‖ * ∫⁻ M` for a deterministic density.
 
-  **What is left of the six.** Both statements that read the bound themselves
-  now have a weighted twin that does not; the bounded ones stay, since a
-  consumer who has a bound wants the shorter hypothesis list. What still carries
-  `hVb` and has no twin are three statements, and every one of them only passes
-  it along: `measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair`,
-  `sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair` and
-  `mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair`. What remains is
-  bookkeeping: each is the composition of statements that already exist in both
-  versions.
+  **The three pass-through statements, 2026-09-22, tenth run — and with them the
+  chain is weakened end to end.** The last three declarations:
+
+  ```
+  MeasureTheory.measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair_of_integrable_mul
+  MeasureTheory.sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair_of_integrable_mul
+  MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair_of_integrable_mul
+  ```
+
+  ```
+  ofReal ε₀ * P {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ ω)) δ}
+    ≤ N * ofReal √((ofReal δ ^ (1 - 1/q) * (K + 2 Kw) + A).toReal)
+      + ((ofReal u ^ (1 - 1/q) * K + 2 * (ofReal u ^ (1 - 1/q) * Kw)) / N + A)
+          / ofReal ε₀,   A = 2 ε' + 4 γ
+  ```
+
+  **`hVb` now occurs in no statement of the chain that does not have a twin
+  without it.** The bounded versions stay, since a consumer who has a bound wants
+  the shorter hypothesis list. A bounded `V` recovers the bounded right hand side
+  from the weighted one: `γ ≤ ofReal c * ε`, and `Kw ≤ ofReal c * K` by
+  `lintegral_const_mul'` against `IsApproximatingPair.lintegral_eLpNorm_le`, and
+  `ofReal δ ^ (1 - 1/q) * (K + 2 c K)` is `(1 + 2 c) * (ofReal δ ^ (1 - 1/q) * K)`.
+
+  **The gap sum needed the running maximum too, and the reason it works there is
+  not the reason it works at the horizon.** At the horizon every cell endpoint is
+  a capped time and lies under `u`. A gap cell overshoots the horizon by up to
+  `δ` at its *right* end — that is why its window is `Set.Iic (u + δ)` — but its
+  **weight sits at the left end**, which is capped, so `untopA_oscHitSeqCap_le`
+  still puts the weight under `u` and one hypothesis about
+  `⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ` serves all `N` cells. The statement therefore
+  carries two different windows, `Set.Iic u` for the weight and
+  `Set.Iic (u + δ)` for the errors, and this is the one asymmetry the weakening
+  adds.
+
+  **In the assembly the three windows collapse to two hypotheses**, as the two
+  did in the bounded version: the weight is read on `Set.Iic u` by both blocks,
+  and the horizon block's errors follow from the gap block's by `biSup_mono`
+  under `lintegral_mono` — at the unweighted error directly, at the weighted one
+  through `mul_le_mul_right`, the weight being the factor that does not move.
+
+  **Where the weakening is *not* consumed, measured at the source and worth
+  saying, because the list of six suggested otherwise.** One statement stands
+  above the assembly,
+  `mul_measure_setOf_lt_modulusBased_postcomp_le_of_isApproximatingPair`, and it
+  needs **no** twin: it reads `V = g ∘ X` for `g : E →ᵇ ℝ` and discharges the
+  bound itself with `BoundedContinuousFunction.norm_coe_le_norm`, `c = ‖g‖`. The
+  weighted chain is therefore consumed not through the postcomposition route but
+  at the assembly directly, at a `V` that is the process itself — which is the
+  case of the rescaled walk, whose two pairs
+  (`isApproximatingPair_rescaledWalk`, `isApproximatingPair_sq_rescaledWalk`)
+  approximate an unbounded `V` with error `0`.
+
+  **One elaboration detail, so that no run pays for it twice.** In the weighted
+  cell `{W}` stands *before* `γ` and its hypothesis, whereas in the bounded cell
+  `{W}` is fixed by `hε`, which stands first. Applying the weighted cell with
+  `hαW`/`hβW` therefore leaves `W` a metavariable and the elaborator runs into an
+  `isDefEq` timeout; `(W := Set.Iic (u + δ))` at the call site is the fix, and
+  the gap sum passes `(M := fun ω ↦ ⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ)` with it for the
+  same reason.
+
+  **The condition and the three limits, 2026-09-22, tenth run — and with them
+  the weakening reaches the shape a consumer meets.** Four declarations:
+
+  ```
+  MeasureTheory.IsApproximableMul
+  MeasureTheory.IsApproximableMul.one_lt_exponent
+  MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximableMul
+  MeasureTheory.tendsto_measure_setOf_lt_modulusBased_of_isApproximableMul
+  ```
+
+  ```
+  Tendsto (fun δ : ℝ≥0 ↦ P {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ ω)) δ})
+    (𝓝[>] 0) (𝓝 0)
+  ```
+
+  `IsApproximableMul` is `IsApproximable` with the bound removed at the two
+  places the chain reads it: the error of the first pair becomes the **weighted**
+  error, and `K` is joined by a second constant `Kw` for the weighted
+  compensator. The order of the three limits — `N`, then `δ`, then `ε` — is
+  unchanged, and the window limit is
+  `tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` at `c = 0` with `K + 2 Kw` in
+  place of `K`.
+
+  **Three design points, each decided and not defaulted.**
+
+  * **The weight is the running maximum at the full horizon `T`, in both
+    weighted fields, and not at `u`.** The assembly reads the weight at `u ≤ T`
+    and the error of the first pair at `u + δ ≤ T`; stating the condition at `T`
+    makes the field dominate the hypothesis, so both narrowings go the right way
+    and `mul_le_mul'` supplies the weighted one in a single step. Stating it at
+    `u` would make the condition too weak for its own consumer.
+  * **`Kw` is an `ℝ≥0` and a parameter of the condition, not of a pair.** It
+    plays the role `K` plays — a constant every pair produced at every error must
+    respect — and being in `ℝ≥0` it makes the finiteness of the first summand
+    free, which matters because `Real.sqrt S.toReal` reads `toReal`. It is also
+    what lets `tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` be applied at
+    `K + 2 Kw`, that lemma taking its constant in `ℝ≥0`.
+  * **The two square integrabilities of `V` are fields of their own, outside the
+    existential**, because `V` is fixed and they say nothing about the
+    approximants; the six that do belong to the pairs stay inside.
+
+  **What the weighted route consumes next, and it is *not* the postcomposition
+  criterion.** `SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le`
+  asks for a bound on the modulus of `postcomp g ∘ path`, and reaching it needs
+  approximating pairs for `g ∘ X`, which pairs for `X` do not give: composing
+  with `g` destroys the martingale property. The weighted chain bounds the
+  modulus of the **unpostcomposed** real path, and the criterion that consumes
+  that is `SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal`, whose only
+  further input is `SkorokhodSpace.IsCompactContained` — which for the rescaled
+  walk stands as `isCompactContained_rescaledWalk`.
+
+  **One window for the whole family, weighted** —
+  `MeasureTheory.exists_forall_measure_setOf_lt_modulusBased_le_of_forall_isApproximableMul`:
+
+  ```
+  ∃ δ > 0, ∀ i, P {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ i ω)) δ} ≤ η
+  ```
+
+  for a family whose members share `q`, `T`, `K`, `Kw`. The uniformity is carried
+  by the constants and by nothing else: `B` and the window bound are built from
+  `q`, `T`, `K`, `Kw`, `u` and `ε₀`, so all three choices — count, window, error
+  — are made before the member is named. The empty index is disposed of first,
+  the exponent `1 < q` being read off a member.
+
+  **And the tightness itself** —
+  `MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isApproximableMul`,
+  which needed one new brick in **SkorokhodSpace**,
+  `SkorokhodSpace.measure_map_setOf_le_modulusBased_le`: the passage from a bound
+  over the sample space to one on the image law **without** a value change,
+  `Measure.map_map` composing one layer instead of two. Both were built on
+  2026-09-22, tenth run.
+
+  ```
+  IsTightMeasureSet {P.map (Φ i) | i}
+  ```
+
+  for a family of right continuous progressive real processes, weighted
+  approximable at every horizon with constants depending on the horizon alone,
+  and with the image laws compactly contained.
+
+  **This is the first tightness statement of the milestone that reads no bound
+  on the process**, and it is what the whole weakening was for.
+
+  **The compact containment is a hypothesis here and is not one on the
+  post-composed route**, and the difference is the same one twice: the
+  post-composed image laws are compactly contained for free, the range of a
+  bounded `g` being bounded; the laws of the paths themselves are not. For the
+  rescaled walk it is `isCompactContained_rescaledWalk`.
+
+  **What remains for Donsker's tightness is the acceptance case itself**: that
+  the rescaled walk satisfies `IsApproximableMul` at every horizon. Its two pairs
+  exist (`isApproximatingPair_rescaledWalk`, `isApproximatingPair_sq_rescaledWalk`)
+  and their error is exactly `0`, so the weighted error is `0` against any weight;
+  what is to be checked is `Kw = 0` — a statement about the density `Z` of the
+  first pair and not about its error — and the eight `L²` families at the capped
+  and the gap times, which at error `0` are statements about the walk itself at a
+  bounded stopping time.
 
   **The alternative, and why it is the more expensive one.** The acceptance
   example below states Donsker with `A = {(f, f''/2) | f ∈ Cc^∞(ℝ)}`, that is,
