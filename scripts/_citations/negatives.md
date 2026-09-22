@@ -434,7 +434,14 @@ Suche `integral_abs_le_sqrt|sq_integral_le_integral_sq|integral_abs_le_rpow` unt
 Suche `Filtration.comap|Filtration.reindex|Filtration.comp\b|reindexFiltration|floorFiltration` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
 
 
+## `tight-finite` — TODO.md Punkt 8; MartingaleProblems/Suggested.lean, `isTightMeasureSet_of_finite`; MartingaleProblems/README.md, Meilenstein 11
+
+> Mathlib hat die Straffheit einer **endlichen** Menge endlicher Masse nicht. `Mathlib/MeasureTheory/Measure/Tight.lean` traegt `isTightMeasureSet_singleton` (:99) und im Namensraum `IsTightMeasureSet` die Aussagen `of_compactSpace` (:109), `subset` (:114), `union` (:119), `inter` (:125), `map` (:129), `prodMk` (:143); das Wort `Finite` steht dort nur in den Doc-Kommentaren der Einzelmass-Aussagen. Am 2026-09-21 am Quelltext nachgesehen, nach dem letzten Namensbestandteil **innerhalb der Datei** und nicht nach dem qualifizierten Namen.
+
+Suche `isTightMeasureSet_of_finite|IsTightMeasureSet.finite|isTightMeasureSet_finite|IsTightMeasureSet.biUnion` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
 ## Zusammenfassung
 
-59 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
+60 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
 

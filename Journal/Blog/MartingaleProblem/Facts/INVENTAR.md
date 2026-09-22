@@ -54865,3 +54865,1309 @@ Signatur gehört. Frei ist allgemeiner, aber dann muß der Verbraucher die
 Straffheit der Ausnahmen selbst liefern, und die Aussage ist nur noch
 Buchhaltung. Die Entscheidung ist am Akzeptanztest zu treffen — Donsker hat
 `γ = ℕ` und `F = atTop` — und sie ist zu begründen, nicht zu raten.
+
+### 2026-09-21, vierundzwanzigster Lauf des Tages — die Ausnahme ist gebaut, und die Entscheidung, die der Vorlauf offengelassen hatte, fällt gegen den Filter: der Ausnahmeindex darf sich **nicht** bewegen
+
+Der Vorlauf hatte
+`isTightMeasureSet_map_postcomp_of_eventually_isApproximable` vorgeschlagen und
+ausdrücklich eine Entscheidung mitgegeben: „ob der Filter `F` in der Aussage frei
+bleiben darf oder ob die endliche Ausnahme in die Signatur gehört … sie ist zu
+begründen, nicht zu raten."
+
+**Sie ist begründet, und die Begründung ist schärfer als die Alternative, die der
+Vorlauf gesehen hat.** Es geht nicht darum, ob eine Filterfassung *allgemeiner*
+wäre; es geht darum, daß eine Filterfassung an dieser Stelle **gar nicht
+hinschreibbar** ist, ohne etwas anderes zu behaupten.
+
+#### Warum kein Filter
+
+Die Voraussetzung von
+`MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_isApproximable` lautet
+
+```
+∀ ε₀ > 0, ∀ u > 0, ∃ q T K, u < T ∧ ∀ i, IsApproximable 𝓕 P q T K (g ∘ X i) ε₀ u
+```
+
+— das `∃ q T K` steht **zwischen** `∀ u` und `∀ i`, weil die Konstanten über die
+Familie gleichmäßig sein müssen (das ist der ganze Inhalt der
+Gleichmäßigkeitsaussage darunter). Ein `∀ᶠ i in F` kann deshalb nur ganz innen
+stehen, und dann hängt die Ausnahmemenge von `(ε₀, u)` ab.
+
+**Das darf sie nicht**, und der Grund steht im Verbraucher:
+`SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le`
+quantifiziert den Horizont `m : ℕ` **unbeschränkt** und baut aus allen Radien
+*eine* kompakte Menge. Ausnahmemengen, die mit `m` wandern, vereinigen sich zu
+einer abzählbaren Menge, und dann ist nichts mehr auszunehmen. Die endliche
+Menge `G : Set γ` gehört also **außerhalb jedes Quantors** in die Signatur; sie
+ist damit die schwächste Voraussetzung dieser Bauart, und `Filter.cofinite`
+kauft nichts.
+
+(Nebenbei, damit es nicht noch einmal erhoben wird: die drei Filterfassungen
+sind nicht gleichwertig. `∀ᶠ i in F` mit `cofinite ≤ F` ist äquivalent zur
+Endlichkeit des Komplements — `cofinite ≤ F` heißt `F.sets ⊆ cofinite.sets` —,
+und `∀ᶠ i in cofinite` ist unter ihnen die schwächste Voraussetzung, also die
+stärkste Aussage. Für `γ = ℕ` ist sie über `Nat.cofinite_eq_atTop` von `atTop`
+aus erreichbar. Das alles hilft hier aber nicht, weil die Ausnahme nicht innen
+stehen darf.)
+
+#### Drei Deklarationen, alle gegen `master` übersetzt
+
+| Deklaration | was sie sagt |
+| --- | --- |
+| `MeasureTheory.isTightMeasureSet_of_finite` | eine **endliche** Menge endlicher Maße ist straff |
+| `MeasureTheory.isTightMeasureSet_range_of_finite_compl` | eine Familie ist straff, sobald sie es außerhalb endlich vieler Indizes ist |
+| `MeasureTheory.isTightMeasureSet_map_postcomp_of_isApproximable_off_finite` | die Straffheit der Bildmaße, wenn alle `i ∉ G` approximierbar sind, `G` endlich |
+
+`check_master.py`: 0 Fehler, 0 `sorry`, Warnungen unverändert 18 / 38 / 112,
+davon veraltet 0. Alle drei mit `check_axioms_master.py` geprüft und auf
+`propext`, `Classical.choice`, `Quot.sound` und nichts sonst. Mathlib-Stand
+`94ef6b89544e58e90f119da869f3fb48d1da0f4c`.
+
+Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 11, als eigener
+Eintrag „Finitely many members may be exempted, and the exemption does not move",
+unmittelbar hinter dem Befund des Vorlaufs.
+
+#### Die Negativaussage, und sie ist am Quelltext erhoben
+
+**`Mathlib/MeasureTheory/Measure/Tight.lean` hat die beiden Enden und nicht die
+Mitte.** Vorhanden sind `isTightMeasureSet_singleton` (`:99`) und, innerhalb von
+`namespace IsTightMeasureSet`, `of_compactSpace` (`:109`), `subset` (`:114`),
+`union` (`:119`), `inter` (`:125`), `map` (`:129`), `prodMk` (`:143`). Das Wort
+`Finite` kommt in der ganzen Datei **nur** in den Doc-Kommentaren der
+Einzelmaß-Aussagen vor; die Iteration von `union` über eine endliche Menge steht
+nirgends. Gesucht wurde nach der Regel des Vorlaufs — nach dem **letzten
+Namensbestandteil innerhalb der Datei**, nicht nach dem qualifizierten Namen.
+
+**Sie steht eingetragen** — `TODO.md` Punkt 8, als einunddreißigste Lücke
+(„Eine endliche Menge endlicher Maße ist straff"), und als `tight-finite` in
+`scripts/check_negatives.py`, damit sie künftig mitgeprüft wird. Der Lauf des
+Skripts nach dem Eintrag: **60 Behauptungen, 0 mit unerwarteten Treffern.** Der
+Beweis ist vier Zeilen, und der Platz in Mathlib ist neben `union`.
+
+#### Was der Satz **nicht** erreicht, und das ist der eigentliche Befund des Laufs
+
+Der Vorlauf hatte geschrieben, diese Aussage sei „die einzige Stelle, an der die
+Straffheitsseite des Akzeptanztests noch hängt". **Das stimmt nicht, und es ist
+aus dem eigenen Befund des Vorlaufs ablesbar.**
+
+Sein Zeuge sagt: eine reskalierte Irrfahrt ist bei **jedem** `n` durch **kein**
+Paar approximierbar. `IsApproximable` quantifiziert den Näherungsfehler `ε`
+**in sich** (`exists_approximants : ∀ ε > 0, ∃ …`), ein Glied ist also entweder
+zu jedem Fehler approximierbar oder zu keinem. Eine Familie, deren `n`-tes Glied
+nur bis auf `ε n` approximierbar ist mit `ε n → 0`, wird deshalb durch **kein**
+endliches `G` freigestellt — sie ist an jedem Glied schlecht, nur immer weniger.
+Für Donsker leistet der heute gebaute Satz also nichts.
+
+**Die Abschwächung, die \EK (9.26) wirklich machen, ist eine andere**: das `∀ ε`
+der Struktur wandert **nach außen an den Index vorbei**. Das ist eine andere
+Aussage und keine Instanz der heutigen.
+
+#### Und sie ist erreichbar — der Weg ist in diesem Lauf noch abgesucht und die Bausteine sind benannt
+
+Der Grund, warum es überhaupt geht, steht im Beweis von
+`mul_measure_setOf_lt_modulusBased_le_of_isApproximable`: er liest die
+Approximanten zum Fehler `(n : ℝ≥0∞)⁻¹` und setzt sie in
+`mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair` ein, **das den
+Fehlerterm `A = 2ε' + 4·ofReal c·ε` ausdrücklich auf der rechten Seite trägt**:
+
+```
+ofReal ε₀ * P {…} ≤ N * ofReal √((G + A).toReal) + (B / N + A) / ofReal ε₀
+```
+
+Erst der Grenzübergang `n → ∞` streicht `A`. Eine Familie, die zu **jedem**
+Fehlerniveau nur **schließlich** approximierbar ist, liefert also dieselbe
+Ungleichung mit einem `A`, das mit dem Index verschwindet — die
+Paar-Ungleichung ist der Anschluß, und sie ist bewiesen.
+
+**Was dabei zusätzlich gebraucht wird, und es ist genau eine Aussage.** Die
+Ausnahmemenge darf dann mit `(ε, m, η)` wandern, und nach dem Befund oben
+verträgt `SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le`
+das nicht. Der Ausweg ist **nicht**, die Ausnahmen aus der Konklusion
+herauszunehmen, sondern ihnen die Voraussetzung **einzeln zu beschaffen**: ein
+einzelnes Bildgesetz ist straff (`isTightMeasureSet_singleton`), und
+`SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` ist eine **Äquivalenz**,
+gibt also für jedes einzelne Glied sein eigenes `δ`. Zusammen mit
+`SkorokhodSpace.modulusBased_mono` (`SkorokhodSpace/Suggested.lean:8897`, die
+Monotonie in `δ`, die eine Schranke bei `δ` auf jedes kleinere trägt) ist das
+Minimum aus dem `δ` der guten Glieder und den endlich vielen `δ` der Ausnahmen
+ein `δ`, das allen dient.
+
+#### Und er ist im selben Lauf noch gebaut — drei weitere Deklarationen
+
+Der Vorschlag, der hier zunächst für den nächsten Lauf stand, ist eingelöst
+worden, weil die Bausteine sämtlich dastanden und der Beweis im ersten Anlauf
+durchging.
+
+| Deklaration | Datei | was sie sagt |
+| --- | --- | --- |
+| `Set.Finite.exists_pos_forall_le` | SkorokhodSpace | endlich viele positive Zahlen haben eine positive untere Schranke |
+| `SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le_off_finite` | SkorokhodSpace | das Kriterium mit endlich vielen ausgenommenen Gliedern, **und die Ausnahme darf mit `(ε, m, η)` wandern** |
+| `MeasureTheory.isTightMeasureSet_map_postcomp_of_isApproximable_off_finite_window` | MartingaleProblems | dasselbe eine Stufe höher: `G` entsteht **innerhalb** der Voraussetzung, nach `ε₀` und `u` |
+
+**Der Kunstgriff, und er ist der ganze Inhalt:** die Ausnahmen werden **nicht**
+aus der Konklusion herausgenommen, sondern es wird ihnen die Voraussetzung
+beschafft. Ein einzelnes Bildgesetz ist ein endliches Maß auf einem vollständigen
+zweitabzählbaren metrischen Raum, also straff
+(`MeasureTheory.isTightMeasureSet_singleton`), und
+`SkorokhodSpace.isTightMeasureSet_map_postcomp_iff` ist eine **Äquivalenz** — sie
+gibt also, was sie nimmt, und liefert dem Ausnahmeglied sein eigenes `δ` zu
+genau demselben `(ε, m, η)`. `SkorokhodSpace.modulusBased_mono` trägt eine
+Schranke von einem Fenster auf jedes kleinere, und das Minimum aus dem
+gemeinsamen `δ` und den endlich vielen Ausnahme-`δ` dient allen.
+
+**Damit ist der Befund von oben berichtigt, und zwar in die richtige Richtung:**
+der Verbraucher verträgt eine wandernde Ausnahmemenge doch — nicht, weil die
+kompakte Menge aus allen Radien anders gebaut würde, sondern weil das Kriterium
+**radienweise** verbraucht wird, sobald man es als Äquivalenz liest. Die
+Unmöglichkeit betraf allein den Weg über das Aufspalten der Familie
+(`isTightMeasureSet_range_of_finite_compl`), und der bleibt der elementarere von
+beiden.
+
+`check_master.py` nach dem Einbau: 0 Fehler, 0 `sorry`, Warnungen unverändert
+18 / 38 / 112, davon veraltet 0. Alle sechs Deklarationen des Laufs mit
+`check_axioms_master.py` geprüft und auf `propext`, `Classical.choice`,
+`Quot.sound` und nichts sonst. Die Punkte stehen in
+`MartingaleProblems/README.md`, Meilenstein 11, und in
+`SkorokhodSpace/README.md`, Meilenstein 7.
+
+**`P` ist dabei auf `IsFiniteMeasure` abgeschwächt** — das Kriterium liest von
+`P` nichts als die Straffheit eines einzelnen Bildgesetzes, und die verlangt
+keine Wahrscheinlichkeit.
+
+#### Was jetzt noch fehlt, und es ist genau eine Stelle
+
+Der Fehler `ε` steht weiterhin **in** `IsApproximable`. Der Hebel, ihn
+herauszuziehen, ist benannt und steht:
+`mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair` trägt den Fehler
+der Approximanten als ausdrücklichen Summanden `A` auf der rechten Seite, und
+`mul_measure_setOf_lt_modulusBased_le_of_isApproximable` wirft ihn im Grenzwert
+längs `ε = (n : ℝ≥0∞)⁻¹` weg.
+
+**Vorschlag für den nächsten Lauf, als benanntes Ziel:**
+
+> `MeasureTheory.IsEventuallyApproximable` — dieselbe Struktur wie
+> `MeasureTheory.IsApproximable`, aber über eine **Familie** `X : γ → …` und mit
+> dem Fehler außen: zu jedem `ε > 0` gibt es ein endliches `G : Set γ`, so daß
+> jedes `i ∉ G` zwei Paare der Klasse mit gemeinsamen `q`, `T`, `K` und Fehler
+> `≤ ε` besitzt.
+>
+> Und daraus
+> `MeasureTheory.isTightMeasureSet_map_postcomp_of_isEventuallyApproximable`,
+> über `isTightMeasureSet_map_postcomp_of_isApproximable_off_finite_window`.
+
+**Worauf es ruht, und alles davon steht:** die Paar-Ungleichung mit `A`
+(`mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair`), die Wahl von
+`N` und `δ` **vor** dem Glied im Beweis von
+`exists_forall_measure_setOf_lt_modulusBased_postcomp_le_of_forall_isApproximable`
+— dort wird das dritte Drittel `θ/2` bereits zweigeteilt, es ist also in `θ/3`
+umzuschreiben und der dritte Teil an `A` zu geben —, und das heute gebaute
+Straffheitsende.
+
+**Die Stelle, an der es klemmen kann, benannt:** die Ungleichung mit `A` verlangt
+`(G + A) ≠ ⊤` und die Stetigkeit der Wurzel bei `A ≠ 0`; der vorhandene Beweis
+nimmt beides im Grenzwert und nicht bei festem `A`. Ob die Abschätzung bei festem
+`A` ohne neue Rechnung durchgeht, ist der erste zu prüfende Punkt, und er ist am
+Beweis von `mul_measure_setOf_lt_modulusBased_le_of_isApproximable` (Zeilen
+45850–45865) zu entscheiden, nicht zu raten.
+
+**Und der Akzeptanztest, damit die Aussage nicht leer bleibt:** die reskalierten
+Irrfahrten. Für sie ist `IsApproximable` bei jedem `n` falsch
+(`not_isApproximable_indicator_Ici` und der Befund des dreiundzwanzigsten Laufs),
+`IsEventuallyApproximable` aber gerade nicht — und erst das macht aus den fünf
+wahren Konditionalaussagen dieses Meilensteins anwendbare Sätze.
+
+### 2026-09-22, erster Lauf des Tages — der Fehler steht jetzt **außerhalb** des Index, und damit ist die Straffheitsseite des Meilensteins nicht mehr leer: eine Familie, von der **kein Glied** approximierbar ist, ist hier straff
+
+Der Vorlauf hatte als benanntes Ziel `MeasureTheory.IsEventuallyApproximable`
+hinterlassen — dieselbe Struktur wie `IsApproximable`, aber über eine Familie und
+mit dem Fehler außen — und dazu die Stelle benannt, an der es klemmen könne: die
+Paarungleichung trage den Fehler `A` auf der rechten Seite, der vorhandene Beweis
+nehme aber `(G + A) ≠ ⊤` und die Stetigkeit der Wurzel **im Grenzwert** und nicht
+bei festem `A`.
+
+**Die Stelle klemmt nicht, und der Grund ist, daß sie schon vorgesehen war.**
+`MeasureTheory.tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` ist seit dem
+2026-09-21 mit **freiem `A`** bewiesen und liefert als Grenzwert ausdrücklich
+`N · ofReal √(A.toReal)` und nicht `0`; der Lauf, der sie bewiesen hat, hat im
+Doc-Kommentar festgehalten, daß eine Fassung mit Grenzwert `0` falsch wäre. Damit
+war die einzige Eingabe, die der Vorlauf als ungeprüft benannt hatte, bereits
+da. Es war nichts nachzurechnen und nichts abzuschwächen.
+
+#### Was gebaut ist — acht Deklarationen
+
+| Deklaration | was sie sagt |
+| --- | --- |
+| `MeasureTheory.IsEventuallyApproximable` | zu jedem Fehler ein **endliches** `G : Set γ`, außerhalb dessen jedes Glied zwei Paare mit gemeinsamen `q`, `T`, `K` zu **diesem** Fehler hat |
+| `MeasureTheory.isEventuallyApproximable_of_tendsto_zero_cofinite` | die Eingangsform: **jedes** Glied hat Paare, deren Fehler längs `cofinite` verschwindet |
+| `MeasureTheory.isEventuallyApproximable_of_forall_isApproximable` | Approximierbarkeit außerhalb eines endlichen `G` gibt sie, bei unbeweglichem `G` — also ist sie eine Abschwächung und keine andere Bedingung |
+| `MeasureTheory.exists_finite_forall_measure_setOf_lt_modulusBased_postcomp_le_of_isEventuallyApproximable` | die gleichmäßige Modulschranke: **ein** Ausnahmeindexsatz und **ein** Fenster für alle Glieder außerhalb |
+| `MeasureTheory.isTightMeasureSet_map_postcomp_of_isEventuallyApproximable` | die Straffheit der Bildgesetze daraus |
+| `MeasureTheory.isApproximatingPair_zero` | das Nullpaar ist ein Paar der Klasse |
+| `MeasureTheory.not_isApproximable_scaledStep` | **kein** Glied der skalierten Treppenfamilie ist approximierbar |
+| `MeasureTheory.isEventuallyApproximable_scaledStep` | dieselbe Familie **ist** eventuell approximierbar |
+
+`check_master.py` nach dem Einbau: **0 Fehler, 0 `sorry`**, Warnungen unverändert
+18 / 38 / 112, davon veraltet 0 — der Einbau erzeugt also keine einzige neue
+Warnung. Alle acht mit `check_axioms_master.py` geprüft und auf `propext`,
+`Classical.choice`, `Quot.sound` und nichts sonst. Die Punkte stehen in
+`MartingaleProblems/README.md`, Meilenstein 11.
+
+#### Der Inhalt, und er ist eine Vertauschung der Quantorenreihenfolge
+
+Die ganze Kette darüber wählt in der Reihenfolge **`N`, `δ`, `ε`**: der Zähler
+zuerst (der Horizontterm ist `O(1/N)`), das Fenster danach, und der Fehler
+zuletzt, „für gegebenes `N` und `δ`" — so sagen es \EK{} bei (9.28), und so steht
+es im Doc-Kommentar von
+`mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair`.
+
+**Hier ist sie `N`, `ε`, `δ`.** Der Grund ist zwingend und nicht Geschmack: die
+Ausnahmemenge `G` entsteht *mit* dem Fehler, und der Verbraucher
+`SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le_off_finite`
+verlangt `∃ G, G.Finite ∧ ∃ δ, …` — also `G` **vor** `δ`. Wer den Fehler zuletzt
+wählte, hätte die Ausnahmemenge hinter dem Fenster und könnte sie dort nicht mehr
+herausreichen.
+
+Daß die vertauschte Reihenfolge trägt, ist genau die Aussage mit freiem `A`: bei
+festem `a₀` geht der Gapterm gegen `N · √a₀` statt gegen `0`, also wird `a₀` so
+klein gewählt, daß dieser Grenzwert **echt** unter seinem Anteil am Budget liegt,
+und das Fenster drückt den Term dann darunter. Das Budget
+`θ = ofReal ε₀ * η` zerfällt in `θ/2` für den Gapterm und zweimal `θ/4` für den
+Horizont- und den Fehlerterm.
+
+**Drei Kleinigkeiten, die beim Hinschreiben Zeit gekostet haben und die
+aufzuschreiben sie spart:**
+
+* **`η = ⊤` ist zuerst zu erledigen.** Sonst ist `θ = ⊤` und `θ/4 < θ/2` ist
+  falsch; die Strenge der Halbierung wird aber gebraucht, weil der Gapterm nur
+  *strikt* unter die Schranke gebracht werden kann.
+* **Der Exponent `1 < q` sitzt im Paar und ist nur über die Ausnahmemenge
+  erreichbar.** Er wird beim Fehler `1` geholt; erschöpft die dortige
+  Ausnahmemenge den Index, so ist die Konklusion leer und `δ = 1` tut es.
+* **`ENNReal.mul_div_cancel'` ist nicht, was der Name vermuten läßt.** Auf
+  `master` (`Mathlib/Basic/ENNReal/Inv.lean:184`) trägt es
+  `(ha₀ : a = 0 → b = 0) (ha : a = ∞ → b = 0)`; die Fassung mit `a ≠ 0`,
+  `a ≠ ∞` heißt `ENNReal.mul_div_cancel` (`:188`). Gebraucht wird sie, weil der
+  Fehler als `a₀ / (2 + 4 ofReal ‖g‖)` gewählt wird, damit die Kombination
+  `2 ε' + 4 ofReal ‖g‖ ε` der Paarungleichung **auf den Kopf** `a₀` ist.
+
+#### Und der Befund, um den es eigentlich geht: die Aussage ist nicht leer, und die davor waren es für diesen Zweck
+
+Der dreiundzwanzigste Lauf des 2026-09-21 hatte gezeigt, daß eine reskalierte
+Irrfahrt bei **festem** Index durch **nichts** approximierbar ist, und der Grund
+ist nicht die Irrfahrt, sondern der deterministische Sprung. Der vierundzwanzigste
+hat daraus gefolgert, daß keine endliche Ausnahmemenge hilft: `IsApproximable`
+quantifiziert den Fehler in sich, ein Glied ist also zu jedem Fehler
+approximierbar oder zu keinem.
+
+**Dieser Lauf hat den Zeugen dazu gebaut, und er ist billiger als die Irrfahrt.**
+Die Familie der deterministischen Treppen zur festen Zeit `b` mit der Höhe
+`(i+1)⁻¹`:
+
+* `not_isApproximable_scaledStep` — **kein** Glied ist approximierbar, über
+  `not_isApproximable_of_eqOn_Ico_of_integral_ne`: das Glied ruht auf
+  `Set.Ico 0 b` und bewegt seinen Mittelwert um `(i+1)⁻¹ ≠ 0` darüber hinweg.
+* `isEventuallyApproximable_scaledStep` — die **Familie** ist eventuell
+  approximierbar, und zwar durch das **Nullpaar**. Approximiert wird gar nichts;
+  die Glieder sind bloß klein, und der Fehler der Approximation ist ihre eigene
+  Höhe. Die Ausnahmemenge ist das Anfangsstück `Set.Iio M` der Indizes, deren
+  Höhe den Fehler übersteigt.
+
+Damit ist diese Familie durch
+`isTightMeasureSet_map_postcomp_of_isEventuallyApproximable` straff und durch
+**keinen** der beiden Sätze davor erreichbar. Das ist die Schärfe der
+Abschwächung, in Lean und nicht im Doc-Kommentar.
+
+Der Zeuge trägt die **Gestalt** der reskalierten Irrfahrt — Sprunghöhe gegen
+Null, deterministischer Sprungzeitpunkt — und nicht die Irrfahrt selbst; was er
+belegt, ist die Quantorenstruktur. Das steht so an der Deklaration, damit kein
+Lauf ihn für mehr nimmt, als er ist.
+
+#### Ein Nebenbefund zu den Zitaten, aufgeschrieben und nicht verfolgt
+
+`upstream/master` in `~/Code/lean/mathlib4` steht auf `09712d488fd`
+(2026-09-21), vier Tage frischer als der Worktree `~/Code/lean/mathlib-master`
+(`94ef6b89544`, 2026-09-18), gegen den `check_master.py` übersetzt. Auf dem
+frischeren Stand sind die `ENNReal`-Dateien nach `Mathlib/Basic/ENNReal/`
+gewandert: `ENNReal.add_div`, `ENNReal.div_pos` und `ENNReal.mul_div_cancel`
+stehen dort in `Mathlib/Basic/ENNReal/Inv.lean` (Zeilen 505, 226, 188), während
+`Mathlib/Data/ENNReal/Inv.lean` auf demselben Stand **fünf Zeilen** lang ist und
+keinen dieser Namen mehr führt — also ein reiner Weiterleitungsstummel.
+
+**Das ist nicht in diesem Lauf zu verfolgen** — unsere Zitatprüfung läuft gegen
+den Worktree, und der ist maßgeblich, solange er es ist. Aber es ist eine
+Verschiebung, die **jede** Dateiangabe zu `ENNReal` in den vier `README.md`
+betrifft, und sie gehört an die Stelle, an der der nächste Zitatlauf sie findet.
+
+#### Die Eingangsform ist im selben Lauf noch gebaut — eine achte Deklaration
+
+Der Vorschlag, der hier zunächst für den nächsten Lauf stand, ist eingelöst
+worden, weil der Beweis die Umschreibung **einer** Äquivalenz ist und im ersten
+Anlauf durchging:
+
+> `MeasureTheory.isEventuallyApproximable_of_tendsto_zero_cofinite` — **jedes**
+> Glied hat Paare mit gemeinsamen `q`, `T`, `K`, und ihr Fehler `e i` geht längs
+> `Filter.cofinite` gegen `0`. Daraus `IsEventuallyApproximable`.
+
+Das ist die Gestalt, in der \EK{} (9.26) lesen und in der ein Verbraucher die
+Bedingung hat: *„es gibt Approximanten, deren Fehler mit dem Index
+verschwindet"*, nicht *„zu jedem Fehler eine Ausnahmemenge"*. Die zweite ist die,
+mit der sich rechnen läßt; die erste ist die, die dasteht.
+
+**Der ganze Inhalt ist `Filter.eventually_cofinite`**
+(`Mathlib/Order/Filter/Cofinite.lean:49`, am Quelltext von `94ef6b89544` **und**
+`09712d488fd` nachgesehen, dort dieselbe Zeile): `∀ᶠ i in cofinite, e i ≤ ε` ist
+`{i | ¬ e i ≤ ε}.Finite`, und das **ist** die Ausnahmemenge zum Fehler `ε`. Es
+wird nichts abgeschätzt; es sind zwei Lesarten einer Endlichkeit. Der Index
+braucht dafür keine Voraussetzung.
+
+**`cofinite` und nicht `atTop`**, und das ist keine Geschmacksfrage: die Struktur
+verlangt eine **endliche** Ausnahmemenge, und genau das heißt `cofinite`, während
+`atTop` es nur über einer Ordnung sagt. Für `γ = ℕ` fallen beide zusammen
+(`Nat.cofinite_eq_atTop`).
+
+`check_master.py` nach dem zweiten Einbau: **0 Fehler, 0 `sorry`**, Warnungen
+weiterhin 18 / 38 / 112, davon veraltet 0. Auch diese Deklaration mit
+`check_axioms_master.py` geprüft, `propext`, `Classical.choice`, `Quot.sound`.
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+> `MeasureTheory.isEventuallyApproximable_rescaledWalk` — der Akzeptanztest
+> selbst: die reskalierten Irrfahrten erfüllen `IsEventuallyApproximable`, und
+> damit sind ihre Bildgesetze straff.
+
+**Worauf es ruht, und das meiste davon steht.** Die Eingangsform
+`isEventuallyApproximable_of_tendsto_zero_cofinite` nimmt der Aussage die ganze
+Quantorenarbeit ab: zu zeigen bleibt, daß das `n`-te Glied Paare mit Fehler
+`e n → 0` hat. Der naheliegende Ansatz ist, das Glied durch sich selbst zu
+approximieren — steht die Martingaleigenschaft der reskalierten Partialsumme über
+der gewählten Filtration, so ist `Y = V`, `C = 0`, `Z = 0` ein Paar mit Fehler
+`0` — während für das Quadrat der Kompensator der quadratischen Variation
+einzusetzen ist. Das ist die eine wirkliche Rechnung des Vorhabens, und sie ist
+zu machen, nicht zu behaupten.
+
+**Die Stelle, an der es klemmen kann, benannt, und sie ist nicht die
+Approximation.** Der einundzwanzigste Lauf des 2026-09-21 hat gezeigt, daß die
+Partialsumme über der dort genannten Filtration **kein** Martingal ist; die
+Filtration ist also zuerst festzuhalten, und zwar die, unter der die Rechnung
+dieses Laufs steht. Und `IsApproximatingPair` verlangt `1 < q` samt
+`∫⁻ eLpNorm (Z ·) q ≤ K` **gleichmäßig über die Familie** — für `Z ≡ 0` ist das
+frei, für den Kompensator des Quadrats nicht, und dort ist die Schranke `K` an
+der Skalierung nachzurechnen. Das ist der Punkt, an dem sich entscheidet, ob der
+Akzeptanztest ein Lauf ist oder drei.
+
+**Was dabei nicht noch einmal zu erheben ist:** daß die Irrfahrt bei festem Index
+durch nichts approximierbar ist (dreiundzwanzigster Lauf des 2026-09-21), und daß
+keine endliche Ausnahmemenge das repariert (vierundzwanzigster). Beides ist
+gemessen; der neue Satz umgeht es und widerlegt es nicht.
+
+### 2026-09-22, zweiter Lauf des Tages — der Akzeptanztest hat sein **erstes** Paar bekommen, und zugleich ist gemessen, warum das zweite nicht das Quadrat selbst sein kann: der Kompensator eines diskreten Quadrats ist eine **Treppe**, und die Klasse verlangt ein Integral
+
+**Der Vorschlag des Vorlaufs lautete `isEventuallyApproximable_rescaledWalk`,
+und er ist nicht eingelöst, aber er ist von einer Richtung in eine Rechnung
+verwandelt worden.** Der Vorlauf hatte zwei Klemmstellen benannt: die Filtration
+und die gleichmäßige Schranke `K` für den Kompensator des Quadrats. Die erste
+ist keine mehr — `martingale_rescaledWalk` steht seit dem 2026-09-21 über
+`floorFiltration`, und das ist dieselbe, die `isStronglyProgressive_rescaledWalk`
+liest. Die zweite ist nicht die Stelle, an der es klemmt. Es klemmt eine Stufe
+davor, und das ist der Befund dieses Laufs.
+
+#### Der Befund: die beiden Paare sind ungleich teuer, und zwar aus einem Grund, der nicht die Irrfahrt betrifft
+
+`MeasureTheory.IsApproximable` verlangt **zwei** Paare je Fehler: eines für den
+Prozeß, eines für sein Quadrat.
+
+* **Das erste ist umsonst.** Ein Martingal ist sein eigener Approximant — Fehler
+  `0`, Kompensator `0`, Dichte `0`, Konstante `K = 0`.
+* **Das zweite ist es nicht, und der Grund ist strukturell.** Zum Quadrat der
+  Irrfahrt gehört der Kompensator `⟨V⟩ t = (n+1)⁻¹ ∑_{j < ⌊t(n+1)⌋} 𝔼[ξ_j²]`,
+  und `V² − ⟨V⟩` ist ein Martingal. Aber `⟨V⟩` ist eine **Treppenfunktion der
+  Zeit**, und das Feld `IsApproximatingPair.compensator_eq` verlangt
+  `C t ω = ∫_{(0,t]} Z s ω` mit `Z` in `L^q`. **Keine Treppe ist ein solches
+  Integral.**
+
+Der Approximant des Quadrats ist deshalb nicht das kompensierte Quadrat,
+sondern das kompensierte Quadrat **plus einen absolutstetigen Kompensator**, und
+der Fehler ist der Abstand der beiden. Bei gemeinsamem zweitem Moment `σ` ist
+der absolutstetige Kompensator `t · σ` mit der konstanten Dichte `σ`, und der
+Abstand ist
+
+```
+(t − ⌊t (n+1)⌋ / (n+1)) · σ ≤ σ / (n+1),
+```
+
+gleichmäßig in `ω` **und** in `t`.
+
+**Und das ist der Punkt.** Dieser Fehler geht gegen `0` *längs der Familie* und
+ist bei festem `n` eine feste positive Zahl. Das ist dieselbe Aussage, die der
+dreiundzwanzigste Lauf des 2026-09-21 als Unmöglichkeit gefunden hatte — eine
+Irrfahrt ist bei festem Index durch nichts approximierbar —, hier aber von der
+anderen Seite und mit einer Zahl daneben. `IsEventuallyApproximable` ist also
+nicht bloß die Bedingung, unter der der Akzeptanztest durchgeht; sie ist die
+Bedingung, unter der er **überhaupt formulierbar** ist, und der Betrag des
+Fehlers ist `σ/(n+1)`.
+
+#### Was gebaut ist — vier Deklarationen
+
+| Deklaration | was sie sagt |
+| --- | --- |
+| `MeasureTheory.martingale_sq_partialSum_of_iIndepFun` | `(∑_{k<n} ξ k)² − ∑_{k<n} 𝔼[ξ k²]` ist ein Martingal für die natürliche Filtration der Summen |
+| `MeasureTheory.martingale_sq_rescaledWalk` | dasselbe für die reskalierte Irrfahrt, längs der Abrundung umindiziert |
+| `MeasureTheory.isApproximatingPair_rescaledWalk` | die Irrfahrt ist ihr eigener Approximant, mit `C = 0`, `Z = 0`, `K = 0` |
+| `MeasureTheory.IsApproximatingPair.integrable_stoppedValue_of_dominated` | der gestoppte Wert ist integrierbar, wenn der Approximant bis `j` von einem **integrierbaren** `g` dominiert wird |
+
+`check_master.py` nach dem Einbau: **0 Fehler, 0 `sorry`**, Warnungen unverändert
+18 / 38 / 112, davon veraltet 0 — der Einbau erzeugt also keine einzige neue
+Warnung. Alle vier mit `check_axioms_master.py` geprüft und auf `propext`,
+`Classical.choice`, `Quot.sound` und nichts sonst; `…_of_bounded`, das jetzt
+Instanz von `…_of_dominated` ist, mitgeprüft. Die Punkte stehen in
+`MartingaleProblems/README.md`, Meilenstein 11.
+
+#### Das kompensierte Quadrat: eine Lücke in Mathlib, am Quelltext belegt
+
+**Mathlib hat es in keiner Fassung.** Gesucht am Quelltext von `master`
+`09712d488fd` unter `Mathlib/Probability/` nach `QuadraticVariation`,
+`predictableQuadratic` und `quadratic variation` — null Treffer; in
+`Mathlib/Probability/Moments/Variance.lean` kommt `Martingale` **nicht ein
+einziges Mal** vor, und die einzigen Treffer von `sq_sub` unter
+`Mathlib/Probability/` sind `condVar_ae_eq_condExp_sq_sub_sq_condExp` und seine
+Verbraucher, also die bedingte Varianz und nicht der Kompensator. Was Mathlib
+hat, ist `ProbabilityTheory.IndepFun.variance_sum` — diese Aussage zu **einer**
+Zeit und mit weggeworfener Bedingung. Das ist eine neue Lücke für `TODO.md`
+Punkt 8.
+
+**Der Kompensator ist die Summe der zweiten Momente und nicht der Varianzen.**
+Unter der Zentriertheit sind beide gleich; die zweiten Momente sind, was der
+Beweis erzeugt, denn `∫ ξ n ²` ist die bedingte Erwartung von `ξ n ²` unter der
+Unabhängigkeit, und die Varianz müßte auf jeder Stufe zurückgerechnet werden.
+
+**Wo die beiden Voraussetzungen an die Summanden verbraucht werden, je an einer
+Stelle.** Die Zentriertheit tötet das Kreuzglied `2 · S n · ξ n` — über
+`MeasureTheory.condExp_mul_of_stronglyMeasurable_left`
+(`Mathlib/MeasureTheory/Function/ConditionalExpectation/PullOut.lean:245`), deren
+`m`-meßbarer Faktor die Summe und deren unabhängiger Faktor der Zuwachs ist —,
+und die Quadratintegrierbarkeit kauft die Integrierbarkeit dieses Kreuzglieds
+(`MeasureTheory.MemLp.integrable_mul` am Hölderpaar `(2,2)`,
+`Mathlib/MeasureTheory/Function/L1Space/Integrable.lean:1086`) und die des
+Quadrats (`MeasureTheory.MemLp.integrable_sq`,
+`Mathlib/MeasureTheory/Function/L2Space.lean:42`). Die Unabhängigkeit wird genau
+dort gelesen, wo sie `martingale_partialSum_of_iIndepFun` liest, und **dieselbe**
+Unabhängigkeit bedient den Zuwachs und sein Quadrat, weil `ξ n ²` für die
+σ-Algebra von `ξ n` meßbar ist.
+
+#### Zwei Kleinigkeiten, die Zeit gekostet haben und die aufzuschreiben sie spart
+
+* **Die Konstante der *nächsten* Stufe bleibt beim adaptierten Summanden.** Die
+  Zerlegung des Schrittes als
+  `(S n ² − ∑_{k<n+1} 𝔼[ξ k²]) + (2 · S n · ξ n + ξ n ²)` läßt in dem Summanden,
+  dessen bedingte Erwartung gerechnet wird, **keine Subtraktion** stehen, und
+  `MeasureTheory.condExp_sub` muß mit `Pi.sub` gar nicht erst versöhnt werden.
+  Mit der Konstanten auf der anderen Seite bleibt der Beweis an einem `rw`
+  hängen, das `(f − g) ω` sieht, wo das Ziel `f ω − g ω` trägt —
+  definitionsgleich, aber für `rw` kein Muster. Das ist dieselbe Falle wie die
+  `ENNReal`/`WithTop`-Stelle des achtzehnten Laufs vom 2026-09-10: **nicht am
+  Ziel rewriten, sondern die Aussage so hinschreiben, daß das Muster dasteht.**
+* **`WithTop.untopA_le` ist durch `@[to_dual]` erzeugt.** Es entsteht aus
+  `WithBot.le_unbotA` (`Mathlib/Order/WithBot.lean:658`) und steht in **keiner**
+  `theorem`-Zeile; `Mathlib/Probability/Process/Stopping.lean:1019` benutzt es
+  unqualifiziert. Das ist die vierte Instanz der stehenden Regel, nach
+  `Set.indicator_of_notMem`, `frequently_lt_of_liminf_lt` und `IsCadlag.add`.
+
+#### Warum die Integrierbarkeit des gestoppten Wertes eine Verallgemeinerung brauchte
+
+`IsApproximatingPair.integrable_stoppedValue_of_bounded` verlangte eine
+**konstante** Schranke an den Approximanten, und die Irrfahrt hat keine: ihr Wert
+auf der Stufe `k` ist eine Summe unabhängiger Summanden. Auf einer beschränkten
+Zeitstrecke wird sie aber von der Summe der endlich vielen Stufenwerte dominiert,
+die dort vorkommen können, und die ist integrierbar. Die Verallgemeinerung auf
+einen **integrierbaren Majoranten** kostet nichts — `Integrable.mono'` statt
+`integrable_const` — und der bisherige Satz ist jetzt ihre Instanz am konstanten
+Majoranten. Die Dominierung wird nur bis `j` verlangt, weil `WithTop.untopA_le`
+die Lesestelle des gestoppten Wertes unter `j` legt; eine Schranke darüber wäre
+eine Voraussetzung über Werte, die die Aussage nie ansieht.
+
+**Ohne sie wäre der Akzeptanztest nicht erreichbar gewesen**, und das ist keine
+Vermutung: `IsApproximable` fordert die vier Integrierbarkeiten von **jedem**
+Paar, und mit konstantem Majoranten erreicht die Klasse keinen unbeschränkten
+Approximanten.
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+> `MeasureTheory.isApproximatingPair_sq_rescaledWalk` — das **zweite** Paar: für
+> Zuwächse mit gemeinsamem zweitem Moment `σ` ist
+> `Y' t ω = V t ω ² − ⟨V⟩ t ω + t σ` mit `C' t ω = t σ` und `Z' s ω = σ` ein Paar
+> der Klasse, und `‖Y' t ω − V t ω ²‖ ≤ σ / (n+1)` gleichmäßig.
+
+**Worauf es ruht, und das meiste steht.** Die Martingaleigenschaft von
+`Y' − C' = V² − ⟨V⟩` ist `martingale_sq_rescaledWalk` dieses Laufs. Der
+Kompensator ist `∫_{(0,t]} σ ds = t · σ`, also `setIntegral_const` und
+`Real.volume_Ioc` und sonst nichts — **das ist der Grund, das gemeinsame zweite
+Moment vorauszusetzen und nicht die allgemeine Treppendichte
+`Z' s ω = 𝔼[ξ_{⌊s(n+1)⌋}²]`**: die allgemeine Fassung verlangt die Auswertung von
+`∫_{(0,t]} f ⌊s c⌋₊ ds` als Teleskopsumme über die Zellen, eine Induktion über
+`⌊t c⌋`, und sie ist der ganze Mehrpreis. Die Voraussetzung ist keine
+Bequemlichkeit gegen die stehende Regel: Donsker verlangt identisch verteilte
+Zuwächse ohnehin, und das gemeinsame zweite Moment ist genau das, was davon
+gebraucht wird. **Die allgemeine Fassung gehört als eigener Punkt daneben, mit
+der Treppendichte als Inhalt und der Zellinduktion als benanntem Preis.**
+
+**Die Stelle, an der es klemmen kann, benannt.** Die Rechtsstetigkeit von
+`Y' − C'` ist kein Problem — `Y' − C' = V² − ⟨V⟩`, beides Treppenpfade —, wohl
+aber `ae_memLp` und `lintegral_eLpNorm_le` **für die konstante Dichte**: die sind
+`eLpNorm` einer Konstanten auf `Set.Ioc 0 T`, also `σ · T^{1/q}`, und damit ist
+`K = σ · T^{1/q}` **gleichmäßig in `n`** — der Punkt, an dem der Vorlauf die
+Klemmstelle vermutet hatte, ist bei dieser Wahl der Dichte frei. Was bleibt, ist
+die Buchhaltung des Fehlers: `⨆ t ∈ Set.Iic T` einer Schranke, die von `t` nicht
+abhängt, und dann `lintegral_const` gegen ein Wahrscheinlichkeitsmaß — dieselbe
+Rechnung wie `hstep` in `isEventuallyApproximable_scaledStep`.
+
+**Und danach, und erst danach**, ist `isEventuallyApproximable_rescaledWalk` der
+Zusammenbau: die beiden Paare mit `mono_K` auf ein gemeinsames `K` gehoben, die
+vier Integrierbarkeiten über `integrable_stoppedValue_of_dominated` dieses Laufs,
+und `isEventuallyApproximable_of_tendsto_zero_cofinite` mit dem Fehler
+`e n = ofReal (σ/(n+1))`. Was dort noch zu tun bleibt und hier nicht erhoben
+wurde, ist der **Majorant** der Irrfahrt auf `Set.Iic u`: die Summe der
+`⌊u(n+1)⌋ + 1` Stufenwerte, integrierbar, aber als Aussage noch nicht
+hingeschrieben.
+
+### 2026-09-22, dritter Lauf des Tages — das zweite Paar des Akzeptanztests steht, samt seinem Fehler in geschlossener Form; und die Voraussetzung, die der Vorlauf ihm mitgegeben hatte, wird **nicht gelesen**: das gemeinsame zweite Moment gehört zum Fehler und nicht zum Paar
+
+**Der Vorschlag des Vorlaufs lautete `isApproximatingPair_sq_rescaledWalk`, und er
+ist eingelöst** — zusammen mit den beiden Aussagen über seinen Fehler, die der
+Zusammenbau danach verbraucht, und der halbe Majorant obendrein. Fünf
+Deklarationen, `check_master.py` ohne einen Fehler und ohne ein `sorry`, die
+Warnungen unverändert 18 / 38 / 112 und davon veraltet 0.
+
+#### Was gebaut ist — fünf Deklarationen
+
+| Deklaration | was sie sagt |
+| --- | --- |
+| `MeasureTheory.isApproximatingPair_sq_rescaledWalk` | `V² − ⟨V⟩ + t σ` mit dem **linearen** Kompensator `t σ`, der konstanten Dichte `σ` und `K = T^{1/q} · ‖σ‖` ist ein Paar der Klasse |
+| `MeasureTheory.enorm_sub_sq_rescaledWalk_le` | der Abstand dieses Approximanten zu `V²` ist `σ (t − ⌊t(n+1)⌋/(n+1)) ≤ σ/(n+1)`, an **jedem** Zeitpunkt und **jedem** Stichprobenpunkt |
+| `MeasureTheory.lintegral_biSup_enorm_sub_sq_rescaledWalk_le` | dieselbe Schranke in der Gestalt, die `IsEventuallyApproximable` liest |
+| `MeasureTheory.abs_rescaledWalk_le_of_le` | unterhalb `j` ist die Irrfahrt durch `(n+1)^{-1/2} ∑_{k<⌊j(n+1)⌋} \|ξ k\|` dominiert |
+| `MeasureTheory.integrable_majorant_rescaledWalk` | dieser Majorant ist integrierbar |
+
+Alle fünf mit `check_axioms_master.py` geprüft und auf `propext`,
+`Classical.choice`, `Quot.sound` und nichts sonst. Der Einbau erzeugt **keine
+einzige neue Warnung**; `check_own_names.py` zählt unverändert 439 Namen ohne
+Deckung, die fünf neuen Zitate der README sind also gedeckt.
+
+#### Der Befund, und er berichtigt den Vorschlag: `σ` ist im Paar **frei**
+
+Der Vorlauf hatte das Paar für „Zuwächse mit gemeinsamem zweitem Moment `σ`"
+angekündigt und die Voraussetzung ausdrücklich verteidigt („Donsker verlangt
+identisch verteilte Zuwächse ohnehin"). Beim Hinschreiben kommt heraus, daß sie
+in **keinem** der acht Felder gelesen wird:
+
+* das Martingalfeld liest `Y − C = V² − ⟨V⟩`, und dort **kürzt sich die
+  Konstante heraus**, gleich welche sie ist;
+* die drei Felder, die die Dichte lesen — `compensator_eq`, `ae_memLp`,
+  `lintegral_eLpNorm_le` —, lesen eine **Konstante**, und eine Konstante ist ihr
+  eigener Betrag;
+* die drei Meßbarkeits- und Stetigkeitsfelder sehen den Zufall gar nicht.
+
+`isApproximatingPair_sq_rescaledWalk` trägt deshalb `σ : ℝ` als freien Parameter
+und **kein** `hsq`. Das zweite Moment sitzt genau dort, wo es verbraucht wird: in
+`enorm_sub_sq_rescaledWalk_le`, denn erst der *Abstand zum Quadrat* fragt danach,
+ob die gewählte Dichte die richtige ist. Das ist nicht Allgemeinheit auf
+Verdacht, sondern die stehende Regel angewandt: die Voraussetzung steht an der
+Aussage, die sie braucht.
+
+#### Der zweite Befund: der vorhergesagte Weg über `isApproximatingPair_of_martingale` trägt nicht — und muß es nicht
+
+Der einzige bisherige Bewohner der Klasse, `isApproximatingPair_of_martingale`,
+nimmt `Y = F ∘ X` und `C = ∫ g ∘ X` **längs desselben Pfades**. Hier ist der
+Kompensator `t σ` eine Funktion der **Zeit allein**, und es gibt kein stetiges
+`F`, das `V² − ⟨V⟩ + tσ` als Bild eines Prozesses schriebe, ohne die Zeit in den
+Zustandsraum aufzunehmen; die Abrundung, die `⟨V⟩` trägt, ist nicht stetig.
+
+Die acht Felder sind deshalb einzeln bedient, und **der Tausch ist günstig**:
+`progressive_sub` ist dort „the one real price" — die gemeinsame Meßbarkeit des
+Kompensators über `measurable_uncurry_min_of_rightContinuous` —, und hier ist es
+`V² − ⟨V⟩`, zwei Treppenpfade und `IsStronglyProgressive.sub`. Der ganze Beweis
+kommt ohne den dyadischen Apparat aus.
+
+Der deterministische Kompensator `⟨V⟩` ist dabei
+`isStronglyProgressive_stepPath_natCastDiv` an einer **konstanten** Wertefolge:
+jene Aussage verlangt von den Werten, daß sie als diskreter Prozeß adaptiert
+sind, und eine Konstante ist es für jede Filtration. Die Rechtsstetigkeit ebenso,
+über `continuousWithinAt_stepPath_nnreal`.
+
+#### Der dritte Befund, und er war die vermutete Klemmstelle: die Konstante `K` bewegt sich nicht mit `n`
+
+Der Vorlauf hatte die gleichmäßige Schranke an den Kompensator als zweite
+Klemmstelle benannt und zugleich vermutet, sie sei bei konstanter Dichte frei.
+Sie ist es, und der Grund ist ablesbar: `K` wird **allein an der Dichte**
+abgelesen, die Dichte ist `σ`, und `n` kommt weder in ihr noch im Horizont vor.
+`eLpNorm` einer Konstanten über ein Fenster der Länge `T` ist `σ T^{1/q}`, und
+`lintegral_const` gegen ein Wahrscheinlichkeitsmaß läßt das stehen.
+
+#### Der vierte Befund, unvorhergesehen: der Horizont wird im Fehler **gar nicht** gelesen
+
+`lintegral_biSup_enorm_sub_sq_rescaledWalk_le` schätzt ein Mittel über `Ω` eines
+Supremums über `Set.Iic T` — und die Schranke hängt von `T` nicht ab. Beide
+Quantoren sind umsonst, weil die punktweise Schranke an **jedem** Zeitpunkt und
+**jedem** Stichprobenpunkt steht: `iSup₂_le` erledigt das Supremum,
+`lintegral_const` das Mittel. Der Fehler dieser Familie wächst also mit der
+**Maschenweite** und nicht mit dem **Fenster**. Ein gröberer Weg — erst eine
+zeitabhängige Schranke, dann das Supremum — hätte `T` in die Konstante getragen
+und die Gleichmäßigkeit über den Horizont verloren.
+
+Ebenso ist `0 ≤ σ` keine Voraussetzung: es ist `hsq 0` gegen `integral_nonneg`
+gelesen, und **das braucht keine Integrierbarkeit** — ein Bochner-Integral einer
+nichtnegativen Funktion ist nichtnegativ, ob die Funktion integrierbar ist oder
+nicht. Unabhängigkeit, Zentriertheit und Meßbarkeit der Zuwächse kommen im
+Fehlerbeweis an keiner Stelle vor; er ist eine Identität zwischen zwei
+Kompensatoren und eine Einschachtelung einer Abrundung.
+
+#### Zwei Namen, die Zeit gekostet haben
+
+* **`div_add_div_same` gibt es für einen Körper nicht.** Unter
+  `Mathlib/Algebra/` steht nur `ENNReal.div_add_div_same`
+  (`Mathlib/Basic/ENNReal/Inv.lean:508`); für einen Körper heißt die Aussage
+  `add_div` (`Mathlib/Algebra/Field/Basic.lean:36`) und läuft in die andere
+  Richtung. Der Beweis ist am Ende ganz ohne sie geführt, über `le_div_iff₀`
+  und `one_div_mul_cancel`.
+* **`setIntegral_const` liefert `μ.real s • c` und nicht `(μ s).toReal • c`.**
+  `Real.volume_Ioc` paßt darauf nicht mehr; zu nehmen ist
+  `Real.volume_real_Ioc_of_le`
+  (`Mathlib/MeasureTheory/Measure/Lebesgue/Basic.lean:120`), und dann ist
+  `compensator_eq` eine Zeile. Wer `Real.volume_Ioc` und `ENNReal.toReal_ofReal`
+  hintereinanderschreibt, sucht ein Muster, das nicht mehr dasteht.
+
+#### Was für `isEventuallyApproximable_rescaledWalk` noch fehlt, und es ist genau das, was der Vorlauf benannt hatte
+
+Die beiden Paare stehen, die beiden Fehler stehen — `0` für die Irrfahrt selbst,
+`ofReal (σ/(n+1))` für ihr Quadrat, und beide gehen längs `n` gegen `0`. Offen
+sind allein die **vier Integrierbarkeiten** von
+`MeasureTheory.IsEventuallyApproximable`, und sie hängen an einer einzigen
+Aussage: dem **integrierbaren Majoranten** der beiden Approximanten auf
+`Set.Iic j`. Für die Irrfahrt steht er seit diesem Lauf, für ihr Quadrat nicht.
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**Die Hälfte des Majoranten ist in diesem Lauf noch mitgenommen.**
+`abs_rescaledWalk_le_of_le` und `integrable_majorant_rescaledWalk` sind der
+Majorant der **Irrfahrt**: unterhalb `j` ist
+`‖V t ω‖ ≤ (n+1)^{-1/2} ∑_{k < ⌊j(n+1)⌋} |ξ k ω| =: g ω`, eine endliche Summe
+integrierbarer Glieder — die Monotonie der Abrundung ist `Nat.floor_le_floor`,
+die Ausdehnung der Summe `Finset.sum_le_sum_of_subset_of_nonneg` gegen
+`Finset.abs_sum_le_sum_abs`, und die Integrierbarkeit `integrable_finsetSum` an
+`(hint k).abs`. Gelesen wird allein die Integrierbarkeit der Zuwächse: keine
+Unabhängigkeit, keine Zentriertheit, keine Quadratintegrierbarkeit.
+
+> **Das benannte Ziel: `MeasureTheory.abs_sq_rescaledWalk_le_of_le` und
+> `MeasureTheory.integrable_majorant_sq_rescaledWalk`** — die andere Hälfte: für
+> `t ≤ j` ist `‖V t ω² − ⟨V⟩ t + t σ‖ ≤ g ω² + ⟨V⟩ j + j |σ|` mit demselben `g`,
+> und dieser Majorant ist integrierbar.
+
+**Worauf es ruht, und alles steht.** Die Schranke an `V²` ist die obige
+quadriert; `⟨V⟩` ist in `t` **wachsend**, weil seine Glieder Integrale von
+Quadraten sind (`integral_nonneg`), also `|⟨V⟩ t| ≤ ⟨V⟩ j`; und `|t σ| ≤ j |σ|`.
+Die beiden letzten sind bei festem `j` **Konstanten** in `ω` und kosten nur
+`integrable_const`. Für `g²` kommt `MemLp ξ 2` hinzu — sie steht schon in den
+Voraussetzungen von `isApproximatingPair_sq_rescaledWalk` —, und der Weg ist
+`MemLp` der endlichen Summe über `MemLp.add` gegen `MemLp.integrable_sq`.
+
+**Die Stelle, an der es klemmen kann, benannt.**
+`integrable_stoppedValue_of_dominated` verlangt die Dominierung nur **bis `j`**,
+und das ist hier wesentlich: oberhalb von `j` wächst der Majorant mit der Zahl
+der Stufen, und eine Schranke über `Set.Iic j` hinaus gäbe es nicht. Die
+Stoppzeiten, die `IsEventuallyApproximable` einsetzt, sind
+`min (oscHitSeq …) u` und `min (oscHitSeq …) (min (oscHitSeq …) u + δ)`; die
+erste ist durch `u` beschränkt, die zweite durch `u + δ` — **zwei verschiedene
+Schranken `j`**, und der Majorant ist an der jeweiligen zu nehmen. Das ist
+Buchhaltung, aber es ist die Stelle, an der ein Lauf mit *einem* `j`
+hängenbliebe.
+
+**Und danach, und erst danach**, ist `isEventuallyApproximable_rescaledWalk` der
+Zusammenbau: die beiden Paare mit `mono_K` auf ein gemeinsames `K` gehoben, die
+vier Integrierbarkeiten über `integrable_stoppedValue_of_dominated`, und
+`isEventuallyApproximable_of_tendsto_zero_cofinite` mit `e n = ofReal (σ/(n+1))`.
+
+### 2026-09-22, vierter Lauf des Tages — die andere Hälfte des Majoranten steht, und mit ihr sind alle vier Integrierbarkeiten von `IsEventuallyApproximable` auf ihre Bausteine zurückgeführt; nur der Zusammenbau fehlt noch
+
+**Das benannte Ziel des Vorlaufs ist eingelöst**: `MeasureTheory.abs_sq_rescaledWalk_le_of_le`
+und `MeasureTheory.integrable_majorant_sq_rescaledWalk` stehen, gegen `upstream/master`
+(`94ef6b89544`) mit `check_master.py` bei **0 Fehlern, 0 `sorry`, 0 neuen Warnungen** (18/38/112
+unverändert, davon 0 veraltet), und beide mit `check_axioms_master.py` auf `propext`,
+`Classical.choice`, `Quot.sound` geprüft.
+
+#### Was gebaut ist — zwei Deklarationen
+
+| Deklaration | was sie sagt |
+| --- | --- |
+| `MeasureTheory.abs_sq_rescaledWalk_le_of_le` | für `t ≤ j` ist `‖V t ω ^ 2 − ⟨V⟩ t + t σ‖ ≤ g ω ^ 2 + ⟨V⟩ j + j \|σ\|`, mit demselben Majoranten `g` wie bei `abs_rescaledWalk_le_of_le` |
+| `MeasureTheory.integrable_majorant_sq_rescaledWalk` | dieser Majorant ist integrierbar |
+
+#### Der Beweis ist Buchhaltung, wie angekündigt — drei Bausteine, keiner neu erschlossen
+
+* **`V t ω ^ 2 ≤ g ω ^ 2`** ist `abs_rescaledWalk_le_of_le` (Vorlauf) quadriert:
+  `pow_le_pow_left₀ (norm_nonneg _) h1 2` an `‖V t ω‖ ≤ g ω`, über
+  `‖x‖ ^ 2 = x ^ 2` (`Real.norm_eq_abs`, `sq_abs`).
+* **`|⟨V⟩ t| ≤ ⟨V⟩ j`** braucht keine Integrierbarkeit an keiner Stelle: die Summanden sind
+  `∫ ((n+1)⁻¹ᐟ² ξ k)^2 ∂P`, nichtnegativ durch `integral_nonneg` (das gilt für **jede** Funktion,
+  integrierbar oder nicht), und `Finset.sum_le_sum_of_subset_of_nonneg` an der schon vom Vorlauf
+  gebauten Bereichsinklusion `Finset.range m ⊆ Finset.range M` macht daraus die Monotonie in `t`.
+* **`|t σ| ≤ j |σ|`** ist `abs_mul` und `mul_le_mul_of_nonneg_right`.
+
+Die drei Schranken zusammen über zwei Dreiecksungleichungen (`abs_add_le`, zweimal) schließen den
+Beweis.
+
+Für die Integrierbarkeit: `∑_{k<M} |ξ k|` ist `MemLp` bei `2` (`memLp_finsetSum` an
+`(hLp k).abs`), eine Konstante mal `MemLp` bleibt `MemLp` (`MemLp.const_mul`), und
+`MemLp.integrable_sq` macht daraus die Integrierbarkeit des Quadrats — **die einzige Stelle, an
+der `MemLp ξ 2` (statt bloßer Integrierbarkeit) gelesen wird**. Die beiden übrigen Summanden sind
+bei festem `j` Konstanten in `ω`, also `integrable_const` (und dafür `[IsProbabilityMeasure P]`,
+das die neue Deklaration deshalb jetzt trägt — der Vorlauf hatte sie an dieser Stelle noch nicht
+gebraucht und nicht notiert).
+
+#### Zwei Namen, die auf `master` anders heißen, und wieder nach demselben Muster
+
+* **`abs_add` gibt es auf `master` nicht mehr — es heißt `abs_add_le`.** Ein Grep nach
+  `theorem abs_add\b` findet auf `upstream/master` (und, nachgeprüft, auch schon auf dem
+  `.lake`-Release v4.33.1) **keine** Fundstelle; der einzige Name für `|a+b| ≤ |a|+|b|` ist
+  `abs_add_le`. Das ist kein `master`-Drift, sondern die stehende Regel „Nichts aus dem
+  Gedächtnis" angewandt auf mich selbst: `abs_add` war nie ein Name dieser Bibliothek, ich hatte
+  ihn falsch erinnert. `check_master.py` hat es sofort gemeldet (`Unknown identifier`), und die
+  Korrektur war eine reine Umbenennung.
+* **`add_le_add_right` addiert auf `master` links, nicht rechts** — jedenfalls in der Gestalt, in
+  der die Elaboration sie hier auflöste: `add_le_add_right (h : a ≤ b) c` ergab
+  `c + a ≤ c + b`, nicht `a + c ≤ b + c`, sichtbar an der `?m.1464 + (...)`-Form der
+  Fehlermeldung. Ob das eine echte Konventionsänderung ist oder nur diese eine Instanz betrifft,
+  ist nicht geklärt — **umgangen statt untersucht**: `add_le_add (add_le_add hV hB_le) (le_refl _)`
+  braucht keine Seitenkonvention und ist stabiler. Wer diesen Namen wieder anfaßt, prüfe die
+  Konvention erst gegen den Quelltext, nicht gegen die Erinnerung an v4.33.1.
+
+Der Befund über `MemLp.abs`, `memLp_finsetSum`, `MemLp.const_mul`, `MemLp.integrable_sq`: alle vier
+standen wie erinnert (`Mathlib/MeasureTheory/Function/L2Space.lean:42` und
+`Mathlib/MeasureTheory/Function/LpSeminorm/{SMul,TriangleInequality}.lean`), keine Überraschung.
+
+#### Die README ist nachgezogen
+
+`MartingaleProblems/README.md`, Meilenstein 11, der Abschnitt zum Akzeptanztest: ein neuer
+Aufzählungspunkt nach `abs_rescaledWalk_le_of_le`/`integrable_majorant_rescaledWalk`, mit derselben
+Kurzfassung. `check_own_names.py` zählt weiterhin 439 Namen ohne Deckung — unverändert, die beiden
+neuen Zitate sind also gedeckt.
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`MeasureTheory.isEventuallyApproximable_rescaledWalk`** — der Zusammenbau, und jetzt liegt
+**alles** dafür bereit:
+
+* die beiden Paare (`isApproximatingPair_rescaledWalk`, `isApproximatingPair_sq_rescaledWalk`),
+  mit `IsApproximatingPair.mono_K` auf ein gemeinsames `K` gehoben;
+* die beiden Fehler (`0` für die Irrfahrt, `ofReal (σ/(n+1))` für ihr Quadrat), beide → `0` längs
+  `n`;
+* die vier Integrierbarkeiten, je zweimal `IsApproximatingPair.integrable_stoppedValue_of_dominated`
+  gegen die beiden jetzt vorhandenen Majoranten (`integrable_majorant_rescaledWalk`,
+  `integrable_majorant_sq_rescaledWalk`).
+
+**Die benannte Klemmstelle aus dem Vorlauf bleibt die einzige, die Aufmerksamkeit braucht:**
+`IsEventuallyApproximable` setzt seine Stoppzeiten als `min (oscHitSeq …) u` und
+`min (oscHitSeq …) (min (oscHitSeq …) u + δ)` — zwei verschiedene Schranken `j` (`u` bzw. `u+δ`),
+und der Majorant ist an der jeweiligen zu nehmen, nicht an einer gemeinsamen. Ein Zusammenbau mit
+*einem* `j` für beide bliebe hier hängen.
+
+Danach ist der Akzeptanztest der Irrfahrten **fertig**: `isCompactContained_rescaledWalk` und
+`isEventuallyApproximable_rescaledWalk` zusammen sind das Paar, das Donsker durch die Kette
+`isTight_map_postcomp_of_exists_martingale → isRelativelyCompact_of_approx → …` schickt.
+
+### 2026-09-22, fünfter Lauf des Tages — der Zusammenbau steht, und ehe er stehen konnte, war eine **Voraussetzung der Kette zu berichtigen**: `IsEventuallyApproximable` trug **eine** Filtration für die ganze Familie, und die Irrfahrten von Donsker haben keine gemeinsame
+
+**Das benannte Ziel des Vorlaufs ist eingelöst**: `MeasureTheory.isEventuallyApproximable_rescaledWalk`
+steht, gegen `upstream/master` (`94ef6b89544`) mit `check_master.py` bei **0 Fehlern, 0 `sorry`,
+0 neuen Warnungen** (18/38/112 unverändert, davon 0 veraltet), und mit `check_axioms_master.py`
+auf `propext`, `Classical.choice`, `Quot.sound` geprüft — zusammen mit den beiden Aussagen, deren
+Signatur der Lauf angefaßt hat.
+
+Damit ist die **Approximierbarkeitsseite des Akzeptanztests** bezahlt. Zusammen mit
+`isCompactContained_rescaledWalk` (zweiundzwanzigster Lauf des 2026-09-21) sind das die beiden
+Stücke, die Donsker durch die Kette `isTight_map_postcomp_of_exists_martingale →
+isRelativelyCompact_of_approx → …` schicken sollen.
+
+#### Der Befund, und er ist der eigentliche Ertrag des Laufs
+
+Der Vorlauf hatte „alles liegt bereit" gemeldet und **eine** Klemmstelle benannt (die zwei
+Schranken der vier Integrierbarkeiten). Diese Klemmstelle war richtig gesehen und hat genau so
+gebissen, wie angesagt. Aber sie war nicht die erste: **die Zielaussage war in der Gestalt, in der
+sie vorgeschlagen war, nicht beweisbar**, und zwar aus einem Grund, den kein Lauf bisher benannt
+hatte.
+
+`MeasureTheory.IsEventuallyApproximable 𝓕 P q T K V ε₀ u` trug `𝓕 : Filtration ℝ≥0 mΩ` — **eine**
+Filtration für die ganze Familie. Die approximierenden Paare müssen Martingale über ihr sein. Die
+reskalierte Irrfahrt der Maschenweite `n` ist ihr eigener Approximant und ein Martingal über
+`floorFiltration … ((n : ℝ≥0) + 1)`, und diese Filtration **bewegt sich mit `n`**.
+
+**Es gibt keine gemeinsame, und das ist kein Formfehler, sondern eine Rechnung.** Adaptiertheit des
+Gliedes der Maschenweite `m` zur positiven Zeit `t` legt `σ (ξ_0, …, ξ_{⌊t (m+1)⌋ − 1})` in `𝓕 t`.
+Längs der Familie geht `⌊t (m+1)⌋ → ∞`, also enthielte ein gemeinsames `𝓕 t` zu **jeder** positiven
+Zeit den ganzen Schwanz `σ (ξ_k : k)`. Über einer solchen Filtration ist jeder Zuwachs schon
+bekannt, und das Martingalfeld erzwingt `ξ_k = 0` f.s. Eine geteilte Filtration erreicht also
+**keine nichtentartete Familie von Irrfahrten**.
+
+Zwei Auswege, die *nicht* tragen, und sie sind durchgedacht und nicht übergangen:
+
+* **Die volle σ-Algebra als in der Zeit konstante Filtration.** Über einer konstanten Filtration ist
+  ein Martingal f.s. konstant in der Zeit (`Y s` ist meßbar, also `Y s = E[Y s | 𝓖] = Y t`), und
+  eine in der Zeit konstante Funktion approximiert die Irrfahrt in keinem Fehler.
+* **Einen anderen Approximanten wählen.** Derselbe Einwand: der Fehler wird als
+  `∫⁻ ω, ⨆_{t ≤ T} ‖Y t ω − V n t ω‖ₑ ∂P ≤ ε` gemessen, also gleichmäßig über das Fenster, und ein
+  zeitkonstantes `Y` liegt davon fest entfernt.
+
+**Und was daran *nicht* geprüft ist, damit es kein späterer Lauf für geprüft hält:** dieses
+Unmöglichkeitsargument ist **auf Papier geführt und nicht in Lean**. Es steht in dieser Gestalt am
+Strukturkommentar und in der README, und es ist die Begründung der Indizierung — aber es ist kein
+Zeuge. Der Zeuge dazu wäre
+
+> `not_forall_martingale_rescaledWalk_of_shared_filtration` — gibt es eine Filtration `𝓕`, über
+> der `V n` für **alle** `n` ein Martingal ist, so ist `ξ k = 0` f.s. für jedes `k`,
+
+und er ist ein eigener Lauf: er verlangt, die Adaptiertheit längs `n` zum Schwanz
+`σ (ξ_k : k) ⊆ 𝓕 t` aufzusammeln und daraus die Martingaleigenschaft an einem festen Glied
+zusammenbrechen zu lassen. Er ist **nicht** gebaut, und die Indizierung hängt auch nicht an ihm —
+sie ist die schwächere Voraussetzung und braucht daher keine Rechtfertigung durch einen
+Gegenzeugen. Wer den Zeugen dennoch baut, hat damit belegt, daß die Indizierung *nötig* und nicht
+bloß *bequem* war; das ist der Unterschied, den dieses Projekt sonst bei jeder Negativaussage
+macht, und hier ist er noch offen.
+
+#### Die Berichtigung, und was sie gekostet hat
+
+`𝓕` ist jetzt `γ → Filtration ℝ≥0 mΩ`. Angefaßt sind **sechs** Deklarationen, alle in
+`MartingaleProblems/Suggested.lean`:
+
+| Deklaration | Änderung |
+| --- | --- |
+| `IsEventuallyApproximable` | `𝓕 : γ → Filtration ℝ≥0 mΩ`; im Feld zweimal `IsApproximatingPair (𝓕 i) P …` |
+| `isEventuallyApproximable_of_forall_isApproximable` | `IsApproximable (𝓕 i) P …` |
+| `isEventuallyApproximable_of_tendsto_zero_cofinite` | `IsApproximatingPair (𝓕 i) P …`, zweimal |
+| `exists_finite_forall_measure_setOf_lt_modulusBased_postcomp_le_of_isEventuallyApproximable` | `[∀ i, (𝓕 i).IsRightContinuous]`, `hX : ∀ i, IsStronglyProgressive (𝓕 i) (X i)` |
+| `isTightMeasureSet_map_postcomp_of_isEventuallyApproximable` | dieselben beiden |
+| `isEventuallyApproximable_scaledStep` | `𝓕 : ℕ → Filtration ℝ≥0 mΩ` (der Zeuge liest `𝓕` nirgends) |
+
+**Gekostet hat sie an Beweisen: nichts.** Nach der Änderung der sechs Signaturen ging die ganze
+Kette ohne eine einzige geänderte Beweiszeile durch. Das ist kein Zufall, sondern der Beleg für die
+Aussage, die jetzt am Strukturkommentar steht: **kein Verbraucher verbindet zwei Glieder über die
+Filtration.** Der Beweis der mittleren Abschätzung liest `𝓕` ausschließlich an dem Glied, das er
+gerade abschätzt (`hX i`, und die Paare aus `hGapp i hi`); geteilt sind über die Familie nur die
+Skalare `q`, `T`, `K`, `ε₀`, `u` und die Ausnahmemenge. Der einzige Zugriff, der wie eine Verbindung
+aussieht, ist die Entnahme von `hq : 1 < q` an einem Glied `i₀ ∉ G₁` — und die holt eine Zahl, keine
+σ-Algebra.
+
+Die Änderung ist damit auch im Sinne der stehenden Regel die richtige Richtung: eine indizierte
+Filtration ist eine **schwächere** Voraussetzung als eine geteilte, und ein Verbraucher mit einer
+einzigen reicht die konstante Familie ein.
+
+#### Der Zusammenbau selbst
+
+`isEventuallyApproximable_rescaledWalk` geht über
+`isEventuallyApproximable_of_tendsto_zero_cofinite` bei `e n = ENNReal.ofReal (σ / ((n : ℝ) + 1))`;
+auf `ℕ` ist `Filter.cofinite = Filter.atTop` (`Nat.cofinite_eq_atTop`), und der Grenzwert ist
+elementar.
+
+* **Die beiden Paare** sind `isApproximatingPair_rescaledWalk` und
+  `isApproximatingPair_sq_rescaledWalk`, auf die gemeinsame Konstante `T ^ q.toReal⁻¹ * ‖σ‖₊`
+  gehoben; die des ersten ist `0`, also ist `mono_K` nur an ihm zu lesen und `zero_le` das ganze
+  Argument.
+* **Der erste Fehler ist exakt `0`**, der zweite ist
+  `lintegral_biSup_enorm_sub_sq_rescaledWalk_le`.
+* **Die vier Integrierbarkeiten** sind viermal
+  `IsApproximatingPair.integrable_stoppedValue_of_dominated`. Die vom Vorlauf benannte Klemmstelle
+  hat gebissen und ist genau so aufzulösen, wie er sagte: die Schranken sind `u` und `u + δ`, und
+  der Majorant ist an der jeweiligen zu nehmen. Die Stoppzeiten sind `isStoppingTime_oscHitSeqCap`
+  und `isStoppingTime_oscHitSeqGap`, ihre Schranken `min_le_right` und `oscHitSeqGap_le_coe` — alle
+  vier standen schon und mußten nicht gesucht werden.
+
+#### Zwei Voraussetzungen, die der Entwurf noch trug und die gestrichen sind
+
+* **`(hSc : S.Countable) (hSd : Dense S)`.** Die Trefferzeiten brauchen eine abzählbare dichte
+  Menge, um Stoppzeiten zu sein — aber `ℝ≥0` ist separabel, und
+  `TopologicalSpace.exists_countable_dense` liefert sie **im Beweis**. Es ist das `D` des Débuts und
+  nicht das `S` der Straffheitsabschätzung, also liest von außen niemand, welche genommen wurde.
+* **`0 ≤ σ`.** Im Entwurf als `have` geführt und nirgends gelesen: die Nichtnegativität wird allein
+  innerhalb von `enorm_sub_sq_rescaledWalk_le` gebraucht, und dort ist sie `hsq 0` gegen
+  `integral_nonneg`.
+
+#### Die README ist nachgezogen
+
+`MartingaleProblems/README.md`, Meilenstein 11: der Punkt zu `IsEventuallyApproximable` trägt jetzt
+die indizierte Filtration samt der Rechnung, warum es keine gemeinsame gibt; der Akzeptanztest hat
+einen neuen Aufzählungspunkt `isEventuallyApproximable_rescaledWalk`. **Und ein Satz ist
+berichtigt**: dort stand „mit diesen trägt die Irrfahrt, über **einer** Filtration, alles, was der
+Meilenstein von einem Prozeß verlangt". Gemeint war eine Filtration je Glied; gelesen wurde es als
+die Aussage, die dieser Lauf widerlegt hat. Er sagt jetzt „über der Filtration ihrer **eigenen**
+Maschenweite … und über keiner mit den übrigen Gliedern geteilten". `check_own_names.py` zählt
+weiterhin 439 Namen ohne Deckung — unverändert, die neuen Zitate sind also gedeckt.
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`MeasureTheory.isTight_map_postcomp_rescaledWalk`** — die Straffheit der Bildgesetze der
+reskalierten Irrfahrten, also der Akzeptanztest des **ersten** Kettenpunktes, ausgesprochen und
+bewiesen.
+
+*Worauf sie ruht, und es liegt jetzt alles da:*
+`isTightMeasureSet_map_postcomp_of_isEventuallyApproximable` mit der indizierten Filtration,
+gefüttert mit `isEventuallyApproximable_rescaledWalk` (dieser Lauf),
+`isStronglyProgressive_rescaledWalk` und `continuousWithinAt_rescaledWalk` je Glied, und
+`isRightContinuous_floorFiltration` für die Instanz `[∀ i, (𝓕 i).IsRightContinuous]`.
+
+*Warum jetzt:* es ist der erste Verbraucher der indizierten Filtration außerhalb ihrer eigenen
+Konstruktion, und damit die Probe darauf, daß die Berichtigung dieses Laufs nicht nur die
+Zielaussage, sondern auch die **Kette darüber** trägt.
+
+**Die eine Stelle, die vorher zu klären ist, und sie ist benannt statt geraten:** der Satz verlangt
+`Φ : γ → Ω → D(ℝ≥0, E)` mit `hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ X i t ω`, also den
+Irrfahrtspfad als Element des Pfadraums. Die Naht dafür ist am 2026-09-21 im zweiundzwanzigsten
+Lauf gebaut (»der Irrfahrtspfad als **Prozeß**«); zu prüfen ist, ob sie in genau dieser Gestalt
+vorliegt oder ob zwischen ihr und `hΦ` noch eine Umschreibung steht. Das ist die erste Frage des
+Laufs und keine Nebensache — an ihr, nicht an der Straffheit, dürfte die Zeit hängen.
+
+*Die zweite Voraussetzung ist eine beschränkte stetige Testfunktion `g : E →ᵇ ℝ` bei `E = ℝ`; die
+Irrfahrt ist reellwertig, und `ℝ` erfüllt `[PolishSpace]` und `[CompleteSpace]`.*
+
+*Die `[∀ i, (𝓕 i).IsRightContinuous]`-Instanz ist der Punkt, an dem die Elaboration Mühe machen
+könnte: `isRightContinuous_floorFiltration` ist ein `theorem` und keine Instanz, und die
+Instanzensuche findet sie nicht von selbst. In `isEventuallyApproximable_rescaledWalk` war das
+harmlos, weil sie dort im Beweis per `have` gesetzt wird; als **Voraussetzung** einer Aussage
+verlangt sie ein `haveI` vor dem Aufruf oder eine Instanzdeklaration.*
+
+### 2026-09-22, sechster Lauf des Tages — das benannte Ziel des Vorlaufs ist **nicht** beweisbar, und der Grund ist keine Naht, sondern eine Voraussetzung, die die ganze Tiefe der Abschätzung durchzieht: jeder Verbraucher der Straffheit liest einen **gleichmäßig beschränkten** Prozeß, und die reskalierte Irrfahrt ist keiner
+
+**Der Vorschlag des Vorlaufs war `MeasureTheory.isTight_map_postcomp_rescaledWalk`**,
+zusammenzusetzen aus `isTightMeasureSet_map_postcomp_of_isEventuallyApproximable` und
+`isEventuallyApproximable_rescaledWalk`. Er hatte als „erste Frage des Laufs" die Naht zwischen
+Treppenpfad und Prozeß benannt und vermutet, dort hänge die Zeit. **Die Naht ist nicht das
+Hindernis** — `stepPath_rescaledWalk_eq` fügt die beiden Lesarten in einer Zeile zusammen. Das
+Hindernis steht eine Ebene tiefer und war in keinem Laufbericht genannt.
+
+#### Der Befund, am Quelltext und mit Zeilen
+
+`MeasureTheory.isTightMeasureSet_map_postcomp_of_isEventuallyApproximable` (Z. 46944 nach den
+Einfügungen dieses Laufs; alle Zeilenangaben dieses Abschnitts sind die **nachherigen**) verlangt
+
+```lean
+IsEventuallyApproximable 𝓕 P q T K (fun i t ω ↦ g (X i t ω)) ε₀ u
+```
+
+mit `g : E →ᵇ ℝ`, während `isEventuallyApproximable_rescaledWalk` (Z. 50854) die Aussage für
+`fun n t ω ↦ (√(n+1))⁻¹ * ∑_{j < ⌊t (n+1)⌋} ξ j` liefert, also für `X i` **selbst**. Die beiden
+treffen sich allein bei `g = id`, und `id : ℝ → ℝ` ist kein `ℝ →ᵇ ℝ`. Es sind genau **zwei**
+Verbraucher von `IsEventuallyApproximable` in der Datei
+(`exists_finite_forall_measure_setOf_lt_modulusBased_postcomp_le_of_isEventuallyApproximable` und
+die obige), und beide lesen die postkomponierte Gestalt. **`isEventuallyApproximable_rescaledWalk` hat damit keinen
+Verbraucher**, und das vorgeschlagene Ziel ist aus ihm nicht zusammenzusetzen.
+
+**Und das Postkomponieren ist keine Marotte der Schnittstelle, sondern die einzige Art, wie die
+Abschätzung an eine Schranke kommt.** Die Beschränktheit läuft durch die ganze Kette:
+
+| Aussage | Zeile | Gestalt |
+| --- | ---: | --- |
+| `enorm_integral_mul_sub_le_of_biSup_le` | 44211 | `hUb : ∀ ω, ‖U ω‖ ≤ c` am Gewicht |
+| `ofReal_integral_sq_sub_le` | 44296 | die Schranke am Prozeß, `c` als Koeffizient des Fehlers |
+| `lintegral_ofReal_dist_le_sqrt_of_biSup_le` | 44427 | dieselbe Schranke ein **zweites** Mal, für die Integrierbarkeit des Quadrats |
+| `measure_setOf_oscHitSeq_lt_le_div_…` | 45061 | durchgereicht |
+| `sum_lintegral_ofReal_dist_oscHitSeqGap_le_…` | 45253 | durchgereicht |
+| `mul_measure_setOf_lt_modulusBased_le_…` | 45413 | durchgereicht |
+| `mul_measure_setOf_lt_modulusBased_postcomp_le_…` | 45562 | eingelöst mit `c = ‖g‖` |
+
+Der Doc-Kommentar von `ofReal_integral_sq_sub_le` sagt es selbst: „a consumer with `f : E →ᵇ ℝ`
+holds all five, `c = ‖f‖`." Die Entwurfsannahme der ganzen Milestone-11-Abschätzung ist also ein
+**beschränkter** Prozeß, und die Irrfahrt ist keiner.
+
+*Der Befund ist einer über die Irrfahrt und keiner gegen die Abschwächung:* die skalierten
+deterministischen Treppen des Zeugen (`isEventuallyApproximable_scaledStep`, Z. 47050) nehmen
+Werte in `[0,1]` an; dort schließt ein `g : ℝ →ᵇ ℝ`, das auf `[0,1]` die Identität ist, dieselbe
+Lücke.
+
+*Und der Akzeptanztest der README sagt dasselbe von der anderen Seite:* er nennt
+`A = {(f, f''/2) | f ∈ Cc^∞(ℝ)}`, also die Martingalhypothese an `f ∘ X n` für beschränktes `f` —
+nicht an der Irrfahrt selbst. Die beiden gebauten Paare (`isApproximatingPair_rescaledWalk`,
+`isApproximatingPair_sq_rescaledWalk`) approximieren die Irrfahrt und ihr Quadrat und passen
+deshalb in keinen der beiden.
+
+#### Die Reparatur, gebaut und übersetzt statt bloß benannt
+
+**Die Schranke am Gewicht wird ausschließlich gegen den Fehler gelesen.** In
+`enorm_integral_mul_sub_le_of_biSup_le` kommen `c` und `ε` nur im Produkt
+`ENNReal.ofReal c * (2 * ε)` vor, nie einzeln. Also trägt die Aussage mit einem **gewichteten
+Fehler** statt einer Schranke, und das ist in dieser Datei neu:
+
+* **`enorm_integral_mul_sub_le_of_lintegral_mul_biSup_le`** — Voraussetzung
+  `∫⁻ ω, ‖U ω‖ₑ * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P ≤ γ`, Schluß `… + 2 * γ`. Der Beweis sind dieselben
+  drei Schritte, nur bleibt das Gewicht **unter** dem Integral.
+* **`ofReal_integral_sq_sub_le_of_lintegral_mul_biSup_le`** — die Quadratidentität (9.26) mit
+  demselben Tausch am Kreuzterm; der Zuwachs des Quadrats steht weiterhin am Gewicht `1`, wo die
+  Schranke `1` ist und nicht `c`.
+* **`enorm_integral_mul_sub_le_of_biSup_le` ist jetzt die Instanz** der ersten bei
+  `γ = ENNReal.ofReal c * ε`; ihr Beweis ist durch die Ableitung ersetzt, damit die Abschwächung
+  eine bewiesene Beziehung ist und keine Behauptung im Doc-Kommentar.
+
+**Daß es eine echte Abschwächung ist und nicht eine Umformulierung:** ein Gewicht mit unendlichem
+Supremum gegen einen Fehler, der verschwindet, gibt `γ = 0`, und das erreicht kein endliches `c`.
+Genau dieser Fall liegt bei der Irrfahrt vor — `isApproximatingPair_rescaledWalk` hat den Fehler
+**exakt `0`**, weil die Irrfahrt ihr eigener Approximant ist.
+
+**Was die Reparatur kostet, und es ist zu sagen statt zu verschweigen:** die Schranke wird
+stromabwärts ein **zweites** Mal gelesen, in `lintegral_ofReal_dist_le_sqrt_of_biSup_le`, wo sie
+die Integrierbarkeit von `(V_β - V_α)²` ohne Hypothese herstellt. Wer die neue Fassung benutzt,
+trägt diese Integrierbarkeit selbst; für die Irrfahrt ist sie `MemLp.integrable_sq` aus
+`hLp : ∀ k, MemLp (ξ k) 2 P`, die sie ohnehin führt. Das steht so am Doc-Kommentar der neuen
+Aussage.
+
+#### Prüfung
+
+`scripts/check_master.py` gegen `upstream/master` (`94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `4.35.0-rc2`): **0 Fehler, 0 `sorry`** in allen drei Dateien, Warnungen **18 / 38 / 112,
+davon 0 veraltet** — unverändert gegenüber dem Vorlauf, die drei angefaßten Deklarationen
+erzeugen also keine neue Warnung. `scripts/check_axioms_master.py` auf `propext`,
+`Classical.choice`, `Quot.sound` für `enorm_integral_mul_sub_le_of_lintegral_mul_biSup_le`,
+`ofReal_integral_sq_sub_le_of_lintegral_mul_biSup_le` und die neu bewiesene
+`enorm_integral_mul_sub_le_of_biSup_le`. `check_own_names.py` zählt 440 statt 439 Namen ohne
+Deckung; der eine neue ist `MeasureTheory.isTight_map_postcomp_rescaledWalk`, der offene Punkt,
+den dieser Lauf als offen benennt.
+
+*Nebenbei am Werkzeug gemessen und hier festgehalten, damit kein Lauf es neu erhebt:* die
+Deklarationen der Abschnitte `ApproximationError`, `ApproximationErrorWeighted` und
+`SquareAtProcess` stehen in einem `section`, **nicht** in `namespace MeasureTheory` (die
+Namensraumklammer endet in Z. 43787). Ihre vollen Namen sind daher **unqualifiziert**;
+`check_axioms_master.py` mit dem Präfix `MeasureTheory.` meldet für sie „Unknown constant", und
+das ist kein Befund über die Deklaration. Die Doc-Kommentare der Datei zitieren sie trotzdem mit
+Präfix, und `check_own_names.py` deckt das — die Konvention bleibt, wie sie ist.
+
+#### Die README ist nachgezogen
+
+`MartingaleProblems/README.md`, Meilenstein 11, unter dem Akzeptanztest: ein eigener Absatz mit
+der Tabelle der Stellen, an denen die Schranke gelesen wird, dem Satz, daß
+`isEventuallyApproximable_rescaledWalk` keinen Verbraucher hat, der benannten Reparatur und dem
+teureren Gegenweg (Lindeberg–Taylor an `f ∘ X n`).
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`lintegral_ofReal_dist_le_sqrt_of_lintegral_mul_biSup_le`** — die zweite und letzte Stelle, an
+der die Schranke `‖V t ω‖ ≤ c` gelesen wird, in derselben Weise abgeschwächt.
+
+*Worauf sie ruht:* `ofReal_integral_sq_sub_le_of_lintegral_mul_biSup_le` (dieser Lauf) und
+`lintegral_ofReal_dist_le_sqrt_toReal_of_le`, das die Wurzel zieht und die Schranke nicht liest.
+Zu ersetzen ist allein das Argument, das aus `‖V t ω‖ ≤ c` die Integrierbarkeit von
+`(V (b ω) ω - V (a ω) ω) ^ 2` gewinnt; sie wird **Hypothese**, und die Aussage verliert damit die
+Schranke ganz.
+
+*Warum jetzt:* mit ihr ist die Abschätzung bis
+`mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair` frei von jeder Schranke am Prozeß,
+und das ist die Aussage, die `SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal`
+(SkorokhodSpace Z. 19288) zusammen mit `isCompactContained_rescaledWalk` unmittelbar in die
+Straffheit der Irrfahrtsgesetze überführt — **ohne** `postcomp` und ohne ein einziges `g`. Das ist
+der Weg, auf dem der Akzeptanztest doch noch über die gebauten Paare läuft, und er ist nach diesem
+Lauf zwei Aussagen weit.
+
+*Die eine Stelle, die vorher zu klären ist:* wieviele der Verbraucher zwischen
+`lintegral_ofReal_dist_le_sqrt_of_biSup_le` und `mul_measure_setOf_lt_modulusBased_le_…` die
+Schranke **selbst** lesen und wieviele sie bloß durchreichen. Nach der Zählung oben reichen drei
+sie durch; ist das richtig, so ist der Rest der Kette mechanisch, und ist es falsch, so ist die
+Stelle, an der es falsch ist, der Ertrag jenes Laufs.
+
+### 2026-09-22, siebter Lauf des Tages — das benannte Ziel des Vorlaufs steht, aber seine Vorfrage ist mit einem **Nein** zu beantworten: die Aussage, die er abschwächen ließ, hat **keinen Verbraucher**; die Stelle, an der die Kette ihre Schranke wirklich liest, liegt eine Ebene tiefer, und dort ist sie **in der Konklusion** — und genau dort hat Mathlib das Werkzeug, sie loszuwerden
+
+**Das benannte Ziel war `lintegral_ofReal_dist_le_sqrt_of_lintegral_mul_biSup_le`**, mit der
+Vorfrage, wieviele Verbraucher zwischen `lintegral_ofReal_dist_le_sqrt_of_biSup_le` und
+`mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair` die Schranke `‖V t ω‖ ≤ c`
+**selbst** lesen und wieviele sie bloß durchreichen. Der Vorlauf hatte „drei reichen sie durch"
+vorhergesagt und angeschlossen: „ist das richtig, so ist der Rest der Kette mechanisch".
+
+**Das Ziel steht. Die Vorhersage ist falsch, und zwar in der Richtung, die zählt.**
+
+#### Die Zählung, am Quelltext
+
+| Aussage | Zeile (vorher) | liest `c` |
+| --- | ---: | --- |
+| `lintegral_ofReal_dist_le_sqrt_of_biSup_le` | 44427 | selbst — **und hat keinen Verbraucher** |
+| `lintegral_ofReal_dist_sq_le_of_isApproximatingPair` | 44831 | **selbst, siebenmal, und in der Konklusion** |
+| `measure_setOf_oscHitSeq_lt_le_of_isApproximatingPair` | 44964 | durchgereicht |
+| `measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair` | 45061 | durchgereicht |
+| `lintegral_ofReal_dist_le_sqrt_of_isApproximatingPair` | 45155 | **selbst**, für die Integrierbarkeit des Quadrats |
+| `sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair` | 45253 | durchgereicht |
+| `mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair` | 45413 | durchgereicht, `c` steht in der Konklusion |
+
+Also **vier** reichen durch und **zwei** lesen selbst, nicht drei und eine.
+
+**Der schwerere Befund ist der erste Tabelleneintrag.** `lintegral_ofReal_dist_le_sqrt_of_biSup_le`
+kommt in der ganzen Datei nur in drei Doc-Kommentaren und in seiner eigenen Definition vor; die
+Kette läuft über `lintegral_ofReal_dist_sq_le_of_isApproximatingPair`, das
+`ofReal_integral_sq_sub_le` unmittelbar aufruft. **Die abgeschwächte Fassung, um die der Vorlauf
+gebeten hat, bewegt in der Kette also nichts** — sie ist richtig und sie ist gebaut, aber sein
+Satz „damit ist die Abschätzung bis `mul_measure_setOf_lt_modulusBased_le_…` frei von jeder
+Schranke am Prozeß" trifft nicht zu.
+
+**Und der Grund, warum er nicht zutrifft, ist kein Buchhaltungsfehler.** Ab
+`IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le_lintegral` steht die Schranke nicht
+in einer Nebenbedingung, sondern **rechts vom `≤`**: als `ENNReal.ofReal c` vor dem
+Kompensatorintegral und am Ende als die Konstante `1 + 2 * ENNReal.ofReal c` der Konklusion von
+`mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair`. Eine Abschwächung dort ist keine
+Änderung von Hypothesen, sondern eine andere Aussage.
+
+#### Wo die Schranke eintritt, und es ist genau eine Stelle
+
+`integral_mul_stoppedValue_eq` (Z. 42707) benutzt die Herausziehregel der bedingten Erwartung in
+ihrer **beschränkten** Gestalt, `MeasureTheory.condExp_stronglyMeasurable_mul_of_bound`
+(`MeasureTheory/Function/ConditionalExpectation/PullOut.lean:260`). Sein eigener Doc-Kommentar
+sagt: „`W` is asked to be bounded and not merely integrable, because the pull out property in the
+form that needs no integrability of the product is the bounded one."
+
+**Das ist wahr als Beschreibung des Tauschs und irreführend als Begründung, denn die andere
+Gestalt gibt es.** `MeasureTheory.condExp_mul_of_stronglyMeasurable_left`
+(`PullOut.lean:245`, nachgesehen an `upstream/master`) verlangt
+
+```lean
+(hf : StronglyMeasurable[m] f) (hfg : Integrable (f * g) μ) (hg : Integrable g μ) :
+    μ[f * g | m] =ᵐ[μ] f * μ[g | m]
+```
+
+— **keine Schranke**, und auch keine Endlichkeit des Maßes für den Herausziehschritt selbst; sie
+ist über `condExp_bilin_of_stronglyMeasurable_left` bewiesen, das `Ω` längs der Mengen
+ausschöpft, auf denen `f` beschränkt *ist*. Der Tausch ist Schranke gegen Integrierbarkeit des
+Produkts, und **welche von beiden ein Verbraucher will, entscheidet sein Prozeß**: ein Gewicht
+aus einer beschränkten Testfunktion hat die Schranke geschenkt, ein Gewicht, das der Prozeß an
+einer Stoppzeit ist — der Kreuzterm von (9.26), und die reskalierte Irrfahrt von Donsker —, hat
+die Produktintegrierbarkeit aus der Quadratintegrierbarkeit über Cauchy–Schwarz und **gar keine
+Schranke**.
+
+#### Gebaut und übersetzt
+
+**Fünf neue Deklarationen**, alle in `TauCeti/MartingaleProblems/Suggested.lean` (Zeilen
+**nachher**), dazu eine sechste neu bewiesen:
+
+* **`lintegral_ofReal_dist_le_sqrt_of_lintegral_mul_biSup_le`** (Z. 44596) — das benannte Ziel.
+  Der gewichtete Fehler `γ` statt `hVb`, und die Integrierbarkeit des Quadrats als Hypothese
+  `hsq` statt als Folgerung aus der Schranke. Ein Einzeiler aus
+  `ofReal_integral_sq_sub_le_of_lintegral_mul_biSup_le` und
+  `lintegral_ofReal_dist_le_sqrt_toReal_of_le`.
+* **`lintegral_ofReal_dist_le_sqrt_of_biSup_le` ist jetzt seine Instanz** bei
+  `γ = ENNReal.ofReal c * ε`; sein Beweis produziert aus `c` beides, den gewichteten Fehler und
+  die Integrierbarkeit des Quadrats, und reicht sie weiter. Damit ist die Abschwächung eine
+  bewiesene Beziehung, wie beim Vorlauf.
+* **`integral_mul_stoppedValue_eq_of_integrable_mul`** (Z. 42754) — die Herausziehregel ohne
+  Schranke, über `condExp_mul_of_stronglyMeasurable_left`. `[IsFiniteMeasure P]` wird weiter
+  gelesen, aber **stromabwärts** vom Herausziehen: bei
+  `integrable_stoppedValue_of_rightContinuous` und bei `integral_condExp`, das
+  `SigmaFinite (P.trim hle)` braucht. Das steht so am Doc-Kommentar.
+* **`integral_mul_stoppedValue_sub_eq_zero_of_integrable_mul`** (Z. 42820) — die Zuwachsform, mit
+  den zwei Produktintegrierbarkeiten statt der Schranke.
+* **`integral_mul_stoppedValue_sub_eq_compensator_of_integrable_mul`** (Z. 42912) — die
+  Kompensatoridentität. **Vier** Produktintegrierbarkeiten statt einer Schranke, und die zwei
+  Integrierbarkeiten der gestoppten Werte von `Y` fallen ersatzlos weg: der beschränkte Nachbar
+  braucht sie, um die von `C` als Differenz zu gewinnen, hier sind die Produkte von vornherein
+  Voraussetzung.
+* **`IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le_lintegral_mul`** (Z. 43681) — die
+  Gestalt, in der die Kette es liest, mit dem Gewicht **unter** dem Integral:
+
+  ```lean
+  ‖∫ ω, W ω * (stoppedValue Y β ω - stoppedValue Y α ω) ∂P‖ₑ
+    ≤ ∫⁻ ω, ‖W ω‖ₑ * ‖C ((β ω).untopA) ω - C ((α ω).untopA) ω‖ₑ ∂P
+  ```
+
+  Der Beweis ist **kürzer** als der beschränkte, um genau den Schritt, der die Konstante
+  herauszieht (`lintegral_const_mul'`).
+
+#### Prüfung
+
+`scripts/check_master.py` gegen `upstream/master` (`94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `4.35.0-rc2`): **0 Fehler, 0 `sorry`** in allen drei Dateien, Warnungen **18 / 38 / 112,
+davon 0 veraltet** — unverändert gegenüber dem Vorlauf, die fünf neuen Deklarationen und der neu
+geführte Beweis der alten erzeugen keine einzige Warnung. `scripts/check_axioms_master.py` auf
+`propext`, `Classical.choice`, `Quot.sound` für alle fünf und für die neu bewiesene
+`lintegral_ofReal_dist_le_sqrt_of_biSup_le`. `check_own_names.py` zählt wieder **440** Namen ohne
+Deckung, also unverändert; `check_cited_lines.py` meldet **443 gepaarte Fundstellen, 0
+verschoben, 0 tot**.
+
+*Und die Namensraumfalle des Vorlaufs ist bestätigt und um drei Namen erweitert:* der Block mit
+`integral_mul_stoppedValue_*` steht in einem `section`, **nicht** in `namespace MeasureTheory`;
+`check_axioms_master.py` mit dem Präfix meldet für die drei „Unknown constant", ohne Präfix gehen
+sie durch. Für `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le_lintegral_mul` gilt
+das Gegenteil — die ist im Namensraum. Wer die Axiomprüfung aufruft, probiert beides.
+
+#### Die README ist nachgezogen
+
+`MartingaleProblems/README.md`, Meilenstein 11, im Abschnitt über die Schranke: die Zählung
+vier/zwei mit Namen, der Satz, daß `lintegral_ofReal_dist_le_sqrt_of_biSup_le` keinen Verbraucher
+hat und eine Abschwächung dort nichts bewegt, die Feststellung, daß `c` ab
+`enorm_integral_mul_stoppedValue_sub_le_lintegral` in der **Konklusion** steht, und die
+unbeschränkte Herausziehregel mit Datei und Zeile samt den vier Aussagen, die den Tausch nach
+oben tragen.
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`lintegral_ofReal_dist_sq_le_of_isApproximatingPair_of_integrable_mul`** — dieselbe Aussage wie
+`lintegral_ofReal_dist_sq_le_of_isApproximatingPair` (Z. 45062 nachher), aber mit
+
+```lean
+∫⁻ ω, ‖stoppedValue V α ω‖ₑ * ‖C ((β ω).untopA) ω - C ((α ω).untopA) ω‖ₑ ∂P
+```
+
+als zweitem Summanden statt `2 * ENNReal.ofReal c * ∫⁻ ω, ‖C … - C …‖ₑ ∂P`, und ohne `hVb`.
+
+*Worauf sie ruht:* `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le_lintegral_mul` und
+`ofReal_integral_sq_sub_le_of_lintegral_mul_biSup_le` (beide stehen seit heute), sowie
+`lintegral_ofReal_dist_le_sqrt_of_lintegral_mul_biSup_le` für den Wurzelzug.
+
+*Warum jetzt:* sie ist der erste der beiden Punkte, die die Schranke **selbst** lesen, und mit ihr
+fallen die sieben Stellen, an denen `hVb` im Beweis von
+`lintegral_ofReal_dist_sq_le_of_isApproximatingPair` die Integrierbarkeiten herstellt. Die
+Statthalter dafür sind benennbar und nicht zu raten: `hIVα`, `hIVβ` werden Hypothesen; `hIVα2`,
+`hIVβ2` folgen aus `MemLp … 2` über `MemLp.integrable_sq`; `hIVc`, `hIYc` sind Cauchy–Schwarz;
+`hsq` ist die Differenz zweier `L²`-Größen. Welcher Mathlib-Name die Cauchy–Schwarz-Stelle trägt,
+ist **am Quelltext zu belegen** und nicht aus dem Gedächtnis zu setzen.
+
+*Die eine Stelle, die vorher zu klären ist, und sie ist nicht kosmetisch:* der zweite Summand ist
+dann **nicht mehr additiv längs benachbarter Zellen** in der Weise, die
+`IsApproximatingPair.sum_lintegral_enorm_compensator_sub_le` über die Kette summiert — dort steht
+`∫⁻ ‖ΔC‖ₑ` ohne Gewicht, hier `∫⁻ ‖V(α)‖ₑ * ‖ΔC‖ₑ`, und das Gewicht wechselt mit der Zelle. Ob
+die Summation über die Kette das trägt — etwa durch Cauchy–Schwarz **nach** der Summation, mit
+einem gleichmäßigen `L²`-Term für `V` und der `L^q`-Schranke der Klasse für den Kompensator —,
+ist die erste Frage jenes Laufs. **Sie zu beantworten ist wertvoller als der Satz selbst**, weil
+an ihr hängt, ob der ganze Weg trägt oder ob die Kette doch eine Schranke am Prozeß braucht; ein
+begründetes Nein an dieser Stelle wäre der Befund, der den Meilenstein auf den Lindeberg–Taylor-Weg
+schickt.
+
+#### Nachtrag desselben Laufs: die eben gestellte Vorfrage ist am Quelltext **beantwortet**, und die Antwort ist besser als die Frage
+
+Der Vorschlag oben nennt als „erste Frage jenes Laufs", ob die Summation über die Kette einen
+**wechselnden** Gewichtsfaktor trägt. Sie ist nachgesehen und braucht keinen eigenen Lauf.
+
+**Pfadweise trägt sie, und zwar ohne neues Argument.** `sum_lintegral_enorm_compensator_sub_le`
+(Z. 43852) ruht auf der punktweisen Kettenschranke `sum_enorm_compensator_sub_le`; mit einem
+Gewicht davor ist
+
+```
+∑ₖ Wₖ ω * ‖ΔCₖ ω‖ₑ ≤ (⨆ t ≤ u, ‖V t ω‖ₑ) * ∑ₖ ‖ΔCₖ ω‖ₑ
+                    ≤ (⨆ t ≤ u, ‖V t ω‖ₑ) * ofReal u ^ (1 - 1/q) * eLpNorm (Z (·, ω)),
+```
+
+also dieselbe Kette mit dem **laufenden Maximum** an der Stelle von `c`. Was danach **nicht** mehr
+geht, ist der Schritt `lintegral_const_mul'`: beide Faktoren hängen von `ω` ab, und aus
+`∫⁻ eLpNorm ≤ K` — dem einzigen Feld der Klasse, das den Kompensator beschränkt — folgt für das
+Produkt nichts. Hier bräuchte es Hölder und damit eine `L²`-Schranke an `eLpNorm (Z (·, ω))`, also
+ein **neues Feld** in `IsApproximatingPair`.
+
+**Für den Akzeptanztest entsteht diese Forderung gar nicht, und das ist am Quelltext abzulesen:**
+
+* `isApproximatingPair_rescaledWalk` (Z. 50639) hat `C = fun _ _ ↦ 0`, `Z = fun _ _ ↦ 0`, `K = 0`.
+  Der Kompensator der Irrfahrt ist **identisch null** — sie ist selbst ein Martingal. Das ist
+  genau das Paar, dessen Gewicht im Kreuzterm die unbeschränkte Irrfahrt ist, und
+  `∫⁻ ω, ‖V (α ω) ω‖ₑ * ‖ΔC‖ₑ ∂P = 0` gleichgültig, wie groß das Gewicht ist.
+* `isApproximatingPair_sq_rescaledWalk` (Z. 50714) hat `C = fun t _ ↦ (t : ℝ) * σ` und
+  `Z = fun _ _ ↦ σ`, beide **deterministisch**; und dieses Paar wird ohnehin am Gewicht `1`
+  gelesen, wo die Schranke `1` ist und nicht `c`.
+
+**Also:** auf dem Akzeptanztest ist der gewichtete Summand null, der ungewichtete unverändert, und
+die Frage nach der Additivität stellt sich nicht. Allgemeiner stellt sie sich nicht, sobald `Z`
+deterministisch ist — dann ist `eLpNorm (Z (·, ω))` eine Konstante, `lintegral_const_mul'` greift
+wie bisher, und übrig bleibt `∫⁻ ω, ⨆ t ≤ u, ‖V t ω‖ₑ ∂P`, die `L¹`-Norm des laufenden Maximums,
+die Doob aus `L²` gibt.
+
+**Was das für den Vorschlag heißt.** Er bleibt stehen, und seine Vorfrage ist damit **vorab
+beantwortet** statt offen: der nächste Lauf baut
+`lintegral_ofReal_dist_sq_le_of_isApproximatingPair_of_integrable_mul` ohne Umweg, und die Frage
+nach einem `L²`-Feld der Klasse ist ein Punkt für **später und für allgemeine Kerne**, nicht für
+Donsker. Wer das Feld doch einführt, führt es als Abschwächung ein und belegt, an welcher Stelle
+der jetzige `K`-Term nicht mehr reicht — die Stelle ist benannt und heißt `lintegral_const_mul'`
+in Z. 43870.

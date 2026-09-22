@@ -12822,6 +12822,155 @@ has to be chosen once for all `n`. What stands:
   members it does not yet cover being tight one by one. The items themselves are
   true as they stand and are not withdrawn; what changes is which data they are
   applied to.
+* **Finitely many members may be exempted.**
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_isApproximable_off_finite`:
+  the hypothesis of the item above asked of all `i ∉ G` for a finite `G : Set γ`
+  gives the same conclusion. The members outside `G` go through that item,
+  instantiated at the subtype `↥Gᶜ` — its constants `q`, `T`, `K` are already
+  uniform in the member, so the hypothesis restricts verbatim — and the members
+  of `G` are finitely many probability measures.
+
+  Two general statements carry it, and they are about tightness alone:
+  `MeasureTheory.isTightMeasureSet_of_finite`, a finite set of finite measures is
+  tight, and `MeasureTheory.isTightMeasureSet_range_of_finite_compl`, a family is
+  tight as soon as it is tight off a finite set of indices.
+  **Mathlib has the two ends and not the middle**, read at the source on
+  2026-09-21 against `94ef6b89544`: `MeasureTheory.isTightMeasureSet_singleton`
+  (`Mathlib/MeasureTheory/Measure/Tight.lean:99`) and
+  `MeasureTheory.IsTightMeasureSet.union` (`:119`, a `protected lemma union`
+  inside `namespace IsTightMeasureSet`, so the qualified name occurs nowhere in
+  the source), beside `.subset` (`:114`), `.inter` (`:125`) and `of_compactSpace`
+  (`:109`). In that file the word `Finite` occurs only in the docstrings of the
+  singleton statements: the iterate of `union` is not there.
+
+  **The exceptional set is data of the statement and not a filter.** The
+  hypothesis reads `∀ ε₀, ∀ u, ∃ q T K, ∀ i`, so a filter phrasing `∀ᶠ i in F`
+  could only sit innermost, and along *this* route the exceptional set may not
+  move: the proof splits the family once and for all, and a split varying with
+  the horizon `m : ℕ` — which the consumer quantifies unboundedly — would union
+  to an infinite exceptional set. `Filter.cofinite` therefore buys nothing here,
+  and a moving exemption needs the other route, which is the next item.
+
+  (The three filter phrasings are not interchangeable, and the comparison is
+  recorded once so that it is not made again: `∀ᶠ i in F` under `cofinite ≤ F` —
+  that is, `F.sets ⊆ cofinite.sets` — says exactly that the complement is finite,
+  and `∀ᶠ i in cofinite` is the weakest of them, hence the strongest statement.
+  For `γ = ℕ` it is reached from `atTop` by `Nat.cofinite_eq_atTop`.)
+
+  **What it does not reach, stated so that no run mistakes it.** The
+  approximation error `ε` is quantified **inside** `MeasureTheory.IsApproximable`,
+  so a member is approximable either to every error or to none, and by the item
+  above a rescaled random walk is approximable to none. A family whose `n`-th
+  member is approximable only to within some `ε n` with `ε n → 0` is therefore
+  exempted by no finite `G`. That is the weakening \EK (9.26) actually make, it
+  moves the `∀ ε` of the structure out past the index, and it is a different
+  statement rather than an instance of this one.
+* **The exempted set may move with the window.**
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_isApproximable_off_finite_window`:
+  the finite `G` is produced **inside** the hypothesis, after `ε₀` and `u`, so a
+  family whose members become approximable only as the accuracy asked is relaxed
+  satisfies it, and the item above is its instance at a `G` depending on neither.
+
+  **Why the move is admissible here and not there.** The item above splits the
+  family once and for all and needs the split to be the same at every horizon;
+  this one never splits it. It goes through
+  `SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le_off_finite`
+  of **SkorokhodSpace**, Milestone 7, which supplies the exempted members with
+  their own window out of the tightness of their single image law — the
+  criterion there is an equivalence, so it gives as well as takes — and there the
+  exemption is consumed one horizon at a time.
+
+  **What it still does not reach, and the three items below do.** The error `ε`
+  remains quantified inside `MeasureTheory.IsApproximable`, so a member is
+  approximable to every error or to none. The lever for moving it out is
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair`,
+  which carries the error of the approximants as an explicit summand `A` on its
+  right hand side, while
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximable` discards
+  it in a limit along `ε = (n : ℝ≥0∞)⁻¹`.
+* **The error quantified outside the index.**
+  `MeasureTheory.IsEventuallyApproximable 𝓕 P q T K V ε₀ u` for a family
+  `V : γ → ℝ≥0 → Ω → ℝ`: to every positive error a **finite** `G : Set γ`, off
+  which every member has two pairs of `MeasureTheory.IsApproximatingPair`, with
+  one and the same `q`, `T`, `K` for the whole family and every error,
+  approximating it and its square to within that error, together with the four
+  integrabilities the assembly reads. The exceptional set moves with the error;
+  the constants do not, and that is what the uniformity over the family rests
+  on.
+
+  **The filtration is indexed by the family**, `𝓕 : γ → Filtration ℝ≥0 mΩ`, and
+  so are the progressivity hypothesis and the right continuity instance of the
+  two consumers below. That is not generality on suspicion but what this
+  milestone's own acceptance test needs: the rescaled walks of Donsker's theorem
+  are martingales over `MeasureTheory.floorFiltration` of their own mesh, and
+  **no single filtration serves them all**. Adaptedness of the member at mesh
+  `m` at a positive time `t` puts `σ (ξ_0, …, ξ_{⌊t (m+1)⌋ - 1})` into `𝓕 t`,
+  and `⌊t (m+1)⌋ → ∞` along the family, so a shared `𝓕 t` would carry the whole
+  tail `σ (ξ_k : k)` at *every* positive time; over such a filtration the
+  increments of any member are already known and the martingale field forces
+  them to vanish. A shared filtration therefore reaches no nondegenerate family
+  of walks at all.
+
+  **Nothing joins two members through the filtration**, which is what makes the
+  indexing free: the estimate under the criterion reads `𝓕` only at the member
+  it is estimating, the quantities shared across the family being the scalars
+  `q`, `T`, `K`, `ε₀`, `u` and the exceptional set. A consumer with one
+  filtration passes the constant family.
+
+  `MeasureTheory.isEventuallyApproximable_of_forall_isApproximable` reads the
+  relation to the condition above: approximability off a finite set is this
+  condition at a `G` that does not move, so this is a weakening of that and not
+  a different condition.
+
+  **The form a consumer arrives with is the other one**, and it is the same
+  statement: `MeasureTheory.isEventuallyApproximable_of_tendsto_zero_cofinite`
+  asks that **every** member have pairs, their error `e i` going to zero along
+  `Filter.cofinite`. The exchange is the equivalence `Filter.eventually_cofinite`
+  (`Mathlib/Order/Filter/Cofinite.lean:49`) and nothing else — `{i | ¬ e i ≤ ε}`
+  finite *is* the exceptional set at the error `ε`. `Filter.cofinite` and not
+  `Filter.atTop`: the structure asks for a finite set, and `atTop` says that only
+  for an ordered index, the two agreeing on `ℕ` by `Nat.cofinite_eq_atTop`.
+* **Tightness of the image laws from eventual approximability.**
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_isEventuallyApproximable`:
+  the conclusion of the two items above under
+  `MeasureTheory.IsEventuallyApproximable` at every horizon. Under it is the
+  uniform estimate
+  `MeasureTheory.exists_finite_forall_measure_setOf_lt_modulusBased_postcomp_le_of_isEventuallyApproximable`,
+  which produces one exceptional set and one window serving every member outside
+  it.
+
+  **The order of the three choices is `N`, `ε`, `δ`, and not `N`, `δ`, `ε`.**
+  The chain above sends the error to zero in a limit and after that limit the
+  approximants no longer occur; here the error survives into the estimate, so
+  the count is chosen first at no window, the **error** second — which is where
+  the exceptional set is born, hence before the window — and the window last at
+  that error, from
+  `MeasureTheory.tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` at `A = a₀` rather
+  than at `A = 0`. That limit is `N · √a₀` and not `0`, so the error is chosen
+  to leave it strictly below its share of the budget. The statement with a free
+  `A` was proved before this item and is what it reads.
+
+  The budget `θ = ofReal ε₀ * η` is split as `θ/2` for the gap term and twice
+  `θ/4` for the horizon term and the error term; `η = ⊤` is disposed of first,
+  so the halves are strict. The exponent `1 < q` is read off a member through
+  the exceptional set at the error `1`, and an exceptional set exhausting the
+  index makes the conclusion vacuous.
+* **The witness that the exchange of quantifiers is not idle.** The family of
+  deterministic unit steps at a fixed time `b` of height `(i+1)⁻¹`,
+  `i : ℕ`. `MeasureTheory.not_isApproximable_scaledStep` says **no** member of
+  it is approximable — the obstruction of
+  `MeasureTheory.not_isApproximable_indicator_Ici`, an atom of the compensator
+  at a deterministic time, which no error absorbs at a fixed member — while
+  `MeasureTheory.isEventuallyApproximable_scaledStep` says the family is
+  eventually approximable, the approximants being the zero pair
+  (`MeasureTheory.isApproximatingPair_zero`) and the exceptional set the initial
+  segment of indices whose height exceeds the error.
+
+  It is therefore tight by the item above and reached by neither of the two
+  items before it, which is the strictness of the weakening. The same shape is
+  what a family of rescaled random walks has, with the height of a single jump
+  in place of `(i+1)⁻¹`; what the witness establishes is the quantifier
+  structure and not that particular family.
 * **The same estimate uniformly over the family.**
   `MeasureTheory.exists_forall_measure_setOf_lt_modulusBased_postcomp_le_of_forall_isApproximable`:
   for a family `X : γ → ℝ≥0 → Ω → E` over **one** probability space, all
@@ -13042,6 +13191,20 @@ has to be chosen once for all `n`. What stands:
   `MeasureTheory.stronglyMeasurable_stoppedValue_of_le`
   (`Probability/Process/Stopping.lean:1016`) against `integrable_const`. Of the
   measure it reads finiteness and not normalisation.
+
+  **And the bound is a majorant, 2026-09-22**, not a constant:
+  `MeasureTheory.IsApproximatingPair.integrable_stoppedValue_of_dominated` asks
+  only for an integrable `g` with `‖Y t ω‖ ≤ g ω` for `t ≤ j`, and the bounded
+  case is its instance at `g` constant. The generalisation is not for its own
+  sake and the acceptance test is what asks for it: a rescaled random walk is
+  **not** bounded, its value at stage `k` being a partial sum of independent
+  summands, while on a bounded stretch of time it is dominated by the sum of the
+  finitely many stage values it can take there, which is integrable. With a
+  constant majorant the class reaches no unbounded approximant, and
+  `MeasureTheory.IsApproximable` demands the four integrabilities of every
+  member of it. The domination is asked **only up to `j`**, `WithTop.untopA_le`
+  putting the reading point of the stopped value below `j`, so nothing is
+  hypothesised about values the statement never looks at.
 
   **Both Aldous times carry the bound the statement needs, and they carried it
   before the question was asked.** The capped time is below `u` by
@@ -13639,12 +13802,259 @@ has to be chosen once for all `n`. What stands:
     the discrete one read at a pair of stages the floor already orders. No
     uniform integrability and no limit enter, the process taking only the
     countably many values it took before.
+  * `martingale_sq_partialSum_of_iIndepFun` and `martingale_sq_rescaledWalk`,
+    **2026-09-22** — the compensated square,
+    `(∑ k < n, ξ k) ^ 2 - ∑ k < n, 𝔼[ξ k ^ 2]`, is a martingale for the same
+    filtration, and so is its floor reindexing. It is the second of the two
+    processes the approximability condition asks for: `IsApproximable` wants an
+    approximant of the walk **and** one of its square, and a square is no
+    martingale. **Mathlib has it in no form** — there is no declaration named
+    for the predictable quadratic variation of a discrete martingale, no
+    `sq_sub` lemma about `Martingale`, and no compensator of a square anywhere
+    under `Mathlib/Probability/` (searched at the source of `master`
+    `09712d488fd`; `Mathlib/Probability/Moments/Variance.lean` mentions
+    `Martingale` not once). What Mathlib has is
+    `ProbabilityTheory.IndepFun.variance_sum`, which is this statement read at
+    one time and with the conditioning thrown away. The compensator is the sum
+    of the **second moments**, which under the centring hypothesis are the
+    variances; second moments are what the proof produces. The centring is spent
+    on the cross term and the square integrability on its integrability, one
+    place each, and the *same* independence serves the increment and its square,
+    `ξ n ^ 2` being measurable for the σ-algebra of `ξ n`.
 
-  With these the walk carries, over **one** filtration, everything the two halves
-  of this milestone ask of a process: the martingale property, progressivity,
-  right continuous paths, and a right continuous filtration. What it does not
-  carry is a solution of a martingale problem — a rescaled walk solves none, and
-  that is why this milestone has an approximate case at all.
+  **And here is the shape the acceptance test needs, measured and not guessed.**
+  The compensator above is a **step function of the time**, while
+  `MeasureTheory.IsApproximatingPair` asks its compensator to be
+  `∫_{(0,t]} Z s ω` for a density in `L^q` — and no step function is one. The
+  approximant of the square is therefore not the compensated square itself but
+  the compensated square plus an *absolutely continuous* compensator, the error
+  being the gap between the two. For increments of one common second moment `σ`
+  the absolutely continuous compensator is `t · σ`, its density the constant
+  `σ`, and the gap is `(t - ⌊t (n + 1)⌋ / (n + 1)) · σ ≤ σ / (n + 1)` — uniform
+  in `ω` and in `t`, and vanishing **along the family** and not at a fixed
+  member. That is the reason this milestone carries
+  `MeasureTheory.IsEventuallyApproximable` at all, and it is measured rather
+  than asserted.
+
+  * `isApproximatingPair_rescaledWalk`, **2026-09-22** — and the first pair is
+    free, which is the other half of the same measurement. The walk approximates
+    itself with the zero compensator, the zero density and the constant `K = 0`,
+    error exactly `0`. It is **an instance of
+    `MeasureTheory.isApproximatingPair_of_martingale` and not a new statement**,
+    read at `F = id` and at the zero generator `g = 0`: that statement asks a
+    process, a continuous `F` and a bounded `g` making `F ∘ X` compensated by
+    the integral of `g ∘ X` a martingale, and a martingale is that with `F` the
+    identity and `g` zero. The walk solves no martingale problem, but `(id, 0)`
+    is admissible data for the statement — **a martingale needs no
+    approximating, being its own approximant.** So the whole cost of the
+    acceptance test sits in the second pair, the square, and a consumer joining
+    the two raises `K` with `MeasureTheory.IsApproximatingPair.mono_K`.
+  * `isApproximatingPair_sq_rescaledWalk`, **2026-09-22** — the second pair, in
+    the shape the paragraph above prescribes: `V ^ 2 - ⟨V⟩ + t σ` with the
+    linear compensator `t σ`, the constant density `σ` and the constant
+    `K = T ^ q⁻¹ · ‖σ‖`. **`σ` is free**: no hypothesis says it is the common
+    second moment, because the martingale field reads `Y - C = V ^ 2 - ⟨V⟩`,
+    where the constant cancels, and the three fields that read the density read
+    a constant. The second moment enters only in the error, and is asked where
+    it is used.
+    It is **not** an instance of `isApproximatingPair_of_martingale`, and the
+    exchange is favourable: there the compensator is an integral along the path
+    and `progressive_sub` is the one real price; here the compensator is a
+    function of the time alone, so `progressive_sub` is `V ^ 2 - ⟨V⟩`, two step
+    paths and `IsStronglyProgressive.sub`. The deterministic step `⟨V⟩` is
+    progressive by `isStronglyProgressive_stepPath_natCastDiv` at a **constant**
+    value sequence — the statement asks the values to be adapted, and a constant
+    is.
+    **The constant does not move with `n`**, which is where a uniformity could
+    have failed and does not: `K` is read off the density alone, and `n` occurs
+    in neither the density nor the horizon.
+  * `enorm_sub_sq_rescaledWalk_le` and
+    `lintegral_biSup_enorm_sub_sq_rescaledWalk_le`, **2026-09-22** — the error of
+    that pair in closed form, `σ (t - ⌊t (n + 1)⌋ / (n + 1)) ≤ σ / (n + 1)`, and
+    the same bound in the shape `IsEventuallyApproximable` reads, a mean over `Ω`
+    of a supremum over the horizon. Both quantifiers are free, the pointwise
+    bound holding at every time and every sample point, so **the horizon `T` is
+    not read at all**: the error of this family grows with the mesh and not with
+    the window. `0 ≤ σ` is no hypothesis either — it is the second moment read
+    against `integral_nonneg`, which needs no integrability.
+  * `abs_rescaledWalk_le_of_le` and `integrable_majorant_rescaledWalk`,
+    **2026-09-22** — the integrable majorant that
+    `IsApproximatingPair.integrable_stoppedValue_of_dominated` asks of an
+    unbounded approximant: below `j` the walk is dominated by
+    `(n+1)^{-1/2} ∑_{k < ⌊j (n+1)⌋} |ξ k|`, a finite sum of integrable terms.
+    **Past `j` the domination is false**, the majorant growing with the number
+    of stages — which is why that statement asks for it only up to the bound of
+    the stopping time. Only integrability of the increments is read.
+  * `abs_sq_rescaledWalk_le_of_le` and `integrable_majorant_sq_rescaledWalk`,
+    **2026-09-22** — the same majorant question for the *square's* approximant.
+    Below `j`, `V ^ 2 - ⟨V⟩ + t σ` is dominated by `g ^ 2 + ⟨V⟩ j + j |σ|`, with
+    `g` the very majorant `abs_rescaledWalk_le_of_le` already names: each of the
+    three summands is bounded at `j` by itself — `V t` by `g` (so `V t ^ 2 ≤
+    g ^ 2`, squaring a bound between nonnegatives), `⟨V⟩ t` by `⟨V⟩ j` (it is a
+    sum of integrals of squares, hence nonnegative and increasing in `t`, no
+    integrability needed for either fact), and `t σ` by `j |σ|`. The majorant is
+    integrable because `∑_{k < ⌊j (n+1)⌋} |ξ k|` is `MemLp` at `2` (a finite sum
+    of `MemLp.abs`), so its square is integrable by `MemLp.integrable_sq` — the
+    one place the square integrability of the increments is spent — and the two
+    remaining summands are constants at fixed `j`. **Past `j` this is false**
+    for the same reason as the walk's own majorant: the discrete compensator
+    keeps growing with the number of stages.
+
+  * `isEventuallyApproximable_rescaledWalk`, **2026-09-22** — the assembly, and
+    with it the approximability half of the acceptance test. The two pairs are
+    joined at the common constant `T ^ q.toReal⁻¹ * ‖σ‖₊` by
+    `IsApproximatingPair.mono_K`, the walk's own constant being `0`; the first
+    error is exactly `0` and the second is
+    `lintegral_biSup_enorm_sub_sq_rescaledWalk_le`, so the error along the
+    family is `σ / (n + 1)` and goes to zero, which is
+    `isEventuallyApproximable_of_tendsto_zero_cofinite` through
+    `Nat.cofinite_eq_atTop`.
+
+    **The four integrabilities are read at two different bounds**, and that is
+    the one place care is needed: the structure stops at `min (τ k) u` and at
+    `min (τ (k+1)) (min (τ k) u + δ)`, whose bounds are `u` and `u + δ`, while
+    the two majorants grow with the bound. An assembly with one bound for both
+    pairs of times does not close. The times are
+    `isStoppingTime_oscHitSeqCap` and `isStoppingTime_oscHitSeqGap`, their
+    bounds `min_le_right` and `oscHitSeqGap_le_coe`.
+
+    **No countable dense set is asked for**: the hitting times need one to be
+    stopping times, and `ℝ≥0` being separable,
+    `TopologicalSpace.exists_countable_dense` produces it inside the proof.
+
+  With these the walk carries, over the filtration of **its own mesh**,
+  everything the two halves of this milestone ask of a process: the martingale
+  property, progressivity, right continuous paths, and a right continuous
+  filtration. It carries them over no coarser one and over no filtration shared
+  with the other members, which is the reason
+  `MeasureTheory.IsEventuallyApproximable` indexes its filtration. What the walk
+  does not carry is a solution of a martingale problem — a rescaled walk solves
+  none, and that is why this milestone has an approximate case at all.
+
+  **And it does not yet reach the chain, for a reason measured at the source on
+  2026-09-22 and not foreseen when the pairs were built.** Every tightness
+  statement of this milestone reads a process that is **uniformly bounded**, and
+  the rescaled walk is not. The bound is not a convenience of one statement but
+  runs the whole depth of the estimate:
+
+  * `MeasureTheory.enorm_integral_mul_sub_le_of_biSup_le` carries
+    `hUb : ∀ ω, ‖U ω‖ ≤ c` at the weight of the cross term;
+  * `MeasureTheory.ofReal_integral_sq_sub_le` reads it as `hVb : ∀ t ω, ‖V t ω‖ ≤ c`
+    and hands `c` on as the coefficient of the approximation error, its own
+    docstring saying "a consumer with `f : E →ᵇ ℝ` holds all five, `c = ‖f‖`";
+  * `MeasureTheory.lintegral_ofReal_dist_le_sqrt_of_biSup_le` reads it a second
+    time, to make the square of the increment integrable without a hypothesis;
+  * and it survives unchanged through
+    `MeasureTheory.sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair`,
+    `MeasureTheory.measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair` and
+    `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair`
+    up to
+    `MeasureTheory.mul_measure_setOf_lt_modulusBased_postcomp_le_of_isApproximatingPair`,
+    where it is discharged as `c = ‖g‖` for `g : E →ᵇ ℝ`.
+
+  **Counted at the source on 2026-09-22, seventh run, so that no run re-derives
+  it.** Of the statements between `lintegral_ofReal_dist_le_sqrt_of_biSup_le` and
+  the end of the chain, **four** merely pass the bound on --
+  `measure_setOf_oscHitSeq_lt_le_of_isApproximatingPair`,
+  `measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair`,
+  `sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair`,
+  `mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair` -- and **two**
+  read it themselves, `lintegral_ofReal_dist_sq_le_of_isApproximatingPair` and
+  `lintegral_ofReal_dist_le_sqrt_of_isApproximatingPair`.
+
+  **And `lintegral_ofReal_dist_le_sqrt_of_biSup_le` is not one of the six: it has
+  no consumer at all.** The chain runs through
+  `lintegral_ofReal_dist_sq_le_of_isApproximatingPair`, which calls
+  `ofReal_integral_sq_sub_le` directly; the unused statement is the same
+  passage packaged for a consumer holding `a`, `b` and a window, and nothing in
+  this file holds those without also holding an approximating pair. Weakening it
+  therefore moves nothing in the chain, which is why the weakening below is
+  stated where the chain actually reads the bound.
+
+  **The decisive place is one level lower than the list above suggests**, and it
+  is not a side condition but the **conclusion**: from
+  `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le_lintegral` onward
+  the bound stands in the right hand side, as `ENNReal.ofReal c` in front of the
+  compensator integral and finally as the constant `1 + 2 * ENNReal.ofReal c` of
+  `mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair`. It enters at
+  exactly one point, `integral_mul_stoppedValue_eq`, where the pull-out property
+  of the conditional expectation is used in its **bounded** form,
+  `MeasureTheory.condExp_stronglyMeasurable_mul_of_bound`
+  (`MeasureTheory/Function/ConditionalExpectation/PullOut.lean:260`).
+
+  Consequently the `V` slot of every consumer is a **post-composition**:
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_isEventuallyApproximable`
+  asks for `IsEventuallyApproximable 𝓕 P q T K (fun i t ω ↦ g (X i t ω)) ε₀ u`,
+  while `MeasureTheory.isEventuallyApproximable_rescaledWalk` supplies it for
+  `X i` itself. The two meet only at `g = id`, and `id : ℝ → ℝ` is not a
+  `ℝ →ᵇ ℝ`. **`isEventuallyApproximable_rescaledWalk` therefore has no consumer
+  as it stands**, and the statement
+  `MeasureTheory.isTight_map_postcomp_rescaledWalk` cannot be assembled from it.
+  This is a statement about the *walk*, not about the weakening: the family of
+  scaled deterministic steps takes its values in `[0, 1]`, so there a `g : ℝ →ᵇ ℝ`
+  agreeing with the identity on `[0, 1]` closes the same gap.
+
+  **The repair, named and not guessed: the bound on the weight is only ever read
+  against the error.** In `enorm_integral_mul_sub_le_of_biSup_le` the two occur
+  exclusively in the product `ENNReal.ofReal c * (2 * ε)`, and the walk's first
+  pair has `ε = 0` exactly. The statement therefore holds with the pointwise
+  bound replaced by a **weighted error**,
+
+  ```
+  MeasureTheory.enorm_integral_mul_sub_le_of_lintegral_mul_biSup_le :
+    (hγ : ∫⁻ ω, ‖U ω‖ₑ * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P ≤ γ) → … + 2 * γ,
+  ```
+
+  of which the bounded version is the instance at `γ = ENNReal.ofReal c * ε`.
+  It is a genuine weakening and not a restatement: a weight of infinite supremum
+  against an error that vanishes gives `γ = 0`, which no `c` produces.
+
+  The second reading, at the integrability of the square, is weakened the same
+  way:
+  `MeasureTheory.lintegral_ofReal_dist_le_sqrt_of_lintegral_mul_biSup_le` carries
+  `hsq : Integrable (fun ω ↦ (V (b ω) ω - V (a ω) ω) ^ 2) P` instead of the
+  bound, which the walk has from `MemLp (ξ k) 2 P` by
+  `MeasureTheory.MemLp.integrable_sq`; the bounded statement is its instance,
+  producing both the weighted error and the square integrability out of `c`.
+
+  **And the bound at the bottom of the chain is removable too, which is what
+  makes the route viable at all.** Mathlib has the pull-out property of the
+  conditional expectation in an unbounded form,
+  `MeasureTheory.condExp_mul_of_stronglyMeasurable_left`
+  (`MeasureTheory/Function/ConditionalExpectation/PullOut.lean:245`), which asks
+  `StronglyMeasurable[m] f`, `Integrable (f * g) μ` and `Integrable g μ` and no
+  bound; it is proved by exhausting the space along the sets where `f` is
+  bounded. Three statements carry that trade upward —
+
+  ```
+  MeasureTheory.integral_mul_stoppedValue_eq_of_integrable_mul
+  MeasureTheory.integral_mul_stoppedValue_sub_eq_zero_of_integrable_mul
+  MeasureTheory.integral_mul_stoppedValue_sub_eq_compensator_of_integrable_mul
+  ```
+
+  — and
+  `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le_lintegral_mul`
+  is the form in which the chain reads them, with the weight left **under** the
+  lower integral,
+
+  ```
+  ‖∫ ω, W ω * (stoppedValue Y β ω - stoppedValue Y α ω) ∂P‖ₑ
+    ≤ ∫⁻ ω, ‖W ω‖ₑ * ‖C ((β ω).untopA) ω - C ((α ω).untopA) ω‖ₑ ∂P,
+  ```
+
+  so that no constant is taken out of it. The price is four integrability
+  hypotheses about products with `W` in place of one bound, and the two
+  integrabilities of the stopped values of `Y` fall away; for a weight in `L²`
+  against an increment in `L²` the four are Cauchy–Schwarz. Carrying this shape
+  through the six statements of the chain is the next piece of work on this item.
+
+  **The alternative, and why it is the more expensive one.** The acceptance
+  example below states Donsker with `A = {(f, f''/2) | f ∈ Cc^∞(ℝ)}`, that is,
+  with the martingale hypothesis at `f ∘ X n` for bounded `f`. Building the
+  pairs there is the Lindeberg–Taylor computation and not a corollary of the two
+  pairs above, whose approximants are the walk and its square. Either route
+  closes the item; the weakening of the bound reuses what is built, the other
+  does not.
 
 * Convergence in measure as a second mode: the space of càdlàg paths with the
   topology of convergence in Lebesgue measure, in which the coordinates are
