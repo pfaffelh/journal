@@ -51865,39 +51865,58 @@ theorem indep_comap_natural_partialSum {P : Measure Ω} {ξ : ℕ → Ω → ℝ
     exact indep_of_indep_of_le_right
       (hind.indep_comap_natural_of_lt hmeas (Nat.lt_succ_self m)) (hle m)
 
-/-- **A centred factor decouples from everything measurable for a σ-algebra it is independent
-of**: `∫ W · X = 0` as soon as `X` is centred and `σ (X)` is independent of a σ-algebra that `W`
-is measurable for.
+/-- **A factor decouples from everything measurable for a σ-algebra it is independent of**:
+`∫ W · X = (∫ W) · (∫ X)` as soon as `σ (X)` is independent of a σ-algebra that `W` is measurable
+for.  It is Mathlib's product formula with the independence read off **σ-algebras** rather than
+off the pair of functions, which is the shape a filtration hands it over in.
 
 **No integrability is asked, and that is a property of Mathlib's lemma and not an oversight
 here.**  `ProbabilityTheory.IndepFun.integral_fun_mul_eq_mul_integral`
 (`Mathlib/Probability/Independence/Integration.lean:423`) gives `∫ W · X = P[W] · P[X]` from bare
 `AEStronglyMeasurable`; its proof runs through `ProbabilityTheory.IndepFun.integral_bilin'`
 (`:335`), which splits on the integrability of the product and observes that where that fails,
-one of the two factors fails as well -- so **both sides are then the Bochner junk value `0`**.
+one of the two factors fails as well -- so **all three integrals are then the Bochner junk value
+`0`**, and the identity holds by both sides being `0`.
 
 **The junk value is therefore read here, and it is read on purpose**: in the degenerate case the
 identity is empty rather than false.  A consumer that wants content supplies what makes the
 product integrable, and for the acceptance test that is boundedness of `W` together with
-integrability of `X = ξ k`, whence `ProbabilityTheory.IndepFun.integrable_mul` (`:358`).  This is
-the one place in the milestone where a hypothesis is *left out* because the junk values on the
-two sides agree, and saying so at the declaration is what the standing rule asks instead of the
-word "harmless".
+integrability of `X`, whence `ProbabilityTheory.IndepFun.integrable_mul` (`:358`).  This is the
+one place in the milestone where a hypothesis is *left out* because the junk values on the two
+sides agree, and saying so at the declaration is what the standing rule asks instead of the word
+"harmless".
+
+**It is a product formula and not a null statement, and that is what makes the omission
+possible.**  Both consumers below -- the first order term of Donsker's expansion, where `∫ X = 0`,
+and the second order term, where `∫ X = σ²` -- are instances of it, and neither needs a
+hypothesis the other does not: a null statement would have had to be argued separately from an
+identity, and here the degenerate branch is the same `0 = 0` in both.
 
 **The hypothesis on `W` is `comap W ≤ m` and not `Measurable[m] W`**, the two being the same by
 `Measurable.comap_le` and `Measurable.of_comap_le`; the σ-algebra form is what
 `ProbabilityTheory.indep_of_indep_of_le_left`
 (`Mathlib/Probability/Independence/Basic.lean:371`) consumes, and it saves the consumer a
 conversion. -/
+theorem integral_mul_eq_mul_integral_of_indep_comap {P : Measure Ω} {m : MeasurableSpace Ω}
+    {X W : Ω → ℝ} (hindep : Indep (MeasurableSpace.comap X inferInstance) m P)
+    (hW : MeasurableSpace.comap W inferInstance ≤ m)
+    (hXm : AEStronglyMeasurable[mΩ] X P) (hWm : AEStronglyMeasurable[mΩ] W P) :
+    ∫ ω, W ω * X ω ∂P = (∫ ω, W ω ∂P) * ∫ ω, X ω ∂P := by
+  have hfun : IndepFun W X P := indep_of_indep_of_le_left hindep.symm hW
+  exact hfun.integral_fun_mul_eq_mul_integral hWm hXm
+
+/-- **A centred factor decouples to `0`**: `∫ W · X = 0` as soon as `X` is centred and `σ (X)` is
+independent of a σ-algebra that `W` is measurable for.
+
+It is `MeasureTheory.integral_mul_eq_mul_integral_of_indep_comap` at `∫ X = 0`, and everything
+said there about the absent integrability hypothesis is said about this one too. -/
 theorem integral_mul_eq_zero_of_indep_comap {P : Measure Ω} {m : MeasurableSpace Ω}
     {X W : Ω → ℝ} (hindep : Indep (MeasurableSpace.comap X inferInstance) m P)
     (hW : MeasurableSpace.comap W inferInstance ≤ m)
     (hXm : AEStronglyMeasurable[mΩ] X P) (hWm : AEStronglyMeasurable[mΩ] W P)
     (hcent : ∫ ω, X ω ∂P = 0) :
     ∫ ω, W ω * X ω ∂P = 0 := by
-  have hfun : IndepFun W X P := indep_of_indep_of_le_left hindep.symm hW
-  rw [hfun.integral_fun_mul_eq_mul_integral hWm hXm]
-  simp [hcent]
+  rw [integral_mul_eq_mul_integral_of_indep_comap hindep hW hXm hWm, hcent, mul_zero]
 
 /-- **The partial sums of independent centred integrable summands are a
 martingale**, which is the one hypothesis
@@ -53492,6 +53511,26 @@ Both are equalities at one sample point.  No limit is taken, no independence is 
 second is the only item of the computation the acceptance test still owes that is free of
 probability. -/
 
+/-- **What is left of a broken cell is shorter than a cell**: the distance from a time to the
+node of the grid below it is at most the mesh `c⁻¹`.
+
+It is the whole of the arithmetic behind the two boundary terms of the gap, `Nat.floor_le` for
+the lower bound and `Nat.lt_floor_add_one` for the upper, and it is stated over a bare real `t`
+rather than over `ℝ≥0` because that is the form `integral_Ioc_comp_floor_mul` leaves the
+remainder in.
+
+**`0 ≤ t` is read and cannot be dropped.**  At a negative `t` the floor is `0`, the remainder is
+`t` itself, and the bound fails for every `t < -c⁻¹`; `Nat.floor` is not the floor there. -/
+theorem abs_sub_natCast_floor_div_le {c : ℝ} (hc : 0 < c) {t : ℝ} (ht : 0 ≤ t) :
+    |t - (⌊t * c⌋₊ : ℝ) / c| ≤ c⁻¹ := by
+  have h1 : (⌊t * c⌋₊ : ℝ) ≤ t * c := Nat.floor_le (by positivity)
+  have h2 : t * c < (⌊t * c⌋₊ : ℝ) + 1 := Nat.lt_floor_add_one _
+  have hkey : t - (⌊t * c⌋₊ : ℝ) / c = (t * c - (⌊t * c⌋₊ : ℝ)) / c := by
+    field_simp
+  rw [hkey, abs_div, abs_of_pos hc, abs_of_nonneg (by linarith), div_le_iff₀ hc,
+    inv_mul_cancel₀ hc.ne']
+  linarith
+
 /-- **The integral of a step function over an arithmetic grid, exactly and in closed form.**
 
 `fun u ↦ v ⌊u * c⌋₊` is the shape every path over an arithmetic grid has: `stepPath_natCast_div`
@@ -53769,6 +53808,130 @@ theorem mpTest_sub_rescaledWalk_eq_sum (f g : ℝ → ℝ) (n : ℕ) (ξ : ℕ �
   simp only [Finset.sum_sub_distrib]
   ring
 
+/-- **The two boundary terms of the gap are of order `(n+1)⁻¹`, uniformly in the sample point**:
+the gap of the third item of the chain differs from its cell sum by at most `2 (n+1)⁻¹ ‖g‖`.
+
+`MeasureTheory.mpTest_sub_rescaledWalk_eq_sum` writes the gap as a sum over whole cells plus what
+is left of the two cells the window breaks.  Those two remainders carry no increment of `f` and
+are therefore not touched by the Lindeberg expansion at all; they are the part of the gap that
+goes away by counting, and this is that count.  What remains after it is the cell sum, on which
+the expansion is carried out.
+
+**Still no probability, and still an identity at one sample point turned into a bound at one
+sample point.**  The estimate is uniform in `ω`, which is what lets the consumer take it under
+the integral against a bounded weight without an integrability argument of its own.
+
+**Only `g` is asked to be bounded, and `f` is asked nothing.**  `f` cancels: the two boundary
+terms of `MeasureTheory.mpTest_sub_rescaledWalk_eq_sum` carry the compensator's weight alone.
+That is the reverse of what the cell sum will ask, where `f` is expanded and `g` only has to
+match `½ σ² f''`.
+
+**`0 ≤ C` is a conclusion and not a hypothesis**, read off `hg` at any point.  **The time
+arguments are `ℝ≥0`**, so the nonnegativity that `abs_sub_natCast_floor_div_le` reads is
+`NNReal.coe_nonneg` and never has to be carried; and the passage from the floor of an `ℝ≥0`
+product to the floor of the real one is `norm_cast` alone. -/
+theorem abs_mpTest_sub_rescaledWalk_sub_sum_le (f g : ℝ → ℝ) {C : ℝ} (hg : ∀ x, |g x| ≤ C)
+    (n : ℕ) (ξ : ℕ → Ω → ℝ) (ω : Ω) {s t : ℝ≥0} (hst : s ≤ t) :
+    |((f ((Real.sqrt ((n : ℝ) + 1))⁻¹
+            * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+          - ∫ u in Set.Ioc (0 : ℝ) (t : ℝ),
+              g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+                * ∑ j ∈ Finset.range ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊, ξ j ω))
+        - (f ((Real.sqrt ((n : ℝ) + 1))⁻¹
+              * ∑ j ∈ Finset.range ⌊s * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+            - ∫ u in Set.Ioc (0 : ℝ) (s : ℝ),
+                g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+                  * ∑ j ∈ Finset.range ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)))
+      - ∑ k ∈ Finset.Ico ⌊s * ((n : ℝ≥0) + 1)⌋₊ ⌊t * ((n : ℝ≥0) + 1)⌋₊,
+          (f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range (k + 1), ξ j ω)
+            - f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)
+            - ((n : ℝ) + 1)⁻¹
+              * g ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω))|
+      ≤ 2 * ((n : ℝ) + 1)⁻¹ * C := by
+  have hc : (0 : ℝ) < (n : ℝ) + 1 := by positivity
+  have hC : 0 ≤ C := (abs_nonneg _).trans (hg 0)
+  -- a broken cell is shorter than a cell, at either end of the window
+  have hbd : ∀ r : ℝ≥0,
+      |((r : ℝ) - (⌊r * ((n : ℝ≥0) + 1)⌋₊ : ℝ) / ((n : ℝ) + 1))| ≤ ((n : ℝ) + 1)⁻¹ := by
+    intro r
+    have hfl : ⌊r * ((n : ℝ≥0) + 1)⌋₊ = ⌊(r : ℝ) * ((n : ℝ) + 1)⌋₊ := by norm_cast
+    rw [hfl]
+    exact abs_sub_natCast_floor_div_le hc r.coe_nonneg
+  rw [mpTest_sub_rescaledWalk_eq_sum f g n ξ ω hst,
+    show ∀ a x y : ℝ, a - x + y - a = y - x from fun a x y ↦ by ring]
+  refine (abs_sub _ _).trans ?_
+  have h1 : |((s : ℝ) - (⌊s * ((n : ℝ≥0) + 1)⌋₊ : ℝ) / ((n : ℝ) + 1))
+      * g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+          * ∑ j ∈ Finset.range ⌊s * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)| ≤ ((n : ℝ) + 1)⁻¹ * C := by
+    rw [abs_mul]
+    exact mul_le_mul (hbd s) (hg _) (abs_nonneg _) (by positivity)
+  have h2 : |((t : ℝ) - (⌊t * ((n : ℝ≥0) + 1)⌋₊ : ℝ) / ((n : ℝ) + 1))
+      * g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+          * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)| ≤ ((n : ℝ) + 1)⁻¹ * C := by
+    rw [abs_mul]
+    exact mul_le_mul (hbd t) (hg _) (abs_nonneg _) (by positivity)
+  linarith
+
+/-- **The second order Taylor expansion with its remainder bounded by the third derivative**,
+which is what turns the increment of `f` across a cell into the two terms the expansion holds
+against plus something estimable.
+
+```
+|f (x + h) - f x - f' x · h - f'' x · h² / 2| ≤ M · |h|³ / 6   for  |f'''| ≤ M
+```
+
+It is the last ingredient of the cell computation that asks anything of `f` beyond boundedness,
+and the acceptance test can afford it: its class is `A = {(f, f'' / 2) | f ∈ Cc^∞(ℝ)}`, which
+hands over as many derivatives as are wanted.
+
+**Both signs of `h` are covered and no case split is needed**, because Mathlib's
+`taylor_mean_remainder_lagrange_iteratedDeriv` (`Mathlib/Analysis/Calculus/Taylor.lean:348`) is
+stated over `Set.uIcc x₀ x` rather than over an ordered `Set.Icc`.  `h = 0` is the one branch
+taken separately, and there both sides are `0`.
+
+**The passage from `iteratedDerivWithin` to `iteratedDeriv` at the endpoint costs nothing**,
+which is the thing to know before reaching for a reflection argument:
+`iteratedDerivWithin_eq_iteratedDeriv`
+(`Mathlib/Analysis/Calculus/IteratedDeriv/Defs.lean:70`) asks `UniqueDiffOn` of the set and
+`ContDiffAt` of the function, not that the set be a neighbourhood -- and `Set.uIcc x (x + h)` has
+unique differentials at `x` as soon as `h ≠ 0`, endpoint or not.
+
+**`0 ≤ M` is a conclusion and not a hypothesis**, read off `hM` at any point.  `ContDiff ℝ 3 f`
+is asked globally rather than on the interval, which is what every consumer has and what saves
+carrying the interval into the hypothesis. -/
+theorem abs_sub_taylor_two_le {f : ℝ → ℝ} {M : ℝ} (hf : ContDiff ℝ 3 f)
+    (hM : ∀ y, |iteratedDeriv 3 f y| ≤ M) (x h : ℝ) :
+    |f (x + h) - f x - deriv f x * h - iteratedDeriv 2 f x * h ^ 2 / 2| ≤ M * |h| ^ 3 / 6 := by
+  rcases eq_or_ne h 0 with rfl | hh
+  · simp
+  have hx : x ≠ x + h := fun hc ↦ hh (by linarith)
+  have hu : UniqueDiffOn ℝ (Set.uIcc x (x + h)) := uniqueDiffOn_uIcc hx
+  have hcd : ContDiffOn ℝ ((2 : ℕ) + 1) f (Set.uIcc x (x + h)) := by
+    exact hf.contDiffOn.of_le (by norm_num)
+  obtain ⟨x', -, heq⟩ := taylor_mean_remainder_lagrange_iteratedDeriv (n := 2) hx hcd
+  -- the two coefficients of the polynomial, read at the left endpoint of the interval
+  have h1 : iteratedDerivWithin 1 f (Set.uIcc x (x + h)) x = deriv f x := by
+    rw [iteratedDerivWithin_eq_iteratedDeriv hu (hf.contDiffAt.of_le (by norm_num))
+      left_mem_uIcc, iteratedDeriv_one]
+  have h2 : iteratedDerivWithin 2 f (Set.uIcc x (x + h)) x = iteratedDeriv 2 f x :=
+    iteratedDerivWithin_eq_iteratedDeriv hu (hf.contDiffAt.of_le (by norm_num)) left_mem_uIcc
+  have hpoly : taylorWithinEval f 2 (Set.uIcc x (x + h)) x (x + h)
+      = f x + deriv f x * h + iteratedDeriv 2 f x * h ^ 2 / 2 := by
+    rw [taylor_within_apply]
+    simp only [Finset.sum_range_succ, Finset.sum_range_zero, zero_add, iteratedDerivWithin_zero,
+      h1, h2, smul_eq_mul, Nat.factorial]
+    ring
+  have hkey : f (x + h) - f x - deriv f x * h - iteratedDeriv 2 f x * h ^ 2 / 2
+      = iteratedDeriv 3 f x' * h ^ 3 / 6 := by
+    have hrem := heq
+    rw [hpoly] at hrem
+    norm_num [Nat.factorial] at hrem
+    linarith [hrem]
+  rw [hkey, abs_div, abs_mul, abs_pow]
+  norm_num
+  gcongr
+  exact hM x'
+
 /-- **The first order term of Donsker's expansion vanishes, cell by cell** -- and this is where
 probability enters the acceptance test for the first time.
 
@@ -53832,6 +53995,81 @@ theorem integral_mul_comp_rescaledWalk_mul_eq_zero {P : Measure Ω} {ξ : ℕ �
     (indep_comap_natural_partialSum _ hmeas hind k) hW.comap_le
     (hmeas k).aestronglyMeasurable
     ((hW.mono (𝒢.le k) le_rfl).stronglyMeasurable.aestronglyMeasurable) (hcent k)
+
+/-- **The second order term of Donsker's expansion, cell by cell**: under the expectation the
+square of the increment may be replaced by its constant second moment.
+
+This is the step at which the second moment enters the acceptance test, and the step at which it
+is decided whether the compensator is met.  The summand of cell `k` after
+`MeasureTheory.mpTest_sub_rescaledWalk_eq_sum` is
+`f (S (k+1)) - f (S k) - (n+1)⁻¹ g (S k)`, and a second order Taylor expansion writes the first
+difference as `f' (S k) · (n+1)⁻¹ᐟ² ξ k + ½ f'' (S k) · (n+1)⁻¹ ξ k ² + remainder`.  The first
+order term vanishes by `MeasureTheory.integral_mul_comp_rescaledWalk_mul_eq_zero`; the statement
+here turns the second into `½ f'' (S k) · (n+1)⁻¹ σ²`, which **cancels the compensator exactly**
+for `g = ½ σ² f''`, the generator of Brownian motion.  The factor `(n+1)⁻¹` is the same on both
+sides and never has to be looked at.
+
+**The second moment is carried as a bare real `v` and not as a square.**  Nothing in the proof
+reads positivity, and a consumer that wants `σ²` supplies it; asking for `σ` here would have
+handed every consumer a sign that the statement does not use.  It is likewise asked of the single
+index `k` and not of all of them: the cells are treated one at a time, and only the consumer that
+sums them needs the moments to agree.
+
+**Neither `h` nor `Z` need be bounded and `ξ k` need not be square integrable**, which is
+contrary to what one expects of an identity whose right hand side is not `0`.  The reason is that
+`MeasureTheory.integral_mul_eq_mul_integral_of_indep_comap` is a **product** formula: where the
+product fails to be integrable all three integrals are the Bochner junk value `0`, so the left
+hand side is `0` and the right hand side is `v · 0`.  The junk values agree here for the same
+reason they agree at the first order term, and not for the weaker reason that both sides are
+null.  Boundedness returns at the consumer, which needs the identity to have content.
+
+**The independence is that of `ξ k` and is pulled through the square**, `comap (ξ k ²) ≤
+comap (ξ k)` by `Measurable.comap_le` and `ProbabilityTheory.indep_of_indep_of_le_left`
+(`Mathlib/Probability/Independence/Basic.lean:371`).  Centring is **not** read: `hcent` does not
+occur, and of the three hypotheses of the acceptance test this statement carries `hind` alone.
+
+**The filtration is the natural one of the scaled sums**, as at the first order term, and for the
+same reason: `Filtration.natural ξ` at `k` holds `ξ k` itself and over it the statement is false
+-- `h = 1` and `Z = ξ k ²` make the left hand side `∫ ξ k ⁴` and the right hand side
+`(∫ ξ k ²) ²`, and the two differ by the variance of `ξ k ²`, which vanishes only for an
+increment whose square is almost surely constant.  Note that `Z = ξ k` is *not* a witness: it
+gives `∫ ξ k ³` against `σ² · ∫ ξ k`, and for a symmetric increment both are `0`. -/
+theorem integral_mul_comp_rescaledWalk_sq_mul_eq_smul {P : Measure Ω} {ξ : ℕ → Ω → ℝ}
+    (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P) (n k : ℕ) {v : ℝ}
+    (hsq : ∫ ω, ξ k ω ^ 2 ∂P = v) {h : ℝ → ℝ} (hh : Measurable h) {Z : Ω → ℝ}
+    (hZ : Measurable[Filtration.natural
+        (fun m ω ↦ ∑ j ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω)
+        (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun j _ ↦ (hmeas j).const_mul _) k] Z) :
+    ∫ ω, h ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω) * ξ k ω ^ 2 * Z ω ∂P
+      = v * ∫ ω, h ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω) * Z ω ∂P := by
+  set 𝒢 : Filtration ℕ mΩ := Filtration.natural
+      (fun m ω ↦ ∑ j ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω)
+      (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun j _ ↦ (hmeas j).const_mul _) with h𝒢
+  -- the path piece is measurable for the past at `k`
+  have hS : StronglyMeasurable[𝒢 k]
+      fun ω ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω := by
+    have hk := Filtration.stronglyAdapted_natural
+      (u := fun m ω ↦ ∑ j ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω)
+      (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun j _ ↦ (hmeas j).const_mul _) k
+    simpa only [h𝒢, Finset.mul_sum] using hk
+  -- the two factors flanking `ξ k ^ 2`, merged into one before independence is asked
+  have hW : Measurable[𝒢 k]
+      fun ω ↦ h ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω) * Z ω :=
+    (hh.comp hS.measurable).mul hZ
+  -- the independence of the increment, pulled through the square
+  have hle : MeasurableSpace.comap (fun ω ↦ ξ k ω ^ 2) inferInstance
+      ≤ MeasurableSpace.comap (ξ k) inferInstance :=
+    Measurable.comap_le ((Measurable.of_comap_le le_rfl).pow_const 2)
+  have hindep : Indep (MeasurableSpace.comap (fun ω ↦ ξ k ω ^ 2) inferInstance) (𝒢 k) P :=
+    indep_of_indep_of_le_left (indep_comap_natural_partialSum _ hmeas hind k) hle
+  have hrw : (fun ω ↦ h ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)
+        * ξ k ω ^ 2 * Z ω)
+      = fun ω ↦ (h ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω) * Z ω)
+        * ξ k ω ^ 2 := by
+    funext ω; ring
+  rw [hrw, integral_mul_eq_mul_integral_of_indep_comap hindep hW.comap_le
+    ((hmeas k).pow 2).aestronglyMeasurable
+    ((hW.mono (𝒢.le k) le_rfl).stronglyMeasurable.aestronglyMeasurable), hsq, mul_comm]
 
 end WalkContainment
 

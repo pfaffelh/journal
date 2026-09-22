@@ -14612,10 +14612,18 @@ has to be chosen once for all `n`. What stands:
     `martingale_partialSum_of_iIndepFun` at `c = 1` and by
     `integral_mul_comp_rescaledWalk_mul_eq_zero` at `c = (n+1)⁻¹ᐟ²`.
 
-  * `integral_mul_eq_zero_of_indep_comap` — **a centred factor decouples from
+  * `integral_mul_eq_mul_integral_of_indep_comap` — **a factor decouples from
     everything measurable for a σ-algebra it is independent of**:
-    `∫ W · X = 0` when `X` is centred and `σ (X)` is independent of a σ-algebra
-    `W` is measurable for. **Proved 2026-09-22.**
+    `∫ W · X = (∫ W) · (∫ X)` when `σ (X)` is independent of a σ-algebra `W` is
+    measurable for. **Proved 2026-09-22.** It is Mathlib's product formula with
+    the independence read off **σ-algebras** rather than off the pair of
+    functions, which is the shape a filtration hands it over in.
+
+    `integral_mul_eq_zero_of_indep_comap` is it at `∫ X = 0` and is what the
+    first order term reads; the second order term reads the product formula
+    itself, at `∫ X = σ²`. That it is an **identity** and not a null statement
+    is what lets both consumers stand on one hypothesis set: the degenerate
+    branch is the same `0 = 0` in either.
 
     **No integrability is asked.**
     `ProbabilityTheory.IndepFun.integral_fun_mul_eq_mul_integral`
@@ -14631,6 +14639,50 @@ has to be chosen once for all `n`. What stands:
     `ProbabilityTheory.IndepFun.integrable_mul` (`:358`). This is the one place
     in the milestone where a hypothesis is left out because the junk values on
     the two sides agree.
+
+  * `abs_sub_natCast_floor_div_le` — **what is left of a broken cell is shorter
+    than a cell**: `|t − ⌊t c⌋/c| ≤ c⁻¹` for `0 ≤ t` and `0 < c`. **Proved
+    2026-09-22.** `Nat.floor_le` for the lower bound and `Nat.lt_floor_add_one`
+    for the upper, and that is the whole of it. `0 ≤ t` is read and cannot be
+    dropped: at a negative `t` the floor is `0`, the remainder is `t` itself,
+    and the bound fails for every `t < −c⁻¹`.
+
+  * `abs_mpTest_sub_rescaledWalk_sub_sum_le` — **the two boundary terms are of
+    order `(n+1)⁻¹`, uniformly in the sample point**: the gap differs from its
+    cell sum by at most `2 (n+1)⁻¹ ‖g‖`. **Proved 2026-09-22.** They carry no
+    increment of `f` and are therefore never touched by the expansion; this is
+    the part of the gap that goes away by counting, and what is left after it is
+    the cell sum.
+
+    The estimate is uniform in `ω`, which is what lets a consumer take it under
+    the integral against a bounded weight with no integrability argument of its
+    own. **Only `g` is asked to be bounded and `f` is asked nothing**, `f`
+    cancelling out of the two boundary terms — the reverse of what the cell sum
+    asks, where `f` is expanded and `g` only has to match `½ σ² f''`.
+
+  * `abs_sub_taylor_two_le` — **the second order Taylor expansion with its
+    remainder bounded by the third derivative**. **Proved 2026-09-22.**
+
+    ```
+    |f (x + h) − f x − f' x · h − f'' x · h² / 2| ≤ M · |h|³ / 6   for |f'''| ≤ M
+    ```
+
+    It is what turns the increment of `f` across a cell into the two terms the
+    expansion is held against plus something estimable, and the last ingredient
+    of the cell computation that asks anything of `f` beyond boundedness. The
+    acceptance test affords it: its class is `A = {(f, f''/2) | f ∈ Cc^∞(ℝ)}`.
+
+    **Both signs of `h` are covered with no case split**, Mathlib's
+    `taylor_mean_remainder_lagrange_iteratedDeriv`
+    (`Mathlib/Analysis/Calculus/Taylor.lean:348`) being stated over `Set.uIcc`
+    and not over an ordered `Set.Icc`; only `h = 0` is taken separately, and
+    there both sides are `0`. And the passage from `iteratedDerivWithin` to
+    `iteratedDeriv` **at the endpoint** costs nothing —
+    `iteratedDerivWithin_eq_iteratedDeriv`
+    (`Mathlib/Analysis/Calculus/IteratedDeriv/Defs.lean:70`) asks `UniqueDiffOn`
+    of the set and `ContDiffAt` of the function, not that the set be a
+    neighbourhood. That is the thing to know before reaching for a reflection
+    argument.
 
   * `integral_mul_comp_rescaledWalk_mul_eq_zero` — **the first order term of
     Donsker's expansion vanishes, cell by cell**, and this is where probability
@@ -14665,6 +14717,40 @@ has to be chosen once for all `n`. What stands:
     `isStronglyProgressive_rescaledWalk` already carry. Over the first the
     statement is false: that σ-algebra holds `ξ k` itself, and `h = 1`, `Z = ξ k`
     turn the left hand side into `∫ ξ k ^ 2`.
+
+  * `integral_mul_comp_rescaledWalk_sq_mul_eq_smul` — **the second order term of
+    Donsker's expansion**, where the second moment enters and where it is decided
+    whether the compensator is met. **Proved 2026-09-22.**
+
+    ```
+    ∫ ω, h (S n k ω) · ξ k ω ^ 2 · Z ω ∂P = v · ∫ ω, h (S n k ω) · Z ω ∂P
+    ```
+
+    for `∫ ξ k ² = v`, `h` measurable and `Z` measurable for the past at `k`.
+    After the first order term has vanished, the cell carries
+    `½ f'' (S n k) · (n+1)⁻¹ ξ k ² − (n+1)⁻¹ g (S n k) + remainder`, and this
+    replaces `ξ k ²` by its constant `σ²` under the integral; for
+    `g = ½ σ² f''`, the generator of Brownian motion, the two **cancel exactly**,
+    the factor `(n+1)⁻¹ ` being the same on both sides.
+
+    **The second moment is a bare real `v` and not a square**, nothing in the
+    proof reading positivity, and it is asked of the single index `k`: the cells
+    are treated one at a time and only the consumer that sums them needs the
+    moments to agree.
+
+    **Neither `h` nor `Z` need be bounded and `ξ k` need not be square
+    integrable**, contrary to what an identity with a non-zero right hand side
+    leads one to expect. `integral_mul_eq_mul_integral_of_indep_comap` is a
+    **product** formula: where the product fails to be integrable all three
+    integrals are the Bochner junk value `0`, the left hand side is `0` and the
+    right hand side is `v · 0`. Boundedness returns at the consumer.
+
+    **Centring is not read.** Of the three hypotheses of the acceptance test
+    this statement carries `hind` alone. And the filtration is again that of the
+    scaled sums: over `Filtration.natural ξ` at `k` the statement is false,
+    `h = 1` and `Z = ξ k ²` giving `∫ ξ k ⁴` against `(∫ ξ k ²)²`, which differ
+    by the variance of `ξ k ²`. `Z = ξ k` is **not** a witness — it gives
+    `∫ ξ k ³` against `σ² · ∫ ξ k`, and for a symmetric increment both are `0`.
 
   **Prokhorov, with the crossing of the two types done once**, and the second
   item of the chain on Donsker's data:
