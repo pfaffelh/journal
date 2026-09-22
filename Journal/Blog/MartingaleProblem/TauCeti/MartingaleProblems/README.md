@@ -14094,15 +14094,58 @@ has to be chosen once for all `n`. What stands:
   everything else unchanged, the increment of the square being read at the
   weight `1`.
 
-  **What is left of the six.** Four statements downstream still carry `hVb`:
-  `lintegral_ofReal_dist_le_sqrt_of_isApproximatingPair` (the second that reads
-  it itself, at the gap cells),
-  `measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair`,
+  **The gap cell, 2026-09-22, ninth run — and with it the second and last
+  statement that reads the bound itself.** Two more declarations:
+
+  ```
+  IsApproximatingPair.lintegral_mul_enorm_compensator_sub_le
+  MeasureTheory.lintegral_ofReal_dist_le_sqrt_of_isApproximatingPair_of_integrable_mul
+  ```
+
+  ```
+  ∫⁻ ω, ofReal (dist (V β ω) (V α ω)) ∂P
+    ≤ ofReal √((ofReal δ ^ (1 - 1/q) * (K + 2 Kw) + (2 ε' + 4 γ)).toReal)
+  ```
+
+  The bound is replaced at two places and by two different things: the increment
+  of the square is read at the weight `1`, so the summand `ofReal δ ^ (1 - 1/q) * K`
+  and the hypothesis on `ε'` are unchanged, while the cross term is read at the
+  weight `V (α ·) ·`, and there `2 c * (ofReal δ ^ (1 - 1/q) * K)` becomes
+  `2 * (ofReal δ ^ (1 - 1/q) * Kw)`. The constant `1 + 2 c` of the bounded
+  statement is therefore no longer a factor but the sum `K + 2 Kw`.
+
+  **The gap block needs no weighted form of
+  `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le`**, and that is
+  the finding of the run, decided at the source and not guessed. That statement
+  is the composition of
+  `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le_lintegral` with
+  `IsApproximatingPair.lintegral_enorm_compensator_sub_le`, and what a cell
+  reads are its two factors separately: the square identity leaves the
+  compensator increments standing and they are discharged one per cell. So the
+  only weighted statement the gap block needs is the weighted *second* factor,
+  `IsApproximatingPair.lintegral_mul_enorm_compensator_sub_le`, and the
+  Hölder-shaped composite — in which `c` stands in front of the product — is
+  never called. The prose above, which names the composite as "the right
+  estimate", names the *passage* and not a statement the proof invokes.
+
+  **The single-cell weighted compensator bound is not the chain sum at `N = 1`.**
+  The chain sum reads its window through a monotone family `σ : ℕ → Ω → ℝ≥0`
+  between `σ 0` and `σ N` and bounds it by the horizon `u`; the single cell
+  bounds its window by its *length* `δ`. That is precisely the difference
+  between the two blocks of this milestone, so the weighted forms of the two
+  unweighted statements are both needed, for the reason those two are. `Kw` is
+  the same parameter in both and is discharged the same way — `Kw = 0` for a
+  vanishing compensator, `Kw = ‖Z‖ * ∫⁻ M` for a deterministic density.
+
+  **What is left of the six.** Both statements that read the bound themselves
+  now have a weighted twin that does not; the bounded ones stay, since a
+  consumer who has a bound wants the shorter hypothesis list. What still carries
+  `hVb` and has no twin are three statements, and every one of them only passes
+  it along: `measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair`,
   `sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair` and
-  `mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair`. The division
-  statement is mechanical once the horizon one is in hand, since it only divides
-  the two summands; the gap block is the one that has to be done next, because
-  it reads the bound itself.
+  `mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair`. What remains is
+  bookkeeping: each is the composition of statements that already exist in both
+  versions.
 
   **The alternative, and why it is the more expensive one.** The acceptance
   example below states Donsker with `A = {(f, f''/2) | f ∈ Cc^∞(ℝ)}`, that is,

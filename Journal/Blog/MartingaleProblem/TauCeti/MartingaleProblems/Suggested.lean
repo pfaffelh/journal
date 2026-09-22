@@ -43613,6 +43613,66 @@ theorem lintegral_enorm_compensator_sub_le (h : IsApproximatingPair 𝓕 P q T K
     _ ≤ ENNReal.ofReal δ ^ (1 - 1 / q.toReal) * K :=
         mul_le_mul_right h.lintegral_eLpNorm_le _
 
+/-- **The same over one short window against a weight left under the integral**:
+
+```
+∫⁻ ω, w ω * ‖C (b ω) ω - C (a ω) ω‖ₑ ∂P ≤ ENNReal.ofReal δ ^ (1 - 1/q.toReal) * Kw
+```
+
+for arbitrary `a b : Ω → ℝ≥0` with `a ω ≤ b ω ≤ T` and `b ω - a ω ≤ δ`, for a weight `w`
+dominated by a single `M : Ω → ℝ≥0∞`, and for `Kw` a bound on
+`∫⁻ ω, M ω * eLpNorm (Z (·, ω)) q (volume.restrict (Ioc 0 T)) ∂P`.
+
+**It stands to `IsApproximatingPair.lintegral_enorm_compensator_sub_le` as
+`IsApproximatingPair.sum_lintegral_mul_enorm_compensator_sub_le` stands to
+`IsApproximatingPair.sum_lintegral_enorm_compensator_sub_le`**, and `Kw` is a parameter for the
+same reason there: the last step pulls the constant `ofReal δ ^ (1 - 1/q)` out with
+`MeasureTheory.lintegral_const_mul'` and would then read the class field
+`IsApproximatingPair.lintegral_eLpNorm_le`, but with a weight in front of the density both
+factors depend on `ω`, and from `∫⁻ eLpNorm ≤ K` alone nothing follows for the product. Two
+cases discharge it without a new field: a **vanishing** compensator, `Z = 0`, where `Kw = 0`
+whatever the weight; and a **deterministic** density, where `Kw = (that constant) * ∫⁻ M`.
+
+**Why it is not the chain sum at `N = 1`.** The chain sum reads its window through a monotone
+family `σ : ℕ → Ω → ℝ≥0` between `σ 0` and `σ N`, and bounds it by the *horizon* `u`; here the
+window is bounded by its *length* `δ`. That is exactly the difference between the two blocks of
+Milestone 11 -- the horizon cells form a chain and are summed first, the gap cells are separated
+by the gaps and are each estimated on their own -- so the weighted forms of the two unweighted
+statements are both needed, and for the reason those two are.
+
+**The weight is dominated and not bounded.** A consumer's weight is `‖V (α ω) ω‖ₑ` and changes
+with the cell, while `M` is one dominant of them all; a pointwise bound on `V` would make `M`
+constant and collapse the statement to the unweighted one. -/
+theorem lintegral_mul_enorm_compensator_sub_le (h : IsApproximatingPair 𝓕 P q T K Y C Z)
+    {a b : Ω → ℝ≥0} (hab : ∀ ω, a ω ≤ b ω) (hbT : ∀ ω, b ω ≤ T)
+    {δ : ℝ} (hδ : ∀ ω, (b ω : ℝ) - (a ω : ℝ) ≤ δ)
+    {w M : Ω → ENNReal} (hw : ∀ ω, w ω ≤ M ω) {Kw : ENNReal}
+    (hKw : ∫⁻ ω, M ω
+        * eLpNorm (fun s ↦ Z s ω) q (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ))) ∂P ≤ Kw) :
+    ∫⁻ ω, w ω * ‖C (b ω) ω - C (a ω) ω‖ₑ ∂P
+      ≤ ENNReal.ofReal δ ^ (1 - 1 / q.toReal) * Kw := by
+  have hc : ENNReal.ofReal δ ^ (1 - 1 / q.toReal) ≠ ⊤ :=
+    (ENNReal.rpow_lt_top_of_nonneg (le_of_lt (one_sub_one_div_toReal_pos h.one_lt_exponent))
+      ENNReal.ofReal_ne_top).ne
+  calc ∫⁻ ω, w ω * ‖C (b ω) ω - C (a ω) ω‖ₑ ∂P
+      ≤ ∫⁻ ω, ENNReal.ofReal δ ^ (1 - 1 / q.toReal)
+          * (M ω * eLpNorm (fun s ↦ Z s ω) q
+              (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ)))) ∂P := by
+        refine lintegral_mono_ae ?_
+        filter_upwards [h.ae_integrableOn] with ω hω
+        calc w ω * ‖C (b ω) ω - C (a ω) ω‖ₑ
+            ≤ M ω * ‖C (b ω) ω - C (a ω) ω‖ₑ := mul_le_mul_left (hw ω) _
+          _ ≤ M ω * (ENNReal.ofReal δ ^ (1 - 1 / q.toReal)
+                * eLpNorm (fun s ↦ Z s ω) q
+                    (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ)))) :=
+              mul_le_mul_right (h.enorm_compensator_sub_le hω (hab ω) (hbT ω) (hδ ω)) _
+          _ = _ := by ring
+    _ = ENNReal.ofReal δ ^ (1 - 1 / q.toReal)
+          * ∫⁻ ω, M ω * eLpNorm (fun s ↦ Z s ω) q
+              (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ))) ∂P :=
+        lintegral_const_mul' _ _ hc
+    _ ≤ _ := mul_le_mul_right hKw _
+
 /-- **The martingale increment against a bounded weight from the past, before Hölder**:
 
 ```
@@ -45744,6 +45804,113 @@ theorem lintegral_ofReal_dist_le_sqrt_of_isApproximatingPair
       ≤ (ENNReal.ofReal δ ^ (1 - 1 / q.toReal) * K
           + 2 * ENNReal.ofReal c * (ENNReal.ofReal δ ^ (1 - 1 / q.toReal) * K))
         + (2 * ε' + 4 * ENNReal.ofReal c * ε) := by gcongr
+    _ = _ := by ring
+
+/-- **The same cell without any bound on the process**, the weight left under the lower integral:
+
+```
+∫⁻ ω, ofReal (dist (V β ω) (V α ω)) ∂P
+  ≤ ofReal √((ofReal δ ^ (1 - 1/q) * (K + 2 Kw) + (2 ε' + 4 γ)).toReal)
+```
+
+with `γ` the **weighted** approximation error
+`∫⁻ ω, ‖stoppedValue V α ω‖ₑ * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P` in place of
+`hVb : ∀ t ω, ‖V t ω‖ ≤ c`, and `Kw` the parameter of
+`IsApproximatingPair.lintegral_mul_enorm_compensator_sub_le`.
+
+**This is the second and last of the two statements of the chain that read the bound itself.**
+It is `MeasureTheory.lintegral_ofReal_dist_le_sqrt_of_isApproximatingPair` with `c` gone from
+both of the places it stood: from the error, where the weighted `γ` replaces `c ε`, and from the
+compensator increment of the first pair, where `Kw` replaces `c K`. Everything downstream of it
+-- the gap sum, the horizon division and the meeting of the two blocks -- only passes the
+constant along.
+
+**The bound `c` is replaced at two places and by two different things, and that is the shape of
+the whole weakening.** The increment of the square is read at the weight `1`, so the first
+summand `ofReal δ ^ (1 - 1/q) * K` and the hypothesis `hε'` are those of the bounded statement
+unchanged; the cross term is read at the weight `V (α ·) ·`, and there the bounded statement's
+`2 c * (ofReal δ ^ (1 - 1/q) * K)` becomes `2 * (ofReal δ ^ (1 - 1/q) * Kw)`. The constant
+`1 + 2 c` of the bounded statement is therefore no longer a factor but the sum `K + 2 Kw`.
+
+**The gap cell needs no weighted form of
+`IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le`**, and that answers the question
+the block's prose raises. That statement is the composition of
+`IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le_lintegral` with
+`IsApproximatingPair.lintegral_enorm_compensator_sub_le`, and what a cell actually reads are the
+two factors separately: the square identity leaves the compensator increments standing, and they
+are discharged here, one per cell. So the only weighted statement the block needs is the
+weighted *second* factor, which is
+`IsApproximatingPair.lintegral_mul_enorm_compensator_sub_le`, and the Hölder-shaped composite --
+in which `c` stands in front of the product -- is never called.
+
+**`γ ≠ ⊤`, `ε' ≠ ⊤` and `Kw ≠ ⊤` are asked for here and not at the square**, and the reason is
+the square root: `Real.sqrt S.toReal` reads `toReal`, and `toReal ⊤ = 0` would make the
+conclusion false rather than vacuous. A consumer holds the first two because his errors come
+from the approximability condition, and the third because the two pairs of the acceptance
+example have `Kw = 0`. -/
+theorem lintegral_ofReal_dist_le_sqrt_of_isApproximatingPair_of_integrable_mul
+    {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K : ℝ≥0} {V Y C Y' C' : ℝ≥0 → Ω → ℝ} {Z Z' : ℝ → Ω → ℝ}
+    (h : IsApproximatingPair 𝓕 P q T K Y C Z) (h' : IsApproximatingPair 𝓕 P q T K Y' C' Z')
+    (hV : IsStronglyProgressive 𝓕 V)
+    {j : ℝ≥0} {α β : Ω → ENNReal} (hα : IsStoppingTime 𝓕 α) (hβ : IsStoppingTime 𝓕 β)
+    (hαβ : α ≤ β) (hβj : ∀ ω, β ω ≤ (j : ENNReal)) (hjT : j ≤ T)
+    {W : Set ℝ≥0} (hαW : ∀ ω, (α ω).untopA ∈ W) (hβW : ∀ ω, (β ω).untopA ∈ W)
+    {δ : ℝ} (hδ : ∀ ω, (((β ω).untopA : ℝ≥0) : ℝ) - (((α ω).untopA : ℝ≥0) : ℝ) ≤ δ)
+    {γ ε' : ENNReal} (hγne : γ ≠ ⊤) (hε'ne : ε' ≠ ⊤)
+    (hγ : ∫⁻ ω, ‖stoppedValue V α ω‖ₑ * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P ≤ γ)
+    (hε' : ∫⁻ ω, ⨆ t ∈ W, ‖Y' t ω - V t ω ^ 2‖ₑ ∂P ≤ ε')
+    {M : Ω → ENNReal} (hM : ∀ ω, ‖stoppedValue V α ω‖ₑ ≤ M ω)
+    {Kw : ENNReal} (hKwne : Kw ≠ ⊤)
+    (hKw : ∫⁻ ω, M ω
+        * eLpNorm (fun s ↦ Z s ω) q (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ))) ∂P ≤ Kw)
+    (hVα : MemLp (stoppedValue V α) 2 P) (hVβ : MemLp (stoppedValue V β) 2 P)
+    (hYα : MemLp (stoppedValue Y α) 2 P) (hYβ : MemLp (stoppedValue Y β) 2 P)
+    (hCα : MemLp (stoppedValue C α) 2 P) (hCβ : MemLp (stoppedValue C β) 2 P)
+    (hY'α : Integrable (stoppedValue Y' α) P) (hY'β : Integrable (stoppedValue Y' β) P) :
+    ∫⁻ ω, ENNReal.ofReal (dist (stoppedValue V β ω) (stoppedValue V α ω)) ∂P
+      ≤ ENNReal.ofReal (Real.sqrt
+          ((ENNReal.ofReal δ ^ (1 - 1 / q.toReal) * ((K : ENNReal) + 2 * Kw)
+            + (2 * ε' + 4 * γ)).toReal)) := by
+  have hβne : ∀ ω, β ω ≠ ⊤ := fun ω ↦ ne_top_of_le_ne_top (by simp) (hβj ω)
+  have hαne : ∀ ω, α ω ≠ ⊤ := fun ω ↦ ne_top_of_le_ne_top (hβne ω) (hαβ ω)
+  have hab : ∀ ω, (α ω).untopA ≤ (β ω).untopA := by
+    intro ω
+    have hle := hαβ ω
+    rw [← coe_untopA (hαne ω), ← coe_untopA (hβne ω)] at hle
+    exact ENNReal.coe_le_coe.1 hle
+  have hbT : ∀ ω, (β ω).untopA ≤ T := by
+    intro ω
+    have hle : β ω ≤ (T : ENNReal) := (hβj ω).trans (by exact_mod_cast hjT)
+    rw [← coe_untopA (hβne ω)] at hle
+    exact ENNReal.coe_le_coe.1 hle
+  have hm : AEStronglyMeasurable (fun ω ↦ stoppedValue V β ω - stoppedValue V α ω) P :=
+    (hVβ.sub hVα).aestronglyMeasurable
+  have hsq : Integrable (fun ω ↦ (stoppedValue V β ω - stoppedValue V α ω) ^ 2) P :=
+    (hVβ.sub hVα).integrable_sq
+  have hSne : (ENNReal.ofReal δ ^ (1 - 1 / q.toReal) * ((K : ENNReal) + 2 * Kw)
+      + (2 * ε' + 4 * γ)) ≠ ⊤ := by
+    have hrpow : ENNReal.ofReal δ ^ (1 - 1 / q.toReal) ≠ ⊤ :=
+      (ENNReal.rpow_lt_top_of_nonneg (le_of_lt (one_sub_one_div_toReal_pos h.one_lt_exponent))
+        ENNReal.ofReal_ne_top).ne
+    finiteness
+  refine lintegral_ofReal_dist_le_sqrt_of_lintegral_sq_le hm hsq hSne ?_
+  refine le_trans (lintegral_ofReal_dist_sq_le_of_isApproximatingPair_of_integrable_mul h h' hV
+    hα hβ hαβ hβj hαW hβW hγ hε' hVα hVβ hYα hYβ hCα hCβ hY'α hY'β) ?_
+  have hC' : ∫⁻ ω, ‖C' ((β ω).untopA) ω - C' ((α ω).untopA) ω‖ₑ ∂P
+      ≤ ENNReal.ofReal δ ^ (1 - 1 / q.toReal) * K :=
+    h'.lintegral_enorm_compensator_sub_le hab hbT hδ
+  have hCw : ∫⁻ ω, ‖stoppedValue V α ω‖ₑ
+      * ‖C ((β ω).untopA) ω - C ((α ω).untopA) ω‖ₑ ∂P
+      ≤ ENNReal.ofReal δ ^ (1 - 1 / q.toReal) * Kw :=
+    h.lintegral_mul_enorm_compensator_sub_le hab hbT hδ hM hKw
+  calc (∫⁻ ω, ‖C' ((β ω).untopA) ω - C' ((α ω).untopA) ω‖ₑ ∂P
+        + 2 * ∫⁻ ω, ‖stoppedValue V α ω‖ₑ
+            * ‖C ((β ω).untopA) ω - C ((α ω).untopA) ω‖ₑ ∂P)
+      + (2 * ε' + 4 * γ)
+      ≤ (ENNReal.ofReal δ ^ (1 - 1 / q.toReal) * K
+          + 2 * (ENNReal.ofReal δ ^ (1 - 1 / q.toReal) * Kw))
+        + (2 * ε' + 4 * γ) := by gcongr
     _ = _ := by ring
 
 /-- **The gap sum at a fixed count**, which is the first summand
