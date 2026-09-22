@@ -20,9 +20,17 @@ import Mathlib.MeasureTheory.Function.Floor
 /-!
 # Suggested signatures for the Skorokhod space roadmap
 
-Prototypes only. Names and argument orders are suggestions; the statements are
-the commitments. `sorry` marks a statement whose proof is the work, never an
-empty proposition.
+**This file is not the roadmap and is not exhaustive.** The definitive document
+is `README.md`. The declarations here suggest Lean forms for particular
+milestones, so that contributors and reviewers converge on names and signatures;
+they are read as suggested forms and never as a checklist, and discharging all of
+them finishes neither a milestone nor the roadmap.
+
+
+Prototypes only. Names, argument orders and statements alike are
+suggestions; what the milestone commits to is written in `README.md`.
+`sorry` marks a statement whose proof is the work, never an empty
+proposition.
 
 **Status: type-checked** with `lake env lean` against Mathlib `upstream/master`
 `94ef6b89544e58e90f119da869f3fb48d1da0f4c` (Lean `4.35.0-rc2`), last on

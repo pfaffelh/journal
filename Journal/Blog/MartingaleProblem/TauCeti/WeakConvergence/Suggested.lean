@@ -28,6 +28,13 @@ import Mathlib.Topology.UrysohnsLemma
 /-!
 # Suggested signatures for the weak convergence roadmap
 
+**This file is not the roadmap and is not exhaustive.** The definitive document
+is `README.md`. The declarations here suggest Lean forms for particular
+milestones, so that contributors and reviewers converge on names and signatures;
+they are read as suggested forms and never as a checklist, and discharging all of
+them finishes neither a milestone nor the roadmap.
+
+
 Prototypes only.
 
 **Status: type-checked** with `lake env lean` against Mathlib `upstream/master`
