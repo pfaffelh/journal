@@ -44112,6 +44112,72 @@ theorem enorm_sub_sub_le_two_mul_biSup {ι : Type*} {W : Set ι} {Y V : ι → �
     _ ≤ (⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ) + ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ := by gcongr
     _ = 2 * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ := (two_mul _).symm
 
+/-- **The approximation error against an arbitrary weight**, the bound on the weight replaced by
+a bound on the weight *times* the error:
+
+```
+‖∫ ω, U ω * (V (b ω) ω - V (a ω) ω) ∂P‖ₑ
+  ≤ ‖∫ ω, U ω * (Y (b ω) ω - Y (a ω) ω) ∂P‖ₑ + 2 * γ
+```
+
+whenever `∫⁻ ω, ‖U ω‖ₑ * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P ≤ γ`.
+
+**It is a genuine weakening of
+`MeasureTheory.enorm_integral_mul_sub_le_of_biSup_le`, which is now its instance** at
+`γ = ENNReal.ofReal c * ε`.  In the bounded statement the two quantities occur only in the
+product `ENNReal.ofReal c * (2 * ε)`, never apart, so nothing of the proof is lost by asking for
+the product directly; and a weight of infinite supremum against an error that vanishes gives
+`γ = 0`, which no finite `c` produces.
+
+**Why the weakening is wanted, and it is measured rather than anticipated.**  Every tightness
+statement of Milestone 11 reaches this statement through
+`MeasureTheory.ofReal_integral_sq_sub_le`, whose weight is the process itself at the earlier of
+the two times; the bounded form therefore asks the *process* to be uniformly bounded, and
+discharges it with `c = ‖g‖` for a test function `g : E →ᵇ ℝ`.  The rescaled random walk of
+Donsker's acceptance test is not bounded, and its own approximating pair
+(`MeasureTheory.isApproximatingPair_rescaledWalk`) has error exactly `0`; the product is `0` and
+the supremum is `⊤`.  This is the form under which such a family passes.
+
+**The proof is the same three steps** -- split the integral at the approximant, bound the tail by
+`MeasureTheory.enorm_sub_sub_le_two_mul_biSup`, and pull the constant `2` out of the lower
+integral -- with the weight left under the integral instead of being taken out of it.  Neither
+measurability of the supremum nor any structure on the window is read, for the reason the
+bounded statement gives. -/
+theorem enorm_integral_mul_sub_le_of_lintegral_mul_biSup_le {ι : Type*} {W : Set ι}
+    {Y V : ι → Ω → ℝ} {P : Measure Ω} {a b : Ω → ι} (ha : ∀ ω, a ω ∈ W) (hb : ∀ ω, b ω ∈ W)
+    {U : Ω → ℝ} {γ : ENNReal}
+    (hγ : ∫⁻ ω, ‖U ω‖ₑ * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P ≤ γ)
+    (hV : Integrable (fun ω ↦ U ω * (V (b ω) ω - V (a ω) ω)) P)
+    (hY : Integrable (fun ω ↦ U ω * (Y (b ω) ω - Y (a ω) ω)) P) :
+    ‖∫ ω, U ω * (V (b ω) ω - V (a ω) ω) ∂P‖ₑ
+      ≤ ‖∫ ω, U ω * (Y (b ω) ω - Y (a ω) ω) ∂P‖ₑ + 2 * γ := by
+  have hdiff : Integrable
+      (fun ω ↦ U ω * (V (b ω) ω - V (a ω) ω - (Y (b ω) ω - Y (a ω) ω))) P := by
+    refine (hV.sub hY).congr (Filter.Eventually.of_forall fun ω ↦ ?_)
+    simp only [Pi.sub_apply]
+    ring
+  have hsum : ∫ ω, U ω * (V (b ω) ω - V (a ω) ω) ∂P
+      = (∫ ω, U ω * (Y (b ω) ω - Y (a ω) ω) ∂P)
+        + ∫ ω, U ω * (V (b ω) ω - V (a ω) ω - (Y (b ω) ω - Y (a ω) ω)) ∂P := by
+    rw [← integral_add hY hdiff]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ ?_)
+    ring
+  have htail : ‖∫ ω, U ω * (V (b ω) ω - V (a ω) ω - (Y (b ω) ω - Y (a ω) ω)) ∂P‖ₑ
+      ≤ 2 * γ := by
+    refine le_trans (enorm_integral_le_lintegral_enorm _) ?_
+    calc ∫⁻ ω, ‖U ω * (V (b ω) ω - V (a ω) ω - (Y (b ω) ω - Y (a ω) ω))‖ₑ ∂P
+        ≤ ∫⁻ ω, 2 * (‖U ω‖ₑ * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ) ∂P := by
+          refine lintegral_mono fun ω ↦ ?_
+          rw [enorm_mul]
+          refine le_trans (mul_le_mul' le_rfl
+            (enorm_sub_sub_le_two_mul_biSup (ha ω) (hb ω))) (le_of_eq ?_)
+          ring
+      _ = 2 * ∫⁻ ω, ‖U ω‖ₑ * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P :=
+          lintegral_const_mul' _ _ (by norm_num)
+      _ ≤ 2 * γ := by gcongr
+  rw [hsum]
+  exact le_trans (enorm_add_le _ _) (add_le_add le_rfl htail)
+
 /-- **The approximation error against a bounded weight**, and this is the reading (9.26) makes at
 the cross term:
 
@@ -44135,7 +44201,13 @@ monotonicity of the lower integral alone.  So this statement stands over an arbi
 with no countability, no topology on the index and no right continuity.
 
 The weight is a plain bounded function and not a conditional expectation or a stopped value:
-what is read of it is its bound, and the consumer supplies the rest. -/
+what is read of it is its bound, and the consumer supplies the rest.
+
+**It is the instance of
+`MeasureTheory.enorm_integral_mul_sub_le_of_lintegral_mul_biSup_le` at
+`γ = ENNReal.ofReal c * ε`**, and is kept because that is the shape in which a consumer holding a
+bounded test function meets it -- the bound of the weight and the error arrive separately, and
+combining them is the one line of the proof. -/
 theorem enorm_integral_mul_sub_le_of_biSup_le {ι : Type*} {W : Set ι} {Y V : ι → Ω → ℝ}
     {P : Measure Ω} {a b : Ω → ι} (ha : ∀ ω, a ω ∈ W) (hb : ∀ ω, b ω ∈ W)
     {ε : ENNReal} (hε : ∫⁻ ω, ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P ≤ ε)
@@ -44144,34 +44216,19 @@ theorem enorm_integral_mul_sub_le_of_biSup_le {ι : Type*} {W : Set ι} {Y V : �
     (hY : Integrable (fun ω ↦ U ω * (Y (b ω) ω - Y (a ω) ω)) P) :
     ‖∫ ω, U ω * (V (b ω) ω - V (a ω) ω) ∂P‖ₑ
       ≤ ‖∫ ω, U ω * (Y (b ω) ω - Y (a ω) ω) ∂P‖ₑ + ENNReal.ofReal c * (2 * ε) := by
-  have hdiff : Integrable
-      (fun ω ↦ U ω * (V (b ω) ω - V (a ω) ω - (Y (b ω) ω - Y (a ω) ω))) P := by
-    refine (hV.sub hY).congr (Filter.Eventually.of_forall fun ω ↦ ?_)
-    simp only [Pi.sub_apply]
-    ring
-  have hsum : ∫ ω, U ω * (V (b ω) ω - V (a ω) ω) ∂P
-      = (∫ ω, U ω * (Y (b ω) ω - Y (a ω) ω) ∂P)
-        + ∫ ω, U ω * (V (b ω) ω - V (a ω) ω - (Y (b ω) ω - Y (a ω) ω)) ∂P := by
-    rw [← integral_add hY hdiff]
-    refine integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ ?_)
-    ring
-  have htail : ‖∫ ω, U ω * (V (b ω) ω - V (a ω) ω - (Y (b ω) ω - Y (a ω) ω)) ∂P‖ₑ
-      ≤ ENNReal.ofReal c * (2 * ε) := by
-    refine le_trans (enorm_integral_le_lintegral_enorm _) ?_
-    calc ∫⁻ ω, ‖U ω * (V (b ω) ω - V (a ω) ω - (Y (b ω) ω - Y (a ω) ω))‖ₑ ∂P
-        ≤ ∫⁻ ω, ENNReal.ofReal c * (2 * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ) ∂P := by
-          refine lintegral_mono fun ω ↦ ?_
-          rw [enorm_mul]
-          refine mul_le_mul' ?_ (enorm_sub_sub_le_two_mul_biSup (ha ω) (hb ω))
+  have hγ : ∫⁻ ω, ‖U ω‖ₑ * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P ≤ ENNReal.ofReal c * ε := by
+    calc ∫⁻ ω, ‖U ω‖ₑ * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P
+        ≤ ∫⁻ ω, ENNReal.ofReal c * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P := by
+          refine lintegral_mono fun ω ↦ mul_le_mul' ?_ le_rfl
           rw [Real.enorm_eq_ofReal_abs]
           exact ENNReal.ofReal_le_ofReal (by simpa [Real.norm_eq_abs] using hUb ω)
-      _ = ENNReal.ofReal c * ∫⁻ ω, 2 * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P :=
+      _ = ENNReal.ofReal c * ∫⁻ ω, ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P :=
           lintegral_const_mul' _ _ ENNReal.ofReal_ne_top
-      _ = ENNReal.ofReal c * (2 * ∫⁻ ω, ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P) := by
-          rw [lintegral_const_mul' _ _ (by norm_num)]
-      _ ≤ ENNReal.ofReal c * (2 * ε) := by gcongr
-  rw [hsum]
-  exact le_trans (enorm_add_le _ _) (add_le_add le_rfl htail)
+      _ ≤ ENNReal.ofReal c * ε := by gcongr
+  refine le_trans (enorm_integral_mul_sub_le_of_lintegral_mul_biSup_le ha hb hγ hV hY)
+    (le_of_eq ?_)
+  congr 1
+  ring
 
 end ApproximationErrorWeighted
 
@@ -44278,6 +44335,70 @@ theorem ofReal_integral_sq_sub_le {ι : Type*} {W : Set ι} {Y Y' V : ι → Ω 
     _ ≤ (‖∫ ω, (Y' (b ω) ω - Y' (a ω) ω) ∂P‖ₑ + 2 * ε')
         + 2 * (‖∫ ω, V (a ω) ω * (Y (b ω) ω - Y (a ω) ω) ∂P‖ₑ
                 + ENNReal.ofReal c * (2 * ε)) := by gcongr
+
+/-- **The square identity without a bound on the process**, the first error weighted by the
+process itself:
+
+```
+∫⁻ ω, ‖V (a ω) ω‖ₑ * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P ≤ γ
+```
+
+replaces `hVb : ∀ t ω, ‖V t ω‖ ≤ c`, and the summand `ENNReal.ofReal c * (2 * ε)` becomes
+`2 * γ`.  Everything else is unchanged, the increment of the square being read at the weight `1`,
+where the bound is `1` and not `c`.
+
+**Why the weight is exactly `V (a ·) ·` and not an arbitrary one.**  Display (9.26) reads the
+cross term of `(v_b - v_a)² = (v_b² - v_a²) - 2 v_a (v_b - v_a)` and nothing else, so the weight
+is fixed by the identity; what is free is how it is estimated, and
+`MeasureTheory.enorm_integral_mul_sub_le_of_lintegral_mul_biSup_le` estimates it against the
+error rather than against its own supremum.
+
+**What it costs a consumer, said plainly.**  `MeasureTheory.ofReal_integral_sq_sub_le` reads the
+bound `c` a second time, downstream, where
+`MeasureTheory.lintegral_ofReal_dist_le_sqrt_of_biSup_le` uses it to make the square of the
+increment integrable without a hypothesis.  A consumer of *this* statement does not get that for
+free and carries the integrability itself -- for a process of square integrable increments it is
+`MeasureTheory.MemLp.integrable_sq`.
+
+**What it buys.**  A process whose approximant is exact -- `Y = V`, the error `0` -- satisfies
+the hypothesis with `γ = 0` whatever its supremum, which is the case of a martingale that is its
+own approximating pair. -/
+theorem ofReal_integral_sq_sub_le_of_lintegral_mul_biSup_le {ι : Type*} {W : Set ι}
+    {Y Y' V : ι → Ω → ℝ} {P : Measure Ω} {a b : Ω → ι}
+    (ha : ∀ ω, a ω ∈ W) (hb : ∀ ω, b ω ∈ W) {γ ε' : ENNReal}
+    (hγ : ∫⁻ ω, ‖V (a ω) ω‖ₑ * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P ≤ γ)
+    (hε' : ∫⁻ ω, ⨆ t ∈ W, ‖Y' t ω - V t ω ^ 2‖ₑ ∂P ≤ ε')
+    (hIV2 : Integrable (fun ω ↦ V (b ω) ω ^ 2 - V (a ω) ω ^ 2) P)
+    (hIY2 : Integrable (fun ω ↦ Y' (b ω) ω - Y' (a ω) ω) P)
+    (hIVc : Integrable (fun ω ↦ V (a ω) ω * (V (b ω) ω - V (a ω) ω)) P)
+    (hIYc : Integrable (fun ω ↦ V (a ω) ω * (Y (b ω) ω - Y (a ω) ω)) P) :
+    ENNReal.ofReal (∫ ω, (V (b ω) ω - V (a ω) ω) ^ 2 ∂P)
+      ≤ (‖∫ ω, (Y' (b ω) ω - Y' (a ω) ω) ∂P‖ₑ + 2 * ε')
+        + 2 * (‖∫ ω, V (a ω) ω * (Y (b ω) ω - Y (a ω) ω) ∂P‖ₑ + 2 * γ) := by
+  set A := ∫ ω, (V (b ω) ω ^ 2 - V (a ω) ω ^ 2) ∂P with hA
+  set B := ∫ ω, V (a ω) ω * (V (b ω) ω - V (a ω) ω) ∂P with hB
+  have hsplit : ∫ ω, (V (b ω) ω - V (a ω) ω) ^ 2 ∂P = A - 2 * B := by
+    rw [hA, hB, ← integral_const_mul, ← integral_sub hIV2 (hIVc.const_mul 2)]
+    exact integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ by ring)
+  have hsq : ‖A‖ₑ ≤ ‖∫ ω, (Y' (b ω) ω - Y' (a ω) ω) ∂P‖ₑ + 2 * ε' := by
+    have := enorm_integral_mul_sub_le_of_biSup_le (W := W) (Y := Y')
+      (V := fun t ω ↦ V t ω ^ 2) (P := P) ha hb hε' (U := fun _ ↦ (1 : ℝ)) (c := 1)
+      (fun ω ↦ by simp) (by simpa using hIV2) (by simpa using hIY2)
+    simpa [hA] using this
+  have hcross : ‖B‖ₑ ≤ ‖∫ ω, V (a ω) ω * (Y (b ω) ω - Y (a ω) ω) ∂P‖ₑ + 2 * γ := by
+    have := enorm_integral_mul_sub_le_of_lintegral_mul_biSup_le (W := W) (Y := Y) (V := V)
+      (P := P) ha hb (U := fun ω ↦ V (a ω) ω) hγ hIVc hIYc
+    simpa [hB] using this
+  calc ENNReal.ofReal (∫ ω, (V (b ω) ω - V (a ω) ω) ^ 2 ∂P)
+      ≤ ‖∫ ω, (V (b ω) ω - V (a ω) ω) ^ 2 ∂P‖ₑ := Real.ofReal_le_enorm _
+    _ = ‖A - 2 * B‖ₑ := by rw [hsplit]
+    _ ≤ ‖A‖ₑ + ‖(2 : ℝ) * B‖ₑ := enorm_sub_le
+    _ = ‖A‖ₑ + 2 * ‖B‖ₑ := by
+        rw [enorm_mul]
+        congr 1
+        simp [Real.enorm_eq_ofReal_abs]
+    _ ≤ (‖∫ ω, (Y' (b ω) ω - Y' (a ω) ω) ∂P‖ₑ + 2 * ε')
+        + 2 * (‖∫ ω, V (a ω) ω * (Y (b ω) ω - Y (a ω) ω) ∂P‖ₑ + 2 * γ) := by gcongr
 
 /-- **The whole passage, from the two approximants to the quantity the Aldous route integrates.**
 

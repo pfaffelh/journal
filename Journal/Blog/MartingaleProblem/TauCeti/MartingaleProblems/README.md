@@ -13931,6 +13931,66 @@ has to be chosen once for all `n`. What stands:
   does not carry is a solution of a martingale problem — a rescaled walk solves
   none, and that is why this milestone has an approximate case at all.
 
+  **And it does not yet reach the chain, for a reason measured at the source on
+  2026-09-22 and not foreseen when the pairs were built.** Every tightness
+  statement of this milestone reads a process that is **uniformly bounded**, and
+  the rescaled walk is not. The bound is not a convenience of one statement but
+  runs the whole depth of the estimate:
+
+  * `MeasureTheory.enorm_integral_mul_sub_le_of_biSup_le` carries
+    `hUb : ∀ ω, ‖U ω‖ ≤ c` at the weight of the cross term;
+  * `MeasureTheory.ofReal_integral_sq_sub_le` reads it as `hVb : ∀ t ω, ‖V t ω‖ ≤ c`
+    and hands `c` on as the coefficient of the approximation error, its own
+    docstring saying "a consumer with `f : E →ᵇ ℝ` holds all five, `c = ‖f‖`";
+  * `MeasureTheory.lintegral_ofReal_dist_le_sqrt_of_biSup_le` reads it a second
+    time, to make the square of the increment integrable without a hypothesis;
+  * and it survives unchanged through
+    `MeasureTheory.sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair`,
+    `MeasureTheory.measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair` and
+    `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair`
+    up to
+    `MeasureTheory.mul_measure_setOf_lt_modulusBased_postcomp_le_of_isApproximatingPair`,
+    where it is discharged as `c = ‖g‖` for `g : E →ᵇ ℝ`.
+
+  Consequently the `V` slot of every consumer is a **post-composition**:
+  `MeasureTheory.isTightMeasureSet_map_postcomp_of_isEventuallyApproximable`
+  asks for `IsEventuallyApproximable 𝓕 P q T K (fun i t ω ↦ g (X i t ω)) ε₀ u`,
+  while `MeasureTheory.isEventuallyApproximable_rescaledWalk` supplies it for
+  `X i` itself. The two meet only at `g = id`, and `id : ℝ → ℝ` is not a
+  `ℝ →ᵇ ℝ`. **`isEventuallyApproximable_rescaledWalk` therefore has no consumer
+  as it stands**, and the statement
+  `MeasureTheory.isTight_map_postcomp_rescaledWalk` cannot be assembled from it.
+  This is a statement about the *walk*, not about the weakening: the family of
+  scaled deterministic steps takes its values in `[0, 1]`, so there a `g : ℝ →ᵇ ℝ`
+  agreeing with the identity on `[0, 1]` closes the same gap.
+
+  **The repair, named and not guessed: the bound on the weight is only ever read
+  against the error.** In `enorm_integral_mul_sub_le_of_biSup_le` the two occur
+  exclusively in the product `ENNReal.ofReal c * (2 * ε)`, and the walk's first
+  pair has `ε = 0` exactly. The statement therefore holds with the pointwise
+  bound replaced by a **weighted error**,
+
+  ```
+  MeasureTheory.enorm_integral_mul_sub_le_of_lintegral_mul_biSup_le :
+    (hγ : ∫⁻ ω, ‖U ω‖ₑ * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P ≤ γ) → … + 2 * γ,
+  ```
+
+  of which the bounded version is the instance at `γ = ENNReal.ofReal c * ε`.
+  It is a genuine weakening and not a restatement: a weight of infinite supremum
+  against an error that vanishes gives `γ = 0`, which no `c` produces. Relaxing
+  the remaining occurrences of the bound in the same manner — the second reading, at
+  the integrability of the square, becomes a square integrability hypothesis,
+  which the walk has by `MemLp (ξ k) 2` — is what carries the chain to an
+  unbounded process, and it is the next piece of work on this item.
+
+  **The alternative, and why it is the more expensive one.** The acceptance
+  example below states Donsker with `A = {(f, f''/2) | f ∈ Cc^∞(ℝ)}`, that is,
+  with the martingale hypothesis at `f ∘ X n` for bounded `f`. Building the
+  pairs there is the Lindeberg–Taylor computation and not a corollary of the two
+  pairs above, whose approximants are the walk and its square. Either route
+  closes the item; the weakening of the bound reuses what is built, the other
+  does not.
+
 * Convergence in measure as a second mode: the space of càdlàg paths with the
   topology of convergence in Lebesgue measure, in which the coordinates are
   nowhere continuous, and `mpSolution_of_tendsto_inMeasure`, obtained from
