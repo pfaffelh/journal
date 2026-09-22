@@ -68,7 +68,7 @@ PREFIX = 'TauCetiRoadmap'
 RUNDIR = os.path.join(MW, f'_check_{os.getpid()}')
 SRCDIR = os.path.join(RUNDIR, PREFIX)
 BUILD = os.path.join(RUNDIR, '_lean_master')
-FILES = ['WeakConvergence', 'SkorokhodSpace', 'MartingaleProblems']
+FILES = ['WeakConvergence', 'SkorokhodSpace', 'MartingaleProblems', 'JumpProcesses']
 
 os.makedirs(OUT, exist_ok=True)
 shutil.rmtree(RUNDIR, ignore_errors=True)
