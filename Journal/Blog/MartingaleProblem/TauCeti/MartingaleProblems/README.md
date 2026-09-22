@@ -13866,6 +13866,20 @@ has to be chosen once for all `n`. What stands:
     **Past `j` the domination is false**, the majorant growing with the number
     of stages — which is why that statement asks for it only up to the bound of
     the stopping time. Only integrability of the increments is read.
+  * `abs_sq_rescaledWalk_le_of_le` and `integrable_majorant_sq_rescaledWalk`,
+    **2026-09-22** — the same majorant question for the *square's* approximant.
+    Below `j`, `V ^ 2 - ⟨V⟩ + t σ` is dominated by `g ^ 2 + ⟨V⟩ j + j |σ|`, with
+    `g` the very majorant `abs_rescaledWalk_le_of_le` already names: each of the
+    three summands is bounded at `j` by itself — `V t` by `g` (so `V t ^ 2 ≤
+    g ^ 2`, squaring a bound between nonnegatives), `⟨V⟩ t` by `⟨V⟩ j` (it is a
+    sum of integrals of squares, hence nonnegative and increasing in `t`, no
+    integrability needed for either fact), and `t σ` by `j |σ|`. The majorant is
+    integrable because `∑_{k < ⌊j (n+1)⌋} |ξ k|` is `MemLp` at `2` (a finite sum
+    of `MemLp.abs`), so its square is integrable by `MemLp.integrable_sq` — the
+    one place the square integrability of the increments is spent — and the two
+    remaining summands are constants at fixed `j`. **Past `j` this is false**
+    for the same reason as the walk's own majorant: the discrete compensator
+    keeps growing with the number of stages.
 
   With these the walk carries, over **one** filtration, everything the two halves
   of this milestone ask of a process: the martingale property, progressivity,

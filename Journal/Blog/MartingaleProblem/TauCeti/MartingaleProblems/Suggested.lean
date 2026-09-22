@@ -50561,6 +50561,109 @@ theorem integrable_majorant_rescaledWalk {P : Measure Ω} {ξ : ℕ → Ω → �
       * ∑ k ∈ Finset.range ⌊j * ((n : ℝ≥0) + 1)⌋₊, |ξ k ω|) P :=
   (integrable_finsetSum _ fun k _ ↦ (hint k).abs).const_mul _
 
+/-- **The approximant of the square is dominated on a bounded stretch of time by the square of the
+majorant of the walk plus two time-independent terms**, the other half of what
+`MeasureTheory.IsApproximatingPair.integrable_stoppedValue_of_dominated` asks of the pair
+`MeasureTheory.isApproximatingPair_sq_rescaledWalk`.
+
+**Each of the three summands of the process is bounded below `j` by itself.**  The walk's own bound
+`MeasureTheory.abs_rescaledWalk_le_of_le` gives `‖V t ω‖ ≤ g ω` for `t ≤ j`, hence
+`V t ω ^ 2 ≤ g ω ^ 2` by squaring a bound between two nonnegative reals
+(`pow_le_pow_left₀`).  The discrete compensator `⟨V⟩ t` is a sum of integrals of squares
+(`MeasureTheory.integral_nonneg` needs no integrability), hence nonnegative and **increasing** in
+`t` -- a smaller range of a sum of nonnegative terms is a smaller sum -- so `|⟨V⟩ t| ≤ ⟨V⟩ j`.  And
+`|t σ| = t |σ| ≤ j |σ|`, `t` and `j` both being nonnegative.  The triangle inequality on the three
+summands, applied twice, closes the bound.
+
+**Past `j` this is false**, for the reason `MeasureTheory.abs_rescaledWalk_le_of_le` already
+carries: the discrete compensator keeps growing with the number of stages the walk can have
+reached by `j`, and no bound fixed at `j` survives past it. -/
+theorem abs_sq_rescaledWalk_le_of_le {P : Measure Ω} {ξ : ℕ → Ω → ℝ} {σ : ℝ} (n : ℕ) {j t : ℝ≥0}
+    (ht : t ≤ j) (ω : Ω) :
+    ‖((Real.sqrt ((n : ℝ) + 1))⁻¹
+            * ∑ k ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ k ω) ^ 2
+        - ∑ k ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊,
+            ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω') ^ 2 ∂P
+        + (t : ℝ) * σ‖
+      ≤ ((Real.sqrt ((n : ℝ) + 1))⁻¹
+            * ∑ k ∈ Finset.range ⌊j * ((n : ℝ≥0) + 1)⌋₊, |ξ k ω|) ^ 2
+        + ∑ k ∈ Finset.range ⌊j * ((n : ℝ≥0) + 1)⌋₊,
+            ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω') ^ 2 ∂P
+        + (j : ℝ) * |σ| := by
+  set m : ℕ := ⌊t * ((n : ℝ≥0) + 1)⌋₊ with hm
+  set M : ℕ := ⌊j * ((n : ℝ≥0) + 1)⌋₊ with hM
+  have hfloor : m ≤ M := Nat.floor_le_floor (mul_le_mul_of_nonneg_right ht zero_le)
+  have hsub : Finset.range m ⊆ Finset.range M :=
+    fun x hx ↦ Finset.mem_range.2 ((Finset.mem_range.1 hx).trans_le hfloor)
+  have hterm_nonneg : ∀ k : ℕ, (0 : ℝ) ≤ ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω') ^ 2 ∂P :=
+    fun k ↦ integral_nonneg fun _ ↦ sq_nonneg _
+  have hB_nonneg :
+      (0 : ℝ) ≤ ∑ k ∈ Finset.range m, ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω') ^ 2 ∂P :=
+    Finset.sum_nonneg fun k _ ↦ hterm_nonneg k
+  have hB_le : ∑ k ∈ Finset.range m, ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω') ^ 2 ∂P
+      ≤ ∑ k ∈ Finset.range M, ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω') ^ 2 ∂P :=
+    Finset.sum_le_sum_of_subset_of_nonneg hsub fun i _ _ ↦ hterm_nonneg i
+  have hV : ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ k ∈ Finset.range m, ξ k ω) ^ 2
+      ≤ ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ k ∈ Finset.range M, |ξ k ω|) ^ 2 := by
+    have h1 := abs_rescaledWalk_le_of_le (ξ := ξ) n ht ω
+    calc ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ k ∈ Finset.range m, ξ k ω) ^ 2
+        = ‖(Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ k ∈ Finset.range m, ξ k ω‖ ^ 2 := by
+          rw [Real.norm_eq_abs, sq_abs]
+      _ ≤ ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ k ∈ Finset.range M, |ξ k ω|) ^ 2 :=
+          pow_le_pow_left₀ (norm_nonneg _) h1 2
+  have htσ : |(t : ℝ) * σ| ≤ (j : ℝ) * |σ| := by
+    rw [abs_mul, abs_of_nonneg t.coe_nonneg]
+    exact mul_le_mul_of_nonneg_right (by exact_mod_cast ht) (abs_nonneg _)
+  have hA_nonneg : (0 : ℝ) ≤ ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ k ∈ Finset.range m, ξ k ω) ^ 2 :=
+    sq_nonneg _
+  have habs1 : |((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ k ∈ Finset.range m, ξ k ω) ^ 2
+        - ∑ k ∈ Finset.range m, ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω') ^ 2 ∂P|
+      ≤ ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ k ∈ Finset.range m, ξ k ω) ^ 2
+        + ∑ k ∈ Finset.range m, ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω') ^ 2 ∂P := by
+    rw [sub_eq_add_neg]
+    refine (abs_add_le _ _).trans ?_
+    rw [abs_neg, abs_of_nonneg hA_nonneg, abs_of_nonneg hB_nonneg]
+  calc ‖((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ k ∈ Finset.range m, ξ k ω) ^ 2
+          - ∑ k ∈ Finset.range m, ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω') ^ 2 ∂P
+          + (t : ℝ) * σ‖
+      = |((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ k ∈ Finset.range m, ξ k ω) ^ 2
+          - ∑ k ∈ Finset.range m, ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω') ^ 2 ∂P
+          + (t : ℝ) * σ| := Real.norm_eq_abs _
+    _ ≤ |((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ k ∈ Finset.range m, ξ k ω) ^ 2
+          - ∑ k ∈ Finset.range m, ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω') ^ 2 ∂P|
+        + |(t : ℝ) * σ| := abs_add_le _ _
+    _ ≤ (((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ k ∈ Finset.range m, ξ k ω) ^ 2
+          + ∑ k ∈ Finset.range m, ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω') ^ 2 ∂P)
+        + (j : ℝ) * |σ| := add_le_add habs1 htσ
+    _ ≤ (((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ k ∈ Finset.range M, |ξ k ω|) ^ 2
+          + ∑ k ∈ Finset.range M, ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω') ^ 2 ∂P)
+        + (j : ℝ) * |σ| := add_le_add (add_le_add hV hB_le) (le_refl _)
+
+/-- **The majorant of `MeasureTheory.abs_sq_rescaledWalk_le_of_le` is integrable**, the other half
+of what `MeasureTheory.IsApproximatingPair.integrable_stoppedValue_of_dominated` asks for the
+square.
+
+The two summands past the square are **constants** in `ω` at a fixed `j`, hence
+`MeasureTheory.integrable_const`.  The square itself is a finite sum of `L^2` terms squared: each
+`|ξ k|` is `MemLp` at `2` by `MeasureTheory.MemLp.abs`, a finite sum of such stays `MemLp` at `2`
+(`MeasureTheory.memLp_finsetSum`), a constant multiple stays `MemLp` at `2`
+(`MeasureTheory.MemLp.const_mul`), and `MeasureTheory.MemLp.integrable_sq` turns that into
+integrability of the square -- the only place the square integrability of the increments, carried
+by `MeasureTheory.isApproximatingPair_sq_rescaledWalk`, is spent here. -/
+theorem integrable_majorant_sq_rescaledWalk {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} {σ : ℝ} (hLp : ∀ k, MemLp (ξ k) 2 P) (n : ℕ) (j : ℝ≥0) :
+    Integrable (fun ω ↦ ((Real.sqrt ((n : ℝ) + 1))⁻¹
+          * ∑ k ∈ Finset.range ⌊j * ((n : ℝ≥0) + 1)⌋₊, |ξ k ω|) ^ 2
+        + ∑ k ∈ Finset.range ⌊j * ((n : ℝ≥0) + 1)⌋₊,
+            ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω') ^ 2 ∂P
+        + (j : ℝ) * |σ|) P := by
+  have hmem : MemLp (fun ω ↦ ∑ k ∈ Finset.range ⌊j * ((n : ℝ≥0) + 1)⌋₊, |ξ k ω|) 2 P :=
+    memLp_finsetSum _ fun k _ ↦ (hLp k).abs
+  have hg2 : Integrable (fun ω ↦ ((Real.sqrt ((n : ℝ) + 1))⁻¹
+        * ∑ k ∈ Finset.range ⌊j * ((n : ℝ≥0) + 1)⌋₊, |ξ k ω|) ^ 2) P :=
+    (hmem.const_mul (Real.sqrt ((n : ℝ) + 1))⁻¹).integrable_sq
+  exact (hg2.add (integrable_const _)).add (integrable_const _)
+
 end WalkContainment
 
 end MeasureTheory

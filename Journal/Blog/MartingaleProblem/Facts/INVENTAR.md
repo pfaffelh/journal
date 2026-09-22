@@ -55584,3 +55584,91 @@ hängenbliebe.
 Zusammenbau: die beiden Paare mit `mono_K` auf ein gemeinsames `K` gehoben, die
 vier Integrierbarkeiten über `integrable_stoppedValue_of_dominated`, und
 `isEventuallyApproximable_of_tendsto_zero_cofinite` mit `e n = ofReal (σ/(n+1))`.
+
+### 2026-09-22, vierter Lauf des Tages — die andere Hälfte des Majoranten steht, und mit ihr sind alle vier Integrierbarkeiten von `IsEventuallyApproximable` auf ihre Bausteine zurückgeführt; nur der Zusammenbau fehlt noch
+
+**Das benannte Ziel des Vorlaufs ist eingelöst**: `MeasureTheory.abs_sq_rescaledWalk_le_of_le`
+und `MeasureTheory.integrable_majorant_sq_rescaledWalk` stehen, gegen `upstream/master`
+(`94ef6b89544`) mit `check_master.py` bei **0 Fehlern, 0 `sorry`, 0 neuen Warnungen** (18/38/112
+unverändert, davon 0 veraltet), und beide mit `check_axioms_master.py` auf `propext`,
+`Classical.choice`, `Quot.sound` geprüft.
+
+#### Was gebaut ist — zwei Deklarationen
+
+| Deklaration | was sie sagt |
+| --- | --- |
+| `MeasureTheory.abs_sq_rescaledWalk_le_of_le` | für `t ≤ j` ist `‖V t ω ^ 2 − ⟨V⟩ t + t σ‖ ≤ g ω ^ 2 + ⟨V⟩ j + j \|σ\|`, mit demselben Majoranten `g` wie bei `abs_rescaledWalk_le_of_le` |
+| `MeasureTheory.integrable_majorant_sq_rescaledWalk` | dieser Majorant ist integrierbar |
+
+#### Der Beweis ist Buchhaltung, wie angekündigt — drei Bausteine, keiner neu erschlossen
+
+* **`V t ω ^ 2 ≤ g ω ^ 2`** ist `abs_rescaledWalk_le_of_le` (Vorlauf) quadriert:
+  `pow_le_pow_left₀ (norm_nonneg _) h1 2` an `‖V t ω‖ ≤ g ω`, über
+  `‖x‖ ^ 2 = x ^ 2` (`Real.norm_eq_abs`, `sq_abs`).
+* **`|⟨V⟩ t| ≤ ⟨V⟩ j`** braucht keine Integrierbarkeit an keiner Stelle: die Summanden sind
+  `∫ ((n+1)⁻¹ᐟ² ξ k)^2 ∂P`, nichtnegativ durch `integral_nonneg` (das gilt für **jede** Funktion,
+  integrierbar oder nicht), und `Finset.sum_le_sum_of_subset_of_nonneg` an der schon vom Vorlauf
+  gebauten Bereichsinklusion `Finset.range m ⊆ Finset.range M` macht daraus die Monotonie in `t`.
+* **`|t σ| ≤ j |σ|`** ist `abs_mul` und `mul_le_mul_of_nonneg_right`.
+
+Die drei Schranken zusammen über zwei Dreiecksungleichungen (`abs_add_le`, zweimal) schließen den
+Beweis.
+
+Für die Integrierbarkeit: `∑_{k<M} |ξ k|` ist `MemLp` bei `2` (`memLp_finsetSum` an
+`(hLp k).abs`), eine Konstante mal `MemLp` bleibt `MemLp` (`MemLp.const_mul`), und
+`MemLp.integrable_sq` macht daraus die Integrierbarkeit des Quadrats — **die einzige Stelle, an
+der `MemLp ξ 2` (statt bloßer Integrierbarkeit) gelesen wird**. Die beiden übrigen Summanden sind
+bei festem `j` Konstanten in `ω`, also `integrable_const` (und dafür `[IsProbabilityMeasure P]`,
+das die neue Deklaration deshalb jetzt trägt — der Vorlauf hatte sie an dieser Stelle noch nicht
+gebraucht und nicht notiert).
+
+#### Zwei Namen, die auf `master` anders heißen, und wieder nach demselben Muster
+
+* **`abs_add` gibt es auf `master` nicht mehr — es heißt `abs_add_le`.** Ein Grep nach
+  `theorem abs_add\b` findet auf `upstream/master` (und, nachgeprüft, auch schon auf dem
+  `.lake`-Release v4.33.1) **keine** Fundstelle; der einzige Name für `|a+b| ≤ |a|+|b|` ist
+  `abs_add_le`. Das ist kein `master`-Drift, sondern die stehende Regel „Nichts aus dem
+  Gedächtnis" angewandt auf mich selbst: `abs_add` war nie ein Name dieser Bibliothek, ich hatte
+  ihn falsch erinnert. `check_master.py` hat es sofort gemeldet (`Unknown identifier`), und die
+  Korrektur war eine reine Umbenennung.
+* **`add_le_add_right` addiert auf `master` links, nicht rechts** — jedenfalls in der Gestalt, in
+  der die Elaboration sie hier auflöste: `add_le_add_right (h : a ≤ b) c` ergab
+  `c + a ≤ c + b`, nicht `a + c ≤ b + c`, sichtbar an der `?m.1464 + (...)`-Form der
+  Fehlermeldung. Ob das eine echte Konventionsänderung ist oder nur diese eine Instanz betrifft,
+  ist nicht geklärt — **umgangen statt untersucht**: `add_le_add (add_le_add hV hB_le) (le_refl _)`
+  braucht keine Seitenkonvention und ist stabiler. Wer diesen Namen wieder anfaßt, prüfe die
+  Konvention erst gegen den Quelltext, nicht gegen die Erinnerung an v4.33.1.
+
+Der Befund über `MemLp.abs`, `memLp_finsetSum`, `MemLp.const_mul`, `MemLp.integrable_sq`: alle vier
+standen wie erinnert (`Mathlib/MeasureTheory/Function/L2Space.lean:42` und
+`Mathlib/MeasureTheory/Function/LpSeminorm/{SMul,TriangleInequality}.lean`), keine Überraschung.
+
+#### Die README ist nachgezogen
+
+`MartingaleProblems/README.md`, Meilenstein 11, der Abschnitt zum Akzeptanztest: ein neuer
+Aufzählungspunkt nach `abs_rescaledWalk_le_of_le`/`integrable_majorant_rescaledWalk`, mit derselben
+Kurzfassung. `check_own_names.py` zählt weiterhin 439 Namen ohne Deckung — unverändert, die beiden
+neuen Zitate sind also gedeckt.
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`MeasureTheory.isEventuallyApproximable_rescaledWalk`** — der Zusammenbau, und jetzt liegt
+**alles** dafür bereit:
+
+* die beiden Paare (`isApproximatingPair_rescaledWalk`, `isApproximatingPair_sq_rescaledWalk`),
+  mit `IsApproximatingPair.mono_K` auf ein gemeinsames `K` gehoben;
+* die beiden Fehler (`0` für die Irrfahrt, `ofReal (σ/(n+1))` für ihr Quadrat), beide → `0` längs
+  `n`;
+* die vier Integrierbarkeiten, je zweimal `IsApproximatingPair.integrable_stoppedValue_of_dominated`
+  gegen die beiden jetzt vorhandenen Majoranten (`integrable_majorant_rescaledWalk`,
+  `integrable_majorant_sq_rescaledWalk`).
+
+**Die benannte Klemmstelle aus dem Vorlauf bleibt die einzige, die Aufmerksamkeit braucht:**
+`IsEventuallyApproximable` setzt seine Stoppzeiten als `min (oscHitSeq …) u` und
+`min (oscHitSeq …) (min (oscHitSeq …) u + δ)` — zwei verschiedene Schranken `j` (`u` bzw. `u+δ`),
+und der Majorant ist an der jeweiligen zu nehmen, nicht an einer gemeinsamen. Ein Zusammenbau mit
+*einem* `j` für beide bliebe hier hängen.
+
+Danach ist der Akzeptanztest der Irrfahrten **fertig**: `isCompactContained_rescaledWalk` und
+`isEventuallyApproximable_rescaledWalk` zusammen sind das Paar, das Donsker durch die Kette
+`isTight_map_postcomp_of_exists_martingale → isRelativelyCompact_of_approx → …` schickt.
