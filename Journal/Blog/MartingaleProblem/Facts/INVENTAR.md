@@ -57264,3 +57264,147 @@ nicht die Daten biegen, sondern die Aussage an dem stellen, was der Beweis wirkl
 Lindeberg-Taylor-Rechnung als Zeuge für `hzero` auf den reskalierten Irrfahrten, mit
 `g = f'' / 2` für `f ∈ Cc^∞(ℝ)`. Das ist der einzige verbliebene Posten des Akzeptanztests, der
 noch eine **Rechnung** verlangt statt Einsetzen; alles andere ist Naht.
+
+### 2026-09-22, vierzehnter Lauf des Tages — das benannte Ziel steht, und beim Hinschreiben sind **zwei** Voraussetzungen weggefallen, die der Vorschlag noch führte: der Escape der Teilfolge wird nicht gelesen, und die Klasse der Testfunktionen kann gar nicht die des Vorbilds sein
+
+*Eine Deklaration in `MartingaleProblems`, durch `check_master.py` mit 0 Fehlern und 0 `sorry`,
+mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft. Die Warnungszahlen
+sind **unverändert** (18 / 38 / 112, davon 0 veraltet), sie erzeugt also keine einzige.*
+
+| Zeile | Name |
+| ---: | --- |
+| 51484 | `MeasureTheory.mpSolution_of_tendsto_cadlag_of_subseq_of_zero` |
+
+**Das benannte Ziel des Vorlaufs war genau diese Aussage.** Sie steht, und sie ging im **ersten**
+Durchlauf durch — nach einem Fehlstart, der nichts mit ihr zu tun hatte: die Entwurfsdatei
+braucht `open scoped BoundedContinuousFunction`, sonst zerfällt `→ᵇ` in einen Pfeil und einen
+Hochstellterm, und die Meldung lautet `elaboration function for
+Mathlib.Tactic.superscriptTerm has not been implemented`. In `Suggested.lean` steht das `open`
+nicht, weil die Notation dort über die Importkette schon im Geltungsbereich ist; eine
+freistehende Entwurfsdatei erbt das nicht.
+
+#### Der Befund des Laufs: zwei Voraussetzungen des Vorbilds werden nicht geerbt, und beide aus einem benennbaren Grund
+
+Der Vorschlag lautete, `mpSolution_of_tendsto_cadlag_of_subseq` wörtlich zu übernehmen und nur
+`hzero` an die Stelle von `hmart`, `hf`, `hg` zu setzen. Das geht nicht wörtlich, und der
+Unterschied ist an beiden Stellen eine Einsicht und keine Unbequemlichkeit.
+
+* **`Tendsto ns atTop atTop` fällt ersatzlos weg.** Der Doc-Kommentar des Vorbilds sagt selbst,
+  daß diese Hypothese dort an **genau einer** Stelle ausbezahlt wird: sie trägt `‖f - f' n‖ → 0`
+  und `‖g - g' n‖ → 0` von der Familie auf die Teilfolge. Steht die Lücke von vornherein längs
+  `ns`, so ist nichts zu tragen. Das ist die schwächere Fassung und nicht nur die kürzere: ein
+  Verbraucher, der die Lücke nur längs einer Teilfolge hat, wird bedient, und wer sie längs der
+  ganzen Familie hat, setzt selbst ein `Filter.Tendsto.comp` davor. Der vierte Kettenpunkt reicht
+  den Escape weiterhin herüber; er wird hier bloß nicht gelesen.
+* **Die Klasse der Testfunktionen kann nicht die des Vorbilds sein.**
+  `mpSolution_of_tendsto_cadlag` liest `Z ∈ SkorokhodSpace.evalFuns E (insert s (T ∩ Set.Iic s))`,
+  und `T` entsteht **im Beweis**, aus `SkorokhodSpace.exists_countable_dense_continuity` am
+  Grenzgesetz — das erst nach der Extraktion bekannt ist. Eine Hypothese, die `T` nennt, ist für
+  den Verbraucher also nicht hinschreibbar. Genommen ist `Set.Iic s`, die kleinste von dieser
+  Wahl unabhängige Zeitmenge, und `SkorokhodSpace.evalFuns_mono` ist der Übergang. **Der Preis
+  gehört in den Bericht:** die Voraussetzung wird über mehr Testfunktionen verlangt, als der
+  Beweis liest. Für den vorgesehenen Verbraucher kostet das nichts — die
+  Lindeberg-Taylor-Entwicklung schätzt die Lücke gegen `‖Z‖_∞` ab und sieht die Zeitmenge gar
+  nicht —, aber es ist eine echte Verstärkung gegenüber `insert s (T ∩ Set.Iic s)` und keine
+  bloße Umformulierung.
+
+Beides steht im Doc-Kommentar und im Meilenstein, damit der nächste Lauf nicht meint, der
+Vorschlag sei ungenau ausgeführt worden.
+
+#### Prüfung
+
+`scripts/check_master.py` gegen `upstream/master`
+(`94ef6b89544e58e90f119da869f3fb48d1da0f4c`, Lean `4.35.0-rc2`): **0 Fehler, 0 `sorry`** in allen
+drei Dateien, Warnungen **18 / 38 / 112, davon 0 veraltet** — unverändert gegenüber dem Vorlauf.
+`scripts/check_axioms_master.py`: `propext`, `Classical.choice`, `Quot.sound`.
+`check_cited_lines.py`: **446 gepaarte Fundstellen, 0 verschoben, 0 tot** — unverändert; der
+Doc-Kommentar zitiert keine Zeilennummer.
+
+#### Wo der Akzeptanztest damit steht
+
+```
+isCompactContained_rescaledWalk
+isEventuallyApproximableMul_rescaledWalk
+  → isTightMeasureSet_map_rescaledWalk        (Straffheit der Pfadgesetze)
+  → isCompact_closure_range_map_rescaledWalk  (relative Kompaktheit, Prokhorov)
+  → mpSolution_of_tendsto_cadlag_of_subseq_of_zero   (dritter Kettenpunkt, Gestalt steht)
+```
+
+Der dritte Kettenpunkt hat damit die Gestalt, die Donskers Daten bedienen können; was ihm auf
+diesen Daten fehlt, ist sein **Zeuge**, und das ist die einzige verbliebene Rechnung des
+Akzeptanztests.
+
+### Die zweite Hälfte desselben Laufs: dieselbe Naht an den Daten des zweiten Kettenpunktes — und dort ist die Lückenfassung nicht bloß anders als die Martingalfassung, sondern **billiger**
+
+| Zeile | Name |
+| ---: | --- |
+| 51598 | `MeasureTheory.mpSolution_of_tendsto_cadlag_of_subseq_of_zero_pathOfProcess` |
+
+Die Aussage ist die vorige, mit dem getesteten Funktional an einem aus einem Prozeß gebauten
+Pfad ausgeschrieben — ein `simp only [SkorokhodSpace.mpTest, hΦ]`, und keine Analysis darin.
+Sie ging ebenfalls im **ersten** Durchlauf durch.
+
+**Der Befund steht in dem, was sie nicht trägt.**
+`mpSolution_of_tendsto_cadlag_of_subseq_pathOfProcess`, ihr Zwilling in der Martingalfassung,
+führt drei Voraussetzungen, die hier alle drei wegfallen: eine Filtration `𝓕`, die
+Adaptiertheit der Prozesse an sie, und `CompleteSpace E`. Die ersten beiden, weil eine
+*Martingal*eigenschaft die Vergangenheit benennen muß; die dritte, weil jener Satz die
+Meßbarkeit der Pfadabbildung aus der Adaptiertheit über
+`SkorokhodSpace.measurable_of_measurable_eval` gewinnt. **Eine verschwindende Lücke benennt keine
+Vergangenheit**: von der Pfadabbildung wird nur ihre Meßbarkeit gelesen, und die wird unmittelbar
+verlangt. Für Donsker kostet das nichts — `isCompact_closure_range_map_rescaledWalk` trägt
+`hΦm` ohnehin —, aber es ist die schwächere Aussage, und sie steht so im Meilenstein.
+
+#### Prüfung, nach der zweiten Deklaration wiederholt
+
+`scripts/check_master.py`: **0 Fehler, 0 `sorry`**, Warnungen **18 / 38 / 112, davon 0
+veraltet** — unverändert. `check_axioms_master.py` über **beide** neuen Deklarationen:
+`propext`, `Classical.choice`, `Quot.sound`.
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`MeasureTheory.integral_comp_rescaledWalk_eq_sum`** — der Kompensator des dritten
+Kettenpunktes an der reskalierten Irrfahrt, **in geschlossener Form und exakt**.
+
+*Die Aussage:* für `g : ℝ →ᵇ ℝ`, `n : ℕ` und `t : ℝ≥0` ist
+
+```
+∫ u in Set.Ioc (0 : ℝ) (t : ℝ), g (V n u.toNNReal ω)
+  = ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ((n : ℝ) + 1)⁻¹ * g (S n j ω)
+    + ((t : ℝ) - ⌊t * ((n : ℝ≥0) + 1)⌋₊ / ((n : ℝ) + 1)) * g (S n ⌊t * ((n : ℝ≥0) + 1)⌋₊ ω)
+```
+
+mit `S n j ω = (√(n+1))⁻¹ * ∑ i ∈ Finset.range j, ξ i ω` den Knotenwerten und
+`V n u ω = S n ⌊u * ((n : ℝ≥0) + 1)⌋₊ ω`.
+
+*Warum das der richtige erste Stein der Lindeberg-Taylor-Rechnung ist:* die Lücke des dritten
+Kettenpunktes ist `𝔼[(mpTest t − mpTest s) · Z]`, und `mpTest` ist Auswertung **minus
+Kompensator**. Der Kompensator ist bisher ein Integral über einen Treppenpfad und in keiner
+Form aufgelöst; solange er das ist, kann die Taylorentwicklung des Auswertungsteils nicht gegen
+ihn gehalten werden. **Und er ist exakt eine Summe, nicht näherungsweise** — der Pfad nimmt auf
+jedem Fenster `[j/(n+1), (j+1)/(n+1))` genau seinen Knotenwert an —, also ist hier kein
+Grenzübergang zu leisten und keine Wahrscheinlichkeit im Spiel. Es ist eine deterministische
+Aussage über einen Stichprobenpunkt, und sie ist der einzige Posten der Rechnung, der ohne die
+Unabhängigkeit der `ξ` auskommt.
+
+*Worauf sie ruht, am Quelltext von `94ef6b89544` nachgesehen, damit der nächste Lauf nicht
+sucht:*
+
+* `intervalIntegral.sum_integral_adjacent_intervals`
+  (`Mathlib/MeasureTheory/Integral/IntervalIntegral/Basic.lean:1116`) mit `a k = k / (n+1)` —
+  die Zerlegung des Fensters in die Gitterzellen. Die Ico-Fassung steht darüber, `:1101`.
+* `Nat.measurable_floor` (`Mathlib/MeasureTheory/Function/Floor.lean:69`) für die Meßbarkeit
+  des Integranden; `Mathlib.MeasureTheory.Function.Floor` ist in `Suggested.lean` schon
+  importiert.
+* `MeasureTheory.Measure.integrableOn_of_bounded`
+  (`Mathlib/MeasureTheory/Integral/IntegrableOn.lean:713`) für die
+  Intervallintegrierbarkeit auf jeder Zelle: der Integrand ist meßbar und durch `‖g‖`
+  beschränkt, mehr wird nicht gebraucht, und eine Stetigkeit hat er nicht.
+* `stepPath_rescaledWalk_eq` (Z. 52025) für die Gleichheit der beiden Beschreibungen des
+  Pfades, falls die Aussage über die `stepPath`-Gestalt geführt wird.
+
+*Die Falle, und sie ist benannt statt entdeckt zu werden:* `⌊x · (n+1)⌋₊ = j` gilt auf
+`[j/(n+1), (j+1)/(n+1))`, am **rechten** Endpunkt aber nicht mehr. Das Intervallintegral sieht
+das nicht, weil der rechte Endpunkt eine Nullmenge ist; der Übergang ist ein
+`setIntegral_congr_ae` auf `Set.Ioc` und kein `simp`. Das letzte, angebrochene Fenster ist
+darum auch kein Sonderfall des Beweises, sondern nur ein eigener Summand.

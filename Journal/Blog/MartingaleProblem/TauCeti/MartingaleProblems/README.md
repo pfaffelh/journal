@@ -13613,7 +13613,7 @@ has to be chosen once for all `n`. What stands:
   `Tendsto ns atTop atTop` of the fourth item is paid out.
 * `mpSolution_of_tendsto_cadlag_of_subseq_of_zero` — the same seam at the
   **vanishing martingale gap** instead of at exact martingality of a moving test
-  pair, and the form Donsker's acceptance test reads.
+  pair, and the form Donsker's acceptance test reads. **Proved 2026-09-22.**
 
   **Why the existing seam does not serve there, and it is read off three
   signatures rather than suspected.** `mpSolution_of_tendsto_cadlag` asks no
@@ -13634,6 +13634,38 @@ has to be chosen once for all `n`. What stands:
   assembles and that do not depend on `hmart`:
   `SkorokhodSpace.exists_countable_dense_continuity`,
   `tendstoInDistribution_id_of_tendsto` and `cadlagFiltration_eq`.
+
+  **Two things the statement settles that the plan had left open.**
+
+  * **The test functions are indexed by `Set.Iic s`** and not by the class
+    `insert s (T ∩ Set.Iic s)` the underlying statement reads. `T` is produced
+    inside the proof, from `SkorokhodSpace.exists_countable_dense_continuity` at
+    the limit law, and the limit is known only after the extraction; no consumer
+    can name it. `Set.Iic s` is the smallest set of times independent of that
+    choice, `SkorokhodSpace.evalFuns_mono` is the passage, and the price is that
+    the hypothesis is asked of more test functions than the proof reads.
+  * **`Tendsto ns atTop atTop` is not carried.** The seam it mirrors spends that
+    hypothesis at exactly one place, the transport of `‖f - f' n‖ → 0` and
+    `‖g - g' n‖ → 0` to the subsequence; with the gap stated along `ns` from the
+    start there is nothing to transport. A consumer holding the gap along the
+    whole family composes with the escape itself, one `Filter.Tendsto.comp`.
+    The fourth item still hands the escape over — it is simply not read here.
+* `mpSolution_of_tendsto_cadlag_of_subseq_of_zero_pathOfProcess` — the vanishing
+  gap at the data the **second** item produces, and the form the Donsker
+  assembly reads: one probability space, a sequence of processes with their path
+  maps, one pair `(f, g)`. **Proved 2026-09-22.**
+
+  It is the previous item with the tested functional written out at a path built
+  from a process, one `simp only [SkorokhodSpace.mpTest, hΦ]`, and there is no
+  analysis in it. What is worth recording is what it does **not** carry:
+  `mpSolution_of_tendsto_cadlag_of_subseq_pathOfProcess` needs a filtration, the
+  adaptedness of the processes to it, and `CompleteSpace E` — the first two
+  because a *martingale* hypothesis has to name the past, the third because it
+  derives the measurability of the path map from the adaptedness through
+  `SkorokhodSpace.measurable_of_measurable_eval`. **A vanishing gap names no
+  past**: all that is read of the path map is its measurability, and that is
+  asked for directly. This is the one place in the pair of seams where the gap
+  form is cheaper and not merely different.
 * `mpSolution_of_tendsto_cadlag_of_subseq_pathOfProcess` — the same seam at the
   data the **second** item produces, and the form the Donsker assembly reads:
   one probability space, one right continuous filtration, a sequence of adapted
@@ -14429,6 +14461,40 @@ has to be chosen once for all `n`. What stands:
   description the containment reads and the process description the
   approximability reads. `hvar` is read only by the first and `hsq` only by the
   second.
+
+  **The third item on Donsker's data, and the one computation the acceptance
+  test still owes.** The seam is
+  `mpSolution_of_tendsto_cadlag_of_subseq_of_zero_pathOfProcess`, whose one
+  hypothesis is the vanishing of
+  `𝔼[(mpTest f g t − mpTest f g s) · Z]` along the family. `mpTest` is the
+  evaluation minus the **compensator**, and the compensator has to be resolved
+  before the evaluation part can be expanded against it:
+
+  * `integral_comp_rescaledWalk_eq_sum` — the compensator of a rescaled walk in
+    closed form and **exactly**, not in the limit: for `g : ℝ →ᵇ ℝ`,
+
+    ```
+    ∫ u in Set.Ioc (0 : ℝ) (t : ℝ), g (V n u.toNNReal ω)
+      = ∑ j < ⌊t (n+1)⌋, (n+1)⁻¹ g (S n j ω)
+        + (t − ⌊t (n+1)⌋/(n+1)) · g (S n ⌊t (n+1)⌋ ω)
+    ```
+
+    with `S n j ω = (n+1)⁻¹ᐟ² ∑ i < j, ξ i ω` the node values. The path takes on
+    each cell `[j/(n+1), (j+1)/(n+1))` exactly its node value, so there is no
+    approximation here and no probability: it is a statement about one sample
+    point, and the only item of the computation independent of the independence
+    of the `ξ`. It rests on
+    `intervalIntegral.sum_integral_adjacent_intervals`
+    (`Mathlib/MeasureTheory/Integral/IntervalIntegral/Basic.lean:1116`) at
+    `a k = k/(n+1)`, on `Nat.measurable_floor`
+    (`Mathlib/MeasureTheory/Function/Floor.lean:69`), on
+    `MeasureTheory.Measure.integrableOn_of_bounded`
+    (`Mathlib/MeasureTheory/Integral/IntegrableOn.lean:713`) for the interval
+    integrability on each cell — the integrand is measurable and bounded by
+    `‖g‖` and has no continuity — and on
+    `stepPath_rescaledWalk_eq` for the passage between the two descriptions of
+    the path. `⌊x (n+1)⌋ = j` fails at the **right** endpoint of the cell, so
+    the passage is a `setIntegral_congr_ae` on `Set.Ioc` and not a `simp`.
 
   **Prokhorov, with the crossing of the two types done once**, and the second
   item of the chain on Donsker's data:

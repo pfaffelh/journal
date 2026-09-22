@@ -51443,6 +51443,76 @@ theorem mpSolution_of_tendsto_cadlag_of_subseq
     (by simpa [Function.comp_def] using hf.comp hns)
     (by simpa [Function.comp_def] using hg.comp hns)
 
+/-- **The same seam at the vanishing martingale gap**, instead of at exact
+martingality of a moving test pair.
+
+`MeasureTheory.mpSolution_of_tendsto_cadlag` asks for no martingale property at
+all: its hypothesis is the convergence to `0` of
+`∫ (mpTest f g t - mpTest f g s) · Z` along the family, a gap that vanishes.
+`MeasureTheory.mpSolution_of_tendsto_cadlag_of_approx` and
+`MeasureTheory.mpSolution_of_tendsto_cadlag_of_subseq` are its specialisations at
+*exact* martingality of a pair `(f' n, g' n)` converging to `(f, g)` in the
+supremum norm -- the approximation sitting in the **test function** and not in the
+error.  A family that is an exact martingale to no pair of bounded continuous
+functions is not reached by them and is reached by this one; the rescaled random
+walk is such a family, its own exact martingales being itself and its square, and
+both unbounded.
+
+**The class of test functions is `SkorokhodSpace.evalFuns E (Set.Iic s)` and not
+the class `insert s (T ∩ Set.Iic s)` the underlying statement reads**, and the
+reason is that `T` is produced inside the proof and no consumer can name it: the
+times come from `SkorokhodSpace.exists_countable_dense_continuity` at the limit
+law, which is known only after the extraction.  `Set.Iic s` is the smallest set of
+times of which that is independent, `SkorokhodSpace.evalFuns_mono` is the passage,
+and the price is that the hypothesis is asked of more test functions than the
+proof reads.
+
+**`Tendsto ns atTop atTop` is not carried here, and its absence is not an
+oversight.**  `MeasureTheory.mpSolution_of_tendsto_cadlag_of_subseq` spends that
+hypothesis at exactly one place, the transport of `‖f - f' n‖ → 0` and
+`‖g - g' n‖ → 0` from the family to the subsequence; with the gap stated along
+`ns` from the start there is nothing to transport.  A consumer that holds the gap
+along the whole family and wants it along a subsequence composes with the escape
+itself, which is one `Filter.Tendsto.comp`.
+
+The other three inputs are those of the seam it mirrors and are produced here
+rather than asked of the consumer, for the reasons recorded there: the process of
+the limit is the identity of the path space
+(`MeasureTheory.tendstoInDistribution_id_of_tendsto`), its filtration is
+`MeasureTheory.cadlagFiltration` and `h𝓕` is `cadlagFiltration_eq` followed by
+`MeasurableSpace.comap_id`, and the times are the ones just named. -/
+theorem mpSolution_of_tendsto_cadlag_of_subseq_of_zero
+    {Ω' : ℕ → Type*} {m' : ∀ n, MeasurableSpace (Ω' n)} {P' : ∀ n, @Measure (Ω' n) (m' n)}
+    [∀ n, IsProbabilityMeasure (P' n)]
+    {X' : ∀ n, Ω' n → D(ℝ≥0, E)} (hX' : ∀ n, @Measurable (Ω' n) _ (m' n) _ (X' n))
+    (f g : E →ᵇ ℝ) {ns : ℕ → ℕ}
+    (hzero : ∀ s t : ℝ≥0, s ≤ t → ∀ Z ∈ SkorokhodSpace.evalFuns E (Set.Iic s),
+      Tendsto (fun k ↦ ∫ ω, (SkorokhodSpace.mpTest f g t (X' (ns k) ω)
+        - SkorokhodSpace.mpTest f g s (X' (ns k) ω)) * Z (X' (ns k) ω) ∂(P' (ns k)))
+        atTop (𝓝 0))
+    {ν : ProbabilityMeasure D(ℝ≥0, E)}
+    (hlim : Tendsto (β := ProbabilityMeasure D(ℝ≥0, E))
+      (fun k ↦ ⟨(P' (ns k)).map (X' (ns k)), inferInstance⟩) atTop (𝓝 ν)) :
+    ∃ T : Set ℝ≥0, T.Countable ∧ Dense T ∧
+      ∀ s ∈ T, ∀ t ∈ T, s ≤ t →
+        (ν : Measure D(ℝ≥0, E))[fun z ↦ SkorokhodSpace.mpTest f g t z | cadlagFiltration s]
+          =ᵐ[(ν : Measure D(ℝ≥0, E))] fun z ↦ SkorokhodSpace.mpTest f g s z := by
+  obtain ⟨T, hTc, hTd, hTgood⟩ :=
+    SkorokhodSpace.exists_countable_dense_continuity (ι := ℝ≥0) (ν : Measure D(ℝ≥0, E))
+  refine ⟨T, hTc, hTd, ?_⟩
+  have h𝓕 : ∀ s : ℝ≥0, (cadlagFiltration (E := E) s : MeasurableSpace D(ℝ≥0, E))
+      = MeasurableSpace.comap (id : D(ℝ≥0, E) → D(ℝ≥0, E)) (⨆ r ∈ Set.Iic s,
+          MeasurableSpace.comap (fun z : D(ℝ≥0, E) ↦ z.toFun r) inferInstance) := by
+    intro s
+    rw [cadlagFiltration_eq, MeasurableSpace.comap_id]
+  exact mpSolution_of_tendsto_cadlag (X := id) (X' := fun k ↦ X' (ns k))
+    measurable_id (fun k ↦ hX' (ns k))
+    (tendstoInDistribution_id_of_tendsto (fun k ↦ hX' (ns k)) hlim)
+    h𝓕 hTc (rightDense_of_dense hTd) hTgood f g
+    fun s _ t _ hst Z hZ ↦ hzero s t hst Z
+      (SkorokhodSpace.evalFuns_mono
+        (Set.insert_subset (Set.mem_Iic.2 le_rfl) Set.inter_subset_right) hZ)
+
 /-- **The seam at the data the second item of the chain produces.**
 
 `MeasureTheory.mpSolution_of_tendsto_cadlag_of_subseq` lets the approximants live
@@ -51503,6 +51573,54 @@ theorem mpSolution_of_tendsto_cadlag_of_subseq_pathOfProcess [CompleteSpace E]
     exact hmart n
   · simp
   · simp
+
+/-- **The vanishing gap at the data the second item of the chain produces**, and
+the form the Donsker assembly reads: one probability space, one sequence of
+processes with their path maps, and one pair `(f, g)` throughout.
+
+It is `MeasureTheory.mpSolution_of_tendsto_cadlag_of_subseq_of_zero` with the
+tested functional written out at a path built from a process, which is one
+`simp only [SkorokhodSpace.mpTest, hΦ]`: `SkorokhodSpace.mpTest` is the
+evaluation minus the compensator and `hΦ` rewrites both.
+
+**No filtration enters, and this is the one place in the seam where the gap form
+is cheaper than the martingale form rather than merely different.**
+`MeasureTheory.mpSolution_of_tendsto_cadlag_of_subseq_pathOfProcess` carries a
+filtration `𝓕`, the adaptedness of the processes to it, and `CompleteSpace E` --
+the first two because its hypothesis is a *martingale* property and therefore has
+to name the past, the third because it derives the measurability of the path map
+from the adaptedness through
+`SkorokhodSpace.measurable_of_measurable_eval`.  A vanishing gap names no past:
+all that is read of the path map is its measurability, which is asked for
+directly.  The consumer that supplies the tightness
+(`MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul`)
+carries both hypotheses anyway, so nothing is lost there either. -/
+theorem mpSolution_of_tendsto_cadlag_of_subseq_of_zero_pathOfProcess
+    {P : Measure Ω} [IsProbabilityMeasure P]
+    {V : ℕ → ℝ≥0 → Ω → E} {Φ : ℕ → Ω → D(ℝ≥0, E)}
+    (hΦ : ∀ n, ∀ ω, (Φ n ω).toFun = fun t ↦ V n t ω) (hΦm : ∀ n, Measurable (Φ n))
+    (f g : E →ᵇ ℝ) {ns : ℕ → ℕ}
+    (hzero : ∀ s t : ℝ≥0, s ≤ t → ∀ Z ∈ SkorokhodSpace.evalFuns E (Set.Iic s),
+      Tendsto (fun k ↦ ∫ ω, ((f (V (ns k) t ω)
+            - ∫ r in Set.Ioc (0 : ℝ) (t : ℝ), g (V (ns k) r.toNNReal ω))
+          - (f (V (ns k) s ω)
+            - ∫ r in Set.Ioc (0 : ℝ) (s : ℝ), g (V (ns k) r.toNNReal ω)))
+          * Z (Φ (ns k) ω) ∂P) atTop (𝓝 0))
+    {ν : ProbabilityMeasure D(ℝ≥0, E)}
+    (hlim : Tendsto (β := ProbabilityMeasure D(ℝ≥0, E))
+      (fun k ↦ ⟨P.map (Φ (ns k)), inferInstance⟩) atTop (𝓝 ν)) :
+    ∃ T : Set ℝ≥0, T.Countable ∧ Dense T ∧
+      ∀ s ∈ T, ∀ t ∈ T, s ≤ t →
+        (ν : Measure D(ℝ≥0, E))[fun z ↦ SkorokhodSpace.mpTest f g t z | cadlagFiltration s]
+          =ᵐ[(ν : Measure D(ℝ≥0, E))] fun z ↦ SkorokhodSpace.mpTest f g s z := by
+  refine mpSolution_of_tendsto_cadlag_of_subseq_of_zero (Ω' := fun _ ↦ Ω) (m' := fun _ ↦ m)
+    (P' := fun _ ↦ P) (X' := Φ) hΦm f g (ns := ns) ?_ hlim
+  intro s t hst Z hZ
+  have he : ∀ (n : ℕ) (r : ℝ≥0) (ω : Ω), SkorokhodSpace.mpTest f g r (Φ n ω)
+      = f (V n r ω) - ∫ q in Set.Ioc (0 : ℝ) (r : ℝ), g (V n q.toNNReal ω) := by
+    intro n r ω
+    simp only [SkorokhodSpace.mpTest, hΦ n ω]
+  simpa only [he] using hzero s t hst Z hZ
 
 end CadlagChain
 
