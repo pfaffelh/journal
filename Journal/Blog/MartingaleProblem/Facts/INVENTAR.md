@@ -57061,3 +57061,206 @@ Donskers Familie als Folgerung —
 `isCompactContained_rescaledWalk` und `isEventuallyApproximableMul_rescaledWalk` eingesetzt — und
 danach der **erste** Kettenpunkt des Meilensteins 11 am selben Beispiel, also der Übergang von
 der Straffheit der Pfadgesetze zur relativen Kompaktheit.
+
+### 2026-09-22, dreizehnter Lauf des Tages — das benannte Ziel steht, und mit ihm die **ganze Straffheitsseite von Donsker**; beide Vorhersagen des Vorlaufs trafen zu, und der einzige Punkt, an dem sie zu kurz griffen, ist einer, den `simp` nicht sieht: `MemLp.zero` steht an `(0 : α → ε)` und der gestoppte Wert eines konstanten Prozesses ist `fun ω ↦ 0`
+
+*Fünf Deklarationen, alle in `MartingaleProblems`, alle durch `check_master.py` mit 0 Fehlern und
+0 `sorry`, alle mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft. Die
+Warnungszahlen sind **unverändert** (18 / 38 / 112, davon 0 veraltet), die fünf erzeugen also
+keine einzige. Dazu zwei vorhandene Beweise gekürzt, ohne Änderung an ihren Aussagen.*
+
+| Zeile | Name |
+| ---: | --- |
+| 48661 | `MeasureTheory.isEventuallyApproximableMul_of_tendsto_zero_cofinite` |
+| 50290 | `MeasureTheory.isCompact_closure_range_probabilityMeasure_of_isTightMeasureSet` |
+| 53143 | `MeasureTheory.isEventuallyApproximableMul_rescaledWalk` |
+| 53240 | `MeasureTheory.isTightMeasureSet_map_rescaledWalk` |
+| 53284 | `MeasureTheory.isCompact_closure_range_map_rescaledWalk` |
+
+**Das benannte Ziel des Vorlaufs war `MeasureTheory.isEventuallyApproximableMul_rescaledWalk`.**
+Es steht. Dazu der gewichtete Zwilling des Cofinite-Kriteriums, den der Vorlauf als „Buchhaltung"
+benannt hatte und der es auch war, und — im selben Lauf und über den Vorschlag hinaus — die
+**Folgerung**, auf die der Vorlauf den übernächsten Lauf vertröstet hatte:
+`isTightMeasureSet_map_rescaledWalk`.
+
+#### Der Befund des Laufs, und er ist klein, aber er ist der einzige
+
+**Die drei Stellen, an denen der Vorlauf den Unterschied zum ungewichteten Zwilling verortet
+hatte, waren die drei Stellen — und an einer vierten, die er nicht nannte, schlägt `simp` fehl.**
+Der Kompensator des ersten Paares ist der Nullprozeß, seine beiden `MemLp`-Felder sind also
+`MemLp (stoppedValue (fun _ _ ↦ (0 : ℝ)) σ) 2 P`. Das ist `MemLp.zero`, aber **nicht** durch
+`simp`: `MemLp.zero` ist an `(0 : α → ε)` ausgesprochen und trägt dort `@[simp]`, der gestoppte
+Wert eines konstanten Prozesses reduziert aber auf `fun ω ↦ 0`, und die beiden Terme sind nur
+definitionsgleich, nicht syntaktisch gleich. `simp [stoppedValue]` läßt das Ziel
+`MemLp (fun ω ↦ 0) 2 P` stehen und meldet obendrein das `stoppedValue`-Argument als ungenutzt;
+`exact MemLp.zero` schließt es. Das ist dasselbe Muster wie `(⊥ : ENNReal)` gegen `WithTop ℝ≥0`
+im achtzehnten Lauf des 2026-09-10: **nicht am Ziel rewriten, sondern das Ziel mit `exact`
+treffen.**
+
+Alles übrige ging im **ersten** Durchlauf durch, beide Deklarationen, wie schon im Vorlauf — und
+aus demselben Grund: die Vorarbeit war so weit getrieben, daß nichts mehr zu entscheiden blieb.
+Die beiden Quadratintegrierbarkeiten des Gliedes selbst (die zwei Felder **vor** dem
+Existenzquantor) sind wörtlich dieselben zwei Aussagen wie die des ersten Approximanten, weil die
+Irrfahrt ihr eigener Approximant ist; sie werden zweimal eingesetzt und einmal bewiesen.
+
+#### Die Folgerung, und was an ihr Arbeit war
+
+`isTightMeasureSet_map_rescaledWalk` ist
+`isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul` an zwei Eingaben, und die
+Naht dazwischen ist der Grund, warum sie nicht in einer Zeile dasteht:
+
+* **Die Kompaktheitseinschließung liest den Pfad als Treppenpfad, die Approximierbarkeit als
+  Prozeß.** `isCompactContained_rescaledWalk` verlangt
+  `hΦ : (Φ n ω).toFun = stepPath (fun k ↦ k / (n+1)) (fun k ↦ …)`, der Straffheitssatz verlangt
+  `hΦ : (Φ n ω).toFun = fun t ↦ V n t ω`. Die Aussage ist in der **zweiten** Form gestellt und
+  die erste daraus abgeleitet, über `stepPath_rescaledWalk_eq` — die Naht des
+  zweiundzwanzigsten Laufs, hier zum ersten Mal verbraucht.
+* **Zwei Konstanten werden gewählt und nicht getragen.** Der Verbraucher fragt zu jedem `ε₀` und
+  jedem `u` nach *irgendwelchen* `q, T, K, Kw` mit `u < T`; die Irrfahrten erfüllen die Bedingung
+  an **jedem** `T` und **jedem** `q > 1`, also tun es `T = u + 1` und `q = 2`.
+* **`one_lt_two` trägt über `ℝ≥0∞` nicht.** Es verlangt `AddLeftStrictMono`, und `ENNReal` ist
+  keines (`⊤ + 1 = ⊤ + 2`). Zu nehmen ist `(by norm_num : (1 : ENNReal) < 2)`. Ein eigener Name
+  `ENNReal.one_lt_two` steht in `Mathlib/Data/ENNReal/` nicht (geprüft gegen `94ef6b89544`).
+* **`hvar` und `hsq` sind nicht redundant** und werden von verschiedenen Seiten gelesen: die
+  Varianzschranke `≤ 1` allein von der Kompaktheitseinschließung, die Identität `∫ ξ² = σ` allein
+  von der Approximierbarkeit. Donskers eigene Normierung `σ = 1` erfüllt beide; die Aussage
+  verlangt sie nicht.
+
+#### Zwei Doc-Kommentare berichtigt, nicht nur ergänzt
+
+* `isEventuallyApproximable_rescaledWalk` sagte, es sei „das zweite und **letzte** der beiden
+  Dinge, die Donskers Akzeptanztest der Straffheitskette schuldet". Das war vor dem elften Lauf
+  geschrieben und ist seither falsch: die ungewichtete Bedingung allein trägt die Irrfahrten
+  **nicht**, weil jeder Verbraucher über ihr einen gleichmäßig beschränkten Prozeß liest. Der
+  Kommentar nennt sie jetzt die ungewichtete Hälfte und verweist auf die Konjunktion.
+* Der Abschnittstext „What the walks do *not* satisfy" endete mit „die eine, die diese Datei dem
+  Akzeptanztest noch schuldet, ist ihre **Konjunktion**". Sie schuldet sie nicht mehr.
+
+#### Prüfung
+
+`scripts/check_master.py` gegen `upstream/master`
+(`94ef6b89544e58e90f119da869f3fb48d1da0f4c`, Lean `4.35.0-rc2`): **0 Fehler, 0 `sorry`** in allen
+drei Dateien, Warnungen **18 / 38 / 112, davon 0 veraltet** — unverändert gegenüber dem Vorlauf.
+`scripts/check_axioms_master.py`: alle drei auf `propext`, `Classical.choice`, `Quot.sound`.
+`check_cited_lines.py`: **446 gepaarte Fundstellen, 0 verschoben, 0 tot** — eine mehr als im
+Vorlauf, nämlich `Mathlib/Order/Filter/Cofinite.lean:49` im neuen Doc-Kommentar.
+
+#### Was damit steht, und was der Akzeptanztest jetzt noch braucht
+
+Die **Straffheitsseite** von Donsker ist vollständig bezahlt:
+
+```
+isCompactContained_rescaledWalk
+isEventuallyApproximableMul_rescaledWalk
+  → isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul
+  → isTightMeasureSet_map_rescaledWalk
+```
+
+Der Akzeptanztest von Meilenstein 11 verlangt die vier Kettenpunkte **je genau einmal und in
+dieser Reihenfolge**, und der erste davon ist `isTight_map_postcomp_of_exists_martingale`. Was
+`isTightMeasureSet_map_rescaledWalk` liefert, ist die Straffheit der **Pfadgesetze** — also das,
+was der erste Kettenpunkt zusammen mit `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp`
+erst herstellen soll. Es ist damit **nicht** der erste Kettenpunkt, sondern dessen Ergebnis auf
+Donskers Daten, auf dem kürzeren Weg über die Approximierbarkeit statt über die
+Martingalhypothese an `f ∘ X n`. Das ist im Meilenstein so vermerkt („Either route closes the
+item") und ist kein Abdrift; der zweite Weg, die Lindeberg-Taylor-Rechnung, bleibt als
+Alternative stehen und ist nicht gebaut.
+
+### Die zweite Hälfte desselben Laufs: der **zweite** Kettenpunkt auf Donskers Daten, und dabei ein Argument, das zweimal ausgeschrieben dastand
+
+Nach der Straffheit war der nächste Schritt billig genug, um im selben Lauf zu stehen: von der
+Straffheit zur **relativen Kompaktheit**. Prokhorov steht in Mathlib
+(`isCompact_closure_of_isTightMeasureSet`, `MeasureTheory/Measure/Prokhorov.lean:530`), es ist
+also keine Mathematik zu leisten — wohl aber ein **Typwechsel**, und der ist der ganze Inhalt:
+Straffheit ist an einer Menge von `Measure` ausgesprochen, Prokhorov schließt über eine Menge
+von `ProbabilityMeasure`, und der vierte Kettenpunkt
+(`tendsto_of_isRelativelyCompact_of_unique`) liest weder das eine noch das andere, sondern ein
+`Set.range`.
+
+**Der Befund: dieser Typwechsel stand zweimal wörtlich in der Datei**, in
+`isCompact_closure_range_of_subalgebra_forall_martingale` und in
+`isCompact_closure_range_of_subalgebra_forall_exists_bounded_pair`, jedesmal als `have hset : … := by ext ν; constructor; …`
+mit demselben `Subtype.ext`. Er ist jetzt **einmal** ausgesprochen, als
+`isCompact_closure_range_probabilityMeasure_of_isTightMeasureSet`, und beide alten Beweise sind
+auf vier Zeilen zusammengegangen — ohne daß eine Voraussetzung hinzukommt oder wegfällt; die
+Axiomprüfung bestätigt beide unverändert.
+
+**Was die allgemeine Fassung wirklich verlangt, ist gemessen und nicht geraten:**
+`[MeasurableSpace F] [TopologicalSpace F] [BorelSpace F] [T2Space F]` — und `BorelSpace` ist
+nötig, nicht bloß bequem: mit `OpensMeasurableSpace` scheitert die Instanzensuche an
+`ProbabilityMeasure F`. **Polnischsein und Vollständigkeit werden hier nicht gelesen**; sie
+werden eine Ebene höher gelesen, in der Straffheit, und das steht so am Doc-Kommentar.
+
+`isCompact_closure_range_map_rescaledWalk` ist dann eine Zeile. Damit steht auf Donskers Daten:
+
+```
+isCompactContained_rescaledWalk
+isEventuallyApproximableMul_rescaledWalk
+  → isTightMeasureSet_map_rescaledWalk        (Straffheit der Pfadgesetze)
+  → isCompact_closure_range_map_rescaledWalk  (relative Kompaktheit, Prokhorov)
+```
+
+#### Prüfung, nach dem Umbau wiederholt
+
+`scripts/check_master.py`: **0 Fehler, 0 `sorry`**, Warnungen **18 / 38 / 112, davon 0
+veraltet** — unverändert. `check_axioms_master.py` über die zwei neuen **und** die zwei
+gekürzten: alle vier auf `propext`, `Classical.choice`, `Quot.sound`.
+`check_cited_lines.py`: **446 gepaarte Fundstellen, 0 verschoben, 0 tot.**
+
+#### Die Vorfrage zum dritten Kettenpunkt ist noch in diesem Lauf am Quelltext beantwortet, damit der nächste sie nicht stellt
+
+Ehe ein Ziel benannt wird, war zu klären, in welcher Gestalt der dritte Kettenpunkt die
+Martingaleigenschaft der Approximanten liest. Die Antwort steht an drei Signaturen und ist
+**nicht** die, die ich erwartet hatte:
+
+* **`mpSolution_of_tendsto_cadlag` (Z. 51041) liest überhaupt keine Martingaleigenschaft.**
+  Seine Voraussetzung `hzero` ist eine **Konvergenz von Integralen**:
+
+  ```
+  ∀ s t ∈ T, s ≤ t → ∀ Z ∈ evalFuns E (insert s (T ∩ Iic s)),
+    Tendsto (fun n ↦ ∫ ω, (mpTest f g t (X' n ω) - mpTest f g s (X' n ω)) * Z (X' n ω) ∂(P' n))
+      atTop (𝓝 0)
+  ```
+
+  Also genau eine **verschwindende Martingallücke**, und nichts sonst.
+* **`mpSolution_of_tendsto_cadlag_of_approx` (Z. 51259) und `_of_subseq` (Z. 51409) sind
+  Spezialisierungen davon an *exakte* Martingalität**, aber an einem **wandernden Testpaar**:
+  `hmart : ∀ n, Martingale (fun r ω ↦ mpTest (f' n) (g' n) r (X' n ω)) (𝓕' n) (P' n)` mit
+  `‖f - f' n‖ → 0` und `‖g - g' n‖ → 0`. Die Näherung sitzt bei ihnen in der **Testfunktion**,
+  nicht im Fehler.
+
+**Das entscheidet den Weg für Donsker, und zwar gegen die vorhandene Teilfolgenfassung.** Die
+reskalierte Irrfahrt ist zu keinem Paar `(f' n, g' n)` beschränkter stetiger Funktionen ein
+*exaktes* Martingal — ihre exakten Martingale sind sie selbst und ihr Quadrat, und beide sind
+unbeschränkt. Was sie hat, ist die verschwindende Lücke, und das ist die
+Lindeberg-Taylor-Entwicklung. `mpSolution_of_tendsto_cadlag` nimmt sie **unmittelbar**; was
+fehlt, ist allein die Teilfolgenfassung dazu.
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`MeasureTheory.mpSolution_of_tendsto_cadlag_of_subseq_of_zero`** — die Teilfolgenfassung des
+dritten Kettenpunktes an der **verschwindenden Martingallücke** statt an exakter Martingalität
+eines wandernden Testpaares.
+
+*Die Aussage:* wörtlich `mpSolution_of_tendsto_cadlag_of_subseq`, nur mit `hzero` (längs `ns`)
+an der Stelle von `hmart`, `hf`, `hg` — und mit derselben Konklusion, also der abzählbaren
+dichten Menge aus `SkorokhodSpace.exists_countable_dense_continuity` und der bedingten
+Erwartung über `cadlagFiltration`.
+
+*Worauf sie ruht:* auf `mpSolution_of_tendsto_cadlag` (Z. 51041) und auf genau den drei
+Zwischenschritten, die `_of_subseq` schon zusammensetzt und die von `hmart` nicht abhängen:
+`SkorokhodSpace.exists_countable_dense_continuity`, `tendstoInDistribution_id_of_tendsto` und
+`cadlagFiltration_eq`. Der Beweis ist der von `_of_subseq` mit **weggelassener** letzter Zeile;
+er sollte kürzer sein als sein Vorbild und nicht länger.
+
+*Warum jetzt:* weil die beiden ersten Kettenpunkte auf Donskers Daten stehen
+(`isTightMeasureSet_map_rescaledWalk`, `isCompact_closure_range_map_rescaledWalk`), der vierte
+reine Topologie ist und auf den dritten wartet, und weil der dritte in seiner **vorhandenen**
+Teilfolgenfassung auf diesen Daten eine unerfüllbare Voraussetzung trägt — dieselbe Lage, die
+der elfte Lauf dieses Tages bei `IsApproximableMul` vorgefunden hat, und dieselbe Antwort:
+nicht die Daten biegen, sondern die Aussage an dem stellen, was der Beweis wirklich liest.
+
+*Und was danach kommt, damit der übernächste Lauf es nicht neu erschließt:* die
+Lindeberg-Taylor-Rechnung als Zeuge für `hzero` auf den reskalierten Irrfahrten, mit
+`g = f'' / 2` für `f ∈ Cc^∞(ℝ)`. Das ist der einzige verbliebene Posten des Akzeptanztests, der
+noch eine **Rechnung** verlangt statt Einsetzen; alles andere ist Naht.

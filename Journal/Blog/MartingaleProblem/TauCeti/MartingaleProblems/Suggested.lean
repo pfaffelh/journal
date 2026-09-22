@@ -48644,6 +48644,61 @@ theorem isEventuallyApproximableMul_of_forall_isApproximableMul {γ : Type*}
   ⟨fun ε hε ↦ ⟨G, hG, fun i hi ↦
     ⟨(h i hi).memLp_cap, (h i hi).memLp_gap, (h i hi).exists_approximants ε hε⟩⟩⟩
 
+/-- **Eventual weighted approximability from approximants indexed along with the family**, the
+weighted twin of `MeasureTheory.isEventuallyApproximable_of_tendsto_zero_cofinite` and the shape
+a consumer arrives with: *every* member is square integrable at the two families of times and
+carries two pairs, the weighted error of the first and the plain error of the second going to
+zero along `Filter.cofinite`.
+
+**Only the two errors travel with the index.**  The weighted compensator bound `Kw` does not:
+it is a constant of the condition, as `K` is, and a member either respects it or does not.  That
+is why it stands outside the two `Filter.Tendsto` estimates and is passed through unchanged.
+
+The exchange is the one equivalence `Filter.eventually_cofinite`
+(`Mathlib/Order/Filter/Cofinite.lean:49`), which turns `∀ᶠ i in cofinite, e i ≤ ε` into the
+finiteness of `{i | ¬ e i ≤ ε}`; nothing is estimated, the two sides being two readings of one
+finiteness.  For `γ = ℕ` the filter is `Filter.atTop` by `Nat.cofinite_eq_atTop`. -/
+theorem isEventuallyApproximableMul_of_tendsto_zero_cofinite {γ : Type*}
+    {𝓕 : γ → Filtration ℝ≥0 mΩ} {P : Measure Ω} {q : ENNReal} {T K Kw : ℝ≥0}
+    {V : γ → ℝ≥0 → Ω → ℝ} {ε₀ : ℝ} {u : ℝ≥0}
+    {e : γ → ENNReal} (he : Tendsto e Filter.cofinite (𝓝 0))
+    (h : ∀ i,
+      (∀ k : ℕ, MemLp
+          (stoppedValue (V i) (fun ω ↦ min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+      ∧ (∀ (δ : ℝ≥0) (k : ℕ), MemLp (stoppedValue (V i) (fun ω ↦
+          min (oscHitSeq (V i) ε₀ (k + 1) ω)
+            (min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) 2 P)
+      ∧ ∃ Y C Y' C' : ℝ≥0 → Ω → ℝ, ∃ Z Z' : ℝ → Ω → ℝ,
+        IsApproximatingPair (𝓕 i) P q T K Y C Z ∧ IsApproximatingPair (𝓕 i) P q T K Y' C' Z'
+        ∧ ∫⁻ ω, (⨆ t ∈ Set.Iic T, ‖V i t ω‖ₑ)
+            * ⨆ t ∈ Set.Iic T, ‖Y t ω - V i t ω‖ₑ ∂P ≤ e i
+        ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T, ‖Y' t ω - V i t ω ^ 2‖ₑ ∂P ≤ e i
+        ∧ ∫⁻ ω, (⨆ t ∈ Set.Iic T, ‖V i t ω‖ₑ)
+            * eLpNorm (fun s ↦ Z s ω) q (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ))) ∂P ≤ Kw
+        ∧ (∀ k : ℕ, MemLp
+            (stoppedValue Y (fun ω ↦ min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+        ∧ (∀ k : ℕ, MemLp
+            (stoppedValue C (fun ω ↦ min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+        ∧ (∀ k : ℕ, Integrable
+            (stoppedValue Y' (fun ω ↦ min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0))) P)
+        ∧ (∀ (δ : ℝ≥0) (k : ℕ), MemLp (stoppedValue Y (fun ω ↦
+            min (oscHitSeq (V i) ε₀ (k + 1) ω)
+              (min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) 2 P)
+        ∧ (∀ (δ : ℝ≥0) (k : ℕ), MemLp (stoppedValue C (fun ω ↦
+            min (oscHitSeq (V i) ε₀ (k + 1) ω)
+              (min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) 2 P)
+        ∧ (∀ (δ : ℝ≥0) (k : ℕ), Integrable (stoppedValue Y' (fun ω ↦
+            min (oscHitSeq (V i) ε₀ (k + 1) ω)
+              (min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) P)) :
+    IsEventuallyApproximableMul 𝓕 P q T K Kw V ε₀ u := by
+  refine ⟨fun ε hε ↦ ?_⟩
+  refine ⟨{i | ¬ e i ≤ ε}, Filter.eventually_cofinite.1 ((ENNReal.tendsto_nhds_zero.1 he) ε hε),
+    fun i hi ↦ ?_⟩
+  have hle : e i ≤ ε := not_not.1 hi
+  obtain ⟨hcapV, hgapV, Y, C, Y', C', Z, Z', hp, hp', h1, h2, hKw, h3, h4, h5, h6, h7, h8⟩ := h i
+  exact ⟨hcapV, hgapV, Y, C, Y', C', Z, Z', hp, hp', h1.trans hle, h2.trans hle, hKw,
+    h3, h4, h5, h6, h7, h8⟩
+
 /-- **The modulus estimate uniformly over an eventually weighted approximable family**, which is
 the shape the tightness criterion reads: one exceptional set and one window serving every member
 outside it, and no bound on any member.
@@ -50210,6 +50265,47 @@ theorem isTightMeasureSet_map_of_subalgebra_forall_martingale {E : Type*}
     (fun _ hΓ _ hη f => exists_mem_subalgebra_forall_dist_le_of_isCompact A hsep hΓ hη f)
     hmart
 
+/-- **Prokhorov with the crossing of the two types done once**: a tight family of probability
+measures, given as measures, has compact closure as a family of `ProbabilityMeasure`.
+
+`MeasureTheory.isCompact_closure_of_isTightMeasureSet`
+(`MeasureTheory/Measure/Prokhorov.lean:530`) is the mathematics and asks only `T2` of the space.
+What this adds is the type-crossing, which is not mathematics and is the whole reason the
+statement is written down: tightness is stated for a set of `Measure`, Prokhorov concludes about
+a set of `ProbabilityMeasure`, and the two are different types with a coercion between them.
+`Set.ext` matches the coercion instead of constructing it.
+
+**The conclusion is at the `Set.range` and not at a comprehension**, because that is what
+`MeasureTheory.tendsto_of_isRelativelyCompact_of_unique` reads.  The type ascription on the
+range is not decoration: `ProbabilityMeasure` is a `def` on a subtype, and `⟨μ i, _⟩` folds back
+to that subtype while elaborating, whereupon `closure` finds no topology on it.
+
+**A junk value that happens to say the truth, and it is worth naming.**  Mathlib's instance
+`IsProbabilityMeasure (Measure.map f μ)`
+(`MeasureTheory/Measure/Typeclasses/Probability.lean:124`) carries **no** measurability
+hypothesis: where `f` is not a.e. measurable, `Measure.map` returns a Dirac measure, and a Dirac
+measure is a probability measure.  So a consumer at image measures gets the instance for free,
+and for a reason that has nothing to do with its map; what makes the image the law it means is
+supplied by the tightness hypothesis, not by this statement. -/
+theorem isCompact_closure_range_probabilityMeasure_of_isTightMeasureSet
+    {F : Type*} [MeasurableSpace F] [TopologicalSpace F] [BorelSpace F] [T2Space F]
+    {γ : Type*} {μ : γ → Measure F} [hp : ∀ i, IsProbabilityMeasure (μ i)]
+    (h : IsTightMeasureSet {μ i | i}) :
+    IsCompact (closure ((Set.range fun i ↦ (⟨μ i, hp i⟩ : ProbabilityMeasure F)) :
+      Set (ProbabilityMeasure F))) := by
+  refine isCompact_closure_of_isTightMeasureSet ?_
+  have hset : {((ν : ProbabilityMeasure F) : Measure F) |
+      ν ∈ ((Set.range fun i ↦ (⟨μ i, hp i⟩ : ProbabilityMeasure F)) :
+        Set (ProbabilityMeasure F))} = {μ i | i} := by
+    ext ρ
+    constructor
+    · rintro ⟨ν, ⟨i, rfl⟩, rfl⟩
+      exact ⟨i, rfl⟩
+    · rintro ⟨i, rfl⟩
+      exact ⟨⟨μ i, hp i⟩, ⟨i, rfl⟩, rfl⟩
+  rw [hset]
+  exact h
+
 /-- **The second item of the chain, `isRelativelyCompact_of_approx`, in the exact
 case**: the laws of the paths have compact closure in the weak topology of
 `ProbabilityMeasure D(ℝ≥0, E)`.
@@ -50301,18 +50397,9 @@ theorem isCompact_closure_range_of_subalgebra_forall_martingale {E : Type*}
       ∧ ∀ i, Martingale (fun t ω ↦ f (X i t ω) ^ 2
         - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g' (X i s.toNNReal ω)) 𝓕 P) :
     IsCompact (closure ((Set.range fun i ↦ (⟨P.map (Φ i), inferInstance⟩ :
-      ProbabilityMeasure D(ℝ≥0, E))) : Set (ProbabilityMeasure D(ℝ≥0, E)))) := by
-  have hset : ((Set.range fun i ↦ (⟨P.map (Φ i), inferInstance⟩ :
-        ProbabilityMeasure D(ℝ≥0, E))) : Set (ProbabilityMeasure D(ℝ≥0, E)))
-      = {ν : ProbabilityMeasure D(ℝ≥0, E) | ∃ i, (ν : Measure D(ℝ≥0, E)) = P.map (Φ i)} := by
-    ext ν
-    constructor
-    · rintro ⟨i, rfl⟩
-      exact ⟨i, rfl⟩
-    · rintro ⟨i, hi⟩
-      exact ⟨i, Subtype.ext hi.symm⟩
-  rw [hset]
-  exact isCompact_closure_of_subalgebra_forall_martingale hSc hSd hX hcont hΦ hcc A hsep hmart
+      ProbabilityMeasure D(ℝ≥0, E))) : Set (ProbabilityMeasure D(ℝ≥0, E)))) :=
+  isCompact_closure_range_probabilityMeasure_of_isTightMeasureSet
+    (isTightMeasureSet_map_of_subalgebra_forall_martingale hSc hSd hX hcont hΦ hcc A hsep hmart)
 
 /-! ### The same four steps in the approximate case, which is the case Donsker is in
 
@@ -50550,19 +50637,10 @@ theorem isCompact_closure_range_of_subalgebra_forall_exists_bounded_pair {E : Ty
           ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ S, ‖Y t ω - f (X i t ω)‖ₑ ∂P ≤ ε
           ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ S, ‖Y' t ω - f (X i t ω) ^ 2‖ₑ ∂P ≤ ε) :
     IsCompact (closure ((Set.range fun i ↦ (⟨P.map (Φ i), inferInstance⟩ :
-      ProbabilityMeasure D(ℝ≥0, E))) : Set (ProbabilityMeasure D(ℝ≥0, E)))) := by
-  have hset : ((Set.range fun i ↦ (⟨P.map (Φ i), inferInstance⟩ :
-        ProbabilityMeasure D(ℝ≥0, E))) : Set (ProbabilityMeasure D(ℝ≥0, E)))
-      = {ν : ProbabilityMeasure D(ℝ≥0, E) | ∃ i, (ν : Measure D(ℝ≥0, E)) = P.map (Φ i)} := by
-    ext ν
-    constructor
-    · rintro ⟨i, rfl⟩
-      exact ⟨i, rfl⟩
-    · rintro ⟨i, hi⟩
-      exact ⟨i, Subtype.ext hi.symm⟩
-  rw [hset]
-  exact isCompact_closure_of_subalgebra_forall_exists_bounded_pair hSc hSd hX hcont hΦ hcc
-    A hsep happ
+      ProbabilityMeasure D(ℝ≥0, E))) : Set (ProbabilityMeasure D(ℝ≥0, E)))) :=
+  isCompact_closure_range_probabilityMeasure_of_isTightMeasureSet
+    (isTightMeasureSet_map_of_subalgebra_forall_exists_bounded_pair hSc hSd hX hcont hΦ hcc
+      A hsep happ)
 
 /-! ### Milestone 10: the determining class the third item of the chain can use
 
@@ -52789,9 +52867,15 @@ theorem integrable_majorant_sq_rescaledWalk {P : Measure Ω} [IsProbabilityMeasu
     (hmem.const_mul (Real.sqrt ((n : ℝ) + 1))⁻¹).integrable_sq
   exact (hg2.add (integrable_const _)).add (integrable_const _)
 
-/-- **The family of rescaled random walks is eventually approximable**, which is the second and
-last of the two things Donsker's acceptance test owes the tightness chain, the first being
-`MeasureTheory.isCompactContained_rescaledWalk`.
+/-- **The family of rescaled random walks is eventually approximable**, which is the unweighted
+half of what Donsker's acceptance test owes the tightness chain.
+
+**It is not by itself enough for the tightness**, and that is measured rather than suspected:
+every consumer above `MeasureTheory.IsEventuallyApproximable` reads a uniformly bounded process
+through the norm `‖g‖` of a test function, and the walk at mesh `n` carries no bound uniform in
+`n`.  What the tightness is read at is the conjunction with the weighted condition,
+`MeasureTheory.isEventuallyApproximableMul_rescaledWalk`, whose proof is this one with three
+changes and which this statement is therefore the pattern of.
 
 **Each member is approximated over its own filtration, and that is why
 `MeasureTheory.IsEventuallyApproximable` indexes the filtration by the family.**  The walk of
@@ -52921,8 +53005,9 @@ from `0` to `σ / (n + 1)`, and that is what
 `MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isApproximableMul` was built for a process
 that is not uniformly bounded, and the rescaled walk is the case it was built for; what
 `MeasureTheory.not_forall_isApproximableMul_rescaledWalk` says is that removing the bound is not
-enough, the error having to leave the index as well.  The two weakenings are independent, and the
-one this file still owes the acceptance test is their **conjunction**.
+enough, the error having to leave the index as well.  The two weakenings are independent, and
+what the walks do satisfy is their **conjunction**,
+`MeasureTheory.isEventuallyApproximableMul_rescaledWalk` below.
 -/
 
 /-- The square of the rescaled walk is strongly measurable at every time. -/
@@ -53023,6 +53108,191 @@ theorem not_forall_isApproximableMul_rescaledWalk
   obtain ⟨q, T, K, Kw, huT, happ⟩ := h 1 one_pos 1 one_pos
   refine not_isApproximableMul_rescaledWalk hmeas hsq hσ 0 ?_ (happ 0)
   simpa using huT.le
+
+/-! ### The acceptance case of the conjunction, and the tightness it pays for
+
+What the two statements above forbid separately,
+`MeasureTheory.IsEventuallyApproximableMul` allows together, and this subsection produces the
+witness: the family of rescaled walks satisfies it, and its image laws are therefore tight.
+-/
+
+/-- **The family of rescaled random walks satisfies the conjunction of the two weakenings**,
+which is the last thing Donsker's acceptance test owes the tightness chain, the other being
+`MeasureTheory.isCompactContained_rescaledWalk`.
+
+**It is `MeasureTheory.isEventuallyApproximable_rescaledWalk` with `Kw = 0` and the same
+constant**, and it differs from it in exactly three places:
+
+* **the two weighted fields are free.**  The first pair *is* the walk
+  (`MeasureTheory.isApproximatingPair_rescaledWalk`), so `Y t ω - V t ω = 0` and the weight is
+  integrated against `0`; its compensator is `0`, so `eLpNorm (fun s ↦ Z s ω) q = 0` and `Kw = 0`
+  carries.  `simp` is the whole argument at both, as it already was at the unweighted error;
+* **integrability becomes `MemLp … 2` at four of the six places**, through
+  `MeasureTheory.IsApproximatingPair.memLp_stoppedValue_of_dominated` -- the same statement as
+  the integrable one with `MemLp.of_le` for `Integrable.mono'` -- against
+  `MeasureTheory.memLp_majorant_rescaledWalk`, which is the majorant of
+  `MeasureTheory.abs_rescaledWalk_le_of_le` in `L²` because the increments are.  The approximant
+  of the square keeps plain integrability, the structure asking no more of it;
+* **the compensator of the first pair is the zero process**, so its two `MemLp` fields are
+  `MemLp.zero`.  They are not reached by `simp`: `MemLp.zero` is stated at `(0 : α → ε)` and the
+  stopped value of a constant process is `fun ω ↦ 0`, which is that term only up to unfolding.
+
+**The two square integrabilities of the member itself are the same two statements as those of
+the first approximant**, the walk being its own approximant; they are supplied twice from one
+proof and not proved twice. -/
+theorem isEventuallyApproximableMul_rescaledWalk {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hLp : ∀ k, MemLp (ξ k) 2 P) (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0)
+    {σ : ℝ} (hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = σ)
+    {q : ENNReal} (hq : 1 < q) {T : ℝ≥0} {ε₀ : ℝ} {u : ℝ≥0} :
+    IsEventuallyApproximableMul
+      (fun n : ℕ ↦ floorFiltration (Filtration.natural
+          (fun m ω ↦ ∑ k ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω)
+          (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ (hmeas k).const_mul _))
+        ((n : ℝ≥0) + 1))
+      P q T (T ^ q.toReal⁻¹ * ‖σ‖₊) 0
+      (fun (n : ℕ) (t : ℝ≥0) (ω : Ω) ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+        * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ε₀ u := by
+  have hint : ∀ k, Integrable (ξ k) P := fun k ↦ (hLp k).integrable (by norm_num)
+  obtain ⟨D, hSc, hSd⟩ := TopologicalSpace.exists_countable_dense ℝ≥0
+  -- the error along the family, as in the unweighted case
+  have htend : Tendsto (fun n : ℕ ↦ ENNReal.ofReal (σ / ((n : ℝ) + 1)))
+      Filter.cofinite (𝓝 0) := by
+    rw [Nat.cofinite_eq_atTop]
+    have h0 : Tendsto (fun n : ℕ ↦ σ / ((n : ℝ) + 1)) atTop (𝓝 0) := by
+      simpa using tendsto_const_nhds.div_atTop
+        (tendsto_natCast_atTop_atTop.atTop_add tendsto_const_nhds)
+    simpa [Function.comp_def] using (ENNReal.continuous_ofReal.tendsto 0).comp h0
+  refine isEventuallyApproximableMul_of_tendsto_zero_cofinite htend fun n ↦ ?_
+  set 𝓖 : Filtration ℝ≥0 mΩ := floorFiltration (Filtration.natural
+      (fun m ω ↦ ∑ k ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω)
+      (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ (hmeas k).const_mul _))
+    ((n : ℝ≥0) + 1) with h𝓖
+  have : 𝓖.IsRightContinuous := by
+    rw [h𝓖]; exact isRightContinuous_floorFiltration _ (by positivity)
+  set V : ℝ≥0 → Ω → ℝ := fun t ω ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω with hV
+  have hVprog : IsStronglyProgressive 𝓖 V := isStronglyProgressive_rescaledWalk hmeas n
+  have hVcont : ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ V s ω) (Set.Ici t) t :=
+    fun ω t ↦ continuousWithinAt_rescaledWalk n ξ ω t
+  have hp1 : IsApproximatingPair 𝓖 P q T (T ^ q.toReal⁻¹ * ‖σ‖₊) V
+      (fun _ _ ↦ (0 : ℝ)) (fun _ _ ↦ (0 : ℝ)) :=
+    (isApproximatingPair_rescaledWalk hmeas hind hint hcent hq (T := T) n).mono_K zero_le
+  have hp2 := isApproximatingPair_sq_rescaledWalk hmeas hind hLp hcent hq (T := T) σ n
+  have hcap : ∀ k : ℕ, IsStoppingTime 𝓖
+      (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0)) :=
+    fun k ↦ isStoppingTime_oscHitSeqCap hSc hSd hVprog hVcont k u
+  have hgap : ∀ (δ : ℝ≥0) (k : ℕ), IsStoppingTime 𝓖
+      (fun ω ↦ min (oscHitSeq V ε₀ (k + 1) ω)
+        (min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0))) :=
+    fun δ k ↦ isStoppingTime_oscHitSeqGap hSc hSd hVprog hVcont k δ u
+  -- the walk in `L²` at the capped and at the gapped times, serving twice
+  have hVcapLp : ∀ k : ℕ, MemLp
+      (stoppedValue V (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) 2 P :=
+    fun k ↦ hp1.memLp_stoppedValue_of_dominated (hcap k) (fun ω ↦ min_le_right _ _)
+      (memLp_majorant_rescaledWalk hLp n u) (fun t ht ω ↦ abs_rescaledWalk_le_of_le n ht ω)
+  have hVgapLp : ∀ (δ : ℝ≥0) (k : ℕ), MemLp (stoppedValue V (fun ω ↦
+      min (oscHitSeq V ε₀ (k + 1) ω)
+        (min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) 2 P :=
+    fun δ k ↦ hp1.memLp_stoppedValue_of_dominated (hgap δ k)
+      (fun ω ↦ oscHitSeqGap_le_coe k δ u ω)
+      (memLp_majorant_rescaledWalk hLp n (u + δ))
+      (fun t ht ω ↦ abs_rescaledWalk_le_of_le n ht ω)
+  refine ⟨hVcapLp, hVgapLp, V, fun _ _ ↦ (0 : ℝ), _, _, fun _ _ ↦ (0 : ℝ), fun _ _ ↦ σ,
+    hp1, hp2, ?_, ?_, ?_, hVcapLp, fun k ↦ ?_, fun k ↦ ?_, hVgapLp, fun δ k ↦ ?_,
+    fun δ k ↦ ?_⟩
+  · simp [hV]
+  · exact lintegral_biSup_enorm_sub_sq_rescaledWalk_le hsq n T
+  · simp
+  · exact MemLp.zero
+  · exact hp2.integrable_stoppedValue_of_dominated (hcap k) (fun ω ↦ min_le_right _ _)
+      (integrable_majorant_sq_rescaledWalk (σ := σ) hLp n u)
+      (fun t ht ω ↦ abs_sq_rescaledWalk_le_of_le (P := P) n ht ω)
+  · exact MemLp.zero
+  · exact hp2.integrable_stoppedValue_of_dominated (hgap δ k)
+      (fun ω ↦ oscHitSeqGap_le_coe k δ u ω)
+      (integrable_majorant_sq_rescaledWalk (σ := σ) hLp n (u + δ))
+      (fun t ht ω ↦ abs_sq_rescaledWalk_le_of_le (P := P) n ht ω)
+
+/-- **The path laws of the rescaled random walks are tight**, which is the tightness half of
+Donsker's acceptance test and the first family of laws on the Skorokhod space this file proves
+tight that is not constant.
+
+It is `MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul` at the
+two inputs the acceptance test was built to produce -- the compact containment
+`MeasureTheory.isCompactContained_rescaledWalk` and the approximability
+`MeasureTheory.isEventuallyApproximableMul_rescaledWalk` -- and nothing is estimated here.
+
+**The horizon and the exponent are chosen and not carried.**  The consumer asks, at every
+oscillation scale `ε₀` and every window radius `u`, for *some* `q`, `T`, `K`, `Kw` with `u < T`;
+the walks satisfy the condition at every `T` and every `q > 1`, so `T = u + 1` and `q = 2` serve,
+with `K = T ^ q.toReal⁻¹ * ‖σ‖₊` read off the statement and `Kw = 0`.
+
+**The seam between the two descriptions of the path is
+`MeasureTheory.stepPath_rescaledWalk_eq`**, the compact containment reading the walk as a step
+path over its nodes and the approximability as the process
+`(n + 1)⁻¹ᐟ² ∑ j < ⌊t (n + 1)⌋, ξ j`.  `Φ` is data and `hΦ` is stated in the second form, the
+first being derived.
+
+**`hvar` is read only by the compact containment** and `hsq` only by the approximability; the
+two are not redundant, the first being a bound and the second an identity, and Donsker's own
+normalisation `σ = 1` satisfies both. -/
+theorem isTightMeasureSet_map_rescaledWalk {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hLp : ∀ k, MemLp (ξ k) 2 P) (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0)
+    {σ : ℝ} (hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = σ) (hvar : ∀ k, variance (ξ k) P ≤ 1)
+    {Φ : ℕ → Ω → D(ℝ≥0, ℝ)}
+    (hΦ : ∀ (n : ℕ) (ω : Ω), (Φ n ω).toFun = fun t : ℝ≥0 ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+    (hΦm : ∀ n, Measurable (Φ n)) :
+    IsTightMeasureSet {P.map (Φ n) | n : ℕ} := by
+  obtain ⟨D, hSc, hSd⟩ := TopologicalSpace.exists_countable_dense ℝ≥0
+  have : ∀ n : ℕ, (floorFiltration (Filtration.natural
+      (fun m ω ↦ ∑ k ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω)
+      (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ (hmeas k).const_mul _))
+      ((n : ℝ≥0) + 1)).IsRightContinuous :=
+    fun n ↦ isRightContinuous_floorFiltration _ (by positivity)
+  refine isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul
+    (𝓕 := fun n : ℕ ↦ floorFiltration (Filtration.natural
+        (fun m ω ↦ ∑ k ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω)
+        (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ (hmeas k).const_mul _))
+      ((n : ℝ≥0) + 1))
+    (V := fun (n : ℕ) (t : ℝ≥0) (ω : Ω) ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+    hSc hSd (fun n ↦ isStronglyProgressive_rescaledWalk hmeas n)
+    (fun n ω t ↦ continuousWithinAt_rescaledWalk n ξ ω t) hΦ ?_ ?_
+  · refine isCompactContained_rescaledWalk hmeas hind hLp hcent hvar ?_ hΦm
+    intro n ω
+    rw [hΦ n ω, stepPath_rescaledWalk_eq]
+  · intro ε₀ hε₀ u hu
+    refine ⟨2, u + 1, _, 0, lt_add_one u,
+      isEventuallyApproximableMul_rescaledWalk hmeas hind hLp hcent hsq
+        (by norm_num : (1 : ENNReal) < 2)⟩
+
+/-- **The path laws of the rescaled random walks are relatively compact**, which is the second
+item of the chain on Donsker's data.
+
+It is `MeasureTheory.isCompact_closure_range_probabilityMeasure_of_isTightMeasureSet` at
+`MeasureTheory.isTightMeasureSet_map_rescaledWalk`, and there is no estimate in it: the passage
+from tightness to compact closure is Prokhorov, and the crossing of the two types is the general
+statement.
+
+**The route is the approximate one and not the exact one.**  The tightness above is read off the
+approximability of the walks, not off a martingale hypothesis at `f ∘ X n`; the milestone allows
+either (`isCompact_closure_range_of_subalgebra_forall_exists_bounded_pair` is the other), and
+this is the one whose inputs the acceptance test has built. -/
+theorem isCompact_closure_range_map_rescaledWalk {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hLp : ∀ k, MemLp (ξ k) 2 P) (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0)
+    {σ : ℝ} (hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = σ) (hvar : ∀ k, variance (ξ k) P ≤ 1)
+    {Φ : ℕ → Ω → D(ℝ≥0, ℝ)}
+    (hΦ : ∀ (n : ℕ) (ω : Ω), (Φ n ω).toFun = fun t : ℝ≥0 ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+    (hΦm : ∀ n, Measurable (Φ n)) :
+    IsCompact (closure ((Set.range fun n : ℕ ↦ (⟨P.map (Φ n), inferInstance⟩ :
+      ProbabilityMeasure D(ℝ≥0, ℝ))) : Set (ProbabilityMeasure D(ℝ≥0, ℝ)))) :=
+  isCompact_closure_range_probabilityMeasure_of_isTightMeasureSet
+    (isTightMeasureSet_map_rescaledWalk hmeas hind hLp hcent hsq hvar hΦ hΦm)
 
 end WalkContainment
 

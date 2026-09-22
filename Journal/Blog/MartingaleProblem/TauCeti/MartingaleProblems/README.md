@@ -13611,6 +13611,29 @@ has to be chosen once for all `n`. What stands:
   hypotheses transport by substitution. The two norm convergences transport
   because the index escapes, and that is the single place at which
   `Tendsto ns atTop atTop` of the fourth item is paid out.
+* `mpSolution_of_tendsto_cadlag_of_subseq_of_zero` — the same seam at the
+  **vanishing martingale gap** instead of at exact martingality of a moving test
+  pair, and the form Donsker's acceptance test reads.
+
+  **Why the existing seam does not serve there, and it is read off three
+  signatures rather than suspected.** `mpSolution_of_tendsto_cadlag` asks no
+  martingale property at all: its hypothesis `hzero` is the convergence to `0`
+  of `∫ (mpTest f g t - mpTest f g s) · Z` along the family, that is, a gap that
+  vanishes. `mpSolution_of_tendsto_cadlag_of_approx` and
+  `mpSolution_of_tendsto_cadlag_of_subseq` are its specialisations at *exact*
+  martingality of a pair `(f' n, g' n)` converging to `(f, g)` in the supremum
+  norm — the approximation sitting in the **test function** and not in the
+  error. A rescaled random walk is an exact martingale to no pair of bounded
+  continuous functions, its own exact martingales being itself and its square,
+  both unbounded; what it has is the vanishing gap, which is the Lindeberg–
+  Taylor expansion.
+
+  The statement is `mpSolution_of_tendsto_cadlag_of_subseq` with `hzero` along
+  `ns` in place of `hmart`, `hf`, `hg`, and the same conclusion. It rests on
+  `mpSolution_of_tendsto_cadlag` and on the three inputs that seam already
+  assembles and that do not depend on `hmart`:
+  `SkorokhodSpace.exists_countable_dense_continuity`,
+  `tendstoInDistribution_id_of_tendsto` and `cadlagFiltration_eq`.
 * `mpSolution_of_tendsto_cadlag_of_subseq_pathOfProcess` — the same seam at the
   data the **second** item produces, and the form the Donsker assembly reads:
   one probability space, one right continuous filtration, a sequence of adapted
@@ -13633,14 +13656,18 @@ has to be chosen once for all `n`. What stands:
   carries it for the same reason, so it is not a new demand.
 
   **The bookkeeping of the set between the second item and the fourth is done
-  too**, as `isCompact_closure_range_of_subalgebra_forall_martingale`: the
-  second item concludes about `closure {ν | ∃ i, ν = P.map (Φ i)}` and the
-  fourth reads `closure (Set.range μ)`, and the two sets are equal by `Set.ext`
-  followed by `Subtype.ext`. No hypothesis is added or dropped. The type
-  ascription on the range is not decoration — `ProbabilityMeasure` is a `def`
-  on a subtype, and the anonymous constructor folds back to it, whereupon
-  `closure` finds no topology; it is the same trap as the `β :=` at
-  `tendstoInDistribution_id_of_tendsto`.
+  too**, and it is one statement rather than one per route:
+  `isCompact_closure_range_probabilityMeasure_of_isTightMeasureSet` carries a
+  tight family of measures to compact closure of the corresponding `Set.range`
+  in `ProbabilityMeasure`, which is what the fourth item reads.
+  `isCompact_closure_range_of_subalgebra_forall_martingale`,
+  `isCompact_closure_range_of_subalgebra_forall_exists_bounded_pair` and
+  `isCompact_closure_range_map_rescaledWalk` are its three instances. No
+  hypothesis is added or dropped, and the general statement asks `BorelSpace`
+  and `T2` of the space alone. The type ascription on the range is not
+  decoration — `ProbabilityMeasure` is a `def` on a subtype, and the anonymous
+  constructor folds back to it, whereupon `closure` finds no topology; it is
+  the same trap as the `β :=` at `tendstoInDistribution_id_of_tendsto`.
 
   With it **the four items join, and between them nothing is left to write**:
   the second delivers the compact closure in the shape the fourth consumes, the
@@ -14371,23 +14398,55 @@ has to be chosen once for all `n`. What stands:
   minimum. The compact containment of a singleton subfamily is read off the
   family's at the same compact set.
 
-  **What this leaves is the acceptance case alone:**
+  **The acceptance case is paid, and with it the whole tightness side of
+  Donsker** (2026-09-22, thirteenth run):
 
-  * `MeasureTheory.isEventuallyApproximableMul_rescaledWalk`. Its inputs all
-    exist: the two pairs, the error
-    `lintegral_biSup_enorm_sub_sq_rescaledWalk_le` of the square, the weighted
-    error `0` of the first pair — the walk being its own approximant, so the
-    weight is integrated against `0` — and `Kw = 0` for the vanishing
-    compensator. The `L²` form of the stopped values, which is where the weighted
-    condition asks more than the plain one, is built:
-    `IsApproximatingPair.memLp_stoppedValue_of_dominated` and
-    `memLp_majorant_rescaledWalk`, the first being
-    `integrable_stoppedValue_of_dominated` with `MemLp.of_le` for
-    `Integrable.mono'` and `le_abs_self` bridging the two sides, the second
-    `integrable_majorant_rescaledWalk` with `memLp_finsetSum` and `MemLp.abs`.
-    `C` is the zero process and costs nothing; `Y` is the walk itself. What
-    remains to write is the weighted twin of
-    `isEventuallyApproximable_of_tendsto_zero_cofinite` and the assembly.
+  ```
+  MeasureTheory.isEventuallyApproximableMul_of_tendsto_zero_cofinite
+  MeasureTheory.isEventuallyApproximableMul_rescaledWalk
+  MeasureTheory.isTightMeasureSet_map_rescaledWalk
+  ```
+
+  `isEventuallyApproximableMul_rescaledWalk` is
+  `isEventuallyApproximable_rescaledWalk` with `Kw = 0` and the same constant
+  `T ^ q.toReal⁻¹ * ‖σ‖₊`, and it differs from it at exactly three places: the
+  two weighted fields are free — the walk is its own approximant, so the weight
+  is integrated against `0`, and the compensator of that pair is `0`, so
+  `eLpNorm (fun s ↦ Z s ω) q = 0` and `Kw = 0` carries; integrability becomes
+  `MemLp … 2` at four of the six places, through
+  `IsApproximatingPair.memLp_stoppedValue_of_dominated` against
+  `memLp_majorant_rescaledWalk`; and the two `MemLp` fields of the zero
+  compensator are `MemLp.zero`, which `simp` does **not** reach, that lemma
+  being stated at `(0 : α → ε)` while the stopped value of a constant process is
+  `fun ω ↦ 0`. The two square integrabilities of the member itself are the same
+  two statements as those of the first approximant and are supplied twice from
+  one proof.
+
+  `isTightMeasureSet_map_rescaledWalk` is then
+  `isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul` at
+  `isCompactContained_rescaledWalk` and the above, with `T = u + 1`, `q = 2`,
+  `Kw = 0`, and `stepPath_rescaledWalk_eq` as the seam between the step-path
+  description the containment reads and the process description the
+  approximability reads. `hvar` is read only by the first and `hsq` only by the
+  second.
+
+  **Prokhorov, with the crossing of the two types done once**, and the second
+  item of the chain on Donsker's data:
+
+  ```
+  MeasureTheory.isCompact_closure_range_probabilityMeasure_of_isTightMeasureSet
+  MeasureTheory.isCompact_closure_range_map_rescaledWalk
+  ```
+
+  The first is `isCompact_closure_of_isTightMeasureSet` with the passage from a
+  set of `Measure` to a set of `ProbabilityMeasure` and on to a `Set.range`,
+  which is the shape `tendsto_of_isRelativelyCompact_of_unique` reads. It asks
+  `BorelSpace` and `T2` of the space and nothing else — no Polishness, no
+  completeness; those are read upstream, in the tightness. That crossing had been
+  written out inline twice, in
+  `isCompact_closure_range_of_subalgebra_forall_martingale` and in
+  `isCompact_closure_range_of_subalgebra_forall_exists_bounded_pair`; both are
+  now four lines through it, with no hypothesis added or dropped.
 
   **The alternative, and why it is the more expensive one.** The acceptance
   example below states Donsker with `A = {(f, f''/2) | f ∈ Cc^∞(ℝ)}`, that is,
