@@ -1,10 +1,10 @@
 # Zitierte Zeilennummern gegen `94ef6b89544e58e90f119da869f3fb48d1da0f4c`
 
-* geprüft: 448 gepaarte Fundstellen
-* **stimmt: 448**
+* geprüft: 456 gepaarte Fundstellen
+* **stimmt: 456**
 * **verschoben: 0**
 * zielt auf eine andere Deklaration (von Hand): 45
-* ungepaart (von Hand): 88
+* ungepaart (von Hand): 89
 * **tote Fundstelle: 0**
 
 ## Tote Fundstellen (0)
@@ -26,9 +26,9 @@ Die zitierte Zeile ist die erste Zeile einer anderen Deklaration, ihr Kopf, oder
 * `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:9317`: `Probability/Martingale/Convergence.lean:243` ist `section L1Convergence`; gepaart wurde `MeasureTheory.tendsto_ae_condExp` (`428`)
 * `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:11805`: `MeasureTheory/Integral/Lebesgue/Markov.lean:52` ist `theorem mul_meas_ge_le_lintegral₀ {f : α → ℝ≥0∞} (hf : AEMea`; gepaart wurde `MeasureTheory.mul_meas_ge_le_lintegral` (`59`)
 * `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:13034`: `MeasureTheory/Measure/Map.lean:157` ist `lemma map_apply₀ {f : α → β} (hf : AEMeasurable f μ) {s : Se`; gepaart wurde `MeasureTheory.Measure.map_apply` (`170`)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:14488`: `Mathlib/MeasureTheory/Integral/IntervalIntegral/Basic.lean:1116` ist intervalIntegral.sum_integral_adjacent_intervals; gepaart wurde `intervalIntegral.sum_integral_adjacent_intervals` (`1117`)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:14803`: `Mathlib/Analysis/LConvolution.lean:130` ist MeasureTheory.mlconvolution_assoc; gepaart wurde `MeasureTheory.mlconvolution` (`50`)
-* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:14805`: `Mathlib/Analysis/LConvolution.lean:143` ist MeasureTheory.mlconvolution_comm; gepaart wurde `MeasureTheory.mlconvolution` (`50`)
+* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:14504`: `Mathlib/MeasureTheory/Integral/IntervalIntegral/Basic.lean:1253` ist intervalIntegral.integral_congr_Ioo_of_le; gepaart wurde `intervalIntegral.integral_congr_Ioo_of_le` (`1254`)
+* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:14899`: `Mathlib/Analysis/LConvolution.lean:130` ist MeasureTheory.mlconvolution_assoc; gepaart wurde `MeasureTheory.mlconvolution` (`50`)
+* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:14901`: `Mathlib/Analysis/LConvolution.lean:143` ist MeasureTheory.mlconvolution_comm; gepaart wurde `MeasureTheory.mlconvolution` (`50`)
 * `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:2268`: `Probability/Martingale/OptionalStopping.lean:155` ist `ENNReal.ofReal`; gepaart wurde `MeasureTheory.maximal_ineq` (`144`)
 * `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:4091`: `MeasureTheory/Function/ConditionalExpectation/Basic.lean:359` ist MeasureTheory._root_.ContinuousLinearMap.comp_condExp_comm; gepaart wurde `MeasureTheory._root_.ContinuousLinearMap.comp_condExp_comm` (`360`)
 * `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:5388`: `Probability/Martingale/Convergence.lean:243` ist `section L1Convergence`; gepaart wurde `MeasureTheory.tendsto_ae_condExp` (`428`)
@@ -64,13 +64,13 @@ Die zitierte Zeile ist die erste Zeile einer anderen Deklaration, ihr Kopf, oder
 
 keine
 
-## Ungepaart (88)
+## Ungepaart (89)
 
 Ungepaart heißt: kein Bezeichner des Umfelds ist in der zitierten Datei deklariert — meist, weil der Text den Gegenstand **beschreibt**, statt ihn zu benennen. Das sagt nichts darüber, ob die Fundstelle stimmt. Gefragt wird deshalb umgekehrt: **was steht an der zitierten Zeile?**
 
 * Deklarationskopf: **42**
 * anonyme Instanz: **15**
-* Kopf von: **13**
+* Kopf von: **14**
 * Signaturfortsetzung von: **7**
 * Kommentar/Attribut: **5**
 * Deklaration/Abschnitt: **3**
@@ -118,7 +118,8 @@ keine
 | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:13758` | `Mathlib/Probability/Process/Filtration.lean:395` | Deklarationskopf `MeasureTheory.Filtration.natural` |
 | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:14134` | `MeasureTheory/Function/LpSeminorm/CompareExp.lean:537` | Deklarationskopf `MeasureTheory.MemLp.mul` |
 | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:14135` | `Mathlib/Basic/ENNReal/Holder.lean:133` | Deklarationskopf `ENNReal.HolderConjugate.instTwoTwo` |
-| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:14801` | `Mathlib/Analysis/LConvolution.lean:50` | Deklarationskopf `MeasureTheory.mlconvolution` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:14495` | `Mathlib/MeasureTheory/Integral/IntervalIntegral/Basic.lean:1116` | Kopf von `intervalIntegral.sum_integral_adjacent_intervals` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/README.md:14897` | `Mathlib/Analysis/LConvolution.lean:50` | Deklarationskopf `MeasureTheory.mlconvolution` |
 | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:770` | `LocalProperty.lean:77` | Deklaration/Abschnitt `variable [LinearOrder ι] {𝓕 : Filtration ι mΩ} {X : ι → Ω → E} {p q : ` |
 | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:771` | `LocalProperty.lean:88` | Deklaration/Abschnitt `variable [OrderBot ι]` |
 | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:1919` | `Probability/Martingale/Convergence.lean:112` | Deklarationskopf `MeasureTheory.not_frequently_of_upcrossings_lt_top` |

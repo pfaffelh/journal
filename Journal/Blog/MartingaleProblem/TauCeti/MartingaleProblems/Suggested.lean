@@ -53412,6 +53412,295 @@ theorem isCompact_closure_range_map_rescaledWalk {P : Measure Ω} [IsProbability
   isCompact_closure_range_probabilityMeasure_of_isTightMeasureSet
     (isTightMeasureSet_map_rescaledWalk hmeas hind hLp hcent hsq hvar hΦ hΦm)
 
+/-! ### The compensator of the third item of the chain, resolved
+
+`SkorokhodSpace.mpTest` is evaluation **minus** a compensator, `∫ u in (0, t], g (z u)`, and the
+third item of the chain measures the gap `𝔼[(mpTest t - mpTest s) * Z]`.  On a step path that
+compensator is an integral of a step function, and until it is written out there is nothing for
+the expansion of the evaluation part to be held against.  The two statements here write it out:
+the first for an arbitrary step function over an arithmetic grid, the second at the rescaled walk.
+
+Both are equalities at one sample point.  No limit is taken, no independence is read, and the
+second is the only item of the computation the acceptance test still owes that is free of
+probability. -/
+
+/-- **The integral of a step function over an arithmetic grid, exactly and in closed form.**
+
+`fun u ↦ v ⌊u * c⌋₊` is the shape every path over an arithmetic grid has: `stepPath_natCast_div`
+says a step path with nodes `k / c` *is* this function, and `stepPath_rescaledWalk_eq` is the
+instance `c = n + 1`.  Its integral over `(0, t]` is a **sum and not an approximation** -- the
+path takes its node value on the whole of each cell -- with `⌊t * c⌋₊` full cells of length `c⁻¹`
+and one broken cell at the right end, whose length `t - ⌊t * c⌋₊ / c` is what is left over.
+
+**Nothing is asked of `v`**: no bound, no measurability.  The integrand is constant on the
+interior of every cell, so interval integrability there is `intervalIntegrable_const` carried
+across by `IntervalIntegrable.congr_uIoo`, and a hypothesis on `v` would be read nowhere.  That
+is what the consumer needs: the node values of a walk are unbounded in the sample point, and it
+is only the test function applied to them that is bounded.
+
+**The partition is `a k = min (k / c) t` and not `k / c`**, so that the last cell is already cut
+at `t` and `intervalIntegral.sum_integral_adjacent_intervals` telescopes to `∫ in 0..t` with no
+case split afterwards.  That `a k = k / c` up to `⌊t * c⌋₊` and `a (⌊t * c⌋₊ + 1) = t` are
+`Nat.floor_le` and `Nat.lt_floor_add_one`, and they are the whole of the arithmetic.
+
+**The right endpoint of a cell is not in it**, `⌊u * c⌋₊` jumping there; the passage is therefore
+`intervalIntegral.integral_congr_Ioo_of_le` over the **open** cell and not a rewrite. -/
+theorem integral_Ioc_comp_floor_mul {c : ℝ} (hc : 0 < c) (v : ℕ → ℝ) {t : ℝ} (ht : 0 ≤ t) :
+    ∫ u in Set.Ioc (0 : ℝ) t, v ⌊u * c⌋₊
+      = ∑ j ∈ Finset.range ⌊t * c⌋₊, c⁻¹ * v j
+        + (t - (⌊t * c⌋₊ : ℝ) / c) * v ⌊t * c⌋₊ := by
+  set N := ⌊t * c⌋₊ with hNdef
+  set a : ℕ → ℝ := fun k ↦ min ((k : ℝ) / c) t with hadef
+  have hle : ∀ k ≤ N, (k : ℝ) / c ≤ t := by
+    intro k hk
+    rw [div_le_iff₀ hc]
+    calc (k : ℝ) ≤ (N : ℝ) := by exact_mod_cast hk
+      _ ≤ t * c := Nat.floor_le (by positivity)
+  have hak : ∀ k ≤ N, a k = (k : ℝ) / c := fun k hk ↦ min_eq_left (hle k hk)
+  have ha0 : a 0 = 0 := by simp [hadef, ht]
+  have haN1 : a (N + 1) = t := by
+    refine min_eq_right ?_
+    rw [le_div_iff₀ hc]
+    exact_mod_cast (Nat.lt_floor_add_one (t * c)).le
+  have hmono : ∀ k, a k ≤ a (k + 1) := by
+    intro k
+    refine min_le_min ?_ le_rfl
+    gcongr
+    exact_mod_cast Nat.le_succ k
+  have hanonneg : ∀ k, 0 ≤ a k := by
+    intro k
+    exact le_min (by positivity) ht
+  have hub : ∀ k, a (k + 1) ≤ ((k : ℝ) + 1) / c := by
+    intro k
+    refine le_trans (min_le_left _ _) ?_
+    push_cast
+    exact le_rfl
+  have hfloor : ∀ k ≤ N, ∀ u ∈ Set.Ioo (a k) (a (k + 1)), ⌊u * c⌋₊ = k := by
+    intro k hk u hu
+    have hu0 : 0 ≤ u := le_of_lt (lt_of_le_of_lt (hanonneg k) hu.1)
+    have h1 : (k : ℝ) ≤ u * c := by
+      have := hu.1
+      rw [hak k hk, div_lt_iff₀ hc] at this
+      linarith
+    have h2 : u * c < (k : ℝ) + 1 := by
+      have hlt : u < ((k : ℝ) + 1) / c := lt_of_lt_of_le hu.2 (hub k)
+      rwa [lt_div_iff₀ hc] at hlt
+    exact (Nat.floor_eq_iff (by positivity)).2 ⟨h1, h2⟩
+  have hint : ∀ k < N + 1,
+      IntervalIntegrable (fun u ↦ v ⌊u * c⌋₊) volume (a k) (a (k + 1)) := by
+    intro k hk
+    refine (intervalIntegrable_const (c := v k)).congr_uIoo ?_
+    rw [Set.uIoo_of_le (hmono k)]
+    intro u hu
+    exact (congrArg v (hfloor k (Nat.lt_succ_iff.mp hk) u hu)).symm
+  have hterm : ∀ k < N + 1,
+      ∫ u in a k..a (k + 1), v ⌊u * c⌋₊ = (a (k + 1) - a k) * v k := by
+    intro k hk
+    rw [intervalIntegral.integral_congr_Ioo_of_le (g := fun _ ↦ v k) (hmono k)
+      (fun u hu ↦ congrArg v (hfloor k (Nat.lt_succ_iff.mp hk) u hu)),
+      intervalIntegral.integral_const, smul_eq_mul]
+  have hsum := intervalIntegral.sum_integral_adjacent_intervals (μ := volume)
+    (f := fun u ↦ v ⌊u * c⌋₊) (a := a) (n := N + 1) hint
+  rw [ha0, haN1, intervalIntegral.integral_of_le ht, Finset.sum_range_succ] at hsum
+  rw [← hsum, hterm N (Nat.lt_succ_self N), hak N le_rfl, haN1]
+  congr 1
+  refine Finset.sum_congr rfl fun k hk ↦ ?_
+  have hkN : k < N := Finset.mem_range.mp hk
+  rw [hterm k (Nat.lt_succ_of_lt hkN), hak k hkN.le, hak (k + 1) hkN]
+  congr 1
+  push_cast
+  field_simp
+  ring
+
+/-- **The compensator of `SkorokhodSpace.mpTest` at the rescaled random walk, exactly and in
+closed form**, which is the first stone of the Lindeberg computation the acceptance test still
+owes.
+
+The path of index `n` has mesh `(n + 1)⁻¹`, so the compensator up to `t` is the mean of the test
+function over the `⌊t (n + 1)⌋` nodes below `t`, weighted by the mesh, plus the piece of the
+broken cell at the right end.  **It is an equality**: there is no limit in it and no
+approximation, because the path takes its node value on the whole of each cell.
+
+It is `integral_Ioc_comp_floor_mul` at `c = n + 1`, and the one crossing is
+`Nonneg.nat_floor_coe` (`Mathlib/Algebra/Order/Nonneg/Floor.lean:41`): the compensator runs over
+a **real** time variable and the walk over an `ℝ≥0` one, and on `(0, t]` the floor of the first
+is the floor of the second, `Real.toNNReal` being the identity there.
+
+**The test function need not be bounded and need not be continuous.**  `SkorokhodSpace.mpTest`
+supplies a `g : ℝ →ᵇ ℝ`, and the coercion of one meets this statement; but neither field of that
+bundle is read here, which is why `g` is a bare function.  What *is* used of the walk is only the
+shape of its paths -- no measurability of the increments, no independence, no integrability.  The
+statement is about one sample point. -/
+theorem integral_comp_rescaledWalk_eq_sum (g : ℝ → ℝ) (n : ℕ) (ξ : ℕ → Ω → ℝ) (ω : Ω)
+    (t : ℝ≥0) :
+    ∫ u in Set.Ioc (0 : ℝ) (t : ℝ),
+        g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+          * ∑ j ∈ Finset.range ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+      = ∑ k ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊,
+          ((n : ℝ) + 1)⁻¹ * g ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)
+        + ((t : ℝ) - (⌊t * ((n : ℝ≥0) + 1)⌋₊ : ℝ) / ((n : ℝ) + 1))
+          * g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+              * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) := by
+  have hc : (0 : ℝ) < (n : ℝ) + 1 := by positivity
+  have hcoe : ∀ u : ℝ, 0 < u →
+      ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊ = ⌊u * ((n : ℝ) + 1)⌋₊ := by
+    intro u hu
+    have h : ((u.toNNReal * ((n : ℝ≥0) + 1) : ℝ≥0) : ℝ) = u * ((n : ℝ) + 1) := by
+      push_cast
+      rw [Real.coe_toNNReal u hu.le]
+    rw [← h]
+    norm_cast
+  have hcoet : ⌊t * ((n : ℝ≥0) + 1)⌋₊ = ⌊(t : ℝ) * ((n : ℝ) + 1)⌋₊ := by
+    have h : ((t * ((n : ℝ≥0) + 1) : ℝ≥0) : ℝ) = (t : ℝ) * ((n : ℝ) + 1) := by
+      push_cast
+      ring
+    rw [← h]
+    norm_cast
+  have hcongr : ∫ u in Set.Ioc (0 : ℝ) (t : ℝ),
+        g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+          * ∑ j ∈ Finset.range ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+      = ∫ u in Set.Ioc (0 : ℝ) (t : ℝ),
+        g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+          * ∑ j ∈ Finset.range ⌊u * ((n : ℝ) + 1)⌋₊, ξ j ω) := by
+    refine setIntegral_congr_fun measurableSet_Ioc fun u hu ↦ ?_
+    rw [hcoe u hu.1]
+  rw [hcongr, hcoet]
+  exact integral_Ioc_comp_floor_mul hc
+    (fun k ↦ g ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω))
+    (NNReal.coe_nonneg t)
+
+/-- **The compensator over a window, as the difference of two initial pieces.**
+
+This and not the previous statement is the shape the gap reads: `mpTest t - mpTest s` subtracts
+two compensators, each of them taken from `0`, and never integrates over `(s, t]`.  The cells
+strictly between the two floors survive with their full weight `c⁻¹`, and what is left of the
+two broken cells stands at the ends with the sign the difference gives it.
+
+**No integrability crosses here.**  The statement is an identity between the two closed forms of
+`integral_Ioc_comp_floor_mul`, so the passage is `Finset.sum_Ico_eq_sub` -- the additive twin of
+`Finset.prod_Ico_eq_div` (`Mathlib/Algebra/BigOperators/Intervals.lean:94`), generated by
+`@[to_additive]` and therefore carrying no `theorem` line of its own -- and `ring`.  Had the
+window been written as `∫ u in Set.Ioc s t` instead, the integrability of the integrand would
+have had to be produced to split it, and it is exactly what the previous statement was arranged
+not to need. -/
+theorem integral_Ioc_sub_Ioc_comp_floor_mul {c : ℝ} (hc : 0 < c) (v : ℕ → ℝ) {s t : ℝ}
+    (hs : 0 ≤ s) (hst : s ≤ t) :
+    (∫ u in Set.Ioc (0 : ℝ) t, v ⌊u * c⌋₊) - ∫ u in Set.Ioc (0 : ℝ) s, v ⌊u * c⌋₊
+      = ∑ j ∈ Finset.Ico ⌊s * c⌋₊ ⌊t * c⌋₊, c⁻¹ * v j
+        + (t - (⌊t * c⌋₊ : ℝ) / c) * v ⌊t * c⌋₊
+        - (s - (⌊s * c⌋₊ : ℝ) / c) * v ⌊s * c⌋₊ := by
+  have hmono : ⌊s * c⌋₊ ≤ ⌊t * c⌋₊ := Nat.floor_le_floor (by nlinarith)
+  rw [integral_Ioc_comp_floor_mul hc v (hs.trans hst), integral_Ioc_comp_floor_mul hc v hs,
+    Finset.sum_Ico_eq_sub _ hmono]
+  ring
+
+/-- **The compensator of `SkorokhodSpace.mpTest` over a window, at the rescaled random walk**,
+which is the form in which the gap of the third item of the chain carries it.
+
+The nodes of the walk lying in `(s, t]` contribute `(n + 1)⁻¹ g (S n j ω)` each, and the two
+broken cells at the ends contribute what is left of them.  Between the two time arguments the
+only thing that moves is the range of the sum: `Finset.Ico ⌊s (n+1)⌋ ⌊t (n+1)⌋`, whose cardinality
+is what the Lindeberg estimate is finally summed over.
+
+It is `integral_Ioc_sub_Ioc_comp_floor_mul` at `c = n + 1`, and it inherits from
+`integral_comp_rescaledWalk_eq_sum` both of that statement's economies: `g` is a bare function,
+and of the walk only the shape of its paths is read.  The hypothesis `s ≤ t` is the only one
+added, and it is read only to order the two floors. -/
+theorem integral_comp_rescaledWalk_sub_eq_sum (g : ℝ → ℝ) (n : ℕ) (ξ : ℕ → Ω → ℝ) (ω : Ω)
+    {s t : ℝ≥0} (hst : s ≤ t) :
+    (∫ u in Set.Ioc (0 : ℝ) (t : ℝ),
+        g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+          * ∑ j ∈ Finset.range ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊, ξ j ω))
+      - ∫ u in Set.Ioc (0 : ℝ) (s : ℝ),
+        g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+          * ∑ j ∈ Finset.range ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+      = ∑ k ∈ Finset.Ico ⌊s * ((n : ℝ≥0) + 1)⌋₊ ⌊t * ((n : ℝ≥0) + 1)⌋₊,
+          ((n : ℝ) + 1)⁻¹ * g ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)
+        + ((t : ℝ) - (⌊t * ((n : ℝ≥0) + 1)⌋₊ : ℝ) / ((n : ℝ) + 1))
+          * g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+              * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+        - ((s : ℝ) - (⌊s * ((n : ℝ≥0) + 1)⌋₊ : ℝ) / ((n : ℝ) + 1))
+          * g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+              * ∑ j ∈ Finset.range ⌊s * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) := by
+  have hmono : ⌊s * ((n : ℝ≥0) + 1)⌋₊ ≤ ⌊t * ((n : ℝ≥0) + 1)⌋₊ :=
+    Nat.floor_le_floor (by gcongr)
+  rw [integral_comp_rescaledWalk_eq_sum g n ξ ω t, integral_comp_rescaledWalk_eq_sum g n ξ ω s,
+    Finset.sum_Ico_eq_sub _ hmono]
+  ring
+
+/-- **The evaluation part of the gap over a window, at the rescaled random walk**, over the same
+index set the compensator part runs on.
+
+`SkorokhodSpace.mpTest` is evaluation minus compensator, and the two halves of the gap have to be
+brought over **one** index set before the cell by cell expansion can be written down at all: the
+compensator part is a sum over `Finset.Ico ⌊s (n+1)⌋ ⌊t (n+1)⌋`, and as long as the evaluation
+part is a bare difference there is nothing to hold against it.
+
+It is a telescoping sum and nothing else, `Finset.sum_Ico_sub` -- the additive twin of
+`Finset.prod_Ico_div` (`Mathlib/Algebra/BigOperators/Intervals.lean:226`), generated by
+`@[to_additive]` and carrying no `theorem` line of its own.  **There is no integral in it and no
+null set**, which is why the right endpoint costs nothing here and did cost something at the
+compensator: the evaluation reads the floor **at** `t`, where the cell identity holds. -/
+theorem sub_comp_rescaledWalk_eq_sum (f : ℝ → ℝ) (n : ℕ) (ξ : ℕ → Ω → ℝ) (ω : Ω)
+    {s t : ℝ≥0} (hst : s ≤ t) :
+    f ((Real.sqrt ((n : ℝ) + 1))⁻¹
+        * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+      - f ((Real.sqrt ((n : ℝ) + 1))⁻¹
+        * ∑ j ∈ Finset.range ⌊s * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+      = ∑ k ∈ Finset.Ico ⌊s * ((n : ℝ≥0) + 1)⌋₊ ⌊t * ((n : ℝ≥0) + 1)⌋₊,
+          (f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range (k + 1), ξ j ω)
+            - f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)) :=
+  (Finset.sum_Ico_sub
+    (f := fun k ↦ f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω))
+    (Nat.floor_le_floor (by gcongr))).symm
+
+/-- **The whole gap of the third item of the chain at the rescaled random walk, cell by cell**,
+which is what the Lindeberg expansion is carried out on.
+
+The hypothesis of `mpSolution_of_tendsto_cadlag_of_subseq_of_zero_pathOfProcess` is that
+`∫ (mpTest f g t - mpTest f g s) · Z` tends to `0`; the factor in front of `Z` is the left hand
+side here, and the right hand side is it written over the grid:
+
+* one summand per **cell** in `Finset.Ico ⌊s (n+1)⌋ ⌊t (n+1)⌋`, namely the increment of `f`
+  across the cell **minus** the compensator's weight `(n+1)⁻¹ g` at its left node -- and that is
+  exactly the shape a second order Taylor expansion of `f` is held against, the increment being
+  `(n+1)⁻¹ᐟ² ξ k`;
+* two boundary terms, one for each broken cell, each of size at most `(n+1)⁻¹ ‖g‖` and therefore
+  the part of the gap that vanishes without any expansion at all.
+
+**Still no probability.**  It is an identity at one sample point, assembled from
+`sub_comp_rescaledWalk_eq_sum` and `integral_comp_rescaledWalk_sub_eq_sum` by
+`Finset.sum_sub_distrib` and `ring`.  Everything the acceptance test still owes -- the centring,
+the second moment, the independence -- enters only when the expectation is taken of this. -/
+theorem mpTest_sub_rescaledWalk_eq_sum (f g : ℝ → ℝ) (n : ℕ) (ξ : ℕ → Ω → ℝ) (ω : Ω)
+    {s t : ℝ≥0} (hst : s ≤ t) :
+    (f ((Real.sqrt ((n : ℝ) + 1))⁻¹
+          * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+        - ∫ u in Set.Ioc (0 : ℝ) (t : ℝ),
+            g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+              * ∑ j ∈ Finset.range ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊, ξ j ω))
+      - (f ((Real.sqrt ((n : ℝ) + 1))⁻¹
+            * ∑ j ∈ Finset.range ⌊s * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+          - ∫ u in Set.Ioc (0 : ℝ) (s : ℝ),
+              g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+                * ∑ j ∈ Finset.range ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊, ξ j ω))
+      = (∑ k ∈ Finset.Ico ⌊s * ((n : ℝ≥0) + 1)⌋₊ ⌊t * ((n : ℝ≥0) + 1)⌋₊,
+            (f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range (k + 1), ξ j ω)
+              - f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)
+              - ((n : ℝ) + 1)⁻¹
+                * g ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)))
+        - ((t : ℝ) - (⌊t * ((n : ℝ≥0) + 1)⌋₊ : ℝ) / ((n : ℝ) + 1))
+            * g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+                * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+        + ((s : ℝ) - (⌊s * ((n : ℝ≥0) + 1)⌋₊ : ℝ) / ((n : ℝ) + 1))
+            * g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+                * ∑ j ∈ Finset.range ⌊s * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) := by
+  rw [show ∀ a b c d : ℝ, (a - b) - (c - d) = (a - c) - (b - d) from fun a b c d ↦ by ring,
+    sub_comp_rescaledWalk_eq_sum f n ξ ω hst,
+    integral_comp_rescaledWalk_sub_eq_sum g n ξ ω hst]
+  simp only [Finset.sum_sub_distrib]
+  ring
+
 end WalkContainment
 
 end MeasureTheory

@@ -14470,31 +14470,127 @@ has to be chosen once for all `n`. What stands:
   evaluation minus the **compensator**, and the compensator has to be resolved
   before the evaluation part can be expanded against it:
 
-  * `integral_comp_rescaledWalk_eq_sum` — the compensator of a rescaled walk in
-    closed form and **exactly**, not in the limit: for `g : ℝ →ᵇ ℝ`,
+  * `integral_Ioc_comp_floor_mul` — the integral of a step function over an
+    arithmetic grid, in closed form and **exactly**. **Proved 2026-09-22.** For
+    `c > 0`, `t ≥ 0` and an arbitrary `v : ℕ → ℝ`,
+
+    ```
+    ∫ u in Set.Ioc (0 : ℝ) t, v ⌊u c⌋
+      = ∑ j < ⌊t c⌋, c⁻¹ · v j + (t − ⌊t c⌋/c) · v ⌊t c⌋
+    ```
+
+    — `⌊t c⌋` full cells of length `c⁻¹`, and the broken cell at the right end.
+    `fun u ↦ v ⌊u c⌋` is the shape of every path over an arithmetic grid:
+    `stepPath_natCast_div` says a step path with nodes `k/c` *is* this function.
+
+    **Nothing is asked of `v`** — no bound and no measurability. The integrand
+    is constant on the interior of each cell, so the interval integrability
+    there is `intervalIntegrable_const`
+    (`Mathlib/MeasureTheory/Integral/IntervalIntegral/Basic.lean:176`) carried
+    across by `IntervalIntegrable.congr_uIoo` (`:110`), and a hypothesis on `v`
+    would be read nowhere. That is what the consumer needs: the node values of a
+    walk are unbounded in the sample point.
+
+    It rests on `intervalIntegral.sum_integral_adjacent_intervals`
+    (`Mathlib/MeasureTheory/Integral/IntervalIntegral/Basic.lean:1116`) at the
+    partition `a k = min (k/c) t` — **and not at `k/c`**, so that the last cell
+    is already cut at `t` and the telescoping reaches `∫ in 0..t` with no case
+    split afterwards. That `a k = k/c` up to `⌊t c⌋` and `a (⌊t c⌋ + 1) = t` are
+    `Nat.floor_le` and `Nat.lt_floor_add_one`
+    (`Mathlib/Algebra/Order/Floor/Semiring.lean:47` and `:63`), and they are the
+    whole of the arithmetic. `⌊u c⌋ = j` fails at the **right** endpoint of the
+    cell, so the passage there is
+    `intervalIntegral.integral_congr_Ioo_of_le`
+    (`Mathlib/MeasureTheory/Integral/IntervalIntegral/Basic.lean:1253`) over the
+    **open** cell
+    and not a rewrite.
+
+  * `integral_comp_rescaledWalk_eq_sum` — the same at the rescaled walk, which
+    is the form the compensator of `SkorokhodSpace.mpTest` has there.
+    **Proved 2026-09-22.**
 
     ```
     ∫ u in Set.Ioc (0 : ℝ) (t : ℝ), g (V n u.toNNReal ω)
-      = ∑ j < ⌊t (n+1)⌋, (n+1)⁻¹ g (S n j ω)
+      = ∑ j < ⌊t (n+1)⌋, (n+1)⁻¹ · g (S n j ω)
         + (t − ⌊t (n+1)⌋/(n+1)) · g (S n ⌊t (n+1)⌋ ω)
     ```
 
-    with `S n j ω = (n+1)⁻¹ᐟ² ∑ i < j, ξ i ω` the node values. The path takes on
-    each cell `[j/(n+1), (j+1)/(n+1))` exactly its node value, so there is no
-    approximation here and no probability: it is a statement about one sample
+    with `S n j ω = (n+1)⁻¹ᐟ² ∑ i < j, ξ i ω` the node values. There is no
+    approximation in it and no probability: it is a statement about one sample
     point, and the only item of the computation independent of the independence
-    of the `ξ`. It rests on
-    `intervalIntegral.sum_integral_adjacent_intervals`
-    (`Mathlib/MeasureTheory/Integral/IntervalIntegral/Basic.lean:1116`) at
-    `a k = k/(n+1)`, on `Nat.measurable_floor`
-    (`Mathlib/MeasureTheory/Function/Floor.lean:69`), on
-    `MeasureTheory.Measure.integrableOn_of_bounded`
-    (`Mathlib/MeasureTheory/Integral/IntegrableOn.lean:713`) for the interval
-    integrability on each cell — the integrand is measurable and bounded by
-    `‖g‖` and has no continuity — and on
-    `stepPath_rescaledWalk_eq` for the passage between the two descriptions of
-    the path. `⌊x (n+1)⌋ = j` fails at the **right** endpoint of the cell, so
-    the passage is a `setIntegral_congr_ae` on `Set.Ioc` and not a `simp`.
+    of the `ξ`. It is the previous statement at `c = n + 1`, and the one
+    crossing is `Nonneg.nat_floor_coe`
+    (`Mathlib/Algebra/Order/Nonneg/Floor.lean:41`) — the compensator runs over a
+    **real** time variable and the walk over an `ℝ≥0` one, and on `(0, t]` the
+    floor of the first is the floor of the second, `Real.toNNReal` being the
+    identity there.
+
+    **The test function need not be bounded and need not be continuous.**
+    `SkorokhodSpace.mpTest` supplies a `g : ℝ →ᵇ ℝ` and the coercion of one meets
+    the statement, but neither field of that bundle is read, so `g` is a bare
+    `ℝ → ℝ`. Of the walk only the shape of its paths enters — no measurability
+    of the increments, no independence, no integrability.
+
+  * `integral_Ioc_sub_Ioc_comp_floor_mul` and
+    `integral_comp_rescaledWalk_sub_eq_sum` — the same over a **window**, which
+    is the shape the gap actually reads. **Proved 2026-09-22.** `mpTest t −
+    mpTest s` subtracts two compensators, each taken from `0`, and never
+    integrates over `(s, t]`; so the statement is the difference of the two
+    closed forms,
+
+    ```
+    ∑ j ∈ Finset.Ico ⌊s (n+1)⌋ ⌊t (n+1)⌋, (n+1)⁻¹ · g (S n j ω)
+      + (t − ⌊t (n+1)⌋/(n+1)) · g (S n ⌊t (n+1)⌋ ω)
+      − (s − ⌊s (n+1)⌋/(n+1)) · g (S n ⌊s (n+1)⌋ ω)
+    ```
+
+    — the cells strictly between the two floors with their full weight, and
+    what is left of the two broken cells at the ends. The cardinality of that
+    `Finset.Ico` is what the Lindeberg estimate is summed over.
+
+    **No integrability crosses here either**, and that is the point of stating
+    the window as a difference: the passage is `Finset.sum_Ico_eq_sub` — the
+    additive twin of `Finset.prod_Ico_eq_div`
+    (`Mathlib/Algebra/BigOperators/Intervals.lean:94`), generated by
+    `@[to_additive]` and therefore carrying no `theorem` line of its own — and
+    `ring`. Written as `∫ u in Set.Ioc s t` the window would have had to produce
+    the integrability of the integrand in order to be split, and that is exactly
+    what the statements above were arranged not to need.
+
+  * `sub_comp_rescaledWalk_eq_sum` — the **evaluation** part of the gap over the
+    same index set. **Proved 2026-09-22.** `mpTest` is evaluation minus
+    compensator, and the two halves have to stand over *one* index set before
+    the cell by cell expansion is writable at all. It is a telescoping sum and
+    nothing else, `Finset.sum_Ico_sub` — the additive twin of
+    `Finset.prod_Ico_div` (`Mathlib/Algebra/BigOperators/Intervals.lean:226`),
+    generated by `@[to_additive]` and carrying no `theorem` line of its own.
+    There is no integral in it and no null set, which is why the right endpoint
+    costs nothing here and did cost something at the compensator: the evaluation
+    reads the floor **at** `t`, where the cell identity holds.
+
+  * `mpTest_sub_rescaledWalk_eq_sum` — the **whole** gap, cell by cell, which is
+    what the Lindeberg expansion is carried out on. **Proved 2026-09-22.**
+
+    ```
+    (mpTest f g t − mpTest f g s)(walk n, ω)
+      = ∑ k ∈ Finset.Ico ⌊s (n+1)⌋ ⌊t (n+1)⌋,
+          (f (S n (k+1) ω) − f (S n k ω) − (n+1)⁻¹ · g (S n k ω))
+        − (t − ⌊t (n+1)⌋/(n+1)) · g (S n ⌊t (n+1)⌋ ω)
+        + (s − ⌊s (n+1)⌋/(n+1)) · g (S n ⌊s (n+1)⌋ ω)
+    ```
+
+    One summand per cell — the increment of `f` across it **minus** the
+    compensator's weight at its left node, which is exactly the shape a second
+    order Taylor expansion is held against, the increment being
+    `(n+1)⁻¹ᐟ² ξ k` — and two boundary terms, each of size at most
+    `(n+1)⁻¹ ‖g‖`, which is the part of the gap that vanishes with no expansion
+    at all.
+
+    **Still no probability in it.** It is an identity at one sample point,
+    assembled from the two previous ones by `Finset.sum_sub_distrib` and `ring`.
+    The centring, the second moment and the independence enter only when the
+    expectation of this is taken — which is where the acceptance test now
+    stands, and the first place in the computation where they are read.
 
   **Prokhorov, with the crossing of the two types done once**, and the second
   item of the chain on Donsker's data:

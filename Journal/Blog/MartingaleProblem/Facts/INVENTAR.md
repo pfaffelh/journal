@@ -57408,3 +57408,243 @@ sucht:*
 das nicht, weil der rechte Endpunkt eine Nullmenge ist; der Übergang ist ein
 `setIntegral_congr_ae` auf `Set.Ioc` und kein `simp`. Das letzte, angebrochene Fenster ist
 darum auch kein Sonderfall des Beweises, sondern nur ein eigener Summand.
+
+### 2026-09-22, fünfzehnter Lauf des Tages — das benannte Ziel steht, und mit ihm **fünf** weitere — die ganze Lücke des dritten Kettenpunktes steht damit zellenweise da; von den drei Mathlib-Bausteinen, die der Vorschlag mitgegeben hatte, wird **keiner** gelesen, und der Grund ist derselbe, aus dem die Aussage über `v` gar nichts voraussetzt
+
+*Sechs Deklarationen in `MartingaleProblems`, durch `check_master.py` mit 0 Fehlern und 0 `sorry`,
+alle sechs mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft. Die
+Warnungszahlen sind **unverändert** (18 / 38 / 112, davon 0 veraltet), die sechs erzeugen also
+keine einzige.*
+
+| Zeile | Name |
+| ---: | --- |
+| 53448 | `MeasureTheory.integral_Ioc_comp_floor_mul` |
+| 53534 | `MeasureTheory.integral_comp_rescaledWalk_eq_sum` |
+| 53586 | `MeasureTheory.integral_Ioc_sub_Ioc_comp_floor_mul` |
+| 53609 | `MeasureTheory.integral_comp_rescaledWalk_sub_eq_sum` |
+| 53644 | `MeasureTheory.sub_comp_rescaledWalk_eq_sum` |
+| 53675 | `MeasureTheory.mpTest_sub_rescaledWalk_eq_sum` |
+
+**Das benannte Ziel des Vorlaufs war `integral_comp_rescaledWalk_eq_sum`.** Es steht. Was der
+Vorschlag nicht vorhergesehen hatte, ist, daß die Aussage **allgemeiner** ist als die Irrfahrt und
+daß sie dadurch billiger wird statt teurer: der Kompensator eines Treppenpfades über einem
+arithmetischen Gitter hängt von der Irrfahrt in nichts ab, und die Aussage darüber ist der
+eigentliche Satz. `integral_comp_rescaledWalk_eq_sum` ist dann eine Zeile plus eine Koerzenz.
+
+#### Der Befund des Laufs: drei benannte Bausteine werden nicht gelesen, und dieselbe Beobachtung erklärt alle drei
+
+Der Vorschlag hatte den Weg mit drei Mathlib-Fundstellen ausgestattet — `Nat.measurable_floor`
+für die Meßbarkeit des Integranden, `MeasureTheory.Measure.integrableOn_of_bounded` für die
+Integrierbarkeit auf jeder Zelle („der Integrand ist meßbar und durch `‖g‖` beschränkt"), und
+`setIntegral_congr_ae` für den rechten Zellrand. **Keiner der drei kommt im Beweis vor**, und der
+Grund ist einer:
+
+> Der Integrand ist im **Inneren** jeder Zelle **konstant**, nicht bloß beschränkt.
+
+Damit ist die Intervallintegrierbarkeit auf einer Zelle `intervalIntegrable_const`
+(`Mathlib/MeasureTheory/Integral/IntervalIntegral/Basic.lean:176`), hinübergetragen durch
+`IntervalIntegrable.congr_uIoo` (`:110`), und eine Meßbarkeit ist nirgends zu zeigen. Der rechte
+Zellrand, an dem `⌊u c⌋₊` springt, wird nicht durch eine f.ü.-Aussage umgangen, sondern durch
+`intervalIntegral.integral_congr_Ioo_of_le`
+(`Mathlib/MeasureTheory/Integral/IntervalIntegral/Basic.lean:1253`), das von vornherein nur über
+dem **offenen** Intervall fragt.
+
+**Und die Folge davon ist eine Voraussetzung weniger, nicht bloß ein anderer Beweis.** Weil keine
+Schranke gebraucht wird, steht in `integral_Ioc_comp_floor_mul` über `v : ℕ → ℝ` **nichts** — weder
+Beschränktheit noch Meßbarkeit. Das ist für den Verbraucher wesentlich und nicht Kosmetik: die
+Knotenwerte einer Irrfahrt sind im Stichprobenpunkt unbeschränkt, beschränkt ist allein die auf
+sie angewandte Testfunktion. Aus demselben Grund trägt `integral_comp_rescaledWalk_eq_sum` ein
+bloßes `g : ℝ → ℝ` und kein `g : ℝ →ᵇ ℝ`: `SkorokhodSpace.mpTest` liefert ein gebündeltes, und
+dessen Koerzenz paßt, aber **kein Feld des Bündels wird gelesen** — weder die Stetigkeit noch die
+Beschränktheit.
+
+#### Die Zerlegung, die der Vorschlag als Falle benannt hatte, ist keine — die Zerlegung selbst ist eine andere
+
+Die angesagte Falle war, daß `⌊x (n+1)⌋₊ = j` am rechten Endpunkt der Zelle nicht mehr gilt, und
+sie ist echt. Was der Vorschlag nicht gesehen hatte, ist, daß das **letzte, angebrochene Fenster**
+dann doch kein eigener Summand sein muß: genommen ist die Zerlegung
+
+```
+a k = min (k / c) t
+```
+
+statt `a k = k / c`. Damit ist die letzte Zelle bereits bei `t` abgeschnitten,
+`intervalIntegral.sum_integral_adjacent_intervals`
+(`Mathlib/MeasureTheory/Integral/IntervalIntegral/Basic.lean:1116`) teleskopiert unmittelbar zu
+`∫ in 0..t`, und es ist **hinterher** keine Fallunterscheidung zu führen. Daß `a k = k / c` bis
+`⌊t c⌋₊` und `a (⌊t c⌋₊ + 1) = t` ist, sind `Nat.floor_le` und `Nat.lt_floor_add_one`
+(`Mathlib/Algebra/Order/Floor/Semiring.lean:47` und `:63`) — und sie sind die ganze Arithmetik des
+Beweises.
+
+#### Eine Negativaussage, die **nicht** aufgeschrieben wurde, weil sie falsch gewesen wäre
+
+Der Beweis braucht, daß der Nat-Floor eines `ℝ≥0` der Nat-Floor seiner reellen Koerzenz ist — der
+Kompensator läuft über eine **reelle** Zeitvariable, die Irrfahrt über eine `ℝ≥0`-wertige. Ein
+`exact?` darauf lieferte „found a proof, but the corresponding tactic failed", also einen
+Fehlbefund in beide Richtungen; ein erster Entwurf hat die Aussage deshalb selbst bewiesen, in
+vier Zeilen über `Nat.floor_eq_iff`. **Mathlib hat sie:**
+
+> `Nonneg.nat_floor_coe` (`Mathlib/Algebra/Order/Nonneg/Floor.lean:41`), mit `@[norm_cast]`,
+> in genau diesem Wortlaut.
+
+Sie war nicht zu finden, weil sie nicht über `NNReal` spricht: `ℝ≥0` ist `Nonneg ℝ`, die
+`FloorSemiring`-Instanz wird in `Mathlib/Basic/NNReal/Basic.lean:40` als
+`inferInstanceAs <| FloorSemiring (Subtype _)` von `Nonneg.floorSemiring` geerbt, und der Satz
+steht bei der Instanz. Der eigene Beweis ist ersatzlos gestrichen.
+
+**Der Merkposten daraus, und er ist neben dem `@[to_additive]`-Muster der zweite seiner Art:**
+wer einen Satz über `ℝ≥0`, `ℚ≥0` oder `ℝ≥0∞` vermißt, sucht ihn unter dem Namen der
+**allgemeinen Konstruktion**, aus der die Instanz kommt — `Nonneg`, `Subtype`, `WithTop` —, und
+nicht unter dem Namen des Typs. Ein Grep nach `NNReal` findet ihn nicht.
+
+*Nebenbei, und es gehört in den Bericht und nicht in den Vorschlag:* beim Einsetzen der
+Koerzenz ist ein `rw [← Nonneg.nat_floor_coe]` **ohne** explizites Argument die falsche Form — das
+Muster paßt auf beide Seiten der Gleichung. Mit explizitem Argument scheitert es an der
+Instanzengestalt (`ℝ≥0`s `FloorSemiring` ist über `inferInstanceAs` gefaltet und nicht
+syntaktisch `Nonneg.floorSemiring`). Was trägt, ist `norm_cast`, wofür das Attribut da ist.
+
+#### Die zweite Hälfte des Laufs: das Fenster, und warum es eine **Differenz** ist
+
+Die Lücke des dritten Kettenpunktes liest den Kompensator nicht bei *einer* Zeit, sondern als
+`mpTest t − mpTest s`. Beide Aussagen dazu — `integral_Ioc_sub_Ioc_comp_floor_mul` und
+`integral_comp_rescaledWalk_sub_eq_sum` — gingen im **ersten** Durchlauf durch.
+
+**Und die Gestalt ist eine Entscheidung, keine Schreibweise.** `mpTest` subtrahiert zwei
+Kompensatoren, deren jeder bei `0` beginnt; es integriert **nie** über `(s, t]`. Die Aussage ist
+deshalb als Differenz zweier Anfangsstücke geführt und nicht als ein Integral über dem Fenster —
+und **damit kreuzt an dieser Stelle keine Integrierbarkeit**: der Übergang ist
+`Finset.sum_Ico_eq_sub` und `ring`. Hätte man das Fenster als `∫ u in Set.Ioc s t` geschrieben, so
+wäre zum Aufspalten die Integrierbarkeit des Integranden zu erzeugen gewesen — genau das, wofür
+die erste Hälfte des Laufs eigens keine Voraussetzung trägt.
+
+`Finset.sum_Ico_eq_sub` ist dabei der dritte Fall des bekannten Musters: er ist der additive
+Zwilling von `Finset.prod_Ico_eq_div` (`Mathlib/Algebra/BigOperators/Intervals.lean:94`), durch
+`@[to_additive]` erzeugt und deshalb in **keiner** `theorem`-Zeile zu finden. Zitiert ist darum
+der multiplikative Name mit dem Attribut, wie die stehende Regel es verlangt.
+
+Was übrigbleibt, ist die Gestalt, die die Lindeberg-Rechnung braucht: die Zellen **echt zwischen**
+den beiden Böden mit vollem Gewicht `(n+1)⁻¹`, und von den beiden angebrochenen Zellen an den
+Rändern je das, was von ihnen übrig ist. Die Mächtigkeit von
+`Finset.Ico ⌊s (n+1)⌋₊ ⌊t (n+1)⌋₊` ist das, worüber die Abschätzung am Ende summiert wird.
+
+#### Die dritte Hälfte, und sie war im Vorschlag noch als *nächster Lauf* vorgesehen: der Auswertungsteil, und dann die ganze Lücke
+
+| Zeile | Name |
+| ---: | --- |
+| 53644 | `MeasureTheory.sub_comp_rescaledWalk_eq_sum` |
+| 53675 | `MeasureTheory.mpTest_sub_rescaledWalk_eq_sum` |
+
+Der Auswertungsteil — `f (V t) − f (V s)` als Summe über derselben Indexmenge — war als benanntes
+Ziel für den *nächsten* Lauf gedacht, mit der Schätzung „unter zehn Zeilen". Er ist **eine**:
+
+```lean
+  (Finset.sum_Ico_sub (f := fun k ↦ f (…)) (Nat.floor_le_floor (by gcongr))).symm
+```
+
+**Denn Mathlib hat auch das schon**, und es ist der zweite Fund derselben Art an einem Tag:
+`Finset.sum_Ico_sub`, der additive Zwilling von `Finset.prod_Ico_div`
+(`Mathlib/Algebra/BigOperators/Intervals.lean:226`), `∑ i ∈ Ico m n, (u (i+1) − u i) = u n − u m`.
+Ein erster Entwurf hat ihn über `Finset.sum_Ico_eq_sub` und `Finset.sum_range_sub` selbst
+zusammengesetzt; das ist ersatzlos gestrichen. Wieder gilt: erzeugt durch `@[to_additive]`, also
+in keiner `theorem`-Zeile, und ein Grep nach dem additiven Namen findet ihn nicht.
+
+**Damit lag die ganze Lücke da**, und sie ist mitgenommen:
+`mpTest_sub_rescaledWalk_eq_sum` schreibt den Faktor vor `Z` in der Hypothese von
+`mpSolution_of_tendsto_cadlag_of_subseq_of_zero_pathOfProcess` zellenweise aus —
+
+```
+= ∑ k ∈ Finset.Ico ⌊s (n+1)⌋₊ ⌊t (n+1)⌋₊,
+    (f (S n (k+1) ω) − f (S n k ω) − (n+1)⁻¹ · g (S n k ω))
+  − (t − ⌊t (n+1)⌋₊/(n+1)) · g (S n ⌊t (n+1)⌋₊ ω)
+  + (s − ⌊s (n+1)⌋₊/(n+1)) · g (S n ⌊s (n+1)⌋₊ ω)
+```
+
+— ein Summand je **Zelle**, nämlich der Zuwachs von `f` über die Zelle **minus** das Gewicht
+`(n+1)⁻¹ g` des Kompensators an ihrem linken Knoten, und dazu zwei Randterme von je höchstens
+`(n+1)⁻¹ ‖g‖`. Das ist genau die Gestalt, gegen die eine Taylorentwicklung zweiter Ordnung
+gehalten wird, der Zuwachs des Pfades über eine Zelle ist `(n+1)⁻¹ᐟ² ξ k`, und die beiden
+Randterme sind der Teil der Lücke, der ohne jede Entwicklung verschwindet.
+
+**Und es ist immer noch keine Wahrscheinlichkeit darin.** Der Beweis ist
+`Finset.sum_sub_distrib` und `ring`. Zentrierung, zweites Moment und Unabhängigkeit werden
+erstmals gelesen, wenn von *dieser* Gleichung der Erwartungswert genommen wird — und genau dort
+steht der Akzeptanztest jetzt.
+
+#### Prüfung
+
+`scripts/check_master.py` gegen `upstream/master`
+(`94ef6b89544e58e90f119da869f3fb48d1da0f4c`, Lean `4.35.0-rc2`): **0 Fehler, 0 `sorry`** in allen
+drei Dateien, Warnungen **18 / 38 / 112, davon 0 veraltet** — unverändert gegenüber dem Vorlauf,
+nach **jeder** der drei Einfügungen eigens gemessen.
+`scripts/check_axioms_master.py` über alle sechs neuen Deklarationen: `propext`,
+`Classical.choice`, `Quot.sound`.
+`check_cited_lines.py`: **454 gepaarte Fundstellen, 0 verschoben, 0 tot** (vorher 446).
+
+*Berichtigt wurden dabei zwei eigene Zahlen, ehe sie stehenblieben:*
+`sum_integral_adjacent_intervals` steht auf `:1116` und nicht auf `:1120`, und
+`integral_congr_Ioo_of_le` auf `:1253` und nicht auf `:1247` (das ist `integral_congr_uIoo`).
+Außerdem ist die Kurzform `` `:1253` `` an jener Stelle **nicht** zulässig:
+`check_cited_lines.py` löst sie gegen die zuletzt genannte Datei auf, und das war dort
+`Floor/Semiring.lean`. Wer zwischen zwei Fundstellen derselben Datei eine aus einer anderen
+einschiebt, schreibt den Pfad wieder aus.
+
+#### Wo der Akzeptanztest damit steht
+
+```
+isCompactContained_rescaledWalk
+isEventuallyApproximableMul_rescaledWalk
+  → isTightMeasureSet_map_rescaledWalk        (Straffheit der Pfadgesetze)
+  → isCompact_closure_range_map_rescaledWalk  (relative Kompaktheit, Prokhorov)
+  → mpSolution_of_tendsto_cadlag_of_subseq_of_zero_pathOfProcess   (dritter Kettenpunkt)
+      ↳ Lücke = 𝔼[(mpTest t − mpTest s) · Z]
+          · Kompensatorteil: integral_comp_rescaledWalk_sub_eq_sum   ← steht seit heute
+          · Auswertungsteil:  sub_comp_rescaledWalk_eq_sum            ← steht seit heute
+          · beides zusammen:  mpTest_sub_rescaledWalk_eq_sum          ← steht seit heute
+              ↳ Erwartungswert davon: offen, und das ist die Lindeberg-Rechnung
+```
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`MeasureTheory.integral_mul_comp_rescaledWalk_mul_eq_zero`** — die **Entkopplung einer Zelle**,
+also der Schritt, an dem in dieser Rechnung zum ersten Mal Wahrscheinlichkeit vorkommt.
+
+*Die Aussage:* ist `hind : iIndepFun ξ P`, `hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0`, ist `h : ℝ → ℝ`
+beschränkt und meßbar und ist `Z : Ω → ℝ` beschränkt und meßbar bezüglich
+`Filtration.natural ξ hmeas k`, so ist
+
+```
+∫ ω, h ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω) * ξ k ω * Z ω ∂P = 0 .
+```
+
+*Warum sie jetzt dran ist, und warum gerade sie.* Nach
+`mpTest_sub_rescaledWalk_eq_sum` ist die Lücke eine Summe über Zellen, und der Summand der Zelle
+`k` ist `f (S (k+1)) − f (S k) − (n+1)⁻¹ g (S k)`. Die Taylorentwicklung zerlegt den ersten Teil
+in einen Term **erster** Ordnung `f' (S k) · (n+1)⁻¹ᐟ² ξ k`, einen Term zweiter Ordnung
+`½ f'' (S k) · (n+1)⁻¹ ξ k²`, und einen Rest. Der Term zweiter Ordnung ist es, der gegen den
+Kompensator gehalten wird; der Rest wird abgeschätzt. **Der Term erster Ordnung muß exakt
+verschwinden**, sonst ist die Ordnung `(n+1)⁻¹ᐟ²` und nichts konvergiert — und *das* ist die
+Aussage oben, mit `h = f'` und `Z` dem Gewicht der Lücke mal dem vorangegangenen Pfadstück.
+
+Sie ist außerdem der Posten, der die drei Voraussetzungen des Akzeptanztests zum ersten Mal
+wirklich liest: `hind` und `hcent`, und die Meßbarkeit. Bis hierher wurde **keine** von ihnen
+gebraucht.
+
+*Worauf sie ruht, und beides steht schon im eigenen Haus:*
+
+* `ProbabilityTheory.iIndepFun.indep_comap_natural_of_lt` und `condExp_indep_eq`, genau in der
+  Gestalt, in der `martingale_partialSum_of_iIndepFun` (Z. 51841) sie benutzt: dort ist
+  `Indep (MeasurableSpace.comap (ξ n) inferInstance) (𝒢 n) P` als Zwischenschritt
+  ausgeschrieben (Z. 51863–51874), und `P[ξ n | 𝒢 n] =ᵐ[P] 0` fällt daraus mit `hcent`.
+  **Diesen Block nicht nachbauen, sondern als Bauteil herausziehen** — er wird ab jetzt zum
+  zweiten Mal gebraucht, und das ist der Augenblick, ihn zu benennen.
+* `h (S n k ·)` ist `𝒢 k`-meßbar: das ist `Filtration.stronglyAdapted_natural` an der
+  Partialsumme, wie in `isStronglyProgressive_rescaledWalk` (Z. 52304), gefolgt von der
+  Komposition mit `h`.
+
+*Die Falle, benannt statt entdeckt:* es sind **zwei** Faktoren vor `ξ k` und nicht einer, und
+beide sind `𝒢 k`-meßbar — das Pfadstück `h (S n k)` und das Gewicht `Z`. Sie sind deshalb zu
+*einem* `𝒢 k`-meßbaren Faktor zusammenzufassen, **ehe** die Unabhängigkeit gefragt wird; wer
+zuerst die Unabhängigkeit von `ξ k` und `h (S n k)` nimmt, muß danach `Z` noch durchbekommen und
+hat dieselbe Arbeit zweimal. Die Beschränktheit von `h` und `Z` steht nur für die
+Integrierbarkeit des Produkts da; eine `MemLp 2`-Voraussetzung an `ξ` wird an dieser Stelle noch
+**nicht** gebraucht — sie kommt erst beim Term zweiter Ordnung.
