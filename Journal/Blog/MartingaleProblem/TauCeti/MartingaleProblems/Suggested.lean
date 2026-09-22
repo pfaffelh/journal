@@ -46717,47 +46717,50 @@ and not at a fixed member, and the statements of this file are to be read the sa
 approximation error goes to zero **with the family**, the finitely many members it does not yet
 cover being tight one by one. -/
 
-/-- **An approximable process that rests on a deterministic cell has the same mean at both ends
-of it.**
+/-- **The cell obstruction at the pair and not at the condition**, which is the whole of the
+argument of `MeasureTheory.IsApproximable.integral_eq_of_eqOn_Ico`: a process `W` that rests on
+`Set.Ico a b` and has, to every error, *one* approximating pair within that error on the horizon,
+has the same mean at both ends of the cell.
 
-`V` is asked to be constant on `Set.Ico a b`, as a function of time *and* of the sample point;
-the conclusion is `∫ V b = ∫ V a`.  Nothing else of `V` is used, and of
-`MeasureTheory.IsApproximable` only the two fields that carry the pair approximating `V` itself --
-neither the pair approximating `V²` nor the four integrabilities of the stopped values are read.
+**It is stated at `W` and not at `V` because the condition carries two pairs and the obstruction
+bites at each of them separately.**  Read at the first pair it is the statement about `V`; read
+at the second it is the statement about `V ^ 2`, and that second reading is the one that decides
+the acceptance test -- the rescaled random walk has constant mean and moves the mean of its
+square across every cell of its own mesh.  The four corollaries below are the four readings.
 
-**The filtration does not enter**, and that is the point of the statement: what is read of the
-martingale is that its mean is constant, and that holds over any filtration.  A larger `𝓕` is
-therefore no escape.
-
-**Where the absolute continuity of the compensator is spent**: in
+**Only two fields of the pair are read**: the martingale, through the constancy of its mean, and
 `MeasureTheory.IsApproximatingPair.lintegral_enorm_compensator_sub_le` at the window `(r, b]`,
-whose bound tends to zero as `r ↑ b` because `1 - 1/q` is positive.  A compensator with an atom
-at `b` would have that increment bounded below, and the statement would be false -- which is
-exactly what `MeasureTheory.not_isApproximable_indicator_Ici` exhibits. -/
-theorem IsApproximable.integral_eq_of_eqOn_Ico
+whose bound `ofReal (b - r) ^ (1 - 1/q) * K` goes to zero as `r` climbs to `b`.  That is where
+the absolute continuity of the compensator is spent, and the only place.
+
+**The filtration does not enter**, and that is the point: what is read of the martingale is that
+its mean is constant, and that holds over any filtration whatever.  Enlarging `𝓕` is therefore no
+escape. -/
+theorem integral_eq_of_eqOn_Ico_of_exists_approximatingPair
     {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} [IsProbabilityMeasure P]
-    {q : ENNReal} {T K : ℝ≥0} {V : ℝ≥0 → Ω → ℝ} {ε₀ : ℝ} {u : ℝ≥0}
-    (happ : IsApproximable 𝓕 P q T K V ε₀ u)
-    (hVm : ∀ t : ℝ≥0, AEStronglyMeasurable (V t) P)
+    {q : ENNReal} {T K : ℝ≥0} {W : ℝ≥0 → Ω → ℝ}
+    (hq : 1 < q)
+    (hex : ∀ ε : ENNReal, 0 < ε → ∃ Y C : ℝ≥0 → Ω → ℝ, ∃ Z : ℝ → Ω → ℝ,
+      IsApproximatingPair 𝓕 P q T K Y C Z ∧
+        ∫⁻ ω, ⨆ t ∈ Set.Iic T, ‖Y t ω - W t ω‖ₑ ∂P ≤ ε)
+    (hWm : ∀ t : ℝ≥0, AEStronglyMeasurable (W t) P)
     {a b : ℝ≥0} (hab : a < b) (hbT : b ≤ T)
-    (hV : ∀ r ∈ Set.Ico a b, V r = V a) :
-    ∫ ω, V b ω ∂P = ∫ ω, V a ω ∂P := by
-  have hq : 1 < q := happ.one_lt_exponent
+    (hW : ∀ r ∈ Set.Ico a b, W r = W a) :
+    ∫ ω, W b ω ∂P = ∫ ω, W a ω ∂P := by
   set p : ℝ := 1 - 1 / q.toReal with hpdef
   have hp0 : 0 < p := one_sub_one_div_toReal_pos hq
   -- the estimate at one approximation error and one time inside the cell
   have main : ∀ e : ℝ, 0 < e → ∀ r : ℝ≥0, a ≤ r → r < b →
-      |(∫ ω, V b ω ∂P) - ∫ ω, V a ω ∂P|
+      |(∫ ω, W b ω ∂P) - ∫ ω, W a ω ∂P|
         ≤ 2 * e + (ENNReal.ofReal ((b : ℝ) - (r : ℝ)) ^ p * (K : ENNReal)).toReal := by
     intro e he r har hrb
     have hrT : r ≤ T := le_trans hrb.le hbT
     have hrb' : r ≤ b := hrb.le
-    obtain ⟨Y, C, Y', C', Z, Z', h, -, hεT, -, -, -, -, -⟩ :=
-      happ.exists_approximants (ENNReal.ofReal e) (ENNReal.ofReal_pos.2 he)
-    have herr : ∀ t : ℝ≥0, t ≤ T → ∫⁻ ω, ‖Y t ω - V t ω‖ₑ ∂P ≤ ENNReal.ofReal e := by
+    obtain ⟨Y, C, Z, h, hεT⟩ := hex (ENNReal.ofReal e) (ENNReal.ofReal_pos.2 he)
+    have herr : ∀ t : ℝ≥0, t ≤ T → ∫⁻ ω, ‖Y t ω - W t ω‖ₑ ∂P ≤ ENNReal.ofReal e := by
       intro t htT
       refine le_trans (lintegral_mono fun ω ↦ ?_) hεT
-      exact le_iSup₂ (f := fun t (_ : t ∈ Set.Iic T) ↦ ‖Y t ω - V t ω‖ₑ) t (Set.mem_Iic.2 htT)
+      exact le_iSup₂ (f := fun t (_ : t ∈ Set.Iic T) ↦ ‖Y t ω - W t ω‖ₑ) t (Set.mem_Iic.2 htT)
     have hYint : ∀ t : ℝ≥0, t ≤ T → Integrable (Y t) P := by
       intro t htT
       have h1 : Integrable (fun ω ↦ Y t ω - C t ω) P := h.martingale.integrable t
@@ -46765,9 +46768,9 @@ theorem IsApproximable.integral_eq_of_eqOn_Ico
       have hrw : Y t = fun ω ↦ (Y t ω - C t ω) + C t ω := by funext ω; ring
       rw [hrw]; exact h1.add h2
     obtain ⟨-, hbnd⟩ := abs_integral_sub_le_of_lintegral_enorm_sub_le (hYint b hbT)
-      (hVm b) he.le (herr b hbT)
+      (hWm b) he.le (herr b hbT)
     obtain ⟨-, hrnd⟩ := abs_integral_sub_le_of_lintegral_enorm_sub_le (hYint r hrT)
-      (hVm r) he.le (herr r hrT)
+      (hWm r) he.le (herr r hrT)
     have hCb : Integrable (C b) P := h.integrable_compensator hbT
     have hCr : Integrable (C r) P := h.integrable_compensator hrT
     have hBne : ENNReal.ofReal ((b : ℝ) - (r : ℝ)) ^ p * (K : ENNReal) ≠ ⊤ :=
@@ -46787,7 +46790,7 @@ theorem IsApproximable.integral_eq_of_eqOn_Ico
       rw [← integral_add (h.martingale.integrable r) hCr]; simp
     have hYdiff : (∫ ω, Y b ω ∂P) - (∫ ω, Y r ω ∂P)
         = (∫ ω, C b ω ∂P) - ∫ ω, C r ω ∂P := by rw [hsplitb, hsplitr, hM]; ring
-    have hVra : (∫ ω, V r ω ∂P) = ∫ ω, V a ω ∂P := by rw [hV r ⟨har, hrb⟩]
+    have hVra : (∫ ω, W r ω ∂P) = ∫ ω, W a ω ∂P := by rw [hW r ⟨har, hrb⟩]
     rw [hVra] at hrnd
     rw [abs_le] at hbnd hrnd hCbnd ⊢
     constructor <;> linarith [hbnd.1, hbnd.2, hrnd.1, hrnd.2, hCbnd.1, hCbnd.2]
@@ -46796,7 +46799,7 @@ theorem IsApproximable.integral_eq_of_eqOn_Ico
   have hc0 : 0 < c := tsub_pos_of_lt hab
   have hcb : c ≤ b := tsub_le_self
   have hccoe : (c : ℝ) = (b : ℝ) - (a : ℝ) := NNReal.coe_sub hab.le
-  have key : ∀ η : ℝ, 0 < η → |(∫ ω, V b ω ∂P) - ∫ ω, V a ω ∂P| ≤ η := by
+  have key : ∀ η : ℝ, 0 < η → |(∫ ω, W b ω ∂P) - ∫ ω, W a ω ∂P| ≤ η := by
     intro η hη
     have hKtop : (K : ENNReal) ≠ ⊤ := ENNReal.coe_ne_top
     have h0 : Tendsto (fun x : ENNReal ↦ (K : ENNReal) * x ^ p) (𝓝 0) (𝓝 0) :=
@@ -46828,14 +46831,44 @@ theorem IsApproximable.integral_eq_of_eqOn_Ico
       rw [mul_comm, ENNReal.ofReal_coe_nnreal]
       exact hdK
     linarith
-  have hzero : |(∫ ω, V b ω ∂P) - ∫ ω, V a ω ∂P| = 0 := by
+  have hzero : |(∫ ω, W b ω ∂P) - ∫ ω, W a ω ∂P| = 0 := by
     by_contra hne
-    have hpos : 0 < |(∫ ω, V b ω ∂P) - ∫ ω, V a ω ∂P| :=
+    have hpos : 0 < |(∫ ω, W b ω ∂P) - ∫ ω, W a ω ∂P| :=
       lt_of_le_of_ne (abs_nonneg _) (Ne.symm hne)
     have hhalf := key _ (half_pos hpos)
     linarith
   have hsub := abs_eq_zero.1 hzero
   linarith [sub_eq_zero.1 hsub]
+
+/-- **An approximable process that rests on a deterministic cell has the same mean at both ends
+of it.**
+
+`V` is asked to be constant on `Set.Ico a b`, as a function of time *and* of the sample point;
+the conclusion is `∫ V b = ∫ V a`.  Nothing else of `V` is used, and of
+`MeasureTheory.IsApproximable` only the two fields that carry the pair approximating `V` itself --
+neither the pair approximating `V²` nor the four integrabilities of the stopped values are read.
+
+**The filtration does not enter**, and that is the point of the statement: what is read of the
+martingale is that its mean is constant, and that holds over any filtration.  A larger `𝓕` is
+therefore no escape.
+
+**Where the absolute continuity of the compensator is spent**: in
+`MeasureTheory.IsApproximatingPair.lintegral_enorm_compensator_sub_le` at the window `(r, b]`,
+whose bound tends to zero as `r ↑ b` because `1 - 1/q` is positive.  A compensator with an atom
+at `b` would have that increment bounded below, and the statement would be false -- which is
+exactly what `MeasureTheory.not_isApproximable_indicator_Ici` exhibits. -/
+theorem IsApproximable.integral_eq_of_eqOn_Ico
+    {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K : ℝ≥0} {V : ℝ≥0 → Ω → ℝ} {ε₀ : ℝ} {u : ℝ≥0}
+    (happ : IsApproximable 𝓕 P q T K V ε₀ u)
+    (hVm : ∀ t : ℝ≥0, AEStronglyMeasurable (V t) P)
+    {a b : ℝ≥0} (hab : a < b) (hbT : b ≤ T)
+    (hV : ∀ r ∈ Set.Ico a b, V r = V a) :
+    ∫ ω, V b ω ∂P = ∫ ω, V a ω ∂P := by
+  refine integral_eq_of_eqOn_Ico_of_exists_approximatingPair (𝓕 := 𝓕) (K := K)
+    happ.one_lt_exponent (fun ε hε ↦ ?_) hVm hab hbT hV
+  obtain ⟨Y, C, Y', C', Z, Z', h, -, hεT, -, -, -, -, -⟩ := happ.exists_approximants ε hε
+  exact ⟨Y, C, Z, h, hεT⟩
 
 /-- **A process that rests on a deterministic cell and moves its mean across it is approximable
 by nothing.**  This is `MeasureTheory.IsApproximable.integral_eq_of_eqOn_Ico` read backwards, and
@@ -46873,6 +46906,32 @@ theorem not_isApproximable_indicator_Ici
   · funext ω
     simp [hr.2, hab]
   · simp [hab]
+
+/-- **The same obstruction read at the square**, which is the reading the acceptance test of
+Milestone 11 is decided by.
+
+`V` rests on `Set.Ico a b`, hence so does `V ^ 2`; the conclusion is that the mean of the
+*square* does not move across the cell either.  What it reads of the condition is the **second**
+pair, the one approximating `V ^ 2`, and nothing else.
+
+**It bites where the statement about `V` itself does not.**  A centred random walk read as a step
+path has constant mean, so `MeasureTheory.IsApproximable.integral_eq_of_eqOn_Ico` says nothing
+about it; its mean square, however, climbs by one increment variance at every mesh point.
+`MeasureTheory.not_isApproximable_rescaledWalk` is that instance, and it is the proof of what the
+section comment above asserts of the walks. -/
+theorem IsApproximable.integral_sq_eq_of_eqOn_Ico
+    {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K : ℝ≥0} {V : ℝ≥0 → Ω → ℝ} {ε₀ : ℝ} {u : ℝ≥0}
+    (happ : IsApproximable 𝓕 P q T K V ε₀ u)
+    (hVm : ∀ t : ℝ≥0, AEStronglyMeasurable (fun ω ↦ V t ω ^ 2) P)
+    {a b : ℝ≥0} (hab : a < b) (hbT : b ≤ T)
+    (hV : ∀ r ∈ Set.Ico a b, V r = V a) :
+    ∫ ω, V b ω ^ 2 ∂P = ∫ ω, V a ω ^ 2 ∂P := by
+  refine integral_eq_of_eqOn_Ico_of_exists_approximatingPair (𝓕 := 𝓕) (K := K)
+    happ.one_lt_exponent (W := fun t ω ↦ V t ω ^ 2) (fun ε hε ↦ ?_) hVm hab hbT (fun r hr ↦ ?_)
+  · obtain ⟨Y, C, Y', C', Z, Z', -, h', -, hεT, -, -, -, -⟩ := happ.exists_approximants ε hε
+    exact ⟨Y', C', Z', h', hεT⟩
+  · rw [hV r hr]
 
 /-- **The third of the three limits, taken once and for all**: the assembly with the
 approximation error already sent to zero.
@@ -47098,9 +47157,19 @@ asks for no bound, and this subsection is the condition and the two limits in th
 **It is not a generalisation on suspicion.**  The rescaled random walk of Donsker's acceptance
 test is not uniformly bounded, and its own approximating pair
 (`MeasureTheory.isApproximatingPair_rescaledWalk`) has error exactly `0`; the weight is then
-integrated against `0` and the product is `0`, which no finite bound produces.  That is the case
-this subsection exists for, and the reason is written out at
+integrated against `0` and the product is `0`, which no finite bound produces.  That is the
+passage this subsection exists for, and the reason is written out at
 `MeasureTheory.enorm_integral_mul_sub_le_of_lintegral_mul_biSup_le`.
+
+**What removing the bound does *not* buy is the acceptance test itself**, and that is measured
+rather than assumed: `MeasureTheory.not_isApproximableMul_rescaledWalk` says that the walk fails
+the condition below at a fixed mesh, so the hypothesis of
+`MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isApproximableMul` is unsatisfiable on
+Donsker's data (`MeasureTheory.not_forall_isApproximableMul_rescaledWalk`).  The obstruction is
+not the bound but the **second** pair: `Y'` approximates `V ^ 2` with the plain error, and the
+walk moves its mean square across every cell of its own mesh.  The two weakenings the walk needs
+-- the bound off the process, and the error outside the index -- are independent, and this
+subsection is the first of them alone.
 -/
 
 /-- **Approximability with the weight left under the lower integral**, which is
@@ -47170,6 +47239,50 @@ theorem IsApproximableMul.one_lt_exponent {𝓕 : Filtration ℝ≥0 mΩ} {P : M
     (happ : IsApproximableMul 𝓕 P q T K Kw V ε₀ u) : 1 < q := by
   obtain ⟨Y, C, Y', C', Z, Z', h, -⟩ := happ.exists_approximants 1 one_pos
   exact h.one_lt_exponent
+
+/-- **The obstruction read at the square of a weighted approximable process**, and it is the
+statement that decides whether the weighted chain reaches Donsker's acceptance test.
+
+`MeasureTheory.IsApproximableMul` removes the bound on the process at the two places the chain
+reads it, but it leaves the **second** pair exactly as it was: `Y'` approximates `V ^ 2` with the
+plain, unweighted error.  So the obstruction of
+`MeasureTheory.integral_eq_of_eqOn_Ico_of_exists_approximatingPair` applies to it verbatim, and
+the weakening buys nothing against it.
+
+**The consequence is `MeasureTheory.not_isApproximableMul_rescaledWalk`**: the rescaled random
+walk does not satisfy the weighted condition at a fixed mesh either, and the hypothesis of
+`MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isApproximableMul` is therefore
+unsatisfiable on the data of Donsker's theorem
+(`MeasureTheory.not_forall_isApproximableMul_rescaledWalk`).  The condition a family of walks
+does meet is the one with the error quantified outside the index,
+`MeasureTheory.IsEventuallyApproximable`. -/
+theorem IsApproximableMul.integral_sq_eq_of_eqOn_Ico
+    {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K Kw : ℝ≥0} {V : ℝ≥0 → Ω → ℝ} {ε₀ : ℝ} {u : ℝ≥0}
+    (happ : IsApproximableMul 𝓕 P q T K Kw V ε₀ u)
+    (hVm : ∀ t : ℝ≥0, AEStronglyMeasurable (fun ω ↦ V t ω ^ 2) P)
+    {a b : ℝ≥0} (hab : a < b) (hbT : b ≤ T)
+    (hV : ∀ r ∈ Set.Ico a b, V r = V a) :
+    ∫ ω, V b ω ^ 2 ∂P = ∫ ω, V a ω ^ 2 ∂P := by
+  refine integral_eq_of_eqOn_Ico_of_exists_approximatingPair (𝓕 := 𝓕) (K := K)
+    happ.one_lt_exponent (W := fun t ω ↦ V t ω ^ 2) (fun ε hε ↦ ?_) hVm hab hbT (fun r hr ↦ ?_)
+  · obtain ⟨Y, C, Y', C', Z, Z', -, h', -, hεT, -, -, -, -, -, -, -⟩ :=
+      happ.exists_approximants ε hε
+    exact ⟨Y', C', Z', h', hεT⟩
+  · rw [hV r hr]
+
+/-- **A weighted approximable process whose square rests on a deterministic cell and moves its
+mean square across it does not exist.**  This is the previous statement read backwards, and it is
+the form a consumer meets. -/
+theorem not_isApproximableMul_of_eqOn_Ico_of_integral_sq_ne
+    {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K Kw : ℝ≥0} {V : ℝ≥0 → Ω → ℝ} {ε₀ : ℝ} {u : ℝ≥0}
+    (hVm : ∀ t : ℝ≥0, AEStronglyMeasurable (fun ω ↦ V t ω ^ 2) P)
+    {a b : ℝ≥0} (hab : a < b) (hbT : b ≤ T)
+    (hV : ∀ r ∈ Set.Ico a b, V r = V a)
+    (hne : (∫ ω, V b ω ^ 2 ∂P) ≠ ∫ ω, V a ω ^ 2 ∂P) :
+    ¬ IsApproximableMul 𝓕 P q T K Kw V ε₀ u :=
+  fun happ ↦ hne (happ.integral_sq_eq_of_eqOn_Ico hVm hab hbT hV)
 
 /-- **The third of the three limits, weighted**: the assembly with the approximation error
 already sent to zero and no bound on the process.
@@ -47818,6 +47931,14 @@ the image laws compactly contained, the set `{P.map (Φ i) | i}` is tight in `D(
 and it is the reason the whole weighted chain exists: the rescaled random walk of Donsker's
 acceptance test is not uniformly bounded, and its approximating pairs approximate the walk
 itself, not a bounded function of it.
+
+**Its hypothesis is nevertheless unsatisfiable on those walks**, and that is
+`MeasureTheory.not_forall_isApproximableMul_rescaledWalk`: `MeasureTheory.IsApproximableMul` asks
+its second pair to approximate `V ^ 2` to *every* error at a fixed member, and a walk moves its
+mean square across every cell of its own mesh.  What the acceptance test needs is this statement
+with the error quantified outside the index as well, which is the conjunction of this weakening
+with the one of `MeasureTheory.IsEventuallyApproximable`.  The statement below is therefore read
+at families whose members do not jump at deterministic times.
 
 **It does not go through a post-composition, and that is not an economy but a necessity.**
 `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_isApproximable` asks for approximating
@@ -52351,6 +52472,128 @@ theorem isEventuallyApproximable_rescaledWalk {P : Measure Ω} [IsProbabilityMea
       (fun ω ↦ oscHitSeqGap_le_coe k δ u ω)
       (integrable_majorant_sq_rescaledWalk (σ := σ) hLp n (u + δ))
       (fun t ht ω ↦ abs_sq_rescaledWalk_le_of_le (P := P) n ht ω)
+
+/-! ### What the walks do *not* satisfy, and it is the condition at a fixed mesh
+
+`MeasureTheory.isEventuallyApproximable_rescaledWalk` above pays the acceptance test with the
+error quantified **outside** the index.  This subsection says why nothing weaker in that respect
+will do: the rescaled walk at a **fixed** mesh satisfies neither
+`MeasureTheory.IsApproximable` nor `MeasureTheory.IsApproximableMul`, and the reason is not a
+bound on the process but the deterministic mesh.
+
+**The cell is the first one of the walk's own mesh**, `Set.Ico 0 (n + 1)⁻¹`, on which the walk is
+the empty sum at every sample point.  Its mean does not move -- the walk is centred -- so
+`MeasureTheory.IsApproximable.integral_eq_of_eqOn_Ico` says nothing.  Its **mean square** climbs
+from `0` to `σ / (n + 1)`, and that is what
+`MeasureTheory.IsApproximable.integral_sq_eq_of_eqOn_Ico` forbids.
+
+**This settles what the weighted chain does and does not reach.**  The chain from
+`MeasureTheory.IsApproximableMul` to
+`MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isApproximableMul` was built for a process
+that is not uniformly bounded, and the rescaled walk is the case it was built for; what
+`MeasureTheory.not_forall_isApproximableMul_rescaledWalk` says is that removing the bound is not
+enough, the error having to leave the index as well.  The two weakenings are independent, and the
+one this file still owes the acceptance test is their **conjunction**.
+-/
+
+/-- The square of the rescaled walk is strongly measurable at every time. -/
+theorem aestronglyMeasurable_sq_rescaledWalk {P : Measure Ω} {ξ : ℕ → Ω → ℝ}
+    (hmeas : ∀ k, StronglyMeasurable (ξ k)) (n : ℕ) (t : ℝ≥0) :
+    AEStronglyMeasurable (fun ω ↦ ((Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ^ 2) P :=
+  (((Finset.stronglyMeasurable_fun_sum _
+    fun k _ ↦ hmeas k).const_mul _).pow 2).aestronglyMeasurable
+
+/-- The rescaled walk rests on the first cell of its own mesh. -/
+theorem rescaledWalk_eqOn_Ico_zero (ξ : ℕ → Ω → ℝ) (n : ℕ)
+    {r : ℝ≥0} (hr : r ∈ Set.Ico (0 : ℝ≥0) ((n : ℝ≥0) + 1)⁻¹) :
+    (fun ω ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+        * ∑ j ∈ Finset.range ⌊r * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+      = fun ω ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+        * ∑ j ∈ Finset.range ⌊(0 : ℝ≥0) * ((n : ℝ≥0) + 1)⌋₊, ξ j ω := by
+  have hn0 : ((n : ℝ≥0) + 1) ≠ 0 := by positivity
+  have hbmul : ((n : ℝ≥0) + 1)⁻¹ * ((n : ℝ≥0) + 1) = 1 := inv_mul_cancel₀ hn0
+  have hrlt : r * ((n : ℝ≥0) + 1) < 1 := by
+    have hlt : r * ((n : ℝ≥0) + 1) < ((n : ℝ≥0) + 1)⁻¹ * ((n : ℝ≥0) + 1) :=
+      mul_lt_mul_of_pos_right hr.2 (by positivity)
+    rwa [hbmul] at hlt
+  have hfl : ⌊r * ((n : ℝ≥0) + 1)⌋₊ = 0 := Nat.floor_eq_zero.2 hrlt
+  simp [hfl]
+
+/-- **The mean square of the rescaled walk moves across the first cell of its own mesh**, by
+`σ / (n + 1)`, the walk being `0` at `0` and one rescaled increment at `(n + 1)⁻¹`. -/
+theorem integral_sq_rescaledWalk_inv_ne {P : Measure Ω} {ξ : ℕ → Ω → ℝ}
+    {σ : ℝ} (hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = σ) (hσ : σ ≠ 0) (n : ℕ) :
+    (∫ ω, ((Real.sqrt ((n : ℝ) + 1))⁻¹
+        * ∑ j ∈ Finset.range ⌊((n : ℝ≥0) + 1)⁻¹ * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ^ 2 ∂P)
+      ≠ ∫ ω, ((Real.sqrt ((n : ℝ) + 1))⁻¹
+        * ∑ j ∈ Finset.range ⌊(0 : ℝ≥0) * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ^ 2 ∂P := by
+  have hn0 : ((n : ℝ≥0) + 1) ≠ 0 := by positivity
+  have hnR : (0 : ℝ) < (n : ℝ) + 1 := by positivity
+  have hfloorb : ⌊((n : ℝ≥0) + 1)⁻¹ * ((n : ℝ≥0) + 1)⌋₊ = 1 := by
+    rw [inv_mul_cancel₀ hn0]; simp
+  have hzero : ∫ ω, ((Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊(0 : ℝ≥0) * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ^ 2 ∂P = 0 := by
+    simp
+  have hone : ∫ ω, ((Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊((n : ℝ≥0) + 1)⁻¹ * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ^ 2 ∂P
+        = ((n : ℝ) + 1)⁻¹ * σ := by
+    rw [hfloorb]
+    have hrw : ∀ ω, ((Real.sqrt ((n : ℝ) + 1))⁻¹
+        * ∑ j ∈ Finset.range 1, ξ j ω) ^ 2 = ((n : ℝ) + 1)⁻¹ * ξ 0 ω ^ 2 := by
+      intro ω
+      rw [Finset.sum_range_one, mul_pow, inv_pow, Real.sq_sqrt hnR.le]
+    simp only [hrw]
+    rw [integral_const_mul, hsq 0]
+  rw [hzero, hone]
+  exact mul_ne_zero (by positivity) hσ
+
+/-- **The rescaled walk is approximable by no pair at a fixed mesh**, weighted or not.
+
+This is what `MeasureTheory.not_isApproximable_indicator_Ici` is asserted to imply for the walks
+in the section comments above, now proved at the walk itself. -/
+theorem not_isApproximable_rescaledWalk
+    {P : Measure Ω} [IsProbabilityMeasure P] {ξ : ℕ → Ω → ℝ}
+    (hmeas : ∀ k, StronglyMeasurable (ξ k))
+    {σ : ℝ} (hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = σ) (hσ : σ ≠ 0)
+    {𝓕 : Filtration ℝ≥0 mΩ} {q : ENNReal} {T K : ℝ≥0} {ε₀ : ℝ} {u : ℝ≥0} (n : ℕ)
+    (hT : ((n : ℝ≥0) + 1)⁻¹ ≤ T) :
+    ¬ IsApproximable 𝓕 P q T K
+        (fun (t : ℝ≥0) (ω : Ω) ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+          * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ε₀ u :=
+  fun happ ↦ integral_sq_rescaledWalk_inv_ne hsq hσ n
+    (happ.integral_sq_eq_of_eqOn_Ico (aestronglyMeasurable_sq_rescaledWalk hmeas n)
+      (by positivity) hT (fun r hr ↦ rescaledWalk_eqOn_Ico_zero ξ n hr))
+
+/-- **The rescaled walk is not weighted approximable at a fixed mesh.** -/
+theorem not_isApproximableMul_rescaledWalk
+    {P : Measure Ω} [IsProbabilityMeasure P] {ξ : ℕ → Ω → ℝ}
+    (hmeas : ∀ k, StronglyMeasurable (ξ k))
+    {σ : ℝ} (hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = σ) (hσ : σ ≠ 0)
+    {𝓕 : Filtration ℝ≥0 mΩ} {q : ENNReal} {T K Kw : ℝ≥0} {ε₀ : ℝ} {u : ℝ≥0} (n : ℕ)
+    (hT : ((n : ℝ≥0) + 1)⁻¹ ≤ T) :
+    ¬ IsApproximableMul 𝓕 P q T K Kw
+        (fun (t : ℝ≥0) (ω : Ω) ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+          * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ε₀ u :=
+  fun happ ↦ integral_sq_rescaledWalk_inv_ne hsq hσ n
+    (happ.integral_sq_eq_of_eqOn_Ico (aestronglyMeasurable_sq_rescaledWalk hmeas n)
+      (by positivity) hT (fun r hr ↦ rescaledWalk_eqOn_Ico_zero ξ n hr))
+
+/-- **The family hypothesis of `MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isApproximableMul`
+is unsatisfiable on Donsker's data.** -/
+theorem not_forall_isApproximableMul_rescaledWalk
+    {P : Measure Ω} [IsProbabilityMeasure P] {ξ : ℕ → Ω → ℝ}
+    (hmeas : ∀ k, StronglyMeasurable (ξ k))
+    {σ : ℝ} (hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = σ) (hσ : σ ≠ 0)
+    {𝓕 : Filtration ℝ≥0 mΩ} :
+    ¬ ∀ ε₀ : ℝ, 0 < ε₀ → ∀ u : ℝ≥0, 0 < u → ∃ q : ENNReal, ∃ T K Kw : ℝ≥0, u < T ∧
+        ∀ n : ℕ, IsApproximableMul 𝓕 P q T K Kw
+          (fun (t : ℝ≥0) (ω : Ω) ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+            * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ε₀ u := by
+  intro h
+  obtain ⟨q, T, K, Kw, huT, happ⟩ := h 1 one_pos 1 one_pos
+  refine not_isApproximableMul_rescaledWalk hmeas hsq hσ 0 ?_ (happ 0)
+  simpa using huT.le
 
 end WalkContainment
 

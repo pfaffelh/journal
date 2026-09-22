@@ -14296,22 +14296,79 @@ has to be chosen once for all `n`. What stands:
   bounded `g` being bounded; the laws of the paths themselves are not. For the
   rescaled walk it is `isCompactContained_rescaledWalk`.
 
-  **What remains for Donsker's tightness is the acceptance case itself**: that
-  the rescaled walk satisfies `IsApproximableMul` at every horizon. Its two pairs
-  exist (`isApproximatingPair_rescaledWalk`, `isApproximatingPair_sq_rescaledWalk`)
-  and their error is exactly `0`, so the weighted error is `0` against any weight;
-  what is to be checked is `Kw = 0` — a statement about the density `Z` of the
-  first pair and not about its error — and the eight `L²` families at the capped
-  and the gap times, which at error `0` are statements about the walk itself at a
-  bounded stopping time.
+  **The acceptance case is not reachable from here, and that is measured and not
+  suspected** (2026-09-22, eleventh run). The rescaled walk does **not** satisfy
+  `IsApproximableMul` at a fixed mesh, so the hypothesis of the statement above
+  is unsatisfiable on Donsker's data:
+
+  ```
+  MeasureTheory.integral_eq_of_eqOn_Ico_of_exists_approximatingPair
+  MeasureTheory.IsApproximable.integral_sq_eq_of_eqOn_Ico
+  MeasureTheory.IsApproximableMul.integral_sq_eq_of_eqOn_Ico
+  MeasureTheory.not_isApproximableMul_of_eqOn_Ico_of_integral_sq_ne
+  MeasureTheory.aestronglyMeasurable_sq_rescaledWalk
+  MeasureTheory.rescaledWalk_eqOn_Ico_zero
+  MeasureTheory.integral_sq_rescaledWalk_inv_ne
+  MeasureTheory.not_isApproximable_rescaledWalk
+  MeasureTheory.not_isApproximableMul_rescaledWalk
+  MeasureTheory.not_forall_isApproximableMul_rescaledWalk
+  ```
+
+  **Where the earlier reading went wrong.** The error of the walk's own pair is
+  exactly `0`, and that is true; but `IsApproximableMul` carries **two** pairs,
+  and the second approximates `V ^ 2` with the plain, unweighted error. The
+  weakening touches the first pair only. The second is subject to the cell
+  obstruction word for word, and the walk fails it: the walk rests on
+  `Set.Ico 0 (n + 1)⁻¹` as a function of time *and* of the sample point, its mean
+  does not move there — it is centred, which is why
+  `IsApproximable.integral_eq_of_eqOn_Ico` says nothing about it — but its
+  **mean square** climbs from `0` to `σ / (n + 1)`. Hence the refutation needs
+  `σ ≠ 0` and nothing else: no independence, no `L²`, no filtration.
+
+  **Two weakenings, and they are independent.** `IsApproximableMul` removes the
+  **bound on the process**; `IsEventuallyApproximable` moves the **error outside
+  the index**. The walk needs both, and neither implies the other:
+  `isEventuallyApproximable_rescaledWalk` is the second one alone and lives on a
+  process the estimate then reads through a bounded `g`.
+
+  **The named point this leaves**, and it is what Donsker's tightness now owes:
+
+  * `MeasureTheory.IsEventuallyApproximableMul` — the conjunction: to every
+    error a finite exceptional set, off which every member has two pairs over
+    **its own** filtration, the first with the **weighted** error and the second
+    with the plain error of the square, at common constants `q`, `T`, `K`, `Kw`.
+    It is `IsEventuallyApproximable` with the two weighted fields of
+    `IsApproximableMul` in place of their plain neighbours, and the filtration
+    indexed as there.
+  * `MeasureTheory.exists_finite_forall_measure_setOf_lt_modulusBased_le_of_isEventuallyApproximableMul`
+    — the uniform modulus estimate over such a family, in the order `N`, `ε`,
+    `δ`, which is the order of
+    `exists_finite_forall_measure_setOf_lt_modulusBased_postcomp_le_of_isEventuallyApproximable`
+    and **not** that of
+    `exists_forall_measure_setOf_lt_modulusBased_le_of_forall_isApproximableMul`:
+    the error survives into the estimate, so the window is chosen last and at
+    that error, from `tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` at `A = a₀`.
+  * `MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul`
+    — the tightness, off a finite exceptional set, through
+    `SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal` and
+    `SkorokhodSpace.measure_map_setOf_le_modulusBased_le`, with the exceptions
+    tight one by one by `isTightMeasureSet_of_finite`.
+  * `MeasureTheory.isEventuallyApproximableMul_rescaledWalk` — the acceptance
+    case. Its inputs all exist: the two pairs, the error
+    `lintegral_biSup_enorm_sub_sq_rescaledWalk_le` of the square, the weighted
+    error `0` of the first pair, `Kw = 0` for the vanishing compensator, and the
+    majorants `integrable_majorant_rescaledWalk`,
+    `integrable_majorant_sq_rescaledWalk` for the stopped values — the last in
+    the `MemLp … 2` form the weighted structure asks for, which is the one new
+    thing to check.
 
   **The alternative, and why it is the more expensive one.** The acceptance
   example below states Donsker with `A = {(f, f''/2) | f ∈ Cc^∞(ℝ)}`, that is,
   with the martingale hypothesis at `f ∘ X n` for bounded `f`. Building the
   pairs there is the Lindeberg–Taylor computation and not a corollary of the two
   pairs above, whose approximants are the walk and its square. Either route
-  closes the item; the weakening of the bound reuses what is built, the other
-  does not.
+  closes the item; the conjunction of the two weakenings reuses what is built,
+  the other does not.
 
 * Convergence in measure as a second mode: the space of càdlàg paths with the
   topology of convergence in Lebesgue measure, in which the coordinates are

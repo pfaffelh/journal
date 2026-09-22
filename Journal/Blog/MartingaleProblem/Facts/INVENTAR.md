@@ -56733,3 +56733,169 @@ Pfadraumaufgabe als Integritätsproblem benannt hat.
    ist die eigentliche Arbeit jenes Laufs**, und wenn sie sich als teuer erweist, ist das ein
    Meßwert und kein Scheitern: er sagt dann, was eine Straffheitsbedingung über einem
    unbeschränkten Prozeß an Integrierbarkeit wirklich kostet.
+
+### 2026-09-22, elfter Lauf des Tages — das benannte Ziel des Vorlaufs ist **widerlegt**, und zwar in Lean: die reskalierte Irrfahrt erfüllt `IsApproximableMul` an **keinem** Index, der Grund ist nicht die fehlende Schranke, sondern das **zweite Paar**; damit hat die ganze gewichtete Kette des Vorlaufs auf Donskers Daten eine unerfüllbare Voraussetzung
+
+*Elf Deklarationen, alle in `MartingaleProblems`, alle durch `check_master.py` mit 0 Fehlern und
+0 `sorry`, alle mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft. Eine
+davon ersetzt einen hundertzeiligen Beweis durch einen vierzeiligen.*
+
+**Das benannte Ziel des Vorlaufs war `MeasureTheory.isApproximableMul_rescaledWalk`** — „die
+reskalierte Irrfahrt erfüllt `IsApproximableMul` an jedem Horizont, mit `Kw = 0`". Der Vorlauf
+nannte drei zu klärende Stellen und hielt die erste für geschenkt. Sie ist geschenkt; die Aussage
+ist trotzdem **falsch**, und die drei Stellen sind nicht der Grund.
+
+#### Warum sie falsch ist, in einem Satz
+
+`IsApproximableMul` trägt **zwei** Paare, und die Abschwächung rührt nur das **erste** an. Das
+zweite approximiert `V ^ 2` mit dem **ungewichteten** Fehler, wörtlich wie in `IsApproximable`.
+Auf dieses zweite Paar greift die Zellenschranke unverändert:
+
+* die Irrfahrt ruht auf `Set.Ico 0 (n + 1)⁻¹` — als Funktion der Zeit **und** des
+  Stichprobenpunktes, denn dort ist sie die leere Summe;
+* ihr **Mittelwert** bewegt sich nicht, sie ist zentriert. Deshalb sagt
+  `IsApproximable.integral_eq_of_eqOn_Ico` über sie **nichts**, und deshalb war der Befund bisher
+  unsichtbar;
+* ihr **mittleres Quadrat** steigt von `0` auf `σ / (n + 1)`.
+
+Ein approximierendes Paar hat einen absolutstetigen Kompensator und kann diesen Sprung nicht
+mitmachen. Also gibt es das zweite Paar nicht, an keinem Fehler unterhalb von `σ / (n + 1)`.
+
+**Gebraucht wird dafür `σ ≠ 0` und sonst nichts** — keine Unabhängigkeit, keine
+Quadratintegrierbarkeit, keine Filtration, kein Horizont über `(n + 1)⁻¹` hinaus. Das ist der
+schmalste mögliche Zeuge, und er ist der Grund, daß der Lauf nicht an den drei angesagten Stellen
+hängenblieb: er kam gar nicht bis dorthin.
+
+#### Was gebaut ist
+
+**Zuerst ein Umbau, kein Zusatz.** Der Beweis von `IsApproximable.integral_eq_of_eqOn_Ico` liest
+von der Bedingung nur zweierlei: den Exponenten und **ein** Paar mit seinem Fehler auf dem
+Horizont. Er ist deshalb herausgezogen:
+
+* **`MeasureTheory.integral_eq_of_eqOn_Ico_of_exists_approximatingPair`** (Z. 46739) — die
+  Zellenschranke **am Paar** statt an der Bedingung, mit einem freien `W`. Die beiden Felder, die
+  sie liest, sind die Martingaleigenschaft (über die Konstanz des Mittelwerts) und
+  `IsApproximatingPair.lintegral_enorm_compensator_sub_le` am Fenster `(r, b]`. **Die Filtration
+  kommt darin nicht vor.**
+* **`MeasureTheory.IsApproximable.integral_eq_of_eqOn_Ico`** (Z. 46860) ist damit **vier Zeilen**
+  statt hundert; die Aussage ist unverändert.
+
+**Dann die drei Lesarten, die es vorher nicht gab:**
+
+* **`MeasureTheory.IsApproximable.integral_sq_eq_of_eqOn_Ico`** (Z. 46922) — dieselbe Schranke am
+  **zweiten** Paar: ruht `V` auf einer Zelle, so bewegt sich auch das mittlere **Quadrat** nicht.
+* **`MeasureTheory.IsApproximableMul.integral_sq_eq_of_eqOn_Ico`** (Z. 47259) — dasselbe für die
+  gewichtete Bedingung, und der Beweis ist derselbe, weil das zweite Paar dort dasselbe ist.
+* **`MeasureTheory.not_isApproximableMul_of_eqOn_Ico_of_integral_sq_ne`** (Z. 47277) — die
+  Umkehrung, in der Gestalt, in der ein Verbraucher sie antrifft.
+
+**Und die Anwendung auf die Irrfahrt, im Abschnitt `WalkContainment`:**
+
+| Zeile | Name |
+| ---: | --- |
+| 52500 | `aestronglyMeasurable_sq_rescaledWalk` |
+| 52508 | `rescaledWalk_eqOn_Ico_zero` |
+| 52525 | `integral_sq_rescaledWalk_inv_ne` |
+| 52555 | `not_isApproximable_rescaledWalk` |
+| 52569 | `not_isApproximableMul_rescaledWalk` |
+| 52584 | `not_forall_isApproximableMul_rescaledWalk` |
+
+Die letzte ist die, auf die es ankommt:
+
+```lean
+¬ ∀ ε₀ : ℝ, 0 < ε₀ → ∀ u : ℝ≥0, 0 < u → ∃ q : ENNReal, ∃ T K Kw : ℝ≥0, u < T ∧
+    ∀ n : ℕ, IsApproximableMul 𝓕 P q T K Kw (reskalierte Irrfahrt der Maschenweite n) ε₀ u
+```
+
+Das ist **wörtlich die Voraussetzung `happ` von
+`isTightMeasureSet_map_pathOfProcess_of_isApproximableMul`**, dem Satz, mit dem der zehnte Lauf
+endete. Sie ist auf Donskers Daten unerfüllbar. Der Beweis nimmt `ε₀ = u = 1`, liest `1 < T`
+heraus und setzt `n = 0` ein; mehr braucht er nicht, weil die Zelle des nullten Gliedes
+`Set.Ico 0 1` ist und `1 ≤ T`.
+
+#### Drei Befunde
+
+* **`not_isApproximable_rescaledWalk` löst eine Behauptung ein, die bisher nur im Fließtext
+  stand.** Der Abschnittskommentar über `IsEventuallyApproximable` sagt seit dem 2026-09-21, die
+  reskalierten Irrfahrten seien Prozesse, die „an deterministischen Zeiten springen", und beruft
+  sich dafür auf `not_isApproximable_indicator_Ici` — einen Satz über einen **anderen** Prozeß.
+  Die Übertragung war nie geführt. Sie ist es jetzt, und sie geht **nicht** über den
+  Einheitssprung, sondern über das Quadrat: der Einheitssprung bewegt seinen Mittelwert, die
+  zentrierte Irrfahrt nicht.
+* **Die beiden Abschwächungen sind unabhängig, und keine ersetzt die andere.**
+  `IsApproximableMul` nimmt die **Schranke vom Prozeß**; `IsEventuallyApproximable` schiebt den
+  **Fehler aus dem Index**. Die Irrfahrt braucht beide. Der zehnte Lauf hat die erste gebaut und
+  die zweite steht seit dem fünften; ihre **Konjunktion** gibt es nicht, und sie ist die ganze
+  restliche Arbeit der Straffheitsseite von Donsker.
+* **Der Vorlauf hat sich nicht verrechnet, sondern die Struktur an der falschen Stelle gelesen.**
+  Sein Satz „der gewichtete Fehler ist `0`, weil der Fehler `0` ist" ist richtig — für das
+  **erste** Feld. Die drei Stellen, die er zu klären ansagte (`Kw = 0`, die acht `MemLp`-Familien),
+  sind alle Aussagen über das erste Paar und über `V` selbst. Das zweite Paar kam in seiner Liste
+  nicht vor. Das ist dasselbe Muster wie beim Müllwert: eine Bedingung wird an den Feldern
+  geprüft, an die man gerade denkt.
+
+#### Prüfung
+
+`scripts/check_master.py` gegen `upstream/master`
+(`94ef6b89544e58e90f119da869f3fb48d1da0f4c`, Lean `4.35.0-rc2`): **0 Fehler, 0 `sorry`** in allen
+drei Dateien, Warnungen **18 / 38 / 112, davon 0 veraltet** — **unverändert** gegenüber dem
+Vorlauf, also erzeugen die elf neuen Deklarationen keine einzige Warnung.
+`scripts/check_axioms_master.py` (mit `--build`): alle elf auf `propext`, `Classical.choice`,
+`Quot.sound`.
+`check_cited_lines.py`: **445 gepaarte Fundstellen, 0 verschoben, 0 tot** — unverändert.
+
+#### Drei Stellen im Quelltext sind berichtigt, nicht nur ergänzt
+
+Eine widerlegte Behauptung stehenzulassen wäre schlimmer, als sie nie geschrieben zu haben:
+
+* der Abschnittskommentar über `IsApproximableMul` sagte „das ist der Fall, für den dieser
+  Abschnitt existiert" — er sagt jetzt, daß die Abschwächung den **Übergang** trägt und den
+  **Akzeptanzfall nicht**, mit Verweis auf die beiden neuen Negativsätze;
+* der Doc-Kommentar von `isTightMeasureSet_map_pathOfProcess_of_isApproximableMul` trägt jetzt
+  den Satz, daß seine Voraussetzung auf jenen Irrfahrten unerfüllbar ist, und wofür er statt
+  dessen zu lesen ist;
+* `MartingaleProblems/README.md`, Meilenstein 11: der Absatz „Was für Donskers Straffheit noch
+  fehlt" behauptete, die Irrfahrt erfülle `IsApproximableMul`. Er ist durch den Befund ersetzt,
+  samt den vier benannten Punkten, die die Konjunktion der beiden Abschwächungen ausmachen.
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`MeasureTheory.IsEventuallyApproximableMul`** — die Konjunktion der beiden Abschwächungen, und
+unmittelbar danach
+**`MeasureTheory.exists_finite_forall_measure_setOf_lt_modulusBased_le_of_isEventuallyApproximableMul`**.
+
+*Die Aussage:* zu jedem Fehler eine **endliche** Ausnahmemenge, außerhalb deren jedes Glied zwei
+Paare über **seiner eigenen** Filtration hat — das erste mit dem **gewichteten** Fehler, das
+zweite mit dem gewöhnlichen Fehler des Quadrats —, bei gemeinsamen Konstanten `q`, `T`, `K`,
+`Kw`. Das ist `IsEventuallyApproximable` mit den beiden gewichteten Feldern von
+`IsApproximableMul` an der Stelle ihrer ungewichteten Nachbarn.
+
+*Worauf sie ruht:* die gewichtete Kette bis
+`mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair_of_integrable_mul` (zehnter Lauf,
+bewiesen) und die Ordnung der drei Wahlen aus
+`exists_finite_forall_measure_setOf_lt_modulusBased_postcomp_le_of_isEventuallyApproximable`
+(fünfter Lauf, bewiesen). Nichts Neues an Theorie.
+
+*Warum jetzt:* weil nach diesem Lauf feststeht, daß **keine** der beiden vorhandenen Bedingungen
+die Irrfahrt trifft, und die Konjunktion die einzige ist, die es tut. Die gewichtete Kette des
+zehnten Laufs ist sonst Theorie über einer leeren Voraussetzung — genau die Lage, die der
+Meilenstein 6 der Pfadraumaufgabe als Integritätsproblem benannt hat.
+
+*Der eine Punkt, an dem es klemmen kann, und er ist benannt:* die Reihenfolge der drei
+Grenzübergänge. Die gewichtete Fassung des zehnten Laufs nimmt `N`, `δ`, `ε`, weil der Fehler im
+Grenzwert verschwindet; die Ausnahmemengenfassung braucht `N`, `ε`, `δ`, weil der Fehler in die
+Abschätzung überlebt. Der Anschluß ist `tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` bei `A = a₀`
+statt bei `A = 0` — dort steht `A` schon frei, und der fünfte Lauf ist der Verbraucher, der es
+dort liest. Der gewichtete Zusammenbau gibt `A = 2 ε' + 4 γ` mit `γ` dem gewichteten Fehler; zu
+prüfen ist, ob `γ` dieselbe Rolle spielt wie dort `‖g‖ ε`, also ob es mit dem Fehler und nicht
+mit dem Glied klein wird.
+
+*Und was danach kommt, damit der übernächste Lauf es nicht neu erschließt:*
+`isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul` (die Straffheit selbst, mit
+den Ausnahmen einzeln straff über `isTightMeasureSet_of_finite`) und
+`isEventuallyApproximableMul_rescaledWalk` (der Akzeptanzfall). Dessen Eingaben stehen alle:
+die zwei Paare, der Fehler `lintegral_biSup_enorm_sub_sq_rescaledWalk_le` des Quadrats, der
+gewichtete Fehler `0` des ersten Paars, `Kw = 0` für den verschwindenden Kompensator, und die
+Majoranten `integrable_majorant_rescaledWalk`, `integrable_majorant_sq_rescaledWalk` — letztere
+in der `MemLp … 2`-Gestalt, die die gewichtete Struktur verlangt, und das ist das einzige daran,
+was neu zu prüfen ist.
