@@ -43870,6 +43870,71 @@ theorem sum_lintegral_enorm_compensator_sub_le (h : IsApproximatingPair 𝓕 P q
         lintegral_const_mul' _ _ hc
     _ ≤ _ := mul_le_mul_right h.lintegral_eLpNorm_le _
 
+/-- **The same chain with a weight under the integral that changes with the cell**:
+
+```
+∑ k ∈ Finset.range N, ∫⁻ ω, w k ω * ‖C (σ (k+1) ω) ω - C (σ k ω) ω‖ₑ ∂P
+  ≤ ENNReal.ofReal u ^ (1 - 1/q.toReal) * Kw
+```
+
+for weights `w k` dominated by a single `M : Ω → ℝ≥0∞` and
+`Kw` a bound on `∫⁻ ω, M ω * eLpNorm (Z (·, ω)) q (volume.restrict (Ioc 0 T)) ∂P`.
+
+**Why `Kw` and not `K`.**  `sum_lintegral_enorm_compensator_sub_le` ends by pulling the constant
+`ofReal u ^ (1 - 1/q)` out with `MeasureTheory.lintegral_const_mul'` and reading the class field
+`lintegral_eLpNorm_le`.  With a weight in front of the density both factors depend on `ω`, and
+from `∫⁻ eLpNorm ≤ K` alone nothing follows for the product: that is the exact point at which a
+weighted chain leaves the class behind, and naming it as a parameter is the honest form.  Two
+cases discharge it without a new field: a **deterministic** `Z`, where `eLpNorm (Z (·, ω))` is a
+constant and `Kw = (that constant) * ∫⁻ M`; and a **vanishing** compensator, `Z = 0`, where
+`Kw = 0` whatever the weight.  The second is the case of the rescaled random walk, which is its
+own martingale.
+
+**The weight is dominated and not bounded**, and the difference is what makes the statement
+usable: the consumer's weight is `‖V (σ k ω) ω‖ₑ` and changes with the stage, while `M` is the
+running maximum `⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ`, which dominates it because `σ k ω ≤ u`.  A
+pointwise bound on `V` would give `M` constant and the statement would collapse to the
+unweighted one.
+
+Nothing beyond `sum_enorm_compensator_sub_le` is used, and as there no stopping time, no
+measurability of `σ` and no `N` on the right. -/
+theorem sum_lintegral_mul_enorm_compensator_sub_le (h : IsApproximatingPair 𝓕 P q T K Y C Z)
+    {N : ℕ} {σ : ℕ → Ω → ℝ≥0} (hσ : ∀ k ω, σ k ω ≤ σ (k + 1) ω)
+    {u : ℝ≥0} (huN : ∀ ω, σ N ω ≤ u) (huT : u ≤ T)
+    {w : ℕ → Ω → ENNReal} {M : Ω → ENNReal} (hw : ∀ k ω, w k ω ≤ M ω)
+    {Kw : ENNReal}
+    (hKw : ∫⁻ ω, M ω
+        * eLpNorm (fun s ↦ Z s ω) q (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ))) ∂P ≤ Kw) :
+    ∑ k ∈ Finset.range N, ∫⁻ ω, w k ω * ‖C (σ (k + 1) ω) ω - C (σ k ω) ω‖ₑ ∂P
+      ≤ ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * Kw := by
+  have hc : ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) ≠ ⊤ :=
+    (ENNReal.rpow_lt_top_of_nonneg (le_of_lt (one_sub_one_div_toReal_pos h.one_lt_exponent))
+      ENNReal.ofReal_ne_top).ne
+  calc ∑ k ∈ Finset.range N, ∫⁻ ω, w k ω * ‖C (σ (k + 1) ω) ω - C (σ k ω) ω‖ₑ ∂P
+      ≤ ∫⁻ ω, ∑ k ∈ Finset.range N, w k ω * ‖C (σ (k + 1) ω) ω - C (σ k ω) ω‖ₑ ∂P :=
+        le_lintegral_finsetSum _ _
+    _ ≤ ∫⁻ ω, ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal)
+          * (M ω * eLpNorm (fun s ↦ Z s ω) q
+              (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ)))) ∂P := by
+        refine lintegral_mono_ae ?_
+        filter_upwards [h.ae_integrableOn] with ω hω
+        calc ∑ k ∈ Finset.range N, w k ω * ‖C (σ (k + 1) ω) ω - C (σ k ω) ω‖ₑ
+            ≤ ∑ k ∈ Finset.range N, M ω * ‖C (σ (k + 1) ω) ω - C (σ k ω) ω‖ₑ :=
+              Finset.sum_le_sum fun k _ ↦ mul_le_mul_left (hw k ω) _
+          _ = M ω * ∑ k ∈ Finset.range N, ‖C (σ (k + 1) ω) ω - C (σ k ω) ω‖ₑ :=
+              (Finset.mul_sum _ _ _).symm
+          _ ≤ M ω * (ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal)
+                * eLpNorm (fun s ↦ Z s ω) q
+                    (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ)))) :=
+              mul_le_mul_right
+                (h.sum_enorm_compensator_sub_le hω (fun k ↦ hσ k ω) (huN ω) huT) _
+          _ = _ := by ring
+    _ = ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal)
+          * ∫⁻ ω, M ω * eLpNorm (fun s ↦ Z s ω) q
+              (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ))) ∂P :=
+        lintegral_const_mul' _ _ hc
+    _ ≤ _ := mul_le_mul_right hKw _
+
 /-- **The compensator vanishes at the origin**, the window `(0,0]` being empty.  It is
 `IsApproximatingPair.compensator_eq` at `t = 0` and nothing else, and it is what makes the
 integrability of a single value of the compensator a special case of
@@ -45156,6 +45221,117 @@ theorem lintegral_ofReal_dist_sq_le_of_isApproximatingPair
                 + ENNReal.ofReal c * (2 * ε)) := by gcongr
     _ = _ := by ring
 
+/-- **The same cell without any bound on the process**, the weight left under the lower
+integral:
+
+```
+∫⁻ ω, ENNReal.ofReal (dist (stoppedValue V β ω) (stoppedValue V α ω)) ^ 2 ∂P
+  ≤ (∫⁻ ω, ‖C' (β ω) ω - C' (α ω) ω‖ₑ ∂P
+      + 2 * ∫⁻ ω, ‖stoppedValue V α ω‖ₑ * ‖C (β ω) ω - C (α ω) ω‖ₑ ∂P)
+    + (2 ε' + 4 γ)
+```
+
+with `γ` the **weighted** approximation error
+`∫⁻ ω, ‖stoppedValue V α ω‖ₑ * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P` in place of
+`hVb : ∀ t ω, ‖V t ω‖ ≤ c`.
+
+**This is the first of the two statements of the chain that read the bound itself**, and where
+it went.  `MeasureTheory.lintegral_ofReal_dist_sq_le_of_isApproximatingPair` spends `hVb` seven
+times, and each of the seven is replaced here by a hypothesis of square integrability:
+`hVα`, `hVβ` give the integrability of the stopped values and of their squares
+(`MeasureTheory.MemLp.integrable_sq`, `MeasureTheory/Function/L2Space.lean:42`) and of the
+square of the increment; the four products -- the cross term, the approximant increment, and the
+two weights of the compensator identity -- are Cauchy--Schwarz, which is
+`MeasureTheory.MemLp.fun_mul` (`MeasureTheory/Function/LpSeminorm/CompareExp.lean:537`, in its
+`to_fun` form) at the instance `ENNReal.HolderTriple.instTwoTwo`
+(`Mathlib/Basic/ENNReal/Holder.lean:133`) followed by
+`MeasureTheory.memLp_one_iff_integrable`.
+
+**The `L²` hypotheses are asked of `Y` and `C` and not merely of `V`**, and that is not
+symmetry: the compensator identity
+`IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le_lintegral_mul` asks for the
+integrability of *four products* of the weight with the stopped values of `Y` and of `C`, and
+there is nothing else in the class that produces them.  In exchange the two plain
+integrabilities of the stopped values of `Y`, which the bounded statement carries, fall away.
+
+**What is not weakened, and it is visible in the conclusion.**  The second summand is now
+`2 * ∫⁻ ‖V(α)‖ₑ * ‖ΔC‖ₑ` and no longer `2 c * ∫⁻ ‖ΔC‖ₑ`; the weight travels *inside* the
+integral, so `MeasureTheory.lintegral_const_mul'` is not available to a consumer summing over a
+chain of cells whose weight changes with the cell.  For a pair with a deterministic density --
+and for the two pairs of the acceptance example, where the walk's compensator is identically
+zero -- the sum is unaffected, the weighted summand being zero there; for a general kernel the
+passage needs an `L²` bound on `eLpNorm (Z (·, ω))`, which the class does not carry.  That is
+recorded at
+`IsApproximatingPair.sum_lintegral_enorm_compensator_sub_le`, whose `lintegral_const_mul'` step
+is the exact place.
+
+The increment of the square is read at the weight `1`, where the bound is `1` and not `c`, so
+the first summand and the hypothesis `hε'` are those of the bounded statement unchanged. -/
+theorem lintegral_ofReal_dist_sq_le_of_isApproximatingPair_of_integrable_mul
+    {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K : ℝ≥0} {V Y C Y' C' : ℝ≥0 → Ω → ℝ} {Z Z' : ℝ → Ω → ℝ}
+    (h : IsApproximatingPair 𝓕 P q T K Y C Z) (h' : IsApproximatingPair 𝓕 P q T K Y' C' Z')
+    (hV : IsStronglyProgressive 𝓕 V)
+    {j : ℝ≥0} {α β : Ω → ENNReal} (hα : IsStoppingTime 𝓕 α) (hβ : IsStoppingTime 𝓕 β)
+    (hαβ : α ≤ β) (hβj : ∀ ω, β ω ≤ (j : ENNReal))
+    {W : Set ℝ≥0} (hαW : ∀ ω, (α ω).untopA ∈ W) (hβW : ∀ ω, (β ω).untopA ∈ W)
+    {γ ε' : ENNReal}
+    (hγ : ∫⁻ ω, ‖stoppedValue V α ω‖ₑ * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P ≤ γ)
+    (hε' : ∫⁻ ω, ⨆ t ∈ W, ‖Y' t ω - V t ω ^ 2‖ₑ ∂P ≤ ε')
+    (hVα : MemLp (stoppedValue V α) 2 P) (hVβ : MemLp (stoppedValue V β) 2 P)
+    (hYα : MemLp (stoppedValue Y α) 2 P) (hYβ : MemLp (stoppedValue Y β) 2 P)
+    (hCα : MemLp (stoppedValue C α) 2 P) (hCβ : MemLp (stoppedValue C β) 2 P)
+    (hY'α : Integrable (stoppedValue Y' α) P) (hY'β : Integrable (stoppedValue Y' β) P) :
+    ∫⁻ ω, ENNReal.ofReal (dist (stoppedValue V β ω) (stoppedValue V α ω)) ^ 2 ∂P
+      ≤ (∫⁻ ω, ‖C' ((β ω).untopA) ω - C' ((α ω).untopA) ω‖ₑ ∂P
+          + 2 * ∫⁻ ω, ‖stoppedValue V α ω‖ₑ
+              * ‖C ((β ω).untopA) ω - C ((α ω).untopA) ω‖ₑ ∂P)
+        + (2 * ε' + 4 * γ) := by
+  -- the product of two `L²` functions is integrable, which is Cauchy--Schwarz
+  have hmul : ∀ {f g : Ω → ℝ}, MemLp f 2 P → MemLp g 2 P →
+      Integrable (fun ω ↦ f ω * g ω) P := fun {_ _} hf hg ↦
+    memLp_one_iff_integrable.1 (hf.fun_mul hg)
+  have hIV2 : Integrable (fun ω ↦ V ((β ω).untopA) ω ^ 2 - V ((α ω).untopA) ω ^ 2) P :=
+    hVβ.integrable_sq.sub' hVα.integrable_sq
+  have hIY2 : Integrable (fun ω ↦ Y' ((β ω).untopA) ω - Y' ((α ω).untopA) ω) P :=
+    hY'β.sub' hY'α
+  have hIVc : Integrable (fun ω ↦ V ((α ω).untopA) ω
+      * (V ((β ω).untopA) ω - V ((α ω).untopA) ω)) P := hmul hVα (hVβ.sub hVα)
+  have hIYc : Integrable (fun ω ↦ V ((α ω).untopA) ω
+      * (Y ((β ω).untopA) ω - Y ((α ω).untopA) ω)) P := hmul hVα (hYβ.sub hYα)
+  have hsq : Integrable (fun ω ↦ (stoppedValue V β ω - stoppedValue V α ω) ^ 2) P :=
+    (hVβ.sub hVα).integrable_sq
+  have hbridge : ∫⁻ ω, ENNReal.ofReal (dist (stoppedValue V β ω) (stoppedValue V α ω)) ^ 2 ∂P
+      = ENNReal.ofReal (∫ ω, (stoppedValue V β ω - stoppedValue V α ω) ^ 2 ∂P) := by
+    rw [ofReal_integral_eq_lintegral_ofReal hsq
+      (Filter.Eventually.of_forall fun ω ↦ sq_nonneg _)]
+    refine lintegral_congr fun ω ↦ ?_
+    rw [Real.dist_eq, ← ENNReal.ofReal_pow (abs_nonneg _), sq_abs]
+  have hWsm : StronglyMeasurable[hα.measurableSpace] (stoppedValue V α) :=
+    (measurable_stoppedValue hV hα).stronglyMeasurable
+  have h1 : ‖∫ ω, (Y' ((β ω).untopA) ω - Y' ((α ω).untopA) ω) ∂P‖ₑ
+      ≤ ∫⁻ ω, ‖C' ((β ω).untopA) ω - C' ((α ω).untopA) ω‖ₑ ∂P := by
+    have hone := h'.enorm_integral_mul_stoppedValue_sub_le_lintegral hα hβ hαβ hβj hY'α hY'β
+      (W := fun _ ↦ (1 : ℝ)) stronglyMeasurable_const (c := 1) (fun ω ↦ by simp)
+    simp only [one_mul, ENNReal.ofReal_one] at hone
+    exact hone
+  have h2 : ‖∫ ω, V ((α ω).untopA) ω * (Y ((β ω).untopA) ω - Y ((α ω).untopA) ω) ∂P‖ₑ
+      ≤ ∫⁻ ω, ‖stoppedValue V α ω‖ₑ
+          * ‖C ((β ω).untopA) ω - C ((α ω).untopA) ω‖ₑ ∂P :=
+    h.enorm_integral_mul_stoppedValue_sub_le_lintegral_mul hα hβ hαβ hβj hWsm
+      (hmul hVα hYα) (hmul hVα hYβ) (hmul hVα hCα) (hmul hVα hCβ)
+  calc ∫⁻ ω, ENNReal.ofReal (dist (stoppedValue V β ω) (stoppedValue V α ω)) ^ 2 ∂P
+      = ENNReal.ofReal (∫ ω, (stoppedValue V β ω - stoppedValue V α ω) ^ 2 ∂P) := hbridge
+    _ ≤ (‖∫ ω, (Y' ((β ω).untopA) ω - Y' ((α ω).untopA) ω) ∂P‖ₑ + 2 * ε')
+        + 2 * (‖∫ ω, V ((α ω).untopA) ω
+                  * (Y ((β ω).untopA) ω - Y ((α ω).untopA) ω) ∂P‖ₑ + 2 * γ) :=
+        ofReal_integral_sq_sub_le_of_lintegral_mul_biSup_le hαW hβW hγ hε' hIV2 hIY2
+          hIVc hIYc
+    _ ≤ (∫⁻ ω, ‖C' ((β ω).untopA) ω - C' ((α ω).untopA) ω‖ₑ ∂P + 2 * ε')
+        + 2 * (∫⁻ ω, ‖stoppedValue V α ω‖ₑ
+                  * ‖C ((β ω).untopA) ω - C ((α ω).untopA) ω‖ₑ ∂P + 2 * γ) := by gcongr
+    _ = _ := by ring
+
 /-- **The horizon probability of Milestone 11, in one inequality, with `N` in the denominator**:
 
 ```
@@ -45256,6 +45432,120 @@ theorem measure_setOf_oscHitSeq_lt_le_of_isApproximatingPair
         · exact h'.sum_lintegral_enorm_compensator_sub_le hσsucc (fun ω ↦ hσle N ω) huT
         · exact h.sum_lintegral_enorm_compensator_sub_le hσsucc (fun ω ↦ hσle N ω) huT
     _ = _ := by ring
+
+/-- **The horizon term without a bound on the process**, the running maximum at the place of
+`c` and a parameter `Kw` at the place of `K`:
+
+```
+N * (ofReal ε₀ ^ 2 * P {ω | oscHitSeq V ε₀ N ω < u})
+  ≤ (ofReal u ^ (1 - 1/q) * K + 2 * (ofReal u ^ (1 - 1/q) * Kw)) + N * (2 ε' + 4 γ)
+```
+
+**The bound `hVb : ∀ t ω, ‖V t ω‖ ≤ c` is gone, and it is replaced at exactly two places.**
+In the cell it becomes the weighted error `γ`, which is
+`lintegral_ofReal_dist_sq_le_of_isApproximatingPair_of_integrable_mul`; in the chain it becomes
+the parameter `Kw`, which is
+`IsApproximatingPair.sum_lintegral_mul_enorm_compensator_sub_le`.  Nothing else of the bounded
+neighbour changes: the first summand is still the class constant of the pair approximating `V²`,
+read at the weight `1`.
+
+**Why the hypotheses are stated with the running maximum `⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ` and not
+cell by cell.**  Each cell asks its weight `‖V (σ k ω) ω‖ₑ` against its own error, and the
+weights change with the stage; a hypothesis per stage would be unusable.  The capped hitting
+times satisfy `σ k ω ≤ u` (`untopA_oscHitSeqCap_le`), so the running maximum dominates all of
+them at once, and both `hγ` and `hKw` are then single statements about the horizon.  That this
+maximum may be infinite costs nothing: the hypotheses are inequalities in `ℝ≥0∞` and are
+discharged by whatever makes the *product* small.
+
+**What discharges `Kw` in practice.**  `Kw = 0` whenever the compensator vanishes, which is the
+case of a process that is its own martingale -- the rescaled random walk of the acceptance
+example; and `Kw = ‖Z‖ * ∫⁻ (⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ)` whenever the density `Z` is
+deterministic, where the running maximum is integrated by Doob out of `L²`.  Only a random
+density against an unbounded weight needs more than the class carries, and the place where it
+is needed is named at `sum_lintegral_mul_enorm_compensator_sub_le`.
+
+The recursion enters through the same three facts as in the bounded neighbour --
+`isStoppingTime_oscHitSeqCap`, `untopA_oscHitSeqCap_le`, `untopA_oscHitSeqCap_le_succ` -- and
+the four families of hypotheses on the stopped values are what Cauchy--Schwarz needs in place
+of the bound: `V`, `Y` and `C` in `L²` at every capped stage, and `Y'` merely integrable, the
+increment of the square being read at the weight `1`. -/
+theorem measure_setOf_oscHitSeq_lt_le_of_isApproximatingPair_of_integrable_mul
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K : ℝ≥0} {V Y C Y' C' : ℝ≥0 → Ω → ℝ} {Z Z' : ℝ → Ω → ℝ}
+    (h : IsApproximatingPair 𝓕 P q T K Y C Z) (h' : IsApproximatingPair 𝓕 P q T K Y' C' Z')
+    {D : Set ℝ≥0} (hDc : D.Countable) (hDd : Dense D)
+    (hV : IsStronglyProgressive 𝓕 V)
+    (hcont : ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ V s ω) (Set.Ici t) t)
+    {u : ℝ≥0} (huT : u ≤ T) {γ ε' Kw : ENNReal} {ε₀ : ℝ}
+    (hγ : ∫⁻ ω, (⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ) * ⨆ t ∈ Set.Iic u, ‖Y t ω - V t ω‖ₑ ∂P ≤ γ)
+    (hε' : ∫⁻ ω, ⨆ t ∈ Set.Iic u, ‖Y' t ω - V t ω ^ 2‖ₑ ∂P ≤ ε')
+    (hKw : ∫⁻ ω, (⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ)
+        * eLpNorm (fun s ↦ Z s ω) q (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ))) ∂P ≤ Kw)
+    (hVmem : ∀ k : ℕ, MemLp
+      (stoppedValue V (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+    (hYmem : ∀ k : ℕ, MemLp
+      (stoppedValue Y (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+    (hCmem : ∀ k : ℕ, MemLp
+      (stoppedValue C (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+    (hY'int : ∀ k : ℕ, Integrable
+      (stoppedValue Y' (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) P)
+    (N : ℕ) :
+    (N : ENNReal) * (ENNReal.ofReal ε₀ ^ 2
+        * P {ω | oscHitSeq V ε₀ N ω < (u : WithTop ℝ≥0)})
+      ≤ (ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * K
+          + 2 * (ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * Kw))
+        + N * (2 * ε' + 4 * γ) := by
+  set τ : ℕ → Ω → WithTop ℝ≥0 :=
+    fun k ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0) with hτdef
+  set σ : ℕ → Ω → ℝ≥0 := fun k ω ↦ (τ k ω).untopA with hσdef
+  have hst : ∀ k, IsStoppingTime 𝓕 (τ k) := fun k ↦
+    isStoppingTime_oscHitSeqCap hDc hDd hV hcont k u
+  have hmono : ∀ k, τ k ≤ τ (k + 1) := fun k ω ↦
+    min_le_min (oscHitSeq_le_succ V ε₀ k ω) le_rfl
+  have hbd : ∀ k ω, τ k ω ≤ (u : WithTop ℝ≥0) := fun k ω ↦ min_le_right _ _
+  have hσle : ∀ k ω, σ k ω ≤ u := fun k ω ↦ untopA_oscHitSeqCap_le V ε₀ k u ω
+  have hσsucc : ∀ k ω, σ k ω ≤ σ (k + 1) ω := fun k ω ↦
+    untopA_oscHitSeqCap_le_succ V ε₀ k u ω
+  -- the running maximum dominates the weight of every cell, the times being capped at `u`
+  have hdom : ∀ (k : ℕ) (ω : Ω), ‖V (σ k ω) ω‖ₑ ≤ ⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ := fun k ω ↦
+    le_iSup₂ (f := fun t (_ : t ∈ Set.Iic u) ↦ ‖V t ω‖ₑ) (σ k ω) (hσle k ω)
+  have hγk : ∀ k : ℕ, ∫⁻ ω, ‖stoppedValue V (τ k) ω‖ₑ
+      * ⨆ t ∈ Set.Iic u, ‖Y t ω - V t ω‖ₑ ∂P ≤ γ := fun k ↦
+    le_trans (lintegral_mono fun ω ↦ mul_le_mul_left (hdom k ω) _) hγ
+  have hcell : ∀ k ∈ Finset.range N,
+      ∫⁻ ω, ENNReal.ofReal (dist (stoppedValue V (τ (k + 1)) ω)
+          (stoppedValue V (τ k) ω)) ^ 2 ∂P
+        ≤ (∫⁻ ω, ‖C' (σ (k + 1) ω) ω - C' (σ k ω) ω‖ₑ ∂P
+            + 2 * ∫⁻ ω, ‖V (σ k ω) ω‖ₑ * ‖C (σ (k + 1) ω) ω - C (σ k ω) ω‖ₑ ∂P)
+          + (2 * ε' + 4 * γ) := by
+    intro k _
+    exact lintegral_ofReal_dist_sq_le_of_isApproximatingPair_of_integrable_mul h h' hV
+      (hst k) (hst (k + 1)) (hmono k) (hbd (k + 1)) (fun ω ↦ hσle k ω)
+      (fun ω ↦ hσle (k + 1) ω) (hγk k) hε' (hVmem k) (hVmem (k + 1)) (hYmem k)
+      (hYmem (k + 1)) (hCmem k) (hCmem (k + 1)) (hY'int k) (hY'int (k + 1))
+  calc (N : ENNReal) * (ENNReal.ofReal ε₀ ^ 2
+          * P {ω | oscHitSeq V ε₀ N ω < (u : WithTop ℝ≥0)})
+      ≤ ∑ k ∈ Finset.range N, ∫⁻ ω, ENNReal.ofReal (dist
+          (stoppedValue V (τ (k + 1)) ω) (stoppedValue V (τ k) ω)) ^ 2 ∂P :=
+        mul_measure_setOf_oscHitSeq_lt_le_sum_lintegral P hDc hDd hV hcont N u
+    _ ≤ ∑ k ∈ Finset.range N,
+          ((∫⁻ ω, ‖C' (σ (k + 1) ω) ω - C' (σ k ω) ω‖ₑ ∂P
+              + 2 * ∫⁻ ω, ‖V (σ k ω) ω‖ₑ
+                  * ‖C (σ (k + 1) ω) ω - C (σ k ω) ω‖ₑ ∂P)
+            + (2 * ε' + 4 * γ)) := Finset.sum_le_sum hcell
+    _ = (∑ k ∈ Finset.range N, ∫⁻ ω, ‖C' (σ (k + 1) ω) ω - C' (σ k ω) ω‖ₑ ∂P
+          + 2 * ∑ k ∈ Finset.range N, ∫⁻ ω, ‖V (σ k ω) ω‖ₑ
+              * ‖C (σ (k + 1) ω) ω - C (σ k ω) ω‖ₑ ∂P)
+        + N * (2 * ε' + 4 * γ) := by
+        rw [Finset.sum_add_distrib, Finset.sum_add_distrib, Finset.sum_const,
+          Finset.card_range, nsmul_eq_mul, Finset.mul_sum]
+    _ ≤ (ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * K
+          + 2 * (ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * Kw))
+        + N * (2 * ε' + 4 * γ) := by
+        gcongr
+        · exact h'.sum_lintegral_enorm_compensator_sub_le hσsucc (fun ω ↦ hσle N ω) huT
+        · exact h.sum_lintegral_mul_enorm_compensator_sub_le hσsucc (fun ω ↦ hσle N ω) huT
+            hdom hKw
 
 /-- **The horizon probability in the shape its consumer reads it**:
 

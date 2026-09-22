@@ -14045,8 +14045,64 @@ has to be chosen once for all `n`. What stands:
   so that no constant is taken out of it. The price is four integrability
   hypotheses about products with `W` in place of one bound, and the two
   integrabilities of the stopped values of `Y` fall away; for a weight in `L²`
-  against an increment in `L²` the four are Cauchy–Schwarz. Carrying this shape
-  through the six statements of the chain is the next piece of work on this item.
+  against an increment in `L²` the four are Cauchy–Schwarz.
+
+  **Carried through the chain, 2026-09-22, eighth run — the cell and the
+  horizon.** Three statements, the two that read the bound themselves being the
+  first of them:
+
+  ```
+  MeasureTheory.lintegral_ofReal_dist_sq_le_of_isApproximatingPair_of_integrable_mul
+  IsApproximatingPair.sum_lintegral_mul_enorm_compensator_sub_le
+  MeasureTheory.measure_setOf_oscHitSeq_lt_le_of_isApproximatingPair_of_integrable_mul
+  ```
+
+  The first replaces the seven uses of `hVb` inside
+  `lintegral_ofReal_dist_sq_le_of_isApproximatingPair` by square integrability:
+  `MeasureTheory.MemLp.integrable_sq`
+  (`MeasureTheory/Function/L2Space.lean:42`) for the three squares, and
+  `MeasureTheory.MemLp.fun_mul`
+  (`MeasureTheory/Function/LpSeminorm/CompareExp.lean:537`) at the instance
+  `ENNReal.HolderTriple.instTwoTwo` (`Mathlib/Basic/ENNReal/Holder.lean:133`)
+  followed by `MeasureTheory.memLp_one_iff_integrable` for the four products.
+  The `L²` hypotheses fall on `V`, `Y` **and** `C`, because the compensator
+  identity asks for products of the weight with the stopped values of both; in
+  exchange the two plain integrabilities of the stopped values of `Y` are gone.
+
+  **What the weight costs, named at the one place it costs anything.** The
+  second summand becomes `2 * ∫⁻ ‖V (α ·) ·‖ₑ * ‖ΔC‖ₑ` with the weight *under*
+  the integral, so `MeasureTheory.lintegral_const_mul'` — the last step of
+  `IsApproximatingPair.sum_lintegral_enorm_compensator_sub_le` — is no longer
+  available when the weight changes with the cell. The weighted chain sum is
+  therefore stated against a **parameter** `Kw` bounding
+  `∫⁻ ω, M ω * eLpNorm (Z (·, ω)) q (volume.restrict (Ioc 0 T)) ∂P`, with `M`
+  any dominant of the cell weights; the consumer takes `M` to be the running
+  maximum `⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ`, which dominates every cell because the
+  capped hitting times satisfy `untopA_oscHitSeqCap_le`.
+
+  `Kw` is discharged without a new field of the class in the two cases that
+  matter: `Kw = 0` for a vanishing compensator — the rescaled random walk, which
+  is its own martingale, so that the weighted summand is zero whatever the
+  weight — and `Kw = ‖Z‖ * ∫⁻ M` for a deterministic density. Only a random
+  density against an unbounded weight would need an `L²` bound on
+  `eLpNorm (Z (·, ω))`, that is, a new field; that is a question for general
+  kernels and not for Donsker, and the place where it would enter is the
+  `lintegral_const_mul'` step named above.
+
+  The horizon statement is then the bounded one with `c` replaced at exactly two
+  places — by the weighted error `γ` in the cell and by `Kw` in the chain — and
+  everything else unchanged, the increment of the square being read at the
+  weight `1`.
+
+  **What is left of the six.** Four statements downstream still carry `hVb`:
+  `lintegral_ofReal_dist_le_sqrt_of_isApproximatingPair` (the second that reads
+  it itself, at the gap cells),
+  `measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair`,
+  `sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair` and
+  `mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair`. The division
+  statement is mechanical once the horizon one is in hand, since it only divides
+  the two summands; the gap block is the one that has to be done next, because
+  it reads the bound itself.
 
   **The alternative, and why it is the more expensive one.** The acceptance
   example below states Donsker with `A = {(f, f''/2) | f ∈ Cc^∞(ℝ)}`, that is,
