@@ -56462,3 +56462,1550 @@ dasselbe Maximum hier trägt: die gekappten Zeiten bleiben unter `u`
 `min (τ k ω) u`, also ebenfalls unter `u` — der Weg sollte also derselbe sein, mit `Iic (u+δ)`
 statt `Iic u` im Fehler und `Iic u` im Gewicht. **Das ist am Quelltext zu bestätigen und nicht
 anzunehmen**, und es ist die halbe Arbeit jenes Laufs.
+
+### 2026-09-22, zehnter Lauf des Tages — das benannte Ziel steht, und mit ihm die beiden übrigen durchreichenden Posten *und* die Bedingung samt den drei Grenzübergängen: die Kette trägt die Schranke `hVb` an **keiner** Stelle mehr ohne Zwilling
+
+*Zehn Deklarationen, in zwei Hälften: drei, die die Kette bis zum Zusammenbau schließen, und
+sieben, die daraus die Gestalt machen, in der ein Verbraucher sie antrifft — die Bedingung, die
+drei Grenzübergänge, ein Fenster für die ganze Familie und die Straffheit selbst. Eine davon
+liegt in `SkorokhodSpace`, alle übrigen in `MartingaleProblems`.*
+
+**Das benannte Ziel des Vorlaufs war
+`sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair_of_integrable_mul`**, die
+Lückensumme ohne `hVb`, und vor ihr stand die Frage, ob dasselbe laufende Maximum trägt wie beim
+Horizontterm des achten Laufs. Die Antwort ist **ja**, und weil der Beweis dann billiger war als
+veranschlagt, sind die beiden anderen durchreichenden Posten im selben Lauf mitgegangen.
+
+#### Die Vorfrage, entschieden am Quelltext
+
+**Es trägt, aber nicht aus dem Grund, aus dem es am Horizont trägt, und der Unterschied gehört
+festgehalten.** Am Horizont liegt *jeder* Zellenendpunkt unter `u`, weil alle Zeiten gekappt
+sind. Eine Lückenzelle überschießt den Horizont am **rechten** Ende um bis zu `δ`
+(`oscHitSeqGap_le_coe`) — das ist der Grund, warum ihr Fenster `Set.Iic (u + δ)` ist —, aber **ihr
+Gewicht sitzt am linken Ende**, und das ist `min (oscHitSeq V ε₀ k ω) u`, also gekappt. Damit
+greift `untopA_oscHitSeqCap_le` unverändert, und **eine** Hypothese über
+`⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ` bedient alle `N` Zellen.
+
+Die gewichtete Lückensumme trägt deshalb **zwei verschiedene Fenster**: `Set.Iic u` am Gewicht,
+`Set.Iic (u + δ)` an den Fehlern. Das ist die einzige Unsymmetrie, die die Abschwächung
+hinzufügt; die beschränkte Fassung kennt sie nicht, weil `c` fensterlos ist.
+
+#### Gebaut und übersetzt — drei Deklarationen
+
+Alle drei in `TauCeti/MartingaleProblems/Suggested.lean`, Zeilen **nachher**:
+
+* **`MeasureTheory.measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair_of_integrable_mul`**
+  (Z. 45706) — die Horizontquotientenfassung ohne `hVb`.
+* **`MeasureTheory.sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair_of_integrable_mul`**
+  (Z. 46101) — das benannte Ziel, die Lückensumme mit `γ` und `Kw` statt `c`.
+* **`MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair_of_integrable_mul`**
+  (Z. 46370) — der Zusammenbau der beiden Blöcke, also die ganze probabilistische Substanz des
+  Straffheitskriteriums in einer Ungleichung, ohne Schranke an den Prozeß:
+
+  ```
+  ofReal ε₀ * P {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ ω)) δ}
+    ≤ N * ofReal √((ofReal δ ^ (1 - 1/q) * (K + 2 Kw) + A).toReal)
+      + ((ofReal u ^ (1 - 1/q) * K + 2 * (ofReal u ^ (1 - 1/q) * Kw)) / N + A) / ofReal ε₀,
+  A = 2 ε' + 4 γ
+  ```
+
+**Der Quotient und der Zusammenbau sind keine Schätzungen**, und das ist der Grund, daß sie
+zusammen einen halben Lauf kosteten: der erste ist der Beweis des beschränkten Nachbarn wörtlich
+(die beiden Divisionen lesen den Zähler nicht, `c` steckt dort nur in den Abkürzungen `B` und
+`A`), der zweite ist `le_trans` von `mul_measure_setOf_lt_modulusBased_le_lintegral_dist` und
+`add_le_add` der beiden gewichteten Blöcke.
+
+**Im Zusammenbau fallen die drei Fenster auf zwei Hypothesen zusammen**, wie die zwei in der
+beschränkten Fassung: das Gewicht wird von beiden Blöcken auf `Set.Iic u` gelesen, und das
+kleinere Fehlerfenster des Horizontblocks folgt aus dem größeren des Lückenblocks durch
+`biSup_mono` unter `lintegral_mono` — beim ungewichteten Fehler unmittelbar, beim gewichteten
+über `mul_le_mul_right`, weil dort das Gewicht der **nicht** bewegte Faktor ist.
+
+#### Vier Befunde
+
+* **Die Elaborationsfalle mit `W`, und sie kostete einen Übersetzungsdurchlauf.** In der
+  gewichteten Zelle steht `{W}` **vor** `γ` und dessen Hypothese, in der beschränkten wird `W`
+  durch `hε` festgelegt, das zuerst steht. Wer die gewichtete Zelle mit `hαW`/`hβW` anwendet,
+  läßt `W` als Metavariable stehen, und der Elaborator läuft in einen Timeout bei `isDefEq`
+  (200000 Heartbeats) statt in eine lesbare Fehlermeldung. `(W := Set.Iic (u + δ))` an der
+  Aufrufstelle behebt es; die Lückensumme gibt `(M := fun ω ↦ ⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ)` aus
+  demselben Grund mit. Die Stelle steht jetzt in `MartingaleProblems/README.md`, Meilenstein 11.
+* **Die Aussage *über* dem Zusammenbau braucht keinen Zwilling, und das war aus der Liste der
+  sechs nicht zu sehen.** `mul_measure_setOf_lt_modulusBased_postcomp_le_of_isApproximatingPair`
+  (Z. 46530) nimmt `hVb` **nicht** als Hypothese, sondern löst es selbst ein, mit
+  `BoundedContinuousFunction.norm_coe_le_norm` und `c = ‖g‖`, weil es `V = g ∘ X` liest. Die
+  gewichtete Kette wird deshalb **nicht** über den Nachkompositionsweg verbraucht, sondern am
+  Zusammenbau unmittelbar, an einem `V`, das der Prozeß selbst ist — und das ist der Fall der
+  reskalierten Irrfahrt.
+* **Eine beschränkte Fassung bekommt man aus der gewichteten zurück, und zwar wörtlich.** Mit
+  `‖V t ω‖ ≤ c` ist `γ ≤ ofReal c * ε` und, über `lintegral_const_mul'` gegen
+  `IsApproximatingPair.lintegral_eLpNorm_le`, `Kw ≤ ofReal c * K`; setzt man beides ein, so ist
+  `ofReal δ ^ (1 - 1/q) * (K + 2 c K)` gerade `(1 + 2 c) * (ofReal δ ^ (1 - 1/q) * K)`, also die
+  rechte Seite des beschränkten Nachbarn. Die beschränkten Fassungen bleiben trotzdem stehen —
+  wer eine Schranke hat, will die kürzere Hypothesenliste.
+* **`check_own_names.py` ist auch für *Strukturfelder* blind, und das ist die zweite Familie
+  falscher Negativbefunde desselben Werkzeugs.** Der Index zählt diesen Lauf **445** statt 443;
+  die beiden neuen Einträge sind `isDefEq` (Fließtext, ein Begriff des Elaborators) und
+  `IsApproximatingPair.lintegral_eLpNorm_le` — das aber **existiert**, als Feld der Struktur
+  `IsApproximatingPair` (`Suggested.lean:43504`), und wird von Sätzen der Datei aufgerufen. Nach
+  der `@[to_fun]`-Blindheit des achten Laufs ist das die zweite Bauart, in der
+  ein Eintrag in `own_names.md` **kein** Beleg ist, daß ein Name fehlt. Die Regel bleibt
+  dieselbe: ein fehlender Name wird durch ein scheiterndes `example … := by exact?` gegen den
+  master-Worktree belegt, nicht durch einen Index.
+
+#### Die README ist nachgezogen
+
+`MartingaleProblems/README.md`, Meilenstein 11, in zwei Abschnitten: für die erste Hälfte die
+drei neuen Namen, der Grund, warum das laufende Maximum auch am linken Ende einer Lückenzelle
+trägt, die zwei Fenster der Lückensumme, das Zusammenfallen der drei Fenster im Zusammenbau, die
+Elaborationsfalle mit `W` und der Befund über die Nachkompositionsaussage; für die zweite die
+sechs neuen Namen, die drei Entwurfsentscheidungen, der Grund, warum der Nachkompositionsweg die
+gewichtete Kette nicht trägt, und was für Donskers Straffheit noch fehlt.
+
+`SkorokhodSpace/README.md`, im Block über den Übergang zum Bildmaß: die neue Aussage, warum
+**beide** Formen gebraucht werden und keine die andere ersetzt, und wer die neue verbraucht.
+
+Dazu eine Berichtigung an einer alten Stelle: der Absatz des Meilensteins, der
+`IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le` „die richtige Schätzung je Zelle"
+nennt, trägt jetzt den Befund des neunten Laufs bei sich — er benennt den *Übergang* und keine
+Aussage, die der Beweis aufruft. Die Notiz stand bisher nur im späteren Abschnitt, also nicht
+dort, wo sie gesucht wird.
+
+#### Was von der Kette jetzt noch die Schranke trägt
+
+**Nichts mehr ohne Zwilling.** Die beiden Aussagen, die `c` selbst lasen, haben seit dem achten
+und neunten Lauf je eine Fassung ohne sie; die drei durchreichenden seit diesem. Die Aussage
+darüber löst die Schranke selbst ein und braucht keine.
+
+#### Und weil dabei Zeit übrig war: die Bedingung und die drei Grenzübergänge, also die Gestalt, in der ein Verbraucher die Abschwächung antrifft
+
+Der Zusammenbau ist eine Ungleichung an **einem** Tripel `(N, δ, ε₀)`; was das
+Straffheitskriterium verlangt, ist eine Kleinheit, und die entsteht erst aus den drei
+Grenzübergängen. Vier weitere Deklarationen, alle im selben Lauf übersetzt:
+
+* **`MeasureTheory.IsApproximableMul`** (Z. 47128) — die gewichtete Fassung von
+  `MeasureTheory.IsApproximable` (Z. 46651).
+* **`MeasureTheory.IsApproximableMul.one_lt_exponent`** (Z. 47168).
+* **`MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximableMul`** (Z. 47200) —
+  der dritte Grenzübergang, also der Zusammenbau mit dem Fehler schon bei `0`.
+* **`MeasureTheory.tendsto_measure_setOf_lt_modulusBased_of_isApproximableMul`** (Z. 47301) —
+  alle drei Grenzübergänge, an **einem** Prozeß:
+
+  ```
+  Tendsto (fun δ : ℝ≥0 ↦ P {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ ω)) δ})
+    (𝓝[>] 0) (𝓝 0)
+  ```
+
+Die Ordnung der drei Grenzübergänge — `N`, dann `δ`, dann `ε` — ist unverändert, und der
+Fenstergrenzübergang ist `tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` bei `c = 0` und `K + 2 Kw`
+statt `K`.
+
+**Drei Entscheidungen, die dabei zu treffen waren, und jede ist begründet und nicht
+voreingestellt.**
+
+* **Das Gewicht ist das laufende Maximum am *vollen* Horizont `T`, in beiden gewichteten
+  Feldern, und nicht bei `u`.** Der Zusammenbau liest das Gewicht bei `u ≤ T` und den Fehler des
+  ersten Paars bei `u + δ ≤ T`; steht die Bedingung bei `T`, so dominiert das Feld die
+  Hypothese, beide Verengungen laufen in die richtige Richtung, und `mul_le_mul'` liefert die
+  gewichtete in einem Schritt. Bei `u` formuliert wäre die Bedingung für ihren eigenen
+  Verbraucher zu schwach.
+* **`Kw` ist ein `ℝ≥0` und ein Parameter der Bedingung, nicht eines Paars.** Es spielt die Rolle
+  von `K` — eine Konstante, die jedes bei jedem Fehler erzeugte Paar einhalten muß —, und in
+  `ℝ≥0` macht es die Endlichkeit des ersten Summanden umsonst, was zählt, weil
+  `Real.sqrt S.toReal` `toReal` liest. Es ist außerdem der Grund, daß
+  `tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` bei `K + 2 Kw` überhaupt anwendbar ist: jener
+  Satz nimmt seine Konstante in `ℝ≥0`.
+* **Die beiden Quadratintegrierbarkeiten von `V` sind eigene Felder außerhalb der
+  Existenzaussage**, weil `V` fest ist und sie über die Approximanten nichts sagen; die sechs,
+  die zu den Paaren gehören, bleiben drinnen.
+
+#### Und ein fünftes Stück: ein Fenster für die ganze Familie
+
+**`MeasureTheory.exists_forall_measure_setOf_lt_modulusBased_le_of_forall_isApproximableMul`** —
+
+```
+∃ δ > 0, ∀ i, P {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ i ω)) δ} ≤ η
+```
+
+für eine Familie, deren Mitglieder dieselben Konstanten `q`, `T`, `K`, `Kw` tragen. **Die
+Gleichmäßigkeit wird von den Konstanten getragen und von sonst nichts**: `B` und die
+Fensterschranke sind aus `q`, `T`, `K`, `Kw`, `u` und `ε₀` gebaut, und keine Größe eines Mitglieds
+kommt in einer von beiden vor — deshalb fallen alle drei Wahlen (Anzahl, Fenster, Fehler), ehe das
+Mitglied genannt wird. Der leere Index wird zuerst erledigt, weil der Exponent `1 < q` an einem
+Mitglied gelesen wird.
+
+#### Und, als sechstes und siebtes Stück, die Straffheit selbst — die erste des Meilensteins, die keine Schranke am Prozeß liest
+
+* **`SkorokhodSpace.measure_map_setOf_le_modulusBased_le`**
+  (`SkorokhodSpace/Suggested.lean:19448`) — der Übergang von einer Schranke über den
+  Stichprobenpunkten zu einer am Bildmaß **ohne** Wertewechsel, also
+  `SkorokhodSpace.measure_map_postcomp_setOf_le_modulusBased_le` mit `Measure.map_map` einmal
+  statt zweimal. Das ist der einzige Eingriff dieses Laufs in die zweite Datei der Kette.
+* **`MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isApproximableMul`** —
+
+  ```
+  IsTightMeasureSet {P.map (Φ i) | i}
+  ```
+
+  für eine Familie rechtsstetiger progressiver **reeller** Prozesse, gewichtet approximierbar an
+  jedem Horizont mit Konstanten, die nur vom Horizont abhängen, und mit kompakt eingeschlossenen
+  Bildmaßen.
+
+**Die kompakte Einschließung ist hier eine Hypothese und auf dem Nachkompositionsweg keine**, und
+der Unterschied ist zum zweiten Mal derselbe: die nachkomponierten Bildmaße sind umsonst kompakt
+eingeschlossen, weil das Bild eines beschränkten `g` beschränkt ist; die Maße der Pfade selbst
+sind es nicht. Für die reskalierte Irrfahrt steht sie als `isCompactContained_rescaledWalk`.
+
+**Eine Warnung ist dabei aufgetreten und wurde nicht bloß gezählt, sondern beseitigt**, und der
+Grund ist die stehende Regel über minimale Voraussetzungen: `SkorokhodSpace` meldete
+`unusedSectionVars` für `[MeasurableSpace E]` und `[BorelSpace E]` an der neuen Aussage — sie
+werden wirklich nicht gelesen, denn die σ-Algebra sitzt am Pfadraum und nicht an `E`. Ein
+`omit [MeasurableSpace E] [BorelSpace E] in` davor, wie es die Nachbarn der Datei tragen, nimmt
+zwei überflüssige Instanzen aus der Signatur; die Warnungszahl steht wieder bei 38. **Das ist
+kein Verstoß gegen „unusedSectionVars nicht anfassen"**: jene Regel verbietet, Signaturen zu
+*ändern*, um eine Stilwarnung zu bedienen — hier war die Warnung der Hinweis auf zwei
+Voraussetzungen, die die Aussage nicht braucht.
+
+#### Prüfung, über alle zehn Deklarationen dieses Laufs
+
+`scripts/check_master.py` gegen `upstream/master`
+(`94ef6b89544e58e90f119da869f3fb48d1da0f4c`, Lean `4.35.0-rc2`): **0 Fehler, 0 `sorry`** in allen
+drei Dateien, Warnungen **18 / 38 / 112, davon 0 veraltet** — **unverändert** gegenüber dem
+Vorlauf, also erzeugen die zehn neuen Deklarationen keine einzige Warnung. (Die eine, die
+zwischenzeitlich entstand, ist oben beschrieben und behoben.)
+`scripts/check_axioms_master.py` (mit `--build`, alle mit vollem Namensraum): die neun Sätze auf
+`propext`, `Classical.choice`, `Quot.sound` (die zehnte Deklaration ist die Struktur).
+`check_cited_lines.py`: **445 gepaarte Fundstellen, 0 verschoben, 0 tot** — unverändert.
+`check_own_names.py`: **445**, also genau so viel wie vor dem Lauf, aber mit zwei Bewegungen, die
+sich aufheben: hinzugekommen sind `isDefEq` (Fließtext) und
+`IsApproximatingPair.lintegral_eLpNorm_le` (existiert als Strukturfeld; siehe den vierten Befund
+oben), weggefallen sind zwei Namen, die dieser Lauf gebaut hat. Alle übrigen Zitate des Laufs
+(`isTightMeasureSet_iff_modulusBased_nnreal`, `measure_map_postcomp_setOf_le_modulusBased_le`,
+`measurable_iInf_modulusBased`, `IsCompactContained`, `isCompactContained_rescaledWalk`) sind
+gedeckt.
+
+#### Die zehn Deklarationen, mit Zeilen nachher
+
+| Datei | Zeile | Name |
+| --- | ---: | --- |
+| `MartingaleProblems` | 45706 | `measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair_of_integrable_mul` |
+| `MartingaleProblems` | 46101 | `sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair_of_integrable_mul` |
+| `MartingaleProblems` | 46370 | `mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair_of_integrable_mul` |
+| `MartingaleProblems` | 47128 | `IsApproximableMul` |
+| `MartingaleProblems` | 47168 | `IsApproximableMul.one_lt_exponent` |
+| `MartingaleProblems` | 47200 | `mul_measure_setOf_lt_modulusBased_le_of_isApproximableMul` |
+| `MartingaleProblems` | 47301 | `tendsto_measure_setOf_lt_modulusBased_of_isApproximableMul` |
+| `MartingaleProblems` | 47404 | `exists_forall_measure_setOf_lt_modulusBased_le_of_forall_isApproximableMul` |
+| `MartingaleProblems` | 47840 | `isTightMeasureSet_map_pathOfProcess_of_isApproximableMul` |
+| `SkorokhodSpace` | 19448 | `SkorokhodSpace.measure_map_setOf_le_modulusBased_le` |
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`MeasureTheory.isApproximableMul_rescaledWalk`** — die reskalierte Irrfahrt erfüllt
+`IsApproximableMul` an jedem Horizont, mit `Kw = 0`. Das ist der **Akzeptanzfall** der ganzen
+Abschwächung: mit ihm und `isCompactContained_rescaledWalk` gibt
+`isTightMeasureSet_map_pathOfProcess_of_isApproximableMul` von heute unmittelbar die Straffheit
+der Irrfahrtsfamilie, also die erste Hälfte von Donsker.
+
+*Worauf er ruht:* `isApproximatingPair_rescaledWalk` und `isApproximatingPair_sq_rescaledWalk`
+(beide bewiesen), und sonst nichts Neues an Theorie.
+
+*Warum jetzt:* die gewichtete Kette steht seit diesem Lauf vollständig, von der Zelle bis zur
+Straffheit, und hat **keinen** Verbraucher. Sie wurde für genau diesen Fall gebaut — für einen
+Prozeß, der nicht gleichmäßig beschränkt ist und dessen Paare ihn selbst approximieren, nicht
+eine beschränkte Funktion von ihm. Bleibt der Fall aus, so ist die Abschwächung Theorie über
+einer leeren Voraussetzung, und das ist genau die Lage, die der Meilenstein 6 der
+Pfadraumaufgabe als Integritätsproblem benannt hat.
+
+*Die drei Stellen, die zu klären sind, und nur die erste ist geschenkt:*
+
+1. **Der gewichtete Fehler ist `0`**, weil der Fehler `0` ist: der Doc-Kommentar von
+   `enorm_integral_mul_sub_le_of_lintegral_mul_biSup_le` (Z. 44439) sagt es schon — „ihr eigenes
+   approximierendes Paar hat Fehler genau `0`; das Produkt ist `0` und das Supremum ist `⊤`".
+2. **`Kw = 0` ist eine Aussage über die Dichte `Z` des ersten Paars und nicht über seinen
+   Fehler**, und deshalb nicht mitgeschenkt: zu zeigen ist
+   `eLpNorm (Z (·, ω)) q (volume.restrict (Ioc 0 T)) = 0` f.ü., also ein verschwindender
+   Kompensator. Bei `isApproximatingPair_rescaledWalk` ist die Irrfahrt ihr eigenes Martingal;
+   **am Quelltext nachzusehen**, ob `Z` dort wirklich `0` ist oder nur `C`.
+3. **Die acht `MemLp … 2`-Familien** an den gekappten und den Lückenzeiten. Bei Fehler `0` ist
+   `Y = V`, es sind also Aussagen über die Irrfahrt selbst an einer beschränkten Stoppzeit —
+   endliche Summen von `L²`-Zuwächsen —, aber für `C` und `Y'` sind sie eigens zu führen. **Das
+   ist die eigentliche Arbeit jenes Laufs**, und wenn sie sich als teuer erweist, ist das ein
+   Meßwert und kein Scheitern: er sagt dann, was eine Straffheitsbedingung über einem
+   unbeschränkten Prozeß an Integrierbarkeit wirklich kostet.
+
+### 2026-09-22, elfter Lauf des Tages — das benannte Ziel des Vorlaufs ist **widerlegt**, und zwar in Lean: die reskalierte Irrfahrt erfüllt `IsApproximableMul` an **keinem** Index, der Grund ist nicht die fehlende Schranke, sondern das **zweite Paar**; damit hat die ganze gewichtete Kette des Vorlaufs auf Donskers Daten eine unerfüllbare Voraussetzung
+
+*Elf Deklarationen, alle in `MartingaleProblems`, alle durch `check_master.py` mit 0 Fehlern und
+0 `sorry`, alle mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft. Eine
+davon ersetzt einen hundertzeiligen Beweis durch einen vierzeiligen.*
+
+**Das benannte Ziel des Vorlaufs war `MeasureTheory.isApproximableMul_rescaledWalk`** — „die
+reskalierte Irrfahrt erfüllt `IsApproximableMul` an jedem Horizont, mit `Kw = 0`". Der Vorlauf
+nannte drei zu klärende Stellen und hielt die erste für geschenkt. Sie ist geschenkt; die Aussage
+ist trotzdem **falsch**, und die drei Stellen sind nicht der Grund.
+
+#### Warum sie falsch ist, in einem Satz
+
+`IsApproximableMul` trägt **zwei** Paare, und die Abschwächung rührt nur das **erste** an. Das
+zweite approximiert `V ^ 2` mit dem **ungewichteten** Fehler, wörtlich wie in `IsApproximable`.
+Auf dieses zweite Paar greift die Zellenschranke unverändert:
+
+* die Irrfahrt ruht auf `Set.Ico 0 (n + 1)⁻¹` — als Funktion der Zeit **und** des
+  Stichprobenpunktes, denn dort ist sie die leere Summe;
+* ihr **Mittelwert** bewegt sich nicht, sie ist zentriert. Deshalb sagt
+  `IsApproximable.integral_eq_of_eqOn_Ico` über sie **nichts**, und deshalb war der Befund bisher
+  unsichtbar;
+* ihr **mittleres Quadrat** steigt von `0` auf `σ / (n + 1)`.
+
+Ein approximierendes Paar hat einen absolutstetigen Kompensator und kann diesen Sprung nicht
+mitmachen. Also gibt es das zweite Paar nicht, an keinem Fehler unterhalb von `σ / (n + 1)`.
+
+**Gebraucht wird dafür `σ ≠ 0` und sonst nichts** — keine Unabhängigkeit, keine
+Quadratintegrierbarkeit, keine Filtration, kein Horizont über `(n + 1)⁻¹` hinaus. Das ist der
+schmalste mögliche Zeuge, und er ist der Grund, daß der Lauf nicht an den drei angesagten Stellen
+hängenblieb: er kam gar nicht bis dorthin.
+
+#### Was gebaut ist
+
+**Zuerst ein Umbau, kein Zusatz.** Der Beweis von `IsApproximable.integral_eq_of_eqOn_Ico` liest
+von der Bedingung nur zweierlei: den Exponenten und **ein** Paar mit seinem Fehler auf dem
+Horizont. Er ist deshalb herausgezogen:
+
+* **`MeasureTheory.integral_eq_of_eqOn_Ico_of_exists_approximatingPair`** (Z. 46739) — die
+  Zellenschranke **am Paar** statt an der Bedingung, mit einem freien `W`. Die beiden Felder, die
+  sie liest, sind die Martingaleigenschaft (über die Konstanz des Mittelwerts) und
+  `IsApproximatingPair.lintegral_enorm_compensator_sub_le` am Fenster `(r, b]`. **Die Filtration
+  kommt darin nicht vor.**
+* **`MeasureTheory.IsApproximable.integral_eq_of_eqOn_Ico`** (Z. 46860) ist damit **vier Zeilen**
+  statt hundert; die Aussage ist unverändert.
+
+**Dann die drei Lesarten, die es vorher nicht gab:**
+
+* **`MeasureTheory.IsApproximable.integral_sq_eq_of_eqOn_Ico`** (Z. 46922) — dieselbe Schranke am
+  **zweiten** Paar: ruht `V` auf einer Zelle, so bewegt sich auch das mittlere **Quadrat** nicht.
+* **`MeasureTheory.IsApproximableMul.integral_sq_eq_of_eqOn_Ico`** (Z. 47259) — dasselbe für die
+  gewichtete Bedingung, und der Beweis ist derselbe, weil das zweite Paar dort dasselbe ist.
+* **`MeasureTheory.not_isApproximableMul_of_eqOn_Ico_of_integral_sq_ne`** (Z. 47277) — die
+  Umkehrung, in der Gestalt, in der ein Verbraucher sie antrifft.
+
+**Und die Anwendung auf die Irrfahrt, im Abschnitt `WalkContainment`:**
+
+| Zeile | Name |
+| ---: | --- |
+| 52500 | `aestronglyMeasurable_sq_rescaledWalk` |
+| 52508 | `rescaledWalk_eqOn_Ico_zero` |
+| 52525 | `integral_sq_rescaledWalk_inv_ne` |
+| 52555 | `not_isApproximable_rescaledWalk` |
+| 52569 | `not_isApproximableMul_rescaledWalk` |
+| 52584 | `not_forall_isApproximableMul_rescaledWalk` |
+
+Die letzte ist die, auf die es ankommt:
+
+```lean
+¬ ∀ ε₀ : ℝ, 0 < ε₀ → ∀ u : ℝ≥0, 0 < u → ∃ q : ENNReal, ∃ T K Kw : ℝ≥0, u < T ∧
+    ∀ n : ℕ, IsApproximableMul 𝓕 P q T K Kw (reskalierte Irrfahrt der Maschenweite n) ε₀ u
+```
+
+Das ist **wörtlich die Voraussetzung `happ` von
+`isTightMeasureSet_map_pathOfProcess_of_isApproximableMul`**, dem Satz, mit dem der zehnte Lauf
+endete. Sie ist auf Donskers Daten unerfüllbar. Der Beweis nimmt `ε₀ = u = 1`, liest `1 < T`
+heraus und setzt `n = 0` ein; mehr braucht er nicht, weil die Zelle des nullten Gliedes
+`Set.Ico 0 1` ist und `1 ≤ T`.
+
+#### Drei Befunde
+
+* **`not_isApproximable_rescaledWalk` löst eine Behauptung ein, die bisher nur im Fließtext
+  stand.** Der Abschnittskommentar über `IsEventuallyApproximable` sagt seit dem 2026-09-21, die
+  reskalierten Irrfahrten seien Prozesse, die „an deterministischen Zeiten springen", und beruft
+  sich dafür auf `not_isApproximable_indicator_Ici` — einen Satz über einen **anderen** Prozeß.
+  Die Übertragung war nie geführt. Sie ist es jetzt, und sie geht **nicht** über den
+  Einheitssprung, sondern über das Quadrat: der Einheitssprung bewegt seinen Mittelwert, die
+  zentrierte Irrfahrt nicht.
+* **Die beiden Abschwächungen sind unabhängig, und keine ersetzt die andere.**
+  `IsApproximableMul` nimmt die **Schranke vom Prozeß**; `IsEventuallyApproximable` schiebt den
+  **Fehler aus dem Index**. Die Irrfahrt braucht beide. Der zehnte Lauf hat die erste gebaut und
+  die zweite steht seit dem fünften; ihre **Konjunktion** gibt es nicht, und sie ist die ganze
+  restliche Arbeit der Straffheitsseite von Donsker.
+* **Der Vorlauf hat sich nicht verrechnet, sondern die Struktur an der falschen Stelle gelesen.**
+  Sein Satz „der gewichtete Fehler ist `0`, weil der Fehler `0` ist" ist richtig — für das
+  **erste** Feld. Die drei Stellen, die er zu klären ansagte (`Kw = 0`, die acht `MemLp`-Familien),
+  sind alle Aussagen über das erste Paar und über `V` selbst. Das zweite Paar kam in seiner Liste
+  nicht vor. Das ist dasselbe Muster wie beim Müllwert: eine Bedingung wird an den Feldern
+  geprüft, an die man gerade denkt.
+
+#### Prüfung
+
+`scripts/check_master.py` gegen `upstream/master`
+(`94ef6b89544e58e90f119da869f3fb48d1da0f4c`, Lean `4.35.0-rc2`): **0 Fehler, 0 `sorry`** in allen
+drei Dateien, Warnungen **18 / 38 / 112, davon 0 veraltet** — **unverändert** gegenüber dem
+Vorlauf, also erzeugen die elf neuen Deklarationen keine einzige Warnung.
+`scripts/check_axioms_master.py` (mit `--build`): alle elf auf `propext`, `Classical.choice`,
+`Quot.sound`.
+`check_cited_lines.py`: **445 gepaarte Fundstellen, 0 verschoben, 0 tot** — unverändert.
+
+#### Drei Stellen im Quelltext sind berichtigt, nicht nur ergänzt
+
+Eine widerlegte Behauptung stehenzulassen wäre schlimmer, als sie nie geschrieben zu haben:
+
+* der Abschnittskommentar über `IsApproximableMul` sagte „das ist der Fall, für den dieser
+  Abschnitt existiert" — er sagt jetzt, daß die Abschwächung den **Übergang** trägt und den
+  **Akzeptanzfall nicht**, mit Verweis auf die beiden neuen Negativsätze;
+* der Doc-Kommentar von `isTightMeasureSet_map_pathOfProcess_of_isApproximableMul` trägt jetzt
+  den Satz, daß seine Voraussetzung auf jenen Irrfahrten unerfüllbar ist, und wofür er statt
+  dessen zu lesen ist;
+* `MartingaleProblems/README.md`, Meilenstein 11: der Absatz „Was für Donskers Straffheit noch
+  fehlt" behauptete, die Irrfahrt erfülle `IsApproximableMul`. Er ist durch den Befund ersetzt,
+  samt den vier benannten Punkten, die die Konjunktion der beiden Abschwächungen ausmachen.
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`MeasureTheory.IsEventuallyApproximableMul`** — die Konjunktion der beiden Abschwächungen, und
+unmittelbar danach
+**`MeasureTheory.exists_finite_forall_measure_setOf_lt_modulusBased_le_of_isEventuallyApproximableMul`**.
+
+*Die Aussage:* zu jedem Fehler eine **endliche** Ausnahmemenge, außerhalb deren jedes Glied zwei
+Paare über **seiner eigenen** Filtration hat — das erste mit dem **gewichteten** Fehler, das
+zweite mit dem gewöhnlichen Fehler des Quadrats —, bei gemeinsamen Konstanten `q`, `T`, `K`,
+`Kw`. Das ist `IsEventuallyApproximable` mit den beiden gewichteten Feldern von
+`IsApproximableMul` an der Stelle ihrer ungewichteten Nachbarn.
+
+*Worauf sie ruht:* die gewichtete Kette bis
+`mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair_of_integrable_mul` (zehnter Lauf,
+bewiesen) und die Ordnung der drei Wahlen aus
+`exists_finite_forall_measure_setOf_lt_modulusBased_postcomp_le_of_isEventuallyApproximable`
+(fünfter Lauf, bewiesen). Nichts Neues an Theorie.
+
+*Warum jetzt:* weil nach diesem Lauf feststeht, daß **keine** der beiden vorhandenen Bedingungen
+die Irrfahrt trifft, und die Konjunktion die einzige ist, die es tut. Die gewichtete Kette des
+zehnten Laufs ist sonst Theorie über einer leeren Voraussetzung — genau die Lage, die der
+Meilenstein 6 der Pfadraumaufgabe als Integritätsproblem benannt hat.
+
+*Der eine Punkt, an dem es klemmen kann, und er ist benannt:* die Reihenfolge der drei
+Grenzübergänge. Die gewichtete Fassung des zehnten Laufs nimmt `N`, `δ`, `ε`, weil der Fehler im
+Grenzwert verschwindet; die Ausnahmemengenfassung braucht `N`, `ε`, `δ`, weil der Fehler in die
+Abschätzung überlebt. Der Anschluß ist `tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` bei `A = a₀`
+statt bei `A = 0` — dort steht `A` schon frei, und der fünfte Lauf ist der Verbraucher, der es
+dort liest. Der gewichtete Zusammenbau gibt `A = 2 ε' + 4 γ` mit `γ` dem gewichteten Fehler; zu
+prüfen ist, ob `γ` dieselbe Rolle spielt wie dort `‖g‖ ε`, also ob es mit dem Fehler und nicht
+mit dem Glied klein wird.
+
+*Und was danach kommt, damit der übernächste Lauf es nicht neu erschließt:*
+`isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul` (die Straffheit selbst, mit
+den Ausnahmen einzeln straff über `isTightMeasureSet_of_finite`) und
+`isEventuallyApproximableMul_rescaledWalk` (der Akzeptanzfall). Dessen Eingaben stehen alle:
+die zwei Paare, der Fehler `lintegral_biSup_enorm_sub_sq_rescaledWalk_le` des Quadrats, der
+gewichtete Fehler `0` des ersten Paars, `Kw = 0` für den verschwindenden Kompensator, und die
+Majoranten `integrable_majorant_rescaledWalk`, `integrable_majorant_sq_rescaledWalk` — letztere
+in der `MemLp … 2`-Gestalt, die die gewichtete Struktur verlangt, und das ist das einzige daran,
+was neu zu prüfen ist.
+
+### 2026-09-22, zwölfter Lauf des Tages — das benannte Ziel steht, und mit ihm der ganze Rest der Kette bis zur Straffheit; beide Beweise gingen im **ersten** Durchlauf durch, und der Grund dafür ist selbst ein Befund: die Konjunktion der beiden Abschwächungen verlangt **keinen** neuen Beweis, sondern nur die richtige Reihenfolge zweier schon geführter
+
+*Sechs Deklarationen, alle in `MartingaleProblems`, alle durch `check_master.py` mit 0 Fehlern und
+0 `sorry`, alle mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft. Die
+Warnungszahlen sind **unverändert** (18 / 38 / 112, davon 0 veraltet), die sechs erzeugen also
+keine einzige.*
+
+**Das benannte Ziel des Vorlaufs war `MeasureTheory.IsEventuallyApproximableMul` samt
+`exists_finite_forall_measure_setOf_lt_modulusBased_le_of_isEventuallyApproximableMul`.** Beide
+stehen. Dazu, im selben Lauf, die beiden, die der Vorlauf als „was danach kommt" benannt hatte —
+bis auf den Akzeptanzfall — und die zwei Bausteine, die dieser noch braucht.
+
+| Zeile | Name |
+| ---: | --- |
+| 48599 | `MeasureTheory.IsEventuallyApproximableMul` |
+| 48639 | `MeasureTheory.isEventuallyApproximableMul_of_forall_isApproximableMul` |
+| 48680 | `MeasureTheory.exists_finite_forall_measure_setOf_lt_modulusBased_le_of_isEventuallyApproximableMul` |
+| 48857 | `MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul` |
+| 49335 | `MeasureTheory.IsApproximatingPair.memLp_stoppedValue_of_dominated` |
+| 52683 | `MeasureTheory.memLp_majorant_rescaledWalk` |
+
+#### Der Befund des Laufs, und er ist der Grund, warum er billig war
+
+**Die Konjunktion der beiden Abschwächungen ist keine dritte Bedingung, sondern die Verschränkung
+zweier bereits geführter Beweise, und die Verschränkung ist an *einer* Zahl ablesbar.** Der
+gewichtete Beweis (`exists_forall_measure_setOf_lt_modulusBased_le_of_forall_isApproximableMul`)
+und der Ausnahmemengenbeweis
+(`exists_finite_forall_measure_setOf_lt_modulusBased_postcomp_le_of_isEventuallyApproximable`)
+unterscheiden sich in nichts als der **Reihenfolge der drei Wahlen** — `N`, `δ` gegen `N`, `ε`,
+`δ` — und in der Konstanten, durch die der Fehler geteilt wird:
+
+* ungewichtet, mit Ausnahmemenge: `ε = a₀ / (2 + 4 ofReal ‖g‖)`, weil die Kombination dort
+  `2 ε' + 4 ofReal ‖g‖ ε` heißt;
+* **gewichtet**, mit Ausnahmemenge: `ε = a₀ / 6`, weil die Kombination `2 ε' + 4 γ` heißt.
+
+Die Norm der Testfunktion verschwindet mit der Schranke am Prozeß — sie steckt im **gewichteten**
+Fehler. Das ist die ganze arithmetische Spur des Weglassens der Schranke, und sie ist der Grund,
+daß der Beweis des Ausnahmemengenfalls Zeile für Zeile übernommen werden konnte, mit `6` an der
+Stelle von `2 + 4 ofReal ‖g‖`.
+
+**Beide Beweise gingen im ersten `dev_check_master.py`-Durchlauf durch** — kein Fehler, keine
+Nachbesserung. Das ist kein Zufall: an beiden Stellen war die Vorarbeit so weit getrieben, daß
+nichts Neues zu entscheiden blieb.
+
+#### Zwei Entscheidungen, die beim Hinschreiben fielen, und beide gehen auf „so schwach wie möglich"
+
+* **Die beiden Quadratintegrierbarkeiten von `V` stehen *innerhalb* des Existenzquantors, nicht
+  daneben.** `IsApproximableMul` trägt sie als zwei eigene Felder, weil dort `V` fest ist; in der
+  Familienfassung wäre „für **jedes** Glied quadratintegrierbar" die bequemere und die stärkere
+  Aussage. Verlangt wird statt dessen nur, was der Verbraucher liest: für die Glieder **außerhalb
+  der Ausnahmemenge**, an der der Fehler gerade steht. Damit hat
+  `IsEventuallyApproximableMul` genau **ein** Feld, und
+  `isEventuallyApproximableMul_of_forall_isApproximableMul` bleibt dieselben drei Zeilen wie sein
+  ungewichteter Zwilling.
+* **Die Straffheit zahlt die Ausnahmen, statt sie fallenzulassen.** Der Weg ist der von
+  `SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le_off_finite`, aber
+  ohne Nachschaltung: das Bildmaß eines einzelnen Gliedes ist ein endliches Maß auf einem
+  vollständigen zweitabzählbaren metrischen Raum, also straff (`isTightMeasureSet_singleton`),
+  und `SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal` ist eine **Äquivalenz**, gibt
+  also demselben Glied zu denselben `(ε, m, η)` sein eigenes Fenster zurück.
+  `SkorokhodSpace.modulusBased_mono` und `Set.Finite.exists_pos_forall_le` bringen die endlich
+  vielen Fenster und das gemeinsame unter ein positives Minimum. Die Kompaktheitseinschließung
+  der einelementigen Teilfamilie ist an derselben kompakten Menge abzulesen wie die der ganzen —
+  drei Zeilen, kein Lemma nötig.
+
+#### Was damit bezahlt ist
+
+Die Straffheitsseite von Donsker hängt jetzt an **einer** Aussage:
+`isEventuallyApproximableMul_rescaledWalk`. Alles darüber steht:
+
+```
+IsEventuallyApproximableMul
+  → exists_finite_forall_measure_setOf_lt_modulusBased_le_of_isEventuallyApproximableMul
+  → isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul
+```
+
+und die Kompaktheitseinschließung, die der letzte als Voraussetzung trägt, ist
+`isCompactContained_rescaledWalk` und steht seit dem 2026-09-21.
+
+#### Prüfung
+
+`scripts/check_master.py` gegen `upstream/master`
+(`94ef6b89544e58e90f119da869f3fb48d1da0f4c`, Lean `4.35.0-rc2`): **0 Fehler, 0 `sorry`** in allen
+drei Dateien, Warnungen **18 / 38 / 112, davon 0 veraltet** — unverändert gegenüber dem Vorlauf.
+`scripts/check_axioms_master.py` (mit `--build`): alle vier auf `propext`, `Classical.choice`,
+`Quot.sound`. `check_cited_lines.py`: **445 gepaarte Fundstellen, 0 verschoben, 0 tot** —
+unverändert.
+
+#### In der Roadmap berichtigt, nicht nur ergänzt
+
+`MartingaleProblems/README.md`, Meilenstein 11: der Abschnitt „The named point this leaves"
+führte die vier Punkte als **offen**. Er nennt jetzt die drei gebauten als Kette, mit der Zahl
+`6` und ihrem Grund und mit dem Weg der Ausnahmezahlung, und läßt den Akzeptanzfall als einzigen
+Punkt stehen. Die dortige Angabe, die Ausnahmen würden „tight one by one by
+`isTightMeasureSet_of_finite`", war eine Vorhersage und ist berichtigt: gebraucht wird
+`isTightMeasureSet_singleton` **und die Rückrichtung der Äquivalenz**, weil aus der Straffheit
+eines Einzelmaßes erst über diese ein *Fenster* wird.
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`MeasureTheory.isEventuallyApproximableMul_rescaledWalk`** — der Akzeptanzfall, und damit die
+ganze Straffheitsseite von Donsker.
+
+*Die Aussage:* die Familie der reskalierten Irrfahrten erfüllt `IsEventuallyApproximableMul` an
+jedem Horizont, mit `Kw = 0` und derselben Konstanten `T ^ q.toReal⁻¹ * ‖σ‖₊` wie
+`isEventuallyApproximable_rescaledWalk`.
+
+*Worauf sie ruht:* wörtlich auf den Eingaben von `isEventuallyApproximable_rescaledWalk` —
+`isApproximatingPair_rescaledWalk`, `isApproximatingPair_sq_rescaledWalk`,
+`lintegral_biSup_enorm_sub_sq_rescaledWalk_le`, `isEventuallyApproximable_of_tendsto_zero_cofinite`
+(beziehungsweise dessen gewichteter Zwilling, der noch zu schreiben ist), die beiden Stoppzeiten
+`isStoppingTime_oscHitSeqCap` und `isStoppingTime_oscHitSeqGap` und die Majoranten
+`abs_rescaledWalk_le_of_le`, `abs_sq_rescaledWalk_le_of_le`.
+
+*Die drei Stellen, an denen es sich vom ungewichteten Zwilling unterscheidet, und nur an diesen:*
+
+1. **Die beiden gewichteten Felder sind geschenkt.** Das erste Paar **ist** die Irrfahrt
+   (`isApproximatingPair_rescaledWalk`), also ist `Y t ω - V t ω = 0` und das Gewicht wird gegen
+   `0` integriert; sein Kompensator ist `0`, also ist `eLpNorm (fun s ↦ Z s ω) q = 0` und
+   `Kw = 0` trägt. Beide Male ist `simp` das ganze Argument, wie schon beim ungewichteten Fehler.
+2. **`Integrable` wird an vier Stellen zu `MemLp … 2`** — und **diese beiden Bausteine sind in
+   diesem Lauf mitgebaut**, damit der nächste sie nicht erst erschließt.
+   `IsEventuallyApproximable` fragt `Y` und `Y'` bloß integrierbar;
+   `IsEventuallyApproximableMul` fragt `V`, `Y` und `C` in `L²` und nur `Y'` integrierbar. `C`
+   ist der Nullprozeß und kostet nichts; `Y` ist die Irrfahrt selbst, also dieselbe Aussage wie
+   für `V`. Die Frage, die der Vorschlag noch offenließ — eigene `MemLp`-Fassung der Dominierung
+   oder `MemLp.of_le` an der gestoppten Funktion —, ist am Quelltext entschieden und lautet:
+   **dieselbe Fassung, ein Zeichen anders.** `integrable_stoppedValue_of_dominated` liest von der
+   Voraussetzung nur die Meßbarkeit der gestoppten Funktion und die punktweise Dominierung, also
+   ist `IsApproximatingPair.memLp_stoppedValue_of_dominated` (Z. 49335) derselbe Beweis mit
+   `MemLp.of_le` statt `Integrable.mono'`. Die **eine** Stelle, an der er nicht wörtlich derselbe
+   ist, ist benannt: `MemLp.of_le` vergleicht auf **beiden** Seiten Normen, die Dominierung steht
+   aber gegen den Majoranten selbst; `le_abs_self` überbrückt das, und genau deshalb bleibt
+   `‖Y t ω‖ ≤ g ω` — und nicht `≤ ‖g ω‖` — die schwächere und damit die richtige Voraussetzung.
+   Die Endlichkeit von `P` wird dabei **nicht** gelesen und ist nicht verlangt; sie steht erst im
+   Sonderfall des konstanten Majoranten.
+3. **Der Majorant ist quadratintegrierbar, weil die Summanden es sind** — ebenfalls gebaut,
+   `memLp_majorant_rescaledWalk` (Z. 52683). `hLp : ∀ k, MemLp (ξ k) 2 P` steht schon in den
+   Voraussetzungen von `isEventuallyApproximable_rescaledWalk`; der Majorant ist eine
+   **endliche** Summe von `|ξ j| / √(n+1)` über `j < ⌊u (n+1)⌋`, also `memLp_finsetSum` an
+   `MemLp.abs` und `MemLp.const_mul` — dieselbe Zeile wie `integrable_majorant_rescaledWalk` mit
+   drei ausgetauschten Namen.
+
+**Damit bleibt für den Akzeptanzfall genau zweierlei zu schreiben:** der gewichtete Zwilling von
+`isEventuallyApproximable_of_tendsto_zero_cofinite` — Buchhaltung, die Felder sind lang und der
+Inhalt ist `Filter.eventually_cofinite` wie dort — und der Zusammenbau selbst, der dieselben
+zwölf Zeilen sind wie bei `isEventuallyApproximable_rescaledWalk`, mit `memLp_stoppedValue_of_dominated`
+an vier der sechs Stellen und `simp` an den beiden gewichteten Feldern.
+
+*Warum jetzt:* weil nach diesem Lauf die ganze Kette über der Bedingung steht und die Bedingung
+auf Donskers Daten noch keinen Zeugen hat — genau die Lage, die die Pfadraumaufgabe bei
+Meilenstein 6 als Integritätsproblem benannt hat, nur eine Ebene höher. Und weil der elfte Lauf
+gezeigt hat, daß **keine** schwächere Bedingung es tut: die Konjunktion ist nicht eine unter
+mehreren, sie ist die einzige.
+
+*Und was danach kommt, damit der übernächste Lauf es nicht neu erschließt:* die Straffheit von
+Donskers Familie als Folgerung —
+`isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul` mit
+`isCompactContained_rescaledWalk` und `isEventuallyApproximableMul_rescaledWalk` eingesetzt — und
+danach der **erste** Kettenpunkt des Meilensteins 11 am selben Beispiel, also der Übergang von
+der Straffheit der Pfadgesetze zur relativen Kompaktheit.
+
+### 2026-09-22, dreizehnter Lauf des Tages — das benannte Ziel steht, und mit ihm die **ganze Straffheitsseite von Donsker**; beide Vorhersagen des Vorlaufs trafen zu, und der einzige Punkt, an dem sie zu kurz griffen, ist einer, den `simp` nicht sieht: `MemLp.zero` steht an `(0 : α → ε)` und der gestoppte Wert eines konstanten Prozesses ist `fun ω ↦ 0`
+
+*Fünf Deklarationen, alle in `MartingaleProblems`, alle durch `check_master.py` mit 0 Fehlern und
+0 `sorry`, alle mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft. Die
+Warnungszahlen sind **unverändert** (18 / 38 / 112, davon 0 veraltet), die fünf erzeugen also
+keine einzige. Dazu zwei vorhandene Beweise gekürzt, ohne Änderung an ihren Aussagen.*
+
+| Zeile | Name |
+| ---: | --- |
+| 48661 | `MeasureTheory.isEventuallyApproximableMul_of_tendsto_zero_cofinite` |
+| 50290 | `MeasureTheory.isCompact_closure_range_probabilityMeasure_of_isTightMeasureSet` |
+| 53143 | `MeasureTheory.isEventuallyApproximableMul_rescaledWalk` |
+| 53240 | `MeasureTheory.isTightMeasureSet_map_rescaledWalk` |
+| 53284 | `MeasureTheory.isCompact_closure_range_map_rescaledWalk` |
+
+**Das benannte Ziel des Vorlaufs war `MeasureTheory.isEventuallyApproximableMul_rescaledWalk`.**
+Es steht. Dazu der gewichtete Zwilling des Cofinite-Kriteriums, den der Vorlauf als „Buchhaltung"
+benannt hatte und der es auch war, und — im selben Lauf und über den Vorschlag hinaus — die
+**Folgerung**, auf die der Vorlauf den übernächsten Lauf vertröstet hatte:
+`isTightMeasureSet_map_rescaledWalk`.
+
+#### Der Befund des Laufs, und er ist klein, aber er ist der einzige
+
+**Die drei Stellen, an denen der Vorlauf den Unterschied zum ungewichteten Zwilling verortet
+hatte, waren die drei Stellen — und an einer vierten, die er nicht nannte, schlägt `simp` fehl.**
+Der Kompensator des ersten Paares ist der Nullprozeß, seine beiden `MemLp`-Felder sind also
+`MemLp (stoppedValue (fun _ _ ↦ (0 : ℝ)) σ) 2 P`. Das ist `MemLp.zero`, aber **nicht** durch
+`simp`: `MemLp.zero` ist an `(0 : α → ε)` ausgesprochen und trägt dort `@[simp]`, der gestoppte
+Wert eines konstanten Prozesses reduziert aber auf `fun ω ↦ 0`, und die beiden Terme sind nur
+definitionsgleich, nicht syntaktisch gleich. `simp [stoppedValue]` läßt das Ziel
+`MemLp (fun ω ↦ 0) 2 P` stehen und meldet obendrein das `stoppedValue`-Argument als ungenutzt;
+`exact MemLp.zero` schließt es. Das ist dasselbe Muster wie `(⊥ : ENNReal)` gegen `WithTop ℝ≥0`
+im achtzehnten Lauf des 2026-09-10: **nicht am Ziel rewriten, sondern das Ziel mit `exact`
+treffen.**
+
+Alles übrige ging im **ersten** Durchlauf durch, beide Deklarationen, wie schon im Vorlauf — und
+aus demselben Grund: die Vorarbeit war so weit getrieben, daß nichts mehr zu entscheiden blieb.
+Die beiden Quadratintegrierbarkeiten des Gliedes selbst (die zwei Felder **vor** dem
+Existenzquantor) sind wörtlich dieselben zwei Aussagen wie die des ersten Approximanten, weil die
+Irrfahrt ihr eigener Approximant ist; sie werden zweimal eingesetzt und einmal bewiesen.
+
+#### Die Folgerung, und was an ihr Arbeit war
+
+`isTightMeasureSet_map_rescaledWalk` ist
+`isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul` an zwei Eingaben, und die
+Naht dazwischen ist der Grund, warum sie nicht in einer Zeile dasteht:
+
+* **Die Kompaktheitseinschließung liest den Pfad als Treppenpfad, die Approximierbarkeit als
+  Prozeß.** `isCompactContained_rescaledWalk` verlangt
+  `hΦ : (Φ n ω).toFun = stepPath (fun k ↦ k / (n+1)) (fun k ↦ …)`, der Straffheitssatz verlangt
+  `hΦ : (Φ n ω).toFun = fun t ↦ V n t ω`. Die Aussage ist in der **zweiten** Form gestellt und
+  die erste daraus abgeleitet, über `stepPath_rescaledWalk_eq` — die Naht des
+  zweiundzwanzigsten Laufs, hier zum ersten Mal verbraucht.
+* **Zwei Konstanten werden gewählt und nicht getragen.** Der Verbraucher fragt zu jedem `ε₀` und
+  jedem `u` nach *irgendwelchen* `q, T, K, Kw` mit `u < T`; die Irrfahrten erfüllen die Bedingung
+  an **jedem** `T` und **jedem** `q > 1`, also tun es `T = u + 1` und `q = 2`.
+* **`one_lt_two` trägt über `ℝ≥0∞` nicht.** Es verlangt `AddLeftStrictMono`, und `ENNReal` ist
+  keines (`⊤ + 1 = ⊤ + 2`). Zu nehmen ist `(by norm_num : (1 : ENNReal) < 2)`. Ein eigener Name
+  `ENNReal.one_lt_two` steht in `Mathlib/Data/ENNReal/` nicht (geprüft gegen `94ef6b89544`).
+* **`hvar` und `hsq` sind nicht redundant** und werden von verschiedenen Seiten gelesen: die
+  Varianzschranke `≤ 1` allein von der Kompaktheitseinschließung, die Identität `∫ ξ² = σ` allein
+  von der Approximierbarkeit. Donskers eigene Normierung `σ = 1` erfüllt beide; die Aussage
+  verlangt sie nicht.
+
+#### Zwei Doc-Kommentare berichtigt, nicht nur ergänzt
+
+* `isEventuallyApproximable_rescaledWalk` sagte, es sei „das zweite und **letzte** der beiden
+  Dinge, die Donskers Akzeptanztest der Straffheitskette schuldet". Das war vor dem elften Lauf
+  geschrieben und ist seither falsch: die ungewichtete Bedingung allein trägt die Irrfahrten
+  **nicht**, weil jeder Verbraucher über ihr einen gleichmäßig beschränkten Prozeß liest. Der
+  Kommentar nennt sie jetzt die ungewichtete Hälfte und verweist auf die Konjunktion.
+* Der Abschnittstext „What the walks do *not* satisfy" endete mit „die eine, die diese Datei dem
+  Akzeptanztest noch schuldet, ist ihre **Konjunktion**". Sie schuldet sie nicht mehr.
+
+#### Prüfung
+
+`scripts/check_master.py` gegen `upstream/master`
+(`94ef6b89544e58e90f119da869f3fb48d1da0f4c`, Lean `4.35.0-rc2`): **0 Fehler, 0 `sorry`** in allen
+drei Dateien, Warnungen **18 / 38 / 112, davon 0 veraltet** — unverändert gegenüber dem Vorlauf.
+`scripts/check_axioms_master.py`: alle drei auf `propext`, `Classical.choice`, `Quot.sound`.
+`check_cited_lines.py`: **446 gepaarte Fundstellen, 0 verschoben, 0 tot** — eine mehr als im
+Vorlauf, nämlich `Mathlib/Order/Filter/Cofinite.lean:49` im neuen Doc-Kommentar.
+
+#### Was damit steht, und was der Akzeptanztest jetzt noch braucht
+
+Die **Straffheitsseite** von Donsker ist vollständig bezahlt:
+
+```
+isCompactContained_rescaledWalk
+isEventuallyApproximableMul_rescaledWalk
+  → isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul
+  → isTightMeasureSet_map_rescaledWalk
+```
+
+Der Akzeptanztest von Meilenstein 11 verlangt die vier Kettenpunkte **je genau einmal und in
+dieser Reihenfolge**, und der erste davon ist `isTight_map_postcomp_of_exists_martingale`. Was
+`isTightMeasureSet_map_rescaledWalk` liefert, ist die Straffheit der **Pfadgesetze** — also das,
+was der erste Kettenpunkt zusammen mit `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp`
+erst herstellen soll. Es ist damit **nicht** der erste Kettenpunkt, sondern dessen Ergebnis auf
+Donskers Daten, auf dem kürzeren Weg über die Approximierbarkeit statt über die
+Martingalhypothese an `f ∘ X n`. Das ist im Meilenstein so vermerkt („Either route closes the
+item") und ist kein Abdrift; der zweite Weg, die Lindeberg-Taylor-Rechnung, bleibt als
+Alternative stehen und ist nicht gebaut.
+
+### Die zweite Hälfte desselben Laufs: der **zweite** Kettenpunkt auf Donskers Daten, und dabei ein Argument, das zweimal ausgeschrieben dastand
+
+Nach der Straffheit war der nächste Schritt billig genug, um im selben Lauf zu stehen: von der
+Straffheit zur **relativen Kompaktheit**. Prokhorov steht in Mathlib
+(`isCompact_closure_of_isTightMeasureSet`, `MeasureTheory/Measure/Prokhorov.lean:530`), es ist
+also keine Mathematik zu leisten — wohl aber ein **Typwechsel**, und der ist der ganze Inhalt:
+Straffheit ist an einer Menge von `Measure` ausgesprochen, Prokhorov schließt über eine Menge
+von `ProbabilityMeasure`, und der vierte Kettenpunkt
+(`tendsto_of_isRelativelyCompact_of_unique`) liest weder das eine noch das andere, sondern ein
+`Set.range`.
+
+**Der Befund: dieser Typwechsel stand zweimal wörtlich in der Datei**, in
+`isCompact_closure_range_of_subalgebra_forall_martingale` und in
+`isCompact_closure_range_of_subalgebra_forall_exists_bounded_pair`, jedesmal als `have hset : … := by ext ν; constructor; …`
+mit demselben `Subtype.ext`. Er ist jetzt **einmal** ausgesprochen, als
+`isCompact_closure_range_probabilityMeasure_of_isTightMeasureSet`, und beide alten Beweise sind
+auf vier Zeilen zusammengegangen — ohne daß eine Voraussetzung hinzukommt oder wegfällt; die
+Axiomprüfung bestätigt beide unverändert.
+
+**Was die allgemeine Fassung wirklich verlangt, ist gemessen und nicht geraten:**
+`[MeasurableSpace F] [TopologicalSpace F] [BorelSpace F] [T2Space F]` — und `BorelSpace` ist
+nötig, nicht bloß bequem: mit `OpensMeasurableSpace` scheitert die Instanzensuche an
+`ProbabilityMeasure F`. **Polnischsein und Vollständigkeit werden hier nicht gelesen**; sie
+werden eine Ebene höher gelesen, in der Straffheit, und das steht so am Doc-Kommentar.
+
+`isCompact_closure_range_map_rescaledWalk` ist dann eine Zeile. Damit steht auf Donskers Daten:
+
+```
+isCompactContained_rescaledWalk
+isEventuallyApproximableMul_rescaledWalk
+  → isTightMeasureSet_map_rescaledWalk        (Straffheit der Pfadgesetze)
+  → isCompact_closure_range_map_rescaledWalk  (relative Kompaktheit, Prokhorov)
+```
+
+#### Prüfung, nach dem Umbau wiederholt
+
+`scripts/check_master.py`: **0 Fehler, 0 `sorry`**, Warnungen **18 / 38 / 112, davon 0
+veraltet** — unverändert. `check_axioms_master.py` über die zwei neuen **und** die zwei
+gekürzten: alle vier auf `propext`, `Classical.choice`, `Quot.sound`.
+`check_cited_lines.py`: **446 gepaarte Fundstellen, 0 verschoben, 0 tot.**
+
+#### Die Vorfrage zum dritten Kettenpunkt ist noch in diesem Lauf am Quelltext beantwortet, damit der nächste sie nicht stellt
+
+Ehe ein Ziel benannt wird, war zu klären, in welcher Gestalt der dritte Kettenpunkt die
+Martingaleigenschaft der Approximanten liest. Die Antwort steht an drei Signaturen und ist
+**nicht** die, die ich erwartet hatte:
+
+* **`mpSolution_of_tendsto_cadlag` (Z. 51041) liest überhaupt keine Martingaleigenschaft.**
+  Seine Voraussetzung `hzero` ist eine **Konvergenz von Integralen**:
+
+  ```
+  ∀ s t ∈ T, s ≤ t → ∀ Z ∈ evalFuns E (insert s (T ∩ Iic s)),
+    Tendsto (fun n ↦ ∫ ω, (mpTest f g t (X' n ω) - mpTest f g s (X' n ω)) * Z (X' n ω) ∂(P' n))
+      atTop (𝓝 0)
+  ```
+
+  Also genau eine **verschwindende Martingallücke**, und nichts sonst.
+* **`mpSolution_of_tendsto_cadlag_of_approx` (Z. 51259) und `_of_subseq` (Z. 51409) sind
+  Spezialisierungen davon an *exakte* Martingalität**, aber an einem **wandernden Testpaar**:
+  `hmart : ∀ n, Martingale (fun r ω ↦ mpTest (f' n) (g' n) r (X' n ω)) (𝓕' n) (P' n)` mit
+  `‖f - f' n‖ → 0` und `‖g - g' n‖ → 0`. Die Näherung sitzt bei ihnen in der **Testfunktion**,
+  nicht im Fehler.
+
+**Das entscheidet den Weg für Donsker, und zwar gegen die vorhandene Teilfolgenfassung.** Die
+reskalierte Irrfahrt ist zu keinem Paar `(f' n, g' n)` beschränkter stetiger Funktionen ein
+*exaktes* Martingal — ihre exakten Martingale sind sie selbst und ihr Quadrat, und beide sind
+unbeschränkt. Was sie hat, ist die verschwindende Lücke, und das ist die
+Lindeberg-Taylor-Entwicklung. `mpSolution_of_tendsto_cadlag` nimmt sie **unmittelbar**; was
+fehlt, ist allein die Teilfolgenfassung dazu.
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`MeasureTheory.mpSolution_of_tendsto_cadlag_of_subseq_of_zero`** — die Teilfolgenfassung des
+dritten Kettenpunktes an der **verschwindenden Martingallücke** statt an exakter Martingalität
+eines wandernden Testpaares.
+
+*Die Aussage:* wörtlich `mpSolution_of_tendsto_cadlag_of_subseq`, nur mit `hzero` (längs `ns`)
+an der Stelle von `hmart`, `hf`, `hg` — und mit derselben Konklusion, also der abzählbaren
+dichten Menge aus `SkorokhodSpace.exists_countable_dense_continuity` und der bedingten
+Erwartung über `cadlagFiltration`.
+
+*Worauf sie ruht:* auf `mpSolution_of_tendsto_cadlag` (Z. 51041) und auf genau den drei
+Zwischenschritten, die `_of_subseq` schon zusammensetzt und die von `hmart` nicht abhängen:
+`SkorokhodSpace.exists_countable_dense_continuity`, `tendstoInDistribution_id_of_tendsto` und
+`cadlagFiltration_eq`. Der Beweis ist der von `_of_subseq` mit **weggelassener** letzter Zeile;
+er sollte kürzer sein als sein Vorbild und nicht länger.
+
+*Warum jetzt:* weil die beiden ersten Kettenpunkte auf Donskers Daten stehen
+(`isTightMeasureSet_map_rescaledWalk`, `isCompact_closure_range_map_rescaledWalk`), der vierte
+reine Topologie ist und auf den dritten wartet, und weil der dritte in seiner **vorhandenen**
+Teilfolgenfassung auf diesen Daten eine unerfüllbare Voraussetzung trägt — dieselbe Lage, die
+der elfte Lauf dieses Tages bei `IsApproximableMul` vorgefunden hat, und dieselbe Antwort:
+nicht die Daten biegen, sondern die Aussage an dem stellen, was der Beweis wirklich liest.
+
+*Und was danach kommt, damit der übernächste Lauf es nicht neu erschließt:* die
+Lindeberg-Taylor-Rechnung als Zeuge für `hzero` auf den reskalierten Irrfahrten, mit
+`g = f'' / 2` für `f ∈ Cc^∞(ℝ)`. Das ist der einzige verbliebene Posten des Akzeptanztests, der
+noch eine **Rechnung** verlangt statt Einsetzen; alles andere ist Naht.
+
+### 2026-09-22, vierzehnter Lauf des Tages — das benannte Ziel steht, und beim Hinschreiben sind **zwei** Voraussetzungen weggefallen, die der Vorschlag noch führte: der Escape der Teilfolge wird nicht gelesen, und die Klasse der Testfunktionen kann gar nicht die des Vorbilds sein
+
+*Eine Deklaration in `MartingaleProblems`, durch `check_master.py` mit 0 Fehlern und 0 `sorry`,
+mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft. Die Warnungszahlen
+sind **unverändert** (18 / 38 / 112, davon 0 veraltet), sie erzeugt also keine einzige.*
+
+| Zeile | Name |
+| ---: | --- |
+| 51484 | `MeasureTheory.mpSolution_of_tendsto_cadlag_of_subseq_of_zero` |
+
+**Das benannte Ziel des Vorlaufs war genau diese Aussage.** Sie steht, und sie ging im **ersten**
+Durchlauf durch — nach einem Fehlstart, der nichts mit ihr zu tun hatte: die Entwurfsdatei
+braucht `open scoped BoundedContinuousFunction`, sonst zerfällt `→ᵇ` in einen Pfeil und einen
+Hochstellterm, und die Meldung lautet `elaboration function for
+Mathlib.Tactic.superscriptTerm has not been implemented`. In `Suggested.lean` steht das `open`
+nicht, weil die Notation dort über die Importkette schon im Geltungsbereich ist; eine
+freistehende Entwurfsdatei erbt das nicht.
+
+#### Der Befund des Laufs: zwei Voraussetzungen des Vorbilds werden nicht geerbt, und beide aus einem benennbaren Grund
+
+Der Vorschlag lautete, `mpSolution_of_tendsto_cadlag_of_subseq` wörtlich zu übernehmen und nur
+`hzero` an die Stelle von `hmart`, `hf`, `hg` zu setzen. Das geht nicht wörtlich, und der
+Unterschied ist an beiden Stellen eine Einsicht und keine Unbequemlichkeit.
+
+* **`Tendsto ns atTop atTop` fällt ersatzlos weg.** Der Doc-Kommentar des Vorbilds sagt selbst,
+  daß diese Hypothese dort an **genau einer** Stelle ausbezahlt wird: sie trägt `‖f - f' n‖ → 0`
+  und `‖g - g' n‖ → 0` von der Familie auf die Teilfolge. Steht die Lücke von vornherein längs
+  `ns`, so ist nichts zu tragen. Das ist die schwächere Fassung und nicht nur die kürzere: ein
+  Verbraucher, der die Lücke nur längs einer Teilfolge hat, wird bedient, und wer sie längs der
+  ganzen Familie hat, setzt selbst ein `Filter.Tendsto.comp` davor. Der vierte Kettenpunkt reicht
+  den Escape weiterhin herüber; er wird hier bloß nicht gelesen.
+* **Die Klasse der Testfunktionen kann nicht die des Vorbilds sein.**
+  `mpSolution_of_tendsto_cadlag` liest `Z ∈ SkorokhodSpace.evalFuns E (insert s (T ∩ Set.Iic s))`,
+  und `T` entsteht **im Beweis**, aus `SkorokhodSpace.exists_countable_dense_continuity` am
+  Grenzgesetz — das erst nach der Extraktion bekannt ist. Eine Hypothese, die `T` nennt, ist für
+  den Verbraucher also nicht hinschreibbar. Genommen ist `Set.Iic s`, die kleinste von dieser
+  Wahl unabhängige Zeitmenge, und `SkorokhodSpace.evalFuns_mono` ist der Übergang. **Der Preis
+  gehört in den Bericht:** die Voraussetzung wird über mehr Testfunktionen verlangt, als der
+  Beweis liest. Für den vorgesehenen Verbraucher kostet das nichts — die
+  Lindeberg-Taylor-Entwicklung schätzt die Lücke gegen `‖Z‖_∞` ab und sieht die Zeitmenge gar
+  nicht —, aber es ist eine echte Verstärkung gegenüber `insert s (T ∩ Set.Iic s)` und keine
+  bloße Umformulierung.
+
+Beides steht im Doc-Kommentar und im Meilenstein, damit der nächste Lauf nicht meint, der
+Vorschlag sei ungenau ausgeführt worden.
+
+#### Prüfung
+
+`scripts/check_master.py` gegen `upstream/master`
+(`94ef6b89544e58e90f119da869f3fb48d1da0f4c`, Lean `4.35.0-rc2`): **0 Fehler, 0 `sorry`** in allen
+drei Dateien, Warnungen **18 / 38 / 112, davon 0 veraltet** — unverändert gegenüber dem Vorlauf.
+`scripts/check_axioms_master.py`: `propext`, `Classical.choice`, `Quot.sound`.
+`check_cited_lines.py`: **446 gepaarte Fundstellen, 0 verschoben, 0 tot** — unverändert; der
+Doc-Kommentar zitiert keine Zeilennummer.
+
+#### Wo der Akzeptanztest damit steht
+
+```
+isCompactContained_rescaledWalk
+isEventuallyApproximableMul_rescaledWalk
+  → isTightMeasureSet_map_rescaledWalk        (Straffheit der Pfadgesetze)
+  → isCompact_closure_range_map_rescaledWalk  (relative Kompaktheit, Prokhorov)
+  → mpSolution_of_tendsto_cadlag_of_subseq_of_zero   (dritter Kettenpunkt, Gestalt steht)
+```
+
+Der dritte Kettenpunkt hat damit die Gestalt, die Donskers Daten bedienen können; was ihm auf
+diesen Daten fehlt, ist sein **Zeuge**, und das ist die einzige verbliebene Rechnung des
+Akzeptanztests.
+
+### Die zweite Hälfte desselben Laufs: dieselbe Naht an den Daten des zweiten Kettenpunktes — und dort ist die Lückenfassung nicht bloß anders als die Martingalfassung, sondern **billiger**
+
+| Zeile | Name |
+| ---: | --- |
+| 51598 | `MeasureTheory.mpSolution_of_tendsto_cadlag_of_subseq_of_zero_pathOfProcess` |
+
+Die Aussage ist die vorige, mit dem getesteten Funktional an einem aus einem Prozeß gebauten
+Pfad ausgeschrieben — ein `simp only [SkorokhodSpace.mpTest, hΦ]`, und keine Analysis darin.
+Sie ging ebenfalls im **ersten** Durchlauf durch.
+
+**Der Befund steht in dem, was sie nicht trägt.**
+`mpSolution_of_tendsto_cadlag_of_subseq_pathOfProcess`, ihr Zwilling in der Martingalfassung,
+führt drei Voraussetzungen, die hier alle drei wegfallen: eine Filtration `𝓕`, die
+Adaptiertheit der Prozesse an sie, und `CompleteSpace E`. Die ersten beiden, weil eine
+*Martingal*eigenschaft die Vergangenheit benennen muß; die dritte, weil jener Satz die
+Meßbarkeit der Pfadabbildung aus der Adaptiertheit über
+`SkorokhodSpace.measurable_of_measurable_eval` gewinnt. **Eine verschwindende Lücke benennt keine
+Vergangenheit**: von der Pfadabbildung wird nur ihre Meßbarkeit gelesen, und die wird unmittelbar
+verlangt. Für Donsker kostet das nichts — `isCompact_closure_range_map_rescaledWalk` trägt
+`hΦm` ohnehin —, aber es ist die schwächere Aussage, und sie steht so im Meilenstein.
+
+#### Prüfung, nach der zweiten Deklaration wiederholt
+
+`scripts/check_master.py`: **0 Fehler, 0 `sorry`**, Warnungen **18 / 38 / 112, davon 0
+veraltet** — unverändert. `check_axioms_master.py` über **beide** neuen Deklarationen:
+`propext`, `Classical.choice`, `Quot.sound`.
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`MeasureTheory.integral_comp_rescaledWalk_eq_sum`** — der Kompensator des dritten
+Kettenpunktes an der reskalierten Irrfahrt, **in geschlossener Form und exakt**.
+
+*Die Aussage:* für `g : ℝ →ᵇ ℝ`, `n : ℕ` und `t : ℝ≥0` ist
+
+```
+∫ u in Set.Ioc (0 : ℝ) (t : ℝ), g (V n u.toNNReal ω)
+  = ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ((n : ℝ) + 1)⁻¹ * g (S n j ω)
+    + ((t : ℝ) - ⌊t * ((n : ℝ≥0) + 1)⌋₊ / ((n : ℝ) + 1)) * g (S n ⌊t * ((n : ℝ≥0) + 1)⌋₊ ω)
+```
+
+mit `S n j ω = (√(n+1))⁻¹ * ∑ i ∈ Finset.range j, ξ i ω` den Knotenwerten und
+`V n u ω = S n ⌊u * ((n : ℝ≥0) + 1)⌋₊ ω`.
+
+*Warum das der richtige erste Stein der Lindeberg-Taylor-Rechnung ist:* die Lücke des dritten
+Kettenpunktes ist `𝔼[(mpTest t − mpTest s) · Z]`, und `mpTest` ist Auswertung **minus
+Kompensator**. Der Kompensator ist bisher ein Integral über einen Treppenpfad und in keiner
+Form aufgelöst; solange er das ist, kann die Taylorentwicklung des Auswertungsteils nicht gegen
+ihn gehalten werden. **Und er ist exakt eine Summe, nicht näherungsweise** — der Pfad nimmt auf
+jedem Fenster `[j/(n+1), (j+1)/(n+1))` genau seinen Knotenwert an —, also ist hier kein
+Grenzübergang zu leisten und keine Wahrscheinlichkeit im Spiel. Es ist eine deterministische
+Aussage über einen Stichprobenpunkt, und sie ist der einzige Posten der Rechnung, der ohne die
+Unabhängigkeit der `ξ` auskommt.
+
+*Worauf sie ruht, am Quelltext von `94ef6b89544` nachgesehen, damit der nächste Lauf nicht
+sucht:*
+
+* `intervalIntegral.sum_integral_adjacent_intervals`
+  (`Mathlib/MeasureTheory/Integral/IntervalIntegral/Basic.lean:1116`) mit `a k = k / (n+1)` —
+  die Zerlegung des Fensters in die Gitterzellen. Die Ico-Fassung steht darüber, `:1101`.
+* `Nat.measurable_floor` (`Mathlib/MeasureTheory/Function/Floor.lean:69`) für die Meßbarkeit
+  des Integranden; `Mathlib.MeasureTheory.Function.Floor` ist in `Suggested.lean` schon
+  importiert.
+* `MeasureTheory.Measure.integrableOn_of_bounded`
+  (`Mathlib/MeasureTheory/Integral/IntegrableOn.lean:713`) für die
+  Intervallintegrierbarkeit auf jeder Zelle: der Integrand ist meßbar und durch `‖g‖`
+  beschränkt, mehr wird nicht gebraucht, und eine Stetigkeit hat er nicht.
+* `stepPath_rescaledWalk_eq` (Z. 52025) für die Gleichheit der beiden Beschreibungen des
+  Pfades, falls die Aussage über die `stepPath`-Gestalt geführt wird.
+
+*Die Falle, und sie ist benannt statt entdeckt zu werden:* `⌊x · (n+1)⌋₊ = j` gilt auf
+`[j/(n+1), (j+1)/(n+1))`, am **rechten** Endpunkt aber nicht mehr. Das Intervallintegral sieht
+das nicht, weil der rechte Endpunkt eine Nullmenge ist; der Übergang ist ein
+`setIntegral_congr_ae` auf `Set.Ioc` und kein `simp`. Das letzte, angebrochene Fenster ist
+darum auch kein Sonderfall des Beweises, sondern nur ein eigener Summand.
+
+### 2026-09-22, fünfzehnter Lauf des Tages — das benannte Ziel steht, und mit ihm **fünf** weitere — die ganze Lücke des dritten Kettenpunktes steht damit zellenweise da; von den drei Mathlib-Bausteinen, die der Vorschlag mitgegeben hatte, wird **keiner** gelesen, und der Grund ist derselbe, aus dem die Aussage über `v` gar nichts voraussetzt
+
+*Sechs Deklarationen in `MartingaleProblems`, durch `check_master.py` mit 0 Fehlern und 0 `sorry`,
+alle sechs mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft. Die
+Warnungszahlen sind **unverändert** (18 / 38 / 112, davon 0 veraltet), die sechs erzeugen also
+keine einzige.*
+
+| Zeile | Name |
+| ---: | --- |
+| 53448 | `MeasureTheory.integral_Ioc_comp_floor_mul` |
+| 53534 | `MeasureTheory.integral_comp_rescaledWalk_eq_sum` |
+| 53586 | `MeasureTheory.integral_Ioc_sub_Ioc_comp_floor_mul` |
+| 53609 | `MeasureTheory.integral_comp_rescaledWalk_sub_eq_sum` |
+| 53644 | `MeasureTheory.sub_comp_rescaledWalk_eq_sum` |
+| 53675 | `MeasureTheory.mpTest_sub_rescaledWalk_eq_sum` |
+
+**Das benannte Ziel des Vorlaufs war `integral_comp_rescaledWalk_eq_sum`.** Es steht. Was der
+Vorschlag nicht vorhergesehen hatte, ist, daß die Aussage **allgemeiner** ist als die Irrfahrt und
+daß sie dadurch billiger wird statt teurer: der Kompensator eines Treppenpfades über einem
+arithmetischen Gitter hängt von der Irrfahrt in nichts ab, und die Aussage darüber ist der
+eigentliche Satz. `integral_comp_rescaledWalk_eq_sum` ist dann eine Zeile plus eine Koerzenz.
+
+#### Der Befund des Laufs: drei benannte Bausteine werden nicht gelesen, und dieselbe Beobachtung erklärt alle drei
+
+Der Vorschlag hatte den Weg mit drei Mathlib-Fundstellen ausgestattet — `Nat.measurable_floor`
+für die Meßbarkeit des Integranden, `MeasureTheory.Measure.integrableOn_of_bounded` für die
+Integrierbarkeit auf jeder Zelle („der Integrand ist meßbar und durch `‖g‖` beschränkt"), und
+`setIntegral_congr_ae` für den rechten Zellrand. **Keiner der drei kommt im Beweis vor**, und der
+Grund ist einer:
+
+> Der Integrand ist im **Inneren** jeder Zelle **konstant**, nicht bloß beschränkt.
+
+Damit ist die Intervallintegrierbarkeit auf einer Zelle `intervalIntegrable_const`
+(`Mathlib/MeasureTheory/Integral/IntervalIntegral/Basic.lean:176`), hinübergetragen durch
+`IntervalIntegrable.congr_uIoo` (`:110`), und eine Meßbarkeit ist nirgends zu zeigen. Der rechte
+Zellrand, an dem `⌊u c⌋₊` springt, wird nicht durch eine f.ü.-Aussage umgangen, sondern durch
+`intervalIntegral.integral_congr_Ioo_of_le`
+(`Mathlib/MeasureTheory/Integral/IntervalIntegral/Basic.lean:1253`), das von vornherein nur über
+dem **offenen** Intervall fragt.
+
+**Und die Folge davon ist eine Voraussetzung weniger, nicht bloß ein anderer Beweis.** Weil keine
+Schranke gebraucht wird, steht in `integral_Ioc_comp_floor_mul` über `v : ℕ → ℝ` **nichts** — weder
+Beschränktheit noch Meßbarkeit. Das ist für den Verbraucher wesentlich und nicht Kosmetik: die
+Knotenwerte einer Irrfahrt sind im Stichprobenpunkt unbeschränkt, beschränkt ist allein die auf
+sie angewandte Testfunktion. Aus demselben Grund trägt `integral_comp_rescaledWalk_eq_sum` ein
+bloßes `g : ℝ → ℝ` und kein `g : ℝ →ᵇ ℝ`: `SkorokhodSpace.mpTest` liefert ein gebündeltes, und
+dessen Koerzenz paßt, aber **kein Feld des Bündels wird gelesen** — weder die Stetigkeit noch die
+Beschränktheit.
+
+#### Die Zerlegung, die der Vorschlag als Falle benannt hatte, ist keine — die Zerlegung selbst ist eine andere
+
+Die angesagte Falle war, daß `⌊x (n+1)⌋₊ = j` am rechten Endpunkt der Zelle nicht mehr gilt, und
+sie ist echt. Was der Vorschlag nicht gesehen hatte, ist, daß das **letzte, angebrochene Fenster**
+dann doch kein eigener Summand sein muß: genommen ist die Zerlegung
+
+```
+a k = min (k / c) t
+```
+
+statt `a k = k / c`. Damit ist die letzte Zelle bereits bei `t` abgeschnitten,
+`intervalIntegral.sum_integral_adjacent_intervals`
+(`Mathlib/MeasureTheory/Integral/IntervalIntegral/Basic.lean:1116`) teleskopiert unmittelbar zu
+`∫ in 0..t`, und es ist **hinterher** keine Fallunterscheidung zu führen. Daß `a k = k / c` bis
+`⌊t c⌋₊` und `a (⌊t c⌋₊ + 1) = t` ist, sind `Nat.floor_le` und `Nat.lt_floor_add_one`
+(`Mathlib/Algebra/Order/Floor/Semiring.lean:47` und `:63`) — und sie sind die ganze Arithmetik des
+Beweises.
+
+#### Eine Negativaussage, die **nicht** aufgeschrieben wurde, weil sie falsch gewesen wäre
+
+Der Beweis braucht, daß der Nat-Floor eines `ℝ≥0` der Nat-Floor seiner reellen Koerzenz ist — der
+Kompensator läuft über eine **reelle** Zeitvariable, die Irrfahrt über eine `ℝ≥0`-wertige. Ein
+`exact?` darauf lieferte „found a proof, but the corresponding tactic failed", also einen
+Fehlbefund in beide Richtungen; ein erster Entwurf hat die Aussage deshalb selbst bewiesen, in
+vier Zeilen über `Nat.floor_eq_iff`. **Mathlib hat sie:**
+
+> `Nonneg.nat_floor_coe` (`Mathlib/Algebra/Order/Nonneg/Floor.lean:41`), mit `@[norm_cast]`,
+> in genau diesem Wortlaut.
+
+Sie war nicht zu finden, weil sie nicht über `NNReal` spricht: `ℝ≥0` ist `Nonneg ℝ`, die
+`FloorSemiring`-Instanz wird in `Mathlib/Basic/NNReal/Basic.lean:40` als
+`inferInstanceAs <| FloorSemiring (Subtype _)` von `Nonneg.floorSemiring` geerbt, und der Satz
+steht bei der Instanz. Der eigene Beweis ist ersatzlos gestrichen.
+
+**Der Merkposten daraus, und er ist neben dem `@[to_additive]`-Muster der zweite seiner Art:**
+wer einen Satz über `ℝ≥0`, `ℚ≥0` oder `ℝ≥0∞` vermißt, sucht ihn unter dem Namen der
+**allgemeinen Konstruktion**, aus der die Instanz kommt — `Nonneg`, `Subtype`, `WithTop` —, und
+nicht unter dem Namen des Typs. Ein Grep nach `NNReal` findet ihn nicht.
+
+*Nebenbei, und es gehört in den Bericht und nicht in den Vorschlag:* beim Einsetzen der
+Koerzenz ist ein `rw [← Nonneg.nat_floor_coe]` **ohne** explizites Argument die falsche Form — das
+Muster paßt auf beide Seiten der Gleichung. Mit explizitem Argument scheitert es an der
+Instanzengestalt (`ℝ≥0`s `FloorSemiring` ist über `inferInstanceAs` gefaltet und nicht
+syntaktisch `Nonneg.floorSemiring`). Was trägt, ist `norm_cast`, wofür das Attribut da ist.
+
+#### Die zweite Hälfte des Laufs: das Fenster, und warum es eine **Differenz** ist
+
+Die Lücke des dritten Kettenpunktes liest den Kompensator nicht bei *einer* Zeit, sondern als
+`mpTest t − mpTest s`. Beide Aussagen dazu — `integral_Ioc_sub_Ioc_comp_floor_mul` und
+`integral_comp_rescaledWalk_sub_eq_sum` — gingen im **ersten** Durchlauf durch.
+
+**Und die Gestalt ist eine Entscheidung, keine Schreibweise.** `mpTest` subtrahiert zwei
+Kompensatoren, deren jeder bei `0` beginnt; es integriert **nie** über `(s, t]`. Die Aussage ist
+deshalb als Differenz zweier Anfangsstücke geführt und nicht als ein Integral über dem Fenster —
+und **damit kreuzt an dieser Stelle keine Integrierbarkeit**: der Übergang ist
+`Finset.sum_Ico_eq_sub` und `ring`. Hätte man das Fenster als `∫ u in Set.Ioc s t` geschrieben, so
+wäre zum Aufspalten die Integrierbarkeit des Integranden zu erzeugen gewesen — genau das, wofür
+die erste Hälfte des Laufs eigens keine Voraussetzung trägt.
+
+`Finset.sum_Ico_eq_sub` ist dabei der dritte Fall des bekannten Musters: er ist der additive
+Zwilling von `Finset.prod_Ico_eq_div` (`Mathlib/Algebra/BigOperators/Intervals.lean:94`), durch
+`@[to_additive]` erzeugt und deshalb in **keiner** `theorem`-Zeile zu finden. Zitiert ist darum
+der multiplikative Name mit dem Attribut, wie die stehende Regel es verlangt.
+
+Was übrigbleibt, ist die Gestalt, die die Lindeberg-Rechnung braucht: die Zellen **echt zwischen**
+den beiden Böden mit vollem Gewicht `(n+1)⁻¹`, und von den beiden angebrochenen Zellen an den
+Rändern je das, was von ihnen übrig ist. Die Mächtigkeit von
+`Finset.Ico ⌊s (n+1)⌋₊ ⌊t (n+1)⌋₊` ist das, worüber die Abschätzung am Ende summiert wird.
+
+#### Die dritte Hälfte, und sie war im Vorschlag noch als *nächster Lauf* vorgesehen: der Auswertungsteil, und dann die ganze Lücke
+
+| Zeile | Name |
+| ---: | --- |
+| 53644 | `MeasureTheory.sub_comp_rescaledWalk_eq_sum` |
+| 53675 | `MeasureTheory.mpTest_sub_rescaledWalk_eq_sum` |
+
+Der Auswertungsteil — `f (V t) − f (V s)` als Summe über derselben Indexmenge — war als benanntes
+Ziel für den *nächsten* Lauf gedacht, mit der Schätzung „unter zehn Zeilen". Er ist **eine**:
+
+```lean
+  (Finset.sum_Ico_sub (f := fun k ↦ f (…)) (Nat.floor_le_floor (by gcongr))).symm
+```
+
+**Denn Mathlib hat auch das schon**, und es ist der zweite Fund derselben Art an einem Tag:
+`Finset.sum_Ico_sub`, der additive Zwilling von `Finset.prod_Ico_div`
+(`Mathlib/Algebra/BigOperators/Intervals.lean:226`), `∑ i ∈ Ico m n, (u (i+1) − u i) = u n − u m`.
+Ein erster Entwurf hat ihn über `Finset.sum_Ico_eq_sub` und `Finset.sum_range_sub` selbst
+zusammengesetzt; das ist ersatzlos gestrichen. Wieder gilt: erzeugt durch `@[to_additive]`, also
+in keiner `theorem`-Zeile, und ein Grep nach dem additiven Namen findet ihn nicht.
+
+**Damit lag die ganze Lücke da**, und sie ist mitgenommen:
+`mpTest_sub_rescaledWalk_eq_sum` schreibt den Faktor vor `Z` in der Hypothese von
+`mpSolution_of_tendsto_cadlag_of_subseq_of_zero_pathOfProcess` zellenweise aus —
+
+```
+= ∑ k ∈ Finset.Ico ⌊s (n+1)⌋₊ ⌊t (n+1)⌋₊,
+    (f (S n (k+1) ω) − f (S n k ω) − (n+1)⁻¹ · g (S n k ω))
+  − (t − ⌊t (n+1)⌋₊/(n+1)) · g (S n ⌊t (n+1)⌋₊ ω)
+  + (s − ⌊s (n+1)⌋₊/(n+1)) · g (S n ⌊s (n+1)⌋₊ ω)
+```
+
+— ein Summand je **Zelle**, nämlich der Zuwachs von `f` über die Zelle **minus** das Gewicht
+`(n+1)⁻¹ g` des Kompensators an ihrem linken Knoten, und dazu zwei Randterme von je höchstens
+`(n+1)⁻¹ ‖g‖`. Das ist genau die Gestalt, gegen die eine Taylorentwicklung zweiter Ordnung
+gehalten wird, der Zuwachs des Pfades über eine Zelle ist `(n+1)⁻¹ᐟ² ξ k`, und die beiden
+Randterme sind der Teil der Lücke, der ohne jede Entwicklung verschwindet.
+
+**Und es ist immer noch keine Wahrscheinlichkeit darin.** Der Beweis ist
+`Finset.sum_sub_distrib` und `ring`. Zentrierung, zweites Moment und Unabhängigkeit werden
+erstmals gelesen, wenn von *dieser* Gleichung der Erwartungswert genommen wird — und genau dort
+steht der Akzeptanztest jetzt.
+
+#### Prüfung
+
+`scripts/check_master.py` gegen `upstream/master`
+(`94ef6b89544e58e90f119da869f3fb48d1da0f4c`, Lean `4.35.0-rc2`): **0 Fehler, 0 `sorry`** in allen
+drei Dateien, Warnungen **18 / 38 / 112, davon 0 veraltet** — unverändert gegenüber dem Vorlauf,
+nach **jeder** der drei Einfügungen eigens gemessen.
+`scripts/check_axioms_master.py` über alle sechs neuen Deklarationen: `propext`,
+`Classical.choice`, `Quot.sound`.
+`check_cited_lines.py`: **454 gepaarte Fundstellen, 0 verschoben, 0 tot** (vorher 446).
+
+*Berichtigt wurden dabei zwei eigene Zahlen, ehe sie stehenblieben:*
+`sum_integral_adjacent_intervals` steht auf `:1116` und nicht auf `:1120`, und
+`integral_congr_Ioo_of_le` auf `:1253` und nicht auf `:1247` (das ist `integral_congr_uIoo`).
+Außerdem ist die Kurzform `` `:1253` `` an jener Stelle **nicht** zulässig:
+`check_cited_lines.py` löst sie gegen die zuletzt genannte Datei auf, und das war dort
+`Floor/Semiring.lean`. Wer zwischen zwei Fundstellen derselben Datei eine aus einer anderen
+einschiebt, schreibt den Pfad wieder aus.
+
+#### Wo der Akzeptanztest damit steht
+
+```
+isCompactContained_rescaledWalk
+isEventuallyApproximableMul_rescaledWalk
+  → isTightMeasureSet_map_rescaledWalk        (Straffheit der Pfadgesetze)
+  → isCompact_closure_range_map_rescaledWalk  (relative Kompaktheit, Prokhorov)
+  → mpSolution_of_tendsto_cadlag_of_subseq_of_zero_pathOfProcess   (dritter Kettenpunkt)
+      ↳ Lücke = 𝔼[(mpTest t − mpTest s) · Z]
+          · Kompensatorteil: integral_comp_rescaledWalk_sub_eq_sum   ← steht seit heute
+          · Auswertungsteil:  sub_comp_rescaledWalk_eq_sum            ← steht seit heute
+          · beides zusammen:  mpTest_sub_rescaledWalk_eq_sum          ← steht seit heute
+              ↳ Erwartungswert davon: offen, und das ist die Lindeberg-Rechnung
+```
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`MeasureTheory.integral_mul_comp_rescaledWalk_mul_eq_zero`** — die **Entkopplung einer Zelle**,
+also der Schritt, an dem in dieser Rechnung zum ersten Mal Wahrscheinlichkeit vorkommt.
+
+*Die Aussage:* ist `hind : iIndepFun ξ P`, `hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0`, ist `h : ℝ → ℝ`
+beschränkt und meßbar und ist `Z : Ω → ℝ` beschränkt und meßbar bezüglich
+`Filtration.natural ξ hmeas k`, so ist
+
+```
+∫ ω, h ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω) * ξ k ω * Z ω ∂P = 0 .
+```
+
+*Warum sie jetzt dran ist, und warum gerade sie.* Nach
+`mpTest_sub_rescaledWalk_eq_sum` ist die Lücke eine Summe über Zellen, und der Summand der Zelle
+`k` ist `f (S (k+1)) − f (S k) − (n+1)⁻¹ g (S k)`. Die Taylorentwicklung zerlegt den ersten Teil
+in einen Term **erster** Ordnung `f' (S k) · (n+1)⁻¹ᐟ² ξ k`, einen Term zweiter Ordnung
+`½ f'' (S k) · (n+1)⁻¹ ξ k²`, und einen Rest. Der Term zweiter Ordnung ist es, der gegen den
+Kompensator gehalten wird; der Rest wird abgeschätzt. **Der Term erster Ordnung muß exakt
+verschwinden**, sonst ist die Ordnung `(n+1)⁻¹ᐟ²` und nichts konvergiert — und *das* ist die
+Aussage oben, mit `h = f'` und `Z` dem Gewicht der Lücke mal dem vorangegangenen Pfadstück.
+
+Sie ist außerdem der Posten, der die drei Voraussetzungen des Akzeptanztests zum ersten Mal
+wirklich liest: `hind` und `hcent`, und die Meßbarkeit. Bis hierher wurde **keine** von ihnen
+gebraucht.
+
+*Worauf sie ruht, und beides steht schon im eigenen Haus:*
+
+* `ProbabilityTheory.iIndepFun.indep_comap_natural_of_lt` und `condExp_indep_eq`, genau in der
+  Gestalt, in der `martingale_partialSum_of_iIndepFun` (Z. 51841) sie benutzt: dort ist
+  `Indep (MeasurableSpace.comap (ξ n) inferInstance) (𝒢 n) P` als Zwischenschritt
+  ausgeschrieben (Z. 51863–51874), und `P[ξ n | 𝒢 n] =ᵐ[P] 0` fällt daraus mit `hcent`.
+  **Diesen Block nicht nachbauen, sondern als Bauteil herausziehen** — er wird ab jetzt zum
+  zweiten Mal gebraucht, und das ist der Augenblick, ihn zu benennen.
+* `h (S n k ·)` ist `𝒢 k`-meßbar: das ist `Filtration.stronglyAdapted_natural` an der
+  Partialsumme, wie in `isStronglyProgressive_rescaledWalk` (Z. 52304), gefolgt von der
+  Komposition mit `h`.
+
+*Die Falle, benannt statt entdeckt:* es sind **zwei** Faktoren vor `ξ k` und nicht einer, und
+beide sind `𝒢 k`-meßbar — das Pfadstück `h (S n k)` und das Gewicht `Z`. Sie sind deshalb zu
+*einem* `𝒢 k`-meßbaren Faktor zusammenzufassen, **ehe** die Unabhängigkeit gefragt wird; wer
+zuerst die Unabhängigkeit von `ξ k` und `h (S n k)` nimmt, muß danach `Z` noch durchbekommen und
+hat dieselbe Arbeit zweimal. Die Beschränktheit von `h` und `Z` steht nur für die
+Integrierbarkeit des Produkts da; eine `MemLp 2`-Voraussetzung an `ξ` wird an dieser Stelle noch
+**nicht** gebraucht — sie kommt erst beim Term zweiter Ordnung.
+
+### 2026-09-22, sechzehnter Lauf des Tages — das benannte Ziel steht, aber **seine Aussage war falsch**: die Filtration, die der Vorschlag nannte, enthält den Zuwachs selbst; und die beiden Schranken, die er als Preis der Integrierbarkeit mitgab, werden **nicht gelesen** — Mathlibs Entkopplungslemma kommt ohne aus, weil auf der Ausnahmemenge **beide Seiten der Müllwert** sind
+
+*Drei Deklarationen in `MartingaleProblems`, durch `check_master.py` mit 0 Fehlern und 0 `sorry`,
+alle drei mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft. Die
+Warnungszahlen sind **unverändert** (18 / 38 / 112, davon 0 veraltet). Dazu ein bestehender Beweis
+um 19 Zeilen gekürzt (23 heraus, 4 hinein).*
+
+| Zeile | Name |
+| ---: | --- |
+| 51838 | `MeasureTheory.indep_comap_natural_partialSum` |
+| 51892 | `MeasureTheory.integral_mul_eq_zero_of_indep_comap` |
+| 53805 | `MeasureTheory.integral_mul_comp_rescaledWalk_mul_eq_zero` |
+
+**Das benannte Ziel des Vorlaufs war `integral_mul_comp_rescaledWalk_mul_eq_zero`.** Es steht —
+aber nicht in der Gestalt, in der es aufgeschrieben war.
+
+#### Der erste Befund: die vorgeschlagene Voraussetzung macht die Aussage **falsch**
+
+Der Vorschlag verlangte `Z` meßbar bezüglich `Filtration.natural ξ hmeas k`. Das ist
+`σ (ξ 0, …, ξ k)`, und darin **steckt `ξ k` selbst**. Über dieser σ-Algebra ist die Aussage nicht
+etwa schwer, sondern unwahr: mit `h = 1` und `Z = ξ k` steht links `∫ ξ k ^ 2`, und das ist nur
+für einen ausgearteten Zuwachs `0`.
+
+Es ist derselbe Unterschied, den der Doc-Kommentar von `martingale_partialSum_of_iIndepFun` seit
+dem Tag seiner Entstehung benennt — „**Die Filtration ist die der Summen und nicht die der
+Summanden**, und der Unterschied entscheidet die Aussage" —, und er ist im Vorschlag
+wiedergekehrt, weil dort `Filtration.natural ξ` dastand, wo `Filtration.natural S` hingehört.
+Genommen ist deshalb die Filtration, die die Irrfahrt ohnehin trägt: die natürliche Filtration der
+**skalierten** Summen, über der `martingale_rescaledWalk` und `isStronglyProgressive_rescaledWalk`
+schon stehen. Der Zeuge gegen die andere Lesart steht als Satz im Doc-Kommentar, nicht in Lean —
+er wäre eine eigene Konstruktion einer unabhängigen Familie, und die Rechnung ist eine Zeile.
+
+#### Der zweite Befund, und er nimmt dem Satz zwei Voraussetzungen: **keine Integrierbarkeit, keine Beschränktheit**
+
+Der Vorschlag gab `h` und `Z` beschränkt mit und sagte dazu, die Beschränktheit stehe „nur für die
+Integrierbarkeit des Produkts da". **Sie steht für gar nichts**, und der Grund liegt in Mathlib:
+
+> `ProbabilityTheory.IndepFun.integral_fun_mul_eq_mul_integral`
+> (`Mathlib/Probability/Independence/Integration.lean:423`) gibt
+> `∫ W · X = P[W] · P[X]` aus **bloßer** `AEStronglyMeasurable`.
+
+Der Beweis läuft über `IndepFun.integral_bilin'` (`:335`), und der macht eine Fallunterscheidung
+über die Integrierbarkeit des Produkts: wo sie fehlt, fehlt sie auch einem der beiden Faktoren,
+und dann sind **beide Seiten der Bochner-Müllwert `0`**. Die Gleichung ist dort also wahr und
+leer.
+
+**Das ist zu sagen und nicht zu verschweigen**, und es ist die stehende Regel dieses Auftrags: wo
+ein Müllwert gelesen wird, nennt der Doc-Kommentar die Stelle. Hier ist es der einzige Ort des
+Meilensteins, an dem eine Voraussetzung **weggelassen** wird, weil die Müllwerte beider Seiten
+übereinstimmen — und der Verbraucher, der Inhalt will, liefert die Beschränktheit von `W` und die
+Integrierbarkeit von `ξ k` nach, woraus `ProbabilityTheory.IndepFun.integrable_mul` (`:358`) das
+Produkt integrierbar macht. Die Voraussetzung wandert also vom Satz zum Verbraucher, statt zu
+verschwinden.
+
+Damit trägt `integral_mul_comp_rescaledWalk_mul_eq_zero` von den Voraussetzungen des
+Akzeptanztests genau zwei: `hind` und `hcent`. `hint` kommt nicht vor, und `MemLp 2` erst recht
+nicht.
+
+#### Das Bauteil, um das der Vorlauf gebeten hatte, ist herausgezogen — und es trägt einen Parameter mehr
+
+Der Vorschlag hatte verlangt, den Unabhängigkeitsblock aus `martingale_partialSum_of_iIndepFun`
+(Z. 51863–51874 im alten Stand) nicht nachzubauen, sondern zu benennen. Er heißt jetzt
+`indep_comap_natural_partialSum` und steht **vor** jenem Satz, der ihn seitdem verbraucht; dessen
+Beweis ist dadurch um 19 Zeilen kürzer — 23 heraus, 4 hinein —, und sein Doc-Kommentar verweist
+statt zu wiederholen.
+
+**Der Parameter `c` kostet nichts und war nötig.** Die Irrfahrt ist über der Filtration der
+*skalierten* Summen geschrieben, `c = (n+1)⁻¹ᐟ²`; der alte Verbraucher liest `c = 1`. Beide aus
+einem Satz zu bedienen verlangt den Faktor in der Aussage, und im Beweis kostet er ein
+`.const_mul c` an einer Stelle. Der Rückweg zu `c = 1` ist `simpa only [one_mul]` — geprüft, ehe
+der bestehende Beweis angefaßt wurde, und das war die richtige Reihenfolge: hätte er nicht
+getragen, wäre die Kürzung unterblieben und das Bauteil trotzdem entstanden.
+
+**`c ≠ 0` wird nicht verlangt.** Bei `c = 0` fällt die Filtration auf `⊥` zusammen, und dort ist
+die Unabhängigkeit leichter, nicht schwerer. Das ist keine Kosmetik: eine Voraussetzung `c ≠ 0`
+hätte jeder Verbraucher mitschleppen müssen.
+
+#### Die Falle, die der Vorschlag benannt hatte, ist echt — und sie ist billiger als angesagt
+
+„Es sind **zwei** Faktoren vor `ξ k` und nicht einer" — das stimmt, und die angesagte Ordnung
+(erst zusammenfassen, dann Unabhängigkeit fragen) ist die richtige. Was sie kostet, ist ein
+`funext ω; ring` und ein `Measurable.mul`; der Rest ist die abstrakte Zwischenstufe
+`integral_mul_eq_zero_of_indep_comap`, die von der Irrfahrt nichts weiß und deshalb auch der
+zweiten Hälfte der Lindeberg-Rechnung offensteht.
+
+**Eine Kleinigkeit, die zweimal Zeit gekostet hat und deshalb hier steht:** in einem Satz, der
+neben dem Grundraum `mΩ` eine zweite σ-Algebra `m` im Kontext hat, greift die Instanzensuche von
+`AEStronglyMeasurable X P` auf **`m`** zu und nicht auf `mΩ` — sie nimmt die zuletzt eingeführte.
+Zu schreiben ist `AEStronglyMeasurable[mΩ] X P`; die Notation steht in
+`Mathlib/MeasureTheory/Function/StronglyMeasurable/AEStronglyMeasurable.lean:78` und ist `scoped`.
+Dasselbe gilt für `Measurable.mono`, das **zwei** Ungleichungen nimmt und nicht eine
+(`hW.mono (𝒢.le k) le_rfl`).
+
+#### Prüfung
+
+`scripts/check_master.py` gegen `upstream/master`
+(`94ef6b89544e58e90f119da869f3fb48d1da0f4c`, Lean `4.35.0-rc2`): **0 Fehler, 0 `sorry`** in allen
+drei Dateien, Warnungen **18 / 38 / 112, davon 0 veraltet** — unverändert gegenüber dem Vorlauf.
+`scripts/check_axioms_master.py` über die drei neuen Deklarationen **und** über das gekürzte
+`martingale_partialSum_of_iIndepFun`: `propext`, `Classical.choice`, `Quot.sound`.
+`check_cited_lines.py`: **463 gepaarte Fundstellen, 0 verschoben, 0 tot** (vorher 460).
+`check_duplicates.py`: keiner der drei Namen trifft auf `master`.
+
+#### Wo der Akzeptanztest damit steht
+
+```
+mpTest_sub_rescaledWalk_eq_sum          (die Lücke, zellenweise, ohne Wahrscheinlichkeit)
+  ↳ Erwartungswert davon, Summand je Zelle:
+      · Term erster Ordnung:  integral_mul_comp_rescaledWalk_mul_eq_zero  ← steht seit heute
+      · Term zweiter Ordnung: offen
+      · Restglied:            offen
+      · zwei Randterme:       offen, je ≤ (n+1)⁻¹ ‖g‖
+```
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`MeasureTheory.integral_mul_comp_rescaledWalk_sq_mul_eq_smul`** — der **Term zweiter Ordnung
+einer Zelle**, also der Schritt, an dem das zweite Moment zum ersten Mal vorkommt und an dem sich
+entscheidet, ob der Kompensator getroffen wird.
+
+*Die Aussage:* unter `hind`, `hmeas` und `hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = σ ^ 2` ist für
+`h : ℝ → ℝ` beschränkt und meßbar und `Z` beschränkt und meßbar für die skalierte Vergangenheit
+bei `k`
+
+```
+∫ ω, h (S n k ω) * ξ k ω ^ 2 * Z ω ∂P
+  = σ ^ 2 * ∫ ω, h (S n k ω) * Z ω ∂P .
+```
+
+*Warum sie jetzt dran ist.* Der Summand der Zelle `k` ist
+`f (S (k+1)) − f (S k) − (n+1)⁻¹ g (S k)`, und nach Taylor steht dort
+`f' (S k) · (n+1)⁻¹ᐟ² ξ k + ½ f'' (S k) · (n+1)⁻¹ ξ k ² − (n+1)⁻¹ g (S k) + Rest`. Mit
+`g = ½ σ² f''` — dem Erzeuger der Brownschen Bewegung und dem eigentlichen Gegenstand des
+Akzeptanztests — heben sich der zweite und der dritte Term **exakt** auf, sobald die Aussage oben
+steht: sie ersetzt `ξ k ²` unter dem Integral durch seine Konstante `σ²`, und der Faktor
+`(n+1)⁻¹` ist auf beiden Seiten derselbe. Der Term erster Ordnung ist seit heute weg, die
+Randterme sind eine Abschätzung ohne Entwicklung, und dann bleibt allein das Restglied.
+
+*Worauf sie ruht, und beides steht im eigenen Haus:*
+
+* `MeasureTheory.integral_mul_eq_zero_of_indep_comap` ist **nicht unmittelbar** zu gebrauchen,
+  weil die Aussage keine Nullaussage ist. Zu nehmen ist der Umweg über die Zentrierung:
+  `∫ W · (ξ k ² − σ²) = 0` ist eine Instanz davon mit `X = ξ k ² − σ²`, und die obige folgt durch
+  Ausmultiplizieren. Die Unabhängigkeit von `ξ k ² − σ²` von der Vergangenheit ist die von `ξ k`,
+  hindurchgezogen über `comap (ξ k ^ 2 − σ^2) ≤ comap (ξ k)` mit `Measurable.comap_le` und
+  `ProbabilityTheory.indep_of_indep_of_le_left`
+  (`Mathlib/Probability/Independence/Basic.lean:371`).
+* `MeasureTheory.indep_comap_natural_partialSum` liefert die Unabhängigkeit von `ξ k` gegen die
+  skalierte Vergangenheit, genau wie heute.
+
+*Die Falle, benannt statt entdeckt:* `∫ W · ξ k ² = σ² · ∫ W` verlangt, daß `∫ W` selbst
+existiert, und `W = h (S n k) · Z` ist nur dann integrierbar, wenn `h` **und** `Z` beschränkt
+sind. Anders als heute sind die beiden Schranken hier also zu führen und nicht wegzulassen — die
+rechte Seite ist keine Null, und die Müllwerte der beiden Seiten stimmen nicht mehr überein. Das
+ist der Unterschied zwischen einer Nullaussage und einer Identität, und er gehört in den
+Doc-Kommentar. Ebenso ist `MemLp 2` an `ξ k` hier zum ersten Mal wirklich zu verlangen, damit
+`ξ k ² − σ²` integrierbar ist; heute wurde sie nicht gebraucht.
+
+### 2026-09-22, siebzehnter Lauf des Tages — der Term **zweiter** Ordnung steht, und die angesagte Falle gibt es nicht: die beiden Schranken und `MemLp 2`, die der Vorschlag als Preis einer Identität mit nichtleerer rechter Seite ansetzte, werden **nicht gelesen**, weil Mathlibs Entkopplung eine **Produktformel** ist und keine Nullaussage. Dazu die **Randterme** und das **Restglied** — und damit ist die Zellenrechnung vollständig
+
+*Sechs Deklarationen in `MartingaleProblems`, durch `check_master.py` mit 0 Fehlern und 0 `sorry`,
+alle sechs mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft. Die
+Warnungszahlen sind **unverändert** (18 / 38 / 112, davon 0 veraltet). Ein bestehender Satz ist
+dabei zu einem Zweizeiler geworden.*
+
+| Zeile | Name |
+| ---: | --- |
+| 51900 | `MeasureTheory.integral_mul_eq_mul_integral_of_indep_comap` |
+| 51913 | `MeasureTheory.integral_mul_eq_zero_of_indep_comap` *(umgeschrieben)* |
+| 53524 | `MeasureTheory.abs_sub_natCast_floor_div_le` |
+| 53833 | `MeasureTheory.abs_mpTest_sub_rescaledWalk_sub_sum_le` |
+| 53902 | `MeasureTheory.abs_sub_taylor_two_le` |
+| 54037 | `MeasureTheory.integral_mul_comp_rescaledWalk_sq_mul_eq_smul` |
+
+**Das benannte Ziel des Vorlaufs war `integral_mul_comp_rescaledWalk_sq_mul_eq_smul`.** Es steht,
+und zwar mit **weniger** Voraussetzungen als angesagt. Weil es billiger war als veranschlagt,
+sind im selben Lauf die beiden **Randterme** und das **Restglied** dazugekommen — die beiden
+Posten, die der Vorlauf noch als offen führte.
+
+#### Der Befund: die angesagte Falle gibt es nicht, und der Grund ist eine Formsache
+
+Der Vorschlag hatte geschrieben:
+
+> „`∫ W · ξ k ² = σ² · ∫ W` verlangt, daß `∫ W` selbst existiert […] Anders als heute sind die
+> beiden Schranken hier also zu führen und nicht wegzulassen — die rechte Seite ist keine Null,
+> und die Müllwerte der beiden Seiten stimmen nicht mehr überein. […] Ebenso ist `MemLp 2` an
+> `ξ k` hier zum ersten Mal wirklich zu verlangen."
+
+**Alle drei Voraussetzungen entfallen**, und es ist keine Schlauheit im Beweis, sondern die
+Gestalt des Mathlib-Satzes. `ProbabilityTheory.IndepFun.integral_fun_mul_eq_mul_integral`
+(`Mathlib/Probability/Independence/Integration.lean:423`) gibt nicht „`∫ W · X = 0`, wenn `X`
+zentriert ist", sondern die **Produktformel** `∫ W · X = P[W] · P[X]`, und zwar aus bloßer
+`AEStronglyMeasurable`. Ist das Produkt nicht integrierbar, so ist es nach
+`IndepFun.integral_bilin'` (`:335`) auch einer der beiden Faktoren nicht, und dann sind **alle
+drei** Integrale der Bochner-Müllwert `0`. Damit steht links `0` und rechts `v · 0` — die
+Müllwerte stimmen also auch hier überein, und zwar aus demselben Grund wie beim Term erster
+Ordnung, nicht aus dem schwächeren, daß beide Seiten Null wären.
+
+Die Überlegung des Vorschlags war richtig für den Weg, den er vorsah — die Zentrierung
+`∫ W · (ξ k ² − σ²) = 0`, ein Ausmultiplizieren, und dafür braucht man `∫ W` wirklich. Der Umweg
+ist aber gar nicht nötig; die Produktformel liefert die Identität unmittelbar. **Das ist die
+Lehre: wer eine Nullaussage als Bauteil hinschreibt, wo Mathlib eine Identität hat, zahlt die
+Voraussetzungen, die die Nullaussage braucht.**
+
+Entsprechend umgebaut: `integral_mul_eq_mul_integral_of_indep_comap` ist jetzt das Bauteil, und
+`integral_mul_eq_zero_of_indep_comap` — das der Term erster Ordnung seit dem Vorlauf liest — ist
+sein Korollar bei `∫ X = 0` und zwei Zeilen lang. Beide Verbraucher stehen damit auf **einer**
+Voraussetzungsmenge.
+
+#### Was der neue Satz liest, und was nicht
+
+Von den drei Voraussetzungen des Akzeptanztests trägt er **`hind` allein**. `hcent` kommt nicht
+vor — die Zentrierung wird für den Term zweiter Ordnung nicht gebraucht —, und `hsq` ist an einem
+**einzigen** Index `k` verlangt statt an allen: die Zellen werden einzeln behandelt, und erst der
+Verbraucher, der sie summiert, braucht die Übereinstimmung der Momente.
+
+**Das zweite Moment ist ein nacktes reelles `v` und kein Quadrat.** Positivität wird nirgends
+gelesen; ein `σ` in der Signatur hätte jedem Verbraucher ein Vorzeichen aufgebürdet, das die
+Aussage nicht benutzt.
+
+Die Unabhängigkeit ist die von `ξ k` und wird durch das Quadrat gezogen,
+`comap (ξ k ²) ≤ comap (ξ k)` über `Measurable.comap_le` und
+`ProbabilityTheory.indep_of_indep_of_le_left` (`Mathlib/Probability/Independence/Basic.lean:371`).
+Das ist der ganze Zusatzaufwand gegenüber dem Term erster Ordnung: **drei Zeilen**, und der
+Beweis ging im ersten Anlauf durch.
+
+#### Der Zeuge gegen die falsche Filtration ist hier ein anderer als im Vorlauf
+
+Über `Filtration.natural ξ` bei `k` ist auch diese Aussage falsch, aber der Zeuge des Vorlaufs
+trägt **nicht**: mit `h = 1` und `Z = ξ k` steht links `∫ ξ k ³` und rechts `σ² · ∫ ξ k`, und für
+einen **symmetrischen** Zuwachs sind beide `0`. Zu nehmen ist `Z = ξ k ²` — links `∫ ξ k ⁴`,
+rechts `(∫ ξ k ²)²`, und die Differenz ist die Varianz von `ξ k ²`, die nur für einen Zuwachs mit
+f.s. konstantem Quadrat verschwindet. Das steht so im Doc-Kommentar, samt der Warnung vor dem
+untauglichen Zeugen.
+
+#### Die beiden Randterme
+
+`mpTest_sub_rescaledWalk_eq_sum` zerlegt die Lücke in die Zellensumme **plus zwei Randterme**.
+Die Roadmap sagte von ihnen bisher bloß, sie seien „je höchstens `(n+1)⁻¹ ‖g‖`"; jetzt ist es
+bewiesen, in der Gestalt, in der es der Verbraucher liest:
+
+```
+|(mpTest f g t − mpTest f g s)(walk n, ω) − ∑ Zellen| ≤ 2 · (n+1)⁻¹ · C   für |g| ≤ C
+```
+
+Zwei Deklarationen. `abs_sub_natCast_floor_div_le` ist die ganze Arithmetik — `Nat.floor_le` nach
+unten, `Nat.lt_floor_add_one` nach oben — und `0 ≤ t` ist darin **gelesen und nicht
+weglaßbar**: bei negativem `t` ist `Nat.floor` gleich `0`, der Rest ist `t` selbst, und die
+Schranke bricht für jedes `t < −c⁻¹`. Das ist wieder eine Müllwert-Stelle, und die erste dieser
+Arbeit, an der der Müllwert eine Aussage nicht still wahr macht, sondern kippt; sie steht im
+Doc-Kommentar.
+
+**Nur `g` wird beschränkt verlangt, `f` gar nichts** — `f` kürzt sich aus den beiden Randtermen
+heraus, weil diese allein das Gewicht des Kompensators tragen. Das ist genau umgekehrt zu dem,
+was die Zellensumme fragt, wo `f` entwickelt wird und `g` bloß `½ σ² f''` treffen muß.
+
+Die Abschätzung ist **gleichmäßig in `ω`**. Das ist nicht Kosmetik: der Verbraucher zieht sie
+damit unter das Integral gegen ein beschränktes Gewicht, ohne ein eigenes
+Integrierbarkeitsargument.
+
+Die Umrechnung von `⌊t · ((n : ℝ≥0)+1)⌋₊` auf `⌊(t : ℝ) · ((n : ℝ)+1)⌋₊` ist `norm_cast` allein —
+ein `push_cast` davor tut nichts und wird vom Linter gemeldet.
+
+#### Und das Restglied, das der Vorlauf als den teuersten Posten veranschlagt hatte
+
+`abs_sub_taylor_two_le`:
+
+```
+|f (x + h) − f x − f' x · h − f'' x · h² / 2| ≤ M · |h|³ / 6   für |f'''| ≤ M
+```
+
+**Der Vorlauf hatte drei Zweige angesagt — `h = 0`, `h > 0`, `h < 0` — und „sie sind die
+eigentliche Arbeit". Es ist einer.** Der Grund ist eine Fundstelle, die die Vorhersage nicht
+kannte: `taylor_mean_remainder_lagrange_iteratedDeriv`
+(`Mathlib/Analysis/Calculus/Taylor.lean:348`) steht über `Set.uIcc x₀ x` und nicht über einem
+geordneten `Set.Icc`, verlangt also nur `x₀ ≠ x` und **kein Vorzeichen von `h`**. Der
+Reflexionsschluß, den die Vorhersage für `h < 0` vorsah, entfällt ersatzlos.
+
+**Und die zweite angesagte Falle gibt es ebenfalls nicht.** Der Vorschlag hatte gewarnt,
+`iteratedDerivWithin` und `iteratedDeriv` stimmten am **Endpunkt** nicht überein, weil `Set.Icc`
+dort keine Umgebung ist. Das ist wahr für Umgebungsargumente und falsch für den Satz, den man
+dafür nimmt: `iteratedDerivWithin_eq_iteratedDeriv`
+(`Mathlib/Analysis/Calculus/IteratedDeriv/Defs.lean:70`) fragt `UniqueDiffOn` der Menge und
+`ContDiffAt` der Funktion, **nicht** daß die Menge eine Umgebung sei — und `uniqueDiffOn_uIcc`
+gibt das erste, Endpunkt hin oder her. Das ist die Stelle, an der die Vorhersage teuer und die
+Rechnung billig war, und der Grund gehört aufgeschrieben: *eine Voraussetzung, die man sich
+merkt, ist nicht die, die im Satz steht.*
+
+Genommen ist die **Lagrange-Form** und nicht `taylor_mean_remainder_bound`; letztere gibt die
+gröbere Konstante `M |h|³ / 2!` statt `/ 3!` und verlangt ein geordnetes Intervall. Für Donsker
+wäre jede Konstante recht gewesen, aber die Lagrange-Form war ohnehin die billigere.
+
+Der einzige eigene Fall ist `h = 0`, wo beide Seiten `0` sind und `simp` schließt. `0 ≤ M` ist
+Folgerung und nicht Voraussetzung.
+
+#### Prüfung
+
+`scripts/check_master.py` gegen `upstream/master`
+(`94ef6b89544e58e90f119da869f3fb48d1da0f4c`, Lean `4.35.0-rc2`): **0 Fehler, 0 `sorry`** in allen
+drei Dateien, Warnungen **18 / 38 / 112, davon 0 veraltet** — unverändert gegenüber dem Vorlauf.
+`scripts/check_axioms_master.py` über die sechs Deklarationen: `propext`, `Classical.choice`,
+`Quot.sound`. `check_cited_lines.py`: **466 gepaarte Fundstellen, 0 verschoben, 0 tot** (vorher
+463). `check_duplicates.py`: keiner der fünf neuen Namen trifft auf `master`.
+
+#### Wo der Akzeptanztest damit steht — jeder Posten der Zellenrechnung ist bewiesen
+
+```
+mpTest_sub_rescaledWalk_eq_sum          (die Lücke, zellenweise, ohne Wahrscheinlichkeit)
+  ↳ zwei Randterme:      abs_mpTest_sub_rescaledWalk_sub_sum_le        ← steht
+  ↳ Erwartungswert der Zellensumme, Summand je Zelle:
+      · Term erster Ordnung:  integral_mul_comp_rescaledWalk_mul_eq_zero   ← steht
+      · Term zweiter Ordnung: integral_mul_comp_rescaledWalk_sq_mul_eq_smul ← steht
+      · Restglied:            abs_sub_taylor_two_le                        ← steht
+```
+
+**Was noch fehlt, ist kein Posten mehr, sondern der Zusammenbau**: die vier Aussagen stehen
+nebeneinander und nicht hintereinander. Keine von ihnen hat bisher eine andere als Eingabe.
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`MeasureTheory.abs_integral_mpTest_sub_rescaledWalk_mul_le`** — der **Zusammenbau einer
+Zelle unter dem Erwartungswert**, also der erste Satz, der die vier obigen hintereinanderschaltet.
+
+*Die Aussage, in der Gestalt, in der sie der dritte Punkt der Kette liest:* unter `hind`, `hmeas`,
+`hsq : ∀ k, ∫ ξ k ² = σ²`, für `f` mit `ContDiff ℝ 3 f` und `|iteratedDeriv 3 f| ≤ K`,
+`g = fun y ↦ σ ^ 2 / 2 * iteratedDeriv 2 f y`, und `Z` beschränkt und meßbar für die skalierte
+Vergangenheit bei `k`:
+
+```
+|∫ ω, (f (S n (k+1) ω) − f (S n k ω) − (n+1)⁻¹ · g (S n k ω)) · Z ω ∂P|
+  ≤ K · ‖Z‖ · (n+1)^(−3/2) · 𝔼[|ξ k|³] / 6 .
+```
+
+*Warum sie jetzt dran ist.* Sie ist genau die Zusammenfügung: der Zuwachs wird nach
+`abs_sub_taylor_two_le` entwickelt, der Term erster Ordnung fällt nach
+`integral_mul_comp_rescaledWalk_mul_eq_zero` weg, der Term zweiter Ordnung trifft nach
+`integral_mul_comp_rescaledWalk_sq_mul_eq_smul` den Kompensator **exakt** — das ist die Wahl
+`g = ½ σ² f''` —, und stehen bleibt allein das Restglied. Jeder der drei Sätze wird dabei **genau
+einmal** gelesen, und das ist die Probe darauf, ob sie in der richtigen Gestalt stehen.
+
+*Worauf sie ruht.* Auf den drei genannten und auf `Integrable`-Argumenten, die hier zum ersten
+Mal wirklich zu führen sind: das Restglied wird integriert, und `|ξ k|³` muß dafür integrierbar
+sein. **Die Beschränktheit von `Z` wird hier gelesen** — anders als bei den beiden
+Zellentermen, wo der Müllwert sie überflüssig machte.
+
+*Die Entscheidung, die dabei ansteht, und sie ist keine Rechnung:* **ein drittes Moment hat
+Donsker nicht.** Die Akzeptanzaussage gibt `MemLp 2`, nicht `MemLp 3`. Es gibt zwei Auswege, und
+der Lauf hat einen zu wählen und die Wahl zu begründen:
+
+* **Das dritte Moment in die Hypothese** — `hthird : ∀ k, ∫ |ξ k| ³ ∂P ≤ ρ`. Die Aussage ist dann
+  schwächer als Donsker, aber der Beweis ist der obige und sonst nichts, und sie deckt jeden
+  beschränkten Zuwachs, also insbesondere die Irrfahrt mit `±1`.
+* **Lindeberg–Feller**, also das Abschneiden des Zuwachses bei `ε √(n+1)` und die Zerlegung des
+  Restglieds in einen Teil mit drittem Moment auf dem kleinen Stück und einen mit zweitem auf dem
+  großen. Das ist der Satz, den Donsker wirklich braucht, und es ist ein eigener Lauf.
+
+*Empfehlung:* **den ersten Weg zuerst**, weil er den Zusammenbau prüft, ohne ihn mit der
+Abschneidung zu vermengen; die Abschneidung setzt dann am fertigen Zusammenbau an und ersetzt
+allein die Schranke am Restglied. Wer beides zugleich anfängt, hat bei einem Fehlschlag zwei
+Verdächtige.

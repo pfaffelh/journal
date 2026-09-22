@@ -19428,6 +19428,53 @@ it is why the first is stated with two radii rather than one.
 `SkorokhodSpace.postcomp_extendNNReal`, which is `rfl`, so no rewriting occurs
 between them. -/
 
+omit [MeasurableSpace E] [BorelSpace E] in
+/-- **The passage from the sample space to the image law, with no value change.**
+A bound on the modulus set at window radius `u'` over the sample space is a bound
+on the modulus set at every smaller radius `u` under the image law.
+
+This is the statement below with the post-composition removed, and it is the one
+a family of **already real valued** paths reads: `MeasureTheory.Measure.map_map`
+composes one layer instead of two, and the only measurability spent is
+`SkorokhodSpace.isometry_extendNNReal` for the index change.  The sandwich is the
+same -- into the Borel set of `SkorokhodSpace.measurable_iInf_modulusBased`, then
+`MeasureTheory.Measure.map_apply`, then back into the modulus set at `u'`.
+
+**Why both exist.**  A criterion reached through a bounded `g : E →ᵇ ℝ` needs the
+post-composed form; one reached through
+`SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal` does not, and for a
+family whose modulus is controlled at the process itself the post-composition
+would have to be undone again. -/
+theorem SkorokhodSpace.measure_map_setOf_le_modulusBased_le [CompleteSpace E]
+    {Ω : Type*} [MeasurableSpace Ω] (P : Measure Ω)
+    {Φ : Ω → D(ℝ≥0, E)} (hΦ : Measurable Φ)
+    {u u' δ : ℝ} (hu0 : 0 ≤ u) (hδ0 : 0 ≤ δ) (huu : u < u') {η ε : ℝ≥0∞}
+    (h : P {ω | η ≤ SkorokhodSpace.modulusBased (0 : ℝ) u'
+        (SkorokhodSpace.extendNNReal (Φ ω)) δ} ≤ ε) :
+    ((P.map Φ).map SkorokhodSpace.extendNNReal)
+        {f : D(ℝ, E) | η ≤ SkorokhodSpace.modulusBased (0 : ℝ) u f δ} ≤ ε := by
+  classical
+  have hE : Measurable (SkorokhodSpace.extendNNReal (E := E)) :=
+    SkorokhodSpace.isometry_extendNNReal.continuous.measurable
+  have hTm : MeasurableSet
+      {f : D(ℝ, E) | η ≤ ⨅ v ∈ Set.Ioi u, SkorokhodSpace.modulusBased (0 : ℝ) v f δ} :=
+    measurableSet_le measurable_const
+      (SkorokhodSpace.measurable_iInf_modulusBased (ι := ℝ) (E := E) hu0 hδ0)
+  rw [Measure.map_map hE hΦ]
+  calc (P.map (SkorokhodSpace.extendNNReal ∘ Φ))
+        {f : D(ℝ, E) | η ≤ SkorokhodSpace.modulusBased (0 : ℝ) u f δ}
+      ≤ (P.map (SkorokhodSpace.extendNNReal ∘ Φ))
+        {f : D(ℝ, E) | η ≤ ⨅ v ∈ Set.Ioi u, SkorokhodSpace.modulusBased (0 : ℝ) v f δ} :=
+        measure_mono (SkorokhodSpace.setOf_le_modulusBased_subset (0 : ℝ))
+    _ = P ((SkorokhodSpace.extendNNReal ∘ Φ) ⁻¹'
+        {f : D(ℝ, E) | η ≤ ⨅ v ∈ Set.Ioi u, SkorokhodSpace.modulusBased (0 : ℝ) v f δ}) :=
+        Measure.map_apply (hE.comp hΦ) hTm
+    _ ≤ P {ω | η ≤ SkorokhodSpace.modulusBased (0 : ℝ) u'
+        (SkorokhodSpace.extendNNReal (Φ ω)) δ} :=
+        measure_mono fun ω hω =>
+          SkorokhodSpace.setOf_le_iInf_modulusBased_subset (0 : ℝ) huu hω
+    _ ≤ ε := h
+
 /-- **The passage from the sample space to the image law.**  A bound on the
 modulus set at window radius `u'` over the sample space is a bound on the modulus
 set at every smaller radius `u` under the image law.

@@ -12060,6 +12060,16 @@ has to be chosen once for all `n`. What stands:
   estimate and its `δ^{1-1/q}` is what vanishes. The two blocks therefore use
   the two forms of the same passage, and that is why both forms exist.
 
+  *This paragraph names the passage and not a statement the proof calls*, and
+  the difference was measured on 2026-09-22, ninth run: the proof of the gap
+  cell reads the two **factors** of that composite separately —
+  `lintegral_ofReal_dist_sq_le_of_isApproximatingPair` leaves the compensator
+  increments standing and `IsApproximatingPair.lintegral_enorm_compensator_sub_le`
+  discharges them, one per cell — so the composite itself is never invoked. That
+  is why weakening the block needed
+  `IsApproximatingPair.lintegral_mul_enorm_compensator_sub_le` and no weighted
+  form of the composite.
+
   **What does not vanish, and it is a correction of the previous run's
   proposal.** As `δ ↓ 0` at fixed `N` the bound tends to
   `N √(2 ε' + 4 c ε)` and **not** to `0` —
@@ -13601,6 +13611,61 @@ has to be chosen once for all `n`. What stands:
   hypotheses transport by substitution. The two norm convergences transport
   because the index escapes, and that is the single place at which
   `Tendsto ns atTop atTop` of the fourth item is paid out.
+* `mpSolution_of_tendsto_cadlag_of_subseq_of_zero` — the same seam at the
+  **vanishing martingale gap** instead of at exact martingality of a moving test
+  pair, and the form Donsker's acceptance test reads. **Proved 2026-09-22.**
+
+  **Why the existing seam does not serve there, and it is read off three
+  signatures rather than suspected.** `mpSolution_of_tendsto_cadlag` asks no
+  martingale property at all: its hypothesis `hzero` is the convergence to `0`
+  of `∫ (mpTest f g t - mpTest f g s) · Z` along the family, that is, a gap that
+  vanishes. `mpSolution_of_tendsto_cadlag_of_approx` and
+  `mpSolution_of_tendsto_cadlag_of_subseq` are its specialisations at *exact*
+  martingality of a pair `(f' n, g' n)` converging to `(f, g)` in the supremum
+  norm — the approximation sitting in the **test function** and not in the
+  error. A rescaled random walk is an exact martingale to no pair of bounded
+  continuous functions, its own exact martingales being itself and its square,
+  both unbounded; what it has is the vanishing gap, which is the Lindeberg–
+  Taylor expansion.
+
+  The statement is `mpSolution_of_tendsto_cadlag_of_subseq` with `hzero` along
+  `ns` in place of `hmart`, `hf`, `hg`, and the same conclusion. It rests on
+  `mpSolution_of_tendsto_cadlag` and on the three inputs that seam already
+  assembles and that do not depend on `hmart`:
+  `SkorokhodSpace.exists_countable_dense_continuity`,
+  `tendstoInDistribution_id_of_tendsto` and `cadlagFiltration_eq`.
+
+  **Two things the statement settles that the plan had left open.**
+
+  * **The test functions are indexed by `Set.Iic s`** and not by the class
+    `insert s (T ∩ Set.Iic s)` the underlying statement reads. `T` is produced
+    inside the proof, from `SkorokhodSpace.exists_countable_dense_continuity` at
+    the limit law, and the limit is known only after the extraction; no consumer
+    can name it. `Set.Iic s` is the smallest set of times independent of that
+    choice, `SkorokhodSpace.evalFuns_mono` is the passage, and the price is that
+    the hypothesis is asked of more test functions than the proof reads.
+  * **`Tendsto ns atTop atTop` is not carried.** The seam it mirrors spends that
+    hypothesis at exactly one place, the transport of `‖f - f' n‖ → 0` and
+    `‖g - g' n‖ → 0` to the subsequence; with the gap stated along `ns` from the
+    start there is nothing to transport. A consumer holding the gap along the
+    whole family composes with the escape itself, one `Filter.Tendsto.comp`.
+    The fourth item still hands the escape over — it is simply not read here.
+* `mpSolution_of_tendsto_cadlag_of_subseq_of_zero_pathOfProcess` — the vanishing
+  gap at the data the **second** item produces, and the form the Donsker
+  assembly reads: one probability space, a sequence of processes with their path
+  maps, one pair `(f, g)`. **Proved 2026-09-22.**
+
+  It is the previous item with the tested functional written out at a path built
+  from a process, one `simp only [SkorokhodSpace.mpTest, hΦ]`, and there is no
+  analysis in it. What is worth recording is what it does **not** carry:
+  `mpSolution_of_tendsto_cadlag_of_subseq_pathOfProcess` needs a filtration, the
+  adaptedness of the processes to it, and `CompleteSpace E` — the first two
+  because a *martingale* hypothesis has to name the past, the third because it
+  derives the measurability of the path map from the adaptedness through
+  `SkorokhodSpace.measurable_of_measurable_eval`. **A vanishing gap names no
+  past**: all that is read of the path map is its measurability, and that is
+  asked for directly. This is the one place in the pair of seams where the gap
+  form is cheaper and not merely different.
 * `mpSolution_of_tendsto_cadlag_of_subseq_pathOfProcess` — the same seam at the
   data the **second** item produces, and the form the Donsker assembly reads:
   one probability space, one right continuous filtration, a sequence of adapted
@@ -13623,14 +13688,18 @@ has to be chosen once for all `n`. What stands:
   carries it for the same reason, so it is not a new demand.
 
   **The bookkeeping of the set between the second item and the fourth is done
-  too**, as `isCompact_closure_range_of_subalgebra_forall_martingale`: the
-  second item concludes about `closure {ν | ∃ i, ν = P.map (Φ i)}` and the
-  fourth reads `closure (Set.range μ)`, and the two sets are equal by `Set.ext`
-  followed by `Subtype.ext`. No hypothesis is added or dropped. The type
-  ascription on the range is not decoration — `ProbabilityMeasure` is a `def`
-  on a subtype, and the anonymous constructor folds back to it, whereupon
-  `closure` finds no topology; it is the same trap as the `β :=` at
-  `tendstoInDistribution_id_of_tendsto`.
+  too**, and it is one statement rather than one per route:
+  `isCompact_closure_range_probabilityMeasure_of_isTightMeasureSet` carries a
+  tight family of measures to compact closure of the corresponding `Set.range`
+  in `ProbabilityMeasure`, which is what the fourth item reads.
+  `isCompact_closure_range_of_subalgebra_forall_martingale`,
+  `isCompact_closure_range_of_subalgebra_forall_exists_bounded_pair` and
+  `isCompact_closure_range_map_rescaledWalk` are its three instances. No
+  hypothesis is added or dropped, and the general statement asks `BorelSpace`
+  and `T2` of the space alone. The type ascription on the range is not
+  decoration — `ProbabilityMeasure` is a `def` on a subtype, and the anonymous
+  constructor folds back to it, whereupon `closure` finds no topology; it is
+  the same trap as the `β :=` at `tendstoInDistribution_id_of_tendsto`.
 
   With it **the four items join, and between them nothing is left to write**:
   the second delivers the compact closure in the shape the fourth consumes, the
@@ -14137,23 +14206,577 @@ has to be chosen once for all `n`. What stands:
   the same parameter in both and is discharged the same way — `Kw = 0` for a
   vanishing compensator, `Kw = ‖Z‖ * ∫⁻ M` for a deterministic density.
 
-  **What is left of the six.** Both statements that read the bound themselves
-  now have a weighted twin that does not; the bounded ones stay, since a
-  consumer who has a bound wants the shorter hypothesis list. What still carries
-  `hVb` and has no twin are three statements, and every one of them only passes
-  it along: `measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair`,
-  `sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair` and
-  `mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair`. What remains is
-  bookkeeping: each is the composition of statements that already exist in both
-  versions.
+  **The three pass-through statements, 2026-09-22, tenth run — and with them the
+  chain is weakened end to end.** The last three declarations:
+
+  ```
+  MeasureTheory.measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair_of_integrable_mul
+  MeasureTheory.sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair_of_integrable_mul
+  MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair_of_integrable_mul
+  ```
+
+  ```
+  ofReal ε₀ * P {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ ω)) δ}
+    ≤ N * ofReal √((ofReal δ ^ (1 - 1/q) * (K + 2 Kw) + A).toReal)
+      + ((ofReal u ^ (1 - 1/q) * K + 2 * (ofReal u ^ (1 - 1/q) * Kw)) / N + A)
+          / ofReal ε₀,   A = 2 ε' + 4 γ
+  ```
+
+  **`hVb` now occurs in no statement of the chain that does not have a twin
+  without it.** The bounded versions stay, since a consumer who has a bound wants
+  the shorter hypothesis list. A bounded `V` recovers the bounded right hand side
+  from the weighted one: `γ ≤ ofReal c * ε`, and `Kw ≤ ofReal c * K` by
+  `lintegral_const_mul'` against `IsApproximatingPair.lintegral_eLpNorm_le`, and
+  `ofReal δ ^ (1 - 1/q) * (K + 2 c K)` is `(1 + 2 c) * (ofReal δ ^ (1 - 1/q) * K)`.
+
+  **The gap sum needed the running maximum too, and the reason it works there is
+  not the reason it works at the horizon.** At the horizon every cell endpoint is
+  a capped time and lies under `u`. A gap cell overshoots the horizon by up to
+  `δ` at its *right* end — that is why its window is `Set.Iic (u + δ)` — but its
+  **weight sits at the left end**, which is capped, so `untopA_oscHitSeqCap_le`
+  still puts the weight under `u` and one hypothesis about
+  `⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ` serves all `N` cells. The statement therefore
+  carries two different windows, `Set.Iic u` for the weight and
+  `Set.Iic (u + δ)` for the errors, and this is the one asymmetry the weakening
+  adds.
+
+  **In the assembly the three windows collapse to two hypotheses**, as the two
+  did in the bounded version: the weight is read on `Set.Iic u` by both blocks,
+  and the horizon block's errors follow from the gap block's by `biSup_mono`
+  under `lintegral_mono` — at the unweighted error directly, at the weighted one
+  through `mul_le_mul_right`, the weight being the factor that does not move.
+
+  **Where the weakening is *not* consumed, measured at the source and worth
+  saying, because the list of six suggested otherwise.** One statement stands
+  above the assembly,
+  `mul_measure_setOf_lt_modulusBased_postcomp_le_of_isApproximatingPair`, and it
+  needs **no** twin: it reads `V = g ∘ X` for `g : E →ᵇ ℝ` and discharges the
+  bound itself with `BoundedContinuousFunction.norm_coe_le_norm`, `c = ‖g‖`. The
+  weighted chain is therefore consumed not through the postcomposition route but
+  at the assembly directly, at a `V` that is the process itself — which is the
+  case of the rescaled walk, whose two pairs
+  (`isApproximatingPair_rescaledWalk`, `isApproximatingPair_sq_rescaledWalk`)
+  approximate an unbounded `V` with error `0`.
+
+  **One elaboration detail, so that no run pays for it twice.** In the weighted
+  cell `{W}` stands *before* `γ` and its hypothesis, whereas in the bounded cell
+  `{W}` is fixed by `hε`, which stands first. Applying the weighted cell with
+  `hαW`/`hβW` therefore leaves `W` a metavariable and the elaborator runs into an
+  `isDefEq` timeout; `(W := Set.Iic (u + δ))` at the call site is the fix, and
+  the gap sum passes `(M := fun ω ↦ ⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ)` with it for the
+  same reason.
+
+  **The condition and the three limits, 2026-09-22, tenth run — and with them
+  the weakening reaches the shape a consumer meets.** Four declarations:
+
+  ```
+  MeasureTheory.IsApproximableMul
+  MeasureTheory.IsApproximableMul.one_lt_exponent
+  MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximableMul
+  MeasureTheory.tendsto_measure_setOf_lt_modulusBased_of_isApproximableMul
+  ```
+
+  ```
+  Tendsto (fun δ : ℝ≥0 ↦ P {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ ω)) δ})
+    (𝓝[>] 0) (𝓝 0)
+  ```
+
+  `IsApproximableMul` is `IsApproximable` with the bound removed at the two
+  places the chain reads it: the error of the first pair becomes the **weighted**
+  error, and `K` is joined by a second constant `Kw` for the weighted
+  compensator. The order of the three limits — `N`, then `δ`, then `ε` — is
+  unchanged, and the window limit is
+  `tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` at `c = 0` with `K + 2 Kw` in
+  place of `K`.
+
+  **Three design points, each decided and not defaulted.**
+
+  * **The weight is the running maximum at the full horizon `T`, in both
+    weighted fields, and not at `u`.** The assembly reads the weight at `u ≤ T`
+    and the error of the first pair at `u + δ ≤ T`; stating the condition at `T`
+    makes the field dominate the hypothesis, so both narrowings go the right way
+    and `mul_le_mul'` supplies the weighted one in a single step. Stating it at
+    `u` would make the condition too weak for its own consumer.
+  * **`Kw` is an `ℝ≥0` and a parameter of the condition, not of a pair.** It
+    plays the role `K` plays — a constant every pair produced at every error must
+    respect — and being in `ℝ≥0` it makes the finiteness of the first summand
+    free, which matters because `Real.sqrt S.toReal` reads `toReal`. It is also
+    what lets `tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` be applied at
+    `K + 2 Kw`, that lemma taking its constant in `ℝ≥0`.
+  * **The two square integrabilities of `V` are fields of their own, outside the
+    existential**, because `V` is fixed and they say nothing about the
+    approximants; the six that do belong to the pairs stay inside.
+
+  **What the weighted route consumes next, and it is *not* the postcomposition
+  criterion.** `SkorokhodSpace.isTightMeasureSet_map_postcomp_of_forall_measure_setOf_le`
+  asks for a bound on the modulus of `postcomp g ∘ path`, and reaching it needs
+  approximating pairs for `g ∘ X`, which pairs for `X` do not give: composing
+  with `g` destroys the martingale property. The weighted chain bounds the
+  modulus of the **unpostcomposed** real path, and the criterion that consumes
+  that is `SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal`, whose only
+  further input is `SkorokhodSpace.IsCompactContained` — which for the rescaled
+  walk stands as `isCompactContained_rescaledWalk`.
+
+  **One window for the whole family, weighted** —
+  `MeasureTheory.exists_forall_measure_setOf_lt_modulusBased_le_of_forall_isApproximableMul`:
+
+  ```
+  ∃ δ > 0, ∀ i, P {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ i ω)) δ} ≤ η
+  ```
+
+  for a family whose members share `q`, `T`, `K`, `Kw`. The uniformity is carried
+  by the constants and by nothing else: `B` and the window bound are built from
+  `q`, `T`, `K`, `Kw`, `u` and `ε₀`, so all three choices — count, window, error
+  — are made before the member is named. The empty index is disposed of first,
+  the exponent `1 < q` being read off a member.
+
+  **And the tightness itself** —
+  `MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isApproximableMul`,
+  which needed one new brick in **SkorokhodSpace**,
+  `SkorokhodSpace.measure_map_setOf_le_modulusBased_le`: the passage from a bound
+  over the sample space to one on the image law **without** a value change,
+  `Measure.map_map` composing one layer instead of two. Both were built on
+  2026-09-22, tenth run.
+
+  ```
+  IsTightMeasureSet {P.map (Φ i) | i}
+  ```
+
+  for a family of right continuous progressive real processes, weighted
+  approximable at every horizon with constants depending on the horizon alone,
+  and with the image laws compactly contained.
+
+  **This is the first tightness statement of the milestone that reads no bound
+  on the process**, and it is what the whole weakening was for.
+
+  **The compact containment is a hypothesis here and is not one on the
+  post-composed route**, and the difference is the same one twice: the
+  post-composed image laws are compactly contained for free, the range of a
+  bounded `g` being bounded; the laws of the paths themselves are not. For the
+  rescaled walk it is `isCompactContained_rescaledWalk`.
+
+  **The acceptance case is not reachable from here, and that is measured and not
+  suspected** (2026-09-22, eleventh run). The rescaled walk does **not** satisfy
+  `IsApproximableMul` at a fixed mesh, so the hypothesis of the statement above
+  is unsatisfiable on Donsker's data:
+
+  ```
+  MeasureTheory.integral_eq_of_eqOn_Ico_of_exists_approximatingPair
+  MeasureTheory.IsApproximable.integral_sq_eq_of_eqOn_Ico
+  MeasureTheory.IsApproximableMul.integral_sq_eq_of_eqOn_Ico
+  MeasureTheory.not_isApproximableMul_of_eqOn_Ico_of_integral_sq_ne
+  MeasureTheory.aestronglyMeasurable_sq_rescaledWalk
+  MeasureTheory.rescaledWalk_eqOn_Ico_zero
+  MeasureTheory.integral_sq_rescaledWalk_inv_ne
+  MeasureTheory.not_isApproximable_rescaledWalk
+  MeasureTheory.not_isApproximableMul_rescaledWalk
+  MeasureTheory.not_forall_isApproximableMul_rescaledWalk
+  ```
+
+  **Where the earlier reading went wrong.** The error of the walk's own pair is
+  exactly `0`, and that is true; but `IsApproximableMul` carries **two** pairs,
+  and the second approximates `V ^ 2` with the plain, unweighted error. The
+  weakening touches the first pair only. The second is subject to the cell
+  obstruction word for word, and the walk fails it: the walk rests on
+  `Set.Ico 0 (n + 1)⁻¹` as a function of time *and* of the sample point, its mean
+  does not move there — it is centred, which is why
+  `IsApproximable.integral_eq_of_eqOn_Ico` says nothing about it — but its
+  **mean square** climbs from `0` to `σ / (n + 1)`. Hence the refutation needs
+  `σ ≠ 0` and nothing else: no independence, no `L²`, no filtration.
+
+  **Two weakenings, and they are independent.** `IsApproximableMul` removes the
+  **bound on the process**; `IsEventuallyApproximable` moves the **error outside
+  the index**. The walk needs both, and neither implies the other:
+  `isEventuallyApproximable_rescaledWalk` is the second one alone and lives on a
+  process the estimate then reads through a bounded `g`.
+
+  **The conjunction of the two weakenings**, which is the condition the walks do
+  meet, and the chain over it:
+
+  ```
+  MeasureTheory.IsEventuallyApproximableMul
+  MeasureTheory.isEventuallyApproximableMul_of_forall_isApproximableMul
+  MeasureTheory.exists_finite_forall_measure_setOf_lt_modulusBased_le_of_isEventuallyApproximableMul
+  MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul
+  ```
+
+  `IsEventuallyApproximableMul` is: to every error a finite exceptional set, off
+  which every member is square integrable at the capped and at the gap times and
+  has two pairs over **its own** filtration, the first with the **weighted**
+  error and the second with the plain error of the square, at common constants
+  `q`, `T`, `K`, `Kw`. It is `IsEventuallyApproximable` with the two weighted
+  fields of `IsApproximableMul` in place of their plain neighbours, and
+  `isEventuallyApproximableMul_of_forall_isApproximableMul` is what says it is a
+  weakening of the latter and not a different condition.
+
+  The modulus estimate is taken in the order `N`, `ε`, `δ`, which is the order of
+  `exists_finite_forall_measure_setOf_lt_modulusBased_postcomp_le_of_isEventuallyApproximable`
+  and **not** that of
+  `exists_forall_measure_setOf_lt_modulusBased_le_of_forall_isApproximableMul`:
+  the error survives into the estimate, so the window is chosen last and at that
+  error, from `tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` at `A = a₀`. The two
+  errors are asked at one and the same `ε = a₀ / 6`, the combination
+  `2 ε' + 4 γ` of
+  `mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair_of_integrable_mul`
+  being `a₀` at that choice; the divisor `2 + 4 ‖g‖` of the bounded twin has
+  disappeared with the bound, the weight being carried inside the error.
+
+  The tightness goes through `SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal`
+  and `SkorokhodSpace.measure_map_setOf_le_modulusBased_le`; the exceptional
+  members are not dropped but paid for, each by `isTightMeasureSet_singleton`
+  read back through that **equivalence** at the same `(ε, m, η)`, with
+  `SkorokhodSpace.modulusBased_mono` and `Set.Finite.exists_pos_forall_le`
+  putting the finitely many windows and the common one under one positive
+  minimum. The compact containment of a singleton subfamily is read off the
+  family's at the same compact set.
+
+  **The acceptance case is paid, and with it the whole tightness side of
+  Donsker** (2026-09-22, thirteenth run):
+
+  ```
+  MeasureTheory.isEventuallyApproximableMul_of_tendsto_zero_cofinite
+  MeasureTheory.isEventuallyApproximableMul_rescaledWalk
+  MeasureTheory.isTightMeasureSet_map_rescaledWalk
+  ```
+
+  `isEventuallyApproximableMul_rescaledWalk` is
+  `isEventuallyApproximable_rescaledWalk` with `Kw = 0` and the same constant
+  `T ^ q.toReal⁻¹ * ‖σ‖₊`, and it differs from it at exactly three places: the
+  two weighted fields are free — the walk is its own approximant, so the weight
+  is integrated against `0`, and the compensator of that pair is `0`, so
+  `eLpNorm (fun s ↦ Z s ω) q = 0` and `Kw = 0` carries; integrability becomes
+  `MemLp … 2` at four of the six places, through
+  `IsApproximatingPair.memLp_stoppedValue_of_dominated` against
+  `memLp_majorant_rescaledWalk`; and the two `MemLp` fields of the zero
+  compensator are `MemLp.zero`, which `simp` does **not** reach, that lemma
+  being stated at `(0 : α → ε)` while the stopped value of a constant process is
+  `fun ω ↦ 0`. The two square integrabilities of the member itself are the same
+  two statements as those of the first approximant and are supplied twice from
+  one proof.
+
+  `isTightMeasureSet_map_rescaledWalk` is then
+  `isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul` at
+  `isCompactContained_rescaledWalk` and the above, with `T = u + 1`, `q = 2`,
+  `Kw = 0`, and `stepPath_rescaledWalk_eq` as the seam between the step-path
+  description the containment reads and the process description the
+  approximability reads. `hvar` is read only by the first and `hsq` only by the
+  second.
+
+  **The third item on Donsker's data, and the one computation the acceptance
+  test still owes.** The seam is
+  `mpSolution_of_tendsto_cadlag_of_subseq_of_zero_pathOfProcess`, whose one
+  hypothesis is the vanishing of
+  `𝔼[(mpTest f g t − mpTest f g s) · Z]` along the family. `mpTest` is the
+  evaluation minus the **compensator**, and the compensator has to be resolved
+  before the evaluation part can be expanded against it:
+
+  * `integral_Ioc_comp_floor_mul` — the integral of a step function over an
+    arithmetic grid, in closed form and **exactly**. **Proved 2026-09-22.** For
+    `c > 0`, `t ≥ 0` and an arbitrary `v : ℕ → ℝ`,
+
+    ```
+    ∫ u in Set.Ioc (0 : ℝ) t, v ⌊u c⌋
+      = ∑ j < ⌊t c⌋, c⁻¹ · v j + (t − ⌊t c⌋/c) · v ⌊t c⌋
+    ```
+
+    — `⌊t c⌋` full cells of length `c⁻¹`, and the broken cell at the right end.
+    `fun u ↦ v ⌊u c⌋` is the shape of every path over an arithmetic grid:
+    `stepPath_natCast_div` says a step path with nodes `k/c` *is* this function.
+
+    **Nothing is asked of `v`** — no bound and no measurability. The integrand
+    is constant on the interior of each cell, so the interval integrability
+    there is `intervalIntegrable_const`
+    (`Mathlib/MeasureTheory/Integral/IntervalIntegral/Basic.lean:176`) carried
+    across by `IntervalIntegrable.congr_uIoo` (`:110`), and a hypothesis on `v`
+    would be read nowhere. That is what the consumer needs: the node values of a
+    walk are unbounded in the sample point.
+
+    It rests on `intervalIntegral.sum_integral_adjacent_intervals`
+    (`Mathlib/MeasureTheory/Integral/IntervalIntegral/Basic.lean:1116`) at the
+    partition `a k = min (k/c) t` — **and not at `k/c`**, so that the last cell
+    is already cut at `t` and the telescoping reaches `∫ in 0..t` with no case
+    split afterwards. That `a k = k/c` up to `⌊t c⌋` and `a (⌊t c⌋ + 1) = t` are
+    `Nat.floor_le` and `Nat.lt_floor_add_one`
+    (`Mathlib/Algebra/Order/Floor/Semiring.lean:47` and `:63`), and they are the
+    whole of the arithmetic. `⌊u c⌋ = j` fails at the **right** endpoint of the
+    cell, so the passage there is
+    `intervalIntegral.integral_congr_Ioo_of_le`
+    (`Mathlib/MeasureTheory/Integral/IntervalIntegral/Basic.lean:1253`) over the
+    **open** cell
+    and not a rewrite.
+
+  * `integral_comp_rescaledWalk_eq_sum` — the same at the rescaled walk, which
+    is the form the compensator of `SkorokhodSpace.mpTest` has there.
+    **Proved 2026-09-22.**
+
+    ```
+    ∫ u in Set.Ioc (0 : ℝ) (t : ℝ), g (V n u.toNNReal ω)
+      = ∑ j < ⌊t (n+1)⌋, (n+1)⁻¹ · g (S n j ω)
+        + (t − ⌊t (n+1)⌋/(n+1)) · g (S n ⌊t (n+1)⌋ ω)
+    ```
+
+    with `S n j ω = (n+1)⁻¹ᐟ² ∑ i < j, ξ i ω` the node values. There is no
+    approximation in it and no probability: it is a statement about one sample
+    point, and the only item of the computation independent of the independence
+    of the `ξ`. It is the previous statement at `c = n + 1`, and the one
+    crossing is `Nonneg.nat_floor_coe`
+    (`Mathlib/Algebra/Order/Nonneg/Floor.lean:41`) — the compensator runs over a
+    **real** time variable and the walk over an `ℝ≥0` one, and on `(0, t]` the
+    floor of the first is the floor of the second, `Real.toNNReal` being the
+    identity there.
+
+    **The test function need not be bounded and need not be continuous.**
+    `SkorokhodSpace.mpTest` supplies a `g : ℝ →ᵇ ℝ` and the coercion of one meets
+    the statement, but neither field of that bundle is read, so `g` is a bare
+    `ℝ → ℝ`. Of the walk only the shape of its paths enters — no measurability
+    of the increments, no independence, no integrability.
+
+  * `integral_Ioc_sub_Ioc_comp_floor_mul` and
+    `integral_comp_rescaledWalk_sub_eq_sum` — the same over a **window**, which
+    is the shape the gap actually reads. **Proved 2026-09-22.** `mpTest t −
+    mpTest s` subtracts two compensators, each taken from `0`, and never
+    integrates over `(s, t]`; so the statement is the difference of the two
+    closed forms,
+
+    ```
+    ∑ j ∈ Finset.Ico ⌊s (n+1)⌋ ⌊t (n+1)⌋, (n+1)⁻¹ · g (S n j ω)
+      + (t − ⌊t (n+1)⌋/(n+1)) · g (S n ⌊t (n+1)⌋ ω)
+      − (s − ⌊s (n+1)⌋/(n+1)) · g (S n ⌊s (n+1)⌋ ω)
+    ```
+
+    — the cells strictly between the two floors with their full weight, and
+    what is left of the two broken cells at the ends. The cardinality of that
+    `Finset.Ico` is what the Lindeberg estimate is summed over.
+
+    **No integrability crosses here either**, and that is the point of stating
+    the window as a difference: the passage is `Finset.sum_Ico_eq_sub` — the
+    additive twin of `Finset.prod_Ico_eq_div`
+    (`Mathlib/Algebra/BigOperators/Intervals.lean:94`), generated by
+    `@[to_additive]` and therefore carrying no `theorem` line of its own — and
+    `ring`. Written as `∫ u in Set.Ioc s t` the window would have had to produce
+    the integrability of the integrand in order to be split, and that is exactly
+    what the statements above were arranged not to need.
+
+  * `sub_comp_rescaledWalk_eq_sum` — the **evaluation** part of the gap over the
+    same index set. **Proved 2026-09-22.** `mpTest` is evaluation minus
+    compensator, and the two halves have to stand over *one* index set before
+    the cell by cell expansion is writable at all. It is a telescoping sum and
+    nothing else, `Finset.sum_Ico_sub` — the additive twin of
+    `Finset.prod_Ico_div` (`Mathlib/Algebra/BigOperators/Intervals.lean:226`),
+    generated by `@[to_additive]` and carrying no `theorem` line of its own.
+    There is no integral in it and no null set, which is why the right endpoint
+    costs nothing here and did cost something at the compensator: the evaluation
+    reads the floor **at** `t`, where the cell identity holds.
+
+  * `mpTest_sub_rescaledWalk_eq_sum` — the **whole** gap, cell by cell, which is
+    what the Lindeberg expansion is carried out on. **Proved 2026-09-22.**
+
+    ```
+    (mpTest f g t − mpTest f g s)(walk n, ω)
+      = ∑ k ∈ Finset.Ico ⌊s (n+1)⌋ ⌊t (n+1)⌋,
+          (f (S n (k+1) ω) − f (S n k ω) − (n+1)⁻¹ · g (S n k ω))
+        − (t − ⌊t (n+1)⌋/(n+1)) · g (S n ⌊t (n+1)⌋ ω)
+        + (s − ⌊s (n+1)⌋/(n+1)) · g (S n ⌊s (n+1)⌋ ω)
+    ```
+
+    One summand per cell — the increment of `f` across it **minus** the
+    compensator's weight at its left node, which is exactly the shape a second
+    order Taylor expansion is held against, the increment being
+    `(n+1)⁻¹ᐟ² ξ k` — and two boundary terms, each of size at most
+    `(n+1)⁻¹ ‖g‖`, which is the part of the gap that vanishes with no expansion
+    at all.
+
+    **Still no probability in it.** It is an identity at one sample point,
+    assembled from the two previous ones by `Finset.sum_sub_distrib` and `ring`.
+    The centring, the second moment and the independence enter only when the
+    expectation of this is taken — which is where the acceptance test now
+    stands, and the first place in the computation where they are read.
+
+  * `indep_comap_natural_partialSum` — **an increment is independent of the past
+    of the partial sums**. **Proved 2026-09-22.**
+
+    ```
+    Indep (comap (ξ n)) (Filtration.natural (fun m ω ↦ ∑ k < m, c · ξ k ω) _ n) P
+    ```
+
+    Mathlib's `ProbabilityTheory.iIndepFun.indep_comap_natural_of_lt`
+    (`Mathlib/Probability/BorelCantelli.lean:43`) states it against the past of
+    the **summands**; what every consumer holds is the past of the **sums**, and
+    the passage is the inclusion `𝒢 (m+1) ≤ Filtration.natural ξ m`. The scaling
+    factor `c` is carried and costs nothing, because the rescaled walk is
+    written over the filtration of `c · S` — and no `c ≠ 0` is asked, the
+    filtration collapsing to `⊥` at `c = 0`, where independence is only easier.
+    `IsProbabilityMeasure P` is a conclusion and not a hypothesis.
+
+    It is the one probabilistic input of the walk that is read **twice**, by
+    `martingale_partialSum_of_iIndepFun` at `c = 1` and by
+    `integral_mul_comp_rescaledWalk_mul_eq_zero` at `c = (n+1)⁻¹ᐟ²`.
+
+  * `integral_mul_eq_mul_integral_of_indep_comap` — **a factor decouples from
+    everything measurable for a σ-algebra it is independent of**:
+    `∫ W · X = (∫ W) · (∫ X)` when `σ (X)` is independent of a σ-algebra `W` is
+    measurable for. **Proved 2026-09-22.** It is Mathlib's product formula with
+    the independence read off **σ-algebras** rather than off the pair of
+    functions, which is the shape a filtration hands it over in.
+
+    `integral_mul_eq_zero_of_indep_comap` is it at `∫ X = 0` and is what the
+    first order term reads; the second order term reads the product formula
+    itself, at `∫ X = σ²`. That it is an **identity** and not a null statement
+    is what lets both consumers stand on one hypothesis set: the degenerate
+    branch is the same `0 = 0` in either.
+
+    **No integrability is asked.**
+    `ProbabilityTheory.IndepFun.integral_fun_mul_eq_mul_integral`
+    (`Mathlib/Probability/Independence/Integration.lean:423`) gives
+    `∫ W · X = P[W] · P[X]` from bare `AEStronglyMeasurable`, its proof running
+    through `ProbabilityTheory.IndepFun.integral_bilin'` (`:335`), which splits
+    on the integrability of the product and observes that where it fails, one of
+    the factors fails too and **both sides are the Bochner junk value `0`**.
+
+    The junk value is therefore read here, and on purpose: in the degenerate
+    case the identity is empty rather than false. A consumer that wants content
+    supplies boundedness of `W` and integrability of `X`, whence
+    `ProbabilityTheory.IndepFun.integrable_mul` (`:358`). This is the one place
+    in the milestone where a hypothesis is left out because the junk values on
+    the two sides agree.
+
+  * `abs_sub_natCast_floor_div_le` — **what is left of a broken cell is shorter
+    than a cell**: `|t − ⌊t c⌋/c| ≤ c⁻¹` for `0 ≤ t` and `0 < c`. **Proved
+    2026-09-22.** `Nat.floor_le` for the lower bound and `Nat.lt_floor_add_one`
+    for the upper, and that is the whole of it. `0 ≤ t` is read and cannot be
+    dropped: at a negative `t` the floor is `0`, the remainder is `t` itself,
+    and the bound fails for every `t < −c⁻¹`.
+
+  * `abs_mpTest_sub_rescaledWalk_sub_sum_le` — **the two boundary terms are of
+    order `(n+1)⁻¹`, uniformly in the sample point**: the gap differs from its
+    cell sum by at most `2 (n+1)⁻¹ ‖g‖`. **Proved 2026-09-22.** They carry no
+    increment of `f` and are therefore never touched by the expansion; this is
+    the part of the gap that goes away by counting, and what is left after it is
+    the cell sum.
+
+    The estimate is uniform in `ω`, which is what lets a consumer take it under
+    the integral against a bounded weight with no integrability argument of its
+    own. **Only `g` is asked to be bounded and `f` is asked nothing**, `f`
+    cancelling out of the two boundary terms — the reverse of what the cell sum
+    asks, where `f` is expanded and `g` only has to match `½ σ² f''`.
+
+  * `abs_sub_taylor_two_le` — **the second order Taylor expansion with its
+    remainder bounded by the third derivative**. **Proved 2026-09-22.**
+
+    ```
+    |f (x + h) − f x − f' x · h − f'' x · h² / 2| ≤ M · |h|³ / 6   for |f'''| ≤ M
+    ```
+
+    It is what turns the increment of `f` across a cell into the two terms the
+    expansion is held against plus something estimable, and the last ingredient
+    of the cell computation that asks anything of `f` beyond boundedness. The
+    acceptance test affords it: its class is `A = {(f, f''/2) | f ∈ Cc^∞(ℝ)}`.
+
+    **Both signs of `h` are covered with no case split**, Mathlib's
+    `taylor_mean_remainder_lagrange_iteratedDeriv`
+    (`Mathlib/Analysis/Calculus/Taylor.lean:348`) being stated over `Set.uIcc`
+    and not over an ordered `Set.Icc`; only `h = 0` is taken separately, and
+    there both sides are `0`. And the passage from `iteratedDerivWithin` to
+    `iteratedDeriv` **at the endpoint** costs nothing —
+    `iteratedDerivWithin_eq_iteratedDeriv`
+    (`Mathlib/Analysis/Calculus/IteratedDeriv/Defs.lean:70`) asks `UniqueDiffOn`
+    of the set and `ContDiffAt` of the function, not that the set be a
+    neighbourhood. That is the thing to know before reaching for a reflection
+    argument.
+
+  * `integral_mul_comp_rescaledWalk_mul_eq_zero` — **the first order term of
+    Donsker's expansion vanishes, cell by cell**, and this is where probability
+    enters the acceptance test for the first time. **Proved 2026-09-22.**
+
+    ```
+    ∫ ω, h (S n k ω) · ξ k ω · Z ω ∂P = 0
+    ```
+
+    for `h` measurable and `Z` measurable for the past at `k`. The second order
+    Taylor expansion of `f` splits the increment of the cell into a term of
+    first order `f' (S n k) · (n+1)⁻¹ᐟ² ξ k`, a term of second order and a
+    remainder; the second is held against the compensator and the third is
+    estimated, but the first **has to vanish exactly** — it is of order
+    `(n+1)⁻¹ᐟ²` and no estimate removes it. This is it, with `h = f'` and `Z`
+    the weight the gap is tested against.
+
+    **There are two factors in front of `ξ k` and not one**, the path piece
+    `h (S n k)` and the weight `Z`, both measurable for the past at `k`; they
+    are merged into a single such factor **before** independence is asked, since
+    asking it of `ξ k` against `h (S n k)` alone leaves `Z` to be carried
+    through afterwards.
+
+    Of the three hypotheses of the acceptance test this is the first statement
+    to read any: `hind` and `hcent` enter here, everything above being an
+    identity at one sample point. Integrability is read at neither `ξ k` nor the
+    product, and neither `h` nor `Z` need be bounded, for the reason set out at
+    `integral_mul_eq_zero_of_indep_comap`.
+
+    **The filtration is not `Filtration.natural ξ` at `k`** but that of the
+    scaled sums, which `martingale_rescaledWalk` and
+    `isStronglyProgressive_rescaledWalk` already carry. Over the first the
+    statement is false: that σ-algebra holds `ξ k` itself, and `h = 1`, `Z = ξ k`
+    turn the left hand side into `∫ ξ k ^ 2`.
+
+  * `integral_mul_comp_rescaledWalk_sq_mul_eq_smul` — **the second order term of
+    Donsker's expansion**, where the second moment enters and where it is decided
+    whether the compensator is met. **Proved 2026-09-22.**
+
+    ```
+    ∫ ω, h (S n k ω) · ξ k ω ^ 2 · Z ω ∂P = v · ∫ ω, h (S n k ω) · Z ω ∂P
+    ```
+
+    for `∫ ξ k ² = v`, `h` measurable and `Z` measurable for the past at `k`.
+    After the first order term has vanished, the cell carries
+    `½ f'' (S n k) · (n+1)⁻¹ ξ k ² − (n+1)⁻¹ g (S n k) + remainder`, and this
+    replaces `ξ k ²` by its constant `σ²` under the integral; for
+    `g = ½ σ² f''`, the generator of Brownian motion, the two **cancel exactly**,
+    the factor `(n+1)⁻¹ ` being the same on both sides.
+
+    **The second moment is a bare real `v` and not a square**, nothing in the
+    proof reading positivity, and it is asked of the single index `k`: the cells
+    are treated one at a time and only the consumer that sums them needs the
+    moments to agree.
+
+    **Neither `h` nor `Z` need be bounded and `ξ k` need not be square
+    integrable**, contrary to what an identity with a non-zero right hand side
+    leads one to expect. `integral_mul_eq_mul_integral_of_indep_comap` is a
+    **product** formula: where the product fails to be integrable all three
+    integrals are the Bochner junk value `0`, the left hand side is `0` and the
+    right hand side is `v · 0`. Boundedness returns at the consumer.
+
+    **Centring is not read.** Of the three hypotheses of the acceptance test
+    this statement carries `hind` alone. And the filtration is again that of the
+    scaled sums: over `Filtration.natural ξ` at `k` the statement is false,
+    `h = 1` and `Z = ξ k ²` giving `∫ ξ k ⁴` against `(∫ ξ k ²)²`, which differ
+    by the variance of `ξ k ²`. `Z = ξ k` is **not** a witness — it gives
+    `∫ ξ k ³` against `σ² · ∫ ξ k`, and for a symmetric increment both are `0`.
+
+  **Prokhorov, with the crossing of the two types done once**, and the second
+  item of the chain on Donsker's data:
+
+  ```
+  MeasureTheory.isCompact_closure_range_probabilityMeasure_of_isTightMeasureSet
+  MeasureTheory.isCompact_closure_range_map_rescaledWalk
+  ```
+
+  The first is `isCompact_closure_of_isTightMeasureSet` with the passage from a
+  set of `Measure` to a set of `ProbabilityMeasure` and on to a `Set.range`,
+  which is the shape `tendsto_of_isRelativelyCompact_of_unique` reads. It asks
+  `BorelSpace` and `T2` of the space and nothing else — no Polishness, no
+  completeness; those are read upstream, in the tightness. That crossing had been
+  written out inline twice, in
+  `isCompact_closure_range_of_subalgebra_forall_martingale` and in
+  `isCompact_closure_range_of_subalgebra_forall_exists_bounded_pair`; both are
+  now four lines through it, with no hypothesis added or dropped.
 
   **The alternative, and why it is the more expensive one.** The acceptance
   example below states Donsker with `A = {(f, f''/2) | f ∈ Cc^∞(ℝ)}`, that is,
   with the martingale hypothesis at `f ∘ X n` for bounded `f`. Building the
   pairs there is the Lindeberg–Taylor computation and not a corollary of the two
   pairs above, whose approximants are the walk and its square. Either route
-  closes the item; the weakening of the bound reuses what is built, the other
-  does not.
+  closes the item; the conjunction of the two weakenings reuses what is built,
+  the other does not.
 
 * Convergence in measure as a second mode: the space of càdlàg paths with the
   topology of convergence in Lebesgue measure, in which the coordinates are

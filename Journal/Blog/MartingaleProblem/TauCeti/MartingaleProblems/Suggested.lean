@@ -45679,6 +45679,77 @@ theorem measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair
   refine le_trans (le_of_eq ?_) hstep
   ring
 
+/-- **The same quotient without a bound on the process**:
+
+```
+ENNReal.ofReal ε₀ * P {ω | oscHitSeq V ε₀ N ω < u}
+  ≤ ((ofReal u ^ (1 - 1/q) * K + 2 * (ofReal u ^ (1 - 1/q) * Kw)) / N + (2 ε' + 4 γ))
+      / ofReal ε₀
+```
+
+for `0 < ε₀` and `N ≠ 0`, under the hypotheses of
+`measure_setOf_oscHitSeq_lt_le_of_isApproximatingPair_of_integrable_mul`.
+
+**The proof is that of the bounded neighbour verbatim, and that is the statement's whole
+content.**  Neither division reads the numerator: dividing by `N` is
+`ENNReal.mul_le_mul_iff_left` against `ENNReal.div_mul_cancel`, and dividing by `ofReal ε₀` is
+`ENNReal.le_div_iff_mul_le`.  The bound `c` occurs in the bounded neighbour only inside the two
+abbreviations `B` and `A`, which are carried through untouched; here `B` is the weighted horizon
+constant and `A = 2 ε' + 4 γ` the weighted error, and nothing else changes.  A statement that
+merely passes a constant along is not a new estimate, and this one is named separately only
+because its consumer asks for the quotient shape.
+
+**No finiteness is asked, and `γ ≠ ⊤`, `Kw ≠ ⊤` in particular are not.**  The conclusion is an
+inequality between two quotients in `ℝ≥0∞` and never computes either, so an infinite constant
+makes it true and not false -- unlike at the cell, where `Real.sqrt S.toReal` reads `toReal` and
+`toReal ⊤ = 0` would make it false. -/
+theorem measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair_of_integrable_mul
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K : ℝ≥0} {V Y C Y' C' : ℝ≥0 → Ω → ℝ} {Z Z' : ℝ → Ω → ℝ}
+    (h : IsApproximatingPair 𝓕 P q T K Y C Z) (h' : IsApproximatingPair 𝓕 P q T K Y' C' Z')
+    {D : Set ℝ≥0} (hDc : D.Countable) (hDd : Dense D)
+    (hV : IsStronglyProgressive 𝓕 V)
+    (hcont : ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ V s ω) (Set.Ici t) t)
+    {u : ℝ≥0} (huT : u ≤ T) {γ ε' Kw : ENNReal} {ε₀ : ℝ} (hε₀ : 0 < ε₀)
+    (hγ : ∫⁻ ω, (⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ) * ⨆ t ∈ Set.Iic u, ‖Y t ω - V t ω‖ₑ ∂P ≤ γ)
+    (hε' : ∫⁻ ω, ⨆ t ∈ Set.Iic u, ‖Y' t ω - V t ω ^ 2‖ₑ ∂P ≤ ε')
+    (hKw : ∫⁻ ω, (⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ)
+        * eLpNorm (fun s ↦ Z s ω) q (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ))) ∂P ≤ Kw)
+    (hVmem : ∀ k : ℕ, MemLp
+      (stoppedValue V (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+    (hYmem : ∀ k : ℕ, MemLp
+      (stoppedValue Y (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+    (hCmem : ∀ k : ℕ, MemLp
+      (stoppedValue C (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+    (hY'int : ∀ k : ℕ, Integrable
+      (stoppedValue Y' (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) P)
+    {N : ℕ} (hN : N ≠ 0) :
+    ENNReal.ofReal ε₀ * P {ω | oscHitSeq V ε₀ N ω < (u : WithTop ℝ≥0)}
+      ≤ ((ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * K
+              + 2 * (ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * Kw)) / N
+          + (2 * ε' + 4 * γ)) / ENNReal.ofReal ε₀ := by
+  set B := ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * K
+    + 2 * (ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * Kw) with hB
+  set A := 2 * ε' + 4 * γ with hA
+  set M := P {ω | oscHitSeq V ε₀ N ω < (u : WithTop ℝ≥0)} with hM
+  have hN0 : (N : ENNReal) ≠ 0 := by exact_mod_cast hN
+  have hNt : (N : ENNReal) ≠ ⊤ := ENNReal.natCast_ne_top N
+  have he0 : ENNReal.ofReal ε₀ ≠ 0 := by
+    simpa using ENNReal.ofReal_pos.2 hε₀
+  have hkey : (N : ENNReal) * (ENNReal.ofReal ε₀ ^ 2 * M) ≤ B + N * A :=
+    measure_setOf_oscHitSeq_lt_le_of_isApproximatingPair_of_integrable_mul h h' hDc hDd hV hcont
+      huT hγ hε' hKw hVmem hYmem hCmem hY'int N
+  have hstep : ENNReal.ofReal ε₀ ^ 2 * M ≤ B / N + A := by
+    rw [← ENNReal.mul_le_mul_iff_left hN0 hNt]
+    calc ENNReal.ofReal ε₀ ^ 2 * M * (N : ENNReal)
+        = (N : ENNReal) * (ENNReal.ofReal ε₀ ^ 2 * M) := by ring
+      _ ≤ B + N * A := hkey
+      _ = (B / N + A) * (N : ENNReal) := by
+          rw [add_mul, ENNReal.div_mul_cancel hN0 hNt, mul_comm (N : ENNReal) A]
+  rw [ENNReal.le_div_iff_mul_le (Or.inl he0) (Or.inl ENNReal.ofReal_ne_top)]
+  refine le_trans (le_of_eq ?_) hstep
+  ring
+
 /-! ### The gap term
 
 The other of the two quantities `mul_measure_setOf_lt_modulusBased_le_lintegral_dist` leaves --
@@ -45994,6 +46065,117 @@ theorem sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair
   refine le_trans (Finset.sum_le_sum hcell) ?_
   rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
 
+/-- **The gap sum without a bound on the process**:
+
+```
+∑ k ∈ range N, ∫⁻ ω, ofReal (dist (V β_k ω) (V α_k ω)) ∂P
+  ≤ N · ofReal √((ofReal δ ^ (1 - 1/q) · (K + 2 Kw) + (2 ε' + 4 γ)).toReal)
+```
+
+with the same `δ`-capped cells `α_k = min (τ k) u`, `β_k = min (τ (k+1)) (α_k + δ)` as in the
+bounded neighbour, the weighted error `γ` and the parameter `Kw` in place of
+`hVb : ∀ t ω, ‖V t ω‖ ≤ c`.
+
+**Every cell is still bounded by the same quantity, so the sum is still `N` times it** -- the
+weakening does not touch the counting step, which is `Finset.sum_le_sum` followed by
+`Finset.sum_const`.  What it touches is the cell, and the cell is
+`lintegral_ofReal_dist_le_sqrt_of_isApproximatingPair_of_integrable_mul`.
+
+**One hypothesis for all `N` cells, and it is the running maximum, exactly as at the horizon.**
+Each cell asks its own weight `‖V (α_k ·) ·‖ₑ` against its own error, and a hypothesis per stage
+would be unusable.  The left endpoint of a gap cell is a **capped** time, so
+`untopA_oscHitSeqCap_le` puts it under `u`, and `⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ` dominates all `N`
+weights at once.  This is the same device as in
+`measure_setOf_oscHitSeq_lt_le_of_isApproximatingPair_of_integrable_mul`, and it works here for
+the same reason, although the *right* endpoints overshoot the horizon: the weight sits at the
+left end.
+
+**The two windows are therefore different, and the statement says so.**  The weight is read on
+`Set.Iic u` and the approximation errors on `Set.Iic (u + δ)`, because a gap cell may end beyond
+the horizon by at most `δ` (`oscHitSeqGap_le_coe`).  That is why `u + δ ≤ T` and not `u ≤ T` is
+asked, and it is the one place the two blocks differ in their window.
+
+**The eight hypotheses on the stopped values are two families of four**, one at the capped times
+and one at the gap times: `V`, `Y` and `C` in `L²` and `Y'` merely integrable, which is what
+Cauchy--Schwarz needs in place of the bound. -/
+theorem sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair_of_integrable_mul
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K : ℝ≥0} {V Y C Y' C' : ℝ≥0 → Ω → ℝ} {Z Z' : ℝ → Ω → ℝ}
+    (h : IsApproximatingPair 𝓕 P q T K Y C Z) (h' : IsApproximatingPair 𝓕 P q T K Y' C' Z')
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hV : IsStronglyProgressive 𝓕 V)
+    (hcont : ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ V s ω) (Set.Ici t) t)
+    {u δ : ℝ≥0} (huT : u + δ ≤ T) {γ ε' Kw : ENNReal} {ε₀ : ℝ}
+    (hγne : γ ≠ ⊤) (hε'ne : ε' ≠ ⊤) (hKwne : Kw ≠ ⊤)
+    (hγ : ∫⁻ ω, (⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ)
+        * ⨆ t ∈ Set.Iic (u + δ), ‖Y t ω - V t ω‖ₑ ∂P ≤ γ)
+    (hε' : ∫⁻ ω, ⨆ t ∈ Set.Iic (u + δ), ‖Y' t ω - V t ω ^ 2‖ₑ ∂P ≤ ε')
+    (hKw : ∫⁻ ω, (⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ)
+        * eLpNorm (fun s ↦ Z s ω) q (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ))) ∂P ≤ Kw)
+    (hVcap : ∀ k : ℕ, MemLp
+      (stoppedValue V (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+    (hYcap : ∀ k : ℕ, MemLp
+      (stoppedValue Y (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+    (hCcap : ∀ k : ℕ, MemLp
+      (stoppedValue C (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+    (hY'cap : ∀ k : ℕ, Integrable
+      (stoppedValue Y' (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) P)
+    (hVgap : ∀ k : ℕ, MemLp (stoppedValue V (fun ω ↦ min (oscHitSeq V ε₀ (k + 1) ω)
+      (min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) 2 P)
+    (hYgap : ∀ k : ℕ, MemLp (stoppedValue Y (fun ω ↦ min (oscHitSeq V ε₀ (k + 1) ω)
+      (min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) 2 P)
+    (hCgap : ∀ k : ℕ, MemLp (stoppedValue C (fun ω ↦ min (oscHitSeq V ε₀ (k + 1) ω)
+      (min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) 2 P)
+    (hY'gap : ∀ k : ℕ, Integrable (stoppedValue Y' (fun ω ↦ min (oscHitSeq V ε₀ (k + 1) ω)
+      (min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) P)
+    (N : ℕ) :
+    ∑ k ∈ Finset.range N, ∫⁻ ω, ENNReal.ofReal (dist
+        (stoppedValue V (fun ω ↦ min (oscHitSeq V ε₀ (k + 1) ω)
+          (min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0))) ω)
+        (stoppedValue V (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0)) ω)) ∂P
+      ≤ N * ENNReal.ofReal (Real.sqrt
+          ((ENNReal.ofReal (δ : ℝ) ^ (1 - 1 / q.toReal) * ((K : ENNReal) + 2 * Kw)
+            + (2 * ε' + 4 * γ)).toReal)) := by
+  -- the running maximum dominates the weight of every cell, the left endpoints being capped
+  have hdom : ∀ (k : ℕ) (ω : Ω),
+      ‖stoppedValue V (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0)) ω‖ₑ
+        ≤ ⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ := fun k ω ↦
+    le_iSup₂ (f := fun t (_ : t ∈ Set.Iic u) ↦ ‖V t ω‖ₑ)
+      ((min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0)).untopA)
+      (untopA_oscHitSeqCap_le V ε₀ k u ω)
+  have hγk : ∀ k : ℕ, ∫⁻ ω,
+      ‖stoppedValue V (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0)) ω‖ₑ
+        * ⨆ t ∈ Set.Iic (u + δ), ‖Y t ω - V t ω‖ₑ ∂P ≤ γ := fun k ↦
+    le_trans (lintegral_mono fun ω ↦ mul_le_mul_left (hdom k ω) _) hγ
+  have hcell : ∀ k ∈ Finset.range N, ∫⁻ ω, ENNReal.ofReal (dist
+      (stoppedValue V (fun ω ↦ min (oscHitSeq V ε₀ (k + 1) ω)
+        (min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0))) ω)
+      (stoppedValue V (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0)) ω)) ∂P
+        ≤ ENNReal.ofReal (Real.sqrt
+            ((ENNReal.ofReal (δ : ℝ) ^ (1 - 1 / q.toReal) * ((K : ENNReal) + 2 * Kw)
+              + (2 * ε' + 4 * γ)).toReal)) := by
+    intro k _
+    refine lintegral_ofReal_dist_le_sqrt_of_isApproximatingPair_of_integrable_mul
+      (W := Set.Iic (u + δ)) (M := fun ω ↦ ⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ) h h' hV
+      (isStoppingTime_oscHitSeqCap hSc hSd hV hcont k u)
+      (isStoppingTime_oscHitSeqGap hSc hSd hV hcont k δ u)
+      (fun ω ↦ oscHitSeqCap_le_oscHitSeqGap k δ u ω)
+      (fun ω ↦ oscHitSeqGap_le_coe k δ u ω) huT
+      (fun ω ↦ le_trans (untopA_oscHitSeqCap_le V ε₀ k u ω) le_self_add)
+      (fun ω ↦ WithTop.untopA_le (oscHitSeqGap_le_coe k δ u ω))
+      ?_ hγne hε'ne (hγk k) hε' (hdom k) hKwne hKw (hVcap k) (hVgap k) (hYcap k) (hYgap k)
+      (hCcap k) (hCgap k) (hY'cap k) (hY'gap k)
+    intro ω
+    have hle : (min (oscHitSeq V ε₀ (k + 1) ω)
+        (min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0))).untopA
+        ≤ (min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0)).untopA + δ :=
+      untopA_oscHitSeqGap_le_add V ε₀ k δ u ω
+    have hcoe := NNReal.coe_le_coe.2 hle
+    push_cast at hcoe
+    linarith
+  refine le_trans (Finset.sum_le_sum hcell) ?_
+  rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+
 /-- **What the gap bound does as the window shrinks at a fixed count**:
 
 ```
@@ -46146,6 +46328,104 @@ theorem mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair
       hVb huT hεne hε'ne hε hε' hYcap hY'cap hYgap hY'gap N
   · exact measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair h h' hSc hSd hV hcont hVb
       (le_trans le_self_add huT) hε₀ hεu hε'u hYcap hY'cap hN
+
+/-- **The whole probabilistic substance of the tightness criterion, without a bound on the
+process**:
+
+```
+ofReal ε₀ * P {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ ω)) δ}
+  ≤ N * ofReal √((ofReal δ ^ (1 - 1/q) * (K + 2 Kw) + A).toReal)
+    + ((ofReal u ^ (1 - 1/q) * K + 2 * (ofReal u ^ (1 - 1/q) * Kw)) / N + A) / ofReal ε₀
+```
+
+with `A = 2 ε' + 4 γ`, for `δ < u`, `u + δ ≤ T`, `0 < ε₀` and `N ≠ 0`.
+
+**This is `mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair` with `hVb` gone, and
+with it the last statement of the chain that asked for a bounded process.**  Nothing here is an
+estimate: it is `le_trans` of `mul_measure_setOf_lt_modulusBased_le_lintegral_dist` followed by
+`add_le_add` of the two weighted blocks,
+`sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair_of_integrable_mul` and
+`measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair_of_integrable_mul`.  The bounded
+version stays, because a consumer who has a bound wants the shorter hypothesis list.
+
+**The three windows are two hypotheses and not three.**  The weight is read on `Set.Iic u` in
+both blocks, because both weights sit at capped times; the approximation errors are read on
+`Set.Iic (u + δ)` by the gap block and on `Set.Iic u` by the horizon block, and the statement
+carries only the larger.  The smaller follows by `biSup_mono` under `lintegral_mono` -- at the
+error of the second pair directly, and at the weighted error through `mul_le_mul_right`, the
+weight being the factor that does **not** move.  For the same reason `u ≤ T` is not a hypothesis:
+it is `le_self_add` against `u + δ ≤ T`.
+
+**`γ ≠ ⊤`, `ε' ≠ ⊤` and `Kw ≠ ⊤` are asked because of the square root in the gap block and for
+no other reason**; the horizon block is a quotient and reads none of them.
+
+**What replaces the bound in the consumer.**  `γ` and `Kw` are the two weighted constants of
+the class: `Kw = 0` whenever the compensator vanishes -- the rescaled random walk of the
+acceptance example, which is its own martingale -- and `Kw = ‖Z‖ * ∫⁻ (⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ)`
+whenever the density is deterministic, the running maximum being integrated by Doob out of `L²`.
+A bounded `V` gives `γ ≤ ofReal c * ε` and, by `lintegral_const_mul'` against
+`IsApproximatingPair.lintegral_eLpNorm_le`, `Kw ≤ ofReal c * K`; substituting these turns the
+right hand side into that of the bounded statement, `ofReal δ ^ (1 - 1/q) * (K + 2 c K)` being
+`(1 + 2 c) * (ofReal δ ^ (1 - 1/q) * K)`. -/
+theorem mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair_of_integrable_mul
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K : ℝ≥0} {V Y C Y' C' : ℝ≥0 → Ω → ℝ} {Z Z' : ℝ → Ω → ℝ}
+    (h : IsApproximatingPair 𝓕 P q T K Y C Z) (h' : IsApproximatingPair 𝓕 P q T K Y' C' Z')
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hV : IsStronglyProgressive 𝓕 V)
+    (hcont : ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ V s ω) (Set.Ici t) t)
+    {Φ : Ω → D(ℝ≥0, ℝ)} (hΦ : ∀ ω, (Φ ω).toFun = fun t ↦ V t ω)
+    {u δ : ℝ≥0} (hδu : δ < u) (huT : u + δ ≤ T)
+    {γ ε' Kw : ENNReal} (hγne : γ ≠ ⊤) (hε'ne : ε' ≠ ⊤) (hKwne : Kw ≠ ⊤)
+    {ε₀ : ℝ} (hε₀ : 0 < ε₀)
+    (hγ : ∫⁻ ω, (⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ)
+        * ⨆ t ∈ Set.Iic (u + δ), ‖Y t ω - V t ω‖ₑ ∂P ≤ γ)
+    (hε' : ∫⁻ ω, ⨆ t ∈ Set.Iic (u + δ), ‖Y' t ω - V t ω ^ 2‖ₑ ∂P ≤ ε')
+    (hKw : ∫⁻ ω, (⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ)
+        * eLpNorm (fun s ↦ Z s ω) q (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ))) ∂P ≤ Kw)
+    (hVcap : ∀ k : ℕ, MemLp
+      (stoppedValue V (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+    (hYcap : ∀ k : ℕ, MemLp
+      (stoppedValue Y (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+    (hCcap : ∀ k : ℕ, MemLp
+      (stoppedValue C (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+    (hY'cap : ∀ k : ℕ, Integrable
+      (stoppedValue Y' (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) P)
+    (hVgap : ∀ k : ℕ, MemLp (stoppedValue V (fun ω ↦ min (oscHitSeq V ε₀ (k + 1) ω)
+      (min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) 2 P)
+    (hYgap : ∀ k : ℕ, MemLp (stoppedValue Y (fun ω ↦ min (oscHitSeq V ε₀ (k + 1) ω)
+      (min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) 2 P)
+    (hCgap : ∀ k : ℕ, MemLp (stoppedValue C (fun ω ↦ min (oscHitSeq V ε₀ (k + 1) ω)
+      (min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) 2 P)
+    (hY'gap : ∀ k : ℕ, Integrable (stoppedValue Y' (fun ω ↦ min (oscHitSeq V ε₀ (k + 1) ω)
+      (min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) P)
+    {N : ℕ} (hN : N ≠ 0) :
+    ENNReal.ofReal ε₀ * P {ω | ENNReal.ofReal ε₀
+          < SkorokhodSpace.modulusBased (0 : ℝ) (u : ℝ)
+              (SkorokhodSpace.extendNNReal (Φ ω)) (δ : ℝ)}
+      ≤ N * ENNReal.ofReal (Real.sqrt
+            ((ENNReal.ofReal (δ : ℝ) ^ (1 - 1 / q.toReal) * ((K : ENNReal) + 2 * Kw)
+              + (2 * ε' + 4 * γ)).toReal))
+        + ((ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * K
+                + 2 * (ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * Kw)) / N
+            + (2 * ε' + 4 * γ)) / ENNReal.ofReal ε₀ := by
+  have hwin : ∀ t : ℝ≥0, t ∈ Set.Iic u → t ∈ Set.Iic (u + δ) := fun t ht ↦
+    Set.mem_Iic.2 (le_trans (Set.mem_Iic.1 ht) le_self_add)
+  have hγu : ∫⁻ ω, (⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ)
+      * ⨆ t ∈ Set.Iic u, ‖Y t ω - V t ω‖ₑ ∂P ≤ γ :=
+    le_trans (lintegral_mono fun ω ↦ mul_le_mul_right (biSup_mono hwin) _) hγ
+  have hε'u : ∫⁻ ω, ⨆ t ∈ Set.Iic u, ‖Y' t ω - V t ω ^ 2‖ₑ ∂P ≤ ε' :=
+    le_trans (lintegral_mono fun ω ↦ biSup_mono hwin) hε'
+  have key := mul_measure_setOf_lt_modulusBased_le_lintegral_dist P hε₀.le hSc hSd hV hcont hΦ
+    (NNReal.coe_nonneg δ) (by exact_mod_cast hδu : (δ : ℝ) < (u : ℝ)) N
+  simp only [Real.toNNReal_coe] at key
+  refine le_trans key (add_le_add ?_ ?_)
+  · exact sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair_of_integrable_mul
+      h h' hSc hSd hV hcont huT hγne hε'ne hKwne hγ hε' hKw hVcap hYcap hCcap hY'cap
+      hVgap hYgap hCgap hY'gap N
+  · exact measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair_of_integrable_mul
+      h h' hSc hSd hV hcont (le_trans le_self_add huT) hε₀ hγu hε'u hKw hVcap hYcap hCcap
+      hY'cap hN
 
 end MeasureTheory
 
@@ -46437,47 +46717,50 @@ and not at a fixed member, and the statements of this file are to be read the sa
 approximation error goes to zero **with the family**, the finitely many members it does not yet
 cover being tight one by one. -/
 
-/-- **An approximable process that rests on a deterministic cell has the same mean at both ends
-of it.**
+/-- **The cell obstruction at the pair and not at the condition**, which is the whole of the
+argument of `MeasureTheory.IsApproximable.integral_eq_of_eqOn_Ico`: a process `W` that rests on
+`Set.Ico a b` and has, to every error, *one* approximating pair within that error on the horizon,
+has the same mean at both ends of the cell.
 
-`V` is asked to be constant on `Set.Ico a b`, as a function of time *and* of the sample point;
-the conclusion is `∫ V b = ∫ V a`.  Nothing else of `V` is used, and of
-`MeasureTheory.IsApproximable` only the two fields that carry the pair approximating `V` itself --
-neither the pair approximating `V²` nor the four integrabilities of the stopped values are read.
+**It is stated at `W` and not at `V` because the condition carries two pairs and the obstruction
+bites at each of them separately.**  Read at the first pair it is the statement about `V`; read
+at the second it is the statement about `V ^ 2`, and that second reading is the one that decides
+the acceptance test -- the rescaled random walk has constant mean and moves the mean of its
+square across every cell of its own mesh.  The four corollaries below are the four readings.
 
-**The filtration does not enter**, and that is the point of the statement: what is read of the
-martingale is that its mean is constant, and that holds over any filtration.  A larger `𝓕` is
-therefore no escape.
-
-**Where the absolute continuity of the compensator is spent**: in
+**Only two fields of the pair are read**: the martingale, through the constancy of its mean, and
 `MeasureTheory.IsApproximatingPair.lintegral_enorm_compensator_sub_le` at the window `(r, b]`,
-whose bound tends to zero as `r ↑ b` because `1 - 1/q` is positive.  A compensator with an atom
-at `b` would have that increment bounded below, and the statement would be false -- which is
-exactly what `MeasureTheory.not_isApproximable_indicator_Ici` exhibits. -/
-theorem IsApproximable.integral_eq_of_eqOn_Ico
+whose bound `ofReal (b - r) ^ (1 - 1/q) * K` goes to zero as `r` climbs to `b`.  That is where
+the absolute continuity of the compensator is spent, and the only place.
+
+**The filtration does not enter**, and that is the point: what is read of the martingale is that
+its mean is constant, and that holds over any filtration whatever.  Enlarging `𝓕` is therefore no
+escape. -/
+theorem integral_eq_of_eqOn_Ico_of_exists_approximatingPair
     {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} [IsProbabilityMeasure P]
-    {q : ENNReal} {T K : ℝ≥0} {V : ℝ≥0 → Ω → ℝ} {ε₀ : ℝ} {u : ℝ≥0}
-    (happ : IsApproximable 𝓕 P q T K V ε₀ u)
-    (hVm : ∀ t : ℝ≥0, AEStronglyMeasurable (V t) P)
+    {q : ENNReal} {T K : ℝ≥0} {W : ℝ≥0 → Ω → ℝ}
+    (hq : 1 < q)
+    (hex : ∀ ε : ENNReal, 0 < ε → ∃ Y C : ℝ≥0 → Ω → ℝ, ∃ Z : ℝ → Ω → ℝ,
+      IsApproximatingPair 𝓕 P q T K Y C Z ∧
+        ∫⁻ ω, ⨆ t ∈ Set.Iic T, ‖Y t ω - W t ω‖ₑ ∂P ≤ ε)
+    (hWm : ∀ t : ℝ≥0, AEStronglyMeasurable (W t) P)
     {a b : ℝ≥0} (hab : a < b) (hbT : b ≤ T)
-    (hV : ∀ r ∈ Set.Ico a b, V r = V a) :
-    ∫ ω, V b ω ∂P = ∫ ω, V a ω ∂P := by
-  have hq : 1 < q := happ.one_lt_exponent
+    (hW : ∀ r ∈ Set.Ico a b, W r = W a) :
+    ∫ ω, W b ω ∂P = ∫ ω, W a ω ∂P := by
   set p : ℝ := 1 - 1 / q.toReal with hpdef
   have hp0 : 0 < p := one_sub_one_div_toReal_pos hq
   -- the estimate at one approximation error and one time inside the cell
   have main : ∀ e : ℝ, 0 < e → ∀ r : ℝ≥0, a ≤ r → r < b →
-      |(∫ ω, V b ω ∂P) - ∫ ω, V a ω ∂P|
+      |(∫ ω, W b ω ∂P) - ∫ ω, W a ω ∂P|
         ≤ 2 * e + (ENNReal.ofReal ((b : ℝ) - (r : ℝ)) ^ p * (K : ENNReal)).toReal := by
     intro e he r har hrb
     have hrT : r ≤ T := le_trans hrb.le hbT
     have hrb' : r ≤ b := hrb.le
-    obtain ⟨Y, C, Y', C', Z, Z', h, -, hεT, -, -, -, -, -⟩ :=
-      happ.exists_approximants (ENNReal.ofReal e) (ENNReal.ofReal_pos.2 he)
-    have herr : ∀ t : ℝ≥0, t ≤ T → ∫⁻ ω, ‖Y t ω - V t ω‖ₑ ∂P ≤ ENNReal.ofReal e := by
+    obtain ⟨Y, C, Z, h, hεT⟩ := hex (ENNReal.ofReal e) (ENNReal.ofReal_pos.2 he)
+    have herr : ∀ t : ℝ≥0, t ≤ T → ∫⁻ ω, ‖Y t ω - W t ω‖ₑ ∂P ≤ ENNReal.ofReal e := by
       intro t htT
       refine le_trans (lintegral_mono fun ω ↦ ?_) hεT
-      exact le_iSup₂ (f := fun t (_ : t ∈ Set.Iic T) ↦ ‖Y t ω - V t ω‖ₑ) t (Set.mem_Iic.2 htT)
+      exact le_iSup₂ (f := fun t (_ : t ∈ Set.Iic T) ↦ ‖Y t ω - W t ω‖ₑ) t (Set.mem_Iic.2 htT)
     have hYint : ∀ t : ℝ≥0, t ≤ T → Integrable (Y t) P := by
       intro t htT
       have h1 : Integrable (fun ω ↦ Y t ω - C t ω) P := h.martingale.integrable t
@@ -46485,9 +46768,9 @@ theorem IsApproximable.integral_eq_of_eqOn_Ico
       have hrw : Y t = fun ω ↦ (Y t ω - C t ω) + C t ω := by funext ω; ring
       rw [hrw]; exact h1.add h2
     obtain ⟨-, hbnd⟩ := abs_integral_sub_le_of_lintegral_enorm_sub_le (hYint b hbT)
-      (hVm b) he.le (herr b hbT)
+      (hWm b) he.le (herr b hbT)
     obtain ⟨-, hrnd⟩ := abs_integral_sub_le_of_lintegral_enorm_sub_le (hYint r hrT)
-      (hVm r) he.le (herr r hrT)
+      (hWm r) he.le (herr r hrT)
     have hCb : Integrable (C b) P := h.integrable_compensator hbT
     have hCr : Integrable (C r) P := h.integrable_compensator hrT
     have hBne : ENNReal.ofReal ((b : ℝ) - (r : ℝ)) ^ p * (K : ENNReal) ≠ ⊤ :=
@@ -46507,7 +46790,7 @@ theorem IsApproximable.integral_eq_of_eqOn_Ico
       rw [← integral_add (h.martingale.integrable r) hCr]; simp
     have hYdiff : (∫ ω, Y b ω ∂P) - (∫ ω, Y r ω ∂P)
         = (∫ ω, C b ω ∂P) - ∫ ω, C r ω ∂P := by rw [hsplitb, hsplitr, hM]; ring
-    have hVra : (∫ ω, V r ω ∂P) = ∫ ω, V a ω ∂P := by rw [hV r ⟨har, hrb⟩]
+    have hVra : (∫ ω, W r ω ∂P) = ∫ ω, W a ω ∂P := by rw [hW r ⟨har, hrb⟩]
     rw [hVra] at hrnd
     rw [abs_le] at hbnd hrnd hCbnd ⊢
     constructor <;> linarith [hbnd.1, hbnd.2, hrnd.1, hrnd.2, hCbnd.1, hCbnd.2]
@@ -46516,7 +46799,7 @@ theorem IsApproximable.integral_eq_of_eqOn_Ico
   have hc0 : 0 < c := tsub_pos_of_lt hab
   have hcb : c ≤ b := tsub_le_self
   have hccoe : (c : ℝ) = (b : ℝ) - (a : ℝ) := NNReal.coe_sub hab.le
-  have key : ∀ η : ℝ, 0 < η → |(∫ ω, V b ω ∂P) - ∫ ω, V a ω ∂P| ≤ η := by
+  have key : ∀ η : ℝ, 0 < η → |(∫ ω, W b ω ∂P) - ∫ ω, W a ω ∂P| ≤ η := by
     intro η hη
     have hKtop : (K : ENNReal) ≠ ⊤ := ENNReal.coe_ne_top
     have h0 : Tendsto (fun x : ENNReal ↦ (K : ENNReal) * x ^ p) (𝓝 0) (𝓝 0) :=
@@ -46548,14 +46831,44 @@ theorem IsApproximable.integral_eq_of_eqOn_Ico
       rw [mul_comm, ENNReal.ofReal_coe_nnreal]
       exact hdK
     linarith
-  have hzero : |(∫ ω, V b ω ∂P) - ∫ ω, V a ω ∂P| = 0 := by
+  have hzero : |(∫ ω, W b ω ∂P) - ∫ ω, W a ω ∂P| = 0 := by
     by_contra hne
-    have hpos : 0 < |(∫ ω, V b ω ∂P) - ∫ ω, V a ω ∂P| :=
+    have hpos : 0 < |(∫ ω, W b ω ∂P) - ∫ ω, W a ω ∂P| :=
       lt_of_le_of_ne (abs_nonneg _) (Ne.symm hne)
     have hhalf := key _ (half_pos hpos)
     linarith
   have hsub := abs_eq_zero.1 hzero
   linarith [sub_eq_zero.1 hsub]
+
+/-- **An approximable process that rests on a deterministic cell has the same mean at both ends
+of it.**
+
+`V` is asked to be constant on `Set.Ico a b`, as a function of time *and* of the sample point;
+the conclusion is `∫ V b = ∫ V a`.  Nothing else of `V` is used, and of
+`MeasureTheory.IsApproximable` only the two fields that carry the pair approximating `V` itself --
+neither the pair approximating `V²` nor the four integrabilities of the stopped values are read.
+
+**The filtration does not enter**, and that is the point of the statement: what is read of the
+martingale is that its mean is constant, and that holds over any filtration.  A larger `𝓕` is
+therefore no escape.
+
+**Where the absolute continuity of the compensator is spent**: in
+`MeasureTheory.IsApproximatingPair.lintegral_enorm_compensator_sub_le` at the window `(r, b]`,
+whose bound tends to zero as `r ↑ b` because `1 - 1/q` is positive.  A compensator with an atom
+at `b` would have that increment bounded below, and the statement would be false -- which is
+exactly what `MeasureTheory.not_isApproximable_indicator_Ici` exhibits. -/
+theorem IsApproximable.integral_eq_of_eqOn_Ico
+    {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K : ℝ≥0} {V : ℝ≥0 → Ω → ℝ} {ε₀ : ℝ} {u : ℝ≥0}
+    (happ : IsApproximable 𝓕 P q T K V ε₀ u)
+    (hVm : ∀ t : ℝ≥0, AEStronglyMeasurable (V t) P)
+    {a b : ℝ≥0} (hab : a < b) (hbT : b ≤ T)
+    (hV : ∀ r ∈ Set.Ico a b, V r = V a) :
+    ∫ ω, V b ω ∂P = ∫ ω, V a ω ∂P := by
+  refine integral_eq_of_eqOn_Ico_of_exists_approximatingPair (𝓕 := 𝓕) (K := K)
+    happ.one_lt_exponent (fun ε hε ↦ ?_) hVm hab hbT hV
+  obtain ⟨Y, C, Y', C', Z, Z', h, -, hεT, -, -, -, -, -⟩ := happ.exists_approximants ε hε
+  exact ⟨Y, C, Z, h, hεT⟩
 
 /-- **A process that rests on a deterministic cell and moves its mean across it is approximable
 by nothing.**  This is `MeasureTheory.IsApproximable.integral_eq_of_eqOn_Ico` read backwards, and
@@ -46593,6 +46906,32 @@ theorem not_isApproximable_indicator_Ici
   · funext ω
     simp [hr.2, hab]
   · simp [hab]
+
+/-- **The same obstruction read at the square**, which is the reading the acceptance test of
+Milestone 11 is decided by.
+
+`V` rests on `Set.Ico a b`, hence so does `V ^ 2`; the conclusion is that the mean of the
+*square* does not move across the cell either.  What it reads of the condition is the **second**
+pair, the one approximating `V ^ 2`, and nothing else.
+
+**It bites where the statement about `V` itself does not.**  A centred random walk read as a step
+path has constant mean, so `MeasureTheory.IsApproximable.integral_eq_of_eqOn_Ico` says nothing
+about it; its mean square, however, climbs by one increment variance at every mesh point.
+`MeasureTheory.not_isApproximable_rescaledWalk` is that instance, and it is the proof of what the
+section comment above asserts of the walks. -/
+theorem IsApproximable.integral_sq_eq_of_eqOn_Ico
+    {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K : ℝ≥0} {V : ℝ≥0 → Ω → ℝ} {ε₀ : ℝ} {u : ℝ≥0}
+    (happ : IsApproximable 𝓕 P q T K V ε₀ u)
+    (hVm : ∀ t : ℝ≥0, AEStronglyMeasurable (fun ω ↦ V t ω ^ 2) P)
+    {a b : ℝ≥0} (hab : a < b) (hbT : b ≤ T)
+    (hV : ∀ r ∈ Set.Ico a b, V r = V a) :
+    ∫ ω, V b ω ^ 2 ∂P = ∫ ω, V a ω ^ 2 ∂P := by
+  refine integral_eq_of_eqOn_Ico_of_exists_approximatingPair (𝓕 := 𝓕) (K := K)
+    happ.one_lt_exponent (W := fun t ω ↦ V t ω ^ 2) (fun ε hε ↦ ?_) hVm hab hbT (fun r hr ↦ ?_)
+  · obtain ⟨Y, C, Y', C', Z, Z', -, h', -, hεT, -, -, -, -⟩ := happ.exists_approximants ε hε
+    exact ⟨Y', C', Z', h', hεT⟩
+  · rw [hV r hr]
 
 /-- **The third of the three limits, taken once and for all**: the assembly with the
 approximation error already sent to zero.
@@ -46806,6 +47145,464 @@ theorem tendsto_measure_setOf_lt_modulusBased_of_isApproximable
   rw [mul_zero] at h3
   refine h3.congr fun δ ↦ ?_
   rw [← mul_assoc, ENNReal.inv_mul_cancel he0 ENNReal.ofReal_ne_top, one_mul]
+
+/-! ### The approximability condition without a bound on the process
+
+`MeasureTheory.IsApproximable` above is the condition in the shape a **bounded** process meets
+it, and the two statements that follow it spend that bound.  The weighted chain -- from
+`MeasureTheory.lintegral_ofReal_dist_sq_le_of_isApproximatingPair_of_integrable_mul` up to
+`MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair_of_integrable_mul` --
+asks for no bound, and this subsection is the condition and the two limits in that form.
+
+**It is not a generalisation on suspicion.**  The rescaled random walk of Donsker's acceptance
+test is not uniformly bounded, and its own approximating pair
+(`MeasureTheory.isApproximatingPair_rescaledWalk`) has error exactly `0`; the weight is then
+integrated against `0` and the product is `0`, which no finite bound produces.  That is the
+passage this subsection exists for, and the reason is written out at
+`MeasureTheory.enorm_integral_mul_sub_le_of_lintegral_mul_biSup_le`.
+
+**What removing the bound does *not* buy is the acceptance test itself**, and that is measured
+rather than assumed: `MeasureTheory.not_isApproximableMul_rescaledWalk` says that the walk fails
+the condition below at a fixed mesh, so the hypothesis of
+`MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isApproximableMul` is unsatisfiable on
+Donsker's data (`MeasureTheory.not_forall_isApproximableMul_rescaledWalk`).  The obstruction is
+not the bound but the **second** pair: `Y'` approximates `V ^ 2` with the plain error, and the
+walk moves its mean square across every cell of its own mesh.  The two weakenings the walk needs
+-- the bound off the process, and the error outside the index -- are independent, and this
+subsection is the first of them alone.
+-/
+
+/-- **Approximability with the weight left under the lower integral**, which is
+`MeasureTheory.IsApproximable` with the bound on the process removed at the two places where the
+chain reads it: the error of the first pair becomes the **weighted** error, and the constant `K`
+is joined by a second constant `Kw` for the weighted compensator.
+
+**The weight is the running maximum at the full horizon, `⨆ t ∈ Set.Iic T, ‖V t ω‖ₑ`**, and the
+same one in both fields.  It may be `⊤` at a sample point and that costs nothing: the fields are
+inequalities in `ℝ≥0∞`, and what a consumer makes small is the *product*.  Stating it at `T`
+rather than at `u` is what makes the condition monotone in the right direction -- the assembly
+reads the weight at `u ≤ T`, and the larger supremum dominates the smaller.
+
+**`Kw` is a parameter of the condition and not of a pair**, exactly as `K` is: both bound a
+quantity that every pair produced at every error must respect.  It is discharged without any new
+field of `MeasureTheory.IsApproximatingPair` in the two cases that occur -- `Kw = 0` for a
+vanishing compensator, which is a process that is its own martingale, and
+`Kw = ‖Z‖ * ∫⁻ (⨆ t ∈ Set.Iic T, ‖V t ω‖ₑ)` for a deterministic density.
+
+**The square integrabilities of `V` are two fields of their own and not part of the
+existential**, because `V` is fixed and they say nothing about the approximants; the six
+remaining families do belong to the pairs.  Together they are what Cauchy--Schwarz consumes in
+place of the bound: `V`, `Y` and `C` in `L²` at the capped and at the gap times, and `Y'` merely
+integrable, the increment of the square being read at the weight `1`. -/
+structure IsApproximableMul (𝓕 : Filtration ℝ≥0 mΩ) (P : Measure Ω) (q : ENNReal)
+    (T K Kw : ℝ≥0) (V : ℝ≥0 → Ω → ℝ) (ε₀ : ℝ) (u : ℝ≥0) : Prop where
+  /-- The process is square integrable at every capped time. -/
+  memLp_cap : ∀ k : ℕ, MemLp
+    (stoppedValue V (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) 2 P
+  /-- The process is square integrable at every gap time. -/
+  memLp_gap : ∀ (δ : ℝ≥0) (k : ℕ), MemLp (stoppedValue V (fun ω ↦
+    min (oscHitSeq V ε₀ (k + 1) ω)
+      (min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) 2 P
+  /-- To every positive error, two approximating pairs with the common constants, the weighted
+  error of the first pair and the plain error of the second on the horizon, the weighted
+  compensator constant, and the six integrabilities the assembly reads. -/
+  exists_approximants : ∀ ε : ENNReal, 0 < ε →
+    ∃ Y C Y' C' : ℝ≥0 → Ω → ℝ, ∃ Z Z' : ℝ → Ω → ℝ,
+      IsApproximatingPair 𝓕 P q T K Y C Z ∧ IsApproximatingPair 𝓕 P q T K Y' C' Z'
+      ∧ ∫⁻ ω, (⨆ t ∈ Set.Iic T, ‖V t ω‖ₑ) * ⨆ t ∈ Set.Iic T, ‖Y t ω - V t ω‖ₑ ∂P ≤ ε
+      ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T, ‖Y' t ω - V t ω ^ 2‖ₑ ∂P ≤ ε
+      ∧ ∫⁻ ω, (⨆ t ∈ Set.Iic T, ‖V t ω‖ₑ)
+          * eLpNorm (fun s ↦ Z s ω) q (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ))) ∂P ≤ Kw
+      ∧ (∀ k : ℕ, MemLp
+          (stoppedValue Y (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+      ∧ (∀ k : ℕ, MemLp
+          (stoppedValue C (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+      ∧ (∀ k : ℕ, Integrable
+          (stoppedValue Y' (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) P)
+      ∧ (∀ (δ : ℝ≥0) (k : ℕ), MemLp (stoppedValue Y (fun ω ↦
+          min (oscHitSeq V ε₀ (k + 1) ω)
+            (min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) 2 P)
+      ∧ (∀ (δ : ℝ≥0) (k : ℕ), MemLp (stoppedValue C (fun ω ↦
+          min (oscHitSeq V ε₀ (k + 1) ω)
+            (min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) 2 P)
+      ∧ (∀ (δ : ℝ≥0) (k : ℕ), Integrable (stoppedValue Y' (fun ω ↦
+          min (oscHitSeq V ε₀ (k + 1) ω)
+            (min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) P)
+
+/-- **The exponent of a weighted approximable process is above `1`**, read off the pair at
+`ε = 1`.
+
+It is the proof of `MeasureTheory.IsApproximable.one_lt_exponent` verbatim: the only reason the
+statement needs a proof at all is that the pairs sit behind an existential. -/
+theorem IsApproximableMul.one_lt_exponent {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} {q : ENNReal}
+    {T K Kw : ℝ≥0} {V : ℝ≥0 → Ω → ℝ} {ε₀ : ℝ} {u : ℝ≥0}
+    (happ : IsApproximableMul 𝓕 P q T K Kw V ε₀ u) : 1 < q := by
+  obtain ⟨Y, C, Y', C', Z, Z', h, -⟩ := happ.exists_approximants 1 one_pos
+  exact h.one_lt_exponent
+
+/-- **The obstruction read at the square of a weighted approximable process**, and it is the
+statement that decides whether the weighted chain reaches Donsker's acceptance test.
+
+`MeasureTheory.IsApproximableMul` removes the bound on the process at the two places the chain
+reads it, but it leaves the **second** pair exactly as it was: `Y'` approximates `V ^ 2` with the
+plain, unweighted error.  So the obstruction of
+`MeasureTheory.integral_eq_of_eqOn_Ico_of_exists_approximatingPair` applies to it verbatim, and
+the weakening buys nothing against it.
+
+**The consequence is `MeasureTheory.not_isApproximableMul_rescaledWalk`**: the rescaled random
+walk does not satisfy the weighted condition at a fixed mesh either, and the hypothesis of
+`MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isApproximableMul` is therefore
+unsatisfiable on the data of Donsker's theorem
+(`MeasureTheory.not_forall_isApproximableMul_rescaledWalk`).  The condition a family of walks
+does meet is the one with the error quantified outside the index,
+`MeasureTheory.IsEventuallyApproximable`. -/
+theorem IsApproximableMul.integral_sq_eq_of_eqOn_Ico
+    {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K Kw : ℝ≥0} {V : ℝ≥0 → Ω → ℝ} {ε₀ : ℝ} {u : ℝ≥0}
+    (happ : IsApproximableMul 𝓕 P q T K Kw V ε₀ u)
+    (hVm : ∀ t : ℝ≥0, AEStronglyMeasurable (fun ω ↦ V t ω ^ 2) P)
+    {a b : ℝ≥0} (hab : a < b) (hbT : b ≤ T)
+    (hV : ∀ r ∈ Set.Ico a b, V r = V a) :
+    ∫ ω, V b ω ^ 2 ∂P = ∫ ω, V a ω ^ 2 ∂P := by
+  refine integral_eq_of_eqOn_Ico_of_exists_approximatingPair (𝓕 := 𝓕) (K := K)
+    happ.one_lt_exponent (W := fun t ω ↦ V t ω ^ 2) (fun ε hε ↦ ?_) hVm hab hbT (fun r hr ↦ ?_)
+  · obtain ⟨Y, C, Y', C', Z, Z', -, h', -, hεT, -, -, -, -, -, -, -⟩ :=
+      happ.exists_approximants ε hε
+    exact ⟨Y', C', Z', h', hεT⟩
+  · rw [hV r hr]
+
+/-- **A weighted approximable process whose square rests on a deterministic cell and moves its
+mean square across it does not exist.**  This is the previous statement read backwards, and it is
+the form a consumer meets. -/
+theorem not_isApproximableMul_of_eqOn_Ico_of_integral_sq_ne
+    {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K Kw : ℝ≥0} {V : ℝ≥0 → Ω → ℝ} {ε₀ : ℝ} {u : ℝ≥0}
+    (hVm : ∀ t : ℝ≥0, AEStronglyMeasurable (fun ω ↦ V t ω ^ 2) P)
+    {a b : ℝ≥0} (hab : a < b) (hbT : b ≤ T)
+    (hV : ∀ r ∈ Set.Ico a b, V r = V a)
+    (hne : (∫ ω, V b ω ^ 2 ∂P) ≠ ∫ ω, V a ω ^ 2 ∂P) :
+    ¬ IsApproximableMul 𝓕 P q T K Kw V ε₀ u :=
+  fun happ ↦ hne (happ.integral_sq_eq_of_eqOn_Ico hVm hab hbT hV)
+
+/-- **The third of the three limits, weighted**: the assembly with the approximation error
+already sent to zero and no bound on the process.
+
+```
+ofReal ε₀ * P {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ ω)) δ}
+  ≤ N * ofReal √((ofReal δ ^ (1 - 1/q) * (K + 2 Kw)).toReal)
+    + (ofReal u ^ (1 - 1/q) * K + 2 * (ofReal u ^ (1 - 1/q) * Kw)) / N / ofReal ε₀
+```
+
+for `δ < u`, `u + δ ≤ T`, `0 < ε₀` and `N ≠ 0`.
+
+**The limit is taken along the same sequence of errors as in the bounded twin**, at
+`ε = ε' = (n : ℝ≥0∞)⁻¹`, so that here `A n = 2 n⁻¹ + 4 n⁻¹` -- the coefficient `4 ofReal c` of
+the bounded twin is gone, the weighted error carrying the weight inside itself.
+
+**The weight is narrowed twice and in opposite directions, and both are monotonicity.**  The
+condition states its two weighted fields at `Set.Iic T`; the assembly reads the weight at
+`Set.Iic u` and the error of the first pair at `Set.Iic (u + δ)`, both smaller by `u + δ ≤ T`,
+so the field dominates the hypothesis and `mul_le_mul'` supplies it in one step.  The error of
+the second pair is narrowed by `MeasureTheory.lintegral_biSup_Iic_mono` as in the bounded twin,
+and `Kw` by `mul_le_mul_left` at the weight alone.
+
+**`Kw` is an `ℝ≥0` and not an `ℝ≥0∞`, and that is what makes the finiteness free.**  The first
+summand reads `ENNReal.tendsto_toReal` and therefore asks
+`ofReal δ ^ (1 - 1/q) * (K + 2 Kw) ≠ ⊤`; with `Kw` in `ℝ≥0` this is
+`ENNReal.rpow_ne_top_of_nonneg` and `ENNReal.coe_ne_top`, and no hypothesis is needed. -/
+theorem mul_measure_setOf_lt_modulusBased_le_of_isApproximableMul
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K Kw : ℝ≥0} {V : ℝ≥0 → Ω → ℝ} {ε₀ : ℝ} {u : ℝ≥0}
+    (happ : IsApproximableMul 𝓕 P q T K Kw V ε₀ u)
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hV : IsStronglyProgressive 𝓕 V)
+    (hcont : ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ V s ω) (Set.Ici t) t)
+    {Φ : Ω → D(ℝ≥0, ℝ)} (hΦ : ∀ ω, (Φ ω).toFun = fun t ↦ V t ω)
+    {δ : ℝ≥0} (hδu : δ < u) (huT : u + δ ≤ T) (hε₀ : 0 < ε₀)
+    {N : ℕ} (hN : N ≠ 0) :
+    ENNReal.ofReal ε₀ * P {ω | ENNReal.ofReal ε₀
+          < SkorokhodSpace.modulusBased (0 : ℝ) (u : ℝ)
+              (SkorokhodSpace.extendNNReal (Φ ω)) (δ : ℝ)}
+      ≤ (N : ENNReal) * ENNReal.ofReal (Real.sqrt
+            ((ENNReal.ofReal (δ : ℝ) ^ (1 - 1 / q.toReal)
+              * ((K : ENNReal) + 2 * (Kw : ENNReal))).toReal))
+        + (ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * (K : ENNReal)
+            + 2 * (ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * (Kw : ENNReal)))
+            / N / ENNReal.ofReal ε₀ := by
+  have hq : 1 < q := happ.one_lt_exponent
+  have hexp : (0 : ℝ) ≤ 1 - 1 / q.toReal := (one_sub_one_div_toReal_pos hq).le
+  have huT' : u ≤ T := le_trans le_self_add huT
+  -- the running maximum at the full horizon dominates the one at `u`
+  have hVmono : ∀ ω, (⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ) ≤ ⨆ t ∈ Set.Iic T, ‖V t ω‖ₑ := fun ω ↦
+    biSup_mono fun t ht ↦ Set.mem_Iic.2 (le_trans (Set.mem_Iic.1 ht) huT')
+  set G : ENNReal := ENNReal.ofReal (δ : ℝ) ^ (1 - 1 / q.toReal)
+      * ((K : ENNReal) + 2 * (Kw : ENNReal)) with hGdef
+  set B : ENNReal := ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * (K : ENNReal)
+      + 2 * (ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * (Kw : ENNReal)) with hBdef
+  have hGtop : G ≠ ⊤ := by
+    rw [hGdef]
+    exact ENNReal.mul_ne_top (ENNReal.rpow_ne_top_of_nonneg hexp ENNReal.ofReal_ne_top)
+      (by finiteness)
+  set A : ℕ → ENNReal := fun n ↦ 2 * (n : ENNReal)⁻¹ + 4 * (n : ENNReal)⁻¹ with hAdef
+  have key : ∀ n : ℕ, n ≠ 0 →
+      ENNReal.ofReal ε₀ * P {ω | ENNReal.ofReal ε₀
+          < SkorokhodSpace.modulusBased (0 : ℝ) (u : ℝ)
+              (SkorokhodSpace.extendNNReal (Φ ω)) (δ : ℝ)}
+        ≤ (N : ENNReal) * ENNReal.ofReal (Real.sqrt ((G + A n).toReal))
+          + (B / N + A n) / ENNReal.ofReal ε₀ := by
+    intro n hn
+    have hpos : (0 : ENNReal) < (n : ENNReal)⁻¹ :=
+      ENNReal.inv_pos.2 (ENNReal.natCast_ne_top n)
+    obtain ⟨Y, C, Y', C', Z, Z', h, h', hγT, hε'T, hKwT, hYcap, hCcap, hY'cap,
+      hYgap, hCgap, hY'gap⟩ := happ.exists_approximants ((n : ENNReal)⁻¹) hpos
+    refine mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair_of_integrable_mul
+      h h' hSc hSd hV hcont hΦ hδu huT (by finiteness) (by finiteness) ENNReal.coe_ne_top hε₀
+      ?_ ?_ ?_ (happ.memLp_cap) (hYcap) (hCcap) (hY'cap)
+      (happ.memLp_gap δ) (hYgap δ) (hCgap δ) (hY'gap δ) hN
+    · refine le_trans (lintegral_mono fun ω ↦ ?_) hγT
+      exact mul_le_mul' (hVmono ω)
+        (biSup_mono fun t ht ↦ Set.mem_Iic.2 (le_trans (Set.mem_Iic.1 ht) huT))
+    · exact (lintegral_biSup_Iic_mono P (fun t ω ↦ ‖Y' t ω - V t ω ^ 2‖ₑ) huT).trans hε'T
+    · exact le_trans (lintegral_mono fun ω ↦ mul_le_mul_left (hVmono ω) _) hKwT
+  have hA : Tendsto A atTop (𝓝 0) := by
+    have h0 := ENNReal.tendsto_inv_nat_nhds_zero
+    have h1 : Tendsto (fun n : ℕ ↦ 2 * (n : ENNReal)⁻¹) atTop (𝓝 0) := by
+      simpa using ENNReal.Tendsto.const_mul h0 (Or.inr (by finiteness))
+    have h2 : Tendsto (fun n : ℕ ↦ 4 * (n : ENNReal)⁻¹) atTop (𝓝 0) := by
+      simpa using ENNReal.Tendsto.const_mul h0 (Or.inr (by finiteness))
+    simpa [hAdef] using h1.add h2
+  have hs : Tendsto (fun n : ℕ ↦ G + A n) atTop (𝓝 G) := by
+    simpa using tendsto_const_nhds.add hA
+  have ht : Tendsto (fun n : ℕ ↦ (N : ENNReal) * ENNReal.ofReal (Real.sqrt ((G + A n).toReal)))
+      atTop (𝓝 ((N : ENNReal) * ENNReal.ofReal (Real.sqrt G.toReal))) :=
+    ENNReal.Tendsto.const_mul
+      ((ENNReal.continuous_ofReal.tendsto _).comp
+        ((Real.continuous_sqrt.tendsto _).comp ((ENNReal.tendsto_toReal hGtop).comp hs)))
+      (Or.inr (ENNReal.natCast_ne_top N))
+  have hd : Tendsto (fun n : ℕ ↦ (B / N + A n) / ENNReal.ofReal ε₀) atTop
+      (𝓝 (B / N / ENNReal.ofReal ε₀)) := by
+    refine ENNReal.Tendsto.div_const ?_ (Or.inr (ENNReal.ofReal_pos.2 hε₀).ne')
+    simpa using tendsto_const_nhds.add hA
+  exact ge_of_tendsto (ht.add hd) (Filter.eventually_atTop.2 ⟨1, fun n hn ↦ key n (by omega)⟩)
+
+/-- **The tightness estimate of Milestone 11 with all three limits taken and no bound on the
+process**: for a weighted approximable right continuous progressive `V` with path map `Φ` and
+any threshold `ε₀ > 0`,
+
+```
+Tendsto (fun δ : ℝ≥0 ↦ P {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ ω)) δ})
+  (𝓝[>] 0) (𝓝 0).
+```
+
+**This is the end of the weakening**: from here up, nothing in the chain reads a bound on the
+process, and what a consumer supplies is `MeasureTheory.IsApproximableMul` -- the two weighted
+constants `γ` and `Kw` in place of `c`, and square integrability in place of boundedness.
+
+**The order of the three limits is unchanged and is again the proof.**  The count `N` comes
+first, from `ENNReal.tendsto_inv_nat_nhds_zero` on the horizon term, which does not see `δ`; the
+window `δ` comes second, at that fixed `N`, from
+`MeasureTheory.tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero`; and the error is already gone, having
+been spent in `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximableMul`.
+
+**The window limit is the bounded one at `c = 0` and `K + 2 Kw` in place of `K`**, and that it is
+applicable at all is the reason `Kw` was made an `ℝ≥0`: `tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero`
+takes its constant there.  At `c = 0` the factor `1 + 2 ofReal c` is `1`, and the only step is
+the cast `((K + 2 Kw : ℝ≥0) : ℝ≥0∞) = K + 2 Kw`.
+
+**`0 < u` and `u < T` are both strict and each is used once**, as in the bounded twin: the first
+makes `δ < u` hold near `0`, the second makes `u + δ ≤ T` hold there. -/
+theorem tendsto_measure_setOf_lt_modulusBased_of_isApproximableMul
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K Kw : ℝ≥0} {V : ℝ≥0 → Ω → ℝ} {ε₀ : ℝ} {u : ℝ≥0}
+    (happ : IsApproximableMul 𝓕 P q T K Kw V ε₀ u)
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hV : IsStronglyProgressive 𝓕 V)
+    (hcont : ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ V s ω) (Set.Ici t) t)
+    {Φ : Ω → D(ℝ≥0, ℝ)} (hΦ : ∀ ω, (Φ ω).toFun = fun t ↦ V t ω)
+    (hu : 0 < u) (huT : u < T) (hε₀ : 0 < ε₀) :
+    Tendsto (fun δ : ℝ≥0 ↦ P {ω | ENNReal.ofReal ε₀
+        < SkorokhodSpace.modulusBased (0 : ℝ) (u : ℝ)
+            (SkorokhodSpace.extendNNReal (Φ ω)) (δ : ℝ)})
+      (𝓝[>] 0) (𝓝 0) := by
+  have hq : 1 < q := happ.one_lt_exponent
+  have he0 : ENNReal.ofReal ε₀ ≠ 0 := (ENNReal.ofReal_pos.2 hε₀).ne'
+  have hcast : ((K + 2 * Kw : ℝ≥0) : ENNReal) = (K : ENNReal) + 2 * (Kw : ENNReal) := by
+    push_cast
+    ring
+  set B : ENNReal := ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * (K : ENNReal)
+      + 2 * (ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * (Kw : ENNReal)) with hBdef
+  have hBtop : B ≠ ⊤ := by
+    have hrpow : ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) ≠ ⊤ :=
+      ENNReal.rpow_ne_top_of_nonneg (one_sub_one_div_toReal_pos hq).le ENNReal.ofReal_ne_top
+    rw [hBdef]
+    finiteness
+  have hwin : ∀ᶠ δ : ℝ≥0 in 𝓝[>] 0, δ < u ∧ u + δ ≤ T := by
+    have h1 : ∀ᶠ δ : ℝ≥0 in 𝓝 0, δ < u := eventually_lt_nhds hu
+    have h2 : ∀ᶠ δ : ℝ≥0 in 𝓝 0, u + δ ≤ T := by
+      have : Tendsto (fun δ : ℝ≥0 ↦ u + δ) (𝓝 0) (𝓝 (u + 0)) :=
+        (continuous_const.add continuous_id).tendsto 0
+      rw [add_zero] at this
+      exact (this.eventually_lt_const huT).mono fun δ hδ ↦ hδ.le
+    exact ((h1.and h2)).filter_mono nhdsWithin_le_nhds
+  have hgap : ∀ N : ℕ, Tendsto (fun δ : ℝ≥0 ↦ (N : ENNReal) * ENNReal.ofReal (Real.sqrt
+        ((ENNReal.ofReal (δ : ℝ) ^ (1 - 1 / q.toReal)
+          * ((K : ENNReal) + 2 * (Kw : ENNReal))).toReal)))
+      (𝓝[>] 0) (𝓝 0) := by
+    intro N
+    have hcoe : Tendsto (fun δ : ℝ≥0 ↦ (δ : ℝ)) (𝓝[>] (0 : ℝ≥0)) (𝓝[>] (0 : ℝ)) := by
+      refine tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within _ ?_ ?_
+      · simpa using (NNReal.continuous_coe.tendsto (0 : ℝ≥0)).mono_left nhdsWithin_le_nhds
+      · filter_upwards [self_mem_nhdsWithin] with δ hδ
+        simp only [Set.mem_Ioi] at hδ ⊢
+        exact_mod_cast hδ
+    have h := (tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero (K := K + 2 * Kw) (c := 0) hq
+      (A := 0) (by finiteness) N).comp hcoe
+    simpa [Function.comp_def, hcast] using h
+  have hhor : Tendsto (fun n : ℕ ↦ B / n / ENNReal.ofReal ε₀) atTop (𝓝 0) := by
+    have hfin : B / ENNReal.ofReal ε₀ ≠ ⊤ := ENNReal.div_ne_top hBtop he0
+    have := ENNReal.Tendsto.const_mul (a := B / ENNReal.ofReal ε₀)
+      ENNReal.tendsto_inv_nat_nhds_zero (Or.inr hfin)
+    rw [mul_zero] at this
+    refine this.congr fun n ↦ ?_
+    simp only [div_eq_mul_inv]
+    ring
+  have h1 : Tendsto (fun δ : ℝ≥0 ↦ ENNReal.ofReal ε₀ * P {ω | ENNReal.ofReal ε₀
+      < SkorokhodSpace.modulusBased (0 : ℝ) (u : ℝ)
+          (SkorokhodSpace.extendNNReal (Φ ω)) (δ : ℝ)}) (𝓝[>] 0) (𝓝 0) := by
+    rw [ENNReal.tendsto_nhds_zero]
+    intro η hη
+    have hhalf : (0 : ENNReal) < η / 2 := ENNReal.half_pos hη.ne'
+    obtain ⟨n, hn⟩ := (Filter.eventually_atTop.1
+      ((ENNReal.tendsto_nhds_zero.1 hhor) (η / 2) hhalf))
+    have hN : (n + 1 : ℕ) ≠ 0 := Nat.succ_ne_zero n
+    have hhor' : B / (n + 1 : ℕ) / ENNReal.ofReal ε₀ ≤ η / 2 := hn (n + 1) (by omega)
+    filter_upwards [hwin, (ENNReal.tendsto_nhds_zero.1 (hgap (n + 1))) (η / 2) hhalf]
+      with δ hδwin hδgap
+    refine le_trans (mul_measure_setOf_lt_modulusBased_le_of_isApproximableMul happ hSc hSd hV
+      hcont hΦ hδwin.1 hδwin.2 hε₀ hN) ?_
+    exact le_trans (add_le_add hδgap hhor') (le_of_eq (ENNReal.add_halves η))
+  have h3 := ENNReal.Tendsto.const_mul (a := (ENNReal.ofReal ε₀)⁻¹) h1
+    (Or.inr (ENNReal.inv_ne_top.2 he0))
+  rw [mul_zero] at h3
+  refine h3.congr fun δ ↦ ?_
+  rw [← mul_assoc, ENNReal.inv_mul_cancel he0 ENNReal.ofReal_ne_top, one_mul]
+
+/-- **One window for the whole family, weighted**: the estimate above with the error surviving
+into it and the window chosen **before** the member,
+
+```
+∃ δ > 0, ∀ i, P {ω | ofReal ε₀ < modulusBased 0 u (extendNNReal (Φ i ω)) δ} ≤ η,
+```
+
+for a family `V : γ → ℝ≥0 → Ω → ℝ` all of whose members are weighted approximable with the
+**same** constants `q`, `T`, `K`, `Kw`.
+
+**The uniformity is the whole point and it is carried by the constants.**  Each of the three
+choices is made before the member is named: the count `N` from the horizon term `B / N / ofReal ε₀`,
+which sees neither window nor member; the window `δ` from
+`MeasureTheory.tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` at that fixed count; and the error is
+already gone, spent in `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximableMul`.
+What makes this possible is that `B` and the window bound are built from `q`, `T`, `K`, `Kw`,
+`u` and `ε₀` alone -- no quantity of a member occurs in either.
+
+**The empty index is disposed of first**, because the exponent `1 < q` is read off a member
+through `MeasureTheory.IsApproximableMul.one_lt_exponent`; with no member the conclusion holds at
+`δ = 1`.
+
+This is the unbounded counterpart of
+`MeasureTheory.exists_forall_measure_setOf_lt_modulusBased_postcomp_le_of_forall_isApproximable`,
+and it differs from it in two ways that are the same difference twice: the modulus is that of the
+path of `V` itself and not of a post-composition, and the constant of the gap term is `K + 2 Kw`
+in place of `(1 + 2 ‖g‖) K`. -/
+theorem exists_forall_measure_setOf_lt_modulusBased_le_of_forall_isApproximableMul
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K Kw : ℝ≥0} {γ : Type*} {V : γ → ℝ≥0 → Ω → ℝ}
+    {ε₀ : ℝ} {u : ℝ≥0}
+    (happ : ∀ i, IsApproximableMul 𝓕 P q T K Kw (V i) ε₀ u)
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hV : ∀ i, IsStronglyProgressive 𝓕 (V i))
+    (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ V i s ω) (Set.Ici t) t)
+    {Φ : γ → Ω → D(ℝ≥0, ℝ)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ V i t ω)
+    (hu : 0 < u) (huT : u < T) (hε₀ : 0 < ε₀) {η : ENNReal} (hη : 0 < η) :
+    ∃ δ : ℝ, 0 < δ ∧ ∀ i, P {ω | ENNReal.ofReal ε₀
+        < SkorokhodSpace.modulusBased (0 : ℝ) (u : ℝ)
+            (SkorokhodSpace.extendNNReal (Φ i ω)) δ} ≤ η := by
+  rcases isEmpty_or_nonempty γ with hγ | hγ
+  · exact ⟨1, one_pos, fun i ↦ (hγ.false i).elim⟩
+  have hq : 1 < q := (happ (Classical.arbitrary γ)).one_lt_exponent
+  have he0 : ENNReal.ofReal ε₀ ≠ 0 := (ENNReal.ofReal_pos.2 hε₀).ne'
+  have hcast : ((K + 2 * Kw : ℝ≥0) : ENNReal) = (K : ENNReal) + 2 * (Kw : ENNReal) := by
+    push_cast
+    ring
+  set B : ENNReal := ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * (K : ENNReal)
+      + 2 * (ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * (Kw : ENNReal)) with hBdef
+  have hBtop : B ≠ ⊤ := by
+    have hrpow : ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) ≠ ⊤ :=
+      ENNReal.rpow_ne_top_of_nonneg (one_sub_one_div_toReal_pos hq).le ENNReal.ofReal_ne_top
+    rw [hBdef]
+    finiteness
+  set θ : ENNReal := ENNReal.ofReal ε₀ * η with hθdef
+  have hθ : θ ≠ 0 := (ENNReal.mul_pos he0 hη.ne').ne'
+  have hhalf : (0 : ENNReal) < θ / 2 := ENNReal.half_pos hθ
+  -- the horizon term, chosen first and at no window
+  have hhor : Tendsto (fun n : ℕ ↦ B / n / ENNReal.ofReal ε₀) atTop (𝓝 0) := by
+    have hfin : B / ENNReal.ofReal ε₀ ≠ ⊤ := ENNReal.div_ne_top hBtop he0
+    have := ENNReal.Tendsto.const_mul (a := B / ENNReal.ofReal ε₀)
+      ENNReal.tendsto_inv_nat_nhds_zero (Or.inr hfin)
+    rw [mul_zero] at this
+    refine this.congr fun n ↦ ?_
+    simp only [div_eq_mul_inv]
+    ring
+  obtain ⟨n, hn⟩ := Filter.eventually_atTop.1
+    ((ENNReal.tendsto_nhds_zero.1 hhor) (θ / 2) hhalf)
+  have hN : (n + 1 : ℕ) ≠ 0 := Nat.succ_ne_zero n
+  have hhor' : B / (n + 1 : ℕ) / ENNReal.ofReal ε₀ ≤ θ / 2 := hn (n + 1) (by omega)
+  -- the window, chosen second, at that fixed count and still before the member
+  have hwin : ∀ᶠ δ : ℝ≥0 in 𝓝[>] 0, δ < u ∧ u + δ ≤ T := by
+    have h1 : ∀ᶠ δ : ℝ≥0 in 𝓝 0, δ < u := eventually_lt_nhds hu
+    have h2 : ∀ᶠ δ : ℝ≥0 in 𝓝 0, u + δ ≤ T := by
+      have : Tendsto (fun δ : ℝ≥0 ↦ u + δ) (𝓝 0) (𝓝 (u + 0)) :=
+        (continuous_const.add continuous_id).tendsto 0
+      rw [add_zero] at this
+      exact (this.eventually_lt_const huT).mono fun δ hδ ↦ hδ.le
+    exact ((h1.and h2)).filter_mono nhdsWithin_le_nhds
+  have hgap : Tendsto (fun δ : ℝ≥0 ↦ ((n + 1 : ℕ) : ENNReal) * ENNReal.ofReal (Real.sqrt
+        ((ENNReal.ofReal (δ : ℝ) ^ (1 - 1 / q.toReal)
+          * ((K : ENNReal) + 2 * (Kw : ENNReal))).toReal)))
+      (𝓝[>] 0) (𝓝 0) := by
+    have hcoe : Tendsto (fun δ : ℝ≥0 ↦ (δ : ℝ)) (𝓝[>] (0 : ℝ≥0)) (𝓝[>] (0 : ℝ)) := by
+      refine tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within _ ?_ ?_
+      · simpa using (NNReal.continuous_coe.tendsto (0 : ℝ≥0)).mono_left nhdsWithin_le_nhds
+      · filter_upwards [self_mem_nhdsWithin] with δ hδ
+        simp only [Set.mem_Ioi] at hδ ⊢
+        exact_mod_cast hδ
+    have h := (tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero (K := K + 2 * Kw) (c := 0) hq
+      (A := 0) (by finiteness) (n + 1)).comp hcoe
+    simpa [Function.comp_def, hcast] using h
+  obtain ⟨δ, hδ0, hδwin, hδgap⟩ : ∃ δ : ℝ≥0, 0 < δ ∧ (δ < u ∧ u + δ ≤ T) ∧
+      ((n + 1 : ℕ) : ENNReal) * ENNReal.ofReal (Real.sqrt
+        ((ENNReal.ofReal (δ : ℝ) ^ (1 - 1 / q.toReal)
+          * ((K : ENNReal) + 2 * (Kw : ENNReal))).toReal)) ≤ θ / 2 := by
+    obtain ⟨δ, ⟨hw, hg⟩, hp⟩ :=
+      ((hwin.and ((ENNReal.tendsto_nhds_zero.1 hgap) (θ / 2) hhalf)).and
+        self_mem_nhdsWithin).exists
+    exact ⟨δ, hp, hw, hg⟩
+  refine ⟨(δ : ℝ), by exact_mod_cast hδ0, fun i ↦ ?_⟩
+  have key := mul_measure_setOf_lt_modulusBased_le_of_isApproximableMul (happ i) hSc hSd
+    (hV i) (hcont i) (hΦ i) hδwin.1 hδwin.2 hε₀ hN
+  have hb : ENNReal.ofReal ε₀ * P {ω | ENNReal.ofReal ε₀
+      < SkorokhodSpace.modulusBased (0 : ℝ) (u : ℝ)
+          (SkorokhodSpace.extendNNReal (Φ i ω)) (δ : ℝ)} ≤ θ :=
+    le_trans key (le_trans (add_le_add hδgap hhor') (le_of_eq (ENNReal.add_halves θ)))
+  calc P {ω | ENNReal.ofReal ε₀
+        < SkorokhodSpace.modulusBased (0 : ℝ) (u : ℝ)
+            (SkorokhodSpace.extendNNReal (Φ i ω)) (δ : ℝ)}
+      = (ENNReal.ofReal ε₀)⁻¹ * (ENNReal.ofReal ε₀ * P {ω | ENNReal.ofReal ε₀
+          < SkorokhodSpace.modulusBased (0 : ℝ) (u : ℝ)
+              (SkorokhodSpace.extendNNReal (Φ i ω)) (δ : ℝ)}) := by
+        rw [← mul_assoc, ENNReal.inv_mul_cancel he0 ENNReal.ofReal_ne_top, one_mul]
+    _ ≤ (ENNReal.ofReal ε₀)⁻¹ * θ := mul_le_mul_right hb _
+    _ = η := by rw [hθdef, ← mul_assoc, ENNReal.inv_mul_cancel he0 ENNReal.ofReal_ne_top, one_mul]
 
 variable {E : Type*} [MetricSpace E]
 
@@ -47120,6 +47917,75 @@ theorem isTightMeasureSet_map_postcomp_of_forall_isApproximable [MeasurableSpace
     exists_forall_measure_setOf_lt_modulusBased_postcomp_le_of_forall_isApproximable
       happ' hSc hSd hX hcont hΦ hu0 huT hε₀ hε
   refine ⟨δ, hδ0, fun i => le_trans (measure_mono ?_) (hle i)⟩
+  intro ω hω
+  show ENNReal.ofReal ε₀ < _
+  rw [hucoe]
+  exact lt_of_lt_of_le hltη hω
+
+/-- **Tightness of the image laws of the real paths, with no bound on the processes.**  For a
+family `V : γ → ℝ≥0 → Ω → ℝ` of right continuous progressive processes with path maps `Φ i`,
+weighted approximable at every horizon with constants depending on the horizon alone, and with
+the image laws compactly contained, the set `{P.map (Φ i) | i}` is tight in `D(ℝ≥0, ℝ)`.
+
+**This is the first tightness statement of the milestone that reads no bound on the process**,
+and it is the reason the whole weighted chain exists: the rescaled random walk of Donsker's
+acceptance test is not uniformly bounded, and its approximating pairs approximate the walk
+itself, not a bounded function of it.
+
+**Its hypothesis is nevertheless unsatisfiable on those walks**, and that is
+`MeasureTheory.not_forall_isApproximableMul_rescaledWalk`: `MeasureTheory.IsApproximableMul` asks
+its second pair to approximate `V ^ 2` to *every* error at a fixed member, and a walk moves its
+mean square across every cell of its own mesh.  What the acceptance test needs is this statement
+with the error quantified outside the index as well, which is the conjunction of this weakening
+with the one of `MeasureTheory.IsEventuallyApproximable`.  The statement below is therefore read
+at families whose members do not jump at deterministic times.
+
+**It does not go through a post-composition, and that is not an economy but a necessity.**
+`MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_isApproximable` asks for approximating
+pairs of `g ∘ X` for a bounded `g`, and pairs for `X` do not produce them -- composing with `g`
+destroys the martingale property of `Y - C`.  The route taken here bounds the modulus of the
+path of `V` itself and hands it to
+`SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal` through
+`SkorokhodSpace.measure_map_setOf_le_modulusBased_le`.
+
+**The compact containment is a hypothesis here and is not one there**, and the difference is the
+same one.  The post-composed image laws are compactly contained for free, the range of a bounded
+`g` being bounded; the laws of the paths themselves are not, and `IsCompactContained` is exactly
+what says they are.  For the rescaled walk it is `isCompactContained_rescaledWalk`.
+
+**The two seams are those of the section comment above `measurable_pathOfProcess`**: the window
+is `u = m + 1`, produced in `ℝ≥0` and read there, and the threshold is crossed by `measure_mono`
+at an `ε₀` with `ofReal ε₀ < η`, which `ENNReal.lt_iff_exists_real_btwn` supplies for every
+`η > 0` including `η = ⊤`.  The measurability of the path maps is not a hypothesis, being
+`MeasureTheory.measurable_pathOfProcess` of the progressivity. -/
+theorem isTightMeasureSet_map_pathOfProcess_of_isApproximableMul
+    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
+    {γ : Type*} {V : γ → ℝ≥0 → Ω → ℝ}
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hV : ∀ i, IsStronglyProgressive 𝓕 (V i))
+    (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ V i s ω) (Set.Ici t) t)
+    {Φ : γ → Ω → D(ℝ≥0, ℝ)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ V i t ω)
+    (hcc : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) fun i ↦ P.map (Φ i))
+    (happ : ∀ ε₀ : ℝ, 0 < ε₀ → ∀ u : ℝ≥0, 0 < u → ∃ q : ENNReal, ∃ T K Kw : ℝ≥0, u < T ∧
+      ∀ i, IsApproximableMul 𝓕 P q T K Kw (V i) ε₀ u) :
+    IsTightMeasureSet {P.map (Φ i) | i} := by
+  rw [SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal hcc]
+  intro ε hε m η hη
+  obtain ⟨ε₀, hε₀0, hlt, hltη⟩ := ENNReal.lt_iff_exists_real_btwn.1 hη
+  have hε₀ : 0 < ε₀ := ENNReal.ofReal_pos.1 hlt
+  set u : ℝ≥0 := (m : ℝ≥0) + 1 with hu
+  have hu0 : 0 < u := by positivity
+  have hucoe : ((u : ℝ≥0) : ℝ) = (m : ℝ) + 1 := by
+    rw [hu]; push_cast; ring
+  obtain ⟨q, T, K, Kw, huT, happ'⟩ := happ ε₀ hε₀ u hu0
+  obtain ⟨δ, hδ0, hle⟩ :=
+    exists_forall_measure_setOf_lt_modulusBased_le_of_forall_isApproximableMul
+      happ' hSc hSd hV hcont hΦ hu0 huT hε₀ hε
+  refine ⟨δ, hδ0, fun i ↦ ?_⟩
+  refine SkorokhodSpace.measure_map_setOf_le_modulusBased_le P
+    (measurable_pathOfProcess (hV i) (hΦ i)) (u := (m : ℝ)) (u' := (m : ℝ) + 1)
+    (Nat.cast_nonneg m) hδ0.le (by linarith) ?_
+  refine le_trans (measure_mono ?_) (hle i)
   intro ω hω
   show ENNReal.ofReal ε₀ < _
   rw [hucoe]
@@ -47661,6 +48527,449 @@ theorem isTightMeasureSet_map_postcomp_of_isEventuallyApproximable [MeasurableSp
   rw [hucoe]
   exact lt_of_lt_of_le hltη hω
 
+/-! ### Both weakenings at once, which is the one condition Donsker's walks meet
+
+Two weakenings of `MeasureTheory.IsApproximable` stand above, and each is measured against the
+rescaled random walks of the acceptance test:
+
+* `MeasureTheory.IsApproximableMul` takes the **bound off the process**, carrying the running
+  maximum of `V` under the lower integral of the first error and of the compensator norm;
+* `MeasureTheory.IsEventuallyApproximable` moves the **error outside the index**, asking the
+  pairs only of all but finitely many members and letting that finite set move with the error.
+
+**Neither reaches the walks, and this is proved rather than suspected.**
+`MeasureTheory.not_forall_isApproximableMul_rescaledWalk` says the first does not: at a *fixed*
+mesh the walk rests on the first cell of its own mesh and moves its mean square across it, which
+`MeasureTheory.IsApproximableMul.integral_sq_eq_of_eqOn_Ico` forbids, and no weight touches that
+-- the second pair of the weighted condition approximates `V ^ 2` with the plain error, exactly
+as in the unweighted one.  The second does not reach them either, for the reason its own
+subsection gives: every consumer above it reads a **uniformly bounded** process through the
+bound `‖g‖` of the test function, and the walk at mesh `n` has no bound uniform in `n`.
+
+`MeasureTheory.IsEventuallyApproximableMul` is their conjunction, and it is what the acceptance
+test is stated at.  It is not a third condition: at a constant exceptional set it is
+`MeasureTheory.IsApproximableMul` of each member
+(`MeasureTheory.isEventuallyApproximableMul_of_forall_isApproximableMul`), and with the weight
+dropped and `Kw = 0` its fields are those of `MeasureTheory.IsEventuallyApproximable`.
+
+**The order of the three choices is that of the eventually approximable case and not that of the
+weighted one.**  The weighted chain spends the error inside
+`MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximableMul`, where a member is
+approximable to *every* error and a limit may be taken at the member; here the error survives
+into the estimate, so the count `N` is chosen first, the error second -- before the exceptional
+set, which is born with it -- and the window last, **at that error**, from
+`MeasureTheory.tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` at `A = a₀` rather than at `A = 0`.
+
+**The two errors are one.**  The weighted error of the first pair and the plain error of the
+second enter the estimate only through `2 ε' + 4 γ`, so both are asked at the same `ε` and the
+combination is made to be `a₀` by `ε = a₀ / 6` -- where the unweighted twin needs
+`a₀ / (2 + 4 ofReal ‖g‖)`, the bound of the test function having disappeared with the bound on
+the process.
+
+**The square integrabilities of `V` sit inside the existential and not beside it.**  They are
+properties of the member and not of the approximants, and `MeasureTheory.IsApproximableMul`
+carries them as two fields of its own; here they are asked only of the members the estimate is
+made at, which is the weaker statement and the one the consumer reads. -/
+
+/-- **Both weakenings of the approximability condition at once**: the weight left under the lower
+integral, *and* the error quantified outside the index.
+
+To every positive error there is a **finite** exceptional set `G`, off which every member is
+square integrable at the capped and at the gap times and carries two approximating pairs over
+**its own** filtration -- the first with the *weighted* error, the second with the plain error of
+the square -- at constants `q`, `T`, `K`, `Kw` common to the whole family and to every error.
+
+**It is the conjunction and not a third condition.**
+`MeasureTheory.isEventuallyApproximableMul_of_forall_isApproximableMul` is one direction, and
+`MeasureTheory.IsEventuallyApproximable` is what remains when the weight is dropped and `Kw` set
+to `0`.  Each of the two weakenings alone is unsatisfiable on the rescaled walks of Donsker's
+acceptance test: the first by `MeasureTheory.not_forall_isApproximableMul_rescaledWalk`, the
+second because its consumers read the bound `‖g‖` of a test function that the walk does not
+carry uniformly in its mesh.
+
+**The filtration moves with the member.**  The reason is the one at
+`MeasureTheory.IsEventuallyApproximable` and it is not a generality on suspicion: the rescaled
+walks are martingales over the filtration of their own mesh, and no single filtration serves them
+all without forcing their increments to vanish.
+
+**`Kw` is a parameter of the condition and not of a pair**, as `K` is, and for the same reason:
+both bound a quantity every pair produced at every error and at every member must respect.  It is
+discharged as `Kw = 0` whenever the compensator vanishes, which is the case of a process that is
+its own martingale -- the walk among them. -/
+structure IsEventuallyApproximableMul {γ : Type*} (𝓕 : γ → Filtration ℝ≥0 mΩ) (P : Measure Ω)
+    (q : ENNReal) (T K Kw : ℝ≥0) (V : γ → ℝ≥0 → Ω → ℝ) (ε₀ : ℝ) (u : ℝ≥0) : Prop where
+  /-- To every positive error a finite exceptional set, off which every member is square
+  integrable at the capped and at the gap times and has two approximating pairs over its own
+  filtration and with the common constants, the weighted error of the first pair and the plain
+  error of the second on the horizon, the weighted compensator constant, and the six
+  integrabilities the assembly reads. -/
+  exists_approximants : ∀ ε : ENNReal, 0 < ε → ∃ G : Set γ, G.Finite ∧ ∀ i ∉ G,
+    (∀ k : ℕ, MemLp
+        (stoppedValue (V i) (fun ω ↦ min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+    ∧ (∀ (δ : ℝ≥0) (k : ℕ), MemLp (stoppedValue (V i) (fun ω ↦
+        min (oscHitSeq (V i) ε₀ (k + 1) ω)
+          (min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) 2 P)
+    ∧ ∃ Y C Y' C' : ℝ≥0 → Ω → ℝ, ∃ Z Z' : ℝ → Ω → ℝ,
+      IsApproximatingPair (𝓕 i) P q T K Y C Z ∧ IsApproximatingPair (𝓕 i) P q T K Y' C' Z'
+      ∧ ∫⁻ ω, (⨆ t ∈ Set.Iic T, ‖V i t ω‖ₑ)
+          * ⨆ t ∈ Set.Iic T, ‖Y t ω - V i t ω‖ₑ ∂P ≤ ε
+      ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T, ‖Y' t ω - V i t ω ^ 2‖ₑ ∂P ≤ ε
+      ∧ ∫⁻ ω, (⨆ t ∈ Set.Iic T, ‖V i t ω‖ₑ)
+          * eLpNorm (fun s ↦ Z s ω) q (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ))) ∂P ≤ Kw
+      ∧ (∀ k : ℕ, MemLp
+          (stoppedValue Y (fun ω ↦ min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+      ∧ (∀ k : ℕ, MemLp
+          (stoppedValue C (fun ω ↦ min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+      ∧ (∀ k : ℕ, Integrable
+          (stoppedValue Y' (fun ω ↦ min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0))) P)
+      ∧ (∀ (δ : ℝ≥0) (k : ℕ), MemLp (stoppedValue Y (fun ω ↦
+          min (oscHitSeq (V i) ε₀ (k + 1) ω)
+            (min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) 2 P)
+      ∧ (∀ (δ : ℝ≥0) (k : ℕ), MemLp (stoppedValue C (fun ω ↦
+          min (oscHitSeq (V i) ε₀ (k + 1) ω)
+            (min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) 2 P)
+      ∧ (∀ (δ : ℝ≥0) (k : ℕ), Integrable (stoppedValue Y' (fun ω ↦
+          min (oscHitSeq (V i) ε₀ (k + 1) ω)
+            (min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) P)
+
+/-- **A family weighted approximable off a finite set is eventually weighted approximable**, at
+the same `G` for every error.  This is what makes the conjunction a weakening of
+`MeasureTheory.IsApproximableMul` and not a different condition, and the two square
+integrabilities travel with it because they are fields of the member's own condition. -/
+theorem isEventuallyApproximableMul_of_forall_isApproximableMul {γ : Type*}
+    {𝓕 : γ → Filtration ℝ≥0 mΩ} {P : Measure Ω} {q : ENNReal} {T K Kw : ℝ≥0}
+    {V : γ → ℝ≥0 → Ω → ℝ} {ε₀ : ℝ} {u : ℝ≥0}
+    {G : Set γ} (hG : G.Finite) (h : ∀ i ∉ G, IsApproximableMul (𝓕 i) P q T K Kw (V i) ε₀ u) :
+    IsEventuallyApproximableMul 𝓕 P q T K Kw V ε₀ u :=
+  ⟨fun ε hε ↦ ⟨G, hG, fun i hi ↦
+    ⟨(h i hi).memLp_cap, (h i hi).memLp_gap, (h i hi).exists_approximants ε hε⟩⟩⟩
+
+/-- **Eventual weighted approximability from approximants indexed along with the family**, the
+weighted twin of `MeasureTheory.isEventuallyApproximable_of_tendsto_zero_cofinite` and the shape
+a consumer arrives with: *every* member is square integrable at the two families of times and
+carries two pairs, the weighted error of the first and the plain error of the second going to
+zero along `Filter.cofinite`.
+
+**Only the two errors travel with the index.**  The weighted compensator bound `Kw` does not:
+it is a constant of the condition, as `K` is, and a member either respects it or does not.  That
+is why it stands outside the two `Filter.Tendsto` estimates and is passed through unchanged.
+
+The exchange is the one equivalence `Filter.eventually_cofinite`
+(`Mathlib/Order/Filter/Cofinite.lean:49`), which turns `∀ᶠ i in cofinite, e i ≤ ε` into the
+finiteness of `{i | ¬ e i ≤ ε}`; nothing is estimated, the two sides being two readings of one
+finiteness.  For `γ = ℕ` the filter is `Filter.atTop` by `Nat.cofinite_eq_atTop`. -/
+theorem isEventuallyApproximableMul_of_tendsto_zero_cofinite {γ : Type*}
+    {𝓕 : γ → Filtration ℝ≥0 mΩ} {P : Measure Ω} {q : ENNReal} {T K Kw : ℝ≥0}
+    {V : γ → ℝ≥0 → Ω → ℝ} {ε₀ : ℝ} {u : ℝ≥0}
+    {e : γ → ENNReal} (he : Tendsto e Filter.cofinite (𝓝 0))
+    (h : ∀ i,
+      (∀ k : ℕ, MemLp
+          (stoppedValue (V i) (fun ω ↦ min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+      ∧ (∀ (δ : ℝ≥0) (k : ℕ), MemLp (stoppedValue (V i) (fun ω ↦
+          min (oscHitSeq (V i) ε₀ (k + 1) ω)
+            (min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) 2 P)
+      ∧ ∃ Y C Y' C' : ℝ≥0 → Ω → ℝ, ∃ Z Z' : ℝ → Ω → ℝ,
+        IsApproximatingPair (𝓕 i) P q T K Y C Z ∧ IsApproximatingPair (𝓕 i) P q T K Y' C' Z'
+        ∧ ∫⁻ ω, (⨆ t ∈ Set.Iic T, ‖V i t ω‖ₑ)
+            * ⨆ t ∈ Set.Iic T, ‖Y t ω - V i t ω‖ₑ ∂P ≤ e i
+        ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T, ‖Y' t ω - V i t ω ^ 2‖ₑ ∂P ≤ e i
+        ∧ ∫⁻ ω, (⨆ t ∈ Set.Iic T, ‖V i t ω‖ₑ)
+            * eLpNorm (fun s ↦ Z s ω) q (volume.restrict (Set.Ioc (0 : ℝ) (T : ℝ))) ∂P ≤ Kw
+        ∧ (∀ k : ℕ, MemLp
+            (stoppedValue Y (fun ω ↦ min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+        ∧ (∀ k : ℕ, MemLp
+            (stoppedValue C (fun ω ↦ min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0))) 2 P)
+        ∧ (∀ k : ℕ, Integrable
+            (stoppedValue Y' (fun ω ↦ min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0))) P)
+        ∧ (∀ (δ : ℝ≥0) (k : ℕ), MemLp (stoppedValue Y (fun ω ↦
+            min (oscHitSeq (V i) ε₀ (k + 1) ω)
+              (min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) 2 P)
+        ∧ (∀ (δ : ℝ≥0) (k : ℕ), MemLp (stoppedValue C (fun ω ↦
+            min (oscHitSeq (V i) ε₀ (k + 1) ω)
+              (min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) 2 P)
+        ∧ (∀ (δ : ℝ≥0) (k : ℕ), Integrable (stoppedValue Y' (fun ω ↦
+            min (oscHitSeq (V i) ε₀ (k + 1) ω)
+              (min (oscHitSeq (V i) ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) P)) :
+    IsEventuallyApproximableMul 𝓕 P q T K Kw V ε₀ u := by
+  refine ⟨fun ε hε ↦ ?_⟩
+  refine ⟨{i | ¬ e i ≤ ε}, Filter.eventually_cofinite.1 ((ENNReal.tendsto_nhds_zero.1 he) ε hε),
+    fun i hi ↦ ?_⟩
+  have hle : e i ≤ ε := not_not.1 hi
+  obtain ⟨hcapV, hgapV, Y, C, Y', C', Z, Z', hp, hp', h1, h2, hKw, h3, h4, h5, h6, h7, h8⟩ := h i
+  exact ⟨hcapV, hgapV, Y, C, Y', C', Z, Z', hp, hp', h1.trans hle, h2.trans hle, hKw,
+    h3, h4, h5, h6, h7, h8⟩
+
+/-- **The modulus estimate uniformly over an eventually weighted approximable family**, which is
+the shape the tightness criterion reads: one exceptional set and one window serving every member
+outside it, and no bound on any member.
+
+It is `MeasureTheory.exists_finite_forall_measure_setOf_lt_modulusBased_postcomp_le_of_isEventuallyApproximable`
+with the weight in place of the bound, and
+`MeasureTheory.exists_forall_measure_setOf_lt_modulusBased_le_of_forall_isApproximableMul` with
+the error surviving into the estimate.  The three choices are made in the order `N`, `ε`, `δ`,
+and each is made **before** the member:
+
+* the count `N` from `ENNReal.tendsto_inv_nat_nhds_zero` on the horizon term
+  `B / N / ofReal ε₀` with `B = ofReal u ^ (1 - 1/q) * K + 2 (ofReal u ^ (1 - 1/q) * Kw)`, which
+  sees neither the window nor the error;
+* the error from the two limits `N · ofReal √(a.toReal) → 0` and `a / ofReal ε₀ → 0` along
+  `a = k⁻¹`, written as `ε = a₀ / 6` so that the combination `2 ε' + 4 γ` occurring in
+  `MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair_of_integrable_mul`
+  **is** `a₀`;
+* the window from `MeasureTheory.tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero` at `A = a₀` and
+  `c = 0`, whose limit is `N · ofReal √(a₀.toReal)` and not `0` -- which is why the error has to
+  leave that limit strictly below its budget.
+
+**The divisor is `6` and not `2 + 4 ‖g‖`**, and that is the whole arithmetical trace of removing
+the bound: the weighted error carries the weight inside itself, so no norm of a test function
+enters the combination.
+
+**The fields are stated at `Set.Iic T` and read at `Set.Iic u` and `Set.Iic (u + δ)`**, and both
+narrowings are monotonicity -- `mul_le_mul'` at the weighted field,
+`MeasureTheory.lintegral_biSup_Iic_mono` at the plain one, and `mul_le_mul_left` at `Kw`.
+
+**The exponent is read off a member and the case of no member is disposed of first.**  `1 < q`
+lives in `MeasureTheory.IsApproximatingPair` and is reached through the exceptional set at the
+error `1`; if that set is everything, the conclusion is vacuous and `δ = 1` serves.  `η = ⊤` is
+disposed of first as well, so that `θ = ofReal ε₀ * η` is finite and its halves are strict. -/
+theorem exists_finite_forall_measure_setOf_lt_modulusBased_le_of_isEventuallyApproximableMul
+    {γ : Type*} {𝓕 : γ → Filtration ℝ≥0 mΩ} [∀ i, (𝓕 i).IsRightContinuous]
+    {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K Kw : ℝ≥0} {V : γ → ℝ≥0 → Ω → ℝ} {ε₀ : ℝ} {u : ℝ≥0}
+    (happ : IsEventuallyApproximableMul 𝓕 P q T K Kw V ε₀ u)
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hV : ∀ i, IsStronglyProgressive (𝓕 i) (V i))
+    (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ V i s ω) (Set.Ici t) t)
+    {Φ : γ → Ω → D(ℝ≥0, ℝ)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ V i t ω)
+    (hu : 0 < u) (huT : u < T) (hε₀ : 0 < ε₀) {η : ENNReal} (hη : 0 < η) :
+    ∃ G : Set γ, G.Finite ∧ ∃ δ : ℝ, 0 < δ ∧ ∀ i ∉ G, P {ω | ENNReal.ofReal ε₀
+        < SkorokhodSpace.modulusBased (0 : ℝ) (u : ℝ)
+            (SkorokhodSpace.extendNNReal (Φ i ω)) δ} ≤ η := by
+  rcases eq_or_ne η ⊤ with rfl | hηtop
+  · exact ⟨∅, Set.finite_empty, 1, one_pos, fun i _ ↦ le_top⟩
+  obtain ⟨G₁, hG₁, h₁⟩ := happ.exists_approximants 1 one_pos
+  by_cases hall : ∀ i : γ, i ∈ G₁
+  · exact ⟨G₁, hG₁, 1, one_pos, fun i hi ↦ absurd (hall i) hi⟩
+  push Not at hall
+  obtain ⟨i₀, hi₀⟩ := hall
+  obtain ⟨-, -, Y₀, C₀, Y₀', C₀', Z₀, Z₀', hp₀, -⟩ := h₁ i₀ hi₀
+  have hq : 1 < q := hp₀.one_lt_exponent
+  have hexp : (0 : ℝ) ≤ 1 - 1 / q.toReal := (one_sub_one_div_toReal_pos hq).le
+  have he0 : ENNReal.ofReal ε₀ ≠ 0 := (ENNReal.ofReal_pos.2 hε₀).ne'
+  have hcast : ((K + 2 * Kw : ℝ≥0) : ENNReal) = (K : ENNReal) + 2 * (Kw : ENNReal) := by
+    push_cast
+    ring
+  set B : ENNReal := ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * (K : ENNReal)
+      + 2 * (ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) * (Kw : ENNReal)) with hBdef
+  have hBtop : B ≠ ⊤ := by
+    have hrpow : ENNReal.ofReal (u : ℝ) ^ (1 - 1 / q.toReal) ≠ ⊤ :=
+      ENNReal.rpow_ne_top_of_nonneg hexp ENNReal.ofReal_ne_top
+    rw [hBdef]
+    finiteness
+  set θ : ENNReal := ENNReal.ofReal ε₀ * η with hθdef
+  have hθ : θ ≠ 0 := (ENNReal.mul_pos he0 hη.ne').ne'
+  have hhalf : (0 : ENNReal) < θ / 2 := ENNReal.half_pos hθ
+  have hζ : (0 : ENNReal) < θ / 2 / 2 := ENNReal.half_pos hhalf.ne'
+  -- the count, chosen first and at no window and no error
+  have hhor : Tendsto (fun n : ℕ ↦ B / n / ENNReal.ofReal ε₀) atTop (𝓝 0) := by
+    have hfin : B / ENNReal.ofReal ε₀ ≠ ⊤ := ENNReal.div_ne_top hBtop he0
+    have := ENNReal.Tendsto.const_mul (a := B / ENNReal.ofReal ε₀)
+      ENNReal.tendsto_inv_nat_nhds_zero (Or.inr hfin)
+    rw [mul_zero] at this
+    refine this.congr fun n ↦ ?_
+    simp only [div_eq_mul_inv]
+    ring
+  obtain ⟨n, hn⟩ := Filter.eventually_atTop.1
+    ((ENNReal.tendsto_nhds_zero.1 hhor) (θ / 2 / 2) hζ)
+  have hN : (n + 1 : ℕ) ≠ 0 := Nat.succ_ne_zero n
+  have hhor' : B / (n + 1 : ℕ) / ENNReal.ofReal ε₀ ≤ θ / 2 / 2 := hn (n + 1) (by omega)
+  -- the error, chosen second, at that fixed count and still before the window
+  have hsq : Tendsto (fun k : ℕ ↦ ((n + 1 : ℕ) : ENNReal)
+      * ENNReal.ofReal (Real.sqrt (((k : ENNReal)⁻¹).toReal))) atTop (𝓝 0) := by
+    have h0 : Tendsto (fun k : ℕ ↦ (((k : ENNReal))⁻¹).toReal) atTop (𝓝 0) := by
+      simpa [Function.comp_def] using
+        (ENNReal.tendsto_toReal (by finiteness)).comp ENNReal.tendsto_inv_nat_nhds_zero
+    have h1 : Tendsto (fun k : ℕ ↦ ENNReal.ofReal (Real.sqrt (((k : ENNReal)⁻¹).toReal)))
+        atTop (𝓝 0) := by
+      simpa [Function.comp_def] using (ENNReal.continuous_ofReal.tendsto _).comp
+        ((Real.continuous_sqrt.tendsto _).comp h0)
+    simpa using ENNReal.Tendsto.const_mul h1 (Or.inr (ENNReal.natCast_ne_top (n + 1)))
+  have hdiv : Tendsto (fun k : ℕ ↦ (k : ENNReal)⁻¹ / ENNReal.ofReal ε₀) atTop (𝓝 0) := by
+    have := ENNReal.Tendsto.div_const ENNReal.tendsto_inv_nat_nhds_zero (Or.inr he0)
+    simpa using this
+  obtain ⟨k, ⟨hka, hkb⟩, hk1⟩ :=
+    (((hsq.eventually_lt_const hhalf).and
+      ((ENNReal.tendsto_nhds_zero.1 hdiv) (θ / 2 / 2) hζ)).and
+      (Filter.eventually_ge_atTop 1)).exists
+  set a₀ : ENNReal := (k : ENNReal)⁻¹ with ha₀def
+  have hkne : (k : ENNReal) ≠ 0 := by
+    simpa using (Nat.cast_ne_zero (R := ENNReal)).2 (by omega : k ≠ 0)
+  have ha₀ne : a₀ ≠ 0 := by
+    rw [ha₀def]
+    exact (ENNReal.inv_pos.2 (ENNReal.natCast_ne_top k)).ne'
+  have ha₀top : a₀ ≠ ⊤ := by
+    rw [ha₀def]
+    exact ENNReal.inv_ne_top.2 hkne
+  set ε : ENNReal := a₀ / 6 with hεdef
+  have hεpos : 0 < ε := by
+    rw [hεdef]
+    exact ENNReal.div_pos ha₀ne (by norm_num)
+  have hεne : ε ≠ ⊤ := by
+    rw [hεdef]
+    exact ENNReal.div_ne_top ha₀top (by norm_num)
+  have hA : 2 * ε + 4 * ε = a₀ := by
+    have hr : 2 * ε + 4 * ε = 6 * ε := by ring
+    rw [hr, hεdef, ENNReal.mul_div_cancel (by norm_num) (by norm_num)]
+  obtain ⟨G, hG, hGapp⟩ := happ.exists_approximants ε hεpos
+  -- the window, chosen last and at that error
+  have hwin : ∀ᶠ δ : ℝ≥0 in 𝓝[>] 0, δ < u ∧ u + δ ≤ T := by
+    have h1 : ∀ᶠ δ : ℝ≥0 in 𝓝 0, δ < u := eventually_lt_nhds hu
+    have h2 : ∀ᶠ δ : ℝ≥0 in 𝓝 0, u + δ ≤ T := by
+      have : Tendsto (fun δ : ℝ≥0 ↦ u + δ) (𝓝 0) (𝓝 (u + 0)) :=
+        (continuous_const.add continuous_id).tendsto 0
+      rw [add_zero] at this
+      exact (this.eventually_lt_const huT).mono fun δ hδ ↦ hδ.le
+    exact ((h1.and h2)).filter_mono nhdsWithin_le_nhds
+  have hgap : Tendsto (fun δ : ℝ≥0 ↦ ((n + 1 : ℕ) : ENNReal) * ENNReal.ofReal (Real.sqrt
+        ((ENNReal.ofReal (δ : ℝ) ^ (1 - 1 / q.toReal)
+          * ((K : ENNReal) + 2 * (Kw : ENNReal)) + a₀).toReal)))
+      (𝓝[>] 0) (𝓝 (((n + 1 : ℕ) : ENNReal) * ENNReal.ofReal (Real.sqrt a₀.toReal))) := by
+    have hcoe : Tendsto (fun δ : ℝ≥0 ↦ (δ : ℝ)) (𝓝[>] (0 : ℝ≥0)) (𝓝[>] (0 : ℝ)) := by
+      refine tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within _ ?_ ?_
+      · simpa using (NNReal.continuous_coe.tendsto (0 : ℝ≥0)).mono_left nhdsWithin_le_nhds
+      · filter_upwards [self_mem_nhdsWithin] with δ hδ
+        simp only [Set.mem_Ioi] at hδ ⊢
+        exact_mod_cast hδ
+    have h := (tendsto_mul_ofReal_sqrt_toReal_nhdsGT_zero (K := K + 2 * Kw) (c := 0) hq
+      (A := a₀) ha₀top (n + 1)).comp hcoe
+    simpa [Function.comp_def, hcast] using h
+  obtain ⟨δ, ⟨hδwin, hδgap⟩, hδ0⟩ :=
+    ((hwin.and (hgap.eventually_lt_const hka)).and self_mem_nhdsWithin).exists
+  refine ⟨G, hG, (δ : ℝ), by exact_mod_cast hδ0, fun i hi ↦ ?_⟩
+  obtain ⟨hVcap, hVgap, Y, C, Y', C', Z, Z', h, h', hγT, hε'T, hKwT,
+    hYcap, hCcap, hY'cap, hYgap, hCgap, hY'gap⟩ := hGapp i hi
+  have huT' : u ≤ T := le_trans le_self_add hδwin.2
+  have hVmono : ∀ ω, (⨆ t ∈ Set.Iic u, ‖V i t ω‖ₑ) ≤ ⨆ t ∈ Set.Iic T, ‖V i t ω‖ₑ := fun ω ↦
+    biSup_mono fun t ht ↦ Set.mem_Iic.2 (le_trans (Set.mem_Iic.1 ht) huT')
+  have key := mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair_of_integrable_mul
+    h h' hSc hSd (hV i) (hcont i) (hΦ i) hδwin.1 hδwin.2 hεne hεne ENNReal.coe_ne_top hε₀
+    (le_trans (lintegral_mono fun ω ↦ mul_le_mul' (hVmono ω)
+      (biSup_mono fun t ht ↦ Set.mem_Iic.2 (le_trans (Set.mem_Iic.1 ht) hδwin.2))) hγT)
+    ((lintegral_biSup_Iic_mono P (fun t ω ↦ ‖Y' t ω - V i t ω ^ 2‖ₑ) hδwin.2).trans hε'T)
+    (le_trans (lintegral_mono fun ω ↦ mul_le_mul_left (hVmono ω) _) hKwT)
+    hVcap hYcap hCcap hY'cap (hVgap δ) (hYgap δ) (hCgap δ) (hY'gap δ) hN
+  rw [hA] at key
+  have hrhs : ((n + 1 : ℕ) : ENNReal) * ENNReal.ofReal (Real.sqrt
+        ((ENNReal.ofReal (δ : ℝ) ^ (1 - 1 / q.toReal)
+            * ((K : ENNReal) + 2 * (Kw : ENNReal)) + a₀).toReal))
+      + (B / (n + 1 : ℕ) + a₀) / ENNReal.ofReal ε₀ ≤ θ := by
+    have h2 : (B / (n + 1 : ℕ) + a₀) / ENNReal.ofReal ε₀ ≤ θ / 2 := by
+      rw [ENNReal.add_div]
+      exact le_trans (add_le_add hhor' hkb) (le_of_eq (ENNReal.add_halves (θ / 2)))
+    exact le_trans (add_le_add hδgap.le h2) (le_of_eq (ENNReal.add_halves θ))
+  have hb : ENNReal.ofReal ε₀ * P {ω | ENNReal.ofReal ε₀
+      < SkorokhodSpace.modulusBased (0 : ℝ) (u : ℝ)
+          (SkorokhodSpace.extendNNReal (Φ i ω)) (δ : ℝ)} ≤ θ := le_trans key hrhs
+  calc P {ω | ENNReal.ofReal ε₀
+        < SkorokhodSpace.modulusBased (0 : ℝ) (u : ℝ)
+            (SkorokhodSpace.extendNNReal (Φ i ω)) (δ : ℝ)}
+      = (ENNReal.ofReal ε₀)⁻¹ * (ENNReal.ofReal ε₀ * P {ω | ENNReal.ofReal ε₀
+          < SkorokhodSpace.modulusBased (0 : ℝ) (u : ℝ)
+              (SkorokhodSpace.extendNNReal (Φ i ω)) (δ : ℝ)}) := by
+        rw [← mul_assoc, ENNReal.inv_mul_cancel he0 ENNReal.ofReal_ne_top, one_mul]
+    _ ≤ (ENNReal.ofReal ε₀)⁻¹ * θ := mul_le_mul_right hb _
+    _ = η := by rw [hθdef, ← mul_assoc, ENNReal.inv_mul_cancel he0 ENNReal.ofReal_ne_top, one_mul]
+
+/-- **Tightness of the image laws of the real paths, with no bound on the processes and the error
+outside the index.**  This is the tightness statement of Milestone 11 under the weakest of its
+approximability conditions, and the one Donsker's acceptance test is read at.
+
+It stands to `MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isApproximableMul` as
+`MeasureTheory.isTightMeasureSet_map_postcomp_of_isEventuallyApproximable` stands to its own
+bounded twin, and it is the only one of the four that reaches a family of rescaled random walks:
+the other three read either a bound on the process -- which the walk at mesh `n` has, but not
+uniformly in `n` -- or the condition at a fixed member, which
+`MeasureTheory.not_isApproximableMul_rescaledWalk` forbids.
+
+**The exceptional members are not dropped but paid for.**  The image law of a single member is a
+finite measure on a complete second countable metric space, hence tight
+(`MeasureTheory.isTightMeasureSet_singleton`), and
+`SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal` is an **equivalence**, so it returns
+for that member its own window at the very same `(ε, m, η)`.  `SkorokhodSpace.modulusBased_mono`
+carries a bound at a window to every smaller one, and `Set.Finite.exists_pos_forall_le` makes the
+minimum of the common window and the finitely many exceptional ones positive.  The compact
+containment of the singleton subfamily is read off `hcc` at the same compact set.
+
+**The compact containment is a hypothesis and not a consequence**, for the reason it is one at
+`MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isApproximableMul`: the laws of the paths
+themselves are not contained for free, no bounded test function standing between them and the
+state space.  For the rescaled walks it is `MeasureTheory.isCompactContained_rescaledWalk`.
+
+**The two seams are the usual ones**: the window `u = m + 1` is produced in `ℝ≥0` and the
+hypothesis read there, and the threshold is crossed by `measure_mono` at an `ε₀` with
+`ofReal ε₀ < η`, which `ENNReal.lt_iff_exists_real_btwn` supplies for every `η > 0` including
+`η = ⊤`. -/
+theorem isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul
+    {γ : Type*} {𝓕 : γ → Filtration ℝ≥0 mΩ} [∀ i, (𝓕 i).IsRightContinuous]
+    {P : Measure Ω} [IsProbabilityMeasure P] {V : γ → ℝ≥0 → Ω → ℝ}
+    {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
+    (hV : ∀ i, IsStronglyProgressive (𝓕 i) (V i))
+    (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ V i s ω) (Set.Ici t) t)
+    {Φ : γ → Ω → D(ℝ≥0, ℝ)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ V i t ω)
+    (hcc : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) fun i ↦ P.map (Φ i))
+    (happ : ∀ ε₀ : ℝ, 0 < ε₀ → ∀ u : ℝ≥0, 0 < u → ∃ q : ENNReal, ∃ T K Kw : ℝ≥0, u < T ∧
+      IsEventuallyApproximableMul 𝓕 P q T K Kw V ε₀ u) :
+    IsTightMeasureSet {P.map (Φ i) | i} := by
+  rw [SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal hcc]
+  intro ε hε m η hη
+  obtain ⟨ε₀, hε₀0, hlt, hltη⟩ := ENNReal.lt_iff_exists_real_btwn.1 hη
+  have hε₀ : 0 < ε₀ := ENNReal.ofReal_pos.1 hlt
+  set u : ℝ≥0 := (m : ℝ≥0) + 1 with hu
+  have hu0 : 0 < u := by positivity
+  have hucoe : ((u : ℝ≥0) : ℝ) = (m : ℝ) + 1 := by
+    rw [hu]; push_cast; ring
+  obtain ⟨q, T, K, Kw, huT, happ'⟩ := happ ε₀ hε₀ u hu0
+  obtain ⟨G, hG, δ, hδ0, hle⟩ :=
+    exists_finite_forall_measure_setOf_lt_modulusBased_le_of_isEventuallyApproximableMul
+      happ' hSc hSd hV hcont hΦ hu0 huT hε₀ hε
+  have hgood : ∀ i ∉ G, ((P.map (Φ i)).map SkorokhodSpace.extendNNReal)
+      {f : D(ℝ, ℝ) | η ≤ SkorokhodSpace.modulusBased (0 : ℝ) (m : ℝ) f δ} ≤ ε := by
+    intro i hi
+    refine SkorokhodSpace.measure_map_setOf_le_modulusBased_le P
+      (measurable_pathOfProcess (hV i) (hΦ i)) (u := (m : ℝ)) (u' := (m : ℝ) + 1)
+      (Nat.cast_nonneg m) hδ0.le (by linarith) ?_
+    refine le_trans (measure_mono ?_) (hle i hi)
+    intro ω hω
+    show ENNReal.ofReal ε₀ < _
+    rw [hucoe]
+    exact lt_of_lt_of_le hltη hω
+  have hsing : ∀ i, ∃ d : ℝ, 0 < d ∧ ((P.map (Φ i)).map SkorokhodSpace.extendNNReal)
+      {f : D(ℝ, ℝ) | η ≤ SkorokhodSpace.modulusBased (0 : ℝ) (m : ℝ) f d} ≤ ε := by
+    intro i
+    have hcci : SkorokhodSpace.IsCompactContained (0 : ℝ≥0) (fun _ : Unit ↦ P.map (Φ i)) := by
+      intro a ha j
+      obtain ⟨Kc, hKc, h⟩ := hcc a ha j
+      exact ⟨Kc, hKc, fun _ ↦ h i⟩
+    have hrange : {(fun _ : Unit ↦ P.map (Φ i)) j | j}
+        = ({P.map (Φ i)} : Set (Measure D(ℝ≥0, ℝ))) := Set.range_const
+    have htight : IsTightMeasureSet {(fun _ : Unit ↦ P.map (Φ i)) j | j} := by
+      rw [hrange]
+      exact isTightMeasureSet_singleton
+    obtain ⟨d, hd, hdle⟩ :=
+      (SkorokhodSpace.isTightMeasureSet_iff_modulusBased_nnreal hcci).1 htight ε hε m η hη
+    exact ⟨d, hd, hdle ()⟩
+  choose d hd hdle using hsing
+  obtain ⟨c, hc0, hcle⟩ := hG.exists_pos_forall_le d fun i _ ↦ hd i
+  refine ⟨min δ c, lt_min hδ0 hc0, fun i ↦ ?_⟩
+  by_cases hi : i ∈ G
+  · refine le_trans (measure_mono ?_) (hdle i)
+    intro f hf
+    exact le_trans hf (SkorokhodSpace.modulusBased_mono (0 : ℝ) (m : ℝ) f
+      ((min_le_right δ c).trans (hcle i hi)))
+  · refine le_trans (measure_mono ?_) (hgood i hi)
+    intro f hf
+    exact le_trans hf (SkorokhodSpace.modulusBased_mono (0 : ℝ) (m : ℝ) f (min_le_left δ c))
+
 /-! ### The witness that the exchange of quantifiers is not idle
 
 A weakening earns its place only if something satisfies it that did not satisfy what it weakens.
@@ -48065,6 +49374,32 @@ theorem IsApproximatingPair.integrable_stoppedValue_of_dominated
     (((stronglyMeasurable_stoppedValue_of_le h.progressive hσ hσj).mono
       (𝓕.le j)).aestronglyMeasurable)
     (Filter.Eventually.of_forall fun ω ↦ hYb _ (WithTop.untopA_le (hσj ω)) ω)
+
+/-- **The same at an `L^p` majorant**, which is what the *weighted* conditions ask where the
+plain ones ask integrability: `MeasureTheory.IsApproximableMul` and
+`MeasureTheory.IsEventuallyApproximableMul` read `V`, `Y` and `C` in `L²` at the capped and at
+the gap times, Cauchy--Schwarz standing there in place of the bound on the process.
+
+The proof is the previous one with `MemLp.of_le` for `Integrable.mono'`, and the only step that
+is not shared is that `MemLp.of_le` compares **norms** on both sides while the domination is
+stated against the majorant itself: `le_abs_self` bridges it, and it is exactly the step that
+makes the hypothesis `‖Y t ω‖ ≤ g ω` -- rather than `≤ ‖g ω‖` -- the weaker one to supply.
+
+The finiteness of `P` is not read here and is not asked for; it is read by the instance at a
+constant majorant below, where a constant has to be in `L^p`. -/
+theorem IsApproximatingPair.memLp_stoppedValue_of_dominated
+    {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} {q : ENNReal} {T K : ℝ≥0} {p : ENNReal}
+    {Y C : ℝ≥0 → Ω → ℝ} {Z : ℝ → Ω → ℝ} (h : IsApproximatingPair 𝓕 P q T K Y C Z)
+    {σ : Ω → WithTop ℝ≥0} (hσ : IsStoppingTime 𝓕 σ) {j : ℝ≥0}
+    (hσj : ∀ ω, σ ω ≤ (j : WithTop ℝ≥0)) {g : Ω → ℝ} (hg : MemLp g p P)
+    (hYb : ∀ t : ℝ≥0, t ≤ j → ∀ ω, ‖Y t ω‖ ≤ g ω) :
+    MemLp (stoppedValue Y σ) p P :=
+  hg.of_le
+    (((stronglyMeasurable_stoppedValue_of_le h.progressive hσ hσj).mono
+      (𝓕.le j)).aestronglyMeasurable)
+    (Filter.Eventually.of_forall fun ω ↦ by
+      rw [Real.norm_eq_abs (g ω)]
+      exact (hYb _ (WithTop.untopA_le (hσj ω)) ω).trans (le_abs_self _))
 
 /-- **The stopped value of a bounded approximant at a bounded stopping time is integrable**, the
 instance of `MeasureTheory.IsApproximatingPair.integrable_stoppedValue_of_dominated` at a
@@ -48930,6 +50265,47 @@ theorem isTightMeasureSet_map_of_subalgebra_forall_martingale {E : Type*}
     (fun _ hΓ _ hη f => exists_mem_subalgebra_forall_dist_le_of_isCompact A hsep hΓ hη f)
     hmart
 
+/-- **Prokhorov with the crossing of the two types done once**: a tight family of probability
+measures, given as measures, has compact closure as a family of `ProbabilityMeasure`.
+
+`MeasureTheory.isCompact_closure_of_isTightMeasureSet`
+(`MeasureTheory/Measure/Prokhorov.lean:530`) is the mathematics and asks only `T2` of the space.
+What this adds is the type-crossing, which is not mathematics and is the whole reason the
+statement is written down: tightness is stated for a set of `Measure`, Prokhorov concludes about
+a set of `ProbabilityMeasure`, and the two are different types with a coercion between them.
+`Set.ext` matches the coercion instead of constructing it.
+
+**The conclusion is at the `Set.range` and not at a comprehension**, because that is what
+`MeasureTheory.tendsto_of_isRelativelyCompact_of_unique` reads.  The type ascription on the
+range is not decoration: `ProbabilityMeasure` is a `def` on a subtype, and `⟨μ i, _⟩` folds back
+to that subtype while elaborating, whereupon `closure` finds no topology on it.
+
+**A junk value that happens to say the truth, and it is worth naming.**  Mathlib's instance
+`IsProbabilityMeasure (Measure.map f μ)`
+(`MeasureTheory/Measure/Typeclasses/Probability.lean:124`) carries **no** measurability
+hypothesis: where `f` is not a.e. measurable, `Measure.map` returns a Dirac measure, and a Dirac
+measure is a probability measure.  So a consumer at image measures gets the instance for free,
+and for a reason that has nothing to do with its map; what makes the image the law it means is
+supplied by the tightness hypothesis, not by this statement. -/
+theorem isCompact_closure_range_probabilityMeasure_of_isTightMeasureSet
+    {F : Type*} [MeasurableSpace F] [TopologicalSpace F] [BorelSpace F] [T2Space F]
+    {γ : Type*} {μ : γ → Measure F} [hp : ∀ i, IsProbabilityMeasure (μ i)]
+    (h : IsTightMeasureSet {μ i | i}) :
+    IsCompact (closure ((Set.range fun i ↦ (⟨μ i, hp i⟩ : ProbabilityMeasure F)) :
+      Set (ProbabilityMeasure F))) := by
+  refine isCompact_closure_of_isTightMeasureSet ?_
+  have hset : {((ν : ProbabilityMeasure F) : Measure F) |
+      ν ∈ ((Set.range fun i ↦ (⟨μ i, hp i⟩ : ProbabilityMeasure F)) :
+        Set (ProbabilityMeasure F))} = {μ i | i} := by
+    ext ρ
+    constructor
+    · rintro ⟨ν, ⟨i, rfl⟩, rfl⟩
+      exact ⟨i, rfl⟩
+    · rintro ⟨i, rfl⟩
+      exact ⟨⟨μ i, hp i⟩, ⟨i, rfl⟩, rfl⟩
+  rw [hset]
+  exact h
+
 /-- **The second item of the chain, `isRelativelyCompact_of_approx`, in the exact
 case**: the laws of the paths have compact closure in the weak topology of
 `ProbabilityMeasure D(ℝ≥0, E)`.
@@ -49021,18 +50397,9 @@ theorem isCompact_closure_range_of_subalgebra_forall_martingale {E : Type*}
       ∧ ∀ i, Martingale (fun t ω ↦ f (X i t ω) ^ 2
         - ∫ s in Set.Ioc (0 : ℝ) (t : ℝ), g' (X i s.toNNReal ω)) 𝓕 P) :
     IsCompact (closure ((Set.range fun i ↦ (⟨P.map (Φ i), inferInstance⟩ :
-      ProbabilityMeasure D(ℝ≥0, E))) : Set (ProbabilityMeasure D(ℝ≥0, E)))) := by
-  have hset : ((Set.range fun i ↦ (⟨P.map (Φ i), inferInstance⟩ :
-        ProbabilityMeasure D(ℝ≥0, E))) : Set (ProbabilityMeasure D(ℝ≥0, E)))
-      = {ν : ProbabilityMeasure D(ℝ≥0, E) | ∃ i, (ν : Measure D(ℝ≥0, E)) = P.map (Φ i)} := by
-    ext ν
-    constructor
-    · rintro ⟨i, rfl⟩
-      exact ⟨i, rfl⟩
-    · rintro ⟨i, hi⟩
-      exact ⟨i, Subtype.ext hi.symm⟩
-  rw [hset]
-  exact isCompact_closure_of_subalgebra_forall_martingale hSc hSd hX hcont hΦ hcc A hsep hmart
+      ProbabilityMeasure D(ℝ≥0, E))) : Set (ProbabilityMeasure D(ℝ≥0, E)))) :=
+  isCompact_closure_range_probabilityMeasure_of_isTightMeasureSet
+    (isTightMeasureSet_map_of_subalgebra_forall_martingale hSc hSd hX hcont hΦ hcc A hsep hmart)
 
 /-! ### The same four steps in the approximate case, which is the case Donsker is in
 
@@ -49270,19 +50637,10 @@ theorem isCompact_closure_range_of_subalgebra_forall_exists_bounded_pair {E : Ty
           ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ S, ‖Y t ω - f (X i t ω)‖ₑ ∂P ≤ ε
           ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T' ∩ S, ‖Y' t ω - f (X i t ω) ^ 2‖ₑ ∂P ≤ ε) :
     IsCompact (closure ((Set.range fun i ↦ (⟨P.map (Φ i), inferInstance⟩ :
-      ProbabilityMeasure D(ℝ≥0, E))) : Set (ProbabilityMeasure D(ℝ≥0, E)))) := by
-  have hset : ((Set.range fun i ↦ (⟨P.map (Φ i), inferInstance⟩ :
-        ProbabilityMeasure D(ℝ≥0, E))) : Set (ProbabilityMeasure D(ℝ≥0, E)))
-      = {ν : ProbabilityMeasure D(ℝ≥0, E) | ∃ i, (ν : Measure D(ℝ≥0, E)) = P.map (Φ i)} := by
-    ext ν
-    constructor
-    · rintro ⟨i, rfl⟩
-      exact ⟨i, rfl⟩
-    · rintro ⟨i, hi⟩
-      exact ⟨i, Subtype.ext hi.symm⟩
-  rw [hset]
-  exact isCompact_closure_of_subalgebra_forall_exists_bounded_pair hSc hSd hX hcont hΦ hcc
-    A hsep happ
+      ProbabilityMeasure D(ℝ≥0, E))) : Set (ProbabilityMeasure D(ℝ≥0, E)))) :=
+  isCompact_closure_range_probabilityMeasure_of_isTightMeasureSet
+    (isTightMeasureSet_map_of_subalgebra_forall_exists_bounded_pair hSc hSd hX hcont hΦ hcc
+      A hsep happ)
 
 /-! ### Milestone 10: the determining class the third item of the chain can use
 
@@ -50085,6 +51443,76 @@ theorem mpSolution_of_tendsto_cadlag_of_subseq
     (by simpa [Function.comp_def] using hf.comp hns)
     (by simpa [Function.comp_def] using hg.comp hns)
 
+/-- **The same seam at the vanishing martingale gap**, instead of at exact
+martingality of a moving test pair.
+
+`MeasureTheory.mpSolution_of_tendsto_cadlag` asks for no martingale property at
+all: its hypothesis is the convergence to `0` of
+`∫ (mpTest f g t - mpTest f g s) · Z` along the family, a gap that vanishes.
+`MeasureTheory.mpSolution_of_tendsto_cadlag_of_approx` and
+`MeasureTheory.mpSolution_of_tendsto_cadlag_of_subseq` are its specialisations at
+*exact* martingality of a pair `(f' n, g' n)` converging to `(f, g)` in the
+supremum norm -- the approximation sitting in the **test function** and not in the
+error.  A family that is an exact martingale to no pair of bounded continuous
+functions is not reached by them and is reached by this one; the rescaled random
+walk is such a family, its own exact martingales being itself and its square, and
+both unbounded.
+
+**The class of test functions is `SkorokhodSpace.evalFuns E (Set.Iic s)` and not
+the class `insert s (T ∩ Set.Iic s)` the underlying statement reads**, and the
+reason is that `T` is produced inside the proof and no consumer can name it: the
+times come from `SkorokhodSpace.exists_countable_dense_continuity` at the limit
+law, which is known only after the extraction.  `Set.Iic s` is the smallest set of
+times of which that is independent, `SkorokhodSpace.evalFuns_mono` is the passage,
+and the price is that the hypothesis is asked of more test functions than the
+proof reads.
+
+**`Tendsto ns atTop atTop` is not carried here, and its absence is not an
+oversight.**  `MeasureTheory.mpSolution_of_tendsto_cadlag_of_subseq` spends that
+hypothesis at exactly one place, the transport of `‖f - f' n‖ → 0` and
+`‖g - g' n‖ → 0` from the family to the subsequence; with the gap stated along
+`ns` from the start there is nothing to transport.  A consumer that holds the gap
+along the whole family and wants it along a subsequence composes with the escape
+itself, which is one `Filter.Tendsto.comp`.
+
+The other three inputs are those of the seam it mirrors and are produced here
+rather than asked of the consumer, for the reasons recorded there: the process of
+the limit is the identity of the path space
+(`MeasureTheory.tendstoInDistribution_id_of_tendsto`), its filtration is
+`MeasureTheory.cadlagFiltration` and `h𝓕` is `cadlagFiltration_eq` followed by
+`MeasurableSpace.comap_id`, and the times are the ones just named. -/
+theorem mpSolution_of_tendsto_cadlag_of_subseq_of_zero
+    {Ω' : ℕ → Type*} {m' : ∀ n, MeasurableSpace (Ω' n)} {P' : ∀ n, @Measure (Ω' n) (m' n)}
+    [∀ n, IsProbabilityMeasure (P' n)]
+    {X' : ∀ n, Ω' n → D(ℝ≥0, E)} (hX' : ∀ n, @Measurable (Ω' n) _ (m' n) _ (X' n))
+    (f g : E →ᵇ ℝ) {ns : ℕ → ℕ}
+    (hzero : ∀ s t : ℝ≥0, s ≤ t → ∀ Z ∈ SkorokhodSpace.evalFuns E (Set.Iic s),
+      Tendsto (fun k ↦ ∫ ω, (SkorokhodSpace.mpTest f g t (X' (ns k) ω)
+        - SkorokhodSpace.mpTest f g s (X' (ns k) ω)) * Z (X' (ns k) ω) ∂(P' (ns k)))
+        atTop (𝓝 0))
+    {ν : ProbabilityMeasure D(ℝ≥0, E)}
+    (hlim : Tendsto (β := ProbabilityMeasure D(ℝ≥0, E))
+      (fun k ↦ ⟨(P' (ns k)).map (X' (ns k)), inferInstance⟩) atTop (𝓝 ν)) :
+    ∃ T : Set ℝ≥0, T.Countable ∧ Dense T ∧
+      ∀ s ∈ T, ∀ t ∈ T, s ≤ t →
+        (ν : Measure D(ℝ≥0, E))[fun z ↦ SkorokhodSpace.mpTest f g t z | cadlagFiltration s]
+          =ᵐ[(ν : Measure D(ℝ≥0, E))] fun z ↦ SkorokhodSpace.mpTest f g s z := by
+  obtain ⟨T, hTc, hTd, hTgood⟩ :=
+    SkorokhodSpace.exists_countable_dense_continuity (ι := ℝ≥0) (ν : Measure D(ℝ≥0, E))
+  refine ⟨T, hTc, hTd, ?_⟩
+  have h𝓕 : ∀ s : ℝ≥0, (cadlagFiltration (E := E) s : MeasurableSpace D(ℝ≥0, E))
+      = MeasurableSpace.comap (id : D(ℝ≥0, E) → D(ℝ≥0, E)) (⨆ r ∈ Set.Iic s,
+          MeasurableSpace.comap (fun z : D(ℝ≥0, E) ↦ z.toFun r) inferInstance) := by
+    intro s
+    rw [cadlagFiltration_eq, MeasurableSpace.comap_id]
+  exact mpSolution_of_tendsto_cadlag (X := id) (X' := fun k ↦ X' (ns k))
+    measurable_id (fun k ↦ hX' (ns k))
+    (tendstoInDistribution_id_of_tendsto (fun k ↦ hX' (ns k)) hlim)
+    h𝓕 hTc (rightDense_of_dense hTd) hTgood f g
+    fun s _ t _ hst Z hZ ↦ hzero s t hst Z
+      (SkorokhodSpace.evalFuns_mono
+        (Set.insert_subset (Set.mem_Iic.2 le_rfl) Set.inter_subset_right) hZ)
+
 /-- **The seam at the data the second item of the chain produces.**
 
 `MeasureTheory.mpSolution_of_tendsto_cadlag_of_subseq` lets the approximants live
@@ -50145,6 +51573,54 @@ theorem mpSolution_of_tendsto_cadlag_of_subseq_pathOfProcess [CompleteSpace E]
     exact hmart n
   · simp
   · simp
+
+/-- **The vanishing gap at the data the second item of the chain produces**, and
+the form the Donsker assembly reads: one probability space, one sequence of
+processes with their path maps, and one pair `(f, g)` throughout.
+
+It is `MeasureTheory.mpSolution_of_tendsto_cadlag_of_subseq_of_zero` with the
+tested functional written out at a path built from a process, which is one
+`simp only [SkorokhodSpace.mpTest, hΦ]`: `SkorokhodSpace.mpTest` is the
+evaluation minus the compensator and `hΦ` rewrites both.
+
+**No filtration enters, and this is the one place in the seam where the gap form
+is cheaper than the martingale form rather than merely different.**
+`MeasureTheory.mpSolution_of_tendsto_cadlag_of_subseq_pathOfProcess` carries a
+filtration `𝓕`, the adaptedness of the processes to it, and `CompleteSpace E` --
+the first two because its hypothesis is a *martingale* property and therefore has
+to name the past, the third because it derives the measurability of the path map
+from the adaptedness through
+`SkorokhodSpace.measurable_of_measurable_eval`.  A vanishing gap names no past:
+all that is read of the path map is its measurability, which is asked for
+directly.  The consumer that supplies the tightness
+(`MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul`)
+carries both hypotheses anyway, so nothing is lost there either. -/
+theorem mpSolution_of_tendsto_cadlag_of_subseq_of_zero_pathOfProcess
+    {P : Measure Ω} [IsProbabilityMeasure P]
+    {V : ℕ → ℝ≥0 → Ω → E} {Φ : ℕ → Ω → D(ℝ≥0, E)}
+    (hΦ : ∀ n, ∀ ω, (Φ n ω).toFun = fun t ↦ V n t ω) (hΦm : ∀ n, Measurable (Φ n))
+    (f g : E →ᵇ ℝ) {ns : ℕ → ℕ}
+    (hzero : ∀ s t : ℝ≥0, s ≤ t → ∀ Z ∈ SkorokhodSpace.evalFuns E (Set.Iic s),
+      Tendsto (fun k ↦ ∫ ω, ((f (V (ns k) t ω)
+            - ∫ r in Set.Ioc (0 : ℝ) (t : ℝ), g (V (ns k) r.toNNReal ω))
+          - (f (V (ns k) s ω)
+            - ∫ r in Set.Ioc (0 : ℝ) (s : ℝ), g (V (ns k) r.toNNReal ω)))
+          * Z (Φ (ns k) ω) ∂P) atTop (𝓝 0))
+    {ν : ProbabilityMeasure D(ℝ≥0, E)}
+    (hlim : Tendsto (β := ProbabilityMeasure D(ℝ≥0, E))
+      (fun k ↦ ⟨P.map (Φ (ns k)), inferInstance⟩) atTop (𝓝 ν)) :
+    ∃ T : Set ℝ≥0, T.Countable ∧ Dense T ∧
+      ∀ s ∈ T, ∀ t ∈ T, s ≤ t →
+        (ν : Measure D(ℝ≥0, E))[fun z ↦ SkorokhodSpace.mpTest f g t z | cadlagFiltration s]
+          =ᵐ[(ν : Measure D(ℝ≥0, E))] fun z ↦ SkorokhodSpace.mpTest f g s z := by
+  refine mpSolution_of_tendsto_cadlag_of_subseq_of_zero (Ω' := fun _ ↦ Ω) (m' := fun _ ↦ m)
+    (P' := fun _ ↦ P) (X' := Φ) hΦm f g (ns := ns) ?_ hlim
+  intro s t hst Z hZ
+  have he : ∀ (n : ℕ) (r : ℝ≥0) (ω : Ω), SkorokhodSpace.mpTest f g r (Φ n ω)
+      = f (V n r ω) - ∫ q in Set.Ioc (0 : ℝ) (r : ℝ), g (V n q.toNNReal ω) := by
+    intro n r ω
+    simp only [SkorokhodSpace.mpTest, hΦ n ω]
+  simpa only [he] using hzero s t hst Z hZ
 
 end CadlagChain
 
@@ -50333,6 +51809,115 @@ theorem isCompactContained_map_stepPath_of_martingale {γ : Type*}
   obtain ⟨k, hk, hlt⟩ := hω
   exact ⟨k, hk, le_of_lt (by simpa [Real.dist_eq] using hlt)⟩
 
+/-- **An increment is independent of the past of the partial sums**, which is the one
+probabilistic input the random walk of the acceptance test reads twice: once for the martingale
+property of the sums (`MeasureTheory.martingale_partialSum_of_iIndepFun`) and once for the
+decoupling of a single cell in Donsker's expansion
+(`MeasureTheory.integral_mul_comp_rescaledWalk_mul_eq_zero`).
+
+**Where the two indices part company.**  Mathlib's
+`ProbabilityTheory.iIndepFun.indep_comap_natural_of_lt`
+(`Mathlib/Probability/BorelCantelli.lean:43`) makes `ξ (m + 1)` independent of
+`Filtration.natural ξ m`, the past of the **summands**.  What a consumer holds is the past of the
+**sums**, and the passage is the inclusion `𝒢 (m + 1) ≤ Filtration.natural ξ m`, each `c · S j`
+with `j ≤ m + 1` being a constant multiple of a sum of increments of index at most `m`.  At
+`n = 0` there is no increment to condition away: `𝒢 0` is the σ-algebra of the constant
+`c · S 0 = 0`, hence `⊥`, and `ProbabilityTheory.indep_bot_right`
+(`Mathlib/Probability/Independence/Basic.lean:350`) serves.
+
+**The scaling factor is carried and costs nothing.**  The filtration is that of `c · S`, for an
+arbitrary real `c`, because that is the one the rescaled walk is written over
+(`MeasureTheory.martingale_rescaledWalk`, `MeasureTheory.isStronglyProgressive_rescaledWalk`);
+`c = 1` gives the unscaled shape after `one_mul`, which is how
+`MeasureTheory.martingale_partialSum_of_iIndepFun` reads it.  **No `c ≠ 0` is asked**: at `c = 0`
+the filtration collapses to `⊥`, where independence is only easier.
+
+**`IsProbabilityMeasure P` is a conclusion and not a hypothesis**, being read off the
+independence by `ProbabilityTheory.iIndepFun.isProbabilityMeasure`.  It is the `n = 0` branch
+that wants it, `indep_bot_right` asking `IsZeroOrProbabilityMeasure`. -/
+theorem indep_comap_natural_partialSum {P : Measure Ω} {ξ : ℕ → Ω → ℝ} (c : ℝ)
+    (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P) (n : ℕ) :
+    Indep (MeasurableSpace.comap (ξ n) inferInstance)
+      (Filtration.natural (fun m ω ↦ ∑ k ∈ Finset.range m, c * ξ k ω)
+        (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ (hmeas k).const_mul c) n) P := by
+  have : IsProbabilityMeasure P := hind.isProbabilityMeasure
+  set 𝒢 : Filtration ℕ mΩ := Filtration.natural
+      (fun m ω ↦ ∑ k ∈ Finset.range m, c * ξ k ω)
+      (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ (hmeas k).const_mul c) with h𝒢
+  have hle : ∀ i, 𝒢 (i + 1) ≤ Filtration.natural ξ hmeas i := by
+    intro i
+    refine iSup₂_le fun j hj ↦ ?_
+    refine Measurable.comap_le (StronglyMeasurable.measurable ?_)
+    refine Finset.stronglyMeasurable_fun_sum (m := Filtration.natural ξ hmeas i) _ fun k hk ↦ ?_
+    have hki : k ≤ i := by
+      have := Finset.mem_range.1 hk
+      omega
+    exact ((Filtration.stronglyAdapted_natural hmeas k).mono
+      ((Filtration.natural ξ hmeas).mono hki)).const_mul c
+  cases n with
+  | zero =>
+    refine indep_of_indep_of_le_right (indep_bot_right _) ?_
+    refine iSup₂_le fun j hj ↦ ?_
+    have hj0 : j = 0 := Nat.le_zero.1 hj
+    subst hj0
+    simp
+  | succ m =>
+    exact indep_of_indep_of_le_right
+      (hind.indep_comap_natural_of_lt hmeas (Nat.lt_succ_self m)) (hle m)
+
+/-- **A factor decouples from everything measurable for a σ-algebra it is independent of**:
+`∫ W · X = (∫ W) · (∫ X)` as soon as `σ (X)` is independent of a σ-algebra that `W` is measurable
+for.  It is Mathlib's product formula with the independence read off **σ-algebras** rather than
+off the pair of functions, which is the shape a filtration hands it over in.
+
+**No integrability is asked, and that is a property of Mathlib's lemma and not an oversight
+here.**  `ProbabilityTheory.IndepFun.integral_fun_mul_eq_mul_integral`
+(`Mathlib/Probability/Independence/Integration.lean:423`) gives `∫ W · X = P[W] · P[X]` from bare
+`AEStronglyMeasurable`; its proof runs through `ProbabilityTheory.IndepFun.integral_bilin'`
+(`:335`), which splits on the integrability of the product and observes that where that fails,
+one of the two factors fails as well -- so **all three integrals are then the Bochner junk value
+`0`**, and the identity holds by both sides being `0`.
+
+**The junk value is therefore read here, and it is read on purpose**: in the degenerate case the
+identity is empty rather than false.  A consumer that wants content supplies what makes the
+product integrable, and for the acceptance test that is boundedness of `W` together with
+integrability of `X`, whence `ProbabilityTheory.IndepFun.integrable_mul` (`:358`).  This is the
+one place in the milestone where a hypothesis is *left out* because the junk values on the two
+sides agree, and saying so at the declaration is what the standing rule asks instead of the word
+"harmless".
+
+**It is a product formula and not a null statement, and that is what makes the omission
+possible.**  Both consumers below -- the first order term of Donsker's expansion, where `∫ X = 0`,
+and the second order term, where `∫ X = σ²` -- are instances of it, and neither needs a
+hypothesis the other does not: a null statement would have had to be argued separately from an
+identity, and here the degenerate branch is the same `0 = 0` in both.
+
+**The hypothesis on `W` is `comap W ≤ m` and not `Measurable[m] W`**, the two being the same by
+`Measurable.comap_le` and `Measurable.of_comap_le`; the σ-algebra form is what
+`ProbabilityTheory.indep_of_indep_of_le_left`
+(`Mathlib/Probability/Independence/Basic.lean:371`) consumes, and it saves the consumer a
+conversion. -/
+theorem integral_mul_eq_mul_integral_of_indep_comap {P : Measure Ω} {m : MeasurableSpace Ω}
+    {X W : Ω → ℝ} (hindep : Indep (MeasurableSpace.comap X inferInstance) m P)
+    (hW : MeasurableSpace.comap W inferInstance ≤ m)
+    (hXm : AEStronglyMeasurable[mΩ] X P) (hWm : AEStronglyMeasurable[mΩ] W P) :
+    ∫ ω, W ω * X ω ∂P = (∫ ω, W ω ∂P) * ∫ ω, X ω ∂P := by
+  have hfun : IndepFun W X P := indep_of_indep_of_le_left hindep.symm hW
+  exact hfun.integral_fun_mul_eq_mul_integral hWm hXm
+
+/-- **A centred factor decouples to `0`**: `∫ W · X = 0` as soon as `X` is centred and `σ (X)` is
+independent of a σ-algebra that `W` is measurable for.
+
+It is `MeasureTheory.integral_mul_eq_mul_integral_of_indep_comap` at `∫ X = 0`, and everything
+said there about the absent integrability hypothesis is said about this one too. -/
+theorem integral_mul_eq_zero_of_indep_comap {P : Measure Ω} {m : MeasurableSpace Ω}
+    {X W : Ω → ℝ} (hindep : Indep (MeasurableSpace.comap X inferInstance) m P)
+    (hW : MeasurableSpace.comap W inferInstance ≤ m)
+    (hXm : AEStronglyMeasurable[mΩ] X P) (hWm : AEStronglyMeasurable[mΩ] W P)
+    (hcent : ∫ ω, X ω ∂P = 0) :
+    ∫ ω, W ω * X ω ∂P = 0 := by
+  rw [integral_mul_eq_mul_integral_of_indep_comap hindep hW hXm hWm, hcent, mul_zero]
+
 /-- **The partial sums of independent centred integrable summands are a
 martingale**, which is the one hypothesis
 `isCompactContained_map_stepPath_of_martingale` asks of the family it is applied
@@ -50350,15 +51935,12 @@ process is adapted, and its conditional expectation at `n + 1` is
 `σ (S 0, …, S n) = σ (ξ 0, …, ξ (n - 1))`, which is what the martingale property
 reads.  The consumer takes either, its filtration being an implicit argument.
 
-**What carries the step** is
-`ProbabilityTheory.iIndepFun.indep_comap_natural_of_lt`
-(`Mathlib/Probability/BorelCantelli.lean:43`), which makes `ξ (m + 1)`
-independent of `Filtration.natural ξ m`, together with
-`MeasureTheory.condExp_indep_eq`.  The passage from the one filtration to the
-other is the inclusion `𝒢 (m + 1) ≤ Filtration.natural ξ m`, each `S j` with
-`j ≤ m + 1` being a sum of increments of index at most `m`.  At `n = 0` there is
-no increment to condition away: `𝒢 0` is the σ-algebra of the constant
-`S 0 = 0`, hence `⊥`, and `ProbabilityTheory.indep_bot_right` serves.
+**What carries the step** is `MeasureTheory.indep_comap_natural_partialSum`, read at `c = 1`,
+together with `MeasureTheory.condExp_indep_eq`.  That the increment is independent of the past of
+the **sums** -- and not merely of the past of the summands, which is what Mathlib states -- is the
+whole of the probabilistic content, and it is stated there rather than here because Donsker's
+expansion reads it a second time, in
+`MeasureTheory.integral_mul_comp_rescaledWalk_mul_eq_zero`.
 
 **`IsProbabilityMeasure P` is a conclusion and not a hypothesis**, being read off
 the independence by `ProbabilityTheory.iIndepFun.isProbabilityMeasure`. -/
@@ -50373,29 +51955,10 @@ theorem martingale_partialSum_of_iIndepFun {P : Measure Ω} {ξ : ℕ → Ω →
     fun n ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ hmeas k with hSm
   set 𝒢 : Filtration ℕ mΩ := Filtration.natural (fun n ω ↦ ∑ k ∈ Finset.range n, ξ k ω) Sm
     with h𝒢
-  -- the past of the walk at `n + 1` sits inside the past of the increments at `n`
-  have hle : ∀ n, 𝒢 (n + 1) ≤ Filtration.natural ξ hmeas n := by
-    intro n
-    refine iSup₂_le fun j hj ↦ ?_
-    refine Measurable.comap_le (StronglyMeasurable.measurable ?_)
-    refine Finset.stronglyMeasurable_fun_sum (m := Filtration.natural ξ hmeas n) _ fun k hk ↦ ?_
-    have hkn : k ≤ n := by
-      have := Finset.mem_range.1 hk
-      omega
-    exact (Filtration.stronglyAdapted_natural hmeas k).mono
-      ((Filtration.natural ξ hmeas).mono hkn)
-  have hindep : ∀ n, Indep (MeasurableSpace.comap (ξ n) inferInstance) (𝒢 n) P := by
-    intro n
-    cases n with
-    | zero =>
-      refine indep_of_indep_of_le_right (indep_bot_right _) ?_
-      refine iSup₂_le fun j hj ↦ ?_
-      have hj0 : j = 0 := Nat.le_zero.1 hj
-      subst hj0
-      simp
-    | succ m =>
-      exact indep_of_indep_of_le_right
-        (hind.indep_comap_natural_of_lt hmeas (Nat.lt_succ_self m)) (hle m)
+  -- the increment is independent of the past of the sums; that is the extracted building block,
+  -- read here at `c = 1`
+  have hindep : ∀ n, Indep (MeasurableSpace.comap (ξ n) inferInstance) (𝒢 n) P := fun n ↦ by
+    simpa only [h𝒢, one_mul] using indep_comap_natural_partialSum (P := P) 1 hmeas hind n
   refine martingale_nat (Filtration.stronglyAdapted_natural Sm) (fun n ↦ ?_) (fun n ↦ ?_)
   · exact integrable_finsetSum _ fun k _ ↦ hint k
   · have hsplit : (fun ω ↦ ∑ k ∈ Finset.range (n + 1), ξ k ω)
@@ -51391,6 +52954,21 @@ theorem integrable_majorant_rescaledWalk {P : Measure Ω} {ξ : ℕ → Ω → �
       * ∑ k ∈ Finset.range ⌊j * ((n : ℝ≥0) + 1)⌋₊, |ξ k ω|) P :=
   (integrable_finsetSum _ fun k _ ↦ (hint k).abs).const_mul _
 
+/-- **The same majorant is in `L²` when the increments are**, which is what
+`MeasureTheory.IsEventuallyApproximableMul` asks where
+`MeasureTheory.IsEventuallyApproximable` asked integrability, and what
+`MeasureTheory.IsApproximatingPair.memLp_stoppedValue_of_dominated` consumes.
+
+It is the previous statement with `memLp_finsetSum` for `integrable_finsetSum` and `MemLp.abs`
+for `Integrable.abs`, the sum being finite in both cases.  The hypothesis is
+`hLp : ∀ k, MemLp (ξ k) 2 P`, which the acceptance test carries anyway: it is what the second
+approximating pair of the walk is built from. -/
+theorem memLp_majorant_rescaledWalk {P : Measure Ω} {ξ : ℕ → Ω → ℝ}
+    (hLp : ∀ k, MemLp (ξ k) 2 P) (n : ℕ) (j : ℝ≥0) :
+    MemLp (fun ω ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ k ∈ Finset.range ⌊j * ((n : ℝ≥0) + 1)⌋₊, |ξ k ω|) 2 P :=
+  (memLp_finsetSum _ fun k _ ↦ (hLp k).abs).const_mul _
+
 /-- **The approximant of the square is dominated on a bounded stretch of time by the square of the
 majorant of the walk plus two time-independent terms**, the other half of what
 `MeasureTheory.IsApproximatingPair.integrable_stoppedValue_of_dominated` asks of the pair
@@ -51494,9 +53072,15 @@ theorem integrable_majorant_sq_rescaledWalk {P : Measure Ω} [IsProbabilityMeasu
     (hmem.const_mul (Real.sqrt ((n : ℝ) + 1))⁻¹).integrable_sq
   exact (hg2.add (integrable_const _)).add (integrable_const _)
 
-/-- **The family of rescaled random walks is eventually approximable**, which is the second and
-last of the two things Donsker's acceptance test owes the tightness chain, the first being
-`MeasureTheory.isCompactContained_rescaledWalk`.
+/-- **The family of rescaled random walks is eventually approximable**, which is the unweighted
+half of what Donsker's acceptance test owes the tightness chain.
+
+**It is not by itself enough for the tightness**, and that is measured rather than suspected:
+every consumer above `MeasureTheory.IsEventuallyApproximable` reads a uniformly bounded process
+through the norm `‖g‖` of a test function, and the walk at mesh `n` carries no bound uniform in
+`n`.  What the tightness is read at is the conjunction with the weighted condition,
+`MeasureTheory.isEventuallyApproximableMul_rescaledWalk`, whose proof is this one with three
+changes and which this statement is therefore the pattern of.
 
 **Each member is approximated over its own filtration, and that is why
 `MeasureTheory.IsEventuallyApproximable` indexes the filtration by the family.**  The walk of
@@ -51606,6 +53190,886 @@ theorem isEventuallyApproximable_rescaledWalk {P : Measure Ω} [IsProbabilityMea
       (fun ω ↦ oscHitSeqGap_le_coe k δ u ω)
       (integrable_majorant_sq_rescaledWalk (σ := σ) hLp n (u + δ))
       (fun t ht ω ↦ abs_sq_rescaledWalk_le_of_le (P := P) n ht ω)
+
+/-! ### What the walks do *not* satisfy, and it is the condition at a fixed mesh
+
+`MeasureTheory.isEventuallyApproximable_rescaledWalk` above pays the acceptance test with the
+error quantified **outside** the index.  This subsection says why nothing weaker in that respect
+will do: the rescaled walk at a **fixed** mesh satisfies neither
+`MeasureTheory.IsApproximable` nor `MeasureTheory.IsApproximableMul`, and the reason is not a
+bound on the process but the deterministic mesh.
+
+**The cell is the first one of the walk's own mesh**, `Set.Ico 0 (n + 1)⁻¹`, on which the walk is
+the empty sum at every sample point.  Its mean does not move -- the walk is centred -- so
+`MeasureTheory.IsApproximable.integral_eq_of_eqOn_Ico` says nothing.  Its **mean square** climbs
+from `0` to `σ / (n + 1)`, and that is what
+`MeasureTheory.IsApproximable.integral_sq_eq_of_eqOn_Ico` forbids.
+
+**This settles what the weighted chain does and does not reach.**  The chain from
+`MeasureTheory.IsApproximableMul` to
+`MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isApproximableMul` was built for a process
+that is not uniformly bounded, and the rescaled walk is the case it was built for; what
+`MeasureTheory.not_forall_isApproximableMul_rescaledWalk` says is that removing the bound is not
+enough, the error having to leave the index as well.  The two weakenings are independent, and
+what the walks do satisfy is their **conjunction**,
+`MeasureTheory.isEventuallyApproximableMul_rescaledWalk` below.
+-/
+
+/-- The square of the rescaled walk is strongly measurable at every time. -/
+theorem aestronglyMeasurable_sq_rescaledWalk {P : Measure Ω} {ξ : ℕ → Ω → ℝ}
+    (hmeas : ∀ k, StronglyMeasurable (ξ k)) (n : ℕ) (t : ℝ≥0) :
+    AEStronglyMeasurable (fun ω ↦ ((Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ^ 2) P :=
+  (((Finset.stronglyMeasurable_fun_sum _
+    fun k _ ↦ hmeas k).const_mul _).pow 2).aestronglyMeasurable
+
+/-- The rescaled walk rests on the first cell of its own mesh. -/
+theorem rescaledWalk_eqOn_Ico_zero (ξ : ℕ → Ω → ℝ) (n : ℕ)
+    {r : ℝ≥0} (hr : r ∈ Set.Ico (0 : ℝ≥0) ((n : ℝ≥0) + 1)⁻¹) :
+    (fun ω ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+        * ∑ j ∈ Finset.range ⌊r * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+      = fun ω ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+        * ∑ j ∈ Finset.range ⌊(0 : ℝ≥0) * ((n : ℝ≥0) + 1)⌋₊, ξ j ω := by
+  have hn0 : ((n : ℝ≥0) + 1) ≠ 0 := by positivity
+  have hbmul : ((n : ℝ≥0) + 1)⁻¹ * ((n : ℝ≥0) + 1) = 1 := inv_mul_cancel₀ hn0
+  have hrlt : r * ((n : ℝ≥0) + 1) < 1 := by
+    have hlt : r * ((n : ℝ≥0) + 1) < ((n : ℝ≥0) + 1)⁻¹ * ((n : ℝ≥0) + 1) :=
+      mul_lt_mul_of_pos_right hr.2 (by positivity)
+    rwa [hbmul] at hlt
+  have hfl : ⌊r * ((n : ℝ≥0) + 1)⌋₊ = 0 := Nat.floor_eq_zero.2 hrlt
+  simp [hfl]
+
+/-- **The mean square of the rescaled walk moves across the first cell of its own mesh**, by
+`σ / (n + 1)`, the walk being `0` at `0` and one rescaled increment at `(n + 1)⁻¹`. -/
+theorem integral_sq_rescaledWalk_inv_ne {P : Measure Ω} {ξ : ℕ → Ω → ℝ}
+    {σ : ℝ} (hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = σ) (hσ : σ ≠ 0) (n : ℕ) :
+    (∫ ω, ((Real.sqrt ((n : ℝ) + 1))⁻¹
+        * ∑ j ∈ Finset.range ⌊((n : ℝ≥0) + 1)⁻¹ * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ^ 2 ∂P)
+      ≠ ∫ ω, ((Real.sqrt ((n : ℝ) + 1))⁻¹
+        * ∑ j ∈ Finset.range ⌊(0 : ℝ≥0) * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ^ 2 ∂P := by
+  have hn0 : ((n : ℝ≥0) + 1) ≠ 0 := by positivity
+  have hnR : (0 : ℝ) < (n : ℝ) + 1 := by positivity
+  have hfloorb : ⌊((n : ℝ≥0) + 1)⁻¹ * ((n : ℝ≥0) + 1)⌋₊ = 1 := by
+    rw [inv_mul_cancel₀ hn0]; simp
+  have hzero : ∫ ω, ((Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊(0 : ℝ≥0) * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ^ 2 ∂P = 0 := by
+    simp
+  have hone : ∫ ω, ((Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊((n : ℝ≥0) + 1)⁻¹ * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ^ 2 ∂P
+        = ((n : ℝ) + 1)⁻¹ * σ := by
+    rw [hfloorb]
+    have hrw : ∀ ω, ((Real.sqrt ((n : ℝ) + 1))⁻¹
+        * ∑ j ∈ Finset.range 1, ξ j ω) ^ 2 = ((n : ℝ) + 1)⁻¹ * ξ 0 ω ^ 2 := by
+      intro ω
+      rw [Finset.sum_range_one, mul_pow, inv_pow, Real.sq_sqrt hnR.le]
+    simp only [hrw]
+    rw [integral_const_mul, hsq 0]
+  rw [hzero, hone]
+  exact mul_ne_zero (by positivity) hσ
+
+/-- **The rescaled walk is approximable by no pair at a fixed mesh**, weighted or not.
+
+This is what `MeasureTheory.not_isApproximable_indicator_Ici` is asserted to imply for the walks
+in the section comments above, now proved at the walk itself. -/
+theorem not_isApproximable_rescaledWalk
+    {P : Measure Ω} [IsProbabilityMeasure P] {ξ : ℕ → Ω → ℝ}
+    (hmeas : ∀ k, StronglyMeasurable (ξ k))
+    {σ : ℝ} (hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = σ) (hσ : σ ≠ 0)
+    {𝓕 : Filtration ℝ≥0 mΩ} {q : ENNReal} {T K : ℝ≥0} {ε₀ : ℝ} {u : ℝ≥0} (n : ℕ)
+    (hT : ((n : ℝ≥0) + 1)⁻¹ ≤ T) :
+    ¬ IsApproximable 𝓕 P q T K
+        (fun (t : ℝ≥0) (ω : Ω) ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+          * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ε₀ u :=
+  fun happ ↦ integral_sq_rescaledWalk_inv_ne hsq hσ n
+    (happ.integral_sq_eq_of_eqOn_Ico (aestronglyMeasurable_sq_rescaledWalk hmeas n)
+      (by positivity) hT (fun r hr ↦ rescaledWalk_eqOn_Ico_zero ξ n hr))
+
+/-- **The rescaled walk is not weighted approximable at a fixed mesh.** -/
+theorem not_isApproximableMul_rescaledWalk
+    {P : Measure Ω} [IsProbabilityMeasure P] {ξ : ℕ → Ω → ℝ}
+    (hmeas : ∀ k, StronglyMeasurable (ξ k))
+    {σ : ℝ} (hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = σ) (hσ : σ ≠ 0)
+    {𝓕 : Filtration ℝ≥0 mΩ} {q : ENNReal} {T K Kw : ℝ≥0} {ε₀ : ℝ} {u : ℝ≥0} (n : ℕ)
+    (hT : ((n : ℝ≥0) + 1)⁻¹ ≤ T) :
+    ¬ IsApproximableMul 𝓕 P q T K Kw
+        (fun (t : ℝ≥0) (ω : Ω) ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+          * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ε₀ u :=
+  fun happ ↦ integral_sq_rescaledWalk_inv_ne hsq hσ n
+    (happ.integral_sq_eq_of_eqOn_Ico (aestronglyMeasurable_sq_rescaledWalk hmeas n)
+      (by positivity) hT (fun r hr ↦ rescaledWalk_eqOn_Ico_zero ξ n hr))
+
+/-- **The family hypothesis of `MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isApproximableMul`
+is unsatisfiable on Donsker's data.** -/
+theorem not_forall_isApproximableMul_rescaledWalk
+    {P : Measure Ω} [IsProbabilityMeasure P] {ξ : ℕ → Ω → ℝ}
+    (hmeas : ∀ k, StronglyMeasurable (ξ k))
+    {σ : ℝ} (hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = σ) (hσ : σ ≠ 0)
+    {𝓕 : Filtration ℝ≥0 mΩ} :
+    ¬ ∀ ε₀ : ℝ, 0 < ε₀ → ∀ u : ℝ≥0, 0 < u → ∃ q : ENNReal, ∃ T K Kw : ℝ≥0, u < T ∧
+        ∀ n : ℕ, IsApproximableMul 𝓕 P q T K Kw
+          (fun (t : ℝ≥0) (ω : Ω) ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+            * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ε₀ u := by
+  intro h
+  obtain ⟨q, T, K, Kw, huT, happ⟩ := h 1 one_pos 1 one_pos
+  refine not_isApproximableMul_rescaledWalk hmeas hsq hσ 0 ?_ (happ 0)
+  simpa using huT.le
+
+/-! ### The acceptance case of the conjunction, and the tightness it pays for
+
+What the two statements above forbid separately,
+`MeasureTheory.IsEventuallyApproximableMul` allows together, and this subsection produces the
+witness: the family of rescaled walks satisfies it, and its image laws are therefore tight.
+-/
+
+/-- **The family of rescaled random walks satisfies the conjunction of the two weakenings**,
+which is the last thing Donsker's acceptance test owes the tightness chain, the other being
+`MeasureTheory.isCompactContained_rescaledWalk`.
+
+**It is `MeasureTheory.isEventuallyApproximable_rescaledWalk` with `Kw = 0` and the same
+constant**, and it differs from it in exactly three places:
+
+* **the two weighted fields are free.**  The first pair *is* the walk
+  (`MeasureTheory.isApproximatingPair_rescaledWalk`), so `Y t ω - V t ω = 0` and the weight is
+  integrated against `0`; its compensator is `0`, so `eLpNorm (fun s ↦ Z s ω) q = 0` and `Kw = 0`
+  carries.  `simp` is the whole argument at both, as it already was at the unweighted error;
+* **integrability becomes `MemLp … 2` at four of the six places**, through
+  `MeasureTheory.IsApproximatingPair.memLp_stoppedValue_of_dominated` -- the same statement as
+  the integrable one with `MemLp.of_le` for `Integrable.mono'` -- against
+  `MeasureTheory.memLp_majorant_rescaledWalk`, which is the majorant of
+  `MeasureTheory.abs_rescaledWalk_le_of_le` in `L²` because the increments are.  The approximant
+  of the square keeps plain integrability, the structure asking no more of it;
+* **the compensator of the first pair is the zero process**, so its two `MemLp` fields are
+  `MemLp.zero`.  They are not reached by `simp`: `MemLp.zero` is stated at `(0 : α → ε)` and the
+  stopped value of a constant process is `fun ω ↦ 0`, which is that term only up to unfolding.
+
+**The two square integrabilities of the member itself are the same two statements as those of
+the first approximant**, the walk being its own approximant; they are supplied twice from one
+proof and not proved twice. -/
+theorem isEventuallyApproximableMul_rescaledWalk {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hLp : ∀ k, MemLp (ξ k) 2 P) (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0)
+    {σ : ℝ} (hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = σ)
+    {q : ENNReal} (hq : 1 < q) {T : ℝ≥0} {ε₀ : ℝ} {u : ℝ≥0} :
+    IsEventuallyApproximableMul
+      (fun n : ℕ ↦ floorFiltration (Filtration.natural
+          (fun m ω ↦ ∑ k ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω)
+          (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ (hmeas k).const_mul _))
+        ((n : ℝ≥0) + 1))
+      P q T (T ^ q.toReal⁻¹ * ‖σ‖₊) 0
+      (fun (n : ℕ) (t : ℝ≥0) (ω : Ω) ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+        * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ε₀ u := by
+  have hint : ∀ k, Integrable (ξ k) P := fun k ↦ (hLp k).integrable (by norm_num)
+  obtain ⟨D, hSc, hSd⟩ := TopologicalSpace.exists_countable_dense ℝ≥0
+  -- the error along the family, as in the unweighted case
+  have htend : Tendsto (fun n : ℕ ↦ ENNReal.ofReal (σ / ((n : ℝ) + 1)))
+      Filter.cofinite (𝓝 0) := by
+    rw [Nat.cofinite_eq_atTop]
+    have h0 : Tendsto (fun n : ℕ ↦ σ / ((n : ℝ) + 1)) atTop (𝓝 0) := by
+      simpa using tendsto_const_nhds.div_atTop
+        (tendsto_natCast_atTop_atTop.atTop_add tendsto_const_nhds)
+    simpa [Function.comp_def] using (ENNReal.continuous_ofReal.tendsto 0).comp h0
+  refine isEventuallyApproximableMul_of_tendsto_zero_cofinite htend fun n ↦ ?_
+  set 𝓖 : Filtration ℝ≥0 mΩ := floorFiltration (Filtration.natural
+      (fun m ω ↦ ∑ k ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω)
+      (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ (hmeas k).const_mul _))
+    ((n : ℝ≥0) + 1) with h𝓖
+  have : 𝓖.IsRightContinuous := by
+    rw [h𝓖]; exact isRightContinuous_floorFiltration _ (by positivity)
+  set V : ℝ≥0 → Ω → ℝ := fun t ω ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω with hV
+  have hVprog : IsStronglyProgressive 𝓖 V := isStronglyProgressive_rescaledWalk hmeas n
+  have hVcont : ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ V s ω) (Set.Ici t) t :=
+    fun ω t ↦ continuousWithinAt_rescaledWalk n ξ ω t
+  have hp1 : IsApproximatingPair 𝓖 P q T (T ^ q.toReal⁻¹ * ‖σ‖₊) V
+      (fun _ _ ↦ (0 : ℝ)) (fun _ _ ↦ (0 : ℝ)) :=
+    (isApproximatingPair_rescaledWalk hmeas hind hint hcent hq (T := T) n).mono_K zero_le
+  have hp2 := isApproximatingPair_sq_rescaledWalk hmeas hind hLp hcent hq (T := T) σ n
+  have hcap : ∀ k : ℕ, IsStoppingTime 𝓖
+      (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0)) :=
+    fun k ↦ isStoppingTime_oscHitSeqCap hSc hSd hVprog hVcont k u
+  have hgap : ∀ (δ : ℝ≥0) (k : ℕ), IsStoppingTime 𝓖
+      (fun ω ↦ min (oscHitSeq V ε₀ (k + 1) ω)
+        (min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0))) :=
+    fun δ k ↦ isStoppingTime_oscHitSeqGap hSc hSd hVprog hVcont k δ u
+  -- the walk in `L²` at the capped and at the gapped times, serving twice
+  have hVcapLp : ∀ k : ℕ, MemLp
+      (stoppedValue V (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0))) 2 P :=
+    fun k ↦ hp1.memLp_stoppedValue_of_dominated (hcap k) (fun ω ↦ min_le_right _ _)
+      (memLp_majorant_rescaledWalk hLp n u) (fun t ht ω ↦ abs_rescaledWalk_le_of_le n ht ω)
+  have hVgapLp : ∀ (δ : ℝ≥0) (k : ℕ), MemLp (stoppedValue V (fun ω ↦
+      min (oscHitSeq V ε₀ (k + 1) ω)
+        (min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0)))) 2 P :=
+    fun δ k ↦ hp1.memLp_stoppedValue_of_dominated (hgap δ k)
+      (fun ω ↦ oscHitSeqGap_le_coe k δ u ω)
+      (memLp_majorant_rescaledWalk hLp n (u + δ))
+      (fun t ht ω ↦ abs_rescaledWalk_le_of_le n ht ω)
+  refine ⟨hVcapLp, hVgapLp, V, fun _ _ ↦ (0 : ℝ), _, _, fun _ _ ↦ (0 : ℝ), fun _ _ ↦ σ,
+    hp1, hp2, ?_, ?_, ?_, hVcapLp, fun k ↦ ?_, fun k ↦ ?_, hVgapLp, fun δ k ↦ ?_,
+    fun δ k ↦ ?_⟩
+  · simp [hV]
+  · exact lintegral_biSup_enorm_sub_sq_rescaledWalk_le hsq n T
+  · simp
+  · exact MemLp.zero
+  · exact hp2.integrable_stoppedValue_of_dominated (hcap k) (fun ω ↦ min_le_right _ _)
+      (integrable_majorant_sq_rescaledWalk (σ := σ) hLp n u)
+      (fun t ht ω ↦ abs_sq_rescaledWalk_le_of_le (P := P) n ht ω)
+  · exact MemLp.zero
+  · exact hp2.integrable_stoppedValue_of_dominated (hgap δ k)
+      (fun ω ↦ oscHitSeqGap_le_coe k δ u ω)
+      (integrable_majorant_sq_rescaledWalk (σ := σ) hLp n (u + δ))
+      (fun t ht ω ↦ abs_sq_rescaledWalk_le_of_le (P := P) n ht ω)
+
+/-- **The path laws of the rescaled random walks are tight**, which is the tightness half of
+Donsker's acceptance test and the first family of laws on the Skorokhod space this file proves
+tight that is not constant.
+
+It is `MeasureTheory.isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul` at the
+two inputs the acceptance test was built to produce -- the compact containment
+`MeasureTheory.isCompactContained_rescaledWalk` and the approximability
+`MeasureTheory.isEventuallyApproximableMul_rescaledWalk` -- and nothing is estimated here.
+
+**The horizon and the exponent are chosen and not carried.**  The consumer asks, at every
+oscillation scale `ε₀` and every window radius `u`, for *some* `q`, `T`, `K`, `Kw` with `u < T`;
+the walks satisfy the condition at every `T` and every `q > 1`, so `T = u + 1` and `q = 2` serve,
+with `K = T ^ q.toReal⁻¹ * ‖σ‖₊` read off the statement and `Kw = 0`.
+
+**The seam between the two descriptions of the path is
+`MeasureTheory.stepPath_rescaledWalk_eq`**, the compact containment reading the walk as a step
+path over its nodes and the approximability as the process
+`(n + 1)⁻¹ᐟ² ∑ j < ⌊t (n + 1)⌋, ξ j`.  `Φ` is data and `hΦ` is stated in the second form, the
+first being derived.
+
+**`hvar` is read only by the compact containment** and `hsq` only by the approximability; the
+two are not redundant, the first being a bound and the second an identity, and Donsker's own
+normalisation `σ = 1` satisfies both. -/
+theorem isTightMeasureSet_map_rescaledWalk {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hLp : ∀ k, MemLp (ξ k) 2 P) (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0)
+    {σ : ℝ} (hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = σ) (hvar : ∀ k, variance (ξ k) P ≤ 1)
+    {Φ : ℕ → Ω → D(ℝ≥0, ℝ)}
+    (hΦ : ∀ (n : ℕ) (ω : Ω), (Φ n ω).toFun = fun t : ℝ≥0 ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+    (hΦm : ∀ n, Measurable (Φ n)) :
+    IsTightMeasureSet {P.map (Φ n) | n : ℕ} := by
+  obtain ⟨D, hSc, hSd⟩ := TopologicalSpace.exists_countable_dense ℝ≥0
+  have : ∀ n : ℕ, (floorFiltration (Filtration.natural
+      (fun m ω ↦ ∑ k ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω)
+      (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ (hmeas k).const_mul _))
+      ((n : ℝ≥0) + 1)).IsRightContinuous :=
+    fun n ↦ isRightContinuous_floorFiltration _ (by positivity)
+  refine isTightMeasureSet_map_pathOfProcess_of_isEventuallyApproximableMul
+    (𝓕 := fun n : ℕ ↦ floorFiltration (Filtration.natural
+        (fun m ω ↦ ∑ k ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω)
+        (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ (hmeas k).const_mul _))
+      ((n : ℝ≥0) + 1))
+    (V := fun (n : ℕ) (t : ℝ≥0) (ω : Ω) ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+    hSc hSd (fun n ↦ isStronglyProgressive_rescaledWalk hmeas n)
+    (fun n ω t ↦ continuousWithinAt_rescaledWalk n ξ ω t) hΦ ?_ ?_
+  · refine isCompactContained_rescaledWalk hmeas hind hLp hcent hvar ?_ hΦm
+    intro n ω
+    rw [hΦ n ω, stepPath_rescaledWalk_eq]
+  · intro ε₀ hε₀ u hu
+    refine ⟨2, u + 1, _, 0, lt_add_one u,
+      isEventuallyApproximableMul_rescaledWalk hmeas hind hLp hcent hsq
+        (by norm_num : (1 : ENNReal) < 2)⟩
+
+/-- **The path laws of the rescaled random walks are relatively compact**, which is the second
+item of the chain on Donsker's data.
+
+It is `MeasureTheory.isCompact_closure_range_probabilityMeasure_of_isTightMeasureSet` at
+`MeasureTheory.isTightMeasureSet_map_rescaledWalk`, and there is no estimate in it: the passage
+from tightness to compact closure is Prokhorov, and the crossing of the two types is the general
+statement.
+
+**The route is the approximate one and not the exact one.**  The tightness above is read off the
+approximability of the walks, not off a martingale hypothesis at `f ∘ X n`; the milestone allows
+either (`isCompact_closure_range_of_subalgebra_forall_exists_bounded_pair` is the other), and
+this is the one whose inputs the acceptance test has built. -/
+theorem isCompact_closure_range_map_rescaledWalk {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hLp : ∀ k, MemLp (ξ k) 2 P) (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0)
+    {σ : ℝ} (hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = σ) (hvar : ∀ k, variance (ξ k) P ≤ 1)
+    {Φ : ℕ → Ω → D(ℝ≥0, ℝ)}
+    (hΦ : ∀ (n : ℕ) (ω : Ω), (Φ n ω).toFun = fun t : ℝ≥0 ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+    (hΦm : ∀ n, Measurable (Φ n)) :
+    IsCompact (closure ((Set.range fun n : ℕ ↦ (⟨P.map (Φ n), inferInstance⟩ :
+      ProbabilityMeasure D(ℝ≥0, ℝ))) : Set (ProbabilityMeasure D(ℝ≥0, ℝ)))) :=
+  isCompact_closure_range_probabilityMeasure_of_isTightMeasureSet
+    (isTightMeasureSet_map_rescaledWalk hmeas hind hLp hcent hsq hvar hΦ hΦm)
+
+/-! ### The compensator of the third item of the chain, resolved
+
+`SkorokhodSpace.mpTest` is evaluation **minus** a compensator, `∫ u in (0, t], g (z u)`, and the
+third item of the chain measures the gap `𝔼[(mpTest t - mpTest s) * Z]`.  On a step path that
+compensator is an integral of a step function, and until it is written out there is nothing for
+the expansion of the evaluation part to be held against.  The two statements here write it out:
+the first for an arbitrary step function over an arithmetic grid, the second at the rescaled walk.
+
+Both are equalities at one sample point.  No limit is taken, no independence is read, and the
+second is the only item of the computation the acceptance test still owes that is free of
+probability. -/
+
+/-- **What is left of a broken cell is shorter than a cell**: the distance from a time to the
+node of the grid below it is at most the mesh `c⁻¹`.
+
+It is the whole of the arithmetic behind the two boundary terms of the gap, `Nat.floor_le` for
+the lower bound and `Nat.lt_floor_add_one` for the upper, and it is stated over a bare real `t`
+rather than over `ℝ≥0` because that is the form `integral_Ioc_comp_floor_mul` leaves the
+remainder in.
+
+**`0 ≤ t` is read and cannot be dropped.**  At a negative `t` the floor is `0`, the remainder is
+`t` itself, and the bound fails for every `t < -c⁻¹`; `Nat.floor` is not the floor there. -/
+theorem abs_sub_natCast_floor_div_le {c : ℝ} (hc : 0 < c) {t : ℝ} (ht : 0 ≤ t) :
+    |t - (⌊t * c⌋₊ : ℝ) / c| ≤ c⁻¹ := by
+  have h1 : (⌊t * c⌋₊ : ℝ) ≤ t * c := Nat.floor_le (by positivity)
+  have h2 : t * c < (⌊t * c⌋₊ : ℝ) + 1 := Nat.lt_floor_add_one _
+  have hkey : t - (⌊t * c⌋₊ : ℝ) / c = (t * c - (⌊t * c⌋₊ : ℝ)) / c := by
+    field_simp
+  rw [hkey, abs_div, abs_of_pos hc, abs_of_nonneg (by linarith), div_le_iff₀ hc,
+    inv_mul_cancel₀ hc.ne']
+  linarith
+
+/-- **The integral of a step function over an arithmetic grid, exactly and in closed form.**
+
+`fun u ↦ v ⌊u * c⌋₊` is the shape every path over an arithmetic grid has: `stepPath_natCast_div`
+says a step path with nodes `k / c` *is* this function, and `stepPath_rescaledWalk_eq` is the
+instance `c = n + 1`.  Its integral over `(0, t]` is a **sum and not an approximation** -- the
+path takes its node value on the whole of each cell -- with `⌊t * c⌋₊` full cells of length `c⁻¹`
+and one broken cell at the right end, whose length `t - ⌊t * c⌋₊ / c` is what is left over.
+
+**Nothing is asked of `v`**: no bound, no measurability.  The integrand is constant on the
+interior of every cell, so interval integrability there is `intervalIntegrable_const` carried
+across by `IntervalIntegrable.congr_uIoo`, and a hypothesis on `v` would be read nowhere.  That
+is what the consumer needs: the node values of a walk are unbounded in the sample point, and it
+is only the test function applied to them that is bounded.
+
+**The partition is `a k = min (k / c) t` and not `k / c`**, so that the last cell is already cut
+at `t` and `intervalIntegral.sum_integral_adjacent_intervals` telescopes to `∫ in 0..t` with no
+case split afterwards.  That `a k = k / c` up to `⌊t * c⌋₊` and `a (⌊t * c⌋₊ + 1) = t` are
+`Nat.floor_le` and `Nat.lt_floor_add_one`, and they are the whole of the arithmetic.
+
+**The right endpoint of a cell is not in it**, `⌊u * c⌋₊` jumping there; the passage is therefore
+`intervalIntegral.integral_congr_Ioo_of_le` over the **open** cell and not a rewrite. -/
+theorem integral_Ioc_comp_floor_mul {c : ℝ} (hc : 0 < c) (v : ℕ → ℝ) {t : ℝ} (ht : 0 ≤ t) :
+    ∫ u in Set.Ioc (0 : ℝ) t, v ⌊u * c⌋₊
+      = ∑ j ∈ Finset.range ⌊t * c⌋₊, c⁻¹ * v j
+        + (t - (⌊t * c⌋₊ : ℝ) / c) * v ⌊t * c⌋₊ := by
+  set N := ⌊t * c⌋₊ with hNdef
+  set a : ℕ → ℝ := fun k ↦ min ((k : ℝ) / c) t with hadef
+  have hle : ∀ k ≤ N, (k : ℝ) / c ≤ t := by
+    intro k hk
+    rw [div_le_iff₀ hc]
+    calc (k : ℝ) ≤ (N : ℝ) := by exact_mod_cast hk
+      _ ≤ t * c := Nat.floor_le (by positivity)
+  have hak : ∀ k ≤ N, a k = (k : ℝ) / c := fun k hk ↦ min_eq_left (hle k hk)
+  have ha0 : a 0 = 0 := by simp [hadef, ht]
+  have haN1 : a (N + 1) = t := by
+    refine min_eq_right ?_
+    rw [le_div_iff₀ hc]
+    exact_mod_cast (Nat.lt_floor_add_one (t * c)).le
+  have hmono : ∀ k, a k ≤ a (k + 1) := by
+    intro k
+    refine min_le_min ?_ le_rfl
+    gcongr
+    exact_mod_cast Nat.le_succ k
+  have hanonneg : ∀ k, 0 ≤ a k := by
+    intro k
+    exact le_min (by positivity) ht
+  have hub : ∀ k, a (k + 1) ≤ ((k : ℝ) + 1) / c := by
+    intro k
+    refine le_trans (min_le_left _ _) ?_
+    push_cast
+    exact le_rfl
+  have hfloor : ∀ k ≤ N, ∀ u ∈ Set.Ioo (a k) (a (k + 1)), ⌊u * c⌋₊ = k := by
+    intro k hk u hu
+    have hu0 : 0 ≤ u := le_of_lt (lt_of_le_of_lt (hanonneg k) hu.1)
+    have h1 : (k : ℝ) ≤ u * c := by
+      have := hu.1
+      rw [hak k hk, div_lt_iff₀ hc] at this
+      linarith
+    have h2 : u * c < (k : ℝ) + 1 := by
+      have hlt : u < ((k : ℝ) + 1) / c := lt_of_lt_of_le hu.2 (hub k)
+      rwa [lt_div_iff₀ hc] at hlt
+    exact (Nat.floor_eq_iff (by positivity)).2 ⟨h1, h2⟩
+  have hint : ∀ k < N + 1,
+      IntervalIntegrable (fun u ↦ v ⌊u * c⌋₊) volume (a k) (a (k + 1)) := by
+    intro k hk
+    refine (intervalIntegrable_const (c := v k)).congr_uIoo ?_
+    rw [Set.uIoo_of_le (hmono k)]
+    intro u hu
+    exact (congrArg v (hfloor k (Nat.lt_succ_iff.mp hk) u hu)).symm
+  have hterm : ∀ k < N + 1,
+      ∫ u in a k..a (k + 1), v ⌊u * c⌋₊ = (a (k + 1) - a k) * v k := by
+    intro k hk
+    rw [intervalIntegral.integral_congr_Ioo_of_le (g := fun _ ↦ v k) (hmono k)
+      (fun u hu ↦ congrArg v (hfloor k (Nat.lt_succ_iff.mp hk) u hu)),
+      intervalIntegral.integral_const, smul_eq_mul]
+  have hsum := intervalIntegral.sum_integral_adjacent_intervals (μ := volume)
+    (f := fun u ↦ v ⌊u * c⌋₊) (a := a) (n := N + 1) hint
+  rw [ha0, haN1, intervalIntegral.integral_of_le ht, Finset.sum_range_succ] at hsum
+  rw [← hsum, hterm N (Nat.lt_succ_self N), hak N le_rfl, haN1]
+  congr 1
+  refine Finset.sum_congr rfl fun k hk ↦ ?_
+  have hkN : k < N := Finset.mem_range.mp hk
+  rw [hterm k (Nat.lt_succ_of_lt hkN), hak k hkN.le, hak (k + 1) hkN]
+  congr 1
+  push_cast
+  field_simp
+  ring
+
+/-- **The compensator of `SkorokhodSpace.mpTest` at the rescaled random walk, exactly and in
+closed form**, which is the first stone of the Lindeberg computation the acceptance test still
+owes.
+
+The path of index `n` has mesh `(n + 1)⁻¹`, so the compensator up to `t` is the mean of the test
+function over the `⌊t (n + 1)⌋` nodes below `t`, weighted by the mesh, plus the piece of the
+broken cell at the right end.  **It is an equality**: there is no limit in it and no
+approximation, because the path takes its node value on the whole of each cell.
+
+It is `integral_Ioc_comp_floor_mul` at `c = n + 1`, and the one crossing is
+`Nonneg.nat_floor_coe` (`Mathlib/Algebra/Order/Nonneg/Floor.lean:41`): the compensator runs over
+a **real** time variable and the walk over an `ℝ≥0` one, and on `(0, t]` the floor of the first
+is the floor of the second, `Real.toNNReal` being the identity there.
+
+**The test function need not be bounded and need not be continuous.**  `SkorokhodSpace.mpTest`
+supplies a `g : ℝ →ᵇ ℝ`, and the coercion of one meets this statement; but neither field of that
+bundle is read here, which is why `g` is a bare function.  What *is* used of the walk is only the
+shape of its paths -- no measurability of the increments, no independence, no integrability.  The
+statement is about one sample point. -/
+theorem integral_comp_rescaledWalk_eq_sum (g : ℝ → ℝ) (n : ℕ) (ξ : ℕ → Ω → ℝ) (ω : Ω)
+    (t : ℝ≥0) :
+    ∫ u in Set.Ioc (0 : ℝ) (t : ℝ),
+        g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+          * ∑ j ∈ Finset.range ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+      = ∑ k ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊,
+          ((n : ℝ) + 1)⁻¹ * g ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)
+        + ((t : ℝ) - (⌊t * ((n : ℝ≥0) + 1)⌋₊ : ℝ) / ((n : ℝ) + 1))
+          * g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+              * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) := by
+  have hc : (0 : ℝ) < (n : ℝ) + 1 := by positivity
+  have hcoe : ∀ u : ℝ, 0 < u →
+      ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊ = ⌊u * ((n : ℝ) + 1)⌋₊ := by
+    intro u hu
+    have h : ((u.toNNReal * ((n : ℝ≥0) + 1) : ℝ≥0) : ℝ) = u * ((n : ℝ) + 1) := by
+      push_cast
+      rw [Real.coe_toNNReal u hu.le]
+    rw [← h]
+    norm_cast
+  have hcoet : ⌊t * ((n : ℝ≥0) + 1)⌋₊ = ⌊(t : ℝ) * ((n : ℝ) + 1)⌋₊ := by
+    have h : ((t * ((n : ℝ≥0) + 1) : ℝ≥0) : ℝ) = (t : ℝ) * ((n : ℝ) + 1) := by
+      push_cast
+      ring
+    rw [← h]
+    norm_cast
+  have hcongr : ∫ u in Set.Ioc (0 : ℝ) (t : ℝ),
+        g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+          * ∑ j ∈ Finset.range ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+      = ∫ u in Set.Ioc (0 : ℝ) (t : ℝ),
+        g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+          * ∑ j ∈ Finset.range ⌊u * ((n : ℝ) + 1)⌋₊, ξ j ω) := by
+    refine setIntegral_congr_fun measurableSet_Ioc fun u hu ↦ ?_
+    rw [hcoe u hu.1]
+  rw [hcongr, hcoet]
+  exact integral_Ioc_comp_floor_mul hc
+    (fun k ↦ g ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω))
+    (NNReal.coe_nonneg t)
+
+/-- **The compensator over a window, as the difference of two initial pieces.**
+
+This and not the previous statement is the shape the gap reads: `mpTest t - mpTest s` subtracts
+two compensators, each of them taken from `0`, and never integrates over `(s, t]`.  The cells
+strictly between the two floors survive with their full weight `c⁻¹`, and what is left of the
+two broken cells stands at the ends with the sign the difference gives it.
+
+**No integrability crosses here.**  The statement is an identity between the two closed forms of
+`integral_Ioc_comp_floor_mul`, so the passage is `Finset.sum_Ico_eq_sub` -- the additive twin of
+`Finset.prod_Ico_eq_div` (`Mathlib/Algebra/BigOperators/Intervals.lean:94`), generated by
+`@[to_additive]` and therefore carrying no `theorem` line of its own -- and `ring`.  Had the
+window been written as `∫ u in Set.Ioc s t` instead, the integrability of the integrand would
+have had to be produced to split it, and it is exactly what the previous statement was arranged
+not to need. -/
+theorem integral_Ioc_sub_Ioc_comp_floor_mul {c : ℝ} (hc : 0 < c) (v : ℕ → ℝ) {s t : ℝ}
+    (hs : 0 ≤ s) (hst : s ≤ t) :
+    (∫ u in Set.Ioc (0 : ℝ) t, v ⌊u * c⌋₊) - ∫ u in Set.Ioc (0 : ℝ) s, v ⌊u * c⌋₊
+      = ∑ j ∈ Finset.Ico ⌊s * c⌋₊ ⌊t * c⌋₊, c⁻¹ * v j
+        + (t - (⌊t * c⌋₊ : ℝ) / c) * v ⌊t * c⌋₊
+        - (s - (⌊s * c⌋₊ : ℝ) / c) * v ⌊s * c⌋₊ := by
+  have hmono : ⌊s * c⌋₊ ≤ ⌊t * c⌋₊ := Nat.floor_le_floor (by nlinarith)
+  rw [integral_Ioc_comp_floor_mul hc v (hs.trans hst), integral_Ioc_comp_floor_mul hc v hs,
+    Finset.sum_Ico_eq_sub _ hmono]
+  ring
+
+/-- **The compensator of `SkorokhodSpace.mpTest` over a window, at the rescaled random walk**,
+which is the form in which the gap of the third item of the chain carries it.
+
+The nodes of the walk lying in `(s, t]` contribute `(n + 1)⁻¹ g (S n j ω)` each, and the two
+broken cells at the ends contribute what is left of them.  Between the two time arguments the
+only thing that moves is the range of the sum: `Finset.Ico ⌊s (n+1)⌋ ⌊t (n+1)⌋`, whose cardinality
+is what the Lindeberg estimate is finally summed over.
+
+It is `integral_Ioc_sub_Ioc_comp_floor_mul` at `c = n + 1`, and it inherits from
+`integral_comp_rescaledWalk_eq_sum` both of that statement's economies: `g` is a bare function,
+and of the walk only the shape of its paths is read.  The hypothesis `s ≤ t` is the only one
+added, and it is read only to order the two floors. -/
+theorem integral_comp_rescaledWalk_sub_eq_sum (g : ℝ → ℝ) (n : ℕ) (ξ : ℕ → Ω → ℝ) (ω : Ω)
+    {s t : ℝ≥0} (hst : s ≤ t) :
+    (∫ u in Set.Ioc (0 : ℝ) (t : ℝ),
+        g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+          * ∑ j ∈ Finset.range ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊, ξ j ω))
+      - ∫ u in Set.Ioc (0 : ℝ) (s : ℝ),
+        g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+          * ∑ j ∈ Finset.range ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+      = ∑ k ∈ Finset.Ico ⌊s * ((n : ℝ≥0) + 1)⌋₊ ⌊t * ((n : ℝ≥0) + 1)⌋₊,
+          ((n : ℝ) + 1)⁻¹ * g ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)
+        + ((t : ℝ) - (⌊t * ((n : ℝ≥0) + 1)⌋₊ : ℝ) / ((n : ℝ) + 1))
+          * g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+              * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+        - ((s : ℝ) - (⌊s * ((n : ℝ≥0) + 1)⌋₊ : ℝ) / ((n : ℝ) + 1))
+          * g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+              * ∑ j ∈ Finset.range ⌊s * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) := by
+  have hmono : ⌊s * ((n : ℝ≥0) + 1)⌋₊ ≤ ⌊t * ((n : ℝ≥0) + 1)⌋₊ :=
+    Nat.floor_le_floor (by gcongr)
+  rw [integral_comp_rescaledWalk_eq_sum g n ξ ω t, integral_comp_rescaledWalk_eq_sum g n ξ ω s,
+    Finset.sum_Ico_eq_sub _ hmono]
+  ring
+
+/-- **The evaluation part of the gap over a window, at the rescaled random walk**, over the same
+index set the compensator part runs on.
+
+`SkorokhodSpace.mpTest` is evaluation minus compensator, and the two halves of the gap have to be
+brought over **one** index set before the cell by cell expansion can be written down at all: the
+compensator part is a sum over `Finset.Ico ⌊s (n+1)⌋ ⌊t (n+1)⌋`, and as long as the evaluation
+part is a bare difference there is nothing to hold against it.
+
+It is a telescoping sum and nothing else, `Finset.sum_Ico_sub` -- the additive twin of
+`Finset.prod_Ico_div` (`Mathlib/Algebra/BigOperators/Intervals.lean:226`), generated by
+`@[to_additive]` and carrying no `theorem` line of its own.  **There is no integral in it and no
+null set**, which is why the right endpoint costs nothing here and did cost something at the
+compensator: the evaluation reads the floor **at** `t`, where the cell identity holds. -/
+theorem sub_comp_rescaledWalk_eq_sum (f : ℝ → ℝ) (n : ℕ) (ξ : ℕ → Ω → ℝ) (ω : Ω)
+    {s t : ℝ≥0} (hst : s ≤ t) :
+    f ((Real.sqrt ((n : ℝ) + 1))⁻¹
+        * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+      - f ((Real.sqrt ((n : ℝ) + 1))⁻¹
+        * ∑ j ∈ Finset.range ⌊s * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+      = ∑ k ∈ Finset.Ico ⌊s * ((n : ℝ≥0) + 1)⌋₊ ⌊t * ((n : ℝ≥0) + 1)⌋₊,
+          (f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range (k + 1), ξ j ω)
+            - f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)) :=
+  (Finset.sum_Ico_sub
+    (f := fun k ↦ f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω))
+    (Nat.floor_le_floor (by gcongr))).symm
+
+/-- **The whole gap of the third item of the chain at the rescaled random walk, cell by cell**,
+which is what the Lindeberg expansion is carried out on.
+
+The hypothesis of `mpSolution_of_tendsto_cadlag_of_subseq_of_zero_pathOfProcess` is that
+`∫ (mpTest f g t - mpTest f g s) · Z` tends to `0`; the factor in front of `Z` is the left hand
+side here, and the right hand side is it written over the grid:
+
+* one summand per **cell** in `Finset.Ico ⌊s (n+1)⌋ ⌊t (n+1)⌋`, namely the increment of `f`
+  across the cell **minus** the compensator's weight `(n+1)⁻¹ g` at its left node -- and that is
+  exactly the shape a second order Taylor expansion of `f` is held against, the increment being
+  `(n+1)⁻¹ᐟ² ξ k`;
+* two boundary terms, one for each broken cell, each of size at most `(n+1)⁻¹ ‖g‖` and therefore
+  the part of the gap that vanishes without any expansion at all.
+
+**Still no probability.**  It is an identity at one sample point, assembled from
+`sub_comp_rescaledWalk_eq_sum` and `integral_comp_rescaledWalk_sub_eq_sum` by
+`Finset.sum_sub_distrib` and `ring`.  Everything the acceptance test still owes -- the centring,
+the second moment, the independence -- enters only when the expectation is taken of this. -/
+theorem mpTest_sub_rescaledWalk_eq_sum (f g : ℝ → ℝ) (n : ℕ) (ξ : ℕ → Ω → ℝ) (ω : Ω)
+    {s t : ℝ≥0} (hst : s ≤ t) :
+    (f ((Real.sqrt ((n : ℝ) + 1))⁻¹
+          * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+        - ∫ u in Set.Ioc (0 : ℝ) (t : ℝ),
+            g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+              * ∑ j ∈ Finset.range ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊, ξ j ω))
+      - (f ((Real.sqrt ((n : ℝ) + 1))⁻¹
+            * ∑ j ∈ Finset.range ⌊s * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+          - ∫ u in Set.Ioc (0 : ℝ) (s : ℝ),
+              g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+                * ∑ j ∈ Finset.range ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊, ξ j ω))
+      = (∑ k ∈ Finset.Ico ⌊s * ((n : ℝ≥0) + 1)⌋₊ ⌊t * ((n : ℝ≥0) + 1)⌋₊,
+            (f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range (k + 1), ξ j ω)
+              - f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)
+              - ((n : ℝ) + 1)⁻¹
+                * g ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)))
+        - ((t : ℝ) - (⌊t * ((n : ℝ≥0) + 1)⌋₊ : ℝ) / ((n : ℝ) + 1))
+            * g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+                * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+        + ((s : ℝ) - (⌊s * ((n : ℝ≥0) + 1)⌋₊ : ℝ) / ((n : ℝ) + 1))
+            * g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+                * ∑ j ∈ Finset.range ⌊s * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) := by
+  rw [show ∀ a b c d : ℝ, (a - b) - (c - d) = (a - c) - (b - d) from fun a b c d ↦ by ring,
+    sub_comp_rescaledWalk_eq_sum f n ξ ω hst,
+    integral_comp_rescaledWalk_sub_eq_sum g n ξ ω hst]
+  simp only [Finset.sum_sub_distrib]
+  ring
+
+/-- **The two boundary terms of the gap are of order `(n+1)⁻¹`, uniformly in the sample point**:
+the gap of the third item of the chain differs from its cell sum by at most `2 (n+1)⁻¹ ‖g‖`.
+
+`MeasureTheory.mpTest_sub_rescaledWalk_eq_sum` writes the gap as a sum over whole cells plus what
+is left of the two cells the window breaks.  Those two remainders carry no increment of `f` and
+are therefore not touched by the Lindeberg expansion at all; they are the part of the gap that
+goes away by counting, and this is that count.  What remains after it is the cell sum, on which
+the expansion is carried out.
+
+**Still no probability, and still an identity at one sample point turned into a bound at one
+sample point.**  The estimate is uniform in `ω`, which is what lets the consumer take it under
+the integral against a bounded weight without an integrability argument of its own.
+
+**Only `g` is asked to be bounded, and `f` is asked nothing.**  `f` cancels: the two boundary
+terms of `MeasureTheory.mpTest_sub_rescaledWalk_eq_sum` carry the compensator's weight alone.
+That is the reverse of what the cell sum will ask, where `f` is expanded and `g` only has to
+match `½ σ² f''`.
+
+**`0 ≤ C` is a conclusion and not a hypothesis**, read off `hg` at any point.  **The time
+arguments are `ℝ≥0`**, so the nonnegativity that `abs_sub_natCast_floor_div_le` reads is
+`NNReal.coe_nonneg` and never has to be carried; and the passage from the floor of an `ℝ≥0`
+product to the floor of the real one is `norm_cast` alone. -/
+theorem abs_mpTest_sub_rescaledWalk_sub_sum_le (f g : ℝ → ℝ) {C : ℝ} (hg : ∀ x, |g x| ≤ C)
+    (n : ℕ) (ξ : ℕ → Ω → ℝ) (ω : Ω) {s t : ℝ≥0} (hst : s ≤ t) :
+    |((f ((Real.sqrt ((n : ℝ) + 1))⁻¹
+            * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+          - ∫ u in Set.Ioc (0 : ℝ) (t : ℝ),
+              g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+                * ∑ j ∈ Finset.range ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊, ξ j ω))
+        - (f ((Real.sqrt ((n : ℝ) + 1))⁻¹
+              * ∑ j ∈ Finset.range ⌊s * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+            - ∫ u in Set.Ioc (0 : ℝ) (s : ℝ),
+                g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+                  * ∑ j ∈ Finset.range ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)))
+      - ∑ k ∈ Finset.Ico ⌊s * ((n : ℝ≥0) + 1)⌋₊ ⌊t * ((n : ℝ≥0) + 1)⌋₊,
+          (f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range (k + 1), ξ j ω)
+            - f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)
+            - ((n : ℝ) + 1)⁻¹
+              * g ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω))|
+      ≤ 2 * ((n : ℝ) + 1)⁻¹ * C := by
+  have hc : (0 : ℝ) < (n : ℝ) + 1 := by positivity
+  have hC : 0 ≤ C := (abs_nonneg _).trans (hg 0)
+  -- a broken cell is shorter than a cell, at either end of the window
+  have hbd : ∀ r : ℝ≥0,
+      |((r : ℝ) - (⌊r * ((n : ℝ≥0) + 1)⌋₊ : ℝ) / ((n : ℝ) + 1))| ≤ ((n : ℝ) + 1)⁻¹ := by
+    intro r
+    have hfl : ⌊r * ((n : ℝ≥0) + 1)⌋₊ = ⌊(r : ℝ) * ((n : ℝ) + 1)⌋₊ := by norm_cast
+    rw [hfl]
+    exact abs_sub_natCast_floor_div_le hc r.coe_nonneg
+  rw [mpTest_sub_rescaledWalk_eq_sum f g n ξ ω hst,
+    show ∀ a x y : ℝ, a - x + y - a = y - x from fun a x y ↦ by ring]
+  refine (abs_sub _ _).trans ?_
+  have h1 : |((s : ℝ) - (⌊s * ((n : ℝ≥0) + 1)⌋₊ : ℝ) / ((n : ℝ) + 1))
+      * g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+          * ∑ j ∈ Finset.range ⌊s * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)| ≤ ((n : ℝ) + 1)⁻¹ * C := by
+    rw [abs_mul]
+    exact mul_le_mul (hbd s) (hg _) (abs_nonneg _) (by positivity)
+  have h2 : |((t : ℝ) - (⌊t * ((n : ℝ≥0) + 1)⌋₊ : ℝ) / ((n : ℝ) + 1))
+      * g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+          * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)| ≤ ((n : ℝ) + 1)⁻¹ * C := by
+    rw [abs_mul]
+    exact mul_le_mul (hbd t) (hg _) (abs_nonneg _) (by positivity)
+  linarith
+
+/-- **The second order Taylor expansion with its remainder bounded by the third derivative**,
+which is what turns the increment of `f` across a cell into the two terms the expansion holds
+against plus something estimable.
+
+```
+|f (x + h) - f x - f' x · h - f'' x · h² / 2| ≤ M · |h|³ / 6   for  |f'''| ≤ M
+```
+
+It is the last ingredient of the cell computation that asks anything of `f` beyond boundedness,
+and the acceptance test can afford it: its class is `A = {(f, f'' / 2) | f ∈ Cc^∞(ℝ)}`, which
+hands over as many derivatives as are wanted.
+
+**Both signs of `h` are covered and no case split is needed**, because Mathlib's
+`taylor_mean_remainder_lagrange_iteratedDeriv` (`Mathlib/Analysis/Calculus/Taylor.lean:348`) is
+stated over `Set.uIcc x₀ x` rather than over an ordered `Set.Icc`.  `h = 0` is the one branch
+taken separately, and there both sides are `0`.
+
+**The passage from `iteratedDerivWithin` to `iteratedDeriv` at the endpoint costs nothing**,
+which is the thing to know before reaching for a reflection argument:
+`iteratedDerivWithin_eq_iteratedDeriv`
+(`Mathlib/Analysis/Calculus/IteratedDeriv/Defs.lean:70`) asks `UniqueDiffOn` of the set and
+`ContDiffAt` of the function, not that the set be a neighbourhood -- and `Set.uIcc x (x + h)` has
+unique differentials at `x` as soon as `h ≠ 0`, endpoint or not.
+
+**`0 ≤ M` is a conclusion and not a hypothesis**, read off `hM` at any point.  `ContDiff ℝ 3 f`
+is asked globally rather than on the interval, which is what every consumer has and what saves
+carrying the interval into the hypothesis. -/
+theorem abs_sub_taylor_two_le {f : ℝ → ℝ} {M : ℝ} (hf : ContDiff ℝ 3 f)
+    (hM : ∀ y, |iteratedDeriv 3 f y| ≤ M) (x h : ℝ) :
+    |f (x + h) - f x - deriv f x * h - iteratedDeriv 2 f x * h ^ 2 / 2| ≤ M * |h| ^ 3 / 6 := by
+  rcases eq_or_ne h 0 with rfl | hh
+  · simp
+  have hx : x ≠ x + h := fun hc ↦ hh (by linarith)
+  have hu : UniqueDiffOn ℝ (Set.uIcc x (x + h)) := uniqueDiffOn_uIcc hx
+  have hcd : ContDiffOn ℝ ((2 : ℕ) + 1) f (Set.uIcc x (x + h)) := by
+    exact hf.contDiffOn.of_le (by norm_num)
+  obtain ⟨x', -, heq⟩ := taylor_mean_remainder_lagrange_iteratedDeriv (n := 2) hx hcd
+  -- the two coefficients of the polynomial, read at the left endpoint of the interval
+  have h1 : iteratedDerivWithin 1 f (Set.uIcc x (x + h)) x = deriv f x := by
+    rw [iteratedDerivWithin_eq_iteratedDeriv hu (hf.contDiffAt.of_le (by norm_num))
+      left_mem_uIcc, iteratedDeriv_one]
+  have h2 : iteratedDerivWithin 2 f (Set.uIcc x (x + h)) x = iteratedDeriv 2 f x :=
+    iteratedDerivWithin_eq_iteratedDeriv hu (hf.contDiffAt.of_le (by norm_num)) left_mem_uIcc
+  have hpoly : taylorWithinEval f 2 (Set.uIcc x (x + h)) x (x + h)
+      = f x + deriv f x * h + iteratedDeriv 2 f x * h ^ 2 / 2 := by
+    rw [taylor_within_apply]
+    simp only [Finset.sum_range_succ, Finset.sum_range_zero, zero_add, iteratedDerivWithin_zero,
+      h1, h2, smul_eq_mul, Nat.factorial]
+    ring
+  have hkey : f (x + h) - f x - deriv f x * h - iteratedDeriv 2 f x * h ^ 2 / 2
+      = iteratedDeriv 3 f x' * h ^ 3 / 6 := by
+    have hrem := heq
+    rw [hpoly] at hrem
+    norm_num [Nat.factorial] at hrem
+    linarith [hrem]
+  rw [hkey, abs_div, abs_mul, abs_pow]
+  norm_num
+  gcongr
+  exact hM x'
+
+/-- **The first order term of Donsker's expansion vanishes, cell by cell** -- and this is where
+probability enters the acceptance test for the first time.
+
+After `MeasureTheory.mpTest_sub_rescaledWalk_eq_sum` the gap of the third item of the chain is a
+sum over cells, the summand of cell `k` being `f (S (k+1)) - f (S k) - (n+1)⁻¹ g (S k)`.  A second
+order Taylor expansion of `f` splits that first difference into a term of **first** order
+`f' (S k) · (n+1)⁻¹ᐟ² ξ k`, a term of second order, and a remainder; the second order term is what
+is held against the compensator and the remainder is estimated, but the first order term **has to
+vanish exactly** -- it is of order `(n+1)⁻¹ᐟ²`, and no estimate makes it go away.  This is that
+statement, with `h = f'` and `Z` the weight the gap is tested against.
+
+**There are two factors in front of `ξ k` and not one**, the path piece `h (S n k)` and the
+weight `Z`, and both are measurable for the past at `k`.  They are merged into a single such
+factor **before** independence is asked.  Asking it first of `ξ k` against `h (S n k)` leaves `Z`
+to be carried through afterwards, which is the same work twice.
+
+**Of the three hypotheses of the acceptance test this is the first statement to read any.**
+`hind` and `hcent` enter here; everything up to and including
+`MeasureTheory.mpTest_sub_rescaledWalk_eq_sum` is an identity at one sample point and used
+neither.
+
+**What it does not read is integrability** -- neither of `ξ k` nor of the product -- and neither
+`h` nor `Z` need be bounded, for the reason set out at
+`MeasureTheory.integral_mul_eq_zero_of_indep_comap`: where the product fails to be integrable,
+both sides are the Bochner junk value `0` and the identity is empty rather than false.
+Boundedness returns at the consumer, which needs the identity to have content.
+
+**The filtration is the one the walk is already written over**, the natural filtration of the
+**scaled** sums that `MeasureTheory.martingale_rescaledWalk` and
+`MeasureTheory.isStronglyProgressive_rescaledWalk` carry.  **It is not `Filtration.natural ξ` at
+`k`**: that σ-algebra holds `ξ k` itself, and over it the statement is false -- `h = 1` and
+`Z = ξ k` turn the left hand side into `∫ ξ k ^ 2`, which is `0` only for a degenerate
+increment. -/
+theorem integral_mul_comp_rescaledWalk_mul_eq_zero {P : Measure Ω} {ξ : ℕ → Ω → ℝ}
+    (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0) (n k : ℕ) {h : ℝ → ℝ} (hh : Measurable h) {Z : Ω → ℝ}
+    (hZ : Measurable[Filtration.natural
+        (fun m ω ↦ ∑ j ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω)
+        (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun j _ ↦ (hmeas j).const_mul _) k] Z) :
+    ∫ ω, h ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω) * ξ k ω * Z ω ∂P = 0 := by
+  set 𝒢 : Filtration ℕ mΩ := Filtration.natural
+      (fun m ω ↦ ∑ j ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω)
+      (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun j _ ↦ (hmeas j).const_mul _) with h𝒢
+  -- the path piece is measurable for the past at `k`
+  have hS : StronglyMeasurable[𝒢 k]
+      fun ω ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω := by
+    have hk := Filtration.stronglyAdapted_natural
+      (u := fun m ω ↦ ∑ j ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω)
+      (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun j _ ↦ (hmeas j).const_mul _) k
+    simpa only [h𝒢, Finset.mul_sum] using hk
+  -- the two factors in front of `ξ k`, merged into one before independence is asked
+  have hW : Measurable[𝒢 k]
+      fun ω ↦ h ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω) * Z ω :=
+    (hh.comp hS.measurable).mul hZ
+  have hrw : (fun ω ↦ h ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)
+        * ξ k ω * Z ω)
+      = fun ω ↦ (h ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω) * Z ω) * ξ k ω := by
+    funext ω; ring
+  rw [hrw]
+  exact integral_mul_eq_zero_of_indep_comap
+    (indep_comap_natural_partialSum _ hmeas hind k) hW.comap_le
+    (hmeas k).aestronglyMeasurable
+    ((hW.mono (𝒢.le k) le_rfl).stronglyMeasurable.aestronglyMeasurable) (hcent k)
+
+/-- **The second order term of Donsker's expansion, cell by cell**: under the expectation the
+square of the increment may be replaced by its constant second moment.
+
+This is the step at which the second moment enters the acceptance test, and the step at which it
+is decided whether the compensator is met.  The summand of cell `k` after
+`MeasureTheory.mpTest_sub_rescaledWalk_eq_sum` is
+`f (S (k+1)) - f (S k) - (n+1)⁻¹ g (S k)`, and a second order Taylor expansion writes the first
+difference as `f' (S k) · (n+1)⁻¹ᐟ² ξ k + ½ f'' (S k) · (n+1)⁻¹ ξ k ² + remainder`.  The first
+order term vanishes by `MeasureTheory.integral_mul_comp_rescaledWalk_mul_eq_zero`; the statement
+here turns the second into `½ f'' (S k) · (n+1)⁻¹ σ²`, which **cancels the compensator exactly**
+for `g = ½ σ² f''`, the generator of Brownian motion.  The factor `(n+1)⁻¹` is the same on both
+sides and never has to be looked at.
+
+**The second moment is carried as a bare real `v` and not as a square.**  Nothing in the proof
+reads positivity, and a consumer that wants `σ²` supplies it; asking for `σ` here would have
+handed every consumer a sign that the statement does not use.  It is likewise asked of the single
+index `k` and not of all of them: the cells are treated one at a time, and only the consumer that
+sums them needs the moments to agree.
+
+**Neither `h` nor `Z` need be bounded and `ξ k` need not be square integrable**, which is
+contrary to what one expects of an identity whose right hand side is not `0`.  The reason is that
+`MeasureTheory.integral_mul_eq_mul_integral_of_indep_comap` is a **product** formula: where the
+product fails to be integrable all three integrals are the Bochner junk value `0`, so the left
+hand side is `0` and the right hand side is `v · 0`.  The junk values agree here for the same
+reason they agree at the first order term, and not for the weaker reason that both sides are
+null.  Boundedness returns at the consumer, which needs the identity to have content.
+
+**The independence is that of `ξ k` and is pulled through the square**, `comap (ξ k ²) ≤
+comap (ξ k)` by `Measurable.comap_le` and `ProbabilityTheory.indep_of_indep_of_le_left`
+(`Mathlib/Probability/Independence/Basic.lean:371`).  Centring is **not** read: `hcent` does not
+occur, and of the three hypotheses of the acceptance test this statement carries `hind` alone.
+
+**The filtration is the natural one of the scaled sums**, as at the first order term, and for the
+same reason: `Filtration.natural ξ` at `k` holds `ξ k` itself and over it the statement is false
+-- `h = 1` and `Z = ξ k ²` make the left hand side `∫ ξ k ⁴` and the right hand side
+`(∫ ξ k ²) ²`, and the two differ by the variance of `ξ k ²`, which vanishes only for an
+increment whose square is almost surely constant.  Note that `Z = ξ k` is *not* a witness: it
+gives `∫ ξ k ³` against `σ² · ∫ ξ k`, and for a symmetric increment both are `0`. -/
+theorem integral_mul_comp_rescaledWalk_sq_mul_eq_smul {P : Measure Ω} {ξ : ℕ → Ω → ℝ}
+    (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P) (n k : ℕ) {v : ℝ}
+    (hsq : ∫ ω, ξ k ω ^ 2 ∂P = v) {h : ℝ → ℝ} (hh : Measurable h) {Z : Ω → ℝ}
+    (hZ : Measurable[Filtration.natural
+        (fun m ω ↦ ∑ j ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω)
+        (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun j _ ↦ (hmeas j).const_mul _) k] Z) :
+    ∫ ω, h ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω) * ξ k ω ^ 2 * Z ω ∂P
+      = v * ∫ ω, h ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω) * Z ω ∂P := by
+  set 𝒢 : Filtration ℕ mΩ := Filtration.natural
+      (fun m ω ↦ ∑ j ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω)
+      (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun j _ ↦ (hmeas j).const_mul _) with h𝒢
+  -- the path piece is measurable for the past at `k`
+  have hS : StronglyMeasurable[𝒢 k]
+      fun ω ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω := by
+    have hk := Filtration.stronglyAdapted_natural
+      (u := fun m ω ↦ ∑ j ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω)
+      (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun j _ ↦ (hmeas j).const_mul _) k
+    simpa only [h𝒢, Finset.mul_sum] using hk
+  -- the two factors flanking `ξ k ^ 2`, merged into one before independence is asked
+  have hW : Measurable[𝒢 k]
+      fun ω ↦ h ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω) * Z ω :=
+    (hh.comp hS.measurable).mul hZ
+  -- the independence of the increment, pulled through the square
+  have hle : MeasurableSpace.comap (fun ω ↦ ξ k ω ^ 2) inferInstance
+      ≤ MeasurableSpace.comap (ξ k) inferInstance :=
+    Measurable.comap_le ((Measurable.of_comap_le le_rfl).pow_const 2)
+  have hindep : Indep (MeasurableSpace.comap (fun ω ↦ ξ k ω ^ 2) inferInstance) (𝒢 k) P :=
+    indep_of_indep_of_le_left (indep_comap_natural_partialSum _ hmeas hind k) hle
+  have hrw : (fun ω ↦ h ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)
+        * ξ k ω ^ 2 * Z ω)
+      = fun ω ↦ (h ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω) * Z ω)
+        * ξ k ω ^ 2 := by
+    funext ω; ring
+  rw [hrw, integral_mul_eq_mul_integral_of_indep_comap hindep hW.comap_le
+    ((hmeas k).pow 2).aestronglyMeasurable
+    ((hW.mono (𝒢.le k) le_rfl).stronglyMeasurable.aestronglyMeasurable), hsq, mul_comm]
 
 end WalkContainment
 
