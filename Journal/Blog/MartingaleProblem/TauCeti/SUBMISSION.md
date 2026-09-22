@@ -43,6 +43,70 @@ attribution.
   `MeasureTheory.measurableCylinders`, `MeasureTheory.AddContent`), so what is
   taken over should first be reduced to what Mathlib does not already provide.
 
+* `scottnarmstrong/MarkovProcess` — Apache-2.0, `LICENSE` at the root, per-file
+  copyright headers (Copyright 2026 Scott Armstrong). Read on 2026-09-22 at
+  commit of 2026-09-13. 258 Lean files and about 45,700 lines, **no `sorry`**
+  and **no custom `axiom`**, warning-free under the core linters, pinned to
+  Lean and Mathlib `v4.33.0` — the same pin this journal carries, and two
+  releases behind the `master` these roadmaps target (`v4.35.0-rc2` on
+  2026-09-22).
+
+  It constructs, from a transition-kernel semigroup on a locally compact Polish
+  state space, the **continuous-path** Markov process with those transition
+  probabilities, unique and strong Markov, for every starting point and with no
+  exceptional set; on it the killed process, the gluing of local resolvents, the
+  one-point compactification, exit times, Dynkin's formula, optional stopping,
+  and Feynman–Kac.
+
+  **It does not touch the càdlàg world.** Grepped on 2026-09-22: no `cadlag`,
+  no `Skorokhod`, no `MartingaleProblem` anywhere in the 258 files. Path
+  continuity comes from an *intrinsic Kolmogorov moment criterion* on the
+  semigroup (Kolmogorov–Chentsov), not from a modification of a càdlàg process.
+  `SkorokhodSpace` and the abstract martingale problem of `MartingaleProblems`
+  therefore do not collide with it at all.
+
+  Four places where it does touch these roadmaps, so that a reviewer's question
+  about overlap has an answer already written:
+
+  * `Audit/BrownianMotion/` states, and the library proves, that the centred
+    canonical process is `IsBrownianReal` under every starting point, together
+    with `t⁻¹ (P_t f − f) → ½ f''` uniformly. That is the **target** of the
+    bridge in Milestone 11 of `MartingaleProblems`, reached from the other
+    side: from the heat semigroup rather than as the limit of rescaled walks.
+    The step "finite-dimensional distributions are the heat kernels ⟹
+    `IsBrownianReal`" is the reusable part.
+  * `Trajectory/DynkinMartingale.lean` proves that
+    `f (ω t) − ∫₀ᵗ (L f) (ω s) ds` is a martingale for a Feller semigroup — the
+    *solution* direction of the martingale problem in the special case, on
+    continuous-path space.
+  * `Trajectory/WeakConvergence.lean` is the structural counterpart of
+    Milestone 11: Trotter–Kato gives finite-dimensional convergence, one
+    **common** Kolmogorov moment bound gives tightness, and Stone–Weierstrass
+    on a single compact set of paths finishes it — its module doc says "three
+    epsilons finish the argument; no compactness theorem for measures is used".
+    That is deliberately not the route taken here, and the difference is worth
+    naming rather than hiding.
+  * `Kernel/WeakConvergence.lean` (vague convergence to a probability measure is
+    weak convergence, on a locally compact Polish space) and its use of
+    Mathlib's Ionescu–Tulcea with its own projective-family reindexing touch the
+    edges of `WeakConvergence` and `KolmogorovExtension`.
+
+  The licence permits reuse with attribution, and the same caution applies as to
+  `brownian-motion`: nothing is to be accepted merely because it matches that
+  file. The version gap is real — taking anything over means porting from
+  `v4.33.0` to `master`.
+
+  **One device from that repository is worth copying, and it is process rather
+  than mathematics, which is why it is recorded here and in no roadmap.** Its
+  `Audit/` holds, for each main theorem, a `Challenge.lean` that imports *only*
+  Mathlib, rebuilds from scratch every definition needed to read the theorem,
+  states it, and ends with a single `sorry` — checked with
+  `leanprover/comparator` — beside a `Solution.lean` proving the byte-identical
+  statement through private bridges to the library. It answers, in a form a
+  reviewer can check mechanically, the question these roadmaps will be asked
+  with their 2,927 declarations: whether the main theorem is the one a reader
+  means, or only the one the library's own definitions make it.
+
 One repository is cited in the manuscript but **not** here, and deliberately:
 the `D([0,1], ℝ)` development accompanying the Kuan reference. Two repositories
 accompany that paper and they are licensed differently.
