@@ -13803,8 +13803,8 @@ has to be chosen once for all `n`. What stands:
     place each, and the *same* independence serves the increment and its square,
     `ξ n ^ 2` being measurable for the σ-algebra of `ξ n`.
 
-  **And here is what the walk still owes the acceptance test, measured and not
-  guessed.** The compensator above is a **step function of the time**, while
+  **And here is the shape the acceptance test needs, measured and not guessed.**
+  The compensator above is a **step function of the time**, while
   `MeasureTheory.IsApproximatingPair` asks its compensator to be
   `∫_{(0,t]} Z s ω` for a density in `L^q` — and no step function is one. The
   approximant of the square is therefore not the compensated square itself but
@@ -13814,7 +13814,7 @@ has to be chosen once for all `n`. What stands:
   `σ`, and the gap is `(t - ⌊t (n + 1)⌋ / (n + 1)) · σ ≤ σ / (n + 1)` — uniform
   in `ω` and in `t`, and vanishing **along the family** and not at a fixed
   member. That is the reason this milestone carries
-  `MeasureTheory.IsEventuallyApproximable` at all, and it is now measured rather
+  `MeasureTheory.IsEventuallyApproximable` at all, and it is measured rather
   than asserted.
 
   * `isApproximatingPair_rescaledWalk`, **2026-09-22** — and the first pair is
@@ -13830,6 +13830,42 @@ has to be chosen once for all `n`. What stands:
     approximating, being its own approximant.** So the whole cost of the
     acceptance test sits in the second pair, the square, and a consumer joining
     the two raises `K` with `MeasureTheory.IsApproximatingPair.mono_K`.
+  * `isApproximatingPair_sq_rescaledWalk`, **2026-09-22** — the second pair, in
+    the shape the paragraph above prescribes: `V ^ 2 - ⟨V⟩ + t σ` with the
+    linear compensator `t σ`, the constant density `σ` and the constant
+    `K = T ^ q⁻¹ · ‖σ‖`. **`σ` is free**: no hypothesis says it is the common
+    second moment, because the martingale field reads `Y - C = V ^ 2 - ⟨V⟩`,
+    where the constant cancels, and the three fields that read the density read
+    a constant. The second moment enters only in the error, and is asked where
+    it is used.
+    It is **not** an instance of `isApproximatingPair_of_martingale`, and the
+    exchange is favourable: there the compensator is an integral along the path
+    and `progressive_sub` is the one real price; here the compensator is a
+    function of the time alone, so `progressive_sub` is `V ^ 2 - ⟨V⟩`, two step
+    paths and `IsStronglyProgressive.sub`. The deterministic step `⟨V⟩` is
+    progressive by `isStronglyProgressive_stepPath_natCastDiv` at a **constant**
+    value sequence — the statement asks the values to be adapted, and a constant
+    is.
+    **The constant does not move with `n`**, which is where a uniformity could
+    have failed and does not: `K` is read off the density alone, and `n` occurs
+    in neither the density nor the horizon.
+  * `enorm_sub_sq_rescaledWalk_le` and
+    `lintegral_biSup_enorm_sub_sq_rescaledWalk_le`, **2026-09-22** — the error of
+    that pair in closed form, `σ (t - ⌊t (n + 1)⌋ / (n + 1)) ≤ σ / (n + 1)`, and
+    the same bound in the shape `IsEventuallyApproximable` reads, a mean over `Ω`
+    of a supremum over the horizon. Both quantifiers are free, the pointwise
+    bound holding at every time and every sample point, so **the horizon `T` is
+    not read at all**: the error of this family grows with the mesh and not with
+    the window. `0 ≤ σ` is no hypothesis either — it is the second moment read
+    against `integral_nonneg`, which needs no integrability.
+  * `abs_rescaledWalk_le_of_le` and `integrable_majorant_rescaledWalk`,
+    **2026-09-22** — the integrable majorant that
+    `IsApproximatingPair.integrable_stoppedValue_of_dominated` asks of an
+    unbounded approximant: below `j` the walk is dominated by
+    `(n+1)^{-1/2} ∑_{k < ⌊j (n+1)⌋} |ξ k|`, a finite sum of integrable terms.
+    **Past `j` the domination is false**, the majorant growing with the number
+    of stages — which is why that statement asks for it only up to the bound of
+    the stopping time. Only integrability of the increments is read.
 
   With these the walk carries, over **one** filtration, everything the two halves
   of this milestone ask of a process: the martingale property, progressivity,

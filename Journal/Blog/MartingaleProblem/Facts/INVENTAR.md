@@ -55428,3 +55428,159 @@ und `isEventuallyApproximable_of_tendsto_zero_cofinite` mit dem Fehler
 wurde, ist der **Majorant** der Irrfahrt auf `Set.Iic u`: die Summe der
 `⌊u(n+1)⌋ + 1` Stufenwerte, integrierbar, aber als Aussage noch nicht
 hingeschrieben.
+
+### 2026-09-22, dritter Lauf des Tages — das zweite Paar des Akzeptanztests steht, samt seinem Fehler in geschlossener Form; und die Voraussetzung, die der Vorlauf ihm mitgegeben hatte, wird **nicht gelesen**: das gemeinsame zweite Moment gehört zum Fehler und nicht zum Paar
+
+**Der Vorschlag des Vorlaufs lautete `isApproximatingPair_sq_rescaledWalk`, und er
+ist eingelöst** — zusammen mit den beiden Aussagen über seinen Fehler, die der
+Zusammenbau danach verbraucht, und der halbe Majorant obendrein. Fünf
+Deklarationen, `check_master.py` ohne einen Fehler und ohne ein `sorry`, die
+Warnungen unverändert 18 / 38 / 112 und davon veraltet 0.
+
+#### Was gebaut ist — fünf Deklarationen
+
+| Deklaration | was sie sagt |
+| --- | --- |
+| `MeasureTheory.isApproximatingPair_sq_rescaledWalk` | `V² − ⟨V⟩ + t σ` mit dem **linearen** Kompensator `t σ`, der konstanten Dichte `σ` und `K = T^{1/q} · ‖σ‖` ist ein Paar der Klasse |
+| `MeasureTheory.enorm_sub_sq_rescaledWalk_le` | der Abstand dieses Approximanten zu `V²` ist `σ (t − ⌊t(n+1)⌋/(n+1)) ≤ σ/(n+1)`, an **jedem** Zeitpunkt und **jedem** Stichprobenpunkt |
+| `MeasureTheory.lintegral_biSup_enorm_sub_sq_rescaledWalk_le` | dieselbe Schranke in der Gestalt, die `IsEventuallyApproximable` liest |
+| `MeasureTheory.abs_rescaledWalk_le_of_le` | unterhalb `j` ist die Irrfahrt durch `(n+1)^{-1/2} ∑_{k<⌊j(n+1)⌋} \|ξ k\|` dominiert |
+| `MeasureTheory.integrable_majorant_rescaledWalk` | dieser Majorant ist integrierbar |
+
+Alle fünf mit `check_axioms_master.py` geprüft und auf `propext`,
+`Classical.choice`, `Quot.sound` und nichts sonst. Der Einbau erzeugt **keine
+einzige neue Warnung**; `check_own_names.py` zählt unverändert 439 Namen ohne
+Deckung, die fünf neuen Zitate der README sind also gedeckt.
+
+#### Der Befund, und er berichtigt den Vorschlag: `σ` ist im Paar **frei**
+
+Der Vorlauf hatte das Paar für „Zuwächse mit gemeinsamem zweitem Moment `σ`"
+angekündigt und die Voraussetzung ausdrücklich verteidigt („Donsker verlangt
+identisch verteilte Zuwächse ohnehin"). Beim Hinschreiben kommt heraus, daß sie
+in **keinem** der acht Felder gelesen wird:
+
+* das Martingalfeld liest `Y − C = V² − ⟨V⟩`, und dort **kürzt sich die
+  Konstante heraus**, gleich welche sie ist;
+* die drei Felder, die die Dichte lesen — `compensator_eq`, `ae_memLp`,
+  `lintegral_eLpNorm_le` —, lesen eine **Konstante**, und eine Konstante ist ihr
+  eigener Betrag;
+* die drei Meßbarkeits- und Stetigkeitsfelder sehen den Zufall gar nicht.
+
+`isApproximatingPair_sq_rescaledWalk` trägt deshalb `σ : ℝ` als freien Parameter
+und **kein** `hsq`. Das zweite Moment sitzt genau dort, wo es verbraucht wird: in
+`enorm_sub_sq_rescaledWalk_le`, denn erst der *Abstand zum Quadrat* fragt danach,
+ob die gewählte Dichte die richtige ist. Das ist nicht Allgemeinheit auf
+Verdacht, sondern die stehende Regel angewandt: die Voraussetzung steht an der
+Aussage, die sie braucht.
+
+#### Der zweite Befund: der vorhergesagte Weg über `isApproximatingPair_of_martingale` trägt nicht — und muß es nicht
+
+Der einzige bisherige Bewohner der Klasse, `isApproximatingPair_of_martingale`,
+nimmt `Y = F ∘ X` und `C = ∫ g ∘ X` **längs desselben Pfades**. Hier ist der
+Kompensator `t σ` eine Funktion der **Zeit allein**, und es gibt kein stetiges
+`F`, das `V² − ⟨V⟩ + tσ` als Bild eines Prozesses schriebe, ohne die Zeit in den
+Zustandsraum aufzunehmen; die Abrundung, die `⟨V⟩` trägt, ist nicht stetig.
+
+Die acht Felder sind deshalb einzeln bedient, und **der Tausch ist günstig**:
+`progressive_sub` ist dort „the one real price" — die gemeinsame Meßbarkeit des
+Kompensators über `measurable_uncurry_min_of_rightContinuous` —, und hier ist es
+`V² − ⟨V⟩`, zwei Treppenpfade und `IsStronglyProgressive.sub`. Der ganze Beweis
+kommt ohne den dyadischen Apparat aus.
+
+Der deterministische Kompensator `⟨V⟩` ist dabei
+`isStronglyProgressive_stepPath_natCastDiv` an einer **konstanten** Wertefolge:
+jene Aussage verlangt von den Werten, daß sie als diskreter Prozeß adaptiert
+sind, und eine Konstante ist es für jede Filtration. Die Rechtsstetigkeit ebenso,
+über `continuousWithinAt_stepPath_nnreal`.
+
+#### Der dritte Befund, und er war die vermutete Klemmstelle: die Konstante `K` bewegt sich nicht mit `n`
+
+Der Vorlauf hatte die gleichmäßige Schranke an den Kompensator als zweite
+Klemmstelle benannt und zugleich vermutet, sie sei bei konstanter Dichte frei.
+Sie ist es, und der Grund ist ablesbar: `K` wird **allein an der Dichte**
+abgelesen, die Dichte ist `σ`, und `n` kommt weder in ihr noch im Horizont vor.
+`eLpNorm` einer Konstanten über ein Fenster der Länge `T` ist `σ T^{1/q}`, und
+`lintegral_const` gegen ein Wahrscheinlichkeitsmaß läßt das stehen.
+
+#### Der vierte Befund, unvorhergesehen: der Horizont wird im Fehler **gar nicht** gelesen
+
+`lintegral_biSup_enorm_sub_sq_rescaledWalk_le` schätzt ein Mittel über `Ω` eines
+Supremums über `Set.Iic T` — und die Schranke hängt von `T` nicht ab. Beide
+Quantoren sind umsonst, weil die punktweise Schranke an **jedem** Zeitpunkt und
+**jedem** Stichprobenpunkt steht: `iSup₂_le` erledigt das Supremum,
+`lintegral_const` das Mittel. Der Fehler dieser Familie wächst also mit der
+**Maschenweite** und nicht mit dem **Fenster**. Ein gröberer Weg — erst eine
+zeitabhängige Schranke, dann das Supremum — hätte `T` in die Konstante getragen
+und die Gleichmäßigkeit über den Horizont verloren.
+
+Ebenso ist `0 ≤ σ` keine Voraussetzung: es ist `hsq 0` gegen `integral_nonneg`
+gelesen, und **das braucht keine Integrierbarkeit** — ein Bochner-Integral einer
+nichtnegativen Funktion ist nichtnegativ, ob die Funktion integrierbar ist oder
+nicht. Unabhängigkeit, Zentriertheit und Meßbarkeit der Zuwächse kommen im
+Fehlerbeweis an keiner Stelle vor; er ist eine Identität zwischen zwei
+Kompensatoren und eine Einschachtelung einer Abrundung.
+
+#### Zwei Namen, die Zeit gekostet haben
+
+* **`div_add_div_same` gibt es für einen Körper nicht.** Unter
+  `Mathlib/Algebra/` steht nur `ENNReal.div_add_div_same`
+  (`Mathlib/Basic/ENNReal/Inv.lean:508`); für einen Körper heißt die Aussage
+  `add_div` (`Mathlib/Algebra/Field/Basic.lean:36`) und läuft in die andere
+  Richtung. Der Beweis ist am Ende ganz ohne sie geführt, über `le_div_iff₀`
+  und `one_div_mul_cancel`.
+* **`setIntegral_const` liefert `μ.real s • c` und nicht `(μ s).toReal • c`.**
+  `Real.volume_Ioc` paßt darauf nicht mehr; zu nehmen ist
+  `Real.volume_real_Ioc_of_le`
+  (`Mathlib/MeasureTheory/Measure/Lebesgue/Basic.lean:120`), und dann ist
+  `compensator_eq` eine Zeile. Wer `Real.volume_Ioc` und `ENNReal.toReal_ofReal`
+  hintereinanderschreibt, sucht ein Muster, das nicht mehr dasteht.
+
+#### Was für `isEventuallyApproximable_rescaledWalk` noch fehlt, und es ist genau das, was der Vorlauf benannt hatte
+
+Die beiden Paare stehen, die beiden Fehler stehen — `0` für die Irrfahrt selbst,
+`ofReal (σ/(n+1))` für ihr Quadrat, und beide gehen längs `n` gegen `0`. Offen
+sind allein die **vier Integrierbarkeiten** von
+`MeasureTheory.IsEventuallyApproximable`, und sie hängen an einer einzigen
+Aussage: dem **integrierbaren Majoranten** der beiden Approximanten auf
+`Set.Iic j`. Für die Irrfahrt steht er seit diesem Lauf, für ihr Quadrat nicht.
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**Die Hälfte des Majoranten ist in diesem Lauf noch mitgenommen.**
+`abs_rescaledWalk_le_of_le` und `integrable_majorant_rescaledWalk` sind der
+Majorant der **Irrfahrt**: unterhalb `j` ist
+`‖V t ω‖ ≤ (n+1)^{-1/2} ∑_{k < ⌊j(n+1)⌋} |ξ k ω| =: g ω`, eine endliche Summe
+integrierbarer Glieder — die Monotonie der Abrundung ist `Nat.floor_le_floor`,
+die Ausdehnung der Summe `Finset.sum_le_sum_of_subset_of_nonneg` gegen
+`Finset.abs_sum_le_sum_abs`, und die Integrierbarkeit `integrable_finsetSum` an
+`(hint k).abs`. Gelesen wird allein die Integrierbarkeit der Zuwächse: keine
+Unabhängigkeit, keine Zentriertheit, keine Quadratintegrierbarkeit.
+
+> **Das benannte Ziel: `MeasureTheory.abs_sq_rescaledWalk_le_of_le` und
+> `MeasureTheory.integrable_majorant_sq_rescaledWalk`** — die andere Hälfte: für
+> `t ≤ j` ist `‖V t ω² − ⟨V⟩ t + t σ‖ ≤ g ω² + ⟨V⟩ j + j |σ|` mit demselben `g`,
+> und dieser Majorant ist integrierbar.
+
+**Worauf es ruht, und alles steht.** Die Schranke an `V²` ist die obige
+quadriert; `⟨V⟩` ist in `t` **wachsend**, weil seine Glieder Integrale von
+Quadraten sind (`integral_nonneg`), also `|⟨V⟩ t| ≤ ⟨V⟩ j`; und `|t σ| ≤ j |σ|`.
+Die beiden letzten sind bei festem `j` **Konstanten** in `ω` und kosten nur
+`integrable_const`. Für `g²` kommt `MemLp ξ 2` hinzu — sie steht schon in den
+Voraussetzungen von `isApproximatingPair_sq_rescaledWalk` —, und der Weg ist
+`MemLp` der endlichen Summe über `MemLp.add` gegen `MemLp.integrable_sq`.
+
+**Die Stelle, an der es klemmen kann, benannt.**
+`integrable_stoppedValue_of_dominated` verlangt die Dominierung nur **bis `j`**,
+und das ist hier wesentlich: oberhalb von `j` wächst der Majorant mit der Zahl
+der Stufen, und eine Schranke über `Set.Iic j` hinaus gäbe es nicht. Die
+Stoppzeiten, die `IsEventuallyApproximable` einsetzt, sind
+`min (oscHitSeq …) u` und `min (oscHitSeq …) (min (oscHitSeq …) u + δ)`; die
+erste ist durch `u` beschränkt, die zweite durch `u + δ` — **zwei verschiedene
+Schranken `j`**, und der Majorant ist an der jeweiligen zu nehmen. Das ist
+Buchhaltung, aber es ist die Stelle, an der ein Lauf mit *einem* `j`
+hängenbliebe.
+
+**Und danach, und erst danach**, ist `isEventuallyApproximable_rescaledWalk` der
+Zusammenbau: die beiden Paare mit `mono_K` auf ein gemeinsames `K` gehoben, die
+vier Integrierbarkeiten über `integrable_stoppedValue_of_dominated`, und
+`isEventuallyApproximable_of_tendsto_zero_cofinite` mit `e n = ofReal (σ/(n+1))`.

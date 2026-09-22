@@ -50290,6 +50290,277 @@ theorem isApproximatingPair_rescaledWalk {P : Measure Ω} [IsProbabilityMeasure 
     (fun ω t ↦ continuousWithinAt_rescaledWalk n ξ ω t) hmart
   simpa using h
 
+/-- **The square of the rescaled walk is a pair of the class**, with the **linear** compensator
+`C t ω = t σ`, the constant density `Z = σ` and the constant `K = T ^ q.toReal⁻¹ * ‖σ‖₊`.  It is
+the *second* of the two pairs the approximability condition asks for, and the whole cost of the
+acceptance test sits here, the first being free.
+
+**The approximant is not the compensated square.**  `martingale_sq_rescaledWalk` compensates
+`V ^ 2` by `⟨V⟩ t = ∑_{j < ⌊t (n + 1)⌋} ∫ ((n + 1)⁻¹ᐟ² ξ j) ^ 2`, which is a **step function of
+the time**, while `MeasureTheory.IsApproximatingPair.compensator_eq` asks the compensator to be
+`∫_{(0,t]} Z s ω` and no step function is one.  What is a pair is therefore the compensated
+square **plus** an absolutely continuous compensator, `V ^ 2 - ⟨V⟩ + t σ`, whose compensated
+process is again `V ^ 2 - ⟨V⟩`; the error against `V ^ 2` is the gap `t σ - ⟨V⟩ t` between the two
+compensators, and `MeasureTheory.enorm_sub_sq_rescaledWalk_le` measures it.
+
+**`σ` is free, and that is not a generality on suspicion.**  No hypothesis says that `σ` is the
+common second moment of the increments: *every* constant density gives a pair, because the
+martingale field reads `Y - C = V ^ 2 - ⟨V⟩` and the constant cancels there, and the three fields
+that read `Z` read a constant.  The second moment enters only in the **error**, and it is stated
+where it is used.  A consumer joining the two pairs raises `K = 0` of
+`MeasureTheory.isApproximatingPair_rescaledWalk` to this one with
+`MeasureTheory.IsApproximatingPair.mono_K`.
+
+**It is not an instance of `MeasureTheory.isApproximatingPair_of_martingale`**, and the reason is
+the same one: there the compensator is the integral of `g ∘ X` along the path, here it is a
+function of the time alone.  The eight fields are met one by one, and the exchange is favourable
+-- `progressive_sub`, which is the one real price of that statement, is free here, `V ^ 2 - ⟨V⟩`
+being a step path in the time and `MeasureTheory.IsStronglyProgressive.sub` doing the rest.
+
+**Where each field comes from.**  `progressive` is
+`MeasureTheory.IsStronglyProgressive.continuous_comp` at `Continuous.pow` for the square,
+`MeasureTheory.isStronglyProgressive_stepPath_natCastDiv` at a **constant** value sequence for
+`⟨V⟩` -- a deterministic step path is progressive for any filtration -- and
+`MeasureTheory.isStronglyProgressive_of_measurable_uncurry_min` for `t σ`;  `martingale` is
+`MeasureTheory.martingale_sq_rescaledWalk` after `add_sub_cancel_right`;  `rightContinuous` is
+`MeasureTheory.continuousWithinAt_rescaledWalk` squared against
+`MeasureTheory.continuousWithinAt_stepPath_nnreal`, both at **every** sample point, so the almost
+sure quantifier is not spent;  `compensator_eq` is `MeasureTheory.setIntegral_const` and
+`Real.volume_real_Ioc_of_le`;  `ae_memLp` and `lintegral_eLpNorm_le` are
+`MeasureTheory.memLp_of_bounded_Ioc` and `MeasureTheory.eLpNorm_le_of_bounded_Ioc` at the bound
+`‖σ‖`, the constant being its own bound.
+
+**The constant does not move with `n`**, and that is where a uniformity could have failed and does
+not: `K` is read off the density alone, the density is `σ`, and `n` occurs in neither.  The
+`L^q` norm of a constant over a window of length `T` is `σ T ^ q.toReal⁻¹`, and
+`MeasureTheory.lintegral_const` against a probability measure leaves it unchanged.
+
+**The square integrability of the increments replaces their integrability**, and the centring is
+read exactly where `MeasureTheory.martingale_sq_rescaledWalk` reads it; nothing else in the eight
+fields looks at the law of `ξ`. -/
+theorem isApproximatingPair_sq_rescaledWalk {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hLp : ∀ k, MemLp (ξ k) 2 P) (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0)
+    {q : ENNReal} (hq : 1 < q) {T : ℝ≥0} (σ : ℝ) (n : ℕ) :
+    IsApproximatingPair
+      (floorFiltration (Filtration.natural
+          (fun m ω ↦ ∑ k ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω)
+          (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ (hmeas k).const_mul _))
+        ((n : ℝ≥0) + 1)) P q T (T ^ q.toReal⁻¹ * ‖σ‖₊)
+      (fun t ω ↦ ((Real.sqrt ((n : ℝ) + 1))⁻¹
+            * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ^ 2
+          - ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊,
+              ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω') ^ 2 ∂P
+          + (t : ℝ) * σ)
+      (fun t _ ↦ (t : ℝ) * σ) (fun _ _ ↦ σ) := by
+  have hcpos : (0 : ℝ≥0) < (n : ℝ≥0) + 1 := by positivity
+  set 𝒢 : Filtration ℕ mΩ := Filtration.natural
+      (fun m ω ↦ ∑ k ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω)
+      (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ (hmeas k).const_mul _) with h𝒢
+  have hV := isStronglyProgressive_rescaledWalk hmeas n
+  have hV2 := hV.continuous_comp (continuous_pow 2)
+  have hA : IsStronglyProgressive (floorFiltration 𝒢 ((n : ℝ≥0) + 1))
+      (fun (t : ℝ≥0) (_ : Ω) ↦ ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊,
+        ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω') ^ 2 ∂P) := by
+    have h := isStronglyProgressive_stepPath_natCastDiv (𝒢 := 𝒢) (c := (n : ℝ≥0) + 1) hcpos
+      (y := fun k (_ : Ω) ↦ ∑ j ∈ Finset.range k,
+        ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω') ^ 2 ∂P)
+      (fun _ ↦ stronglyMeasurable_const)
+    simpa only [stepPath_natCast_div hcpos] using h
+  have hlin : IsStronglyProgressive (floorFiltration 𝒢 ((n : ℝ≥0) + 1))
+      (fun (t : ℝ≥0) (_ : Ω) ↦ (t : ℝ) * σ) := by
+    refine isStronglyProgressive_of_measurable_uncurry_min fun t ↦ ?_
+    exact (measurable_coe_nnreal_real.comp (measurable_fst.min measurable_const)).mul_const σ
+  have hAc : ∀ (ω : Ω) (s : ℝ≥0), ContinuousWithinAt
+      (fun r : ℝ≥0 ↦ ∑ j ∈ Finset.range ⌊r * ((n : ℝ≥0) + 1)⌋₊,
+        ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω') ^ 2 ∂P) (Set.Ici s) s := by
+    intro ω s
+    have h := continuousWithinAt_stepPath_nnreal (fun k : ℕ ↦ (k : ℝ≥0) / ((n : ℝ≥0) + 1))
+      (fun k ↦ ∑ j ∈ Finset.range k, ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω') ^ 2 ∂P) s
+    simpa only [stepPath_natCast_div hcpos] using h
+  refine
+    { one_lt_exponent := hq
+      progressive := (hV2.sub hA).add hlin
+      progressive_sub := ?_
+      martingale := ?_
+      rightContinuous := ?_
+      compensator_eq := ?_
+      ae_memLp := ?_
+      lintegral_eLpNorm_le := ?_ }
+  · simpa only [add_sub_cancel_right] using hV2.sub hA
+  · simpa only [add_sub_cancel_right] using martingale_sq_rescaledWalk hmeas hind hLp hcent n
+  · refine Filter.Eventually.of_forall fun ω s ↦ ?_
+    have h1 : Tendsto (fun r : ℝ≥0 ↦ ((Real.sqrt ((n : ℝ) + 1))⁻¹
+          * ∑ j ∈ Finset.range ⌊r * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ^ 2
+        - ∑ j ∈ Finset.range ⌊r * ((n : ℝ≥0) + 1)⌋₊,
+            ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω') ^ 2 ∂P) (𝓝[≥] s)
+        (𝓝 (((Real.sqrt ((n : ℝ) + 1))⁻¹
+              * ∑ j ∈ Finset.range ⌊s * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ^ 2
+            - ∑ j ∈ Finset.range ⌊s * ((n : ℝ≥0) + 1)⌋₊,
+                ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω') ^ 2 ∂P)) :=
+      ((continuousWithinAt_rescaledWalk n ξ ω s).pow 2).sub (hAc ω s)
+    simpa only [add_sub_cancel_right] using h1
+  · intro t ω
+    rw [setIntegral_const, Real.volume_real_Ioc_of_le t.coe_nonneg, sub_zero, smul_eq_mul]
+  · exact Filter.Eventually.of_forall fun _ ↦
+      memLp_of_bounded_Ioc measurable_const (fun _ ↦ le_rfl) q T
+  · have hcoe : ((T ^ q.toReal⁻¹ * ‖σ‖₊ : ℝ≥0) : ENNReal)
+        = (T : ENNReal) ^ q.toReal⁻¹ * ENNReal.ofReal ‖σ‖ := by
+      rw [ENNReal.coe_mul, ENNReal.coe_rpow_of_nonneg _ (inv_nonneg.2 ENNReal.toReal_nonneg),
+        ← coe_nnnorm, ENNReal.ofReal_coe_nnreal]
+    rw [lintegral_const, measure_univ, mul_one, hcoe]
+    exact eLpNorm_le_of_bounded_Ioc measurable_const (fun _ ↦ le_rfl) q T
+
+/-- **The error of the second pair, in closed form and uniform in the sample point and in the
+time**: the approximant of `MeasureTheory.isApproximatingPair_sq_rescaledWalk` differs from the
+square of the walk by `σ (t - ⌊t (n + 1)⌋ / (n + 1))`, hence by at most `σ / (n + 1)`.
+
+**This is the gap between two compensators and nothing else.**  Both approximant and square carry
+`V ^ 2`; what is left is `t σ - ⟨V⟩ t`, and under a common second moment `σ` the discrete
+compensator is `⌊t (n + 1)⌋ σ / (n + 1)` exactly -- the scaling `((n + 1)⁻¹ᐟ² x) ^ 2 =
+(n + 1)⁻¹ x ^ 2` is `Real.sq_sqrt` and the sum is `Finset.sum_const`.  The two floor facts
+`Nat.floor_le` and `Nat.lt_floor_add_one` bracket the gap in `[0, (n + 1)⁻¹]`, and no cancellation
+of the walk is used: the bound holds at **every** sample point, so it survives the supremum over
+the horizon without an almost sure quantifier.
+
+**The bound is a fixed positive number at a fixed `n`**, and that is the quantitative face of
+`MeasureTheory.not_isApproximable_indicator_Ici`: a rescaled walk is approximable by no pair
+whatever, and this says by how much any pair must miss.  It is what
+`MeasureTheory.IsEventuallyApproximable` is carried for, the error being spent along the family
+and not at a member.
+
+**`0 ≤ σ` is not a hypothesis.**  It is `hsq 0` read against `MeasureTheory.integral_nonneg` at
+the square, which needs no integrability -- a Bochner integral of a nonnegative function is
+nonnegative whether or not the function is integrable.  Neither independence nor centring nor
+measurability of the increments is read anywhere: this is an identity between two compensators and
+a bracketing of a floor. -/
+theorem enorm_sub_sq_rescaledWalk_le {P : Measure Ω} {ξ : ℕ → Ω → ℝ} {σ : ℝ}
+    (hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = σ) (n : ℕ) (t : ℝ≥0) (ω : Ω) :
+    ‖(((Real.sqrt ((n : ℝ) + 1))⁻¹
+              * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ^ 2
+            - ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊,
+                ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω') ^ 2 ∂P
+            + (t : ℝ) * σ)
+          - ((Real.sqrt ((n : ℝ) + 1))⁻¹
+              * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ^ 2‖ₑ
+      ≤ ENNReal.ofReal (σ / ((n : ℝ) + 1)) := by
+  have hσ : 0 ≤ σ := by
+    rw [← hsq 0]
+    exact integral_nonneg fun _ ↦ sq_nonneg _
+  have hn : (0 : ℝ) < (n : ℝ) + 1 := by positivity
+  set m : ℕ := ⌊t * ((n : ℝ≥0) + 1)⌋₊ with hm
+  have hterm : ∀ j : ℕ, ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω') ^ 2 ∂P
+      = ((n : ℝ) + 1)⁻¹ * σ := by
+    intro j
+    have h : ∀ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω') ^ 2
+        = ((n : ℝ) + 1)⁻¹ * ξ j ω' ^ 2 := by
+      intro ω'
+      rw [mul_pow, inv_pow, Real.sq_sqrt hn.le]
+    simp only [h]
+    rw [integral_const_mul, hsq j]
+  have hA : ∑ j ∈ Finset.range m, ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω') ^ 2 ∂P
+      = (m : ℝ) * (((n : ℝ) + 1)⁻¹ * σ) := by
+    simp only [hterm, Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+  have h1 : ((m : ℕ) : ℝ≥0) ≤ t * ((n : ℝ≥0) + 1) := Nat.floor_le zero_le
+  have h2 : t * ((n : ℝ≥0) + 1) < ((m : ℕ) : ℝ≥0) + 1 := by
+    rw [hm]; exact Nat.lt_floor_add_one _
+  have h1' : (m : ℝ) ≤ (t : ℝ) * ((n : ℝ) + 1) := by exact_mod_cast h1
+  have h2' : (t : ℝ) * ((n : ℝ) + 1) < (m : ℝ) + 1 := by exact_mod_cast h2
+  have hle : (m : ℝ) * ((n : ℝ) + 1)⁻¹ ≤ (t : ℝ) := by
+    rw [← div_eq_mul_inv, div_le_iff₀ hn]
+    exact h1'
+  have hlt : (t : ℝ) - (m : ℝ) * ((n : ℝ) + 1)⁻¹ ≤ ((n : ℝ) + 1)⁻¹ := by
+    rw [inv_eq_one_div, le_div_iff₀ hn, sub_mul, mul_assoc,
+      one_div_mul_cancel (ne_of_gt hn), mul_one]
+    linarith
+  have hgap : (((Real.sqrt ((n : ℝ) + 1))⁻¹
+            * ∑ j ∈ Finset.range m, ξ j ω) ^ 2
+          - ∑ j ∈ Finset.range m,
+              ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω') ^ 2 ∂P
+          + (t : ℝ) * σ)
+        - ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range m, ξ j ω) ^ 2
+      = σ * ((t : ℝ) - (m : ℝ) * ((n : ℝ) + 1)⁻¹) := by
+    rw [hA]; ring
+  rw [hgap, Real.enorm_eq_ofReal (mul_nonneg hσ (by linarith))]
+  refine ENNReal.ofReal_le_ofReal ?_
+  rw [div_eq_mul_inv]
+  exact mul_le_mul_of_nonneg_left hlt hσ
+
+/-- **The error of the second pair in the shape `MeasureTheory.IsEventuallyApproximable` reads
+it**, which is a mean over `Ω` of a supremum over the horizon.
+
+Both quantifiers are free: the pointwise bound of `MeasureTheory.enorm_sub_sq_rescaledWalk_le`
+holds at every time and every sample point, so `iSup₂_le` disposes of the supremum and
+`MeasureTheory.lintegral_const` of the mean, a probability measure leaving the constant
+unchanged.  **The horizon `T` is therefore not read at all** -- the error of this family does not
+grow with the window, only with the mesh -- and that is the sharper statement, a supremum over
+`Set.Iic T` of a bound depending on `T` being what a cruder route would produce.
+
+It is the second of the two error fields of that structure; the first is zero, the walk being its
+own approximant in `MeasureTheory.isApproximatingPair_rescaledWalk`.  Sent along `n` the bound
+goes to `0`, which is the hypothesis of
+`MeasureTheory.isEventuallyApproximable_of_tendsto_zero_cofinite` at
+`e n = ENNReal.ofReal (σ / (n + 1))`. -/
+theorem lintegral_biSup_enorm_sub_sq_rescaledWalk_le {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} {σ : ℝ} (hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = σ) (n : ℕ) (T : ℝ≥0) :
+    ∫⁻ ω, ⨆ t ∈ Set.Iic T,
+        ‖(((Real.sqrt ((n : ℝ) + 1))⁻¹
+                * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ^ 2
+              - ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊,
+                  ∫ ω', ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω') ^ 2 ∂P
+              + (t : ℝ) * σ)
+            - ((Real.sqrt ((n : ℝ) + 1))⁻¹
+                * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ^ 2‖ₑ ∂P
+      ≤ ENNReal.ofReal (σ / ((n : ℝ) + 1)) := by
+  refine le_trans (lintegral_mono fun ω ↦
+    iSup₂_le fun t _ ↦ enorm_sub_sq_rescaledWalk_le hsq n t ω) ?_
+  rw [lintegral_const, measure_univ, mul_one]
+
+/-- **The rescaled walk is dominated on a bounded stretch of time by the sum of the stage values
+it can reach there**, and the majorant does not depend on the time.
+
+This is the hypothesis `MeasureTheory.IsApproximatingPair.integrable_stoppedValue_of_dominated`
+asks of an **unbounded** approximant, and a rescaled walk is one: its value at stage `k` is a
+partial sum of independent summands and no constant bounds it.  What does bound it below `j` is
+the sum of absolute increments over the `⌊j (n + 1)⌋` stages the walk can have reached, which is
+`MeasureTheory.integrable_majorant_rescaledWalk`.
+
+**The domination is stated only for `t ≤ j`, and past `j` it is false** -- the majorant grows with
+the number of stages.  That is exactly the shape the consumer wants: the stopped value reads the
+process below the bound of its stopping time and nowhere else.
+
+Nothing about the law of the increments enters: monotonicity of `Nat.floor`, the triangle
+inequality `Finset.abs_sum_le_sum_abs`, and `Finset.sum_le_sum_of_subset_of_nonneg` to widen the
+range, the added terms being absolute values. -/
+theorem abs_rescaledWalk_le_of_le {ξ : ℕ → Ω → ℝ} (n : ℕ) {j t : ℝ≥0} (ht : t ≤ j) (ω : Ω) :
+    ‖(Real.sqrt ((n : ℝ) + 1))⁻¹
+        * ∑ k ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ k ω‖
+      ≤ (Real.sqrt ((n : ℝ) + 1))⁻¹
+        * ∑ k ∈ Finset.range ⌊j * ((n : ℝ≥0) + 1)⌋₊, |ξ k ω| := by
+  have hfloor : ⌊t * ((n : ℝ≥0) + 1)⌋₊ ≤ ⌊j * ((n : ℝ≥0) + 1)⌋₊ :=
+    Nat.floor_le_floor (mul_le_mul_of_nonneg_right ht zero_le)
+  have hsub : Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊ ⊆ Finset.range ⌊j * ((n : ℝ≥0) + 1)⌋₊ :=
+    fun x hx ↦ Finset.mem_range.2 ((Finset.mem_range.1 hx).trans_le hfloor)
+  have h1 : |∑ k ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ k ω|
+      ≤ ∑ k ∈ Finset.range ⌊j * ((n : ℝ≥0) + 1)⌋₊, |ξ k ω| :=
+    (Finset.abs_sum_le_sum_abs _ _).trans
+      (Finset.sum_le_sum_of_subset_of_nonneg hsub fun i _ _ ↦ abs_nonneg _)
+  rw [Real.norm_eq_abs, abs_mul,
+    abs_of_nonneg (by positivity : (0 : ℝ) ≤ (Real.sqrt ((n : ℝ) + 1))⁻¹)]
+  exact mul_le_mul_of_nonneg_left h1 (by positivity)
+
+/-- **The majorant of `MeasureTheory.abs_rescaledWalk_le_of_le` is integrable**, which is the other
+half of what `MeasureTheory.IsApproximatingPair.integrable_stoppedValue_of_dominated` asks.
+
+It is a **finite** sum -- the stages below `j` are `⌊j (n + 1)⌋` many -- so `integrable_finsetSum`
+against `Integrable.abs` is the whole proof, and only integrability of the increments is read:
+neither independence, nor centring, nor square integrability. -/
+theorem integrable_majorant_rescaledWalk {P : Measure Ω} {ξ : ℕ → Ω → ℝ}
+    (hint : ∀ k, Integrable (ξ k) P) (n : ℕ) (j : ℝ≥0) :
+    Integrable (fun ω ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ k ∈ Finset.range ⌊j * ((n : ℝ≥0) + 1)⌋₊, |ξ k ω|) P :=
+  (integrable_finsetSum _ fun k _ ↦ (hint k).abs).const_mul _
+
 end WalkContainment
 
 end MeasureTheory
