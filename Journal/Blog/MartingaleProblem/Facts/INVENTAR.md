@@ -56171,3 +56171,294 @@ nach einem `L²`-Feld der Klasse ist ein Punkt für **später und für allgemein
 Donsker. Wer das Feld doch einführt, führt es als Abschwächung ein und belegt, an welcher Stelle
 der jetzige `K`-Term nicht mehr reicht — die Stelle ist benannt und heißt `lintegral_const_mul'`
 in Z. 43870.
+
+### 2026-09-22, achter Lauf des Tages — das benannte Ziel steht, und mit ihm zwei weitere: die **Zelle** und der **Horizont** tragen die Schranke am Prozeß nicht mehr; was dabei an ihre Stelle tritt, ist an *einer* Stelle kein Tausch von Hypothesen, sondern ein **Parameter**, und der Grund dafür ist benennbar und heißt `lintegral_const_mul'`
+
+**Das benannte Ziel des Vorlaufs war `lintegral_ofReal_dist_sq_le_of_isApproximatingPair_of_integrable_mul`**,
+mit der Vorfrage nach der Additivität des gewichteten Summanden längs der Kette — die der Vorlauf
+in seinem eigenen Nachtrag schon beantwortet hatte. Beides ist eingelöst, und der Lauf ist über
+das Ziel hinausgegangen, weil die Antwort des Nachtrags trug.
+
+#### Gebaut und übersetzt — drei Deklarationen
+
+Alle in `TauCeti/MartingaleProblems/Suggested.lean`, Zeilen **nachher**:
+
+* **`MeasureTheory.lintegral_ofReal_dist_sq_le_of_isApproximatingPair_of_integrable_mul`**
+  (Z. 45270) — das benannte Ziel. Die Zelle von (9.26) ohne `hVb`, mit dem gewichteten Fehler
+  `γ` und dem zweiten Summanden `2 * ∫⁻ ω, ‖stoppedValue V α ω‖ₑ * ‖ΔC‖ₑ ∂P`.
+* **`MeasureTheory.IsApproximatingPair.sum_lintegral_mul_enorm_compensator_sub_le`**
+  (Z. 43901) — die Kettensumme mit einem Gewicht, das **mit der Zelle wechselt**, gegen eine
+  gemeinsame Majorante `M` und einen Parameter `Kw`.
+* **`MeasureTheory.measure_setOf_oscHitSeq_lt_le_of_isApproximatingPair_of_integrable_mul`**
+  (Z. 45472) — der Horizontterm, die beiden vorigen zusammengesetzt.
+
+#### Was aus den sieben Verwendungen von `hVb` geworden ist, einzeln
+
+Der Vorlauf hatte gezählt, daß `lintegral_ofReal_dist_sq_le_of_isApproximatingPair` die
+Schranke **siebenmal** liest. Jede ist ersetzt, und keine durch eine Hypothese derselben Art:
+
+| im beschränkten Nachbarn | hier |
+| --- | --- |
+| `hIVα`, `hIVβ` über `Integrable.mono'` gegen `c` | fallen **ganz weg** — nicht mehr gebraucht |
+| `hIVα2`, `hIVβ2` gegen `c^2` | `MemLp.integrable_sq` (`MeasureTheory/Function/L2Space.lean:42`) |
+| `hIVc`, `hIYc` über `Integrable.bdd_mul` | `MemLp.fun_mul` + `memLp_one_iff_integrable` |
+| `hsq` gegen `(2c)^2` | `(hVβ.sub hVα).integrable_sq` |
+| die Schranke am Gewicht der Kompensatoridentität | die vier Produktintegrierbarkeiten |
+
+Die Cauchy–Schwarz-Stelle ist am Quelltext belegt und nicht geraten:
+`MeasureTheory.MemLp.mul` (`MeasureTheory/Function/LpSeminorm/CompareExp.lean:537`) in seiner
+`to_fun`-Gestalt `MemLp.fun_mul`, mit der Instanz `ENNReal.HolderTriple.instTwoTwo`
+(`Mathlib/Basic/ENNReal/Holder.lean:133`), die `2⁻¹ + 2⁻¹ = 1⁻¹` liefert und `r := 1` als
+`semiOutParam` bestimmt.
+
+**Und die `L²`-Hypothesen fallen nicht nur auf `V`.** Sie fallen auf `V`, `Y` **und** `C`, weil
+`enorm_integral_mul_stoppedValue_sub_le_lintegral_mul` vier Produkte des Gewichts mit den
+gestoppten Werten von `Y` und von `C` verlangt und die Klasse nichts hat, was sie erzeugt. Im
+Tausch fallen die beiden schlichten Integrierbarkeiten der gestoppten `Y`-Werte weg, die der
+beschränkte Nachbar führt. Netto: zwei Hypothesen mehr, eine Schranke weniger — und die
+Schranke ist die, die kein Verbraucher einlösen kann.
+
+#### Der eine Punkt, an dem es **kein** Tausch von Hypothesen ist
+
+Der Nachtrag des Vorlaufs hatte vorausgesagt, daß die Summation über die Kette pfadweise trägt
+und daß `lintegral_const_mul'` die Stelle ist, an der es aufhört. **Beides bestätigt sich beim
+Bauen, und zwar genau so.** Pfadweise ist
+
+```
+∑ₖ wₖ ω * ‖ΔCₖ ω‖ₑ ≤ M ω * ∑ₖ ‖ΔCₖ ω‖ₑ ≤ M ω * (ofReal u ^ (1-1/q) * eLpNorm (Z (·,ω)))
+```
+
+mit jeder Majorante `M` der Zellgewichte — das ist `sum_enorm_compensator_sub_le` unverändert
+und kostet nichts. Danach läßt sich die **Konstante** `ofReal u ^ (1-1/q)` weiterhin
+herausziehen (sie hängt nicht von `ω` ab), stehen bleibt aber `∫⁻ ω, M ω * eLpNorm (Z (·,ω))`,
+und dafür gibt das einzige Feld der Klasse, `∫⁻ eLpNorm ≤ K`, **nichts** her.
+
+Die Aussage trägt deshalb einen **Parameter** `Kw` dafür, in derselben Bauart wie das `S` von
+`lintegral_ofReal_dist_le_sqrt_of_lintegral_mul_biSup_le`. Das ist kein Ausweichen: es benennt
+die Forderung, statt sie zu verstecken, und sie ist in den beiden Fällen, die zählen, ohne neues
+Feld eingelöst —
+
+* **`Kw = 0`, wenn der Kompensator verschwindet.** `isApproximatingPair_rescaledWalk` hat
+  `Z = fun _ _ ↦ 0`; die reskalierte Irrfahrt ist ihr eigenes Martingal. Das ist genau das Paar,
+  dessen Gewicht im Kreuzterm die **unbeschränkte** Irrfahrt ist, und der gewichtete Summand ist
+  dort null, wie groß das Gewicht auch sei.
+* **`Kw = ‖Z‖ * ∫⁻ M`, wenn die Dichte deterministisch ist.** `isApproximatingPair_sq_rescaledWalk`
+  hat `Z = fun _ _ ↦ σ`.
+
+Ein **neues Feld** der Klasse — eine `L²`-Schranke an `eLpNorm (Z (·, ω))` — wird erst von einer
+zufälligen Dichte gegen ein unbeschränktes Gewicht verlangt. Das ist eine Frage für allgemeine
+Kerne und nicht für Donsker, und die Stelle steht benannt.
+
+#### Die Majorante ist das **laufende Maximum**, und das ist die Quantorenentscheidung des Laufs
+
+Jede Zelle fragt ihr eigenes Gewicht `‖V (σ k ω) ω‖ₑ` gegen ihren eigenen Fehler; eine Hypothese
+je Stufe wäre unbrauchbar. Gewählt ist deshalb **eine** Hypothese über
+`⨆ t ∈ Set.Iic u, ‖V t ω‖ₑ`, und sie trägt, weil die gekappten Trefferzeiten unter `u` bleiben
+(`untopA_oscHitSeqCap_le`). Daß dieses Supremum unendlich sein darf, kostet nichts: die
+Hypothesen sind Ungleichungen in `ℝ≥0∞`, und eingelöst wird das **Produkt**, nicht der Faktor.
+
+#### Prüfung
+
+`scripts/check_master.py` gegen `upstream/master`
+(`94ef6b89544e58e90f119da869f3fb48d1da0f4c`, Lean `4.35.0-rc2`): **0 Fehler, 0 `sorry`** in
+allen drei Dateien, Warnungen **18 / 38 / 112, davon 0 veraltet** — unverändert gegenüber dem
+Vorlauf; die drei neuen Deklarationen erzeugen keine einzige Warnung.
+`scripts/check_axioms_master.py` (mit `--build`; die Kettensumme mit, die beiden anderen ohne
+`IsApproximatingPair`-Präfix): alle drei auf `propext`, `Classical.choice`, `Quot.sound`.
+`check_cited_lines.py` meldet **445 gepaarte Fundstellen, 0 verschoben, 0 tot** (vorher 443; die
+zwei neuen sind die Cauchy–Schwarz-Belege).
+`check_own_names.py` zählt **443** statt 440 — die drei sind `Kw` und `hVb`, zwei Hypothesennamen
+im Fließtext, und `MeasureTheory.MemLp.fun_mul`.
+
+#### Zwei Befunde über das Werkzeug, beide gemessen
+
+* **`check_own_names.py` ist blind für `@[to_fun]`.** `MemLp.fun_mul` steht dort als „ohne
+  Deckung", **existiert aber**: die drei neuen Deklarationen übersetzen, und zwei von ihnen rufen
+  ihn auf. Das ist dieselbe Familie falscher Negativbefunde wie bei `Set.indicator_of_notMem`
+  (2026-09-13), `frequently_lt_of_liminf_lt` (2026-09-18) und `IsCadlag.add` (2026-09-21) — nur
+  diesmal nicht von einem Grep, sondern vom Index. **Ein Eintrag in `own_names.md` ist kein
+  Beleg, daß ein Name fehlt**, wenn über dem multiplikativen Nachbarn ein erzeugendes Attribut
+  steht; er ist einer, wenn `example … := by exact?` gegen den master-Worktree scheitert.
+* **Die Falle `mul_le_mul_left'` / `mul_le_mul_right'` stand längst in der README** — Meilenstein
+  11, bei `mul_measure_setOf_lt_modulusBased_le_lintegral_dist`, Zeile 12199 —, und dieser Lauf
+  ist trotzdem hineingelaufen und hat einen Übersetzungsdurchlauf dafür bezahlt. Der Eintrag ist
+  richtig und vollständig (die primierten Namen gibt es auf `master` nicht, auch nicht als
+  veraltete Aliase; die unprimierten tragen die primierte Bedeutung, und das Suffix benennt die
+  Seite des **veränderlichen** Arguments). Die Notiz, die dieser Lauf zunächst ein zweites Mal
+  hinschrieb, ist wieder entfernt worden. **Was fehlt, ist nicht der Eintrag, sondern daß er
+  gefunden wird**; eine Notiz über einen Mathlib-Namen gehört an die Stelle, an der der Name
+  gesucht wird, und nicht nur dorthin, wo er das erste Mal weh tat.
+
+#### Die README ist nachgezogen
+
+`MartingaleProblems/README.md`, Meilenstein 11, im Abschnitt über die Schranke: die drei neuen
+Namen, die sieben ersetzten Verwendungen in Prosa, der Grund für `Kw` samt den beiden Fällen,
+die ihn ohne neues Feld einlösen, die Wahl des laufenden Maximums, und die Zählung dessen, was
+von den sechs noch `hVb` trägt.
+
+#### Was von der Kette jetzt noch die Schranke trägt, und es sind vier
+
+| Aussage | Zeile | liest `c` |
+| --- | ---: | --- |
+| `lintegral_ofReal_dist_le_sqrt_of_isApproximatingPair` | 45676 | **selbst** |
+| `measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair` | 45582 | durchgereicht |
+| `sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair` | 45774 | durchgereicht |
+| `mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair` | 45934 | durchgereicht, in der Konklusion |
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`lintegral_ofReal_dist_le_sqrt_of_isApproximatingPair_of_integrable_mul`** (Z. 45676 für den
+beschränkten Nachbarn) — die **Lückenzelle**, dieselbe Aussage ohne `hVb`, mit dem gewichteten
+Fehler `γ` und der Quadratintegrierbarkeit als Hypothese.
+
+*Worauf sie ruht:* `lintegral_ofReal_dist_le_sqrt_of_lintegral_mul_biSup_le` (steht seit dem
+siebten Lauf) und `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le_lintegral_mul`
+(ebenso), sowie dieselben `MemLp … 2`-Hypothesen, die heute bei der Horizontzelle getragen haben
+— der Beweis ist der Beweis von heute an der anderen Zelle.
+
+*Warum jetzt:* sie ist die **zweite und letzte** der beiden Aussagen, die die Schranke selbst
+lesen; danach ist alles, was übrig ist, Durchreichen, und das ist Buchhaltung.
+
+*Die eine Stelle, die vorher zu klären ist, und sie ist nicht dieselbe wie heute:* die Lückenzelle
+ist **nicht** konsekutiv. Ihr rechtes Ende ist `min (τ (k+1)) (min (τ k) u + δ)`, und darum geht
+die Summation über sie **nicht** über `sum_enorm_compensator_sub_le`, sondern über die
+Hölder-Schranke `ofReal δ ^ (1-1/q) * K` je Zelle — das ist der Grund, warum der Meilenstein zwei
+Blöcke hat. Zu prüfen ist deshalb, ob die gewichtete Fassung dort
+`IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le` braucht (die Hölder-Gestalt, in der
+`c` **vor** dem Produkt steht und die es in gewichteter Fassung noch nicht gibt) oder ob die
+Lückenzelle mit der Lintegral-Gestalt auskommt, weil sie einzeln und nicht summiert gelesen wird.
+**Diese Frage zu beantworten ist die halbe Arbeit jenes Laufs**, und sie ist am Quelltext von
+`sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair` zu entscheiden, nicht zu raten.
+
+### 2026-09-22, neunter Lauf des Tages — das benannte Ziel steht, und die Vorfrage des Vorlaufs ist am Quelltext mit einem **Nein** beantwortet: die Lückenzelle braucht die Hölder-Gestalt nicht, sondern die gewichtete Fassung ihres **zweiten Faktors**
+
+**Das benannte Ziel des Vorlaufs war
+`lintegral_ofReal_dist_le_sqrt_of_isApproximatingPair_of_integrable_mul`**, die **Lückenzelle**
+ohne `hVb`, und vor ihr stand die Frage, ob die gewichtete Fassung dort
+`IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le` braucht — die Hölder-Gestalt, in der
+`c` **vor** dem Produkt steht — oder ob die Lintegral-Gestalt reicht. Beides ist eingelöst.
+
+#### Die Vorfrage, entschieden am Quelltext und nicht geraten
+
+**Antwort: die Hölder-Gestalt wird nicht gebraucht, und zwar weil sie im Lückenblock überhaupt
+nicht aufgerufen wird.** Der Vorlauf hatte die Frage aus der Prosa des Blocks gestellt, und die
+Prosa (Z. 45631–45637 der alten Zählung, ebenso `README.md`, Meilenstein 11) nennt in der Tat
+`IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le` als „die richtige Schätzung je
+Zelle". Der **Beweis** von `lintegral_ofReal_dist_le_sqrt_of_isApproximatingPair` tut etwas
+anderes:
+
+1. `lintegral_ofReal_dist_sq_le_of_isApproximatingPair` — die Zelle, die die beiden
+   Kompensatorzuwächse **stehen läßt**;
+2. `h'.lintegral_enorm_compensator_sub_le` und `h.lintegral_enorm_compensator_sub_le` — je
+   **einmal** für diese Zelle;
+3. `lintegral_ofReal_dist_le_sqrt_of_lintegral_sq_le` — die Wurzel.
+
+`enorm_integral_mul_stoppedValue_sub_le` ist die **Zusammensetzung** von
+`enorm_integral_mul_stoppedValue_sub_le_lintegral` mit `lintegral_enorm_compensator_sub_le`
+(Z. 43750 der alten Zählung), und was eine Zelle liest, sind ihre beiden Faktoren getrennt. Die
+Prosa benennt also den **Übergang** und nicht eine Aussage, die der Beweis aufruft; beide Lesarten
+sind wahr, aber nur die zweite sagt, was zu bauen ist.
+
+**Zu bauen war deshalb der gewichtete *zweite* Faktor**, und der fehlte:
+`IsApproximatingPair.lintegral_mul_enorm_compensator_sub_le`.
+
+#### Gebaut und übersetzt — zwei Deklarationen
+
+Beide in `TauCeti/MartingaleProblems/Suggested.lean`, Zeilen **nachher**:
+
+* **`MeasureTheory.IsApproximatingPair.lintegral_mul_enorm_compensator_sub_le`** (Z. 43646) —
+  `∫⁻ ω, w ω * ‖C (b ω) ω - C (a ω) ω‖ₑ ∂P ≤ ofReal δ ^ (1-1/q) * Kw` für ein von `M`
+  dominiertes Gewicht `w` und `Kw` eine Schranke an `∫⁻ ω, M ω * eLpNorm (Z (·,ω))`.
+* **`MeasureTheory.lintegral_ofReal_dist_le_sqrt_of_isApproximatingPair_of_integrable_mul`**
+  (Z. 45851) — das benannte Ziel, die Lückenzelle mit dem gewichteten Fehler `γ`, den sechs
+  `MemLp … 2`-Hypothesen und `Kw`.
+
+#### Die erste ist **nicht** die Kettensumme bei `N = 1`, und das ist der Grund, daß sie eine eigene Aussage ist
+
+`IsApproximatingPair.sum_lintegral_mul_enorm_compensator_sub_le` (der achte Lauf) liest ihr
+Fenster über eine monotone Familie `σ : ℕ → Ω → ℝ≥0` zwischen `σ 0` und `σ N` und schränkt es
+durch den **Horizont** `u` ein; die Einzelzelle schränkt ihr Fenster durch seine **Länge** `δ`
+ein. Das ist genau der Unterschied zwischen den beiden Blöcken des Meilensteins — die
+Horizontzellen bilden eine Kette und werden zuerst summiert, die Lückenzellen sind durch die
+Lücken getrennt und werden einzeln geschätzt —, und darum braucht es die gewichteten Fassungen
+**beider** ungewichteten Aussagen, aus demselben Grund, aus dem es jene beiden gibt.
+
+`Kw` ist in beiden derselbe Parameter und wird gleich eingelöst: `Kw = 0` bei verschwindendem
+Kompensator (die reskalierte Irrfahrt, ihr eigenes Martingal), `Kw = ‖Z‖ * ∫⁻ M` bei
+deterministischer Dichte.
+
+#### Wo die Schranke geblieben ist — zwei Stellen, zwei verschiedene Ersatzstücke
+
+| im beschränkten Nachbarn (Z. 45736) | hier |
+| --- | --- |
+| `2 * ofReal c * ∫⁻ ‖ΔC‖ₑ` (Kreuzterm, Gewicht `V (α ·) ·`) | `2 * (ofReal δ ^ (1-1/q) * Kw)` |
+| `4 * ofReal c * ε` (Fehler am Kreuzterm) | `4 * γ`, der gewichtete Fehler |
+| `ofReal δ ^ (1-1/q) * K` (Quadratzuwachs, Gewicht `1`) | **unverändert** |
+| `hε'` | **unverändert** |
+| `hVb` für `hIVα/β`, `hIVα2/β2`, `hIVc`, `hIYc`, `hsq` | die sechs `MemLp … 2` über die Zelle des achten Laufs |
+
+Die Konstante `1 + 2 c` des beschränkten Nachbarn ist damit **kein Faktor mehr, sondern die
+Summe** `K + 2 * Kw`. Das ist keine Kosmetik: `(1 + 2c) * (… * K)` faktorisiert, weil beide
+Summanden dieselbe Schranke `K` tragen; `ofReal δ ^ (1-1/q) * (K + 2 Kw)` tut es nicht, weil der
+gewichtete Summand seine eigene Konstante hat.
+
+**`γ ≠ ⊤`, `ε' ≠ ⊤` und `Kw ≠ ⊤` stehen hier und nicht an der Quadratzelle**, und der Grund ist
+derselbe wie beim beschränkten Nachbarn: `Real.sqrt S.toReal` liest `toReal`, und `toReal ⊤ = 0`
+machte die Konklusion **falsch** statt leer. Neu gegenüber dem Nachbarn ist allein `hKwne`.
+
+#### Prüfung
+
+`scripts/check_master.py` gegen `upstream/master`
+(`94ef6b89544e58e90f119da869f3fb48d1da0f4c`, Lean `4.35.0-rc2`): **0 Fehler, 0 `sorry`** in allen
+drei Dateien, Warnungen **18 / 38 / 112, davon 0 veraltet** — unverändert gegenüber dem Vorlauf;
+die beiden neuen Deklarationen erzeugen keine einzige Warnung.
+`scripts/check_axioms_master.py` (mit `--build`, beide mit vollem Namensraum): beide auf
+`propext`, `Classical.choice`, `Quot.sound`.
+`check_cited_lines.py`: **445 gepaarte Fundstellen, 0 verschoben, 0 tot** (unverändert; der Lauf
+zitiert nur Namen, die schon belegt waren).
+`check_own_names.py`: **443** — unverändert, also kein neuer Name ohne Deckung.
+
+#### Was von der Kette jetzt noch die Schranke trägt, und es sind drei — alle bloß durchreichend
+
+| Aussage | Zeile | liest `c` |
+| --- | ---: | --- |
+| `measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair` | 45642 | durchgereicht |
+| `sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair` | 45941 | durchgereicht |
+| `mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair` | 46101 | durchgereicht, in der Konklusion |
+
+Die beiden Aussagen, die die Schranke **selbst** lasen, haben jetzt je einen Zwilling ohne sie
+(`lintegral_ofReal_dist_sq_le_…_of_integrable_mul` seit dem achten Lauf, die Lückenzelle seit
+diesem). Die beschränkten Fassungen bleiben stehen — wer eine Schranke hat, will die kürzere
+Hypothesenliste —, und die drei oben sind Zusammensetzungen von Aussagen, die es nun in beiden
+Fassungen gibt.
+
+#### Die README ist nachgezogen
+
+`MartingaleProblems/README.md`, Meilenstein 11: die beiden neuen Namen, die Antwort auf die
+Vorfrage samt der Berichtigung der Prosa („die Prosa benennt den Übergang, nicht eine Aussage,
+die der Beweis aufruft"), der Grund, warum die Einzelzelle nicht die Kettensumme bei `N = 1` ist,
+und die berichtigte Zählung dessen, was noch `hVb` trägt.
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`MeasureTheory.sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair_of_integrable_mul`**
+(Z. 45941 für den beschränkten Nachbarn) — die **Lückensumme** ohne `hVb`: dieselbe Aussage mit
+`N *` vor der Wurzel, mit `γ` und `Kw` statt `c`.
+
+*Worauf sie ruht:* die Lückenzelle von heute, und sonst nichts Neues — der beschränkte Nachbar ist
+`Finset.sum_le_sum` über eine Zelle, die für jedes `k` dieselbe Schranke hat, gefolgt von
+`Finset.sum_const`.
+
+*Warum jetzt:* sie ist der erste der drei durchreichenden Posten und der einzige, bei dem ein
+Quantor zu klären ist; die beiden anderen sind danach Zusammensetzung.
+
+*Die eine Stelle, die vorher zu klären ist:* **`γ` und `M` hängen von der Zelle ab, `Kw` soll es
+nicht.** Der gewichtete Fehler der `k`-ten Zelle ist
+`∫⁻ ω, ‖V (min (τ k ω) u) ω‖ₑ * ⨆ t ∈ Iic (u+δ), ‖Y t ω - V t ω‖ₑ ∂P`, und eine Hypothese je Stufe
+wäre unbrauchbar — dieselbe Lage wie beim Horizontterm des achten Laufs, der sie mit **einer**
+Hypothese über das laufende Maximum `⨆ t ∈ Iic u, ‖V t ω‖ₑ` gelöst hat. Zu prüfen ist, ob
+dasselbe Maximum hier trägt: die gekappten Zeiten bleiben unter `u`
+(`untopA_oscHitSeqCap_le`), das Gewicht der Lückenzelle sitzt am **linken** Ende
+`min (τ k ω) u`, also ebenfalls unter `u` — der Weg sollte also derselbe sein, mit `Iic (u+δ)`
+statt `Iic u` im Fehler und `Iic u` im Gewicht. **Das ist am Quelltext zu bestätigen und nicht
+anzunehmen**, und es ist die halbe Arbeit jenes Laufs.
