@@ -12898,6 +12898,25 @@ has to be chosen once for all `n`. What stands:
   the constants do not, and that is what the uniformity over the family rests
   on.
 
+  **The filtration is indexed by the family**, `𝓕 : γ → Filtration ℝ≥0 mΩ`, and
+  so are the progressivity hypothesis and the right continuity instance of the
+  two consumers below. That is not generality on suspicion but what this
+  milestone's own acceptance test needs: the rescaled walks of Donsker's theorem
+  are martingales over `MeasureTheory.floorFiltration` of their own mesh, and
+  **no single filtration serves them all**. Adaptedness of the member at mesh
+  `m` at a positive time `t` puts `σ (ξ_0, …, ξ_{⌊t (m+1)⌋ - 1})` into `𝓕 t`,
+  and `⌊t (m+1)⌋ → ∞` along the family, so a shared `𝓕 t` would carry the whole
+  tail `σ (ξ_k : k)` at *every* positive time; over such a filtration the
+  increments of any member are already known and the martingale field forces
+  them to vanish. A shared filtration therefore reaches no nondegenerate family
+  of walks at all.
+
+  **Nothing joins two members through the filtration**, which is what makes the
+  indexing free: the estimate under the criterion reads `𝓕` only at the member
+  it is estimating, the quantities shared across the family being the scalars
+  `q`, `T`, `K`, `ε₀`, `u` and the exceptional set. A consumer with one
+  filtration passes the constant family.
+
   `MeasureTheory.isEventuallyApproximable_of_forall_isApproximable` reads the
   relation to the condition above: approximability off a finite set is this
   condition at a `G` that does not move, so this is a weakening of that and not
@@ -13881,11 +13900,36 @@ has to be chosen once for all `n`. What stands:
     for the same reason as the walk's own majorant: the discrete compensator
     keeps growing with the number of stages.
 
-  With these the walk carries, over **one** filtration, everything the two halves
-  of this milestone ask of a process: the martingale property, progressivity,
-  right continuous paths, and a right continuous filtration. What it does not
-  carry is a solution of a martingale problem — a rescaled walk solves none, and
-  that is why this milestone has an approximate case at all.
+  * `isEventuallyApproximable_rescaledWalk`, **2026-09-22** — the assembly, and
+    with it the approximability half of the acceptance test. The two pairs are
+    joined at the common constant `T ^ q.toReal⁻¹ * ‖σ‖₊` by
+    `IsApproximatingPair.mono_K`, the walk's own constant being `0`; the first
+    error is exactly `0` and the second is
+    `lintegral_biSup_enorm_sub_sq_rescaledWalk_le`, so the error along the
+    family is `σ / (n + 1)` and goes to zero, which is
+    `isEventuallyApproximable_of_tendsto_zero_cofinite` through
+    `Nat.cofinite_eq_atTop`.
+
+    **The four integrabilities are read at two different bounds**, and that is
+    the one place care is needed: the structure stops at `min (τ k) u` and at
+    `min (τ (k+1)) (min (τ k) u + δ)`, whose bounds are `u` and `u + δ`, while
+    the two majorants grow with the bound. An assembly with one bound for both
+    pairs of times does not close. The times are
+    `isStoppingTime_oscHitSeqCap` and `isStoppingTime_oscHitSeqGap`, their
+    bounds `min_le_right` and `oscHitSeqGap_le_coe`.
+
+    **No countable dense set is asked for**: the hitting times need one to be
+    stopping times, and `ℝ≥0` being separable,
+    `TopologicalSpace.exists_countable_dense` produces it inside the proof.
+
+  With these the walk carries, over the filtration of **its own mesh**,
+  everything the two halves of this milestone ask of a process: the martingale
+  property, progressivity, right continuous paths, and a right continuous
+  filtration. It carries them over no coarser one and over no filtration shared
+  with the other members, which is the reason
+  `MeasureTheory.IsEventuallyApproximable` indexes its filtration. What the walk
+  does not carry is a solution of a martingale problem — a rescaled walk solves
+  none, and that is why this milestone has an approximate case at all.
 
 * Convergence in measure as a second mode: the space of càdlàg paths with the
   topology of convergence in Lebesgue measure, in which the coordinates are

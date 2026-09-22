@@ -46541,15 +46541,33 @@ direction and shows the condition is a weakening and not a different condition.
 **`G` moves with the error and the constants do not.**  Were `q`, `T`, `K` allowed to move with
 the error, the estimate would be taken at a moving bound and the window could not be chosen
 after the error; that they are fixed is the same content they have in
-`MeasureTheory.IsApproximable`, and it is what the uniformity over the family rests on. -/
-structure IsEventuallyApproximable {γ : Type*} (𝓕 : Filtration ℝ≥0 mΩ) (P : Measure Ω)
+`MeasureTheory.IsApproximable`, and it is what the uniformity over the family rests on.
+
+**The filtration moves with the member, and the constants do not.**  That is not a generality on
+suspicion but the only shape under which the milestone's own acceptance test is statable: the
+rescaled random walks of Donsker's theorem are martingales over the filtration
+`MeasureTheory.floorFiltration` of their own mesh, and **no single filtration serves them all**.
+Adaptedness of the member at mesh `m` at a positive time `t` puts `σ (ξ_0, …, ξ_{⌊t (m+1)⌋ - 1})`
+into `𝓕 t`, and `⌊t (m+1)⌋ → ∞` along the family, so a shared `𝓕 t` would contain the whole tail
+`σ (ξ_k : k)` at *every* positive time; over such a filtration the increments of any member are
+already known and the martingale field forces them to vanish.  A shared filtration therefore
+reaches no nondegenerate family of walks at all.
+
+**Nothing in the consumers joins two members through the filtration**, which is why the indexing
+costs nothing: the estimate of
+`MeasureTheory.exists_finite_forall_measure_setOf_lt_modulusBased_postcomp_le_of_isEventuallyApproximable`
+reads `𝓕` only at the member it is estimating, the quantities shared across the family being the
+scalars `q`, `T`, `K`, `ε₀`, `u` and the exceptional set.  A consumer with one filtration passes
+the constant family, which is
+`MeasureTheory.isEventuallyApproximable_of_forall_isApproximable`. -/
+structure IsEventuallyApproximable {γ : Type*} (𝓕 : γ → Filtration ℝ≥0 mΩ) (P : Measure Ω)
     (q : ENNReal) (T K : ℝ≥0) (V : γ → ℝ≥0 → Ω → ℝ) (ε₀ : ℝ) (u : ℝ≥0) : Prop where
   /-- To every positive error a finite exceptional set, off which every member has two
-  approximating pairs with the common constants, the two errors on the horizon, and the four
-  integrabilities the assembly reads. -/
+  approximating pairs over its own filtration and with the common constants, the two errors on
+  the horizon, and the four integrabilities the assembly reads. -/
   exists_approximants : ∀ ε : ENNReal, 0 < ε → ∃ G : Set γ, G.Finite ∧ ∀ i ∉ G,
     ∃ Y C Y' C' : ℝ≥0 → Ω → ℝ, ∃ Z Z' : ℝ → Ω → ℝ,
-      IsApproximatingPair 𝓕 P q T K Y C Z ∧ IsApproximatingPair 𝓕 P q T K Y' C' Z'
+      IsApproximatingPair (𝓕 i) P q T K Y C Z ∧ IsApproximatingPair (𝓕 i) P q T K Y' C' Z'
       ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T, ‖Y t ω - V i t ω‖ₑ ∂P ≤ ε
       ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T, ‖Y' t ω - V i t ω ^ 2‖ₑ ∂P ≤ ε
       ∧ (∀ k : ℕ, Integrable
@@ -46568,9 +46586,10 @@ every error.  This is what makes the new condition a weakening of the old one an
 one, and it is the reason
 `MeasureTheory.isTightMeasureSet_map_postcomp_of_isApproximable_off_finite` need not be restated
 below: it is the instance at a constant `G`. -/
-theorem isEventuallyApproximable_of_forall_isApproximable {γ : Type*} {𝓕 : Filtration ℝ≥0 mΩ}
+theorem isEventuallyApproximable_of_forall_isApproximable {γ : Type*}
+    {𝓕 : γ → Filtration ℝ≥0 mΩ}
     {P : Measure Ω} {q : ENNReal} {T K : ℝ≥0} {V : γ → ℝ≥0 → Ω → ℝ} {ε₀ : ℝ} {u : ℝ≥0}
-    {G : Set γ} (hG : G.Finite) (h : ∀ i ∉ G, IsApproximable 𝓕 P q T K (V i) ε₀ u) :
+    {G : Set γ} (hG : G.Finite) (h : ∀ i ∉ G, IsApproximable (𝓕 i) P q T K (V i) ε₀ u) :
     IsEventuallyApproximable 𝓕 P q T K V ε₀ u :=
   ⟨fun ε hε ↦ ⟨G, hG, fun i hi ↦ (h i hi).exists_approximants ε hε⟩⟩
 
@@ -46589,11 +46608,11 @@ the structure asks for a **finite** exceptional set, and that is what `cofinite`
 `atTop` says it in a way that presupposes an order. For `γ = ℕ` the two agree by
 `Nat.cofinite_eq_atTop`. -/
 theorem isEventuallyApproximable_of_tendsto_zero_cofinite {γ : Type*}
-    {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω} {q : ENNReal} {T K : ℝ≥0}
+    {𝓕 : γ → Filtration ℝ≥0 mΩ} {P : Measure Ω} {q : ENNReal} {T K : ℝ≥0}
     {V : γ → ℝ≥0 → Ω → ℝ} {ε₀ : ℝ} {u : ℝ≥0}
     {e : γ → ENNReal} (he : Tendsto e Filter.cofinite (𝓝 0))
     (h : ∀ i, ∃ Y C Y' C' : ℝ≥0 → Ω → ℝ, ∃ Z Z' : ℝ → Ω → ℝ,
-      IsApproximatingPair 𝓕 P q T K Y C Z ∧ IsApproximatingPair 𝓕 P q T K Y' C' Z'
+      IsApproximatingPair (𝓕 i) P q T K Y C Z ∧ IsApproximatingPair (𝓕 i) P q T K Y' C' Z'
       ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T, ‖Y t ω - V i t ω‖ₑ ∂P ≤ e i
       ∧ ∫⁻ ω, ⨆ t ∈ Set.Iic T, ‖Y' t ω - V i t ω ^ 2‖ₑ ∂P ≤ e i
       ∧ (∀ k : ℕ, Integrable
@@ -46638,12 +46657,13 @@ lives in `MeasureTheory.IsApproximatingPair` and is reached through the exceptio
 error `1`; if that set is everything, the conclusion is vacuous and `δ = 1` serves.  `η = ⊤` is
 disposed of first as well, so that `θ = ofReal ε₀ * η` is finite and its halves are strict. -/
 theorem exists_finite_forall_measure_setOf_lt_modulusBased_postcomp_le_of_isEventuallyApproximable
-    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
-    {q : ENNReal} {T K : ℝ≥0} {γ : Type*} {X : γ → ℝ≥0 → Ω → E} {g : E →ᵇ ℝ}
+    {γ : Type*} {𝓕 : γ → Filtration ℝ≥0 mΩ} [∀ i, (𝓕 i).IsRightContinuous]
+    {P : Measure Ω} [IsProbabilityMeasure P]
+    {q : ENNReal} {T K : ℝ≥0} {X : γ → ℝ≥0 → Ω → E} {g : E →ᵇ ℝ}
     {ε₀ : ℝ} {u : ℝ≥0}
     (happ : IsEventuallyApproximable 𝓕 P q T K (fun i t ω ↦ g (X i t ω)) ε₀ u)
     {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
-    (hX : ∀ i, IsStronglyProgressive 𝓕 (X i))
+    (hX : ∀ i, IsStronglyProgressive (𝓕 i) (X i))
     (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ X i s ω) (Set.Ici t) t)
     {Φ : γ → Ω → D(ℝ≥0, E)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ X i t ω)
     (hu : 0 < u) (huT : u < T) (hε₀ : 0 < ε₀) {η : ENNReal} (hη : 0 < η) :
@@ -46802,10 +46822,11 @@ They are kept because each is proved on its own route and the middle one takes t
 route through `MeasureTheory.isTightMeasureSet_range_of_finite_compl`. -/
 theorem isTightMeasureSet_map_postcomp_of_isEventuallyApproximable [MeasurableSpace E]
     [BorelSpace E] [PolishSpace E] [CompleteSpace E]
-    {𝓕 : Filtration ℝ≥0 mΩ} [𝓕.IsRightContinuous] {P : Measure Ω} [IsProbabilityMeasure P]
-    {γ : Type*} {X : γ → ℝ≥0 → Ω → E} {g : E →ᵇ ℝ}
+    {γ : Type*} {𝓕 : γ → Filtration ℝ≥0 mΩ} [∀ i, (𝓕 i).IsRightContinuous]
+    {P : Measure Ω} [IsProbabilityMeasure P]
+    {X : γ → ℝ≥0 → Ω → E} {g : E →ᵇ ℝ}
     {S : Set ℝ≥0} (hSc : S.Countable) (hSd : Dense S)
-    (hX : ∀ i, IsStronglyProgressive 𝓕 (X i))
+    (hX : ∀ i, IsStronglyProgressive (𝓕 i) (X i))
     (hcont : ∀ i, ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ X i s ω) (Set.Ici t) t)
     {Φ : γ → Ω → D(ℝ≥0, E)} (hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ X i t ω)
     (happ : ∀ ε₀ : ℝ, 0 < ε₀ → ∀ u : ℝ≥0, 0 < u → ∃ q : ENNReal, ∃ T K : ℝ≥0, u < T ∧
@@ -46905,7 +46926,7 @@ weakening**: the same family satisfies `MeasureTheory.IsEventuallyApproximable` 
 `MeasureTheory.isTightMeasureSet_map_postcomp_of_isEventuallyApproximable` reaches families that
 `MeasureTheory.isTightMeasureSet_map_postcomp_of_isApproximable_off_finite` and
 `MeasureTheory.isTightMeasureSet_map_postcomp_of_forall_isApproximable` do not. -/
-theorem isEventuallyApproximable_scaledStep {𝓕 : Filtration ℝ≥0 mΩ} {P : Measure Ω}
+theorem isEventuallyApproximable_scaledStep {𝓕 : ℕ → Filtration ℝ≥0 mΩ} {P : Measure Ω}
     [IsProbabilityMeasure P] {q : ENNReal} (hq : 1 < q) {T K : ℝ≥0} {ε₀ : ℝ} {u : ℝ≥0}
     {b : ℝ≥0} :
     IsEventuallyApproximable 𝓕 P q T K
@@ -50663,6 +50684,119 @@ theorem integrable_majorant_sq_rescaledWalk {P : Measure Ω} [IsProbabilityMeasu
         * ∑ k ∈ Finset.range ⌊j * ((n : ℝ≥0) + 1)⌋₊, |ξ k ω|) ^ 2) P :=
     (hmem.const_mul (Real.sqrt ((n : ℝ) + 1))⁻¹).integrable_sq
   exact (hg2.add (integrable_const _)).add (integrable_const _)
+
+/-- **The family of rescaled random walks is eventually approximable**, which is the second and
+last of the two things Donsker's acceptance test owes the tightness chain, the first being
+`MeasureTheory.isCompactContained_rescaledWalk`.
+
+**Each member is approximated over its own filtration, and that is why
+`MeasureTheory.IsEventuallyApproximable` indexes the filtration by the family.**  The walk of
+mesh `n` is a martingale over `MeasureTheory.floorFiltration` at `n + 1` and over no coarser
+one; the reason a *shared* filtration reaches no family of walks at all is written out at that
+structure and is not repeated here.  This statement is the consumer that forced the indexing,
+and it is the witness that the indexing is inhabited by something other than the zero process.
+
+**The error is `σ / (n + 1)` and it is spent entirely on the square.**  The first of the two
+errors is exactly `0`, the walk being its own approximant
+(`MeasureTheory.isApproximatingPair_rescaledWalk`); the second is
+`MeasureTheory.lintegral_biSup_enorm_sub_sq_rescaledWalk_le`, the gap between the step
+compensator of the discrete square and the linear compensator a pair is obliged to carry.  Along
+the family that gap goes to zero, which is the hypothesis of
+`MeasureTheory.isEventuallyApproximable_of_tendsto_zero_cofinite`; on `ℕ` the cofinite filter is
+`Filter.atTop` by `Nat.cofinite_eq_atTop`, and the limit is elementary.
+
+**The common constant is the one of the square**, `T ^ q.toReal⁻¹ * ‖σ‖₊`, the walk's own
+constant being `0` and raised to it by `MeasureTheory.IsApproximatingPair.mono_K`.  It does not
+move with `n`, which is what the uniformity over the family asks and what
+`MeasureTheory.isApproximatingPair_sq_rescaledWalk` was stated to deliver.
+
+**The four integrabilities are read at two different bounds, and that is the one place care is
+needed.**  The structure stops at `min (τ k) u` and at `min (τ (k+1)) (min (τ k) u + δ)`, whose
+bounds are `u` and `u + δ`; `MeasureTheory.IsApproximatingPair.integrable_stoppedValue_of_dominated`
+wants the majorant at *that* bound, and the majorants of
+`MeasureTheory.abs_rescaledWalk_le_of_le` and `MeasureTheory.abs_sq_rescaledWalk_le_of_le` grow
+with it -- they count the stages the walk can have reached.  An assembly with one bound for both
+pairs of times does not close.  The times themselves are
+`MeasureTheory.isStoppingTime_oscHitSeqCap` and `MeasureTheory.isStoppingTime_oscHitSeqGap`, and
+their bounds `min_le_right` and `MeasureTheory.oscHitSeqGap_le_coe`.
+
+**No countable dense set is asked for**, although the hitting times need one to be stopping
+times: `ℝ≥0` is separable and `TopologicalSpace.exists_countable_dense` produces it inside the
+proof.  It is the `D` of the début and not the `S` of the tightness estimate, so nothing outside
+reads which one was taken.
+
+**Nonnegativity of `σ` is not a hypothesis** and neither is it used: it is `hsq 0` against
+`MeasureTheory.integral_nonneg` wherever it is wanted, and it is wanted only inside
+`MeasureTheory.enorm_sub_sq_rescaledWalk_le`.  Independence and centring are read only through
+the two pairs, and the square integrability only through the second of them and through the
+majorant of the square. -/
+theorem isEventuallyApproximable_rescaledWalk {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hLp : ∀ k, MemLp (ξ k) 2 P) (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0)
+    {σ : ℝ} (hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = σ)
+    {q : ENNReal} (hq : 1 < q) {T : ℝ≥0} {ε₀ : ℝ} {u : ℝ≥0} :
+    IsEventuallyApproximable
+      (fun n : ℕ ↦ floorFiltration (Filtration.natural
+          (fun m ω ↦ ∑ k ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω)
+          (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ (hmeas k).const_mul _))
+        ((n : ℝ≥0) + 1))
+      P q T (T ^ q.toReal⁻¹ * ‖σ‖₊)
+      (fun (n : ℕ) (t : ℝ≥0) (ω : Ω) ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+        * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) ε₀ u := by
+  have hint : ∀ k, Integrable (ξ k) P := fun k ↦ (hLp k).integrable (by norm_num)
+  obtain ⟨D, hSc, hSd⟩ := TopologicalSpace.exists_countable_dense ℝ≥0
+  -- the error along the family
+  have htend : Tendsto (fun n : ℕ ↦ ENNReal.ofReal (σ / ((n : ℝ) + 1)))
+      Filter.cofinite (𝓝 0) := by
+    rw [Nat.cofinite_eq_atTop]
+    have h0 : Tendsto (fun n : ℕ ↦ σ / ((n : ℝ) + 1)) atTop (𝓝 0) := by
+      simpa using tendsto_const_nhds.div_atTop
+        (tendsto_natCast_atTop_atTop.atTop_add tendsto_const_nhds)
+    simpa [Function.comp_def] using (ENNReal.continuous_ofReal.tendsto 0).comp h0
+  refine isEventuallyApproximable_of_tendsto_zero_cofinite htend fun n ↦ ?_
+  -- the filtration of this member, right continuous
+  set 𝓖 : Filtration ℝ≥0 mΩ := floorFiltration (Filtration.natural
+      (fun m ω ↦ ∑ k ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω)
+      (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun k _ ↦ (hmeas k).const_mul _))
+    ((n : ℝ≥0) + 1) with h𝓖
+  have : 𝓖.IsRightContinuous := by
+    rw [h𝓖]; exact isRightContinuous_floorFiltration _ (by positivity)
+  set V : ℝ≥0 → Ω → ℝ := fun t ω ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω with hV
+  have hVprog : IsStronglyProgressive 𝓖 V := isStronglyProgressive_rescaledWalk hmeas n
+  have hVcont : ∀ ω, ∀ t : ℝ≥0, ContinuousWithinAt (fun s ↦ V s ω) (Set.Ici t) t :=
+    fun ω t ↦ continuousWithinAt_rescaledWalk n ξ ω t
+  -- the two pairs, at the common constant
+  have hp1 : IsApproximatingPair 𝓖 P q T (T ^ q.toReal⁻¹ * ‖σ‖₊) V
+      (fun _ _ ↦ (0 : ℝ)) (fun _ _ ↦ (0 : ℝ)) :=
+    (isApproximatingPair_rescaledWalk hmeas hind hint hcent hq (T := T) n).mono_K zero_le
+  have hp2 := isApproximatingPair_sq_rescaledWalk hmeas hind hLp hcent hq (T := T) σ n
+  -- the two stopping times and their bounds
+  have hcap : ∀ k : ℕ, IsStoppingTime 𝓖
+      (fun ω ↦ min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0)) :=
+    fun k ↦ isStoppingTime_oscHitSeqCap hSc hSd hVprog hVcont k u
+  have hgap : ∀ (δ : ℝ≥0) (k : ℕ), IsStoppingTime 𝓖
+      (fun ω ↦ min (oscHitSeq V ε₀ (k + 1) ω)
+        (min (oscHitSeq V ε₀ k ω) (u : WithTop ℝ≥0) + (δ : WithTop ℝ≥0))) :=
+    fun δ k ↦ isStoppingTime_oscHitSeqGap hSc hSd hVprog hVcont k δ u
+  refine ⟨V, fun _ _ ↦ (0 : ℝ), _, _, fun _ _ ↦ (0 : ℝ), fun _ _ ↦ σ, hp1, hp2, ?_, ?_,
+    fun k ↦ ?_, fun k ↦ ?_, fun δ k ↦ ?_, fun δ k ↦ ?_⟩
+  · simp [hV]
+  · exact lintegral_biSup_enorm_sub_sq_rescaledWalk_le hsq n T
+  · exact hp1.integrable_stoppedValue_of_dominated (hcap k) (fun ω ↦ min_le_right _ _)
+      (integrable_majorant_rescaledWalk hint n u)
+      (fun t ht ω ↦ abs_rescaledWalk_le_of_le n ht ω)
+  · exact hp2.integrable_stoppedValue_of_dominated (hcap k) (fun ω ↦ min_le_right _ _)
+      (integrable_majorant_sq_rescaledWalk (σ := σ) hLp n u)
+      (fun t ht ω ↦ abs_sq_rescaledWalk_le_of_le (P := P) n ht ω)
+  · exact hp1.integrable_stoppedValue_of_dominated (hgap δ k)
+      (fun ω ↦ oscHitSeqGap_le_coe k δ u ω)
+      (integrable_majorant_rescaledWalk hint n (u + δ))
+      (fun t ht ω ↦ abs_rescaledWalk_le_of_le n ht ω)
+  · exact hp2.integrable_stoppedValue_of_dominated (hgap δ k)
+      (fun ω ↦ oscHitSeqGap_le_coe k δ u ω)
+      (integrable_majorant_sq_rescaledWalk (σ := σ) hLp n (u + δ))
+      (fun t ht ω ↦ abs_sq_rescaledWalk_le_of_le (P := P) n ht ω)
 
 end WalkContainment
 

@@ -55672,3 +55672,161 @@ und der Majorant ist an der jeweiligen zu nehmen, nicht an einer gemeinsamen. Ei
 Danach ist der Akzeptanztest der Irrfahrten **fertig**: `isCompactContained_rescaledWalk` und
 `isEventuallyApproximable_rescaledWalk` zusammen sind das Paar, das Donsker durch die Kette
 `isTight_map_postcomp_of_exists_martingale → isRelativelyCompact_of_approx → …` schickt.
+
+### 2026-09-22, fünfter Lauf des Tages — der Zusammenbau steht, und ehe er stehen konnte, war eine **Voraussetzung der Kette zu berichtigen**: `IsEventuallyApproximable` trug **eine** Filtration für die ganze Familie, und die Irrfahrten von Donsker haben keine gemeinsame
+
+**Das benannte Ziel des Vorlaufs ist eingelöst**: `MeasureTheory.isEventuallyApproximable_rescaledWalk`
+steht, gegen `upstream/master` (`94ef6b89544`) mit `check_master.py` bei **0 Fehlern, 0 `sorry`,
+0 neuen Warnungen** (18/38/112 unverändert, davon 0 veraltet), und mit `check_axioms_master.py`
+auf `propext`, `Classical.choice`, `Quot.sound` geprüft — zusammen mit den beiden Aussagen, deren
+Signatur der Lauf angefaßt hat.
+
+Damit ist die **Approximierbarkeitsseite des Akzeptanztests** bezahlt. Zusammen mit
+`isCompactContained_rescaledWalk` (zweiundzwanzigster Lauf des 2026-09-21) sind das die beiden
+Stücke, die Donsker durch die Kette `isTight_map_postcomp_of_exists_martingale →
+isRelativelyCompact_of_approx → …` schicken sollen.
+
+#### Der Befund, und er ist der eigentliche Ertrag des Laufs
+
+Der Vorlauf hatte „alles liegt bereit" gemeldet und **eine** Klemmstelle benannt (die zwei
+Schranken der vier Integrierbarkeiten). Diese Klemmstelle war richtig gesehen und hat genau so
+gebissen, wie angesagt. Aber sie war nicht die erste: **die Zielaussage war in der Gestalt, in der
+sie vorgeschlagen war, nicht beweisbar**, und zwar aus einem Grund, den kein Lauf bisher benannt
+hatte.
+
+`MeasureTheory.IsEventuallyApproximable 𝓕 P q T K V ε₀ u` trug `𝓕 : Filtration ℝ≥0 mΩ` — **eine**
+Filtration für die ganze Familie. Die approximierenden Paare müssen Martingale über ihr sein. Die
+reskalierte Irrfahrt der Maschenweite `n` ist ihr eigener Approximant und ein Martingal über
+`floorFiltration … ((n : ℝ≥0) + 1)`, und diese Filtration **bewegt sich mit `n`**.
+
+**Es gibt keine gemeinsame, und das ist kein Formfehler, sondern eine Rechnung.** Adaptiertheit des
+Gliedes der Maschenweite `m` zur positiven Zeit `t` legt `σ (ξ_0, …, ξ_{⌊t (m+1)⌋ − 1})` in `𝓕 t`.
+Längs der Familie geht `⌊t (m+1)⌋ → ∞`, also enthielte ein gemeinsames `𝓕 t` zu **jeder** positiven
+Zeit den ganzen Schwanz `σ (ξ_k : k)`. Über einer solchen Filtration ist jeder Zuwachs schon
+bekannt, und das Martingalfeld erzwingt `ξ_k = 0` f.s. Eine geteilte Filtration erreicht also
+**keine nichtentartete Familie von Irrfahrten**.
+
+Zwei Auswege, die *nicht* tragen, und sie sind durchgedacht und nicht übergangen:
+
+* **Die volle σ-Algebra als in der Zeit konstante Filtration.** Über einer konstanten Filtration ist
+  ein Martingal f.s. konstant in der Zeit (`Y s` ist meßbar, also `Y s = E[Y s | 𝓖] = Y t`), und
+  eine in der Zeit konstante Funktion approximiert die Irrfahrt in keinem Fehler.
+* **Einen anderen Approximanten wählen.** Derselbe Einwand: der Fehler wird als
+  `∫⁻ ω, ⨆_{t ≤ T} ‖Y t ω − V n t ω‖ₑ ∂P ≤ ε` gemessen, also gleichmäßig über das Fenster, und ein
+  zeitkonstantes `Y` liegt davon fest entfernt.
+
+**Und was daran *nicht* geprüft ist, damit es kein späterer Lauf für geprüft hält:** dieses
+Unmöglichkeitsargument ist **auf Papier geführt und nicht in Lean**. Es steht in dieser Gestalt am
+Strukturkommentar und in der README, und es ist die Begründung der Indizierung — aber es ist kein
+Zeuge. Der Zeuge dazu wäre
+
+> `not_forall_martingale_rescaledWalk_of_shared_filtration` — gibt es eine Filtration `𝓕`, über
+> der `V n` für **alle** `n` ein Martingal ist, so ist `ξ k = 0` f.s. für jedes `k`,
+
+und er ist ein eigener Lauf: er verlangt, die Adaptiertheit längs `n` zum Schwanz
+`σ (ξ_k : k) ⊆ 𝓕 t` aufzusammeln und daraus die Martingaleigenschaft an einem festen Glied
+zusammenbrechen zu lassen. Er ist **nicht** gebaut, und die Indizierung hängt auch nicht an ihm —
+sie ist die schwächere Voraussetzung und braucht daher keine Rechtfertigung durch einen
+Gegenzeugen. Wer den Zeugen dennoch baut, hat damit belegt, daß die Indizierung *nötig* und nicht
+bloß *bequem* war; das ist der Unterschied, den dieses Projekt sonst bei jeder Negativaussage
+macht, und hier ist er noch offen.
+
+#### Die Berichtigung, und was sie gekostet hat
+
+`𝓕` ist jetzt `γ → Filtration ℝ≥0 mΩ`. Angefaßt sind **sechs** Deklarationen, alle in
+`MartingaleProblems/Suggested.lean`:
+
+| Deklaration | Änderung |
+| --- | --- |
+| `IsEventuallyApproximable` | `𝓕 : γ → Filtration ℝ≥0 mΩ`; im Feld zweimal `IsApproximatingPair (𝓕 i) P …` |
+| `isEventuallyApproximable_of_forall_isApproximable` | `IsApproximable (𝓕 i) P …` |
+| `isEventuallyApproximable_of_tendsto_zero_cofinite` | `IsApproximatingPair (𝓕 i) P …`, zweimal |
+| `exists_finite_forall_measure_setOf_lt_modulusBased_postcomp_le_of_isEventuallyApproximable` | `[∀ i, (𝓕 i).IsRightContinuous]`, `hX : ∀ i, IsStronglyProgressive (𝓕 i) (X i)` |
+| `isTightMeasureSet_map_postcomp_of_isEventuallyApproximable` | dieselben beiden |
+| `isEventuallyApproximable_scaledStep` | `𝓕 : ℕ → Filtration ℝ≥0 mΩ` (der Zeuge liest `𝓕` nirgends) |
+
+**Gekostet hat sie an Beweisen: nichts.** Nach der Änderung der sechs Signaturen ging die ganze
+Kette ohne eine einzige geänderte Beweiszeile durch. Das ist kein Zufall, sondern der Beleg für die
+Aussage, die jetzt am Strukturkommentar steht: **kein Verbraucher verbindet zwei Glieder über die
+Filtration.** Der Beweis der mittleren Abschätzung liest `𝓕` ausschließlich an dem Glied, das er
+gerade abschätzt (`hX i`, und die Paare aus `hGapp i hi`); geteilt sind über die Familie nur die
+Skalare `q`, `T`, `K`, `ε₀`, `u` und die Ausnahmemenge. Der einzige Zugriff, der wie eine Verbindung
+aussieht, ist die Entnahme von `hq : 1 < q` an einem Glied `i₀ ∉ G₁` — und die holt eine Zahl, keine
+σ-Algebra.
+
+Die Änderung ist damit auch im Sinne der stehenden Regel die richtige Richtung: eine indizierte
+Filtration ist eine **schwächere** Voraussetzung als eine geteilte, und ein Verbraucher mit einer
+einzigen reicht die konstante Familie ein.
+
+#### Der Zusammenbau selbst
+
+`isEventuallyApproximable_rescaledWalk` geht über
+`isEventuallyApproximable_of_tendsto_zero_cofinite` bei `e n = ENNReal.ofReal (σ / ((n : ℝ) + 1))`;
+auf `ℕ` ist `Filter.cofinite = Filter.atTop` (`Nat.cofinite_eq_atTop`), und der Grenzwert ist
+elementar.
+
+* **Die beiden Paare** sind `isApproximatingPair_rescaledWalk` und
+  `isApproximatingPair_sq_rescaledWalk`, auf die gemeinsame Konstante `T ^ q.toReal⁻¹ * ‖σ‖₊`
+  gehoben; die des ersten ist `0`, also ist `mono_K` nur an ihm zu lesen und `zero_le` das ganze
+  Argument.
+* **Der erste Fehler ist exakt `0`**, der zweite ist
+  `lintegral_biSup_enorm_sub_sq_rescaledWalk_le`.
+* **Die vier Integrierbarkeiten** sind viermal
+  `IsApproximatingPair.integrable_stoppedValue_of_dominated`. Die vom Vorlauf benannte Klemmstelle
+  hat gebissen und ist genau so aufzulösen, wie er sagte: die Schranken sind `u` und `u + δ`, und
+  der Majorant ist an der jeweiligen zu nehmen. Die Stoppzeiten sind `isStoppingTime_oscHitSeqCap`
+  und `isStoppingTime_oscHitSeqGap`, ihre Schranken `min_le_right` und `oscHitSeqGap_le_coe` — alle
+  vier standen schon und mußten nicht gesucht werden.
+
+#### Zwei Voraussetzungen, die der Entwurf noch trug und die gestrichen sind
+
+* **`(hSc : S.Countable) (hSd : Dense S)`.** Die Trefferzeiten brauchen eine abzählbare dichte
+  Menge, um Stoppzeiten zu sein — aber `ℝ≥0` ist separabel, und
+  `TopologicalSpace.exists_countable_dense` liefert sie **im Beweis**. Es ist das `D` des Débuts und
+  nicht das `S` der Straffheitsabschätzung, also liest von außen niemand, welche genommen wurde.
+* **`0 ≤ σ`.** Im Entwurf als `have` geführt und nirgends gelesen: die Nichtnegativität wird allein
+  innerhalb von `enorm_sub_sq_rescaledWalk_le` gebraucht, und dort ist sie `hsq 0` gegen
+  `integral_nonneg`.
+
+#### Die README ist nachgezogen
+
+`MartingaleProblems/README.md`, Meilenstein 11: der Punkt zu `IsEventuallyApproximable` trägt jetzt
+die indizierte Filtration samt der Rechnung, warum es keine gemeinsame gibt; der Akzeptanztest hat
+einen neuen Aufzählungspunkt `isEventuallyApproximable_rescaledWalk`. **Und ein Satz ist
+berichtigt**: dort stand „mit diesen trägt die Irrfahrt, über **einer** Filtration, alles, was der
+Meilenstein von einem Prozeß verlangt". Gemeint war eine Filtration je Glied; gelesen wurde es als
+die Aussage, die dieser Lauf widerlegt hat. Er sagt jetzt „über der Filtration ihrer **eigenen**
+Maschenweite … und über keiner mit den übrigen Gliedern geteilten". `check_own_names.py` zählt
+weiterhin 439 Namen ohne Deckung — unverändert, die neuen Zitate sind also gedeckt.
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`MeasureTheory.isTight_map_postcomp_rescaledWalk`** — die Straffheit der Bildgesetze der
+reskalierten Irrfahrten, also der Akzeptanztest des **ersten** Kettenpunktes, ausgesprochen und
+bewiesen.
+
+*Worauf sie ruht, und es liegt jetzt alles da:*
+`isTightMeasureSet_map_postcomp_of_isEventuallyApproximable` mit der indizierten Filtration,
+gefüttert mit `isEventuallyApproximable_rescaledWalk` (dieser Lauf),
+`isStronglyProgressive_rescaledWalk` und `continuousWithinAt_rescaledWalk` je Glied, und
+`isRightContinuous_floorFiltration` für die Instanz `[∀ i, (𝓕 i).IsRightContinuous]`.
+
+*Warum jetzt:* es ist der erste Verbraucher der indizierten Filtration außerhalb ihrer eigenen
+Konstruktion, und damit die Probe darauf, daß die Berichtigung dieses Laufs nicht nur die
+Zielaussage, sondern auch die **Kette darüber** trägt.
+
+**Die eine Stelle, die vorher zu klären ist, und sie ist benannt statt geraten:** der Satz verlangt
+`Φ : γ → Ω → D(ℝ≥0, E)` mit `hΦ : ∀ i, ∀ ω, (Φ i ω).toFun = fun t ↦ X i t ω`, also den
+Irrfahrtspfad als Element des Pfadraums. Die Naht dafür ist am 2026-09-21 im zweiundzwanzigsten
+Lauf gebaut (»der Irrfahrtspfad als **Prozeß**«); zu prüfen ist, ob sie in genau dieser Gestalt
+vorliegt oder ob zwischen ihr und `hΦ` noch eine Umschreibung steht. Das ist die erste Frage des
+Laufs und keine Nebensache — an ihr, nicht an der Straffheit, dürfte die Zeit hängen.
+
+*Die zweite Voraussetzung ist eine beschränkte stetige Testfunktion `g : E →ᵇ ℝ` bei `E = ℝ`; die
+Irrfahrt ist reellwertig, und `ℝ` erfüllt `[PolishSpace]` und `[CompleteSpace]`.*
+
+*Die `[∀ i, (𝓕 i).IsRightContinuous]`-Instanz ist der Punkt, an dem die Elaboration Mühe machen
+könnte: `isRightContinuous_floorFiltration` ist ein `theorem` und keine Instanz, und die
+Instanzensuche findet sie nicht von selbst. In `isEventuallyApproximable_rescaledWalk` war das
+harmlos, weil sie dort im Beweis per `have` gesetzt wird; als **Voraussetzung** einer Aussage
+verlangt sie ein `haveI` vor dem Aufruf oder eine Instanzdeklaration.*
