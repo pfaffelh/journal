@@ -55965,3 +55965,209 @@ Lauf zwei Aussagen weit.
 Schranke **selbst** lesen und wieviele sie bloß durchreichen. Nach der Zählung oben reichen drei
 sie durch; ist das richtig, so ist der Rest der Kette mechanisch, und ist es falsch, so ist die
 Stelle, an der es falsch ist, der Ertrag jenes Laufs.
+
+### 2026-09-22, siebter Lauf des Tages — das benannte Ziel des Vorlaufs steht, aber seine Vorfrage ist mit einem **Nein** zu beantworten: die Aussage, die er abschwächen ließ, hat **keinen Verbraucher**; die Stelle, an der die Kette ihre Schranke wirklich liest, liegt eine Ebene tiefer, und dort ist sie **in der Konklusion** — und genau dort hat Mathlib das Werkzeug, sie loszuwerden
+
+**Das benannte Ziel war `lintegral_ofReal_dist_le_sqrt_of_lintegral_mul_biSup_le`**, mit der
+Vorfrage, wieviele Verbraucher zwischen `lintegral_ofReal_dist_le_sqrt_of_biSup_le` und
+`mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair` die Schranke `‖V t ω‖ ≤ c`
+**selbst** lesen und wieviele sie bloß durchreichen. Der Vorlauf hatte „drei reichen sie durch"
+vorhergesagt und angeschlossen: „ist das richtig, so ist der Rest der Kette mechanisch".
+
+**Das Ziel steht. Die Vorhersage ist falsch, und zwar in der Richtung, die zählt.**
+
+#### Die Zählung, am Quelltext
+
+| Aussage | Zeile (vorher) | liest `c` |
+| --- | ---: | --- |
+| `lintegral_ofReal_dist_le_sqrt_of_biSup_le` | 44427 | selbst — **und hat keinen Verbraucher** |
+| `lintegral_ofReal_dist_sq_le_of_isApproximatingPair` | 44831 | **selbst, siebenmal, und in der Konklusion** |
+| `measure_setOf_oscHitSeq_lt_le_of_isApproximatingPair` | 44964 | durchgereicht |
+| `measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair` | 45061 | durchgereicht |
+| `lintegral_ofReal_dist_le_sqrt_of_isApproximatingPair` | 45155 | **selbst**, für die Integrierbarkeit des Quadrats |
+| `sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair` | 45253 | durchgereicht |
+| `mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair` | 45413 | durchgereicht, `c` steht in der Konklusion |
+
+Also **vier** reichen durch und **zwei** lesen selbst, nicht drei und eine.
+
+**Der schwerere Befund ist der erste Tabelleneintrag.** `lintegral_ofReal_dist_le_sqrt_of_biSup_le`
+kommt in der ganzen Datei nur in drei Doc-Kommentaren und in seiner eigenen Definition vor; die
+Kette läuft über `lintegral_ofReal_dist_sq_le_of_isApproximatingPair`, das
+`ofReal_integral_sq_sub_le` unmittelbar aufruft. **Die abgeschwächte Fassung, um die der Vorlauf
+gebeten hat, bewegt in der Kette also nichts** — sie ist richtig und sie ist gebaut, aber sein
+Satz „damit ist die Abschätzung bis `mul_measure_setOf_lt_modulusBased_le_…` frei von jeder
+Schranke am Prozeß" trifft nicht zu.
+
+**Und der Grund, warum er nicht zutrifft, ist kein Buchhaltungsfehler.** Ab
+`IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le_lintegral` steht die Schranke nicht
+in einer Nebenbedingung, sondern **rechts vom `≤`**: als `ENNReal.ofReal c` vor dem
+Kompensatorintegral und am Ende als die Konstante `1 + 2 * ENNReal.ofReal c` der Konklusion von
+`mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair`. Eine Abschwächung dort ist keine
+Änderung von Hypothesen, sondern eine andere Aussage.
+
+#### Wo die Schranke eintritt, und es ist genau eine Stelle
+
+`integral_mul_stoppedValue_eq` (Z. 42707) benutzt die Herausziehregel der bedingten Erwartung in
+ihrer **beschränkten** Gestalt, `MeasureTheory.condExp_stronglyMeasurable_mul_of_bound`
+(`MeasureTheory/Function/ConditionalExpectation/PullOut.lean:260`). Sein eigener Doc-Kommentar
+sagt: „`W` is asked to be bounded and not merely integrable, because the pull out property in the
+form that needs no integrability of the product is the bounded one."
+
+**Das ist wahr als Beschreibung des Tauschs und irreführend als Begründung, denn die andere
+Gestalt gibt es.** `MeasureTheory.condExp_mul_of_stronglyMeasurable_left`
+(`PullOut.lean:245`, nachgesehen an `upstream/master`) verlangt
+
+```lean
+(hf : StronglyMeasurable[m] f) (hfg : Integrable (f * g) μ) (hg : Integrable g μ) :
+    μ[f * g | m] =ᵐ[μ] f * μ[g | m]
+```
+
+— **keine Schranke**, und auch keine Endlichkeit des Maßes für den Herausziehschritt selbst; sie
+ist über `condExp_bilin_of_stronglyMeasurable_left` bewiesen, das `Ω` längs der Mengen
+ausschöpft, auf denen `f` beschränkt *ist*. Der Tausch ist Schranke gegen Integrierbarkeit des
+Produkts, und **welche von beiden ein Verbraucher will, entscheidet sein Prozeß**: ein Gewicht
+aus einer beschränkten Testfunktion hat die Schranke geschenkt, ein Gewicht, das der Prozeß an
+einer Stoppzeit ist — der Kreuzterm von (9.26), und die reskalierte Irrfahrt von Donsker —, hat
+die Produktintegrierbarkeit aus der Quadratintegrierbarkeit über Cauchy–Schwarz und **gar keine
+Schranke**.
+
+#### Gebaut und übersetzt
+
+**Fünf neue Deklarationen**, alle in `TauCeti/MartingaleProblems/Suggested.lean` (Zeilen
+**nachher**), dazu eine sechste neu bewiesen:
+
+* **`lintegral_ofReal_dist_le_sqrt_of_lintegral_mul_biSup_le`** (Z. 44596) — das benannte Ziel.
+  Der gewichtete Fehler `γ` statt `hVb`, und die Integrierbarkeit des Quadrats als Hypothese
+  `hsq` statt als Folgerung aus der Schranke. Ein Einzeiler aus
+  `ofReal_integral_sq_sub_le_of_lintegral_mul_biSup_le` und
+  `lintegral_ofReal_dist_le_sqrt_toReal_of_le`.
+* **`lintegral_ofReal_dist_le_sqrt_of_biSup_le` ist jetzt seine Instanz** bei
+  `γ = ENNReal.ofReal c * ε`; sein Beweis produziert aus `c` beides, den gewichteten Fehler und
+  die Integrierbarkeit des Quadrats, und reicht sie weiter. Damit ist die Abschwächung eine
+  bewiesene Beziehung, wie beim Vorlauf.
+* **`integral_mul_stoppedValue_eq_of_integrable_mul`** (Z. 42754) — die Herausziehregel ohne
+  Schranke, über `condExp_mul_of_stronglyMeasurable_left`. `[IsFiniteMeasure P]` wird weiter
+  gelesen, aber **stromabwärts** vom Herausziehen: bei
+  `integrable_stoppedValue_of_rightContinuous` und bei `integral_condExp`, das
+  `SigmaFinite (P.trim hle)` braucht. Das steht so am Doc-Kommentar.
+* **`integral_mul_stoppedValue_sub_eq_zero_of_integrable_mul`** (Z. 42820) — die Zuwachsform, mit
+  den zwei Produktintegrierbarkeiten statt der Schranke.
+* **`integral_mul_stoppedValue_sub_eq_compensator_of_integrable_mul`** (Z. 42912) — die
+  Kompensatoridentität. **Vier** Produktintegrierbarkeiten statt einer Schranke, und die zwei
+  Integrierbarkeiten der gestoppten Werte von `Y` fallen ersatzlos weg: der beschränkte Nachbar
+  braucht sie, um die von `C` als Differenz zu gewinnen, hier sind die Produkte von vornherein
+  Voraussetzung.
+* **`IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le_lintegral_mul`** (Z. 43681) — die
+  Gestalt, in der die Kette es liest, mit dem Gewicht **unter** dem Integral:
+
+  ```lean
+  ‖∫ ω, W ω * (stoppedValue Y β ω - stoppedValue Y α ω) ∂P‖ₑ
+    ≤ ∫⁻ ω, ‖W ω‖ₑ * ‖C ((β ω).untopA) ω - C ((α ω).untopA) ω‖ₑ ∂P
+  ```
+
+  Der Beweis ist **kürzer** als der beschränkte, um genau den Schritt, der die Konstante
+  herauszieht (`lintegral_const_mul'`).
+
+#### Prüfung
+
+`scripts/check_master.py` gegen `upstream/master` (`94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `4.35.0-rc2`): **0 Fehler, 0 `sorry`** in allen drei Dateien, Warnungen **18 / 38 / 112,
+davon 0 veraltet** — unverändert gegenüber dem Vorlauf, die fünf neuen Deklarationen und der neu
+geführte Beweis der alten erzeugen keine einzige Warnung. `scripts/check_axioms_master.py` auf
+`propext`, `Classical.choice`, `Quot.sound` für alle fünf und für die neu bewiesene
+`lintegral_ofReal_dist_le_sqrt_of_biSup_le`. `check_own_names.py` zählt wieder **440** Namen ohne
+Deckung, also unverändert; `check_cited_lines.py` meldet **443 gepaarte Fundstellen, 0
+verschoben, 0 tot**.
+
+*Und die Namensraumfalle des Vorlaufs ist bestätigt und um drei Namen erweitert:* der Block mit
+`integral_mul_stoppedValue_*` steht in einem `section`, **nicht** in `namespace MeasureTheory`;
+`check_axioms_master.py` mit dem Präfix meldet für die drei „Unknown constant", ohne Präfix gehen
+sie durch. Für `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le_lintegral_mul` gilt
+das Gegenteil — die ist im Namensraum. Wer die Axiomprüfung aufruft, probiert beides.
+
+#### Die README ist nachgezogen
+
+`MartingaleProblems/README.md`, Meilenstein 11, im Abschnitt über die Schranke: die Zählung
+vier/zwei mit Namen, der Satz, daß `lintegral_ofReal_dist_le_sqrt_of_biSup_le` keinen Verbraucher
+hat und eine Abschwächung dort nichts bewegt, die Feststellung, daß `c` ab
+`enorm_integral_mul_stoppedValue_sub_le_lintegral` in der **Konklusion** steht, und die
+unbeschränkte Herausziehregel mit Datei und Zeile samt den vier Aussagen, die den Tausch nach
+oben tragen.
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`lintegral_ofReal_dist_sq_le_of_isApproximatingPair_of_integrable_mul`** — dieselbe Aussage wie
+`lintegral_ofReal_dist_sq_le_of_isApproximatingPair` (Z. 45062 nachher), aber mit
+
+```lean
+∫⁻ ω, ‖stoppedValue V α ω‖ₑ * ‖C ((β ω).untopA) ω - C ((α ω).untopA) ω‖ₑ ∂P
+```
+
+als zweitem Summanden statt `2 * ENNReal.ofReal c * ∫⁻ ω, ‖C … - C …‖ₑ ∂P`, und ohne `hVb`.
+
+*Worauf sie ruht:* `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le_lintegral_mul` und
+`ofReal_integral_sq_sub_le_of_lintegral_mul_biSup_le` (beide stehen seit heute), sowie
+`lintegral_ofReal_dist_le_sqrt_of_lintegral_mul_biSup_le` für den Wurzelzug.
+
+*Warum jetzt:* sie ist der erste der beiden Punkte, die die Schranke **selbst** lesen, und mit ihr
+fallen die sieben Stellen, an denen `hVb` im Beweis von
+`lintegral_ofReal_dist_sq_le_of_isApproximatingPair` die Integrierbarkeiten herstellt. Die
+Statthalter dafür sind benennbar und nicht zu raten: `hIVα`, `hIVβ` werden Hypothesen; `hIVα2`,
+`hIVβ2` folgen aus `MemLp … 2` über `MemLp.integrable_sq`; `hIVc`, `hIYc` sind Cauchy–Schwarz;
+`hsq` ist die Differenz zweier `L²`-Größen. Welcher Mathlib-Name die Cauchy–Schwarz-Stelle trägt,
+ist **am Quelltext zu belegen** und nicht aus dem Gedächtnis zu setzen.
+
+*Die eine Stelle, die vorher zu klären ist, und sie ist nicht kosmetisch:* der zweite Summand ist
+dann **nicht mehr additiv längs benachbarter Zellen** in der Weise, die
+`IsApproximatingPair.sum_lintegral_enorm_compensator_sub_le` über die Kette summiert — dort steht
+`∫⁻ ‖ΔC‖ₑ` ohne Gewicht, hier `∫⁻ ‖V(α)‖ₑ * ‖ΔC‖ₑ`, und das Gewicht wechselt mit der Zelle. Ob
+die Summation über die Kette das trägt — etwa durch Cauchy–Schwarz **nach** der Summation, mit
+einem gleichmäßigen `L²`-Term für `V` und der `L^q`-Schranke der Klasse für den Kompensator —,
+ist die erste Frage jenes Laufs. **Sie zu beantworten ist wertvoller als der Satz selbst**, weil
+an ihr hängt, ob der ganze Weg trägt oder ob die Kette doch eine Schranke am Prozeß braucht; ein
+begründetes Nein an dieser Stelle wäre der Befund, der den Meilenstein auf den Lindeberg–Taylor-Weg
+schickt.
+
+#### Nachtrag desselben Laufs: die eben gestellte Vorfrage ist am Quelltext **beantwortet**, und die Antwort ist besser als die Frage
+
+Der Vorschlag oben nennt als „erste Frage jenes Laufs", ob die Summation über die Kette einen
+**wechselnden** Gewichtsfaktor trägt. Sie ist nachgesehen und braucht keinen eigenen Lauf.
+
+**Pfadweise trägt sie, und zwar ohne neues Argument.** `sum_lintegral_enorm_compensator_sub_le`
+(Z. 43852) ruht auf der punktweisen Kettenschranke `sum_enorm_compensator_sub_le`; mit einem
+Gewicht davor ist
+
+```
+∑ₖ Wₖ ω * ‖ΔCₖ ω‖ₑ ≤ (⨆ t ≤ u, ‖V t ω‖ₑ) * ∑ₖ ‖ΔCₖ ω‖ₑ
+                    ≤ (⨆ t ≤ u, ‖V t ω‖ₑ) * ofReal u ^ (1 - 1/q) * eLpNorm (Z (·, ω)),
+```
+
+also dieselbe Kette mit dem **laufenden Maximum** an der Stelle von `c`. Was danach **nicht** mehr
+geht, ist der Schritt `lintegral_const_mul'`: beide Faktoren hängen von `ω` ab, und aus
+`∫⁻ eLpNorm ≤ K` — dem einzigen Feld der Klasse, das den Kompensator beschränkt — folgt für das
+Produkt nichts. Hier bräuchte es Hölder und damit eine `L²`-Schranke an `eLpNorm (Z (·, ω))`, also
+ein **neues Feld** in `IsApproximatingPair`.
+
+**Für den Akzeptanztest entsteht diese Forderung gar nicht, und das ist am Quelltext abzulesen:**
+
+* `isApproximatingPair_rescaledWalk` (Z. 50639) hat `C = fun _ _ ↦ 0`, `Z = fun _ _ ↦ 0`, `K = 0`.
+  Der Kompensator der Irrfahrt ist **identisch null** — sie ist selbst ein Martingal. Das ist
+  genau das Paar, dessen Gewicht im Kreuzterm die unbeschränkte Irrfahrt ist, und
+  `∫⁻ ω, ‖V (α ω) ω‖ₑ * ‖ΔC‖ₑ ∂P = 0` gleichgültig, wie groß das Gewicht ist.
+* `isApproximatingPair_sq_rescaledWalk` (Z. 50714) hat `C = fun t _ ↦ (t : ℝ) * σ` und
+  `Z = fun _ _ ↦ σ`, beide **deterministisch**; und dieses Paar wird ohnehin am Gewicht `1`
+  gelesen, wo die Schranke `1` ist und nicht `c`.
+
+**Also:** auf dem Akzeptanztest ist der gewichtete Summand null, der ungewichtete unverändert, und
+die Frage nach der Additivität stellt sich nicht. Allgemeiner stellt sie sich nicht, sobald `Z`
+deterministisch ist — dann ist `eLpNorm (Z (·, ω))` eine Konstante, `lintegral_const_mul'` greift
+wie bisher, und übrig bleibt `∫⁻ ω, ⨆ t ≤ u, ‖V t ω‖ₑ ∂P`, die `L¹`-Norm des laufenden Maximums,
+die Doob aus `L²` gibt.
+
+**Was das für den Vorschlag heißt.** Er bleibt stehen, und seine Vorfrage ist damit **vorab
+beantwortet** statt offen: der nächste Lauf baut
+`lintegral_ofReal_dist_sq_le_of_isApproximatingPair_of_integrable_mul` ohne Umweg, und die Frage
+nach einem `L²`-Feld der Klasse ist ein Punkt für **später und für allgemeine Kerne**, nicht für
+Donsker. Wer das Feld doch einführt, führt es als Abschwächung ein und belegt, an welcher Stelle
+der jetzige `K`-Term nicht mehr reicht — die Stelle ist benannt und heißt `lintegral_const_mul'`
+in Z. 43870.

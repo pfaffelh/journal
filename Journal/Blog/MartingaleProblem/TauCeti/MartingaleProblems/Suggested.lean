@@ -42727,6 +42727,53 @@ theorem integral_mul_stoppedValue_eq
   filter_upwards [stoppedValue_ae_eq_condExp_stoppedValue hY hprog hrc hα hβ hαβ hβj] with ω hω
   rw [hω]
 
+/-- **The same, with the bound on the weight replaced by integrability of the product.**  For `W`
+measurable at `𝓕_α` and `W · stoppedValue Y β` integrable,
+
+```
+∫ ω, W ω * stoppedValue Y β ω ∂P = ∫ ω, W ω * stoppedValue Y α ω ∂P.
+```
+
+**Mathlib has the unbounded pull-out property, and this is the one place in this development that
+needed it.**  `MeasureTheory.condExp_mul_of_stronglyMeasurable_left`
+(`MeasureTheory/Function/ConditionalExpectation/PullOut.lean:245`) asks `StronglyMeasurable[m] f`,
+`Integrable (f * g) μ` and `Integrable g μ` -- no bound, and no finiteness of the measure for the
+pull-out step itself; it is proved by exhausting `Ω` along the sets where `f` *is* bounded.  The
+bounded form `MeasureTheory.condExp_stronglyMeasurable_mul_of_bound` (`:260`) is the trade in the
+other direction: a bound instead of the integrability of the product.
+
+**Which of the two a consumer wants is decided by the process, not by taste.**  A weight coming
+from a bounded test function has the bound and not the product integrability for free; a weight
+that is the process itself at a stopping time -- the cross term of \EK, display (9.26), and the
+rescaled random walk of Donsker -- has the product integrability from square integrability by
+Cauchy--Schwarz, and no bound at all.  This statement is what lets the second kind through.
+
+`[IsFiniteMeasure P]` is still read, but downstream of the pull-out: at
+`integrable_stoppedValue_of_rightContinuous` and at `MeasureTheory.integral_condExp`, which needs
+`SigmaFinite (P.trim hle)`. -/
+theorem integral_mul_stoppedValue_eq_of_integrable_mul
+    (hY : Martingale Y 𝓕 P) (hprog : IsStronglyProgressive 𝓕 Y)
+    (hrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
+    {j : ℝ≥0} {α β : Ω → ENNReal} (hα : IsStoppingTime 𝓕 α) (hβ : IsStoppingTime 𝓕 β)
+    (hαβ : α ≤ β) (hβj : ∀ ω, β ω ≤ (j : ENNReal))
+    {W : Ω → ℝ} (hW : StronglyMeasurable[hα.measurableSpace] W)
+    (hWβ : Integrable (fun ω ↦ W ω * stoppedValue Y β ω) P) :
+    ∫ ω, W ω * stoppedValue Y β ω ∂P = ∫ ω, W ω * stoppedValue Y α ω ∂P := by
+  have hαj : ∀ ω, α ω ≤ (j : ENNReal) := fun ω ↦ (hαβ ω).trans (hβj ω)
+  have hle : hα.measurableSpace ≤ m := hα.measurableSpace_le_of_le hαj
+  have hβint : Integrable (stoppedValue Y β) P :=
+    integrable_stoppedValue_of_rightContinuous hY hrc hβ hβj
+  have hWβ' : Integrable (W * stoppedValue Y β) P := hWβ
+  have key : P[W * stoppedValue Y β | hα.measurableSpace]
+      =ᵐ[P] W * P[stoppedValue Y β | hα.measurableSpace] :=
+    condExp_mul_of_stronglyMeasurable_left hW hWβ' hβint
+  have hstep : ∫ ω, W ω * stoppedValue Y β ω ∂P
+      = ∫ ω, W ω * P[stoppedValue Y β | hα.measurableSpace] ω ∂P :=
+    Eq.trans (integral_condExp hle (f := W * stoppedValue Y β)).symm (integral_congr_ae key)
+  refine hstep.trans (integral_congr_ae ?_)
+  filter_upwards [stoppedValue_ae_eq_condExp_stoppedValue hY hprog hrc hα hβ hαβ hβj] with ω hω
+  rw [hω]
+
 /-- **The same statement with the increment on one side**, which is the form a consumer uses:
 
 ```
@@ -42759,6 +42806,32 @@ theorem integral_mul_stoppedValue_sub_eq_zero
     rw [← integral_sub hmβ hmα]
     exact integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ by ring)
   rw [hsplit, integral_mul_stoppedValue_eq hY hprog hrc hα hβ hαβ hβj hW hWb, sub_self]
+
+/-- **The increment form of the unbounded-weight statement**, with the two product
+integrabilities as hypotheses in place of the bound:
+
+```
+∫ ω, W ω * (stoppedValue Y β ω - stoppedValue Y α ω) ∂P = 0.
+```
+
+The two are what splitting the integral reads, and `MeasureTheory.Integrable.bdd_mul` -- the step
+the bounded neighbour takes to get them -- is precisely where a bound would be spent.  A consumer
+with square integrable increments gets them from Cauchy--Schwarz instead. -/
+theorem integral_mul_stoppedValue_sub_eq_zero_of_integrable_mul
+    (hY : Martingale Y 𝓕 P) (hprog : IsStronglyProgressive 𝓕 Y)
+    (hrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
+    {j : ℝ≥0} {α β : Ω → ENNReal} (hα : IsStoppingTime 𝓕 α) (hβ : IsStoppingTime 𝓕 β)
+    (hαβ : α ≤ β) (hβj : ∀ ω, β ω ≤ (j : ENNReal))
+    {W : Ω → ℝ} (hW : StronglyMeasurable[hα.measurableSpace] W)
+    (hWα : Integrable (fun ω ↦ W ω * stoppedValue Y α ω) P)
+    (hWβ : Integrable (fun ω ↦ W ω * stoppedValue Y β ω) P) :
+    ∫ ω, W ω * (stoppedValue Y β ω - stoppedValue Y α ω) ∂P = 0 := by
+  have hsplit : ∫ ω, W ω * (stoppedValue Y β ω - stoppedValue Y α ω) ∂P
+      = ∫ ω, W ω * stoppedValue Y β ω ∂P - ∫ ω, W ω * stoppedValue Y α ω ∂P := by
+    rw [← integral_sub hWβ hWα]
+    exact integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ by ring)
+  rw [hsplit,
+    integral_mul_stoppedValue_eq_of_integrable_mul hY hprog hrc hα hβ hαβ hβj hW hWβ, sub_self]
 
 /-- **The increment of a quasimartingale against a weight from the past is the increment of its
 compensator.**  If `Y - C` is a right continuous martingale and `W` is bounded and
@@ -42811,6 +42884,62 @@ theorem integral_mul_stoppedValue_sub_eq_compensator
   have hmC : Integrable (fun ω ↦ W ω * (stoppedValue C β ω - stoppedValue C α ω)) P :=
     (hCβ.sub hCα).bdd_mul hWae hbound
   have hzero := integral_mul_stoppedValue_sub_eq_zero hM hMprog hMrc hα hβ hαβ hβj hW hWb
+  have hcomb : ∫ ω, W ω * (stoppedValue Y β ω - stoppedValue Y α ω) ∂P
+      - ∫ ω, W ω * (stoppedValue C β ω - stoppedValue C α ω) ∂P = 0 := by
+    refine Eq.trans (integral_sub hmY hmC).symm (Eq.trans (integral_congr_ae ?_) hzero)
+    exact Filter.Eventually.of_forall fun ω ↦ by simp only [stoppedValue]; ring
+  exact sub_eq_zero.mp hcomb
+
+/-- **The compensator identity for an unbounded weight**, with four product integrabilities in
+place of the bound:
+
+```
+∫ ω, W ω * (stoppedValue Y β ω - stoppedValue Y α ω) ∂P
+  = ∫ ω, W ω * (stoppedValue C β ω - stoppedValue C α ω) ∂P.
+```
+
+**The integrability of the four stopped values drops out.**  The bounded neighbour asks `hYα` and
+`hYβ` and makes those of `C` the difference; here the products with `W` are hypotheses from the
+start, and the product with the martingale part is their difference.  So the trade is four
+hypotheses for one, and none of the four is about `C` alone.
+
+**What this opens.**  It is the bottom of the chain of Milestone 11: every statement from
+`IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le_lintegral` up to
+`MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair` carries
+`ENNReal.ofReal c` in its **conclusion**, and the bound entered at exactly one place -- the pull
+out property of the conditional expectation, in its bounded form.  With the unbounded form the
+bound is replaceable there too, and a process that is merely square integrable can be read. -/
+theorem integral_mul_stoppedValue_sub_eq_compensator_of_integrable_mul
+    {Y C : ℝ≥0 → Ω → ℝ}
+    (hM : Martingale (fun t ω ↦ Y t ω - C t ω) 𝓕 P)
+    (hMprog : IsStronglyProgressive 𝓕 fun t ω ↦ Y t ω - C t ω)
+    (hMrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0,
+      Tendsto (fun r ↦ Y r ω - C r ω) (𝓝[≥] s) (𝓝 (Y s ω - C s ω)))
+    {j : ℝ≥0} {α β : Ω → ENNReal} (hα : IsStoppingTime 𝓕 α) (hβ : IsStoppingTime 𝓕 β)
+    (hαβ : α ≤ β) (hβj : ∀ ω, β ω ≤ (j : ENNReal))
+    {W : Ω → ℝ} (hW : StronglyMeasurable[hα.measurableSpace] W)
+    (hWYα : Integrable (fun ω ↦ W ω * stoppedValue Y α ω) P)
+    (hWYβ : Integrable (fun ω ↦ W ω * stoppedValue Y β ω) P)
+    (hWCα : Integrable (fun ω ↦ W ω * stoppedValue C α ω) P)
+    (hWCβ : Integrable (fun ω ↦ W ω * stoppedValue C β ω) P) :
+    ∫ ω, W ω * (stoppedValue Y β ω - stoppedValue Y α ω) ∂P
+      = ∫ ω, W ω * (stoppedValue C β ω - stoppedValue C α ω) ∂P := by
+  have hWMα : Integrable
+      (fun ω ↦ W ω * stoppedValue (fun t ω ↦ Y t ω - C t ω) α ω) P :=
+    (hWYα.sub hWCα).congr (Filter.Eventually.of_forall fun ω ↦ by
+      simp only [Pi.sub_apply, stoppedValue]; ring)
+  have hWMβ : Integrable
+      (fun ω ↦ W ω * stoppedValue (fun t ω ↦ Y t ω - C t ω) β ω) P :=
+    (hWYβ.sub hWCβ).congr (Filter.Eventually.of_forall fun ω ↦ by
+      simp only [Pi.sub_apply, stoppedValue]; ring)
+  have hmY : Integrable (fun ω ↦ W ω * (stoppedValue Y β ω - stoppedValue Y α ω)) P :=
+    (hWYβ.sub hWYα).congr (Filter.Eventually.of_forall fun ω ↦ by
+      simp only [Pi.sub_apply]; ring)
+  have hmC : Integrable (fun ω ↦ W ω * (stoppedValue C β ω - stoppedValue C α ω)) P :=
+    (hWCβ.sub hWCα).congr (Filter.Eventually.of_forall fun ω ↦ by
+      simp only [Pi.sub_apply]; ring)
+  have hzero := integral_mul_stoppedValue_sub_eq_zero_of_integrable_mul hM hMprog hMrc hα hβ
+    hαβ hβj hW hWMα hWMβ
   have hcomb : ∫ ω, W ω * (stoppedValue Y β ω - stoppedValue Y α ω) ∂P
       - ∫ ω, W ω * (stoppedValue C β ω - stoppedValue C α ω) ∂P = 0 := by
     refine Eq.trans (integral_sub hmY hmC).symm (Eq.trans (integral_congr_ae ?_) hzero)
@@ -43527,6 +43656,45 @@ theorem enorm_integral_mul_stoppedValue_sub_le_lintegral [IsFiniteMeasure P]
         exact ENNReal.ofReal_le_ofReal (by simpa [Real.norm_eq_abs] using hWb ω)
     _ = ENNReal.ofReal c * ∫⁻ ω, ‖C ((β ω).untopA) ω - C ((α ω).untopA) ω‖ₑ ∂P :=
         lintegral_const_mul' _ _ ENNReal.ofReal_ne_top
+
+/-- **The same with the weight left under the integral**, which is the form an unbounded weight
+reads:
+
+```
+‖∫ ω, W ω * (stoppedValue Y β ω - stoppedValue Y α ω) ∂P‖ₑ
+  ≤ ∫⁻ ω, ‖W ω‖ₑ * ‖C ((β ω).untopA) ω - C ((α ω).untopA) ω‖ₑ ∂P.
+```
+
+**Why it is not a reformulation.**  The bounded neighbour puts `ENNReal.ofReal c` in front of the
+lower integral, and `c` then travels unchanged through the whole chain of this milestone, up to
+`MeasureTheory.mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair`, where it stands in
+the conclusion as the constant `1 + 2 * ENNReal.ofReal c`.  Here nothing is taken out of the
+integral, so a weight of infinite supremum is admissible whenever the product against the
+compensator increment is integrable -- and for a weight in `L²` against an increment in `L²` that
+is Cauchy--Schwarz.
+
+**The price is four integrability hypotheses instead of one bound**, the same four as at
+`MeasureTheory.integral_mul_stoppedValue_sub_eq_compensator_of_integrable_mul`, and the
+integrability of the two stopped values of `Y` is no longer asked for.  The proof is shorter than
+the bounded one by exactly the step that pulls the constant out,
+`MeasureTheory.lintegral_const_mul'`. -/
+theorem enorm_integral_mul_stoppedValue_sub_le_lintegral_mul [IsFiniteMeasure P]
+    (h : IsApproximatingPair 𝓕 P q T K Y C Z)
+    {j : ℝ≥0} {α β : Ω → ENNReal} (hα : IsStoppingTime 𝓕 α) (hβ : IsStoppingTime 𝓕 β)
+    (hαβ : α ≤ β) (hβj : ∀ ω, β ω ≤ (j : ENNReal))
+    {W : Ω → ℝ} (hW : StronglyMeasurable[hα.measurableSpace] W)
+    (hWYα : Integrable (fun ω ↦ W ω * stoppedValue Y α ω) P)
+    (hWYβ : Integrable (fun ω ↦ W ω * stoppedValue Y β ω) P)
+    (hWCα : Integrable (fun ω ↦ W ω * stoppedValue C α ω) P)
+    (hWCβ : Integrable (fun ω ↦ W ω * stoppedValue C β ω) P) :
+    ‖∫ ω, W ω * (stoppedValue Y β ω - stoppedValue Y α ω) ∂P‖ₑ
+      ≤ ∫⁻ ω, ‖W ω‖ₑ * ‖C ((β ω).untopA) ω - C ((α ω).untopA) ω‖ₑ ∂P := by
+  rw [integral_mul_stoppedValue_sub_eq_compensator_of_integrable_mul h.martingale
+    h.progressive_sub h.rightContinuous hα hβ hαβ hβj hW hWYα hWYβ hWCα hWCβ]
+  refine le_trans (enorm_integral_le_lintegral_enorm _) (le_of_eq ?_)
+  refine lintegral_congr fun ω ↦ ?_
+  rw [enorm_mul]
+  rfl
 
 /-- **The martingale increment against a bounded weight from the past, bounded uniformly.**
 
@@ -44400,6 +44568,52 @@ theorem ofReal_integral_sq_sub_le_of_lintegral_mul_biSup_le {ι : Type*} {W : Se
     _ ≤ (‖∫ ω, (Y' (b ω) ω - Y' (a ω) ω) ∂P‖ₑ + 2 * ε')
         + 2 * (‖∫ ω, V (a ω) ω * (Y (b ω) ω - Y (a ω) ω) ∂P‖ₑ + 2 * γ) := by gcongr
 
+/-- **The whole passage with the bound on the process replaced by a weighted error**, which is
+the shape a consumer whose process is unbounded reads:
+
+```
+∫⁻ ω, ENNReal.ofReal (dist (V (b ω) ω) (V (a ω) ω)) ∂P ≤ ENNReal.ofReal √(S.toReal)
+```
+
+whenever `S` bounds the four summands of
+`MeasureTheory.ofReal_integral_sq_sub_le_of_lintegral_mul_biSup_le`.  It is that statement
+followed by `lintegral_ofReal_dist_le_sqrt_toReal_of_le`.
+
+**What changes against the bounded neighbour, and it is exactly one hypothesis each way.**  The
+pointwise bound `hVb : ∀ t ω, ‖V t ω‖ ≤ c` is gone; in its place stands the integrability of the
+square of the increment, `hsq`, which the bounded statement derives from `hVb` through
+`MeasureTheory.Integrable.mono'` against the constant `(2c)²`.  For a process of square
+integrable increments -- the rescaled random walk among them, by `MeasureTheory.MemLp.integrable_sq`
+from `MemLp (ξ k) 2 P` -- that hypothesis is held anyway, and the bound is not.
+
+**This is the second and last place in this block where the bound on `V` was read.**  The first
+was the cross term, weakened at
+`MeasureTheory.enorm_integral_mul_sub_le_of_lintegral_mul_biSup_le`.  What the two do *not*
+reach is the bound the chain reads further downstream, at the weight of the compensator
+identity: `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le_lintegral` carries
+`ENNReal.ofReal c` in its **conclusion**, and freeing that is
+`MeasureTheory.integral_mul_stoppedValue_eq_of_integrable_mul` and the statements above it. -/
+theorem lintegral_ofReal_dist_le_sqrt_of_lintegral_mul_biSup_le {ι : Type*} {W : Set ι}
+    {Y Y' V : ι → Ω → ℝ} {P : Measure Ω} [IsProbabilityMeasure P]
+    {a b : Ω → ι} (ha : ∀ ω, a ω ∈ W) (hb : ∀ ω, b ω ∈ W)
+    {γ ε' : ENNReal}
+    (hγ : ∫⁻ ω, ‖V (a ω) ω‖ₑ * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P ≤ γ)
+    (hε' : ∫⁻ ω, ⨆ t ∈ W, ‖Y' t ω - V t ω ^ 2‖ₑ ∂P ≤ ε')
+    (hm : AEStronglyMeasurable (fun ω ↦ V (b ω) ω - V (a ω) ω) P)
+    (hsq : Integrable (fun ω ↦ (V (b ω) ω - V (a ω) ω) ^ 2) P)
+    (hIV2 : Integrable (fun ω ↦ V (b ω) ω ^ 2 - V (a ω) ω ^ 2) P)
+    (hIY2 : Integrable (fun ω ↦ Y' (b ω) ω - Y' (a ω) ω) P)
+    (hIVc : Integrable (fun ω ↦ V (a ω) ω * (V (b ω) ω - V (a ω) ω)) P)
+    (hIYc : Integrable (fun ω ↦ V (a ω) ω * (Y (b ω) ω - Y (a ω) ω)) P)
+    {S : ENNReal} (hSne : S ≠ ⊤)
+    (hS : (‖∫ ω, (Y' (b ω) ω - Y' (a ω) ω) ∂P‖ₑ + 2 * ε')
+            + 2 * (‖∫ ω, V (a ω) ω * (Y (b ω) ω - Y (a ω) ω) ∂P‖ₑ + 2 * γ) ≤ S) :
+    ∫⁻ ω, ENNReal.ofReal (dist (V (b ω) ω) (V (a ω) ω)) ∂P
+      ≤ ENNReal.ofReal (Real.sqrt S.toReal) :=
+  lintegral_ofReal_dist_le_sqrt_toReal_of_le hm hsq hSne
+    (le_trans (ofReal_integral_sq_sub_le_of_lintegral_mul_biSup_le ha hb hγ hε' hIV2 hIY2
+      hIVc hIYc) hS)
+
 /-- **The whole passage, from the two approximants to the quantity the Aldous route integrates.**
 
 ```
@@ -44423,7 +44637,13 @@ for itself a second time.**  With `‖V t ω‖ ≤ c` the increment is bounded 
 `(2c)²`, and `MeasureTheory.Integrable.mono'`
 (`MeasureTheory/Function/L1Space/Integrable.lean:105`) against the constant turns the
 measurability that Cauchy--Schwarz asks for anyway into integrability.  The consumer therefore
-carries one hypothesis fewer than the composition would suggest. -/
+carries one hypothesis fewer than the composition would suggest.
+
+**It is the instance of
+`MeasureTheory.lintegral_ofReal_dist_le_sqrt_of_lintegral_mul_biSup_le` at
+`γ = ENNReal.ofReal c * ε`**, and is kept because that is the shape in which a consumer holding a
+bounded test function meets it; the two things the bound buys -- the weighted error and the
+integrability of the square -- are produced here and handed over. -/
 theorem lintegral_ofReal_dist_le_sqrt_of_biSup_le {ι : Type*} {W : Set ι}
     {Y Y' V : ι → Ω → ℝ} {P : Measure Ω} [IsProbabilityMeasure P]
     {a b : Ω → ι} (ha : ∀ ω, a ω ∈ W) (hb : ∀ ω, b ω ∈ W)
@@ -44454,8 +44674,19 @@ theorem lintegral_ofReal_dist_le_sqrt_of_biSup_le {ι : Type*} {W : Set ι}
       linarith
     have h4 : (0 : ℝ) ≤ |V (b ω) ω - V (a ω) ω| := abs_nonneg _
     nlinarith
-  exact lintegral_ofReal_dist_le_sqrt_toReal_of_le hm hsq hSne
-    (le_trans (ofReal_integral_sq_sub_le ha hb hε hε' hVb hIV2 hIY2 hIVc hIYc) hS)
+  have hγ : ∫⁻ ω, ‖V (a ω) ω‖ₑ * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P ≤ ENNReal.ofReal c * ε := by
+    calc ∫⁻ ω, ‖V (a ω) ω‖ₑ * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P
+        ≤ ∫⁻ ω, ENNReal.ofReal c * ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P := by
+          refine lintegral_mono fun ω ↦ mul_le_mul' ?_ le_rfl
+          rw [Real.enorm_eq_ofReal_abs]
+          exact ENNReal.ofReal_le_ofReal (by simpa [Real.norm_eq_abs] using hVb (a ω) ω)
+      _ = ENNReal.ofReal c * ∫⁻ ω, ⨆ t ∈ W, ‖Y t ω - V t ω‖ₑ ∂P :=
+          lintegral_const_mul' _ _ ENNReal.ofReal_ne_top
+      _ ≤ ENNReal.ofReal c * ε := by gcongr
+  refine lintegral_ofReal_dist_le_sqrt_of_lintegral_mul_biSup_le ha hb hγ hε' hm hsq hIV2 hIY2
+    hIVc hIYc hSne (le_trans (le_of_eq ?_) hS)
+  congr 2
+  ring
 
 end SquareAtProcess
 

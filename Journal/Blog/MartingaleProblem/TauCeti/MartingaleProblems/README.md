@@ -13952,6 +13952,36 @@ has to be chosen once for all `n`. What stands:
     `MeasureTheory.mul_measure_setOf_lt_modulusBased_postcomp_le_of_isApproximatingPair`,
     where it is discharged as `c = ‖g‖` for `g : E →ᵇ ℝ`.
 
+  **Counted at the source on 2026-09-22, seventh run, so that no run re-derives
+  it.** Of the statements between `lintegral_ofReal_dist_le_sqrt_of_biSup_le` and
+  the end of the chain, **four** merely pass the bound on --
+  `measure_setOf_oscHitSeq_lt_le_of_isApproximatingPair`,
+  `measure_setOf_oscHitSeq_lt_le_div_of_isApproximatingPair`,
+  `sum_lintegral_ofReal_dist_oscHitSeqGap_le_of_isApproximatingPair`,
+  `mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair` -- and **two**
+  read it themselves, `lintegral_ofReal_dist_sq_le_of_isApproximatingPair` and
+  `lintegral_ofReal_dist_le_sqrt_of_isApproximatingPair`.
+
+  **And `lintegral_ofReal_dist_le_sqrt_of_biSup_le` is not one of the six: it has
+  no consumer at all.** The chain runs through
+  `lintegral_ofReal_dist_sq_le_of_isApproximatingPair`, which calls
+  `ofReal_integral_sq_sub_le` directly; the unused statement is the same
+  passage packaged for a consumer holding `a`, `b` and a window, and nothing in
+  this file holds those without also holding an approximating pair. Weakening it
+  therefore moves nothing in the chain, which is why the weakening below is
+  stated where the chain actually reads the bound.
+
+  **The decisive place is one level lower than the list above suggests**, and it
+  is not a side condition but the **conclusion**: from
+  `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le_lintegral` onward
+  the bound stands in the right hand side, as `ENNReal.ofReal c` in front of the
+  compensator integral and finally as the constant `1 + 2 * ENNReal.ofReal c` of
+  `mul_measure_setOf_lt_modulusBased_le_of_isApproximatingPair`. It enters at
+  exactly one point, `integral_mul_stoppedValue_eq`, where the pull-out property
+  of the conditional expectation is used in its **bounded** form,
+  `MeasureTheory.condExp_stronglyMeasurable_mul_of_bound`
+  (`MeasureTheory/Function/ConditionalExpectation/PullOut.lean:260`).
+
   Consequently the `V` slot of every consumer is a **post-composition**:
   `MeasureTheory.isTightMeasureSet_map_postcomp_of_isEventuallyApproximable`
   asks for `IsEventuallyApproximable 𝓕 P q T K (fun i t ω ↦ g (X i t ω)) ε₀ u`,
@@ -13977,11 +14007,46 @@ has to be chosen once for all `n`. What stands:
 
   of which the bounded version is the instance at `γ = ENNReal.ofReal c * ε`.
   It is a genuine weakening and not a restatement: a weight of infinite supremum
-  against an error that vanishes gives `γ = 0`, which no `c` produces. Relaxing
-  the remaining occurrences of the bound in the same manner — the second reading, at
-  the integrability of the square, becomes a square integrability hypothesis,
-  which the walk has by `MemLp (ξ k) 2` — is what carries the chain to an
-  unbounded process, and it is the next piece of work on this item.
+  against an error that vanishes gives `γ = 0`, which no `c` produces.
+
+  The second reading, at the integrability of the square, is weakened the same
+  way:
+  `MeasureTheory.lintegral_ofReal_dist_le_sqrt_of_lintegral_mul_biSup_le` carries
+  `hsq : Integrable (fun ω ↦ (V (b ω) ω - V (a ω) ω) ^ 2) P` instead of the
+  bound, which the walk has from `MemLp (ξ k) 2 P` by
+  `MeasureTheory.MemLp.integrable_sq`; the bounded statement is its instance,
+  producing both the weighted error and the square integrability out of `c`.
+
+  **And the bound at the bottom of the chain is removable too, which is what
+  makes the route viable at all.** Mathlib has the pull-out property of the
+  conditional expectation in an unbounded form,
+  `MeasureTheory.condExp_mul_of_stronglyMeasurable_left`
+  (`MeasureTheory/Function/ConditionalExpectation/PullOut.lean:245`), which asks
+  `StronglyMeasurable[m] f`, `Integrable (f * g) μ` and `Integrable g μ` and no
+  bound; it is proved by exhausting the space along the sets where `f` is
+  bounded. Three statements carry that trade upward —
+
+  ```
+  MeasureTheory.integral_mul_stoppedValue_eq_of_integrable_mul
+  MeasureTheory.integral_mul_stoppedValue_sub_eq_zero_of_integrable_mul
+  MeasureTheory.integral_mul_stoppedValue_sub_eq_compensator_of_integrable_mul
+  ```
+
+  — and
+  `IsApproximatingPair.enorm_integral_mul_stoppedValue_sub_le_lintegral_mul`
+  is the form in which the chain reads them, with the weight left **under** the
+  lower integral,
+
+  ```
+  ‖∫ ω, W ω * (stoppedValue Y β ω - stoppedValue Y α ω) ∂P‖ₑ
+    ≤ ∫⁻ ω, ‖W ω‖ₑ * ‖C ((β ω).untopA) ω - C ((α ω).untopA) ω‖ₑ ∂P,
+  ```
+
+  so that no constant is taken out of it. The price is four integrability
+  hypotheses about products with `W` in place of one bound, and the two
+  integrabilities of the stopped values of `Y` fall away; for a weight in `L²`
+  against an increment in `L²` the four are Cauchy–Schwarz. Carrying this shape
+  through the six statements of the chain is the next piece of work on this item.
 
   **The alternative, and why it is the more expensive one.** The acceptance
   example below states Donsker with `A = {(f, f''/2) | f ∈ Cc^∞(ℝ)}`, that is,
