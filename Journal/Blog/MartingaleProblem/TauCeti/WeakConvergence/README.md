@@ -143,26 +143,15 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   `ext_of_forall_mem_subalgebra_integral_eq_of_pseudoEMetric_complete_countable`
   (`Mathlib/MeasureTheory/Measure/FiniteMeasureExt.lean:36`), under
   `[PseudoEMetricSpace E] [BorelSpace E] [CompleteSpace E]
-  [SecondCountableTopology E]`. That is the weaker of Mathlib's two bundles
-  here; the `PolishSpace` form (`:72`) is that one preceded by
-  `upgradeIsCompletelyMetrizable`, and the separation of `E` never enters, only
-  the separation of the algebra, so the metric may be a pseudometric. That theorem is
-  stated for a `StarSubalgebra 𝕜 (E →ᵇ 𝕜)` with `[RCLike 𝕜]` and the separation
-  hypothesis `(A.map (toContinuousMapStarₐ 𝕜)).SeparatesPoints`; the roadmap
-  needs it over `ℝ` for a plain `Subalgebra ℝ (E →ᵇ ℝ)` with
-  `(A.map (toContinuousMapₐ ℝ)).SeparatesPoints`, which is the form its own proof
-  passes through (`Mathlib/Analysis/SpecialFunctions/MulExpNegMulSqIntegral.lean:161`).
-  The step between the two is to attach the trivial star structure: `A` becomes a
-  `StarSubalgebra ℝ (E →ᵇ ℝ)` with the same `carrier`, its `star_mem'` being
-  `star g = g` proved pointwise, and since `toContinuousMapStarₐ ℝ` and
-  `toContinuousMapₐ ℝ` have the same underlying function the two separation
-  hypotheses are the same statement, so the witness is taken apart and put back
-  together. `Subalgebra.SeparatesPoints.rclike_to_real` and
-  `RCLike.restrict_toContinuousMap_eq_toContinuousMapStar_restrict` are **not**
-  used: they carry a `StarSubalgebra` over `𝕜` to its real part, which is the
-  opposite direction. `TrivialStar (E →ᵇ ℝ)` is not an instance in Mathlib —
-  `TrivialStar ℝ` is — so `star_trivial` does not apply to a bounded continuous
-  function and the pointwise `ext` is what proves `star g = g`.
+  [SecondCountableTopology E]`. Mathlib states it for a
+  `StarSubalgebra 𝕜 (E →ᵇ 𝕜)` with `(A.map (toContinuousMapStarₐ 𝕜)).SeparatesPoints`;
+  what is needed here is a plain `Subalgebra ℝ (E →ᵇ ℝ)` with
+  `(A.map (toContinuousMapₐ ℝ)).SeparatesPoints`, so the step is to attach the
+  trivial star structure — same `carrier`, `star_mem'` proved pointwise. Two traps
+  there: `TrivialStar (E →ᵇ ℝ)` is **not** an instance (only `TrivialStar ℝ` is),
+  so `star_trivial` does not apply; and
+  `Subalgebra.SeparatesPoints.rclike_to_real` runs the other way, from a
+  `StarSubalgebra` over `𝕜` to its real part.
 * **The Stone–Weierstrass step for the *convergence* notion, the reason this
   milestone exists**, in the form `fact:stoneweierstrass` states it: on a
   complete separable metric space a subalgebra of `E →ᵇ ℝ` that **strongly**
@@ -759,6 +748,17 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   divides by zero at `G = A`. This is the branch a proof that normalises
   unconditionally gets wrong. The degenerate `m = ⊥` with `V` a constant `c`
   reads as: a law all of whose `Γ`-integrals are those of `δ c` is `δ c`.
+
+### Provenance
+
+Choices made in the statements above, recorded so that a reviewer who wonders
+need not ask, and an implementer who does not wonder need not read.
+
+* **Why the `PseudoEMetricSpace` bundle for `IsSeparating.of_subalgebra` and not
+  the `PolishSpace` form** (`FiniteMeasureExt.lean:72`): the latter is the former
+  preceded by `upgradeIsCompletelyMetrizable`, and the separation of `E` never
+  enters — only the separation of the algebra — so the metric may be a
+  pseudometric.
 
 ## Milestone 2: the continuous mapping theorem for almost everywhere continuous maps
 
