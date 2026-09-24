@@ -19,6 +19,15 @@ nimmt den nächsten Schritt im selben Lauf. Wer steckenbleibt, berichtet ein
 begründetes „geht nicht" und geht zu dem nächsten Schritt, der nicht daran
 hängt; die Abhängigkeiten stehen je dabei.
 
+**Die Reihenfolge ist vom Nutzer gesetzt und nicht zu ändern.** Die Schritte 0
+bis 2 räumen die Voraussetzungen auf, bevor die Identifikation darauf gebaut
+wird; die Schritte 3 bis 7 sind die Identifikation. Ein früherer Entwurf hatte
+die Aufräumarbeiten ans Ende gestellt, mit dem Argument, sie träfen nur die
+Erzeugerseite und würden durch Wartezeit nicht teurer. **Der Nutzer hat am
+2026-09-24 nachts anders entschieden:** die Aussagen der Kette sollen ihre
+endgültigen Signaturen haben, bevor eine weitere Schicht darauf steht. Wer die
+Reihenfolge umdreht, baut die Identifikation zweimal.
+
 **Stand beim Stellen der Aufgabe:** `exists_tendsto_map_rescaledWalk` trägt
 keine Hypothese über den Limes mehr. Was fehlt, ist der Abgleich des Grenzmaßes
 mit Mathlibs `IsBrownianReal` — bisher ist der Limes nur durch unsere **eigene**
@@ -42,7 +51,55 @@ worden sei. `ProbabilityTheory.IsBrownianReal` ist ein Prädikat **ohne**
 Existenzaussage (nachgesehen am 2026-09-24). Was hier entsteht, ist ein
 Pfadgesetz mit einer Eigenschaft, nicht eine Existenz.
 
-#### Schritt 0. `σ` → `v`: dieselbe Größe heißt in der Kette zweierlei
+#### Schritt 0. `ContDiff ℝ 3` → `ContDiff ℝ 2` in der Testklasse
+
+`brownianGeneratorPairs` verlangt `ContDiff ℝ 3 f` und kompakten Träger.
+**Zweite Ableitungen genügen**, und `C²` mit kompaktem Träger ist die Klasse, in
+die der Satz gehört — der Erzeuger ist ein Operator zweiter Ordnung.
+
+Die dritte Ableitung wird an **einer** Stelle gebraucht:
+`abs_sub_taylor_two_le_min` nimmt das Minimum aus `M₃ |h|³ / 6` und `M₂ h²`.
+An die Stelle von `M₃` tritt der **Stetigkeitsmodul von `f''`**: Taylor erster
+Ordnung mit Lagrange-Rest gibt `f (x+h) - f x - f' x * h = f'' x' * h² / 2` mit
+`x'` zwischen `x` und `x+h`, und statt `|f'' x' - f'' x| ≤ 2 M₂` ist
+`≤ ω(|h|)` zu schreiben. Für `f ∈ C²` mit kompaktem Träger ist `f''`
+gleichmäßig stetig, also `ω(δ) → 0` für `δ → 0`.
+
+**`abs_sub_taylor_two_le'` läuft schon auf `ContDiff ℝ 2` und ist genau dieser
+Beweis** — er schätzt nur gröber ab. Das Beweisskelett bleibt, zu ändern sind
+das Minimum-Lemma, `min_taylor_le_lindeberg` und die `hM₃`-Argumente der
+Verbraucher.
+
+Nach der Summation über die Zellen steht dann `(v/2) * ω(e)` statt `M₃ e v / 6`,
+und **die Reihenfolge der Grenzübergänge bleibt dieselbe**: `n → ∞` vor `e → 0`.
+Das ist die Stelle, an der ein Lauf danebengreift.
+
+*Was sich dadurch ändert und was nicht:* die Konvergenzaussage wird echt
+stärker, weil die Testklasse größer wird. Die Eindeutigkeit fällt gratis mit —
+jede `C²`-Lösung ist eine `C³`-Lösung, und der Weg über `cos`/`sin` liest die
+Abschneidung ohnehin in `C^∞`.
+
+#### Schritt 1. `hvar` herausnehmen
+
+`hvar : ∀ k, variance (ξ k) P ≤ 1` ist zusammen mit `hcent` und `hLp` nichts als
+`v ≤ 1` — eine **Normierung, keine Momentenbedingung**. Gelesen wird sie an
+**einer** Stelle, `integral_abs_sum_le_sqrt_of_iIndepFun`, für `E|S_N| ≤ sqrt N`;
+mit allgemeinem `v` steht dort `sqrt (v * N)`, und das trägt als Konstante durch
+`isCompactContained_rescaledWalk` und `isTightMeasureSet_map_rescaledWalk`
+durch bis zur Straffheit.
+
+Zu tun ist das eine oder das andere, **nicht beides**: die Konstante mitführen,
+oder die Hypothese ehrlich als `v ≤ 1` schreiben statt als `∀ k`-Aussage. Die
+erste Fassung ist die bessere, wenn sie ohne Kettenreaktion in den Konstanten
+der Straffheit zu haben ist; ist sie es nicht, ist die zweite ehrlich genug und
+im Bericht ist zu sagen, warum.
+
+*Nachrangig, im selben Lauf mitzunehmen, wenn Zeit bleibt:* wegen `hlaw` folgen
+die `∀ k`-Fassungen von `hcent`, `hsq`, `hLp` ohnehin aus dem Fall `k = 0`. Die
+Voraussetzungsliste von `exists_tendsto_map_rescaledWalk` ist länger, als die
+Aussage braucht.
+
+#### Schritt 2. `σ` → `v`: dieselbe Größe heißt in der Kette zweierlei
 
 In der Martingal- und Donskerhälfte heißt das gemeinsame zweite Moment `v`, in
 der Straffheitshälfte `σ` — bei identischer Gleichung `∫ ξ k ^ 2 = ·` daneben.
@@ -55,10 +112,11 @@ die Größe **ist** aber die Varianz. Wer die beiden Hälften nebeneinanderlegt,
 schreibt irgendwann ein `Real.sqrt` zuviel oder zuwenig.
 
 Umzubenennen ist `σ` nach `v` und `hσ` nach `hv`, sonst nichts. Rein mechanisch,
-ein halber Lauf. **Das steht an erster Stelle, weil jeder weitere Lauf den
-Fehler sonst weiterträgt.**
+ein halber Lauf. **Das ist derselbe Dateiabschnitt, den Schritt 1 anfaßt** —
+beides ist Signaturchirurgie an der Straffheitshälfte, und wer Schritt 1 früh
+fertig hat, nimmt diesen Schritt im selben Lauf mit.
 
-#### Schritt 1. `map_eval_eq_gaussianReal_of_isCadlagMPSolution`
+#### Schritt 3. `map_eval_eq_gaussianReal_of_isCadlagMPSolution`
 
 Die eindimensionalen Randverteilungen einer càdlàg-Lösung mit Start in `0` sind
 `gaussianReal 0 (v * t).toNNReal`. Die vollständige Wegbeschreibung samt der
@@ -72,7 +130,7 @@ leer, und `brownianGeneratorPairs v` ist für jedes reelle `v` definiert — die
 Lösungsaussage **weiß** nicht, daß `v` ein Quadratintegral ist. Im
 Doc-Kommentar gehört gesagt, daß `0 ≤ v` an Donskers Daten aus `hsq` folgt.
 
-#### Schritt 2. Die Vorwärtsgleichung mit Multiplikator — hier kann es klemmen
+#### Schritt 4. Die Vorwärtsgleichung mit Multiplikator — hier kann es klemmen
 
 `integral_eval_mul_cos_eq_of_isCadlagMPSolution` und die sin-Fassung integrieren
 gegen `ν` und gegen nichts sonst. Gebraucht wird dieselbe Gleichung **mit einem
@@ -89,9 +147,9 @@ her — sie ist eine Aussage über `mpTest` gegen jedes `F_s`-meßbare beschrän
 `integral_eval_sub_eq_setIntegral_of_tendsto` die Grenzübergänge mit dem `Z`
 mitnimmt oder ob das `Z` dort erst hineinzuziehen ist.
 
-#### Schritt 3. Die Zuwächse: Unabhängigkeit und Verteilung in **einer** Aussage
+#### Schritt 5. Die Zuwächse: Unabhängigkeit und Verteilung in **einer** Aussage
 
-Aus Schritt 2 mit `Z = indicator A * cos (θ * z.toFun s)` beziehungsweise
+Aus Schritt 4 mit `Z = indicator A * cos (θ * z.toFun s)` beziehungsweise
 `Z = indicator A * sin (θ * z.toFun s)` und demselben ODE-Endspurt wie im
 zwölften Lauf (`eq_mul_exp_of_sub_eq_setIntegral`, unverändert brauchbar):
 
@@ -107,7 +165,7 @@ Induktion über endlich viele Zuwächse.
 zwischen Integralen eine Gleichung zwischen Maßen macht, und weil der
 Sinusanteil hier wie im zwölften Lauf verschwindet.
 
-#### Schritt 4. `IsPreBrownianReal` — und dort ist `v = 1` Pflicht
+#### Schritt 6. `IsPreBrownianReal` — und dort ist `v = 1` Pflicht
 
 `HasIndepIncrements.isPreBrownianReal_of_hasLaw`
 (`Mathlib/Probability/BrownianMotion/Basic.lean:189`, gelesen gegen
@@ -116,10 +174,10 @@ der Zeitparameter selbst**. Die Aussage ist deshalb für `v = 1` zu stellen und
 nicht für allgemeines `v`; wer sie allgemein stellt, muß den Prozeß erst
 skalieren und hat einen zweiten Satz statt einer Anwendung.
 
-Bei `v = 1` ist nebenbei `hvar : ∀ k, variance (ξ k) P ≤ 1` scharf und kein
-Schönheitsfehler mehr.
+Nach Schritt 1 ist das eine glatte Einsetzung: die Konstante der Straffheit ist
+dann geführt, `v = 1` ist ein Spezialfall und keine Zusatzannahme mehr.
 
-#### Schritt 5. Die stetigen Pfade — **hängt nicht an 2 bis 4**
+#### Schritt 7. Die stetigen Pfade — **hängt nicht an 4 bis 6**
 
 Seit dem fünften Lauf des 2026-09-24 stehen `jumpBdd`,
 `measure_setOf_continuous_eq_one_of_tendsto` und `ae_continuous_of_tendsto_law`.
@@ -132,37 +190,7 @@ für den reskalierten Weg, dessen Sprünge `ξ j / sqrt (n+1)` sind. Damit hat `
 fast sicher stetige Pfade, und das ist das Feld `cont`, das
 `IsPreBrownianReal` von `IsBrownianReal` trennt.
 
-**Dieser Schritt ist der Ausweichschritt**, wenn Schritt 2 steckenbleibt.
-
-#### Schritt 6. Erst danach: `ContDiff ℝ 3` → `ContDiff ℝ 2` in der Testklasse
-
-`brownianGeneratorPairs` verlangt `ContDiff ℝ 3`. Gebraucht wird die dritte
-Ableitung an **einer** Stelle: `abs_sub_taylor_two_le_min` nimmt das Minimum aus
-`M₃ |h|³ / 6` und `M₂ h²`. Statt `M₃` genügt der **Stetigkeitsmodul von `f''`**:
-Taylor erster Ordnung mit Lagrange-Rest gibt `f'' x' * h² / 2`, und statt
-`|f'' x' - f'' x| ≤ 2 M₂` ist `≤ ω_{f''}(|h|)` zu schreiben; für `f ∈ C²` mit
-kompaktem Träger ist `f''` gleichmäßig stetig. `abs_sub_taylor_two_le'` läuft
-**schon** auf `ContDiff ℝ 2` und ist genau dieser Beweis.
-
-*Warum erst hier und nicht vorher:* die Vergrößerung der Testklasse trifft nur
-die **Erzeugerseite**. Jeder Verbraucher — Eindeutigkeit, abgeschnittener
-Kosinus, die ganze Identifikation der Schritte 1 bis 4 — bekommt bei einer
-größeren Klasse mehr und ist von der Umstellung nicht betroffen. Sie wird also
-nicht teurer dadurch, daß die Schritte 1 bis 5 vorher laufen.
-
-#### Schritt 7. Und dann `hvar`
-
-`hvar : ∀ k, variance (ξ k) P ≤ 1` ist zusammen mit `hcent` und `hLp` nichts als
-`v ≤ 1` — eine Normierung, keine Momentenbedingung. Gelesen wird sie an **einer**
-Stelle, `integral_abs_sum_le_sqrt_of_iIndepFun`, für `E|S_N| ≤ sqrt N`; mit
-allgemeinem `v` steht dort `sqrt (v * N)`, und das trägt als Konstante durch die
-kompakte Einschließung durch. Zu tun ist das eine oder das andere, nicht beides:
-die Konstante mitführen, oder die Hypothese ehrlich als `v ≤ 1` schreiben statt
-als `∀ k`-Aussage.
-
-Nachrangig: wegen `hlaw` folgen die `∀ k`-Fassungen von `hcent`, `hsq`, `hLp`
-ohnehin aus dem Fall `k = 0`. Die Voraussetzungsliste von
-`exists_tendsto_map_rescaledWalk` ist länger, als die Aussage braucht.
+**Dieser Schritt ist der Ausweichschritt**, wenn Schritt 4 steckenbleibt.
 
 ---
 
