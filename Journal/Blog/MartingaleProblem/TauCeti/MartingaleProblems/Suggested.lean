@@ -31286,6 +31286,199 @@ def IsCadlagMPSolution (A : Set ((E →ᵇ ℝ) × (E →ᵇ ℝ))) (ν : Measur
       ν[fun z ↦ SkorokhodSpace.mpTest p.1 p.2 t z | cadlagFiltration s]
         =ᵐ[ν] fun z ↦ SkorokhodSpace.mpTest p.1 p.2 s z
 
+/-! #### The tested functional is a member of `mpFamily` over `lebesgueClock`
+
+`SkorokhodSpace.mpTest` is written without a clock, so that the statements about
+where it is continuous can be made before any filtration exists; the abstract
+layer writes the same functional as a member of `mpFamily` over `lebesgueClock`
+in the optional convention.  The two statements below say that these are the
+same object and draw the consequence: a law that solves the martingale problem
+in the form the chain of Milestone 11 produces solves it in the form Milestone 6
+reads. -/
+
+omit [PolishSpace E] in
+/-- **The tested functional of the path space is the test process of `mpFamily`
+over `lebesgueClock`**, at the coordinates of the càdlàg path space and in the
+optional convention.
+
+**This is not `rfl`, and the reason is that the two compensators are written
+over different indices.**  `mpFamily` integrates over `ℝ≥0` against
+`lebesgueClock.q`, which is `volume.restrict (Set.Ici 0)` pushed forward along
+`Real.toNNReal`; `SkorokhodSpace.mpTest` integrates over `ℝ` against `volume`.
+The passage is the image measure step, and it is already done once and for all
+in `MeasureTheory.integral_lebesgueClock_Ioc`, whose hypothesis is the
+measurability of the integrand along the index --- here `IsCadlag.measurable` of
+Milestone 2 of **SkorokhodSpace** composed with the continuous `g`.  The
+docstring of `SkorokhodSpace.mpTest` asserts this identity; this is the proof of
+it.
+
+**Two rewrites carry the rest.**  `MeasureTheory.lebesgueClock_interval_optional_eq`
+turns the abstract window `Clock.interval` into `Set.Ioc ⊥ t`, and
+`intervalIntegral.integral_of_le` at `t.coe_nonneg` turns the interval integral
+that `integral_lebesgueClock_Ioc` produces back into a set integral over
+`Set.Ioc (0 : ℝ) t`.  The lower end is `⊥` and not `0` because the abstract layer
+asks for `[OrderBot ι]` and carries no `Zero`; over `ℝ≥0` the two agree, and that
+is the one place the identification of `⊥` with `0` is read. -/
+theorem mpTest_eq_sub_setIntegral_lebesgueClock (f g : E →ᵇ ℝ) (t : ℝ≥0) (z : D(ℝ≥0, E)) :
+    SkorokhodSpace.mpTest f g t z
+      = f (z.toFun t)
+        - ∫ s in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+            g (z.toFun s) ∂lebesgueClock.q := by
+  have hmeas : Measurable fun s : ℝ≥0 ↦ g (z.toFun s) :=
+    g.continuous.measurable.comp z.isCadlag.measurable
+  rw [SkorokhodSpace.mpTest, lebesgueClock_interval_optional_eq,
+    integral_lebesgueClock_Ioc bot_le hmeas]
+  congr 1
+  rw [show ((⊥ : ℝ≥0) : ℝ) = 0 from by simp, sub_zero,
+    intervalIntegral.integral_of_le t.coe_nonneg]
+  refine setIntegral_congr_fun measurableSet_Ioc fun u _ ↦ ?_
+  rw [zero_add]
+
+omit [PolishSpace E] in
+/-- **A test process of `mpFamily` over `lebesgueClock` at the coordinates *is*
+`SkorokhodSpace.mpTest` at a pair of the operator.**
+
+This is `MeasureTheory.mpTest_eq_sub_setIntegral_lebesgueClock` read from the
+other side, and it is the step every consumer of the bridge starts with: the
+membership in `mpFamily` is existential over the pair, so the pair has to be
+produced before anything can be said about the process.
+
+**The operator is related and not fixed.**  `mpFamily` reads a set of pairs of
+plain functions while `MeasureTheory.IsCadlagMPSolution` reads a set of pairs of
+bounded continuous ones, and the hypothesis is only that every member of the
+former comes from a member of the latter.  That is the direction the proof
+consumes; asking for the image itself would be an equality where an inclusion is
+used, and would force a consumer whose operator is *described* rather than
+*constructed* as an image to prove more than the statement reads. -/
+theorem exists_mpTest_eq_of_mem_mpFamily {A : Set ((E →ᵇ ℝ) × (E →ᵇ ℝ))}
+    {A' : Set ((E → ℝ) × (E → ℝ))}
+    (hA' : ∀ q ∈ A', ∃ p ∈ A, (⇑p.1 : E → ℝ) = q.1 ∧ (⇑p.2 : E → ℝ) = q.2)
+    {Y : ℝ≥0 → D(ℝ≥0, E) → ℝ}
+    (hY : Y ∈ mpFamily A' lebesgueClock Clock.Conv.optional
+      (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r)) :
+    ∃ p ∈ A, ∀ t : ℝ≥0, Y t = SkorokhodSpace.mpTest p.1 p.2 t := by
+  obtain ⟨q, hqA', hYq⟩ := hY
+  obtain ⟨p, hpA, hq1, hq2⟩ := hA' q hqA'
+  refine ⟨p, hpA, fun t ↦ funext fun z ↦ ?_⟩
+  rw [hYq t z, ← hq1, ← hq2, mpTest_eq_sub_setIntegral_lebesgueClock]
+
+/-- **The test processes are adapted to the coordinate filtration**, which is
+the hypothesis `hY` of `MeasureTheory.isShiftSystem_mpFamily_lebesgueClock` and
+of `MeasureTheory.subsingleton_mpSolutions_mpFamily_lebesgueClock`.
+
+`MeasureTheory.measurable_mpTest` is the whole content and no measure is read;
+`Measurable.stronglyMeasurable` is the passage, the target being `ℝ`. -/
+theorem stronglyAdapted_mpFamily_cadlagFiltration {A : Set ((E →ᵇ ℝ) × (E →ᵇ ℝ))}
+    {A' : Set ((E → ℝ) × (E → ℝ))}
+    (hA' : ∀ q ∈ A', ∃ p ∈ A, (⇑p.1 : E → ℝ) = q.1 ∧ (⇑p.2 : E → ℝ) = q.2)
+    {Y : ℝ≥0 → D(ℝ≥0, E) → ℝ}
+    (hY : Y ∈ mpFamily A' lebesgueClock Clock.Conv.optional
+      (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r)) :
+    StronglyAdapted cadlagFiltration Y := by
+  obtain ⟨p, -, hp⟩ := exists_mpTest_eq_of_mem_mpFamily hA' hY
+  intro t
+  rw [hp t]
+  exact (measurable_mpTest p.1 p.2 t).stronglyMeasurable
+
+/-- **The test processes are integrable under every finite law on the path
+space**, which is the hypothesis `hint` of
+`MeasureTheory.subsingleton_mpSolutions_mpFamily_lebesgueClock`.
+
+`MeasureTheory.abs_mpTest_le` bounds the process by a **constant** -- uniformly
+in the path, not merely in `ν`-measure -- so nothing about the law is read
+beyond its finiteness, and in particular the hypothesis that `ν` solve anything
+is not.  The `hint` of Milestone 6 is stated with the solution property in front
+of it because an abstract clock gives no such bound; here it does. -/
+theorem integrable_mpFamily_cadlagFiltration {A : Set ((E →ᵇ ℝ) × (E →ᵇ ℝ))}
+    {A' : Set ((E → ℝ) × (E → ℝ))}
+    (hA' : ∀ q ∈ A', ∃ p ∈ A, (⇑p.1 : E → ℝ) = q.1 ∧ (⇑p.2 : E → ℝ) = q.2)
+    (ν : Measure D(ℝ≥0, E)) [IsFiniteMeasure ν]
+    {Y : ℝ≥0 → D(ℝ≥0, E) → ℝ}
+    (hY : Y ∈ mpFamily A' lebesgueClock Clock.Conv.optional
+      (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r)) (t : ℝ≥0) :
+    Integrable (Y t) ν := by
+  obtain ⟨p, -, hp⟩ := exists_mpTest_eq_of_mem_mpFamily hA' hY
+  rw [hp t]
+  exact integrable_of_abs_le (C := ‖p.1‖ + ‖p.2‖ * (t : ℝ))
+    ((measurable_mpTest p.1 p.2 t).mono ((cadlagFiltration (E := E)).le t) le_rfl)
+    (fun z ↦ abs_mpTest_le p.1 p.2 le_rfl z)
+
+/-- **The form the chain of Milestone 11 produces is the form Milestone 6 reads.**
+
+`MeasureTheory.IsCadlagMPSolution` is a martingale identity at
+`SkorokhodSpace.mpTest` along *some* countable dense set of times, one set per
+pair; `MeasureTheory.IsMPSolution` over `mpFamily … lebesgueClock
+Clock.Conv.optional` at the coordinates is the martingale property at every pair
+of times.  This is the passage, and it is the last thing between
+`MeasureTheory.tendsto_map_rescaledWalk_of_unique` and a uniqueness theorem that
+can discharge its `huniq`.
+
+**Two steps and no third.**  The identification of the test process is
+`MeasureTheory.exists_mpTest_eq_of_mem_mpFamily`; the passage from the dense set
+to all times is `MeasureTheory.mpSolution_forall_of_mpSolution_dense`, with
+`MeasureTheory.rightDense_of_dense` between the `Dense T` that
+`IsCadlagMPSolution` carries and the right density that statement asks for.
+`Martingale` has exactly two fields (`Mathlib/Probability/Martingale/Basic.lean`,
+read against `94ef6b89544`), and **integrability is not one of them** despite
+what its own docstring says; the strong adaptedness is
+`MeasureTheory.stronglyAdapted_mpFamily_cadlagFiltration` and nothing else.
+
+**The finiteness of `ν` is the only hypothesis on the measure**, and it is read
+in one place: the majorant of the dominated convergence inside
+`mpSolution_forall_of_mpSolution_dense` is a constant, which is integrable
+exactly because the measure is finite. -/
+theorem isMPSolution_of_isCadlagMPSolution {A : Set ((E →ᵇ ℝ) × (E →ᵇ ℝ))}
+    {A' : Set ((E → ℝ) × (E → ℝ))}
+    (hA' : ∀ q ∈ A', ∃ p ∈ A, (⇑p.1 : E → ℝ) = q.1 ∧ (⇑p.2 : E → ℝ) = q.2)
+    (ν : Measure D(ℝ≥0, E)) [IsFiniteMeasure ν] (h : IsCadlagMPSolution A ν) :
+    IsMPSolution (mpFamily A' lebesgueClock Clock.Conv.optional
+        (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r)) cadlagFiltration ν := by
+  intro Y hY
+  obtain ⟨p, hpA, hp⟩ := exists_mpTest_eq_of_mem_mpFamily hA' hY
+  obtain ⟨T, -, hTd, hT⟩ := h p hpA
+  refine ⟨stronglyAdapted_mpFamily_cadlagFiltration hA' hY, fun s t hst ↦ ?_⟩
+  simp only [hp]
+  exact mpSolution_forall_of_mpSolution_dense p.1 p.2 ν
+    (fun r ↦ rightDense_of_dense hTd r) hT hst
+
+/-! #### The shift of the càdlàg path space
+
+`Shift` is the structure Milestone 6 reads a restart through, and on
+`RightContinuousPath E` it has a witness since 2026-09-14.  On `D(ℝ≥0, E)` --
+the space the chain of Milestone 11 actually produces its limit on -- it had
+none, so every statement of Milestone 6 was inapplicable there.  These two
+supply it. -/
+
+/-- **`Shift` is inhabited at the càdlàg path space.**
+
+The three fields are the three statements of `SkorokhodSpace.shift`: the shifted
+path is a path, it is measurable (`SkorokhodSpace.measurable_shift`), and its
+coordinates are `SkorokhodSpace.shift_toFun`, which is `rfl`.
+
+**What it buys and what it does not.**  It makes `MeasureTheory.IsShiftSystem`
+and through it the whole of Milestone 6 statable over `D(ℝ≥0, E)`; it does not
+by itself give the shift system, whose `increment` field is a statement about
+the operator and not about the space. -/
+def cadlagShift [CompleteSpace E] :
+    Shift D(ℝ≥0, E) (fun (r : ℝ≥0) (z : D(ℝ≥0, E)) ↦ z.toFun r) where
+  θ := SkorokhodSpace.shift
+  measurable := SkorokhodSpace.measurable_shift
+  eval_comp _ _ _ := rfl
+
+/-- **The shift clause of `MeasureTheory.IsShiftSystem` costs nothing at the
+coordinate filtration**, which is what `MeasureTheory.shiftMeasurable_of_natural`
+says in general; `cadlagFiltration_eq` is the identification of
+`cadlagFiltration` with the natural filtration of the coordinates, and it is
+`rfl`.
+
+This is the hypothesis `hsm` of `MeasureTheory.isShiftSystem_mpFamily_lebesgueClock`
+and of `MeasureTheory.subsingleton_mpSolutions_mpFamily_lebesgueClock`, discharged
+on the data the chain produces. -/
+theorem cadlagShift_measurable_cadlagFiltration [CompleteSpace E] (r s : ℝ≥0) :
+    Measurable[cadlagFiltration (E := E) (r + s), cadlagFiltration (E := E) s]
+      ((cadlagShift (E := E)).θ r) :=
+  shiftMeasurable_of_natural (fun u ↦ cadlagFiltration_eq u) r s
+
 omit [MeasurableSpace E] [BorelSpace E] in
 /-- **The canonical process is the bridge between the fourth item of the chain
 and the third.**

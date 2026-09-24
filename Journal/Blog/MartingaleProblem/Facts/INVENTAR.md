@@ -59525,3 +59525,163 @@ Quelltext nachgesehen, nicht geschätzt:
    `measurable_mpTest` plus `Measurable.stronglyMeasurable`. **Erst die Felder von `Martingale`
    lesen, dann rechnen**; wer eine Integrierbarkeitsverpflichtung erwartet, sucht ein Feld, das
    nicht da ist.
+
+### 2026-09-24, siebter Lauf des Tages — das benannte Ziel steht, und beim Zusammenzählen dessen, was danach noch zwischen Donsker und einer unbedingten Aussage steht, fällt ein **Integritätsbefund** ab: `Shift` hatte auf `D(ℝ≥0, E)` **keinen Zeugen**, also war Meilenstein 6 auf den Raum, auf dem die Kette ihren Limes erzeugt, gar nicht anwendbar
+
+*12 Deklarationen: 5 in `SkorokhodSpace/Suggested.lean` (neuer Unterabschnitt „The time shift of
+the path space", hinter `borel_eq_iSup_comap_eval_nnreal`), 7 in `MartingaleProblems/Suggested.lean`
+(zwei neue Unterabschnitte hinter `IsCadlagMPSolution`).
+`scripts/check_master.py` gegen `upstream/master` (`94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `4.35.0-rc2`): **0 Fehler, 0 veraltete Namen, 0 `sorry`** in allen vier Dateien, Warnungen
+**18 / 38 / 36 / 76** — **unverändert**, also keine einzige neue.
+`check_axioms_master.py` über alle zwölf: `propext`, `Classical.choice`, `Quot.sound`, kein
+`sorryAx`. `check_duplicates.py` jetzt 1875 eigene Deklarationen, 45 Treffer (zuvor 43); die zwei
+neuen sind `SkorokhodSpace.shift_zero` und `SkorokhodSpace.shift_shift` gegen gleichnamige Endungen
+in `CategoryTheory`, `CochainComplex` und `AffineSubspace` — Namensraum verschieden, keine
+Kollision.*
+
+#### Was steht
+
+| Name | Aussage |
+| --- | --- |
+| `SkorokhodSpace.shift` | der um `r` verschobene Pfad, `t ↦ z (r + t)`, wieder càdlàg |
+| `SkorokhodSpace.shift_toFun` | seine Koordinaten, `rfl` |
+| `SkorokhodSpace.shift_zero` / `shift_shift` | die Monoidwirkung von `ℝ≥0` |
+| `SkorokhodSpace.measurable_shift` | die Meßbarkeit, über `measurable_of_measurable_eval` |
+| `MeasureTheory.mpTest_eq_sub_setIntegral_lebesgueClock` | **`mpTest` ist der Testprozeß von `mpFamily` über `lebesgueClock`** |
+| `MeasureTheory.exists_mpTest_eq_of_mem_mpFamily` | dasselbe von der Mitgliedschaftsseite gelesen |
+| `MeasureTheory.stronglyAdapted_mpFamily_cadlagFiltration` | `hY` von Meilenstein 6, eingelöst |
+| `MeasureTheory.integrable_mpFamily_cadlagFiltration` | `hint` von Meilenstein 6, eingelöst |
+| `MeasureTheory.isMPSolution_of_isCadlagMPSolution` | **das benannte Ziel** |
+| `MeasureTheory.cadlagShift` | **der Zeuge für `Shift` auf `D(ℝ≥0, E)`** |
+| `MeasureTheory.cadlagShift_measurable_cadlagFiltration` | `hsm` von Meilenstein 6, eingelöst |
+
+#### Das benannte Ziel, und die Wegbeschreibung des Vorlaufs hat in allen drei Punkten getragen — zwei davon, indem die angesagte Arbeit **nicht anfiel**
+
+Der Vorlauf hatte drei Stellen benannt. Punkt 3 — „`Martingale` hat zwei Verpflichtungen und
+Integrierbarkeit ist keine davon" — war richtig und hat einen Durchlauf gespart: die Felder wurden
+gelesen, ehe gerechnet wurde. Punkt 2 — die Zeitmenge hängt am Paar, der Aufruf steht **innerhalb**
+des `∀ p ∈ A` — war ebenfalls richtig und ist so gebaut.
+
+**Punkt 1 war als „die eigentliche Arbeit des Punktes" angesagt und ist ein `rw`.** Der
+Bildmaßschritt zwischen dem `ℝ≥0`-Integral gegen `lebesgueClock.q` und dem `ℝ`-Integral gegen
+`volume` steht seit langem bewiesen da, als `MeasureTheory.integral_lebesgueClock_Ioc` — gebaut als
+**viertes der vier Buchhaltungsstücke von `jumpProcess_isMPSolution`**, für einen ganz anderen
+Verbraucher, und dort mit genau der Hypothese, die hier vorliegt (Meßbarkeit des Integranden längs
+des Index, hier `IsCadlag.measurable` plus die Stetigkeit von `g`). Die angesagte Falle —
+`lebesgueClock` trägt seinen `MeasurableSpace` als **Feld**, also `Clock.measurableSet_interval` und
+nicht `measurableSet_Ioc` — ist deshalb gar nicht aufgetreten:
+`lebesgueClock_interval_optional_eq` macht aus dem abstrakten Fenster ein `Set.Ioc`, **ehe**
+irgendeine Meßbarkeit gefragt wird, und danach steht kein `Clock` mehr im Ziel.
+
+**Die Lehre, und sie ist die Umkehrung der Lehre des sechsten Laufs.** Der sechste Lauf hat gezeigt,
+daß eine Aussage über ihrer eigenen Eingabe stehen und dort unbeweisbar sein kann. Dieser zeigt das
+Gegenstück: eine als teuer angesagte Naht kann längst gebaut sein, unter einem Namen, der den
+Verbraucher nicht nennt. `integral_lebesgueClock_Ioc` heißt nach der Uhr und nicht nach `mpTest`;
+wer nach „mpTest" und „map" gegrept hätte, hätte es nicht gefunden. Gefunden wurde es, weil **der
+Abschnitt um `lebesgueClock` ganz gelesen** wurde, ehe etwas geschrieben war — vier Deklarationen
+weit, und die vierte war es.
+
+#### Die Zerlegung, und sie ist nicht Kosmetik
+
+Der Satz ist in vier Stücke zerlegt statt in einem Beweis geführt, und der Grund ist gemessen: drei
+der vier sind **eigenständige Hypothesen von Meilenstein 6**. `exists_mpTest_eq_of_mem_mpFamily`
+zieht die Mitgliedschaft in `mpFamily` auf ein Paar von `A` zurück; darauf ruhen
+`stronglyAdapted_mpFamily_cadlagFiltration` (das ist `hY` von
+`subsingleton_mpSolutions_mpFamily_lebesgueClock`), `integrable_mpFamily_cadlagFiltration` (das ist
+`hint`) und das Ziel selbst. In einem einzigen Beweis geführt, wären zwei Hypothesen des
+Eindeutigkeitssatzes im Rumpf verschwunden und hätten noch einmal bewiesen werden müssen.
+
+**`integrable_mpFamily_cadlagFiltration` ist dabei stärker, als `hint` verlangt.** Der abstrakte
+`hint` von Meilenstein 6 setzt voraus, daß `P` das Martingalproblem *löst*, ehe er die
+Integrierbarkeit fordert — weil eine abstrakte Uhr keine Schranke hergibt. Über `lebesgueClock` gibt
+es eine: `abs_mpTest_le` beschränkt den Testprozeß durch `‖f‖ + ‖g‖ · t`, **gleichmäßig im Pfad**,
+also gilt die Integrierbarkeit unter *jedem* endlichen Maß und die Lösungseigenschaft wird nicht
+gelesen. Das steht so am Doc-Kommentar.
+
+#### Der Befund des Laufs: `Shift` hatte auf `D(ℝ≥0, E)` keinen Zeugen
+
+Beim Zusammenzählen dessen, was `huniq` von `tendsto_map_rescaledWalk_of_unique` noch schuldet, ist
+der Parameter `S : Shift F π` von `subsingleton_mpSolutions_mpFamily_lebesgueClock` nachzusehen. In
+der ganzen Datei gibt es **genau einen** Zeugen für `Shift`, `pathShift` auf
+`RightContinuousPath E` (`:17339`), gebaut am 2026-09-14 gegen den damaligen Befund „`Shift F π` hat
+in der ganzen Datei keinen einzigen Zeugen". Auf `D(ℝ≥0, E)` — dem Raum, auf dem die Kette von
+Meilenstein 11 ihren Limes **wirklich** erzeugt — gab es keinen. Meilenstein 6 war dort also nicht
+falsch, sondern **nicht anwendbar**, und das ist dieselbe Art von Befund wie der vom 2026-09-14,
+eine Etage weiter oben.
+
+`cadlagShift` schließt das, und es ist billig: `IsCadlag.comp_monotone_continuous` von Meilenstein 2
+macht den verschobenen Pfad wieder càdlàg (die Translation `t ↦ r + t` ist monoton und stetig),
+`SkorokhodSpace.measurable_of_measurable_eval` gibt die Meßbarkeit aus der der Koordinaten, und
+`eval_comp` ist `rfl`. `cadlagShift_measurable_cadlagFiltration` ist danach wörtlich die Bauart von
+`pathShift_measurable` (`:17362`): `shiftMeasurable_of_natural` an `cadlagFiltration_eq`, und
+`cadlagFiltration_eq` ist `rfl`.
+
+**Der Preis ist `[CompleteSpace E]`, und er ist echt.** `measurable_of_measurable_eval` liest ihn,
+weil die Borelstruktur von `D(ℝ≥0, E)` nur unter ihm von den Koordinaten erzeugt wird; das ambiente
+`[PolishSpace E]` gibt ihn **nicht** — `PolishSpace` ist Zweitabzählbarkeit plus die *Existenz*
+einer vollständigen Metrik, nicht die Vollständigkeit der vorliegenden. Für Donsker (`E = ℝ`) ist er
+frei. Die Definition `SkorokhodSpace.shift` selbst und die drei Aussagen über ihre Koordinaten lesen
+ihn nicht und stehen deshalb in einem eigenen Abschnitt über bloßem `[MetricSpace E]`.
+
+#### Was Donsker nach diesem Lauf noch schuldet, Hypothese für Hypothese
+
+`subsingleton_mpSolutions_mpFamily_lebesgueClock` trägt einen Parameter und zehn Hypothesen. Der
+Stand, und die beiden Spalten sind auseinanderzuhalten — **bewiesen** heißt in diesem Lauf in Lean
+gezeigt, **benannt** heißt am Quelltext nachgesehen und *nicht* bewiesen:
+
+| | Stand |
+| --- | --- |
+| `S : Shift F π` | **bewiesen**: `cadlagShift` |
+| `hsm` | **bewiesen**: `cadlagShift_measurable_cadlagFiltration` |
+| `hY` | **bewiesen**: `stronglyAdapted_mpFamily_cadlagFiltration` |
+| `hint` | **bewiesen**: `integrable_mpFamily_cadlagFiltration` |
+| `hadapt` | benannt: `measurable_cadlagFiltration` |
+| `hgen` | benannt: `SkorokhodSpace.borel_eq_iSup_comap_eval_nnreal` |
+| `hfm`, `hfb`, `hgb` | benannt: die Paare sind beschränkt stetig, also frei |
+| `hpath` | benannt: `IsCadlag.measurable` und die Stetigkeit von `p.2` |
+| `honedim` | **offen, und das ist die Mathematik** |
+
+**Die Zusammensetzung ist nicht gemacht**, und das ist ausdrücklich zu sagen: die sechs „benannt"
+sind nicht in Lean eingelöst. Was aber feststeht, ist die Gestalt des Rests: alles außer `honedim`
+ist Buchhaltung über bereits gebautem Material, und `honedim` — die Übereinstimmung der
+eindimensionalen Verteilungen für **jeden** Shift `r` — ist für den Brownschen Erzeuger ein eigener
+Satz und kein Nachtrag. Damit ist zum ersten Mal genau gesagt, was zwischen Donsker und einer
+unbedingten Aussage steht, und es ist **eine** Hypothese und kein Rückstau.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **`MeasureTheory.isShiftSystem_mpFamily_cadlagFiltration`** — das Shiftsystem von
+> `mpFamily … lebesgueClock Clock.Conv.optional` an den Koordinaten von `D(ℝ≥0, E)`, also
+> `isShiftSystem_mpFamily_lebesgueClock` eingelöst auf `cadlagShift`, `cadlagFiltration` und einer
+> Operatorklasse beschränkt stetiger Paare.
+
+*Warum jetzt:* nach ihm steht `subsingleton_mpSolutions_mpFamily_lebesgueClock` über `D(ℝ≥0, E)` mit
+genau **einer** offenen Hypothese, und die ist `honedim`. Es ist der letzte Punkt vor der
+Mathematik, und drei seiner Eingaben sind in diesem Lauf gebaut worden.
+
+*Worauf es ruht, und alles davon steht:* `cadlagShift` und
+`cadlagShift_measurable_cadlagFiltration` für den Shift und `hsm`;
+`stronglyAdapted_mpFamily_cadlagFiltration` für `hY`; `lebesgueClock_isShiftInvariant` (`:16936`)
+für die Verschiebungsinvarianz der Uhr, die `isShiftSystem_mpFamily_lebesgueClock` intern liest.
+
+*Die drei Stellen, an denen ein Lauf danebengreifen wird, und alle drei sind am Quelltext
+nachgesehen.*
+
+1. **`hpath` fragt nach `Measurable[lebesgueClock.measurableSpace]`, und das ist ein Feld und keine
+   Instanz.** Die Falle vom 2026-09-10 steht hier zum ersten Mal an einer Hypothese statt in einem
+   Beweis: `lebesgueClock.measurableSpace` ist ausweislich der Definition `inferInstance`, die
+   beiden sind also definitionsgleich — aber die Instanzensuche ist syntaktisch, und ein Lemma, das
+   die Instanz nennt, wird nicht gefunden. Zu nehmen ist `exact` oder ein `show`, nicht ein `rw` auf
+   die Hypothese.
+2. **`hgen` vergleicht die *Instanz* `MeasurableSpace D(ℝ≥0, E)` mit dem Supremum, und
+   `borel_eq_iSup_comap_eval_nnreal` spricht von `borel D(ℝ≥0, E)`.** Die Instanz ist `borel _`
+   (`SkorokhodSpace/Suggested.lean:7391`), also definitionsgleich; dieselbe Vorsicht wie bei 1. Und
+   sie trägt `[CompleteSpace E]`, das das ambiente `[PolishSpace E]` nicht gibt — die Aussage wird es
+   also als eigene Voraussetzung führen müssen.
+3. **Das Feld `increment` von `IsShiftSystem` ist auch hier nicht Buchhaltung.**
+   `isShiftSystem_mpFamily_lebesgueClock` liefert es, aber sein `hY` läuft über die **ganze**
+   `mpFamily` und nicht über ein Paar; `stronglyAdapted_mpFamily_cadlagFiltration` ist in genau
+   dieser Gestalt gebaut (Hypothese `hY : Y ∈ mpFamily …`) und paßt, sofern die Operatorklasse `A'`
+   als `∀ q ∈ A', ∃ p ∈ A, …` beschrieben wird und nicht als Bild. Wer `A'` als Bildmenge
+   hinschreibt, hat eine Gleichheit zu zeigen, wo eine Inklusion gebraucht wird.
