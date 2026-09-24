@@ -60382,3 +60382,304 @@ haben, und `Measure.ext_of_charFun`
 (`Mathlib/MeasureTheory/Measure/CharacteristicFunction/Basic.lean:257`) macht daraus die
 Gleichheit der eindimensionalen Verteilungen. Das ist `honedim`, die letzte getragene Hypothese
 von Donsker.
+
+### 2026-09-24, zwölfter Lauf des Tages — das benannte Ziel steht, und der Vergleich, den es verlangt hat, ist **gemessen statt behauptet**: von den beiden Eindeutigkeitswegen ist der eine gar nicht anwendbar, und die beiden, die es sind, kosten **16 gegen 17 Zeilen** — der Unterschied sitzt nicht in der Länge, sondern in dem, was sie lesen
+
+*3 Deklarationen, alle in `MartingaleProblems/Suggested.lean`, im Abschnitt `DonskerLimit`
+unmittelbar hinter `integral_eval_mul_sin_eq_of_isCadlagMPSolution`. **Kein** neuer Import.
+`scripts/check_master.py` gegen `upstream/master`
+(`94ef6b89544e58e90f119da869f3fb48d1da0f4c`, Lean `4.35.0-rc2`): **0 Fehler, 0 veraltete Namen,
+0 `sorry`** in allen vier Dateien, Warnungen **18 / 38 / 36 / 76** — **unverändert**, also keine
+einzige neue. `check_axioms_master.py` über alle drei: `propext`, `Classical.choice`,
+`Quot.sound`, kein `sorryAx`. `check_duplicates.py` jetzt 1908 eigene Deklarationen, 45 Treffer —
+unverändert gegenüber dem Vorlauf. Keine `README.md` angefaßt.*
+
+#### Was steht
+
+| Name | Aussage |
+| --- | --- |
+| `MeasureTheory.eq_mul_exp_of_sub_eq_setIntegral` | eine **beschränkte** reelle Funktion der Zeit, deren Zuwachs über jedem Fenster `c` mal ihr eigenes Integral über dem Fenster ist, ist `C 0 * exp (c t)` — ohne jede Regularitätsvoraussetzung |
+| `MeasureTheory.integral_eval_mul_cos_eq_mul_exp_of_isCadlagMPSolution` | **das benannte Ziel**: `Cθ t = Cθ 0 * exp (-(v/2) θ² t)` für jede càdlàg-Lösung und jedes `θ` |
+| `MeasureTheory.integral_eval_mul_sin_eq_mul_exp_of_isCadlagMPSolution` | dasselbe für `Sθ`, und es kostet vier Zeilen |
+
+#### Der Befund: die Stetigkeit ist **Ergebnis** und nicht Voraussetzung, und deshalb ist der Satz einer der reellen Analysis ohne jede Maßtheorie
+
+Die Wegbeschreibung des Vorlaufs hatte als ersten Schritt die Stetigkeit von `Cθ` angesagt, „und
+zwar aus der Gleichung selbst". Das trägt weiter, als es dort steht: **die Gleichung allein,
+zusammen mit einer Schranke, gibt die Lipschitzstetigkeit**, und damit liest der ganze Satz von
+der Funktion `C : ℝ≥0 → ℝ` nichts als
+
+* `∀ r, |C r| ≤ M`, und
+* `∀ s ≤ t, C t - C s = ∫ u in Ioc s t, c * C u.toNNReal`.
+
+Keine Meßbarkeit, keine Stetigkeit, kein Maß, kein Pfadraum, kein `θ`. Genommen ist deshalb die
+allgemeine Fassung; `cos` und `sin` sind zwei Instanzen zu je vier Zeilen, deren einzige eigene
+Arbeit die Schranke `ν.real Set.univ` aus `Real.abs_cos_le_one` beziehungsweise
+`Real.abs_sin_le_one` ist. Eine Fassung, die die Stetigkeit **fordert**, wäre an jeder
+Aufrufstelle schwächer: der Aufrufer müßte sie aus derselben Gleichung herleiten.
+
+#### Der Vergleich der beiden Eindeutigkeitswege, und er hat ein Ergebnis, das der Vorlauf nicht vorhergesehen hatte
+
+Der Vorlauf hatte zwei Wege genannt und gesagt, der zweite — `is_const_of_deriv_eq_zero` auf
+`t ↦ Cθ t · exp ((v/2) θ² t)` — sei „vermutlich billiger", und das sei zu messen. Gemessen:
+
+**1. `is_const_of_deriv_eq_zero` ist gar nicht anwendbar.** Es verlangt
+`Differentiable ℝ f` auf **ganz** `ℝ`
+(`Mathlib/Analysis/Calculus/MeanValue.lean:750`, gelesen gegen `94ef6b89544`). Die Zeit läuft
+hier über `ℝ≥0`; die Funktion wird durch `Real.toNNReal` nach `ℝ` getragen und ist auf der
+**negativen** Halbachse konstant, der integrierende Faktor aber nicht — die Ableitung des
+Produktes ist dort `-c · C 0 · exp (-c r)` und **nicht** null. Am Nullpunkt existiert nur die
+einseitige Ableitung. Das ist keine Unbequemlichkeit, sondern ein falscher Satz: wer ihn
+heranzieht, muß die Funktion erst jenseits der Gleichung fortsetzen.
+
+Genommen ist statt dessen `constant_of_has_deriv_right_zero`
+(`Mathlib/Analysis/Calculus/MeanValue.lean:360`) — dieselbe Idee, aber **einseitig**, mit
+`HasDerivWithinAt f 0 (Ici x) x` auf `Ico a b` und `ContinuousOn f (Icc a b)`.
+
+**2. Der wirkliche Vergleich ist der mit `ODE_solution_unique`, und der ist gebaut.** Beide
+Endspurte sind aus **denselben zwei Eingaben** geführt — der Stetigkeit von `r ↦ C r.toNNReal`
+und der einseitigen Ableitung `HasDerivWithinAt … (c * C x.toNNReal) (Ici x) x` für `x ≥ 0` —
+und beide übersetzen gegen `master` ohne Fehler:
+
+| Weg | Zeilen (Beweis) | was er darüber hinaus liest |
+| --- | ---: | --- |
+| integrierender Faktor, `constant_of_has_deriv_right_zero` | **16** | nichts |
+| `ODE_solution_unique` | **17** | die Lipschitzkonstante des Feldes `x ↦ c * x` (`lipschitzWith_smul`), die **zweite** Lösung `t ↦ C 0 * exp (c t)` samt eigener Stetigkeit und Ableitung, und den Import `Mathlib.Analysis.ODE.ExistUnique`, den in der Kette sonst nichts braucht |
+
+**Die Vorhersage stimmt also, aber nicht aus dem genannten Grund.** Sie stimmt um **eine**
+Zeile, und das ist innerhalb des Rauschens; was den Ausschlag gibt, ist die Abhängigkeit. Von
+den 17 Zeilen des ODE-Weges gehen 12 für die zweite Lösung drauf — eine Funktion, die der
+integrierende Faktor gar nicht kennt. Die beiden Sätze sind an dieser Stelle **austauschbar**,
+und das ist selbst ein Befund: `ODE_solution_unique` liest genau dieselbe einseitige
+Ableitungsform, ist hier also kein stärkeres Werkzeug, sondern dasselbe mit mehr Eingängen.
+(Die Vergleichsdateien fallen unter `/scripts/_dev_*.lean` und sind nach `.gitignore` nicht Teil
+der Geschichte; die Zahlen stehen deshalb hier.)
+
+#### Was der Vorlauf sonst richtig vorhergesagt hat
+
+„Die Umschreibung von `Set.Ioc` auf `intervalIntegral` ist hier fällig" — sie ist es, und sie
+kostet genau eine Zeile: `intervalIntegral.integral_of_le`. Auch der Hauptsatz steht, wo er
+angesagt war (`intervalIntegral.integral_hasDerivAt_right`,
+`Mathlib/MeasureTheory/Integral/IntervalIntegral/FundThmCalculus.lean:725`), mit
+`Continuous.stronglyMeasurableAtFilter` (`Mathlib/MeasureTheory/Integral/IntegrableOn.lean:863`)
+als drittem Argument.
+
+*Eine Stelle, die Zeit kostet und in keiner Wegbeschreibung stand:* `hasDerivAt_id` schleppt ein
+`id` durch die Kettenregel, so daß `convert … using 1` an der **Funktion** scheitert und nicht
+bloß an der Ableitung. Zu nehmen ist `simpa using` oder `simp only [id_eq] at h` **vor** dem
+`convert`; beide Endspurte des Vergleichs haben diese Zeile, an je verschiedener Stelle.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **`MeasureTheory.map_eval_eq_of_isCadlagMPSolution_of_map_zero_eq`** — sind `ν` und `ν'` zwei
+> Wahrscheinlichkeitsmaße auf `D(ℝ≥0, ℝ)`, beide càdlàg-Lösungen des Martingalproblems zu
+> `brownianGeneratorPairs v`, und stimmen ihre Verteilungen zur Zeit `0` überein, so stimmen sie
+> zu **jeder** Zeit überein:
+>
+>     ν.map (fun z ↦ z.toFun t) = ν'.map (fun z ↦ z.toFun t)   für alle t : ℝ≥0.
+
+*Warum jetzt:* das ist `honedim` der Sache nach, und alle analytischen Eingaben stehen seit
+diesem Lauf. Es ist kein Grenzübergang mehr und keine Differentialrechnung, sondern die
+Zusammensetzung dreier vorhandener Stücke.
+
+*Worauf es ruht:*
+
+1. **Die beiden Exponentialformeln dieses Laufs**, die aus der Gleichheit bei `0` die Gleichheit
+   von `Cθ t` und `Sθ t` für jedes `θ` und jedes `t` machen — die rechte Seite ist ein Produkt
+   aus einer Größe zur Zeit `0` und einem von der Lösung unabhängigen Faktor.
+2. **Der Übergang vom Pfadmaß zum Bildmaß**: `∫ z, cos (θ * z.toFun t) ∂ν
+   = ∫ x, cos (θ * x) ∂(ν.map (z ↦ z.toFun t))`. Das ist `integral_map` mit
+   `SkorokhodSpace.measurable_eval` und einem stetigen Integranden, wörtlich wie in
+   `integral_map_eval_sub_eq_setIntegral_of_isCadlagMPSolution` (Zeile 31625) — dort ist es
+   dreimal ausgeschrieben und kann abgelesen werden.
+3. **`Measure.ext_of_charFun`**
+   (`Mathlib/MeasureTheory/Measure/CharacteristicFunction/Basic.lean:257`). Der Import steht
+   seit dem elften Lauf in der Datei.
+
+*Die Stelle, an der ein Lauf Zeit verliert, und sie ist zu klären, ehe gebaut wird:*
+`charFun` ist **komplexwertig**, unsere beiden Formeln sind reell. Der Übergang
+`charFun μ θ = (∫ cos (θ x) ∂μ) + i * (∫ sin (θ x) ∂μ)` ist die Zerlegung eines komplexen
+Integrals in Real- und Imaginärteil und verlangt die **Integrierbarkeit** des komplexen
+Integranden — bei endlichem Maß und beschränktem stetigem Integranden kein Hindernis, aber ein
+eigener Schritt. **Zuerst nachzusehen ist, ob Mathlib die Zerlegung schon als Lemma über
+`charFun` führt** (ein Name wie `charFun_apply_real` oder eine `re`/`im`-Gleichung daneben); nur
+wenn nicht, ist sie über `integral_re`/`integral_im` selbst zu führen. Das ist eine
+Bibliotheksfrage von zehn Minuten und keine mathematische, aber sie entscheidet über die Länge
+des Laufs.
+
+*Und was danach noch zwischen dem und Donsker steht, damit die Reihenfolge klar ist:* `honedim`
+in `exists_tendsto_map_rescaledWalk_of_onedim` ist über `IsMPSolution (mpFamily A' …)`
+formuliert, nicht über `IsCadlagMPSolution`. Der Anschluß der beiden Lesarten ist zu prüfen —
+er ist vermutlich vorhanden (der Abschnitt `BoundedContinuousOperator`, Zeile 31828, ist genau
+dafür gebaut), aber er ist **nicht** nachgesehen und gehört nicht behauptet.
+
+### Derselbe Lauf, zweiter Teil — **das eben benannte Ziel steht ebenfalls**, und beide Beweise gingen im ersten Durchlauf durch; die Bibliotheksfrage, die der erste Teil für den nächsten Lauf angesetzt hatte, ist beantwortet: **Mathlib führt die Zerlegung von `charFun` in Real- und Imaginärteil nicht**
+
+*2 Deklarationen, unmittelbar hinter den dreien des ersten Teils. `check_master.py` gegen
+denselben Stand: **0 Fehler, 0 veraltete Namen, 0 `sorry`**, Warnungen **18 / 38 / 36 / 76** —
+weiterhin unverändert. `check_axioms_master.py` über beide: `propext`, `Classical.choice`,
+`Quot.sound`. `check_duplicates.py` jetzt 1910 eigene Deklarationen, 45 Treffer — unverändert.*
+
+| Name | Aussage |
+| --- | --- |
+| `MeasureTheory.charFun_eq_integral_cos_add_integral_sin_mul_I` | `charFun μ θ = (∫ cos (θ x)) + (∫ sin (θ x)) * I` für jedes endliche Maß auf `ℝ` |
+| `MeasureTheory.map_eval_eq_of_isCadlagMPSolution_of_map_zero_eq` | **`honedim` in der Lesart `IsCadlagMPSolution`**: zwei càdlàg-Lösungen mit gleicher Verteilung zur Zeit `0` haben zu **jeder** Zeit dieselbe |
+
+#### Der Befund: die Lücke ist in Mathlib und nicht bei uns
+
+`Mathlib/MeasureTheory/Measure/CharacteristicFunction/Basic.lean` (gelesen gegen `94ef6b89544`)
+führt `charFun` mit einer großen Umgebung — `charFun_apply_real`, `charFun_zero`, `charFun_neg`,
+`charFun_conv`, `charFun_prod`, `charFun_pi`, `norm_charFun_le`, dazu die ganze
+`charFunDual`-Schicht und `Measure.ext_of_charFun` — **aber keine Gleichung, die Real- und
+Imaginärteil benennt**. Das ist die Brücke zwischen einem reellen Argument (zwei reelle
+Integrale sind bestimmt) und `Measure.ext_of_charFun`, das nur von der komplexwertigen Funktion
+spricht, und sie war selbst zu bauen.
+
+Sie ist elementar — `Complex.exp_mul_I` punktweise, dann `integral_add` — und der ganze Inhalt
+ist die **Integrierbarkeit**, wie der erste Teil vorhergesagt hatte: sie geht über
+`Integrable.mono'` gegen die Konstante `1` und die beiden Schranken `Real.abs_cos_le_one`,
+`Real.abs_sin_le_one`, und nur dort wird die Endlichkeit des Maßes gelesen. Die Aussage ist
+Mathlib-fertig (ein endliches Maß auf `ℝ`, sonst nichts) und gehört in die Lückenliste von
+`TODO.md` Punkt 8, sobald die READMEs wieder anfaßbar sind; **dieser Lauf hat keine angefaßt.**
+
+*Eine Falle, die zwei Anläufe kostet und in keiner Wegbeschreibung stand:* `simpa using
+Real.abs_cos_le_one _` schlägt **fehl**, weil `simp` die Koerzion `↑(Real.cos (θ * x))` nach
+`Complex.cos (↑θ * ↑x)` zieht und das Ziel damit von der reellen Schranke wegbewegt. Zu nehmen
+ist `rw [Complex.norm_real, Real.norm_eq_abs]` und dann `exact`. Dasselbe Muster wie bei den
+`iteratedDeriv`-Koerzionen des elften Laufs: wo eine Koerzion die Aussage trägt, ist `simp` das
+falsche Werkzeug.
+
+#### Was der Satz **nicht** ist, und das ist die Arbeit des nächsten Laufs
+
+`map_eval_eq_of_isCadlagMPSolution_of_map_zero_eq` ist `honedim` **der Sache nach**, aber nicht
+buchstäblich: die Hypothese `honedim` von
+`MeasureTheory.exists_tendsto_map_rescaledWalk_of_onedim` (und ebenso die von
+`eq_of_isCadlagMPSolution_of_map_bot_eq`) verlangt die Aussage für Lösungen im Sinn von
+`IsMPSolution (mpFamily A' lebesgueClock …)`, und bewiesen ist sie für Lösungen im Sinn von
+`IsCadlagMPSolution`. Die vorhandene Brücke `isMPSolution_of_isCadlagMPSolution` (Zeile 31467)
+läuft in die **falsche** Richtung.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **`MeasureTheory.isCadlagMPSolution_of_isMPSolution`** — ist `ν` ein endliches Maß auf
+> `D(ℝ≥0, E)`, das `IsMPSolution (mpFamily A' lebesgueClock Clock.Conv.optional
+> (fun r z ↦ z.toFun r)) cadlagFiltration` erfüllt, und liegt zu jedem `p ∈ A` das Paar seiner
+> Koerzionen in `A'`, so gilt `IsCadlagMPSolution A ν`.
+
+*Warum jetzt:* es ist die einzige Aussage zwischen dem Satz dieses Laufs und einem **unbedingten
+Donsker**. Mit ihr wird `honedim` in `exists_tendsto_map_rescaledWalk_of_onedim` aus
+`map_eval_eq_of_isCadlagMPSolution_of_map_zero_eq` eingelöst, und die letzte getragene Hypothese
+der Kette fällt.
+
+*Worauf es ruht, und der Weg ist kurz:*
+
+1. Die Umkehrung der Inklusion, die `isMPSolution_of_isCadlagMPSolution` liest: dort ist
+   `hA' : ∀ q ∈ A', ∃ p ∈ A, …`, hier wird `∀ p ∈ A, (⇑p.1, ⇑p.2) ∈ A'` gebraucht. **Beide
+   zugleich hat man**, wenn `A'` als das Bild von `A` unter der Koerzion genommen wird, und
+   genau so wird `hA'` an der Aufrufstelle von Donsker ohnehin erzeugt. Die Aussage ist deshalb
+   mit der Inklusion in dieser Richtung zu stellen, nicht mit einer Gleichheit von Mengen — der
+   Grund steht an `exists_mpTest_eq_of_mem_mpFamily`.
+2. Die abzählbare dichte Zeitmenge, die `IsCadlagMPSolution` verlangt: `IsMPSolution` gibt die
+   Martingalgleichung für **alle** `s ≤ t`, es ist also irgendeine zu nehmen.
+   `TopologicalSpace.exists_countable_dense ℝ≥0` steht und wird in dieser Datei schon zweimal so
+   benutzt (Zeilen 33839 und 34061). Eine Stetigkeitsbedingung an die Zeiten wird **nicht**
+   gebraucht, anders als bei `SkorokhodSpace.exists_countable_dense_continuity`.
+3. Die Identifikation des getesteten Funktionals, `SkorokhodSpace.mpTest` gegen das Glied von
+   `mpFamily`: das ist `exists_mpTest_eq_of_mem_mpFamily` beziehungsweise die Aussage darüber,
+   und sie ist im Beweis von `isMPSolution_of_isCadlagMPSolution` in der Gegenrichtung schon
+   einmal geführt.
+
+*Die Stelle, an der ein Lauf danebengreifen kann:* `IsMPSolution` trägt neben der
+Martingalgleichung die **Adaptiertheit** (`StronglyAdapted`), `IsCadlagMPSolution` nicht; in
+dieser Richtung wird sie also nur verbraucht und nicht erzeugt. Umgekehrt verlangt
+`IsCadlagMPSolution` nichts, was `IsMPSolution` nicht hätte — die Richtung ist die billigere von
+beiden, und wenn sie teuer wird, ist die Ursache in der Übersetzung der Testfunktionale zu
+suchen und nicht in der Mathematik.
+
+### Derselbe Lauf, dritter Teil — **Donsker trägt keine Hypothese mehr**: die Brücke in die fehlende Richtung ist elf Zeilen lang, und `honedim` fällt
+
+*2 Deklarationen in `MartingaleProblems/Suggested.lean` — `isCadlagMPSolution_of_isMPSolution`
+hinter `isMPSolution_of_isCadlagMPSolution` (Zeile 31481), `exists_tendsto_map_rescaledWalk` am
+Ende des Abschnitts `DonskerLimit`. `check_master.py` gegen `94ef6b89544`: **0 Fehler,
+0 veraltete Namen, 0 `sorry`**, Warnungen **18 / 38 / 36 / 76** — über alle drei Teile dieses
+Laufs unverändert. `check_axioms_master.py`: `propext`, `Classical.choice`, `Quot.sound`.
+`check_duplicates.py` 1912 eigene Deklarationen, 45 Treffer — unverändert. Keine `README.md`
+angefaßt.*
+
+| Name | Aussage |
+| --- | --- |
+| `MeasureTheory.isCadlagMPSolution_of_isMPSolution` | die Rückrichtung der Brücke: aus `IsMPSolution (mpFamily A' …)` folgt `IsCadlagMPSolution A`, wenn zu jedem `p ∈ A` das Paar seiner Koerzionen in `A'` liegt |
+| `MeasureTheory.exists_tendsto_map_rescaledWalk` | **Donsker ohne getragene Hypothese** |
+
+#### Warum die Brücke elf Zeilen kostet und nicht mehr
+
+Die Vorhersage des zweiten Teils ist eingetroffen, in jedem Punkt: die abzählbare dichte
+Zeitmenge ist `TopologicalSpace.exists_countable_dense ℝ≥0` und wird nur *irgendwo* gebraucht,
+weil `IsMPSolution` die Martingalgleichung an **jedem** Zeitenpaar gibt; die Identifikation des
+Testfunktionals ist `mpTest_eq_sub_setIntegral_lebesgueClock`, in dieser Richtung ohne den
+Umweg über `exists_mpTest_eq_of_mem_mpFamily`, weil das Paar hier **gegeben** und nicht zu
+gewinnen ist; und die Adaptiertheit wird verbraucht statt erzeugt.
+
+**Die Umkehrung der Inklusion ist kein Hindernis, weil man beide Richtungen zugleich hat.** Am
+Aufrufort ist `A'` das Bild von `A` unter der Koerzion; dann ist `hA'` die Identität
+(`fun q hq ↦ hq`) und die neue Voraussetzung `∀ p ∈ A, (⇑p.1, ⇑p.2) ∈ A'` ist `⟨p, hp, rfl, rfl⟩`.
+Die Entscheidung, `exists_mpTest_eq_of_mem_mpFamily` seinerzeit mit einer **Inklusion** statt
+einer Mengengleichheit zu stellen, zahlt sich hier aus: keine der beiden Seiten muß mehr zeigen,
+als sie benutzt.
+
+#### Was „ohne getragene Hypothese" heißt, und was es nicht heißt
+
+**Es heißt:** in `exists_tendsto_map_rescaledWalk` steht keine Annahme mehr über den *Limes* —
+kein `honedim`, kein `huniq`, kein `ν₀` als Parameter. Die Aussage produziert das Grenzmaß, sagt
+von ihm, daß es das Martingalproblem löst, daß es bei `0` startet, und daß die Folge der
+Pfadgesetze gegen es konvergiert.
+
+**Es heißt nicht, daß die Voraussetzungen an die Daten leer wären**, und eine davon ist mehr als
+Buchhaltung: `hvar : ∀ k, variance (ξ k) P ≤ 1`. Zusammen mit `hcent` und `hsq` besagt sie
+`v ≤ 1` — die Aussage ist also für Zuwächse mit **Varianz höchstens eins** geführt. Sie stammt
+aus der Straffheit (`isCompact_closure_range_map_rescaledWalk`) und ist dort eine
+Normierung, keine Notwendigkeit: durch Skalieren von `ξ` ließe sie sich entfernen. **Das ist
+nicht getan**, und es steht hier, damit kein Leser die Aussage für allgemeiner hält, als sie
+ist.
+
+Ebensowenig ist das Grenzmaß als Wienermaß im Sinn von Mathlib identifiziert.
+`ProbabilityTheory.IsBrownianReal` ist ein Prädikat über einen Prozeß mit dem Index `ℝ≥0` und
+**ohne Existenzaussage** (nachgesehen am 2026-09-24, siehe die Aufgabenstellung); es gibt dort
+nichts, wogegen ein Grenzgesetz abgeglichen werden könnte.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **`MeasureTheory.map_eval_eq_gaussianReal_of_isCadlagMPSolution`** — ist `ν` eine
+> càdlàg-Lösung des Martingalproblems zu `brownianGeneratorPairs v` mit
+> `ν.map (z ↦ z.toFun 0) = Measure.dirac 0`, so ist
+>
+>     ν.map (fun z ↦ z.toFun t) = ProbabilityTheory.gaussianReal 0 (v * t).toNNReal
+>
+> für jedes `t : ℝ≥0`.
+
+*Warum jetzt:* es ist der erste Satz, der das Grenzgesetz gegen etwas prüft, das **nicht aus
+unserer Konstruktion stammt** — dieselbe Rolle, die `poissonMeasure` beim Poissonprozeß und die
+geometrische Verteilung beim Yule-Prozeß spielen. Und er ist billig: alle Eingaben stehen seit
+diesem Lauf.
+
+*Worauf es ruht:*
+
+1. `MeasureTheory.integral_eval_mul_cos_eq_mul_exp_of_isCadlagMPSolution` und die sin-Fassung,
+   mit `Cθ 0 = 1` und `Sθ 0 = 0` aus `ν.map (z ↦ z.toFun 0) = Measure.dirac 0` (über
+   `integral_map` und `integral_dirac`).
+2. `MeasureTheory.charFun_eq_integral_cos_add_integral_sin_mul_I` aus diesem Lauf, die daraus
+   `charFun (ν.map eval t) θ = exp (-(v/2) θ² t)` macht — eine **reelle** Zahl im komplexen
+   Gewand, weil der Sinusteil verschwindet.
+3. `ProbabilityTheory.charFun_gaussianReal`
+   (`Mathlib/Probability/Distributions/Gaussian/Real.lean:483`, gelesen gegen `94ef6b89544`):
+   `charFun (gaussianReal m w) θ = cexp (θ * m * I - w * θ^2 / 2)`. Bei `m = 0` und `w = (v t)`
+   ist das `exp (-(v t) θ² / 2)`, also dasselbe.
+4. `Measure.ext_of_charFun`.
+
+*Die Stelle, an der ein Lauf Zeit verliert:* `gaussianReal` nimmt die Varianz in `ℝ≥0`, unser `v`
+ist reell. `v ≥ 0` ist aus `hsq` **nicht** ablesbar, solange man nur die càdlàg-Lösung hat —
+`brownianGeneratorPairs v` ist für jedes reelle `v` definiert. Entweder trägt die Aussage
+`0 ≤ v` als Hypothese (ehrlich und billig), oder sie wird über `Real.toNNReal` gestellt und ist
+für negatives `v` leer. **Die erste Fassung ist zu nehmen**, und im Doc-Kommentar gehört gesagt,
+daß an Donskers Daten `0 ≤ v` aus `hsq` folgt (ein Quadratintegral ist nichtnegativ), die
+Lösungsaussage selbst es aber nicht weiß.

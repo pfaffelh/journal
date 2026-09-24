@@ -31478,6 +31478,48 @@ theorem isMPSolution_of_isCadlagMPSolution {A : Set ((E →ᵇ ℝ) × (E →ᵇ
   exact mpSolution_forall_of_mpSolution_dense p.1 p.2 ν
     (fun r ↦ rightDense_of_dense hTd r) hT hst
 
+/-- **The converse reading: a solution in the sense of Milestone 6 is a solution
+in the sense of the chain of Milestone 11.**
+
+`MeasureTheory.isMPSolution_of_isCadlagMPSolution` carries a law from the càdlàg
+reading to the abstract one; this carries it back, and it is the direction a
+uniqueness *hypothesis* is discharged in -- `honedim` speaks of solutions in the
+abstract reading, and what is proved about the one dimensional distributions of
+the Brownian generator is proved in the càdlàg one.
+
+**The inclusion runs the other way, and both are available at once.**  Here the
+hypothesis is `∀ p ∈ A, (⇑p.1, ⇑p.2) ∈ A'`, where
+`MeasureTheory.isMPSolution_of_isCadlagMPSolution` asks for
+`∀ q ∈ A', ∃ p ∈ A, …`.  A consumer that takes `A'` to be the image of `A` under
+the coercion -- which is how `hA'` is produced at the call site of Donsker's
+theorem -- has both, and no equality of sets is asked of anyone else.
+
+**The countable dense set of times is free.**  `MeasureTheory.IsMPSolution` gives
+the martingale identity at *every* pair of times, so any countable dense set will
+do and `TopologicalSpace.exists_countable_dense` produces one; no continuity of
+the law at those times is needed, unlike in the statements that go the other way
+and have to *choose* the times (`SkorokhodSpace.exists_countable_dense_continuity`).
+
+**Nothing is lost and one thing is dropped:** `MeasureTheory.IsMPSolution` carries
+the adaptedness of the test processes and `MeasureTheory.IsCadlagMPSolution` does
+not, so in this direction the adaptedness is consumed and not produced. -/
+theorem isCadlagMPSolution_of_isMPSolution {A : Set ((E →ᵇ ℝ) × (E →ᵇ ℝ))}
+    {A' : Set ((E → ℝ) × (E → ℝ))}
+    (hAA' : ∀ p ∈ A, ((⇑p.1 : E → ℝ), (⇑p.2 : E → ℝ)) ∈ A')
+    (ν : Measure D(ℝ≥0, E))
+    (h : IsMPSolution (mpFamily A' lebesgueClock Clock.Conv.optional
+      (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r)) cadlagFiltration ν) :
+    IsCadlagMPSolution A ν := by
+  obtain ⟨T, hTc, hTd⟩ := TopologicalSpace.exists_countable_dense ℝ≥0
+  intro p hp
+  refine ⟨T, hTc, hTd, fun s _ t _ hst ↦ ?_⟩
+  have hY : (fun (t : ℝ≥0) (z : D(ℝ≥0, E)) ↦ SkorokhodSpace.mpTest p.1 p.2 t z)
+      ∈ mpFamily A' lebesgueClock Clock.Conv.optional
+        (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r) :=
+    ⟨((⇑p.1 : E → ℝ), (⇑p.2 : E → ℝ)), hAA' p hp,
+      fun t z ↦ mpTest_eq_sub_setIntegral_lebesgueClock p.1 p.2 t z⟩
+  exact (h _ hY).2 s t hst
+
 /-! #### The forward equation of the one dimensional distributions
 
 The martingale identity, integrated, is an identity of numbers: the mean of the
@@ -36624,6 +36666,261 @@ theorem integral_eval_mul_sin_eq_of_isCadlagMPSolution {v : ℝ}
   rw [integral_eval_sub_eq_setIntegral_of_tendsto ν h hmem hlim1 hlim2 hn1 hn2 hst]
   exact setIntegral_congr_fun measurableSet_Ioc fun u _ ↦ integral_const_mul _ _
 
+/-- **A bounded solution of the closed scalar integral equation is an
+exponential.**
+
+If a real function of the time is bounded and its increment over every window is
+`c` times its own integral over that window, then it is
+`C 0 * Real.exp (c * t)`.  No regularity is assumed of `C`: it is not supposed
+measurable, let alone continuous.
+
+**The continuity is an output, not an input.**  The right hand side of the
+equation is bounded by `|c| * M` times the length of the window, so `C` is
+Lipschitz, and that is what the fundamental theorem of calculus consumes.  A
+statement that assumed the continuity would be strictly weaker at every call
+site, because the caller would have to prove it from the same equation.
+
+**Why the constancy lemma and not `is_const_of_deriv_eq_zero`.**  The time runs
+over `ℝ≥0`, and the function is carried to `ℝ` by `Real.toNNReal`, which is
+constant on the negative half line -- where the equation says nothing and the
+derivative of the product with the integrating factor is *not* zero.  What holds
+at every `x ≥ 0` is a derivative **within `Set.Ici x`**, and
+`constant_of_has_deriv_right_zero` asks for exactly that, on `Set.Icc 0 t`.  A
+one sided derivative at the base point is unavoidable here, so the two sided
+statement is not merely inconvenient but false for the extended function.
+
+**The integrating factor, and not the uniqueness theorem for ODEs.**  Both roads
+are open and both were built: `ODE_solution_unique` reads the same
+`HasDerivWithinAt … (Set.Ici x) x` on `Set.Ico 0 t` and the same `ContinuousOn`
+on `Set.Icc 0 t`, so the two are interchangeable at this point of the proof.  The
+integrating factor is taken because it reads *less*: the ODE road needs, beyond
+these, the Lipschitz constant of the field `x ↦ c * x` and the second solution
+`t ↦ C 0 * Real.exp (c * t)` with its own continuity and derivative, and it needs
+`Mathlib.Analysis.ODE.ExistUnique`, which nothing else in this file uses. -/
+theorem eq_mul_exp_of_sub_eq_setIntegral {c M : ℝ} {C : ℝ≥0 → ℝ}
+    (hbdd : ∀ r : ℝ≥0, |C r| ≤ M)
+    (heq : ∀ s t : ℝ≥0, s ≤ t →
+      C t - C s = ∫ u in Set.Ioc (s : ℝ) (t : ℝ), c * C u.toNNReal)
+    (t : ℝ≥0) :
+    C t = C 0 * Real.exp (c * t) := by
+  have hM : (0 : ℝ) ≤ M := le_trans (abs_nonneg _) (hbdd 0)
+  have hlip : ∀ s t : ℝ≥0, s ≤ t → |C t - C s| ≤ |c| * M * ((t : ℝ) - (s : ℝ)) := by
+    intro s t hst
+    have hst' : (s : ℝ) ≤ (t : ℝ) := by exact_mod_cast hst
+    have hfin : IsFiniteMeasure ((volume : Measure ℝ).restrict (Set.Ioc (s : ℝ) (t : ℝ))) := by
+      refine ⟨?_⟩
+      rw [Measure.restrict_apply_univ, Real.volume_Ioc]
+      exact ENNReal.ofReal_lt_top
+    rw [heq s t hst, ← Real.norm_eq_abs]
+    refine le_trans (norm_integral_le_of_norm_le_const
+      (μ := (volume : Measure ℝ).restrict (Set.Ioc (s : ℝ) (t : ℝ))) (C := |c| * M)
+      (Filter.Eventually.of_forall fun u ↦ ?_)) (le_of_eq ?_)
+    · rw [Real.norm_eq_abs, abs_mul]
+      exact mul_le_mul_of_nonneg_left (hbdd _) (abs_nonneg c)
+    · rw [measureReal_restrict_apply_univ, Real.volume_real_Ioc_of_le hst']
+  have hK : (0 : ℝ) ≤ |c| * M := mul_nonneg (abs_nonneg _) hM
+  have hcontC : Continuous C := by
+    refine (LipschitzWith.of_dist_le_mul (K := Real.toNNReal (|c| * M)) fun a b ↦ ?_).continuous
+    rw [Real.dist_eq, NNReal.dist_eq, Real.coe_toNNReal _ hK]
+    rcases le_total a b with hab | hab
+    · have hab' : (a : ℝ) ≤ (b : ℝ) := by exact_mod_cast hab
+      rw [abs_sub_comm, abs_sub_comm ((a : ℝ)) ((b : ℝ)),
+        abs_of_nonneg (show (0 : ℝ) ≤ (b : ℝ) - (a : ℝ) by linarith)]
+      exact hlip a b hab
+    · have hab' : (b : ℝ) ≤ (a : ℝ) := by exact_mod_cast hab
+      rw [abs_of_nonneg (show (0 : ℝ) ≤ (a : ℝ) - (b : ℝ) by linarith)]
+      exact hlip b a hab
+  have hcontG : Continuous fun r : ℝ ↦ C r.toNNReal := hcontC.comp continuous_real_toNNReal
+  have hcontcG : Continuous fun u : ℝ ↦ c * C u.toNNReal := continuous_const.mul hcontG
+  have hint : ∀ r : ℝ, 0 ≤ r →
+      C r.toNNReal = C (0 : ℝ).toNNReal + ∫ u in (0 : ℝ)..r, c * C u.toNNReal := by
+    intro r hr
+    have h := heq 0 r.toNNReal (by simp)
+    rw [intervalIntegral.integral_of_le hr]
+    have hc : ((r.toNNReal : ℝ≥0) : ℝ) = r := Real.coe_toNNReal r hr
+    simp only [NNReal.coe_zero, hc] at h
+    rw [Real.toNNReal_zero]
+    linarith [h]
+  have hderiv : ∀ x : ℝ,
+      HasDerivAt (fun r ↦ ∫ u in (0 : ℝ)..r, c * C u.toNNReal) (c * C x.toNNReal) x := by
+    intro x
+    exact intervalIntegral.integral_hasDerivAt_right
+      (hcontcG.intervalIntegrable _ _)
+      (hcontcG.stronglyMeasurableAtFilter _ _) hcontcG.continuousAt
+  have hGderiv : ∀ x : ℝ, 0 ≤ x →
+      HasDerivWithinAt (fun r ↦ C r.toNNReal) (c * C x.toNNReal) (Set.Ici x) x := by
+    intro x hx
+    have h1 : HasDerivWithinAt
+        (fun r ↦ C (0 : ℝ).toNNReal + ∫ u in (0 : ℝ)..r, c * C u.toNNReal)
+        (c * C x.toNNReal) (Set.Ici x) x :=
+      ((hderiv x).const_add (C (0 : ℝ).toNNReal)).hasDerivWithinAt
+    exact h1.congr (fun y hy ↦ hint y (hx.trans hy)) (hint x hx)
+  have hFderiv : ∀ x ∈ Set.Ico (0 : ℝ) (t : ℝ),
+      HasDerivWithinAt (fun r ↦ C r.toNNReal * Real.exp (-c * r)) 0 (Set.Ici x) x := by
+    intro x hx
+    have hexp : HasDerivAt (fun r : ℝ ↦ Real.exp (-c * r)) (Real.exp (-c * x) * (-c)) x := by
+      simpa using (((hasDerivAt_id x).const_mul (-c))).exp
+    have h := (hGderiv x hx.1).mul hexp.hasDerivWithinAt
+    convert h using 1
+    ring
+  have hcontF : ContinuousOn (fun r ↦ C r.toNNReal * Real.exp (-c * r))
+      (Set.Icc (0 : ℝ) (t : ℝ)) :=
+    (hcontG.mul (Real.continuous_exp.comp (continuous_const.mul continuous_id))).continuousOn
+  have ht0 : (0 : ℝ) ≤ (t : ℝ) := t.coe_nonneg
+  have hconst := constant_of_has_deriv_right_zero hcontF hFderiv (t : ℝ)
+    (Set.right_mem_Icc.2 ht0)
+  simp only [Real.toNNReal_coe, Real.toNNReal_zero, mul_zero, Real.exp_zero,
+    mul_one] at hconst
+  rw [← hconst, mul_assoc, ← Real.exp_add]
+  simp
+
+/-- **The real part of the characteristic function of a càdlàg solution is
+determined by its value at time `0`.**
+
+`Cθ t = Cθ 0 * Real.exp (-(v/2) θ² t)`, for every `θ` and every solution of the
+martingale problem for `MeasureTheory.brownianGeneratorPairs v` -- the Gaussian
+characteristic function, save that `Cθ 0` is whatever the initial distribution
+makes it.
+
+**Two solutions with the same law at time `0` therefore have the same
+`Cθ t` at every time**, and with the sine half
+(`MeasureTheory.integral_eval_mul_sin_eq_mul_exp_of_isCadlagMPSolution`) the same
+characteristic function, which is what `Measure.ext_of_charFun` consumes.
+
+The only two inputs are
+`MeasureTheory.integral_eval_mul_cos_eq_of_isCadlagMPSolution`, the closed
+integral equation, and `MeasureTheory.eq_mul_exp_of_sub_eq_setIntegral`, which
+solves it.  The bound the latter asks for is `ν.real Set.univ`, from
+`Real.abs_cos_le_one` alone; no property of the solution is read for it.
+
+**The base point is `0` and not `⊥`.**  They are the same element of `ℝ≥0`
+(`NNReal.bot_eq_zero`), and a consumer that speaks of the law at `⊥` -- as
+`MeasureTheory.map_eval_bot_map_rescaledWalk_eq_dirac` does -- rewrites with it. -/
+theorem integral_eval_mul_cos_eq_mul_exp_of_isCadlagMPSolution {v : ℝ}
+    (ν : Measure D(ℝ≥0, ℝ)) [IsFiniteMeasure ν]
+    (h : IsCadlagMPSolution (brownianGeneratorPairs v) ν) (θ : ℝ) (t : ℝ≥0) :
+    (∫ z, Real.cos (θ * z.toFun t) ∂ν)
+      = (∫ z, Real.cos (θ * z.toFun 0) ∂ν) * Real.exp (-(v / 2) * θ ^ 2 * t) := by
+  refine eq_mul_exp_of_sub_eq_setIntegral
+    (C := fun r ↦ ∫ z, Real.cos (θ * z.toFun r) ∂ν) (M := ν.real Set.univ) (fun r ↦ ?_)
+    (fun s t hst ↦ integral_eval_mul_cos_eq_of_isCadlagMPSolution ν h θ hst) t
+  simpa [Real.norm_eq_abs] using norm_integral_le_of_norm_le_const (μ := ν) (C := 1)
+    (Filter.Eventually.of_forall fun z : D(ℝ≥0, ℝ) ↦
+      (Real.norm_eq_abs _).trans_le (Real.abs_cos_le_one _))
+
+/-- **The imaginary part of the characteristic function of a càdlàg solution is
+determined by its value at time `0`.**
+
+The sine half of
+`MeasureTheory.integral_eval_mul_cos_eq_mul_exp_of_isCadlagMPSolution`, with the
+same constant and the same proof, the bound being `Real.abs_sin_le_one`.  It
+costs nothing beyond the cosine one because
+`MeasureTheory.eq_mul_exp_of_sub_eq_setIntegral` reads the function only through
+the equation and a bound. -/
+theorem integral_eval_mul_sin_eq_mul_exp_of_isCadlagMPSolution {v : ℝ}
+    (ν : Measure D(ℝ≥0, ℝ)) [IsFiniteMeasure ν]
+    (h : IsCadlagMPSolution (brownianGeneratorPairs v) ν) (θ : ℝ) (t : ℝ≥0) :
+    (∫ z, Real.sin (θ * z.toFun t) ∂ν)
+      = (∫ z, Real.sin (θ * z.toFun 0) ∂ν) * Real.exp (-(v / 2) * θ ^ 2 * t) := by
+  refine eq_mul_exp_of_sub_eq_setIntegral
+    (C := fun r ↦ ∫ z, Real.sin (θ * z.toFun r) ∂ν) (M := ν.real Set.univ) (fun r ↦ ?_)
+    (fun s t hst ↦ integral_eval_mul_sin_eq_of_isCadlagMPSolution ν h θ hst) t
+  simpa [Real.norm_eq_abs] using norm_integral_le_of_norm_le_const (μ := ν) (C := 1)
+    (Filter.Eventually.of_forall fun z : D(ℝ≥0, ℝ) ↦
+      (Real.norm_eq_abs _).trans_le (Real.abs_sin_le_one _))
+
+/-- **The characteristic function of a finite measure on `ℝ`, split into its real
+and imaginary parts.**
+
+`charFun μ θ = (∫ cos (θ x)) + (∫ sin (θ x)) * I`.  Mathlib carries `charFun` and
+a large API around it, but not this decomposition; it is what connects a real
+argument -- two real integrals determined -- to `Measure.ext_of_charFun`, which
+speaks of the complex valued function alone.
+
+**The integrability is the whole content.**  `Complex.exp_mul_I` splits the
+integrand pointwise; splitting the *integral* needs both halves integrable, and
+that is where the finiteness of the measure is read, through
+`MeasureTheory.Integrable.mono'` against the constant `1` and the two bounds
+`Real.abs_cos_le_one`, `Real.abs_sin_le_one`.  Nothing else about `μ` is
+used. -/
+theorem charFun_eq_integral_cos_add_integral_sin_mul_I
+    (μ : Measure ℝ) [IsFiniteMeasure μ] (θ : ℝ) :
+    charFun μ θ = (↑(∫ x, Real.cos (θ * x) ∂μ) : ℂ)
+      + (↑(∫ x, Real.sin (θ * x) ∂μ) : ℂ) * Complex.I := by
+  have hcm : Continuous fun x : ℝ ↦ ((Real.cos (θ * x) : ℝ) : ℂ) :=
+    Complex.continuous_ofReal.comp (Real.continuous_cos.comp (continuous_const.mul continuous_id))
+  have hsm : Continuous fun x : ℝ ↦ ((Real.sin (θ * x) : ℝ) : ℂ) :=
+    Complex.continuous_ofReal.comp (Real.continuous_sin.comp (continuous_const.mul continuous_id))
+  have hc : Integrable (fun x : ℝ ↦ ((Real.cos (θ * x) : ℝ) : ℂ)) μ := by
+    refine (integrable_const (1 : ℝ)).mono' hcm.aestronglyMeasurable
+      (Filter.Eventually.of_forall fun x ↦ ?_)
+    rw [Complex.norm_real, Real.norm_eq_abs]
+    exact Real.abs_cos_le_one _
+  have hs : Integrable (fun x : ℝ ↦ ((Real.sin (θ * x) : ℝ) : ℂ) * Complex.I) μ := by
+    refine Integrable.mul_const ?_ _
+    refine (integrable_const (1 : ℝ)).mono' hsm.aestronglyMeasurable
+      (Filter.Eventually.of_forall fun x ↦ ?_)
+    rw [Complex.norm_real, Real.norm_eq_abs]
+    exact Real.abs_sin_le_one _
+  rw [charFun_apply_real]
+  have hpt : ∀ x : ℝ, Complex.exp (↑θ * ↑x * Complex.I)
+      = ((Real.cos (θ * x) : ℝ) : ℂ) + ((Real.sin (θ * x) : ℝ) : ℂ) * Complex.I := by
+    intro x
+    rw [← Complex.ofReal_mul, Complex.exp_mul_I, Complex.ofReal_cos, Complex.ofReal_sin]
+  simp_rw [hpt]
+  rw [integral_add hc hs, integral_mul_const, integral_complex_ofReal, integral_complex_ofReal]
+
+/-- **Two càdlàg solutions that agree at time `0` agree at every time.**
+
+This is the uniqueness of the one dimensional distributions of the martingale
+problem for `MeasureTheory.brownianGeneratorPairs v` --- the hypothesis `honedim`
+of `MeasureTheory.exists_tendsto_map_rescaledWalk_of_onedim`, in the reading
+`MeasureTheory.IsCadlagMPSolution`.
+
+**No uniqueness theorem of Milestone 6 is read, and no shift.**  The argument is
+the classical one and runs entirely through the characteristic function: the two
+exponential formulas
+(`MeasureTheory.integral_eval_mul_cos_eq_mul_exp_of_isCadlagMPSolution` and its
+sine half) make each one dimensional mean of `cos (θ · )` and `sin (θ · )` a
+quantity at time `0` times a factor that does not depend on the solution, the
+equality at `0` transports to every time, and `Measure.ext_of_charFun` turns the
+equality of the characteristic functions into the equality of the measures.
+
+**What carries the initial condition is `integral_map` and not a hypothesis on
+the paths.**  The equality of the laws at time `0` is used only through the two
+integrals of `cos (θ · )` and `sin (θ · )` against them; no property of the
+sample paths at `0` is read, and the solutions need not be probability measures,
+only finite. -/
+theorem map_eval_eq_of_isCadlagMPSolution_of_map_zero_eq {v : ℝ}
+    (ν ν' : Measure D(ℝ≥0, ℝ)) [IsFiniteMeasure ν] [IsFiniteMeasure ν']
+    (h : IsCadlagMPSolution (brownianGeneratorPairs v) ν)
+    (h' : IsCadlagMPSolution (brownianGeneratorPairs v) ν')
+    (h0 : ν.map (fun z : D(ℝ≥0, ℝ) ↦ z.toFun 0) = ν'.map (fun z : D(ℝ≥0, ℝ) ↦ z.toFun 0))
+    (t : ℝ≥0) :
+    ν.map (fun z : D(ℝ≥0, ℝ) ↦ z.toFun t) = ν'.map (fun z : D(ℝ≥0, ℝ) ↦ z.toFun t) := by
+  have hmap : ∀ (μ : Measure D(ℝ≥0, ℝ)) (u : ℝ≥0) (g : ℝ → ℝ), Continuous g →
+      ∫ x, g x ∂(μ.map fun z : D(ℝ≥0, ℝ) ↦ z.toFun u) = ∫ z, g (z.toFun u) ∂μ :=
+    fun μ u g hg ↦ integral_map (SkorokhodSpace.measurable_eval u).aemeasurable
+      hg.measurable.aestronglyMeasurable
+  refine Measure.ext_of_charFun (funext fun θ ↦ ?_)
+  have hcosc : Continuous fun x : ℝ ↦ Real.cos (θ * x) :=
+    Real.continuous_cos.comp (continuous_const.mul continuous_id)
+  have hsinc : Continuous fun x : ℝ ↦ Real.sin (θ * x) :=
+    Real.continuous_sin.comp (continuous_const.mul continuous_id)
+  have hcos0 : (∫ z, Real.cos (θ * z.toFun 0) ∂ν) = ∫ z, Real.cos (θ * z.toFun 0) ∂ν' := by
+    rw [← hmap ν 0 _ hcosc, ← hmap ν' 0 _ hcosc, h0]
+  have hsin0 : (∫ z, Real.sin (θ * z.toFun 0) ∂ν) = ∫ z, Real.sin (θ * z.toFun 0) ∂ν' := by
+    rw [← hmap ν 0 _ hsinc, ← hmap ν' 0 _ hsinc, h0]
+  have hcost : (∫ z, Real.cos (θ * z.toFun t) ∂ν) = ∫ z, Real.cos (θ * z.toFun t) ∂ν' := by
+    rw [integral_eval_mul_cos_eq_mul_exp_of_isCadlagMPSolution ν h θ t,
+      integral_eval_mul_cos_eq_mul_exp_of_isCadlagMPSolution ν' h' θ t, hcos0]
+  have hsint : (∫ z, Real.sin (θ * z.toFun t) ∂ν) = ∫ z, Real.sin (θ * z.toFun t) ∂ν' := by
+    rw [integral_eval_mul_sin_eq_mul_exp_of_isCadlagMPSolution ν h θ t,
+      integral_eval_mul_sin_eq_mul_exp_of_isCadlagMPSolution ν' h' θ t, hsin0]
+  rw [charFun_eq_integral_cos_add_integral_sin_mul_I,
+    charFun_eq_integral_cos_add_integral_sin_mul_I,
+    hmap ν t _ hcosc, hmap ν' t _ hcosc, hmap ν t _ hsinc, hmap ν' t _ hsinc, hcost, hsint]
+
 variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
 
 /-- **The hypothesis `hlim` of the fourth item of the chain, at Donsker's data.**
@@ -36921,6 +37218,56 @@ theorem exists_tendsto_map_rescaledWalk_of_onedim
     hsq hLp hlaw hvar hΦm hΦ fun ν hsol hinit ↦ ProbabilityMeasure.toMeasure_injective ?_⟩
   exact eq_of_isCadlagMPSolution_of_map_bot_eq hA' honedim hsol hsol0
     (hinit.trans hinit0.symm)
+
+/-- **Donsker's invariance principle, with no carried hypothesis.**
+
+The path laws of the rescaled random walks of a centred, square integrable,
+identically distributed independent sequence converge weakly on `D(ℝ≥0, ℝ)` to a
+law which solves the martingale problem for
+`MeasureTheory.brownianGeneratorPairs v` and starts at `0`.
+
+This is `MeasureTheory.exists_tendsto_map_rescaledWalk_of_onedim` with its
+`honedim` discharged.  The discharge is
+`MeasureTheory.map_eval_eq_of_isCadlagMPSolution_of_map_zero_eq`, read through
+`MeasureTheory.isCadlagMPSolution_of_isMPSolution`, and the operator is taken in
+the only reading that makes both inclusions between `A` and `A'` available: `A'`
+is the image of `MeasureTheory.brownianGeneratorPairs v` under the coercion, so
+`hA'` is the identity and the converse inclusion is `rfl` twice.
+
+**What it is and what it is not.**  It is a convergence theorem whose limit is
+characterised by a martingale property and an initial law, and by the uniqueness
+that stands behind it there is exactly one such law.  It does not construct
+Wiener measure in Mathlib's sense: `ProbabilityTheory.IsBrownianReal` is a
+predicate on a process over the index `ℝ≥0` with no existence statement attached,
+so there is nothing there for the limit law to be matched against; what this
+theorem gives is the càdlàg path law, and the identification would be a statement
+about the process read off it. -/
+theorem exists_tendsto_map_rescaledWalk
+    {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0) {v : ℝ} (hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = v)
+    (hLp : ∀ k, MemLp (ξ k) 2 P) (hlaw : ∀ k, Measure.map (ξ k) P = Measure.map (ξ 0) P)
+    (hvar : ∀ k, variance (ξ k) P ≤ 1)
+    {Φ : ℕ → Ω → D(ℝ≥0, ℝ)} (hΦm : ∀ n, Measurable (Φ n))
+    (hΦ : ∀ (n : ℕ) (ω : Ω), (Φ n ω).toFun = fun r : ℝ≥0 ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊r * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) :
+    ∃ ν₀ : ProbabilityMeasure D(ℝ≥0, ℝ),
+      IsCadlagMPSolution (brownianGeneratorPairs v) (ν₀ : Measure D(ℝ≥0, ℝ)) ∧
+      (ν₀ : Measure D(ℝ≥0, ℝ)).map (fun z : D(ℝ≥0, ℝ) ↦ z.toFun ⊥) = Measure.dirac 0 ∧
+      Tendsto (β := ProbabilityMeasure D(ℝ≥0, ℝ))
+        (fun n ↦ ⟨P.map (Φ n), inferInstance⟩) atTop (𝓝 ν₀) := by
+  refine exists_tendsto_map_rescaledWalk_of_onedim hmeas hind hcent hsq hLp hlaw hvar hΦm hΦ
+    (A' := {q : (ℝ → ℝ) × (ℝ → ℝ) | ∃ p ∈ brownianGeneratorPairs v,
+      (⇑p.1 : ℝ → ℝ) = q.1 ∧ (⇑p.2 : ℝ → ℝ) = q.2})
+    (fun q hq ↦ hq) (fun R R' hR hR' hsol hsol' hinit u ↦ ?_)
+  have hAA' : ∀ p ∈ brownianGeneratorPairs v,
+      ((⇑p.1 : ℝ → ℝ), (⇑p.2 : ℝ → ℝ)) ∈ {q : (ℝ → ℝ) × (ℝ → ℝ) |
+        ∃ p ∈ brownianGeneratorPairs v, (⇑p.1 : ℝ → ℝ) = q.1 ∧ (⇑p.2 : ℝ → ℝ) = q.2} :=
+    fun p hp ↦ ⟨p, hp, rfl, rfl⟩
+  have hc := isCadlagMPSolution_of_isMPSolution hAA' R hsol
+  have hc' := isCadlagMPSolution_of_isMPSolution hAA' R' hsol'
+  refine map_eval_eq_of_isCadlagMPSolution_of_map_zero_eq R R' hc hc' ?_ u
+  simpa using hinit
 
 end DonskerLimit
 
