@@ -6858,6 +6858,278 @@ false. -/
 instance SkorokhodSpace.instPolishSpace [PolishSpace E] [CompleteSpace E]
     [SkorokhodSpace.HasCountableCore ι] : PolishSpace D(ι, E) := inferInstance
 
+/-! ### The jump functional
+
+Ethier--Kurtz's `J` (Section 3.10): a single real valued functional on `D(ι, E)`
+that is continuous and vanishes exactly on the continuous paths.  It is what
+turns "the limit has no jumps" from a statement about every time into a
+statement about one number, and with it the continuous paths are the zero set of
+a continuous function and hence closed -- the last point of Milestone 5 that had
+no prototype.
+
+Its shape is the shape of the metric of Milestone 4, and deliberately so: the
+window radius runs over `Set.Ioi 0` against the weight `exp (-u)`, exactly as in
+`SkorokhodSpace.intWith`.  Reading the two in the same shape is what lets a
+proof of `continuous_jumpFunctional` follow the time changes that
+`SkorokhodSpace.intDist` takes the infimum over.
+
+**The window is read through `clamp` and not through a subtype.**
+`⨆ t : ι, SkorokhodSpace.jumpSize x (clamp t₀ u t)` is the supremum over `exhaustion t₀ u`,
+because `clamp` is a retraction onto that window (`clamp_mem_exhaustion` and
+`clamp_eq_self`), and it is a supremum over a *type*, so `ciSup` applies with no
+nonemptiness side condition beyond the base point.  This is the idiom of
+`SkorokhodSpace.distWith`, and it is why the two are provable in the same way.
+
+**Measurability in the radius is monotonicity and nothing else.**  For the
+metric it costs `exists_countable_ciSup_eq` -- a supremum of a right continuous
+family is a supremum over a countable set -- and that route is **not available
+here**: `t ↦ dist (x t) (x⁻ t)` is not right continuous, it is positive at a
+jump and tends to `0` immediately to the right of one.  What replaces it is that
+`jumpWith` is nondecreasing in the radius, since the windows are nested
+(`clamp_clamp_of_le`), and `Monotone.measurable` is the whole proof.  The gain
+is not only brevity: it removes `SecondCountableTopology E`, which
+`measurable_distWith` needs for `Measurable.dist` and which the jump functional
+does without until the topology of `D(ι, E)` is mentioned. -/
+
+/-- The jump of a path at one time, truncated at `1`. -/
+noncomputable def SkorokhodSpace.jumpSize (x : D(ι, E)) (t : ι) : ℝ :=
+  min 1 (dist (x.toFun t) (Function.leftLim x.toFun t))
+
+/-- Ethier--Kurtz's `J(x, u)`: the largest truncated jump inside the window of
+radius `u`. -/
+noncomputable def SkorokhodSpace.jumpWith (t₀ : ι) (u : ℝ) (x : D(ι, E)) : ℝ :=
+  ⨆ t : ι, SkorokhodSpace.jumpSize x (clamp t₀ u t)
+
+/-- **Ethier--Kurtz's `J`**, the jump functional of Section 3.10: the largest
+truncated jump inside the window of radius `u`, integrated over the radius
+against `exp (-u)`. -/
+noncomputable def SkorokhodSpace.jumpFunctional (t₀ : ι) (x : D(ι, E)) : ℝ :=
+  ∫ u in Set.Ioi (0 : ℝ), Real.exp (-u) * SkorokhodSpace.jumpWith t₀ u x
+
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] [BasePoint ι] in
+theorem SkorokhodSpace.jumpSize_nonneg (x : D(ι, E)) (t : ι) : 0 ≤ SkorokhodSpace.jumpSize x t :=
+  le_min zero_le_one dist_nonneg
+
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] [BasePoint ι] in
+theorem SkorokhodSpace.jumpSize_le_one (x : D(ι, E)) (t : ι) : SkorokhodSpace.jumpSize x t ≤ 1 := min_le_left _ _
+
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] [BasePoint ι] in
+/-- The truncation at `1` is invisible at the one place it matters: a truncated
+jump vanishes exactly when the left limit is the value.  This is where the
+choice `min 1 _` rather than `min c _` for some other positive `c` costs
+nothing. -/
+theorem SkorokhodSpace.jumpSize_eq_zero_iff {x : D(ι, E)} {t : ι} :
+    SkorokhodSpace.jumpSize x t = 0 ↔ Function.leftLim x.toFun t = x.toFun t := by
+  rw [SkorokhodSpace.jumpSize]
+  constructor
+  · intro h
+    rcases min_cases (1 : ℝ) (dist (x.toFun t) (Function.leftLim x.toFun t)) with
+      ⟨h1, -⟩ | ⟨h1, -⟩
+    · rw [h1] at h; exact absurd h one_ne_zero
+    · rw [h1] at h; exact (dist_eq_zero.1 h).symm
+  · intro h
+    rw [h, dist_self, min_eq_right zero_le_one]
+
+omit [AdditiveDist ι] [BasePoint ι] in
+/-- The supremum over the window is bounded by the truncation, which is what
+makes `ciSup` legitimate and what bounds `jumpFunctional` by `1`. -/
+theorem SkorokhodSpace.bddAbove_range_jumpSize_clamp (t₀ : ι) (u : ℝ) (x : D(ι, E)) :
+    BddAbove (Set.range fun t : ι => SkorokhodSpace.jumpSize x (clamp t₀ u t)) :=
+  ⟨1, by rintro _ ⟨t, rfl⟩; exact SkorokhodSpace.jumpSize_le_one _ _⟩
+
+omit [AdditiveDist ι] [BasePoint ι] in
+theorem SkorokhodSpace.jumpWith_nonneg (t₀ : ι) (u : ℝ) (x : D(ι, E)) : 0 ≤ SkorokhodSpace.jumpWith t₀ u x :=
+  le_ciSup_of_le (SkorokhodSpace.bddAbove_range_jumpSize_clamp t₀ u x) t₀ (SkorokhodSpace.jumpSize_nonneg _ _)
+
+omit [AdditiveDist ι] [BasePoint ι] in
+theorem SkorokhodSpace.jumpWith_le_one (t₀ : ι) (u : ℝ) (x : D(ι, E)) : SkorokhodSpace.jumpWith t₀ u x ≤ 1 := by
+  have : Nonempty ι := ⟨t₀⟩
+  exact ciSup_le fun _ => SkorokhodSpace.jumpSize_le_one _ _
+
+omit [AdditiveDist ι] [BasePoint ι] in
+/-- The window is read at every one of its points: this is the half of the
+`clamp` idiom that the zero set argument spends. -/
+theorem SkorokhodSpace.jumpSize_le_jumpWith (t₀ : ι) (u : ℝ) (x : D(ι, E)) {t : ι}
+    (ht : t ∈ exhaustion t₀ u) : SkorokhodSpace.jumpSize x t ≤ SkorokhodSpace.jumpWith t₀ u x :=
+  le_ciSup_of_le (SkorokhodSpace.bddAbove_range_jumpSize_clamp t₀ u x) t (by rw [clamp_eq_self ht])
+
+omit [BasePoint ι] in
+/-- **The windows are nested, so the jump over them is nondecreasing.**  This
+replaces the right continuity argument that the metric of Milestone 4 uses for
+the same purpose, and it is the whole proof of `measurable_jumpWith`. -/
+theorem SkorokhodSpace.monotone_jumpWith (t₀ : ι) (x : D(ι, E)) :
+    Monotone fun u : ℝ => SkorokhodSpace.jumpWith t₀ u x := by
+  have : Nonempty ι := ⟨t₀⟩
+  intro u u' h
+  refine ciSup_le fun t => ?_
+  refine le_ciSup_of_le (SkorokhodSpace.bddAbove_range_jumpSize_clamp t₀ u' x) (clamp t₀ u t) ?_
+  rw [clamp_clamp_of_le t₀ h t]
+
+omit [BasePoint ι] in
+/-- Measurability in the window radius, and it costs no hypothesis on `E`:
+a monotone function of a real variable is measurable. -/
+theorem SkorokhodSpace.measurable_jumpWith (t₀ : ι) (x : D(ι, E)) :
+    Measurable fun u : ℝ => SkorokhodSpace.jumpWith t₀ u x :=
+  (SkorokhodSpace.monotone_jumpWith t₀ x).measurable
+
+omit [BasePoint ι] in
+/-- The integral defining `jumpFunctional` is an integral of an integrable
+function, so it is not the junk value `0`.  Same shape as
+`SkorokhodSpace.integrableOn_intDist`, and dominated by the same `exp (-u)`. -/
+theorem SkorokhodSpace.integrableOn_jumpFunctional (t₀ : ι) (x : D(ι, E)) :
+    IntegrableOn (fun u : ℝ => Real.exp (-u) * SkorokhodSpace.jumpWith t₀ u x) (Set.Ioi (0 : ℝ)) := by
+  refine MeasureTheory.Integrable.mono' (integrableOn_exp_neg_Ioi 0)
+    (((Real.measurable_exp.comp measurable_neg).mul
+      (SkorokhodSpace.measurable_jumpWith t₀ x)).aestronglyMeasurable.restrict) ?_
+  filter_upwards with u
+  rw [Real.norm_eq_abs,
+    abs_of_nonneg (mul_nonneg (Real.exp_pos _).le (SkorokhodSpace.jumpWith_nonneg _ _ _))]
+  calc Real.exp (-u) * SkorokhodSpace.jumpWith t₀ u x ≤ Real.exp (-u) * 1 :=
+        mul_le_mul_of_nonneg_left (SkorokhodSpace.jumpWith_le_one _ _ _) (Real.exp_pos _).le
+    _ = Real.exp (-u) := mul_one _
+
+omit [AdditiveDist ι] [BasePoint ι] in
+theorem SkorokhodSpace.jumpFunctional_nonneg (t₀ : ι) (x : D(ι, E)) : 0 ≤ SkorokhodSpace.jumpFunctional t₀ x := by
+  refine MeasureTheory.setIntegral_nonneg measurableSet_Ioi fun u _ => ?_
+  exact mul_nonneg (Real.exp_pos _).le (SkorokhodSpace.jumpWith_nonneg _ _ _)
+
+omit [BasePoint ι] in
+/-- `J` takes its values in `[0, 1]`, since the truncation of the jump bounds the
+integrand by the probability density `exp (-u)` on `Set.Ioi 0`.  A consumer that
+integrates `J` against a probability measure reads this and nothing else: it is
+what makes `J` a *bounded* continuous test function and hence usable in the
+portmanteau theorem. -/
+theorem SkorokhodSpace.jumpFunctional_le_one (t₀ : ι) (x : D(ι, E)) : SkorokhodSpace.jumpFunctional t₀ x ≤ 1 := by
+  refine le_trans (MeasureTheory.setIntegral_mono_on
+    (SkorokhodSpace.integrableOn_jumpFunctional t₀ x) (integrableOn_exp_neg_Ioi 0)
+    measurableSet_Ioi fun u _ => ?_) (le_of_eq integral_exp_neg_Ioi_zero)
+  calc Real.exp (-u) * SkorokhodSpace.jumpWith t₀ u x ≤ Real.exp (-u) * 1 :=
+        mul_le_mul_of_nonneg_left (SkorokhodSpace.jumpWith_le_one _ _ _) (Real.exp_pos _).le
+    _ = Real.exp (-u) := mul_one _
+
+omit [BasePoint ι] in
+/-- **The window at which the jump functional vanishes is every window.**  The
+passage from "almost every radius" to "every radius" is the monotonicity: a
+nondecreasing nonnegative function that is positive at one point is positive on
+a half line, which is not a null set.  Without it one would only know that the
+jumps vanish for almost every radius, and a null set of radii can carry the
+whole index. -/
+theorem SkorokhodSpace.jumpWith_eq_zero_of_jumpFunctional_eq_zero {t₀ : ι} {x : D(ι, E)}
+    (h : SkorokhodSpace.jumpFunctional t₀ x = 0) {u : ℝ} (hu : 0 < u) : SkorokhodSpace.jumpWith t₀ u x = 0 := by
+  have hnn : (0 : ℝ → ℝ) ≤ᵐ[volume.restrict (Set.Ioi (0 : ℝ))]
+      fun v => Real.exp (-v) * SkorokhodSpace.jumpWith t₀ v x := by
+    filter_upwards with v using mul_nonneg (Real.exp_pos _).le (SkorokhodSpace.jumpWith_nonneg _ _ _)
+  have hae := (MeasureTheory.integral_eq_zero_iff_of_nonneg_ae hnn
+    (SkorokhodSpace.integrableOn_jumpFunctional t₀ x)).1 h
+  by_contra hne
+  have hpos : 0 < SkorokhodSpace.jumpWith t₀ u x :=
+    lt_of_le_of_ne (SkorokhodSpace.jumpWith_nonneg _ _ _) (Ne.symm hne)
+  have hsub : Set.Icc u (u + 1) ⊆ {v | ¬ Real.exp (-v) * SkorokhodSpace.jumpWith t₀ v x = 0} := by
+    intro v hv
+    exact ne_of_gt (mul_pos (Real.exp_pos _)
+      (lt_of_lt_of_le hpos (SkorokhodSpace.monotone_jumpWith t₀ x hv.1)))
+  have hnull : volume.restrict (Set.Ioi (0 : ℝ)) (Set.Icc u (u + 1)) = 0 := by
+    refine measure_mono_null hsub ?_
+    simpa using ae_iff.1 hae
+  rw [Measure.restrict_apply' measurableSet_Ioi] at hnull
+  have hself : Set.Icc u (u + 1) ∩ Set.Ioi (0 : ℝ) = Set.Icc u (u + 1) :=
+    Set.inter_eq_self_of_subset_left fun v hv => lt_of_lt_of_le hu hv.1
+  rw [hself, Real.volume_Icc] at hnull
+  simp at hnull
+
+omit [BasePoint ι] in
+/-- **`J x = 0` exactly for the continuous paths.**  Ethier--Kurtz, Section 3.10.
+
+The forward direction spends `jumpWith_eq_zero_of_jumpFunctional_eq_zero` at the
+radius `max 1 (dist t₀ t)`, which is positive and large enough to contain `t`;
+taking `dist t₀ t` itself would fail at `t = t₀`, where the radius is `0` and the
+statement about almost every radius says nothing.  The backward direction is the
+observation that every term of every supremum is `0`, so the integrand is, and
+no integrability is read.
+
+Both directions go through `IsCadlag.continuous_iff_leftJumpSet_eq_empty`, so
+what is proved is a statement about the *path* and not about the pair
+`(x, SkorokhodSpace.jumpFunctional)`; the càdlàg property of `x` is read in it and nowhere
+else. -/
+theorem SkorokhodSpace.jumpFunctional_eq_zero_iff (t₀ : ι) (x : D(ι, E)) :
+    SkorokhodSpace.jumpFunctional t₀ x = 0 ↔ Continuous x.toFun := by
+  rw [x.isCadlag.continuous_iff_leftJumpSet_eq_empty, Set.eq_empty_iff_forall_notMem]
+  constructor
+  · intro h t ht
+    have hu : (0 : ℝ) < max 1 (dist t₀ t) := lt_of_lt_of_le zero_lt_one (le_max_left _ _)
+    have hmem : t ∈ exhaustion t₀ (max 1 (dist t₀ t)) := by
+      simp only [exhaustion, Metric.mem_closedBall, max_eq_left hu.le, dist_comm t t₀]
+      exact le_max_right _ _
+    have h0 : SkorokhodSpace.jumpSize x t = 0 :=
+      le_antisymm (le_of_le_of_eq (SkorokhodSpace.jumpSize_le_jumpWith t₀ _ x hmem)
+        (SkorokhodSpace.jumpWith_eq_zero_of_jumpFunctional_eq_zero h hu)) (SkorokhodSpace.jumpSize_nonneg _ _)
+    exact ht (SkorokhodSpace.jumpSize_eq_zero_iff.1 h0)
+  · intro h
+    have hz : ∀ v : ℝ, SkorokhodSpace.jumpWith t₀ v x = 0 := by
+      intro v
+      have : Nonempty ι := ⟨t₀⟩
+      refine le_antisymm (ciSup_le fun t => ?_) (SkorokhodSpace.jumpWith_nonneg _ _ _)
+      exact le_of_eq (SkorokhodSpace.jumpSize_eq_zero_iff.2 (by
+        by_contra hc
+        exact h _ hc))
+    simp [SkorokhodSpace.jumpFunctional, hz]
+
+/-- **Ethier--Kurtz, Proposition 3.5.3: the jump functional is continuous on
+`D(ι, E)`.**
+
+This is the one statement of the block whose proof is the work, and the route is
+the one the shape of `jumpFunctional` was chosen for.  Let `xₙ → x`, and pick by
+`SkorokhodSpace.exists_orderIso_dist_lt_of_intDist_lt` time changes `λₙ` with
+`TimeChange.norm λₙ → 0` and the windowed suprema of `dist (xₙ (λₙ t)) (x t)`
+going to `0`.  The jump is carried along a time change exactly -- a time change
+is an order isomorphism, so it maps left limits to left limits and
+`jumpSize xₙ (λₙ t) = SkorokhodSpace.jumpSize (xₙ ∘ λₙ) t` -- so the whole content is that a
+uniformly small perturbation moves `jumpWith` by little **at almost every
+radius**, which is where the exponential average is spent: the radii at which
+the window boundary meets a jump of `x` are countably many, hence Lebesgue null,
+and the integral does not see them.  That is the same argument by which
+`SkorokhodSpace.ae_summable_min_one_distWith` makes the metric of Milestone 4
+work, and it is why the two are written in one shape.
+
+`SecondCountableTopology E` is read here and in nothing above it: it is what the
+metric instance `SkorokhodSpace.instMetricSpace` asks for, and the statements
+about `jumpFunctional` as a *function* do without it. -/
+theorem SkorokhodSpace.continuous_jumpFunctional [SecondCountableTopology E] :
+    Continuous (SkorokhodSpace.jumpFunctional (basePoint : ι) : D(ι, E) → ℝ) := sorry
+
+/-- The continuous paths are the zero set of a continuous function, hence
+closed. -/
+theorem SkorokhodSpace.isClosed_setOf_continuous [SecondCountableTopology E] :
+    IsClosed {x : D(ι, E) | Continuous x.toFun} := by
+  have hpre : {x : D(ι, E) | Continuous x.toFun}
+      = SkorokhodSpace.jumpFunctional (basePoint : ι) ⁻¹' {0} := by
+    ext x
+    simp [SkorokhodSpace.jumpFunctional_eq_zero_iff]
+  rw [hpre]
+  exact isClosed_singleton.preimage SkorokhodSpace.continuous_jumpFunctional
+
+/-- **The continuous paths form a closed subspace of `D(ι, E)`**, the last point
+of Milestone 5, and Section 3.10 delivers it as a corollary rather than as a
+separate argument: `C(ι, E)` sits in `D(ι, E)` as the zero set of
+`jumpFunctional`.
+
+The range and the set of paths with continuous `toFun` are the same set -- a
+càdlàg path with a continuous underlying function *is* the image of that
+function -- and stating it as a range is what makes it the subspace the
+milestone names. -/
+theorem SkorokhodSpace.isClosed_range_continuous [SecondCountableTopology E] :
+    IsClosed (Set.range fun f : C(ι, E) => (⟨f, f.continuous.isCadlag⟩ : D(ι, E))) := by
+  have hrange : (Set.range fun f : C(ι, E) => (⟨f, f.continuous.isCadlag⟩ : D(ι, E)))
+      = {x : D(ι, E) | Continuous x.toFun} := by
+    ext x
+    constructor
+    · rintro ⟨f, rfl⟩
+      exact f.continuous
+    · intro h
+      exact ⟨⟨x.toFun, h⟩, rfl⟩
+  rw [hrange]
+  exact SkorokhodSpace.isClosed_setOf_continuous
+
 /-! ## Milestone 6: the Borel structure
 
 The measurable structure on `D(ι, E)` is the Borel one of the metric above, so

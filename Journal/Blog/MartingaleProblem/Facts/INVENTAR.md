@@ -85,7 +85,7 @@ unserer Konstruktion. Daher:
 | `fact:kolmogorov` | 3 | Kolmogorov extension; EK, Theorem 4.1.1; eqref{T0} + e | Roadmap | KolmogorovExtension M2 — Gerüst weitgehend in Mathlib, es fehlen σ-Subadditivität und `projectiveLimit` |
 | `fact:stoneweierstrass` | 3 | Stone--Weierstrass for separating classes; EK, Theorem | Roadmap | WeakConvergence M1 — die separierende Hälfte ist Mathlib (`ext_of_forall_mem_subalgebra_integral_eq_of_polish`); die konvergenzbestimmende ist es **auch**, unter Straffheit und bloßer Punktetrennung: `MeasureTheory.ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`, `MeasureTheory/Measure/LevyConvergence.lean:154`, am 2026-09-05 an `upstream/master` geprüft, nicht `deprecated`. Es fehlt allein der Schritt von **starker** Trennung zu Straffheit, in M1 als `isTightMeasureSet_of_stronglySeparatesPoints` angelegt (2026-09-05). Die separierende Hälfte ist seit dem 2026-09-06, drittem Lauf, auch auf unserer Seite bewiesen: `IsSeparating.of_subalgebra`, die Anbindung unseres Prädikats an `ext_of_forall_mem_subalgebra_integral_eq_of_polish`, geht durch `lake env lean`. ~~die konvergenzbestimmende fehlt~~ — dieser Befund stand vom 2026-08-29 bis zum 2026-09-05 und war falsch: gesucht worden war nach unserer Vokabel „konvergenzbestimmend" statt nach der Aussage, die in Mathlib unter `SeparatesPoints` und `IsTightMeasureSet` steht. **Am 2026-09-06, dritter Lauf, belegt, daß dieser Weg in Mathlib nicht bloß vorhanden, sondern tragend ist:** `Measure.ext_of_charFun` (`Measure/CharacteristicFunction/Basic.lean:257` auf `upstream/master` `810b3888`, `:248` in v4.33.1) und `Measure.ext_of_charFunDual` (`:462` bzw. `:453`) — „charakteristische Funktionen trennen endliche Maße" — ruhen über `ext_of_integral_char_eq` (`:103` bzw. `:101`) Zeile für Zeile auf `ext_of_forall_mem_subalgebra_integral_eq_of_pseudoEMetric_complete_countable` (`Measure/FiniteMeasureExt.lean:36`), angewandt auf `separatesPoints_charPoly` (`Analysis/Fourier/BoundedContinuousFunctionChar.lean:155`). Charakteristische Funktionen sind dort **kein eigenes Fundament**, sondern eine Anwendung der punktetrennenden Unteralgebra `charPoly` (`ibid.:141`), und diese ist eine `StarSubalgebra ℂ (V →ᵇ ℂ)` — also genau die Konjugationsabgeschlossenheit, die der Fact für $\K=\C$ verlangt. Keine der vier Deklarationen ist `deprecated`. **Am 2026-09-07, siebzehnter Lauf, sind die Schritte (1) und (3) des fehlenden Beweises bewiesen** und gehen durch `lake env lean` gegen v4.33.1: `tendsto_integral_comp_of_forall_tendsto_integral` (die Pushforwards nach `κ → ℝ` konvergieren schwach, für beliebigen `Fintype κ`) samt `coordAlgebra`, `separatesPoints_coordAlgebra` und `exists_mem_subalgebra_comp_of_mem_coordAlgebra`, dazu die Portmanteau-Folgerung `le_liminf_measure_preimage_of_isOpen` und Schritt (3) selbst, `le_liminf_measure_thickening_of_stronglySeparatesPoints`. **Und die Aussage von `isTightMeasureSet_of_stronglySeparatesPoints` war über beliebigem Filter falsch** — Zeuge `𝓕 = pure 0` auf `ℕ`, `E = ℝ`, `A = ⊤`, `μ n = δ n`, `μ₀ = δ 0`: die Voraussetzung ist dort die einzige Gleichung `∫ g ∂μ 0 = ∫ g ∂μ₀`, die gilt, und die Familie `{δ n}` ist nicht straff. Die fehlende Hypothese ist `Filter.cofinite ≤ 𝓕`, sie steht jetzt in der Aussage, und für Folgen ist sie geschenkt (`Nat.cofinite_eq_atTop`). **Im selben Lauf ist auch das gelockerte Straffheitskriterium EK Thm. 3.2.2 bewiesen**, `isTightMeasureSet_of_forall_exists_isCompact_measure_compl_thickening_le` — eine eigene Mathlib-Lücke, weil die Verdickung eines Kompaktums nur auf einem properen Raum kompakt ist, mit dem Zeugen `⋂ m, cthickening (u m) (K m)` für eine Nullfolge `u m`, der `TotallyBounded.isCompact_of_isClosed` trägt; auch **ohne** Separabilität. ~~Offen bleibt allein die Buchhaltung darüber~~ — **am 2026-09-08, erster Lauf, ist auch sie bewiesen, und damit der Fact ganz**: `isTightMeasureSet_of_stronglySeparatesPoints` und sein Korollar `isConvergenceDetermining_of_stronglySeparatesPoints` — die Aussage des Manuskripts — tragen Beweise, gehen durch `lake env lean` gegen v4.33.1 und hängen laut `#print axioms` allein an `propext`, `Classical.choice` und `Quot.sound`. Meilenstein 1 trägt danach **kein `sorry`** mehr. Die Buchhaltung ist: `μ₀` straff (`isTightMeasureSet_singleton`) gibt `K₀` mit `μ₀ K₀ᶜ ≤ ε/2`, Schritt (3) macht daraus `1 - ε/2 ≤ liminf`, die Hälfte erzeugt die **strikte** Ungleichung gegen `1 - ε`, die `Filter.eventually_lt_of_lt_liminf` verlangt, und die endlich vielen Ausnahmeindizes (endlich nach `Filter.mem_cofinite`) werden durch `Set.Finite.isCompact_biUnion` in `K₀` hineingezogen. Eine Hypothese hat sich dabei **geändert**: statt `[PolishSpace E]` steht `[CompleteSpace E] [SecondCountableTopology E]` — dieselbe Raumklasse (beide zusammen geben `PolishSpace` als Instanz), aber die Vollständigkeit hängt an der **gegebenen** Metrik, und die braucht der Beweis, weil `Metric.thickening` in ihr lebt; `PolishSpace` sagt nur, daß *eine* verträgliche Metrik vollständig ist (Zeuge in M1: $(0,1)$ mit der euklidischen Metrik) |
 | `fact:bp` | 2 | EK, Lemma 3.4.1, Proposition 3.4.2, and Appendix 3, Pr | entbehrlich (2026-08-30) | Kein Beweis des Manuskripts benutzt `cor:bpclosure`, und EK 4.3.1 trägt dort nichts; der bp-Abschluss ist am 2026-08-30 aus MartingaleProblems M2 gestrichen und durch `insert_of_tendsto_of_forall_norm_le` und `submartingale_mpProcess_of_tendsto` ersetzt, M9 trägt die Anwendung (EK 4.3.9/4.3.10) |
-| `fact:cadlagext` | 2 | Regularization along a dense set; EK, Lemma 2.2.8; eqr | Roadmap | MartingaleProblems M9, `exists_cadlag_modification_of_isRegularizingClass` — seit dem 2026-09-17, fünftem Lauf des Tages, **bewiesen** und durch `lake env lean` gegen v4.33.1; dazu die deterministische Hälfte `isCadlagPath_rightLimAlong` und der Zeuge `rightLimAlong`. Vorarbeit in `brownian-motion` (Apache-2.0), Branch `master`, ist reellwertig; die `E`-wertige Zusammensetzung steht dort nicht |
+| `fact:cadlagext` | 2 | Regularization along a dense set; EK, Lemma 2.2.8; eqr | Roadmap | MartingaleProblems M9, `exists_cadlag_modification_of_isRegularizingClass` — seit dem 2026-09-17, fünftem Lauf des Tages, **bewiesen** und durch `lake env lean` gegen v4.33.1; dazu die deterministische Hälfte `isCadlagPath_rightLimAlong` und der Zeuge `rightLimAlong`. Vorarbeit in `brownian-motion` (Apache-2.0), Branch `master`, ist reellwertig; die `E`-wertige Zusammensetzung steht dort nicht. **Zwischen dem 2026-09-22 und dem 2026-09-24 zeigte dieser Beleg ins Leere**: der Schnitt hatte die Deklaration nach `JumpProcesses` gezogen, und in `MartingaleProblems` M9 stand sie nicht mehr. Am 2026-09-24 zurückgeholt, die Zeile stimmt wieder |
 | `fact:optsampl` | 2 | Optional sampling; EK, Theorem 2.2.13, Remark 2.2.14,  | Roadmap | MartingaleProblems M9, `Submartingale.stoppedValue_min_le_condExp` — dort neu angelegt; Mathlibs `Martingale.stoppedValue_min_ae_eq_condExp` ist der diskrete Fall und nur für Martingale |
 | `fact:prohorov` | 2 | Prohorov; EK, Lemma 3.2.1 and Theorem 3.2.2 | Mathlib | `MeasureTheory/Measure/Prokhorov.lean`, `isCompact_closure_of_isTightMeasureSet` und Umkehrung |
 | `fact:relcompact2` | 2 | Relative compactness, II; EK, Theorem 3.9.4 | Roadmap | MartingaleProblems M11, `isTight_map_postcomp_of_exists_martingale` — dort neu angelegt; `isRelativelyCompact_of_approx` nannte nur die Folgerung, nicht das Kriterium |
@@ -58009,3 +58009,401 @@ der Lauf hat einen zu wählen und die Wahl zu begründen:
 Abschneidung zu vermengen; die Abschneidung setzt dann am fertigen Zusammenbau an und ersetzt
 allein die Schranke am Restglied. Wer beides zugleich anfängt, hat bei einem Fehlschlag zwei
 Verdächtige.
+
+### 2026-09-24, erster Lauf des Tages — Punkt 1 der neuen Aufgabe ist erledigt, und der Befund ist **stärker als die Frage**: von den fünf Deklarationen liest **keine** Sprungmaterial, und dasselbe gilt für elf weitere, die mit ihnen gewandert sind; der Schnitt vom 2026-09-22 ging **mitten durch einen Abschnitt** und hat zwei Zeugenräume zerteilt
+
+*Verschoben, nicht umgeschrieben: 16 Deklarationen und 1205 Zeilen von
+`JumpProcesses/Suggested.lean` nach `MartingaleProblems/Suggested.lean`, kein Zeichen des
+Textes geändert. `scripts/check_master.py` gegen `upstream/master`
+(`94ef6b89544e58e90f119da869f3fb48d1da0f4c`, Lean `4.35.0-rc2`): **0 Fehler, 0 `sorry`,
+0 veraltete Namen** in allen vier Dateien, zweimal unabhängig gemessen.*
+
+#### Was gefragt war und was herauskam
+
+Die Aufgabe nannte fünf Deklarationen und verlangte, **je Deklaration** zu prüfen, welche
+Beweiszeilen wirklich Sprungmaterial lesen. Gemessen wurde das mit `scripts/decl_deps.py`: es
+nimmt den Rumpf einer Deklaration (ohne Doc-Kommentar) und zählt jeden Bezeichner, der in
+`JumpProcesses/Suggested.lean` **definiert** ist und in `MartingaleProblems/Suggested.lean`
+nicht. Ein leerer Befund ist damit belastbar; ein nichtleerer ist eine Liste von Verdächtigen
+und keine Entscheidung.
+
+| Deklaration | Zeilen Rumpf | JumpProcesses-eigene Namen im Rumpf |
+| --- | ---: | --- |
+| `isRegularizingClass_mpFamily` | 12 | `IsRegularizingClass`, `isCompensatorFor_mpFamily` |
+| `isCompensatorFor_mpFamily` | 59 | `IsCompensatorFor` |
+| `exists_cadlag_modification_of_isRegularizingClass` | 120 | `IsRegularizingClass`, `ae_forall_exists_tendsto_of_isRegularizingClass`, `ae_isCadlag_rightLimAlong_of_isRegularizingClass` |
+| `isQuasiLeftContinuous_of_isRegularizingClass` | 117 | `IsCompensatorFor`, `ae_eq_limUnder_condExp_stoppedValue` |
+| `not_isQuasiLeftContinuous_of_isRegularizingClass_of_free_solutionSet` | 31 | `IsCompensatorFor` |
+
+**Kein einziger dieser Namen ist Sprungmaterial.** Es sind zwei Definitionen
+(`IsCompensatorFor`, `IsRegularizingClass`) und drei Hilfssätze über sie; dieselbe Messung
+über diese fünf, und über die sechs weiteren desselben Blocks, gibt wieder nichts. Die
+transitive Hülle schließt sich nach 16 Deklarationen, und `jumpTime` — die erste Deklaration
+der Sprungkonstruktion — kommt in keiner von ihnen vor.
+
+Die Antwort auf „welche Beweiszeilen lesen Sprungmaterial" lautet also für alle fünf: **keine,
+an keiner Stelle.** Ein begründetes „geht nicht" gibt es hier nicht zu berichten.
+
+#### Warum sie trotzdem dort standen, und das ist der eigentliche Fund
+
+Beide Dateien tragen seit dem 2026-09-22 **denselben Abschnittskopf**
+(`/-! ## Milestone 9: the regularizing class and quasi-left-continuity`), dieselben zwei
+Vorbemerkungen über separierende Klassen und über `IsCadlag`, und dieselben zwei
+`variable`-Zeilen — Zeichen für Zeichen gleich. Der Schnitt ist nicht zwischen zwei Abschnitte
+gefallen, sondern **mitten durch einen**: was `IsCompensatorFor` liest, ging nach
+`JumpProcesses`, alles übrige blieb.
+
+Das erklärt den Schnitt auch. Er ist längs der transitiven Abhängigkeitshülle der **Beispiele**
+gezogen worden, und `isQuasiLeftContinuous_of_isMPSolutionFor` wird von der
+Zustandsraum-Probe des Meilensteins 4 gelesen. **Eine Hülle über Verbraucher zieht allgemeine
+Theorie mit**, und genau das ist hier geschehen. Wer künftig eine Roadmap schneidet, schneidet
+nach der Frage „wovon handelt die *Aussage*" und nicht nach „wer liest sie".
+
+**Zwei Zeugenräume waren dabei halbiert**, und das ist der Schaden, den die Zahlen nicht
+zeigen:
+
+* `LiftWitness` — `witnessMeasure`, `diagY`, `diagY_ae_eq_zero`, `not_ae_forall_diagY_eq_zero`
+  standen in `MartingaleProblems`, `isCompensatorFor_diagY` allein in `JumpProcesses`. Der
+  Zeuge dafür, daß die Rechtsstetigkeit von `Y` nicht aus den übrigen Feldern folgt, war über
+  zwei Dateien verteilt, und der Leser der ersten fand die Aussage nicht, die den Zeugen zum
+  Zeugen macht.
+* `AtomWitness` — die Münze steht in `MartingaleProblems`, der Satz, der sie gegen eine freie
+  Lösungsmenge ausspielt, stand in `JumpProcesses`. In `JumpProcesses` blieben dabei **zwei
+  leere `namespace AtomWitness ... end AtomWitness`** stehen, eines davon mit reiner Prosa
+  über `coinMartingale`, das dort gar nicht existiert.
+
+#### Was verschoben ist
+
+In dieser Reihenfolge, als geschlossener Abschnitt vor `end Regularizing` in
+`MartingaleProblems/Suggested.lean`:
+
+`IsCompensatorFor`, `IsRegularizingClass`, `ae_exists_tendsto_comp_of_isRegularizingClass`,
+`IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi`,
+`ae_forall_exists_tendsto_of_isRegularizingClass`,
+`ae_isCadlag_rightLimAlong_of_isRegularizingClass`,
+`exists_cadlag_modification_of_isRegularizingClass`, `isCompensatorFor_mpFamily`,
+`isRegularizingClass_mpFamily`, `IsCompensatorFor.ae_forall_decomposition`,
+`IsCompensatorFor.decomposition_stoppedValue`, `LiftWitness.isCompensatorFor_diagY`,
+`ae_eq_limUnder_condExp_stoppedValue`, `isQuasiLeftContinuous_of_isRegularizingClass`,
+`isQuasiLeftContinuous_of_isMPSolutionFor`,
+`not_isQuasiLeftContinuous_of_isRegularizingClass_of_free_solutionSet`.
+
+Die elf über die fünf hinaus sind **nicht** Zugabe: ohne die beiden Definitionen sind die
+Aussagen der fünf nicht hinschreibbar, und ohne die drei Hilfssätze nicht beweisbar. Die
+übrigen sechs sind dieselbe Theorie und wären sonst als Rest in der Beispieldatei
+zurückgeblieben, aus der sie nichts liest.
+
+Der Umzug ist ein reines Verschieben, mit `scripts/move_regularizing.py`, das Zeile für
+Zeile umhängt und keinen Text ändert; das Skript bleibt stehen, damit nachprüfbar ist, daß es
+eines war.
+
+#### Prüfung
+
+| Datei | Fehler | `sorry` | Warnungen | davon veraltet |
+| --- | ---: | ---: | ---: | ---: |
+| `WeakConvergence` | 0 | 0 | 18 | 0 |
+| `SkorokhodSpace` | 0 | 0 | 38 | 0 |
+| `MartingaleProblems` | 0 | 0 | 36 | 0 |
+| `JumpProcesses` | 0 | 0 | 76 | 0 |
+
+Die Warnungssumme ist **unverändert 168**; zwei sind von `JumpProcesses` nach
+`MartingaleProblems` gewandert, so viele, wie der Block trägt. Das ist die Probe darauf, daß
+nichts verlorenging und nichts doppelt steht — dieselbe, die der Schnitt vom 2026-09-22 für
+sich geführt hat.
+
+Zeilen: `JumpProcesses` 28 452 → 27 204, `MartingaleProblems` 32 435 → 33 640.
+
+#### Was liegen blieb, und es ist derselbe Schnitt
+
+In `JumpProcesses/Suggested.lean` stehen weiterhin die **Abschnittsköpfe und Vorbemerkungen**
+der Meilensteine 2, 3, 5 und 9 von `MartingaleProblems` mit leeren `section`-`end`-Paaren
+darunter — Prosa, die wörtlich auch in `MartingaleProblems` steht und deren Deklarationen dort
+sind. Das bricht nichts; es ist dieselbe Hinterlassenschaft des Schnittes, und ein Leser der
+Einreichung findet denselben Absatz zweimal. Nicht angefaßt, weil es über den Auftrag
+hinausgeht; hier vermerkt, damit es nicht neu erhoben wird.
+
+Ebenso steht in `MartingaleProblems` jetzt ein zweites, leeres `section LevyUpward`, weil das
+Paar aus `JumpProcesses` mitgewandert ist.
+
+### Derselbe Lauf, zweiter Teil — Punkt 2 (EK §3.10) steht bis auf **einen** Satz, und der Weg, den die Aufgabe für die Meßbarkeit vorsah, ist nicht gangbar: was ihn ersetzt, ist die **Monotonie**, und die ist nicht nur kürzer, sondern kostet eine Voraussetzung weniger
+
+*20 Deklarationen in `SkorokhodSpace/Suggested.lean` (vor Meilenstein 6), 4 in
+`MartingaleProblems/Suggested.lean` (nach `end PathDetermining`). `check_master.py` gegen
+`upstream/master` (`94ef6b89544e58e90f119da869f3fb48d1da0f4c`, Lean `4.35.0-rc2`): **0 Fehler,
+0 veraltete Namen**, Warnungen unverändert **18 / 38+1 / 36 / 76**. **Ein `sorry`**, und es ist
+benannt.*
+
+#### Was steht
+
+| Name | Stand |
+| --- | --- |
+| `SkorokhodSpace.jumpSize`, `jumpWith`, `jumpFunctional` | definiert, kein `sorry` in einer Definition |
+| `SkorokhodSpace.jumpFunctional_eq_zero_iff` | **bewiesen** |
+| `SkorokhodSpace.continuous_jumpFunctional` | **`sorry`** — EK Proposition 3.5.3 |
+| `SkorokhodSpace.isClosed_setOf_continuous`, `isClosed_range_continuous` | bewiesen **aus** dem `sorry` |
+| `MeasureTheory.measure_setOf_continuous_eq_one_of_tendsto` | bewiesen, liest das `sorry` |
+| `MeasureTheory.ae_continuous_of_tendsto_law` | bewiesen, liest das `sorry` |
+
+`scripts/check_axioms_master.py`: `jumpFunctional_eq_zero_iff`, `jumpFunctional_le_one`,
+`jumpWith_eq_zero_of_jumpFunctional_eq_zero` auf `propext`, `Classical.choice`, `Quot.sound`;
+`isClosed_range_continuous`, `measure_setOf_continuous_eq_one_of_tendsto` und
+`ae_continuous_of_tendsto_law` zusätzlich auf **`sorryAx`**. Das ist die ehrliche Lage und
+steht hier, damit kein späterer Lauf den Meilenstein 5 für geschlossen hält: **der Punkt, der
+bisher keinen Prototypen hatte, hat jetzt einen, und der Prototyp hängt an einem `sorry`.**
+
+#### Der Befund: die Meßbarkeit im Fensterradius ist billiger als bei der Metrik, und aus einem benennbaren Grund
+
+`SkorokhodSpace.intWith` — die Metrik des Meilensteins 4, die dieselbe Gestalt hat
+(`∫ u in Ioi 0, exp (-u) * …`) — kauft die Meßbarkeit ihres Integranden mit
+`exists_countable_ciSup_eq`: das Supremum einer **rechtsstetigen** Familie ist eines über eine
+feste abzählbare Menge, und `Measurable.iSup` greift. Dafür zahlt sie
+`[SecondCountableTopology E]`, denn `Measurable.dist` verlangt es.
+
+**Für das Sprungfunktional trägt dieser Weg nicht**, und das ist keine Bequemlichkeitsfrage:
+`t ↦ dist (x t) (x⁻ t)` ist **nicht rechtsstetig**. An einer Sprungstelle ist es positiv, und
+unmittelbar rechts davon fällt es auf `0`. Wer die Fundstelle der Metrik hier einsetzt, beweist
+nichts.
+
+Was statt dessen trägt: `jumpWith` ist im Radius **monoton wachsend**, weil die Fenster
+geschachtelt sind (`clamp_clamp_of_le`), und `Monotone.measurable` ist der ganze Beweis. Der
+Gewinn ist doppelt — der Beweis ist drei Zeilen statt zwölf, und
+**`SecondCountableTopology E` entfällt**: bis einschließlich `jumpFunctional_eq_zero_iff` steht
+über `E` nichts als `[MetricSpace E]`. Die Zusatzvoraussetzung kommt erst dort herein, wo von
+der *Topologie* von `D(ι, E)` die Rede ist, also bei `continuous_jumpFunctional` und darunter.
+
+#### Zwei Stellen, an denen der Beweis von `jumpFunctional_eq_zero_iff` hätte danebengreifen können
+
+* **Der Radius `dist t₀ t` genügt nicht, `max 1 (dist t₀ t)` schon.** Die Hinrichtung braucht
+  einen Radius, der `t` enthält **und positiv ist**: die Aussage über den Radius gilt nur für
+  fast jeden, und der gilt für keinen einzelnen. Bei `t = t₀` ist `dist t₀ t = 0`, und die
+  Aussage über den Radius `0` ist leer.
+* **Von „fast jeder Radius" zu „jeder Radius" führt allein die Monotonie.** Ist `jumpWith` an
+  einem `u > 0` positiv, so ist es auf der ganzen Halbgeraden `[u, ∞)` positiv, und die ist
+  keine Nullmenge; das ist `jumpWith_eq_zero_of_jumpFunctional_eq_zero`, und ohne es wüßte man
+  nur, daß die Sprünge für fast jeden Radius verschwinden — und eine Nullmenge von Radien kann
+  den ganzen Index tragen.
+
+Die Rückrichtung liest **keine** Integrierbarkeit: jeder Summand jedes Supremums ist `0`, also
+der Integrand, also das Integral.
+
+#### Was `continuous_jumpFunctional` kosten wird, und warum es nicht in diesem Lauf ging
+
+Es ist EK Proposition 3.5.3, und der Weg steht ausgeschrieben am Satz: Zeitwechsel `λₙ` aus
+`SkorokhodSpace.exists_orderIso_dist_lt_of_intDist_lt` ziehen, den Sprung längs eines
+Zeitwechsels exakt transportieren — ein Zeitwechsel ist ein Ordnungsisomorphismus, also bildet
+er Linkslimiten auf Linkslimiten ab —, und dann die Radien aussondern, an denen der Fensterrand
+einen Sprung des Grenzpfades trifft; derer sind abzählbar viele, also Lebesgue-null, und das
+Exponentialmittel sieht sie nicht. Das ist **dasselbe** Argument, mit dem
+`SkorokhodSpace.ae_summable_min_one_distWith` die Metrik des Meilensteins 4 trägt, und der
+Grund, warum `jumpFunctional` in derselben Gestalt geschrieben ist wie `intWith`: damit der
+Beweis dort abgeschrieben werden kann statt neu erfunden.
+
+Nicht geschätzt wird, wie viele Läufe das sind; der Vorlauf, der bei
+`abs_sub_taylor_two_le` drei Fälle vorhersagte und einen bekam, ist die Mahnung.
+
+#### Die Anwendung, und wie genau sie zu Mathlibs `IsBrownianReal` paßt
+
+`measure_setOf_continuous_eq_one_of_tendsto`: konvergieren die Gesetze schwach in `D(ι, E)` und
+geht `𝔼[J]` längs der Approximanten gegen `0`, so hat der Limes stetige Pfade mit
+Wahrscheinlichkeit `1`. Gelesen wird ausschließlich schwache Konvergenz — `J` ist beschränkt
+(`jumpFunctional_le_one`, weil der Sprung bei `1` abgeschnitten ist und `exp (-u)` über
+`Ioi 0` das Maß `1` hat) und stetig, also ist `jumpBdd` ein `D(ι, E) →ᵇ ℝ` und
+`ProbabilityMeasure.tendsto_iff_forall_integral_tendsto` trägt das Integral hinüber.
+
+**Wo die Abgeschlossenheit wirklich gebraucht wird**, und es ist nicht, wo man es erwartet:
+nicht für die Konvergenz, sondern damit `{x | Continuous x.toFun}` **meßbar** ist. Ohne §3.10
+hätte man eine Nullmenge von Pfaden mit Sprung und kein Recht, sie eine Null*menge* zu nennen.
+
+**Zur Paßform am Feld `cont`, am Quelltext geprüft (2026-09-24):**
+`Mathlib/Probability/BrownianMotion/Basic.lean:302` führt
+`structure IsBrownianReal (X : ℝ≥0 → Ω → ℝ) (P : Measure Ω) : Prop extends IsPreBrownianReal`
+mit dem einen zusätzlichen Feld `cont : ∀ᵐ ω ∂P, Continuous (X · ω)`.
+`ae_continuous_of_tendsto_law` schließt `∀ᵐ ω ∂P, Continuous (Y ω).toFun` — **dieselbe Aussage
+erst nach dem Tausch der beiden Argumente**, denn unser `Y` ist `Ω → D(ι, E)` und Mathlibs `X`
+ist `ℝ≥0 → Ω → ℝ`. Die Brücke ist `fun t ω ↦ (Y ω).toFun t`; sie ist nicht gebaut, und das
+gehört gesagt statt behauptet.
+
+Ebenfalls am Quelltext: `IsBrownianReal` kommt in **genau einer** Datei von `upstream/master`
+vor, und das Wort `exists` kommt darin **null**mal vor. **Eine Existenzaussage gibt es nicht**,
+und ein Lauf, der `cont` liefert, hat nicht die Brownsche Bewegung konstruiert.
+
+---
+
+### Derselbe Lauf, dritter Teil — **Punkt 3 steht ganz**: `abs_integral_mpTest_sub_rescaledWalk_mul_le` ist bewiesen, und zwar ohne drittes Moment; die vier Posten der Zellenrechnung werden je **genau einmal** gelesen, und die vier Integrierbarkeiten, die allein der Zusammenbau schuldet, waren genau die vier vorhergesagten
+
+*8 Deklarationen in `MartingaleProblems/Suggested.lean` — sieben hinter
+`abs_sub_taylor_two_le`, der Zusammenbau am Ende von `WalkContainment`. Alle acht durch
+`check_master.py` mit 0 Fehlern und ohne `sorry`, alle acht mit `check_axioms_master.py` auf
+`propext`, `Classical.choice`, `Quot.sound` geprüft. Die Warnungszahl von
+`MartingaleProblems` ist dabei **unverändert 36** geblieben.*
+
+| Name | was es ist |
+| --- | --- |
+| `abs_sub_taylor_two_le'` | der zweite Taylorrest, `≤ M₂ h²`, ohne dritte Ableitung |
+| `abs_sub_taylor_two_le_min` | das Minimum der beiden Schranken |
+| `min_taylor_le_lindeberg` | die Aufspaltung am Pegel `e` — drei reelle Zahlen, keine Maßtheorie |
+| `measurable_indicator_sq` | das abgeschnittene Quadrat ist meßbar |
+| `tendsto_integral_sq_indicator` | **die Lindeberg-Größe geht gegen null**, und es ist dominierte Konvergenz |
+| `indicator_sq_mul_scale` | der Pegel wandert mit der Skalierung |
+| `integral_abs_le_lindeberg` | der Rest, integriert, in der Gestalt der beiden Grenzübergänge |
+| `abs_integral_mpTest_sub_rescaledWalk_mul_le` | **das benannte Ziel**: der Zusammenbau einer Zelle unter dem Erwartungswert |
+
+**Die Entscheidung des Nutzers ist eingehalten: nirgends steht ein drittes Moment.** Gelesen
+wird `MemLp X 2 P` und sonst nichts — kein `iIndepFun`, keine Gleichverteilung, keine
+Beschränktheit.
+
+#### Der zweite Taylorrest kostete nichts, und der Grund ist derselbe wie beim ersten
+
+Die Aufgabe sagte: „aus Taylor **erster** Ordnung mit Lagrange-Rest plus der Abschätzung des
+zweiten Gliedes selbst." So ist es, und es ist wörtlich derselbe Beweis wie bei
+`abs_sub_taylor_two_le`, eine Ordnung tiefer — dieselbe Fundstelle
+`taylor_mean_remainder_lagrange_iteratedDeriv` über `Set.uIcc`, also wieder **kein Vorzeichen
+von `h`** und wieder nur der Zweig `h = 0` eigens. Die Voraussetzung sinkt von `ContDiff ℝ 3`
+auf `ContDiff ℝ 2`.
+
+**Die beiden Schranken sind unvergleichbar, und das ist ihr Zweck**: die eine ist `O(h³)`, die
+andere `O(h²)`; die erste ist besser für kleines `h`, die zweite für großes. Das Minimum ist
+kein schwächerer Satz, sondern der, den der Verbraucher braucht.
+
+#### Und die Stelle, an der die Aufgabe recht behält: die Reihenfolge der Grenzübergänge
+
+`integral_abs_le_lindeberg` gibt
+
+```
+∫ |R| ≤ M₃ a³ c 𝔼[X²] / 6  +  M₂ a² 𝔼[X² · 1_{|X| > c}]
+```
+
+und mit `a = (n+1)⁻¹ᐟ²`, `c = e √(n+1)` ist das `(n+1)⁻¹` mal
+`M₃ e 𝔼[X²] / 6 + M₂ 𝔼[X² 1_{|X| > e √(n+1)}]`; über die `n+1` Zellen summiert bleibt genau
+dieser Ausdruck stehen. Der zweite Summand geht nach `tendsto_integral_sq_indicator` **bei
+festem `e`** gegen null, der erste ist von `n` unabhängig — der `limsup` in `n` ist also
+`M₃ e 𝔼[X²] / 6`, und **erst danach** geht `e` gegen null.
+
+**Andersherum geht es nicht**, und das steht jetzt als Satz und nicht als Warnung da: bei
+festem `n` wächst der zweite Summand für `e ↓ 0` gegen `𝔼[X²]` und nicht gegen `0`. Die
+Reihenfolge ist keine Vorsicht, sondern eine Eigenschaft der Schranke.
+
+**`tendsto_integral_sq_indicator` ist dominierte Konvergenz und keine Hypothese**, und der
+Grund steht am Satz: bei einem Dreiecksschema ist die Lindeberg-Bedingung eine Voraussetzung,
+weil die Zeilenverteilungen wechseln; bei einer i.i.d.-Folge, die mit `√(n+1)` skaliert wird,
+steht unter dem Integral **immer dasselbe `X`** und nur der Pegel bewegt sich. Der Integrand
+ist durch `X²` dominiert, das `MemLp X 2 P` integrierbar macht, und er verschwindet an jedem
+Stichprobenpunkt, sobald der Pegel `|X ω|` überschreitet.
+
+#### Der Zusammenbau, und was er wirklich gekostet hat
+
+`abs_integral_mpTest_sub_rescaledWalk_mul_le` gibt, für jedes `e ≥ 0` und `|Z| ≤ K`:
+
+```
+|∫ (f (S (k+1)) − f (S k) − (n+1)⁻¹ · g (S k)) · Z|
+  ≤ K · (n+1)⁻¹ · ( M₃ e v / 6  +  M₂ 𝔼[ξ k ² · 1_{|ξ k| > e √(n+1)}] )
+```
+
+mit `g = fun y ↦ v / 2 * iteratedDeriv 2 f y`. Jeder der vier Posten wird **genau einmal**
+gelesen, und das war die Probe darauf, ob sie in der richtigen Gestalt stehen: sie stehen.
+Die Aufhebung des Kompensators gegen das zweite Glied ist eine **Identität** und keine
+Abschätzung — `∫ f'' (S k) · ξ k ² · Z = v · ∫ f'' (S k) · Z` trifft
+`(n+1)⁻¹ · (v/2) · f'' (S k)` auf den Punkt.
+
+**Was der Zusammenbau als einziger schuldet, ist die Linearität**, und sie ist teuer, wo die
+vier Posten billig waren. Die beiden Zellenidentitäten sind müllwertfest und tragen keine
+Integrierbarkeit (so steht es an `integral_mul_comp_rescaledWalk_mul_eq_zero` und an
+`integral_mul_comp_rescaledWalk_sq_mul_eq_smul`); `∫ (A + B + C − D) = ∫A + ∫B + ∫C − ∫D` ist
+es nicht. **Das ist die Stelle, an der die Beschränktheit von `f'`, `f''` und `Z` zum ersten
+Mal in dieser Kette wirklich gelesen wird.**
+
+Die vier Posten, und woher ihre Integrierbarkeit je kam — die Vorhersage vor dem Beweis, und
+sie traf zu:
+
+1. `f (S (k+1)) · Z` und `f (S k) · Z` — beschränkt, also über einem Wahrscheinlichkeitsmaß
+   integrierbar. Verlangt `f` beschränkt, was die Akzeptanzklasse `Cc^∞` hergibt.
+2. `f' (S k) · D · Z` — betragsmäßig `≤ ‖f'‖ ‖Z‖ (n+1)⁻¹ᐟ² |ξ k|`, integrierbar aus
+   `MemLp (ξ k) 2 P` über `MemLp.integrable`.
+3. `f'' (S k) · D² / 2 · Z` — `≤ ‖f''‖ ‖Z‖ ξ k ² / (2(n+1))`, integrierbar aus
+   `MemLp.integrable_sq`.
+4. Das Restglied — integrierbar, **und das ist schon bewiesen**: es ist die Zeile `hRint` im
+   Beweis von `integral_abs_le_lindeberg`, die den Rest aus seiner eigenen quadratischen
+   Schranke integrierbar macht.
+
+Vier `Integrable`-Zeilen, dann drei `rw` — so war es vorhergesagt, und so war es. Was die
+Vorhersage **nicht** hatte, sind zwei Formsachen, die den Beweis zweimal aufhielten und die
+festzuhalten sind:
+
+* **`integral_sub` und `integral_add` greifen nicht, wenn die Integrierbarkeit als
+  `h₁.add h₂` übergeben wird.** Der Term steht dann in `Pi`-Gestalt (`(f + g) a`), und `rw`
+  findet sein Muster im Integral nicht. Der Ausweg ist, jede Integrierbarkeit als eigenes
+  `have` mit **ausgeschriebenem Typ** hinzuschreiben; dann steht sie punktweise da und die
+  Umschreibung geht durch. Das ist kein Detail dieses Beweises: jeder Beweis, der ein Integral
+  in mehr als zwei Summanden zerlegt, läuft hinein.
+* **`0 ≤ K` ist keine Voraussetzung, aber es ist auch nicht geschenkt.** Aus `|Z ω| ≤ K` folgt
+  es erst, wenn es ein `ω` gibt, und `Ω` ist nicht als nichtleer vorausgesetzt. Die Nichtleere
+  kommt aus `IsProbabilityMeasure P`: über leerem `Ω` wäre `P ∅ = 1`. Vier Zeilen, und ohne
+  sie trägt die Schranke `K · (…)` nichts.
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`MeasureTheory.abs_integral_mpTest_sub_rescaledWalk_sum_le`** — die **Summation über die
+Zellen**, also Punkt 4 der Aufgabe, und er ist jetzt an der Reihe, weil Punkt 3 steht.
+
+*Die Aussage:* für `s ≤ t` in `ℝ≥0` und dieselben Daten wie beim Zusammenbau einer Zelle,
+
+```
+|∫ ω, (mpTest f g t − mpTest f g s) (walk n, ω) · Z ω ∂P|
+  ≤ 2 K (n+1)⁻¹ C  +  K · ( M₃ e v / 6 + M₂ · 𝔼[ξ 0 ² · 1_{|ξ 0| > e √(n+1)}] ) .
+```
+
+*Worauf sie ruht, und alles davon steht:* `mpTest_sub_rescaledWalk_eq_sum` zerlegt die Lücke
+in die Zellensumme und zwei Randterme; `abs_mpTest_sub_rescaledWalk_sub_sum_le` schätzt die
+Randterme mit `2 (n+1)⁻¹ C` ab, **gleichmäßig in `ω`**, also auch unter dem Integral;
+`abs_integral_mpTest_sub_rescaledWalk_mul_le` ist der Summand, und über die höchstens `n+1`
+Zellen des Fensters summiert hebt sich das `(n+1)⁻¹` gerade auf.
+
+*Wo die Arbeit sitzt, und es ist nicht die Ungleichung:* die Zellen sind mit
+`Finset.Ico ⌊s(n+1)⌋ ⌊t(n+1)⌋` indiziert, und zu zeigen ist, daß es **höchstens `n+1`** sind,
+also `⌊t(n+1)⌋ − ⌊s(n+1)⌋ ≤ (t−s)(n+1) + 1`; das ist `abs_sub_natCast_floor_div_le` noch
+einmal, und es ist dieselbe Müllwertstelle wie dort (`0 ≤ s`). Dazu ein
+`Finset.abs_sum_le_sum_abs` und die Integrierbarkeit der Summe, die aus der jedes Summanden
+folgt.
+
+*Und die Voraussetzung, die dabei neu hinzukommt:* die Zellenschranke verlangt
+`hsq : ∫ ξ k ² = v` an **einem** Index, die Summe an **allen** — das ist die Stelle, an der
+die Gleichverteilung der Zuwächse zum ersten Mal wirklich gebraucht wird, und sie gehört
+benannt, nicht mitgeschleift.
+
+**Danach:** `isTight_map_postcomp_rescaledWalk`, für das die Straffheitsseite seit dem
+2026-09-22 vollständig dasteht.
+
+**Und ein zweiter, davon unabhängiger Vorschlag, falls der erste steckenbleibt:**
+`SkorokhodSpace.continuous_jumpFunctional`, das einzige `sorry` der Kette. Es ist das Tor zu
+Meilenstein 5 von `SkorokhodSpace` **und** zu den beiden Sätzen in `MartingaleProblems`, die
+heute über `sorryAx` laufen; der Weg steht am Satz ausgeschrieben und ist derselbe, den
+`ae_summable_min_one_distWith` für die Metrik schon einmal gegangen ist.
+
+#### Die übrigen Prüfungen des Laufs, über alle drei Teile
+
+* `scripts/check_master.py` gegen `upstream/master`
+  (`94ef6b89544e58e90f119da869f3fb48d1da0f4c`, Lean `4.35.0-rc2`), **viermal** gelaufen, zuletzt
+  nach der letzten Einfügung: **0 Fehler, 0 veraltete Namen** in allen vier Dateien; **1
+  `sorry`**, und zwar `SkorokhodSpace.continuous_jumpFunctional`. Warnungen
+  **18 / 39 / 36 / 76**, in Summe 169 gegen 168 vorher — der Zuwachs ist die Meldung des
+  `sorry` und nichts sonst. Die 32 neuen Deklarationen (20 in `SkorokhodSpace`, 12 in
+  `MartingaleProblems`) haben **keine einzige** Warnung hinzugefügt.
+* `scripts/check_axioms_master.py` über zwölf der neuen Namen: alle auf `propext`,
+  `Classical.choice`, `Quot.sound` — **außer** `SkorokhodSpace.isClosed_range_continuous`,
+  `MeasureTheory.measure_setOf_continuous_eq_one_of_tendsto` und
+  `MeasureTheory.ae_continuous_of_tendsto_law`, die zusätzlich auf `sorryAx` laufen. Das sind
+  genau die drei, die `continuous_jumpFunctional` lesen, und keine weiteren.
+* `scripts/check_cited_lines.py`: **491 gepaarte Fundstellen, 0 verschoben, 0 tote** (vorher
+  466). Die 25 neuen Zitate stimmen alle.
+* `scripts/check_duplicates.py`: **keiner** der neuen Namen trifft auf `master` — weder
+  `jumpFunctional` und seine Familie noch `min_taylor_le_lindeberg`,
+  `tendsto_integral_sq_indicator`, `integral_abs_le_lindeberg`, `abs_sub_taylor_two_le'` oder
+  `isClosed_range_continuous`.
+
+Und eine Berichtigung, die aus Punkt 1 abfällt und in der Tabelle oben eingetragen ist: der
+Beleg von `fact:cadlagext` zeigte zwischen dem 2026-09-22 und heute **ins Leere**. Er nennt
+`MartingaleProblems` Meilenstein 9 und
+`exists_cadlag_modification_of_isRegularizingClass`, und die Deklaration stand seit dem Schnitt
+in `JumpProcesses`. Sie ist zurück, und die Zeile stimmt wieder. Von den fünf Zeilen, die auf
+Meilenstein 9 zeigen, war nur diese eine betroffen; die übrigen vier nennen Deklarationen, die
+nie gewandert sind.
