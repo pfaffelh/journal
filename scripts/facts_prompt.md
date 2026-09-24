@@ -165,17 +165,50 @@ Induktion über endlich viele Zuwächse.
 zwischen Integralen eine Gleichung zwischen Maßen macht, und weil der
 Sinusanteil hier wie im zwölften Lauf verschwindet.
 
-#### Schritt 6. `IsPreBrownianReal` — und dort ist `v = 1` Pflicht
+#### Schritt 6. `IsPreBrownianReal` — für jedes `0 < v`, über die Skalierung im **Raum**
 
 `HasIndepIncrements.isPreBrownianReal_of_hasLaw`
 (`Mathlib/Probability/BrownianMotion/Basic.lean:189`, gelesen gegen
 `94ef6b89544`) verlangt `HasLaw (X t) (gaussianReal 0 t) P` — **die Varianz ist
-der Zeitparameter selbst**. Die Aussage ist deshalb für `v = 1` zu stellen und
-nicht für allgemeines `v`; wer sie allgemein stellt, muß den Prozeß erst
-skalieren und hat einen zweiten Satz statt einer Anwendung.
+der Zeitparameter selbst**. Der Prozeß aus Schritt 5 hat aber Varianz `v * t`.
 
-Nach Schritt 1 ist das eine glatte Einsetzung: die Konstante der Straffheit ist
-dann geführt, `v = 1` ist ein Spezialfall und keine Zusatzannahme mehr.
+**Die Aussage ist trotzdem für jedes `0 < v` zu stellen und nicht nur für
+`v = 1`**, und zwar über den skalierten Prozeß
+
+    fun (t : ℝ≥0) (z : D(ℝ≥0, ℝ)) ↦ (Real.sqrt v)⁻¹ * z.toFun t
+
+*Warum das billig ist:* `IsPreBrownianReal` ist ein Prädikat über einen
+**beliebigen** Prozeß `ℝ≥0 → Ω → ℝ` und nicht über ein Maß auf dem Pfadraum.
+Der skalierte Prozeß ist deshalb eine Funktionsdefinition und **kein Bild von
+`ν₀` unter einer Abbildung `D → D`**: keine Càdlàg-Erhaltung, keine
+Meßbarkeit einer Pfadtransformation, keine Filtration. Beide Eingaben liegen
+fertig in Mathlib:
+
+* `ProbabilityTheory.gaussianReal_const_mul`
+  (`Mathlib/Probability/Distributions/Gaussian/Real.lean:405`) macht aus
+  `HasLaw X (gaussianReal 0 (v*t))` die Aussage
+  `HasLaw (c * X) (gaussianReal 0 (c^2 * (v*t)))`; mit `c = (Real.sqrt v)⁻¹`
+  ist `c^2 * (v*t) = t`.
+* `ProbabilityTheory.iIndepFun.comp`
+  (`Mathlib/Probability/Independence/Basic.lean:670`) trägt die Unabhängigkeit
+  der Zuwächse durch: `c * (X t_{i+1} - X t_i)` ist eine meßbare Funktion des
+  Zuwachses, und `HasIndepIncrements` ist über genau diese Differenzen
+  definiert (`Independence/Process/HasIndepIncrements/Basic.lean:57`).
+
+**Die Skalierung geht in den Raum und nicht in die Zeit.** `X (t/v)` täte es
+mathematisch auch, verlangt aber eine Zeitänderung *auf dem Pfadraum*,
+`z ↦ z (·/v)`, samt Càdlàg-Erhaltung und Meßbarkeit — dieselbe Arbeit, die der
+siebte Lauf des 2026-09-24 für `SkorokhodSpace.shift` und `cadlagShift` geleistet
+hat, also ein eigener Lauf für dasselbe Ergebnis. **Wer die Zeit skaliert, zahlt
+ohne Gegenleistung.**
+
+*Der Preis ist `0 < v` statt `0 ≤ v`*, und er ist ehrlich: bei `v = 0` ist der
+Limes das Dirac-Maß auf dem Nullpfad und keine Brownsche Bewegung. Die
+Hypothese verschweigt nichts, sie benennt einen entarteten Fall.
+
+*Und es ist dieselbe Skalierung wie in Schritt 1, nur am anderen Ende
+angesetzt:* dort `ξ / sqrt v` an den Daten, hier `X / sqrt v` am Limes. Am Limes
+ist sie billiger, weil sie die Konstanten der Straffheit nicht anfaßt.
 
 #### Schritt 7. Die stetigen Pfade — **hängt nicht an 4 bis 6**
 
