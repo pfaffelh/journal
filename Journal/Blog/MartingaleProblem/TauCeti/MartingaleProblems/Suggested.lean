@@ -31479,6 +31479,225 @@ theorem cadlagShift_measurable_cadlagFiltration [CompleteSpace E] (r s : ℝ≥0
       ((cadlagShift (E := E)).θ r) :=
   shiftMeasurable_of_natural (fun u ↦ cadlagFiltration_eq u) r s
 
+/-! #### The operator read through its bounded continuous representatives
+
+Milestone 6 reads an operator as a set of pairs of plain functions `E → ℝ`, the
+chain of Milestone 11 as a set of pairs of bounded continuous ones.  The four
+statements below are the four hypotheses that Milestone 6 puts on the operator --
+`hfm`, `hfb`, `hgb` and `hpath` of
+`MeasureTheory.isShiftSystem_mpFamily_lebesgueClock` -- discharged from the one
+relation between the two readings, that every pair of the former is the
+underlying pair of functions of a pair of the latter.
+
+**The relation is an inclusion and not an image**, for the reason recorded at
+`MeasureTheory.exists_mpTest_eq_of_mem_mpFamily`: a consumer whose operator is
+described rather than constructed as an image would otherwise have to prove an
+equality of sets where the proofs use only one direction of it. -/
+
+section BoundedContinuousOperator
+
+variable {A : Set ((E →ᵇ ℝ) × (E →ᵇ ℝ))} {A' : Set ((E → ℝ) × (E → ℝ))}
+variable (hA' : ∀ q ∈ A', ∃ p ∈ A, (⇑p.1 : E → ℝ) = q.1 ∧ (⇑p.2 : E → ℝ) = q.2)
+
+include hA'
+
+omit [PolishSpace E] in
+/-- **The test function of a pair is measurable**, which is the hypothesis `hfm`
+of `MeasureTheory.isShiftSystem_mpFamily_lebesgueClock`.  A bounded continuous
+function is continuous and a continuous function into a Borel space is
+measurable; no property of `A'` beyond the representation is read. -/
+theorem measurable_fst_of_boundedContinuous (q : (E → ℝ) × (E → ℝ)) (hq : q ∈ A') :
+    Measurable q.1 := by
+  obtain ⟨p, -, hq1, -⟩ := hA' q hq
+  rw [← hq1]
+  exact p.1.continuous.measurable
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The test function of a pair is bounded**, which is the hypothesis `hfb` of
+`MeasureTheory.isShiftSystem_mpFamily_lebesgueClock`.  The bound is the norm of
+the representing bounded continuous function, and `norm_coe_le_norm` is the whole
+content; the statement is written as an existential because that is the shape the
+abstract layer asks for, which knows no norm on the operator. -/
+theorem exists_norm_fst_le_of_boundedContinuous (q : (E → ℝ) × (E → ℝ)) (hq : q ∈ A') :
+    ∃ b, ∀ x, ‖q.1 x‖ ≤ b := by
+  obtain ⟨p, -, hq1, -⟩ := hA' q hq
+  refine ⟨‖p.1‖, fun x ↦ ?_⟩
+  rw [← hq1]
+  exact p.1.norm_coe_le_norm x
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The generator term of a pair is bounded**, which is the hypothesis `hgb` of
+`MeasureTheory.isShiftSystem_mpFamily_lebesgueClock`.  The companion of
+`MeasureTheory.exists_norm_fst_le_of_boundedContinuous` at the second component;
+this is the bound the shift system spends on `κ`. -/
+theorem exists_norm_snd_le_of_boundedContinuous (q : (E → ℝ) × (E → ℝ)) (hq : q ∈ A') :
+    ∃ b, ∀ x, ‖q.2 x‖ ≤ b := by
+  obtain ⟨p, -, -, hq2⟩ := hA' q hq
+  refine ⟨‖p.2‖, fun x ↦ ?_⟩
+  rw [← hq2]
+  exact p.2.norm_coe_le_norm x
+
+omit [PolishSpace E] in
+/-- **The generator term along a path is measurable in time**, which is the
+hypothesis `hpath` of `MeasureTheory.isShiftSystem_mpFamily_lebesgueClock`: it is
+what makes the compensating integral something other than the junk value `0`.
+
+**The hypothesis names `lebesgueClock.measurableSpace` and not the instance.**
+`Clock` carries its measurable space as a *field*, and instance search is
+syntactic, so a lemma stated for the instance is not found for the field even
+though `lebesgueClock.measurableSpace` is `inferInstance` by definition.  The
+proof therefore produces the statement over the instance and closes the goal with
+`exact`, which sees through the definitional equality; a `rw` on the hypothesis
+would not.
+
+The measurability itself is `IsCadlag.measurable` of Milestone 2 of
+**SkorokhodSpace** composed with the continuity of the representing function. -/
+theorem measurable_snd_comp_of_boundedContinuous (q : (E → ℝ) × (E → ℝ)) (hq : q ∈ A')
+    (z : D(ℝ≥0, E)) :
+    Measurable[lebesgueClock.measurableSpace] fun u ↦ q.2 (z.toFun u) := by
+  obtain ⟨p, -, -, hq2⟩ := hA' q hq
+  have h : Measurable fun u : ℝ≥0 ↦ q.2 (z.toFun u) := by
+    rw [← hq2]
+    exact p.2.continuous.measurable.comp z.isCadlag.measurable
+  exact h
+
+end BoundedContinuousOperator
+
+/-- **The shift system of `ex:shiftXA` at the càdlàg path space.**
+
+`MeasureTheory.isShiftSystem_mpFamily_lebesgueClock` is a theorem about a shift,
+a filtration and an operator; this is it on the data the chain of Milestone 11
+produces, and every one of its seven hypotheses is discharged.  After it,
+`MeasureTheory.IsShiftSystem` is not merely statable over `D(ℝ≥0, E)` --- which
+is what `MeasureTheory.cadlagShift` achieved --- but inhabited there.
+
+**Where the seven come from.**  `hfm`, `hfb`, `hgb` and `hpath` are the four
+statements of the section above, read off the bounded continuous
+representatives; `hπ` is `MeasureTheory.measurable_cadlagFiltration` at `u = v`;
+`hsm` is `MeasureTheory.cadlagShift_measurable_cadlagFiltration`; `hY` is
+`MeasureTheory.stronglyAdapted_mpFamily_cadlagFiltration`.
+
+**The `increment` field is where the work sits**, and it is not done here: it is
+`MeasureTheory.isShiftSystem_mpFamily`, whose proof is the substitution
+`v = r + u` under the shift invariance of `lebesgueClock`.  What this statement
+adds is that the substitution applies to *these* data. -/
+theorem isShiftSystem_mpFamily_cadlagFiltration [CompleteSpace E]
+    {A : Set ((E →ᵇ ℝ) × (E →ᵇ ℝ))} {A' : Set ((E → ℝ) × (E → ℝ))}
+    (hA' : ∀ q ∈ A', ∃ p ∈ A, (⇑p.1 : E → ℝ) = q.1 ∧ (⇑p.2 : E → ℝ) = q.2) :
+    IsShiftSystem (cadlagShift (E := E)) cadlagFiltration
+      (fun _ ↦ mpFamily A' lebesgueClock Clock.Conv.optional
+        (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r)) :=
+  isShiftSystem_mpFamily_lebesgueClock (measurable_fst_of_boundedContinuous hA')
+    (exists_norm_fst_le_of_boundedContinuous hA')
+    (exists_norm_snd_le_of_boundedContinuous hA')
+    (measurable_snd_comp_of_boundedContinuous hA')
+    (fun _ ↦ measurable_cadlagFiltration le_rfl)
+    cadlagShift_measurable_cadlagFiltration
+    (fun _ hY ↦ stronglyAdapted_mpFamily_cadlagFiltration hA' hY)
+
+/-- **`thm:absuniq`(b) at the càdlàg path space**: a law on `D(ℝ≥0, E)` solving
+the martingale problem is determined by its initial distribution, as soon as the
+one dimensional distributions are.
+
+This is `MeasureTheory.subsingleton_mpSolutions_mpFamily_lebesgueClock` with ten
+of its eleven inputs discharged on the data the chain of Milestone 11 produces.
+It is the statement a consumer of `MeasureTheory.tendsto_map_rescaledWalk_of_unique`
+reads, and after it exactly one thing stands between that theorem and an
+unconditional limit: the one dimensional distributions.
+
+**What is discharged and by what.**  The shift is `MeasureTheory.cadlagShift`;
+`hsm` is `MeasureTheory.cadlagShift_measurable_cadlagFiltration`; `hY` is
+`MeasureTheory.stronglyAdapted_mpFamily_cadlagFiltration`; `hint` is
+`MeasureTheory.integrable_mpFamily_cadlagFiltration`, which is *stronger* than
+asked -- it reads no solution property, because `MeasureTheory.abs_mpTest_le`
+bounds the test process uniformly in the path; `hadapt` is
+`MeasureTheory.measurable_cadlagFiltration`; `hgen` is
+`SkorokhodSpace.borel_eq_iSup_comap_eval_nnreal`; the four hypotheses on the
+operator are the section above.
+
+**`honedim` carries no shift here, and that is not a weakening.**  The abstract
+statement quantifies it over every shift `r`, and the quantifier is vacuous by
+construction: `MeasureTheory.isShiftSystem_mpFamily` gives
+`𝓧₀ = fun _ ↦ mpFamily A Q c π`, so the shifted problem *is* the original one and
+`honedim` is one statement about `mpFamily` rather than a family of them.  Asking
+a consumer for the family would be asking it for the same statement several
+times.
+
+**The completeness of `E` is read and is not implied by the ambient
+`[PolishSpace E]`**, which gives second countability and the *existence* of a
+complete metric, not the completeness of the metric at hand.  It enters twice,
+through `MeasureTheory.cadlagShift` and through
+`SkorokhodSpace.borel_eq_iSup_comap_eval_nnreal`, and both times for the same
+reason: the Borel structure of `D(ℝ≥0, E)` is generated by the coordinates only
+under it.  For the acceptance example, `E = ℝ`, it is free. -/
+theorem subsingleton_mpSolutions_mpFamily_cadlagFiltration [CompleteSpace E]
+    {A : Set ((E →ᵇ ℝ) × (E →ᵇ ℝ))} {A' : Set ((E → ℝ) × (E → ℝ))}
+    (hA' : ∀ q ∈ A', ∃ p ∈ A, (⇑p.1 : E → ℝ) = q.1 ∧ (⇑p.2 : E → ℝ) = q.2)
+    (honedim : ∀ R R' : Measure D(ℝ≥0, E),
+      IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      IsMPSolution (mpFamily A' lebesgueClock Clock.Conv.optional
+        (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r)) cadlagFiltration R →
+      IsMPSolution (mpFamily A' lebesgueClock Clock.Conv.optional
+        (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r)) cadlagFiltration R' →
+      R.map (fun z : D(ℝ≥0, E) ↦ z.toFun ⊥) = R'.map (fun z : D(ℝ≥0, E) ↦ z.toFun ⊥) →
+      ∀ u : ℝ≥0, R.map (fun z : D(ℝ≥0, E) ↦ z.toFun u)
+        = R'.map (fun z : D(ℝ≥0, E) ↦ z.toFun u))
+    (mu : Measure E) :
+    Set.Subsingleton {P ∈ mpSolutions (mpFamily A' lebesgueClock Clock.Conv.optional
+        (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r)) cadlagFiltration |
+      IsProbabilityMeasure P ∧ P.map (fun z : D(ℝ≥0, E) ↦ z.toFun ⊥) = mu} :=
+  subsingleton_mpSolutions_mpFamily_lebesgueClock (S := cadlagShift (E := E))
+    (measurable_fst_of_boundedContinuous hA')
+    (exists_norm_fst_le_of_boundedContinuous hA')
+    (exists_norm_snd_le_of_boundedContinuous hA')
+    (measurable_snd_comp_of_boundedContinuous hA')
+    cadlagShift_measurable_cadlagFiltration
+    (fun _ hY ↦ stronglyAdapted_mpFamily_cadlagFiltration hA' hY)
+    (fun _ _ huv ↦ measurable_cadlagFiltration huv)
+    SkorokhodSpace.borel_eq_iSup_comap_eval_nnreal
+    (fun P _ _ _ hY u ↦ integrable_mpFamily_cadlagFiltration hA' P hY u)
+    (fun _ ↦ honedim) mu
+
+/-- **Uniqueness in the form the chain of Milestone 11 produces**: two càdlàg
+laws solving the martingale problem and agreeing at time `⊥` are equal.
+
+This is `MeasureTheory.subsingleton_mpSolutions_mpFamily_cadlagFiltration` read
+through `MeasureTheory.isMPSolution_of_isCadlagMPSolution`, and it is the shape a
+consumer of `MeasureTheory.tendsto_map_rescaledWalk_of_unique` needs: that
+theorem's `huniq` speaks of `MeasureTheory.IsCadlagMPSolution`, Milestone 6 of
+`MeasureTheory.IsMPSolution` over a clock.
+
+**The agreement of the initial laws is a hypothesis and cannot be dropped**, and
+this is the one respect in which the statement is weaker than the `huniq` of
+`MeasureTheory.tendsto_map_rescaledWalk_of_unique`.  `MeasureTheory.IsCadlagMPSolution`
+is a martingale identity and says nothing about time `⊥`; a martingale problem
+posed by an operator alone has one solution per initial law and not one
+altogether.  For a translation invariant operator such as
+`MeasureTheory.brownianGeneratorPairs` the solution set is closed under the
+translation of the paths, so it is either empty or infinite, and a uniqueness
+statement over it that names no initial law asks for the wrong thing. -/
+theorem eq_of_isCadlagMPSolution_of_map_bot_eq [CompleteSpace E]
+    {A : Set ((E →ᵇ ℝ) × (E →ᵇ ℝ))} {A' : Set ((E → ℝ) × (E → ℝ))}
+    (hA' : ∀ q ∈ A', ∃ p ∈ A, (⇑p.1 : E → ℝ) = q.1 ∧ (⇑p.2 : E → ℝ) = q.2)
+    (honedim : ∀ R R' : Measure D(ℝ≥0, E),
+      IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      IsMPSolution (mpFamily A' lebesgueClock Clock.Conv.optional
+        (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r)) cadlagFiltration R →
+      IsMPSolution (mpFamily A' lebesgueClock Clock.Conv.optional
+        (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r)) cadlagFiltration R' →
+      R.map (fun z : D(ℝ≥0, E) ↦ z.toFun ⊥) = R'.map (fun z : D(ℝ≥0, E) ↦ z.toFun ⊥) →
+      ∀ u : ℝ≥0, R.map (fun z : D(ℝ≥0, E) ↦ z.toFun u)
+        = R'.map (fun z : D(ℝ≥0, E) ↦ z.toFun u))
+    {ν ν' : Measure D(ℝ≥0, E)} [IsProbabilityMeasure ν] [IsProbabilityMeasure ν']
+    (h : IsCadlagMPSolution A ν) (h' : IsCadlagMPSolution A ν')
+    (hinit : ν.map (fun z : D(ℝ≥0, E) ↦ z.toFun ⊥)
+      = ν'.map (fun z : D(ℝ≥0, E) ↦ z.toFun ⊥)) :
+    ν = ν' :=
+  subsingleton_mpSolutions_mpFamily_cadlagFiltration hA' honedim
+    (ν.map (fun z : D(ℝ≥0, E) ↦ z.toFun ⊥))
+    ⟨isMPSolution_of_isCadlagMPSolution hA' ν h, inferInstance, rfl⟩
+    ⟨isMPSolution_of_isCadlagMPSolution hA' ν' h', inferInstance, hinit.symm⟩
+
 omit [MeasurableSpace E] [BorelSpace E] in
 /-- **The canonical process is the bridge between the fourth item of the chain
 and the third.**

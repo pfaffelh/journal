@@ -59685,3 +59685,158 @@ nachgesehen.*
    dieser Gestalt gebaut (Hypothese `hY : Y ∈ mpFamily …`) und paßt, sofern die Operatorklasse `A'`
    als `∀ q ∈ A', ∃ p ∈ A, …` beschrieben wird und nicht als Bild. Wer `A'` als Bildmenge
    hinschreibt, hat eine Gleichheit zu zeigen, wo eine Inklusion gebraucht wird.
+
+### 2026-09-24, achter Lauf des Tages — das benannte Ziel steht, und mit ihm die zwei Aussagen darüber; **aber der Satz, auf den die ganze Kette zuläuft, trägt eine Hypothese, die unter seinen eigenen Voraussetzungen unerfüllbar ist**: `huniq` von `tendsto_map_rescaledWalk_of_unique` nennt keine Anfangsverteilung
+
+*7 Deklarationen, alle in `MartingaleProblems/Suggested.lean` (neuer Unterabschnitt „The operator
+read through its bounded continuous representatives" und drei Sätze dahinter, eingefügt hinter
+`cadlagShift_measurable_cadlagFiltration`).
+`scripts/check_master.py` gegen `upstream/master` (`94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `4.35.0-rc2`): **0 Fehler, 0 veraltete Namen, 0 `sorry`** in allen vier Dateien, Warnungen
+**18 / 38 / 36 / 76** — **unverändert**, also keine einzige neue.
+`check_axioms_master.py` über alle sieben: `propext`, `Classical.choice`, `Quot.sound`, kein
+`sorryAx`. `check_duplicates.py` jetzt 1882 eigene Deklarationen, 45 Treffer — **unverändert**
+gegenüber dem Vorlauf, also keine neue Namenskollision.*
+
+#### Was steht
+
+| Name | Aussage |
+| --- | --- |
+| `MeasureTheory.measurable_fst_of_boundedContinuous` | `hfm`, aus dem beschränkt stetigen Vertreter |
+| `MeasureTheory.exists_norm_fst_le_of_boundedContinuous` | `hfb`, die Schranke ist `‖p.1‖` |
+| `MeasureTheory.exists_norm_snd_le_of_boundedContinuous` | `hgb`, ebenso am zweiten Glied |
+| `MeasureTheory.measurable_snd_comp_of_boundedContinuous` | `hpath`, `IsCadlag.measurable` nach der Stetigkeit |
+| `MeasureTheory.isShiftSystem_mpFamily_cadlagFiltration` | **das benannte Ziel** |
+| `MeasureTheory.subsingleton_mpSolutions_mpFamily_cadlagFiltration` | **Meilenstein 6 auf `D(ℝ≥0, E)`**, zehn von elf Eingaben eingelöst |
+| `MeasureTheory.eq_of_isCadlagMPSolution_of_map_bot_eq` | die Eindeutigkeit in der Gestalt, die die Kette erzeugt |
+
+#### Die drei angesagten Fallen sind alle drei nicht aufgetreten
+
+Der Vorlauf hatte drei Stellen benannt. Keine hat gekostet, und das aus je einem Grund, der
+festzuhalten ist:
+
+1. **`hpath` und das Feld `lebesgueClock.measurableSpace`.** Die Falle ist echt und der Rat war
+   richtig — aber sie fällt weg, sobald die Aussage als *eigener Satz* geführt wird statt im
+   Rumpf: `measurable_snd_comp_of_boundedContinuous` erzeugt die Meßbarkeit über der Instanz in
+   einem `have` und schließt mit `exact h`. Kein `rw` auf die Hypothese, also keine syntaktische
+   Instanzensuche.
+2. **`hgen` und `borel D(ℝ≥0, E)` gegen die Instanz.**
+   `SkorokhodSpace.borel_eq_iSup_comap_eval_nnreal` geht **unverändert** als `hgen` durch; die
+   Definitionsgleichheit wird beim Elaborieren des Arguments gelesen und verlangt kein `show`.
+   Das `[CompleteSpace E]`, das der Vorlauf dafür angesagt hat, ist echt und steht an beiden
+   neuen Hauptsätzen.
+3. **Das Feld `increment` und die Gestalt von `A'`.** Der Rat, `A'` als `∀ q ∈ A', ∃ p ∈ A, …` zu
+   beschreiben und nicht als Bildmenge, hat getragen; `stronglyAdapted_mpFamily_cadlagFiltration`
+   paßt ohne Zutun.
+
+**Alle drei Sätze sind im ersten Durchlauf durchgegangen.** Der Grund ist nicht Glück: die sieben
+beziehungsweise elf Eingaben waren vom Vorlauf Hypothese für Hypothese aufgelistet, sechs davon
+mit dem Namen der Aussage, die sie einlöst. Diese Liste war die Arbeit.
+
+#### Die Zerlegung des Operators in vier eigene Sätze
+
+`hfm`, `hfb`, `hgb` und `hpath` sind Hypothesen von **zwei** Sätzen und werden von beiden
+gelesen; in den Rumpf geschrieben, stünden sie zweimal da. Als eigene Sätze mit `include hA'`
+stehen sie einmal, und der dritte Satz des Laufs ist bereits ihr dritter Verbraucher. Die
+`omit`-Zeilen sind gemessen: die beiden Schrankenaussagen lesen **keine** Meßstruktur auf `E`,
+die beiden anderen kein `[PolishSpace E]`; deshalb ist die Warnungszahl unverändert.
+
+#### Der Stand von Donsker: **eine** offene Hypothese, und sie heißt `honedim`
+
+Die Tabelle des Vorlaufs ist abgearbeitet. Von den elf Eingaben von
+`subsingleton_mpSolutions_mpFamily_lebesgueClock` sind zehn **in Lean** eingelöst — der Parameter
+`S`, dann `hsm`, `hY`, `hint`, `hadapt`, `hgen`, `hfm`, `hfb`, `hgb`, `hpath`. Die sechs, die der
+Vorlauf ausdrücklich als „benannt" und *nicht* als eingelöst geführt hat, sind es jetzt.
+
+**Eine Abweichung von der abstrakten Fassung, und sie ist eine Vereinfachung:** `honedim` trägt
+hier **keinen** Shift. Die abstrakte Aussage quantifiziert über jedes `r`, und der Quantor ist
+bauartbedingt leer — `isShiftSystem_mpFamily` liefert `𝓧₀ = fun _ ↦ mpFamily A Q c π`, das
+geshiftete Problem *ist* also das ursprüngliche. Einen Verbraucher nach der Familie zu fragen
+hieße, ihn dieselbe Aussage mehrfach beweisen zu lassen. Eingesetzt wird sie als `fun _ ↦ honedim`.
+
+#### Der Befund des Laufs, und er wiegt schwerer als das Ziel
+
+> **`huniq` von `MeasureTheory.tendsto_map_rescaledWalk_of_unique` ist unter den Voraussetzungen
+> desselben Satzes unerfüllbar. Der Satz ist damit leer.**
+
+Die Hypothese lautet
+
+```lean
+(huniq : ∀ ν : ProbabilityMeasure D(ℝ≥0, ℝ),
+  IsCadlagMPSolution (brownianGeneratorPairs v) (ν : Measure D(ℝ≥0, ℝ)) → ν = ν₀)
+```
+
+— sie nennt **keine Anfangsverteilung**. `IsCadlagMPSolution` ist eine Martingalidentität und
+sagt über die Zeit `⊥` nichts; ein Martingalproblem hat eine Lösung **je** Anfangsverteilung und
+nicht eine insgesamt. Der Widerspruch ist in drei Schritten, und alle drei sind am Quelltext
+nachgesehen:
+
+1. **Lösungen gibt es.** `exists_subseq_isCadlagMPSolution_of_rescaledWalk` erzeugt unter
+   *denselben* Datenvoraussetzungen (`hmeas`, `hind`, `hcent`, `hsq`, `hLp`, `hlaw`, `hvar`,
+   `hΦm`, `hΦ`) ein `ν` mit `IsCadlagMPSolution (brownianGeneratorPairs v) ν`.
+2. **Die Lösungsmenge ist unter der Verschiebung der Pfade abgeschlossen.**
+   `brownianGeneratorPairs v` ist translationsinvariant: mit `f` ist auch `f (· + c)` von der
+   Klasse `C³` und kompakt getragen, und
+   `iteratedDeriv 2 (fun y ↦ f (y + c)) y = iteratedDeriv 2 f (y + c)`. Für `τ_c z = z + c` ist
+   deshalb `mpTest p t (τ_c z) = mpTest p^c t z` mit `p^c ∈ brownianGeneratorPairs v`, und `τ_c`
+   ist in beide Richtungen `cadlagFiltration s`-meßbar, weil `x ↦ x + c` ein meßbarer
+   Isomorphismus von `ℝ` ist. Also löst `ν.map τ_c` dasselbe Problem, mit derselben dichten
+   Zeitmenge.
+3. **Die Verschiebung ändert die Lösung.** `(ν.map τ_c).map (eval ⊥)` ist das um `c` verschobene
+   Bild von `ν.map (eval ⊥)`, und auf `ℝ` gibt es kein Wahrscheinlichkeitsmaß, das unter einer
+   Verschiebung um `c ≠ 0` invariant ist.
+
+Aus 1–3 folgen zwei verschiedene Lösungen, und `huniq` zwingt sie beide auf `ν₀`. Die
+Voraussetzungen des Satzes sind also widersprüchlich.
+
+**Was das heißt und was nicht.** Es heißt nicht, daß an der Kette von Meilenstein 11 etwas falsch
+ist: die vier Punkte und ihr Zusammenbau stehen, und `tendsto_of_isRelativelyCompact_of_unique`
+ist als *abstrakte* Aussage richtig — dort ist `huniq` eine Hypothese über eine beliebige Familie
+und keine über den Brownschen Erzeuger. Es heißt, daß **die Instanz**
+`tendsto_map_rescaledWalk_of_unique` die Hypothese in der falschen Gestalt führt, und daß ihr
+Doc-Kommentar — „`huniq` ist getragen und nicht bewiesen, und es ist das eine, was Donsker hier
+noch schuldet" — zu optimistisch ist: es ist nicht *noch* zu beweisen, es ist so nicht beweisbar.
+
+**Der Befund ist auf Papier geführt und in Lean nicht nachgeprüft.** Das ist ausdrücklich zu
+sagen: die drei Schritte sind je am Quelltext belegt, aber weder der Transport der
+Martingaleigenschaft unter `τ_c` noch die Nichtexistenz eines verschiebungsinvarianten
+Wahrscheinlichkeitsmaßes ist hier in Lean gezeigt.
+
+**Die Richtigstellung steht zur Hälfte schon da.** `eq_of_isCadlagMPSolution_of_map_bot_eq`, der
+dritte Satz dieses Laufs, ist die Eindeutigkeit in der richtigen Gestalt: zwei càdlàg-Lösungen,
+**die bei `⊥` übereinstimmen**, sind gleich. Was Donsker dann noch braucht, ist die
+Anfangsverteilung des Limes, und die ist `δ 0` — der umskalierte Irrfahrtspfad ist bei `r = 0`
+die leere Summe.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **`MeasureTheory.map_eval_bot_map_rescaledWalk_eq_dirac`** — die Anfangsverteilung des
+> umskalierten Irrfahrtspfades ist `δ 0`, also
+> `(P.map (Φ n)).map (fun z : D(ℝ≥0, ℝ) ↦ z.toFun ⊥) = Measure.dirac 0` für jedes `n`, unter den
+> Voraussetzungen `hΦm` und `hΦ` von `tendsto_map_rescaledWalk_of_unique`.
+
+*Warum jetzt:* es ist die erste fehlende Eingabe zwischen
+`eq_of_isCadlagMPSolution_of_map_bot_eq` und einer Fassung von
+`tendsto_map_rescaledWalk_of_unique`, deren `huniq` nicht leer ist — und es ist der billigste
+Punkt des Befunds.
+
+*Worauf es ruht, und alles davon steht:* `hΦ` gibt `(Φ n ω).toFun r` als
+`(Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range ⌊r * ((n : ℝ≥0) + 1)⌋₊, ξ j ω`; bei `r = ⊥`
+ist `NNReal.bot_eq_zero` der Übergang zu `0`, `zero_mul` macht das Produkt zu `0`,
+`Nat.floor_zero` den Index zu `0`, und `Finset.range 0` ist leer.
+
+*Die zwei Stellen, an denen ein Lauf danebengreifen wird.*
+
+1. **`⌊r * ((n : ℝ≥0) + 1)⌋₊` läuft über `ℝ≥0` und nicht über `ℝ`.** `zero_mul` ist vor
+   `Nat.floor_zero` zu benutzen, sonst paßt das Muster nicht.
+2. **Der Schritt danach ist kein `Measure.map_const`.** Die Abbildung `z ↦ z.toFun ⊥` ist keine
+   Konstante; konstant ist erst ihre Zusammensetzung mit `Φ n`. Zu nehmen ist deshalb
+   `Measure.map_map` (beide Faktoren sind meßbar: `hΦm n` und `SkorokhodSpace.measurable_eval`)
+   und **danach** die Gleichheit der Abbildungen — der zusammengesetzte Integrand ist wörtlich
+   `fun _ ↦ (0 : ℝ)`.
+
+*Und der Schritt darüber, damit er nicht neu erschlossen wird:* aus der Anfangsverteilung jedes
+Approximanten die des Limes zu gewinnen verlangt die **Stetigkeit** der Auswertung bei `0` in der
+Skorokhod-Topologie. Sie ist wahr — bei `t = 0` gibt es keinen Sprung von links —, aber sie ist
+in `SkorokhodSpace/Suggested.lean` zu suchen und **nicht** aus `SkorokhodSpace.measurable_eval`
+zu folgern; Meßbarkeit ist für einen schwachen Limes zu wenig.
