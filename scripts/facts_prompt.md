@@ -8,7 +8,107 @@ einem git-Worktree auf dem Branch `facts-inventory`. Zeitbudget: 120 Minuten.
 zu lesen; sie sind ausgelagert, damit dieser Auftrag der Auftrag bleibt und nicht
 die Aktenlage. Die Ergebnisse stehen ohnehin in `Facts/INVENTAR.md`.*
 
-### Aufgabe: `SkorokhodSpace` fertig, dann Meilenstein 4 von `MartingaleProblems` *(gestellt 2026-09-08 vom Nutzer)*
+### Aufgabe: die vier Punkte in dieser Reihenfolge *(gestellt 2026-09-24 vom Nutzer)*
+
+**Diese Aufgabe geht allen älteren vor.** Die darunterstehenden Aufträge sind
+Aktenlage; was gilt, steht hier.
+
+**Was sich seit dem 2026-09-22 geändert hat, und ohne das läuft nichts:**
+
+* Die Kette hat **vier** Dateien statt drei. `JumpProcesses/Suggested.lean` ist
+  neu und importiert `MartingaleProblems.Suggested`; `check_master.py` baut alle
+  vier in Abhängigkeitsordnung. Die Beispiele — Sprungprozesse, Hawkes, Volterra
+  — sind aus `MartingaleProblems` heraus und dorthin gezogen.
+* **Keine `README.md` und keine `README-kurz.md` anfassen, in keiner Roadmap.**
+  Der Nutzer redigiert sie gerade. Befunde gehören ausschließlich in
+  `Facts/INVENTAR.md`. Wer eine README ändert, erzeugt einen Konflikt in genau
+  der Datei, an der der Nutzer arbeitet.
+* Die Meilensteinnummern in den READMEs sind in Bewegung. Im Bericht wird eine
+  Aussage über ihren **Namen** benannt und nicht über ihre Nummer.
+
+#### 1. Die fünf falsch einsortierten Deklarationen zurückholen
+
+Der Schnitt vom 2026-09-22 hat fünf **allgemeine** Aussagen nach
+`JumpProcesses/Suggested.lean` gezogen, weil ihre *Beweise* Sprungmaterial lesen;
+ihre *Aussagen* gehören nach `MartingaleProblems`:
+
+    isRegularizingClass_mpFamily
+    isCompensatorFor_mpFamily
+    exists_cadlag_modification_of_isRegularizingClass
+    isQuasiLeftContinuous_of_isRegularizingClass
+    not_isQuasiLeftContinuous_of_isRegularizingClass_of_free_solutionSet
+
+Zu prüfen ist **je Deklaration**, welche Beweiszeilen wirklich Sprungmaterial
+lesen und ob sich das durch eine Hypothese ersetzen läßt. Wo ja: zurückholen. Wo
+nein: den Grund benennen und die Deklaration lassen, wo sie ist. Ein begründetes
+„geht nicht" ist hier so viel wert wie der Umzug.
+
+#### 2. EK §3.10, und es fällt eine Lücke von `SkorokhodSpace` mit ab
+
+Nach `SkorokhodSpace/Suggested.lean`:
+
+* `SkorokhodSpace.jumpFunctional` — das Funktional
+  `J x = ∫ u in Ioi 0, exp (-u) * (⨆ t ≤ u, min 1 (dist (x t) (x⁻ t)))`.
+* `continuous_jumpFunctional` — EK Proposition 3.5.3: `J` ist stetig auf `D`.
+* `jumpFunctional_eq_zero_iff` — `J x = 0` **genau** für stetige `x`.
+* `isClosed_range_continuous` — fällt daraus ab: die stetigen Pfade sind die
+  Nullstellenmenge eines stetigen Funktionals. Dieser Punkt steht in der Roadmap
+  von `SkorokhodSpace` Meilenstein 5 und hat als **einziger** dort keinen
+  Prototyp; §3.10 erledigt ihn mit.
+
+Nach `MartingaleProblems/Suggested.lean` die Anwendung: konvergiert `X n → X`
+schwach in `D` und verschwindet `J` im Limes, so hat `X` fast sicher stetige
+Pfade. Das ist das Feld `cont` von Mathlibs `IsBrownianReal`.
+
+**Nachgesehen am 2026-09-24:** Mathlib `master` hat `IsPreBrownianReal` und
+`IsBrownianReal` in `Mathlib/Probability/BrownianMotion/Basic.lean`, über dem
+Index `ℝ≥0`, mit `IsGaussianProcess.isPreBrownianReal_of_covariance` und
+`HasIndepIncrements.isPreBrownianReal_of_hasLaw` als Charakterisierungen. Eine
+**Existenzaussage gibt es nicht**. `IsBrownianReal` ist `IsPreBrownianReal` plus
+`cont`; ein Lauf darf das eine nicht unter dem Namen des anderen melden.
+
+#### 3. Donsker, der Zellenzusammenbau — **ohne drittes Moment**
+
+`abs_integral_mpTest_sub_rescaledWalk_mul_le`: die vier Posten der Zellenrechnung
+hintereinandergeschaltet. Die vier stehen und sind je einmal zu lesen:
+`abs_sub_taylor_two_le`, `integral_mul_comp_rescaledWalk_mul_eq_zero`,
+`integral_mul_comp_rescaledWalk_sq_mul_eq_smul`,
+`abs_mpTest_sub_rescaledWalk_sub_sum_le`.
+
+**Die Entscheidung ist vom Nutzer am 2026-09-24 getroffen und nicht neu zu
+treffen: kein drittes Moment.** `MemLp (ξ k) 2 P` ist die Voraussetzung, die der
+Akzeptanztest ohnehin führt, und sie reicht. Eine Fassung mit einer
+Drittmoment-Hypothese wäre nicht Donsker, sondern ein Satz über beschränkte
+Zuwächse.
+
+Der Weg ist die **Abschneidung**, und er braucht drei Dinge:
+
+* **Ein zweiter Taylorrest, ohne dritte Ableitung:** der Rest zweiter Ordnung ist
+  durch `(Schranke an f'') * h^2` beschränkt, aus Taylor **erster** Ordnung mit
+  Lagrange-Rest plus der Abschätzung des zweiten Gliedes selbst. Dieselbe
+  Fundstelle wie beim vorhandenen Rest,
+  `taylor_mean_remainder_lagrange_iteratedDeriv`, eine Ordnung tiefer.
+* **Das Minimum der beiden Schranken** — die kubische auf dem kleinen, die
+  quadratische auf dem großen Teil.
+* **Die Lindeberg-Größe.** Mit `D = xi k / sqrt (n+1)` und Abschneidung bei `e`
+  bleibt nach der Summation über die Zellen
+
+      C * e  +  C' * E[xi^2 * indicator {|xi| > e * sqrt (n+1)}]
+
+  und der zweite Summand geht **für jedes feste `e`** gegen null — bei i.i.d. mit
+  endlicher Varianz ist das **dominierte Konvergenz** und nicht die
+  Lindeberg-Bedingung als Hypothese.
+
+**Die Reihenfolge der Grenzübergänge ist `n -> unendlich` vor `e -> 0`**, und das
+ist die Stelle, an der ein Lauf danebengreift.
+
+#### 4. Danach: die Summation über die Zellen, dann `isTight_map_postcomp_rescaledWalk`
+
+Erst wenn 3 steht. Vorher nicht anfangen.
+
+---
+
+### Aufgabe: `SkorokhodSpace` fertig, dann Meilenstein 4 von `MartingaleProblems` *(gestellt 2026-09-08 vom Nutzer; durch die Aufgabe oben ersetzt)*
 
 **Reihenfolge, vom Nutzer am 2026-09-10 abends neu festgelegt:**
 
