@@ -17,7 +17,8 @@ milestone, **KolmogorovExtension**.
 
 `Suggested.lean` prototypes the signatures. Most of them are discharged there,
 against Mathlib `master`; that is evidence the milestones are reachable, not a
-prescription of how. Where a proof route is named below it is because the
+prescription of how. **Milestones 6 and 7 are the exceptions and say so in their
+first paragraph**: nothing of either is prototyped. Where a proof route is named below it is because the
 obvious route is **wrong**, not because it is the one taken.
 
 ## What Mathlib already has
@@ -215,6 +216,13 @@ its converse.
 
 ## Milestone 6: localization
 
+> **Nothing of this milestone is prototyped.** `Suggested.lean` carries
+> `IsLocalMPSolution` and `isLocalMPSolution_of_isMPSolution` — the definition
+> and its trivial direction — and nothing else of what follows. The **instance**
+> exists, in the **JumpProcesses** roadmap (`rateSup`, `rateTime`,
+> `isLocalizingSequence_rateTime`, `jumpProcess_isLocalMPSolution`); the general
+> theory below is stated from the manuscript and is to be reviewed on that basis.
+
 The localizing systems here are a **refinement** of Mathlib's
 `IsLocalizingSequence`, not a replacement. A **strict** stopping time is one for
 `𝓕` and not for the right continuous filtration `⨅ s > t, 𝓕 s`, and the
@@ -233,6 +241,20 @@ time for the right continuous filtration only, and the whole point of the
 milestone is to stay with `𝓕`.
 
 ## Milestone 7: duality
+
+> **Nothing of this milestone is prototyped**, and it is the largest of the
+> twelve. `Suggested.lean` contains no `chain_identity`, no `duality`, no
+> `dualSemigroup`, no atom certificate and no `tailProduct`; the word "duality"
+> occurs only in doc comments pointing at the manuscript. Everything below is
+> stated from the manuscript and is to be reviewed on that basis, without the
+> evidence of reachability the other milestones carry.
+>
+> **A reviewer should ask whether the ladder of atomic cases belongs in a roadmap
+> at all.** Eleven variants sorted by the order type of the atoms, resting on
+> Krylov certificates and on a Phragmén–Lindelöf argument, is closer to a research
+> sketch than to a work programme. The first three items — the chain identity, the
+> atomless clock and the discrete clock — are a milestone; what follows them may
+> be better placed in a later roadmap of its own.
 
 A dual process determines the one dimensional distributions, hence, with
 Milestone 5, gives uniqueness. The milestone is built from one algebraic identity

@@ -342,13 +342,13 @@ while the goal wants the given one.
   `exists_finite_partition_ball_of_denseRange` (the partition, and the one place
   `SeparableSpace E` is consumed) and `exists_nat_weights`.
 
-  Two requirements on those two. The partition must return its representatives
-  as **indices**, not as points — that is what makes the family countable, and
-  why Mathlib's `SeparableSpace.exists_measurable_partition_diam_le` is not
-  usable, being countably indexed with the representatives forgotten. And
-  `exists_nat_weights` should **normalise** (`m i / ∑ j, m j`) rather than round
-  down and let one index absorb the slack: that avoids truncated subtraction in
-  `ℝ≥0∞` and a case distinction; the `+ 1` in `m i = ⌊c i · N⌋₊ + 1` keeps the
+  Two things the doing taught. The partition returns its representatives as
+  **indices**, not as points — that is what makes the family countable, and why
+  Mathlib's `SeparableSpace.exists_measurable_partition_diam_le` is not usable,
+  being countably indexed with the representatives forgotten. And
+  `exists_nat_weights` **normalises** (`m i / ∑ j, m j`) rather than rounding
+  down and letting one index absorb the slack: that avoids truncated subtraction
+  in `ℝ≥0∞` and a case distinction; the `+ 1` in `m i = ⌊c i · N⌋₊ + 1` keeps the
   denominator positive.
 
   The empty `E` is a separate line, not a hypothesis: `exists_dense_seq` wants
@@ -535,9 +535,8 @@ hypothesis, so the differing spaces are Mathlib's and not this roadmap's.
   by exactly the families it exists to exclude*: a family with infinite first
   moment makes the integrand non-integrable at every `N`, `integral_undef`
   returns the junk value `0`, and the supremum is `0`. The Cauchy law is the
-  witness: it satisfies the Bochner form of the criterion and has no first
-  moment, so the convergence theorem above fails for it. In `ℝ≥0∞` there is no
-  junk value, and the criterion then *implies* integrability
+  witness, and the theorem above was false as stated until this was found. In
+  `ℝ≥0∞` there is no junk value, and the criterion then *implies* integrability
   rather than presupposing it (`integrable_id_of_lintegral_truncTail_lt_top`).
 
   The lesson generalises past this milestone: **a criterion phrased as a Bochner
@@ -699,10 +698,10 @@ integral finite without an integrability hypothesis — the same device as
   has no counterpart here — `distInMeasure` is not a norm and `E` is not a normed
   group.
 
-  The approximating family cannot be a family of **sums** of indicators, the
-  obvious candidate: `E` is a bare metric space and carries no addition, so
-  those terms do not typecheck. It is `AEEqFun.stepFun`, the step function
-  attached to a **list** of index pairs, earlier entries having priority. A list is what makes the index type countable
+  The approximating family is therefore **not** a family of sums: `E` is a bare
+  metric space and carries no addition, so those terms do not typecheck. It is
+  `AEEqFun.stepFun`, the step function attached to a **list** of index pairs,
+  earlier entries having priority. A list is what makes the index type countable
   with no bookkeeping (`Countable (List (ℕ × ℕ))` is instance search) and what
   replaces the sum by a case distinction. `exists_mem_stepFun` — whichever branch
   fires, the value is named by *some* entry whose set contains the argument — is
