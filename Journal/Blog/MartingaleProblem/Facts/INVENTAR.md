@@ -58940,3 +58940,224 @@ danebengreifen wird.
 *Und was dabei nicht zu erwarten ist:* auch danach ist die Brownsche Bewegung nicht konstruiert.
 Mathlibs `IsBrownianReal` hat keine Existenzaussage, die den Limes aufnähme; die Identifikation
 als Wiener-Maß ist ein eigener Punkt und nicht der Rest dieses.
+
+### 2026-09-24, vierter Lauf des Tages — das benannte Ziel steht, und die Arbeit, die der Vorlauf dafür angesagt hatte, gibt es **nicht**: die Umstellung der Quantoren braucht **kein Diagonalverfahren**, weil die Teilfolge aus einer Aussage kommt, die die Testfunktion gar nicht liest; damit steht Donsker bis auf die **eine** getragene Eindeutigkeitshypothese
+
+*5 Deklarationen in `MartingaleProblems/Suggested.lean`: eine im Abschnitt `CadlagChain`
+(`IsCadlagMPSolution`, hinter `tendsto_of_isRelativelyCompact_of_unique`), vier im neuen
+Wurzelabschnitt `DonskerLimit` hinter `end TestClassSeam`.
+`scripts/check_master.py` gegen `upstream/master` (`94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `4.35.0-rc2`): **0 Fehler, 0 veraltete Namen**, `sorry` unverändert **eins** (das benannte
+`continuous_jumpFunctional`), Warnungen unverändert **18 / 39 / 36 / 76** — also **keine einzige
+neue Warnung**. `check_axioms_master.py` über alle fünf: `propext`, `Classical.choice`,
+`Quot.sound`, **kein `sorryAx`**. `check_duplicates.py` (1849 eigene Deklarationen, 43 Treffer,
+keiner auf einen neuen Namen), `check_cited_lines.py` (491 Fundstellen, 0 verschoben, 0 tot) und
+`check_negatives.py` (62 Behauptungen, 0 unerwartete Treffer) unverändert; die Diffs der
+Prüfberichte sind ausschließlich Zeilenverschiebungen.*
+
+#### Was steht
+
+| Name | Abschnitt |
+| --- | --- |
+| `MeasureTheory.IsCadlagMPSolution` | `CadlagChain` — das Prädikat `Sol` des vierten Kettenpunktes, über einer **Familie** von Paaren |
+| `MeasureTheory.brownianGeneratorPairs` | `DonskerLimit` — die Paare von `f ↦ (v/2)·f''` auf glatten Funktionen mit kompaktem Träger |
+| `MeasureTheory.isCadlagMPSolution_of_tendsto_subseq_rescaledWalk` | `DonskerLimit` — **das Feld `hlim`** des vierten Kettenpunktes |
+| `MeasureTheory.exists_subseq_isCadlagMPSolution_of_rescaledWalk` | `DonskerLimit` — Straffheit hinein, Lösung für die **ganze** Klasse heraus |
+| `MeasureTheory.tendsto_map_rescaledWalk_of_unique` | `DonskerLimit` — **Donsker**, mit `huniq` getragen |
+
+#### Der Befund, und er widerlegt die Wegbeschreibung des Vorlaufs
+
+Der Vorlauf hatte das Ziel richtig benannt und den Weg dorthin falsch. Er schrieb: „mit einer
+abzählbaren Klasse glatter Funktionen mit kompaktem Träger und dem **Diagonalverfahren** gilt die
+Konklusion längs *einer* Teilfolge für *alle* `f`" — und nannte das „die Stelle, an der ein Lauf,
+der gleich zur Eindeutigkeit greift, danebengreifen wird".
+
+**Ein Diagonalverfahren wird nicht gebraucht, und die Abzählbarkeit der Klasse auch nicht.** Der
+Grund steht in der Signatur der Aussage, aus der die Teilfolge kommt:
+
+    theorem isCompact_closure_range_map_rescaledWalk … (hΦm : ∀ n, Measurable (Φ n)) :
+        IsCompact (closure ((Set.range fun n : ℕ ↦ ⟨P.map (Φ n), inferInstance⟩) : …))
+
+Darin kommt **keine Testfunktion vor**. Die Straffheit der Pfadgesetze ist eine Abschätzung in den
+Zuwächsen und der Varianz; die Testklasse betritt die Kette erst in
+`tendsto_integral_mpTest_sub_pathOfProcess_rescaledWalk`, und die gilt für jedes `f` **einzeln
+längs der ganzen Folge**. Eine Teilfolge einer Nullfolge ist eine Nullfolge — also bedient **eine**
+Extraktion jedes `f` zugleich, und die Umstellung der beiden Existenzquantoren ist umsonst. Das
+Diagonalverfahren wäre richtig gewesen und ist überflüssig; es steht so am Abschnittskopf von
+`DonskerLimit`, damit kein Lauf es nachträgt.
+
+**Die Lehre ist dieselbe wie im Vorlauf, nur an der anderen Naht:** wer einen Weg ansagt, sieht
+vorher in die **Signatur** der Aussage, die den kritischen Schritt liefert. Hier hätte ein Blick auf
+`isCompact_closure_range_map_rescaledWalk` gezeigt, daß der teure Teil `f`-frei ist.
+
+#### Was der Umstellung wirklich im Weg stand, und es war eine Quantorenstellung, nicht ein Beweis
+
+Die beiden Aussagen des Vorlaufs tragen `∃ fb gb, ⇑fb = f ∧ (∀ y, gb y = v/2 · f'' y) ∧ …`. Dieses
+Existenzquantorenpaar ist der Grund, warum `huniq` „nicht einmal hinschreibbar" war: eine
+Martingaleigenschaft an **einem** Paar bestimmt kein Maß, und `tendsto_of_isRelativelyCompact_of_unique`
+verlangt von `huniq` gerade, daß es das Maß bestimmt.
+
+Der Ausweg ist **nicht** ein weiterer Beweis darüber, sondern das Paar in eine **Menge** zu legen:
+`brownianGeneratorPairs v` besteht aus den Paaren, deren erste Komponente eine `C³`-Funktion mit
+kompaktem Träger *ist* und deren zweite `(v/2)·f''` *ist*. Dann ist die Konklusion universell über
+die Klasse und nicht existentiell über einen Vertreter, und das Existenzquantorenpaar verschwindet
+ersatzlos. Bezahlt wird das mit zwei Zeilen: die Naht liefert *irgendein* `fb', gb'` mit
+vorgeschriebener Koerzierung und vorgeschriebenen Werten, das hereingegebene Paar hat dieselben,
+also sind sie gleich — `DFunLike.coe_injective` für die erste, `BoundedContinuousFunction.ext` für
+die zweite Komponente.
+
+**Das ist eine echte Verstärkung und nicht bloß eine Umschreibung.** Die alte Fassung sagt „es gibt
+ein Paar, für das `ν` löst"; die neue sagt „für **jedes** Paar der Klasse löst `ν`".
+
+#### Die vier Voraussetzungen an `E` in `IsCadlagMPSolution` sind erzwungen und nicht bequem
+
+Gemessen, nicht vermutet: mit `variable {E : Type*} [MetricSpace E]` allein scheitert die Definition
+an `failed to synthesize instance MeasurableSpace D(ℝ≥0, E)`. Die Instanz ist
+`SkorokhodSpace/Suggested.lean:7143`, `borel _`, und steht unter
+`variable [MeasurableSpace E] [BorelSpace E] [PolishSpace E]`; eine `instance`-Deklaration nimmt
+ihre Instanzvariablen ohnehin alle auf. `SkorokhodSpace.mpTest` selbst fragt nur nach
+`MetricSpace E` — das steht so am Doc-Kommentar, damit die Regel der minimalen Voraussetzungen
+nicht an einer Stelle beklagt wird, an der sie nichts hergibt.
+
+**Und eine Falle dabei, für den nächsten Lauf:** `omit [BorelSpace E] [PolishSpace E] in` vor einer
+**`def`** ist wirkungslos. Die Probe ist eindeutig: mit `omit [MetricSpace E] …` vor der Definition
+übersetzt die Datei ebenfalls mit `rc=0`, obwohl `mpTest` ohne `MetricSpace E` gar nicht
+elaborierbar ist. Wer die Minimalität einer Definition messen will, **kürzt den `variable`-Block**
+und liest den Fehler; `omit` mißt bei Definitionen nichts.
+
+#### Was Donsker jetzt noch schuldet, und es ist genau eine Aussage
+
+`tendsto_map_rescaledWalk_of_unique` trägt `huniq` als Hypothese. Alle anderen Eingaben des vierten
+Kettenpunktes sind eingelöst: `hcpt` ist `isCompact_closure_range_map_rescaledWalk`, `hlim` ist
+`isCadlagMPSolution_of_tendsto_subseq_rescaledWalk` dieses Laufs.
+
+**Worauf `huniq` ruht.** Meilenstein 6 hat die Eindeutigkeit als
+`subsingleton_mpSolutions_of_unique_onedim` (`:16433`), und sie ist über `IsMPSolution` einer
+`mpFamily` über einer Uhr ausgesprochen. `IsCadlagMPSolution` ist die Gestalt, die die Kette
+**erzeugt**: die Martingalidentität an `SkorokhodSpace.mpTest` längs einer abzählbaren dichten
+Zeitmenge, über `cadlagFiltration`. Die beiden zusammenzuführen ist eine eigene Aussage; sie ist
+der Vorschlag unten.
+
+**Und was auch mit `huniq` nicht dasteht:** die Brownsche Bewegung. Die Konklusion ist die
+Konvergenz der Gesetze gegen ein Maß, das durch eine Martingaleigenschaft **charakterisiert** ist;
+konstruiert wird es nicht, denn `huniq` setzt `ν₀` voraus. Und Mathlibs `IsBrownianReal` hat, wie am
+2026-09-24 am Quelltext festgehalten, keine Existenzaussage, die es aufnähme. Ein Lauf darf das eine
+nicht unter dem Namen des anderen melden.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **Die Brücke von Meilenstein 6 nach `IsCadlagMPSolution`** — also
+> `MeasureTheory.isMPSolution_of_isCadlagMPSolution`: aus der Martingalidentität an
+> `SkorokhodSpace.mpTest` längs einer abzählbaren dichten Zeitmenge die Aussage
+> `IsMPSolution (mpFamily A lebesgueClock Clock.Conv.optional coordinate) cadlagFiltration ν`.
+
+*Warum jetzt:* das ist die **einzige** noch offene Eingabe von Donsker. Nach dieser Brücke ist
+`huniq` nicht mehr getragen, sondern aus `subsingleton_mpSolutions_mpFamily_lebesgueClock`
+(`:16994`) zu beziehen, und `tendsto_map_rescaledWalk_of_unique` wird unbedingt.
+
+*Worauf sie ruht, und hier ist die Arbeit:* die Lücke ist **nicht** die Martingaleigenschaft, sondern
+die **Zeitmenge**. `IsMPSolution` verlangt die Identität für *alle* `s ≤ t`, `IsCadlagMPSolution`
+gibt sie auf einer abzählbaren dichten `T`. Der Schluß von `T` auf alle Zeiten ist die
+Rechtsstetigkeit des Testprozesses in `L¹` plus die Rechtsstetigkeit der Filtration — und beides
+steht in der Datei: `SkorokhodSpace.mpTest` ist an jedem Pfad rechtsstetig (der vierzehnte Lauf des
+2026-09-21 hat dafür sogar die Stetigkeit des Kompensators an **jedem** Pfad gezeigt), und der
+Übergang von einer dichten Zeitmenge auf alle Zeiten ist derselbe, den
+`mpSolution_of_tendsto_cadlag` intern schon einmal führt. **Der erste Schritt ist deshalb
+nachzusehen, ob dieser Übergang dort als eigene Aussage abgetrennt dasteht oder im Beweis
+eingebaut ist** — im zweiten Fall ist ihn abzutrennen die halbe Arbeit, und ein Lauf, der gleich zur
+Uhr greift, schreibt ihn zum zweiten Mal.
+
+*Die zweite Hälfte, und sie ist Buchhaltung:* `mpFamily` ist über einem `Clock` und der Konvention
+`Clock.Conv.optional` gebildet, `mpTest` ohne Uhr; daß die beiden dieselbe Funktion sind, sagt der
+Doc-Kommentar von `SkorokhodSpace.mpTest` ausdrücklich („the same functional that the roadmap
+**MartingaleProblems** builds as a member of `mpFamily` over `lebesgueClock` in the optional
+convention"). Das ist zu **prüfen** und nicht zu glauben: `lebesgueClock` trägt seinen
+`MeasurableSpace` als Feld, und die Falle dazu steht seit dem 2026-09-10 im Auftrag
+(`Clock.measurableSet_interval` statt `measurableSet_Ioc`).
+
+#### Derselbe Lauf, zweiter Teil — die erste Eingabe des eben benannten Ziels ist gleich mitgebaut, und die Vorfrage, die dazu gestellt war, ist mit einem **Nein** beantwortet
+
+*2 Deklarationen in `MartingaleProblems/Suggested.lean`, Abschnitt `CadlagChain`, hinter
+`abs_mpTest_sub_mpTest_le`: `continuous_compensator_mpTest` und `isRightContinuous_mpTest`.
+Beide im **ersten** Durchlauf durchgegangen. `check_master.py` gegen dasselbe `master`:
+**0 Fehler, 0 veraltete Namen**, `sorry` unverändert eins, Warnungen unverändert
+**18 / 39 / 36 / 76**. `check_axioms_master.py`: `propext`, `Classical.choice`, `Quot.sound`.
+`check_duplicates.py` jetzt 1851 eigene Deklarationen, 43 Treffer, keiner auf einen neuen Namen;
+`check_cited_lines.py` 491 / 0 / 0, `check_negatives.py` 62 / 0.*
+
+**Die Vorfrage war: steht der Übergang von einer dichten Zeitmenge auf alle Zeiten in
+`mpSolution_of_tendsto_cadlag` als eigene Aussage abgetrennt da, oder im Beweis eingebaut?
+Er steht überhaupt nicht da.** Nachgesehen an den Konklusionen der ganzen Kette: *jede* endet auf
+`∀ s ∈ T, ∀ t ∈ T` — `mpSolution_of_tendsto_cadlag` (`:30808`), `…_of_subseq` (`:31210`),
+`…_of_subseq_of_zero` (`:31280`), `…_pathOfProcess` (`:31396`). Der Übergang ist also **neu zu
+bauen** und nicht abzutrennen; die Schätzung im Vorschlag oben („die halbe Arbeit") war zu
+optimistisch in der einen Richtung und zu pessimistisch in der anderen: es ist mehr zu schreiben,
+aber es ist kein Umbau an fremden Beweisen.
+
+**Gebaut ist die erste seiner beiden Eingaben.**
+
+| Name | Aussage |
+| --- | --- |
+| `MeasureTheory.continuous_compensator_mpTest` | der Kompensator ist in der **Zeit** stetig, an jedem Pfad |
+| `MeasureTheory.isRightContinuous_mpTest` | `r ↦ mpTest f g r z` ist **rechtsstetig**, an jedem Pfad |
+
+Die Verwechslung, vor der das schützt: `SkorokhodSpace.continuousAt_mpTest` (`SkorokhodSpace`,
+`:20416`) ist die Stetigkeit im **Pfad** bei fester Zeit. Das ist die andere Variable, und sie
+ist die, die der dritte Kettenpunkt liest. Für den Übergang auf alle Zeiten wird die Zeitvariable
+gebraucht, und dafür stand nichts da.
+
+**Rechtsstetig und nicht stetig, und die Asymmetrie ist die des Pfades:** der Zustandsterm erbt
+genau die Regularität von `z`, also càdlàg und nicht mehr; der Kompensator ist die Stammfunktion
+einer beschränkten meßbaren Funktion und damit **stetig** — das ist
+`continuous_intervalIntegral_of_bounded` (`:11107`), und über den Pfad wird dabei nichts gelesen
+als seine Meßbarkeit. Zusammengesetzt wird mit `IsRightContinuous.sub`, dem durch
+`@[to_additive]` aus `IsRightContinuous.div'` erzeugten Namen; die stehende Regel dazu (ein
+erzeugter Name steht in keiner `theorem`-Zeile) hat hier zum vierten Mal getragen.
+
+**Beide Aussagen gelten an *jedem* Pfad und nicht fast sicher**, und keine nennt ein Maß: die
+càdlàg-Eigenschaft ist ein **Feld** von `D(ℝ≥0, E)`. Und `PolishSpace E` wird in keiner der
+beiden gelesen, also steht `omit [PolishSpace E] in` davor.
+
+**Eine Syntaxfalle, die einen Durchlauf gekostet hat:** `omit … in` gehört **vor** den
+Doc-Kommentar, nicht zwischen Doc-Kommentar und `theorem`. Dazwischen meldet Lean
+`unexpected token 'omit'; expected 'lemma'`, und die Meldung nennt `lemma` statt `theorem`, was
+in die Irre führt.
+
+#### Das benannte Ziel, berichtigt
+
+> **`MeasureTheory.mpSolution_forall_of_mpSolution_dense`** — aus der Martingalidentität an
+> `SkorokhodSpace.mpTest` längs einer dichten Zeitmenge `T` dieselbe Identität für **alle**
+> `s ≤ t`.
+
+*Warum das vor der Uhr kommt:* es ist die Lücke, und die Brücke zu `IsMPSolution` über
+`lebesgueClock` ist danach Buchhaltung. Ohne diesen Satz ist `huniq` von
+`tendsto_map_rescaledWalk_of_unique` nicht einlösbar, mit ihm ist es Meilenstein 6.
+
+*Der Weg, und er ist ausgeschrieben, damit ihn kein Lauf neu erschließt.* **Nicht** über die
+Konvergenz bedingter Erwartungen längs einer fallenden Folge von σ-Algebren — dafür bräuchte es
+Lévys Abwärtssatz, und der Limes wäre `𝓕 s+` und nicht `𝓕 s`. Sondern über die **Mengenintegrale**:
+
+1. Sei `s ≤ t` beliebig und `A ∈ cadlagFiltration s`. Wähle `sₙ ∈ T` mit `sₙ ↓ s`, `sₙ ≥ s`, und
+   `tₙ ∈ T` mit `tₙ ↓ t`; setze `t'ₙ = max sₙ tₙ ∈ T`, so daß `sₙ ≤ t'ₙ` und `t'ₙ → t`.
+2. Wegen `A ∈ cadlagFiltration s ⊆ cadlagFiltration sₙ` gibt die Identität auf `T` über
+   `setIntegral_condExp` die Gleichheit `∫_A mpTest t'ₙ = ∫_A mpTest sₙ`.
+3. Grenzübergang mit **dominierter Konvergenz**: punktweise nach
+   `isRightContinuous_mpTest` dieses Laufs, die Majorante ist `‖f‖ + ‖g‖·(t+1)` nach
+   `abs_mpTest_le` (`:30647`) — gleichmäßig, weil `t'ₙ` und `sₙ` schließlich unter `t+1` liegen.
+   Also `∫_A mpTest t = ∫_A mpTest s`.
+4. `ae_eq_condExp_of_forall_setIntegral_eq` schließt.
+
+*Die Voraussetzung, die dabei wirklich gebraucht wird, ist nicht `Dense T`, sondern die
+Approximierbarkeit von rechts* — also `∀ t, t ∈ T ∨ (𝓝[T ∩ Set.Ioi t] t).NeBot`, genau das
+`hTr` von `mpSolution_of_tendsto_cadlag` (`:30801`), das `rightDense_of_dense` (`:30459`) aus der Dichtheit
+erzeugt. Die Aussage ist unter `hTr` zu formulieren und nicht unter `Dense T`; `IsCadlagMPSolution`
+führt `Dense T`, und der Übergang von dort nach `hTr` ist `rightDense_of_dense` und schon
+bewiesen. **Das ist die stehende Regel der minimalen Voraussetzungen an genau der Stelle, an der
+sie in diesem Punkt etwas hergibt.**
+
+*Und der Schritt, an dem ein Lauf danebengreifen wird:* Schritt 1 braucht eine **Folge** in `T`,
+`NeBot` gibt aber nur einen Filter. Der Übergang ist `Filter.NeBot` plus
+`FirstCountableTopology ℝ≥0` zu `exists_seq_tendsto`, und das Ergebnis liegt in `T ∩ Set.Ioi t`,
+also **echt** oberhalb von `t` — was für `sₙ ≥ s` mehr als genug ist, für `t'ₙ → t` aber heißt,
+daß der Fall `t ∈ T` eigens zu nehmen ist (dort ist die Folge konstant `t`). Die Disjunktion in
+`hTr` ist genau dafür da und nicht aus Bequemlichkeit so geschrieben.
