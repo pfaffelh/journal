@@ -60170,3 +60170,215 @@ für `Measure.ext_of_charFun` am Ende des Weges. Beide sind in der Probe zusamme
 unter `simp` **nicht** zu `1` und `2`, wenn der Buckel eine eigene `def` ist — die Projektion
 steht vor einem Namen und nicht vor dem Strukturliteral. Zu nehmen ist
 `show probeBump.rOut = 2 from rfl` oder das `simp`-Argument `[probeBump]`.
+
+### 2026-09-24, elfter Lauf des Tages — das benannte Ziel steht, und es steht **allgemeiner, als es benannt war**: die Abschneidung liest von `cos` nichts als drei Schranken, also ist der Satz einer über beschränkte `C³`-Funktionen und `cos` wie `sin` sind Instanzen; zwei Schritte der angesagten Wegbeschreibung fallen dabei ersatzlos weg
+
+*4 Deklarationen, alle in `MartingaleProblems/Suggested.lean`, im Abschnitt `DonskerLimit`
+unmittelbar hinter `brownianGeneratorPairs`. Dazu zwei Importe. `scripts/check_master.py` gegen
+`upstream/master` (`94ef6b89544e58e90f119da869f3fb48d1da0f4c`, Lean `4.35.0-rc2`): **0 Fehler,
+0 veraltete Namen, 0 `sorry`** in allen vier Dateien, Warnungen **18 / 38 / 36 / 76** —
+**unverändert**, also keine einzige neue. `check_axioms_master.py` über alle vier: `propext`,
+`Classical.choice`, `Quot.sound`, kein `sorryAx`. `check_duplicates.py` jetzt 1903 eigene
+Deklarationen, 45 Treffer — **unverändert** gegenüber dem Vorlauf, also keine neue
+Namenskollision. Keine `README.md` angefaßt.*
+
+#### Was steht
+
+| Name | Aussage |
+| --- | --- |
+| `MeasureTheory.exists_smooth_cutoff` | ein `C³`-Abschneider auf `ℝ`: kompakt getragen, `= 1` auf `[-1,1]`, `= 0` außerhalb `(-2,2)`, Werte in `[-1,1]` |
+| `MeasureTheory.exists_brownianGeneratorPairs_tendsto` | **das benannte Ziel, allgemein**: zu jedem beschränkten `C³`-`f` mit beschränkten `f'`, `f''` eine Folge in `brownianGeneratorPairs v`, die in **beiden** Komponenten punktweise gegen `(f, (v/2) f'')` geht, mit **einer** Schranke für die ganze Folge |
+| `MeasureTheory.exists_brownianGeneratorPairs_tendsto_mul_cos` | die Instanz `f = cos (θ · )`, mit der zweiten Komponente als `-(v/2) θ² cos (θ · )` |
+| `MeasureTheory.exists_brownianGeneratorPairs_tendsto_mul_sin` | dieselbe für `sin`, und sie kostet nach dem allgemeinen Satz **nichts** |
+
+Dazu in `MartingaleProblems/Suggested.lean` die zwei Importe, die der Vorlauf angesagt hatte:
+`Mathlib.Analysis.Calculus.BumpFunction.FiniteDimension` und
+`Mathlib.MeasureTheory.Measure.CharacteristicFunction.Basic`. Beide sind verträglich; der
+Warnungsstand der Datei bleibt bei 36.
+
+#### Der Befund: das benannte Ziel war zu eng gestellt, und zwar meßbar
+
+Der Vorschlag lautete auf eine Aussage über `Real.cos (θ * x)`. Beim Beweisen liest die
+Abschneidung von `cos` aber **nur drei Dinge**: `ContDiff ℝ 3`, und Schranken an `|f|`, `|f'|`,
+`|f''|`. Nichts davon ist trigonometrisch, und insbesondere kommt die Differentialgleichung
+`f'' = -θ² f`, die den *Nutzen* der Aussage ausmacht, im Beweis **gar nicht vor** — sie steht
+erst in der Instanz.
+
+Genommen ist deshalb die allgemeine Fassung, und der Preis ist **negativ**: der Beweis wird
+kürzer als der cos-spezifische, weil die Kette `iteratedDeriv_comp_const_mul` auf der
+`f`-Seite entfällt (im cos-Fall mußte jedes der drei Leibnizglieder den Faktor `θ^k`
+herausziehen; allgemein steht dort einfach `iteratedDeriv k f x`). Und die Grenzaussage der
+zweiten Komponente wird von `θ² · (-cos)` zu `iteratedDeriv 2 f`, also zu einer Gleichung ohne
+Rechnung. `sin` ist danach eine Kopie der cos-Instanz mit drei ausgetauschten Namen.
+
+**Die Lehre ist die stehende Regel des Auftrags, an einem Fall, wo sie Arbeit spart statt
+welche zu machen:** eine Aussage trägt die schwächsten Hypothesen, unter denen sie gilt. Hier
+war die schwächste Fassung zugleich die billigere, weil die Spezialisierung Rechenschritte
+*hinzufügt*, die der allgemeine Satz nicht kennt.
+
+#### Zwei Schritte der Wegbeschreibung fallen ersatzlos weg
+
+Der Vorlauf hatte die Leibnizformel für `(χₙ · cos (θ ·))''` ausgeschrieben und dabei gesagt,
+die ersten zwei Glieder gingen überdies gegen `0`. Das stimmt, wird aber **nicht gebraucht**,
+und der Grund ist der zweite weggefallene Schritt:
+
+* **Die Konvergenz der zweiten Komponente ist eine Gleichheit und keine Abschätzung.** Für
+  festes `x` und alle großen `n` ist der Abschneider auf der **offenen** Menge
+  `{y | |cₙ y| < 1}` identisch `1`, und die Menge enthält `x`. Zwei auf einer offenen Menge
+  übereinstimmende Funktionen haben dort dieselben iterierten Ableitungen
+  (`Set.EqOn.iteratedDeriv_of_isOpen`, `Mathlib/Analysis/Calculus/IteratedDeriv/Lemmas.lean:441`,
+  gelesen gegen `94ef6b89544`). Die zweite Komponente ist also **schließlich gleich** ihrem
+  Limes, nicht bloß nahe daran. Die Leibnizformel wird damit **allein für die Schranke**
+  gebraucht, nie für den Grenzwert.
+* **Die Offenheit erspart das Fenster.** Der naheliegende Weg wäre `Set.Ioo (-(n+1)) (n+1)`
+  gewesen, mit der Rechnung, daß `x` darin liegt. `{y | |cₙ y| < 1}` ist als Urbild unter einer
+  stetigen Abbildung offen (`isOpen_lt`), und die Zugehörigkeit von `x` **ist** die
+  Voraussetzung, die die Folgenaussage ohnehin liefert. Damit kommt im ganzen Beweis über
+  die Skalierungsfolge nichts vor als drei Eigenschaften — `0 < cₙ`, `cₙ ≤ 1`, und
+  `∀ x, ∀ᶠ n, |cₙ x| < 1` —, und die Folge selbst wird nach fünf Zeilen `obtain` nie wieder
+  ausgepackt. Das ist der Grund, aus dem der Beweis keine einzige Abschätzung über `(n+1)⁻¹`
+  enthält.
+
+#### Was der Vorlauf richtig vorhergesagt hat
+
+Die vier übersetzten Bausteine haben getragen, unverändert: `iteratedDeriv_fun_mul` (die
+Leibnizformel, `Finset.range 3`, `Nat.choose`), der Buckel mit `rIn = 1`, `rOut = 2` samt
+`contDiff`, `hasCompactSupport`, `one_of_mem_closedBall`, `zero_of_le_dist`, und die kompakte
+Trägerschaft des skalierten Abschneiders. `HasCompactSupport.exists_bound_of_continuous` wird
+nicht unmittelbar gelesen, weil der schon vorhandene
+`exists_bound_abs_iteratedDeriv_of_hasCompactSupport` genau darauf ruht und die Schranken an
+`χ'` und `χ''` in einer Zeile gibt. Auch die Warnung zu den Projektionen traf zu: `χ.rIn` und
+`χ.rOut` reduzieren unter `simp` nicht, und genommen sind `have hin : χ.rIn = 1 := rfl` und
+`have hout : χ.rOut = 2 := rfl`. Und die Ansage, die dritte Ableitung nicht mitzuschätzen, ist
+eingehalten — sie kommt in keiner Deklaration vor.
+
+#### Die Meßgröße dahinter
+
+Der Abstand zwischen der angesagten und der gebauten Aussage ist an einer Zahl ablesbar: der
+cos-spezifische Beweis des ersten Anlaufs — er stand in der Roadmap, war gegen `master` mit 0
+Fehlern übersetzt und ist durch den allgemeinen ersetzt worden — hat 5
+`iteratedDeriv_comp_const_mul`-Aufrufe und die Schranke `θ² + 2 M₁ |θ| + M₂`; der allgemeine
+hat 2 Aufrufe und die Schranke `K + 2 M₁ K + M₂ K`. Die beiden Instanzen holen die 5 zusammen
+wieder ein — aber je Instanz sind es 3, und jede weitere Testfunktion kostet 0. (Die
+Entwurfsdateien selbst sind nach `.gitignore` nicht Teil der Geschichte; die Zahlen stehen
+deshalb hier und nicht als Verweis.)
+
+*Ein Rest, den der Lauf nicht wegräumen konnte:* `scripts/_newblock.lean` ist das Zwischenlager
+des Einfügeschritts und trägt nur einen erklärenden Kommentar. Es ist **keine** Probe, es fällt
+nicht unter `/scripts/_dev_*.lean` und darf gelöscht werden; dem Lauf ist das Löschen und
+Verschieben von Dateien verwehrt.
+
+#### Das nächste Ziel — **und es ist im selben Lauf eingelöst**, siehe den zweiten Teil unten
+
+> **`MeasureTheory.integral_eval_mul_cos_eq_of_isCadlagMPSolution`** — für eine càdlàg-Lösung
+> `ν` des Martingalproblems zu `brownianGeneratorPairs v` und jedes `θ : ℝ` erfüllen die beiden
+> reellen Funktionen
+>
+>     Cθ t = ∫ z, Real.cos (θ * z.toFun t) ∂ν      Sθ t = ∫ z, Real.sin (θ * z.toFun t) ∂ν
+>
+> die **geschlossenen** skalaren Integralgleichungen
+>
+>     Cθ t - Cθ s = ∫ u in Set.Ioc (s:ℝ) (t:ℝ), -(v/2) * θ^2 * Cθ u.toNNReal
+>     Sθ t - Sθ s = ∫ u in Set.Ioc (s:ℝ) (t:ℝ), -(v/2) * θ^2 * Sθ u.toNNReal
+>
+> für alle `s ≤ t`.
+
+*Warum jetzt:* es ist die unmittelbare Zusammensetzung der beiden Sätze, die jetzt dastehen —
+`integral_eval_sub_eq_setIntegral_of_tendsto` nimmt die Folge, die
+`exists_brownianGeneratorPairs_tendsto_mul_cos` liefert, und gibt genau diese Gleichung. Es ist
+ein Lauf ohne offene Entscheidung: beide Eingaben sind bewiesen, und die Formen passen
+buchstäblich aufeinander — `f` und `g` der Limesaussage sind frei und müssen **keiner Klasse
+angehören**, und das ist der Grund, aus dem `cos (θ · )` dort zulässig ist.
+
+*Worauf es ruht, alles in dieser Datei bewiesen:*
+`MeasureTheory.integral_eval_sub_eq_setIntegral_of_tendsto`,
+`MeasureTheory.exists_brownianGeneratorPairs_tendsto_mul_cos` und `…_mul_sin`.
+
+*Die Stelle, an der ein Lauf Zeit verliert:* der Limes der zweiten Komponente ist
+`-(v/2) * θ^2 * Real.cos (θ * x)` als **Funktion von `x`**, und die Limesaussage verlangt ihn
+als das `g` in `∫ z, g (z.toFun u.toNNReal) ∂ν`. Die rechte Seite ist damit nicht `-(v/2) θ²`
+mal einer Konstanten, sondern mal `Cθ u.toNNReal` — die **gesuchte Funktion selbst** unter dem
+Integral. Das ist die Geschlossenheit der Gleichung, und wer sie beim Hinschreiben verliert,
+hat die Aussage, aber nicht ihren Nutzen. Die Vertauschung `∫ z, -(v/2) θ² cos (θ z_u) ∂ν
+= -(v/2) θ² ∫ z, cos (θ z_u) ∂ν` ist `integral_const_mul` und kein Fubini-Schritt.
+
+*Und der Schritt danach, damit er nicht neu erschlossen wird:* aus der Integralgleichung mit
+stetigem Integranden (`continuous_integral_eval_of_isCadlagMPSolution`, seit dem zehnten Lauf)
+folgt `Cθ' = -(v/2) θ² Cθ`, also `Cθ t = Cθ 0 · exp (-(v/2) θ² t)` — eine skalare lineare ODE.
+Erst danach kommt `Measure.ext_of_charFun`. Die **Eindeutigkeit der ODE** ist der einzige Punkt
+dieses Restwegs, der noch eine Entscheidung trägt: entweder über Grönwall auf der Differenz
+zweier Lösungen oder über den integrierenden Faktor `exp ((v/2) θ² t)`, dessen Ableitung
+verschwindet. Beides ist zu prüfen, ehe gebaut wird; geraten ist hier nichts.
+
+### Derselbe Lauf, zweiter Teil — das eben benannte Ziel steht ebenfalls, und es hat **vier Zeilen** gekostet: die Geschlossenheit der Gleichung ist keine Rechnung, sondern eine Folge davon, daß die Limesaussage `f` und `g` **frei** führt
+
+*2 Deklarationen, unmittelbar hinter den vier des ersten Teils. `check_master.py` gegen
+denselben Stand: **0 Fehler, 0 veraltete Namen, 0 `sorry`**, Warnungen **18 / 38 / 36 / 76** —
+weiterhin unverändert. `check_axioms_master.py` über beide: `propext`, `Classical.choice`,
+`Quot.sound`. `check_duplicates.py` jetzt 1905 eigene Deklarationen, 45 Treffer — unverändert.*
+
+| Name | Aussage |
+| --- | --- |
+| `MeasureTheory.integral_eval_mul_cos_eq_of_isCadlagMPSolution` | `Cθ t − Cθ s = ∫ u in Ioc s t, −(v/2) θ² · Cθ u`, für jede càdlàg-Lösung und jedes `θ` |
+| `MeasureTheory.integral_eval_mul_sin_eq_of_isCadlagMPSolution` | dasselbe für `Sθ`, mit derselben Konstanten |
+
+Beide Beweise sind vier Zeilen: die Folge aus dem ersten Teil holen, sie in
+`integral_eval_sub_eq_setIntegral_of_tendsto` einsetzen, und die Konstante mit
+`integral_const_mul` punktweise in der Zeit unter dem Fensterintegral aus dem inneren Integral
+ziehen (`setIntegral_congr_fun measurableSet_Ioc`). Beide gingen im **ersten** Durchlauf durch.
+
+**Der Befund, und er rechtfertigt rückwirkend eine Entscheidung des zehnten Laufs.** Daß das so
+billig ist, liegt allein daran, daß `integral_eval_sub_eq_setIntegral_of_tendsto` seine beiden
+Grenzfunktionen `f` und `g` **ohne jede Voraussetzung** führt — sie müssen keiner Klasse
+angehören, nicht kompakt getragen, nicht beschränkt, nicht einmal meßbar in der Aussage sein.
+Hätte die Limesaussage `g` an `f` gekoppelt (etwa als `(v/2) f''`), so wäre hier eine
+Zusatzrechnung nötig gewesen; so steht die geschlossene Gleichung ohne eine.
+
+**Und die Vorhersage über die Falle traf zu, aber sie kostete nichts.** Die rechte Seite ist
+wirklich `−(v/2) θ²` mal `Cθ u` und nicht mal einer Konstanten; die Umschreibung ist
+`integral_const_mul` und kein Fubini-Schritt, wie angesagt.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **`MeasureTheory.integral_eval_mul_cos_eq_mul_exp_of_isCadlagMPSolution`** — für eine
+> càdlàg-Lösung `ν` und jedes `θ` ist
+>
+>     ∫ z, Real.cos (θ * z.toFun t) ∂ν
+>       = (∫ z, Real.cos (θ * z.toFun 0) ∂ν) * Real.exp (-(v / 2) * θ ^ 2 * t)
+>
+> für alle `t : ℝ≥0`, und ebenso für `sin`.
+
+*Warum jetzt:* es ist der einzige Schritt, der noch zwischen der Integralgleichung und
+`Measure.ext_of_charFun` steht, und er ist reine reelle Analysis — keine Maßtheorie, kein
+Pfadraum, eine skalare Funktion `ℝ≥0 → ℝ`.
+
+*Worauf es ruht, und der Weg ist drei Schritte lang:*
+
+1. **Lipschitz, und zwar aus der Gleichung selbst.** `|Cθ u| ≤ ν.real Set.univ` für jedes `u`
+   (`norm_integral_le_of_norm_le_const` mit `Real.abs_cos_le_one`), also ist die rechte Seite
+   der Gleichung durch `|v/2| θ² · ν.real Set.univ · (t − s)` beschränkt. Das gibt die
+   Stetigkeit von `Cθ` **ohne** `continuous_integral_eval_of_isCadlagMPSolution` — jener Satz
+   verlangt `p ∈ A`, und `cos (θ · )` ist kein Mitglied. Wer ihn hier heranzieht, greift daneben.
+2. **Hauptsatz.** Mit stetigem Integranden ist
+   `t ↦ ∫ u in Ioc 0 t, -(v/2) θ² Cθ u` differenzierbar mit Ableitung `-(v/2) θ² Cθ t`;
+   in Mathlib ist das `intervalIntegral.integral_hasDerivAt_right`
+   (`Mathlib/MeasureTheory/Integral/IntervalIntegral/FundThmCalculus.lean:725`) beziehungsweise
+   `Continuous.deriv_integral` (ebenda, `:664`), beide gelesen gegen `94ef6b89544`.
+   **Die Umschreibung von `Set.Ioc` auf `intervalIntegral` ist hier
+   fällig** und war es bei den Aussagen des zehnten Laufs ausdrücklich nicht; das ist die eine
+   Stelle, an der Zeit verlorengeht.
+3. **Eindeutigkeit.** Zwei Wege, beide am Quelltext gegen `94ef6b89544` belegt:
+   `ODE_solution_unique` (`Mathlib/Analysis/ODE/ExistUnique.lean:326`) mit der
+   Lipschitzbedingung des linearen Feldes, oder `is_const_of_deriv_eq_zero`
+   (`Mathlib/Analysis/Calculus/MeanValue.lean:751`) auf
+   `t ↦ Cθ t · exp ((v/2) θ² t)`, deren Ableitung nach der Produktregel verschwindet. Der
+   zweite ist vermutlich billiger, weil er kein Feld und keine Lipschitzkonstante braucht,
+   sondern nur eine Produktableitung — **aber das ist zu messen und nicht zu behaupten**, und
+   der Vergleich der beiden gehört in den Bericht.
+
+*Was danach bleibt, damit die Reihenfolge klar ist:* aus der geschlossenen Form folgt, daß zwei
+Lösungen mit gleicher Verteilung zur Zeit `0` dieselbe charakteristische Funktion zu jeder Zeit
+haben, und `Measure.ext_of_charFun`
+(`Mathlib/MeasureTheory/Measure/CharacteristicFunction/Basic.lean:257`) macht daraus die
+Gleichheit der eindimensionalen Verteilungen. Das ist `honedim`, die letzte getragene Hypothese
+von Donsker.

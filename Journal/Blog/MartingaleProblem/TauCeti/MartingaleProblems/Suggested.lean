@@ -42,6 +42,8 @@ import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
 import Mathlib.MeasureTheory.Function.ConvergenceInDistribution
 import Mathlib.Probability.Martingale.Convergence
 import Mathlib.Analysis.LConvolution
+import Mathlib.Analysis.Calculus.BumpFunction.FiniteDimension
+import Mathlib.MeasureTheory.Measure.CharacteristicFunction.Basic
 
 /-!
 # Suggested signatures for the martingale problems roadmap
@@ -36266,6 +36268,361 @@ costs nothing, a bounded continuous function being determined by either. -/
 def brownianGeneratorPairs (v : ℝ) : Set ((ℝ →ᵇ ℝ) × (ℝ →ᵇ ℝ)) :=
   {p | ∃ f : ℝ → ℝ, ContDiff ℝ 3 f ∧ HasCompactSupport f ∧ ⇑p.1 = f ∧
     ∀ y, p.2 y = v / 2 * iteratedDeriv 2 f y}
+
+/-- **A smooth cutoff on the line**: `C³`, compactly supported, equal to `1` on
+`[-1, 1]`, vanishing outside `(-2, 2)`, and with values in `[-1, 1]`.
+
+It is `ContDiffBump (0 : ℝ)` with `rIn = 1` and `rOut = 2`, read through its four
+properties rather than through its projections.  **The properties and not the
+structure** is what the consumer wants: the only thing
+`MeasureTheory.exists_brownianGeneratorPairs_tendsto_mul_cos` does with the
+cutoff is to scale its argument, and for that a bump is indistinguishable from
+any other function with these four properties.
+
+**`ContDiff ℝ 3` and not `ContDiff ℝ ⊤`**, for the reason recorded at
+`MeasureTheory.brownianGeneratorPairs`: three is the highest order any consumer
+reads.  The bump is smooth, so the statement could say more; saying more would
+oblige every future witness to be smooth as well. -/
+theorem exists_smooth_cutoff :
+    ∃ χ : ℝ → ℝ, ContDiff ℝ 3 χ ∧ HasCompactSupport χ ∧
+      (∀ x, |x| ≤ 1 → χ x = 1) ∧ (∀ x, 2 ≤ |x| → χ x = 0) ∧ ∀ x, |χ x| ≤ 1 := by
+  let χ : ContDiffBump (0 : ℝ) := ⟨1, 2, one_pos, one_lt_two⟩
+  have hin : χ.rIn = 1 := rfl
+  have hout : χ.rOut = 2 := rfl
+  refine ⟨fun x ↦ χ x, χ.contDiff, χ.hasCompactSupport, fun x hx ↦ ?_, fun x hx ↦ ?_,
+    fun x ↦ ?_⟩
+  · refine χ.one_of_mem_closedBall ?_
+    rw [Metric.mem_closedBall, Real.dist_eq, sub_zero, hin]
+    exact hx
+  · refine χ.zero_of_le_dist ?_
+    rw [Real.dist_eq, sub_zero, hout]
+    exact hx
+  · rw [abs_of_nonneg χ.nonneg]
+    exact χ.le_one
+
+/-- **A bounded `C³` function with bounded first two derivatives is a bounded
+pointwise limit of the operator's own test functions**, together with its image
+under the operator.
+
+This is the missing input of
+`MeasureTheory.integral_eval_sub_eq_setIntegral_of_tendsto` on the way to the
+uniqueness of the one dimensional distributions of a solution of the martingale
+problem for `MeasureTheory.brownianGeneratorPairs v`.  That class consists of
+*compactly supported* functions, and the functions whose one dimensional means
+satisfy a **closed** scalar equation --- `x ↦ Real.cos (θ * x)` and
+`x ↦ Real.sin (θ * x)`, whose second derivative is `-θ²` times themselves --- are
+not members of it.  They are bounded pointwise limits of members, in both
+components and with one bound for the whole sequence, and that is what is
+asserted here.
+
+**Compact support is the only thing being repaired**, which is why the
+hypotheses mention no support and no smallness: `f` is `C³` and `f`, `f'`, `f''`
+are bounded, and nothing else is read.  The two trigonometric instances below
+are the consumers, but the statement is not about them.
+
+**The cutoff is scaled and not inflated, and that is the whole content of the
+uniform bound.**  A sequence of bumps of growing radius has second derivatives
+that are *not* uniformly bounded, and the hypothesis `hgb` of the limit statement
+would fail.  With one fixed cutoff `χ` (`MeasureTheory.exists_smooth_cutoff`) and
+the functions `χ (cₙ · ) · f` for `cₙ → 0` the chain rule puts a factor `cₙ^k` in
+front of the `k`-th derivative of the cutoff, so the three Leibniz terms are
+bounded by `K + 2 M₁ K + M₂ K` uniformly in `n`, where `M₁, M₂` bound the first
+two derivatives of `χ` alone.
+
+**The convergence of the second component is an equality and not an estimate.**
+For each `x` and all large `n` the cutoff is identically `1` on the *open* set
+`{y | |cₙ y| < 1}`, which contains `x`; two functions agreeing on an open set
+have the same iterated derivatives there (`Set.EqOn.iteratedDeriv_of_isOpen`), so
+the second component is eventually *equal* to its limit.  No estimate on the
+derivative of the cutoff enters the limit --- only the bound.
+
+**Only the second derivative of `f` is estimated**, although the class asks for
+`C³`: the third derivative is never read, because only the second occurs in the
+second component of a pair. -/
+theorem exists_brownianGeneratorPairs_tendsto (v : ℝ) {f : ℝ → ℝ} (hf : ContDiff ℝ 3 f)
+    {K : ℝ} (hf0 : ∀ x, |f x| ≤ K) (hf1 : ∀ x, |iteratedDeriv 1 f x| ≤ K)
+    (hf2 : ∀ x, |iteratedDeriv 2 f x| ≤ K) :
+    ∃ (pn : ℕ → (ℝ →ᵇ ℝ) × (ℝ →ᵇ ℝ)) (C : ℝ),
+      (∀ n, pn n ∈ brownianGeneratorPairs v) ∧
+      (∀ x, Tendsto (fun n ↦ (pn n).1 x) atTop (𝓝 (f x))) ∧
+      (∀ x, Tendsto (fun n ↦ (pn n).2 x) atTop (𝓝 (v / 2 * iteratedDeriv 2 f x))) ∧
+      (∀ n, ‖(pn n).1‖ ≤ C) ∧ (∀ n, ‖(pn n).2‖ ≤ C) := by
+  have hmul : ∀ {a b A B : ℝ}, |a| ≤ A → |b| ≤ B → |a * b| ≤ A * B := by
+    intro a b A B ha hb
+    rw [abs_mul]
+    exact mul_le_mul ha hb (abs_nonneg _) ((abs_nonneg _).trans ha)
+  have hK0 : (0 : ℝ) ≤ K := (abs_nonneg (f 0)).trans (hf0 0)
+  obtain ⟨χ, hχd, hχs, hχ1, hχ0, hχb⟩ := exists_smooth_cutoff
+  obtain ⟨M₁, hM₁0, hM₁⟩ :=
+    exists_bound_abs_iteratedDeriv_of_hasCompactSupport hχd hχs (k := 1) (by norm_num)
+  obtain ⟨M₂, hM₂0, hM₂⟩ :=
+    exists_bound_abs_iteratedDeriv_of_hasCompactSupport hχd hχs (k := 2) (by norm_num)
+  obtain ⟨c, hcpos, hcle, hcsmall⟩ : ∃ c : ℕ → ℝ, (∀ n, 0 < c n) ∧ (∀ n, c n ≤ 1) ∧
+      ∀ x : ℝ, ∀ᶠ n : ℕ in atTop, |c n * x| < 1 := by
+    refine ⟨fun n ↦ ((n : ℝ) + 1)⁻¹, fun n ↦ by positivity,
+      fun n ↦ inv_le_one_of_one_le₀ (by simp), fun x ↦ ?_⟩
+    filter_upwards [eventually_ge_atTop ⌈|x|⌉₊] with n hn
+    have h1 : |x| ≤ (n : ℝ) := le_trans (Nat.le_ceil _) (by exact_mod_cast hn)
+    have hn1 : (0 : ℝ) < (n : ℝ) + 1 := by positivity
+    have h2 : ((n : ℝ) + 1)⁻¹ * |x| < ((n : ℝ) + 1)⁻¹ * ((n : ℝ) + 1) :=
+      mul_lt_mul_of_pos_left (by linarith) (by positivity)
+    rw [inv_mul_cancel₀ (ne_of_gt hn1)] at h2
+    rwa [abs_mul, abs_of_pos (by positivity : (0 : ℝ) < ((n : ℝ) + 1)⁻¹)]
+  have hcabs : ∀ n, |c n| ≤ 1 := fun n ↦ by rw [abs_of_pos (hcpos n)]; exact hcle n
+  have hcsq : ∀ n, |c n ^ 2| ≤ 1 := fun n ↦ by
+    rw [abs_of_nonneg (sq_nonneg _)]
+    nlinarith [hcpos n, hcle n]
+  set F : ℕ → ℝ → ℝ := fun n x ↦ χ (c n * x) * f x with hF
+  have hud : ∀ n, ContDiff ℝ 3 (fun x : ℝ ↦ χ (c n * x)) := fun n ↦
+    hχd.comp (contDiff_const.mul contDiff_id)
+  have hFd : ∀ n, ContDiff ℝ 3 (F n) := fun n ↦ (hud n).mul hf
+  have hFs : ∀ n, HasCompactSupport (F n) := by
+    intro n
+    refine HasCompactSupport.intro
+      (isCompact_Icc (a := -(2 / c n)) (b := 2 / c n)) fun x hx ↦ ?_
+    have hz : χ (c n * x) = 0 := by
+      refine hχ0 _ ?_
+      rw [abs_mul, abs_of_pos (hcpos n)]
+      by_contra hcon
+      have hlt : |x| < 2 / c n := by
+        rw [lt_div_iff₀ (hcpos n), mul_comm]
+        exact not_le.mp hcon
+      exact hx ⟨(abs_lt.mp hlt).1.le, (abs_lt.mp hlt).2.le⟩
+    simp only [hF, hz, zero_mul]
+  have hderiv : ∀ (n : ℕ) (x : ℝ), iteratedDeriv 2 (F n) x
+      = χ (c n * x) * iteratedDeriv 2 f x
+        + 2 * ((c n ^ 1 * iteratedDeriv 1 χ (c n * x)) * iteratedDeriv 1 f x)
+        + c n ^ 2 * iteratedDeriv 2 χ (c n * x) * f x := by
+    intro n x
+    have hu2 : ContDiff ℝ 2 (fun y : ℝ ↦ χ (c n * y)) := (hud n).of_le (by norm_num)
+    have hf2' : ContDiff ℝ 2 f := hf.of_le (by norm_num)
+    have hu1e : iteratedDeriv 1 (fun y : ℝ ↦ χ (c n * y)) x
+        = c n ^ 1 * iteratedDeriv 1 χ (c n * x) :=
+      congrFun (iteratedDeriv_comp_const_mul (hχd.of_le (by norm_num)) (c n)) x
+    have hu2e : iteratedDeriv 2 (fun y : ℝ ↦ χ (c n * y)) x
+        = c n ^ 2 * iteratedDeriv 2 χ (c n * x) :=
+      congrFun (iteratedDeriv_comp_const_mul (hχd.of_le (by norm_num)) (c n)) x
+    simp only [hF]
+    rw [iteratedDeriv_fun_mul hu2.contDiffAt hf2'.contDiffAt]
+    simp only [Finset.sum_range_succ, Finset.sum_range_zero, zero_add, iteratedDeriv_zero]
+    rw [hu1e, hu2e]
+    norm_num
+    ring
+  have hbound : ∀ (n : ℕ) (x : ℝ),
+      |iteratedDeriv 2 (F n) x| ≤ K + 2 * (M₁ * K) + M₂ * K := by
+    intro n x
+    rw [hderiv n x]
+    refine (abs_add_three _ _ _).trans ?_
+    have h1 : |χ (c n * x) * iteratedDeriv 2 f x| ≤ 1 * K := hmul (hχb _) (hf2 _)
+    have h2 : |2 * ((c n ^ 1 * iteratedDeriv 1 χ (c n * x)) * iteratedDeriv 1 f x)|
+        ≤ 2 * ((1 * M₁) * K) := by
+      refine hmul (by norm_num) (hmul (hmul ?_ (hM₁ _)) (hf1 _))
+      simpa using hcabs n
+    have h3 : |c n ^ 2 * iteratedDeriv 2 χ (c n * x) * f x| ≤ (1 * M₂) * K :=
+      hmul (hmul (hcsq n) (hM₂ _)) (hf0 _)
+    calc _ ≤ 1 * K + 2 * ((1 * M₁) * K) + (1 * M₂) * K := add_le_add (add_le_add h1 h2) h3
+      _ = K + 2 * (M₁ * K) + M₂ * K := by ring
+  have heq : ∀ (n : ℕ) (x : ℝ), |c n * x| < 1 →
+      iteratedDeriv 2 (F n) x = iteratedDeriv 2 f x := by
+    intro n x hx
+    have hopen : IsOpen {y : ℝ | |c n * y| < 1} :=
+      isOpen_lt (Continuous.abs (continuous_const.mul continuous_id)) continuous_const
+    have hEqOn : Set.EqOn (F n) f {y : ℝ | |c n * y| < 1} := by
+      intro y hy
+      simp only [hF, hχ1 _ (le_of_lt hy), one_mul]
+    exact Set.EqOn.iteratedDeriv_of_isOpen hEqOn hopen 2 hx
+  have key : ∀ n : ℕ, ∃ p : (ℝ →ᵇ ℝ) × (ℝ →ᵇ ℝ),
+      (⇑p.1 = F n) ∧ ∀ y, p.2 y = v / 2 * iteratedDeriv 2 (F n) y := by
+    intro n
+    obtain ⟨fb, gb, -, -, -, hfb, hgb, -, -, -⟩ :=
+      exists_boundedContinuous_of_contDiff_of_hasCompactSupport (hFd n) (hFs n) v
+    exact ⟨(fb, gb), hfb, hgb⟩
+  choose pn hcoe hval using key
+  have hC0 : (0 : ℝ) ≤ max K (|v / 2| * (K + 2 * (M₁ * K) + M₂ * K)) :=
+    le_max_of_le_left hK0
+  refine ⟨pn, max K (|v / 2| * (K + 2 * (M₁ * K) + M₂ * K)),
+    fun n ↦ ⟨F n, hFd n, hFs n, hcoe n, hval n⟩, ?_, ?_, ?_, ?_⟩
+  · intro x
+    refine Tendsto.congr' ?_ tendsto_const_nhds
+    filter_upwards [hcsmall x] with n hn
+    rw [hcoe n]
+    simp only [hF, hχ1 _ (le_of_lt hn), one_mul]
+  · intro x
+    refine Tendsto.congr' ?_ tendsto_const_nhds
+    filter_upwards [hcsmall x] with n hn
+    rw [hval n x, heq n x hn]
+  · intro n
+    rw [BoundedContinuousFunction.norm_le hC0]
+    intro x
+    rw [Real.norm_eq_abs, hcoe n]
+    refine le_trans ?_ (le_max_left _ _)
+    simp only [hF]
+    calc |χ (c n * x) * f x| ≤ 1 * K := hmul (hχb _) (hf0 _)
+      _ = K := one_mul K
+  · intro n
+    rw [BoundedContinuousFunction.norm_le hC0]
+    intro x
+    rw [Real.norm_eq_abs, hval n x, abs_mul]
+    refine le_trans ?_ (le_max_right _ _)
+    exact mul_le_mul_of_nonneg_left (hbound n x) (abs_nonneg _)
+
+/-- **The real part of a character is a bounded pointwise limit of the operator's
+test functions.**
+
+`MeasureTheory.exists_brownianGeneratorPairs_tendsto` at
+`f = fun x ↦ Real.cos (θ * x)`, with `K = max 1 (max |θ| θ²)` and the three
+bounds read off from `Real.abs_iteratedDeriv_cos_le_one` after
+`iteratedDeriv_comp_const_mul` has pulled the factor `θ^k` out.
+
+**Why this is the pair the uniqueness argument wants.**  The second component
+converges to `-(v/2) θ² cos (θ · )`, which is `-(v/2) θ²` *times the first*.  The
+forward equation of the one dimensional distributions,
+`MeasureTheory.integral_eval_sub_eq_setIntegral_of_isCadlagMPSolution`, therefore
+becomes a **closed** scalar linear integral equation for the mean of the first
+component, with no other unknown in it.  Together with the sine version it
+determines the characteristic function of the one dimensional distribution, and
+`Measure.ext_of_charFun` makes that the equality of the distributions. -/
+theorem exists_brownianGeneratorPairs_tendsto_mul_cos (v θ : ℝ) :
+    ∃ (pn : ℕ → (ℝ →ᵇ ℝ) × (ℝ →ᵇ ℝ)) (C : ℝ),
+      (∀ n, pn n ∈ brownianGeneratorPairs v) ∧
+      (∀ x, Tendsto (fun n ↦ (pn n).1 x) atTop (𝓝 (Real.cos (θ * x)))) ∧
+      (∀ x, Tendsto (fun n ↦ (pn n).2 x) atTop
+        (𝓝 (-(v / 2) * θ ^ 2 * Real.cos (θ * x)))) ∧
+      (∀ n, ‖(pn n).1‖ ≤ C) ∧ (∀ n, ‖(pn n).2‖ ≤ C) := by
+  have hcd : ContDiff ℝ 3 (fun x : ℝ ↦ Real.cos (θ * x)) :=
+    Real.contDiff_cos.comp (contDiff_const.mul contDiff_id)
+  have hk : ∀ k : ℕ, ∀ x : ℝ, iteratedDeriv k (fun y : ℝ ↦ Real.cos (θ * y)) x
+      = θ ^ k * iteratedDeriv k Real.cos (θ * x) := fun k x ↦
+    congrFun (iteratedDeriv_comp_const_mul Real.contDiff_cos θ) x
+  have hb0 : ∀ x : ℝ, |Real.cos (θ * x)| ≤ max 1 (max |θ| (θ ^ 2)) := fun x ↦
+    (Real.abs_cos_le_one _).trans (le_max_left _ _)
+  have hb1 : ∀ x : ℝ, |iteratedDeriv 1 (fun y : ℝ ↦ Real.cos (θ * y)) x|
+      ≤ max 1 (max |θ| (θ ^ 2)) := by
+    intro x
+    rw [hk 1 x, abs_mul, pow_one]
+    refine le_trans ?_ ((le_max_left _ _).trans (le_max_right 1 _))
+    calc |θ| * |iteratedDeriv 1 Real.cos (θ * x)| ≤ |θ| * 1 :=
+          mul_le_mul_of_nonneg_left (Real.abs_iteratedDeriv_cos_le_one 1 _) (abs_nonneg _)
+      _ = |θ| := mul_one _
+  have hb2 : ∀ x : ℝ, |iteratedDeriv 2 (fun y : ℝ ↦ Real.cos (θ * y)) x|
+      ≤ max 1 (max |θ| (θ ^ 2)) := by
+    intro x
+    rw [hk 2 x, abs_mul, abs_of_nonneg (sq_nonneg θ)]
+    refine le_trans ?_ ((le_max_right _ _).trans (le_max_right 1 _))
+    calc θ ^ 2 * |iteratedDeriv 2 Real.cos (θ * x)| ≤ θ ^ 2 * 1 :=
+          mul_le_mul_of_nonneg_left (Real.abs_iteratedDeriv_cos_le_one 2 _) (sq_nonneg θ)
+      _ = θ ^ 2 := mul_one _
+  obtain ⟨pn, C, hmem, hlim1, hlim2, hn1, hn2⟩ :=
+    exists_brownianGeneratorPairs_tendsto v hcd hb0 hb1 hb2
+  refine ⟨pn, C, hmem, hlim1, fun x ↦ ?_, hn1, hn2⟩
+  have hval : v / 2 * iteratedDeriv 2 (fun y : ℝ ↦ Real.cos (θ * y)) x
+      = -(v / 2) * θ ^ 2 * Real.cos (θ * x) := by
+    have hcos2 : iteratedDeriv 2 Real.cos (θ * x) = -Real.cos (θ * x) := by simp
+    rw [hk 2 x, hcos2]
+    ring
+  have h := hlim2 x
+  rwa [hval] at h
+
+/-- **The imaginary part of a character is a bounded pointwise limit of the
+operator's test functions.**
+
+The sine half of `MeasureTheory.exists_brownianGeneratorPairs_tendsto_mul_cos`,
+proved the same way and from the same general statement.  Both halves are needed:
+the characteristic function of the one dimensional distribution is determined by
+the means of `cos (θ · )` and `sin (θ · )` together, and either alone determines
+only the symmetric respectively antisymmetric part of the distribution. -/
+theorem exists_brownianGeneratorPairs_tendsto_mul_sin (v θ : ℝ) :
+    ∃ (pn : ℕ → (ℝ →ᵇ ℝ) × (ℝ →ᵇ ℝ)) (C : ℝ),
+      (∀ n, pn n ∈ brownianGeneratorPairs v) ∧
+      (∀ x, Tendsto (fun n ↦ (pn n).1 x) atTop (𝓝 (Real.sin (θ * x)))) ∧
+      (∀ x, Tendsto (fun n ↦ (pn n).2 x) atTop
+        (𝓝 (-(v / 2) * θ ^ 2 * Real.sin (θ * x)))) ∧
+      (∀ n, ‖(pn n).1‖ ≤ C) ∧ (∀ n, ‖(pn n).2‖ ≤ C) := by
+  have hcd : ContDiff ℝ 3 (fun x : ℝ ↦ Real.sin (θ * x)) :=
+    Real.contDiff_sin.comp (contDiff_const.mul contDiff_id)
+  have hk : ∀ k : ℕ, ∀ x : ℝ, iteratedDeriv k (fun y : ℝ ↦ Real.sin (θ * y)) x
+      = θ ^ k * iteratedDeriv k Real.sin (θ * x) := fun k x ↦
+    congrFun (iteratedDeriv_comp_const_mul Real.contDiff_sin θ) x
+  have hb0 : ∀ x : ℝ, |Real.sin (θ * x)| ≤ max 1 (max |θ| (θ ^ 2)) := fun x ↦
+    (Real.abs_sin_le_one _).trans (le_max_left _ _)
+  have hb1 : ∀ x : ℝ, |iteratedDeriv 1 (fun y : ℝ ↦ Real.sin (θ * y)) x|
+      ≤ max 1 (max |θ| (θ ^ 2)) := by
+    intro x
+    rw [hk 1 x, abs_mul, pow_one]
+    refine le_trans ?_ ((le_max_left _ _).trans (le_max_right 1 _))
+    calc |θ| * |iteratedDeriv 1 Real.sin (θ * x)| ≤ |θ| * 1 :=
+          mul_le_mul_of_nonneg_left (Real.abs_iteratedDeriv_sin_le_one 1 _) (abs_nonneg _)
+      _ = |θ| := mul_one _
+  have hb2 : ∀ x : ℝ, |iteratedDeriv 2 (fun y : ℝ ↦ Real.sin (θ * y)) x|
+      ≤ max 1 (max |θ| (θ ^ 2)) := by
+    intro x
+    rw [hk 2 x, abs_mul, abs_of_nonneg (sq_nonneg θ)]
+    refine le_trans ?_ ((le_max_right _ _).trans (le_max_right 1 _))
+    calc θ ^ 2 * |iteratedDeriv 2 Real.sin (θ * x)| ≤ θ ^ 2 * 1 :=
+          mul_le_mul_of_nonneg_left (Real.abs_iteratedDeriv_sin_le_one 2 _) (sq_nonneg θ)
+      _ = θ ^ 2 := mul_one _
+  obtain ⟨pn, C, hmem, hlim1, hlim2, hn1, hn2⟩ :=
+    exists_brownianGeneratorPairs_tendsto v hcd hb0 hb1 hb2
+  refine ⟨pn, C, hmem, hlim1, fun x ↦ ?_, hn1, hn2⟩
+  have hval : v / 2 * iteratedDeriv 2 (fun y : ℝ ↦ Real.sin (θ * y)) x
+      = -(v / 2) * θ ^ 2 * Real.sin (θ * x) := by
+    have hsin2 : iteratedDeriv 2 Real.sin (θ * x) = -Real.sin (θ * x) := by simp
+    rw [hk 2 x, hsin2]
+    ring
+  have h := hlim2 x
+  rwa [hval] at h
+
+/-- **The forward equation closes on the real part of the characteristic
+function.**
+
+For a càdlàg solution of the martingale problem for
+`MeasureTheory.brownianGeneratorPairs v`, the mean `Cθ t = ∫ cos (θ · z t)`
+satisfies a scalar linear integral equation in which **no other unknown occurs**:
+its increment over a window is `-(v/2) θ²` times the integral of `Cθ` itself over
+that window.
+
+**This is what the compactly supported test functions cannot say.**  For a member
+`p` of the class the forward equation
+(`MeasureTheory.integral_eval_sub_eq_setIntegral_of_isCadlagMPSolution`) relates
+the mean of `p.1` to the mean of `p.2`, and the two are different functions.  For
+`cos (θ · )` they are proportional, because `cos'' = -cos`, and the equation
+becomes closed --- which is the whole reason the limit statement
+`MeasureTheory.integral_eval_sub_eq_setIntegral_of_tendsto` was proved with `f`
+and `g` free of any class.
+
+**The constant comes out of the inner integral and not out of the window.**  The
+right hand side is `∫ u, ∫ z, g (z u)` with `g = -(v/2) θ² cos (θ · )`; pulling
+the constant out is `integral_const_mul` under `ν`, pointwise in the time.  No
+Fubini step is involved, and the window integral is untouched. -/
+theorem integral_eval_mul_cos_eq_of_isCadlagMPSolution {v : ℝ}
+    (ν : Measure D(ℝ≥0, ℝ)) [IsFiniteMeasure ν]
+    (h : IsCadlagMPSolution (brownianGeneratorPairs v) ν) (θ : ℝ) {s t : ℝ≥0} (hst : s ≤ t) :
+    (∫ z, Real.cos (θ * z.toFun t) ∂ν) - ∫ z, Real.cos (θ * z.toFun s) ∂ν
+      = ∫ u in Set.Ioc (s : ℝ) (t : ℝ),
+          -(v / 2) * θ ^ 2 * ∫ z, Real.cos (θ * z.toFun u.toNNReal) ∂ν := by
+  obtain ⟨pn, C, hmem, hlim1, hlim2, hn1, hn2⟩ :=
+    exists_brownianGeneratorPairs_tendsto_mul_cos v θ
+  rw [integral_eval_sub_eq_setIntegral_of_tendsto ν h hmem hlim1 hlim2 hn1 hn2 hst]
+  exact setIntegral_congr_fun measurableSet_Ioc fun u _ ↦ integral_const_mul _ _
+
+/-- **The forward equation closes on the imaginary part of the characteristic
+function.**
+
+The sine half of
+`MeasureTheory.integral_eval_mul_cos_eq_of_isCadlagMPSolution`, with the same
+constant `-(v/2) θ²`.  The two together are the equations the characteristic
+function of the one dimensional distribution satisfies, and they are what a
+uniqueness argument for those distributions consumes. -/
+theorem integral_eval_mul_sin_eq_of_isCadlagMPSolution {v : ℝ}
+    (ν : Measure D(ℝ≥0, ℝ)) [IsFiniteMeasure ν]
+    (h : IsCadlagMPSolution (brownianGeneratorPairs v) ν) (θ : ℝ) {s t : ℝ≥0} (hst : s ≤ t) :
+    (∫ z, Real.sin (θ * z.toFun t) ∂ν) - ∫ z, Real.sin (θ * z.toFun s) ∂ν
+      = ∫ u in Set.Ioc (s : ℝ) (t : ℝ),
+          -(v / 2) * θ ^ 2 * ∫ z, Real.sin (θ * z.toFun u.toNNReal) ∂ν := by
+  obtain ⟨pn, C, hmem, hlim1, hlim2, hn1, hn2⟩ :=
+    exists_brownianGeneratorPairs_tendsto_mul_sin v θ
+  rw [integral_eval_sub_eq_setIntegral_of_tendsto ν h hmem hlim1 hlim2 hn1 hn2 hst]
+  exact setIntegral_congr_fun measurableSet_Ioc fun u _ ↦ integral_const_mul _ _
 
 variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
 
