@@ -4079,6 +4079,85 @@ acceptance example on `D(ℝ, E)` compute with `intDist 0`. -/
 theorem SkorokhodSpace.dist_eq [SecondCountableTopology E] (f g : D(ι, E)) :
     dist f g = SkorokhodSpace.intDist (basePoint : ι) f g := rfl
 
+/-! ### Evaluation at the base point is continuous
+
+`SkorokhodSpace.continuous_eval_of_nhdsGT_eq_bot` above makes evaluation
+continuous at a *right isolated* point, and the base point of a running instance
+such as `ℝ≥0` is not one.  It is continuous there all the same, and for a
+different reason: the infimum defining the metric runs over `TimeChange.fixing`,
+so every competitor leaves the base point where it is and the windowed supremum
+sees the displacement of the two paths there undiminished.
+
+This is what carries an initial distribution through a weak limit: a sequence of
+laws on `D(ι, E)` all of whose members put the same law on the value at the base
+point has a limit with that same law there. -/
+
+omit [BasePoint ι] in
+/-- **The displacement at an anchored point is below the windowed supremum**, at
+every radius and for every time change that fixes it.
+
+The window always contains its own centre (`mem_exhaustion_self`), so the clamp
+is the identity there, and a time change of `TimeChange.fixing t₀` reads the
+first path at `t₀` as well.  The supremum is a supremum and not the junk value
+by `bddAbove_range_dist_restrictExhaustion`, which is what the `le_ciSup_of_le`
+spends. -/
+theorem SkorokhodSpace.dist_eval_le_distWith (t₀ : ι) (u : ℝ) {l : TimeChange ι}
+    (hl : l ∈ TimeChange.fixing t₀) (f g : D(ι, E)) :
+    dist (f.toFun t₀) (g.toFun t₀) ≤ SkorokhodSpace.distWith t₀ u l f g := by
+  refine le_ciSup_of_le (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion t₀ u f g l)
+    t₀ (le_of_eq ?_)
+  rw [SkorokhodSpace.restrictExhaustion_apply, SkorokhodSpace.restrictExhaustion_apply,
+    TimeChange.mem_fixing_iff.1 hl, clamp_eq_self (mem_exhaustion_self t₀ u)]
+
+/-- **The metric dominates the truncated displacement at the base point.**
+
+The truncation is not a blemish of the proof but of the metric: `intDist` is an
+integral of `min 1 (distWith …)`, so it never exceeds `1` and can dominate no
+unbounded quantity.  What the statement says is therefore exactly as much as is
+true, and it is enough for `SkorokhodSpace.continuous_eval_basePoint`.
+
+The three steps are one each: `dist_eval_le_distWith` under the integral,
+`Real.integral_exp_neg_Ioi_zero` for the constant that comes out of it, and
+`le_max_right` to drop the logarithmic norm of the time change. -/
+theorem SkorokhodSpace.min_one_dist_eval_basePoint_le_dist [SecondCountableTopology E]
+    (f g : D(ι, E)) :
+    min 1 (dist (f.toFun (basePoint : ι)) (g.toFun (basePoint : ι))) ≤ dist f g := by
+  rw [SkorokhodSpace.dist_eq, SkorokhodSpace.intDist]
+  refine le_ciInf fun l ↦ le_trans ?_ (le_max_right _ _)
+  have hconst : min 1 (dist (f.toFun (basePoint : ι)) (g.toFun (basePoint : ι)))
+      = ∫ u in Set.Ioi (0 : ℝ),
+        Real.exp (-u) * min 1 (dist (f.toFun (basePoint : ι)) (g.toFun (basePoint : ι))) := by
+    rw [MeasureTheory.integral_mul_const, integral_exp_neg_Ioi_zero, one_mul]
+  rw [hconst, SkorokhodSpace.intWith]
+  refine MeasureTheory.integral_mono ((integrableOn_exp_neg_Ioi 0).mul_const _)
+    (SkorokhodSpace.integrableOn_intDist (basePoint : ι) (l : TimeChange ι) f g) fun u ↦ ?_
+  exact mul_le_mul_of_nonneg_left
+    (min_le_min le_rfl (SkorokhodSpace.dist_eval_le_distWith (basePoint : ι) u l.2 f g))
+    (Real.exp_pos _).le
+
+/-- **Evaluation at the base point is continuous.**
+
+The truncation of the previous lemma is why the proof is an `ε`-`δ` argument and
+not a `LipschitzWith`: a radius above `1` says nothing, so the radius is taken to
+be `min ε 1` and the case distinction `min_cases` reads off which branch of the
+truncation was met.  Below `1` the truncation is invisible and the estimate is
+the metric itself.
+
+`SkorokhodSpace.measurable_eval` is strictly weaker and would not do here:
+measurability passes to no weak limit. -/
+theorem SkorokhodSpace.continuous_eval_basePoint [SecondCountableTopology E] :
+    Continuous fun f : D(ι, E) ↦ f.toFun (basePoint : ι) := by
+  rw [Metric.continuous_iff]
+  intro f ε hε
+  refine ⟨min ε 1, lt_min hε one_pos, fun g hg ↦ ?_⟩
+  have hle := SkorokhodSpace.min_one_dist_eval_basePoint_le_dist g f
+  have hlt : min 1 (dist (g.toFun (basePoint : ι)) (f.toFun (basePoint : ι))) < min ε 1 :=
+    lt_of_le_of_lt hle hg
+  rcases min_cases 1 (dist (g.toFun (basePoint : ι)) (f.toFun (basePoint : ι))) with
+    ⟨he, -⟩ | ⟨he, -⟩
+  · exact absurd (he ▸ lt_of_lt_of_le hlt (min_le_right _ _)) (lt_irrefl 1)
+  · exact he ▸ lt_of_lt_of_le hlt (min_le_left _ _)
+
 /-! ## Milestone 5: completeness, separability, Polishness
 
 **The three commitments of this section --- `CompleteSpace`, `SeparableSpace` and
@@ -12794,6 +12873,63 @@ theorem SkorokhodSpace.measurable_uncurry_eval :
       (Eventually.of_forall hge)
   have hrc : Tendsto p.2.toFun (𝓝[≥] t) (𝓝 (p.2.toFun t)) :=
     continuousWithinAt_Ioi_iff_Ici.1 (p.2.isCadlag.isRightContinuous t)
+  exact hrc.comp hwithin
+
+/-- **Evaluation is jointly measurable over the index `ℝ≥0` as well.**
+
+The proof is `SkorokhodSpace.measurable_uncurry_eval` over the other index, and
+it is repeated rather than transported because there is no measurable equivalence
+of `D(ℝ, E)` and `D(ℝ≥0, E)` to transport it along: the two path spaces are not
+the same object, and a path over `ℝ≥0` has no values to the left of the base
+point to be matched with.
+
+What changes is the approximation from the right -- `⌈u 2ⁿ⌉₊ / 2ⁿ` with a natural
+ceiling, because `ℝ≥0` is a `FloorSemiring` and not a `FloorRing` -- and nothing
+else: `Nat.measurable_ceil` is what makes each approximant measurable in the
+pair, the right continuity of the paths makes them converge, and
+`measurable_of_tendsto_metrizable` closes it.
+
+This is the joint measurability a Fubini argument over the path space needs: the
+compensator of `SkorokhodSpace.mpTest` integrates the path over a window, and
+exchanging that integral with one over the law is the first step from a
+martingale identity to the forward equation of the one dimensional
+distributions. -/
+theorem SkorokhodSpace.measurable_uncurry_eval_nnreal :
+    Measurable fun p : ℝ≥0 × D(ℝ≥0, E) ↦ p.2.toFun p.1 := by
+  have h2 : ∀ n : ℕ, (0 : ℝ≥0) < 2 ^ n := fun n ↦ by positivity
+  have hstep : ∀ n : ℕ, Measurable fun p : ℝ≥0 × D(ℝ≥0, E) ↦
+      p.2.toFun ((⌈p.1 * 2 ^ n⌉₊ : ℝ≥0) / 2 ^ n) := by
+    intro n
+    have hF : Measurable fun q : D(ℝ≥0, E) × ℕ ↦ q.1.toFun ((q.2 : ℝ≥0) / 2 ^ n) :=
+      measurable_from_prod_countable_left fun k ↦
+        SkorokhodSpace.measurable_eval ((k : ℝ≥0) / 2 ^ n)
+    exact hF.comp (measurable_snd.prodMk
+      (Nat.measurable_ceil.comp (measurable_fst.mul_const _)))
+  refine measurable_of_tendsto_metrizable hstep (tendsto_pi_nhds.2 fun p ↦ ?_)
+  set u : ℝ≥0 := p.1 with hu
+  have hge : ∀ n : ℕ, u ≤ (⌈u * 2 ^ n⌉₊ : ℝ≥0) / 2 ^ n := by
+    intro n
+    rw [le_div_iff₀ (h2 n)]
+    exact_mod_cast Nat.le_ceil (u * 2 ^ n)
+  have hlt : ∀ n : ℕ, (⌈u * 2 ^ n⌉₊ : ℝ≥0) / 2 ^ n ≤ u + (2 : ℝ≥0)⁻¹ ^ n := by
+    intro n
+    rw [div_le_iff₀ (h2 n)]
+    have hone : ((2 : ℝ≥0)⁻¹) ^ n * 2 ^ n = 1 := by
+      rw [← mul_pow]
+      norm_num
+    have hrw : (u + (2 : ℝ≥0)⁻¹ ^ n) * 2 ^ n = u * 2 ^ n + 1 := by
+      rw [add_mul, hone]
+    rw [hrw]
+    exact_mod_cast (Nat.ceil_lt_add_one (u * 2 ^ n).coe_nonneg).le
+  have hzero : Tendsto (fun n : ℕ ↦ u + (2 : ℝ≥0)⁻¹ ^ n) atTop (𝓝 (u + 0)) :=
+    tendsto_const_nhds.add (NNReal.tendsto_pow_atTop_nhds_zero_of_lt_one (by norm_num))
+  rw [add_zero] at hzero
+  have hsq : Tendsto (fun n : ℕ ↦ (⌈u * 2 ^ n⌉₊ : ℝ≥0) / 2 ^ n) atTop (𝓝 u) :=
+    tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hzero hge hlt
+  have hwithin : Tendsto (fun n : ℕ ↦ (⌈u * 2 ^ n⌉₊ : ℝ≥0) / 2 ^ n) atTop (𝓝[≥] u) :=
+    tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within _ hsq (Eventually.of_forall hge)
+  have hrc : Tendsto p.2.toFun (𝓝[≥] u) (𝓝 (p.2.toFun u)) :=
+    continuousWithinAt_Ioi_iff_Ici.1 (p.2.isCadlag.isRightContinuous u)
   exact hrc.comp hwithin
 
 /-- **The event that the right oscillation over `[t, t + δ')` exceeds `a` is

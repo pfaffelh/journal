@@ -59840,3 +59840,159 @@ Approximanten die des Limes zu gewinnen verlangt die **Stetigkeit** der Auswertu
 Skorokhod-Topologie. Sie ist wahr — bei `t = 0` gibt es keinen Sprung von links —, aber sie ist
 in `SkorokhodSpace/Suggested.lean` zu suchen und **nicht** aus `SkorokhodSpace.measurable_eval`
 zu folgern; Meßbarkeit ist für einen schwachen Limes zu wenig.
+
+### 2026-09-24, neunter Lauf des Tages — das benannte Ziel steht, und es trägt weiter als angesagt: die Stetigkeit der Auswertung bei `⊥` war **nicht** in `SkorokhodSpace` zu suchen, sondern zu beweisen, und mit ihr fällt Donsker auf **eine** getragene Hypothese zurück — `honedim`
+
+*10 Deklarationen, 4 in `SkorokhodSpace/Suggested.lean` (neuer Unterabschnitt „Evaluation at the
+base point is continuous" hinter `SkorokhodSpace.dist_eq`, dazu eine hinter
+`measurable_uncurry_eval`), 6 in `MartingaleProblems/Suggested.lean` (neuer Unterabschnitt „The
+initial distribution, and the repair of `huniq`" am Ende von `DonskerLimit`, dazu zwei hinter
+`integrable_mpFamily_cadlagFiltration`).
+`scripts/check_master.py` gegen `upstream/master` (`94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `4.35.0-rc2`): **0 Fehler, 0 veraltete Namen, 0 `sorry`** in allen vier Dateien, Warnungen
+**18 / 38 / 36 / 76** — **unverändert**, also keine einzige neue.
+`check_axioms_master.py` über alle zehn: `propext`, `Classical.choice`, `Quot.sound`, kein
+`sorryAx`. `check_duplicates.py` jetzt 1892 eigene Deklarationen, 45 Treffer — **unverändert**
+gegenüber dem Vorlauf, also keine neue Namenskollision. Zwei Doc-Kommentare berichtigt, keine
+`README.md` angefaßt.*
+
+#### Was steht
+
+| Name | Aussage |
+| --- | --- |
+| `SkorokhodSpace.dist_eval_le_distWith` | die Verschiebung am verankerten Punkt liegt unter dem Fenstersupremum |
+| `SkorokhodSpace.min_one_dist_eval_basePoint_le_dist` | `min 1 (dist (f ⊥) (g ⊥)) ≤ dist f g` |
+| `SkorokhodSpace.continuous_eval_basePoint` | **die Auswertung am Basispunkt ist stetig** |
+| `MeasureTheory.map_eval_bot_map_rescaledWalk_eq_dirac` | **das benannte Ziel**: der umskalierte Irrfahrtspfad startet in `0` |
+| `MeasureTheory.map_eval_bot_eq_dirac_of_tendsto` | eine gemeinsame Anfangsverteilung geht in den schwachen Limes über |
+| `MeasureTheory.tendsto_map_rescaledWalk_of_unique_of_map_bot` | Donsker mit einem `huniq`, das eine Anfangsverteilung nennt |
+| `MeasureTheory.exists_tendsto_map_rescaledWalk_of_onedim` | **Donsker, und getragen ist nur noch `honedim`** |
+| `SkorokhodSpace.measurable_uncurry_eval_nnreal` | die Auswertung ist über `ℝ≥0` gemeinsam meßbar |
+| `MeasureTheory.measurable_uncurry_comp_eval_toNNReal` | dasselbe für den Integranden des Kompensators |
+| `MeasureTheory.integral_setIntegral_eval_comm` | Fubini: Fensterintegral und Integral über das Gesetz vertauschen |
+
+#### Das benannte Ziel: beide angesagten Fallen waren echt, und die Wegbeschreibung stimmte
+
+`map_eval_bot_map_rescaledWalk_eq_dirac` ging im **ersten** Durchlauf durch, mit genau der
+Reihenfolge, die der Vorlauf angesagt hatte: `NNReal.bot_eq_zero`, dann `zero_mul`, dann
+`Nat.floor_zero` — der Faktor läuft über `ℝ≥0`, und umgekehrt paßt das Muster nicht. Und der
+Schritt danach ist `Measure.map_map` (beide Faktoren meßbar: `hΦm n` und
+`SkorokhodSpace.measurable_eval ⊥`) und erst **auf dem zusammengesetzten Integranden**
+`Measure.map_const`. Die Deklaration liest von den neun Datenvoraussetzungen nur `hΦm` und `hΦ`.
+
+#### Die Stetigkeit bei `⊥`: sie stand nicht da, und der Grund, aus dem sie gilt, ist nicht der angesagte
+
+Der Vorlauf hatte sie „in `SkorokhodSpace/Suggested.lean` zu suchen" gestellt, mit der Begründung
+„bei `t = 0` gibt es keinen Sprung von links". **Sie steht dort nicht**, und die Begründung ist
+nicht die, die trägt. Was dort steht, ist `SkorokhodSpace.continuous_eval_of_nhdsGT_eq_bot` — die
+Auswertung an einem **rechts isolierten** Punkt —, und `(basePoint : ℝ≥0) = 0` ist keiner:
+`𝓝[>] 0` ist auf `ℝ≥0` nicht trivial. Die Aussage war zu beweisen.
+
+Der Grund, aus dem sie gilt, steht in der Bauart der Metrik und nicht in der Pfadregularität:
+
+> Das Infimum von `SkorokhodSpace.intDist` läuft über `TimeChange.fixing t₀`. **Jeder Konkurrent
+> läßt den Basispunkt liegen**, also sieht das Fenstersupremum die Verschiebung der beiden Pfade
+> dort ungemindert — bei *jedem* Radius und für *jede* Zeitänderung.
+
+Daraus ist die Abschätzung drei Zeilen: `dist_eval_le_distWith` unter das Integral,
+`Real.integral_exp_neg_Ioi_zero` für die Konstante, die dabei herauskommt, und `le_max_right`, um
+die logarithmische Norm fallen zu lassen. Bemerkenswert ist, was **nicht** vorkommt: kein
+Sprungverhalten, keine Rechtsstetigkeit, keine zweite Eigenschaft von `⊥` außer der, daß die
+Zeitänderungen ihn festhalten. Die Aussage gilt deshalb über jedem `ι` der Meilensteine 1–4 und
+nicht nur über `ℝ≥0`.
+
+**Und die Abschneidung bei `1` ist keine Schwäche des Beweises, sondern der Metrik.** `intDist`
+integriert `min 1 (distWith …)` und übersteigt `1` nie; eine Aussage der Gestalt
+`dist (f ⊥) (g ⊥) ≤ dist f g` wäre **falsch**, sobald die Pfade dort um mehr als `1`
+auseinanderliegen. Deshalb steht `min 1` in der Aussage, deshalb ist die Stetigkeit ein
+`ε`-`δ`-Argument mit Radius `min ε 1` und keine `LipschitzWith`, und deshalb liest der Beweis am
+Ende `min_cases`.
+
+#### Der Befund des Vorlaufs ist eingelöst, und zwar in der stärkeren von zwei möglichen Formen
+
+Der achte Lauf hatte gezeigt, daß `huniq` von `tendsto_map_rescaledWalk_of_unique` keine
+Anfangsverteilung nennt und der Satz damit leer ist. Die naheliegende Reparatur wäre gewesen, die
+Anfangsverteilung in `huniq` aufzunehmen und es weiter zu tragen. Das ist
+`tendsto_map_rescaledWalk_of_unique_of_map_bot`, und es ist nicht das Ende:
+
+> Das Prädikat `Sol` von `tendsto_of_isRelativelyCompact_of_unique` ist **frei**. Nimmt man die
+> Anfangsverteilung als zweite Klausel hinein, so ist sie entlang **jeder** Teilfolge erfüllt —
+> und dann ist `huniq` genau die Aussage, die Meilenstein 6 beweist, nämlich
+> `eq_of_isCadlagMPSolution_of_map_bot_eq`.
+
+Damit läßt sich `huniq` **ausrechnen** statt tragen: `exists_subseq_isCadlagMPSolution_of_rescaledWalk`
+erzeugt ein `ν₀` entlang einer Teilfolge, `map_eval_bot_eq_dirac_of_tendsto` gibt ihm die
+Anfangsverteilung `δ 0`, und Meilenstein 6 identifiziert jeden anderen Teilfolgenlimes damit. Das
+ist `exists_tendsto_map_rescaledWalk_of_onedim`, und **es trägt nur noch `honedim`** — daß zwei
+Lösungen mit derselben Verteilung zur Zeit `⊥` zu jeder Zeit dieselbe haben.
+
+**Der Stand von Donsker ist damit:** neun Datenvoraussetzungen an die Zuwächse (alle auf Daten
+einlösbar, der Akzeptanztest führt sie ohnehin), `hA'` (Buchhaltung: jedes Paar von `A'` kommt aus
+`brownianGeneratorPairs v`), und **eine** mathematische Hypothese, `honedim`.
+
+#### Zwei Doc-Kommentare berichtigt, und einer davon in die andere Richtung als erwartet
+
+An `tendsto_map_rescaledWalk_of_unique` stand, `huniq` sei „getragen und nicht bewiesen, und es ist
+das eine, was Donsker hier noch schuldet". Das ist ersetzt. Aber **nicht** durch die Behauptung des
+Vorlaufs, die Hypothese sei unerfüllbar: dieser Beweis ist auf Papier geführt und in Lean nicht
+nachgeprüft, und ein Doc-Kommentar, der ihn als Tatsache aufschreibt, wäre genau die Sorte
+Behauptung, die diese Läufe nicht machen sollen. Was jetzt dasteht, nennt die Erwartung als
+Erwartung und sagt in einem Klammersatz, welche zwei Schritte dafür fehlen — der Transport der
+Martingaleigenschaft unter einer Verschiebung und die Nichtexistenz eines
+verschiebungsinvarianten Wahrscheinlichkeitsmaßes auf `ℝ`.
+
+#### Drei kleine Stellen, an denen ein Lauf Zeit verlieren wird
+
+1. **`Subtype.ext` ist hier die falsche Injektivität.** Das Ziel `↑ν = ↑ν₀` über `Subtype.val`
+   läßt die Instanzensuche `IsProbabilityMeasure ↑ν` nicht mehr finden: die Instanz in Mathlib
+   steht über `ProbabilityMeasure.toMeasure`, und das ist eine eigene, nicht reduzible
+   Definition. Zu nehmen ist `ProbabilityMeasure.toMeasure_injective`; ein lokales `haveI`
+   repariert es **nicht**.
+2. **`tendsto_nhds_unique` braucht den Typ ausgeschrieben.** Als Argument von
+   `congrArg Subtype.val` elaboriert es in `{ μ // IsProbabilityMeasure μ }` hinein und findet
+   dann keine `TopologicalSpace`-Instanz. Erst die Gleichheit als eigenes `have` mit genanntem
+   Typ, dann die Coercion.
+3. **`ProbabilityMeasure.map` verlangt auf `master` kein Meßbarkeitsargument**, und
+   `toMeasure_map` ist `rfl` — der Übergang zwischen den beiden Schreibweisen kostet nichts.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **`MeasureTheory.integral_eval_sub_eq_intervalIntegral_of_isCadlagMPSolution`** — die
+> eindimensionalen Verteilungen einer càdlàg-Lösung erfüllen die Vorwärtsgleichung in
+> integrierter Gestalt: für `p ∈ A` und `s ≤ t` aus der dichten Zeitmenge von
+> `IsCadlagMPSolution`
+>
+>     ∫ z, p.1 (z.toFun t) ∂ν - ∫ z, p.1 (z.toFun s) ∂ν
+>       = ∫ u in Set.Ioc (s : ℝ) (t : ℝ), ∫ z, p.2 (z.toFun u.toNNReal) ∂ν
+
+*Warum jetzt:* nach diesem Lauf ist `honedim` die **einzige** mathematische Hypothese zwischen
+Donsker und einer Aussage über Daten. Sie ist nicht in einem Lauf zu haben — der Brownsche
+Erzeuger ist unbeschränkt, also trägt der Weg des Sprungfalls
+(`integral_eq_of_isMPSolution_of_map_eq`, dessen Beweis auf `|Aⁿ f| ≤ (2L)ⁿ C` ruht)
+**nicht**. Aber ihr erster Schritt ist von der Analysis unabhängig und steht für jede Familie:
+die Martingalidentität, integriert, ist die Vorwärtsgleichung.
+
+*Worauf es ruht, und alles davon steht — **der Fubini-Schritt ist in diesem Lauf mitgebaut**:*
+`integral_condExp` macht aus der bedingten Erwartung die Gleichheit der Integrale;
+`SkorokhodSpace.mpTest` ist die Differenz aus Auswertung und Zeitintegral; das Vertauschen des
+Fensterintegrals mit dem Integral über das Gesetz ist
+**`MeasureTheory.integral_setIntegral_eval_comm`**, und die gemeinsame Meßbarkeit, die es dafür
+braucht, ist **`SkorokhodSpace.measurable_uncurry_eval_nnreal`** — beide seit diesem Lauf
+bewiesen. Die Integrierbarkeit über `ν` ist `MeasureTheory.integrable_mpFamily_cadlagFiltration`,
+die **keine** Lösungseigenschaft liest.
+
+*Was beim Bau dieser beiden herauskam, und es erspart dem nächsten Lauf einen Irrweg:*
+`SkorokhodSpace.measurable_uncurry_eval` steht in der Datei **nur über dem Index `ℝ`** und ist
+nicht zu transportieren — es gibt keine meßbare Äquivalenz von `D(ℝ, E)` und `D(ℝ≥0, E)`, längs
+derer das ginge, und ein Pfad über `ℝ≥0` hat links vom Basispunkt keine Werte, die zu vergleichen
+wären. Der Beweis ist deshalb wiederholt, und er ändert sich an genau einer Stelle: `ℝ≥0` ist
+`FloorSemiring` und nicht `FloorRing`, die dyadische Näherung von rechts läuft also über
+`⌈u 2ⁿ⌉₊` mit `Nat.measurable_ceil` statt über `Int.measurable_ceil`. Alles andere — die
+Näherung von rechts, `measurable_from_prod_countable_left`, die Rechtsstetigkeit,
+`measurable_of_tendsto_metrizable` — steht Zeile für Zeile wie über `ℝ`.
+
+*Die Stelle, an der ein Lauf danebengreifen wird:* `IsCadlagMPSolution` quantifiziert über eine
+**abzählbare dichte** Zeitmenge `T`, die von `p` abhängen darf, und nicht über alle Zeiten. Die
+Aussage ist deshalb zuerst für `s, t ∈ T` zu führen; der Übergang zu beliebigen Zeiten ist ein
+zweiter Satz und braucht die Rechtsstetigkeit der Pfade samt dominierter Konvergenz. Wer beides
+in eine Deklaration packt, hat am Ende keinen von beiden.

@@ -31403,6 +31403,41 @@ theorem integrable_mpFamily_cadlagFiltration {A : Set ((E →ᵇ ℝ) × (E →�
     ((measurable_mpTest p.1 p.2 t).mono ((cadlagFiltration (E := E)).le t) le_rfl)
     (fun z ↦ abs_mpTest_le p.1 p.2 le_rfl z)
 
+/-- The integrand of the compensator of `SkorokhodSpace.mpTest`, read jointly in
+the path and the time.  `SkorokhodSpace.measurable_uncurry_eval_nnreal` is the
+whole content; the time of the window runs over `ℝ` and the index over `ℝ≥0`, so
+`measurable_real_toNNReal` sits between them. -/
+theorem measurable_uncurry_comp_eval_toNNReal (g : E →ᵇ ℝ) :
+    Measurable fun q : D(ℝ≥0, E) × ℝ ↦ g (q.1.toFun q.2.toNNReal) :=
+  g.continuous.measurable.comp (SkorokhodSpace.measurable_uncurry_eval_nnreal.comp
+    ((measurable_real_toNNReal.comp measurable_snd).prodMk measurable_fst))
+
+/-- **The compensator may be averaged over the law time by time.**
+
+The window integral of a path and the integral over the law commute, and this is
+Fubini in the form `MeasureTheory.integral_integral_swap`: the integrand is
+jointly measurable by `MeasureTheory.measurable_uncurry_comp_eval_toNNReal` and
+bounded by `‖g‖`, and both factors of the product are finite measures -- the
+window because it is bounded, the law by hypothesis.
+
+It is the step that turns the martingale identity of
+`MeasureTheory.IsCadlagMPSolution` into a statement about the one dimensional
+distributions alone: after it, the compensator is an integral over the window of
+the numbers `∫ z, g (z u) ∂ν`, which is what the forward equation speaks of. -/
+theorem integral_setIntegral_eval_comm (g : E →ᵇ ℝ) (ν : Measure D(ℝ≥0, E))
+    [IsFiniteMeasure ν] (r : ℝ≥0) :
+    ∫ z, (∫ u in Set.Ioc (0 : ℝ) (r : ℝ), g (z.toFun u.toNNReal)) ∂ν
+      = ∫ u in Set.Ioc (0 : ℝ) (r : ℝ), (∫ z, g (z.toFun u.toNNReal) ∂ν) := by
+  have : IsFiniteMeasure (volume.restrict (Set.Ioc (0 : ℝ) (r : ℝ))) := by
+    refine ⟨?_⟩
+    rw [Measure.restrict_apply_univ, Real.volume_Ioc]
+    exact ENNReal.ofReal_lt_top
+  refine integral_integral_swap (integrable_of_abs_le (μ := ν.prod
+    (volume.restrict (Set.Ioc (0 : ℝ) (r : ℝ)))) (C := ‖g‖)
+    (measurable_uncurry_comp_eval_toNNReal g) fun q ↦ ?_)
+  simpa [Function.uncurry, Real.norm_eq_abs] using
+    g.norm_coe_le_norm (q.1.toFun q.2.toNNReal)
+
 /-- **The form the chain of Milestone 11 produces is the form Milestone 6 reads.**
 
 `MeasureTheory.IsCadlagMPSolution` is a martingale identity at
@@ -36034,15 +36069,22 @@ and both of its other two inputs are discharged: `hcpt` is
 `MeasureTheory.isCompact_closure_range_map_rescaledWalk` and `hlim` is
 `MeasureTheory.isCadlagMPSolution_of_tendsto_subseq_rescaledWalk`.
 
-**`huniq` is carried and not proved, and it is the one thing Donsker still owes
-here.**  It is the uniqueness theorem for the martingale problem of the Brownian
-generator, read on the path space: Milestone 6 proves uniqueness from the
-agreement of the one dimensional distributions
-(`MeasureTheory.subsingleton_mpSolutions_of_unique_onedim`) and states it for
-`IsMPSolution` over a clock, while `MeasureTheory.IsCadlagMPSolution` is the form
-the chain produces — the martingale identity at `SkorokhodSpace.mpTest` along a
-countable dense set of times.  Bridging the two is a separate statement and not
-the remainder of this one.
+**`huniq` names no initial distribution, and the repair is
+`MeasureTheory.tendsto_map_rescaledWalk_of_unique_of_map_bot` below.**
+`MeasureTheory.IsCadlagMPSolution` is a martingale identity and says nothing
+about time `⊥`; a martingale problem has one solution per initial distribution
+and not one altogether, so a uniqueness hypothesis over the bare solution set
+asks for the wrong thing.  Solutions do exist under the very hypotheses of this
+theorem (`MeasureTheory.exists_subseq_isCadlagMPSolution_of_rescaledWalk`), and
+`MeasureTheory.brownianGeneratorPairs` is invariant under the translation of the
+paths; the expectation is therefore that `huniq` is not satisfiable at all,
+though neither the transport of the martingale property under a translation nor
+the absence of a translation invariant law on `ℝ` is proved here.  Nothing is
+built on this theorem.
+
+What Milestone 6 proves is the uniqueness *at a given initial distribution*
+(`MeasureTheory.eq_of_isCadlagMPSolution_of_map_bot_eq`), and that is the shape
+the theorem below reads.
 
 **What this is not, even with `huniq` in hand.**  The conclusion is the
 convergence of the laws to a measure characterised by a martingale property.  It
@@ -36069,6 +36111,165 @@ theorem tendsto_map_rescaledWalk_of_unique
     (fun _ hns _ hlim ↦ isCadlagMPSolution_of_tendsto_subseq_rescaledWalk hmeas hind hcent
       hsq hLp hlaw hΦm hΦ hns hlim)
     huniq
+
+/-! ### The initial distribution, and the repair of `huniq`
+
+The `huniq` of `MeasureTheory.tendsto_map_rescaledWalk_of_unique` above names no
+initial distribution, and under the hypotheses of that theorem it is not expected
+to be satisfiable: solutions exist by
+`MeasureTheory.exists_subseq_isCadlagMPSolution_of_rescaledWalk`, and the family
+`MeasureTheory.brownianGeneratorPairs` is invariant under the translation of the
+paths, which moves the law at time `⊥` and hence the solution.  (That last step
+is an argument and not a theorem of this file: neither the transport of the
+martingale property under a translation nor the absence of a translation
+invariant law on `ℝ` is proved here.)
+
+What is missing is one statement, and this section supplies it: the rescaled walk
+starts at `0`, deterministically and at every `n`, and the evaluation at `⊥` is
+continuous on `D(ℝ≥0, ℝ)`, so the limit starts at `0` too.  With that clause in
+the predicate, `huniq` is the uniqueness of the solution *with initial
+distribution* `Measure.dirac 0`, which is the statement Milestone 6 proves --
+`MeasureTheory.eq_of_isCadlagMPSolution_of_map_bot_eq`.  It is discharged in
+`MeasureTheory.exists_tendsto_map_rescaledWalk_of_onedim` below, whose only
+carried hypothesis is `honedim`. -/
+
+/-- **The rescaled walk starts at `0`.**
+
+At `r = ⊥` the index of the partial sum is `⌊0 * (n+1)⌋₊ = 0` and the sum is
+empty, so the path takes the value `0` at every sample point and the law of that
+value is `Measure.dirac 0`.  The floor runs over `ℝ≥0`, so `NNReal.bot_eq_zero`
+comes first and `zero_mul` before `Nat.floor_zero`.
+
+The composite and not the evaluation is the constant, which is why the final step
+is `MeasureTheory.Measure.map_map` and only then `MeasureTheory.Measure.map_const`. -/
+theorem map_eval_bot_map_rescaledWalk_eq_dirac
+    {P : Measure Ω} [IsProbabilityMeasure P] {ξ : ℕ → Ω → ℝ}
+    {Φ : ℕ → Ω → D(ℝ≥0, ℝ)} (hΦm : ∀ n, Measurable (Φ n))
+    (hΦ : ∀ (n : ℕ) (ω : Ω), (Φ n ω).toFun = fun r : ℝ≥0 ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊r * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+    (n : ℕ) :
+    (P.map (Φ n)).map (fun z : D(ℝ≥0, ℝ) ↦ z.toFun ⊥) = Measure.dirac 0 := by
+  rw [Measure.map_map (SkorokhodSpace.measurable_eval (E := ℝ) ⊥) (hΦm n)]
+  have hfun : ((fun z : D(ℝ≥0, ℝ) ↦ z.toFun ⊥) ∘ Φ n) = fun _ : Ω ↦ (0 : ℝ) := by
+    funext ω
+    simp only [Function.comp_apply, hΦ n ω, NNReal.bot_eq_zero, zero_mul, Nat.floor_zero,
+      Finset.range_zero, Finset.sum_empty, mul_zero]
+  rw [hfun, Measure.map_const, measure_univ, one_smul]
+
+/-- **A common initial distribution passes to a weak limit.**
+
+This is the continuous mapping theorem at the evaluation at time `⊥`, and the
+continuity is `SkorokhodSpace.continuous_eval_basePoint` -- measurability would
+not do, which is the whole reason that lemma is proved.  The images are all the
+same measure, so the limit of the images is that measure by the uniqueness of
+limits in `MeasureTheory.ProbabilityMeasure ℝ`, which is Hausdorff.
+
+The filter is arbitrary and only needs `Filter.NeBot`, so a subsequence is as
+good as the sequence; that is how it is used below. -/
+theorem map_eval_bot_eq_dirac_of_tendsto {F : Type*} {L : Filter F} [L.NeBot]
+    {μ : F → ProbabilityMeasure D(ℝ≥0, ℝ)} {ν : ProbabilityMeasure D(ℝ≥0, ℝ)}
+    (hlim : Tendsto μ L (𝓝 ν))
+    (h0 : ∀ i, (μ i : Measure D(ℝ≥0, ℝ)).map (fun z : D(ℝ≥0, ℝ) ↦ z.toFun ⊥)
+      = Measure.dirac 0) :
+    (ν : Measure D(ℝ≥0, ℝ)).map (fun z : D(ℝ≥0, ℝ) ↦ z.toFun ⊥) = Measure.dirac 0 := by
+  have hcont : Continuous fun z : D(ℝ≥0, ℝ) ↦ z.toFun ⊥ :=
+    SkorokhodSpace.continuous_eval_basePoint (ι := ℝ≥0) (E := ℝ)
+  have h := ProbabilityMeasure.tendsto_map_of_tendsto_of_continuous μ ν hlim hcont
+  have hconst : (fun i ↦ (μ i).map (fun z : D(ℝ≥0, ℝ) ↦ z.toFun ⊥))
+      = fun _ ↦ (⟨Measure.dirac 0, inferInstance⟩ : ProbabilityMeasure ℝ) :=
+    funext fun i ↦ Subtype.ext (h0 i)
+  rw [hconst] at h
+  have heq : ν.map (fun z : D(ℝ≥0, ℝ) ↦ z.toFun ⊥)
+      = (⟨Measure.dirac 0, inferInstance⟩ : ProbabilityMeasure ℝ) :=
+    tendsto_nhds_unique h tendsto_const_nhds
+  exact congrArg (fun p : ProbabilityMeasure ℝ ↦ (p : Measure ℝ)) heq
+
+/-- **Donsker's invariance principle with a `huniq` that can be met.**
+
+This is `MeasureTheory.tendsto_map_rescaledWalk_of_unique` with the initial
+distribution written into the predicate `Sol`: the limit is required to solve the
+martingale problem **and** to put `Measure.dirac 0` on the value at time `⊥`.
+Both clauses hold along every subsequence -- the first by
+`MeasureTheory.isCadlagMPSolution_of_tendsto_subseq_rescaledWalk`, the second by
+`MeasureTheory.map_eval_bot_map_rescaledWalk_eq_dirac` and
+`MeasureTheory.map_eval_bot_eq_dirac_of_tendsto` -- so nothing is lost, and the
+hypothesis becomes the uniqueness statement Milestone 6 actually proves. -/
+theorem tendsto_map_rescaledWalk_of_unique_of_map_bot
+    {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0) {v : ℝ} (hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = v)
+    (hLp : ∀ k, MemLp (ξ k) 2 P) (hlaw : ∀ k, Measure.map (ξ k) P = Measure.map (ξ 0) P)
+    (hvar : ∀ k, variance (ξ k) P ≤ 1)
+    {Φ : ℕ → Ω → D(ℝ≥0, ℝ)} (hΦm : ∀ n, Measurable (Φ n))
+    (hΦ : ∀ (n : ℕ) (ω : Ω), (Φ n ω).toFun = fun r : ℝ≥0 ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊r * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+    {ν₀ : ProbabilityMeasure D(ℝ≥0, ℝ)}
+    (huniq : ∀ ν : ProbabilityMeasure D(ℝ≥0, ℝ),
+      IsCadlagMPSolution (brownianGeneratorPairs v) (ν : Measure D(ℝ≥0, ℝ)) →
+      (ν : Measure D(ℝ≥0, ℝ)).map (fun z : D(ℝ≥0, ℝ) ↦ z.toFun ⊥) = Measure.dirac 0 →
+      ν = ν₀) :
+    Tendsto (β := ProbabilityMeasure D(ℝ≥0, ℝ))
+      (fun n ↦ ⟨P.map (Φ n), inferInstance⟩) atTop (𝓝 ν₀) :=
+  tendsto_of_isRelativelyCompact_of_unique
+    (Sol := fun ν ↦ IsCadlagMPSolution (brownianGeneratorPairs v) (ν : Measure D(ℝ≥0, ℝ)) ∧
+      (ν : Measure D(ℝ≥0, ℝ)).map (fun z : D(ℝ≥0, ℝ) ↦ z.toFun ⊥) = Measure.dirac 0)
+    (isCompact_closure_range_map_rescaledWalk hmeas hind hLp hcent hsq hvar hΦ hΦm)
+    (fun ns hns _ hlim ↦ ⟨isCadlagMPSolution_of_tendsto_subseq_rescaledWalk hmeas hind hcent
+        hsq hLp hlaw hΦm hΦ hns hlim,
+      map_eval_bot_eq_dirac_of_tendsto hlim
+        fun k ↦ map_eval_bot_map_rescaledWalk_eq_dirac hΦm hΦ (ns k)⟩)
+    fun ν h ↦ huniq ν h.1 h.2
+
+/-- **Donsker, carrying the one dimensional distributions and nothing else.**
+
+The limiting law is no longer a parameter: it is produced by
+`MeasureTheory.exists_subseq_isCadlagMPSolution_of_rescaledWalk` along one
+subsequence, it starts at `0` by
+`MeasureTheory.map_eval_bot_eq_dirac_of_tendsto`, and
+`MeasureTheory.eq_of_isCadlagMPSolution_of_map_bot_eq` then identifies every
+other subsequential limit with it.  What is carried is `honedim` -- that two
+solutions with the same law at time `⊥` have the same law at every time -- and
+that is the one thing between this and an unconditional statement.
+
+**`A'` is the family read through the coercion**, as everywhere in Milestone 6:
+`hA'` says each of its pairs comes from a pair of
+`MeasureTheory.brownianGeneratorPairs`, and no more is needed of it. -/
+theorem exists_tendsto_map_rescaledWalk_of_onedim
+    {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0) {v : ℝ} (hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = v)
+    (hLp : ∀ k, MemLp (ξ k) 2 P) (hlaw : ∀ k, Measure.map (ξ k) P = Measure.map (ξ 0) P)
+    (hvar : ∀ k, variance (ξ k) P ≤ 1)
+    {Φ : ℕ → Ω → D(ℝ≥0, ℝ)} (hΦm : ∀ n, Measurable (Φ n))
+    (hΦ : ∀ (n : ℕ) (ω : Ω), (Φ n ω).toFun = fun r : ℝ≥0 ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊r * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+    {A' : Set ((ℝ → ℝ) × (ℝ → ℝ))}
+    (hA' : ∀ q ∈ A', ∃ p ∈ brownianGeneratorPairs v,
+      (⇑p.1 : ℝ → ℝ) = q.1 ∧ (⇑p.2 : ℝ → ℝ) = q.2)
+    (honedim : ∀ R R' : Measure D(ℝ≥0, ℝ),
+      IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      IsMPSolution (mpFamily A' lebesgueClock Clock.Conv.optional
+        (fun r (z : D(ℝ≥0, ℝ)) ↦ z.toFun r)) cadlagFiltration R →
+      IsMPSolution (mpFamily A' lebesgueClock Clock.Conv.optional
+        (fun r (z : D(ℝ≥0, ℝ)) ↦ z.toFun r)) cadlagFiltration R' →
+      R.map (fun z : D(ℝ≥0, ℝ) ↦ z.toFun ⊥) = R'.map (fun z : D(ℝ≥0, ℝ) ↦ z.toFun ⊥) →
+      ∀ u : ℝ≥0, R.map (fun z : D(ℝ≥0, ℝ) ↦ z.toFun u)
+        = R'.map (fun z : D(ℝ≥0, ℝ) ↦ z.toFun u)) :
+    ∃ ν₀ : ProbabilityMeasure D(ℝ≥0, ℝ),
+      IsCadlagMPSolution (brownianGeneratorPairs v) (ν₀ : Measure D(ℝ≥0, ℝ)) ∧
+      (ν₀ : Measure D(ℝ≥0, ℝ)).map (fun z : D(ℝ≥0, ℝ) ↦ z.toFun ⊥) = Measure.dirac 0 ∧
+      Tendsto (β := ProbabilityMeasure D(ℝ≥0, ℝ))
+        (fun n ↦ ⟨P.map (Φ n), inferInstance⟩) atTop (𝓝 ν₀) := by
+  obtain ⟨ns, ν₀, hmono, hlim0, hsol0⟩ := exists_subseq_isCadlagMPSolution_of_rescaledWalk
+    hmeas hind hcent hsq hLp hlaw hvar hΦm hΦ
+  have hinit0 : (ν₀ : Measure D(ℝ≥0, ℝ)).map (fun z : D(ℝ≥0, ℝ) ↦ z.toFun ⊥)
+      = Measure.dirac 0 :=
+    map_eval_bot_eq_dirac_of_tendsto hlim0
+      fun k ↦ map_eval_bot_map_rescaledWalk_eq_dirac hΦm hΦ (ns k)
+  refine ⟨ν₀, hsol0, hinit0, tendsto_map_rescaledWalk_of_unique_of_map_bot hmeas hind hcent
+    hsq hLp hlaw hvar hΦm hΦ fun ν hsol hinit ↦ ProbabilityMeasure.toMeasure_injective ?_⟩
+  exact eq_of_isCadlagMPSolution_of_map_bot_eq hA' honedim hsol hsol0
+    (hinit.trans hinit0.symm)
 
 end DonskerLimit
 
