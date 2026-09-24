@@ -58407,3 +58407,373 @@ Beleg von `fact:cadlagext` zeigte zwischen dem 2026-09-22 und heute **ins Leere*
 in `JumpProcesses`. Sie ist zurück, und die Zeile stimmt wieder. Von den fünf Zeilen, die auf
 Meilenstein 9 zeigen, war nur diese eine betroffen; die übrigen vier nennen Deklarationen, die
 nie gewandert sind.
+
+---
+
+### 2026-09-24, zweiter Lauf des Tages — **Punkt 4 steht**: die Summation über die Zellen ist bewiesen; und die Schranke, die der Vorschlag dafür angesagt hatte, ist **falsch** — nicht um einen Faktor, sondern weil sie eine Voraussetzung verschweigt: sie gilt nur für Fenster der Länge `≤ 1`
+
+*3 Deklarationen in `MartingaleProblems/Suggested.lean`, am Ende von `WalkContainment`.
+`scripts/check_master.py` gegen `upstream/master`
+(`94ef6b89544e58e90f119da869f3fb48d1da0f4c`, Lean `4.35.0-rc2`): **0 Fehler, 0 veraltete
+Namen**, Warnungen unverändert **18 / 39 / 36 / 76**, in Summe 169; das eine `sorry` ist
+weiterhin `SkorokhodSpace.continuous_jumpFunctional` und kein neues.
+`scripts/check_axioms_master.py` über alle drei: `propext`, `Classical.choice`, `Quot.sound` und
+nichts sonst. `scripts/check_duplicates.py`: keiner der drei Namen trifft auf `master`.
+`scripts/check_cited_lines.py`: **491 gepaarte Fundstellen, 0 verschoben, 0 tote** — unverändert,
+die drei neuen Deklarationen zitieren keine Zeilennummer.*
+
+#### Was steht
+
+| Name | was es ist |
+| --- | --- |
+| `MeasureTheory.natCast_floor_sub_floor_div_le` | die Zellenzählung: `(⌊t c⌋ − ⌊s c⌋) · c⁻¹ ≤ t − s + c⁻¹` |
+| `MeasureTheory.integrable_mpCell_rescaledWalk_mul` | eine Zelle gegen das Gewicht ist integrierbar |
+| `MeasureTheory.abs_integral_mpTest_sub_rescaledWalk_sum_le` | **das benannte Ziel**: die Summation über die Zellen eines Fensters |
+
+Die Konklusion, ausgeschrieben:
+
+```
+|∫ (mpTest f g t − mpTest f g s) (reskalierte Irrfahrt) · Z|
+  ≤ (t − s + (n+1)⁻¹) · K · (M₃ e v / 6 + M₂ L)  +  2 (n+1)⁻¹ (|v|/2 · M₂) · K
+```
+
+für `|Z| ≤ K`, `Z` meßbar für die Vergangenheit am **linken** Fensterrand, jedes `e ≥ 0`, und
+`L` irgendeine gemeinsame Schranke der abgeschnittenen zweiten Momente
+`𝔼[ξ k ² · 1_{|ξ k| > e √(n+1)}]`.
+
+#### Der Befund, und er berichtigt den Vorschlag des Vorlaufs
+
+Der Vorschlag sagte: „über die höchstens `n+1` Zellen des Fensters summiert hebt sich das
+`(n+1)⁻¹` gerade auf", und schrieb als Konklusion
+
+```
+≤ 2 K (n+1)⁻¹ C  +  K · ( M₃ e v / 6 + M₂ · 𝔼[ξ 0 ² · 1_{…}] ) .
+```
+
+**Das gilt nicht.** Die Zellen sind mit `Finset.Ico ⌊s(n+1)⌋ ⌊t(n+1)⌋` indiziert, und ihre Zahl
+ist `⌊t(n+1)⌋ − ⌊s(n+1)⌋`; mit der Maschenweite gewichtet ist das höchstens `t − s + (n+1)⁻¹` und
+nicht höchstens `1`. Für ein Fenster der Länge `t − s > 1` sind es **mehr** als `n+1` Zellen, und
+die angesagte Schranke ist dann zu klein. Der Vorschlag hat die richtige Ungleichung selbst
+hingeschrieben — `⌊t(n+1)⌋ − ⌊s(n+1)⌋ ≤ (t−s)(n+1) + 1` — und daraus einen Schluß gezogen, den
+sie nicht hergibt: sie gibt `≤ n+1` nur, wenn `t − s ≤ n/(n+1)`.
+
+Der Faktor `(t − s + (n+1)⁻¹)` steht deshalb in der Aussage, und er ist kein Schönheitsfehler,
+sondern das, was der Verbraucher braucht: die Straffheitsseite arbeitet auf Fenstern beliebiger
+Länge, und eine Schranke ohne die Fensterlänge wäre entweder falsch oder auf `t − s ≤ 1`
+einzuschränken. Der Grenzübergang leidet nicht darunter — `t − s` ist fest, während `n → ∞`
+geht — aber die Aussage muß es sagen.
+
+**Und der zweite Punkt, den der Vorschlag zu kurz gefaßt hat:** er nannte
+`abs_sub_natCast_floor_div_le` „noch einmal". Es ist nicht dieselbe Aussage. Jene mißt am
+**einen** Endpunkt den Abstand zum Gitterpunkt darunter; hier wird zwischen **zwei** Endpunkten
+die **Anzahl** abgeschätzt, und das ist eine eigene Aussage mit einem eigenen Beweis
+(`natCast_floor_sub_floor_div_le`, elf Zeilen). Gemeinsam haben die beiden nur `Nat.floor_le` und
+`Nat.lt_floor_add_one`; was hier zusätzlich zu leisten ist, ist die Natursubtraktion
+(`Nat.cast_sub` unter `Nat.floor_le_floor`), und die kommt dort nicht vor.
+
+#### Was die Summation dem Zusammenbau einer Zelle wirklich hinzufügt, und es ist genau eine Sache
+
+**Die Integrierbarkeit jeder einzelnen Zelle.**
+`abs_integral_mpTest_sub_rescaledWalk_mul_le` schätzt das Integral **einer** Zelle ab, ohne die
+Zelle je integrierbar zu nennen: es schreibt sie in vier Summanden um und integriert die, so daß
+ein Müllwert links durch einen rechts gedeckt wäre. `MeasureTheory.integral_finsetSum` kann das
+nicht — es verlangt jeden Summanden integrierbar —, und **das** ist die eine neue Schuld des
+Fensters. Sie ist aus dem Zellensatz nicht zu beziehen; er baut seine vier `Integrable`-Zeilen
+intern und exportiert keine.
+
+**Und sie ist bezahlt, ohne `f` beschränkt zu nennen.** Der billige Weg wäre `|f| ≤ C₀` gewesen,
+und die Akzeptanzklasse `Cc^∞` gibt es her; genommen ist er nicht. Was integriert wird, ist eine
+**Differenz** von Werten von `f` an zwei Nachbarknoten, und
+
+```
+|f (x + d) − f x|  ≤  C₁ |d| + (3/2) M₂ d²
+```
+
+ist `abs_sub_taylor_two_le'` plus die beiden Glieder der Entwicklung selbst. An `d = ξ k/√(n+1)`
+ist die rechte Seite aus `MemLp (ξ k) 2 P` allein integrierbar — der erste Summand über
+`MemLp.integrable`, der zweite über `MemLp.integrable_sq`. **Der zweite Taylorrest, den der
+Vorlauf für die Abschneidung gebaut hat, wird hier ein zweites Mal gelesen, und für etwas
+anderes**: dort trug er die Lindeberg-Aufspaltung, hier die Integrierbarkeit. Das ist der Grund,
+aus dem `integrable_mpCell_rescaledWalk_mul` über `f` nichts verlangt als `ContDiff ℝ 2` und die
+zwei Ableitungsschranken.
+
+Von `g` verlangt es nur eine Schranke und Meßbarkeit und **keine Beziehung zu `f`**; es steht
+damit vor der Wahl `g = ½ v f''` und ist von jedem Verbraucher von
+`mpTest_sub_rescaledWalk_eq_sum` lesbar.
+
+#### Wo die Gleichverteilung der Zuwächse zum ersten Mal wirklich gebraucht wird
+
+Der Zellensatz verlangt `∫ ξ k ² = v` und ein abgeschnittenes zweites Moment an **einem** Index;
+das Fenster verlangt sie an **allen** Indizes des Fensters. Das ist die erste Stelle der Kette,
+an der die Zuwächse eine gemeinsame Verteilung haben müssen und nicht bloß unabhängig sein.
+
+Sie ist als **zwei über `k` quantifizierte Hypothesen** benannt und nicht als Gleichheit der
+Bildmaße, und das ist die schwächste Form, unter der der Beweis durchgeht:
+`hsq : ∀ k, ∫ ξ k ² = v` und `hL : ∀ k, 𝔼[ξ k ² 1_{…}] ≤ L`. **`L` muß nicht der gemeinsame Wert
+sein, nur eine gemeinsame Schranke** — eine Folge mit gleichem zweiten Moment und verschiedenen
+Verteilungen genügt, solange die Abschneidungen gleichmäßig klein sind. Wer `Measure.map (ξ k) P`
+gleichsetzt, hat beides, aber mehr als der Beweis liest.
+
+`0 ≤ v` und `0 ≤ L` sind **Folgerungen** und keine Voraussetzungen: das erste aus `hsq 0` und der
+Nichtnegativität eines Quadrats, das zweite aus `hL 0` und der Nichtnegativität eines Indikators
+von einem Quadrat. `0 ≤ K` ebenso, über die Nichtleere von `Ω`, die `IsProbabilityMeasure P`
+gibt.
+
+#### Eine Formsache, die den Beweis bestimmt hat, und sie gilt allgemein
+
+**`g` ist als Funktion mit `hgv : ∀ y, g y = v / 2 * iteratedDeriv 2 f y` geführt und nicht
+eingesetzt.** Das ist keine Geschmacksfrage. `mpTest_sub_rescaledWalk_eq_sum` und
+`abs_mpTest_sub_rescaledWalk_sub_sum_le` sind über eine **Funktion** `g` formuliert; setzt man
+dort eine Lambda ein, so steht in der Konklusion `(fun y ↦ v/2 * iteratedDeriv 2 f y) (…)`, und
+
+* `rw` findet sein Muster im Ziel nicht, weil das Ziel die reduzierte Gestalt trägt;
+* `ring` und `linarith` helfen nicht, weil ein Beta-Redex für sie ein **Atom** ist und das
+  reduzierte Produkt ein Polynom in zwei anderen Atomen.
+
+Mit `g` als Variable fällt das weg, und `hgv` wird an genau **zwei** Stellen gelesen: einmal, um
+die Zelle in die Gestalt des Zellensatzes zu bringen (`simp only [hgv]`), und einmal, um `g` durch
+`|v|/2 · M₂` zu beschränken. Das ist die zweite Formfalle dieser Kette nach der des Vorlaufs
+(`integral_add` greift nicht, wenn die Integrierbarkeit als `h₁.add h₂` übergeben wird), und sie
+hat dieselbe Bauart: **eine Aussage, die auf dem Papier dieselbe ist, ist für die Taktik eine
+andere.**
+
+Der zweite Griff derselben Art: die beiden Randzellen sind als **explizite Funktion** `W` des
+Stichprobenpunkts eingeführt und nicht als `GAP − Zellensumme`. Anders wäre `W` nicht meßbar
+hinzuschreiben, denn `GAP` enthält das Bochner-Integral über `u`. Daß `W` gleichwohl das ist, was
+`abs_mpTest_sub_rescaledWalk_sub_sum_le` abschätzt, gibt `eq_sub_of_add_eq'` aus der punktweisen
+Identität — **ohne die Zielaussage ein zweites Mal hinschreiben zu müssen**, was bei dieser
+Ausdrucksgröße der Unterschied zwischen zwölf Zeilen und keiner ist. Ebenso ist die Identität
+selbst mit `simp only [hgapraw]` **unter dem Integralzeichen** angewandt statt über
+`integral_congr_ae`, und das erspart das einzige weitere Hinschreiben des Ausdrucks.
+
+#### Drei Befunde über `master`, am Quelltext belegt, die dieser Lauf einsammeln mußte
+
+1. **`abs_add` gibt es nicht mehr; der Name ist `abs_add_le`.** Belegt an
+   `Mathlib/Algebra/Order/AbsoluteValue/Basic.lean:278` (`add_le' := abs_add_le`) und an
+   `Mathlib/Algebra/Order/BigOperators/Group/Finset.lean:366`, wo `Finset.abs_sum_le_sum_abs`
+   daraus gebaut ist. Der Fehler ist ein `unknownIdentifier` und damit harmlos; er steht hier,
+   damit ihn kein Lauf für einen fehlenden Satz nimmt.
+2. **`add_le_add_left` und `add_le_add_right` addieren auf der Seite, die ihr Name *nicht*
+   nennt.** `Mathlib/Algebra/Order/Monoid/Unbundled/Basic.lean:60` führt
+   `mul_le_mul_right (bc : b ≤ c) (a : α) : a * b ≤ a * c` und `:68`
+   `mul_le_mul_left (bc : b ≤ c) (a : α) : b * a ≤ c * a`, und `@[to_additive]` erzeugt daraus
+   `add_le_add_right` und `add_le_add_left`. Also ist `add_le_add_right h a : a + b ≤ a + c` —
+   der Summand steht **links**. Der Name benennt die Seite, auf der die *bewegliche* Größe sitzt,
+   nicht die des Summanden. Wer die klassische Lesart schreibt, bekommt einen nackten
+   `Type mismatch` ohne Hinweis auf die Vertauschung; `add_le_add h₁ h₂` ist eindeutig und in
+   solchen Fällen der kürzere Weg.
+3. **`integrable_finset_sum` und `integral_finset_sum` sind veraltet**, seit dem 2026-04-08, zu
+   `integrable_finsetSum` (`Mathlib/MeasureTheory/Function/L1Space/Integrable.lean:451`, Alias in
+   `:455`) und `integral_finsetSum` (`Mathlib/MeasureTheory/Integral/Bochner/Basic.lean:248`).
+   Das sind die ersten neuen Veraltungen seit dem dreiundzwanzigsten Lauf des 2026-09-18, und sie
+   sind in diesem Lauf sofort aufgelöst worden; die Spalte „davon veraltet" ist wieder 0 in allen
+   vier Dateien. **Die Kette benutzte die beiden Namen vorher nirgends** — es ist also keine
+   Altlast, sondern eine Veraltung, in die dieser Lauf beim Neuschreiben hineingelaufen wäre.
+
+#### Was damit von der Kette des Meilensteins 11 dasteht und was nicht
+
+Die vier Hauptpunkte sind unverändert offen; gebaut ist die **Straffheitsseite von Donsker** samt
+der Zellenrechnung und nun ihrer Summation. Der erste Punkt,
+`isTight_map_postcomp_of_exists_martingale`, ist davon der unmittelbare Verbraucher.
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`MeasureTheory.tendsto_integral_mpTest_sub_rescaledWalk_mul`** — der Grenzübergang, und er ist
+jetzt an der Reihe, weil die Summation steht und weil er die **Reihenfolge der beiden Limiten**
+zum ersten Mal wirklich ausführt statt sie nur zuzulassen.
+
+*(Eingelöst noch im selben Lauf, zweiter Teil unten — samt einer Berichtigung dieses Vorschlags
+an zwei Stellen: der `limsup`-Schluß wird nicht gebraucht, und die Gleichverteilung sitzt hier und
+nicht bei der Summation. Wer weiterarbeiten will, liest den Vorschlag am Ende des zweiten
+Teils.)*
+
+*Die Aussage:* für `s ≤ t` in `ℝ≥0`, eine unabhängige Folge mit gemeinsamem zweiten Moment,
+`MemLp (ξ k) 2 P`, `∫ ξ k = 0`, `∫ ξ k ² = v`, und `f`, `g`, `Z`, `K` wie bei der Summation,
+
+```
+Tendsto (fun n ↦ ∫ ω, (mpTest f g t − mpTest f g s) (walk n, ω) · Z n ω ∂P) atTop (𝓝 0) .
+```
+
+*Worauf sie ruht, und alles davon steht:* `abs_integral_mpTest_sub_rescaledWalk_sum_le` gibt für
+jedes `e ≥ 0` und jedes `n` die Schranke; `tendsto_integral_sq_indicator` schickt bei festem `e`
+den Posten `L = 𝔼[ξ 0 ² 1_{|ξ 0| > e √(n+1)}]` gegen `0`; der Randposten ist `O((n+1)⁻¹)`. Also
+ist `limsup_n ≤ (t − s) · K · M₃ e v / 6` für **jedes** `e > 0`, und erst danach `e ↓ 0`.
+
+*Wo die Arbeit sitzt, und es ist nicht die Abschätzung:* der `limsup`-Schluß „`limsup ≤ c · e` für
+jedes `e > 0`, also `limsup ≤ 0`" ist zu führen, und zu klären ist, welche Mathlib-Gestalt davon
+billiger ist — `le_of_forall_pos_le_add`, `ge_of_tendsto` längs `𝓝[>] 0`, oder
+`le_of_forall_lt_iff_le`. Der Vorlauf hat die **Reihenfolge** der Grenzübergänge als Satz
+hingeschrieben, aber noch keinen Doppellimes ausgeführt; das ist hier zum ersten Mal zu tun.
+Dazu kommt, daß `L` in der Summation eine **Schranke** ist und kein Wert: der Grenzübergang muß
+sie an jedem `n` neu wählen (`L n = 𝔼[ξ 0 ² 1_{|ξ 0| > e √(n+1)}]`), und das ist die Stelle, an
+der die Gleichverteilung gebraucht wird, um das `∀ k` der Summation aus `k = 0` zu bekommen.
+
+**Und ein zweiter, davon unabhängiger Vorschlag, falls der erste steckenbleibt:**
+`SkorokhodSpace.continuous_jumpFunctional`, unverändert das einzige `sorry` der Kette und das Tor
+zu Meilenstein 5 von `SkorokhodSpace` samt den beiden Sätzen in `MartingaleProblems`, die heute
+über `sorryAx` laufen.
+
+### Derselbe Lauf, zweiter Teil — der **Grenzübergang** steht, und er ist im ersten Durchlauf durchgegangen; die Arbeit, die der Vorschlag dafür beim `limsup` vermutet hat, gibt es **nicht**: der Doppellimes ist in Lean *ein* `ε`, *ein* `e` und *ein* `N`
+
+*Eine Deklaration, `MeasureTheory.tendsto_integral_mpTest_sub_rescaledWalk_mul`, am Ende von
+`WalkContainment`. `scripts/check_master.py` gegen `upstream/master`: **0 Fehler, 0 veraltete
+Namen**, Warnungen unverändert **18 / 39 / 36 / 76**; `check_axioms_master.py`: `propext`,
+`Classical.choice`, `Quot.sound`. `check_duplicates.py` über 1835 eigene Deklarationen: kein
+Treffer auf `master`. `check_cited_lines.py`: **491 / 0 / 0**, unverändert.*
+
+Die Aussage: für `g = ½ v f''` und eine gleichmäßig beschränkte Familie von Gewichten `Zₙ`, je
+meßbar für die Vergangenheit am linken Fensterrand,
+
+```
+∫ (mpTest f g t − mpTest f g s) (reskalierte Irrfahrt) · Zₙ  ⟶  0 .
+```
+
+Das ist `hzero` von `mpSolution_of_tendsto_cadlag` auf Donskers Daten, bis auf die Naht zum
+Pfadraum, und damit **der letzte Posten des Akzeptanztests, der eine Rechnung verlangt**.
+
+#### Der Befund, und er berichtigt den Vorschlag desselben Laufs
+
+Der Vorschlag sagte: „Wo die Arbeit sitzt, und es ist nicht die Abschätzung: der
+`limsup`-Schluß ‚`limsup ≤ c · e` für jedes `e > 0`, also `limsup ≤ 0`' ist zu führen, und zu
+klären ist, welche Mathlib-Gestalt davon billiger ist."
+
+**Es ist kein `limsup` zu führen, und keine der drei genannten Gestalten wird gelesen.** In
+`Metric.tendsto_atTop` ist die Reihenfolge der beiden Grenzübergänge schon eingebaut: man bekommt
+ein `ε > 0` und darf **danach** alles wählen. Also wird zuerst der Pegel
+
+```
+e = ε / (2 (A + 1)) ,   A = (t − s + 1) K M₃ v / 6
+```
+
+gewählt — das macht den von `n` unabhängigen Summanden kleiner als `ε/2` —, und erst dann liefert
+`tendsto_integral_sq_indicator` an diesem festen `e` ein `N`, ab dem der Rest kleiner als `ε/2`
+ist. Ein `limsup` kommt nicht vor, ein zweites `Tendsto` in `e` kommt nicht vor, und der ganze
+Beweis ist **ein** `∃ N`.
+
+Das ist kein Kunstgriff, sondern die Einsicht, worin ein Doppellimes besteht: „`limsup ≤ c e` für
+jedes `e`, also `limsup ≤ 0`" ist die Fassung für einen Menschen, der die beiden Limiten getrennt
+denken will. Wer dagegen die ε-Fassung nimmt, hat die Schachtelung geschenkt. **Und er hat sie
+nur, weil die Reihenfolge die richtige ist**: wäre `e` vor `ε` zu wählen, so ginge es nicht, und
+genau das ist die Aussage des Vorlaufs über die Reihenfolge der Grenzübergänge, hier zum ersten
+Mal benutzt statt behauptet.
+
+Die zweite Sparsamkeit derselben Art: `A + 1` statt `A` im Nenner erspart die Fallunterscheidung
+`A = 0`. Bei `M₃ = 0` oder `v = 0` oder `K = 0` ist `A = 0`, und `ε / (2 A)` wäre der Müllwert;
+mit `A + 1` ist der Nenner immer positiv und die Abschätzung `A e < ε/2` ist `0 < ε` und sonst
+nichts.
+
+#### Wo die Gleichverteilung wirklich gebraucht wird — und es ist **nicht**, wo der Vorlauf sie erwartet hat
+
+Der Vorlauf hatte die Gleichverteilung bei der **Summation** verortet („das ist die Stelle, an der
+die Gleichverteilung der Zuwächse zum ersten Mal wirklich gebraucht wird"). Das war falsch, und
+der erste Teil dieses Laufs hat es selbst gezeigt: die Summation kommt mit zwei über `k`
+quantifizierten Hypothesen aus und liest **kein** gemeinsames Gesetz.
+
+Gebraucht wird es hier, und an genau **einer** Zeile — `hlawint`. Der Grund ist die dominierte
+Konvergenz: `tendsto_integral_sq_indicator` sieht **eine** Zufallsvariable, deren Quadrat die
+Majorante ist, während die Summation `n + 1` verschiedene Indizes betrifft. Ohne gemeinsames
+Gesetz müßte man `sup_k 𝔼[ξ k ² 1_{…}] → 0` fordern, also die Lindeberg-Bedingung — und die zu
+vermeiden war die Vorgabe des Nutzers. **Die Gleichverteilung ist der Preis dafür, daß die
+Lindeberg-Bedingung ein Satz ist und keine Hypothese**, und sie steht damit an der richtigen
+Stelle: bei einer i.i.d.-Folge, von der Donsker ohnehin spricht.
+
+Sie ist als `hlaw : ∀ k, Measure.map (ξ k) P = Measure.map (ξ 0) P` gestellt und nicht als
+Gleichheit der beiden Integrale, weil ein Verbraucher das erste hat und das zweite sonst selbst
+herleiten müßte; die Herleitung ist `integral_map` zweimal, und die Meßbarkeit dafür ist
+`measurable_indicator_sq` aus dem Vorlauf.
+
+#### Die fünf Mathlib-Bausteine, alle am Quelltext belegt
+
+* `Real.tendsto_sqrt_atTop` — `Mathlib/Analysis/Real/Sqrt.lean:140`, `map_sqrt_atTop.le`.
+* `Tendsto.const_mul_atTop` — `Mathlib/Order/Filter/AtTopBot/Field.lean:72`, mit `0 < r`.
+* `tendsto_natCast_atTop_atTop` — `Mathlib/Order/Filter/AtTopBot/Archimedean.lean:44`.
+* `tendsto_one_div_add_atTop_nhds_zero_nat` — `Mathlib/Analysis/SpecificLimits/Basic.lean:71`,
+  über einem `DivisionSemiring` mit `CharZero`; die Umschreibung auf `((n:ℝ)+1)⁻¹` ist `one_div`.
+* `inv_le_one₀` für `((n:ℝ)+1)⁻¹ ≤ 1`, dieselbe Fundstelle, die die Datei schon an einer Stelle
+  liest.
+
+Keiner davon war zu suchen, und keine Lücke ist dabei aufgefallen; das ist hier vermerkt, damit
+der nächste Lauf den Grenzübergang nicht für teurer hält, als er ist.
+
+#### Vorschlag für den nächsten Lauf, als benanntes Ziel
+
+**`MeasureTheory.tendsto_integral_mpTest_sub_pathOfProcess_rescaledWalk`** — dieselbe Konvergenz,
+aber über `SkorokhodSpace.mpTest` und dem Pfadbild, also **wörtlich** die Voraussetzung `hzero`
+von `mpSolution_of_tendsto_cadlag` und seiner Teilfolgenfassung. Das ist Naht und keine Rechnung,
+und die Naht ist an drei Stellen benennbar:
+
+1. **Das Funktional.** `SkorokhodSpace.mpTest f g t z = f (z.toFun t) − ∫ u in Ioc 0 t, g (z.toFun u.toNNReal)`
+   (`SkorokhodSpace/Suggested.lean:20326`), und
+   `isTightMeasureSet_map_rescaledWalk` führt das Pfadbild bereits in der Gestalt
+   `hΦ : (Φ n ω).toFun = fun r ↦ (√(n+1))⁻¹ * ∑ j ∈ range ⌊r ((n:ℝ≥0)+1)⌋₊, ξ j ω`
+   (Zeile 33141). Unter `hΦ` ist `mpTest f g t (Φ n ω)` **definitionsgleich** dem Ausdruck, über
+   den der Grenzübergang schon ausgesprochen ist; zu leisten ist ein `rw [hΦ]` und nichts weiter.
+2. **Das Gewicht.** `Z ∈ SkorokhodSpace.evalFuns ℝ (insert s (T ∩ Iic s))` ist beschränkt
+   (`bounded_of_mem_evalFuns`) und meßbar für die Vergangenheit; gebraucht wird
+   `Measurable[Filtration.natural … ⌊s ((n:ℝ≥0)+1)⌋₊] (fun ω ↦ Z (Φ n ω))`. Die Brücke steht
+   schon und ist ein `rfl`: `floorFiltration_apply` (Zeile 31933) sagt
+   `floorFiltration 𝒢 c t = 𝒢 ⌊t c⌋₊` und trägt `@[simp]`. Zu bauen war allein das Gegenstück zu
+   `measurable_cadlagFiltration_of_mem_evalFuns` (Zeile 30692) für die Irrfahrtsfiltration —
+   **und das ist noch in diesem Lauf gebaut, siehe den dritten Teil unten.** Dieser Posten ist
+   damit erledigt.
+3. **Die Testklasse, und hier sitzt die einzige echte Lücke.** `mpTest` nimmt `f g : ℝ →ᵇ ℝ`, die
+   Zellenrechnung nimmt `ContDiff ℝ 3 f` mit beschränkten Ableitungen. Die Akzeptanzklasse
+   `Cc^∞(ℝ)` gibt beides, aber die **Brücke** — eine glatte Funktion mit kompaktem Träger als
+   gebündeltes `ℝ →ᵇ ℝ`, samt der Schranken an `f'`, `f''`, `f'''` — steht in keiner der vier
+   Dateien: `HasCompactSupport` kommt in `TauCeti/` genau zweimal vor, beide Male in
+   `WeakConvergence/Suggested.lean` (Zeilen 1446 und 1462) und beide Male als *Menge* von
+   Funktionen, nie als `→ᵇ`-Bündelung. Sie ist ein eigener, kleiner Punkt und gehört vor Punkt 1
+   gebaut, weil sonst die Aussage nicht hinschreibbar ist.
+
+*Warum jetzt:* weil danach **alle vier** Kettenpunkte des Meilensteins 11 auf Donskers Daten
+eingelöst sind — die Straffheit und die relative Kompaktheit seit dem 2026-09-22, der dritte über
+`mpSolution_of_tendsto_cadlag_of_subseq_of_zero_pathOfProcess`, und der vierte ist reine
+Topologie. Der Akzeptanztest verlangt sie je einmal und in dieser Reihenfolge; die Rechnung, die
+dafür fehlte, steht seit diesem Lauf.
+
+### Derselbe Lauf, dritter Teil — die Naht zum Pfadraum, soweit sie ohne die Testklasse zu haben ist: `measurable_comp_rescaledWalk_of_mem_evalFuns`
+
+*Eine Deklaration, hinter dem Grenzübergang am Ende von `WalkContainment`.
+`scripts/check_master.py`: **0 Fehler, 0 `sorry` außer dem bekannten, 0 veraltete Namen**,
+Warnungen unverändert **18 / 39 / 36 / 76**. `check_axioms_master.py`: `propext`,
+`Classical.choice`, `Quot.sound`. `check_duplicates.py` und `check_cited_lines.py` unverändert.
+Im **ersten** Durchlauf durchgegangen, wie der Grenzübergang.*
+
+Die Aussage: ist `Z ∈ SkorokhodSpace.evalFuns ℝ S` mit `S ⊆ Set.Iic s`, und ist `Φ` das Pfadbild
+der reskalierten Irrfahrt in der Gestalt, die `isTightMeasureSet_map_rescaledWalk` schon führt, so
+ist `fun ω ↦ Z (Φ ω)` meßbar für `floorFiltration (Filtration.natural …) ((n:ℝ≥0)+1)` bei `s` —
+also genau das, was `tendsto_integral_mpTest_sub_rescaledWalk_mul` als `hZ` verlangt und
+`mpSolution_of_tendsto_cadlag` als Klasse anbietet.
+
+**Punkt 2 des Vorschlags im zweiten Teil ist damit eingelöst, und er kostete so wenig wie
+angesagt:** der Indexwechsel ist `floorFiltration_apply` und damit `rfl`, jeder Faktor ist eine
+beschränkt stetige Funktion des Pfades an *einer* Zeit `r ≤ s`, der Pfad dort ist die Partialsumme
+bis `⌊r c⌋ ≤ ⌊s c⌋`, und `Filtration.stronglyAdapted_natural` mit der Monotonie der Filtration ist
+alles Weitere. Der Beweis ist der von `measurable_cadlagFiltration_of_mem_evalFuns`, nur mit der
+Partialsumme an der Stelle der Koordinate.
+
+**Was damit von der Naht noch fehlt, ist genau Punkt 3 und sonst nichts:** die Testklasse. `mpTest`
+nimmt `f g : ℝ →ᵇ ℝ`, die Zellenrechnung nimmt `ContDiff ℝ 3 f` mit beschränkten Ableitungen, und
+die Bündelung einer glatten Funktion mit kompaktem Träger als `ℝ →ᵇ ℝ` samt der drei Schranken
+steht in keiner der vier Dateien. Punkt 1 — das Einsetzen von `hΦ` in `SkorokhodSpace.mpTest` — ist
+danach ein `rw` und keine Arbeit.
+
+**Das benannte Ziel für den nächsten Lauf ist deshalb jetzt die Testklasse**, und zwar als eigene
+Aussage vor dem Zusammenbau:
+
+> **`MeasureTheory.exists_boundedContinuous_contDiff_of_hasCompactSupport`** — zu `f : ℝ → ℝ` mit
+> `ContDiff ℝ ⊤ f` und `HasCompactSupport f` ein `f♭ : ℝ →ᵇ ℝ` mit `f♭ = f` als Funktion, und drei
+> Konstanten `C₁, M₂, M₃` mit `|f'| ≤ C₁`, `|f''| ≤ M₂`, `|f'''| ≤ M₃`.
+
+*Worauf sie ruht:* die Beschränktheit jeder Ableitung folgt daraus, daß `iteratedDeriv k f` stetig
+ist und außerhalb des Trägers von `f` verschwindet, also kompakten Träger hat
+(`HasCompactSupport.iteratedDeriv` ist gegen `master` zu prüfen — falls es fehlt, ist es
+`HasCompactSupport.mono` am Träger der Ableitung), und eine stetige Funktion mit kompaktem Träger
+ist beschränkt (`Continuous.bounded_above_of_compact_support` oder
+`HasCompactSupport.exists_bound_of_continuous`). Der genaue Name ist am Quelltext zu belegen und
+nicht zu raten; die Aussage selbst ist Mathlib-Grundtheorie und sollte, wenn sie dort fehlt, als
+eigener Punkt in `TODO.md` Punkt 8 vermerkt werden.
+
+*Warum sie vorangeht:* ohne sie ist `tendsto_integral_mpTest_sub_pathOfProcess_rescaledWalk` nicht
+**hinschreibbar** — `mpTest` verlangt die Bündelung im Typ. Alles andere an der Naht steht seit
+diesem Lauf.

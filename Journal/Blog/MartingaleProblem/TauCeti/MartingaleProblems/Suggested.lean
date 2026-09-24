@@ -34270,6 +34270,647 @@ theorem abs_integral_mpTest_sub_rescaledWalk_mul_le {P : Measure Ω} [IsProbabil
     + (M₂ * ∫ ω, ({y : ℝ | e * Real.sqrt ((n : ℝ) + 1) < |y|}.indicator fun y => y ^ 2)
         (ξ k ω) ∂P) * hasq
 
+/-- **The whole cells of a window, weighed by the mesh, do not add up to more than the window
+plus one mesh.**
+
+```
+(⌊t c⌋ − ⌊s c⌋) · c⁻¹  ≤  t − s + c⁻¹
+```
+
+This is the entire counting that the passage from one cell of Donsker's expansion to a window
+costs.  The cell bound carries one factor `(n+1)⁻¹` per cell, so what the consumer needs is that
+the cells of a window do not add up to more than the window itself.
+
+**The `+ c⁻¹` cannot be dropped**, and it is the broken cell at the left end: at `s = t` the left
+hand side is `0`, but for `s` just below a node and `t` just above it the count is `1` while the
+length `t − s` is arbitrarily small.  It is the same overshoot that
+`MeasureTheory.abs_sub_natCast_floor_div_le` measures at one endpoint, here between two.
+
+**`0 ≤ s` is read and cannot be dropped**, for the reason given there: `Nat.floor` is not the
+floor below `0`, and at a negative `s` the count is not `⌊t c⌋ − ⌊s c⌋`. -/
+theorem natCast_floor_sub_floor_div_le {c : ℝ} (hc : 0 < c) {s t : ℝ} (hs : 0 ≤ s)
+    (hst : s ≤ t) :
+    ((⌊t * c⌋₊ - ⌊s * c⌋₊ : ℕ) : ℝ) * c⁻¹ ≤ t - s + c⁻¹ := by
+  have hsc : s * c ≤ t * c := mul_le_mul_of_nonneg_right hst hc.le
+  have hle : ⌊s * c⌋₊ ≤ ⌊t * c⌋₊ := Nat.floor_le_floor hsc
+  have h1 : (⌊t * c⌋₊ : ℝ) ≤ t * c := Nat.floor_le (mul_nonneg (hs.trans hst) hc.le)
+  have h2 : s * c < (⌊s * c⌋₊ : ℝ) + 1 := Nat.lt_floor_add_one _
+  have hinv : (0 : ℝ) < c⁻¹ := inv_pos.2 hc
+  have hcc : c * c⁻¹ = 1 := mul_inv_cancel₀ hc.ne'
+  rw [Nat.cast_sub hle]
+  have h3 : (⌊t * c⌋₊ : ℝ) - (⌊s * c⌋₊ : ℝ) ≤ t * c - s * c + 1 := by linarith
+  calc ((⌊t * c⌋₊ : ℝ) - (⌊s * c⌋₊ : ℝ)) * c⁻¹
+      ≤ (t * c - s * c + 1) * c⁻¹ := mul_le_mul_of_nonneg_right h3 hinv.le
+    _ = t * (c * c⁻¹) - s * (c * c⁻¹) + c⁻¹ := by ring
+    _ = t - s + c⁻¹ := by rw [hcc]; ring
+
+/-- **One cell of Donsker's expansion against a bounded weight is integrable**, and this is what
+the summation over the cells needs and the single cell did not.
+
+`MeasureTheory.abs_integral_mpTest_sub_rescaledWalk_mul_le` bounds the integral of one cell
+without ever asking the cell itself to be integrable: it rewrites the cell into four summands and
+integrates those, so a junk value on the left would be matched by one on the right.  The
+**sum** over the cells cannot do that.  `MeasureTheory.integral_finsetSum` asks each summand to
+be integrable, and that is the one obligation the window adds to the cell.
+
+**`f` is not asked to be bounded**, which is the point of doing this with a Taylor bound rather
+than with `|f| ≤ C₀`.  What is integrated is a *difference* of values of `f` at two neighbouring
+nodes, and
+
+```
+|f (x + d) − f x|  ≤  C₁ |d| + (3/2) M₂ d²
+```
+
+by `MeasureTheory.abs_sub_taylor_two_le'` together with the two terms of the expansion itself.
+At `d = ξ k / √(n+1)` the right hand side is integrable out of `MemLp (ξ k) 2 P` alone -- the
+first summand from `MemLp.integrable`, the second from `MemLp.integrable_sq` -- and nothing about
+`f` at large argument is read.  A hypothesis `|f| ≤ C₀` would have been cheaper by ten lines and
+would have been a hypothesis the acceptance class has to carry.
+
+**`g` is asked only for a bound and measurability**, not for any relation to `f`: the compensating
+term of the cell is `(n+1)⁻¹ g (S k)`, bounded by `(n+1)⁻¹ C_g` uniformly in the sample point.
+That is why this statement stands before the choice `g = ½ v f''` is made and can be read by any
+consumer of `MeasureTheory.mpTest_sub_rescaledWalk_eq_sum`.
+
+`0 ≤ K`, `0 ≤ M₂`, `0 ≤ C₁` and `0 ≤ C_g` are conclusions and not hypotheses; the first needs a
+sample point, which `IsProbabilityMeasure P` provides. -/
+theorem integrable_mpCell_rescaledWalk_mul {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} (hmeas : ∀ k, StronglyMeasurable (ξ k)) (n k : ℕ)
+    (hLp : MemLp (ξ k) 2 P) {f g : ℝ → ℝ} (hf : ContDiff ℝ 2 f) {M₂ C₁ Cg K : ℝ}
+    (hM₂ : ∀ y, |iteratedDeriv 2 f y| ≤ M₂) (hC₁ : ∀ y, |deriv f y| ≤ C₁)
+    (hgm : Measurable g) (hgb : ∀ y, |g y| ≤ Cg)
+    {Z : Ω → ℝ} (hZK : ∀ ω, |Z ω| ≤ K) (hZm : Measurable Z) :
+    Integrable (fun ω => (f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range (k + 1), ξ j ω)
+        - f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)
+        - ((n : ℝ) + 1)⁻¹ * g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+            * ∑ j ∈ Finset.range k, ξ j ω)) * Z ω) P := by
+  have hn : (0 : ℝ) < (n : ℝ) + 1 := by positivity
+  have hs0 : 0 < Real.sqrt ((n : ℝ) + 1) := Real.sqrt_pos.2 hn
+  have ha0 : 0 < (Real.sqrt ((n : ℝ) + 1))⁻¹ := by positivity
+  have hasq : ((Real.sqrt ((n : ℝ) + 1))⁻¹) ^ 2 = ((n : ℝ) + 1)⁻¹ := by
+    rw [inv_pow, Real.sq_sqrt hn.le]
+  have hM₂0 : 0 ≤ M₂ := (abs_nonneg _).trans (hM₂ 0)
+  have hC₁0 : 0 ≤ C₁ := (abs_nonneg _).trans (hC₁ 0)
+  have hCg0 : 0 ≤ Cg := (abs_nonneg _).trans (hgb 0)
+  have hK : 0 ≤ K := by
+    rcases isEmpty_or_nonempty Ω with hE | hne
+    · have h1 : P Set.univ = 1 := measure_univ
+      rw [Set.univ_eq_empty_iff.2 hE, measure_empty] at h1
+      exact absurd h1 (by simp)
+    · exact (abs_nonneg _).trans (hZK hne.some)
+  have hf2c : Continuous (iteratedDeriv 2 f) := hf.continuous_iteratedDeriv 2 (by norm_num)
+  have hf1c : Continuous (deriv f) := by
+    have h := hf.continuous_iteratedDeriv 1 (by norm_num)
+    simpa [iteratedDeriv_one] using h
+  have hSm : ∀ m : ℕ, Measurable fun ω =>
+      (Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range m, ξ j ω :=
+    fun m => measurable_const.mul (Finset.measurable_sum _ fun j _ => (hmeas j).measurable)
+  -- the cell is bounded by an affine function of `|ξ k|` and `ξ k ²`, with no bound on `f`
+  have hcellb : ∀ ω,
+      |f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range (k + 1), ξ j ω)
+        - f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)
+        - ((n : ℝ) + 1)⁻¹ * g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+            * ∑ j ∈ Finset.range k, ξ j ω)|
+      ≤ C₁ * (Real.sqrt ((n : ℝ) + 1))⁻¹ * |ξ k ω|
+        + M₂ * ((n : ℝ) + 1)⁻¹ * (3 / 2) * ξ k ω ^ 2
+        + ((n : ℝ) + 1)⁻¹ * Cg := by
+    intro ω
+    have hx : (Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range (k + 1), ξ j ω
+        = (Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω
+          + (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω := by
+      rw [Finset.sum_range_succ, mul_add]
+    rw [hx]
+    set x := (Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω with hxdef
+    set d := (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ k ω with hddef
+    have hd2 : d ^ 2 = ((n : ℝ) + 1)⁻¹ * ξ k ω ^ 2 := by rw [hddef, mul_pow, hasq]
+    have hdabs : |d| = (Real.sqrt ((n : ℝ) + 1))⁻¹ * |ξ k ω| := by
+      rw [hddef, abs_mul, abs_of_pos ha0]
+    have hT : |f (x + d) - f x - deriv f x * d - iteratedDeriv 2 f x * d ^ 2 / 2| ≤ M₂ * d ^ 2 :=
+      abs_sub_taylor_two_le' hf hM₂ x d
+    have hD1 : |deriv f x * d| ≤ C₁ * |d| := by
+      rw [abs_mul]
+      exact mul_le_mul_of_nonneg_right (hC₁ x) (abs_nonneg _)
+    have hD2 : |iteratedDeriv 2 f x * d ^ 2 / 2| ≤ M₂ * d ^ 2 / 2 := by
+      have h1 : |iteratedDeriv 2 f x * d ^ 2 / 2| = |iteratedDeriv 2 f x| * d ^ 2 / 2 := by
+        rw [abs_div, abs_mul, abs_pow, sq_abs]
+        norm_num
+      rw [h1]
+      have h2 := mul_le_mul_of_nonneg_right (hM₂ x) (sq_nonneg d)
+      linarith
+    have hD3 : |((n : ℝ) + 1)⁻¹ * g x| ≤ ((n : ℝ) + 1)⁻¹ * Cg := by
+      rw [abs_mul, abs_of_nonneg (by positivity : (0 : ℝ) ≤ ((n : ℝ) + 1)⁻¹)]
+      exact mul_le_mul_of_nonneg_left (hgb x) (by positivity)
+    have hsplit : f (x + d) - f x - ((n : ℝ) + 1)⁻¹ * g x
+        = (f (x + d) - f x - deriv f x * d - iteratedDeriv 2 f x * d ^ 2 / 2)
+          + deriv f x * d + iteratedDeriv 2 f x * d ^ 2 / 2
+          - ((n : ℝ) + 1)⁻¹ * g x := by ring
+    have e1 := abs_add_le (f (x + d) - f x - deriv f x * d - iteratedDeriv 2 f x * d ^ 2 / 2)
+      (deriv f x * d)
+    have e2 := abs_add_le ((f (x + d) - f x - deriv f x * d - iteratedDeriv 2 f x * d ^ 2 / 2)
+      + deriv f x * d) (iteratedDeriv 2 f x * d ^ 2 / 2)
+    have e3 := abs_sub (((f (x + d) - f x - deriv f x * d - iteratedDeriv 2 f x * d ^ 2 / 2)
+      + deriv f x * d) + iteratedDeriv 2 f x * d ^ 2 / 2) (((n : ℝ) + 1)⁻¹ * g x)
+    have hfin : |f (x + d) - f x - ((n : ℝ) + 1)⁻¹ * g x|
+        ≤ C₁ * |d| + M₂ * d ^ 2 * (3 / 2) + ((n : ℝ) + 1)⁻¹ * Cg := by
+      rw [hsplit]; linarith
+    rw [hd2, hdabs] at hfin
+    linarith
+  -- the majorant, integrable out of `MemLp (ξ k) 2 P` alone
+  have h1 : Integrable (fun ω => |ξ k ω|) P := (hLp.integrable one_le_two).abs
+  have h2 : Integrable (fun ω => ξ k ω ^ 2) P := hLp.integrable_sq
+  have hmaj : Integrable (fun ω => K * (C₁ * (Real.sqrt ((n : ℝ) + 1))⁻¹ * |ξ k ω|
+      + M₂ * ((n : ℝ) + 1)⁻¹ * (3 / 2) * ξ k ω ^ 2
+      + ((n : ℝ) + 1)⁻¹ * Cg)) P :=
+    (((h1.const_mul _).add (h2.const_mul _)).add (integrable_const _)).const_mul _
+  refine Integrable.mono' hmaj ?_ ?_
+  · exact ((((hf.continuous.measurable.comp (hSm (k + 1))).sub
+      (hf.continuous.measurable.comp (hSm k))).sub
+      ((hgm.comp (hSm k)).const_mul (((n : ℝ) + 1)⁻¹))).mul hZm).aestronglyMeasurable
+  · filter_upwards with ω
+    have hB0 : 0 ≤ C₁ * (Real.sqrt ((n : ℝ) + 1))⁻¹ * |ξ k ω|
+        + M₂ * ((n : ℝ) + 1)⁻¹ * (3 / 2) * ξ k ω ^ 2
+        + ((n : ℝ) + 1)⁻¹ * Cg := by
+      have t1 : 0 ≤ C₁ * (Real.sqrt ((n : ℝ) + 1))⁻¹ * |ξ k ω| :=
+        mul_nonneg (mul_nonneg hC₁0 (by positivity)) (abs_nonneg _)
+      have t2 : 0 ≤ M₂ * ((n : ℝ) + 1)⁻¹ * (3 / 2) * ξ k ω ^ 2 :=
+        mul_nonneg (mul_nonneg (mul_nonneg hM₂0 (by positivity)) (by norm_num)) (sq_nonneg _)
+      have t3 : 0 ≤ ((n : ℝ) + 1)⁻¹ * Cg := mul_nonneg (by positivity) hCg0
+      linarith
+    rw [Real.norm_eq_abs, abs_mul]
+    exact le_trans (mul_le_mul (hcellb ω) (hZK ω) (abs_nonneg _) hB0) (le_of_eq (mul_comm _ _))
+
+/-- **The summation of Donsker's expansion over the cells of a window**, which is the fourth and
+last item the tightness side of the chain owes and the form
+`mpSolution_of_tendsto_cadlag_of_subseq_of_zero_pathOfProcess` reads:
+
+```
+|∫ (mpTest f g t − mpTest f g s) (rescaled walk) · Z|
+  ≤ (t − s + (n+1)⁻¹) · K · (M₃ e v / 6 + M₂ L)  +  2 (n+1)⁻¹ (|v|/2 M₂) K
+```
+
+for `|Z| ≤ K` measurable for the past at the **left** end of the window, every `e ≥ 0`, and `L`
+any common bound on the truncated second moments `𝔼[ξ k ² 1_{|ξ k| > e √(n+1)}]`.
+
+**The order of the two limits is forced by the shape of the bound**, as at the single cell: at
+fixed `e` the second factor of the first summand tends to `M₃ e v / 6` -- because
+`MeasureTheory.tendsto_integral_sq_indicator` sends `L` to `0` along `n` -- and only then does
+`e` go to `0`.  The boundary summand is `O((n+1)⁻¹)` and vanishes by counting.
+
+**The `(n+1)⁻¹` of the cell bound cancels against the number of cells, and that is the whole
+content of the summation**: there are `⌊t (n+1)⌋ − ⌊s (n+1)⌋` cells,
+`MeasureTheory.natCast_floor_sub_floor_div_le` says that weighed by the mesh they come to at most
+`t − s + (n+1)⁻¹`, and the surplus `(n+1)⁻¹` is the broken cell at the left end.  It is **not**
+true that there are at most `n+1` of them; a window longer than `1` has more, and a bound that
+claimed otherwise would be false for `t − s > 1`.
+
+**Where the identical distribution of the increments is really needed, and it is here.**  The
+single cell asks `∫ ξ k ² = v` and a truncated second moment at **one** index; the window asks
+them at **all** indices of the window, and that is the first place in this chain where the
+increments have to have a common law rather than merely be independent.  It is asked as two
+hypotheses quantified over `k` and not as a distributional equality, which is the weakest form
+under which the proof goes through: `L` need not be the common value, only a common bound.
+
+**`g` is carried as a function with `hgv` and not substituted**, because
+`MeasureTheory.mpTest_sub_rescaledWalk_eq_sum` and
+`MeasureTheory.abs_mpTest_sub_rescaledWalk_sub_sum_le` are stated over a function `g` and the
+chain hands over a pair `(f, g)` from the class.  `hgv` is read at exactly two places: once to
+turn the cell into the form the single cell bound has, and once to bound `g` by `|v|/2 M₂`.
+
+`0 ≤ v` and `0 ≤ L` are conclusions and not hypotheses -- the first from `hsq 0` and the
+nonnegativity of a square, the second from `hL 0` and the nonnegativity of an indicator of one. -/
+theorem abs_integral_mpTest_sub_rescaledWalk_sum_le {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0) (n : ℕ) {v : ℝ}
+    (hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = v) (hLp : ∀ k, MemLp (ξ k) 2 P)
+    {f g : ℝ → ℝ} (hf : ContDiff ℝ 3 f) {M₂ M₃ C₁ K L e : ℝ}
+    (hgv : ∀ y, g y = v / 2 * iteratedDeriv 2 f y)
+    (hM₂ : ∀ y, |iteratedDeriv 2 f y| ≤ M₂) (hM₃ : ∀ y, |iteratedDeriv 3 f y| ≤ M₃)
+    (hC₁ : ∀ y, |deriv f y| ≤ C₁) (he : 0 ≤ e)
+    (hL : ∀ k, ∫ ω, ({y : ℝ | e * Real.sqrt ((n : ℝ) + 1) < |y|}.indicator fun y => y ^ 2)
+        (ξ k ω) ∂P ≤ L)
+    {Z : Ω → ℝ} (hZK : ∀ ω, |Z ω| ≤ K) {s t : ℝ≥0} (hst : s ≤ t)
+    (hZ : Measurable[Filtration.natural
+        (fun m ω ↦ ∑ j ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω)
+        (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun j _ ↦ (hmeas j).const_mul _)
+        ⌊s * ((n : ℝ≥0) + 1)⌋₊] Z) :
+    |∫ ω, ((f ((Real.sqrt ((n : ℝ) + 1))⁻¹
+              * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+            - ∫ u in Set.Ioc (0 : ℝ) (t : ℝ),
+                g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+                  * ∑ j ∈ Finset.range ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊, ξ j ω))
+          - (f ((Real.sqrt ((n : ℝ) + 1))⁻¹
+                * ∑ j ∈ Finset.range ⌊s * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+              - ∫ u in Set.Ioc (0 : ℝ) (s : ℝ),
+                  g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+                    * ∑ j ∈ Finset.range ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊, ξ j ω))) * Z ω ∂P|
+      ≤ ((t : ℝ) - (s : ℝ) + ((n : ℝ) + 1)⁻¹) * K * (M₃ * e * v / 6 + M₂ * L)
+        + 2 * ((n : ℝ) + 1)⁻¹ * (|v| / 2 * M₂) * K := by
+  have hn : (0 : ℝ) < (n : ℝ) + 1 := by positivity
+  have hM₂0 : 0 ≤ M₂ := (abs_nonneg _).trans (hM₂ 0)
+  have hM₃0 : 0 ≤ M₃ := (abs_nonneg _).trans (hM₃ 0)
+  have hK : 0 ≤ K := by
+    rcases isEmpty_or_nonempty Ω with hE | hne
+    · have h1 : P Set.univ = 1 := measure_univ
+      rw [Set.univ_eq_empty_iff.2 hE, measure_empty] at h1
+      exact absurd h1 (by simp)
+    · exact (abs_nonneg _).trans (hZK hne.some)
+  have hv0 : 0 ≤ v := by rw [← hsq 0]; exact integral_nonneg fun ω => sq_nonneg _
+  have hL0 : 0 ≤ L :=
+    le_trans (integral_nonneg fun ω => Set.indicator_nonneg (fun y _ => sq_nonneg y) _) (hL 0)
+  have hB0 : 0 ≤ M₃ * e * v / 6 + M₂ * L :=
+    add_nonneg (div_nonneg (mul_nonneg (mul_nonneg hM₃0 he) hv0) (by norm_num))
+      (mul_nonneg hM₂0 hL0)
+  have hCg0 : 0 ≤ |v| / 2 * M₂ := mul_nonneg (by positivity) hM₂0
+  have hf2c : Continuous (iteratedDeriv 2 f) := hf.continuous_iteratedDeriv 2 (by norm_num)
+  have hgeq : g = fun y => v / 2 * iteratedDeriv 2 f y := funext hgv
+  have hgm : Measurable g := by rw [hgeq]; exact hf2c.measurable.const_mul _
+  have hgb : ∀ y, |g y| ≤ |v| / 2 * M₂ := by
+    intro y
+    rw [hgv y]
+    have h1 : |v / 2 * iteratedDeriv 2 f y| = |v| / 2 * |iteratedDeriv 2 f y| := by
+      rw [abs_mul, abs_div]; norm_num
+    rw [h1]
+    exact mul_le_mul_of_nonneg_left (hM₂ y) (by positivity)
+  have hSm : ∀ m : ℕ, Measurable fun ω =>
+      (Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range m, ξ j ω :=
+    fun m => measurable_const.mul (Finset.measurable_sum _ fun j _ => (hmeas j).measurable)
+  set 𝒢 : Filtration ℕ mΩ := Filtration.natural
+      (fun m ω ↦ ∑ j ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω)
+      (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun j _ ↦ (hmeas j).const_mul _) with h𝒢
+  have hZm : Measurable Z := hZ.mono (𝒢.le _) le_rfl
+  -- the two broken cells of the window, as an explicit function of the sample point
+  obtain ⟨W, hWdef⟩ : ∃ W : Ω → ℝ, W = fun ω =>
+      -(((t : ℝ) - (⌊t * ((n : ℝ≥0) + 1)⌋₊ : ℝ) / ((n : ℝ) + 1))
+          * g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+              * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω))
+        + ((s : ℝ) - (⌊s * ((n : ℝ≥0) + 1)⌋₊ : ℝ) / ((n : ℝ) + 1))
+          * g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+              * ∑ j ∈ Finset.range ⌊s * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) := ⟨_, rfl⟩
+  have hWm : Measurable W := by
+    rw [hWdef]
+    exact (((hgm.comp (hSm _)).const_mul _).neg).add ((hgm.comp (hSm _)).const_mul _)
+  -- the gap at one sample point, as the cell sum plus the two broken cells
+  have hgapraw : ∀ ω, (f ((Real.sqrt ((n : ℝ) + 1))⁻¹
+            * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+          - ∫ u in Set.Ioc (0 : ℝ) (t : ℝ),
+              g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+                * ∑ j ∈ Finset.range ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊, ξ j ω))
+        - (f ((Real.sqrt ((n : ℝ) + 1))⁻¹
+              * ∑ j ∈ Finset.range ⌊s * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+            - ∫ u in Set.Ioc (0 : ℝ) (s : ℝ),
+                g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+                  * ∑ j ∈ Finset.range ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊, ξ j ω))
+      = (∑ k ∈ Finset.Ico ⌊s * ((n : ℝ≥0) + 1)⌋₊ ⌊t * ((n : ℝ≥0) + 1)⌋₊,
+            (f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range (k + 1), ξ j ω)
+              - f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)
+              - ((n : ℝ) + 1)⁻¹
+                * g ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω))) + W ω := by
+    intro ω
+    simp only [hWdef]
+    rw [mpTest_sub_rescaledWalk_eq_sum f g n ξ ω hst]
+    ring
+  -- the two broken cells are of order `(n+1)⁻¹`, uniformly in the sample point
+  have hWb : ∀ ω, |W ω| ≤ 2 * ((n : ℝ) + 1)⁻¹ * (|v| / 2 * M₂) := by
+    intro ω
+    rw [eq_sub_of_add_eq' (hgapraw ω).symm]
+    exact abs_mpTest_sub_rescaledWalk_sub_sum_le f g hgb n ξ ω hst
+  -- each cell against the weight is integrable, which the single cell bound did not need
+  have hcellint : ∀ k, Integrable (fun ω =>
+      (f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range (k + 1), ξ j ω)
+        - f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)
+        - ((n : ℝ) + 1)⁻¹
+          * g ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)) * Z ω) P :=
+    fun k => integrable_mpCell_rescaledWalk_mul hmeas n k (hLp k) (hf.of_le (by norm_num))
+      hM₂ hC₁ hgm hgb hZK hZm
+  have hsumint : Integrable (fun ω =>
+      ∑ k ∈ Finset.Ico ⌊s * ((n : ℝ≥0) + 1)⌋₊ ⌊t * ((n : ℝ≥0) + 1)⌋₊,
+        (f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range (k + 1), ξ j ω)
+          - f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)
+          - ((n : ℝ) + 1)⁻¹
+            * g ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)) * Z ω) P :=
+    integrable_finsetSum _ fun k _ => hcellint k
+  have hWint : Integrable (fun ω => W ω * Z ω) P := by
+    refine Integrable.mono' (integrable_const (2 * ((n : ℝ) + 1)⁻¹ * (|v| / 2 * M₂) * K))
+      (hWm.mul hZm).aestronglyMeasurable ?_
+    filter_upwards with ω
+    rw [Real.norm_eq_abs, abs_mul]
+    exact mul_le_mul (hWb ω) (hZK ω) (abs_nonneg _) (mul_nonneg (by positivity) hCg0)
+  have hWZ : |∫ ω, W ω * Z ω ∂P| ≤ 2 * ((n : ℝ) + 1)⁻¹ * (|v| / 2 * M₂) * K := by
+    calc |∫ ω, W ω * Z ω ∂P| ≤ ∫ ω, |W ω * Z ω| ∂P := abs_integral_le_integral_abs
+      _ ≤ ∫ _ω, 2 * ((n : ℝ) + 1)⁻¹ * (|v| / 2 * M₂) * K ∂P := by
+          refine integral_mono hWint.abs (integrable_const _) fun ω => ?_
+          rw [abs_mul]
+          exact mul_le_mul (hWb ω) (hZK ω) (abs_nonneg _) (mul_nonneg (by positivity) hCg0)
+      _ = 2 * ((n : ℝ) + 1)⁻¹ * (|v| / 2 * M₂) * K := by simp
+  -- the cell bound, with the truncated second moment replaced by its common bound
+  have hcellbound : ∀ k ∈ Finset.Ico ⌊s * ((n : ℝ≥0) + 1)⌋₊ ⌊t * ((n : ℝ≥0) + 1)⌋₊,
+      |∫ ω, (f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range (k + 1), ξ j ω)
+          - f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)
+          - ((n : ℝ) + 1)⁻¹
+            * g ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)) * Z ω ∂P|
+        ≤ K * (((n : ℝ) + 1)⁻¹ * (M₃ * e * v / 6 + M₂ * L)) := by
+    intro k hk
+    have hZk : Measurable[𝒢 k] Z := hZ.mono (𝒢.mono (Finset.mem_Ico.1 hk).1) le_rfl
+    simp only [hgv]
+    refine (abs_integral_mpTest_sub_rescaledWalk_mul_le hmeas hind hcent n k (hsq k) (hLp k)
+      hf hM₂ hM₃ hC₁ he hZK hZk).trans ?_
+    refine mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_left ?_ (by positivity)) hK
+    exact add_le_add le_rfl (mul_le_mul_of_nonneg_left (hL k) hM₂0)
+  -- the assembly
+  simp only [hgapraw]
+  have hpt : ∀ ω, ((∑ k ∈ Finset.Ico ⌊s * ((n : ℝ≥0) + 1)⌋₊ ⌊t * ((n : ℝ≥0) + 1)⌋₊,
+            (f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range (k + 1), ξ j ω)
+              - f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)
+              - ((n : ℝ) + 1)⁻¹
+                * g ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω))) + W ω) * Z ω
+      = (∑ k ∈ Finset.Ico ⌊s * ((n : ℝ≥0) + 1)⌋₊ ⌊t * ((n : ℝ≥0) + 1)⌋₊,
+            (f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range (k + 1), ξ j ω)
+              - f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)
+              - ((n : ℝ) + 1)⁻¹
+                * g ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)) * Z ω)
+        + W ω * Z ω := fun ω => by rw [add_mul, Finset.sum_mul]
+  simp only [hpt]
+  rw [integral_add hsumint hWint, integral_finsetSum _ fun k _ => hcellint k]
+  calc |(∑ k ∈ Finset.Ico ⌊s * ((n : ℝ≥0) + 1)⌋₊ ⌊t * ((n : ℝ≥0) + 1)⌋₊,
+          ∫ ω, (f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range (k + 1), ξ j ω)
+            - f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)
+            - ((n : ℝ) + 1)⁻¹
+              * g ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)) * Z ω ∂P)
+        + ∫ ω, W ω * Z ω ∂P|
+      ≤ |∑ k ∈ Finset.Ico ⌊s * ((n : ℝ≥0) + 1)⌋₊ ⌊t * ((n : ℝ≥0) + 1)⌋₊,
+          ∫ ω, (f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range (k + 1), ξ j ω)
+            - f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)
+            - ((n : ℝ) + 1)⁻¹
+              * g ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)) * Z ω ∂P|
+        + |∫ ω, W ω * Z ω ∂P| := abs_add_le _ _
+    _ ≤ (∑ k ∈ Finset.Ico ⌊s * ((n : ℝ≥0) + 1)⌋₊ ⌊t * ((n : ℝ≥0) + 1)⌋₊,
+            |∫ ω, (f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range (k + 1), ξ j ω)
+              - f ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)
+              - ((n : ℝ) + 1)⁻¹
+                * g ((Real.sqrt ((n : ℝ) + 1))⁻¹ * ∑ j ∈ Finset.range k, ξ j ω)) * Z ω ∂P|)
+          + 2 * ((n : ℝ) + 1)⁻¹ * (|v| / 2 * M₂) * K :=
+        add_le_add (Finset.abs_sum_le_sum_abs _ _) hWZ
+    _ ≤ (∑ _k ∈ Finset.Ico ⌊s * ((n : ℝ≥0) + 1)⌋₊ ⌊t * ((n : ℝ≥0) + 1)⌋₊,
+            K * (((n : ℝ) + 1)⁻¹ * (M₃ * e * v / 6 + M₂ * L)))
+          + 2 * ((n : ℝ) + 1)⁻¹ * (|v| / 2 * M₂) * K :=
+        add_le_add (Finset.sum_le_sum hcellbound) le_rfl
+    _ = ((⌊t * ((n : ℝ≥0) + 1)⌋₊ - ⌊s * ((n : ℝ≥0) + 1)⌋₊ : ℕ) : ℝ)
+            * (K * (((n : ℝ) + 1)⁻¹ * (M₃ * e * v / 6 + M₂ * L)))
+          + 2 * ((n : ℝ) + 1)⁻¹ * (|v| / 2 * M₂) * K := by
+        rw [Finset.sum_const, Nat.card_Ico, nsmul_eq_mul]
+    _ ≤ ((t : ℝ) - (s : ℝ) + ((n : ℝ) + 1)⁻¹) * K * (M₃ * e * v / 6 + M₂ * L)
+          + 2 * ((n : ℝ) + 1)⁻¹ * (|v| / 2 * M₂) * K := by
+        refine add_le_add ?_ le_rfl
+        have hflt : ⌊t * ((n : ℝ≥0) + 1)⌋₊ = ⌊(t : ℝ) * ((n : ℝ) + 1)⌋₊ := by norm_cast
+        have hfls : ⌊s * ((n : ℝ≥0) + 1)⌋₊ = ⌊(s : ℝ) * ((n : ℝ) + 1)⌋₊ := by norm_cast
+        have hcount : ((⌊t * ((n : ℝ≥0) + 1)⌋₊ - ⌊s * ((n : ℝ≥0) + 1)⌋₊ : ℕ) : ℝ)
+            * ((n : ℝ) + 1)⁻¹ ≤ (t : ℝ) - (s : ℝ) + ((n : ℝ) + 1)⁻¹ := by
+          rw [hflt, hfls]
+          exact natCast_floor_sub_floor_div_le hn s.coe_nonneg (by exact_mod_cast hst)
+        have hKB : 0 ≤ K * (M₃ * e * v / 6 + M₂ * L) := mul_nonneg hK hB0
+        calc ((⌊t * ((n : ℝ≥0) + 1)⌋₊ - ⌊s * ((n : ℝ≥0) + 1)⌋₊ : ℕ) : ℝ)
+                * (K * (((n : ℝ) + 1)⁻¹ * (M₃ * e * v / 6 + M₂ * L)))
+            = (((⌊t * ((n : ℝ≥0) + 1)⌋₊ - ⌊s * ((n : ℝ≥0) + 1)⌋₊ : ℕ) : ℝ) * ((n : ℝ) + 1)⁻¹)
+                * (K * (M₃ * e * v / 6 + M₂ * L)) := by ring
+          _ ≤ ((t : ℝ) - (s : ℝ) + ((n : ℝ) + 1)⁻¹) * (K * (M₃ * e * v / 6 + M₂ * L)) :=
+              mul_le_mul_of_nonneg_right hcount hKB
+          _ = ((t : ℝ) - (s : ℝ) + ((n : ℝ) + 1)⁻¹) * K * (M₃ * e * v / 6 + M₂ * L) := by ring
+
+/-- **The martingale gap of the rescaled random walk vanishes**, and this is the one posten of
+Donsker's acceptance test that asks for a computation rather than for a seam:
+
+```
+∫ (mpTest f g t − mpTest f g s) (rescaled walk) · Zₙ  ⟶  0
+```
+
+for `g = ½ v f''` and any uniformly bounded family of weights `Zₙ` measurable for the past at the
+**left** end of the window.  It is the hypothesis `hzero` of
+`MeasureTheory.mpSolution_of_tendsto_cadlag` read on Donsker's data.
+
+**Both limits are carried out here, and in the order the bound forces.**  Given `ε > 0`, a level
+`e > 0` is chosen **first**, small enough that `(t − s + 1) K M₃ v e / 6 < ε/2`; only then does
+`n` go to infinity, where `MeasureTheory.tendsto_integral_sq_indicator` makes the Lindeberg
+quantity and `MeasureTheory.natCast_floor_sub_floor_div_le`'s surplus `(n+1)⁻¹` jointly smaller
+than `ε/2`.  The reverse order does not work and that is not a matter of care: at fixed `n` the
+Lindeberg quantity grows to `v` as `e ↓ 0`.
+
+**No third moment, no Lindeberg condition, no boundedness of the increments.**  What is read of
+the increments is independence, centring, a common second moment, `MemLp 2`, and a **common
+law** -- the last only to turn the `∀ k` of
+`MeasureTheory.abs_integral_mpTest_sub_rescaledWalk_sum_le` into a statement about `ξ 0`, which
+is the only form in which dominated convergence sees the Lindeberg quantity.  That is where
+`hlaw` is spent and nowhere else; it is asked as equality of the laws rather than as equality of
+the two integrals because a consumer has the former and would have to derive the latter anyway.
+
+**`Z` is a family and not a function**, because the walk's filtration moves with `n`: the
+rescaling `(n+1)⁻¹ᐟ²` sits inside the partial sums, so `Filtration.natural` is a different
+filtration for every `n`, and the left end of the window is the moving index
+`⌊s (n+1)⌋`.  A consumer that has one weight on path space supplies `Z n = Z₀ ∘ Φ n`.
+
+`0 ≤ v` is a conclusion, from `hsq 0` and the nonnegativity of a square; `0 ≤ K` follows from
+`hZK` at any sample point, which `IsProbabilityMeasure P` provides. -/
+theorem tendsto_integral_mpTest_sub_rescaledWalk_mul {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0) {v : ℝ} (hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = v)
+    (hLp : ∀ k, MemLp (ξ k) 2 P) (hlaw : ∀ k, Measure.map (ξ k) P = Measure.map (ξ 0) P)
+    {f g : ℝ → ℝ} (hf : ContDiff ℝ 3 f) {M₂ M₃ C₁ K : ℝ}
+    (hgv : ∀ y, g y = v / 2 * iteratedDeriv 2 f y)
+    (hM₂ : ∀ y, |iteratedDeriv 2 f y| ≤ M₂) (hM₃ : ∀ y, |iteratedDeriv 3 f y| ≤ M₃)
+    (hC₁ : ∀ y, |deriv f y| ≤ C₁)
+    {Z : ℕ → Ω → ℝ} (hZK : ∀ n ω, |Z n ω| ≤ K) {s t : ℝ≥0} (hst : s ≤ t)
+    (hZ : ∀ n : ℕ, Measurable[Filtration.natural
+        (fun m ω ↦ ∑ j ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω)
+        (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun j _ ↦ (hmeas j).const_mul _)
+        ⌊s * ((n : ℝ≥0) + 1)⌋₊] (Z n)) :
+    Tendsto (fun n : ℕ => ∫ ω, ((f ((Real.sqrt ((n : ℝ) + 1))⁻¹
+              * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+            - ∫ u in Set.Ioc (0 : ℝ) (t : ℝ),
+                g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+                  * ∑ j ∈ Finset.range ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊, ξ j ω))
+          - (f ((Real.sqrt ((n : ℝ) + 1))⁻¹
+                * ∑ j ∈ Finset.range ⌊s * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+              - ∫ u in Set.Ioc (0 : ℝ) (s : ℝ),
+                  g ((Real.sqrt ((n : ℝ) + 1))⁻¹
+                    * ∑ j ∈ Finset.range ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊, ξ j ω))) * Z n ω ∂P)
+      atTop (𝓝 0) := by
+  have hM₂0 : 0 ≤ M₂ := (abs_nonneg _).trans (hM₂ 0)
+  have hM₃0 : 0 ≤ M₃ := (abs_nonneg _).trans (hM₃ 0)
+  have hK : 0 ≤ K := by
+    rcases isEmpty_or_nonempty Ω with hE | hne
+    · have h1 : P Set.univ = 1 := measure_univ
+      rw [Set.univ_eq_empty_iff.2 hE, measure_empty] at h1
+      exact absurd h1 (by simp)
+    · exact (abs_nonneg _).trans (hZK 0 hne.some)
+  have hv0 : 0 ≤ v := by rw [← hsq 0]; exact integral_nonneg fun ω => sq_nonneg _
+  have hts : (0 : ℝ) ≤ (t : ℝ) - (s : ℝ) := by
+    have : (s : ℝ) ≤ (t : ℝ) := by exact_mod_cast hst
+    linarith
+  -- the common law is spent here and nowhere else
+  have hlawint : ∀ (c : ℝ) (k : ℕ),
+      ∫ ω, ({y : ℝ | c < |y|}.indicator fun y => y ^ 2) (ξ k ω) ∂P
+        = ∫ ω, ({y : ℝ | c < |y|}.indicator fun y => y ^ 2) (ξ 0 ω) ∂P := by
+    intro c k
+    rcases eq_or_ne k 0 with rfl | hk0
+    · rfl
+    have hm : Measurable ({y : ℝ | c < |y|}.indicator fun y => y ^ 2) :=
+      measurable_indicator_sq c
+    rw [← integral_map (hmeas k).measurable.aemeasurable hm.aestronglyMeasurable,
+      ← integral_map (hmeas 0).measurable.aemeasurable hm.aestronglyMeasurable, hlaw k]
+  rw [Metric.tendsto_atTop]
+  intro ε hε
+  -- the level of the truncation, chosen before `n` moves
+  set A : ℝ := ((t : ℝ) - (s : ℝ) + 1) * K * (M₃ * v / 6) with hAdef
+  have hA0 : 0 ≤ A := by
+    rw [hAdef]
+    exact mul_nonneg (mul_nonneg (by linarith) hK) (by positivity)
+  have hApos : (0 : ℝ) < A + 1 := by linarith
+  set e : ℝ := ε / (2 * (A + 1)) with hedef
+  have he0 : 0 < e := by rw [hedef]; positivity
+  have hAe : A * e < ε / 2 := by
+    have h2 : (0 : ℝ) < 2 * (A + 1) := by linarith
+    have h3 : A * e = A * ε / (2 * (A + 1)) := by rw [hedef]; ring
+    rw [h3, div_lt_iff₀ h2]
+    nlinarith
+  -- the two summands that go to zero at this fixed level
+  have hcast : Tendsto (fun n : ℕ => ((n : ℝ) + 1)) atTop atTop :=
+    tendsto_atTop_add_const_right _ 1 tendsto_natCast_atTop_atTop
+  have hsqrt : Tendsto (fun n : ℕ => Real.sqrt ((n : ℝ) + 1)) atTop atTop :=
+    Real.tendsto_sqrt_atTop.comp hcast
+  have hlevel : Tendsto (fun n : ℕ => e * Real.sqrt ((n : ℝ) + 1)) atTop atTop :=
+    Tendsto.const_mul_atTop he0 hsqrt
+  have hLn : Tendsto (fun n : ℕ => ∫ ω,
+      ({y : ℝ | e * Real.sqrt ((n : ℝ) + 1) < |y|}.indicator fun y => y ^ 2) (ξ 0 ω) ∂P)
+      atTop (𝓝 0) := tendsto_integral_sq_indicator (hLp 0) hlevel
+  have hinv : Tendsto (fun n : ℕ => ((n : ℝ) + 1)⁻¹) atTop (𝓝 0) := by
+    simpa [one_div] using tendsto_one_div_add_atTop_nhds_zero_nat (𝕜 := ℝ)
+  have hb : Tendsto (fun n : ℕ =>
+      ((t : ℝ) - (s : ℝ) + 1) * K * (M₂ * ∫ ω,
+          ({y : ℝ | e * Real.sqrt ((n : ℝ) + 1) < |y|}.indicator fun y => y ^ 2) (ξ 0 ω) ∂P)
+        + 2 * ((n : ℝ) + 1)⁻¹ * (|v| / 2 * M₂) * K) atTop (𝓝 0) := by
+    have h1 := (hLn.const_mul M₂).const_mul (((t : ℝ) - (s : ℝ) + 1) * K)
+    have h2 := ((hinv.const_mul (2 : ℝ)).mul_const (|v| / 2 * M₂)).mul_const K
+    have h3 := h1.add h2
+    simpa using h3
+  obtain ⟨N, hN⟩ := Metric.tendsto_atTop.1 hb (ε / 2) (by positivity)
+  refine ⟨N, fun n hn => ?_⟩
+  have hnpos : (0 : ℝ) < (n : ℝ) + 1 := by positivity
+  have hinv1 : ((n : ℝ) + 1)⁻¹ ≤ 1 := by
+    rw [inv_le_one₀ hnpos]
+    have := Nat.cast_nonneg (α := ℝ) n
+    linarith
+  have hLn0 : (0 : ℝ) ≤ ∫ ω,
+      ({y : ℝ | e * Real.sqrt ((n : ℝ) + 1) < |y|}.indicator fun y => y ^ 2) (ξ 0 ω) ∂P :=
+    integral_nonneg fun ω => Set.indicator_nonneg (fun y _ => sq_nonneg y) _
+  have hmain := abs_integral_mpTest_sub_rescaledWalk_sum_le hmeas hind hcent n hsq hLp hf
+    hgv hM₂ hM₃ hC₁ he0.le (fun k => le_of_eq (hlawint (e * Real.sqrt ((n : ℝ) + 1)) k))
+    (hZK n) hst (hZ n)
+  have hbN := hN n hn
+  rw [Real.dist_eq, sub_zero] at hbN
+  have hbnn : (0 : ℝ) ≤ ((t : ℝ) - (s : ℝ) + 1) * K * (M₂ * ∫ ω,
+        ({y : ℝ | e * Real.sqrt ((n : ℝ) + 1) < |y|}.indicator fun y => y ^ 2) (ξ 0 ω) ∂P)
+      + 2 * ((n : ℝ) + 1)⁻¹ * (|v| / 2 * M₂) * K := by
+    have t1 : (0 : ℝ) ≤ ((t : ℝ) - (s : ℝ) + 1) * K * (M₂ * ∫ ω,
+        ({y : ℝ | e * Real.sqrt ((n : ℝ) + 1) < |y|}.indicator fun y => y ^ 2) (ξ 0 ω) ∂P) :=
+      mul_nonneg (mul_nonneg (by linarith) hK) (mul_nonneg hM₂0 hLn0)
+    have t2 : (0 : ℝ) ≤ 2 * ((n : ℝ) + 1)⁻¹ * (|v| / 2 * M₂) * K :=
+      mul_nonneg (mul_nonneg (by positivity) (mul_nonneg (by positivity) hM₂0)) hK
+    linarith
+  have hbnlt : ((t : ℝ) - (s : ℝ) + 1) * K * (M₂ * ∫ ω,
+        ({y : ℝ | e * Real.sqrt ((n : ℝ) + 1) < |y|}.indicator fun y => y ^ 2) (ξ 0 ω) ∂P)
+      + 2 * ((n : ℝ) + 1)⁻¹ * (|v| / 2 * M₂) * K < ε / 2 := by
+    rw [abs_of_nonneg hbnn] at hbN
+    exact hbN
+  -- the window shorter than it is: the surplus `(n+1)⁻¹` traded for `1`
+  have hsplit : ((t : ℝ) - (s : ℝ) + ((n : ℝ) + 1)⁻¹) * K * (M₃ * e * v / 6
+        + M₂ * ∫ ω, ({y : ℝ | e * Real.sqrt ((n : ℝ) + 1) < |y|}.indicator fun y => y ^ 2)
+            (ξ 0 ω) ∂P)
+      ≤ A * e + ((t : ℝ) - (s : ℝ) + 1) * K * (M₂ * ∫ ω,
+          ({y : ℝ | e * Real.sqrt ((n : ℝ) + 1) < |y|}.indicator fun y => y ^ 2) (ξ 0 ω) ∂P) := by
+    have hle : (t : ℝ) - (s : ℝ) + ((n : ℝ) + 1)⁻¹ ≤ (t : ℝ) - (s : ℝ) + 1 := by linarith
+    have hc1 : (0 : ℝ) ≤ K * (M₃ * e * v / 6) :=
+      mul_nonneg hK (by positivity)
+    have hc2 : (0 : ℝ) ≤ K * (M₂ * ∫ ω,
+        ({y : ℝ | e * Real.sqrt ((n : ℝ) + 1) < |y|}.indicator fun y => y ^ 2) (ξ 0 ω) ∂P) :=
+      mul_nonneg hK (mul_nonneg hM₂0 hLn0)
+    have hAe' : ((t : ℝ) - (s : ℝ) + 1) * K * (M₃ * e * v / 6) = A * e := by rw [hAdef]; ring
+    calc ((t : ℝ) - (s : ℝ) + ((n : ℝ) + 1)⁻¹) * K * (M₃ * e * v / 6
+            + M₂ * ∫ ω, ({y : ℝ | e * Real.sqrt ((n : ℝ) + 1) < |y|}.indicator fun y => y ^ 2)
+                (ξ 0 ω) ∂P)
+        = ((t : ℝ) - (s : ℝ) + ((n : ℝ) + 1)⁻¹) * (K * (M₃ * e * v / 6))
+          + ((t : ℝ) - (s : ℝ) + ((n : ℝ) + 1)⁻¹) * (K * (M₂ * ∫ ω,
+              ({y : ℝ | e * Real.sqrt ((n : ℝ) + 1) < |y|}.indicator fun y => y ^ 2)
+                (ξ 0 ω) ∂P)) := by ring
+      _ ≤ ((t : ℝ) - (s : ℝ) + 1) * (K * (M₃ * e * v / 6))
+          + ((t : ℝ) - (s : ℝ) + 1) * (K * (M₂ * ∫ ω,
+              ({y : ℝ | e * Real.sqrt ((n : ℝ) + 1) < |y|}.indicator fun y => y ^ 2)
+                (ξ 0 ω) ∂P)) :=
+          add_le_add (mul_le_mul_of_nonneg_right hle hc1) (mul_le_mul_of_nonneg_right hle hc2)
+      _ = ((t : ℝ) - (s : ℝ) + 1) * K * (M₃ * e * v / 6)
+          + ((t : ℝ) - (s : ℝ) + 1) * K * (M₂ * ∫ ω,
+              ({y : ℝ | e * Real.sqrt ((n : ℝ) + 1) < |y|}.indicator fun y => y ^ 2)
+                (ξ 0 ω) ∂P) := by ring
+      _ = _ := by rw [hAe']
+  rw [Real.dist_eq, sub_zero]
+  linarith
+
+/-- **A finite dimensional test function of times below `s`, read at the path of the rescaled
+random walk, is measurable for the past of the walk at the left end of the window.**
+
+It is the counterpart for the walk's own filtration of
+`MeasureTheory.measurable_cadlagFiltration_of_mem_evalFuns`, and it is the seam between the two
+halves of Donsker's third chain item: `mpSolution_of_tendsto_cadlag` asks its `hzero` against a
+`Z ∈ SkorokhodSpace.evalFuns ℝ (insert s (T ∩ Set.Iic s))` on **path space**, while
+`MeasureTheory.tendsto_integral_mpTest_sub_rescaledWalk_mul` supplies the limit against a weight
+measurable for `Filtration.natural` at the **integer** index `⌊s (n+1)⌋`.
+
+**The passage between the two indices is `rfl`** and not an argument:
+`MeasureTheory.floorFiltration_apply` says `floorFiltration 𝒢 c s = 𝒢 ⌊s c⌋₊` by definition, so
+what has to be shown is measurability of each factor for `𝒢 ⌊s c⌋₊`.  Each factor is a bounded
+continuous function of the path at one time `r ≤ s`, the path at `r` is the partial sum up to
+`⌊r c⌋ ≤ ⌊s c⌋`, and `Filtration.stronglyAdapted_natural` together with monotonicity of the
+filtration is the whole of it.
+
+**The hypothesis is on the set of times and not on the function**, as at the path space
+counterpart, which is why the consumer may feed it `insert s (T ∩ Set.Iic s)`. And `hΦ` is the
+same shape `MeasureTheory.isTightMeasureSet_map_rescaledWalk` carries, so a consumer that has the
+tightness has it already. -/
+theorem measurable_comp_rescaledWalk_of_mem_evalFuns {ξ : ℕ → Ω → ℝ}
+    (hmeas : ∀ k, StronglyMeasurable (ξ k)) (n : ℕ) {Φ : Ω → D(ℝ≥0, ℝ)}
+    (hΦ : ∀ ω, (Φ ω).toFun = fun r : ℝ≥0 ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊r * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+    {s : ℝ≥0} {S : Set ℝ≥0} (hS : S ⊆ Set.Iic s)
+    {Z : D(ℝ≥0, ℝ) → ℝ} (hZ : Z ∈ SkorokhodSpace.evalFuns ℝ S) :
+    Measurable[floorFiltration (Filtration.natural
+        (fun m ω ↦ ∑ j ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω)
+        (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun j _ ↦ (hmeas j).const_mul _))
+      ((n : ℝ≥0) + 1) s] fun ω ↦ Z (Φ ω) := by
+  set 𝒢 : Filtration ℕ mΩ := Filtration.natural
+      (fun m ω ↦ ∑ j ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω)
+      (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun j _ ↦ (hmeas j).const_mul _) with h𝒢
+  obtain ⟨u, F, hu, rfl⟩ := hZ
+  refine Finset.measurable_prod u fun r hr ↦ ?_
+  have hrs : r ≤ s := hS (hu hr)
+  have hfl : ⌊r * ((n : ℝ≥0) + 1)⌋₊ ≤ ⌊s * ((n : ℝ≥0) + 1)⌋₊ := Nat.floor_le_floor (by gcongr)
+  have hsm : StronglyMeasurable[𝒢 ⌊r * ((n : ℝ≥0) + 1)⌋₊]
+      fun ω ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+        * ∑ j ∈ Finset.range ⌊r * ((n : ℝ≥0) + 1)⌋₊, ξ j ω := by
+    have hk := Filtration.stronglyAdapted_natural
+      (u := fun m ω ↦ ∑ j ∈ Finset.range m, (Real.sqrt ((n : ℝ) + 1))⁻¹ * ξ j ω)
+      (fun _ ↦ Finset.stronglyMeasurable_fun_sum _ fun j _ ↦ (hmeas j).const_mul _)
+      ⌊r * ((n : ℝ≥0) + 1)⌋₊
+    simpa only [h𝒢, Finset.mul_sum] using hk
+  have hmono : Measurable[𝒢 ⌊s * ((n : ℝ≥0) + 1)⌋₊]
+      fun ω ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+        * ∑ j ∈ Finset.range ⌊r * ((n : ℝ≥0) + 1)⌋₊, ξ j ω :=
+    hsm.measurable.mono (𝒢.mono hfl) le_rfl
+  have hrw : (fun ω ↦ F r ((Φ ω).toFun r))
+      = fun ω ↦ F r ((Real.sqrt ((n : ℝ) + 1))⁻¹
+        * ∑ j ∈ Finset.range ⌊r * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) := by
+    funext ω
+    rw [hΦ ω]
+  rw [hrw]
+  exact (F r).continuous.measurable.comp hmono
+
 end WalkContainment
 
 end MeasureTheory
