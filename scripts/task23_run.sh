@@ -116,11 +116,11 @@ ALLOWED=(
   "Bash(pdflatex:*)" "Bash(latexmk:*)" "Bash(bibtex:*)" "Bash(pdftotext:*)"
 )
 
-# Modell: Opus 5.  Fable stirbt nachweislich an der modellspezifischen
+# Modell: Opus 5.5.  Fable stirbt nachweislich an der modellspezifischen
 # Kontingentgrenze, ohne eine Sekunde zu rechnen (Erfahrung des
 # ratchet-Projekts, dokumentiert in dessen run_iteration.sh).  Der Fallback
 # muss ein ANDERES Modell sein als $MODEL, sonst ist er wirkungslos.
-MODEL="${TASK23_MODEL:-claude-opus-5}"
+MODEL="${TASK23_MODEL:-claude-opus-5-5}"
 FALLBACK="${TASK23_FALLBACK_MODEL:-sonnet}"
 
 # Der Prompt geht ueber stdin, nicht als Argument, aus zwei Gruenden.  Erstens
