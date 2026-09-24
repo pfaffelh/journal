@@ -8,10 +8,170 @@ einem git-Worktree auf dem Branch `facts-inventory`. Zeitbudget: 120 Minuten.
 zu lesen; sie sind ausgelagert, damit dieser Auftrag der Auftrag bleibt und nicht
 die Aktenlage. Die Ergebnisse stehen ohnehin in `Facts/INVENTAR.md`.*
 
-### Aufgabe: die vier Punkte in dieser Reihenfolge *(gestellt 2026-09-24 vom Nutzer)*
+### Aufgabe: die Identifikation als Brownsche Bewegung, in acht Schritten *(gestellt 2026-09-24 nachts vom Nutzer)*
 
-**Diese Aufgabe geht allen älteren vor.** Die darunterstehenden Aufträge sind
-Aktenlage; was gilt, steht hier.
+**Diese Aufgabe geht allen älteren vor**, auch der Vierpunkteaufgabe darunter.
+Die ist am 2026-09-24 in zwölf Läufen vollständig abgearbeitet; sie steht nur
+noch als Aktenlage da.
+
+**Ein Schritt ist ein Lauf und ein benanntes Ziel.** Wer früher fertig ist,
+nimmt den nächsten Schritt im selben Lauf. Wer steckenbleibt, berichtet ein
+begründetes „geht nicht" und geht zu dem nächsten Schritt, der nicht daran
+hängt; die Abhängigkeiten stehen je dabei.
+
+**Stand beim Stellen der Aufgabe:** `exists_tendsto_map_rescaledWalk` trägt
+keine Hypothese über den Limes mehr. Was fehlt, ist der Abgleich des Grenzmaßes
+mit Mathlibs `IsBrownianReal` — bisher ist der Limes nur durch unsere **eigene**
+Konstruktion beschrieben, und das ist die Lücke, die diese acht Schritte
+schließen.
+
+**Zwei Regeln aus dem Vorauftrag gelten weiter und stehen deshalb hier, damit
+sie niemand für Aktenlage hält:**
+
+* **Keine `README.md` und keine `README-kurz.md` anfassen, in keiner Roadmap.**
+  Der Nutzer redigiert sie. Befunde gehören ausschließlich in
+  `Facts/INVENTAR.md`. Wer eine README ändert, erzeugt einen Konflikt in genau
+  der Datei, an der der Nutzer arbeitet.
+* Die Kette hat **vier** Dateien: `WeakConvergence`, `SkorokhodSpace`,
+  `MartingaleProblems`, `JumpProcesses`. `check_master.py` baut alle vier in
+  Abhängigkeitsordnung. Im Bericht wird eine Aussage über ihren **Namen**
+  benannt und nicht über eine Meilensteinnummer.
+
+**Was in keinem Bericht stehen darf:** daß die Brownsche Bewegung konstruiert
+worden sei. `ProbabilityTheory.IsBrownianReal` ist ein Prädikat **ohne**
+Existenzaussage (nachgesehen am 2026-09-24). Was hier entsteht, ist ein
+Pfadgesetz mit einer Eigenschaft, nicht eine Existenz.
+
+#### Schritt 0. `σ` → `v`: dieselbe Größe heißt in der Kette zweierlei
+
+In der Martingal- und Donskerhälfte heißt das gemeinsame zweite Moment `v`, in
+der Straffheitshälfte `σ` — bei identischer Gleichung `∫ ξ k ^ 2 = ·` daneben.
+Betroffen sind elf Deklarationen in `MartingaleProblems/Suggested.lean`, von
+`enorm_sub_sq_rescaledWalk_le` bis `isCompact_closure_range_map_rescaledWalk`,
+einige davon mit `hσ : σ ≠ 0`.
+
+**Das ist eine Falle und keine Geschmacksfrage:** `σ` liest sich als Streuung,
+die Größe **ist** aber die Varianz. Wer die beiden Hälften nebeneinanderlegt,
+schreibt irgendwann ein `Real.sqrt` zuviel oder zuwenig.
+
+Umzubenennen ist `σ` nach `v` und `hσ` nach `hv`, sonst nichts. Rein mechanisch,
+ein halber Lauf. **Das steht an erster Stelle, weil jeder weitere Lauf den
+Fehler sonst weiterträgt.**
+
+#### Schritt 1. `map_eval_eq_gaussianReal_of_isCadlagMPSolution`
+
+Die eindimensionalen Randverteilungen einer càdlàg-Lösung mit Start in `0` sind
+`gaussianReal 0 (v * t).toNNReal`. Die vollständige Wegbeschreibung samt der
+vier Eingaben steht im Bericht des zwölften Laufs vom 2026-09-24 in
+`Facts/INVENTAR.md`, Abschnitt „Das benannte Ziel für den nächsten Lauf"; sie
+ist dort schon gemessen und nicht neu zu erfinden.
+
+**Die Entscheidung ist getroffen und nicht neu zu treffen:** die Aussage trägt
+`0 ≤ v` als Hypothese. Über `Real.toNNReal` gestellt wäre sie für negatives `v`
+leer, und `brownianGeneratorPairs v` ist für jedes reelle `v` definiert — die
+Lösungsaussage **weiß** nicht, daß `v` ein Quadratintegral ist. Im
+Doc-Kommentar gehört gesagt, daß `0 ≤ v` an Donskers Daten aus `hsq` folgt.
+
+#### Schritt 2. Die Vorwärtsgleichung mit Multiplikator — hier kann es klemmen
+
+`integral_eval_mul_cos_eq_of_isCadlagMPSolution` und die sin-Fassung integrieren
+gegen `ν` und gegen nichts sonst. Gebraucht wird dieselbe Gleichung **mit einem
+beschränkten, `cadlagFiltration s`-meßbaren `Z` davor**:
+
+    ∫ Z z * cos (θ * z.toFun t) ∂ν  -  ∫ Z z * cos (θ * z.toFun s) ∂ν
+      = ∫ u in Ioc s t, -(v/2) * θ^2 * ∫ Z z * cos (θ * z.toFun u) ∂ν
+
+**Das ist die einzige Stelle dieser Aufgabe, an der wirklich Arbeit liegt**, und
+ein Lauf, der sie nicht schafft, hat trotzdem etwas geliefert, wenn er den Grund
+benennt. Die Martingaleigenschaft von `IsCadlagMPSolution` gibt den Multiplikator
+her — sie ist eine Aussage über `mpTest` gegen jedes `F_s`-meßbare beschränkte
+`Z` —, und die Frage ist, ob
+`integral_eval_sub_eq_setIntegral_of_tendsto` die Grenzübergänge mit dem `Z`
+mitnimmt oder ob das `Z` dort erst hineinzuziehen ist.
+
+#### Schritt 3. Die Zuwächse: Unabhängigkeit und Verteilung in **einer** Aussage
+
+Aus Schritt 2 mit `Z = indicator A * cos (θ * z.toFun s)` beziehungsweise
+`Z = indicator A * sin (θ * z.toFun s)` und demselben ODE-Endspurt wie im
+zwölften Lauf (`eq_mul_exp_of_sub_eq_setIntegral`, unverändert brauchbar):
+
+    E[ 1_A * exp (I θ (z t - z s)) ]  =  P A * exp (-(v/2) θ^2 (t - s))
+
+Das ist die Unabhängigkeit des Zuwachses von `F_s` **und** seine Verteilung in
+einer Zeile. `ProbabilityTheory.HasIndepIncrements` (Mathlib,
+`Probability/Independence/Process/HasIndepIncrements/Basic.lean`) ist daraus die
+Induktion über endlich viele Zuwächse.
+
+*Warum der Umweg über die charakteristische Funktion und nicht direkt:* weil
+`Measure.ext_of_charFun` das einzige Werkzeug ist, das aus einer Gleichung
+zwischen Integralen eine Gleichung zwischen Maßen macht, und weil der
+Sinusanteil hier wie im zwölften Lauf verschwindet.
+
+#### Schritt 4. `IsPreBrownianReal` — und dort ist `v = 1` Pflicht
+
+`HasIndepIncrements.isPreBrownianReal_of_hasLaw`
+(`Mathlib/Probability/BrownianMotion/Basic.lean:189`, gelesen gegen
+`94ef6b89544`) verlangt `HasLaw (X t) (gaussianReal 0 t) P` — **die Varianz ist
+der Zeitparameter selbst**. Die Aussage ist deshalb für `v = 1` zu stellen und
+nicht für allgemeines `v`; wer sie allgemein stellt, muß den Prozeß erst
+skalieren und hat einen zweiten Satz statt einer Anwendung.
+
+Bei `v = 1` ist nebenbei `hvar : ∀ k, variance (ξ k) P ≤ 1` scharf und kein
+Schönheitsfehler mehr.
+
+#### Schritt 5. Die stetigen Pfade — **hängt nicht an 2 bis 4**
+
+Seit dem fünften Lauf des 2026-09-24 stehen `jumpBdd`,
+`measure_setOf_continuous_eq_one_of_tendsto` und `ae_continuous_of_tendsto_law`.
+Im Abschnitt `DonskerLimit` kommt `jumpBdd` **nicht vor**: was fehlt, ist die
+eine Hypothese, die die allgemeine Aussage verlangt, nämlich
+
+    E[ jumpFunctional (Φ n) ]  →  0
+
+für den reskalierten Weg, dessen Sprünge `ξ j / sqrt (n+1)` sind. Damit hat `ν₀`
+fast sicher stetige Pfade, und das ist das Feld `cont`, das
+`IsPreBrownianReal` von `IsBrownianReal` trennt.
+
+**Dieser Schritt ist der Ausweichschritt**, wenn Schritt 2 steckenbleibt.
+
+#### Schritt 6. Erst danach: `ContDiff ℝ 3` → `ContDiff ℝ 2` in der Testklasse
+
+`brownianGeneratorPairs` verlangt `ContDiff ℝ 3`. Gebraucht wird die dritte
+Ableitung an **einer** Stelle: `abs_sub_taylor_two_le_min` nimmt das Minimum aus
+`M₃ |h|³ / 6` und `M₂ h²`. Statt `M₃` genügt der **Stetigkeitsmodul von `f''`**:
+Taylor erster Ordnung mit Lagrange-Rest gibt `f'' x' * h² / 2`, und statt
+`|f'' x' - f'' x| ≤ 2 M₂` ist `≤ ω_{f''}(|h|)` zu schreiben; für `f ∈ C²` mit
+kompaktem Träger ist `f''` gleichmäßig stetig. `abs_sub_taylor_two_le'` läuft
+**schon** auf `ContDiff ℝ 2` und ist genau dieser Beweis.
+
+*Warum erst hier und nicht vorher:* die Vergrößerung der Testklasse trifft nur
+die **Erzeugerseite**. Jeder Verbraucher — Eindeutigkeit, abgeschnittener
+Kosinus, die ganze Identifikation der Schritte 1 bis 4 — bekommt bei einer
+größeren Klasse mehr und ist von der Umstellung nicht betroffen. Sie wird also
+nicht teurer dadurch, daß die Schritte 1 bis 5 vorher laufen.
+
+#### Schritt 7. Und dann `hvar`
+
+`hvar : ∀ k, variance (ξ k) P ≤ 1` ist zusammen mit `hcent` und `hLp` nichts als
+`v ≤ 1` — eine Normierung, keine Momentenbedingung. Gelesen wird sie an **einer**
+Stelle, `integral_abs_sum_le_sqrt_of_iIndepFun`, für `E|S_N| ≤ sqrt N`; mit
+allgemeinem `v` steht dort `sqrt (v * N)`, und das trägt als Konstante durch die
+kompakte Einschließung durch. Zu tun ist das eine oder das andere, nicht beides:
+die Konstante mitführen, oder die Hypothese ehrlich als `v ≤ 1` schreiben statt
+als `∀ k`-Aussage.
+
+Nachrangig: wegen `hlaw` folgen die `∀ k`-Fassungen von `hcent`, `hsq`, `hLp`
+ohnehin aus dem Fall `k = 0`. Die Voraussetzungsliste von
+`exists_tendsto_map_rescaledWalk` ist länger, als die Aussage braucht.
+
+---
+
+
+### Aufgabe: die vier Punkte in dieser Reihenfolge *(gestellt 2026-09-24 vom Nutzer; am selben Tag in zwölf Läufen vollständig abgearbeitet, durch die Aufgabe oben ersetzt)*
+
+**Erledigt am 2026-09-24**, alle vier Punkte, in zwölf Läufen. Was gilt, steht
+in der Aufgabe **darüber**; dieser Abschnitt ist Aktenlage und wird nur noch
+gelesen, wer wissen will, woher der Stand kommt.
 
 **Was sich seit dem 2026-09-22 geändert hat, und ohne das läuft nichts:**
 
