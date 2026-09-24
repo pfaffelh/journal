@@ -59996,3 +59996,177 @@ Näherung von rechts, `measurable_from_prod_countable_left`, die Rechtsstetigkei
 Aussage ist deshalb zuerst für `s, t ∈ T` zu führen; der Übergang zu beliebigen Zeiten ist ein
 zweiter Satz und braucht die Rechtsstetigkeit der Pfade samt dominierter Konvergenz. Wer beides
 in eine Deklaration packt, hat am Ende keinen von beiden.
+
+### 2026-09-24, zehnter Lauf des Tages — das benannte Ziel steht, und die Warnung, die der Vorlauf daran geschrieben hatte, zeigt auf Arbeit, die **schon getan war**: die Vorwärtsgleichung gilt an *jedem* Zeitenpaar, nicht bloß auf der dichten Menge, und sie kostet dafür keine Zeile
+
+*7 Deklarationen, alle in `MartingaleProblems/Suggested.lean`, in einem neuen Unterabschnitt
+„The forward equation of the one dimensional distributions" zwischen
+`isMPSolution_of_isCadlagMPSolution` und „The shift of the càdlàg path space".
+`scripts/check_master.py` gegen `upstream/master` (`94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `4.35.0-rc2`): **0 Fehler, 0 veraltete Namen, 0 `sorry`** in allen vier Dateien, Warnungen
+**18 / 38 / 36 / 76** — **unverändert**, also keine einzige neue.
+`check_axioms_master.py` über alle sieben: `propext`, `Classical.choice`, `Quot.sound`, kein
+`sorryAx`. `check_duplicates.py` jetzt 1899 eigene Deklarationen, 45 Treffer — **unverändert**
+gegenüber dem Vorlauf, also keine neue Namenskollision. Keine `README.md` angefaßt.*
+
+#### Was steht
+
+| Name | Aussage |
+| --- | --- |
+| `MeasureTheory.measurable_integral_eval_toNNReal` | `u ↦ ∫ z, g (z u) ∂ν` ist meßbar |
+| `MeasureTheory.integrableOn_integral_eval_toNNReal` | dasselbe ist über jedem Fenster integrierbar |
+| `MeasureTheory.integral_eval_sub_eq_setIntegral_of_isCadlagMPSolution` | **das benannte Ziel**: die Vorwärtsgleichung in integrierter Gestalt |
+| `MeasureTheory.integral_map_eval_sub_eq_setIntegral_of_isCadlagMPSolution` | dieselbe, an den Bildmaßen `ν.map (z ↦ z t)` geschrieben |
+| `MeasureTheory.integral_eval_sub_eq_setIntegral_of_tendsto` | sie überlebt einen beschränkten punktweisen Limes von Paaren |
+| `MeasureTheory.abs_integral_eval_sub_le_of_isCadlagMPSolution` | die Lipschitzschranke der eindimensionalen Mittelwerte |
+| `MeasureTheory.continuous_integral_eval_of_isCadlagMPSolution` | **die eindimensionalen Mittelwerte sind stetig in der Zeit** |
+
+#### Der Befund: die angesagte Falle war keine, weil der zweite Satz schon dasteht
+
+Der Vorlauf hatte an das benannte Ziel geschrieben:
+
+> `IsCadlagMPSolution` quantifiziert über eine **abzählbare dichte** Zeitmenge `T` […] Die
+> Aussage ist deshalb zuerst für `s, t ∈ T` zu führen; der Übergang zu beliebigen Zeiten ist ein
+> zweiter Satz und braucht die Rechtsstetigkeit der Pfade samt dominierter Konvergenz.
+
+Als Mathematik ist das richtig, und der zweite Satz braucht wirklich beides. Nur ist er
+**bewiesen**: `MeasureTheory.mpSolution_forall_of_mpSolution_dense` trägt die Martingalidentität
+von der dichten Menge an jedes Zeitenpaar, mit `rightDense_of_dense` davor, und er ist genau die
+Stelle, an der die Rechtsstetigkeit der Pfade gelesen wird (über
+`tendsto_setIntegral_mpTest_of_tendsto` und `isRightContinuous_mpTest`). Das benannte Ziel war
+deshalb in **einer** Deklaration zu haben, über beliebigen `s ≤ t`, und die Zerlegung in zwei
+Sätze hätte den vorhandenen zweiten noch einmal geschrieben.
+
+Die Lehre ist nicht, daß die Warnung falsch war, sondern **wo sie hätte nachsehen müssen**: der
+Beweis von `isMPSolution_of_isCadlagMPSolution`, zwanzig Zeilen über der Einfügestelle, besteht
+aus nichts anderem als diesem Übergang. Wer eine Voraussetzung für schwierig hält, sieht zuerst
+nach, ob der nächste Nachbar in der Datei sie schon ausgeräumt hat.
+
+#### Der Weg, und er ist drei Schritte lang
+
+`integral_condExp` macht aus der bedingten Erwartung die Gleichheit `∫ mpTest t = ∫ mpTest s`;
+`integral_sub` zerlegt beide Seiten in Zustandsterm und Kompensator (dessen Integrierbarkeit
+nicht eigens zu zeigen ist — er *ist* die Differenz der beiden schon integrierbaren Stücke);
+`integral_setIntegral_eval_comm`, der Fubini-Schritt des Vorlaufs, zieht das Mittel unter das
+Fensterintegral. Was dann noch fehlt, ist reine Fensterrechnung: beide Kompensatoren sitzen auf
+`Set.Ioc 0 ·`, und `Set.Ioc_union_Ioc_eq_Ioc` mit `setIntegral_union` macht aus ihrer Differenz
+das Fenster `Set.Ioc s t`, das in **keinem** der beiden Summanden vorkommt.
+
+**Die Namensabweichung ist Absicht.** Der Vorlauf hatte
+`…_eq_intervalIntegral_of_isCadlagMPSolution` angesagt, die Formel darunter aber mit
+`∫ u in Set.Ioc (s:ℝ) (t:ℝ)` geschrieben. Genommen ist die Formel, also heißt die Deklaration
+`…_eq_setIntegral_…`. Der Grund ist nicht Pedanterie: `SkorokhodSpace.mpTest` ist selbst mit
+einem Mengenintegral über `Set.Ioc` definiert, und ein `intervalIntegral` in der Aussage hätte
+an jedem Verbraucher eine Umschreibung erzwungen, die hier nirgends gebraucht wird.
+
+#### Drei Folgerungen, die mit demselben Material fallen
+
+* **Die Bildmaßfassung** (`integral_map_eval_sub_eq_setIntegral_of_isCadlagMPSolution`) ist
+  dreimal `integral_map` und sagt dasselbe über die eindimensionalen Verteilungen
+  `ν.map (z ↦ z t)` selbst. Das ist die Gestalt, die `honedim` liest: zwei Lösungen mit gleicher
+  Verteilung zur Zeit `⊥` erfüllen **dieselbe** Integralgleichung.
+* **Die Lipschitzschranke** — der Zuwachs des Mittelwertes ist höchstens `‖p.2‖` mal die Masse
+  mal die Fensterlänge —, und daraus
+* **die Stetigkeit der eindimensionalen Mittelwerte in der Zeit**, obwohl die Pfade nur càdlàg
+  sind. Das ist keine Aussage über einen einzelnen Pfad — der Zeuge von
+  `not_isQuasiLeftContinuous_of_atom` springt zu einer festen Zeit und löst trotzdem sein
+  Martingalproblem —, sondern über das **Mittel**, und der Grund steht im Beweis: der
+  Kompensator ist ein Fensterintegral, und ein Fenster verschwindender Länge trägt
+  verschwindende Masse.
+
+#### Was der Lauf über `honedim` herausgefunden hat, und es ist die Wegbeschreibung für den nächsten
+
+`honedim` ist nach dem neunten Lauf die **einzige** mathematische Hypothese zwischen Donsker und
+einer Aussage über Daten. Der Weg des Sprungfalls trägt nicht (der Brownsche Erzeuger ist
+unbeschränkt). Der Weg, der trägt, ist die **charakteristische Funktion**, und die
+Vorwärtsgleichung ist genau seine Eingabe:
+
+> Für `f = cos (θ ·)` ist `A f = −(v/2) θ² f`, also ist die Vorwärtsgleichung eine
+> **geschlossene** skalare lineare Integralgleichung für den Mittelwert von `f`, und dasselbe
+> für `sin (θ ·)`. Aus ihr folgt die charakteristische Funktion der eindimensionalen
+> Verteilung, und `Measure.ext_of_charFun`
+> (`Mathlib/MeasureTheory/Measure/CharacteristicFunction/Basic.lean:257`, gelesen gegen
+> `94ef6b89544`) macht daraus die Gleichheit der Maße.
+
+**Und hier liegt das Hindernis, das die Arbeit dieses Laufs vorwegnimmt.**
+`MeasureTheory.brownianGeneratorPairs v` ist eine Klasse von **kompakt getragenen** `C³`-Funktionen
+(`∃ f, ContDiff ℝ 3 f ∧ HasCompactSupport f ∧ …`). `cos (θ ·)` hat keinen kompakten Träger und
+ist **kein** Mitglied. Es ist aber ein **beschränkter punktweiser Limes** von Mitgliedern, und
+genau dafür ist `MeasureTheory.integral_eval_sub_eq_setIntegral_of_tendsto` gebaut: die
+Vorwärtsgleichung überlebt einen solchen Limes, in beiden Komponenten, mit einer Schranke für
+die ganze Folge.
+
+**Was dafür in Mathlib nachgesehen ist, gegen `94ef6b89544`:**
+
+* `ContDiffBump` (`Mathlib/Analysis/Calculus/BumpFunction/Basic.lean:70`) mit
+  `ContDiffBump.one_of_mem_closedBall` (`:137`), `ContDiffBump.hasCompactSupport` (`:166`, unter
+  `[FiniteDimensional ℝ E]`) und `ContDiffBump.contDiff` (`:203`). Über `ℝ` sind alle drei frei.
+* `Measure.ext_of_charFun` (`Mathlib/MeasureTheory/Measure/CharacteristicFunction/Basic.lean:257`),
+  unter `[CompleteSpace E]` für einen Innenproduktraum; über `ℝ` ebenfalls frei.
+
+**Die Abschneidung muß skaliert und nicht aufgeblasen werden**, und das ist die Stelle, an der
+ein Lauf danebengreifen wird: nimmt man eine Folge von Buckeln mit wachsenden Radien, so sind
+ihre zweiten Ableitungen **nicht** gleichmäßig beschränkt, und die Voraussetzung `hgb` von
+`integral_eval_sub_eq_setIntegral_of_tendsto` ist verletzt. Zu nehmen ist **ein** fester Buckel
+`χ` mit `χ = 1` auf `Metric.closedBall 0 1` und `χ_n x = χ (x / n)`; dann ist
+`χ_n'' x = χ'' (x/n) / n²`, und die Leibnizformel für
+`(χ_n · cos (θ ·))'' = χ_n'' cos − 2 θ χ_n' sin − θ² χ_n cos` gibt eine Schranke, die in `n`
+gleichmäßig ist und deren erste zwei Glieder überdies gegen `0` gehen.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **`MeasureTheory.exists_brownianGeneratorPairs_tendsto_mul_cos`** — zu jedem `θ : ℝ` und
+> `v : ℝ` eine Folge `pn : ℕ → (ℝ →ᵇ ℝ) × (ℝ →ᵇ ℝ)` in `brownianGeneratorPairs v` mit
+>
+>     (∀ x, Tendsto (fun n ↦ (pn n).1 x) atTop (𝓝 (Real.cos (θ * x))))
+>     (∀ x, Tendsto (fun n ↦ (pn n).2 x) atTop (𝓝 (-(v / 2) * θ ^ 2 * Real.cos (θ * x))))
+>
+> und **einer** Schranke `C` für alle `‖(pn n).1‖` und `‖(pn n).2‖`.
+
+*Warum jetzt:* es ist die einzige fehlende Eingabe von
+`integral_eval_sub_eq_setIntegral_of_tendsto` auf dem Weg zu `honedim`, und es ist der Schritt,
+der **keine** Maßtheorie braucht — reine Analysis auf `ℝ`, nachprüfbar ohne ein einziges Maß.
+Der Rest des Weges (die skalare Integralgleichung, ihre Eindeutigkeit, `Measure.ext_of_charFun`)
+ist danach eine Kette von Aussagen, deren jede für sich steht.
+
+*Worauf es ruht, und alles davon ist am Quelltext belegt:* `ContDiffBump` samt den drei oben
+genannten Lemmata für die Abschneidung; `ContDiff.mul` und die Leibnizformel für
+`iteratedDeriv 2` eines Produkts für die zweite Ableitung;
+`MeasureTheory.exists_boundedContinuous_of_contDiff_of_hasCompactSupport` (in dieser Datei) für
+den Übergang von der Funktion zum gebündelten `ℝ →ᵇ ℝ`, der in der Definition von
+`brownianGeneratorPairs` ohnehin über die Koerzion läuft.
+
+*Die zweite Stelle, an der Zeit verlorengeht:* `brownianGeneratorPairs` verlangt
+`ContDiff ℝ 3 f`, also **drei** Ableitungen und nicht zwei. Der Buckel ist `C^∞`, `cos` ist
+`C^∞`, das Produkt also auch — aber die Schranke ist nur für die **zweite** Ableitung zu führen,
+weil nur sie in der zweiten Komponente des Paares vorkommt. Wer die dritte mitschätzt, schätzt
+umsonst.
+
+#### Die Eingaben des nächsten Laufs sind **übersetzt** und nicht bloß nachgeschlagen
+
+Damit der nächste Lauf keine Zeit an der Bibliothek verliert, sind die vier Bausteine in einer
+Probedatei gegen `master` **kompiliert** (`scripts/_dev_bump.lean`, `rc=0`, nur zwei
+`push_neg`-Veraltungswarnungen der Probe selbst):
+
+| geprüft | Befund |
+| --- | --- |
+| `HasCompactSupport.exists_bound_of_continuous` | **existiert** — erzeugt von `@[to_additive]` über `HasCompactMulSupport.exists_bound_of_continuous` (`Mathlib/Analysis/Normed/Group/Bounded.lean:100`); ein Grep nach `theorem HasCompactSupport.exists_bound…` gäbe den bekannten Falschbefund |
+| `iteratedDeriv_fun_mul` | **existiert** — die Leibnizformel, erzeugt von `@[to_fun]` über `iteratedDeriv_mul` (`Mathlib/Analysis/Calculus/IteratedDeriv/Lemmas.lean:420`), als Summe über `Finset.range (n+1)` mit `Nat.choose` |
+| `ContDiffBump (0 : ℝ)` mit `rIn = 1`, `rOut = 2` | **baut** samt `contDiff`, `hasCompactSupport`, `one_of_mem_closedBall`, `zero_of_le_dist` |
+| `HasCompactSupport (fun x ↦ χ (x / (n+1)))` | **bewiesen** in der Probe, über `HasCompactSupport.intro` an `Set.Icc (-(2(n+1))) (2(n+1))` und `zero_of_le_dist` |
+
+**Und hier ist das einzige, was den nächsten Lauf sonst aufgehalten hätte: zwei Importe fehlen.**
+`ContDiffBump` ist in der Kette **nicht** erreichbar — die vier Dateien importieren Mathlib
+namentlich und nicht als Ganzes. Zu ergänzen sind in `MartingaleProblems/Suggested.lean`
+
+    import Mathlib.Analysis.Calculus.BumpFunction.FiniteDimension
+    import Mathlib.MeasureTheory.Measure.CharacteristicFunction.Basic
+
+der erste für den Buckel (er zieht `Basic` und die `HasContDiffBump`-Instanz nach), der zweite
+für `Measure.ext_of_charFun` am Ende des Weges. Beide sind in der Probe zusammen mit der Kette
+übersetzt, also verträglich.
+
+*Eine Kleinigkeit, die drei Minuten kostet:* `probeBump.rIn` und `probeBump.rOut` reduzieren sich
+unter `simp` **nicht** zu `1` und `2`, wenn der Buckel eine eigene `def` ist — die Projektion
+steht vor einem Namen und nicht vor dem Strukturliteral. Zu nehmen ist
+`show probeBump.rOut = 2 from rfl` oder das `simp`-Argument `[probeBump]`.

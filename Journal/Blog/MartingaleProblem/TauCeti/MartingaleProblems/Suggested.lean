@@ -31476,6 +31476,300 @@ theorem isMPSolution_of_isCadlagMPSolution {A : Set ((E →ᵇ ℝ) × (E →ᵇ
   exact mpSolution_forall_of_mpSolution_dense p.1 p.2 ν
     (fun r ↦ rightDense_of_dense hTd r) hT hst
 
+/-! #### The forward equation of the one dimensional distributions
+
+The martingale identity, integrated, is an identity of numbers: the mean of the
+state term moves by the mean of the compensator.  It is the first thing every
+uniqueness argument for the one dimensional distributions starts from, and it is
+free of the analysis of the operator -- nothing below reads a bound on the
+generator, a semigroup, or a regularity of the paths beyond the càdlàg property
+the path space already carries.
+
+Two consequences come with it and neither needs a second idea: the mean of the
+state term is **Lipschitz in time**, with the norm of the second component of the
+pair and the total mass as the constant, and therefore **continuous**, so the one
+dimensional means of a càdlàg solution have no jumps at all. -/
+
+/-- The averaged integrand of the compensator is measurable in the time.
+
+`MeasureTheory.StronglyMeasurable.integral_prod_left'` is the whole content ---
+the Bochner integral of a jointly measurable function is measurable in the
+parameter --- and the joint measurability is
+`MeasureTheory.measurable_uncurry_comp_eval_toNNReal`.  The finiteness of `ν` is
+read only through the `SFinite` instance that statement asks for. -/
+theorem measurable_integral_eval_toNNReal (g : E →ᵇ ℝ) (ν : Measure D(ℝ≥0, E))
+    [IsFiniteMeasure ν] :
+    Measurable fun u : ℝ ↦ ∫ z, g (z.toFun u.toNNReal) ∂ν :=
+  (StronglyMeasurable.integral_prod_left' (μ := ν)
+    (measurable_uncurry_comp_eval_toNNReal g).stronglyMeasurable).measurable
+
+/-- The averaged integrand of the compensator is integrable over every window.
+
+It is bounded by `‖g‖ * ν.real Set.univ` uniformly in the time --- the bound of
+the integrand times the mass --- and the window has finite Lebesgue measure, so
+nothing but `MeasureTheory.measurable_integral_eval_toNNReal` is needed.
+
+**The window is not required to sit in `Set.Ici 0`.**  The statement is read at
+`Set.Ioc 0 s` and at `Set.Ioc s t` inside
+`MeasureTheory.integral_eval_sub_eq_setIntegral_of_isCadlagMPSolution`, and
+making the endpoints free is what lets the same statement serve both. -/
+theorem integrableOn_integral_eval_toNNReal (g : E →ᵇ ℝ) (ν : Measure D(ℝ≥0, E))
+    [IsFiniteMeasure ν] (a b : ℝ) :
+    IntegrableOn (fun u : ℝ ↦ ∫ z, g (z.toFun u.toNNReal) ∂ν) (Set.Ioc a b) volume := by
+  have : IsFiniteMeasure ((volume : Measure ℝ).restrict (Set.Ioc a b)) := by
+    refine ⟨?_⟩
+    rw [Measure.restrict_apply_univ, Real.volume_Ioc]
+    exact ENNReal.ofReal_lt_top
+  refine integrable_of_abs_le (μ := (volume : Measure ℝ).restrict (Set.Ioc a b))
+    (C := ‖g‖ * ν.real Set.univ) (measurable_integral_eval_toNNReal g ν) fun u ↦ ?_
+  simpa [Real.norm_eq_abs] using
+    norm_integral_le_of_norm_le_const (μ := ν)
+      (Filter.Eventually.of_forall fun z : D(ℝ≥0, E) ↦ g.norm_coe_le_norm (z.toFun u.toNNReal))
+
+/-- **The forward equation in integrated form.**  The one dimensional
+distributions of a càdlàg solution satisfy, for every pair of the operator and
+every pair of times,
+
+    ∫ p.1 (z t) dν - ∫ p.1 (z s) dν = ∫_s^t ∫ p.2 (z u) dν du.
+
+**It holds at every pair of times and not only on the dense set.**
+`MeasureTheory.IsCadlagMPSolution` quantifies over a countable dense set of
+times that may depend on the pair, so the obvious reading of this statement is
+one restricted to that set.  The restriction is unnecessary:
+`MeasureTheory.mpSolution_forall_of_mpSolution_dense` has already carried the
+martingale identity from the dense set to every pair of times, and that is the
+only place the right continuity of the paths is read.  Nothing here repeats that
+work.
+
+**Three steps and no fourth.**  `MeasureTheory.integral_condExp` turns the
+conditional expectation into an equality of the two integrals of
+`SkorokhodSpace.mpTest`; `MeasureTheory.integral_setIntegral_eval_comm` is the
+Fubini step that moves the average inside the window integral; and the two
+windows are compared by `MeasureTheory.setIntegral_union` at
+`Set.Ioc_union_Ioc_eq_Ioc`, whose hypotheses are the integrability over each
+piece (`MeasureTheory.integrableOn_integral_eval_toNNReal`) and the disjointness,
+which is `u ≤ s` against `s < u`.
+
+**The lower end of the first window is `0` and not `s`.**  The compensator of
+`SkorokhodSpace.mpTest` always starts at the base point, so the difference of the
+two test functionals carries the difference of two windows anchored there; the
+window `Set.Ioc s t` of the statement is produced by the splitting and is not
+present in either summand. -/
+theorem integral_eval_sub_eq_setIntegral_of_isCadlagMPSolution
+    {A : Set ((E →ᵇ ℝ) × (E →ᵇ ℝ))} (ν : Measure D(ℝ≥0, E)) [IsFiniteMeasure ν]
+    (h : IsCadlagMPSolution A ν) {p : (E →ᵇ ℝ) × (E →ᵇ ℝ)} (hp : p ∈ A)
+    {s t : ℝ≥0} (hst : s ≤ t) :
+    (∫ z, p.1 (z.toFun t) ∂ν) - ∫ z, p.1 (z.toFun s) ∂ν
+      = ∫ u in Set.Ioc (s : ℝ) (t : ℝ), ∫ z, p.2 (z.toFun u.toNNReal) ∂ν := by
+  obtain ⟨T, -, hTd, hT⟩ := h p hp
+  have hmart := mpSolution_forall_of_mpSolution_dense p.1 p.2 ν
+    (fun r ↦ rightDense_of_dense hTd r) hT hst
+  have hglob : ∀ q : ℝ≥0, Measurable (SkorokhodSpace.mpTest p.1 p.2 q) := fun q ↦
+    (measurable_mpTest p.1 p.2 q).mono ((cadlagFiltration (E := E)).le q) le_rfl
+  have hint : ∀ q : ℝ≥0, Integrable (fun z ↦ SkorokhodSpace.mpTest p.1 p.2 q z) ν := fun q ↦
+    integrable_of_abs_le (C := ‖p.1‖ + ‖p.2‖ * (q : ℝ)) (hglob q)
+      (fun z ↦ abs_mpTest_le p.1 p.2 le_rfl z)
+  have hev : ∀ q : ℝ≥0, Integrable (fun z : D(ℝ≥0, E) ↦ p.1 (z.toFun q)) ν := fun q ↦
+    integrable_of_abs_le (C := ‖p.1‖)
+      (p.1.continuous.measurable.comp (SkorokhodSpace.measurable_eval q))
+      fun z ↦ by simpa [Real.norm_eq_abs] using p.1.norm_coe_le_norm (z.toFun q)
+  have hcomp : ∀ q : ℝ≥0, Integrable
+      (fun z : D(ℝ≥0, E) ↦ ∫ u in Set.Ioc (0 : ℝ) (q : ℝ), p.2 (z.toFun u.toNNReal)) ν := by
+    intro q
+    have hfun : (fun z : D(ℝ≥0, E) ↦ ∫ u in Set.Ioc (0 : ℝ) (q : ℝ), p.2 (z.toFun u.toNNReal))
+        = fun z ↦ p.1 (z.toFun q) - SkorokhodSpace.mpTest p.1 p.2 q z := by
+      funext z
+      rw [SkorokhodSpace.mpTest]
+      ring
+    rw [hfun]
+    exact (hev q).sub (hint q)
+  have hsplit : ∀ q : ℝ≥0, ∫ z, SkorokhodSpace.mpTest p.1 p.2 q z ∂ν
+      = (∫ z, p.1 (z.toFun q) ∂ν)
+        - ∫ u in Set.Ioc (0 : ℝ) (q : ℝ), ∫ z, p.2 (z.toFun u.toNNReal) ∂ν := by
+    intro q
+    rw [show (fun z : D(ℝ≥0, E) ↦ SkorokhodSpace.mpTest p.1 p.2 q z)
+        = fun z ↦ p.1 (z.toFun q)
+            - ∫ u in Set.Ioc (0 : ℝ) (q : ℝ), p.2 (z.toFun u.toNNReal) from rfl,
+      integral_sub (hev q) (hcomp q), integral_setIntegral_eval_comm p.2 ν q]
+  have hEq : ∫ z, SkorokhodSpace.mpTest p.1 p.2 t z ∂ν
+      = ∫ z, SkorokhodSpace.mpTest p.1 p.2 s z ∂ν := by
+    rw [← integral_condExp ((cadlagFiltration (E := E)).le s)
+      (f := fun z ↦ SkorokhodSpace.mpTest p.1 p.2 t z)]
+    exact integral_congr_ae hmart
+  have hdisj : Disjoint (Set.Ioc (0 : ℝ) (s : ℝ)) (Set.Ioc (s : ℝ) (t : ℝ)) :=
+    Set.disjoint_left.2 fun u hu hu' ↦ absurd hu.2 (not_le.2 hu'.1)
+  have hunion : ∫ u in Set.Ioc (0 : ℝ) (t : ℝ), ∫ z, p.2 (z.toFun u.toNNReal) ∂ν
+      = (∫ u in Set.Ioc (0 : ℝ) (s : ℝ), ∫ z, p.2 (z.toFun u.toNNReal) ∂ν)
+        + ∫ u in Set.Ioc (s : ℝ) (t : ℝ), ∫ z, p.2 (z.toFun u.toNNReal) ∂ν := by
+    rw [← setIntegral_union hdisj measurableSet_Ioc
+      (integrableOn_integral_eval_toNNReal p.2 ν _ _)
+      (integrableOn_integral_eval_toNNReal p.2 ν _ _),
+      Set.Ioc_union_Ioc_eq_Ioc s.coe_nonneg (by exact_mod_cast hst)]
+  rw [hsplit t, hsplit s, hunion] at hEq
+  linarith
+
+/-- **The forward equation written at the one dimensional distributions
+themselves.**
+
+This is `MeasureTheory.integral_eval_sub_eq_setIntegral_of_isCadlagMPSolution`
+read through the image measures `ν.map (z ↦ z t)`, which are the one dimensional
+distributions the uniqueness hypothesis of Donsker's theorem speaks of.  The
+passage is `MeasureTheory.integral_map` three times, the measurability being
+`SkorokhodSpace.measurable_eval` and the test function being continuous.
+
+It is the form a uniqueness argument consumes: two solutions whose distributions
+agree at the base point satisfy the *same* integral equation, so any argument
+that makes that equation determine its solution identifies them. -/
+theorem integral_map_eval_sub_eq_setIntegral_of_isCadlagMPSolution
+    {A : Set ((E →ᵇ ℝ) × (E →ᵇ ℝ))} (ν : Measure D(ℝ≥0, E)) [IsFiniteMeasure ν]
+    (h : IsCadlagMPSolution A ν) {p : (E →ᵇ ℝ) × (E →ᵇ ℝ)} (hp : p ∈ A)
+    {s t : ℝ≥0} (hst : s ≤ t) :
+    (∫ x, p.1 x ∂(ν.map fun z : D(ℝ≥0, E) ↦ z.toFun t))
+        - ∫ x, p.1 x ∂(ν.map fun z : D(ℝ≥0, E) ↦ z.toFun s)
+      = ∫ u in Set.Ioc (s : ℝ) (t : ℝ),
+          ∫ x, p.2 x ∂(ν.map fun z : D(ℝ≥0, E) ↦ z.toFun u.toNNReal) := by
+  have hmap : ∀ (q : ℝ≥0) (f : E →ᵇ ℝ),
+      ∫ x, f x ∂(ν.map fun z : D(ℝ≥0, E) ↦ z.toFun q) = ∫ z, f (z.toFun q) ∂ν := fun q f ↦
+    integral_map (SkorokhodSpace.measurable_eval q).aemeasurable
+      f.continuous.measurable.aestronglyMeasurable
+  rw [hmap, hmap, setIntegral_congr_fun measurableSet_Ioc fun u _ ↦ hmap u.toNNReal p.2]
+  exact integral_eval_sub_eq_setIntegral_of_isCadlagMPSolution ν h hp hst
+
+/-- **The forward equation survives a bounded pointwise limit of pairs.**
+
+If a sequence of pairs of the operator converges pointwise in both components,
+with one bound for the whole sequence, then the forward equation holds for the
+limit pair --- which need belong to no class at all, and in particular need not
+be compactly supported, bounded continuous, or even measurable in the statement.
+
+**This is the statement a uniqueness argument for the one dimensional
+distributions needs, and the reason is the compact support.**
+`MeasureTheory.brownianGeneratorPairs` is a class of *compactly supported* `C³`
+functions, so the functions whose one dimensional means satisfy a **closed**
+ordinary differential equation --- `x ↦ Real.cos (θ * x)` and `x ↦ Real.sin (θ * x)`,
+whose second derivative is `-θ²` times themselves --- are not members of it.
+They are bounded pointwise limits of members, and this statement is what carries
+the forward equation across that limit.
+
+**Dominated convergence three times and nothing else**: once for each of the two
+state terms under `ν`, once inside the window integral for each time, and once
+for the window integral itself, whose majorant is the constant
+`C * ν.real Set.univ` and whose measurability in the time is
+`MeasureTheory.measurable_integral_eval_toNNReal`.  Both majorants are constants
+and integrable because the two measures are finite --- `ν` by hypothesis, the
+window because it is bounded. -/
+theorem integral_eval_sub_eq_setIntegral_of_tendsto
+    {A : Set ((E →ᵇ ℝ) × (E →ᵇ ℝ))} (ν : Measure D(ℝ≥0, E)) [IsFiniteMeasure ν]
+    (h : IsCadlagMPSolution A ν)
+    {pn : ℕ → (E →ᵇ ℝ) × (E →ᵇ ℝ)} (hpn : ∀ n, pn n ∈ A)
+    {f g : E → ℝ} {C : ℝ}
+    (hf : ∀ x, Tendsto (fun n ↦ (pn n).1 x) atTop (𝓝 (f x)))
+    (hg : ∀ x, Tendsto (fun n ↦ (pn n).2 x) atTop (𝓝 (g x)))
+    (hfb : ∀ n, ‖pn n |>.1‖ ≤ C) (hgb : ∀ n, ‖pn n |>.2‖ ≤ C)
+    {s t : ℝ≥0} (hst : s ≤ t) :
+    (∫ z, f (z.toFun t) ∂ν) - ∫ z, f (z.toFun s) ∂ν
+      = ∫ u in Set.Ioc (s : ℝ) (t : ℝ), ∫ z, g (z.toFun u.toNNReal) ∂ν := by
+  have hstate : ∀ q : ℝ≥0, Tendsto (fun n ↦ ∫ z, (pn n).1 (z.toFun q) ∂ν) atTop
+      (𝓝 (∫ z, f (z.toFun q) ∂ν)) := by
+    intro q
+    refine tendsto_integral_of_dominated_convergence (fun _ ↦ C)
+      (fun n ↦ ((pn n).1.continuous.measurable.comp
+        (SkorokhodSpace.measurable_eval q)).aestronglyMeasurable)
+      (integrable_const _) (fun n ↦ Filter.Eventually.of_forall fun z ↦ ?_)
+      (Filter.Eventually.of_forall fun z ↦ hf (z.toFun q))
+    exact le_trans ((pn n).1.norm_coe_le_norm _) (hfb n)
+  have hinner : ∀ u : ℝ, Tendsto (fun n ↦ ∫ z, (pn n).2 (z.toFun u.toNNReal) ∂ν) atTop
+      (𝓝 (∫ z, g (z.toFun u.toNNReal) ∂ν)) := by
+    intro u
+    refine tendsto_integral_of_dominated_convergence (fun _ ↦ C)
+      (fun n ↦ ((pn n).2.continuous.measurable.comp
+        (SkorokhodSpace.measurable_eval u.toNNReal)).aestronglyMeasurable)
+      (integrable_const _) (fun n ↦ Filter.Eventually.of_forall fun z ↦ ?_)
+      (Filter.Eventually.of_forall fun z ↦ hg (z.toFun u.toNNReal))
+    exact le_trans ((pn n).2.norm_coe_le_norm _) (hgb n)
+  have hfinw : IsFiniteMeasure ((volume : Measure ℝ).restrict (Set.Ioc (s : ℝ) (t : ℝ))) := by
+    refine ⟨?_⟩
+    rw [Measure.restrict_apply_univ, Real.volume_Ioc]
+    exact ENNReal.ofReal_lt_top
+  have hwin : Tendsto
+      (fun n ↦ ∫ u in Set.Ioc (s : ℝ) (t : ℝ), ∫ z, (pn n).2 (z.toFun u.toNNReal) ∂ν) atTop
+      (𝓝 (∫ u in Set.Ioc (s : ℝ) (t : ℝ), ∫ z, g (z.toFun u.toNNReal) ∂ν)) := by
+    refine tendsto_integral_of_dominated_convergence (fun _ ↦ C * ν.real Set.univ)
+      (fun n ↦ (measurable_integral_eval_toNNReal (pn n).2 ν).aestronglyMeasurable)
+      (integrable_const _) (fun n ↦ Filter.Eventually.of_forall fun u ↦ ?_)
+      (Filter.Eventually.of_forall hinner)
+    exact norm_integral_le_of_norm_le_const (μ := ν)
+      (Filter.Eventually.of_forall fun z : D(ℝ≥0, E) ↦
+        le_trans ((pn n).2.norm_coe_le_norm _) (hgb n))
+  refine tendsto_nhds_unique ((hstate t).sub (hstate s)) ?_
+  simpa only [integral_eval_sub_eq_setIntegral_of_isCadlagMPSolution ν h (hpn _) hst] using hwin
+
+/-- **The mean of the state term moves at most at the rate `‖p.2‖` times the
+mass.**
+
+The right hand side of the forward equation is the integral of a function
+bounded by `‖p.2‖ * ν.real Set.univ` over a window of length `t - s`, so the
+bound is `MeasureTheory.norm_integral_le_of_norm_le_const` twice --- once under
+`ν` for the integrand, once under the restricted Lebesgue measure for the window
+--- and `Real.volume_real_Ioc_of_le` for the length.
+
+**No property of the operator is read beyond the norm of its second component.**
+In particular the bound survives an unbounded generator restricted to bounded
+continuous representatives, which is the case Donsker's theorem is read at. -/
+theorem abs_integral_eval_sub_le_of_isCadlagMPSolution
+    {A : Set ((E →ᵇ ℝ) × (E →ᵇ ℝ))} (ν : Measure D(ℝ≥0, E)) [IsFiniteMeasure ν]
+    (h : IsCadlagMPSolution A ν) {p : (E →ᵇ ℝ) × (E →ᵇ ℝ)} (hp : p ∈ A)
+    {s t : ℝ≥0} (hst : s ≤ t) :
+    |(∫ z, p.1 (z.toFun t) ∂ν) - ∫ z, p.1 (z.toFun s) ∂ν|
+      ≤ ‖p.2‖ * ν.real Set.univ * ((t : ℝ) - (s : ℝ)) := by
+  have hst' : (s : ℝ) ≤ (t : ℝ) := by exact_mod_cast hst
+  have hfin : IsFiniteMeasure ((volume : Measure ℝ).restrict (Set.Ioc (s : ℝ) (t : ℝ))) := by
+    refine ⟨?_⟩
+    rw [Measure.restrict_apply_univ, Real.volume_Ioc]
+    exact ENNReal.ofReal_lt_top
+  rw [integral_eval_sub_eq_setIntegral_of_isCadlagMPSolution ν h hp hst, ← Real.norm_eq_abs]
+  refine le_trans (norm_integral_le_of_norm_le_const
+    (μ := (volume : Measure ℝ).restrict (Set.Ioc (s : ℝ) (t : ℝ)))
+    (C := ‖p.2‖ * ν.real Set.univ) (Filter.Eventually.of_forall fun u ↦ ?_)) (le_of_eq ?_)
+  · simpa [Real.norm_eq_abs] using
+      norm_integral_le_of_norm_le_const (μ := ν)
+        (Filter.Eventually.of_forall fun z : D(ℝ≥0, E) ↦ p.2.norm_coe_le_norm (z.toFun u.toNNReal))
+  · rw [measureReal_restrict_apply_univ, Real.volume_real_Ioc_of_le hst']
+
+/-- **The one dimensional means of a càdlàg solution are continuous in the
+time**, although the paths themselves are only càdlàg.
+
+It is the Lipschitz bound of
+`MeasureTheory.abs_integral_eval_sub_le_of_isCadlagMPSolution` read through
+`LipschitzWith.of_dist_le_mul`, with `NNReal.dist_eq` for the distance of two
+times and `Real.dist_eq` for the distance of the two means.
+
+**What it says and what it does not.**  It says the *mean* of `p.1` along the
+solution has no jump, at any time and for every pair of the operator; it says
+nothing about a single path, which may jump at a deterministic time --- the
+witness of `not_isQuasiLeftContinuous_of_atom` does exactly that
+and is a martingale problem solution.  What is ruled out is a jump of the
+*averaged* state, and the reason is visible in the proof: the compensator is an
+integral over a window, and a window of vanishing length carries vanishing
+mass. -/
+theorem continuous_integral_eval_of_isCadlagMPSolution
+    {A : Set ((E →ᵇ ℝ) × (E →ᵇ ℝ))} (ν : Measure D(ℝ≥0, E)) [IsFiniteMeasure ν]
+    (h : IsCadlagMPSolution A ν) {p : (E →ᵇ ℝ) × (E →ᵇ ℝ)} (hp : p ∈ A) :
+    Continuous fun t : ℝ≥0 ↦ ∫ z, p.1 (z.toFun t) ∂ν := by
+  have hM : (0 : ℝ) ≤ ‖p.2‖ * ν.real Set.univ :=
+    mul_nonneg (norm_nonneg _) ENNReal.toReal_nonneg
+  refine (LipschitzWith.of_dist_le_mul (K := Real.toNNReal (‖p.2‖ * ν.real Set.univ))
+    fun a b ↦ ?_).continuous
+  rw [Real.dist_eq, NNReal.dist_eq, Real.coe_toNNReal _ hM]
+  rcases le_total a b with hab | hab
+  · have hab' : (a : ℝ) ≤ (b : ℝ) := by exact_mod_cast hab
+    rw [abs_sub_comm, abs_sub_comm ((a : ℝ)) ((b : ℝ)),
+      abs_of_nonneg (show (0 : ℝ) ≤ (b : ℝ) - (a : ℝ) by linarith)]
+    exact abs_integral_eval_sub_le_of_isCadlagMPSolution ν h hp hab
+  · have hab' : (b : ℝ) ≤ (a : ℝ) := by exact_mod_cast hab
+    rw [abs_of_nonneg (show (0 : ℝ) ≤ (a : ℝ) - (b : ℝ) by linarith)]
+    exact abs_integral_eval_sub_le_of_isCadlagMPSolution ν h hp hab
+
 /-! #### The shift of the càdlàg path space
 
 `Shift` is the structure Milestone 6 reads a restart through, and on
