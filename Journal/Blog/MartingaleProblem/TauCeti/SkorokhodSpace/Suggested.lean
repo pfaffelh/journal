@@ -7074,22 +7074,200 @@ theorem SkorokhodSpace.jumpFunctional_eq_zero_iff (t₀ : ι) (x : D(ι, E)) :
         exact h _ hc))
     simp [SkorokhodSpace.jumpFunctional, hz]
 
+/-! #### Carrying the jump along a time change
+
+The three statements below are the perturbation half of Proposition 3.5.3, and
+they are stated for a bare order isomorphism rather than for a `TimeChange`: a
+time change enters the estimate through nothing but its order isomorphism and
+the two numbers `η` (how far it moves the window) and `ε` (how far it moves the
+values), so that is what they take.  The metric half --- producing `e`, `η` and
+`ε` from `SkorokhodSpace.intDist` --- is
+`SkorokhodSpace.exists_orderIso_forall_dist_lt_of_intDist_lt`, and it has to
+wait for `SkorokhodSpace.exists_radius_distWith_lt` of Milestone 6. -/
+
+omit [AdditiveDist ι] [ProperSpace ι] [BasePoint ι] in
+/-- **An order isomorphism carries the left neighbourhood filter to the left
+neighbourhood filter.**  This is what makes a jump a quantity a time change can
+move but not create: `Function.leftLim` is defined from `𝓝[<]`, and an order
+isomorphism of a linearly ordered topological space is a homeomorphism that
+respects the order, so the filter is transported and with it the left limit.
+
+Mathlib has `OrderIso.image_Iio` and the homeomorphism, but no statement about
+the filter, so this is written out. -/
+theorem OrderIso.map_nhdsLT (e : ι ≃o ι) (t : ι) :
+    Filter.map e (𝓝[<] t) = 𝓝[<] (e t) := by
+  have key : ∀ (f : ι ≃o ι) (s : ι), Filter.Tendsto f (𝓝[<] s) (𝓝[<] (f s)) := by
+    intro f s
+    refine tendsto_nhdsWithin_iff.2 ⟨(f.continuous.tendsto s).mono_left nhdsWithin_le_nhds, ?_⟩
+    filter_upwards [eventually_mem_nhdsWithin] with r hr
+    exact f.lt_iff_lt.2 hr
+  refine le_antisymm (key e t) ?_
+  have h2 := key e.symm (e t)
+  rw [e.symm_apply_apply] at h2
+  have hcomp : (⇑e ∘ ⇑e.symm) = id := funext fun z => e.apply_symm_apply z
+  calc 𝓝[<] (e t) = Filter.map e (Filter.map e.symm (𝓝[<] (e t))) := by
+        rw [Filter.map_map, hcomp, Filter.map_id]
+    _ ≤ Filter.map e (𝓝[<] t) := Filter.map_mono h2
+
+omit [AdditiveDist ι] [ProperSpace ι] [BasePoint ι] in
+/-- **Left limits inherit a bound that holds on a left neighbourhood.**
+
+The hypothesis is read on `𝓝[≤] t` and not on `𝓝[<] t`, and that is not a
+convenience: at a point isolated from the left `𝓝[<] t` is `⊥`, every statement
+about it is vacuous, and `Function.leftLim` is the *value* there.  `𝓝[≤] t` is
+never `⊥` --- it carries `pure t` --- so the same hypothesis serves both cases,
+and the case distinction is the one `OrderIso.map_nhdsLT` makes possible: the
+filter is `⊥` on one side exactly when it is `⊥` on the other. -/
+theorem SkorokhodSpace.dist_leftLim_le_of_eventually (x y : D(ι, E)) (e : ι ≃o ι) (t : ι)
+    {ε : ℝ} (h : ∀ᶠ s in 𝓝[≤] t, dist (x.toFun (e s)) (y.toFun s) ≤ ε) :
+    dist (Function.leftLim x.toFun (e t)) (Function.leftLim y.toFun t) ≤ ε := by
+  by_cases hbot : 𝓝[<] t = ⊥
+  · have hbot' : 𝓝[<] (e t) = ⊥ := by
+      rw [← OrderIso.map_nhdsLT e t, hbot, Filter.map_bot]
+    rw [leftLim_eq_of_eq_bot _ hbot', leftLim_eq_of_eq_bot _ hbot]
+    exact h.self_of_nhdsWithin le_rfl
+  · have : (𝓝[<] t).NeBot := ⟨hbot⟩
+    have he : Filter.Tendsto (⇑e) (𝓝[<] t) (𝓝[<] (e t)) := le_of_eq (OrderIso.map_nhdsLT e t)
+    have hx : Filter.Tendsto (fun s => x.toFun (e s)) (𝓝[<] t)
+        (𝓝 (Function.leftLim x.toFun (e t))) :=
+      (x.isCadlag.tendsto_nhdsLT_leftLim (e t)).comp he
+    have hy := y.isCadlag.tendsto_nhdsLT_leftLim t
+    refine le_of_tendsto (hx.dist hy) ?_
+    exact h.filter_mono (nhdsWithin_mono t Set.Iio_subset_Iic_self)
+
+/-- The truncation at `1` survives an additive error.  It is the one arithmetic
+step of the perturbation estimate, and it is stated on its own because the case
+`1 ≤ b`, where the truncated quantity does not move at all, is the one a
+`linarith` after `min_le_left` misses. -/
+theorem min_one_le_min_one_add {a b c : ℝ} (h : a ≤ b + c) (hc : 0 ≤ c) :
+    min 1 a ≤ min 1 b + c := by
+  rcases le_total b 1 with hb | hb
+  · rw [min_eq_right hb]; exact le_trans (min_le_right _ _) h
+  · rw [min_eq_left hb]
+    have := min_le_left (1 : ℝ) a
+    linarith
+
+omit [AdditiveDist ι] [ProperSpace ι] [BasePoint ι] in
+/-- **The jump size is carried along an order isomorphism, up to twice the
+uniform error.**  This is the heart of Proposition 3.5.3: if `x ∘ e` and `y`
+differ by at most `ε` on a window, then their jumps at corresponding points
+differ by at most `2ε` --- once for the value and once for the left limit, which
+is where `SkorokhodSpace.dist_leftLim_le_of_eventually` is spent.
+
+The window is read at `t` with room to spare (`dist t₀ t < R`, strictly), and
+the strictness is what the left limit costs: a left neighbourhood of a point on
+the boundary of the window leaves the window, so the hypothesis has to hold a
+little beyond `t`. -/
+theorem SkorokhodSpace.jumpSize_le_of_forall_dist_le (t₀ : ι) {R ε : ℝ} {x y : D(ι, E)}
+    {e : ι ≃o ι} (hε : 0 ≤ ε)
+    (hxy : ∀ s ∈ exhaustion t₀ R, dist (x.toFun (e s)) (y.toFun s) ≤ ε)
+    {t : ι} (ht : dist t₀ t < R) :
+    SkorokhodSpace.jumpSize y t ≤ SkorokhodSpace.jumpSize x (e t) + 2 * ε := by
+  have hRpos : 0 < R := lt_of_le_of_lt dist_nonneg ht
+  have hmemR : ∀ s : ι, dist t₀ s < R → s ∈ exhaustion t₀ R := by
+    intro s hs
+    rw [exhaustion, Metric.mem_closedBall, max_eq_left hRpos.le, dist_comm]
+    exact hs.le
+  have hopen : IsOpen {s : ι | dist t₀ s < R} :=
+    isOpen_lt (continuous_const.dist continuous_id) continuous_const
+  have hev : ∀ᶠ s in 𝓝[≤] t, dist (x.toFun (e s)) (y.toFun s) ≤ ε := by
+    filter_upwards [nhdsWithin_le_nhds (hopen.mem_nhds ht)] with s hs
+    exact hxy s (hmemR s hs)
+  have hval : dist (x.toFun (e t)) (y.toFun t) ≤ ε := hxy t (hmemR t ht)
+  have hlim := SkorokhodSpace.dist_leftLim_le_of_eventually x y e t hev
+  have htri : dist (y.toFun t) (Function.leftLim y.toFun t)
+      ≤ dist (x.toFun (e t)) (Function.leftLim x.toFun (e t)) + 2 * ε := by
+    have h1 : dist (y.toFun t) (Function.leftLim y.toFun t)
+        ≤ dist (y.toFun t) (x.toFun (e t))
+          + dist (x.toFun (e t)) (Function.leftLim y.toFun t) := dist_triangle _ _ _
+    have h2 : dist (x.toFun (e t)) (Function.leftLim y.toFun t)
+        ≤ dist (x.toFun (e t)) (Function.leftLim x.toFun (e t))
+          + dist (Function.leftLim x.toFun (e t)) (Function.leftLim y.toFun t) :=
+      dist_triangle _ _ _
+    have h3 : dist (y.toFun t) (x.toFun (e t)) ≤ ε := by rwa [dist_comm]
+    linarith
+  exact min_one_le_min_one_add htri (by linarith)
+
+omit [BasePoint ι] in
+/-- **The windowed jump is carried along a small order isomorphism**, at the
+price of twice the uniform error *and* of a window enlarged by the displacement.
+
+The enlargement is not an artefact of the proof: a jump of `y` inside the window
+of radius `u` sits at a point of `x` that `e` has moved by up to `η`, and that
+point can lie outside the window.  It is exactly this shift that the exponential
+weight of `SkorokhodSpace.jumpFunctional` absorbs, by the translation invariance
+of Lebesgue measure --- see the route recorded at
+`SkorokhodSpace.continuous_jumpFunctional`. -/
+theorem SkorokhodSpace.jumpWith_le_of_forall_dist_le (t₀ : ι) {R u η ε : ℝ} {x y : D(ι, E)}
+    {e : ι ≃o ι} (hε : 0 ≤ ε) (hη : 0 ≤ η) (hu : 0 < u) (hR : u + η < R)
+    (hmove : ∀ s ∈ exhaustion t₀ R, dist (e s) s ≤ η)
+    (hxy : ∀ s ∈ exhaustion t₀ R, dist (x.toFun (e s)) (y.toFun s) ≤ ε) :
+    SkorokhodSpace.jumpWith t₀ u y ≤ SkorokhodSpace.jumpWith t₀ (u + η) x + 2 * ε := by
+  have : Nonempty ι := ⟨t₀⟩
+  simp only [SkorokhodSpace.jumpWith]
+  refine ciSup_le fun t => ?_
+  set s : ι := clamp t₀ u t with hsdef
+  have hsmem : s ∈ exhaustion t₀ u := clamp_mem_exhaustion t₀ u t
+  have hds : dist t₀ s ≤ u := by
+    rw [exhaustion, Metric.mem_closedBall, max_eq_left hu.le] at hsmem
+    rwa [dist_comm]
+  have hsR : dist t₀ s < R := lt_of_le_of_lt hds (by linarith)
+  have hstep := SkorokhodSpace.jumpSize_le_of_forall_dist_le t₀ hε hxy hsR
+  have hRpos : 0 < R := lt_of_le_of_lt dist_nonneg hsR
+  have hsRmem : s ∈ exhaustion t₀ R := by
+    rw [exhaustion, Metric.mem_closedBall, max_eq_left hRpos.le, dist_comm]
+    exact hsR.le
+  have hmv : dist (e s) s ≤ η := hmove s hsRmem
+  have hes : e s ∈ exhaustion t₀ (u + η) := by
+    rw [exhaustion, Metric.mem_closedBall, max_eq_left (by linarith : (0 : ℝ) ≤ u + η), dist_comm]
+    have h1 : dist t₀ (e s) ≤ dist t₀ s + dist s (e s) := dist_triangle _ _ _
+    have h2 : dist s (e s) = dist (e s) s := dist_comm _ _
+    linarith
+  have hsup := SkorokhodSpace.jumpSize_le_jumpWith t₀ (u + η) x hes
+  simp only [SkorokhodSpace.jumpWith] at hsup
+  linarith
+
 /-- **Ethier--Kurtz, Proposition 3.5.3: the jump functional is continuous on
 `D(ι, E)`.**
 
-This is the one statement of the block whose proof is the work, and the route is
-the one the shape of `jumpFunctional` was chosen for.  Let `xₙ → x`, and pick by
-`SkorokhodSpace.exists_orderIso_dist_lt_of_intDist_lt` time changes `λₙ` with
-`TimeChange.norm λₙ → 0` and the windowed suprema of `dist (xₙ (λₙ t)) (x t)`
-going to `0`.  The jump is carried along a time change exactly -- a time change
-is an order isomorphism, so it maps left limits to left limits and
-`jumpSize xₙ (λₙ t) = SkorokhodSpace.jumpSize (xₙ ∘ λₙ) t` -- so the whole content is that a
-uniformly small perturbation moves `jumpWith` by little **at almost every
-radius**, which is where the exponential average is spent: the radii at which
-the window boundary meets a jump of `x` are countably many, hence Lebesgue null,
-and the integral does not see them.  That is the same argument by which
-`SkorokhodSpace.ae_summable_min_one_distWith` makes the metric of Milestone 4
-work, and it is why the two are written in one shape.
+The perturbation half of the proof stands above and the metric half stands at
+`SkorokhodSpace.exists_orderIso_forall_dist_lt_of_intDist_lt`; what this
+declaration still owes is the integral assembly of the two, and the assembly is
+written out here so that no run has to find it again.
+
+Fix `x` and `ε > 0`.  Choose `η > 0` with `Real.exp η - 1 < ε / 8`, then `R` with
+`Real.exp (-(R - η)) < ε / 8`, then the `δ` that
+`exists_orderIso_forall_dist_lt_of_intDist_lt` returns for the window `R` and the
+accuracy `min (ε / 8) η`.  For `y` with `dist y x < δ` this gives one order
+isomorphism `e` with `dist (e t) t < η`, `dist (e.symm t) t < η` and
+`dist (x (e t)) (y t) < ε / 8` on the window, and
+`SkorokhodSpace.jumpWith_le_of_forall_dist_le` turns it into
+
+    jumpWith u y ≤ jumpWith (u + η) x + ε / 4    for `0 < u` and `u + η < R`,
+
+with the mirror inequality coming from the same lemma applied to `e.symm` --- for
+which `dist (e.symm t) t < η` is exactly the clause the windowed approximation
+lemma carries.
+
+**And here the exponential weight pays for itself, which is the one point on
+which this route differs from the one this declaration announced until
+2026-09-24.**  The announced route was to control `jumpWith` at *almost every*
+radius, the bad radii being the countably many at which the window boundary
+meets a jump; that is the argument of
+`SkorokhodSpace.ae_summable_min_one_distWith`, and it is **not needed here**.
+The shift of the window by `η` is a *translation* of the radius, and against
+`Real.exp (-u) du` a translation is a factor:
+
+    ∫_{u > 0} exp (-u) * jumpWith (u + η) x du = exp η * ∫_{u > η} exp (-u) * jumpWith u x du
+      ≤ exp η * jumpFunctional x.
+
+So `jumpFunctional y ≤ exp η * jumpFunctional x + ε / 4 + exp (-(R - η))`, and
+since `jumpFunctional x ≤ 1` by `SkorokhodSpace.jumpFunctional_le_one` the first
+term is within `ε / 8` of `jumpFunctional x`.  The mirror inequality is the same
+computation read the other way, `exp (-η) * jumpFunctional x ≤ jumpFunctional y +
+ε / 4 + exp (-(R - η))`.  No null set of radii is ever mentioned, and the
+monotonicity of `SkorokhodSpace.monotone_jumpWith` is spent only on the tail
+bound `jumpWith ≤ 1`.
 
 `SecondCountableTopology E` is read here and in nothing above it: it is what the
 metric instance `SkorokhodSpace.instMetricSpace` asks for, and the statements
@@ -7313,6 +7491,98 @@ theorem SkorokhodSpace.exists_orderIso_dist_lt_of_intDist_lt [SecondCountableTop
   rw [happ, clamp_eq_self hsu] at hterm
   have : dist (f.toFun s) (g.toFun s') < c := by linarith
   exact this.trans_le hcε
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- **The windowed reading of the approximation lemma**, and the metric half of
+Ethier--Kurtz Proposition 3.5.3.
+
+`SkorokhodSpace.exists_orderIso_dist_lt_of_intDist_lt` controls **one** point of
+the index, with a `δ` that depends on that point; the jump functional integrates
+over a whole window at once and needs the control to be uniform there.  It is,
+and for `δ` it costs nothing but reading `TimeChange.dist_le_of_norm_le` on the
+window instead of at a point: that lemma is already uniform, and
+`SkorokhodSpace.dist_le_distWith` is a supremum over the index to begin with.
+The pointwise statement is therefore not weaker by necessity --- it is weaker
+because a point is all that Milestone 6 consumes.
+
+The order isomorphism is exposed **on both sides**, as in the pointwise lemma
+and for a different reason: the jump estimate has to be run once with `e` and
+once with `e.symm`, since a bound on `dist (f (e t)) (g t)` is a bound on
+`dist (g (e.symm s)) (f s)` only after the substitution `s = e t`, and that
+substitution moves the window by the displacement of `e.symm`. -/
+theorem SkorokhodSpace.exists_orderIso_forall_dist_lt_of_intDist_lt [SecondCountableTopology E]
+    (t₀ : ι) {R ε : ℝ} (hR : 0 < R) (hε : 0 < ε) :
+    ∃ δ : ℝ, 0 < δ ∧ ∀ f g : D(ι, E), SkorokhodSpace.intDist t₀ f g < δ →
+      ∃ e : ι ≃o ι, (∀ t ∈ exhaustion t₀ R, dist (e t) t < ε) ∧
+        (∀ t ∈ exhaustion t₀ R, dist (e.symm t) t < ε) ∧
+        (∀ t ∈ exhaustion t₀ R, dist (f.toFun (e t)) (g.toFun t) < ε) := by
+  set c : ℝ := min ε 1 with hc
+  have hc0 : 0 < c := lt_min hε one_pos
+  have hc1 : c ≤ 1 := min_le_right _ _
+  have hcε : c ≤ ε := min_le_left _ _
+  set δ₁ : ℝ := Real.log (1 + c / (4 * (R + 1))) with hδ₁
+  have hq0 : 0 < c / (4 * (R + 1)) := by positivity
+  have hδ₁0 : 0 < δ₁ := Real.log_pos (by linarith)
+  have hexp : Real.exp δ₁ = 1 + c / (4 * (R + 1)) := Real.exp_log (by linarith)
+  set M : ℝ := R + 1 with hM
+  have hM0 : 0 < M := by rw [hM]; linarith
+  set δ₂ : ℝ := Real.exp (-(M + 1)) * (c / 2) with hδ₂
+  have hδ₂0 : 0 < δ₂ := by positivity
+  refine ⟨min δ₁ δ₂, lt_min hδ₁0 hδ₂0, fun f g hfg => ?_⟩
+  simp only [SkorokhodSpace.intDist] at hfg
+  obtain ⟨l, hl⟩ := exists_lt_of_ciInf_lt hfg
+  have hnorm : (l : TimeChange ι).norm ≤ δ₁ :=
+    le_trans ((le_max_left _ _).trans hl.le) (min_le_left _ _)
+  have hint : SkorokhodSpace.intWith t₀ (l : TimeChange ι) f g < δ₂ :=
+    lt_of_le_of_lt (le_max_right _ _) (hl.trans_le (min_le_right _ _))
+  obtain ⟨u, hu, hdist⟩ :=
+    SkorokhodSpace.exists_radius_distWith_lt (M := M) (c := c / 2) t₀ (l : TimeChange ι) f g
+      hM0 (by linarith) (by linarith) (by rw [hδ₂] at hint; exact hint)
+  have hu0 : 0 < u := hM0.trans hu.1
+  have huR : R + 1 < u := by have := hu.1; rw [hM] at this; exact this
+  have hlfix : (l : TimeChange ι).toOrderIso t₀ = t₀ := l.2
+  have hkey : (Real.exp δ₁ - 1) * (2 * R) < c / 2 := by
+    rw [hexp]
+    have h4 : (0 : ℝ) < 4 * (R + 1) := by linarith
+    have hs : 1 + c / (4 * (R + 1)) - 1 = c / (4 * (R + 1)) := by ring
+    rw [hs, div_mul_eq_mul_div, div_lt_iff₀ h4]
+    nlinarith
+  have hmove : ∀ t ∈ exhaustion t₀ R, dist ((l : TimeChange ι).toOrderIso t) t < c / 2 := by
+    intro t ht
+    have h := TimeChange.dist_le_of_norm_le (l := (l : TimeChange ι)) (γ := δ₁) t₀ hR.le
+      hlfix hnorm ht
+    linarith
+  have hinvfix : ((l : TimeChange ι)⁻¹).toOrderIso t₀ = t₀ :=
+    (l : TimeChange ι).toOrderIso.symm_apply_eq.2 hlfix.symm
+  have hmoveinv : ∀ t ∈ exhaustion t₀ R,
+      dist ((l : TimeChange ι).toOrderIso.symm t) t < c / 2 := by
+    intro t ht
+    have h := TimeChange.dist_le_of_norm_le (l := (l : TimeChange ι)⁻¹) (γ := δ₁) t₀ hR.le
+      hinvfix (by rwa [TimeChange.norm_inv]) ht
+    have heq : ((l : TimeChange ι)⁻¹).toOrderIso t = (l : TimeChange ι).toOrderIso.symm t := rfl
+    rw [heq] at h
+    linarith
+  refine ⟨(l : TimeChange ι).toOrderIso, fun t ht => ?_, fun t ht => ?_, fun t ht => ?_⟩
+  · have := hmove t ht
+    linarith
+  · have := hmoveinv t ht
+    linarith
+  · have hmv := hmove t ht
+    rw [exhaustion, Metric.mem_closedBall, max_eq_left hR.le] at ht
+    have hdR : dist t₀ t ≤ R := by rw [dist_comm]; exact ht
+    have htu : t ∈ exhaustion t₀ u := by
+      rw [exhaustion, Metric.mem_closedBall, max_eq_left hu0.le, dist_comm]
+      linarith
+    have hlt : (l : TimeChange ι).toOrderIso t ∈ exhaustion t₀ u := by
+      rw [exhaustion, Metric.mem_closedBall, max_eq_left hu0.le, dist_comm]
+      have h1 : dist t₀ ((l : TimeChange ι).toOrderIso t)
+          ≤ dist t₀ t + dist t ((l : TimeChange ι).toOrderIso t) := dist_triangle _ _ _
+      have h2 : dist t ((l : TimeChange ι).toOrderIso t)
+          = dist ((l : TimeChange ι).toOrderIso t) t := dist_comm _ _
+      linarith
+    have hterm := SkorokhodSpace.dist_le_distWith t₀ u (l : TimeChange ι) f g t
+    rw [clamp_eq_self htu, clamp_eq_self hlt] at hterm
+    linarith
 
 omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
 /-- The one-sided reading of `exists_orderIso_dist_lt_of_intDist_lt`: paths close
