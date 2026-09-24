@@ -1,10 +1,10 @@
 # Formalisierungs-Inventar — Status
 
-- **Letzter Lauf (UTC):** 20260924T210301Z
-- **Zustand:** fehler
-- **Notiz:** claude endete mit Code 1 (siehe logs/run_20260924T210301Z.log)
+- **Letzter Lauf (UTC):** 20260924T220301Z
+- **Zustand:** laeuft
+- **Notiz:** Lauf gestartet
 - **Host:** fisher
-- **Laeufe bisher:** 361
+- **Laeufe bisher:** 362
 
 Logs unter `logs/`. Der inhaltliche Stand steht in
 `Journal/Blog/MartingaleProblem/Facts/INVENTAR.md`.
