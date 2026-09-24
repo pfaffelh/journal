@@ -7227,86 +7227,155 @@ theorem SkorokhodSpace.jumpWith_le_of_forall_dist_le (t₀ : ι) {R u η ε : �
   simp only [SkorokhodSpace.jumpWith] at hsup
   linarith
 
-/-- **Ethier--Kurtz, Proposition 3.5.3: the jump functional is continuous on
-`D(ι, E)`.**
+omit [BasePoint ι] in
+/-- **The shifted integrand is integrable**, with the same majorant `exp (-u)`
+as `SkorokhodSpace.integrableOn_jumpFunctional`.  The shift in the radius is
+invisible to the bound `jumpWith ≤ 1`, and it costs the measurability nothing:
+a monotone function of the radius composed with a translation is monotone, so
+`SkorokhodSpace.measurable_jumpWith` carries over unchanged and no hypothesis on
+`E` is picked up. -/
+theorem SkorokhodSpace.integrableOn_jumpWith_add (t₀ : ι) (x : D(ι, E)) (η : ℝ) :
+    IntegrableOn (fun u : ℝ => Real.exp (-u) * SkorokhodSpace.jumpWith t₀ (u + η) x)
+      (Set.Ioi (0 : ℝ)) := by
+  refine MeasureTheory.Integrable.mono' (integrableOn_exp_neg_Ioi 0)
+    (((Real.measurable_exp.comp measurable_neg).mul
+      ((SkorokhodSpace.measurable_jumpWith t₀ x).comp
+        (measurable_id.add_const η))).aestronglyMeasurable.restrict) ?_
+  filter_upwards with u
+  rw [Real.norm_eq_abs,
+    abs_of_nonneg (mul_nonneg (Real.exp_pos _).le (SkorokhodSpace.jumpWith_nonneg _ _ _))]
+  calc Real.exp (-u) * SkorokhodSpace.jumpWith t₀ (u + η) x ≤ Real.exp (-u) * 1 :=
+        mul_le_mul_of_nonneg_left (SkorokhodSpace.jumpWith_le_one _ _ _) (Real.exp_pos _).le
+    _ = Real.exp (-u) := mul_one _
 
-The perturbation half of the proof stands above and the metric half stands at
-`SkorokhodSpace.exists_orderIso_forall_dist_lt_of_intDist_lt`; what this
-declaration still owes is the integral assembly of the two, and the assembly is
-written out here so that no run has to find it again.
+omit [BasePoint ι] in
+/-- **Shifting the window by `η` is multiplying by `Real.exp η`.**
 
-Fix `x` and `ε > 0`.  Choose `η > 0` with `Real.exp η - 1 < ε / 8`, then `R` with
-`Real.exp (-(R - η)) < ε / 8`, then the `δ` that
-`exists_orderIso_forall_dist_lt_of_intDist_lt` returns for the window `R` and the
-accuracy `min (ε / 8) η`.  For `y` with `dist y x < δ` this gives one order
-isomorphism `e` with `dist (e t) t < η`, `dist (e.symm t) t < η` and
-`dist (x (e t)) (y t) < ε / 8` on the window, and
-`SkorokhodSpace.jumpWith_le_of_forall_dist_le` turns it into
+This is the identity that turns Proposition 3.5.3 into an integral computation,
+and it is worth saying plainly what it replaces.  A time change moves the window
+boundary by `η`, so the only estimate available for `jumpWith t₀ u y` is one
+about `jumpWith t₀ (u + η) x`; against the weight `exp (-u) du` a translation of
+the radius is a **factor**, by the translation invariance of Lebesgue measure.
+No null set of radii is mentioned here and none is needed --- the route through
+"almost every radius", which is the one
+`SkorokhodSpace.ae_summable_min_one_distWith` takes for the metric of Milestone 4,
+is a different argument for a different purpose; see the note at
+`SkorokhodSpace.continuous_jumpFunctional`.
 
-    jumpWith u y ≤ jumpWith (u + η) x + ε / 4    for `0 < u` and `u + η < R`,
+The inequality, rather than an equality, enters at exactly one place:
+`Set.Ioi η ⊆ Set.Ioi 0`.  The substitution itself is an equality onto the smaller
+half line, and the nonnegativity of the integrand gives the rest. -/
+theorem SkorokhodSpace.integral_jumpWith_add_le (t₀ : ι) (x : D(ι, E)) {η : ℝ} (hη : 0 ≤ η) :
+    ∫ u in Set.Ioi (0 : ℝ), Real.exp (-u) * SkorokhodSpace.jumpWith t₀ (u + η) x
+      ≤ Real.exp η * SkorokhodSpace.jumpFunctional t₀ x := by
+  have hstep : ∫ u in Set.Ioi (0 : ℝ), Real.exp (-u) * SkorokhodSpace.jumpWith t₀ (u + η) x
+      = Real.exp η * ∫ u in Set.Ioi (0 : ℝ),
+          Real.exp (-(u + η)) * SkorokhodSpace.jumpWith t₀ (u + η) x := by
+    rw [← MeasureTheory.integral_const_mul]
+    refine MeasureTheory.setIntegral_congr_fun measurableSet_Ioi fun u _ => ?_
+    rw [← mul_assoc, ← Real.exp_add]
+    congr 2
+    ring
+  have hsub : ∫ u in Set.Ioi (0 : ℝ),
+        Real.exp (-(u + η)) * SkorokhodSpace.jumpWith t₀ (u + η) x
+      = ∫ v in Set.Ioi η, Real.exp (-v) * SkorokhodSpace.jumpWith t₀ v x := by
+    have hpre : (fun u : ℝ => u + η) ⁻¹' Set.Ioi η = Set.Ioi (0 : ℝ) := by
+      ext u; simp
+    have h := (measurePreserving_add_right (volume : Measure ℝ) η).setIntegral_preimage_emb
+      (measurableEmbedding_addRight η)
+      (fun v : ℝ => Real.exp (-v) * SkorokhodSpace.jumpWith t₀ v x) (Set.Ioi η)
+    rw [hpre] at h
+    exact h
+  have hmono : ∫ v in Set.Ioi η, Real.exp (-v) * SkorokhodSpace.jumpWith t₀ v x
+      ≤ SkorokhodSpace.jumpFunctional t₀ x := by
+    refine MeasureTheory.setIntegral_mono_set
+      (SkorokhodSpace.integrableOn_jumpFunctional t₀ x) ?_ ?_
+    · filter_upwards with v using
+        mul_nonneg (Real.exp_pos _).le (SkorokhodSpace.jumpWith_nonneg _ _ _)
+    · exact (Set.Ioi_subset_Ioi hη).eventuallyLE
+  rw [hstep, hsub]
+  exact mul_le_mul_of_nonneg_left hmono (Real.exp_pos _).le
 
-with the mirror inequality coming from the same lemma applied to `e.symm` --- for
-which `dist (e.symm t) t < η` is exactly the clause the windowed approximation
-lemma carries.
+omit [BasePoint ι] in
+/-- **From a windowed comparison of `jumpWith` to a comparison of `J`.**
 
-**And here the exponential weight pays for itself, which is the one point on
-which this route differs from the one this declaration announced until
-2026-09-24.**  The announced route was to control `jumpWith` at *almost every*
-radius, the bad radii being the countably many at which the window boundary
-meets a jump; that is the argument of
-`SkorokhodSpace.ae_summable_min_one_distWith`, and it is **not needed here**.
-The shift of the window by `η` is a *translation* of the radius, and against
-`Real.exp (-u) du` a translation is a factor:
+The hypothesis is read only on `Set.Ioc 0 a`; beyond `a` the truncation
+`SkorokhodSpace.jumpWith_le_one` carries the integral by itself, and what that
+costs is the tail `Real.exp (-a)` of the weight.  This is the only place where
+the truncation at `1` in `SkorokhodSpace.jumpSize` earns its keep in the
+continuity proof.
 
-    ∫_{u > 0} exp (-u) * jumpWith (u + η) x du = exp η * ∫_{u > η} exp (-u) * jumpWith u x du
-      ≤ exp η * jumpFunctional x.
+**The window parameter is `a` and not the radius `R` of the approximation
+lemma**, and that is deliberate: a consumer has to leave room between the two,
+since `SkorokhodSpace.jumpWith_le_of_forall_dist_le` asks for `u + η < R`
+strictly while the split of `Set.Ioi 0` at `a` hands it `u ≤ a`.  Stating the
+lemma in `a` puts that arithmetic at the call site, where the constants are
+chosen anyway, instead of burying it here. -/
+theorem SkorokhodSpace.jumpFunctional_le_of_forall_jumpWith_le (t₀ : ι) {x y : D(ι, E)}
+    {η a c : ℝ} (hη : 0 ≤ η) (hc : 0 ≤ c) (ha : 0 < a)
+    (h : ∀ u : ℝ, 0 < u → u ≤ a →
+      SkorokhodSpace.jumpWith t₀ u y ≤ SkorokhodSpace.jumpWith t₀ (u + η) x + c) :
+    SkorokhodSpace.jumpFunctional t₀ y
+      ≤ Real.exp η * SkorokhodSpace.jumpFunctional t₀ x + c + Real.exp (-a) := by
+  have hiy := SkorokhodSpace.integrableOn_jumpFunctional t₀ y
+  have hy1 : IntegrableOn (fun u : ℝ => Real.exp (-u) * SkorokhodSpace.jumpWith t₀ u y)
+      (Set.Ioc (0 : ℝ) a) := hiy.mono_set Set.Ioc_subset_Ioi_self
+  have hy2 : IntegrableOn (fun u : ℝ => Real.exp (-u) * SkorokhodSpace.jumpWith t₀ u y)
+      (Set.Ioi a) := hiy.mono_set (Set.Ioi_subset_Ioi ha.le)
+  have hdisj : Disjoint (Set.Ioc (0 : ℝ) a) (Set.Ioi a) :=
+    Set.disjoint_left.2 fun u hu hu' => absurd hu' (not_lt.2 hu.2)
+  have hsplit : SkorokhodSpace.jumpFunctional t₀ y
+      = (∫ u in Set.Ioc (0 : ℝ) a, Real.exp (-u) * SkorokhodSpace.jumpWith t₀ u y)
+        + ∫ u in Set.Ioi a, Real.exp (-u) * SkorokhodSpace.jumpWith t₀ u y := by
+    rw [SkorokhodSpace.jumpFunctional, ← Set.Ioc_union_Ioi_eq_Ioi ha.le,
+      MeasureTheory.setIntegral_union hdisj measurableSet_Ioi hy1 hy2]
+  have htail : ∫ u in Set.Ioi a, Real.exp (-u) * SkorokhodSpace.jumpWith t₀ u y
+      ≤ Real.exp (-a) := by
+    refine le_trans (MeasureTheory.setIntegral_mono_on hy2 (integrableOn_exp_neg_Ioi a)
+      measurableSet_Ioi fun u _ => ?_) (le_of_eq (integral_exp_neg_Ioi a))
+    calc Real.exp (-u) * SkorokhodSpace.jumpWith t₀ u y ≤ Real.exp (-u) * 1 :=
+          mul_le_mul_of_nonneg_left (SkorokhodSpace.jumpWith_le_one _ _ _) (Real.exp_pos _).le
+      _ = Real.exp (-u) := mul_one _
+  have hix := SkorokhodSpace.integrableOn_jumpWith_add t₀ x η
+  have hrhs1 : IntegrableOn
+      (fun u : ℝ => Real.exp (-u) * SkorokhodSpace.jumpWith t₀ (u + η) x)
+      (Set.Ioc (0 : ℝ) a) := hix.mono_set Set.Ioc_subset_Ioi_self
+  have hrhs2 : IntegrableOn (fun u : ℝ => c * Real.exp (-u)) (Set.Ioc (0 : ℝ) a) :=
+    ((integrableOn_exp_neg_Ioi 0).mono_set Set.Ioc_subset_Ioi_self).const_mul c
+  have hbody : ∫ u in Set.Ioc (0 : ℝ) a, Real.exp (-u) * SkorokhodSpace.jumpWith t₀ u y
+      ≤ (∫ u in Set.Ioc (0 : ℝ) a, Real.exp (-u) * SkorokhodSpace.jumpWith t₀ (u + η) x)
+        + ∫ u in Set.Ioc (0 : ℝ) a, c * Real.exp (-u) := by
+    rw [← MeasureTheory.integral_add hrhs1 hrhs2]
+    refine MeasureTheory.setIntegral_mono_on hy1 (hrhs1.add hrhs2) measurableSet_Ioc fun u hu => ?_
+    have hstep := h u hu.1 hu.2
+    nlinarith [(Real.exp_pos (-u)).le, Real.exp_pos (-u)]
+  have hbody1 : ∫ u in Set.Ioc (0 : ℝ) a, Real.exp (-u) * SkorokhodSpace.jumpWith t₀ (u + η) x
+      ≤ Real.exp η * SkorokhodSpace.jumpFunctional t₀ x := by
+    refine le_trans ?_ (SkorokhodSpace.integral_jumpWith_add_le t₀ x hη)
+    refine MeasureTheory.setIntegral_mono_set hix ?_ ?_
+    · filter_upwards with u using
+        mul_nonneg (Real.exp_pos _).le (SkorokhodSpace.jumpWith_nonneg _ _ _)
+    · exact Set.Ioc_subset_Ioi_self.eventuallyLE
+  have hbody2 : ∫ u in Set.Ioc (0 : ℝ) a, c * Real.exp (-u) ≤ c := by
+    have hconst : ∫ u in Set.Ioi (0 : ℝ), c * Real.exp (-u) = c := by
+      rw [MeasureTheory.integral_const_mul, integral_exp_neg_Ioi_zero, mul_one]
+    have hle : ∫ u in Set.Ioc (0 : ℝ) a, c * Real.exp (-u)
+        ≤ ∫ u in Set.Ioi (0 : ℝ), c * Real.exp (-u) := by
+      refine MeasureTheory.setIntegral_mono_set ((integrableOn_exp_neg_Ioi 0).const_mul c) ?_ ?_
+      · filter_upwards with u using mul_nonneg hc (Real.exp_pos _).le
+      · exact Set.Ioc_subset_Ioi_self.eventuallyLE
+    rw [hconst] at hle
+    exact hle
+  rw [hsplit]
+  linarith
 
-So `jumpFunctional y ≤ exp η * jumpFunctional x + ε / 4 + exp (-(R - η))`, and
-since `jumpFunctional x ≤ 1` by `SkorokhodSpace.jumpFunctional_le_one` the first
-term is within `ε / 8` of `jumpFunctional x`.  The mirror inequality is the same
-computation read the other way, `exp (-η) * jumpFunctional x ≤ jumpFunctional y +
-ε / 4 + exp (-(R - η))`.  No null set of radii is ever mentioned, and the
-monotonicity of `SkorokhodSpace.monotone_jumpWith` is spent only on the tail
-bound `jumpWith ≤ 1`.
-
-`SecondCountableTopology E` is read here and in nothing above it: it is what the
-metric instance `SkorokhodSpace.instMetricSpace` asks for, and the statements
-about `jumpFunctional` as a *function* do without it. -/
-theorem SkorokhodSpace.continuous_jumpFunctional [SecondCountableTopology E] :
-    Continuous (SkorokhodSpace.jumpFunctional (basePoint : ι) : D(ι, E) → ℝ) := sorry
-
-/-- The continuous paths are the zero set of a continuous function, hence
-closed. -/
-theorem SkorokhodSpace.isClosed_setOf_continuous [SecondCountableTopology E] :
-    IsClosed {x : D(ι, E) | Continuous x.toFun} := by
-  have hpre : {x : D(ι, E) | Continuous x.toFun}
-      = SkorokhodSpace.jumpFunctional (basePoint : ι) ⁻¹' {0} := by
-    ext x
-    simp [SkorokhodSpace.jumpFunctional_eq_zero_iff]
-  rw [hpre]
-  exact isClosed_singleton.preimage SkorokhodSpace.continuous_jumpFunctional
-
-/-- **The continuous paths form a closed subspace of `D(ι, E)`**, the last point
-of Milestone 5, and Section 3.10 delivers it as a corollary rather than as a
-separate argument: `C(ι, E)` sits in `D(ι, E)` as the zero set of
-`jumpFunctional`.
-
-The range and the set of paths with continuous `toFun` are the same set -- a
-càdlàg path with a continuous underlying function *is* the image of that
-function -- and stating it as a range is what makes it the subspace the
-milestone names. -/
-theorem SkorokhodSpace.isClosed_range_continuous [SecondCountableTopology E] :
-    IsClosed (Set.range fun f : C(ι, E) => (⟨f, f.continuous.isCadlag⟩ : D(ι, E))) := by
-  have hrange : (Set.range fun f : C(ι, E) => (⟨f, f.continuous.isCadlag⟩ : D(ι, E)))
-      = {x : D(ι, E) | Continuous x.toFun} := by
-    ext x
-    constructor
-    · rintro ⟨f, rfl⟩
-      exact f.continuous
-    · intro h
-      exact ⟨⟨x.toFun, h⟩, rfl⟩
-  rw [hrange]
-  exact SkorokhodSpace.isClosed_setOf_continuous
+/-! **Where the continuity of `J` itself stands.**  `SkorokhodSpace.continuous_jumpFunctional`
+and the two corollaries of Section 3.10 --- `SkorokhodSpace.isClosed_setOf_continuous` and
+`SkorokhodSpace.isClosed_range_continuous`, the last point of Milestone 5 --- are
+stated at the end of Milestone 6, because the metric half of Proposition 3.5.3 is
+`SkorokhodSpace.exists_orderIso_forall_dist_lt_of_intDist_lt` and that rests on
+`SkorokhodSpace.exists_radius_distWith_lt`.  Everything in this subsection is
+independent of Milestone 6 and reads no structure on `E` beyond its metric. -/
 
 /-! ## Milestone 6: the Borel structure
 
@@ -7584,6 +7653,171 @@ theorem SkorokhodSpace.exists_orderIso_forall_dist_lt_of_intDist_lt [SecondCount
     rw [clamp_eq_self htu, clamp_eq_self hlt] at hterm
     linarith
 
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **Ethier--Kurtz, Proposition 3.5.3: the jump functional is continuous on
+`D(ι, E)`.**
+
+The proof is the assembly of two halves that stand apart: the perturbation half
+is `SkorokhodSpace.jumpWith_le_of_forall_dist_le`, and the metric half ---
+turning `SkorokhodSpace.intDist` into an order isomorphism with a bound on its
+displacement and on the values --- is
+`SkorokhodSpace.exists_orderIso_forall_dist_lt_of_intDist_lt` just above.  That
+is why this declaration sits in Milestone 6 although it is Section 3.10 and its
+corollary is the last point of Milestone 5: the metric half rests on
+`SkorokhodSpace.exists_radius_distWith_lt`, which is Milestone 6.
+
+The constants, written out so that no run has to find them again.  Given `x` and
+`ε > 0`, put `η = Real.log (1 + ε / 16)`, so that `Real.exp η - 1 = ε / 16`;
+`a = max 1 (Real.log (16 / ε))`, so that `Real.exp (-a) ≤ ε / 16`;
+`R = a + 3 * η + 1`; and `α = min (ε / 16) η` for the accuracy of the
+approximation lemma on the window of radius `R`.  For `y` with `dist y x < δ`
+this yields one order isomorphism `e` with `dist (e t) t < α`,
+`dist (e.symm t) t < α` and `dist (x (e t)) (y t) < α` on that window, and
+`SkorokhodSpace.jumpWith_le_of_forall_dist_le` turns it into
+
+    jumpWith u y ≤ jumpWith (u + η) x + 2 * α    for `0 < u ≤ a`,
+
+since `u + η ≤ a + η < R`.  `SkorokhodSpace.jumpFunctional_le_of_forall_jumpWith_le`
+integrates that, and `SkorokhodSpace.integral_jumpWith_add_le` pays for the shift
+in the radius, leaving
+
+    jumpFunctional y ≤ Real.exp η * jumpFunctional x + 2 * α + Real.exp (-a),
+
+which by `SkorokhodSpace.jumpFunctional_le_one` is within `ε / 4` of
+`jumpFunctional x`.
+
+**The two places where the mirror inequality is not the reflection of the
+first.**  Running the same estimate with `e.symm` needs
+`dist (y (e.symm s)) (x s) ≤ α`, and that is the hypothesis after the
+substitution `s = e t`; the substitution moves the window by the displacement of
+`e.symm`, so the mirror is read on `exhaustion t₀ (R - η)` and not on
+`exhaustion t₀ R`.  This is the reason
+`SkorokhodSpace.exists_orderIso_forall_dist_lt_of_intDist_lt` carries the clause
+about `e.symm` separately, and the reason `R` is chosen with `3 * η` of room
+rather than `η`.
+
+**And here the exponential weight pays for itself, which is the one point on
+which this route differs from the one this declaration announced until
+2026-09-24.**  The announced route was to control `jumpWith` at *almost every*
+radius, the bad radii being the countably many at which the window boundary
+meets a jump; that is the argument of
+`SkorokhodSpace.ae_summable_min_one_distWith`, and it is **not needed here**.
+The shift of the window by `η` is a *translation* of the radius, and against
+`Real.exp (-u) du` a translation is a factor --- see
+`SkorokhodSpace.integral_jumpWith_add_le`.  No null set of radii is ever
+mentioned, and `SkorokhodSpace.monotone_jumpWith` is spent on the measurability
+of the integrand and on nothing else in this proof.
+
+`SecondCountableTopology E` is read here and nowhere in the jump functional
+block above it: it is what the metric instance `SkorokhodSpace.instMetricSpace`
+asks for, and the statements about `jumpFunctional` as a *function* do without
+it. -/
+theorem SkorokhodSpace.continuous_jumpFunctional [SecondCountableTopology E] :
+    Continuous (SkorokhodSpace.jumpFunctional (basePoint : ι) : D(ι, E) → ℝ) := by
+  set t₀ : ι := basePoint with ht₀
+  refine Metric.continuous_iff.2 fun x ε hε => ?_
+  set η : ℝ := Real.log (1 + ε / 16) with hηdef
+  have hη0 : 0 < η := Real.log_pos (by linarith)
+  have hηexp : Real.exp η = 1 + ε / 16 := Real.exp_log (by linarith)
+  set a : ℝ := max 1 (Real.log (16 / ε)) with hadef
+  have ha0 : 0 < a := lt_of_lt_of_le zero_lt_one (le_max_left _ _)
+  have haexp : Real.exp (-a) ≤ ε / 16 := by
+    have h1 : Real.log (16 / ε) ≤ a := le_max_right _ _
+    have h2 : Real.exp (-a) ≤ Real.exp (-Real.log (16 / ε)) :=
+      Real.exp_le_exp.2 (by linarith)
+    have h3 : Real.exp (-Real.log (16 / ε)) = ε / 16 := by
+      rw [Real.exp_neg, Real.exp_log (by positivity)]
+      field_simp
+    linarith
+  set R : ℝ := a + 3 * η + 1 with hRdef
+  have hR0 : 0 < R := by rw [hRdef]; linarith
+  set α : ℝ := min (ε / 16) η with hαdef
+  have hα0 : 0 < α := lt_min (by linarith) hη0
+  have hαη : α ≤ η := min_le_right _ _
+  obtain ⟨δ, hδ0, hδ⟩ :=
+    SkorokhodSpace.exists_orderIso_forall_dist_lt_of_intDist_lt (E := E) t₀ hR0 hα0
+  refine ⟨δ, hδ0, fun y hy => ?_⟩
+  have hxy : SkorokhodSpace.intDist t₀ x y < δ := by
+    rw [← SkorokhodSpace.dist_eq, dist_comm, SkorokhodSpace.dist_eq]
+    exact hy
+  obtain ⟨e, hmove, hmoveinv, hval⟩ := hδ x y hxy
+  have hRη : (0 : ℝ) < R - η := by rw [hRdef]; linarith
+  have hsub : ∀ s : ι, s ∈ exhaustion t₀ (R - η) → s ∈ exhaustion t₀ R := by
+    intro s hs
+    rw [exhaustion, Metric.mem_closedBall, max_eq_left hRη.le] at hs
+    rw [exhaustion, Metric.mem_closedBall, max_eq_left hR0.le]
+    linarith
+  have hfwd : SkorokhodSpace.jumpFunctional t₀ y
+      ≤ Real.exp η * SkorokhodSpace.jumpFunctional t₀ x + 2 * α + Real.exp (-a) := by
+    refine SkorokhodSpace.jumpFunctional_le_of_forall_jumpWith_le t₀ hη0.le
+      (by linarith) ha0 fun u hu hua => ?_
+    refine SkorokhodSpace.jumpWith_le_of_forall_dist_le t₀ hα0.le hη0.le hu
+      (by rw [hRdef]; linarith) (fun s hs => (hmove s hs).le.trans hαη) (fun s hs => (hval s hs).le)
+  have hbwd : SkorokhodSpace.jumpFunctional t₀ x
+      ≤ Real.exp η * SkorokhodSpace.jumpFunctional t₀ y + 2 * α + Real.exp (-a) := by
+    refine SkorokhodSpace.jumpFunctional_le_of_forall_jumpWith_le t₀ hη0.le
+      (by linarith) ha0 fun u hu hua => ?_
+    refine SkorokhodSpace.jumpWith_le_of_forall_dist_le t₀ hα0.le hη0.le hu
+      (by rw [hRdef]; linarith) (fun s hs => (hmoveinv s (hsub s hs)).le.trans hαη) ?_
+    intro s hs
+    have hmv : dist (e.symm s) s < α := hmoveinv s (hsub s hs)
+    have hmem : e.symm s ∈ exhaustion t₀ R := by
+      rw [exhaustion, Metric.mem_closedBall, max_eq_left hRη.le] at hs
+      rw [exhaustion, Metric.mem_closedBall, max_eq_left hR0.le]
+      have h1 : dist (e.symm s) t₀ ≤ dist (e.symm s) s + dist s t₀ := dist_triangle _ _ _
+      linarith
+    have hv := hval (e.symm s) hmem
+    rw [e.apply_symm_apply] at hv
+    rw [dist_comm]
+    exact hv.le
+  have hx1 : SkorokhodSpace.jumpFunctional t₀ x ≤ 1 := SkorokhodSpace.jumpFunctional_le_one t₀ x
+  have hy1 : SkorokhodSpace.jumpFunctional t₀ y ≤ 1 := SkorokhodSpace.jumpFunctional_le_one t₀ y
+  have hx0 : 0 ≤ SkorokhodSpace.jumpFunctional t₀ x := SkorokhodSpace.jumpFunctional_nonneg t₀ x
+  have hy0 : 0 ≤ SkorokhodSpace.jumpFunctional t₀ y := SkorokhodSpace.jumpFunctional_nonneg t₀ y
+  have hαε : α ≤ ε / 16 := min_le_left _ _
+  have hexpx : Real.exp η * SkorokhodSpace.jumpFunctional t₀ x
+      ≤ SkorokhodSpace.jumpFunctional t₀ x + ε / 16 := by
+    rw [hηexp]; nlinarith
+  have hexpy : Real.exp η * SkorokhodSpace.jumpFunctional t₀ y
+      ≤ SkorokhodSpace.jumpFunctional t₀ y + ε / 16 := by
+    rw [hηexp]; nlinarith
+  rw [Real.dist_eq, abs_lt]
+  constructor <;> linarith
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- The continuous paths are the zero set of a continuous function, hence
+closed. -/
+theorem SkorokhodSpace.isClosed_setOf_continuous [SecondCountableTopology E] :
+    IsClosed {x : D(ι, E) | Continuous x.toFun} := by
+  have hpre : {x : D(ι, E) | Continuous x.toFun}
+      = SkorokhodSpace.jumpFunctional (basePoint : ι) ⁻¹' {0} := by
+    ext x
+    simp [SkorokhodSpace.jumpFunctional_eq_zero_iff]
+  rw [hpre]
+  exact isClosed_singleton.preimage SkorokhodSpace.continuous_jumpFunctional
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The continuous paths form a closed subspace of `D(ι, E)`**, the last point
+of Milestone 5, and Section 3.10 delivers it as a corollary rather than as a
+separate argument: `C(ι, E)` sits in `D(ι, E)` as the zero set of
+`jumpFunctional`.
+
+The range and the set of paths with continuous `toFun` are the same set -- a
+càdlàg path with a continuous underlying function *is* the image of that
+function -- and stating it as a range is what makes it the subspace the
+milestone names. -/
+theorem SkorokhodSpace.isClosed_range_continuous [SecondCountableTopology E] :
+    IsClosed (Set.range fun f : C(ι, E) => (⟨f, f.continuous.isCadlag⟩ : D(ι, E))) := by
+  have hrange : (Set.range fun f : C(ι, E) => (⟨f, f.continuous.isCadlag⟩ : D(ι, E)))
+      = {x : D(ι, E) | Continuous x.toFun} := by
+    ext x
+    constructor
+    · rintro ⟨f, rfl⟩
+      exact f.continuous
+    · intro h
+      exact ⟨⟨x.toFun, h⟩, rfl⟩
+  rw [hrange]
+  exact SkorokhodSpace.isClosed_setOf_continuous
 omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
 /-- The one-sided reading of `exists_orderIso_dist_lt_of_intDist_lt`: paths close
 in `intDist` take close values at nearby points.  This is the form the lower

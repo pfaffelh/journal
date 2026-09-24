@@ -30738,6 +30738,179 @@ theorem isRightContinuous_mpTest (f g : E →ᵇ ℝ) (z : D(ℝ≥0, E)) :
     (continuous_compensator_mpTest g z).isRightContinuous
   exact h1.sub h2
 
+/-! #### From a dense set of times to all times
+
+The martingale identity that the chain of Milestone 11 produces holds along a
+countable set of times and not at every time, for the reason recorded at
+`MeasureTheory.mpSolution_of_tendsto_cadlag_of_subseq`: the set has to avoid the
+fixed discontinuities of a limit law that is not yet known.  The three statements
+below close that gap, and they are what turns
+`MeasureTheory.IsCadlagMPSolution` into an ordinary martingale property. -/
+
+/-- **A right dense set of times is reached by a sequence from the right, inside
+a window.**
+
+`Filter.NeBot` gives a filter and not a sequence; `exists_seq_tendsto` turns it
+into one, and the first countability of `ℝ≥0` is what it costs.  Two things are
+arranged here rather than at the call site, and both are needed by the dominated
+convergence step that consumes this:
+
+* the sequence lies in `T` **and above `t`** at *every* index, not eventually ---
+  a filter statement is eventual, so the sequence is shifted by the index beyond
+  which both hold;
+* it stays below `t + 1`, so that `MeasureTheory.abs_mpTest_le` gives **one**
+  bound for the whole sequence.  Without it the majorant would move with `n`.
+
+**The case `t ∈ T` is taken separately and the constant sequence serves**, which
+is why the hypothesis is the disjunction `hTr` and not `Dense T`: at a right
+isolated point the filter is `⊥` and no sequence approaches from the right, while
+the point itself is in `T` and nothing has to. -/
+theorem exists_seq_mem_Icc_tendsto_of_rightDense {T : Set ℝ≥0}
+    (hTr : ∀ t : ℝ≥0, t ∈ T ∨ (𝓝[T ∩ Set.Ioi t] t).NeBot) (t : ℝ≥0) :
+    ∃ a : ℕ → ℝ≥0, (∀ n, a n ∈ T) ∧ (∀ n, t ≤ a n) ∧ (∀ n, a n ≤ t + 1) ∧
+      Tendsto a atTop (𝓝 t) := by
+  rcases hTr t with ht | hne
+  · exact ⟨fun _ ↦ t, fun _ ↦ ht, fun _ ↦ le_rfl, fun _ ↦ le_add_of_nonneg_right zero_le,
+      tendsto_const_nhds⟩
+  · have : (𝓝[T ∩ Set.Ioi t] t).NeBot := hne
+    obtain ⟨x, hx⟩ := exists_seq_tendsto (𝓝[T ∩ Set.Ioi t] t)
+    obtain ⟨hxt, hxm⟩ := tendsto_nhdsWithin_iff.1 hx
+    have hlt : ∀ᶠ n in atTop, x n < t + 1 := hxt.eventually (gt_mem_nhds (lt_add_one t))
+    obtain ⟨N, hN⟩ := eventually_atTop.1 (hxm.and hlt)
+    refine ⟨fun n ↦ x (n + N), fun n ↦ (hN _ (Nat.le_add_left N n)).1.1,
+      fun n ↦ (hN _ (Nat.le_add_left N n)).1.2.le,
+      fun n ↦ (hN _ (Nat.le_add_left N n)).2.le, hxt.comp (tendsto_add_atTop_nat N)⟩
+
+/-- **The set integral of the tested functional follows the time from the
+right.**
+
+This is dominated convergence and nothing else, with
+`MeasureTheory.isRightContinuous_mpTest` for the pointwise limit and
+`MeasureTheory.abs_mpTest_le` for the majorant, which is a **constant** and
+integrable because `ν` is finite.
+
+**The window bound `b` is a hypothesis and not derived from the convergence.**
+A sequence tending to `r` is eventually below `r + 1`, so a bound could be
+produced here; making it an input instead lets the consumer use the *same*
+bound for two sequences with different limits, and that is what
+`MeasureTheory.mpSolution_forall_of_mpSolution_dense` needs --- it runs the
+statement once at `s` and once at `t` and has to compare the two limits.
+
+`Set.Ioi_insert` is where the strictness of `IsRightContinuous` is paid for:
+that predicate is continuity within `Set.Ioi r`, while the sequence is only
+`≥ r` and may sit at `r` itself.  `ContinuousWithinAt.insert` puts the point
+back, and the resulting statement is continuity within `Set.Ici r`. -/
+theorem tendsto_setIntegral_mpTest_of_tendsto (f g : E →ᵇ ℝ) (ν : Measure D(ℝ≥0, E))
+    [IsFiniteMeasure ν] {A : Set D(ℝ≥0, E)} {b : ℝ≥0} {r : ℝ≥0} {a : ℕ → ℝ≥0}
+    (hge : ∀ n, r ≤ a n) (hb : ∀ n, a n ≤ b) (hten : Tendsto a atTop (𝓝 r)) :
+    Tendsto (fun n ↦ ∫ z in A, SkorokhodSpace.mpTest f g (a n) z ∂ν) atTop
+      (𝓝 (∫ z in A, SkorokhodSpace.mpTest f g r z ∂ν)) := by
+  have hglob : ∀ q : ℝ≥0, Measurable (SkorokhodSpace.mpTest f g q) := fun q ↦
+    (measurable_mpTest f g q).mono ((cadlagFiltration (E := E)).le q) le_rfl
+  refine tendsto_integral_of_dominated_convergence (fun _ ↦ ‖f‖ + ‖g‖ * (b : ℝ))
+    (fun n ↦ (hglob (a n)).aestronglyMeasurable) (integrable_const _) (fun n ↦ ?_) ?_
+  · filter_upwards with z
+    simpa [Real.norm_eq_abs] using abs_mpTest_le f g (hb n) z
+  · filter_upwards with z
+    have hrc : ContinuousWithinAt (fun q : ℝ≥0 ↦ SkorokhodSpace.mpTest f g q z) (Set.Ici r) r := by
+      rw [← Set.Ioi_insert]
+      exact (isRightContinuous_mpTest f g z r).insert
+    exact hrc.tendsto.comp (tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within a hten
+      (Filter.Eventually.of_forall hge))
+
+/-- **The martingale identity along a right dense set of times holds at every
+pair of times.**
+
+This is the statement that turns `MeasureTheory.IsCadlagMPSolution` --- the form
+the chain of Milestone 11 produces --- into the martingale property that
+Milestone 6 reads, and it is the only analytic step between the two; what is
+left after it is the identification of `SkorokhodSpace.mpTest` with a member of
+`mpFamily` over `lebesgueClock`, which is bookkeeping.
+
+**Not through the convergence of conditional expectations.**  The obvious route,
+a downward martingale convergence along the decreasing σ-algebras
+`cadlagFiltration sₙ`, needs Lévy's downward theorem *and* delivers the wrong
+limit: it identifies the conditional expectation given `⋂ₙ cadlagFiltration sₙ`,
+which is the right continuous filtration `𝓕 s+` and not `𝓕 s`.  The route taken
+here is the set integrals: the identity on `T` is an identity of integrals over
+every `A ∈ cadlagFiltration sₙ`, of which `A ∈ cadlagFiltration s` is one, and
+the passage to the limit happens **inside** the integral, where the filtration
+plays no part at all.
+
+The four steps.  Given `s ≤ t` and `A ∈ cadlagFiltration s`, take `sₙ ∈ T` with
+`sₙ ↓ s`, `sₙ ≥ s`, and `bₙ ∈ T` with `bₙ ↓ t`, `bₙ ≥ t`, both by
+`MeasureTheory.exists_seq_mem_Icc_tendsto_of_rightDense`, and put
+`cₙ = max sₙ bₙ`, which lies in `T` because a maximum of two elements **is** one
+of them.  Then `sₙ ≤ cₙ`, so the identity on `T` and
+`MeasureTheory.setIntegral_condExp` give `∫_A mpTest cₙ = ∫_A mpTest sₙ`; both
+sides converge by `MeasureTheory.tendsto_setIntegral_mpTest_of_tendsto`, the
+left to `∫_A mpTest t` and the right to `∫_A mpTest s`; and
+`ae_eq_condExp_of_forall_setIntegral_eq` turns the resulting equality of set
+integrals back into the conditional expectation.
+
+**Both sequences are bounded by `t + 1` and that is why the majorant is one
+constant.**  `sₙ ≤ s + 1 ≤ t + 1` uses `s ≤ t`, which is the hypothesis; without
+it the two sequences would need two bounds and the comparison of the limits
+would not be a single dominated convergence.
+
+**The hypothesis is right density and not density.**  `Dense T` is what
+`MeasureTheory.IsCadlagMPSolution` carries and it is strictly stronger than what
+is read here; `rightDense_of_dense` is the one line between them, and it holds
+over `ℝ≥0` for the reason recorded there.  Stating this in `hTr` is the standing
+rule of minimal hypotheses at a place where it gives something: the statement
+becomes usable over an index with right isolated points, where `Dense T` would
+be the wrong condition and not merely a stronger one. -/
+theorem mpSolution_forall_of_mpSolution_dense (f g : E →ᵇ ℝ) {T : Set ℝ≥0}
+    (ν : Measure D(ℝ≥0, E)) [IsFiniteMeasure ν]
+    (hTr : ∀ q : ℝ≥0, q ∈ T ∨ (𝓝[T ∩ Set.Ioi q] q).NeBot)
+    (h : ∀ p ∈ T, ∀ q ∈ T, p ≤ q →
+      ν[fun z ↦ SkorokhodSpace.mpTest f g q z | cadlagFiltration p]
+        =ᵐ[ν] fun z ↦ SkorokhodSpace.mpTest f g p z)
+    {s t : ℝ≥0} (hst : s ≤ t) :
+    ν[fun z ↦ SkorokhodSpace.mpTest f g t z | cadlagFiltration s]
+      =ᵐ[ν] fun z ↦ SkorokhodSpace.mpTest f g s z := by
+  have hglob : ∀ q : ℝ≥0, Measurable (SkorokhodSpace.mpTest f g q) := fun q ↦
+    (measurable_mpTest f g q).mono ((cadlagFiltration (E := E)).le q) le_rfl
+  have hint : ∀ q : ℝ≥0, Integrable (fun z ↦ SkorokhodSpace.mpTest f g q z) ν := fun q ↦
+    integrable_of_abs_le (C := ‖f‖ + ‖g‖ * (q : ℝ)) (hglob q)
+      (fun z ↦ abs_mpTest_le f g le_rfl z)
+  refine (ae_eq_condExp_of_forall_setIntegral_eq ((cadlagFiltration (E := E)).le s) (hint t)
+    (fun A _ _ ↦ (hint s).integrableOn)
+    (fun A hA _ ↦ ?_)
+    (measurable_mpTest f g s).stronglyMeasurable.aestronglyMeasurable).symm
+  obtain ⟨as, hasT, hasge, hasle, hastend⟩ := exists_seq_mem_Icc_tendsto_of_rightDense hTr s
+  obtain ⟨bs, hbsT, hbsge, hbsle, hbstend⟩ := exists_seq_mem_Icc_tendsto_of_rightDense hTr t
+  set c : ℕ → ℝ≥0 := fun n ↦ max (as n) (bs n) with hcdef
+  have hcT : ∀ n, c n ∈ T := by
+    intro n
+    rcases le_total (as n) (bs n) with hle | hle
+    · simpa [hcdef, max_eq_right hle] using hbsT n
+    · simpa [hcdef, max_eq_left hle] using hasT n
+  have hcge : ∀ n, as n ≤ c n := fun n ↦ le_max_left _ _
+  have hcget : ∀ n, t ≤ c n := fun n ↦ le_trans (hbsge n) (le_max_right _ _)
+  have hcle : ∀ n, c n ≤ t + 1 := fun n ↦
+    max_le (le_trans (hasle n) (add_le_add hst le_rfl)) (hbsle n)
+  have hctend : Tendsto c atTop (𝓝 t) := by
+    have := hastend.max hbstend
+    rwa [max_eq_right hst] at this
+  have hstep : ∀ n, ∫ z in A, SkorokhodSpace.mpTest f g (c n) z ∂ν
+      = ∫ z in A, SkorokhodSpace.mpTest f g (as n) z ∂ν := by
+    intro n
+    have hA' : MeasurableSet[cadlagFiltration (E := E) (as n)] A :=
+      (cadlagFiltration (E := E)).mono (hasge n) A hA
+    refine (setIntegral_condExp ((cadlagFiltration (E := E)).le (as n))
+      (hint (c n)) hA').symm.trans ?_
+    refine setIntegral_congr_ae ((cadlagFiltration (E := E)).le (as n) A hA') ?_
+    filter_upwards [h (as n) (hasT n) (c n) (hcT n) (hcge n)] with z hz using fun _ ↦ hz
+  have hconv1 := tendsto_setIntegral_mpTest_of_tendsto f g ν (A := A) (b := s + 1)
+    hasge hasle hastend
+  have hconv2 := tendsto_setIntegral_mpTest_of_tendsto f g ν (A := A) (b := t + 1)
+    hcget hcle hctend
+  have hconv2' : Tendsto (fun n ↦ ∫ z in A, SkorokhodSpace.mpTest f g (as n) z ∂ν) atTop
+      (𝓝 (∫ z in A, SkorokhodSpace.mpTest f g t z ∂ν)) := by
+    simpa only [hstep] using hconv2
+  exact tendsto_nhds_unique hconv1 hconv2'
+
 /-- **A finite dimensional test function of times below `s` is measurable for the
 coordinate past at `s`.**
 

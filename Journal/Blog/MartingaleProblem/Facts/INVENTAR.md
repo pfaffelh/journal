@@ -59291,3 +59291,237 @@ Prototyp — kein `sorry` mehr, und dasselbe gilt für die Anwendung in `Marting
    `e.symm`. Deshalb trägt die Näherungsaussage die Klausel über `e.symm` eigens, und deshalb
    ist die Rückrichtung auf dem **kleineren** Fenster `exhaustion t₀ (R − η)` zu führen. Wer
    sie auf demselben `R` führt, bekommt eine Hypothese, die er nicht einlösen kann.
+
+### 2026-09-24, sechster Lauf des Tages — **die ganze Kette trägt kein `sorry` mehr**: das benannte Ziel steht, und der Grund, warum es fünf Läufe lang stehenbleiben konnte, ist kein mathematischer, sondern einer der **Reihenfolge** — die Aussage stand in der Datei *über* ihrer eigenen Eingabe und war dort gar nicht abschließbar
+
+*6 Deklarationen in `SkorokhodSpace/Suggested.lean`: drei neue im Unterabschnitt „Carrying the jump
+along a time change", drei **verschobene** ans Ende von Meilenstein 6, hinter
+`exists_orderIso_forall_dist_lt_of_intDist_lt`.
+`scripts/check_master.py` gegen `upstream/master` (`94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `4.35.0-rc2`): **0 Fehler, 0 veraltete Namen** und **`sorry` = 0 in allen vier Dateien**
+(zuvor eins). Warnungen **18 / 38 / 36 / 76**; die eine Warnung, die in `SkorokhodSpace` wegfällt,
+ist genau die verschwundene `declaration uses 'sorry'` — `check_master.py` zählt sie in beiden
+Spalten (`:139`), also hat **keine** der sechs Deklarationen eine neue Warnung erzeugt.
+`check_axioms_master.py` über alle sechs: `propext`, `Classical.choice`, `Quot.sound`,
+**kein `sorryAx`**. `check_duplicates.py` jetzt 1860 eigene Deklarationen, 43 Treffer, keiner auf
+einen neuen Namen.*
+
+#### Was steht
+
+| Name | Aussage |
+| --- | --- |
+| `SkorokhodSpace.integrableOn_jumpWith_add` | der um `η` verschobene Integrand ist integrierbar, mit derselben Majorante `exp (-u)` |
+| `SkorokhodSpace.integral_jumpWith_add_le` | **die Substitution**: `∫_{u>0} exp (-u) · jumpWith (u+η) x ≤ exp η · jumpFunctional x` |
+| `SkorokhodSpace.jumpFunctional_le_of_forall_jumpWith_le` | aus einem gefensterten Vergleich von `jumpWith` der Vergleich von `J`, mit Schwanz `exp (-a)` |
+| `SkorokhodSpace.continuous_jumpFunctional` | **EK Proposition 3.5.3** — ohne `sorry` |
+| `SkorokhodSpace.isClosed_setOf_continuous` | die stetigen Pfade sind die Nullstellenmenge |
+| `SkorokhodSpace.isClosed_range_continuous` | **der einzige Punkt von `SkorokhodSpace` Meilenstein 5 ohne Prototyp**, jetzt unbedingt |
+
+Damit trägt auch die Anwendung in `MartingaleProblems` (`jumpBdd` und die f.s. Stetigkeit der
+Pfade im Limes) nichts Getragenes mehr, und Punkt 2 der Aufgabe vom 2026-09-24 ist eingelöst.
+**Alle vier Punkte jener Aufgabe stehen** — Punkt 1 im ersten Lauf, Punkt 4 im zweiten, Punkt 3
+im dritten, Punkt 2 in diesem.
+
+#### Der Befund des Laufs, und er ist über die Datei und nicht über die Mathematik
+
+`continuous_jumpFunctional` stand seit dem Bau des Blocks in Zeile 7275, sein einziger nicht
+trivialer Eingabesatz `exists_orderIso_forall_dist_lt_of_intDist_lt` in Zeile 7513 — **238 Zeilen
+darunter**, in Meilenstein 6. Ein `sorry` sieht das nicht: es prüft nichts nach, und die Datei
+übersetzt. Die Aussage war also nicht bloß unbewiesen, sondern **an ihrem Platz unbeweisbar**, und
+fünf Läufe haben Wegbeschreibungen an sie geschrieben, ohne daß einer das bemerkt hätte. Der
+Doc-Kommentar hat sogar die richtige Auskunft gegeben — „die metrische Hälfte steht bei
+`exists_orderIso_forall_dist_lt_of_intDist_lt`, und sie muß auf `exists_radius_distWith_lt` von
+Meilenstein 6 warten" —, nur hat niemand die beiden Zeilennummern verglichen.
+
+**Die Lehre, und sie ist billig einzuhalten:** wer eine Wegbeschreibung an ein `sorry` schreibt,
+das einen Satz **derselben Datei** nennt, sieht nach, ob dieser Satz davor steht. Ein Grep nach
+beiden Namen kostet einen Aufruf.
+
+**Was daraus folgte:** die drei Aussagen der Stetigkeit — `continuous_jumpFunctional`,
+`isClosed_setOf_continuous`, `isClosed_range_continuous` — sind ans Ende von Meilenstein 6
+gewandert, jede mit `omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in`, denn keine liest
+eine davon. Die drei **neuen** Hilfssätze sind im Sprungfunktional-Block geblieben, weil sie von
+Meilenstein 6 ebenfalls nichts brauchen; an ihrer Stelle steht jetzt ein Absatz, der sagt, wo die
+Stetigkeit selbst gelandet ist und warum. Die Meilensteinzuordnung ändert sich dadurch **nicht**:
+`isClosed_range_continuous` bleibt der Abschlußpunkt von Meilenstein 5, es steht nur weiter unten
+in der Datei. Die Reihenfolge einer Lean-Datei ist die der Abhängigkeiten, nicht die der Roadmap.
+
+#### Die Rechnung, und die Wegbeschreibung des Vorlaufs hat in beiden Punkten getragen
+
+Beide Fallen, die der fünfte Lauf angesagt hatte, waren richtig gestellt und sind so eingetreten:
+
+* **Die Substitution.** Genommen ist nicht `intervalIntegral.integral_comp_add_right`, sondern
+  `MeasurePreserving.setIntegral_preimage_emb` mit `measurePreserving_add_right volume η` und
+  `measurableEmbedding_addRight η`; der Urbildschritt ist `(· + η) ⁻¹' Set.Ioi η = Set.Ioi 0` und
+  geht mit `simp`. Der Faktor `exp η` ist, wie angesagt, **vor** der Substitution aus dem
+  Integranden zu ziehen (`integral_const_mul` nach links, dann `setIntegral_congr_fun`); danach
+  ist das Integral wörtlich `jumpFunctional` auf dem kleineren Halbstrahl, und die Ungleichung
+  entsteht an genau **einer** Stelle, `Set.Ioi η ⊆ Set.Ioi 0` unter `setIntegral_mono_set`.
+* **Die Rückrichtung auf dem kleineren Fenster.** Sie ist auf `exhaustion t₀ (R − η)` geführt, und
+  der Schritt, der das erzwingt, ist die Substitution im Wertargument: aus
+  `dist (x (e t)) (y t) < α` wird `dist (y (e.symm s)) (x s) < α` erst, nachdem `e.symm s` wieder
+  im Fenster `R` liegt, und das kostet die Verrückung. Genau dafür führt
+  `exists_orderIso_forall_dist_lt_of_intDist_lt` die Klausel über `e.symm` eigens.
+
+**Die Konstanten, gemessen statt geschätzt.** Mit `η = log (1 + ε/16)`, `a = max 1 (log (16/ε))`,
+`R = a + 3η + 1` und Genauigkeit `α = min (ε/16) η` kommt
+
+    |J y − J x| ≤ (exp η − 1) + 2α + exp (−a) ≤ ε/16 + ε/8 + ε/16 = ε/4 ,
+
+also mit dem Faktor 4 Luft. Die drei `ε/16` sind nicht optimiert; sie sind so gewählt, daß der
+Abschluß eine einzige `linarith` ist und kein Lauf sie nachrechnen muß. **`3η` und nicht `η`** im
+Fenster, weil die Rückrichtung das Fenster zweimal verkleinert — einmal für den Wechsel auf
+`R − η` und einmal für die Verrückung von `e.symm` darin.
+
+#### Zwei Einzelbefunde
+
+* **`rw [integral_const_mul]` greift die falsche Seite.** In einem Ziel, in dem *beide* Seiten ein
+  Integral eines konstanten Vielfachen sind, nimmt `rw` das **erste** Vorkommen, und das war hier
+  das Integral über `Set.Ioc 0 a`, das gerade nicht ausgerechnet werden sollte. Das war der
+  einzige Fehler des ganzen Laufs; die Abhilfe ist, den auszurechnenden Wert als eigenes `have`
+  hinzuschreiben (`∫ u in Ioi 0, c * exp (-u) = c`) und dann `rw [hconst] at hle` zu setzen —
+  also **nicht** im Ziel zu rewriten, sondern in der eben gebauten Hypothese.
+* **Der ganze Rest ging im ersten Durchlauf durch**, vier Deklarationen und rund 150 Zeilen
+  Beweis. Das ist kein Verdienst dieses Laufs: die beiden Hälften waren im fünften Lauf so
+  zugeschnitten worden, daß die Naht eine Integralrechnung ist, und die Wegbeschreibung hat die
+  beiden Fallen benannt, ehe sie zuschnappen konnten.
+
+#### Der Stand der Kette, damit ihn kein Lauf neu erhebt
+
+`WeakConvergence`, `SkorokhodSpace`, `MartingaleProblems` und `JumpProcesses` bauen gegen
+`upstream/master` mit **0 Fehlern, 0 veralteten Namen und 0 `sorry`**. Das ist seit dem
+2026-09-18, an dem die Kette zum ersten Mal gegen `master` durchlief, der erste Stand, an dem
+*keine* der vier Dateien eine unbewiesene Aussage trägt.
+
+**Was das nicht heißt.** Es heißt nicht, daß die Roadmaps vollständig sind — ein Meilenstein ohne
+`sorry` ist einer ohne *hingeschriebene* Lücke, und die Punkte, die noch gar keinen Prototyp
+haben, zählt keine Spalte. Und es heißt nicht, daß Donsker unbedingt dasteht:
+`tendsto_map_rescaledWalk_of_unique` trägt weiterhin `huniq` als **Hypothese**, und eine getragene
+Hypothese ist kein `sorry`. Der Vorschlag unten ist genau die Aussage, die sie einlöst.
+
+#### Das benannte Ziel für den nächsten Lauf — **im selben Lauf eingelöst, siehe den zweiten Teil unten**
+
+> **`MeasureTheory.mpSolution_forall_of_mpSolution_dense`** — aus der Martingalidentität an
+> `SkorokhodSpace.mpTest` längs einer rechtsdichten Zeitmenge `T` dieselbe Identität für **alle**
+> `s ≤ t`.
+
+Das ist wörtlich das berichtigte Ziel des vierten Laufs dieses Tages; es ist seither nicht
+angefaßt worden, weil die Läufe fünf und sechs Punkt 2 der Aufgabe erledigt haben, und es bleibt
+die **einzige** offene Eingabe von Donsker. Der Weg steht dort in vier Schritten ausgeschrieben
+(Mengenintegrale statt Lévys Abwärtssatz, dominierte Konvergenz mit der Majorante aus
+`abs_mpTest_le`, Abschluß mit `ae_eq_condExp_of_forall_setIntegral_eq`), die erste seiner beiden
+Eingaben ist gebaut (`isRightContinuous_mpTest`), die Voraussetzung ist `hTr` und nicht `Dense T`,
+und die Stelle, an der ein Lauf danebengreifen wird, ist dort benannt: `NeBot` gibt einen Filter
+und keine Folge, und der Fall `t ∈ T` ist eigens zu nehmen. **Er ist nicht neu zu erschließen.**
+
+#### Derselbe Lauf, zweiter Teil — das eben benannte Ziel **steht**, und die Wegbeschreibung des vierten Laufs hat in jedem ihrer vier Schritte getragen; was sie nicht vorhergesehen hat, ist ein fünfter, und er steckt in der **Majorante**
+
+*3 Deklarationen in `MartingaleProblems/Suggested.lean`, neuer Unterabschnitt „From a dense set of
+times to all times" hinter `isRightContinuous_mpTest`. `scripts/check_master.py` gegen dasselbe
+`master`: **0 Fehler, 0 veraltete Namen, 0 `sorry`**, Warnungen unverändert **18 / 38 / 36 / 76** —
+also **keine einzige neue**. `check_axioms_master.py` über alle drei: `propext`,
+`Classical.choice`, `Quot.sound`, kein `sorryAx`. `check_duplicates.py` jetzt 1863 eigene
+Deklarationen, 43 Treffer, keiner auf einen neuen Namen.*
+
+| Name | Aussage |
+| --- | --- |
+| `MeasureTheory.exists_seq_mem_Icc_tendsto_of_rightDense` | aus `hTr` eine Folge in `T`, von rechts, **an jedem Index** und unter `t + 1` |
+| `MeasureTheory.tendsto_setIntegral_mpTest_of_tendsto` | dominierte Konvergenz des Mengenintegrals längs einer solchen Folge |
+| `MeasureTheory.mpSolution_forall_of_mpSolution_dense` | **das Ziel**: aus `T` auf alle `s ≤ t` |
+
+**Die vier Schritte des vierten Laufs sind wörtlich so gegangen.** Kein Lévy-Abwärtssatz, keine
+Konvergenz bedingter Erwartungen; die Identität wird auf `A ∈ cadlagFiltration s` ausgelesen,
+mit `setIntegral_condExp` über `cadlagFiltration (sₙ)` — wohin `A` gehört, weil `s ≤ sₙ` —, und
+der Grenzübergang findet **innerhalb** des Integrals statt, wo die Filtration gar nicht vorkommt.
+`max sₙ bₙ ∈ T` ist richtig, weil ein Maximum zweier Elemente **eines von beiden ist**, und das ist
+der einzige Grund, warum die Folge für `t` nicht eigens mit `sₙ` verglichen werden muß.
+
+#### Der fünfte Schritt, den die Wegbeschreibung nicht hatte: **die Majorante muß für beide Folgen dieselbe sein**
+
+`abs_mpTest_le f g (hr : r ≤ t) z` gibt `‖f‖ + ‖g‖ · t`, also eine Schranke, die **mit der Zeit
+wächst**. Eine Folge `sₙ → s` ist schließlich unter `s + 1`, aber „schließlich" ist für
+`tendsto_integral_of_dominated_convergence` zu wenig: die Hypothese `h_bound` läuft über **alle**
+`n`. Zwei Dinge sind deshalb in die Folgenkonstruktion hineingezogen worden statt sie am
+Verbrauchsort zu reparieren:
+
+* `∀ n, a n ∈ T` und `∀ n, t ≤ a n` **an jedem Index**, nicht schließlich — der Filter liefert
+  beides nur eventuell, also wird die Folge um den Index verschoben, ab dem beides gilt
+  (`fun n ↦ x (n + N)`);
+* `∀ n, a n ≤ t + 1`, damit die Majorante eine **Konstante** ist. Sie ist integrierbar, weil `ν`
+  endlich ist, und das ist die einzige Stelle, an der die Endlichkeit des Maßes gelesen wird.
+
+Und der Fensterparameter `b` von `tendsto_setIntegral_mpTest_of_tendsto` ist deshalb eine
+**Hypothese** und keine aus der Konvergenz gewonnene Zahl: der Verbraucher führt zwei Folgen mit
+**verschiedenen** Grenzwerten (`s` und `t`) und braucht für beide dieselbe Schranke `t + 1`. Daß
+`sₙ ≤ s + 1 ≤ t + 1` ist, verbraucht `s ≤ t` — die Hypothese des Satzes, an einer Stelle, an der
+man sie nicht erwartet.
+
+#### Zwei Einzelbefunde, beide zur stehenden Regel über erzeugte Namen
+
+* **`Set.Ioi_insert` steht in keiner `theorem`-Zeile.** `insert a (Set.Iio a) = Set.Iic a` ist
+  `Set.Iio_insert` (`Mathlib/Order/Interval/Set/Basic.lean:563`); die Fassung für `Ioi` ist durch
+  `@[to_dual]` erzeugt, und ein Grep nach `theorem Ioi_insert` findet **nur die Finset-Fassung**
+  in `Mathlib/Order/Interval/Finset/Basic.lean:732`. Das ist der fünfte Fall dieses Musters
+  (nach `Set.indicator_of_notMem`, `frequently_lt_of_liminf_lt`, `IsRightContinuous.sub` und
+  `IsCadlag.add`), und diesmal hat die Regel von vornherein getragen: gesucht wurde nach dem
+  dualen Namen, nicht nach dem gewünschten.
+* **Und sie wird an genau einer Stelle gebraucht.** `IsRightContinuous f` ist
+  `∀ a, ContinuousWithinAt f (Set.Ioi a) a`, also Stetigkeit in `Set.Ioi r` — **echt** rechts.
+  Die Folge ist aber nur `≥ r` und darf auf `r` sitzen; im Fall `t ∈ T` ist sie sogar konstant `r`.
+  `Set.Ioi_insert` und `ContinuousWithinAt.insert` setzen den Punkt zurück und machen daraus
+  Stetigkeit in `Set.Ici r`. Wer das übersieht, baut die Folge strikt oberhalb und kann den Fall
+  `t ∈ T` nicht mehr bedienen.
+
+#### Was Donsker jetzt noch schuldet
+
+`tendsto_map_rescaledWalk_of_unique` trägt weiterhin `huniq`, aber unter der Hypothese steht
+jetzt kein Grenzübergang mehr. Was zwischen `IsCadlagMPSolution` und
+`subsingleton_mpSolutions_mpFamily_lebesgueClock` (`:16994`) noch fehlt, ist die **Identifikation
+von `SkorokhodSpace.mpTest` mit einem Glied von `mpFamily A lebesgueClock Clock.Conv.optional
+coordinate`** — der Doc-Kommentar von `SkorokhodSpace.mpTest` behauptet sie, und sie ist zu
+**prüfen** und nicht zu glauben. Dazu der Übergang von `Dense T` auf `hTr`, der
+`rightDense_of_dense` ist und dasteht.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **`MeasureTheory.isMPSolution_of_isCadlagMPSolution`** — aus `IsCadlagMPSolution A ν` die
+> Aussage `IsMPSolution (mpFamily A lebesgueClock Clock.Conv.optional coordinate)
+> cadlagFiltration ν`.
+
+*Warum jetzt:* es ist die letzte Eingabe von `huniq` und damit von Donsker, und die analytische
+Hälfte steht seit diesem Lauf. `mpSolution_forall_of_mpSolution_dense` liefert die Identität für
+alle `s ≤ t`, `rightDense_of_dense` die Voraussetzung dafür aus dem `Dense T`, das
+`IsCadlagMPSolution` führt.
+
+*Worauf zu achten ist, und es ist nicht die Martingaleigenschaft.* Die drei Stellen sind am
+Quelltext nachgesehen, nicht geschätzt:
+
+1. **Der Kompensator von `mpFamily` und der von `mpTest` sind nicht dieselbe Schreibweise, und
+   das ist mehr als Buchhaltung.** `mpFamily` (`:805`) setzt
+   `Y t ω = p.1 (X t ω) − ∫ s in Q.interval c ⊥ t, p.2 (X s ω) ∂Q.q`, also ein Integral über
+   **`ℝ≥0`** gegen `lebesgueClock.q`; `SkorokhodSpace.mpTest` (`SkorokhodSpace:20830`) setzt
+   `f (z t) − ∫ u in Set.Ioc (0:ℝ) (t:ℝ), g (z u.toNNReal)`, also ein Integral über **`ℝ`** gegen
+   `volume`. Der Übergang ist kein `rfl`, sondern ein Bildmaßschritt: `lebesgueClock.q` ist
+   ausweislich seiner Definition (`:9070`)
+   `((volume : Measure ℝ).restrict (Set.Ici 0)).map Real.toNNReal`, also ist `setIntegral_map` an
+   `measurable_real_toNNReal` zu lesen und das Urbild `Real.toNNReal ⁻¹' (Set.Ioc ⊥ t) ∩ Set.Ici 0`
+   mit `Set.Ioc (0:ℝ) (t:ℝ)` zu identifizieren. Der Doc-Kommentar von `SkorokhodSpace.mpTest`
+   behauptet die Gleichheit der beiden; **er belegt sie nicht, und dieser Schritt ist die
+   eigentliche Arbeit des Punktes.** Dazu die Falle vom 2026-09-10: `lebesgueClock` trägt seinen
+   `MeasurableSpace` als **Feld**, also `Clock.measurableSet_interval` und nicht
+   `measurableSet_Ioc`.
+2. **Die Zeitmenge hängt am Paar.** `IsCadlagMPSolution` (`:31283`) gibt für *jedes* `p ∈ A` ein
+   eigenes `T`; `mpSolution_forall_of_mpSolution_dense` ist über einem festen Paar ausgesprochen,
+   wird also **innerhalb** des `∀ p ∈ A` aufgerufen und nicht davor. Ein Lauf, der ein gemeinsames
+   `T` sucht, sucht etwas, das die Kette nicht liefert und das auch nicht gebraucht wird.
+3. **`IsMPSolution` hat zwei Verpflichtungen, nicht drei — und Integrierbarkeit ist keine davon.**
+   `IsMPSolution 𝓧 F P` ist `∀ Y ∈ 𝓧, Martingale Y F P` (`:759`), und Mathlibs `Martingale`
+   (`Mathlib/Probability/Martingale/Basic.lean:53`, nachgesehen gegen `94ef6b89544`) ist
+   `StronglyAdapted ℱ f ∧ ∀ i j, i ≤ j → μ[f j | ℱ i] =ᵐ[μ] f i`. **Ein Integrierbarkeitsfeld gibt
+   es nicht**, obwohl der Doc-Kommentar dort von „a family of integrable functions" spricht; die
+   Integrierbarkeit wird nur *innerhalb* des Beweises der Identität gebraucht, und dafür steht sie
+   in diesem Lauf als `hint` da. Zu liefern sind also die Identität — das ist
+   `mpSolution_forall_of_mpSolution_dense` — und `StronglyAdapted`, und letzteres ist
+   `measurable_mpTest` plus `Measurable.stronglyMeasurable`. **Erst die Felder von `Martingale`
+   lesen, dann rechnen**; wer eine Integrierbarkeitsverpflichtung erwartet, sucht ein Feld, das
+   nicht da ist.
