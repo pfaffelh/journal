@@ -1,6 +1,6 @@
 # Formalisierungs-Inventar — Status
 
-- **Letzter Lauf (UTC):** 20260924T220301Z
+- **Letzter Lauf (UTC):** 20260924T220559Z
 - **Zustand:** laeuft
 - **Notiz:** Lauf gestartet
 - **Host:** fisher
