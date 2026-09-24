@@ -250,7 +250,7 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Zweiunddreißig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Vierunddreißig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
 Alle zweiundzwanzig beim Beweisen aufgefallen, und die ersten vier sind kleine,
 in sich abgeschlossene Beiträge. Sie gehören thematisch zu
@@ -1211,6 +1211,45 @@ Zeichenketten, nicht Aussagen.
   Aufgefallen beim Bau des zweiten Approximanten des Akzeptanztests von
   Meilenstein 11: `MeasureTheory.IsApproximable` verlangt einen Approximanten des
   **Quadrats** des Prozesses, und ein Quadrat ist kein Martingal.
+
+* **Der kompakte Träger der iterierten Ableitung.**
+  `HasCompactSupport.deriv` steht in
+  `Mathlib/Analysis/Calculus/Deriv/Support.lean:60`; die Iterierte steht
+  nirgends. Am 2026-09-24 gegen `upstream/master` `94ef6b89544` gesucht nach
+  `HasCompactSupport.iteratedDeriv`, `iteratedDeriv.*HasCompactSupport`,
+  `support_iteratedDeriv` und `tsupport_iteratedDeriv` — **kein Treffer**. Der
+  Beweis ist die Induktion über die vorhandene Aussage und drei Zeilen lang;
+  bemerkenswert ist nur, daß er **keine** Differenzierbarkeit liest: eine
+  iterierte Ableitung, die nicht existiert, ist die Nullfunktion, und deren
+  Träger ist leer.
+
+  Steht bei uns als `HasCompactSupport.iteratedDeriv` in
+  `TauCeti/MartingaleProblems/Suggested.lean`, Abschnitt `TestClass`, über
+  `{𝕜} [NontriviallyNormedField 𝕜] {F} [NormedAddCommGroup F] [NormedSpace 𝕜 F]`
+  — also genau dem Bündel, das die Mathlib-Aussage darunter führt. Der Platz ist
+  dieselbe Datei, unmittelbar hinter `HasCompactSupport.deriv`.
+
+* **Die stetige Funktion mit kompaktem Träger als beschränkte stetige
+  Funktion.** Mathlib führt die Konstruktion an drei Stellen **inline** aus —
+  `Mathlib/Analysis/Distribution/ContDiffMapSupportedIn.lean:142` und `:287`,
+  `Mathlib/Analysis/Distribution/TestFunction.lean:111`, jedesmal
+  `(map_continuous f).bounded_above_of_compact_support …` gefolgt von
+  `ofNormedAddCommGroup` —, hat sie aber nirgends als Deklaration. Am
+  2026-09-24 gegen `94ef6b89544` gesucht nach `ofHasCompactSupport`,
+  `BoundedContinuousFunction.*hasCompactSupport` und
+  `hasCompactSupport.*toBoundedContinuous` — **kein Treffer**.
+
+  Steht bei uns als `BoundedContinuousFunction.ofHasCompactSupport` mit
+  `coe_ofHasCompactSupport` (`rfl`) am selben Ort. Der Platz in Mathlib ist
+  `Mathlib/Topology/ContinuousMap/Bounded/Normed.lean`, neben
+  `ofNormedAddCommGroup`, dessen Schranke sie aus
+  `Continuous.bounded_above_of_compact_support` selbst beschafft, statt sie vom
+  Aufrufer zu verlangen.
+
+  Aufgefallen beim Bau der Testklasse für den Akzeptanztest von Meilenstein 11:
+  `SkorokhodSpace.mpTest` verlangt sein Paar im gebündelten Typ `E →ᵇ ℝ`, die
+  Zellenrechnung liefert die nackte Funktion, und beide Halbschritte des
+  Übergangs fehlten.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine

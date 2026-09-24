@@ -516,6 +516,31 @@ CLAIMS_TODO8 = [
      '|isTightMeasureSet_finite|IsTightMeasureSet.biUnion',
      ['Mathlib/'],
      []),
+    ('iterated-deriv-compact-support',
+     'TODO.md Punkt 8; MartingaleProblems/Suggested.lean, '
+     '`HasCompactSupport.iteratedDeriv`',
+     'Mathlib hat den kompakten Traeger der **iterierten** Ableitung nicht. '
+     '`HasCompactSupport.deriv` steht in '
+     '`Mathlib/Analysis/Calculus/Deriv/Support.lean:60` und ist der erste '
+     'Schritt; die Iterierte darueber steht nirgends. Am 2026-09-24 am '
+     'Quelltext nachgesehen.',
+     'HasCompactSupport\\.iteratedDeriv|iteratedDeriv.*HasCompactSupport'
+     '|support_iteratedDeriv|tsupport_iteratedDeriv',
+     ['Mathlib/'],
+     []),
+    ('bcf-of-compact-support',
+     'TODO.md Punkt 8; MartingaleProblems/Suggested.lean, '
+     '`BoundedContinuousFunction.ofHasCompactSupport`',
+     'Mathlib hat die stetige Funktion mit kompaktem Traeger als beschraenkte '
+     'stetige Funktion nicht als Deklaration. Sie fuehrt die Konstruktion an '
+     'drei Stellen **inline** aus — '
+     '`Mathlib/Analysis/Distribution/ContDiffMapSupportedIn.lean:142` und '
+     '`:287`, `Mathlib/Analysis/Distribution/TestFunction.lean:111` —, '
+     'jedesmal `bounded_above_of_compact_support` gefolgt von '
+     '`ofNormedAddCommGroup`. Am 2026-09-24 am Quelltext nachgesehen.',
+     'ofHasCompactSupport|hasCompactSupport.*toBoundedContinuous',
+     ['Mathlib/'],
+     []),
 ]
 
 

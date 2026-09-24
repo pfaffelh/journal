@@ -58777,3 +58777,166 @@ eigener Punkt in `TODO.md` Punkt 8 vermerkt werden.
 *Warum sie vorangeht:* ohne sie ist `tendsto_integral_mpTest_sub_pathOfProcess_rescaledWalk` nicht
 **hinschreibbar** — `mpTest` verlangt die Bündelung im Typ. Alles andere an der Naht steht seit
 diesem Lauf.
+
+---
+
+### 2026-09-24, dritter Lauf des Tages — die Testklasse steht, und mit ihr **die ganze Naht**: das benannte Ziel des Vorlaufs war der kleinste der vier Schritte, und die drei darüber gingen je im **ersten** Durchlauf durch; dazu zwei Mathlib-Lücken, die beide in der Bibliothek **inline ausgeführt und nirgends deklariert** sind
+
+*8 Deklarationen in `MartingaleProblems/Suggested.lean`, hinter `end WalkContainment`:
+drei im neuen Wurzelabschnitt `TestClass`, fünf im neuen `TestClassSeam`.
+`scripts/check_master.py` gegen `upstream/master` (`94ef6b89544e58e90f119da869f3fb48d1da0f4c`,
+Lean `4.35.0-rc2`): **0 Fehler, 0 veraltete Namen**, `sorry` unverändert **eins** (das benannte
+`continuous_jumpFunctional`), Warnungen unverändert **18 / 39 / 36 / 76** — also **keine einzige
+neue Warnung**. `check_axioms_master.py` über alle acht: `propext`, `Classical.choice`,
+`Quot.sound`. `check_duplicates.py` und `check_cited_lines.py` unverändert (491 Fundstellen,
+0 verschoben, 0 tot).*
+
+#### Was steht
+
+| Name | Abschnitt |
+| --- | --- |
+| `HasCompactSupport.iteratedDeriv` | `TestClass` — Mathlib-Grundtheorie, Lücke |
+| `BoundedContinuousFunction.ofHasCompactSupport` samt `coe_…` | `TestClass` — Mathlib-Grundtheorie, Lücke |
+| `MeasureTheory.exists_bound_abs_iteratedDeriv_of_hasCompactSupport` | `TestClassSeam` |
+| `MeasureTheory.exists_boundedContinuous_of_contDiff_of_hasCompactSupport` | `TestClassSeam` — **die Testklasse** |
+| `MeasureTheory.tendsto_integral_mpTest_sub_pathOfProcess_rescaledWalk` | `TestClassSeam` — **die Naht** |
+| `MeasureTheory.mpSolution_of_tendsto_rescaledWalk` | `TestClassSeam` — **der Zusammenbau**, unter `hlim` |
+| `MeasureTheory.exists_subseq_mpSolution_of_rescaledWalk` | `TestClassSeam` — **ohne jede Konvergenzhypothese** (Nachtrag unten) |
+
+Der Name weicht vom Vorschlag ab: vorgeschlagen war
+`exists_boundedContinuous_contDiff_of_hasCompactSupport`, geschrieben ist
+`exists_boundedContinuous_of_contDiff_of_hasCompactSupport`. Mathlibs Konvention setzt `_of_` vor
+**jede** Hypothese, und `contDiff` ist hier eine.
+
+#### Der Befund, und er ist eine Korrektur der eigenen Vorhersage
+
+Der Vorlauf hatte **eine** Aussage als das benannte Ziel ausgegeben und für alles Weitere gesagt,
+es sei „ein `rw` und keine Arbeit". Beides trifft zu, aber die Gewichtung war falsch herum: die
+Testklasse war der **kleinste** der vier Schritte, und die drei darüber — Naht, Zusammenbau und die
+Bündelung dazwischen — gingen je im **ersten** Durchlauf durch. Was den Vorlauf die Naht nicht
+hinschreiben ließ, war wirklich nur der Typ.
+
+**Zwei Einzelheiten, bei denen die Vorhersage des Vorlaufs zu vorsichtig war:**
+
+* Für `HasCompactSupport.iteratedDeriv` sagte er „falls es fehlt, ist es `HasCompactSupport.mono`
+  am Träger der Ableitung". Es fehlt, aber `mono` wird nicht gebraucht: die Induktion über
+  `iteratedDeriv_succ` und `HasCompactSupport.deriv` ist der ganze Beweis, drei Zeilen. Und sie
+  liest **keine Differenzierbarkeit** — eine iterierte Ableitung, die nicht existiert, ist die
+  Nullfunktion, deren Träger leer ist. Die Aussage steht deshalb ohne jede `ContDiff`-Hypothese.
+* Für die Schranke nannte er zwei Kandidaten, „`Continuous.bounded_above_of_compact_support` oder
+  `HasCompactSupport.exists_bound_of_continuous`". **Beide existieren** — die erste in
+  `Mathlib/Analysis/Normed/Group/Bounded.lean:155`, die zweite ebenda `:100` als die
+  multiplikative `HasCompactMulSupport.exists_bound_of_continuous`. Genommen ist die erste, weil
+  sie additiv und schon in der gebrauchten Gestalt ist.
+
+#### Die zwei Mathlib-Lücken, und was an ihnen bemerkenswert ist
+
+Beide sind in `TODO.md` Punkt 8 eingetragen (der damit von 32 auf **34** geht) und beide sind in
+`scripts/check_negatives.py` mechanisiert; der Lauf prüft jetzt **62** Behauptungen und meldet
+keinen unerwarteten Treffer.
+
+* **`HasCompactSupport.iteratedDeriv`.** Gesucht am 2026-09-24 gegen `94ef6b89544` nach
+  `HasCompactSupport\.iteratedDeriv`, `iteratedDeriv.*HasCompactSupport`, `support_iteratedDeriv`,
+  `tsupport_iteratedDeriv` — **null Treffer**. Der erste Schritt steht da
+  (`Mathlib/Analysis/Calculus/Deriv/Support.lean:60`), die Iterierte darüber nicht.
+* **`BoundedContinuousFunction.ofHasCompactSupport`.** Gesucht nach `ofHasCompactSupport` und
+  `hasCompactSupport.*toBoundedContinuous` — **null Treffer**. Und das ist der interessantere
+  Befund: Mathlib **führt diese Konstruktion aus**, dreimal, aber jedesmal **inline** —
+  `Analysis/Distribution/ContDiffMapSupportedIn.lean:142` und `:287`,
+  `Analysis/Distribution/TestFunction.lean:111`, jedesmal `bounded_above_of_compact_support`
+  unmittelbar gefolgt von `ofNormedAddCommGroup`. Es fehlt also nicht die Mathematik, sondern der
+  Name. Das ist eine Lückenart, die die Regel für den Negativbefund oben nicht abdeckt: wer nach
+  der *Aussage* statt nach der Vokabel sucht, findet hier drei Treffer und muß trotzdem „fehlt"
+  schreiben, weil keiner davon zitierbar ist.
+
+#### Zwei Stellen, an denen der Lauf danebengriff, beide billig
+
+* **`♭` ist kein Lean-Bezeichner.** Der Vorschlag des Vorlaufs schrieb das gebündelte `f` als
+  `f♭`; U+266D geht durch den Parser nicht („expected token"). Geschrieben ist `fb`, `gb`.
+* **Das `→ᵇ` der Notation ist an den Namensraum gebunden, in dem es geöffnet wurde.** Der neue
+  Abschnitt `TestClass` steht **außerhalb** von `namespace MeasureTheory`, also außerhalb der
+  Reichweite des `open scoped _root_.BoundedContinuousFunction` von Zeile 29336, und die
+  Fehlermeldung dafür ist irreführend: „elaboration function for
+  `Mathlib.Tactic.superscriptTerm` has not been implemented". Sie klingt nach einem Fehler in
+  Mathlibs Taktik und heißt bloß, daß die Notation nicht offen ist.
+
+#### Was der Zusammenbau **nicht** ist, und es steht so am Satz
+
+`mpSolution_of_tendsto_rescaledWalk` nimmt die schwache Konvergenz der Gesetze als **Hypothese**
+`hlim`. Das ist die andere Hälfte von Donsker und in diesem Lauf nicht bezahlt. Und ein Lauf, der
+diesen Satz hat, hat **nicht die Brownsche Bewegung konstruiert**: die Konklusion ist die
+Martingaleigenschaft von `ν` an **einem** Paar `(fb, gb)` zu **einem** `f`; die Identifikation als
+Wiener-Maß verlangt das Paar für jedes `f` der Klasse **und** den Eindeutigkeitssatz, und Mathlibs
+`IsBrownianReal` hat, wie am 2026-09-24 am Quelltext festgehalten, ohnehin keine Existenzaussage,
+die das aufnähme.
+
+**Ein Nebenbefund aus der Axiomprüfung, und er ist mehr als Buchhaltung:**
+`mpSolution_of_tendsto_rescaledWalk` hängt **nicht** an `sorryAx`. Die Martingalseite von Donsker
+ist damit vom einen offenen `sorry` der Kette — `continuous_jumpFunctional`, EK Proposition 3.5.3 —
+**unabhängig**. Die beiden Baustellen berühren sich nicht, und wer an der einen steckenbleibt,
+blockiert die andere nicht.
+
+#### Nachtrag desselben Laufs — das eben benannte Ziel steht auch schon, und die Sorge, mit der es benannt war, war gegenstandslos
+
+**`MeasureTheory.exists_subseq_mpSolution_of_rescaledWalk`**, achte Deklaration des Laufs, im
+selben Abschnitt `TestClassSeam`, wieder **0 Fehler / 0 neue Warnungen** und wieder auf `propext`,
+`Classical.choice`, `Quot.sound`:
+
+> Aus der Straffheit allein, ohne jede Konvergenzhypothese: es gibt eine Teilfolge `ns` und ein
+> `ν`, längs derer die Gesetze der reskalierten Irrfahrten schwach konvergieren und der Limes das
+> Martingalproblem für `(fb, gb)` auf einer abzählbaren dichten Zeitmenge löst.
+
+Das ist die **erste** Aussage der ganzen Kette, die keine Hypothese über Konvergenz mehr trägt —
+Straffheit hinein, Lösung heraus.
+
+**Die beiden Vorhersagen, die der Vorschlag mitgab, waren beide zu vorsichtig, und beide auf
+dieselbe Art:**
+
+* *Angesagt war*, zuerst nachzusehen, unter welchen Instanzen
+  `isCompact_closure_of_isTightMeasureSet` steht und ob `D(ℝ≥0, ℝ)` sie hat — „die einzige
+  Voraussetzung dieses Schrittes, die nicht schon in der Kette steht". **Sie steht schon in der
+  Kette.** Mathlibs Aussage verlangt nur `[T2Space E] [BorelSpace E]` („We only require the space
+  to be T2"), und die Datei benutzt sie an **drei** Stellen bereits auf dem Pfadraum
+  (`:29859`, `:29918`, `:30157`).
+* *Angesagt war*, die Kompaktheit aus der Straffheit zu ziehen. **Sie stand bereits da**, als
+  `MeasureTheory.isCompact_closure_range_map_rescaledWalk` (`:33180`), und zwar mit **derselben
+  Signatur**, die der Lauf im Entwurf frisch hingeschrieben hatte — bemerkt erst an der
+  Fehlermeldung „has already been declared".
+
+Das ist die zweite Hälfte der Regel für den Negativbefund, angewandt auf den eigenen Bestand:
+**vor dem Bauen wird der eigene Bestand durchsucht**, nicht nur vor dem Negativbefund. Ein `grep`
+über `MartingaleProblems/Suggested.lean` hätte hier einen Entwurf erspart.
+
+**Die eine Falle war eine andere, und die Datei warnt selbst vor ihr:** `ProbabilityMeasure` ist
+ein `def` auf einem Subtyp, der anonyme Konstruktor klappt darauf zurück, und dann findet weder
+`closure` noch `𝓝` eine Topologie („failed to synthesize `TopologicalSpace { μ // IsProbabilityMeasure μ }`").
+Die Typangabe hinter `⟨…⟩` genügt **nicht**; was hilft, ist `Tendsto (β := ProbabilityMeasure …)`
+in der Aussage und ein `set μ : ℕ → ProbabilityMeasure … := …` im Beweis. Der Doc-Kommentar an
+`isCompact_closure_range_of_subalgebra_forall_martingale` sagt das seit dem 2026-09-21; gelesen
+worden ist er erst nach dem Fehler.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **Die Eindeutigkeit des Limes** — und damit `MeasureTheory.tendsto_of_isRelativelyCompact_of_unique`
+> (`:31012`, bewiesen) an den Daten der reskalierten Irrfahrt, so daß aus der Teilfolge die **ganze
+> Folge** wird.
+
+*Warum jetzt:* nach diesem Lauf ist von Donsker alles bezahlt außer diesem einen Stück. Der vierte
+Kettenpunkt steht bewiesen da und hat drei Eingaben; `hcpt` ist
+`isCompact_closure_range_map_rescaledWalk`, `hlim` ist
+`exists_subseq_mpSolution_of_rescaledWalk` dieses Laufs in der Gestalt „jede konvergente
+Teilfolge hat einen Limes mit `Sol`", und allein `huniq` fehlt.
+
+*Worauf `huniq` ruht, und hier ist die Arbeit:* `Sol ν` ist derzeit die Martingaleigenschaft für
+**ein** Paar `(fb, gb)` zu **einem** `f`. Für die Eindeutigkeit braucht es sie für die **ganze**
+Testklasse, also einen Quantor über `f` in der Konklusion — das ist eine Änderung der Aussage und
+nicht ein weiterer Beweis darüber. **Der erste Schritt ist deshalb, `exists_subseq_…` so
+umzuschreiben, daß die Teilfolge vor dem `f` steht und nicht dahinter**: mit einer abzählbaren
+Klasse glatter Funktionen mit kompaktem Träger und dem Diagonalverfahren gilt die Konklusion
+längs *einer* Teilfolge für *alle* `f`. Ohne diese Umstellung ist `huniq` nicht einmal
+hinschreibbar, und das ist die Stelle, an der ein Lauf, der gleich zur Eindeutigkeit greift,
+danebengreifen wird.
+
+*Und was dabei nicht zu erwarten ist:* auch danach ist die Brownsche Bewegung nicht konstruiert.
+Mathlibs `IsBrownianReal` hat keine Existenzaussage, die den Limes aufnähme; die Identifikation
+als Wiener-Maß ist ein eigener Punkt und nicht der Rest dieses.

@@ -4,7 +4,7 @@
 * **stimmt: 491**
 * **verschoben: 0**
 * zielt auf eine andere Deklaration (von Hand): 46
-* ungepaart (von Hand): 99
+* ungepaart (von Hand): 102
 * **tote Fundstelle: 0**
 
 ## Tote Fundstellen (0)
@@ -65,7 +65,7 @@ Die zitierte Zeile ist die erste Zeile einer anderen Deklaration, ihr Kopf, oder
 
 keine
 
-## Ungepaart (99)
+## Ungepaart (102)
 
 Ungepaart heißt: kein Bezeichner des Umfelds ist in der zitierten Datei deklariert — meist, weil der Text den Gegenstand **beschreibt**, statt ihn zu benennen. Das sagt nichts darüber, ob die Fundstelle stimmt. Gefragt wird deshalb umgekehrt: **was steht an der zitierten Zeile?**
 
@@ -75,11 +75,14 @@ Ungepaart heißt: kein Bezeichner des Umfelds ist in der zitierten Datei deklari
 * Signaturfortsetzung von: **8**
 * Kommentar/Attribut: **5**
 * Deklaration/Abschnitt: **3**
+* im Rumpf von: **3**
 * Doc-Kommentar von: **3**
 
-### Mitten im Rumpf (0) — die einzige Klasse, die ein Befund sein kann
+### Mitten im Rumpf (3) — die einzige Klasse, die ein Befund sein kann
 
-keine
+* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:34934` -> `Analysis/Distribution/ContDiffMapSupportedIn.lean:142`: ContDiffMapSupportedInClass — `rcases (map_continuous f).bounded_above_of_compact`
+* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:34934` -> `Analysis/Distribution/ContDiffMapSupportedIn.lean:287`: ContDiffMapSupportedIn.bounded_iteratedFDeriv — `Continuous.bounded_above_of_compact_support`
+* `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:34935` -> `Analysis/Distribution/TestFunction.lean:111`: TestFunctionClass — `obtain ⟨C, hC⟩ := (map_continuous f).bounded_above`
 
 ### Alle ungepaarten Fundstellen
 
@@ -157,6 +160,9 @@ keine
 | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:29848` | `MeasureTheory/Measure/Typeclasses/Probability.lean:124` | anonyme Instanz `instance {f : α → β} : IsProbabilityMeasure (map f μ) where` |
 | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:29892` | `MeasureTheory/Measure/Typeclasses/Probability.lean:124` | anonyme Instanz `instance {f : α → β} : IsProbabilityMeasure (map f μ) where` |
 | `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:31622` | `Mathlib/Probability/Process/Filtration.lean:395` | Deklarationskopf `MeasureTheory.Filtration.natural` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:34934` | `Analysis/Distribution/ContDiffMapSupportedIn.lean:142` | im Rumpf von `ContDiffMapSupportedInClass — `rcases (map_continuous f).bounded_above_of_compact`` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:34934` | `Analysis/Distribution/ContDiffMapSupportedIn.lean:287` | im Rumpf von `ContDiffMapSupportedIn.bounded_iteratedFDeriv — `Continuous.bounded_above_of_compact_support`` |
+| `Journal/Blog/MartingaleProblem/TauCeti/MartingaleProblems/Suggested.lean:34935` | `Analysis/Distribution/TestFunction.lean:111` | im Rumpf von `TestFunctionClass — `obtain ⟨C, hC⟩ := (map_continuous f).bounded_above`` |
 | `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:519` | `Mathlib/MeasureTheory/Constructions/BorelSpace/Basic.lean:509` | Kopf von `measurable_of_countable_not_continuousAt` |
 | `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:1513` | `Mathlib/Topology/Metrizable/CompletelyMetrizable.lean:172` | anonyme Instanz `instance (priority := 100) _root_.MetricSpace.toIsCompletelyMetrizable` |
 | `Journal/Blog/MartingaleProblem/TauCeti/SkorokhodSpace/README.md:4193` | `Mathlib/Topology/MetricSpace/ProperSpace.lean:104` | anonyme Instanz `instance (priority := 100) complete_of_proper [ProperSpace α] : Comple` |

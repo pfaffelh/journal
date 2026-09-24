@@ -34914,3 +34914,302 @@ theorem measurable_comp_rescaledWalk_of_mem_evalFuns {ξ : ℕ → Ω → ℝ}
 end WalkContainment
 
 end MeasureTheory
+
+/-! ### The test class, and the two pieces of Mathlib groundwork it is missing
+
+`SkorokhodSpace.mpTest` takes its pair in the bundled type `E →ᵇ ℝ`, while the
+cell computation takes a bare `f : ℝ → ℝ` with `ContDiff ℝ 3 f` and three
+bounds on its derivatives.  Nothing joins the two, and the join is not a
+formality: a smooth function is not bounded, and a bound on a derivative is not
+part of `ContDiff`.  What makes both free at once is **compact support**, and
+the two steps that carry it are missing from Mathlib in the following precise
+sense (checked against `master` `94ef6b89544`, 2026-09-24):
+
+* `HasCompactSupport.deriv` is there, in
+  `Mathlib/Analysis/Calculus/Deriv/Support.lean`; the iterate is **not**, under
+  any of `HasCompactSupport.iteratedDeriv`, `support_iteratedDeriv`,
+  `tsupport_iteratedDeriv`.  It is the induction over the one that is there.
+* Turning a continuous compactly supported function into a bounded continuous
+  function is done **inline** at three places of Mathlib
+  (`Analysis/Distribution/ContDiffMapSupportedIn.lean:142` and `:287`,
+  `Analysis/Distribution/TestFunction.lean:111`) and is nowhere a declaration;
+  `ofHasCompactSupport` finds nothing.
+
+Both are stated at the generality of their proofs and neither mentions a
+measure, which is why they stand outside `MeasureTheory`. -/
+
+section TestClass
+
+open scoped _root_.BoundedContinuousFunction
+
+universe u v
+
+variable {𝕜 : Type u} [NontriviallyNormedField 𝕜]
+variable {F : Type v} [NormedAddCommGroup F] [NormedSpace 𝕜 F]
+
+/-- **Every iterated derivative of a compactly supported function is compactly
+supported.**  `HasCompactSupport.deriv` is the first step and is Mathlib's; this
+is the induction over it, and it reads no differentiability whatever — an
+iterated derivative that does not exist is the zero function, whose support is
+empty. -/
+protected theorem HasCompactSupport.iteratedDeriv {f : 𝕜 → F} (hf : HasCompactSupport f) :
+    ∀ n : ℕ, HasCompactSupport (iteratedDeriv n f)
+  | 0 => by simpa only [iteratedDeriv_zero] using hf
+  | n + 1 => by
+      rw [iteratedDeriv_succ]
+      exact (HasCompactSupport.iteratedDeriv hf n).deriv
+
+/-- **A continuous function with compact support, as a bounded continuous
+function.**  The bound is the one `Continuous.bounded_above_of_compact_support`
+produces and it is not named in the type, because no consumer reads its value;
+what every consumer reads is that the coercion is the original function, and
+that is `rfl`. -/
+noncomputable def BoundedContinuousFunction.ofHasCompactSupport
+    {α : Type*} [TopologicalSpace α] {β : Type*} [NormedAddCommGroup β]
+    (f : α → β) (hc : Continuous f) (hs : HasCompactSupport f) : α →ᵇ β :=
+  BoundedContinuousFunction.ofNormedAddCommGroup f hc
+    (hc.bounded_above_of_compact_support hs).choose
+    (hc.bounded_above_of_compact_support hs).choose_spec
+
+@[simp]
+theorem BoundedContinuousFunction.coe_ofHasCompactSupport
+    {α : Type*} [TopologicalSpace α] {β : Type*} [NormedAddCommGroup β]
+    (f : α → β) (hc : Continuous f) (hs : HasCompactSupport f) :
+    ⇑(BoundedContinuousFunction.ofHasCompactSupport f hc hs) = f := rfl
+
+end TestClass
+
+namespace MeasureTheory
+
+section TestClassSeam
+
+open scoped _root_.BoundedContinuousFunction
+
+/-- **Every derivative of a compactly supported `C^n` function is bounded.**  The
+two ingredients are `ContDiff.continuous_iteratedDeriv` and
+`HasCompactSupport.iteratedDeriv`; the nonnegativity of the bound is read off at
+a single point and is carried because the consumers below want it.
+
+The order `k` is asked to be at most `n` and nothing stronger: the derivative of
+order `n` itself is continuous under `ContDiff ℝ n`, so the highest bound is
+available at the smoothness the consumer already has. -/
+theorem exists_bound_abs_iteratedDeriv_of_hasCompactSupport {f : ℝ → ℝ} {n : ℕ}
+    (hf : ContDiff ℝ n f) (hs : HasCompactSupport f) {k : ℕ} (hk : k ≤ n) :
+    ∃ C : ℝ, 0 ≤ C ∧ ∀ y, |iteratedDeriv k f y| ≤ C := by
+  obtain ⟨C, hC⟩ :=
+    (hf.continuous_iteratedDeriv k (by exact_mod_cast hk)).bounded_above_of_compact_support
+      (hs.iteratedDeriv k)
+  have hC' : ∀ y, |iteratedDeriv k f y| ≤ C := fun y => by
+    simpa only [Real.norm_eq_abs] using hC y
+  exact ⟨C, (abs_nonneg (iteratedDeriv k f 0)).trans (hC' 0), hC'⟩
+
+/-- **The test class of Donsker's acceptance example.**
+
+A smooth compactly supported `f`, bundled as a bounded continuous function
+together with the compensator integrand `g = (v/2) · f''` and the three
+derivative bounds that `MeasureTheory.abs_integral_mpTest_sub_rescaledWalk_mul_le`
+reads.  This is the one statement that makes
+`MeasureTheory.tendsto_integral_mpTest_sub_pathOfProcess_rescaledWalk` below
+*writable*: `SkorokhodSpace.mpTest` demands the bundling in its type, and the
+cell computation produces the bare function.
+
+**`ContDiff ℝ 3 f` and not `ContDiff ℝ ⊤ f`.**  Three is the highest order any
+consumer reads, and each of the three bounds costs only the continuity of a
+compactly supported function.  Smoothness beyond the third derivative is neither
+used nor available to be used.
+
+**`g` is given by its values and `f` by its coercion**, which is the asymmetry
+the two consumers impose: the cell computation asks for `g` through
+`∀ y, g y = v / 2 * iteratedDeriv 2 f y`, while the path-space statements
+substitute `⇑f` and want the equality of functions.  Both are `rfl` at the
+witnesses produced here. -/
+theorem exists_boundedContinuous_of_contDiff_of_hasCompactSupport {f : ℝ → ℝ}
+    (hf : ContDiff ℝ 3 f) (hs : HasCompactSupport f) (v : ℝ) :
+    ∃ (fb gb : ℝ →ᵇ ℝ) (C₁ M₂ M₃ : ℝ),
+      (⇑fb = f) ∧ (∀ y, gb y = v / 2 * iteratedDeriv 2 f y) ∧
+      (∀ y, |deriv f y| ≤ C₁) ∧ (∀ y, |iteratedDeriv 2 f y| ≤ M₂) ∧
+      (∀ y, |iteratedDeriv 3 f y| ≤ M₃) := by
+  obtain ⟨C₁, -, hC₁⟩ :=
+    exists_bound_abs_iteratedDeriv_of_hasCompactSupport hf hs (k := 1) (by norm_num)
+  obtain ⟨M₂, -, hM₂⟩ :=
+    exists_bound_abs_iteratedDeriv_of_hasCompactSupport hf hs (k := 2) (by norm_num)
+  obtain ⟨M₃, -, hM₃⟩ :=
+    exists_bound_abs_iteratedDeriv_of_hasCompactSupport hf hs (k := 3) (by norm_num)
+  have hgc : Continuous fun y => v / 2 * iteratedDeriv 2 f y :=
+    (hf.continuous_iteratedDeriv 2 (by norm_num)).const_mul _
+  have hgs : HasCompactSupport fun y => v / 2 * iteratedDeriv 2 f y :=
+    (hs.iteratedDeriv 2).mul_left
+  refine ⟨BoundedContinuousFunction.ofHasCompactSupport f hf.continuous hs,
+    BoundedContinuousFunction.ofHasCompactSupport _ hgc hgs, C₁, M₂, M₃,
+    rfl, fun _ => rfl, fun y => ?_, hM₂, hM₃⟩
+  simpa only [iteratedDeriv_one] using hC₁ y
+
+variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
+
+/-- **The seam: `SkorokhodSpace.mpTest` read at the rescaled walk.**
+
+`MeasureTheory.tendsto_integral_mpTest_sub_rescaledWalk_mul` states the limit in
+coordinates — partial sums, a Lebesgue window, a weight indexed by `n`.  The
+càdlàg chain asks for it in the two shapes that live on path space: the tested
+functional is `SkorokhodSpace.mpTest`, and the weight is any member of
+`SkorokhodSpace.evalFuns`.  This is that translation, and **it is a rewrite and
+not an argument**: with `hΦ` the path at a time is the partial sum at the
+floored index, and with the bundling of
+`MeasureTheory.exists_boundedContinuous_of_contDiff_of_hasCompactSupport` both
+coercions are `rfl`.
+
+**The two hypotheses on the weight are discharged and not passed on.**  The
+boundedness `hZK` is `SkorokhodSpace.bounded_of_mem_evalFuns`, and the
+measurability for the moving filtration is
+`MeasureTheory.measurable_comp_rescaledWalk_of_mem_evalFuns` at `hS := le_rfl`.
+That is why the statement quantifies over `Z` in the class rather than carrying
+the two conditions: a consumer on path space has the membership and would have
+to rederive both.
+
+**The pair is produced and not taken.**  `f` enters bare and the bundled `fb, gb`
+come out, because the martingale problem the walk solves is not one a consumer
+may choose — `g` is determined by `f` and the common variance `v`. -/
+theorem tendsto_integral_mpTest_sub_pathOfProcess_rescaledWalk
+    {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0) {v : ℝ} (hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = v)
+    (hLp : ∀ k, MemLp (ξ k) 2 P) (hlaw : ∀ k, Measure.map (ξ k) P = Measure.map (ξ 0) P)
+    {f : ℝ → ℝ} (hf : ContDiff ℝ 3 f) (hs : HasCompactSupport f)
+    {Φ : ℕ → Ω → D(ℝ≥0, ℝ)}
+    (hΦ : ∀ (n : ℕ) (ω : Ω), (Φ n ω).toFun = fun r : ℝ≥0 ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊r * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) :
+    ∃ fb gb : ℝ →ᵇ ℝ, (⇑fb = f) ∧ (∀ y, gb y = v / 2 * iteratedDeriv 2 f y) ∧
+      ∀ s t : ℝ≥0, s ≤ t → ∀ Z ∈ SkorokhodSpace.evalFuns ℝ (Set.Iic s),
+        Tendsto (fun n : ℕ ↦ ∫ ω, (SkorokhodSpace.mpTest fb gb t (Φ n ω)
+            - SkorokhodSpace.mpTest fb gb s (Φ n ω)) * Z (Φ n ω) ∂P) atTop (𝓝 0) := by
+  obtain ⟨fb, gb, C₁, M₂, M₃, hfb, hgb, hC₁, hM₂, hM₃⟩ :=
+    exists_boundedContinuous_of_contDiff_of_hasCompactSupport hf hs v
+  refine ⟨fb, gb, hfb, hgb, fun s t hst Z hZ => ?_⟩
+  obtain ⟨K, hK⟩ := SkorokhodSpace.bounded_of_mem_evalFuns (E := ℝ) Z hZ
+  have hrw : ∀ (n : ℕ) (ω : Ω), (SkorokhodSpace.mpTest fb gb t (Φ n ω)
+      - SkorokhodSpace.mpTest fb gb s (Φ n ω)) * Z (Φ n ω)
+      = ((f ((Real.sqrt ((n : ℝ) + 1))⁻¹
+              * ∑ j ∈ Finset.range ⌊t * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+            - ∫ u in Set.Ioc (0 : ℝ) (t : ℝ),
+                (fun y => v / 2 * iteratedDeriv 2 f y) ((Real.sqrt ((n : ℝ) + 1))⁻¹
+                  * ∑ j ∈ Finset.range ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊, ξ j ω))
+          - (f ((Real.sqrt ((n : ℝ) + 1))⁻¹
+                * ∑ j ∈ Finset.range ⌊s * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+              - ∫ u in Set.Ioc (0 : ℝ) (s : ℝ),
+                  (fun y => v / 2 * iteratedDeriv 2 f y) ((Real.sqrt ((n : ℝ) + 1))⁻¹
+                    * ∑ j ∈ Finset.range ⌊u.toNNReal * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)))
+        * (fun ω => Z (Φ n ω)) ω := by
+    intro n ω
+    simp only [SkorokhodSpace.mpTest, hΦ n ω, hfb, hgb]
+  simp only [hrw]
+  refine tendsto_integral_mpTest_sub_rescaledWalk_mul hmeas hind hcent hsq hLp hlaw hf
+    (g := fun y => v / 2 * iteratedDeriv 2 f y) (fun y => rfl) hM₂ hM₃ hC₁
+    (Z := fun n ω => Z (Φ n ω)) (fun n ω => hK _) hst ?_
+  intro n
+  exact measurable_comp_rescaledWalk_of_mem_evalFuns hmeas n (hΦ n) (le_refl _) hZ
+
+/-- **Donsker's acceptance example, the martingale-problem half.**
+
+Given a weakly convergent sequence of laws of the rescaled walks, the limit
+solves the martingale problem for `(fb, gb)` on a countable dense set of times.
+This is the third and fourth items of Milestone 11 read on the data of the
+acceptance test, and it is
+`MeasureTheory.mpSolution_of_tendsto_cadlag_of_subseq_of_zero` at the constant
+sequence of spaces with `ns = id`.
+
+**What it does not contain is the convergence itself.**  `hlim` is a hypothesis,
+and paying it is the other half of Donsker: tightness
+(`MeasureTheory.isTightMeasureSet_map_rescaledWalk`) gives relative compactness,
+and the uniqueness of the limit turns that into convergence.  Stating the
+martingale side against `hlim` keeps the two halves apart, which is how the
+chain of Milestone 11 is built and how its fourth item reads them.
+
+**A run that has this has not constructed Brownian motion.**  The conclusion is
+a martingale property of `ν` at the pair `(fb, gb)` for one `f`; identifying `ν`
+as Wiener measure needs the pair for *every* `f` of the class together with the
+uniqueness theorem, and Mathlib's `IsBrownianReal` carries no existence
+statement to receive it. -/
+theorem mpSolution_of_tendsto_rescaledWalk
+    {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0) {v : ℝ} (hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = v)
+    (hLp : ∀ k, MemLp (ξ k) 2 P) (hlaw : ∀ k, Measure.map (ξ k) P = Measure.map (ξ 0) P)
+    {f : ℝ → ℝ} (hf : ContDiff ℝ 3 f) (hs : HasCompactSupport f)
+    {Φ : ℕ → Ω → D(ℝ≥0, ℝ)} (hΦm : ∀ n, Measurable (Φ n))
+    (hΦ : ∀ (n : ℕ) (ω : Ω), (Φ n ω).toFun = fun r : ℝ≥0 ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊r * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+    {ν : ProbabilityMeasure D(ℝ≥0, ℝ)}
+    (hlim : Tendsto (β := ProbabilityMeasure D(ℝ≥0, ℝ))
+      (fun n ↦ ⟨P.map (Φ n), inferInstance⟩) atTop (𝓝 ν)) :
+    ∃ fb gb : ℝ →ᵇ ℝ, (⇑fb = f) ∧ (∀ y, gb y = v / 2 * iteratedDeriv 2 f y) ∧
+      ∃ T : Set ℝ≥0, T.Countable ∧ Dense T ∧
+        ∀ s ∈ T, ∀ t ∈ T, s ≤ t →
+          (ν : Measure D(ℝ≥0, ℝ))[fun z ↦ SkorokhodSpace.mpTest fb gb t z | cadlagFiltration s]
+            =ᵐ[(ν : Measure D(ℝ≥0, ℝ))] fun z ↦ SkorokhodSpace.mpTest fb gb s z := by
+  obtain ⟨fb, gb, hfb, hgb, hzero⟩ :=
+    tendsto_integral_mpTest_sub_pathOfProcess_rescaledWalk hmeas hind hcent hsq hLp hlaw hf hs hΦ
+  refine ⟨fb, gb, hfb, hgb, ?_⟩
+  exact mpSolution_of_tendsto_cadlag_of_subseq_of_zero (Ω' := fun _ ↦ Ω) (m' := fun _ ↦ mΩ)
+    (P' := fun _ ↦ P) (X' := Φ) hΦm fb gb (ns := id) hzero hlim
+
+/-- **Donsker's acceptance example without any convergence hypothesis: tightness
+in, a solution out.**
+
+This is the first statement of the whole chain that assumes nothing about
+convergence.  `MeasureTheory.mpSolution_of_tendsto_rescaledWalk` above takes
+`hlim` and is therefore conditional; here the sequence is produced, and what
+produces it is the tightness already paid for in
+`MeasureTheory.isCompact_closure_range_map_rescaledWalk`.
+
+**Three steps, none of them new.**  Prokhorov turns the tightness into a compact
+closure (that is the cited statement); `IsCompact.tendsto_subseq` extracts a
+convergent subsequence from it; and the martingale side is
+`MeasureTheory.mpSolution_of_tendsto_cadlag_of_subseq_of_zero` read along that
+subsequence, its `hzero` being the conclusion of
+`MeasureTheory.tendsto_integral_mpTest_sub_pathOfProcess_rescaledWalk` composed
+with `StrictMono.tendsto_atTop`.
+
+**`hvar` is the one hypothesis the martingale side does not already carry.**  It
+belongs to the tightness and not to the cell computation: the compact
+containment of the walks is an estimate in the variance, while the cell
+computation reads only the common second moment `v`.  The two are asked
+separately because they are spent in different halves.
+
+**What is still missing for Donsker is the uniqueness of the limit and nothing
+else.**  `MeasureTheory.tendsto_of_isRelativelyCompact_of_unique` is proved and
+waits for exactly that: with a uniqueness theorem for the martingale problem of
+`(fb, gb)` the subsequence here becomes the full sequence, and the limit is
+identified.  Until then the statement says what it says -- *some* subsequential
+limit solves the problem -- and that is not the construction of Brownian
+motion. -/
+theorem exists_subseq_mpSolution_of_rescaledWalk {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hcent : ∀ k, ∫ ω, ξ k ω ∂P = 0) {v : ℝ} (hsq : ∀ k, ∫ ω, ξ k ω ^ 2 ∂P = v)
+    (hLp : ∀ k, MemLp (ξ k) 2 P) (hlaw : ∀ k, Measure.map (ξ k) P = Measure.map (ξ 0) P)
+    (hvar : ∀ k, variance (ξ k) P ≤ 1)
+    {f : ℝ → ℝ} (hf : ContDiff ℝ 3 f) (hs : HasCompactSupport f)
+    {Φ : ℕ → Ω → D(ℝ≥0, ℝ)} (hΦm : ∀ n, Measurable (Φ n))
+    (hΦ : ∀ (n : ℕ) (ω : Ω), (Φ n ω).toFun = fun r : ℝ≥0 ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊r * ((n : ℝ≥0) + 1)⌋₊, ξ j ω) :
+    ∃ fb gb : ℝ →ᵇ ℝ, (⇑fb = f) ∧ (∀ y, gb y = v / 2 * iteratedDeriv 2 f y) ∧
+      ∃ (ns : ℕ → ℕ) (ν : ProbabilityMeasure D(ℝ≥0, ℝ)), StrictMono ns ∧
+        Tendsto (β := ProbabilityMeasure D(ℝ≥0, ℝ))
+          (fun k ↦ ⟨P.map (Φ (ns k)), inferInstance⟩) atTop (𝓝 ν) ∧
+        ∃ T : Set ℝ≥0, T.Countable ∧ Dense T ∧
+          ∀ s ∈ T, ∀ t ∈ T, s ≤ t →
+            (ν : Measure D(ℝ≥0, ℝ))[fun z ↦ SkorokhodSpace.mpTest fb gb t z | cadlagFiltration s]
+              =ᵐ[(ν : Measure D(ℝ≥0, ℝ))] fun z ↦ SkorokhodSpace.mpTest fb gb s z := by
+  obtain ⟨fb, gb, hfb, hgb, hzero⟩ :=
+    tendsto_integral_mpTest_sub_pathOfProcess_rescaledWalk hmeas hind hcent hsq hLp hlaw hf hs hΦ
+  have hcpt := isCompact_closure_range_map_rescaledWalk hmeas hind hLp hcent hsq hvar hΦ hΦm
+  set μ : ℕ → ProbabilityMeasure D(ℝ≥0, ℝ) := fun n ↦ ⟨P.map (Φ n), inferInstance⟩ with hμ
+  obtain ⟨ν, -, ns, hns, hlim⟩ :=
+    hcpt.tendsto_subseq (x := μ) fun n ↦ subset_closure ⟨n, rfl⟩
+  refine ⟨fb, gb, hfb, hgb, ns, ν, hns, hlim, ?_⟩
+  exact mpSolution_of_tendsto_cadlag_of_subseq_of_zero (Ω' := fun _ ↦ Ω) (m' := fun _ ↦ mΩ)
+    (P' := fun _ ↦ P) (X' := Φ) hΦm fb gb (ns := ns)
+    (fun s t hst Z hZ ↦ (hzero s t hst Z hZ).comp hns.tendsto_atTop) hlim
+
+end TestClassSeam
+
+end MeasureTheory

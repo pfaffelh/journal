@@ -6,6 +6,6 @@
 | Datei | rc | Fehler | `sorry` | Warnungen | davon veraltet | Sekunden |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | `WeakConvergence` | 0 | 0 | 0 | 18 | 0 | 7 |
-| `SkorokhodSpace` | 0 | 0 | 1 | 39 | 0 | 22 |
-| `MartingaleProblems` | 0 | 0 | 0 | 36 | 0 | 36 |
-| `JumpProcesses` | 0 | 0 | 0 | 76 | 0 | 63 |
+| `SkorokhodSpace` | 0 | 0 | 1 | 39 | 0 | 21 |
+| `MartingaleProblems` | 0 | 0 | 0 | 36 | 0 | 34 |
+| `JumpProcesses` | 0 | 0 | 0 | 76 | 0 | 61 |
