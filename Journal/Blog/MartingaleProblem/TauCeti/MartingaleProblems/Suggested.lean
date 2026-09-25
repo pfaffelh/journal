@@ -39891,4 +39891,368 @@ theorem rademacherSeq_le_supOn_rescaledWalkPath {a : ℝ} (ha : 0 < a) (T : ℝ�
 
 end RademacherData
 
+/-! ### The reflection principle for Brownian motion
+
+`MeasureTheory.measure_le_iSup_eq_two_mul_of_isBrownianReal`: for Mathlib's
+`ProbabilityTheory.IsBrownianReal X Q`, `Q (a ≤ ⨆ t ≤ T, X t) = 2 Q (a ≤ X T)`, by the exact
+reflection identity for the fair-sign walk and Donsker's theorem.  The inputs are a portmanteau
+statement with a moving boundary on `ℝ`, the one-dimensional limit along Donsker's theorem, and
+its instance on `MeasureTheory.rademacherSeq`.  `X` is a hypothesis throughout. -/
+
+section ReflectionPrinciple
+
+variable {Ω : Type*}
+
+/-- **Portmanteau with a moving boundary.**  If `μs → μ` weakly on `ℝ`, `μ` has no atom at `a`,
+and `c i → a`, then `μs i [c i, ∞) → μ [a, ∞)`.
+
+`ProbabilityMeasure.tendsto_measure_of_null_frontier_of_tendsto` covers a fixed set; here the
+boundary moves with `i`.  The proof sandwiches `[c i, ∞)` between `(s, ∞)` and `[s', ∞)` for
+fixed `s' < a < s`, reads the two halves of the portmanteau theorem there
+(`ProbabilityMeasure.le_liminf_measure_open_of_tendsto`,
+`ProbabilityMeasure.limsup_measure_closed_le_of_tendsto`), and lets `s ↓ a`, `s' ↑ a` by
+continuity of `μ` along `⋃ (a + 1/(k+1), ∞) = (a, ∞)` and `⋂ [a - 1/(k+1), ∞) = [a, ∞)`.  The atom
+condition is read once, to identify `μ (a, ∞)` with `μ [a, ∞)` (`Ioi_ae_eq_Ici'`); no atom
+condition is asked at `s` or `s'`, because the portmanteau halves are inequalities. -/
+theorem ProbabilityMeasure.tendsto_measure_Ici_of_tendsto {ι : Type*} {L : Filter ι}
+    {μs : ι → ProbabilityMeasure ℝ} {μ : ProbabilityMeasure ℝ} (hμ : Tendsto μs L (𝓝 μ))
+    {a : ℝ} (ha : (μ : Measure ℝ) {a} = 0) {c : ι → ℝ} (hc : Tendsto c L (𝓝 a)) :
+    Tendsto (fun i ↦ (μs i : Measure ℝ) (Ici (c i))) L (𝓝 ((μ : Measure ℝ) (Ici a))) := by
+  refine tendsto_order.2 ⟨fun b hb ↦ ?_, fun b hb ↦ ?_⟩
+  · have hU : ⋃ k : ℕ, Ioi (a + 1 / ((k : ℝ) + 1)) = Ioi a := by
+      ext x
+      simp only [mem_iUnion, mem_Ioi]
+      constructor
+      · rintro ⟨k, hk⟩
+        have : 0 < 1 / ((k : ℝ) + 1) := by positivity
+        linarith
+      · intro hx
+        obtain ⟨k, hk⟩ := exists_nat_one_div_lt (sub_pos.2 hx)
+        exact ⟨k, by linarith⟩
+    have hmono : Monotone fun k : ℕ ↦ Ioi (a + 1 / ((k : ℝ) + 1)) := fun k l hkl ↦
+      Ioi_subset_Ioi (by gcongr)
+    have hlim := tendsto_measure_iUnion_atTop (μ := (μ : Measure ℝ)) hmono
+    rw [hU, measure_congr (Ioi_ae_eq_Ici' ha)] at hlim
+    obtain ⟨k, hk⟩ := (hlim.eventually (lt_mem_nhds hb)).exists
+    set s := a + 1 / ((k : ℝ) + 1)
+    have hs : a < s := by
+      have : 0 < 1 / ((k : ℝ) + 1) := by positivity
+      linarith
+    have hk' : b < (μ : Measure ℝ) (Ioi s) := hk
+    have h1 := ProbabilityMeasure.le_liminf_measure_open_of_tendsto hμ (isOpen_Ioi (a := s))
+    have h2 : ∀ᶠ i in L, b < (μs i : Measure ℝ) (Ioi s) :=
+      eventually_lt_of_lt_liminf (hk'.trans_le h1)
+    filter_upwards [h2, hc.eventually (gt_mem_nhds hs)] with i hi hci
+    exact hi.trans_le (measure_mono (Ioi_subset_Ici hci.le))
+  · have hI : ⋂ k : ℕ, Ici (a - 1 / ((k : ℝ) + 1)) = Ici a := by
+      ext x
+      simp only [mem_iInter, mem_Ici]
+      constructor
+      · intro hx
+        by_contra hxa
+        obtain ⟨k, hk⟩ := exists_nat_one_div_lt (sub_pos.2 (not_le.1 hxa))
+        linarith [hx k]
+      · intro hx k
+        have : 0 < 1 / ((k : ℝ) + 1) := by positivity
+        linarith
+    have hanti : Antitone fun k : ℕ ↦ Ici (a - 1 / ((k : ℝ) + 1)) := fun k l hkl ↦
+      Ici_subset_Ici.2 (by gcongr)
+    have hlim := tendsto_measure_iInter_atTop (μ := (μ : Measure ℝ))
+      (fun _ ↦ measurableSet_Ici.nullMeasurableSet) hanti ⟨0, measure_ne_top _ _⟩
+    rw [hI] at hlim
+    obtain ⟨k, hk⟩ := (hlim.eventually (gt_mem_nhds hb)).exists
+    set s := a - 1 / ((k : ℝ) + 1)
+    have hs : s < a := by
+      have : 0 < 1 / ((k : ℝ) + 1) := by positivity
+      linarith
+    have hk' : (μ : Measure ℝ) (Ici s) < b := hk
+    have h1 := ProbabilityMeasure.limsup_measure_closed_le_of_tendsto hμ (isClosed_Ici (a := s))
+    have h2 : ∀ᶠ i in L, (μs i : Measure ℝ) (Ici s) < b :=
+      eventually_lt_of_limsup_lt (h1.trans_lt hk')
+    filter_upwards [h2, hc.eventually (lt_mem_nhds hs)] with i hi hci
+    exact (measure_mono (Ici_subset_Ici.2 hci.le)).trans_lt hi
+
+/-- **The one-dimensional central limit theorem along Donsker's theorem, with a moving level.**
+For Donsker's data, `ProbabilityTheory.IsBrownianReal X Q` with measurable coordinates, a
+horizon `0 < T` and levels `c n → a`,
+`P (c n ≤ Φ n T) → Q (a ≤ √v · X T)`.
+
+The law of `Φ n T` converges to that of `√v · X' T` by the continuous mapping theorem with a
+null discontinuity set, `MeasureTheory.tendsto_of_measure_setOf_not_continuousAt_eq_zero`,
+applied to the evaluation at `T`, which is continuous at every continuous path
+(`SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet`); `X'` is the modification of
+`MeasureTheory.tendsto_map_rescaledWalk_of_isBrownianReal`, and `cont` puts almost every limit path
+there.  The limit law is `gaussianReal 0 T` scaled by `√v`, absolutely continuous
+(`ProbabilityTheory.gaussianReal_absolutelyContinuous`), so it has no atom at `a` and
+`MeasureTheory.ProbabilityMeasure.tendsto_measure_Ici_of_tendsto` applies.  `0 < T` is where the
+atom condition comes from: at `T = 0` the limit is `dirac 0`.  **Not an existence statement**:
+`X` is a hypothesis. -/
+theorem tendsto_measure_le_eval_rescaledWalk_of_isBrownianReal {mΩ : MeasurableSpace Ω}
+    {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hcent : ∫ ω, ξ 0 ω ∂P = 0) {v : ℝ} (hv : 0 < v) (hsq : ∫ ω, ξ 0 ω ^ 2 ∂P = v)
+    (hLp : MemLp (ξ 0) 2 P) (hlaw : ∀ k, Measure.map (ξ k) P = Measure.map (ξ 0) P)
+    {Φ : ℕ → Ω → D(ℝ≥0, ℝ)} (hΦm : ∀ n, Measurable (Φ n))
+    (hΦ : ∀ (n : ℕ) (ω : Ω), (Φ n ω).toFun = fun r : ℝ≥0 ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊r * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t))
+    {T : ℝ≥0} (hT : 0 < T) {a : ℝ} {c : ℕ → ℝ} (hc : Tendsto c atTop (𝓝 a)) :
+    Tendsto (fun n ↦ P {ω | c n ≤ (Φ n ω).toFun T}) atTop
+      (𝓝 (Q {ω | a ≤ Real.sqrt v * X T ω})) := by
+  obtain ⟨X', hc', hae, hm', hconv⟩ :=
+    tendsto_map_rescaledWalk_of_isBrownianReal hmeas hind hcent hv hsq hLp hlaw hΦm hΦ hX hm
+  have hpre : IsPreBrownianReal X' Q :=
+    hX.toIsPreBrownianReal.congr fun t ↦ by
+      filter_upwards [hae] with ω hω using (hω t).symm
+  have := hpre.isGaussianProcess.isProbabilityMeasure
+  set Y := cadlagPath (fun t ω ↦ Real.sqrt v * X' t ω)
+    (fun ω ↦ (hc' ω).continuous_comp (continuous_const.mul continuous_id)) with hY
+  have hYm : Measurable Y := measurable_cadlagPath _ fun t ↦ (hm' t).const_mul _
+  set e : D(ℝ≥0, ℝ) → ℝ := fun z ↦ z.toFun T with he
+  have hem : Measurable e := SkorokhodSpace.measurable_eval T
+  have hFc : ∀ᵐ ω ∂Q, ContinuousAt e (Y ω) := by
+    filter_upwards [hX.cont, hae] with ω hω hω'
+    have hcont : Continuous fun t ↦ Real.sqrt v * X' t ω := by
+      simp only [hω']
+      exact continuous_const.mul hω
+    exact SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet
+      ((Y ω).isCadlag.continuousAt_iff_notMem_leftJumpSet.1 hcont.continuousAt)
+  have hnull : (Q.map Y) {z | ¬ ContinuousAt e z} = 0 := by
+    have hms : MeasurableSet {z | ¬ ContinuousAt e z} := (measurableSet_of_continuousAt e).compl
+    rw [Measure.map_apply hYm hms]
+    exact ae_iff.1 hFc
+  have hlim := tendsto_of_measure_setOf_not_continuousAt_eq_zero
+    (μ' := fun n ↦ ⟨(P.map (Φ n)).map e, inferInstance⟩)
+    (ν' := ⟨(Q.map Y).map e, inferInstance⟩) hem hconv hnull (fun n ↦ rfl) rfl
+  have hlawT : Q.map (fun ω ↦ X' T ω) = gaussianReal 0 T := (hpre.hasLaw_eval T).map_eq
+  have hsv : 0 < Real.sqrt v := Real.sqrt_pos.2 hv
+  have hatom : ((Q.map Y).map e) {a} = 0 := by
+    rw [Measure.map_apply hem (measurableSet_singleton a),
+      Measure.map_apply hYm (hem (measurableSet_singleton a))]
+    have hset : Y ⁻¹' (e ⁻¹' {a}) = (fun ω ↦ X' T ω) ⁻¹' {a / Real.sqrt v} := by
+      ext ω
+      simp only [mem_preimage, mem_singleton_iff, Y, e, cadlagPath]
+      rw [eq_div_iff hsv.ne', mul_comm]
+    rw [hset, ← Measure.map_apply (hm' T) (measurableSet_singleton _), hlawT]
+    exact gaussianReal_absolutelyContinuous 0 (ne_of_gt hT) (Real.volume_singleton)
+  have key := ProbabilityMeasure.tendsto_measure_Ici_of_tendsto hlim
+    (μ := ⟨(Q.map Y).map e, inferInstance⟩) hatom hc
+  have hP : ∀ n, ((⟨(P.map (Φ n)).map e, inferInstance⟩ : ProbabilityMeasure ℝ) : Measure ℝ)
+      (Ici (c n)) = P {ω | c n ≤ (Φ n ω).toFun T} := fun n ↦ by
+    change ((P.map (Φ n)).map e) (Ici (c n)) = _
+    rw [Measure.map_apply hem measurableSet_Ici,
+      Measure.map_apply (hΦm n) (hem measurableSet_Ici)]
+    rfl
+  have hQ : ((⟨(Q.map Y).map e, inferInstance⟩ : ProbabilityMeasure ℝ) : Measure ℝ) (Ici a)
+      = Q {ω | a ≤ Real.sqrt v * X T ω} := by
+    change ((Q.map Y).map e) (Ici a) = _
+    rw [Measure.map_apply hem measurableSet_Ici,
+      Measure.map_apply hYm (hem measurableSet_Ici)]
+    refine measure_congr ?_
+    filter_upwards [hae] with ω hω
+    change (a ≤ Real.sqrt v * X' T ω) = (a ≤ Real.sqrt v * X T ω)
+    rw [hω T]
+  rw [← hQ]
+  exact key.congr hP
+
+/-- **The walk of fair signs at a moving level.**  For `ProbabilityTheory.IsBrownianReal X Q` with
+measurable coordinates, `0 < T` and `c n → a`,
+`P (c n √(n+1) ≤ S_{⌊T (n+1)⌋}) → Q (a ≤ X T)` under `rademacherSeq`.  This is
+`MeasureTheory.tendsto_measure_le_eval_rescaledWalk_of_isBrownianReal` on the data of
+`MeasureTheory.rademacherSeq`, with `v = 1`, the event rewritten from `Φ n T` to the partial sum.
+It is the form in which the two summands of
+`MeasureTheory.rademacherSeq_le_supOn_rescaledWalkPath` are passed to the limit. -/
+theorem tendsto_rademacherSeq_le_sum_div_sqrt
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t))
+    {T : ℝ≥0} (hT : 0 < T) {a : ℝ} {c : ℕ → ℝ} (hc : Tendsto c atTop (𝓝 a)) :
+    Tendsto (fun n ↦ rademacherSeq {ω | c n * Real.sqrt ((n : ℝ) + 1)
+        ≤ ∑ j ∈ Finset.range ⌊T * ((n : ℝ≥0) + 1)⌋₊, ω j}) atTop
+      (𝓝 (Q {ω | a ≤ X T ω})) := by
+  have h := tendsto_measure_le_eval_rescaledWalk_of_isBrownianReal
+    (fun k ↦ (measurable_pi_apply k).stronglyMeasurable) iIndepFun_rademacherSeq
+    (integral_eval_rademacherSeq 0) one_pos (integral_eval_sq_rademacherSeq 0)
+    (memLp_eval_rademacherSeq 0 2)
+    (fun k ↦ by rw [map_eval_rademacherSeq, map_eval_rademacherSeq])
+    (measurable_rescaledWalkPath fun k ↦ measurable_pi_apply k) (fun _ _ ↦ rfl) hX hm hT hc
+  simp only [Real.sqrt_one, one_mul] at h
+  refine h.congr fun n ↦ congrArg rademacherSeq (Set.ext fun ω ↦ ?_)
+  change c n ≤ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊T * ((n : ℝ≥0) + 1)⌋₊, ω j ↔ _
+  rw [le_inv_mul_iff₀ (by positivity), mul_comm]
+  rfl
+
+/-- **The reflection principle for Mathlib's Brownian motion.**  For
+`ProbabilityTheory.IsBrownianReal X Q` with measurable coordinates, `0 < T` and `0 < a`,
+`Q (a ≤ ⨆ t ≤ T, X t) = 2 Q (a ≤ X T)`.
+
+The proof is Billingsley's (*Convergence of Probability Measures*, §9): exact for the fair-sign
+walk, then Donsker.  For the walk,
+`P (a ≤ sup_{t ≤ T} Φ n) = P (S_N ≥ m) + P (S_N > m)` with `m = ⌈a √(n+1)⌉`
+(`MeasureTheory.rademacherSeq_le_supOn_rescaledWalkPath`); both summands tend to `Q (a ≤ X T)` by
+`MeasureTheory.tendsto_rademacherSeq_le_sum_div_sqrt`, the second squeezed between the levels
+`m + 1` and `m`, so no integrality of `S_N` is read.  The laws of `sup_{t ≤ T} Φ n` converge to
+that of `sup_{t ≤ T} X'` (`SkorokhodSpace.continuousAt_supOn` and the continuous mapping theorem
+with a null discontinuity set), and the two halves of the portmanteau theorem give
+`Q (s < sup) ≤ 2 Q (s ≤ X T)` for every `0 < s` and `2 Q (a ≤ X T) ≤ Q (a ≤ sup)`.  Letting
+`s ↑ a` along `a - 1/(k+1)` closes the gap, by continuity of `s ↦ Q (s ≤ X T)` from the left,
+which is continuity of a measure from above and asks for **no** atom condition.  In particular
+it is **not** shown beforehand that `sup_{t ≤ T} X t` has no atoms; that falls out.
+
+The supremum `⨆ t : Set.Iic T, X t ω` is Lean's `iSup` of reals and is the junk value `0` on an
+unbounded family.  It is not read there: off one null set the path is continuous, hence bounded
+on `[0, T]`, and the measure only sees the almost sure class of the event.  The event itself
+need not be measurable; `Q` is evaluated as an outer measure.
+
+**Not an existence statement**: `X` is a hypothesis, and `ProbabilityTheory.IsBrownianReal`
+carries no existence statement. -/
+theorem measure_le_iSup_eq_two_mul_of_isBrownianReal
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t))
+    {T : ℝ≥0} (hT : 0 < T) {a : ℝ} (ha : 0 < a) :
+    Q {ω | a ≤ ⨆ t : Set.Iic T, X t ω} = 2 * Q {ω | a ≤ X T ω} := by
+  set G : ℝ → ENNReal := fun s ↦ Q {ω | s ≤ X T ω} with hG
+  set S : ℕ → (ℕ → ℝ) → ℝ := fun n ω ↦ ∑ j ∈ Finset.range ⌊T * ((n : ℝ≥0) + 1)⌋₊, ω j
+    with hS
+  have hsq : ∀ n : ℕ, 0 < Real.sqrt ((n : ℝ) + 1) := fun n ↦ Real.sqrt_pos.2 (by positivity)
+  have hinv : Tendsto (fun n : ℕ ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹) atTop (𝓝 0) :=
+    tendsto_inv_atTop_zero.comp (Real.tendsto_sqrt_atTop.comp
+      (tendsto_atTop_add_const_right _ 1 tendsto_natCast_atTop_atTop))
+  -- the two summands of the reflection identity, at every level
+  have hA : ∀ s : ℝ, ∀ d : ℝ, 0 ≤ d → Tendsto (fun n : ℕ ↦ rademacherSeq {ω |
+      (⌈s * Real.sqrt ((n : ℝ) + 1)⌉ : ℝ) + d ≤ S n ω}) atTop (𝓝 (G s)) := by
+    intro s d hd
+    set c : ℕ → ℝ := fun n ↦
+      ((⌈s * Real.sqrt ((n : ℝ) + 1)⌉ : ℝ) + d) / Real.sqrt ((n : ℝ) + 1) with hcdef
+    have hc : Tendsto c atTop (𝓝 s) := by
+      have hup : Tendsto (fun n : ℕ ↦ s + (1 + d) * (Real.sqrt ((n : ℝ) + 1))⁻¹) atTop
+          (𝓝 s) := by
+        simpa using tendsto_const_nhds.add (hinv.const_mul (1 + d))
+      refine tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hup (fun n ↦ ?_)
+        (fun n ↦ ?_)
+      · change s ≤ ((⌈s * Real.sqrt ((n : ℝ) + 1)⌉ : ℝ) + d) / Real.sqrt ((n : ℝ) + 1)
+        rw [le_div_iff₀ (hsq n)]
+        linarith [Int.le_ceil (s * Real.sqrt ((n : ℝ) + 1))]
+      · change ((⌈s * Real.sqrt ((n : ℝ) + 1)⌉ : ℝ) + d) / Real.sqrt ((n : ℝ) + 1)
+          ≤ s + (1 + d) * (Real.sqrt ((n : ℝ) + 1))⁻¹
+        rw [div_le_iff₀ (hsq n), add_mul, mul_assoc, inv_mul_cancel₀ (hsq n).ne', mul_one]
+        linarith [Int.ceil_lt_add_one (s * Real.sqrt ((n : ℝ) + 1))]
+    refine (tendsto_rademacherSeq_le_sum_div_sqrt hX hm hT hc).congr fun n ↦ ?_
+    have h : c n * Real.sqrt ((n : ℝ) + 1) = (⌈s * Real.sqrt ((n : ℝ) + 1)⌉ : ℝ) + d :=
+      div_mul_cancel₀ _ (hsq n).ne'
+    rw [h]
+  -- the law of the running maximum of the walk, at every positive level
+  have hf : ∀ s, 0 < s → Tendsto (fun n ↦ rademacherSeq {ω | s ≤ SkorokhodSpace.supOn T
+      (rescaledWalkPath (fun k (ω : ℕ → ℝ) ↦ ω k) n ω)}) atTop (𝓝 (2 * G s)) := by
+    intro s hs
+    have h0 := hA s 0 le_rfl
+    simp only [add_zero] at h0
+    have h1 := hA s 1 zero_le_one
+    have hB : Tendsto (fun n : ℕ ↦ rademacherSeq {ω |
+        (⌈s * Real.sqrt ((n : ℝ) + 1)⌉ : ℝ) < S n ω}) atTop (𝓝 (G s)) := by
+      refine tendsto_of_tendsto_of_tendsto_of_le_of_le h1 h0
+        (fun n ↦ measure_mono fun ω hω ↦ ?_) (fun n ↦ measure_mono fun ω hω ↦ ?_)
+      · exact (lt_add_one _).trans_le (show _ ≤ S n ω from hω)
+      · exact le_of_lt (show _ < S n ω from hω)
+    rw [two_mul]
+    exact (h0.add hB).congr fun n ↦ (rademacherSeq_le_supOn_rescaledWalkPath hs T n).symm
+  -- the laws of the running maxima converge
+  obtain ⟨X', hc', hae, hm', hconv⟩ := tendsto_map_rescaledWalk_of_isBrownianReal
+    (fun k ↦ (measurable_pi_apply k).stronglyMeasurable) iIndepFun_rademacherSeq
+    (integral_eval_rademacherSeq 0) one_pos (integral_eval_sq_rademacherSeq 0)
+    (memLp_eval_rademacherSeq 0 2)
+    (fun k ↦ by rw [map_eval_rademacherSeq, map_eval_rademacherSeq])
+    (measurable_rescaledWalkPath fun k ↦ measurable_pi_apply k) (fun _ _ ↦ rfl) hX hm
+  have := hX.toIsPreBrownianReal.isGaussianProcess.isProbabilityMeasure
+  set Y := cadlagPath (fun t ω ↦ Real.sqrt 1 * X' t ω)
+    (fun ω ↦ (hc' ω).continuous_comp (continuous_const.mul continuous_id)) with hY
+  have hYm : Measurable Y := measurable_cadlagPath _ fun t ↦ (hm' t).const_mul _
+  set e : D(ℝ≥0, ℝ) → ℝ := SkorokhodSpace.supOn T with he
+  have hem : Measurable e := SkorokhodSpace.measurable_supOn T
+  have hFc : ∀ᵐ ω ∂Q, ContinuousAt e (Y ω) := by
+    filter_upwards [hX.cont, hae] with ω hω hω'
+    have hcont : Continuous fun t ↦ Real.sqrt 1 * X' t ω := by
+      simp only [hω']
+      exact continuous_const.mul hω
+    exact SkorokhodSpace.continuousAt_supOn hcont
+  have hnull : (Q.map Y) {z | ¬ ContinuousAt e z} = 0 := by
+    have hms : MeasurableSet {z | ¬ ContinuousAt e z} := (measurableSet_of_continuousAt e).compl
+    rw [Measure.map_apply hYm hms]
+    exact ae_iff.1 hFc
+  set μs : ℕ → ProbabilityMeasure ℝ := fun n ↦
+    ⟨(rademacherSeq.map (rescaledWalkPath (fun k (ω : ℕ → ℝ) ↦ ω k) n)).map e, inferInstance⟩
+    with hμs
+  set μ : ProbabilityMeasure ℝ := ⟨(Q.map Y).map e, inferInstance⟩ with hμdef
+  have hlim : Tendsto μs atTop (𝓝 μ) :=
+    tendsto_of_measure_setOf_not_continuousAt_eq_zero hem hconv hnull (fun n ↦ rfl) rfl
+  have hμn : ∀ s, (fun n ↦ (μs n : Measure ℝ) (Ici s)) = fun n ↦ rademacherSeq {ω | s ≤
+      SkorokhodSpace.supOn T (rescaledWalkPath (fun k (ω : ℕ → ℝ) ↦ ω k) n ω)} := by
+    intro s
+    funext n
+    change ((rademacherSeq.map (rescaledWalkPath (fun k (ω : ℕ → ℝ) ↦ ω k) n)).map e)
+      (Ici s) = _
+    rw [Measure.map_apply hem measurableSet_Ici,
+      Measure.map_apply (measurable_rescaledWalkPath (fun k ↦ measurable_pi_apply k) n)
+        (hem measurableSet_Ici)]
+    rfl
+  have hμ : (μ : Measure ℝ) (Ici a) = Q {ω | a ≤ ⨆ t : Set.Iic T, X t ω} := by
+    change ((Q.map Y).map e) (Ici a) = _
+    rw [Measure.map_apply hem measurableSet_Ici,
+      Measure.map_apply hYm (hem measurableSet_Ici)]
+    refine measure_congr ?_
+    filter_upwards [hae] with ω hω
+    change (a ≤ SkorokhodSpace.supOn T (Y ω)) = (a ≤ ⨆ t : Set.Iic T, X t ω)
+    simp only [SkorokhodSpace.supOn, hY, cadlagPath, hω, Real.sqrt_one, one_mul]
+  -- Portmanteau, both halves
+  have hlow : 2 * G a ≤ (μ : Measure ℝ) (Ici a) := by
+    have h := ProbabilityMeasure.limsup_measure_closed_le_of_tendsto hlim (isClosed_Ici (a := a))
+    rw [hμn a, (hf a ha).limsup_eq] at h
+    exact h
+  have hup : ∀ s, 0 < s → (μ : Measure ℝ) (Ioi s) ≤ 2 * G s := by
+    intro s hs
+    calc (μ : Measure ℝ) (Ioi s)
+        ≤ liminf (fun n ↦ (μs n : Measure ℝ) (Ioi s)) atTop :=
+          ProbabilityMeasure.le_liminf_measure_open_of_tendsto hlim (isOpen_Ioi (a := s))
+      _ ≤ liminf (fun n ↦ (μs n : Measure ℝ) (Ici s)) atTop :=
+          liminf_le_liminf (Eventually.of_forall fun n ↦ measure_mono Ioi_subset_Ici_self)
+      _ = 2 * G s := by rw [hμn s]; exact (hf s hs).liminf_eq
+  -- the survival function of `X T` is continuous from the left
+  have hGlim : Tendsto (fun k : ℕ ↦ G (a - 1 / ((k : ℝ) + 1))) atTop (𝓝 (G a)) := by
+    have hanti : Antitone fun k : ℕ ↦ {ω | a - 1 / ((k : ℝ) + 1) ≤ X T ω} :=
+      fun k l hkl ω (hω : a - 1 / ((l : ℝ) + 1) ≤ X T ω) ↦
+        (show a - 1 / ((k : ℝ) + 1) ≤ a - 1 / ((l : ℝ) + 1) by gcongr).trans hω
+    have hI : ⋂ k : ℕ, {ω | a - 1 / ((k : ℝ) + 1) ≤ X T ω} = {ω | a ≤ X T ω} := by
+      ext ω
+      simp only [mem_iInter]
+      change (∀ k : ℕ, a - 1 / ((k : ℝ) + 1) ≤ X T ω) ↔ a ≤ X T ω
+      constructor
+      · intro hx
+        by_contra hxa
+        obtain ⟨k, hk⟩ := exists_nat_one_div_lt (sub_pos.2 (not_le.1 hxa))
+        linarith [hx k]
+      · intro hx k
+        have : 0 < 1 / ((k : ℝ) + 1) := by positivity
+        linarith
+    have h := tendsto_measure_iInter_atTop (μ := Q)
+      (fun k ↦ (measurableSet_le measurable_const (hm T)).nullMeasurableSet) hanti
+      ⟨0, measure_ne_top _ _⟩
+    rw [hI] at h
+    exact h
+  have hpos : ∀ᶠ k : ℕ in atTop, 0 < a - 1 / ((k : ℝ) + 1) := by
+    have h := (tendsto_const_nhds (x := a)).sub (tendsto_one_div_add_atTop_nhds_zero_nat (𝕜 := ℝ))
+    rw [sub_zero] at h
+    exact h.eventually (lt_mem_nhds ha)
+  have hupper : (μ : Measure ℝ) (Ici a) ≤ 2 * G a := by
+    refine ge_of_tendsto (ENNReal.Tendsto.const_mul hGlim (Or.inr (by simp))) ?_
+    filter_upwards [hpos] with k hk
+    have hk' : a - 1 / ((k : ℝ) + 1) < a := by
+      have : 0 < 1 / ((k : ℝ) + 1) := by positivity
+      linarith
+    exact (measure_mono (Ici_subset_Ioi.2 hk')).trans (hup _ hk)
+  rw [← hμ]
+  exact le_antisymm hupper hlow
+
+end ReflectionPrinciple
+
 end MeasureTheory

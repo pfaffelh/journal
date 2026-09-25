@@ -1,6 +1,6 @@
 # Deklarationen, die es auf `94ef6b89544e58e90f119da869f3fb48d1da0f4c` schon geben könnte
 
-* geprüfte eigene Deklarationen: **2004**
+* geprüfte eigene Deklarationen: **2008**
 * Treffer auf dem letzten Namensbestandteil: **45**
 * als zu allgemein übergangen (kurz oder generisch): 26
 

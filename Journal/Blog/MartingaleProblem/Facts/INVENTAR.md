@@ -61513,3 +61513,100 @@ es ist das letzte Stück vor dem Spiegelungsprinzip. Danach bleibt der Schluß: 
 mit der Stetigkeit von `a ↦ 2 Q (a ≤ X T)` die Gleichung
 `Q (a ≤ ⨆ t ≤ T, X t) = 2 Q (a ≤ X T)` — ohne gesondert zu zeigen, daß `sup X` keine Atome hat.
 Geschätzt ein Lauf für das Ziel, einer für den Schluß.
+
+### 2026-09-25, achter Lauf des Tages — das benannte Ziel steht, und der Schluß dahinter ebenfalls, im selben Lauf: **das Spiegelungsprinzip für Mathlibs `IsBrownianReal`**, `Q (a ≤ ⨆ t ≤ T, X t) = 2 Q (a ≤ X T)`, ohne vorher zu zeigen, daß das Supremum keine Atome hat
+
+*`check_master.py` gegen `94ef6b89544`: **0 Fehler, 0 veraltete Namen, 0 `sorry`**, Warnungen
+**18 / 38 / 36 / 76**, unverändert — die vier neuen Deklarationen tragen keine Warnung.
+`check_axioms_master.py` über alle vier: `propext`, `Classical.choice`, `Quot.sound`.
+`check_duplicates.py`: 45, unverändert. Erprobt in `scripts/_dev_onedim.lean` (gegen v4.33.1,
+nur die Portmanteau-Aussage) und `scripts/_dev_onedimwalk.lean` (über `dev_check_master.py`
+gegen die gebaute Kette); eingefügt mit `scripts/_dev_insert_reflection.py`. Drei Korrekturen
+im Probelauf, alle Schreibweise und keine Mathematik: `Measure.map_apply` fand die Menge
+`{z | ¬ ContinuousAt e z}` erst, als ihre Meßbarkeit als eigene Aussage in genau dieser
+Gestalt dastand; Mengen `{ω | … ≤ S n ω}` sind für `lt_add_one.trans_le` erst nach
+`show _ ≤ S n ω from hω` eine Ungleichung; und `fun n ↦` brauchte den Typ `ℕ`, weil `n` sonst aus
+`(n : ℝ)` als reell erschlossen wird. Die Prüfbäume `~/Code/lean/mathlib-master/_check_1448273`
+und `_check_1454941` sind nach `--keep` stehengeblieben und aus diesem Lauf nicht löschbar
+(außerhalb der freigegebenen Verzeichnisse); sie sind wegzuräumen, ebenso der vom Vorlauf
+gemeldete `_check_1404662`.*
+
+Neuer Abschnitt `ReflectionPrinciple` am Ende von `MartingaleProblems/Suggested.lean`, hinter
+`RademacherData`, vier Deklarationen:
+
+| Name | Aussage |
+| --- | --- |
+| `MeasureTheory.ProbabilityMeasure.tendsto_measure_Ici_of_tendsto` | **Portmanteau mit wanderndem Rand**: `μs → μ` schwach auf `ℝ`, `μ {a} = 0`, `c i → a` ⟹ `μs i [c i, ∞) → μ [a, ∞)`, über beliebigem Filter |
+| `MeasureTheory.tendsto_measure_le_eval_rescaledWalk_of_isBrownianReal` | Donsker-Daten, `IsBrownianReal X Q`, `0 < T`, `c n → a` ⟹ `P (c n ≤ Φ n T) → Q (a ≤ √v · X T)` |
+| `MeasureTheory.tendsto_rademacherSeq_le_sum_div_sqrt` | **das benannte Ziel**: `rademacherSeq {c n √(n+1) ≤ S_{⌊T (n+1)⌋}} → Q (a ≤ X T)` |
+| `MeasureTheory.measure_le_iSup_eq_two_mul_of_isBrownianReal` | **das Spiegelungsprinzip**: für `IsBrownianReal X Q` mit meßbaren Koordinaten, `0 < T`, `0 < a`: `Q {a ≤ ⨆ t : Set.Iic T, X t} = 2 * Q {a ≤ X T}` |
+
+#### Befunde
+
+* **Der angesagte Weg war richtig, und er ist kürzer als angesagt: ein Lauf statt zwei.** Die
+  Schätzung „ein Lauf für das Ziel, einer für den Schluß" hat den Schluß überschätzt, weil seine
+  Arbeit beim Ziel schon getan war: die Portmanteau-Aussage mit wanderndem Rand steckt zweimal
+  darin, und im Schluß werden ihre beiden Hälften einzeln gelesen
+  (`ProbabilityMeasure.limsup_measure_closed_le_of_tendsto`,
+  `ProbabilityMeasure.le_liminf_measure_open_of_tendsto`,
+  `Mathlib/MeasureTheory/Measure/Portmanteau.lean:314` und `:326` auf `94ef6b89544`).
+* **Die Atomlosigkeit des Supremums wird nicht gebraucht, die der Randverteilung nur an einer
+  Stelle.** Im Schluß stehen `2 G a ≤ Q (a ≤ sup)` (abgeschlossene Hälfte bei `a`) und
+  `Q (s < sup) ≤ 2 G s` für jedes `0 < s` (offene Hälfte bei `s`), mit `G s = Q (s ≤ X T)`.
+  Mit `Q (a ≤ sup) ≤ Q (s < sup)` für `s < a` bleibt nur `G (a - 1/(k+1)) → G a`, und das ist
+  **Stetigkeit des Maßes von oben** (`tendsto_measure_iInter_atTop`,
+  `Mathlib/MeasureTheory/Measure/Continuity.lean:220`) längs
+  `⋂ {a - 1/(k+1) ≤ X T} = {a ≤ X T}` — ohne Atombedingung. Gelesen wird die Atomlosigkeit von
+  `X T` nur im eindimensionalen Grenzübergang, über
+  `ProbabilityTheory.gaussianReal_absolutelyContinuous`
+  (`Mathlib/Probability/Distributions/Gaussian/Real.lean:254`) und `Real.volume_singleton`.
+  Das ist auch der Grund für `0 < T`: bei `T = 0` ist der Limes `dirac 0`.
+* **Der zweite Summand braucht keine Ganzzahligkeit der Irrfahrt.** `P (S_N > m)` ist zwischen
+  `P (S_N ≥ m + 1)` und `P (S_N ≥ m)` eingeklemmt; beide Stufenfolgen `(m + d)/√(n+1)`,
+  `d = 1` bzw. `0`, konvergieren gegen `a`, weil
+  `a ≤ (⌈a√(n+1)⌉ + d)/√(n+1) ≤ a + (1+d)/√(n+1)`. Daß `S_N` fast sicher ganzzahlig ist, wird
+  nirgends gelesen.
+* **Das Supremum ist kein Müllwert, wo es gelesen wird.** `⨆ t : Set.Iic T, X t ω` ist Leans
+  `iSup` und auf einer unbeschränkten Familie `0`. Die Aussage ist trotzdem ehrlich: außerhalb
+  einer `Q`-Nullmenge ist der Pfad stetig, also auf `[0, T]` beschränkt, und `measure_congr`
+  sieht nur die fast sichere Klasse des Ereignisses. Das Ereignis muß nicht meßbar sein; `Q`
+  wird als äußeres Maß ausgewertet. Gebraucht wird die Meßbarkeit von `SkorokhodSpace.supOn T`
+  auf dem Pfadraum (`SkorokhodSpace.measurable_supOn`), über die Modifikation `X'`.
+* **Mathlib hat den eindimensionalen zentralen Grenzwertsatz, und die Kette nennt ihn
+  nirgends:** `ProbabilityTheory.tendstoInDistribution_inv_sqrt_mul_sum`
+  (`Mathlib/Probability/CentralLimitTheorem.lean:79`, auf `94ef6b89544` wie auf
+  `upstream/master` `09712d488fd`), dazu `tendstoInDistribution_inv_sqrt_mul_sum_sub` (`:124`)
+  für allgemeines Mittel und Varianz. **Er ist hier nicht benutzt**, und das ist eine Abwägung:
+  `tendsto_measure_le_eval_rescaledWalk_of_isBrownianReal` normiert mit `√(n+1)` über
+  `⌊T (n+1)⌋` Summanden, der Satz mit `√N` über `N`; der Übergang verlangte eine Teilfolge und
+  einen Slutsky-Schritt für den Faktor `√(⌊T(n+1)⌋/(n+1)) → √T`, während die Auswertung von
+  Donskers Limes bei `T` beides enthält. Eine Negativaussage über den Grenzwertsatz steht in
+  keiner Roadmap und im Inventar nicht (gesucht nach „central limit", „CLT", „Grenzwertsatz");
+  zu berichtigen ist nichts.
+
+**Was nicht dasteht:** das Gesetz des Maximums als Maßgleichung; das Spiegelungsprinzip für
+Donsker-Daten jenseits der fairen Vorzeichen (es ist dafür nicht nötig und nicht
+ausgesprochen); `T = 0`. **Keine Existenzaussage über die Brownsche Bewegung** — `X` ist
+Hypothese jeder der vier Aussagen, und `ProbabilityTheory.IsBrownianReal` trägt keine.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **`MeasureTheory.map_supOn_eq_map_abs_of_isBrownianReal`** — für `IsBrownianReal X Q` mit
+> meßbaren Koordinaten und `0 < T`: das Gesetz von `sup_{t ≤ T} X t` ist das von `|X T|`,
+> ausgesprochen über die Modifikation `X'` von
+> `MeasureTheory.isCadlagMPSolution_of_isBrownianReal`:
+> `(Q.map (cadlagPath X' hc)).map (SkorokhodSpace.supOn T) = Q.map (fun ω ↦ |X T ω|)`.
+
+*Worauf es ruht:* für `0 < a` ist `Q (a ≤ |X T|) = 2 Q (a ≤ X T)` aus der Symmetrie
+(`ProbabilityTheory.IsBrownianReal.neg`, `Mathlib/Probability/BrownianMotion/Basic.lean:306`,
+oder direkt `gaussianReal` bei Mittel `0`) und der Atomlosigkeit bei `-a`, also gleich
+`Q (a ≤ sup)` nach `measure_le_iSup_eq_two_mul_of_isBrownianReal`. Für `a ≤ 0` sind beide Seiten
+`1`, weil `X 0 = 0` fast sicher (`ProbabilityTheory.IsPreBrownianReal.eval_zero_ae_eq_zero`,
+`Basic.lean:99`) und damit `sup ≥ 0`. Zwei endliche Maße auf `ℝ`, die auf allen `[a, ∞)`
+übereinstimmen, sind gleich: `ext_of_Ici`
+(`Mathlib/MeasureTheory/Constructions/BorelSpace/Order.lean:538`; Namensraum und genaue
+Voraussetzungen vor dem Schreiben am Quelltext nachsehen). *Warum jetzt:* es ist die
+klassische Gestalt des Satzes (Lévy: `max_{t ≤ T} B_t ≐ |B_T|`), und es macht aus einer
+Gleichung über Halbgeraden eine über Maße, die ein nächster Verbraucher — die Verteilung der
+Trefferzeit über `{τ_a ≤ T} = {a ≤ sup_{t ≤ T} X t}` — unmittelbar liest. Geschätzt ein halber
+Lauf.
