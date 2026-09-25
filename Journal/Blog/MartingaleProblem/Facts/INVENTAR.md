@@ -62964,3 +62964,65 @@ neuen Abschnitt steht `ENNReal` (das war der einzige Fehler des ersten master-Du
 
 **Stand der Aufgabe.** Schritte 1–4 stehen. Offen: 5 (`propagatesAgreement_of_duality`,
 `uniqueness_of_duality`), 6, 7.
+
+
+### Derselbe Lauf, dritter Teil — Dualität, Schritt 5: **`propagatesAgreement_of_duality`** und **`uniqueness_of_duality`**, auf dem Weg von `rem:dualnonmarkov`
+
+*`check_master.py`: 0 Fehler, 0 `sorry`, 0 veraltet in allen vier Dateien*, Warnungszahlen
+unverändert (18 / 38 / 38 / 76), erster Durchlauf. `check_axioms_master.py` für die vier neuen
+Namen: nur `propext`, `Classical.choice`, `Quot.sound`. Keine Namenskollision. Entwickelt in
+`scripts/_dev_bridge_dual.lean` gegen v4.33.1 (Stubs für `weightedLaw`, `PropagatesAgreement`,
+`propagatesAgreement_of_transfer`, `eq_of_propagatesAgreement` und die drei Mittelwertsätze),
+eingebaut mit `scripts/_dev_integrate_bridge.py` hinter `end Stopped`.
+
+**Vier Deklarationen.**
+
+* `integral_weightedLaw`: `∫ φ d(weightedLaw π P Z t) = E^P[Z φ (π t)]` für `Z ≥ 0` meßbar und
+  `φ` stark meßbar; `integral_map` und `integral_withDensity_eq_integral_toReal_smul`
+  (`Mathlib/MeasureTheory/Integral/Bochner/ContinuousLinearMap.lean:317` in v4.33.1). Ohne
+  Integrierbarkeit von `φ`.
+* **`integral_weightedLaw_eq_of_duality`**: für `s ≤ t`, `Z` beschränkt, `≥ 0`,
+  `𝓕₀ s`-meßbar: `∫ f (·, y) d(weightedLaw π P Z t) = ∫ Λ d(weightedLaw π P Z s)` mit
+  `Λ x = E^Q[f (x, Y y (t - s))]`. Das ist `htransfer`.
+* **`propagatesAgreement_of_duality`**: die Menge
+  `{P | IsProbabilityMeasure P ∧ ∀ y, Martingale (f (π ·, y) - ∫ g (π ·, y)) 𝓕₀ P}` propagiert
+  Übereinstimmung, unter `hsep` = `cor:uniqviadual`(i).
+* **`uniqueness_of_duality`**: zwei solche `P`, `P'` mit `P.map (π 0) = P'.map (π 0)` sind gleich
+  (`eq_of_propagatesAgreement`, dazu `hadapt` und `hgen` für den Pfadraum).
+
+**Befunde.**
+
+1. **Der Weg ist der aus `rem:dualnonmarkov`, und er trägt wie angekündigt:** kein
+   Schiftsystem, keine bestimmende Menge, kein `thm:absuniq`. Von `cor:uniqviadual` überlebt
+   (i) als `hsep`, (ii) als Martingalhypothesen mit `g = h`, (iii) als Existenz des Duals
+   `Y y` mit `Y y 0 = y`.
+2. **Unabhängigkeit ohne Martingal auf dem Produkt.** Die Lösung lebt unter `P` auf dem
+   Pfadraum, das Dual unter `Q` auf seinem Raum; auf `P ⊗ Q` sind sie über `indepFun_prod`
+   (`Mathlib/Probability/Independence/Basic.lean:727`) unabhängig. Die Martingaleigenschaft auf
+   dem Produkt wäre eine eigene Aussage über bedingte Erwartungen unter `comap Prod.fst`; sie
+   wird **nicht** gebraucht, weil `duality_relation_zero_of_mean` nur Mittelwerte liest und
+   diese über `integral_fun_fst`/`integral_fun_snd` (`Mathlib/MeasureTheory/Integral/Prod.lean:549/552`)
+   vom Faktor kommen. Das ist der zweite Ertrag der Umstellung auf die Mittelwertform
+   (siebzehnter Lauf), nach der gestoppten Dualität.
+3. **Die Schranke ist `eq:dual1` mit konstanter Majorante längs der Dualpfade**:
+   `∀ y, ∃ C, ∀ x t ω', |f (x, Y y t ω')|, |g (…)|, |h (…)| ≤ C`, gleichmäßig in `x`. Das ist
+   schwächer als `A ⊂ B(E) × B(E)` gleichmäßig in `y`, und für `cor:uniqviadual` mit
+   beschränkten `f`, `g` die natürliche Form. Eine integrierbare statt konstanter Majorante
+   verlangte, `Γ` auf dem Produkt aus einer `P`- und einer `Q`-Schranke zu bilden; das ist
+   nicht gebaut.
+4. **`hgi` bleibt**, die Intervallintegrierbarkeit der Pfade `r ↦ g (π r ω, y)` für **jedes**
+   `y` (nicht nur längs des Duals), weil die Mittelwerthypothese in `X` an jedem eingefrorenen
+   Wert `y` gelesen wird (Geisterkopie). Für eine Lösung mit `g (·, y)` beschränkt und `π`
+   gemeinsam meßbar ist sie automatisch.
+5. **`isMarkov_of_duality` ist weggelassen**, mit Grund: mit `Z = 1_A` liefert die gewichtete
+   Relation `E[f (π t, y) | 𝓕₀ s] = Λ (π s)` nur für die Funktionen `f (·, y)`; für jedes
+   beschränkte `f` bräuchte es eine Fortsetzung aus der trennenden Familie (monotone Klassen
+   oder die Bestimmtheit der bedingten Verteilung), und die ist ein eigener Beweis. Der Satz
+   steht im Kommentar vor dem Abschnitt.
+
+**Manuskript:** keine Lücke. Zu `rem:dualnonmarkov`, „Status“ (Z. 7597–7601): die
+„duality-specific instantiation“ und der Zeuge stehen jetzt bewiesen; die bedingte Balance
+(„conditional balance“) nicht.
+
+**Stand der Aufgabe.** Schritte 1–5 stehen. Offen: 6 (`duality_of_atomless`), 7 (Abnahme an
+der Brownschen Bewegung).

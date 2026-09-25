@@ -22471,6 +22471,190 @@ theorem duality_stopped {X : ℝ≥0 → Ω → E₁} {Y : ℝ≥0 → Ω → E�
 
 end Stopped
 
+/-! ### The bridge to uniqueness: `propagatesAgreement_of_duality`
+
+The route of `rem:dualnonmarkov` and not the one of the proof of `cor:uniqviadual`: the weighted
+duality relation is `htransfer` of `propagatesAgreement_of_transfer`, and
+`eq_of_propagatesAgreement` gives uniqueness for every initial law.  The solution `π` lives under
+`P` on the path space, the dual `Y y` under `Q` on its own space, and the two are made
+independent on the product `P ⊗ Q` (`indepFun_prod`); the mean hypotheses of
+`duality_relation_zero_of_mean` are then read off the factors (`integral_fun_fst`,
+`integral_fun_snd`), so that no martingale on the product is ever formed.
+
+`isMarkov_of_duality` is not stated.  With `Z = 1_A`, `A ∈ 𝓕₀ s`, the weighted relation gives
+`E[f (π t, y) | 𝓕₀ s] = Λ (π s)` for the functions `f (·, y)` only; the Markov property for every
+bounded `f` needs an extension from the separating family, which is a proof of its own and not a
+corollary of the statements below. -/
+
+section DualityBridge
+
+variable {F Ω₂ E E₂ : Type*} {mF : MeasurableSpace F} {mΩ₂ : MeasurableSpace Ω₂}
+  [MeasurableSpace E] [MeasurableSpace E₂]
+
+/-- **Integration against a weighted law** is integration of the weight times the function of the
+coordinate, for a non-negative weight. -/
+theorem integral_weightedLaw {ι : Type*} {π : ι → F → E} {t : ι} (hπ : Measurable (π t))
+    (P : Measure F) {Z : F → ℝ} (hZm : Measurable Z) (hZ0 : ∀ ω, 0 ≤ Z ω) {φ : E → ℝ}
+    (hφ : StronglyMeasurable φ) :
+    ∫ x, φ x ∂(weightedLaw π P Z t) = ∫ ω, Z ω * φ (π t ω) ∂P := by
+  unfold weightedLaw
+  rw [integral_map hπ.aemeasurable hφ.aestronglyMeasurable,
+    integral_withDensity_eq_integral_toReal_smul hZm.ennreal_ofReal
+      (ae_of_all _ fun _ ↦ ENNReal.ofReal_lt_top)]
+  simp only [ENNReal.toReal_ofReal (hZ0 _), smul_eq_mul]
+
+/-- **The weighted duality relation, read as a transfer operator.**  `π` under `P` is the first
+process, and for every `y` the dual `Y y` under `Q` starts at `y`; on the product `P ⊗ Q` the two
+are independent, and `duality_relation_zero_of_mean` for `(Z, π (s + ·))` and `Y y` gives, for
+`s ≤ t` and every bounded non-negative `𝓕₀ s`-measurable `Z`,
+`E^P[Z f (π t, y)] = E^P[Z Λ (π s)]` with `Λ x = E^Q[f (x, Y y (t - s))]`.  The right side is
+`∫ Λ d(weightedLaw π P Z s)`, and `Λ` does not depend on `P`: this is `htransfer` of
+`propagatesAgreement_of_transfer`.
+
+*Hypotheses.*  Of the solution only the martingale property of `f (π ·, y) - ∫ g (π ·, y)` for
+every `y` and the interval integrability of the paths of `g (π ·, y)`; of the dual only the
+martingale property of `f (x, Y y ·) - ∫ h (x, Y y ·)` and a bound `C y` for `f`, `g`, `h`
+along its paths, which is `eq:dual1` with a constant majorant; the balance `g = h`. -/
+theorem integral_weightedLaw_eq_of_duality {π : ℝ≥0 → F → E}
+    (hπ : Measurable (fun p : ℝ≥0 × F ↦ π p.1 p.2)) {𝓕₀ : Filtration ℝ≥0 mF}
+    {P : Measure F} [IsProbabilityMeasure P] {Q : Measure Ω₂} [IsProbabilityMeasure Q]
+    {𝓖 : E₂ → Filtration ℝ≥0 mΩ₂} {Y : E₂ → ℝ≥0 → Ω₂ → E₂}
+    (hY : ∀ y, Measurable (fun p : ℝ≥0 × Ω₂ ↦ Y y p.1 p.2)) (hY0 : ∀ y ω', Y y 0 ω' = y)
+    {f g h : E × E₂ → ℝ} (hf : Measurable f) (hg : Measurable g) (hh : Measurable h)
+    (hC : ∀ y, ∃ C, ∀ x t ω', |f (x, Y y t ω')| ≤ C ∧ |g (x, Y y t ω')| ≤ C ∧
+      |h (x, Y y t ω')| ≤ C)
+    (hgi : ∀ ω y (T : ℝ), IntervalIntegrable (fun r ↦ g (π r.toNNReal ω, y)) volume 0 T)
+    (hXmg : ∀ y, Martingale (fun t ω ↦ f (π t ω, y) - ∫ r in (0 : ℝ)..t, g (π r.toNNReal ω, y))
+      𝓕₀ P)
+    (hYmg : ∀ y x, Martingale (fun t ω' ↦ f (x, Y y t ω') -
+      ∫ r in (0 : ℝ)..t, h (x, Y y r.toNNReal ω')) (𝓖 y) Q)
+    (hbal : ∀ z, g z = h z) {s t : ℝ≥0} (hst : s ≤ t) {Z : F → ℝ} (hZ0 : ∀ ω, 0 ≤ Z ω)
+    {K : ℝ} (hZK : ∀ ω, Z ω ≤ K) (hZ : StronglyMeasurable[𝓕₀ s] Z) (y : E₂) :
+    ∫ x, f (x, y) ∂(weightedLaw π P Z t) =
+      ∫ x, (∫ ω', f (x, Y y (t - s) ω') ∂Q) ∂(weightedLaw π P Z s) := by
+  obtain ⟨C, hC⟩ := hC y
+  have hZm : Measurable Z := (hZ.mono (𝓕₀.le s)).measurable
+  have hZK' : ∀ ω, |Z ω| ≤ K := fun ω ↦ by rw [abs_of_nonneg (hZ0 ω)]; exact hZK ω
+  have hπt : ∀ u, Measurable (π u) := fun u ↦ hπ.comp (measurable_const.prodMk measurable_id)
+  have hYt : ∀ u, Measurable (Y y u) := fun u ↦ (hY y).comp (measurable_const.prodMk measurable_id)
+  have hb : ∀ {k : E × E₂ → ℝ}, (∀ x t ω', |k (x, Y y t ω')| ≤ C) → ∀ (v : ℝ) x u ω',
+      |v| ≤ K → |v * k (x, Y y u ω')| ≤ K * C := fun hk v x u ω' hv ↦ by
+    rw [abs_mul]
+    exact mul_le_mul hv (hk x u ω') (abs_nonneg _) ((abs_nonneg _).trans hv)
+  have key := duality_relation_zero_of_mean (P := P.prod Q)
+    (X := fun u ω ↦ (Z ω.1, π (s + u) ω.1)) (Y := fun u ω ↦ Y y u ω.2)
+    (f := fun z ↦ z.1.1 * f (z.1.2, z.2)) (g := fun z ↦ z.1.1 * g (z.1.2, z.2))
+    (h := fun z ↦ z.1.1 * h (z.1.2, z.2)) (Γ := fun _ _ ↦ K * C)
+    ((hZm.comp measurable_snd.fst).prodMk
+      (hπ.comp ((measurable_const.add measurable_fst).prodMk measurable_snd.fst)))
+    ((hY y).comp (measurable_fst.prodMk measurable_snd.snd))
+    (fun u v ↦ indepFun_prod (X := fun ω ↦ (Z ω, π (s + u) ω)) (Y := Y y v)
+      (hZm.prodMk (hπt _)) (hYt v))
+    (by fun_prop) (by fun_prop) (by fun_prop) (fun _ ↦ integrable_const _)
+    (fun _ u v _ _ ω ↦ hb (fun x t ω' ↦ (hC x t ω').1) _ _ v ω.2 (hZK' _))
+    (fun _ u v _ _ ω ↦ hb (fun x t ω' ↦ (hC x t ω').2.1) _ _ v ω.2 (hZK' _))
+    (fun _ u v _ _ ω ↦ hb (fun x t ω' ↦ (hC x t ω').2.2) _ _ v ω.2 (hZK' _))
+    (fun y' u ↦ by
+      have e := integral_fun_fst (μ := P) (ν := Q) (fun ω ↦ Z ω * f (π (s + u) ω, y') -
+        Z ω * f (π (s + 0) ω, y') - ∫ r in (0 : ℝ)..u, Z ω * g (π (s + r.toNNReal) ω, y'))
+      refine e.trans ?_
+      rw [integral_weight_sub_eq_zero hXmg hgi hZ hZK' y' u, smul_zero])
+    (fun x u ↦ by
+      have e := integral_fun_snd (μ := P) (ν := Q) (fun ω' ↦ x.1 * f (x.2, Y y u ω') -
+        x.1 * f (x.2, Y y 0 ω') - ∫ r in (0 : ℝ)..u, x.1 * h (x.2, Y y r.toNNReal ω'))
+      refine e.trans ?_
+      have h0 := integral_compensated_sub_eq_zero_of_martingale (f := fun z ↦ f (z.2, z.1))
+        (g := fun z ↦ h (z.2, z.1)) (hYmg y) x.2 u
+      have e2 : ∫ ω', (x.1 * f (x.2, Y y u ω') - x.1 * f (x.2, Y y 0 ω') -
+          ∫ r in (0 : ℝ)..u, x.1 * h (x.2, Y y r.toNNReal ω')) ∂Q =
+          x.1 * ∫ ω', (f (x.2, Y y u ω') - f (x.2, Y y 0 ω') -
+            ∫ r in (0 : ℝ)..u, h (x.2, Y y r.toNNReal ω')) ∂Q := by
+        rw [← integral_const_mul]
+        refine integral_congr_ae (ae_of_all _ fun ω' ↦ ?_)
+        simp only [intervalIntegral.integral_const_mul]
+        ring
+      rw [e2, h0, mul_zero, smul_zero])
+    (fun z ↦ by simp only [hbal]) (t - s)
+  -- the two sides
+  have hΛ : StronglyMeasurable (fun x ↦ ∫ ω', f (x, Y y (t - s) ω') ∂Q) :=
+    (hf.comp (measurable_fst.prodMk ((hYt _).comp measurable_snd))).stronglyMeasurable
+      |>.integral_prod_right'
+  rw [integral_weightedLaw (φ := fun x ↦ f (x, y)) (hπt t) P hZm hZ0
+      (hf.comp (measurable_id.prodMk measurable_const)).stronglyMeasurable,
+    integral_weightedLaw (φ := fun x ↦ ∫ ω', f (x, Y y (t - s) ω') ∂Q) (hπt s) P hZm hZ0 hΛ]
+  simp only [hY0, add_tsub_cancel_of_le hst, add_zero] at key
+  have e1 := integral_fun_fst (μ := P) (ν := Q) (fun ω ↦ Z ω * f (π t ω, y))
+  simp only [probReal_univ, one_smul] at e1
+  rw [← e1, key]
+  have hint : Integrable (fun ω : F × Ω₂ ↦ Z ω.1 * f (π s ω.1, Y y (t - s) ω.2)) (P.prod Q) := by
+    refine (integrable_const (K * C)).mono' (by fun_prop) (ae_of_all _ fun ω ↦ ?_)
+    rw [Real.norm_eq_abs]
+    exact hb (fun x t ω' ↦ (hC x t ω').1) _ _ _ _ (hZK' _)
+  rw [integral_prod _ hint]
+  simp only [integral_const_mul]
+
+/-- **`propagatesAgreement_of_duality`** (`rem:dualnonmarkov`): the laws `P` under which
+`f (π ·, y) - ∫ g (π ·, y)` is a martingale for every `y` propagate agreement, as soon as a dual
+`Y y` with the balance `g = h` exists for every `y` and the functions `f (·, y)` separate finite
+measures of equal mass.  `integral_weightedLaw_eq_of_duality` is `htransfer` of
+`propagatesAgreement_of_transfer`, with `Λ s t y x = E^Q[f (x, Y y (t - s))]`; the separation is
+`cor:uniqviadual`(i), and no shift system, no determining set and no `thm:absuniq` occur. -/
+theorem propagatesAgreement_of_duality {π : ℝ≥0 → F → E}
+    (hπ : Measurable (fun p : ℝ≥0 × F ↦ π p.1 p.2)) {𝓕₀ : Filtration ℝ≥0 mF}
+    {Q : Measure Ω₂} [IsProbabilityMeasure Q]
+    {𝓖 : E₂ → Filtration ℝ≥0 mΩ₂} {Y : E₂ → ℝ≥0 → Ω₂ → E₂}
+    (hY : ∀ y, Measurable (fun p : ℝ≥0 × Ω₂ ↦ Y y p.1 p.2)) (hY0 : ∀ y ω', Y y 0 ω' = y)
+    {f g h : E × E₂ → ℝ} (hf : Measurable f) (hg : Measurable g) (hh : Measurable h)
+    (hC : ∀ y, ∃ C, ∀ x t ω', |f (x, Y y t ω')| ≤ C ∧ |g (x, Y y t ω')| ≤ C ∧
+      |h (x, Y y t ω')| ≤ C)
+    (hgi : ∀ ω y (T : ℝ), IntervalIntegrable (fun r ↦ g (π r.toNNReal ω, y)) volume 0 T)
+    (hYmg : ∀ y x, Martingale (fun t ω' ↦ f (x, Y y t ω') -
+      ∫ r in (0 : ℝ)..t, h (x, Y y r.toNNReal ω')) (𝓖 y) Q)
+    (hbal : ∀ z, g z = h z)
+    (hsep : ∀ μ ν : Measure E, IsFiniteMeasure μ → IsFiniteMeasure ν →
+      μ Set.univ = ν Set.univ → (∀ y, ∫ x, f (x, y) ∂μ = ∫ x, f (x, y) ∂ν) → μ = ν) :
+    PropagatesAgreement 𝓕₀ π {P | IsProbabilityMeasure P ∧ ∀ y, Martingale
+      (fun t ω ↦ f (π t ω, y) - ∫ r in (0 : ℝ)..t, g (π r.toNNReal ω, y)) 𝓕₀ P} :=
+  propagatesAgreement_of_transfer (fun P hP ↦ by have := hP.1; infer_instance)
+    (fun u ↦ hπ.comp (measurable_const.prodMk measurable_id)) (fun y x ↦ f (x, y)) hsep
+    (fun s t y x ↦ ∫ ω', f (x, Y y (t - s) ω') ∂Q)
+    (fun P hP _ _ hst _ hZ0 ⟨_, hb⟩ hZ y ↦ by
+      have := hP.1
+      exact integral_weightedLaw_eq_of_duality hπ hY hY0 hf hg hh hC hgi hP.2 hYmg hbal hst
+        hZ0 hb hZ y)
+
+/-- **`uniqueness_of_duality`**: under the hypotheses of `propagatesAgreement_of_duality`, two
+laws under which `f (π ·, y) - ∫ g (π ·, y)` is a martingale for every `y`, and which have the same
+initial law, are equal, provided `π` is adapted and generates the σ-algebra of the path space.
+This is `eq_of_propagatesAgreement`; the initial law is arbitrary. -/
+theorem uniqueness_of_duality {π : ℝ≥0 → F → E}
+    (hπ : Measurable (fun p : ℝ≥0 × F ↦ π p.1 p.2)) {𝓕₀ : Filtration ℝ≥0 mF}
+    (hadapt : ∀ u v : ℝ≥0, u ≤ v → Measurable[𝓕₀ v] (π u))
+    (hgen : mF = ⨆ i : ℝ≥0, MeasurableSpace.comap (π i) inferInstance)
+    {Q : Measure Ω₂} [IsProbabilityMeasure Q]
+    {𝓖 : E₂ → Filtration ℝ≥0 mΩ₂} {Y : E₂ → ℝ≥0 → Ω₂ → E₂}
+    (hY : ∀ y, Measurable (fun p : ℝ≥0 × Ω₂ ↦ Y y p.1 p.2)) (hY0 : ∀ y ω', Y y 0 ω' = y)
+    {f g h : E × E₂ → ℝ} (hf : Measurable f) (hg : Measurable g) (hh : Measurable h)
+    (hC : ∀ y, ∃ C, ∀ x t ω', |f (x, Y y t ω')| ≤ C ∧ |g (x, Y y t ω')| ≤ C ∧
+      |h (x, Y y t ω')| ≤ C)
+    (hgi : ∀ ω y (T : ℝ), IntervalIntegrable (fun r ↦ g (π r.toNNReal ω, y)) volume 0 T)
+    (hYmg : ∀ y x, Martingale (fun t ω' ↦ f (x, Y y t ω') -
+      ∫ r in (0 : ℝ)..t, h (x, Y y r.toNNReal ω')) (𝓖 y) Q)
+    (hbal : ∀ z, g z = h z)
+    (hsep : ∀ μ ν : Measure E, IsFiniteMeasure μ → IsFiniteMeasure ν →
+      μ Set.univ = ν Set.univ → (∀ y, ∫ x, f (x, y) ∂μ = ∫ x, f (x, y) ∂ν) → μ = ν)
+    {P P' : Measure F} [IsProbabilityMeasure P] [IsProbabilityMeasure P']
+    (hP : ∀ y, Martingale (fun t ω ↦ f (π t ω, y) - ∫ r in (0 : ℝ)..t, g (π r.toNNReal ω, y))
+      𝓕₀ P)
+    (hP' : ∀ y, Martingale (fun t ω ↦ f (π t ω, y) - ∫ r in (0 : ℝ)..t, g (π r.toNNReal ω, y))
+      𝓕₀ P')
+    (hinit : P.map (π 0) = P'.map (π 0)) : P = P' :=
+  eq_of_propagatesAgreement
+    (propagatesAgreement_of_duality hπ hY hY0 hf hg hh hC hgi hYmg hbal hsep) hadapt hgen
+    ⟨inferInstance, hP⟩ ⟨inferInstance, hP'⟩ hinit
+
+end DualityBridge
+
 /-! ## Causal convolution and the Volterra resolvent
 
 Milestone 14.  The renewal equation `m = m₀ + φ ⋆ m` on `[0,∞)` and the resolvent that solves it
