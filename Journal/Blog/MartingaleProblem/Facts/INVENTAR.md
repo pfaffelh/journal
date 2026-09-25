@@ -63330,3 +63330,83 @@ Schranke `n + c`.
 **Benanntes Ziel für den nächsten Lauf:** `localizingSystem_of_boundedJumps`, Schritt 2 der
 Aufgabe, mit (i)–(iii) als den drei Zwischenaussagen; danach Schritt 3 (`lem:localmix`) mit dem
 Befund oben zum Beweis von (a).
+
+### 2026-09-26, Lauf 22:03 UTC (vom 25.) — Einschub: **`duality_of_atomless` ohne unendliche Masse**. Erledigt; der vorgeschlagene Indikatorweg trägt nicht, das Quadrat trägt
+
+*`check_master.py`: 0 Fehler, 0 `sorry`, 0 veraltet in allen vier Dateien*, Warnungen unverändert
+(18 / 38 / 38 / 76), Mathlib `94ef6b89544`. `check_axioms_master.py` für die zwölf neuen oder
+geänderten Namen: nur `propext`, `Classical.choice`, `Quot.sound`. `check_duplicates.py`: kein
+neuer Treffer. Entwickelt in `scripts/_dev_atomless_square.lean` gegen die `.olean` der Kette.
+
+**Ergebnis.** `duality_of_atomless` trägt **kein `hunb` mehr**: Voraussetzungen `q [0, s) < ∞`,
+`q {t} = 0`, Meßbarkeit von `γ` in jeder Variablen, die zwei Zuwachsdarstellungen wie bisher, und
+`eq:calcint` samt den zwei Randschnitten **je Horizont `b` auf dem Quadrat `[0, Q b]²`**, für
+`ψ = γ (Q_b^← ·, Q_b^← ·)` mit dem bei `b` gekappten Quantil. Folgerung unverändert:
+`∀ᵐ t ∂q, Φ t 0 = Φ 0 t`. Eine endliche Uhr ist zugelassen.
+
+**Deklarationen.**
+
+* Abschnitt `Calculus`: **`integral_sub_eq_integral_antidiagonal_Icc`** (die integrierte
+  Fassung von `lem:calculus` mit allen Voraussetzungen nur auf `[0, T]²`) und
+  **`ae_sub_eq_integral_antidiagonal_Icc`** (f.ü. `t ∈ (0, L)`, alles nur auf `[0, L]²`).
+  `integral_sub_eq_integral_antidiagonal` ist jetzt ein Zweizeiler daraus.
+  `continuousOn_of_eq_primitive` liest die Stammfunktion nur noch auf `[0, T]`, eine zusätzliche
+  Schranke `u ≤ T` in der Hypothese; die sechs Aufrufer tragen ein `_` mehr.
+* Abschnitt `ClockQuantile`: `clockQuantile_of_clockTime_le` (über `Q b` ist das gekappte
+  Quantil die Kappe `b`, also konstant), `clockTime_clockQuantile_of_le` (`Q (Q_b^← z) = z` auf
+  dem **abgeschlossenen** `[0, Q b]`), `sub_eq_integral_clockQuantile`,
+  `eq_of_clockQuantile_clockTime`, `eq_zero_of_clockTime_eq_zero`; `clockQuantile_eq_clockQuantile`
+  neu bewiesen, direkt über `le_clockQuantile_iff`, jetzt mit `0 ≤ z`.
+* **Entfernt**: `clockInverse` und die vier Sätze darüber (`clockInverse_eq_clockQuantile`,
+  `sub_eq_integral_clockInverse`, `clockTime_clockInverse`, `eq_of_clockInverse_clockTime`). Sie
+  trugen alle `hunb` und hatten außer `duality_of_atomless` keinen Verbraucher, auch in keiner
+  README.
+
+**Befunde.**
+
+1. **Der vorgeschlagene Weg bricht an `eq:calcint` auf dem Streifen, nicht an `∇Ψ`.** Mit
+   `γ₁ = ψ · 1_{s<L}` und `γ₂ = ψ · 1_{t<L}` und `Ψ` jenseits von `L` konstant stimmt
+   `∇Ψ = (γ₁, γ₂)` auf dem ganzen Quadranten, und `γ₁ − γ₂ = 0` auf `{s + t ≤ L}` ebenfalls, wie
+   angesagt. `ae_sub_eq_integral_antidiagonal` verlangt aber `eq:calcint` auf **jedem**
+   `[0, T]²`, auch für `T > L`, und dazu gehört der Streifen `{s < L ≤ t}`. Dort ist
+   `γ₁ (s, t) = γ (Q^← s, t*)` mit dem Wert der Uhr am Horizont, `t* = Q^← L`, und seine
+   Integrierbarkeit ist `∫_{[0, t*)} |γ (r, t*)| q(dr) < ∞`, **ein einzelner Schnitt**. Aus
+   `eq:calcint` auf `[0, L]²` folgt das nicht, weil ein Schnitt eine Nullmenge ist, und aus den
+   Zuwachsdarstellungen auch nicht, weil ein Bochner-Integral einer nicht integrierbaren Funktion
+   stillschweigend `0` ist. Der Weg trägt also nur mit einer zusätzlichen Voraussetzung.
+   Dazu kommt ein zweiter Bruch bei **ungekapptem** `Q^←` und endlicher Uhr, deren Masse nicht
+   angenommen wird (z. B. `q = Exp(1)`): `Q^← L = ∞` liegt nicht in `ℝ≥0`, und „konstant
+   fortgesetzt“ hieße `Φ (∞, ·)`, ein Grenzwert, der nicht existieren muß. Mit der Kappe bei `b`
+   ist `t* = b`, und dieser zweite Bruch fällt weg (`clockQuantile_of_clockTime_le`).
+2. **Was statt dessen trägt, ist `lem:calculus` auf dem Quadrat**, wie es der fünfte Teil des
+   25. als Buchhaltung angesagt hatte. Der Beweis von `lem:calculus` liest bei jedem Horizont `T`
+   nur `[0, T]²`; man differenziert die integrierte Identität bei `T ∈ (0, L)` und braucht dafür
+   nur die Horizonte `T ≤ L`. Auf `[0, L]²` ist `γ₁ = γ₂ = ψ` und kein Indikator nötig. Das Quadrat
+   kostet zwei Sätze und keine neue Voraussetzung.
+3. **Die Horizonte werden einzeln abgearbeitet.** Für jedes `b` gibt es eine Lebesgue-Nullmenge
+   `N_b` in `(0, Q b)`. Die Ausnahmemenge in `[0, b)` liegt in `Q⁻¹ (N_b ∪ {Q b})`, und das
+   bekommt unter `q|_{[0,b)} = Q_b^← # Leb|_{[0, Q b)}` die Masse `0`. Der Punkt `Q b` ist nötig:
+   die Zeiten `t < b` mit `Q t = Q b` sehen das Quadrat nur an seinem Rand. Danach
+   `ℝ≥0 = ⋃ₙ [0, n)`.
+4. **Die neue Voraussetzung ist je Horizont formuliert** (`∀ b`, `ψ` mit Kappe `b`). Bei
+   unendlicher Masse stimmt das gekappte Quantil auf `[0, Q b)` mit dem ungekappten überein. Die
+   alten Voraussetzungen dürften deshalb die neuen enthalten, bis auf den Randpunkt `Q b`, der
+   eine Nullmenge ist. **Das ist in Lean nicht gezeigt**, sondern nur am Papier überlegt.
+   Umformuliert in der Uhrzeit, also `γ` integrierbar für `q ⊗ q` auf `[0, b)²`, wäre die
+   Voraussetzung ganz ohne Quantil. Das verlangt `Measure.map_prod_map` für den Transport und
+   einen eigenen Randschnitt bei `Q_b^← 0`. Es ist nicht gemacht und wird nicht vorgeschlagen.
+
+**Manuskript, nicht angefaßt.** `cor:atomless` braucht **einen Satz**. `lem:calculus`
+(Z. 7187–7195) ist für `Φ` auf dem ganzen Quadranten `[0,∞)²` ausgesprochen, mit `eq:calcint` für
+jedes `T > 0`. Der Beweis von `cor:atomless` wendet ihn „on `[0,L]^2`“ an (Z. 5686), wo `Ψ` nur
+auf `[0, L]²` erklärt ist. Das ist richtig, weil der Beweis von `lem:calculus` bei jedem `T` nur
+`[0, T]²` liest. Gesagt wird es aber nicht, und die naheliegende Reparatur, `Ψ` jenseits von `L`
+fortzusetzen, bricht an Befund 1. Vorschlag für den Wortlaut, an `lem:calculus` angehängt:
+„The proof reads `Φ` only on `[0, T]²`; so for `Φ` given on `[0, L]²` with `eq:calcint` at
+`T = L`, `eq:calcconc` holds for almost every `t ∈ [0, L]`.“ Der Halbsatz „`Ψ(L,0) = Φ(t^*,0)`“
+(Z. 5688–5689) bleibt der schon am 25. notierte Punkt: er gibt die Aussage nur am Endpunkt. Die
+Aussage für `q`-fast jedes `t` verlangt die Rückübersetzung aus Befund 3.
+
+**Tabelle der Dualitätsaufgabe, Zeile 6:** Die Einschränkung „Uhr unendlicher Masse“ **entfällt**.
+
+Weiter mit der Aufgabe „lokales Martingalproblem“, Schritt 2.

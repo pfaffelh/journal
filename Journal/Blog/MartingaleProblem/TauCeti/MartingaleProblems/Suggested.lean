@@ -20860,39 +20860,41 @@ theorem integral_antidiagTriangle_eq_iterated_snd {F : ℝ × ℝ → ℝ} {T : 
         exact (setIntegral_congr_fun measurableSet_Ioc heq).symm
 
 /-- The boundary sections of `lem:calculus` are continuous: `Φ (·, 0)` and `Φ (0, ·)` are
-primitives of integrable functions. -/
+primitives of integrable functions.  Only the primitive on `[0, T]` is read. -/
 theorem continuousOn_of_eq_primitive {φ g : ℝ → ℝ} {T : ℝ} (hT : 0 ≤ T)
-    (hg : IntervalIntegrable g volume 0 T) (h : ∀ u, 0 ≤ u → φ u - φ 0 = ∫ r in 0..u, g r) :
+    (hg : IntervalIntegrable g volume 0 T)
+    (h : ∀ u, 0 ≤ u → u ≤ T → φ u - φ 0 = ∫ r in 0..u, g r) :
     ContinuousOn φ (uIcc 0 T) := by
   refine ((continuousOn_const (c := φ 0)).add (intervalIntegral.continuousOn_primitive_interval' hg
     left_mem_uIcc)).congr fun u hu ↦ ?_
   rw [uIcc_of_le hT] at hu
   show φ u = φ 0 + ∫ r in 0..u, g r
-  linarith [h u hu.1]
+  linarith [h u hu.1 hu.2]
 
-/-- **`lem:calculus`, integrated** (EK 4.4.10).  For every `T ≥ 0` the primitive of
-`t ↦ Φ t 0 - Φ 0 t` is the primitive of the anti-diagonal integral, and the latter integrand is
-integrable on `[0, T]`.  This is the displayed chain of equalities in the manuscript's proof,
-before the differentiation; the hypotheses are those of `ae_sub_eq_integral_antidiagonal`. -/
-theorem integral_sub_eq_integral_antidiagonal {Φ γ₁ γ₂ : ℝ → ℝ → ℝ}
-    (h₁ : ∀ s t, 0 ≤ s → 0 ≤ t → Φ s t - Φ 0 t = ∫ r in 0..s, γ₁ r t)
-    (h₂ : ∀ s t, 0 ≤ s → 0 ≤ t → Φ s t - Φ s 0 = ∫ r in 0..t, γ₂ s r)
-    (hγ₁ : ∀ T, IntervalIntegrable (fun r ↦ γ₁ r 0) volume 0 T)
-    (hγ₂ : ∀ T, IntervalIntegrable (γ₂ 0) volume 0 T)
-    (hint₁ : ∀ T, IntegrableOn (Function.uncurry γ₁) (Icc 0 T ×ˢ Icc 0 T))
-    (hint₂ : ∀ T, IntegrableOn (Function.uncurry γ₂) (Icc 0 T ×ˢ Icc 0 T)) {T : ℝ} (hT : 0 ≤ T) :
+/-- **`lem:calculus`, integrated, on one square** (EK 4.4.10): for `T ≥ 0` the primitive of
+`t ↦ Φ t 0 - Φ 0 t` on `[0, T]` is that of the anti-diagonal integral, and the latter integrand is
+integrable on `[0, T]`.  This is the displayed chain of equalities in the manuscript's proof, before
+the differentiation.  Every hypothesis is read on `[0, T]²` only: the two increment representations
+at points of the square, the boundary sections on `[0, T]`, `eq:calcint` on the square. -/
+theorem integral_sub_eq_integral_antidiagonal_Icc {Φ γ₁ γ₂ : ℝ → ℝ → ℝ} {T : ℝ} (hT : 0 ≤ T)
+    (h₁ : ∀ s t, 0 ≤ s → 0 ≤ t → s ≤ T → t ≤ T → Φ s t - Φ 0 t = ∫ r in 0..s, γ₁ r t)
+    (h₂ : ∀ s t, 0 ≤ s → 0 ≤ t → s ≤ T → t ≤ T → Φ s t - Φ s 0 = ∫ r in 0..t, γ₂ s r)
+    (hγ₁ : IntervalIntegrable (fun r ↦ γ₁ r 0) volume 0 T)
+    (hγ₂ : IntervalIntegrable (γ₂ 0) volume 0 T)
+    (hint₁ : IntegrableOn (Function.uncurry γ₁) (Icc 0 T ×ˢ Icc 0 T))
+    (hint₂ : IntegrableOn (Function.uncurry γ₂) (Icc 0 T ×ˢ Icc 0 T)) :
     IntervalIntegrable (fun t ↦ ∫ s in 0..t, (γ₁ s (t - s) - γ₂ s (t - s))) volume 0 T ∧
       ∫ t in 0..T, (Φ t 0 - Φ 0 t) = ∫ t in 0..T, ∫ s in 0..t, (γ₁ s (t - s) - γ₂ s (t - s)) := by
-  have hF := (hint₁ T).sub (hint₂ T)
+  have hF := hint₁.sub hint₂
   obtain ⟨hGi, hG⟩ := integral_antidiagTriangle_eq_shear hT hF
   refine ⟨hGi, ?_⟩
-  obtain ⟨hm₁, hB⟩ := integral_antidiagTriangle_eq_iterated_fst hT (hint₁ T)
-  obtain ⟨hm₂, hC⟩ := integral_antidiagTriangle_eq_iterated_snd hT (hint₂ T)
+  obtain ⟨hm₁, hB⟩ := integral_antidiagTriangle_eq_iterated_fst hT hint₁
+  obtain ⟨hm₂, hC⟩ := integral_antidiagTriangle_eq_iterated_snd hT hint₂
   -- the two boundary sections
   have hc₁ : ContinuousOn (fun u ↦ Φ u 0) (uIcc 0 T) :=
-    continuousOn_of_eq_primitive hT (hγ₁ T) fun u hu ↦ h₁ u 0 hu le_rfl
+    continuousOn_of_eq_primitive hT hγ₁ fun u hu huT ↦ h₁ u 0 hu le_rfl huT hT
   have hc₂ : ContinuousOn (fun u ↦ Φ 0 u) (uIcc 0 T) :=
-    continuousOn_of_eq_primitive hT (hγ₂ T) fun u hu ↦ h₂ 0 u le_rfl hu
+    continuousOn_of_eq_primitive hT hγ₂ fun u hu huT ↦ h₂ 0 u le_rfl hu hT huT
   set m₁ : ℝ → ℝ := fun v ↦ ∫ u in 0..(T - v), γ₁ u v
   set m₂ : ℝ → ℝ := fun u ↦ ∫ v in 0..(T - u), γ₂ u v
   have hm₁' : IntervalIntegrable (fun u ↦ m₁ (T - u)) volume 0 T := by
@@ -20907,8 +20909,9 @@ theorem integral_sub_eq_integral_antidiagonal {Φ γ₁ γ₂ : ℝ → ℝ → 
     intro u hu
     rw [uIcc_of_le hT] at hu
     simp only [m₁, m₂]
-    rw [← h₁ _ _ (by linarith [hu.1, hu.2]) (by linarith [hu.1, hu.2]),
-      ← h₂ _ _ hu.1 (by linarith [hu.2]),
+    rw [← h₁ _ _ (by linarith [hu.1, hu.2]) (by linarith [hu.1, hu.2]) (by linarith [hu.1, hu.2])
+        (by linarith [hu.1, hu.2]),
+      ← h₂ _ _ hu.1 (by linarith [hu.2]) hu.2 (by linarith [hu.1]),
       sub_sub_cancel]
     ring
   calc ∫ t in 0..T, (Φ t 0 - Φ 0 t)
@@ -20925,9 +20928,23 @@ theorem integral_sub_eq_integral_antidiagonal {Φ γ₁ γ₂ : ℝ → ℝ → 
     _ = (∫ z in antidiagTriangle T, Function.uncurry γ₁ z) -
           ∫ z in antidiagTriangle T, Function.uncurry γ₂ z := by rw [hB, hC]; rfl
     _ = ∫ z in antidiagTriangle T, (Function.uncurry γ₁ - Function.uncurry γ₂) z :=
-        (integral_sub ((hint₁ T).mono_set (antidiagTriangle_subset T))
-          ((hint₂ T).mono_set (antidiagTriangle_subset T))).symm
+        (integral_sub (hint₁.mono_set (antidiagTriangle_subset T))
+          (hint₂.mono_set (antidiagTriangle_subset T))).symm
     _ = ∫ t in 0..T, ∫ s in 0..t, (γ₁ s (t - s) - γ₂ s (t - s)) := hG.symm
+
+/-- **`lem:calculus`, integrated** (EK 4.4.10), with the hypotheses on the whole quadrant: the
+square version `integral_sub_eq_integral_antidiagonal_Icc` at `T`. -/
+theorem integral_sub_eq_integral_antidiagonal {Φ γ₁ γ₂ : ℝ → ℝ → ℝ}
+    (h₁ : ∀ s t, 0 ≤ s → 0 ≤ t → Φ s t - Φ 0 t = ∫ r in 0..s, γ₁ r t)
+    (h₂ : ∀ s t, 0 ≤ s → 0 ≤ t → Φ s t - Φ s 0 = ∫ r in 0..t, γ₂ s r)
+    (hγ₁ : ∀ T, IntervalIntegrable (fun r ↦ γ₁ r 0) volume 0 T)
+    (hγ₂ : ∀ T, IntervalIntegrable (γ₂ 0) volume 0 T)
+    (hint₁ : ∀ T, IntegrableOn (Function.uncurry γ₁) (Icc 0 T ×ˢ Icc 0 T))
+    (hint₂ : ∀ T, IntegrableOn (Function.uncurry γ₂) (Icc 0 T ×ˢ Icc 0 T)) {T : ℝ} (hT : 0 ≤ T) :
+    IntervalIntegrable (fun t ↦ ∫ s in 0..t, (γ₁ s (t - s) - γ₂ s (t - s))) volume 0 T ∧
+      ∫ t in 0..T, (Φ t 0 - Φ 0 t) = ∫ t in 0..T, ∫ s in 0..t, (γ₁ s (t - s) - γ₂ s (t - s)) :=
+  integral_sub_eq_integral_antidiagonal_Icc hT (fun s t hs ht _ _ ↦ h₁ s t hs ht)
+    (fun s t hs ht _ _ ↦ h₂ s t hs ht) (hγ₁ T) (hγ₂ T) (hint₁ T) (hint₂ T)
 
 /-- **`lem:calculus`** (EK 4.4.10): for almost every `t > 0`,
 `Φ t 0 - Φ 0 t = ∫_0^t (γ₁ s (t-s) - γ₂ s (t-s)) ds`.
@@ -20961,8 +20978,8 @@ theorem ae_sub_eq_integral_antidiagonal {Φ γ₁ γ₂ : ℝ → ℝ → ℝ}
     have hT : (0 : ℝ) ≤ n := Nat.cast_nonneg n
     obtain ⟨hGi, -⟩ := integral_sub_eq_integral_antidiagonal h₁ h₂ hγ₁ hγ₂ hint₁ hint₂ hT
     have hDi : IntervalIntegrable D volume 0 n :=
-      ((continuousOn_of_eq_primitive hT (hγ₁ n) fun u hu ↦ h₁ u 0 hu le_rfl).sub
-        (continuousOn_of_eq_primitive hT (hγ₂ n) fun u hu ↦ h₂ 0 u le_rfl hu)).intervalIntegrable
+      ((continuousOn_of_eq_primitive hT (hγ₁ n) fun u hu _ ↦ h₁ u 0 hu le_rfl).sub
+        (continuousOn_of_eq_primitive hT (hγ₂ n) fun u hu _ ↦ h₂ 0 u le_rfl hu)).intervalIntegrable
     filter_upwards [hGi.ae_hasDerivAt_integral, hDi.ae_hasDerivAt_integral,
       Measure.ae_ne volume 0] with x hGx hDx hx0 hx
     have hx' : 0 < x := lt_of_le_of_ne (by rw [uIcc_of_le hT] at hx; exact hx.1) (Ne.symm hx0)
@@ -20974,6 +20991,46 @@ theorem ae_sub_eq_integral_antidiagonal {Φ γ₁ γ₂ : ℝ → ℝ → ℝ}
   filter_upwards [ae_all_iff.2 hn] with t ht htpos
   obtain ⟨n, hn'⟩ := exists_nat_gt t
   exact ht n (by rw [uIcc_of_le (Nat.cast_nonneg n)]; exact ⟨htpos.le, hn'.le⟩)
+
+/-- **`lem:calculus` on one square `[0, L]²`**: for almost every `t ∈ (0, L)`,
+`Φ t 0 - Φ 0 t = ∫_0^t (γ₁ s (t-s) - γ₂ s (t-s)) ds`, with every hypothesis read on `[0, L]²` only.
+This is the form in which the manuscript applies the lemma in the proof of `cor:atomless`
+(on `[0, L]²`, `L = Q (t*)`), and the one that needs no clock of infinite mass there.  The proof is
+that of `ae_sub_eq_integral_antidiagonal`, differentiating the integrated identity at the horizons
+`T ∈ (0, L)`, where it holds by `integral_sub_eq_integral_antidiagonal_Icc` on `[0, T]² ⊆ [0, L]²`. -/
+theorem ae_sub_eq_integral_antidiagonal_Icc {Φ γ₁ γ₂ : ℝ → ℝ → ℝ} {L : ℝ}
+    (h₁ : ∀ s t, 0 ≤ s → 0 ≤ t → s ≤ L → t ≤ L → Φ s t - Φ 0 t = ∫ r in 0..s, γ₁ r t)
+    (h₂ : ∀ s t, 0 ≤ s → 0 ≤ t → s ≤ L → t ≤ L → Φ s t - Φ s 0 = ∫ r in 0..t, γ₂ s r)
+    (hγ₁ : IntervalIntegrable (fun r ↦ γ₁ r 0) volume 0 L)
+    (hγ₂ : IntervalIntegrable (γ₂ 0) volume 0 L)
+    (hint₁ : IntegrableOn (Function.uncurry γ₁) (Icc 0 L ×ˢ Icc 0 L))
+    (hint₂ : IntegrableOn (Function.uncurry γ₂) (Icc 0 L ×ˢ Icc 0 L)) :
+    ∀ᵐ t, 0 < t → t < L → Φ t 0 - Φ 0 t = ∫ s in 0..t, (γ₁ s (t - s) - γ₂ s (t - s)) := by
+  rcases lt_or_ge L 0 with hL | hL
+  · exact Eventually.of_forall fun t ht htL ↦ absurd (ht.trans (htL.trans hL)) (lt_irrefl _)
+  -- the integrated identity at every horizon `T ≤ L`
+  have hT : ∀ T, 0 ≤ T → T ≤ L →
+      ∫ t in 0..T, (Φ t 0 - Φ 0 t) = ∫ t in 0..T, ∫ s in 0..t, (γ₁ s (t - s) - γ₂ s (t - s)) := by
+    intro T hT0 hTL
+    have hsq : Icc 0 T ×ˢ Icc 0 T ⊆ Icc 0 L ×ˢ Icc 0 L :=
+      prod_mono (Icc_subset_Icc_right hTL) (Icc_subset_Icc_right hTL)
+    have hsub : uIcc 0 T ⊆ uIcc 0 L := by
+      rw [uIcc_of_le hT0, uIcc_of_le hL]; exact Icc_subset_Icc_right hTL
+    exact (integral_sub_eq_integral_antidiagonal_Icc hT0
+      (fun s t hs ht hsT htT ↦ h₁ s t hs ht (hsT.trans hTL) (htT.trans hTL))
+      (fun s t hs ht hsT htT ↦ h₂ s t hs ht (hsT.trans hTL) (htT.trans hTL))
+      (hγ₁.mono_set hsub) (hγ₂.mono_set hsub) (hint₁.mono_set hsq) (hint₂.mono_set hsq)).2
+  obtain ⟨hGi, -⟩ := integral_sub_eq_integral_antidiagonal_Icc hL h₁ h₂ hγ₁ hγ₂ hint₁ hint₂
+  have hDi : IntervalIntegrable (fun t ↦ Φ t 0 - Φ 0 t) volume 0 L :=
+    ((continuousOn_of_eq_primitive hL hγ₁ fun u hu huL ↦ h₁ u 0 hu le_rfl huL hL).sub
+      (continuousOn_of_eq_primitive hL hγ₂ fun u hu huL ↦ h₂ 0 u le_rfl hu hL huL)).intervalIntegrable
+  filter_upwards [hGi.ae_hasDerivAt_integral, hDi.ae_hasDerivAt_integral] with x hGx hDx hx0 hxL
+  have hx : x ∈ uIcc 0 L := by rw [uIcc_of_le hL]; exact ⟨hx0.le, hxL.le⟩
+  have hG' := hGx hx 0 left_mem_uIcc
+  have hD' := hDx hx 0 left_mem_uIcc
+  refine hD'.unique (hG'.congr_of_eventuallyEq ?_)
+  filter_upwards [Ioo_mem_nhds hx0 hxL] with T hT'
+  exact hT T hT'.1.le hT'.2.le
 
 end Calculus
 
@@ -21282,8 +21339,8 @@ theorem duality_relation_zero_of_mean {X : ℝ≥0 → Ω → E₁} {Y : ℝ≥0
   have hcont : ContinuousOn D (Ioi 0) := by
     intro u hu
     have hT : (0 : ℝ) ≤ u + 1 := by linarith [hu.out]
-    have hc₁ := continuousOn_of_eq_primitive hT (hγ₁ (u + 1)) fun v hv ↦ h₁ v 0 hv le_rfl
-    have hc₂ := continuousOn_of_eq_primitive hT (hγ₂ (u + 1)) fun v hv ↦ h₂ 0 v le_rfl hv
+    have hc₁ := continuousOn_of_eq_primitive hT (hγ₁ (u + 1)) fun v hv _ ↦ h₁ v 0 hv le_rfl
+    have hc₂ := continuousOn_of_eq_primitive hT (hγ₂ (u + 1)) fun v hv _ ↦ h₂ 0 v le_rfl hv
     have hmem : uIcc 0 (u + 1) ∈ nhds u := by
       rw [uIcc_of_le hT]; exact Icc_mem_nhds hu.out (by linarith)
     refine ((hc₁.continuousAt hmem).sub (hc₂.continuousAt hmem)).continuousWithinAt.congr
@@ -22833,75 +22890,76 @@ theorem clockTime_clockQuantile (hq : ∀ s, q (Iio s) ≠ ⊤) (hat : ∀ t, q 
     exact (measure_union_le _ _).trans (by rw [hat, add_zero])
   exact (ENNReal.ofReal_le_iff_le_toReal (hq _)).1 (hIic.trans hIio)
 
-/-- **The uncapped quantile**, `Q^← z = sup {t | Q t ≤ z}`.  Honest for a clock of infinite mass,
-where every `z` lies below some `Q b` and the supremum is that of a bounded set. -/
-noncomputable def clockInverse (q : Measure ℝ≥0) (z : ℝ) : ℝ≥0 := sSup {t | clockTime q t ≤ z}
-
-/-- Below `Q b` the cap is not read: the uncapped quantile is the capped one. -/
-theorem clockInverse_eq_clockQuantile (hq : ∀ s, q (Iio s) ≠ ⊤) {b : ℝ≥0} {z : ℝ}
-    (hzb : z < clockTime q b) : clockInverse q z = clockQuantile q b z := by
-  unfold clockInverse clockQuantile
-  congr 1
-  ext t
-  simp only [mem_ofPred_eq, iff_and_self]
-  intro ht
-  by_contra hbt
-  exact absurd ((clockTime_mono hq (not_le.1 hbt).le).trans ht) (not_le.2 hzb)
-
+/-- Below both caps the cap is not read: `Q^←` capped at `b` and at `b'` agree below `Q b` and
+`Q b'`, both being characterised by the Galois property `le_clockQuantile_iff`. -/
 theorem clockQuantile_eq_clockQuantile (hq : ∀ s, q (Iio s) ≠ ⊤) {b b' : ℝ≥0} {z : ℝ}
-    (hzb : z < clockTime q b) (hzb' : z < clockTime q b') :
-    clockQuantile q b z = clockQuantile q b' z := by
-  rw [← clockInverse_eq_clockQuantile hq hzb, clockInverse_eq_clockQuantile hq hzb']
+    (hz0 : 0 ≤ z) (hzb : z < clockTime q b) (hzb' : z < clockTime q b') :
+    clockQuantile q b z = clockQuantile q b' z :=
+  eq_of_forall_le_iff fun a ↦ by
+    rw [le_clockQuantile_iff hq hz0 hzb, le_clockQuantile_iff hq hz0 hzb']
 
-/-- **The increments of `Φ (Q^← ·, u)` are Lebesgue integrals**, for an atomless clock of
-infinite mass: `Φ (Q^← x', u) - Φ (Q^← x, u) = ∫_{[x, x')} γ (Q^← z, u) dz` for `0 ≤ x ≤ x'`.
-This is `eq:quantile` together with `Q (Q^← x) = x`, and it is the step of `cor:atomless` that
-needs the atomlessness. -/
-theorem sub_eq_integral_clockInverse (hq : ∀ s, q (Iio s) ≠ ⊤) (hat : ∀ t, q {t} = 0)
-    (hunb : ∀ z : ℝ, ∃ b, z < clockTime q b) {γ : ℝ≥0 → ℝ≥0 → ℝ}
-    (hγ : ∀ u, Measurable (γ · u)) {Φ : ℝ≥0 → ℝ≥0 → ℝ}
+/-- **Above `Q b` the capped quantile is the cap**: `Q^← z = b` for `z ≥ Q b`.  So `Ψ` of
+`cor:atomless`, read on `[0, Q b]`, is continued constantly beyond `Q b`. -/
+theorem clockQuantile_of_clockTime_le {b : ℝ≥0} {z : ℝ}
+    (hbz : clockTime q b ≤ z) : clockQuantile q b z = b :=
+  le_antisymm (clockQuantile_le b z) (le_csSup ⟨b, fun _ ht ↦ ht.1⟩ ⟨le_rfl, hbz⟩)
+
+/-- `Q (Q^← z) = z` on the closed interval `0 ≤ z ≤ Q b`, for an atomless clock: below `Q b`
+this is `clockTime_clockQuantile`, at `Q b` the quantile is the cap. -/
+theorem clockTime_clockQuantile_of_le (hq : ∀ s, q (Iio s) ≠ ⊤) (hat : ∀ t, q {t} = 0)
+    {b : ℝ≥0} {z : ℝ} (hz0 : 0 ≤ z) (hzb : z ≤ clockTime q b) :
+    clockTime q (clockQuantile q b z) = z := by
+  rcases hzb.lt_or_eq with hzb | rfl
+  · exact clockTime_clockQuantile hq hat hz0 hzb
+  · rw [clockQuantile_of_clockTime_le le_rfl]
+
+/-- **The increments of `Φ (Q^← ·, u)` are Lebesgue integrals** on `[0, Q b]`, for an atomless
+clock with the quantile capped at `b`: `Φ (Q^← x', u) - Φ (Q^← x, u) = ∫_{[x, x')} γ (Q^← z, u) dz`
+for `0 ≤ x ≤ x' ≤ Q b`.  This is `eq:quantile` together with `Q (Q^← x) = x`, and it is the step
+of `cor:atomless` that needs the atomlessness.  No mass condition on the clock beyond
+`q [0, s) < ∞`. -/
+theorem sub_eq_integral_clockQuantile (hq : ∀ s, q (Iio s) ≠ ⊤) (hat : ∀ t, q {t} = 0)
+    {γ : ℝ≥0 → ℝ≥0 → ℝ} (hγ : ∀ u, Measurable (γ · u)) {Φ : ℝ≥0 → ℝ≥0 → ℝ}
     (h₁ : ∀ s s' t, s ≤ s' → Φ s' t - Φ s t = ∫ r in Iio s' \ Iio s, γ r t ∂q)
-    {x x' : ℝ} (hx : 0 ≤ x) (hxx' : x ≤ x') (u : ℝ≥0) :
-    Φ (clockInverse q x') u - Φ (clockInverse q x) u =
-      ∫ z in Ico x x', γ (clockInverse q z) u := by
-  obtain ⟨b, hb⟩ := hunb x'
+    {b : ℝ≥0} {x x' : ℝ} (hx : 0 ≤ x) (hxx' : x ≤ x') (hx'b : x' ≤ clockTime q b) (u : ℝ≥0) :
+    Φ (clockQuantile q b x') u - Φ (clockQuantile q b x) u =
+      ∫ z in Ico x x', γ (clockQuantile q b z) u := by
   have hx'0 : 0 ≤ x' := hx.trans hxx'
-  have hxb : x < clockTime q b := hxx'.trans_lt hb
-  rw [clockInverse_eq_clockQuantile hq hb, clockInverse_eq_clockQuantile hq hxb]
   have hmono : clockQuantile q b x ≤ clockQuantile q b x' := clockQuantile_mono b hxx'
   rw [h₁ _ _ u hmono, setIntegral_interval_eq_clockQuantile hq (hγ u),
-    clockTime_clockQuantile hq hat hx hxb, clockTime_clockQuantile hq hat hx'0 hb]
+    clockTime_clockQuantile_of_le hq hat hx (hxx'.trans hx'b),
+    clockTime_clockQuantile_of_le hq hat hx'0 hx'b]
   refine setIntegral_congr_fun measurableSet_Ico fun z hz ↦ ?_
   have hz0 : 0 ≤ z := hx.trans hz.1
   have hzx' : z < clockTime q (clockQuantile q b x') := by
-    rw [clockTime_clockQuantile hq hat hx'0 hb]; exact hz.2
-  rw [clockQuantile_eq_clockQuantile hq hzx' (hz.2.trans hb), ← clockInverse_eq_clockQuantile hq
-    (hz.2.trans hb)]
+    rw [clockTime_clockQuantile_of_le hq hat hx'0 hx'b]; exact hz.2
+  rw [clockQuantile_eq_clockQuantile hq hz0 hzx' (hz.2.trans_le hx'b)]
 
-theorem clockTime_clockInverse (hq : ∀ s, q (Iio s) ≠ ⊤) (hat : ∀ t, q {t} = 0)
-    (hunb : ∀ z : ℝ, ∃ b, z < clockTime q b) {z : ℝ} (hz : 0 ≤ z) :
-    clockTime q (clockInverse q z) = z := by
-  obtain ⟨b, hb⟩ := hunb z
-  rw [clockInverse_eq_clockQuantile hq hb, clockTime_clockQuantile hq hat hz hb]
-
-/-- A time and the quantile of its clock time differ by a null interval, so `Φ` does not see the
-difference: `Φ (Q^← (Q t), u) = Φ (t, u)`. -/
-theorem eq_of_clockInverse_clockTime (hq : ∀ s, q (Iio s) ≠ ⊤) (hat : ∀ t, q {t} = 0)
-    (hunb : ∀ z : ℝ, ∃ b, z < clockTime q b) {γ : ℝ≥0 → ℝ≥0 → ℝ} {Φ : ℝ≥0 → ℝ≥0 → ℝ}
-    (h₁ : ∀ s s' t, s ≤ s' → Φ s' t - Φ s t = ∫ r in Iio s' \ Iio s, γ r t ∂q) (t u : ℝ≥0) :
-    Φ (clockInverse q (clockTime q t)) u = Φ t u := by
+/-- A time and the quantile of its clock time differ by a null interval, so `Φ` does not see
+the difference: `Φ (Q^← (Q t), u) = Φ (t, u)` as long as `Q t < Q b`. -/
+theorem eq_of_clockQuantile_clockTime (hq : ∀ s, q (Iio s) ≠ ⊤) (hat : ∀ t, q {t} = 0)
+    {γ : ℝ≥0 → ℝ≥0 → ℝ} {Φ : ℝ≥0 → ℝ≥0 → ℝ}
+    (h₁ : ∀ s s' t, s ≤ s' → Φ s' t - Φ s t = ∫ r in Iio s' \ Iio s, γ r t ∂q) {b t : ℝ≥0}
+    (htb : clockTime q t < clockTime q b) (u : ℝ≥0) :
+    Φ (clockQuantile q b (clockTime q t)) u = Φ t u := by
   have hF0 : 0 ≤ clockTime q t := measureReal_nonneg
-  obtain ⟨b, hb⟩ := hunb (clockTime q t)
-  have hle : t ≤ clockInverse q (clockTime q t) := by
-    rw [clockInverse_eq_clockQuantile hq hb]
-    exact (le_clockQuantile_iff hq hF0 hb).2 le_rfl
-  have hF := clockTime_clockInverse hq hat hunb hF0
-  have hnull : q (Iio (clockInverse q (clockTime q t)) \ Iio t) = 0 := by
+  have hle : t ≤ clockQuantile q b (clockTime q t) := (le_clockQuantile_iff hq hF0 htb).2 le_rfl
+  have hF := clockTime_clockQuantile hq hat hF0 htb
+  have hnull : q (Iio (clockQuantile q b (clockTime q t)) \ Iio t) = 0 := by
     rw [measure_sdiff (Iio_subset_Iio hle) measurableSet_Iio.nullMeasurableSet (hq t)]
-    have : q (Iio (clockInverse q (clockTime q t))) = q (Iio t) :=
+    have : q (Iio (clockQuantile q b (clockTime q t))) = q (Iio t) :=
       (ENNReal.toReal_eq_toReal_iff' (hq _) (hq _)).1 hF
     rw [this, tsub_self]
   rw [← sub_eq_zero, h₁ _ _ u hle, setIntegral_measure_zero _ hnull]
+
+/-- A time of clock time `0` is not seen by `Φ`: `Φ (t, u) = Φ (0, u)` when `q [0, t) = 0`. -/
+theorem eq_zero_of_clockTime_eq_zero (hq : ∀ s, q (Iio s) ≠ ⊤)
+    {γ : ℝ≥0 → ℝ≥0 → ℝ} {Φ : ℝ≥0 → ℝ≥0 → ℝ}
+    (h₁ : ∀ s s' t, s ≤ s' → Φ s' t - Φ s t = ∫ r in Iio s' \ Iio s, γ r t ∂q) {t : ℝ≥0}
+    (ht : clockTime q t = 0) (u : ℝ≥0) : Φ t u = Φ 0 u := by
+  have hnull : q (Iio t \ Iio 0) = 0 :=
+    measure_mono_null sdiff_subset ((measureReal_eq_zero_iff (hq t)).1 ht)
+  rw [← sub_eq_zero, h₁ _ _ u zero_le, setIntegral_measure_zero _ hnull]
 
 end ClockQuantile
 
@@ -22909,81 +22967,96 @@ section Atomless
 
 variable {q : Measure ℝ≥0}
 
-/-- **`cor:atomless`** (`duality_of_atomless`): for an atomless clock of infinite mass on `ℝ≥0`
-and `Φ`, `γ` with the two increment representations `eq:incrementrep` in the predictable
-convention and `γ₁ = γ₂ = γ`, `Φ (t, 0) = Φ (0, t)` for `q`-almost every `t`, as soon as
-`Ψ = Φ (Q^← ·, Q^← ·)` and `ψ = γ (Q^← ·, Q^← ·)` satisfy the hypotheses of `lem:calculus`
-(`eq:calcint` on every square, and the two boundary sections).
+/-- **`cor:atomless`** (`duality_of_atomless`): for an atomless clock on `ℝ≥0`, finite on every
+`[0, s)`, and `Φ`, `γ` with the two increment representations `eq:incrementrep` in the predictable
+convention and `γ₁ = γ₂ = γ`, `Φ (t, 0) = Φ (0, t)` for `q`-almost every `t`, as soon as, for every
+horizon `b`, `Ψ = Φ (Q^← ·, Q^← ·)` and `ψ = γ (Q^← ·, Q^← ·)` with the quantile capped at `b`
+satisfy the hypotheses of `lem:calculus` on the square `[0, Q b]²` (`eq:calcint` there, and the two
+boundary sections on `[0, Q b]`).  No condition on the total mass: `q` may be finite.
 
-*Proof.*  The manuscript's: `sub_eq_integral_clockInverse` turns the two increment
-representations of `Φ` in clock time into those of `Ψ` in Lebesgue time,
-`ae_sub_eq_integral_antidiagonal` gives `Ψ (ℓ, 0) = Ψ (0, ℓ)` for almost every `ℓ`, and
-`eq_of_clockInverse_clockTime` reads that back at `ℓ = Q t`.  The exceptional set of `t` is the
-preimage under `Q` of a Lebesgue null set, and `q` gives it mass `0` because `q` is the image of
-Lebesgue measure under `Q^←` (`restrict_Iio_eq_map_clockQuantile`) and `Q ∘ Q^← = id`. -/
+*Proof.*  The manuscript's, on each horizon `[0, b)`: `sub_eq_integral_clockQuantile` turns the two
+increment representations of `Φ` in clock time into those of `Ψ` in Lebesgue time on `[0, Q b]²`,
+`ae_sub_eq_integral_antidiagonal_Icc` gives `Ψ (ℓ, 0) = Ψ (0, ℓ)` for almost every `ℓ ∈ (0, Q b)`,
+and `eq_of_clockQuantile_clockTime` reads that back at `ℓ = Q t`.  The exceptional set in `[0, b)`
+lies in the preimage under `Q` of a Lebesgue null set together with the point `Q b`, and `q` gives
+it mass `0` because `q` on `[0, b)` is the image of Lebesgue measure on `[0, Q b)` under `Q^←`
+(`restrict_Iio_eq_map_clockQuantile`) and `Q ∘ Q^← = id` there.  Times of clock time `0` are no
+exception (`eq_zero_of_clockTime_eq_zero`).  Finally `ℝ≥0 = ⋃ₙ [0, n)`. -/
 theorem duality_of_atomless (hq : ∀ s, q (Iio s) ≠ ⊤) (hat : ∀ t, q {t} = 0)
-    (hunb : ∀ z : ℝ, ∃ b, z < clockTime q b) {γ : ℝ≥0 → ℝ≥0 → ℝ}
+    {γ : ℝ≥0 → ℝ≥0 → ℝ}
     (hγ₁ : ∀ u, Measurable (γ · u)) (hγ₂ : ∀ s, Measurable (γ s ·)) {Φ : ℝ≥0 → ℝ≥0 → ℝ}
     (h₁ : ∀ s s' t, s ≤ s' → Φ s' t - Φ s t = ∫ r in Iio s' \ Iio s, γ r t ∂q)
     (h₂ : ∀ s t t', t ≤ t' → Φ s t' - Φ s t = ∫ r in Iio t' \ Iio t, γ s r ∂q)
-    (hsec₁ : ∀ T, IntervalIntegrable (fun z ↦ γ (clockInverse q z) (clockInverse q 0)) volume 0 T)
-    (hsec₂ : ∀ T, IntervalIntegrable (fun z ↦ γ (clockInverse q 0) (clockInverse q z)) volume 0 T)
-    (hint : ∀ T, IntegrableOn (fun p : ℝ × ℝ ↦ γ (clockInverse q p.1) (clockInverse q p.2))
-      (Icc 0 T ×ˢ Icc 0 T)) :
+    (hsec₁ : ∀ b, IntervalIntegrable (fun z ↦ γ (clockQuantile q b z) (clockQuantile q b 0))
+      volume 0 (clockTime q b))
+    (hsec₂ : ∀ b, IntervalIntegrable (fun z ↦ γ (clockQuantile q b 0) (clockQuantile q b z))
+      volume 0 (clockTime q b))
+    (hint : ∀ b, IntegrableOn (fun p : ℝ × ℝ ↦ γ (clockQuantile q b p.1) (clockQuantile q b p.2))
+      (Icc 0 (clockTime q b) ×ˢ Icc 0 (clockTime q b))) :
     ∀ᵐ t ∂q, Φ t 0 = Φ 0 t := by
-  set Ψ : ℝ → ℝ → ℝ := fun x y ↦ Φ (clockInverse q x) (clockInverse q y)
-  set ψ : ℝ → ℝ → ℝ := fun x y ↦ γ (clockInverse q x) (clockInverse q y)
   have hΦswap : ∀ s s' t, s ≤ s' → (fun a b ↦ Φ b a) s' t - (fun a b ↦ Φ b a) s t =
       ∫ r in Iio s' \ Iio s, (fun a b ↦ γ b a) r t ∂q := fun s s' t h ↦ h₂ t s s' h
-  have H₁ : ∀ s t, 0 ≤ s → 0 ≤ t → Ψ s t - Ψ 0 t = ∫ r in 0..s, ψ r t := fun s t hs _ ↦ by
-    rw [intervalIntegral.integral_of_le hs, ← integral_Ico_eq_integral_Ioc]
-    exact sub_eq_integral_clockInverse hq hat hunb hγ₁ h₁ le_rfl hs (clockInverse q t)
-  have H₂ : ∀ s t, 0 ≤ s → 0 ≤ t → Ψ s t - Ψ s 0 = ∫ r in 0..t, ψ s r := fun s t _ ht ↦ by
-    rw [intervalIntegral.integral_of_le ht, ← integral_Ico_eq_integral_Ioc]
-    exact sub_eq_integral_clockInverse (Φ := fun a b ↦ Φ b a) (γ := fun a b ↦ γ b a) hq hat hunb
-      hγ₂ hΦswap le_rfl ht (clockInverse q s)
-  have key := ae_sub_eq_integral_antidiagonal H₁ H₂ hsec₁ hsec₂ hint hint
-  simp only [sub_self, intervalIntegral.integral_zero] at key
-  -- the exceptional set in Lebesgue time, and a measurable null superset of it
-  obtain ⟨N, hNsub, hNm, hN0⟩ := exists_measurable_superset_of_null (ae_iff.1 key)
   have hFm : Measurable (clockTime q) := (clockTime_mono hq).measurable
-  -- the back translation
-  have hback : ∀ t : ℝ≥0, Ψ (clockTime q t) 0 - Ψ 0 (clockTime q t) = Φ t 0 - Φ 0 t := fun t ↦ by
-    have e0 : clockInverse q 0 = clockInverse q (clockTime q 0) := by simp [clockTime]
-    have a1 := eq_of_clockInverse_clockTime hq hat hunb h₁ t (clockInverse q (clockTime q 0))
-    have a2 := eq_of_clockInverse_clockTime hq hat hunb h₁ 0 (clockInverse q (clockTime q t))
-    have b1 := eq_of_clockInverse_clockTime (Φ := fun a b ↦ Φ b a) (γ := fun a b ↦ γ b a) hq hat
-      hunb hΦswap 0 t
-    have b2 := eq_of_clockInverse_clockTime (Φ := fun a b ↦ Φ b a) (γ := fun a b ↦ γ b a) hq hat
-      hunb hΦswap t 0
-    show Φ (clockInverse q (clockTime q t)) (clockInverse q 0) -
-      Φ (clockInverse q 0) (clockInverse q (clockTime q t)) = _
-    rw [e0, a1, a2, b1, b2]
-  have hsub : {t | ¬ Φ t 0 = Φ 0 t} ⊆ clockTime q ⁻¹' N := fun t ht ↦ by
-    refine hNsub fun h ↦ ht ?_
-    have hF0 : 0 ≤ clockTime q t := measureReal_nonneg
-    rcases hF0.lt_or_eq with hpos | hzero
-    · have := h hpos
-      rw [hback t] at this
-      exact sub_eq_zero.1 this
-    · have := hback t
-      rw [← hzero] at this
-      exact sub_eq_zero.1 (this.symm.trans (sub_self _))
-  refine ae_iff.2 (measure_mono_null hsub ?_)
-  have hU : clockTime q ⁻¹' N = ⋃ n : ℕ, (clockTime q ⁻¹' N ∩ Iio (n : ℝ≥0)) := by
-    ext t
-    simp only [mem_iUnion, mem_inter_iff, mem_Iio]
-    exact ⟨fun h ↦ ⟨(exists_nat_gt t).choose, h, (exists_nat_gt t).choose_spec⟩,
-      fun ⟨_, h, _⟩ ↦ h⟩
-  rw [hU]
-  refine measure_iUnion_null fun n ↦ ?_
-  rw [← Measure.restrict_apply (hFm hNm), restrict_Iio_eq_map_clockQuantile hq,
-    Measure.map_apply (clockQuantile_mono _).measurable (hFm hNm),
-    Measure.restrict_apply ((clockQuantile_mono _).measurable (hFm hNm))]
-  refine measure_mono_null (fun z hz ↦ ?_) hN0
-  obtain ⟨hzN, hz0, hzn⟩ := hz
-  have : clockTime q (clockQuantile q (n : ℝ≥0) z) = z := clockTime_clockQuantile hq hat hz0 hzn
-  simpa [mem_preimage, this] using hzN
+  -- `t` with clock time `0` is no exception
+  have hzero : ∀ t, clockTime q t = 0 → Φ t 0 = Φ 0 t := fun t ht ↦ by
+    rw [eq_zero_of_clockTime_eq_zero hq h₁ ht,
+      eq_zero_of_clockTime_eq_zero (Φ := fun a b ↦ Φ b a) hq hΦswap ht]
+  -- on each horizon `[0, b)`, `lem:calculus` on the square `[0, Q b]²`
+  have hb : ∀ b : ℝ≥0, q ({t | ¬ Φ t 0 = Φ 0 t} ∩ Iio b) = 0 := by
+    intro b
+    set L := clockTime q b
+    set Ψ : ℝ → ℝ → ℝ := fun x y ↦ Φ (clockQuantile q b x) (clockQuantile q b y)
+    set ψ : ℝ → ℝ → ℝ := fun x y ↦ γ (clockQuantile q b x) (clockQuantile q b y)
+    have H₁ : ∀ s t, 0 ≤ s → 0 ≤ t → s ≤ L → t ≤ L → Ψ s t - Ψ 0 t = ∫ r in 0..s, ψ r t :=
+      fun s t hs _ hsL _ ↦ by
+        rw [intervalIntegral.integral_of_le hs, ← integral_Ico_eq_integral_Ioc]
+        exact sub_eq_integral_clockQuantile hq hat hγ₁ h₁ le_rfl hs hsL (clockQuantile q b t)
+    have H₂ : ∀ s t, 0 ≤ s → 0 ≤ t → s ≤ L → t ≤ L → Ψ s t - Ψ s 0 = ∫ r in 0..t, ψ s r :=
+      fun s t _ ht _ htL ↦ by
+        rw [intervalIntegral.integral_of_le ht, ← integral_Ico_eq_integral_Ioc]
+        exact sub_eq_integral_clockQuantile (Φ := fun a b ↦ Φ b a) (γ := fun a b ↦ γ b a) hq hat
+          hγ₂ hΦswap le_rfl ht htL (clockQuantile q b s)
+    have key := ae_sub_eq_integral_antidiagonal_Icc H₁ H₂ (hsec₁ b) (hsec₂ b) (hint b) (hint b)
+    simp only [sub_self, intervalIntegral.integral_zero] at key
+    obtain ⟨N, hNsub, hNm, hN0⟩ := exists_measurable_superset_of_null (ae_iff.1 key)
+    -- the exceptional set on `[0, b)` lies in `Q⁻¹ (N ∪ {L})`
+    have hsub : {t | ¬ Φ t 0 = Φ 0 t} ∩ Iio b ⊆ clockTime q ⁻¹' (N ∪ {L}) ∩ Iio b := by
+      rintro t ⟨ht, htb⟩
+      refine ⟨?_, htb⟩
+      by_contra hn
+      simp only [mem_preimage, mem_union, mem_singleton_iff, not_or] at hn
+      have hF0 : 0 ≤ clockTime q t := measureReal_nonneg
+      have htL : clockTime q t < L :=
+        lt_of_le_of_ne (clockTime_mono hq (le_of_lt htb)) hn.2
+      rcases hF0.lt_or_eq with hpos | hzero'
+      · have hQ0 : clockTime q 0 = 0 := by simp [clockTime]
+        have hL0 : clockTime q 0 < L := by rw [hQ0]; exact hpos.trans htL
+        have := of_not_not (fun h ↦ hn.1 (hNsub h)) hpos htL
+        have a1 := eq_of_clockQuantile_clockTime hq hat h₁ htL (clockQuantile q b (clockTime q 0))
+        have a2 := eq_of_clockQuantile_clockTime hq hat h₁ hL0 (clockQuantile q b (clockTime q t))
+        have b1 := eq_of_clockQuantile_clockTime (Φ := fun a b ↦ Φ b a) (γ := fun a b ↦ γ b a)
+          hq hat hΦswap hL0 t
+        have b2 := eq_of_clockQuantile_clockTime (Φ := fun a b ↦ Φ b a) (γ := fun a b ↦ γ b a)
+          hq hat hΦswap htL 0
+        have e0 : clockQuantile q b 0 = clockQuantile q b (clockTime q 0) := by simp [clockTime]
+        have : Φ (clockQuantile q b (clockTime q t)) (clockQuantile q b 0) -
+            Φ (clockQuantile q b 0) (clockQuantile q b (clockTime q t)) = 0 := this
+        rw [e0, a1, a2, b1, b2] at this
+        exact ht (sub_eq_zero.1 this)
+      · exact ht (hzero t hzero'.symm)
+    have hNL : MeasurableSet (N ∪ {L}) := hNm.union (measurableSet_singleton L)
+    have hNL0 : volume (N ∪ {L}) = 0 := measure_union_null hN0 Real.volume_singleton
+    refine measure_mono_null hsub ?_
+    rw [← Measure.restrict_apply (hFm hNL), restrict_Iio_eq_map_clockQuantile hq,
+      Measure.map_apply (clockQuantile_mono _).measurable (hFm hNL),
+      Measure.restrict_apply ((clockQuantile_mono _).measurable (hFm hNL))]
+    refine measure_mono_null (fun z hz ↦ ?_) hNL0
+    obtain ⟨hzN, hz0, hzb⟩ := hz
+    have : clockTime q (clockQuantile q b z) = z := clockTime_clockQuantile hq hat hz0 hzb
+    simpa [mem_preimage, this] using hzN
+  have hU : {t | ¬ Φ t 0 = Φ 0 t} ⊆ ⋃ n : ℕ, ({t | ¬ Φ t 0 = Φ 0 t} ∩ Iio (n : ℝ≥0)) :=
+    fun t ht ↦ mem_iUnion.2 ⟨(exists_nat_gt t).choose, ht, (exists_nat_gt t).choose_spec⟩
+  exact ae_iff.2 (measure_mono_null hU (measure_iUnion_null fun n ↦ hb n))
 
 end Atomless
 
