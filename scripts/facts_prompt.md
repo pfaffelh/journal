@@ -18,173 +18,146 @@ Deine letzte Antwort ist der Bericht, nicht eine Ankündigung.
 zu lesen; sie sind ausgelagert, damit dieser Auftrag der Auftrag bleibt und nicht
 die Aktenlage. Die Ergebnisse stehen ohnehin in `Facts/INVENTAR.md`.*
 
-### Aufgabe: Dualität, der Kern von Meilenstein 7 *(gestellt 2026-09-25 vom Nutzer)*
+### Aufgabe: das lokale Martingalproblem, Meilenstein 6 *(gestellt 2026-09-25 abends vom Nutzer)*
 
-**Diese Aufgabe geht allen älteren vor.** Die Identifikation als Brownsche
-Bewegung ist am 2026-09-25 im ersten Lauf vollständig erledigt und ins Archiv
-verschoben. Was die elf Läufe danach auf eigene Faust gebaut haben
-(Spiegelungsprinzip, Lévy, Ruin des Spielers, Wald), bleibt stehen, **wird aber
-nicht fortgesetzt**. Die Laplace-Transformierte von `τ_a`, die der letzte Lauf
-als Ziel benannt hat, ist **kein** Ziel mehr.
-
-**Stand beim Stellen der Aufgabe:** In `MartingaleProblems/Suggested.lean` steht
-**keine einzige** Deklaration zur Dualität: kein `chain_identity`, kein
-`duality`, nichts. Die Uhr (`Clock`, `Clock.interval`, `lebesgueClock`) steht,
-ebenso Meilenstein 5 mit `PropagatesAgreement`, `weightedLaw`,
-`propagatesAgreement_of_transfer` und `eq_of_propagatesAgreement`. Auf dieser
-Brücke landet die Dualität. Quelle für jede Aussage ist
-`MartingaleProblem.tex`, Abschnitt `sec:duality` (ab Z. 5500); die Namen sind
-die aus `MartingaleProblems/README-kurz.md`, Meilenstein 7, wo es sie gibt.
+**Diese Aufgabe geht allen älteren vor.** Die Dualität ist am 2026-09-25
+vollständig erledigt und ins Archiv verschoben. Quelle für jede Aussage ist
+`MartingaleProblem.tex`, Abschnitte `ssec:localmp` (ab Z. 4537) und
+`ssec:localuniq` (ab Z. 4979); die Namen sind die aus
+`MartingaleProblems/README-kurz.md`, Meilenstein 6, wo es sie gibt.
 
 **Ein Schritt ist ein Lauf und ein benanntes Ziel.** Wer früher fertig ist,
 nimmt den nächsten Schritt im selben Lauf. Wer steckenbleibt, berichtet ein
 begründetes „geht nicht“ und geht zum nächsten Schritt, der nicht daran hängt;
 die Abhängigkeiten stehen je dabei. **Die Reihenfolge ist vom Nutzer gesetzt.**
 
-**Was ausdrücklich nicht dazugehört:**
+**Worum es geht, in einem Satz** (Z. 4540–4551): „`Y` ist ein lokales Martingal“
+ist nicht linear in `P`, weil die lokalisierende Folge von `P` abhängen darf;
+Mischung, Disintegration und Restart gehen deshalb im lokalen Fall verloren.
+Repariert wird das durch ein **Lokalisierungssystem** `Σ` aus **strikten**
+Stoppzeiten, die Funktionale des Pfads sind, dieselben für jedes `P`.
 
-* die atomaren Uhren (`prop:atomicdual`, `prop:atomicposet`, die Zertifikate,
-  Task 23), die gemischten Uhren (`prop:mixeddual`) und alles ab
-  `thm:densechain`. Die Roadmap sagt selbst, daß diese Leiter eher eine
-  Forschungsskizze als ein Meilenstein ist;
-* Meilenstein 11, die Existenz aus einem Dual;
-* Meilenstein 6, die Lokalisierung. Er ist ein eigener, späterer Auftrag. Die
-  gestoppte Dualität (Schritt 4) braucht ihn **nicht**;
-* der Grenzübergang `τ, σ → ∞` aus `rem:dualstopped`. Das Manuskript beweist ihn
-  nicht, es verweist nur auf EK Remark 4.4.16. Er wäre neue Mathematik und
-  gehört zuerst ins Manuskript.
+**Strikt heißt hier, in Lean:** `IsStoppingTime 𝓕 τ` für die **rohe** Filtration
+`𝓕`, nicht für ihre rechtsstetige Hülle und nicht für eine Vervollständigung
+(`rem:strictdebut`, `rem:jsdiff`(iii)). Das ist der Inhalt des Meilensteins und
+in jeder Signatur sichtbar zu halten. Eine Voraussetzung
+`[𝓕.IsRightContinuous]` oder `[𝓕.IsComplete]` in einer Aussage dieser Aufgabe
+ist ein Fehler in der Aussage, kein Werkzeug.
+
+**Was schon steht, und nicht neu zu bauen ist:**
+
+* in Mathlib (`Mathlib/Probability/Process/LocalProperty.lean`):
+  `IsLocalizingSequence`, `Locally`, `IsStable`, `IsStable.locally`,
+  `IsLocalizingSequence.min`, `locally_locally_iff`, `locally_induction`. Einen
+  Begriff `IsLocalMartingale` hat Mathlib **nicht**;
+* in `MartingaleProblems/Suggested.lean`: `IsLocalMPSolution` (Z. 792, über
+  `Locally`), `isLocalMPSolution_of_isMPSolution`, `martingale_stoppedProcess`
+  (Z. 10946, stetige Zeit, ohne Schranke an die Pfade),
+  `locally_martingale_stoppedProcess` (Z. 11445), `restart` (`lem:restart`),
+  `IsShiftSystem`, und `thm:absuniq` als `propagatesAgreement_of_unique_onedim`,
+  `subsingleton_mpSolutions_of_unique_onedim`, `isMarkov_of_unique_onedim`;
+* in `JumpProcesses/Suggested.lean`: die Instanzen `isLocalizingSequence_rateTime`,
+  `jumpProcess_isLocalMPSolution`, `poissonProcess_isLocalMPSolution`,
+  `linearBirthDeath_isLocalMPSolution`, `yule_isLocalMPSolution`.
+
+**BrownianMotion, nur zum Lesen.** `~/Code/lean/brownian-motion-upstream` ist ein
+Worktree von `RemyDegenne/brownian-motion` auf `upstream/master` (`0d5b6eb`,
+2026-09-22), über `--add-dir` lesbar. **Nicht importierbar**: Die Roadmap-Dateien
+hängen allein an Mathlib `master`. Was von dort übernommen wird, wird
+abgeschrieben, angepaßt und mit einem Kommentar
+`-- nach BrownianMotion, <Datei>:<Zeile> (0d5b6eb)` versehen. Dort wird
+**nichts** geschrieben, gebaut oder gepullt. Einschlägig:
+
+* `StochasticIntegral/LocalMartingale.lean`: `IsLocalMartingale` als
+  `Locally (Martingale · 𝓕 P ∧ càdlàg)`, `isStable_martingale`,
+  `Martingale.stoppedProcess_indicator`;
+* `StochasticIntegral/LocalizingSequence.lean`, `Locally.lean`: Ergänzungen zu
+  Mathlibs `LocalProperty` und die Stabilität von Pfadeigenschaften;
+* `StochasticIntegral/LocalizingLeastGE.lean`: `isLocalizingSequence_leastGE`
+  und `stoppedAtNorm_le_add_jump`. **Das ist fast `lem:L1auto`, aber unter
+  `[𝓕.IsComplete] [𝓕.IsRightContinuous]`**: die Stoppzeiteigenschaft kommt dort
+  aus dem Débutsatz (`Choquet.Debut`). Die Sprungschranke ist übernehmbar, die
+  Stoppzeiteigenschaft **nicht**.
+
+**Was ausdrücklich nicht dazugehört:** `rem:cadlaglocal` (die lokale Fassung von
+`thm:cadlag`); die starke Markoveigenschaft in `thm:localuniq`, solange die
+schwache nicht steht; Meilenstein 11.
 
 **Regeln, die weiter gelten:**
 
 * **Keine `README.md` und keine `README-kurz.md` anfassen, in keiner Roadmap.**
-  Der Nutzer redigiert sie. Befunde gehören ausschließlich in
-  `Facts/INVENTAR.md`.
-* **Das Manuskript nicht anfassen.** Findet ein Lauf dort eine Lücke oder einen
-  Fehler, steht das im Bericht, mit Zeilennummer.
-* Die Kette hat **vier** Dateien: `WeakConvergence`, `SkorokhodSpace`,
-  `MartingaleProblems`, `JumpProcesses`. `check_master.py` baut alle vier. Die
-  neuen Aussagen kommen in einen neuen Abschnitt `Duality` in
-  `MartingaleProblems/Suggested.lean`. Im Bericht wird eine Aussage über ihren
-  **Namen** benannt, nicht über eine Meilensteinnummer.
+  Befunde gehören ausschließlich in `Facts/INVENTAR.md`.
+* **Das Manuskript nicht anfassen.** Lücken und Fehler stehen im Bericht, mit
+  Zeilennummer.
+* Die Kette hat **vier** Dateien; `check_master.py` baut alle vier und ist die
+  maßgebliche Prüfung. Die neuen Aussagen kommen in einen neuen Abschnitt
+  `Localization` in `MartingaleProblems/Suggested.lean`. Im Bericht wird eine
+  Aussage über ihren **Namen** benannt.
 
-#### Schritt 1. `chain_identity` — die Treppenidentität (`lem:chain`, Z. 5529)
+#### Schritt 1. `LocalizingSystem` (`def:localizing`, Z. 4553)
 
-Rein algebraisch, **ohne Wahrscheinlichkeit**. Auf einer Präordnung `ι` mit
-kleinstem Element, einer `Clock` und `Φ γ₁ γ₂ : ι → ι → ℝ` mit den beiden
-Zuwachsdarstellungen `eq:incrementrep` gilt für jede Treppe von `(⊥, t)` nach
-`(t, ⊥)` die Summenformel `eq:chain`.
+Eine Familie `Σ` strikter Stoppzeiten auf dem Pfadraum mit (L1) gleichmäßige
+Lokalisierung, (L2) Shiftkovarianz, (L3) integrable Zuwächse nach einem
+Restart; dazu „stark shiftkovariant“. **Eine Verfeinerung von
+`IsLocalizingSequence`, kein Ersatz**: (L1) ist die Aussage, daß **eine** feste
+Folge `τ_n ∈ Σ` für **jede** Lösung `Locally` bezeugt. Wie das ohne Doppelung
+gegen Mathlib ausgesprochen wird, entscheidet der Lauf und begründet es.
 
-* Das Intervall `[s, s')` des Manuskripts ist `Clock.interval Q .predictable s s'`
-  (`Set.Iio s' \ Set.Iio s`). **Keine eigene Intervalldefinition bauen**, und
-  nicht `Set.Ico`: auf einer Präordnung, die nicht linear ist, ist das die
-  falsche Menge.
-* Die Treppe als zwei Folgen `s, t : Fin (m+1) → ι` (oder `ℕ → ι` bis `m`), `s`
-  monoton, `t` antiton, mit den vier Randwerten.
-* Die Integrierbarkeit ist Voraussetzung („all integrals being assumed to
-  exist“), als `IntegrableOn` auf den benutzten Intervallen und nicht mehr.
-* **Die Telescopie liest keinen der beiden Endpunkte.** Wenn es billig ist, die
-  Aussage für eine Treppe zwischen beliebigen Ecken zu formulieren und `(⊥,t)`
-  nach `(t,⊥)` als Spezialfall zu nehmen, dann so.
+Als Probe, daß die Definition nicht ins Leere zielt: `rem:localhyp`, der
+Diffusionsfall, oder eine der Instanzen aus `JumpProcesses`, je nachdem, was
+billiger ist. Paßt keine, ist das ein Befund über die Definition.
 
-#### Schritt 2. Die diskrete Uhr: `prop:haar`(a), dann `duality_discrete` (`cor:dualdiscrete`, Z. 7424)
+#### Schritt 2. `localizingSystem_of_boundedJumps` (`lem:L1auto`, Z. 4683)
 
-Hängt nur an Schritt 1. Das ist der **Kollapstest**: Trägt die Signatur von
-Schritt 1 hier nicht, ist sie falsch, und das ist vor Schritt 3 zu wissen.
+Hängt an Schritt 1. **Der technisch heikelste Schritt.** Càdlàg-Testprozesse
+mit `Y 0 = 0` und durch `c_Y` beschränkten Sprüngen; `τ_n` ist die Treffzeit
+des **laufenden Supremums** `S_t = sup_{s ≤ t} ‖Y_s‖` auf `[n, ∞)`, nicht die
+der Norm. Die vier Schritte des Beweises:
 
-* Zuerst `prop:haar`(a): auf `ℕ` mit Zählmaß folgt aus `γ₁ = γ₂` die Gleichung
-  `Φ t 0 = Φ 0 t`, **ohne jede Integrierbarkeit**, über die antidiagonale Treppe
-  `s k = k`, `t k = t - k`. Jeder Summand ist identisch Null.
-* Dann `cor:dualdiscrete`: unabhängige Markovketten mit Kernen `P`, `Q`, `f`
-  beschränkt meßbar mit `eq:dualdiscrete`, Folgerung `eq:dualdiscreteconc`.
-  **Wie die Markovkette in Lean ausgesprochen wird, entscheidet der Lauf** und
-  begründet es im Bericht. Naheliegend ist die Form, die
-  `rem:dualdiscretemp` nennt: `f (X n, y) - ∑_{k<n} ((P - I) f)(X k, y)` ist ein
-  Martingal. Das ist `mpFamily` mit Zählmaßuhr in der prädiktablen Konvention
-  und braucht keine Trajektorienkonstruktion. Mathlibs `Kernel.traj` ist die
-  Alternative.
+1. `S` ist càdlàg, monoton und adaptiert, über das abzählbare Supremum
+   `eq:supcountable` (T2b);
+2. `{τ_n ≤ t} = {S_t ≥ n}` (`eq:debutclosed`), also `τ_n` strikt. **Hier liegt
+   der Unterschied zu BrownianMotion**, und er ist im Bericht festzuhalten;
+3. `‖Y^{τ_n}‖ ≤ n + c_Y`. Das ist `stoppedAtNorm_le_add_jump` mit `S` statt
+   `‖Y‖`;
+4. (L1): Ein beschränktes lokales Martingal ist ein Martingal.
 
-#### Schritt 3. Die Dualität in stetiger Zeit: `lem:calculus`, dann `duality`, `duality_weighted` (Z. 7183–7420)
+#### Schritt 3. `lem:localmix` (Z. 4622)
 
-**Das ist der größte Schritt und darf zwei Läufe brauchen.** Hängt an Schritt 1
-nur über `rem:dualischain`. Der Beweis darf den direkten Weg über Fubini gehen,
-statt über `lem:chain`.
+Hängt an Schritt 1. (a) Konvexität, **ohne jede Voraussetzung**, über
+`IsLocalizingSequence.min`; (b) Mischungen unter (L1) mit der
+Integrabilitätsbedingung; (c) Disintegration unter `eq:countabletest`. Die
+globalen Fassungen `lem:mixture` (Z. 3405) und `lem:disint` (Z. 3427) stehen in
+Lean **nicht**. Ob sie vorab als eigene Aussagen kommen oder der lokale Beweis
+direkt geführt wird, entscheidet der Lauf.
 
-1. `lem:calculus` (EK 4.4.10): `Φ` auf `ℝ≥0 × ℝ≥0`, absolut stetig in jeder
-   Variablen, `∇Φ = (γ₁, γ₂)` mit `eq:calcint`. Dann gilt `eq:calcconc` für fast
-   jedes `t`. Das ist reine Analysis. Hängt es nur an Mathlib, ist das im
-   Bericht zu sagen.
-2. `duality`, zuerst **mit `α = β = 0`**: `X`, `Y` unabhängig und meßbar, die
-   beiden Martingalhypothesen `eq:dualmg1`/`eq:dualmg2`, die Schranken
-   `eq:dual1`. Folgerung `eq:dualconc`, und unter der Balance `g = h` die
-   Dualitätsrelation `eq:dualrel` **für jedes** `t` (`cor:dualrel`: fast überall,
-   dann Stetigkeit aus `eq:Fpartial1`/`eq:Fpartial2`). Das ist der Fall, den die
-   Eindeutigkeit braucht.
-3. Dann die Fassung mit `α` und `β`. Sie wird für die Abnahme in Schritt 6
-   gebraucht.
-4. `duality_weighted` nach `rem:dualnonmarkov`: ein beschränktes, nichtnegatives,
-   `𝓕^X_{s₀}`-meßbares Gewicht `Z` **auf dem ersten Faktor**, `Φ^Z(s,t) =
-   E[Z · f(X_s, Y_t)]` für `s ≥ s₀`. Dazu
-   `not_secondIncrement_of_weight_on_dual`, das Gegenbeispiel aus derselben
-   Remark (`E₁ = {*}`, `f(x,y) = y`, `Y` ab Zeit 1 ein fairer Vorzeichenwechsel,
-   `Z = 1 + Y₁`). Es zeigt, daß das Gewicht auf dem ersten Faktor sitzen
-   **muß**.
+#### Schritt 4. `localRestart` (`lem:localrestart`, Z. 4780)
 
-*Die Filtration:* EK nimmt die Hilfsfiltration `*𝓕^X`. Hier genügt eine
-Filtration `𝓕` für `X` und eine `𝓖` für `Y`, mit `⨆ 𝓕` unabhängig von `⨆ 𝓖`.
-Wird mehr gebraucht, ist das ein Befund.
+Hängt an Schritt 1 und an `restart`. Der Beweis ist der von `restart` mit
+`Y^{τ_n}` statt `Y`; wird er kein Korollar von `restart`, ist das ein Befund über
+`restart`.
 
-#### Schritt 4. Die gestoppte Dualität (`cor:dualstopped`, EK 4.4.14, Z. 7471)
+#### Schritt 5. `subsingleton_localMPSolutions` (`thm:localuniq`, Z. 4866)
 
-Hängt an Schritt 3. Stoppzeiten `τ` für `𝓕` und `σ` für `𝓖`, die
-Martingalhypothesen für die gestoppten Prozesse. In der Folgerung trägt der
-Integrand die Indikatoren `1_{s ≤ τ}` bzw. `1_{t-s ≤ σ}`. Das Manuskript beweist
-das in einem Satz: den Beweis von Schritt 3 mit der Indikatorfunktion im
-Integral wiederholen. **Ist Schritt 3 so gebaut, daß das ein Korollar ist, ist
-das richtig gebaut.** Braucht es einen zweiten Beweis, ist das ein Befund über
-Schritt 3.
+Hängt an Schritt 4. `thm:absuniq` mit `𝓜_loc` statt `𝓜`: nach dem Manuskript
+nur `lem:restart` durch `localRestart` ersetzt, `prop:uniqfromprop`
+unverändert. Die schwache Markoveigenschaft, falls sie ohne neuen Beweis
+abfällt.
 
-Das Manuskript nennt diese Fassung die praktisch relevante (`rem:dualstopped`):
-Die Schranken `eq:dual1` fehlen oft global, auf Austrittszeiten aus Kompakta sind
-sie leicht zu haben. `martingale_stoppedProcess` steht schon.
+#### Schritt 6. Lokale Eindeutigkeit (`ssec:localuniq`, Z. 4979–5160)
 
-#### Schritt 5. Die Brücke zur Eindeutigkeit: `propagatesAgreement_of_duality`, `uniqueness_of_duality`
+Hängt an Schritt 1, nicht an 2–5. `def:localuniq`, strikte Stoppzeiten im Sinn
+von `def:pasting` (Stoppoperator `a_T`, `𝓕°_T = a_T⁻¹ 𝓢`), `def:restartkernel`,
+`lem:pasting` (Verkleben mit Gedächtnis), `thm:localuniqueness` (JS III.2.40)
+und `cor:pastingmarkov`. Das ist eine eigene Richtung und darf zwei Läufe
+brauchen.
 
-Hängt an Schritt 3 (Teil 4). **Der Weg ist der aus `rem:dualnonmarkov` und nicht
-der aus dem Beweis von `cor:uniqviadual`**: kein Shiftsystem, keine bestimmende
-Menge, kein `thm:absuniq`.
+#### Schritt 7. Abnahme: der explodierende Sprungprozess
 
-* `propagatesAgreement_of_duality`: Die gewichtete Dualitätsrelation liefert die
-  Voraussetzung `htransfer` von `propagatesAgreement_of_transfer`. `Λ s t y` ist
-  dort die rechte Seite der Dualität, die nicht von der Lösung abhängt. Die
-  Trennungsvoraussetzung `hsep` ist `cor:uniqviadual`(i).
-* `uniqueness_of_duality`: mit `eq_of_propagatesAgreement` höchstens eine Lösung
-  zu gegebenem Anfangsgesetz.
-* `isMarkov_of_duality`, falls es ohne neuen Beweis abfällt. Sonst weglassen und
-  im Bericht sagen, warum.
-
-#### Schritt 6. Die atomlose Uhr: `duality_of_atomless` (`cor:atomless`, Z. 5644)
-
-Hängt an Schritt 3 (Teil 1). Zeittransformation `Q s = q (Set.Iio s)`,
-Quantilfunktion `Q^←`, Substitutionsformel `eq:quantile` und Reduktion auf
-`lem:calculus`. Braucht eine lineare Ordnung mit der Intervalleigenschaft (T3).
-`Clock.IsAtomless` steht schon.
-
-#### Schritt 7. Abnahme: die Brownsche Bewegung ist zu sich selbst dual
-
-Hängt an Schritt 3 (Teil 3) und Schritt 5. Mit `f(x,y) = cos(xy)` und `sin(xy)`
-(oder komplex `e^{ixy}`, `𝕂 = ℂ`), `Y ≡ y` deterministisch, `h = 0`, `α = 0`
-und `β(y) = -(v/2) y²` ist die Balance `eq:dualbalance` erfüllt. Die Dualität
-liefert dann die charakteristische Funktion der Randverteilung einer Lösung zu
-`brownianGeneratorPairs v`.
-
-* **Das ist ein zweiter Beweis** von `map_eval_eq_gaussianReal_of_isCadlagMPSolution`
-  und mit `uniqueness_of_duality` von der Eindeutigkeit. Er ersetzt die
-  vorhandenen **nicht**. Er ist der Test, daß die Signaturen der Schritte 3 und
-  5 auf einer echten Anwendung tragen.
-* **Hier kann es klemmen:** `cos(x·y)` hat keinen kompakten Träger, liegt also
-  nicht in `brownianGeneratorPairs`. Die vorhandene Kette hat dasselbe Problem
-  über eine Abschneidung gelöst (`integral_eval_mul_cos_eq_of_isCadlagMPSolution`
-  und die sin-Fassung). Das ist wiederzuverwenden, nicht neu zu bauen.
+Hängt an Schritt 1 und an `JumpProcesses`. Das lokale Problem hat eine Lösung,
+das globale keine. Die lokale Lösung steht schon
+(`jumpProcess_isLocalMPSolution`); neu ist, daß ihre lokalisierende Folge aus
+einem Lokalisierungssystem kommt, und die Nichtexistenz der globalen Lösung.
 
 #### Wenn alle sieben Schritte stehen
 

@@ -170,9 +170,13 @@ ALLOWED=(
 ADDDIRS=()
 # $HOME/Code/lean/journal ist noetig, weil dort die lakefile und das gebaute
 # .lake liegen; der Auftrag verbietet ausdruecklich, dort zu schreiben.
+# brownian-motion-upstream ist ein losgeloester Worktree von
+# RemyDegenne/brownian-motion auf upstream/master, nur zum Lesen: die Roadmap-
+# Dateien koennen es nicht importieren (sie haengen allein an Mathlib master).
 for d in "${FACTS_JOURNAL:-$HOME/Code/lean/journal}" \
          "${FACTS_MATHLIB:-$HOME/Code/lean/journal/.lake/packages/mathlib}" \
-         "${FACTS_MATHLIB_MASTER:-$HOME/Code/lean/mathlib4}"; do
+         "${FACTS_MATHLIB_MASTER:-$HOME/Code/lean/mathlib4}" \
+         "${FACTS_BROWNIAN:-$HOME/Code/lean/brownian-motion-upstream}"; do
   if [ -d "$d" ]; then
     ADDDIRS+=(--add-dir "$d")
   else
