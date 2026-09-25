@@ -18,6 +18,35 @@ Deine letzte Antwort ist der Bericht, nicht eine Ankündigung.
 zu lesen; sie sind ausgelagert, damit dieser Auftrag der Auftrag bleibt und nicht
 die Aktenlage. Die Ergebnisse stehen ohnehin in `Facts/INVENTAR.md`.*
 
+### Einschub: `duality_of_atomless` ohne unendliche Masse *(gestellt 2026-09-25 nachts vom Nutzer)*
+
+**Das kommt vor dem nächsten Schritt der Aufgabe darunter, in einem Lauf.**
+Findet ein Lauf im Inventar schon einen Bericht zu diesem Einschub vor, ist er
+erledigt, und der Lauf geht direkt zur Aufgabe darunter. Danach geht es mit dem
+nächsten offenen Schritt dort weiter.
+
+**Worum es geht.** `duality_of_atomless` (`MartingaleProblems/Suggested.lean`,
+Z. 22924) trägt die Voraussetzung `hunb`, eine Uhr unendlicher Masse, die das
+Manuskript nicht hat (Befund 1 des fünften Teils vom 2026-09-25). Grund war, daß
+`ae_sub_eq_integral_antidiagonal` auf dem ganzen Quadranten steht und das
+gekappte Quantil oberhalb von `L = sup Q` konstant ist, die Zuwächse von `Ψ`
+dort also `0` sind und nicht `∫ ψ`.
+
+**Der vorgeschlagene Weg, noch ungeprüft:** Man verlangt nicht dasselbe `ψ` in
+beiden Variablen. Man nimmt `γ₁ = ψ · 1_{s < L}` und `γ₂ = ψ · 1_{t < L}`, zu
+`Ψ`, das jenseits von `L` konstant fortgesetzt ist. Das ist absolut stetig, weil
+es bei `L` stetig und danach konstant ist. Auf dem ganzen Quadranten gilt dann
+`∇Ψ = (γ₁, γ₂)`, und `lem:calculus` gilt wörtlich. Für `t ≤ L` liegen `s` und
+`t - s` unter `L`, also ist `γ₁(s, t-s) - γ₂(s, t-s) = 0`.
+
+* Ziel: `duality_of_atomless` **ohne** `hunb`, für jede atomlose Uhr mit
+  `q (Iio s) ≠ ⊤`, mit derselben Folgerung. `check_master.py` sauber.
+* Trägt der Weg nicht, dann ein begründetes „geht nicht“ mit der Stelle, an der
+  er bricht, und `duality_of_atomless` bleibt, wie es ist.
+* Der Befund gehört ins Inventar, auch die Frage, ob `cor:atomless` im Manuskript
+  (Beweis ab Z. 5661, Anwendung von `lem:calculus` auf `[0, L]²`) dafür einen Satz
+  braucht. **Das Manuskript nicht anfassen.**
+
 ### Aufgabe: das lokale Martingalproblem, Meilenstein 6 *(gestellt 2026-09-25 abends vom Nutzer)*
 
 **Diese Aufgabe geht allen älteren vor.** Die Dualität ist am 2026-09-25
