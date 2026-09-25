@@ -46071,3 +46071,418 @@ theorem lintegral_sq_hittingAfter_abs_of_isBrownianReal
 end ExitTimeSecondMoment
 
 end MeasureTheory
+
+section Localization
+
+/-! ## Milestone 6: localization
+
+`def:localizing` of the manuscript (`ssec:localmp`).  "`Y` is a local martingale" is not linear in
+`P`, because the localizing sequence may depend on `P`; a localizing system fixes one sequence of
+strict stopping times, functionals of the path, for every `P`.  Mathlib's
+`ProbabilityTheory.IsLocalizingSequence` and `ProbabilityTheory.Locally` are used as they stand;
+`IsUniformLocalization` is the statement that one sequence is a localizing sequence for every
+measure and a witness of `Locally` for every local solution. -/
+
+variable {ι : Type*} [LinearOrder ι] [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι]
+variable {F : Type*} {mF : MeasurableSpace F} {𝕂 : Type*} [RCLike 𝕂]
+
+/-- **Clause (L1) of `def:localizing`, uniform localization.**  One sequence `τ` of strict
+stopping times, increasing and tending to `⊤` **at every path**, localizes every test process under
+every local solution.
+
+It refines `ProbabilityTheory.IsLocalizingSequence` and does not replace it: the first three
+fields say that `τ` is a localizing sequence for **every** measure at once
+(`IsUniformLocalization.isLocalizingSequence`), and the fourth says that this one sequence is a
+witness of `ProbabilityTheory.Locally` for every test process under every local solution.  The
+stopped process is written exactly as `Locally` writes it, indicator of `{⊥ < τ n}` included, so
+that the direction "⇐" of `def:localizing`(L1) is the definition of `Locally` and nothing else
+(`isLocalMPSolution_iff_of_isUniformLocalization`).
+
+The convergence is pointwise and not almost sure, as in the manuscript, and the reason is the
+restart of `lem:localrestart`: there the measure to be shown a local solution is the restarted
+one, which is not yet known to be a solution, so an almost sure convergence under solutions would
+not reach it.
+
+`IsStoppingTime 𝓕₀` is for the raw filtration `𝓕₀`: no right continuous hull and no completion
+enter (`rem:strictdebut`). -/
+structure IsUniformLocalization (𝓧 : Set (ι → F → 𝕂)) (𝓕₀ : Filtration ι mF)
+    (τ : ℕ → F → WithTop ι) : Prop where
+  isStoppingTime : ∀ n, IsStoppingTime 𝓕₀ (τ n)
+  mono : ∀ f, Monotone (τ · f)
+  tendsto_top : ∀ f, Tendsto (τ · f) atTop (𝓝 ⊤)
+  martingale : ∀ P : Measure F, IsProbabilityMeasure P → IsLocalMPSolution 𝓧 𝓕₀ P →
+    ∀ Y ∈ 𝓧, ∀ n, Martingale
+      (stoppedProcess (fun i ↦ {f | ⊥ < τ n f}.indicator (Y i)) (τ n)) 𝓕₀ P
+
+omit [OrderBot ι] in
+/-- A sequence of stopping times that increases and tends to `⊤` at every point is a localizing
+sequence for every measure. -/
+theorem isLocalizingSequence_of_forall {𝓕₀ : Filtration ι mF} {τ : ℕ → F → WithTop ι}
+    (hst : ∀ n, IsStoppingTime 𝓕₀ (τ n)) (hmono : ∀ f, Monotone (τ · f))
+    (htop : ∀ f, Tendsto (τ · f) atTop (𝓝 ⊤)) (P : Measure F) :
+    IsLocalizingSequence 𝓕₀ τ P where
+  isStoppingTime := hst
+  tendsto_top := ae_of_all _ htop
+  mono := ae_of_all _ hmono
+
+theorem IsUniformLocalization.isLocalizingSequence {𝓧 : Set (ι → F → 𝕂)}
+    {𝓕₀ : Filtration ι mF} {τ : ℕ → F → WithTop ι} (hτ : IsUniformLocalization 𝓧 𝓕₀ τ)
+    (P : Measure F) : IsLocalizingSequence 𝓕₀ τ P :=
+  isLocalizingSequence_of_forall hτ.isStoppingTime hτ.mono hτ.tendsto_top P
+
+/-- **(L1) turns the local problem into a family of martingale conditions**, for every
+probability measure and not only for solutions: this is what makes membership linear in `P`
+(`rem:localhyp`). -/
+theorem isLocalMPSolution_iff_of_isUniformLocalization {𝓧 : Set (ι → F → 𝕂)}
+    {𝓕₀ : Filtration ι mF} {τ : ℕ → F → WithTop ι} (hτ : IsUniformLocalization 𝓧 𝓕₀ τ)
+    (P : Measure F) [IsProbabilityMeasure P] :
+    IsLocalMPSolution 𝓧 𝓕₀ P ↔ ∀ Y ∈ 𝓧, ∀ n, Martingale
+        (stoppedProcess (fun i ↦ {f | ⊥ < τ n f}.indicator (Y i)) (τ n)) 𝓕₀ P :=
+  ⟨hτ.martingale P inferInstance, fun hmart Y hY ↦ ⟨τ, hτ.isLocalizingSequence P, hmart Y hY⟩⟩
+
+variable [AddCommMonoid ι] [AddLeftMono ι]
+
+/-- **The filtration seen from time `r`**, `t ↦ 𝓕₀ (r + t)`, the filtration of
+`def:localizing`(L3).  Mathlib has no shifted filtration. -/
+def MeasureTheory.Filtration.shiftBy (𝓕₀ : Filtration ι mF) (r : ι) : Filtration ι mF where
+  seq t := 𝓕₀ (r + t)
+  mono' s t hst := 𝓕₀.mono (by gcongr)
+  le' t := 𝓕₀.le (r + t)
+
+
+omit [AddCommMonoid ι] [AddLeftMono ι] in
+/-- **A bounded local martingale is a martingale**, Step 4 of the proof of `lem:L1auto`.  The
+bound is on every path, and it is what makes the limit along the localizing sequence a dominated
+one: `tendsto_condExp_unique` moves the martingale identity of the stopped processes to the limit.
+Neither right continuity nor progressivity is used -- the stopped process agrees with `Y` at `i`
+as soon as `i < τ n`, which is eventually the case along a localizing sequence. -/
+theorem martingale_of_locally_of_bounded {Ω : Type*} {m : MeasurableSpace Ω}
+    {𝓕 : Filtration ι m} {P : Measure Ω} [IsFiniteMeasure P] {Y : ι → Ω → 𝕂}
+    (hY : Locally (fun Z ↦ Martingale Z 𝓕 P) 𝓕 Y P) (hadapt : StronglyAdapted 𝓕 Y)
+    {C : ℝ} (hC : ∀ i ω, ‖Y i ω‖ ≤ C) : Martingale Y 𝓕 P := by
+  obtain ⟨τ, hτ, hmart⟩ := hY
+  set Z : ℕ → ι → Ω → 𝕂 :=
+    fun n ↦ stoppedProcess (fun i ↦ {ω | ⊥ < τ n ω}.indicator (Y i)) (τ n) with hZ
+  have hZb : ∀ n i ω, ‖Z n i ω‖ ≤ C := by
+    intro n i ω
+    simp only [hZ, stoppedProcess]
+    by_cases hmem : ω ∈ {ω | ⊥ < τ n ω}
+    · rw [Set.indicator_of_mem hmem]; exact hC _ ω
+    · rw [Set.indicator_of_notMem hmem, norm_zero]; exact (norm_nonneg _).trans (hC i ω)
+  have hconv : ∀ i, ∀ᵐ ω ∂P, Tendsto (fun n ↦ Z n i ω) atTop (𝓝 (Y i ω)) := by
+    intro i
+    filter_upwards [hτ.tendsto_top] with ω hω
+    have hev : ∀ᶠ n in atTop, (i : WithTop ι) < τ n ω :=
+      hω.eventually (eventually_gt_nhds (WithTop.coe_lt_top i))
+    refine tendsto_const_nhds.congr' ?_
+    filter_upwards [hev] with n hn
+    have hbot : ω ∈ {ω | ⊥ < τ n ω} := show ⊥ < τ n ω from bot_le.trans_lt hn
+    simp only [hZ]
+    rw [stoppedProcess_eq_of_le hn.le, Set.indicator_of_mem hbot]
+  have hYint : ∀ i, Integrable (Y i) P := fun i ↦
+    Integrable.mono' (integrable_const C) ((hadapt i).mono (𝓕.le i)).aestronglyMeasurable
+      (ae_of_all _ (hC i))
+  refine ⟨hadapt, fun i j hij ↦ ?_⟩
+  have h := tendsto_condExp_unique (m := 𝓕 i) (μ := P) (fun n ↦ Z n j) (fun n ↦ Z n i) (Y j) (Y i)
+    (fun n ↦ (hmart n).integrable j) (fun n ↦ (hmart n).integrable i) (hconv j) (hconv i)
+    (fun _ ↦ C) (integrable_const C) (fun _ ↦ C) (integrable_const C)
+    (fun n ↦ ae_of_all _ (hZb n j)) (fun n ↦ ae_of_all _ (hZb n i))
+    (fun n ↦ ((hmart n).condExp_ae_eq hij).trans
+      (condExp_of_stronglyMeasurable (𝓕.le i) ((hmart n).stronglyMeasurable i)
+        ((hmart n).integrable i)).symm.eventuallyEq)
+  exact h.trans (condExp_of_stronglyMeasurable (𝓕.le i) (hadapt i) (hYint i)).eventuallyEq
+
+omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
+/-- **The increments of a martingale after `r` form a martingale for the filtration seen from
+`r`.**  The hypothesis `hr` is `0 ≤ u` for a canonically ordered index; it makes `Y r` measurable
+for the past at `r + u`. -/
+theorem MeasureTheory.Martingale.shiftBy_sub {Ω : Type*} {m : MeasurableSpace Ω}
+    {𝓕 : Filtration ι m} {P : Measure Ω} [IsFiniteMeasure P] {Y : ι → Ω → 𝕂}
+    (hY : Martingale Y 𝓕 P) (r : ι) (hr : ∀ u : ι, r ≤ r + u) :
+    Martingale (fun t ω ↦ Y (r + t) ω - Y r ω) (𝓕.shiftBy r) P := by
+  have h1 : Martingale (fun t ↦ Y (r + t)) (𝓕.shiftBy r) P :=
+    ⟨fun t ↦ hY.stronglyMeasurable (r + t), fun s t hst ↦
+      hY.condExp_ae_eq (show r + s ≤ r + t by gcongr)⟩
+  have h2 : Martingale (fun _ ↦ Y r) (𝓕.shiftBy r) P := by
+    have hm : ∀ t, StronglyMeasurable[𝓕.shiftBy r t] (Y r) := fun t ↦
+      (hY.stronglyMeasurable r).mono (𝓕.mono (hr t))
+    refine ⟨hm, fun s t _ ↦ ?_⟩
+    exact (condExp_of_stronglyMeasurable ((𝓕.shiftBy r).le s) (hm s)
+      (hY.integrable r)).eventuallyEq
+  exact h1.sub h2
+
+variable {E : Type*} [MeasurableSpace E] {π : ι → F → E}
+
+/-- **A localizing system**, `def:localizing`, for the family `𝓧` on the path space `F` with
+the shift `S`.
+
+* `isStoppingTime`: every member is a **strict** stopping time, i.e. one for the raw filtration
+  `𝓕₀` -- not for its right continuous hull and not for a completion (`rem:strictdebut`,
+  `rem:jsdiff`(iii)).  No `IsRightContinuous` and no completeness enter the structure.
+* `uniform`: (L1), a sequence in the system that is an `IsUniformLocalization`.
+* `shift_mem`: (L2), shift covariance `r + σ ∘ θ r ∈ 𝔖`, with the addition of `WithTop ι`, so
+  that `r + ⊤ = ⊤`.
+* `restart`: (L3), integrable increments after a restart, for the filtration
+  `Filtration.shiftBy 𝓕₀ r`.
+
+The structure is stated on the path space.  The manuscript's reading on an ambient space
+`(Ω, 𝔾, P)` with `Y° (X)` in place of `Y°` is not a separate structure: it is this one
+applied to the image measure. -/
+structure LocalizingSystem (S : Shift F π) (𝓕₀ : Filtration ι mF) (𝓧 : Set (ι → F → 𝕂))
+    (𝔖 : Set (F → WithTop ι)) : Prop where
+  isStoppingTime : ∀ σ ∈ 𝔖, IsStoppingTime 𝓕₀ σ
+  uniform : ∃ τ : ℕ → F → WithTop ι, (∀ n, τ n ∈ 𝔖) ∧ IsUniformLocalization 𝓧 𝓕₀ τ
+  shift_mem : ∀ σ ∈ 𝔖, ∀ r : ι, (fun f ↦ (r : WithTop ι) + σ (S.θ r f)) ∈ 𝔖
+  restart : ∀ P : Measure F, IsProbabilityMeasure P → IsLocalMPSolution 𝓧 𝓕₀ P →
+    ∀ Y ∈ 𝓧, ∀ r : ι, ∀ σ ∈ 𝔖, (∀ f, (r : WithTop ι) ≤ σ f) →
+      Martingale (fun t f ↦ stoppedProcess Y σ (r + t) f - Y r f) (𝓕₀.shiftBy r) P
+
+
+/-- **The filtration seen from a stopping time**, `t ↦ 𝓕₀_{τ + t}`, built from Mathlib's
+`IsStoppingTime.measurableSpace`.  That `τ + t` is a stopping time is carried as the hypothesis
+`hτ`: Mathlib proves it (`IsStoppingTime.add_const`, `IsStoppingTime.add_const'`) only over an
+additive group or a countable index, and `ℝ≥0` is neither. -/
+def MeasureTheory.Filtration.shiftByTime (𝓕₀ : Filtration ι mF) (τ : F → ι)
+    (hτ : ∀ t : ι, IsStoppingTime 𝓕₀ fun f ↦ ((τ f + t : ι) : WithTop ι)) :
+    Filtration ι mF where
+  seq t := (hτ t).measurableSpace
+  mono' s t hst := (hτ s).measurableSpace_mono (hτ t) fun f ↦ by
+    simp only [WithTop.coe_le_coe]; gcongr
+  le' t := (hτ t).measurableSpace_le
+
+/-- **Strong shift covariance**, the last sentence of `def:localizing`: (L2) and (L3) with the
+deterministic time `r` replaced by a finite stopping time `τ`. -/
+structure LocalizingSystem.IsStronglyShiftCovariant (S : Shift F π) (𝓕₀ : Filtration ι mF)
+    (𝓧 : Set (ι → F → 𝕂)) (𝔖 : Set (F → WithTop ι)) : Prop where
+  shift_mem : ∀ σ ∈ 𝔖, ∀ τ : F → ι, IsStoppingTime 𝓕₀ (fun f ↦ (τ f : WithTop ι)) →
+    (fun f ↦ (τ f : WithTop ι) + σ (S.θ (τ f) f)) ∈ 𝔖
+  restart : ∀ P : Measure F, IsProbabilityMeasure P → IsLocalMPSolution 𝓧 𝓕₀ P →
+    ∀ Y ∈ 𝓧, ∀ τ : F → ι,
+    ∀ hτ : (∀ t : ι, IsStoppingTime 𝓕₀ fun f ↦ ((τ f + t : ι) : WithTop ι)),
+    ∀ σ ∈ 𝔖, (∀ f, (τ f : WithTop ι) ≤ σ f) →
+      Martingale (fun t f ↦ stoppedProcess Y σ (τ f + t) f - Y (τ f) f)
+        (𝓕₀.shiftByTime τ hτ) P
+
+omit [MeasurableSpace E] in
+/-- **Emptiness check of `LocalizingSystem`: a uniformly bounded adapted family has the
+localizing system `{⊤}`.**  All four clauses are discharged, and the one with content is (L1),
+which here is `martingale_of_locally_of_bounded`: every local solution is a solution.
+
+This is a check against vacuity, not against sharpness: the system is degenerate, and the family
+is one for which the local and the global problem coincide.  The diffusion case of
+`rem:localhyp` and the jump instances are not reached by it; see the report of the run for why
+`isLocalizingSequence_rateTime` does not give a localizing system as it stands. -/
+theorem localizingSystem_top_of_bounded (S : Shift F π) {𝓕₀ : Filtration ι mF}
+    {𝓧 : Set (ι → F → 𝕂)} (hadapt : ∀ Y ∈ 𝓧, StronglyAdapted 𝓕₀ Y)
+    (hbd : ∀ Y ∈ 𝓧, ∃ C : ℝ, ∀ i f, ‖Y i f‖ ≤ C) (hr : ∀ r u : ι, r ≤ r + u) :
+    LocalizingSystem S 𝓕₀ 𝓧 {fun _ ↦ ⊤} := by
+  have hmart : ∀ P : Measure F, IsProbabilityMeasure P → IsLocalMPSolution 𝓧 𝓕₀ P →
+      ∀ Y ∈ 𝓧, Martingale Y 𝓕₀ P := by
+    intro P _ hP Y hY
+    obtain ⟨C, hC⟩ := hbd Y hY
+    exact martingale_of_locally_of_bounded (hP Y hY) (hadapt Y hY) hC
+  refine ⟨?_, ⟨fun _ _ ↦ ⊤, fun _ ↦ rfl, ?_⟩, ?_, ?_⟩
+  · rintro σ rfl
+    simp [IsStoppingTime]
+  · refine ⟨fun _ ↦ by simp [IsStoppingTime], fun _ _ _ _ ↦ le_rfl,
+      fun _ ↦ tendsto_const_nhds, fun P hPp hP Y hY n ↦ ?_⟩
+    have heq : stoppedProcess (fun i ↦ {f : F | (⊥ : WithTop ι) < ⊤}.indicator (Y i))
+        (fun _ ↦ ⊤) = Y := by
+      funext i f
+      rw [stoppedProcess_eq_of_le (τ := fun _ : F ↦ (⊤ : WithTop ι)) le_top]
+      simp
+    show Martingale (stoppedProcess (fun i ↦ {f : F | (⊥ : WithTop ι) < ⊤}.indicator (Y i))
+      (fun _ ↦ ⊤)) 𝓕₀ P
+    rw [heq]
+    exact hmart P hPp hP Y hY
+  · rintro σ rfl r
+    funext f
+    exact WithTop.add_top _
+  · rintro P hPp hP Y hY r σ rfl -
+    have heq : (fun t f ↦ stoppedProcess Y (fun _ ↦ (⊤ : WithTop ι)) (r + t) f - Y r f)
+        = fun t f ↦ Y (r + t) f - Y r f := by
+      funext t f
+      rw [stoppedProcess_eq_of_le (τ := fun _ : F ↦ (⊤ : WithTop ι)) le_top]
+    rw [heq]
+    exact (hmart P hPp hP Y hY).shiftBy_sub r (hr r)
+
+end Localization
+
+/-! ### The running supremum and its hitting times, `lem:L1auto`
+
+Steps 1 and 2 of the proof of `lem:L1auto`: the running supremum of a right continuous adapted
+process is adapted, and its hitting times are strict stopping times. -/
+
+open scoped ENNReal
+
+section RunningSupremum
+
+variable {Ω : Type*} {m : MeasurableSpace Ω} {E : Type*} [NormedAddCommGroup E]
+
+/-- **The running supremum of the norm**, `S_t = sup_{s ≤ t} ‖Y_s‖` of `lem:L1auto`, in `ℝ≥0∞`
+so that no boundedness has to be proved before it can be written. -/
+noncomputable def runningSup (Y : ℝ≥0 → Ω → E) (t : ℝ≥0) (ω : Ω) : ℝ≥0∞ :=
+  ⨆ s ∈ Set.Iic t, ‖Y s ω‖ₑ
+
+/-- The running supremum is nondecreasing, Step 1 of the proof of `lem:L1auto`. -/
+theorem monotone_runningSup (Y : ℝ≥0 → Ω → E) (ω : Ω) :
+    Monotone fun t ↦ runningSup Y t ω :=
+  fun _ _ hst ↦ biSup_mono fun _ hu ↦ le_trans hu hst
+
+/-- **For right continuous paths the running supremum is a supremum over a countable set**,
+`eq:supcountable` of the manuscript: any dense `D` together with the endpoint `t` will do.  A
+value `‖Y s‖` above the countable supremum would, by right continuity at `s`, persist on some
+`[s, u)`, and `D` meets `(s, min u t)`. -/
+theorem runningSup_eq_of_dense {Y : ℝ≥0 → Ω → E} {ω : Ω}
+    (hrc : ∀ s, ContinuousWithinAt (Y · ω) (Ici s) s) {D : Set ℝ≥0} (hD : Dense D)
+    (t : ℝ≥0) :
+    runningSup Y t ω = ⨆ s ∈ insert t (D ∩ Iic t), ‖Y s ω‖ₑ := by
+  refine le_antisymm (iSup₂_le fun s hs ↦ ?_) (biSup_mono fun s hs ↦ ?_)
+  · rcases eq_or_lt_of_le (show s ≤ t from hs) with rfl | hst
+    · exact le_iSup₂ (f := fun u (_ : u ∈ insert s (D ∩ Iic s)) ↦ ‖Y u ω‖ₑ) s (mem_insert _ _)
+    · by_contra hlt
+      push Not at hlt
+      have hcont : ContinuousWithinAt (fun u ↦ ‖Y u ω‖ₑ) (Ici s) s :=
+        continuous_enorm.continuousAt.comp_continuousWithinAt (hrc s)
+      have hev := hcont.eventually (eventually_gt_nhds hlt)
+      obtain ⟨u, hu, hsub⟩ := (mem_nhdsGE_iff_exists_Ico_subset).1 hev
+      obtain ⟨q, hqD, hq⟩ := hD.exists_between (lt_min hu hst)
+      have hlt' := hsub ⟨hq.1.le, hq.2.trans_le (min_le_left _ _)⟩
+      have hle : ‖Y q ω‖ₑ ≤ ⨆ s ∈ insert t (D ∩ Iic t), ‖Y s ω‖ₑ :=
+        le_iSup₂ (f := fun s (_ : s ∈ insert t (D ∩ Iic t)) ↦ ‖Y s ω‖ₑ) q
+          (mem_insert_of_mem _ ⟨hqD, (hq.2.trans_le (min_le_right _ _)).le⟩)
+      exact lt_irrefl _ (hlt'.trans_le hle)
+  · rcases hs with rfl | ⟨_, hs⟩
+    · exact (show s ≤ s from le_refl s)
+    · exact hs
+
+/-- **The running supremum is adapted**, Step 1 of the proof of `lem:L1auto`, through the
+countable supremum `runningSup_eq_of_dense` and `Measurable.biSup`.  Only right continuity of
+the paths and adaptedness enter (`T2b`); no completeness. -/
+theorem measurable_runningSup {𝓕 : Filtration ℝ≥0 m} {Y : ℝ≥0 → Ω → E}
+    (hY : StronglyAdapted 𝓕 Y) (hrc : ∀ ω s, ContinuousWithinAt (Y · ω) (Ici s) s)
+    (t : ℝ≥0) : Measurable[𝓕 t] (runningSup Y t) := by
+  obtain ⟨D, hDc, hD⟩ := TopologicalSpace.exists_countable_dense ℝ≥0
+  have heq : runningSup Y t = fun ω ↦ ⨆ s ∈ insert t (D ∩ Iic t), ‖Y s ω‖ₑ :=
+    funext fun ω ↦ runningSup_eq_of_dense (hrc ω) hD t
+  rw [heq]
+  refine Measurable.biSup _ ((hDc.mono inter_subset_left).insert t) fun s hs ↦ ?_
+  have hst : s ≤ t := by
+    rcases hs with rfl | ⟨_, hs⟩
+    · exact le_rfl
+    · exact hs
+  exact ((hY s).mono (𝓕.mono hst)).enorm
+
+/-- A strict upper bound of the running supremum at `t` survives a little beyond `t`.  This is
+right continuity of the running supremum, in the one form in which it is used. -/
+theorem exists_gt_runningSup_le {Y : ℝ≥0 → Ω → E} {ω : Ω}
+    (hrc : ∀ s, ContinuousWithinAt (Y · ω) (Ici s) s) {t : ℝ≥0} {c : ℝ≥0∞}
+    (hc : runningSup Y t ω < c) : ∃ v, t < v ∧ runningSup Y v ω ≤ c := by
+  have hYt : ‖Y t ω‖ₑ < c :=
+    (le_iSup₂ (f := fun s (_ : s ∈ Iic t) ↦ ‖Y s ω‖ₑ) t (show t ≤ t from le_refl t)).trans_lt hc
+  have hcont : ContinuousWithinAt (fun u ↦ ‖Y u ω‖ₑ) (Ici t) t :=
+    continuous_enorm.continuousAt.comp_continuousWithinAt (hrc t)
+  obtain ⟨u, hu, hsub⟩ :=
+    (mem_nhdsGE_iff_exists_Ico_subset).1 (hcont.eventually (eventually_lt_nhds hYt))
+  obtain ⟨v, htv, hvu⟩ := exists_between (show t < u from hu)
+  refine ⟨v, htv, iSup₂_le fun s hs ↦ ?_⟩
+  rcases le_or_gt s t with hst | hts
+  · exact (le_iSup₂ (f := fun s (_ : s ∈ Iic t) ↦ ‖Y s ω‖ₑ) s hst).trans hc.le
+  · exact (hsub ⟨hts.le, (show s ≤ v from hs).trans_lt hvu⟩).le
+
+/-- **The hitting time of the level `n` by the running supremum**, `τ^Y_n` of `lem:L1auto`.  The
+infimum is taken in `ℝ≥0∞`, so that `sInf ∅ = ⊤`: a path whose running supremum stays below `n`
+is never stopped. -/
+noncomputable def supHittingTime (Y : ℝ≥0 → Ω → E) (n : ℕ) (ω : Ω) : ℝ≥0∞ :=
+  ⨅ t : ℝ≥0, ⨅ _ : (n : ℝ≥0∞) ≤ runningSup Y t ω, (t : ℝ≥0∞)
+
+/-- **`{τ_n ≤ t} = {S_t ≥ n}`**, `eq:debutclosed`, Step 2 of the proof of `lem:L1auto`.  The
+level set of the running supremum is closed from the right because the running supremum is right
+continuous (`exists_gt_runningSup_le`), so the infimum is attained. -/
+theorem supHittingTime_le_iff {Y : ℝ≥0 → Ω → E} {ω : Ω}
+    (hrc : ∀ s, ContinuousWithinAt (Y · ω) (Ici s) s) {n : ℕ} (t : ℝ≥0) :
+    supHittingTime Y n ω ≤ (t : ℝ≥0∞) ↔ (n : ℝ≥0∞) ≤ runningSup Y t ω := by
+  refine ⟨fun h ↦ ?_, fun h ↦ iInf₂_le (f := fun (s : ℝ≥0) (_ : _) ↦ (s : ℝ≥0∞)) t h⟩
+  by_contra hcon
+  push Not at hcon
+  obtain ⟨c, htc, hcn⟩ := exists_between hcon
+  obtain ⟨v, htv, hv⟩ := exists_gt_runningSup_le hrc htc
+  have hge : (v : ℝ≥0∞) ≤ supHittingTime Y n ω := by
+    refine le_iInf₂ fun s hs ↦ ?_
+    rcases le_or_gt s v with hsv | hvs
+    · exact absurd (hs.trans (monotone_runningSup Y ω hsv)) (not_le.2 (hv.trans_lt hcn))
+    · exact_mod_cast hvs.le
+  have : (t : ℝ≥0∞) < v := by exact_mod_cast htv
+  exact absurd (hge.trans h) (not_le.2 this)
+
+/-- **`τ^Y_n` is a strict stopping time**, i.e. one for the raw filtration `𝓕`.
+
+This is where the construction differs from BrownianMotion's `isLocalizingSequence_leastGE`
+(`BrownianMotion/StochasticIntegral/LocalizingLeastGE.lean:24`, `0d5b6eb`), which hits the level
+by `‖Y‖` itself and gets the stopping time property from the début theorem, under
+`[𝓕.IsComplete P] [𝓕.IsRightContinuous]`.  Hitting by the **running supremum** makes the event
+`{τ_n ≤ t}` equal to `{n ≤ S_t}` (`supHittingTime_le_iff`), and `S_t` is `𝓕 t`-measurable by the
+countable supremum (`measurable_runningSup`); neither completion nor right continuity of the
+filtration is used. -/
+theorem isStoppingTime_supHittingTime {𝓕 : Filtration ℝ≥0 m} {Y : ℝ≥0 → Ω → E}
+    (hY : StronglyAdapted 𝓕 Y) (hrc : ∀ ω s, ContinuousWithinAt (Y · ω) (Ici s) s)
+    (n : ℕ) : IsStoppingTime 𝓕 (supHittingTime Y n) := by
+  intro t
+  refine MeasurableSet.congr (s := {ω | (n : ℝ≥0∞) ≤ runningSup Y t ω})
+    (measurableSet_le measurable_const (measurable_runningSup hY hrc t)) ?_
+  ext ω
+  exact (supHittingTime_le_iff (hrc ω) t).symm
+
+/-- Before the hitting time the norm is below the level. -/
+theorem norm_lt_of_lt_supHittingTime {Y : ℝ≥0 → Ω → E} {ω : Ω}
+    (hrc : ∀ s, ContinuousWithinAt (Y · ω) (Ici s) s) {n : ℕ} {s : ℝ≥0}
+    (hs : (s : ℝ≥0∞) < supHittingTime Y n ω) : ‖Y s ω‖ < n := by
+  have h1 : runningSup Y s ω < n := by
+    by_contra h
+    push Not at h
+    exact absurd ((supHittingTime_le_iff hrc s).2 h) (not_le.2 hs)
+  have h2 : ‖Y s ω‖ₑ < n :=
+    (le_iSup₂ (f := fun u (_ : u ∈ Iic s) ↦ ‖Y u ω‖ₑ) s (show s ≤ s from le_refl s)).trans_lt h1
+  rw [← ofReal_norm] at h2
+  have : ENNReal.ofReal ‖Y s ω‖ < ENNReal.ofReal n := by simpa using h2
+  exact ((ENNReal.ofReal_lt_ofReal_iff').1 this).1
+
+/-- **`‖Y^{τ_n}‖ ≤ n + c`**, Step 3 of the proof of `lem:L1auto`, for a path with `Y 0 = 0`, left
+limits, and jumps bounded by `c`.  Before `τ_n` the norm is below `n`; at `τ_n > 0` the left limit
+has norm at most `n`, and the jump adds at most `c`.
+
+-- nach BrownianMotion, StochasticIntegral/LocalizingLeastGE.lean:107 (0d5b6eb),
+-- `stoppedAtNorm_le_add_jump`, mit dem laufenden Supremum statt `‖Y‖`.
+
+The jump bound is stated through the left limit and only at `t > 0`: at `0` the left
+neighbourhood filter of `ℝ≥0` is `⊥`, every `l` is a limit along it, and the bound would say
+nothing true; `Y 0 = 0` takes its place.  The indicator of `{⊥ < τ_n}` that `Locally` adds is not
+in the statement; it only lowers the norm. -/
+theorem norm_stoppedProcess_supHittingTime_le {Y : ℝ≥0 → Ω → E} {ω : Ω}
+    (hrc : ∀ s, ContinuousWithinAt (Y · ω) (Ici s) s)
+    (hl : ∀ t, ∃ l, Tendsto (Y · ω) (𝓝[<] t) (𝓝 l)) (h0 : Y 0 ω = 0) {c : ℝ} (hc : 0 ≤ c)
+    (hjump : ∀ t, 0 < t → ∀ l, Tendsto (Y · ω) (𝓝[<] t) (𝓝 l) → ‖Y t ω - l‖ ≤ c)
+    (n : ℕ) (t : ℝ≥0) :
+    ‖stoppedProcess Y (supHittingTime Y n) t ω‖ ≤ n + c := by
+  rcases lt_or_ge (t : ℝ≥0∞) (supHittingTime Y n ω) with hlt | hge
+  · rw [stoppedProcess_eq_of_le hlt.le]
+    linarith [norm_lt_of_lt_supHittingTime hrc hlt]
+  · have hfin : supHittingTime Y n ω ≠ ⊤ := ne_top_of_le_ne_top ENNReal.coe_ne_top hge
+    obtain ⟨τ0, hτ0⟩ := WithTop.ne_top_iff_exists.1 hfin
+    rw [stoppedProcess_eq_of_ge hge, ← hτ0]
+    show ‖Y τ0 ω‖ ≤ n + c
+    rcases eq_zero_or_pos τ0 with rfl | hpos
+    · rw [h0, norm_zero]; positivity
+    · obtain ⟨l, hlim⟩ := hl τ0
+      have : (𝓝[<] τ0).NeBot := nhdsLT_neBot_of_exists_lt ⟨0, hpos⟩
+      have hln : ‖l‖ ≤ n := by
+        refine le_of_tendsto (hlim.norm) ?_
+        filter_upwards [self_mem_nhdsWithin] with s hs
+        refine (norm_lt_of_lt_supHittingTime hrc ?_).le
+        rw [← hτ0]; exact WithTop.coe_lt_coe.2 hs
+      calc ‖Y τ0 ω‖ = ‖(Y τ0 ω - l) + l‖ := by rw [sub_add_cancel]
+        _ ≤ ‖Y τ0 ω - l‖ + ‖l‖ := norm_add_le _ _
+        _ ≤ c + n := add_le_add (hjump τ0 hpos l hlim) hln
+        _ = n + c := add_comm _ _
+
+end RunningSupremum

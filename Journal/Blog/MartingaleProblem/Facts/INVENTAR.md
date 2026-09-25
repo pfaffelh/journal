@@ -63223,3 +63223,110 @@ zu Beginn des Laufs). `check_axioms_master.py` für die sieben neuen Namen: nur 
 Nach dem Auftrag endet die Aufgabe hier; **ein Folgeziel wird nicht vorgeschlagen und nicht
 eingetragen.** Den nächsten Auftrag stellt der Nutzer. Die drei Einschränkungen der Tabelle sind
 Befunde für ihn, keine offenen Schritte.
+
+### 2026-09-25, Lauf 21:03 UTC — Lokales Martingalproblem, Schritt 1: **`LocalizingSystem`** (`def:localizing`, Z. 4553), mit Probe
+
+Neuer Abschnitt `Localization` am Ende von `MartingaleProblems/Suggested.lean`. `check_master.py`
+vorher und nachher sauber (alle vier Dateien 0 Fehler, 0 `sorry`, 0 Veraltungen; Mathlib
+`94ef6b89544`, 2026-09-18). `#print axioms` aller neuen Sätze: `propext`, `Classical.choice`,
+`Quot.sound`.
+
+**Deklarationen.**
+
+* `IsUniformLocalization 𝓧 𝓕₀ τ` — (L1). Vier Felder: `IsStoppingTime 𝓕₀ (τ n)` für die **rohe**
+  Filtration, Monotonie und `τ n → ⊤` **an jedem Pfad**, und: für jede lokale Lösung `P` ist
+  `stoppedProcess (fun i ↦ {⊥ < τ n}.indicator (Y i)) (τ n)` ein `P`-Martingal — wörtlich die
+  Gestalt, in der `Locally` den gestoppten Prozeß schreibt.
+* `isLocalizingSequence_of_forall`, `IsUniformLocalization.isLocalizingSequence` — die drei ersten
+  Felder **sind** Mathlibs `IsLocalizingSequence`, für jedes Maß zugleich. Das ist die Antwort auf
+  „Verfeinerung, kein Ersatz“: es wird nichts neben `IsLocalizingSequence` gestellt.
+* `isLocalMPSolution_iff_of_isUniformLocalization` — (L1) als Äquivalenz für **jedes**
+  Wahrscheinlichkeitsmaß; „⇐“ ist die Definition von `Locally`, sonst nichts.
+* `MeasureTheory.Filtration.shiftBy 𝓕₀ r` (`t ↦ 𝓕₀ (r + t)`) und
+  `MeasureTheory.Filtration.shiftByTime 𝓕₀ τ hτ` (`t ↦ 𝓕₀_{τ+t}` über
+  `IsStoppingTime.measurableSpace`). Mathlib hat keine verschobene Filtration (Suche nach `shift`
+  in `Mathlib/Probability/Process/` auf master: kein Treffer). Daß `τ + t` Stoppzeit ist, wird als
+  Hypothese getragen: `IsStoppingTime.add_const` (`Stopping.lean:389`) verlangt `AddGroup ι`,
+  `add_const'` (`:403`) `Countable ι`; `ℝ≥0` ist keins von beiden. Eine Lücke, klein.
+* `LocalizingSystem S 𝓕₀ 𝓧 𝔖` — Struktur mit `isStoppingTime` (Striktheit), `uniform` (L1),
+  `shift_mem` (L2, Addition in `WithTop ι`, also `r + ⊤ = ⊤`), `restart` (L3, Martingal für
+  `𝓕₀.shiftBy r`). **Keine** `IsRightContinuous`- oder `IsComplete`-Voraussetzung irgendwo.
+* `LocalizingSystem.IsStronglyShiftCovariant` — (L2), (L3) mit endlicher Stoppzeit `τ : F → ι`
+  statt `r`, Filtration `𝓕₀.shiftByTime τ hτ`.
+* `martingale_of_locally_of_bounded` — **ein beschränktes lokales Martingal ist ein Martingal**
+  (Schritt 4 von `lem:L1auto`, vorgezogen), über `tendsto_condExp_unique`; ohne Rechtsstetigkeit,
+  ohne Progressivität.
+* `MeasureTheory.Martingale.shiftBy_sub` — Zuwächse nach `r` sind ein Martingal für
+  `𝓕.shiftBy r`, unter `∀ u, r ≤ r + u`.
+* `localizingSystem_top_of_bounded` — **die Probe**: eine gleichmäßig beschränkte adaptierte
+  Familie hat das Lokalisierungssystem `{⊤}`; alle vier Felder eingelöst.
+
+**Entscheidung, begründet: (L1) punktweise, nicht f.s. unter Lösungen.** Zuerst war `τ n → ⊤`
+nur „`P`-f.s. für jede lokale Lösung `P`“ formuliert (schwächer, und für `lem:localmix`(b)
+genug). Verworfen wegen `lem:localrestart`: dort ist zu zeigen, daß das *neu gebildete*
+Restart-Maß eine lokale Lösung ist, und für ein noch nicht als Lösung bekanntes Maß gibt die
+f.s.-Fassung keine lokalisierende Folge. Die punktweise Fassung gibt sie jedem Maß
+(`isLocalizingSequence_of_forall`). Das ist die Fassung des Manuskripts.
+
+**Befund zur Probe.** Die Probe ist ein Beleg gegen Leerheit, nicht gegen Schärfe: `{⊤}` ist
+entartet, und die Familie ist eine, für die lokales und globales Problem zusammenfallen. Die
+vorgeschlagene `JumpProcesses`-Probe paßt **nicht** unmittelbar, aus zwei benannten Gründen:
+(i) `rateTime lam n → ⊤` gilt nur auf `NonExplosiveE lam` (`tendsto_rateTime_atTop`), nicht an
+jedem Stichprobenpunkt — die Konstruktion lebt auf dem Stichprobenraum `(ℕ → E) × (ℕ → ℝ)`, auf
+dem explosive Punkte existieren; auf dem kanonischen Pfadraum der càdlàg-Pfade entfiele das, weil
+ein càdlàg-Pfad in diskretem `E` auf `[0, t]` endlich viele Werte annimmt; (ii) (L1) verlangt die
+Martingaleigenschaft unter **jeder** lokalen Lösung, `jumpProcess_isLocalMPSolution` spricht nur
+über `jumpMeasure mu nu`. Beides ist der Inhalt von Schritt 7, nicht ein Defekt der Definition.
+Der Diffusionsfall von `rem:localhyp` braucht `lem:L1auto` oder KA 32.10 und ist damit Schritt 2.
+
+**Befund am Manuskript, für Schritt 3 (Z. 4646–4651, Beweis von `lem:localmix`(a)).** Der Schluß
+„`σ_n → ∞` `Q`-f.s., weil `τ_n → ∞` `P`-f.s. und `τ'_n → ∞` `P'`-f.s.“ trägt nicht: `Q`-f.s. heißt
+`P`- **und** `P'`-f.s., und unter `P` ist über `τ'_n` nichts bekannt. Zeuge: `P = δ_w` für einen
+Pfad `w` mit `P'{w} = 0`, `τ'_n` eine `P'`-lokalisierende Folge, auf `{w}` gleich `0` abgeändert
+(bleibt `P'`-lokalisierend, und Stoppzeit, wenn `{w}` in `𝓕°_0` liegt); dann ist `σ_n = 0`
+`P`-f.s. Die Aussage (a) dürfte trotzdem stimmen — über den Dichteprozeß: `dP/dQ ≤ 1/α`, `Y` ist
+`P`-lokales Martingal genau dann, wenn `Y · Z` ein `Q`-lokales ist, und unter dem *einen* Maß `Q`
+greift `IsLocalizingSequence.min` —, aber nicht mit diesem Beweis und nicht als Einzeiler.
+Zweitens: „ein Martingal, weiter gestoppt, bleibt ein Martingal“ braucht in stetiger Zeit
+Rechtsstetigkeit und Progressivität (`martingale_stoppedProcess`,
+`isStable_martingale_rightContinuous`); das ist (T2b), nicht „keine Voraussetzung“ (Z. 4628).
+
+**Schritt 2 im selben Lauf begonnen: `lem:L1auto` (Z. 4683), Teilschritte 1–4 als Bausteine
+bewiesen, der Zusammenbau `localizingSystem_of_boundedJumps` steht noch aus.** Abschnitt
+`RunningSupremum`, Index `ℝ≥0`, Werte in beliebigem `[NormedAddCommGroup E]`; `check_master.py`
+danach sauber (0/0/0 in allen vier Dateien), Axiome wie oben.
+
+* Teilschritt 1: `runningSup Y t ω = ⨆ s ≤ t, ‖Y s ω‖ₑ` (in `ℝ≥0∞`), `monotone_runningSup`,
+  `runningSup_eq_of_dense` (**`eq:supcountable`**: für rechtsstetige Pfade das Supremum über
+  `insert t (D ∩ Iic t)` für jedes dichte `D`), `measurable_runningSup` (adaptiert über
+  `Measurable.biSup` und `TopologicalSpace.exists_countable_dense`), `exists_gt_runningSup_le`
+  (die Rechtsstetigkeit von `S`, in der einzigen gebrauchten Form).
+* Teilschritt 2: `supHittingTime Y n`, `supHittingTime_le_iff` (**`eq:debutclosed`**,
+  `{τ_n ≤ t} = {n ≤ S_t}`), `isStoppingTime_supHittingTime` — **strikt**, für die rohe
+  Filtration, Voraussetzungen nur `StronglyAdapted 𝓕 Y` und Rechtsstetigkeit der Pfade.
+  **Der Unterschied zu BrownianMotion**, festgehalten auch im Doc-Kommentar:
+  `isLocalizingSequence_leastGE` (`LocalizingLeastGE.lean:24`, `0d5b6eb`) trifft das Niveau mit
+  `‖Y‖` selbst, und `{τ ≤ t}` ist dann ein Début, meßbar nur über `Choquet.Debut` unter
+  `[𝓕.IsComplete P] [𝓕.IsRightContinuous]`. Mit dem laufenden Supremum ist `{τ_n ≤ t}` eine
+  Niveaumenge **einer** `𝓕 t`-meßbaren Funktion; kein Débutsatz, keine Vervollständigung.
+* Teilschritt 3: `norm_lt_of_lt_supHittingTime`, `norm_stoppedProcess_supHittingTime_le`
+  (`‖Y^{τ_n}_t‖ ≤ n + c`, abgeschrieben und angepaßt nach `stoppedAtNorm_le_add_jump`,
+  `LocalizingLeastGE.lean:107`). Die Sprungschranke ist über den Linkslimes und **nur für
+  `t > 0`** formuliert: in `ℝ≥0` ist `𝓝[<] 0 = ⊥`, jeder Punkt ist dort Limes, und eine
+  Schranke an `‖Y 0 - l‖` für alle solchen `l` wäre unerfüllbar; `Y 0 = 0` tritt an ihre Stelle.
+* Teilschritt 4: `martingale_of_locally_of_bounded` (siehe oben).
+
+**Was für `localizingSystem_of_boundedJumps` noch fehlt, benannt:** (i) `τ_n → ⊤` an jedem
+càdlàg-Pfad, also `runningSup Y t ω < ⊤` — ein càdlàg-Pfad ist auf `[0, t]` beschränkt; das steht
+weder in Mathlib (`Topology/Order/Cadlag.lean` hat nur die Algebra von `IsCadlag`) noch hier;
+(ii) die Monotonie in `n` (eine Zeile, wie `monotone_rateTime`); (iii) der Schritt von
+`IsLocalMPSolution` (nur `Locally Martingale`) zu `Locally` des gestoppten Prozesses: der
+vorhandene `locally_martingale_stoppedProcess` verlangt `Locally` der **Konjunktion** mit
+Progressivität und Rechtsstetigkeit; für adaptierte càdlàg-`Y` ist die Konjunktion lokal aus der
+Martingaleigenschaft allein zu gewinnen, weil Progressivität und Rechtsstetigkeit unter
+`stoppedProcess` und Indikator erhalten bleiben. Dann `martingale_of_locally_of_bounded` mit der
+Schranke `n + c`.
+
+**Benanntes Ziel für den nächsten Lauf:** `localizingSystem_of_boundedJumps`, Schritt 2 der
+Aufgabe, mit (i)–(iii) als den drei Zwischenaussagen; danach Schritt 3 (`lem:localmix`) mit dem
+Befund oben zum Beweis von (a).
