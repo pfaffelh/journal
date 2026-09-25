@@ -7,6 +7,188 @@ ausgelagert am 2026-09-10 aus `scripts/facts_prompt.md`, weil der Prompt auf
 will, wie eine frühere Aufgabe ausgegangen ist, findet es hier; die Berichte
 selbst stehen ohnehin in `Facts/INVENTAR.md`.
 
+### ~~Aufgabe: Dualität, der Kern von Meilenstein 7~~ *(gestellt 2026-09-25 vom Nutzer, erledigt am selben Tag, abgeschlossen im Lauf 20260925T170301Z)*
+
+**Ergebnis.** Alle sieben Schritte, Schlußaussage `eq_of_isCadlagMPSolution_of_duality`; `check_master.py` sauber (vier Dateien, 0 Fehler, 0 `sorry`). Bericht in `Facts/INVENTAR.md`, Abschnitte vom 2026-09-25 zur Dualität. Am 2026-09-25 abends durch die Aufgabe zum lokalen Martingalproblem ersetzt.
+
+**Diese Aufgabe geht allen älteren vor.** Die Identifikation als Brownsche
+Bewegung ist am 2026-09-25 im ersten Lauf vollständig erledigt und ins Archiv
+verschoben. Was die elf Läufe danach auf eigene Faust gebaut haben
+(Spiegelungsprinzip, Lévy, Ruin des Spielers, Wald), bleibt stehen, **wird aber
+nicht fortgesetzt**. Die Laplace-Transformierte von `τ_a`, die der letzte Lauf
+als Ziel benannt hat, ist **kein** Ziel mehr.
+
+**Stand beim Stellen der Aufgabe:** In `MartingaleProblems/Suggested.lean` steht
+**keine einzige** Deklaration zur Dualität: kein `chain_identity`, kein
+`duality`, nichts. Die Uhr (`Clock`, `Clock.interval`, `lebesgueClock`) steht,
+ebenso Meilenstein 5 mit `PropagatesAgreement`, `weightedLaw`,
+`propagatesAgreement_of_transfer` und `eq_of_propagatesAgreement`. Auf dieser
+Brücke landet die Dualität. Quelle für jede Aussage ist
+`MartingaleProblem.tex`, Abschnitt `sec:duality` (ab Z. 5500); die Namen sind
+die aus `MartingaleProblems/README-kurz.md`, Meilenstein 7, wo es sie gibt.
+
+**Ein Schritt ist ein Lauf und ein benanntes Ziel.** Wer früher fertig ist,
+nimmt den nächsten Schritt im selben Lauf. Wer steckenbleibt, berichtet ein
+begründetes „geht nicht“ und geht zum nächsten Schritt, der nicht daran hängt;
+die Abhängigkeiten stehen je dabei. **Die Reihenfolge ist vom Nutzer gesetzt.**
+
+**Was ausdrücklich nicht dazugehört:**
+
+* die atomaren Uhren (`prop:atomicdual`, `prop:atomicposet`, die Zertifikate,
+  Task 23), die gemischten Uhren (`prop:mixeddual`) und alles ab
+  `thm:densechain`. Die Roadmap sagt selbst, daß diese Leiter eher eine
+  Forschungsskizze als ein Meilenstein ist;
+* Meilenstein 11, die Existenz aus einem Dual;
+* Meilenstein 6, die Lokalisierung. Er ist ein eigener, späterer Auftrag. Die
+  gestoppte Dualität (Schritt 4) braucht ihn **nicht**;
+* der Grenzübergang `τ, σ → ∞` aus `rem:dualstopped`. Das Manuskript beweist ihn
+  nicht, es verweist nur auf EK Remark 4.4.16. Er wäre neue Mathematik und
+  gehört zuerst ins Manuskript.
+
+**Regeln, die weiter gelten:**
+
+* **Keine `README.md` und keine `README-kurz.md` anfassen, in keiner Roadmap.**
+  Der Nutzer redigiert sie. Befunde gehören ausschließlich in
+  `Facts/INVENTAR.md`.
+* **Das Manuskript nicht anfassen.** Findet ein Lauf dort eine Lücke oder einen
+  Fehler, steht das im Bericht, mit Zeilennummer.
+* Die Kette hat **vier** Dateien: `WeakConvergence`, `SkorokhodSpace`,
+  `MartingaleProblems`, `JumpProcesses`. `check_master.py` baut alle vier. Die
+  neuen Aussagen kommen in einen neuen Abschnitt `Duality` in
+  `MartingaleProblems/Suggested.lean`. Im Bericht wird eine Aussage über ihren
+  **Namen** benannt, nicht über eine Meilensteinnummer.
+
+#### Schritt 1. `chain_identity` — die Treppenidentität (`lem:chain`, Z. 5529)
+
+Rein algebraisch, **ohne Wahrscheinlichkeit**. Auf einer Präordnung `ι` mit
+kleinstem Element, einer `Clock` und `Φ γ₁ γ₂ : ι → ι → ℝ` mit den beiden
+Zuwachsdarstellungen `eq:incrementrep` gilt für jede Treppe von `(⊥, t)` nach
+`(t, ⊥)` die Summenformel `eq:chain`.
+
+* Das Intervall `[s, s')` des Manuskripts ist `Clock.interval Q .predictable s s'`
+  (`Set.Iio s' \ Set.Iio s`). **Keine eigene Intervalldefinition bauen**, und
+  nicht `Set.Ico`: auf einer Präordnung, die nicht linear ist, ist das die
+  falsche Menge.
+* Die Treppe als zwei Folgen `s, t : Fin (m+1) → ι` (oder `ℕ → ι` bis `m`), `s`
+  monoton, `t` antiton, mit den vier Randwerten.
+* Die Integrierbarkeit ist Voraussetzung („all integrals being assumed to
+  exist“), als `IntegrableOn` auf den benutzten Intervallen und nicht mehr.
+* **Die Telescopie liest keinen der beiden Endpunkte.** Wenn es billig ist, die
+  Aussage für eine Treppe zwischen beliebigen Ecken zu formulieren und `(⊥,t)`
+  nach `(t,⊥)` als Spezialfall zu nehmen, dann so.
+
+#### Schritt 2. Die diskrete Uhr: `prop:haar`(a), dann `duality_discrete` (`cor:dualdiscrete`, Z. 7424)
+
+Hängt nur an Schritt 1. Das ist der **Kollapstest**: Trägt die Signatur von
+Schritt 1 hier nicht, ist sie falsch, und das ist vor Schritt 3 zu wissen.
+
+* Zuerst `prop:haar`(a): auf `ℕ` mit Zählmaß folgt aus `γ₁ = γ₂` die Gleichung
+  `Φ t 0 = Φ 0 t`, **ohne jede Integrierbarkeit**, über die antidiagonale Treppe
+  `s k = k`, `t k = t - k`. Jeder Summand ist identisch Null.
+* Dann `cor:dualdiscrete`: unabhängige Markovketten mit Kernen `P`, `Q`, `f`
+  beschränkt meßbar mit `eq:dualdiscrete`, Folgerung `eq:dualdiscreteconc`.
+  **Wie die Markovkette in Lean ausgesprochen wird, entscheidet der Lauf** und
+  begründet es im Bericht. Naheliegend ist die Form, die
+  `rem:dualdiscretemp` nennt: `f (X n, y) - ∑_{k<n} ((P - I) f)(X k, y)` ist ein
+  Martingal. Das ist `mpFamily` mit Zählmaßuhr in der prädiktablen Konvention
+  und braucht keine Trajektorienkonstruktion. Mathlibs `Kernel.traj` ist die
+  Alternative.
+
+#### Schritt 3. Die Dualität in stetiger Zeit: `lem:calculus`, dann `duality`, `duality_weighted` (Z. 7183–7420)
+
+**Das ist der größte Schritt und darf zwei Läufe brauchen.** Hängt an Schritt 1
+nur über `rem:dualischain`. Der Beweis darf den direkten Weg über Fubini gehen,
+statt über `lem:chain`.
+
+1. `lem:calculus` (EK 4.4.10): `Φ` auf `ℝ≥0 × ℝ≥0`, absolut stetig in jeder
+   Variablen, `∇Φ = (γ₁, γ₂)` mit `eq:calcint`. Dann gilt `eq:calcconc` für fast
+   jedes `t`. Das ist reine Analysis. Hängt es nur an Mathlib, ist das im
+   Bericht zu sagen.
+2. `duality`, zuerst **mit `α = β = 0`**: `X`, `Y` unabhängig und meßbar, die
+   beiden Martingalhypothesen `eq:dualmg1`/`eq:dualmg2`, die Schranken
+   `eq:dual1`. Folgerung `eq:dualconc`, und unter der Balance `g = h` die
+   Dualitätsrelation `eq:dualrel` **für jedes** `t` (`cor:dualrel`: fast überall,
+   dann Stetigkeit aus `eq:Fpartial1`/`eq:Fpartial2`). Das ist der Fall, den die
+   Eindeutigkeit braucht.
+3. Dann die Fassung mit `α` und `β`. Sie wird für die Abnahme in Schritt 6
+   gebraucht.
+4. `duality_weighted` nach `rem:dualnonmarkov`: ein beschränktes, nichtnegatives,
+   `𝓕^X_{s₀}`-meßbares Gewicht `Z` **auf dem ersten Faktor**, `Φ^Z(s,t) =
+   E[Z · f(X_s, Y_t)]` für `s ≥ s₀`. Dazu
+   `not_secondIncrement_of_weight_on_dual`, das Gegenbeispiel aus derselben
+   Remark (`E₁ = {*}`, `f(x,y) = y`, `Y` ab Zeit 1 ein fairer Vorzeichenwechsel,
+   `Z = 1 + Y₁`). Es zeigt, daß das Gewicht auf dem ersten Faktor sitzen
+   **muß**.
+
+*Die Filtration:* EK nimmt die Hilfsfiltration `*𝓕^X`. Hier genügt eine
+Filtration `𝓕` für `X` und eine `𝓖` für `Y`, mit `⨆ 𝓕` unabhängig von `⨆ 𝓖`.
+Wird mehr gebraucht, ist das ein Befund.
+
+#### Schritt 4. Die gestoppte Dualität (`cor:dualstopped`, EK 4.4.14, Z. 7471)
+
+Hängt an Schritt 3. Stoppzeiten `τ` für `𝓕` und `σ` für `𝓖`, die
+Martingalhypothesen für die gestoppten Prozesse. In der Folgerung trägt der
+Integrand die Indikatoren `1_{s ≤ τ}` bzw. `1_{t-s ≤ σ}`. Das Manuskript beweist
+das in einem Satz: den Beweis von Schritt 3 mit der Indikatorfunktion im
+Integral wiederholen. **Ist Schritt 3 so gebaut, daß das ein Korollar ist, ist
+das richtig gebaut.** Braucht es einen zweiten Beweis, ist das ein Befund über
+Schritt 3.
+
+Das Manuskript nennt diese Fassung die praktisch relevante (`rem:dualstopped`):
+Die Schranken `eq:dual1` fehlen oft global, auf Austrittszeiten aus Kompakta sind
+sie leicht zu haben. `martingale_stoppedProcess` steht schon.
+
+#### Schritt 5. Die Brücke zur Eindeutigkeit: `propagatesAgreement_of_duality`, `uniqueness_of_duality`
+
+Hängt an Schritt 3 (Teil 4). **Der Weg ist der aus `rem:dualnonmarkov` und nicht
+der aus dem Beweis von `cor:uniqviadual`**: kein Shiftsystem, keine bestimmende
+Menge, kein `thm:absuniq`.
+
+* `propagatesAgreement_of_duality`: Die gewichtete Dualitätsrelation liefert die
+  Voraussetzung `htransfer` von `propagatesAgreement_of_transfer`. `Λ s t y` ist
+  dort die rechte Seite der Dualität, die nicht von der Lösung abhängt. Die
+  Trennungsvoraussetzung `hsep` ist `cor:uniqviadual`(i).
+* `uniqueness_of_duality`: mit `eq_of_propagatesAgreement` höchstens eine Lösung
+  zu gegebenem Anfangsgesetz.
+* `isMarkov_of_duality`, falls es ohne neuen Beweis abfällt. Sonst weglassen und
+  im Bericht sagen, warum.
+
+#### Schritt 6. Die atomlose Uhr: `duality_of_atomless` (`cor:atomless`, Z. 5644)
+
+Hängt an Schritt 3 (Teil 1). Zeittransformation `Q s = q (Set.Iio s)`,
+Quantilfunktion `Q^←`, Substitutionsformel `eq:quantile` und Reduktion auf
+`lem:calculus`. Braucht eine lineare Ordnung mit der Intervalleigenschaft (T3).
+`Clock.IsAtomless` steht schon.
+
+#### Schritt 7. Abnahme: die Brownsche Bewegung ist zu sich selbst dual
+
+Hängt an Schritt 3 (Teil 3) und Schritt 5. Mit `f(x,y) = cos(xy)` und `sin(xy)`
+(oder komplex `e^{ixy}`, `𝕂 = ℂ`), `Y ≡ y` deterministisch, `h = 0`, `α = 0`
+und `β(y) = -(v/2) y²` ist die Balance `eq:dualbalance` erfüllt. Die Dualität
+liefert dann die charakteristische Funktion der Randverteilung einer Lösung zu
+`brownianGeneratorPairs v`.
+
+* **Das ist ein zweiter Beweis** von `map_eval_eq_gaussianReal_of_isCadlagMPSolution`
+  und mit `uniqueness_of_duality` von der Eindeutigkeit. Er ersetzt die
+  vorhandenen **nicht**. Er ist der Test, daß die Signaturen der Schritte 3 und
+  5 auf einer echten Anwendung tragen.
+* **Hier kann es klemmen:** `cos(x·y)` hat keinen kompakten Träger, liegt also
+  nicht in `brownianGeneratorPairs`. Die vorhandene Kette hat dasselbe Problem
+  über eine Abschneidung gelöst (`integral_eval_mul_cos_eq_of_isCadlagMPSolution`
+  und die sin-Fassung). Das ist wiederzuverwenden, nicht neu zu bauen.
+
+#### Wenn alle sieben Schritte stehen
+
+**Dann ist Schluß.** Der Lauf schreibt seinen Bericht, schlägt **kein**
+selbstgewähltes Folgeziel vor und trägt keins ein. Das gilt **abweichend** von
+„Am Ende jedes Laufs“ und „Es gibt immer Arbeit“ weiter unten. Findet ein Lauf
+diese Aufgabe vollständig erledigt vor, prüft er nur, daß `check_master.py`
+sauber ist, schreibt einen Satz ins Inventar und endet. Den nächsten Auftrag
+stellt der Nutzer.
+
+Dasselbe gilt **während** der Aufgabe: Ein „benanntes Ziel für den nächsten
+Lauf“ ist immer der nächste offene Schritt dieser Liste und nie etwas außerhalb.
+
 ### ~~Aufgabe: die Identifikation als Brownsche Bewegung, in acht Schritten~~ *(gestellt 2026-09-24 nachts vom Nutzer, erledigt 2026-09-25 im ersten Lauf des Tages, 20260924T220559Z)*
 
 **Ergebnis.** Alle acht Schritte, Schlußaussage `exists_tendsto_map_rescaledWalk_isBrownianReal`; Bericht in `Facts/INVENTAR.md`, Abschnitte vom 2026-09-25. Am 2026-09-25 durch die Dualitätsaufgabe ersetzt.
