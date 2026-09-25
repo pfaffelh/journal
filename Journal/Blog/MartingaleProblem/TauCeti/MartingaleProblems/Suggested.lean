@@ -39897,7 +39897,9 @@ end RademacherData
 `ProbabilityTheory.IsBrownianReal X Q`, `Q (a ≤ ⨆ t ≤ T, X t) = 2 Q (a ≤ X T)`, by the exact
 reflection identity for the fair-sign walk and Donsker's theorem.  The inputs are a portmanteau
 statement with a moving boundary on `ℝ`, the one-dimensional limit along Donsker's theorem, and
-its instance on `MeasureTheory.rademacherSeq`.  `X` is a hypothesis throughout. -/
+its instance on `MeasureTheory.rademacherSeq`.  `MeasureTheory.map_supOn_eq_map_abs_of_isBrownianReal`
+turns the identity on half-lines into Lévy's equality of laws, `sup_{t ≤ T} X t ≐ |X T|`.
+`X` is a hypothesis throughout. -/
 
 section ReflectionPrinciple
 
@@ -40253,6 +40255,411 @@ theorem measure_le_iSup_eq_two_mul_of_isBrownianReal
   rw [← hμ]
   exact le_antisymm hupper hlow
 
+/-- **Lévy's equality of laws for the running maximum.**  For
+`ProbabilityTheory.IsBrownianReal X Q` with measurable coordinates, a horizon `0 < T`, and any
+process `X'` with measurable coordinates and **every** path càdlàg that agrees with `X` at all
+times outside one null set, the law of `sup_{t ≤ T} X' t` on the path space is the law of
+`|X T|`.
+
+The two finite measures on `ℝ` agree on every `[a, ∞)` (`MeasureTheory.Measure.ext_of_Ici`,
+`Mathlib/MeasureTheory/Constructions/BorelSpace/Order.lean:538`).  For `0 < a` the left side is
+`2 Q (a ≤ X T)` by `MeasureTheory.measure_le_iSup_eq_two_mul_of_isBrownianReal`, and the right side
+splits into the disjoint events `a ≤ X T` and `a ≤ -X T`, which have the same probability
+because `X T` and `(-X) T` both have law `gaussianReal 0 T`
+(`ProbabilityTheory.IsBrownianReal.neg`, `Mathlib/Probability/BrownianMotion/Basic.lean:306`).
+No atom condition at `-a` is read: the split is an equality of sets, not of measures up to a
+boundary.  For `a ≤ 0` both events are almost sure, the left one because `X' 0 = X 0 = 0` almost
+surely (`ProbabilityTheory.IsPreBrownianReal.eval_zero_ae_eq_zero`, `Basic.lean:99`) and the
+running maximum of a càdlàg path dominates its value at `0`
+(`SkorokhodSpace.bddAbove_range_supOn`).
+
+`X'` enters only through the path map: `SkorokhodSpace.supOn T` lives on `D(ℝ≥0, ℝ)`, and a
+Brownian motion has càdlàg paths only almost surely.  The modification of
+`MeasureTheory.isCadlagMPSolution_of_isBrownianReal` is one such `X'`
+(`MeasureTheory.exists_map_supOn_eq_map_abs_of_isBrownianReal`).  **Not an existence statement**:
+`X` is a hypothesis. -/
+theorem map_supOn_eq_map_abs_of_isBrownianReal
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t))
+    {X' : ℝ≥0 → Ω' → ℝ} (hc : ∀ ω, IsCadlag (X' · ω)) (hm' : ∀ t, Measurable (X' t))
+    (hae : ∀ᵐ ω ∂Q, ∀ t, X' t ω = X t ω) {T : ℝ≥0} (hT : 0 < T) :
+    (Q.map (cadlagPath X' hc)).map (SkorokhodSpace.supOn T) = Q.map (fun ω ↦ |X T ω|) := by
+  have := hX.toIsPreBrownianReal.isGaussianProcess.isProbabilityMeasure
+  have hYm : Measurable (cadlagPath X' hc) := measurable_cadlagPath hc hm'
+  have hem : Measurable (SkorokhodSpace.supOn T) := SkorokhodSpace.measurable_supOn T
+  have habs : Measurable fun ω ↦ |X T ω| := continuous_abs.measurable.comp (hm T)
+  refine Measure.ext_of_Ici _ _ fun a ↦ ?_
+  rw [Measure.map_apply hem measurableSet_Ici, Measure.map_apply hYm (hem measurableSet_Ici),
+    Measure.map_apply habs measurableSet_Ici]
+  rcases le_or_gt a 0 with ha | ha
+  · -- both events are almost sure: `X 0 = 0` and `|X T| ≥ 0`
+    have hR : (fun ω ↦ |X T ω|) ⁻¹' Ici a = univ :=
+      eq_univ_of_forall fun ω ↦ ha.trans (abs_nonneg (X T ω))
+    have hL : ∀ᵐ ω ∂Q, ω ∈ cadlagPath X' hc ⁻¹' (SkorokhodSpace.supOn T ⁻¹' Ici a) := by
+      filter_upwards [hae, hX.toIsPreBrownianReal.eval_zero_ae_eq_zero] with ω hω h0
+      change a ≤ SkorokhodSpace.supOn T (cadlagPath X' hc ω)
+      have hb := SkorokhodSpace.bddAbove_range_supOn T (cadlagPath X' hc ω) (subset_refl _)
+      have h1 : (cadlagPath X' hc ω).toFun 0 ≤ SkorokhodSpace.supOn T (cadlagPath X' hc ω) :=
+        le_ciSup hb (⟨0, mem_Iic.2 (zero_le : (0 : ℝ≥0) ≤ T)⟩ : Set.Iic T)
+      have h2 : (cadlagPath X' hc ω).toFun 0 = 0 := by
+        change X' 0 ω = 0
+        rw [hω 0, h0]
+      linarith
+    rw [hR, measure_congr (ae_eq_univ.2 (ae_iff.1 hL)), measure_univ]
+  · -- the reflection principle and the symmetry of `X T`
+    have hL : Q (cadlagPath X' hc ⁻¹' (SkorokhodSpace.supOn T ⁻¹' Ici a))
+        = Q {ω | a ≤ ⨆ t : Set.Iic T, X t ω} := by
+      refine measure_congr ?_
+      filter_upwards [hae] with ω hω
+      change (a ≤ SkorokhodSpace.supOn T (cadlagPath X' hc ω)) = (a ≤ ⨆ t : Set.Iic T, X t ω)
+      simp only [SkorokhodSpace.supOn, cadlagPath, hω]
+    rw [hL, measure_le_iSup_eq_two_mul_of_isBrownianReal hX hm hT ha]
+    have hsplit : (fun ω ↦ |X T ω|) ⁻¹' Ici a = {ω | a ≤ X T ω} ∪ {ω | a ≤ -X T ω} := by
+      ext ω
+      simp only [mem_preimage, mem_Ici, mem_union, mem_ofPred_eq]
+      exact le_abs'.trans (or_comm.trans (or_congr Iff.rfl (by constructor <;> intro h <;> linarith)))
+    have hdisj : Disjoint {ω | a ≤ X T ω} {ω | a ≤ -X T ω} :=
+      Set.disjoint_left.2 fun ω h1 h2 ↦ by
+        simp only [mem_ofPred_eq] at h1 h2
+        linarith
+    have hneg : Q {ω | a ≤ -X T ω} = Q {ω | a ≤ X T ω} := by
+      have h1 := (hX.neg.hasLaw_eval T).map_eq
+      have h2 := (hX.hasLaw_eval T).map_eq
+      have e1 : Q {ω | a ≤ -X T ω} = (Q.map ((-X) T)) (Ici a) := by
+        rw [Measure.map_apply (show Measurable ((-X) T) from (hm T).neg) measurableSet_Ici]
+        rfl
+      have e2 : Q {ω | a ≤ X T ω} = (Q.map (X T)) (Ici a) := by
+        rw [Measure.map_apply (hm T) measurableSet_Ici]
+        rfl
+      rw [e1, e2, h1, h2]
+    rw [hsplit, measure_union hdisj (measurableSet_le measurable_const (hm T).neg), hneg,
+      two_mul]
+
+/-- **Lévy's equality of laws, over the modification that the martingale problem supplies.**
+`MeasureTheory.map_supOn_eq_map_abs_of_isBrownianReal` applied to the càdlàg modification `X'` of
+`MeasureTheory.isCadlagMPSolution_of_isBrownianReal`.  **Not an existence statement** about
+Brownian motion: `X` is a hypothesis, and only the modification is constructed. -/
+theorem exists_map_supOn_eq_map_abs_of_isBrownianReal
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t))
+    {T : ℝ≥0} (hT : 0 < T) :
+    ∃ (X' : ℝ≥0 → Ω' → ℝ) (hc : ∀ ω, IsCadlag (X' · ω)),
+      (∀ᵐ ω ∂Q, ∀ t, X' t ω = X t ω) ∧ (∀ t, Measurable (X' t)) ∧
+      (Q.map (cadlagPath X' hc)).map (SkorokhodSpace.supOn T) = Q.map (fun ω ↦ |X T ω|) := by
+  obtain ⟨X', hc, hae, hm', -⟩ := isCadlagMPSolution_of_isBrownianReal hX hm one_pos
+  exact ⟨X', hc, hae, hm', map_supOn_eq_map_abs_of_isBrownianReal hX hm hc hm' hae hT⟩
+
 end ReflectionPrinciple
+
+/-! ### Hitting times in continuous time, and the first passage time of Brownian motion
+
+Mathlib's results about `MeasureTheory.hittingAfter` that locate the hitting time carry
+`[WellFoundedLT ι]`, so none of them applies over `ℝ≥0`.  For a closed set and a right-continuous
+path the infimum is attained (`MeasureTheory.hittingAfter_mem_set_of_isClosed`), which gives the
+characterisation `MeasureTheory.hittingAfter_le_iff_of_isClosed`, and with it the law of the first
+passage time of Brownian motion from the reflection principle and its finiteness,
+`MeasureTheory.ae_hittingAfter_ne_top_of_isBrownianReal`. -/
+
+section ContinuousHittingTime
+
+variable {Ω β ι : Type*} [ConditionallyCompleteLinearOrder ι] [TopologicalSpace ι]
+  [OrderTopology ι] [TopologicalSpace β] {u : ι → Ω → β} {s : Set β} {n : ι} {ω : Ω}
+
+/-- **A right-continuous path attains its hitting time of a closed set.**  If `t ↦ u t ω` is
+continuous from the right at every time, `s` is closed, and the path enters `s` after `n`,
+then `hittingAfter u s n ω` is a time `i ≥ n` with `u i ω ∈ s`.
+
+Mathlib's `MeasureTheory.hittingAfter_mem_set` asks for `[WellFoundedLT ι]` instead, which
+excludes `ℝ≥0`.  Here the infimum `i` of the entrance set `S` lies in the closure of `S`
+(`csInf_mem_closure`) and `S ⊆ [i, ∞)`, so right continuity at `i` puts `u i ω` into the closure
+of `u '' S ⊆ s` (`ContinuousWithinAt.mem_closure_image`), and `s` is closed. -/
+theorem hittingAfter_mem_set_of_isClosed (hs : IsClosed s)
+    (hu : ∀ t, ContinuousWithinAt (u · ω) (Ici t) t) (h_exists : ∃ j, n ≤ j ∧ u j ω ∈ s) :
+    ∃ i : ι, hittingAfter u s n ω = i ∧ n ≤ i ∧ u i ω ∈ s := by
+  classical
+  set S := {i : ι | n ≤ i ∧ u i ω ∈ s} with hS
+  have hne : S.Nonempty := h_exists
+  have hbdd : BddBelow S := ⟨n, fun _ h ↦ h.1⟩
+  refine ⟨sInf S, ?_, le_csInf hne fun _ h ↦ h.1, ?_⟩
+  · simp only [hittingAfter, h_exists, ↓reduceIte, hS]
+  · have hsub : S ⊆ Ici (sInf S) := fun _ h ↦ csInf_le hbdd h
+    have hmem := ((hu (sInf S)).mono hsub).mem_closure_image (csInf_mem_closure hne hbdd)
+    exact closure_minimal (image_subset_iff.2 fun _ h ↦ h.2) hs hmem
+
+/-- **The hitting time of a closed set by a right-continuous path is at most `i` exactly when the
+path is in `s` at some time of `[n, i]`.**  The continuous-time counterpart of
+`MeasureTheory.hittingAfter_le_iff`, which carries `[WellFoundedLT ι]` and reads it only through
+`MeasureTheory.hittingAfter_mem_set`; `MeasureTheory.hittingAfter_mem_set_of_isClosed` replaces
+that input.  Without closedness the statement fails: the path `t ↦ t` hits `(1, ∞)` at time `1`
+and is not in it at any time of `[0, 1]`. -/
+theorem hittingAfter_le_iff_of_isClosed (hs : IsClosed s)
+    (hu : ∀ t, ContinuousWithinAt (u · ω) (Ici t) t) {i : ι} :
+    hittingAfter u s n ω ≤ i ↔ ∃ j ∈ Icc n i, u j ω ∈ s := by
+  constructor
+  · intro h
+    by_cases h_exists : ∃ j, n ≤ j ∧ u j ω ∈ s
+    · obtain ⟨j, hj, hnj, hjs⟩ := hittingAfter_mem_set_of_isClosed hs hu h_exists
+      rw [hj] at h
+      exact ⟨j, ⟨hnj, WithTop.coe_le_coe.1 h⟩, hjs⟩
+    · classical
+      simp only [hittingAfter, h_exists, ↓reduceIte, top_le_iff, WithTop.coe_ne_top] at h
+  · rintro ⟨j, hj, hjs⟩
+    exact (hittingAfter_le_of_mem hj.1 hjs).trans (WithTop.coe_le_coe.2 hj.2)
+
+/-- **At a continuous real path, the first passage time at `a` is at most `T` exactly when the
+running maximum up to `T` reaches `a`.**  `MeasureTheory.hittingAfter_le_iff_of_isClosed` turns
+`τ_a ≤ T` into `∃ t ≤ T, a ≤ X t`, and a continuous path attains its maximum on the compact
+`[0, T]` (`IsCompact.exists_isMaxOn`), so this is `a ≤ ⨆ t ≤ T, X t`.  The supremum is over a set
+bounded above, because the path is continuous on a compact set, and is not a junk value. -/
+theorem hittingAfter_Ici_le_iff_le_iSup {Ω : Type*} {X : ℝ≥0 → Ω → ℝ} {ω : Ω}
+    (hω : Continuous (X · ω)) (a : ℝ) (T : ℝ≥0) :
+    hittingAfter X (Ici a) 0 ω ≤ T ↔ a ≤ ⨆ t : Iic T, X t ω := by
+  have hc : IsCompact (Iic T) := by
+    rw [← Icc_bot]; exact isCompact_Icc
+  have hb : BddAbove (range fun t : Iic T ↦ X t ω) := by
+    refine (hc.bddAbove_image hω.continuousOn).mono ?_
+    rintro _ ⟨t, rfl⟩
+    exact ⟨t, t.2, rfl⟩
+  rw [hittingAfter_le_iff_of_isClosed isClosed_Ici fun t ↦ hω.continuousWithinAt]
+  constructor
+  · rintro ⟨j, hj, hja⟩
+    exact le_trans hja (le_ciSup hb (⟨j, hj.2⟩ : Iic T))
+  · intro h
+    obtain ⟨m, hmT, hmax⟩ := hc.exists_isMaxOn ⟨0, mem_Iic.2 (zero_le : (0 : ℝ≥0) ≤ T)⟩
+      hω.continuousOn
+    exact ⟨m, ⟨zero_le, hmT⟩, h.trans (ciSup_le fun t ↦ hmax t.2)⟩
+
+/-- **The law of the first passage time of Brownian motion.**  For
+`ProbabilityTheory.IsBrownianReal X Q` with measurable coordinates, `0 < T` and `0 < a`, the
+first time `τ_a = hittingAfter X [a, ∞) 0` at which `X` reaches `a` satisfies
+`Q (τ_a ≤ T) = 2 Q (a ≤ X T)`.
+
+At every continuous path `{τ_a ≤ T} = {a ≤ sup_{t ≤ T} X t}`
+(`MeasureTheory.hittingAfter_Ici_le_iff_le_iSup`).  The paths are continuous off one null set
+(`cont`), and `MeasureTheory.measure_le_iSup_eq_two_mul_of_isBrownianReal` gives the value.  `τ_a`
+is valued in `WithTop ℝ≥0` and is `⊤` on paths that never reach `a`; that value is the truth and
+not a junk value, and `{τ_a ≤ T}` does not contain those paths.  The event need not be
+measurable; `Q` is evaluated as an outer measure.  **Not an existence statement**: `X` is a
+hypothesis. -/
+theorem measure_hittingAfter_le_eq_two_mul_of_isBrownianReal
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t))
+    {T : ℝ≥0} (hT : 0 < T) {a : ℝ} (ha : 0 < a) :
+    Q {ω | hittingAfter X (Ici a) 0 ω ≤ T} = 2 * Q {ω | a ≤ X T ω} := by
+  rw [← measure_le_iSup_eq_two_mul_of_isBrownianReal hX hm hT ha]
+  refine measure_congr ?_
+  filter_upwards [hX.cont] with ω hω
+  exact propext (hittingAfter_Ici_le_iff_le_iSup hω a T)
+
+/-- **The standard Gaussian gives mass `1/2` to `(0, ∞)`**, in the form `2 * N (0, ∞) = 1`.
+`N (0, ∞) = N (-∞, 0)` by `ProbabilityTheory.gaussianReal_map_neg`, `N {0} = 0` by
+`ProbabilityTheory.gaussianReal_absolutelyContinuous`, and the two half-lines with the point
+cover `ℝ`.  Mathlib states no mass of a half-line under `gaussianReal`. -/
+theorem two_mul_gaussianReal_Ioi_zero :
+    2 * gaussianReal 0 1 (Ioi 0) = 1 := by
+  set N := gaussianReal 0 1
+  have h0 : N {0} = 0 :=
+    gaussianReal_absolutelyContinuous 0 one_ne_zero (Real.volume_singleton)
+  have hsymm : N (Ioi 0) = N (Iio 0) := by
+    have h := gaussianReal_map_neg (μ := 0) (v := 1)
+    rw [neg_zero] at h
+    calc N (Ioi 0) = (N.map fun x ↦ -x) (Ioi 0) := by rw [h]
+      _ = N (Iio 0) := by
+        rw [Measure.map_apply measurable_neg measurableSet_Ioi]
+        congr 1
+        ext x
+        simp
+  have hU : N (Iic 0) + N (Ioi 0) = 1 := by
+    rw [← measure_union (Iic_disjoint_Ioi le_rfl) measurableSet_Ioi, Iic_union_Ioi,
+      measure_univ]
+  rw [← measure_congr (Iio_ae_eq_Iic' h0), ← hsymm] at hU
+  rw [two_mul]
+  exact hU
+
+/-- **Brownian motion reaches every level: the first passage time is finite almost surely.**
+For `ProbabilityTheory.IsBrownianReal X Q` with measurable coordinates and every real `a`,
+`hittingAfter X [a, ∞) 0 ≠ ⊤` for `Q`-almost every `ω`.
+
+For `a ≤ 0` this is `X 0 = 0` almost surely
+(`ProbabilityTheory.IsPreBrownianReal.eval_zero_ae_eq_zero`).  For `0 < a`,
+`Q (τ_a ≤ k + 1) = 2 Q (a ≤ X (k+1))` by
+`MeasureTheory.measure_hittingAfter_le_eq_two_mul_of_isBrownianReal`, and
+`Q (a ≤ X t) = N [a / √t, ∞)` for the standard Gaussian `N`
+(`ProbabilityTheory.gaussianReal_div_const`), which increases to `N (0, ∞) = 1/2`
+(`MeasureTheory.two_mul_gaussianReal_Ioi_zero`).  So `Q (τ_a = ⊤) + 2 Q (a ≤ X (k+1)) ≤ 1` for
+every `k`, and in the limit `Q (τ_a = ⊤) = 0`.
+
+The one step that needs care is the complement: `{τ_a = ⊤}` lies in the complement of
+`{τ_a ≤ k + 1}`, and `Q (A) + Q (Aᶜ) = 1` asks `A` to be null measurable
+(`MeasureTheory.measure_add_measure_compl₀`).  `{τ_a ≤ T}` is almost surely equal to the preimage
+of `[a, ∞)` under `SkorokhodSpace.supOn T` and the path map of the càdlàg modification of
+`MeasureTheory.isCadlagMPSolution_of_isBrownianReal`, which is measurable
+(`SkorokhodSpace.measurable_supOn`).  **Not an existence statement**: `X` is a hypothesis. -/
+theorem ae_hittingAfter_ne_top_of_isBrownianReal
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t)) (a : ℝ) :
+    ∀ᵐ ω ∂Q, hittingAfter X (Ici a) 0 ω ≠ ⊤ := by
+  have := hX.toIsPreBrownianReal.isGaussianProcess.isProbabilityMeasure
+  rcases le_or_gt a 0 with ha | ha
+  · filter_upwards [hX.toIsPreBrownianReal.eval_zero_ae_eq_zero] with ω h0
+    have hmem : X 0 ω ∈ Ici a := by
+      rw [h0]
+      exact ha
+    exact ne_top_of_le_ne_top WithTop.coe_ne_top (hittingAfter_le_of_mem le_rfl hmem)
+  -- the events `{τ ≤ T}` are null measurable, through the càdlàg modification
+  obtain ⟨X', hc, hae, hm', -⟩ := isCadlagMPSolution_of_isBrownianReal hX hm one_pos
+  have hYm : Measurable (cadlagPath X' hc) := measurable_cadlagPath hc hm'
+  have hE : ∀ T : ℝ≥0, NullMeasurableSet {ω | hittingAfter X (Ici a) 0 ω ≤ T} Q := by
+    intro T
+    refine ((hYm ((SkorokhodSpace.measurable_supOn T) (measurableSet_Ici (a := a)))).nullMeasurableSet).congr
+      ?_
+    filter_upwards [hae, hX.cont] with ω hω hcont
+    change (a ≤ SkorokhodSpace.supOn T (cadlagPath X' hc ω)) = (hittingAfter X (Ici a) 0 ω ≤ T)
+    simp only [SkorokhodSpace.supOn, cadlagPath, hω]
+    exact propext (hittingAfter_Ici_le_iff_le_iSup hcont a T).symm
+  -- `Q (a ≤ X t)` is a standard Gaussian tail at `a / √t`
+  have hG : ∀ t : ℝ≥0, 0 < t →
+      Q {ω | a ≤ X t ω} = gaussianReal 0 1 (Ici (a / Real.sqrt t)) := by
+    intro t ht
+    have hs : 0 < Real.sqrt t := Real.sqrt_pos.2 (by exact_mod_cast ht)
+    have hl := gaussianReal_div_const (hX.hasLaw_eval t) (Real.sqrt t)
+    have hl' : HasLaw (fun ω ↦ X t ω / Real.sqrt t) (gaussianReal 0 1) Q := by
+      convert hl using 2
+      · simp
+      · apply NNReal.eq
+        rw [NNReal.coe_one, NNReal.coe_div]
+        change (1 : ℝ) = (t : ℝ) / Real.sqrt t ^ 2
+        rw [eq_comm, div_eq_one_iff_eq (by positivity)]
+        exact (Real.sq_sqrt t.2).symm
+    rw [← hl'.map_eq, Measure.map_apply ((hm t).div_const _) measurableSet_Ici]
+    congr 1
+    ext ω
+    simp only [mem_ofPred_eq, mem_preimage, mem_Ici]
+    rw [div_le_div_iff_of_pos_right hs]
+  -- and it tends to `1/2`
+  have hlim : Tendsto (fun k : ℕ ↦ 2 * Q {ω | a ≤ X ((k : ℝ≥0) + 1) ω}) atTop (𝓝 1) := by
+    have hmono : Monotone fun k : ℕ ↦ Ici (a / Real.sqrt (((k : ℝ≥0) + 1 : ℝ≥0) : ℝ)) := by
+      intro k l hkl
+      refine Ici_subset_Ici.2 (div_le_div_of_nonneg_left ha.le
+        (Real.sqrt_pos.2 (by positivity)) (Real.sqrt_le_sqrt ?_))
+      push_cast
+      exact_mod_cast Nat.add_le_add_right hkl 1
+    have hU : ⋃ k : ℕ, Ici (a / Real.sqrt (((k : ℝ≥0) + 1 : ℝ≥0) : ℝ)) = Ioi 0 := by
+      ext x
+      simp only [mem_iUnion, mem_Ici, mem_Ioi]
+      constructor
+      · rintro ⟨k, hk⟩
+        exact lt_of_lt_of_le (div_pos ha (Real.sqrt_pos.2 (by positivity))) hk
+      · intro hx
+        obtain ⟨k, hk⟩ := exists_nat_gt ((a / x) ^ 2)
+        have hs : 0 < Real.sqrt (((k : ℝ≥0) + 1 : ℝ≥0) : ℝ) := Real.sqrt_pos.2 (by positivity)
+        refine ⟨k, ?_⟩
+        rw [div_le_iff₀ hs]
+        have h1 : a / x < Real.sqrt (((k : ℝ≥0) + 1 : ℝ≥0) : ℝ) := by
+          rw [Real.lt_sqrt (div_pos ha hx).le]
+          push_cast
+          linarith
+        have h2 : a = x * (a / x) := by field_simp
+        nlinarith
+    have h := tendsto_measure_iUnion_atTop (μ := gaussianReal 0 1) hmono
+    rw [hU] at h
+    have h2 := ENNReal.Tendsto.const_mul h (Or.inr (by norm_num : (2 : ENNReal) ≠ ⊤))
+    rw [two_mul_gaussianReal_Ioi_zero] at h2
+    refine h2.congr fun k ↦ ?_
+    rw [hG _ (by positivity)]
+    rfl
+  -- the paths that never reach `a` have measure `0`
+  have hsum : ∀ k : ℕ, Q {ω | hittingAfter X (Ici a) 0 ω = ⊤}
+      + 2 * Q {ω | a ≤ X ((k : ℝ≥0) + 1) ω} ≤ 1 := by
+    intro k
+    rw [← measure_hittingAfter_le_eq_two_mul_of_isBrownianReal hX hm (by positivity) ha]
+    have hsub : {ω | hittingAfter X (Ici a) 0 ω = ⊤}
+        ⊆ {ω | hittingAfter X (Ici a) 0 ω ≤ ((k : ℝ≥0) + 1 : ℝ≥0)}ᶜ := by
+      intro ω hω h
+      simp only [mem_ofPred_eq] at hω h
+      rw [hω] at h
+      exact WithTop.coe_ne_top (top_le_iff.1 h)
+    calc _ ≤ Q {ω | hittingAfter X (Ici a) 0 ω ≤ ((k : ℝ≥0) + 1 : ℝ≥0)}ᶜ
+          + Q {ω | hittingAfter X (Ici a) 0 ω ≤ ((k : ℝ≥0) + 1 : ℝ≥0)} := by
+          gcongr
+      _ = 1 := by rw [add_comm, measure_add_measure_compl₀ (hE _), measure_univ]
+  have h := le_of_tendsto' (tendsto_const_nhds.add hlim) hsum
+  have h0 : Q {ω | hittingAfter X (Ici a) 0 ω = ⊤} = 0 := by
+    have h' : Q {ω | hittingAfter X (Ici a) 0 ω = ⊤} + 1 ≤ 0 + 1 := by rwa [zero_add]
+    exact nonpos_iff_eq_zero.1 (ENNReal.le_of_add_le_add_right ENNReal.one_ne_top h')
+  rw [ae_iff]
+  simpa only [ne_eq, not_not] using h0
+
+/-- **Brownian motion is unbounded above at large times.**  For
+`ProbabilityTheory.IsBrownianReal X Q` with measurable coordinates, almost every path satisfies
+`a ≤ X t` for arbitrarily large `t`, simultaneously for every real `a`.
+
+`MeasureTheory.ae_hittingAfter_ne_top_of_isBrownianReal` at the countably many levels `n : ℕ`
+(`MeasureTheory.ae_all_iff`) says that the path reaches every `n`.  A continuous path is bounded
+on the compact `[0, T]` (`IsCompact.bddAbove_image`), so the time at which it exceeds that bound
+lies beyond `T`.  The quantifier over `a` sits inside the almost sure statement because only
+countably many levels are used. -/
+theorem ae_frequently_ge_of_isBrownianReal
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t)) :
+    ∀ᵐ ω ∂Q, ∀ a : ℝ, ∃ᶠ t in atTop, a ≤ X t ω := by
+  have h : ∀ᵐ ω ∂Q, ∀ n : ℕ, hittingAfter X (Ici (n : ℝ)) 0 ω ≠ ⊤ :=
+    ae_all_iff.2 fun n ↦ ae_hittingAfter_ne_top_of_isBrownianReal hX hm n
+  filter_upwards [h, hX.cont] with ω hω hc a
+  rw [frequently_atTop]
+  intro T
+  have hK : IsCompact (Iic T) := by
+    rw [← Icc_bot]; exact isCompact_Icc
+  obtain ⟨M, hM⟩ := hK.bddAbove_image hc.continuousOn
+  obtain ⟨n, hn⟩ := exists_nat_gt (max a M)
+  have hex : ∃ j, 0 ≤ j ∧ X j ω ∈ Ici (n : ℝ) := by
+    classical
+    by_contra hne
+    exact hω n (by simp only [hittingAfter, hne, ↓reduceIte])
+  obtain ⟨j, -, hj⟩ := hex
+  have hj' : (n : ℝ) ≤ X j ω := hj
+  refine ⟨j, ?_, (le_max_left a M).trans (hn.le.trans hj')⟩
+  by_contra hjT
+  have hle : X j ω ≤ M := hM ⟨j, mem_Iic.2 (not_le.1 hjT).le, rfl⟩
+  linarith [le_max_right a M]
+
+/-- **Brownian motion oscillates: `limsup X t = ∞` and `liminf X t = -∞` almost surely.**  For
+`ProbabilityTheory.IsBrownianReal X Q` with measurable coordinates, almost every path satisfies,
+for every real `a`, both `a ≤ X t` and `X t ≤ a` for arbitrarily large `t`.  The upper half is
+`MeasureTheory.ae_frequently_ge_of_isBrownianReal`, the lower half is the same statement for `-X`
+(`ProbabilityTheory.IsBrownianReal.neg`, `Mathlib/Probability/BrownianMotion/Basic.lean:306`).
+**Not an existence statement**: `X` is a hypothesis. -/
+theorem ae_frequently_le_of_isBrownianReal
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t)) :
+    ∀ᵐ ω ∂Q, ∀ a : ℝ, (∃ᶠ t in atTop, a ≤ X t ω) ∧ (∃ᶠ t in atTop, X t ω ≤ a) := by
+  filter_upwards [ae_frequently_ge_of_isBrownianReal hX hm,
+    ae_frequently_ge_of_isBrownianReal hX.neg fun t ↦ (hm t).neg] with ω h1 h2 a
+  refine ⟨h1 a, (h2 (-a)).mono fun t ht ↦ ?_⟩
+  have ht' : -a ≤ -X t ω := ht
+  linarith
+
+/-- **Brownian motion visits every level at arbitrarily large times.**  For
+`ProbabilityTheory.IsBrownianReal X Q` with measurable coordinates, almost every path satisfies
+`X t = a` for arbitrarily large `t`, simultaneously for every real `a`; for `a = 0` the zero set
+is unbounded.  Past any `T` the path is `≥ a + 1` at some `t₁` and then `≤ a - 1` at some
+`t₂ ≥ t₁` (`MeasureTheory.ae_frequently_le_of_isBrownianReal`), and the intermediate value
+theorem on `[t₁, t₂]` (`intermediate_value_Icc'`,
+`Mathlib/Topology/Order/IntermediateValue.lean:592`) gives the visit.  **Not an existence
+statement**: `X` is a hypothesis. -/
+theorem ae_frequently_eq_of_isBrownianReal
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t)) :
+    ∀ᵐ ω ∂Q, ∀ a : ℝ, ∃ᶠ t in atTop, X t ω = a := by
+  filter_upwards [ae_frequently_le_of_isBrownianReal hX hm, hX.cont] with ω h hc a
+  rw [frequently_atTop]
+  intro T
+  obtain ⟨t₁, hT1, h1⟩ := frequently_atTop.1 (h (a + 1)).1 T
+  obtain ⟨t₂, h12, h2⟩ := frequently_atTop.1 (h (a - 1)).2 t₁
+  obtain ⟨t, ht, hta⟩ := intermediate_value_Icc' h12 (f := fun s ↦ X s ω) hc.continuousOn
+    (show a ∈ Icc (X t₂ ω) (X t₁ ω) from ⟨by linarith, by linarith⟩)
+  exact ⟨t, hT1.trans ht.1, hta⟩
+
+end ContinuousHittingTime
 
 end MeasureTheory

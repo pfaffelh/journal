@@ -61610,3 +61610,237 @@ klassische Gestalt des Satzes (Lévy: `max_{t ≤ T} B_t ≐ |B_T|`), und es mac
 Gleichung über Halbgeraden eine über Maße, die ein nächster Verbraucher — die Verteilung der
 Trefferzeit über `{τ_a ≤ T} = {a ≤ sup_{t ≤ T} X t}` — unmittelbar liest. Geschätzt ein halber
 Lauf.
+
+### 2026-09-25, neunter Lauf des Tages — das benannte Ziel steht, und der Verbraucher, den es angesagt hat, ebenfalls: **Lévys Gleichheit `sup_{t ≤ T} X t ≐ |X T|`** als Gleichung von Maßen, und **das Gesetz der ersten Passagezeit** `Q (τ_a ≤ T) = 2 Q (a ≤ X T)`; dafür fällt eine Mathlib-Lücke ab: keine Aussage über `hittingAfter`, die die Trefferzeit lokalisiert, gilt über `ℝ≥0`
+
+*`check_master.py` gegen `94ef6b89544`: **0 Fehler, 0 veraltete Namen, 0 `sorry`**, Warnungen
+**18 / 38 / 36 / 76**, unverändert — keine der fünf neuen Deklarationen trägt eine Warnung.
+`check_axioms_master.py` über alle fünf: `propext`, `Classical.choice`, `Quot.sound`.
+`check_duplicates.py`: 45, unverändert. Erprobt in `scripts/_dev_levy.lean` und
+`scripts/_dev_hitting.lean` über `dev_check_master.py` gegen die gebaute Kette; eingefügt mit
+`scripts/_dev_insert_hitting.py` (der Lévy-Teil von Hand). Korrekturen im Probelauf, alle
+Schreibweise: `ext_of_Ici` steht im Namensraum `MeasureTheory.Measure`; `Measurable.abs` gibt es
+nicht (genommen `continuous_abs.measurable.comp`); `zero_le` hat auf master kein explizites
+Argument; `Measure.map_apply` fand `(-X) T` erst nach `show Measurable ((-X) T)`. Die
+Trefferzeit-Aussagen gingen im **ersten** Durchlauf durch. Die Prüfbäume
+`~/Code/lean/mathlib-master/_check_1496018`, `_check_1499447`, `_check_1503547` sind nach
+`--keep` stehengeblieben und wegzuräumen, zusammen mit den vom Vorlauf gemeldeten.*
+
+Zwei Deklarationen am Ende von `ReflectionPrinciple`, drei im neuen Abschnitt
+`ContinuousHittingTime` dahinter, alle in `MartingaleProblems/Suggested.lean`:
+
+| Name | Aussage |
+| --- | --- |
+| `MeasureTheory.map_supOn_eq_map_abs_of_isBrownianReal` | **das benannte Ziel**: `IsBrownianReal X Q`, meßbare Koordinaten, `0 < T`, und **jedes** `X'` mit meßbaren Koordinaten, allen Pfaden càdlàg und `X' = X` f.s. für alle `t` ⟹ `(Q.map (cadlagPath X' hc)).map (supOn T) = Q.map (fun ω ↦ \|X T ω\|)` |
+| `MeasureTheory.exists_map_supOn_eq_map_abs_of_isBrownianReal` | dasselbe über die Modifikation von `isCadlagMPSolution_of_isBrownianReal`, als Existenz von `X'` |
+| `MeasureTheory.hittingAfter_mem_set_of_isClosed` | über `[ConditionallyCompleteLinearOrder ι] [OrderTopology ι]`: `s` abgeschlossen, Pfad überall rechtsstetig, betritt `s` nach `n` ⟹ `hittingAfter u s n ω = i` mit `n ≤ i`, `u i ω ∈ s` |
+| `MeasureTheory.hittingAfter_le_iff_of_isClosed` | ebenso: `hittingAfter u s n ω ≤ i ↔ ∃ j ∈ Icc n i, u j ω ∈ s` |
+| `MeasureTheory.measure_hittingAfter_le_eq_two_mul_of_isBrownianReal` | `IsBrownianReal X Q`, meßbare Koordinaten, `0 < T`, `0 < a` ⟹ `Q {hittingAfter X (Ici a) 0 ≤ T} = 2 * Q {a ≤ X T}` |
+
+#### Befunde
+
+* **Die Aussage ist allgemeiner gestellt als benannt, und das kostet nichts.** Benannt war sie
+  „über die Modifikation `X'` von `isCadlagMPSolution_of_isBrownianReal`". Diese Modifikation
+  steht in einer Existenzaussage und ist nur unter `obtain` zu nennen. Gestellt ist der Satz
+  deshalb für **jedes** `X'` mit den drei Eigenschaften, die der Beweis liest; die
+  Existenzfassung sind zwei Zeilen.
+* **Die angesagte Atomlosigkeit bei `-a` wird nicht gebraucht.** Der Vorlauf sagte
+  „Symmetrie und Atomlosigkeit bei `-a`". Für `0 < a` ist
+  `{a ≤ |x|} = {a ≤ x} ∪ {a ≤ -x}` eine **Mengengleichung** mit disjunkten Teilen, und
+  `Q {a ≤ -X T} = Q {a ≤ X T}` folgt daraus, daß `X T` und `(-X) T` beide das Gesetz
+  `gaussianReal 0 T` haben (`ProbabilityTheory.IsBrownianReal.neg`,
+  `Mathlib/Probability/BrownianMotion/Basic.lean:306`, mit `IsPreBrownianReal.hasLaw_eval`,
+  `:95`). Kein Randterm, kein Atom.
+* **Der Fall `a ≤ 0` liest `X 0 = 0` am Modifikationspfad.** Das laufende Maximum eines
+  càdlàg-Pfades dominiert seinen Wert bei `0` (`SkorokhodSpace.bddAbove_range_supOn` und
+  `le_ciSup`), und `X' 0 = X 0 = 0` f.s.
+  (`ProbabilityTheory.IsPreBrownianReal.eval_zero_ae_eq_zero`, `Basic.lean:99`). Beide Seiten
+  sind dort `1`; `MeasureTheory.Measure.ext_of_Ici`
+  (`Mathlib/MeasureTheory/Constructions/BorelSpace/Order.lean:538`) schließt.
+* **Mathlib-Lücke, belegt auf `94ef6b89544` und auf `upstream/master` `09712d488fd`
+  (2026-09-21):** `MeasureTheory.hittingAfter_mem_set`
+  (`Mathlib/Probability/Process/HittingTime.lean:189`), `hittingAfter_mem_set_of_ne_top` (`:205`)
+  und `hittingAfter_le_iff` (`:238`) tragen `[WellFoundedLT ι]`, das über `ℝ≥0` nicht gilt.
+  `hittingAfter_le_of_mem` (`:217`) trägt es nicht und ist die Richtung, die hier übernommen
+  wird. Die andere Richtung liest die Wohlfundiertheit **nur** über `hittingAfter_mem_set`, und
+  für abgeschlossenes `s` und rechtsstetige Pfade ersetzt eine Zeile Topologie sie: das Infimum
+  der Eintrittsmenge liegt in ihrem Abschluß (`csInf_mem_closure`), die Menge liegt rechts
+  davon, und Rechtsstetigkeit gibt `ContinuousWithinAt.mem_closure_image`. Abgeschlossenheit ist
+  nötig (Zeuge im Doc-Kommentar: `t ↦ t` und `(1, ∞)`). Kandidat für einen Mathlib-PR, neben
+  `isStoppingTime_debutTime`, das dieselbe Voraussetzungsfrage von der Meßbarkeitsseite
+  beantwortet.
+* **`τ_a = ⊤` ist kein Müllwert.** `hittingAfter` ist `WithTop ι`-wertig und gibt `⊤` genau auf
+  den Pfaden, die `a` nie erreichen; `{τ_a ≤ T}` enthält sie nicht. Die stehende Regel über
+  `sInf`-getotalisierte Funktionen trifft `hittingAfter` nicht: das `sInf` wird nur auf
+  nichtleerer Menge genommen.
+
+**Was nicht dasteht:** die Dichte von `τ_a`; `τ_a < ⊤` f.s.; `T = 0`. **Keine Existenzaussage
+über die Brownsche Bewegung** — `X` ist Hypothese jeder der fünf Aussagen.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **`MeasureTheory.ae_hittingAfter_ne_top_of_isBrownianReal`** — für `IsBrownianReal X Q` mit
+> meßbaren Koordinaten und jedes reelle `a`: `∀ᵐ ω ∂Q, hittingAfter X (Ici a) 0 ω ≠ ⊤`. Die
+> Rekurrenz der eindimensionalen Brownschen Bewegung; für `a ≤ 0` wegen `X 0 = 0` trivial.
+
+*Worauf es ruht:* `{τ_a ≠ ⊤} = ⋃ k, {τ_a ≤ k + 1}` aufsteigend, also
+`Q (τ_a ≠ ⊤) = lim 2 Q (a ≤ X (k+1))` nach `measure_hittingAfter_le_eq_two_mul_of_isBrownianReal`
+und `tendsto_measure_iUnion_atTop`. Mit `ProbabilityTheory.gaussianReal_const_mul`
+(`Mathlib/Probability/Distributions/Gaussian/Real.lean:405`) ist
+`Q (a ≤ X t) = gaussianReal 0 1 [a/√t, ∞)`, und das strebt gegen
+`gaussianReal 0 1 (0, ∞) = 1/2` — Stetigkeit des Maßes von unten längs `a/√t ↓ 0` plus Symmetrie.
+*Warum jetzt:* es ist der eine Satz über `τ_a`, den jede Anwendung der ersten Passagezeit
+braucht — daß sie endlich ist —, und alle Eingaben stehen. Geschätzt ein halber Lauf.
+
+### Derselbe Lauf, zweiter Teil — das eben benannte Ziel steht ebenfalls: **die Brownsche Bewegung erreicht jedes Niveau**, `∀ᵐ ω, hittingAfter X [a, ∞) 0 ω ≠ ⊤` für jedes reelle `a`; die eine Stelle, an der es hätte klemmen können, ist das Komplement eines nicht meßbaren Ereignisses
+
+*`check_master.py`: **0 Fehler, 0 veraltete Namen, 0 `sorry`**, Warnungen **18 / 38 / 36 / 76**,
+unverändert (ein `change`, das nach der Umstellung auf den Hilfssatz nichts mehr tat, meldete
+der Linter und ist entfernt). `check_axioms_master.py`: `propext`, `Classical.choice`,
+`Quot.sound` für alle vier Deklarationen dieses Teils. `check_duplicates.py`: 45, unverändert.
+Erprobt in `scripts/_dev_recurrence.lean`, eingefügt mit `scripts/_dev_insert_recurrence.py`.
+Drei Probeläufe, alle Schreibweise: `measurableSet_Ici` brauchte `(a := a)`, weil
+`NullMeasurableSet.congr` die Menge erst aus dem zweiten Argument erschließt;
+`Real.sq_sqrt` fand `√t ^ 2` im `NNReal.mk` nicht per `rw` und wurde per `exact` über
+`div_eq_one_iff_eq` gelesen; `HasLaw.measurable` gibt es nicht (genommen
+`(hm t).div_const _`).*
+
+Im Abschnitt `ContinuousHittingTime` neu bzw. umgestellt:
+
+| Name | Aussage |
+| --- | --- |
+| `MeasureTheory.hittingAfter_Ici_le_iff_le_iSup` | pfadweise: `Continuous (X · ω)` ⟹ `hittingAfter X (Ici a) 0 ω ≤ T ↔ a ≤ ⨆ t : Iic T, X t ω` |
+| `MeasureTheory.measure_hittingAfter_le_eq_two_mul_of_isBrownianReal` | Aussage unverändert, Beweis jetzt vier Zeilen über den Hilfssatz |
+| `MeasureTheory.two_mul_gaussianReal_Ioi_zero` | `2 * gaussianReal 0 1 (Ioi 0) = 1` |
+| `MeasureTheory.ae_hittingAfter_ne_top_of_isBrownianReal` | **das benannte Ziel**: `IsBrownianReal X Q`, meßbare Koordinaten, jedes `a : ℝ` ⟹ `∀ᵐ ω ∂Q, hittingAfter X (Ici a) 0 ω ≠ ⊤` |
+
+#### Befunde
+
+* **Die Klemmstelle ist die Meßbarkeit, nicht der Grenzübergang.** Der Beweis braucht
+  `Q (τ_a = ⊤) + Q (τ_a ≤ k+1) ≤ 1`, also `Q A + Q Aᶜ = 1` für `A = {τ_a ≤ k+1}`, und das gilt
+  für ein äußeres Maß nur bei null-meßbarem `A` (`MeasureTheory.measure_add_measure_compl₀`,
+  `Mathlib/MeasureTheory/Measure/NullMeasurable.lean:305`). `A` selbst ist nicht als meßbar
+  bekannt — `X` hat nur meßbare Koordinaten, und `A` hängt von überabzählbar vielen ab. Gelöst
+  über die Modifikation: `A` ist f.s. gleich dem Urbild von `[a, ∞)` unter
+  `SkorokhodSpace.supOn T ∘ cadlagPath X' hc`, und das ist meßbar
+  (`SkorokhodSpace.measurable_supOn`). Die Modifikation von
+  `isCadlagMPSolution_of_isBrownianReal` wird hier zum zweiten Mal in diesem Lauf als
+  Meßbarkeitswerkzeug gelesen und nicht als Lösung.
+* **Der angesagte Weg war richtig bis auf die Richtung der Stetigkeit.** Angesagt war
+  „Stetigkeit von oben längs `a/√t ↓ 0`"; es ist Stetigkeit **von unten**, denn die Mengen
+  `[a/√(k+1), ∞)` wachsen, und ihre Vereinigung ist `(0, ∞)` und nicht `[0, ∞)`. Das ist der
+  Grund, warum `N (0, ∞)` und nicht `N [0, ∞)` gebraucht wird; beide sind `1/2`, aber nur die
+  offene Halbgerade ist die Vereinigung. `tendsto_measure_iUnion_atTop`.
+* **Mathlib führt keine Masse einer Halbgeraden unter `gaussianReal`** — gesucht auf
+  `upstream/master` `09712d488fd` nach `Ioi 0`, `Ici 0`, `Iic 0`, `Iio 0` in
+  `Mathlib/Probability/Distributions/Gaussian/`, kein Treffer. `two_mul_gaussianReal_Ioi_zero`
+  ist deshalb eigene Arbeit, gut zwanzig Zeilen aus `gaussianReal_map_neg` (`Real.lean:360`) und
+  `gaussianReal_absolutelyContinuous` (`:254`).
+* **Kein `0 < T` und kein `0 < a` in der Aussage.** Beide Hypothesen der Passagezeit-Aussage
+  verschwinden: `a ≤ 0` ist `X 0 = 0` f.s., und im Grenzübergang läuft `T = k + 1`.
+
+**Was nicht dasteht:** die Dichte von `τ_a` (Lévy-Verteilung); `E τ_a = ∞`; die Meßbarkeit von
+`τ_a` als Abbildung. **Keine Existenzaussage über die Brownsche Bewegung.**
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **`MeasureTheory.ae_frequently_le_of_isBrownianReal`** — für `IsBrownianReal X Q` mit meßbaren
+> Koordinaten: `∀ᵐ ω ∂Q, ∀ a : ℝ, (∃ᶠ t in atTop, a ≤ X t ω) ∧ (∃ᶠ t in atTop, X t ω ≤ a)`.
+> Die Oszillation der Brownschen Bewegung: `limsup X t = ∞` und `liminf X t = -∞` f.s.
+
+*Worauf es ruht:* `ae_hittingAfter_ne_top_of_isBrownianReal` an den Niveaus `n : ℕ` gibt,
+über `ae_all_iff` abzählbar geschnitten, daß der Pfad jedes `n` erreicht
+(`hittingAfter_mem_set_of_isClosed` liefert den Zeitpunkt), also nicht nach oben beschränkt ist.
+Auf `[0, T]` ist ein stetiger Pfad beschränkt (`IsCompact.bddAbove_image`), also ist er es auf
+`[T, ∞)` nicht — das ist `∃ᶠ t in atTop`. Die untere Hälfte ist dieselbe Aussage für `-X`
+(`ProbabilityTheory.IsBrownianReal.neg`, `Basic.lean:306`, mit `(hm t).neg`). *Warum jetzt:*
+es ist die Rekurrenz in ihrer üblichen Gestalt und alle Eingaben stehen. Geschätzt ein halber
+Lauf.
+
+### Derselbe Lauf, dritter Teil — das eben benannte Ziel steht ebenfalls, im ersten Durchlauf und wie beschrieben: **die Oszillation**, `limsup X t = ∞` und `liminf X t = -∞` fast sicher
+
+*`check_master.py`: **0 Fehler, 0 veraltete Namen, 0 `sorry`**, Warnungen **18 / 38 / 36 / 76**,
+unverändert. `check_axioms_master.py`: `propext`, `Classical.choice`, `Quot.sound` für beide.
+`check_duplicates.py`: 45. Erprobt in `scripts/_dev_oscillation.lean`, von Hand eingefügt am
+Ende von `ContinuousHittingTime`.*
+
+| Name | Aussage |
+| --- | --- |
+| `MeasureTheory.ae_frequently_ge_of_isBrownianReal` | `IsBrownianReal X Q`, meßbare Koordinaten ⟹ `∀ᵐ ω, ∀ a : ℝ, ∃ᶠ t in atTop, a ≤ X t ω` |
+| `MeasureTheory.ae_frequently_le_of_isBrownianReal` | **das benannte Ziel**: dazu `∃ᶠ t in atTop, X t ω ≤ a`, beides für jedes `a` unter **einem** f.s.-Quantor |
+
+#### Befunde
+
+* **Der Allquantor über `a` steht innerhalb des f.s.-Quantors, und das kostet nichts.** Gelesen
+  werden nur die abzählbar vielen Niveaus `n : ℕ` (`MeasureTheory.ae_all_iff`); jedes reelle `a`
+  wird von einem `n > max a M` überboten, wobei `M` die Schranke des Pfades auf `[0, T]` ist.
+* **`hittingAfter_mem_set_of_isClosed` wird hier nicht gebraucht**, anders als angesagt: aus
+  `τ_n ≠ ⊤` folgt die Existenz eines Treffzeitpunkts schon aus der Definition
+  (`hittingAfter` ist `⊤`, wenn es keinen gibt); welcher es ist, spielt keine Rolle, weil er
+  nur jenseits von `T` liegen muß.
+
+**Keine Existenzaussage über die Brownsche Bewegung.**
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **`MeasureTheory.ae_frequently_eq_of_isBrownianReal`** — für `IsBrownianReal X Q` mit meßbaren
+> Koordinaten: `∀ᵐ ω ∂Q, ∀ a : ℝ, ∃ᶠ t in atTop, X t ω = a`. Die Brownsche Bewegung besucht
+> jedes Niveau zu beliebig späten Zeiten; für `a = 0` ist das die Unbeschränktheit der
+> Nullstellenmenge.
+
+*Worauf es ruht:* `ae_frequently_le_of_isBrownianReal` gibt zu jedem `T` Zeiten
+`T ≤ t₁` mit `a + 1 ≤ X t₁` und dann `t₁ ≤ t₂` mit `X t₂ ≤ a - 1`; auf `[t₁, t₂]` ist der Pfad
+stetig, und der Zwischenwertsatz (`intermediate_value_Icc'`,
+`Mathlib/Topology/Order/IntermediateValue.lean`; Namen und Richtung vor dem Schreiben am
+Quelltext von `94ef6b89544` nachsehen) liefert `t ∈ [t₁, t₂]` mit `X t = a`, also `T ≤ t`.
+*Warum jetzt:* es ist der letzte der klassischen Rekurrenzsätze, die aus der
+Passagezeit-Aussage ohne Markov-Eigenschaft folgen, und alle Eingaben stehen. Geschätzt ein
+Viertel Lauf.
+
+### Derselbe Lauf, vierter Teil — das eben benannte Ziel steht ebenfalls: `MeasureTheory.ae_frequently_eq_of_isBrownianReal`, **jedes Niveau wird zu beliebig späten Zeiten besucht**
+
+*`check_master.py`: **0 Fehler, 0 veraltete Namen, 0 `sorry`**, Warnungen **18 / 38 / 36 / 76**,
+unverändert. `check_axioms_master.py`: `propext`, `Classical.choice`, `Quot.sound`.
+`check_duplicates.py`: 45. Erprobt in `scripts/_dev_levels.lean`, von Hand eingefügt am Ende von
+`ContinuousHittingTime`. Ein Probelauf: der Zwischenwert in `intermediate_value_Icc'`
+(`Mathlib/Topology/Order/IntermediateValue.lean:592` auf `94ef6b89544`) wurde ohne
+Typangabe an `X t₂ ω` statt an `a` gebunden; mit `show a ∈ Icc (X t₂ ω) (X t₁ ω)` ging es.*
+
+Die Aussage: `IsBrownianReal X Q`, meßbare Koordinaten ⟹
+`∀ᵐ ω ∂Q, ∀ a : ℝ, ∃ᶠ t in atTop, X t ω = a` — für `a = 0` die Unbeschränktheit der
+Nullstellenmenge. Neun Zeilen, wie angesagt aus der Oszillation und dem Zwischenwertsatz.
+
+**Stand des Abschnitts `ContinuousHittingTime` nach diesem Lauf**, neun Deklarationen:
+`hittingAfter_mem_set_of_isClosed`, `hittingAfter_le_iff_of_isClosed`,
+`hittingAfter_Ici_le_iff_le_iSup`, `measure_hittingAfter_le_eq_two_mul_of_isBrownianReal`,
+`two_mul_gaussianReal_Ioi_zero`, `ae_hittingAfter_ne_top_of_isBrownianReal`,
+`ae_frequently_ge_of_isBrownianReal`, `ae_frequently_le_of_isBrownianReal`,
+`ae_frequently_eq_of_isBrownianReal`; dazu am Ende von `ReflectionPrinciple`
+`map_supOn_eq_map_abs_of_isBrownianReal` und `exists_map_supOn_eq_map_abs_of_isBrownianReal`.
+Elf Deklarationen in diesem Lauf, alle ohne `sorry`, keine davon eine Existenzaussage über die
+Brownsche Bewegung.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **`MeasureTheory.hasLaw_hittingAfter_of_isBrownianReal`** — die erste Passagezeit als
+> **Zufallsvariable**: für `IsBrownianReal X Q` mit meßbaren Koordinaten und `0 < a` ist
+> `τ_a = hittingAfter X (Ici a) 0` `AEMeasurable` bezüglich `Q`, und für jedes `0 < T` ist
+> `(Q.map τ_a) (Iic T) = 2 * gaussianReal 0 1 (Ici (a / √T))`.
+
+*Worauf es ruht:* Die Modifikation `X'` von `isCadlagMPSolution_of_isBrownianReal` ist `0` auf
+einer meßbaren Nullmenge und `X` sonst, und `X` ist außerhalb davon stetig — **jeder** Pfad von
+`X'` ist also stetig, nicht nur fast jeder (am Beweis von
+`isCadlagMPSolution_of_isBrownianReal` nachsehen, ob die Nullmenge die Unstetigkeitsmenge
+enthält; der Doc-Kommentar sagt es). Dann ist `{hittingAfter X' (Ici a) 0 ≤ T}` **genau** das
+meßbare Urbild von `[a, ∞)` unter `supOn T ∘ cadlagPath X' hc`
+(`hittingAfter_Ici_le_iff_le_iSup`), also `hittingAfter X' (Ici a) 0` meßbar über die
+Halbgeraden `Iic T` (in Mathlib `measurable_of_Iic`; ob `WithTop ℝ≥0` dafür die nötige
+`BorelSpace`- und `OrderTopology`-Instanz hat, ist **die** Frage, die zuerst am Quelltext zu
+klären ist — sonst über `ENNReal`, das dieselbe Menge ist). `τ_a` ist f.s. gleich dieser
+Zufallsvariable. Die Formel ist `measure_hittingAfter_le_eq_two_mul_of_isBrownianReal` mit dem
+Gauß-Schwanz `Q (a ≤ X T) = N [a/√T, ∞)`, der im Beweis von
+`ae_hittingAfter_ne_top_of_isBrownianReal` als `hG` schon steht und dafür als eigene Aussage
+herauszuziehen ist. *Warum jetzt:* bisher sind alle Passagezeit-Aussagen Aussagen über ein
+äußeres Maß; ein Verbraucher, der `τ_a` in einen Erwartungswert oder ein Optional-Stopping
+steckt, braucht sie als Zufallsvariable. Geschätzt ein halber bis ganzer Lauf, je nach der
+Instanzfrage.
