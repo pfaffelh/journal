@@ -61085,3 +61085,70 @@ ist `isCadlagMPSolution_of_isPreBrownianReal` darauf umzustellen, und die Konver
 konvergieren die Wege gegen „ein" `ν₀`, das nur durch eine Eigenschaft beschrieben ist; mit dem
 Lemma ist der Limes ein benanntes Maß aus Mathlibs Begriffen. *Ehrlich zu sagen:* auch das ist
 keine Existenzaussage, denn `X` bleibt Hypothese. Geschätzt ein halber Lauf.
+
+### 2026-09-25, vierter Lauf des Tages — das benannte Ziel steht, beide Hälften: **Donsker in der klassischen Fassung** — die reskalierten Wege konvergieren gegen das Pfadgesetz von `√v · X` für **jede** pre-Brownsche Bewegung `X` mit meßbaren Koordinaten und càdlàg-Pfaden; dazu die Fassung für `IsBrownianReal` ohne Forderung an jeden Pfad
+
+*Die acht Schritte der Identifikationsaufgabe sind seit dem ersten Lauf des Tages erledigt; dieser
+Lauf nimmt das im dritten Lauf benannte Ziel und danach das eigene Folgeziel. Abschnitt
+`BrownianSolution` von `MartingaleProblems/Suggested.lean`. `check_master.py` gegen `94ef6b89544`:
+**0 Fehler, 0 veraltete Namen, 0 `sorry`**, Warnungen **18 / 38 / 36 / 76**, gegen den Anfang des
+Laufs unverändert. `check_axioms_master.py` über die drei neuen und die umgestellte Deklaration:
+`propext`, `Classical.choice`, `Quot.sound`. `check_duplicates.py`: 45 Treffer, unverändert.
+`upstream/master` steht weiter auf `09712d488fd`. Keine `README.md` angefaßt.*
+
+| Name | Aussage |
+| --- | --- |
+| `MeasureTheory.map_cadlagPath_eq_of_isCadlagMPSolution` | `IsPreBrownianReal X P`, meßbare Koordinaten, lauter càdlàg-Pfade, `0 < v`, und `ν` eine càdlàg-Lösung zu `brownianGeneratorPairs v` mit `ν.map (· 0) = dirac 0` ⟹ `P.map (cadlagPath (√v · X)) = ν` |
+| `MeasureTheory.tendsto_map_rescaledWalk_map_cadlagPath` | Donskers Daten `ξ` auf `(Ω, P)` mit `0 < v`, und `X` wie oben auf einem **anderen** Raum `(Ω', Q)` ⟹ `P.map (Φ n) → Q.map (cadlagPath (√v · X))` schwach auf `D(ℝ≥0, ℝ)` |
+| `MeasureTheory.tendsto_map_rescaledWalk_of_isBrownianReal` | dasselbe für `IsBrownianReal X Q` mit meßbaren Koordinaten; der Limes ist das Pfadgesetz von `√v · X'`, `X'` die Modifikation aus `isCadlagMPSolution_of_isBrownianReal` (gleich `X` außerhalb **einer** Nullmenge, für alle Zeiten) |
+
+`isCadlagMPSolution_of_isPreBrownianReal` ist auf das neue Lemma umgestellt; sein Beweis ist um
+30 Zeilen kürzer, die Aussage unverändert.
+
+#### Befunde
+
+* **Das Lemma liest von `ν` wirklich nur `isPreBrownianReal_of_isCadlagMPSolution`**, wie der Vorlauf
+  angesagt hatte: der Beweisteil ließ sich wörtlich herausziehen, mit `ν` statt `ν₀`.
+* **Die Fehler des ersten Durchlaufs kamen von einem Namen, den es auf master nicht gibt:**
+  `isProbabilityMeasure_map`. Auf `upstream/master` ist `IsProbabilityMeasure (map f μ)` eine
+  **Instanz ohne Meßbarkeitsvoraussetzung**
+  (`Mathlib/MeasureTheory/Measure/Typeclasses/Probability.lean:124`; bei nicht meßbarem `f` ist
+  `map` dort ein Dirac-Maß); daneben steht nur `Measure.isProbabilityMeasure_map_iff` (Z. 139).
+  Richtig ist also `inferInstance`, sobald `IsProbabilityMeasure Q` bekannt ist — und das folgt aus
+  `hX.isGaussianProcess.isProbabilityMeasure`, steht also nicht als eigene Hypothese. Der dritte
+  Fehler war ein `convert … using 2`, das eine Stufe zu tief ging; ersetzt durch
+  `Tendsto.mono_right` mit `congrArg 𝓝 (Subtype.ext …)`.
+* **Ein zweiter Raum kostet nichts.** Daten und Brownsche Bewegung leben auf `(Ω, P)` und
+  `(Ω', Q)`; die Aussage verknüpft sie nur über das Gesetz auf `D(ℝ≥0, ℝ)`.
+* **Die `IsBrownianReal`-Fassung ist existenziell in `X'`**, nicht mit einer benannten
+  Modifikation. Eine Definition `cadlagModification` hätte die Nullmenge über `Classical.choose`
+  festlegen müssen; da `X'` und `X` zu jeder Zeit f.s. übereinstimmen, ist der Limes ohnehin durch
+  `X` bestimmt, und die Existenzform sagt das ohne weiteren Apparat.
+
+**Was nicht dasteht, ausdrücklich:** eine Existenzaussage. `X` ist Hypothese; die Sätze sagen, daß
+der Limes das Pfadgesetz **jeder** solchen Bewegung ist, nicht daß es eine gibt.
+
+**Nicht erledigt:** die Prüfbäume `~/Code/lean/mathlib-master/_check_1259647` und `_check_1262921`
+(aus `--keep`, für die Axiomprüfung) liegen außerhalb der freigegebenen Verzeichnisse und sind nicht
+geräumt, ebenso die drei aus dem Vorlauf.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **`MeasureTheory.tendsto_integral_map_rescaledWalk`** — das Invarianzprinzip als Korollar in der
+> Form, in der es benutzt wird: für jedes `F : D(ℝ≥0, ℝ) → ℝ`, beschränkt und stetig **an
+> `Q`-fast jedem Pfad von `√v · X`**, gilt `∫ F (Φ n ω) dP → ∫ F (√v · X ω) dQ`.
+
+*Worauf es ruht:* auf `tendsto_map_rescaledWalk_map_cadlagPath` und dem Satz von der stetigen
+Abbildung in der Nullmengenfassung, `tendsto_of_measure_setOf_not_continuousAt_eq_zero`
+(`WeakConvergence/Suggested.lean:2356`, Meilenstein 2; verlangt `Measurable F` und
+`HasOuterApproxClosed` auf dem Ausgangsraum — ob `D(ℝ≥0, ℝ)` die Instanz schon trägt, ist das
+erste, was nachzusehen ist). *Warum jetzt:* erst mit ihr sind klassische Funktionale wie
+`z ↦ sup_{t ≤ 1} z t` anwendbar, die auf `D` nicht überall stetig sind, wohl aber an jedem stetigen
+Pfad — und stetige Pfade hat der Limes nach `isBrownianReal_of_isCadlagMPSolution` fast sicher.
+Geschätzt ein halber Lauf, wenn die Nullmengenfassung des Abbildungssatzes dasteht.
+
+*Und was dahinter steht, als Frage an den Nutzer, nicht als Auftrag:* mit einer Rademacher- oder
+Gauß-Folge unter `Measure.infinitePi` als Donsker-Daten würde
+`exists_tendsto_map_rescaledWalk_isBrownianReal` eine **Existenz**aussage für `IsBrownianReal` auf
+`D(ℝ≥0, ℝ)` ergeben. Der dritte Lauf des Tages hat das als Entscheidung des Nutzers benannt; dieser
+Lauf hat sie nicht getroffen.
