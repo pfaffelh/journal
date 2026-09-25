@@ -62743,3 +62743,106 @@ es genügt die paarweise Unabhängigkeit von `X r` und `Y t` (Befund 1). Kein Fe
 > Kettenregel für eine bloß integrierbare `r ↦ α (X r)` tragen, ist noch nicht nachgesehen. *Warum
 > jetzt:* es ist der nächste offene Punkt der gestellten Reihenfolge; Teil 4 und Schritt 5
 > brauchen ihn bei `α = β = 0` nicht, Schritte 6 und 7 schon.
+
+### 2026-09-25, siebzehnter Lauf des Tages — Dualität, Schritt 3, Teil 3: **`duality`** (`thm:duality` mit `α`, `β`) und **`duality_relation`** (`cor:dualrel` für jedes `t`), über die Reduktion auf `α = β = 0`; das Exponentialmartingal ohne Partition
+
+*Aufgabe: „Dualität, der Kern von Meilenstein 7“, das benannte Ziel des vorigen Laufs.*
+
+*`check_master.py`: 0 Fehler, 0 `sorry`, 0 veraltet in allen vier Dateien* (`WeakConvergence`
+18, `SkorokhodSpace` 38, `MartingaleProblems` 38 statt 36, `JumpProcesses` 76 Warnungen).
+Mathlib `94ef6b89544`. `#print axioms` gegen master für `duality`, `duality_relation`,
+`duality_augment`, `integral_mul_exp_sub_eq_zero_of_martingale`, `duality_zero_of_mean`,
+`duality_relation_zero`: nur `propext`, `Classical.choice`, `Quot.sound`
+(`scripts/_dev_axioms_dual.lean`). `check_duplicates.py`: kein Treffer auf die neuen Namen.
+Entwickelt in `scripts/_dev_expmart.lean` gegen v4.33.1, dort mit zwei `sorry`-Stubs für die
+`_of_mean`-Sätze; eingebaut mit `scripts/_dev_integrate_dual.py`. `check_suggested.py` gegen
+v4.33.1 ist **nicht** gelaufen (nach der Regel vom 2026-09-18 nur zu berichten).
+
+**Umbau in `section ContinuousDuality`.** Die vier Sätze des vorigen Laufs verbrauchen von den
+Martingalhypothesen nur die Konstanz des Mittelwerts; sie stehen jetzt in dieser Form als
+`duality_increment_fst_of_mean`, `duality_zero_hypotheses_of_mean`, `duality_zero_of_mean`,
+`duality_relation_zero_of_mean` (Hypothese: `∫ (f (X s, y) - f (X 0, y) - ∫_0^s g (X r, y)) = 0`
+für jedes `y`, `s`). Die alten Namen bleiben, mit unveränderter Signatur, als Einzeiler über
+`integral_compensated_sub_eq_zero_of_martingale`. Das ist kein Schönheitsumbau: die
+exponentiell gewichteten Prozesse liefern genau diese Form und **kein** Martingal, und ein
+Martingal hätte zusätzlich die Adaptiertheit von `∫_0^t (g + α f)(X r) e_α(r) dr` verlangt.
+
+**Neuer Abschnitt „`thm:duality` and `cor:dualrel` with `α` and `β`“** hinter
+`end ContinuousDuality`, dreizehn Deklarationen:
+
+* *Analysis, ruht nur auf Mathlib:* `AbsolutelyContinuousOnInterval.lipschitzOnWith_comp`
+  (fehlt in Mathlib: absolut stetig nach lipschitz auf dem Wertebereich ist absolut stetig),
+  `absolutelyContinuousOnInterval_exp_integral`, `ae_hasDerivAt_exp_integral`,
+  **`exp_integral_sub_one_eq`** (die Kettenregel `e(T) - 1 = ∫_0^T a e` für bloß integrierbares
+  `a`, die Z. 7300 benutzt), `integral_mul_exp_integral_eq` (Produktregel für `I · e`), und
+  **`mul_exp_sub_eq_path`**: pfadweise
+  `U(t)e(t) - U(0) - ∫(V + aU)e = (M t - M 0) + ∫_0^t a(r) e(r) (M t - M r) dr` mit `M = U - ∫V`.
+  Getragen von `AbsolutelyContinuousOnInterval.integral_deriv_eq_sub`,
+  `…integral_deriv_mul_eq_sub` (`Mathlib/MeasureTheory/Integral/IntervalIntegral/AbsolutelyContinuousFun.lean:225/245`),
+  `IntervalIntegrable.absolutelyContinuousOnInterval_intervalIntegral`
+  (`Mathlib/MeasureTheory/Function/AbsolutelyContinuous.lean:412`), `ContDiffOn.exists_lipschitzOnWith`.
+  **Damit ist die Frage des vorigen Laufs beantwortet**, welche Mathlib-Sätze die Kettenregel
+  tragen: die FTC für absolut stetige Funktionen; es fehlte nur die Komposition.
+* *Wahrscheinlichkeit:* `integral_mul_sub_eq_zero_of_martingale`,
+  `measurable_intervalIntegral_param`, `intervalIntegrable_of_abs_le_Icc` (der Name
+  `intervalIntegrable_of_abs_le` ist in der Datei schon vergeben, Z. 9586, für global
+  beschränkte Funktionen), und **`integral_mul_exp_sub_eq_zero_of_martingale`**: das
+  Exponentialmartingal im Mittel, für **einen** Prozeß.
+* *Zusammenbau:* `integral_augment_sub_eq_zero`, `abs_mul_exp_mul_exp_le`, **`duality_augment`**
+  (alle Voraussetzungen von `duality_zero_of_mean` für `X̃ s = (X s, ∫_0^s α(X))`,
+  `Ỹ t = (Y t, ∫_0^t β(Y))`, `f̃ = f e^a e^b`, `g̃ = (g + αf) e^a e^b`, `h̃ = (h + βf) e^a e^b`,
+  `Γ̃ T = 2 e^{Cα T} e^{Cβ T} Γ T`), **`duality`**, **`duality_relation`**.
+
+**Befunde.**
+
+1. **Die Terme `T₂`, `T₄` des Manuskripts (Z. 7328–7343) und der Grenzübergang über Partitionen
+   (Z. 7344–7355) kommen nicht vor.** Pfadweise ist
+   `f(X_t)e(t) - f(X_0) - ∫_0^t (g + αf)(X_r) e(r) dr = (M_t - M_0) + ∫_0^t α(X_r) e(r) (M_t - M_r) dr`
+   eine **exakte** Identität (Ketten- und Produktregel für absolut stetige Funktionen), und der
+   Mittelwert der rechten Seite verschwindet Zeitpunkt für Zeitpunkt, weil `α(X_r)e(r)` bei `r`
+   bekannt ist. Der Beweis ist kürzer als der des Manuskripts und braucht keine
+   `O(h²)`-Abschätzung. Das ist eine Beobachtung, kein Fehler.
+2. **Die Schranken `eq:dual1` stehen bei einem eingefrorenen Wert des anderen Prozesses**
+   (`∀ y`, `∀ x`), nicht längs `Y(t)` bzw. `X(s)`. Grund: Schritt 1 des Manuskripts (Z. 7271–7282)
+   friert `Y(t) = y` durch Bedingen ein und wendet die Martingalrechnung für festes `y` an; dafür
+   braucht sie die Integrierbarkeit von `(|α(X r)| + 1) |f(X s, y)|` unter dem bedingten Gesetz,
+   und das Manuskript sagt nicht, woher. `eq:dual1` liefert eine Majorante `Γ_T` auf der
+   **Diagonale**; auf ein eingefrorenes `y` überträgt sie sich nur über `E[Γ_T | σ(X, Y)]` und
+   eine meßbare Auswahl des Supremums über überabzählbar viele `r, s, t`. Bei `α = β = 0`
+   (voriger Lauf) trat das nicht auf, weil dort das Martingal selbst die Integrierbarkeit bei
+   jedem `y` liefert. **Offene Auffälligkeit, Manuskript Z. 7224–7238 mit Z. 7271–7282:** die
+   Schranken gehören für den Beweis in der eingefrorenen Form formuliert, oder Schritt 1 muß
+   die Übertragung ausführen. Für die Anwendungen (Schritt 7: `Y ≡ y` deterministisch;
+   beschränkte `f`, `α`) ist die eingefrorene Form ohnehin die natürliche.
+3. **`eq:dual2` in der benutzten Gestalt:** `|∫_0^r α(X w) dw| ≤ Cα T` für `r ≤ T`, pfadweise,
+   dazu die Intervallintegrierbarkeit von `α(X ·)` je Pfad. Das ist schwächer als
+   `∫_0^T |α(X u)| du ≤ C_T` und folgt daraus.
+4. **Die Filtration wird jetzt gelesen, und nur so:** `X s` und `∫_0^s α(X w) dw` sind
+   `𝓕 s`-meßbar, `Y t` und `∫_0^t β(Y w) dw` `𝓖 t`-meßbar, und `𝓕 s` ist von `𝓖 t` unabhängig
+   für jedes Paar `s, t`. Das ist schwächer als die Vorgabe „`⨆ 𝓕` unabhängig von `⨆ 𝓖`“; keine
+   Hilfsfiltration `*𝓕^X`, keine progressive Meßbarkeit (nur die Adaptiertheit der Primitive,
+   die aus ihr folgt). Die Unabhängigkeit von `X̃ s` und `Ỹ t` ist damit
+   `indep_of_indep_of_le_left/right` mit `Measurable.comap_le` — die Stelle, an der die paarweise
+   Unabhängigkeit von `X s`, `Y t` aus dem vorigen Lauf nicht mehr reicht, denn `X̃ s` hängt vom
+   Pfad bis `s` ab.
+5. **`eq:dualconc` steht mit geteiltem Erwartungswert:** `E[(g + αf)e e] - E[(h + βf)e e]` unter
+   dem Zeitintegral statt `E[(g - h + (α - β) f) e e]`; das ist die Form, die
+   `duality_zero_of_mean` liefert, und gleichwertig, weil beide Summanden integrierbar sind.
+
+**Manuskript:** keine Lücke in `cor:dualrel`; die Auffälligkeit unter Befund 2 betrifft
+`thm:duality`, Z. 7224–7238 und 7271–7282.
+
+**Stand der Aufgabe.** Schritt 1, 2 und Schritt 3 Teile 1–3 stehen. Offen: Schritt 3 Teil 4
+(`duality_weighted`, `not_secondIncrement_of_weight_on_dual`), dann Schritte 4–7.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **Schritt 3, Teil 4: `duality_weighted`** nach `rem:dualnonmarkov`, bei `α = β = 0`, und
+> **`not_secondIncrement_of_weight_on_dual`**. *Weg:* `duality_zero_of_mean` für
+> `X' r = (Z, X (s₀ + r))` und `f' ((v, x), y) = v f (x, y)`; die Mittelwerthypothese ist
+> `E[Z (M_{s₀+s} - M_{s₀})] = 0`, also `integral_mul_sub_eq_zero_of_martingale` (dieser Lauf)
+> mit `ξ = Z`, `𝓕 s₀`-meßbar. Die Unabhängigkeit `IndepFun (Z, X (s₀+r)) (Y t)` folgt wie in
+> `duality_augment` aus `Indep (𝓕 (s₀ + r)) (𝓖 t)`. *Worauf es ruht:* `duality_zero_of_mean`,
+> `duality_relation_zero_of_mean`, `integral_mul_sub_eq_zero_of_martingale`. *Warum jetzt:* es
+> ist der nächste offene Punkt der gestellten Reihenfolge, und Schritt 5 hängt daran; durch die
+> Mittelwertform ist er eine Reduktion wie Teil 3, keine neue Rechnung.
