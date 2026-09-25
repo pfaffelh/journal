@@ -60979,3 +60979,109 @@ Donsker-Daten gibt — also die Rademacher-Instanz über `Measure.infinitePi`, d
 Tages dem Nutzer zur Entscheidung vorgelegt hat. Der direkte Weg ohne sie ginge über die Gaußsche
 Wärmeleitungsgleichung `∂ₜ 𝔼 f(x + X t) = (v/2) 𝔼 f''(x + X t)` und die Unabhängigkeit der Zuwächse;
 er ist teurer, braucht aber keine Entscheidung des Nutzers.
+
+### 2026-09-25, dritter Lauf des Tages — das benannte Ziel steht: **Mathlibs Brownsche Bewegung, mit `√v` skaliert, löst das Martingalproblem zu `brownianGeneratorPairs v`**, und zwar ohne Wärmeleitungsgleichung und **ohne** die Rademacher-Entscheidung: die Donsker-Daten werden aus den Zuwächsen von `X` selbst gelesen
+
+*Die acht Schritte der Identifikationsaufgabe sind seit dem ersten Lauf des Tages erledigt; dieser
+Lauf nimmt das im zweiten Lauf benannte Ziel. Neuer Abschnitt `BrownianSolution` am Ende von
+`MartingaleProblems/Suggested.lean` (Z. 38825 ff.). `check_master.py` gegen `94ef6b89544`:
+**0 Fehler, 0 veraltete Namen, 0 `sorry`**, Warnungen **18 / 38 / 36 / 76**, gegen den Anfang des
+Laufs unverändert; die sechs neuen Deklarationen bringen keine Warnung (auch einzeln über
+`dev_check_master.py` geprüft). `check_axioms_master.py` über alle sechs: `propext`,
+`Classical.choice`, `Quot.sound`. `check_duplicates.py`: 45 Treffer, unverändert.
+`upstream/master` steht weiter auf `09712d488fd`. Keine `README.md` angefaßt.*
+
+| Name | Aussage |
+| --- | --- |
+| `MeasureTheory.isStepPath_mul_sum_floor` | `r ↦ c · ∑ j < ⌊r b⌋₊, s j` ist für `0 < b` ein `IsStepPath`, also càdlàg |
+| `MeasureTheory.rescaledWalkPath` | der reskalierte Weg als Abbildung `Ω → D(ℝ≥0, ℝ)`; `hΦ` von Donsker gilt dafür mit `rfl` |
+| `MeasureTheory.measurable_rescaledWalkPath` | meßbar, wenn alle `ξ k` meßbar sind (`SkorokhodSpace.measurable_of_measurable_eval`) |
+| `MeasureTheory.cadlagPath`, `measurable_cadlagPath` | die Pfadabbildung eines Prozesses mit **lauter** càdlàg-Pfaden, meßbar bei meßbaren Koordinaten |
+| `MeasureTheory.map_sqrt_mul_sub_eq_gaussianReal` | `√v (X (k+1) − X k)` hat unter einem pre-Brownschen `X` das Gesetz `gaussianReal 0 v` |
+| `MeasureTheory.isCadlagMPSolution_of_isPreBrownianReal` | **`IsPreBrownianReal X P`, `∀ t, Measurable (X t)`, `∀ ω, IsCadlag (X · ω)`, `0 < v` ⟹ das Pfadgesetz von `√v · X` ist `IsCadlagMPSolution (brownianGeneratorPairs v)`** |
+| `MeasureTheory.map_eval_zero_map_cadlagPath_eq_dirac` | dieses Pfadgesetz startet in `0` |
+
+Zusammen mit `isBrownianReal_of_isCadlagMPSolution` ist damit die Äquivalenz „càdlàg-Lösung mit Start
+in `0` ⟺ skalierte Brownsche Bewegung" in beiden Richtungen bewiesen.
+
+#### Drei Befunde
+
+* **Die Entscheidung, die der Vorlauf als Preis nannte, fällt weg.** Der Vorlauf hatte gesagt, der
+  Weg über Donskers `ν₀` brauche Donsker-Daten, also die Rademacher-Instanz über
+  `Measure.infinitePi`, und die sei eine Entscheidung des Nutzers. Das stimmt nicht: die
+  Voraussetzung `IsPreBrownianReal X P` **liefert** die Daten, nämlich die Einheitszuwächse
+  `ξ k = √v (X (k+1) − X k)`. Unabhängig sind sie nach `ProbabilityTheory.HasIndepIncrements.nat`
+  (`Mathlib/Probability/Independence/Process/HasIndepIncrements/Basic.lean:61`, genau die Form mit
+  `ℕ`-Index, die Donsker verlangt) und `iIndepFun.comp`. Die Existenz von `X` ist Hypothese, die
+  Daten sind keine zusätzliche. Die Rademacher-Frage bleibt für eine **Existenz**aussage offen, für
+  diesen Satz spielt sie keine Rolle.
+* **Die Identifikation ist eine Zeile Mathlib-Definition.** `IsPreBrownianReal` *ist*
+  `∀ I, HasLaw (I.restrict X) (BrownianReal.projectiveFamily I)`, und zwar sowohl für `X` unter `P`
+  als auch für den skalierten Koordinatenprozeß unter `ν₀` (aus `isPreBrownianReal_of_isCadlagMPSolution`).
+  `HasLaw.integral_comp` zweimal und `SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq`
+  mit `T = univ` geben `P.map (cadlagPath …) = ν₀`. Ein Ext-Lemma der Gestalt `ext_of_…eval`, das
+  der Vorlauf vermißt hatte, gibt es in der Kette also doch, nur unter dem Namen `eq_of_…_evalPi_eq`
+  in `SkorokhodSpace` Meilenstein 8.
+* **Zum ersten Mal ein Zeuge für `Φ`.** In der ganzen Kette war der reskalierte Weg nur Hypothese
+  (`hΦm`, `hΦ`); `rescaledWalkPath` ist der erste Term dafür, und seine càdlàg-Eigenschaft läuft
+  über das vorhandene `IsStepPath.isCadlag`. Damit ist nebenbei belegt, daß die Voraussetzungen von
+  `exists_tendsto_map_rescaledWalk` auf Daten erfüllbar sind (Leerheitsprobe).
+
+**Was die Hypothesen sind und warum.** Verlangt ist `IsPreBrownianReal` und nicht `IsBrownianReal`,
+denn die Stetigkeit wird nicht gelesen (minimale Voraussetzung). Verlangt sind dafür **jeder** Pfad
+càdlàg und **meßbare** Koordinaten: die Pfadabbildung nach `D(ℝ≥0, ℝ)` muß total sein, und
+`IsPreBrownianReal` gibt nur `AEMeasurable`. Beides steht im Doc-Kommentar.
+
+**Was nicht dasteht:** eine Existenzaussage. Der Satz sagt, was Mathlibs Brownsche Bewegung ist, wenn
+es sie gibt; daß es sie gibt, sagt er nicht.
+
+**Nicht erledigt:** die angelegten Prüfbäume `~/Code/lean/mathlib-master/_check_1210235` und
+`_check_1213813`, dazu `_check_1217599` aus dem zweiten Teil (alle aus `--keep`), liegen außerhalb der freigegebenen Verzeichnisse und sind nicht
+geräumt.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **`MeasureTheory.isCadlagMPSolution_of_isBrownianReal`** — dieselbe Aussage für ein
+> `IsBrownianReal X P` mit meßbaren Koordinaten, **ohne** die Forderung, daß jeder Pfad càdlàg ist.
+
+*Worauf es ruht:* `IsBrownianReal.cont` gibt stetige Pfade nur fast sicher. Man wählt mit
+`MeasureTheory.exists_measurable_superset_of_null` eine meßbare Nullmenge `N`, die alle
+unstetigen Pfade enthält, und setzt `X' t ω = if ω ∈ N then 0 else X t ω`. Dann sind die
+Koordinaten von `X'` meßbar, **jeder** Pfad von `X'` ist stetig oder null und damit càdlàg, und
+`IsPreBrownianReal.congr` (`Mathlib/Probability/BrownianMotion/Basic.lean:80`) überträgt die
+Eigenschaft von `X` auf `X'`. Danach ist `isCadlagMPSolution_of_isPreBrownianReal` auf `X'`
+anzuwenden. *Warum jetzt:* die Aussage des heutigen Laufs verlangt eine Totalität, die Mathlibs
+Prädikat nicht mitbringt; mit dieser Modifikation steht die Umkehrung in Mathlibs eigenem Wortlaut.
+Geschätzt ein halber Lauf.
+
+### Derselbe Lauf, zweiter Teil — das eben benannte Ziel steht ebenfalls, im ersten Durchlauf und wie beschrieben: `MeasureTheory.isCadlagMPSolution_of_isBrownianReal`
+
+*Im Abschnitt `BrownianSolution`, als letzte Deklaration. `check_master.py`: **0 Fehler, 0 veraltete
+Namen, 0 `sorry`**, Warnungen **18 / 38 / 36 / 76**, unverändert (die zwei `if_pos`/`if_neg` des
+Entwurfs sind vor dem Einhängen durch `ite_eq_left`/`ite_eq_right` ersetzt). Axiome: `propext`,
+`Classical.choice`, `Quot.sound`.*
+
+**Die Aussage:** zu `IsBrownianReal X P` mit meßbaren Koordinaten und `0 < v` gibt es `X'` mit
+`∀ᵐ ω, ∀ t, X' t ω = X t ω` (eine Nullmenge für **alle** Zeiten, nicht je Zeit eine), meßbaren
+Koordinaten und lauter càdlàg-Pfaden, deren skaliertes Pfadgesetz das Martingalproblem löst. Der
+Beweis ist genau der angesagte: `exists_measurable_superset_of_null` auf `ae_iff.1 hX.cont`,
+`Measurable.ite`, `IsPreBrownianReal.congr`. Nichts davon brauchte mehr als die Zeilen der Ansage.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **`MeasureTheory.map_cadlagPath_eq_of_isCadlagMPSolution`** — *jede* càdlàg-Lösung `ν` zu
+> `brownianGeneratorPairs v` mit Start in `0` ist **gleich** dem Pfadgesetz `P.map (cadlagPath (√v · X))`
+> einer beliebigen pre-Brownschen Bewegung `X` mit meßbaren Koordinaten und càdlàg-Pfaden; und
+> daraus **`MeasureTheory.tendsto_map_rescaledWalk_map_cadlagPath`**: Donskers reskalierte Wege
+> konvergieren gegen **dieses** Gesetz, also Donsker in der klassischen Fassung „gegen das
+> Wienermaß".
+
+*Worauf es ruht:* der Kern steht schon, nämlich im Schlußteil von
+`isCadlagMPSolution_of_isPreBrownianReal`, wo die Gleichheit `P.map G = ν₀` für Donskers `ν₀`
+bewiesen wird. Dieses Argument liest von `ν₀` nichts als `isPreBrownianReal_of_isCadlagMPSolution`,
+gilt also für jede Lösung `ν` mit Start in `0`. Herauszuziehen ist es als eigenes Lemma, danach
+ist `isCadlagMPSolution_of_isPreBrownianReal` darauf umzustellen, und die Konvergenzaussage ist
+`exists_tendsto_map_rescaledWalk` mit dieser Gleichheit eingesetzt. *Warum jetzt:* bisher
+konvergieren die Wege gegen „ein" `ν₀`, das nur durch eine Eigenschaft beschrieben ist; mit dem
+Lemma ist der Limes ein benanntes Maß aus Mathlibs Begriffen. *Ehrlich zu sagen:* auch das ist
+keine Existenzaussage, denn `X` bleibt Hypothese. Geschätzt ein halber Lauf.

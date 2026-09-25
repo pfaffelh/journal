@@ -38814,4 +38814,249 @@ theorem isBrownianReal_of_isCadlagMPSolution {v : ℝ} (hv : 0 < v)
     (Eventually.of_forall fun z ↦
       z.isCadlag.continuous_comp (continuous_const.mul continuous_id))
 
+/-! ### Mathlib's Brownian motion solves the martingale problem
+
+The converse of `MeasureTheory.isBrownianReal_of_isCadlagMPSolution`: the path law
+of a scaled pre-Brownian motion with càdlàg paths solves the martingale problem of
+`brownianGeneratorPairs v`.  The proof reads the solution off Donsker's theorem on
+the increments of the process itself and identifies it through the finite
+dimensional laws. -/
+
+section BrownianSolution
+
+variable {Ω : Type*}
+
+/-- **The rescaled walk is a step path**: `r ↦ c · ∑ j < ⌊r b⌋₊, s j` is constant on
+every cell `[k / b, (k + 1) / b)`.  To the right of `x` the floor index stays at
+`⌊x b⌋₊` below `(⌊x b⌋₊ + 1) / b`; to the left of `x > 0` it is `⌈x b⌉₊ − 1` on
+`((⌈x b⌉₊ − 1) / b, x)`, and at `x = 0` the left neighbourhood filter is `⊥`.
+`IsStepPath.isCadlag` then makes the walk a point of `D(ℝ≥0, ℝ)`. -/
+theorem isStepPath_mul_sum_floor (c : ℝ) {b : ℝ≥0} (hb : 0 < b) (s : ℕ → ℝ) :
+    IsStepPath (fun r : ℝ≥0 ↦ c * ∑ j ∈ Finset.range ⌊r * b⌋₊, s j) := by
+  refine ⟨fun x ↦ ?_, fun x ↦ ?_⟩
+  · have hx : x < ((⌊x * b⌋₊ : ℝ≥0) + 1) / b := by
+      rw [lt_div_iff₀ hb]
+      exact Nat.lt_floor_add_one _
+    filter_upwards [self_mem_nhdsWithin, nhdsWithin_le_nhds (Iio_mem_nhds hx)] with y hy hy'
+    have h1 : ⌊y * b⌋₊ = ⌊x * b⌋₊ := by
+      refine le_antisymm ?_ (Nat.floor_le_floor (mul_le_mul_of_nonneg_right hy zero_le))
+      have : y * b < (⌊x * b⌋₊ : ℝ≥0) + 1 := (lt_div_iff₀ hb).1 hy'
+      exact Nat.lt_add_one_iff.1 ((Nat.floor_lt zero_le).2 (by exact_mod_cast this))
+    rw [h1]
+  · rcases eq_zero_or_pos x with rfl | hx
+    · refine ⟨0, ?_⟩
+      have : Set.Iio (0 : ℝ≥0) = ∅ :=
+        Set.eq_empty_of_forall_notMem fun z hz ↦ not_lt.2 (zero_le : (0 : ℝ≥0) ≤ z) hz
+      rw [this, nhdsWithin_empty]
+      exact Filter.eventually_bot
+    refine ⟨c * ∑ j ∈ Finset.range (⌈x * b⌉₊ - 1), s j, ?_⟩
+    have hpos : 0 < ⌈x * b⌉₊ := Nat.ceil_pos.2 (by positivity)
+    have h' : ((⌈x * b⌉₊ - 1 : ℕ) : ℝ≥0) + 1 = (⌈x * b⌉₊ : ℝ≥0) := by
+      rw [← Nat.cast_add_one, Nat.sub_add_cancel hpos]
+    have hk1 : (((⌈x * b⌉₊ - 1 : ℕ) : ℝ≥0)) < x * b := by
+      have := Nat.ceil_lt_add_one (zero_le : (0 : ℝ≥0) ≤ x * b)
+      rw [← h'] at this
+      exact lt_of_add_lt_add_right this
+    have hk2 : x * b ≤ (((⌈x * b⌉₊ - 1 : ℕ) : ℝ≥0)) + 1 := h' ▸ Nat.le_ceil _
+    have hlt : (((⌈x * b⌉₊ - 1 : ℕ) : ℝ≥0)) / b < x := (div_lt_iff₀ hb).2 hk1
+    filter_upwards [Ioo_mem_nhdsLT hlt] with y hy
+    have h1 : ⌊y * b⌋₊ = ⌈x * b⌉₊ - 1 := by
+      rw [Nat.floor_eq_iff zero_le]
+      refine ⟨((div_lt_iff₀ hb).1 hy.1).le, ?_⟩
+      exact (mul_lt_mul_of_pos_right hy.2 hb).trans_le hk2
+    rw [h1]
+
+/-- **The rescaled walk as a random element of the path space**: the `Φ n` that
+`MeasureTheory.exists_tendsto_map_rescaledWalk` asks for, with its hypothesis `hΦ`
+holding by `rfl`.  Until now `Φ` was only ever a hypothesis; this is a witness. -/
+noncomputable def rescaledWalkPath (ξ : ℕ → Ω → ℝ) (n : ℕ) (ω : Ω) : D(ℝ≥0, ℝ) :=
+  ⟨fun r : ℝ≥0 ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊r * ((n : ℝ≥0) + 1)⌋₊, ξ j ω,
+    (isStepPath_mul_sum_floor _ (by positivity) _).isCadlag⟩
+
+theorem measurable_rescaledWalkPath {mΩ : MeasurableSpace Ω} {ξ : ℕ → Ω → ℝ}
+    (hξ : ∀ k, Measurable (ξ k)) (n : ℕ) : Measurable (rescaledWalkPath ξ n) :=
+  SkorokhodSpace.measurable_of_measurable_eval fun _ ↦
+    (Finset.measurable_sum _ fun j _ ↦ hξ j).const_mul _
+
+/-- **The path map of a process all of whose paths are càdlàg.** -/
+noncomputable def cadlagPath (X : ℝ≥0 → Ω → ℝ) (hc : ∀ ω, IsCadlag (X · ω)) (ω : Ω) :
+    D(ℝ≥0, ℝ) :=
+  ⟨(X · ω), hc ω⟩
+
+theorem measurable_cadlagPath {mΩ : MeasurableSpace Ω} {X : ℝ≥0 → Ω → ℝ}
+    (hc : ∀ ω, IsCadlag (X · ω)) (hm : ∀ t, Measurable (X t)) :
+    Measurable (cadlagPath X hc) :=
+  SkorokhodSpace.measurable_of_measurable_eval hm
+
+/-- **The unit increments of a pre-Brownian motion, scaled by `√v`, are
+`gaussianReal 0 v`**: `ProbabilityTheory.IsPreBrownianReal.hasLaw_sub` at the
+consecutive integers, where `nndist` is `1`, then
+`ProbabilityTheory.gaussianReal_map_const_mul`. -/
+theorem map_sqrt_mul_sub_eq_gaussianReal {mΩ : MeasurableSpace Ω} {P : Measure Ω}
+    {X : ℝ≥0 → Ω → ℝ} (hX : IsPreBrownianReal X P) (hm : ∀ t, Measurable (X t))
+    {v : ℝ} (hv : 0 ≤ v) (k : ℕ) :
+    P.map (fun ω ↦ Real.sqrt v * (X ((k + 1 : ℕ) : ℝ≥0) ω - X (k : ℝ≥0) ω))
+      = gaussianReal 0 v.toNNReal := by
+  have hd := (hX.hasLaw_sub ((k + 1 : ℕ) : ℝ≥0) (k : ℝ≥0)).map_eq
+  have h1 : nndist (((k + 1 : ℕ) : ℝ≥0)).1 ((k : ℝ≥0)).1 = 1 := by
+    ext; simp
+  rw [h1] at hd
+  have hmeas : Measurable (X ((k + 1 : ℕ) : ℝ≥0) - X (k : ℝ≥0)) := (hm _).sub (hm _)
+  rw [show (fun ω ↦ Real.sqrt v * (X ((k + 1 : ℕ) : ℝ≥0) ω - X (k : ℝ≥0) ω))
+      = (fun y ↦ Real.sqrt v * y) ∘ (X ((k + 1 : ℕ) : ℝ≥0) - X (k : ℝ≥0)) from rfl,
+    ← Measure.map_map (measurable_const_mul _) hmeas, hd, gaussianReal_map_const_mul]
+  congr 1
+  · simp
+  · ext; simp [Real.sq_sqrt hv, hv]
+
+/-- **Mathlib's Brownian motion, scaled by `√v`, solves the martingale problem of
+`brownianGeneratorPairs v`.**  For a process `X` with
+`ProbabilityTheory.IsPreBrownianReal X P`, measurable coordinates and càdlàg paths,
+the path law of `t ↦ √v · X t` on `D(ℝ≥0, ℝ)` is a càdlàg solution.  With
+`MeasureTheory.isBrownianReal_of_isCadlagMPSolution` this is the equivalence
+"càdlàg solution started at `0` ⟺ scaled Brownian motion"; the start is
+`MeasureTheory.map_eval_zero_map_cadlagPath_eq_dirac`.
+
+**No heat equation.**  The unit increments `ξ k = √v (X (k+1) − X k)` of `X`
+itself are Donsker data: independent by `ProbabilityTheory.HasIndepIncrements.nat`
+(`Mathlib/Probability/Independence/Process/HasIndepIncrements/Basic.lean:61`) and
+`ProbabilityTheory.iIndepFun.comp`, each `gaussianReal 0 v`
+(`MeasureTheory.map_sqrt_mul_sub_eq_gaussianReal`), centred with second moment `v`.
+`MeasureTheory.exists_tendsto_map_rescaledWalk` on
+`MeasureTheory.rescaledWalkPath` then gives a solution `ν₀`, and `ν₀` is the path
+law of `√v · X`: under both the scaled coordinates have the finite dimensional laws
+`ProbabilityTheory.BrownianReal.projectiveFamily`, which is what
+`ProbabilityTheory.IsPreBrownianReal` *is*, and
+`SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq` identifies two laws
+on `D(ℝ≥0, ℝ)` from their finite dimensional distributions.  The existence of `X`
+is the hypothesis; the Donsker data are not an extra one, they are read off `X`.
+
+**Only `IsPreBrownianReal` is asked**, not `IsBrownianReal`: the continuity of
+the paths is not read, and the càdlàg paths, which `IsBrownianReal` would give
+only almost surely, are asked of *every* path because the path map must be total.
+`Measurable (X t)` is asked because `IsPreBrownianReal` gives only
+`AEMeasurable`, and a map into `D(ℝ≥0, ℝ)` is shown measurable through all its
+coordinates (`SkorokhodSpace.measurable_of_measurable_eval`). -/
+theorem isCadlagMPSolution_of_isPreBrownianReal {mΩ : MeasurableSpace Ω} {P : Measure Ω}
+    {X : ℝ≥0 → Ω → ℝ} (hX : IsPreBrownianReal X P) (hm : ∀ t, Measurable (X t))
+    (hc : ∀ ω, IsCadlag (X · ω)) {v : ℝ} (hv : 0 < v) :
+    IsCadlagMPSolution (brownianGeneratorPairs v)
+      (P.map (cadlagPath (fun t ω ↦ Real.sqrt v * X t ω)
+        fun ω ↦ (hc ω).continuous_comp (continuous_const.mul continuous_id))) := by
+  have : IsProbabilityMeasure P := hX.isGaussianProcess.isProbabilityMeasure
+  set ξ : ℕ → Ω → ℝ := fun k ω ↦ Real.sqrt v * (X ((k + 1 : ℕ) : ℝ≥0) ω - X (k : ℝ≥0) ω)
+    with hξdef
+  have hξm : ∀ k, Measurable (ξ k) := fun k ↦ ((hm _).sub (hm _)).const_mul _
+  have hind : iIndepFun ξ P :=
+    (hX.hasIndepIncrements.nat (t := fun k : ℕ ↦ (k : ℝ≥0)) Nat.mono_cast).comp
+      (fun _ y ↦ Real.sqrt v * y) fun _ ↦ measurable_const_mul _
+  have hlaw0 := map_sqrt_mul_sub_eq_gaussianReal hX hm hv.le
+  have hlaw : ∀ k, P.map (ξ k) = P.map (ξ 0) := fun k ↦ (hlaw0 k).trans (hlaw0 0).symm
+  have hL : HasLaw (ξ 0) (gaussianReal 0 v.toNNReal) P := ⟨(hξm 0).aemeasurable, hlaw0 0⟩
+  have hcent : ∫ ω, ξ 0 ω ∂P = 0 := by
+    rw [hL.integral_eq, integral_id_gaussianReal]
+  have hsq : ∫ ω, ξ 0 ω ^ 2 ∂P = v := by
+    rw [← variance_of_integral_eq_zero (hξm 0).aemeasurable hcent, hL.variance_eq,
+      variance_id_gaussianReal, Real.coe_toNNReal _ hv.le]
+  have hLp : MemLp (ξ 0) 2 P := by
+    have := memLp_id_gaussianReal (μ := 0) (v := v.toNNReal) 2
+    rw [← hlaw0 0] at this
+    exact (memLp_map_measure_iff aestronglyMeasurable_id (hξm 0).aemeasurable).1 this
+  obtain ⟨ν₀, hsol, hinit, -⟩ := exists_tendsto_map_rescaledWalk
+    (fun k ↦ (hξm k).stronglyMeasurable) hind hcent hsq hLp hlaw
+    (measurable_rescaledWalkPath hξm) (fun n ω ↦ rfl)
+  set G := cadlagPath (fun t ω ↦ Real.sqrt v * X t ω)
+    fun ω ↦ (hc ω).continuous_comp (continuous_const.mul continuous_id)
+  have hG : Measurable G := measurable_cadlagPath _ fun t ↦ (hm t).const_mul _
+  have hpre := isPreBrownianReal_of_isCadlagMPSolution hv (ν₀ : Measure D(ℝ≥0, ℝ)) hsol
+    (by simpa using hinit)
+  have hsv : Real.sqrt v ≠ 0 := (Real.sqrt_pos.2 hv).ne'
+  suffices h : P.map G = (ν₀ : Measure D(ℝ≥0, ℝ)) by rw [h]; exact hsol
+  refine SkorokhodSpace.eq_of_forall_dense_forall_integral_evalPi_eq dense_univ _ _
+    fun s _ F ↦ ?_
+  set H : (s → ℝ) → ℝ := fun y ↦ ∏ t : s, F t (Real.sqrt v * y t)
+  have hH : Continuous H := continuous_finsetProd _ fun t _ ↦
+    (F t).continuous.comp (continuous_const.mul (continuous_apply t))
+  have e1 := (hpre.hasLaw s).integral_comp hH.aestronglyMeasurable
+  have e2 := (hX.hasLaw s).integral_comp hH.aestronglyMeasurable
+  calc ∫ z, ∏ t ∈ s, F t (z.toFun t) ∂(P.map G)
+      = ∫ ω, ∏ t ∈ s, F t (Real.sqrt v * X t ω) ∂P := by
+        have hmF : Measurable fun z : D(ℝ≥0, ℝ) ↦ ∏ t ∈ s, F t (z.toFun t) :=
+          Finset.measurable_prod _ fun t _ ↦
+            (F t).continuous.measurable.comp (SkorokhodSpace.measurable_eval t)
+        rw [integral_map hG.aemeasurable hmF.aestronglyMeasurable]
+        rfl
+    _ = ∫ ω, (H ∘ fun ω ↦ s.restrict (X · ω)) ω ∂P := by
+        refine integral_congr_ae (Eventually.of_forall fun ω ↦ ?_)
+        simp only [H, Function.comp_apply, Finset.restrict]
+        exact (Finset.prod_coe_sort s (fun t ↦ F t (Real.sqrt v * X t ω))).symm
+    _ = ∫ y, H y ∂BrownianReal.projectiveFamily s := e2
+    _ = ∫ z, (H ∘ fun z : D(ℝ≥0, ℝ) ↦ s.restrict fun t ↦ (Real.sqrt v)⁻¹ * z.toFun t) z
+          ∂(ν₀ : Measure D(ℝ≥0, ℝ)) := e1.symm
+    _ = ∫ z, ∏ t ∈ s, F t (z.toFun t) ∂(ν₀ : Measure D(ℝ≥0, ℝ)) := by
+        refine integral_congr_ae (Eventually.of_forall fun z ↦ ?_)
+        simp only [H, Function.comp_apply, Finset.restrict, mul_inv_cancel_left₀ hsv]
+        exact Finset.prod_coe_sort s (fun t ↦ F t (z.toFun t))
+
+/-- **The path law of `√v · X` starts at `0`**, from
+`ProbabilityTheory.IsPreBrownianReal.hasLaw_eval` at `0`, which is
+`gaussianReal 0 0 = dirac 0`. -/
+theorem map_eval_zero_map_cadlagPath_eq_dirac {mΩ : MeasurableSpace Ω} {P : Measure Ω}
+    {X : ℝ≥0 → Ω → ℝ} (hX : IsPreBrownianReal X P) (hm : ∀ t, Measurable (X t))
+    (hc : ∀ ω, IsCadlag (X · ω)) (v : ℝ) :
+    (P.map (cadlagPath (fun t ω ↦ Real.sqrt v * X t ω)
+        fun ω ↦ (hc ω).continuous_comp (continuous_const.mul continuous_id))).map
+      (fun z : D(ℝ≥0, ℝ) ↦ z.toFun 0) = Measure.dirac 0 := by
+  rw [Measure.map_map (SkorokhodSpace.measurable_eval 0)
+    (measurable_cadlagPath _ fun t ↦ (hm t).const_mul _)]
+  change P.map ((fun y ↦ Real.sqrt v * y) ∘ X 0) = _
+  rw [← Measure.map_map (measurable_const_mul _) (hm 0), (hX.hasLaw_eval 0).map_eq,
+    gaussianReal_map_const_mul]
+  simp
+
+/-- **Mathlib's Brownian motion solves the martingale problem, in Mathlib's own
+wording.**  For `ProbabilityTheory.IsBrownianReal X P` with measurable coordinates
+and `0 < v` there is a process `X'` which agrees with `X` at all times outside one
+null set, has measurable coordinates and **every** path càdlàg, and whose scaled
+path law `√v · X'` solves the martingale problem of `brownianGeneratorPairs v`.
+
+`MeasureTheory.isCadlagMPSolution_of_isPreBrownianReal` asks for càdlàg paths
+everywhere, because the path map into `D(ℝ≥0, ℝ)` must be total, and the field
+`cont` gives continuity only almost surely.  The gap is one null set:
+`MeasureTheory.exists_measurable_superset_of_null` puts the discontinuous paths
+into a measurable null set `N`, `X'` is `0` on `N` and `X` off it, so its
+coordinates stay measurable and each of its paths is continuous or constant, and
+`ProbabilityTheory.IsPreBrownianReal.congr`
+(`Mathlib/Probability/BrownianMotion/Basic.lean:80`) carries the finite
+dimensional laws across. -/
+theorem isCadlagMPSolution_of_isBrownianReal {mΩ : MeasurableSpace Ω} {P : Measure Ω}
+    {X : ℝ≥0 → Ω → ℝ} (hX : IsBrownianReal X P) (hm : ∀ t, Measurable (X t))
+    {v : ℝ} (hv : 0 < v) :
+    ∃ (X' : ℝ≥0 → Ω → ℝ) (hc : ∀ ω, IsCadlag (X' · ω)),
+      (∀ᵐ ω ∂P, ∀ t, X' t ω = X t ω) ∧ (∀ t, Measurable (X' t)) ∧
+      IsCadlagMPSolution (brownianGeneratorPairs v)
+        (P.map (cadlagPath (fun t ω ↦ Real.sqrt v * X' t ω)
+          fun ω ↦ (hc ω).continuous_comp (continuous_const.mul continuous_id))) := by
+  obtain ⟨N, hsub, hNm, hN0⟩ := exists_measurable_superset_of_null (ae_iff.1 hX.cont)
+  classical
+  set X' : ℝ≥0 → Ω → ℝ := fun t ω ↦ if ω ∈ N then 0 else X t ω
+  have hc : ∀ ω, IsCadlag (X' · ω) := by
+    intro ω
+    by_cases hω : ω ∈ N
+    · simp only [X', ite_eq_left hω]
+      exact IsCadlag.const
+    · simp only [X', ite_eq_right hω]
+      exact (not_not.1 fun h ↦ hω (hsub h)).isCadlag
+  have hae : ∀ᵐ ω ∂P, ∀ t, X' t ω = X t ω := by
+    filter_upwards [measure_eq_zero_iff_ae_notMem.1 hN0] with ω hω t
+    simp [X', hω]
+  have hm' : ∀ t, Measurable (X' t) := fun t ↦ Measurable.ite hNm measurable_const (hm t)
+  have hpre : IsPreBrownianReal X' P :=
+    hX.toIsPreBrownianReal.congr fun t ↦ by
+      filter_upwards [hae] with ω hω using (hω t).symm
+  exact ⟨X', hc, hae, hm', isCadlagMPSolution_of_isPreBrownianReal hpre hm' hc hv⟩
+
+end BrownianSolution
+
 end MeasureTheory
