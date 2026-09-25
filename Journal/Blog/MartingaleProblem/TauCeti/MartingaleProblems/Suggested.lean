@@ -16263,44 +16263,25 @@ variable {ι : Type*} [Preorder ι] [OrderBot ι] [AddCommMonoid ι] [AddLeftMon
 variable {E : Type*} [MeasurableSpace E]
 variable {F : Type*} [mF : MeasurableSpace F] {π : ι → F → E}
 
-/-- **`lem:propagation`**: under a shift system, uniqueness of the one dimensional laws of the
-shifted problems propagates agreement.
+omit [AddLeftMono ι] in
+/-- **`lem:propagation` with the restart as a hypothesis.**  `𝓜 r` is any family of measures on
+the path space -- the solutions of the problem posed at `r`, global or local -- and `hrestart` is
+the one property of it that the proof reads: reweighting a member of `N` by a bounded
+non-negative density of the past at `s` and shifting by `s` lands in `𝓜 s`.
 
-This is the statement that turns `eq_of_propagatesAgreement` -- which knows nothing about
-martingales -- into `thm:absuniq`(b).  Its hypothesis `honedim` is `eq:absonedim` of the
-manuscript: for **every** shift `r`, two probability solutions of the problem posed at `r` with
-the same law at `⊥` have the same law at every time.  The quantifier over `r` cannot be dropped
-to `r = ⊥`; the induction of `prop:uniqfromprop` consumes the shifted problems.
-
-Three points of the proof are worth recording.
-
-*The normalisation is free.*  The manuscript takes `h ≡ 1` to get `c = E^P[Z] = E^Q[Z]`, splits
-off `c = 0`, and divides.  Here `c` is `weightedLaw_univ` applied to the hypothesis, the case
-`c = 0` is `measure_univ_eq_zero` on the density, and the division is `weightedLaw_const_mul`.
-It is the only reason the proof is longer than the restart it rests on.
-
-*The determining set does not appear.*  The manuscript compares `E[Z h(π_s)]` against all
-`h ∈ Bdd(E)`; `PropagatesAgreement` compares measures, and `restart_canonical` identifies the
-conditional expectation against all sets of the past.  Neither `def:canonical`(ii) nor the
-determining set occurs.
-
-*Where (T4) sits.*  Only in `hsub`, and only in the last step: `π u ∘ θ s = π (s + u)`, so
-reading the shifted problem at `u` reads the original at `t = s + u`.  Everything before that is
-true for a `t` that is not a shift of `s` -- it is the *conclusion* that would then speak of the
-wrong time. -/
-theorem propagatesAgreement_of_unique_onedim
-    {S : Shift F π} {𝓕₀ : Filtration ι mF} {𝓧₀ : ι → Set (ι → F → 𝕂)}
-    (hS : IsShiftSystem S 𝓕₀ 𝓧₀)
-    (hbot : (⊥ : ι) = 0) (hadd : ∀ r u : ι, r ≤ r + u)
-    (hsub : ∀ s t : ι, s ≤ t → ∃ u : ι, t = s + u)
+This is the sentence of `thm:localuniq` that "`prop:uniqfromprop` applies as it stands": the
+global statement `propagatesAgreement_of_unique_onedim` takes `𝓜 r = M(𝓧₀ r)` and `restart`, the
+local one takes `𝓜 r = M_loc(𝓧₀ r)` and `localRestart`.  No shift system and no martingale
+problem occur in the statement. -/
+theorem propagatesAgreement_of_restart {S : Shift F π} {𝓕₀ : Filtration ι mF}
+    (hbot : (⊥ : ι) = 0) (hsub : ∀ s t : ι, s ≤ t → ∃ u : ι, t = s + u)
     (hπ : ∀ t : ι, Measurable (π t))
-    {N : Set (Measure F)}
-    (hNprob : ∀ P ∈ N, IsProbabilityMeasure P)
-    (hNsol : ∀ P ∈ N, IsMPSolution (𝓧₀ 0) 𝓕₀ P)
-    (hNint : ∀ P ∈ N, ∀ Y ∈ 𝓧₀ 0, ∀ u : ι, Integrable (Y u) P)
+    {N : Set (Measure F)} (hNprob : ∀ P ∈ N, IsProbabilityMeasure P)
+    {𝓜 : ι → Set (Measure F)}
+    (hrestart : ∀ P ∈ N, ∀ s : ι, ∀ Z : F → ℝ, (∀ f, 0 ≤ Z f) → (∃ b, ∀ f, Z f ≤ b) →
+      StronglyMeasurable[𝓕₀ s] Z → (P.withDensity fun f ↦ ENNReal.ofReal (Z f)).map (S.θ s) ∈ 𝓜 s)
     (honedim : ∀ r : ι, ∀ R R' : Measure F, IsProbabilityMeasure R → IsProbabilityMeasure R' →
-      IsMPSolution (𝓧₀ r) 𝓕₀ R → IsMPSolution (𝓧₀ r) 𝓕₀ R' →
-      R.map (π ⊥) = R'.map (π ⊥) → ∀ u : ι, R.map (π u) = R'.map (π u)) :
+      R ∈ 𝓜 r → R' ∈ 𝓜 r → R.map (π ⊥) = R'.map (π ⊥) → ∀ u : ι, R.map (π u) = R'.map (π u)) :
     PropagatesAgreement 𝓕₀ π N := by
   intro P hP Q hQ s t hst Z hZ0 hZb hZm hagree
   haveI hPp : IsProbabilityMeasure P := hNprob P hP
@@ -16358,12 +16339,10 @@ theorem propagatesAgreement_of_unique_onedim
       have h1 : ∫ f, Z' f ∂R = a⁻¹ * ∫ f, Z f ∂R := by
         rw [hZ'def]; exact integral_const_mul _ _
       rw [h1, hR, inv_mul_cancel₀ (ne_of_gt hapos)]
-    have hsolP : IsMPSolution (𝓧₀ s) 𝓕₀
-        ((P.withDensity fun f ↦ ENNReal.ofReal (Z' f)).map (S.θ s)) :=
-      restart_canonical hS (hNsol P hP) (hNint P hP) s (hadd s) hZ'0 hZ'b hZ'm
-    have hsolQ : IsMPSolution (𝓧₀ s) 𝓕₀
-        ((Q.withDensity fun f ↦ ENNReal.ofReal (Z' f)).map (S.θ s)) :=
-      restart_canonical hS (hNsol Q hQ) (hNint Q hQ) s (hadd s) hZ'0 hZ'b hZ'm
+    have hsolP : (P.withDensity fun f ↦ ENNReal.ofReal (Z' f)).map (S.θ s) ∈ 𝓜 s :=
+      hrestart P hP s Z' hZ'0 hZ'b hZ'm
+    have hsolQ : (Q.withDensity fun f ↦ ENNReal.ofReal (Z' f)).map (S.θ s) ∈ 𝓜 s :=
+      hrestart Q hQ s Z' hZ'0 hZ'b hZ'm
     have hprobP : IsProbabilityMeasure
         ((P.withDensity fun f ↦ ENNReal.ofReal (Z' f)).map (S.θ s)) :=
       isProbabilityMeasure_map_withDensity_ofReal (S.measurable s) hZ'meas hZ'0 hZ'c
@@ -16402,6 +16381,52 @@ theorem propagatesAgreement_of_unique_onedim
     rw [← mul_assoc, ← mul_assoc, ← ENNReal.ofReal_mul (le_of_lt hapos),
       mul_inv_cancel₀ (ne_of_gt hapos), ENNReal.ofReal_one, one_mul, one_mul] at h2
     exact h2
+
+
+/-- **`lem:propagation`**: under a shift system, uniqueness of the one dimensional laws of the
+shifted problems propagates agreement.
+
+This is the statement that turns `eq_of_propagatesAgreement` -- which knows nothing about
+martingales -- into `thm:absuniq`(b).  Its hypothesis `honedim` is `eq:absonedim` of the
+manuscript: for **every** shift `r`, two probability solutions of the problem posed at `r` with
+the same law at `⊥` have the same law at every time.  The quantifier over `r` cannot be dropped
+to `r = ⊥`; the induction of `prop:uniqfromprop` consumes the shifted problems.
+
+Three points of the proof are worth recording.
+
+*The normalisation is free.*  The manuscript takes `h ≡ 1` to get `c = E^P[Z] = E^Q[Z]`, splits
+off `c = 0`, and divides.  Here `c` is `weightedLaw_univ` applied to the hypothesis, the case
+`c = 0` is `measure_univ_eq_zero` on the density, and the division is `weightedLaw_const_mul`.
+It is the only reason the proof is longer than the restart it rests on.
+
+*The determining set does not appear.*  The manuscript compares `E[Z h(π_s)]` against all
+`h ∈ Bdd(E)`; `PropagatesAgreement` compares measures, and `restart_canonical` identifies the
+conditional expectation against all sets of the past.  Neither `def:canonical`(ii) nor the
+determining set occurs.
+
+*Where (T4) sits.*  Only in `hsub`, and only in the last step: `π u ∘ θ s = π (s + u)`, so
+reading the shifted problem at `u` reads the original at `t = s + u`.  Everything before that is
+true for a `t` that is not a shift of `s` -- it is the *conclusion* that would then speak of the
+wrong time. -/
+theorem propagatesAgreement_of_unique_onedim
+    {S : Shift F π} {𝓕₀ : Filtration ι mF} {𝓧₀ : ι → Set (ι → F → 𝕂)}
+    (hS : IsShiftSystem S 𝓕₀ 𝓧₀)
+    (hbot : (⊥ : ι) = 0) (hadd : ∀ r u : ι, r ≤ r + u)
+    (hsub : ∀ s t : ι, s ≤ t → ∃ u : ι, t = s + u)
+    (hπ : ∀ t : ι, Measurable (π t))
+    {N : Set (Measure F)}
+    (hNprob : ∀ P ∈ N, IsProbabilityMeasure P)
+    (hNsol : ∀ P ∈ N, IsMPSolution (𝓧₀ 0) 𝓕₀ P)
+    (hNint : ∀ P ∈ N, ∀ Y ∈ 𝓧₀ 0, ∀ u : ι, Integrable (Y u) P)
+    (honedim : ∀ r : ι, ∀ R R' : Measure F, IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      IsMPSolution (𝓧₀ r) 𝓕₀ R → IsMPSolution (𝓧₀ r) 𝓕₀ R' →
+      R.map (π ⊥) = R'.map (π ⊥) → ∀ u : ι, R.map (π u) = R'.map (π u)) :
+    PropagatesAgreement 𝓕₀ π N :=
+  propagatesAgreement_of_restart hbot hsub hπ hNprob
+    (𝓜 := fun r ↦ {R | IsMPSolution (𝓧₀ r) 𝓕₀ R})
+    (fun P hP s _ hZ0 hZb hZm ↦ have := hNprob P hP
+      restart_canonical hS (hNsol P hP) (hNint P hP) s (hadd s) hZ0 hZb hZm)
+    honedim
 
 end PropagationFromOnedim
 
@@ -16548,30 +16573,23 @@ omit [Preorder ι] [OrderBot ι] [AddCommMonoid ι] [AddLeftMono ι] mF in
 theorem stateSigma_eq_comap (π : ι → F → E) (X : Ω → F) (r : ι) :
     stateSigma π X r = MeasurableSpace.comap (fun ω ↦ π r (X ω)) inferInstance := rfl
 
-/-- **`thm:absuniq`(a)**: if the one dimensional laws of the problem posed at `r` are determined
-by the initial law, then every solution is Markov at `r` -- in general time inhomogeneously so.
-
-The hypotheses are those of `restart`, which is applied twice, together with `honedim` at the
-single shift `r`.  `hadapt` is the adaptedness of the coordinate maps, which supplies both the
-measurability of `π u` and the `𝓖 r`-measurability of the state `X r`; `hbot` identifies the
-initial time of the shifted problem with the neutral element of the shift.
-
-Note what is **absent**: no linear order, no (T4), no determining set, no topology on `E`, and no
-hypothesis that `P` is the law of the path -- `X` is an arbitrary measurable process, which is
-`rem:restarttwolevel` of the manuscript. -/
-theorem isMarkov_of_unique_onedim
-    {S : Shift F π} {𝓕₀ : Filtration ι mF} {𝓧₀ : ι → Set (ι → F → 𝕂)}
-    (hS : IsShiftSystem S 𝓕₀ 𝓧₀)
-    (hbot : (⊥ : ι) = 0) (hadd : ∀ r u : ι, r ≤ r + u)
+omit [AddLeftMono ι] in
+/-- **`thm:absuniq`(a) with the restart as a hypothesis.**  `𝓜` is any family of measures on
+the path space and `hrestart` the one property of it the proof reads: every bounded non-negative
+reweighting of `P` by a density of the past at `r`, transported by `θ r ∘ X`, lies in `𝓜`.
+`honedim` is `eq:absonedim` for `𝓜`.  The global statement `isMarkov_of_unique_onedim` takes
+`𝓜 = M(𝓧₀ r)` and `restart`; the local one takes `𝓜 = M_loc(𝓧₀ r)` and `localRestart`. -/
+theorem isMarkov_of_restart
+    {S : Shift F π} {𝓕₀ : Filtration ι mF}
+    (hbot : (⊥ : ι) = 0)
     (hadapt : ∀ u : ι, Measurable[𝓕₀ u] (π u))
     {X : Ω → F} (hX : Measurable X) {𝓖 : Filtration ι m} {P : Measure Ω}
     [IsProbabilityMeasure P] (hXadapt : ∀ u : ι, Measurable[𝓖 u, 𝓕₀ u] X)
-    (hsol : IsMPSolution ((fun (Y : ι → F → 𝕂) t ω ↦ Y t (X ω)) '' 𝓧₀ 0) 𝓖 P)
-    (hint : ∀ Y ∈ 𝓧₀ 0, ∀ u : ι, Integrable (fun ω ↦ Y u (X ω)) P)
-    (r : ι)
+    (r : ι) {𝓜 : Set (Measure F)}
+    (hrestart : ∀ Z : Ω → ℝ, (∀ ω, 0 ≤ Z ω) → (∃ b, ∀ ω, Z ω ≤ b) → StronglyMeasurable[𝓖 r] Z →
+      ((P.withDensity fun ω ↦ ENNReal.ofReal (Z ω)).map fun ω ↦ S.θ r (X ω)) ∈ 𝓜)
     (honedim : ∀ R R' : Measure F, IsProbabilityMeasure R → IsProbabilityMeasure R' →
-      IsMPSolution (𝓧₀ r) 𝓕₀ R → IsMPSolution (𝓧₀ r) 𝓕₀ R' →
-      R.map (π ⊥) = R'.map (π ⊥) → ∀ u : ι, R.map (π u) = R'.map (π u))
+      R ∈ 𝓜 → R' ∈ 𝓜 → R.map (π ⊥) = R'.map (π ⊥) → ∀ u : ι, R.map (π u) = R'.map (π u))
     {f : E → 𝕂} (hf : Measurable f) {cf : ℝ} (hfb : ∀ x, ‖f x‖ ≤ cf) (t : ι) :
     P[fun ω ↦ f (π (r + t) (X ω)) | 𝓖 r]
       =ᵐ[P] P[fun ω ↦ f (π (r + t) (X ω)) | stateSigma π X r] := by
@@ -16660,12 +16678,10 @@ theorem isMarkov_of_unique_onedim
   have hZ₂1 : ∫ ω, Z₂ ω ∂P = 1 := by
     rw [hZ₂def, integral_const_mul, hg'I, inv_mul_cancel₀ (ne_of_gt hp)]
   have hψ : Measurable fun ω ↦ S.θ r (X ω) := (S.measurable r).comp hX
-  have hsol₁ : IsMPSolution (𝓧₀ r) 𝓕₀
-      ((P.withDensity fun ω ↦ ENNReal.ofReal (Z₁ ω)).map fun ω ↦ S.θ r (X ω)) :=
-    restart hS hX hXadapt hsol hint r (hadd r) hZ₁0 ⟨_, hZ₁c⟩ hZ₁m
-  have hsol₂ : IsMPSolution (𝓧₀ r) 𝓕₀
-      ((P.withDensity fun ω ↦ ENNReal.ofReal (Z₂ ω)).map fun ω ↦ S.θ r (X ω)) :=
-    restart hS hX hXadapt hsol hint r (hadd r) hZ₂0 ⟨_, hZ₂c⟩ hZ₂m
+  have hsol₁ : ((P.withDensity fun ω ↦ ENNReal.ofReal (Z₁ ω)).map fun ω ↦ S.θ r (X ω)) ∈ 𝓜 :=
+    hrestart Z₁ hZ₁0 ⟨_, hZ₁c⟩ hZ₁m
+  have hsol₂ : ((P.withDensity fun ω ↦ ENNReal.ofReal (Z₂ ω)).map fun ω ↦ S.θ r (X ω)) ∈ 𝓜 :=
+    hrestart Z₂ hZ₂0 ⟨_, hZ₂c⟩ hZ₂m
   have hprob₁ : IsProbabilityMeasure
       ((P.withDensity fun ω ↦ ENNReal.ofReal (Z₁ ω)).map fun ω ↦ S.θ r (X ω)) :=
     isProbabilityMeasure_map_withDensity_ofReal hψ hZ₁meas hZ₁0 hZ₁c hZ₁1
@@ -16748,6 +16764,36 @@ theorem isMarkov_of_unique_onedim
     _ = ∫ ω, u1 ω • V ω ∂P := hmain'.symm
     _ = ∫ x in A, V x ∂P := by rw [hind, integral_indicator hA']
 
+
+/-- **`thm:absuniq`(a)**: if the one dimensional laws of the problem posed at `r` are determined
+by the initial law, then every solution is Markov at `r` -- in general time inhomogeneously so.
+
+The hypotheses are those of `restart`, which is applied twice, together with `honedim` at the
+single shift `r`.  `hadapt` is the adaptedness of the coordinate maps, which supplies both the
+measurability of `π u` and the `𝓖 r`-measurability of the state `X r`; `hbot` identifies the
+initial time of the shifted problem with the neutral element of the shift.
+
+Note what is **absent**: no linear order, no (T4), no determining set, no topology on `E`, and no
+hypothesis that `P` is the law of the path -- `X` is an arbitrary measurable process, which is
+`rem:restarttwolevel` of the manuscript. -/
+theorem isMarkov_of_unique_onedim
+    {S : Shift F π} {𝓕₀ : Filtration ι mF} {𝓧₀ : ι → Set (ι → F → 𝕂)}
+    (hS : IsShiftSystem S 𝓕₀ 𝓧₀)
+    (hbot : (⊥ : ι) = 0) (hadd : ∀ r u : ι, r ≤ r + u)
+    (hadapt : ∀ u : ι, Measurable[𝓕₀ u] (π u))
+    {X : Ω → F} (hX : Measurable X) {𝓖 : Filtration ι m} {P : Measure Ω}
+    [IsProbabilityMeasure P] (hXadapt : ∀ u : ι, Measurable[𝓖 u, 𝓕₀ u] X)
+    (hsol : IsMPSolution ((fun (Y : ι → F → 𝕂) t ω ↦ Y t (X ω)) '' 𝓧₀ 0) 𝓖 P)
+    (hint : ∀ Y ∈ 𝓧₀ 0, ∀ u : ι, Integrable (fun ω ↦ Y u (X ω)) P)
+    (r : ι)
+    (honedim : ∀ R R' : Measure F, IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      IsMPSolution (𝓧₀ r) 𝓕₀ R → IsMPSolution (𝓧₀ r) 𝓕₀ R' →
+      R.map (π ⊥) = R'.map (π ⊥) → ∀ u : ι, R.map (π u) = R'.map (π u))
+    {f : E → 𝕂} (hf : Measurable f) {cf : ℝ} (hfb : ∀ x, ‖f x‖ ≤ cf) (t : ι) :
+    P[fun ω ↦ f (π (r + t) (X ω)) | 𝓖 r]
+      =ᵐ[P] P[fun ω ↦ f (π (r + t) (X ω)) | stateSigma π X r] :=
+  isMarkov_of_restart hbot hadapt hX hXadapt r (𝓜 := {R | IsMPSolution (𝓧₀ r) 𝓕₀ R})
+    (fun _ hZ0 hZb hZm ↦ restart hS hX hXadapt hsol hint r (hadd r) hZ0 hZb hZm) honedim hf hfb t
 end MarkovFromOnedim
 
 
@@ -47059,3 +47105,299 @@ theorem ae_isLocalMPSolution_of_countableTest {𝓧 : Set (ι → F → 𝕂)} {
   exact ⟨(isLocalMPSolution_iff_isMPSolution_localizedFamily hτ _).2 hx.1, hx.2⟩
 
 end LocalizedFamily
+
+/-! ### The local restart, `lem:localrestart`
+
+`restart` rests on a martingale identity that a local martingale does not supply; (L3) supplies
+it after `r`, and that is all the computation reads. -/
+
+section LocalRestart
+
+variable {ι : Type*} [LinearOrder ι] [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι]
+  [AddCommMonoid ι] [AddLeftMono ι]
+variable {F : Type*} {mF : MeasurableSpace F} {𝕂 : Type*} [RCLike 𝕂]
+
+omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
+/-- **The restart computation with only the increments after `r`.**  Let `V` be adapted on the
+path space, and suppose that along `ψ` it is a bounded `𝓖 r`-measurable factor `G` times a
+martingale `M` for the filtration seen from `r`, plus a `u`-independent integrable `K`.  Then
+under the reweighted transported measure `(Z · P) ∘ ψ⁻¹` the process `V` is a martingale.
+
+This is the proof of `restart` with its martingale hypothesis weakened to what the proof reads:
+`restart` asks the base family to be a martingale on all of `ι`, and uses it only between
+`r + s` and `r + t`, which is `Martingale.shiftBy_sub`.  The weakened form is what
+`def:localizing`(L3) supplies, and it is the reason `localRestart` is not a corollary of
+`restart` as stated.  The factor `G` carries the indicator `{⊥ < τ_n ∘ θ_r}` that `Locally` puts
+in front of a stopped process. -/
+theorem martingale_map_withDensity_of_shiftBy {Ω : Type*} {m : MeasurableSpace Ω}
+    {𝓕₀ : Filtration ι mF} {𝓖 : Filtration ι m} {P : Measure Ω} [IsProbabilityMeasure P]
+    {r : ι} (hr : ∀ u : ι, r ≤ r + u) {ψ : Ω → F} (hψ : Measurable ψ)
+    (hψ𝓖 : ∀ s : ι, Measurable[𝓖 (r + s), 𝓕₀ s] ψ)
+    {V : ι → F → 𝕂} (hV : StronglyAdapted 𝓕₀ V)
+    {M : ι → Ω → 𝕂} (hM : Martingale M (𝓖.shiftBy r) P)
+    {G : Ω → ℝ} (hG : StronglyMeasurable[𝓖 r] G) {cG : ℝ} (hGb : ∀ ω, ‖G ω‖ ≤ cG)
+    {K : Ω → 𝕂} (hK : Integrable K P) (hVeq : ∀ u ω, V u (ψ ω) = G ω • M u ω + K ω)
+    {Z : Ω → ℝ} (hZ0 : ∀ ω, 0 ≤ Z ω) (hZb : ∃ b, ∀ ω, Z ω ≤ b)
+    (hZm : StronglyMeasurable[𝓖 r] Z) :
+    Martingale V 𝓕₀ ((P.withDensity fun ω ↦ ENNReal.ofReal (Z ω)).map ψ) := by
+  obtain ⟨b, hb⟩ := hZb
+  set c : ℝ := max b 0 with hcdef
+  have hZc : ∀ ω, Z ω ≤ c := fun ω ↦ (hb ω).trans (le_max_left _ _)
+  have hc0 : (0 : ℝ) ≤ c := le_max_right _ _
+  have hZmeas : Measurable Z := (hZm.mono (𝓖.le r)).measurable
+  have hGmeas : StronglyMeasurable G := hG.mono (𝓖.le r)
+  set R : Measure F := (P.withDensity fun ω ↦ ENNReal.ofReal (Z ω)).map ψ with hRdef
+  have hRfin : IsFiniteMeasure R := by
+    constructor
+    rw [hRdef, Measure.map_apply hψ MeasurableSet.univ, Set.preimage_univ,
+      withDensity_apply _ MeasurableSet.univ, Measure.restrict_univ]
+    calc ∫⁻ ω, ENNReal.ofReal (Z ω) ∂P
+        ≤ ∫⁻ _ : Ω, ENNReal.ofReal c ∂P :=
+          lintegral_mono fun ω ↦ ENNReal.ofReal_le_ofReal (hZc ω)
+      _ = ENNReal.ofReal c := by simp
+      _ < ⊤ := ENNReal.ofReal_lt_top
+  have hVmeas : ∀ u : ι, Measurable (V u) := fun u ↦ ((hV u).mono (𝓕₀.le u)).measurable
+  have hbdd : ∀ {W : Ω → ℝ} {C : ℝ}, StronglyMeasurable W → (∀ ω, ‖W ω‖ ≤ C) →
+      ∀ U : Ω → 𝕂, Integrable U P → Integrable (fun ω ↦ W ω • U ω) P := by
+    intro W C hW hWC U hU
+    refine Integrable.mono' (hU.norm.const_mul C) (hW.aestronglyMeasurable.smul hU.1) ?_
+    filter_upwards with ω
+    rw [norm_smul]
+    exact mul_le_mul_of_nonneg_right (hWC ω) (norm_nonneg _)
+  have hVint : ∀ u : ι, Integrable (fun ω ↦ V u (ψ ω)) P := by
+    intro u
+    simp only [hVeq]
+    exact (hbdd hGmeas hGb _ (hM.integrable u)).add hK
+  have hVintR : ∀ u : ι, Integrable (V u) R := fun u ↦
+    integrable_map_withDensity_ofReal hψ hZmeas hZ0 hZc (hVmeas u) (hVint u)
+  refine ⟨hV, fun s t hst ↦ ?_⟩
+  refine (ae_eq_condExp_of_forall_setIntegral_eq (𝓕₀.le s) (hVintR t)
+    (fun A _ _ ↦ (hVintR s).integrableOn) ?_ (hV s).aestronglyMeasurable).symm
+  intro A hA _
+  have hA' : MeasurableSet A := 𝓕₀.le s A hA
+  set W : Ω → ℝ := (ψ ⁻¹' A).indicator Z with hWdef
+  have hBmeas : MeasurableSet[𝓖 (r + s)] (ψ ⁻¹' A) := hψ𝓖 s hA
+  have hWsm : StronglyMeasurable[𝓖 (r + s)] W :=
+    (hZm.mono (𝓖.mono (hr s))).indicator hBmeas
+  have hWb : ∀ ω, ‖W ω‖ ≤ c := by
+    intro ω
+    by_cases hmem : ω ∈ ψ ⁻¹' A
+    · rw [hWdef, Set.indicator_of_mem hmem, Real.norm_eq_abs, abs_of_nonneg (hZ0 ω)]
+      exact hZc ω
+    · rw [hWdef, Set.indicator_of_notMem hmem, norm_zero]; exact hc0
+  have hWGsm : StronglyMeasurable[𝓖 (r + s)] (fun ω ↦ W ω * G ω) :=
+    hWsm.mul (hG.mono (𝓖.mono (hr s)))
+  have hWGb : ∀ ω, ‖W ω * G ω‖ ≤ c * cG := fun ω ↦ by
+    rw [norm_mul]
+    exact mul_le_mul (hWb ω) (hGb ω) (norm_nonneg _) hc0
+  have hWm : StronglyMeasurable W := hWsm.mono (𝓖.le _)
+  have hkey : ∀ u : ι, ∫ x in A, V u x ∂R = ∫ ω, W ω • V u (ψ ω) ∂P := by
+    intro u
+    rw [← integral_indicator hA', hRdef,
+      integral_map_withDensity_ofReal hψ hZmeas hZ0 ((hVmeas u).indicator hA')]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ ?_)
+    show Z ω • A.indicator (V u) (ψ ω) = W ω • V u (ψ ω)
+    by_cases hmem : ψ ω ∈ A
+    · rw [Set.indicator_of_mem hmem, hWdef,
+        Set.indicator_of_mem (show ω ∈ ψ ⁻¹' A from hmem)]
+    · rw [Set.indicator_of_notMem hmem, hWdef,
+        Set.indicator_of_notMem (show ω ∉ ψ ⁻¹' A from hmem), smul_zero, zero_smul]
+  have hsplit : ∀ u : ι, ∫ ω, W ω • V u (ψ ω) ∂P
+      = ∫ ω, (W ω * G ω) • M u ω ∂P + ∫ ω, W ω • K ω ∂P := by
+    intro u
+    have hpt : ∀ ω, W ω • V u (ψ ω) = (W ω * G ω) • M u ω + W ω • K ω := by
+      intro ω; rw [hVeq u ω, smul_add, smul_smul]
+    simp_rw [hpt]
+    exact integral_add (hbdd (hWGsm.mono (𝓖.le _)) hWGb _ (hM.integrable u))
+      (hbdd hWm hWb _ hK)
+  have hmg := integral_smul_martingale_eq (𝓖 := 𝓖.shiftBy r) hM hst (hM.integrable t)
+    (W := fun ω ↦ W ω * G ω) hWGsm hWGb
+  rw [hkey s, hkey t, hsplit s, hsplit t, hmg]
+
+
+variable {E : Type*} [MeasurableSpace E] {π : ι → F → E}
+
+omit [TopologicalSpace ι] [OrderTopology ι] in
+/-- `r + (u ∧ x) = (r + u) ∧ (r + x)` at the level of `untopA`: the order embedding `r + ·`
+commutes with `min`, `⊤` included.  This is the arithmetic of `eq:shiftedstopped`. -/
+theorem shift_add_min_untopA (r u : ι) (x : WithTop ι) :
+    r + (min (u : WithTop ι) x).untopA = (min ((r + u : ι) : WithTop ι) ((r : WithTop ι) + x)).untopA := by
+  induction x using WithTop.recTopCoe with
+  | top =>
+    simp only [le_top, min_eq_left, WithTop.add_top]
+    rfl
+  | coe v =>
+    have h : r + min u v = min (r + u) (r + v) :=
+      Monotone.map_min (f := (r + ·)) fun a b hab ↦ by show r + a ≤ r + b; gcongr
+    rw [← WithTop.coe_add, ← WithTop.coe_min, ← WithTop.coe_min, ← h]
+    rfl
+
+omit [MeasurableSpace E] in
+/-- **`lem:localrestart`**, on the canonical space: if `P` solves the local problem for the base
+family `𝓧₀ 0` with a localizing system `𝔖`, then `(Z · P) ∘ θ_r⁻¹` solves the local problem for
+`𝓧₀ r`, for bounded non-negative `𝓕₀ r`-measurable `Z`.
+
+The localizing sequence of the conclusion is any increasing sequence `τ` in `𝔖` tending to `⊤`
+at every path; (L2) puts `σ = r + τ_n ∘ θ_r` into `𝔖`, (L3) makes
+`t ↦ Y_{(r+t) ∧ σ} - Y_r` a martingale for the filtration seen from `r`, and
+`eq:shiftedstopped` is `IsShiftSystem.increment` read through `shift_add_min_untopA`.  The
+martingale clause of (L1) is **not** used, neither for `𝓧₀ 0` nor for `𝓧₀ r`; only its sequence.
+
+`hadapt` is the adaptedness of the stopped test processes, which the manuscript obtains from
+progressive measurability under (T2b) (`IsStronglyProgressive.stronglyAdapted_stoppedProcess`);
+it is carried as what the proof uses.  The determining set is not needed, as in `restart`. -/
+theorem localRestart {S : Shift F π} {𝓕₀ : Filtration ι mF} {𝓧₀ : ι → Set (ι → F → 𝕂)}
+    (hS : IsShiftSystem S 𝓕₀ 𝓧₀) {𝔖 : Set (F → WithTop ι)}
+    (hsys : LocalizingSystem S 𝓕₀ (𝓧₀ 0) 𝔖) {τ : ℕ → F → WithTop ι} (hτ𝔖 : ∀ n, τ n ∈ 𝔖)
+    (hτmono : ∀ f, Monotone (τ · f)) (hτtop : ∀ f, Tendsto (τ · f) atTop (𝓝 ⊤))
+    {P : Measure F} [IsProbabilityMeasure P] (hP : IsLocalMPSolution (𝓧₀ 0) 𝓕₀ P)
+    (r : ι) (hr : ∀ u : ι, r ≤ r + u)
+    (hadapt : ∀ Y' ∈ 𝓧₀ r, ∀ n, StronglyAdapted 𝓕₀
+      (stoppedProcess (fun i ↦ {f | ⊥ < τ n f}.indicator (Y' i)) (τ n)))
+    {Z : F → ℝ} (hZ0 : ∀ f, 0 ≤ Z f) (hZb : ∃ b, ∀ f, Z f ≤ b)
+    (hZm : StronglyMeasurable[𝓕₀ r] Z) :
+    IsLocalMPSolution (𝓧₀ r) 𝓕₀ ((P.withDensity fun f ↦ ENNReal.ofReal (Z f)).map (S.θ r)) := by
+  intro Y' hY'
+  obtain ⟨Y, hY0, κ, hκm, ⟨cκ, hκb⟩, hincr⟩ := hS.increment r Y' hY'
+  refine ⟨τ, isLocalizingSequence_of_forall (fun n ↦ hsys.isStoppingTime _ (hτ𝔖 n)) hτmono
+    hτtop _, fun n ↦ ?_⟩
+  set σ : F → WithTop ι := fun f ↦ (r : WithTop ι) + τ n (S.θ r f) with hσdef
+  have hσ : σ ∈ 𝔖 := hsys.shift_mem _ (hτ𝔖 n) r
+  have hrσ : ∀ f, (r : WithTop ι) ≤ σ f := by
+    intro f
+    show (r : WithTop ι) ≤ r + τ n (S.θ r f)
+    induction τ n (S.θ r f) using WithTop.recTopCoe with
+    | top => simp
+    | coe v => rw [← WithTop.coe_add]; exact WithTop.coe_le_coe.2 (hr v)
+  have hM := hsys.restart P inferInstance hP Y hY0 r σ hσ hrσ
+  set T : Set F := {f | ⊥ < τ n (S.θ r f)} with hTdef
+  set G : F → ℝ := T.indicator fun _ ↦ (1 : ℝ) with hGdef
+  have hT : MeasurableSet[𝓕₀ r] T := by
+    have hbot : MeasurableSet[𝓕₀ ⊥] {g | ⊥ < τ n g} := by
+      have hcompl : {g | ⊥ < τ n g} = {g | τ n g ≤ ((⊥ : ι) : WithTop ι)}ᶜ := by
+        ext g
+        show (⊥ : WithTop ι) < τ n g ↔ ¬ τ n g ≤ ((⊥ : ι) : WithTop ι)
+        exact not_le.symm
+      rw [hcompl]
+      exact (hsys.isStoppingTime _ (hτ𝔖 n) ⊥).compl
+    have hle : r + ⊥ ≤ r := by
+      calc r + ⊥ ≤ r + 0 := by gcongr; exact bot_le
+        _ = r := add_zero r
+    exact 𝓕₀.mono hle _ (hS.shiftMeasurable r ⊥ hbot)
+  have hG : StronglyMeasurable[𝓕₀ r] G := stronglyMeasurable_const.indicator hT
+  have hGb : ∀ f, ‖G f‖ ≤ 1 := by
+    intro f
+    by_cases hf : f ∈ T
+    · simp [hGdef, Set.indicator_of_mem hf]
+    · simp [hGdef, Set.indicator_of_notMem hf]
+  have hκint : Integrable (fun f ↦ G f • κ f) P := by
+    refine Integrable.mono' (integrable_const (1 * cκ))
+      ((hG.mono (𝓕₀.le r)).aestronglyMeasurable.smul
+        (hκm.mono (𝓕₀.le r)).aestronglyMeasurable) (ae_of_all _ fun f ↦ ?_)
+    rw [norm_smul]
+    exact mul_le_mul (hGb f) (hκb f) (norm_nonneg _) zero_le_one
+  refine martingale_map_withDensity_of_shiftBy hr (S.measurable r) (hS.shiftMeasurable r)
+    (hadapt Y' hY' n) hM hG hGb hκint (fun u f ↦ ?_) hZ0 hZb hZm
+  by_cases hf : f ∈ T
+  · have hG1 : G f = 1 := by simp [hGdef, Set.indicator_of_mem hf]
+    have hpos : ⊥ < τ n (S.θ r f) := hf
+    rw [hG1, one_smul, one_smul]
+    show {g | ⊥ < τ n g}.indicator (Y' (min (u : WithTop ι) (τ n (S.θ r f))).untopA) (S.θ r f)
+      = _
+    rw [Set.indicator_of_mem (show S.θ r f ∈ {g | ⊥ < τ n g} from hpos), hincr]
+    show _ = Y (min (((r + u : ι)) : WithTop ι) (σ f)).untopA f - Y r f + κ f
+    rw [shift_add_min_untopA]
+  · have hG0 : G f = 0 := by simp [hGdef, Set.indicator_of_notMem hf]
+    have hneg : S.θ r f ∉ {g | ⊥ < τ n g} := hf
+    rw [hG0, zero_smul, zero_smul, add_zero]
+    show {g | ⊥ < τ n g}.indicator (Y' (min (u : WithTop ι) (τ n (S.θ r f))).untopA) (S.θ r f)
+      = 0
+    rw [Set.indicator_of_notMem hneg]
+
+end LocalRestart
+
+/-! ### Local uniqueness and the Markov property, `thm:localuniq`
+
+`thm:absuniq` with `M_loc` in place of `M`: the two halves are `propagatesAgreement_of_restart`
+and `isMarkov_of_restart`, which take the restart as a hypothesis, fed with `localRestart`. -/
+
+section LocalUniqueness
+
+variable {ι : Type*} [LinearOrder ι] [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι]
+  [AddCommMonoid ι] [AddLeftMono ι]
+variable {F : Type*} {mF : MeasurableSpace F} {𝕂 : Type*} [RCLike 𝕂]
+variable {E : Type*} [MeasurableSpace E] {π : ι → F → E}
+
+/-- **`lem:propagation` for the local problem**: `propagatesAgreement_of_restart` with
+`𝓜 r = M_loc(𝓧₀ r)` and `localRestart` in place of `restart`, and nothing else changed. -/
+theorem propagatesAgreement_localMPSolutions {S : Shift F π} {𝓕₀ : Filtration ι mF}
+    {𝓧₀ : ι → Set (ι → F → 𝕂)} (hS : IsShiftSystem S 𝓕₀ 𝓧₀) {𝔖 : Set (F → WithTop ι)}
+    (hsys : LocalizingSystem S 𝓕₀ (𝓧₀ 0) 𝔖) {τ : ℕ → F → WithTop ι} (hτ𝔖 : ∀ n, τ n ∈ 𝔖)
+    (hτmono : ∀ f, Monotone (τ · f)) (hτtop : ∀ f, Tendsto (τ · f) atTop (𝓝 ⊤))
+    (hadapt : ∀ r : ι, ∀ Y' ∈ 𝓧₀ r, ∀ n, StronglyAdapted 𝓕₀
+      (stoppedProcess (fun i ↦ {f | ⊥ < τ n f}.indicator (Y' i)) (τ n)))
+    (hbot : (⊥ : ι) = 0) (hadd : ∀ r u : ι, r ≤ r + u)
+    (hsub : ∀ s t : ι, s ≤ t → ∃ u : ι, t = s + u) (hπ : ∀ t : ι, Measurable (π t))
+    (honedim : ∀ r : ι, ∀ R R' : Measure F, IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      IsLocalMPSolution (𝓧₀ r) 𝓕₀ R → IsLocalMPSolution (𝓧₀ r) 𝓕₀ R' →
+      R.map (π ⊥) = R'.map (π ⊥) → ∀ u : ι, R.map (π u) = R'.map (π u)) :
+    PropagatesAgreement 𝓕₀ π {P | IsLocalMPSolution (𝓧₀ 0) 𝓕₀ P ∧ IsProbabilityMeasure P} :=
+  propagatesAgreement_of_restart hbot hsub hπ (fun _ hP ↦ hP.2)
+    (𝓜 := fun r ↦ {R | IsLocalMPSolution (𝓧₀ r) 𝓕₀ R})
+    (fun _ hP s _ hZ0 hZb hZm ↦ have := hP.2
+      localRestart hS hsys hτ𝔖 hτmono hτtop hP.1 s (hadd s) (hadapt s) hZ0 hZb hZm)
+    honedim
+
+/-- **`thm:localuniq`, uniqueness half**: if the one dimensional laws of every shifted local
+problem are determined by the initial law (`eq:localonedim`), the local martingale problem has at
+most one probability solution with a prescribed initial law.
+
+As the manuscript says, `prop:uniqfromprop` is used as it stands (`eq_of_propagatesAgreement`);
+the only change against `subsingleton_mpSolutions_of_unique_onedim` is the restart, which is
+`localRestart`.  The integrability proviso `hint` of the global statement is gone: (L3) supplies
+the integrability of the increments after `r`, and nothing else is read. -/
+theorem subsingleton_localMPSolutions {S : Shift F π} {𝓕₀ : Filtration ι mF}
+    {𝓧₀ : ι → Set (ι → F → 𝕂)} (hS : IsShiftSystem S 𝓕₀ 𝓧₀) {𝔖 : Set (F → WithTop ι)}
+    (hsys : LocalizingSystem S 𝓕₀ (𝓧₀ 0) 𝔖) {τ : ℕ → F → WithTop ι} (hτ𝔖 : ∀ n, τ n ∈ 𝔖)
+    (hτmono : ∀ f, Monotone (τ · f)) (hτtop : ∀ f, Tendsto (τ · f) atTop (𝓝 ⊤))
+    (hadapt : ∀ r : ι, ∀ Y' ∈ 𝓧₀ r, ∀ n, StronglyAdapted 𝓕₀
+      (stoppedProcess (fun i ↦ {f | ⊥ < τ n f}.indicator (Y' i)) (τ n)))
+    (hbot : (⊥ : ι) = 0) (hadd : ∀ r u : ι, r ≤ r + u)
+    (hsub : ∀ s t : ι, s ≤ t → ∃ u : ι, t = s + u)
+    (hπadapt : ∀ u v : ι, u ≤ v → Measurable[𝓕₀ v] (π u))
+    (hgen : mF = ⨆ i : ι, MeasurableSpace.comap (π i) inferInstance)
+    (honedim : ∀ r : ι, ∀ R R' : Measure F, IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      IsLocalMPSolution (𝓧₀ r) 𝓕₀ R → IsLocalMPSolution (𝓧₀ r) 𝓕₀ R' →
+      R.map (π ⊥) = R'.map (π ⊥) → ∀ u : ι, R.map (π u) = R'.map (π u))
+    (mu : Measure E) :
+    Set.Subsingleton {P : Measure F | IsLocalMPSolution (𝓧₀ 0) 𝓕₀ P ∧
+      IsProbabilityMeasure P ∧ P.map (π ⊥) = mu} := by
+  have hπ : ∀ t : ι, Measurable (π t) := fun t ↦ (hπadapt t t le_rfl).mono (𝓕₀.le t) le_rfl
+  have hN := propagatesAgreement_localMPSolutions hS hsys hτ𝔖 hτmono hτtop hadapt hbot hadd
+    hsub hπ honedim
+  rintro P ⟨hPsol, hPp, hPi⟩ Q ⟨hQsol, hQp, hQi⟩
+  exact eq_of_propagatesAgreement hN hπadapt hgen ⟨hPsol, hPp⟩ ⟨hQsol, hQp⟩ (hPi.trans hQi.symm)
+
+/-- **`thm:localuniq`, Markov half**, on the canonical space: under `eq:localonedim` at `r`, every
+local solution is Markov at `r`.  It is `isMarkov_of_restart` with `localRestart`; the proof of
+`thm:absuniq`(a) is not repeated. -/
+theorem isMarkov_of_unique_onedim_local {S : Shift F π} {𝓕₀ : Filtration ι mF}
+    {𝓧₀ : ι → Set (ι → F → 𝕂)} (hS : IsShiftSystem S 𝓕₀ 𝓧₀) {𝔖 : Set (F → WithTop ι)}
+    (hsys : LocalizingSystem S 𝓕₀ (𝓧₀ 0) 𝔖) {τ : ℕ → F → WithTop ι} (hτ𝔖 : ∀ n, τ n ∈ 𝔖)
+    (hτmono : ∀ f, Monotone (τ · f)) (hτtop : ∀ f, Tendsto (τ · f) atTop (𝓝 ⊤))
+    (hbot : (⊥ : ι) = 0) (hadd : ∀ r u : ι, r ≤ r + u)
+    (hπadapt : ∀ u : ι, Measurable[𝓕₀ u] (π u))
+    {P : Measure F} [IsProbabilityMeasure P] (hP : IsLocalMPSolution (𝓧₀ 0) 𝓕₀ P) (r : ι)
+    (hadapt : ∀ Y' ∈ 𝓧₀ r, ∀ n, StronglyAdapted 𝓕₀
+      (stoppedProcess (fun i ↦ {f | ⊥ < τ n f}.indicator (Y' i)) (τ n)))
+    (honedim : ∀ R R' : Measure F, IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      IsLocalMPSolution (𝓧₀ r) 𝓕₀ R → IsLocalMPSolution (𝓧₀ r) 𝓕₀ R' →
+      R.map (π ⊥) = R'.map (π ⊥) → ∀ u : ι, R.map (π u) = R'.map (π u))
+    {g : E → 𝕂} (hg : Measurable g) {cg : ℝ} (hgb : ∀ x, ‖g x‖ ≤ cg) (t : ι) :
+    P[fun f ↦ g (π (r + t) f) | 𝓕₀ r] =ᵐ[P] P[fun f ↦ g (π (r + t) f) | stateSigma π id r] :=
+  isMarkov_of_restart (X := id) hbot hπadapt measurable_id (fun _ ↦ measurable_id) r
+    (𝓜 := {R | IsLocalMPSolution (𝓧₀ r) 𝓕₀ R})
+    (fun _ hZ0 hZb hZm ↦ localRestart hS hsys hτ𝔖 hτmono hτtop hP r (hadd r) hadapt hZ0 hZb hZm)
+    honedim hg hgb t
+
+end LocalUniqueness

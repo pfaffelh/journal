@@ -63605,3 +63605,100 @@ außerdem von `thm:absuniq` und Schritt 5 gebraucht, die ohne sie auf `P = ∫ P
 **Stand der Aufgabe.** Schritte 1 und 2 stehen (2 für endliche Familien). Schritt 3 steht mit (b)
 und (c) ganz und (a) unter (L1) oder beschränkten Sprüngen, Befund 1 zur allgemeinen Fassung.
 Offen: Schritte 4–7.
+
+### Derselbe Lauf, zweiter Teil — Schritt 4: **`localRestart`** (`lem:localrestart`), auf dem kanonischen Raum; kein Korollar von `restart`, aber beide Korollare eines gemeinsamen Kerns
+
+*`check_master.py`: 0 / 0 / 0 in allen vier Dateien*, Warnungen 18 / 38 / 38 / 76 (unverändert).
+Axiome der drei neuen Sätze: nur die drei Standardaxiome. Abschnitt `LocalRestart` am Ende von
+`MartingaleProblems/Suggested.lean`, entwickelt in `scripts/_dev_localrestart.lean`.
+
+**Deklarationen.**
+
+* **`martingale_map_withDensity_of_shiftBy`** (der Kern): `V` adaptiert auf dem Pfadraum, längs
+  `ψ` gleich `G • M + K` mit `M` Martingal für `𝓖.shiftBy r`, `G` beschränkt und
+  `𝓖 r`-meßbar, `K` integrierbar ⟹ `V` ist Martingal unter `(Z · P) ∘ ψ⁻¹`. Der Beweis ist der
+  von `restart`, mit `integral_smul_martingale_eq` für die verschobene Filtration.
+* `shift_add_min_untopA`: `r + (u ∧ x) = (r + u) ∧ (r + x)` auf der Ebene von `untopA`, `⊤`
+  eingeschlossen. Das ist die ganze Arithmetik von `eq:shiftedstopped`.
+* **`localRestart`**: `P` lokale Lösung für `𝓧₀ 0`, `𝔖` ein `LocalizingSystem` für `𝓧₀ 0`,
+  `τ` eine wachsende Folge in `𝔖` mit `τ n → ⊤` an jedem Pfad, `Z ≥ 0` beschränkt und
+  `𝓕₀ r`-meßbar ⟹ `(Z · P) ∘ θ_r⁻¹` ist lokale Lösung für `𝓧₀ r`, lokalisiert durch dasselbe `τ`.
+
+**Befunde.**
+
+1. **Befund über `restart`, wie in der Aufgabe vorhergesehen: `localRestart` ist kein Korollar
+   von `restart` in der vorliegenden Gestalt**, aus zwei Gründen. (i) `restart` verlangt, daß die
+   Basisfamilie ein Martingal auf ganz `ι` ist (`hsol`), und liest davon nur die Zuwächse zwischen
+   `r + s` und `r + t`. (L3) liefert genau diese Zuwächse, aber nicht mehr, weil vor `r` nichts
+   kontrolliert ist (`rem:localhyp`, zweiter Absatz). (ii) Der geshiftete gestoppte Prozeß
+   `Ŷ^{τ_n} ∘ θ_r` ist kein Element von `𝓧₀ r`; er ist `1_{τ_n ∘ θ_r > ⊥} · (Y_{(r+·) ∧ σ} - Y_r + κ)`,
+   und den Indikator, den `Locally` vor jeden gestoppten Prozeß schreibt, kennt
+   `IsShiftSystem.increment` nicht. Der Kern `martingale_map_withDensity_of_shiftBy` behebt
+   beides: das Martingal steht nur nach `r`, und der Faktor `G` nimmt den Indikator auf.
+   `restart` selbst ist **nicht** umgebaut. Es ist aber `martingale_map_withDensity_of_shiftBy` mit
+   `M = Y (r + ·) - Y r` (`Martingale.shiftBy_sub`), `G = 1`, `K = κ`.
+2. **Von (L1) wird nur die Folge gebraucht, nicht ihre Martingalklausel.** Der Beweis im
+   Manuskript beginnt mit „By (L1) it suffices …“ und braucht dafür (L1) für `𝓧°_r`. Das
+   Lokalisierungssystem ist aber für `𝓧°` gegeben (Z. 4783–4784), und für `𝓧°_r` ist (L1) nicht
+   vorausgesetzt. Tatsächlich genügt die Definition von `Locally`: `τ_n` wächst punktweise gegen
+   `∞`, besteht aus Stoppzeiten, und `Ŷ^{τ_n}` ist ein `R`-Martingal. Das zeigt Schritt 2 des
+   Beweises. Im Lean-Satz steht `τ` deshalb als eigenes Datum, ohne `IsUniformLocalization`.
+   **Manuskript nicht angefaßt**; Vorschlag: „By `Locally`, it suffices …“ statt „By (L1)“.
+3. **Die Adaptiertheit der gestoppten Testprozesse ist eine Voraussetzung** (`hadapt`). Das
+   Manuskript bekommt sie aus (T2b) über Progressivität. Die rohe Filtration erlaubt das über
+   `IsStronglyProgressive.stronglyAdapted_stoppedProcess` (`Stopping.lean:1002` auf master), aber
+   nur unter `[PseudoMetrizableSpace ι]` und mit Progressivität der Testprozesse. Getragen ist, was
+   der Beweis liest.
+4. **`r + ⊥ ≤ r`** wird gebraucht, damit `{τ_n ∘ θ_r > ⊥}` in `𝓕°_r` liegt. Es folgt aus
+   `⊥ ≤ 0` und `AddLeftMono`, ohne neue Voraussetzung.
+5. **Die determinierende Menge `𝓩°` kommt nicht vor**, wie schon bei `restart`: die bedingte
+   Erwartung wird gegen alle Mengen von `𝓕°_s` identifiziert.
+6. **Nicht gebaut:** die Fassung auf einem Umgebungsraum `(Ω, 𝔾, P)` mit `X` und die Fassung mit
+   einer Stoppzeit statt `r` (stark shiftkovariant). Beide gehen mit demselben Kern, weil
+   `martingale_map_withDensity_of_shiftBy` schon über allgemeinem `ψ` steht. Ihre (L3) muß dann auf
+   dem Umgebungsraum ausgesprochen werden, und das kann `LocalizingSystem`, das auf `F` steht,
+   nicht. Die starke Fassung braucht zudem `Filtration.shiftByTime` im Kern.
+
+### Derselbe Lauf, dritter Teil — Schritt 5: **`subsingleton_localMPSolutions`** und **`isMarkov_of_unique_onedim_local`** (`thm:localuniq`); `prop:uniqfromprop` wörtlich unverändert
+
+*`check_master.py`: 0 / 0 / 0 in allen vier Dateien*, Warnungen 18 / 38 / 38 / 76 (unverändert).
+Axiome der acht betroffenen Sätze (fünf neu, drei umgebaut): nur die drei Standardaxiome.
+`check_duplicates.py`: zwei neue Treffer, `Martingale.add_measure` und `Martingale.smul_measure`
+gegen `Integrable.add_measure` und `Ergodic.smul_measure`. Es ist nur dieselbe Namensendung an
+anderen Strukturen, keine Dublette.
+
+**Umbau.** Die beiden Hälften von `thm:absuniq` nehmen den Restart jetzt als Hypothese:
+
+* **`propagatesAgreement_of_restart`**: `lem:propagation` für eine beliebige Familie
+  `𝓜 : ι → Set (Measure F)` mit der Restart-Eigenschaft `hrestart` und `eq:absonedim` für `𝓜`.
+  Weder Schiftsystem noch Martingalproblem stehen darin. `propagatesAgreement_of_unique_onedim`
+  ist jetzt ein Vierzeiler daraus (mit `restart_canonical`), Signatur unverändert.
+* **`isMarkov_of_restart`**: ebenso für `thm:absuniq`(a); `isMarkov_of_unique_onedim` ist ein
+  Dreizeiler daraus (mit `restart`), Signatur unverändert.
+
+**Neu.**
+
+* `propagatesAgreement_localMPSolutions`: `lem:propagation` mit `𝓜 r = M_loc(𝓧₀ r)` und
+  `localRestart`.
+* **`subsingleton_localMPSolutions`**: unter `eq:localonedim` hat das lokale Problem höchstens
+  eine Wahrscheinlichkeitslösung mit gegebenem Anfangsgesetz. `eq_of_propagatesAgreement`
+  (`prop:uniqfromprop`) wird **unverändert** benutzt, wie das Manuskript sagt.
+* **`isMarkov_of_unique_onedim_local`**: die schwache Markoveigenschaft jeder lokalen Lösung bei
+  `r`, auf dem kanonischen Raum. **Sie fällt ohne neuen Beweis ab**: `isMarkov_of_restart` mit
+  `X = id` und `localRestart`.
+
+**Befunde.**
+
+1. **Die Integrabilitätsvoraussetzung `hint` der globalen Fassung entfällt im lokalen Satz.**
+   (L3) liefert die Integrierbarkeit der Zuwächse nach `r`, und nur die wird gelesen. Der globale
+   `restart` verlangt `Y_u ∈ L¹` für alle `u`, auch vor `r`, und liest es nicht. Befund 1 des
+   zweiten Teils, von der anderen Seite gesehen.
+2. **Der Beweis im Manuskript (Z. 4887–4896) stimmt so, wie er dasteht**: drei Zutaten, und nur
+   die erste wird ersetzt. Die Aussage „Every density used is … bounded by `1/P(F₀)` and
+   `𝓖_r`-measurable“ ist genau `hrestart`, mit dem `restart` bzw. `localRestart` als Beleg.
+3. **Die starke Markoveigenschaft ist nicht Aufgabe** (sie hängt an der stark shiftkovarianten
+   Fassung von `localRestart`, Befund 6 des zweiten Teils).
+
+**Stand der Aufgabe.** Schritte 1–5 stehen, mit den Einschränkungen: Schritt 2 für endliche
+Familien, Schritt 3(a) unter (L1) oder beschränkten Sprüngen, Schritte 4 und 5 auf dem
+kanonischen Raum. Offen: Schritte 6 und 7.
