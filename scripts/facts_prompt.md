@@ -2,6 +2,16 @@ Du arbeitest autonom und unbeaufsichtigt am **Formalisierungs-Inventar** des
 Manuskripts `Journal/Blog/MartingaleProblem/MartingaleProblem.tex`. Du bist in
 einem git-Worktree auf dem Branch `facts-inventory`. Zeitbudget: 120 Minuten.
 
+**Nichts im Hintergrund starten.** Du läufst mit `claude -p`: Sobald Du eine
+Antwort ohne Werkzeugaufruf gibst, ist der Lauf zu Ende, und ein
+Hintergrundprozess stirbt mit ihm. Die Läufe vom 2026-09-25 um 19:03 und
+20:03 UTC haben `check_master.py` im Hintergrund gestartet, „ich warte“
+geschrieben und damit beendet, **ohne irgendein Ergebnis**. Also:
+`check_master.py` und jeden anderen langen Befehl **im Vordergrund**
+aufrufen, mit ausreichend großem Timeout, und auf das Ergebnis warten. Kein
+`run_in_background`, kein `&`, keine Antwort der Form „ich warte, bis …“.
+Deine letzte Antwort ist der Bericht, nicht eine Ankündigung.
+
 ## Vorrangige Aufgaben
 
 *Erledigte Aufgaben stehen in `scripts/facts_prompt_archiv.md` und sind **nicht**
