@@ -61844,3 +61844,110 @@ herauszuziehen ist. *Warum jetzt:* bisher sind alle Passagezeit-Aussagen Aussage
 äußeres Maß; ein Verbraucher, der `τ_a` in einen Erwartungswert oder ein Optional-Stopping
 steckt, braucht sie als Zufallsvariable. Geschätzt ein halber bis ganzer Lauf, je nach der
 Instanzfrage.
+
+### 2026-09-25, zehnter Lauf des Tages — das benannte Ziel steht, im ersten Durchlauf: **die erste Passagezeit der Brownschen Bewegung ist eine Zufallsvariable**, und ihr Bildmaß gibt `[0, T]` die Masse `2 N [a/√T, ∞)`; die Instanzfrage, an der es hängen sollte, war keine
+
+*`check_master.py`: **0 Fehler, 0 veraltete Namen, 0 `sorry`**, Warnungen **18 / 38 / 36 / 76**,
+unverändert. `#print axioms` der vier berührten Deklarationen: `propext`, `Classical.choice`,
+`Quot.sound`. Erprobt in `scripts/_dev_hitlaw.lean` (ging ohne Änderung durch), Achsenprobe
+in `scripts/_dev_hitlaw_check.lean`. Mathlib `94ef6b89544` (Worktree), `upstream/master` steht
+bei `09712d488fd` (2026-09-21).*
+
+**Die Instanzfrage, zuerst am Quelltext geklärt.**
+`Mathlib/MeasureTheory/Constructions/BorelSpace/WithTop.lean:35,37` (auf `94ef6b89544`) gibt
+`WithTop ι` für jede lineare Ordnung mit Ordnungstopologie die Borelstruktur samt
+`BorelSpace`; die Ordnungstopologie selbst steht in `Mathlib/Topology/Order/WithTop.lean:26,32`.
+`measurable_of_Iic` greift auf `WithTop ℝ≥0` ohne weiteres — die zweite Abzählbarkeit wird
+per Instanzensuche gefunden (in der Probe mit `inferInstance` geprüft). **Der Umweg über
+`ENNReal` wird nicht gebraucht.**
+
+**Drei Deklarationen, im Abschnitt `ContinuousHittingTime` von
+`MartingaleProblems/Suggested.lean`:**
+
+* `MeasureTheory.measure_le_eval_eq_gaussianReal_Ici` — `Q (a ≤ X t) = N [a/√t, ∞)` für
+  `IsPreBrownianReal X Q`, `0 < t`, jedes reelle `a`. Das bisherige `hG` aus dem Beweis von
+  `ae_hittingAfter_ne_top_of_isBrownianReal`, herausgezogen und **auf `IsPreBrownianReal`
+  abgeschwächt** — `cont` wird nicht gelesen. `hG` ist dort jetzt ein Einzeiler auf dieses
+  Lemma, keine Duplikation.
+* `MeasureTheory.aemeasurable_hittingAfter_Ici_of_isBrownianReal` — `τ_a` ist
+  `AEMeasurable` für **jedes** reelle `a` (die Positivität wird hier nicht gebraucht).
+* `MeasureTheory.map_hittingAfter_Iic_eq_of_isBrownianReal` — für `0 < a`, `0 < T`:
+  `(Q.map τ_a) (Iic T) = 2 * gaussianReal 0 1 (Ici (a / √T))`. Drei Umschreibungen und `rfl`.
+
+**Befund zur Wegbeschreibung des Vorlaufs.** Sie hatte angesagt, am Beweis von
+`isCadlagMPSolution_of_isBrownianReal` nachzusehen, ob jeder Pfad der Modifikation stetig ist.
+Er ist es (die Modifikation ist `0` auf einer meßbaren Nullmenge, die die Unstetigkeitsmenge
+enthält) — **aber die Existenzaussage gibt das nicht her**: sie nennt nur `IsCadlag` je Pfad.
+Statt ihre Konklusion zu verstärken, führt der neue Beweis die Konstruktion selbst, sechs
+Zeilen, und hat damit `Continuous (X' · ω)` an **jedem** `ω`; dann ist
+`{hittingAfter X' [a,∞) 0 ≤ T}` **an jedem Punkt** und nicht bloß fast sicher das Urbild von
+`[a,∞)` unter `supOn T ∘ cadlagPath X'`, und die Meßbarkeit ist eine Gleichheit von Mengen.
+Die Übereinstimmung mit `τ_a` außerhalb der Nullmenge ist ein `simp` über die Definition von
+`hittingAfter`.
+
+**Nicht erreicht und nicht behauptet:** das Bildmaß `Q.map τ_a` ist nicht als **benanntes**
+Maß (die Lévy-Verteilung) ausgesprochen, nur auf den Halbgeraden `Iic T` ausgewertet; und
+`τ_a` ist **nicht** als Stoppzeit gezeigt — Mathlibs `Adapted.isStoppingTime_hittingAfter`
+(`Mathlib/Probability/Process/HittingTime.lean:412` auf `upstream/master`) trägt
+`[WellFoundedLT ι] [Countable ι]` und greift über `ℝ≥0` nicht. Keine der Aussagen ist eine
+Existenzaussage über die Brownsche Bewegung. *(Die Stoppzeitlücke ist im zweiten Teil
+unten geschlossen.)*
+
+### Derselbe Lauf, zweiter Teil — **die erste Passagezeit eines stetigen adaptierten Prozesses ist eine Stoppzeit über `ℝ≥0`**, ohne Rechtsstetigkeit der Filtration und ohne Vervollständigung
+
+*`check_master.py`: **0 / 0 / 0**, Warnungen **18 / 38 / 36 / 76**, unverändert. Axiome der beiden
+neuen Deklarationen: `propext`, `Classical.choice`, `Quot.sound`. `check_duplicates.py`: 45,
+unverändert. Erprobt in `scripts/_dev_hitstop.lean`; zwei Nachbesserungen im Probelauf (ein
+fehlender Cast `ℝ≥0 → ℝ` in `hj.1`, und `Set.mem_setOf_eq` ist auf master veraltet —
+`Set.mem_ofPred_eq` genommen).*
+
+**Mathlib hat es nicht, nachgesehen auf `upstream/master` `09712d488fd`:** die einzigen
+Stoppzeitaussagen über Trefferzeiten stehen in `Mathlib/Probability/Process/HittingTime.lean`
+(`:402` für `hittingBtwn`, `:412` `Adapted.isStoppingTime_hittingAfter`, `:436`), alle über
+`[WellFoundedLT ι] [Countable ι]`. Die Treffer mit `Continuous` in
+`Mathlib/Probability/Process/Stopping.lean:1262,1273` betreffen die Meßbarkeit von
+`stoppedValue`, nicht Trefferzeiten.
+
+**Zwei Deklarationen, im Abschnitt `ContinuousHittingTime` hinter
+`hittingAfter_Ici_le_iff_le_iSup`:**
+
+* `MeasureTheory.hittingAfter_Ici_le_iff_forall_exists_rat` — an einem stetigen reellen Pfad
+  ist `hittingAfter X [a,∞) n ≤ T` genau dann, wenn für jedes `k` ein
+  `q ∈ ({T} ∪ {r⁺ : r ∈ ℚ}) ∩ [n, T]` mit `a - 1/(k+1) < X q` existiert. `T` muß in der
+  abzählbaren Menge liegen, weil bei Treffer genau in `T` kein Rationales rechts davon unter
+  `T` liegt; so vermeidet der Beweis jede Fallunterscheidung bei `n = T` oder `j = 0`.
+* `MeasureTheory.isStoppingTime_hittingAfter_Ici_of_continuous` — für `Adapted f X` über
+  `ℝ≥0` mit **jedem** Pfad stetig ist `hittingAfter X [a,∞) n` eine `IsStoppingTime f`, für
+  jedes `a` und jeden Start `n`. Acht Zeilen aus dem Lemma davor.
+
+**Was die Hypothese „jeder Pfad stetig" heißt, und warum sie nicht abgeschwächt ist.**
+`IsStoppingTime` ist eine Aussage über Mengen und keine fast sichere; mit „fast jeder Pfad"
+bräuchte man eine vervollständigte Filtration, und die Augmentierung hat Mathlib nicht (siehe
+den Befund vom 2026-09-12). Für `IsBrownianReal` ist der Weg daher der aus dem ersten Teil:
+die Modifikation `X'` mit **jedem** Pfad stetig, und deren natürliche Filtration. Das ist
+nicht als eigene Aussage ausgesprochen, weil die Filtration dann die von `X'` und nicht die
+von `X` ist; ein Verbraucher, der optional stoppt, arbeitet ohnehin mit `X'`. Die Aussage ist
+auf `[a, ∞)` und reelle Pfade beschränkt; für beliebige abgeschlossene Mengen in einem
+metrischen Raum geht derselbe Beweis mit `infDist` statt `a - X q`, wurde aber nicht gebraucht.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **`MeasureTheory.lintegral_hittingAfter_eq_top_of_isBrownianReal`** — die erste
+> Passagezeit hat **unendlichen Erwartungswert**: für `IsBrownianReal X Q` mit meßbaren
+> Koordinaten und `0 < a` ist `∫⁻ ω, (hittingAfter X [a,∞) 0 ω : ℝ≥0∞) ∂Q = ∞`, mit
+> `WithTop ℝ≥0 → ℝ≥0∞` über die Ordnungsisomorphie (`WithTop.map` des Einbettens oder
+> `ENNReal` ist definitionsgleich `WithTop ℝ≥0` — **das** ist am Quelltext zuerst zu klären).
+
+*Worauf es ruht:* auf `aemeasurable_hittingAfter_Ici_of_isBrownianReal` und
+`map_hittingAfter_Iic_eq_of_isBrownianReal` aus diesem Lauf; die Schichtformel
+`MeasureTheory.lintegral_eq_lintegral_meas_lt` (oder die `ℝ≥0∞`-Fassung
+`lintegral_eq_lintegral_meas_le`, am Quelltext zu belegen) macht daraus
+`∫ Q (τ_a > T) dT`, und `Q (τ_a > T) = 1 - 2 N [a/√T, ∞) = N (-a/√T, a/√T)` ist für
+`T ≥ a²` mindestens `c / √T` mit `c = 2 a φ(1)`, weil die Gaußdichte auf `[-1, 1]` mindestens
+`φ(1)` ist; `∫_{a²}^∞ T^{-1/2} dT = ∞`. *Warum jetzt:* es ist der erste Verbraucher, der
+`τ_a` als **Zufallsvariable** und nicht als Ereignis liest, also die Probe darauf, daß der erste
+Teil dieses Laufs brauchbar formuliert ist; und es ist die klassische Aussage, die zusammen mit
+der f.s. Endlichkeit (`ae_hittingAfter_ne_top_of_isBrownianReal`) die Nullrekurrenz ausmacht.
+Geschätzt ein Lauf; der teure Teil ist die untere Schranke an die Gaußmasse eines Intervalls,
+für die Mathlib nach bisherigem Stand keine fertige Aussage hat — auch das ist vorher per
+`git grep` auf `upstream/master` zu prüfen.

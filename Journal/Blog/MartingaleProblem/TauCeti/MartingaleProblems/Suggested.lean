@@ -40358,7 +40358,11 @@ Mathlib's results about `MeasureTheory.hittingAfter` that locate the hitting tim
 path the infimum is attained (`MeasureTheory.hittingAfter_mem_set_of_isClosed`), which gives the
 characterisation `MeasureTheory.hittingAfter_le_iff_of_isClosed`, and with it the law of the first
 passage time of Brownian motion from the reflection principle and its finiteness,
-`MeasureTheory.ae_hittingAfter_ne_top_of_isBrownianReal`. -/
+`MeasureTheory.ae_hittingAfter_ne_top_of_isBrownianReal`.  For a continuous adapted real process
+the first passage time is a stopping time over `ℝ≥0`
+(`MeasureTheory.isStoppingTime_hittingAfter_Ici_of_continuous`), and for Brownian motion it is a
+random variable (`MeasureTheory.aemeasurable_hittingAfter_Ici_of_isBrownianReal`) whose law is
+evaluated on `[0, T]` in `MeasureTheory.map_hittingAfter_Iic_eq_of_isBrownianReal`. -/
 
 section ContinuousHittingTime
 
@@ -40429,6 +40433,85 @@ theorem hittingAfter_Ici_le_iff_le_iSup {Ω : Type*} {X : ℝ≥0 → Ω → ℝ
       hω.continuousOn
     exact ⟨m, ⟨zero_le, hmT⟩, h.trans (ciSup_le fun t ↦ hmax t.2)⟩
 
+/-- **At a continuous real path, `τ_a ≤ T` is decided at countably many times.**  With
+`D = {T} ∪ {r⁺ : r ∈ ℚ}`, the first passage time of `[a, ∞)` after `n` is at most `T` exactly when
+for every `k` some `q ∈ D ∩ [n, T]` has `a - 1/(k+1) < X q`.
+
+Forward: `MeasureTheory.hittingAfter_le_iff_of_isClosed` gives `j ∈ [n, T]` with `a ≤ X j`;
+if `j = T` take `q = T`, otherwise continuity at `j` and a rational in `(j, min (j + δ) T)`
+(`exists_rat_btwn`) give `q`.  The time `T` is in `D` because a rational to the right of `j`
+need not exist below `T` when `j = T`.  Backward: the path attains its maximum on the compact
+`[n, T]` (`IsCompact.exists_isMaxOn`), and that maximum exceeds `a - 1/(k+1)` for every `k`. -/
+theorem hittingAfter_Ici_le_iff_forall_exists_rat {Ω : Type*} {X : ℝ≥0 → Ω → ℝ} {ω : Ω}
+    (hω : Continuous (X · ω)) (a : ℝ) (n T : ℝ≥0) :
+    hittingAfter X (Ici a) n ω ≤ T ↔ ∀ k : ℕ, ∃ q ∈ insert T (range fun r : ℚ ↦ (r : ℝ).toNNReal),
+      q ∈ Icc n T ∧ a - 1 / (k + 1) < X q ω := by
+  rw [hittingAfter_le_iff_of_isClosed isClosed_Ici fun t ↦ hω.continuousWithinAt]
+  constructor
+  · rintro ⟨j, hj, hja⟩ k
+    have hε : (0 : ℝ) < 1 / (k + 1) := by positivity
+    rcases hj.2.eq_or_lt with hjT | hjT
+    · refine ⟨T, mem_insert _ _, hjT ▸ hj, ?_⟩
+      rw [← hjT]
+      have : a ≤ X j ω := hja
+      linarith
+    · obtain ⟨δ, hδ, hball⟩ := Metric.continuous_iff.1 hω j (1 / (k + 1)) hε
+      obtain ⟨r, hr1, hr2⟩ := exists_rat_btwn
+        (lt_min (by linarith : (j : ℝ) < j + δ) (NNReal.coe_lt_coe.2 hjT))
+      have hr0 : (0 : ℝ) ≤ r := j.2.trans hr1.le
+      set q : ℝ≥0 := (r : ℝ).toNNReal
+      have hq : (q : ℝ) = r := Real.coe_toNNReal _ hr0
+      refine ⟨q, mem_insert_of_mem _ ⟨r, rfl⟩, ⟨?_, ?_⟩, ?_⟩
+      · rw [← NNReal.coe_le_coe, hq]; exact (NNReal.coe_le_coe.2 hj.1).trans hr1.le
+      · rw [← NNReal.coe_le_coe, hq]; exact (hr2.trans_le (min_le_right _ _)).le
+      · have hd : dist q j < δ := by
+          rw [NNReal.dist_eq, hq, abs_of_pos (by linarith)]
+          linarith [min_le_left ((j : ℝ) + δ) T, hr2]
+        have h := hball q hd
+        rw [Real.dist_eq] at h
+        have : a ≤ X j ω := hja
+        linarith [neg_abs_le (X q ω - X j ω)]
+  · intro h
+    obtain ⟨q₀, -, hq₀, -⟩ := h 0
+    obtain ⟨m, hm, hmax⟩ := isCompact_Icc.exists_isMaxOn ⟨q₀, hq₀⟩ hω.continuousOn
+    refine ⟨m, hm, ?_⟩
+    change a ≤ X m ω
+    by_contra hlt
+    push Not at hlt
+    obtain ⟨k, hk⟩ := exists_nat_one_div_lt (sub_pos.2 hlt)
+    obtain ⟨q, -, hq, hqa⟩ := h k
+    have : X q ω ≤ X m ω := hmax hq
+    linarith
+
+/-- **The first passage time of a continuous adapted real process is a stopping time**, over the
+index `ℝ≥0`.  For a filtration `f` on `ℝ≥0`, `MeasureTheory.Adapted f X`, **every** path
+continuous, every level `a` and start `n`, `hittingAfter X [a, ∞) n` is a
+`MeasureTheory.IsStoppingTime` of `f` — without right continuity of the filtration and without
+completion.
+
+Mathlib's `MeasureTheory.Adapted.isStoppingTime_hittingAfter`
+(`Mathlib/Probability/Process/HittingTime.lean:412`) carries `[WellFoundedLT ι] [Countable ι]`
+and excludes `ℝ≥0`.  Here `MeasureTheory.hittingAfter_Ici_le_iff_forall_exists_rat` writes
+`{τ ≤ T}` as a countable intersection of countable unions of the events `{a - 1/(k+1) < X q}`,
+`q ∈ [n, T]`, each in `f q ≤ f T`.  Continuity of every path is used, not only of almost every
+path: `IsStoppingTime` is a statement about sets, not an almost sure one. -/
+theorem isStoppingTime_hittingAfter_Ici_of_continuous {Ω : Type*} {m : MeasurableSpace Ω}
+    {f : Filtration ℝ≥0 m} {X : ℝ≥0 → Ω → ℝ} (hX : Adapted f X)
+    (hc : ∀ ω, Continuous (X · ω)) (a : ℝ) (n : ℝ≥0) :
+    IsStoppingTime f (hittingAfter X (Ici a) n) := by
+  intro T
+  have hD : (insert T (range fun r : ℚ ↦ (r : ℝ).toNNReal) ∩ Icc n T).Countable :=
+    ((countable_range _).insert T).mono inter_subset_left
+  have hset : {ω | hittingAfter X (Ici a) n ω ≤ T} = ⋂ k : ℕ,
+      ⋃ q ∈ insert T (range fun r : ℚ ↦ (r : ℝ).toNNReal) ∩ Icc n T,
+        {ω | a - 1 / (k + 1) < X q ω} := by
+    ext ω
+    simp only [mem_ofPred_eq, mem_iInter, mem_iUnion, mem_inter_iff, exists_prop, and_assoc]
+    exact hittingAfter_Ici_le_iff_forall_exists_rat (hc ω) a n T
+  rw [hset]
+  refine MeasurableSet.iInter fun k ↦ MeasurableSet.biUnion hD fun q hq ↦ ?_
+  exact f.mono hq.2.2 _ ((hX q) measurableSet_Ioi)
+
 /-- **The law of the first passage time of Brownian motion.**  For
 `ProbabilityTheory.IsBrownianReal X Q` with measurable coordinates, `0 < T` and `0 < a`, the
 first time `τ_a = hittingAfter X [a, ∞) 0` at which `X` reaches `a` satisfies
@@ -40476,6 +40559,33 @@ theorem two_mul_gaussianReal_Ioi_zero :
   rw [two_mul]
   exact hU
 
+/-- **The upper tail of a pre-Brownian coordinate is a standard Gaussian tail.**  For
+`ProbabilityTheory.IsPreBrownianReal X Q` with measurable coordinates, `0 < t` and every real
+`a`, `Q (a ≤ X t) = N [a / √t, ∞)` for the standard Gaussian `N`.  `X t` has law
+`gaussianReal 0 t` (`ProbabilityTheory.IsPreBrownianReal.hasLaw_eval`), so `X t / √t` has law
+`gaussianReal 0 1` (`ProbabilityTheory.gaussianReal_div_const`), and dividing by `√t > 0`
+preserves the order. -/
+theorem measure_le_eval_eq_gaussianReal_Ici
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsPreBrownianReal X Q) (hm : ∀ t, Measurable (X t))
+    {t : ℝ≥0} (ht : 0 < t) (a : ℝ) :
+    Q {ω | a ≤ X t ω} = gaussianReal 0 1 (Ici (a / Real.sqrt t)) := by
+  have hs : 0 < Real.sqrt t := Real.sqrt_pos.2 (by exact_mod_cast ht)
+  have hl := gaussianReal_div_const (hX.hasLaw_eval t) (Real.sqrt t)
+  have hl' : HasLaw (fun ω ↦ X t ω / Real.sqrt t) (gaussianReal 0 1) Q := by
+    convert hl using 2
+    · simp
+    · apply NNReal.eq
+      rw [NNReal.coe_one, NNReal.coe_div]
+      change (1 : ℝ) = (t : ℝ) / Real.sqrt t ^ 2
+      rw [eq_comm, div_eq_one_iff_eq (by positivity)]
+      exact (Real.sq_sqrt t.2).symm
+  rw [← hl'.map_eq, Measure.map_apply ((hm t).div_const _) measurableSet_Ici]
+  congr 1
+  ext ω
+  simp only [mem_ofPred_eq, mem_preimage, mem_Ici]
+  rw [div_le_div_iff_of_pos_right hs]
+
 /-- **Brownian motion reaches every level: the first passage time is finite almost surely.**
 For `ProbabilityTheory.IsBrownianReal X Q` with measurable coordinates and every real `a`,
 `hittingAfter X [a, ∞) 0 ≠ ⊤` for `Q`-almost every `ω`.
@@ -40519,23 +40629,8 @@ theorem ae_hittingAfter_ne_top_of_isBrownianReal
     exact propext (hittingAfter_Ici_le_iff_le_iSup hcont a T).symm
   -- `Q (a ≤ X t)` is a standard Gaussian tail at `a / √t`
   have hG : ∀ t : ℝ≥0, 0 < t →
-      Q {ω | a ≤ X t ω} = gaussianReal 0 1 (Ici (a / Real.sqrt t)) := by
-    intro t ht
-    have hs : 0 < Real.sqrt t := Real.sqrt_pos.2 (by exact_mod_cast ht)
-    have hl := gaussianReal_div_const (hX.hasLaw_eval t) (Real.sqrt t)
-    have hl' : HasLaw (fun ω ↦ X t ω / Real.sqrt t) (gaussianReal 0 1) Q := by
-      convert hl using 2
-      · simp
-      · apply NNReal.eq
-        rw [NNReal.coe_one, NNReal.coe_div]
-        change (1 : ℝ) = (t : ℝ) / Real.sqrt t ^ 2
-        rw [eq_comm, div_eq_one_iff_eq (by positivity)]
-        exact (Real.sq_sqrt t.2).symm
-    rw [← hl'.map_eq, Measure.map_apply ((hm t).div_const _) measurableSet_Ici]
-    congr 1
-    ext ω
-    simp only [mem_ofPred_eq, mem_preimage, mem_Ici]
-    rw [div_le_div_iff_of_pos_right hs]
+      Q {ω | a ≤ X t ω} = gaussianReal 0 1 (Ici (a / Real.sqrt t)) := fun t ht ↦
+    measure_le_eval_eq_gaussianReal_Ici hX.toIsPreBrownianReal hm ht a
   -- and it tends to `1/2`
   have hlim : Tendsto (fun k : ℕ ↦ 2 * Q {ω | a ≤ X ((k : ℝ≥0) + 1) ω}) atTop (𝓝 1) := by
     have hmono : Monotone fun k : ℕ ↦ Ici (a / Real.sqrt (((k : ℝ≥0) + 1 : ℝ≥0) : ℝ)) := by
@@ -40659,6 +40754,70 @@ theorem ae_frequently_eq_of_isBrownianReal
   obtain ⟨t, ht, hta⟩ := intermediate_value_Icc' h12 (f := fun s ↦ X s ω) hc.continuousOn
     (show a ∈ Icc (X t₂ ω) (X t₁ ω) from ⟨by linarith, by linarith⟩)
   exact ⟨t, hT1.trans ht.1, hta⟩
+
+/-- **The first passage time of Brownian motion is a random variable.**  For
+`ProbabilityTheory.IsBrownianReal X Q` with measurable coordinates and every real `a`,
+`τ_a = hittingAfter X [a, ∞) 0 : Ω' → WithTop ℝ≥0` is almost everywhere measurable, for the Borel
+structure of `WithTop ℝ≥0` (`Mathlib/MeasureTheory/Constructions/BorelSpace/WithTop.lean`).
+
+The discontinuous paths lie in a measurable null set `N`
+(`MeasureTheory.exists_measurable_superset_of_null`), and `X'` is `0` on `N` and `X` off it, so
+**every** path of `X'` is continuous, not only almost every one.  Then
+`{hittingAfter X' [a, ∞) 0 ≤ T}` is, at every `ω`, the preimage of `[a, ∞)` under
+`SkorokhodSpace.supOn T` and the path map of `X'`
+(`MeasureTheory.hittingAfter_Ici_le_iff_le_iSup`), which is measurable, and `measurable_of_Iic`
+makes the hitting time of `X'` measurable; it agrees with `τ_a` off `N`.  The value `⊤` on paths
+that never reach `a` is the truth and not a junk value.  **Not an existence statement**: `X` is a
+hypothesis. -/
+theorem aemeasurable_hittingAfter_Ici_of_isBrownianReal
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t)) (a : ℝ) :
+    AEMeasurable (hittingAfter X (Ici a) 0) Q := by
+  obtain ⟨N, hsub, hNm, hN0⟩ := exists_measurable_superset_of_null (ae_iff.1 hX.cont)
+  classical
+  set X' : ℝ≥0 → Ω' → ℝ := fun t ω ↦ if ω ∈ N then 0 else X t ω
+  have hcont : ∀ ω, Continuous (X' · ω) := by
+    intro ω
+    by_cases hω : ω ∈ N
+    · simp only [X', ite_eq_left hω]
+      exact continuous_const
+    · simp only [X', ite_eq_right hω]
+      exact not_not.1 fun h ↦ hω (hsub h)
+  have hc : ∀ ω, IsCadlag (X' · ω) := fun ω ↦ (hcont ω).isCadlag
+  have hm' : ∀ t, Measurable (X' t) := fun t ↦ Measurable.ite hNm measurable_const (hm t)
+  have hYm : Measurable (cadlagPath X' hc) := measurable_cadlagPath hc hm'
+  refine ⟨hittingAfter X' (Ici a) 0, measurable_of_Iic fun T ↦ ?_, ?_⟩
+  · induction T with
+    | top => simp
+    | coe T =>
+      convert hYm ((SkorokhodSpace.measurable_supOn T) (measurableSet_Ici (a := a))) using 1
+      ext ω
+      change hittingAfter X' (Ici a) 0 ω ≤ T ↔ a ≤ SkorokhodSpace.supOn T (cadlagPath X' hc ω)
+      rw [hittingAfter_Ici_le_iff_le_iSup (hcont ω) a T]
+      rfl
+  · filter_upwards [measure_eq_zero_iff_ae_notMem.1 hN0] with ω hω
+    simp only [hittingAfter, X', hω, ite_false]
+
+/-- **The law of the first passage time of Brownian motion, as the image measure of a random
+variable.**  For `ProbabilityTheory.IsBrownianReal X Q` with measurable coordinates, `0 < a` and
+`0 < T`, the law of `τ_a = hittingAfter X [a, ∞) 0` gives `[0, T]` the mass
+`2 N [a / √T, ∞)`, for the standard Gaussian `N`.
+
+`MeasureTheory.aemeasurable_hittingAfter_Ici_of_isBrownianReal` makes `Measure.map` evaluate as a
+preimage (`MeasureTheory.Measure.map_apply_of_aemeasurable`),
+`MeasureTheory.measure_hittingAfter_le_eq_two_mul_of_isBrownianReal` gives `2 Q (a ≤ X T)`, and
+`MeasureTheory.measure_le_eval_eq_gaussianReal_Ici` the Gaussian tail.  **Not an existence
+statement**: `X` is a hypothesis. -/
+theorem map_hittingAfter_Iic_eq_of_isBrownianReal
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t))
+    {a : ℝ} (ha : 0 < a) {T : ℝ≥0} (hT : 0 < T) :
+    (Q.map (hittingAfter X (Ici a) 0)) (Iic (T : WithTop ℝ≥0))
+      = 2 * gaussianReal 0 1 (Ici (a / Real.sqrt T)) := by
+  rw [Measure.map_apply_of_aemeasurable (aemeasurable_hittingAfter_Ici_of_isBrownianReal hX hm a)
+    measurableSet_Iic, ← measure_le_eval_eq_gaussianReal_Ici hX.toIsPreBrownianReal hm hT a,
+    ← measure_hittingAfter_le_eq_two_mul_of_isBrownianReal hX hm hT ha]
+  rfl
 
 end ContinuousHittingTime
 
