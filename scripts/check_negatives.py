@@ -541,6 +541,81 @@ CLAIMS_TODO8 = [
      'ofHasCompactSupport|hasCompactSupport.*toBoundedContinuous',
      ['Mathlib/'],
      []),
+    # Die Negativbefunde der Brownschen Läufe des 2026-09-25 (zweiter bis
+    # vierzehnter Lauf), am 2026-09-25, fünfzehnter Lauf, hier eingetragen und
+    # gegen `upstream/master` `a61b94c216f` geprüft.  Fundort ist jeweils der
+    # Laufbericht in `Facts/INVENTAR.md` und der Doc-Kommentar der genannten
+    # Deklaration in `MartingaleProblems/Suggested.lean`.
+    ('bm-cadlag-brownian',
+     'INVENTAR, 2026-09-25 zweiter Lauf; `isBrownianReal_of_isCadlagMPSolution`',
+     'Mathlib hat keine Aussage „pre-Brownsch plus càdlàg ist Brownsch".',
+     'isBrownianReal_of',
+     ['Mathlib/Probability/'],
+     []),
+    ('gauss-higher-moments',
+     'INVENTAR, 2026-09-25 vierzehnter Lauf; '
+     '`ProbabilityTheory.integral_pow_four_gaussianReal_zero`',
+     'Mathlib führt kein Moment von `gaussianReal` über dem zweiten; die '
+     'Momentaussagen in `Distributions/Gaussian/` sind Mittel, Varianz, `memLp`.',
+     '\\^ 3|\\^ 4|pow_three|pow_four',
+     ['Mathlib/Probability/Distributions/Gaussian/'],
+     []),
+    ('gauss-halfline',
+     'INVENTAR, 2026-09-25 neunter Lauf; `two_mul_gaussianReal_Ioi_zero`',
+     'Mathlib führt keine Masse einer Halbgeraden unter `gaussianReal`.',
+     'gaussianReal.*(Ioi|Ici|Iic|Iio) 0',
+     ['Mathlib/'],
+     []),
+    ('reflection-principle',
+     'INVENTAR, 2026-09-25 sechster und achter Lauf',
+     'Mathlib hat das Spiegelungsprinzip der Brownschen Bewegung nicht.',
+     'reflection_principle|reflectionPrinciple|reflection principle',
+     ['Mathlib/'],
+     # Die Spiegelungsformel der Bernoulli-Polynome, ein Namensvetter.
+     ['Mathlib/NumberTheory/ZetaValues.lean']),
+    ('levy-distribution',
+     'INVENTAR, 2026-09-25 elfter Lauf',
+     'Mathlib hat die Lévy-Verteilung nicht.',
+     'levy',
+     ['Mathlib/Probability/Distributions/'],
+     []),
+    ('bm-martingale',
+     'INVENTAR, 2026-09-25 zwölfter Lauf',
+     'In `Mathlib/Probability/BrownianMotion/` steht kein Martingalsatz und '
+     'kein exponentielles Martingal.',
+     'martingale|\\bexp\\b',
+     ['Mathlib/Probability/BrownianMotion/'],
+     []),
+    ('gamblers-ruin',
+     'INVENTAR, 2026-09-25 zwölfter Lauf',
+     'Mathlib hat den Ruin des Spielers nicht.',
+     'gambler|\\bruin\\b',
+     ['Mathlib/'],
+     # „and ruin" in einem Doc-Kommentar über Quandles.
+     ['Mathlib/Algebra/Quandle.lean']),
+    ('wald-identity',
+     'INVENTAR, 2026-09-25 zwölfter Lauf',
+     'Mathlib hat Walds Identitäten nicht.',
+     '\\bwald\\b|wald_|_wald',
+     ['Mathlib/Probability/'],
+     []),
+    ('laplace-uniqueness',
+     'INVENTAR, 2026-09-25 vierzehnter Lauf',
+     'Mathlib hat keinen Eindeutigkeitssatz für die Laplace-Transformierte auf '
+     '`(0, ∞)`; `Measure.ext_of_complexMGF_eq` braucht die imaginäre Achse.',
+     'laplace.*(inj|ext|uniq)',
+     ['Mathlib/'],
+     []),
+    ('hittingAfter-continuous-time',
+     'INVENTAR, 2026-09-25 neunter und zehnter Lauf',
+     'Die lokalisierenden Aussagen über `hittingAfter` und die '
+     'Stoppzeiteigenschaft tragen `[WellFoundedLT ι]` bzw. `[Countable ι]`; '
+     'über `ℝ≥0` gilt keine.  Das Muster findet jede Datei, die `hittingAfter` '
+     'benutzt; eine neue ist nachzulesen.',
+     'hittingAfter',
+     ['Mathlib/'],
+     ['Mathlib/Probability/Process/HittingTime.lean',
+      'Mathlib/Probability/Martingale/BorelCantelli.lean']),
 ]
 
 

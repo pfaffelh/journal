@@ -1,4 +1,4 @@
-# Negativaussagen gegen `upstream/master` `09712d488fdbecc0b1d9248a283cf2aa31081b55`
+# Negativaussagen gegen `upstream/master` `a61b94c216f0aa29fce1033fdc1f1bbcd9bea90a`
 
 ## Die Behauptungen der Roadmaps
 
@@ -455,7 +455,81 @@ Suche `HasCompactSupport\.iteratedDeriv|iteratedDeriv.*HasCompactSupport|support
 Suche `ofHasCompactSupport|hasCompactSupport.*toBoundedContinuous` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
 
 
+## `bm-cadlag-brownian` — INVENTAR, 2026-09-25 zweiter Lauf; `isBrownianReal_of_isCadlagMPSolution`
+
+> Mathlib hat keine Aussage „pre-Brownsch plus càdlàg ist Brownsch".
+
+Suche `isBrownianReal_of` unter `Mathlib/Probability/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
+## `gauss-higher-moments` — INVENTAR, 2026-09-25 vierzehnter Lauf; `ProbabilityTheory.integral_pow_four_gaussianReal_zero`
+
+> Mathlib führt kein Moment von `gaussianReal` über dem zweiten; die Momentaussagen in `Distributions/Gaussian/` sind Mittel, Varianz, `memLp`.
+
+Suche `\^ 3|\^ 4|pow_three|pow_four` unter `Mathlib/Probability/Distributions/Gaussian/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
+## `gauss-halfline` — INVENTAR, 2026-09-25 neunter Lauf; `two_mul_gaussianReal_Ioi_zero`
+
+> Mathlib führt keine Masse einer Halbgeraden unter `gaussianReal`.
+
+Suche `gaussianReal.*(Ioi|Ici|Iic|Iio) 0` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
+## `reflection-principle` — INVENTAR, 2026-09-25 sechster und achter Lauf
+
+> Mathlib hat das Spiegelungsprinzip der Brownschen Bewegung nicht.
+
+Suche `reflection_principle|reflectionPrinciple|reflection principle` unter `Mathlib/`: **1 Treffer** in 1 Dateien — wie erwartet.
+
+* `Mathlib/NumberTheory/ZetaValues.lean`
+
+## `levy-distribution` — INVENTAR, 2026-09-25 elfter Lauf
+
+> Mathlib hat die Lévy-Verteilung nicht.
+
+Suche `levy` unter `Mathlib/Probability/Distributions/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
+## `bm-martingale` — INVENTAR, 2026-09-25 zwölfter Lauf
+
+> In `Mathlib/Probability/BrownianMotion/` steht kein Martingalsatz und kein exponentielles Martingal.
+
+Suche `martingale|\bexp\b` unter `Mathlib/Probability/BrownianMotion/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
+## `gamblers-ruin` — INVENTAR, 2026-09-25 zwölfter Lauf
+
+> Mathlib hat den Ruin des Spielers nicht.
+
+Suche `gambler|\bruin\b` unter `Mathlib/`: **1 Treffer** in 1 Dateien — wie erwartet.
+
+* `Mathlib/Algebra/Quandle.lean`
+
+## `wald-identity` — INVENTAR, 2026-09-25 zwölfter Lauf
+
+> Mathlib hat Walds Identitäten nicht.
+
+Suche `\bwald\b|wald_|_wald` unter `Mathlib/Probability/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
+## `laplace-uniqueness` — INVENTAR, 2026-09-25 vierzehnter Lauf
+
+> Mathlib hat keinen Eindeutigkeitssatz für die Laplace-Transformierte auf `(0, ∞)`; `Measure.ext_of_complexMGF_eq` braucht die imaginäre Achse.
+
+Suche `laplace.*(inj|ext|uniq)` unter `Mathlib/`: **0 Treffer** in 0 Dateien — wie erwartet.
+
+
+## `hittingAfter-continuous-time` — INVENTAR, 2026-09-25 neunter und zehnter Lauf
+
+> Die lokalisierenden Aussagen über `hittingAfter` und die Stoppzeiteigenschaft tragen `[WellFoundedLT ι]` bzw. `[Countable ι]`; über `ℝ≥0` gilt keine.  Das Muster findet jede Datei, die `hittingAfter` benutzt; eine neue ist nachzulesen.
+
+Suche `hittingAfter` unter `Mathlib/`: **64 Treffer** in 2 Dateien — wie erwartet.
+
+* `Mathlib/Probability/Martingale/BorelCantelli.lean`
+* `Mathlib/Probability/Process/HittingTime.lean`
+
 ## Zusammenfassung
 
-62 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
+72 Behauptungen geprüft, 0 mit unerwarteten Treffern: keine.
 
