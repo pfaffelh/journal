@@ -38549,3 +38549,269 @@ theorem exists_tendsto_map_rescaledWalk_isBrownianReal
 end DonskerContinuity
 
 end MeasureTheory
+
+/-! ### Càdlàg pre-Brownian motions are Brownian
+
+A statement about Mathlib's predicates alone, without any martingale problem:
+`ProbabilityTheory.IsPreBrownianReal` together with almost surely càdlàg paths is
+`ProbabilityTheory.IsBrownianReal`.  Applied to the scaled coordinate process of
+a càdlàg solution of the martingale problem of `brownianGeneratorPairs v`, it
+gives the field `cont` for **every** such solution started at `0`, and not only
+for Donsker's limit, where
+`MeasureTheory.exists_tendsto_map_rescaledWalk_isBrownianReal` reads it off the
+construction. -/
+
+namespace ProbabilityTheory
+
+section CadlagPreBrownian
+
+open scoped ENNReal
+
+/-- **A jump of a càdlàg path is seen by every fine enough grid.**  If a càdlàg
+`x : ℝ≥0 → ℝ` is not continuous, there are a size `1 / (m + 1)`, a horizon `M` and
+a mesh index `N` such that for **every** `n ≥ N` some increment of `x` over a cell
+`[k / (n + 1), (k + 1) / (n + 1)]` with `k < (n + 1) M` has size at least
+`1 / (m + 1)`.
+
+The point `t` of discontinuity is a left jump, `lim_{s ↑ t} x s = L ≠ x t`, because
+the right continuity is given and the two one sided limits together would be
+continuity (`nhdsLT_sup_nhdsGE`); and `t > 0`, because at `0` the left
+neighbourhood filter is `⊥`.  Then `x` is `d/3`-close to `L` on some `(a, t)` and
+to `x t` on some `[t, u)`, with `d = |L − x t|`, and the cell containing `t` in its
+closed right half, `k + 1 = ⌈t (n + 1)⌉₊`, has its two ends in these intervals as
+soon as the mesh is smaller than both.  "For every `n ≥ N`" and not "for
+infinitely many `n`" is the point: it makes the bad event a `liminf`, whose
+measure is bounded by each single term, and no Borel--Cantelli summability is
+needed. -/
+theorem _root_.IsCadlag.exists_le_abs_sub_of_not_continuous {x : ℝ≥0 → ℝ} (hx : IsCadlag x)
+    (hc : ¬ Continuous x) :
+    ∃ m M N : ℕ, ∀ n ≥ N, ∃ k < (n + 1) * M, 1 / ((m : ℝ) + 1) ≤
+      |x (((k : ℝ≥0) + 1) / ((n : ℝ≥0) + 1)) - x ((k : ℝ≥0) / ((n : ℝ≥0) + 1))| := by
+  obtain ⟨t, ht⟩ : ∃ t, ¬ ContinuousAt x t := by
+    by_contra h
+    push Not at h
+    exact hc (continuous_iff_continuousAt.2 h)
+  have hR : Tendsto x (𝓝[≥] t) (𝓝 (x t)) :=
+    continuousWithinAt_Ioi_iff_Ici.1 (hx.isRightContinuous t)
+  have hne : ∀ L, Tendsto x (𝓝[<] t) (𝓝 L) → L ≠ x t := by
+    rintro L hL rfl
+    have := hL.sup hR
+    rw [nhdsLT_sup_nhdsGE] at this
+    exact ht this
+  obtain ⟨L, hL⟩ := hx.tendsto_nhdsLT t
+  have hLt := hne L hL
+  have ht0 : 0 < t := by
+    refine pos_iff_ne_zero.2 fun h0 => hne (x t) ?_ rfl
+    have : 𝓝[<] t = ⊥ := by
+      rw [h0]
+      have : Set.Iio (0 : ℝ≥0) = ∅ := Set.eq_empty_of_forall_notMem fun z hz => not_lt.2 (zero_le : (0 : ℝ≥0) ≤ z) hz
+      rw [this, nhdsWithin_empty]
+    rw [this]
+    exact tendsto_bot
+  set d := dist L (x t)
+  have hd : 0 < d := dist_pos.2 hLt
+  obtain ⟨m, hm⟩ := exists_nat_one_div_lt (show (0 : ℝ) < d / 3 by positivity)
+  obtain ⟨a, ha, hsa⟩ := (mem_nhdsLT_iff_exists_Ioo_subset' ht0).1
+    (Metric.tendsto_nhds.1 hL (d / 3) (by positivity))
+  obtain ⟨u, hu, hsu⟩ := (mem_nhdsGE_iff_exists_Ico_subset' (lt_add_one t)).1
+    (Metric.tendsto_nhds.1 hR (d / 3) (by positivity))
+  have hδ : 0 < min (t - a) (u - t) := lt_min (tsub_pos_of_lt ha) (tsub_pos_of_lt hu)
+  obtain ⟨N, hN⟩ := exists_nat_one_div_lt hδ
+  refine ⟨m, ⌈t⌉₊ + 1, N, fun n hn => ?_⟩
+  have hn1 : (0 : ℝ≥0) < (n : ℝ≥0) + 1 := by positivity
+  have hsmall : 1 / ((n : ℝ≥0) + 1) < min (t - a) (u - t) :=
+    lt_of_le_of_lt (one_div_le_one_div_of_le (by positivity) (by exact_mod_cast Nat.succ_le_succ hn)) hN
+  obtain ⟨k, hk⟩ : ∃ k : ℕ, ⌈t * ((n : ℝ≥0) + 1)⌉₊ = k + 1 :=
+    Nat.exists_eq_add_one_of_ne_zero (Nat.ceil_pos.2 (by positivity)).ne'
+  have hc1 : t * ((n : ℝ≥0) + 1) ≤ (k : ℝ≥0) + 1 := by
+    have := Nat.le_ceil (t * ((n : ℝ≥0) + 1)); rw [hk] at this; exact_mod_cast this
+  have hc2 : (k : ℝ≥0) + 1 < t * ((n : ℝ≥0) + 1) + 1 := by
+    have := Nat.ceil_lt_add_one (zero_le : (0 : ℝ≥0) ≤ t * ((n : ℝ≥0) + 1)); rw [hk] at this
+    exact_mod_cast this
+  have hsplit : ((k : ℝ≥0) + 1) / ((n : ℝ≥0) + 1) = (k : ℝ≥0) / ((n : ℝ≥0) + 1) + 1 / ((n : ℝ≥0) + 1) :=
+    add_div _ _ _
+  have h1 : t ≤ ((k : ℝ≥0) + 1) / ((n : ℝ≥0) + 1) := (le_div_iff₀ hn1).2 hc1
+  have h3 : (k : ℝ≥0) / ((n : ℝ≥0) + 1) < t := by
+    rw [div_lt_iff₀ hn1]
+    exact lt_of_add_lt_add_right hc2
+  have h2 : ((k : ℝ≥0) + 1) / ((n : ℝ≥0) + 1) < u := by
+    rw [hsplit]
+    have := lt_of_lt_of_le hsmall (min_le_right _ _)
+    rw [lt_tsub_iff_left] at this
+    calc _ < t + 1 / ((n : ℝ≥0) + 1) := by gcongr
+      _ < u := this
+  have h4 : a < (k : ℝ≥0) / ((n : ℝ≥0) + 1) := by
+    have := lt_of_lt_of_le hsmall (min_le_left _ _)
+    rw [lt_tsub_iff_left] at this
+    have h5 : a + 1 / ((n : ℝ≥0) + 1) < (k : ℝ≥0) / ((n : ℝ≥0) + 1) + 1 / ((n : ℝ≥0) + 1) := by
+      rw [← hsplit]; exact this.trans_le h1
+    exact lt_of_add_lt_add_right h5
+  refine ⟨k, ?_, ?_⟩
+  · have : (k : ℝ≥0) / ((n : ℝ≥0) + 1) < ((⌈t⌉₊ + 1 : ℕ) : ℝ≥0) :=
+      h3.trans_le ((Nat.le_ceil t).trans (by exact_mod_cast Nat.le_succ _))
+    rw [div_lt_iff₀ hn1] at this
+    exact_mod_cast (show ((k : ℕ) : ℝ≥0) < (((n + 1) * (⌈t⌉₊ + 1) : ℕ) : ℝ≥0) by
+      push_cast at this ⊢; rwa [mul_comm])
+  · set p := (k : ℝ≥0) / ((n : ℝ≥0) + 1)
+    set q := ((k : ℝ≥0) + 1) / ((n : ℝ≥0) + 1)
+    have e1 : dist (x q) (x t) < d / 3 := hsu ⟨h1, h2⟩
+    have e2 : dist (x p) L < d / 3 := hsa ⟨h4, h3⟩
+    rw [← Real.dist_eq]
+    have h6 := dist_triangle4 L (x p) (x q) (x t)
+    have h7 : dist L (x p) = dist (x p) L := dist_comm _ _
+    have h8 : dist (x p) (x q) = dist (x q) (x p) := dist_comm _ _
+    linarith
+
+variable {Ω : Type*} {mΩ : MeasurableSpace Ω} {B : ℝ≥0 → Ω → ℝ} {P : Measure Ω}
+
+/-- The fourth moment of the standard Gaussian is finite, in the `lintegral`
+form in which Markov's inequality reads it.  From
+`ProbabilityTheory.memLp_id_gaussianReal'`; its value `3` is not needed and is not
+in Mathlib. -/
+lemma lintegral_ofReal_pow_four_gaussianReal_ne_top :
+    ∫⁻ y, ENNReal.ofReal (y ^ 4) ∂gaussianReal 0 1 ≠ ∞ := by
+  have h := (memLp_id_gaussianReal' (μ := 0) (v := 1) ((4 : ℕ) : ℝ≥0∞) (by simp)).integrable_norm_pow
+    (by norm_num)
+  have := h.lintegral_lt_top
+  refine ne_of_lt (lt_of_eq_of_lt (lintegral_congr fun y => ?_) this)
+  simp [Real.norm_eq_abs, Even.pow_abs (by decide : Even 4)]
+
+/-- **The increment tail of a pre-Brownian motion, from the fourth moment.**
+`P (ε ≤ |B t − B s|) ≤ |t − s|² / ε⁴ · 𝔼[N⁴]` with `N` standard Gaussian: Markov's
+inequality for `(B t − B s)⁴`, whose law is that of `√|t − s| · N` by
+`ProbabilityTheory.IsPreBrownianReal.hasLaw_sub` and
+`ProbabilityTheory.gaussianReal_map_const_mul`.  The square of the mesh is what
+beats the number of cells of a grid; the second moment would give only the mesh
+itself and would not suffice. -/
+lemma IsPreBrownianReal.measure_le_abs_sub_le (hB : IsPreBrownianReal B P) (s t : ℝ≥0) {ε : ℝ}
+    (hε : 0 < ε) :
+    P {ω | ε ≤ |B t ω - B s ω|} ≤
+      ENNReal.ofReal (dist t s ^ 2 / ε ^ 4) * ∫⁻ y, ENNReal.ofReal (y ^ 4) ∂gaussianReal 0 1 := by
+  have hX := hB.hasLaw_sub t s
+  set K := ∫⁻ y, ENNReal.ofReal (y ^ 4) ∂gaussianReal 0 1
+  have hsub : {ω | ε ≤ |B t ω - B s ω|} ⊆
+      {ω | ENNReal.ofReal (ε ^ 4) ≤ ENNReal.ofReal ((B t - B s) ω ^ 4)} := by
+    intro ω hω
+    have hω' : ε ≤ |B t ω - B s ω| := hω
+    show ENNReal.ofReal (ε ^ 4) ≤ ENNReal.ofReal ((B t ω - B s ω) ^ 4)
+    apply ENNReal.ofReal_le_ofReal
+    calc ε ^ 4 ≤ |B t ω - B s ω| ^ 4 := pow_le_pow_left₀ hε.le hω' 4
+      _ = (B t ω - B s ω) ^ 4 := Even.pow_abs (by decide : Even 4) _
+  have hmap : ∀ δ : ℝ≥0, gaussianReal 0 δ =
+      (gaussianReal 0 1).map (fun y => Real.sqrt δ * y) := by
+    intro δ
+    rw [gaussianReal_map_const_mul]
+    congr 1
+    · simp
+    · ext
+      simp
+  have hδ : ((nndist t.1 s.1 : ℝ≥0) : ℝ) = dist t s := by
+    rw [coe_nndist, NNReal.dist_eq, Real.dist_eq]; rfl
+  have hint : ∫⁻ ω, ENNReal.ofReal ((B t - B s) ω ^ 4) ∂P = ENNReal.ofReal (dist t s ^ 2) * K := by
+    rw [hX.lintegral_comp (f := fun x => ENNReal.ofReal (x ^ 4)) (by fun_prop), hmap,
+      lintegral_map (by fun_prop) (by fun_prop), ← lintegral_const_mul _ (by fun_prop)]
+    refine lintegral_congr fun y => ?_
+    rw [← ENNReal.ofReal_mul (by positivity), mul_pow]
+    congr 2
+    rw [show (4 : ℕ) = 2 * 2 from rfl, pow_mul, Real.sq_sqrt (NNReal.coe_nonneg _), hδ]
+  calc P {ω | ε ≤ |B t ω - B s ω|}
+      ≤ P {ω | ENNReal.ofReal (ε ^ 4) ≤ ENNReal.ofReal ((B t - B s) ω ^ 4)} := measure_mono hsub
+    _ ≤ (∫⁻ ω, ENNReal.ofReal ((B t - B s) ω ^ 4) ∂P) / ENNReal.ofReal (ε ^ 4) :=
+        meas_ge_le_lintegral_div ((hX.aemeasurable.pow_const 4).ennreal_ofReal)
+          (by simp; positivity) ENNReal.ofReal_ne_top
+    _ = ENNReal.ofReal (dist t s ^ 2 / ε ^ 4) * K := by
+        rw [hint, ENNReal.ofReal_div_of_pos (by positivity), div_eq_mul_inv, div_eq_mul_inv,
+          mul_right_comm]
+
+/-- **A pre-Brownian motion with càdlàg paths is a Brownian motion.**  The
+finite dimensional laws alone force continuity once the paths are known to be
+càdlàg: no modification is taken and no Kolmogorov--Chentsov argument is needed.
+
+A discontinuous càdlàg path lies, by `IsCadlag.exists_le_abs_sub_of_not_continuous`,
+in `⋂ n ≥ N, A m M n` for some `m, M, N`, where `A m M n` is the event that one of
+the `(n + 1) M` grid increments of mesh `1 / (n + 1)` has size `≥ 1 / (m + 1)`.
+By `ProbabilityTheory.IsPreBrownianReal.measure_le_abs_sub_le` and a union bound,
+`P (A m M n) ≤ M (m + 1)⁴ 𝔼[N⁴] / (n + 1) → 0`, so each of the countably many
+intersections is null.  The measurability of `A m M n` is never used: the union
+bound and the monotonicity are statements about the outer measure. -/
+theorem IsPreBrownianReal.isBrownianReal_of_ae_isCadlag (hB : IsPreBrownianReal B P)
+    (hc : ∀ᵐ ω ∂P, IsCadlag (B · ω)) : IsBrownianReal B P where
+  toIsPreBrownianReal := hB
+  cont := by
+    set K := ∫⁻ y, ENNReal.ofReal (y ^ 4) ∂gaussianReal 0 1
+    have hK : K ≠ ∞ := lintegral_ofReal_pow_four_gaussianReal_ne_top
+    let A : ℕ → ℕ → ℕ → Set Ω := fun m M n => ⋃ k ∈ Finset.range ((n + 1) * M),
+      {ω | 1 / ((m : ℝ) + 1) ≤
+        |B (((k : ℝ≥0) + 1) / ((n : ℝ≥0) + 1)) ω - B ((k : ℝ≥0) / ((n : ℝ≥0) + 1)) ω|}
+    have hd : ∀ n k : ℕ, dist (((k : ℝ≥0) + 1) / ((n : ℝ≥0) + 1)) ((k : ℝ≥0) / ((n : ℝ≥0) + 1))
+        = 1 / ((n : ℝ) + 1) := by
+      intro n k
+      rw [NNReal.dist_eq]
+      push_cast
+      rw [← sub_div, add_sub_cancel_left, abs_of_nonneg (by positivity)]
+    have hA : ∀ m M n, P (A m M n) ≤
+        ENNReal.ofReal (M * ((m : ℝ) + 1) ^ 4 * (1 / ((n : ℝ) + 1))) * K := by
+      intro m M n
+      refine (measure_biUnion_finset_le _ _).trans ?_
+      refine (Finset.sum_le_sum fun k _ => hB.measure_le_abs_sub_le _ _ (by positivity)).trans ?_
+      simp only [hd, Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+      rw [← mul_assoc, ← ENNReal.ofReal_natCast, ← ENNReal.ofReal_mul (by positivity)]
+      refine le_of_eq (congrArg (· * K) (congrArg ENNReal.ofReal ?_))
+      push_cast
+      field_simp
+    have hlim : ∀ m M : ℕ, Tendsto (fun n : ℕ =>
+        ENNReal.ofReal (M * ((m : ℝ) + 1) ^ 4 * (1 / ((n : ℝ) + 1))) * K) atTop (𝓝 0) := by
+      intro m M
+      have h1 : Tendsto (fun n : ℕ => M * ((m : ℝ) + 1) ^ 4 * (1 / ((n : ℝ) + 1))) atTop (𝓝 0) := by
+        have h := (tendsto_one_div_add_atTop_nhds_zero_nat).const_mul (M * ((m : ℝ) + 1) ^ 4)
+        rw [mul_zero] at h
+        exact h
+      simpa using ENNReal.Tendsto.mul_const (ENNReal.tendsto_ofReal h1) (Or.inr hK)
+    have hnull : ∀ m M N, P (⋂ n ≥ N, A m M n) = 0 := by
+      intro m M N
+      refine le_antisymm (ge_of_tendsto (hlim m M) ?_) zero_le
+      filter_upwards [eventually_ge_atTop N] with n hn
+      exact (measure_mono (Set.biInter_subset_of_mem hn)).trans (hA m M n)
+    rw [ae_iff]
+    refine measure_mono_null (t := {ω | ¬ IsCadlag (B · ω)} ∪ ⋃ m, ⋃ M, ⋃ N, ⋂ n ≥ N, A m M n)
+      ?_ (measure_union_null (ae_iff.1 hc) (measure_iUnion_null fun m =>
+        measure_iUnion_null fun M => measure_iUnion_null fun N => hnull m M N))
+    intro ω hω
+    by_cases hω' : IsCadlag (B · ω)
+    · right
+      obtain ⟨m, M, N, h⟩ := hω'.exists_le_abs_sub_of_not_continuous hω
+      simp only [Set.mem_iUnion, Set.mem_iInter]
+      refine ⟨m, M, N, fun n hn => ?_⟩
+      obtain ⟨k, hk, h'⟩ := h n hn
+      exact Set.mem_biUnion (Finset.mem_coe.2 (Finset.mem_range.2 hk)) h'
+    · left
+      exact hω'
+
+end CadlagPreBrownian
+
+end ProbabilityTheory
+
+namespace MeasureTheory
+
+/-- **Every càdlàg solution of the Brownian martingale problem is, scaled, a
+Brownian motion in Mathlib's sense.**  For `0 < v` and a càdlàg solution `ν` of
+the martingale problem of `brownianGeneratorPairs v` started at `0`, the process
+`t ↦ (√v)⁻¹ · z t` is `ProbabilityTheory.IsBrownianReal` under `ν`.
+
+`MeasureTheory.isPreBrownianReal_of_isCadlagMPSolution` gives the finite
+dimensional laws, and
+`ProbabilityTheory.IsPreBrownianReal.isBrownianReal_of_ae_isCadlag` the continuity,
+from the càdlàg paths that every point of `D(ℝ≥0, ℝ)` has.  **What this is not**:
+an existence statement.  It says what every solution is; that a solution exists
+is Donsker's theorem, `MeasureTheory.exists_tendsto_map_rescaledWalk`. -/
+theorem isBrownianReal_of_isCadlagMPSolution {v : ℝ} (hv : 0 < v)
+    (ν : Measure D(ℝ≥0, ℝ)) [IsProbabilityMeasure ν]
+    (h : IsCadlagMPSolution (brownianGeneratorPairs v) ν)
+    (h0 : ν.map (fun z : D(ℝ≥0, ℝ) ↦ z.toFun 0) = Measure.dirac 0) :
+    ProbabilityTheory.IsBrownianReal
+      (fun (t : ℝ≥0) (z : D(ℝ≥0, ℝ)) ↦ (Real.sqrt v)⁻¹ * z.toFun t) ν :=
+  (isPreBrownianReal_of_isCadlagMPSolution hv ν h h0).isBrownianReal_of_ae_isCadlag
+    (Eventually.of_forall fun z ↦
+      z.isCadlag.continuous_comp (continuous_const.mul continuous_id))
+
+end MeasureTheory

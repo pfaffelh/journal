@@ -60897,3 +60897,85 @@ ob `IsPreBrownianReal.hasLaw_sub` (`Mathlib/Probability/BrownianMotion/Basic.lea
 *Ein zweiter, kleinerer Punkt:* `0 ≤ v` in `map_eval_eq_gaussianReal_of_isCadlagMPSolution` ist
 logisch entbehrlich (siehe zweiter Teil); die Entscheidung der Aufgabe ist befolgt, und sie zu
 revidieren ist Sache des Nutzers.
+
+### 2026-09-25, zweiter Lauf des Tages — das benannte Ziel des Vorlaufs steht: **ein pre-Brownscher Prozeß mit fast sicher càdlàg Pfaden ist Brownsch**, und damit ist **jede** càdlàg-Lösung des Brownschen Martingalproblems mit Start in `0`, skaliert, `IsBrownianReal` — nicht nur Donskers Limes
+
+*Die acht Schritte der Identifikationsaufgabe waren im ersten Lauf des Tages vollständig erledigt;
+dieser Lauf nimmt das dort benannte Ziel. Neuer Abschnitt „Càdlàg pre-Brownian motions are
+Brownian" am Ende von `MartingaleProblems/Suggested.lean` (Z. 38553 ff.). `check_master.py` gegen
+`94ef6b89544`: **0 Fehler, 0 veraltete Namen, 0 `sorry`**, Warnungen **18 / 38 / 36 / 76** — gegen
+den Anfang des Laufs unverändert, die neuen Deklarationen bringen keine Warnung.
+`check_axioms_master.py` über alle fünf: `propext`, `Classical.choice`, `Quot.sound`.
+`check_duplicates.py`: 45 Treffer, unverändert. `upstream/master` steht auf `09712d488fd`
+(2026-09-21); `Mathlib/Probability/BrownianMotion/Basic.lean` gelesen gegen `94ef6b89544`, eine
+Aussage der Gestalt „pre-Brownsch plus càdlàg ⟹ Brownsch" steht dort nicht (`git grep
+isBrownianReal_of upstream/master -- Mathlib/Probability`: kein Treffer). Keine `README.md`
+angefaßt.*
+
+| Name | Aussage |
+| --- | --- |
+| `IsCadlag.exists_le_abs_sub_of_not_continuous` | deterministisch: ist `x : ℝ≥0 → ℝ` càdlàg und nicht stetig, so gibt es `m, M, N` mit: für **jedes** `n ≥ N` hat eine der `(n+1)M` Gitterdifferenzen `x((k+1)/(n+1)) − x(k/(n+1))` Betrag `≥ 1/(m+1)` |
+| `ProbabilityTheory.lintegral_ofReal_pow_four_gaussianReal_ne_top` | `∫⁻ ofReal (y⁴) ∂gaussianReal 0 1 ≠ ∞`, aus `memLp_id_gaussianReal'` (`Mathlib/Probability/Distributions/Gaussian/Real.lean:582`) |
+| `ProbabilityTheory.IsPreBrownianReal.measure_le_abs_sub_le` | `P (ε ≤ |B t − B s|) ≤ |t − s|²/ε⁴ · 𝔼[N⁴]` — Markov (`meas_ge_le_lintegral_div`, `Mathlib/MeasureTheory/Integral/Lebesgue/Markov.lean:106`) für `(B t − B s)⁴`, Gesetz über `IsPreBrownianReal.hasLaw_sub` und `gaussianReal_map_const_mul` (`…/Gaussian/Real.lean:329`) |
+| `ProbabilityTheory.IsPreBrownianReal.isBrownianReal_of_ae_isCadlag` | **`IsPreBrownianReal B P` und `∀ᵐ ω, IsCadlag (B · ω)` ⟹ `IsBrownianReal B P`** |
+| `MeasureTheory.isBrownianReal_of_isCadlagMPSolution` | `0 < v`, `ν` càdlàg-Lösung zu `brownianGeneratorPairs v`, Start in `0` ⟹ `(√v)⁻¹ · z t` ist `IsBrownianReal` unter `ν` |
+
+#### Drei Befunde, alle gegen die Wegbeschreibung des Vorlaufs gemessen
+
+* **Das vierte Moment wird nicht ausgerechnet, und Mathlib hat es auch nicht.** Die Frage des
+  Vorlaufs („ob Mathlib das vierte zentrale Moment von `gaussianReal` führt") ist beantwortet: nein —
+  `git grep` über `Mathlib/Probability/Distributions/Gaussian/` findet keinen Momentwert über dem
+  zweiten. Gebraucht wird er nicht: die Skalierung `gaussianReal 0 δ = map (√δ · ·) (gaussianReal 0 1)`
+  macht aus `𝔼[(B t − B s)⁴]` die Zahl `δ² · 𝔼[N⁴]`, und von `𝔼[N⁴]` wird nur die **Endlichkeit**
+  gelesen. Die Konstante `3` der Wegbeschreibung kommt nicht vor.
+* **Kein Borel–Cantelli, und keine Meßbarkeit.** Das deterministische Lemma liefert „für **alle**
+  `n ≥ N`", also liegt ein unstetiger Pfad in einem `⋂ n ≥ N, A n`, dessen Maß durch **jedes
+  einzelne** `P (A n)` beschränkt ist — `P (A n) ≤ M (m+1)⁴ 𝔼[N⁴]/(n+1) → 0` genügt, obwohl die
+  Reihe divergiert. Die Mengen `A n` werden nirgends als meßbar gebraucht
+  (`measure_biUnion_finset_le`, `measure_mono`, `measure_iUnion_null` sind Aussagen über das äußere
+  Maß), und von `B t` wird nur die `AEMeasurable`-Aussage gelesen, die `HasLaw` mitbringt.
+* **Die Aussage braucht nichts aus der Kette.** `IsCadlag.dist_leftLim_le_of_Ioo_subset`, das der
+  Vorlauf als Eingabe nannte, wird nicht gelesen; die Sprungstelle wird direkt über den Linksgrenzwert
+  aus dem Feld `IsCadlag.tendsto_nhdsLT` gefunden, und die vier Deklarationen im Namensraum
+  `ProbabilityTheory` stehen **nur auf Mathlib** (`Topology/Order/Cadlag.lean`,
+  `Probability/BrownianMotion/Basic.lean`, Markov, Gaussian). Sie sind damit ohne Umbau ein Kandidat
+  für `Mathlib/Probability/BrownianMotion/Basic.lean` selbst. **Für den Nutzer, nicht als Vorschlag
+  zum Einreichen**: ob und wann, entscheidet er.
+
+#### Was dasteht und was nicht
+
+**Es steht:** jede càdlàg-Lösung des Martingalproblems zu `brownianGeneratorPairs v` mit `0 < v` und
+Start in `0` ist, durch `√v` geteilt, eine Brownsche Bewegung im Sinn von Mathlibs Prädikat — mit der
+Stetigkeit der Pfade, nicht nur den endlichdimensionalen Gesetzen.
+
+**Es steht nicht:** eine Existenzaussage. `IsBrownianReal` hat keine, und der neue Satz sagt, was
+**jede** Lösung ist, nicht daß es eine gibt; daß es eine gibt, ist Donskers Satz auf Daten
+`(Ω, P, ξ)`, die vorausgesetzt werden.
+
+**Für den Nutzer, nicht angefaßt:** `exists_tendsto_map_rescaledWalk_isBrownianReal` ließe sich jetzt
+aus `exists_tendsto_map_rescaledWalk` und `isBrownianReal_of_isCadlagMPSolution` in zwei Zeilen
+beweisen, und der Weg des ersten Laufs über `tendsto_integral_jumpFunctional_rescaledWalk` würde für
+diesen Satz entbehrlich. Die Deklarationen des Abschnitts `DonskerContinuity` bleiben richtig und sind
+die Anwendung von EK §3.10, die Punkt 2 der Vierpunkteaufgabe verlangt hat; ob der Spitzensatz
+umgestellt wird, ist eine Frage der Darstellung.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **`MeasureTheory.isCadlagMPSolution_of_isBrownianReal`** — die Umkehrung: ist
+> `X : ℝ≥0 → Ω → ℝ` mit `IsBrownianReal X P` und **jedem** Pfad càdlàg, so löst das Pfadgesetz von
+> `t ↦ √v · X t` auf `D(ℝ≥0, ℝ)` das Martingalproblem zu `brownianGeneratorPairs v`. Zusammen mit
+> `isBrownianReal_of_isCadlagMPSolution` ist das die **Äquivalenz** „càdlàg-Lösung mit Start in `0`
+> ⟺ skalierte Brownsche Bewegung".
+
+*Warum jetzt:* die Hinrichtung steht seit diesem Lauf vollständig; ohne die Rückrichtung sagt die
+Kette, was Lösungen sind, aber nicht, daß Mathlibs Brownsche Bewegung eine ist.
+*Worauf es ruht, und was zu prüfen ist, ehe gebaut wird:* zwei Wahrscheinlichkeitsmaße auf
+`D(ℝ≥0, ℝ)` mit denselben endlichdimensionalen Verteilungen sind gleich (die σ-Algebra von `D` ist
+die der Koordinaten — unter welchem Namen die Kette das führt, ist nachzusehen; ein Treffer der
+Gestalt `ext_of_…eval` fand sich in diesem Lauf **nicht**, nur `ext_of_map_frestrictLe` für
+`ℕ → E`), und Donskers `ν₀` ist eine Lösung mit denselben fdd. Dann erbt das Gesetz von `√v · X` die
+Lösungseigenschaft von `ν₀`, **ohne Wärmeleitungsgleichung**. Der Preis: `ν₀` gibt es nur, wenn es
+Donsker-Daten gibt — also die Rademacher-Instanz über `Measure.infinitePi`, die der erste Lauf des
+Tages dem Nutzer zur Entscheidung vorgelegt hat. Der direkte Weg ohne sie ginge über die Gaußsche
+Wärmeleitungsgleichung `∂ₜ 𝔼 f(x + X t) = (v/2) 𝔼 f''(x + X t)` und die Unabhängigkeit der Zuwächse;
+er ist teurer, braucht aber keine Entscheidung des Nutzers.
