@@ -39276,6 +39276,278 @@ theorem tendsto_integral_supOn_rescaledWalk {mΩ : MeasurableSpace Ω}
   exact h.continuous.continuousAt.comp
     (SkorokhodSpace.continuousAt_supOn (continuous_const.mul hω))
 
+/-- **The running maximum of the rescaled walk converges in law to that of Mathlib's Brownian
+motion, with no condition on the paths beyond `cont`.**  For Donsker's data and
+`ProbabilityTheory.IsBrownianReal X Q` with measurable coordinates, for every bounded continuous
+`h : ℝ → ℝ` and every horizon `T`,
+`∫ h (sup_{t ≤ T} Φ n ω t) dP → ∫ h (⨆ t ≤ T, √v · X t ω) dQ`, the limit written through `X`
+itself.
+
+`MeasureTheory.isCadlagMPSolution_of_isBrownianReal` gives the modification `X'`, equal to `X` at
+all times outside one `Q`-null set and càdlàg everywhere; `MeasureTheory.tendsto_integral_map_rescaledWalk`
+applies to it, and off the null set the supremum over `√v · X'` is the one over `√v · X`, so the
+two limits agree by `MeasureTheory.integral_congr_ae`.  The continuity at almost every limit path
+is read from the field `cont` of `X` through the same null set.
+
+**The supremum is not a junk value**: on the complement of the null set the path `t ↦ X t ω` is
+continuous, so `(fun t : Set.Iic T ↦ √v * X t ω)` is bounded above and `⨆` is the maximum.  On the
+null set itself `⨆` may be the junk value `0` of an unbounded family, and it is not read, because
+the integral only sees the almost sure class.  **Not an existence statement**: `X` is a
+hypothesis. -/
+theorem tendsto_integral_supOn_rescaledWalk_of_isBrownianReal {mΩ : MeasurableSpace Ω}
+    {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hcent : ∫ ω, ξ 0 ω ∂P = 0) {v : ℝ} (hv : 0 < v) (hsq : ∫ ω, ξ 0 ω ^ 2 ∂P = v)
+    (hLp : MemLp (ξ 0) 2 P) (hlaw : ∀ k, Measure.map (ξ k) P = Measure.map (ξ 0) P)
+    {Φ : ℕ → Ω → D(ℝ≥0, ℝ)} (hΦm : ∀ n, Measurable (Φ n))
+    (hΦ : ∀ (n : ℕ) (ω : Ω), (Φ n ω).toFun = fun r : ℝ≥0 ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊r * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t))
+    (h : BoundedContinuousFunction ℝ ℝ) (T : ℝ≥0) :
+    Tendsto (fun n ↦ ∫ ω, h (SkorokhodSpace.supOn T (Φ n ω)) ∂P) atTop
+      (𝓝 (∫ ω, h (⨆ t : Set.Iic T, Real.sqrt v * X t ω) ∂Q)) := by
+  obtain ⟨X', hc, hae, hm', -⟩ := isCadlagMPSolution_of_isBrownianReal hX hm hv
+  have hpre : IsPreBrownianReal X' Q :=
+    hX.toIsPreBrownianReal.congr fun t ↦ by
+      filter_upwards [hae] with ω hω using (hω t).symm
+  have hFc : ∀ᵐ ω ∂Q, ContinuousAt (fun z ↦ h (SkorokhodSpace.supOn T z))
+      (cadlagPath (fun t ω ↦ Real.sqrt v * X' t ω)
+        (fun ω ↦ (hc ω).continuous_comp (continuous_const.mul continuous_id)) ω) := by
+    filter_upwards [hX.cont, hae] with ω hω hω'
+    have hcont : Continuous fun t ↦ Real.sqrt v * X' t ω := by
+      simp only [hω']
+      exact continuous_const.mul hω
+    exact h.continuous.continuousAt.comp (SkorokhodSpace.continuousAt_supOn hcont)
+  have hlim := tendsto_integral_map_rescaledWalk hmeas hind hcent hv hsq hLp hlaw hΦm hΦ
+    hpre hm' hc (F := fun z ↦ h (SkorokhodSpace.supOn T z))
+    (h.continuous.measurable.comp (SkorokhodSpace.measurable_supOn T)) (C := ‖h‖)
+    (fun z ↦ by rw [← Real.norm_eq_abs]; exact h.norm_coe_le_norm _) hFc
+  have heq : ∫ ω, h (⨆ t : Set.Iic T, Real.sqrt v * X t ω) ∂Q
+      = ∫ ω, h (SkorokhodSpace.supOn T (cadlagPath (fun t ω ↦ Real.sqrt v * X' t ω)
+          (fun ω ↦ (hc ω).continuous_comp (continuous_const.mul continuous_id)) ω)) ∂Q := by
+    refine integral_congr_ae ?_
+    filter_upwards [hae] with ω hω
+    simp only [SkorokhodSpace.supOn, cadlagPath, hω]
+  rw [heq]
+  exact hlim
+
+/-- **The running maximum of any continuous image of the rescaled walk converges in law.**  For
+Donsker's data, `ProbabilityTheory.IsBrownianReal X Q` with measurable coordinates, a continuous
+`φ : ℝ → ℝ`, a bounded continuous `h : ℝ → ℝ` and a horizon `T`,
+`∫ h (sup_{t ≤ T} φ (Φ n ω t)) dP → ∫ h (⨆ t ≤ T, φ (√v · X t ω)) dQ`.
+
+`MeasureTheory.tendsto_integral_supOn_rescaledWalk_of_isBrownianReal` is the case `φ = id`; the
+case `φ = |·|` is the maximal displacement `sup_{t ≤ T} |S_t|`, and `φ = -·` is minus the running
+minimum.  No new continuity argument is needed for these: `SkorokhodSpace.postcomp φ` is
+continuous on **all** of `D(ℝ≥0, ℝ)` (`SkorokhodSpace.continuous_postcomp`) and maps continuous
+paths to continuous paths, so `SkorokhodSpace.continuousAt_supOn` applies to its image, and it is
+measurable (`SkorokhodSpace.measurable_postcomp`).  The rest is the proof of the case `φ = id`,
+with the same null set.
+
+**Not an existence statement**: `X` is a hypothesis. -/
+theorem tendsto_integral_supOn_postcomp_rescaledWalk_of_isBrownianReal {mΩ : MeasurableSpace Ω}
+    {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hcent : ∫ ω, ξ 0 ω ∂P = 0) {v : ℝ} (hv : 0 < v) (hsq : ∫ ω, ξ 0 ω ^ 2 ∂P = v)
+    (hLp : MemLp (ξ 0) 2 P) (hlaw : ∀ k, Measure.map (ξ k) P = Measure.map (ξ 0) P)
+    {Φ : ℕ → Ω → D(ℝ≥0, ℝ)} (hΦm : ∀ n, Measurable (Φ n))
+    (hΦ : ∀ (n : ℕ) (ω : Ω), (Φ n ω).toFun = fun r : ℝ≥0 ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊r * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t))
+    (φ : C(ℝ, ℝ)) (h : BoundedContinuousFunction ℝ ℝ) (T : ℝ≥0) :
+    Tendsto (fun n ↦ ∫ ω, h (SkorokhodSpace.supOn T (SkorokhodSpace.postcomp φ (Φ n ω))) ∂P)
+      atTop (𝓝 (∫ ω, h (⨆ t : Set.Iic T, φ (Real.sqrt v * X t ω)) ∂Q)) := by
+  obtain ⟨X', hc, hae, hm', -⟩ := isCadlagMPSolution_of_isBrownianReal hX hm hv
+  have hpre : IsPreBrownianReal X' Q :=
+    hX.toIsPreBrownianReal.congr fun t ↦ by
+      filter_upwards [hae] with ω hω using (hω t).symm
+  have hFc : ∀ᵐ ω ∂Q,
+      ContinuousAt (fun z ↦ h (SkorokhodSpace.supOn T (SkorokhodSpace.postcomp φ z)))
+        (cadlagPath (fun t ω ↦ Real.sqrt v * X' t ω)
+          (fun ω ↦ (hc ω).continuous_comp (continuous_const.mul continuous_id)) ω) := by
+    filter_upwards [hX.cont, hae] with ω hω hω'
+    have hcont : Continuous fun t ↦ φ (Real.sqrt v * X' t ω) := by
+      simp only [hω']
+      exact φ.continuous.comp (continuous_const.mul hω)
+    exact h.continuous.continuousAt.comp ((SkorokhodSpace.continuousAt_supOn hcont).comp
+      (SkorokhodSpace.continuous_postcomp φ).continuousAt)
+  have hlim := tendsto_integral_map_rescaledWalk hmeas hind hcent hv hsq hLp hlaw hΦm hΦ
+    hpre hm' hc (F := fun z ↦ h (SkorokhodSpace.supOn T (SkorokhodSpace.postcomp φ z)))
+    (h.continuous.measurable.comp
+      ((SkorokhodSpace.measurable_supOn T).comp (SkorokhodSpace.measurable_postcomp φ)))
+    (C := ‖h‖) (fun z ↦ by rw [← Real.norm_eq_abs]; exact h.norm_coe_le_norm _) hFc
+  have heq : ∫ ω, h (⨆ t : Set.Iic T, φ (Real.sqrt v * X t ω)) ∂Q
+      = ∫ ω, h (SkorokhodSpace.supOn T (SkorokhodSpace.postcomp φ
+          (cadlagPath (fun t ω ↦ Real.sqrt v * X' t ω)
+            (fun ω ↦ (hc ω).continuous_comp (continuous_const.mul continuous_id)) ω))) ∂Q := by
+    refine integral_congr_ae ?_
+    filter_upwards [hae] with ω hω
+    simp only [SkorokhodSpace.supOn, SkorokhodSpace.postcomp_toFun, cadlagPath, hω]
+  rw [heq]
+  exact hlim
+
 end BrownianSolution
+
+/-! ### The reflection principle for the simple random walk
+
+The first input of the reflection principle for `ProbabilityTheory.IsBrownianReal` along
+Donsker's theorem (Billingsley, *Convergence of Probability Measures*, §9): for `0 < m`, among
+the `2 ^ n` sign sequences of length `n`, those whose walk reaches `m` by time `n` are as many as
+those ending at or above `m` plus those ending above `m`.  It is pure counting: the bijection
+reflects the signs after the first time the walk reaches `m`, and the walk sits **exactly** at `m`
+then because its steps are `±1` (`MeasureTheory.srwHit_spec`).  The first hitting time is an
+`sInf` on `ℕ`; its junk value `sInf ∅ = 0` is never read, because every statement about it
+carries the hypothesis `m ≤ srwSum ε k` that makes the set nonempty. -/
+
+section SimpleRandomWalkReflection
+
+open Finset
+
+/-- The `±1` step of a sign. -/
+def srwStep (b : Bool) : ℤ := if b then 1 else -1
+
+@[simp] theorem srwStep_not (b : Bool) : srwStep (!b) = -srwStep b := by
+  cases b <;> rfl
+
+/-- The partial sums of the simple random walk with signs `ε`, frozen after time `n`. -/
+def srwSum {n : ℕ} (ε : Fin n → Bool) (k : ℕ) : ℤ :=
+  ∑ j ∈ range k, if h : j < n then srwStep (ε ⟨j, h⟩) else 0
+
+@[simp] theorem srwSum_zero {n : ℕ} (ε : Fin n → Bool) : srwSum ε 0 = 0 := by
+  simp [srwSum]
+
+theorem srwSum_succ {n : ℕ} (ε : Fin n → Bool) (k : ℕ) :
+    srwSum ε (k + 1) = srwSum ε k + if h : k < n then srwStep (ε ⟨k, h⟩) else 0 := by
+  simp [srwSum, sum_range_succ]
+
+theorem srwSum_succ_le {n : ℕ} (ε : Fin n → Bool) (k : ℕ) :
+    srwSum ε (k + 1) ≤ srwSum ε k + 1 := by
+  rw [srwSum_succ]
+  split_ifs
+  · unfold srwStep; split_ifs <;> omega
+  · omega
+
+/-- The first time the walk is at or above level `m`. -/
+noncomputable def srwHit {n : ℕ} (m : ℤ) (ε : Fin n → Bool) : ℕ :=
+  sInf {k | m ≤ srwSum ε k}
+
+/-- The signs reflected from time `τ` on. -/
+def srwReflect {n : ℕ} (τ : ℕ) (ε : Fin n → Bool) : Fin n → Bool :=
+  fun j ↦ if (j : ℕ) < τ then ε j else !ε j
+
+theorem srwSum_srwReflect_of_le {n : ℕ} (τ : ℕ) (ε : Fin n → Bool) {k : ℕ} (hk : k ≤ τ) :
+    srwSum (srwReflect τ ε) k = srwSum ε k := by
+  induction k with
+  | zero => simp
+  | succ k ih =>
+    rw [srwSum_succ, srwSum_succ, ih (by omega)]
+    congr 1
+    split_ifs with h
+    · simp [srwReflect, show k < τ by omega]
+    · rfl
+
+theorem srwSum_srwReflect_of_ge {n : ℕ} (τ : ℕ) (ε : Fin n → Bool) {k : ℕ} (hk : τ ≤ k) :
+    srwSum (srwReflect τ ε) k = 2 * srwSum ε τ - srwSum ε k := by
+  induction k, hk using Nat.le_induction with
+  | base => rw [srwSum_srwReflect_of_le τ ε le_rfl]; ring
+  | succ k hk ih =>
+    rw [srwSum_succ, srwSum_succ, ih]
+    split_ifs with h
+    · simp only [srwReflect, show ¬ k < τ by omega, ite_false, srwStep_not]
+      ring
+    · ring
+
+theorem srwReflect_srwReflect {n : ℕ} (τ : ℕ) (ε : Fin n → Bool) :
+    srwReflect τ (srwReflect τ ε) = ε := by
+  funext j
+  unfold srwReflect
+  split_ifs <;> simp
+
+/-- On the event that level `m > 0` is reached by time `n`, the hitting time is at most `n`
+and the walk sits **exactly** at `m` there. -/
+theorem srwHit_spec {n : ℕ} {m : ℤ} (hm : 0 < m) (ε : Fin n → Bool) {k : ℕ}
+    (hk : m ≤ srwSum ε k) :
+    srwHit m ε ≤ k ∧ srwSum ε (srwHit m ε) = m ∧ ∀ j < srwHit m ε, srwSum ε j < m := by
+  have hne : ({k | m ≤ srwSum ε k} : Set ℕ).Nonempty := ⟨k, hk⟩
+  have hmem : m ≤ srwSum ε (srwHit m ε) := Nat.sInf_mem hne
+  have hlt : ∀ j < srwHit m ε, srwSum ε j < m := fun j hj ↦
+    lt_of_not_ge fun h ↦ Nat.notMem_of_lt_sInf hj h
+  refine ⟨Nat.sInf_le hk, le_antisymm ?_ hmem, hlt⟩
+  have h0 : srwHit m ε ≠ 0 := by
+    intro h0
+    rw [h0, srwSum_zero] at hmem
+    all_goals omega
+  obtain ⟨j, hj⟩ : ∃ j, srwHit m ε = j + 1 := ⟨srwHit m ε - 1, by omega⟩
+  have h1 := hlt j (by omega)
+  rw [hj]
+  have := srwSum_succ_le ε j
+  omega
+
+theorem srwHit_srwReflect {n : ℕ} {m : ℤ} (hm : 0 < m) (ε : Fin n → Bool) {k : ℕ}
+    (hk : m ≤ srwSum ε k) :
+    srwHit m (srwReflect (srwHit m ε) ε) = srwHit m ε := by
+  obtain ⟨-, heq, hlt⟩ := srwHit_spec hm ε hk
+  set τ := srwHit m ε
+  have hk' : m ≤ srwSum (srwReflect τ ε) τ := by
+    rw [srwSum_srwReflect_of_le τ ε le_rfl, heq]
+  obtain ⟨hle, heq', -⟩ := srwHit_spec hm (srwReflect τ ε) hk'
+  refine le_antisymm hle (not_lt.1 fun h ↦ ?_)
+  rw [srwSum_srwReflect_of_le τ ε h.le] at heq'
+  have := hlt _ h
+  omega
+
+/-- **The reflection principle for the simple random walk, as a count.**  For `0 < m`, the
+sign sequences of length `n` whose walk reaches `m` by time `n` and ends below `m` are as many
+as those whose walk ends above `m`.  The bijection reflects the signs after the first time the
+walk reaches `m`. -/
+theorem card_srwReflect {n : ℕ} {m : ℤ} (hm : 0 < m) :
+    #{ε : Fin n → Bool | (∃ k ≤ n, m ≤ srwSum ε k) ∧ srwSum ε n < m}
+      = #{ε : Fin n → Bool | m < srwSum ε n} := by
+  refine card_nbij' (fun ε ↦ srwReflect (srwHit m ε) ε) (fun ε ↦ srwReflect (srwHit m ε) ε)
+    ?_ ?_ ?_ ?_
+  · intro ε hε
+    simp only [coe_filter, Finset.mem_univ, true_and, Set.mem_ofPred_eq] at hε ⊢
+    obtain ⟨⟨k, hkn, hk⟩, hn⟩ := hε
+    obtain ⟨hle, heq, -⟩ := srwHit_spec hm ε hk
+    rw [srwSum_srwReflect_of_ge _ ε (hle.trans hkn), heq]
+    omega
+  · intro ε hε
+    simp only [coe_filter, Finset.mem_univ, true_and, Set.mem_ofPred_eq] at hε ⊢
+    obtain ⟨hle, heq, -⟩ := srwHit_spec hm ε hε.le
+    refine ⟨⟨srwHit m ε, hle, ?_⟩, ?_⟩
+    · rw [srwSum_srwReflect_of_le _ ε le_rfl, heq]
+    · rw [srwSum_srwReflect_of_ge _ ε hle, heq]
+      omega
+  · intro ε hε
+    simp only [coe_filter, Finset.mem_univ, true_and, Set.mem_ofPred_eq] at hε
+    obtain ⟨⟨k, -, hk⟩, -⟩ := hε
+    simp only
+    rw [srwHit_srwReflect hm ε hk, srwReflect_srwReflect]
+  · intro ε hε
+    simp only [coe_filter, Finset.mem_univ, true_and, Set.mem_ofPred_eq] at hε
+    simp only
+    rw [srwHit_srwReflect hm ε hε.le, srwReflect_srwReflect]
+
+/-- **The reflection principle for the simple random walk**: for `0 < m`, the walk reaches `m`
+by time `n` for exactly as many sign sequences as end at or above `m` plus those that end above
+`m`. -/
+theorem card_exists_le_srwSum {n : ℕ} {m : ℤ} (hm : 0 < m) :
+    #{ε : Fin n → Bool | ∃ k ≤ n, m ≤ srwSum ε k}
+      = #{ε : Fin n → Bool | m ≤ srwSum ε n} + #{ε : Fin n → Bool | m < srwSum ε n} := by
+  rw [← card_srwReflect hm]
+  have hsplit := card_filter_add_card_filter_not
+    (s := ({ε : Fin n → Bool | ∃ k ≤ n, m ≤ srwSum ε k} : Finset _))
+    (fun ε ↦ m ≤ srwSum ε n)
+  rw [← hsplit, filter_filter, filter_filter]
+  congr 2
+  · ext ε
+    simp only [mem_filter, Finset.mem_univ, true_and]
+    exact ⟨fun h ↦ h.2, fun h ↦ ⟨⟨n, le_rfl, h⟩, h⟩⟩
+  · ext ε
+    simp only [mem_filter, Finset.mem_univ, true_and, not_le]
+
+end SimpleRandomWalkReflection
 
 end MeasureTheory

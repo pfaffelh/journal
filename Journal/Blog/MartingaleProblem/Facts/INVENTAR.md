@@ -61262,3 +61262,122 @@ sind Infimum, `sup |z|` und Oszillation je eine Zeile.
 
 *Weiter als Frage an den Nutzer, nicht als Auftrag:* die Existenzaussage über Rademacher-Daten
 (vierter Lauf, Schluß).
+
+### 2026-09-25, sechster Lauf des Tages — das benannte Ziel steht, und es steht **allgemeiner**: das laufende Maximum jedes stetigen Bildes `φ ∘ Φ n` konvergiert in Verteilung gegen das von `φ (√v · X)`, für Mathlibs `IsBrownianReal` **ohne** Forderung an jeden Pfad; die angesagte Stetigkeitsaussage `continuousAt_of_forall_dist_lt` wird dafür **nicht** gebraucht
+
+*`check_master.py` gegen `94ef6b89544`: **0 Fehler, 0 veraltete Namen, 0 `sorry`**, Warnungen
+**18 / 38 / 36 / 76**, unverändert. `check_axioms_master.py` über beide neuen Deklarationen:
+`propext`, `Classical.choice`, `Quot.sound`. `check_duplicates.py`: 45, unverändert. Beide
+Beweise gingen im **ersten** Durchlauf der Kette durch.*
+
+| Name | Datei | Aussage |
+| --- | --- | --- |
+| `MeasureTheory.tendsto_integral_supOn_rescaledWalk_of_isBrownianReal` | `MartingaleProblems` | Donskers Daten, `IsBrownianReal X Q` mit meßbaren Koordinaten, `h` beschränkt stetig ⟹ `∫ h (supOn T (Φ n)) dP → ∫ h (⨆ t : Set.Iic T, √v * X t ω) dQ` — der Limes **über `X` selbst** geschrieben, keine càdlàg-Forderung an jeden Pfad, kein `∃ X'` in der Aussage |
+| `MeasureTheory.tendsto_integral_supOn_postcomp_rescaledWalk_of_isBrownianReal` | `MartingaleProblems` | dasselbe für `supOn T ∘ SkorokhodSpace.postcomp φ`, `φ : C(ℝ, ℝ)` beliebig: Limes `∫ h (⨆ t : Set.Iic T, φ (√v * X t ω)) dQ`. Instanzen: `φ = id` (die Zeile darüber), `φ = abs` (maximale Auslenkung `sup_{t ≤ T} |S_t|`), `φ = -·` (minus das laufende Minimum) |
+
+#### Befunde
+
+* **Der Weg war der angesagte**, ohne Abweichung: `isCadlagMPSolution_of_isBrownianReal` gibt
+  `X'` mit `∀ᵐ ω, ∀ t, X' t ω = X t ω`; `IsPreBrownianReal.congr` trägt die Eigenschaft hinüber;
+  `tendsto_integral_map_rescaledWalk` auf `X'`; die Stetigkeit am Limespfad aus `hX.cont` **über
+  dieselbe Nullmenge** (`filter_upwards [hX.cont, hae]`, dann `simp only [hω']` im Pfad); am Ende
+  `integral_congr_ae` mit `simp only [SkorokhodSpace.supOn, cadlagPath, hω]`. 17 Beweiszeilen.
+* **Die Richtung „`SkorokhodSpace.continuousAt_of_forall_dist_lt`, dann Infimum, `sup |z|` und
+  Oszillation je eine Zeile", die der Vorlauf angesagt hatte, ist für diese drei nicht nötig.**
+  `SkorokhodSpace.continuous_postcomp` (`SkorokhodSpace/Suggested.lean:15958`) sagt, daß
+  Nachschalten einer stetigen Abbildung auf **ganz** `D` stetig ist, und es bildet stetige Pfade
+  auf stetige ab. Also ist `supOn T ∘ postcomp φ` an jedem stetigen Pfad stetig, als Komposition
+  von `continuousAt_supOn` mit einer stetigen Abbildung, und meßbar über
+  `SkorokhodSpace.measurable_postcomp` (`:15529`; die Instanz `NNReal.instHasCountableCore` steht
+  `:8432`). `sup |z|` ist `φ = abs`, das Infimum ist `-(supOn T (postcomp (-·) z))`, die
+  Oszillation `sup - inf` die Summe zweier solcher Funktionale. Das allgemeine Stetigkeitslemma
+  bleibt ein Werkzeug für Funktionale, die **nicht** von dieser Gestalt sind (Treffzeiten,
+  Integralfunktionale mit zeitabhängigem Integranden); für die drei genannten ist es entbehrlich,
+  und es ist nicht gebaut.
+* **Der Müllwert von `⨆` wird nicht gelesen**, und der Doc-Kommentar sagt wo: auf dem Komplement
+  der Nullmenge ist `t ↦ X t ω` stetig, also die Familie auf `Set.Iic T` beschränkt und `⨆` das
+  Maximum; auf der Nullmenge darf `⨆` der Müllwert `0` einer unbeschränkten Familie sein, und das
+  Integral sieht nur die f.s.-Klasse.
+
+**Was nicht dasteht:** eine Existenzaussage (`X` ist Hypothese), und das **Gesetz** des Maximums.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **`ProbabilityTheory.IsBrownianReal.measure_le_iSup_eq_two_mul`** — das Spiegelungsprinzip:
+> für `IsBrownianReal X Q` mit meßbaren Koordinaten, `0 < a` und `T`,
+> `Q {ω | a ≤ ⨆ t : Set.Iic T, X t ω} = 2 * Q {ω | a ≤ X T ω}`.
+
+*Worauf es ruht, und warum über Donsker und nicht über die starke Markoveigenschaft:* für
+`IsBrownianReal` gibt es in Mathlib keine starke Markoveigenschaft und kein Spiegelungsprinzip
+(geprüft in diesem Lauf, `git grep -i` gegen `upstream/master` `09712d488fd`, 2026-09-21:
+`reflection`, `strongMarkov`, `iSup`, `sup_` in `Mathlib/Probability/BrownianMotion/` — zwei
+Dateien, `Basic.lean` und `GaussianProjectiveFamily.lean`, **null** Treffer; `reflection
+principle`, `StrongMarkov`, `strong Markov` in ganz `Mathlib/Probability/` — **null** Treffer). Die
+klassische Alternative (Billingsley, §9) ist die **kombinatorische** Spiegelung für die einfache
+Irrfahrt, `P(max_{k ≤ n} S_k ≥ m) = 2 P(S_n > m) + P(S_n = m)`, und dann der Grenzübergang über
+**genau die eben bewiesene Aussage** mit `φ = id`, gegen Rademacher-Zuwächse (`v = 1`). Drei
+Eingaben: (i) die Spiegelung für die Irrfahrt, endlich und kombinatorisch, über eine Bijektion der
+Vorzeichenfolgen — eigene Arbeit, der größte Posten; (ii) Rademacher-Daten als Donsker-Daten,
+über `Measure.infinitePi` (verwandt mit der Existenzfrage des vierten Laufs, aber **nicht**
+dieselbe Aussage: die Existenz von `X` bleibt vorausgesetzt, gebraucht wird nur eine i.i.d.
+`±1`-Folge); (iii) der Übergang von beschränkt stetigem `h` zu Indikatoren `1_{[a, ∞)}` —
+Sandwich zwischen stetigen Rampen, und der Rand trägt keine Masse, weil die rechte Seite
+`2 Q{a ≤ X T}` stetig in `a` ist (`gaussianReal` hat keine Atome). *Warum jetzt:* es ist die erste
+Aussage, bei der Donskers Satz etwas über Mathlibs `IsBrownianReal` **ausrechnet**, das die
+Definition nicht hergibt; bisher ging die Kette nur von der Brownschen Bewegung zum Limes, nicht
+zurück. Geschätzt drei Läufe, davon (i) zwei.
+
+*Weiter als Frage an den Nutzer, nicht als Auftrag:* die Existenzaussage über Rademacher-Daten
+(vierter Lauf, Schluß).
+
+### Derselbe Lauf, zweiter Teil — Eingabe (i) des eben benannten Ziels steht **auf der Zählebene**: die Spiegelung der einfachen Irrfahrt ist eine Bijektion der Vorzeichenfolgen, in Lean, ohne jede Wahrscheinlichkeit
+
+*`check_master.py` gegen `94ef6b89544`: **0 Fehler, 0 veraltete Namen, 0 `sorry`**, Warnungen
+**18 / 38 / 36 / 76**, unverändert. `check_axioms_master.py` über `card_srwReflect`,
+`card_exists_le_srwSum`, `srwHit_spec`: `propext`, `Classical.choice`, `Quot.sound`.
+`check_duplicates.py`: 45, unverändert. Erprobt in `scripts/_dev_reflect.lean` gegen v4.33.1
+(drei Korrekturen: `Finset.card_filter_add_card_filter_not` statt eines geratenen Namens,
+`Nat.exists_eq_succ_of_ne_zero` liefert `j.succ` und nicht `j + 1`, was `omega` nicht
+zusammenführt, und `mem_univ` ist unter `open Set` mehrdeutig); gegen master danach im ersten
+Durchlauf.*
+
+Neuer Abschnitt `SimpleRandomWalkReflection` am Ende von `MartingaleProblems/Suggested.lean`,
+fünfzehn Deklarationen:
+
+| Name | Aussage |
+| --- | --- |
+| `MeasureTheory.srwStep`, `srwStep_not` | `±1` aus einem `Bool`; Negation dreht das Vorzeichen |
+| `MeasureTheory.srwSum`, `srwSum_zero`, `srwSum_succ`, `srwSum_succ_le` | Partialsummen `S_k` zu `ε : Fin n → Bool`, nach `n` eingefroren; Rekursion, Schritt `≤ 1` nach oben |
+| `MeasureTheory.srwHit` | erste Zeit mit `m ≤ S_k`, als `sInf` auf `ℕ` |
+| `MeasureTheory.srwReflect`, `srwSum_srwReflect_of_le`, `srwSum_srwReflect_of_ge`, `srwReflect_srwReflect` | Vorzeichen ab `τ` umgedreht; vor `τ` gleiche Summen, danach `2 S_τ - S_k`; Involution |
+| `MeasureTheory.srwHit_spec` | für `0 < m` und `m ≤ S_k`: `srwHit ≤ k`, `S_{srwHit} = m` **genau**, und darunter `< m` |
+| `MeasureTheory.srwHit_srwReflect` | die Spiegelung erhält die Treffzeit |
+| `MeasureTheory.card_srwReflect` | `#{ε | (∃ k ≤ n, m ≤ S_k) ∧ S_n < m} = #{ε | m < S_n}` |
+| `MeasureTheory.card_exists_le_srwSum` | `#{ε | ∃ k ≤ n, m ≤ S_k} = #{ε | m ≤ S_n} + #{ε | m < S_n}` — die Spiegelung als Zählung |
+
+#### Befunde
+
+* **Keine eigene diskrete Zwischenwertaussage nötig.** Daß die Irrfahrt beim ersten Erreichen von
+  `≥ m` **genau** bei `m` steht, folgt in drei Zeilen aus der Minimalität von `sInf` und
+  `srwSum_succ_le`; die Treffzeit ist nie `0`, weil `S_0 = 0 < m`.
+* **Der Müllwert `sInf ∅ = 0` wird nicht gelesen**, und nicht mit dem Wort „harmlos" begründet:
+  jede Aussage über `srwHit` trägt `m ≤ srwSum ε k`, und das macht die Menge nichtleer
+  (`Nat.sInf_mem`). Der Abschnittskommentar sagt es so.
+* Die Zählfassung ist **die ganze Kombinatorik**. Was bis zum Spiegelungsprinzip für
+  `IsBrownianReal` bleibt, ist Maßtheorie, und die Schätzung „(i) zwei Läufe" war zu hoch: (i)
+  ist bis auf die Übersetzung in Wahrscheinlichkeiten erledigt.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **`MeasureTheory.measure_exists_le_sum_eq_of_rademacher`** — für i.i.d. `ξ k` mit
+> `P (ξ k = 1) = P (ξ k = -1) = 1/2` und `0 < m`:
+> `P {ω | ∃ k ≤ n, m ≤ ∑ j < k, ξ j ω} = P {ω | m ≤ ∑ j < n, ξ j ω} + P {ω | m < ∑ j < n, ξ j ω}`.
+
+*Worauf es ruht:* auf `card_exists_le_srwSum` und darauf, daß `(ξ 0, …, ξ (n-1))` gleichverteilt
+auf `{±1}^n` ist — aus `iIndepFun` die Produktgestalt des Bildmaßes
+(`ProbabilityTheory.iIndepFun_iff_map_fun_eq_pi_map`, `Mathlib/Probability/Independence/Basic.lean:859` auf `upstream/master` `09712d488fd`, verlangt `[Fintype ι]` — also auf `Fin n` einzuschränken), jeder
+Faktor `(dirac 1 + dirac (-1)) / 2`, also Masse `2⁻ⁿ` je Folge; die drei Ereignisse sind Urbilder
+von Mengen von Folgen, deren Maß `2⁻ⁿ · #` ist. *Warum jetzt:* es ist die Brücke von der eben
+bewiesenen Zählung zu den Donsker-Daten, auf denen `tendsto_integral_supOn_rescaledWalk_of_isBrownianReal`
+arbeitet; danach bleiben (ii) Rademacher-Daten über `Measure.infinitePi` und (iii) der Übergang
+zu Indikatoren. Geschätzt ein Lauf.
