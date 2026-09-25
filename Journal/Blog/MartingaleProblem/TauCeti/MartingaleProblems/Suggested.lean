@@ -22833,7 +22833,159 @@ theorem clockTime_clockQuantile (hq : ∀ s, q (Iio s) ≠ ⊤) (hat : ∀ t, q 
     exact (measure_union_le _ _).trans (by rw [hat, add_zero])
   exact (ENNReal.ofReal_le_iff_le_toReal (hq _)).1 (hIic.trans hIio)
 
+/-- **The uncapped quantile**, `Q^← z = sup {t | Q t ≤ z}`.  Honest for a clock of infinite mass,
+where every `z` lies below some `Q b` and the supremum is that of a bounded set. -/
+noncomputable def clockInverse (q : Measure ℝ≥0) (z : ℝ) : ℝ≥0 := sSup {t | clockTime q t ≤ z}
+
+/-- Below `Q b` the cap is not read: the uncapped quantile is the capped one. -/
+theorem clockInverse_eq_clockQuantile (hq : ∀ s, q (Iio s) ≠ ⊤) {b : ℝ≥0} {z : ℝ}
+    (hzb : z < clockTime q b) : clockInverse q z = clockQuantile q b z := by
+  unfold clockInverse clockQuantile
+  congr 1
+  ext t
+  simp only [mem_ofPred_eq, iff_and_self]
+  intro ht
+  by_contra hbt
+  exact absurd ((clockTime_mono hq (not_le.1 hbt).le).trans ht) (not_le.2 hzb)
+
+theorem clockQuantile_eq_clockQuantile (hq : ∀ s, q (Iio s) ≠ ⊤) {b b' : ℝ≥0} {z : ℝ}
+    (hzb : z < clockTime q b) (hzb' : z < clockTime q b') :
+    clockQuantile q b z = clockQuantile q b' z := by
+  rw [← clockInverse_eq_clockQuantile hq hzb, clockInverse_eq_clockQuantile hq hzb']
+
+/-- **The increments of `Φ (Q^← ·, u)` are Lebesgue integrals**, for an atomless clock of
+infinite mass: `Φ (Q^← x', u) - Φ (Q^← x, u) = ∫_{[x, x')} γ (Q^← z, u) dz` for `0 ≤ x ≤ x'`.
+This is `eq:quantile` together with `Q (Q^← x) = x`, and it is the step of `cor:atomless` that
+needs the atomlessness. -/
+theorem sub_eq_integral_clockInverse (hq : ∀ s, q (Iio s) ≠ ⊤) (hat : ∀ t, q {t} = 0)
+    (hunb : ∀ z : ℝ, ∃ b, z < clockTime q b) {γ : ℝ≥0 → ℝ≥0 → ℝ}
+    (hγ : ∀ u, Measurable (γ · u)) {Φ : ℝ≥0 → ℝ≥0 → ℝ}
+    (h₁ : ∀ s s' t, s ≤ s' → Φ s' t - Φ s t = ∫ r in Iio s' \ Iio s, γ r t ∂q)
+    {x x' : ℝ} (hx : 0 ≤ x) (hxx' : x ≤ x') (u : ℝ≥0) :
+    Φ (clockInverse q x') u - Φ (clockInverse q x) u =
+      ∫ z in Ico x x', γ (clockInverse q z) u := by
+  obtain ⟨b, hb⟩ := hunb x'
+  have hx'0 : 0 ≤ x' := hx.trans hxx'
+  have hxb : x < clockTime q b := hxx'.trans_lt hb
+  rw [clockInverse_eq_clockQuantile hq hb, clockInverse_eq_clockQuantile hq hxb]
+  have hmono : clockQuantile q b x ≤ clockQuantile q b x' := clockQuantile_mono b hxx'
+  rw [h₁ _ _ u hmono, setIntegral_interval_eq_clockQuantile hq (hγ u),
+    clockTime_clockQuantile hq hat hx hxb, clockTime_clockQuantile hq hat hx'0 hb]
+  refine setIntegral_congr_fun measurableSet_Ico fun z hz ↦ ?_
+  have hz0 : 0 ≤ z := hx.trans hz.1
+  have hzx' : z < clockTime q (clockQuantile q b x') := by
+    rw [clockTime_clockQuantile hq hat hx'0 hb]; exact hz.2
+  rw [clockQuantile_eq_clockQuantile hq hzx' (hz.2.trans hb), ← clockInverse_eq_clockQuantile hq
+    (hz.2.trans hb)]
+
+theorem clockTime_clockInverse (hq : ∀ s, q (Iio s) ≠ ⊤) (hat : ∀ t, q {t} = 0)
+    (hunb : ∀ z : ℝ, ∃ b, z < clockTime q b) {z : ℝ} (hz : 0 ≤ z) :
+    clockTime q (clockInverse q z) = z := by
+  obtain ⟨b, hb⟩ := hunb z
+  rw [clockInverse_eq_clockQuantile hq hb, clockTime_clockQuantile hq hat hz hb]
+
+/-- A time and the quantile of its clock time differ by a null interval, so `Φ` does not see the
+difference: `Φ (Q^← (Q t), u) = Φ (t, u)`. -/
+theorem eq_of_clockInverse_clockTime (hq : ∀ s, q (Iio s) ≠ ⊤) (hat : ∀ t, q {t} = 0)
+    (hunb : ∀ z : ℝ, ∃ b, z < clockTime q b) {γ : ℝ≥0 → ℝ≥0 → ℝ} {Φ : ℝ≥0 → ℝ≥0 → ℝ}
+    (h₁ : ∀ s s' t, s ≤ s' → Φ s' t - Φ s t = ∫ r in Iio s' \ Iio s, γ r t ∂q) (t u : ℝ≥0) :
+    Φ (clockInverse q (clockTime q t)) u = Φ t u := by
+  have hF0 : 0 ≤ clockTime q t := measureReal_nonneg
+  obtain ⟨b, hb⟩ := hunb (clockTime q t)
+  have hle : t ≤ clockInverse q (clockTime q t) := by
+    rw [clockInverse_eq_clockQuantile hq hb]
+    exact (le_clockQuantile_iff hq hF0 hb).2 le_rfl
+  have hF := clockTime_clockInverse hq hat hunb hF0
+  have hnull : q (Iio (clockInverse q (clockTime q t)) \ Iio t) = 0 := by
+    rw [measure_sdiff (Iio_subset_Iio hle) measurableSet_Iio.nullMeasurableSet (hq t)]
+    have : q (Iio (clockInverse q (clockTime q t))) = q (Iio t) :=
+      (ENNReal.toReal_eq_toReal_iff' (hq _) (hq _)).1 hF
+    rw [this, tsub_self]
+  rw [← sub_eq_zero, h₁ _ _ u hle, setIntegral_measure_zero _ hnull]
+
 end ClockQuantile
+
+section Atomless
+
+variable {q : Measure ℝ≥0}
+
+/-- **`cor:atomless`** (`duality_of_atomless`): for an atomless clock of infinite mass on `ℝ≥0`
+and `Φ`, `γ` with the two increment representations `eq:incrementrep` in the predictable
+convention and `γ₁ = γ₂ = γ`, `Φ (t, 0) = Φ (0, t)` for `q`-almost every `t`, as soon as
+`Ψ = Φ (Q^← ·, Q^← ·)` and `ψ = γ (Q^← ·, Q^← ·)` satisfy the hypotheses of `lem:calculus`
+(`eq:calcint` on every square, and the two boundary sections).
+
+*Proof.*  The manuscript's: `sub_eq_integral_clockInverse` turns the two increment
+representations of `Φ` in clock time into those of `Ψ` in Lebesgue time,
+`ae_sub_eq_integral_antidiagonal` gives `Ψ (ℓ, 0) = Ψ (0, ℓ)` for almost every `ℓ`, and
+`eq_of_clockInverse_clockTime` reads that back at `ℓ = Q t`.  The exceptional set of `t` is the
+preimage under `Q` of a Lebesgue null set, and `q` gives it mass `0` because `q` is the image of
+Lebesgue measure under `Q^←` (`restrict_Iio_eq_map_clockQuantile`) and `Q ∘ Q^← = id`. -/
+theorem duality_of_atomless (hq : ∀ s, q (Iio s) ≠ ⊤) (hat : ∀ t, q {t} = 0)
+    (hunb : ∀ z : ℝ, ∃ b, z < clockTime q b) {γ : ℝ≥0 → ℝ≥0 → ℝ}
+    (hγ₁ : ∀ u, Measurable (γ · u)) (hγ₂ : ∀ s, Measurable (γ s ·)) {Φ : ℝ≥0 → ℝ≥0 → ℝ}
+    (h₁ : ∀ s s' t, s ≤ s' → Φ s' t - Φ s t = ∫ r in Iio s' \ Iio s, γ r t ∂q)
+    (h₂ : ∀ s t t', t ≤ t' → Φ s t' - Φ s t = ∫ r in Iio t' \ Iio t, γ s r ∂q)
+    (hsec₁ : ∀ T, IntervalIntegrable (fun z ↦ γ (clockInverse q z) (clockInverse q 0)) volume 0 T)
+    (hsec₂ : ∀ T, IntervalIntegrable (fun z ↦ γ (clockInverse q 0) (clockInverse q z)) volume 0 T)
+    (hint : ∀ T, IntegrableOn (fun p : ℝ × ℝ ↦ γ (clockInverse q p.1) (clockInverse q p.2))
+      (Icc 0 T ×ˢ Icc 0 T)) :
+    ∀ᵐ t ∂q, Φ t 0 = Φ 0 t := by
+  set Ψ : ℝ → ℝ → ℝ := fun x y ↦ Φ (clockInverse q x) (clockInverse q y)
+  set ψ : ℝ → ℝ → ℝ := fun x y ↦ γ (clockInverse q x) (clockInverse q y)
+  have hΦswap : ∀ s s' t, s ≤ s' → (fun a b ↦ Φ b a) s' t - (fun a b ↦ Φ b a) s t =
+      ∫ r in Iio s' \ Iio s, (fun a b ↦ γ b a) r t ∂q := fun s s' t h ↦ h₂ t s s' h
+  have H₁ : ∀ s t, 0 ≤ s → 0 ≤ t → Ψ s t - Ψ 0 t = ∫ r in 0..s, ψ r t := fun s t hs _ ↦ by
+    rw [intervalIntegral.integral_of_le hs, ← integral_Ico_eq_integral_Ioc]
+    exact sub_eq_integral_clockInverse hq hat hunb hγ₁ h₁ le_rfl hs (clockInverse q t)
+  have H₂ : ∀ s t, 0 ≤ s → 0 ≤ t → Ψ s t - Ψ s 0 = ∫ r in 0..t, ψ s r := fun s t _ ht ↦ by
+    rw [intervalIntegral.integral_of_le ht, ← integral_Ico_eq_integral_Ioc]
+    exact sub_eq_integral_clockInverse (Φ := fun a b ↦ Φ b a) (γ := fun a b ↦ γ b a) hq hat hunb
+      hγ₂ hΦswap le_rfl ht (clockInverse q s)
+  have key := ae_sub_eq_integral_antidiagonal H₁ H₂ hsec₁ hsec₂ hint hint
+  simp only [sub_self, intervalIntegral.integral_zero] at key
+  -- the exceptional set in Lebesgue time, and a measurable null superset of it
+  obtain ⟨N, hNsub, hNm, hN0⟩ := exists_measurable_superset_of_null (ae_iff.1 key)
+  have hFm : Measurable (clockTime q) := (clockTime_mono hq).measurable
+  -- the back translation
+  have hback : ∀ t : ℝ≥0, Ψ (clockTime q t) 0 - Ψ 0 (clockTime q t) = Φ t 0 - Φ 0 t := fun t ↦ by
+    have e0 : clockInverse q 0 = clockInverse q (clockTime q 0) := by simp [clockTime]
+    have a1 := eq_of_clockInverse_clockTime hq hat hunb h₁ t (clockInverse q (clockTime q 0))
+    have a2 := eq_of_clockInverse_clockTime hq hat hunb h₁ 0 (clockInverse q (clockTime q t))
+    have b1 := eq_of_clockInverse_clockTime (Φ := fun a b ↦ Φ b a) (γ := fun a b ↦ γ b a) hq hat
+      hunb hΦswap 0 t
+    have b2 := eq_of_clockInverse_clockTime (Φ := fun a b ↦ Φ b a) (γ := fun a b ↦ γ b a) hq hat
+      hunb hΦswap t 0
+    show Φ (clockInverse q (clockTime q t)) (clockInverse q 0) -
+      Φ (clockInverse q 0) (clockInverse q (clockTime q t)) = _
+    rw [e0, a1, a2, b1, b2]
+  have hsub : {t | ¬ Φ t 0 = Φ 0 t} ⊆ clockTime q ⁻¹' N := fun t ht ↦ by
+    refine hNsub fun h ↦ ht ?_
+    have hF0 : 0 ≤ clockTime q t := measureReal_nonneg
+    rcases hF0.lt_or_eq with hpos | hzero
+    · have := h hpos
+      rw [hback t] at this
+      exact sub_eq_zero.1 this
+    · have := hback t
+      rw [← hzero] at this
+      exact sub_eq_zero.1 (this.symm.trans (sub_self _))
+  refine ae_iff.2 (measure_mono_null hsub ?_)
+  have hU : clockTime q ⁻¹' N = ⋃ n : ℕ, (clockTime q ⁻¹' N ∩ Iio (n : ℝ≥0)) := by
+    ext t
+    simp only [mem_iUnion, mem_inter_iff, mem_Iio]
+    exact ⟨fun h ↦ ⟨(exists_nat_gt t).choose, h, (exists_nat_gt t).choose_spec⟩,
+      fun ⟨_, h, _⟩ ↦ h⟩
+  rw [hU]
+  refine measure_iUnion_null fun n ↦ ?_
+  rw [← Measure.restrict_apply (hFm hNm), restrict_Iio_eq_map_clockQuantile hq,
+    Measure.map_apply (clockQuantile_mono _).measurable (hFm hNm),
+    Measure.restrict_apply ((clockQuantile_mono _).measurable (hFm hNm))]
+  refine measure_mono_null (fun z hz ↦ ?_) hN0
+  obtain ⟨hzN, hz0, hzn⟩ := hz
+  have : clockTime q (clockQuantile q (n : ℝ≥0) z) = z := clockTime_clockQuantile hq hat hz0 hzn
+  simpa [mem_preimage, this] using hzN
+
+end Atomless
 
 /-! ## Causal convolution and the Volterra resolvent
 

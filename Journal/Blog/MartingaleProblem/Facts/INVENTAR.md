@@ -63070,3 +63070,44 @@ sSup {t ≤ b | Q t ≤ z}` (das `Q^←`, **gekappt** bei `b`), `clockTime_mono`
 
 **Stand der Aufgabe.** Schritte 1–5 stehen, Schritt 6 zur Hälfte. Offen: der Zusammenbau
 `duality_of_atomless`, dann Schritt 7.
+
+
+### Derselbe Lauf, fünfter Teil — Dualität, Schritt 6, zweite Hälfte: **`duality_of_atomless`** (`cor:atomless`) für eine atomlose Uhr unendlicher Masse auf `ℝ≥0`
+
+*`check_master.py`: 0 Fehler, 0 `sorry`, 0 veraltet in allen vier Dateien*, Warnungszahlen
+unverändert (18 / 38 / 38 / 76). `check_axioms_master.py` für die sechs neuen Namen: nur die drei
+Standardaxiome. `check_duplicates.py`: kein Treffer. Entwickelt in `scripts/_dev_atomless.lean`
+(Stub nur für `ae_sub_eq_integral_antidiagonal`), eingebaut an `end ClockQuantile`.
+
+**Sechs Deklarationen:** `clockInverse q z = sSup {t | Q t ≤ z}` (das ungekappte `Q^←`),
+`clockInverse_eq_clockQuantile` und `clockQuantile_eq_clockQuantile` (unter `Q b` wird die Kappe
+nicht gelesen), `clockTime_clockInverse`, **`sub_eq_integral_clockInverse`**
+(`Φ (Q^← x', u) - Φ (Q^← x, u) = ∫_{[x,x')} γ (Q^← z, u) dz`), **`eq_of_clockInverse_clockTime`**
+(`Φ (Q^← (Q t), u) = Φ (t, u)`: das Manuskripts „`q([s,s')) = 0` erzwingt
+`Φ(s,·) = Φ(s',·)`“), und **`duality_of_atomless`**: `∀ᵐ t ∂q, Φ t 0 = Φ 0 t`.
+
+*Voraussetzungen:* `q [0, s) < ∞`, `q {t} = 0`, **`∀ z, ∃ b, z < Q b`** (unendliche Masse),
+`γ` meßbar in jeder Variablen (Borel auf `ℝ≥0`, wie im Manuskript erlaubt), die beiden
+Zuwachsdarstellungen `eq:incrementrep` in der prädiktablen Konvention mit `γ₁ = γ₂ = γ`, und
+`eq:calcint` für `ψ = γ (Q^← ·, Q^← ·)` samt den zwei Randschnitten — das „If `Ψ`, `ψ` satisfy
+the integrability hypothesis“ des Manuskripts, wörtlich.
+
+**Befunde.**
+
+1. **Die unendliche Masse ist eine Voraussetzung, die das Manuskript nicht hat.** Das
+   Manuskript arbeitet auf `T_{≤ t*}` und wendet `lem:calculus` auf `[0, L]²` an,
+   `L = Q (t*)`. Unser `ae_sub_eq_integral_antidiagonal` steht auf dem **ganzen** Quadranten;
+   für eine beschränkte Uhr ist `Q^←` oberhalb von `sup Q` nicht erklärt (gekappt: konstant, und
+   dann sind die Zuwächse von `Ψ` dort `0`, nicht `∫ ψ`). Der Fall wird geschlossen durch eine
+   Fassung von `lem:calculus` auf `[0, T]²` — die integrierte Fassung
+   `integral_sub_eq_integral_antidiagonal` hat die `T`-Abhängigkeit schon, verlangt aber die
+   Zuwachsdarstellungen auf dem ganzen Quadranten. Das ist Buchhaltung, keine neue Mathematik.
+   Lebesgue und jede Uhr mit einer Dichte, die nach unten beschränkt ist, haben unendliche Masse.
+2. **Die Rückübersetzung „für `q`-fast jedes `t`“ ist ein eigener Schritt, den das Manuskript
+   in einem Halbsatz erledigt** („`Ψ(L,0) = Φ(t*,0)`“): die Ausnahmemenge ist das Urbild einer
+   Lebesgue-Nullmenge unter `Q`, und sie ist `q`-null, weil `q` auf `[0, n)` das Bild von
+   Lebesgue unter `Q^←` ist und `Q ∘ Q^← = id` (atomlos). Beides stand aus der ersten Hälfte.
+3. **`t = 0` bzw. `Q t = 0` braucht keine Ausnahme**: dort ist `Ψ (0, 0) - Ψ (0, 0) = 0`.
+
+**Stand der Aufgabe.** Schritte 1–6 stehen, Schritt 6 mit der Einschränkung aus Befund 1.
+Offen: Schritt 7.
