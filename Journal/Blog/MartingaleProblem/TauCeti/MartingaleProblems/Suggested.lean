@@ -22294,6 +22294,183 @@ theorem not_secondIncrement_of_weight_on_dual :
   · rw [hint]; simp [Y]
   · rw [hint]; simp [Y, ε]
 
+/-! ### `cor:dualstopped`: the stopped duality
+
+A corollary of `duality_zero_of_mean` by the same device as `duality` and `duality_weighted`:
+the indicator `1_{s ≤ τ}` of the manuscript's proof is carried by a second coordinate of the
+process, so that the compensator up to `t ∧ τ` becomes a compensator up to `t` with a cut off
+integrand (`intervalIntegral_min_eq_indicator`), and nothing of the proof of `thm:duality` is
+repeated. -/
+
+section Stopped
+
+variable {Ω E₁ E₂ : Type*} {mΩ : MeasurableSpace Ω} [MeasurableSpace E₁] [MeasurableSpace E₂]
+  {P : Measure Ω} [IsProbabilityMeasure P]
+
+/-- **The compensator up to a stopping time as a compensator with a cut off integrand.**
+`∫_0^{t ∧ τ} G = ∫_0^t 1_{r ≤ τ} H r dr` as soon as `H = G` before `τ`; no integrability is
+asked, because both sides are the integral of `G` over the same set `(0, t ∧ τ]`. -/
+theorem intervalIntegral_min_eq_indicator {G H : ℝ → ℝ} {τ : ENNReal} (t : ℝ≥0)
+    (hGH : ∀ r : ℝ, 0 ≤ r → (r.toNNReal : ENNReal) ≤ τ → H r = G r) :
+    ∫ r in (0 : ℝ)..((min (t : ENNReal) τ).toNNReal : ℝ≥0), G r =
+      ∫ r in (0 : ℝ)..t, (if (r.toNNReal : ENNReal) ≤ τ then (1 : ℝ) else 0) * H r := by
+  set S : Set ℝ := {r | (r.toNNReal : ENNReal) ≤ τ}
+  have hS : MeasurableSet S :=
+    measurableSet_le (measurable_coe_nnreal_ennreal.comp measurable_real_toNNReal)
+      measurable_const
+  have hset : Ioc 0 (t : ℝ) ∩ S = Ioc 0 (((min (t : ENNReal) τ).toNNReal : ℝ≥0) : ℝ) := by
+    rcases eq_or_ne τ ⊤ with h | h
+    · subst h
+      have : S = univ := by ext r; simp [S]
+      rw [this, inter_univ, min_top_right, ENNReal.toNNReal_coe]
+    · lift τ to ℝ≥0 using h
+      rw [← ENNReal.coe_min, ENNReal.toNNReal_coe]
+      ext r
+      simp only [S, mem_inter_iff, mem_Ioc, mem_ofPred_eq, ENNReal.coe_le_coe, NNReal.coe_min]
+      constructor
+      · rintro ⟨⟨h0, ht⟩, hr⟩
+        exact ⟨h0, le_min ht ((Real.toNNReal_le_iff_le_coe).1 hr)⟩
+      · rintro ⟨h0, hr⟩
+        exact ⟨⟨h0, hr.trans (min_le_left _ _)⟩,
+          (Real.toNNReal_le_iff_le_coe).2 (hr.trans (min_le_right _ _))⟩
+  have hind : (fun r ↦ (if (r.toNNReal : ENNReal) ≤ τ then (1 : ℝ) else 0) * H r) = S.indicator H := by
+    funext r
+    by_cases hr : r ∈ S
+    · rw [indicator_of_mem hr]; simp [S] at hr; simp [hr]
+    · rw [indicator_of_notMem hr]; simp [S] at hr; simp [not_le.2 hr]
+  rw [intervalIntegral.integral_of_le (NNReal.coe_nonneg t),
+    intervalIntegral.integral_of_le (NNReal.coe_nonneg _),
+    hind, setIntegral_indicator hS, hset]
+  refine setIntegral_congr_fun measurableSet_Ioc fun r hr ↦ ?_
+  have hr' : r ∈ Ioc 0 (t : ℝ) ∩ S := hset ▸ hr
+  exact (hGH r hr.1.le hr'.2).symm
+
+/-- `stoppedProcess` before the stopping time is the process. -/
+theorem stoppedProcess_eq_of_coe_le {E : Type*} {X : ℝ≥0 → Ω → E} {τ : Ω → ENNReal} {u : ℝ≥0}
+    {ω : Ω} (h : (u : ENNReal) ≤ τ ω) : stoppedProcess X τ u ω = X u ω := by
+  unfold stoppedProcess
+  exact congrArg (X · ω) ((untopA_eq_toNNReal
+    (ne_top_of_le_ne_top ENNReal.coe_ne_top (min_le_left _ _))).trans
+      (by rw [min_eq_left h, ENNReal.toNNReal_coe]))
+
+/-- A jointly measurable process stopped at a measurable time is jointly measurable. -/
+theorem measurable_uncurry_stoppedProcess {E : Type*} [MeasurableSpace E] {V : ℝ≥0 → Ω → E}
+    {ρ : Ω → ENNReal} (hV : Measurable (fun p : ℝ≥0 × Ω ↦ V p.1 p.2)) (hρ : Measurable ρ) :
+    Measurable (fun p : ℝ≥0 × Ω ↦ stoppedProcess V ρ p.1 p.2) := by
+  have e : (fun p : ℝ≥0 × Ω ↦ stoppedProcess V ρ p.1 p.2) =
+      fun p ↦ V (min (p.1 : ENNReal) (ρ p.2)).toNNReal p.2 := by
+    funext p
+    exact congrArg (V · p.2)
+      (untopA_eq_toNNReal (ne_top_of_le_ne_top ENNReal.coe_ne_top (min_le_left _ _)))
+  rw [e]
+  exact hV.comp ((ENNReal.measurable_toNNReal.comp
+    ((measurable_coe_nnreal_ennreal.comp measurable_fst).min (hρ.comp measurable_snd))).prodMk
+      measurable_snd)
+
+omit [MeasurableSpace E₁] [MeasurableSpace E₂] in
+/-- **The mean hypothesis of the stopped process, with the indicator in the integrand.**  The
+martingale of `cor:dualstopped`, `f (X (t ∧ τ), y) - ∫_0^{t ∧ τ} g (X r, y) dr`, is rewritten as
+`f (X (t ∧ τ), y) - ∫_0^t 1_{r ≤ τ} g (X (r ∧ τ), y) dr`, which is the manuscript's proof, and
+the constancy of its mean is read off. -/
+theorem integral_stopped_sub_eq_zero {X : ℝ≥0 → Ω → E₁} {𝓕 : Filtration ℝ≥0 mΩ}
+    {τ : Ω → ENNReal} {f g : E₁ × E₂ → ℝ}
+    (hXmg : ∀ y, Martingale (fun t ω ↦ f (stoppedProcess X τ t ω, y) -
+        ∫ r in (0 : ℝ)..((min (t : ENNReal) (τ ω)).toNNReal : ℝ), g (X r.toNNReal ω, y)) 𝓕 P)
+    (y : E₂) (s : ℝ≥0) :
+    ∫ ω, (f (stoppedProcess X τ s ω, y) - f (stoppedProcess X τ 0 ω, y) -
+      ∫ r in (0 : ℝ)..s, (if (r.toNNReal : ENNReal) ≤ τ ω then (1 : ℝ) else 0) *
+        g (stoppedProcess X τ r.toNNReal ω, y)) ∂P = 0 := by
+  have h := integral_sub_eq_zero_of_martingale (hXmg y) (zero_le : (0 : ℝ≥0) ≤ s)
+  refine (integral_congr_ae (ae_of_all _ fun ω ↦ ?_)).trans h
+  rw [← intervalIntegral_min_eq_indicator (G := fun r ↦ g (X r.toNNReal ω, y)) s
+    fun r _ hr ↦ by rw [stoppedProcess_eq_of_coe_le hr]]
+  simp only [ENNReal.coe_zero, zero_le, min_eq_left, ENNReal.toNNReal_zero, NNReal.coe_zero,
+    intervalIntegral.integral_same]
+  ring
+
+/-- **`cor:dualstopped`** (EK 4.4.14) at `α = β = 0`: for almost every `t > 0`,
+`E f (X^τ t, Y^σ 0) - E f (X^τ 0, Y^σ t)` is the integral over `s ∈ [0, t]` of
+`E[1_{s ≤ τ} g (X^τ s, Y^σ (t-s))] - E[1_{t-s ≤ σ} h (X^τ s, Y^σ (t-s))]`, with
+`X^τ = stoppedProcess X τ` and `Y^σ = stoppedProcess Y σ`.
+
+*Proof.*  A corollary of `duality_zero_of_mean`, and that is the test of how `thm:duality` was
+built: the indicator is carried by a second coordinate, `X̃ s = (X^τ s, 1_{s ≤ τ})` and
+`Ỹ t = (Y^σ t, 1_{t ≤ σ})`, with `g̃ ((x, b), y) = b g (x, y)` and `h̃ (x, (y, c)) = c h (x, y)`.
+The mean hypotheses are `integral_stopped_sub_eq_zero`, which is the manuscript's one line
+"rewrite the martingale with the indicator in the integral".  The stopping times are read only
+through the measurability of `{s ≤ τ}` for `𝓕 s` and of `τ` itself.
+
+*Hypotheses, against the manuscript.*  `X^τ` adapted to `𝓕`, `Y^σ` to `𝓖` -- that is what
+progressivity of `X`, `Y` gives for the stopped processes, and it is what is consumed; `X`, `Y`
+jointly measurable; `eq:dual1` for the stopped processes; `eq:dual2` is void at `α = β = 0`. -/
+theorem duality_stopped {X : ℝ≥0 → Ω → E₁} {Y : ℝ≥0 → Ω → E₂}
+    (hX : Measurable (fun p : ℝ≥0 × Ω ↦ X p.1 p.2)) (hY : Measurable (fun p : ℝ≥0 × Ω ↦ Y p.1 p.2))
+    {𝓕 𝓖 : Filtration ℝ≥0 mΩ} {τ σ : Ω → ENNReal} (hτ : IsStoppingTime 𝓕 τ)
+    (hσ : IsStoppingTime 𝓖 σ) (hXad : ∀ s, Measurable[𝓕 s] (stoppedProcess X τ s))
+    (hYad : ∀ t, Measurable[𝓖 t] (stoppedProcess Y σ t)) (hind : ∀ s t, Indep (𝓕 s) (𝓖 t) P)
+    {f g h : E₁ × E₂ → ℝ} (hf : Measurable f) (hg : Measurable g) (hh : Measurable h)
+    {Γ : ℝ≥0 → Ω → ℝ} (hΓ : ∀ T, Integrable (Γ T) P)
+    (hfΓ : ∀ T s t, s ≤ T → t ≤ T → ∀ ω,
+      |f (stoppedProcess X τ s ω, stoppedProcess Y σ t ω)| ≤ Γ T ω)
+    (hgΓ : ∀ T s t, s ≤ T → t ≤ T → ∀ ω,
+      |g (stoppedProcess X τ s ω, stoppedProcess Y σ t ω)| ≤ Γ T ω)
+    (hhΓ : ∀ T s t, s ≤ T → t ≤ T → ∀ ω,
+      |h (stoppedProcess X τ s ω, stoppedProcess Y σ t ω)| ≤ Γ T ω)
+    (hXmg : ∀ y, Martingale (fun t ω ↦ f (stoppedProcess X τ t ω, y) -
+        ∫ r in (0 : ℝ)..((min (t : ENNReal) (τ ω)).toNNReal : ℝ), g (X r.toNNReal ω, y)) 𝓕 P)
+    (hYmg : ∀ x, Martingale (fun t ω ↦ f (x, stoppedProcess Y σ t ω) -
+        ∫ r in (0 : ℝ)..((min (t : ENNReal) (σ ω)).toNNReal : ℝ), h (x, Y r.toNNReal ω)) 𝓖 P) :
+    ∀ᵐ t : ℝ, 0 < t →
+      ∫ ω, f (stoppedProcess X τ t.toNNReal ω, stoppedProcess Y σ 0 ω) ∂P -
+        ∫ ω, f (stoppedProcess X τ 0 ω, stoppedProcess Y σ t.toNNReal ω) ∂P =
+      ∫ s in (0 : ℝ)..t,
+        ((∫ ω, (if (s.toNNReal : ENNReal) ≤ τ ω then (1 : ℝ) else 0) *
+            g (stoppedProcess X τ s.toNNReal ω, stoppedProcess Y σ (t - s).toNNReal ω) ∂P) -
+          ∫ ω, (if ((t - s).toNNReal : ENNReal) ≤ σ ω then (1 : ℝ) else 0) *
+            h (stoppedProcess X τ s.toNNReal ω, stoppedProcess Y σ (t - s).toNNReal ω) ∂P) := by
+  have hτm : Measurable τ := hτ.measurable'
+  have hσm : Measurable σ := hσ.measurable'
+  have hbj : ∀ {ρ : Ω → ENNReal}, Measurable ρ →
+      Measurable (fun p : ℝ≥0 × Ω ↦ if (p.1 : ENNReal) ≤ ρ p.2 then (1 : ℝ) else 0) :=
+    fun hρ ↦ Measurable.ite (measurableSet_le (measurable_coe_nnreal_ennreal.comp measurable_fst)
+      (hρ.comp measurable_snd)) measurable_const measurable_const
+  have hbs : ∀ {𝓗 : Filtration ℝ≥0 mΩ} {ρ : Ω → ENNReal}, IsStoppingTime 𝓗 ρ → ∀ s : ℝ≥0,
+      Measurable[𝓗 s] (fun ω ↦ if (s : ENNReal) ≤ ρ ω then (1 : ℝ) else 0) := fun {𝓗 ρ} hρ s ↦ by
+    have hS : MeasurableSet[𝓗 s] {ω | (s : ENNReal) ≤ ρ ω} := by
+      have e : {ω | (s : ENNReal) ≤ ρ ω} = {ω | ρ ω < (s : ENNReal)}ᶜ := by ext ω; simp
+      rw [e]
+      exact (hρ.measurableSet_lt s).compl
+    exact Measurable.ite hS measurable_const measurable_const
+  have hb01 : ∀ {c : Prop} [Decidable c] {v : ℝ}, |(if c then (1 : ℝ) else 0) * v| ≤ |v| := by
+    intro c _ v
+    split_ifs <;> simp
+  have hX' := (measurable_uncurry_stoppedProcess hX hτm).prodMk (hbj hτm)
+  have hY' := (measurable_uncurry_stoppedProcess hY hσm).prodMk (hbj hσm)
+  have hmain := duality_zero_of_mean (P := P)
+    (X := fun s ω ↦ (stoppedProcess X τ s ω, if (s : ENNReal) ≤ τ ω then (1 : ℝ) else 0))
+    (Y := fun t ω ↦ (stoppedProcess Y σ t ω, if (t : ENNReal) ≤ σ ω then (1 : ℝ) else 0))
+    (f := fun z ↦ f (z.1.1, z.2.1)) (g := fun z ↦ z.1.2 * g (z.1.1, z.2.1))
+    (h := fun z ↦ z.2.2 * h (z.1.1, z.2.1)) (Γ := Γ) hX' hY'
+    (fun s t ↦ by
+      rw [IndepFun_iff_Indep]
+      exact indep_of_indep_of_le_right (indep_of_indep_of_le_left (hind s t)
+        ((hXad s).prodMk (hbs hτ s)).comap_le) ((hYad t).prodMk (hbs hσ t)).comap_le)
+    (by fun_prop) (by fun_prop) (by fun_prop) hΓ
+    (fun T s t hs ht ω ↦ hfΓ T s t hs ht ω)
+    (fun T s t hs ht ω ↦ hb01.trans (hgΓ T s t hs ht ω))
+    (fun T s t hs ht ω ↦ hb01.trans (hhΓ T s t hs ht ω))
+    (fun y s ↦ integral_stopped_sub_eq_zero (f := fun z ↦ f (z.1, z.2.1))
+      (g := fun z ↦ g (z.1, z.2.1)) (fun y ↦ hXmg y.1) y s)
+    (fun x t ↦ by
+      have := integral_stopped_sub_eq_zero (f := fun z ↦ f (z.2.1, z.1))
+        (g := fun z ↦ h (z.2.1, z.1)) (fun x ↦ hYmg x.1) x t
+      refine (integral_congr_ae (ae_of_all _ fun ω ↦ ?_)).trans this
+      rfl)
+  filter_upwards [hmain] with t ht ht0
+  exact ht ht0
+
+end Stopped
+
 /-! ## Causal convolution and the Volterra resolvent
 
 Milestone 14.  The renewal equation `m = m₀ + φ ⋆ m` on `[0,∞)` and the resolvent that solves it

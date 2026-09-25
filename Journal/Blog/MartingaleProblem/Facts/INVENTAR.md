@@ -62913,3 +62913,54 @@ integrals assumed to exist“ eine benannte Hypothese wird.
 
 **Stand der Aufgabe.** Schritte 1, 2 und Schritt 3 vollständig. Offen: Schritt 4
 (`duality_stopped`), 5, 6, 7.
+
+
+### Derselbe Lauf, zweiter Teil — Dualität, Schritt 4: **`duality_stopped`** (`cor:dualstopped`, EK 4.4.14, bei `α = β = 0`), als **Korollar** von `duality_zero_of_mean`
+
+*`check_master.py`: 0 Fehler, 0 `sorry`, 0 veraltet in allen vier Dateien*, Warnungszahlen
+unverändert (18 / 38 / 38 / 76). `check_axioms_master.py` für die fünf neuen Namen: nur
+`propext`, `Classical.choice`, `Quot.sound`. Keine Namenskollision in den vier Dateien und auf
+`upstream/master`. Entwickelt in `scripts/_dev_stopped.lean` gegen v4.33.1, eingebaut mit
+`scripts/_dev_integrate_stopped.py` als Abschnitt „`cor:dualstopped`: the stopped duality“ hinter
+dem Zeugen des ersten Teils. Die Notation `ℝ≥0∞` ist in `Suggested.lean` nicht geöffnet; im
+neuen Abschnitt steht `ENNReal` (das war der einzige Fehler des ersten master-Durchlaufs).
+
+**Fünf Deklarationen.**
+
+* `intervalIntegral_min_eq_indicator`: `∫_0^{(t ∧ τ).toNNReal} G = ∫_0^t 1_{r ≤ τ} H r dr`, sobald
+  `H = G` vor `τ`. **Ohne jede Integrierbarkeit**: beide Seiten sind das Integral von `G` über
+  `(0, t ∧ τ]` (`setIntegral_indicator` verlangt nur die Meßbarkeit der Menge).
+* `stoppedProcess_eq_of_coe_le`, `measurable_uncurry_stoppedProcess`: der gestoppte Prozeß vor
+  `τ` ist der Prozeß; gemeinsam meßbar, sobald `X` es ist und `τ` meßbar (über das vorhandene
+  `untopA_eq_toNNReal`).
+* `integral_stopped_sub_eq_zero`: die Mittelwerthypothese des um `1_{s ≤ τ}` erweiterten
+  gestoppten Prozesses, aus dem Martingal `f (X^τ t, y) - ∫_0^{t∧τ} g (X r, y) dr`.
+* **`duality_stopped`**: für fast jedes `t > 0`
+  `E f(X^τ t, Y^σ 0) - E f(X^τ 0, Y^σ t) = ∫_0^t (E[1_{s≤τ} g(X^τ s, Y^σ(t-s))] - E[1_{t-s≤σ} h(…)]) ds`.
+
+**Befunde.**
+
+1. **Schritt 3 ist richtig gebaut, im Sinn der Aufgabe: es ist ein Korollar.** Der Beweis ist
+   `duality_zero_of_mean` für `X̃ s = (X^τ s, 1_{s ≤ τ})`, `Ỹ t = (Y^σ t, 1_{t ≤ σ})`,
+   `g̃ ((x, b), y) = b g (x, y)`, `h̃ (x, (y, c)) = c h (x, y)` — dieselbe Zusatzkoordinate wie
+   bei den Exponentialgewichten (`duality`) und beim Gewicht `Z` (`duality_weighted`). Das
+   „wiederhole den Beweis von `thm:duality`“ des Manuskripts (Z. 7490–7494) entfällt. Möglich ist
+   das, weil der vorige Lauf die Sätze auf die **Mittelwerthypothese** umgestellt hat: ein
+   Martingal in der erweiterten Gestalt wäre wieder eigens zu zeigen.
+2. **Was von den Stoppzeiten verbraucht wird:** die Meßbarkeit von `τ`
+   (`IsStoppingTime.measurable'`) und `{s ≤ τ} ∈ 𝓕 s` (`IsStoppingTime.measurableSet_lt`,
+   Komplement). Die Progressivität des Manuskripts wird durch ihre Folge ersetzt, die gelesen
+   wird: `X^τ s` ist `𝓕 s`-meßbar (`hXad`). Für `E₁` ohne Topologie ist das ohnehin die einzige
+   Form; `IsStronglyProgressive.stronglyAdapted_stoppedProcess` liefert sie, wo es eine gibt.
+3. **Die Schranken `eq:dual1` stehen für die gestoppten Prozesse**, wie im Manuskript; für `g̃`,
+   `h̃` folgen sie, weil der Indikator in `{0, 1}` liegt.
+4. **Die Fassung mit `α`, `β` ist nicht gebaut.** Sie ginge über `duality_augment` mit
+   `X̃ = (X^τ, 1_{·≤τ})`, braucht dort aber das Exponentialmartingal für den *erweiterten* Prozeß
+   mit `α̃ (x, b) = b α (x)`, also die Adaptiertheit von `∫_0^{s} 1_{r≤τ} α (X r) dr` — eine
+   Buchhaltung, keine neue Mathematik. Die Aufgabe verlangt sie nicht; Schritt 5 und 7 brauchen
+   sie nicht.
+
+**Manuskript:** keine Lücke in `cor:dualstopped`.
+
+**Stand der Aufgabe.** Schritte 1–4 stehen. Offen: 5 (`propagatesAgreement_of_duality`,
+`uniqueness_of_duality`), 6, 7.
