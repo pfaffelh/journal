@@ -62114,3 +62114,169 @@ Konvergenz für `n → ∞`, weil `|X' (τ ∧ n)| ≤ max a b`; (v) `τ < ∞` 
 Brownschen Bewegung** vorführt, also die Probe darauf, daß das in Meilenstein 9 gebaute optionale
 Sampling in stetiger Zeit an Mathlibs `IsBrownianReal` anschließt; und (ii) ist eine allgemeine
 Aussage, die für jede abgeschlossene Menge gebraucht wird. Geschätzt ein Lauf; (ii) zuerst.
+
+### 2026-09-25, zwölfter Lauf des Tages — das benannte Ziel steht: **der Ruin des Spielers für Mathlibs `IsBrownianReal`**, `Q (X τ = a) = b / (a + b)` für die Austrittszeit aus `(-b, a)`, und zwar **ohne** Forderung an jeden Pfad; die fehlende Eingabe (ii) steht allgemein, für abgeschlossene Mengen in einem metrischen Raum, und kostet keinen neuen Abzählbarkeitsbeweis
+
+*`check_master.py`: **0 / 0 / 0 / 0** Fehler, `sorry` 0, Warnungen **18 / 38 / 36 / 76**,
+unverändert (die vier neuen Deklarationen erzeugen keine). Mathlib `94ef6b89544`. Axiome der vier
+neuen Deklarationen: `propext`, `Classical.choice`, `Quot.sound` (`check_axioms_master.py`).
+`check_duplicates.py`: 45, unverändert. Erprobt in `scripts/_dev_ruin.lean`; drei Durchläufe
+(Nachbesserungen: `zero_le` hat auf master kein explizites Argument mehr; `simp` schreibt die
+Bedingung eines `if` unter einem `Decidable`-Argument nicht um, deshalb `split_ifs`;
+`Measurable.comp` findet bei einer Filtration als Quell-σ-Algebra die falsche Instanz, deshalb
+die Meßbarkeit als Urbildaussage ausgeschrieben).*
+
+**Vier Deklarationen in `MartingaleProblems/Suggested.lean`.** Zwei im Abschnitt
+`ContinuousHittingTime`, hinter `isStoppingTime_hittingAfter_Ici_of_continuous`:
+
+* `MeasureTheory.hittingAfter_eq_hittingAfter_neg_infDist` — für `s` abgeschlossen und
+  **nichtleer** in einem metrischen Raum ist `hittingAfter u s n` die Trefferzeit von `[0, ∞)`
+  durch `t ↦ -infDist (u t) s`, an **jedem** Stichprobenpunkt. Beleg:
+  `IsClosed.mem_iff_infDist_zero` (`Mathlib/Topology/MetricSpace/HausdorffDistance.lean:581` auf
+  `09712d488fd`). Die Nichtleere ist nötig und im Doc-Kommentar begründet: `infDist x ∅ = 0`
+  (`:477`), die rechte Seite wäre `n`, die linke `⊤`.
+* `MeasureTheory.isStoppingTime_hittingAfter_of_isClosed_of_continuous` — für `Adapted f X` über
+  `ℝ≥0` mit Werten in einem metrischen Raum mit `OpensMeasurableSpace`, **jedem** Pfad stetig und
+  `s` abgeschlossen ist `hittingAfter X s n` eine Stoppzeit. `s = ∅` eigens (`{τ ≤ T} = ∅`),
+  sonst die Zeile darüber und der Satz des zehnten Laufs für `[a, ∞)`.
+
+**Befund zur Wegbeschreibung.** Der zehnte Lauf hatte angesagt, „derselbe Beweis geht mit
+`infDist` statt `a - X q`". Er muß nicht noch einmal geführt werden: die Trefferzeit einer
+abgeschlossenen Menge **ist** eine erste Passagezeit, nämlich die von `-infDist (X ·) s` bei `0`,
+und der vorhandene Satz nimmt sie unverändert. Die Verallgemeinerung auf metrische Werte ist
+damit eine Umschreibung und kein zweiter Abzählbarkeitsbeweis.
+
+Zwei im neuen Abschnitt `GamblersRuin` hinter `BrownianMartingale`:
+
+* `MeasureTheory.measure_stoppedValue_hittingAfter_eq_of_continuous` — für `IsBrownianReal X Q`
+  mit meßbaren Koordinaten und **jedem** Pfad stetig, `0 < a`, `0 < b`, und
+  `τ = hittingAfter X (Iic (-b) ∪ Ici a) 0` ist
+  `Q {ω | stoppedValue X τ ω = a} = ENNReal.ofReal (b / (a + b))`. Die fünf angesagten Eingaben
+  sind genau die benutzten: `martingale_of_isPreBrownianReal`, die Stoppzeit von eben,
+  `integral_stoppedValue_eq_of_rightContinuous` bei `τ ∧ n` (die `WithTop ℝ≥0`-Stoppzeit geht
+  ohne Umwandlung in die `ENNReal`-Signatur), beschränkte Konvergenz mit der Konstanten
+  `max a b` (`tendsto_integral_of_dominated_convergence`), und
+  `ae_hittingAfter_ne_top_of_isBrownianReal` über `hittingAfter_anti`
+  (`Mathlib/Probability/Process/HittingTime.lean:328`). Die Integrierbarkeit der gestoppten Werte
+  gibt `integrable_stoppedValue_of_rightContinuous` aus demselben Abschnitt her.
+* `MeasureTheory.measure_stoppedValue_hittingAfter_eq_of_isBrownianReal` — dieselbe Aussage
+  **ohne** `hc`, über die Modifikation `X'` (gleich `X` außerhalb einer meßbaren Nullmenge, dort
+  `0`), die wie in `aemeasurable_hittingAfter_Ici_of_isBrownianReal` gebaut ist. Außerhalb der
+  Nullmenge sind die Pfade dieselbe Funktion, also auch Austrittszeit und gestoppter Wert.
+
+**Eine Stelle, die die Wegbeschreibung nicht genannt hatte: `X 0 = 0` gilt nur fast sicher.**
+Die Schranke `|X (τ ∧ n)| ≤ max a b` braucht, daß `τ > 0` ist — sonst läge `X τ = X 0` in `s`
+und könnte jenseits von `a` liegen. Deshalb ist die Schranke eine fast sichere Aussage, auf
+`{X 0 = 0}` (`IsPreBrownianReal.eval_zero_ae_eq_zero`), und bei `τ > 0` liegt `X τ` im
+Abschluß von `X '' [0, τ) ⊆ (-b, a)` (`closure_Iio'`, `ContinuousWithinAt.mem_closure_image`).
+Die beschränkte Konvergenz verlangt die Schranke ohnehin nur fast sicher.
+
+*Zum Müllwert:* `stoppedValue X τ` liest bei `τ = ⊤` den Wert `X (untopA ⊤)`, einen Müllwert. Er
+wird nicht gelesen: jede Aussage über `stoppedValue X τ` im Beweis steht unter `τ ≠ ⊤`, und das
+Ereignis `τ = ⊤` ist eine Nullmenge. So steht es im Doc-Kommentar.
+
+**Mathlib hat es nicht**, nachgesehen auf `upstream/master` `09712d488fd`: `git grep -il
+"gambler\|ruin"` in `Mathlib/Probability/` gibt keinen Treffer; die Stoppzeitaussagen über
+Trefferzeiten in `Mathlib/Probability/Process/HittingTime.lean` tragen weiterhin
+`[WellFoundedLT ι] [Countable ι]` (Befund des zehnten Laufs, unverändert).
+
+*(Die beiden Ruin-Aussagen sind im zweiten Teil unten umgebaut: der Beweis der stetigen Fassung
+liest jetzt die ausgelagerten Hilfsaussagen des zweiten Teils und besteht nur noch aus der
+Indikatorrechnung; Signaturen unverändert.)*
+
+### Derselbe Lauf, zweiter Teil — **das Martingal `X t ² - t` und Walds Identität** `E[τ] = a b` für die Austrittszeit aus `(-b, a)`, ebenfalls ohne Forderung an jeden Pfad; der Schluß braucht **keine** der beiden Austrittswahrscheinlichkeiten
+
+*`check_master.py`: **0 / 0 / 0 / 0** Fehler, `sorry` 0, Warnungen **18 / 38 / 36 / 76**,
+unverändert. Axiome aller acht Deklarationen des Abschnitts `GamblersRuin` und der beiden neuen
+in `BrownianMartingale`: `propext`, `Classical.choice`, `Quot.sound`. `check_duplicates.py`: 45,
+unverändert. Erprobt in `scripts/_dev_bmsq.lean` (im zweiten Durchlauf durch; `integral_const`
+verlangt die Konstante ausdrücklich, `Integrable.const_mul` liefert `fun x ↦ 2 * f x` und nicht
+`2 • f`) und `scripts/_dev_wald.lean` (dritter Durchlauf; `integral_sub'` für die punktfreie
+Differenz, und `ℝ≥0∞` ist in der Datei nicht offen — `open scoped ENNReal in` wie bei
+`lintegral_hittingAfter_eq_top_of_isBrownianReal`).*
+
+**Abschnitt `BrownianMartingale`, zwei neue Deklarationen:**
+
+* `MeasureTheory.indep_comap_sub_natural_of_isPreBrownianReal` — für `s ≤ t` ist die
+  σ-Algebra von `X t - X s` unabhängig von `Filtration.natural X hsm s`. Das ist der
+  Unabhängigkeitsschritt, der bisher **innerhalb** von `martingale_of_isPreBrownianReal` stand;
+  er ist herausgezogen, und jener Beweis liest ihn jetzt (Aussage unverändert).
+* `MeasureTheory.martingale_sq_sub_of_isPreBrownianReal` — `t ↦ X t ^ 2 - t` ist ein Martingal
+  der natürlichen Filtration, für `IsPreBrownianReal` (Pfadstetigkeit nicht gelesen). Zerlegung
+  `X t² - t = X s² + 2 X s Z + (Z² - t)` mit `Z = X t - X s`; Belege auf `upstream/master`
+  `09712d488fd`: `condExp_mul_of_stronglyMeasurable_left`
+  (`Mathlib/MeasureTheory/Function/ConditionalExpectation/PullOut.lean:245`),
+  `MemLp.integrable_mul` (`Mathlib/MeasureTheory/Function/L1Space/Integrable.lean:1086`),
+  `condExp_indep_eq` (`Mathlib/Probability/ConditionalExpectation.lean:42`),
+  `IsPreBrownianReal.hasLaw_sub` (`Mathlib/Probability/BrownianMotion/Basic.lean:105`),
+  `HasLaw.variance_eq` (`Mathlib/Probability/HasLaw.lean:203`), `variance_id_gaussianReal`
+  (`Mathlib/Probability/Distributions/Gaussian/Real.lean:572`), `variance_of_integral_eq_zero`
+  (`Mathlib/Probability/Moments/Variance.lean:174`). **Mathlib hat es nicht:** `git grep "\^ 2 - "`
+  in `Mathlib/Probability/BrownianMotion/` und `Mathlib/Probability/Martingale/`: kein Treffer.
+
+**Abschnitt `GamblersRuin`, jetzt acht Deklarationen**, davon vier Hilfsaussagen, die beide
+Anwendungen lesen:
+
+* `MeasureTheory.mem_of_coe_eq_hittingAfter_of_isClosed` — an einer endlichen Trefferzeit einer
+  abgeschlossenen Menge liegt der stetige Pfad in der Menge.
+* `MeasureTheory.mem_Icc_of_le_hittingAfter_of_continuous` — bis zur Austrittszeit aus `(-b, a)`
+  bleibt ein stetiger Pfad mit `X 0 = 0` in `[-b, a]`. Der Doc-Kommentar nennt den Zeugen dafür,
+  daß `X 0 = 0` nötig ist (Start in `2a`: Austritt bei `0` mit Wert `2a`).
+* `MeasureTheory.integral_stoppedValue_hittingAfter_eq_zero_of_continuous` — optionales Stoppen:
+  `X τ` integrierbar und `E[X τ] = 0`.
+* `MeasureTheory.ae_stoppedValue_hittingAfter_eq_or_eq_of_continuous` — `X τ ∈ {-b, a}` f.s.
+* die beiden Ruin-Aussagen aus dem ersten Teil;
+* `MeasureTheory.lintegral_hittingAfter_eq_of_continuous` und
+  `MeasureTheory.lintegral_hittingAfter_eq_of_isBrownianReal` — **Walds Identität**:
+  `∫⁻ ω, (hittingAfter X (Iic (-b) ∪ Ici a) 0 ω : ℝ≥0∞) ∂Q = ENNReal.ofReal (a * b)`, die zweite
+  ohne `hc`, über dieselbe Modifikation wie beim Ruin.
+
+**Befund: der Schluß auf `E[X τ ²] = a b` braucht die Ruinwahrscheinlichkeit nicht.** Die
+Lehrbuchrechnung ist `a² · b/(a+b) + b² · a/(a+b) = ab`. Hier steht statt dessen die punktweise
+Identität `x² = (a - b) x + a b` für `x ∈ {-b, a}`, und deren Erwartung ist `a b` wegen
+`E[X τ] = 0`. Die Wahrscheinlichkeiten und die Meßbarkeit des Ereignisses `{X τ = a}` kommen im
+Beweis von Walds Identität nicht vor.
+
+**Befund: die Meßbarkeit von `τ` als Zufallsvariable wird nicht gebraucht.** Monotone Konvergenz
+(`lintegral_tendsto_of_tendsto_of_monotone`, `Mathlib/MeasureTheory/Integral/Lebesgue/Add.lean:115`)
+verlangt die Meßbarkeit von `τ ∧ n` als `ℝ≥0∞`-Funktion. Sie ist nicht aus der Stoppzeit gelesen,
+sondern aus der Identität `(τ ∧ n).untopA = X (τ ∧ n)² - Y (τ ∧ n)` mit `Y = X² - t`: die rechte
+Seite ist integrierbar (`integrable_stoppedValue_of_rightContinuous` für beide Martingale), also
+die linke, und `ENNReal.ofReal` davon **ist** `τ ∧ n` (`ENNReal.ofReal_coe_nnreal`, und
+`ENNReal` ist definitionsgleich `WithTop ℝ≥0`).
+
+**Mathlib hat es nicht:** `git grep -il "wald"` in `Mathlib/Probability/` auf
+`upstream/master` `09712d488fd`: kein Treffer.
+
+**Nicht erreicht und nicht behauptet:** `Q (X τ = -b) = a / (a + b)` ist nicht eigens
+ausgesprochen. Der Grenzübergang `b → ∞` in Walds Identität, der
+`lintegral_hittingAfter_eq_top_of_isBrownianReal` zurückgäbe, ist nicht gemacht. Die Aussagen
+sind über den **natürlichen** Filtrationen von `X` bzw. `X'` geführt und nicht über einer
+beliebigen Filtration, bezüglich der `X` eine Brownsche Bewegung ist; das letztere ist in Mathlib
+nicht definiert.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **Die Laplace-Transformierte der ersten Passagezeit**,
+> `MeasureTheory.integral_exp_neg_hittingAfter_Ici_of_isBrownianReal`: für `IsBrownianReal X Q`
+> mit meßbaren Koordinaten, `0 < a` und `0 < λ` ist
+> `∫ ω, Real.exp (-λ * (hittingAfter X (Ici a) 0 ω).untopA) ∂Q = Real.exp (-a * Real.sqrt (2 * λ))`.
+
+*Worauf es ruht, fünf Eingaben, davon vier vorhanden:* (i) **fehlt:** das exponentielle Martingal
+`MeasureTheory.martingale_exp_of_isPreBrownianReal`, `t ↦ exp (θ X t - θ² t / 2)`, nach dem Muster
+von `martingale_sq_sub_of_isPreBrownianReal` — `exp (θ X t) = exp (θ X s) · exp (θ Z)`,
+herausziehen mit `condExp_mul_of_stronglyMeasurable_left`, `E[exp (θ Z) | 𝓕 s] = E[exp (θ Z)]` mit
+`indep_comap_sub_natural_of_isPreBrownianReal` und `condExp_indep_eq`, und
+`E[exp (θ Z)] = exp (θ² (t - s)/2)` aus `ProbabilityTheory.mgf_gaussianReal`
+(`Mathlib/Probability/Distributions/Gaussian/Real.lean:492`); die Integrierbarkeit des Produkts
+ist die heikle Stelle (beide Faktoren in jedem `Lᵖ`, oder über die Unabhängigkeit); (ii) die
+Stoppzeit `isStoppingTime_hittingAfter_Ici_of_continuous`; (iii)
+`integral_stoppedValue_eq_of_rightContinuous` bei `τ_a ∧ n`; (iv) beschränkte Konvergenz mit der
+Schranke `exp (θ a)` für `θ = √(2λ) > 0`, weil `X ≤ a` bis `τ_a`; (v)
+`ae_hittingAfter_ne_top_of_isBrownianReal`, damit am Limes `X τ_a = a` f.s. gilt. Dann
+`E[exp (θ a - λ τ_a)] = 1`. *Warum jetzt:* es ist der dritte klassische Schluß des optionalen
+Stoppens und der erste mit einem **nicht polynomialen** Martingal, also die Probe darauf, daß die
+Unabhängigkeitsaussage dieses Laufs über Momente hinaus trägt; und sein Ergebnis ist gegen das
+bekannte Gesetz von `τ_a` nachzurechnen, das der elfte Lauf als das von `a²/Z²` benannt hat
+(`map_hittingAfter_Ici_eq_map_gaussianReal_of_isBrownianReal`) — eine Kontrolle von außen, nicht
+aus derselben Rechnung. Geschätzt ein Lauf; (i) zuerst.
