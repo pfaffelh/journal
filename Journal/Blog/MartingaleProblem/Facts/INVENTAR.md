@@ -62383,3 +62383,131 @@ dominiert wird. Dann `E[τ²] = (6 a² E[τ] - a⁴)/3 = 5a⁴/3`. *Warum jetzt:
 der ein **nicht beschränktes** Glied im gestoppten Martingal hat (`t X t²`) und deshalb nicht mit
 beschränkter Konvergenz allein geht; und (ii) schließt eine Lücke in Mathlibs Gauß-API, die auch
 außerhalb dieser Kette gebraucht wird. Geschätzt ein Lauf; (ii) zuerst, weil (i) daran hängt.
+
+
+### 2026-09-25, vierzehnter Lauf des Tages — das benannte Ziel steht, und das Ziel, das der Lauf danach für den nächsten benannt hatte, gleich mit: **das zweite Moment der Austrittszeit aus `(-b, a)`**, `E[τ²] = a b (a² + 3ab + b²) / 3`, für Mathlibs `IsBrownianReal` ohne Forderung an jeden Pfad, mit `5 a⁴ / 3` für `b = a` als Korollar; dazu die Gauß-Momente dritter und vierter Ordnung, die Mathlib nicht hat
+
+*Stand der Aufgabe: die acht Schritte der Identifikationsaufgabe stehen seit dem ersten und
+zweiten Lauf des Tages (`map_eval_eq_gaussianReal_of_isCadlagMPSolution`,
+`integral_mul_eval_mul_cos_eq_of_isCadlagMPSolution`, `hasIndepIncrements_of_isCadlagMPSolution`,
+`isPreBrownianReal_of_isCadlagMPSolution`, `tendsto_integral_jumpFunctional_rescaledWalk`,
+`isBrownianReal_of_isCadlagMPSolution`), das Inventar hat keine Zeile mit `?`. Dieser Lauf nimmt
+daher das benannte Ziel des dreizehnten Laufs.*
+
+*`check_master.py`: **0 / 0 / 0 / 0** Fehler, `sorry` 0, Warnungen **18 / 38 / 36 / 76**,
+unverändert (die elf neuen Deklarationen erzeugen keine). Mathlib `94ef6b89544`. Axiome aller
+elf: `propext`, `Classical.choice`, `Quot.sound` (`check_axioms_master.py`).
+`check_duplicates.py`: 45 Treffer, unverändert. Erprobt in `scripts/_dev_gaussmom.lean` (Momente,
+vierter Durchlauf), `scripts/_dev_pow4.lean` (quartisches Martingal zweiter, symmetrischer
+Hauptsatz dritter Durchlauf) und `scripts/_dev_tausq.lean` mit `scripts/_dev_tausq_tail.lean`
+(kubisches Martingal und allgemeiner Hauptsatz, zweiter Durchlauf; die Probedatei benennt das
+Korollar mit Strich um, weil der gebaute Baum die symmetrische Fassung schon enthielt). Nachbesserungen, die der nächste Lauf nicht
+wiederholen muß: `simp`/`rw` mit `iteratedDeriv_succ'` greift an der Zahl `4` nicht — erst
+`show iteratedDeriv (0 + 1 + 1 + 1 + 1) _ = _`; eine Zeile, die in einem `by`-Block weniger weit
+eingerückt ist als die Taktik, beendet den Block (ein umbrochenes `(by simpa using a.add\n  b)`
+bricht deshalb mit „unexpected token“); `integral_add` mit einem Integrierbarkeitsbeweis in
+`Pi`-Gestalt (`i4.sub …`) findet das Muster nicht — den Beweis mit einer `λ`-Signatur als `have`
+voranstellen; `zero_le _` nimmt auf master kein explizites Argument mehr.*
+
+**Neuer Abschnitt `GaussianMoments` (`ProbabilityTheory`), sechs Deklarationen:**
+
+* `ProbabilityTheory.hasDerivAt_mul_exp_mul_sq_div_two` — Polynom mal `exp (c t²/2)`
+  differenziert zu Polynom mal derselben Exponentialfunktion.
+* `ProbabilityTheory.iteratedDeriv_exp_mul_sq_div_two` — die dritte und vierte Ableitung von
+  `t ↦ exp (c t²/2)` in geschlossener Form.
+* `ProbabilityTheory.integral_pow_gaussianReal_zero` — `∫ x^n ∂gaussianReal 0 v` ist die `n`-te
+  Ableitung von `exp (v t²/2)` bei `0`: `ProbabilityTheory.iteratedDeriv_mgf_zero`
+  (`Mathlib/Probability/Moments/MGFAnalytic.lean:92`) mit `mgf_id_gaussianReal`
+  (`Mathlib/Probability/Distributions/Gaussian/Real.lean:505`) und
+  `integrableExpSet_id_gaussianReal` (`:520`) für die Innenbedingung.
+* `ProbabilityTheory.integral_pow_three_gaussianReal_zero` — `E[Z³] = 0`.
+* `ProbabilityTheory.integral_pow_four_gaussianReal_zero` — `E[Z⁴] = 3 v²`.
+* `ProbabilityTheory.memLp_pow_of_hasLaw_gaussianReal` — jede Potenz einer Gauß-Variablen ist in
+  `L²`, aus `integrable_pow_of_mem_interior_integrableExpSet`
+  (`Mathlib/Probability/Moments/IntegrableExpMul.lean:518`), `memLp_two_iff_integrable_sq` und
+  `HasLaw.memLp_comp` (`Mathlib/Probability/HasLaw.lean:151`).
+
+*Mathlib hat es nicht*, nachgesehen auf `94ef6b89544`: in `Mathlib/Probability/Distributions/Gaussian/`
+kommt kein `^ 3` und kein `^ 4` vor; die Momentaussagen dort sind Mittel, Varianz und `memLp`.
+Der Weg über `iteratedDeriv_mgf_zero` war der im Vorschlag angesagte; der über die Symmetrie
+(`gaussianReal_map_neg`, `:360`) für `E[Z³]` wurde nicht gebraucht, weil die dritte Ableitung ohnehin
+auf dem Weg zur vierten anfällt.
+
+**Neuer Abschnitt `ExitTimeSecondMoment` (`MeasureTheory`), fünf Deklarationen:**
+
+* `MeasureTheory.martingale_pow_four_of_isPreBrownianReal` — `X t⁴ - 6 t X t² + 3 t²` ist ein
+  Martingal der natürlichen Filtration. **Befund zur Beweisgestalt:** statt fünf verketteter
+  `condExp_add` wie beim Quadratmartingal ist `X t⁴ - …` als `∑ j : Fin 5, A j * Z ^ j` mit
+  `𝓕 s`-meßbaren Polynomen `A j` in `X s` geschrieben; **ein** Hilfssatz zieht `A j` heraus und
+  ersetzt `E[Z^j | 𝓕 s]` durch `E[Z^j]`, und `condExp_finsetSum`
+  (`Mathlib/MeasureTheory/Function/ConditionalExpectation/Basic.lean:304`; der alte Name
+  `condExp_finset_sum` ist seit 2026-04-08 veraltet) mit `ae_all_iff` über `Fin 5` erledigt den
+  Rest. Die Integrierbarkeit jedes Summanden ist `MemLp.integrable_mul` zweier `L²`-Faktoren. Wer
+  ein Martingal höheren Grades braucht, ändert nur die fünf Polynome.
+* `MeasureTheory.martingale_pow_three_of_isPreBrownianReal` — `X t³ - 3 t X t`, dasselbe mit vier
+  Polynomen. Geschrieben erst, nachdem der symmetrische Satz stand; er ging im ersten Durchlauf.
+* `MeasureTheory.lintegral_sq_hittingAfter_of_continuous` und
+  `MeasureTheory.lintegral_sq_hittingAfter_of_isBrownianReal` —
+  `∫⁻ ω, (hittingAfter X (Iic (-b) ∪ Ici a) 0 ω : ℝ≥0∞) ^ 2 ∂Q
+    = ENNReal.ofReal (a * b * (a ^ 2 + 3 * a * b + b ^ 2) / 3)`.
+  Optionales Stoppen bei `ρ n = τ ∧ n` gibt `E[X_ρ³] = 3 E[ρ X_ρ]` und
+  `3 E[ρ²] = 6 E[ρ X_ρ²] - E[X_ρ⁴]`. **Die angesagte Stelle, an der es klemmen sollte — die
+  unbeschränkten Terme `ρ X_ρ` und `ρ X_ρ²` —, kostet genau eine Integrierbarkeitsaussage**: die
+  Majorante `max a b ^ k · τ` ist integrierbar, weil `τ` als fast sicherer Limes der integrierbaren
+  `ρ n` stark meßbar ist (`aestronglyMeasurable_of_tendsto_ae`) und sein Lebesgue-Integral nach
+  Wald `ab` ist (`hasFiniteIntegral_iff_ofReal`). Danach ist es dominierte Konvergenz wie jede
+  andere. **Befund: keine Austrittswahrscheinlichkeit wird gelesen.** Der Vorschlag hatte die
+  beiden Ruinwahrscheinlichkeiten als Eingabe (iii) genannt; gebraucht wird nur `E[X_τ] = 0`
+  (`integral_stoppedValue_hittingAfter_eq_zero_of_continuous`), denn auf `{-b, a}` ist
+  `X² = (a - b) X + ab`, also sind `X³` und `X⁴` affin in `X` und
+  `E[X_τ³] = ab(a-b)`, `E[X_τ⁴] = ab(a² - ab + b²)`. Ebenso ist `τ X_τ² = (a - b) τ X_τ + ab τ`
+  punktweise, und `E[τ X_τ] = ab(a-b)/3` fällt aus dem kubischen Martingal durch Eindeutigkeit
+  zweier Grenzwerte derselben Folge ab.
+* `MeasureTheory.lintegral_sq_hittingAfter_abs_of_isBrownianReal` — **das benannte Ziel, in der
+  angesagten Signatur**, jetzt als Korollar `b = a` in drei Zeilen (`ring` auf
+  `a·a·(a² + 3a² + a²)/3 = 5a⁴/3`). Die zuerst bewiesene symmetrische Fassung mit eigenem
+  Stoppschluß ist dafür wieder herausgenommen; sie war die Probe und ist durch das Korollar
+  ersetzt.
+
+**Nicht erreicht und nicht behauptet:** die Varianz `2a⁴/3` steht nur im Doc-Kommentar und ist
+nicht als Aussage formuliert; alles weiterhin nur über der **natürlichen** Filtration.
+
+**Nebenbefund zur offenen Frage des dreizehnten Laufs (Eindeutigkeit aus der
+Laplace-Transformierten):** Mathlib hat `Measure.ext_of_complexMGF_eq`
+(`Mathlib/Probability/Moments/ComplexMGF.lean:319`) — Gleichheit der komplexen MGF **überall** —
+und `eqOn_complexMGF_of_mgf` (`:299`), das aus Gleichheit der reellen MGF die Gleichheit der
+komplexen nur auf dem Streifen `{z | z.re ∈ interior (integrableExpSet X μ)}` gibt. Für eine
+positive Zufallsvariable mit `E[τ] = ∞` wie `τ_a` ist das die offene linke Halbebene, und die
+imaginäre Achse, auf der `ext_of_complexMGF_eq` die Gleichheit braucht, liegt auf dem **Rand**.
+Ein Eindeutigkeitssatz für die Laplace-Transformierte auf `(0, ∞)` steht damit nicht
+unmittelbar da; gesucht nach `laplace` zusammen mit `inj`/`ext`/`uniq` in `Mathlib/`: kein Treffer.
+Das ist ein Negativbefund über eine Suche, nicht über einen Beweis.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+**Zuerst eine Beobachtung zur Reihenfolge, für den Nutzer:** seit dem dritten Lauf des Tages
+arbeiten die Läufe eine Kette von Anwendungen der Brownschen Bewegung ab (Donsker klassisch,
+Invarianzprinzip, Spiegelung, erste Passagezeit, Ruin, Laplace, jetzt die Momente der
+Austrittszeit), jede als „benanntes Ziel“ des Vorlaufs. Die vorrangige Aufgabe — die acht
+Schritte — ist seit dem zweiten Lauf erledigt, das Inventar hat keine `?`, und nach der
+Reihenfolge des Auftrags käme als Nächstes `Facts/BACKLOG.md`, nicht eine weitere Anwendung.
+Die Kette selbst ist sauber und ohne `sorry`, aber sie gehört zu keiner gestellten Aufgabe. Ich
+lasse sie deshalb hier enden und benenne das Ziel aus dem Rückstau.
+
+> **Rückstaupunkt 4, `fact:PSpolish`, erste Hälfte: den Stand feststellen und den ersten offenen
+> Punkt schließen.** `WeakConvergence/Suggested.lean` hat seit einem früheren Lauf eine
+> Separabilitätsaussage über `LevyProkhorov (ProbabilityMeasure E)` (Zeile 2909) und
+> `isTightMeasureSet_of_forall_exists_finite_iUnion_ball` (Zeile 3008); ob die **Vollständigkeit**,
+> `CompleteSpace (LevyProkhorov (ProbabilityMeasure E))` für vollständiges separables `E`, steht,
+> ist in diesem Lauf nicht nachgesehen. Mathlib `94ef6b89544` hat weder `SeparableSpace`,
+> `CompleteSpace` noch `PolishSpace` für `LevyProkhorov (ProbabilityMeasure _)` oder
+> `ProbabilityMeasure _` (gesucht, kein Treffer). *Warum jetzt:* es ist der älteste offene Punkt
+> des Rückstaus, er ist der Untergrund jedes Teilfolgenarguments des Konvergenzteils, und der
+> Rückstaupunkt selbst sagt noch „übersetzt ist nichts“ — das ist nach Zeile 2909 veraltet und
+> gehört als erstes berichtigt.
+
+*Falls der Nutzer die Anwendungskette fortsetzen will*, ist das nächste Glied benannt und
+geprüft, daß alle Werkzeuge stehen: die gemeinsame Laplace-Transformierte von Austrittszeit und
+Austrittsseite, `E[exp (-r τ); X_τ = a] = sinh (b √(2r)) / sinh ((a+b) √(2r))`, aus den beiden
+exponentiellen Martingalen bei `±θ`; die Hürde ist die Meßbarkeit des Ereignisses `{X_τ = a}`
+für `X` selbst, die der dreizehnte Lauf umgangen hat.

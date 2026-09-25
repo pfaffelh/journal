@@ -42237,3 +42237,729 @@ theorem integral_exp_neg_hittingAfter_abs_of_isBrownianReal
 end FirstPassageLaplace
 
 end MeasureTheory
+
+/-! ### The third and fourth moments of a centred Gaussian
+
+Mathlib's Gaussian API gives the mean and the variance of `gaussianReal μ v` and its moment
+generating function `ProbabilityTheory.mgf_id_gaussianReal`, but no moment of higher order.  They are
+read off the derivatives of `t ↦ exp (v t ^ 2 / 2)` at `0`
+(`ProbabilityTheory.iteratedDeriv_mgf_zero`); the third is `0` and the fourth is `3 v ^ 2`
+(`ProbabilityTheory.integral_pow_four_gaussianReal_zero`).  The fourth moment is what the quartic
+Brownian martingale `MeasureTheory.martingale_pow_four_of_isPreBrownianReal` reads. -/
+
+namespace ProbabilityTheory
+
+section GaussianMoments
+
+/-- A polynomial times `exp (c t ^ 2 / 2)` differentiates to a polynomial times the same
+exponential. -/
+theorem hasDerivAt_mul_exp_mul_sq_div_two (c : ℝ) {p p' : ℝ → ℝ} (t : ℝ)
+    (hp : HasDerivAt p (p' t) t) :
+    HasDerivAt (fun t ↦ p t * Real.exp (c * t ^ 2 / 2))
+      ((p' t + p t * (c * t)) * Real.exp (c * t ^ 2 / 2)) t := by
+  have hE : HasDerivAt (fun t ↦ Real.exp (c * t ^ 2 / 2))
+      (Real.exp (c * t ^ 2 / 2) * (c * t)) t := by
+    have h := (((hasDerivAt_pow 2 t).const_mul c).div_const 2).exp
+    convert h using 1
+    push_cast
+    ring
+  convert hp.mul hE using 1
+  ring
+
+/-- The first four derivatives of `t ↦ exp (c t ^ 2 / 2)`, the moment generating function of
+`gaussianReal 0 c`. -/
+theorem iteratedDeriv_exp_mul_sq_div_two (c : ℝ) :
+    iteratedDeriv 3 (fun t ↦ Real.exp (c * t ^ 2 / 2))
+        = (fun t ↦ (3 * c ^ 2 * t + c ^ 3 * t ^ 3) * Real.exp (c * t ^ 2 / 2)) ∧
+      iteratedDeriv 4 (fun t ↦ Real.exp (c * t ^ 2 / 2))
+        = (fun t ↦ (3 * c ^ 2 + 6 * c ^ 3 * t ^ 2 + c ^ 4 * t ^ 4) *
+            Real.exp (c * t ^ 2 / 2)) := by
+  have d1 : deriv (fun t ↦ Real.exp (c * t ^ 2 / 2))
+      = fun t ↦ (c * t) * Real.exp (c * t ^ 2 / 2) := by
+    funext t
+    have h := hasDerivAt_mul_exp_mul_sq_div_two c (p := fun _ ↦ 1) (p' := fun _ ↦ 0) t
+      (hasDerivAt_const t 1)
+    simp only [one_mul, zero_add] at h
+    exact h.deriv
+  have d2 : deriv (fun t ↦ (c * t) * Real.exp (c * t ^ 2 / 2))
+      = fun t ↦ (c + c ^ 2 * t ^ 2) * Real.exp (c * t ^ 2 / 2) := by
+    funext t
+    have h := hasDerivAt_mul_exp_mul_sq_div_two c (p := fun t ↦ c * t) (p' := fun _ ↦ c) t
+      (by simpa using (hasDerivAt_id t).const_mul c)
+    rw [h.deriv]
+    ring
+  have d3 : deriv (fun t ↦ (c + c ^ 2 * t ^ 2) * Real.exp (c * t ^ 2 / 2))
+      = fun t ↦ (3 * c ^ 2 * t + c ^ 3 * t ^ 3) * Real.exp (c * t ^ 2 / 2) := by
+    funext t
+    have h := hasDerivAt_mul_exp_mul_sq_div_two c (p := fun t ↦ c + c ^ 2 * t ^ 2)
+      (p' := fun t ↦ c ^ 2 * (2 * t)) t
+      (by simpa using ((hasDerivAt_pow 2 t).const_mul (c ^ 2)).const_add c)
+    rw [h.deriv]
+    ring
+  have d4 : deriv (fun t ↦ (3 * c ^ 2 * t + c ^ 3 * t ^ 3) * Real.exp (c * t ^ 2 / 2))
+      = fun t ↦ (3 * c ^ 2 + 6 * c ^ 3 * t ^ 2 + c ^ 4 * t ^ 4) * Real.exp (c * t ^ 2 / 2) := by
+    funext t
+    have hp := ((hasDerivAt_id t).const_mul (3 * c ^ 2)).add
+      ((hasDerivAt_pow 3 t).const_mul (c ^ 3))
+    have h := hasDerivAt_mul_exp_mul_sq_div_two c
+      (p := fun t ↦ 3 * c ^ 2 * t + c ^ 3 * t ^ 3)
+      (p' := fun t ↦ 3 * c ^ 2 + c ^ 3 * (3 * t ^ 2)) t
+      (by simp only [Pi.add_def, id, mul_one] at hp; convert hp using 2)
+    rw [h.deriv]
+    ring
+  have h3 : iteratedDeriv 3 (fun t ↦ Real.exp (c * t ^ 2 / 2))
+      = (fun t ↦ (3 * c ^ 2 * t + c ^ 3 * t ^ 3) * Real.exp (c * t ^ 2 / 2)) := by
+    show iteratedDeriv (0 + 1 + 1 + 1) _ = _
+    rw [iteratedDeriv_succ', iteratedDeriv_succ', iteratedDeriv_succ', iteratedDeriv_zero,
+      d1, d2, d3]
+  refine ⟨h3, ?_⟩
+  show iteratedDeriv (0 + 1 + 1 + 1 + 1) _ = _
+  rw [iteratedDeriv_succ', iteratedDeriv_succ', iteratedDeriv_succ', iteratedDeriv_succ',
+    iteratedDeriv_zero, d1, d2, d3, d4]
+
+/-- **The moments of a centred Gaussian are the derivatives of `exp (v t ^ 2 / 2)` at `0`.**
+`ProbabilityTheory.iteratedDeriv_mgf_zero` for `X = id`, with
+`ProbabilityTheory.mgf_id_gaussianReal`; the interior condition holds because
+`ProbabilityTheory.integrableExpSet_id_gaussianReal` is all of `ℝ`. -/
+theorem integral_pow_gaussianReal_zero (v : ℝ≥0) (n : ℕ) :
+    ∫ x, x ^ n ∂gaussianReal 0 v
+      = iteratedDeriv n (fun t ↦ Real.exp ((v : ℝ) * t ^ 2 / 2)) 0 := by
+  have h := iteratedDeriv_mgf_zero (X := id) (μ := gaussianReal 0 v)
+    (by simp [integrableExpSet_id_gaussianReal]) n
+  rw [mgf_id_gaussianReal] at h
+  simp only [zero_mul, zero_add] at h
+  rw [h]
+  rfl
+
+/-- **The third moment of `gaussianReal 0 v` is `0`.** -/
+theorem integral_pow_three_gaussianReal_zero (v : ℝ≥0) :
+    ∫ x, x ^ 3 ∂gaussianReal 0 v = 0 := by
+  rw [integral_pow_gaussianReal_zero, (iteratedDeriv_exp_mul_sq_div_two _).1]
+  simp
+
+/-- **The fourth moment of `gaussianReal 0 v` is `3 v ^ 2`.** -/
+theorem integral_pow_four_gaussianReal_zero (v : ℝ≥0) :
+    ∫ x, x ^ 4 ∂gaussianReal 0 v = 3 * (v : ℝ) ^ 2 := by
+  rw [integral_pow_gaussianReal_zero, (iteratedDeriv_exp_mul_sq_div_two _).2]
+  simp
+
+/-- **Every power of a Gaussian random variable is square integrable.** -/
+theorem memLp_pow_of_hasLaw_gaussianReal {Ω' : Type*} {mΩ' : MeasurableSpace Ω'}
+    {Q : Measure Ω'} {Y : Ω' → ℝ} {μ : ℝ} {v : ℝ≥0} (h : HasLaw Y (gaussianReal μ v) Q)
+    (k : ℕ) : MemLp (fun ω ↦ Y ω ^ k) 2 Q := by
+  have hint : Integrable (fun x : ℝ ↦ x ^ (k * 2)) (gaussianReal μ v) := by
+    simpa using integrable_pow_of_mem_interior_integrableExpSet (X := id)
+      (μ := gaussianReal μ v) (by simp [integrableExpSet_id_gaussianReal]) (k * 2)
+  have hf : MemLp (fun x : ℝ ↦ x ^ k) 2 (gaussianReal μ v) :=
+    (memLp_two_iff_integrable_sq (continuous_pow k).aestronglyMeasurable).2
+      (by simpa [← pow_mul] using hint)
+  exact h.memLp_comp hf
+
+end GaussianMoments
+
+end ProbabilityTheory
+
+/-! ### The second moment of the exit time from an interval
+
+The cubic and the quartic martingale, `X t ^ 3 - 3 t X t` and `X t ^ 4 - 6 t X t ^ 2 + 3 t ^ 2`
+(`MeasureTheory.martingale_pow_three_of_isPreBrownianReal`,
+`MeasureTheory.martingale_pow_four_of_isPreBrownianReal`), stopped at the exit time `τ` from
+`(-b, a)`, give `E[τ ^ 2] = a b (a ^ 2 + 3 a b + b ^ 2) / 3`
+(`MeasureTheory.lintegral_sq_hittingAfter_of_isBrownianReal`), and `5 a ^ 4 / 3` for `b = a`
+(`MeasureTheory.lintegral_sq_hittingAfter_abs_of_isBrownianReal`).  These are the first optional
+stopping arguments of this file with stopped terms that are **not** bounded, `t X t` and
+`t X t ^ 2`; they are dominated by powers of `max a b` times `τ`, which is integrable by Wald's
+identity `MeasureTheory.lintegral_hittingAfter_eq_of_isBrownianReal`. -/
+
+namespace MeasureTheory
+
+section ExitTimeSecondMoment
+
+/-- **The quartic martingale of a pre-Brownian motion.**  For
+`ProbabilityTheory.IsPreBrownianReal X Q` with strongly measurable coordinates,
+`t ↦ X t ^ 4 - 6 t X t ^ 2 + 3 t ^ 2` is a `MeasureTheory.Martingale` for
+`MeasureTheory.Filtration.natural X hsm`.
+
+With `Z = X t - X s`, the process at `t` is `∑ j < 5, A j * Z ^ j` for five `𝓕 s`-measurable
+polynomials `A j` in `X s`.  Each summand pulls its `A j` out
+(`MeasureTheory.condExp_mul_of_stronglyMeasurable_left`, integrable because every power of a
+Gaussian is in `L²`, `ProbabilityTheory.memLp_pow_of_hasLaw_gaussianReal`) and leaves
+`E[Z ^ j | 𝓕 s] = E[Z ^ j]` by independence
+(`MeasureTheory.indep_comap_sub_natural_of_isPreBrownianReal`, `MeasureTheory.condExp_indep_eq`);
+the moments `1, 0, t - s, 0, 3 (t - s) ^ 2` are those of `gaussianReal 0 (t - s)`
+(`ProbabilityTheory.integral_pow_three_gaussianReal_zero`,
+`ProbabilityTheory.integral_pow_four_gaussianReal_zero`).  Continuity of paths is not read.
+**Not an existence statement**: `X` is a hypothesis. -/
+theorem martingale_pow_four_of_isPreBrownianReal {Ω' : Type*} {mΩ' : MeasurableSpace Ω'}
+    {Q : Measure Ω'} {X : ℝ≥0 → Ω' → ℝ} (hX : IsPreBrownianReal X Q)
+    (hsm : ∀ t, StronglyMeasurable (X t)) :
+    Martingale (fun t ω ↦ X t ω ^ 4 - 6 * t * X t ω ^ 2 + 3 * (t : ℝ) ^ 2)
+      (Filtration.natural X hsm) Q := by
+  have : IsProbabilityMeasure Q := hX.isGaussianProcess.isProbabilityMeasure
+  have had := Filtration.stronglyAdapted_natural hsm
+  have hpow : ∀ r k, MemLp (fun ω ↦ X r ω ^ k) 2 Q := fun r k ↦
+    memLp_pow_of_hasLaw_gaussianReal (hX.hasLaw_eval r) k
+  have hX2 : ∀ r, MemLp (X r) 2 Q := fun r ↦
+    (hX.isGaussianProcess.hasGaussianLaw_eval r).memLp_two
+  refine ⟨fun t ↦ ((((had t).pow 4).sub (stronglyMeasurable_const.mul ((had t).pow 2))).add
+    stronglyMeasurable_const), fun s t hst ↦ ?_⟩
+  set F := Filtration.natural X hsm
+  set Z : Ω' → ℝ := X t - X s with hZ
+  have hI : Indep (MeasurableSpace.comap Z inferInstance) (F s) Q :=
+    indep_comap_sub_natural_of_isPreBrownianReal hX hsm hst
+  have hZm : Measurable Z := (hsm t).measurable.sub (hsm s).measurable
+  have hZlaw : HasLaw Z (gaussianReal 0 (nndist t s)) Q := hX.hasLaw_sub t s
+  have hnd : ((nndist t s : ℝ≥0) : ℝ) = (t : ℝ) - s := by
+    rw [coe_nndist, NNReal.dist_eq, abs_of_nonneg (sub_nonneg.2 (NNReal.coe_le_coe.2 hst))]
+  have hZp : ∀ j : ℕ, MemLp (Z ^ j) 2 Q := fun j ↦ memLp_pow_of_hasLaw_gaussianReal hZlaw j
+  have hmom : ∀ j : ℕ, ∫ ω, Z ω ^ j ∂Q = ∫ x, x ^ j ∂gaussianReal 0 (nndist t s) := fun j ↦
+    hZlaw.integral_comp (f := fun x ↦ x ^ j) (continuous_pow j).aestronglyMeasurable
+  have hZ0 : ∫ ω, Z ω ∂Q = 0 := by
+    rw [hZ, integral_sub' (hX.integrable_eval t) (hX.integrable_eval s), hX.integral_eval,
+      hX.integral_eval, sub_self]
+  have hZ2 : ∫ ω, Z ω ^ 2 ∂Q = t - s := by
+    rw [← variance_of_integral_eq_zero hZm.aemeasurable hZ0, hZlaw.variance_eq,
+      variance_id_gaussianReal, hnd]
+  have hZ3 : ∫ ω, Z ω ^ 3 ∂Q = 0 := by rw [hmom, integral_pow_three_gaussianReal_zero]
+  have hZ4 : ∫ ω, Z ω ^ 4 ∂Q = 3 * ((t : ℝ) - s) ^ 2 := by
+    rw [hmom, integral_pow_four_gaussianReal_zero, hnd]
+  have key : ∀ (A : Ω' → ℝ) (j : ℕ), StronglyMeasurable[F s] A → MemLp A 2 Q →
+      Integrable (A * Z ^ j) Q ∧
+        Q[A * Z ^ j | F s] =ᵐ[Q] A * fun _ ↦ ∫ ω, (Z ^ j) ω ∂Q := by
+    intro A j hA hA2
+    have hint : Integrable (A * Z ^ j) Q := hA2.integrable_mul (hZp j)
+    refine ⟨hint, ?_⟩
+    filter_upwards [condExp_mul_of_stronglyMeasurable_left hA hint
+        ((hZp j).integrable one_le_two),
+      condExp_indep_eq hZm.comap_le (F.le s)
+        ((comap_measurable Z).pow_const j).stronglyMeasurable hI] with ω h1 h2
+    rw [h1, Pi.mul_apply, Pi.mul_apply]
+    exact congrArg (A ω * ·) h2
+  set A : Fin 5 → Ω' → ℝ := ![fun ω ↦ X s ω ^ 4 - 6 * t * X s ω ^ 2 + 3 * (t : ℝ) ^ 2,
+    fun ω ↦ 4 * X s ω ^ 3 - 12 * t * X s ω, fun ω ↦ 6 * X s ω ^ 2 - 6 * t,
+    fun ω ↦ 4 * X s ω, fun _ ↦ 1] with hA_def
+  have hAm : ∀ j, StronglyMeasurable[F s] (A j) := by
+    have h := had s
+    intro j
+    fin_cases j
+    · exact ((h.pow 4).sub (stronglyMeasurable_const.mul (h.pow 2))).add stronglyMeasurable_const
+    · exact (stronglyMeasurable_const.mul (h.pow 3)).sub (stronglyMeasurable_const.mul h)
+    · exact (stronglyMeasurable_const.mul (h.pow 2)).sub stronglyMeasurable_const
+    · exact stronglyMeasurable_const.mul h
+    · exact stronglyMeasurable_const
+  have hA2 : ∀ j, MemLp (A j) 2 Q := by
+    intro j
+    fin_cases j
+    · exact ((hpow s 4).sub ((hpow s 2).const_mul _)).add (memLp_const _)
+    · exact ((hpow s 3).const_mul _).sub ((hX2 s).const_mul _)
+    · exact ((hpow s 2).const_mul _).sub (memLp_const _)
+    · exact (hX2 s).const_mul _
+    · exact memLp_const _
+  have hk : ∀ j : Fin 5, Integrable (A j * Z ^ (j : ℕ)) Q ∧
+      Q[A j * Z ^ (j : ℕ) | F s] =ᵐ[Q] A j * fun _ ↦ ∫ ω, (Z ^ (j : ℕ)) ω ∂Q :=
+    fun j ↦ key (A j) j (hAm j) (hA2 j)
+  have hdec : (fun ω ↦ X t ω ^ 4 - 6 * t * X t ω ^ 2 + 3 * (t : ℝ) ^ 2)
+      = ∑ j : Fin 5, A j * Z ^ (j : ℕ) := by
+    funext ω
+    have hXt : X t ω = X s ω + Z ω := by simp [hZ]
+    simp only [Finset.sum_apply, Fin.sum_univ_five, hA_def, Pi.mul_apply, Pi.pow_apply]
+    simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
+      Matrix.cons_val_three, Matrix.cons_val_four, Fin.val_zero, Fin.val_one, Fin.val_two]
+    rw [hXt]
+    norm_num
+    ring
+  have hall : ∀ᵐ ω ∂Q, ∀ j : Fin 5,
+      Q[A j * Z ^ (j : ℕ) | F s] ω = A j ω * ∫ ω, (Z ^ (j : ℕ)) ω ∂Q :=
+    ae_all_iff.2 fun j ↦ (hk j).2
+  show Q[fun ω ↦ X t ω ^ 4 - 6 * t * X t ω ^ 2 + 3 * (t : ℝ) ^ 2 | F s]
+    =ᵐ[Q] fun ω ↦ X s ω ^ 4 - 6 * s * X s ω ^ 2 + 3 * (s : ℝ) ^ 2
+  rw [hdec]
+  filter_upwards [condExp_finsetSum (fun j _ ↦ (hk j).1) (F s), hall] with ω h1 h2
+  rw [h1, Finset.sum_apply, Fin.sum_univ_five, h2, h2, h2, h2, h2]
+  simp only [Pi.pow_apply, hA_def]
+  simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
+    Matrix.cons_val_three, Matrix.cons_val_four, Fin.val_zero, Fin.val_one, Fin.val_two]
+  norm_num [hZ0, hZ2, hZ3, hZ4]
+  ring
+
+/-- **The cubic martingale of a pre-Brownian motion.**  For
+`ProbabilityTheory.IsPreBrownianReal X Q` with strongly measurable coordinates,
+`t ↦ X t ^ 3 - 3 t X t` is a `MeasureTheory.Martingale` for
+`MeasureTheory.Filtration.natural X hsm`.  The proof is that of
+`MeasureTheory.martingale_pow_four_of_isPreBrownianReal` with four polynomials instead of five;
+the moments read are `1, 0, t - s, 0` (`ProbabilityTheory.integral_pow_three_gaussianReal_zero`).
+Continuity of paths is not read.  **Not an existence statement**: `X` is a hypothesis. -/
+theorem martingale_pow_three_of_isPreBrownianReal {Ω' : Type*} {mΩ' : MeasurableSpace Ω'}
+    {Q : Measure Ω'} {X : ℝ≥0 → Ω' → ℝ} (hX : IsPreBrownianReal X Q)
+    (hsm : ∀ t, StronglyMeasurable (X t)) :
+    Martingale (fun t ω ↦ X t ω ^ 3 - 3 * t * X t ω) (Filtration.natural X hsm) Q := by
+  have : IsProbabilityMeasure Q := hX.isGaussianProcess.isProbabilityMeasure
+  have had := Filtration.stronglyAdapted_natural hsm
+  have hpow : ∀ r k, MemLp (fun ω ↦ X r ω ^ k) 2 Q := fun r k ↦
+    memLp_pow_of_hasLaw_gaussianReal (hX.hasLaw_eval r) k
+  have hX2 : ∀ r, MemLp (X r) 2 Q := fun r ↦
+    (hX.isGaussianProcess.hasGaussianLaw_eval r).memLp_two
+  refine ⟨fun t ↦ (((had t).pow 3).sub (stronglyMeasurable_const.mul (had t))),
+    fun s t hst ↦ ?_⟩
+  set F := Filtration.natural X hsm
+  set Z : Ω' → ℝ := X t - X s with hZ
+  have hI : Indep (MeasurableSpace.comap Z inferInstance) (F s) Q :=
+    indep_comap_sub_natural_of_isPreBrownianReal hX hsm hst
+  have hZm : Measurable Z := (hsm t).measurable.sub (hsm s).measurable
+  have hZlaw : HasLaw Z (gaussianReal 0 (nndist t s)) Q := hX.hasLaw_sub t s
+  have hnd : ((nndist t s : ℝ≥0) : ℝ) = (t : ℝ) - s := by
+    rw [coe_nndist, NNReal.dist_eq, abs_of_nonneg (sub_nonneg.2 (NNReal.coe_le_coe.2 hst))]
+  have hZp : ∀ j : ℕ, MemLp (Z ^ j) 2 Q := fun j ↦ memLp_pow_of_hasLaw_gaussianReal hZlaw j
+  have hZ0 : ∫ ω, Z ω ∂Q = 0 := by
+    rw [hZ, integral_sub' (hX.integrable_eval t) (hX.integrable_eval s), hX.integral_eval,
+      hX.integral_eval, sub_self]
+  have hZ2 : ∫ ω, Z ω ^ 2 ∂Q = t - s := by
+    rw [← variance_of_integral_eq_zero hZm.aemeasurable hZ0, hZlaw.variance_eq,
+      variance_id_gaussianReal, hnd]
+  have hZ3 : ∫ ω, Z ω ^ 3 ∂Q = 0 := by
+    rw [show ∫ ω, Z ω ^ 3 ∂Q = ∫ x, x ^ 3 ∂gaussianReal 0 (nndist t s) from
+      hZlaw.integral_comp (f := fun x ↦ x ^ 3) (continuous_pow 3).aestronglyMeasurable,
+      integral_pow_three_gaussianReal_zero]
+  have key : ∀ (A : Ω' → ℝ) (j : ℕ), StronglyMeasurable[F s] A → MemLp A 2 Q →
+      Integrable (A * Z ^ j) Q ∧
+        Q[A * Z ^ j | F s] =ᵐ[Q] A * fun _ ↦ ∫ ω, (Z ^ j) ω ∂Q := by
+    intro A j hA hA2
+    have hint : Integrable (A * Z ^ j) Q := hA2.integrable_mul (hZp j)
+    refine ⟨hint, ?_⟩
+    filter_upwards [condExp_mul_of_stronglyMeasurable_left hA hint
+        ((hZp j).integrable one_le_two),
+      condExp_indep_eq hZm.comap_le (F.le s)
+        ((comap_measurable Z).pow_const j).stronglyMeasurable hI] with ω h1 h2
+    rw [h1, Pi.mul_apply, Pi.mul_apply]
+    exact congrArg (A ω * ·) h2
+  set A : Fin 4 → Ω' → ℝ := ![fun ω ↦ X s ω ^ 3 - 3 * t * X s ω,
+    fun ω ↦ 3 * X s ω ^ 2 - 3 * t, fun ω ↦ 3 * X s ω, fun _ ↦ 1] with hA_def
+  have hAm : ∀ j, StronglyMeasurable[F s] (A j) := by
+    have h := had s
+    intro j
+    fin_cases j
+    · exact (h.pow 3).sub (stronglyMeasurable_const.mul h)
+    · exact (stronglyMeasurable_const.mul (h.pow 2)).sub stronglyMeasurable_const
+    · exact stronglyMeasurable_const.mul h
+    · exact stronglyMeasurable_const
+  have hA2 : ∀ j, MemLp (A j) 2 Q := by
+    intro j
+    fin_cases j
+    · exact (hpow s 3).sub ((hX2 s).const_mul _)
+    · exact ((hpow s 2).const_mul _).sub (memLp_const _)
+    · exact (hX2 s).const_mul _
+    · exact memLp_const _
+  have hk : ∀ j : Fin 4, Integrable (A j * Z ^ (j : ℕ)) Q ∧
+      Q[A j * Z ^ (j : ℕ) | F s] =ᵐ[Q] A j * fun _ ↦ ∫ ω, (Z ^ (j : ℕ)) ω ∂Q :=
+    fun j ↦ key (A j) j (hAm j) (hA2 j)
+  have hdec : (fun ω ↦ X t ω ^ 3 - 3 * t * X t ω) = ∑ j : Fin 4, A j * Z ^ (j : ℕ) := by
+    funext ω
+    have hXt : X t ω = X s ω + Z ω := by simp [hZ]
+    simp only [Finset.sum_apply, Fin.sum_univ_four, hA_def, Pi.mul_apply, Pi.pow_apply]
+    simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
+      Matrix.cons_val_three, Fin.val_zero, Fin.val_one, Fin.val_two]
+    rw [hXt]
+    norm_num
+    ring
+  have hall : ∀ᵐ ω ∂Q, ∀ j : Fin 4,
+      Q[A j * Z ^ (j : ℕ) | F s] ω = A j ω * ∫ ω, (Z ^ (j : ℕ)) ω ∂Q :=
+    ae_all_iff.2 fun j ↦ (hk j).2
+  show Q[fun ω ↦ X t ω ^ 3 - 3 * t * X t ω | F s] =ᵐ[Q] fun ω ↦ X s ω ^ 3 - 3 * s * X s ω
+  rw [hdec]
+  filter_upwards [condExp_finsetSum (fun j _ ↦ (hk j).1) (F s), hall] with ω h1 h2
+  rw [h1, Finset.sum_apply, Fin.sum_univ_four, h2, h2, h2, h2]
+  simp only [Pi.pow_apply, hA_def]
+  simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
+    Matrix.cons_val_three, Fin.val_zero, Fin.val_one, Fin.val_two]
+  norm_num [hZ0, hZ2, hZ3]
+  ring
+
+open scoped ENNReal in
+/-- **The exit time of Brownian motion with every path continuous from `(-b, a)` has second
+moment `a b (a ^ 2 + 3 a b + b ^ 2) / 3`.**  For `ProbabilityTheory.IsBrownianReal X Q` with
+measurable coordinates, **every** path continuous, `0 < a` and `0 < b`,
+`∫⁻ ω, (hittingAfter X ((-∞, -b] ∪ [a, ∞)) 0 ω : ℝ≥0∞) ^ 2 ∂Q = a b (a ^ 2 + 3 a b + b ^ 2) / 3`.
+
+Optional sampling at `ρ n = τ ∧ n` for the cubic and the quartic martingale
+(`MeasureTheory.martingale_pow_three_of_isPreBrownianReal`,
+`MeasureTheory.martingale_pow_four_of_isPreBrownianReal`) gives
+`E[X_ρ ^ 3] = 3 E[ρ X_ρ]` and `3 E[ρ ^ 2] = 6 E[ρ X_ρ ^ 2] - E[X_ρ ^ 4]`.  The powers of `X_ρ` are
+bounded by powers of `max a b`; the mixed terms are not bounded and are dominated by powers of
+`max a b` times `τ`, which is integrable by Wald's identity
+(`MeasureTheory.lintegral_hittingAfter_eq_of_continuous`).  In the limit, `X τ ∈ {-b, a}` almost
+surely, so `X τ ^ 2 = (a - b) X τ + a b`, and with `E[X τ] = 0` this gives
+`E[X τ ^ 3] = a b (a - b)`, `E[X τ ^ 4] = a b (a ^ 2 - a b + b ^ 2)`, and
+`E[τ X τ ^ 2] = (a - b) E[τ X τ] + a b E[τ] = a b (a - b) ^ 2 / 3 + a ^ 2 b ^ 2`.  No probability
+of either exit is read.  On the left, monotone convergence gives `E[τ ^ 2]`.
+**Not an existence statement**: `X` is a hypothesis. -/
+theorem lintegral_sq_hittingAfter_of_continuous
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t))
+    (hc : ∀ ω, Continuous (X · ω)) {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
+    ∫⁻ ω, (hittingAfter X (Iic (-b) ∪ Ici a) 0 ω : ℝ≥0∞) ^ 2 ∂Q
+      = ENNReal.ofReal (a * b * (a ^ 2 + 3 * a * b + b ^ 2) / 3) := by
+  have : IsProbabilityMeasure Q := hX.isGaussianProcess.isProbabilityMeasure
+  have hEτ := lintegral_hittingAfter_eq_of_continuous hX hm hc ha hb
+  have htwo := ae_stoppedValue_hittingAfter_eq_or_eq_of_continuous hX hm hc ha hb
+  obtain ⟨hIXτ, hEXτ⟩ := integral_stoppedValue_hittingAfter_eq_zero_of_continuous hX hm hc ha hb
+  obtain ⟨τ, hτ_def⟩ : ∃ τ, τ = hittingAfter X (Iic (-b) ∪ Ici a) 0 := ⟨_, rfl⟩
+  rw [← hτ_def] at hEτ htwo hIXτ hEXτ ⊢
+  set c : ℝ := max a b with hc_def
+  have hc0 : 0 ≤ c := ha.le.trans (le_max_left a b)
+  have hsm : ∀ t, StronglyMeasurable (X t) := fun t ↦ (hm t).stronglyMeasurable
+  have hτ : IsStoppingTime (Filtration.natural X hsm) τ := hτ_def ▸
+    isStoppingTime_hittingAfter_of_isClosed_of_continuous
+      (Filtration.stronglyAdapted_natural hsm).adapted hc (isClosed_Iic.union isClosed_Ici) 0
+  have hfin : ∀ᵐ ω ∂Q, τ ω ≠ ⊤ := by
+    filter_upwards [ae_hittingAfter_ne_top_of_isBrownianReal hX hm a] with ω hω
+    refine ne_top_of_le_ne_top hω ?_
+    rw [hτ_def]
+    exact hittingAfter_anti X 0 subset_union_right ω
+  -- the four martingales
+  set Y : ℝ≥0 → Ω' → ℝ := fun t ω ↦ X t ω ^ 2 - t with hY_def
+  have hMY : Martingale Y (Filtration.natural X hsm) Q :=
+    martingale_sq_sub_of_isPreBrownianReal hX.toIsPreBrownianReal hsm
+  set M3 : ℝ≥0 → Ω' → ℝ := fun t ω ↦ X t ω ^ 3 - 3 * t * X t ω with hM3_def
+  have hMM3 : Martingale M3 (Filtration.natural X hsm) Q :=
+    martingale_pow_three_of_isPreBrownianReal hX.toIsPreBrownianReal hsm
+  set M : ℝ≥0 → Ω' → ℝ := fun t ω ↦ X t ω ^ 4 - 6 * t * X t ω ^ 2 + 3 * (t : ℝ) ^ 2
+    with hM_def
+  have hMM : Martingale M (Filtration.natural X hsm) Q :=
+    martingale_pow_four_of_isPreBrownianReal hX.toIsPreBrownianReal hsm
+  have hM : Martingale X (Filtration.natural X hsm) Q :=
+    martingale_of_isPreBrownianReal hX.toIsPreBrownianReal hsm
+  have hrcY : ∀ᵐ ω ∂Q, ∀ s : ℝ≥0, Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)) :=
+    ae_of_all _ fun ω s ↦ ((((hc ω).pow 2).sub NNReal.continuous_coe).tendsto s).mono_left
+      nhdsWithin_le_nhds
+  have hrcM3 : ∀ᵐ ω ∂Q, ∀ s : ℝ≥0, Tendsto (fun r ↦ M3 r ω) (𝓝[≥] s) (𝓝 (M3 s ω)) :=
+    ae_of_all _ fun ω s ↦ ((((hc ω).pow 3).sub ((continuous_const.mul NNReal.continuous_coe).mul
+      (hc ω))).tendsto s).mono_left nhdsWithin_le_nhds
+  have hrcM : ∀ᵐ ω ∂Q, ∀ s : ℝ≥0, Tendsto (fun r ↦ M r ω) (𝓝[≥] s) (𝓝 (M s ω)) :=
+    ae_of_all _ fun ω s ↦ (((((hc ω).pow 4).sub ((continuous_const.mul NNReal.continuous_coe).mul
+      ((hc ω).pow 2))).add (continuous_const.mul (NNReal.continuous_coe.pow 2))).tendsto s).mono_left
+      nhdsWithin_le_nhds
+  have hrc : ∀ᵐ ω ∂Q, ∀ s : ℝ≥0, Tendsto (fun r ↦ X r ω) (𝓝[≥] s) (𝓝 (X s ω)) :=
+    ae_of_all _ fun ω s ↦ ((hc ω).tendsto s).mono_left nhdsWithin_le_nhds
+  -- the truncated exit times
+  set ρ : ℕ → Ω' → WithTop ℝ≥0 := fun n ω ↦ min (τ ω) ((n : ℝ≥0) : WithTop ℝ≥0) with hρ_def
+  have hρ : ∀ n, IsStoppingTime (Filtration.natural X hsm) (ρ n) := fun n ↦ hτ.min_const _
+  have hρj : ∀ n ω, ρ n ω ≤ (((n : ℝ≥0)) : ENNReal) := fun n ω ↦ min_le_right _ _
+  have hρtop : ∀ n ω, ρ n ω ≠ ⊤ := fun n ω ↦ ne_top_of_le_ne_top WithTop.coe_ne_top (hρj n ω)
+  set g : ℕ → Ω' → ℝ := fun n ω ↦ ((ρ n ω).untopA : ℝ) with hg_def
+  set gτ : Ω' → ℝ := fun ω ↦ ((τ ω).untopA : ℝ) with hgτ_def
+  set S : ℕ → Ω' → ℝ := fun n ↦ stoppedValue X (ρ n) with hS_def
+  set Sτ : Ω' → ℝ := stoppedValue X τ with hSτ_def
+  have hev : ∀ᵐ ω ∂Q, ∀ᶠ n in atTop, ρ n ω = τ ω := by
+    filter_upwards [hfin] with ω hω
+    obtain ⟨u, hu⟩ := WithTop.ne_top_iff_exists.1 hω
+    obtain ⟨N, hN⟩ := exists_nat_ge u
+    refine eventually_atTop.2 ⟨N, fun n hn ↦ ?_⟩
+    simp only [hρ_def]
+    rw [min_eq_left]
+    rw [← hu]
+    exact WithTop.coe_le_coe.2 (hN.trans (Nat.cast_le.2 hn))
+  have hg_nonneg : ∀ n ω, 0 ≤ g n ω := fun n ω ↦ NNReal.coe_nonneg _
+  have hg_le : ∀ n ω, g n ω ≤ n := by
+    intro n ω
+    obtain ⟨u, hu⟩ := WithTop.ne_top_iff_exists.1 (hρtop n ω)
+    have h := hρj n ω
+    rw [← hu] at h
+    simp only [hg_def, ← hu]
+    change (u : ℝ) ≤ n
+    exact_mod_cast ENNReal.coe_le_coe.1 h
+  have hg_le_τ : ∀ᵐ ω ∂Q, ∀ n, g n ω ≤ gτ ω := by
+    filter_upwards [hfin] with ω hω n
+    obtain ⟨u, hu⟩ := WithTop.ne_top_iff_exists.1 hω
+    obtain ⟨w, hw⟩ := WithTop.ne_top_iff_exists.1 (hρtop n ω)
+    have h : ρ n ω ≤ τ ω := min_le_left _ _
+    rw [← hu, ← hw] at h
+    simp only [hg_def, hgτ_def, ← hu, ← hw]
+    change (w : ℝ) ≤ u
+    exact_mod_cast WithTop.coe_le_coe.1 h
+  have hSbd : ∀ n, ∀ᵐ ω ∂Q, |S n ω| ≤ c := by
+    intro n
+    filter_upwards [hX.toIsPreBrownianReal.eval_zero_ae_eq_zero, hfin] with ω h0 hω'
+    obtain ⟨u, hu⟩ := WithTop.ne_top_iff_exists.1 hω'
+    have hmem := mem_Icc_of_le_hittingAfter_of_continuous (hc ω) h0 ha hb (u := min u n)
+      (by rw [← hτ_def, ← hu]; exact WithTop.coe_le_coe.2 (min_le_left _ _))
+    simp only [hS_def, stoppedValue, hρ_def]
+    rw [← hu, ← WithTop.coe_min]
+    change |X (min u n) ω| ≤ c
+    rw [abs_le]
+    constructor <;> linarith [hmem.1, hmem.2, le_max_left a b, le_max_right a b]
+  have hIX : ∀ n, Integrable (S n) Q := fun n ↦
+    integrable_stoppedValue_of_rightContinuous hM hrc (hρ n) (hρj n)
+  have hIY : ∀ n, Integrable (stoppedValue Y (ρ n)) Q := fun n ↦
+    integrable_stoppedValue_of_rightContinuous hMY hrcY (hρ n) (hρj n)
+  have hSp : ∀ n k, Integrable (fun ω ↦ S n ω ^ k) Q := fun n k ↦
+    (integrable_const (c ^ k)).mono' ((hIX n).aestronglyMeasurable.pow k) (by
+      filter_upwards [hSbd n] with ω h
+      rw [Real.norm_eq_abs, abs_pow]
+      exact pow_le_pow_left₀ (abs_nonneg _) h k)
+  have hgY : ∀ n, g n = (fun ω ↦ S n ω ^ 2) - stoppedValue Y (ρ n) := by
+    intro n
+    funext ω
+    simp only [hg_def, hS_def, Pi.sub_apply, stoppedValue, hY_def]
+    ring
+  have hIg : ∀ n, Integrable (g n) Q := fun n ↦ by
+    rw [hgY n]
+    exact (hSp n 2).sub (hIY n)
+  have hIg2 : ∀ n, Integrable (fun ω ↦ g n ω ^ 2) Q := fun n ↦
+    (integrable_const ((n : ℝ) ^ 2)).mono' ((hIg n).aestronglyMeasurable.pow 2)
+      (ae_of_all _ fun ω ↦ by
+        rw [Real.norm_eq_abs, abs_pow, abs_of_nonneg (hg_nonneg n ω)]
+        exact pow_le_pow_left₀ (hg_nonneg n ω) (hg_le n ω) 2)
+  have hIgS : ∀ n k, Integrable (fun ω ↦ g n ω * S n ω ^ k) Q := fun n k ↦
+    (integrable_const ((n : ℝ) * c ^ k)).mono'
+      ((hIg n).aestronglyMeasurable.mul ((hIX n).aestronglyMeasurable.pow k)) (by
+        filter_upwards [hSbd n] with ω h
+        rw [Real.norm_eq_abs, abs_mul, abs_pow, abs_of_nonneg (hg_nonneg n ω)]
+        exact mul_le_mul (hg_le n ω) (pow_le_pow_left₀ (abs_nonneg _) h k)
+          (by positivity) (Nat.cast_nonneg _))
+  -- optional stopping for the cubic and the quartic martingale
+  have hlawn : ∀ n : ℕ, HasLaw (X n) (gaussianReal 0 ((n : ℕ) : ℝ≥0)) Q := fun n ↦
+    hX.toIsPreBrownianReal.hasLaw_eval ((n : ℕ) : ℝ≥0)
+  have h2n : ∀ n : ℕ, ∫ ω, X n ω ^ 2 ∂Q = n := by
+    intro n
+    rw [← variance_of_integral_eq_zero (hm _).aemeasurable
+        (hX.toIsPreBrownianReal.integral_eval _), (hlawn n).variance_eq, variance_id_gaussianReal]
+    simp
+  have hM3n : ∀ n : ℕ, ∫ ω, M3 n ω ∂Q = 0 := by
+    intro n
+    have h3 : ∫ ω, X n ω ^ 3 ∂Q = 0 := by
+      rw [show ∫ ω, X n ω ^ 3 ∂Q = ∫ x, x ^ 3 ∂gaussianReal 0 ((n : ℕ) : ℝ≥0) from
+        (hlawn n).integral_comp (f := fun x ↦ x ^ 3) (continuous_pow 3).aestronglyMeasurable,
+        integral_pow_three_gaussianReal_zero]
+    have i3 := (memLp_pow_of_hasLaw_gaussianReal (hlawn n) 3).integrable one_le_two
+    have j1 : Integrable (fun ω ↦ 3 * ((n : ℕ) : ℝ≥0) * X n ω) Q :=
+      (hX.toIsPreBrownianReal.integrable_eval _).const_mul _
+    simp only [hM3_def]
+    rw [integral_sub i3 j1, integral_const_mul, h3, hX.toIsPreBrownianReal.integral_eval]
+    simp
+  have hMn : ∀ n : ℕ, ∫ ω, M n ω ∂Q = 0 := by
+    intro n
+    have h4 : ∫ ω, X n ω ^ 4 ∂Q = 3 * (n : ℝ) ^ 2 := by
+      rw [show ∫ ω, X n ω ^ 4 ∂Q = ∫ x, x ^ 4 ∂gaussianReal 0 ((n : ℕ) : ℝ≥0) from
+        (hlawn n).integral_comp (f := fun x ↦ x ^ 4) (continuous_pow 4).aestronglyMeasurable,
+        integral_pow_four_gaussianReal_zero]
+      simp
+    have i4 := (memLp_pow_of_hasLaw_gaussianReal (hlawn n) 4).integrable one_le_two
+    have i2 := (memLp_pow_of_hasLaw_gaussianReal (hlawn n) 2).integrable one_le_two
+    have j1 : Integrable (fun ω ↦ X n ω ^ 4 - 6 * ((n : ℕ) : ℝ≥0) * X n ω ^ 2) Q :=
+      i4.sub (i2.const_mul _)
+    have j2 : Integrable (fun ω ↦ 6 * ((n : ℕ) : ℝ≥0) * X n ω ^ 2) Q := i2.const_mul _
+    simp only [hM_def]
+    rw [integral_add j1 (integrable_const _), integral_sub i4 j2, integral_const_mul, h4, h2n n,
+      integral_const]
+    simp
+    ring
+  have hid3 : ∀ n, ∫ ω, S n ω ^ 3 ∂Q = 3 * ∫ ω, g n ω * S n ω ^ 1 ∂Q := by
+    intro n
+    have h0 : ∫ ω, stoppedValue M3 (ρ n) ω ∂Q = 0 := by
+      rw [integral_stoppedValue_eq_of_rightContinuous hMM3 hrcM3 (hρ n) (hρj n)]
+      exact hM3n n
+    have hpt : stoppedValue M3 (ρ n) = fun ω ↦ S n ω ^ 3 - 3 * (g n ω * S n ω ^ 1) := by
+      funext ω
+      simp only [stoppedValue, hM3_def, hS_def, hg_def]
+      ring
+    have j2 : Integrable (fun ω ↦ 3 * (g n ω * S n ω ^ 1)) Q := (hIgS n 1).const_mul _
+    simp only [hpt] at h0
+    rw [integral_sub (hSp n 3) j2, integral_const_mul] at h0
+    linarith
+  have hid : ∀ n, ∫ ω, g n ω ^ 2 ∂Q
+      = (6 * ∫ ω, g n ω * S n ω ^ 2 ∂Q - ∫ ω, S n ω ^ 4 ∂Q) / 3 := by
+    intro n
+    have h0 : ∫ ω, stoppedValue M (ρ n) ω ∂Q = 0 := by
+      rw [integral_stoppedValue_eq_of_rightContinuous hMM hrcM (hρ n) (hρj n)]
+      exact hMn n
+    have hpt : stoppedValue M (ρ n)
+        = fun ω ↦ S n ω ^ 4 - 6 * (g n ω * S n ω ^ 2) + 3 * g n ω ^ 2 := by
+      funext ω
+      simp only [stoppedValue, hM_def, hS_def, hg_def]
+      ring
+    have j1 : Integrable (fun ω ↦ S n ω ^ 4 - 6 * (g n ω * S n ω ^ 2)) Q :=
+      (hSp n 4).sub ((hIgS n 2).const_mul _)
+    have j2 : Integrable (fun ω ↦ 6 * (g n ω * S n ω ^ 2)) Q := (hIgS n 2).const_mul _
+    have j3 : Integrable (fun ω ↦ 3 * g n ω ^ 2) Q := (hIg2 n).const_mul _
+    simp only [hpt] at h0
+    rw [integral_add j1 j3, integral_sub (hSp n 4) j2, integral_const_mul,
+      integral_const_mul] at h0
+    linarith
+  -- the limits
+  have hgτ_lim : ∀ᵐ ω ∂Q, Tendsto (fun n ↦ g n ω) atTop (𝓝 (gτ ω)) := by
+    filter_upwards [hev] with ω h
+    exact tendsto_const_nhds.congr' (h.mono fun n hn ↦ by simp only [hg_def, hgτ_def, hn])
+  have hS_lim : ∀ᵐ ω ∂Q, Tendsto (fun n ↦ S n ω) atTop (𝓝 (Sτ ω)) := by
+    filter_upwards [hev] with ω h
+    exact tendsto_const_nhds.congr' (h.mono fun n hn ↦ by
+      simp only [hS_def, hSτ_def, stoppedValue, hn])
+  have hgτm : AEStronglyMeasurable gτ Q :=
+    aestronglyMeasurable_of_tendsto_ae atTop (fun n ↦ (hIg n).aestronglyMeasurable) hgτ_lim
+  have hofτ : (fun ω ↦ ENNReal.ofReal (gτ ω)) =ᵐ[Q] fun ω ↦ (τ ω : ℝ≥0∞) := by
+    filter_upwards [hfin] with ω hω
+    obtain ⟨u, hu⟩ := WithTop.ne_top_iff_exists.1 hω
+    simp only [hgτ_def, ← hu]
+    exact ENNReal.ofReal_coe_nnreal
+  have hgτ_nn : 0 ≤ᵐ[Q] gτ := ae_of_all _ fun ω ↦ NNReal.coe_nonneg _
+  have hIgτ : Integrable gτ Q := by
+    refine ⟨hgτm, (hasFiniteIntegral_iff_ofReal hgτ_nn).2 ?_⟩
+    rw [lintegral_congr_ae hofτ, hEτ]
+    exact ENNReal.ofReal_lt_top
+  have hEgτ : ∫ ω, gτ ω ∂Q = a * b := by
+    rw [integral_eq_lintegral_of_nonneg_ae hgτ_nn hgτm, lintegral_congr_ae hofτ, hEτ,
+      ENNReal.toReal_ofReal (mul_nonneg ha.le hb.le)]
+  have hSτbd : ∀ᵐ ω ∂Q, |Sτ ω| ≤ c := by
+    filter_upwards [htwo] with ω h
+    rcases h with h | h <;> rw [h]
+    · rw [abs_neg, abs_of_pos hb]; exact le_max_right a b
+    · rw [abs_of_pos ha]; exact le_max_left a b
+  have hIgτS : ∀ k, Integrable (fun ω ↦ gτ ω * Sτ ω ^ k) Q := fun k ↦
+    (hIgτ.const_mul (c ^ k)).mono' (hgτm.mul (hIXτ.aestronglyMeasurable.pow k)) (by
+      filter_upwards [hSτbd] with ω h
+      rw [Real.norm_eq_abs, abs_mul, abs_pow, abs_of_nonneg (NNReal.coe_nonneg _), mul_comm]
+      exact mul_le_mul_of_nonneg_right (pow_le_pow_left₀ (abs_nonneg _) h k)
+        (NNReal.coe_nonneg _))
+  -- `X τ ^ 2 = (a - b) X τ + a b`
+  have hsq : ∀ᵐ ω ∂Q, Sτ ω ^ 2 = (a - b) * Sτ ω + a * b := by
+    filter_upwards [htwo] with ω h
+    rcases h with h | h <;> (rw [h]; ring)
+  have hpow_lim : ∀ k, Tendsto (fun n ↦ ∫ ω, S n ω ^ k ∂Q) atTop (𝓝 (∫ ω, Sτ ω ^ k ∂Q)) :=
+    fun k ↦ tendsto_integral_of_dominated_convergence (fun _ ↦ c ^ k)
+      (fun n ↦ (hSp n k).aestronglyMeasurable) (integrable_const _) (fun n ↦ by
+        filter_upwards [hSbd n] with ω h
+        rw [Real.norm_eq_abs, abs_pow]
+        exact pow_le_pow_left₀ (abs_nonneg _) h k) (by
+        filter_upwards [hS_lim] with ω h
+        exact h.pow k)
+  have hmix_lim : ∀ k, Tendsto (fun n ↦ ∫ ω, g n ω * S n ω ^ k ∂Q) atTop
+      (𝓝 (∫ ω, gτ ω * Sτ ω ^ k ∂Q)) :=
+    fun k ↦ tendsto_integral_of_dominated_convergence (fun ω ↦ c ^ k * gτ ω)
+      (fun n ↦ (hIgS n k).aestronglyMeasurable) (hIgτ.const_mul _) (fun n ↦ by
+        filter_upwards [hSbd n, hg_le_τ] with ω h hle
+        rw [Real.norm_eq_abs, abs_mul, abs_pow, abs_of_nonneg (hg_nonneg n ω), mul_comm]
+        exact mul_le_mul (pow_le_pow_left₀ (abs_nonneg _) h k) (hle n) (hg_nonneg n ω)
+          (by positivity)) (by
+        filter_upwards [hgτ_lim, hS_lim] with ω h1 h2
+        exact h1.mul (h2.pow k))
+  -- the moments of the exit position
+  have hE3 : ∫ ω, Sτ ω ^ 3 ∂Q = a * b * (a - b) := by
+    have hpt : (fun ω ↦ Sτ ω ^ 3) =ᵐ[Q]
+        fun ω ↦ ((a - b) ^ 2 + a * b) * Sτ ω + a * b * (a - b) := by
+      filter_upwards [hsq] with ω h
+      rw [pow_succ, h]
+      linear_combination (a - b) * h
+    rw [integral_congr_ae hpt, integral_add (hIXτ.const_mul _) (integrable_const _),
+      integral_const_mul, hEXτ, integral_const]
+    simp
+  have hE4 : ∫ ω, Sτ ω ^ 4 ∂Q = a * b * (a ^ 2 - a * b + b ^ 2) := by
+    have hpt : (fun ω ↦ Sτ ω ^ 4) =ᵐ[Q]
+        fun ω ↦ (a - b) * ((a - b) ^ 2 + 2 * a * b) * Sτ ω
+          + a * b * (a ^ 2 - a * b + b ^ 2) := by
+      filter_upwards [hsq] with ω h
+      have h4 : Sτ ω ^ 4 = (Sτ ω ^ 2) ^ 2 := by ring
+      rw [h4, h]
+      linear_combination ((a - b) ^ 2) * h
+    rw [integral_congr_ae hpt, integral_add (hIXτ.const_mul _) (integrable_const _),
+      integral_const_mul, hEXτ, integral_const]
+    simp
+  have hmix1 : ∫ ω, gτ ω * Sτ ω ^ 1 ∂Q = a * b * (a - b) / 3 := by
+    have h := tendsto_nhds_unique ((hpow_lim 3).congr hid3)
+      ((hmix_lim 1).const_mul 3)
+    rw [hE3] at h
+    linarith
+  have hmix2 : ∫ ω, gτ ω * Sτ ω ^ 2 ∂Q = a * b * (a - b) ^ 2 / 3 + a ^ 2 * b ^ 2 := by
+    have hpt : (fun ω ↦ gτ ω * Sτ ω ^ 2) =ᵐ[Q]
+        fun ω ↦ (a - b) * (gτ ω * Sτ ω ^ 1) + a * b * gτ ω := by
+      filter_upwards [hsq] with ω h
+      rw [h]
+      ring
+    rw [integral_congr_ae hpt, integral_add ((hIgτS 1).const_mul _) (hIgτ.const_mul _),
+      integral_const_mul, integral_const_mul, hmix1, hEgτ]
+    ring
+  have hconv : Tendsto (fun n ↦ ∫ ω, g n ω ^ 2 ∂Q) atTop
+      (𝓝 (a * b * (a ^ 2 + 3 * a * b + b ^ 2) / 3)) := by
+    simp only [hid]
+    have h := (((hmix_lim 2).const_mul 6).sub (hpow_lim 4)).div_const 3
+    rw [hmix2, hE4] at h
+    convert h using 2
+    ring
+  -- and the squared truncated times increase to `τ ^ 2`
+  have hofReal : ∀ n ω, ENNReal.ofReal (g n ω ^ 2) = (ρ n ω : ℝ≥0∞) ^ 2 := by
+    intro n ω
+    obtain ⟨u, hu⟩ := WithTop.ne_top_iff_exists.1 (hρtop n ω)
+    rw [ENNReal.ofReal_pow (hg_nonneg n ω)]
+    simp only [hg_def]
+    rw [← hu]
+    rw [ENNReal.ofReal_coe_nnreal]
+    rfl
+  have hlint : ∀ n, ∫⁻ ω, (ρ n ω : ℝ≥0∞) ^ 2 ∂Q = ENNReal.ofReal (∫ ω, g n ω ^ 2 ∂Q) := by
+    intro n
+    rw [ofReal_integral_eq_lintegral_ofReal (hIg2 n)
+      (ae_of_all _ fun ω ↦ sq_nonneg _)]
+    simp only [hofReal]
+  have hmono : ∀ᵐ ω ∂Q, Monotone fun n ↦ (ρ n ω : ℝ≥0∞) ^ 2 := ae_of_all _ fun ω n k hnk ↦
+    pow_le_pow_left₀ (by positivity)
+      (min_le_min_left _ (WithTop.coe_le_coe.2 (Nat.cast_le.2 hnk))) 2
+  have hτlim : ∀ᵐ ω ∂Q, Tendsto (fun n ↦ (ρ n ω : ℝ≥0∞) ^ 2) atTop
+      (𝓝 ((τ ω : ℝ≥0∞) ^ 2)) := by
+    filter_upwards [hev] with ω h
+    exact tendsto_const_nhds.congr' (h.mono fun n hn ↦ by simp only [hn])
+  have hmeas : ∀ n, AEMeasurable (fun ω ↦ (ρ n ω : ℝ≥0∞) ^ 2) Q := fun n ↦ by
+    have h := (hIg2 n).aestronglyMeasurable.aemeasurable.ennreal_ofReal
+    simp only [hofReal] at h
+    exact h
+  have h := lintegral_tendsto_of_tendsto_of_monotone hmeas hmono hτlim
+  exact tendsto_nhds_unique (h.congr hlint) (ENNReal.tendsto_ofReal hconv)
+
+open scoped ENNReal in
+/-- **The exit time of Brownian motion from `(-b, a)` has second moment
+`a b (a ^ 2 + 3 a b + b ^ 2) / 3`.**  For `ProbabilityTheory.IsBrownianReal X Q` with measurable
+coordinates, `0 < a` and `0 < b`, with no hypothesis on every path.  Through the modification `X'`
+with every path continuous, as in `MeasureTheory.lintegral_hittingAfter_eq_of_isBrownianReal`.
+**Not an existence statement**: `X` is a hypothesis. -/
+theorem lintegral_sq_hittingAfter_of_isBrownianReal
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t))
+    {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
+    ∫⁻ ω, (hittingAfter X (Iic (-b) ∪ Ici a) 0 ω : ℝ≥0∞) ^ 2 ∂Q
+      = ENNReal.ofReal (a * b * (a ^ 2 + 3 * a * b + b ^ 2) / 3) := by
+  obtain ⟨N, hsub, hNm, hN0⟩ := exists_measurable_superset_of_null (ae_iff.1 hX.cont)
+  classical
+  set X' : ℝ≥0 → Ω' → ℝ := fun t ω ↦ if ω ∈ N then 0 else X t ω
+  have hcont : ∀ ω, Continuous (X' · ω) := by
+    intro ω
+    by_cases hω : ω ∈ N
+    · simp only [X', ite_eq_left hω]
+      exact continuous_const
+    · simp only [X', ite_eq_right hω]
+      exact not_not.1 fun h ↦ hω (hsub h)
+  have hm' : ∀ t, Measurable (X' t) := fun t ↦ Measurable.ite hNm measurable_const (hm t)
+  have hae : ∀ᵐ ω ∂Q, ω ∉ N := measure_eq_zero_iff_ae_notMem.1 hN0
+  have hX' : IsBrownianReal X' Q :=
+    { toIsPreBrownianReal := hX.toIsPreBrownianReal.congr fun t ↦ by
+        filter_upwards [hae] with ω hω
+        simp only [X', hω, ite_false]
+      cont := ae_of_all _ hcont }
+  rw [← lintegral_sq_hittingAfter_of_continuous hX' hm' hcont ha hb]
+  refine lintegral_congr_ae ?_
+  filter_upwards [hae] with ω hω
+  simp only [hittingAfter, X', hω, ite_false]
+
+open scoped ENNReal in
+/-- **The exit time of Brownian motion from `(-a, a)` has second moment `5 a ^ 4 / 3`.**  The
+case `b = a` of `MeasureTheory.lintegral_sq_hittingAfter_of_isBrownianReal`.  With `E[τ] = a ^ 2`
+(`MeasureTheory.lintegral_hittingAfter_eq_of_isBrownianReal`) the variance of `τ` is `2 a ^ 4 / 3`;
+that is not stated here.  **Not an existence statement**: `X` is a hypothesis. -/
+theorem lintegral_sq_hittingAfter_abs_of_isBrownianReal
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t))
+    {a : ℝ} (ha : 0 < a) :
+    ∫⁻ ω, (hittingAfter X (Iic (-a) ∪ Ici a) 0 ω : ℝ≥0∞) ^ 2 ∂Q
+      = ENNReal.ofReal (5 * a ^ 4 / 3) := by
+  rw [lintegral_sq_hittingAfter_of_isBrownianReal hX hm ha ha]
+  congr 1
+  ring
+
+end ExitTimeSecondMoment
+
+end MeasureTheory
