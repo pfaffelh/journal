@@ -61951,3 +61951,166 @@ der f.s. Endlichkeit (`ae_hittingAfter_ne_top_of_isBrownianReal`) die Nullrekurr
 Geschätzt ein Lauf; der teure Teil ist die untere Schranke an die Gaußmasse eines Intervalls,
 für die Mathlib nach bisherigem Stand keine fertige Aussage hat — auch das ist vorher per
 `git grep` auf `upstream/master` zu prüfen.
+
+### 2026-09-25, elfter Lauf des Tages — das benannte Ziel steht, im ersten Durchlauf des Einbaus: **die erste Passagezeit der Brownschen Bewegung hat unendlichen Erwartungswert**; dazu das Gesetz von `τ_a` **benannt**, als das von `a²/Z²` mit `Z` standardnormal
+
+*`check_master.py`: **0 Fehler, 0 veraltete Namen, 0 `sorry`** in allen vier Dateien, Warnungen
+**18 / 38 / 36 / 76**, unverändert. `#print axioms` der sechs neuen Deklarationen: `propext`,
+`Classical.choice`, `Quot.sound` (Probe `scripts/_dev_hitmean_check.lean`). `check_duplicates.py`:
+45, unverändert. Erprobt in `scripts/_dev_hitmean.lean` und `scripts/_dev_levy.lean`. Mathlib
+`94ef6b89544` (Worktree), `upstream/master` steht bei `09712d488fd` (2026-09-21).*
+
+Die acht Schritte der Identifikationsaufgabe sind seit dem ersten Lauf des Tages erledigt; dieser
+Lauf nimmt, wie die Läufe seither, das benannte Ziel des Vorlaufs.
+
+**Die Vorfrage, zuerst geklärt: `WithTop ℝ≥0` und `ℝ≥0∞`.** Beide sind **definitionsgleich**,
+und zwar samt `MeasurableSpace`: `example : (WithTop ℝ≥0) = ℝ≥0∞ := rfl` und
+`example : (inferInstance : MeasurableSpace (WithTop ℝ≥0)) = (inferInstance : MeasurableSpace ℝ≥0∞) := rfl`
+gehen beide gegen master durch (die Topologien sind beide `Preorder.topology`,
+`Mathlib/Topology/Order/WithTop.lean:26`). Die Aussage schreibt deshalb einfach
+`(hittingAfter X (Ici a) 0 ω : ℝ≥0∞)`, **ohne** Umrechnung, und die `AEMeasurable`-Aussage des
+Vorlaufs gilt unverändert für den Integranden. *Eine Einschränkung, gemessen:* die
+**Instanzensuche** sieht durch die Definitionsgleichheit nicht hindurch — ein
+`IsFiniteMeasure` auf `Measure ℝ≥0∞` wird für dasselbe Maß als `Measure (WithTop ℝ≥0)` nicht
+gefunden und ist mit `@` hineinzureichen (so im Beweis des Gesetzes unten).
+
+**Sechs Deklarationen, im Abschnitt `ContinuousHittingTime` von
+`MartingaleProblems/Suggested.lean`:**
+
+* `MeasureTheory.ofReal_mul_gaussianPDFReal_one_le_gaussianReal_Ico` — für `0 ≤ b ≤ 1` ist
+  `N [0, b) ≥ b φ(1)`, mit `φ = gaussianPDFReal 0 1`. Über `gaussianReal_apply`
+  (`Probability/Distributions/Gaussian/Real.lean:243`) und `setLIntegral_mono`; die
+  Monotonie der Dichte ist ein `gcongr`.
+* `MeasureTheory.gaussianReal_Iic_neg` — `N (-∞, -b] = N [b, ∞)`, aus `gaussianReal_map_neg`
+  (`:360`).
+* `MeasureTheory.gaussianReal_Ici_zero` — `N [0, ∞) = 1/2`, aus der Symmetrie und
+  `nullSingletonClass_gaussianReal`.
+* `MeasureTheory.lintegral_hittingAfter_eq_top_of_isBrownianReal` — **das Ziel**:
+  `∫⁻ τ_a dQ = ∞` für `IsBrownianReal X Q`, meßbare Koordinaten, `0 < a`.
+* `MeasureTheory.ext_withTop_nnreal_of_Iic_pos` — zwei endliche Maße auf `WithTop ℝ≥0`, die auf
+  jedem `[0, T]` mit `T > 0` und auf dem ganzen Raum übereinstimmen, sind gleich.
+  `Measure.ext_of_Iic` (`MeasureTheory/Constructions/BorelSpace/Order.lean:522`) plus Stetigkeit
+  von oben (`Antitone.measure_iInter`, `MeasureTheory/Measure/Continuity.lean:167`) für den Punkt
+  `T = 0`.
+* `MeasureTheory.map_hittingAfter_Ici_eq_map_gaussianReal_of_isBrownianReal` —
+  `Q.map τ_a = (gaussianReal 0 1).map (z ↦ a² / z²)`, gerechnet in `ℝ≥0∞`.
+
+**Befund zur Wegbeschreibung des Vorlaufs.** Sie hatte die **Schichtformel** angesagt
+(`∫ Q (τ_a > T) dT`). Sie wird **nicht** gebraucht: die Markovungleichung an **einer** Zeit,
+`mul_meas_ge_le_lintegral₀` (`MeasureTheory/Integral/Lebesgue/Markov.lean:52`), gibt
+`∫⁻ τ_a ≥ T Q (τ_a > T) ≥ T · 2 φ(1) a/√T = 2 φ(1) a √T` für jedes `T ≥ a²`, und das wächst
+unbeschränkt; `ENNReal.eq_top_of_forall_nnreal_le` (`Mathlib/Basic/ENNReal/Inv.lean:502`)
+schließt. Damit entfällt auch jede Meßbarkeitsfrage über `T ↦ Q (τ_a > T)`. Die untere Schranke
+an die Gaußmasse, die der Vorlauf den „teuren Teil" nannte, kostet neun Zeilen.
+
+**Negativbefund, mit Suchbegriffen:** Mathlib hat die Masse `1/2` der Halbgeraden und die
+Symmetrie auf Halbgeraden für `gaussianReal` **nicht** als Aussage. Gesucht per `git grep` auf
+`94ef6b89544` und `upstream/master` in `Mathlib/Probability/Distributions/Gaussian/` und
+`Mathlib/Probability/CDF.lean` nach `Ici 0`, `Ioi 0`, `2⁻¹`, `1 / 2`, sowie in ganz `Mathlib/`
+nach `gaussianPDFReal.*≤`, `≤ gaussianPDFReal`, `gaussianReal.*Icc`, `gaussianReal.*Ico`: kein
+Treffer außer `gaussianPDFReal_nonneg`. Eine Lévy-Verteilung hat Mathlib nicht (kein Treffer auf
+`levy`/`Levy` in `Mathlib/Probability/Distributions/`); das Gesetz ist deshalb über
+`gaussianReal` ausgesprochen, was ohnehin die ehrlichere Form ist — sie nennt ein Maß, das nicht
+aus unserer Konstruktion stammt.
+
+**Die Stelle, an der ein Müllwert hätte lügen können, und warum er es nicht tut.** Bei `z = 0`
+ist `a²/z²` in `ℝ≥0∞` gleich `⊤` (`ENNReal.div_zero`, `Inv.lean:87`, verlangt `a² ≠ 0`, also
+`0 < a`), nicht `0` wie in `ℝ`. Eine Fassung über `ℝ` hätte dem Nullpunkt die Passagezeit `0`
+gegeben; weil `{0}` eine Gaußnullmenge ist, wäre das Maß dasselbe gewesen, aber die Formel
+hätte gelogen. Hier sagt sie die Wahrheit.
+
+**Nicht erreicht und nicht behauptet:** die **Dichte** des Gesetzes von `τ_a`
+(`a (2π t³)^{-1/2} exp(-a²/2t)`) ist nicht ausgesprochen; `τ_a` ist weiterhin nur für die
+Modifikation mit stetigen Pfaden eine Stoppzeit (zweiter Teil des Vorlaufs). Keine der Aussagen
+ist eine Existenzaussage über die Brownsche Bewegung.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **`MeasureTheory.martingale_of_isPreBrownianReal`** — eine pre-Brownsche Bewegung mit meßbaren
+> Koordinaten ist ein **Martingal** bezüglich ihrer natürlichen Filtration:
+> `Martingale X (Filtration.natural (fun t ↦ X t) hsm) Q`, mit `hsm` der starken Meßbarkeit der
+> Koordinaten (aus `hm`, weil `ℝ` zweitabzählbar ist).
+
+*Worauf es ruht:* auf `IsPreBrownianReal.hasIndepIncrements` (Mathlib,
+`Probability/BrownianMotion/Basic.lean:169`) und `HasIndepIncrements.indepFun_eval_sub`
+(`Probability/Independence/Process/HasIndepIncrements/Basic.lean:102`), die die Unabhängigkeit
+des Zuwachses `X t - X s` von **endlich vielen** früheren Koordinaten geben; auf
+`ProbabilityTheory.indep_iSup_of_directed_le` (`Probability/Independence/Basic.lean:516`), das
+daraus die Unabhängigkeit von `σ(X u : u ≤ s)` macht, weil die endlichen Teilfamilien gerichtet
+sind; und auf `condExp_indep_eq` (`Probability/ConditionalExpectation.lean:42`) für
+`E[X t - X s | F_s] = E[X t - X s] = 0` (`IsPreBrownianReal.integral_eval`, `:110`). *Warum
+jetzt:* in Mathlibs `Probability/BrownianMotion/` steht **kein** Martingalsatz (per `git grep`
+nach `Martingale`/`martingale` auf `upstream/master` in `BrownianMotion/` und
+`Independence/Process/`: kein Treffer), und er ist die Eingabe, die das hier vorhandene optionale
+Stoppen `integral_stoppedValue_eq_of_rightContinuous` — dessen Stoppzeiten `ENNReal`-wertig
+sind, also genau vom Typ von `hittingAfter` — auf die Brownsche Bewegung anwendbar macht. Der
+Verbraucher danach ist der **Ruin des Spielers**, `Q (τ_a < τ_{-b}) = b / (a + b)`; dafür wird
+zusätzlich die Stoppzeitaussage des Vorlaufs für die Menge `(-∞, -b] ∪ [a, ∞)` gebraucht, deren
+Beweis der Vorlauf als `infDist`-Variante beschrieben hat. Geschätzt ein Lauf für das Martingal;
+die Stelle, an der es klemmen kann, ist `indep_iSup_of_directed_le`, weil
+`HasIndepIncrements` über **geordnete** endliche Zeitfolgen spricht und die natürliche
+Filtration über **Mengen** von Zeiten.
+
+### Derselbe Lauf, zweiter Teil — das eben benannte Ziel steht ebenfalls: **die pre-Brownsche Bewegung ist ein Martingal ihrer natürlichen Filtration**, `MeasureTheory.martingale_of_isPreBrownianReal`; die angesagte Klemmstelle `indep_iSup_of_directed_le` kommt nicht vor
+
+*`check_master.py`: **0 / 0 / 0** in allen vier Dateien, Warnungen **18 / 38 / 36 / 76**,
+unverändert. Axiome: `propext`, `Classical.choice`, `Quot.sound`. Erprobt in
+`scripts/_dev_bmmart.lean`; drei Nachbesserungen im Probelauf (`Filtration.adapted_natural` heißt
+auf master `Filtration.stronglyAdapted_natural`, `Mathlib/Probability/Process/Adapted.lean:172`;
+`integral_sub'` statt `integral_sub` für die punktfreie Differenz; ein `module`, das an einer
+`Finset`-indizierten Linearform scheiterte, durch `simp only …; ring` ersetzt).*
+
+**Eine Deklaration, im neuen Abschnitt `BrownianMartingale` von
+`MartingaleProblems/Suggested.lean`:** für `IsPreBrownianReal X Q` mit stark meßbaren Koordinaten
+ist `Martingale X (Filtration.natural X hsm) Q`. Die Pfadstetigkeit wird nicht gelesen.
+
+**Befund zur Wegbeschreibung des ersten Teils.** Er hatte den Weg über
+`HasIndepIncrements.indepFun_eval_sub` und `indep_iSup_of_directed_le` angesagt und die
+Übersetzung zwischen **geordneten** endlichen Zeitfolgen und **Mengen** von Zeiten als
+Klemmstelle benannt. Der Weg ist ein anderer und kürzer: Mathlib hat
+`ProbabilityTheory.IsGaussianProcess.indepFun_of_covariance_eq_zero`
+(`Mathlib/Probability/Distributions/Gaussian/IsGaussianProcess/Independence.lean:156` auf
+`94ef6b89544`), die Unabhängigkeit zweier **gemeinsam Gaußscher Prozesse über beliebigen
+Indexmengen** aus verschwindenden Kreuzkovarianzen. Angewandt auf den Prozeß über
+`Iic s ⊕ Unit`, der die vergangenen Koordinaten und den Zuwachs `X t - X s` auflistet —
+Gaußsch nach `IsGaussianProcess.of_isGaussianProcess` (`…/IsGaussianProcess/Basic.lean:125`),
+Kreuzkovarianz `min u t - min u s = 0` nach `IsPreBrownianReal.covariance_eval`
+(`Mathlib/Probability/BrownianMotion/Basic.lean:117`) und `covariance_sub_right`
+(`Mathlib/Probability/Moments/Covariance.lean:185`) —, gibt das die Unabhängigkeit des Zuwachses
+vom **ganzen** Vergangenheitsvektor, und dessen σ-Algebra **ist** die natürliche Filtration
+(`Filtration.natural_eq_comap`, `Mathlib/Probability/Process/Filtration.lean:403`). Kein Sortieren,
+keine gerichtete Vereinigung. `MeasureTheory.condExp_indep_eq`
+(`Mathlib/Probability/ConditionalExpectation.lean:42`, Namensraum `MeasureTheory`, nicht
+`ProbabilityTheory`) schließt. Der Beweis ist 40 Zeilen und ging im zweiten Probelauf durch.
+
+*Zur Regel über Negativbefunde:* der erste Teil dieses Laufs hatte „in Mathlibs
+`Probability/BrownianMotion/` steht kein Martingalsatz" geschrieben. Das bleibt richtig (per
+`git grep` nach `Martingale`/`martingale`, `martingale_of_isPreBrownianReal` und
+`IsPreBrownianReal.martingale` auf `upstream/master`: kein Treffer); aber das **Werkzeug** stand
+eine Datei daneben, unter dem Stichwort *Gaußprozeß* und nicht *Brownsche Bewegung*. Gefunden hat
+es die Suche nach der **Aussage** (Unabhängigkeit aus Kovarianz), nicht nach dem Gegenstand.
+
+**Nicht erreicht und nicht behauptet:** das Martingal `X t² - t` ist nicht ausgesprochen, und kein
+optionales Stoppen der Brownschen Bewegung ist durchgeführt.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **Der Ruin des Spielers**, `MeasureTheory.measure_hittingAfter_lt_of_isBrownianReal`: für
+> `IsBrownianReal X Q` mit meßbaren Koordinaten, `0 < a`, `0 < b` und
+> `τ = hittingAfter X ((Iic (-b)) ∪ (Ici a)) 0` ist `Q (X τ = a) = b / (a + b)`, gelesen an der
+> Modifikation `X'` mit **jedem** Pfad stetig.
+
+*Worauf es ruht, fünf Eingaben, davon vier vorhanden:* (i) `martingale_of_isPreBrownianReal` aus
+diesem Lauf, angewandt auf `X'` (pre-Brownsch nach `IsPreBrownianReal.congr`, Mathlib
+`BrownianMotion/Basic.lean:80`); (ii) **fehlt:** die Stoppzeitaussage für die abgeschlossene Menge
+`(-∞, -b] ∪ [a, ∞)` — `isStoppingTime_hittingAfter_Ici_of_continuous` aus dem zehnten Lauf deckt
+nur `[a, ∞)`, und sein zweiter Teil beschreibt die Verallgemeinerung mit `Metric.infDist` statt
+`a - X q`; (iii) `integral_stoppedValue_eq_of_rightContinuous` (hier, Abschnitt über optionales
+Sampling), dessen Stoppzeiten `ENNReal`-wertig sind und damit nach dem ersten Teil dieses Laufs
+**definitionsgleich** vom Typ von `hittingAfter`, angewandt auf `τ ∧ n`; (iv) beschränkte
+Konvergenz für `n → ∞`, weil `|X' (τ ∧ n)| ≤ max a b`; (v) `τ < ∞` fast sicher, aus
+`ae_hittingAfter_ne_top_of_isBrownianReal` (τ ist höchstens die Passagezeit von `a`). Dann
+`0 = a · p - b · (1 - p)`. *Warum jetzt:* es ist der erste Satz, der **optionales Stoppen an der
+Brownschen Bewegung** vorführt, also die Probe darauf, daß das in Meilenstein 9 gebaute optionale
+Sampling in stetiger Zeit an Mathlibs `IsBrownianReal` anschließt; und (ii) ist eine allgemeine
+Aussage, die für jede abgeschlossene Menge gebraucht wird. Geschätzt ein Lauf; (ii) zuerst.

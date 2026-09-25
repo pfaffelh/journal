@@ -40362,7 +40362,10 @@ passage time of Brownian motion from the reflection principle and its finiteness
 the first passage time is a stopping time over `ℝ≥0`
 (`MeasureTheory.isStoppingTime_hittingAfter_Ici_of_continuous`), and for Brownian motion it is a
 random variable (`MeasureTheory.aemeasurable_hittingAfter_Ici_of_isBrownianReal`) whose law is
-evaluated on `[0, T]` in `MeasureTheory.map_hittingAfter_Iic_eq_of_isBrownianReal`. -/
+evaluated on `[0, T]` in `MeasureTheory.map_hittingAfter_Iic_eq_of_isBrownianReal` and whose
+expectation is infinite (`MeasureTheory.lintegral_hittingAfter_eq_top_of_isBrownianReal`); the law
+itself is that of `a² / Z²` for a standard Gaussian `Z`
+(`MeasureTheory.map_hittingAfter_Ici_eq_map_gaussianReal_of_isBrownianReal`). -/
 
 section ContinuousHittingTime
 
@@ -40819,6 +40822,310 @@ theorem map_hittingAfter_Iic_eq_of_isBrownianReal
     ← measure_hittingAfter_le_eq_two_mul_of_isBrownianReal hX hm hT ha]
   rfl
 
+/-- **A lower bound for the standard Gaussian mass of a short interval.**  For `0 ≤ b ≤ 1`,
+`N [0, b) ≥ b φ(1)`, where `φ = ProbabilityTheory.gaussianPDFReal 0 1` is the standard Gaussian
+density: on `[0, b) ⊆ [0, 1]` the density is at least its value at `1`, because `x² ≤ 1` there
+and `exp` is monotone. -/
+theorem ofReal_mul_gaussianPDFReal_one_le_gaussianReal_Ico {b : ℝ} (hb0 : 0 ≤ b) (hb1 : b ≤ 1) :
+    ENNReal.ofReal (b * gaussianPDFReal 0 1 1) ≤ gaussianReal 0 1 (Ico 0 b) := by
+  rw [gaussianReal_apply 0 one_ne_zero, ENNReal.ofReal_mul hb0, ← sub_zero b,
+    ← Real.volume_Ico, sub_zero, mul_comm, ← setLIntegral_const]
+  refine setLIntegral_mono (measurable_gaussianPDF 0 1) fun x hx ↦ ?_
+  rw [gaussianPDF]
+  refine ENNReal.ofReal_le_ofReal ?_
+  simp only [gaussianPDFReal, sub_zero, NNReal.coe_one, mul_one]
+  gcongr
+  all_goals nlinarith [hx.1, hx.2]
+
+/-- **The symmetry of the standard Gaussian on half-lines**: `N (-∞, -b] = N [b, ∞)`, from
+`ProbabilityTheory.gaussianReal_map_neg` at mean `0`. -/
+theorem gaussianReal_Iic_neg (b : ℝ) : gaussianReal 0 1 (Iic (-b)) = gaussianReal 0 1 (Ici b) := by
+  have h := gaussianReal_map_neg (μ := (0 : ℝ)) (v := 1)
+  rw [neg_zero] at h
+  conv_lhs => rw [← h]
+  rw [Measure.map_apply measurable_neg measurableSet_Iic]
+  congr 1
+  ext x
+  simp
+
+/-- **The standard Gaussian gives the half-line `[0, ∞)` the mass `1/2`.**  By the symmetry
+`MeasureTheory.gaussianReal_Iic_neg` the half-lines `(-∞, 0]` and `[0, ∞)` have equal mass,
+and since the singleton `{0}` is null (`ProbabilityTheory.nullSingletonClass_gaussianReal`)
+`[0, ∞)` and `(0, ∞)` have equal mass as well; `(-∞, 0] ∪ (0, ∞) = ℝ`. -/
+theorem gaussianReal_Ici_zero : gaussianReal 0 1 (Ici 0) = 2⁻¹ := by
+  have hsymm := gaussianReal_Iic_neg 0
+  rw [neg_zero] at hsymm
+  have := nullSingletonClass_gaussianReal (μ := (0 : ℝ)) (v := 1) one_ne_zero
+  have hsum := measure_union (μ := gaussianReal 0 1) (s₁ := Iic 0) (s₂ := Ioi 0)
+    (Set.disjoint_left.2 fun x (hx : x ≤ 0) (hx' : 0 < x) ↦ absurd hx (not_le.2 hx'))
+    measurableSet_Ioi
+  rw [Iic_union_Ioi, measure_univ, hsymm, ← Ioi_ae_eq_Ici.measure_eq, ← two_mul] at hsum
+  rw [← Ioi_ae_eq_Ici.measure_eq]
+  exact ENNReal.eq_inv_of_mul_eq_one_left (by rw [mul_comm]; exact hsum.symm)
+
+open scoped ENNReal in
+/-- **The first passage time of Brownian motion has infinite expectation.**  For
+`ProbabilityTheory.IsBrownianReal X Q` with measurable coordinates and `0 < a`, the first passage
+time `τ_a = hittingAfter X [a, ∞) 0` satisfies `∫⁻ τ_a dQ = ∞`.  Together with its almost sure
+finiteness, `MeasureTheory.ae_hittingAfter_ne_top_of_isBrownianReal`, this is the null recurrence
+of Brownian motion.
+
+`τ_a` takes values in `WithTop ℝ≥0`, which **is** `ℝ≥0∞` by definition, with the same Borel
+structure; the value `⊤` on paths that never reach `a` is the truth and not a junk value, and it
+is read here as the value `∞` of the integrand.  No conversion is made.
+
+The proof is Markov's inequality at a single time and no layer-cake formula: for `T ≥ a²`,
+`∫⁻ τ_a ≥ T Q (τ_a > T)`, and `Q (τ_a > T) = 1 - 2 N [a/√T, ∞) = 2 N [0, a/√T)`
+(`MeasureTheory.map_hittingAfter_Iic_eq_of_isBrownianReal`,
+`MeasureTheory.gaussianReal_Ici_zero`), which is at least `2 φ(1) a / √T` because `a / √T ≤ 1`
+(`MeasureTheory.ofReal_mul_gaussianPDFReal_one_le_gaussianReal_Ico`).  So
+`∫⁻ τ_a ≥ 2 φ(1) a √T` for every large `T`.  **Not an existence statement**: `X` is a
+hypothesis. -/
+theorem lintegral_hittingAfter_eq_top_of_isBrownianReal
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t))
+    {a : ℝ} (ha : 0 < a) :
+    ∫⁻ ω, (hittingAfter X (Ici a) 0 ω : ℝ≥0∞) ∂Q = ∞ := by
+  have : IsProbabilityMeasure Q := hX.isGaussianProcess.isProbabilityMeasure
+  have hτ := aemeasurable_hittingAfter_Ici_of_isBrownianReal hX hm a
+  set τ := hittingAfter X (Ici a) 0
+  have hτm : AEMeasurable (fun ω ↦ (τ ω : ℝ≥0∞)) Q := hτ
+  set p := gaussianPDFReal 0 1 1
+  have hp : 0 < p := gaussianPDFReal_pos 0 1 1 one_ne_zero
+  have key : ∀ T : ℝ≥0, a ^ 2 ≤ T →
+      ENNReal.ofReal (2 * p * a * Real.sqrt T) ≤ ∫⁻ ω, (τ ω : ℝ≥0∞) ∂Q := by
+    intro T hT
+    have hT0 : 0 < T := by
+      have : (0 : ℝ) < T := lt_of_lt_of_le (by positivity) hT
+      exact_mod_cast this
+    have hsT : 0 < Real.sqrt T := Real.sqrt_pos.2 (by exact_mod_cast hT0)
+    set b := a / Real.sqrt T with hbdef
+    have hb0 : 0 ≤ b := by positivity
+    have hb1 : b ≤ 1 := by
+      rw [hbdef, div_le_one hsT]
+      calc a = Real.sqrt (a ^ 2) := (Real.sqrt_sq ha.le).symm
+        _ ≤ Real.sqrt T := Real.sqrt_le_sqrt hT
+    have hle := map_hittingAfter_Iic_eq_of_isBrownianReal hX hm ha hT0
+    have hgt : (Q.map τ) (Ioi (T : WithTop ℝ≥0)) = 2 * gaussianReal 0 1 (Ico 0 b) := by
+      rw [← compl_Iic, prob_compl_eq_one_sub measurableSet_Iic, hle]
+      have hsplit : gaussianReal 0 1 (Ici 0)
+          = gaussianReal 0 1 (Ico 0 b) + gaussianReal 0 1 (Ici b) := by
+        have h := measure_union (μ := gaussianReal 0 1) (s₁ := Ico 0 b) (s₂ := Ici b)
+          (Set.disjoint_left.2 fun x (hx : x ∈ Ico 0 b) (hx' : x ∈ Ici b) ↦
+            absurd hx'.out (not_le.2 hx.2)) measurableSet_Ici
+        rwa [Ico_union_Ici_eq_Ici hb0] at h
+      have h1 : (1 : ℝ≥0∞) = 2 * gaussianReal 0 1 (Ico 0 b) + 2 * gaussianReal 0 1 (Ici b) := by
+        rw [← mul_add, ← hsplit, gaussianReal_Ici_zero, ENNReal.mul_inv_cancel] <;> simp
+      rw [h1, ENNReal.add_sub_cancel_right]
+      exact ENNReal.mul_ne_top (by simp) (measure_ne_top _ _)
+    calc ENNReal.ofReal (2 * p * a * Real.sqrt T)
+        = ENNReal.ofReal (T * (2 * (b * p))) := by
+          congr 1
+          rw [hbdef, show (T : ℝ) * (2 * (a / Real.sqrt T * p))
+            = 2 * p * a * ((T : ℝ) / Real.sqrt T) by ring, Real.div_sqrt]
+      _ = (T : ℝ≥0∞) * (2 * ENNReal.ofReal (b * p)) := by
+          rw [ENNReal.ofReal_mul (NNReal.coe_nonneg T), ENNReal.ofReal_mul zero_le_two,
+            ENNReal.ofReal_coe_nnreal, ENNReal.ofReal_ofNat]
+      _ ≤ (T : ℝ≥0∞) * (Q.map τ) (Ioi (T : WithTop ℝ≥0)) := by
+          rw [hgt]
+          gcongr
+          exact ofReal_mul_gaussianPDFReal_one_le_gaussianReal_Ico hb0 hb1
+      _ ≤ (T : ℝ≥0∞) * Q {ω | (T : ℝ≥0∞) ≤ (τ ω : ℝ≥0∞)} := by
+          rw [Measure.map_apply_of_aemeasurable hτ measurableSet_Ioi]
+          gcongr
+          intro ω hω
+          exact (show (T : ℝ≥0∞) < τ ω from hω).le
+      _ ≤ ∫⁻ ω, (τ ω : ℝ≥0∞) ∂Q := mul_meas_ge_le_lintegral₀ hτm _
+  refine ENNReal.eq_top_of_forall_nnreal_le fun r ↦ ?_
+  set T : ℝ≥0 := max (Real.toNNReal (a ^ 2)) (Real.toNNReal (((r : ℝ) / (2 * p * a)) ^ 2))
+    with hTdef
+  refine le_trans ?_ (key T ?_)
+  · rw [← ENNReal.ofReal_coe_nnreal]
+    refine ENNReal.ofReal_le_ofReal ?_
+    have : (r : ℝ) / (2 * p * a) ≤ Real.sqrt T := by
+      calc (r : ℝ) / (2 * p * a) = Real.sqrt (((r : ℝ) / (2 * p * a)) ^ 2) :=
+            (Real.sqrt_sq (by positivity)).symm
+        _ ≤ Real.sqrt T := Real.sqrt_le_sqrt (by simp [hTdef])
+    rw [div_le_iff₀ (by positivity)] at this
+    linarith
+  · simp [hTdef]
+
+/-- **Two finite measures on `WithTop ℝ≥0` are equal if they agree on every `[0, T]` with
+`0 < T` and on the whole space.**  `MeasureTheory.Measure.ext_of_Iic` asks for every `Iic x`; at
+`x = ⊤` this is the whole space, and `[0, 0]` is the decreasing intersection of the
+`[0, 1/(n+1)]`, so continuity from above (`Antitone.measure_iInter`) gives it from the positive
+times.  This is what a law given by a formula that only makes sense at `T > 0` needs. -/
+theorem ext_withTop_nnreal_of_Iic_pos (μ ν : Measure (WithTop ℝ≥0)) [IsFiniteMeasure μ]
+    [IsFiniteMeasure ν]
+    (h : ∀ T : ℝ≥0, 0 < T → μ (Iic (T : WithTop ℝ≥0)) = ν (Iic (T : WithTop ℝ≥0)))
+    (huniv : μ univ = ν univ) : μ = ν := by
+  have hI : Iic ((0 : ℝ≥0) : WithTop ℝ≥0)
+      = ⋂ n : ℕ, Iic ((((n : ℝ≥0) + 1)⁻¹ : ℝ≥0) : WithTop ℝ≥0) := by
+    ext x
+    simp only [mem_Iic, mem_iInter]
+    refine ⟨fun hx n ↦ hx.trans (WithTop.coe_le_coe.2 zero_le), fun hx ↦ ?_⟩
+    induction x with
+    | top => exact absurd (hx 0) (by simp)
+    | coe y =>
+      refine WithTop.coe_le_coe.2 (le_of_forall_pos_le_add fun ε hε ↦ ?_)
+      obtain ⟨n, hn⟩ := exists_nat_one_div_lt hε
+      have := WithTop.coe_le_coe.1 (hx n)
+      rw [zero_add]
+      exact this.trans (le_of_lt (by simpa [one_div] using hn))
+  have hanti : Antitone fun n : ℕ ↦ Iic ((((n : ℝ≥0) + 1)⁻¹ : ℝ≥0) : WithTop ℝ≥0) := by
+    intro m n hmn
+    refine Iic_subset_Iic.2 (WithTop.coe_le_coe.2 ?_)
+    gcongr
+  refine Measure.ext_of_Iic μ ν fun x ↦ ?_
+  induction x with
+  | top => rw [Iic_top, huniv]
+  | coe T =>
+    rcases eq_or_lt_of_le (zero_le (a := T)) with hT | hT
+    · rw [← hT]
+      rw [hI, hanti.measure_iInter (fun _ ↦ measurableSet_Iic.nullMeasurableSet)
+        ⟨0, measure_ne_top _ _⟩, hanti.measure_iInter
+        (fun _ ↦ measurableSet_Iic.nullMeasurableSet) ⟨0, measure_ne_top _ _⟩]
+      exact iInf_congr fun n ↦ h _ (by positivity)
+    · exact h T hT
+
+open scoped ENNReal in
+/-- **The law of the first passage time of Brownian motion, named: `τ_a` is distributed as
+`a² / Z²` for a standard Gaussian `Z`.**  For `ProbabilityTheory.IsBrownianReal X Q` with
+measurable coordinates and `0 < a`, the image of `Q` under `τ_a = hittingAfter X [a, ∞) 0` is the
+image of `gaussianReal 0 1` under `z ↦ a² / z²`, computed in `ℝ≥0∞` — which **is**
+`WithTop ℝ≥0`, the value space of `hittingAfter`.  This is the Lévy distribution with scale
+`a²`, and it is stated through `gaussianReal` because Mathlib has no Lévy distribution.  At
+`z = 0` the quotient is `a² / 0 = ⊤` in `ℝ≥0∞`, the truth and not a junk value; the event has
+Gaussian mass `0`.
+
+For `T > 0` both sides give `[0, T]` the mass `2 N [a/√T, ∞)`: the left by
+`MeasureTheory.map_hittingAfter_Iic_eq_of_isBrownianReal`, the right because
+`a² / z² ≤ T ↔ a/√T ≤ |z|` and `MeasureTheory.gaussianReal_Iic_neg`.  The remaining point `T = 0`
+is `MeasureTheory.ext_withTop_nnreal_of_Iic_pos`.  **Not an existence statement**: `X` is a
+hypothesis. -/
+theorem map_hittingAfter_Ici_eq_map_gaussianReal_of_isBrownianReal
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t))
+    {a : ℝ} (ha : 0 < a) :
+    Q.map (hittingAfter X (Ici a) 0)
+      = ((gaussianReal 0 1).map fun z ↦ ENNReal.ofReal (a ^ 2) / ENNReal.ofReal (z ^ 2) :
+          Measure ℝ≥0∞) := by
+  have : IsProbabilityMeasure Q := hX.isGaussianProcess.isProbabilityMeasure
+  have hgm : Measurable fun z : ℝ ↦ ENNReal.ofReal (a ^ 2) / ENNReal.ofReal (z ^ 2) :=
+    measurable_const.div (ENNReal.measurable_ofReal.comp (measurable_id.pow_const 2))
+  have hN : IsFiniteMeasure
+      ((gaussianReal 0 1).map fun z ↦ ENNReal.ofReal (a ^ 2) / ENNReal.ofReal (z ^ 2)) :=
+    inferInstance
+  have hN1 : ((gaussianReal 0 1).map fun z ↦ ENNReal.ofReal (a ^ 2) / ENNReal.ofReal (z ^ 2))
+      univ = 1 := measure_univ
+  refine @ext_withTop_nnreal_of_Iic_pos _ _ _ hN (fun T hT ↦ ?_)
+    (by rw [measure_univ]; exact hN1.symm)
+  rw [map_hittingAfter_Iic_eq_of_isBrownianReal hX hm ha hT]
+  change _ = ((gaussianReal 0 1).map fun z ↦ ENNReal.ofReal (a ^ 2) / ENNReal.ofReal (z ^ 2))
+    (Iic (T : ℝ≥0∞))
+  rw [Measure.map_apply hgm measurableSet_Iic]
+  have hsT : 0 < Real.sqrt T := Real.sqrt_pos.2 (by exact_mod_cast hT)
+  set b := a / Real.sqrt T with hbdef
+  have hb : 0 < b := by positivity
+  have hset : (fun z : ℝ ↦ ENNReal.ofReal (a ^ 2) / ENNReal.ofReal (z ^ 2)) ⁻¹' Iic (T : ℝ≥0∞)
+      = Iic (-b) ∪ Ici b := by
+    ext z
+    simp only [mem_preimage, mem_Iic, mem_union, mem_Ici]
+    rw [← le_abs']
+    rcases eq_or_ne z 0 with rfl | hz
+    · simp only [ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, zero_pow, ENNReal.ofReal_zero,
+        abs_zero]
+      rw [ENNReal.div_zero (by simpa using ha.ne')]
+      simp only [top_le_iff, ENNReal.coe_ne_top, false_iff, not_le]
+      exact hb
+    · have hz2 : 0 < z ^ 2 := by positivity
+      rw [ENNReal.div_le_iff (by simpa using hz) ENNReal.ofReal_ne_top,
+        ← ENNReal.ofReal_coe_nnreal, ← ENNReal.ofReal_mul (NNReal.coe_nonneg T),
+        ENNReal.ofReal_le_ofReal_iff (by positivity), hbdef, div_le_iff₀ hsT,
+        ← pow_le_pow_iff_left₀ ha.le (by positivity) two_ne_zero, mul_pow, sq_abs,
+        Real.sq_sqrt (NNReal.coe_nonneg T), mul_comm]
+  rw [hset, measure_union (s₁ := Iic (-b)) (s₂ := Ici b)
+    (Set.disjoint_left.2 fun x (hx : x ∈ Iic (-b)) (hx' : x ∈ Ici b) ↦ by
+      simp only [mem_Iic, mem_Ici] at hx hx'; linarith)
+    measurableSet_Ici, gaussianReal_Iic_neg, two_mul]
+
 end ContinuousHittingTime
+
+/-! ### Brownian motion is a martingale
+
+Mathlib's `Mathlib/Probability/BrownianMotion/` has no martingale statement.  For a pre-Brownian
+motion the increment `X t - X s` is independent of the **whole** past `σ(X u : u ≤ s)` and not
+only of finitely many coordinates, and this comes for free from joint Gaussianity:
+`ProbabilityTheory.IsGaussianProcess.indepFun_of_covariance_eq_zero` states the independence of
+two jointly Gaussian processes indexed by arbitrary types from vanishing cross-covariances, and
+`cov[X u, X t - X s] = min u t - min u s = 0` for `u ≤ s`.  No sorting of finite time sets and no
+`ProbabilityTheory.indep_iSup_of_directed_le` is needed. -/
+
+section BrownianMartingale
+
+/-- **A pre-Brownian motion is a martingale for its natural filtration.**  For
+`ProbabilityTheory.IsPreBrownianReal X Q` with strongly measurable coordinates, `X` is a
+`MeasureTheory.Martingale` for `MeasureTheory.Filtration.natural X hsm`.
+
+The process indexed by `Iic s ⊕ Unit` that lists the past coordinates and the increment
+`X t - X s` is Gaussian (`ProbabilityTheory.IsGaussianProcess.of_isGaussianProcess`), its
+cross-covariances vanish by `ProbabilityTheory.IsPreBrownianReal.covariance_eval`, so the
+increment is independent of the past vector
+(`ProbabilityTheory.IsGaussianProcess.indepFun_of_covariance_eq_zero`), whose σ-algebra is the
+natural filtration at `s` (`MeasureTheory.Filtration.natural_eq_comap`).  Then
+`MeasureTheory.condExp_indep_eq` makes the conditional expectation of the increment its mean,
+`0`.  Continuity of paths is not read, so the statement is about `IsPreBrownianReal`.  **Not an
+existence statement**: `X` is a hypothesis. -/
+theorem martingale_of_isPreBrownianReal {Ω' : Type*} {mΩ' : MeasurableSpace Ω'}
+    {Q : Measure Ω'} {X : ℝ≥0 → Ω' → ℝ} (hX : IsPreBrownianReal X Q)
+    (hsm : ∀ t, StronglyMeasurable (X t)) :
+    Martingale X (Filtration.natural X hsm) Q := by
+  have : IsProbabilityMeasure Q := hX.isGaussianProcess.isProbabilityMeasure
+  refine ⟨Filtration.stronglyAdapted_natural hsm, fun s t hst ↦ ?_⟩
+  classical
+  have hG : IsGaussianProcess
+      (Sum.elim (fun u : Iic s ↦ X u) (fun _ : Unit ↦ X t - X s)) Q := by
+    refine hX.isGaussianProcess.of_isGaussianProcess fun i ↦ ?_
+    rcases i with u | _
+    · exact ⟨{u.1},
+        { toFun x := x ⟨u.1, by simp⟩
+          map_add' := by simp
+          map_smul' := by simp }, by simp⟩
+    · exact ⟨{s, t},
+        { toFun x := x ⟨t, by simp⟩ - x ⟨s, by simp⟩
+          map_add' x y := by simp; abel
+          map_smul' c x := by
+            simp only [Pi.smul_apply, smul_eq_mul, RingHom.id_apply]; ring }, by simp⟩
+  have hL2 : ∀ r, MemLp (X r) 2 Q := fun r ↦
+    (hX.isGaussianProcess.hasGaussianLaw_eval r).memLp_two
+  have hind := hG.indepFun_of_covariance_eq_zero (fun u ↦ (hsm u.1).aemeasurable)
+    (fun _ ↦ ((hsm t).sub (hsm s)).aemeasurable) fun u _ ↦ by
+      rw [covariance_sub_right (hL2 u) (hL2 t) (hL2 s), hX.covariance_eval, hX.covariance_eval,
+        min_eq_left (u.2.trans hst), min_eq_left u.2, sub_self]
+  set Z : Ω' → ℝ := X t - X s with hZ
+  have hZle : MeasurableSpace.comap Z inferInstance
+      ≤ MeasurableSpace.comap (fun ω (_ : Unit) ↦ Z ω) inferInstance :=
+    (show Measurable[MeasurableSpace.comap (fun ω (_ : Unit) ↦ Z ω) inferInstance] Z from
+      (measurable_pi_apply ()).comp (comap_measurable (fun ω (_ : Unit) ↦ Z ω))).comap_le
+  have hI : Indep (MeasurableSpace.comap Z inferInstance) (Filtration.natural X hsm s) Q := by
+    rw [Filtration.natural_eq_comap]
+    exact indep_of_indep_of_le_left (hind : Indep _ _ Q).symm hZle
+  have hZm : StronglyMeasurable[MeasurableSpace.comap Z inferInstance] Z :=
+    (comap_measurable Z).stronglyMeasurable
+  have hZ0 : Q[Z] = 0 := by
+    rw [hZ, integral_sub' (hX.integrable_eval t) (hX.integrable_eval s), hX.integral_eval,
+      hX.integral_eval, sub_self]
+  have hcZ := condExp_indep_eq ((comap_measurable Z).comap_le.trans
+    (measurable_iff_comap_le.1 ((hsm t).measurable.sub (hsm s).measurable)))
+    ((Filtration.natural X hsm).le s) hZm hI
+  have hXt : X t = X s + Z := by rw [hZ]; abel
+  rw [hXt]
+  filter_upwards [condExp_add (hX.integrable_eval s) ((hX.integrable_eval t).sub
+    (hX.integrable_eval s)) (Filtration.natural X hsm s), hcZ] with ω h1 h2
+  rw [h1, Pi.add_apply, h2, hZ0, add_zero,
+    condExp_of_stronglyMeasurable ((Filtration.natural X hsm).le s)
+      (Filtration.stronglyAdapted_natural hsm s) (hX.integrable_eval s)]
+
+end BrownianMartingale
 
 end MeasureTheory
