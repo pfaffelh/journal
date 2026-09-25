@@ -10568,7 +10568,15 @@ Fact~\ref{fact:kolmogorov} needs --- see the list there.
   (Facts~\ref{fact:cadlagext}, \ref{fact:submgreg}) --- but see
   Remark~\ref{rem:bmrepo}: this exists already, outside Mathlib;
 \item local martingales in the \EK{} sense
-  (Definition~\ref{def:localmartingale}, Fact~\ref{fact:stoppedlocalmg});
+  (Definition~\ref{def:localmartingale}, Fact~\ref{fact:stoppedlocalmg}).
+  Mathlib has the scaffolding, \texttt{IsLocalizing}\allowbreak\texttt{Sequence} and
+  \texttt{Locally}, but no local martingale; the
+  \texttt{brownian-}\allowbreak\texttt{motion} project defines one on top of it (Remark~\ref{rem:bmrepo}); and the roadmap
+  accompanying this manuscript proves Fact~\ref{fact:stoppedlocalmg} as
+  \texttt{locally\_}\allowbreak\texttt{martingale\_}\allowbreak\texttt{stoppedProcess},
+  on top of optional stopping in continuous time with no bound on the paths.
+  What is built nowhere is the localizing system of
+  Definition~\ref{def:localizing};
 \item separating and convergence determining classes and their Stone--Weierstrass
   theory (Definition~\ref{def:separating},
   Facts~\ref{fact:convdet}, \ref{fact:stoneweierstrass}, \ref{fact:fdd},
@@ -10643,6 +10651,20 @@ Fact~\ref{fact:kolmogorov} needs --- see the list there.
   $\Bor(\DE) = \sigma(\pi_t)$, no compactness criterion.  So \ref{it:F5b} is
   untouched there, and Theorems~\ref{thm:DEpolish} and \ref{thm:DEcompact} are
   proved here instead.
+
+  Since then (state of 22~September~2026) the repository has acquired local
+  martingales as well: \texttt{IsLocalMartingale} and
+  \texttt{IsLocalSubmartingale}, as \texttt{Locally} of the c\`adl\`ag
+  (sub)martingale property, the stability of these classes under stopping, and,
+  in \texttt{Localizing}\allowbreak\texttt{LeastGE.lean}, the statement that the hitting times of
+  $[n,\infty)$ by a real c\`adl\`ag adapted process form a localizing sequence,
+  with the bound $n + \lvert \Delta X_\tau \rvert$ on the process stopped at
+  the hitting time of its norm.  This is Lemma~\ref{lem:L1auto} up to one
+  difference, and it is the difference of Remark~\ref{rem:strictdebut}: there
+  the hitting times are those of the process itself, and they are stopping times
+  by the d\'ebut theorem, for a complete and right continuous filtration.
+  Lemma~\ref{lem:L1auto} takes the running supremum instead, whose hitting times
+  are strict for the raw filtration; the jump bound carries over unchanged.
 \end{remark}
 
 This dictates a natural order of work.  Each item names the bundle of
@@ -10693,6 +10715,9 @@ any bespoke index theory.
   only genuinely new proofs there; Lemma~\ref{lem:localrestart} is
   Lemma~\ref{lem:restart} plus the one identity \eqref{eq:shiftedstopped}, and
   Theorem~\ref{thm:localuniq} is bookkeeping.
+  \emph{Status.}  Lemma~\ref{lem:restart} and Theorem~\ref{thm:absuniq} are
+  formalized in the roadmap; Lemma~\ref{lem:mixture}, Lemma~\ref{lem:disint}
+  and the local theory are not.
 \item \label{it:F5a}
   \emph{Targets \eqref{T0} + \eqref{E3}, with $D = \T$.}
   Theorem~\ref{thm:absconv}, the abstract convergence theorem.  It needs an
@@ -10716,6 +10741,14 @@ any bespoke index theory.
   Note that Corollary~\ref{cor:dualdiscrete} needs none of the analysis and can
   be formalized directly after Lemma~\ref{lem:chain}.  Together with \ref{it:F2} this already yields
   Corollary~\ref{cor:uniqviadual}, a complete uniqueness theory.
+  \emph{Status.}  Formalized in the roadmap: Lemma~\ref{lem:chain},
+  Proposition~\ref{prop:haar}(a), Corollary~\ref{cor:dualdiscrete},
+  Lemma~\ref{lem:calculus}, Theorem~\ref{thm:duality} with $\alpha$ and $\beta$,
+  Corollaries~\ref{cor:dualrel} and \ref{cor:dualstopped}, and
+  Corollary~\ref{cor:atomless} for a clock of infinite mass.  Uniqueness is
+  obtained by the route of Remark~\ref{rem:dualnonmarkov}, without a shift
+  system, rather than through Corollary~\ref{cor:uniqviadual}; as a test, it
+  gives a second proof of the one dimensional laws of Brownian motion.
 \item \label{it:F3b}
   \emph{Targets \eqref{T0} + \eqref{T4} + \eqref{E1} + a shift invariant clock.}
   Section~\ref{ssec:exduality}: Lemma~\ref{lem:dualsemigroup},
