@@ -63497,3 +63497,111 @@ càdlàg adaptierte reelle Testprozesse. Der Weg führt über den Dichteprozeß 
 Maß `Q` über `IsLocalizingSequence.min`; das steht im Befund des 25. zu Z. 4646–4651. Danach (b)
 unter `IsUniformLocalization`: das ist `isLocalMPSolution_iff_of_isUniformLocalization` plus
 Linearität des Martingalbegriffs in `P`.
+
+### 2026-09-26, Lauf 23:03 UTC (vom 25.) — Lokales Martingalproblem, Schritt 3: **`lem:localmix`**, (b) und (c) ganz, (a) im Rahmen von `lem:L1auto`; die allgemeine Fassung von (a) ist offen, mit benannter Bruchstelle
+
+*`check_master.py`: 0 Fehler, 0 `sorry`, 0 veraltet in allen vier Dateien*, Warnungen unverändert
+(18 / 38 / 38 / 76), Mathlib `94ef6b89544`. `check_axioms_master.py` für die zehn neuen Sätze: nur
+`propext`, `Classical.choice`, `Quot.sound`. Kein Namenskonflikt, weder auf master
+(`Mathlib/Probability`) noch in der Kette. Neuer Abschnitt „Mixtures and disintegration,
+`lem:localmix`“ am Ende von `MartingaleProblems/Suggested.lean` (Sektionen `LocalMixture`,
+`LocalMixtureSolutions`, `LocalMixtureJumps`, `LocalMixtureKernel`,
+`LocalMixtureKernelSolutions`, `Disintegration`, `LocalizedFamily`), entwickelt in
+`scripts/_dev_localmix.lean`. Einschub: im Inventar schon als erledigt berichtet (Lauf 22:03), also
+übersprungen.
+
+**Entscheidung: die globalen Fassungen `lem:mixture` und `lem:disint` kommen vorab als eigene
+Aussagen.** Der lokale Beweis wird dann in beiden Fällen zu einer Zeile über
+`isLocalMPSolution_iff_isMPSolution_localizedFamily`, genau wie im Manuskript
+(„`M_loc(𝓧) = M(𝓧_•)`, now apply `lem:mixture` resp. `lem:disint`“). Die globalen Sätze werden
+außerdem von `thm:absuniq` und Schritt 5 gebraucht, die ohne sie auf `P = ∫ P_x μ(dx)` verzichten.
+
+**Deklarationen.**
+
+* `MeasureTheory.martingale_of_setIntegral_eq`: Martingal ⟸ adaptiert, integrierbar und
+  `∫_G f i = ∫_G f j` für `G ∈ 𝓕 i`, `i ≤ j`, über **beliebigem** präordnetem Index. Mathlib hat
+  nur die diskrete Fassung `martingale_of_setIntegral_eq_succ` (`Martingale/Basic.lean:493` auf
+  master).
+* `MeasureTheory.Martingale.add_measure`, `MeasureTheory.Martingale.smul_measure`: Martingal unter
+  `μ` und `ν` ⟹ unter `μ + ν`, unter `c • μ` für `c ≠ ∞`. Das ist `lem:mixture` für endliche
+  Mischungen. Mathlib hat keins von beiden.
+* **`MeasureTheory.Martingale.comp_measure`** (`lem:mixture`, ein Prozeß): Martingal unter `κ θ`
+  für `ν`-fast jedes `θ` und `∫ E^{κ θ} ‖f i‖ ν(dθ) < ∞` ⟹ Martingal unter `κ ∘ₘ ν`. Die
+  „meßbare Familie“ des Manuskripts ist ein Kern `κ`. Fubini ist `Kernel.setIntegral_comp`
+  (`Kernel/Composition/IntegralCompProd.lean:433`), die Integrierbarkeit unter der Mischung
+  `integrable_comp_iff` (`:323`), beide über `Measure.comp_eq_comp_const_apply`
+  (`MeasureComp.lean:35`). Adaptiertheit wird eigens getragen, weil sie keinem Maß gehört und
+  `ν = 0` zulässig ist.
+* `isLocalMPSolution_add_of_isUniformLocalization` (**(b), endlich**) und
+  **`isLocalMPSolution_comp_of_isUniformLocalization`** (**(b)**, meßbare Mischung `κ ∘ₘ ν`,
+  Integrabilitätsbedingung wörtlich die des Manuskripts, `∫ E^{P_θ}|Y^{τ_n}_t| ν(dθ) < ∞`).
+  Voraussetzung nur `IsUniformLocalization`; keine Rechtsstetigkeit, keine Progressivität.
+* **`isLocalMPSolution_add_of_boundedJumps`** (**(a)** im Rahmen von `lem:L1auto`): für càdlàg
+  adaptierte reelle Testprozesse mit `Y 0 = 0` und beschränkten Sprüngen ist jede endliche
+  Kombination `a • P + b • P'` lokaler Lösungen eine lokale Lösung, **ohne** Lokalisierungssystem
+  und für beliebige, auch unendliche Familien `𝓧`. Die lokalisierende Folge ist
+  `supHittingTime Y`, je Testprozeß eine, als Funktional des Pfades dieselbe für `P`, `P'` und
+  die Mischung. Das ist die Fassung „je `Y` eine Folge“, die der Bericht vom 22:03-Lauf
+  (Befund 2) als den wirklichen Inhalt von `lem:L1auto` benannt hat.
+* **`ae_isMPSolution_of_countableTest`** (`lem:disint`): Sei `P = κ ∘ₘ μ` mit
+  `κ x {π₀ = x} = 1` fast sicher, `π₀` meßbar für jedes `𝓕₀ i`, `P` eine Lösung, und die
+  Mitgliedschaft in `M(𝓧)` sei durch abzählbar viele Identitäten `eq:countabletest` samt der
+  Integrierbarkeit der beteiligten `Y_s`, `Y_t` **impliziert**. Dann ist `κ x` für `μ`-fast jedes
+  `x` eine Lösung mit Anfang `x`. Beweis wie im Manuskript, mit `h = 1_A` statt beliebigem
+  beschränktem `h`: `∫_A g dμ = E^P[W · 1_A(π₀)] = 0` für `g x = E^{κ x}[W]`, also `g = 0`
+  `μ`-f.ü. (`Integrable.ae_eq_zero_of_forall_setIntegral_eq_zero`), und eine Nullmenge für alle
+  abzählbar vielen Daten (`ae_all_iff`).
+* `localizedFamily 𝓧 τ` (`𝓧_•`), `isLocalMPSolution_iff_isMPSolution_localizedFamily`
+  (`M_loc(𝓧) = M(𝓧_•)` unter (L1)), **`ae_isLocalMPSolution_of_countableTest`** (**(c)**).
+
+**Befunde.**
+
+1. **(a) in voller Allgemeinheit ist nicht bewiesen, und die Bruchstelle ist benannt.** Der Beweis
+   im Manuskript (Z. 4646–4651) trägt nicht (Befund des 21:03-Laufs: `τ'_n → ∞` ist unter `P`
+   unbekannt). Der Pfad-Trick von `isLocalMPSolution_add_of_boundedJumps` reicht über beschränkte
+   Sprünge **nicht** hinaus. Gegenbeispiel auf Papier, nicht in Lean: `Y_t = η V 1_{t ≥ 1}`, `V`
+   nicht integrierbar und `𝓕_{1/2}`-meßbar, `η = ±1` symmetrisch, unabhängig, bei `1` enthüllt.
+   `Y` ist ein lokales Martingal (lokalisiert durch `ρ_k = 1/2` auf `{|V| > k}`, sonst `∞`), aber
+   `Y^{τ_n}` mit `τ_n = supHittingTime Y n` ist keins, weil `|Y_{τ_n}| = |V|` auf `{|V| ≥ n}`
+   nicht integrierbar ist. Ohne beschränkte Sprünge gibt es also im allgemeinen keine vom Maß
+   unabhängige Folge aus dem Pfad allein. Der richtige Weg ist der Dichteprozeß
+   `Z_t = dP|_{𝓕_t} / dQ|_{𝓕_t}` mit `Q = αP + (1-α)P'`: `Y` ist `P`-lokales Martingal genau dann,
+   wenn `Y Z` ein `Q`-lokales ist (JS III.3.8), und unter dem *einen* Maß `Q` greift
+   `IsLocalizingSequence.min`. **Er bricht an der Rechtsstetigkeit von `Z`**: die Äquivalenz
+   braucht `Z_{τ} = E_Q[Z_∞ | 𝓕_τ]` an den lokalisierenden Zeiten, also optionales Sampling für
+   `Z`, also eine càdlàg-Version von `Z`. Die gibt Doobs Regularisierung, aber nur für die
+   rechtsstetige Hülle der Filtration und bis auf Nullmengen, und genau das schließt die Aufgabe
+   für Meilenstein 6 aus („strikt“ heißt roh). Ob (a) für die rohe Filtration überhaupt gilt, ist
+   offen; ein Zeuge dagegen ist nicht gebaut.
+2. **Was (a) statt dessen bekommt**: (i) unter (L1) folgt (a) aus (b)
+   (`isLocalMPSolution_add_of_isUniformLocalization`); (ii) ohne (L1) im Rahmen von `lem:L1auto`
+   (`isLocalMPSolution_add_of_boundedJumps`), und dort sogar ohne Beschränkung der Mächtigkeit von
+   `𝓧`. Beides ist für den Gebrauch in Schritten 4 und 5 genug, weil dort ohnehin ein
+   Lokalisierungssystem vorliegt. Die Aussage „**keine Voraussetzung**“ (Z. 4628) und die Bemerkung
+   `rem:convexfree` („a finite convex combination costs nothing“, Z. 4668–4669) sind damit
+   **nicht** gedeckt. Beides gehört so ins Manuskript nicht; das ist ein Befund, kein Eingriff.
+3. **`eq:countabletest` (Z. 3431–3437) muß die Integrierbarkeit enthalten.** Für ein `Q`, das noch
+   nicht als Lösung bekannt ist, ist `E^Q[(Y_t - Y_s) Z_s]` nicht erklärt, und in Lean gäbe ein
+   Bochner-Integral einer nicht integrierbaren Funktion stillschweigend `0`. In
+   `ae_isMPSolution_of_countableTest` gehört die Integrierbarkeit von `Y_s`, `Y_t` für die
+   abzählbar vielen Daten deshalb in die Testbedingung. Sie vererbt sich auf `κ x` für fast jedes
+   `x` (`Measure.ae_integrable_of_integrable_comp`), aber wieder nur für abzählbar viele Zeiten.
+   Wer die Integrierbarkeit **aller** `Y_t` verlangt, verliert die eine Nullmenge.
+4. **Von `eq:countabletest` wird nur die Richtung „⟸“ gebraucht**; „⟹“ ist die
+   Martingaleigenschaft (`integral_sub_mul_eq_zero_of_martingale`). Die Voraussetzung ist also
+   schwächer, als das Manuskript sie ausspricht.
+5. **`π₀` muß `𝓕°_0`-meßbar sein**, damit `Z_s h(π₀)` in `𝓕°_s` liegt. Das Manuskript benutzt es
+   stillschweigend (Z. 3446–3447); auf dem Pfadraum ist es wahr. In Lean steht es als Hypothese
+   `∀ i, Measurable[𝓕₀ i] π₀`.
+6. **(E1) wird in (c) nicht gebraucht, wenn der Kern gegeben ist.** (E1) liefert im Manuskript die
+   Existenz der regulären bedingten Verteilung `P(· | π₀ = x)`. Die Lean-Fassung nimmt den Kern
+   `κ` mit `P = κ ∘ₘ μ` als Datum und braucht deshalb keine Struktur auf `F`. Die Existenz steht
+   in Mathlib als `condDistrib` unter `StandardBorelSpace`. Der Anschluß ist nicht gemacht.
+7. Nebenbei: der Halbsatz im Beweis von (b), „stopping a process at a stopping time preserves
+   adaptedness once the process is progressively measurable“ (Z. 4657–4659), wird unter (L1) nicht
+   gebraucht. Die Martingaleigenschaft der gestoppten Prozesse ist Teil von (L1) und enthält ihre
+   Adaptiertheit.
+
+**Stand der Aufgabe.** Schritte 1 und 2 stehen (2 für endliche Familien). Schritt 3 steht mit (b)
+und (c) ganz und (a) unter (L1) oder beschränkten Sprüngen, Befund 1 zur allgemeinen Fassung.
+Offen: Schritte 4–7.

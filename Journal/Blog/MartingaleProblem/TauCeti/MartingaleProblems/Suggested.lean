@@ -46756,3 +46756,306 @@ theorem isUniformLocalization_of_boundedJumps {F : Type*} {mF : MeasurableSpace 
       fun f ↦ Finset.inf_le (f := fun Y ↦ supHittingTime Y n f) hYs
 
 end BoundedJumps
+
+/-! ### Mixtures and disintegration, `lem:localmix`
+
+The martingale property as an identity linear in the measure (`lem:mixture`, `lem:disint`), and
+its localized forms under (L1).  Part (a) of `lem:localmix` is proved in the bounded-jump setting
+of `lem:L1auto`, where the localizing sequence is a functional of the path. -/
+
+section LocalMixture
+
+variable {ι : Type*} [Preorder ι] {Ω : Type*} {m : MeasurableSpace Ω}
+  {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [CompleteSpace E]
+
+/-- **The martingale property as a family of set integral identities**, over any preordered
+index.  Mathlib has the discrete form `martingale_of_setIntegral_eq_succ`; this is the same
+statement for `i ≤ j` in place of `i`, `i + 1`, through `ae_eq_condExp_of_forall_setIntegral_eq`.
+It is the form in which the martingale property is visibly linear in the measure. -/
+theorem MeasureTheory.martingale_of_setIntegral_eq {𝓕 : Filtration ι m} {μ : Measure Ω}
+    [IsFiniteMeasure μ] {f : ι → Ω → E} (hadp : StronglyAdapted 𝓕 f)
+    (hint : ∀ i, Integrable (f i) μ)
+    (hf : ∀ i j, i ≤ j → ∀ s, MeasurableSet[𝓕 i] s → ∫ ω in s, f i ω ∂μ = ∫ ω in s, f j ω ∂μ) :
+    Martingale f 𝓕 μ := by
+  refine ⟨hadp, fun i j hij ↦ ?_⟩
+  exact (ae_eq_condExp_of_forall_setIntegral_eq (𝓕.le i) (hint j)
+    (fun s _ _ ↦ (hint i).integrableOn) (fun s hs _ ↦ hf i j hij s hs)
+    (hadp i).aestronglyMeasurable).symm
+
+/-- **A martingale under `μ` and under `ν` is one under `μ + ν`**: the finite half of
+`lem:mixture`.  The filtration is the same for both measures, and nothing else is used. -/
+theorem MeasureTheory.Martingale.add_measure {𝓕 : Filtration ι m} {μ ν : Measure Ω}
+    [IsFiniteMeasure μ] [IsFiniteMeasure ν] {f : ι → Ω → E}
+    (hμ : Martingale f 𝓕 μ) (hν : Martingale f 𝓕 ν) : Martingale f 𝓕 (μ + ν) := by
+  refine martingale_of_setIntegral_eq hμ.stronglyAdapted
+    (fun i ↦ (hμ.integrable i).add_measure (hν.integrable i)) fun i j hij s hs ↦ ?_
+  rw [Measure.restrict_add, integral_add_measure (hμ.integrable i).integrableOn
+      (hν.integrable i).integrableOn, integral_add_measure (hμ.integrable j).integrableOn
+      (hν.integrable j).integrableOn, hμ.setIntegral_eq hij hs, hν.setIntegral_eq hij hs]
+
+/-- A martingale under `μ` is one under `c • μ` for finite `c`. -/
+theorem MeasureTheory.Martingale.smul_measure {𝓕 : Filtration ι m} {μ : Measure Ω}
+    [IsFiniteMeasure μ] {f : ι → Ω → E} (hμ : Martingale f 𝓕 μ) {c : ℝ≥0∞} (hc : c ≠ ∞) :
+    Martingale f 𝓕 (c • μ) := by
+  have : IsFiniteMeasure (c • μ) := Measure.smul_finite μ hc
+  refine martingale_of_setIntegral_eq hμ.stronglyAdapted
+    (fun i ↦ (hμ.integrable i).smul_measure hc) fun i j hij s hs ↦ ?_
+  rw [Measure.restrict_smul, integral_smul_measure, integral_smul_measure,
+    hμ.setIntegral_eq hij hs]
+
+end LocalMixture
+
+section LocalMixtureSolutions
+
+variable {ι : Type*} [LinearOrder ι] [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι]
+variable {F : Type*} {mF : MeasurableSpace F} {𝕂 : Type*} [RCLike 𝕂]
+
+/-- **`lem:localmix`(b) for finite mixtures.**  Under (L1) a finite combination of local
+solutions is a local solution; the localizing sequence is the uniform one, and the martingale
+property of the stopped processes is linear in the measure. -/
+theorem isLocalMPSolution_add_of_isUniformLocalization {𝓧 : Set (ι → F → 𝕂)}
+    {𝓕₀ : Filtration ι mF} {τ : ℕ → F → WithTop ι} (hτ : IsUniformLocalization 𝓧 𝓕₀ τ)
+    {P P' : Measure F} [IsProbabilityMeasure P] [IsProbabilityMeasure P']
+    (hP : IsLocalMPSolution 𝓧 𝓕₀ P) (hP' : IsLocalMPSolution 𝓧 𝓕₀ P')
+    {a b : ℝ≥0∞} (ha : a ≠ ∞) (hb : b ≠ ∞) :
+    IsLocalMPSolution 𝓧 𝓕₀ (a • P + b • P') := by
+  have : IsFiniteMeasure (a • P) := Measure.smul_finite P ha
+  have : IsFiniteMeasure (b • P') := Measure.smul_finite P' hb
+  intro Y hY
+  exact ⟨τ, hτ.isLocalizingSequence _, fun n ↦
+    ((hτ.martingale P inferInstance hP Y hY n).smul_measure ha).add_measure
+      ((hτ.martingale P' inferInstance hP' Y hY n).smul_measure hb)⟩
+
+end LocalMixtureSolutions
+
+section LocalMixtureJumps
+
+variable {Ω : Type*} {m : MeasurableSpace Ω}
+
+/-- **`lem:localmix`(a) in the setting of `lem:L1auto`, with no localizing system.**  For
+càdlàg adapted real test processes with `Y 0 = 0` and bounded jumps, a finite combination of
+local solutions is a local solution.
+
+The localizing sequence is `supHittingTime Y`, the hitting times of the running supremum, which
+are functionals of the path and the same for every measure; by
+`martingale_stoppedProcess_of_le_supHittingTime` the stopped process is a martingale under
+**each** local solution, and so under the combination.  This avoids the step of the proof of
+`lem:localmix`(a) in which `τ_n ∧ τ'_n` is claimed to tend to `∞` under both measures: here there
+is only one sequence.  For test processes with unbounded jumps it does not apply, and (a) is not
+proved here in that generality. -/
+theorem isLocalMPSolution_add_of_boundedJumps {𝓕 : Filtration ℝ≥0 m}
+    {𝓧 : Set (ℝ≥0 → Ω → ℝ)}
+    (hY : ∀ Y ∈ 𝓧, StronglyAdapted 𝓕 Y) (hcad : ∀ Y ∈ 𝓧, ∀ ω, IsCadlag (Y · ω))
+    (h0 : ∀ Y ∈ 𝓧, ∀ ω, Y 0 ω = 0)
+    (hjump : ∀ Y ∈ 𝓧, ∃ c, 0 ≤ c ∧
+      ∀ ω t, 0 < t → ∀ l, Tendsto (Y · ω) (𝓝[<] t) (𝓝 l) → ‖Y t ω - l‖ ≤ c)
+    {P P' : Measure Ω} [IsFiniteMeasure P] [IsFiniteMeasure P']
+    (hP : IsLocalMPSolution 𝓧 𝓕 P) (hP' : IsLocalMPSolution 𝓧 𝓕 P')
+    {a b : ℝ≥0∞} (ha : a ≠ ∞) (hb : b ≠ ∞) :
+    IsLocalMPSolution 𝓧 𝓕 (a • P + b • P') := by
+  have : IsFiniteMeasure (a • P) := Measure.smul_finite P ha
+  have : IsFiniteMeasure (b • P') := Measure.smul_finite P' hb
+  intro Y hYX
+  obtain ⟨c, hc, hj⟩ := hjump Y hYX
+  have hrc : ∀ ω s, ContinuousWithinAt (Y · ω) (Ici s) s := fun ω ↦
+    (hcad Y hYX ω).continuousWithinAt_Ici
+  have hst := isStoppingTime_supHittingTime (hY Y hYX) hrc
+  refine ⟨supHittingTime Y, isLocalizingSequence_of_forall hst
+    (monotone_supHittingTime Y) (fun ω ↦ tendsto_supHittingTime (hcad Y hYX ω)) _, fun n ↦ ?_⟩
+  have h1 := martingale_stoppedProcess_of_le_supHittingTime (hP Y hYX) (hY Y hYX) (hcad Y hYX)
+    (h0 Y hYX) hc hj (hst n) (fun _ ↦ le_rfl)
+  have h2 := martingale_stoppedProcess_of_le_supHittingTime (hP' Y hYX) (hY Y hYX)
+    (hcad Y hYX) (h0 Y hYX) hc hj (hst n) (fun _ ↦ le_rfl)
+  exact (h1.smul_measure ha).add_measure (h2.smul_measure hb)
+
+end LocalMixtureJumps
+
+section LocalMixtureKernel
+
+variable {ι : Type*} [Preorder ι] {Ω : Type*} {m : MeasurableSpace Ω}
+  {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [CompleteSpace E]
+
+/-- **`lem:mixture` for one process: a measurable mixture of martingale laws is a martingale
+law**, under the integrability `∫ E^{κ θ} ‖f i‖ ν(dθ) < ∞` of the manuscript.  The mixture is
+`κ ∘ₘ ν` for a kernel `κ`, which is what "measurable family" means; Fubini is
+`Kernel.setIntegral_comp` and the integrability of `f i` under the mixture is
+`integrable_comp_iff`.  Adaptedness is carried separately, because it is not a property of any
+one measure and `ν` may be zero. -/
+theorem MeasureTheory.Martingale.comp_measure {Θ : Type*} {mΘ : MeasurableSpace Θ}
+    {𝓕 : Filtration ι m} {ν : Measure Θ} [IsFiniteMeasure ν] {κ : Kernel Θ Ω}
+    [IsFiniteKernel κ] {f : ι → Ω → E} (hadp : StronglyAdapted 𝓕 f)
+    (hmart : ∀ᵐ θ ∂ν, Martingale f 𝓕 (κ θ))
+    (hint : ∀ i, Integrable (fun θ ↦ ∫ ω, ‖f i ω‖ ∂κ θ) ν) : Martingale f 𝓕 (κ ∘ₘ ν) := by
+  have hsm : ∀ i, StronglyMeasurable (f i) := fun i ↦
+    (hadp i).mono (𝓕.le i)
+  have hI : ∀ i, Integrable (f i) (κ ∘ₘ ν) := by
+    intro i
+    rw [Measure.comp_eq_comp_const_apply]
+    refine (integrable_comp_iff ?_).2 ⟨?_, ?_⟩
+    · exact (hsm i).aestronglyMeasurable
+    · simp only [Kernel.const_apply]
+      filter_upwards [hmart] with θ hθ using hθ.integrable i
+    · simpa only [Kernel.const_apply] using hint i
+  refine martingale_of_setIntegral_eq hadp hI fun i j hij s hs ↦ ?_
+  have hs' : MeasurableSet s := 𝓕.le i s hs
+  rw [Measure.comp_eq_comp_const_apply] at hI ⊢
+  rw [Kernel.setIntegral_comp hs' (hI i).integrableOn,
+    Kernel.setIntegral_comp hs' (hI j).integrableOn]
+  simp only [Kernel.const_apply]
+  refine integral_congr_ae ?_
+  filter_upwards [hmart] with θ hθ using hθ.setIntegral_eq hij hs
+
+end LocalMixtureKernel
+
+section LocalMixtureKernelSolutions
+
+variable {ι : Type*} [LinearOrder ι] [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι]
+variable {F : Type*} {mF : MeasurableSpace F} {𝕂 : Type*} [RCLike 𝕂]
+
+/-- **`lem:localmix`(b)**: under (L1) a measurable mixture `κ ∘ₘ ν` of local solutions is a local
+solution, subject to `∫ E^{κ θ} ‖Y^{τ_n}_i‖ ν(dθ) < ∞`.  It is `Martingale.comp_measure` applied
+to the stopped processes of the uniform sequence. -/
+theorem isLocalMPSolution_comp_of_isUniformLocalization {Θ : Type*} {mΘ : MeasurableSpace Θ}
+    {𝓧 : Set (ι → F → 𝕂)} {𝓕₀ : Filtration ι mF} {τ : ℕ → F → WithTop ι}
+    (hτ : IsUniformLocalization 𝓧 𝓕₀ τ) {ν : Measure Θ} [IsProbabilityMeasure ν]
+    {κ : Kernel Θ F} [IsMarkovKernel κ] (hκ : ∀ᵐ θ ∂ν, IsLocalMPSolution 𝓧 𝓕₀ (κ θ))
+    (hint : ∀ Y ∈ 𝓧, ∀ n i, Integrable (fun θ ↦ ∫ f,
+      ‖stoppedProcess (fun i ↦ {f | ⊥ < τ n f}.indicator (Y i)) (τ n) i f‖ ∂κ θ) ν) :
+    IsLocalMPSolution 𝓧 𝓕₀ (κ ∘ₘ ν) := by
+  intro Y hY
+  refine ⟨τ, hτ.isLocalizingSequence _, fun n ↦ ?_⟩
+  obtain ⟨θ₀, hθ₀⟩ := hκ.exists
+  refine Martingale.comp_measure
+    (hτ.martingale (κ θ₀) inferInstance hθ₀ Y hY n).stronglyAdapted ?_ (hint Y hY n)
+  filter_upwards [hκ] with θ hθ using hτ.martingale (κ θ) inferInstance hθ Y hY n
+
+end LocalMixtureKernelSolutions
+
+section Disintegration
+
+variable {ι : Type*} [Preorder ι] {F : Type*} {mF : MeasurableSpace F} {𝕂 : Type*} [RCLike 𝕂]
+  {E : Type*} {mE : MeasurableSpace E}
+
+/-- **`lem:disint`, the disintegration of a solution along its initial value.**  Let
+`P = κ ∘ₘ μ` with `κ x` carried by `{π₀ = x}`, and suppose that membership in the solution set
+of `𝓧` is **implied** by countably many identities `eq:countabletest` together with the
+integrability of the processes they involve.  Then `κ x` is a solution for `μ`-almost every `x`.
+
+Only the direction "the countable identities imply membership" of `eq:countabletest` is used;
+the other is the martingale property itself (`integral_sub_mul_eq_zero_of_martingale`).  The
+kernel `κ` stands for `P(· | π₀ = x)`; stating it through `κ ∘ₘ μ` asks for no standard Borel
+structure on `F`.  `π₀` is measurable for every `𝓕₀ i`, which on the path space is the
+measurability of the initial coordinate for `𝓕₀ ⊥`. -/
+theorem ae_isMPSolution_of_countableTest {𝓧 : Set (ι → F → 𝕂)} {𝓕₀ : Filtration ι mF}
+    {K : Type*} [Countable K] (Y : K → ι → F → 𝕂) (hY : ∀ k, Y k ∈ 𝓧) (s t : K → ι)
+    (hst : ∀ k, s k ≤ t k) (Z : K → F → ℝ) (hZ : ∀ k, StronglyMeasurable[𝓕₀ (s k)] (Z k))
+    (b : K → ℝ) (hb : ∀ k f, ‖Z k f‖ ≤ b k)
+    (htest : ∀ Q : Measure F, IsProbabilityMeasure Q →
+      (∀ k, Integrable (Y k (s k)) Q ∧ Integrable (Y k (t k)) Q) →
+      (∀ k, ∫ f, (Y k (t k) f - Y k (s k) f) * (Z k f : 𝕂) ∂Q = 0) → IsMPSolution 𝓧 𝓕₀ Q)
+    {π₀ : F → E} (hπ₀ : ∀ i, Measurable[𝓕₀ i] π₀)
+    {μ : Measure E} [IsProbabilityMeasure μ] {κ : Kernel E F} [IsMarkovKernel κ]
+    (hκ : ∀ᵐ x ∂μ, ∀ᵐ f ∂κ x, π₀ f = x) (hP : IsMPSolution 𝓧 𝓕₀ (κ ∘ₘ μ)) :
+    ∀ᵐ x ∂μ, IsMPSolution 𝓧 𝓕₀ (κ x) ∧ ∀ᵐ f ∂κ x, π₀ f = x := by
+  have hmart : ∀ k, Martingale (Y k) 𝓕₀ (κ ∘ₘ μ) := fun k ↦ hP _ (hY k)
+  have hint : ∀ k, ∀ᵐ x ∂μ, Integrable (Y k (s k)) (κ x) ∧ Integrable (Y k (t k)) (κ x) :=
+    fun k ↦ (Measure.ae_integrable_of_integrable_comp ((hmart k).integrable _)).and
+      (Measure.ae_integrable_of_integrable_comp ((hmart k).integrable _))
+  have hzero : ∀ k, ∀ᵐ x ∂μ, ∫ f, (Y k (t k) f - Y k (s k) f) * (Z k f : 𝕂) ∂κ x = 0 := by
+    intro k
+    set W : F → 𝕂 := fun f ↦ (Y k (t k) f - Y k (s k) f) * (Z k f : 𝕂) with hWdef
+    have hZm : StronglyMeasurable (fun f ↦ (Z k f : 𝕂)) :=
+      RCLike.continuous_ofReal.comp_stronglyMeasurable ((hZ k).mono (𝓕₀.le _))
+    have hWint : Integrable W (κ ∘ₘ μ) :=
+      (((hmart k).integrable _).sub ((hmart k).integrable _)).mul_bdd hZm.aestronglyMeasurable
+        (c := b k) (ae_of_all _ fun f ↦ by simpa using hb k f)
+    have hWsm : StronglyMeasurable W :=
+      ((((hmart k).stronglyMeasurable _).mono (𝓕₀.le _)).sub
+        (((hmart k).stronglyMeasurable _).mono (𝓕₀.le _))).mul hZm
+    have hg : Integrable (fun x ↦ ∫ f, W f ∂κ x) μ :=
+      Integrable.mono' (Measure.integrable_integral_norm_of_integrable_comp hWint)
+        hWsm.integral_kernel.aestronglyMeasurable
+        (ae_of_all _ fun x ↦ norm_integral_le_integral_norm _)
+    refine hg.ae_eq_zero_of_forall_setIntegral_eq_zero fun A hA _ ↦ ?_
+    have hSs : MeasurableSet[𝓕₀ (s k)] (π₀ ⁻¹' A) := hπ₀ (s k) hA
+    have hS : MeasurableSet (π₀ ⁻¹' A) := 𝓕₀.le _ _ hSs
+    have h0 := integral_sub_mul_eq_zero_of_martingale (hmart k) (hst k)
+      ((hZ k).indicator hSs) (b := b k)
+      (fun f ↦ (norm_indicator_le_norm_self _ _).trans (hb k f))
+    have hind : (fun f ↦ (Y k (t k) f - Y k (s k) f) *
+        (((π₀ ⁻¹' A).indicator (Z k) f : ℝ) : 𝕂)) = (π₀ ⁻¹' A).indicator W := by
+      funext f
+      by_cases hf : f ∈ π₀ ⁻¹' A
+      · simp [Set.indicator_of_mem hf, hWdef]
+      · simp [Set.indicator_of_notMem hf]
+    have hWint' := hWint
+    rw [Measure.comp_eq_comp_const_apply] at hWint'
+    rw [hind, integral_indicator hS, Measure.comp_eq_comp_const_apply,
+      Kernel.setIntegral_comp hS hWint'.integrableOn] at h0
+    simp only [Kernel.const_apply] at h0
+    rw [← integral_indicator hA, ← h0]
+    refine integral_congr_ae ?_
+    filter_upwards [hκ] with x hx
+    by_cases hxA : x ∈ A
+    · rw [Set.indicator_of_mem hxA]
+      have hset : (π₀ ⁻¹' A : Set F) =ᵐ[κ x] (Set.univ : Set F) := by
+        rw [eventuallyEqSet_iff]
+        filter_upwards [hx] with f hf
+        simp [hf, hxA]
+      rw [setIntegral_congr_set hset, setIntegral_univ]
+    · rw [Set.indicator_of_notMem hxA]
+      have hset : (π₀ ⁻¹' A : Set F) =ᵐ[κ x] (∅ : Set F) := by
+        rw [eventuallyEqSet_iff]
+        filter_upwards [hx] with f hf
+        simp [hf, hxA]
+      rw [setIntegral_congr_set hset, Measure.restrict_empty, integral_zero_measure]
+  filter_upwards [ae_all_iff.2 hint, ae_all_iff.2 hzero, hκ] with x hx1 hx2 hx3
+  exact ⟨htest (κ x) inferInstance hx1 hx2, hx3⟩
+
+end Disintegration
+
+section LocalizedFamily
+
+variable {ι : Type*} [LinearOrder ι] [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι]
+variable {F : Type*} {mF : MeasurableSpace F} {𝕂 : Type*} [RCLike 𝕂]
+
+/-- **The localized family `𝓧_•`** of the proof of `lem:localmix`: the processes of `𝓧` stopped
+along `τ`, written as `Locally` writes them. -/
+def localizedFamily (𝓧 : Set (ι → F → 𝕂)) (τ : ℕ → F → WithTop ι) : Set (ι → F → 𝕂) :=
+  {Z | ∃ Y ∈ 𝓧, ∃ n, Z = stoppedProcess (fun i ↦ {f | ⊥ < τ n f}.indicator (Y i)) (τ n)}
+
+/-- **`M_loc(𝓧) = M(𝓧_•)` under (L1)**, the first sentence of the proof of
+`lem:localmix`(b),(c). -/
+theorem isLocalMPSolution_iff_isMPSolution_localizedFamily {𝓧 : Set (ι → F → 𝕂)}
+    {𝓕₀ : Filtration ι mF} {τ : ℕ → F → WithTop ι} (hτ : IsUniformLocalization 𝓧 𝓕₀ τ)
+    (P : Measure F) [IsProbabilityMeasure P] :
+    IsLocalMPSolution 𝓧 𝓕₀ P ↔ IsMPSolution (localizedFamily 𝓧 τ) 𝓕₀ P := by
+  rw [isLocalMPSolution_iff_of_isUniformLocalization hτ]
+  refine ⟨?_, fun h Y hY n ↦ h _ ⟨Y, hY, n, rfl⟩⟩
+  rintro h _ ⟨Y, hY, n, rfl⟩
+  exact h Y hY n
+
+variable {E : Type*} {mE : MeasurableSpace E}
+
+/-- **`lem:localmix`(c)**: under (L1), and if membership in `M(𝓧_•)` is implied by countably
+many data as in `eq:countabletest`, the disintegration of a local solution along its initial
+value consists of local solutions. -/
+theorem ae_isLocalMPSolution_of_countableTest {𝓧 : Set (ι → F → 𝕂)} {𝓕₀ : Filtration ι mF}
+    {τ : ℕ → F → WithTop ι} (hτ : IsUniformLocalization 𝓧 𝓕₀ τ)
+    {K : Type*} [Countable K] (Y : K → ι → F → 𝕂) (hY : ∀ k, Y k ∈ localizedFamily 𝓧 τ)
+    (s t : K → ι) (hst : ∀ k, s k ≤ t k) (Z : K → F → ℝ)
+    (hZ : ∀ k, StronglyMeasurable[𝓕₀ (s k)] (Z k)) (b : K → ℝ) (hb : ∀ k f, ‖Z k f‖ ≤ b k)
+    (htest : ∀ Q : Measure F, IsProbabilityMeasure Q →
+      (∀ k, Integrable (Y k (s k)) Q ∧ Integrable (Y k (t k)) Q) →
+      (∀ k, ∫ f, (Y k (t k) f - Y k (s k) f) * (Z k f : 𝕂) ∂Q = 0) →
+      IsMPSolution (localizedFamily 𝓧 τ) 𝓕₀ Q)
+    {π₀ : F → E} (hπ₀ : ∀ i, Measurable[𝓕₀ i] π₀)
+    {μ : Measure E} [IsProbabilityMeasure μ] {κ : Kernel E F} [IsMarkovKernel κ]
+    (hκ : ∀ᵐ x ∂μ, ∀ᵐ f ∂κ x, π₀ f = x) (hP : IsLocalMPSolution 𝓧 𝓕₀ (κ ∘ₘ μ)) :
+    ∀ᵐ x ∂μ, IsLocalMPSolution 𝓧 𝓕₀ (κ x) ∧ ∀ᵐ f ∂κ x, π₀ f = x := by
+  have hP' := (isLocalMPSolution_iff_isMPSolution_localizedFamily hτ _).1 hP
+  filter_upwards [ae_isMPSolution_of_countableTest Y hY s t hst Z hZ b hb htest hπ₀ hκ hP']
+    with x hx
+  exact ⟨(isLocalMPSolution_iff_isMPSolution_localizedFamily hτ _).2 hx.1, hx.2⟩
+
+end LocalizedFamily
