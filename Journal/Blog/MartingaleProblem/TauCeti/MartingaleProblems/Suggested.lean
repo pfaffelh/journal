@@ -40529,6 +40529,349 @@ theorem map_eval_eq_gaussianReal_of_duality {v : ℝ} (hv : 0 ≤ v)
   congr 1
   ring
 
+
+section ForwardMartingale
+
+variable {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsFiniteMeasure P]
+
+/-- **A closed forward equation with multipliers from the past is a martingale.**  If for every
+`A ∈ 𝓕 s` and `s ≤ t`, `∫_A u (X t) - ∫_A u (X s) = ∫_s^t c ∫_A u (X r) dr`, then
+`u (X t) - ∫_0^t c u (X r) dr` is an `𝓕`-martingale, provided it is adapted. -/
+theorem martingale_of_forward_setIntegral {𝓕 : Filtration ℝ≥0 mΩ} {X : ℝ≥0 → Ω → ℝ}
+    (hX : Measurable (fun p : ℝ≥0 × Ω ↦ X p.1 p.2)) {u : ℝ → ℝ} (hu : Measurable u)
+    (hu1 : ∀ x, |u x| ≤ 1) (c : ℝ)
+    (had : ∀ t : ℝ≥0, Measurable[𝓕 t]
+      (fun ω ↦ u (X t ω) - ∫ r in (0 : ℝ)..t, c * u (X r.toNNReal ω)))
+    (hfwd : ∀ s t : ℝ≥0, s ≤ t → ∀ A, MeasurableSet[𝓕 s] A →
+      (∫ ω in A, u (X t ω) ∂P) - ∫ ω in A, u (X s ω) ∂P =
+        ∫ r in Ioc (s : ℝ) t, c * ∫ ω in A, u (X r.toNNReal ω) ∂P) :
+    Martingale (fun t ω ↦ u (X t ω) - ∫ r in (0 : ℝ)..t, c * u (X r.toNNReal ω)) 𝓕 P := by
+  have hXt : ∀ s, Measurable (X s) := fun s ↦ hX.comp (measurable_const.prodMk measurable_id)
+  have hXr : Measurable fun p : ℝ × Ω ↦ X p.1.toNNReal p.2 :=
+    hX.comp ((measurable_real_toNNReal.comp measurable_fst).prodMk measurable_snd)
+  have hbd : ∀ (μ : Measure ℝ) [IsFiniteMeasure μ] (ν : Measure Ω) [IsFiniteMeasure ν],
+      Integrable (fun p : ℝ × Ω ↦ c * u (X p.1.toNNReal p.2)) (μ.prod ν) := fun μ _ ν _ ↦
+    (integrable_const |c|).mono' (measurable_const.mul (hu.comp hXr)).aestronglyMeasurable
+      (ae_of_all _ fun p ↦ by
+        rw [Real.norm_eq_abs, abs_mul]
+        exact mul_le_of_le_one_right (abs_nonneg c) (hu1 _))
+  have hii : ∀ ω (a b : ℝ), IntervalIntegrable (fun r ↦ c * u (X r.toNNReal ω)) volume a b :=
+    fun ω a b ↦ (intervalIntegrable_const (c := |c|)).mono_fun
+      (Measurable.aestronglyMeasurable
+        (measurable_const.mul (hu.comp (hXr.comp (measurable_id.prodMk measurable_const)))))
+      (ae_of_all _ fun r ↦ by
+        simp only [Real.norm_eq_abs, abs_mul, abs_abs]
+        exact mul_le_of_le_one_right (abs_nonneg c) (hu1 _))
+  have hint : ∀ t : ℝ≥0, Integrable
+      (fun ω ↦ u (X t ω) - ∫ r in (0 : ℝ)..t, c * u (X r.toNNReal ω)) P := fun t ↦ by
+    refine (integrable_const (1 + |c| * t)).mono' ((had t).mono (𝓕.le t) le_rfl).aestronglyMeasurable
+      (ae_of_all _ fun ω ↦ ?_)
+    rw [Real.norm_eq_abs]
+    refine (abs_sub _ _).trans (add_le_add (hu1 _) ?_)
+    have := intervalIntegral.norm_integral_le_of_norm_le_const (a := 0) (b := (t : ℝ))
+      (f := fun r ↦ c * u (X r.toNNReal ω)) (C := |c|) fun r _ ↦ by
+        rw [Real.norm_eq_abs, abs_mul]
+        exact mul_le_of_le_one_right (abs_nonneg c) (hu1 _)
+    simpa [Real.norm_eq_abs, mul_comm] using this
+  refine ⟨fun t ↦ (had t).stronglyMeasurable, fun i j hij ↦ ?_⟩
+  refine (ae_eq_condExp_of_forall_setIntegral_eq (𝓕.le i) (hint j)
+    (fun _ _ _ ↦ (hint i).integrableOn) (fun A hA _ ↦ ?_)
+    ((had i).stronglyMeasurable.aestronglyMeasurable)).symm
+  have hAm : MeasurableSet A := 𝓕.le i A hA
+  -- the compensator increment, after Fubini
+  have hsplit : ∀ ω, (∫ r in (0 : ℝ)..j, c * u (X r.toNNReal ω)) -
+      ∫ r in (0 : ℝ)..i, c * u (X r.toNNReal ω) =
+      ∫ r in Ioc (i : ℝ) j, c * u (X r.toNNReal ω) := fun ω ↦ by
+    rw [intervalIntegral.integral_interval_sub_left (hii ω _ _) (hii ω _ _),
+      intervalIntegral.integral_of_le (NNReal.coe_le_coe.2 hij)]
+  have hswap := integral_integral_swap (μ := volume.restrict (Ioc (i : ℝ) j))
+    (ν := P.restrict A) (f := fun (r : ℝ) (ω : Ω) ↦ c * u (X r.toNNReal ω)) (hbd _ _)
+  have hIi : ∀ t : ℝ≥0, Integrable (fun ω ↦ u (X t ω)) P := fun t ↦
+    (integrable_const (1 : ℝ)).mono' (hu.comp (hXt t)).aestronglyMeasurable
+      (ae_of_all _ fun ω ↦ by rw [Real.norm_eq_abs]; exact hu1 _)
+  have hJ : ∀ t : ℝ≥0, Integrable (fun ω ↦ ∫ r in (0 : ℝ)..t, c * u (X r.toNNReal ω)) P :=
+    fun t ↦ ((hIi t).sub (hint t)).congr (ae_of_all _ fun ω ↦ by simp)
+  rw [integral_sub (hIi i).integrableOn (hJ i).integrableOn,
+    integral_sub (hIi j).integrableOn (hJ j).integrableOn]
+  have hK : (∫ ω in A, (∫ r in (0 : ℝ)..j, c * u (X r.toNNReal ω)) ∂P) -
+      ∫ ω in A, (∫ r in (0 : ℝ)..i, c * u (X r.toNNReal ω)) ∂P =
+      ∫ r in Ioc (i : ℝ) j, c * ∫ ω in A, u (X r.toNNReal ω) ∂P := by
+    rw [← integral_sub (hJ j).integrableOn (hJ i).integrableOn]
+    simp_rw [hsplit]
+    rw [← hswap]
+    simp only [integral_const_mul]
+  have hF := hfwd i j hij A hA
+  linarith
+
+end ForwardMartingale
+
+/-- The functions `cos (θ x) + sin (θ x)`, `θ ∈ ℝ`, separate finite measures on `ℝ`: at `θ` and
+`-θ` they give the two halves of the characteristic function. -/
+theorem eq_of_integral_cos_add_sin_eq {μ ν : Measure ℝ} [IsFiniteMeasure μ] [IsFiniteMeasure ν]
+    (h : ∀ θ, ∫ x, (Real.cos (θ * x) + Real.sin (θ * x)) ∂μ =
+      ∫ x, (Real.cos (θ * x) + Real.sin (θ * x)) ∂ν) : μ = ν := by
+  have hi : ∀ (m : Measure ℝ) [IsFiniteMeasure m] (w : ℝ → ℝ), Continuous w → (∀ x, |w x| ≤ 1) →
+      Integrable w m := fun m _ w hw hw1 ↦
+    (integrable_const (1 : ℝ)).mono' hw.aestronglyMeasurable
+      (ae_of_all _ fun x ↦ by rw [Real.norm_eq_abs]; exact hw1 x)
+  have hc : ∀ θ : ℝ, Continuous fun x : ℝ ↦ Real.cos (θ * x) := fun θ ↦
+    Real.continuous_cos.comp (continuous_const.mul continuous_id)
+  have hs : ∀ θ : ℝ, Continuous fun x : ℝ ↦ Real.sin (θ * x) := fun θ ↦
+    Real.continuous_sin.comp (continuous_const.mul continuous_id)
+  have hsplit : ∀ (m : Measure ℝ) [IsFiniteMeasure m] (θ : ℝ),
+      ∫ x, (Real.cos (θ * x) + Real.sin (θ * x)) ∂m =
+        (∫ x, Real.cos (θ * x) ∂m) + ∫ x, Real.sin (θ * x) ∂m := fun m _ θ ↦
+    integral_add (hi m _ (hc θ) fun _ ↦ Real.abs_cos_le_one _)
+      (hi m _ (hs θ) fun _ ↦ Real.abs_sin_le_one _)
+  have hcos : ∀ θ, ∫ x, Real.cos (θ * x) ∂μ = ∫ x, Real.cos (θ * x) ∂ν := fun θ ↦ by
+    have h1 := h θ
+    have h2 := h (-θ)
+    rw [hsplit, hsplit] at h1 h2
+    simp only [neg_mul, Real.cos_neg, Real.sin_neg, integral_neg] at h2
+    linarith
+  have hsin : ∀ θ, ∫ x, Real.sin (θ * x) ∂μ = ∫ x, Real.sin (θ * x) ∂ν := fun θ ↦ by
+    have h1 := h θ
+    have h2 := h (-θ)
+    rw [hsplit, hsplit] at h1 h2
+    simp only [neg_mul, Real.cos_neg, Real.sin_neg, integral_neg] at h2
+    linarith
+  refine Measure.ext_of_charFun (funext fun θ ↦ ?_)
+  rw [charFun_eq_integral_cos_add_integral_sin_mul_I, charFun_eq_integral_cos_add_integral_sin_mul_I,
+    hcos, hsin]
+
+/-- `b ↦ w e^{c b}` against its derivative: `w e^{c (b + t)} - ∫_0^t c w e^{c (b + r)} dr = w e^{c b}`.
+The process of the deterministic dual `(θ, b + t)` is constant. -/
+theorem mul_exp_sub_integral_eq (w c b : ℝ) (t : ℝ≥0) :
+    w * Real.exp (c * ((b + t : ℝ))) - ∫ r in (0 : ℝ)..t, c * (w * Real.exp (c * (b + r.toNNReal)))
+      = w * Real.exp (c * b) := by
+  have e1 : ∫ r in (0 : ℝ)..t, c * (w * Real.exp (c * (b + r.toNNReal))) =
+      ∫ r in (0 : ℝ)..t, w * (Real.exp (c * (b + r)) * c) := by
+    refine intervalIntegral.integral_congr fun r hr ↦ ?_
+    have hr0 : 0 ≤ r := le_trans (le_min le_rfl t.2) hr.1
+    simp only [Real.coe_toNNReal r hr0]
+    ring
+  rw [e1, intervalIntegral.integral_const_mul,
+    intervalIntegral.integral_eq_sub_of_hasDerivAt (f := fun r ↦ Real.exp (c * (b + r)))
+      (fun r _ ↦ by
+        have := (((hasDerivAt_id r).const_add b).const_mul c).exp
+        simpa using this)
+      ((by fun_prop : Continuous fun r : ℝ ↦ Real.exp (c * (b + r)) * c).intervalIntegrable _ _)]
+  simp only [add_zero]
+  ring
+
+/-- **Uniqueness through the duality chain, for the generator `(v/2) ∂²`.**  Two laws on a path
+space under which `cos (θ π ·) - ∫ c_θ cos (θ π ·)` and the sine twin are martingales for every
+`θ`, `c_θ = -(v/2) θ²`, and which agree at time `0`, are equal.
+
+*Proof.*  `uniqueness_of_duality` with the deterministic dual `Y (θ, b) t = (θ, b + t)` on a one
+point space, `f (x, (θ, b)) = (cos (θ x) + sin (θ x)) e^{c_θ b}` and `g = h = c_θ f`: the balance
+is an identity, the dual process is constant (`mul_exp_sub_integral_eq`), and the family
+`f (·, (θ, 0))` separates (`eq_of_integral_cos_add_sin_eq`). -/
+theorem eq_of_martingale_cos_sin {F : Type*} {mF : MeasurableSpace F} {π : ℝ≥0 → F → ℝ}
+    (hπ : Measurable (fun p : ℝ≥0 × F ↦ π p.1 p.2)) {𝓕₀ : Filtration ℝ≥0 mF}
+    (hadapt : ∀ u v : ℝ≥0, u ≤ v → Measurable[𝓕₀ v] (π u))
+    (hgen : mF = ⨆ i : ℝ≥0, MeasurableSpace.comap (π i) inferInstance) {v : ℝ} (hv : 0 ≤ v)
+    {P P' : Measure F} [IsProbabilityMeasure P] [IsProbabilityMeasure P']
+    (hcos : ∀ R : Measure F, R = P ∨ R = P' → ∀ θ : ℝ, Martingale (fun t ω ↦ Real.cos (θ * π t ω) -
+      ∫ r in (0 : ℝ)..t, -(v / 2) * θ ^ 2 * Real.cos (θ * π r.toNNReal ω)) 𝓕₀ R)
+    (hsin : ∀ R : Measure F, R = P ∨ R = P' → ∀ θ : ℝ, Martingale (fun t ω ↦ Real.sin (θ * π t ω) -
+      ∫ r in (0 : ℝ)..t, -(v / 2) * θ ^ 2 * Real.sin (θ * π r.toNNReal ω)) 𝓕₀ R)
+    (hinit : P.map (π 0) = P'.map (π 0)) : P = P' := by
+  set cf : ℝ → ℝ := fun θ ↦ -(v / 2) * θ ^ 2
+  have hcf : ∀ θ, cf θ ≤ 0 := fun θ ↦
+    mul_nonpos_of_nonpos_of_nonneg (neg_nonpos.2 (by positivity)) (sq_nonneg θ)
+  have he1 : ∀ θ (b : ℝ≥0), Real.exp (cf θ * b) ≤ 1 := fun θ b ↦
+    Real.exp_le_one_iff.2 (mul_nonpos_of_nonpos_of_nonneg (hcf θ) b.2)
+  have hcs : ∀ a : ℝ, |Real.cos a + Real.sin a| ≤ 2 := fun a ↦
+    (abs_add_le _ _).trans (by linarith [Real.abs_cos_le_one a, Real.abs_sin_le_one a])
+  set f : ℝ × (ℝ × ℝ≥0) → ℝ := fun z ↦
+    (Real.cos (z.2.1 * z.1) + Real.sin (z.2.1 * z.1)) * Real.exp (cf z.2.1 * z.2.2)
+  have hf : Measurable f := by
+    refine Continuous.measurable ?_
+    simp only [f, cf]
+    fun_prop
+  have hfb : ∀ x θ (b : ℝ≥0), |f (x, (θ, b))| ≤ 2 := fun x θ b ↦ by
+    simp only [f, abs_mul, abs_of_pos (Real.exp_pos _)]
+    nlinarith [hcs (θ * x), he1 θ b, Real.exp_pos (cf θ * b), abs_nonneg (Real.cos (θ * x) +
+      Real.sin (θ * x))]
+  have hπt : ∀ u, Measurable (π u) := fun u ↦ hπ.comp (measurable_const.prodMk measurable_id)
+  have hπr : ∀ ω, Measurable fun r : ℝ ↦ π r.toNNReal ω := fun ω ↦
+    hπ.comp (measurable_real_toNNReal.prodMk measurable_const)
+  have hII : ∀ (w : ℝ → ℝ), Measurable w → (∀ x, |w x| ≤ 1) → ∀ (k : ℝ) ω (t : ℝ),
+      IntervalIntegrable (fun r ↦ k * w (π r.toNNReal ω)) volume 0 t := fun w hw hw1 k ω t ↦
+    (intervalIntegrable_const (c := |k|)).mono_fun
+      (Measurable.aestronglyMeasurable (measurable_const.mul (hw.comp (hπr ω))))
+      (ae_of_all _ fun r ↦ by
+        show ‖k * w (π r.toNNReal ω)‖ ≤ ‖|k|‖
+        rw [Real.norm_eq_abs, Real.norm_eq_abs, abs_mul, abs_abs]
+        exact mul_le_of_le_one_right (abs_nonneg k) (hw1 _))
+  have hcm : ∀ θ : ℝ, Measurable fun x : ℝ ↦ Real.cos (θ * x) := fun θ ↦
+    (Real.continuous_cos.comp (continuous_const.mul continuous_id)).measurable
+  have hsm : ∀ θ : ℝ, Measurable fun x : ℝ ↦ Real.sin (θ * x) := fun θ ↦
+    (Real.continuous_sin.comp (continuous_const.mul continuous_id)).measurable
+  have hmart : ∀ R : Measure F, R = P ∨ R = P' → ∀ y : ℝ × ℝ≥0, Martingale
+      (fun t ω ↦ f (π t ω, y) - ∫ r in (0 : ℝ)..t, cf y.1 * f (π r.toNNReal ω, y)) 𝓕₀ R := by
+    intro R hR y
+    have hm := ((hcos R hR y.1).add (hsin R hR y.1)).smul (Real.exp (cf y.1 * y.2))
+    convert hm using 1
+    funext t ω
+    simp only [Pi.smul_apply, Pi.add_apply, smul_eq_mul, f]
+    have h1 := hII _ (hcm y.1) (fun _ ↦ Real.abs_cos_le_one _) (-(v / 2) * y.1 ^ 2) ω t
+    have h2 := hII _ (hsm y.1) (fun _ ↦ Real.abs_sin_le_one _) (-(v / 2) * y.1 ^ 2) ω t
+    rw [intervalIntegral.integral_congr (g := fun r ↦ Real.exp (cf y.1 * y.2) *
+        (-(v / 2) * y.1 ^ 2 * Real.cos (y.1 * π r.toNNReal ω)) + Real.exp (cf y.1 * y.2) *
+        (-(v / 2) * y.1 ^ 2 * Real.sin (y.1 * π r.toNNReal ω))) (fun r _ ↦ by simp only [cf]; ring),
+      intervalIntegral.integral_add (h1.const_mul _) (h2.const_mul _)]
+    simp only [intervalIntegral.integral_const_mul]
+    ring
+  refine uniqueness_of_duality (Q := Measure.dirac ()) (𝓖 := fun _ ↦ ⊥)
+    (Y := fun y t _ ↦ (y.1, y.2 + t)) (f := f) (g := fun z ↦ cf z.2.1 * f z)
+    (h := fun z ↦ cf z.2.1 * f z) hπ hadapt hgen
+    (fun y ↦ measurable_const.prodMk (measurable_const.add measurable_fst)) (fun y _ ↦ by simp)
+    hf (by fun_prop) (by fun_prop)
+    (fun y ↦ ⟨2 + 2 * |cf y.1|, fun x t _ ↦ by
+      have h1 := hfb x y.1 (y.2 + t)
+      refine ⟨by linarith [abs_nonneg (cf y.1)], ?_, ?_⟩ <;>
+      · rw [abs_mul]
+        nlinarith [abs_nonneg (cf y.1)]⟩)
+    (fun ω y T ↦ (intervalIntegrable_const (c := |cf y.1| * 2)).mono_fun
+      (Measurable.aestronglyMeasurable (measurable_const.mul (hf.comp ((hπr ω).prodMk
+        measurable_const)) : Measurable fun r : ℝ ↦ cf y.1 * f (π r.toNNReal ω, y)))
+      (ae_of_all _ fun r ↦ by
+        show ‖cf y.1 * f (π r.toNNReal ω, y)‖ ≤ ‖|cf y.1| * 2‖
+        rw [Real.norm_eq_abs, Real.norm_eq_abs, abs_mul,
+          abs_of_nonneg (by positivity : (0 : ℝ) ≤ |cf y.1| * 2)]
+        exact mul_le_mul_of_nonneg_left (hfb _ y.1 y.2) (abs_nonneg _)))
+    (fun y x ↦ by
+      have e : (fun (t : ℝ≥0) (_ : Unit) ↦ f (x, (y.1, y.2 + t)) -
+          ∫ r in (0 : ℝ)..t, cf y.1 * f (x, (y.1, y.2 + r.toNNReal))) = fun _ _ ↦ f (x, y) := by
+        funext t _
+        have := mul_exp_sub_integral_eq (Real.cos (y.1 * x) + Real.sin (y.1 * x)) (cf y.1) y.2 t
+        simp only [f, NNReal.coe_add] at this ⊢
+        exact this
+      rw [e]
+      exact martingale_const _ _ _)
+    (fun _ ↦ rfl)
+    (fun μ ν _ _ _ hμν ↦ eq_of_integral_cos_add_sin_eq fun θ ↦ by
+      have := hμν (θ, 0)
+      simpa [f] using this)
+    (hmart P (Or.inl rfl)) (hmart P' (Or.inr rfl)) hinit
+
+
+/-- **The cosine test process of a Brownian solution is a martingale** for the coordinate
+filtration, although `cos (θ ·)` has no compact support: the closed forward equation with a
+multiplier from the past (`integral_mul_eval_mul_cos_eq_of_isCadlagMPSolution`, which has
+passed through the cut off) is the set-integral identity of `martingale_of_forward_setIntegral`
+at `Z = 1_A`. -/
+theorem martingale_cos_of_isCadlagMPSolution {v : ℝ} (ν : Measure D(ℝ≥0, ℝ))
+    [IsProbabilityMeasure ν] (h : IsCadlagMPSolution (brownianGeneratorPairs v) ν) (θ : ℝ) :
+    Martingale (fun (t : ℝ≥0) (z : D(ℝ≥0, ℝ)) ↦ Real.cos (θ * z.toFun t) -
+      ∫ r in (0 : ℝ)..t, -(v / 2) * θ ^ 2 * Real.cos (θ * z.toFun r.toNNReal))
+      cadlagFiltration ν := by
+  have hc : Continuous fun x : ℝ ↦ Real.cos (θ * x) :=
+    Real.continuous_cos.comp (continuous_const.mul continuous_id)
+  let g : ℝ →ᵇ ℝ := BoundedContinuousFunction.mkOfBound ⟨fun x ↦ Real.cos (θ * x), hc⟩ 2
+    fun x y ↦ by
+      have h1 := Real.neg_one_le_cos (θ * x)
+      have h2 := Real.cos_le_one (θ * x)
+      have h3 := Real.neg_one_le_cos (θ * y)
+      have h4 := Real.cos_le_one (θ * y)
+      show |Real.cos (θ * x) - Real.cos (θ * y)| ≤ 2
+      rw [abs_le]
+      constructor <;> linarith
+  refine martingale_of_forward_setIntegral (P := ν) (𝓕 := cadlagFiltration)
+    (X := fun (t : ℝ≥0) (z : D(ℝ≥0, ℝ)) ↦ z.toFun t) (u := fun x ↦ Real.cos (θ * x))
+    SkorokhodSpace.measurable_uncurry_eval_nnreal hc.measurable (fun _ ↦ Real.abs_cos_le_one _)
+    (-(v / 2) * θ ^ 2) (fun t ↦ ?_) (fun s t hst A hA ↦ ?_)
+  · have e : (fun z : D(ℝ≥0, ℝ) ↦ ∫ r in (0 : ℝ)..t, -(v / 2) * θ ^ 2 *
+        Real.cos (θ * z.toFun r.toNNReal)) =
+        fun z ↦ -(v / 2) * θ ^ 2 * ∫ u in Set.Ioc (0 : ℝ) (t : ℝ), g (z.toFun u.toNNReal) := by
+      funext z
+      rw [intervalIntegral.integral_of_le (NNReal.coe_nonneg t), integral_const_mul]
+      rfl
+    refine Measurable.sub (hc.measurable.comp (measurable_cadlagFiltration le_rfl)) ?_
+    rw [e]
+    exact measurable_const.mul (measurable_compensator_cadlagFiltration g t)
+  · have hAm : MeasurableSet A := (cadlagFiltration (E := ℝ)).le s A hA
+    have hind : ∀ F : D(ℝ≥0, ℝ) → ℝ, ∫ z, A.indicator 1 z * F z ∂ν = ∫ z in A, F z ∂ν :=
+      fun F ↦ by
+        rw [← integral_indicator hAm]
+        congr 1
+        funext z
+        by_cases hz : z ∈ A <;> simp [hz]
+    have := integral_mul_eval_mul_cos_eq_of_isCadlagMPSolution ν h θ le_rfl hst
+      (Z := A.indicator 1) (measurable_const.indicator hA) (K := 1)
+      (fun z ↦ by by_cases hz : z ∈ A <;> simp [hz])
+    simp only [hind] at this
+    exact this
+
+/-- The sine twin of `martingale_cos_of_isCadlagMPSolution`. -/
+theorem martingale_sin_of_isCadlagMPSolution {v : ℝ} (ν : Measure D(ℝ≥0, ℝ))
+    [IsProbabilityMeasure ν] (h : IsCadlagMPSolution (brownianGeneratorPairs v) ν) (θ : ℝ) :
+    Martingale (fun (t : ℝ≥0) (z : D(ℝ≥0, ℝ)) ↦ Real.sin (θ * z.toFun t) -
+      ∫ r in (0 : ℝ)..t, -(v / 2) * θ ^ 2 * Real.sin (θ * z.toFun r.toNNReal))
+      cadlagFiltration ν := by
+  have hc : Continuous fun x : ℝ ↦ Real.sin (θ * x) :=
+    Real.continuous_sin.comp (continuous_const.mul continuous_id)
+  let g : ℝ →ᵇ ℝ := BoundedContinuousFunction.mkOfBound ⟨fun x ↦ Real.sin (θ * x), hc⟩ 2
+    fun x y ↦ by
+      have h1 := Real.neg_one_le_sin (θ * x)
+      have h2 := Real.sin_le_one (θ * x)
+      have h3 := Real.neg_one_le_sin (θ * y)
+      have h4 := Real.sin_le_one (θ * y)
+      show |Real.sin (θ * x) - Real.sin (θ * y)| ≤ 2
+      rw [abs_le]
+      constructor <;> linarith
+  refine martingale_of_forward_setIntegral (P := ν) (𝓕 := cadlagFiltration)
+    (X := fun (t : ℝ≥0) (z : D(ℝ≥0, ℝ)) ↦ z.toFun t) (u := fun x ↦ Real.sin (θ * x))
+    SkorokhodSpace.measurable_uncurry_eval_nnreal hc.measurable (fun _ ↦ Real.abs_sin_le_one _)
+    (-(v / 2) * θ ^ 2) (fun t ↦ ?_) (fun s t hst A hA ↦ ?_)
+  · have e : (fun z : D(ℝ≥0, ℝ) ↦ ∫ r in (0 : ℝ)..t, -(v / 2) * θ ^ 2 *
+        Real.sin (θ * z.toFun r.toNNReal)) =
+        fun z ↦ -(v / 2) * θ ^ 2 * ∫ u in Set.Ioc (0 : ℝ) (t : ℝ), g (z.toFun u.toNNReal) := by
+      funext z
+      rw [intervalIntegral.integral_of_le (NNReal.coe_nonneg t), integral_const_mul]
+      rfl
+    refine Measurable.sub (hc.measurable.comp (measurable_cadlagFiltration le_rfl)) ?_
+    rw [e]
+    exact measurable_const.mul (measurable_compensator_cadlagFiltration g t)
+  · have hAm : MeasurableSet A := (cadlagFiltration (E := ℝ)).le s A hA
+    have hind : ∀ F : D(ℝ≥0, ℝ) → ℝ, ∫ z, A.indicator 1 z * F z ∂ν = ∫ z in A, F z ∂ν :=
+      fun F ↦ by
+        rw [← integral_indicator hAm]
+        congr 1
+        funext z
+        by_cases hz : z ∈ A <;> simp [hz]
+    have := integral_mul_eval_mul_sin_eq_of_isCadlagMPSolution ν h θ le_rfl hst
+      (Z := A.indicator 1) (measurable_const.indicator hA) (K := 1)
+      (fun z ↦ by by_cases hz : z ∈ A <;> simp [hz])
+    simp only [hind] at this
+    exact this
+
+/-- **Acceptance, second half: uniqueness of the Brownian martingale problem through the
+duality chain.**  Two càdlàg solutions of the martingale problem for `brownianGeneratorPairs v`
+with the same initial law are equal, by `uniqueness_of_duality` (through
+`eq_of_martingale_cos_sin`) and **not** through `thm:absuniq`: no shift system, no restart, no
+determining set. -/
+theorem eq_of_isCadlagMPSolution_of_duality {v : ℝ} (hv : 0 ≤ v)
+    {ν ν' : Measure D(ℝ≥0, ℝ)} [IsProbabilityMeasure ν] [IsProbabilityMeasure ν']
+    (h : IsCadlagMPSolution (brownianGeneratorPairs v) ν)
+    (h' : IsCadlagMPSolution (brownianGeneratorPairs v) ν')
+    (hinit : ν.map (fun z : D(ℝ≥0, ℝ) ↦ z.toFun 0) = ν'.map (fun z : D(ℝ≥0, ℝ) ↦ z.toFun 0)) :
+    ν = ν' :=
+  eq_of_martingale_cos_sin (π := fun t z ↦ z.toFun t)
+    SkorokhodSpace.measurable_uncurry_eval_nnreal (fun _ _ huv ↦ measurable_cadlagFiltration huv)
+    SkorokhodSpace.borel_eq_iSup_comap_eval_nnreal hv
+    (fun R hR θ ↦ by
+      rcases hR with rfl | rfl
+      · exact martingale_cos_of_isCadlagMPSolution _ h θ
+      · exact martingale_cos_of_isCadlagMPSolution _ h' θ)
+    (fun R hR θ ↦ by
+      rcases hR with rfl | rfl
+      · exact martingale_sin_of_isCadlagMPSolution _ h θ
+      · exact martingale_sin_of_isCadlagMPSolution _ h' θ)
+    hinit
+
 /-- **A càdlàg solution started at `0`, scaled in space by `(√v)⁻¹`, is a
 pre-Brownian motion** in the sense of Mathlib's
 `ProbabilityTheory.IsPreBrownianReal`

@@ -63154,3 +63154,72 @@ Standardaxiome. Entwickelt in `scripts/_dev_bmdual.lean` (allgemeines Lemma, Stu
 
 **Stand der Aufgabe.** Schritte 1–6 stehen, Schritt 7 Teil A. Offen: Schritt 7 Teil B, die
 Eindeutigkeit mit `uniqueness_of_duality` (siehe unten).
+
+
+### Derselbe Lauf, siebter Teil — Dualität, Schritt 7, Teil B: **die Eindeutigkeit des Brownschen Martingalproblems über `uniqueness_of_duality`**, `eq_of_isCadlagMPSolution_of_duality`; damit stehen alle sieben Schritte
+
+*`check_master.py`: 0 Fehler, 0 `sorry`, 0 veraltet in allen vier Dateien* (`WeakConvergence` 18,
+`SkorokhodSpace` 38, `MartingaleProblems` 38, `JumpProcesses` 76 Warnungen — dieselben Zahlen wie
+zu Beginn des Laufs). `check_axioms_master.py` für die sieben neuen Namen: nur `propext`,
+`Classical.choice`, `Quot.sound`. `check_duplicates.py`: kein Treffer. Entwickelt in
+`scripts/_dev_bmmart2.lean` und `scripts/_dev_bmuniq.lean` gegen v4.33.1 (Stubs für
+`uniqueness_of_duality` und `charFun_eq_integral_cos_add_integral_sin_mul_I`); die Einsetzung auf
+`D(ℝ≥0, ℝ)` direkt gegen master, drei Durchläufe (Bindertypen, ein Zeilenumbruch in einer
+`linarith`-Liste, explizite Argumente gegen eine `isDefEq`-Zeitüberschreitung).
+
+**Sieben Deklarationen** im Namensraum `MeasureTheory`, hinter
+`map_eval_eq_gaussianReal_of_duality`:
+
+* `martingale_of_forward_setIntegral`: eine geschlossene Vorwärtsgleichung mit Multiplikatoren
+  aus der Vergangenheit, `∫_A u(X t) - ∫_A u(X s) = ∫_s^t c ∫_A u(X r) dr` für `A ∈ 𝓕 s`, macht
+  `u(X ·) - ∫_0^· c u(X r) dr` zum Martingal, sobald es adaptiert ist
+  (`ae_eq_condExp_of_forall_setIntegral_eq`, Fubini auf `[s, t] × A`).
+* `martingale_cos_of_isCadlagMPSolution`, `martingale_sin_of_isCadlagMPSolution`: für eine Lösung
+  zu `brownianGeneratorPairs v` ist `cos (θ X ·) - ∫ -(v/2) θ² cos (θ X ·)` ein
+  `cadlagFiltration`-Martingal; Eingabe `integral_mul_eval_mul_cos_eq_of_isCadlagMPSolution` bei
+  `Z = 1_A`, Adaptiertheit über `measurable_compensator_cadlagFiltration`.
+* `eq_of_integral_cos_add_sin_eq`: `x ↦ cos (θ x) + sin (θ x)` trennt endliche Maße auf `ℝ`
+  (bei `θ` und `-θ` die beiden Hälften der charakteristischen Funktion).
+* `mul_exp_sub_integral_eq`: der Prozeß des deterministischen Duals ist konstant.
+* **`eq_of_martingale_cos_sin`**: auf einem beliebigen Pfadraum mit adaptierter, erzeugender
+  Koordinate sind zwei Gesetze mit den `cos`/`sin`-Martingalen und gleichem Anfangsgesetz gleich —
+  **über `uniqueness_of_duality`**, mit dem Dual `Y (θ, b) t = (θ, b + t)` auf einem Punkt,
+  `f (x, (θ, b)) = (cos (θ x) + sin (θ x)) e^{-(v/2) θ² b}`, `g = h = -(v/2) θ² f`.
+* **`eq_of_isCadlagMPSolution_of_duality`**: zwei càdlàg-Lösungen zu `brownianGeneratorPairs v`
+  mit gleichem Anfangsgesetz sind gleich.
+
+**Befunde.**
+
+1. **Die Signatur von Schritt 5 trägt an der echten Anwendung ohne Änderung.** Von
+   `uniqueness_of_duality` wird jede Hypothese eingelöst, `hgen` durch
+   `SkorokhodSpace.borel_eq_iSup_comap_eval_nnreal`, `hadapt` durch `measurable_cadlagFiltration`,
+   `hC` mit der Konstanten `2 + 2 |c_θ|`, `hsep` bei `b = 0`. Kein Schiftsystem, kein `restart`,
+   kein `thm:absuniq`: die Eindeutigkeit stand vorher als `subsingleton_mpSolutions…` über den
+   Schiftweg; dies ist der zweite, Markov-freie Weg aus `rem:dualnonmarkov`, und er geht.
+2. **Wie in Teil A sitzt `β` in der Dualkoordinate.** Das Dual `(θ, b)` mit `b ↦ b + t` macht
+   aus `eq:dualbalance` mit `β(θ) = -(v/2) θ²` eine Balance `g = h` bei `α = β = 0`; so reicht
+   die gewichtete Fassung von Schritt 3 Teil 4 ohne Exponentialgewichte.
+3. **Die Abschneidung wird ein drittes Mal wiederverwendet**, jetzt in der gewichteten Form
+   (`integral_mul_eval_mul_cos_eq_of_isCadlagMPSolution`); das Martingal für `cos` ist neu, aber
+   keine neue Abschneidung.
+4. **Nebenertrag, nicht fortgesetzt:** `martingale_of_forward_setIntegral` ist allgemein — jede
+   geschlossene gewichtete Vorwärtsgleichung ist ein Martingal. Es gehört in den Bericht und in
+   keinen Vorschlag.
+
+**Manuskript:** keine Lücke in `cor:uniqviadual` für diesen Fall.
+
+#### Stand der Aufgabe „Dualität, der Kern von Meilenstein 7“: **alle sieben Schritte stehen**
+
+| Schritt | Aussage(n) | Einschränkung |
+| --- | --- | --- |
+| 1 | `chain_identity`, `chain_identity_bot` | — |
+| 2 | `countClock_duality`, `duality_discrete` | — |
+| 3 | `duality_zero`, `duality_relation_zero`, `duality`, `duality_relation`, `duality_weighted`, `duality_relation_weighted`, `not_secondIncrement_of_weight_on_dual` | `duality_weighted` bei `α = β = 0`; `hgi` nötig (Befund 2 des ersten Teils) |
+| 4 | `duality_stopped` | bei `α = β = 0` |
+| 5 | `propagatesAgreement_of_duality`, `uniqueness_of_duality` | `isMarkov_of_duality` weggelassen, begründet; konstante Majorante längs des Duals |
+| 6 | `restrict_Iio_eq_map_clockQuantile`, `setIntegral_interval_eq_clockQuantile`, `duality_of_atomless` | Uhr unendlicher Masse auf `ℝ≥0` (Befund 1 des fünften Teils) |
+| 7 | `map_eval_eq_gaussianReal_of_duality`, `eq_of_isCadlagMPSolution_of_duality` | — |
+
+Nach dem Auftrag endet die Aufgabe hier; **ein Folgeziel wird nicht vorgeschlagen und nicht
+eingetragen.** Den nächsten Auftrag stellt der Nutzer. Die drei Einschränkungen der Tabelle sind
+Befunde für ihn, keine offenen Schritte.
