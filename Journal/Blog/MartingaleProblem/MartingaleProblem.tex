@@ -5658,9 +5658,8 @@ the arguments stop.
 \end{corollary}
 
 \begin{proof}
-  Since $q$ is atomless, $Q$ is continuous; by \eqref{T3} its domain is an interval, so
-  $Q$ maps $\T_{\leq t^*}$ onto $[0,L]$, $L = Q(t^*)$, and $Q^{\leftarrow}$ is a right
-  inverse: $Q(Q^{\leftarrow}(z)) = z$.  Monotonicity of $Q$ gives
+  For every clock, $Q$ is nondecreasing and continuous from below, since
+  $\T_{<s} = \bigcup_{s' < s} \T_{<s'}$; this gives
   $Q^{\leftarrow}(z) \geq a \iff z \geq Q(a)$, whence the change-of-variables formula
   \begin{equation}
     \label{eq:quantile}
@@ -5669,6 +5668,10 @@ the arguments stop.
   \end{equation}
   for order-measurable $g$: for $g = \one_{[a,a')}$ both sides equal
   $Q(s'\wedge a') - Q(s\vee a)$, and Fact~\ref{fact:monotoneclass} does the rest.
+  Atomlessness has not been used so far; it enters only now.  Since $q$ is
+  atomless, $Q$ is continuous; by \eqref{T3} its domain is an interval, so $Q$ maps
+  $\T_{\leq t^*}$ onto $[0,L]$, $L = Q(t^*)$, and $Q^{\leftarrow}$ is a right
+  inverse: $Q(Q^{\leftarrow}(z)) = z$.
 
   Now $q([s,s')) = 0$ forces $\Phi(s,\cdot) = \Phi(s',\cdot)$ as well as
   $\Phi(\cdot,s) = \Phi(\cdot,s')$, by \eqref{eq:incrementrep}; hence
@@ -7184,7 +7187,7 @@ shape of $\Psi$ itself.
   \label{lem:calculus}
   Let $\Phi : [0,\infty) \times [0,\infty) \to \R$ be absolutely continuous in $s$
   for each fixed $t$ and absolutely continuous in $t$ for each fixed $s$, and
-  set $(\gamma_1,\gamma_2) = \nabla\Phi$.  Suppose that
+  set $(\gamma_1,\gamma_2) = \nabla\Phi$, jointly measurable.  Suppose that
   \begin{equation}
     \label{eq:calcint}
     \int_0^T \! \int_0^T |\gamma_i(s,t)| \dif s \dif t < \infty,
@@ -7225,12 +7228,16 @@ shape of $\Psi$ itself.
   \begin{equation}
     \label{eq:dual1}
     \begin{aligned}
-      \sup_{r,s,t \leq T} \bigl( |\alpha(X(r))| + 1 \bigr) |f(X(s),Y(t))| &\leq \Gamma_T , \\
-      \sup_{r,s,t \leq T} \bigl( |\beta(Y(r))| + 1 \bigr) |f(X(s),Y(t))| &\leq \Gamma_T , \\
-      \sup_{r,s,t \leq T} \bigl( |\alpha(X(r))| + 1 \bigr) |g(X(s),Y(t))| &\leq \Gamma_T , \\
-      \sup_{r,s,t \leq T} \bigl( |\beta(Y(r))| + 1 \bigr) |h(X(s),Y(t))| &\leq \Gamma_T ,
+      \sup_{r,s \leq T,\, y \in E_2} \bigl( |\alpha(X(r))| + 1 \bigr) |f(X(s),y)| &\leq \Gamma_T , \\
+      \sup_{r,t \leq T,\, x \in E_1} \bigl( |\beta(Y(r))| + 1 \bigr) |f(x,Y(t))| &\leq \Gamma_T , \\
+      \sup_{r,s \leq T,\, y \in E_2} \bigl( |\alpha(X(r))| + 1 \bigr) |g(X(s),y)| &\leq \Gamma_T , \\
+      \sup_{r,t \leq T,\, x \in E_1} \bigl( |\beta(Y(r))| + 1 \bigr) |h(x,Y(t))| &\leq \Gamma_T ,
     \end{aligned}
   \end{equation}
+  the bounds being asked at a \emph{frozen} value of the other process.  They
+  imply the bounds along it (take $y = Y(t)$, $x = X(s)$), and they are what
+  Step~1 of the proof consumes; for bounded $f$, $g$, $h$, $\alpha$, $\beta$ they
+  are automatic.
   and
   \begin{equation}
     \label{eq:dual2}
@@ -7277,8 +7284,9 @@ shape of $\Psi$ itself.
   $M^y_r = f(X(r),y) - \int_0^r g(X(v),y)\dif v$ is a
   $({}^{*}\Filt^X_r)$-martingale under the conditioned measure --- which it is,
   because conditioning on an independent $\sigma$-field leaves the law of $X$ and
-  the filtration ${}^{*}\Filt^X$ unchanged.  We suppress the conditioning from the
-  notation.
+  the filtration ${}^{*}\Filt^X$ unchanged.  The bounds \eqref{eq:dual1} hold at
+  the frozen value $y$ as they stand, which is why they are asked in that form.
+  We suppress the conditioning from the notation.
 
   \emph{Step 2: the increment identity.}  For $h > 0$ split
   \begin{multline}
