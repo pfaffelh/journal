@@ -63026,3 +63026,47 @@ eingebaut mit `scripts/_dev_integrate_bridge.py` hinter `end Stopped`.
 
 **Stand der Aufgabe.** Schritte 1–5 stehen. Offen: 6 (`duality_of_atomless`), 7 (Abnahme an
 der Brownschen Bewegung).
+
+
+### Derselbe Lauf, vierter Teil — Dualität, Schritt 6, erste Hälfte: **Zeittransformation, Quantil und `eq:quantile`** für eine Uhr auf `ℝ≥0`
+
+*`check_master.py`: 0 Fehler, 0 `sorry`, 0 veraltet in allen vier Dateien*, Warnungszahlen
+unverändert. `check_axioms_master.py` für die neun neuen Namen: nur die drei Standardaxiome.
+Keine Namenskollision. Entwickelt in `scripts/_dev_quantile.lean`, eingebaut mit
+`scripts/_dev_integrate_quantile.py` hinter `end DualityBridge`, Abschnitt
+„Toward `cor:atomless`“.
+
+**Neun Deklarationen**, für ein Maß `q` auf `ℝ≥0` mit `q [0, s) < ∞`:
+`clockTime q s = q.real [0, s)` (das `Q` des Manuskripts), `clockQuantile q b z =
+sSup {t ≤ b | Q t ≤ z}` (das `Q^←`, **gekappt** bei `b`), `clockTime_mono`, `clockQuantile_le`,
+`clockQuantile_mono`, `measure_Iio_le_of_forall_lt` (Stetigkeit von unten),
+**`le_clockQuantile_iff`** (`a ≤ Q^← z ↔ Q a ≤ z` für `0 ≤ z < Q b`), `clockQuantile_lt_iff`,
+**`restrict_Iio_eq_map_clockQuantile`** (`q` auf `[0,b)` ist das Bild von Lebesgue auf
+`[0, Q b)` unter `Q^←`), **`setIntegral_interval_eq_clockQuantile`** (`eq:quantile`:
+`∫_{[s,s')} g dq = ∫_{[Q s, Q s')} g (Q^← z) dz`), **`clockTime_clockQuantile`**
+(`Q (Q^← z) = z` für atomloses `q`).
+
+**Befunde.**
+
+1. **`eq:quantile` braucht die Atomlosigkeit nicht** — gegen die Reihenfolge im Beweis von
+   `cor:atomless` (Z. 5661–5671), der sie vorab für die Stetigkeit von `Q` einsetzt. In der
+   prädiktablen Konvention und mit dem bei `b` gekappten Quantil gilt die Formel für **jede**
+   Uhr: `Q^←` ist auf der Lücke, die ein Atom `a` im Bild von `Q` läßt, konstant gleich `a`, und
+   die Lücke hat die Lebesguemasse `q {a}`. Von `Q` werden nur Monotonie und Stetigkeit **von
+   unten** gebraucht, und die hat `s ↦ q [0, s)` immer. Die Galois-Eigenschaft
+   „`Q^←(z) ≥ a` genau dann, wenn `z ≥ Q(a)`“ gilt ebenso ohne Atomlosigkeit.
+2. **Die Atomlosigkeit wird an genau einer Stelle verbraucht**: `Q (Q^← z) = z`, und dort nur als
+   Stetigkeit von oben bei `Q^← z`, also `q {Q^← z} = 0`. Das ist die Stelle, an der
+   `Ψ (x', y) - Ψ (x, y) = ∫_x^{x'} ψ` für **beliebige** `x ≤ x'` gilt und nicht nur für `x, x'`
+   im Bild von `Q`; `rem:atomsnotchange` erklärt, warum es mit Atom scheitert, und das deckt sich.
+3. **Die Kappung** ersetzt den Satz „`Q` bildet `T_{≤ t*}` auf `[0, L]` ab“: ohne sie ist die
+   Menge `{t | Q t ≤ z}` für `z ≥ sup Q` unbeschränkt, und `sSup` gibt in `ℝ≥0` den Müllwert `0`.
+   Mit Kappung ist `Q^←` auf ganz `ℝ` monoton, also meßbar (`Monotone.measurable`), und unter
+   `Q b` wird die Kappe nicht gelesen.
+4. **Die Uhr-σ-Algebra:** die Sätze stehen für die Borel-σ-Algebra von `ℝ≥0`. Für eine `Clock`
+   mit größerem `measurableSpace` ist `Q^←` dorthin nicht meßbar; das Manuskript erlaubt
+   ausdrücklich, `𝒯` als Ordnungs-σ-Algebra zu nehmen (Z. 5648–5650), und die ist auf `ℝ≥0` die
+   Borelsche (`borel_eq_generateFrom_Iio`).
+
+**Stand der Aufgabe.** Schritte 1–5 stehen, Schritt 6 zur Hälfte. Offen: der Zusammenbau
+`duality_of_atomless`, dann Schritt 7.

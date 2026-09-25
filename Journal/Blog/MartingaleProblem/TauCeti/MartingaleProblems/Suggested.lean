@@ -22655,6 +22655,186 @@ theorem uniqueness_of_duality {π : ℝ≥0 → F → E}
 
 end DualityBridge
 
+/-! ### Toward `cor:atomless`: the time change and the quantile of a clock on `ℝ≥0`
+
+`Q s = q [0, s)` and its quantile `Q^←`, capped at a horizon `b` so that the supremum is honest.
+The substitution formula `eq:quantile` holds for **every** clock finite on `[0, s)`, in the
+predictable convention (`restrict_Iio_eq_map_clockQuantile`,
+`setIntegral_interval_eq_clockQuantile`): the quantile is constant on the gap an atom leaves in
+the range of `Q`, and the gap carries exactly the atom's mass.  Atomlessness is spent in one
+place only, `clockTime_clockQuantile`: `Q (Q^← z) = z`, which is what turns the increments of
+`Φ (Q^← ·, Q^← ·)` into Lebesgue integrals over arbitrary intervals. -/
+
+section ClockQuantile
+
+variable (q : Measure ℝ≥0)
+
+/-- **The time change of a clock on `ℝ≥0`**, `Q s = q [0, s)`, read in `ℝ`. -/
+noncomputable def clockTime (s : ℝ≥0) : ℝ := q.real (Iio s)
+
+/-- **The quantile function of a clock, capped at `b`**: `Q^← z = sup {t ≤ b | Q t ≤ z}`.  The cap
+makes the set bounded, so that the supremum is an honest one and the function is monotone on all
+of `ℝ`; below `Q b` it is not read. -/
+noncomputable def clockQuantile (b : ℝ≥0) (z : ℝ) : ℝ≥0 := sSup {t | t ≤ b ∧ clockTime q t ≤ z}
+
+variable {q}
+
+theorem clockTime_mono (hq : ∀ s, q (Iio s) ≠ ⊤) : Monotone (clockTime q) :=
+  fun _ t hst ↦ measureReal_mono (Iio_subset_Iio hst) (hq t)
+
+theorem clockQuantile_le (b : ℝ≥0) (z : ℝ) : clockQuantile q b z ≤ b := by
+  rcases eq_empty_or_nonempty {t | t ≤ b ∧ clockTime q t ≤ z} with h | h
+  · rw [clockQuantile, h, csSup_empty]; exact zero_le
+  · exact csSup_le h fun _ ht ↦ ht.1
+
+theorem clockQuantile_mono (b : ℝ≥0) : Monotone (clockQuantile q b) := by
+  intro z z' hzz'
+  rcases eq_empty_or_nonempty {t | t ≤ b ∧ clockTime q t ≤ z} with h | h
+  · rw [clockQuantile, h, csSup_empty]; exact zero_le
+  · exact csSup_le_csSup ⟨b, fun _ ht ↦ ht.1⟩ h fun t ht ↦ ⟨ht.1, ht.2.trans hzz'⟩
+
+/-- **Continuity from below of the mass of `[0, θ)`**: a bound on `q [0, t)` for every `t < θ`
+bounds `q [0, θ)`.  No atomlessness: `[0, θ)` is an increasing union of `[0, t)`, `t < θ`. -/
+theorem measure_Iio_le_of_forall_lt {θ : ℝ≥0} {c : ENNReal} (h : ∀ t < θ, q (Iio t) ≤ c) :
+    q (Iio θ) ≤ c := by
+  rcases eq_or_ne θ 0 with rfl | hθ
+  · simp
+  obtain ⟨u, hu, hu0, hlim⟩ := exists_seq_strictMono_tendsto' (pos_iff_ne_zero.2 hθ)
+  have hU : (⋃ n, Iio (u n)) = Iio θ := by
+    ext t
+    simp only [mem_iUnion, mem_Iio]
+    constructor
+    · rintro ⟨n, hn⟩; exact hn.trans (hu0 n).2
+    · intro ht
+      exact (hlim.eventually (Ioi_mem_nhds ht)).exists
+  have ht := tendsto_measure_iUnion_atTop (μ := q) (fun m n hmn ↦ Iio_subset_Iio (hu.monotone hmn))
+  rw [hU] at ht
+  exact le_of_tendsto' ht fun n ↦ h _ (hu0 n).2
+
+/-- **The Galois property of the quantile**: below `Q b`, `a ≤ Q^← z ↔ Q a ≤ z`.  This is
+"`Q^←(z) ≥ a ⟺ z ≥ Q(a)`" of the manuscript's proof of `cor:atomless`, and it holds for **every**
+clock: of `Q` only the monotonicity and the continuity from below are used. -/
+theorem le_clockQuantile_iff (hq : ∀ s, q (Iio s) ≠ ⊤) {a b : ℝ≥0} {z : ℝ} (hz0 : 0 ≤ z)
+    (hzb : z < clockTime q b) : a ≤ clockQuantile q b z ↔ clockTime q a ≤ z := by
+  have hne : ({t | t ≤ b ∧ clockTime q t ≤ z} : Set ℝ≥0).Nonempty :=
+    ⟨0, zero_le, by simp [clockTime, hz0]⟩
+  have hbdd : BddAbove {t | t ≤ b ∧ clockTime q t ≤ z} := ⟨b, fun _ ht ↦ ht.1⟩
+  constructor
+  · intro ha
+    refine le_trans (clockTime_mono hq ha) ?_
+    have hθ : q (Iio (clockQuantile q b z)) ≤ ENNReal.ofReal z := by
+      refine measure_Iio_le_of_forall_lt fun t ht ↦ ?_
+      obtain ⟨t', ht', htt'⟩ := exists_lt_of_lt_csSup hne ht
+      refine (measure_mono (Iio_subset_Iio htt'.le)).trans ?_
+      exact (ENNReal.le_ofReal_iff_toReal_le (hq _) hz0).2 ht'.2
+    exact (ENNReal.toReal_le_of_le_ofReal hz0 hθ)
+  · intro ha
+    have hab : a ≤ b := by
+      by_contra hba
+      exact absurd (lt_of_le_of_lt ((clockTime_mono hq (not_le.1 hba).le).trans ha) hzb)
+        (lt_irrefl _)
+    exact le_csSup hbdd ⟨hab, ha⟩
+
+theorem clockQuantile_lt_iff (hq : ∀ s, q (Iio s) ≠ ⊤) {a b : ℝ≥0} {z : ℝ} (hz0 : 0 ≤ z)
+    (hzb : z < clockTime q b) : clockQuantile q b z < a ↔ z < clockTime q a := by
+  rw [← not_le, le_clockQuantile_iff hq hz0 hzb, not_le]
+
+/-- **`eq:quantile` as an identity of measures**: `q` on `[0, b)` is the image of Lebesgue measure
+on `[0, Q b)` under the quantile.  For **every** clock on `ℝ≥0` finite on `[0, s)`; atoms are
+allowed, the quantile being constant on the gap of an atom, which carries exactly the atom's
+mass. -/
+theorem restrict_Iio_eq_map_clockQuantile (hq : ∀ s, q (Iio s) ≠ ⊤) (b : ℝ≥0) :
+    q.restrict (Iio b) = (volume.restrict (Ico 0 (clockTime q b))).map (clockQuantile q b) := by
+  have hθm : Measurable (clockQuantile q b) := (clockQuantile_mono b).measurable
+  have : IsFiniteMeasure (q.restrict (Iio b)) := isFiniteMeasure_restrict.2 (hq b)
+  have hF0 : ∀ s, 0 ≤ clockTime q s := fun _ ↦ measureReal_nonneg
+  have hset : ∀ a : ℝ≥0, clockQuantile q b ⁻¹' Iio a ∩ Ico 0 (clockTime q b) =
+      Ico 0 (min (clockTime q a) (clockTime q b)) := by
+    intro a
+    ext z
+    simp only [mem_inter_iff, mem_preimage, mem_Iio, mem_Ico, lt_min_iff]
+    constructor
+    · rintro ⟨h, h0, hz⟩
+      exact ⟨h0, (clockQuantile_lt_iff hq h0 hz).1 h, hz⟩
+    · rintro ⟨h0, ha, hz⟩
+      exact ⟨(clockQuantile_lt_iff hq h0 hz).2 ha, h0, hz⟩
+  refine ext_of_generate_finite (range Iio) (borel_eq_generateFrom_Iio ℝ≥0 ▸ BorelSpace.measurable_eq)
+    isPiSystem_Iio ?_ ?_
+  · rintro _ ⟨a, rfl⟩
+    rw [Measure.restrict_apply measurableSet_Iio, Measure.map_apply hθm measurableSet_Iio,
+      Measure.restrict_apply (hθm measurableSet_Iio), hset, Real.volume_Ico, sub_zero,
+      Iio_inter_Iio, ← (clockTime_mono hq).map_min]
+    exact (ofReal_measureReal (hq _)).symm
+  · rw [Measure.restrict_apply MeasurableSet.univ, univ_inter, Measure.map_apply hθm
+      MeasurableSet.univ, preimage_univ, Measure.restrict_apply MeasurableSet.univ, univ_inter,
+      Real.volume_Ico, sub_zero]
+    exact (ofReal_measureReal (hq _)).symm
+
+/-- **`eq:quantile`** (predictable convention): for `s ≤ s'` and `g` measurable,
+`∫_{[s, s')} g dq = ∫_{[Q s, Q s')} g (Q^← z) dz`, with the quantile capped at `s'`.  For every
+clock on `ℝ≥0` finite on `[0, s)`; atomlessness is not used here. -/
+theorem setIntegral_interval_eq_clockQuantile (hq : ∀ s, q (Iio s) ≠ ⊤) {s s' : ℝ≥0}
+    {g : ℝ≥0 → ℝ} (hg : Measurable g) :
+    ∫ r in Iio s' \ Iio s, g r ∂q =
+      ∫ z in Ico (clockTime q s) (clockTime q s'), g (clockQuantile q s' z) := by
+  have hθm : Measurable (clockQuantile q s') := (clockQuantile_mono s').measurable
+  have hA : MeasurableSet (Iio s' \ Iio s) := measurableSet_Iio.diff measurableSet_Iio
+  have hF0 : ∀ s, 0 ≤ clockTime q s := fun _ ↦ measureReal_nonneg
+  have e1 : ∫ r in Iio s' \ Iio s, g r ∂q = ∫ r in Iio s' \ Iio s, g r ∂(q.restrict (Iio s')) := by
+    rw [Measure.restrict_restrict hA, inter_eq_left.2 sdiff_subset]
+  rw [e1, restrict_Iio_eq_map_clockQuantile hq s', setIntegral_map hA hg.aestronglyMeasurable
+    hθm.aemeasurable, Measure.restrict_restrict (hθm hA)]
+  congr 2
+  ext z
+  simp only [mem_inter_iff, mem_preimage, Set.mem_sdiff, mem_Iio, mem_Ico]
+  constructor
+  · rintro ⟨⟨-, h⟩, h0, hz⟩
+    exact ⟨not_lt.1 fun h' ↦ h ((clockQuantile_lt_iff hq h0 hz).2 h'), hz⟩
+  · rintro ⟨hs, hz⟩
+    have h0 : 0 ≤ z := (hF0 s).trans hs
+    exact ⟨⟨(clockQuantile_lt_iff hq h0 hz).2 hz, fun h ↦ absurd ((clockQuantile_lt_iff hq h0 hz).1 h)
+      (not_lt.2 hs)⟩, h0, hz⟩
+
+/-- **The quantile is a right inverse of the time change, for an atomless clock**:
+`Q (Q^← z) = z` for `0 ≤ z < Q b`.  This is the one place in the proof of `cor:atomless` where the
+atomlessness is spent: `≤` is the Galois property, `≥` is continuity from above of
+`t ↦ q [0, t)` at `Q^← z`, and that continuity is `q {Q^← z} = 0`. -/
+theorem clockTime_clockQuantile (hq : ∀ s, q (Iio s) ≠ ⊤) (hat : ∀ t, q {t} = 0) {b : ℝ≥0}
+    {z : ℝ} (hz0 : 0 ≤ z) (hzb : z < clockTime q b) : clockTime q (clockQuantile q b z) = z := by
+  set θ := clockQuantile q b z
+  have hle : clockTime q θ ≤ z := (le_clockQuantile_iff hq hz0 hzb).1 le_rfl
+  refine le_antisymm hle ?_
+  have hθb : θ < b := by
+    refine lt_of_le_of_ne (clockQuantile_le b z) fun h ↦ ?_
+    rw [h] at hle
+    exact absurd (hle.trans_lt hzb) (lt_irrefl _)
+  obtain ⟨u, hu, hub, hlim⟩ := exists_seq_strictAnti_tendsto' hθb
+  have hI : (⋂ n, Iio (u n)) = Iic θ := by
+    ext t
+    simp only [mem_iInter, mem_Iio, mem_Iic]
+    constructor
+    · intro h
+      by_contra hθt
+      obtain ⟨n, hn⟩ := (hlim.eventually (Iio_mem_nhds (not_le.1 hθt))).exists
+      exact absurd (h n) (not_lt.2 hn.le)
+    · intro ht n
+      exact ht.trans_lt (hub n).1
+  have ht := tendsto_measure_iInter_atTop (μ := q) (fun n ↦ measurableSet_Iio.nullMeasurableSet)
+    (fun m n hmn ↦ Iio_subset_Iio (hu.antitone hmn)) ⟨0, hq _⟩
+  rw [hI] at ht
+  have hlow : ∀ n, ENNReal.ofReal z ≤ q (Iio (u n)) := fun n ↦ by
+    have hzu : z < clockTime q (u n) := by
+      rw [← not_le, ← le_clockQuantile_iff hq hz0 hzb]
+      exact not_le.2 (hub n).1
+    exact (ENNReal.ofReal_le_iff_le_toReal (hq _)).2 hzu.le
+  have hIic : ENNReal.ofReal z ≤ q (Iic θ) := ge_of_tendsto' ht hlow
+  have hIio : q (Iic θ) ≤ q (Iio θ) := by
+    rw [← Iio_union_right]
+    exact (measure_union_le _ _).trans (by rw [hat, add_zero])
+  exact (ENNReal.ofReal_le_iff_le_toReal (hq _)).1 (hIic.trans hIio)
+
+end ClockQuantile
+
 /-! ## Causal convolution and the Volterra resolvent
 
 Milestone 14.  The renewal equation `m = m₀ + φ ⋆ m` on `[0,∞)` and the resolvent that solves it
