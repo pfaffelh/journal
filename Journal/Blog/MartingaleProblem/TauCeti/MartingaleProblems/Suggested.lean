@@ -22987,6 +22987,106 @@ theorem duality_of_atomless (hq : ∀ s, q (Iio s) ≠ ⊤) (hat : ∀ t, q {t} 
 
 end Atomless
 
+/-! ### The deterministic time as a dual process
+
+The last link of the duality chain before its acceptance test: a closed forward equation for
+`E u (X ·)` with a rate `c` is a duality against the time itself, and gives the exponential law
+`E u (X t) = E u (X 0) e^{c t}`.  It is stated here, beside the duality theorems it consumes,
+and used for the Brownian solution in `map_eval_eq_gaussianReal_of_duality`. -/
+
+section TimeDual
+
+variable {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
+
+/-- **The deterministic time as a dual process.**  If the one dimensional laws of `X` satisfy the
+closed forward equation `E u (X s) - E u (X 0) = ∫_0^s c E u (X r) dr` for a bounded measurable
+`u` and a rate `c ≤ 0`, then `E u (X t) = E u (X 0) e^{c t}`.
+
+*Proof.*  `duality_relation_zero_of_mean` for `X` and the dual `Y t = t`, which is deterministic
+and therefore independent of `X`, with `f (x, b) = u x e^{c b}` and `g = h = c u x e^{c b}`: the
+generator of `X` on `u` is the multiplication by `c` in law, and the generator of the time on
+`e^{c ·}` is the multiplication by `c` pointwise.  The balance `g = h` holds identically; this is
+the balance `eq:dualbalance` with `h = 0`, `α = 0`, `β = c` of Step 7, written with the
+exponential weight carried by the dual coordinate. -/
+theorem integral_comp_eq_mul_exp_of_forward {X : ℝ≥0 → Ω → ℝ}
+    (hX : Measurable (fun p : ℝ≥0 × Ω ↦ X p.1 p.2)) {u : ℝ → ℝ} (hu : Measurable u)
+    (hu1 : ∀ x, |u x| ≤ 1) {c : ℝ} (hc : c ≤ 0)
+    (hfwd : ∀ s : ℝ≥0, (∫ ω, u (X s ω) ∂P) - ∫ ω, u (X 0 ω) ∂P =
+      ∫ r in Ioc (0 : ℝ) s, c * ∫ ω, u (X r.toNNReal ω) ∂P) (t : ℝ≥0) :
+    ∫ ω, u (X t ω) ∂P = (∫ ω, u (X 0 ω) ∂P) * Real.exp (c * t) := by
+  have hXt : ∀ s, Measurable (X s) := fun s ↦ hX.comp (measurable_const.prodMk measurable_id)
+  have hXr : Measurable fun p : ℝ × Ω ↦ X p.1.toNNReal p.2 :=
+    hX.comp ((measurable_real_toNNReal.comp measurable_fst).prodMk measurable_snd)
+  have he1 : ∀ b : ℝ, 0 ≤ b → Real.exp (c * b) ≤ 1 := fun b hb ↦
+    Real.exp_le_one_iff.2 (mul_nonpos_of_nonpos_of_nonneg hc hb)
+  have key := duality_relation_zero_of_mean (P := P) (X := X) (Y := fun t _ ↦ (t : ℝ))
+    (f := fun z ↦ u z.1 * Real.exp (c * z.2)) (g := fun z ↦ c * u z.1 * Real.exp (c * z.2))
+    (h := fun z ↦ c * u z.1 * Real.exp (c * z.2)) (Γ := fun _ _ ↦ 1 + |c|) hX
+    (measurable_coe_nnreal_real.comp measurable_fst)
+    (fun s t ↦ indepFun_const_right (X s) _) (by fun_prop) (by fun_prop) (by fun_prop)
+    (fun _ ↦ integrable_const _)
+    (fun _ s t _ _ ω ↦ by
+      rw [abs_mul, abs_of_pos (Real.exp_pos _)]
+      nlinarith [hu1 (X s ω), he1 t t.2, abs_nonneg c, abs_nonneg (u (X s ω)), Real.exp_pos (c * t)])
+    (fun _ s t _ _ ω ↦ by
+      rw [abs_mul, abs_mul, abs_of_pos (Real.exp_pos _)]
+      nlinarith [hu1 (X s ω), he1 t t.2, abs_nonneg c, abs_nonneg (u (X s ω)), Real.exp_pos (c * t),
+        mul_nonneg (abs_nonneg c) (abs_nonneg (u (X s ω)))])
+    (fun _ s t _ _ ω ↦ by
+      rw [abs_mul, abs_mul, abs_of_pos (Real.exp_pos _)]
+      nlinarith [hu1 (X s ω), he1 t t.2, abs_nonneg c, abs_nonneg (u (X s ω)), Real.exp_pos (c * t),
+        mul_nonneg (abs_nonneg c) (abs_nonneg (u (X s ω)))])
+    (fun y s ↦ by
+      -- the forward equation, times the constant `e^{c y}`, after Fubini
+      have hi : ∀ s : ℝ≥0, Integrable (fun ω ↦ u (X s ω)) P := fun s ↦
+        (integrable_const (1 : ℝ)).mono' (hu.comp (hXt _)).aestronglyMeasurable
+          (ae_of_all _ fun ω ↦ by rw [Real.norm_eq_abs]; exact hu1 _)
+      have hG : Integrable (fun p : ℝ × Ω ↦ u (X p.1.toNNReal p.2))
+          ((volume.restrict (Ioc 0 (s : ℝ))).prod P) :=
+        (integrable_const (1 : ℝ)).mono' (hu.comp hXr).aestronglyMeasurable
+          (ae_of_all _ fun p ↦ by rw [Real.norm_eq_abs]; exact hu1 _)
+      have hswap := integral_integral_swap (f := fun (r : ℝ) (ω : Ω) ↦ u (X r.toNNReal ω)) hG
+      have hI : Integrable (fun ω ↦ ∫ r in Ioc 0 (s : ℝ), u (X r.toNNReal ω)) P :=
+        hG.integral_prod_right
+      have e : ∀ ω, u (X s ω) * Real.exp (c * y) - u (X 0 ω) * Real.exp (c * y) -
+          ∫ r in (0 : ℝ)..s, c * u (X r.toNNReal ω) * Real.exp (c * y) =
+          Real.exp (c * y) * (u (X s ω) - u (X 0 ω) -
+            c * ∫ r in Ioc 0 (s : ℝ), u (X r.toNNReal ω)) := fun ω ↦ by
+        rw [intervalIntegral.integral_of_le (NNReal.coe_nonneg s)]
+        have : (fun r : ℝ ↦ c * u (X r.toNNReal ω) * Real.exp (c * y)) =
+            fun r : ℝ ↦ (c * Real.exp (c * y)) * u (X r.toNNReal ω) := by funext r; ring
+        rw [this, integral_const_mul]
+        ring
+      show ∫ ω, (u (X s ω) * Real.exp (c * y) - u (X 0 ω) * Real.exp (c * y) -
+        ∫ r in (0 : ℝ)..s, c * u (X r.toNNReal ω) * Real.exp (c * y)) ∂P = 0
+      rw [integral_congr_ae (ae_of_all _ e), integral_const_mul,
+        integral_sub (f := fun ω ↦ u (X s ω) - u (X 0 ω)) ((hi s).sub (hi 0)) (hI.const_mul c),
+        integral_sub (hi s) (hi 0),
+        integral_const_mul, ← hswap, hfwd s, integral_const_mul, sub_self, mul_zero])
+    (fun x t ↦ by
+      -- the time dual: `e^{c t} - 1 = ∫_0^t c e^{c r} dr`
+      have hd : ∫ r in (0 : ℝ)..t, c * u x * Real.exp (c * (r.toNNReal : ℝ)) =
+          u x * (Real.exp (c * t) - 1) := by
+        have e1 : ∫ r in (0 : ℝ)..t, c * u x * Real.exp (c * (r.toNNReal : ℝ)) =
+            ∫ r in (0 : ℝ)..t, u x * (Real.exp (c * r) * c) := by
+          refine intervalIntegral.integral_congr fun r hr ↦ ?_
+          have hr0 : 0 ≤ r := le_trans (le_min le_rfl t.2) hr.1
+          simp only [Real.coe_toNNReal r hr0]
+          ring
+        rw [e1, intervalIntegral.integral_const_mul,
+          intervalIntegral.integral_eq_sub_of_hasDerivAt (f := fun r ↦ Real.exp (c * r))
+            (fun r _ ↦ by simpa using ((hasDerivAt_id r).const_mul c).exp)
+            ((by fun_prop : Continuous fun r : ℝ ↦ Real.exp (c * r) * c).intervalIntegrable _ _)]
+        simp
+      simp only [hd, NNReal.coe_zero, mul_zero, Real.exp_zero, mul_one]
+      ring_nf
+      simp)
+    (fun _ ↦ rfl) t
+  simp only [NNReal.coe_zero, mul_zero, Real.exp_zero, mul_one] at key
+  rw [key, integral_mul_const]
+
+end TimeDual
+
 /-! ## Causal convolution and the Volterra resolvent
 
 Milestone 14.  The renewal equation `m = m₀ + φ ⋆ m` on `[0,∞)` and the resolvent that solves it
@@ -40354,6 +40454,75 @@ theorem map_eval_eq_gaussianReal_of_isCadlagMPSolution {v : ℝ} (hv : 0 ≤ v)
   rw [charFun_eq_integral_cos_add_integral_sin_mul_I, hmap t _ hcosc, hmap t _ hsinc,
     integral_eval_mul_cos_eq_mul_exp_of_isCadlagMPSolution ν h θ t,
     integral_eval_mul_sin_eq_mul_exp_of_isCadlagMPSolution ν h θ t, hcos0, hsin0,
+    ProbabilityTheory.charFun_gaussianReal, Real.coe_toNNReal _ (by positivity)]
+  push_cast
+  simp only [one_mul, zero_mul, add_zero, mul_zero, zero_sub]
+  congr 1
+  ring
+
+
+/-- **Acceptance of the duality chain: the Brownian solution against the deterministic time,
+cosine part.**  `E cos (θ X t) = E cos (θ X 0) · exp (-(v/2) θ² t)`, now as a consequence of
+`duality_relation_zero_of_mean` (through `integral_comp_eq_mul_exp_of_forward`) and not of the
+scalar ODE `eq_mul_exp_of_sub_eq_setIntegral`.  The dual is the time itself, `Y t = t`, and the
+balance is `eq:dualbalance` with `h = 0`, `α = 0`, `β(θ) = -(v/2) θ²`, the exponential weight
+being carried by the dual coordinate.  `cos (θ x)` has no compact support; the input is the
+forward equation `integral_eval_mul_cos_eq_of_isCadlagMPSolution`, which already passes through
+the cut off. -/
+theorem integral_eval_mul_cos_eq_mul_exp_of_duality {v : ℝ} (hv : 0 ≤ v)
+    (ν : Measure D(ℝ≥0, ℝ)) [IsProbabilityMeasure ν]
+    (h : IsCadlagMPSolution (brownianGeneratorPairs v) ν) (θ : ℝ) (t : ℝ≥0) :
+    (∫ z, Real.cos (θ * z.toFun t) ∂ν)
+      = (∫ z, Real.cos (θ * z.toFun 0) ∂ν) * Real.exp (-(v / 2) * θ ^ 2 * t) :=
+  integral_comp_eq_mul_exp_of_forward (P := ν) (X := fun t z ↦ z.toFun t)
+    SkorokhodSpace.measurable_uncurry_eval_nnreal
+    (Real.continuous_cos.comp (continuous_const.mul continuous_id)).measurable
+    (fun _ ↦ Real.abs_cos_le_one _)
+    (mul_nonpos_of_nonpos_of_nonneg (neg_nonpos.2 (by positivity)) (sq_nonneg θ))
+    (fun s ↦ by
+      have := integral_eval_mul_cos_eq_of_isCadlagMPSolution ν h θ (zero_le : (0 : ℝ≥0) ≤ s)
+      rwa [NNReal.coe_zero] at this) t
+
+/-- The sine part of `integral_eval_mul_cos_eq_mul_exp_of_duality`. -/
+theorem integral_eval_mul_sin_eq_mul_exp_of_duality {v : ℝ} (hv : 0 ≤ v)
+    (ν : Measure D(ℝ≥0, ℝ)) [IsProbabilityMeasure ν]
+    (h : IsCadlagMPSolution (brownianGeneratorPairs v) ν) (θ : ℝ) (t : ℝ≥0) :
+    (∫ z, Real.sin (θ * z.toFun t) ∂ν)
+      = (∫ z, Real.sin (θ * z.toFun 0) ∂ν) * Real.exp (-(v / 2) * θ ^ 2 * t) :=
+  integral_comp_eq_mul_exp_of_forward (P := ν) (X := fun t z ↦ z.toFun t)
+    SkorokhodSpace.measurable_uncurry_eval_nnreal
+    (Real.continuous_sin.comp (continuous_const.mul continuous_id)).measurable
+    (fun _ ↦ Real.abs_sin_le_one _)
+    (mul_nonpos_of_nonpos_of_nonneg (neg_nonpos.2 (by positivity)) (sq_nonneg θ))
+    (fun s ↦ by
+      have := integral_eval_mul_sin_eq_of_isCadlagMPSolution ν h θ (zero_le : (0 : ℝ≥0) ≤ s)
+      rwa [NNReal.coe_zero] at this) t
+
+/-- **The second proof of `map_eval_eq_gaussianReal_of_isCadlagMPSolution`, through the
+duality.**  Same statement, for a probability measure; the two scalar ODE steps are replaced by
+`integral_eval_mul_cos_eq_mul_exp_of_duality` and its sine twin, and the rest -- the
+characteristic function split into cosine and sine, `Measure.ext_of_charFun` -- is the same. -/
+theorem map_eval_eq_gaussianReal_of_duality {v : ℝ} (hv : 0 ≤ v)
+    (ν : Measure D(ℝ≥0, ℝ)) [IsProbabilityMeasure ν]
+    (h : IsCadlagMPSolution (brownianGeneratorPairs v) ν)
+    (h0 : ν.map (fun z : D(ℝ≥0, ℝ) ↦ z.toFun 0) = Measure.dirac 0) (t : ℝ≥0) :
+    ν.map (fun z : D(ℝ≥0, ℝ) ↦ z.toFun t) = ProbabilityTheory.gaussianReal 0 (v * t).toNNReal := by
+  have hmap : ∀ (u : ℝ≥0) (g : ℝ → ℝ), Continuous g →
+      ∫ x, g x ∂(ν.map fun z : D(ℝ≥0, ℝ) ↦ z.toFun u) = ∫ z, g (z.toFun u) ∂ν :=
+    fun u g hg ↦ integral_map (SkorokhodSpace.measurable_eval u).aemeasurable
+      hg.measurable.aestronglyMeasurable
+  refine Measure.ext_of_charFun (funext fun θ ↦ ?_)
+  have hcosc : Continuous fun x : ℝ ↦ Real.cos (θ * x) :=
+    Real.continuous_cos.comp (continuous_const.mul continuous_id)
+  have hsinc : Continuous fun x : ℝ ↦ Real.sin (θ * x) :=
+    Real.continuous_sin.comp (continuous_const.mul continuous_id)
+  have hcos0 : (∫ z, Real.cos (θ * z.toFun 0) ∂ν) = 1 := by
+    rw [← hmap 0 _ hcosc, h0, integral_dirac]; simp
+  have hsin0 : (∫ z, Real.sin (θ * z.toFun 0) ∂ν) = 0 := by
+    rw [← hmap 0 _ hsinc, h0, integral_dirac]; simp
+  rw [charFun_eq_integral_cos_add_integral_sin_mul_I, hmap t _ hcosc, hmap t _ hsinc,
+    integral_eval_mul_cos_eq_mul_exp_of_duality hv ν h θ t,
+    integral_eval_mul_sin_eq_mul_exp_of_duality hv ν h θ t, hcos0, hsin0,
     ProbabilityTheory.charFun_gaussianReal, Real.coe_toNNReal _ (by positivity)]
   push_cast
   simp only [one_mul, zero_mul, add_zero, mul_zero, zero_sub]

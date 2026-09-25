@@ -63111,3 +63111,46 @@ the integrability hypothesis“ des Manuskripts, wörtlich.
 
 **Stand der Aufgabe.** Schritte 1–6 stehen, Schritt 6 mit der Einschränkung aus Befund 1.
 Offen: Schritt 7.
+
+
+### Derselbe Lauf, sechster Teil — Dualität, Schritt 7, Teil A: **der zweite Beweis der Randverteilung**, `map_eval_eq_gaussianReal_of_duality`, über die Dualität gegen die deterministische Zeit
+
+*`check_master.py`: 0 Fehler, 0 `sorry`, 0 veraltet in allen vier Dateien*, Warnungszahlen
+unverändert, erster Durchlauf. `check_axioms_master.py` für die vier neuen Namen: nur die drei
+Standardaxiome. Entwickelt in `scripts/_dev_bmdual.lean` (allgemeines Lemma, Stub für
+`duality_relation_zero_of_mean`); die Brownsche Einsetzung direkt gegen master übersetzt.
+
+**Vier Deklarationen.**
+
+* `integral_comp_eq_mul_exp_of_forward` (Abschnitt „The deterministic time as a dual process“,
+  hinter `end Atomless`): aus der geschlossenen Vorwärtsgleichung
+  `E u(X s) - E u(X 0) = ∫_0^s c E u(X r) dr` mit `|u| ≤ 1`, `c ≤ 0` folgt
+  `E u(X t) = E u(X 0) e^{c t}` — **über `duality_relation_zero_of_mean`** mit dem Dual
+  `Y t = t` (deterministisch, also unabhängig: `indepFun_const_right`) und
+  `f (x, b) = u x e^{c b}`, `g = h = c u x e^{c b}`.
+* `MeasureTheory.integral_eval_mul_cos_eq_mul_exp_of_duality` und `…_sin_…`: die Einsetzung
+  `u = cos (θ ·)`, `sin (θ ·)`, `c = -(v/2) θ²` für eine Lösung zu `brownianGeneratorPairs v`;
+  Eingabe ist die vorhandene Vorwärtsgleichung `integral_eval_mul_cos_eq_of_isCadlagMPSolution`.
+* **`MeasureTheory.map_eval_eq_gaussianReal_of_duality`**: dieselbe Aussage wie
+  `map_eval_eq_gaussianReal_of_isCadlagMPSolution`, für ein Wahrscheinlichkeitsmaß. Der Schluß
+  (charakteristische Funktion, `Measure.ext_of_charFun`) ist wörtlich derselbe; ersetzt sind die
+  zwei ODE-Schritte `eq_mul_exp_of_sub_eq_setIntegral`. Der vorhandene Beweis bleibt stehen.
+
+**Befunde.**
+
+1. **Die Signaturen tragen.** `duality_relation_zero_of_mean` nimmt die Brownsche Lösung ohne
+   Umbau: gemeinsame Meßbarkeit ist `SkorokhodSpace.measurable_uncurry_eval_nnreal`, die
+   Mittelwerthypothese ist die Vorwärtsgleichung nach Fubini, die Schranke ist konstant.
+2. **`β` sitzt in der Dualkoordinate, nicht in `duality`.** Die Aufgabe nennt die Fassung mit
+   `α`, `β` (`duality_relation`), `Y ≡ y`, `h = 0`, `β(y) = -(v/2) y²`. Diese verlangt die
+   Martingaleigenschaft von `cos (θ X ·) - ∫ g`, und die steht für `cos` (kein kompakter Träger)
+   nicht zur Verfügung — nur die Vorwärtsgleichung. Mit dem Dual `(y, t)` und
+   `f (x, b) = u x e^{c b}` wird `β` zur Balance `g = h` bei `α = β = 0`, und dann genügt die
+   Mittelwertform. Das ist dieselbe Zusatzkoordinate wie in `duality_augment`, nur auf der
+   Dualseite und deterministisch.
+3. **Die Abschneidung wird wiederverwendet**, wie verlangt: die Eingabe ist
+   `integral_eval_mul_cos_eq_of_isCadlagMPSolution` (und `sin`), die über
+   `exists_brownianGeneratorPairs_tendsto_mul_cos` schon durch die Abschneidung gegangen ist.
+
+**Stand der Aufgabe.** Schritte 1–6 stehen, Schritt 7 Teil A. Offen: Schritt 7 Teil B, die
+Eindeutigkeit mit `uniqueness_of_duality` (siehe unten).
