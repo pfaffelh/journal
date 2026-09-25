@@ -47,6 +47,7 @@ import Mathlib.MeasureTheory.Measure.CharacteristicFunction.Basic
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Independence.CharacteristicFunction
 import Mathlib.Probability.BrownianMotion.Basic
+import Mathlib.Probability.Distributions.Bernoulli
 
 /-!
 # Suggested signatures for the martingale problems roadmap
@@ -39399,7 +39400,14 @@ those ending at or above `m` plus those ending above `m`.  It is pure counting: 
 reflects the signs after the first time the walk reaches `m`, and the walk sits **exactly** at `m`
 then because its steps are `±1` (`MeasureTheory.srwHit_spec`).  The first hitting time is an
 `sInf` on `ℕ`; its junk value `sInf ∅ = 0` is never read, because every statement about it
-carries the hypothesis `m ≤ srwSum ε k` that makes the set nonempty. -/
+carries the hypothesis `m ≤ srwSum ε k` that makes the set nonempty.
+
+The count becomes a probability for i.i.d. signs `ξ k` with `P (ξ k = 1) = P (ξ k = -1) = 1/2`
+(`MeasureTheory.measure_exists_le_sum_eq_of_rademacher`): by independence every sign pattern of
+length `n` has probability `2⁻ⁿ`, the signs are almost surely `±1`, and an event read off the
+first `n` partial sums is almost surely the event that the pattern lies in the corresponding set
+of sign sequences.  The level `m` is an integer on purpose: for a non-integer level the walk
+reaches `m` iff it reaches `⌈m⌉`, and `P (S_n ≥ m) + P (S_n > m)` is then the wrong count. -/
 
 section SimpleRandomWalkReflection
 
@@ -39548,6 +39556,339 @@ theorem card_exists_le_srwSum {n : ℕ} {m : ℤ} (hm : 0 < m) :
   · ext ε
     simp only [mem_filter, Finset.mem_univ, true_and, not_le]
 
+theorem srwStep_injective : Function.Injective srwStep := by
+  intro a b h
+  cases a <;> cases b <;> simp_all [srwStep]
+
+/-- Real partial sums of a sequence that follows the signs `ε` up to time `n` are the partial
+sums of the simple random walk, up to time `n`. -/
+theorem sum_range_eq_srwSum {n : ℕ} {x : ℕ → ℝ} {ε : Fin n → Bool}
+    (hx : ∀ j : Fin n, x j = srwStep (ε j)) {k : ℕ} (hk : k ≤ n) :
+    ∑ j ∈ range k, x j = srwSum ε k := by
+  induction k with
+  | zero => simp
+  | succ k ih =>
+    rw [sum_range_succ, ih (by omega), srwSum_succ, dite_eq_left (show k < n by omega),
+      Int.cast_add, hx ⟨k, by omega⟩]
+
+variable {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} {ξ : ℕ → Ω → ℝ}
+
+/-- For i.i.d. signs `ξ k = ±1` with probability `1/2` each, every sign pattern of length `n`
+has probability `2⁻ⁿ`. -/
+theorem measure_forall_eq_srwStep (hind : iIndepFun ξ P)
+    (h1 : ∀ k, P {ω | ξ k ω = 1} = 2⁻¹) (hm1 : ∀ k, P {ω | ξ k ω = -1} = 2⁻¹)
+    {n : ℕ} (ε : Fin n → Bool) :
+    P {ω | ∀ j : Fin n, ξ j ω = srwStep (ε j)} = 2⁻¹ ^ n := by
+  have hind' := hind.precomp (g := fun j : Fin n ↦ (j : ℕ)) Fin.val_injective
+  have hset : {ω | ∀ j : Fin n, ξ j ω = srwStep (ε j)}
+      = ⋂ j : Fin n, ξ j ⁻¹' {(srwStep (ε j) : ℝ)} := by
+    ext ω; simp
+  rw [hset, hind'.meas_iInter (fun j ↦ ⟨_, measurableSet_singleton _, rfl⟩)]
+  have hj : ∀ j : Fin n, P (ξ j ⁻¹' {(srwStep (ε j) : ℝ)}) = 2⁻¹ := by
+    intro j
+    cases ε j
+    · simpa [srwStep, Set.preimage, Set.mem_singleton_iff] using hm1 j
+    · simpa [srwStep, Set.preimage, Set.mem_singleton_iff] using h1 j
+  simp only [hj, prod_const, card_univ, Fintype.card_fin]
+
+/-- For i.i.d. signs, the probability that the first `n` signs follow a pattern in `s` is
+`#s * 2⁻ⁿ`. -/
+theorem measure_exists_mem_forall_eq_srwStep (hξ : ∀ k, Measurable (ξ k))
+    (hind : iIndepFun ξ P) (h1 : ∀ k, P {ω | ξ k ω = 1} = 2⁻¹)
+    (hm1 : ∀ k, P {ω | ξ k ω = -1} = 2⁻¹) {n : ℕ} (s : Finset (Fin n → Bool)) :
+    P {ω | ∃ ε ∈ s, ∀ j : Fin n, ξ j ω = srwStep (ε j)} = #s * 2⁻¹ ^ n := by
+  have hset : {ω | ∃ ε ∈ s, ∀ j : Fin n, ξ j ω = srwStep (ε j)}
+      = ⋃ ε ∈ s, {ω | ∀ j : Fin n, ξ j ω = srwStep (ε j)} := by
+    ext ω; simp
+  have hmeas : ∀ ε : Fin n → Bool, MeasurableSet {ω | ∀ j : Fin n, ξ j ω = srwStep (ε j)} := by
+    intro ε
+    simp only [Set.ofPred_forall]
+    exact MeasurableSet.iInter fun j ↦ measurableSet_eq_fun (hξ j) measurable_const
+  rw [hset, measure_biUnion_finset _ (fun ε _ ↦ hmeas ε)]
+  · simp only [measure_forall_eq_srwStep hind h1 hm1, sum_const, nsmul_eq_mul]
+  · intro ε _ ε' _ hne
+    refine Set.disjoint_left.2 fun ω hω hω' ↦ hne ?_
+    funext j
+    exact srwStep_injective (Int.cast_injective ((hω j).symm.trans (hω' j)))
+
+/-- I.i.d. signs are almost surely `±1`. -/
+theorem ae_exists_forall_eq_srwStep (hξ : ∀ k, Measurable (ξ k)) [IsProbabilityMeasure P]
+    (h1 : ∀ k, P {ω | ξ k ω = 1} = 2⁻¹) (hm1 : ∀ k, P {ω | ξ k ω = -1} = 2⁻¹) (n : ℕ) :
+    ∀ᵐ ω ∂P, ∃ ε : Fin n → Bool, ∀ j : Fin n, ξ j ω = srwStep (ε j) := by
+  have hk : ∀ k, ∀ᵐ ω ∂P, ξ k ω = 1 ∨ ξ k ω = -1 := by
+    intro k
+    have hU : P ({ω | ξ k ω = 1} ∪ {ω | ξ k ω = -1}) = 1 := by
+      rw [measure_union _ (measurableSet_eq_fun (hξ k) measurable_const), h1, hm1,
+        ENNReal.inv_two_add_inv_two]
+      exact Set.disjoint_left.2 fun ω h h' ↦ by
+        simp only [Set.mem_ofPred_eq] at h h'; rw [h] at h'; norm_num at h'
+    have hmU : MeasurableSet ({ω | ξ k ω = 1} ∪ {ω | ξ k ω = -1}) :=
+      (measurableSet_eq_fun (hξ k) measurable_const).union
+        (measurableSet_eq_fun (hξ k) measurable_const)
+    have : {ω | ξ k ω = 1} ∪ {ω | ξ k ω = -1} ∈ ae P := mem_ae_iff.2 (by
+      rw [measure_compl hmU (measure_ne_top _ _), hU, measure_univ, tsub_self])
+    filter_upwards [this] with ω hω
+    simpa using hω
+  filter_upwards [ae_all_iff.2 hk] with ω hω
+  refine ⟨fun j ↦ decide (ξ j ω = 1), fun j ↦ ?_⟩
+  rcases hω j with h | h
+  · simp [h, srwStep]
+  · simp [h, srwStep]
+
+/-- For i.i.d. signs, an event that depends on the first `n` signs only through a predicate `Q`
+of the sign pattern has probability `#{ε | Q ε} * 2⁻ⁿ`. -/
+theorem measure_eq_card_mul_of_rademacher (hξ : ∀ k, Measurable (ξ k))
+    [IsProbabilityMeasure P] (hind : iIndepFun ξ P) (h1 : ∀ k, P {ω | ξ k ω = 1} = 2⁻¹)
+    (hm1 : ∀ k, P {ω | ξ k ω = -1} = 2⁻¹) {n : ℕ} (Q : (Fin n → Bool) → Prop)
+    [DecidablePred Q] (R : Ω → Prop)
+    (hQR : ∀ ω ε, (∀ j : Fin n, ξ j ω = srwStep (ε j)) → (R ω ↔ Q ε)) :
+    P {ω | R ω} = #{ε | Q ε} * 2⁻¹ ^ n := by
+  rw [← measure_exists_mem_forall_eq_srwStep hξ hind h1 hm1]
+  refine measure_congr ?_
+  filter_upwards [ae_exists_forall_eq_srwStep hξ h1 hm1 n] with ω ⟨ε, hε⟩
+  change R ω = ∃ ε ∈ ({ε | Q ε} : Finset _), ∀ j : Fin n, ξ j ω = srwStep (ε j)
+  refine propext ⟨fun h ↦ ⟨ε, by simpa using (hQR ω ε hε).1 h, hε⟩, ?_⟩
+  rintro ⟨ε', hε', h'⟩
+  exact (hQR ω ε' h').2 (by simpa using hε')
+
+/-- **The reflection principle for the simple random walk.**  For i.i.d. signs `ξ k = ±1`
+with probability `1/2` each and an integer level `0 < m`,
+`P (max_{k ≤ n} S_k ≥ m) = P (S_n ≥ m) + P (S_n > m)`. -/
+theorem measure_exists_le_sum_eq_of_rademacher (hξ : ∀ k, Measurable (ξ k))
+    [IsProbabilityMeasure P] (hind : iIndepFun ξ P) (h1 : ∀ k, P {ω | ξ k ω = 1} = 2⁻¹)
+    (hm1 : ∀ k, P {ω | ξ k ω = -1} = 2⁻¹) {m : ℤ} (hm : 0 < m) (n : ℕ) :
+    P {ω | ∃ k ≤ n, (m : ℝ) ≤ ∑ j ∈ range k, ξ j ω}
+      = P {ω | (m : ℝ) ≤ ∑ j ∈ range n, ξ j ω} + P {ω | (m : ℝ) < ∑ j ∈ range n, ξ j ω} := by
+  classical
+  have hA : ∀ ω ε, (∀ j : Fin n, ξ j ω = srwStep (ε j)) →
+      ((∃ k ≤ n, (m : ℝ) ≤ ∑ j ∈ range k, ξ j ω) ↔ ∃ k ≤ n, m ≤ srwSum ε k) :=
+    fun ω ε hε ↦ exists_congr fun k ↦ and_congr_right fun hk ↦ by
+      rw [sum_range_eq_srwSum (x := fun j ↦ ξ j ω) hε hk]
+      exact Int.cast_le
+  have hB : ∀ ω ε, (∀ j : Fin n, ξ j ω = srwStep (ε j)) →
+      ((m : ℝ) ≤ ∑ j ∈ range n, ξ j ω ↔ m ≤ srwSum ε n) := fun ω ε hε ↦ by
+    rw [sum_range_eq_srwSum (x := fun j ↦ ξ j ω) hε le_rfl]
+    exact Int.cast_le
+  have hC : ∀ ω ε, (∀ j : Fin n, ξ j ω = srwStep (ε j)) →
+      ((m : ℝ) < ∑ j ∈ range n, ξ j ω ↔ m < srwSum ε n) := fun ω ε hε ↦ by
+    rw [sum_range_eq_srwSum (x := fun j ↦ ξ j ω) hε le_rfl]
+    exact Int.cast_lt
+  rw [measure_eq_card_mul_of_rademacher hξ hind h1 hm1 _ _ hA,
+    measure_eq_card_mul_of_rademacher hξ hind h1 hm1 _ _ hB,
+    measure_eq_card_mul_of_rademacher hξ hind h1 hm1 _ _ hC, ← add_mul]
+  congr 1
+  exact_mod_cast card_exists_le_srwSum hm
+
+/-- **The reflection principle for the simple random walk, at a real level.**  For `0 < x`,
+the walk reaches `x` iff it reaches `⌈x⌉`, so
+`P (max_{k ≤ n} S_k ≥ x) = P (S_n ≥ ⌈x⌉) + P (S_n > ⌈x⌉)`. -/
+theorem measure_exists_le_sum_eq_of_rademacher_ceil (hξ : ∀ k, Measurable (ξ k))
+    [IsProbabilityMeasure P] (hind : iIndepFun ξ P) (h1 : ∀ k, P {ω | ξ k ω = 1} = 2⁻¹)
+    (hm1 : ∀ k, P {ω | ξ k ω = -1} = 2⁻¹) {x : ℝ} (hx : 0 < x) (n : ℕ) :
+    P {ω | ∃ k ≤ n, x ≤ ∑ j ∈ range k, ξ j ω}
+      = P {ω | (⌈x⌉ : ℝ) ≤ ∑ j ∈ range n, ξ j ω}
+        + P {ω | (⌈x⌉ : ℝ) < ∑ j ∈ range n, ξ j ω} := by
+  classical
+  have hA : ∀ ω ε, (∀ j : Fin n, ξ j ω = srwStep (ε j)) →
+      ((∃ k ≤ n, x ≤ ∑ j ∈ range k, ξ j ω) ↔ ∃ k ≤ n, ⌈x⌉ ≤ srwSum ε k) :=
+    fun ω ε hε ↦ exists_congr fun k ↦ and_congr_right fun hk ↦ by
+      rw [sum_range_eq_srwSum (x := fun j ↦ ξ j ω) hε hk]
+      exact Int.ceil_le.symm
+  have hA' : ∀ ω ε, (∀ j : Fin n, ξ j ω = srwStep (ε j)) →
+      ((∃ k ≤ n, ((⌈x⌉ : ℤ) : ℝ) ≤ ∑ j ∈ range k, ξ j ω) ↔ ∃ k ≤ n, ⌈x⌉ ≤ srwSum ε k) :=
+    fun ω ε hε ↦ exists_congr fun k ↦ and_congr_right fun hk ↦ by
+      rw [sum_range_eq_srwSum (x := fun j ↦ ξ j ω) hε hk]
+      exact Int.cast_le
+  rw [measure_eq_card_mul_of_rademacher hξ hind h1 hm1 _ _ hA,
+    ← measure_eq_card_mul_of_rademacher hξ hind h1 hm1 _ _ hA']
+  exact measure_exists_le_sum_eq_of_rademacher hξ hind h1 hm1 (Int.ceil_pos.2 hx) n
+
+/-- **The running maximum of a step path is attained at a jump.**  For the path
+`t ↦ c * ∑ j < ⌊t * b⌋₊, x j`, the supremum over `[0, T]` reaches `a` exactly when one of the
+finitely many partial sums up to `⌊T * b⌋₊` does.  In particular the supremum is not a junk
+value: the family takes finitely many values. -/
+theorem le_iSup_mul_sum_floor_iff {b : ℝ≥0} (hb : 0 < b) (c : ℝ) (x : ℕ → ℝ) (T : ℝ≥0)
+    (a : ℝ) :
+    a ≤ ⨆ t : Set.Iic T, c * ∑ j ∈ Finset.range ⌊(t : ℝ≥0) * b⌋₊, x j
+      ↔ ∃ k ≤ ⌊T * b⌋₊, a ≤ c * ∑ j ∈ Finset.range k, x j := by
+  set g : ℕ → ℝ := fun k ↦ c * ∑ j ∈ Finset.range k, x j
+  set N := ⌊T * b⌋₊
+  have hfl : ∀ t : Set.Iic T, ⌊(t : ℝ≥0) * b⌋₊ ≤ N := fun t ↦
+    Nat.floor_le_floor (mul_le_mul_of_nonneg_right t.2 zero_le)
+  have hne : (Finset.range (N + 1)).Nonempty := ⟨0, Finset.mem_range.2 (Nat.succ_pos N)⟩
+  have hle : ∀ t : Set.Iic T, g ⌊(t : ℝ≥0) * b⌋₊ ≤ (Finset.range (N + 1)).sup' hne g :=
+    fun t ↦ Finset.le_sup' g (Finset.mem_range.2 (Nat.lt_succ_of_le (hfl t)))
+  have hbdd : BddAbove (Set.range fun t : Set.Iic T ↦ g ⌊(t : ℝ≥0) * b⌋₊) :=
+    ⟨_, by rintro _ ⟨t, rfl⟩; exact hle t⟩
+  constructor
+  · intro h
+    by_contra hcon
+    push Not at hcon
+    have hM : (Finset.range (N + 1)).sup' hne g < a :=
+      (Finset.sup'_lt_iff hne).2 fun k hk ↦
+        hcon k (Nat.lt_succ_iff.1 (Finset.mem_range.1 hk))
+    have : Nonempty (Set.Iic T) := ⟨⟨0, Set.mem_Iic.2 zero_le⟩⟩
+    exact absurd (h.trans (ciSup_le hle)) (not_le.2 hM)
+  · rintro ⟨k, hk, hak⟩
+    have hkT : (k : ℝ≥0) / b ≤ T := by
+      rw [div_le_iff₀ hb]
+      exact (Nat.cast_le.2 hk).trans (Nat.floor_le zero_le)
+    refine hak.trans (le_ciSup_of_le hbdd ⟨(k : ℝ≥0) / b, hkT⟩ ?_)
+    simp only [div_mul_cancel₀ _ hb.ne', Nat.floor_natCast, le_refl]
+
+/-- **The running maximum of the rescaled walk reaches `a` iff a partial sum reaches
+`a * √(n+1)`**, among the partial sums up to `⌊T (n+1)⌋`.  This is the event whose probability
+`MeasureTheory.measure_exists_le_sum_eq_of_rademacher` computes for Rademacher signs, at the
+integer level `⌈a * √(n+1)⌉`. -/
+theorem le_supOn_rescaledWalkPath_iff (ξ : ℕ → Ω → ℝ) (n : ℕ) (T : ℝ≥0) (a : ℝ) (ω : Ω) :
+    a ≤ SkorokhodSpace.supOn T (rescaledWalkPath ξ n ω)
+      ↔ ∃ k ≤ ⌊T * ((n : ℝ≥0) + 1)⌋₊,
+          a * Real.sqrt ((n : ℝ) + 1) ≤ ∑ j ∈ range k, ξ j ω := by
+  change a ≤ ⨆ t : Set.Iic T, (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ range ⌊(t : ℝ≥0) * ((n : ℝ≥0) + 1)⌋₊, ξ j ω ↔ _
+  rw [le_iSup_mul_sum_floor_iff (by positivity)]
+  refine exists_congr fun k ↦ and_congr_right fun _ ↦ ?_
+  rw [le_inv_mul_iff₀ (by positivity), mul_comm]
+
 end SimpleRandomWalkReflection
+
+/-! ### Fair signs
+
+The data on which the reflection principle for the simple random walk becomes a statement
+about `ProbabilityTheory.IsBrownianReal`: `rademacherMeasure` is Mathlib's
+`ProbabilityTheory.bernoulliMeasure 1 (-1) (1/2)`, mass `1/2` at `±1`, and
+`rademacherSeq` is its product on `ℕ → ℝ` (`Measure.infinitePi`), whose coordinates are i.i.d.
+by `ProbabilityTheory.iIndepFun_infinitePi`.  They carry exactly the hypotheses of Donsker's
+theorem with `v = 1` and of `MeasureTheory.measure_exists_le_sum_eq_of_rademacher`. -/
+
+section RademacherData
+
+/-- The law of a fair sign, `Ber(1, -1, 1/2)`: mass `1/2` at `1` and at `-1`. -/
+noncomputable def rademacherMeasure : Measure ℝ :=
+  bernoulliMeasure 1 (-1) ⟨2⁻¹, by norm_num, by norm_num⟩
+
+instance : IsProbabilityMeasure rademacherMeasure := by
+  unfold rademacherMeasure; infer_instance
+
+theorem rademacherMeasure_singleton_one : rademacherMeasure {1} = 2⁻¹ := by
+  rw [rademacherMeasure, bernoulliMeasure_apply_of_mem_of_notMem _ (measurableSet_singleton _)
+    rfl (by norm_num)]
+  have h : unitInterval.toNNReal ⟨2⁻¹, by norm_num, by norm_num⟩ = 2⁻¹ := NNReal.eq (by simp)
+  rw [h, ENNReal.coe_inv two_ne_zero]
+  rfl
+
+theorem rademacherMeasure_singleton_neg_one : rademacherMeasure {-1} = 2⁻¹ := by
+  rw [rademacherMeasure, bernoulliMeasure_apply_of_notMem_of_mem _ (measurableSet_singleton _)
+    (by norm_num) rfl]
+  have h : unitInterval.toNNReal (unitInterval.symm ⟨2⁻¹, by norm_num, by norm_num⟩) = 2⁻¹ :=
+    NNReal.eq (by simp only [unitInterval.coe_toNNReal, unitInterval.coe_symm_eq]; norm_num)
+  rw [h, ENNReal.coe_inv two_ne_zero]
+  rfl
+
+/-- Integrals against `rademacherMeasure` are averages of two values. -/
+theorem integral_rademacherMeasure {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
+    [CompleteSpace E] (f : ℝ → E) :
+    ∫ x, f x ∂rademacherMeasure = (2⁻¹ : ℝ) • (f 1 + f (-1)) := by
+  rw [rademacherMeasure, integral_bernoulliMeasure, smul_add]
+  norm_num
+
+theorem ae_abs_le_one_rademacherMeasure : ∀ᵐ x ∂rademacherMeasure, |x| ≤ 1 := by
+  have hm : MeasurableSet {x : ℝ | 1 < |x|} := measurableSet_lt measurable_const (by fun_prop)
+  rw [ae_iff]
+  simp only [not_le]
+  exact bernoulliMeasure_apply_of_notMem_of_notMem _ hm (by norm_num) (by norm_num)
+
+/-- The i.i.d. fair signs: the product of `rademacherMeasure` on `ℕ → ℝ`. -/
+noncomputable def rademacherSeq : Measure (ℕ → ℝ) :=
+  Measure.infinitePi fun _ ↦ rademacherMeasure
+
+instance : IsProbabilityMeasure rademacherSeq := by
+  unfold rademacherSeq; infer_instance
+
+theorem map_eval_rademacherSeq (k : ℕ) :
+    rademacherSeq.map (fun ω ↦ ω k) = rademacherMeasure :=
+  Measure.infinitePi_map_eval _ k
+
+theorem iIndepFun_rademacherSeq : iIndepFun (fun k (ω : ℕ → ℝ) ↦ ω k) rademacherSeq :=
+  iIndepFun_infinitePi (X := fun _ ↦ id) fun _ ↦ measurable_id
+
+theorem rademacherSeq_eval_eq_one (k : ℕ) : rademacherSeq {ω | ω k = 1} = 2⁻¹ := by
+  rw [← rademacherMeasure_singleton_one, ← map_eval_rademacherSeq k,
+    Measure.map_apply (measurable_pi_apply k) (measurableSet_singleton _)]
+  rfl
+
+theorem rademacherSeq_eval_eq_neg_one (k : ℕ) : rademacherSeq {ω | ω k = -1} = 2⁻¹ := by
+  rw [← rademacherMeasure_singleton_neg_one, ← map_eval_rademacherSeq k,
+    Measure.map_apply (measurable_pi_apply k) (measurableSet_singleton _)]
+  rfl
+
+theorem integral_eval_rademacherSeq (k : ℕ) : ∫ ω, ω k ∂rademacherSeq = 0 := by
+  have h := integral_map (μ := rademacherSeq) (measurable_pi_apply k).aemeasurable
+    (aestronglyMeasurable_id (μ := rademacherSeq.map fun ω ↦ ω k))
+  rw [map_eval_rademacherSeq, integral_rademacherMeasure] at h
+  simp only [id] at h
+  rw [← h]
+  norm_num
+
+theorem integral_eval_sq_rademacherSeq (k : ℕ) : ∫ ω, ω k ^ 2 ∂rademacherSeq = 1 := by
+  have h := integral_map (μ := rademacherSeq) (f := fun x : ℝ ↦ x ^ 2)
+    (measurable_pi_apply k).aemeasurable (continuous_pow 2).aestronglyMeasurable
+  rw [map_eval_rademacherSeq, integral_rademacherMeasure] at h
+  rw [← h]
+  norm_num
+
+/-- The fair signs are bounded, hence in every `L^p`. -/
+theorem memLp_eval_rademacherSeq (k : ℕ) (p : ENNReal) :
+    MemLp (fun ω : ℕ → ℝ ↦ ω k) p rademacherSeq := by
+  have h : MemLp id p rademacherMeasure :=
+    MemLp.of_bound aestronglyMeasurable_id 1
+      (ae_abs_le_one_rademacherMeasure.mono fun x hx ↦ by simpa using hx)
+  rw [← map_eval_rademacherSeq k] at h
+  exact (memLp_map_measure_iff aestronglyMeasurable_id
+    (measurable_pi_apply k).aemeasurable).1 h
+
+/-- **Donsker's theorem for the running maximum, on concrete data.**  The rescaled walk of the
+fair signs of `rademacherSeq` satisfies every hypothesis of
+`MeasureTheory.tendsto_integral_supOn_rescaledWalk_of_isBrownianReal`, with `v = 1`; so for any
+`IsBrownianReal X Q` with measurable coordinates the law of `sup_{t ≤ T}` of the walk converges
+to that of `sup_{t ≤ T} X t`.  The Brownian motion `X` is a hypothesis: nothing here constructs
+one. -/
+theorem tendsto_integral_supOn_rescaledWalkPath_rademacherSeq
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t))
+    (h : BoundedContinuousFunction ℝ ℝ) (T : ℝ≥0) :
+    Tendsto (fun n ↦ ∫ ω, h (SkorokhodSpace.supOn T
+        (rescaledWalkPath (fun k (ω : ℕ → ℝ) ↦ ω k) n ω)) ∂rademacherSeq) atTop
+      (𝓝 (∫ ω, h (⨆ t : Set.Iic T, X t ω) ∂Q)) := by
+  have hlim := tendsto_integral_supOn_rescaledWalk_of_isBrownianReal
+    (fun k ↦ (measurable_pi_apply k).stronglyMeasurable) iIndepFun_rademacherSeq
+    (integral_eval_rademacherSeq 0) one_pos (integral_eval_sq_rademacherSeq 0)
+    (memLp_eval_rademacherSeq 0 2)
+    (fun k ↦ by rw [map_eval_rademacherSeq, map_eval_rademacherSeq])
+    (measurable_rescaledWalkPath fun k ↦ measurable_pi_apply k) (fun _ _ ↦ rfl) hX hm h T
+  simpa only [Real.sqrt_one, one_mul] using hlim
+
+/-- **The law of the running maximum of the rescaled fair-sign walk, exactly.**  For `0 < a`,
+with `N = ⌊T (n+1)⌋₊` and `m = ⌈a √(n+1)⌉`,
+`P (sup_{t ≤ T} Φ n t ≥ a) = P (S_N ≥ m) + P (S_N > m)`. -/
+theorem rademacherSeq_le_supOn_rescaledWalkPath {a : ℝ} (ha : 0 < a) (T : ℝ≥0) (n : ℕ) :
+    rademacherSeq {ω | a ≤ SkorokhodSpace.supOn T
+        (rescaledWalkPath (fun k (ω : ℕ → ℝ) ↦ ω k) n ω)}
+      = rademacherSeq {ω | (⌈a * Real.sqrt ((n : ℝ) + 1)⌉ : ℝ)
+            ≤ ∑ j ∈ Finset.range ⌊T * ((n : ℝ≥0) + 1)⌋₊, ω j}
+        + rademacherSeq {ω | (⌈a * Real.sqrt ((n : ℝ) + 1)⌉ : ℝ)
+            < ∑ j ∈ Finset.range ⌊T * ((n : ℝ≥0) + 1)⌋₊, ω j} := by
+  have hset : {ω : ℕ → ℝ | a ≤ SkorokhodSpace.supOn T
+        (rescaledWalkPath (fun k (ω : ℕ → ℝ) ↦ ω k) n ω)}
+      = {ω | ∃ k ≤ ⌊T * ((n : ℝ≥0) + 1)⌋₊,
+          a * Real.sqrt ((n : ℝ) + 1) ≤ ∑ j ∈ Finset.range k, ω j} := by
+    ext ω
+    exact le_supOn_rescaledWalkPath_iff _ n T a ω
+  rw [hset]
+  exact measure_exists_le_sum_eq_of_rademacher_ceil (ξ := fun k (ω : ℕ → ℝ) ↦ ω k)
+    (fun k ↦ measurable_pi_apply k) iIndepFun_rademacherSeq rademacherSeq_eval_eq_one
+    rademacherSeq_eval_eq_neg_one (by positivity) _
+
+end RademacherData
 
 end MeasureTheory

@@ -61381,3 +61381,135 @@ von Mengen von Folgen, deren Maß `2⁻ⁿ · #` ist. *Warum jetzt:* es ist die 
 bewiesenen Zählung zu den Donsker-Daten, auf denen `tendsto_integral_supOn_rescaledWalk_of_isBrownianReal`
 arbeitet; danach bleiben (ii) Rademacher-Daten über `Measure.infinitePi` und (iii) der Übergang
 zu Indikatoren. Geschätzt ein Lauf.
+
+### 2026-09-25, siebter Lauf des Tages — das benannte Ziel steht: **die Spiegelung der einfachen Irrfahrt als Wahrscheinlichkeitsaussage** für i.i.d. `±1`-Zuwächse, `measure_exists_le_sum_eq_of_rademacher`; dazu die Übersetzung des laufenden Maximums des reskalierten Weges in genau das Ereignis, das dieser Satz ausrechnet
+
+*`check_master.py` gegen `94ef6b89544`: **0 Fehler, 0 veraltete Namen, 0 `sorry`**, Warnungen
+**18 / 38 / 36 / 76**, unverändert — beide Einfügungen im **ersten** Durchlauf der Kette.
+`check_axioms_master.py` über alle neun neuen Deklarationen: `propext`, `Classical.choice`,
+`Quot.sound` (`srwStep_injective` nur `propext`). `check_duplicates.py`: 45, unverändert.
+Erprobt in `scripts/_dev_rademacher.lean` und `scripts/_dev_supwalk.lean` gegen v4.33.1, drei
+Korrekturen: `ae_iff_measure_eq` liefert auf v4.33.1 ein Ziel der Gestalt `{a | s a}`, an dem
+`rw` scheitert — genommen ist `mem_ae_iff` mit `measure_compl`; `Finset.nonempty_range_succ`
+gibt es nicht; `sum_range_eq_srwSum` braucht `(x := fun j ↦ ξ j ω)` ausdrücklich, weil die
+Unifikation höherer Ordnung `ξ ↑j ω` nicht als `?x ↑j` liest. `dif_pos` ist durch
+`dite_eq_left` ersetzt, damit master keine Veraltung zählt. Der nach `--keep`
+stehengebliebene Prüfbaum `~/Code/lean/mathlib-master/_check_1404662` ließ sich aus diesem
+Lauf nicht löschen (außerhalb der freigegebenen Verzeichnisse); er ist wegzuräumen.*
+
+Im Abschnitt `SimpleRandomWalkReflection` von `MartingaleProblems/Suggested.lean`, neun neue
+Deklarationen, der Abschnittskommentar um einen Absatz ergänzt:
+
+| Name | Aussage |
+| --- | --- |
+| `MeasureTheory.srwStep_injective` | `±1` aus `Bool` ist injektiv |
+| `MeasureTheory.sum_range_eq_srwSum` | folgt `x` bis `n` den Vorzeichen `ε`, so ist `∑ j < k, x j = srwSum ε k` für `k ≤ n` |
+| `MeasureTheory.measure_forall_eq_srwStep` | `iIndepFun ξ P`, `P (ξ k = 1) = P (ξ k = -1) = 2⁻¹` ⟹ jedes Vorzeichenmuster der Länge `n` hat Maß `2⁻¹ ^ n` — **ohne** Meßbarkeit der `ξ k` |
+| `MeasureTheory.measure_exists_mem_forall_eq_srwStep` | Muster in einer `Finset` `s`: Maß `#s * 2⁻¹ ^ n` |
+| `MeasureTheory.ae_exists_forall_eq_srwStep` | die Vorzeichen sind fast sicher `±1` |
+| `MeasureTheory.measure_eq_card_mul_of_rademacher` | ein Ereignis, das von den ersten `n` Vorzeichen nur über ein Prädikat `Q` des Musters abhängt, hat Maß `#{ε \| Q ε} * 2⁻¹ ^ n` |
+| `MeasureTheory.measure_exists_le_sum_eq_of_rademacher` | **das benannte Ziel**: für ganzzahliges `0 < m`, `P {∃ k ≤ n, m ≤ ∑ j < k, ξ j} = P {m ≤ ∑ j < n, ξ j} + P {m < ∑ j < n, ξ j}` |
+| `MeasureTheory.le_iSup_mul_sum_floor_iff` | das Supremum über `[0, T]` des Treppenpfads `t ↦ c * ∑ j < ⌊t b⌋₊, x j` erreicht `a` genau dann, wenn eine der Partialsummen bis `⌊T b⌋₊` es tut |
+| `MeasureTheory.le_supOn_rescaledWalkPath_iff` | `a ≤ supOn T (rescaledWalkPath ξ n ω) ↔ ∃ k ≤ ⌊T (n+1)⌋₊, a √(n+1) ≤ ∑ j < k, ξ j ω` |
+
+#### Befunde
+
+* **Der Weg war der angesagte, mit einer Abweichung in der Ausführung:** die Produktgestalt
+  wird nicht über `iIndepFun_iff_map_fun_eq_pi_map` und ein Bildmaß gelesen, sondern direkt
+  über `iIndepFun.precomp` (`Mathlib/Probability/Independence/Basic.lean:324` auf v4.33.1)
+  mit `Fin.val_injective` und `iIndepFun.meas_iInter` (`:265`). Das erspart jede Aussage über
+  ein Maß auf `Fin n → ℝ`; die Wahrscheinlichkeit eines Musters ist ein Produkt über `Fin n`
+  von Urbildern von Einpunktmengen.
+* **Die Stufe ist ganzzahlig, und das ist keine Bequemlichkeit.** Für nicht ganzzahliges `m`
+  erreicht die Irrfahrt `m` genau dann, wenn sie `⌈m⌉` erreicht, und
+  `P (S_n ≥ m) + P (S_n > m)` ist dann `2 P (S_n ≥ ⌈m⌉)` — die falsche Zählung. Der
+  Abschnittskommentar sagt das. Beim Grenzübergang geht `⌈a √(n+1)⌉` hinein, und
+  `le_supOn_rescaledWalkPath_iff` ist die Stelle, an der die reelle Stufe `a √(n+1)` entsteht.
+* **Das Supremum des reskalierten Weges ist kein Müllwert:** `le_iSup_mul_sum_floor_iff`
+  zeigt es durch Beschränkung auf die endlich vielen Werte `c S_0, …, c S_N`; `BddAbove` wird
+  aus `Finset.sup'` gewonnen und nicht aus der càdlàg-Eigenschaft.
+* **`measure_forall_eq_srwStep` braucht keine Meßbarkeit** der `ξ k`: die Mengen sind Urbilder
+  unter `ξ j` selbst, und `iIndepFun` fragt nur nach Meßbarkeit in `comap (ξ j)`. Meßbar
+  müssen die `ξ k` erst für die Vereinigung über die Muster und für die fast sichere Aussage
+  sein.
+
+**Was nicht dasteht:** das Spiegelungsprinzip für `IsBrownianReal`; eine Rademacher-Folge
+(die `ξ` sind Hypothese); der Grenzübergang. Keine Existenzaussage über die Brownsche Bewegung.
+
+*(Das zunächst hier benannte Ziel, die Rademacher-Daten, ist im selben Lauf erledigt; siehe
+den zweiten Teil.)*
+
+### Derselbe Lauf, zweiter Teil — Eingabe (ii) steht: **die fairen Vorzeichen als Donsker-Daten**, über Mathlibs `bernoulliMeasure` und `Measure.infinitePi`; Donskers Satz für das laufende Maximum ist damit auf **konkreten** Daten ausgesprochen, und das Gesetz des Maximums der Irrfahrt steht **exakt**
+
+*`check_master.py` gegen `94ef6b89544`: **0 Fehler, 0 veraltete Namen, 0 `sorry`**, Warnungen
+**18 / 38 / 36 / 76**, unverändert. `check_axioms_master.py` über alle sechzehn neuen
+Deklarationen: `propext`, `Classical.choice`, `Quot.sound`. `check_duplicates.py`: 45,
+unverändert. Neuer Import in `MartingaleProblems/Suggested.lean`:
+`Mathlib.Probability.Distributions.Bernoulli`. Erprobt in `scripts/_dev_rademacherMeasure.lean`
+und `scripts/_dev_rademacherBer.lean` gegen v4.33.1. Zwei Fehler gegen master, beide
+Schreibfehler und keine Mathematik: `ℝ≥0∞` ist in der Kette nicht geöffnet (dort `ENNReal`),
+und `fun k ω ↦ ω k` braucht in einem benannten Argument den Typ von `ω`.*
+
+| Name | Aussage |
+| --- | --- |
+| `MeasureTheory.rademacherMeasure` | `ProbabilityTheory.bernoulliMeasure 1 (-1) ⟨2⁻¹, _⟩` — Mathlibs `Ber(1, -1, 1/2)` |
+| `MeasureTheory.rademacherMeasure_singleton_one`, `_neg_one` | Masse `2⁻¹` an `1` und an `-1` |
+| `MeasureTheory.integral_rademacherMeasure` | `∫ f ∂rademacherMeasure = 2⁻¹ • (f 1 + f (-1))` |
+| `MeasureTheory.ae_abs_le_one_rademacherMeasure` | `|x| ≤ 1` fast sicher |
+| `MeasureTheory.rademacherSeq` | `Measure.infinitePi fun _ ↦ rademacherMeasure` auf `ℕ → ℝ`, Wahrscheinlichkeitsmaß |
+| `MeasureTheory.map_eval_rademacherSeq`, `iIndepFun_rademacherSeq` | Randgesetz `rademacherMeasure`, Koordinaten unabhängig |
+| `MeasureTheory.rademacherSeq_eval_eq_one`, `_eq_neg_one` | `P (ω k = ±1) = 2⁻¹` |
+| `MeasureTheory.integral_eval_rademacherSeq`, `integral_eval_sq_rademacherSeq`, `memLp_eval_rademacherSeq` | Mittel `0`, zweites Moment `1`, in jedem `L^p` |
+| `MeasureTheory.tendsto_integral_supOn_rescaledWalkPath_rademacherSeq` | **Donsker für das Maximum auf konkreten Daten**: für `IsBrownianReal X Q` mit meßbaren Koordinaten und `h` beschränkt stetig, `∫ h (supOn T (Φ n)) d rademacherSeq → ∫ h (⨆ t ≤ T, X t) dQ` |
+| `MeasureTheory.measure_exists_le_sum_eq_of_rademacher_ceil` | Spiegelung an reeller Stufe `0 < x`: `P (max_{k ≤ n} S_k ≥ x) = P (S_n ≥ ⌈x⌉) + P (S_n > ⌈x⌉)` |
+| `MeasureTheory.rademacherSeq_le_supOn_rescaledWalkPath` | **das Gesetz des Maximums, exakt**: für `0 < a`, `P (a ≤ supOn T (Φ n)) = P (S_N ≥ m) + P (S_N > m)`, `N = ⌊T (n+1)⌋₊`, `m = ⌈a √(n+1)⌉` |
+
+#### Befunde
+
+* **Mathlib hat das Maß schon, und der erste Entwurf hat es übersehen.** Gebaut war zuerst
+  `(2⁻¹ : ℝ≥0∞) • (dirac 1 + dirac (-1))`, übersetzt und gegen master grün. Erst die Suche nach
+  der **Aussage** statt nach der Vokabel („rademacher" hat auf master **null** Treffer in
+  `Mathlib/Probability/`) fand `ProbabilityTheory.bernoulliMeasure x y p`
+  (`Mathlib/Probability/Distributions/Bernoulli.lean:46` auf v4.33.1, `:47` auf
+  `upstream/master` `09712d488fd`), mit Einpunktmassen, Integralformel
+  (`integral_bernoulliMeasure`) und `IsProbabilityMeasure`-Instanz. `rademacherMeasure` ist
+  jetzt eine Instanz davon; von den Beweisen blieb die Rechnung `toNNReal ⟨2⁻¹, _⟩ = 2⁻¹` (in
+  `ℝ≥0` über `NNReal.eq`, dann `ENNReal.coe_inv`). `unitInterval` führt keine Konstante `1/2`.
+* **Unabhängigkeit und Randgesetz kosten je eine Zeile:** `iIndepFun_infinitePi` mit
+  `X = fun _ ↦ id`, und `Measure.infinitePi_map_eval`. Die Momente gehen über `integral_map`
+  und `integral_rademacherMeasure`; `MemLp` über `MemLp.of_bound` und
+  `memLp_map_measure_iff`.
+* **Eingabe (ii) war nicht verwandt mit der Existenzfrage der Brownschen Bewegung, wie der
+  Vorlauf vorsichtig vermerkt hatte, sondern unabhängig von ihr:** gebraucht wird nur ein
+  Produktmaß auf `ℕ → ℝ`, und `X` bleibt Hypothese jeder Aussage.
+* **Die Stufe `⌈x⌉` ist an der richtigen Stelle.** `measure_exists_le_sum_eq_of_rademacher_ceil`
+  schreibt beide Seiten auf dieselbe Musterzählung um (`Int.ceil_le`, weil die Partialsummen auf
+  den Mustern ganzzahlig sind) und ruft die ganzzahlige Fassung — vier Zeilen Beweis ohne neue
+  Mengenalgebra.
+
+**Was nicht dasteht:** das Spiegelungsprinzip für `IsBrownianReal`. Keine Existenzaussage.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **`MeasureTheory.tendsto_rademacherSeq_le_sum_div_sqrt`** — für `IsBrownianReal X Q` mit
+> meßbaren Koordinaten, `a : ℝ`, `T : ℝ≥0` und jede reelle Folge `c n → a`:
+> `rademacherSeq {c n * √(n+1) ≤ S_{⌊T (n+1)⌋₊}} → Q {a ≤ X T}` (in `ℝ≥0∞`, oder über
+> `.real`).
+
+*Worauf es ruht:* die eindimensionale Konvergenz `S_N / √(n+1) → X T` in Verteilung ist die
+Auswertung bei `T` im Donsker-Limes — `tendsto_integral_map_rescaledWalk` mit
+`F z = h (z.toFun T)`, stetig an jedem stetigen Pfad
+(`SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet`, `SkorokhodSpace/Suggested.lean:12043`,
+in diesem Lauf nachgesehen: Auswertung bei `t` ist stetig an jedem `g` ohne Linkssprung bei `t`). Von beschränkt
+stetigem `h` zu Halbgeraden `[c n, ∞)` mit wanderndem Rand über Portmanteau und darüber, daß
+`X T` unter `Q` Gaußsch mit Varianz `T` ist, also für `0 < T` **keine Atome** hat
+(`IsPreBrownianReal` gibt `HasLaw (X T) (gaussianReal 0 T)`); für `T = 0` ist
+`S_0 = 0` und beide Seiten sind `1_{a ≤ 0}` bis auf die Stufe `a = 0`, die gesondert zu führen
+ist. Mit `c n = ⌈a√(n+1)⌉ / √(n+1)` und `c n = (⌈a√(n+1)⌉ + 1) / √(n+1)` gibt das die beiden
+Summanden von `rademacherSeq_le_supOn_rescaledWalkPath`, beide `→ Q {a ≤ X T}`. *Warum jetzt:*
+es ist das letzte Stück vor dem Spiegelungsprinzip. Danach bleibt der Schluß: aus
+`tendsto_integral_supOn_rescaledWalkPath_rademacherSeq` über Portmanteau
+`limsup P (a ≤ sup_n) ≤ Q (a ≤ sup X)` und `liminf P (a < sup_n) ≥ Q (a < sup X)`, zusammen
+mit der Stetigkeit von `a ↦ 2 Q (a ≤ X T)` die Gleichung
+`Q (a ≤ ⨆ t ≤ T, X t) = 2 Q (a ≤ X T)` — ohne gesondert zu zeigen, daß `sup X` keine Atome hat.
+Geschätzt ein Lauf für das Ziel, einer für den Schluß.
