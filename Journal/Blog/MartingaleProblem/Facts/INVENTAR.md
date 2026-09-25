@@ -62511,3 +62511,129 @@ geprüft, daß alle Werkzeuge stehen: die gemeinsame Laplace-Transformierte von 
 Austrittsseite, `E[exp (-r τ); X_τ = a] = sinh (b √(2r)) / sinh ((a+b) √(2r))`, aus den beiden
 exponentiellen Martingalen bei `±θ`; die Hürde ist die Meßbarkeit des Ereignisses `{X_τ = a}`
 für `X` selbst, die der dreizehnte Lauf umgangen hat.
+
+### 2026-09-25, fünfzehnter Lauf des Tages — Dualität, Schritte 1 und 2: **`chain_identity`** über einer Präordnung mit Uhr, zwischen beliebigen Ecken, und der Kollapstest **`duality_discrete`** geht durch, ohne die Signatur von Schritt 1 anzufassen
+
+*Aufgabe: „Dualität, der Kern von Meilenstein 7“ (gestellt 2026-09-25). Vorgefunden: keine
+Deklaration zur Dualität in `MartingaleProblems/Suggested.lean`, wie angesagt.*
+
+*`check_master.py`: **0 / 0 / 0 / 0** Fehler, `sorry` 0, Warnungen **18 / 38 / 36 / 76**,
+unverändert gegen den Stand zu Laufbeginn (die neuen Deklarationen erzeugen keine). Mathlib
+`94ef6b89544`. Axiome der sechs Sätze `chain_identity`, `chain_identity_bot`,
+`countClock_duality`, `eq_of_succ_increments`, `integral_comp_eq_zero_of_indepFun`,
+`duality_discrete`: `propext`, `Classical.choice`, `Quot.sound` (`check_axioms_master.py`).
+Erprobt in `scripts/_dev_duality.lean` gegen v4.33.1 (die Probedatei kopiert `Clock` und
+`Clock.interval` wörtlich, damit sie ohne die Kette übersetzt).*
+
+**Neuer Abschnitt `Duality` unter dem Kopf „Milestone 7: duality“**, vor „Causal convolution“:
+
+* `chain_identity` — `lem:chain` für eine Treppe `s, t : ℕ → ι` mit `s` monoton, `t` antiton auf
+  den ersten `m` Schritten, **zwischen beliebigen Ecken**: `Φ (s m) (t m) - Φ (s 0) (t 0)` ist die
+  Summe aus `eq:chain`. Das Intervall ist `Q.interval c`, für **beide** Konventionen `c`; die des
+  Manuskripts ist `.predictable`. Über `ι` nur `Preorder`.
+* `chain_identity_bot` — `lem:chain` wie gestellt, `[OrderBot ι]`, Treppe von `(⊥, T)` nach
+  `(T, ⊥)`; eine Zeile aus dem vorigen.
+* `countClock` mit `countClock_interval_succ`, `countClock_real_singleton`,
+  `countClock_setIntegral_interval` und der Instanz `countClock_measurableSingletonClass` — die
+  Zählmaßuhr auf `ℕ`. **Befund, zum zweiten Mal:** weil `Clock` seinen `MeasurableSpace` als
+  *Feld* trägt, findet die Instanzensuche `MeasurableSingletonClass` durch
+  `countClock.measurableSpace` nicht; die Instanz ist ausdrücklich angegeben (`inferInstanceAs`).
+* `countClock_duality` — **`prop:haar`(a)**, ohne Meßbarkeit von `γ` und ohne Integrierbarkeit,
+  über die antidiagonale Treppe; jeder Summand ist `γ k (T-k-1) - γ k (T-k-1)`.
+* `eq_of_succ_increments` — dasselbe aus den **Ein-Schritt**-Zuwächsen; das ist die Gestalt, in
+  der eine Kette sie liefert, und die Übersetzung in `eq:incrementrep` ist eine Induktion mit
+  `Finset.sum_Ico_succ_top` und `setIntegral_finset`.
+* `integral_comp_eq_zero_of_indepFun` — ist `H (·, y)` längs `U` zentriert für jedes feste `y`
+  und `W` unabhängig von `U`, so ist `H (U, W)` zentriert. Über
+  `indepFun_iff_map_prod_eq_prod_map_map` und `integral_prod_symm`; **keine** Meßbarkeit eines
+  Parameterintegrals wird gebraucht, weil der innere Integrand punktweise `0` ist.
+* `duality_discrete` — **`cor:dualdiscrete`**, in der Martingalform von `rem:dualdiscretemp`:
+  `f (X n, y) - ∑_{k<n} g (X k, y)` Martingal bzgl. `𝓕` für jedes `y`, symmetrisch für `Y`
+  bzgl. `𝓖`, **dasselbe** `g`, `⨆ 𝓕` unabhängig von `⨆ 𝓖`, `f`, `g` beschränkt meßbar. Folgerung
+  `E f (X n, Y 0) = E f (X 0, Y n)`; die Fassung des Manuskripts ist `X 0 = x`, `Y 0 = y`.
+
+**Die Entscheidungen, begründet.**
+
+1. **Die Markovkette als Martingalproblem, nicht über `Kernel.traj`.** Mit Kernen `P`, `Q` und
+   `eq:dualdiscrete` ist `g = (P - I) f = (Q - I) f`, und die beiden Hypothesen sind die
+   Doob-Zerlegungen. So braucht der Satz keine Trajektorienkonstruktion, und er ist wörtlich die
+   Zählmaßuhr in der prädiktablen Konvention, die Gestalt, in der Schritt 3 ihn wiedertrifft.
+   `Kernel.traj` gäbe die Ketten, aber nicht die Zerlegung; die Brücke „Kern ⇒ Doob-Martingal“ ist
+   **nicht** gebaut und für den Satz nicht nötig.
+2. **Keine Integrierbarkeit in `chain_identity`, abweichend von der Vorgabe „als `IntegrableOn`
+   auf den benutzten Intervallen“.** Die Vorgabe setzte eine Obergrenze („und nicht mehr“), und
+   nach der stehenden Regel gilt die schwächste Hypothese. Die Stelle, an der der Müllwert nicht
+   gelesen wird: der Beweis schreibt `rw [← h₁ …, ← h₂ …]` und bewegt die Bochner-Integrale aus
+   den Hypothesen *unausgewertet* in die Folgerung; der Wert `0` eines nicht integrierbaren
+   Integranden wird kopiert, nie ausgewertet. Verbraucht wird die Integrierbarkeit dort, wo
+   `eq:incrementrep` *hergeleitet* wird — in `duality_discrete` als Beschränktheit von `f` und
+   `g`, in Schritt 3 als `eq:dual1`. Wer die Hypothese doch will, sagt es; sie wäre ein Zusatz
+   ohne Verbraucher.
+3. **Die Filtration.** Gebraucht wird genau: `X n` ist `𝓕 n`-meßbar, `Y m` ist `𝓖 m`-meßbar,
+   `⨆ 𝓕` unabhängig von `⨆ 𝓖`. Keine Hilfsfiltration `*𝓕^X`. Das ist die Vorgabe und kein Befund.
+
+**Kollapstest: bestanden.** `duality_discrete` erreicht `chain_identity_bot` über
+`eq_of_succ_increments` und `countClock_duality`, und an Schritt 1 wurde dafür nichts geändert.
+
+**Manuskript:** keine Lücke. `lem:chain` (Z. 5529–5572) und `prop:haar`(a) (Z. 5619–5624) gehen
+wörtlich. Der Beweis von `cor:dualdiscrete` (Z. 7442–7451) beruft sich auf „the Markov property
+and independence“; benutzt wird tatsächlich nur die **Erwartung** des Martingalschritts bei
+eingefrorenem zweiten Argument, also `integral_comp_eq_zero_of_indepFun`. Das ist eine
+Beobachtung, kein Fehler.
+
+**Im selben Lauf: Schritt 3, Teil 1, `lem:calculus`, steht** — Unterabschnitt „`lem:calculus`:
+the anti-diagonal lemma in continuous time“ (`section Calculus`, unmittelbar nach
+`end Duality`). Erprobt in `scripts/_dev_calculus.lean`. `check_master.py` danach wieder
+**0 / 0 / 0 / 0**, Warnungen **18 / 38 / 36 / 76**, davon veraltet 0 (neun `if_pos`/`if_neg`/
+`if_true`/`if_false` des ersten Einbaus sind im neuen Abschnitt durch `ite_eq_left`/
+`ite_eq_right`/`ite_true`/`ite_false` ersetzt). Axiome der fünf Hauptsätze: `propext`,
+`Classical.choice`, `Quot.sound`.
+
+* `antidiagTriangle T` = `{0 < u, 0 < v, u + v ≤ T}` mit Meßbarkeit und `⊆ [0,T]²`.
+* `integral_antidiagTriangle_eq_shear` — die Substitution als **maßerhaltende Scherung**
+  `(s,t) ↦ (s, t-s)`, Mathlibs `measurePreserving_prod_sub`
+  (`Mathlib/MeasureTheory/Group/Prod.lean:366`, additiv aus `measurePreserving_prod_div`).
+* `integral_antidiagTriangle_eq_iterated_fst`, `_snd` — die beiden Fubini-Ordnungen, je mit der
+  Integrierbarkeit des Randintegrals.
+* `integral_sub_eq_integral_antidiagonal` — die Gleichungskette des Manuskripts (Z. 7201–7211)
+  für jedes `T ≥ 0`.
+* `ae_sub_eq_integral_antidiagonal` — **`lem:calculus`**, `eq:calcconc` für fast alle `t > 0`;
+  das Ableiten nach `T` ist `IntervalIntegrable.ae_hasDerivAt_integral`
+  (`Mathlib/MeasureTheory/Integral/IntervalIntegral/LebesgueDifferentiationThm.lean:66`).
+
+**Es hängt nur an Mathlib**, wie die Aufgabe fragte: Fubini, Scherung, Lebesgue-Differentiation.
+Der Weg ist der direkte über Fubini, nicht über `chain_identity`.
+
+**Befunde zur Übersetzung der Hypothesen.**
+
+* Die absolute Stetigkeit ist als die beiden Stammfunktionsdarstellungen `h₁`, `h₂` auf dem
+  Quadranten gestellt — die Gestalt, in der `eq:Fpartial1`/`eq:Fpartial2` sie liefern. Das
+  Integral `eq:calcint` ist `IntegrableOn (uncurry γᵢ) ([0,T] ×ˢ [0,T])`.
+* **Verbraucht wird die absolute Stetigkeit nur an den beiden Randschnitten** `γ₁ (·, 0)` und
+  `γ₂ (0, ·)` (`hγ₁`, `hγ₂`): sie machen `Φ (·,0)` und `Φ (0,·)` stetig, und dort wird ein
+  Integral einer Differenz geteilt. Alle anderen Schnitte kommen nur durch Fubini vor, wo ein
+  nicht integrierbarer Schnitt eine Nullmenge von Schnitten ist.
+* Der Index ist `ℝ` mit allen Hypothesen auf dem Quadranten, damit `t - s` und `T - u` ohne
+  Abschneiden stehen. Für Schritt 3.2 heißt das: `Φ s t = E[f (X s.toNNReal, Y t.toNNReal)]`.
+
+**Offene Auffälligkeit im Manuskript, Z. 7189–7192 (`eq:calcint`):** die Bedingung sagt nichts
+über **gemeinsame** Meßbarkeit von `γᵢ`, und Fubini braucht sie; aus der absoluten Stetigkeit in
+jeder Variablen einzeln folgt sie nicht ohne weiteres. In Lean steckt sie in `IntegrableOn`. Das
+Manuskript ist nicht angefaßt.
+
+**Nicht gelaufen:** `check_duplicates.py` (Zeitbudget).
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **Schritt 3, Teil 2: `duality` mit `α = β = 0`**, dann `cor:dualrel` für **jedes** `t`.
+> `X`, `Y` meßbar, `X` an `𝓕`, `Y` an `𝓖` adaptiert, `⨆ 𝓕` unabhängig von `⨆ 𝓖`, die beiden
+> Martingalhypothesen `eq:dualmg1`/`eq:dualmg2` (mit `lebesgueClock` oder direkt mit
+> `∫ in 0..t`), die Schranken `eq:dual1` als ein integrierbares `Γ_T`. *Worauf es ruht:* die
+> Zuwachsdarstellungen `eq:Fpartial1`/`eq:Fpartial2` sind bei `α = β = 0` ohne die Terme
+> `T₂`, `T₄` des Manuskripts zu haben — `Φ(s,t) - Φ(0,t) = ∫_0^s E[g (X r, Y t)] dr` folgt aus
+> der Martingalhypothese bei eingefrorenem `Y t` genau wie in `duality_discrete`, mit
+> `integral_comp_eq_zero_of_indepFun` für den Schritt `s → s'` und Fubini
+> (`integral_integral_swap`) für das Vertauschen von `E` und `∫ dr`. Dann
+> `ae_sub_eq_integral_antidiagonal`; für `cor:dualrel` die Stetigkeit von `t ↦ Φ(t,0)`, `Φ(0,t)`
+> aus `continuousOn_of_eq_primitive`, das schon dasteht. *Warum jetzt:* es ist der nächste
+> offene Schritt der gestellten Liste; die Schritte 4 bis 7 hängen daran.

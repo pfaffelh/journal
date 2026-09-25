@@ -20391,6 +20391,590 @@ theorem uniformCompactContainment_of_forall_map_eq [CompleteSpace E] [Nonempty �
 
 end UniformCompactContainment
 
+/-! ## Milestone 7: duality
+
+The chain identity `lem:chain` and its first consumer, the discrete duality `cor:dualdiscrete`.
+The identity is stated over an arbitrary preorder with a clock and between arbitrary corners of a
+staircase; the compensating window is `Clock.interval`, not `Set.Ico`, which on a preorder that is
+not linear is the wrong set.  `duality_discrete` is the collapse test of that signature: it is
+reached by feeding the one-step increments of two independent martingale problems on `ℕ` into
+`chain_identity_bot` along the anti-diagonal staircase of the counting clock, and nothing about
+the identity had to be restated on the way.
+
+*The Markov chain as a martingale problem.*  `duality_discrete` does not construct the chains.
+It takes the form `rem:dualdiscretemp` names: `f (X n, y) - ∑_{k<n} g (X k, y)` is a martingale
+for each `y`, and symmetrically for `Y`, with the **same** `g`, which for kernels `P`, `Q` with
+`eq:dualdiscrete` is `(P - I) f = (Q - I) f`.  This is the Doob decomposition and the martingale
+problem of the counting clock in the predictable convention; it needs no trajectory construction,
+and `Kernel.traj` would supply the chains but not the decomposition.  Of the filtrations only
+the independence of `⨆ 𝓕` and `⨆ 𝓖` is used, through `integral_comp_eq_zero_of_indepFun`.
+-/
+
+section Duality
+
+/-- **The chain identity** (`lem:chain`), for a staircase between arbitrary corners.
+
+The staircase is two sequences, `s` monotone and `t` antitone on the first `m` steps; its corners
+are `(s 0, t 0)` and `(s m, t m)`, and the telescoping reads neither of them, so the statement is
+made between arbitrary corners and `lem:chain` proper is `chain_identity_bot`.  The convention
+`c` is free: the manuscript's `[s, s')` is `Q.interval .predictable s s'`, and the proof is the
+same for the optional one.
+
+**No integrability is assumed**, although the manuscript assumes all integrals to exist.  The
+two increment representations are hypotheses about Bochner integrals, and the proof moves those
+very integrals from the hypotheses into the conclusion without evaluating one of them; the
+Bochner value `0` of a non integrable integrand is therefore never read, only copied.  Where
+integrability is needed is upstream, in *deriving* `eq:incrementrep` from a martingale property
+(`duality_discrete`), and it is spent there.  The monotonicity of the staircase is what licenses
+each application of `h₁` and `h₂`, and it is used only at the `m` steps. -/
+theorem chain_identity (Q : Clock ι) (c : Clock.Conv) {Φ γ₁ γ₂ : ι → ι → ℝ}
+    (h₁ : ∀ s s' t, s ≤ s' → Φ s' t - Φ s t = ∫ r in Q.interval c s s', γ₁ r t ∂Q.q)
+    (h₂ : ∀ s t t', t ≤ t' → Φ s t' - Φ s t = ∫ r in Q.interval c t t', γ₂ s r ∂Q.q)
+    (m : ℕ) {s t : ℕ → ι} (hs : ∀ k < m, s k ≤ s (k + 1)) (ht : ∀ k < m, t (k + 1) ≤ t k) :
+    Φ (s m) (t m) - Φ (s 0) (t 0) =
+      ∑ k ∈ Finset.range m,
+        ((∫ r in Q.interval c (s k) (s (k + 1)), γ₁ r (t (k + 1)) ∂Q.q) -
+          ∫ r in Q.interval c (t (k + 1)) (t k), γ₂ (s k) r ∂Q.q) := by
+  rw [← Finset.sum_range_sub (fun k ↦ Φ (s k) (t k))]
+  refine Finset.sum_congr rfl fun k hk ↦ ?_
+  have hk := Finset.mem_range.mp hk
+  rw [← h₁ _ _ _ (hs k hk), ← h₂ _ _ _ (ht k hk)]
+  ring
+
+/-- **`lem:chain` as stated**: a staircase from `(⊥, T)` to `(T, ⊥)`, the special case of
+`chain_identity` with the four boundary values fixed. -/
+theorem chain_identity_bot [OrderBot ι] (Q : Clock ι) (c : Clock.Conv)
+    {Φ γ₁ γ₂ : ι → ι → ℝ}
+    (h₁ : ∀ s s' t, s ≤ s' → Φ s' t - Φ s t = ∫ r in Q.interval c s s', γ₁ r t ∂Q.q)
+    (h₂ : ∀ s t t', t ≤ t' → Φ s t' - Φ s t = ∫ r in Q.interval c t t', γ₂ s r ∂Q.q)
+    (T : ι) (m : ℕ) {s t : ℕ → ι} (hs : ∀ k < m, s k ≤ s (k + 1))
+    (ht : ∀ k < m, t (k + 1) ≤ t k) (hs0 : s 0 = ⊥) (hsm : s m = T) (ht0 : t 0 = T)
+    (htm : t m = ⊥) :
+    Φ T ⊥ - Φ ⊥ T =
+      ∑ k ∈ Finset.range m,
+        ((∫ r in Q.interval c (s k) (s (k + 1)), γ₁ r (t (k + 1)) ∂Q.q) -
+          ∫ r in Q.interval c (t (k + 1)) (t k), γ₂ (s k) r ∂Q.q) := by
+  rw [← chain_identity Q c h₁ h₂ m hs ht, hs0, hsm, ht0, htm]
+
+/-- The counting clock on `ℕ`: the discrete σ-field and counting measure.  The down-sets are
+finite, which is `Clock.measure_Iic_ne_top`. -/
+noncomputable def countClock : Clock ℕ where
+  measurableSpace := inferInstance
+  q := Measure.count
+  measurableSet_Iic _ := MeasurableSet.of_discrete
+  measurableSet_Iio _ := MeasurableSet.of_discrete
+  measure_Iic_ne_top t := by
+    rw [Measure.count_apply_finite _ (Set.finite_Iic t)]
+    exact ENNReal.natCast_ne_top _
+
+theorem countClock_interval_succ (k : ℕ) :
+    countClock.interval .predictable k (k + 1) = {k} := by
+  ext x
+  simp only [Clock.interval, Set.mem_sdiff, Set.mem_Iio, Set.mem_singleton_iff]
+  omega
+
+/-- `countClock` carries the discrete σ-algebra as a field; this exposes its singleton class,
+which the instance search does not find through the field. -/
+instance countClock_measurableSingletonClass :
+    @MeasurableSingletonClass ℕ countClock.measurableSpace :=
+  inferInstanceAs (MeasurableSingletonClass ℕ)
+
+theorem countClock_real_singleton (k : ℕ) : countClock.q.real {k} = 1 := by
+  change (Measure.count ({k} : Set ℕ)).toReal = 1
+  rw [Measure.count_singleton, ENNReal.toReal_one]
+
+/-- **`prop:haar`(a)**: on `ℕ` with the counting clock, the balance `γ₁ = γ₂ = γ` gives
+`Φ T 0 = Φ 0 T` for every `T`, for every `γ` whatsoever.
+
+The proof is the manuscript's: `chain_identity_bot` along the anti-diagonal staircase
+`s k = k`, `t k = T - k`, whose blocks `[k, k+1)` and `[T-k-1, T-k)` are the singletons `{k}` and
+`{T-k-1}`, so that each summand is `γ k (T-k-1) - γ k (T-k-1)`.  The only facts about the clock
+used are `countClock_interval_succ` and `countClock_real_singleton`; no measurability of `γ` and
+no integrability occurs.  The truncated subtraction `T - k` of `ℕ` is harmless here in the strict
+sense that it is only ever evaluated at `k ≤ T`. -/
+theorem countClock_duality {Φ γ : ℕ → ℕ → ℝ}
+    (h₁ : ∀ s s' t, s ≤ s' →
+      Φ s' t - Φ s t = ∫ r in countClock.interval .predictable s s', γ r t ∂countClock.q)
+    (h₂ : ∀ s t t', t ≤ t' →
+      Φ s t' - Φ s t = ∫ r in countClock.interval .predictable t t', γ s r ∂countClock.q)
+    (T : ℕ) : Φ T 0 = Φ 0 T := by
+  have key := chain_identity_bot countClock .predictable h₁ h₂ T T
+    (s := fun k ↦ k) (t := fun k ↦ T - k) (fun k _ ↦ Nat.le_succ k) (fun k _ ↦ by omega)
+    rfl rfl (Nat.sub_zero T) (Nat.sub_self T)
+  have hzero : ∀ k ∈ Finset.range T,
+      ((∫ r in countClock.interval .predictable k (k + 1), γ r (T - (k + 1)) ∂countClock.q) -
+        ∫ r in countClock.interval .predictable (T - (k + 1)) (T - k), γ k r ∂countClock.q)
+        = 0 := by
+    intro k hk
+    have hk := Finset.mem_range.mp hk
+    have hT : T - k = T - (k + 1) + 1 := by omega
+    rw [hT, countClock_interval_succ, countClock_interval_succ, integral_singleton,
+      integral_singleton, countClock_real_singleton, countClock_real_singleton, sub_self]
+  rw [Finset.sum_eq_zero hzero, sub_eq_zero] at key
+  exact key
+
+/-- On the counting clock the compensating window is a finite sum. -/
+theorem countClock_setIntegral_interval (g : ℕ → ℝ) (s s' : ℕ) :
+    ∫ r in countClock.interval .predictable s s', g r ∂countClock.q = ∑ r ∈ Finset.Ico s s', g r := by
+  have hI : countClock.interval .predictable s s' = ↑(Finset.Ico s s') := by
+    ext x
+    simp only [Clock.interval, Set.mem_sdiff, Set.mem_Iio, Finset.coe_Ico, Set.mem_Ico]
+    omega
+  rw [hI]
+  change ∫ r in (↑(Finset.Ico s s') : Set ℕ), g r ∂(Measure.count : Measure ℕ) = _
+  rw [setIntegral_finset]
+  · refine Finset.sum_congr rfl fun r _ ↦ ?_
+    rw [Measure.real, Measure.count_singleton, ENNReal.toReal_one, one_smul]
+  · rw [← (↑(Finset.Ico s s') : Set ℕ).biUnion_of_singleton,
+      integrableOn_finite_biUnion (Finset.finite_toSet _)]
+    intro r _
+    exact integrableOn_singleton (hx := by rw [Measure.count_singleton]; exact ENNReal.one_lt_top)
+
+/-- **`prop:haar`(a) in one-step form.**  On `ℕ` the increment representations
+`eq:incrementrep` over the counting clock are equivalent to their one-step versions; this is
+the form in which a Markov chain delivers them. -/
+theorem eq_of_succ_increments {Φ γ : ℕ → ℕ → ℝ}
+    (h₁ : ∀ s t, Φ (s + 1) t - Φ s t = γ s t) (h₂ : ∀ s t, Φ s (t + 1) - Φ s t = γ s t)
+    (T : ℕ) : Φ T 0 = Φ 0 T := by
+  refine countClock_duality (γ := γ) (fun s s' t hss' ↦ ?_) (fun s t t' htt' ↦ ?_) T
+  · rw [countClock_setIntegral_interval]
+    induction s', hss' using Nat.le_induction with
+    | base => simp
+    | succ n hn ih => rw [Finset.sum_Ico_succ_top hn, ← ih, ← h₁ n t]; ring
+  · rw [countClock_setIntegral_interval (fun r ↦ γ s r)]
+    induction t', htt' using Nat.le_induction with
+    | base => simp
+    | succ n hn ih => rw [Finset.sum_Ico_succ_top hn, ← ih, ← h₂ s n]; ring
+
+section DiscreteDuality
+
+variable {Ω E₁ E₂ Z : Type*} {mΩ : MeasurableSpace Ω} [MeasurableSpace E₁] [MeasurableSpace E₂]
+  [MeasurableSpace Z] {P : Measure Ω} [IsProbabilityMeasure P]
+
+/-- If `H (·, y)` has mean zero along `U` for every fixed `y`, and `W` is independent of `U`,
+then `H (U, W)` has mean zero.  This is the whole use of independence in the duality theorems:
+the second variable is frozen, the first averaged out. -/
+theorem integral_comp_eq_zero_of_indepFun {U : Ω → Z} {W : Ω → E₂} (hU : Measurable U)
+    (hW : Measurable W) (hUW : IndepFun U W P) {H : Z × E₂ → ℝ} (hH : Measurable H) {C : ℝ}
+    (hHC : ∀ z, |H z| ≤ C) (h0 : ∀ y, ∫ ω, H (U ω, y) ∂P = 0) :
+    ∫ ω, H (U ω, W ω) ∂P = 0 := by
+  have hmap := (indepFun_iff_map_prod_eq_prod_map_map hU.aemeasurable hW.aemeasurable).1 hUW
+  have hint : Integrable H ((P.map U).prod (P.map W)) :=
+    Integrable.of_bound hH.aestronglyMeasurable C (Filter.Eventually.of_forall fun z ↦ hHC z)
+  calc ∫ ω, H (U ω, W ω) ∂P
+      = ∫ z, H z ∂(P.map fun ω ↦ (U ω, W ω)) :=
+        (integral_map (hU.prodMk hW).aemeasurable hH.aestronglyMeasurable).symm
+    _ = ∫ y, ∫ x, H (x, y) ∂(P.map U) ∂(P.map W) := by rw [hmap, integral_prod_symm H hint]
+    _ = 0 := by
+        refine integral_eq_zero_of_ae (Filter.Eventually.of_forall fun y ↦ ?_)
+        change ∫ x, (fun x ↦ H (x, y)) x ∂(P.map U) = 0
+        rw [integral_map hU.aemeasurable (f := fun x ↦ H (x, y))
+          (hH.comp (measurable_id.prodMk measurable_const)).aestronglyMeasurable]
+        exact h0 y
+
+/-- **`cor:dualdiscrete`, in the martingale form of `rem:dualdiscretemp`.**
+Two processes indexed by `ℕ`, adapted to filtrations whose limits are independent, whose test
+processes `f (X n, y) - ∑_{k<n} g (X k, y)` and `f (x, Y n) - ∑_{k<n} g (x, Y k)` are
+martingales with the **same** `g`.  Then `E f (X n, Y 0) = E f (X 0, Y n)`.
+
+For Markov chains with kernels `P`, `Q` and `eq:dualdiscrete`, `g = (P - I) f = (Q - I) f` and
+the two martingale hypotheses are the Doob decompositions; the corollary as stated is the case
+`X 0 = x`, `Y 0 = y`.  No integrability is assumed beyond boundedness of `f` and `g`, which
+`f ∈ B(E₁ × E₂)` gives for `g = (P - I) f`. -/
+theorem duality_discrete {𝓕 𝓖 : MeasureTheory.Filtration ℕ mΩ}
+    (hind : Indep (⨆ n, 𝓕 n) (⨆ n, 𝓖 n) P) {X : ℕ → Ω → E₁} {Y : ℕ → Ω → E₂}
+    (hX : ∀ n, Measurable[𝓕 n] (X n)) (hY : ∀ n, Measurable[𝓖 n] (Y n))
+    {f g : E₁ × E₂ → ℝ} (hf : Measurable f) (hg : Measurable g) {C : ℝ}
+    (hfC : ∀ z, |f z| ≤ C) (hgC : ∀ z, |g z| ≤ C)
+    (hXmg : ∀ y, Martingale (fun n ω ↦ f (X n ω, y) - ∑ k ∈ Finset.range n, g (X k ω, y)) 𝓕 P)
+    (hYmg : ∀ x, Martingale (fun n ω ↦ f (x, Y n ω) - ∑ k ∈ Finset.range n, g (x, Y k ω)) 𝓖 P)
+    (n : ℕ) : ∫ ω, f (X n ω, Y 0 ω) ∂P = ∫ ω, f (X 0 ω, Y n ω) ∂P := by
+  have hXm : ∀ n, Measurable (X n) := fun n ↦ (hX n).mono (𝓕.le n) le_rfl
+  have hYm : ∀ n, Measurable (Y n) := fun n ↦ (hY n).mono (𝓖.le n) le_rfl
+  have hXF : ∀ n, Measurable[⨆ n, 𝓕 n] (X n) := fun n ↦ (hX n).mono (le_iSup 𝓕 n) le_rfl
+  have hYG : ∀ n, Measurable[⨆ n, 𝓖 n] (Y n) := fun n ↦ (hY n).mono (le_iSup 𝓖 n) le_rfl
+  have hint : ∀ {h : E₁ × E₂ → ℝ}, Measurable h → (∀ z, |h z| ≤ C) → ∀ n m,
+      Integrable (fun ω ↦ h (X n ω, Y m ω)) P := fun hh hhC n m ↦
+    Integrable.of_bound (hh.comp ((hXm n).prodMk (hYm m))).aestronglyMeasurable C
+      (Filter.Eventually.of_forall fun ω ↦ hhC _)
+  -- the mean increment of a martingale vanishes
+  have hstep : ∀ {M : ℕ → Ω → ℝ} {𝓗 : MeasureTheory.Filtration ℕ mΩ}, Martingale M 𝓗 P →
+      ∀ n, ∫ ω, M (n + 1) ω ∂P = ∫ ω, M n ω ∂P := fun {M 𝓗} hM n ↦ by
+    rw [← integral_condExp (𝓗.le n), hM.condExp_ae_eq (Nat.le_succ n) |> integral_congr_ae]
+  have hbd : ∀ {a b c : ℝ}, |a| ≤ C → |b| ≤ C → |c| ≤ C → |a - b - c| ≤ C + C + C :=
+    fun ha hb hc ↦ (abs_sub _ _).trans (add_le_add ((abs_sub _ _)) hc |>.trans
+      (add_le_add (add_le_add ha hb) le_rfl))
+  refine eq_of_succ_increments (Φ := fun n m ↦ ∫ ω, f (X n ω, Y m ω) ∂P)
+    (γ := fun n m ↦ ∫ ω, g (X n ω, Y m ω) ∂P) (fun n m ↦ ?_) (fun n m ↦ ?_) n
+  · -- the first increment: freeze `Y m`, average the martingale step of `X`
+    have hind' : IndepFun (fun ω ↦ (X n ω, X (n + 1) ω)) (Y m) P :=
+      indep_of_indep_of_le_right (indep_of_indep_of_le_left hind
+        ((hXF n).prodMk (hXF (n + 1))).comap_le) (hYG m).comap_le
+    have key := integral_comp_eq_zero_of_indepFun (U := fun ω ↦ (X n ω, X (n + 1) ω))
+      (W := Y m) (H := fun z ↦ f (z.1.2, z.2) - f (z.1.1, z.2) - g (z.1.1, z.2))
+      ((hXm n).prodMk (hXm (n + 1))) (hYm m) hind'
+      (((hf.comp (measurable_fst.snd.prodMk measurable_snd)).sub
+        (hf.comp (measurable_fst.fst.prodMk measurable_snd))).sub
+        (hg.comp (measurable_fst.fst.prodMk measurable_snd)))
+      (fun z ↦ hbd (hfC _) (hfC _) (hgC _))
+      (fun y ↦ by
+        have hM := hXmg y
+        calc _ = ∫ ω, ((f (X (n + 1) ω, y) - ∑ k ∈ Finset.range (n + 1), g (X k ω, y)) -
+              (f (X n ω, y) - ∑ k ∈ Finset.range n, g (X k ω, y))) ∂P :=
+              integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ by
+                simp only [Finset.sum_range_succ]; ring)
+          _ = 0 := by
+              rw [integral_sub (hM.integrable (n + 1)) (hM.integrable n), hstep hM n, sub_self])
+    change ∫ ω, (f (X (n + 1) ω, Y m ω) - f (X n ω, Y m ω) - g (X n ω, Y m ω)) ∂P = 0 at key
+    rw [integral_sub, integral_sub] at key
+    · linarith
+    all_goals first
+      | exact hint hf hfC _ _
+      | exact hint hg hgC _ _
+      | exact (hint hf hfC _ _).sub (hint hf hfC _ _)
+  · -- the second increment: freeze `X n`, average the martingale step of `Y`
+    have hind' : IndepFun (fun ω ↦ (Y m ω, Y (m + 1) ω)) (X n) P :=
+      indep_of_indep_of_le_right (indep_of_indep_of_le_left hind.symm
+        ((hYG m).prodMk (hYG (m + 1))).comap_le) (hXF n).comap_le
+    have key := integral_comp_eq_zero_of_indepFun (U := fun ω ↦ (Y m ω, Y (m + 1) ω))
+      (W := X n) (H := fun z ↦ f (z.2, z.1.2) - f (z.2, z.1.1) - g (z.2, z.1.1))
+      ((hYm m).prodMk (hYm (m + 1))) (hXm n) hind'
+      (((hf.comp (measurable_snd.prodMk measurable_fst.snd)).sub
+        (hf.comp (measurable_snd.prodMk measurable_fst.fst))).sub
+        (hg.comp (measurable_snd.prodMk measurable_fst.fst)))
+      (fun z ↦ hbd (hfC _) (hfC _) (hgC _))
+      (fun x ↦ by
+        have hM := hYmg x
+        calc _ = ∫ ω, ((f (x, Y (m + 1) ω) - ∑ k ∈ Finset.range (m + 1), g (x, Y k ω)) -
+              (f (x, Y m ω) - ∑ k ∈ Finset.range m, g (x, Y k ω))) ∂P :=
+              integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ by
+                simp only [Finset.sum_range_succ]; ring)
+          _ = 0 := by
+              rw [integral_sub (hM.integrable (m + 1)) (hM.integrable m), hstep hM m, sub_self])
+    change ∫ ω, (f (X n ω, Y (m + 1) ω) - f (X n ω, Y m ω) - g (X n ω, Y m ω)) ∂P = 0 at key
+    rw [integral_sub, integral_sub] at key
+    · linarith
+    all_goals first
+      | exact hint hf hfC _ _
+      | exact hint hg hgC _ _
+      | exact (hint hf hfC _ _).sub (hint hf hfC _ _)
+
+end DiscreteDuality
+
+end Duality
+
+/-! ### `lem:calculus`: the anti-diagonal lemma in continuous time
+
+The direct route over Fubini, not over `chain_identity`: over `ℝ` with Lebesgue measure the
+refinement of staircases that `prop:haar`(b) alludes to *is* the shear
+`(s, t) ↦ (s, t - s)`, and Mathlib has it as `measurePreserving_prod_sub`.  The statement is
+pure analysis and rests on Mathlib alone: Fubini (`integral_prod`, `integral_prod_symm`,
+`Integrable.integral_prod_left`/`_right`), the shear, and Lebesgue's differentiation theorem
+(`IntervalIntegrable.ae_hasDerivAt_integral`).  The index is `ℝ`, with every hypothesis
+restricted to the quadrant, so that the substitutions `t - s` and `T - u` need no truncation. -/
+
+section Calculus
+
+/-- The triangle below the anti-diagonal `u + v = T`, open along both axes. -/
+def antidiagTriangle (T : ℝ) : Set (ℝ × ℝ) := {z | 0 < z.1 ∧ 0 < z.2 ∧ z.1 + z.2 ≤ T}
+
+theorem measurableSet_antidiagTriangle (T : ℝ) : MeasurableSet (antidiagTriangle T) :=
+  (measurableSet_lt measurable_const measurable_fst).inter
+    ((measurableSet_lt measurable_const measurable_snd).inter
+      (measurableSet_le (measurable_fst.add measurable_snd) measurable_const))
+
+theorem antidiagTriangle_subset (T : ℝ) : antidiagTriangle T ⊆ Icc 0 T ×ˢ Icc 0 T := by
+  rintro ⟨u, v⟩ ⟨hu, hv, huv⟩
+  exact ⟨⟨hu.le, by linarith⟩, ⟨hv.le, by linarith⟩⟩
+
+/-- **Integrating the triangle along the anti-diagonals.**  The shear `(s, t) ↦ (s, t - s)`
+carries `{0 < s < t ≤ T}` onto `antidiagTriangle T` and preserves Lebesgue measure
+(`measurePreserving_prod_sub`), so integrating `F` over the triangle is integrating its values
+along the anti-diagonal `u + v = t`, and then over `t`. -/
+theorem integral_antidiagTriangle_eq_shear {F : ℝ × ℝ → ℝ} {T : ℝ} (hT : 0 ≤ T)
+    (hF : IntegrableOn F (Icc 0 T ×ˢ Icc 0 T)) :
+    IntervalIntegrable (fun t ↦ ∫ s in 0..t, F (s, t - s)) volume 0 T ∧
+      ∫ t in 0..T, ∫ s in 0..t, F (s, t - s) = ∫ z in antidiagTriangle T, F z := by
+  set Δ := antidiagTriangle T
+  have hFi : Integrable (Δ.indicator F) ((volume : Measure ℝ).prod volume) := by
+    rw [← Measure.volume_eq_prod]
+    exact (hF.mono_set (antidiagTriangle_subset T)).integrable_indicator
+      (measurableSet_antidiagTriangle T)
+  have hψ := measurePreserving_prod_sub (volume : Measure ℝ) (volume : Measure ℝ)
+  set H : ℝ × ℝ → ℝ := (Δ.indicator F) ∘ fun z ↦ (z.1, z.2 - z.1) with hHdef
+  have hH : Integrable H ((volume : Measure ℝ).prod volume) :=
+    hψ.integrable_comp_of_integrable hFi
+  set inner : ℝ → ℝ := fun t ↦ ∫ s in Ioc 0 t, F (s, t - s)
+  have hpt : ∀ t, ∫ s, H (s, t) = (Ioc 0 T).indicator inner t := by
+    intro t
+    have hset : ∀ s, H (s, t) =
+        (if t ≤ T then (Ioo 0 t).indicator (fun s ↦ F (s, t - s)) s else 0) := by
+      intro s
+      rw [hHdef, Function.comp_apply]
+      by_cases hΔ : (s, t - s) ∈ Δ
+      · obtain ⟨a, b, c⟩ := hΔ
+        have h1 : t ≤ T := by simp only at c; linarith
+        have h2 : s ∈ Ioo 0 t := ⟨a, by simp only at b; linarith⟩
+        rw [indicator_of_mem (show (s, t - s) ∈ Δ from ⟨a, b, c⟩), ite_eq_left h1, indicator_of_mem h2]
+      · rw [indicator_of_notMem hΔ]
+        split_ifs with h
+        · rw [indicator_of_notMem]
+          rintro ⟨a, b⟩
+          exact hΔ (show 0 < s ∧ 0 < t - s ∧ s + (t - s) ≤ T from ⟨a, by linarith, by linarith⟩)
+        · rfl
+    simp_rw [hset]
+    by_cases htT : t ≤ T
+    · simp only [htT, ite_true]
+      rw [integral_indicator measurableSet_Ioo, ← integral_Ioc_eq_integral_Ioo]
+      by_cases ht0 : 0 < t
+      · rw [indicator_of_mem (show t ∈ Ioc 0 T from ⟨ht0, htT⟩)]
+      · rw [indicator_of_notMem (fun h ↦ ht0 h.1), Ioc_eq_empty (by linarith), Measure.restrict_empty,
+          integral_zero_measure]
+    · simp only [htT, ite_false, integral_zero]
+      rw [indicator_of_notMem (fun h ↦ htT h.2)]
+  have hint := hH.integral_prod_right
+  simp_rw [hpt] at hint
+  have hIoc : IntegrableOn inner (Ioc 0 T) := (integrable_indicator_iff measurableSet_Ioc).1 hint
+  have heq : EqOn (fun t ↦ ∫ s in 0..t, F (s, t - s)) inner (Ioc 0 T) := fun t ht ↦
+    intervalIntegral.integral_of_le ht.1.le
+  refine ⟨(intervalIntegrable_iff_integrableOn_Ioc_of_le hT).2
+    (hIoc.congr_fun heq.symm measurableSet_Ioc), ?_⟩
+  calc ∫ t in 0..T, ∫ s in 0..t, F (s, t - s)
+      = ∫ t in Ioc 0 T, inner t := by
+        rw [intervalIntegral.integral_of_le hT]; exact setIntegral_congr_fun measurableSet_Ioc heq
+    _ = ∫ t, ∫ s, H (s, t) := by rw [← integral_indicator measurableSet_Ioc]; simp_rw [hpt]
+    _ = ∫ z, H z ∂((volume : Measure ℝ).prod volume) := (integral_prod_symm H hH).symm
+    _ = ∫ z, Δ.indicator F z ∂((volume : Measure ℝ).prod volume) := by
+        rw [hHdef]
+        change ∫ z, (Δ.indicator F) ((fun z : ℝ × ℝ ↦ (z.1, z.2 - z.1)) z) ∂_ = _
+        have hae : AEStronglyMeasurable (Δ.indicator F)
+            (Measure.map (fun z : ℝ × ℝ ↦ (z.1, z.2 - z.1)) ((volume : Measure ℝ).prod volume)) := by
+          rw [hψ.map_eq]; exact hFi.aestronglyMeasurable
+        rw [← integral_map hψ.measurable.aemeasurable hae, hψ.map_eq]
+    _ = ∫ z in Δ, F z := by
+        rw [integral_indicator (measurableSet_antidiagTriangle T), Measure.volume_eq_prod]
+
+/-- The one-variable bookkeeping behind both iterated forms of the triangle. -/
+theorem integral_ite_indicator_Ioc (T a : ℝ) (G : ℝ → ℝ) :
+    ∫ b, (if 0 < a then (Ioc 0 (T - a)).indicator G b else 0) =
+      (Ioc 0 T).indicator (fun a ↦ ∫ b in Ioc 0 (T - a), G b) a := by
+  by_cases ha : 0 < a
+  · simp only [ha, ite_true]
+    rw [integral_indicator measurableSet_Ioc]
+    by_cases haT : a ≤ T
+    · rw [indicator_of_mem (show a ∈ Ioc 0 T from ⟨ha, haT⟩)]
+    · rw [indicator_of_notMem (fun h ↦ haT h.2), Ioc_eq_empty (by linarith),
+        Measure.restrict_empty, integral_zero_measure]
+  · simp only [ha, ite_false, integral_zero]
+    rw [indicator_of_notMem (fun h ↦ ha h.1)]
+
+theorem integrable_indicator_antidiagTriangle {F : ℝ × ℝ → ℝ} {T : ℝ}
+    (hF : IntegrableOn F (Icc 0 T ×ˢ Icc 0 T)) :
+    Integrable ((antidiagTriangle T).indicator F) ((volume : Measure ℝ).prod volume) := by
+  rw [← Measure.volume_eq_prod]
+  exact (hF.mono_set (antidiagTriangle_subset T)).integrable_indicator
+    (measurableSet_antidiagTriangle T)
+
+/-- **The triangle by vertical sections**: the inner integral runs over the first variable. -/
+theorem integral_antidiagTriangle_eq_iterated_fst {F : ℝ × ℝ → ℝ} {T : ℝ} (hT : 0 ≤ T)
+    (hF : IntegrableOn F (Icc 0 T ×ˢ Icc 0 T)) :
+    IntervalIntegrable (fun v ↦ ∫ u in 0..(T - v), F (u, v)) volume 0 T ∧
+      ∫ z in antidiagTriangle T, F z = ∫ v in 0..T, ∫ u in 0..(T - v), F (u, v) := by
+  have hFi := integrable_indicator_antidiagTriangle hF
+  set inner : ℝ → ℝ := fun v ↦ ∫ u in Ioc 0 (T - v), F (u, v)
+  have hpt : ∀ v, ∫ u, (antidiagTriangle T).indicator F (u, v) = (Ioc 0 T).indicator inner v := by
+    intro v
+    have e : (Ioc 0 T).indicator inner v =
+        (Ioc 0 T).indicator (fun a ↦ ∫ b in Ioc 0 (T - a), (fun u ↦ F (u, v)) b) v := by
+      rfl
+    rw [e, ← integral_ite_indicator_Ioc T v (fun u ↦ F (u, v))]
+    congr 1; ext u
+    by_cases hv : 0 < v
+    · rw [ite_eq_left hv]
+      by_cases hΔ : (u, v) ∈ antidiagTriangle T
+      · obtain ⟨a, b, c⟩ := hΔ
+        rw [indicator_of_mem (show (u, v) ∈ antidiagTriangle T from ⟨a, b, c⟩),
+          indicator_of_mem (show u ∈ Ioc 0 (T - v) from ⟨a, by simp only at c; linarith⟩)]
+      · rw [indicator_of_notMem hΔ, indicator_of_notMem]
+        rintro ⟨a, b⟩
+        exact hΔ (show 0 < u ∧ 0 < v ∧ u + v ≤ T from ⟨a, hv, by linarith⟩)
+    · rw [ite_eq_right hv, indicator_of_notMem]
+      rintro ⟨_, b, _⟩; exact hv b
+  have hint := hFi.integral_prod_right
+  simp_rw [hpt] at hint
+  have hIoc : IntegrableOn inner (Ioc 0 T) := (integrable_indicator_iff measurableSet_Ioc).1 hint
+  have heq : EqOn (fun v ↦ ∫ u in 0..(T - v), F (u, v)) inner (Ioc 0 T) := fun v hv ↦
+    intervalIntegral.integral_of_le (by linarith [hv.2])
+  refine ⟨(intervalIntegrable_iff_integrableOn_Ioc_of_le hT).2
+    (hIoc.congr_fun heq.symm measurableSet_Ioc), ?_⟩
+  calc ∫ z in antidiagTriangle T, F z
+      = ∫ z, (antidiagTriangle T).indicator F z ∂((volume : Measure ℝ).prod volume) := by
+        rw [integral_indicator (measurableSet_antidiagTriangle T), Measure.volume_eq_prod]
+    _ = ∫ v, ∫ u, (antidiagTriangle T).indicator F (u, v) := integral_prod_symm _ hFi
+    _ = ∫ v in Ioc 0 T, inner v := by rw [← integral_indicator measurableSet_Ioc]; simp_rw [hpt]
+    _ = ∫ v in 0..T, ∫ u in 0..(T - v), F (u, v) := by
+        rw [intervalIntegral.integral_of_le hT]
+        exact (setIntegral_congr_fun measurableSet_Ioc heq).symm
+
+/-- **The triangle by horizontal sections**: the inner integral runs over the second variable. -/
+theorem integral_antidiagTriangle_eq_iterated_snd {F : ℝ × ℝ → ℝ} {T : ℝ} (hT : 0 ≤ T)
+    (hF : IntegrableOn F (Icc 0 T ×ˢ Icc 0 T)) :
+    IntervalIntegrable (fun u ↦ ∫ v in 0..(T - u), F (u, v)) volume 0 T ∧
+      ∫ z in antidiagTriangle T, F z = ∫ u in 0..T, ∫ v in 0..(T - u), F (u, v) := by
+  have hFi := integrable_indicator_antidiagTriangle hF
+  set inner : ℝ → ℝ := fun u ↦ ∫ v in Ioc 0 (T - u), F (u, v)
+  have hpt : ∀ u, ∫ v, (antidiagTriangle T).indicator F (u, v) = (Ioc 0 T).indicator inner u := by
+    intro u
+    have e : (Ioc 0 T).indicator inner u =
+        (Ioc 0 T).indicator (fun a ↦ ∫ b in Ioc 0 (T - a), (fun v ↦ F (u, v)) b) u := by
+      rfl
+    rw [e, ← integral_ite_indicator_Ioc T u (fun v ↦ F (u, v))]
+    congr 1; ext v
+    by_cases hu : 0 < u
+    · rw [ite_eq_left hu]
+      by_cases hΔ : (u, v) ∈ antidiagTriangle T
+      · obtain ⟨a, b, c⟩ := hΔ
+        rw [indicator_of_mem (show (u, v) ∈ antidiagTriangle T from ⟨a, b, c⟩),
+          indicator_of_mem (show v ∈ Ioc 0 (T - u) from ⟨b, by simp only at c; linarith⟩)]
+      · rw [indicator_of_notMem hΔ, indicator_of_notMem]
+        rintro ⟨b, c⟩
+        exact hΔ (show 0 < u ∧ 0 < v ∧ u + v ≤ T from ⟨hu, b, by linarith⟩)
+    · rw [ite_eq_right hu, indicator_of_notMem]
+      rintro ⟨a, _, _⟩; exact hu a
+  have hint := hFi.integral_prod_left
+  simp_rw [hpt] at hint
+  have hIoc : IntegrableOn inner (Ioc 0 T) := (integrable_indicator_iff measurableSet_Ioc).1 hint
+  have heq : EqOn (fun u ↦ ∫ v in 0..(T - u), F (u, v)) inner (Ioc 0 T) := fun u hu ↦
+    intervalIntegral.integral_of_le (by linarith [hu.2])
+  refine ⟨(intervalIntegrable_iff_integrableOn_Ioc_of_le hT).2
+    (hIoc.congr_fun heq.symm measurableSet_Ioc), ?_⟩
+  calc ∫ z in antidiagTriangle T, F z
+      = ∫ z, (antidiagTriangle T).indicator F z ∂((volume : Measure ℝ).prod volume) := by
+        rw [integral_indicator (measurableSet_antidiagTriangle T), Measure.volume_eq_prod]
+    _ = ∫ u, ∫ v, (antidiagTriangle T).indicator F (u, v) := integral_prod _ hFi
+    _ = ∫ u in Ioc 0 T, inner u := by rw [← integral_indicator measurableSet_Ioc]; simp_rw [hpt]
+    _ = ∫ u in 0..T, ∫ v in 0..(T - u), F (u, v) := by
+        rw [intervalIntegral.integral_of_le hT]
+        exact (setIntegral_congr_fun measurableSet_Ioc heq).symm
+
+/-- The boundary sections of `lem:calculus` are continuous: `Φ (·, 0)` and `Φ (0, ·)` are
+primitives of integrable functions. -/
+theorem continuousOn_of_eq_primitive {φ g : ℝ → ℝ} {T : ℝ} (hT : 0 ≤ T)
+    (hg : IntervalIntegrable g volume 0 T) (h : ∀ u, 0 ≤ u → φ u - φ 0 = ∫ r in 0..u, g r) :
+    ContinuousOn φ (uIcc 0 T) := by
+  refine ((continuousOn_const (c := φ 0)).add (intervalIntegral.continuousOn_primitive_interval' hg
+    left_mem_uIcc)).congr fun u hu ↦ ?_
+  rw [uIcc_of_le hT] at hu
+  show φ u = φ 0 + ∫ r in 0..u, g r
+  linarith [h u hu.1]
+
+/-- **`lem:calculus`, integrated** (EK 4.4.10).  For every `T ≥ 0` the primitive of
+`t ↦ Φ t 0 - Φ 0 t` is the primitive of the anti-diagonal integral, and the latter integrand is
+integrable on `[0, T]`.  This is the displayed chain of equalities in the manuscript's proof,
+before the differentiation; the hypotheses are those of `ae_sub_eq_integral_antidiagonal`. -/
+theorem integral_sub_eq_integral_antidiagonal {Φ γ₁ γ₂ : ℝ → ℝ → ℝ}
+    (h₁ : ∀ s t, 0 ≤ s → 0 ≤ t → Φ s t - Φ 0 t = ∫ r in 0..s, γ₁ r t)
+    (h₂ : ∀ s t, 0 ≤ s → 0 ≤ t → Φ s t - Φ s 0 = ∫ r in 0..t, γ₂ s r)
+    (hγ₁ : ∀ T, IntervalIntegrable (fun r ↦ γ₁ r 0) volume 0 T)
+    (hγ₂ : ∀ T, IntervalIntegrable (γ₂ 0) volume 0 T)
+    (hint₁ : ∀ T, IntegrableOn (Function.uncurry γ₁) (Icc 0 T ×ˢ Icc 0 T))
+    (hint₂ : ∀ T, IntegrableOn (Function.uncurry γ₂) (Icc 0 T ×ˢ Icc 0 T)) {T : ℝ} (hT : 0 ≤ T) :
+    IntervalIntegrable (fun t ↦ ∫ s in 0..t, (γ₁ s (t - s) - γ₂ s (t - s))) volume 0 T ∧
+      ∫ t in 0..T, (Φ t 0 - Φ 0 t) = ∫ t in 0..T, ∫ s in 0..t, (γ₁ s (t - s) - γ₂ s (t - s)) := by
+  have hF := (hint₁ T).sub (hint₂ T)
+  obtain ⟨hGi, hG⟩ := integral_antidiagTriangle_eq_shear hT hF
+  refine ⟨hGi, ?_⟩
+  obtain ⟨hm₁, hB⟩ := integral_antidiagTriangle_eq_iterated_fst hT (hint₁ T)
+  obtain ⟨hm₂, hC⟩ := integral_antidiagTriangle_eq_iterated_snd hT (hint₂ T)
+  -- the two boundary sections
+  have hc₁ : ContinuousOn (fun u ↦ Φ u 0) (uIcc 0 T) :=
+    continuousOn_of_eq_primitive hT (hγ₁ T) fun u hu ↦ h₁ u 0 hu le_rfl
+  have hc₂ : ContinuousOn (fun u ↦ Φ 0 u) (uIcc 0 T) :=
+    continuousOn_of_eq_primitive hT (hγ₂ T) fun u hu ↦ h₂ 0 u le_rfl hu
+  set m₁ : ℝ → ℝ := fun v ↦ ∫ u in 0..(T - v), γ₁ u v
+  set m₂ : ℝ → ℝ := fun u ↦ ∫ v in 0..(T - u), γ₂ u v
+  have hm₁' : IntervalIntegrable (fun u ↦ m₁ (T - u)) volume 0 T := by
+    have := hm₁.comp_sub_left T
+    rw [sub_self, sub_zero] at this
+    exact this.symm
+  have hΦ₂ : IntervalIntegrable (fun u ↦ Φ 0 (T - u)) volume 0 T := by
+    have := hc₂.intervalIntegrable.comp_sub_left T
+    rw [sub_self, sub_zero] at this
+    exact this.symm
+  have hpt : EqOn (fun u ↦ m₁ (T - u) - m₂ u) (fun u ↦ Φ u 0 - Φ 0 (T - u)) (uIcc 0 T) := by
+    intro u hu
+    rw [uIcc_of_le hT] at hu
+    simp only [m₁, m₂]
+    rw [← h₁ _ _ (by linarith [hu.1, hu.2]) (by linarith [hu.1, hu.2]),
+      ← h₂ _ _ hu.1 (by linarith [hu.2]),
+      sub_sub_cancel]
+    ring
+  calc ∫ t in 0..T, (Φ t 0 - Φ 0 t)
+      = (∫ t in 0..T, Φ t 0) - ∫ t in 0..T, Φ 0 t :=
+        intervalIntegral.integral_sub hc₁.intervalIntegrable hc₂.intervalIntegrable
+    _ = (∫ u in 0..T, Φ u 0) - ∫ u in 0..T, Φ 0 (T - u) := by
+        rw [intervalIntegral.integral_comp_sub_left (fun u ↦ Φ 0 u) T, sub_self, sub_zero]
+    _ = ∫ u in 0..T, (Φ u 0 - Φ 0 (T - u)) :=
+        (intervalIntegral.integral_sub hc₁.intervalIntegrable hΦ₂).symm
+    _ = ∫ u in 0..T, (m₁ (T - u) - m₂ u) := (intervalIntegral.integral_congr hpt).symm
+    _ = (∫ u in 0..T, m₁ (T - u)) - ∫ u in 0..T, m₂ u := intervalIntegral.integral_sub hm₁' hm₂
+    _ = (∫ v in 0..T, m₁ v) - ∫ u in 0..T, m₂ u := by
+        rw [intervalIntegral.integral_comp_sub_left m₁ T, sub_self, sub_zero]
+    _ = (∫ z in antidiagTriangle T, Function.uncurry γ₁ z) -
+          ∫ z in antidiagTriangle T, Function.uncurry γ₂ z := by rw [hB, hC]; rfl
+    _ = ∫ z in antidiagTriangle T, (Function.uncurry γ₁ - Function.uncurry γ₂) z :=
+        (integral_sub ((hint₁ T).mono_set (antidiagTriangle_subset T))
+          ((hint₂ T).mono_set (antidiagTriangle_subset T))).symm
+    _ = ∫ t in 0..T, ∫ s in 0..t, (γ₁ s (t - s) - γ₂ s (t - s)) := hG.symm
+
+/-- **`lem:calculus`** (EK 4.4.10): for almost every `t > 0`,
+`Φ t 0 - Φ 0 t = ∫_0^t (γ₁ s (t-s) - γ₂ s (t-s)) ds`.
+
+*How the hypotheses translate.*  "Absolutely continuous in each variable with `∇Φ = (γ₁, γ₂)`"
+is stated as the two primitive representations `h₁`, `h₂` on the quadrant -- the form in which
+`eq:Fpartial1` and `eq:Fpartial2` deliver it -- and `eq:calcint` as `IntegrableOn` of the
+uncurried `γᵢ` on every square `[0, T]²`.  That is **joint** integrability, and it contains joint
+a.e.-measurability, which `eq:calcint` as written does not say and which Fubini needs.  The
+absolute continuity itself is consumed only at the two boundary sections, `hγ₁` and `hγ₂`: they
+make `Φ (·, 0)` and `Φ (0, ·)` continuous, hence integrable, and that is where the proof splits
+an integral of a difference.  Every other section is reached through Fubini, where the Bochner
+value of a non integrable section occurs only on a null set of sections.
+
+*The proof* is the manuscript's, with the substitution done once, as a measure preserving shear
+(`integral_antidiagTriangle_eq_shear`), and the two Fubini orders as
+`integral_antidiagTriangle_eq_iterated_fst` and `_snd`.  The last step, "differentiating with
+respect to `T`", is `IntervalIntegrable.ae_hasDerivAt_integral` on `[0, n]` for every `n`. -/
+theorem ae_sub_eq_integral_antidiagonal {Φ γ₁ γ₂ : ℝ → ℝ → ℝ}
+    (h₁ : ∀ s t, 0 ≤ s → 0 ≤ t → Φ s t - Φ 0 t = ∫ r in 0..s, γ₁ r t)
+    (h₂ : ∀ s t, 0 ≤ s → 0 ≤ t → Φ s t - Φ s 0 = ∫ r in 0..t, γ₂ s r)
+    (hγ₁ : ∀ T, IntervalIntegrable (fun r ↦ γ₁ r 0) volume 0 T)
+    (hγ₂ : ∀ T, IntervalIntegrable (γ₂ 0) volume 0 T)
+    (hint₁ : ∀ T, IntegrableOn (Function.uncurry γ₁) (Icc 0 T ×ˢ Icc 0 T))
+    (hint₂ : ∀ T, IntegrableOn (Function.uncurry γ₂) (Icc 0 T ×ˢ Icc 0 T)) :
+    ∀ᵐ t, 0 < t → Φ t 0 - Φ 0 t = ∫ s in 0..t, (γ₁ s (t - s) - γ₂ s (t - s)) := by
+  set G : ℝ → ℝ := fun t ↦ ∫ s in 0..t, (γ₁ s (t - s) - γ₂ s (t - s))
+  set D : ℝ → ℝ := fun t ↦ Φ t 0 - Φ 0 t
+  have hn : ∀ n : ℕ, ∀ᵐ x, x ∈ uIcc 0 (n : ℝ) → D x = G x := by
+    intro n
+    have hT : (0 : ℝ) ≤ n := Nat.cast_nonneg n
+    obtain ⟨hGi, -⟩ := integral_sub_eq_integral_antidiagonal h₁ h₂ hγ₁ hγ₂ hint₁ hint₂ hT
+    have hDi : IntervalIntegrable D volume 0 n :=
+      ((continuousOn_of_eq_primitive hT (hγ₁ n) fun u hu ↦ h₁ u 0 hu le_rfl).sub
+        (continuousOn_of_eq_primitive hT (hγ₂ n) fun u hu ↦ h₂ 0 u le_rfl hu)).intervalIntegrable
+    filter_upwards [hGi.ae_hasDerivAt_integral, hDi.ae_hasDerivAt_integral,
+      Measure.ae_ne volume 0] with x hGx hDx hx0 hx
+    have hx' : 0 < x := lt_of_le_of_ne (by rw [uIcc_of_le hT] at hx; exact hx.1) (Ne.symm hx0)
+    have hG' := hGx hx 0 left_mem_uIcc
+    have hD' := hDx hx 0 left_mem_uIcc
+    refine hD'.unique (hG'.congr_of_eventuallyEq ?_)
+    filter_upwards [Ioi_mem_nhds hx'] with T hT'
+    exact (integral_sub_eq_integral_antidiagonal h₁ h₂ hγ₁ hγ₂ hint₁ hint₂ (le_of_lt hT')).2
+  filter_upwards [ae_all_iff.2 hn] with t ht htpos
+  obtain ⟨n, hn'⟩ := exists_nat_gt t
+  exact ht n (by rw [uIcc_of_le (Nat.cast_nonneg n)]; exact ⟨htpos.le, hn'.le⟩)
+
+end Calculus
+
 /-! ## Causal convolution and the Volterra resolvent
 
 Milestone 14.  The renewal equation `m = m₀ + φ ⋆ m` on `[0,∞)` and the resolvent that solves it
