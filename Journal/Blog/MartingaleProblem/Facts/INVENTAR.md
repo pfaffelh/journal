@@ -62846,3 +62846,70 @@ Martingal hätte zusätzlich die Adaptiertheit von `∫_0^t (g + α f)(X r) e_α
 > `duality_relation_zero_of_mean`, `integral_mul_sub_eq_zero_of_martingale`. *Warum jetzt:* es
 > ist der nächste offene Punkt der gestellten Reihenfolge, und Schritt 5 hängt daran; durch die
 > Mittelwertform ist er eine Reduktion wie Teil 3, keine neue Rechnung.
+
+
+### 2026-09-25, achtzehnter Lauf des Tages — Dualität, Schritt 3, Teil 4: **`duality_weighted`** und **`duality_relation_weighted`** (`rem:dualnonmarkov`, bei `α = β = 0`), dazu der Zeuge **`not_secondIncrement_of_weight_on_dual`**
+
+*Aufgabe: „Dualität, der Kern von Meilenstein 7“, das benannte Ziel des vorigen Laufs.*
+
+*`check_master.py`: 0 Fehler, 0 `sorry`, 0 veraltet in allen vier Dateien* (`WeakConvergence`
+18, `SkorokhodSpace` 38, `MartingaleProblems` 38, `JumpProcesses` 76 Warnungen; keine neue
+Warnung). Mathlib `94ef6b89544`. `check_axioms_master.py` für die fünf neuen Namen: nur
+`propext`, `Classical.choice`, `Quot.sound`. `check_duplicates.py`: kein Treffer. Entwickelt in
+`scripts/_dev_weighted.lean` (mit `sorry`-Stubs für die vier vorhandenen Sätze, die es benutzt)
+und `scripts/_dev_witness.lean` gegen v4.33.1, eingebaut mit
+`scripts/_dev_integrate_weighted.py` als Abschnitt „The weighted duality of
+`rem:dualnonmarkov`“ hinter `end AlphaBeta`. **Zwei neue Importe**:
+`Mathlib.Probability.Distributions.Uniform` und
+`Mathlib.Probability.ProbabilityMassFunction.Integrals`, nur für den Zeugen
+(`PMF.uniformOfFintype`, `PMF.integral_eq_sum`).
+
+**Fünf Deklarationen.**
+
+* `integral_weight_sub_eq_zero`: `E[Z (f(X(s₀+s),y) - f(X s₀,y) - ∫_0^s g(X(s₀+r),y) dr)] = 0`
+  für `Z` beschränkt und `𝓕 s₀`-meßbar. Über `integral_mul_sub_eq_zero_of_martingale` (voriger
+  Lauf) mit `ξ = Z`; die Zeitverschiebung ist `intervalIntegral.integral_comp_add_right`, die
+  Teilung bei `s₀` `intervalIntegral.integral_interval_sub_left`.
+* `duality_weighted_hypotheses`: alle Voraussetzungen von `duality_zero_of_mean` für
+  `X' r = (Z, X (s₀ + r))`, `f' ((v, x), y) = v f (x, y)` (ebenso `g'`, `h'`) und
+  `Γ' T = K Γ (s₀ + T)`.
+* **`duality_weighted`**: für fast jedes `t > 0`
+  `E[Z f(X(s₀+t), Y 0)] - E[Z f(X s₀, Y t)] = ∫_0^t (E[Z g(X(s₀+s), Y(t-s))] - E[Z h(…)]) ds`.
+* **`duality_relation_weighted`**: unter `g = h` für **jedes** `t`:
+  `E[Z f(X(s₀+t), Y 0)] = E[Z f(X s₀, Y t)]`. Das ist die Form, die
+  `propagatesAgreement_of_transfer` liest.
+* **`not_secondIncrement_of_weight_on_dual`**: auf `Bool` mit der fairen Münze ist
+  `Y t = 0` für `t < 1` und `= ε` danach ein Martingal für die Filtration `⊥` vor `1`, `⊤`
+  danach; `Z = 1 + Y 1 ∈ [0, 2]` ist `𝓖 1`-meßbar, und `E[Z Y 0] = 0`, `E[Z Y 1] = 1`. Mit
+  `f (x, y) = y`, `h = 0`, also `γ₂ = 0`, verlangte die zweite Zuwachsrelation Gleichheit.
+
+**Befunde.**
+
+1. **Das Manuskript hat recht mit „die gewichtete Fassung verbraucht die volle
+   Martingaleigenschaft in `X`“, und nur dort.** In `Y` genügt weiterhin die Konstanz des
+   Mittelwerts bei eingefrorenem `x`: das Gewicht sitzt in der ersten Koordinate von `X'`, ist
+   für die `Y`-Rechnung also eine Konstante `v` und wird herausgezogen. Die Hypothese in `Y`
+   ist deshalb wie bei `duality` als Martingal gestellt, verbraucht wird von ihr nur
+   `integral_compensated_sub_eq_zero_of_martingale`.
+2. **Eine neue Voraussetzung, und sie ist nötig, nicht bequem:** die Pfade
+   `r ↦ g (X r ω, y)` sind intervallintegrierbar (`hgi`). Das Martingal trägt das Zeitintegral
+   ab `0`, die gewichtete Rechnung braucht es ab `s₀`; die Teilung
+   `∫_0^{s₀+s} - ∫_0^{s₀} = ∫_{s₀}^{s₀+s}` gilt für den Bochner-Müllwert nicht. Ohne `hgi`
+   könnte `∫_0^{s₀+s}` als `0` gelesen werden, während `∫_{s₀}^{s₀+s}` es nicht ist. Das ist
+   „all integrals being assumed to exist“ des Manuskripts, an der Stelle, an der es gelesen wird.
+   Bei `duality_zero` (ungewichtet) kam `hgi` nicht vor, weil dort nie geteilt wird.
+3. **Kein Vorzeichen von `Z` wird gebraucht**, nur `|Z| ≤ K` und die `𝓕 s₀`-Meßbarkeit.
+   `0 ≤ Z` braucht erst die Lesart als gewichtetes Gesetz (`weightedLaw`, Schritt 5).
+4. **Die Filtration:** genau die von `duality` — `Indep (𝓕 s) (𝓖 t)` für jedes Paar; die
+   Meßbarkeit von `Z` für `𝓕 (s₀ + r)` kommt aus `𝓕.mono`. Das ist die Stelle, an der der Zeuge
+   ansetzt: dort ist `Z` für `𝓖 1` meßbar, und `IndepFun (Z, X) (Y t)` fällt.
+5. **Zum Zeugen, gegen das Manuskript (Z. 7571–7576):** „`Y` the martingale that is `0` at `⊥`
+   and a fair sign from time `1`“ — richtig; die Filtration nennt das Manuskript nicht. Die
+   natürliche von `Y` tut es und ist die hier gewählte (`⊥` vor `1`, auf `Bool` ist `σ(ε) = ⊤`).
+   Keine Lücke.
+
+**Manuskript:** keine Lücke in `rem:dualnonmarkov`. Befund 2 ist die Stelle, an der „all
+integrals assumed to exist“ eine benannte Hypothese wird.
+
+**Stand der Aufgabe.** Schritte 1, 2 und Schritt 3 vollständig. Offen: Schritt 4
+(`duality_stopped`), 5, 6, 7.

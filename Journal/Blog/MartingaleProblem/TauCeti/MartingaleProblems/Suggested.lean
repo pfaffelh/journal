@@ -48,6 +48,8 @@ import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Independence.CharacteristicFunction
 import Mathlib.Probability.BrownianMotion.Basic
 import Mathlib.Probability.Distributions.Bernoulli
+import Mathlib.Probability.Distributions.Uniform
+import Mathlib.Probability.ProbabilityMassFunction.Integrals
 
 /-!
 # Suggested signatures for the martingale problems roadmap
@@ -22050,6 +22052,247 @@ theorem duality_relation {X : ℝ≥0 → Ω → E₁} {Y : ℝ≥0 → Ω → E
   exact this
 
 end AlphaBeta
+
+/-! ### The weighted duality of `rem:dualnonmarkov`
+
+`Φ^Z (s, t) = E[Z f (X (s₀ + s), Y t)]` for a bounded weight `Z` measurable for the past of `X` at
+`s₀`.  The reduction is the one of `duality`: the weight is carried by an extra coordinate,
+`X' r = (Z, X (s₀ + r))`, and `duality_zero_of_mean` applies to `v f (x, y)`.  What is new is
+the mean hypothesis in the first variable, which now consumes the whole martingale property
+(`integral_weight_sub_eq_zero`); and the witness `not_secondIncrement_of_weight_on_dual` shows
+that the weight cannot be moved to the dual side. -/
+
+section Weighted
+
+variable {Ω E₁ E₂ : Type*} {mΩ : MeasurableSpace Ω} [MeasurableSpace E₁] [MeasurableSpace E₂]
+  {P : Measure Ω} [IsProbabilityMeasure P]
+
+omit [MeasurableSpace E₁] [MeasurableSpace E₂] in
+/-- **The weighted mean hypothesis, `lem:restartmemory` in the form the duality consumes.**  For a
+bounded `𝓕 s₀`-measurable weight `Z`, the compensated increment of `f (X ·, y)` after `s₀`,
+multiplied by `Z`, has mean zero.  This is the one place where the whole martingale property is
+consumed and not only the constancy of the mean; the time integral is split at `s₀`, which is why
+the paths of `g (X ·, y)` are asked to be interval integrable. -/
+theorem integral_weight_sub_eq_zero {X : ℝ≥0 → Ω → E₁} {𝓕 : Filtration ℝ≥0 mΩ}
+    {f g : E₁ × E₂ → ℝ}
+    (hXmg : ∀ y, Martingale (fun t ω ↦ f (X t ω, y) - ∫ r in (0 : ℝ)..t, g (X r.toNNReal ω, y))
+      𝓕 P)
+    (hgi : ∀ ω y (T : ℝ), IntervalIntegrable (fun r ↦ g (X r.toNNReal ω, y)) volume 0 T)
+    {s₀ : ℝ≥0} {Z : Ω → ℝ} (hZ : StronglyMeasurable[𝓕 s₀] Z) {K : ℝ} (hZK : ∀ ω, |Z ω| ≤ K)
+    (y : E₂) (s : ℝ≥0) :
+    ∫ ω, (Z ω * f (X (s₀ + s) ω, y) - Z ω * f (X (s₀ + 0) ω, y) -
+      ∫ r in (0 : ℝ)..s, Z ω * g (X (s₀ + r.toNNReal) ω, y)) ∂P = 0 := by
+  set M : ℝ≥0 → Ω → ℝ := fun t ω ↦ f (X t ω, y) - ∫ r in (0 : ℝ)..t, g (X r.toNNReal ω, y)
+  have hM : Martingale M 𝓕 P := hXmg y
+  have hZm : AEStronglyMeasurable Z P := (hZ.mono (𝓕.le s₀)).aestronglyMeasurable
+  have hint : ∀ t, Integrable (fun ω ↦ Z ω * M t ω) P := fun t ↦
+    (hM.integrable t).bdd_mul hZm (ae_of_all _ fun ω ↦ by rw [Real.norm_eq_abs]; exact hZK ω)
+  have key := integral_mul_sub_eq_zero_of_martingale hM (le_self_add : s₀ ≤ s₀ + s) hZ
+    (hint _) (hint _)
+  refine (integral_congr_ae (ae_of_all _ fun ω ↦ ?_)).trans key
+  have hshift : ∫ r in (0 : ℝ)..s, Z ω * g (X (s₀ + r.toNNReal) ω, y) =
+      Z ω * ∫ r in (s₀ : ℝ)..(s₀ + s : ℝ≥0), g (X r.toNNReal ω, y) := by
+    rw [intervalIntegral.integral_const_mul]
+    congr 1
+    have e : ∫ r in (0 : ℝ)..s, g (X (s₀ + r.toNNReal) ω, y) =
+        ∫ r in (0 : ℝ)..s, g (X (r + s₀).toNNReal ω, y) := by
+      refine intervalIntegral.integral_congr fun r hr ↦ ?_
+      have hr0 : 0 ≤ r := le_trans (le_min le_rfl s.2) hr.1
+      have e' : (r + (s₀ : ℝ)).toNNReal = s₀ + r.toNNReal := by
+        rw [Real.toNNReal_add hr0 s₀.coe_nonneg, Real.toNNReal_coe, add_comm]
+      rw [e']
+    rw [e, intervalIntegral.integral_comp_add_right (fun r ↦ g (X r.toNNReal ω, y))]
+    simp only [zero_add, NNReal.coe_add, add_comm (s : ℝ)]
+  rw [hshift, ← intervalIntegral.integral_interval_sub_left (hgi ω y _) (hgi ω y _)]
+  simp only [M, add_zero]
+  ring
+
+/-- The hypotheses of `duality_zero_of_mean` for the weighted process `X' r = (Z, X (s₀ + r))`
+and the functions `v f (x, y)`, `v g (x, y)`, `v h (x, y)` of `((v, x), y)`, with the majorant
+`K Γ (s₀ + T)`.  Stated once, so that `duality_weighted` and `duality_relation_weighted` share it.
+-/
+theorem duality_weighted_hypotheses {X : ℝ≥0 → Ω → E₁} {Y : ℝ≥0 → Ω → E₂}
+    (hX : Measurable (fun p : ℝ≥0 × Ω ↦ X p.1 p.2))
+    {𝓕 𝓖 : Filtration ℝ≥0 mΩ} (hXad : ∀ s, Measurable[𝓕 s] (X s))
+    (hYad : ∀ t, Measurable[𝓖 t] (Y t)) (hind : ∀ s t, Indep (𝓕 s) (𝓖 t) P)
+    {f g h : E₁ × E₂ → ℝ} (hf : Measurable f) (hg : Measurable g) (hh : Measurable h)
+    {Γ : ℝ≥0 → Ω → ℝ} (hΓ : ∀ T, Integrable (Γ T) P)
+    (hfΓ : ∀ T s t, s ≤ T → t ≤ T → ∀ ω, |f (X s ω, Y t ω)| ≤ Γ T ω)
+    (hgΓ : ∀ T s t, s ≤ T → t ≤ T → ∀ ω, |g (X s ω, Y t ω)| ≤ Γ T ω)
+    (hhΓ : ∀ T s t, s ≤ T → t ≤ T → ∀ ω, |h (X s ω, Y t ω)| ≤ Γ T ω)
+    (hgi : ∀ ω y (T : ℝ), IntervalIntegrable (fun r ↦ g (X r.toNNReal ω, y)) volume 0 T)
+    (hXmg : ∀ y, Martingale (fun t ω ↦ f (X t ω, y) - ∫ r in (0 : ℝ)..t, g (X r.toNNReal ω, y))
+      𝓕 P)
+    (hYmg : ∀ x, Martingale (fun t ω ↦ f (x, Y t ω) - ∫ r in (0 : ℝ)..t, h (x, Y r.toNNReal ω))
+      𝓖 P)
+    {s₀ : ℝ≥0} {Z : Ω → ℝ} (hZ : StronglyMeasurable[𝓕 s₀] Z) {K : ℝ} (hZK : ∀ ω, |Z ω| ≤ K) :
+    let X' : ℝ≥0 → Ω → ℝ × E₁ := fun r ω ↦ (Z ω, X (s₀ + r) ω)
+    let f' : (ℝ × E₁) × E₂ → ℝ := fun z ↦ z.1.1 * f (z.1.2, z.2)
+    let g' : (ℝ × E₁) × E₂ → ℝ := fun z ↦ z.1.1 * g (z.1.2, z.2)
+    let h' : (ℝ × E₁) × E₂ → ℝ := fun z ↦ z.1.1 * h (z.1.2, z.2)
+    let Γ' : ℝ≥0 → Ω → ℝ := fun T ω ↦ K * Γ (s₀ + T) ω
+    Measurable (fun p : ℝ≥0 × Ω ↦ X' p.1 p.2) ∧ (∀ s t, IndepFun (X' s) (Y t) P) ∧
+    Measurable f' ∧ Measurable g' ∧ Measurable h' ∧ (∀ T, Integrable (Γ' T) P) ∧
+    (∀ T s t, s ≤ T → t ≤ T → ∀ ω, |f' (X' s ω, Y t ω)| ≤ Γ' T ω) ∧
+    (∀ T s t, s ≤ T → t ≤ T → ∀ ω, |g' (X' s ω, Y t ω)| ≤ Γ' T ω) ∧
+    (∀ T s t, s ≤ T → t ≤ T → ∀ ω, |h' (X' s ω, Y t ω)| ≤ Γ' T ω) ∧
+    (∀ y (s : ℝ≥0), ∫ ω, (f' (X' s ω, y) - f' (X' 0 ω, y) -
+      ∫ r in (0 : ℝ)..s, g' (X' r.toNNReal ω, y)) ∂P = 0) ∧
+    (∀ x (t : ℝ≥0), ∫ ω, (f' (x, Y t ω) - f' (x, Y 0 ω) -
+      ∫ r in (0 : ℝ)..t, h' (x, Y r.toNNReal ω)) ∂P = 0) := by
+  intro X' f' g' h' Γ'
+  have hZm : Measurable Z := (hZ.mono (𝓕.le s₀)).measurable
+  have hK : ∀ ω, 0 ≤ K := fun ω ↦ (abs_nonneg _).trans (hZK ω)
+  have hb : ∀ {k : E₁ × E₂ → ℝ}, (∀ T s t, s ≤ T → t ≤ T → ∀ ω, |k (X s ω, Y t ω)| ≤ Γ T ω) →
+      ∀ T s t, s ≤ T → t ≤ T → ∀ ω, |Z ω * k (X (s₀ + s) ω, Y t ω)| ≤ K * Γ (s₀ + T) ω :=
+    fun hk T s t hs ht ω ↦ by
+      rw [abs_mul]
+      exact mul_le_mul (hZK ω) (hk (s₀ + T) (s₀ + s) t (by gcongr) (ht.trans le_add_self) ω)
+        (abs_nonneg _) (hK ω)
+  refine ⟨(hZm.comp measurable_snd).prodMk
+      (hX.comp ((measurable_const.add measurable_fst).prodMk measurable_snd)), fun s t ↦ ?_,
+    by fun_prop, by fun_prop, by fun_prop, fun T ↦ (hΓ _).const_mul K, hb hfΓ, hb hgΓ, hb hhΓ,
+    fun y s ↦ integral_weight_sub_eq_zero hXmg hgi hZ hZK y s, fun x t ↦ ?_⟩
+  · rw [IndepFun_iff_Indep]
+    exact indep_of_indep_of_le_right (indep_of_indep_of_le_left (hind (s₀ + s) t)
+      (((hZ.mono (𝓕.mono le_self_add)).measurable.prodMk (hXad _)).comap_le))
+      (hYad t).comap_le
+  · have h0 := integral_compensated_sub_eq_zero_of_martingale (f := fun z ↦ f (z.2, z.1))
+      (g := fun z ↦ h (z.2, z.1)) hYmg x.2 t
+    refine (integral_congr_ae (ae_of_all _ fun ω ↦ ?_)).trans
+      ((integral_const_mul x.1 _).trans ((congrArg (x.1 * ·) h0).trans (mul_zero _)))
+    simp only [f', h', intervalIntegral.integral_const_mul]
+    ring
+
+/-- **`duality_weighted`** (`rem:dualnonmarkov`), at `α = β = 0`: for a bounded weight `Z`
+measurable for the past of `X` at `s₀`, the weighted `Φ^Z (s, t) = E[Z f (X (s₀ + s), Y t)]`
+satisfies the conclusion of `thm:duality`: for almost every `t > 0`,
+`Φ^Z (t, 0) - Φ^Z (0, t) = ∫_0^t (E[Z g (X (s₀ + s), Y (t-s))] - E[Z h (X (s₀ + s), Y (t-s))]) ds`.
+
+*Proof.*  `duality_zero_of_mean` for the process `X' r = (Z, X (s₀ + r))` and the functions
+`v f (x, y)`, `v g (x, y)`, `v h (x, y)` of `((v, x), y)` (`duality_weighted_hypotheses`).  The
+mean hypothesis in the first variable is `integral_weight_sub_eq_zero`, and it is there that the
+martingale property of `X` is spent in full; the one in the second variable is that of `Y` times
+the frozen constant `v`, which is the manuscript's "reweighting the first factor leaves the second
+independent with its law unchanged".  The independence of `X' r` and `Y t` is that of
+`𝓕 (s₀ + r)` and `𝓖 t`, and this is where the weight has to be measurable for the filtration of
+`X`: `not_secondIncrement_of_weight_on_dual` is the witness.
+
+*Hypotheses.*  No sign of `Z` is used; `0 ≤ Z` enters only where the weighted identity is read
+as a statement about weighted laws.  The paths `g (X ·, y)` are interval integrable, because the
+time integral of the martingale is split at `s₀`. -/
+theorem duality_weighted {X : ℝ≥0 → Ω → E₁} {Y : ℝ≥0 → Ω → E₂}
+    (hX : Measurable (fun p : ℝ≥0 × Ω ↦ X p.1 p.2)) (hY : Measurable (fun p : ℝ≥0 × Ω ↦ Y p.1 p.2))
+    {𝓕 𝓖 : Filtration ℝ≥0 mΩ} (hXad : ∀ s, Measurable[𝓕 s] (X s))
+    (hYad : ∀ t, Measurable[𝓖 t] (Y t)) (hind : ∀ s t, Indep (𝓕 s) (𝓖 t) P)
+    {f g h : E₁ × E₂ → ℝ} (hf : Measurable f) (hg : Measurable g) (hh : Measurable h)
+    {Γ : ℝ≥0 → Ω → ℝ} (hΓ : ∀ T, Integrable (Γ T) P)
+    (hfΓ : ∀ T s t, s ≤ T → t ≤ T → ∀ ω, |f (X s ω, Y t ω)| ≤ Γ T ω)
+    (hgΓ : ∀ T s t, s ≤ T → t ≤ T → ∀ ω, |g (X s ω, Y t ω)| ≤ Γ T ω)
+    (hhΓ : ∀ T s t, s ≤ T → t ≤ T → ∀ ω, |h (X s ω, Y t ω)| ≤ Γ T ω)
+    (hgi : ∀ ω y (T : ℝ), IntervalIntegrable (fun r ↦ g (X r.toNNReal ω, y)) volume 0 T)
+    (hXmg : ∀ y, Martingale (fun t ω ↦ f (X t ω, y) - ∫ r in (0 : ℝ)..t, g (X r.toNNReal ω, y))
+      𝓕 P)
+    (hYmg : ∀ x, Martingale (fun t ω ↦ f (x, Y t ω) - ∫ r in (0 : ℝ)..t, h (x, Y r.toNNReal ω))
+      𝓖 P)
+    {s₀ : ℝ≥0} {Z : Ω → ℝ} (hZ : StronglyMeasurable[𝓕 s₀] Z) {K : ℝ} (hZK : ∀ ω, |Z ω| ≤ K) :
+    ∀ᵐ t : ℝ, 0 < t →
+      ∫ ω, Z ω * f (X (s₀ + t.toNNReal) ω, Y 0 ω) ∂P - ∫ ω, Z ω * f (X s₀ ω, Y t.toNNReal ω) ∂P =
+        ∫ s in 0..t, ((∫ ω, Z ω * g (X (s₀ + s.toNNReal) ω, Y (t - s).toNNReal ω) ∂P) -
+          ∫ ω, Z ω * h (X (s₀ + s.toNNReal) ω, Y (t - s).toNNReal ω) ∂P) := by
+  obtain ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11⟩ :=
+    duality_weighted_hypotheses hX hXad hYad hind hf hg hh hΓ hfΓ hgΓ hhΓ hgi hXmg hYmg hZ hZK
+  filter_upwards [duality_zero_of_mean h1 hY h2 h3 h4 h5 h6 h7 h8 h9 h10 h11] with t ht ht0
+  have := ht ht0
+  simp only [add_zero] at this
+  exact this
+
+/-- **`duality_relation_weighted`**: `cor:dualrel` under the weight, for **every** `t`.  Under the
+balance `g = h`, `E[Z f (X (s₀ + t), Y 0)] = E[Z f (X s₀, Y t)]` for every bounded
+`𝓕 s₀`-measurable `Z`.  This is the identity `propagatesAgreement_of_transfer` reads. -/
+theorem duality_relation_weighted {X : ℝ≥0 → Ω → E₁} {Y : ℝ≥0 → Ω → E₂}
+    (hX : Measurable (fun p : ℝ≥0 × Ω ↦ X p.1 p.2)) (hY : Measurable (fun p : ℝ≥0 × Ω ↦ Y p.1 p.2))
+    {𝓕 𝓖 : Filtration ℝ≥0 mΩ} (hXad : ∀ s, Measurable[𝓕 s] (X s))
+    (hYad : ∀ t, Measurable[𝓖 t] (Y t)) (hind : ∀ s t, Indep (𝓕 s) (𝓖 t) P)
+    {f g h : E₁ × E₂ → ℝ} (hf : Measurable f) (hg : Measurable g) (hh : Measurable h)
+    {Γ : ℝ≥0 → Ω → ℝ} (hΓ : ∀ T, Integrable (Γ T) P)
+    (hfΓ : ∀ T s t, s ≤ T → t ≤ T → ∀ ω, |f (X s ω, Y t ω)| ≤ Γ T ω)
+    (hgΓ : ∀ T s t, s ≤ T → t ≤ T → ∀ ω, |g (X s ω, Y t ω)| ≤ Γ T ω)
+    (hhΓ : ∀ T s t, s ≤ T → t ≤ T → ∀ ω, |h (X s ω, Y t ω)| ≤ Γ T ω)
+    (hgi : ∀ ω y (T : ℝ), IntervalIntegrable (fun r ↦ g (X r.toNNReal ω, y)) volume 0 T)
+    (hXmg : ∀ y, Martingale (fun t ω ↦ f (X t ω, y) - ∫ r in (0 : ℝ)..t, g (X r.toNNReal ω, y))
+      𝓕 P)
+    (hYmg : ∀ x, Martingale (fun t ω ↦ f (x, Y t ω) - ∫ r in (0 : ℝ)..t, h (x, Y r.toNNReal ω))
+      𝓖 P)
+    (hbal : ∀ z, g z = h z)
+    {s₀ : ℝ≥0} {Z : Ω → ℝ} (hZ : StronglyMeasurable[𝓕 s₀] Z) {K : ℝ} (hZK : ∀ ω, |Z ω| ≤ K)
+    (t : ℝ≥0) :
+    ∫ ω, Z ω * f (X (s₀ + t) ω, Y 0 ω) ∂P = ∫ ω, Z ω * f (X s₀ ω, Y t ω) ∂P := by
+  obtain ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11⟩ :=
+    duality_weighted_hypotheses hX hXad hYad hind hf hg hh hΓ hfΓ hgΓ hhΓ hgi hXmg hYmg hZ hZK
+  have := duality_relation_zero_of_mean h1 hY h2 h3 h4 h5 h6 h7 h8 h9 h10 h11
+    (fun z ↦ by rw [hbal]) t
+  simp only [add_zero] at this
+  exact this
+
+end Weighted
+
+/-- **The weight must sit on the first factor** (`rem:dualnonmarkov`).  On `Ω = Bool` with the
+fair coin, `Y` is `0` before time `1` and a fair sign `ε` from time `1` on, a martingale for the
+filtration that is trivial before `1` and everything from `1` on.  With `E₁ = {*}`,
+`f (x, y) = y` and `h = 0` this is the martingale hypothesis `eq:dualmg2`, and `γ₂ = 0`.  The
+weight `Z = 1 + Y 1` is bounded and non-negative, but it reads the dual process: it is
+`𝓖 1`-measurable.  Then `Φ^Z (⊥, ⊥) = E[Z Y 0] = 0` and `Φ^Z (⊥, 1) = E[Z Y 1] = E[ε + ε²] = 1`,
+while the second increment relation would make the difference `∫_0^1 γ₂^Z = 0`. -/
+theorem not_secondIncrement_of_weight_on_dual :
+    ∃ (P : Measure Bool) (_ : IsProbabilityMeasure P) (Y : ℝ≥0 → Bool → ℝ)
+      (𝓖 : Filtration ℝ≥0 (inferInstance : MeasurableSpace Bool)) (Z : Bool → ℝ),
+      Martingale Y 𝓖 P ∧ StronglyMeasurable[𝓖 1] Z ∧ (∀ ω, 0 ≤ Z ω ∧ Z ω ≤ 2) ∧
+      ∫ ω, Z ω * Y 0 ω ∂P = 0 ∧ ∫ ω, Z ω * Y 1 ω ∂P = 1 := by
+  set P : Measure Bool := (PMF.uniformOfFintype Bool).toMeasure
+  set ε : Bool → ℝ := fun ω ↦ if ω then 1 else -1
+  set Y : ℝ≥0 → Bool → ℝ := fun t ω ↦ if t < 1 then 0 else ε ω
+  let 𝓖 : Filtration ℝ≥0 (inferInstance : MeasurableSpace Bool) :=
+    { seq := fun t ↦ if t < 1 then ⊥ else ⊤
+      mono' := fun i j hij ↦ by
+        by_cases hj : j < 1
+        · simp only [lt_of_le_of_lt hij hj, hj, ↓reduceIte, le_refl]
+        · simp only [hj, ↓reduceIte, le_top]
+      le' := fun i ↦ by
+        by_cases hi : i < 1
+        · simp only [hi, ↓reduceIte, bot_le]
+        · simp only [hi, ↓reduceIte]; exact le_rfl }
+  have hint : ∀ F : Bool → ℝ, ∫ ω, F ω ∂P = (F true + F false) / 2 := fun F ↦ by
+    simp only [P, PMF.integral_eq_sum, PMF.uniformOfFintype_apply, Fintype.card_bool,
+      Fintype.univ_bool, Finset.mem_singleton, Bool.true_eq_false, not_false_eq_true,
+      Finset.sum_insert, Finset.sum_singleton, smul_eq_mul]
+    norm_num
+    ring
+  have hsm : ∀ F : Bool → ℝ, StronglyMeasurable[⊤] F := fun F ↦
+    (measurable_of_finite F).stronglyMeasurable
+  have hY0 : ∀ t, t < 1 → Y t = 0 := fun t ht ↦ funext fun ω ↦ by simp [Y, ht]
+  have hY1 : ∀ t, ¬ t < 1 → Y t = ε := fun t ht ↦ funext fun ω ↦ by simp [Y, ht]
+  refine ⟨P, inferInstance, Y, 𝓖, fun ω ↦ 1 + Y 1 ω, ⟨fun t ↦ ?_, fun i j hij ↦ ?_⟩, ?_, ?_, ?_, ?_⟩
+  · show StronglyMeasurable[if t < 1 then ⊥ else ⊤] (Y t)
+    by_cases ht : t < 1
+    · rw [hY0 t ht]; exact stronglyMeasurable_const
+    · rw [show (if t < 1 then ⊥ else ⊤ : MeasurableSpace Bool) = ⊤ by simp [ht]]; exact hsm _
+  · show P[Y j | if i < 1 then ⊥ else ⊤] =ᵐ[P] Y i
+    by_cases hj : j < 1
+    · rw [hY0 j hj, hY0 i (lt_of_le_of_lt hij hj), condExp_zero]
+    · by_cases hi : i < 1
+      · rw [show (if i < 1 then ⊥ else ⊤ : MeasurableSpace Bool) = ⊥ by simp [hi], condExp_bot',
+          hY0 i hi, hint]
+        refine ae_of_all _ fun ω ↦ ?_
+        simp [Y, hj, ε]
+      · rw [show (if i < 1 then ⊥ else ⊤ : MeasurableSpace Bool) = ⊤ by simp [hi]]
+        rw [condExp_of_stronglyMeasurable le_rfl (hsm _) (Integrable.of_finite), hY1 i hi,
+          hY1 j hj]
+  · show StronglyMeasurable[if (1 : ℝ≥0) < 1 then ⊥ else ⊤] _
+    rw [show (if (1 : ℝ≥0) < 1 then ⊥ else ⊤ : MeasurableSpace Bool) = ⊤ by simp]; exact hsm _
+  · intro ω; cases ω <;> norm_num [Y, ε]
+  · rw [hint]; simp [Y]
+  · rw [hint]; simp [Y, ε]
 
 /-! ## Causal convolution and the Volterra resolvent
 
