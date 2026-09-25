@@ -63410,3 +63410,90 @@ Aussage für `q`-fast jedes `t` verlangt die Rückübersetzung aus Befund 3.
 **Tabelle der Dualitätsaufgabe, Zeile 6:** Die Einschränkung „Uhr unendlicher Masse“ **entfällt**.
 
 Weiter mit der Aufgabe „lokales Martingalproblem“, Schritt 2.
+
+### Derselbe Lauf, zweiter Teil — Lokales Martingalproblem, Schritt 2: **`lem:L1auto`**, (L1) für Testprozesse mit beschränkten Sprüngen, als `isUniformLocalization_of_boundedJumps`
+
+*`check_master.py`: 0 Fehler, 0 `sorry`, 0 veraltet in allen vier Dateien*, Warnungen unverändert
+(18 / 38 / 38 / 76). `check_axioms_master.py` für die zwölf neuen Namen: nur die drei
+Standardaxiome. Kein Namenskonflikt auf master (`git grep` nach jedem Namen). Neuer Abschnitt
+`BoundedJumps` direkt hinter `RunningSupremum` in `MartingaleProblems/Suggested.lean`, entwickelt in
+`scripts/_dev_l1auto.lean`.
+
+**Deklarationen.**
+
+* `MeasureTheory.StronglyAdapted.isStronglyProgressive_of_rightContinuous`: ein adaptierter
+  reeller Prozeß mit rechtsstetigen Pfaden über `ℝ≥0` ist progressiv. **Mathlib hat das nicht.**
+  `Mathlib/Probability/Process/Adapted.lean` auf master hat nur `…_of_continuous` (Z. 365) und
+  `…_of_discrete` (Z. 376). Hier ist es ein Dreizeiler aus den vorhandenen
+  `measurable_uncurry_min_of_rightContinuous` und `isStronglyProgressive_of_measurable_uncurry_min`.
+  Das ist der Halbsatz von `lem:localmix`, Z. 4658–4659, „a càdlàg adapted process is
+  progressively measurable“.
+* `IsCadlag.continuousWithinAt_Ici`: Mathlibs `IsRightContinuous` ist Stetigkeit **in `Ioi`**
+  (`Topology/Order/Cadlag.lean:36`). Der Übergang geht über `continuousWithinAt_Ioi_iff_Ici`.
+* `runningSup_lt_top` (Teilpunkt (i) des 25.): ein càdlàg-Pfad hat endliches laufendes Supremum,
+  über `IsCadlag.totallyBounded_image_Icc` aus `SkorokhodSpace`. `monotone_supHittingTime`
+  (Teilpunkt (ii)), `tendsto_supHittingTime` (`τ_n → ⊤` an **jedem** càdlàg-Pfad),
+  `norm_le_of_le_supHittingTime` (`‖Y_s‖ ≤ n + c` für `s ≤ τ_n`).
+* **`martingale_stoppedProcess_of_le_supHittingTime`** (Teilpunkt (iii) und Schritt 4): Sei `Y`
+  ein lokales Martingal, adaptiert, càdlàg, mit `Y 0 = 0` und Sprüngen `≤ c`. Dann ist `Y`, bei
+  **jeder** Stoppzeit `σ ≤ τ_n` gestoppt, ein Martingal, mit dem Indikator, den `Locally` schreibt.
+  (iii) ist ohne neues Lemma erledigt. Die Konjunktion aus Martingal, Progressivität und
+  Rechtsstetigkeit, die `locally_martingale_stoppedProcess` verlangt, entsteht aus der
+  lokalisierenden Folge von `Y` selbst. Progressiv wird sie über den neuen Satz, dann
+  `isStronglyProgressive_indicator` und `.stoppedProcess`; rechtsstetig über
+  `tendsto_nhdsGE_stoppedProcess`. Danach folgt `martingale_of_locally_of_bounded` mit `C = n + c`.
+* `finsetSupHittingTime s n = min_{Y ∈ s} τ^Y_n`, mit `isStoppingTime_finsetSupHittingTime`
+  (strikt: das Ereignis ist eine endliche Vereinigung von `{n ≤ S^Y_t}`), Monotonie, `→ ⊤`.
+* **`isUniformLocalization_of_boundedJumps`**: für eine **endliche** Familie `s` adaptierter
+  càdlàg-Testprozesse mit `Y 0 = 0` und beschränkten Sprüngen ist `finsetSupHittingTime s` ein
+  `IsUniformLocalization (↑s) 𝓕₀`. Das ist (L1) von `def:localizing`, für die **rohe**
+  Filtration, ohne `IsRightContinuous` und ohne `IsComplete`.
+
+**Befunde.**
+
+1. **Unterschied zu BrownianMotion, wie verlangt festgehalten.** Übernommen ist nur die
+   Sprungschranke (`stoppedAtNorm_le_add_jump`, `LocalizingLeastGE.lean:107`, `0d5b6eb`, schon im
+   25. Lauf, Kommentar an `norm_stoppedProcess_supHittingTime_le`). Die Stoppzeiteigenschaft kommt
+   dort aus `Choquet.Debut` unter `[𝓕.IsComplete P] [𝓕.IsRightContinuous]`. Hier kommt sie aus
+   `{τ_n ≤ t} = {n ≤ S_t}` und dem abzählbaren Supremum. Auch Schritt 4 braucht keine der beiden
+   Voraussetzungen: `martingale_of_locally_of_bounded` ist dominierte Konvergenz der bedingten
+   Erwartungen längs der lokalisierenden Folge.
+2. **`lem:L1auto` liefert (L1) nur für endliche Familien, und auch dann nicht in `Σ₀`.**
+   (L1) (Z. 4564–4571) verlangt **eine** Folge `τ_n ∈ Σ` für **alle** `Y° ∈ 𝓧°`. `Σ₀ = {τ^Y_n}`
+   (Z. 4693) hat aber je Testprozeß eine eigene Folge. Gestoppt bei `τ^Y_n` ist ein anderes `Y'`
+   nicht beschränkt, und Schritt 4 des Beweises greift dann nicht.
+   * Für endliches `𝓧°` trägt das Minimum `min_Y τ^Y_n`. Das steht jetzt in Lean, liegt aber
+     **nicht in `Σ₀`**. `Σ₀` muß also um endliche Minima erweitert werden.
+   * Für unendliches `𝓧°` gibt das Infimum keine strikte Stoppzeit, weil es nicht angenommen
+     werden muß. Der Ausweg `inf_j τ^{Y_j}_{n+j}` hält zwar jedes `Y_k` beschränkt (durch
+     `n + k + c_k`), geht aber nicht gegen `∞`, sobald `S^{Y_j}_t` schneller als `j` wächst.
+   * Ein Zeuge dafür, daß kein gemeinsames `τ_n` existiert, ist **nicht** gebaut. Er bräuchte ein
+     striktes lokales Martingal.
+   Was `lem:L1auto` wirklich zeigt, ist die Fassung **je Testprozeß**: für jedes `Y°` eine Folge
+   in `Σ₀`. Diese Fassung genügt dem Gebrauch in `lem:localmix`(a),(b) (Z. 4654–4663): dort wird
+   `𝓧°_• = {Y^{τ_n}}` gebildet, und dafür reicht eine Folge je `Y°`. Die Abzählbarkeit für (b)
+   vererbt sich weiterhin. **Manuskript nicht angefaßt**; Z. 4564–4571 und 4692–4694 wären
+   entweder auf „für jedes `Y°` eine Folge in `Σ`“ umzustellen, oder `lem:L1auto` auf endliches
+   `𝓧°` und `Σ₀` um Minima zu erweitern.
+3. **Für die Lean-Definition heißt das:** `IsUniformLocalization` und `LocalizingSystem.uniform`
+   (Schritt 1) sind die Fassung „eine Folge für alle“. Sie werden von `lem:L1auto` nur für endliche
+   Familien erreicht; der Diffusionsfall mit abzählbar vielen `f` wird es nicht. Ob die
+   Definition auf „je `Y` eine Folge“ umgestellt wird, entscheidet der Nutzer. Der Lauf hat sie
+   **nicht** geändert. Die Umstellung wäre klein, weil
+   `isLocalMPSolution_iff_of_isUniformLocalization` mit einer Folge je `Y` genauso geht.
+   `martingale_stoppedProcess_of_le_supHittingTime` ist die Fassung je `Y` und steht schon.
+4. **Nicht gebaut: `localizingSystem_of_boundedJumps` als volles `LocalizingSystem`.**
+   `lem:L1auto` behauptet nur (L1). (L2) und (L3) für `Σ₀` sagt das Manuskript nicht, und sie
+   sind keine Folgerung. Für (L2) müßte `r + τ^Y_n ∘ θ_r` wieder in `Σ` liegen; das ist die
+   Trefferzeit des laufenden Supremums von `Y ∘ θ_r`, also eines anderen Testprozesses. Deshalb
+   heißt der Satz `isUniformLocalization_of_boundedJumps`.
+
+**Stand der Aufgabe.** Schritt 1 steht. Schritt 2 steht für endliche Familien, mit den Befunden 2
+bis 4. Offen: Schritte 3–7.
+
+**Benanntes Ziel für den nächsten Lauf:** Schritt 3, `lem:localmix`. Zuerst (a),
+`isLocalMPSolution_convex`: `IsLocalMPSolution 𝓧 𝓕 P` und `… P'` geben `… (α P + (1-α) P')`, für
+càdlàg adaptierte reelle Testprozesse. Der Weg führt über den Dichteprozeß oder unter dem *einen*
+Maß `Q` über `IsLocalizingSequence.min`; das steht im Befund des 25. zu Z. 4646–4651. Danach (b)
+unter `IsUniformLocalization`: das ist `isLocalMPSolution_iff_of_isUniformLocalization` plus
+Linearität des Martingalbegriffs in `P`.

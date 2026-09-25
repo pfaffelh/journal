@@ -46559,3 +46559,200 @@ theorem norm_stoppedProcess_supHittingTime_le {Y : ℝ≥0 → Ω → E} {ω : �
         _ = n + c := add_comm _ _
 
 end RunningSupremum
+
+/-! ### Uniform localization for bounded jumps, `lem:L1auto`
+
+Steps 3 and 4 of the proof of `lem:L1auto` put together: below the hitting time of its running
+supremum a càdlàg test process with bounded jumps is bounded, a stopped local martingale with
+right continuous paths is a local martingale, and a bounded local martingale is a martingale. -/
+
+section BoundedJumps
+
+variable {Ω : Type*} {m : MeasurableSpace Ω}
+
+/-- **A right continuous adapted real process is progressive**, over `ℝ≥0`.  Mathlib has the
+continuous case (`StronglyAdapted.isStronglyProgressive_of_continuous`) and the discrete one,
+not this; it is `measurable_uncurry_min_of_rightContinuous` read through
+`isStronglyProgressive_of_measurable_uncurry_min`.  This is the sentence "a càdlàg adapted
+process is progressively measurable" in the proof of `lem:localmix`, under (T2b). -/
+theorem MeasureTheory.StronglyAdapted.isStronglyProgressive_of_rightContinuous
+    {𝓕 : Filtration ℝ≥0 m} {Y : ℝ≥0 → Ω → ℝ} (hY : StronglyAdapted 𝓕 Y)
+    (hrc : ∀ ω s, ContinuousWithinAt (Y · ω) (Ici s) s) : IsStronglyProgressive 𝓕 Y := by
+  refine isStronglyProgressive_of_measurable_uncurry_min fun t ↦ ?_
+  set G : ℝ → Ω → ℝ := fun r ω ↦ Y r.toNNReal ω
+  have hmeas : ∀ r : ℝ, r ≤ (t : ℝ) → Measurable[𝓕 t] (G r) := fun r hr ↦
+    ((hY r.toNNReal).mono (𝓕.mono (Real.toNNReal_le_iff_le_coe.2 hr))).measurable
+  have key := measurable_uncurry_min_of_rightContinuous (φ := fun u : ℝ≥0 ↦ (u : ℝ))
+    measurable_coe_nnreal_real hmeas fun ω s ↦ tendsto_nhdsGE_comp_toNNReal (hrc ω) s
+  have heq : (fun p : ℝ≥0 × Ω ↦ G (min (p.1 : ℝ) (t : ℝ)) p.2)
+      = fun p : ℝ≥0 × Ω ↦ Y (min p.1 t) p.2 := by
+    funext p
+    simp only [G]
+    rw [← NNReal.coe_min, Real.toNNReal_coe]
+  rw [heq] at key
+  exact key
+
+/-- Mathlib's `IsRightContinuous` is continuity within `Ioi`; the running supremum reads it
+within `Ici`. -/
+theorem IsCadlag.continuousWithinAt_Ici {Y : ℝ≥0 → Ω → ℝ} {ω : Ω} (hY : IsCadlag (Y · ω))
+    (s : ℝ≥0) : ContinuousWithinAt (Y · ω) (Ici s) s :=
+  continuousWithinAt_Ioi_iff_Ici.1 (hY.isRightContinuous s)
+
+/-- A càdlàg path has a finite running supremum. -/
+theorem runningSup_lt_top {Y : ℝ≥0 → Ω → ℝ} {ω : Ω} (hY : IsCadlag (Y · ω)) (t : ℝ≥0) :
+    runningSup Y t ω < ⊤ := by
+  have hK : IsCompact (Icc (0 : ℝ≥0) t) := isCompact_Icc
+  obtain ⟨C, hC⟩ := (hY.totallyBounded_image_Icc zero_le hK).isBounded.exists_norm_le
+  refine lt_of_le_of_lt (iSup₂_le fun s hs ↦ ?_) (ENNReal.ofReal_lt_top (r := C))
+  rw [← ofReal_norm]
+  exact ENNReal.ofReal_le_ofReal (hC _ ⟨s, ⟨zero_le, hs⟩, rfl⟩)
+
+/-- The hitting times increase with the level. -/
+theorem monotone_supHittingTime (Y : ℝ≥0 → Ω → ℝ) (ω : Ω) :
+    Monotone fun n ↦ supHittingTime Y n ω := by
+  intro n n' hnn'
+  refine le_iInf₂ fun t ht ↦ iInf₂_le (f := fun (s : ℝ≥0) (_ : (n : ℝ≥0∞) ≤ runningSup Y s ω) ↦
+    (s : ℝ≥0∞)) t ((Nat.cast_le.2 hnn').trans ht)
+
+/-- The hitting times of the running supremum of a càdlàg path tend to `⊤`: a càdlàg path is
+bounded on bounded intervals. -/
+theorem tendsto_supHittingTime {Y : ℝ≥0 → Ω → ℝ} {ω : Ω} (hY : IsCadlag (Y · ω)) :
+    Tendsto (fun n ↦ supHittingTime Y n ω) atTop (𝓝 ⊤) := by
+  refine ENNReal.tendsto_nhds_top_iff_nnreal.2 fun x ↦ ?_
+  obtain ⟨N, hN⟩ := ENNReal.exists_nat_gt (runningSup_lt_top hY x).ne
+  filter_upwards [eventually_ge_atTop N] with n hn
+  rw [← not_le, supHittingTime_le_iff hY.continuousWithinAt_Ici]
+  exact not_le.2 (hN.trans_le (Nat.cast_le.2 hn))
+
+/-- Up to the hitting time the path is bounded by the level plus the jump bound. -/
+theorem norm_le_of_le_supHittingTime {Y : ℝ≥0 → Ω → ℝ} {ω : Ω} (hY : IsCadlag (Y · ω))
+    (h0 : Y 0 ω = 0) {c : ℝ} (hc : 0 ≤ c)
+    (hjump : ∀ t, 0 < t → ∀ l, Tendsto (Y · ω) (𝓝[<] t) (𝓝 l) → ‖Y t ω - l‖ ≤ c)
+    {n : ℕ} {s : ℝ≥0} (hs : (s : ℝ≥0∞) ≤ supHittingTime Y n ω) : ‖Y s ω‖ ≤ n + c := by
+  have := norm_stoppedProcess_supHittingTime_le hY.continuousWithinAt_Ici hY.tendsto_nhdsLT h0 hc
+    hjump n s
+  rwa [stoppedProcess_eq_of_le hs] at this
+
+/-- **The hitting times of the running suprema of finitely many test processes**, the infimum
+over the family: one sequence for all of them, as (L1) of `def:localizing` asks. -/
+noncomputable def finsetSupHittingTime (s : Finset (ℝ≥0 → Ω → ℝ)) (n : ℕ) (ω : Ω) : ℝ≥0∞ :=
+  s.inf fun Y ↦ supHittingTime Y n ω
+
+/-- The common hitting time is a **strict** stopping time: `{min_Y τ^Y_n ≤ t}` is the finite
+union of the events `{n ≤ S^Y_t}`. -/
+theorem isStoppingTime_finsetSupHittingTime {𝓕 : Filtration ℝ≥0 m}
+    {s : Finset (ℝ≥0 → Ω → ℝ)} (hY : ∀ Y ∈ s, StronglyAdapted 𝓕 Y)
+    (hrc : ∀ Y ∈ s, ∀ ω t, ContinuousWithinAt (Y · ω) (Ici t) t) (n : ℕ) :
+    IsStoppingTime 𝓕 (finsetSupHittingTime s n) := by
+  intro t
+  refine MeasurableSet.congr (s := ⋃ Y ∈ s, {ω | supHittingTime Y n ω ≤ (t : ℝ≥0∞)})
+    (Finset.measurableSet_biUnion _ fun Y hYs ↦
+      isStoppingTime_supHittingTime (hY Y hYs) (hrc Y hYs) n t) ?_
+  ext ω
+  simp only [mem_iUnion, exists_prop]
+  exact (Finset.inf_le_iff ENNReal.coe_lt_top).symm
+
+theorem monotone_finsetSupHittingTime (s : Finset (ℝ≥0 → Ω → ℝ)) (ω : Ω) :
+    Monotone fun n ↦ finsetSupHittingTime s n ω :=
+  fun _ _ hnn' ↦ Finset.inf_mono_fun fun Y _ ↦ monotone_supHittingTime Y ω hnn'
+
+/-- The common hitting times tend to `⊤` at every path along which every member is
+càdlàg. -/
+theorem tendsto_finsetSupHittingTime {s : Finset (ℝ≥0 → Ω → ℝ)} {ω : Ω}
+    (hY : ∀ Y ∈ s, IsCadlag (Y · ω)) :
+    Tendsto (fun n ↦ finsetSupHittingTime s n ω) atTop (𝓝 ⊤) := by
+  refine ENNReal.tendsto_nhds_top_iff_nnreal.2 fun x ↦ ?_
+  have h : ∀ Y ∈ s, ∀ᶠ n in atTop, (x : ℝ≥0∞) < supHittingTime Y n ω := fun Y hYs ↦
+    ENNReal.tendsto_nhds_top_iff_nnreal.1 (tendsto_supHittingTime (hY Y hYs)) x
+  filter_upwards [(Filter.eventually_all_finset s).2 h] with n hn
+  exact (Finset.lt_inf_iff ENNReal.coe_lt_top).2 hn
+
+/-- **(L1) for a test process with bounded jumps, one direction**: a local martingale that is
+càdlàg, adapted, starts in `0` and has jumps bounded by `c`, stopped at any stopping time
+`σ ≤ τ_n` below the `n`-th hitting time of its running supremum, is a martingale.  The stopped
+process is bounded by `n + c` (`norm_le_of_le_supHittingTime`), it is a local martingale because
+a local martingale with right continuous paths stays one under stopping
+(`locally_martingale_stoppedProcess`), and a bounded local martingale is a martingale
+(`martingale_of_locally_of_bounded`). -/
+theorem martingale_stoppedProcess_of_le_supHittingTime {𝓕 : Filtration ℝ≥0 m} {P : Measure Ω}
+    [IsFiniteMeasure P] {Y : ℝ≥0 → Ω → ℝ} (hloc : Locally (fun Z ↦ Martingale Z 𝓕 P) 𝓕 Y P)
+    (hY : StronglyAdapted 𝓕 Y) (hcad : ∀ ω, IsCadlag (Y · ω)) (h0 : ∀ ω, Y 0 ω = 0)
+    {c : ℝ} (hc : 0 ≤ c)
+    (hjump : ∀ ω t, 0 < t → ∀ l, Tendsto (Y · ω) (𝓝[<] t) (𝓝 l) → ‖Y t ω - l‖ ≤ c)
+    {n : ℕ} {σ : Ω → ℝ≥0∞} (hσ : IsStoppingTime 𝓕 σ) (hσn : ∀ ω, σ ω ≤ supHittingTime Y n ω) :
+    Martingale (stoppedProcess (fun i ↦ {ω | ⊥ < σ ω}.indicator (Y i)) σ) 𝓕 P := by
+  have hrc : ∀ ω s, ContinuousWithinAt (Y · ω) (Ici s) s := fun ω ↦ (hcad ω).continuousWithinAt_Ici
+  have hprog := hY.isStronglyProgressive_of_rightContinuous hrc
+  -- the conjunction that is stable under stopping holds locally
+  have hconj : Locally (fun W ↦ Martingale W 𝓕 P ∧ IsStronglyProgressive 𝓕 W ∧
+      ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ W r ω) (𝓝[≥] s) (𝓝 (W s ω))) 𝓕 Y P := by
+    obtain ⟨ρ, hρ, hmart⟩ := hloc
+    refine ⟨ρ, hρ, fun k ↦ ⟨hmart k, ?_, ?_⟩⟩
+    · have hS : MeasurableSet[𝓕 ⊥] {ω | ⊥ < ρ k ω} := by
+        have hcompl : {ω | ⊥ < ρ k ω} = {ω | ρ k ω ≤ ((⊥ : ℝ≥0) : ℝ≥0∞)}ᶜ := by
+          ext ω
+          show (⊥ : WithTop ℝ≥0) < ρ k ω ↔ ¬ ρ k ω ≤ ((⊥ : ℝ≥0) : ℝ≥0∞)
+          exact not_le.symm
+        rw [hcompl]
+        exact (hρ.isStoppingTime k ⊥).compl
+      exact (isStronglyProgressive_indicator hprog hS).stoppedProcess (hρ.isStoppingTime k)
+    · refine Filter.Eventually.of_forall fun ω s ↦ tendsto_nhdsGE_stoppedProcess ω ?_ s
+      intro s'
+      by_cases hmem : ω ∈ {ω | ⊥ < ρ k ω}
+      · simp only [Set.indicator_of_mem hmem]
+        exact hrc ω s'
+      · simp only [Set.indicator_of_notMem hmem]
+        exact tendsto_const_nhds
+  have hW := locally_martingale_stoppedProcess hconj hσ
+  have hWad : StronglyAdapted 𝓕 (stoppedProcess (fun i ↦ {ω | ⊥ < σ ω}.indicator (Y i)) σ) := by
+    have hS : MeasurableSet[𝓕 ⊥] {ω | ⊥ < σ ω} := by
+      have hcompl : {ω | ⊥ < σ ω} = {ω | σ ω ≤ ((⊥ : ℝ≥0) : ℝ≥0∞)}ᶜ := by
+        ext ω
+        show (⊥ : WithTop ℝ≥0) < σ ω ↔ ¬ σ ω ≤ ((⊥ : ℝ≥0) : ℝ≥0∞)
+        exact not_le.symm
+      rw [hcompl]
+      exact (hσ ⊥).compl
+    exact (isStronglyProgressive_indicator hprog hS).stronglyAdapted_stoppedProcess hσ
+  refine martingale_of_locally_of_bounded hW hWad (C := n + c) fun i ω ↦ ?_
+  simp only [stoppedProcess]
+  by_cases hmem : ω ∈ {ω | ⊥ < σ ω}
+  · rw [Set.indicator_of_mem hmem]
+    refine norm_le_of_le_supHittingTime (hcad ω) (h0 ω) hc (hjump ω) ?_
+    refine le_trans ?_ (hσn ω)
+    exact (coe_untopA (ne_top_of_le_ne_top WithTop.coe_ne_top (min_le_left _ _))).le.trans
+      (min_le_right _ _)
+  · rw [Set.indicator_of_notMem hmem, norm_zero]
+    positivity
+
+/-- **`lem:L1auto`, clause (L1), for a finite family of test processes with bounded jumps.**  If
+every member of the finite family `s` is adapted to the **raw** filtration `𝓕₀`, càdlàg at every
+path, starts in `0`, and has jumps bounded by a constant, then the common hitting times
+`finsetSupHittingTime s n = min_{Y ∈ s} τ^Y_n` of the running suprema are a uniform localization:
+strict stopping times, increasing and tending to `⊤` at every path, and for every local solution
+`P` every stopped `Y^{τ_n}` is a `P`-martingale.  The singleton `s = {Y}` is the manuscript's
+`τ^Y_n` itself.
+
+The family is finite, and that is not a convenience.  (L1) asks for **one** sequence for all test
+processes, and the manuscript's `Σ₀ = {τ^Y_n}` supplies one sequence **per** test process; for
+two members the common sequence is the minimum, which is not in `Σ₀`, and for infinitely many the
+infimum need not be attained, so `{inf_Y τ^Y_n ≤ t}` is no longer a finite union of events of the
+past.  No filtration hypothesis enters: neither right continuity nor completeness. -/
+theorem isUniformLocalization_of_boundedJumps {F : Type*} {mF : MeasurableSpace F}
+    {𝓕₀ : Filtration ℝ≥0 mF} {s : Finset (ℝ≥0 → F → ℝ)}
+    (hY : ∀ Y ∈ s, StronglyAdapted 𝓕₀ Y) (hcad : ∀ Y ∈ s, ∀ f, IsCadlag (Y · f))
+    (h0 : ∀ Y ∈ s, ∀ f, Y 0 f = 0)
+    (hjump : ∀ Y ∈ s, ∃ c, 0 ≤ c ∧
+      ∀ f t, 0 < t → ∀ l, Tendsto (Y · f) (𝓝[<] t) (𝓝 l) → ‖Y t f - l‖ ≤ c) :
+    IsUniformLocalization (s : Set (ℝ≥0 → F → ℝ)) 𝓕₀ (finsetSupHittingTime s) where
+  isStoppingTime := isStoppingTime_finsetSupHittingTime hY
+    fun Y hYs f ↦ (hcad Y hYs f).continuousWithinAt_Ici
+  mono := monotone_finsetSupHittingTime s
+  tendsto_top f := tendsto_finsetSupHittingTime fun Y hYs ↦ hcad Y hYs f
+  martingale P _ hP Y hYs n := by
+    obtain ⟨c, hc, hj⟩ := hjump Y hYs
+    exact martingale_stoppedProcess_of_le_supHittingTime (hP Y hYs) (hY Y hYs) (hcad Y hYs)
+      (h0 Y hYs) hc hj (isStoppingTime_finsetSupHittingTime hY
+        (fun Y hYs f ↦ (hcad Y hYs f).continuousWithinAt_Ici) n)
+      fun f ↦ Finset.inf_le (f := fun Y ↦ supHittingTime Y n f) hYs
+
+end BoundedJumps
