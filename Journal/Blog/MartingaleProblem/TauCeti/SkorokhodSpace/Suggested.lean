@@ -12062,6 +12062,63 @@ theorem SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet [SecondCountableT
     _ = ε := by ring
 
 omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **Convergence to a continuous path is locally uniform.**  If `f i → g` in `D(ι, E)`
+and `g` is continuous, then `f i → g` uniformly on every window `exhaustion basePoint R`.
+This is the converse of `SkorokhodSpace.tendsto_distWith_of_tendstoUniformlyOn` for a
+continuous limit, Billingsley's (12.14) and Ethier--Kurtz Proposition 3.10.1.
+
+The proof is the one of `SkorokhodSpace.continuousAt_eval_of_notMem_leftJumpSet`, run on
+the whole window at once: `SkorokhodSpace.exists_orderIso_forall_dist_lt_of_intDist_lt`
+gives, for paths close in the metric, **one** order isomorphism `e` moving the window by
+little with `dist (g (e t)) (f t)` small there, and `g`, being uniformly continuous on the
+compact window of radius `R + 1` (`IsCompact.uniformContinuousOn_of_continuous`), does not
+notice that the time has moved.  The lemma is applied with the roles of the two paths
+exchanged, so that the time change acts on the continuous one.
+
+Continuity of `g` is what the statement cannot do without: a unit jump at `1 + 1/n`
+converges in `D` to the unit jump at `1`, and at no `n` is it uniformly close to it. -/
+theorem SkorokhodSpace.tendstoUniformlyOn_of_tendsto_of_continuous [SecondCountableTopology E]
+    {γ : Type*} {L : Filter γ} {f : γ → D(ι, E)} {g : D(ι, E)}
+    (hg : Continuous g.toFun) (hfg : Tendsto f L (𝓝 g)) {R : ℝ} (hR : 0 < R) :
+    TendstoUniformlyOn (fun i t ↦ (f i).toFun t) g.toFun L (exhaustion (basePoint : ι) R) := by
+  rw [Metric.tendstoUniformlyOn_iff]
+  intro ε hε
+  obtain ⟨ρ, hρ, hunif⟩ := Metric.uniformContinuousOn_iff.1
+    ((isCompact_exhaustion (basePoint : ι) (R + 1)).uniformContinuousOn_of_continuous
+      hg.continuousOn) (ε / 2) (by linarith)
+  set η : ℝ := min (min (ε / 2) ρ) 1 with hη
+  have hη0 : 0 < η := lt_min (lt_min (by linarith) hρ) one_pos
+  obtain ⟨δ, hδ, h⟩ := SkorokhodSpace.exists_orderIso_forall_dist_lt_of_intDist_lt (E := E)
+    (basePoint : ι) hR hη0
+  filter_upwards [Metric.tendsto_nhds.1 hfg δ hδ] with i hi t ht
+  rw [dist_comm, SkorokhodSpace.dist_eq] at hi
+  obtain ⟨e, h1, -, h3⟩ := h g (f i) hi
+  have hmv : dist (e t) t < η := h1 t ht
+  have hR1 : exhaustion (basePoint : ι) R ⊆ exhaustion (basePoint : ι) (R + 1) := by
+    intro s hs
+    simp only [exhaustion, Metric.mem_closedBall] at hs ⊢
+    rw [max_eq_left hR.le] at hs
+    rw [max_eq_left (by linarith)]
+    linarith
+  have het : e t ∈ exhaustion (basePoint : ι) (R + 1) := by
+    have ht' := ht
+    simp only [exhaustion, Metric.mem_closedBall] at ht' ⊢
+    rw [max_eq_left hR.le] at ht'
+    rw [max_eq_left (by linarith)]
+    have := dist_triangle (e t) t (basePoint : ι)
+    have : η ≤ 1 := min_le_right _ _
+    linarith
+  have h4 : dist (g.toFun (e t)) (g.toFun t) < ε / 2 :=
+    hunif _ het _ (hR1 ht) (hmv.trans_le ((min_le_left _ _).trans (min_le_right _ _)))
+  have h5 : dist (g.toFun (e t)) ((f i).toFun t) < ε / 2 :=
+    (h3 t ht).trans_le ((min_le_left _ _).trans (min_le_left _ _))
+  calc dist (g.toFun t) ((f i).toFun t)
+      ≤ dist (g.toFun t) (g.toFun (e t)) + dist (g.toFun (e t)) ((f i).toFun t) :=
+        dist_triangle _ _ _
+    _ < ε / 2 + ε / 2 := by rw [dist_comm] at h4; linarith
+    _ = ε := by ring
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
 /-- **The finite dimensional evaluation is continuous at every path that jumps at
 none of its times.**  The index family `α` is arbitrary --- not finite, not even
 countable --- because continuity into a product is continuity in each
@@ -19807,6 +19864,113 @@ theorem mem_exhaustion_zero_nnreal_iff {u t : ℝ≥0} :
     t ∈ exhaustion (0 : ℝ≥0) (u : ℝ) ↔ t ≤ u := by
   simp [exhaustion, Metric.mem_closedBall, NNReal.dist_eq,
     abs_of_nonneg t.coe_nonneg, ← NNReal.coe_le_coe]
+
+/-! ### The running maximum
+
+`z ↦ sup_{t ≤ T} z t` is the classical example of a functional on the path space that is
+**not** continuous on `D(ℝ≥0, ℝ)` and **is** continuous at every continuous path: a jump at
+`T + 1/n` converges in `D` to a jump at `T`, and the suprema over `[0, T]` do not.  It is
+measurable, because a càdlàg path attains its supremum over `[0, T]` along a countable dense
+set together with `T`.  The two statements together are what the almost everywhere continuous
+mapping theorem asks of a functional. -/
+
+/-- **The running maximum** of a real càdlàg path up to time `T`, `⨆ t ≤ T, z t`.  The
+supremum is over a set bounded above (`SkorokhodSpace.bddAbove_range_supOn`), so it is the
+supremum and not a junk value. -/
+noncomputable def SkorokhodSpace.supOn (T : ℝ≥0) (z : D(ℝ≥0, ℝ)) : ℝ :=
+  ⨆ t : Set.Iic T, z.toFun t
+
+/-- A càdlàg path is bounded above on `[0, T]`, and hence on every subset of it:
+`isBounded_image_of_isCadlag_of_isCompact` (`Mathlib/Topology/Order/Cadlag.lean:192`). -/
+theorem SkorokhodSpace.bddAbove_range_supOn (T : ℝ≥0) (z : D(ℝ≥0, ℝ)) {W : Set ℝ≥0}
+    (hW : W ⊆ Set.Iic T) : BddAbove (Set.range fun t : W ↦ z.toFun t) := by
+  have hc : IsCompact (Set.Iic T) := by
+    rw [← Set.Icc_bot]; exact isCompact_Icc
+  refine ((isBounded_image_of_isCadlag_of_isCompact z.isCadlag hc).bddAbove).mono ?_
+  rintro _ ⟨t, rfl⟩
+  exact ⟨t, hW t.2, rfl⟩
+
+/-- **The running maximum is `1`-Lipschitz for the uniform distance on `[0, T]`.** -/
+theorem SkorokhodSpace.abs_supOn_sub_supOn_le {T : ℝ≥0} {z g : D(ℝ≥0, ℝ)} {ε : ℝ}
+    (h : ∀ t ≤ T, |z.toFun t - g.toFun t| ≤ ε) :
+    |SkorokhodSpace.supOn T z - SkorokhodSpace.supOn T g| ≤ ε := by
+  have hne : Nonempty (Set.Iic T) := ⟨⟨T, Set.mem_Iic.2 le_rfl⟩⟩
+  have hz := SkorokhodSpace.bddAbove_range_supOn T z (subset_refl _)
+  have hg := SkorokhodSpace.bddAbove_range_supOn T g (subset_refl _)
+  rw [abs_le]
+  constructor
+  · have : SkorokhodSpace.supOn T g ≤ SkorokhodSpace.supOn T z + ε := by
+      refine ciSup_le fun t ↦ ?_
+      have h1 := (abs_le.1 (h t t.2)).1
+      have h2 : z.toFun t ≤ SkorokhodSpace.supOn T z := le_ciSup hz t
+      linarith
+    linarith
+  · have : SkorokhodSpace.supOn T z ≤ SkorokhodSpace.supOn T g + ε := by
+      refine ciSup_le fun t ↦ ?_
+      have h1 := (abs_le.1 (h t t.2)).2
+      have h2 : g.toFun t ≤ SkorokhodSpace.supOn T g := le_ciSup hg t
+      linarith
+    linarith
+
+/-- **The running maximum is continuous at every continuous path.**  Convergence in `D` to a
+continuous path is uniform on `[0, T]`
+(`SkorokhodSpace.tendstoUniformlyOn_of_tendsto_of_continuous`, read on the window of radius
+`T + 1`), and the running maximum is `1`-Lipschitz for the uniform distance
+(`SkorokhodSpace.abs_supOn_sub_supOn_le`).  Continuity of `g` cannot be dropped; see the
+section comment. -/
+theorem SkorokhodSpace.continuousAt_supOn {T : ℝ≥0} {g : D(ℝ≥0, ℝ)} (hg : Continuous g.toFun) :
+    ContinuousAt (SkorokhodSpace.supOn T) g := by
+  have hunif := SkorokhodSpace.tendstoUniformlyOn_of_tendsto_of_continuous (E := ℝ)
+    (L := 𝓝 g) (f := id) hg tendsto_id (R := (T : ℝ) + 1) (by positivity)
+  rw [Metric.tendstoUniformlyOn_iff] at hunif
+  rw [ContinuousAt, Metric.tendsto_nhds]
+  intro ε hε
+  filter_upwards [hunif (ε / 2) (by linarith)] with z hz
+  rw [Real.dist_eq]
+  refine lt_of_le_of_lt (SkorokhodSpace.abs_supOn_sub_supOn_le (ε := ε / 2) fun t ht ↦ ?_)
+    (half_lt_self hε)
+  have hmem : t ∈ exhaustion (basePoint : ℝ≥0) ((T : ℝ) + 1) := by
+    change t ∈ exhaustion (0 : ℝ≥0) ((T : ℝ) + 1)
+    have : ((T : ℝ) + 1) = ((T + 1 : ℝ≥0) : ℝ) := by push_cast; ring
+    rw [this, mem_exhaustion_zero_nnreal_iff]
+    exact ht.trans (le_add_of_nonneg_right zero_le_one)
+  have := hz t hmem
+  rw [dist_comm, Real.dist_eq] at this
+  exact this.le
+
+/-- **The running maximum is measurable.**  With `S` countable and dense
+(`TopologicalSpace.exists_countable_dense`), the supremum over `[0, T]` equals the supremum
+over the countable set `([0, T] ∩ S) ∪ {T}`: a right continuous path below a constant along
+`S` on the window is below it on the whole window
+(`SkorokhodSpace.forall_mem_Icc_of_forall_mem_dense`, the endpoint read separately).  A
+countable supremum of the measurable evaluations is measurable (`Measurable.iSup`,
+`Mathlib/MeasureTheory/Constructions/BorelSpace/Order.lean:909`, which needs no bound). -/
+theorem SkorokhodSpace.measurable_supOn (T : ℝ≥0) :
+    Measurable (SkorokhodSpace.supOn T) := by
+  obtain ⟨S, hSc, hSd⟩ := TopologicalSpace.exists_countable_dense ℝ≥0
+  set W : Set ℝ≥0 := (Set.Iic T ∩ S) ∪ {T} with hWdef
+  have hWsub : W ⊆ Set.Iic T := by
+    rintro t (ht | ht)
+    · exact ht.1
+    · rw [Set.mem_singleton_iff.1 ht]; exact Set.mem_Iic.2 le_rfl
+  have hWc : W.Countable := ((hSc.mono Set.inter_subset_right).union (Set.countable_singleton T))
+  have : Countable W := hWc.to_subtype
+  have hTW : T ∈ W := Or.inr rfl
+  have heq : SkorokhodSpace.supOn T = fun z : D(ℝ≥0, ℝ) ↦ ⨆ t : W, z.toFun t := by
+    funext z
+    have hne : Nonempty (Set.Iic T) := ⟨⟨T, Set.mem_Iic.2 le_rfl⟩⟩
+    have hneW : Nonempty W := ⟨⟨T, hTW⟩⟩
+    have hbW := SkorokhodSpace.bddAbove_range_supOn T z hWsub
+    have hb := SkorokhodSpace.bddAbove_range_supOn T z (subset_refl _)
+    refine le_antisymm (ciSup_le fun t ↦ ?_) (ciSup_le fun t ↦ le_ciSup hb ⟨t, hWsub t.2⟩)
+    have hall := SkorokhodSpace.forall_mem_Icc_of_forall_mem_dense
+      (K := Set.Iic (⨆ s : W, z.toFun s)) isClosed_Iic hSd (a := 0) (b := T)
+      z.isCadlag.isRightContinuous
+      (fun s hs ↦ le_ciSup hbW ⟨s, Or.inl ⟨hs.1.2, hs.2⟩⟩)
+      (fun _ ↦ le_ciSup hbW ⟨T, hTW⟩)
+    exact hall t ⟨bot_le, t.2⟩
+  rw [heq]
+  exact Measurable.iSup fun t ↦ SkorokhodSpace.measurable_eval (t : ℝ≥0)
 
 /-- **The window set over `ℝ≥0` is measurable**, and it is the crossed form of
 `SkorokhodSpace.measurableSet_setOf_forall_mem_exhaustion`: the identity above is

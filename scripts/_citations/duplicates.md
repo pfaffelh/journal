@@ -1,6 +1,6 @@
 # Deklarationen, die es auf `94ef6b89544e58e90f119da869f3fb48d1da0f4c` schon geben könnte
 
-* geprüfte eigene Deklarationen: **1953**
+* geprüfte eigene Deklarationen: **1962**
 * Treffer auf dem letzten Namensbestandteil: **45**
 * als zu allgemein übergangen (kurz oder generisch): 26
 
@@ -22,7 +22,7 @@ Ein Treffer ist ein **Anhaltspunkt**, keine Doppelung. Er sagt, daß Mathlib ein
 | `MeasureTheory.Submartingale.comp_monotone` | `MartingaleProblems/Suggested.lean:2065` | `Antitone.comp_monotone` (`Mathlib/Order/Monotone/Defs.lean:370`) |
 | `MeasureTheory.TendstoInDistribution.continuousAt_comp` | `WeakConvergence/Suggested.lean:2450` | `MapClusterPt.continuousAt_comp` (`Mathlib/Topology/ClusterPt.lean:150`) |
 | `SkorokhodSpace.const_toFun` | `SkorokhodSpace/Suggested.lean:2948` | `Tactic.ComputeAsymptotics.MultiseriesExpansion.const_toFun` (`Mathlib/Tactic/ComputeAsymptotics/Multiseries/Defs.lean:578`) |
-| `SkorokhodSpace.continuous_postcomp` | `SkorokhodSpace/Suggested.lean:15901` | `ContinuousLinearMapWOT.continuous_postcomp` (`Mathlib/Analysis/LocallyConvex/WeakOperatorTopology.lean:508`); `ContinuousMap.continuous_postcomp` (`Mathlib/Topology/CompactOpen.lean:139`); `Pi.continuous_postcomp` (`Mathlib/Topology/Constructions.lean:853`) |
+| `SkorokhodSpace.continuous_postcomp` | `SkorokhodSpace/Suggested.lean:15958` | `ContinuousLinearMapWOT.continuous_postcomp` (`Mathlib/Analysis/LocallyConvex/WeakOperatorTopology.lean:508`); `ContinuousMap.continuous_postcomp` (`Mathlib/Topology/CompactOpen.lean:139`); `Pi.continuous_postcomp` (`Mathlib/Topology/Constructions.lean:853`) |
 | `SkorokhodSpace.measurable_eval` | `SkorokhodSpace/Suggested.lean:8076` | `ContinuousMap.measurable_eval` (`Mathlib/MeasureTheory/Constructions/BorelSpace/ContinuousMap.lean:56`) |
 | `SkorokhodSpace.shift_shift` | `SkorokhodSpace/Suggested.lean:8515` | `CategoryTheory.ObjectProperty.shift_shift` (`Mathlib/CategoryTheory/ObjectProperty/Shift.lean:53`) |
 | `SkorokhodSpace.shift_zero` | `SkorokhodSpace/Suggested.lean:8508` | `CochainComplex.HomComplex.Cochain.shift_zero` (`Mathlib/Algebra/Homology/HomotopyCategory/HomComplexShift.lean:228`); `CategoryTheory.ObjectProperty.shift_zero` (`Mathlib/CategoryTheory/ObjectProperty/Shift.lean:47`); `AffineSubspace.shift_zero` (`Mathlib/LinearAlgebra/AffineSpace/AffineSubspace/Shift.lean:88`) |
@@ -50,6 +50,6 @@ Ein Treffer ist ein **Anhaltspunkt**, keine Doppelung. Er sagt, daß Mathlib ein
 | `SkorokhodSpace.instMetricSpace` | `SkorokhodSpace/Suggested.lean:4071` | `Circle.instMetricSpace` (`Mathlib/Analysis/Complex/Circle.lean:65`); `Unitization.instMetricSpace` (`Mathlib/Analysis/Normed/Algebra/Unitization.lean:230`); `BoundedContinuousFunction.instMetricSpace` (`Mathlib/Topology/ContinuousMap/Bounded/Basic.lean:205`) |
 | `SkorokhodSpace.instSeparableSpace` | `SkorokhodSpace/Suggested.lean:6847` | `DomMulAct.instSeparableSpace` (`Mathlib/Topology/Algebra/Constructions/DomMulAct.lean:100`); `ContinuousMap.instSeparableSpace` (`Mathlib/Topology/ContinuousMap/SecondCountableSpace.lean:108`) |
 | `SkorokhodSpace.metricSpace` | `SkorokhodSpace/Suggested.lean:3509` | `spectralNorm.metricSpace` (`Mathlib/Analysis/Normed/Unbundled/SpectralNorm.lean:905`); `Padic.metricSpace` (`Mathlib/NumberTheory/Padics/PadicNumbers.lean:784`); `Subtype.metricSpace` (`Mathlib/Topology/MetricSpace/Basic.lean:111`) |
-| `SkorokhodSpace.postcomp` | `SkorokhodSpace/Suggested.lean:15450` | `PresheafOfModulesOfCommRing.Derivation.postcomp` (`Mathlib/Algebra/Category/ModuleCat/Differentials/Presheaf.lean:83`); `ModuleCat.AlternatingMap.postcomp` (`Mathlib/Algebra/Category/ModuleCat/ExteriorPower.lean:55`); `CategoryTheory.Abelian.Ext.postcomp` (`Mathlib/Algebra/Homology/DerivedCategory/Ext/Basic.lean:407`) |
-| `TimeChange.ofNNReal` | `SkorokhodSpace/Suggested.lean:19210` | `ENNReal.ofNNReal` (`Mathlib/Basic/ENNReal/Basic.lean:116`) |
+| `SkorokhodSpace.postcomp` | `SkorokhodSpace/Suggested.lean:15507` | `PresheafOfModulesOfCommRing.Derivation.postcomp` (`Mathlib/Algebra/Category/ModuleCat/Differentials/Presheaf.lean:83`); `ModuleCat.AlternatingMap.postcomp` (`Mathlib/Algebra/Category/ModuleCat/ExteriorPower.lean:55`); `CategoryTheory.Abelian.Ext.postcomp` (`Mathlib/Algebra/Homology/DerivedCategory/Ext/Basic.lean:407`) |
+| `TimeChange.ofNNReal` | `SkorokhodSpace/Suggested.lean:19267` | `ENNReal.ofNNReal` (`Mathlib/Basic/ENNReal/Basic.lean:116`) |
 | `TimeChange.toNNReal` | `SkorokhodSpace/Suggested.lean:8361` | `ContinuousMap.toNNReal` (`Mathlib/Analysis/CStarAlgebra/ContinuousFunctionalCalculus/Unique.lean:67`); `ContinuousMapZero.toNNReal` (`Mathlib/Analysis/CStarAlgebra/ContinuousFunctionalCalculus/Unique.lean:233`); `ENNReal.toNNReal` (`Mathlib/Basic/ENNReal/Basic.lean:226`) |

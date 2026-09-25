@@ -39167,6 +39167,115 @@ theorem tendsto_map_rescaledWalk_of_isBrownianReal {mΩ : MeasurableSpace Ω}
   exact ⟨X', hc, hae, hm', tendsto_map_rescaledWalk_map_cadlagPath hmeas hind hcent hv hsq hLp
     hlaw hΦm hΦ hpre hm' hc⟩
 
+/-- **The invariance principle, in the form in which it is used.**  Under the hypotheses of
+`MeasureTheory.tendsto_map_rescaledWalk_map_cadlagPath`, for every bounded measurable
+`F : D(ℝ≥0, ℝ) → ℝ` that is continuous at `Q`-almost every path of `√v · X`,
+`∫ F (Φ n ω) dP → ∫ F (√v · X ω) dQ`.
+
+Continuity is asked **only at almost every path of the limit**, and that is the point of the
+statement: functionals such as `z ↦ sup_{t ≤ 1} z t` are not continuous on all of `D(ℝ≥0, ℝ)`
+but are at every continuous path, and for `IsBrownianReal` those carry the whole mass.
+
+The proof is the continuous mapping theorem with a null discontinuity set,
+`MeasureTheory.tendsto_of_measure_setOf_not_continuousAt_eq_zero` (roadmap `WeakConvergence`),
+applied to `F` itself with target `ℝ`, and then the defining property of weak convergence on `ℝ`
+(`ProbabilityMeasure.tendsto_iff_forall_integral_tendsto`,
+`Mathlib/MeasureTheory/Measure/ProbabilityMeasure.lean:365`) against the clamp
+`x ↦ max (-|C|) (min |C| x)`, which is bounded, continuous, and the identity on the range of
+`F`.  The continuity set of `F` is Borel by `measurableSet_of_continuousAt`, which is what turns
+the hypothesis on `Ω'` into one on the law. -/
+theorem tendsto_integral_map_rescaledWalk {mΩ : MeasurableSpace Ω}
+    {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hcent : ∫ ω, ξ 0 ω ∂P = 0) {v : ℝ} (hv : 0 < v) (hsq : ∫ ω, ξ 0 ω ^ 2 ∂P = v)
+    (hLp : MemLp (ξ 0) 2 P) (hlaw : ∀ k, Measure.map (ξ k) P = Measure.map (ξ 0) P)
+    {Φ : ℕ → Ω → D(ℝ≥0, ℝ)} (hΦm : ∀ n, Measurable (Φ n))
+    (hΦ : ∀ (n : ℕ) (ω : Ω), (Φ n ω).toFun = fun r : ℝ≥0 ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊r * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsPreBrownianReal X Q) (hm : ∀ t, Measurable (X t))
+    (hc : ∀ ω, IsCadlag (X · ω))
+    {F : D(ℝ≥0, ℝ) → ℝ} (hF : Measurable F) {C : ℝ} (hC : ∀ z, |F z| ≤ C)
+    (hFc : ∀ᵐ ω ∂Q, ContinuousAt F (cadlagPath (fun t ω ↦ Real.sqrt v * X t ω)
+      (fun ω ↦ (hc ω).continuous_comp (continuous_const.mul continuous_id)) ω)) :
+    Tendsto (fun n ↦ ∫ ω, F (Φ n ω) ∂P) atTop
+      (𝓝 (∫ ω, F (cadlagPath (fun t ω ↦ Real.sqrt v * X t ω)
+        (fun ω ↦ (hc ω).continuous_comp (continuous_const.mul continuous_id)) ω) ∂Q)) := by
+  have := hX.isGaussianProcess.isProbabilityMeasure
+  set Y := cadlagPath (fun t ω ↦ Real.sqrt v * X t ω)
+    (fun ω ↦ (hc ω).continuous_comp (continuous_const.mul continuous_id)) with hY
+  have hYm : Measurable Y := measurable_cadlagPath _ fun t ↦ (hm t).const_mul _
+  have hconv := tendsto_map_rescaledWalk_map_cadlagPath hmeas hind hcent hv hsq hLp hlaw hΦm hΦ
+    hX hm hc
+  have hnull : (Q.map Y) {z | ¬ ContinuousAt F z} = 0 := by
+    have hms : MeasurableSet {z | ¬ ContinuousAt F z} := (measurableSet_of_continuousAt F).compl
+    rw [Measure.map_apply hYm hms]
+    exact ae_iff.1 hFc
+  have hlim := tendsto_of_measure_setOf_not_continuousAt_eq_zero
+    (μ' := fun n ↦ ⟨(P.map (Φ n)).map F, inferInstance⟩)
+    (ν' := ⟨(Q.map Y).map F, inferInstance⟩) hF hconv hnull (fun n ↦ rfl) rfl
+  let g : BoundedContinuousFunction ℝ ℝ := BoundedContinuousFunction.mkOfBound
+    ⟨fun x ↦ max (-|C|) (min |C| x), by fun_prop⟩ (|C| + |C|) fun x y ↦ by
+      have hb : ∀ x : ℝ, |max (-|C|) (min |C| x)| ≤ |C| := fun x ↦
+        abs_le.2 ⟨le_max_left _ _, max_le (by linarith [abs_nonneg C]) (min_le_left _ _)⟩
+      simp only [ContinuousMap.coe_mk, Real.dist_eq]
+      exact (abs_sub _ _).trans (add_le_add (hb x) (hb y))
+  have hg : ∀ z, g (F z) = F z := fun z ↦ by
+    have h1 := abs_le.1 ((hC z).trans (le_abs_self C))
+    change max (-|C|) (min |C| (F z)) = F z
+    rw [min_eq_right h1.2, max_eq_right h1.1]
+  have hint := (ProbabilityMeasure.tendsto_iff_forall_integral_tendsto.1 hlim) g
+  have hgF : StronglyMeasurable fun z ↦ g (F z) :=
+    g.continuous.comp_stronglyMeasurable hF.stronglyMeasurable
+  have hvalQ : ∫ x, g x ∂((Q.map Y).map F) = ∫ ω, F (Y ω) ∂Q := by
+    rw [integral_map hF.aemeasurable g.continuous.aestronglyMeasurable,
+      integral_map hYm.aemeasurable hgF.aestronglyMeasurable]
+    simp only [hg]
+  have hvalP : ∀ n, ∫ x, g x ∂((P.map (Φ n)).map F) = ∫ ω, F (Φ n ω) ∂P := fun n ↦ by
+    rw [integral_map hF.aemeasurable g.continuous.aestronglyMeasurable,
+      integral_map (hΦm n).aemeasurable hgF.aestronglyMeasurable]
+    simp only [hg]
+  simp only [ProbabilityMeasure.coe_mk] at hint
+  rw [hvalQ] at hint
+  exact hint.congr hvalP
+
+/-- **The running maximum of the rescaled walk converges in law to that of the scaled
+Brownian motion.**  For Donsker's data and `ProbabilityTheory.IsBrownianReal X Q` with
+measurable coordinates and càdlàg paths, and for every bounded continuous `h : ℝ → ℝ` and
+every horizon `T`,
+`∫ h (sup_{t ≤ T} Φ n ω t) dP → ∫ h (sup_{t ≤ T} √v · X t ω) dQ`.
+
+This is the first functional for which `MeasureTheory.tendsto_integral_map_rescaledWalk` says
+more than the continuous mapping theorem: `SkorokhodSpace.supOn T` is not continuous on
+`D(ℝ≥0, ℝ)`, only at continuous paths (`SkorokhodSpace.continuousAt_supOn`), and the field
+`cont` of `IsBrownianReal` puts almost every path of the limit there.  Measurability is
+`SkorokhodSpace.measurable_supOn`, and the bound is `‖h‖`.
+
+**Not an existence statement**: `X` is a hypothesis.  Asking every path to be càdlàg on top
+of `cont` is the price of the total path map; `MeasureTheory.isCadlagMPSolution_of_isBrownianReal`
+shows how to remove it by a modification on a null set. -/
+theorem tendsto_integral_supOn_rescaledWalk {mΩ : MeasurableSpace Ω}
+    {P : Measure Ω} [IsProbabilityMeasure P]
+    {ξ : ℕ → Ω → ℝ} (hmeas : ∀ k, StronglyMeasurable (ξ k)) (hind : iIndepFun ξ P)
+    (hcent : ∫ ω, ξ 0 ω ∂P = 0) {v : ℝ} (hv : 0 < v) (hsq : ∫ ω, ξ 0 ω ^ 2 ∂P = v)
+    (hLp : MemLp (ξ 0) 2 P) (hlaw : ∀ k, Measure.map (ξ k) P = Measure.map (ξ 0) P)
+    {Φ : ℕ → Ω → D(ℝ≥0, ℝ)} (hΦm : ∀ n, Measurable (Φ n))
+    (hΦ : ∀ (n : ℕ) (ω : Ω), (Φ n ω).toFun = fun r : ℝ≥0 ↦ (Real.sqrt ((n : ℝ) + 1))⁻¹
+      * ∑ j ∈ Finset.range ⌊r * ((n : ℝ≥0) + 1)⌋₊, ξ j ω)
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t))
+    (hc : ∀ ω, IsCadlag (X · ω)) (h : BoundedContinuousFunction ℝ ℝ) (T : ℝ≥0) :
+    Tendsto (fun n ↦ ∫ ω, h (SkorokhodSpace.supOn T (Φ n ω)) ∂P) atTop
+      (𝓝 (∫ ω, h (SkorokhodSpace.supOn T (cadlagPath (fun t ω ↦ Real.sqrt v * X t ω)
+        (fun ω ↦ (hc ω).continuous_comp (continuous_const.mul continuous_id)) ω)) ∂Q)) := by
+  refine tendsto_integral_map_rescaledWalk hmeas hind hcent hv hsq hLp hlaw hΦm hΦ
+    hX.toIsPreBrownianReal hm hc (F := fun z ↦ h (SkorokhodSpace.supOn T z))
+    (h.continuous.measurable.comp (SkorokhodSpace.measurable_supOn T)) (C := ‖h‖)
+    (fun z ↦ by rw [← Real.norm_eq_abs]; exact h.norm_coe_le_norm _) ?_
+  filter_upwards [hX.cont] with ω hω
+  exact h.continuous.continuousAt.comp
+    (SkorokhodSpace.continuousAt_supOn (continuous_const.mul hω))
+
 end BrownianSolution
 
 end MeasureTheory

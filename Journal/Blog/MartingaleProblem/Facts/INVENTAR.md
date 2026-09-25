@@ -61152,3 +61152,113 @@ Gauß-Folge unter `Measure.infinitePi` als Donsker-Daten würde
 `exists_tendsto_map_rescaledWalk_isBrownianReal` eine **Existenz**aussage für `IsBrownianReal` auf
 `D(ℝ≥0, ℝ)` ergeben. Der dritte Lauf des Tages hat das als Entscheidung des Nutzers benannt; dieser
 Lauf hat sie nicht getroffen.
+
+### 2026-09-25, fünfter Lauf des Tages — das benannte Ziel steht: **das Invarianzprinzip als Korollar**, `∫ F (Φ n) dP → ∫ F (√v · X) dQ` für jedes beschränkte meßbare `F`, das an `Q`-fast jedem Pfad des Limes stetig ist
+
+*Die acht Schritte der Identifikationsaufgabe sind seit dem ersten Lauf des Tages erledigt; dieser
+Lauf nimmt das im vierten Lauf benannte Ziel. Abschnitt `BrownianSolution` von
+`MartingaleProblems/Suggested.lean`. `check_master.py` gegen `94ef6b89544`: **0 Fehler, 0 veraltete
+Namen, 0 `sorry`**, Warnungen **18 / 38 / 36 / 76**, gegen den Anfang des Laufs unverändert (ein
+Zwischenstand hatte 37, eine `haveI`-Stilwarnung der neuen Deklaration; behoben).
+`check_axioms_master.py`: `propext`, `Classical.choice`, `Quot.sound`. `check_duplicates.py`: 45
+Treffer, unverändert. `upstream/master` steht weiter auf `09712d488fd`. Keine `README.md`
+angefaßt.*
+
+| Name | Aussage |
+| --- | --- |
+| `MeasureTheory.tendsto_integral_map_rescaledWalk` | Voraussetzungen von `tendsto_map_rescaledWalk_map_cadlagPath`, dazu `F : D(ℝ≥0, ℝ) → ℝ` meßbar mit `∀ z, \|F z\| ≤ C` und `∀ᵐ ω ∂Q, ContinuousAt F (cadlagPath (√v · X) ω)` ⟹ `∫ ω, F (Φ n ω) ∂P → ∫ ω, F (cadlagPath (√v · X) ω) ∂Q` |
+
+#### Befunde
+
+* **`HasOuterApproxClosed D(ℝ≥0, ℝ)` war keine offene Frage**: die Instanz wird gefunden
+  (pseudometrisierbar), und `SkorokhodSpace.tendsto_finiteDimensional_of_tendsto` benutzt den
+  Abbildungssatz schon auf `D`. Das Ziel war damit, wie geschätzt, ein halber Lauf.
+* **Der Weg:** der Abbildungssatz mit Nullmenge,
+  `tendsto_of_measure_setOf_not_continuousAt_eq_zero` (`WeakConvergence`), angewandt auf `F`
+  selbst mit Ziel `ℝ`; dann `ProbabilityMeasure.tendsto_iff_forall_integral_tendsto`
+  (`Mathlib/MeasureTheory/Measure/ProbabilityMeasure.lean:365` auf `upstream/master`, gelesen) gegen
+  die Kappung `x ↦ max (-|C|) (min |C| x)`, die beschränkt, stetig und auf dem Bild von `F` die
+  Identität ist. Die Hypothese steht auf `Ω'` und nicht auf dem Gesetz; die Übersetzung ist
+  `Measure.map_apply` mit `measurableSet_of_continuousAt`.
+* **Drei Fehler auf dem Weg, alle formal:** `(measurableSet_of_continuousAt F).compl` hat den Typ
+  `{x | ContinuousAt F x}ᶜ`, und `rw` findet damit `{z | ¬ ContinuousAt F z}` nicht — die Menge ist
+  als `have` mit dem gewünschten Typ anzuschreiben. Die Notation `→ᵇ` ist an dieser Stelle der Datei
+  nicht offen. Und ein Hilfslemma mit `∀ {Ω₀ : Type _}` fixiert das Universum beim ersten Gebrauch
+  und paßt dann nicht auf den zweiten Raum; aufgespalten in zwei `have`.
+* **Die Beschränktheit ist die einzige Bedingung an `F` außer Meßbarkeit und Stetigkeit f.ü.**, und
+  sie ist nicht wegzulassen: ohne gleichgradige Integrierbarkeit ist der Satz schon für stetige `F`
+  falsch. Eine Fassung mit gleichgradig integrierbaren Gesetzen stünde über
+  `tendsto_integral_of_tendsto_of_isUniformlyIntegrableLaws` (`WeakConvergence`); sie ist nicht
+  gebaut.
+
+**Was nicht dasteht:** eine Existenzaussage (`X` ist Hypothese), und **kein einziges Funktional,
+das nur fast überall stetig ist**. Der Satz ist so allgemein wie angesagt, aber sein Nutzen —
+`z ↦ sup_{t ≤ T} z t` und dergleichen — hängt an einer Aussage über die Skorokhod-Topologie, die es
+in Lean noch nicht gibt; siehe das benannte Ziel.
+
+*(Das zunächst hier benannte Ziel, die lokal gleichmäßige Konvergenz gegen stetige Limites, ist im
+zweiten Teil desselben Laufs erledigt; siehe dort.)*
+
+### Derselbe Lauf, zweiter Teil — **das Supremumsfunktional**: Konvergenz in `D` gegen einen stetigen Pfad ist lokal gleichmäßig, das laufende Maximum ist an stetigen Pfaden stetig und meßbar, und `sup_{t ≤ T}` der reskalierten Wege konvergiert in Verteilung gegen `sup_{t ≤ T} √v · X`
+
+*`check_master.py` gegen `94ef6b89544`: **0 Fehler, 0 veraltete Namen, 0 `sorry`**, Warnungen
+**18 / 38 / 36 / 76**, unverändert. `check_axioms_master.py` über alle sechs neuen Deklarationen:
+`propext`, `Classical.choice`, `Quot.sound`. `check_duplicates.py`: 45, unverändert. Alle
+Beweise gingen im ersten Durchlauf der Kette durch; der Supremumsteil war vorher in
+`scripts/_dev_supon.lean` gegen die gebaute `SkorokhodSpace`-`.olean` erprobt (zwei Korrekturen:
+`⟨T, le_rfl⟩` ist als Element von `Set.Iic T` mit `Set.mem_Iic.2` zu schreiben, und `zero_le`
+nimmt auf master kein explizites Argument — `bot_le` statt dessen).*
+
+| Name | Datei | Aussage |
+| --- | --- | --- |
+| `SkorokhodSpace.tendstoUniformlyOn_of_tendsto_of_continuous` | `SkorokhodSpace` | `f i → g` in `D(ι, E)` längs eines beliebigen Filters, `g` stetig ⟹ gleichmäßig auf `exhaustion basePoint R` für jedes `R > 0` (Billingsley (12.14), EK Prop. 3.10.1) |
+| `SkorokhodSpace.supOn` | `SkorokhodSpace` | `supOn T z = ⨆ t : Set.Iic T, z t` auf `D(ℝ≥0, ℝ)` |
+| `SkorokhodSpace.bddAbove_range_supOn` | `SkorokhodSpace` | die Werte auf jeder Teilmenge von `[0, T]` sind nach oben beschränkt (kein Müllwert im `⨆`) |
+| `SkorokhodSpace.abs_supOn_sub_supOn_le` | `SkorokhodSpace` | `supOn T` ist `1`-Lipschitz für den gleichmäßigen Abstand auf `[0, T]` |
+| `SkorokhodSpace.continuousAt_supOn` | `SkorokhodSpace` | `supOn T` ist stetig an jedem stetigen Pfad |
+| `SkorokhodSpace.measurable_supOn` | `SkorokhodSpace` | `supOn T` ist meßbar |
+| `MeasureTheory.tendsto_integral_supOn_rescaledWalk` | `MartingaleProblems` | Donskers Daten, `IsBrownianReal X Q` mit meßbaren Koordinaten und càdlàg-Pfaden, `h` beschränkt stetig ⟹ `∫ h (supOn T (Φ n)) dP → ∫ h (supOn T (√v · X)) dQ` |
+
+#### Befunde
+
+* **Die lokal gleichmäßige Konvergenz kostete keine neue Abschätzung.** Die Wegbeschreibung des
+  ersten Teils (Schluß von `intDist → 0` auf `distOn u → 0` über eine Teilfolge) war zu vorsichtig:
+  `SkorokhodSpace.exists_orderIso_forall_dist_lt_of_intDist_lt` — die gleichmäßige Fensterfassung
+  von EK 3.5.3, laut ihrem Doc-Kommentar für das Sprungfunktional gebaut — liefert schon **eine** Zeitänderung für
+  das ganze Fenster. Der Beweis ist der von `continuousAt_eval_of_notMem_leftJumpSet`, auf dem
+  Fenster statt an einem Punkt, mit **vertauschten** Rollen der Pfade, damit die Zeitänderung auf
+  dem stetigen wirkt; dazu die gleichmäßige Stetigkeit von `g` auf dem Fenster vom Radius `R + 1`
+  (`IsCompact.uniformContinuousOn_of_continuous`). 45 Zeilen.
+* **Die Meßbarkeit des Supremums steht auf vorhandenem Material:**
+  `SkorokhodSpace.forall_mem_Icc_of_forall_mem_dense` (Abschnitt `DenseWindow`) mit `K = Set.Iic M`
+  macht das Supremum über `[0, T]` zu einem über `([0, T] ∩ S) ∪ {T}`, `S` abzählbar dicht, und
+  `Measurable.iSup` (`Mathlib/MeasureTheory/Constructions/BorelSpace/Order.lean:909`, auf master
+  gelesen) verlangt **keine** Beschränktheit.
+* **`IsBrownianReal` und nicht `IsPreBrownianReal`:** das Feld `cont`
+  (`Mathlib/Probability/BrownianMotion/Basic.lean:304`, `∀ᵐ ω ∂P, Continuous (X · ω)`) ist genau die
+  Hypothese `hFc` der Nullmengenfassung. Die Forderung „alle Pfade càdlàg" steht zusätzlich, weil die
+  Pfadabbildung total sein muß.
+
+**Was nicht dasteht:** eine Existenzaussage (`X` ist Hypothese), und **das Gesetz des Maximums**
+(Spiegelungsprinzip, `P(sup_{t ≤ T} B t ≥ a) = 2 P(B T ≥ a)`): davon hat Mathlib nichts, und es ist
+hier nicht angefangen.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **`MeasureTheory.tendsto_integral_supOn_rescaledWalk_of_isBrownianReal`** — dieselbe Aussage
+> ohne die Forderung, **jeder** Pfad von `X` sei càdlàg; der Limes ist dann
+> `∫ h (⨆ t ≤ T, √v · X t ω) dQ`, direkt über `X` geschrieben.
+
+*Worauf es ruht:* `isCadlagMPSolution_of_isBrownianReal` liefert die Modifikation `X'`, gleich `X`
+außerhalb **einer** Nullmenge für alle Zeiten; auf deren Komplement ist
+`supOn T (cadlagPath (√v · X') ω) = ⨆ t ≤ T, √v · X t ω` punktweise, also stimmen die Integrale
+überein (`integral_congr_ae`). `IsPreBrownianReal.congr` und `IsBrownianReal.cont` tragen sich auf
+`X'` über (für `cont` mit derselben Nullmenge). *Warum jetzt:* erst diese Fassung ist die
+klassische Aussage „`max_{k ≤ nT} S_k / √n → √v · max_{t ≤ T} B_t` in Verteilung" für Mathlibs
+`IsBrownianReal` ohne Zusatzbedingung; geschätzt ein Viertellauf. Danach, als Richtung und nicht als
+Auftrag: `SkorokhodSpace.continuousAt_of_forall_dist_lt` — jedes Funktional, das bezüglich des
+gleichmäßigen Abstands auf einem Fenster an `g` stetig ist, ist in `D` an stetigem `g` stetig; dann
+sind Infimum, `sup |z|` und Oszillation je eine Zeile.
+
+*Weiter als Frage an den Nutzer, nicht als Auftrag:* die Existenzaussage über Rademacher-Daten
+(vierter Lauf, Schluß).
