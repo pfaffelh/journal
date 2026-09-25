@@ -62280,3 +62280,106 @@ Unabhängigkeitsaussage dieses Laufs über Momente hinaus trägt; und sein Ergeb
 bekannte Gesetz von `τ_a` nachzurechnen, das der elfte Lauf als das von `a²/Z²` benannt hat
 (`map_hittingAfter_Ici_eq_map_gaussianReal_of_isBrownianReal`) — eine Kontrolle von außen, nicht
 aus derselben Rechnung. Geschätzt ein Lauf; (i) zuerst.
+
+### 2026-09-25, dreizehnter Lauf des Tages — das benannte Ziel steht, im zweiten Durchlauf: **die Laplace-Transformierte der ersten Passagezeit**, `E[exp (-r τ_a)] = exp (-a √(2r))` für Mathlibs `IsBrownianReal` ohne Forderung an jeden Pfad; dazu dieselbe Rechnung für das symmetrische Intervall, `E[exp (-r τ)] = 1 / cosh (a √(2r))`, und die zweite Austrittswahrscheinlichkeit des Ruins
+
+*`check_master.py`: **0 / 0 / 0 / 0** Fehler, `sorry` 0, Warnungen **18 / 38 / 36 / 76**,
+unverändert (die neun neuen Deklarationen erzeugen keine). Mathlib `94ef6b89544`. Axiome aller
+neun: `propext`, `Classical.choice`, `Quot.sound` (`check_axioms_master.py`).
+`check_duplicates.py`: 45 Treffer, unverändert, bei 2052 geprüften Deklarationen. Erprobt in
+`scripts/_dev_laplace.lean` (zweiter und dritter Durchlauf; Nachbesserungen: `dist` auf `ℝ≥0`
+schreibt `NNReal.dist_eq` um und nicht `Real.dist_eq`; `WithTop.untopA_coe` gibt es nicht —
+`untopA` ist ein `abbrev` für `untopD`, die Gleichung `(↑u).untopA = u` ist `rfl`),
+`scripts/_dev_cosh.lean` (zweiter Durchlauf) und `scripts/_dev_ruinneg.lean` (erster).*
+
+**Abschnitt `BrownianMartingale`, zwei neue Deklarationen:**
+
+* `MeasureTheory.martingale_exp_of_isPreBrownianReal` — für `IsPreBrownianReal X Q` und jedes
+  reelle `θ` ist `t ↦ exp (θ X t - θ² t / 2)` ein Martingal der natürlichen Filtration. Weg wie
+  angesagt: `exp (θ X t) = exp (θ X s) · exp (θ Z)`, herausziehen mit
+  `condExp_mul_of_stronglyMeasurable_left`, `condExp_indep_eq` mit
+  `indep_comap_sub_natural_of_isPreBrownianReal`, und `E[exp (θ Z)]` aus
+  `ProbabilityTheory.mgf_gaussianReal` (`Mathlib/Probability/Distributions/Gaussian/Real.lean:492`
+  auf `94ef6b89544`). Pfadstetigkeit nicht gelesen.
+* `MeasureTheory.integral_exp_sub_eq_one_of_isPreBrownianReal` — `E[exp (θ X t - θ² t/2)] = 1`.
+  Zwei Verbraucher (die beiden Laplace-Aussagen), deshalb herausgezogen.
+
+**Befund: die angesagte „heikle Stelle" gibt es nicht.** Die Wegbeschreibung hatte die
+Integrierbarkeit des Produkts `exp (θ X s) · exp (θ Z)` als heikel benannt („beide Faktoren in
+jedem `Lᵖ`, oder über die Unabhängigkeit"). Weder das eine noch das andere wird gebraucht: das
+Produkt **ist** `exp (θ X t)`, und für eine Gauß-Variable `Y` ist `exp (θ Y)` integrierbar, weil
+ihre momenterzeugende Funktion positiv ist — `ProbabilityTheory.mgf_pos_iff`
+(`Mathlib/Probability/Moments/Basic.lean:205`) liest die Integrierbarkeit an `0 < mgf` ab, und
+`mgf_gaussianReal` gibt einen Exponentialausdruck. Eine Zeile je Faktor.
+
+**Neuer Abschnitt `FirstPassageLaplace`, fünf Deklarationen:**
+
+* `MeasureTheory.le_of_le_hittingAfter_Ici_of_continuous` — bis zur ersten Passagezeit bei `a`
+  bleibt ein stetiger Pfad mit `X 0 ≤ a` unterhalb von `a`; das einseitige Gegenstück zu
+  `mem_Icc_of_le_hittingAfter_of_continuous`, mit dem Randfall `u = 0` eigens (dort ist `X 0 ≤ a`
+  die Hypothese, und der Abschlußschluß über `closure_Iio'` braucht `0 < u`).
+* `MeasureTheory.integral_exp_neg_hittingAfter_Ici_of_continuous` und
+  `MeasureTheory.integral_exp_neg_hittingAfter_Ici_of_isBrownianReal` — **das benannte Ziel**, in
+  der angesagten Signatur:
+  `∫ ω, Real.exp (-r * (hittingAfter X (Ici a) 0 ω).untopA) ∂Q = Real.exp (-a * Real.sqrt (2 * r))`
+  für `0 < a`, `0 < r` (`λ` ist in Lean ein Schlüsselwort, daher `r`). Die fünf Eingaben sind genau
+  die angesagten; die Schranke ist `exp (θ a)`, weil `θ X ≤ θ a` bis `τ_a` und `-r t ≤ 0`. Die
+  zweite Fassung über dieselbe Modifikation wie beim Ruin.
+* `MeasureTheory.integral_exp_neg_hittingAfter_abs_of_continuous` und
+  `MeasureTheory.integral_exp_neg_hittingAfter_abs_of_isBrownianReal` — **über das Ziel hinaus:**
+  für die Austrittszeit aus `(-a, a)` ist `E[exp (-r τ)] = (cosh (a √(2r)))⁻¹`. Martingal ist die
+  Summe der beiden exponentiellen Martingale bei `θ` und `-θ` (`Martingale.add`); am Austritt steht
+  der Pfad bei `-a` oder `a` (`ae_stoppedValue_hittingAfter_eq_or_eq_of_continuous`), und die Summe
+  ist in **beiden** Fällen `2 cosh (θ a) exp (-r τ)`. Die Symmetrie des Intervalls ist genau das,
+  was die Seite des Austritts aus der Rechnung nimmt; für `(-b, a)` mit `a ≠ b` geht das so nicht,
+  dort bräuchte man die beiden Laplace-Transformierten auf den Teilereignissen getrennt.
+
+**Abschnitt `GamblersRuin`, zwei neue Deklarationen:**
+`MeasureTheory.measure_stoppedValue_hittingAfter_eq_neg_of_continuous` und
+`MeasureTheory.measure_stoppedValue_hittingAfter_eq_neg_of_isBrownianReal` —
+`Q (X τ = -b) = a / (a + b)`. Das war im Bericht des zwölften Laufs als „nicht erreicht"
+vermerkt. Der Beweis ist derselbe wie für `{X τ = a}`, mit `X τ = a - (a+b) 1_B`; er wird
+**nicht** als `1 - b/(a+b)` abgelesen, weil das die beiden Ereignisse als meßbare Komplemente
+verlangen würde, und für `X` selbst ist keines von beiden als meßbar bekannt.
+
+**Mathlib hat es nicht**, nachgesehen im master-Worktree `94ef6b89544`: in
+`Mathlib/Probability/BrownianMotion/` kommt weder `exp` noch `martingale` vor (einziger Treffer auf
+`exp` ist `@[expose]` in `GaussianProjectiveFamily.lean:45`); `hittingAfter` zusammen mit `exp`
+oder „Laplace" gibt in ganz `Mathlib/` keinen Treffer.
+
+**Die Kontrolle von außen ist benannt und nicht geführt.** Der elfte Lauf hat das Gesetz von
+`τ_a` als das von `a²/Z²` mit `Z` standardnormal ausgesprochen
+(`map_hittingAfter_Ici_eq_map_gaussianReal_of_isBrownianReal`). Dessen Laplace-Transformierte ist
+das klassische `exp (-a √(2r))` (Lévy-Verteilung), aber das Gaußintegral
+`∫ exp (-r a²/z²) dN(z)` ist hier **nicht** formalisiert; der Doc-Kommentar sagt das so. Die
+Übereinstimmung ist also eine Aussage über das Papier, nicht über Lean.
+
+**Nicht erreicht und nicht behauptet:** kein Schluß von der Laplace-Transformierten auf das
+Gesetz (ob Mathlib dafür einen Eindeutigkeitssatz hat, ist in diesem Lauf **nicht** nachgesehen);
+die unsymmetrische Austrittszeit aus `(-b, a)`; und weiterhin alles nur über der **natürlichen**
+Filtration.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **Das zweite Moment der Austrittszeit aus `(-a, a)`**,
+> `MeasureTheory.lintegral_sq_hittingAfter_abs_of_isBrownianReal`: für `IsBrownianReal X Q` mit
+> meßbaren Koordinaten und `0 < a` ist
+> `∫⁻ ω, (hittingAfter X (Iic (-a) ∪ Ici a) 0 ω : ℝ≥0∞) ^ 2 ∂Q = ENNReal.ofReal (5 * a ^ 4 / 3)`.
+
+*Worauf es ruht, vier Eingaben, davon zwei vorhanden:* (i) **fehlt:** das Martingal vierten Grades
+`MeasureTheory.martingale_pow_four_of_isPreBrownianReal`, `t ↦ X t⁴ - 6 t X t² + 3 t²`, nach dem
+Muster von `martingale_sq_sub_of_isPreBrownianReal` mit der Zerlegung
+`X t = X s + Z` und `E[Z] = E[Z³] = 0`, `E[Z²] = t - s`, `E[Z⁴] = 3 (t - s)²`; (ii) **fehlt in
+Mathlib:** die Momente `E[Z³] = 0` und `E[Z⁴] = 3 v²` von `gaussianReal 0 v` —
+`Mathlib/Probability/Distributions/Gaussian/` hat keine Momentaussage über die Varianz hinaus
+(gesucht nach `moment`, `integral_pow`, `pow_four`: kein Treffer), sie sind aber aus
+`ProbabilityTheory.iteratedDeriv_mgf_zero` (`Mathlib/Probability/Moments/MGFAnalytic.lean:92`) und
+`mgf_gaussianReal` durch viermaliges Ableiten von `exp (v t²/2)` bei `0` zu holen, oder für
+`E[Z³]` aus der Symmetrie `gaussianReal_map_neg`; (iii) Walds Identität
+`lintegral_hittingAfter_eq_of_isBrownianReal` für `E[τ] = a²`; (iv) optionales Stoppen bei
+`τ ∧ n` wie im Ruin, mit monotoner Konvergenz für `τ²` und beschränkter für die Polynomterme
+(`|X (τ ∧ n)| ≤ a`), wobei der gemischte Term `6 (τ ∧ n) X² ≤ 6 a² (τ ∧ n)` durch (iii)
+dominiert wird. Dann `E[τ²] = (6 a² E[τ] - a⁴)/3 = 5a⁴/3`. *Warum jetzt:* es ist der erste Schluß,
+der ein **nicht beschränktes** Glied im gestoppten Martingal hat (`t X t²`) und deshalb nicht mit
+beschränkter Konvergenz allein geht; und (ii) schließt eine Lücke in Mathlibs Gauß-API, die auch
+außerhalb dieser Kette gebraucht wird. Geschätzt ein Lauf; (ii) zuerst, weil (i) daran hängt.

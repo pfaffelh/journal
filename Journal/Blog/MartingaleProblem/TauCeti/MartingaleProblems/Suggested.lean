@@ -41130,7 +41130,7 @@ Gaussian (`ProbabilityTheory.IsGaussianProcess.of_isGaussianProcess`), its cross
 `ProbabilityTheory.covariance_sub_right`), so the increment is independent of the past vector
 (`ProbabilityTheory.IsGaussianProcess.indepFun_of_covariance_eq_zero`), whose σ-algebra is the
 natural filtration at `s` (`MeasureTheory.Filtration.natural_eq_comap`).  Stated on its own
-because both martingales of this section read it. -/
+because the three martingales of this section read it. -/
 theorem indep_comap_sub_natural_of_isPreBrownianReal {Ω' : Type*} {mΩ' : MeasurableSpace Ω'}
     {Q : Measure Ω'} {X : ℝ≥0 → Ω' → ℝ} (hX : IsPreBrownianReal X Q)
     (hsm : ∀ t, StronglyMeasurable (X t)) {s t : ℝ≥0} (hst : s ≤ t) :
@@ -41263,6 +41263,98 @@ theorem martingale_sq_sub_of_isPreBrownianReal {Ω' : Type*} {mΩ' : MeasurableS
   simp only [Pi.pow_apply, hZ0, hZ2, smul_eq_mul]
   ring
 
+/-- **The exponential martingale of a pre-Brownian motion.**  For
+`ProbabilityTheory.IsPreBrownianReal X Q` with strongly measurable coordinates and every real `θ`,
+`t ↦ exp (θ X t - θ ^ 2 t / 2)` is a `MeasureTheory.Martingale` for
+`MeasureTheory.Filtration.natural X hsm`.
+
+With `Z = X t - X s`, `exp (θ X t) = exp (θ X s) * exp (θ Z)`.  The first factor is
+`𝓕 s`-measurable and is pulled out (`MeasureTheory.condExp_mul_of_stronglyMeasurable_left`); the
+product is integrable because it **is** `exp (θ X t)`, and `exp (θ Y)` is integrable for a Gaussian
+`Y` because its moment generating function is positive (`ProbabilityTheory.mgf_pos_iff`,
+`ProbabilityTheory.mgf_gaussianReal`) — so no `Lᵖ` estimate and no independence is needed for
+integrability.  The second factor is a function of `Z`, which is independent of `𝓕 s`
+(`MeasureTheory.indep_comap_sub_natural_of_isPreBrownianReal`, `MeasureTheory.condExp_indep_eq`),
+and `E[exp (θ Z)] = exp (θ ^ 2 (t - s) / 2)` is the moment generating function of
+`gaussianReal 0 (t - s)` (`ProbabilityTheory.IsPreBrownianReal.hasLaw_sub`).  Continuity of paths
+is not read.  **Not an existence statement**: `X` is a hypothesis. -/
+theorem martingale_exp_of_isPreBrownianReal {Ω' : Type*} {mΩ' : MeasurableSpace Ω'}
+    {Q : Measure Ω'} {X : ℝ≥0 → Ω' → ℝ} (hX : IsPreBrownianReal X Q)
+    (hsm : ∀ t, StronglyMeasurable (X t)) (θ : ℝ) :
+    Martingale (fun t ω ↦ Real.exp (θ * X t ω - θ ^ 2 * t / 2)) (Filtration.natural X hsm) Q := by
+  have : IsProbabilityMeasure Q := hX.isGaussianProcess.isProbabilityMeasure
+  have had := Filtration.stronglyAdapted_natural hsm
+  refine ⟨fun t ↦ Real.continuous_exp.comp_stronglyMeasurable
+    (((had t).const_mul θ).sub stronglyMeasurable_const), fun s t hst ↦ ?_⟩
+  set F := Filtration.natural X hsm
+  set Z : Ω' → ℝ := X t - X s with hZ
+  have hI : Indep (MeasurableSpace.comap Z inferInstance) (F s) Q :=
+    indep_comap_sub_natural_of_isPreBrownianReal hX hsm hst
+  have hZm : Measurable Z := (hsm t).measurable.sub (hsm s).measurable
+  have hZlaw : HasLaw Z (gaussianReal 0 (nndist t s)) Q := hX.hasLaw_sub t s
+  have hXint : Integrable (fun ω ↦ Real.exp (θ * X t ω)) Q :=
+    mgf_pos_iff.1 (by rw [mgf_gaussianReal (hX.hasLaw_eval t)]; exact Real.exp_pos _)
+  have hZint : Integrable (fun ω ↦ Real.exp (θ * Z ω)) Q :=
+    mgf_pos_iff.1 (by rw [mgf_gaussianReal hZlaw]; exact Real.exp_pos _)
+  have hZE : ∫ ω, Real.exp (θ * Z ω) ∂Q = Real.exp (θ ^ 2 * ((t : ℝ) - s) / 2) := by
+    have h := mgf_gaussianReal hZlaw θ
+    rw [mgf] at h
+    rw [h]
+    congr 1
+    rw [coe_nndist, NNReal.dist_eq, abs_of_nonneg (sub_nonneg.2 (NNReal.coe_le_coe.2 hst))]
+    ring
+  have hprod : ((fun ω ↦ Real.exp (θ * X s ω)) * fun ω ↦ Real.exp (θ * Z ω))
+      = fun ω ↦ Real.exp (θ * X t ω) := by
+    funext ω
+    simp only [hZ, Pi.mul_apply, Pi.sub_apply, ← Real.exp_add]
+    congr 1
+    ring
+  have hprodint : Integrable ((fun ω ↦ Real.exp (θ * X s ω)) * fun ω ↦ Real.exp (θ * Z ω)) Q := by
+    rw [hprod]; exact hXint
+  have hXs : StronglyMeasurable[F s] (fun ω ↦ Real.exp (θ * X s ω)) :=
+    Real.continuous_exp.comp_stronglyMeasurable ((had s).const_mul θ)
+  have hZc : Q[fun ω ↦ Real.exp (θ * Z ω) | F s] =ᵐ[Q] fun _ ↦ ∫ ω, Real.exp (θ * Z ω) ∂Q :=
+    condExp_indep_eq hZm.comap_le (F.le s)
+      (Real.continuous_exp.comp_stronglyMeasurable
+        ((comap_measurable Z).stronglyMeasurable.const_mul θ)) hI
+  have hXt : (fun ω ↦ Real.exp (θ * X t ω - θ ^ 2 * t / 2))
+      = Real.exp (-(θ ^ 2 * t / 2)) •
+        ((fun ω ↦ Real.exp (θ * X s ω)) * fun ω ↦ Real.exp (θ * Z ω)) := by
+    rw [hprod]
+    funext ω
+    simp only [Pi.smul_apply, smul_eq_mul, ← Real.exp_add]
+    congr 1
+    ring
+  show Q[fun ω ↦ Real.exp (θ * X t ω - θ ^ 2 * t / 2) | F s]
+    =ᵐ[Q] fun ω ↦ Real.exp (θ * X s ω - θ ^ 2 * s / 2)
+  rw [hXt]
+  filter_upwards [condExp_smul (Real.exp (-(θ ^ 2 * t / 2)))
+      ((fun ω ↦ Real.exp (θ * X s ω)) * fun ω ↦ Real.exp (θ * Z ω)) (F s),
+    condExp_mul_of_stronglyMeasurable_left hXs hprodint hZint, hZc] with ω h1 h2 h3
+  rw [h1, Pi.smul_apply, h2, Pi.mul_apply, h3, hZE, smul_eq_mul, ← Real.exp_add,
+    ← Real.exp_add]
+  congr 1
+  ring
+
+/-- **The exponential martingale has expectation `1`.**  For
+`ProbabilityTheory.IsPreBrownianReal X Q`, every real `θ` and every `t`,
+`E[exp (θ X t - θ ^ 2 t / 2)] = 1`: this is the moment generating function of
+`gaussianReal 0 t` at `θ` (`ProbabilityTheory.mgf_gaussianReal`) times `exp (-θ ^ 2 t / 2)`. -/
+theorem integral_exp_sub_eq_one_of_isPreBrownianReal {Ω' : Type*} {mΩ' : MeasurableSpace Ω'}
+    {Q : Measure Ω'} {X : ℝ≥0 → Ω' → ℝ} (hX : IsPreBrownianReal X Q) (θ : ℝ) (t : ℝ≥0) :
+    ∫ ω, Real.exp (θ * X t ω - θ ^ 2 * t / 2) ∂Q = 1 := by
+  have hmgf := mgf_gaussianReal (hX.hasLaw_eval t) θ
+  rw [mgf] at hmgf
+  have hsplit : (fun ω ↦ Real.exp (θ * X t ω - θ ^ 2 * t / 2))
+      = fun ω ↦ Real.exp (-(θ ^ 2 * t / 2)) * Real.exp (θ * X t ω) := by
+    funext ω
+    rw [← Real.exp_add]
+    congr 1
+    ring
+  rw [hsplit, integral_const_mul, hmgf, ← Real.exp_add, ← Real.exp_zero]
+  congr 1
+  ring
+
 end BrownianMartingale
 
 /-! ### The gambler's ruin and Wald's identity for Brownian motion
@@ -41276,7 +41368,9 @@ is a stopping time of the natural filtration) and
 at the bounded stopping times `τ ∧ n`); `MeasureTheory.ae_hittingAfter_ne_top_of_isBrownianReal`
 makes the exit time finite, and bounded, respectively monotone, convergence passes `n → ∞`.  The
 exit probabilities are `Q (X τ = a) = b / (a + b)`
-(`MeasureTheory.measure_stoppedValue_hittingAfter_eq_of_isBrownianReal`) and the expected exit
+(`MeasureTheory.measure_stoppedValue_hittingAfter_eq_of_isBrownianReal`) and
+`Q (X τ = -b) = a / (a + b)`
+(`MeasureTheory.measure_stoppedValue_hittingAfter_eq_neg_of_isBrownianReal`), and the expected exit
 time is `a * b` (`MeasureTheory.lintegral_hittingAfter_eq_of_isBrownianReal`). -/
 
 section GamblersRuin
@@ -41537,6 +41631,92 @@ theorem measure_stoppedValue_hittingAfter_eq_of_isBrownianReal
   filter_upwards [hae] with ω hω
   simp only [stoppedValue, hittingAfter, X', hω, ite_false]
 
+/-- **The other exit of the gambler's ruin, for every path continuous.**  Under the hypotheses
+of `MeasureTheory.measure_stoppedValue_hittingAfter_eq_of_continuous`, `Q (X τ = -b) = a / (a + b)`.
+The same computation with the indicator of `B = {X τ = -b}`: `X τ = a - (a + b) 1_B` almost
+surely, and `E[X τ] = 0`.  It is not read off as `1 - b / (a + b)`: that would ask the two events
+to be measurable as written, and the proof avoids that by working with a measurable version of
+`X τ`.  **Not an existence statement**: `X` is a hypothesis. -/
+theorem measure_stoppedValue_hittingAfter_eq_neg_of_continuous
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t))
+    (hc : ∀ ω, Continuous (X · ω)) {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
+    Q {ω | stoppedValue X (hittingAfter X (Iic (-b) ∪ Ici a) 0) ω = -b}
+      = ENNReal.ofReal (a / (a + b)) := by
+  have : IsProbabilityMeasure Q := hX.isGaussianProcess.isProbabilityMeasure
+  obtain ⟨hIτ, hEτ⟩ := integral_stoppedValue_hittingAfter_eq_zero_of_continuous hX hm hc ha hb
+  have htwo := ae_stoppedValue_hittingAfter_eq_or_eq_of_continuous hX hm hc ha hb
+  obtain ⟨τ, hτ_def⟩ : ∃ τ, τ = hittingAfter X (Iic (-b) ∪ Ici a) 0 := ⟨_, rfl⟩
+  rw [← hτ_def] at hIτ hEτ htwo ⊢
+  set Y' := hIτ.aestronglyMeasurable.mk _ with hY'
+  have hY'm : Measurable Y' := hIτ.aestronglyMeasurable.stronglyMeasurable_mk.measurable
+  have hYY : stoppedValue X τ =ᵐ[Q] Y' := hIτ.aestronglyMeasurable.ae_eq_mk
+  set A := {ω | Y' ω = -b} with hA
+  have hAm : MeasurableSet A := hY'm (measurableSet_singleton (-b))
+  have hQA : Q {ω | stoppedValue X τ ω = -b} = Q A := by
+    refine measure_congr ?_
+    filter_upwards [hYY] with ω hω
+    change (stoppedValue X τ ω = -b) = (Y' ω = -b)
+    rw [hω]
+  have hYA : Y' =ᵐ[Q] fun ω ↦ a - A.indicator (fun _ ↦ a + b) ω := by
+    filter_upwards [hYY, htwo] with ω hω h2
+    rw [← hω]
+    rcases h2 with h2 | h2
+    · have : ω ∈ A := by
+        change Y' ω = -b
+        rw [← hω, h2]
+      rw [indicator_of_mem this, h2]
+      ring
+    · have : ω ∉ A := by
+        change ¬ Y' ω = -b
+        rw [← hω, h2]
+        intro h; linarith
+      rw [indicator_of_notMem this, h2]
+      ring
+  have hcalc : 0 = a - Q.real A * (a + b) := by
+    rw [← hEτ, integral_congr_ae hYY, integral_congr_ae hYA,
+      integral_sub (integrable_const _) ((integrable_const _).indicator hAm),
+      integral_indicator_const _ hAm, integral_const]
+    simp [smul_eq_mul]
+  have hreal : Q.real A = a / (a + b) := by
+    field_simp
+    linarith
+  rw [hQA, ← ofReal_measureReal, hreal]
+
+/-- **The other exit of the gambler's ruin for Brownian motion.**  For
+`ProbabilityTheory.IsBrownianReal X Q` with measurable coordinates, `0 < a` and `0 < b`,
+`Q (X τ = -b) = a / (a + b)` for `τ = hittingAfter X ((-∞, -b] ∪ [a, ∞)) 0`, with no hypothesis
+on every path; through the same modification as
+`MeasureTheory.measure_stoppedValue_hittingAfter_eq_of_isBrownianReal`.  **Not an existence
+statement**: `X` is a hypothesis. -/
+theorem measure_stoppedValue_hittingAfter_eq_neg_of_isBrownianReal
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t))
+    {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
+    Q {ω | stoppedValue X (hittingAfter X (Iic (-b) ∪ Ici a) 0) ω = -b}
+      = ENNReal.ofReal (a / (a + b)) := by
+  obtain ⟨N, hsub, hNm, hN0⟩ := exists_measurable_superset_of_null (ae_iff.1 hX.cont)
+  classical
+  set X' : ℝ≥0 → Ω' → ℝ := fun t ω ↦ if ω ∈ N then 0 else X t ω
+  have hcont : ∀ ω, Continuous (X' · ω) := by
+    intro ω
+    by_cases hω : ω ∈ N
+    · simp only [X', ite_eq_left hω]
+      exact continuous_const
+    · simp only [X', ite_eq_right hω]
+      exact not_not.1 fun h ↦ hω (hsub h)
+  have hm' : ∀ t, Measurable (X' t) := fun t ↦ Measurable.ite hNm measurable_const (hm t)
+  have hae : ∀ᵐ ω ∂Q, ω ∉ N := measure_eq_zero_iff_ae_notMem.1 hN0
+  have hX' : IsBrownianReal X' Q :=
+    { toIsPreBrownianReal := hX.toIsPreBrownianReal.congr fun t ↦ by
+        filter_upwards [hae] with ω hω
+        simp only [X', hω, ite_false]
+      cont := ae_of_all _ hcont }
+  rw [← measure_stoppedValue_hittingAfter_eq_neg_of_continuous hX' hm' hcont ha hb]
+  refine measure_congr ?_
+  filter_upwards [hae] with ω hω
+  simp only [stoppedValue, hittingAfter, X', hω, ite_false]
+
 open scoped ENNReal in
 /-- **Wald's identity for Brownian motion with every path continuous: the exit time from
 `(-b, a)` has expectation `a * b`.**  For `ProbabilityTheory.IsBrownianReal X Q` with measurable
@@ -41720,5 +41900,340 @@ theorem lintegral_hittingAfter_eq_of_isBrownianReal
   congr
 
 end GamblersRuin
+
+/-! ### The Laplace transform of the first passage time
+
+The first application of optional stopping to a martingale that is **not** a polynomial in `X`:
+the exponential martingale `MeasureTheory.martingale_exp_of_isPreBrownianReal`, stopped at the
+first passage time `τ_a` of `a > 0`, gives `E[exp (-r τ_a)] = exp (-a √(2 r))`
+(`MeasureTheory.integral_exp_neg_hittingAfter_Ici_of_isBrownianReal`).  The martingale is bounded
+up to `τ_a` because the path stays below `a`
+(`MeasureTheory.le_of_le_hittingAfter_Ici_of_continuous`). -/
+
+section FirstPassageLaplace
+
+/-- **Up to its first passage time at `a`, a continuous path started below `a` stays below
+`a`.**  Before the passage time the path is in `(-∞, a)` (`MeasureTheory.notMem_of_lt_hittingAfter`);
+at the passage time `u` itself either `u = 0`, where `X 0 ≤ a` is the hypothesis, or `u > 0`, and
+then `u` is in the closure of `[0, u)` (`closure_Iio'`) and continuity puts `X u` into the closure
+of `(-∞, a)` (`ContinuousWithinAt.mem_closure_image`).  The one-sided counterpart of
+`MeasureTheory.mem_Icc_of_le_hittingAfter_of_continuous`. -/
+theorem le_of_le_hittingAfter_Ici_of_continuous {Ω : Type*} {X : ℝ≥0 → Ω → ℝ} {ω : Ω}
+    (hc : Continuous (X · ω)) {a : ℝ} (h0 : X 0 ω ≤ a) {u : ℝ≥0}
+    (hu : (u : WithTop ℝ≥0) ≤ hittingAfter X (Ici a) 0 ω) : X u ω ≤ a := by
+  have hlt : ∀ r : ℝ≥0, (r : WithTop ℝ≥0) < hittingAfter X (Ici a) 0 ω → X r ω < a := by
+    intro r hr
+    have h := notMem_of_lt_hittingAfter hr (zero_le : (0 : ℝ≥0) ≤ r)
+    simpa only [mem_Ici, not_le] using h
+  rcases hu.lt_or_eq with hu | hu
+  · exact (hlt u hu).le
+  rcases (zero_le : (0 : ℝ≥0) ≤ u).lt_or_eq with hu0 | hu0
+  · have hcl : u ∈ closure (Iio u) := by
+      rw [closure_Iio' (a := u) ⟨0, hu0⟩]
+      exact mem_Iic.2 le_rfl
+    have hmem := (hc.continuousWithinAt (s := Iio u) (x := u)).mem_closure_image hcl
+    suffices X u ω ∈ Iic a from this
+    refine closure_minimal ?_ isClosed_Iic hmem
+    rintro _ ⟨r, hr, rfl⟩
+    exact (hlt r (hu ▸ WithTop.coe_lt_coe.2 hr)).le
+  · rw [← hu0]
+    exact h0
+
+/-- **The Laplace transform of the first passage time of Brownian motion, for every path
+continuous.**  For `ProbabilityTheory.IsBrownianReal X Q` with measurable coordinates and **every**
+path continuous, `0 < a` and `0 < r`, the first passage time `τ_a = hittingAfter X [a, ∞) 0`
+satisfies `E[exp (-r τ_a)] = exp (-a √(2 r))`.
+
+With `θ = √(2 r)`, optional sampling for the exponential martingale
+`M t = exp (θ X t - r t)` (`MeasureTheory.martingale_exp_of_isPreBrownianReal`) at the bounded
+stopping times `τ_a ∧ n` (`MeasureTheory.isStoppingTime_hittingAfter_Ici_of_continuous`,
+`MeasureTheory.integral_stoppedValue_eq_of_rightContinuous`) gives `E[M (τ_a ∧ n)] = E[M n] = 1`.
+Up to `τ_a` the path is at most `a` (`MeasureTheory.le_of_le_hittingAfter_Ici_of_continuous`, on
+`{X 0 = 0}`), so `0 < M (τ_a ∧ n) ≤ exp (θ a)` and bounded convergence passes `n → ∞`; `τ_a` is
+finite almost surely (`MeasureTheory.ae_hittingAfter_ne_top_of_isBrownianReal`) and `X τ_a = a`
+there, so the limit is `exp (θ a) E[exp (-r τ_a)]`.  `untopA` returns a junk value at `τ_a = ⊤`;
+it is not read, because that event is null.  **Not an existence statement**: `X` is a hypothesis. -/
+theorem integral_exp_neg_hittingAfter_Ici_of_continuous
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t))
+    (hc : ∀ ω, Continuous (X · ω)) {a : ℝ} (ha : 0 < a) {r : ℝ} (hr : 0 < r) :
+    ∫ ω, Real.exp (-r * ((hittingAfter X (Ici a) 0 ω).untopA : ℝ)) ∂Q
+      = Real.exp (-a * Real.sqrt (2 * r)) := by
+  have : IsProbabilityMeasure Q := hX.isGaussianProcess.isProbabilityMeasure
+  obtain ⟨τ, hτ_def⟩ : ∃ τ, τ = hittingAfter X (Ici a) 0 := ⟨_, rfl⟩
+  rw [← hτ_def]
+  have hsm : ∀ t, StronglyMeasurable (X t) := fun t ↦ (hm t).stronglyMeasurable
+  set θ := Real.sqrt (2 * r) with hθ
+  have hθ0 : 0 ≤ θ := Real.sqrt_nonneg _
+  have hθ2 : θ ^ 2 / 2 = r := by
+    rw [hθ, Real.sq_sqrt (by linarith)]
+    ring
+  set M : ℝ≥0 → Ω' → ℝ := fun t ω ↦ Real.exp (θ * X t ω - θ ^ 2 * t / 2) with hM_def
+  have hM : Martingale M (Filtration.natural X hsm) Q :=
+    martingale_exp_of_isPreBrownianReal hX.toIsPreBrownianReal hsm θ
+  have hτ : IsStoppingTime (Filtration.natural X hsm) τ := hτ_def ▸
+    isStoppingTime_hittingAfter_Ici_of_continuous
+      (Filtration.stronglyAdapted_natural hsm).adapted hc a 0
+  have hrc : ∀ᵐ ω ∂Q, ∀ s : ℝ≥0, Tendsto (fun u ↦ M u ω) (𝓝[≥] s) (𝓝 (M s ω)) := by
+    refine ae_of_all _ fun ω s ↦ ?_
+    have hcM : Continuous fun u : ℝ≥0 ↦ M u ω :=
+      Real.continuous_exp.comp ((continuous_const.mul (hc ω)).sub
+        ((continuous_const.mul NNReal.continuous_coe).div_const 2))
+    exact (hcM.tendsto s).mono_left nhdsWithin_le_nhds
+  have hfin : ∀ᵐ ω ∂Q, τ ω ≠ ⊤ := by
+    rw [hτ_def]
+    exact ae_hittingAfter_ne_top_of_isBrownianReal hX hm a
+  set ρ : ℕ → Ω' → WithTop ℝ≥0 := fun n ω ↦ min (τ ω) ((n : ℝ≥0) : WithTop ℝ≥0) with hρ_def
+  have hρ : ∀ n, IsStoppingTime (Filtration.natural X hsm) (ρ n) := fun n ↦ hτ.min_const _
+  have hρj : ∀ n ω, ρ n ω ≤ (((n : ℝ≥0)) : ENNReal) := fun n ω ↦ min_le_right _ _
+  have hint : ∀ n, ∫ ω, stoppedValue M (ρ n) ω ∂Q = 1 := fun n ↦ by
+    rw [integral_stoppedValue_eq_of_rightContinuous hM hrc (hρ n) (hρj n)]
+    exact integral_exp_sub_eq_one_of_isPreBrownianReal hX.toIsPreBrownianReal θ _
+  have hG : ∀ᵐ ω ∂Q, stoppedValue M τ ω
+      = Real.exp (θ * a) * Real.exp (-r * ((τ ω).untopA : ℝ)) := by
+    filter_upwards [hX.toIsPreBrownianReal.eval_zero_ae_eq_zero, hfin] with ω h0 hω
+    obtain ⟨u, hu⟩ := WithTop.ne_top_iff_exists.1 hω
+    have hle := le_of_le_hittingAfter_Ici_of_continuous (hc ω) (h0.le.trans ha.le)
+      (u := u) (by rw [← hτ_def, ← hu])
+    have hge := mem_of_coe_eq_hittingAfter_of_isClosed (hc ω) isClosed_Ici
+      (hu.trans (congrFun hτ_def ω))
+    have hXu : X u ω = a := le_antisymm hle hge
+    simp only [stoppedValue, ← hu]
+    change Real.exp (θ * X u ω - θ ^ 2 * u / 2) = _
+    rw [hXu, ← Real.exp_add, ← hθ2]
+    congr 1
+    rw [show (((u : WithTop ℝ≥0).untopA : ℝ≥0) : ℝ) = (u : ℝ) from rfl]
+    ring
+  have hlim : ∀ᵐ ω ∂Q, Tendsto (fun n ↦ stoppedValue M (ρ n) ω) atTop
+      (𝓝 (Real.exp (θ * a) * Real.exp (-r * ((τ ω).untopA : ℝ)))) := by
+    filter_upwards [hfin, hG] with ω hω hGω
+    rw [← hGω]
+    obtain ⟨u, hu⟩ := WithTop.ne_top_iff_exists.1 hω
+    obtain ⟨N, hN⟩ := exists_nat_ge u
+    refine tendsto_const_nhds.congr' (eventually_atTop.2 ⟨N, fun n hn ↦ ?_⟩)
+    simp only [stoppedValue, hρ_def]
+    rw [min_eq_left]
+    rw [← hu]
+    exact WithTop.coe_le_coe.2 (hN.trans (Nat.cast_le.2 hn))
+  have hbound : ∀ n, ∀ᵐ ω ∂Q, ‖stoppedValue M (ρ n) ω‖ ≤ Real.exp (θ * a) := by
+    intro n
+    filter_upwards [hX.toIsPreBrownianReal.eval_zero_ae_eq_zero, hfin] with ω h0 hω'
+    obtain ⟨u, hu⟩ := WithTop.ne_top_iff_exists.1 hω'
+    have hle := le_of_le_hittingAfter_Ici_of_continuous (hc ω) (h0.le.trans ha.le)
+      (u := min u n)
+      (by rw [← hτ_def, ← hu]; exact WithTop.coe_le_coe.2 (min_le_left _ _))
+    simp only [stoppedValue, hρ_def]
+    rw [← hu, ← WithTop.coe_min]
+    change ‖Real.exp (θ * X (min u n) ω - θ ^ 2 * (min u (n : ℝ≥0) : ℝ≥0) / 2)‖
+      ≤ Real.exp (θ * a)
+    rw [Real.norm_eq_abs, abs_of_pos (Real.exp_pos _), Real.exp_le_exp]
+    have h1 : θ * X (min u n) ω ≤ θ * a := mul_le_mul_of_nonneg_left hle hθ0
+    have h2 : 0 ≤ θ ^ 2 * ((min u (n : ℝ≥0) : ℝ≥0) : ℝ) / 2 := by positivity
+    linarith
+  have hconv := tendsto_integral_of_dominated_convergence (fun _ ↦ Real.exp (θ * a))
+    (fun n ↦ (integrable_stoppedValue_of_rightContinuous hM hrc (hρ n)
+      (hρj n)).aestronglyMeasurable) (integrable_const _) hbound hlim
+  simp only [hint] at hconv
+  have hone := tendsto_nhds_unique hconv tendsto_const_nhds
+  rw [integral_const_mul] at hone
+  set I := ∫ ω, Real.exp (-r * ((τ ω).untopA : ℝ)) ∂Q
+  calc I = Real.exp (-(θ * a)) * (Real.exp (θ * a) * I) := by
+        rw [← mul_assoc, ← Real.exp_add, neg_add_cancel, Real.exp_zero, one_mul]
+    _ = Real.exp (-a * θ) := by rw [hone, mul_one, neg_mul, mul_comm a θ]
+
+/-- **The Laplace transform of the first passage time of Brownian motion.**  For
+`ProbabilityTheory.IsBrownianReal X Q` with measurable coordinates, `0 < a` and `0 < r`,
+`E[exp (-r τ_a)] = exp (-a √(2 r))` for `τ_a = hittingAfter X [a, ∞) 0`, with no hypothesis on
+every path.  Through the modification `X'` with every path continuous, as in
+`MeasureTheory.measure_stoppedValue_hittingAfter_eq_of_isBrownianReal`; off a null set the two
+paths and hence the two passage times agree.
+
+*A check from outside this computation:* the law of `τ_a` is that of `a ^ 2 / Z ^ 2` with `Z`
+standard Gaussian (`MeasureTheory.map_hittingAfter_Ici_eq_map_gaussianReal_of_isBrownianReal`),
+whose Laplace transform is the classical `exp (-a √(2 r))` — the Lévy distribution with scale
+`a ^ 2`.  That identity is not formalised here; the statement is proved from the martingale
+alone.  **Not an existence statement**: `X` is a hypothesis. -/
+theorem integral_exp_neg_hittingAfter_Ici_of_isBrownianReal
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t))
+    {a : ℝ} (ha : 0 < a) {r : ℝ} (hr : 0 < r) :
+    ∫ ω, Real.exp (-r * ((hittingAfter X (Ici a) 0 ω).untopA : ℝ)) ∂Q
+      = Real.exp (-a * Real.sqrt (2 * r)) := by
+  obtain ⟨N, hsub, hNm, hN0⟩ := exists_measurable_superset_of_null (ae_iff.1 hX.cont)
+  classical
+  set X' : ℝ≥0 → Ω' → ℝ := fun t ω ↦ if ω ∈ N then 0 else X t ω
+  have hcont : ∀ ω, Continuous (X' · ω) := by
+    intro ω
+    by_cases hω : ω ∈ N
+    · simp only [X', ite_eq_left hω]
+      exact continuous_const
+    · simp only [X', ite_eq_right hω]
+      exact not_not.1 fun h ↦ hω (hsub h)
+  have hm' : ∀ t, Measurable (X' t) := fun t ↦ Measurable.ite hNm measurable_const (hm t)
+  have hae : ∀ᵐ ω ∂Q, ω ∉ N := measure_eq_zero_iff_ae_notMem.1 hN0
+  have hX' : IsBrownianReal X' Q :=
+    { toIsPreBrownianReal := hX.toIsPreBrownianReal.congr fun t ↦ by
+        filter_upwards [hae] with ω hω
+        simp only [X', hω, ite_false]
+      cont := ae_of_all _ hcont }
+  rw [← integral_exp_neg_hittingAfter_Ici_of_continuous hX' hm' hcont ha hr]
+  refine integral_congr_ae ?_
+  filter_upwards [hae] with ω hω
+  have h : hittingAfter X' (Ici a) 0 ω = hittingAfter X (Ici a) 0 ω := by
+    simp only [hittingAfter, X', hω, ite_false]
+  rw [h]
+
+/-- **The Laplace transform of the exit time of Brownian motion from `(-a, a)`, for every path
+continuous.**  For `ProbabilityTheory.IsBrownianReal X Q` with measurable coordinates and **every**
+path continuous, `0 < a` and `0 < r`, the exit time `τ = hittingAfter X ((-∞, -a] ∪ [a, ∞)) 0`
+satisfies `E[exp (-r τ)] = 1 / cosh (a √(2 r))`.
+
+With `θ = √(2 r)`, the sum of the two exponential martingales at `θ` and `-θ`
+(`MeasureTheory.martingale_exp_of_isPreBrownianReal`) is `exp (-r t) (exp (θ X t) + exp (-θ X t))`.
+Up to `τ` the path is in `[-a, a]` (`MeasureTheory.mem_Icc_of_le_hittingAfter_of_continuous`), so
+the stopped sum is at most `2 exp (θ a)`; at `τ` the path is at `-a` or at `a`
+(`MeasureTheory.ae_stoppedValue_hittingAfter_eq_or_eq_of_continuous`), and in either case the sum
+is `2 cosh (θ a) exp (-r τ)` — the symmetry of the interval is what makes the value at `τ`
+independent of the side of exit.  Optional sampling at `τ ∧ n` and bounded convergence give
+`2 cosh (θ a) E[exp (-r τ)] = 2`.  **Not an existence statement**: `X` is a hypothesis. -/
+theorem integral_exp_neg_hittingAfter_abs_of_continuous
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t))
+    (hc : ∀ ω, Continuous (X · ω)) {a : ℝ} (ha : 0 < a) {r : ℝ} (hr : 0 < r) :
+    ∫ ω, Real.exp (-r * ((hittingAfter X (Iic (-a) ∪ Ici a) 0 ω).untopA : ℝ)) ∂Q
+      = (Real.cosh (a * Real.sqrt (2 * r)))⁻¹ := by
+  have : IsProbabilityMeasure Q := hX.isGaussianProcess.isProbabilityMeasure
+  have htwo := ae_stoppedValue_hittingAfter_eq_or_eq_of_continuous hX hm hc ha ha
+  obtain ⟨τ, hτ_def⟩ : ∃ τ, τ = hittingAfter X (Iic (-a) ∪ Ici a) 0 := ⟨_, rfl⟩
+  rw [← hτ_def] at htwo ⊢
+  have hsm : ∀ t, StronglyMeasurable (X t) := fun t ↦ (hm t).stronglyMeasurable
+  set θ := Real.sqrt (2 * r) with hθ
+  have hθ0 : 0 ≤ θ := Real.sqrt_nonneg _
+  have hθ2 : θ ^ 2 / 2 = r := by
+    rw [hθ, Real.sq_sqrt (by linarith)]
+    ring
+  set N : ℝ≥0 → Ω' → ℝ := fun t ω ↦ Real.exp (θ * X t ω - θ ^ 2 * t / 2)
+    + Real.exp ((-θ) * X t ω - (-θ) ^ 2 * t / 2) with hN_def
+  have hM1 := martingale_exp_of_isPreBrownianReal hX.toIsPreBrownianReal hsm θ
+  have hM2 := martingale_exp_of_isPreBrownianReal hX.toIsPreBrownianReal hsm (-θ)
+  have hN : Martingale N (Filtration.natural X hsm) Q := hM1.add hM2
+  have hτ : IsStoppingTime (Filtration.natural X hsm) τ := hτ_def ▸
+    isStoppingTime_hittingAfter_of_isClosed_of_continuous
+      (Filtration.stronglyAdapted_natural hsm).adapted hc (isClosed_Iic.union isClosed_Ici) 0
+  have hrc : ∀ᵐ ω ∂Q, ∀ s : ℝ≥0, Tendsto (fun u ↦ N u ω) (𝓝[≥] s) (𝓝 (N s ω)) := by
+    refine ae_of_all _ fun ω s ↦ ?_
+    have hcN : Continuous fun u : ℝ≥0 ↦ N u ω :=
+      (Real.continuous_exp.comp ((continuous_const.mul (hc ω)).sub
+        ((continuous_const.mul NNReal.continuous_coe).div_const 2))).add
+      (Real.continuous_exp.comp ((continuous_const.mul (hc ω)).sub
+        ((continuous_const.mul NNReal.continuous_coe).div_const 2)))
+    exact (hcN.tendsto s).mono_left nhdsWithin_le_nhds
+  have hfin : ∀ᵐ ω ∂Q, τ ω ≠ ⊤ := by
+    filter_upwards [ae_hittingAfter_ne_top_of_isBrownianReal hX hm a] with ω hω
+    refine ne_top_of_le_ne_top hω ?_
+    rw [hτ_def]
+    exact hittingAfter_anti X 0 subset_union_right ω
+  set ρ : ℕ → Ω' → WithTop ℝ≥0 := fun n ω ↦ min (τ ω) ((n : ℝ≥0) : WithTop ℝ≥0) with hρ_def
+  have hρ : ∀ n, IsStoppingTime (Filtration.natural X hsm) (ρ n) := fun n ↦ hτ.min_const _
+  have hρj : ∀ n ω, ρ n ω ≤ (((n : ℝ≥0)) : ENNReal) := fun n ω ↦ min_le_right _ _
+  have hint : ∀ n, ∫ ω, stoppedValue N (ρ n) ω ∂Q = 2 := fun n ↦ by
+    rw [integral_stoppedValue_eq_of_rightContinuous hN hrc (hρ n) (hρj n)]
+    simp only [hN_def]
+    rw [integral_add (hM1.integrable _) (hM2.integrable _),
+      integral_exp_sub_eq_one_of_isPreBrownianReal hX.toIsPreBrownianReal,
+      integral_exp_sub_eq_one_of_isPreBrownianReal hX.toIsPreBrownianReal]
+    norm_num
+  set c := Real.exp (θ * a) + Real.exp (-(θ * a)) with hc_def
+  have hG : ∀ᵐ ω ∂Q, stoppedValue N τ ω = c * Real.exp (-r * ((τ ω).untopA : ℝ)) := by
+    filter_upwards [hfin, htwo] with ω hω h2
+    obtain ⟨u, hu⟩ := WithTop.ne_top_iff_exists.1 hω
+    simp only [stoppedValue, ← hu] at h2 ⊢
+    change X u ω = -a ∨ X u ω = a at h2
+    change Real.exp (θ * X u ω - θ ^ 2 * u / 2) + Real.exp ((-θ) * X u ω - (-θ) ^ 2 * u / 2) = _
+    rw [show (((u : WithTop ℝ≥0).untopA : ℝ≥0) : ℝ) = (u : ℝ) from rfl, neg_sq, ← hθ2, hc_def]
+    rcases h2 with h2 | h2 <;> rw [h2, add_mul, ← Real.exp_add, ← Real.exp_add]
+    · rw [add_comm]
+      congr 1 <;> congr 1 <;> ring
+    · congr 1 <;> congr 1 <;> ring
+  have hlim : ∀ᵐ ω ∂Q, Tendsto (fun n ↦ stoppedValue N (ρ n) ω) atTop
+      (𝓝 (c * Real.exp (-r * ((τ ω).untopA : ℝ)))) := by
+    filter_upwards [hfin, hG] with ω hω hGω
+    rw [← hGω]
+    obtain ⟨u, hu⟩ := WithTop.ne_top_iff_exists.1 hω
+    obtain ⟨K, hK⟩ := exists_nat_ge u
+    refine tendsto_const_nhds.congr' (eventually_atTop.2 ⟨K, fun n hn ↦ ?_⟩)
+    simp only [stoppedValue, hρ_def]
+    rw [min_eq_left]
+    rw [← hu]
+    exact WithTop.coe_le_coe.2 (hK.trans (Nat.cast_le.2 hn))
+  have hbound : ∀ n, ∀ᵐ ω ∂Q, ‖stoppedValue N (ρ n) ω‖ ≤ 2 * Real.exp (θ * a) := by
+    intro n
+    filter_upwards [hX.toIsPreBrownianReal.eval_zero_ae_eq_zero, hfin] with ω h0 hω'
+    obtain ⟨u, hu⟩ := WithTop.ne_top_iff_exists.1 hω'
+    have hmem := mem_Icc_of_le_hittingAfter_of_continuous (hc ω) h0 ha ha (u := min u n)
+      (by rw [← hτ_def, ← hu]; exact WithTop.coe_le_coe.2 (min_le_left _ _))
+    simp only [stoppedValue, hρ_def]
+    rw [← hu, ← WithTop.coe_min]
+    change ‖Real.exp (θ * X (min u n) ω - θ ^ 2 * (min u (n : ℝ≥0) : ℝ≥0) / 2)
+      + Real.exp ((-θ) * X (min u n) ω - (-θ) ^ 2 * (min u (n : ℝ≥0) : ℝ≥0) / 2)‖
+        ≤ 2 * Real.exp (θ * a)
+    rw [Real.norm_eq_abs, abs_of_pos (by positivity)]
+    have h2 : 0 ≤ θ ^ 2 * ((min u (n : ℝ≥0) : ℝ≥0) : ℝ) / 2 := by positivity
+    have p1 := mul_nonneg hθ0 (sub_nonneg.2 hmem.2)
+    have p2 := mul_nonneg hθ0 (show 0 ≤ X (min u n) ω + a by linarith [hmem.1])
+    have e1 : Real.exp (θ * X (min u n) ω - θ ^ 2 * (min u (n : ℝ≥0) : ℝ≥0) / 2)
+        ≤ Real.exp (θ * a) := by
+      rw [Real.exp_le_exp]; nlinarith
+    have e2 : Real.exp ((-θ) * X (min u n) ω - (-θ) ^ 2 * (min u (n : ℝ≥0) : ℝ≥0) / 2)
+        ≤ Real.exp (θ * a) := by
+      rw [Real.exp_le_exp, neg_sq]; nlinarith
+    linarith
+  have hconv := tendsto_integral_of_dominated_convergence (fun _ ↦ 2 * Real.exp (θ * a))
+    (fun n ↦ (integrable_stoppedValue_of_rightContinuous hN hrc (hρ n)
+      (hρj n)).aestronglyMeasurable) (integrable_const _) hbound hlim
+  simp only [hint] at hconv
+  have htw := tendsto_nhds_unique hconv tendsto_const_nhds
+  rw [integral_const_mul] at htw
+  have hpos : 0 < c := by positivity
+  rw [Real.cosh_eq, mul_comm a θ, ← hc_def, inv_div, eq_div_iff hpos.ne', mul_comm]
+  exact htw
+
+/-- **The Laplace transform of the exit time of Brownian motion from `(-a, a)`.**  For
+`ProbabilityTheory.IsBrownianReal X Q` with measurable coordinates, `0 < a` and `0 < r`,
+`E[exp (-r τ)] = 1 / cosh (a √(2 r))` for `τ = hittingAfter X ((-∞, -a] ∪ [a, ∞)) 0`, with no
+hypothesis on every path; through the same modification as
+`MeasureTheory.integral_exp_neg_hittingAfter_Ici_of_isBrownianReal`.  **Not an existence
+statement**: `X` is a hypothesis. -/
+theorem integral_exp_neg_hittingAfter_abs_of_isBrownianReal
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hm : ∀ t, Measurable (X t))
+    {a : ℝ} (ha : 0 < a) {r : ℝ} (hr : 0 < r) :
+    ∫ ω, Real.exp (-r * ((hittingAfter X (Iic (-a) ∪ Ici a) 0 ω).untopA : ℝ)) ∂Q
+      = (Real.cosh (a * Real.sqrt (2 * r)))⁻¹ := by
+  obtain ⟨N, hsub, hNm, hN0⟩ := exists_measurable_superset_of_null (ae_iff.1 hX.cont)
+  classical
+  set X' : ℝ≥0 → Ω' → ℝ := fun t ω ↦ if ω ∈ N then 0 else X t ω
+  have hcont : ∀ ω, Continuous (X' · ω) := by
+    intro ω
+    by_cases hω : ω ∈ N
+    · simp only [X', ite_eq_left hω]
+      exact continuous_const
+    · simp only [X', ite_eq_right hω]
+      exact not_not.1 fun h ↦ hω (hsub h)
+  have hm' : ∀ t, Measurable (X' t) := fun t ↦ Measurable.ite hNm measurable_const (hm t)
+  have hae : ∀ᵐ ω ∂Q, ω ∉ N := measure_eq_zero_iff_ae_notMem.1 hN0
+  have hX' : IsBrownianReal X' Q :=
+    { toIsPreBrownianReal := hX.toIsPreBrownianReal.congr fun t ↦ by
+        filter_upwards [hae] with ω hω
+        simp only [X', hω, ite_false]
+      cont := ae_of_all _ hcont }
+  rw [← integral_exp_neg_hittingAfter_abs_of_continuous hX' hm' hcont ha hr]
+  refine integral_congr_ae ?_
+  filter_upwards [hae] with ω hω
+  have h : hittingAfter X' (Iic (-a) ∪ Ici a) 0 ω = hittingAfter X (Iic (-a) ∪ Ici a) 0 ω := by
+    simp only [hittingAfter, X', hω, ite_false]
+  rw [h]
+
+end FirstPassageLaplace
 
 end MeasureTheory
