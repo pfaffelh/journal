@@ -17,8 +17,8 @@ milestone, **KolmogorovExtension**.
 
 `Suggested.lean` prototypes the signatures. Most of them are discharged there,
 against Mathlib `master`; that is evidence the milestones are reachable, not a
-prescription of how. **Milestones 6 and 7 are the exceptions and say so in their
-first paragraph**: nothing of either is prototyped. Where a proof route is named below it is because the
+prescription of how. **Milestones 6 and 7 are only partly prototyped and say so in
+their first paragraph.** Where a proof route is named below it is because the
 obvious route is **wrong**, not because it is the one taken.
 
 ## What Mathlib already has
@@ -216,10 +216,12 @@ its converse.
 
 ## Milestone 6: localization
 
-> **Nothing of this milestone is prototyped.** `Suggested.lean` carries
-> `IsLocalMPSolution` and `isLocalMPSolution_of_isMPSolution` — the definition
-> and its trivial direction — and nothing else of what follows. The **instance**
-> exists, in the **JumpProcesses** roadmap (`rateSup`, `rateTime`,
+> **Only the definition and the stopping are prototyped.** `Suggested.lean`
+> carries `IsLocalMPSolution` and `isLocalMPSolution_of_isMPSolution`, and
+> `martingale_stoppedProcess` and `locally_martingale_stoppedProcess` — optional
+> stopping in continuous time without a bound on the paths, and its local form.
+> Nothing of the localizing systems below is there. The **instance** exists, in
+> the **JumpProcesses** roadmap (`rateSup`, `rateTime`,
 > `isLocalizingSequence_rateTime`, `jumpProcess_isLocalMPSolution`); the general
 > theory below is stated from the manuscript and is to be reviewed on that basis.
 
@@ -242,12 +244,18 @@ milestone is to stay with `𝓕`.
 
 ## Milestone 7: duality
 
-> **Nothing of this milestone is prototyped**, and it is the largest of the
-> twelve. `Suggested.lean` contains no `chain_identity`, no `duality`, no
-> `dualSemigroup`, no atom certificate and no `tailProduct`; the word "duality"
-> occurs only in doc comments pointing at the manuscript. Everything below is
-> stated from the manuscript and is to be reviewed on that basis, without the
-> evidence of reachability the other milestones carry.
+> **The core of this milestone is prototyped; the atomic ladder is not.**
+> `Suggested.lean` discharges `chain_identity`, `duality_discrete`, `duality`
+> with `α` and `β`, `duality_weighted` with its witness
+> `not_secondIncrement_of_weight_on_dual`, `duality_stopped`,
+> `propagatesAgreement_of_duality` and `uniqueness_of_duality`, and
+> `duality_of_atomless` for a clock of infinite mass. The acceptance example is
+> Brownian motion as its own dual: `map_eval_eq_gaussianReal_of_duality` and
+> `eq_of_isCadlagMPSolution_of_duality`, a second proof of the marginals and of
+> uniqueness. **Not prototyped:** `isMarkov_of_duality`, everything from
+> `Clock.stretches` on, the certificates, `tailProduct` and `dualSemigroup`.
+> Those items are stated from the manuscript and are to be reviewed on that
+> basis, without the evidence of reachability the other milestones carry.
 >
 > **A reviewer should ask whether the ladder of atomic cases belongs in a roadmap
 > at all.** Eleven variants sorted by the order type of the atoms, resting on
