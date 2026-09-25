@@ -62637,3 +62637,109 @@ Manuskript ist nicht angefaßt.
 > `ae_sub_eq_integral_antidiagonal`; für `cor:dualrel` die Stetigkeit von `t ↦ Φ(t,0)`, `Φ(0,t)`
 > aus `continuousOn_of_eq_primitive`, das schon dasteht. *Warum jetzt:* es ist der nächste
 > offene Schritt der gestellten Liste; die Schritte 4 bis 7 hängen daran.
+
+### 2026-09-25, sechzehnter Lauf des Tages — Dualität, Schritt 3, Teil 2: **`duality_zero`** (`thm:duality` bei `α = β = 0`) und **`duality_relation_zero`** (`cor:dualrel` für **jedes** `t`); verbraucht wird von der Unabhängigkeit nur die **paarweise** von `X s` und `Y t`
+
+*Aufgabe: „Dualität, der Kern von Meilenstein 7“, das benannte Ziel des vorigen Laufs.*
+
+*`check_master.py`: CHECKMASTER_PLATZHALTER. Mathlib `94ef6b89544`. Erprobt in
+`scripts/_dev_dualzero_part.lean` gegen v4.33.1, ohne Fehler; die Probedatei trägt die beiden
+benutzten Sätze aus `section Calculus` (`continuousOn_of_eq_primitive`,
+`ae_sub_eq_integral_antidiagonal`) als `sorry`-Stubs, damit sie ohne die Kette übersetzt — in der
+Roadmap sind es die bewiesenen.*
+
+**Neuer Abschnitt `ContinuousDuality`** in `MartingaleProblems/Suggested.lean`, unmittelbar nach
+`end Calculus`, mit Kopf „`thm:duality` at `α = β = 0`, and `cor:dualrel` for every `t`“. Elf
+Deklarationen:
+
+* `map_prod_eq_map_of_indepFun`, `integral_eq_integral_prod_of_indepFun`,
+  `integrable_prod_of_indepFun` — **die Geisterkopie**: für unabhängige `U`, `W` hat `(U, W)`
+  das Gesetz von `(U ω, W ω')` unter `P ⊗ P`. Über `IndepFun.map_prod_eq_prod_map_map` und
+  `Measure.map_prod_map` (`Mathlib/MeasureTheory/Measure/Prod.lean:833`).
+* `integrableOn_integral_of_abs_le` — ein Erwartungswert mit Parameter ist auf einer Menge
+  endlichen Maßes integrierbar, wenn der Integrand gemeinsam meßbar und dort von *einer*
+  integrierbaren Variablen dominiert ist (`Measure.integrableOn_of_bounded`,
+  `StronglyMeasurable.integral_prod_right`).
+* `integral_sub_eq_intervalIntegral_of_indepFun` — **der Kern**: `Z` ein Prozeß auf `ℝ`,
+  gemeinsam meßbar, `W` von jedem `Z r` unabhängig, und für jedes feste `y` hat
+  `f (Z r, y) - ∫_0^r g (Z v, y) dv` bei `0` und bei `s` denselben Mittelwert. Dann
+  `E f (Z s, W) - E f (Z 0, W) = ∫_0^s E g (Z r, W) dr`.
+* `integral_sub_eq_zero_of_martingale` — der Mittelwert eines Martingals bewegt sich nicht.
+* `duality_increment_fst` — `eq:Fpartial1` bei `α = β = 0`, auf dem Quadranten.
+* `duality_zero_hypotheses` — **die Voraussetzungen von `lem:calculus` für das `Φ` aus
+  `eq:Phidual`**, alle sechs; das ist die probabilistische Hälfte von `rem:dualischain`. Die
+  zweite Zuwachsdarstellung ist die erste mit vertauschten Rollen von `X` und `Y`
+  (`f ∘ swap`), kein zweiter Beweis.
+* `duality_zero` — **`thm:duality` bei `α = β = 0`**, `eq:dualconc` für fast alle `t > 0`.
+* `eqOn_zero_of_ae_of_continuousOn` — über `Measure.eqOn_open_of_ae_eq`
+  (`Mathlib/MeasureTheory/Measure/OpenPos.lean:116`).
+* `duality_relation_zero` — **`cor:dualrel` bei `α = β = 0`, für jedes `t : ℝ≥0`**: unter
+  `g = h` ist `E f (X t, Y 0) = E f (X 0, Y t)`. Fast überall aus `duality_zero`, dann die
+  Stetigkeit von `t ↦ Φ t 0`, `Φ 0 t` aus `continuousOn_of_eq_primitive`; bei `t = 0` ist nichts
+  zu zeigen.
+
+**Die Hypothesen gegen das Manuskript, und drei Befunde.**
+
+1. **Die Unabhängigkeit wird nur paarweise verbraucht**: `∀ s t, IndepFun (X s) (Y t) P`. Das
+   ist schwächer als „`X` und `Y` unabhängige Prozesse“ und schwächer als die Vorgabe
+   „`⨆ 𝓕` unabhängig von `⨆ 𝓖`“. Der Grund ist die Geisterkopie: das Funktional
+   `∫_0^s g (X r, y) dr` des ganzen `X`-Pfades wird nie mit `Y t` am selben Stichprobenpunkt
+   gepaart. Auf `Ω × Ω` gilt die Mittelwerthypothese an **jedem** Punkt des zweiten Faktors,
+   und Fubini auf `[0,s] × Ω × Ω` tauscht Erwartung und Zeitintegral; die Dominierung durch
+   `Γ` steht nur längs der Diagonale und wird von der paarweisen Unabhängigkeit auf das Produkt
+   übertragen. **Nicht** gebraucht wird die Meßbarkeit eines Pfadfunktionals bezüglich
+   `⨆ 𝓕 ⊗ E₂` — an ihr wäre der Weg über `integral_comp_eq_zero_of_indepFun` gescheitert,
+   denn `(ω, y) ↦ ∫_0^s g (X r ω, y) dr` ist bezüglich `⨆ 𝓕` nur meßbar, wenn `X` es
+   gemeinsam in `(r, ω)` ist.
+2. **Von der Martingalhypothese wird bei `α = β = 0` nur die Konstanz des Mittelwerts
+   verbraucht** (`integral_sub_eq_zero_of_martingale` zwischen `0` und `s`). Die Filtrationen
+   `𝓕`, `𝓖` sind deshalb **beliebig**; keine Hilfsfiltration `*𝓕^X`, keine Adaptiertheit, keine
+   Unabhängigkeit der Filtrationen. Das ändert sich bei `α ≠ 0` und beim Gewicht (Teile 3, 4):
+   dort ist `e_α(s)` bzw. `Z` ein `𝓕 s`-meßbarer Faktor, und die Filtration wird gelesen.
+3. **Die Schranken** `eq:dual1` sind bei `α = β = 0` die drei Zeilen für `f`, `g`, `h` ohne die
+   Faktoren `|α| + 1`, `|β| + 1`, als `Γ : ℝ≥0 → Ω → ℝ` mit `Integrable (Γ T)` und
+   `|k (X s ω, Y t ω)| ≤ Γ T ω` für `s, t ≤ T` und **jedes** `ω`; `eq:dual2` ist leer. Die
+   Pfade sind gemeinsam meßbar in `(t, ω)` („measurable processes“ des Manuskripts), die
+   Zeiten auf `ℝ` über `Real.toNNReal` gelesen, weil `lem:calculus` auf `ℝ` steht.
+
+**Manuskript:** keine Lücke in `thm:duality` bei `α = β = 0`. *Beobachtung* zu Z. 7273–7281
+(„Step 1: freezing `Y`“): das Manuskript bedingt auf `σ(Y)` und benutzt, daß `M^y` unter dem
+bedingten Maß ein `*𝓕^X`-Martingal bleibt. Bei `α = β = 0` ist das mehr, als der Beweis braucht:
+es genügt die paarweise Unabhängigkeit von `X r` und `Y t` (Befund 1). Kein Fehler.
+
+#### Was von Schritt 3 offen ist, und wie es an Teil 2 anschließt
+
+* **Teil 3, `α`, `β`, ist eine Reduktion auf Teil 2 plus ein Satz.** Mit den erweiterten
+  Prozessen `X̃ s = (X s, ∫_0^s α (X u) du)`, `Ỹ t = (Y t, ∫_0^t β (Y u) du)` und
+  `f̃ ((x,a),(y,b)) = f (x,y) e^a e^b`, `g̃ = (g + α f) e^a e^b`, `h̃ = (h + β f) e^a e^b` ist
+  `thm:duality` wörtlich `duality_zero` für `X̃`, `Ỹ`, und die Balance `g̃ = h̃` **ist**
+  `eq:dualbalance`. Was fehlt, ist die **Exponentialmartingal-Aussage**: ist
+  `f (X t, y) - ∫_0^t g (X r, y) dr` ein `𝓕`-Martingal, so auch
+  `f (X t, y) e_α(t) - ∫_0^t (g + α f)(X r, y) e_α(r) dr` — unter `eq:dual1`/`eq:dual2` und
+  **progressiver** Meßbarkeit von `X` (damit `e_α(s)` `𝓕 s`-meßbar ist). Das ist genau der
+  Inhalt der Schritte 2 bis 4 des Manuskripts (Z. 7283–7361, die Terme `T₂`, `T₄`), jetzt
+  einmal und für einen Prozeß statt für zwei. Nicht gebaut; Schätzung ein Lauf.
+* **Teil 4, das Gewicht, fällt bei `α = β = 0` ebenfalls an Teil 2**, mit
+  `X' r = (Z, X (s₀ + r))` und `f' ((v,x),y) = v f (x,y)`; die Mittelwerthypothese ist
+  `E[Z (M_{s₀+s} - M_{s₀})] = 0`, und hier wird die Filtration zum ersten Mal gelesen
+  (`Z` `𝓕 s₀`-meßbar, `condExp_mul_of_stronglyMeasurable_left`). Die Unabhängigkeit, die es
+  braucht, ist `IndepFun (Z, X s) (Y t)` für jedes `s`, `t`. Günstig wäre, `duality_zero_hypotheses`
+  dafür eine Fassung mit der **Mittelwerthypothese** statt der Martingalhypothese zu geben —
+  sie ist das, was verbraucht wird.
+
+**Nicht gelaufen:** `check_duplicates.py`, `check_axioms_master.py` AXIOME_PLATZHALTER.
+
+#### Das benannte Ziel für den nächsten Lauf
+
+> **Schritt 3, Teil 3: `duality` mit `α` und `β`**, über die Reduktion oben. Zuerst die
+> Exponentialmartingal-Aussage (Name nach Mathlib-Art etwa
+> `martingale_mul_exp_integral_sub`): `X` progressiv meßbar für `𝓕`, `α` meßbar,
+> `f (X t, y) - ∫_0^t g (X r, y) dr` Martingal, Schranken `eq:dual1`/`eq:dual2` ⇒
+> `f (X t, y) e_α(t) - ∫_0^t (g + α f)(X r, y) e_α(r) dr` Martingal. Dann `duality` als
+> `duality_zero` für `X̃`, `Ỹ` und `cor:dualrel` als `duality_relation_zero`. *Worauf es ruht:*
+> `duality_zero_hypotheses`, `duality_relation_zero` (dieser Lauf); für den Beweis der
+> Exponentialaussage die Partitionsabschätzung aus Z. 7328–7355 und die Kettenregel
+> `e_α(s+h) - e_α(s) = ∫_s^{s+h} α(X r) e_α(r) dr` (Z. 7300); welche Mathlib-Sätze diese
+> Kettenregel für eine bloß integrierbare `r ↦ α (X r)` tragen, ist noch nicht nachgesehen. *Warum
+> jetzt:* es ist der nächste offene Punkt der gestellten Reihenfolge; Teil 4 und Schritt 5
+> brauchen ihn bei `α = β = 0` nicht, Schritte 6 und 7 schon.

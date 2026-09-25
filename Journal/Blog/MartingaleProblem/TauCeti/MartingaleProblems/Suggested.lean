@@ -20975,6 +20975,330 @@ theorem ae_sub_eq_integral_antidiagonal {Φ γ₁ γ₂ : ℝ → ℝ → ℝ}
 
 end Calculus
 
+/-! ### `thm:duality` at `α = β = 0`, and `cor:dualrel` for every `t`
+
+The probabilistic half of `rem:dualischain`: from the two martingale hypotheses
+`eq:dualmg1`/`eq:dualmg2` to the increment representations `eq:Fpartial1`/`eq:Fpartial2`, and
+then `lem:calculus` (`ae_sub_eq_integral_antidiagonal`).  At `α = β = 0` the terms `T₂`, `T₄`
+of the manuscript's proof do not occur, and the increment representation is exact at once: it
+is the constancy of the mean of the martingale at a frozen value of the other process, followed
+by Fubini.  The frozen value is read on a **ghost copy** of the sample space
+(`map_prod_eq_map_of_indepFun`), which is what makes the pairwise independence of `X s` and
+`Y t` suffice: the functional `∫_0^s g (X r, y) dr` of the whole path of `X` is never paired with
+`Y t` on the same sample point. -/
+
+section ContinuousDuality
+
+variable {Ω E₁ E₂ Z : Type*} {mΩ : MeasurableSpace Ω} [MeasurableSpace E₁] [MeasurableSpace E₂]
+  [MeasurableSpace Z] {P : Measure Ω} [IsProbabilityMeasure P]
+
+/-- **The ghost copy.**  For independent `U` and `W` the pair `(U, W)` has the law of
+`(U ω, W ω')` under `P ⊗ P`: the second variable may be read on an independent copy of the
+sample space. -/
+theorem map_prod_eq_map_of_indepFun {U : Ω → Z} {W : Ω → E₂} (hU : Measurable U)
+    (hW : Measurable W) (hUW : IndepFun U W P) :
+    (P.prod P).map (fun p ↦ (U p.1, W p.2)) = P.map (fun ω ↦ (U ω, W ω)) := by
+  rw [hUW.map_prod_eq_prod_map_map hU.aemeasurable hW.aemeasurable, Measure.map_prod_map P P hU hW]
+  rfl
+
+theorem integral_eq_integral_prod_of_indepFun {U : Ω → Z} {W : Ω → E₂} (hU : Measurable U)
+    (hW : Measurable W) (hUW : IndepFun U W P) {F : Z × E₂ → ℝ} (hF : Measurable F) :
+    ∫ ω, F (U ω, W ω) ∂P = ∫ p, F (U p.1, W p.2) ∂(P.prod P) := by
+  have hUW' : Measurable fun p : Ω × Ω ↦ (U p.1, W p.2) :=
+    (hU.comp measurable_fst).prodMk (hW.comp measurable_snd)
+  rw [← integral_map (hU.prodMk hW).aemeasurable hF.aestronglyMeasurable,
+    ← map_prod_eq_map_of_indepFun hU hW hUW]
+  exact integral_map hUW'.aemeasurable hF.aestronglyMeasurable
+
+theorem integrable_prod_of_indepFun {U : Ω → Z} {W : Ω → E₂} (hU : Measurable U)
+    (hW : Measurable W) (hUW : IndepFun U W P) {F : Z × E₂ → ℝ} (hF : Measurable F)
+    (hi : Integrable (fun ω ↦ F (U ω, W ω)) P) :
+    Integrable (fun p ↦ F (U p.1, W p.2)) (P.prod P) := by
+  have hUW' : Measurable fun p : Ω × Ω ↦ (U p.1, W p.2) :=
+    (hU.comp measurable_fst).prodMk (hW.comp measurable_snd)
+  have h1 : Integrable F (P.map fun ω ↦ (U ω, W ω)) :=
+    (integrable_map_measure hF.aestronglyMeasurable (hU.prodMk hW).aemeasurable).2 hi
+  rw [← map_prod_eq_map_of_indepFun hU hW hUW] at h1
+  exact (integrable_map_measure hF.aestronglyMeasurable hUW'.aemeasurable).1 h1
+
+/-- An expectation depending on a parameter is integrable in the parameter on a set of finite
+measure, if the integrand is jointly measurable and dominated by one integrable variable there. -/
+theorem integrableOn_integral_of_abs_le {α : Type*} [MeasurableSpace α] {μ : Measure α}
+    {S : Set α} (hS : MeasurableSet S) (hSμ : μ S ≠ ⊤) {F : α → Ω → ℝ}
+    (hF : Measurable (Function.uncurry F)) {Γ : Ω → ℝ} (hΓ : Integrable Γ P)
+    (hb : ∀ a ∈ S, ∀ ω, |F a ω| ≤ Γ ω) :
+    IntegrableOn (fun a ↦ ∫ ω, F a ω ∂P) S μ := by
+  refine Measure.integrableOn_of_bounded (M := ∫ ω, Γ ω ∂P) hSμ
+    hF.stronglyMeasurable.integral_prod_right.aestronglyMeasurable ?_
+  filter_upwards [ae_restrict_mem hS] with a ha
+  exact norm_integral_le_of_norm_le hΓ (ae_of_all _ fun ω ↦ by
+    rw [Real.norm_eq_abs]; exact hb a ha ω)
+
+/-- **The increment representation from a martingale, at one frozen independent variable.**
+`Z` is a process read on `ℝ`, `W` a variable independent of each `Z r`, and for every fixed `y`
+the process `f (Z r, y) - ∫_0^r g (Z v, y) dv` has the same mean at `0` and at `s`.  Then
+`E f (Z s, W) - E f (Z 0, W) = ∫_0^s E g (Z r, W) dr`.
+
+Only the pairwise independence of `Z r` and `W` is used, for each `r`: the frozen variable is
+read on a ghost copy of the sample space (`map_prod_eq_map_of_indepFun`), where the hypothesis
+`h0` applies at every point of the second factor, and Fubini on `[0, s] × Ω × Ω` exchanges the
+expectation with the time integral.  The domination by `Γ` is along the diagonal only; the ghost
+copy transfers it to the product, which is where the pairwise independence is spent. -/
+theorem integral_sub_eq_intervalIntegral_of_indepFun {Z : ℝ → Ω → E₁}
+    (hZ : Measurable (fun p : ℝ × Ω ↦ Z p.1 p.2)) {W : Ω → E₂} (hW : Measurable W)
+    (hind : ∀ r, IndepFun (Z r) W P) {f g : E₁ × E₂ → ℝ} (hf : Measurable f)
+    (hg : Measurable g) {s : ℝ} (hs : 0 ≤ s) {Γ : Ω → ℝ} (hΓ : Integrable Γ P)
+    (hfΓ : ∀ r ∈ Icc 0 s, ∀ ω, |f (Z r ω, W ω)| ≤ Γ ω)
+    (hgΓ : ∀ r ∈ Icc 0 s, ∀ ω, |g (Z r ω, W ω)| ≤ Γ ω)
+    (h0 : ∀ y, ∫ ω, (f (Z s ω, y) - f (Z 0 ω, y) - ∫ r in 0..s, g (Z r ω, y)) ∂P = 0) :
+    ∫ ω, f (Z s ω, W ω) ∂P - ∫ ω, f (Z 0 ω, W ω) ∂P = ∫ r in 0..s, ∫ ω, g (Z r ω, W ω) ∂P := by
+  simp_rw [intervalIntegral.integral_of_le hs] at h0 ⊢
+  have hZr : ∀ r, Measurable (Z r) := fun r ↦ hZ.comp (measurable_const.prodMk measurable_id)
+  have hintP : ∀ {F : E₁ × E₂ → ℝ}, Measurable F → ∀ r, (∀ ω, |F (Z r ω, W ω)| ≤ Γ ω) →
+      Integrable (fun ω ↦ F (Z r ω, W ω)) P := fun hF r hb ↦
+    hΓ.mono' (hF.comp ((hZr r).prodMk hW)).aestronglyMeasurable
+      (ae_of_all _ fun ω ↦ by rw [Real.norm_eq_abs]; exact hb ω)
+  have hintQ : ∀ {F : E₁ × E₂ → ℝ}, Measurable F → ∀ r, (∀ ω, |F (Z r ω, W ω)| ≤ Γ ω) →
+      Integrable (fun p : Ω × Ω ↦ F (Z r p.1, W p.2)) (P.prod P) := fun hF r hb ↦
+    integrable_prod_of_indepFun (hZr r) hW (hind r) hF (hintP hF r hb)
+  -- the time integrand, jointly on `[0, s] × Ω × Ω`
+  have hGm : Measurable fun q : ℝ × (Ω × Ω) ↦ g (Z q.1 q.2.1, W q.2.2) :=
+    hg.comp ((hZ.comp (measurable_fst.prodMk measurable_snd.fst)).prodMk
+      (hW.comp measurable_snd.snd))
+  have hG : Integrable (fun q : ℝ × (Ω × Ω) ↦ g (Z q.1 q.2.1, W q.2.2))
+      ((volume.restrict (Ioc 0 s)).prod (P.prod P)) := by
+    rw [integrable_prod_iff hGm.aestronglyMeasurable]
+    refine ⟨?_, ?_⟩
+    · filter_upwards [ae_restrict_mem measurableSet_Ioc] with r hr
+      exact hintQ hg r (hgΓ r (Ioc_subset_Icc_self hr))
+    · refine Measure.integrableOn_of_bounded (M := ∫ ω, Γ ω ∂P) measure_Ioc_lt_top.ne
+        (hGm.norm.stronglyMeasurable.integral_prod_right').aestronglyMeasurable ?_
+      filter_upwards [ae_restrict_mem measurableSet_Ioc] with r hr
+      have hr' := hgΓ r (Ioc_subset_Icc_self hr)
+      have heq := integral_eq_integral_prod_of_indepFun (hZr r) hW (hind r) hg.norm
+      show ‖∫ p, ‖g (Z r p.1, W p.2)‖ ∂(P.prod P)‖ ≤ _
+      rw [Real.norm_of_nonneg (integral_nonneg fun _ ↦ norm_nonneg _), ← heq]
+      exact integral_mono (hintP hg.norm r (fun ω ↦ by simpa using hr' ω)) hΓ
+        fun ω ↦ by simpa using hr' ω
+  have hGint : Integrable (fun p : Ω × Ω ↦ ∫ r in Ioc 0 s, g (Z r p.1, W p.2)) (P.prod P) :=
+    hG.integral_prod_right
+  have hswap := integral_integral_swap (f := fun r (p : Ω × Ω) ↦ g (Z r p.1, W p.2)) hG
+  have hA := hintQ hf s (hfΓ s ⟨hs, le_rfl⟩)
+  have hB := hintQ hf 0 (hfΓ 0 ⟨le_rfl, hs⟩)
+  have hAB : Integrable (fun p : Ω × Ω ↦ f (Z s p.1, W p.2) - f (Z 0 p.1, W p.2)) (P.prod P) :=
+    hA.sub hB
+  have hABG : Integrable (fun p : Ω × Ω ↦ f (Z s p.1, W p.2) - f (Z 0 p.1, W p.2) -
+      ∫ r in Ioc 0 s, g (Z r p.1, W p.2)) (P.prod P) := hAB.sub hGint
+  -- the mean zero identity, on the ghost copy
+  have hH : ∫ p, (f (Z s p.1, W p.2) - f (Z 0 p.1, W p.2) -
+      ∫ r in Ioc 0 s, g (Z r p.1, W p.2)) ∂(P.prod P) = 0 := by
+    rw [integral_prod_symm _ hABG]
+    simp_rw [h0, integral_zero]
+  rw [integral_sub hAB hGint, integral_sub hA hB, ← hswap, ← integral_eq_integral_prod_of_indepFun (hZr s) hW (hind s) hf,
+    ← integral_eq_integral_prod_of_indepFun (hZr 0) hW (hind 0) hf] at hH
+  rw [sub_eq_zero.mp hH]
+  exact setIntegral_congr_fun measurableSet_Ioc fun r _ ↦
+    (integral_eq_integral_prod_of_indepFun (hZr r) hW (hind r) hg).symm
+
+/-- The mean of a martingale does not move. -/
+theorem integral_sub_eq_zero_of_martingale {ι : Type*} [Preorder ι] {𝓕 : Filtration ι mΩ}
+    {M : ι → Ω → ℝ} (hM : Martingale M 𝓕 P) {i j : ι} (hij : i ≤ j) :
+    ∫ ω, (M j ω - M i ω) ∂P = 0 := by
+  rw [integral_sub (hM.integrable j) (hM.integrable i), ← integral_condExp (𝓕.le i),
+    integral_congr_ae (hM.condExp_ae_eq hij), sub_self]
+
+/-- **The first increment representation `eq:Fpartial1` at `α = β = 0`.**  For
+`Φ s t = E f (X s, Y t)` and `γ₁ r t = E g (X r, Y t)`, on the quadrant,
+`Φ s t - Φ 0 t = ∫_0^s γ₁ r t dr`.  The processes are indexed by `ℝ≥0` and read on `ℝ` through
+`Real.toNNReal`; of the martingale hypothesis only the constancy of the mean is consumed, and of
+the independence only that of `X r` and `Y t` for each pair `r, t`. -/
+theorem duality_increment_fst {X : ℝ≥0 → Ω → E₁} {Y : ℝ≥0 → Ω → E₂}
+    (hX : Measurable (fun p : ℝ≥0 × Ω ↦ X p.1 p.2)) (hY : ∀ t, Measurable (Y t))
+    (hind : ∀ s t, IndepFun (X s) (Y t) P) {f g : E₁ × E₂ → ℝ} (hf : Measurable f)
+    (hg : Measurable g) {Γ : ℝ≥0 → Ω → ℝ} (hΓ : ∀ T, Integrable (Γ T) P)
+    (hfΓ : ∀ T s t, s ≤ T → t ≤ T → ∀ ω, |f (X s ω, Y t ω)| ≤ Γ T ω)
+    (hgΓ : ∀ T s t, s ≤ T → t ≤ T → ∀ ω, |g (X s ω, Y t ω)| ≤ Γ T ω)
+    {𝓕 : Filtration ℝ≥0 mΩ}
+    (hXmg : ∀ y, Martingale (fun t ω ↦ f (X t ω, y) - ∫ r in (0 : ℝ)..t, g (X r.toNNReal ω, y))
+      𝓕 P) (s t : ℝ) (hs : 0 ≤ s) :
+    ∫ ω, f (X s.toNNReal ω, Y t.toNNReal ω) ∂P - ∫ ω, f (X (0 : ℝ).toNNReal ω, Y t.toNNReal ω) ∂P =
+      ∫ r in 0..s, ∫ ω, g (X r.toNNReal ω, Y t.toNNReal ω) ∂P := by
+  set T := s.toNNReal ⊔ t.toNNReal
+  have hZ : Measurable (fun p : ℝ × Ω ↦ X p.1.toNNReal p.2) :=
+    hX.comp ((measurable_real_toNNReal.comp measurable_fst).prodMk measurable_snd)
+  have hle : ∀ r ∈ Icc 0 s, r.toNNReal ≤ T := fun r hr ↦
+    (Real.toNNReal_le_toNNReal hr.2).trans le_sup_left
+  refine integral_sub_eq_intervalIntegral_of_indepFun (Z := fun r ω ↦ X r.toNNReal ω) hZ (hY _)
+    (fun r ↦ hind _ _) hf hg hs (hΓ T)
+    (fun r hr ω ↦ hfΓ T _ _ (hle r hr) le_sup_right ω)
+    (fun r hr ω ↦ hgΓ T _ _ (hle r hr) le_sup_right ω) fun y ↦ ?_
+  have h := integral_sub_eq_zero_of_martingale (hXmg y) (zero_le : (0 : ℝ≥0) ≤ s.toNNReal)
+  refine (integral_congr_ae (ae_of_all _ fun ω ↦ ?_)).trans h
+  simp only [Real.coe_toNNReal s hs, NNReal.coe_zero, intervalIntegral.integral_same,
+    Real.toNNReal_zero]
+  ring
+
+/-- **The hypotheses of `lem:calculus` for the `Φ` of `eq:Phidual`, at `α = β = 0`.**  This is
+the probabilistic half of `rem:dualischain`: the two increment representations, the
+integrability of the two boundary sections, and the integrability of `γ₁`, `γ₂` on every square.
+-/
+theorem duality_zero_hypotheses {X : ℝ≥0 → Ω → E₁} {Y : ℝ≥0 → Ω → E₂}
+    (hX : Measurable (fun p : ℝ≥0 × Ω ↦ X p.1 p.2)) (hY : Measurable (fun p : ℝ≥0 × Ω ↦ Y p.1 p.2))
+    (hind : ∀ s t, IndepFun (X s) (Y t) P) {f g h : E₁ × E₂ → ℝ} (hf : Measurable f)
+    (hg : Measurable g) (hh : Measurable h) {Γ : ℝ≥0 → Ω → ℝ} (hΓ : ∀ T, Integrable (Γ T) P)
+    (hfΓ : ∀ T s t, s ≤ T → t ≤ T → ∀ ω, |f (X s ω, Y t ω)| ≤ Γ T ω)
+    (hgΓ : ∀ T s t, s ≤ T → t ≤ T → ∀ ω, |g (X s ω, Y t ω)| ≤ Γ T ω)
+    (hhΓ : ∀ T s t, s ≤ T → t ≤ T → ∀ ω, |h (X s ω, Y t ω)| ≤ Γ T ω)
+    {𝓕 𝓖 : Filtration ℝ≥0 mΩ}
+    (hXmg : ∀ y, Martingale (fun t ω ↦ f (X t ω, y) - ∫ r in (0 : ℝ)..t, g (X r.toNNReal ω, y))
+      𝓕 P)
+    (hYmg : ∀ x, Martingale (fun t ω ↦ f (x, Y t ω) - ∫ r in (0 : ℝ)..t, h (x, Y r.toNNReal ω))
+      𝓖 P) :
+    let Φ : ℝ → ℝ → ℝ := fun s t ↦ ∫ ω, f (X s.toNNReal ω, Y t.toNNReal ω) ∂P
+    let γ₁ : ℝ → ℝ → ℝ := fun s t ↦ ∫ ω, g (X s.toNNReal ω, Y t.toNNReal ω) ∂P
+    let γ₂ : ℝ → ℝ → ℝ := fun s t ↦ ∫ ω, h (X s.toNNReal ω, Y t.toNNReal ω) ∂P
+    (∀ s t, 0 ≤ s → 0 ≤ t → Φ s t - Φ 0 t = ∫ r in 0..s, γ₁ r t) ∧
+    (∀ s t, 0 ≤ s → 0 ≤ t → Φ s t - Φ s 0 = ∫ r in 0..t, γ₂ s r) ∧
+    (∀ T, IntervalIntegrable (fun r ↦ γ₁ r 0) volume 0 T) ∧
+    (∀ T, IntervalIntegrable (γ₂ 0) volume 0 T) ∧
+    (∀ T, IntegrableOn (Function.uncurry γ₁) (Icc 0 T ×ˢ Icc 0 T)) ∧
+    (∀ T, IntegrableOn (Function.uncurry γ₂) (Icc 0 T ×ˢ Icc 0 T)) := by
+  intro Φ γ₁ γ₂
+  have hXt : ∀ t, Measurable (X t) := fun t ↦ hX.comp (measurable_const.prodMk measurable_id)
+  have hYt : ∀ t, Measurable (Y t) := fun t ↦ hY.comp (measurable_const.prodMk measurable_id)
+  -- joint measurability of the integrands in the two times and the sample point
+  have hjoint : ∀ {k : E₁ × E₂ → ℝ}, Measurable k →
+      Measurable (Function.uncurry fun (z : ℝ × ℝ) ω ↦ k (X z.1.toNNReal ω, Y z.2.toNNReal ω)) :=
+    fun hk ↦ hk.comp ((hX.comp ((measurable_real_toNNReal.comp measurable_fst.fst).prodMk
+      measurable_snd)).prodMk (hY.comp ((measurable_real_toNNReal.comp measurable_fst.snd).prodMk
+      measurable_snd)))
+  have hsq : ∀ {k : E₁ × E₂ → ℝ}, Measurable k →
+      (∀ T s t, s ≤ T → t ≤ T → ∀ ω, |k (X s ω, Y t ω)| ≤ Γ T ω) → ∀ T : ℝ,
+      IntegrableOn (fun z : ℝ × ℝ ↦ ∫ ω, k (X z.1.toNNReal ω, Y z.2.toNNReal ω) ∂P)
+        (Icc 0 T ×ˢ Icc 0 T) := fun hk hkΓ T ↦
+    integrableOn_integral_of_abs_le (measurableSet_Icc.prod measurableSet_Icc)
+      (isCompact_Icc.prod isCompact_Icc).measure_lt_top.ne (hjoint hk) (hΓ T.toNNReal)
+      fun z hz ω ↦ hkΓ _ _ _ (Real.toNNReal_le_toNNReal hz.1.2)
+        (Real.toNNReal_le_toNNReal hz.2.2) ω
+  have hline : ∀ {k : E₁ × E₂ → ℝ}, Measurable k →
+      (∀ T s t, s ≤ T → t ≤ T → ∀ ω, |k (X s ω, Y t ω)| ≤ Γ T ω) → ∀ (T : ℝ) (e : ℝ → ℝ × ℝ),
+      Measurable e → (∀ r ∈ uIcc 0 T, (e r).1 ≤ |T| ∧ (e r).2 ≤ |T|) →
+      IntervalIntegrable (fun r ↦ ∫ ω, k (X (e r).1.toNNReal ω, Y (e r).2.toNNReal ω) ∂P)
+        volume 0 T := fun hk hkΓ T e he heT ↦ by
+    rw [intervalIntegrable_iff]
+    exact integrableOn_integral_of_abs_le measurableSet_uIoc
+      ((measure_mono uIoc_subset_uIcc).trans_lt isCompact_uIcc.measure_lt_top).ne
+      ((hjoint hk).comp (he.prodMap measurable_id)) (hΓ |T|.toNNReal)
+      fun r hr ω ↦ hkΓ _ _ _ (Real.toNNReal_le_toNNReal (heT r (uIoc_subset_uIcc hr)).1)
+        (Real.toNNReal_le_toNNReal (heT r (uIoc_subset_uIcc hr)).2) ω
+  refine ⟨fun s t hs _ ↦ duality_increment_fst hX hYt hind hf hg hΓ hfΓ hgΓ hXmg s t hs,
+    fun s t _ ht ↦ ?_, fun T ↦ ?_, fun T ↦ ?_, hsq hg hgΓ, hsq hh hhΓ⟩
+  · -- the second increment: the first one with the roles of `X` and `Y` exchanged
+    have := duality_increment_fst (f := fun z ↦ f (z.2, z.1)) (g := fun z ↦ h (z.2, z.1))
+      (Γ := Γ) (𝓕 := 𝓖) hY hXt (fun s t ↦ (hind t s).symm)
+      (hf.comp measurable_swap) (hh.comp measurable_swap) hΓ
+      (fun T s t hs ht ω ↦ hfΓ T t s ht hs ω) (fun T s t hs ht ω ↦ hhΓ T t s ht hs ω) hYmg t s ht
+    show (∫ ω, f (X s.toNNReal ω, Y t.toNNReal ω) ∂P) -
+      ∫ ω, f (X s.toNNReal ω, Y (0 : ℝ).toNNReal ω) ∂P =
+        ∫ r in 0..t, ∫ ω, h (X s.toNNReal ω, Y r.toNNReal ω) ∂P
+    simpa only [Real.toNNReal_zero] using this
+  · refine hline hg hgΓ T (fun r ↦ (r, 0)) (measurable_id.prodMk measurable_const) fun r hr ↦
+      ⟨?_, by simp⟩
+    rcases le_total 0 T with h0 | h0
+    · rw [uIcc_of_le h0] at hr; exact hr.2.trans (le_abs_self T)
+    · rw [uIcc_of_ge h0] at hr; exact hr.2.trans (by simp [abs_nonneg])
+  · refine hline hh hhΓ T (fun r ↦ (0, r)) (measurable_const.prodMk measurable_id) fun r hr ↦
+      ⟨by simp, ?_⟩
+    rcases le_total 0 T with h0 | h0
+    · rw [uIcc_of_le h0] at hr; exact hr.2.trans (le_abs_self T)
+    · rw [uIcc_of_ge h0] at hr; exact hr.2.trans (by simp [abs_nonneg])
+
+/-- **`thm:duality` at `α = β = 0`** (EK 4.4.11): for almost every `t > 0`,
+`E f (X t, Y 0) - E f (X 0, Y t) = ∫_0^t E[g (X s, Y (t-s)) - h (X s, Y (t-s))] ds`.
+
+*Hypotheses, against the manuscript.*  `X`, `Y` are measurable processes on `ℝ≥0`
+(joint measurability in `(t, ω)`); the bounds `eq:dual1` are an integrable `Γ T` dominating
+`f`, `g`, `h` along the paths up to `T`, pointwise in `ω`; `eq:dual2` is void at `α = β = 0`.
+The martingale hypotheses are those of `eq:dualmg1`/`eq:dualmg2`, over **arbitrary**
+filtrations `𝓕`, `𝓖`: at `α = β = 0` only the constancy of the mean is consumed, so no
+filtration condition enters, and no auxiliary filtration `*𝓕^X` is needed.  Independence is
+used only as the pairwise independence of `X s` and `Y t`, for each `s`, `t`.
+
+*Proof.*  `duality_zero_hypotheses` produces the hypotheses of `lem:calculus`, and
+`ae_sub_eq_integral_antidiagonal` is `eq:calcconc`.  The result is stated at `ℝ`-valued times
+`t`, the processes being read through `Real.toNNReal`. -/
+theorem duality_zero {X : ℝ≥0 → Ω → E₁} {Y : ℝ≥0 → Ω → E₂}
+    (hX : Measurable (fun p : ℝ≥0 × Ω ↦ X p.1 p.2)) (hY : Measurable (fun p : ℝ≥0 × Ω ↦ Y p.1 p.2))
+    (hind : ∀ s t, IndepFun (X s) (Y t) P) {f g h : E₁ × E₂ → ℝ} (hf : Measurable f)
+    (hg : Measurable g) (hh : Measurable h) {Γ : ℝ≥0 → Ω → ℝ} (hΓ : ∀ T, Integrable (Γ T) P)
+    (hfΓ : ∀ T s t, s ≤ T → t ≤ T → ∀ ω, |f (X s ω, Y t ω)| ≤ Γ T ω)
+    (hgΓ : ∀ T s t, s ≤ T → t ≤ T → ∀ ω, |g (X s ω, Y t ω)| ≤ Γ T ω)
+    (hhΓ : ∀ T s t, s ≤ T → t ≤ T → ∀ ω, |h (X s ω, Y t ω)| ≤ Γ T ω)
+    {𝓕 𝓖 : Filtration ℝ≥0 mΩ}
+    (hXmg : ∀ y, Martingale (fun t ω ↦ f (X t ω, y) - ∫ r in (0 : ℝ)..t, g (X r.toNNReal ω, y))
+      𝓕 P)
+    (hYmg : ∀ x, Martingale (fun t ω ↦ f (x, Y t ω) - ∫ r in (0 : ℝ)..t, h (x, Y r.toNNReal ω))
+      𝓖 P) :
+    ∀ᵐ t : ℝ, 0 < t →
+      ∫ ω, f (X t.toNNReal ω, Y 0 ω) ∂P - ∫ ω, f (X 0 ω, Y t.toNNReal ω) ∂P =
+        ∫ s in 0..t, ((∫ ω, g (X s.toNNReal ω, Y (t - s).toNNReal ω) ∂P) -
+          ∫ ω, h (X s.toNNReal ω, Y (t - s).toNNReal ω) ∂P) := by
+  obtain ⟨h₁, h₂, hγ₁, hγ₂, hint₁, hint₂⟩ :=
+    duality_zero_hypotheses hX hY hind hf hg hh hΓ hfΓ hgΓ hhΓ hXmg hYmg
+  have := ae_sub_eq_integral_antidiagonal h₁ h₂ hγ₁ hγ₂ hint₁ hint₂
+  simpa only [Real.toNNReal_zero] using this
+
+/-- A function continuous on `(0, ∞)` and zero almost everywhere there is zero there. -/
+theorem eqOn_zero_of_ae_of_continuousOn {D : ℝ → ℝ} (hD : ContinuousOn D (Ioi 0))
+    (h : ∀ᵐ t, 0 < t → D t = 0) : ∀ t, 0 < t → D t = 0 := fun _ ht ↦
+  Measure.eqOn_open_of_ae_eq (g := fun _ ↦ 0)
+    ((ae_restrict_iff' measurableSet_Ioi).2 h) isOpen_Ioi hD continuousOn_const ht
+
+/-- **`cor:dualrel` at `α = β = 0`, for every `t`** (EK 4.4.13): under the balance `g = h`,
+`E f (X t, Y 0) = E f (X 0, Y t)` for **every** `t`.
+
+`duality_zero` gives it for almost every `t`; the extension to every `t` is the continuity of
+`t ↦ Φ t 0` and `t ↦ Φ 0 t`, which the increment representations of
+`duality_zero_hypotheses` give through `continuousOn_of_eq_primitive`.  At `t = 0` there is
+nothing to prove. -/
+theorem duality_relation_zero {X : ℝ≥0 → Ω → E₁} {Y : ℝ≥0 → Ω → E₂}
+    (hX : Measurable (fun p : ℝ≥0 × Ω ↦ X p.1 p.2)) (hY : Measurable (fun p : ℝ≥0 × Ω ↦ Y p.1 p.2))
+    (hind : ∀ s t, IndepFun (X s) (Y t) P) {f g h : E₁ × E₂ → ℝ} (hf : Measurable f)
+    (hg : Measurable g) (hh : Measurable h) {Γ : ℝ≥0 → Ω → ℝ} (hΓ : ∀ T, Integrable (Γ T) P)
+    (hfΓ : ∀ T s t, s ≤ T → t ≤ T → ∀ ω, |f (X s ω, Y t ω)| ≤ Γ T ω)
+    (hgΓ : ∀ T s t, s ≤ T → t ≤ T → ∀ ω, |g (X s ω, Y t ω)| ≤ Γ T ω)
+    (hhΓ : ∀ T s t, s ≤ T → t ≤ T → ∀ ω, |h (X s ω, Y t ω)| ≤ Γ T ω)
+    {𝓕 𝓖 : Filtration ℝ≥0 mΩ}
+    (hXmg : ∀ y, Martingale (fun t ω ↦ f (X t ω, y) - ∫ r in (0 : ℝ)..t, g (X r.toNNReal ω, y))
+      𝓕 P)
+    (hYmg : ∀ x, Martingale (fun t ω ↦ f (x, Y t ω) - ∫ r in (0 : ℝ)..t, h (x, Y r.toNNReal ω))
+      𝓖 P)
+    (hbal : ∀ z, g z = h z) (t : ℝ≥0) :
+    ∫ ω, f (X t ω, Y 0 ω) ∂P = ∫ ω, f (X 0 ω, Y t ω) ∂P := by
+  obtain ⟨h₁, h₂, hγ₁, hγ₂, -, -⟩ :=
+    duality_zero_hypotheses hX hY hind hf hg hh hΓ hfΓ hgΓ hhΓ hXmg hYmg
+  set D : ℝ → ℝ := fun t ↦ ∫ ω, f (X t.toNNReal ω, Y 0 ω) ∂P - ∫ ω, f (X 0 ω, Y t.toNNReal ω) ∂P
+  have hae : ∀ᵐ t : ℝ, 0 < t → D t = 0 := by
+    filter_upwards [duality_zero hX hY hind hf hg hh hΓ hfΓ hgΓ hhΓ hXmg hYmg] with t ht ht0
+    change _ - _ = _
+    rw [ht ht0]
+    simp_rw [hbal, sub_self, intervalIntegral.integral_zero]
+  have hcont : ContinuousOn D (Ioi 0) := by
+    intro u hu
+    have hT : (0 : ℝ) ≤ u + 1 := by linarith [hu.out]
+    have hc₁ := continuousOn_of_eq_primitive hT (hγ₁ (u + 1)) fun v hv ↦ h₁ v 0 hv le_rfl
+    have hc₂ := continuousOn_of_eq_primitive hT (hγ₂ (u + 1)) fun v hv ↦ h₂ 0 v le_rfl hv
+    have hmem : uIcc 0 (u + 1) ∈ nhds u := by
+      rw [uIcc_of_le hT]; exact Icc_mem_nhds hu.out (by linarith)
+    refine ((hc₁.continuousAt hmem).sub (hc₂.continuousAt hmem)).continuousWithinAt.congr
+      (fun v _ ↦ ?_) ?_ <;> simp [D, Real.toNNReal_zero]
+  rcases eq_or_ne t 0 with rfl | ht
+  · rfl
+  · have := eqOn_zero_of_ae_of_continuousOn hcont hae t (NNReal.coe_pos.2 (pos_iff_ne_zero.2 ht))
+    simpa [D, sub_eq_zero] using this
+
+end ContinuousDuality
+
 /-! ## Causal convolution and the Volterra resolvent
 
 Milestone 14.  The renewal equation `m = m₀ + φ ⋆ m` on `[0,∞)` and the resolvent that solves it
