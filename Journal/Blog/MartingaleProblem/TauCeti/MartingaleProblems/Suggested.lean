@@ -47971,3 +47971,609 @@ theorem isRestartKernel_concatKernel_top [MeasurableSingletonClass F] {S : Shift
     (fun _ ↦ ae_of_all _ fun _ ↦ rfl) (fun _ _ _ _ ↦ rfl) (fun _ _ _ h ↦ absurd h WithTop.top_ne_coe)
 
 end PastingMarkov
+
+section ContinuousTimeMartingales
+
+/-! ## Continuous time martingales: optional sampling for submartingales
+
+Milestone 8.  The martingale half of optional sampling in continuous time stands above
+(`stoppedValue_ae_eq_condExp`, `martingale_stoppedProcess`); this section is the submartingale
+half, `Submartingale.stoppedValue_min_le_condExp`, for a bounded stopping time, almost everywhere
+right continuous paths, and **no bound on the paths**.
+
+The route:
+
+* **the dyadic grid as an `ℕ`-indexed process.**  `dyadStop j ρ n` takes its values in the grid
+  `dyadGrid j n`, a monotone sequence of times, and its index on the grid, `dyadIndex`, is a
+  stopping time for the reindexed filtration `Filtration.comp`.  Mathlib's discrete optional
+  stopping, `Submartingale.expected_stoppedValue_mono`, then applies verbatim
+  (`Submartingale.integral_stoppedValue_dyadStop_mono`), and its set form gives the conditional
+  bound `Y_{ρ_n} ≤ E[Y_j | ·]` on the grid (`Submartingale.stoppedValue_dyadStop_ae_le_condExp`).
+* **integrability without a bound on the paths**, by Fatou along the approximations, whose `L¹`
+  norms are at most `2 E[(Y j)⁺] - E[Y 0]`
+  (`Submartingale.integrable_stoppedValue_of_rightContinuous`).
+* **the passage to the limit.**  For a martingale the approximations are conditional expectations
+  of one function and uniformly integrable for free; for a submartingale the conditional bound
+  controls them only from above.  Cutting at `-K` supplies the missing side: `Y ⊔ -K` is a
+  submartingale bounded below, so its approximations are uniformly integrable
+  (`uniformIntegrable_of_le_condExp`) and Vitali applies
+  (`Submartingale.integral_stoppedValue_mono_of_ge`); `K → ∞` is dominated convergence against
+  `|Y_ρ|` (`Submartingale.integral_stoppedValue_mono`).  No backward submartingale and no Doob
+  decomposition in continuous time are needed.
+* **the conditional form** from the expectation form at the auxiliary time equal to `τ ∧ σ` on the
+  test set and to `τ` off it.
+
+The filtration is the raw one: no `[𝓕.IsRightContinuous]`, no completeness. -/
+
+
+/-- The dyadic grid of level `n` capped at `j`, as a monotone sequence of times. -/
+noncomputable def dyadGrid (j : ℝ≥0) (n k : ℕ) : ℝ≥0 := min j (Real.toNNReal ((k : ℝ) / 2 ^ n))
+
+theorem monotone_dyadGrid (j : ℝ≥0) (n : ℕ) : Monotone (dyadGrid j n) := by
+  intro a b hab
+  unfold dyadGrid
+  refine min_le_min_left _ (Real.toNNReal_le_toNNReal ?_)
+  exact div_le_div_of_nonneg_right (by exact_mod_cast hab) (by positivity)
+
+/-- The index on the grid of `dyadGrid` at which `dyadStop` sits. -/
+noncomputable def dyadIndex (ρ : Ω → ENNReal) (n : ℕ) (ω : Ω) : ℕ :=
+  (⌈(ρ ω).toReal * 2 ^ n⌉).toNat
+
+theorem dyadStop_eq_dyadGrid (j : ℝ≥0) (ρ : Ω → ENNReal) (n : ℕ) (ω : Ω) :
+    dyadStop j ρ n ω = (dyadGrid j n (dyadIndex ρ n ω) : ENNReal) := by
+  have h0 : (0 : ℤ) ≤ ⌈(ρ ω).toReal * 2 ^ n⌉ := Int.ceil_nonneg (by positivity)
+  have hcast : (((dyadIndex ρ n ω : ℕ) : ℝ)) = ((⌈(ρ ω).toReal * 2 ^ n⌉ : ℤ) : ℝ) := by
+    rw [dyadIndex, ← Int.cast_natCast, Int.toNat_of_nonneg h0]
+  rw [dyadStop, dyadGrid, dyadCeil, hcast]
+
+theorem dyadIndex_le (j : ℝ≥0) {ρ : Ω → ENNReal} (hρj : ∀ ω, ρ ω ≤ (j : ENNReal)) (n : ℕ)
+    (ω : Ω) : dyadIndex ρ n ω ≤ (⌈(j : ℝ) * 2 ^ n⌉).toNat := by
+  refine Int.toNat_le_toNat (Int.ceil_mono ?_)
+  have hne : ρ ω ≠ ⊤ := ne_top_of_le_ne_top (by simp) (hρj ω)
+  have : (ρ ω).toReal ≤ (j : ℝ) := by
+    have := ENNReal.toReal_mono (by simp) (hρj ω)
+    simpa using this
+  gcongr
+
+theorem dyadIndex_mono {ρ ρ' : Ω → ENNReal} (hρρ' : ∀ ω, ρ ω ≤ ρ' ω)
+    (hρ' : ∀ ω, ρ' ω ≠ ⊤) (n : ℕ) (ω : Ω) : dyadIndex ρ n ω ≤ dyadIndex ρ' n ω := by
+  refine Int.toNat_le_toNat (Int.ceil_mono ?_)
+  refine mul_le_mul_of_nonneg_right ?_ (by positivity)
+  exact ENNReal.toReal_mono (hρ' ω) (hρρ' ω)
+
+theorem dyadGrid_dyadIndex_top (j : ℝ≥0) (n : ℕ) :
+    dyadGrid j n (⌈(j : ℝ) * 2 ^ n⌉).toNat = j := by
+  have h0 : (0 : ℤ) ≤ ⌈(j : ℝ) * 2 ^ n⌉ := Int.ceil_nonneg (by positivity)
+  have hcast : ((((⌈(j : ℝ) * 2 ^ n⌉).toNat : ℕ) : ℝ)) = ((⌈(j : ℝ) * 2 ^ n⌉ : ℤ) : ℝ) := by
+    rw [← Int.cast_natCast, Int.toNat_of_nonneg h0]
+  rw [dyadGrid, hcast]
+  refine min_eq_left ?_
+  rw [Real.le_toNNReal_iff_coe_le (by positivity), le_div_iff₀ (by positivity)]
+  exact Int.le_ceil _
+
+theorem isStoppingTime_dyadIndex {𝓕 : Filtration ℝ≥0 m} {ρ : Ω → ENNReal}
+    (hρ : IsStoppingTime 𝓕 ρ) {j : ℝ≥0} (hρj : ∀ ω, ρ ω ≤ (j : ENNReal)) (n : ℕ) :
+    IsStoppingTime (𝓕.comp (monotone_dyadGrid j n))
+      (fun ω ↦ WithTop.some (dyadIndex ρ n ω)) := by
+  intro i
+  show MeasurableSet[𝓕 (dyadGrid j n i)] {ω | WithTop.some (dyadIndex ρ n ω) ≤ WithTop.some i}
+  have hset : {ω | WithTop.some (dyadIndex ρ n ω) ≤ WithTop.some i}
+      = {ω | ρ ω ≤ (dyadGrid j n i : ENNReal)} := by
+    ext ω
+    have hne : ρ ω ≠ ⊤ := ne_top_of_le_ne_top (by simp) (hρj ω)
+    simp only [Set.mem_ofPred_eq, WithTop.coe_le_coe, dyadIndex, dyadGrid, ENNReal.coe_min,
+      le_min_iff, hρj ω, true_and]
+    rw [Int.toNat_le, Int.ceil_le, ← le_div_iff₀ (by positivity : (0 : ℝ) < 2 ^ n)]
+    rw [show ((Real.toNNReal ((i : ℝ) / 2 ^ n) : ℝ≥0) : ENNReal) = ENNReal.ofReal ((i : ℝ) / 2 ^ n)
+      from rfl, ENNReal.le_ofReal_iff_toReal_le hne (by positivity)]
+    push_cast
+    rfl
+  rw [hset]
+  exact hρ _
+
+theorem stoppedValue_dyadStop_eq {E : Type*} (Y : ℝ≥0 → Ω → E) (j : ℝ≥0) (ρ : Ω → ENNReal)
+    (n : ℕ) :
+    stoppedValue Y (dyadStop j ρ n)
+      = stoppedValue (fun k ↦ Y (dyadGrid j n k)) (fun ω ↦ WithTop.some (dyadIndex ρ n ω)) := by
+  funext ω
+  simp only [stoppedValue, dyadStop_eq_dyadGrid]
+  rfl
+
+/-- **The set integral form of optional sampling for a submartingale over `ℕ`**, bounded
+stopping times, test set in the σ-algebra of the earlier time.  Mathlib has the expectation form
+(`Submartingale.expected_stoppedValue_mono`); the set form is the expectation form at the
+auxiliary time equal to `σ` on the test set and to `τ` off it. -/
+theorem MeasureTheory.Submartingale.setIntegral_stoppedValue_le_nat {P : Measure Ω} {𝒢 : Filtration ℕ m}
+    [SigmaFiniteFiltration P 𝒢] {f : ℕ → Ω → ℝ} (hf : Submartingale f 𝒢 P)
+    {σ τ : Ω → WithTop ℕ} (hσ : IsStoppingTime 𝒢 σ) (hτ : IsStoppingTime 𝒢 τ) (hle : σ ≤ τ)
+    {N : ℕ} (hbdd : ∀ ω, τ ω ≤ N) {A : Set Ω} (hA : MeasurableSet[hσ.measurableSpace] A) :
+    ∫ ω in A, stoppedValue f σ ω ∂P ≤ ∫ ω in A, stoppedValue f τ ω ∂P := by
+  classical
+  have hAm : MeasurableSet A := hσ.measurableSpace_le _ hA
+  set π : Ω → WithTop ℕ := A.piecewise σ τ with hπdef
+  have hπ : IsStoppingTime 𝒢 π := by
+    intro i
+    show MeasurableSet[𝒢 i] {ω | π ω ≤ WithTop.some i}
+    have heq : {ω | π ω ≤ WithTop.some i}
+        = (A ∩ {ω | σ ω ≤ WithTop.some i}) ∪ (({ω | σ ω ≤ WithTop.some i} \
+          (A ∩ {ω | σ ω ≤ WithTop.some i})) ∩ {ω | τ ω ≤ WithTop.some i}) := by
+      ext ω
+      by_cases h : ω ∈ A
+      · simp [hπdef, h]
+      · simp only [hπdef, Set.piecewise_eq_of_notMem _ _ _ h, Set.mem_ofPred_eq, Set.mem_union,
+          Set.mem_inter_iff, h, false_and, Set.mem_sdiff, not_false_eq_true, and_true, false_or]
+        exact ⟨fun h' ↦ ⟨(hle ω).trans h', h'⟩, fun h' ↦ h'.2⟩
+    rw [heq]
+    exact (hA.2 i).union (((hσ i).diff (hA.2 i)).inter (hτ i))
+  have hπle : π ≤ τ := fun ω ↦ by
+    by_cases h : ω ∈ A
+    · simp [hπdef, h, hle ω]
+    · simp [hπdef, h]
+  have hmono := hf.expected_stoppedValue_mono hπ hτ hπle hbdd
+  have hπint : Integrable (stoppedValue f π) P :=
+    hf.integrable_stoppedValue hπ fun ω ↦ (hπle ω).trans (hbdd ω)
+  have hτint : Integrable (stoppedValue f τ) P := hf.integrable_stoppedValue hτ hbdd
+  have h1 : ∫ ω, stoppedValue f π ω ∂P
+      = ∫ ω in A, stoppedValue f σ ω ∂P + ∫ ω in Aᶜ, stoppedValue f τ ω ∂P := by
+    rw [← integral_add_compl hAm hπint]
+    congr 1
+    · refine setIntegral_congr_fun hAm fun ω hω ↦ ?_
+      simp [stoppedValue, hπdef, hω]
+    · refine setIntegral_congr_fun hAm.compl fun ω hω ↦ ?_
+      simp [stoppedValue, hπdef, Set.notMem_of_mem_compl hω]
+  have h2 := integral_add_compl hAm hτint
+  rw [h1, ← h2] at hmono
+  linarith
+
+/-- **An `ℝ`-valued function below another in every set integral over a sub-σ-algebra, and
+measurable for it, is below its conditional expectation.**  The step of
+`submartingale_of_setIntegral_le`, stated for one pair of functions. -/
+theorem ae_le_condExp_of_forall_setIntegral_le {m₀ : MeasurableSpace Ω} {P : Measure Ω}
+    {m' : MeasurableSpace Ω} (hm : m' ≤ m₀) [SigmaFinite (P.trim hm)] {f g : Ω → ℝ}
+    (hf : StronglyMeasurable[m'] f) (hfi : Integrable f P) (hg : Integrable g P)
+    (h : ∀ s, MeasurableSet[m'] s → ∫ ω in s, f ω ∂P ≤ ∫ ω in s, g ω ∂P) :
+    f ≤ᵐ[P] P[g | m'] := by
+  suffices f ≤ᵐ[P.trim hm] P[g | m'] by exact ae_le_of_ae_le_trim this
+  suffices 0 ≤ᵐ[P.trim hm] P[g | m'] - f by
+    filter_upwards [this] with x hx
+    rwa [← sub_nonneg]
+  refine ae_nonneg_of_forall_setIntegral_nonneg
+    ((integrable_condExp.sub hfi).trim _ (stronglyMeasurable_condExp.sub hf)) fun s hs _ ↦ ?_
+  specialize h s hs
+  rwa [← setIntegral_trim _ (stronglyMeasurable_condExp.sub hf) hs,
+    integral_sub' integrable_condExp.integrableOn hfi.integrableOn, sub_nonneg,
+    setIntegral_condExp hm hg hs]
+
+/-- **Optional sampling for a submartingale over `ℕ`, conditional form, at a bounded stopping time
+against a constant.** -/
+theorem MeasureTheory.Submartingale.stoppedValue_ae_le_condExp_nat {P : Measure Ω} [IsFiniteMeasure P]
+    {𝒢 : Filtration ℕ m} {f : ℕ → Ω → ℝ} (hf : Submartingale f 𝒢 P)
+    {σ : Ω → WithTop ℕ} (hσ : IsStoppingTime 𝒢 σ) {N : ℕ} (hbdd : ∀ ω, σ ω ≤ N) :
+    stoppedValue f σ ≤ᵐ[P] P[f N | hσ.measurableSpace] := by
+  have hN : IsStoppingTime 𝒢 (fun _ ↦ (N : WithTop ℕ)) := isStoppingTime_const 𝒢 N
+  have hmeas : StronglyMeasurable[hσ.measurableSpace] (stoppedValue f σ) :=
+    (measurable_stoppedValue hf.stronglyAdapted.isStronglyProgressive_of_discrete
+      hσ).stronglyMeasurable
+  refine ae_le_condExp_of_forall_setIntegral_le (hσ.measurableSpace_le) hmeas
+    (hf.integrable_stoppedValue hσ hbdd) (hf.integrable N) fun s hs ↦ ?_
+  have := hf.setIntegral_stoppedValue_le_nat hσ hN (fun ω ↦ hbdd ω) (fun _ ↦ le_rfl) hs
+  simpa [stoppedValue, show ((N : WithTop ℕ)).untopA = N from rfl] using this
+
+variable {𝓕 : Filtration ℝ≥0 m} {P : Measure Ω} [IsFiniteMeasure P] {Y : ℝ≥0 → Ω → ℝ}
+
+theorem dyadStop_const_zero (j : ℝ≥0) (n : ℕ) :
+    dyadStop j (fun _ : Ω ↦ ((0 : ℝ≥0) : ENNReal)) n = fun _ ↦ ((0 : ℝ≥0) : ENNReal) := by
+  funext ω
+  simp [dyadStop, dyadCeil]
+
+theorem dyadStop_const_self (j : ℝ≥0) (n : ℕ) :
+    dyadStop j (fun _ : Ω ↦ (j : ENNReal)) n = fun _ ↦ (j : ENNReal) := by
+  funext ω
+  have h : j ≤ Real.toNNReal (dyadCeil n (j : ℝ)) := by
+    rw [Real.le_toNNReal_iff_coe_le (le_trans j.coe_nonneg (le_dyadCeil n _))]
+    exact le_dyadCeil n _
+  simp only [dyadStop, ENNReal.coe_toReal, min_eq_left h]
+
+omit [IsFiniteMeasure P] in
+/-- The value at a dyadic approximation is strongly measurable, read on the `ℕ`-indexed grid. -/
+theorem aestronglyMeasurable_stoppedValue_dyadStop (hY : StronglyAdapted 𝓕 Y) {ρ : Ω → ENNReal}
+    (hρ : IsStoppingTime 𝓕 ρ) {j : ℝ≥0} (hρj : ∀ ω, ρ ω ≤ (j : ENNReal)) (n : ℕ) :
+    AEStronglyMeasurable (stoppedValue Y (dyadStop j ρ n)) P := by
+  rw [stoppedValue_dyadStop_eq]
+  have hadp : StronglyAdapted (𝓕.comp (monotone_dyadGrid j n)) (fun k ↦ Y (dyadGrid j n k)) :=
+    fun k ↦ hY _
+  exact ((measurable_stoppedValue hadp.isStronglyProgressive_of_discrete
+    (isStoppingTime_dyadIndex hρ hρj n)).mono
+    ((isStoppingTime_dyadIndex hρ hρj n).measurableSpace_le) le_rfl).aestronglyMeasurable
+
+/-- **Optional sampling for a submartingale at two ordered dyadic approximations.** -/
+theorem MeasureTheory.Submartingale.integral_stoppedValue_dyadStop_mono
+    (hY : Submartingale Y 𝓕 P) {j : ℝ≥0} {ρ ρ' : Ω → ENNReal} (hρ : IsStoppingTime 𝓕 ρ)
+    (hρ' : IsStoppingTime 𝓕 ρ') (hρρ' : ∀ ω, ρ ω ≤ ρ' ω) (hρ'j : ∀ ω, ρ' ω ≤ (j : ENNReal))
+    (n : ℕ) :
+    ∫ ω, stoppedValue Y (dyadStop j ρ n) ω ∂P ≤ ∫ ω, stoppedValue Y (dyadStop j ρ' n) ω ∂P := by
+  have hρj : ∀ ω, ρ ω ≤ (j : ENNReal) := fun ω ↦ (hρρ' ω).trans (hρ'j ω)
+  have hfin : ∀ ω, ρ' ω ≠ ⊤ := fun ω ↦ ne_top_of_le_ne_top (by simp) (hρ'j ω)
+  rw [stoppedValue_dyadStop_eq, stoppedValue_dyadStop_eq]
+  exact (hY.comp_monotone (monotone_dyadGrid j n)).expected_stoppedValue_mono
+    (isStoppingTime_dyadIndex hρ hρj n) (isStoppingTime_dyadIndex hρ' hρ'j n)
+    (fun ω ↦ WithTop.coe_le_coe.2 (dyadIndex_mono hρρ' hfin n ω))
+    (N := (⌈(j : ℝ) * 2 ^ n⌉).toNat) (fun ω ↦ WithTop.coe_le_coe.2 (dyadIndex_le j hρ'j n ω))
+
+/-- **A dyadic approximation of a submartingale is below the conditional expectation of the
+terminal value**, for the σ-algebra of the grid index. -/
+theorem MeasureTheory.Submartingale.stoppedValue_dyadStop_ae_le_condExp
+    (hY : Submartingale Y 𝓕 P) {j : ℝ≥0} {ρ : Ω → ENNReal} (hρ : IsStoppingTime 𝓕 ρ)
+    (hρj : ∀ ω, ρ ω ≤ (j : ENNReal)) (n : ℕ) :
+    stoppedValue Y (dyadStop j ρ n)
+      ≤ᵐ[P] P[Y j | (isStoppingTime_dyadIndex hρ hρj n).measurableSpace] := by
+  rw [stoppedValue_dyadStop_eq]
+  have h := (hY.comp_monotone (monotone_dyadGrid j n)).stoppedValue_ae_le_condExp_nat
+    (isStoppingTime_dyadIndex hρ hρj n) (N := (⌈(j : ℝ) * 2 ^ n⌉).toNat)
+    (fun ω ↦ WithTop.coe_le_coe.2 (dyadIndex_le j hρj n ω))
+  simpa only [dyadGrid_dyadIndex_top] using h
+
+-- nach BrownianMotion, StochasticIntegral/Quasimartingale/CadlagModification.lean:98 (0d5b6eb)
+/-- **A family bounded below by a constant and above by conditional expectations of one
+integrable function is uniformly integrable.** -/
+theorem MeasureTheory.uniformIntegrable_of_le_condExp {κ : Type*} {f : κ → Ω → ℝ} {g : Ω → ℝ}
+    {c : ℝ} {mσ : κ → MeasurableSpace Ω} (hm : ∀ i, mσ i ≤ m) (hg : Integrable g P)
+    (hf : ∀ i, AEStronglyMeasurable (f i) P) (hcf : ∀ i, ∀ᵐ ω ∂P, c ≤ f i ω)
+    (hfg : ∀ i, f i ≤ᵐ[P] P[g | mσ i]) :
+    UniformIntegrable f 1 P := by
+  have hU := hg.uniformIntegrable_condExp (μ := P) hm
+  set F : κ → Ω → ℝ := (fun _ _ ↦ |c|) + fun i ω ↦ ‖(P[g | mσ i]) ω‖ with hFdef
+  have hcondm : ∀ i, AEStronglyMeasurable (fun ω ↦ ‖(P[g | mσ i]) ω‖) P := fun i ↦
+    integrable_condExp.aestronglyMeasurable.norm
+  have hFunif : UnifIntegrable F 1 P :=
+    (unifIntegrable_const le_rfl ENNReal.one_ne_top (memLp_const |c|)).add
+      (hU.1.of_norm_le_ae hcondm fun i ↦ ae_of_all _ fun ω ↦ by simp) le_rfl
+  have hdom : ∀ i, ∀ᵐ ω ∂P, ‖f i ω‖ ≤ ‖F i ω‖ := fun i ↦ by
+    filter_upwards [hcf i, hfg i] with ω h1 h2
+    have hF : F i ω = |c| + ‖(P[g | mσ i]) ω‖ := rfl
+    rw [hF, Real.norm_eq_abs, Real.norm_of_nonneg (by positivity), abs_le, Real.norm_eq_abs]
+    constructor
+    · linarith [neg_abs_le c, abs_nonneg ((P[g | mσ i]) ω)]
+    · linarith [le_abs_self ((P[g | mσ i]) ω), abs_nonneg c]
+  refine ⟨hFunif.of_norm_le_ae hf hdom, ?_⟩
+  obtain ⟨C, hC⟩ := hU.2
+  refine ⟨C + (eLpNorm (fun _ : Ω ↦ |c|) 1 P).toNNReal, fun i ↦ ?_⟩
+  calc eLpNorm (f i) 1 P ≤ eLpNorm (F i) 1 P := eLpNorm_mono_ae (hf i) (hdom i)
+    _ ≤ eLpNorm (fun _ : Ω ↦ |c|) 1 P + eLpNorm (fun ω ↦ ‖(P[g | mσ i]) ω‖) 1 P :=
+        eLpNorm_add_le le_rfl
+    _ = eLpNorm (fun _ : Ω ↦ |c|) 1 P + eLpNorm (P[g | mσ i]) 1 P := by rw [eLpNorm_norm _ integrable_condExp.aestronglyMeasurable]
+    _ ≤ (eLpNorm (fun _ : Ω ↦ |c|) 1 P).toNNReal + C := by
+        rw [ENNReal.coe_toNNReal (memLp_const |c|).eLpNorm_ne_top]
+        exact add_le_add le_rfl (hC i)
+    _ = ((C + (eLpNorm (fun _ : Ω ↦ |c|) 1 P).toNNReal : ℝ≥0) : ENNReal) := by
+        rw [add_comm]; push_cast; rfl
+
+/-- **Vitali's theorem, in the form used here**: integrals of a uniformly integrable, a.e.
+convergent sequence converge. -/
+theorem tendsto_integral_of_uniformIntegrable_of_ae_tendsto {F : ℕ → Ω → ℝ} {g : Ω → ℝ}
+    (hUI : UniformIntegrable F 1 P) (hF : ∀ n, AEStronglyMeasurable (F n) P)
+    (hlim : ∀ᵐ ω ∂P, Tendsto (fun n ↦ F n ω) atTop (𝓝 (g ω))) :
+    Tendsto (fun n ↦ ∫ ω, F n ω ∂P) atTop (𝓝 (∫ ω, g ω ∂P)) := by
+  have hgint : Integrable g P := hUI.integrable_of_ae_tendsto hlim
+  obtain ⟨C, hC⟩ := hUI.2
+  have hmem : ∀ n, MemLp (F n) 1 P := fun n ↦ (hC n).trans_lt ENNReal.coe_lt_top
+  have hL1 : Tendsto (fun n ↦ eLpNorm (F n - g) 1 P) atTop (𝓝 0) :=
+    tendsto_Lp_finite_of_tendsto_ae le_rfl ENNReal.one_ne_top hF
+      (memLp_one_iff_integrable.2 hgint) hUI.1 hlim
+  exact tendsto_integral_of_L1' _
+    (Filter.Eventually.of_forall fun n ↦ memLp_one_iff_integrable.1 (hmem n)) hL1
+
+/-- **Optional sampling in expectation for a submartingale bounded below**, at two ordered bounded
+stopping times, with almost everywhere right continuous paths.  The lower bound makes the dyadic
+approximations uniformly integrable (`uniformIntegrable_of_le_condExp`). -/
+theorem MeasureTheory.Submartingale.integral_stoppedValue_mono_of_ge (hY : Submartingale Y 𝓕 P)
+    {c : ℝ} (hc : ∀ t ω, c ≤ Y t ω)
+    (hrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
+    {j : ℝ≥0} {ρ ρ' : Ω → ENNReal} (hρ : IsStoppingTime 𝓕 ρ) (hρ' : IsStoppingTime 𝓕 ρ')
+    (hρρ' : ∀ ω, ρ ω ≤ ρ' ω) (hρ'j : ∀ ω, ρ' ω ≤ (j : ENNReal)) :
+    ∫ ω, stoppedValue Y ρ ω ∂P ≤ ∫ ω, stoppedValue Y ρ' ω ∂P := by
+  have hρj : ∀ ω, ρ ω ≤ (j : ENNReal) := fun ω ↦ (hρρ' ω).trans (hρ'j ω)
+  have hUI : ∀ {ρ₀ : Ω → ENNReal} (hρ₀ : IsStoppingTime 𝓕 ρ₀)
+      (hρ₀j : ∀ ω, ρ₀ ω ≤ (j : ENNReal)),
+      Tendsto (fun n ↦ ∫ ω, stoppedValue Y (dyadStop j ρ₀ n) ω ∂P) atTop
+        (𝓝 (∫ ω, stoppedValue Y ρ₀ ω ∂P)) := fun {ρ₀} hρ₀ hρ₀j ↦
+    tendsto_integral_of_uniformIntegrable_of_ae_tendsto
+      (uniformIntegrable_of_le_condExp
+        (fun n ↦ (isStoppingTime_dyadIndex hρ₀ hρ₀j n).measurableSpace_le) (hY.integrable j)
+        (fun n ↦ aestronglyMeasurable_stoppedValue_dyadStop hY.stronglyAdapted hρ₀ hρ₀j n)
+        (fun n ↦ ae_of_all _ fun ω ↦ hc _ ω)
+        (fun n ↦ hY.stoppedValue_dyadStop_ae_le_condExp hρ₀ hρ₀j n))
+      (fun n ↦ aestronglyMeasurable_stoppedValue_dyadStop hY.stronglyAdapted hρ₀ hρ₀j n)
+      (ae_tendsto_stoppedValue_dyadStop hrc hρ₀j)
+  exact le_of_tendsto_of_tendsto' (hUI hρ hρj) (hUI hρ' hρ'j)
+    (hY.integral_stoppedValue_dyadStop_mono hρ hρ' hρρ' hρ'j)
+
+omit [IsFiniteMeasure P] in
+theorem MeasureTheory.Submartingale.integrable_stoppedValue_dyadStop (hY : Submartingale Y 𝓕 P)
+    {j : ℝ≥0} {ρ : Ω → ENNReal} (hρ : IsStoppingTime 𝓕 ρ) (hρj : ∀ ω, ρ ω ≤ (j : ENNReal))
+    (n : ℕ) : Integrable (stoppedValue Y (dyadStop j ρ n)) P := by
+  rw [stoppedValue_dyadStop_eq]
+  exact (hY.comp_monotone (monotone_dyadGrid j n)).integrable_stoppedValue
+    (isStoppingTime_dyadIndex hρ hρj n) (N := (⌈(j : ℝ) * 2 ^ n⌉).toNat)
+    (fun ω ↦ WithTop.coe_le_coe.2 (dyadIndex_le j hρj n ω))
+
+theorem abs_eq_two_mul_max_zero_sub (x : ℝ) : |x| = 2 * max x 0 - x := by
+  rcases le_total 0 x with h | h
+  · rw [abs_of_nonneg h, max_eq_left h]; ring
+  · rw [abs_of_nonpos h, max_eq_right h]; ring
+
+/-- **The value of a right continuous submartingale at a bounded stopping time is integrable**,
+with no bound on the paths.  Fatou's lemma along the dyadic approximations, whose `L¹` norms are
+bounded by `2 E[(Y j)⁺] - E[Y 0]`: the positive part is a submartingale sampled below `j`, and the
+expectation is at least the one at time `0`. -/
+theorem MeasureTheory.Submartingale.integrable_stoppedValue_of_rightContinuous
+    (hY : Submartingale Y 𝓕 P)
+    (hrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
+    {j : ℝ≥0} {ρ : Ω → ENNReal} (hρ : IsStoppingTime 𝓕 ρ) (hρj : ∀ ω, ρ ω ≤ (j : ENNReal)) :
+    Integrable (stoppedValue Y ρ) P := by
+  set F : ℕ → Ω → ℝ := fun n ↦ stoppedValue Y (dyadStop j ρ n) with hFdef
+  have hFint : ∀ n, Integrable (F n) P := hY.integrable_stoppedValue_dyadStop hρ hρj
+  have hlim : ∀ᵐ ω ∂P, Tendsto (fun n ↦ F n ω) atTop (𝓝 (stoppedValue Y ρ ω)) :=
+    ae_tendsto_stoppedValue_dyadStop hrc hρj
+  have hpos : Submartingale (Y⁺) 𝓕 P := hY.pos
+  have hFpos : ∀ n, Integrable (fun ω ↦ max (F n ω) 0) P := fun n ↦
+    hpos.integrable_stoppedValue_dyadStop hρ hρj n
+  have hup : ∀ n, ∫ ω, max (F n ω) 0 ∂P ≤ ∫ ω, max (Y j ω) 0 ∂P := fun n ↦ by
+    have h := hpos.integral_stoppedValue_dyadStop_mono hρ (isStoppingTime_const 𝓕 j) hρj
+      (fun _ ↦ le_rfl) n
+    rw [show dyadStop j (fun _ : Ω ↦ ((j : ℝ≥0) : WithTop ℝ≥0)) n
+      = fun _ ↦ ((j : ℝ≥0) : WithTop ℝ≥0) from dyadStop_const_self j n] at h
+    exact h
+  have hlow : ∀ n, ∫ ω, Y 0 ω ∂P ≤ ∫ ω, F n ω ∂P := fun n ↦ by
+    have h := hY.integral_stoppedValue_dyadStop_mono (isStoppingTime_const 𝓕 0) hρ
+      (fun ω ↦ (zero_le : (0 : ENNReal) ≤ ρ ω)) hρj n
+    rw [show dyadStop j (fun _ : Ω ↦ ((0 : ℝ≥0) : WithTop ℝ≥0)) n
+      = fun _ ↦ ((0 : ℝ≥0) : WithTop ℝ≥0) from dyadStop_const_zero j n] at h
+    exact h
+  set B : ℝ := 2 * ∫ ω, max (Y j ω) 0 ∂P - ∫ ω, Y 0 ω ∂P with hB
+  have hbd : ∀ n, ∫⁻ ω, ‖F n ω‖ₑ ∂P ≤ ENNReal.ofReal B := fun n ↦ by
+    rw [← ofReal_integral_norm_eq_lintegral_enorm (hFint n)]
+    refine ENNReal.ofReal_le_ofReal ?_
+    have heq : ∫ ω, ‖F n ω‖ ∂P = 2 * ∫ ω, max (F n ω) 0 ∂P - ∫ ω, F n ω ∂P := by
+      simp_rw [Real.norm_eq_abs, abs_eq_two_mul_max_zero_sub]
+      rw [integral_sub ((hFpos n).const_mul 2) (hFint n), integral_const_mul]
+    rw [heq, hB]
+    linarith [hup n, hlow n]
+  refine ⟨aestronglyMeasurable_of_tendsto_ae _ (fun n ↦ (hFint n).aestronglyMeasurable) hlim, ?_⟩
+  have hfatou : ∫⁻ ω, ‖stoppedValue Y ρ ω‖ₑ ∂P ≤ liminf (fun n ↦ ∫⁻ ω, ‖F n ω‖ₑ ∂P) atTop :=
+    lintegral_congr_ae (by filter_upwards [hlim] with x hx using hx.enorm.liminf_eq) ▸
+      (lintegral_liminf_le' fun n ↦ (hFint n).aestronglyMeasurable.aemeasurable.enorm)
+  exact lt_of_le_of_lt (hfatou.trans
+    (liminf_le_of_frequently_le' (Frequently.of_forall hbd))) ENNReal.ofReal_lt_top
+
+/-- **Optional sampling in expectation for a submartingale in continuous time**: at two ordered
+bounded stopping times, for almost everywhere right continuous paths, with no bound on the paths.
+
+The submartingale is cut from below at `-K`; `Y ⊔ -K` is a submartingale bounded below, for which
+`integral_stoppedValue_mono_of_ge` holds, and `K → ∞` is dominated convergence against `|Y_ρ|`,
+integrable by `integrable_stoppedValue_of_rightContinuous`. -/
+theorem MeasureTheory.Submartingale.integral_stoppedValue_mono (hY : Submartingale Y 𝓕 P)
+    (hrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
+    {j : ℝ≥0} {ρ ρ' : Ω → ENNReal} (hρ : IsStoppingTime 𝓕 ρ) (hρ' : IsStoppingTime 𝓕 ρ')
+    (hρρ' : ∀ ω, ρ ω ≤ ρ' ω) (hρ'j : ∀ ω, ρ' ω ≤ (j : ENNReal)) :
+    ∫ ω, stoppedValue Y ρ ω ∂P ≤ ∫ ω, stoppedValue Y ρ' ω ∂P := by
+  have hρj : ∀ ω, ρ ω ≤ (j : ENNReal) := fun ω ↦ (hρρ' ω).trans (hρ'j ω)
+  set Z : ℕ → ℝ≥0 → Ω → ℝ := fun K ↦ Y ⊔ fun _ _ ↦ -(K : ℝ) with hZdef
+  have hZ : ∀ K, Submartingale (Z K) 𝓕 P := fun K ↦
+    hY.sup (martingale_const 𝓕 P (-(K : ℝ))).submartingale
+  have hZrc : ∀ K, ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ Z K r ω) (𝓝[≥] s) (𝓝 (Z K s ω)) :=
+    fun K ↦ by
+      filter_upwards [hrc] with ω hω s using (hω s).sup_nhds tendsto_const_nhds
+  have hK : ∀ K, ∫ ω, stoppedValue (Z K) ρ ω ∂P ≤ ∫ ω, stoppedValue (Z K) ρ' ω ∂P := fun K ↦
+    (hZ K).integral_stoppedValue_mono_of_ge (c := -(K : ℝ)) (fun _ _ ↦ le_sup_right) (hZrc K)
+      hρ hρ' hρρ' hρ'j
+  have hlimit : ∀ {ρ₀ : Ω → ENNReal} (hρ₀ : IsStoppingTime 𝓕 ρ₀)
+      (hρ₀j : ∀ ω, ρ₀ ω ≤ (j : ENNReal)),
+      Tendsto (fun K ↦ ∫ ω, stoppedValue (Z K) ρ₀ ω ∂P) atTop
+        (𝓝 (∫ ω, stoppedValue Y ρ₀ ω ∂P)) := fun {ρ₀} hρ₀ hρ₀j ↦ by
+    refine tendsto_integral_of_dominated_convergence (fun ω ↦ |stoppedValue Y ρ₀ ω|)
+      (fun K ↦ ((hZ K).integrable_stoppedValue_of_rightContinuous (hZrc K) hρ₀
+        hρ₀j).aestronglyMeasurable)
+      (hY.integrable_stoppedValue_of_rightContinuous hrc hρ₀ hρ₀j).abs
+      (fun K ↦ ae_of_all _ fun ω ↦ ?_) (ae_of_all _ fun ω ↦ ?_)
+    · have hval : stoppedValue (Z K) ρ₀ ω = max (stoppedValue Y ρ₀ ω) (-(K : ℝ)) := rfl
+      rw [hval, Real.norm_eq_abs, abs_le]
+      have hK0 : (0 : ℝ) ≤ K := K.cast_nonneg
+      constructor
+      · linarith [neg_abs_le (stoppedValue Y ρ₀ ω), le_max_left (stoppedValue Y ρ₀ ω) (-(K : ℝ))]
+      · exact max_le (le_abs_self _) (by linarith [abs_nonneg (stoppedValue Y ρ₀ ω)])
+    · refine tendsto_const_nhds.congr' ?_
+      filter_upwards [eventually_ge_atTop ⌈-stoppedValue Y ρ₀ ω⌉₊] with K hK
+      have h1 : -stoppedValue Y ρ₀ ω ≤ K :=
+        (Nat.le_ceil _).trans (by exact_mod_cast hK)
+      show stoppedValue Y ρ₀ ω = max (stoppedValue Y ρ₀ ω) (-(K : ℝ))
+      rw [max_eq_left (by linarith)]
+  exact le_of_tendsto_of_tendsto' (hlimit hρ hρj) (hlimit hρ' hρ'j) hK
+
+/-- **Optional sampling for a submartingale in continuous time**: for a bounded stopping time `τ`,
+an arbitrary stopping time `σ`, and almost everywhere right continuous paths,
+`Y_{τ ∧ σ} ≤ E[Y_τ | 𝓕_σ]`, with no bound on the paths.
+
+The set form is the expectation form `integral_stoppedValue_mono` at the auxiliary time equal to
+`τ ∧ σ` on the test set `S ∈ 𝓕_σ` and to `τ` off it; it is a stopping time because
+`{ρ ≤ t} = {τ ≤ t} ∪ (S ∩ {σ ≤ t})`. -/
+theorem MeasureTheory.Submartingale.stoppedValue_min_le_condExp (hY : Submartingale Y 𝓕 P)
+    (hprog : IsStronglyProgressive 𝓕 Y)
+    (hrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
+    {j : ℝ≥0} {τ σ : Ω → ENNReal} (hτ : IsStoppingTime 𝓕 τ) (hσ : IsStoppingTime 𝓕 σ)
+    (hτj : ∀ ω, τ ω ≤ (j : ENNReal)) :
+    stoppedValue Y (τ ⊓ σ) ≤ᵐ[P] P[stoppedValue Y τ | hσ.measurableSpace] := by
+  classical
+  have hmin : IsStoppingTime 𝓕 (τ ⊓ σ) := hτ.min hσ
+  have hminj : ∀ ω, (τ ⊓ σ) ω ≤ (j : ENNReal) := fun ω ↦ inf_le_left.trans (hτj ω)
+  have hmeas : StronglyMeasurable[hσ.measurableSpace] (stoppedValue Y (τ ⊓ σ)) :=
+    ((measurable_stoppedValue hprog hmin).mono
+      (hmin.measurableSpace_mono hσ fun ω ↦ inf_le_right) le_rfl).stronglyMeasurable
+  have hτint := hY.integrable_stoppedValue_of_rightContinuous hrc hτ hτj
+  have hminint := hY.integrable_stoppedValue_of_rightContinuous hrc hmin hminj
+  refine ae_le_condExp_of_forall_setIntegral_le hσ.measurableSpace_le hmeas hminint hτint
+    fun S hS ↦ ?_
+  have hSm : MeasurableSet S := hσ.measurableSpace_le _ hS
+  set ρ : Ω → ENNReal := S.piecewise (τ ⊓ σ) τ with hρdef
+  have hρ : IsStoppingTime 𝓕 ρ := by
+    intro t
+    show MeasurableSet[𝓕 t] {ω | ρ ω ≤ (t : ENNReal)}
+    have heq : {ω | ρ ω ≤ (t : ENNReal)}
+        = {ω | τ ω ≤ (t : ENNReal)} ∪ (S ∩ {ω | σ ω ≤ (t : ENNReal)}) := by
+      ext ω
+      by_cases h : ω ∈ S
+      · simp [hρdef, h]
+      · simp [hρdef, h]
+    rw [heq]
+    exact (hτ t).union (hS.2 t)
+  have hρτ : ∀ ω, ρ ω ≤ τ ω := fun ω ↦ by
+    by_cases h : ω ∈ S
+    · simp [hρdef, h]
+    · simp [hρdef, h]
+  have hmono := hY.integral_stoppedValue_mono hrc hρ hτ hρτ hτj
+  have hρint := hY.integrable_stoppedValue_of_rightContinuous hrc hρ
+    fun ω ↦ (hρτ ω).trans (hτj ω)
+  have h1 : ∫ ω, stoppedValue Y ρ ω ∂P
+      = ∫ ω in S, stoppedValue Y (τ ⊓ σ) ω ∂P + ∫ ω in Sᶜ, stoppedValue Y τ ω ∂P := by
+    rw [← integral_add_compl hSm hρint]
+    congr 1
+    · refine setIntegral_congr_fun hSm fun ω hω ↦ ?_
+      simp only [stoppedValue, hρdef, Set.piecewise_eq_of_mem _ _ _ hω]; rfl
+    · refine setIntegral_congr_fun hSm.compl fun ω hω ↦ ?_
+      simp only [stoppedValue, hρdef, Set.piecewise_eq_of_notMem _ _ _ (Set.notMem_of_mem_compl hω)]
+  have h2 := integral_add_compl hSm hτint
+  rw [h1, ← h2] at hmono
+  linarith
+
+/-- **Optional sampling for a submartingale, `τ` bounded almost surely.**  `τ ∧ j` is a bounded
+stopping time and differs from `τ` only on a null set. -/
+theorem MeasureTheory.Submartingale.stoppedValue_min_le_condExp_of_ae_le
+    (hY : Submartingale Y 𝓕 P) (hprog : IsStronglyProgressive 𝓕 Y)
+    (hrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
+    {j : ℝ≥0} {τ σ : Ω → ENNReal} (hτ : IsStoppingTime 𝓕 τ) (hσ : IsStoppingTime 𝓕 σ)
+    (hτj : ∀ᵐ ω ∂P, τ ω ≤ (j : ENNReal)) :
+    stoppedValue Y (τ ⊓ σ) ≤ᵐ[P] P[stoppedValue Y τ | hσ.measurableSpace] := by
+  set τ' : Ω → ENNReal := fun ω ↦ min (τ ω) (j : WithTop ℝ≥0) with hτ'def
+  have hτ' : IsStoppingTime 𝓕 τ' := hτ.min_const j
+  have h := hY.stoppedValue_min_le_condExp hprog hrc hτ' hσ (j := j) fun ω ↦ min_le_right _ _
+  have heq1 : stoppedValue Y τ' =ᵐ[P] stoppedValue Y τ := by
+    filter_upwards [hτj] with ω hω
+    have h' : min (τ ω) ((j : ℝ≥0) : WithTop ℝ≥0) = τ ω :=
+      min_eq_left (hω : τ ω ≤ ((j : ℝ≥0) : WithTop ℝ≥0))
+    exact congrArg (fun x ↦ Y (WithTop.untopA x) ω) h'
+  have heq2 : stoppedValue Y (τ' ⊓ σ) =ᵐ[P] stoppedValue Y (τ ⊓ σ) := by
+    filter_upwards [hτj] with ω hω
+    have h' : min (τ ω) ((j : ℝ≥0) : WithTop ℝ≥0) = τ ω :=
+      min_eq_left (hω : τ ω ≤ ((j : ℝ≥0) : WithTop ℝ≥0))
+    exact congrArg (fun x ↦ Y (WithTop.untopA (min x (σ ω))) ω) h'
+  exact heq2.symm.le.trans (h.trans (condExp_congr_ae heq1).le)
+
+/-- Vitali's theorem for set integrals. -/
+theorem tendsto_setIntegral_of_uniformIntegrable_of_ae_tendsto {F : ℕ → Ω → ℝ} {g : Ω → ℝ}
+    (hUI : UniformIntegrable F 1 P) (hF : ∀ n, AEStronglyMeasurable (F n) P)
+    (hlim : ∀ᵐ ω ∂P, Tendsto (fun n ↦ F n ω) atTop (𝓝 (g ω))) (S : Set Ω) :
+    Tendsto (fun n ↦ ∫ ω in S, F n ω ∂P) atTop (𝓝 (∫ ω in S, g ω ∂P)) := by
+  have hgint : Integrable g P := hUI.integrable_of_ae_tendsto hlim
+  obtain ⟨C, hC⟩ := hUI.2
+  have hmem : ∀ n, MemLp (F n) 1 P := fun n ↦ (hC n).trans_lt ENNReal.coe_lt_top
+  have hL1 : Tendsto (fun n ↦ eLpNorm (F n - g) 1 P) atTop (𝓝 0) :=
+    tendsto_Lp_finite_of_tendsto_ae le_rfl ENNReal.one_ne_top hF
+      (memLp_one_iff_integrable.2 hgint) hUI.1 hlim
+  exact tendsto_setIntegral_of_L1' _
+    (Filter.Eventually.of_forall fun n ↦ memLp_one_iff_integrable.1 (hmem n)) hL1 S
+
+/-- **Optional sampling for a submartingale at an almost surely finite stopping time**, under
+uniform integrability of the two stopped sequences `Y_{τ ∧ n}` and `Y_{τ ∧ σ ∧ n}`.  The bounded
+form at `τ ∧ n`, and `n → ∞` in the set integrals by Vitali.
+
+The two uniform integrability hypotheses are what the passage to the limit spends and nothing
+more; a condition on `Y` alone that implies them (class (D) on the stochastic interval up to `τ`)
+is not derived here. -/
+theorem MeasureTheory.Submartingale.stoppedValue_min_le_condExp_of_ae_finite
+    (hY : Submartingale Y 𝓕 P) (hprog : IsStronglyProgressive 𝓕 Y)
+    (hrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
+    {τ σ : Ω → ENNReal} (hτ : IsStoppingTime 𝓕 τ) (hσ : IsStoppingTime 𝓕 σ)
+    (hτfin : ∀ᵐ ω ∂P, τ ω ≠ ⊤)
+    (hUIτ : UniformIntegrable
+      (fun n : ℕ ↦ stoppedValue Y fun ω ↦ min (τ ω) ((n : ℝ≥0) : WithTop ℝ≥0)) 1 P)
+    (hUIτσ : UniformIntegrable
+      (fun n : ℕ ↦ stoppedValue Y fun ω ↦ min (min (τ ω) (σ ω)) ((n : ℝ≥0) : WithTop ℝ≥0)) 1 P) :
+    stoppedValue Y (τ ⊓ σ) ≤ᵐ[P] P[stoppedValue Y τ | hσ.measurableSpace] := by
+  set τn : ℕ → Ω → ENNReal := fun n ω ↦ min (τ ω) ((n : ℝ≥0) : WithTop ℝ≥0) with hτndef
+  have hτn : ∀ n, IsStoppingTime 𝓕 (τn n) := fun n ↦ hτ.min_const (n : ℝ≥0)
+  have hτnb : ∀ n ω, τn n ω ≤ ((n : ℝ≥0) : ENNReal) := fun n ω ↦ min_le_right _ _
+  have hmin : IsStoppingTime 𝓕 (τ ⊓ σ) := hτ.min hσ
+  have hmeas : StronglyMeasurable[hσ.measurableSpace] (stoppedValue Y (τ ⊓ σ)) :=
+    ((measurable_stoppedValue hprog hmin).mono
+      (hmin.measurableSpace_mono hσ fun ω ↦ inf_le_right) le_rfl).stronglyMeasurable
+  have hev : ∀ᵐ ω ∂P, ∀ᶠ n in atTop, τn n ω = τ ω := by
+    filter_upwards [hτfin] with ω hω
+    obtain ⟨N, hN⟩ := ENNReal.exists_nat_gt hω
+    filter_upwards [eventually_ge_atTop N] with n hn
+    have : τ ω ≤ ((n : ℝ≥0) : ENNReal) := by
+      rw [ENNReal.coe_natCast]
+      exact hN.le.trans (by exact_mod_cast hn)
+    exact min_eq_left this
+  have hlimτ : ∀ᵐ ω ∂P, Tendsto (fun n ↦ stoppedValue Y (τn n) ω) atTop
+      (𝓝 (stoppedValue Y τ ω)) := by
+    filter_upwards [hev] with ω hω
+    refine tendsto_const_nhds.congr' ?_
+    filter_upwards [hω] with n hn
+    simp only [stoppedValue, hn]
+  have hlimτσ : ∀ᵐ ω ∂P, Tendsto
+      (fun n : ℕ ↦ stoppedValue Y (fun ω ↦ min (min (τ ω) (σ ω)) ((n : ℝ≥0) : WithTop ℝ≥0)) ω)
+      atTop (𝓝 (stoppedValue Y (τ ⊓ σ) ω)) := by
+    filter_upwards [hev] with ω hω
+    refine tendsto_const_nhds.congr' ?_
+    filter_upwards [hω] with n hn
+    have hle : min (τ ω) (σ ω) ≤ ((n : ℝ≥0) : WithTop ℝ≥0) :=
+      (min_le_left _ _).trans (hn ▸ min_le_right _ _)
+    exact congrArg (fun x ↦ Y (WithTop.untopA x) ω) (min_eq_left hle).symm
+  have hτint : Integrable (stoppedValue Y τ) P := hUIτ.integrable_of_ae_tendsto hlimτ
+  have hminint : Integrable (stoppedValue Y (τ ⊓ σ)) P := hUIτσ.integrable_of_ae_tendsto hlimτσ
+  have hτnint : ∀ n, Integrable (stoppedValue Y (τn n)) P := fun n ↦
+    hY.integrable_stoppedValue_of_rightContinuous hrc (hτn n) (hτnb n)
+  have hτnσint : ∀ n, Integrable (stoppedValue Y (τn n ⊓ σ)) P := fun n ↦
+    hY.integrable_stoppedValue_of_rightContinuous hrc ((hτn n).min hσ)
+      fun ω ↦ inf_le_left.trans (hτnb n ω)
+  have hswap : ∀ n, stoppedValue Y (τn n ⊓ σ)
+      = stoppedValue Y (fun ω ↦ min (min (τ ω) (σ ω)) ((n : ℝ≥0) : WithTop ℝ≥0)) := fun n ↦ by
+    funext ω
+    exact congrArg (fun x ↦ Y (WithTop.untopA x) ω) (min_right_comm (τ ω) _ (σ ω))
+  refine ae_le_condExp_of_forall_setIntegral_le hσ.measurableSpace_le hmeas hminint hτint
+    fun S hS ↦ ?_
+  have hSm : MeasurableSet S := hσ.measurableSpace_le _ hS
+  have hn : ∀ n, ∫ ω in S, stoppedValue Y (τn n ⊓ σ) ω ∂P ≤ ∫ ω in S, stoppedValue Y (τn n) ω ∂P :=
+    fun n ↦ by
+      have h := hY.stoppedValue_min_le_condExp hprog hrc (hτn n) hσ (hτnb n)
+      rw [← setIntegral_condExp hσ.measurableSpace_le (hτnint n) hS]
+      exact setIntegral_mono_ae_restrict (hτnσint n).integrableOn integrable_condExp.integrableOn
+        (ae_restrict_of_ae h)
+  refine le_of_tendsto_of_tendsto' ?_
+    (tendsto_setIntegral_of_uniformIntegrable_of_ae_tendsto hUIτ
+      (fun n ↦ (hτnint n).aestronglyMeasurable) hlimτ S) hn
+  simp only [hswap]
+  exact tendsto_setIntegral_of_uniformIntegrable_of_ae_tendsto hUIτσ
+    (fun n ↦ (hswap n ▸ hτnσint n).aestronglyMeasurable) hlimτσ S
+
+/-- **`Martingale.stoppedProcess_of_rightContinuous`**, the name the roadmap gives to
+`martingale_stoppedProcess`: the stopped process of a progressive, almost everywhere right
+continuous martingale is a martingale, for an arbitrary stopping time and the raw filtration. -/
+theorem MeasureTheory.Martingale.stoppedProcess_of_rightContinuous (hY : Martingale Y 𝓕 P)
+    (hprog : IsStronglyProgressive 𝓕 Y)
+    (hrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
+    {τ : Ω → ENNReal} (hτ : IsStoppingTime 𝓕 τ) :
+    Martingale (stoppedProcess Y τ) 𝓕 P :=
+  martingale_stoppedProcess hY hprog hrc hτ
+
+/-- **Emptiness check for `Submartingale.stoppedValue_min_le_condExp`**: the zero process meets
+every hypothesis. -/
+theorem Submartingale.stoppedValue_min_le_condExp_zero {j : ℝ≥0} {τ σ : Ω → ENNReal}
+    (hτ : IsStoppingTime 𝓕 τ) (hσ : IsStoppingTime 𝓕 σ) (hτj : ∀ ω, τ ω ≤ (j : ENNReal)) :
+    stoppedValue (fun (_ : ℝ≥0) (_ : Ω) ↦ (0 : ℝ)) (τ ⊓ σ)
+      ≤ᵐ[P] P[stoppedValue (fun (_ : ℝ≥0) (_ : Ω) ↦ (0 : ℝ)) τ | hσ.measurableSpace] :=
+  (martingale_zero ℝ 𝓕 P).submartingale.stoppedValue_min_le_condExp
+    (isStronglyProgressive_const 𝓕 0) (Filter.Eventually.of_forall fun _ _ ↦ tendsto_const_nhds)
+    hτ hσ hτj
+
+end ContinuousTimeMartingales

@@ -64005,3 +64005,93 @@ Einschub und alle sieben Schritte von Meilenstein 6 sind erledigt vorgefunden (B
 ### 2026-09-26, Lauf 06:03 UTC — Prüflauf: Aufgabe weiterhin vollständig erledigt
 
 `check_master.py` ist sauber: 0 Fehler, 0 `sorry` und 0 Veraltungen in allen vier Dateien, Warnungen 18 / 38 / 38 / 76 unverändert; kein Folgeziel, den nächsten Auftrag stellt der Nutzer.
+
+### 2026-09-26, Lauf 07:03 UTC — Aufgabe A, Schritte A1, A2, A3: **`Submartingale.stoppedValue_min_le_condExp`** in stetiger Zeit, ohne Schranke an die Pfade und für die rohe Filtration; A2 und A3 waren schon da und sind zugeordnet
+
+**Stand der Prüfung.** `check_master.py` (Mathlib `94ef6b89544`, Lean v4.35.0-rc2), zweimal gelaufen:
+0 Fehler, 0 `sorry`, 0 Veraltungen in allen vier Dateien; Warnungen 18 / 38 / 38 / 76, **unverändert**
+(der neue Abschnitt bringt keine). `#print axioms` gegen das gebaute Modul: alle acht neuen
+Hauptaussagen stehen auf `propext`, `Classical.choice`, `Quot.sound`.
+
+**Neu: Abschnitt `ContinuousTimeMartingales`**, `MartingaleProblems/Suggested.lean` Z. 47975–48579,
+2 Definitionen, 28 Sätze. Die tragenden Aussagen:
+
+| Roadmap / Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| A1, bedingte Fassung, `τ ≤ j` überall | `MeasureTheory.Submartingale.stoppedValue_min_le_condExp` | 48400 |
+| A1, `τ ≤ j` fast sicher | `…stoppedValue_min_le_condExp_of_ae_le` | 48450 |
+| A1, `τ` f.s. endlich | `…stoppedValue_min_le_condExp_of_ae_finite` | 48492 |
+| A1, Erwartungswertform | `MeasureTheory.Submartingale.integral_stoppedValue_mono` | 48355 |
+| Integrierbarkeit von `Y_ρ` | `MeasureTheory.Submartingale.integrable_stoppedValue_of_rightContinuous` | 48309 |
+| diskret, Mengenform über `ℕ` | `MeasureTheory.Submartingale.setIntegral_stoppedValue_le_nat` | 48086 |
+| diskret, bedingte Form über `ℕ` | `MeasureTheory.Submartingale.stoppedValue_ae_le_condExp_nat` | 48149 |
+| gleichgradige Integrierbarkeit | `MeasureTheory.uniformIntegrable_of_le_condExp` | 48219 |
+| A2 | `MeasureTheory.Martingale.stoppedProcess_of_rightContinuous` | 48562 |
+
+Voraussetzungen von `stoppedValue_min_le_condExp`: `Submartingale Y 𝓕 P` (reellwertig, Index `ℝ≥0`,
+`IsFiniteMeasure P`), `IsStronglyProgressive 𝓕 Y`, Rechtsstetigkeit der Pfade **fast sicher**,
+`τ ≤ j`, `σ` beliebig; Schluß `stoppedValue Y (τ ⊓ σ) ≤ᵐ[P] P[stoppedValue Y τ | hσ.measurableSpace]`.
+**Keine** Voraussetzung an die Filtration (`IsRightContinuous`, `IsComplete` kommen nicht vor).
+Die Progressivität wird nur für die `𝓕_σ`-Meßbarkeit der linken Seite gebraucht; die
+Erwartungswertform `integral_stoppedValue_mono` kommt ohne sie aus.
+
+**Der Weg, und wo er von der Ansage abweicht.**
+
+1. *Das dyadische Gitter als `ℕ`-Prozeß.* `dyadStop j ρ n` nimmt Werte in `dyadGrid j n k =
+   min j (k/2ⁿ)`, sein Index `dyadIndex` ist Stoppzeit für `𝓕.comp` (steht seit langem im Prototyp,
+   Z. 2056). Damit greift Mathlibs `Submartingale.expected_stoppedValue_mono`
+   (`Probability/Martingale/OptionalStopping.lean:43`) wörtlich. **Die Klasse `Approximable` von
+   BrownianMotion wird nicht übernommen:** für `ℝ≥0` leistet `dyadStop` genau das, was sie abstrakt
+   verlangt (abzählbarer Wertebereich, Annäherung von oben, Stoppzeiten), und das ist gebaut.
+2. *Integrierbarkeit ohne Schranke*: Fatou längs der Näherungen, deren `L¹`-Normen durch
+   `2 E[(Y j)⁺] − E[Y 0]` beschränkt sind (`Y⁺` ist Submartingal, `Submartingale.pos`).
+3. *Grenzübergang.* Die Ansage nannte Doob-Zerlegung auf dem Gitter oder
+   `uniformIntegrable_of_le_condExp`. Genommen ist das zweite, aber **nicht direkt**: für ein
+   Submartingal kontrolliert die bedingte Schranke `Y_{ρₙ} ≤ E[Y_j | ·]` nur die Oberseite. Die
+   Unterseite liefert das **Abschneiden `Y ⊔ −K`**: das ist wieder ein Submartingal
+   (`Submartingale.sup`), nach unten beschränkt, also sind seine Näherungen gleichgradig integrierbar
+   und Vitali greift (`integral_stoppedValue_mono_of_ge`); `K → ∞` ist dominierte Konvergenz gegen
+   `|Y_ρ|`. Weder ein Rückwärts-Submartingal noch eine Doob-Zerlegung wird gebraucht.
+4. *Bedingte Form* über die Hilfszeit `ρ = τ ∧ σ` auf `S ∈ 𝓕_σ`, `τ` sonst; sie ist Stoppzeit, weil
+   `{ρ ≤ t} = {τ ≤ t} ∪ (S ∩ {σ ≤ t})`.
+
+**Übernahme aus BrownianMotion:** allein `uniformIntegrable_of_le_condExp`, nach
+`StochasticIntegral/Quasimartingale/CadlagModification.lean:98 (0d5b6eb)`, angepaßt an master
+(`UniformIntegrable` trägt dort keine Meßbarkeit mehr; Beweis über das vorhandene
+`UnifIntegrable.of_norm_le_ae` statt `uniformIntegrable_of_dominated`), mit Herkunftskommentar.
+
+**Befund für den Nutzer (nichts nach außen gegeben):** `Submartingale.stoppedValue_min_ae_le_condExp`
+in `BrownianMotion/StochasticIntegral/OptionalSampling.lean:281` ist dort `sorry`. Der hiesige Beweis
+schließt die Aussage **für `E = ℝ`, `ι = ℝ≥0`**; BrownianMotion formuliert sie für geordnete
+Banachräume und allgemeines metrisierbares `ι` unter `∀ ω, IsRightContinuous`. Der Weg (Abschneiden
+bei `−K`) überträgt sich auf `ℝ`-wertige Prozesse über allgemeinem `ι` mit einer Approximationsfolge;
+für vektorwertiges `E` ist `Y ⊔ −K` kein Ersatz. Ob das dort eingebracht wird, entscheidet der Nutzer.
+
+**`…_of_ae_finite`: offene Stelle, benannt.** Die Fassung steht unter den zwei Voraussetzungen
+„`n ↦ Y_{τ∧n}` und `n ↦ Y_{τ∧σ∧n}` gleichgradig integrierbar“. Eine Bedingung an `Y` allein, die
+beides liefert (Klasse (D) auf `[0, τ]`), ist **nicht** hergeleitet: die Oberseite von
+`Y_{τ∧σ∧n}` folgt aus A1, die Unterseite nicht, und genau dort bräuchte man das Argument, das
+Schritt 3 für beschränkte Zeiten durch Abschneiden umgeht.
+
+**A2.** `martingale_stoppedProcess` (Z. 10946) *ist* der Satz; unter dem Roadmap-Namen
+`Martingale.stoppedProcess_of_rightContinuous` steht er jetzt als Einzeiler darüber.
+
+**A3: schon vorhanden, nichts gebaut.** Zuordnung README-Name ↦ Lean-Name:
+Doobs Maximalungleichung in stetiger Zeit ↦ `MeasureTheory.Submartingale.mul_measReal_lt_biSup_enorm_le`
+(Z. 3042) und `…mul_measReal_le_biSup_enorm_le` (Z. 3084), ohne Nichtnegativität, mit `(Y T)⁺`;
+`Lᵖ`-Ungleichung ↦ `MeasureTheory.Submartingale.lintegral_biSup_enorm_rpow_le` (Z. 3576). Beide über
+beliebigem `[LinearOrder ι] [OrderTopology ι] [DenselyOrdered ι] [OrderBot ι]` mit dichter abzählbarer
+Menge `D` und rechtsstetigen Pfaden — also stärker als die Ansage (nicht nur `ℝ≥0`). Die bei
+BrownianMotion offenen `integral_iSup_le_norm_rpow_le`/`integral_iSup_norm_rpow_le`
+(`DoobLp.lean`) sind damit hier für reellwertige nichtnegative Submartingale geschlossen. Ein
+Unterschied bleibt: die hiesigen Fassungen verlangen `∀ ω, IsRightContinuous`, nicht f.s.
+
+**Offen aus Aufgabe A:** A4 (`Submartingale.cadlagModif_ae_eq_iff_continuousWithinAt_integral`,
+beide Richtungen; `Martingale.cadlagModif_ae_eq`) und A5 (Namensabgleich des
+càdlàg-Modifikationssatzes und der Zeugen, soweit nicht vorhanden) sind nicht begonnen.
+
+**Nächstes benanntes Ziel (nächster offener Schritt der Liste): A4**, zuerst nachsehen, was von
+`rightLimAlong` (Z. 4370) und `isCadlag_rightLimAlong` (Z. 4497) als `cadlagModif` schon trägt; die
+Richtung „Modifikation ⇒ `t ↦ 𝔼[Y t]` rechtsstetig“ braucht gleichgradige Integrierbarkeit von
+`Y_{t+1/n}` von oben, die über `uniformIntegrable_of_le_condExp` und das Abschneiden `Y ⊔ −K` aus
+diesem Lauf zu haben ist, und ist ohne Voraussetzung an die Filtration zu versuchen.
