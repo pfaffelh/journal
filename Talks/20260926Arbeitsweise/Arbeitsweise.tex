@@ -1,0 +1,344 @@
+% Übersetzen mit
+%   lualatex Arbeitsweise.tex
+% (kein minted, also kein --shell-escape nötig)
+
+\documentclass[11pt,aspectratio=169]{beamer}
+\setbeamertemplate{navigation symbols}{}
+\usepackage{background}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, fit, backgrounds, calc}
+\usepackage{fontspec}
+\setmonofont[Scale=0.85]{DejaVu Sans Mono}
+\usepackage[ngerman]{babel}
+\usepackage{csquotes}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
+
+\definecolor{darkgreen}{rgb}{0.0,0.4,0.0}
+\definecolor{darkblue}{rgb}{0.1,0.1,0.5}
+\definecolor{darkred}{rgb}{0.5,0.0,0.0}
+\definecolor{gray}{rgb}{0.35,0.35,0.35}
+\definecolor{nutzer}{rgb}{0.75,0.2,0.1}
+\definecolor{sitzung}{rgb}{0.1,0.35,0.7}
+\definecolor{lauf}{rgb}{0.0,0.5,0.3}
+\setbeamercolor{title}{fg=white}
+\setbeamercolor{author}{fg=white}
+\setbeamercolor{date}{fg=white}
+\setbeamertemplate{blocks}[rounded][shadow=true]
+
+\newcommand{\datei}[1]{\texttt{#1}}
+\tikzset{
+  box/.style={draw, rounded corners, thick, align=center, inner sep=5pt, font=\small},
+  pfeil/.style={-{Stealth[length=2.5mm]}, thick},
+}
+
+\title{Wie wir arbeiten}
+\subtitle{Stündliche Läufe am Formalisierungs-Inventar}
+\author{Peter Pfaffelhuber}
+\date{Freiburg, September 2026}
+
+\begin{document}
+
+\backgroundsetup{scale=1, color=black, opacity=1, angle=0, contents={\vspace*{3cm}\hspace*{-10cm}\includegraphics[width=1.80\paperwidth,height=1.33\paperheight]{hintergrund_vortrag1.pdf}}}
+\setbeamertemplate{background}{\BgMaterial}
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\setbeamertemplate{background}{}
+\setbeamertemplate{footline}{%
+  \hbox{\hskip 0.5cm\includegraphics[height=0.55cm]{ufr.png}\hfill
+    \usebeamerfont{footline}\color{gray}\insertframenumber\hskip 0.5cm}%
+  \vskip 4pt%
+}
+
+% ------------------------------------------------------------------
+\begin{frame}{Worum es geht}
+  \begin{itemize}
+  \item Ein Manuskript über Martingalprobleme,
+    \datei{Journal/Blog/MartingaleProblem/MartingaleProblem.tex}, rund 140 Seiten.
+  \item Dazu eine \textbf{Formalisierung in Lean}, verteilt auf vier Roadmaps:
+    \datei{WeakConvergence}, \datei{SkorokhodSpace}, \datei{MartingaleProblems},
+    \datei{JumpProcesses}, jeweils mit einer Datei \datei{Suggested.lean}.
+  \item Die Formalisierung schreiben zum größten Teil \textbf{unbeaufsichtigte Läufe}
+    von Claude, \textbf{einmal pro Stunde}.
+  \item Ich schreibe die Aufträge, lese die Berichte und entscheide.
+  \end{itemize}
+  \bigskip
+  \begin{block}{Stand am 26.\,9.\,2026}
+    \begin{tabular}{@{}ll}
+      Läufe seit dem 29.\,8.\,2026 & gut 400 \\
+      Lean-Zeilen in den vier \datei{Suggested.lean} & rund 110\,000 \\
+      \datei{check\_master.py} am Ende jedes Laufs & 0 Fehler, 0 \texttt{sorry} \\
+      Axiome jedes neuen Hauptsatzes & \texttt{propext}, \texttt{Classical.choice}, \texttt{Quot.sound}
+    \end{tabular}
+  \end{block}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Drei Beteiligte, vier Dateien}
+  \centering
+  \begin{tikzpicture}[node distance=1.2cm and 1.6cm]
+    \node[box, draw=nutzer, text=nutzer, minimum width=3.2cm] (N) {\textbf{Nutzer}\\ich};
+    \node[box, draw=sitzung, text=sitzung, minimum width=3.2cm, right=of N] (S)
+      {\textbf{interaktive Sitzung}\\Claude Code, mit mir};
+    \node[box, draw=lauf, text=lauf, minimum width=3.2cm, right=of S] (L)
+      {\textbf{stündlicher Lauf}\\\texttt{claude -p}, allein};
+
+    \node[box, below=1.6cm of N, minimum width=3.2cm] (M) {Manuskript\\\datei{.tex}};
+    \node[box, below=1.6cm of S, minimum width=3.2cm] (P) {Auftrag\\\datei{facts\_prompt.md}};
+    \node[box, below=1.6cm of L, minimum width=3.2cm] (I) {Inventar + Lean\\\datei{INVENTAR.md}, \datei{Suggested.lean}};
+
+    \draw[pfeil, nutzer] (N) -- node[left, font=\scriptsize]{schreibt} (M);
+    \draw[pfeil, nutzer] (N) -- (S);
+    \draw[pfeil, sitzung] (S) -- node[right, font=\scriptsize]{schreibt} (P);
+    \draw[pfeil, sitzung] (S.south west) -- node[above left, font=\scriptsize]{korrigiert} (M.north east);
+    \draw[pfeil, lauf] (P.east) -- node[above, font=\scriptsize]{liest} (L.south west);
+    \draw[pfeil, lauf] (L) -- node[right, font=\scriptsize]{schreibt} (I);
+    \draw[pfeil, gray, dashed] (I.south) -- ++(0,-0.6) -| node[pos=0.25, below, font=\scriptsize]{Berichte und Befunde} (M.south);
+  \end{tikzpicture}
+
+  \medskip
+  \small Die README-Dateien der Roadmaps redigiere ich selbst. Kein Lauf fasst sie an.
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Der Takt: was jede Stunde passiert}
+  \footnotesize
+  \begin{tikzpicture}[node distance=0.35cm]
+    \node[box, text width=3.4cm] (c) {\texttt{cron}: \texttt{3 * * * *}\\ jede Stunde um :03};
+    \node[box, text width=3.4cm, below=of c] (g) {\datei{facts\_gate.sh}\\ Schranke \texttt{NOT\_BEFORE}};
+    \node[box, text width=3.4cm, below=of g] (r) {\datei{facts\_run.sh}\\ im Worktree \datei{journal-facts}};
+    \draw[pfeil] (c) -- (g);
+    \draw[pfeil] (g) -- (r);
+  \end{tikzpicture}
+  \hfill
+  \begin{minipage}[c]{0.6\textwidth}
+    \begin{enumerate}
+    \setlength\itemsep{2pt}
+    \item \textbf{Sperre} (\texttt{flock}): läuft der vorige Lauf noch, fällt dieser Slot aus.
+    \item \textbf{Kontingent}: steht eine Sitzungsgrenze fest, wird bis dahin nicht gestartet.
+    \item \textbf{\texttt{master} nachziehen}: \texttt{git merge origin/master} in den Branch
+      \texttt{facts-inventory}.
+    \item Commit \enquote{\texttt{Facts STATUS: Lauf \dots\ gestartet}}.
+    \item \texttt{claude -p} mit Opus 5.5, Zeitschranke \textbf{120 Minuten},
+      \textbf{enge Werkzeugliste}, Auftrag über \texttt{stdin}.
+    \item \textbf{Schutznetz}: Übersetzt das Manuskript nicht mehr, werden seine
+      Änderungen verworfen.
+    \item Commit und Push \enquote{\texttt{Facts \dots\ (rc=0)}}, auch im Fehlerfall.
+    \end{enumerate}
+  \end{minipage}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Zwei Branches, ein Rückweg}
+  \centering
+  \begin{tikzpicture}[x=0.92cm, y=1cm]
+    \draw[very thick, nutzer] (0,2) -- (11.5,2) node[right]{\texttt{master}};
+    \draw[very thick, lauf] (0,0) -- (11.5,0) node[right]{\texttt{facts-inventory}};
+    \foreach \x in {0.5,2.5,4.5,6.5,8.5} {
+      \draw[pfeil, gray] (\x,2) -- (\x+0.4,0.1);
+      \fill[lauf] (\x+0.4,0) circle (3pt);
+    }
+    \node[font=\scriptsize, gray, align=center, fill=white, inner sep=1pt] at (3.6,1.0) {bei jedem Start:\\ Merge von \texttt{master}};
+    \foreach \x in {1.9,3.9,5.9,7.9,9.9} \fill[lauf!60] (\x,0) circle (2pt);
+    \draw[pfeil, darkblue, thick] (9.9,0.1) -- (10.4,1.9);
+    \node[font=\scriptsize, darkblue, align=left, anchor=west] at (10.5,1.0) {von Hand:\\ Merge ins \texttt{master}};
+    \fill[nutzer] (0.2,2) circle (3pt) node[above, font=\scriptsize]{Auftrag};
+    \fill[nutzer] (5.4,2) circle (3pt) node[above, font=\scriptsize]{Manuskript};
+  \end{tikzpicture}
+
+  \bigskip
+  \begin{itemize}
+  \item Auf \texttt{master} liegen \textbf{Manuskript und Auftrag}. Dort schreiben nur ich
+    und die interaktive Sitzung.
+  \item Auf \texttt{facts-inventory} liegen \textbf{Inventar und Lean}. Dort schreiben
+    nur die Läufe, in einem eigenen Worktree. Mein Checkout bleibt unberührt.
+  \item Ein neuer Auftrag wirkt also erst, wenn er \textbf{gepusht} ist, und zwar
+    ab dem nächsten Start.
+  \item Zurück in \texttt{master} kommt die Arbeit nur durch meinen Merge (181 bisher).
+  \end{itemize}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Woher ein Lauf seinen Auftrag bekommt}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \datei{scripts/facts\_prompt.md}, bei jedem Start frisch gelesen:
+      \begin{enumerate}
+      \item \textbf{Vorrangige Aufgaben}, von mir datiert, mit
+        \textbf{Schritten in fester Reihenfolge}.
+      \item \textbf{Stehende Regeln}: minimale Voraussetzungen, Übersetzen,
+        der Pflichtbericht am Ende.
+      \item Erledigte Aufgaben wandern nach \datei{facts\_prompt\_archiv.md}.
+        Kein Lauf liest das Archiv.
+      \end{enumerate}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Ein Lauf hat kein Gedächtnis}
+        Jeder Lauf beginnt leer. Was er wissen muss, steht an zwei Stellen:
+        \begin{itemize}
+        \item in \datei{Facts/INVENTAR.md}: Berichte, Zuordnungen
+          \enquote{Manuskript $\mapsto$ Lean-Name}, Befunde;
+        \item in den Commits auf \texttt{facts-inventory}.
+        \end{itemize}
+      \end{block}
+      \begin{block}{Ein Schritt ist ein Lauf und ein benanntes Ziel}
+        Jeder Lauf nennt am Ende das Ziel für den nächsten, und das ist immer der
+        nächste offene Schritt \emph{meiner} Liste.
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Was ein Lauf darf und was nicht}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textcolor{darkgreen}{\textbf{Darf}}
+      \begin{itemize}
+      \item Lean schreiben und übersetzen (\texttt{lake}, \texttt{lean})
+      \item \datei{check\_master.py}: baut alle vier Dateien gegen Mathlib
+        \texttt{master}. Diese Prüfung zählt.
+      \item Mathlib und BrownianMotion \textbf{lesen}
+      \item Befunde ins Inventar schreiben, mit Zeilennummer
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textcolor{darkred}{\textbf{Darf nicht}}
+      \begin{itemize}
+      \item das Manuskript ändern
+      \item eine README anfassen
+      \item \textbf{nach außen} gehen: kein PR, kein Issue, kein Kommentar
+      \item Prozesse im Hintergrund starten
+      \item Dateien löschen (\texttt{rm} ist nicht freigegeben)
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  \bigskip
+  \small Die Rechte hängen am \textbf{Namen des Befehls}. Nicht Freigegebenes wird im
+  Modus \texttt{-p} verweigert, nicht erfragt. Ein Lauf bleibt also nie hängen und
+  wartet auf mich.
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Mein Einfluss}
+  \begin{enumerate}
+  \setlength\itemsep{4pt}
+  \item \textbf{Aufträge stellen.} In einer interaktiven Sitzung formuliert und
+    nach \texttt{master} gepusht. Ich setze die Reihenfolge; Läufe wählen sich
+    kein eigenes Ziel.
+  \item \textbf{Anhalten und freigeben.} Mit \texttt{NOT\_BEFORE} in
+    \datei{facts\_gate.sh}, zum Beispiel am 15.\,9. (Kontingent erschöpft) und am
+    22.\,9. (keine Läufe mehr, ohne Enddatum), wieder frei am 24.\,9.
+  \item \textbf{Das Manuskript korrigieren.} Die Läufe finden Fehler, ich entscheide
+    und ändere.
+  \item \textbf{Entscheiden, was nach außen geht.} Mathlib-Kandidaten und Lücken bei
+    BrownianMotion sammeln sich im Inventar, ich entscheide über sie.
+  \item \textbf{Abnehmen.} Der Merge von \texttt{facts-inventory} nach
+    \texttt{master}, zuletzt am 22.\,9.
+  \item \textbf{Aufräumen und nachsteuern,} wenn Läufe festhängen oder sich irren.
+  \end{enumerate}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Ein Tag: der 26.\,9.\,2026}
+  \footnotesize
+  \begin{tabular}{@{}lp{0.78\textwidth}@{}}
+    \toprule
+    08:32 & Neuer Auftrag: A (Martingale in stetiger Zeit), B (lokales
+            Martingalproblem ohne Einschränkungen), C (abstraktes Martingalproblem) \\
+    09:03 & Optional sampling in stetiger Zeit, ohne Schranke an die Pfade und bei roher
+            Filtration \\
+    10:03 & càdlàg-Modifikation, beide Richtungen, mit einem Zeugen, dass Rechtsstetigkeit der
+            Filtration nötig ist \\
+    13:03 & \textbf{Fehler im Manuskript}: starke Markoveigenschaft im inhomogenen Fall, Zeuge
+            in Lean \\
+    16:03 & \textbf{Lücke}: Chapman--Kolmogorov braucht eine Verträglichkeit der
+            Schiftsysteme \\
+    17:03 & \textbf{Lücke}: der verschobene Pfad muss adaptiert sein \\
+    19:03 & Der Lauf korrigiert den Lauf davor: zweimal \enquote{offen}, was schon dastand \\
+    19:30 & In der interaktiven Sitzung: Manuskript korrigiert, neuer Auftrag D und E \\
+    21:03 & Der erste Lauf mit dem neuen Auftrag \\
+    \bottomrule
+  \end{tabular}
+
+  \medskip
+  B2 (Konvexität bei roher Filtration) hing fünf Läufe lang fest: Jeder nannte sie als
+  Ziel, keiner hatte einen neuen Gedanken.
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Die Rückkopplung}
+  \centering
+  \begin{tikzpicture}[node distance=0.6cm and 1.4cm]
+    \node[box, draw=nutzer] (M) {Manuskript};
+    \node[box, draw=sitzung, right=of M] (A) {Auftrag};
+    \node[box, draw=lauf, right=of A] (L) {Lauf: Lean};
+    \node[box, draw=lauf, below=1.3cm of L] (B) {Befund\\Gegenbeispiel in Lean};
+    \node[box, draw=nutzer, below=1.3cm of M] (E) {Entscheidung\\des Nutzers};
+    \draw[pfeil] (M) -- (A);
+    \draw[pfeil] (A) -- (L);
+    \draw[pfeil] (L) -- (B);
+    \draw[pfeil] (B) -- node[below, font=\scriptsize]{Inventar, Zeilennummer} (E);
+    \draw[pfeil] (E) -- node[left, font=\scriptsize]{korrigiert} (M);
+    \draw[pfeil] (E) -- node[below, sloped, font=\scriptsize]{neuer Auftrag} (A);
+  \end{tikzpicture}
+
+  \bigskip
+  \begin{itemize}
+  \item Ein Befund ist erst dann ein Befund, wenn er ein \textbf{Zeuge in Lean}
+    ist, mit allen Voraussetzungen geprüft. Eine bloße Vermutung reicht nicht.
+  \item Das Manuskript folgt der Formalisierung, nicht umgekehrt. Geändert wird es
+    aber nur durch mich.
+  \end{itemize}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Was schiefging, und was das Skript daraus gelernt hat}
+  \footnotesize
+  \begin{tabular}{@{}lp{0.42\textwidth}p{0.36\textwidth}@{}}
+    \toprule
+    Datum & Panne & jetzt \\
+    \midrule
+    5.\,9.  & \enquote{\texttt{lake}: Befehl nicht gefunden}, weil \texttt{cron} einen leeren
+              \texttt{PATH} hat & \texttt{PATH} im Skript gesetzt \\
+    7.\,9.  & vier Läufe hintereinander an der Kontingentgrenze gestorben &
+              Rücksetzzeit merken, bis dahin aussetzen \\
+    10.\,9. & der Auftrag über 128\,KiB: \enquote{Argumentliste zu lang} &
+              Auftrag über \texttt{stdin}, altes ins Archiv \\
+    25.\,9. & zwei Läufe starten die Prüfung im Hintergrund, schreiben
+              \enquote{ich warte} und enden ohne Ergebnis & Verbot steht als erster
+              Absatz im Auftrag \\
+    26.\,9. & ein Ziel blockiert alle Läufe (B2) & ein einziger Lauf, dann Frage an
+              den Nutzer \\
+    26.\,9. & ein Lauf führt als offen, was schon dasteht & \enquote{Zuerst nachsehen,
+              dann bauen} \\
+    \bottomrule
+  \end{tabular}
+
+  \medskip
+  Von gut 400 Läufen endeten 386 regulär, 18 mit Fehler, 3 an der Zeitschranke;
+  2 starteten nie (der zu lange Auftrag).
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Was bleibt beim Nutzer}
+  \begin{itemize}
+  \setlength\itemsep{6pt}
+  \item \textbf{Die mathematische Richtigkeit der Aussagen.} \datei{check\_master.py}
+    und \texttt{\#print axioms} prüfen die Beweise, nicht, ob die Lean-Aussage das
+    Manuskript trifft.
+  \item \textbf{Die Richtung.} Läufe arbeiten ab, was dasteht, und sie sind gut
+    darin. Was als Nächstes wichtig ist, sagen sie nicht.
+  \item \textbf{Die Außenwirkung.} Mathlib und BrownianMotion bekommen nur, was ich
+    freigebe.
+  \item \textbf{Die Lesbarkeit.} Die Läufe schreiben viel. Das Inventar hat mehr als
+    65\,000 Zeilen, und die READMEs redigiere ich selbst.
+  \end{itemize}
+\end{frame}
+
+\end{document}
