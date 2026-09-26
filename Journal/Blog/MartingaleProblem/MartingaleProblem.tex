@@ -4395,31 +4395,55 @@ uniform integrability of the martingale itself is required.
 
 \begin{theorem}[Abstract strong Markov property; \eqref{T2b} + \eqref{T4}]
   \label{thm:absstrongmarkov}
-  In the situation of Theorem~\ref{thm:absuniq}, assume in addition that
-  $F \subset \DE$, that $(\theta_r)$ extends to a measurable map
-  $(\omega,r) \mapsto \theta_r\omega$, that the shift system is measurable in the
-  sense of Definition~\ref{def:shiftstable}, that every
-  $Y^\circ \in \XX^\circ$ has right continuous paths, and that
-  \eqref{eq:optafterint} holds for $Y = Y^\circ(X)$ at the stopping time $\tau$
-  below, for every $Y^\circ \in \XX^\circ$ and $s \leq t$.  Let $X$ have paths in $F$, solve the
-  martingale problem with respect to $(\Gilt_t)$, and let $\tau$ be an a.s.\
-  finite $(\Gilt_t)$-stopping time.  Then
-  \[
-    E\bigl[ f(X(\tau+t)) \bigm| \Gilt_\tau \bigr]
-      \;=\; E\bigl[ f(X(\tau+t)) \bigm| X(\tau) \bigr] ,
-    \qquad f \in \Bdd(E),\ t \in \T .
-  \]
-  If moreover $\tau$ takes countably many values and there is a measurable family
-  $(P_{x,r})_{x \in E,\, r \in \T}$ with $P_{x,r} \in \Msol(\XX^\circ_r,\delta_x)$,
-  then
-  \[
-    E\bigl[ f(X(\tau+t)) \bigm| \Gilt_\tau \bigr] \;=\;
-      \bigl( T_{\tau,\tau+t} f \bigr)(X(\tau)) ,
-    \qquad
-    \bigl( T_{r,r+t} f \bigr)(x) \;=\; \int f(\pi_t) \dif P_{x,r} ,
-  \]
-  a two-parameter family of kernels satisfying the Chapman--Kolmogorov relation
-  $T_{r,s} T_{s,t} = T_{r,t}$ for $r \leq s \leq t$.
+  In the situation of Theorem~\ref{thm:absuniq}, let $X$ have paths in $F$ and
+  solve the martingale problem with respect to $(\Gilt_t)$, let \eqref{eq:absonedim}
+  hold for every $r \in \T$, and let $f \in \Bdd(E)$ and $t \in \T$.
+  \begin{enumerate}[label=(\alph*)]
+  \item \label{it:asm_hom}
+    \emph{The homogeneous case.}  Assume $\XX^\circ_r = \XX^\circ$ for every $r$,
+    that $F \subset \DE$, that $(\theta_r)$ extends to a measurable map
+    $(\omega,r) \mapsto \theta_r\omega$, that the $\kappa$ in
+    \eqref{eq:shiftstable} can be chosen jointly measurable in $(\omega,r)$, that
+    every $Y^\circ \in \XX^\circ$ has right continuous paths, and let $\tau$ be an
+    a.s.\ finite $(\Gilt_t)$-stopping time such that
+    \begin{equation}
+      \label{eq:shiftadapt}
+      X(\tau+\cdot) \ \text{ is } \ \Gilt_{\tau+s}/\Filt^\circ_s\text{-measurable
+      for every } s \in \T ,
+    \end{equation}
+    and \eqref{eq:optafterint} holds for $Y = Y^\circ(X)$, for every
+    $Y^\circ \in \XX^\circ$ and $s \leq t$.  Then
+    \[
+      E\bigl[ f(X(\tau+t)) \bigm| \Gilt_\tau \bigr]
+        \;=\; E\bigl[ f(X(\tau+t)) \bigm| X(\tau) \bigr] .
+    \]
+    If moreover there is a measurable family $(P_x)_{x \in E}$ with
+    $P_x \in \Msol(\XX^\circ,\delta_x)$, then
+    $E[ f(X(\tau+t)) \mid \Gilt_\tau ] = (T_t f)(X(\tau))$ with
+    $(T_t f)(x) = \int f(\pi_t) \dif P_x$, and $T_s T_t = T_{s+t}$.
+  \item \label{it:asm_inhom}
+    \emph{The general case, at countably valued stopping times.}  Let $\tau$ be a
+    $(\Gilt_t)$-stopping time with countably many values.  Then on every
+    $\{\tau = r\}$
+    \[
+      E\bigl[ f(X(\tau+t)) \bigm| \Gilt_\tau \bigr]
+        \;=\; E\bigl[ f(X(r+t)) \bigm| X(r) \bigr] ,
+    \]
+    that is, $E[ f(X(\tau+t)) \mid \Gilt_\tau ]$ is a function of the pair
+    $(\tau, X(\tau))$.  If there is a measurable family
+    $(P_{x,r})_{x \in E,\, r \in \T}$ with $P_{x,r} \in \Msol(\XX^\circ_r,\delta_x)$,
+    then
+    \[
+      E\bigl[ f(X(\tau+t)) \bigm| \Gilt_\tau \bigr] \;=\;
+        \bigl( T_{\tau,\tau+t} f \bigr)(X(\tau)) ,
+      \qquad
+      \bigl( T_{r,r+t} f \bigr)(x) \;=\; \int f(\pi_t) \dif P_{x,r} .
+    \]
+    If in addition the shift system is \emph{consistent}, in the sense that for
+    every $r$ the family $(\XX^\circ_{r+u})_{u \in \T}$ is a shift system for
+    $\XX^\circ_r$, then the kernels satisfy the Chapman--Kolmogorov relation
+    $T_{r,s} T_{s,t} = T_{r,t}$ for $r \leq s \leq t$.
+  \end{enumerate}
 \end{theorem}
 
 \begin{proof}
@@ -4436,43 +4460,99 @@ uniform integrability of the martingale itself is required.
   Lemma~\ref{lem:optsamplafter} gives the identity for every bounded
   $\Gilt_{\tau+s}$-measurable $W$.
 
-  \emph{Step 2: the first assertion.}  With $\XX^\circ_\tau$ in place of
-  $\XX^\circ_r$ --- meaningful because the shift system is measurable, so that
-  $\hat{Y}^{\circ,\tau(\omega)}$ is jointly measurable --- the remainder of the
-  proof of Lemma~\ref{lem:restart} and of
-  Theorem~\ref{thm:absuniq}\ref{it:absuniq_a} is unchanged.
+  \emph{Step 2: part~\ref{it:asm_hom}.}  Let $Z \geq 0$ be bounded and
+  $\Gilt_\tau$-measurable.  The remainder of the proof of
+  Lemma~\ref{lem:restart} goes through with $\tau$ in place of $r$ and gives
+  $(Z \cdot P) \circ (X(\tau+\cdot))^{-1} \in \Msol(\XX^\circ)$; it uses the
+  shifted path in exactly two places.  The test variable
+  $W = \one_B(X(\tau+\cdot))$ for $B \in \Filt^\circ_s$ must be
+  $\Gilt_{\tau+s}$-measurable, which is \eqref{eq:shiftadapt}; and the increment
+  identity \eqref{eq:shiftstable}, read at the random time $\tau$ along $X$, must
+  have a measurable $\kappa(\tau(\cdot),X)$, which is the joint measurability of
+  $\kappa$.  Neither follows from the joint measurability of $\theta$, which
+  gives only the measurability of $X(\tau+\cdot)$ itself, not
+  \eqref{eq:shiftadapt}.  Here homogeneity is used: whatever the value of $\tau$,
+  the reweighted measure solves the \emph{one} problem $\XX^\circ$, so no
+  partition according to the values of $\tau$ is needed.  The proof of
+  Theorem~\ref{thm:absuniq}\ref{it:absuniq_a} with $\Gilt_\tau$ in place of
+  $\Gilt_r$ is then unchanged and gives the first assertion.  For the kernel form
+  take $F_0 \in \Gilt_\tau$ with $P(F_0) > 0$, write
+  $\mu_{F_0} = P\{X(\tau) \in \cdot \mid F_0\}$, and compare
+  $R_1 = (Z_1 \cdot P) \circ (X(\tau+\cdot))^{-1}$, $Z_1 = \one_{F_0}/P(F_0)$,
+  with $R_2 = \int P_x \, \mu_{F_0}(\dif x)$.  Both lie in $\Msol(\XX^\circ)$, the
+  second by Lemma~\ref{lem:mixture}, and both have initial law $\mu_{F_0}$, so
+  \eqref{eq:absonedim} gives $E[\one_{F_0} f(X(\tau+t))] =
+  E[\one_{F_0} (T_t f)(X(\tau))]$.  The relation $T_sT_t = T_{s+t}$ is the kernel
+  form under $P_x$ at the deterministic time $\tau = s$, integrated.
 
-  \emph{Step 3: the second assertion.}  Let $\tau$ take the countably many values
-  $r_1, r_2, \dots$, and fix $j$.  It suffices to prove the identity on
-  $\{\tau = r_j\}$, since these events partition $\Omega$ and lie in $\Gilt_\tau$.
-  Let $F_0 \in \Gilt_\tau$ with $F_0 \subset \{\tau = r_j\}$ and $P(F_0) > 0$,
-  write $\mu_{F_0} = P\{X(\tau) \in \cdot \mid F_0\}$, and put
+  \emph{Step 3: part~\ref{it:asm_inhom}.}  Let $\tau$ take the countably many
+  values $r_1, r_2, \dots$.  On $\{\tau = r_j\}$ the $\sigma$-algebras $\Gilt_\tau$
+  and $\Gilt_{r_j}$ agree, so the first assertion is
+  Theorem~\ref{thm:absuniq}\ref{it:absuniq_a} at the one time $r_j$; neither
+  optional sampling nor path regularity is used.  For the kernel form let
+  $F_0 \in \Gilt_\tau$ with $F_0 \subset \{\tau = r_j\}$ and $P(F_0) > 0$, and
+  put
   \[
-    R_1 = (Z_1 \cdot P) \circ (X(\tau+\cdot))^{-1}
+    R_1 = (Z_1 \cdot P) \circ (X(r_j+\cdot))^{-1}
       \ \text{ with } Z_1 = \one_{F_0}/P(F_0) ,
     \qquad
     R_2 = \int P_{x,r_j} \, \mu_{F_0}(\dif x) .
   \]
-  Both lie in $\Msol(\XX^\circ_{r_j})$: the first by Steps~1--2, the second by
-  Lemma~\ref{lem:mixture}, and it is here that $F_0$ must be carried by a single
-  value of $\tau$ --- a mixture of solutions of \emph{different} shifted problems
-  need solve none of them.  Since $R_1\pi_0^{-1} = \mu_{F_0} = R_2\pi_0^{-1}$,
-  \eqref{eq:absonedim} applies and gives the assertion on $F_0$.  The
-  Chapman--Kolmogorov relation follows by applying the first assertion twice.
+  Both lie in $\Msol(\XX^\circ_{r_j})$: the first by Lemma~\ref{lem:restart}, the
+  second by Lemma~\ref{lem:mixture}, and it is here that $F_0$ must be carried by
+  a single value of $\tau$ --- a mixture of solutions of \emph{different} shifted
+  problems need solve none of them.  Since $R_1\pi_0^{-1} = \mu_{F_0} =
+  R_2\pi_0^{-1}$, \eqref{eq:absonedim} applies and gives the assertion on $F_0$.
+
+  For Chapman--Kolmogorov fix $r \leq s \leq t$ and $x$, and let $u = s - r$,
+  which exists by \eqref{T4}.  The measure $P_{x,r}$ solves $\XX^\circ_r$, and by
+  consistency $(\XX^\circ_{r+v})_v$ is a shift system for it, whose problem shifted
+  to $u$ is $\XX^\circ_s$.  The kernel form just proved, applied on the canonical
+  space to $P_{x,r}$, the problem $\XX^\circ_r$ with this shift system, and the
+  deterministic time $u$, gives
+  $E^{P_{x,r}}[f(\pi_{t-r}) \mid \Filt^\circ_u] = (T_{s,t}f)(\pi_u)$;
+  integrating yields $T_{r,t} f(x) = T_{r,s}(T_{s,t}f)(x)$.
 \end{proof}
 
-\begin{remark}[On the two restrictions]
+\begin{remark}[Why the two cases, and what each hypothesis does]
   \label{rem:strongmarkovscope}
-  Two hypotheses in Theorem~\ref{thm:absstrongmarkov} deserve comment.
+  \emph{Conditioning on $X(\tau)$ alone fails in the inhomogeneous case.}  In
+  part~\ref{it:asm_inhom} the conditional law of the future given $\Gilt_\tau$
+  depends on $\tau$ as well as on $X(\tau)$, and it cannot be replaced by
+  conditioning on $X(\tau)$.  Take $\T = \N$, $E = \mathbb{Z}$, and the shift
+  system whose problem shifted to $r$ has as its only solution from $x$ the
+  deterministic path $u \mapsto x + (r+u-1)^+ - (r-1)^+$; it is a shift system
+  with $\kappa = 0$, and \eqref{eq:absonedim} holds for every $r$.  The path
+  $n \mapsto (n-1)^+$ solves the problem at $0$.  Let $\tau = 1$ on the heads and
+  $\tau = 0$ on the tails of a fair coin in $\Gilt_0$.  Then $X(\tau) = 0$ on
+  both events, but $X(\tau+1) = \tau$, so
+  $E[\one_{\{X(\tau+1) \neq 0\}} \mid \Gilt_\tau] = \tau$ is not a function of
+  $X(\tau)$.  In the homogeneous case the two forms agree, which is why
+  part~\ref{it:asm_hom} can condition on $X(\tau)$.
 
-  \emph{Countably many values.}  In the time-homogeneous case
-  $\XX^\circ_r = \XX^\circ$ the restriction is vacuous, because then all the
-  measures $P_{x,r} = P_x$ solve one and the same problem and Step~3 needs no
-  partition.  It is only in the inhomogeneous case that the mixture must be
-  confined to a single $r$.  A general $\tau$ is then reached by approximation
-  from above by countably-valued stopping times $\tau_n \downarrow \tau$; this
-  requires right continuity of $\mathbb{G}$ and of $r \mapsto P_{x,r}$ in a
-  suitable sense, and is not developed here.
+  \emph{Countably many values.}  In the homogeneous case the restriction is
+  unnecessary, because all the reweighted measures solve one and the same
+  problem.  In the inhomogeneous case the mixture must be confined to a single
+  $r$.  A general $\tau$ is then reached by approximation from above by
+  countably-valued stopping times $\tau_n \downarrow \tau$; this requires right
+  continuity of $\mathbb{G}$ and of $r \mapsto P_{x,r}$ in a suitable sense, and
+  is not developed here.
+
+  \emph{Consistency.}  Definition~\ref{def:shiftstable} relates each
+  $\XX^\circ_r$ to $\XX^\circ_0$ only; it says nothing about how $\XX^\circ_s$
+  is related to $\XX^\circ_r$, and without that the second restart in the proof of
+  Chapman--Kolmogorov has nothing to land on.  For $\XX_A$ of
+  Example~\ref{ex:shiftXA} consistency holds, by the same substitution, since the
+  clock pulled back first by $r$ and then by $u$ is $q_{r+u}$.  In the homogeneous
+  case it is automatic.
+
+  \emph{Adaptedness of the shifted path.}  Hypothesis \eqref{eq:shiftadapt} is
+  the stopping time version of the adaptedness of $X$ in
+  Lemma~\ref{lem:restart}: for the natural filtration it says that
+  $X(\tau+v)$, $v \leq s$, is $\Gilt_{\tau+s}$-measurable, i.e.\ that $X$ is
+  progressive at the stopping times $\tau+v$.  For right continuous adapted $X$
+  with values in a metrizable $E$ this is standard; it has to be stated because
+  it does not follow from the measurability of $\theta$.
 
   \emph{The integrability \eqref{eq:optafterint}.}  This is what Step~1 needs, and
   it concerns the increment over the \emph{random window}
@@ -5450,12 +5530,12 @@ results apply and which fail.
   $\langle \tau+s,\tau+t \rangle_\iota$ is bounded by
   $2\lVert f\rVert + \lVert g\rVert q(\langle s,t\rangle_\iota)$, the clock
   being shift invariant here; so \eqref{eq:optafterint} is automatic and
-  Theorem~\ref{thm:absstrongmarkov} applies; its second assertion is
-  \eqref{eq:strongmarkov2} with $T(t)f(x) = \int f(\omega(t)) P_x(\dif\omega)$.
-  Its restriction to stopping times with countably many values is vacuous here:
-  the shift system is the constant one, so all the measures $P_{x,r} = P_x$ solve
-  one and the same problem and the partition of Step~3 there is unnecessary.  See
-  Remark~\ref{rem:strongmarkovscope}.
+  Theorem~\ref{thm:absstrongmarkov}\ref{it:asm_hom} applies --- the shift
+  system is the constant one, and \eqref{eq:shiftadapt} holds because the paths
+  are c\`adl\`ag, see Remark~\ref{rem:strongmarkovscope}; its kernel form is
+  \eqref{eq:strongmarkov2} with $T(t)f(x) = \int f(\omega(t)) P_x(\dif\omega)$,
+  for every a.s.\ finite stopping time and without any restriction on its
+  values.
 \end{proof}
 
 \begin{corollary}[\EK, Corollary 4.4.3; \eqref{T3}]
@@ -8053,7 +8133,8 @@ standard sufficient condition.
   Lemma~\ref{lem:dualsemigroup} becomes $P_{r,s}P_{s,t} = P_{r,t}$ and
   Proposition~\ref{prop:dualCK} the corresponding two-parameter
   Chapman--Kolmogorov relation, exactly as in
-  Theorem~\ref{thm:absstrongmarkov}.  Nothing in the proofs resists; it is not
+  Theorem~\ref{thm:absstrongmarkov}\ref{it:asm_inhom}, and under the same
+  proviso: the shift system must be consistent.  Nothing else in the proofs resists; it is not
   carried out here only to keep the notation readable.
 \end{remark}
 

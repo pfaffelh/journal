@@ -18,25 +18,51 @@ Deine letzte Antwort ist der Bericht, nicht eine Ankündigung.
 zu lesen; sie sind ausgelagert, damit dieser Auftrag der Auftrag bleibt und nicht
 die Aktenlage. Die Ergebnisse stehen ohnehin in `Facts/INVENTAR.md`.*
 
-### Drei Aufgaben in dieser Reihenfolge *(gestellt 2026-09-26 vom Nutzer)*
+### Zwei Aufgaben: B2 und der Rest von C *(gestellt 2026-09-26 abends vom Nutzer)*
 
-**Diese drei Aufgaben gehen allen älteren vor, und zwar in der angegebenen
-Reihenfolge: erst A, dann B, dann C.** Der Einschub zu `duality_of_atomless` und
-die Aufgabe zum lokalen Martingalproblem (Meilenstein 6) sind am 2026-09-26
-erledigt und ins Archiv verschoben. Ihre Ergebnisse stehen in `Facts/INVENTAR.md`.
+**Diese Aufgaben gehen allen älteren vor, und die Schritte werden in der unten
+angegebenen Reihenfolge bearbeitet: D1, E1, E2, E3, E4, E5, E6, zuletzt D2.**
+Die drei Aufgaben A, B, C vom Morgen sind ins Archiv verschoben. Ihre Ergebnisse
+stehen in `Facts/INVENTAR.md`, zuletzt im Abschluß des Laufs 17:03 UTC. Offen
+geblieben ist dort nur „cutting down to an open subset“ aus A5; das gehört **nicht**
+zu diesem Auftrag.
+
+**Warum die rohe Fassung von B2 am Ende steht:** Sie war von 11:03 bis 17:03
+jedesmal das benannte Ziel, und fünf Läufe in Folge haben sie ohne neuen Gedanken
+übersprungen. Sie bekommt jetzt **genau einen** Lauf (D2), und zwar erst, wenn
+alles andere steht.
 
 **Ein Schritt ist ein Lauf und ein benanntes Ziel.** Wer früher fertig ist,
 nimmt den nächsten Schritt im selben Lauf. Wer steckenbleibt, berichtet ein
 begründetes „geht nicht“ mit der Stelle, an der es bricht, und geht zum nächsten
-Schritt, der nicht daran hängt. Die Abhängigkeiten stehen jeweils dabei.
-**Die Reihenfolge ist vom Nutzer gesetzt.**
+Schritt, der nicht daran hängt. Ein „benanntes Ziel für den nächsten Lauf“ ist
+immer der nächste offene Schritt **dieser** Liste.
 
-**Zuerst nachsehen, dann bauen.** Die Liste der fehlenden Namen unten stammt aus
-einem groben Abgleich der Namen in `README-kurz.md` mit denen in
-`Suggested.lean` vom 2026-09-26. Ein Name, der fehlt, kann unter anderem Namen
-schon stehen. Deshalb vor jedem Schritt `Suggested.lean` (alle vier Dateien) nach
-dem **Inhalt** durchsuchen. Steht die Aussage schon, wird die Zuordnung „README-
-Name ↦ Lean-Name“ ins Inventar geschrieben und **nichts doppelt gebaut**.
+**Zuerst nachsehen, dann bauen.** Vor jedem Schritt `Suggested.lean` (alle vier
+Dateien) nach dem **Inhalt** durchsuchen. Steht die Aussage schon, wird die
+Zuordnung ins Inventar geschrieben und **nichts doppelt gebaut**. Der Lauf 16:03
+hat zweimal etwas als offen geführt, das schon dastand (`honedim` für den
+Sprungoperator, `hψ`/`hψadapt`); der Lauf 17:03 hat das korrigiert.
+
+**Das Manuskript ist am 2026-09-26 abends geändert worden,** auf Grund der
+Befunde der Läufe 11:03, 14:03 und 15:03. `thm:absstrongmarkov` (Z. 4396 ff.) hat
+jetzt zwei Teile:
+
+* **(a), homogener Fall** `𝓧°_r = 𝓧°`: an jeder f.s. endlichen Stoppzeit, bedingt
+  auf `X(τ)`, mit der neuen Voraussetzung `eq:shiftadapt` (der verschobene Pfad
+  `X(τ+·)` ist `𝓖_{τ+s}/𝓕°_s`-meßbar; das ist `hψadapt`) und einem gemeinsam
+  meßbaren `κ` (das ist `hincr` mit meßbarem `K`). Dazu die Kernform `T_t` und
+  `T_s T_t = T_{s+t}`.
+* **(b), allgemeiner Fall**, an Stoppzeiten mit abzählbar vielen Werten: auf
+  `{τ = r}` bedingt auf `X(r)`, also auf das Paar `(τ, X τ)`, mit der Kernform
+  `T_{τ,τ+t}`. Chapman–Kolmogorov `T_{r,s} T_{s,t} = T_{r,t}` gilt nur unter der
+  neuen Voraussetzung **„konsistentes Schiftsystem“**: für jedes `r` ist
+  `(𝓧°_{r+u})_u` ein Schiftsystem für `𝓧°_r`.
+
+`rem:strongmarkovscope` (Z. 4517 ff.) enthält jetzt das Gegenbeispiel
+`StrongMarkovWitness` in Worten, und außerdem die Gründe für die Konsistenz und für
+`eq:shiftadapt`. **Das Manuskript bleibt für die Läufe unberührbar;** stimmt
+etwas an der neuen Fassung nicht, ist das ein Befund mit Zeilennummer.
 
 **BrownianMotion, nur zum Lesen.** `~/Code/lean/brownian-motion-upstream` ist ein
 Worktree von `RemyDegenne/brownian-motion` auf `upstream/master` (`0d5b6eb`,
@@ -54,238 +80,157 @@ wird abgeschrieben, angepaßt und mit dem Kommentar
   Zeilennummer.
 * `check_master.py` baut alle vier Dateien der Kette und ist die maßgebliche
   Prüfung. Im Bericht wird eine Aussage über ihren **Namen** benannt.
+* **Strikt heißt weiterhin roh:** `IsStoppingTime 𝓕 τ` für die rohe Filtration.
+  `[𝓕.IsRightContinuous]` oder `[𝓕.IsComplete]` stehen nur in einer ausdrücklich
+  als solche benannten Nebenfassung.
 * **Nichts nach außen**: kein PR, kein Issue, kein Kommentar bei BrownianMotion
-  oder Mathlib, auch wenn ein Beweis dort eine Lücke schließen würde. Das kommt
-  ins Inventar, und der Nutzer entscheidet.
+  oder Mathlib. Das kommt ins Inventar, und der Nutzer entscheidet.
+* **Hilfsdateien** (`scripts/_dev_*`, `scratch/…`) am Ende des Laufs nicht
+  liegenlassen, wenn sie nicht mehr gebraucht werden. Wo `rm` nicht freigegeben
+  ist, sie im Bericht **einmal** auflisten; nicht leeren, nicht umbenennen.
 
 ---
 
-#### Aufgabe A: Meilenstein 8 von `MartingaleProblems`, Martingale in stetiger Zeit
+#### Aufgabe D: B2, die Konvexität von `lem:localmix`(a) (Z. 4703)
 
-Quelle: `MartingaleProblems/README-kurz.md`, Meilenstein 8, und die zugehörigen
-Stellen im Manuskript (`thm:cadlag` und Umgebung). Die neuen Aussagen kommen in
-einen Abschnitt `ContinuousTimeMartingales` in `MartingaleProblems/Suggested.lean`,
-sofern sie nicht zu schon vorhandenem Material gehören.
+Stand: B1, B3, B4 stehen. Für B2 gibt es weder Beweis noch Zeugen. Die Eingrenzung
+auf Papier steht im Inventar (Läufe 11:03 und 14:03): Sind `P` und `P'` lokal
+äquivalent oder trennen sie sich an einem einzigen Zeitpunkt, gibt es keinen
+Zeugen. Die Bruchstelle sitzt bei den `P'`-Nullmengen, auf denen `lim τ'_n`
+endlich ist und die unter `P` positive Masse haben.
 
-**Was im Prototyp schon steht** (nicht neu bauen): `HasUpcrossings` (Z. 1777),
-`rightLimAlong` (Z. 4370), `isCadlag_rightLimAlong` (Z. 4497), `dyadStop`
-(Z. 10525), `stoppedValue_ae_eq_condExp` (Z. 10872), `martingale_stoppedProcess`
-(Z. 10946, ohne Schranke an die Pfade), `locally_martingale_stoppedProcess`,
-`Submartingale.ae_exists_not_hasUpcrossings`, die Quasi-Linksstetigkeit.
+##### Schritt D1. Die Nebenfassung unter `[𝓕.IsRightContinuous]`
 
-**Was BrownianMotion schon hat** (Stand `0d5b6eb`, am 2026-09-26 nachgesehen):
+Aufgabe A ist erledigt, also ist die Nebenfassung jetzt erlaubt und baubar. Sie
+heißt nicht wie die rohe Fassung und ersetzt sie nicht. Das Gerüst:
 
-* `StochasticIntegral/OptionalSampling.lean` (Kexing Ying), unter
-  `[LinearOrder ι] [OrderTopology ι] [OrderBot ι] [SecondCountableTopology ι]`,
-  rechtsstetigen Pfaden und der Klasse `Approximable 𝓕 μ` aus `ApproxSeq.lean`:
-  `stoppedValue_min_ae_eq_condExp'` (optional sampling für **Martingale**,
-  bewiesen), `condExp_stoppedValue_ae_eq_stoppedProcess`,
-  `Martingale.stoppedProcess` (gestoppter Prozeß ist Martingal, bewiesen),
-  `Submartingale.stoppedValue_min_ae_le_condExp_nat` (diskret, bewiesen).
-  **`Submartingale.stoppedValue_min_ae_le_condExp` in stetiger Zeit (Z. 281) ist
-  dort ein `sorry`.** Das ist genau unser Schritt A1.
-* `StochasticIntegral/DoobLp.lean`: `maximal_ineq`, `maximal_ineq_norm`,
-  `measurable_iSup_of_rightContinuous` bewiesen; die $L^p$-Ungleichungen
-  `integral_iSup_le_norm_rpow_le` und `integral_iSup_norm_rpow_le` sind `sorry`.
-* `StochasticIntegral/Quasimartingale/CadlagModification.lean` und
-  `…Banach.lean`: `Submartingale.cadlagModifReal_ae_eq` **unter
-  `[𝓕.IsRightContinuous]`** und mit rechtsstetigem Erwartungswert als
-  Voraussetzung (nur die eine Richtung der Äquivalenz),
-  `Martingale.cadlagModif_ae_eq` und `Martingale.martingale_cadlagModif` für
-  Banach-wertige Martingale, ebenfalls unter `[𝓕.IsRightContinuous]`.
-  `cadlagModif` ist dort eine Konstruktion, wie es die Roadmap verlangt.
-* `Auxiliary/Upcrossing.lean`, `Quasimartingale/MaximalInequality.lean`:
-  Upcrossings auf endlichen Teilmengen, Maximalungleichung für Quasimartingale.
+1. Nachsehen, ob Mathlib (master), der Prototyp oder BrownianMotion schon zeigt,
+   daß die Eintrittszeit eines rechtsstetigen adaptierten reellen Prozesses in
+   eine **offene** Menge eine Stoppzeit einer **rechtsstetigen** Filtration ist
+   (ohne Vervollständigung). Wenn nicht: bauen. Der Beweis ist
+   `{σ < t} = ⋃_{q ∈ ℚ, q < t} {Z_q ∈ U}`, und die Rechtsstetigkeit der Filtration
+   macht aus `{σ < t} ∈ 𝓕_t` für alle `t` die Aussage `{σ ≤ t} ∈ 𝓕_t`.
+2. Der Dichteprozeß `Z_t = d(P|𝓕_t)/d(Q|𝓕_t)` für `Q = αP + (1-α)P'`. Er ist durch
+   `1/α` beschränkt und ein `Q`-Martingal. Seine càdlàg-Modifikation kommt aus A4
+   (`Martingale.cadlagModif_ae_eq`, braucht `IsRightContinuous`, steht in der
+   Signatur).
+3. Die lokalisierende Folge unter `Q` aus `τ_n`, `τ'_n` und den Eintrittszeiten
+   von `{Z < 1/n}` beziehungsweise `{Z > 1 - 1/n}`, und damit
+   `lem:localmix`(a) in der Nebenfassung.
 
-**Worauf es bei der Übernahme ankommt:** BrownianMotion arbeitet unter
-`[𝓕.IsRightContinuous]` (und teils `IsComplete`). Die Roadmap will die
-Regularisierung **genau dort eine Modifikation, wo `t ↦ 𝔼[Y t]` rechtsstetig
-ist**, als Äquivalenz. Welche Voraussetzung an die Filtration die Äquivalenz
-wirklich braucht, ist Teil des Befunds. Wird eine Richtung nur unter
-`[𝓕.IsRightContinuous]` erreicht, ist das in der Signatur sichtbar zu lassen und
-im Bericht zu sagen. Die Klasse `Approximable` wird **nicht** blind übernommen:
-Der Lauf prüft, ob `dyadStop` im Prototyp für `ℝ≥0` dasselbe leistet, und
-entscheidet begründet.
+Der Bericht sagt am Ende genau, **an welcher Stelle** die Rechtsstetigkeit
+gebraucht wird. Das ist die Information, die D2 braucht.
 
-##### Schritt A1. Optional sampling für Submartingale in stetiger Zeit
+##### Schritt D2. Die rohe Fassung, ein einziger Lauf *(zuletzt, nach E6)*
 
-`Submartingale.stoppedValue_min_le_condExp` für eine beschränkte Stoppzeit und
-rechtsstetige Pfade, danach `…_of_ae_finite` für eine fast sicher endliche unter
-einer Integrierbarkeitsvoraussetzung. Weg: diskrete Fassung
-(`Submartingale.stoppedValue_min_ae_le_condExp_nat` bzw. Mathlib), dyadische
-Approximation von oben, $L^1$-Konvergenz über gleichgradige Integrierbarkeit.
-Das Martingal-Gegenstück ist bei BrownianMotion bewiesen und zeigt, wie die
-Approximation läuft; für Submartingale braucht die gleichgradige
-Integrierbarkeit ein eigenes Argument (Doob-Zerlegung auf dem Gitter oder
-`uniformIntegrable_of_le_condExp`, `CadlagModification.lean`).
-
-##### Schritt A2. `Martingale.stoppedProcess_of_rightContinuous`
-
-Hängt an A1 oder am Martingal-Fall. Wahrscheinlich im Kern schon
-`martingale_stoppedProcess` (Z. 10946). Dann nur Zuordnung und, falls nötig, die
-Fassung mit dem Namen der Roadmap.
-
-##### Schritt A3. Doobs Ungleichungen in stetiger Zeit
-
-Die Maximalungleichung und die $L^p$-Ungleichung für rechtsstetige
-Submartingale, das Supremum meßbar als Supremum über eine abzählbare dichte
-Menge. Die Maximalungleichung ist bei BrownianMotion bewiesen; die
-$L^p$-Fassung ist dort `sorry` und hier zu beweisen (aus der diskreten Fassung in
-Mathlib, `MeasureTheory.maximal_ineq` und Verwandte, über abzählbare dichte
-Mengen).
-
-##### Schritt A4. Die càdlàg-Modifikation eines Submartingals
-
-`Submartingale.cadlagModif_ae_eq_iff_continuousWithinAt_integral` (beide
-Richtungen) und `Martingale.cadlagModif_ae_eq` als Korollar, mit `cadlagModif`
-aus `rightLimAlong`. Der Satz, daß die Modifikation wieder ein Submartingal ist
-(bezüglich der rechtsstetigen Hülle), gehört dazu. Siehe den Absatz über die
-Filtration oben.
-
-##### Schritt A5. Der càdlàg-Modifikationssatz und die Zeugen
-
-Soweit nicht schon vorhanden: `IsRegularizingClass`, `CompactContainment`,
-`exists_cadlag_modification_of_isRegularizingClass`,
-`exists_tendsto_of_forall_tendsto_comp`, `isRegularizingClass_mpFamily`,
-`isCompensatorFor_mpFamily`; die Zeugen `LiftWitness`,
-`not_isQuasiLeftContinuous_of_isRegularizingClass_of_free_solutionSet`,
-`not_isQuasiLeftContinuous_of_atom`. Die Akzeptanzbeispiele der Roadmap:
-ein Submartingal ohne càdlàg-Modifikation mit der genauen Obstruktion; optional
-sampling braucht seine Beschränktheit (Brownsche Bewegung und die Treffzeit von
-`1`); die Münze am Atom.
-
-**Was nicht zu Aufgabe A gehört:** `isStrongMarkov` (das ist Schritt C5), die
-Doob–Meyer-Zerlegung, stochastische Integrale.
+Ausgangspunkt ist die Stelle aus D1, an der die Rechtsstetigkeit eingeht. Zuerst
+prüfen, ob das Argument „ein Trennzeitpunkt“ von 11:03 sich auf **abzählbar
+viele** Trennzeitpunkte verallgemeinern läßt; dann ist das der Beweis. Wenn
+nicht, gibt es zwei gleich gute Ausgänge: einen Beweis oder einen Zeugen in Lean.
+Kommt in diesem einen Lauf keiner von beiden zustande, schreibt der Lauf die
+**genaue mathematische Frage**, die offen ist, als Frage an den Nutzer ins
+Inventar. Dann ist B2 als „beim Nutzer“ geschlossen, und kein weiterer Lauf faßt
+es an.
 
 ---
 
-#### Aufgabe B: Die Einschränkungen von Meilenstein 6 aufheben
+#### Aufgabe E: Der Rest von C (Meilensteine 3 und 5)
 
-Hängt nur dort an Aufgabe A, wo es dabeisteht. Stand nach der Aufgabe vom
-2026-09-25 (Berichte im Inventar, 2026-09-25/26):
+Stand nach 17:03: C1, C2, C4 vollständig. C5 steht abstrakt, für `mpFamily`, auf
+dem kanonischen Pfadraum (`isStrongMarkov_mpFamily_coordinate`), für beschränkte
+Sprungoperatoren an beschränkten Stoppzeiten
+(`isStrongMarkov_jumpOperator_coordinate`) und an der Zwei-Zustands-Kette mit
+einer echten Stoppzeit (`isStrongMarkov_flip_firstHitCapped`). Chapman–Kolmogorov
+steht nur homogen (`chapmanKolmogorov_of_unique_onedim`). Die Kernform steht nur
+für Indikatoren und nur an abzählbar wertigen Stoppzeiten
+(`isStrongMarkov_kernel_of_countable_range`).
 
-* Schritt 2 (`lem:L1auto`) steht als `isUniformLocalization_of_boundedJumps`
-  **nur für endliche Familien**, und das Minimum liegt nicht in `Σ₀`;
-* Schritt 3(a) (`lem:localmix`, Konvexität) steht nur **unter (L1) oder bei
-  beschränkten Sprüngen**; die Fassung „ohne jede Voraussetzung“ ist offen, der
-  Weg über den Dichteprozeß bricht an der Rechtsstetigkeit von `Z`;
-* Schritte 4 und 5 (`localRestart`, `subsingleton_localMPSolutions`) stehen nur
-  **auf dem kanonischen Raum**;
-* Schritt 7 endet mit einem begründeten Nein zur Formulierung des Manuskripts
-  (explodierende Sprungprozesse: lokalisierende Folge geht nur gegen `ζ`).
+##### Schritt E1. Die Lean-Sätze an das neue `thm:absstrongmarkov` angleichen
 
-**Strikt heißt weiterhin roh:** `IsStoppingTime 𝓕 τ` für die rohe Filtration.
-Eine Voraussetzung `[𝓕.IsRightContinuous]` oder `[𝓕.IsComplete]` in einer
-Aussage des Meilensteins ist ein Fehler, **außer** sie steht in einer ausdrücklich
-als solche benannten Nebenfassung (siehe B2).
+Kein neuer Beweisweg, sondern Abgleich und Lückenschluß:
 
-##### Schritt B1. (L1) je Testprozeß, und `lem:L1auto` für beliebige Familien
+* Im Inventar eine Tabelle „Teil des Manuskripts ↦ Lean-Name“ für (a) und (b),
+  jede Voraussetzung einzeln (`eq:shiftadapt` ↦ `hψadapt`, κ meßbar ↦ `hincr`/`hK`,
+  `eq:optafterint` ↦ `hint`, …). Weicht eine Lean-Voraussetzung von der neuen
+  Fassung ab, ist das ein Befund in der einen oder der anderen Richtung.
+* Die Kernform von (a) im homogenen Fall an einer Stoppzeit mit **beliebigem**
+  Wertebereich, `E[f(X(τ+t)) | 𝓖_τ] = (T_t f)(X τ)`, und `T_s T_t = T_{s+t}` in der
+  Halbgruppenform, falls `chapmanKolmogorov_of_unique_onedim` sie nicht schon ist.
+* Die Kernformen für **beschränktes meßbares `f`**, nicht nur für Indikatoren,
+  über einfache Funktionen (die Lücke ist im Inventar vom 11:03 genannt).
 
-Der Befund vom 2026-09-25: Was `lem:L1auto` wirklich zeigt, ist die Fassung
-„**für jedes `Y°` eine Folge in `Σ`**“, und sie genügt jedem Gebrauch in
-`lem:localmix`. Der Lauf baut diese Fassung als **zusätzliche** Definition neben
-`IsUniformLocalization` (die bestehende bleibt, der Nutzer hat über die
-Umstellung noch nicht entschieden), beweist `lem:L1auto` in dieser Fassung für
-**beliebige** Familien, und prüft, welche Sätze von Schritt 3–5 mit ihr genauso
-gehen. Dazu gehört die Frage, ob `Σ₀` um endliche Minima erweitert ein volles
-`LocalizingSystem` wird ((L2), (L3)), oder ein begründetes Nein. Ein Zeuge, daß
-für unendliche Familien **kein** gemeinsames `τ_n` existiert (strikt lokales
-Martingal), ist erwünscht, aber nachrangig.
+##### Schritt E2. Chapman–Kolmogorov im inhomogenen Fall
 
-##### Schritt B2. Konvexität (`lem:localmix`(a)) ohne Voraussetzung
+* Die Definition „konsistentes Schiftsystem“ (Name nach Wahl, zum Beispiel
+  `IsShiftSystem.IsConsistent`), wörtlich wie in (b): für jedes `r` ist
+  `u ↦ 𝓧₀ (r + u)` ein Schiftsystem für `𝓧₀ r`.
+* `T_{r,s} T_{s,t} = T_{r,t}` unter Konsistenz, mit dem Beweis aus Schritt 3 des
+  Manuskripts.
+* Die Konsistenz für die Familie mit zurückgezogener Uhr (`ex:shiftXA`; im
+  Manuskript begründet mit „`q` erst um `r`, dann um `u` zurückgezogen ist
+  `q_{r+u}`“). Trägt diese Begründung nicht, ist das ein Befund.
+* Nachrangig: ein Zeuge, daß Chapman–Kolmogorov ohne Konsistenz falsch sein kann.
 
-Zwei Ausgänge sind gleich gut: ein Beweis für die **rohe** Filtration, oder ein
-Zeuge in Lean, daß sie für die rohe Filtration falsch ist (das Gegenbeispiel auf
-Papier aus dem Inventar, `Y_t = η V 1_{t ≥ 1}`, zeigt nur, daß die Folge aus dem
-Pfad allein nicht reicht, nicht, daß die Aussage falsch ist). **Nach Aufgabe A**
-darf zusätzlich eine klar benannte Nebenfassung unter `[𝓕.IsRightContinuous]`
-über den Dichteprozeß `Z` und dessen càdlàg-Modifikation bewiesen werden; sie
-ersetzt die rohe Fassung nicht und heißt auch nicht so.
+##### Schritt E3. C5 (i): fast sicher endliche statt beschränkter Stoppzeiten
 
-##### Schritt B3. `localRestart` und `subsingleton_localMPSolutions` auf beliebigem `Ω`
+Der Plan steht im Inventar am Ende des Laufs 17:03 und wird übernommen:
+`isStrongMarkov_jumpOperator_coordinate` an `τ ∧ n`, dann `𝓖_{τ∧n} = 𝓖_τ ⊓ 𝓖_n`
+(`IsStoppingTime.measurableSpace_min_const`) und Lévys Satz nach oben
+(`MeasureTheory.tendsto_ae_condExp`). Die eigentliche Arbeit ist der Übergang auf
+`{τ ≤ n}` von der Zukunft `X(τ∧n + t)` zu `X(τ + t)`. Danach dasselbe für
+`isStrongMarkov_mpFamily_coordinate`, soweit `hint` es zuläßt; `hint` an einer
+unbeschränkten Stoppzeit ist dort die ehrliche Voraussetzung.
 
-Vom kanonischen Raum auf einen Prozeß `X` auf beliebigem `(Ω, 𝓕, P)`, über das
-Bildmaß wie bei den globalen Fassungen (`thm:absuniq` steht allgemein). Wo die
-Übertragung eine Voraussetzung braucht, die das Manuskript nicht nennt
-(Meßbarkeit der Pfadabbildung, Adaptiertheit der gestoppten Testprozesse,
-`hadapt`), ist das ein Befund.
+##### Schritt E4. C5 (ii): die klassische Instanz
 
-##### Schritt B4. Der explodierende Fall
+`E` metrisierbar, `A ⊆ Cb(E) × Bdd(E)`, Pfade càdlàg, Lebesgue-Uhr; das ist die
+Anwendung in `thm:uniqueness` (Z. 5444 ff.). Zuerst nachsehen, ob
+`SkorokhodSpace/Suggested.lean` schon einen kanonischen Raum càdlàg-Pfade mit
+Koordinatenfiltration hat, der sich hier einsetzen läßt. Nur wenn nicht, ist er
+der erste Bau. Zu zeigen sind dann `hψ` und `hψadapt` für diesen Raum. Die Fassung
+für rechtslokalkonstante Pfade (`RightContinuousPath`) trägt hier nicht, weil
+Eintrittszeiten nur für abgeschlossene Mengen gehen, siehe den Nebenbefund des
+Laufs 17:03. `hψadapt` ist die Progressivität an Stoppzeiten; das Manuskript nennt
+sie in `rem:strongmarkovscope` „standard“. Ist sie das in Mathlib nicht, ist das
+ein Befund.
 
-Hängt an nichts. Eine Formulierung, unter der der Satz des Manuskripts stimmt:
-das lokale Problem **auf `[0, ζ)`** als eigene Definition (Lokalisierung durch
-`τ_n ↑ ζ` statt `τ_n ↑ ∞`), `jumpProcess` als Lösung davon, und die
-Nichtexistenz der globalen Lösung. Das ist ein Vorschlag an den Nutzer, kein
-Eingriff ins Manuskript; der Bericht sagt, welche Zeilen (8788–8794, 8818,
-359–361, 10293–10298) sich damit ändern würden.
+##### Schritt E5. C5 (iii): die Brownsche Bewegung als Instanz
 
----
+Nicht als Umkehrung: Die Brownsche Bewegung löst das Problem zu `½ Δ` (steht aus
+der Identifikationsaufgabe vom 2026-09-24/25, nachsehen). Die eindimensionalen
+Gesetze der Lösungen sind eindeutig; auch das nachsehen, bevor gebaut wird. Beides
+zusammen gibt über E4 die starke Markoveigenschaft. Was von BrownianMotion
+übernommen wird, bekommt den Herkunftskommentar.
 
-#### Aufgabe C: Das abstrakte Martingalproblem fertig machen
+##### Schritt E6. C3, die beiden offenen Punkte
 
-Meilensteine 1–5 von `MartingaleProblems/README-kurz.md`: das Gerüst
-(`Clock`, `IsMPSolution`, `mpFamily`, `isMPSolution_iff_forall_fdd`, `restart`,
-`propagatesAgreement_…`, `subsingleton_mpSolutions_of_unique_onedim`,
-`isMarkov_of_unique_onedim`) steht. Laut dem Namensabgleich fehlen noch die
-unten genannten Punkte. **Erst nachsehen** (siehe oben), dann bauen.
+1. Die reelle Fassung von `Clock.IsProgressiveComp` über bloßem
+   `[MeasurableSpace E]`, durch Approximation von rechts (offen seit 10:03).
+2. Das Beispiel „meßbar zu jeder Zeit, progressiv zu keiner“. **Zuerst prüfen**,
+   ob eine nicht **Borel**-meßbare Menge genügt; die Progressivität ist eine
+   Aussage über `𝓑([0,t]) ⊗ 𝓕_t`, nicht über die Lebesgue-Vervollständigung.
+   Wenn ja: Mathlib hat
+   `MeasurableSpace.cardinal_measurableSet_le`
+   (`Mathlib/MeasureTheory/MeasurableSpace/Card.lean:202`). Daraus folgt, daß es
+   höchstens `𝔠` Borelmengen gibt, also eine nicht Borel-meßbare Teilmenge jedes
+   Intervalls. Affine Kopien in `(1/(k+1), 1/k)` geben eine Menge, die auf jedem
+   `[0, t]` nicht Borel ist. Wenn nein, also wenn wirklich die Lebesgue-Fassung
+   „auf jedem Teilintervall“ gebraucht wird: eine Bernstein-Menge als eigener
+   Abschnitt, **höchstens ein Lauf**. Danach wird begründet und endgültig
+   zurückgestellt.
 
-##### Schritt C1. Meilenstein 1, die Uhr
-
-`Clock.Ico_eq_setIco` und `Clock.Ioc_eq_setIoc` unter `[LinearOrder ι]`, als
-`@[simp]` und in Richtung Mathlib umschreibend; `Clock.interval_eq_of_isAtomless`;
-`Clock.interval_add` (mit dem Nachweis, daß die lineare Ordnung nötig ist). Die
-vier Uhren des Manuskripts als Instanzen, und die Akzeptanzbeispiele (Raute,
-`volume + δ 1`, `∑ n, δ n` nicht shiftinvariant), soweit nicht vorhanden.
-
-##### Schritt C2. Meilenstein 2, das abstrakte Problem
-
-`MPSolutions 𝓧 𝓕` mit `MPSolutions (𝓧 ∪ 𝓨) = MPSolutions 𝓧 ∩ MPSolutions 𝓨`;
-`mpProcess` (falls `mpFamily` es nur inline enthält, als eigene Definition, und
-`mpFamily` darüber); `IsMPSolutionFor` und `IsMPSolutionFor.map`;
-`MPSolutions.span`; `IsMPSolutionFor.insert_of_tendsto` und
-`…_of_forall_norm_le`; `IsMPSolutionFor.submartingale_mpProcess_of_tendsto`. Die
-Akzeptanzbeispiele: Poisson von Hand, eine Uhr mit Atom, an der die beiden
-Konventionen verschiedene Lösungen geben, die Beulenfolge gegen
-`insert_of_tendsto`.
-
-##### Schritt C3. Meilenstein 3, der Rest
-
-`Clock.IsProgressiveComp`; `IsCanonical` und `IsDetermining` samt
-`isDetermining_products`, falls nicht vorhanden; die Akzeptanzbeispiele (die
-Filtration ist Voraussetzung, nicht Konvention; meßbar zu jeder Zeit und
-progressiv zu keiner).
-
-##### Schritt C4. Meilenstein 4, Mischungen
-
-`MPSolutions.isConvex` und `MPSolutions.integral_mem`: die globalen Fassungen
-`lem:mixture` (Z. 3405) und `lem:disint` (Z. 3427), die bei Meilenstein 6
-fehlten. Die lokalen Fassungen aus Meilenstein 6 sollen danach Korollare sein
-oder den Grund nennen, warum nicht.
-
-##### Schritt C5. Meilenstein 5, `isStrongMarkov`
-
-Hängt an Aufgabe A (optional sampling in stetiger Zeit). Mit càdlàg-Pfaden und
-meßbarem Shiftsystem die Markoveigenschaft an jeder fast sicher endlichen
-Stoppzeit. Danach die klassische Aussage als Instanz, `E` metrisierbar,
-`A ⊆ Cb(E) × Bdd(E)`, und die Akzeptanzbeispiele (Zwei-Zustands-Kette ganz durch;
-Brownsche Bewegung als Instanz, nicht als Umkehrung).
-
-**Was nicht zu Aufgabe C gehört:** die atomare Leiter von Meilenstein 7,
-Meilensteine 11 und 12.
+**Was nicht zu Aufgabe E gehört:** die atomare Leiter von Meilenstein 7,
+Meilensteine 11 und 12, und der Rest von A5.
 
 ---
 
-#### Wenn A, B und C stehen
+#### Wenn D und E stehen
 
 **Dann ist Schluß.** Der Lauf schreibt seinen Bericht, schlägt **kein**
 selbstgewähltes Folgeziel vor und trägt keins ein. Das gilt **abweichend** von
 „Am Ende jedes Laufs“ und „Es gibt immer Arbeit“ weiter unten. Findet ein Lauf
-alle drei Aufgaben erledigt vor, prüft er nur, daß `check_master.py` sauber ist,
-schreibt einen Satz ins Inventar und endet. Den nächsten Auftrag stellt der
-Nutzer.
-
-Dasselbe gilt **während** der Aufgaben: Ein „benanntes Ziel für den nächsten
-Lauf“ ist immer der nächste offene Schritt dieser Liste und nie etwas außerhalb.
+alles erledigt vor, prüft er nur, daß `check_master.py` sauber ist, schreibt einen
+Satz ins Inventar und endet. Den nächsten Auftrag stellt der Nutzer.
 
 
 ---
