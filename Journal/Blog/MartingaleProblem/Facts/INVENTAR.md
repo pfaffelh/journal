@@ -65235,3 +65235,126 @@ nicht voran, **C5 Schritt 2**: `restart` an einer Stoppzeit `τ : F → ι` mit
 `Filtration.shiftByTime`, gestützt auf `Martingale.shiftByTime_sub` (dieser Lauf) für die
 Testprozesse und auf die Meßbarkeit von `(ω, r) ↦ θ r ω`; daraus
 `isStrongMarkov` für eine f.s. endliche Stoppzeit im homogenen Fall.
+
+### 2026-09-26, Lauf 15:03 UTC — B2 nicht angefaßt (Grund unten); Aufgabe C, Schritt C5 Schritt 2: **der Neustart des Problems an einer Stoppzeit** und **`thm:absstrongmarkov`, erste Aussage, homogener Fall, für eine endliche Stoppzeit mit beliebigem Wertebereich**
+
+`check_master.py` zu Beginn (Mathlib `94ef6b89544`): 0 Fehler, 0 `sorry`, 0 Veraltungen;
+Warnungen 18 / 38 / 38 / 76.
+
+**B2.** Nicht weiter bearbeitet. Vier Läufe (11:03, 13:03, 14:03 und davor) haben die Bruchstelle
+eingegrenzt, zuletzt auf die `P'`-Nullmengen der rohen Filtration. Ein fünfter Anlauf ohne neuen
+Gedanken hätte nur die Zeit gekostet, die C5 braucht. Nach der Regel „wer steckenbleibt, geht zum
+nächsten Schritt, der nicht daran hängt“ weiter mit C5 Schritt 2, dem benannten Ausweichziel.
+
+**C5 Schritt 2, neu** (`MartingaleProblems/Suggested.lean`, neue Abschnitte
+`StrongMarkovRestartProblem` und `StrongMarkovHomogeneous` hinter `StrongMarkovKernel`):
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| Transportschritt von `lem:restart` mit freiem Pfad `ψ`: ist `Y' ∘ ψ = M + K` mit `M` Martingal einer Filtration `𝓗` auf `Ω` und `K` beschränkt, und trägt `ψ` die Vergangenheit `𝓗 s` in `𝓕₀ s`, so ist `Y'` Martingal unter `(Z·P) ∘ ψ⁻¹` | `martingale_map_withDensity_of_comp_eq` | 49041 |
+| σ-Algebra einer einzelnen Abbildung, als `def` (Grund wie bei `stateSigma`) | `stateSigmaOf` | 49138 |
+| `thm:absuniq`(a) für eine **beliebige** Unter-σ-Algebra `𝓖' i` und einen freien Pfad `ψ`, mit dem Neustart als Voraussetzung | `condExp_eq_condExp_state_of_restart` | 49150 |
+| **Schritt 2 von `thm:absstrongmarkov`** (Z. 4439), homogen: jede beschränkte Umgewichtung mit einer `𝓖_τ`-meßbaren Dichte, transportiert mit `θ_τ ∘ X`, löst das Problem | `isMPSolution_map_withDensity_shiftByTime` | 49343 |
+| **`thm:absstrongmarkov`, erste Aussage** (Z. 4406), homogen, `τ : Ω → ℝ≥0` mit beliebigem Wertebereich: `E[f(X(τ+t)) ∣ 𝓖_τ] = E[f(X(τ+t)) ∣ X(τ)]` | `isStrongMarkov_of_unique_onedim` | 49382 |
+
+**Wie die Beweise laufen.** `martingale_map_withDensity_of_comp_eq` ist der Beweis von `restart`,
+mit `θ r ∘ X` durch einen freien Pfad `ψ` und dem Martingal `Y (r + ·) - Y r` durch ein beliebiges
+Martingal `M` ersetzt. Der Summand `K` braucht **keine** Adaptiertheit, nur Meßbarkeit und
+Schranke: er steht auf beiden Seiten der Martingalgleichung mit demselben Gewicht und hebt sich weg.
+Der Schritt `integral_smul_martingale_eq` ist dort ausgeschrieben statt aufgerufen, weil dessen
+Abschnitt eine Addition auf `ι` mitzieht, die der Transport nicht braucht.
+`condExp_eq_condExp_state_of_restart` ist der Beweis von `isMarkov_of_restart` wörtlich, mit
+`𝓖 r` durch `𝓖' i` und dem Zustand `X r` durch `π ⊥ ∘ ψ` ersetzt; er braucht weder die
+Schiftstruktur noch `hbot` noch eine Addition auf `ι`. Schritt 2 ist
+`Martingale.shiftByTime_sub` (Schritt 1, Lauf 14:03), gefolgt vom Transportschritt mit
+`𝓗 = 𝓖.shiftByTime τ hτ`. Die starke Markoveigenschaft ist dann Schritt 2, gefolgt von
+`condExp_eq_condExp_state_of_restart` mit `𝓖' i = (𝓖.shiftByTime τ hτ) 0 = 𝓖_τ`. **Keine Zerlegung
+nach den Werten von `τ`**: im homogenen Fall lösen beide umgewichteten Maße dasselbe Problem. Das
+ist genau `rem:strongmarkovscope` (Z. 4467–4470), jetzt in Lean.
+
+**Voraussetzungen von `isStrongMarkov_of_unique_onedim`**, und wo sie herkommen:
+
+* rohe Filtration `𝓖`, `τ + t` Stoppzeit für jedes `t` (die Form von `Filtration.shiftByTime`);
+* je Testprozeß: `Y ∘ X` Martingal, stark progressiv, f.s. rechtsstetig, und `Y (τ + t) ∘ X`
+  integrierbar (`eq:optafterint`);
+* der verschobene Pfad `ψ` meßbar und adaptiert von `𝓖_{τ+s}` nach `𝓕₀ s` (`hψadapt`), mit
+  `π t ∘ ψ = X(τ + t)` (`hψeval`, das ist `Shift.eval_comp` an der zufälligen Zeit);
+* `hincr`: die Zuwachsklausel des Schiftsystems **an der Zeit `τ` und längs `X` gelesen**,
+  `Y' t (ψ ω) = Y (τ ω + t) (X ω) - Y (τ ω) (X ω) + K ω` mit `K` meßbar und beschränkt;
+* `eq:absonedim` für das eine Problem `𝓧`.
+
+**Befund zum Manuskript (nicht angefaßt).** `thm:absstrongmarkov` verlangt „`θ` extends to a
+measurable map `(ω, r) ↦ θ_r ω`“ und „the shift system is measurable“ (Z. 4398–4400). Der Beweis
+liest davon genau zwei Folgerungen: `hψadapt` (die Adaptiertheit des verschobenen Pfades bezüglich
+`𝓖_{τ+s}`) und `hincr` mit meßbarem `K`. Die gemeinsame Meßbarkeit von `θ` gibt nur die Meßbarkeit
+von `ψ`, **nicht** `hψadapt`. Für die natürliche Filtration ist `hψadapt` eine Aussage über
+`X(τ + u)`, `u ≤ s`, also über die Progressivität von `X` an den Stoppzeiten `τ + u`. Das
+Manuskript nennt diese Voraussetzung nicht eigens. Auf dem kanonischen Raum mit rechtsstetigen
+Pfaden sollte sie gelten (Mathlibs `measurable_stoppedValue` je Koordinate), aber in Lean ist
+dieser Nachweis **nicht** geführt. Deshalb stehen `hψadapt` und `hincr` als benannte
+Voraussetzungen da.
+
+`#print axioms` für alle vier Sätze: `propext`, `Classical.choice`, `Quot.sound`.
+`check_master.py` danach: **0 Fehler, 0 `sorry`, 0 Veraltungen**, Warnungen 18 / 38 / 38 / 76.
+
+### Derselbe Lauf, zweiter Teil — C5: **`hincr` für `mpFamily` an einer zufälligen Zeit**, und die starke Markoveigenschaft für die Testprozesse eines Operators
+
+**Neu** (`MartingaleProblems/Suggested.lean`, Abschnitt `StrongMarkovMpFamily` hinter
+`StrongMarkovHomogeneous`):
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| Zuwachsidentität von `ex:shiftXA` **punktweise im Shift**: `Y t (θ r f) = Y (r + t) f - Y r f + p.1 (π r f)` für jedes `r`, `f` | `mpFamily_comp_shift_eq` | 49442 |
+| `hincr` von `isStrongMarkov_of_unique_onedim` für `mpFamily` an beliebigem `τ`, mit `K ω = p.1 (X(τ ω))` | `exists_incr_mpFamily_of_shift` | 49471 |
+| `thm:absstrongmarkov`, erste Aussage, für `mpFamily A Q c π` auf einer shiftinvarianten Uhr | `isStrongMarkov_mpFamily` | 49497 |
+
+`mpFamily_comp_shift_eq` ist die Rechnung aus dem Beweis von `isShiftSystem_mpFamily`, mit dem
+Summanden `κ = p.1 ∘ π r` ausgeschrieben statt unter einem Existenzquantor. **Das ist der Punkt**:
+ein Existenzquantor je festem `r` gibt kein gemeinsam meßbares `κ`, und genau das bräuchte die
+Lesart an der zufälligen Zeit `r = τ ω`. Ausgeschrieben ist `K ω = p.1 (π (τ ω) (X ω))`, und seine
+Meßbarkeit (`hK`) ist die einzige Stelle, an der ein Wert an der zufälligen Zeit meßbar sein muß.
+`#print axioms` für alle drei: `propext`, `Classical.choice`, `Quot.sound`.
+
+**Was für die Instanz auf dem kanonischen Pfadraum noch fehlt** (Zwei-Zustands-Kette,
+`jumpOperator` auf `RightContinuousPath E`): `isStrongMarkov_mpFamily` verlangt dort `hprog` (starke
+Progressivität der Testprozesse längs der Koordinaten), `hrc` (ihre Rechtsstetigkeit),
+`hψ`/`hψadapt` für `ω ↦ shift (τ ω) ω` und `hK`. Nachgesehen: **keine** dieser Aussagen steht bisher
+auf `RightContinuousPath`. Vorhanden sind nur `measurable_uncurry_coordinate` (reellwertig, für
+`hK` mit `τ` meßbar ausreichend), `measurable_shift` für festes `r`, `stronglyAdapted_mpFamily_coordinate`
+und `measurable_compensator_coordinate`. Für `hψadapt` ist über allgemeinem `[MeasurableSpace E]`
+Mathlibs `measurable_stoppedValue` nicht direkt anwendbar (es verlangt `E` metrisierbar und
+borelsch); über `Bool` ginge es. In der Restzeit des Laufs nicht gebaut.
+
+### Derselbe Lauf, Abschluß
+
+`check_master.py` am Ende (Mathlib `94ef6b89544`): **0 Fehler, 0 `sorry`, 0 Veraltungen** in allen
+vier Dateien, Warnungen 18 / 38 / 38 / 76 wie zu Beginn.
+
+**Stand der drei Aufgaben nach diesem Lauf.**
+
+* **A:** erledigt (unverändert; offen nur „cutting down to an open subset“, siehe Lauf 13:03).
+* **B:** B1, B3, B4 stehen. **B2 offen**, in diesem Lauf nicht angefaßt.
+* **C:** C1 vollständig; C2 bis auf `map` längs Gleichheit der Gesetze; C3 offen (reelle Fassung
+  über bloßem `[MeasurableSpace E]`, „meßbar zu jeder Zeit, progressiv zu keiner“); C4 global.
+  **C5:** jetzt auch Schritt 2 und die erste Aussage von `thm:absstrongmarkov` im homogenen Fall
+  für **beliebige** endliche Stoppzeiten (nicht nur abzählbarwertige), abstrakt und für `mpFamily`.
+  Offen: die Instanz auf dem kanonischen Pfadraum (die fünf Voraussetzungen oben), die klassische
+  Instanz `E` metrisierbar, `A ⊆ Cb(E) × Bdd(E)`, und die Akzeptanzbeispiele
+  (Zwei-Zustands-Kette ganz durch, Brownsche Bewegung als Instanz).
+
+**Befunde für den Nutzer (kein Manuskript, keine README angefaßt; nichts nach außen):**
+
+1. `thm:absstrongmarkov` (Z. 4398–4400): „measurable shift system“ und gemeinsame Meßbarkeit von
+   `θ` liefern die Meßbarkeit des verschobenen Pfades, aber nicht seine Adaptiertheit bezüglich
+   `𝓖_{τ+s}`, die der Beweis in Schritt 2 liest. Sie ist eine eigene Voraussetzung (in Lean
+   `hψadapt`).
+2. `rem:strongmarkovscope` (Z. 4467–4470), die Behauptung, im homogenen Fall sei die
+   Abzählbarkeit überflüssig, **stimmt** und ist jetzt bewiesen (`isStrongMarkov_of_unique_onedim`).
+
+**Benanntes Ziel für den nächsten Lauf, der nächste offene Schritt der Liste: B2**, und kommt es
+nicht voran, **C5, die Instanz auf dem kanonischen Pfadraum**: `hprog`, `hrc`, `hψ`, `hψadapt`, `hK`
+für `mpFamily (jumpOperator lam mu) lebesgueClock` auf `RightContinuousPath E`, zuerst für `E = Bool`
+(dort ist `measurable_stoppedValue` anwendbar), und damit `isStrongMarkov_mpFamily` an der
+Zwei-Zustands-Kette. Grundlage: `measurable_uncurry_of_isRightLocallyConstant` und
+`measurable_uncurry_min_of_isRightLocallyConstant` für die Progressivität,
+`isRightLocallyConstant_coordinate` für die Rechtsstetigkeit von `f ∘ X`.
