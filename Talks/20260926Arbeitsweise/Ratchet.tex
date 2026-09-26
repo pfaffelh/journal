@@ -1,0 +1,428 @@
+% Übersetzen mit
+%   lualatex Ratchet.tex
+% (kein minted, also kein --shell-escape nötig)
+%
+% Zweiter Vortrag zur Arbeitsweise: ausschließlich das ratchet-Projekt
+% (~/Code/research/ratchet, August 2026), aus dem die Läufe hervorgegangen sind.
+
+\documentclass[11pt,aspectratio=169]{beamer}
+\setbeamertemplate{navigation symbols}{}
+\usepackage{background}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, fit, backgrounds, calc}
+\usepackage{fontspec}
+\setmonofont[Scale=0.85]{DejaVu Sans Mono}
+\usepackage[ngerman]{babel}
+\usepackage{csquotes}
+\usepackage{amsmath, amssymb}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
+
+\definecolor{darkgreen}{rgb}{0.0,0.4,0.0}
+\definecolor{darkblue}{rgb}{0.1,0.1,0.5}
+\definecolor{darkred}{rgb}{0.5,0.0,0.0}
+\definecolor{gray}{rgb}{0.35,0.35,0.35}
+\definecolor{nutzer}{rgb}{0.75,0.2,0.1}
+\definecolor{sitzung}{rgb}{0.1,0.35,0.7}
+\definecolor{lauf}{rgb}{0.0,0.5,0.3}
+\setbeamercolor{title}{fg=white}
+\setbeamercolor{author}{fg=white}
+\setbeamercolor{date}{fg=white}
+\setbeamertemplate{blocks}[rounded][shadow=true]
+
+\newcommand{\datei}[1]{\texttt{#1}}
+\tikzset{
+  box/.style={draw, rounded corners, thick, align=center, inner sep=5pt, font=\small},
+  pfeil/.style={-{Stealth[length=2.5mm]}, thick},
+}
+
+\title{Wie es anfing}
+\subtitle{Das ratchet-Projekt: ein autonomer Forschungslauf zu Mullers Ratsche}
+\author{Peter Pfaffelhuber}
+\date{Freiburg, September 2026}
+
+\begin{document}
+
+\backgroundsetup{scale=1, color=black, opacity=1, angle=0, contents={\vspace*{3cm}\hspace*{-10cm}\includegraphics[width=1.80\paperwidth,height=1.33\paperheight]{hintergrund_vortrag1.pdf}}}
+\setbeamertemplate{background}{\BgMaterial}
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\setbeamertemplate{background}{}
+\setbeamertemplate{footline}{%
+  \hbox{\hskip 0.5cm\includegraphics[height=0.55cm]{ufr.png}\hfill
+    \usebeamerfont{footline}\color{gray}\insertframenumber\hskip 0.5cm}%
+  \vskip 4pt%
+}
+
+% ------------------------------------------------------------------
+\begin{frame}{Das Problem: die Klickrate von Mullers Ratsche}
+  \small
+  Unendliches SDE-System mit Fleming--Viot-Rauschen, $k=0,1,2,\dots$, $\sum_k X_k=1$:
+  \[
+    dX_k = \Big(\alpha\Big(\sum_j (j-k)X_j\Big)X_k + \lambda(X_{k-1}-X_k)\Big)dt
+      + \sum_{\ell\neq k}\sqrt{\tfrac1\nu X_kX_\ell}\,dW_{k\ell}.
+  \]
+  $X_k$ ist der Anteil mit $k$ schädlichen Mutationen. $K^\ast(t)=\inf\{k: X_k(t)>0\}$ springt
+  gelegentlich um eins: ein \textbf{Klick}.
+  \begin{itemize}
+  \item Gesucht: die Rate $\mathfrak r=\lim_t K^\ast(t)/t$. Wegen
+    $\mathfrak r(\alpha,\lambda,\nu)=\alpha\,\mathfrak r(1,\theta,\nu\alpha)$ zwei Parameter:
+    $\theta=\lambda/\alpha$ und $n=\nu\alpha$.
+  \item Für $n\to\infty$ ist das \textbf{kleines Rauschen}. Der Fixpunkt ist
+    $\pi=\mathrm{Poi}(\theta)$, ein Klick ist ein seltener Austritt. Vermutung:
+    $\tfrac1n\log\mathfrak r\to-V_\ast(\theta)$, mit $V_\ast$ dem Quasipotential.
+  \item Die Literatur schließt auf eine Gleichung für $X_0$ allein:
+    $V_{1d}(\theta)=2\theta\big[(1+\theta)\log(1+1/\theta)-1\big]$.
+    Der Fehler geht bis zum Faktor~2.
+  \end{itemize}
+  \begin{block}{Der Auftrag}
+    Über die 1d-Heuristik hinauskommen. Eine erneute 1d-Schließung ist \textbf{kein}
+    Fortschritt.
+  \end{block}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Was zur Verfügung stand}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textbf{Im Repo}
+      \begin{itemize}
+      \item das eigene Manuskript arXiv:2606.15842 (Heinzel, P., Wakolbinger),
+        PDF und \TeX
+      \item \datei{ldp.tex}, \enquote{Stand der Diskussion}: Hamiltonfunktion, die
+        Neher--Shraiman-Heuristik, zwei Pflichtlisten
+      \item 93 Ground-Truth-Dateien: $N=10^4$, je 1000 Pfade bis zum ersten Klick
+      \item die Wright--Fisher-Simulation des Papers, CPU-Port und GPU
+      \end{itemize}
+      \textbf{Lokal, nicht im Repo} (\datei{\textasciitilde/bwSyncShare/Papers})
+      \begin{itemize}
+      \item Feng \& Kurtz, \emph{Large Deviations for Stochastic Processes}, 414 S.
+      \item Feng \& Xiong (2002): Quasipotential für Fleming--Viot, \enquote{die Blaupause}
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \textbf{Ratschen-Literatur} (\datei{Papers/ratchet/})
+      \begin{itemize}
+      \item Neher \& Shraiman (2012): die 1d-Heuristik
+      \item Audiffren \& Pardoux (2013); Mariani, Pardoux \& Velleret (2025)
+      \item Etheridge, P., Wakolbinger (2008)
+      \item Dawson \& Feng (1998): LDP für Fleming--Viot \emph{mit Selektion}
+      \item Champagnat \& Hass (2023) und sieben weitere
+      \end{itemize}
+      \textbf{Nachbeschafft am 13.\,8.} für B4
+      \begin{itemize}
+      \item Conforti--Kraaij--Tonon (2), Puhalskii (2),
+        Budhiraja--Dupuis--Maroulas
+      \item sechs kostenpflichtige Titel als \enquote{nicht beschaffbar, nicht suchen}
+        vermerkt
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Die Idee der Läufe (1.--3.\,8.\,2026)}
+  \begin{itemize}
+  \item \textbf{Ich bin im Urlaub.} Ein Rechner im Büro rechnet eine Woche lang
+    allein, alle vier Stunden ein Lauf von \texttt{claude -p}.
+  \item \textbf{Kein Lauf hat ein Gedächtnis.} Der Stand steht nur in
+    \datei{RESEARCH\_LOG.md} und in den Commits. Jeder Lauf liest das Log vollständig
+    und hängt einen Eintrag an.
+  \item \textbf{Der Name ist Programm.} Eine Ratsche dreht nur in eine Richtung: Nichts
+    Verifiziertes wird wieder aufgegeben.
+  \end{itemize}
+  \medskip
+  \begin{columns}[T]
+    \begin{column}{0.47\textwidth}
+      \begin{block}{Ein Log-Eintrag}
+        \footnotesize
+        \textbf{Gelesen}: der Stand\\
+        \textbf{Versucht}: der Ansatz\\
+        \textbf{Ergebnis}: BEWIESEN / VERMUTUNG / SACKGASSE\\
+        \textbf{Nächster Schritt}: ein konkreter Vorschlag
+      \end{block}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      \begin{itemize}
+      \item \emph{Ehrlichkeit vor Fortschritt.}
+      \item Sackgassen sind Ergebnisse.
+      \item Erfinde keine Literatur.
+      \item Versuche keine Sackgasse erneut ohne neuen Grund.
+      \item Keine Rückfragen: Entscheide selbst und dokumentiere es.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Der Runner: \datei{scripts/run\_iteration.sh}}
+  \footnotesize
+  \begin{tikzpicture}[node distance=0.35cm]
+    \node[box, text width=3.4cm] (c) {\texttt{cron}: alle 4 Stunden\\ Büro-Rechner, nicht per SSH erreichbar};
+    \node[box, text width=3.4cm, below=of c] (r) {\datei{run\_iteration.sh}};
+    \node[box, draw=lauf, text=lauf, text width=3.4cm, below=of r] (l) {\texttt{claude -p}\\ \datei{iteration\_prompt.md}};
+    \draw[pfeil] (c) -- (r);
+    \draw[pfeil] (r) -- (l);
+  \end{tikzpicture}
+  \hfill
+  \begin{minipage}[c]{0.6\textwidth}
+    \begin{enumerate}
+    \setlength\itemsep{2pt}
+    \item \textbf{Sperre} (\texttt{flock}): Läufe überlappen nie.
+    \item \textbf{\texttt{PATH} setzen}: \texttt{cron} kennt \texttt{claude} sonst nicht.
+    \item \datei{STATUS.md} schreiben, Commit und Push: das Lebenszeichen.
+    \item \texttt{claude -p} mit \textbf{harter Zeitschranke} (90, später 180 Minuten)
+      und \textbf{enger Werkzeugliste}: \texttt{python3}, \texttt{git},
+      \texttt{pdftotext}, \texttt{ls}, \dots
+    \item Commit und Push \textbf{auch im Fehlerfall}.
+    \item Die Logs der letzten 60 Läufe aufheben.
+    \end{enumerate}
+    \medskip
+    Nicht Freigegebenes wird verweigert, nicht erfragt. Ein Lauf wartet also nie auf mich.
+    Den Suspend des Rechners habe ich systemweit abgeschaltet.
+  \end{minipage}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Fehlschritt 1: der Lauf hätte nie angefangen}
+  Der Probelauf am 3.\,8. vormittags fand \textbf{vier Fehler}, jeder davon hätte den
+  unbeaufsichtigten Lauf sofort gekippt:
+  \begin{itemize}
+  \item Das Repo lag nicht unter dem Pfad, den das Skript kannte:
+    \texttt{cd} schlägt fehl, Abbruch, kein Log.
+  \item Ein \texttt{--add-dir} auf ein fehlendes Verzeichnis: \texttt{claude} bricht
+    sofort ab.
+  \item Die GPU-Simulation lag woanders als angegeben.
+  \item Eine unnötige \texttt{venv}-Anweisung.
+  \end{itemize}
+  \medskip
+  \textbf{Inhaltlich wichtiger:} In \datei{Papers/ratchet/} lag weit mehr, als
+  \datei{PROBLEM.md} wusste, darunter \datei{ldp.tex} mit der schon hergeleiteten
+  Hamiltonfunktion. Ohne Eintrag hätte der Lauf das nachgebaut. Seitdem steht jede Datei
+  mit der geprüften Zuordnung \enquote{Datei $\mapsto$ Arbeit} in der Problemstellung.
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Fehlschritt 2: eine Numerik-Maschine}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{So war es angelegt}
+      \begin{itemize}
+      \item \datei{PROBLEM.md}: die Simulation als \enquote{Verifier (verbindlich)}
+      \item Prompt: \enquote{Prüfe numerisch}
+      \item drei Ergebnistypen gleichrangig
+      \end{itemize}
+      \textbf{Iteration 1} lieferte vier gute Messergebnisse, keinen Beweisversuch, und
+      schlug wieder etwas Numerisches vor.
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \textbf{Anmerkung des Betreuers}, 3.\,8., von Hand ins Log, \emph{keine}
+      Iteration:
+      \begin{itemize}
+      \item \textbf{Ziel ist ein Satz, keine Tabelle.}
+      \item Die Simulation ist \textbf{Sanity-Check}: Sie kann widerlegen, nie
+        bestätigen. Numerisch Gestütztes bleibt VERMUTUNG.
+      \item $V_\ast$ ist ein Infimum, Schranken brauchen \textbf{kein} LDP:
+      \end{itemize}
+      \footnotesize
+      \textbf{B1}: jeder Pfad $\varphi$ gibt $V_\ast\le I(\varphi)$.\\
+      \textbf{B2}: jede Subsolution $F$ gibt $V_\ast\ge\inf\{F: x_0=0\}$.
+    \end{column}
+  \end{columns}
+  \bigskip
+  Iteration 2 bewies darauf einen Negativsatz: Die $(x_0,m_1)$-Schließung liefert keine
+  untere Schranke.
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Iterationen 1--39: Schranken für $V_\ast$ (3.--9.\,8.)}
+  \begin{itemize}
+  \setlength\itemsep{3pt}
+  \item Bis zu sechs Läufe am Tag, jeder mit einem Satz, einem Negativsatz oder einer
+    begründeten Sackgasse.
+  \item Beispiele: Iteration~5, \enquote{keine Momentenschließung endlicher Ordnung
+    liefert eine untere Schranke}; Iteration~6, der Entropie-Ansatz widerlegt;
+    Iteration~9, \textbf{die erste bewiesene positive untere Schranke} für $\theta>1$.
+  \item Stand nach 39 Iterationen: $V_\ast$ für $\theta\lesssim2$ auf $\pm20\,\%$
+    eingeschachtelt. Daraus wurde \datei{paper/quasipotential.tex}.
+  \end{itemize}
+  \begin{block}{Fehlschritt 3: das nie geöffnete Buch}
+    \footnotesize
+    Iteration~39 verbesserte an keinem $\theta$ eine Zahl mehr. Eine Suche im Log ergab
+    \textbf{null} Treffer für \enquote{Dawson}, \enquote{Kurtz},
+    \enquote{Vergleichsprinzip}, \enquote{Straffheit}. Dawson \& Feng lag von Anfang an
+    lokal vor. Das war folgerichtig: Die Problemstellung hatte das LDP planmäßig umgangen.
+    Die Läufe arbeiten ab, was dasteht, und fragen nicht, ob es noch das Richtige ist.
+  \end{block}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Der Kurswechsel: zugeschnittene Reihen (ab 12.\,8.)}
+  \footnotesize
+  \begin{tabular}{@{}llllp{0.37\textwidth}@{}}
+    \toprule
+    Reihe & Iterationen & Tage & Ziel & Ergebnis \\
+    \midrule
+    B1--B3 & 1--39 & 3.--9.\,8. & Schranken für $V_\ast$ & eingeschachtelt, $\pm20\,\%$ \\
+    B4 & 40--46 & 12.--14.\,8. & das LDP selbst & Pfad-LDP bei festem Horizont (Satz 46.4) \\
+    B5 & 47--52 & 14.--15.\,8. & der echte Klick, $\varepsilon\to0$ & $P(\text{Klick vor }T)=e^{-n(v_T+o(1))}$ \\
+    B6 & 53--54 & 17.\,8. & der Zeithorizont & $\lim_T v_T=V_\ast$ (Satz 53.4) \\
+    B7 & 55--74 & 18.--23.\,8. & die Zeitskala & erste Klickzeit auf der Skala $e^{nV_\ast}$; Klickraten-Band \\
+    B8 & 61 & 18.\,8. & moderate Abweichungen & negativ nach einem Lauf, beendet \\
+    \bottomrule
+  \end{tabular}
+
+  \bigskip
+  \begin{itemize}
+  \item Jede Reihe hat einen Abschnitt in \datei{PROBLEM.md} mit festem Zuschnitt, bei B4
+    \textbf{eine Methode pro Lauf}. Jede Iteration liefert einen eigenständigen Satz,
+    \enquote{nicht viermal ein Viertel}.
+  \item \texttt{RATCHET\_STOP\_AFTER}: Die Reihe endet von selbst, kein Lauf läuft ohne
+    zugeschnittenen Auftrag weiter.
+  \item Nach jeder Iteration ein Nachtrag \enquote{Auftrag ab It.~$N$}. So wird das
+    benannte Ziel des nächsten Laufs gesetzt.
+  \end{itemize}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Drei Beteiligte, und wo gesteuert wird}
+  \centering
+  \begin{tikzpicture}[node distance=1.2cm and 1.6cm]
+    \node[box, draw=nutzer, text=nutzer, minimum width=3.2cm] (N) {\textbf{Nutzer}\\ich};
+    \node[box, draw=sitzung, text=sitzung, minimum width=3.2cm, right=of N] (S)
+      {\textbf{interaktive Sitzung}\\Claude Code, mit mir};
+    \node[box, draw=lauf, text=lauf, minimum width=3.2cm, right=of S] (L)
+      {\textbf{Lauf}\\\texttt{claude -p}, allein};
+
+    \node[box, below=1.6cm of N, minimum width=3.2cm] (Z) {\datei{ZUSAMMENFASSUNG.md}\\das, was ich lese};
+    \node[box, below=1.6cm of S, minimum width=3.2cm] (P) {\datei{PROBLEM.md}\\Reihen, Nachträge};
+    \node[box, below=1.6cm of L, minimum width=3.2cm] (R) {\datei{RESEARCH\_LOG.md}\\\datei{proofs/}, \datei{paper/}};
+
+    \draw[pfeil, nutzer] (N) -- (S);
+    \draw[pfeil, sitzung] (S) -- node[right, font=\scriptsize]{schreibt} (P);
+    \draw[pfeil, lauf] (P.east) -- node[above, font=\scriptsize]{liest} (L.south west);
+    \draw[pfeil, lauf] (L) -- node[right, font=\scriptsize]{schreibt} (R);
+    \draw[pfeil, lauf] (L.south west) to[bend left=8] node[pos=0.8, above, font=\scriptsize]{schreibt fort} (Z.north east);
+    \draw[pfeil, nutzer] (Z) -- node[left, font=\scriptsize]{liest} (N);
+  \end{tikzpicture}
+
+  \medskip
+  \small
+  \begin{itemize}
+  \item \textbf{Betreuer-Anmerkungen} im Log, ausdrücklich \enquote{keine Iteration}:
+    Sie überschreiben den vorgeschlagenen nächsten Schritt.
+  \item \datei{ZUSAMMENFASSUNG.md} schreibt seit dem 12.\,8. jede Iteration fort, etwa
+    zehn Seiten: das einzige, was ein Mensch liest. \datei{FORTSCHRITT.pdf} hatte am Ende
+    840 Seiten.
+  \end{itemize}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Fehlschritte im Betrieb}
+  \scriptsize
+  \begin{tabular}{@{}lp{0.44\textwidth}p{0.36\textwidth}@{}}
+    \toprule
+    Datum & Panne & danach \\
+    \midrule
+    12.\,8. & Die Stoppgrenze zählte auch gescheiterte Läufe: Ein Lauf, der am Limit
+              stirbt, verbraucht einen Platz der Reihe & gezählt wird nur \texttt{rc=0} \\
+    12.\,8. & Seitenbilder aus einem 414-Seiten-Buch fressen das Kontingent &
+              \texttt{pdftotext} als Standard \\
+    15.--20.\,8. & Von 27 Slots starben 21 am Limit, 19 an \enquote{Fable~5 limit}, ohne
+              eine Sekunde zu rechnen. \texttt{--fallback-model} hilft dagegen nicht &
+              Runner auf Opus~5 \\
+    20.\,8. & \enquote{session limit} nicht erkannt und als Fehler im Repo gemeldet &
+              Muster ergänzt \\
+    20.\,8. & Ein Abbruch nach der Zeitschranke ließ keine Spur: \enquote{Es geht nichts
+              verloren} war falsch & erster Commit binnen 20 Minuten, dann einer pro
+              Teilschritt \\
+    21.\,8. & Ein einmaliger Crontab-Eintrag für den 21.\,8. hätte 2027 wieder gefeuert &
+              von Hand entfernt \\
+    23.\,8. & Iteration~73 schrieb den Nachtrag für den nächsten Auftrag nicht & von Hand
+              ergänzt \\
+    \bottomrule
+  \end{tabular}
+
+  \medskip
+  87 Läufe, davon 63 regulär und 24 mit Fehler, fast alle am Kontingent.
+  Dazu kamen 74 inhaltliche Iterationen, einige per Hand gestartet.
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Fehlschritte in der Mathematik}
+  \small
+  \textbf{Widerlegt und dokumentiert: das ist der Normalfall}
+  \begin{itemize}
+  \item Der Entropie-Ansatz für B2 (It.~6): Er bricht an der Schwelle $\theta_c=2.4088$.
+  \item (R59-a) widerlegt und repariert (20.\,8.): das Produkt $x_0m_1$ statt des Paars
+    $(x_0,m_1)$.
+  \item Die Klausel (K1) widerlegt (It.~72), darauf zwei neue Wege.
+  \item B8 (moderate Abweichungen): nach einem Lauf negativ. $c_{MD}\sim1/(2\log\theta)\to0$
+    statt eines Werts in $(0,1)$. Die Reihe war auf sechs Läufe geplant.
+  \end{itemize}
+  \textbf{Gefunden erst beim Gegenlesen von Hand} (22.\,8., fünf Befunde, keine Aussage fällt)
+  \begin{itemize}
+  \item Die Einleitung behauptete einen vollen Limes. Bewiesen ist er nur unter der
+    Hypothese (RET).
+  \item Eine Vergleichsfunktion löste die falsche Riccati-Gleichung: Die Differenz ist
+    genau $\theta/2$.
+  \item Eine Konstante zitiert mit $\delta/4$ statt $\delta/8$. Eine Schranke war
+    \emph{kleiner} als die bewiesene.
+  \end{itemize}
+  Die Läufe prüfen ihre eigenen Beweise, aber schlecht die \textbf{Zitatketten}
+  zwischen Iterationen.
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Was herauskam (Stand 25.\,8.)}
+  \small
+  \begin{tabular}{@{}lrp{0.6\textwidth}@{}}
+    \toprule
+    Manuskript & Seiten & Inhalt \\
+    \midrule
+    \datei{ldp.tex} & 75 & Pfad-LDP bei festem Horizont; der echte Klick; $v_T\downarrow V_\ast$;
+                         erste Klickzeit auf der Skala $e^{nV_\ast}$ \\
+    \datei{clickrate.tex} & 16 & $\liminf_n\frac1n\log\liminf_t K^\ast(t)/t\ge-V_\ast$, unbedingt
+                         und f.s.; die obere Hälfte unter (RET) \\
+    \datei{quasipotential.tex} & 22 & B1--B3: Schranken für $V_\ast$ ohne LDP \\
+    \datei{rate.tex} & 6 & die eindimensionale Reduktion (It.~52) \\
+    \bottomrule
+  \end{tabular}
+
+  \bigskip
+  \begin{itemize}
+  \item Geplant war eine Woche, gelaufen sind drei (3.--23.\,8.).
+  \item Offen: (RET), die Existenz von $\mathfrak r$, der Pfad-LDP in $D_\infty$ über
+    Dawson--Gärtner.
+  \item \datei{paper/LEAN\_TODO.md} (18.\,8.): \datei{ldp.tex} ist heute nicht
+    formalisierbar, \datei{quasipotential.tex} in Teilen schon.
+  \end{itemize}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Was ich daraus gelernt habe}
+  \begin{itemize}
+  \setlength\itemsep{6pt}
+  \item \textbf{Die Problemstellung ist der Hebel.} Beide großen Fehlschritte, die
+    Numerik-Maschine und das nie geöffnete Buch, standen so in \datei{PROBLEM.md}. Die
+    Läufe haben genau das getan, was dort stand.
+  \item \textbf{Die Richtung bleibt beim Nutzer.} Ein Lauf merkt nicht, dass ein Weg
+    ausgereizt ist. Er macht ihn nur feiner.
+  \item \textbf{Zuschnitt schlägt Freiheit.} Seit den Reihen gibt es pro Lauf ein benanntes
+    Ziel und eine Stoppgrenze, und aus dem LDP wurde in zwei Wochen ein Manuskript.
+  \item \textbf{Ein Verifier, der nur widerlegen kann, reicht nicht.} Die Beweise standen
+    in Prosa. Was sie trägt, zeigte erst das Gegenlesen.
+  \item \textbf{Der Betrieb kostet mehr als gedacht.} Pfade, Kontingente, Stoppzähler und
+    Crontab-Reste: Jede dieser Pannen ist einmal passiert und steht seitdem als Kommentar im
+    Skript.
+  \end{itemize}
+\end{frame}
+
+\end{document}
