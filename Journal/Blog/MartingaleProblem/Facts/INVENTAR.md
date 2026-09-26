@@ -63985,3 +63985,7 @@ Befunde am Manuskript aus diesem Lauf, mit Zeilen:
 * Z. 5140–5146: „`a_T γ(α, β) = a_T α`“ gilt für die Konkatenation auf `D` nur bei
   `β_0 = α_{T(α)}`, also nur `P_{α_r, r}`-fast sicher.
 * Z. 5037–5040: (E1) wird in `cor:pastingmarkov` gebraucht, in `def:restartkernel` nicht.
+
+### 2026-09-26, Lauf 02:03 UTC — Prüflauf: Aufgabe vollständig erledigt vorgefunden
+
+Einschub und alle sieben Schritte von Meilenstein 6 sind erledigt vorgefunden (Berichte der Läufe 22:03–01:03). `check_master.py` ist sauber: 0 Fehler, 0 `sorry` und 0 Veraltungen in allen vier Dateien, Warnungen 18 / 38 / 38 / 76 wie zuvor. Ein Folgeziel wird nicht vorgeschlagen, denn den nächsten Auftrag stellt der Nutzer.
