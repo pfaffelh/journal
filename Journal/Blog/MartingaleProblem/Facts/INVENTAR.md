@@ -64758,3 +64758,218 @@ zu den README-Formulierungen stehen in den drei Teilen dieses Laufs (fehlende Ad
 `insert_of_tendsto` und `submartingale_mpProcess_of_tendsto`; gemeinsame Meßbarkeit bei `map`; die
 falsche Begründung „genau einer adaptiert“ beim Atombeispiel; „jedes dichte `D`“ bei
 `isDetermining_products`).
+
+### 2026-09-26, Lauf 11:03 UTC — B2 weiter offen (eingegrenzt); Aufgabe C, Schritt C5, erster Teil: **`isStrongMarkov_of_countable_range`**, und ein Zeuge, daß die erste Aussage von `thm:absstrongmarkov` im inhomogenen Fall falsch ist
+
+`check_master.py` zu Beginn (Mathlib `94ef6b89544`): 0 Fehler, 0 `sorry`, 0 Veraltungen;
+Warnungen 18 / 38 / 38 / 76.
+
+**B2: nicht gelöst, aber eingegrenzt, wo ein Zeuge sitzen muß.** Nachgerechnet (auf Papier,
+nicht in Lean): Sei `Q = αP + (1-α)P'`, `τ_n` lokalisiere unter `P`, `τ'_n` unter `P'`.
+
+* `{lim τ'_n ≤ T} = ⋂_n {τ'_n ≤ T}` liegt in `𝓕_T`. Sind `P` und `P'` auf jedem `𝓕_T`
+  äquivalent (lokal äquivalent), so geht `τ'_n → ∞` auch `P`-f.s., und `τ_n ∧ τ'_n` lokalisiert
+  unter `Q` (Stoppen nach A2 in der rohen Filtration). **Kein Zeuge also bei lokaler Äquivalenz.**
+* Sind `P`, `P'` auf `𝓕_{t₀}` gleich und erst auf `𝓕_{t₀+}` singulär, mit trennender Menge
+  `S ∈ 𝓕_{t₀+}`, so ist `ρ_n = τ_n ∧ τ'_n` auf `{τ_n ∧ τ'_n ≤ t₀}` und sonst `τ_n` auf `S`,
+  `τ'_n` auf `Sᶜ` eine **rohe** Stoppzeit (für `t > t₀` ist `S ∈ 𝓕_t`), und sie lokalisiert unter
+  `Q`. **Kein Zeuge also bei einem einzigen Trennzeitpunkt**, auch nicht, wenn er in der Lücke
+  `𝓕_{t₀+} ∖ 𝓕_{t₀}` liegt.
+* Ein Zeuge braucht deshalb, daß die Singularität von `P` und `P'` sich über **unendlich viele**
+  Zeitpunkte verteilt, ohne einen ersten zu haben, an dem sie in einer rohen σ-Algebra sichtbar
+  ist. Weder ein solcher Zeuge noch ein Beweis steht. Der Beweis über den Dichteprozeß
+  `Z_t = dP/dQ|𝓕_t` (beschränkt durch `1/α`) braucht eine càdlàg-Version von `Z` und damit die
+  erlaubte Nebenfassung unter `[𝓕.IsRightContinuous]`; sie ist nicht gebaut.
+
+**C5, neu** (`MartingaleProblems/Suggested.lean`, unmittelbar hinter `end MarkovFromOnedim`):
+
+| README (Meilenstein 5) | Lean-Name | Zeile |
+| --- | --- | ---: |
+| `isStrongMarkov`, Stoppzeit mit abzählbar vielen Werten | `isStrongMarkov_of_countable_range` | 17807 |
+| Zeuge: Problem zur Zeit `r`, Verschiebung `d r t = (r+t-1)⁺ - (r-1)⁺` | `StrongMarkovWitness.d`, `.testProc`, `.fam`, `.shift`, `.filt` | 17867 ff. |
+| … trägt ein Schiftsystem (mit `κ = 0`) | `StrongMarkovWitness.isShiftSystem` | 17895 |
+| … eindimensionale Gesetze jedes geschifteten Problems eindeutig | `StrongMarkovWitness.honedim` (über `measureReal_eval_eq`) | 17949 |
+| … der deterministische Pfad löst es, `τ ∈ {0,1}` ist Stoppzeit | `isMPSolution_X`, `integrable_X`, `isStoppingTime_τ`, `countable_range_τ` | 18001 ff. |
+| **die erste Aussage von `thm:absstrongmarkov` ist falsch** | `StrongMarkovWitness.not_condExp_eq_state` | 18027 |
+
+`isStrongMarkov_of_countable_range`: unter den Voraussetzungen von `isMarkov_of_unique_onedim` an
+der **einen** Verschiebung `r`, für eine Stoppzeit `τ : Ω → WithTop ι` mit abzählbarem
+Wertebereich und jedes integrierbare `V`, das auf `{τ = r}` gleich `f (X (r + t))` ist:
+`P[V | 𝓖_τ] =ᵐ[P.restrict {τ = r}] P[f (X (r + t)) | σ(X r)]`.
+
+Der Beweis ist drei Schritte Mathlib: `condExp_stopping_time_ae_eq_restrict_eq_of_countable_range`
+(`Probability/Process/Stopping.lean:1410` auf master) setzt auf `{τ = r}` die Vergangenheit bei `τ`
+gleich der bei `r`, `condExp_indicator` tauscht `V` gegen `f (X (r + t))`, und
+`isMarkov_of_unique_onedim` tut den Rest. **Weder optional sampling noch Pfadregularität werden
+gebraucht**; Schritt 3 des Manuskriptbeweises hängt also nicht an den Schritten 1 und 2. Index:
+`[LinearOrder ι]` (von Mathlibs Lemma verlangt), sonst dieselben Klassen wie
+`isMarkov_of_unique_onedim`. `#print axioms` für die vier tragenden Sätze
+(`isStrongMarkov_of_countable_range`, `not_condExp_eq_state`, `honedim`, `isShiftSystem`):
+`propext`, `Classical.choice`, `Quot.sound`.
+
+**Befund zum Manuskript (nicht angefaßt), Z. 4406–4410:** Die erste Aussage von
+`thm:absstrongmarkov`, `E[f(X(τ+t)) | 𝓖_τ] = E[f(X(τ+t)) | X(τ)]`, ist im **zeitinhomogenen**
+Fall falsch, und genau den läßt der Satz zu („In the situation of Theorem `thm:absuniq`“ mit den
+geschifteten Familien `𝓧°_r`; `rem:absuniqgain`(ii), Z. 4518–4522, hebt das ausdrücklich hervor).
+Zeuge in Lean: ℕ als Zeit, ℤ als Zustand, der Pfad `n ↦ (n-1)⁺` deterministisch, eine faire Münze
+in `𝓖_0`, `τ = 1` bei Kopf und `0` bei Zahl. Alle Voraussetzungen gelten (Schiftsystem,
+Eindeutigkeit der eindimensionalen Gesetze für **jedes** `r`, Lösung, Stoppzeit mit endlichem
+Wertebereich, Integrierbarkeit trivial, weil die Testprozesse längs des Pfades `0` sind). Aber
+`X τ = 0` auf beiden Seiten, `X(τ+1) = τ`, und `E[1{X(τ+1) ≠ 0} | 𝓖_τ] = τ` ist keine Funktion von
+`X τ`. Richtig ist die Bedingung auf das **Paar** `(τ, X τ)`, und das ist die Form des Lean-Satzes
+(„auf `{τ = r}` gegeben `X r`“). Im homogenen Fall `𝓧°_r = 𝓧°` fallen beide Formen zusammen. Die
+zweite Aussage des Manuskripts (`T_{τ,τ+t} f (X τ)`) trägt `τ` im Index und ist nicht betroffen.
+
+**C5, zweiter Teil: die Kernfassung** (die zweite Aussage von `thm:absstrongmarkov`), hinter
+`end GlobalMixture`, weil sie `mpSolutions_comp` (C4) braucht:
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| (Hilfssatz) `∫ 1_A p⁻¹ • h = p⁻¹ ∫_A h` | `integral_indicator_const_smul` | 48531 |
+| Kern zur festen Zeit, für jedes `A ∈ 𝓖 r` | `setIntegral_indicator_eq_kernel` | 48549 |
+| … als bedingte Erwartung: `P[1_C(X(r+t)) | 𝓖 r] = (K (X r)).real (π t ⁻¹' C)` | `condExp_indicator_eq_kernel` | 48651 |
+| **auf `{τ = r}`, `τ` mit abzählbar vielen Werten** | `isStrongMarkov_kernel_of_countable_range` | 48697 |
+
+Voraussetzungen an den Kern: `K : Kernel E F` markovsch, `K x` löst das Problem zur Zeit `r`,
+`(K x).map (π ⊥) = δ x`, und die Integrierbarkeit von `lem:mixture` für jedes
+Wahrscheinlichkeitsmaß `ν` auf `E`. Der Beweis folgt Schritt 3 des Manuskripts, aber **ohne den
+Umweg über `σ(X r)`**: für `A ∈ 𝓖 r` mit `P A > 0` geben `restart` mit dem Gewicht `1_A / P A`
+und `mpSolutions_comp` mit dessen Anfangsgesetz zwei Lösungen des Problems zur Zeit `r` mit
+demselben Anfangsgesetz, und `honedim` setzt ihre Gesetze bei `t` gleich. Der Kern trägt `r` (es
+ist `P_{·,r}`), was die Form ist, die der Zeuge oben verlangt. Wie im Manuskript ist die Aussage
+für Indikatoren `f = 1_C` formuliert, also als bedingtes Gesetz; die Fassung für beschränktes
+meßbares `f` folgt daraus durch einfache Funktionen und ist nicht gebaut. `#print axioms` für die
+drei Sätze: `propext`, `Classical.choice`, `Quot.sound`.
+
+**Nicht gebaut aus C5:** (i) die Fassung für eine beliebige f.s. endliche Stoppzeit (Schritte 1–2
+des Manuskripts: optional sampling nach `τ` über `lem:optsamplafter`, restart an einer zufälligen
+Zeit mit meßbarem Schiftsystem); (ii) Chapman–Kolmogorov für `T_{r,s}`; (iii) die klassische
+Instanz und die Akzeptanzbeispiele (Zwei-Zustands-Kette, Brownsche Bewegung).
+
+`check_master.py` nach beiden Einfügungen: **0 Fehler, 0 `sorry`, 0 Veraltungen**, Warnungen
+18 / 38 / 38 / 76, unverändert.
+
+### Derselbe Lauf, zweiter Teil — Aufgabe C, Schritt C1, Rest: **`volume + δ 1`** und **`∑ n, δ n` nicht verschiebungsinvariant**
+
+Die beiden im Lauf 08:03 offen gelassenen Akzeptanzbeispiele von Meilenstein 1, hinter
+`end LebesgueShift` (sie brauchen `lebesgueClock_apply`):
+
+| README (Meilenstein 1) | Lean-Name | Zeile |
+| --- | --- | ---: |
+| die Uhr `volume + δ 1` | `lebesgueAtomClock` | 18346 |
+| **die Konventionen unterscheiden sich wirklich**: Masse `2` für `(0,1]`, `1` für `[0,1)` | `lebesgueAtomClock_interval` | 18358 |
+| die Uhr `∑ n, δ n` auf `[0, ∞)` | `integerAtomClock` | 18386 |
+| **nicht verschiebungsinvariant** | `not_isShiftInvariant_integerAtomClock` | 18411 |
+
+* Die Instanzfrage, an der der erste Versuch scheiterte, ist umgangen, indem die Uhr unter der
+  Standardinstanz von `ℝ≥0` **direkt** gebildet wird (wie `lebesgueClock` selbst), nicht als
+  Summe mit `lebesgueClock.q`; der Lebesgueanteil wird dann per `rfl` als `lebesgueClock.q`
+  gelesen, und `lebesgueClock_apply_Ioc`, `lebesgueClock_apply` rechnen.
+* `integerAtomClock` ist unmittelbar als `Clock` gebildet (die Endlichkeit von `Iic t` als
+  endliche Summe über `n ≤ ⌊t⌋₊`), nicht über `Clock.ofFiniteOnCompacts`; die dort fehlende
+  Instanz `IsFiniteMeasureOnCompacts` der Summe wird so nicht gebraucht.
+* Der Zeuge der fehlenden Verschiebungsinvarianz: `r = 1/2`, Fenster `(0, 1]`. Das verschobene
+  Maß hat bei `1` die Masse `0` (das Urbild ist `{1/2}`, kein Atom), das Fenster `(1/2, 3/2]`
+  trägt das Atom bei `1`. Also ist `map_interval` von `Clock.IsShiftInvariant` verletzt.
+
+`#print axioms` für beide Sätze: `propext`, `Classical.choice`, `Quot.sound`. `check_master.py`
+danach: 0 Fehler, 0 `sorry`, 0 Veraltungen, Warnungen 18 / 38 / 38 / 76. **C1 ist damit
+vollständig.**
+
+### Derselbe Lauf, dritter Teil — Aufgabe C, Schritt C3: **das fdd-Kriterium unter `Clock.IsProgressiveComp`**
+
+Der im Lauf 10:03 offen gelassene Punkt „`isMPSolutionFor_iff_forall_fdd` auf `IsProgressiveComp`
+umgestellt“:
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| die reelle Fassung gibt die `𝕂`-wertige (Real- und Imaginärteil) | `Clock.IsProgressiveComp.exists_measurable_comp` | 1854 |
+| Zuwachsidentität, Adaptiertheit, Integrierbarkeit unter der reellen Fassung | `mpFamily_sub_of_isProgressiveComp`, `stronglyAdapted_mpFamily_of_isProgressiveComp`, `integrable_mpFamily_of_bounded_of_isProgressiveComp` | 1872, 1897, 1926 |
+| **`prop:fddchar` unter `Clock.IsProgressiveComp`** | `isMPSolution_iff_forall_fdd_of_isProgressiveComp` | 1947 |
+| die alte Fassung, jetzt Korollar (Aussage unverändert) | `isMPSolution_iff_forall_fdd` | 2063 |
+
+Der Beweis ist der alte; `Clock.IsProgressive` ging nur über den Kompensator ein, und dort nur als
+`g ∘ Z` für meßbares `g : E → 𝕂`. Die reelle Fassung liefert das über `re ∘ g` und `im ∘ g`
+(wie Mathlibs `measurable_of_re_im`, `MeasureTheory/Function/SpecialFunctions/RCLike.lean:64`;
+das Lemma selbst ist über die Importe der Kette nicht erreichbar, der Schluß ist deshalb in drei
+Zeilen nachgebaut). `isMPSolution_iff_forall_fdd` ist jetzt ein Einzeiler über
+`Clock.IsProgressive.isProgressiveComp`; seine Aussage und alle Aufrufer sind unverändert.
+`#print axioms`: `propext`, `Classical.choice`, `Quot.sound`.
+
+**Nicht gebaut aus C3:** die Konstruktion der reellen Fassung über einem bloßen
+`[MeasurableSpace E]` durch Approximation von rechts, und die beiden Akzeptanzbeispiele („die
+Filtration ist Voraussetzung, nicht Konvention“; „meßbar zu jeder Zeit und progressiv zu keiner“).
+
+**Akzeptanzbeispiel „die Filtration ist Voraussetzung, nicht Konvention“, negative Hälfte, neu:**
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| die Filtration, die die Münze von Anfang an kennt | `AtomWitness.fullFiltration` | 6615 |
+| **dieselbe Münze löst ihr Problem für diese Filtration nicht** | `AtomWitness.not_isMPSolution_coinProcess_fullFiltration` | 6624 |
+
+Prozeß, Uhr, Operator und Gesetz sind die von `isMPSolution_coinProcess` (Lösung für die
+natürliche Filtration `coinFiltration u`); nur die Filtration ist vergrößert. Der Testprozeß ist
+`0` vor `u` und `±1/2` ab `u`, und ein Martingal für eine Filtration, die alles weiß, ist zeitlich
+konstant.
+
+**Positive Hälfte, neu** (hinter `end Regularizing`):
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| die Filtration `t ↦ 𝓕 t ⊔ 𝓗` | `MeasureTheory.Filtration.supConst` | 8047 |
+| **eine unabhängige Vergrößerung ändert nichts** | `MeasureTheory.Martingale.supConst` | 8062 |
+
+Ein Martingal für `𝓕` bleibt eines für `t ↦ 𝓕 t ⊔ 𝓗`, wenn `𝓗` von `⨆ t, 𝓕 t` unabhängig ist;
+Werte in einem beliebigen vollständigen normierten `ℝ`-Raum, Index eine Präordnung. Mathlib hat
+nur `condExp_indep_eq` (`Probability/ConditionalExpectation.lean:42`, bedingen auf die unabhängige
+σ-Algebra allein); die Fassung mit Supremum ist hier geführt: auf dem π-System
+`{A ∩ B | A ∈ 𝓕 s, B ∈ 𝓗}` ist `∫_{A∩B} Y = P B • ∫_A Y` (`condExp_indep_eq` für `1_A Y`), und
+`MeasurableSpace.induction_on_inter` setzt fort. Angewandt auf die Testprozesse heißt das: eine
+Lösung für `𝓕` ist eine für `𝓕 ⊔ 𝓗`. Zusammen mit dem negativen Zeugen ist das Akzeptanzbeispiel
+vollständig. `#print axioms` für beide Sätze: `propext`, `Classical.choice`, `Quot.sound`.
+Beobachtung beim Bau: eine lokale Variable `𝓗 : MeasurableSpace Ω` wird von der Instanzsuche als
+Instanz genommen und verdrängt die umgebende σ-Algebra; jede Meßbarkeitsaussage im Beweis trägt
+deshalb `MeasurableSet[m]` ausdrücklich (derselbe Befund wie beim Doc-Kommentar von
+`stateSigma`).
+
+`check_master.py` am Ende des Laufs: **0 Fehler, 0 `sorry`, 0 Veraltungen**, Warnungen
+18 / 38 / 38 / 76. Alle Zeilenangaben dieses Laufs sind die des Endstands (nach der letzten
+Einfügung bei Z. 8047 nachgezogen).
+
+### Derselbe Lauf, Abschluß
+
+`check_master.py` am Ende (Mathlib `94ef6b89544`): **0 Fehler, 0 `sorry`, 0 Veraltungen** in allen
+vier Dateien, Warnungen 18 / 38 / 38 / 76 wie zu Beginn.
+
+**Stand der drei Aufgaben nach diesem Lauf.**
+
+* **A:** unverändert, A1–A4 vollständig, A5 bis auf zwei Akzeptanzrechnungen.
+* **B:** B1, B3 (Eindeutigkeitshälfte), B4 stehen. **B2 offen**; diesmal eingegrenzt: kein Zeuge
+  bei lokaler Äquivalenz von `P`, `P'`, und keiner bei einem einzigen Trennzeitpunkt, auch in der
+  Lücke `𝓕_{t₀+} ∖ 𝓕_{t₀}`. Der erlaubte Weg der Nebenfassung ist `Y` ist `P`-lokales Martingal ⇔
+  `Y Z` ist `Q`-lokales Martingal (Jacod–Shiryaev III.3.8), dann `Y = α Y Z + (1-α) Y Z'`; er ist
+  nicht gebaut.
+* **C:** **C1 vollständig.** C2 bis auf Poisson mit `f = id` und `map` längs Gleichheit der
+  Gesetze. **C3:** fdd-Kriterium jetzt unter `IsProgressiveComp`, Akzeptanzbeispiel „die
+  Filtration ist Voraussetzung“ in beiden Hälften; offen die Konstruktion der reellen Fassung über
+  bloßem `[MeasurableSpace E]` und „meßbar zu jeder Zeit, progressiv zu keiner“. C4 global.
+  **C5 begonnen:** starke Markoveigenschaft an Stoppzeiten mit abzählbar vielen Werten, in der
+  Fassung mit bedingter Erwartung und in der Kernfassung; offen die beliebige f.s. endliche
+  Stoppzeit, Chapman–Kolmogorov, die klassische Instanz und die Akzeptanzbeispiele.
+
+**Befunde für den Nutzer (kein Manuskript, keine README angefaßt; nichts nach außen):**
+
+1. **Manuskript Z. 4406–4410, `thm:absstrongmarkov`:** die erste Aussage (Bedingen auf `X(τ)`
+   allein) ist im zeitinhomogenen Fall, den der Satz zuläßt, **falsch**; Zeuge in Lean
+   (`StrongMarkovWitness.not_condExp_eq_state`). Richtig ist Bedingen auf `(τ, X τ)`. Im homogenen
+   Fall stimmt sie.
+2. Schritt 3 des Beweises von `thm:absstrongmarkov` (abzählbar viele Werte) braucht weder
+   optional sampling noch Pfadregularität; die Voraussetzungen „`F ⊂ D_E`“, „rechtsstetige Pfade“
+   und `eq:optafterint` gehören nur zur ersten Aussage für allgemeines `τ`.
+
+**Benanntes Ziel für den nächsten Lauf, der nächste offene Schritt der Liste: B2**, mit der
+Eingrenzung dieses Laufs: ein Zeuge braucht eine Singularität von `P` und `P'` ohne ersten
+Zeitpunkt, an dem sie in einer rohen σ-Algebra sichtbar ist. Kommt B2 nicht voran, ist der nächste
+Schritt, der nicht daran hängt, **der Rest von C2** (Poisson mit `f = id` über
+`insert_of_tendsto` mit `f_n = min id n` in `JumpProcesses`, das die Integrierbarkeit von `N_t`
+braucht), danach der Rest von C3 und C5.
