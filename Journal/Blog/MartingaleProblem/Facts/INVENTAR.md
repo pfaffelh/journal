@@ -63702,3 +63702,74 @@ anderen Strukturen, keine Dublette.
 **Stand der Aufgabe.** Schritte 1–5 stehen, mit den Einschränkungen: Schritt 2 für endliche
 Familien, Schritt 3(a) unter (L1) oder beschränkten Sprüngen, Schritte 4 und 5 auf dem
 kanonischen Raum. Offen: Schritte 6 und 7.
+
+### Derselbe Lauf, vierter Teil — Schritt 6, erster Teil: **`def:pasting`, `def:restartkernel`, `lem:pasting`, `def:localuniq`, `thm:localuniqueness`**; offen bleibt `cor:pastingmarkov`
+
+*`check_master.py`: 0 / 0 / 0 in allen vier Dateien*, Warnungen 18 / 38 / 38 / 76 (unverändert).
+Axiome der zehn neuen Sätze: nur die drei Standardaxiome. Kein Namenskonflikt auf master oder in
+der Kette. Abschnitte `Pasting` und `StrictTop` am Ende von `MartingaleProblems/Suggested.lean`,
+entwickelt in `scripts/_dev_pasting.lean` und `scripts/_dev_stricttop.lean`. Kein Shift kommt
+vor, wie das Manuskript ankündigt.
+
+**Deklarationen.**
+
+* `IsStrictStoppingTime 𝓕₀ π T a` (`def:pasting`): `IsStoppingTime 𝓕₀ T` für die **rohe**
+  Filtration, Stoppoperator `a` meßbar mit `π t ∘ a = π (t ∧ T)`, `𝓕°_T = a⁻¹ 𝓢` als Gleichung
+  `IsStoppingTime.measurableSpace = MeasurableSpace.comap a mF`, und `T ∘ a = T`.
+  `IsStrictStoppingTime.mem_iff` und `.eq_of_stronglyMeasurable`: Mengen und Funktionen aus
+  `𝓕°_T` trennen keine zwei Pfade mit gleichem gestopptem Pfad, punktweise, ohne
+  Faktorisierungssatz. `.measurable_eval_bot`: `π_0` ist `𝓕°_T`-meßbar, aus `π_0 ∘ a = π_0`.
+* `MeasureTheory.IsStoppingTime.measurableSet_const_lt` (`{s < τ} ∈ 𝓕 s`) und
+  `MeasureTheory.IsStoppingTime.measurableSet_inter_const_lt` (`A ∈ 𝓕 s` ⟹
+  `A ∩ {s < τ} ∈ 𝓕_τ`). Mathlib hat die `≤`-Form für zwei Stoppzeiten
+  (`IsStoppingTime.measurableSet_inter_le`, `Stopping.lean:699`), diese nicht.
+* `IsRestartKernel 𝓧 𝓕₀ T a κ` (`def:restartkernel`): Markovkern, (R1) als
+  `∀ᵐ β ∂κ α, a β = a α`, (R2) als Mengenintegralidentität gegen `𝓕° s` für
+  `T (α) ≤ s ≤ t`, mit Integrierbarkeit.
+* **`comp_apply_eq_of_isRestartKernel`** (`lem:pasting`, erste Hälfte): `κ ∘ₘ P = P` auf
+  `𝓕°_T`, für **jedes** Maß `P`.
+* **`isMPSolution_comp_of_isRestartKernel`** (`lem:pasting`, zweite Hälfte): `P ∈ M(𝓧^T)`, `κ`
+  Restartkern bei `T`, `∫ E^{Q_α}|Y_t| P(dα) < ∞` ⟹ `κ ∘ₘ P ∈ M(𝓧)`. Der Beweis geht je `α`:
+  `E^{Q_α}[(Y_t - Y_s) 1_A] = 1_{A ∩ {s<T}}(α) (Y^T_t - Y^T_s)(α)`, danach Integration unter `P`
+  mit der Martingaleigenschaft von `Y^T` gegen `A ∩ {s < T} ∈ 𝓕°_s`. Die Aufspaltung in (I) und
+  (II) des Manuskripts ist dabei zu einer Fallunterscheidung nach `T (α) ≤ s`, `s < T (α) ≤ t`,
+  `t < T (α)` geworden.
+* `HasLocalUniqueness 𝓧 𝓕₀ π` (`def:localuniq`, JS III.2.37) und
+  **`hasLocalUniqueness_of_restartKernel`** (`thm:localuniqueness`, JS III.2.40 ohne
+  Markovtyp).
+* `isStrictStoppingTime_top`: die Leerheitsprobe. `T ≡ ⊤` mit `a = id` ist strikt, sobald die
+  Filtration die σ-Algebra erzeugt; dann ist `𝓕°_T = 𝓢`, und `HasLocalUniqueness` bei `T ≡ ⊤`
+  ist die Eindeutigkeit.
+
+**Befunde.**
+
+1. **(E1) wird für (R1) nicht gebraucht.** Das Manuskript (Z. 5037–5040) braucht (E1), damit
+   `{(α, β) : a_T α = a_T β}` meßbar ist. In der Fassung `∀ᵐ β ∂Q_α, a β = a α` braucht es keine
+   Meßbarkeit, weil `∀ᵐ` über das äußere Maß erklärt ist. Und `lem:pasting` liest (R1) nur in
+   dieser Form.
+2. **Die `𝓕°_T`-Meßbarkeit des Kerns in `α` (Z. 5021–5022) wird von `lem:pasting` nicht
+   gebraucht.** Gebraucht wird nur, daß `κ` ein Kern auf `(F, 𝓢)` ist, für `κ ∘ₘ P`.
+3. **`thm:localuniqueness` (Z. 5119–5124) führt die Integrabilitätsbedingung von `lem:pasting`
+   nicht.** Der Beweis wendet `lem:pasting` auf jedes `P ∈ M(𝓧^{°,T})` an, und dafür ist
+   `∫ E^{Q_α}|Y°_t| P(dα) < ∞` für eben dieses `P` nötig. In Lean steht sie deshalb in `hkernel`,
+   für jede Lösung des gestoppten Problems. **Manuskript nicht angefaßt**; Vorschlag: „Suppose
+   that at every strict stopping time there is a restart kernel satisfying the integrability of
+   Lemma `lem:pasting` for every `P ∈ M(𝓧^{°,T})`.“
+4. **„`Y°` is adapted, so `Y°_{u∧T}` is a function of the path on `T_{≤T}`“ (Z. 5089–5091)
+   braucht mehr als Adaptiertheit.** Es ist die `𝓕°_T`-Meßbarkeit des gestoppten Wertes, und die
+   gibt Progressivität (`IsStronglyProgressive.stronglyMeasurable_stoppedValue`-Typ) unter
+   (T2b), nicht Adaptiertheit allein. In Lean steht sie als Hypothese `hYT`.
+5. **`T ∘ a_T = T` ist als Feld getragen.** Das Manuskript nennt es eine Folge von
+   `def:pasting`. Das stimmt, sobald `T` selbst `𝓕°_T`-meßbar ist (dann über
+   `.eq_of_stronglyMeasurable`). Mathlib beweist diese Meßbarkeit aber unter Ordnungstopologie,
+   die der Rest des Abschnitts nicht braucht.
+6. **Nebenbefund:** Der Doc-Kommentar vor `measurableSet_mem_oscSet` (Z. 23899 der Datei) nennt
+   `MeasureTheory.IsStoppingTime.measurableSet_inter_lt`. Den Namen gibt es weder in der Kette
+   noch auf master. Nicht korrigiert, weil nicht klar ist, welcher Satz gemeint war.
+
+**Offen in Schritt 6:** `cor:pastingmarkov`. Er braucht die Konkatenation
+`γ(α, β)` mit `θ_T γ = β`, eine meßbare Familie `P_{x,r}` und die „volle“ Schiftfamilie. Das ist
+der zweite Lauf, den die Aufgabe für Schritt 6 vorsieht.
+
+**Stand der Aufgabe.** Schritte 1–5 stehen (mit den genannten Einschränkungen), Schritt 6 bis auf
+`cor:pastingmarkov`. Offen: `cor:pastingmarkov` und Schritt 7.

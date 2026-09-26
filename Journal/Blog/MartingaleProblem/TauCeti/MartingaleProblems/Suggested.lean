@@ -47401,3 +47401,342 @@ theorem isMarkov_of_unique_onedim_local {S : Shift F π} {𝓕₀ : Filtration �
     honedim hg hgb t
 
 end LocalUniqueness
+
+/-! ### Local uniqueness, `ssec:localuniq`
+
+Strict stopping times with their stopping operator, restart kernels, pasting with memory, and
+uniqueness implies local uniqueness.  No shift occurs. -/
+
+section Pasting
+
+variable {ι : Type*} [LinearOrder ι] [OrderBot ι]
+variable {F : Type*} {mF : MeasurableSpace F} {𝕂 : Type*} [RCLike 𝕂]
+variable {E : Type*} [MeasurableSpace E]
+
+/-- **A strict stopping time**, `def:pasting`: a stopping time `T` of the raw filtration together
+with its stopping operator `a`, `π t ∘ a = π (t ∧ T)`, such that `𝓕°_T = a⁻¹ 𝓢`.  The last field
+`T ∘ a = T` is the consequence the manuscript notes; it is carried because deriving it needs the
+`𝓕°_T`-measurability of `T`, which Mathlib states under order topology hypotheses the rest of the
+section does not need. -/
+structure IsStrictStoppingTime (𝓕₀ : Filtration ι mF) (π : ι → F → E) (T : F → WithTop ι)
+    (a : F → F) : Prop where
+  isStoppingTime : IsStoppingTime 𝓕₀ T
+  measurable : Measurable a
+  eval_comp : ∀ (t : ι) (f : F), π t (a f) = π (min (t : WithTop ι) (T f)).untopA f
+  measurableSpace_eq : isStoppingTime.measurableSpace = MeasurableSpace.comap a mF
+  comp_self : ∀ f, T (a f) = T f
+
+variable {𝓕₀ : Filtration ι mF} {π : ι → F → E} {T : F → WithTop ι} {a : F → F}
+
+omit [MeasurableSpace E] in
+/-- A set of `𝓕°_T` does not separate two paths with the same stopped path. -/
+theorem IsStrictStoppingTime.mem_iff (hT : IsStrictStoppingTime 𝓕₀ π T a) {C : Set F}
+    (hC : MeasurableSet[hT.isStoppingTime.measurableSpace] C) {α β : F} (hab : a β = a α) :
+    β ∈ C ↔ α ∈ C := by
+  rw [hT.measurableSpace_eq] at hC
+  obtain ⟨B, -, rfl⟩ := hC
+  simp only [Set.mem_preimage, hab]
+
+omit [MeasurableSpace E] in
+/-- An `𝓕°_T`-measurable function takes the same value at two paths with the same stopped path:
+it is a function of `a_T`, pointwise and without a factorisation theorem. -/
+theorem IsStrictStoppingTime.eq_of_stronglyMeasurable (hT : IsStrictStoppingTime 𝓕₀ π T a)
+    {g : F → 𝕂} (hg : StronglyMeasurable[hT.isStoppingTime.measurableSpace] g) {α β : F}
+    (hab : a β = a α) : g β = g α := by
+  have hm : MeasurableSet[hT.isStoppingTime.measurableSpace] (g ⁻¹' {g α}) :=
+    hg.measurable (measurableSet_singleton _)
+  exact (hT.mem_iff hm hab).2 rfl
+
+omit [OrderBot ι] in
+/-- `{s < τ}` is in the past at `s`. -/
+theorem MeasureTheory.IsStoppingTime.measurableSet_const_lt {τ : F → WithTop ι} (hτ : IsStoppingTime 𝓕₀ τ) (s : ι) :
+    MeasurableSet[𝓕₀ s] {f | (s : WithTop ι) < τ f} := by
+  have : {f | (s : WithTop ι) < τ f} = {f | τ f ≤ s}ᶜ := by ext; simp [not_le]
+  rw [this]
+  exact (hτ s).compl
+
+omit [OrderBot ι] in
+/-- A set of the past at `s`, intersected with `{s < τ}`, lies in `𝓕_τ`.  Mathlib has the
+`≤` form for two stopping times (`IsStoppingTime.measurableSet_inter_le`), not this one. -/
+theorem MeasureTheory.IsStoppingTime.measurableSet_inter_const_lt {τ : F → WithTop ι} (hτ : IsStoppingTime 𝓕₀ τ)
+    {s : ι} {A : Set F} (hA : MeasurableSet[𝓕₀ s] A) :
+    MeasurableSet[hτ.measurableSpace] (A ∩ {f | (s : WithTop ι) < τ f}) := by
+  refine (hτ.measurableSet _).2 ⟨?_, fun j ↦ ?_⟩
+  · exact le_iSup (fun t ↦ (𝓕₀ t : MeasurableSpace F)) s _
+      (hA.inter (IsStoppingTime.measurableSet_const_lt hτ s))
+  · by_cases hj : j ≤ s
+    · have hempty : A ∩ {f | (s : WithTop ι) < τ f} ∩ {f | τ f ≤ j} = ∅ := by
+        refine Set.eq_empty_of_forall_notMem fun f hf ↦ ?_
+        exact absurd (hf.1.2.trans_le (hf.2.trans (WithTop.coe_le_coe.2 hj))) (lt_irrefl _)
+      rw [hempty]
+      exact @MeasurableSet.empty F (𝓕₀ j)
+    · have hsj : s ≤ j := (not_le.1 hj).le
+      exact ((𝓕₀.mono hsj _ hA).inter (𝓕₀.mono hsj _ (IsStoppingTime.measurableSet_const_lt hτ s))).inter
+        (hτ j)
+
+/-- **A restart kernel at `T`**, `def:restartkernel`: a Markov kernel `α ↦ Q_α` that keeps the
+past, (R1), and is a solution from `T (α)` onwards, (R2), the latter as the set integral identity
+against every set of `𝓕° s` for `T (α) ≤ s ≤ t`, with the integrability it needs.
+
+(R1) is stated almost surely, `∀ᵐ β ∂Q_α, a β = a α`.  In that form no measurability of the
+event is needed, and so (E1), which the manuscript invokes for the diagonal, does not enter.  The
+kernel is a kernel on `(F, 𝓢)`: its `𝓕°_T`-measurability in `α` is not used by `lem:pasting`. -/
+structure IsRestartKernel (𝓧 : Set (ι → F → 𝕂)) (𝓕₀ : Filtration ι mF) (T : F → WithTop ι)
+    (a : F → F) (κ : Kernel F F) : Prop where
+  isMarkovKernel : IsMarkovKernel κ
+  keep_past : ∀ α, ∀ᵐ β ∂κ α, a β = a α
+  integrable : ∀ Y ∈ 𝓧, ∀ α, ∀ t : ι, T α ≤ t → Integrable (Y t) (κ α)
+  setIntegral_eq : ∀ Y ∈ 𝓧, ∀ α, ∀ s t : ι, T α ≤ s → s ≤ t → ∀ A : Set F,
+    MeasurableSet[𝓕₀ s] A → ∫ β in A, Y t β ∂κ α = ∫ β in A, Y s β ∂κ α
+
+omit [MeasurableSpace E] in
+/-- **`lem:pasting`, agreement on `𝓕°_T`**: `Q = ∫ Q_α P(dα)` and `P` agree on `𝓕°_T`, for any
+measure `P`. -/
+theorem comp_apply_eq_of_isRestartKernel {𝓧 : Set (ι → F → 𝕂)} {κ : Kernel F F}
+    (hT : IsStrictStoppingTime 𝓕₀ π T a) (hκ : IsRestartKernel 𝓧 𝓕₀ T a κ) (P : Measure F)
+    {A : Set F} (hA : MeasurableSet[hT.isStoppingTime.measurableSpace] A) :
+    (κ ∘ₘ P) A = P A := by
+  have := hκ.isMarkovKernel
+  have hle : hT.isStoppingTime.measurableSpace ≤ mF := by
+    rw [hT.measurableSpace_eq]; exact hT.measurable.comap_le
+  have hA' : MeasurableSet A := hle _ hA
+  rw [Measure.bind_apply hA' κ.measurable.aemeasurable]
+  have hpt : ∀ α, κ α A = A.indicator 1 α := by
+    intro α
+    by_cases hα : α ∈ A
+    · have hae : (A : Set F) =ᵐ[κ α] (Set.univ : Set F) := by
+        rw [eventuallyEqSet_iff]
+        filter_upwards [hκ.keep_past α] with β hβ
+        simp only [Set.mem_univ, iff_true]
+        exact (hT.mem_iff hA hβ).2 hα
+      rw [measure_congr hae, measure_univ, Set.indicator_of_mem hα, Pi.one_apply]
+    · have hae : (A : Set F) =ᵐ[κ α] (∅ : Set F) := by
+        rw [eventuallyEqSet_iff]
+        filter_upwards [hκ.keep_past α] with β hβ
+        simp only [Set.mem_empty_iff_false, iff_false]
+        exact fun h ↦ hα ((hT.mem_iff hA hβ).1 h)
+      rw [measure_congr hae, measure_empty, Set.indicator_of_notMem hα]
+  simp_rw [hpt]
+  exact lintegral_indicator_one hA'
+
+omit [MeasurableSpace E] in
+/-- **`lem:pasting`, the martingale property**: if `P` solves the stopped problem `𝓧^T` and
+`(Q_α)` is a restart kernel at the strict stopping time `T`, then `Q = ∫ Q_α P(dα)` solves the
+problem for `𝓧`, under the integrability `∫ E^{Q_α}|Y_t| P(dα) < ∞` of the manuscript.
+
+The proof is the manuscript's, organised per `α`: for `T (α) ≤ s` it is (R2); for `s < T (α)` the
+stopped process and `1_A` are frozen under `Q_α` and the increment after `T (α)` is (R2) at
+`T (α)`, so that `E^{Q_α}[(Y_t - Y_s) 1_A] = 1_{A ∩ {s < T}}(α) (Y^T_t - Y^T_s)(α)`, which
+integrates to `0` under `P`.  `hYT` is the sentence "`Y°` is adapted, so `Y°_{u ∧ T}` is a function
+of `a_T`", carried as `𝓕°_T`-measurability of the stopped test processes. -/
+theorem isMPSolution_comp_of_isRestartKernel {𝓧 : Set (ι → F → 𝕂)} {κ : Kernel F F}
+    (hT : IsStrictStoppingTime 𝓕₀ π T a) (hκ : IsRestartKernel 𝓧 𝓕₀ T a κ)
+    (hadapt : ∀ Y ∈ 𝓧, StronglyAdapted 𝓕₀ Y)
+    (hYT : ∀ Y ∈ 𝓧, ∀ u : ι,
+      StronglyMeasurable[hT.isStoppingTime.measurableSpace] (stoppedProcess Y T u))
+    {P : Measure F} [IsProbabilityMeasure P]
+    (hP : IsMPSolution ((fun Y ↦ stoppedProcess Y T) '' 𝓧) 𝓕₀ P)
+    (hint : ∀ Y ∈ 𝓧, ∀ t : ι, Integrable (fun α ↦ ∫ β, ‖Y t β‖ ∂κ α) P) :
+    IsMPSolution 𝓧 𝓕₀ (κ ∘ₘ P) := by
+  have := hκ.isMarkovKernel
+  intro Y hY
+  have hmart : Martingale (stoppedProcess Y T) 𝓕₀ P := hP _ ⟨Y, hY, rfl⟩
+  have hsm : ∀ u, StronglyMeasurable (Y u) := fun u ↦ (hadapt Y hY u).mono (𝓕₀.le u)
+  -- under `κ α` the stopping time and the stopped process are frozen at their values at `α`
+  have hfreeze : ∀ α, ∀ᵐ β ∂κ α, T β = T α ∧ ∀ u, stoppedProcess Y T u β = stoppedProcess Y T u α := by
+    intro α
+    filter_upwards [hκ.keep_past α] with β hβ
+    refine ⟨?_, fun u ↦ hT.eq_of_stronglyMeasurable (hYT Y hY u) hβ⟩
+    rw [← hT.comp_self β, hβ, hT.comp_self α]
+  have hbefore : ∀ α (u : ι), (u : WithTop ι) ≤ T α →
+      ∀ᵐ β ∂κ α, Y u β = stoppedProcess Y T u α := by
+    intro α u hu
+    filter_upwards [hfreeze α] with β hfz
+    obtain ⟨hTβ, hst⟩ := hfz
+    rw [← hst u, stoppedProcess_eq_of_le (hTβ ▸ hu)]
+  have hIα : ∀ α t, Integrable (Y t) (κ α) := by
+    intro α t
+    by_cases htT : T α ≤ t
+    · exact hκ.integrable Y hY α t htT
+    · exact (integrable_const (stoppedProcess Y T t α)).congr
+        ((hbefore α t (not_le.1 htT).le).mono fun β h ↦ h.symm)
+  have hIQ : ∀ t, Integrable (Y t) (κ ∘ₘ P) := by
+    intro t
+    rw [Measure.comp_eq_comp_const_apply]
+    refine (integrable_comp_iff (hsm t).aestronglyMeasurable).2 ⟨?_, ?_⟩
+    · simp only [Kernel.const_apply]
+      exact ae_of_all _ fun α ↦ hIα α t
+    · simpa only [Kernel.const_apply] using hint Y hY t
+  refine martingale_of_setIntegral_eq (hadapt Y hY) hIQ fun s t hst A hA ↦ ?_
+  have hA' : MeasurableSet A := 𝓕₀.le s A hA
+  have hAT := IsStoppingTime.measurableSet_inter_const_lt hT.isStoppingTime hA
+  -- a function frozen under `κ α` integrates over `A` to its value times `1_A (α)`
+  have hconst : ∀ α (c : 𝕂) (g : F → 𝕂), (s : WithTop ι) < T α → (∀ᵐ β ∂κ α, g β = c) →
+      ∫ β in A, g β ∂κ α = A.indicator (fun _ ↦ c) α := by
+    intro α c g hsα hg
+    have hmem : ∀ᵐ β ∂κ α, (β ∈ A ↔ α ∈ A) := by
+      filter_upwards [hκ.keep_past α, hfreeze α] with β hβ hfz
+      have hTβ := hfz.1
+      have h := hT.mem_iff hAT hβ
+      simp only [Set.mem_inter_iff, Set.mem_ofPred_eq, hTβ, hsα, and_true] at h
+      exact h
+    by_cases hαA : α ∈ A
+    · have hset : (A : Set F) =ᵐ[κ α] (Set.univ : Set F) := by
+        rw [eventuallyEqSet_iff]
+        filter_upwards [hmem] with β hβ
+        simpa [hαA] using hβ
+      rw [setIntegral_congr_set hset, setIntegral_univ, integral_congr_ae hg,
+        Set.indicator_of_mem hαA]
+      simp
+    · have hset : (A : Set F) =ᵐ[κ α] (∅ : Set F) := by
+        rw [eventuallyEqSet_iff]
+        filter_upwards [hmem] with β hβ
+        simpa [hαA] using hβ
+      rw [setIntegral_congr_set hset, Measure.restrict_empty, integral_zero_measure,
+        Set.indicator_of_notMem hαA]
+  have hpt : ∀ α, ∫ β in A, Y t β ∂κ α = ∫ β in A, Y s β ∂κ α +
+      (A ∩ {f | (s : WithTop ι) < T f}).indicator
+        (fun f ↦ stoppedProcess Y T t f - stoppedProcess Y T s f) α := by
+    intro α
+    by_cases hTs : T α ≤ s
+    · have hn : α ∉ A ∩ {f | (s : WithTop ι) < T f} := fun h ↦ absurd h.2 (not_lt.2 hTs)
+      rw [Set.indicator_of_notMem hn, add_zero]
+      exact hκ.setIntegral_eq Y hY α s t hTs hst A hA
+    · have hsα : (s : WithTop ι) < T α := not_le.1 hTs
+      have hIs : ∫ β in A, Y s β ∂κ α = A.indicator (fun _ ↦ stoppedProcess Y T s α) α :=
+        hconst α _ _ hsα (hbefore α s hsα.le)
+      have hIt : ∫ β in A, Y t β ∂κ α = A.indicator (fun _ ↦ stoppedProcess Y T t α) α := by
+        by_cases hTt : T α ≤ t
+        · obtain ⟨r, hr⟩ : ∃ r : ι, T α = r :=
+            ⟨(T α).untop (ne_top_of_le_ne_top WithTop.coe_ne_top hTt),
+              (WithTop.coe_untop _ _).symm⟩
+          have hsr : s ≤ r := (WithTop.coe_lt_coe.1 (hr ▸ hsα)).le
+          have hrt : r ≤ t := WithTop.coe_le_coe.1 (hr ▸ hTt)
+          have hAr : MeasurableSet[𝓕₀ r] A := 𝓕₀.mono hsr _ hA
+          rw [hκ.setIntegral_eq Y hY α r t hr.le hrt A hAr]
+          refine hconst α _ _ hsα ?_
+          filter_upwards [hbefore α r hr.ge] with β hβ
+          rw [hβ, stoppedProcess_eq_of_ge hr.le, stoppedProcess_eq_of_ge hTt]
+        · exact hconst α _ _ hsα (hbefore α t (not_le.1 hTt).le)
+      have hmemT : α ∈ {f | (s : WithTop ι) < T f} := hsα
+      by_cases hαA : α ∈ A
+      · rw [hIs, hIt, Set.indicator_of_mem hαA, Set.indicator_of_mem hαA,
+          Set.indicator_of_mem (show α ∈ A ∩ {f | (s : WithTop ι) < T f} from ⟨hαA, hmemT⟩)]
+        ring
+      · rw [hIs, hIt, Set.indicator_of_notMem hαA, Set.indicator_of_notMem hαA,
+          Set.indicator_of_notMem (fun h ↦ hαA h.1), add_zero]
+  have hIQ' := hIQ
+  rw [Measure.comp_eq_comp_const_apply] at hIQ'
+  rw [Measure.comp_eq_comp_const_apply, Kernel.setIntegral_comp hA' (hIQ' s).integrableOn,
+    Kernel.setIntegral_comp hA' (hIQ' t).integrableOn]
+  simp only [Kernel.const_apply]
+  have hgi : ∀ u, Integrable (fun α ↦ ∫ β in A, Y u β ∂κ α) P := by
+    intro u
+    refine Integrable.mono' (hint Y hY u) ?_ (ae_of_all _ fun α ↦ ?_)
+    · have h := ((hsm u).indicator hA').integral_kernel (κ := κ)
+      refine h.aestronglyMeasurable.congr (ae_of_all _ fun α ↦ ?_)
+      exact integral_indicator hA'
+    · exact (norm_integral_le_integral_norm _).trans
+        (setIntegral_le_integral (hIα α u).norm (ae_of_all _ fun _ ↦ norm_nonneg _))
+  have hsT : MeasurableSet[𝓕₀ s] (A ∩ {f | (s : WithTop ι) < T f}) :=
+    hA.inter (IsStoppingTime.measurableSet_const_lt hT.isStoppingTime s)
+  have hzero : ∫ α, (A ∩ {f | (s : WithTop ι) < T f}).indicator
+      (fun f ↦ stoppedProcess Y T t f - stoppedProcess Y T s f) α ∂P = 0 := by
+    rw [integral_indicator (𝓕₀.le s _ hsT), integral_sub (hmart.integrable t).integrableOn
+      (hmart.integrable s).integrableOn, hmart.setIntegral_eq hst hsT, sub_self]
+  have hdi : Integrable (fun α ↦ (A ∩ {f | (s : WithTop ι) < T f}).indicator
+      (fun f ↦ stoppedProcess Y T t f - stoppedProcess Y T s f) α) P :=
+    ((hmart.integrable t).sub (hmart.integrable s)).indicator (𝓕₀.le s _ hsT)
+  simp_rw [hpt]
+  rw [integral_add (hgi s) hdi, hzero, add_zero]
+
+/-- `π_0` is `𝓕°_T`-measurable: `π_0 ∘ a_T = π_0`. -/
+theorem IsStrictStoppingTime.measurable_eval_bot (hT : IsStrictStoppingTime 𝓕₀ π T a)
+    (hπ : Measurable (π ⊥)) : Measurable[hT.isStoppingTime.measurableSpace] (π ⊥) := by
+  have heq : π ⊥ = fun f ↦ π ⊥ (a f) := by
+    funext f
+    rw [hT.eval_comp ⊥ f]
+    have hmin : min ((⊥ : ι) : WithTop ι) (T f) = ((⊥ : ι) : WithTop ι) :=
+      min_eq_left (by rw [WithTop.coe_bot]; exact bot_le)
+    rw [hmin]
+    rfl
+  rw [hT.measurableSpace_eq, heq]
+  exact hπ.comp (Measurable.of_comap_le le_rfl)
+
+/-- **Local uniqueness**, `def:localuniq` (JS III.2.37): for every strict stopping time `T`, two
+probability solutions of the stopped problem with the same initial law agree on `𝓕°_T`. -/
+def HasLocalUniqueness (𝓧 : Set (ι → F → 𝕂)) (𝓕₀ : Filtration ι mF) (π : ι → F → E) : Prop :=
+  ∀ (T : F → WithTop ι) (a : F → F) (hT : IsStrictStoppingTime 𝓕₀ π T a) (P P' : Measure F),
+    IsProbabilityMeasure P → IsProbabilityMeasure P' →
+    IsMPSolution ((fun Y ↦ stoppedProcess Y T) '' 𝓧) 𝓕₀ P →
+    IsMPSolution ((fun Y ↦ stoppedProcess Y T) '' 𝓧) 𝓕₀ P' →
+    P.map (π ⊥) = P'.map (π ⊥) →
+    ∀ A, MeasurableSet[hT.isStoppingTime.measurableSpace] A → P A = P' A
+
+/-- **`thm:localuniqueness`** (JS III.2.40, without the Markovian type): if a restart kernel
+exists at every strict stopping time and the problem has at most one solution per initial law,
+local uniqueness holds.
+
+The integrability of `lem:pasting` is part of `hkernel`, for every solution of the stopped
+problem; the manuscript's statement of `thm:localuniqueness` does not carry it. -/
+theorem hasLocalUniqueness_of_restartKernel {𝓧 : Set (ι → F → 𝕂)} (hπ : Measurable (π ⊥))
+    (hadapt : ∀ Y ∈ 𝓧, StronglyAdapted 𝓕₀ Y)
+    (hYT : ∀ (T : F → WithTop ι) (a : F → F) (hT : IsStrictStoppingTime 𝓕₀ π T a), ∀ Y ∈ 𝓧,
+      ∀ u : ι, StronglyMeasurable[hT.isStoppingTime.measurableSpace] (stoppedProcess Y T u))
+    (hkernel : ∀ (T : F → WithTop ι) (a : F → F), IsStrictStoppingTime 𝓕₀ π T a →
+      ∃ κ : Kernel F F, IsRestartKernel 𝓧 𝓕₀ T a κ ∧
+        ∀ P : Measure F, IsProbabilityMeasure P →
+          IsMPSolution ((fun Y ↦ stoppedProcess Y T) '' 𝓧) 𝓕₀ P →
+          ∀ Y ∈ 𝓧, ∀ t : ι, Integrable (fun α ↦ ∫ β, ‖Y t β‖ ∂κ α) P)
+    (huniq : ∀ Q Q' : Measure F, IsProbabilityMeasure Q → IsProbabilityMeasure Q' →
+      IsMPSolution 𝓧 𝓕₀ Q → IsMPSolution 𝓧 𝓕₀ Q' → Q.map (π ⊥) = Q'.map (π ⊥) → Q = Q') :
+    HasLocalUniqueness 𝓧 𝓕₀ π := by
+  intro T a hT P P' hPp hPp' hP hP' hinit A hA
+  obtain ⟨κ, hκ, hint⟩ := hkernel T a hT
+  have := hκ.isMarkovKernel
+  have hπT := hT.measurable_eval_bot hπ
+  have hQ := isMPSolution_comp_of_isRestartKernel hT hκ hadapt (hYT T a hT) hP (hint P hPp hP)
+  have hQ' := isMPSolution_comp_of_isRestartKernel hT hκ hadapt (hYT T a hT) hP'
+    (hint P' hPp' hP')
+  have hmap : ∀ R : Measure F, (κ ∘ₘ R).map (π ⊥) = R.map (π ⊥) := by
+    intro R
+    ext B hB
+    rw [Measure.map_apply hπ hB, Measure.map_apply hπ hB]
+    exact comp_apply_eq_of_isRestartKernel hT hκ R (hπT hB)
+  have hQQ' : κ ∘ₘ P = κ ∘ₘ P' :=
+    huniq _ _ inferInstance inferInstance hQ hQ' (by rw [hmap, hmap, hinit])
+  rw [← comp_apply_eq_of_isRestartKernel hT hκ P hA, hQQ',
+    comp_apply_eq_of_isRestartKernel hT hκ P' hA]
+
+end Pasting
+
+section StrictTop
+
+variable {ι : Type*} [LinearOrder ι] [OrderBot ι]
+variable {F : Type*} {mF : MeasurableSpace F} {E : Type*}
+
+/-- **Emptiness check of `IsStrictStoppingTime`: `T ≡ ⊤` with `a = id`** is strict as soon as the
+filtration generates the σ-algebra of the path space.  Then `𝓕°_T` is all of `𝓢`, and
+`HasLocalUniqueness` at `T ≡ ⊤` is uniqueness, as the manuscript says after `def:localuniq`. -/
+theorem isStrictStoppingTime_top {𝓕₀ : Filtration ι mF} {π : ι → F → E}
+    (hgen : (⨆ t, 𝓕₀ t : MeasurableSpace F) = mF) :
+    IsStrictStoppingTime 𝓕₀ π (fun _ ↦ ⊤) id where
+  isStoppingTime := fun i ↦ by simp
+  measurable := measurable_id
+  eval_comp := fun t f ↦ by simp
+  measurableSpace_eq := by
+    rw [MeasurableSpace.comap_id]
+    ext s
+    refine (IsStoppingTime.measurableSet _ s).trans ?_
+    rw [hgen]
+    constructor
+    · exact fun h ↦ h.1
+    · intro hs
+      refine ⟨hs, fun i ↦ ?_⟩
+      have : s ∩ {ω : F | (⊤ : WithTop ι) ≤ (i : WithTop ι)} = ∅ := by
+        ext ω; simp
+      rw [this]
+      exact @MeasurableSet.empty F (𝓕₀ i)
+  comp_self := fun _ ↦ rfl
+
+end StrictTop
