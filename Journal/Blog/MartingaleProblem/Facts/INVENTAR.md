@@ -65119,3 +65119,119 @@ voran, dann der Rest von C3 (die reelle Fassung `Clock.IsProgressiveComp` über 
 `[MeasurableSpace E]` durch Approximation von rechts), danach C5 (i), die starke Markoveigenschaft
 an einer beliebigen f.s. endlichen Stoppzeit über dyadische Approximation von oben und
 `isStrongMarkov_kernel_of_countable_range`.
+
+### 2026-09-26, Lauf 14:03 UTC — B2 weiter offen, Bruchstelle genauer; Aufgabe C, Schritt C5 (i), Schritt 1 von `thm:absstrongmarkov`: **`lem:optsamplafter`** und **der Neustart eines Martingals an einer endlichen Stoppzeit**
+
+`check_master.py` zu Beginn (Mathlib `94ef6b89544`): 0 Fehler, 0 `sorry`, 0 Veraltungen;
+Warnungen 18 / 38 / 38 / 76.
+
+**B2, nicht gelöst; die Bruchstelle diesmal genauer.** Nachgerechnet auf Papier: Mit
+`L = ⨆ n, τ'_n` (eine rohe Stoppzeit, `{L ≤ t} = ⋂ n, {τ'_n ≤ t}`) ist `P'(L < ∞) = 0`, und
+`τ_n ∧ τ'_n` lokalisiert unter `Q` genau dann, wenn auch `P(L < ∞) = 0` (und symmetrisch mit
+`⨆ τ_n`). Gebraucht würde eine rohe Stoppzeit `σ_n` mit `σ_n = τ'_n` `P'`-f.s. und `σ_n → ∞`
+auf `{L < ∞}`. Für `Y^{σ_n}` als `P'`-Martingal genügt `P'`-f.s. Gleichheit, weil punktweise nur
+die Adaptiertheit gelesen wird, und die folgt aus der Stoppzeiteigenschaft. Jeder Kandidat
+(`τ'_n` auf `{L = ∞}`, `L + n` sonst; oder `∞` auf `{L < ∞}`) scheitert daran, daß
+`{τ'_n ≤ t} ∩ {t < L < ∞}` nicht in `𝓕_t` liegt: wächst `τ'_n` strikt gegen ein endliches `L`,
+so ist zur Zeit `τ'_n` nicht entschieden, ob `L` endlich ist. **Die Bruchstelle liegt also bei
+den Nullmengen von `P'` in der rohen Filtration, nicht bei der Rechtsstetigkeit.** Eine
+Vervollständigung nach `P'` hilft nicht, weil `{L < ∞}` unter `Q` keine Nullmenge ist. Das stützt
+den Befund des Laufs 11:03, daß ein Zeuge eine Singularität ohne ersten sichtbaren Zeitpunkt
+braucht, und macht ihn konkret: eine explosionsartige Folge `τ'_n ↑ L < ∞`, die unter `P`
+positive Masse hat. Weder Zeuge noch Beweis gebaut; die Nebenfassung unter
+`[𝓕.IsRightContinuous]` über den Dichteprozeß ist weiter nicht gebaut. Nach der Regel weiter
+mit C5, das nicht an B2 hängt.
+
+**C5 (i), neu** (`MartingaleProblems/Suggested.lean`):
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| **`lem:optsamplafter`** (Manuskript Z. 4344): `∫ W (Y_{τ+t} - Y_{τ+s}) = 0` für f.s. endliches `τ` und beschränktes, `𝓕_{τ+s}`-meßbares `W`, unter `eq:optafterint` | `integral_mul_stoppedValue_add_sub_eq_zero` | 26938 |
+| **Schritt 1 von `thm:absstrongmarkov`** (Z. 4426): `t ↦ Y_{τ+t} - Y_τ` ist Martingal für `t ↦ 𝓕_{τ+t}` | `MeasureTheory.Martingale.shiftByTime_sub` | 48099 |
+
+`integral_mul_stoppedValue_add_sub_eq_zero`: Index `ℝ≥0`, `τ : Ω → ℝ≥0∞` f.s. endlich,
+rechtsstetige Pfade f.s., **rohe** Filtration, keine gleichgradige Integrierbarkeit. Der Beweis
+ist der des Manuskripts: `σ₁ = τ ∧ n + s ≤ σ₂ = τ ∧ n + t ≤ n + t`, darauf das vorhandene
+`integral_mul_stoppedValue_sub_eq_zero` mit dem Gewicht `1_{τ ≤ n} W`, dann dominierte
+Konvergenz längs `n`. Die Fallunterscheidung des Manuskripts (Z. 4377–4383) für die
+`𝓕_{σ₁}`-Meßbarkeit von `1_{τ ≤ n} W` ersetzt Mathlibs `IsStoppingTime.measurableSet_inter_le`
+(`Probability/Process/Stopping.lean:699`), angewandt auf das Paar `τ + s`, `σ₁`, weil
+`{τ + s ≤ σ₁} = {τ ≤ n}`. Daß `τ + s` eine Stoppzeit ist, ist
+`IsStoppingTime.add_const_of_orderedSub` (schon im Prototyp; Mathlibs `add_const` verlangt eine
+Gruppe, `add_const'` einen abzählbaren Index).
+
+`Martingale.shiftByTime_sub`: `τ : Ω → ℝ≥0` mit `τ + t` Stoppzeit für jedes `t` (die Form von
+`Filtration.shiftByTime` aus Meilenstein 6) und `Y_{τ+t}` integrierbar für jedes `t`, also
+`eq:optafterint` für alle `s ≤ t` zugleich. Die Martingaleigenschaft ist das Lemma mit
+`W = 1_S`, die Adaptiertheit `measurable_stoppedValue`. `#print axioms` für beide: `propext`,
+`Classical.choice`, `Quot.sound`.
+
+**Zum Manuskript (nicht angefaßt):** `lem:optsamplafter` braucht an `W` nur die Meßbarkeit
+bezüglich `𝓕_{τ+s}` und die Beschränktheit. Die Rechtsstetigkeit der Filtration kommt nicht vor,
+und (T2b) wird über `ℝ≥0` durch `n ∈ ℕ` als kofinale Folge eingelöst. Das stimmt mit der
+Annotation des Manuskripts überein; kein Befund gegen die Aussage.
+
+**Noch nicht gebaut aus C5:** Schritt 2, also der Neustart des **Problems** an `τ` (die
+Übertragung von `restart` auf eine zufällige Zeit mit meßbarem Schiftsystem) und daraus die erste
+Aussage für eine beliebige f.s. endliche Stoppzeit; Chapman–Kolmogorov; die klassische Instanz
+und die Akzeptanzbeispiele.
+
+`check_master.py` danach: **0 Fehler, 0 `sorry`, 0 Veraltungen**, Warnungen 18 / 38 / 38 / 76.
+
+### Derselbe Lauf, zweiter Teil — Aufgabe C, Schritt C5 (ii): **Chapman–Kolmogorov im homogenen Fall**; der inhomogene folgt aus `IsShiftSystem` nicht
+
+**Neu** (`MartingaleProblems/Suggested.lean`, am Ende von `StrongMarkovKernel`):
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| **Chapman–Kolmogorov** (`thm:absstrongmarkov`, Z. 4421), `𝓧₀ r = 𝓧₀ 0`: `(K x){π (s+t) ∈ C} = ∫ (K (π s f)){π t ∈ C} d(K x)` | `chapmanKolmogorov_of_unique_onedim` | 48984 |
+
+Der Beweis ist „die erste Aussage zweimal angewandt“ des Manuskripts, und die erste Anwendung
+kostet nichts: `setIntegral_indicator_eq_kernel` auf dem kanonischen Raum mit `X = id`,
+`P = K x`, der Filtration `𝓕₀` und `A = univ`. Voraussetzungen: dieselben wie
+`setIntegral_indicator_eq_kernel` (Schiftsystem, eindeutige eindimensionale Gesetze,
+`K x` löst das Problem von `δ x`, die Integrierbarkeit von `lem:mixture`), dazu die
+Integrierbarkeit der Testprozesse unter jedem `K x`. `#print axioms`: `propext`,
+`Classical.choice`, `Quot.sound`.
+
+**Befund: der inhomogene Fall `T_{r,s} T_{s,t} = T_{r,t}` folgt aus den Voraussetzungen, wie sie
+dastehen, nicht.** Derselbe Beweis braucht `K_r x` als Lösung eines **bei `0` gestellten**
+Problems mit Schiftsystem, also für die Familie `u ↦ 𝓧₀ (r + u)`. `IsShiftSystem` drückt jede
+geschiftete Familie nur durch `𝓧₀ 0` aus; die Zuwachsklausel für `𝓧₀ (r + s)` müßte über
+`𝓧₀ r` laufen, und davon sagt die Struktur nichts. Das Manuskript (Z. 4461) schreibt „follows by
+applying the first assertion twice“; für den inhomogenen Fall fehlt damit eine Voraussetzung,
+nämlich die Verträglichkeit der Schiftsysteme untereinander (ein Kozykel
+`𝓧₀ (r + s) ∘ θ s ⊆ Zuwächse von 𝓧₀ r`). **Offene Auffälligkeit, Manuskript nicht angefaßt.**
+
+`check_master.py` danach: **0 Fehler, 0 `sorry`, 0 Veraltungen**, Warnungen 18 / 38 / 38 / 76.
+
+### Derselbe Lauf, Abschluß
+
+`check_master.py` am Ende (Mathlib `94ef6b89544`): **0 Fehler, 0 `sorry`, 0 Veraltungen** in allen
+vier Dateien, Warnungen 18 / 38 / 38 / 76 wie zu Beginn.
+
+**Stand der drei Aufgaben nach diesem Lauf.**
+
+* **A:** erledigt (unverändert; offen nur „cutting down to an open subset“, siehe Lauf 13:03).
+* **B:** B1, B3, B4 stehen. **B2 offen**; die Bruchstelle für die rohe Filtration ist jetzt bei
+  den `P'`-Nullmengen verortet (erster Teil).
+* **C:** C1 vollständig; C2 bis auf `map` längs Gleichheit der Gesetze; C3 offen (reelle Fassung
+  über bloßem `[MeasurableSpace E]`, „meßbar zu jeder Zeit, progressiv zu keiner“); C4 global.
+  **C5:** jetzt auch `lem:optsamplafter`, Schritt 1 (Martingal-Neustart an einer Stoppzeit) und
+  Chapman–Kolmogorov im homogenen Fall. Offen: Schritt 2 (Neustart des Problems an `τ` mit
+  meßbarem Schiftsystem, daraus die erste Aussage für beliebige f.s. endliche Stoppzeiten), die
+  klassische Instanz, die Akzeptanzbeispiele (Zwei-Zustands-Kette, Brownsche Bewegung).
+
+**Befunde für den Nutzer (kein Manuskript, keine README angefaßt; nichts nach außen):**
+
+1. B2 bei roher Filtration: die Lokalisierung scheitert an Nullmengen von `P'`, die unter `P`
+   positive Masse haben und erst am Grenzwert `⨆ τ'_n` sichtbar werden; nicht an der
+   Rechtsstetigkeit.
+2. `thm:absstrongmarkov`, Chapman–Kolmogorov (Z. 4421, 4461): im inhomogenen Fall fehlt die
+   Verträglichkeit der Schiftsysteme als Voraussetzung.
+
+**Benanntes Ziel für den nächsten Lauf, der nächste offene Schritt der Liste: B2**, und kommt es
+nicht voran, **C5 Schritt 2**: `restart` an einer Stoppzeit `τ : F → ι` mit
+`Filtration.shiftByTime`, gestützt auf `Martingale.shiftByTime_sub` (dieser Lauf) für die
+Testprozesse und auf die Meßbarkeit von `(ω, r) ↦ θ r ω`; daraus
+`isStrongMarkov` für eine f.s. endliche Stoppzeit im homogenen Fall.

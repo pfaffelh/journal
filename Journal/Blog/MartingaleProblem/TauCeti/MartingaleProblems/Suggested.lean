@@ -26913,6 +26913,124 @@ theorem integral_sq_stoppedValue_sub_eq_of_bounded
     (integrable_of_abs_le (hmβ.pow_const 2) (hsqb _ habsβ))
     (fun ω ↦ by simpa [Real.norm_eq_abs] using habsα ω)
 
+
+/-- **Optional sampling after an almost surely finite stopping time**, `lem:optsamplafter`
+(manuscript, Z. 4344).  For a right continuous martingale over `ℝ≥0`, an a.s. finite stopping
+time `τ`, `s ≤ t`, and `W` bounded and measurable for `𝓕_{τ+s}`,
+
+```
+∫ ω, W ω * (Y_{τ+t} ω - Y_{τ+s} ω) ∂P = 0,
+```
+
+provided the increment over the **random** window, `Y_{τ+t} - Y_{τ+s}`, is integrable
+(`eq:optafterint`).  No uniform integrability of `Y` and no bound on `τ` is asked for.
+
+The proof is the manuscript's.  At level `n` the stopping times `σ₁ = τ ∧ n + s ≤ σ₂ = τ ∧ n + t`
+are bounded by `n + t`, and `integral_mul_stoppedValue_sub_eq_zero` applies to the weight
+`1_{τ ≤ n} W`.  That this weight is `𝓕_{σ₁}`-measurable is Mathlib's
+`MeasureTheory.IsStoppingTime.measurableSet_inter_le` (`Probability/Process/Stopping.lean:699`)
+for the pair `τ + s`, `σ₁`, because `{τ + s ≤ σ₁} = {τ ≤ n}`; it replaces the two case
+distinction of the manuscript.  On `{τ ≤ n}` the stopped values agree with `Y_{τ+s}`, `Y_{τ+t}`,
+and dominated convergence along `n`, with the integrable dominator `‖W‖ |Y_{τ+t} - Y_{τ+s}|`,
+removes the truncation.  That `τ + s` is a stopping time over `ℝ≥0` is
+`IsStoppingTime.add_const_of_orderedSub`.  The filtration is the raw one; right continuity of
+`𝓕` is not used. -/
+theorem integral_mul_stoppedValue_add_sub_eq_zero
+    (hY : Martingale Y 𝓕 P) (hprog : IsStronglyProgressive 𝓕 Y)
+    (hrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
+    {τ : Ω → ENNReal} (hτ : IsStoppingTime 𝓕 τ) (hτfin : ∀ᵐ ω ∂P, τ ω ≠ ⊤)
+    {s t : ℝ≥0} (hst : s ≤ t)
+    (hint : Integrable (fun ω ↦ stoppedValue Y (fun ω ↦ τ ω + (t : ENNReal)) ω
+      - stoppedValue Y (fun ω ↦ τ ω + (s : ENNReal)) ω) P)
+    {W : Ω → ℝ}
+    (hW : StronglyMeasurable[(hτ.add_const_of_orderedSub (ι := ℝ≥0) s).measurableSpace] W)
+    {c : ℝ} (hWb : ∀ ω, ‖W ω‖ ≤ c) :
+    ∫ ω, W ω * (stoppedValue Y (fun ω ↦ τ ω + (t : ENNReal)) ω
+      - stoppedValue Y (fun ω ↦ τ ω + (s : ENNReal)) ω) ∂P = 0 := by
+  classical
+  set hτs := hτ.add_const_of_orderedSub (ι := ℝ≥0) s with hτs_def
+  set G : Ω → ℝ := fun ω ↦ W ω * (stoppedValue Y (fun ω ↦ τ ω + (t : ENNReal)) ω
+      - stoppedValue Y (fun ω ↦ τ ω + (s : ENNReal)) ω) with hG
+  have hWmeas : StronglyMeasurable W := hW.mono (hτs.measurableSpace_le)
+  have hGint : Integrable G P :=
+    hint.bdd_mul hWmeas.aestronglyMeasurable (Filter.Eventually.of_forall hWb)
+  -- the truncated statement at level `n`
+  have hA : ∀ n : ℕ, ∫ ω, {ω | τ ω ≤ ((n : ℝ≥0) : ENNReal)}.indicator G ω ∂P = 0 := by
+    intro n
+    set A : Set Ω := {ω | τ ω ≤ ((n : ℝ≥0) : ENNReal)} with hAdef
+    have hτn : IsStoppingTime 𝓕 (fun ω ↦ min (τ ω) ((n : ℝ≥0) : ENNReal)) :=
+      hτ.min_const (n : ℝ≥0)
+    have hσ1 : IsStoppingTime 𝓕 (fun ω ↦ min (τ ω) ((n : ℝ≥0) : ENNReal) + (s : ENNReal)) :=
+      hτn.add_const_of_orderedSub (ι := ℝ≥0) s
+    have hσ2 : IsStoppingTime 𝓕 (fun ω ↦ min (τ ω) ((n : ℝ≥0) : ENNReal) + (t : ENNReal)) :=
+      hτn.add_const_of_orderedSub (ι := ℝ≥0) t
+    have hσ12 : (fun ω ↦ min (τ ω) ((n : ℝ≥0) : ENNReal) + (s : ENNReal))
+        ≤ (fun ω ↦ min (τ ω) ((n : ℝ≥0) : ENNReal) + (t : ENNReal)) := fun ω ↦ by
+      simp only
+      gcongr
+    have hσ2j : ∀ ω, min (τ ω) ((n : ℝ≥0) : ENNReal) + (t : ENNReal)
+        ≤ (((n : ℝ≥0) + t : ℝ≥0) : ENNReal) := fun ω ↦ by
+      rw [ENNReal.coe_add]
+      gcongr
+      exact min_le_right _ _
+    -- `A` seen from the stopping time `τ + s` is the event `{τ + s ≤ σ₁}`
+    have hAeq : A = {ω | τ ω + (s : ENNReal) ≤ min (τ ω) ((n : ℝ≥0) : ENNReal) + (s : ENNReal)} := by
+      ext ω
+      simp only [hAdef, Set.mem_ofPred_eq]
+      constructor
+      · intro h
+        rw [min_eq_left (by exact_mod_cast h)]
+      · intro h
+        have h' := (ENNReal.add_le_add_iff_right ENNReal.coe_ne_top).1 h
+        have := h'.trans (min_le_right _ _)
+        exact_mod_cast this
+    -- sets of `𝓕_{τ+s}` cut down to `A` are sets of `𝓕_{σ₁}`
+    have hcut : ∀ S, MeasurableSet[hτs.measurableSpace] S →
+        MeasurableSet[hσ1.measurableSpace] (S ∩ A) := by
+      intro S hS
+      have h1 := hτs.measurableSet_inter_le hσ1 S hS
+      have hle : (hτs.min hσ1).measurableSpace ≤ hσ1.measurableSpace :=
+        (hτs.min hσ1).measurableSpace_mono hσ1 fun ω ↦ min_le_right _ _
+      rw [hAeq]
+      exact hle _ h1
+    have hAm : MeasurableSet[hσ1.measurableSpace] A := by
+      have := hcut Set.univ MeasurableSet.univ
+      rwa [Set.univ_inter] at this
+    have hWn : Measurable[hσ1.measurableSpace] (A.indicator W) := by
+      intro B hB
+      rw [Set.indicator_preimage]
+      refine MeasurableSet.union ?_ ?_
+      · exact hcut _ (hW.measurable hB)
+      · exact MeasurableSet.diff (measurable_const hB) hAm
+    have hWnb : ∀ ω, ‖A.indicator W ω‖ ≤ c := fun ω ↦
+      (norm_indicator_le_norm_self W ω).trans (hWb ω)
+    have key := integral_mul_stoppedValue_sub_eq_zero hY hprog hrc hσ1 hσ2 hσ12 hσ2j
+      hWn.stronglyMeasurable hWnb
+    rw [← key]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ ?_)
+    by_cases hω : ω ∈ A
+    · have hmin : min (τ ω) ((n : ℝ≥0) : ENNReal) = τ ω := min_eq_left (by exact_mod_cast hω)
+      simp only [Set.indicator_of_mem hω, hG, stoppedValue, hmin]
+    · simp [Set.indicator_of_notMem hω]
+  -- dominated convergence along `n`
+  have hlim : Tendsto (fun n : ℕ ↦ ∫ ω, {ω | τ ω ≤ ((n : ℝ≥0) : ENNReal)}.indicator G ω ∂P)
+      atTop (𝓝 (∫ ω, G ω ∂P)) := by
+    refine tendsto_integral_of_dominated_convergence (fun ω ↦ ‖G ω‖) ?_ hGint.norm ?_ ?_
+    · intro n
+      exact (hGint.indicator (𝓕.le _ _ (hτ (n : ℝ≥0)))).aestronglyMeasurable
+    · intro n
+      exact Filter.Eventually.of_forall fun ω ↦ norm_indicator_le_norm_self G ω
+    · filter_upwards [hτfin] with ω hω
+      obtain ⟨N, hN⟩ := ENNReal.exists_nat_gt hω
+      refine tendsto_const_nhds.congr' ?_
+      filter_upwards [Filter.eventually_ge_atTop N] with n hn
+      have : τ ω ≤ ((n : ℝ≥0) : ENNReal) := hN.le.trans (by exact_mod_cast hn)
+      exact (Set.indicator_of_mem (show ω ∈ {ω | τ ω ≤ ((n : ℝ≥0) : ENNReal)} from this) G).symm
+  have hzero : Tendsto (fun n : ℕ ↦ ∫ ω, {ω | τ ω ≤ ((n : ℝ≥0) : ENNReal)}.indicator G ω ∂P)
+      atTop (𝓝 0) := by
+    simp only [hA]; exact tendsto_const_nhds
+  exact tendsto_nhds_unique hlim hzero
+
 end TwoTimeSampling
 
 /-! ### From the square back to the increment
@@ -47957,6 +48075,98 @@ theorem localizingSystem_top_of_bounded (S : Shift F π) {𝓕₀ : Filtration �
 
 end Localization
 
+section StrongMarkovRestart
+
+/-! ### Step 1 of `thm:absstrongmarkov`: the restart identity at a stopping time -/
+
+variable {Ω : Type*} {m : MeasurableSpace Ω}
+variable {𝓕 : Filtration ℝ≥0 m} {P : Measure Ω} [IsFiniteMeasure P] {Y : ℝ≥0 → Ω → ℝ}
+
+/-- **A right continuous martingale restarted at a finite stopping time is a martingale for the
+filtration seen from that time**, Step 1 of the proof of `thm:absstrongmarkov` (manuscript,
+Z. 4426): `t ↦ Y_{τ+t} - Y_τ` is a martingale for `t ↦ 𝓕_{τ+t}`
+(`MeasureTheory.Filtration.shiftByTime`).
+
+The hypothesis is integrability of `Y_{τ+t}` for every `t`, which is `eq:optafterint` for every
+pair `s ≤ t` at once; for the test processes of a bounded generator on a shift invariant clock it
+is automatic (`rem:strongmarkovscope`).  The martingale identity is
+`integral_mul_stoppedValue_add_sub_eq_zero` with `W = 1_S`; adaptedness is Mathlib's
+`measurable_stoppedValue` for `τ + t` and for `τ`.  The filtration is the raw one.
+
+`τ` is `ℝ≥0`-valued, as in `Filtration.shiftByTime`; an a.s. finite `ENNReal`-valued stopping
+time enters `integral_mul_stoppedValue_add_sub_eq_zero` directly. -/
+
+theorem MeasureTheory.Martingale.shiftByTime_sub
+    (hY : Martingale Y 𝓕 P) (hprog : IsStronglyProgressive 𝓕 Y)
+    (hrc : ∀ᵐ ω ∂P, ∀ s : ℝ≥0, Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
+    {τ : Ω → ℝ≥0} (hτ : ∀ t : ℝ≥0, IsStoppingTime 𝓕 fun ω ↦ ((τ ω + t : ℝ≥0) : WithTop ℝ≥0))
+    (hint : ∀ t : ℝ≥0, Integrable (fun ω ↦ Y (τ ω + t) ω) P) :
+    Martingale (fun t ω ↦ Y (τ ω + t) ω - Y (τ ω) ω) (𝓕.shiftByTime τ hτ) P := by
+  classical
+  have hτ0 : IsStoppingTime 𝓕 (fun ω ↦ ((τ ω : ℝ≥0) : ENNReal)) := by
+    have h := hτ 0
+    simp only [add_zero] at h
+    exact h
+  have hval : ∀ (t : ℝ≥0) ω,
+      stoppedValue Y (fun ω ↦ ((τ ω : ℝ≥0) : ENNReal) + (t : ENNReal)) ω = Y (τ ω + t) ω :=
+    fun t ω ↦ rfl
+  have hval' : ∀ (t : ℝ≥0) ω,
+      stoppedValue Y (fun ω ↦ ((τ ω + t : ℝ≥0) : WithTop ℝ≥0)) ω = Y (τ ω + t) ω :=
+    fun t ω ↦ rfl
+  -- the σ-algebra of the shifted filtration sits inside that of the lemma
+  have hsig : ∀ s : ℝ≥0, (hτ s).measurableSpace
+      ≤ (hτ0.add_const_of_orderedSub (ι := ℝ≥0) s).measurableSpace := fun s ↦
+    (hτ s).measurableSpace_mono (hτ0.add_const_of_orderedSub (ι := ℝ≥0) s)
+      fun ω ↦ le_of_eq (WithTop.coe_add _ _)
+  have hmeas : ∀ t : ℝ≥0, StronglyMeasurable[(hτ t).measurableSpace]
+      (fun ω ↦ Y (τ ω + t) ω - Y (τ ω) ω) := by
+    intro t
+    have h1 : Measurable[(hτ t).measurableSpace]
+        (stoppedValue Y (fun ω ↦ ((τ ω + t : ℝ≥0) : WithTop ℝ≥0))) :=
+      measurable_stoppedValue hprog (hτ t)
+    have h0 : Measurable[(hτ 0).measurableSpace]
+        (stoppedValue Y (fun ω ↦ ((τ ω + 0 : ℝ≥0) : WithTop ℝ≥0))) :=
+      measurable_stoppedValue hprog (hτ 0)
+    have hle : (hτ 0).measurableSpace ≤ (hτ t).measurableSpace :=
+      (hτ 0).measurableSpace_mono (hτ t) fun ω ↦ WithTop.coe_le_coe.2 (by simp)
+    have h0' : Measurable[(hτ t).measurableSpace] (fun ω ↦ Y (τ ω) ω) := by
+      have heq : (fun ω ↦ Y (τ ω) ω)
+          = stoppedValue Y (fun ω ↦ ((τ ω + 0 : ℝ≥0) : WithTop ℝ≥0)) := by
+        funext ω; simp only [stoppedValue, add_zero]; rfl
+      rw [heq]; exact h0.mono hle le_rfl
+    exact (h1.sub h0').stronglyMeasurable
+  have hintf : ∀ t : ℝ≥0, Integrable (fun ω ↦ Y (τ ω + t) ω - Y (τ ω) ω) P := fun t ↦ by
+    have h0 := hint 0
+    simp only [add_zero] at h0
+    exact (hint t).sub h0
+  refine ⟨hmeas, fun s t hst ↦ ?_⟩
+  have hle : (hτ s).measurableSpace ≤ m := (hτ s).measurableSpace_le
+  refine (ae_eq_condExp_of_forall_setIntegral_eq hle (hintf t)
+    (fun S _ _ ↦ (hintf s).integrableOn) (fun S hS _ ↦ ?_)
+    (hmeas s).aestronglyMeasurable).symm
+  have hSm : MeasurableSet S := hle S hS
+  have hW : StronglyMeasurable[(hτ0.add_const_of_orderedSub (ι := ℝ≥0) s).measurableSpace]
+      (S.indicator fun _ ↦ (1 : ℝ)) :=
+    stronglyMeasurable_const.indicator (hsig s S hS)
+  have hWb : ∀ ω, ‖S.indicator (fun _ ↦ (1 : ℝ)) ω‖ ≤ 1 := fun ω ↦ by
+    by_cases h : ω ∈ S <;> simp [h]
+  have hincr : Integrable (fun ω ↦ stoppedValue Y (fun ω ↦ ((τ ω : ℝ≥0) : ENNReal) + (t : ENNReal)) ω
+      - stoppedValue Y (fun ω ↦ ((τ ω : ℝ≥0) : ENNReal) + (s : ENNReal)) ω) P := by
+    simp only [hval]; exact (hint t).sub (hint s)
+  have key := integral_mul_stoppedValue_add_sub_eq_zero hY hprog hrc hτ0
+    (Filter.Eventually.of_forall fun ω ↦ ENNReal.coe_ne_top) hst hincr hW hWb
+  simp only [hval] at key
+  have hsplit : ∫ ω in S, (Y (τ ω + t) ω - Y (τ ω) ω) ∂P
+      - ∫ ω in S, (Y (τ ω + s) ω - Y (τ ω) ω) ∂P
+      = ∫ ω, S.indicator (fun _ ↦ (1 : ℝ)) ω * (Y (τ ω + t) ω - Y (τ ω + s) ω) ∂P := by
+    rw [← integral_sub (hintf t).integrableOn (hintf s).integrableOn, ← integral_indicator hSm]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ ?_)
+    by_cases h : ω ∈ S <;> simp [h]
+  rw [key] at hsplit
+  linarith
+
+end StrongMarkovRestart
+
 /-! ### The running supremum and its hitting times, `lem:L1auto`
 
 Steps 1 and 2 of the proof of `lem:L1auto`: the running supremum of a right continuous adapted
@@ -48747,6 +48957,65 @@ theorem isStrongMarkov_kernel_of_countable_range
   have h3 := condExp_indicator_eq_kernel hS hbot hadd hadapt hX hXadapt hsol hint r honedim
     hKsol hKinit hKint hC t
   exact h1.trans (h2.trans (ae_restrict_of_ae h3))
+
+
+/-- **The Chapman--Kolmogorov relation**, the last sentence of `thm:absstrongmarkov` (manuscript,
+Z. 4421), in the **time homogeneous** case `𝓧₀ r = 𝓧₀ 0`: if every `K x` solves the problem from
+`δ x` and the one dimensional laws are unique, then
+
+```
+(K x) {π (s + t) ∈ C} = ∫ f, (K (π s f)) {π t ∈ C} ∂(K x),
+```
+
+i.e. `T_{s+t} = T_s T_t` for `T_u g x = ∫ g (π u) ∂K x`.
+
+The proof is "the first assertion applied twice" of the manuscript, and the first application is
+free: `setIntegral_indicator_eq_kernel` on the canonical space, with `X = id`, `P = K x`, the
+filtration `𝓕₀`, and `A = univ`.
+
+**Why homogeneous.** In the inhomogeneous case the relation reads
+`T_{r,s} T_{s,t} = T_{r,t}` with `K_r x` solving the problem posed at `r`, and the same proof needs
+`K_r x` as a solution **started at `0`** of a problem with a shift system -- the family
+`u ↦ 𝓧₀ (r + u)`.  `IsShiftSystem` expresses every shifted family through `𝓧₀ 0` only, and a
+shift system for the reindexed family does not follow from it: the increment clause for
+`𝓧₀ (r + s)` would have to go through `𝓧₀ r`, and the structure says nothing about that.  The
+inhomogeneous relation is therefore not a consequence of the hypotheses of this section as
+stated. -/
+theorem chapmanKolmogorov_of_unique_onedim
+    {S : Shift F π} {𝓕₀ : Filtration ι mF} {𝓧₀ : ι → Set (ι → F → 𝕂)}
+    (hS : IsShiftSystem S 𝓕₀ 𝓧₀)
+    (hbot : (⊥ : ι) = 0) (hadd : ∀ r u : ι, r ≤ r + u)
+    (hadapt : ∀ u : ι, Measurable[𝓕₀ u] (π u))
+    (hhom : ∀ r : ι, 𝓧₀ r = 𝓧₀ 0)
+    (honedim : ∀ R R' : Measure F, IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      IsMPSolution (𝓧₀ 0) 𝓕₀ R → IsMPSolution (𝓧₀ 0) 𝓕₀ R' →
+      R.map (π ⊥) = R'.map (π ⊥) → ∀ u : ι, R.map (π u) = R'.map (π u))
+    {K : Kernel E F} [IsMarkovKernel K] (hKsol : ∀ x, IsMPSolution (𝓧₀ 0) 𝓕₀ (K x))
+    (hKinit : ∀ x, (K x).map (π ⊥) = Measure.dirac x)
+    (hKint : ∀ ν : Measure E, IsProbabilityMeasure ν → ∀ Y ∈ 𝓧₀ 0, ∀ i,
+      Integrable (fun x ↦ ∫ ω, ‖Y i ω‖ ∂K x) ν)
+    (hKint' : ∀ x, ∀ Y ∈ 𝓧₀ 0, ∀ u : ι, Integrable (Y u) (K x))
+    {C : Set E} (hC : MeasurableSet C) (x : E) (s t : ι) :
+    (K x).real (π (s + t) ⁻¹' C) = ∫ f, (K (π s f)).real (π t ⁻¹' C) ∂(K x) := by
+  have hπm : ∀ u : ι, Measurable (π u) := fun u ↦ (hadapt u).mono (𝓕₀.le u) le_rfl
+  have himg : ((fun (Y : ι → F → 𝕂) t ω ↦ Y t (id ω)) '' 𝓧₀ 0) = 𝓧₀ 0 := by
+    simp
+  have hsol : IsMPSolution ((fun (Y : ι → F → 𝕂) t ω ↦ Y t (id ω)) '' 𝓧₀ 0) 𝓕₀ (K x) := by
+    rw [himg]; exact hKsol x
+  have h := setIntegral_indicator_eq_kernel hS hbot hadd hadapt measurable_id
+    (fun u ↦ measurable_id) hsol (fun Y hY u ↦ hKint' x Y hY u) s
+    (by rw [hhom s]; exact honedim) (fun y ↦ by rw [hhom s]; exact hKsol y) hKinit
+    (by rw [hhom s]; exact hKint) hC t (A := Set.univ) MeasurableSet.univ
+  simp only [Measure.restrict_univ, id_eq] at h
+  rw [← h]
+  have heq : (fun f ↦ C.indicator (fun _ ↦ (1 : ℝ)) (π (s + t) f))
+      = (π (s + t) ⁻¹' C).indicator (fun _ ↦ (1 : ℝ)) := by
+    funext f
+    by_cases hf : π (s + t) f ∈ C
+    · simp [Set.indicator_of_mem hf, Set.indicator_of_mem (show f ∈ π (s + t) ⁻¹' C from hf)]
+    · simp [Set.indicator_of_notMem hf,
+        Set.indicator_of_notMem (show f ∉ π (s + t) ⁻¹' C from hf)]
+  rw [heq, integral_indicator_const _ (hπm (s + t) hC), smul_eq_mul, mul_one]
 
 end StrongMarkovKernel
 
