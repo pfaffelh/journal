@@ -1,6 +1,0 @@
--- Leerer Rest eines Einfügeschritts vom 2026-09-24 (elfter Lauf des Tages).
--- Der Inhalt steht in `TauCeti/MartingaleProblems/Suggested.lean`, Abschnitt
--- `DonskerLimit`, bei `exists_brownianGeneratorPairs_tendsto`.  Diese Datei ist
--- **keine** Probe und nicht übersetzbar; sie war nur das Zwischenlager für den
--- Block und darf gelöscht werden.  Der Lauf konnte sie nicht selbst entfernen,
--- weil ihm das Löschen von Dateien verwehrt ist.
