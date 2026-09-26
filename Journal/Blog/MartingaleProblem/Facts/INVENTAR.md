@@ -63773,3 +63773,38 @@ der zweite Lauf, den die Aufgabe für Schritt 6 vorsieht.
 
 **Stand der Aufgabe.** Schritte 1–5 stehen (mit den genannten Einschränkungen), Schritt 6 bis auf
 `cor:pastingmarkov`. Offen: `cor:pastingmarkov` und Schritt 7.
+
+### Derselbe Lauf, Abschluß
+
+Bearbeitet: Aufgabe „lokales Martingalproblem“, Schritte 3, 4, 5 und der größere Teil von 6; der
+Einschub war schon erledigt. Das Manuskript und die READMEs sind nicht angefaßt. `check_master.py`
+am Ende: 0 Fehler, 0 `sorry`, 0 veraltet in allen vier Dateien; Warnungen 18 / 38 / 38 / 76, wie zu
+Beginn. Umgebaut, mit unveränderter Signatur, sind `propagatesAgreement_of_unique_onedim` und
+`isMarkov_of_unique_onedim`. Sie sind jetzt Korollare von `propagatesAgreement_of_restart` und
+`isMarkov_of_restart`.
+
+Die Befunde am Manuskript aus diesem Lauf, mit Zeilen:
+
+* Z. 4628, 4646–4651, 4668–4669: (a) von `lem:localmix` „ohne Voraussetzung“ ist nicht gedeckt.
+* Z. 3431–3437: `eq:countabletest` muß die Integrierbarkeit enthalten.
+* Z. 4798: „By (L1)“ in `lem:localrestart` braucht (L1) für `𝓧°_r`, gebraucht wird nur die
+  Folge.
+* Z. 5119–5124: `thm:localuniqueness` führt die Integrabilitätsbedingung von `lem:pasting` nicht.
+* Z. 5089–5091: „adapted, so a function of `a_T`“ braucht Progressivität.
+* Z. 5037–5040: (E1) ist für (R1) entbehrlich.
+
+**Benanntes Ziel für den nächsten Lauf: `cor:pastingmarkov`** (Z. 5131), der Rest von Schritt 6.
+Die Aussage: `restartKernel_of_concatenation`. Sei `γ : F → F → F` meßbar in beiden Variablen, mit
+`a_T (γ α β) = a_T α` und `θ_{T α} (γ α β) = β`, und sei `κ₀ : Kernel F F` mit
+`κ₀ α ∈ M(𝓧₀ (T α), δ_{α_{T α}})`. Dann ist `α ↦ (κ₀ α).map (γ α)` ein `IsRestartKernel` bei `T`.
+Er ruht auf:
+
+* (R1) punktweise aus der ersten Konkatenationseigenschaft;
+* (R2) aus der „vollen“ Schiftfamilie und dem Transport `𝓕°_{r+u} = θ_r⁻¹ 𝓕°_u` modulo
+  `Q_α`-Nullmengen (Z. 5155–5160). Der Transport ist die eigentliche Arbeit. Er ist dieselbe
+  Rechnung wie `shiftMeasurable_of_natural`, nur in der Gegenrichtung und fast sicher;
+* dem Kern als `(Kernel.id ×ₖ κ₀).map (uncurry γ)`.
+
+Danach Schritt 7, der explodierende Sprungprozeß. Dort ist zuerst zu entscheiden, auf welchem
+Pfadraum die Nichtexistenz der globalen Lösung ausgesprochen wird (Befund (i) des 21:03-Laufs:
+`rateTime → ⊤` gilt nur auf `NonExplosiveE`).
