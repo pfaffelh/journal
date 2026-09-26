@@ -18,99 +18,33 @@ Deine letzte Antwort ist der Bericht, nicht eine Ankündigung.
 zu lesen; sie sind ausgelagert, damit dieser Auftrag der Auftrag bleibt und nicht
 die Aktenlage. Die Ergebnisse stehen ohnehin in `Facts/INVENTAR.md`.*
 
-### Einschub: `duality_of_atomless` ohne unendliche Masse *(gestellt 2026-09-25 nachts vom Nutzer)*
+### Drei Aufgaben in dieser Reihenfolge *(gestellt 2026-09-26 vom Nutzer)*
 
-**Das kommt vor dem nächsten Schritt der Aufgabe darunter, in einem Lauf.**
-Findet ein Lauf im Inventar schon einen Bericht zu diesem Einschub vor, ist er
-erledigt, und der Lauf geht direkt zur Aufgabe darunter. Danach geht es mit dem
-nächsten offenen Schritt dort weiter.
-
-**Worum es geht.** `duality_of_atomless` (`MartingaleProblems/Suggested.lean`,
-Z. 22924) trägt die Voraussetzung `hunb`, eine Uhr unendlicher Masse, die das
-Manuskript nicht hat (Befund 1 des fünften Teils vom 2026-09-25). Grund war, daß
-`ae_sub_eq_integral_antidiagonal` auf dem ganzen Quadranten steht und das
-gekappte Quantil oberhalb von `L = sup Q` konstant ist, die Zuwächse von `Ψ`
-dort also `0` sind und nicht `∫ ψ`.
-
-**Der vorgeschlagene Weg, noch ungeprüft:** Man verlangt nicht dasselbe `ψ` in
-beiden Variablen. Man nimmt `γ₁ = ψ · 1_{s < L}` und `γ₂ = ψ · 1_{t < L}`, zu
-`Ψ`, das jenseits von `L` konstant fortgesetzt ist. Das ist absolut stetig, weil
-es bei `L` stetig und danach konstant ist. Auf dem ganzen Quadranten gilt dann
-`∇Ψ = (γ₁, γ₂)`, und `lem:calculus` gilt wörtlich. Für `t ≤ L` liegen `s` und
-`t - s` unter `L`, also ist `γ₁(s, t-s) - γ₂(s, t-s) = 0`.
-
-* Ziel: `duality_of_atomless` **ohne** `hunb`, für jede atomlose Uhr mit
-  `q (Iio s) ≠ ⊤`, mit derselben Folgerung. `check_master.py` sauber.
-* Trägt der Weg nicht, dann ein begründetes „geht nicht“ mit der Stelle, an der
-  er bricht, und `duality_of_atomless` bleibt, wie es ist.
-* Der Befund gehört ins Inventar, auch die Frage, ob `cor:atomless` im Manuskript
-  (Beweis ab Z. 5661, Anwendung von `lem:calculus` auf `[0, L]²`) dafür einen Satz
-  braucht. **Das Manuskript nicht anfassen.**
-
-### Aufgabe: das lokale Martingalproblem, Meilenstein 6 *(gestellt 2026-09-25 abends vom Nutzer)*
-
-**Diese Aufgabe geht allen älteren vor.** Die Dualität ist am 2026-09-25
-vollständig erledigt und ins Archiv verschoben. Quelle für jede Aussage ist
-`MartingaleProblem.tex`, Abschnitte `ssec:localmp` (ab Z. 4537) und
-`ssec:localuniq` (ab Z. 4979); die Namen sind die aus
-`MartingaleProblems/README-kurz.md`, Meilenstein 6, wo es sie gibt.
+**Diese drei Aufgaben gehen allen älteren vor, und zwar in der angegebenen
+Reihenfolge: erst A, dann B, dann C.** Der Einschub zu `duality_of_atomless` und
+die Aufgabe zum lokalen Martingalproblem (Meilenstein 6) sind am 2026-09-26
+erledigt und ins Archiv verschoben. Ihre Ergebnisse stehen in `Facts/INVENTAR.md`.
 
 **Ein Schritt ist ein Lauf und ein benanntes Ziel.** Wer früher fertig ist,
 nimmt den nächsten Schritt im selben Lauf. Wer steckenbleibt, berichtet ein
-begründetes „geht nicht“ und geht zum nächsten Schritt, der nicht daran hängt;
-die Abhängigkeiten stehen je dabei. **Die Reihenfolge ist vom Nutzer gesetzt.**
+begründetes „geht nicht“ mit der Stelle, an der es bricht, und geht zum nächsten
+Schritt, der nicht daran hängt. Die Abhängigkeiten stehen jeweils dabei.
+**Die Reihenfolge ist vom Nutzer gesetzt.**
 
-**Worum es geht, in einem Satz** (Z. 4540–4551): „`Y` ist ein lokales Martingal“
-ist nicht linear in `P`, weil die lokalisierende Folge von `P` abhängen darf;
-Mischung, Disintegration und Restart gehen deshalb im lokalen Fall verloren.
-Repariert wird das durch ein **Lokalisierungssystem** `Σ` aus **strikten**
-Stoppzeiten, die Funktionale des Pfads sind, dieselben für jedes `P`.
-
-**Strikt heißt hier, in Lean:** `IsStoppingTime 𝓕 τ` für die **rohe** Filtration
-`𝓕`, nicht für ihre rechtsstetige Hülle und nicht für eine Vervollständigung
-(`rem:strictdebut`, `rem:jsdiff`(iii)). Das ist der Inhalt des Meilensteins und
-in jeder Signatur sichtbar zu halten. Eine Voraussetzung
-`[𝓕.IsRightContinuous]` oder `[𝓕.IsComplete]` in einer Aussage dieser Aufgabe
-ist ein Fehler in der Aussage, kein Werkzeug.
-
-**Was schon steht, und nicht neu zu bauen ist:**
-
-* in Mathlib (`Mathlib/Probability/Process/LocalProperty.lean`):
-  `IsLocalizingSequence`, `Locally`, `IsStable`, `IsStable.locally`,
-  `IsLocalizingSequence.min`, `locally_locally_iff`, `locally_induction`. Einen
-  Begriff `IsLocalMartingale` hat Mathlib **nicht**;
-* in `MartingaleProblems/Suggested.lean`: `IsLocalMPSolution` (Z. 792, über
-  `Locally`), `isLocalMPSolution_of_isMPSolution`, `martingale_stoppedProcess`
-  (Z. 10946, stetige Zeit, ohne Schranke an die Pfade),
-  `locally_martingale_stoppedProcess` (Z. 11445), `restart` (`lem:restart`),
-  `IsShiftSystem`, und `thm:absuniq` als `propagatesAgreement_of_unique_onedim`,
-  `subsingleton_mpSolutions_of_unique_onedim`, `isMarkov_of_unique_onedim`;
-* in `JumpProcesses/Suggested.lean`: die Instanzen `isLocalizingSequence_rateTime`,
-  `jumpProcess_isLocalMPSolution`, `poissonProcess_isLocalMPSolution`,
-  `linearBirthDeath_isLocalMPSolution`, `yule_isLocalMPSolution`.
+**Zuerst nachsehen, dann bauen.** Die Liste der fehlenden Namen unten stammt aus
+einem groben Abgleich der Namen in `README-kurz.md` mit denen in
+`Suggested.lean` vom 2026-09-26. Ein Name, der fehlt, kann unter anderem Namen
+schon stehen. Deshalb vor jedem Schritt `Suggested.lean` (alle vier Dateien) nach
+dem **Inhalt** durchsuchen. Steht die Aussage schon, wird die Zuordnung „README-
+Name ↦ Lean-Name“ ins Inventar geschrieben und **nichts doppelt gebaut**.
 
 **BrownianMotion, nur zum Lesen.** `~/Code/lean/brownian-motion-upstream` ist ein
 Worktree von `RemyDegenne/brownian-motion` auf `upstream/master` (`0d5b6eb`,
-2026-09-22), über `--add-dir` lesbar. **Nicht importierbar**: Die Roadmap-Dateien
-hängen allein an Mathlib `master`. Was von dort übernommen wird, wird
-abgeschrieben, angepaßt und mit einem Kommentar
+2026-09-22), lesbar über `--add-dir`. Er ist **nicht importierbar**, weil die
+Roadmap-Dateien allein an Mathlib `master` hängen. Was von dort übernommen wird,
+wird abgeschrieben, angepaßt und mit dem Kommentar
 `-- nach BrownianMotion, <Datei>:<Zeile> (0d5b6eb)` versehen. Dort wird
-**nichts** geschrieben, gebaut oder gepullt. Einschlägig:
-
-* `StochasticIntegral/LocalMartingale.lean`: `IsLocalMartingale` als
-  `Locally (Martingale · 𝓕 P ∧ càdlàg)`, `isStable_martingale`,
-  `Martingale.stoppedProcess_indicator`;
-* `StochasticIntegral/LocalizingSequence.lean`, `Locally.lean`: Ergänzungen zu
-  Mathlibs `LocalProperty` und die Stabilität von Pfadeigenschaften;
-* `StochasticIntegral/LocalizingLeastGE.lean`: `isLocalizingSequence_leastGE`
-  und `stoppedAtNorm_le_add_jump`. **Das ist fast `lem:L1auto`, aber unter
-  `[𝓕.IsComplete] [𝓕.IsRightContinuous]`**: die Stoppzeiteigenschaft kommt dort
-  aus dem Débutsatz (`Choquet.Debut`). Die Sprungschranke ist übernehmbar, die
-  Stoppzeiteigenschaft **nicht**.
-
-**Was ausdrücklich nicht dazugehört:** `rem:cadlaglocal` (die lokale Fassung von
-`thm:cadlag`); die starke Markoveigenschaft in `thm:localuniq`, solange die
-schwache nicht steht; Meilenstein 11.
+**nichts** geschrieben, gebaut oder gepullt.
 
 **Regeln, die weiter gelten:**
 
@@ -118,87 +52,241 @@ schwache nicht steht; Meilenstein 11.
   Befunde gehören ausschließlich in `Facts/INVENTAR.md`.
 * **Das Manuskript nicht anfassen.** Lücken und Fehler stehen im Bericht, mit
   Zeilennummer.
-* Die Kette hat **vier** Dateien; `check_master.py` baut alle vier und ist die
-  maßgebliche Prüfung. Die neuen Aussagen kommen in einen neuen Abschnitt
-  `Localization` in `MartingaleProblems/Suggested.lean`. Im Bericht wird eine
-  Aussage über ihren **Namen** benannt.
+* `check_master.py` baut alle vier Dateien der Kette und ist die maßgebliche
+  Prüfung. Im Bericht wird eine Aussage über ihren **Namen** benannt.
+* **Nichts nach außen**: kein PR, kein Issue, kein Kommentar bei BrownianMotion
+  oder Mathlib, auch wenn ein Beweis dort eine Lücke schließen würde. Das kommt
+  ins Inventar, und der Nutzer entscheidet.
 
-#### Schritt 1. `LocalizingSystem` (`def:localizing`, Z. 4553)
+---
 
-Eine Familie `Σ` strikter Stoppzeiten auf dem Pfadraum mit (L1) gleichmäßige
-Lokalisierung, (L2) Shiftkovarianz, (L3) integrable Zuwächse nach einem
-Restart; dazu „stark shiftkovariant“. **Eine Verfeinerung von
-`IsLocalizingSequence`, kein Ersatz**: (L1) ist die Aussage, daß **eine** feste
-Folge `τ_n ∈ Σ` für **jede** Lösung `Locally` bezeugt. Wie das ohne Doppelung
-gegen Mathlib ausgesprochen wird, entscheidet der Lauf und begründet es.
+#### Aufgabe A: Meilenstein 8 von `MartingaleProblems`, Martingale in stetiger Zeit
 
-Als Probe, daß die Definition nicht ins Leere zielt: `rem:localhyp`, der
-Diffusionsfall, oder eine der Instanzen aus `JumpProcesses`, je nachdem, was
-billiger ist. Paßt keine, ist das ein Befund über die Definition.
+Quelle: `MartingaleProblems/README-kurz.md`, Meilenstein 8, und die zugehörigen
+Stellen im Manuskript (`thm:cadlag` und Umgebung). Die neuen Aussagen kommen in
+einen Abschnitt `ContinuousTimeMartingales` in `MartingaleProblems/Suggested.lean`,
+sofern sie nicht zu schon vorhandenem Material gehören.
 
-#### Schritt 2. `localizingSystem_of_boundedJumps` (`lem:L1auto`, Z. 4683)
+**Was im Prototyp schon steht** (nicht neu bauen): `HasUpcrossings` (Z. 1777),
+`rightLimAlong` (Z. 4370), `isCadlag_rightLimAlong` (Z. 4497), `dyadStop`
+(Z. 10525), `stoppedValue_ae_eq_condExp` (Z. 10872), `martingale_stoppedProcess`
+(Z. 10946, ohne Schranke an die Pfade), `locally_martingale_stoppedProcess`,
+`Submartingale.ae_exists_not_hasUpcrossings`, die Quasi-Linksstetigkeit.
 
-Hängt an Schritt 1. **Der technisch heikelste Schritt.** Càdlàg-Testprozesse
-mit `Y 0 = 0` und durch `c_Y` beschränkten Sprüngen; `τ_n` ist die Treffzeit
-des **laufenden Supremums** `S_t = sup_{s ≤ t} ‖Y_s‖` auf `[n, ∞)`, nicht die
-der Norm. Die vier Schritte des Beweises:
+**Was BrownianMotion schon hat** (Stand `0d5b6eb`, am 2026-09-26 nachgesehen):
 
-1. `S` ist càdlàg, monoton und adaptiert, über das abzählbare Supremum
-   `eq:supcountable` (T2b);
-2. `{τ_n ≤ t} = {S_t ≥ n}` (`eq:debutclosed`), also `τ_n` strikt. **Hier liegt
-   der Unterschied zu BrownianMotion**, und er ist im Bericht festzuhalten;
-3. `‖Y^{τ_n}‖ ≤ n + c_Y`. Das ist `stoppedAtNorm_le_add_jump` mit `S` statt
-   `‖Y‖`;
-4. (L1): Ein beschränktes lokales Martingal ist ein Martingal.
+* `StochasticIntegral/OptionalSampling.lean` (Kexing Ying), unter
+  `[LinearOrder ι] [OrderTopology ι] [OrderBot ι] [SecondCountableTopology ι]`,
+  rechtsstetigen Pfaden und der Klasse `Approximable 𝓕 μ` aus `ApproxSeq.lean`:
+  `stoppedValue_min_ae_eq_condExp'` (optional sampling für **Martingale**,
+  bewiesen), `condExp_stoppedValue_ae_eq_stoppedProcess`,
+  `Martingale.stoppedProcess` (gestoppter Prozeß ist Martingal, bewiesen),
+  `Submartingale.stoppedValue_min_ae_le_condExp_nat` (diskret, bewiesen).
+  **`Submartingale.stoppedValue_min_ae_le_condExp` in stetiger Zeit (Z. 281) ist
+  dort ein `sorry`.** Das ist genau unser Schritt A1.
+* `StochasticIntegral/DoobLp.lean`: `maximal_ineq`, `maximal_ineq_norm`,
+  `measurable_iSup_of_rightContinuous` bewiesen; die $L^p$-Ungleichungen
+  `integral_iSup_le_norm_rpow_le` und `integral_iSup_norm_rpow_le` sind `sorry`.
+* `StochasticIntegral/Quasimartingale/CadlagModification.lean` und
+  `…Banach.lean`: `Submartingale.cadlagModifReal_ae_eq` **unter
+  `[𝓕.IsRightContinuous]`** und mit rechtsstetigem Erwartungswert als
+  Voraussetzung (nur die eine Richtung der Äquivalenz),
+  `Martingale.cadlagModif_ae_eq` und `Martingale.martingale_cadlagModif` für
+  Banach-wertige Martingale, ebenfalls unter `[𝓕.IsRightContinuous]`.
+  `cadlagModif` ist dort eine Konstruktion, wie es die Roadmap verlangt.
+* `Auxiliary/Upcrossing.lean`, `Quasimartingale/MaximalInequality.lean`:
+  Upcrossings auf endlichen Teilmengen, Maximalungleichung für Quasimartingale.
 
-#### Schritt 3. `lem:localmix` (Z. 4622)
+**Worauf es bei der Übernahme ankommt:** BrownianMotion arbeitet unter
+`[𝓕.IsRightContinuous]` (und teils `IsComplete`). Die Roadmap will die
+Regularisierung **genau dort eine Modifikation, wo `t ↦ 𝔼[Y t]` rechtsstetig
+ist**, als Äquivalenz. Welche Voraussetzung an die Filtration die Äquivalenz
+wirklich braucht, ist Teil des Befunds. Wird eine Richtung nur unter
+`[𝓕.IsRightContinuous]` erreicht, ist das in der Signatur sichtbar zu lassen und
+im Bericht zu sagen. Die Klasse `Approximable` wird **nicht** blind übernommen:
+Der Lauf prüft, ob `dyadStop` im Prototyp für `ℝ≥0` dasselbe leistet, und
+entscheidet begründet.
 
-Hängt an Schritt 1. (a) Konvexität, **ohne jede Voraussetzung**, über
-`IsLocalizingSequence.min`; (b) Mischungen unter (L1) mit der
-Integrabilitätsbedingung; (c) Disintegration unter `eq:countabletest`. Die
-globalen Fassungen `lem:mixture` (Z. 3405) und `lem:disint` (Z. 3427) stehen in
-Lean **nicht**. Ob sie vorab als eigene Aussagen kommen oder der lokale Beweis
-direkt geführt wird, entscheidet der Lauf.
+##### Schritt A1. Optional sampling für Submartingale in stetiger Zeit
 
-#### Schritt 4. `localRestart` (`lem:localrestart`, Z. 4780)
+`Submartingale.stoppedValue_min_le_condExp` für eine beschränkte Stoppzeit und
+rechtsstetige Pfade, danach `…_of_ae_finite` für eine fast sicher endliche unter
+einer Integrierbarkeitsvoraussetzung. Weg: diskrete Fassung
+(`Submartingale.stoppedValue_min_ae_le_condExp_nat` bzw. Mathlib), dyadische
+Approximation von oben, $L^1$-Konvergenz über gleichgradige Integrierbarkeit.
+Das Martingal-Gegenstück ist bei BrownianMotion bewiesen und zeigt, wie die
+Approximation läuft; für Submartingale braucht die gleichgradige
+Integrierbarkeit ein eigenes Argument (Doob-Zerlegung auf dem Gitter oder
+`uniformIntegrable_of_le_condExp`, `CadlagModification.lean`).
 
-Hängt an Schritt 1 und an `restart`. Der Beweis ist der von `restart` mit
-`Y^{τ_n}` statt `Y`; wird er kein Korollar von `restart`, ist das ein Befund über
-`restart`.
+##### Schritt A2. `Martingale.stoppedProcess_of_rightContinuous`
 
-#### Schritt 5. `subsingleton_localMPSolutions` (`thm:localuniq`, Z. 4866)
+Hängt an A1 oder am Martingal-Fall. Wahrscheinlich im Kern schon
+`martingale_stoppedProcess` (Z. 10946). Dann nur Zuordnung und, falls nötig, die
+Fassung mit dem Namen der Roadmap.
 
-Hängt an Schritt 4. `thm:absuniq` mit `𝓜_loc` statt `𝓜`: nach dem Manuskript
-nur `lem:restart` durch `localRestart` ersetzt, `prop:uniqfromprop`
-unverändert. Die schwache Markoveigenschaft, falls sie ohne neuen Beweis
-abfällt.
+##### Schritt A3. Doobs Ungleichungen in stetiger Zeit
 
-#### Schritt 6. Lokale Eindeutigkeit (`ssec:localuniq`, Z. 4979–5160)
+Die Maximalungleichung und die $L^p$-Ungleichung für rechtsstetige
+Submartingale, das Supremum meßbar als Supremum über eine abzählbare dichte
+Menge. Die Maximalungleichung ist bei BrownianMotion bewiesen; die
+$L^p$-Fassung ist dort `sorry` und hier zu beweisen (aus der diskreten Fassung in
+Mathlib, `MeasureTheory.maximal_ineq` und Verwandte, über abzählbare dichte
+Mengen).
 
-Hängt an Schritt 1, nicht an 2–5. `def:localuniq`, strikte Stoppzeiten im Sinn
-von `def:pasting` (Stoppoperator `a_T`, `𝓕°_T = a_T⁻¹ 𝓢`), `def:restartkernel`,
-`lem:pasting` (Verkleben mit Gedächtnis), `thm:localuniqueness` (JS III.2.40)
-und `cor:pastingmarkov`. Das ist eine eigene Richtung und darf zwei Läufe
-brauchen.
+##### Schritt A4. Die càdlàg-Modifikation eines Submartingals
 
-#### Schritt 7. Abnahme: der explodierende Sprungprozess
+`Submartingale.cadlagModif_ae_eq_iff_continuousWithinAt_integral` (beide
+Richtungen) und `Martingale.cadlagModif_ae_eq` als Korollar, mit `cadlagModif`
+aus `rightLimAlong`. Der Satz, daß die Modifikation wieder ein Submartingal ist
+(bezüglich der rechtsstetigen Hülle), gehört dazu. Siehe den Absatz über die
+Filtration oben.
 
-Hängt an Schritt 1 und an `JumpProcesses`. Das lokale Problem hat eine Lösung,
-das globale keine. Die lokale Lösung steht schon
-(`jumpProcess_isLocalMPSolution`); neu ist, daß ihre lokalisierende Folge aus
-einem Lokalisierungssystem kommt, und die Nichtexistenz der globalen Lösung.
+##### Schritt A5. Der càdlàg-Modifikationssatz und die Zeugen
 
-#### Wenn alle sieben Schritte stehen
+Soweit nicht schon vorhanden: `IsRegularizingClass`, `CompactContainment`,
+`exists_cadlag_modification_of_isRegularizingClass`,
+`exists_tendsto_of_forall_tendsto_comp`, `isRegularizingClass_mpFamily`,
+`isCompensatorFor_mpFamily`; die Zeugen `LiftWitness`,
+`not_isQuasiLeftContinuous_of_isRegularizingClass_of_free_solutionSet`,
+`not_isQuasiLeftContinuous_of_atom`. Die Akzeptanzbeispiele der Roadmap:
+ein Submartingal ohne càdlàg-Modifikation mit der genauen Obstruktion; optional
+sampling braucht seine Beschränktheit (Brownsche Bewegung und die Treffzeit von
+`1`); die Münze am Atom.
+
+**Was nicht zu Aufgabe A gehört:** `isStrongMarkov` (das ist Schritt C5), die
+Doob–Meyer-Zerlegung, stochastische Integrale.
+
+---
+
+#### Aufgabe B: Die Einschränkungen von Meilenstein 6 aufheben
+
+Hängt nur dort an Aufgabe A, wo es dabeisteht. Stand nach der Aufgabe vom
+2026-09-25 (Berichte im Inventar, 2026-09-25/26):
+
+* Schritt 2 (`lem:L1auto`) steht als `isUniformLocalization_of_boundedJumps`
+  **nur für endliche Familien**, und das Minimum liegt nicht in `Σ₀`;
+* Schritt 3(a) (`lem:localmix`, Konvexität) steht nur **unter (L1) oder bei
+  beschränkten Sprüngen**; die Fassung „ohne jede Voraussetzung“ ist offen, der
+  Weg über den Dichteprozeß bricht an der Rechtsstetigkeit von `Z`;
+* Schritte 4 und 5 (`localRestart`, `subsingleton_localMPSolutions`) stehen nur
+  **auf dem kanonischen Raum**;
+* Schritt 7 endet mit einem begründeten Nein zur Formulierung des Manuskripts
+  (explodierende Sprungprozesse: lokalisierende Folge geht nur gegen `ζ`).
+
+**Strikt heißt weiterhin roh:** `IsStoppingTime 𝓕 τ` für die rohe Filtration.
+Eine Voraussetzung `[𝓕.IsRightContinuous]` oder `[𝓕.IsComplete]` in einer
+Aussage des Meilensteins ist ein Fehler, **außer** sie steht in einer ausdrücklich
+als solche benannten Nebenfassung (siehe B2).
+
+##### Schritt B1. (L1) je Testprozeß, und `lem:L1auto` für beliebige Familien
+
+Der Befund vom 2026-09-25: Was `lem:L1auto` wirklich zeigt, ist die Fassung
+„**für jedes `Y°` eine Folge in `Σ`**“, und sie genügt jedem Gebrauch in
+`lem:localmix`. Der Lauf baut diese Fassung als **zusätzliche** Definition neben
+`IsUniformLocalization` (die bestehende bleibt, der Nutzer hat über die
+Umstellung noch nicht entschieden), beweist `lem:L1auto` in dieser Fassung für
+**beliebige** Familien, und prüft, welche Sätze von Schritt 3–5 mit ihr genauso
+gehen. Dazu gehört die Frage, ob `Σ₀` um endliche Minima erweitert ein volles
+`LocalizingSystem` wird ((L2), (L3)), oder ein begründetes Nein. Ein Zeuge, daß
+für unendliche Familien **kein** gemeinsames `τ_n` existiert (strikt lokales
+Martingal), ist erwünscht, aber nachrangig.
+
+##### Schritt B2. Konvexität (`lem:localmix`(a)) ohne Voraussetzung
+
+Zwei Ausgänge sind gleich gut: ein Beweis für die **rohe** Filtration, oder ein
+Zeuge in Lean, daß sie für die rohe Filtration falsch ist (das Gegenbeispiel auf
+Papier aus dem Inventar, `Y_t = η V 1_{t ≥ 1}`, zeigt nur, daß die Folge aus dem
+Pfad allein nicht reicht, nicht, daß die Aussage falsch ist). **Nach Aufgabe A**
+darf zusätzlich eine klar benannte Nebenfassung unter `[𝓕.IsRightContinuous]`
+über den Dichteprozeß `Z` und dessen càdlàg-Modifikation bewiesen werden; sie
+ersetzt die rohe Fassung nicht und heißt auch nicht so.
+
+##### Schritt B3. `localRestart` und `subsingleton_localMPSolutions` auf beliebigem `Ω`
+
+Vom kanonischen Raum auf einen Prozeß `X` auf beliebigem `(Ω, 𝓕, P)`, über das
+Bildmaß wie bei den globalen Fassungen (`thm:absuniq` steht allgemein). Wo die
+Übertragung eine Voraussetzung braucht, die das Manuskript nicht nennt
+(Meßbarkeit der Pfadabbildung, Adaptiertheit der gestoppten Testprozesse,
+`hadapt`), ist das ein Befund.
+
+##### Schritt B4. Der explodierende Fall
+
+Hängt an nichts. Eine Formulierung, unter der der Satz des Manuskripts stimmt:
+das lokale Problem **auf `[0, ζ)`** als eigene Definition (Lokalisierung durch
+`τ_n ↑ ζ` statt `τ_n ↑ ∞`), `jumpProcess` als Lösung davon, und die
+Nichtexistenz der globalen Lösung. Das ist ein Vorschlag an den Nutzer, kein
+Eingriff ins Manuskript; der Bericht sagt, welche Zeilen (8788–8794, 8818,
+359–361, 10293–10298) sich damit ändern würden.
+
+---
+
+#### Aufgabe C: Das abstrakte Martingalproblem fertig machen
+
+Meilensteine 1–5 von `MartingaleProblems/README-kurz.md`: das Gerüst
+(`Clock`, `IsMPSolution`, `mpFamily`, `isMPSolution_iff_forall_fdd`, `restart`,
+`propagatesAgreement_…`, `subsingleton_mpSolutions_of_unique_onedim`,
+`isMarkov_of_unique_onedim`) steht. Laut dem Namensabgleich fehlen noch die
+unten genannten Punkte. **Erst nachsehen** (siehe oben), dann bauen.
+
+##### Schritt C1. Meilenstein 1, die Uhr
+
+`Clock.Ico_eq_setIco` und `Clock.Ioc_eq_setIoc` unter `[LinearOrder ι]`, als
+`@[simp]` und in Richtung Mathlib umschreibend; `Clock.interval_eq_of_isAtomless`;
+`Clock.interval_add` (mit dem Nachweis, daß die lineare Ordnung nötig ist). Die
+vier Uhren des Manuskripts als Instanzen, und die Akzeptanzbeispiele (Raute,
+`volume + δ 1`, `∑ n, δ n` nicht shiftinvariant), soweit nicht vorhanden.
+
+##### Schritt C2. Meilenstein 2, das abstrakte Problem
+
+`MPSolutions 𝓧 𝓕` mit `MPSolutions (𝓧 ∪ 𝓨) = MPSolutions 𝓧 ∩ MPSolutions 𝓨`;
+`mpProcess` (falls `mpFamily` es nur inline enthält, als eigene Definition, und
+`mpFamily` darüber); `IsMPSolutionFor` und `IsMPSolutionFor.map`;
+`MPSolutions.span`; `IsMPSolutionFor.insert_of_tendsto` und
+`…_of_forall_norm_le`; `IsMPSolutionFor.submartingale_mpProcess_of_tendsto`. Die
+Akzeptanzbeispiele: Poisson von Hand, eine Uhr mit Atom, an der die beiden
+Konventionen verschiedene Lösungen geben, die Beulenfolge gegen
+`insert_of_tendsto`.
+
+##### Schritt C3. Meilenstein 3, der Rest
+
+`Clock.IsProgressiveComp`; `IsCanonical` und `IsDetermining` samt
+`isDetermining_products`, falls nicht vorhanden; die Akzeptanzbeispiele (die
+Filtration ist Voraussetzung, nicht Konvention; meßbar zu jeder Zeit und
+progressiv zu keiner).
+
+##### Schritt C4. Meilenstein 4, Mischungen
+
+`MPSolutions.isConvex` und `MPSolutions.integral_mem`: die globalen Fassungen
+`lem:mixture` (Z. 3405) und `lem:disint` (Z. 3427), die bei Meilenstein 6
+fehlten. Die lokalen Fassungen aus Meilenstein 6 sollen danach Korollare sein
+oder den Grund nennen, warum nicht.
+
+##### Schritt C5. Meilenstein 5, `isStrongMarkov`
+
+Hängt an Aufgabe A (optional sampling in stetiger Zeit). Mit càdlàg-Pfaden und
+meßbarem Shiftsystem die Markoveigenschaft an jeder fast sicher endlichen
+Stoppzeit. Danach die klassische Aussage als Instanz, `E` metrisierbar,
+`A ⊆ Cb(E) × Bdd(E)`, und die Akzeptanzbeispiele (Zwei-Zustands-Kette ganz durch;
+Brownsche Bewegung als Instanz, nicht als Umkehrung).
+
+**Was nicht zu Aufgabe C gehört:** die atomare Leiter von Meilenstein 7,
+Meilensteine 11 und 12.
+
+---
+
+#### Wenn A, B und C stehen
 
 **Dann ist Schluß.** Der Lauf schreibt seinen Bericht, schlägt **kein**
 selbstgewähltes Folgeziel vor und trägt keins ein. Das gilt **abweichend** von
 „Am Ende jedes Laufs“ und „Es gibt immer Arbeit“ weiter unten. Findet ein Lauf
-diese Aufgabe vollständig erledigt vor, prüft er nur, daß `check_master.py`
-sauber ist, schreibt einen Satz ins Inventar und endet. Den nächsten Auftrag
-stellt der Nutzer.
+alle drei Aufgaben erledigt vor, prüft er nur, daß `check_master.py` sauber ist,
+schreibt einen Satz ins Inventar und endet. Den nächsten Auftrag stellt der
+Nutzer.
 
-Dasselbe gilt **während** der Aufgabe: Ein „benanntes Ziel für den nächsten
+Dasselbe gilt **während** der Aufgaben: Ein „benanntes Ziel für den nächsten
 Lauf“ ist immer der nächste offene Schritt dieser Liste und nie etwas außerhalb.
+
 
 ---
 
