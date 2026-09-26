@@ -65969,3 +65969,87 @@ Roadmaps): `scripts/_dev_fixlines.py`, `scripts/_dev_mkD.py`, `scripts/_dev_E3sr
 `_dev_E4b.lean`, `_dev_E5.lean`, `_dev_E6.lean`, `_dev_ax.lean` und aus dem Lauf 17:03
 `_dev_C5hit.lean`, `_dev_C5hit_ax.lean`, `_dev_C5psi.lean`, `_dev_C5psi_ax.lean`.
 
+### 2026-09-26, Lauf 20:03 UTC — Aufgabe E, Schritt E6, Punkt 2: **die Bernstein-Menge**, und damit **das Akzeptanzbeispiel „meßbar zu jeder Zeit, progressiv zu keiner“ vollständig**: das fdd-Kriterium scheitert von rechts nach links, und `Clock.IsProgressive` ist die einzige verletzte Voraussetzung
+
+`check_master.py` zu Beginn (Mathlib `94ef6b89544`): 0 Fehler, 0 `sorry`, 0 Veraltungen;
+Warnungen 18 / 38 / 38 / 76. D1–E5 hatte der Lauf 18:03 erledigt. Aus der Liste offen waren
+nur noch drei kleine Punkte. Genau einem davon gibt der Auftrag ausdrücklich einen eigenen Lauf,
+der Bernstein-Menge (E6, Punkt 2, „höchstens ein Lauf“). Diesen Punkt nimmt dieser Lauf.
+
+**Nachgesehen, ehe gebaut wurde.** `git grep -i "bernstein\|vitali set\|nonmeasurable\|non-measurable"
+upstream/master -- Mathlib/` (`a61b94c216f`, 2026-09-25) liefert nur Bernsteinpolynome,
+Schröder–Bernstein und Doc-Kommentare. Mathlib hat keine nicht meßbare Menge.
+
+**Neu** (`MartingaleProblems/Suggested.lean`, Abschnitt `BernsteinWitness` am Dateiende, Z. 54506 ff.;
+drei neue Importe: `Mathlib.MeasureTheory.MeasurableSpace.Card`, `Mathlib.Topology.MetricSpace.Perfect`,
+`Mathlib.Analysis.Real.Cardinality`):
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| höchstens `𝔠` abgeschlossene überabzählbare Teilmengen von `ℝ` (sie sind Borel; `MeasurableSpace.cardinal_measurableSet_le_continuum`, `Real.borel_eq_generateFrom_Iio_rat`) | `BernsteinSet.mk_perf_le` | 54517 |
+| jede hat mindestens `𝔠` Punkte (`IsClosed.exists_nat_bool_injection_of_not_countable`) | `BernsteinSet.continuum_le_mk` | 54524 |
+| transfinite Rekursion über `(𝔠).ord.ToType` (`Cardinal.mk_Iio_lt`, `WellFounded.fix`), je Stufe zwei frische Punkte der aufgezählten Menge | `BernsteinSet.pt`, `.pt_spec` | — |
+| **die Bernstein-Menge** | `BernsteinSet.bernsteinSet` | 54604 |
+| sie und ihr Komplement treffen jede abgeschlossene überabzählbare Menge | `BernsteinSet.inter_bernstein_nonempty`, `.inter_compl_bernstein_nonempty` | 54614, 54620 |
+| **auf keinem nichtausgearteten Intervall Lebesgue-meßbar** (innere Regularität, `MeasurableSet.exists_lt_isCompact_of_ne_top`) | `BernsteinSet.not_nullMeasurableSet_inter_Ioo` | 54640 |
+| dasselbe für `lebesgueClock.q` auf `ℝ≥0`, Teilintervalle von `(0, 1)` | `ProgressiveWitness.not_nullMeasurableSet_V` | 54686 |
+| der Pfad von `g ∘ X` ist auf keinem Fenster `(s, t]` mit `s < 1` f.ü. meßbar; der Kompensator ist dort also der Müllwert `0` | `ProgressiveWitness.not_aestronglyMeasurable` | 54811 |
+| **die rechte Seite von `isMPSolution_iff_forall_fdd` gilt** | `ProgressiveWitness.rhs` | 54883 |
+| **`P` löst das Problem nicht** (`Martingale.setIntegral_eq` auf `{true} ∈ 𝓕 (3/2)`) | `ProgressiveWitness.not_isMPSolution` | 54904 |
+| **`X` ist nicht progressiv** (für `lebesgueClock` und die natürliche Filtration) | `ProgressiveWitness.not_isProgressive` | 54924 |
+| **Zusammenfassung**: alle Voraussetzungen des Kriteriums außer `Clock.IsProgressive` gelten, und die Äquivalenz ist falsch | `ProgressiveWitness.not_isMPSolution_iff_forall_fdd` | 54943 |
+
+`#print axioms` für `not_isMPSolution_iff_forall_fdd` und `not_nullMeasurableSet_inter_Ioo`:
+`propext`, `Classical.choice`, `Quot.sound`. Kein `sorry`.
+
+**Das Beispiel.** `Ω = Bool`, `P` die faire Münze, `ι = ℝ≥0`, Uhr `lebesgueClock`, optionale
+Konvention, `E = ℝ`, ein Paar `(f, g)`, beide meßbar und durch `1` beschränkt. Auf `[0, 1]` ist
+`X_u = 10·1_V(u)` für beide Ausgänge gleich (`V` die Bernstein-Menge in `(0, 1)`). Danach steigt
+`X` bei `true` mit Rate `1` bis `1` und fällt bei `false` bis `-1`. Es ist `f(x) = x` auf `[-1, 1]`, sonst `0`;
+`g = 1` auf `(0, 1)`, `g = -1` auf `(-1, 0)`, `g(10) = 1`, sonst `0`. Die Filtration ist die natürliche von
+`X` (`h𝓕` gilt per `rfl`).
+
+* Fenster `(s, t]` mit `s < 1`: Der Kompensator ist für beide Ausgänge der Müllwert `0`. Weil
+  die Vergangenheit bis `s < 1` die Münze nicht sieht, heben sich die Beiträge von `true` und
+  `false` in `E[…·∏ h_k(X_{r_k})]` auf.
+* Fenster `(s, t]` mit `s ≥ 1`: Der Kompensator ist ehrlich und gleicht `f(X_t) - f(X_s)` pfadweise aus.
+* Das Martingal sieht beide Sorten zugleich: `Y_t = f(X_t) - ∫_{(0,t]}` hat für `t > 1` den Müllwert
+  als Kompensator. Also ist `Y_2 - Y_{3/2} = ±1/2` auf `{true}` bzw. `{false}`, und es gilt `{true} ∈ 𝓕_{3/2}`.
+
+**Die Frage des Auftrags, ob eine nicht Borel-meßbare Menge genügt, ist damit endgültig
+beantwortet:** Für das Scheitern der Progressivität selbst ja (Lauf 18:03), für das Scheitern des
+fdd-Kriteriums nein. Gebraucht wird die Nicht-Meßbarkeit bezüglich der Lebesgue-Vervollständigung auf
+**jedem** Teilintervall eines Anfangsstücks. Der Grund: Die rechte Seite des Kriteriums testet Fenster
+`(s, t]` mit jedem `s < 1`, und jedes davon muß Müll liefern. Die Bernstein-Menge leistet genau
+das, und sie ist jetzt gebaut.
+
+**Befund an der README (nicht angefaßt, nach der Regel des Auftrags):** `MartingaleProblems/README.md`,
+Z. 599–607, beschreibt das Beispiel mit „`ι = ℝ`, `q` Lebesgue auf `[0,1]`, `g = id`, and **any** `X`
+whose sections `X t` are measurable while `(u, ω) ↦ X u ω` is not jointly measurable“. So trägt das
+nicht: (i) Auf einem einpunktigen `Ω` folgt die linke Seite immer aus der rechten, denn das Fenster
+`(⊥, t]` gehört zur rechten Seite. (ii) Ein beliebiges nicht gemeinsam meßbares `X` genügt nicht: Eine
+nicht Borel-meßbare Teilmenge einer Nullmenge gibt ehrliche Integrale (Lauf 18:03). (iii) Die Zutaten
+sind Nicht-Meßbarkeit auf jedem Teilintervall eines Anfangsstücks, ein Zufall, der erst danach sichtbar
+wird, und ein `g`, das danach die Rate trägt. Die richtige Gestalt ist der Lean-Zeuge
+`ProgressiveWitness.not_isMPSolution_iff_forall_fdd`. Ob die README-Zeilen umgeschrieben werden,
+entscheidet der Nutzer.
+
+### Derselbe Lauf, Abschluß
+
+`check_master.py` am Ende (Mathlib `94ef6b89544`): **0 Fehler, 0 `sorry`, 0 Veraltungen** in allen
+vier Dateien, Warnungen 18 / 38 / 38 / 76 wie zu Beginn. Der neue Abschnitt übersetzt ohne eine
+Warnung.
+
+**Stand der Liste D/E:** D1, D2 und E1–E5 wie nach dem Lauf 18:03. **E6 ist jetzt vollständig:**
+Punkt 1 im Lauf 18:03, Punkt 2 mit der Bernstein-Menge und dem ganzen Akzeptanzbeispiel hier.
+Offen aus der Liste bleiben nur die beiden kleinen Punkte, die der Lauf 18:03 genannt hat und denen
+der Auftrag keinen eigenen Lauf gibt: die zurückgezogene Uhr für die Konsistenz von `ex:shiftXA` in
+Lean (E2; auf Papier geprüft, trägt) und „f.s. endlich“ statt „überall endlich“ (E3).
+Nach der Regel des Auftrags wird **kein** selbstgewähltes Folgeziel vorgeschlagen. Keine README
+angefaßt, das Manuskript nicht angefaßt, nichts nach außen.
+
+Hilfsdateien dieses Laufs, die mangels `rm`-Freigabe liegen bleiben (alle von `.gitignore` erfaßt,
+alle entbehrlich, ihr Inhalt steht in der Roadmap): `scripts/_dev_Bern.lean`, `scripts/_dev_PW.lean`,
+`scripts/_dev_PW_full.lean`; außerdem der mit `--keep` behaltene Prüfbaum
+`~/Code/lean/mathlib-master/_check_3342026/`.
+

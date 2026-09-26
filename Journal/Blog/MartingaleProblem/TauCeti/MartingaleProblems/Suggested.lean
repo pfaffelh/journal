@@ -50,6 +50,9 @@ import Mathlib.Probability.BrownianMotion.Basic
 import Mathlib.Probability.Distributions.Bernoulli
 import Mathlib.Probability.Distributions.Uniform
 import Mathlib.Probability.ProbabilityMassFunction.Integrals
+import Mathlib.MeasureTheory.MeasurableSpace.Card
+import Mathlib.Topology.MetricSpace.Perfect
+import Mathlib.Analysis.Real.Cardinality
 
 /-!
 # Suggested signatures for the martingale problems roadmap
@@ -54481,3 +54484,481 @@ theorem IsMPSolutionFor.of_map_eq_pathFiltration {A : Set ((E → ℝ) × (E →
   exact (isMPSolutionFor_iff_map_pathFiltration c hfm hgm hX hΦ hΦX).1 hsol
 
 end MPSolutionLaw
+
+/-! ### A Bernstein set, and a process that is measurable at every time and progressive at none
+
+The acceptance example of Milestone 3 for `Clock.IsProgressive` needs a path whose compensator is
+the junk value of the Bochner integral on some windows and honest on others, with the bad windows
+being exactly those that start before a fixed time.  A set that is merely not Borel does not do
+this, because the Bochner integral reads `AEStronglyMeasurable` for the Lebesgue measure, and a non
+Borel subset of a null set is a.e. empty.  What is needed is a set that is not Lebesgue measurable
+on **any** subinterval of `(0, 1)`: a Bernstein set.
+
+Mathlib has no non-measurable set.  The construction is the classical transfinite one: the closed
+uncountable subsets of `ℝ` are at most `𝔠` many (they are Borel,
+`MeasurableSpace.cardinal_measurableSet_le_continuum` with `Real.borel_eq_generateFrom_Iio_rat`),
+each has `𝔠` points (`IsClosed.exists_nat_bool_injection_of_not_countable`), and along the initial
+ordinal of `𝔠` (`Cardinal.mk_Iio_lt`) two fresh points of the current set are chosen at every
+stage.  Inner regularity (`MeasurableSet.exists_lt_isCompact_of_ne_top`) turns a measurable part
+of positive measure into a compact, hence closed uncountable, set, which the construction has
+forbidden. -/
+
+section BernsteinWitness
+
+open scoped ENNReal
+
+namespace BernsteinSet
+
+open Cardinal
+
+/-- The closed uncountable subsets of `ℝ`. -/
+def Perf : Set (Set ℝ) := {C | IsClosed C ∧ ¬ C.Countable}
+
+theorem mk_perf_le : #Perf ≤ 𝔠 := by
+  have h1 : #(⋃ a : ℚ, {Iio (a : ℝ)}) ≤ 𝔠 :=
+    ((countable_iUnion fun _ ↦ countable_singleton _).le_aleph0).trans aleph0_le_continuum
+  have h2 := MeasurableSpace.cardinal_measurableSet_le_continuum h1
+  rw [← Real.borel_eq_generateFrom_Iio_rat] at h2
+  exact (mk_le_mk_of_subset fun C hC ↦ hC.1.measurableSet).trans h2
+
+theorem continuum_le_mk {C : Set ℝ} (hC : C ∈ Perf) : 𝔠 ≤ #C := by
+  obtain ⟨f, hf, -, hinj⟩ := hC.1.exists_nat_bool_injection_of_not_countable hC.2
+  have : #(ℕ → Bool) = 𝔠 := by simp [two_power_aleph0]
+  rw [← this]
+  exact mk_le_of_injective (f := fun x ↦ (⟨f x, hf ⟨x, rfl⟩⟩ : C))
+    fun x y h ↦ hinj (congrArg Subtype.val h)
+
+theorem univ_mem_perf : Set.univ ∈ Perf := ⟨isClosed_univ, not_countable_univ⟩
+
+instance : Nonempty Perf := ⟨⟨Set.univ, univ_mem_perf⟩⟩
+
+/-- The index type: the initial ordinal of `𝔠`. -/
+abbrev Stage : Type := (𝔠).ord.ToType
+
+theorem mk_Stage : #Stage = 𝔠 := mk_ord_toType _
+
+/-- An embedding of `Perf` into `Stage`. -/
+noncomputable def emb : Perf ↪ Stage := Classical.choice (by rw [← Cardinal.le_def, mk_Stage]; exact mk_perf_le)
+
+/-- The enumeration of `Perf` by `Stage`. -/
+noncomputable def enum : Stage → Perf := Function.invFun emb
+
+theorem enum_emb (C : Perf) : enum (emb C) = C :=
+  Function.leftInverse_invFun emb.injective C
+
+/-- Points already used before stage `i`. -/
+def used (i : Stage) (prev : ∀ j < i, ℝ × ℝ) : Set ℝ :=
+  ⋃ j : Iio i, {(prev j j.2).1, (prev j j.2).2}
+
+theorem mk_used_lt (i : Stage) (prev : ∀ j < i, ℝ × ℝ) : #(used i prev) < 𝔠 := by
+  refine (mk_iUnion_le _).trans_lt ?_
+  have hi : #(Iio i) < 𝔠 := by
+    have := mk_Iio_lt i (by simp)
+    rwa [mk_Stage] at this
+  refine mul_lt_of_lt aleph0_le_continuum hi ?_
+  refine ciSup_le' (fun j ↦ ?_) |>.trans_lt (nat_lt_continuum 2)
+  exact (mk_insert_le).trans (by simp; norm_num)
+
+theorem exists_step (i : Stage) (prev : ∀ j < i, ℝ × ℝ) :
+    ∃ p : ℝ × ℝ, p.1 ∈ (enum i : Set ℝ) ∧ p.2 ∈ (enum i : Set ℝ) ∧ p.1 ≠ p.2 ∧
+      p.1 ∉ used i prev ∧ p.2 ∉ used i prev := by
+  set C : Set ℝ := (enum i).1
+  have hnt : (C \ used i prev).Nontrivial := by
+    by_contra h
+    rw [not_nontrivial_iff] at h
+    have h1 : #↥(C \ used i prev) ≤ 1 := mk_le_one_iff_set_subsingleton.2 h
+    have h2 : #C ≤ #(used i prev) + 1 :=
+      (mk_le_mk_of_subset (fun x hx ↦ by
+        by_cases hu : x ∈ used i prev
+        · exact Or.inl hu
+        · exact Or.inr ⟨hx, hu⟩ : C ⊆ used i prev ∪ (C \ used i prev))).trans
+        ((mk_union_le _ _).trans (add_le_add le_rfl h1))
+    exact (h2.trans_lt (add_lt_of_lt aleph0_le_continuum (mk_used_lt i prev)
+      (one_lt_aleph0.trans_le aleph0_le_continuum))).not_ge (continuum_le_mk (enum i).2)
+  obtain ⟨a, ha, b, hb, hab⟩ := hnt
+  exact ⟨(a, b), ha.1, hb.1, hab, ha.2, hb.2⟩
+
+/-- One stage of the recursion. -/
+noncomputable def step (i : Stage) (prev : ∀ j < i, ℝ × ℝ) : ℝ × ℝ :=
+  Classical.choose (exists_step i prev)
+
+/-- The pair chosen at stage `i`. -/
+noncomputable def pt : Stage → ℝ × ℝ := wellFounded_lt.fix step
+
+theorem pt_eq (i : Stage) : pt i = step i (fun j _ ↦ pt j) := wellFounded_lt.fix_eq step i
+
+theorem pt_spec (i : Stage) :
+    (pt i).1 ∈ (enum i : Set ℝ) ∧ (pt i).2 ∈ (enum i : Set ℝ) ∧ (pt i).1 ≠ (pt i).2 ∧
+      (∀ j < i, (pt i).1 ≠ (pt j).1 ∧ (pt i).1 ≠ (pt j).2) ∧
+      (∀ j < i, (pt i).2 ≠ (pt j).1 ∧ (pt i).2 ≠ (pt j).2) := by
+  have h := Classical.choose_spec (exists_step i (fun j _ ↦ pt j))
+  rw [← step, ← pt_eq] at h
+  obtain ⟨h1, h2, h3, h4, h5⟩ := h
+  refine ⟨h1, h2, h3, fun j hj ↦ ?_, fun j hj ↦ ?_⟩
+  · refine ⟨fun e ↦ h4 ?_, fun e ↦ h4 ?_⟩ <;>
+      exact mem_iUnion.2 ⟨⟨j, hj⟩, by simp [e]⟩
+  · refine ⟨fun e ↦ h5 ?_, fun e ↦ h5 ?_⟩ <;>
+      exact mem_iUnion.2 ⟨⟨j, hj⟩, by simp [e]⟩
+
+/-- **A Bernstein set**: it and its complement meet every closed uncountable subset of `ℝ`. -/
+noncomputable def bernsteinSet : Set ℝ := range fun i ↦ (pt i).1
+
+theorem disjoint_bernstein : Disjoint bernsteinSet (range fun i ↦ (pt i).2) := by
+  rw [disjoint_iff_forall_ne]
+  rintro _ ⟨i, rfl⟩ _ ⟨j, rfl⟩
+  rcases lt_trichotomy i j with h | rfl | h
+  · exact fun e ↦ ((pt_spec j).2.2.2.2 i h).1 e.symm
+  · exact (pt_spec i).2.2.1
+  · exact ((pt_spec i).2.2.2.1 j h).2
+
+theorem inter_bernstein_nonempty {C : Set ℝ} (hC : IsClosed C) (hunc : ¬ C.Countable) :
+    (C ∩ bernsteinSet).Nonempty := by
+  have := (pt_spec (emb ⟨C, hC, hunc⟩)).1
+  rw [enum_emb] at this
+  exact ⟨_, this, _, rfl⟩
+
+theorem inter_compl_bernstein_nonempty {C : Set ℝ} (hC : IsClosed C) (hunc : ¬ C.Countable) :
+    (C ∩ bernsteinSetᶜ).Nonempty := by
+  have := (pt_spec (emb ⟨C, hC, hunc⟩)).2.1
+  rw [enum_emb] at this
+  exact ⟨_, this, disjoint_bernstein.notMem_of_mem_right ⟨_, rfl⟩⟩
+
+/-- A null measurable set of finite Lebesgue measure whose complement meets every closed
+uncountable set is a null set. -/
+theorem volume_eq_zero_of_forall {S : Set ℝ} (hS : NullMeasurableSet S volume)
+    (hfin : volume S ≠ ⊤) (h : ∀ C, IsClosed C → ¬ C.Countable → (C ∩ Sᶜ).Nonempty) :
+    volume S = 0 := by
+  obtain ⟨M, hMS, hM, hae⟩ := hS.exists_measurable_subset_ae_eq
+  rw [← measure_congr hae]
+  by_contra hne
+  have hMfin : volume M ≠ ⊤ := ne_top_of_le_ne_top hfin (measure_mono hMS)
+  obtain ⟨K, hKM, hK, hpos⟩ := hM.exists_lt_isCompact_of_ne_top hMfin (pos_iff_ne_zero.2 hne)
+  obtain ⟨x, hxK, hxS⟩ := h K hK.isClosed (fun hc ↦ (hc.measure_zero volume ▸ hpos).false)
+  exact hxS (hMS (hKM hxK))
+
+/-- **The Bernstein set is not Lebesgue measurable on any nondegenerate interval.** -/
+theorem not_nullMeasurableSet_inter_Ioo {a b : ℝ} (hab : a < b) :
+    ¬ NullMeasurableSet (bernsteinSet ∩ Ioo a b) volume := by
+  intro hS
+  have hfin : ∀ T ⊆ Ioo a b, volume T ≠ ⊤ := fun T hT ↦
+    ne_top_of_le_ne_top (by simp) (measure_mono hT)
+  have h1 : volume (bernsteinSet ∩ Ioo a b) = 0 :=
+    volume_eq_zero_of_forall hS (hfin _ inter_subset_right) fun C hC hunc ↦ by
+      obtain ⟨x, hxC, hx⟩ := inter_compl_bernstein_nonempty hC hunc
+      exact ⟨x, hxC, fun h ↦ hx h.1⟩
+  have h2 : volume (Ioo a b \ bernsteinSet) = 0 :=
+    volume_eq_zero_of_forall (by
+      have e : Ioo a b \ bernsteinSet = Ioo a b \ (bernsteinSet ∩ Ioo a b) := by
+        ext x; simp only [Set.mem_sdiff, mem_inter_iff]; tauto
+      rw [e]; exact nullMeasurableSet_Ioo.diff hS)
+      (hfin _ sdiff_subset) fun C hC hunc ↦ by
+      obtain ⟨x, hxC, hx⟩ := inter_bernstein_nonempty hC hunc
+      exact ⟨x, hxC, fun h ↦ h.2 hx⟩
+  have : volume (Ioo a b) = 0 := by
+    have := measure_union_le (μ := volume) (bernsteinSet ∩ Ioo a b) (Ioo a b \ bernsteinSet)
+    rw [h1, h2, add_zero, nonpos_iff_eq_zero] at this
+    exact measure_mono_null (fun x hx ↦ by
+      by_cases h : x ∈ bernsteinSet
+      · exact Or.inl ⟨h, hx⟩
+      · exact Or.inr ⟨hx, h⟩) this
+  simp at this
+  exact absurd this (not_le.2 hab)
+
+end BernsteinSet
+
+namespace ProgressiveWitness
+
+open BernsteinSet
+
+attribute [local instance] Classical.propDecidable
+
+theorem mIoc (s t : ℝ≥0) : MeasurableSet[lebesgueClock.measurableSpace] (Ioc s t) := by
+  rw [← lebesgueClock_interval_optional_eq]
+  exact lebesgueClock.measurableSet_interval _ _ _
+
+theorem mIoo (s t : ℝ≥0) : MeasurableSet[lebesgueClock.measurableSpace] (Ioo s t) := by
+  rw [← Ioi_inter_Iio, ← compl_Iic]
+  exact (lebesgueClock.measurableSet_Iic s).compl.inter (lebesgueClock.measurableSet_Iio t)
+
+/-- The Bernstein set, read in `ℝ≥0` and cut to `(0, 1)`. -/
+def V : Set ℝ≥0 := {u | (u : ℝ) ∈ bernsteinSet ∧ 0 < u ∧ u < 1}
+
+theorem not_nullMeasurableSet_V {a b : ℝ≥0} (hab : a < b) (hb : b ≤ 1) :
+    ¬ NullMeasurableSet (V ∩ Ioo a b) lebesgueClock.q := by
+  intro h
+  have hq : Measure.QuasiMeasurePreserving Real.toNNReal
+      ((volume : Measure ℝ).restrict (Ici 0)) lebesgueClock.q :=
+    ⟨measurable_real_toNNReal, Measure.AbsolutelyContinuous.refl _⟩
+  have h1 := (nullMeasurableSet_restrict measurableSet_Ici.nullMeasurableSet).1 (h.preimage hq)
+  have e : Real.toNNReal ⁻¹' (V ∩ Ioo a b) ∩ Ici 0 = bernsteinSet ∩ Ioo (a : ℝ) b := by
+    ext x
+    simp only [V, mem_inter_iff, mem_preimage, mem_ofPred_eq, mem_Ioo, mem_Ici]
+    constructor
+    · rintro ⟨⟨⟨hB, -, -⟩, ha, hb'⟩, hx⟩
+      rw [Real.coe_toNNReal _ hx] at hB
+      exact ⟨hB, (Real.lt_toNNReal_iff_coe_lt).1 ha, (Real.toNNReal_lt_iff_lt_coe hx).1 hb'⟩
+    · rintro ⟨hB, ha, hb'⟩
+      have hx : 0 ≤ x := a.coe_nonneg.trans ha.le
+      refine ⟨⟨⟨by rwa [Real.coe_toNNReal _ hx], ?_, ?_⟩, (Real.lt_toNNReal_iff_coe_lt).2 ha,
+        (Real.toNNReal_lt_iff_lt_coe hx).2 hb'⟩, hx⟩
+      · exact (Real.lt_toNNReal_iff_coe_lt).2 (a.coe_nonneg.trans_lt ha)
+      · exact (Real.toNNReal_lt_iff_lt_coe hx).2 (hb'.trans_le (by exact_mod_cast hb))
+  rw [e] at h1
+  exact not_nullMeasurableSet_inter_Ioo (by exact_mod_cast hab) h1
+
+/-- The process: on `[0, 1]` it is `10` on `V` and `0` off it, the same for both outcomes; after
+`1` the outcome `true` climbs to `1` at rate `1` and the outcome `false` falls to `-1`. -/
+noncomputable def X (u : ℝ≥0) (ω : Bool) : ℝ :=
+  if u ≤ 1 then (if u ∈ V then 10 else 0) else (if ω then 1 else -1) * (min (u : ℝ) 2 - 1)
+
+/-- The first component of the pair. -/
+noncomputable def f (x : ℝ) : ℝ := if |x| ≤ 1 then x else 0
+
+/-- The second component of the pair. -/
+noncomputable def g (x : ℝ) : ℝ :=
+  if 0 < x ∧ x < 1 then 1 else if -1 < x ∧ x < 0 then -1 else if x = 10 then 1 else 0
+
+theorem measurable_f : Measurable f :=
+  Measurable.ite (measurableSet_le continuous_abs.measurable measurable_const) measurable_id
+    measurable_const
+
+theorem measurable_g : Measurable g :=
+  Measurable.ite measurableSet_Ioo measurable_const
+    (Measurable.ite measurableSet_Ioo measurable_const
+      (Measurable.ite (measurableSet_singleton 10) measurable_const measurable_const))
+
+theorem abs_f_le (x : ℝ) : ‖f x‖ ≤ 1 := by
+  unfold f; split_ifs with h
+  · exact h
+  · simp
+
+theorem abs_g_le (x : ℝ) : ‖g x‖ ≤ 1 := by
+  unfold g; split_ifs <;> simp
+
+/-- The operator, one pair. -/
+def A : Set ((ℝ → ℝ) × (ℝ → ℝ)) := {(f, g)}
+
+/-- The natural filtration of `X`. -/
+noncomputable def 𝓕 : Filtration ℝ≥0 (inferInstance : MeasurableSpace Bool) where
+  seq s := ⨆ r ∈ Iic s, MeasurableSpace.comap (X r) inferInstance
+  mono' _ _ hst := iSup₂_mono' fun r hr ↦ ⟨r, le_trans hr hst, le_rfl⟩
+  le' _ _ _ := MeasurableSet.of_discrete
+
+/-- A fair coin. -/
+noncomputable def P : Measure Bool := (2⁻¹ : ℝ≥0∞) • (Measure.dirac true + Measure.dirac false)
+
+instance : IsProbabilityMeasure P := ⟨by
+  simp [P, Measure.add_apply, ← two_mul]
+  exact ENNReal.mul_inv_cancel two_ne_zero ENNReal.ofNat_ne_top⟩
+
+theorem P_real_singleton (ω : Bool) : P.real {ω} = 2⁻¹ := by
+  cases ω <;> simp [P, measureReal_def, Measure.add_apply]
+
+/-- `f` along the path of `true`. -/
+noncomputable def F (u : ℝ≥0) : ℝ := if u ≤ 1 then 0 else min (u : ℝ) 2 - 1
+
+theorem f_X_true (u : ℝ≥0) : f (X u true) = F u := by
+  by_cases hu : u ≤ 1
+  · by_cases hV : u ∈ V <;> simp [X, F, f, hu, hV]
+  · have h1 : (1 : ℝ) < u := by exact_mod_cast not_le.1 hu
+    have h2 : |min (u : ℝ) 2 - 1| ≤ 1 := by
+      rw [abs_le]; constructor <;> cases min_cases (u : ℝ) 2 <;> linarith
+    simp [X, F, f, hu, h2]
+
+theorem f_X_false (u : ℝ≥0) : f (X u false) = - F u := by
+  by_cases hu : u ≤ 1
+  · by_cases hV : u ∈ V <;> simp [X, F, f, hu, hV]
+  · have h1 : (1 : ℝ) < u := by exact_mod_cast not_le.1 hu
+    have h2 : |1 - min (u : ℝ) 2| ≤ 1 := by
+      rw [abs_le]; constructor <;> cases min_cases (u : ℝ) 2 <;> linarith
+    simp [X, F, f, hu, h2]
+
+theorem g_X_of_le {u : ℝ≥0} (hu : u ≤ 1) (ω : Bool) :
+    g (X u ω) = if u ∈ V then 1 else 0 := by
+  by_cases hV : u ∈ V <;> simp [X, g, hu, hV]
+
+theorem g_X_true_of_gt {u : ℝ≥0} (hu : 1 < u) :
+    g (X u true) = (Iio (2 : ℝ≥0)).indicator (fun _ ↦ (1 : ℝ)) u := by
+  have h1 : (1 : ℝ) < u := by exact_mod_cast hu
+  by_cases h2 : u < 2
+  · have h2' : (u : ℝ) < 2 := by exact_mod_cast h2
+    have hx : X u true = (u : ℝ) - 1 := by simp [X, not_le.2 hu, min_eq_left h2'.le]
+    have c : 0 < (u : ℝ) - 1 ∧ (u : ℝ) - 1 < 1 := ⟨by linarith, by linarith⟩
+    rw [hx, indicator_of_mem (show u ∈ Iio 2 from h2)]
+    simp [g, c]
+  · have h2' : (2 : ℝ) ≤ u := by exact_mod_cast not_lt.1 h2
+    have hx : X u true = 1 := by simp [X, not_le.2 hu, min_eq_right h2']; norm_num
+    rw [hx, indicator_of_notMem (show u ∉ Iio 2 from h2)]
+    norm_num [g]
+
+theorem g_X_false_of_gt {u : ℝ≥0} (hu : 1 < u) :
+    g (X u false) = - (Iio (2 : ℝ≥0)).indicator (fun _ ↦ (1 : ℝ)) u := by
+  have h1 : (1 : ℝ) < u := by exact_mod_cast hu
+  by_cases h2 : u < 2
+  · have h2' : (u : ℝ) < 2 := by exact_mod_cast h2
+    have hx : X u false = 1 - (u : ℝ) := by
+      simp [X, not_le.2 hu, min_eq_left h2'.le]
+    have c1 : ¬ (0 : ℝ) < 1 - u := by linarith
+    have c2 : -1 < 1 - (u : ℝ) ∧ 1 - (u : ℝ) < 0 := ⟨by linarith, by linarith⟩
+    rw [hx, indicator_of_mem (show u ∈ Iio 2 from h2)]
+    simp [g, c1, c2]
+  · have h2' : (2 : ℝ) ≤ u := by exact_mod_cast not_lt.1 h2
+    have hx : X u false = -1 := by simp [X, not_le.2 hu, min_eq_right h2']; norm_num
+    rw [hx, indicator_of_notMem (show u ∉ Iio 2 from h2)]
+    norm_num [g]
+
+/-- **The path of `g ∘ X` is not measurable on any window starting before `1`.** -/
+theorem not_aestronglyMeasurable {s t : ℝ≥0} (hs : s < 1) (hst : s < t) (ω : Bool) :
+    ¬ AEStronglyMeasurable (fun u ↦ g (X u ω)) (lebesgueClock.q.restrict (Ioc s t)) := by
+  intro hA
+  have hN := (nullMeasurableSet_restrict (mIoc s t).nullMeasurableSet).1
+    (hA.aemeasurable.nullMeasurableSet_preimage (measurableSet_singleton (1 : ℝ)))
+  have hm : s < min t 1 := lt_min hst hs
+  have h2 := hN.inter (mIoo s (min t 1)).nullMeasurableSet
+  have e : ((fun u ↦ g (X u ω)) ⁻¹' {1} ∩ Ioc s t) ∩ Ioo s (min t 1) = V ∩ Ioo s (min t 1) := by
+    ext u
+    simp only [mem_inter_iff, mem_preimage, mem_singleton_iff, mem_Ioc, mem_Ioo]
+    constructor
+    · rintro ⟨⟨h, -⟩, hu⟩
+      refine ⟨?_, hu⟩
+      rw [g_X_of_le ((hu.2.trans_le (min_le_right _ _)).le)] at h
+      by_contra hV; simp [hV] at h
+    · rintro ⟨hV, hu⟩
+      refine ⟨⟨?_, hu.1, (hu.2.trans_le (min_le_left _ _)).le⟩, hu⟩
+      rw [g_X_of_le ((hu.2.trans_le (min_le_right _ _)).le)]
+      simp [hV]
+  rw [e] at h2
+  exact not_nullMeasurableSet_V hm (min_le_right _ _) h2
+
+theorem integral_eq_zero {s : ℝ≥0} (hs : s < 1) (t : ℝ≥0) (ω : Bool) :
+    ∫ u in Ioc s t, g (X u ω) ∂lebesgueClock.q = 0 := by
+  rcases lt_or_ge s t with hst | hts
+  · exact integral_undef fun hi ↦ not_aestronglyMeasurable hs hst ω hi.aestronglyMeasurable
+  · simp [Ioc_eq_empty (not_lt.2 hts)]
+
+theorem integral_indicator_Iio_two {s t : ℝ≥0} (hs : 1 ≤ s) (hst : s ≤ t) :
+    ∫ u in Ioc s t, (Iio (2 : ℝ≥0)).indicator (fun _ ↦ (1 : ℝ)) u ∂lebesgueClock.q
+      = F t - F s := by
+  rw [setIntegral_indicator (lebesgueClock.measurableSet_Iio 2), setIntegral_const, smul_eq_mul,
+    mul_one]
+  have hae : (Ioc s t ∩ Iio 2 : Set ℝ≥0) =ᵐ[lebesgueClock.q] (Ioc s t ∩ Iic 2 : Set ℝ≥0) :=
+    ae_eq_set_inter (ae_eq_refl _) (Iio_ae_eq_Iic' (lebesgueClock_apply_singleton 2))
+  rw [measureReal_def, measure_congr hae, Ioc_inter_Iic, lebesgueClock_apply_Ioc,
+    ENNReal.toReal_ofReal']
+  have hs' : (1 : ℝ) ≤ s := by exact_mod_cast hs
+  have hst' : (s : ℝ) ≤ t := by exact_mod_cast hst
+  have Fs : F s = min (s : ℝ) 2 - 1 := by
+    unfold F; split_ifs with h
+    · have : (s : ℝ) = 1 := le_antisymm (by exact_mod_cast h) hs'
+      rw [this]; norm_num
+    · rfl
+  have Ft : F t = min (t : ℝ) 2 - 1 := by
+    unfold F; split_ifs with h
+    · have : (t : ℝ) = 1 := le_antisymm (by exact_mod_cast h) (hs'.trans hst')
+      rw [this]; norm_num
+    · rfl
+  rw [Fs, Ft, NNReal.coe_min, NNReal.coe_ofNat]
+  rcases le_total (t : ℝ) 2 with ht | ht <;> rcases le_total (s : ℝ) 2 with hs2 | hs2
+  · rw [min_eq_left ht, min_eq_left hs2, max_eq_left (by linarith)]; ring
+  · have e1 : (t : ℝ) = 2 := by linarith
+    have e2 : (s : ℝ) = 2 := by linarith
+    rw [min_eq_left ht, min_eq_right hs2, e1, e2]; norm_num
+  · rw [min_eq_right ht, min_eq_left hs2, max_eq_left (by linarith)]; ring
+  · rw [min_eq_right ht, min_eq_right hs2, max_eq_right (by linarith)]; ring
+
+theorem integral_true {s t : ℝ≥0} (hs : 1 ≤ s) (hst : s ≤ t) :
+    ∫ u in Ioc s t, g (X u true) ∂lebesgueClock.q = F t - F s := by
+  rw [← integral_indicator_Iio_two hs hst]
+  exact setIntegral_congr_fun (mIoc s t) fun u hu ↦ g_X_true_of_gt (hs.trans_lt hu.1)
+
+theorem integral_false {s t : ℝ≥0} (hs : 1 ≤ s) (hst : s ≤ t) :
+    ∫ u in Ioc s t, g (X u false) ∂lebesgueClock.q = -(F t - F s) := by
+  rw [← integral_indicator_Iio_two hs hst, ← integral_neg]
+  exact setIntegral_congr_fun (mIoc s t) fun u hu ↦ g_X_false_of_gt (hs.trans_lt hu.1)
+
+theorem X_true_eq_false {u : ℝ≥0} (hu : u ≤ 1) : X u true = X u false := by
+  simp [X, hu]
+
+/-- **The right hand side of the finite dimensional criterion holds.** -/
+theorem rhs : ∀ p ∈ A, ∀ s t : ℝ≥0, s ≤ t → ∀ (n : ℕ) (r : Fin n → ℝ≥0), (∀ k, r k ≤ s) →
+    ∀ h : Fin n → ℝ → ℝ, (∀ k, Measurable (h k)) → (∀ k, ∃ b, ∀ x, ‖h k x‖ ≤ b) →
+    ∫ ω, (p.1 (X t ω) - p.1 (X s ω)
+          - ∫ u in lebesgueClock.interval Clock.Conv.optional s t, p.2 (X u ω)
+              ∂lebesgueClock.q) *
+        ∏ k, (h k (X (r k) ω) : ℝ) ∂P = 0 := by
+  intro p hp s t hst n r hr h _ _
+  simp only [A, mem_singleton_iff] at hp
+  subst hp
+  rw [lebesgueClock_interval_optional_eq, integral_fintype Integrable.of_finite,
+    Fintype.sum_bool, P_real_singleton, P_real_singleton]
+  simp only [f_X_true, f_X_false, smul_eq_mul]
+  rcases lt_or_ge s 1 with hs | hs
+  · have hprod : (∏ k, (h k (X (r k) true) : ℝ)) = ∏ k, (h k (X (r k) false) : ℝ) :=
+      Finset.prod_congr rfl fun k _ ↦ by rw [X_true_eq_false ((hr k).trans hs.le)]
+    rw [integral_eq_zero hs, integral_eq_zero hs, hprod]
+    ring
+  · rw [integral_true hs hst, integral_false hs hst]
+    ring
+
+/-- **`P` does not solve the martingale problem.** -/
+theorem not_isMPSolution : ¬ IsMPSolution (mpFamily A lebesgueClock Clock.Conv.optional X) 𝓕 P := by
+  intro hsol
+  have hY : mpProcess lebesgueClock Clock.Conv.optional X f g ∈
+      mpFamily A lebesgueClock Clock.Conv.optional X :=
+    ⟨(f, g), rfl, fun _ _ ↦ rfl⟩
+  have h32 : ¬ (3 / 2 : ℝ≥0) ≤ 1 := by rw [← NNReal.coe_le_coe]; push_cast; norm_num
+  have hmeas : MeasurableSet[𝓕 (3 / 2)] {true} := by
+    refine le_iSup₂ (f := fun r (_ : r ∈ Iic (3 / 2 : ℝ≥0)) ↦
+      MeasurableSpace.comap (X r) inferInstance) (3 / 2) (mem_Iic.2 le_rfl) _ ?_
+    refine ⟨Ioi 0, measurableSet_Ioi, ?_⟩
+    ext ω
+    cases ω <;> norm_num [X, h32]
+  have key := (hsol _ hY).setIntegral_eq
+    (show (3 / 2 : ℝ≥0) ≤ 2 by rw [← NNReal.coe_le_coe]; push_cast; norm_num) hmeas
+  simp only [integral_singleton, P_real_singleton, smul_eq_mul, mpProcess,
+    lebesgueClock_interval_optional_eq, bot_eq_zero', integral_eq_zero zero_lt_one, sub_zero,
+    f_X_true, F, h32] at key
+  norm_num at key
+
+/-- **`X` is not progressive.** -/
+theorem not_isProgressive : ¬ lebesgueClock.IsProgressive X 𝓕 := by
+  intro hprog
+  obtain ⟨Z, hZ, hZm⟩ := hprog 1
+  have hsec : Measurable[lebesgueClock.measurableSpace] fun u ↦ g (Z u true) :=
+    measurable_g.comp
+      (hZm.comp (measurable_prodMk_right (m := lebesgueClock.measurableSpace) (mβ := 𝓕 1)))
+  refine not_aestronglyMeasurable zero_lt_one zero_lt_one true ?_
+  refine (hsec.aestronglyMeasurable.restrict).congr ?_
+  filter_upwards [ae_restrict_mem (mIoc 0 1)] with u hu
+  rw [hZ u hu.2]
+
+/-- **The acceptance example of Milestone 3: measurable at every time, progressive at none, and
+the finite dimensional criterion fails from right to left.**  Every hypothesis of
+`isMPSolution_iff_forall_fdd` except `Clock.IsProgressive` holds (bounded measurable pair,
+measurable coordinates, the natural filtration), the right hand side holds, and `P` does not solve
+the problem.  The compensator of `true` over `(0, t]`, `t > 1`, is the junk value `0` of the
+Bochner integral, because the integrand is the indicator of the Bernstein set on `(0, 1)`; over
+`(s, t]` with `s ≥ 1` it is honest.  The right hand side only ever meets windows of one kind at a
+time, the martingale property meets both. -/
+theorem not_isMPSolution_iff_forall_fdd :
+    (∀ p ∈ A, (Measurable p.1 ∧ ∃ b, ∀ x, ‖p.1 x‖ ≤ b) ∧ Measurable p.2 ∧
+      ∃ b, ∀ x, ‖p.2 x‖ ≤ b) ∧
+    (∀ t, Measurable (X t)) ∧
+    (∀ s, 𝓕 s = ⨆ r ∈ Iic s, MeasurableSpace.comap (X r) inferInstance) ∧
+    ¬ lebesgueClock.IsProgressive X 𝓕 ∧
+    ¬ (IsMPSolution (mpFamily A lebesgueClock Clock.Conv.optional X) 𝓕 P ↔
+      ∀ p ∈ A, ∀ s t : ℝ≥0, s ≤ t → ∀ (n : ℕ) (r : Fin n → ℝ≥0), (∀ k, r k ≤ s) →
+        ∀ h : Fin n → ℝ → ℝ, (∀ k, Measurable (h k)) → (∀ k, ∃ b, ∀ x, ‖h k x‖ ≤ b) →
+        ∫ ω, (p.1 (X t ω) - p.1 (X s ω)
+              - ∫ u in lebesgueClock.interval Clock.Conv.optional s t, p.2 (X u ω)
+                  ∂lebesgueClock.q) *
+            ∏ k, (h k (X (r k) ω) : ℝ) ∂P = 0) := by
+  refine ⟨fun p hp ↦ ?_, fun _ ↦ Measurable.of_discrete, fun _ ↦ rfl, not_isProgressive,
+    fun h ↦ not_isMPSolution (h.2 rhs)⟩
+  simp only [A, mem_singleton_iff] at hp
+  subst hp
+  exact ⟨⟨measurable_f, 1, abs_f_le⟩, measurable_g, 1, abs_g_le⟩
+
+end ProgressiveWitness
+
+end BernsteinWitness
