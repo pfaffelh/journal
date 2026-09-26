@@ -23386,6 +23386,41 @@ theorem isMarkov_jumpOperator_coordinate {lam : E → ℝ} (hlam : Measurable la
       Clock.Conv.optional hY P u)
     r (onedim_mpFamily_jumpOperator_coordinate hlam hlam0 hL r) hf hfb t
 
+open RightContinuousPath in
+/-- **`thm:absstrongmarkov`, first assertion, on the data of Milestone 4: every solution of the
+martingale problem of a bounded jump operator is strong Markov** at every bounded stopping time of
+the raw filtration `pathFiltration`, with arbitrary range:
+`E[f(X(τ+t)) | 𝓖_τ] = E[f(X(τ+t)) | X(τ)]`.
+
+`isStrongMarkov_mpFamily_coordinate` with `hint` from `integrable_mpFamily_coordinate_randomTime`
+and `honedim` from `onedim_mpFamily_jumpOperator_coordinate`, the same lemma that gives
+uniqueness (`subsingleton_mpSolutions_jumpOperator_coordinate`) and the simple Markov property
+(`isMarkov_jumpOperator_coordinate`).  Strong Markov is a **conclusion** here, from uniqueness of
+the one dimensional laws, and no hypothesis beyond the data of `isMarkov_jumpOperator_coordinate`
+and the bound on `τ` enters: no topology on `E`, no right continuity of the filtration. -/
+theorem isStrongMarkov_jumpOperator_coordinate {lam : E → ℝ} (hlam : Measurable lam) {L : ℝ}
+    (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L) {mu : Kernel E E} [IsMarkovKernel mu]
+    {P : Measure (RightContinuousPath E)} [IsProbabilityMeasure P]
+    (hsol : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (coordinate : ℝ≥0 → RightContinuousPath E → E)) (pathFiltration (E := E)) P)
+    {τ : RightContinuousPath E → ℝ≥0}
+    (hτ : ∀ t : ℝ≥0, IsStoppingTime (pathFiltration (E := E))
+      fun ω ↦ ((τ ω + t : ℝ≥0) : WithTop ℝ≥0))
+    {T : ℝ≥0} (hτT : ∀ ω, τ ω ≤ T)
+    {f : E → ℝ} (hf : Measurable f) {cf : ℝ} (hfb : ∀ x, ‖f x‖ ≤ cf) (t : ℝ≥0) :
+    P[fun ω ↦ f (coordinate (τ ω + t) ω) | (hτ 0).measurableSpace]
+      =ᵐ[P] P[fun ω ↦ f (coordinate (τ ω + t) ω) |
+        MeasurableSpace.comap (fun ω ↦ coordinate (τ ω) ω) inferInstance] :=
+  isStrongMarkov_mpFamily_coordinate (fun _ hp ↦ measurable_fst_jumpOperator hp)
+    (fun _ hp ↦ bddAbove_fst_jumpOperator hp) (fun _ hp ↦ measurable_snd_jumpOperator hlam hp)
+    (fun _ hp ↦ bddAbove_snd_jumpOperator hlam0 hL hp) hsol hτ
+    (fun _ hY t ↦ integrable_mpFamily_coordinate_randomTime
+      (fun _ hp ↦ measurable_fst_jumpOperator hp) (fun _ hp ↦ bddAbove_fst_jumpOperator hp)
+      (fun _ hp ↦ measurable_snd_jumpOperator hlam hp)
+      (fun _ hp ↦ bddAbove_snd_jumpOperator hlam0 hL hp) hτ hτT hY t)
+    (fun R R' hR hR' hs hs' h0 u ↦ onedim_mpFamily_jumpOperator_coordinate hlam hlam0 hL 0
+      R R' hR hR' hs hs' h0 u) hf hfb t
+
 end JumpUniqueness
 
 /-! ### The acceptance example: the two state chain, existence and uniqueness and a number
@@ -23476,6 +23511,30 @@ example (P : Measure (RightContinuousPath Bool)) [IsProbabilityMeasure P]
     (P.map (RightContinuousPath.coordinate (E := Bool) 0)).real {true} = 0 := by
   rw [real_map_coordinate_flip_eq P hsol hinit 0]
   norm_num
+
+open RightContinuousPath in
+/-- **The acceptance example of `thm:absstrongmarkov` on the two state chain, at a genuine
+stopping time.**  Let `P` be any solution of the martingale problem of the flip generator
+`A f x = f (!x) - f x` on the canonical path space over `Bool`, and let `τ` be the first time the
+path is at `true`, capped at `T`.  Then the future after `τ` depends on the past up to `τ` only
+through the state at `τ`.
+
+`τ` has uncountable range, so `isStrongMarkov_of_countable_range` does not reach it; this is
+`isStrongMarkov_jumpOperator_coordinate` with `isStoppingTime_firstHitCapped_add`. -/
+theorem isStrongMarkov_flip_firstHitCapped (P : Measure (RightContinuousPath Bool))
+    [IsProbabilityMeasure P]
+    (hsol : IsMPSolution (mpFamily (jumpOperator flipRate flipKernel) lebesgueClock
+        Clock.Conv.optional (coordinate : ℝ≥0 → RightContinuousPath Bool → Bool))
+      (pathFiltration (E := Bool)) P)
+    (T : ℝ≥0) {f : Bool → ℝ} (hf : Measurable f) {cf : ℝ} (hfb : ∀ x, ‖f x‖ ≤ cf) (t : ℝ≥0) :
+    P[fun ω ↦ f (coordinate (firstHitCapped {true} T ω + t) ω) |
+        (isStoppingTime_firstHitCapped_add (measurableSet_singleton true) T 0).measurableSpace]
+      =ᵐ[P] P[fun ω ↦ f (coordinate (firstHitCapped {true} T ω + t) ω) |
+        MeasurableSpace.comap (fun ω ↦ coordinate (firstHitCapped {true} T ω) ω)
+          inferInstance] :=
+  isStrongMarkov_jumpOperator_coordinate measurable_flipRate (fun x ↦ (flipRate_pos x).le)
+    flipRate_le_one hsol (isStoppingTime_firstHitCapped_add (measurableSet_singleton true) T)
+    (firstHitCapped_le {true} T) hf hfb t
 
 end TwoStateSolution
 

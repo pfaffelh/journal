@@ -65472,3 +65472,127 @@ nicht voran, **C5, `hψ` und `hψadapt` für `E = Bool`**: `Measurable fun ω �
 `𝓖_{τ+s}`-Meßbarkeit über `measurable_uncurry_min_coordinate_pathFiltration` (dieser Lauf) an der
 Stoppzeit `τ + u`. Damit ist `isStrongMarkov_mpFamily` an der Zwei-Zustands-Kette bis auf
 `honedim` anwendbar.
+
+### 2026-09-26, Lauf 17:03 UTC — B2 nicht angefaßt; Aufgabe C, Schritt C5: **`hψ` und `hψadapt` auf dem kanonischen Pfadraum über beliebigem `[MeasurableSpace E]`**, und damit **`isStrongMarkov_jumpOperator_coordinate`**: jede Lösung des Problems eines beschränkten Sprungoperators ist stark markovsch an jeder beschränkten Stoppzeit der rohen Filtration
+
+`check_master.py` zu Beginn (Mathlib `94ef6b89544`): 0 Fehler, 0 `sorry`, 0 Veraltungen;
+Warnungen 18 / 38 / 38 / 76.
+
+**B2.** Nicht angefaßt, aus dem Grund der Läufe 15:03 und 16:03: kein neuer Gedanke; die
+Nebenfassung über den Dichteprozeß braucht Treffzeiten von `{Z ≤ 1/n}` für ein càdlàg-`Z` als
+Stoppzeiten der rohen rechtsstetigen Filtration.
+
+**C5. Der Befund des Laufs 16:03 war zu vorsichtig.** Dort hieß es, `hψ`/`hψadapt` seien
+`E`-wertige Aussagen und über bloßem `[MeasurableSpace E]` nur für `E = Bool` (oder abzählbar
+erzeugtes `E`) aus der reellen Fassung zu gewinnen. Das stimmt nicht: eine Abbildung nach `E` ist
+meßbar, sobald für **jede** meßbare Menge `B` der Indikator `B.indicator 1` längs ihr meßbar ist,
+denn `g ⁻¹' B = (B.indicator 1 ∘ g) ⁻¹' {1}`. Es braucht keine Erzeugung durch abzählbar viele
+Funktionale, weil Meßbarkeit mengenweise geprüft wird. Damit geht alles über beliebigem `E`.
+
+**Neu** (`MartingaleProblems/Suggested.lean`, Namensraum `RightContinuousPath`, Ende von
+`CanonicalPathSpace`; und neuer Abschnitt `StrongMarkovCanonical` nach `StrongMarkovMpFamily`):
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| `E`-wertige Meßbarkeit aus der der Indikatoren aller meßbaren Mengen, ohne Topologie; verallgemeinert `measurable_of_measurable_indicator_comp` (Z. 12122, dort `[Countable E]`, `[MeasurableSingletonClass E]`) | `RightContinuousPath.measurable_of_forall_measurableSet_indicator_comp` | 18957 |
+| Koordinatenprozeß gemeinsam meßbar als `E`-wertige Abbildung | `RightContinuousPath.measurable_uncurry_coordinate_self` | 18971 |
+| **`hψ`**: der um eine meßbare Zufallszeit geschobene Pfad ist meßbar | `RightContinuousPath.measurable_shift_randomTime` | 18978 |
+| reelles Funktional eines adaptierten Prozesses mit Pfaden in `RightContinuousPath E` ist stark progressiv | `RightContinuousPath.isStronglyProgressive_comp_coordinate` | 18987 |
+| Koordinate an einer Stoppzeit ist `𝓖_σ`-meßbar, `E`-wertig (Mathlibs `measurable_stoppedValue` je Indikator) | `RightContinuousPath.measurable_coordinate_stoppingTime` | 19000 |
+| **`hψadapt`**: geschobener Pfad bis `s` ist `𝓖_{τ+s}`-meßbar | `RightContinuousPath.measurable_shift_stoppingTime` | 19020 |
+| **`thm:absstrongmarkov`, erste Aussage, auf dem kanonischen Raum**, alle Regularitätsvoraussetzungen abgeladen; es bleiben `hint` und `honedim` | `isStrongMarkov_mpFamily_coordinate` | 49798 |
+| `hint` für beschränktes `τ ≤ T` | `integrable_mpFamily_coordinate_randomTime` | 49852 |
+
+und in `JumpProcesses/Suggested.lean`, Abschnitt `JumpUniqueness`:
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| **starke Markoveigenschaft jeder Lösung des Problems eines beschränkten Sprungoperators, an jeder beschränkten Stoppzeit der rohen Filtration `pathFiltration`, beliebiger Wertebereich** | `isStrongMarkov_jumpOperator_coordinate` | 23401 |
+
+Voraussetzungen von `isStrongMarkov_jumpOperator_coordinate`: `Measurable lam`, `0 ≤ lam ≤ L`,
+`mu` Markovkern, `P` Wahrscheinlichkeitsmaß und Lösung, `τ + t` Stoppzeit für jedes `t`, `τ ≤ T`.
+Über `E` nur `[MeasurableSpace E]`; keine Rechtsstetigkeit der Filtration, keine Vervollständigung.
+`honedim` ist `onedim_mpFamily_jumpOperator_coordinate` (stand schon, `JumpProcesses` Z. 23231;
+der Lauf 16:03 führte es irrtümlich als offen). Strong Markov ist damit **Konklusion** aus der
+Eindeutigkeit der eindimensionalen Verteilungen, wie `rem:noch1` es will. `#print axioms` für alle
+neuen Hauptaussagen: `propext`, `Classical.choice`, `Quot.sound`.
+
+**Warum `τ ≤ T`.** `hint` fragt nach der Integrierbarkeit von `Y (τ + t)`; der Kompensator wächst
+linear in der Zeit (`|Y r| ≤ ‖p.1‖ + ‖p.2‖·r`, `abs_mpFamily_coordinate_le`), also genügt jede
+Schranke an `τ`, und ohne sie braucht man `𝔼 τ < ∞`. Die fast sicher endliche Stoppzeit des
+Manuskripts ist damit **nicht** erreicht; der Weg dorthin ist `τ ∧ n` und ein Grenzübergang in der
+bedingten Erwartung, der hier nicht gemacht ist.
+
+### Derselbe Lauf, zweiter Teil — C5, Akzeptanzbeispiel: **die Zwei-Zustands-Kette an einer echten Stoppzeit**, der bei `T` abgeschnittenen Eintrittszeit in `{true}`
+
+Mathlibs Treffzeitsätze (`Adapted.isStoppingTime_hittingBtwn`, `…_hittingAfter`,
+`Probability/Process/HittingTime.lean:399,412`) verlangen `[WellFoundedLT ι]` und greifen über
+`ℝ≥0` nicht; `IsStoppingTime.add_const` (`Stopping.lean:389`) verlangt `[AddGroup ι]`,
+`add_const'` (`:403`) `[Countable ι]`. Beides ist über `ℝ≥0` nicht erfüllt; genommen ist
+`IsStoppingTime.add_const_of_orderedSub` aus dem Prototyp.
+
+**Neu** (`MartingaleProblems/Suggested.lean`, Namensraum `RightContinuousPath`; über bloßem
+`[MeasurableSpace E]`, für beliebiges meßbares `B`):
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| Eintrittszeit in `B`, bei `T` abgeschnitten; `T` steht in der Menge, deren Infimum genommen wird, also wird `sInf ∅ = 0` nie gelesen | `RightContinuousPath.firstHitCapped` | 19044 |
+| die Eintrittszeit wird angenommen (Rechtslokalkonstanz) | `RightContinuousPath.csInf_mem_setOf_coordinate_mem` | 19054 |
+| `τ ≤ i ↔ ∃ u ≤ i, X_u ∈ B` für `i < T` | `RightContinuousPath.firstHitCapped_le_iff` | 19069 |
+| „bis `i` in `B` gewesen“ liegt in `pathFiltration i` (abzählbar viele Zeiten `min (k/2ⁿ) i`) | `RightContinuousPath.measurableSet_exists_coordinate_mem` | 19090 |
+| **Stoppzeit der rohen Filtration**, ohne Rechtsstetigkeit der Filtration | `RightContinuousPath.isStoppingTime_firstHitCapped` | 19119 |
+| dasselbe um `t` verschoben, für `hτ` | `RightContinuousPath.isStoppingTime_firstHitCapped_add` | 49875 |
+
+und in `JumpProcesses/Suggested.lean`, Abschnitt `TwoStateSolution`:
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| **jede Lösung des Flip-Problems ist stark markovsch an `firstHitCapped {true} T`**, einer Stoppzeit mit überabzählbarem Wertebereich, die `isStrongMarkov_of_countable_range` nicht erreicht | `isStrongMarkov_flip_firstHitCapped` | 23524 |
+
+`#print axioms`: `propext`, `Classical.choice`, `Quot.sound`.
+
+**Nebenbefund.** Daß die rohe Filtration hier reicht, liegt an der Rechtslokalkonstanz der Pfade:
+die Eintrittszeit in eine *beliebige* meßbare Menge wird angenommen, `{τ ≤ i}` ist ein Ereignis
+über abzählbar viele Koordinaten bis `i`. Für bloß rechtsstetige Pfade in einem topologischen
+Raum stimmt das nur für abgeschlossene `B` (und auch dann nur für die Treffzeit, nicht die
+Eintrittszeit, im Allgemeinen); der kanonische Raum dieses Meilensteins ist der diskrete Fall.
+
+### Derselbe Lauf, Abschluß
+
+`check_master.py` am Ende (Mathlib `94ef6b89544`): **0 Fehler, 0 `sorry`, 0 Veraltungen** in allen
+vier Dateien, Warnungen 18 / 38 / 38 / 76 wie zu Beginn.
+
+**Stand der drei Aufgaben nach diesem Lauf.**
+
+* **A:** erledigt (offen nur „cutting down to an open subset“, siehe Lauf 13:03).
+* **B:** B1, B3, B4 stehen. **B2 offen**, nicht angefaßt.
+* **C:** C1, C2 vollständig; C3 offen in zwei Punkten (siehe Lauf 16:03); C4 global.
+  **C5:** abstrakt, für `mpFamily`, **auf dem kanonischen Pfadraum mit allen
+  Regularitätsvoraussetzungen abgeladen** (`isStrongMarkov_mpFamily_coordinate`), für
+  **beschränkte Sprungoperatoren vollständig an beschränkten Stoppzeiten**
+  (`isStrongMarkov_jumpOperator_coordinate`), und an der Zwei-Zustands-Kette mit einer echten
+  Stoppzeit (`isStrongMarkov_flip_firstHitCapped`). Offen in C5: (i) fast sicher endliche statt
+  beschränkte Stoppzeiten; (ii) die klassische Instanz mit `E` metrisierbar,
+  `A ⊆ Cb(E) × Bdd(E)` (sie braucht einen kanonischen Raum rechtsstetiger, nicht
+  rechtslokalkonstanter Pfade, den es noch nicht gibt); (iii) Brownsche Bewegung als Instanz.
+
+**Befunde für den Nutzer (kein Manuskript, keine README angefaßt; nichts nach außen):**
+
+1. Lauf 16:03 hatte `hψ`/`hψadapt` über bloßem `[MeasurableSpace E]` für unerreichbar erklärt
+   und `honedim` für den Sprungoperator als offen geführt. Beides war falsch: `hψ`/`hψadapt`
+   folgen mengenweise aus der reellen Fassung (`measurable_of_forall_measurableSet_indicator_comp`),
+   `honedim` stand als `onedim_mpFamily_jumpOperator_coordinate`.
+2. `thm:absstrongmarkov` spricht von fast sicher endlichen Stoppzeiten. Die Formalisierung
+   erreicht beschränkte; der Unterschied sitzt allein in `hint` (Integrierbarkeit des
+   Kompensators an der Zufallszeit), nicht in der Struktur des Beweises.
+
+**Benanntes Ziel für den nächsten Lauf, der nächste offene Schritt der Liste: B2**, und kommt es
+nicht voran, **C5 (i): `isStrongMarkov_jumpOperator_coordinate` für fast sicher endliches `τ`**,
+über `τ ∧ n` (`isStrongMarkov_jumpOperator_coordinate` an `min τ n`) und den Grenzübergang
+`n → ∞`. Bausteine, am master-Quelltext belegt: `𝓖_{τ∧n} = 𝓖_τ ⊓ 𝓖_n`
+(`IsStoppingTime.measurableSpace_min_const`, `Probability/Process/Stopping.lean:690`), also ist
+`n ↦ 𝓖_{τ∧n}` eine Filtration über `ℕ` mit Supremum `𝓖_τ`, wenn `τ` f.s. endlich ist; darauf
+Lévys Satz nach oben (`MeasureTheory.tendsto_ae_condExp`, `Probability/Martingale/Convergence.lean:428`)
+für die beschränkte Funktion `f (X(τ+t))`. Zu klären ist dabei, wie auf `{τ ≤ n}` die Aussage an
+`τ ∧ n` (Zukunft `X(τ∧n + t)`) zur Aussage an `τ` wird; das ist die eigentliche Arbeit.
+

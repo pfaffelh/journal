@@ -18885,10 +18885,10 @@ theorem integrable_mpFamily_coordinate {A : Set ((E → ℝ) × (E → ℝ))} (c
 and strong progressivity (`hprog`), and it asks for the value of `p.1` at the random time to be
 measurable (`hK`).  For the coordinate process of `RightContinuousPath E` and the Lebesgue clock
 the three hold over a bare `[MeasurableSpace E]`, at every path and not only almost surely.  Right
-local constancy is all they read.  The shifted path at a random time (`hψ`, `hψadapt`) is not
-among them: its measurability is an `E`-valued statement, and over a bare measurable space only
-the real functionals of the coordinates are jointly measurable
-(`measurable_uncurry_of_isRightLocallyConstant`). -/
+local constancy is all they read.  The shifted path at a random time (`hψ`, `hψadapt`) is an
+`E`-valued statement, and it reduces to the real one without any topology on `E`: a map into `E`
+is measurable once every indicator of a measurable set along it is
+(`measurable_of_forall_measurableSet_indicator_comp`). -/
 
 /-- **`hrc` on the canonical space**: every test process of the optional convention has right
 continuous paths, at every path.  The state term is right locally constant, and the compensator
@@ -18950,6 +18950,187 @@ theorem measurable_comp_coordinate_randomTime {Ω' : Type*} {m' : MeasurableSpac
     {X : Ω' → RightContinuousPath E} (hX : Measurable X) :
     Measurable fun ω ↦ h (coordinate (τ ω) (X ω)) :=
   (measurable_uncurry_coordinate hh).comp (hτ.prodMk hX)
+
+/-- **An `E`-valued map is measurable as soon as every indicator of a measurable set along it
+is.**  No topology on `E` enters: the preimage of `B` is the preimage of `{1}` under
+`B.indicator 1`.  This is `measurable_of_measurable_indicator_comp` without `[Countable E]` and
+`[MeasurableSingletonClass E]`: measurability is tested set by set, so the indicators of all
+measurable sets do what the point indicators do on a countable space, and no generation by
+countably many functionals is needed. -/
+theorem measurable_of_forall_measurableSet_indicator_comp {α : Type*} {mα : MeasurableSpace α}
+    {g : α → E} (h : ∀ B : Set E, MeasurableSet B →
+      Measurable fun a ↦ B.indicator (fun _ ↦ (1 : ℝ)) (g a)) :
+    Measurable g := by
+  intro B hB
+  have hpre : g ⁻¹' B = (fun a ↦ B.indicator (fun _ ↦ (1 : ℝ)) (g a)) ⁻¹' {1} := by
+    ext a
+    by_cases ha : g a ∈ B <;> simp [ha]
+  rw [hpre]
+  exact h B hB (measurableSet_singleton 1)
+
+/-- **The coordinate process of the canonical path space is jointly measurable as an `E`-valued
+map**, over a bare `[MeasurableSpace E]`.  `measurable_uncurry_coordinate` for the indicators of
+measurable sets. -/
+theorem measurable_uncurry_coordinate_self :
+    Measurable fun p : ℝ≥0 × RightContinuousPath E ↦ coordinate p.1 p.2 :=
+  measurable_of_forall_measurableSet_indicator_comp fun _ hB ↦
+    measurable_uncurry_coordinate (measurable_const.indicator hB)
+
+/-- **`hψ` on the canonical space**: the path shifted by a measurable random time is a
+measurable map into the path space. -/
+theorem measurable_shift_randomTime {Ω' : Type*} {m' : MeasurableSpace Ω'}
+    {τ : Ω' → ℝ≥0} (hτ : Measurable τ) {X : Ω' → RightContinuousPath E} (hX : Measurable X) :
+    Measurable fun ω ↦ pathShift.θ (τ ω) (X ω) :=
+  measurable_of_measurable_toFun (measurable_pi_iff.mpr fun u ↦
+    measurable_uncurry_coordinate_self.comp ((hτ.add_const u).prodMk hX))
+
+/-- **A real functional of an adapted process with paths in `RightContinuousPath E` is strongly
+progressive.**  `measurable_uncurry_min_of_isRightLocallyConstant` on the sample space, with the
+past at `t` as its σ-algebra. -/
+theorem isStronglyProgressive_comp_coordinate {Ω : Type*} {m : MeasurableSpace Ω}
+    {𝓖 : Filtration ℝ≥0 m} {X : Ω → RightContinuousPath E}
+    (hX : ∀ u : ℝ≥0, Measurable[𝓖 u] fun ω ↦ coordinate u (X ω))
+    {h : E → ℝ} (hh : Measurable h) :
+    IsStronglyProgressive 𝓖 fun r ω ↦ h (coordinate r (X ω)) :=
+  isStronglyProgressive_of_measurable_uncurry_min fun t ↦
+    @measurable_uncurry_min_of_isRightLocallyConstant E _ Ω (𝓖 t)
+      (fun r ω ↦ coordinate r (X ω)) t (fun u hu ↦ (hX u).mono (𝓖.mono hu) le_rfl)
+      (fun ω u ↦ (X ω).rightLocallyConstant' u) h hh
+
+/-- **The coordinate at a stopping time is measurable for the past at that stopping time**, as
+an `E`-valued map and over a bare `[MeasurableSpace E]`.  For every indicator this is Mathlib's
+`measurable_stoppedValue` applied to the real process `isStronglyProgressive_comp_coordinate`. -/
+theorem measurable_coordinate_stoppingTime {Ω : Type*} {m : MeasurableSpace Ω}
+    {𝓖 : Filtration ℝ≥0 m} {X : Ω → RightContinuousPath E}
+    (hX : ∀ u : ℝ≥0, Measurable[𝓖 u] fun ω ↦ coordinate u (X ω))
+    {σ : Ω → ℝ≥0} (hσ : IsStoppingTime 𝓖 fun ω ↦ ((σ ω : ℝ≥0) : WithTop ℝ≥0)) :
+    Measurable[hσ.measurableSpace] fun ω ↦ coordinate (σ ω) (X ω) := by
+  refine @measurable_of_forall_measurableSet_indicator_comp E _ Ω hσ.measurableSpace _ fun B hB ↦ ?_
+  have h := measurable_stoppedValue
+    (isStronglyProgressive_comp_coordinate hX
+      ((measurable_const : Measurable fun _ : E ↦ (1 : ℝ)).indicator hB)) hσ
+  have heq : stoppedValue (fun r ω ↦ B.indicator (fun _ ↦ (1 : ℝ)) (coordinate r (X ω)))
+      (fun ω ↦ ((σ ω : ℝ≥0) : WithTop ℝ≥0))
+      = fun ω ↦ B.indicator (fun _ ↦ (1 : ℝ)) (coordinate (σ ω) (X ω)) := by
+    funext ω
+    rfl
+  rw [heq] at h
+  exact h
+
+/-- **`hψadapt` on the canonical space**: the path shifted by `τ`, read up to time `s`, is
+measurable for the past at the stopping time `τ + s`.  Each coordinate `u ≤ s` of the shifted
+path is the coordinate at the stopping time `τ + u ≤ τ + s`. -/
+theorem measurable_shift_stoppingTime {Ω : Type*} {m : MeasurableSpace Ω}
+    {𝓖 : Filtration ℝ≥0 m} {X : Ω → RightContinuousPath E}
+    (hX : ∀ u : ℝ≥0, Measurable[𝓖 u] fun ω ↦ coordinate u (X ω))
+    {τ : Ω → ℝ≥0} (hτ : ∀ t : ℝ≥0, IsStoppingTime 𝓖 fun ω ↦ ((τ ω + t : ℝ≥0) : WithTop ℝ≥0))
+    (s : ℝ≥0) :
+    Measurable[(hτ s).measurableSpace, pathFiltration s]
+      fun ω ↦ pathShift.θ (τ ω) (X ω) := by
+  rw [measurable_iff_comap_le, pathFiltration_eq, MeasurableSpace.comap_iSup]
+  refine iSup_le fun u ↦ ?_
+  rw [MeasurableSpace.comap_iSup]
+  refine iSup_le fun hu ↦ ?_
+  rw [MeasurableSpace.comap_comp]
+  have hmono : (hτ u).measurableSpace ≤ (hτ s).measurableSpace :=
+    IsStoppingTime.measurableSpace_mono (hτ u) (hτ s) fun ω ↦
+      WithTop.coe_le_coe.2 (by gcongr; exact Set.mem_Iic.1 hu)
+  refine le_trans ?_ hmono
+  exact measurable_iff_comap_le.mp (measurable_coordinate_stoppingTime hX (hτ u))
+
+/-- **The first time the path enters `B`, capped at `T`.**  The cap is in the set of which the
+infimum is taken, so the set is never empty and `sInf ∅ = 0` is never read: a path that does not
+enter `B` before `T` gets the value `T`, not `0`. -/
+noncomputable def firstHitCapped (B : Set E) (T : ℝ≥0) (f : RightContinuousPath E) : ℝ≥0 :=
+  sInf (insert T {u | coordinate u f ∈ B})
+
+theorem firstHitCapped_le (B : Set E) (T : ℝ≥0) (f : RightContinuousPath E) :
+    firstHitCapped B T f ≤ T :=
+  csInf_le (OrderBot.bddBelow _) (Set.mem_insert T _)
+
+/-- **The entrance time into any set is attained**, by right local constancy: if the infimum `s`
+were not a time in `B`, the path would sit outside `B` on `[s, s + ε)`, and `s + ε` would be a
+lower bound. -/
+theorem csInf_mem_setOf_coordinate_mem {B : Set E} {f : RightContinuousPath E}
+    (hne : {u | coordinate u f ∈ B}.Nonempty) :
+    sInf {u | coordinate u f ∈ B} ∈ {u | coordinate u f ∈ B} := by
+  by_contra hs
+  set s := sInf {u | coordinate u f ∈ B} with hsdef
+  obtain ⟨ε, hε, hconst⟩ := f.rightLocallyConstant' s
+  have hlb : s + ε ≤ s := by
+    refine le_csInf hne fun u hu ↦ ?_
+    by_contra hlt
+    push Not at hlt
+    have hsu : s ≤ u := csInf_le (OrderBot.bddBelow _) hu
+    have heq : coordinate u f = coordinate s f := hconst u hsu hlt
+    exact hs (by simp only [Set.mem_ofPred_eq]; rw [← heq]; exact hu)
+  exact absurd hlb (not_le.2 (lt_add_of_pos_right s hε))
+
+theorem firstHitCapped_le_iff {B : Set E} {T i : ℝ≥0} (hi : i < T) (f : RightContinuousPath E) :
+    firstHitCapped B T f ≤ i ↔ ∃ u ≤ i, coordinate u f ∈ B := by
+  constructor
+  · intro h
+    by_cases hne : {u | coordinate u f ∈ B}.Nonempty
+    · rw [firstHitCapped, csInf_insert (OrderBot.bddBelow _) hne] at h
+      have h' : sInf {u | coordinate u f ∈ B} ≤ i := by
+        rcases min_le_iff.1 h with h1 | h1
+        · exact absurd (lt_of_le_of_lt h1 hi) (lt_irrefl T)
+        · exact h1
+      exact ⟨_, h', csInf_mem_setOf_coordinate_mem hne⟩
+    · rw [Set.not_nonempty_iff_eq_empty] at hne
+      rw [firstHitCapped, hne, insert_empty_eq, csInf_singleton] at h
+      exact absurd (lt_of_le_of_lt h hi) (lt_irrefl T)
+  · rintro ⟨u, hui, hu⟩
+    exact le_trans (csInf_le (OrderBot.bddBelow _) (Set.mem_insert_of_mem T hu)) hui
+
+/-- **Entering `B` by time `i` is an event of the past at `i`.**  The union over the uncountably
+many times `u ≤ i` is the union over the countably many `min (k / 2 ^ n) i`, because a path in
+`B` at `u` stays there on `[u, u + ε)` and `min (dyadAbove n u) i` lies in that interval for
+large `n`. -/
+theorem measurableSet_exists_coordinate_mem {B : Set E} (hB : MeasurableSet B) (i : ℝ≥0) :
+    MeasurableSet[pathFiltration i] {f : RightContinuousPath E | ∃ u ≤ i, coordinate u f ∈ B} := by
+  have hset : {f : RightContinuousPath E | ∃ u ≤ i, coordinate u f ∈ B}
+      = ⋃ n : ℕ, ⋃ k : ℕ, {f | coordinate (min ((k : ℝ≥0) / 2 ^ n) i) f ∈ B} := by
+    ext f
+    simp only [Set.mem_ofPred_eq, Set.mem_iUnion]
+    constructor
+    · rintro ⟨u, hui, hu⟩
+      obtain ⟨ε, hε, hconst⟩ := f.rightLocallyConstant' u
+      obtain ⟨n, hn⟩ := NNReal.exists_pow_lt_of_lt_one hε (by norm_num : (1 / 2 : ℝ≥0) < 1)
+      refine ⟨n, ⌈(2 : ℝ≥0) ^ n * u⌉₊, ?_⟩
+      have hge : u ≤ min (dyadAbove n u) i := le_min (le_dyadAbove n u) hui
+      have hlt : min (dyadAbove n u) i < u + ε :=
+        lt_of_le_of_lt (min_le_left _ _) (lt_trans (dyadAbove_lt n u) (by gcongr))
+      have heq := hconst _ hge hlt
+      show coordinate (min (dyadAbove n u) i) f ∈ B
+      rw [show coordinate (min (dyadAbove n u) i) f = f.toFun (min (dyadAbove n u) i) from rfl,
+        heq]
+      exact hu
+    · rintro ⟨n, k, hk⟩
+      exact ⟨_, min_le_right _ _, hk⟩
+  rw [hset]
+  exact MeasurableSet.iUnion fun n ↦ MeasurableSet.iUnion fun k ↦
+    measurable_pathFiltration (min_le_right _ _) hB
+
+/-- **The capped entrance time is a stopping time of the raw filtration `pathFiltration`**, for
+any measurable `B` and over a bare `[MeasurableSpace E]`.  No right continuity of the filtration:
+the entrance time is attained (`csInf_mem_setOf_coordinate_mem`), so `{τ ≤ i}` is "the path has
+been in `B` by time `i`", and that is countably determined. -/
+theorem isStoppingTime_firstHitCapped {B : Set E} (hB : MeasurableSet B) (T : ℝ≥0) :
+    IsStoppingTime (pathFiltration (E := E))
+      fun f ↦ ((firstHitCapped B T f : ℝ≥0) : WithTop ℝ≥0) := by
+  intro i
+  simp only [WithTop.coe_le_coe]
+  rcases le_or_gt T i with hTi | hiT
+  · have : {f : RightContinuousPath E | firstHitCapped B T f ≤ i} = Set.univ :=
+      Set.eq_univ_of_forall fun f ↦ le_trans (firstHitCapped_le B T f) hTi
+    rw [this]
+    exact MeasurableSet.univ
+  · have : {f : RightContinuousPath E | firstHitCapped B T f ≤ i}
+        = {f | ∃ u ≤ i, coordinate u f ∈ B} :=
+      Set.ext fun f ↦ firstHitCapped_le_iff hiT f
+    rw [this]
+    exact measurableSet_exists_coordinate_mem hB i
 
 end RightContinuousPath
 
@@ -49595,6 +49776,111 @@ theorem isStrongMarkov_mpFamily {A : Set ((E → ℝ) × (E → ℝ))}
     (exists_incr_mpFamily_of_shift hsi hfb hgb hpath hK) honedim hf hfb' t
 
 end StrongMarkovMpFamily
+
+section StrongMarkovCanonical
+
+variable {E : Type*} [MeasurableSpace E]
+
+open RightContinuousPath in
+/-- **`thm:absstrongmarkov`, first assertion, on the canonical path space**: for a solution `P`
+of the martingale problem of a bounded operator `A` on `RightContinuousPath E` with the Lebesgue
+clock and the optional convention,
+`E[f(X(τ+t)) | 𝓖_τ] = E[f(X(τ+t)) | X(τ)]` for every finite stopping time `τ` of the raw
+filtration `pathFiltration`, with arbitrary range.
+
+`isStrongMarkov_mpFamily` at `Ω = F = RightContinuousPath E`, `X = id`, `S = pathShift`.  Of its
+hypotheses the regularity ones are all discharged by the canonical space, over a bare
+`[MeasurableSpace E]`: `hsi` (`lebesgueClock_isShiftInvariant`), `hpath`, `hπ`, `hadaptY`,
+`hprog`, `hrc`, `hK`, and the two about the shifted path, `hψ` (`measurable_shift_randomTime`)
+and `hψadapt` (`measurable_shift_stoppingTime`).  What remains is the integrability `hint` of
+the test processes at the random time -- a statement about `τ` and not about the space, since the
+compensator grows linearly in time -- and `eq:absonedim` for the one problem, `honedim`. -/
+theorem isStrongMarkov_mpFamily_coordinate {A : Set ((E → ℝ) × (E → ℝ))}
+    (hfm : ∀ p ∈ A, Measurable p.1) (hfb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.1 x‖ ≤ b)
+    (hgm : ∀ p ∈ A, Measurable p.2) (hgb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.2 x‖ ≤ b)
+    {P : Measure (RightContinuousPath E)} [IsProbabilityMeasure P]
+    (hsol : IsMPSolution (mpFamily A lebesgueClock Clock.Conv.optional
+        (coordinate : ℝ≥0 → RightContinuousPath E → E)) (pathFiltration (E := E)) P)
+    {τ : RightContinuousPath E → ℝ≥0}
+    (hτ : ∀ t : ℝ≥0, IsStoppingTime (pathFiltration (E := E))
+      fun ω ↦ ((τ ω + t : ℝ≥0) : WithTop ℝ≥0))
+    (hint : ∀ Y ∈ mpFamily A lebesgueClock Clock.Conv.optional
+        (coordinate : ℝ≥0 → RightContinuousPath E → E),
+      ∀ t : ℝ≥0, Integrable (fun ω ↦ Y (τ ω + t) ω) P)
+    (honedim : ∀ R R' : Measure (RightContinuousPath E), IsProbabilityMeasure R →
+      IsProbabilityMeasure R' →
+      IsMPSolution (mpFamily A lebesgueClock Clock.Conv.optional
+        (coordinate : ℝ≥0 → RightContinuousPath E → E)) (pathFiltration (E := E)) R →
+      IsMPSolution (mpFamily A lebesgueClock Clock.Conv.optional
+        (coordinate : ℝ≥0 → RightContinuousPath E → E)) (pathFiltration (E := E)) R' →
+      R.map (coordinate 0) = R'.map (coordinate 0) →
+        ∀ u : ℝ≥0, R.map (coordinate u) = R'.map (coordinate u))
+    {f : E → ℝ} (hf : Measurable f) {cf : ℝ} (hfb' : ∀ x, ‖f x‖ ≤ cf) (t : ℝ≥0) :
+    P[fun ω ↦ f (coordinate (τ ω + t) ω) | (hτ 0).measurableSpace]
+      =ᵐ[P] P[fun ω ↦ f (coordinate (τ ω + t) ω) |
+        MeasurableSpace.comap (fun ω ↦ coordinate (τ ω) ω) inferInstance] := by
+  have hX : ∀ u : ℝ≥0, Measurable[pathFiltration (E := E) u]
+      fun ω : RightContinuousPath E ↦ coordinate u (id ω) :=
+    fun _ ↦ measurable_pathFiltration le_rfl
+  have hτm : Measurable τ := by
+    have h := (((hτ 0).measurable).untopA).mono (hτ 0).measurableSpace_le le_rfl
+    simp only [add_zero] at h
+    exact h
+  exact isStrongMarkov_mpFamily (S := pathShift) (X := id)
+    (lebesgueClock_isShiftInvariant Clock.Conv.optional) hfb hgb
+    (fun p hp g ↦ measurable_comp_coordinate (hgm p hp) g)
+    (fun _ ↦ measurable_pathFiltration le_rfl)
+    (fun _ hY ↦ stronglyAdapted_mpFamily_coordinate Clock.Conv.optional hfm hgm hY)
+    hsol
+    (fun _ hY ↦ isStronglyProgressive_mpFamily_coordinate Clock.Conv.optional hfm hgm hY)
+    (fun _ hY ↦ ae_of_all _ fun ω ↦ tendsto_nhdsGE_mpFamily_coordinate hgm
+      (fun p hp ↦ by
+        obtain ⟨b, hb⟩ := hgb p hp
+        exact ⟨b, fun x ↦ by rw [← Real.norm_eq_abs]; exact hb x⟩) hY ω)
+    hτ hint (measurable_shift_randomTime hτm measurable_id)
+    (measurable_shift_stoppingTime hX hτ)
+    (fun p hp ↦ measurable_comp_coordinate_randomTime (hfm p hp) hτm measurable_id)
+    honedim hf hfb' t
+
+open RightContinuousPath in
+/-- **`hint` of `isStrongMarkov_mpFamily_coordinate` for a bounded stopping time.**  A test
+process at the random time `τ + t` is integrable when `τ ≤ T`: it is measurable as the stopped
+value of a strongly progressive real process (`measurable_stoppedValue`), and bounded because the
+compensating window has mass at most `T + t` (`abs_mpFamily_coordinate_le`).  Some bound on `τ`
+is needed: the compensator grows linearly in time, so an unbounded `τ` asks for an integrability
+of `τ` itself. -/
+theorem integrable_mpFamily_coordinate_randomTime {A : Set ((E → ℝ) × (E → ℝ))}
+    (hfm : ∀ p ∈ A, Measurable p.1) (hfb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.1 x‖ ≤ b)
+    (hgm : ∀ p ∈ A, Measurable p.2) (hgb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.2 x‖ ≤ b)
+    {P : Measure (RightContinuousPath E)} [IsFiniteMeasure P]
+    {τ : RightContinuousPath E → ℝ≥0}
+    (hτ : ∀ t : ℝ≥0, IsStoppingTime (pathFiltration (E := E))
+      fun ω ↦ ((τ ω + t : ℝ≥0) : WithTop ℝ≥0))
+    {T : ℝ≥0} (hτT : ∀ ω, τ ω ≤ T)
+    {Y : ℝ≥0 → RightContinuousPath E → ℝ}
+    (hY : Y ∈ mpFamily A lebesgueClock Clock.Conv.optional
+      (coordinate : ℝ≥0 → RightContinuousPath E → E)) (t : ℝ≥0) :
+    Integrable (fun ω ↦ Y (τ ω + t) ω) P := by
+  have hm : Measurable[(hτ t).measurableSpace] fun ω ↦ Y (τ ω + t) ω :=
+    measurable_stoppedValue
+      (isStronglyProgressive_mpFamily_coordinate Clock.Conv.optional hfm hgm hY) (hτ t)
+  obtain ⟨c, -, hc⟩ := abs_mpFamily_coordinate_le hfb hgb hY (T + t)
+  exact integrable_of_abs_le (hm.mono (hτ t).measurableSpace_le le_rfl)
+    fun ω ↦ hc _ (add_le_add_left (hτT ω) t) ω
+
+open RightContinuousPath in
+/-- `firstHitCapped B T + t` is a stopping time for every `t`, the form `hτ` of
+`isStrongMarkov_mpFamily_coordinate` asks for.  Stated here and not next to
+`isStoppingTime_firstHitCapped` because it uses `IsStoppingTime.add_const_of_orderedSub`. -/
+theorem RightContinuousPath.isStoppingTime_firstHitCapped_add {B : Set E} (hB : MeasurableSet B)
+    (T t : ℝ≥0) :
+    IsStoppingTime (pathFiltration (E := E))
+      fun f ↦ ((firstHitCapped B T f + t : ℝ≥0) : WithTop ℝ≥0) := by
+  have h := (isStoppingTime_firstHitCapped hB T).add_const_of_orderedSub t
+  simp only [← WithTop.coe_add] at h
+  exact h
+
+end StrongMarkovCanonical
 
 section LocalMixtureKernelSolutions
 
