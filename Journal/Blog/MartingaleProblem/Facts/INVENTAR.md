@@ -66189,3 +66189,9 @@ behaltenen Prüfbäume `~/Code/lean/mathlib-master/_check_3396620/` und `_check_
 Lauf darf dort nicht auflisten; ob beide noch stehen, ist also nicht nachgesehen. Ein dritter,
 `_check_3383104/`, war beim zweiten Gebrauch schon verschwunden.
 
+### 2026-09-27, Lauf 22:03 UTC (00:03 Freiburger Zeit) — D und E vorgefunden erledigt
+
+D1, D2 und E1–E6 standen nach den Läufen 18:03 bis 21:03. Nach der Regel des Auftrags hat dieser
+Lauf nur `check_master.py` geprüft (Mathlib `94ef6b89544`): 0 Fehler, 0 `sorry`, 0 Veraltungen in
+allen vier Dateien, Warnungen 18 / 38 / 38 / 76 unverändert; nichts gebaut, kein Folgeziel.
+
