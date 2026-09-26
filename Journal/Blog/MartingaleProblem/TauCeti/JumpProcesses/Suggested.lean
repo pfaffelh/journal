@@ -4835,6 +4835,150 @@ example (t : ℝ≥0) (f : ℕ → ℝ) (C : ℝ) (hC : ∀ x, |f x| ≤ C) :
       (by intro p hp; rw [List.mem_singleton] at hp; subst hp; exact ⟨C, hC⟩),
     fddExp_singleton]
 
+/-- **The Poisson law has a first moment**: `n ↦ (n : ℝ)` is integrable against
+`ProbabilityTheory.poissonMeasure r`.  `integrable_poissonMeasure_iff` reduces it to the
+summability of `e^{-r} r^n n / n!`, which is dominated by `e^{-r} (2r)^n / n!` because `n ≤ 2^n`
+(`Real.summable_pow_div_factorial`).  Mathlib states no moment of the Poisson law. -/
+theorem integrable_natCast_poissonMeasure (r : ℝ≥0) :
+    Integrable (fun n : ℕ ↦ (n : ℝ)) (poissonMeasure r) := by
+  rw [integrable_poissonMeasure_iff]
+  refine Summable.of_nonneg_of_le (fun n ↦ by positivity) (fun n ↦ ?_)
+    ((Real.summable_pow_div_factorial (2 * r)).mul_left (Real.exp (-r)))
+  have h2 : (n : ℝ) ≤ 2 ^ n := by exact_mod_cast (Nat.lt_two_pow_self).le
+  rw [Real.norm_natCast, mul_pow, mul_div_assoc, mul_div_assoc, mul_assoc]
+  refine mul_le_mul_of_nonneg_left ?_ (Real.exp_pos _).le
+  rw [mul_comm, ← mul_div_assoc, mul_div_assoc]
+  exact mul_le_mul_of_nonneg_right h2 (by positivity)
+
+/-- The generator applied to the truncation `min · n` is the indicator of `{x < n}`. -/
+theorem jumpApply_poisson_min (n x : ℕ) :
+    jumpApply poissonRate poissonJumpKernel (fun y : ℕ ↦ ((min y n : ℕ) : ℝ)) x
+      = if x < n then 1 else 0 := by
+  rw [jumpApply_poisson]
+  split_ifs with h
+  · rw [min_eq_left (Nat.succ_le_of_lt h), min_eq_left h.le]
+    push_cast; ring
+  · push Not at h
+    rw [min_eq_right (h.trans (Nat.le_succ x)), min_eq_right h, sub_self]
+
+/-- **Acceptance of Milestone 2: the Poisson process by hand, with the unbounded `f = id`.**
+The constructed Poisson process solves the martingale problem for its operator **together with the
+pair `(id, 1)`**, that is, `N t - t` is a martingale, and this is obtained from the bounded pairs
+alone through `IsMPSolutionFor.insert_of_tendsto`, with the truncations `f n = min · n`.
+
+On them the generator is `1_{x < n}` (`jumpApply_poisson_min`), so the test processes are
+`min (N t) n - ∫_0^t 1_{N s < n} ds`.  They converge pointwise (for fixed `ω` the first term is
+eventually `N t`, the second converges by dominated convergence on the window), are dominated by
+`2 N t + 2 t`, and `N t` is integrable because its law is `Po(t)`
+(`jumpMeasure_map_jumpProcess_poisson`, `integrable_natCast_poissonMeasure`).  Adaptedness of
+`N t - t` is read off the pointwise limit of adapted processes, so no statement about the
+filtration of the construction is needed.  The bounded form
+`IsMPSolutionFor.insert_of_forall_norm_le` does **not** apply here, `id` being unbounded; that is
+the point of the example. -/
+theorem poissonProcess_isMPSolutionFor_insert_id :
+    IsMPSolutionFor (insert ((fun x : ℕ ↦ (x : ℝ)), fun _ ↦ (1 : ℝ))
+        (jumpOperator poissonRate poissonJumpKernel)) lebesgueClock Clock.Conv.optional
+      (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcess poissonRate (t : ℝ) ω)
+      (jumpFiltration poissonRate measurable_poissonRate)
+      (jumpMeasure poissonJumpKernel (Measure.dirac 0)) := by
+  set X : ℝ≥0 → (ℕ → ℕ) × (ℕ → ℝ) → ℕ := fun t ω ↦ jumpProcess poissonRate (t : ℝ) ω with hXdef
+  set P := jumpMeasure poissonJumpKernel (Measure.dirac 0) with hPdef
+  set 𝓖 := jumpFiltration poissonRate measurable_poissonRate with h𝓖def
+  set Q := lebesgueClock with hQdef
+  set c := Clock.Conv.optional with hcdef
+  set p : ℕ → (ℕ → ℝ) × (ℕ → ℝ) := fun n ↦ ((fun y : ℕ ↦ ((min y n : ℕ) : ℝ)),
+    jumpApply poissonRate poissonJumpKernel (fun y : ℕ ↦ ((min y n : ℕ) : ℝ))) with hpdef
+  have hpA : ∀ n, p n ∈ jumpOperator poissonRate poissonJumpKernel := fun n ↦
+    mem_jumpOperator (measurable_of_countable _) (C := n) fun y ↦ by
+      rw [abs_of_nonneg (by positivity)]; exact_mod_cast min_le_right y n
+  have hZ : ∀ n, Martingale (mpProcess Q c X (p n).1 (p n).2) 𝓖 P := by
+    intro n
+    have h : IsMPSolutionFor (jumpOperator poissonRate poissonJumpKernel) Q c X 𝓖 P :=
+      poissonProcess_isMPSolution
+    rw [IsMPSolutionFor, mpFamily_eq_image_mpProcess] at h
+    exact h _ ⟨p n, hpA n, rfl⟩
+  set Y := mpProcess Q c X (fun x : ℕ ↦ (x : ℝ)) (fun _ ↦ (1 : ℝ)) with hYdef
+  have hfin : ∀ t, IsFiniteMeasure (Q.q.restrict (Q.interval c ⊥ t)) := fun t ↦
+    ⟨by rw [Measure.restrict_apply_univ]; exact (Q.measure_interval_ne_top c ⊥ t).lt_top⟩
+  have hg1 : ∀ n x, ‖(p n).2 x‖ ≤ 1 := fun n x ↦ by
+    simp only [hpdef, jumpApply_poisson_min]
+    split_ifs <;> simp
+  have hgconv : ∀ x, Tendsto (fun n ↦ (p n).2 x) atTop (𝓝 1) := fun x ↦ by
+    refine tendsto_const_nhds.congr' (eventually_atTop.2 ⟨x + 1, fun n hn ↦ ?_⟩)
+    simp only [hpdef, jumpApply_poisson_min, ite_eq_left (Nat.lt_of_succ_le hn)]
+  have hXs : ∀ ω, Measurable fun s : ℝ≥0 ↦ X s ω := fun ω ↦
+    (measurable_jumpProcess measurable_poissonRate).comp
+      (measurable_coe_nnreal_real.prodMk measurable_const)
+  have hconv : ∀ t ω, Tendsto (fun n ↦ mpProcess Q c X (p n).1 (p n).2 t ω) atTop
+      (𝓝 (Y t ω)) := by
+    intro t ω
+    have := hfin t
+    refine Tendsto.sub ?_ ?_
+    · refine tendsto_const_nhds.congr' (eventually_atTop.2 ⟨X t ω, fun n hn ↦ ?_⟩)
+      simp only [hpdef, min_eq_left hn]
+    · exact tendsto_integral_of_dominated_convergence (fun _ ↦ 1)
+        (fun n ↦ ((measurable_of_countable (p n).2).comp (hXs ω)).aestronglyMeasurable)
+        (integrable_const 1) (fun n ↦ ae_of_all _ fun s ↦ hg1 n _)
+        (ae_of_all _ fun s ↦ hgconv _)
+  have hXt : ∀ t, Measurable (X t) := fun t ↦
+    (measurable_jumpProcess measurable_poissonRate).comp (measurable_const.prodMk measurable_id)
+  have hNint : ∀ t, Integrable (fun ω ↦ (X t ω : ℝ)) P := fun t ↦ by
+    have h := integrable_natCast_poissonMeasure t
+    rw [← jumpMeasure_map_jumpProcess_poisson t] at h
+    exact (integrable_map_measure (by fun_prop) (hXt t).aemeasurable).1 h
+  -- the bound `‖Z n t - Y t‖ ≤ N t + 2 q(window)`
+  have hwin : ∀ t (g : ℕ → ℝ), (∀ x, ‖g x‖ ≤ 1) → ∀ ω,
+      ‖∫ s in Q.interval c ⊥ t, g (X s ω) ∂Q.q‖ ≤ Q.q.real (Q.interval c ⊥ t) := by
+    intro t g hg ω
+    have := hfin t
+    have h := norm_setIntegral_le_of_norm_le_const (μ := Q.q) (s := Q.interval c ⊥ t)
+      (C := 1) (Q.measure_interval_ne_top c ⊥ t).lt_top (fun s _ ↦ hg (X s ω))
+    simpa using h
+  have hbound : ∀ n t ω, ‖mpProcess Q c X (p n).1 (p n).2 t ω - Y t ω‖
+      ≤ 2 * (X t ω : ℝ) + 2 * Q.q.real (Q.interval c ⊥ t) := by
+    intro n t ω
+    have h1 := hwin t (p n).2 (hg1 n) ω
+    have h2 : ‖∫ s in Q.interval c ⊥ t, (1 : ℝ) ∂Q.q‖ ≤ Q.q.real (Q.interval c ⊥ t) :=
+      hwin t (fun _ ↦ (1 : ℝ)) (fun _ ↦ by simp) ω
+    have h3 : ‖((p n).1 (X t ω))‖ ≤ (X t ω : ℝ) := by
+      simp only [hpdef, Real.norm_natCast]; exact_mod_cast min_le_left _ _
+    have h4 : ‖((X t ω : ℕ) : ℝ)‖ ≤ (X t ω : ℝ) := by rw [Real.norm_natCast]
+    refine (norm_sub_le _ _).trans ((add_le_add (norm_sub_le _ _) (norm_sub_le _ _)).trans ?_)
+    linarith [h1, h2, h3, h4]
+  have hZsm : ∀ n t, StronglyMeasurable[𝓖 t] (mpProcess Q c X (p n).1 (p n).2 t) := fun n t ↦
+    (hZ n).stronglyAdapted t
+  have hadapt : StronglyAdapted 𝓖 Y := fun t ↦
+    stronglyMeasurable_of_tendsto atTop (hZsm · t) (tendsto_pi_nhds.2 (hconv t))
+  have hYint : ∀ t, Integrable (Y t) P := fun t ↦ by
+    refine Integrable.mono' (((hNint t).norm).add (integrable_const
+      (Q.q.real (Q.interval c ⊥ t)))) ((hadapt t).mono (𝓖.le t)).aestronglyMeasurable
+      (ae_of_all _ fun ω ↦ ?_)
+    simp only [hYdef, mpProcess, Pi.add_apply]
+    refine (norm_sub_le _ _).trans ?_
+    exact add_le_add le_rfl (hwin t (fun _ ↦ (1 : ℝ)) (fun _ ↦ by simp) ω)
+  apply IsMPSolutionFor.insert_of_tendsto (p := p) poissonProcess_isMPSolution hpA hadapt hYint
+  intro t
+  have hmeas : ∀ n, AEStronglyMeasurable
+      (mpProcess Q c X (p n).1 (p n).2 t - Y t) P := fun n ↦
+    (((hZsm n t).mono (𝓖.le t)).sub ((hadapt t).mono (𝓖.le t))).aestronglyMeasurable
+  have hdom : Integrable (fun ω ↦ 2 * (X t ω : ℝ) + 2 * Q.q.real (Q.interval c ⊥ t)) P :=
+    ((hNint t).const_mul 2).add (integrable_const _)
+  refine (tendsto_congr fun n ↦ (eLpNorm_one_eq_lintegral_enorm (hmeas n)).symm).1 ?_
+  have h := tendsto_lintegral_of_dominated_convergence' (μ := P) (f := fun _ ↦ 0)
+    (fun ω ↦ ENNReal.ofReal (2 * (X t ω : ℝ) + 2 * Q.q.real (Q.interval c ⊥ t)))
+    (fun n ↦ (hmeas n).enorm)
+    (fun n ↦ ae_of_all _ fun ω ↦ by
+      show ‖mpProcess Q c X (p n).1 (p n).2 t ω - Y t ω‖ₑ ≤ _
+      rw [← ofReal_norm]
+      exact ENNReal.ofReal_le_ofReal (hbound n t ω))
+    (by
+      rw [← ofReal_integral_eq_lintegral_ofReal hdom (ae_of_all _ fun ω ↦ by positivity)]
+      exact ENNReal.ofReal_ne_top)
+    (ae_of_all _ fun ω ↦ by
+      have h1 := (continuous_enorm.tendsto _).comp ((hconv t ω).sub_const (Y t ω))
+      simpa [Function.comp_def, sub_self] using h1)
+  simpa using h
+
 end PoissonExample
 
 /-! ## Second acceptance example for Milestone 4: the two state chain

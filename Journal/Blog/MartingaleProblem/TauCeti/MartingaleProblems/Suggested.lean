@@ -49421,6 +49421,77 @@ theorem map_eq_of_martingale_comp_localizingSystemEach {S : Shift F π} {𝓕₀
   exact subsingleton_localMPSolutions hS hsys hτ𝔖 hτmono hτtop hadapt hbot hadd hsub hπadapt
     hgen honedim ((P₁.map Φ₁).map (π ⊥)) ⟨h1, inferInstance, rfl⟩ ⟨h2, inferInstance, hinit.symm⟩
 
+/-- **A density read through a map pushes forward with it**: `(g ∘ Φ) • P`, carried along
+`θ ∘ Φ`, is `g • (P.map Φ)` carried along `θ`.  `setLIntegral_map` on each measurable set. -/
+theorem map_withDensity_comp_eq {Ω F' G : Type*} {m : MeasurableSpace Ω} {mF' : MeasurableSpace F'}
+    {mG : MeasurableSpace G} {P : Measure Ω} {Φ : Ω → F'} (hΦ : Measurable Φ)
+    {g : F' → ℝ≥0∞} (hg : Measurable g) {θ : F' → G} (hθ : Measurable θ) :
+    (P.withDensity (fun ω ↦ g (Φ ω))).map (fun ω ↦ θ (Φ ω))
+      = ((P.map Φ).withDensity g).map θ := by
+  ext A hA
+  rw [Measure.map_apply (f := fun ω ↦ θ (Φ ω)) (hθ.comp hΦ) hA, Measure.map_apply hθ hA,
+    withDensity_apply _ (show MeasurableSet ((fun ω ↦ θ (Φ ω)) ⁻¹' A) from (hθ.comp hΦ) hA), withDensity_apply _ (hθ hA),
+    setLIntegral_map (hθ hA) hg hΦ]
+  rfl
+
+/-- **`thm:localuniq`, Markov half, on arbitrary spaces.**  Let `Φ : Ω → F` be the path map of an
+adapted process on `(Ω, 𝓖, P)` whose law `P.map Φ` solves the local problem, and suppose that at
+the time `r` the filtration `𝓖` knows no more than the path up to `r`:
+`𝓖 r ≤ MeasurableSpace.comap Φ (𝓕₀ r)`.  Under `eq:localonedim` at `r`, the process is Markov at
+`r` for `𝓖`.
+
+The proof is `isMarkov_of_restart` with `X := Φ`, and the restart it asks for is `localRestart` on
+the path space: an `𝓖 r`-measurable density `Z` factors as `Z' ∘ Φ` with `Z'` measurable for
+`𝓕₀ r` (`StronglyMeasurable.exists_eq_measurable_comp`), clipped to the same bounds, and
+`map_withDensity_comp_eq` moves the density to `P.map Φ`.
+
+**The hypothesis on `𝓖 r` is where the ambient space differs from the canonical one.**  On the
+path space it is `𝓕₀ r` itself.  On `Ω` it cannot be dropped: `hP` speaks of the law only, and
+for the filtration that is `m` at every time the left hand side is `g (π (r + t) (Φ ·))` itself,
+which is not `σ(X r)`-measurable in general.  An enlargement by a σ-algebra independent of the
+path, which keeps the Markov property, is not covered by this statement; it needs the
+independence and is `Martingale.supConst` in spirit, not this proof. -/
+theorem isMarkov_of_unique_onedim_local_of_le_comap {S : Shift F π} {𝓕₀ : Filtration ι mF}
+    {𝓧₀ : ι → Set (ι → F → 𝕂)} (hS : IsShiftSystem S 𝓕₀ 𝓧₀) {𝔖 : Set (F → WithTop ι)}
+    (hsys : LocalizingSystemEach S 𝓕₀ (𝓧₀ 0) 𝔖) {τ : ℕ → F → WithTop ι} (hτ𝔖 : ∀ n, τ n ∈ 𝔖)
+    (hτmono : ∀ f, Monotone (τ · f)) (hτtop : ∀ f, Tendsto (τ · f) atTop (𝓝 ⊤))
+    (hbot : (⊥ : ι) = 0) (hadd : ∀ r u : ι, r ≤ r + u)
+    (hπadapt : ∀ u : ι, Measurable[𝓕₀ u] (π u))
+    {Ω : Type*} {m : MeasurableSpace Ω} {𝓖 : Filtration ι m} {P : Measure Ω}
+    [IsProbabilityMeasure P] {Φ : Ω → F} (hΦ : Measurable Φ)
+    (hΦi : ∀ i, Measurable[𝓖 i, 𝓕₀ i] Φ)
+    (hP : IsLocalMPSolution (𝓧₀ 0) 𝓕₀ (P.map Φ)) (r : ι)
+    (h𝓖r : 𝓖 r ≤ MeasurableSpace.comap Φ (𝓕₀ r))
+    (hadapt : ∀ Y' ∈ 𝓧₀ r, ∀ n, StronglyAdapted 𝓕₀
+      (stoppedProcess (fun i ↦ {f | ⊥ < τ n f}.indicator (Y' i)) (τ n)))
+    (honedim : ∀ R R' : Measure F, IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      IsLocalMPSolution (𝓧₀ r) 𝓕₀ R → IsLocalMPSolution (𝓧₀ r) 𝓕₀ R' →
+      R.map (π ⊥) = R'.map (π ⊥) → ∀ u : ι, R.map (π u) = R'.map (π u))
+    {g : E → 𝕂} (hg : Measurable g) {cg : ℝ} (hgb : ∀ x, ‖g x‖ ≤ cg) (t : ι) :
+    P[fun ω ↦ g (π (r + t) (Φ ω)) | 𝓖 r]
+      =ᵐ[P] P[fun ω ↦ g (π (r + t) (Φ ω)) | stateSigma π Φ r] := by
+  refine isMarkov_of_restart (S := S) hbot hπadapt hΦ hΦi r (𝓜 := {R | IsLocalMPSolution (𝓧₀ r) 𝓕₀ R})
+    (fun Z hZ0 hZb' hZm ↦ ?_) honedim hg hgb t
+  obtain ⟨b, hZb⟩ := hZb'
+  obtain ⟨Z', hZ'm, hZ'⟩ :=
+    @StronglyMeasurable.exists_eq_measurable_comp Ω F ℝ (𝓕₀ r) Φ Z _ _ _ (hZm.mono h𝓖r)
+  set Z'' : F → ℝ := fun f ↦ max 0 (min b (Z' f)) with hZ''def
+  have hZ''m : StronglyMeasurable[𝓕₀ r] Z'' :=
+    (continuous_const.max (continuous_const.min continuous_id)).comp_stronglyMeasurable hZ'm
+  have hZZ : ∀ ω, Z ω = Z'' (Φ ω) := by
+    intro ω
+    have h := congrFun hZ' ω
+    simp only [Function.comp_apply] at h
+    simp only [hZ''def, ← h, min_eq_right (hZb ω), max_eq_right (hZ0 ω)]
+  have hθ : Measurable (S.θ r) := S.measurable r
+  have hden : Measurable fun f ↦ ENNReal.ofReal (Z'' f) :=
+    ENNReal.measurable_ofReal.comp (hZ''m.measurable.mono (𝓕₀.le r) le_rfl)
+  show IsLocalMPSolution (𝓧₀ r) 𝓕₀ _
+  simp_rw [hZZ]
+  rw [map_withDensity_comp_eq hΦ hden hθ]
+  exact localRestart hS hsys hτ𝔖 hτmono hτtop hP r (hadd r) hadapt
+    (fun f ↦ le_max_left _ _) ⟨max 0 b, fun f ↦ max_le_max le_rfl (min_le_left _ _)⟩ hZ''m
+
 end LocalOnAmbient
 
 /-- **(L1) on the ambient space is automatic for bounded jumps**: if a test process `Y` on the
@@ -51330,5 +51401,98 @@ theorem integral_stoppedValue_hittingAfter_one_of_isBrownianReal
       hu.le) (mem_of_coe_eq_hittingAfter_of_isClosed (hc ω) isClosed_Ici hu)
   rw [integral_congr_ae hval]
   simp
+
+/-- **The second moment of a pre-Brownian motion, as a lower integral**: for
+`ProbabilityTheory.IsPreBrownianReal X Q` with measurable coordinates,
+`∫⁻ ‖X T‖ₑ ^ 2 = T`.  The variance of `gaussianReal 0 T` is `T`
+(`ProbabilityTheory.IsPreBrownianReal.hasLaw_eval`, `ProbabilityTheory.variance_id_gaussianReal`),
+the mean is `0`, and `‖x‖ₑ ^ 2 = ofReal (x ^ 2)` carries it to the lower integral
+(`MeasureTheory.ofReal_integral_eq_lintegral_ofReal`).  It is the right hand side of Doob's
+`L²` inequality computed below, in the form that inequality is stated in. -/
+theorem lintegral_enorm_sq_eq_of_isPreBrownianReal {Ω' : Type*} {mΩ' : MeasurableSpace Ω'}
+    {Q : Measure Ω'} {X : ℝ≥0 → Ω' → ℝ} (hX : IsPreBrownianReal X Q)
+    (hm : ∀ t, Measurable (X t)) (T : ℝ≥0) :
+    ∫⁻ ω, ‖X T ω‖ₑ ^ (2 : ℝ) ∂Q = ENNReal.ofReal T := by
+  have : IsProbabilityMeasure Q := hX.isGaussianProcess.isProbabilityMeasure
+  have hL2 : MemLp (X T) 2 Q := (hX.isGaussianProcess.hasGaussianLaw_eval T).memLp_two
+  have hsq : ∫ ω, X T ω ^ 2 ∂Q = T := by
+    have h0 : ∫ ω, X T ω ∂Q = 0 := hX.integral_eval T
+    rw [← variance_of_integral_eq_zero (hm T).aemeasurable h0, (hX.hasLaw_eval T).variance_eq,
+      variance_id_gaussianReal]
+  have hpt : ∀ ω, ‖X T ω‖ₑ ^ (2 : ℝ) = ENNReal.ofReal (X T ω ^ 2) := by
+    intro ω
+    rw [Real.enorm_eq_ofReal_abs, ENNReal.ofReal_rpow_of_nonneg (abs_nonneg _) (by norm_num),
+      Real.rpow_two, sq_abs]
+  simp_rw [hpt]
+  rw [← ofReal_integral_eq_lintegral_ofReal hL2.integrable_sq
+    (ae_of_all _ fun ω ↦ sq_nonneg _), hsq]
+
+/-- **Acceptance: Doob's `L²` inequality, computed for Brownian motion.**  For
+`ProbabilityTheory.IsBrownianReal X Q` with measurable coordinates and **every** path continuous,
+`∫⁻ (⨆ t ≤ T, ‖X t‖ₑ) ^ 2 ≤ 4 T`.  It is `Martingale.lintegral_biSup_enorm_rpow_le` at `r = 2`,
+whose constant `(r / (r - 1)) ^ r` is `4`, for the martingale `martingale_of_isPreBrownianReal`
+and a countable dense subset of `ℝ≥0`, with the right hand side `4 ∫⁻ ‖X T‖ₑ ^ 2 = 4 T` from
+`lintegral_enorm_sq_eq_of_isPreBrownianReal`.  The `L²` hypothesis of the general statement is
+discharged by the same computation.  Continuity of **every** path, and not only of almost every
+one, is asked because the general statement reads right continuity at every sample point. -/
+theorem lintegral_biSup_enorm_sq_le_of_isBrownianReal {Ω' : Type*} {mΩ' : MeasurableSpace Ω'}
+    {Q : Measure Ω'} {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q)
+    (hm : ∀ t, Measurable (X t)) (hc : ∀ ω, Continuous (X · ω)) (T : ℝ≥0) :
+    ∫⁻ ω, (⨆ t ∈ Set.Iic T, ‖X t ω‖ₑ) ^ (2 : ℝ) ∂Q ≤ 4 * ENNReal.ofReal T := by
+  have : IsProbabilityMeasure Q := hX.isGaussianProcess.isProbabilityMeasure
+  have hsm : ∀ t, StronglyMeasurable (X t) := fun t ↦ (hm t).stronglyMeasurable
+  have hM : Martingale X (Filtration.natural X hsm) Q :=
+    martingale_of_isPreBrownianReal hX.toIsPreBrownianReal hsm
+  obtain ⟨D, hDc, hD⟩ := TopologicalSpace.exists_countable_dense ℝ≥0
+  have h := hM.lintegral_biSup_enorm_rpow_le hD hDc (T := T)
+    (fun ω ↦ (hc ω).isRightContinuous) (r := 2) (by norm_num)
+    (fun t ↦ by rw [lintegral_enorm_sq_eq_of_isPreBrownianReal hX.toIsPreBrownianReal hm t];
+                exact ENNReal.ofReal_ne_top)
+  rw [lintegral_enorm_sq_eq_of_isPreBrownianReal hX.toIsPreBrownianReal hm T] at h
+  convert h using 2
+  norm_num
+
+/-- **`E|X T| ≤ √T` for a pre-Brownian motion**, from `Var |X T| ≥ 0` and `E[X T ^ 2] = T`
+(`ProbabilityTheory.variance_eq_sub`).  The exact value is `√(2T/π)`; it is not needed for the
+acceptance example below and not proved here. -/
+theorem integral_norm_le_sqrt_of_isPreBrownianReal {Ω' : Type*} {mΩ' : MeasurableSpace Ω'}
+    {Q : Measure Ω'} {X : ℝ≥0 → Ω' → ℝ} (hX : IsPreBrownianReal X Q)
+    (hm : ∀ t, Measurable (X t)) (T : ℝ≥0) :
+    ∫ ω, ‖X T ω‖ ∂Q ≤ Real.sqrt T := by
+  have : IsProbabilityMeasure Q := hX.isGaussianProcess.isProbabilityMeasure
+  have hL2 : MemLp (X T) 2 Q := (hX.isGaussianProcess.hasGaussianLaw_eval T).memLp_two
+  have hsq : ∫ ω, X T ω ^ 2 ∂Q = T := by
+    have h0 : ∫ ω, X T ω ∂Q = 0 := hX.integral_eval T
+    rw [← variance_of_integral_eq_zero (hm T).aemeasurable h0, (hX.hasLaw_eval T).variance_eq,
+      variance_id_gaussianReal]
+  have hL2n : MemLp (fun ω ↦ ‖X T ω‖) 2 Q := hL2.norm
+  have hv := variance_nonneg (fun ω ↦ ‖X T ω‖) Q
+  rw [variance_eq_sub hL2n] at hv
+  have h2 : ∫ ω, (fun ω ↦ ‖X T ω‖) ω ^ 2 ∂Q = T := by
+    simp only [Real.norm_eq_abs, sq_abs]
+    exact hsq
+  simp only [Pi.pow_apply] at hv
+  rw [h2] at hv
+  apply Real.le_sqrt_of_sq_le
+  linarith
+
+/-- **Acceptance: Doob's maximal inequality, computed for Brownian motion, with the constant
+`1`.**  Under the hypotheses of `lintegral_biSup_enorm_sq_le_of_isBrownianReal`,
+`ε · Q {ε ≤ ⨆ t ≤ T, ‖X t‖ₑ} ≤ √T`.  It is `Martingale.measure_iSup_norm_le` followed by
+`integral_norm_le_sqrt_of_isPreBrownianReal`.  The two sided window bound
+`Submartingale.mul_measReal_le_biSup_enorm_le` would give `2 E|X T| - E[X 0] = 2 E|X T|` on these
+data, which is the bound this example distinguishes from the classical one. -/
+theorem measure_biSup_enorm_le_of_isBrownianReal {Ω' : Type*} {mΩ' : MeasurableSpace Ω'}
+    {Q : Measure Ω'} {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q)
+    (hm : ∀ t, Measurable (X t)) (hc : ∀ ω, Continuous (X · ω)) (T : ℝ≥0) {ε : ℝ}
+    (hε : 0 < ε) :
+    ε * Q.real {ω | ENNReal.ofReal ε ≤ ⨆ t ∈ Set.Iic T, ‖X t ω‖ₑ} ≤ Real.sqrt T := by
+  have : IsProbabilityMeasure Q := hX.isGaussianProcess.isProbabilityMeasure
+  have hsm : ∀ t, StronglyMeasurable (X t) := fun t ↦ (hm t).stronglyMeasurable
+  have hM : Martingale X (Filtration.natural X hsm) Q :=
+    martingale_of_isPreBrownianReal hX.toIsPreBrownianReal hsm
+  obtain ⟨D, hDc, hD⟩ := TopologicalSpace.exists_countable_dense ℝ≥0
+  exact (hM.measure_iSup_norm_le hD hDc (T := T) (fun ω ↦ (hc ω).isRightContinuous) hε).trans
+    (integral_norm_le_sqrt_of_isPreBrownianReal hX.toIsPreBrownianReal hm T)
 
 end ContinuousTimeMartingales

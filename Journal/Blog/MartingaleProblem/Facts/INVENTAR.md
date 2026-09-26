@@ -64973,3 +64973,149 @@ Zeitpunkt, an dem sie in einer rohen σ-Algebra sichtbar ist. Kommt B2 nicht vor
 Schritt, der nicht daran hängt, **der Rest von C2** (Poisson mit `f = id` über
 `insert_of_tendsto` mit `f_n = min id n` in `JumpProcesses`, das die Integrierbarkeit von `N_t`
 braucht), danach der Rest von C3 und C5.
+
+### 2026-09-26, Lauf 13:03 UTC — Aufgabe A, Schritt A5, Rest: **Doobs zwei Ungleichungen, an der Brownschen Bewegung gerechnet**; „cutting down to an open subset“ begründet offen
+
+`check_master.py` zu Beginn (Mathlib `94ef6b89544`): 0 Fehler, 0 `sorry`, 0 Veraltungen;
+Warnungen 18 / 38 / 38 / 76.
+
+**Neu** (`MartingaleProblems/Suggested.lean`, Abschnitt `ContinuousTimeMartingales`, hinter
+`integral_stoppedValue_hittingAfter_one_of_isBrownianReal`):
+
+| README (Meilenstein 8, Akzeptanz) | Lean-Name | Zeile |
+| --- | --- | ---: |
+| (Hilfssatz) `∫⁻ ‖X T‖ₑ ^ 2 = T` für prä-Brownsche Bewegung | `lintegral_enorm_sq_eq_of_isPreBrownianReal` | 51412 |
+| **Doobs `L²`-Ungleichung, gerechnet:** `∫⁻ (⨆ t ≤ T, ‖X t‖ₑ) ^ 2 ≤ 4 T` | `lintegral_biSup_enorm_sq_le_of_isBrownianReal` | 51438 |
+| (Hilfssatz) `E|X T| ≤ √T` | `integral_norm_le_sqrt_of_isPreBrownianReal` | 51458 |
+| **Doobs Maximalungleichung, gerechnet, Konstante `1`:** `ε · Q {ε ≤ ⨆ t ≤ T, ‖X t‖ₑ} ≤ √T` | `measure_biSup_enorm_le_of_isBrownianReal` | 51485 |
+
+Beide sind die vorhandenen Sätze `Martingale.lintegral_biSup_enorm_rpow_le` (bei `r = 2`, Konstante
+`(r/(r-1))^r = 4`) und `Martingale.measure_iSup_norm_le`, angewandt auf
+`martingale_of_isPreBrownianReal` mit einer abzählbaren dichten Teilmenge von `ℝ≥0`
+(`TopologicalSpace.exists_countable_dense`). Die rechte Seite ist die Varianz von
+`gaussianReal 0 T` (`IsPreBrownianReal.hasLaw_eval`, `variance_id_gaussianReal`), in die untere
+Integralform gebracht über `ofReal_integral_eq_lintegral_ofReal`; `E|X T| ≤ √T` aus
+`Var |X T| ≥ 0` (`variance_eq_sub`). Der genaue Wert `E|X T| = √(2T/π)` ist nicht bewiesen und für
+das Beispiel nicht nötig. Voraussetzung ist Stetigkeit **jedes** Pfades, weil die allgemeinen Sätze
+die Rechtsstetigkeit an jedem Stichprobenpunkt lesen (wie bei den Treffzeitbeispielen daneben).
+`#print axioms` für beide Akzeptanzsätze: `propext`, `Classical.choice`, `Quot.sound`.
+
+**„Cutting down to an open subset“: nicht gebaut, mit Grund.** Das Akzeptanzbeispiel der README
+(`E = ℝ`, `U = (-1, 1)`, Beulenfolge) prüft `IsMPSolutionFor.ae_forall_mem_of_tendsto`
+(Ethier–Kurtz 4.3.9), und das ruht auf `IsMPSolutionFor.integral_comp_stoppedLim_eq`
+(Ethier–Kurtz 4.3.8). **Beide Sätze stehen nicht in der Datei** (gesucht nach beiden Namen und
+nach `stoppedLim`); das Beispiel ist also kein Abnahmetest für Vorhandenes, sondern verlangt zwei
+neue Sätze. Die Stelle, an der der Bau Arbeit macht: die Stoppzeiten
+`τ m = sInf {t | infEdist (X t) Uᶜ < 1/m}` sind Eintrittszeiten einer **offenen** Menge durch
+einen càdlàg-Prozeß und damit für die **rohe** Filtration im allgemeinen keine Stoppzeiten (nur
+für `𝓕_{t+}`); die Eintrittszeit der abgeschlossenen Menge `{infEdist ≤ 1/m}` ist es auch nicht,
+weil der Pfad sie über einen linken Limes erreichen kann, ohne sie zu treffen. Der kürzere Weg
+über `IsMPSolutionFor.submartingale_mpProcess_of_tendsto` (C2) gibt nur `X t ∈ U` f.s. für jedes
+feste `t`, nicht für alle `t` zugleich und nicht für die linken Limiten. Das gehört in den Bericht,
+nicht in diesen Lauf: die in Aufgabe A5 **benannten** Akzeptanzbeispiele (Submartingal ohne
+càdlàg-Modifikation, optional sampling braucht die Beschränktheit, die Münze am Atom) stehen alle.
+
+`check_master.py` danach: 0 Fehler, 0 `sorry`, 0 Veraltungen, Warnungen 18 / 38 / 38 / 76.
+
+**Aufgabe A ist damit erledigt**, bis auf „cutting down to an open subset“, das zwei nicht
+vorhandene Sätze (EK 4.3.8, 4.3.9) verlangt.
+
+### Derselbe Lauf, zweiter Teil — Aufgabe B, Schritt B3, Rest: **die Markov-Hälfte von `thm:localuniq` auf beliebigem `Ω`**
+
+Die im Lauf 08:03 (fünfter Teil) offen gelassene Hälfte. **Neu** (`MartingaleProblems/Suggested.lean`,
+Abschnitt `LocalOnAmbient`):
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| (Hilfssatz) `((g ∘ Φ) • P).map (θ ∘ Φ) = (g • P.map Φ).map θ` | `map_withDensity_comp_eq` | 49426 |
+| **`thm:localuniq`, Markov-Hälfte, auf beliebigem `Ω`** | `isMarkov_of_unique_onedim_local_of_le_comap` | 49454 |
+
+Aussage: `Φ : Ω → F` meßbar und adaptiert (`∀ i, Measurable[𝓖 i, 𝓕₀ i] Φ`), `P.map Φ` löst das
+lokale Problem, und **`𝓖 r ≤ MeasurableSpace.comap Φ (𝓕₀ r)`**. Unter `eq:localonedim` bei `r`
+gilt `P[g (π (r+t) ∘ Φ) | 𝓖 r] =ᵐ P[g (π (r+t) ∘ Φ) | σ(π r ∘ Φ)]`.
+
+Beweis: `isMarkov_of_restart` mit `X := Φ`. Der verlangte Neustart ist `localRestart` **auf dem
+Pfadraum**, nicht auf `Ω`: eine `𝓖 r`-meßbare Dichte `Z` faktorisiert als `Z' ∘ Φ` mit `Z'`
+`𝓕₀ r`-meßbar (Mathlib `StronglyMeasurable.exists_eq_measurable_comp`,
+`MeasureTheory/Function/FactorsThrough.lean:56`), auf dieselben Schranken abgeschnitten, und
+`map_withDensity_comp_eq` schiebt die Dichte nach `P.map Φ`. `localRestart` auf `Ω` selbst wird
+damit **nicht gebraucht**. `#print axioms` für beide Sätze: `propext`, `Classical.choice`,
+`Quot.sound`.
+
+**Befund: die Bedingung an `𝓖 r` ist die, die das Manuskript nicht nennt.** Im Lauf 08:03 war
+vermutet, es brauche „`𝓖` = natürliche Filtration von `X`“. Gebraucht wird nur die eine
+Inklusion zur Zeit `r`, und nur sie (die andere folgt aus der Adaptiertheit). Wegzulassen ist sie
+nicht: `hP` spricht nur über das Gesetz, und für die Filtration, die zu jeder Zeit `m` ist, ist die
+linke Seite `g (π (r+t) ∘ Φ)` selbst, im allgemeinen nicht `σ(X r)`-meßbar. Nicht erfaßt ist die
+Vergrößerung um eine vom Pfad unabhängige σ-Algebra, die die Markoveigenschaft erhält; dafür wäre
+die Unabhängigkeit zu tragen (wie in `Martingale.supConst`), und das ist nicht gebaut.
+
+`check_master.py` danach: 0 Fehler, 0 `sorry`, 0 Veraltungen, Warnungen 18 / 38 / 38 / 76.
+**B3 ist damit vollständig** (Eindeutigkeit und Markov-Eigenschaft auf beliebigem `Ω`).
+
+### Derselbe Lauf, dritter Teil — B2 weiter offen; Aufgabe C, Schritt C2, Rest: **der Poissonprozeß von Hand mit `f = id`**, über `insert_of_tendsto`
+
+**B2:** in diesem Lauf nicht angefaßt. Die Eingrenzung des Laufs 11:03 gilt unverändert (kein Zeuge
+bei lokaler Äquivalenz, keiner bei einem einzigen Trennzeitpunkt); die erlaubte Nebenfassung unter
+`[𝓕.IsRightContinuous]` über den Dichteprozeß ist weiter nicht gebaut. Nach der Regel „wer
+steckenbleibt, geht zum nächsten Schritt, der nicht daran hängt“ weiter mit C.
+
+**C2, neu** (`JumpProcesses/Suggested.lean`, Abschnitt `PoissonExample`, hinter
+`jumpMeasure_map_jumpProcess_poisson`):
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| `n ↦ (n : ℝ)` integrierbar gegen `poissonMeasure r` (Mathlib hat kein Moment der Poissonverteilung) | `integrable_natCast_poissonMeasure` | 4842 |
+| Erzeuger an der Stutzung: `A (min · n) = 1_{x < n}` | `jumpApply_poisson_min` | 4854 |
+| **Akzeptanz: der Poissonprozeß löst das Problem mit `(id, 1)` dazu** | `poissonProcess_isMPSolutionFor_insert_id` | 4878 |
+
+Aussage: `IsMPSolutionFor (insert (id, 1) (jumpOperator poissonRate poissonJumpKernel))` für den
+konstruierten Poissonprozeß, seine Filtration und sein Gesetz; `N t - t` ist also Martingal. Der
+Beweis benutzt **nur** `poissonProcess_isMPSolution` (beschränkte Paare) und
+`IsMPSolutionFor.insert_of_tendsto` mit `f n = min · n`: punktweise Konvergenz der Testprozesse
+(erster Term schließlich konstant, zweiter über dominierte Konvergenz auf dem Fenster), Majorante
+`2 N t + 2 t`, Integrierbarkeit von `N t` über sein Gesetz `Po(t)`, und die Adaptiertheit von
+`N t - t` als punktweiser Limes adaptierter Prozesse (`stronglyMeasurable_of_tendsto`), so daß über
+die Filtration der Konstruktion nichts gesagt werden muß. `insert_of_forall_norm_le` greift hier
+nicht (`id` unbeschränkt), das ist der Sinn des Beispiels. `#print axioms` für beide tragenden Sätze:
+`propext`, `Classical.choice`, `Quot.sound`. Mathlib-Namen am Quelltext geprüft:
+`integrable_poissonMeasure_iff` (`Probability/Distributions/Poisson/Basic.lean:76`),
+`tendsto_lintegral_of_dominated_convergence'`
+(`MeasureTheory/Integral/Lebesgue/DominatedConvergence.lean:63`), `eLpNorm_one_eq_lintegral_enorm`
+(`MeasureTheory/Function/LpSeminorm/Defs.lean:125`, verlangt die Meßbarkeit); dabei gefunden:
+`ofReal_norm_eq_enorm` ist auf master veraltet, neu `ofReal_norm`.
+
+`check_master.py` danach: 0 Fehler, 0 `sorry`, 0 Veraltungen, Warnungen 18 / 38 / 38 / 76.
+**C2 ist damit bis auf `IsMPSolutionFor.map` längs Gleichheit der Gesetze vollständig.**
+
+### Derselbe Lauf, Abschluß
+
+`check_master.py` am Ende (Mathlib `94ef6b89544`): **0 Fehler, 0 `sorry`, 0 Veraltungen** in allen
+vier Dateien, Warnungen 18 / 38 / 38 / 76 wie zu Beginn.
+
+**Stand der drei Aufgaben nach diesem Lauf.**
+
+* **A:** erledigt. A1–A4 vollständig; A5 mit allen im Auftrag benannten Akzeptanzbeispielen und
+  jetzt auch „Doob's two inequalities computed“. Offen nur „cutting down to an open subset“, das die
+  zwei nicht vorhandenen Sätze `IsMPSolutionFor.integral_comp_stoppedLim_eq` (EK 4.3.8) und
+  `IsMPSolutionFor.ae_forall_mem_of_tendsto` (EK 4.3.9) verlangt; Bruchstelle: die Eintrittszeiten
+  in `{infEdist < 1/m}` sind für die rohe Filtration keine Stoppzeiten.
+* **B:** B1, B3 (**jetzt beide Hälften**), B4 stehen. **B2 offen**, unverändert eingegrenzt.
+* **C:** C1 vollständig. **C2** bis auf `map` längs Gleichheit der Gesetze. C3 offen: die reelle
+  Fassung über bloßem `[MeasurableSpace E]`, „meßbar zu jeder Zeit, progressiv zu keiner“. C4 global.
+  C5 offen: beliebige f.s. endliche Stoppzeit, Chapman–Kolmogorov, klassische Instanz,
+  Akzeptanzbeispiele.
+
+**Befunde für den Nutzer (kein Manuskript, keine README angefaßt; nichts nach außen):**
+
+1. `thm:localuniq`, Markov-Hälfte, auf beliebigem `Ω` braucht nicht „`𝓖` = natürliche Filtration“,
+   sondern nur `𝓖 r ≤ σ(Φ)`-Vergangenheit bei `r`; sie ist nicht entbehrlich, weil die
+   Lösungseigenschaft des Bildmaßes über `𝓖` nichts sagt.
+2. Mathlib hat kein Moment der Poissonverteilung; `integrable_natCast_poissonMeasure` ist ein
+   Kandidat für Mathlib (nicht eingereicht).
+
+**Benanntes Ziel für den nächsten Lauf, der nächste offene Schritt der Liste: B2.** Kommt B2 nicht
+voran, dann der Rest von C3 (die reelle Fassung `Clock.IsProgressiveComp` über bloßem
+`[MeasurableSpace E]` durch Approximation von rechts), danach C5 (i), die starke Markoveigenschaft
+an einer beliebigen f.s. endlichen Stoppzeit über dyadische Approximation von oben und
+`isStrongMarkov_kernel_of_countable_range`.
