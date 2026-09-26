@@ -66053,3 +66053,139 @@ alle entbehrlich, ihr Inhalt steht in der Roadmap): `scripts/_dev_Bern.lean`, `s
 `scripts/_dev_PW_full.lean`; außerdem der mit `--keep` behaltene Prüfbaum
 `~/Code/lean/mathlib-master/_check_3342026/`.
 
+### 2026-09-26, Lauf 21:03 UTC (23:03 Freiburger Zeit) — Aufgabe E, Schritt E3, Rest: **fast sicher endliche Stoppzeiten**, wie das Manuskript es sagt
+
+`check_master.py` zu Beginn (Mathlib `94ef6b89544`): 0 Fehler, 0 `sorry`, 0 Veraltungen;
+Warnungen 18 / 38 / 38 / 76. D1, D2 und E1–E6 standen (Läufe 18:03 und 20:03). Offen waren aus
+der Liste nur die zwei Restpunkte, die beide Läufe genannt hatten. Der erste davon ist die
+Überschrift von E3 selbst („fast sicher endliche statt beschränkter Stoppzeiten“); Lean hatte nur
+„überall endlich“. Ihn nimmt dieser Lauf.
+
+**Nachgesehen, ehe gebaut wurde.** Mathlibs `measurable_stoppedValue`
+(`Probability/Process/Stopping.lean`) verlangt einen progressiv meßbaren Prozeß mit Werten in
+einem metrisierbaren Raum. Unser `E` trägt nur `[MeasurableSpace E]`; die Meßbarkeit von
+`X_τ` für `𝓖_τ` stand deshalb nur für überall endliches `τ` (`measurable_shift_stoppingTime`).
+
+**Neu:**
+
+| Rolle | Lean-Name | Datei, Zeile |
+| --- | --- | --- |
+| `stoppedValue coordinate τ` ist `𝓖_τ`-meßbar für jede `WithTop ℝ≥0`-wertige Stoppzeit der rohen Pfadfiltration, über bloßem `[MeasurableSpace E]` | `measurable_stoppedValue_coordinate` | `MartingaleProblems`, 51342 |
+| **(a), erste Aussage, kanonischer Raum, jede f.s. endliche Stoppzeit `τ : F → WithTop ℝ≥0` der rohen Filtration** (`hτ : IsStoppingTime pathFiltration τ`, `hfin : ∀ᵐ ω ∂P, τ ω ≠ ⊤`), ohne `hint` | `isStrongMarkov_mpFamily_coordinate_of_ae_finite` | `MartingaleProblems`, 51460 |
+| **jede Lösung eines beschränkten Sprungoperators ist stark markovsch an jeder f.s. endlichen Stoppzeit der rohen Filtration** | `isStrongMarkov_jumpOperator_coordinate_of_ae_finite` | `JumpProcesses`, 23454 |
+
+`#print axioms` für alle drei: `propext`, `Classical.choice`, `Quot.sound`. Der neue Abschnitt
+`StrongMarkovAeFinite` übersetzt ohne eine Warnung.
+
+**Der Beweis** ist der von `isStrongMarkov_mpFamily_coordinate_of_finite`, mit einer Änderung.
+Die Gewichte `1_{τ ≤ n} Z` konvergieren jetzt gegen `1_{τ ≠ ⊤} Z` und nicht gegen `Z`, und die
+beiden Dichten sind `P`-f.s. gleich (`withDensity_congr_ae`). Die beschränkten Stoppzeiten sind
+`(τ ∧ n).untopA`; sie sind überall endlich, auch auf `{τ = ⊤}`. Die Vergangenheit bei `τ` geht als
+konstante Filtration `Filtration.const ℝ≥0 hτ.measurableSpace` in
+`condExp_eq_condExp_state_of_restart` ein. Der Satz ist also **keine** Zurückführung auf den
+Fall „überall endlich“, und er kann keine sein: `{τ = ⊤}` liegt in keinem `𝓖_t`. Die rohe
+Stoppzeit läßt sich deshalb auf dieser Nullmenge nicht abändern.
+
+**Wo der Müllwert gelesen wird, mit der Stelle:** Die Aussage benutzt Mathlibs Konvention
+`stoppedValue` (`(τ ω).untopA`, auf `{τ = ⊤}` ein fester Wert). Gelesen wird er nur auf
+`{τ = ⊤}`, also auf einer `P`-Nullmenge. Dort hat das neugestartete Maß die Dichte `0` (die
+Indikatorfunktion `1_{τ ≠ ⊤}` im Limes), und die Gleichheit der bedingten Erwartungen ist ohnehin
+nur `P`-f.s. In der Meßbarkeit des Zustands wird er gelesen, trägt aber nicht: jede meßbare
+Teilmenge von `{τ = ⊤}` liegt in `𝓖_τ`.
+
+**Abgleich mit der Tabelle des Laufs 18:03** (Zeile „`τ` f.s. endliche Stoppzeit“): Die
+Abweichung „überall statt f.s. endlich“ ist für den kanonischen Raum und für Sprungoperatoren
+aufgehoben. Auch die Voraussetzung `hτ : ∀ t, IsStoppingTime (τ + t)` entfällt dort. Verlangt wird
+nur noch `IsStoppingTime τ`, wörtlich wie im Manuskript.
+
+**Auf `D(ℝ≥0, E)` und für die Brownsche Bewegung nachgezogen** (dritter Teil dieses Laufs, gleich
+hier eingetragen):
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| `measurable_cadlag_eval_stoppingTime` an einer `WithTop ℝ≥0`-wertigen Stoppzeit (Mathlibs `measurable_stoppedValue` nimmt sie, wie sie ist) | `MeasureTheory.measurable_cadlag_stoppedValue` | 52143 |
+| **(a), erste Aussage, klassische Instanz auf `D(ℝ≥0, E)`, jede f.s. endliche Stoppzeit der rohen Koordinatenfiltration**, ohne `hint` | `MeasureTheory.isStrongMarkov_mpFamily_cadlag_of_ae_finite` | 52201 |
+| **die Brownsche Bewegung ist stark markovsch an jeder f.s. endlichen Stoppzeit**, keine Voraussetzung außer der Lösungseigenschaft | `MeasureTheory.isStrongMarkov_brownian_of_ae_finite` | 52466 |
+
+`#print axioms`: `propext`, `Classical.choice`, `Quot.sound`. Der Abschnitt
+`StrongMarkovCadlagAeFinite` übersetzt ohne eine Warnung. Damit ist die Abweichung „überall statt
+f.s. endlich“ in allen vier Instanzen aufgehoben: kanonischer Raum, Sprungoperatoren, `D(ℝ≥0, E)`,
+Brownsche Bewegung. Die Fassungen `_of_finite` bleiben stehen; sie sind die Sonderfälle mit
+`ℝ≥0`-wertigem `τ` und `hτ : ∀ t, IsStoppingTime (τ + t)`.
+
+### Derselbe Lauf, zweiter Teil — Aufgabe E, Schritt E2, dritter Punkt: **die Konsistenz von `ex:shiftXA` in Lean**, mit zurückgezogener Uhr und zeitabhängigem Koeffizienten
+
+Der Lauf 18:03 hatte die Konsistenz auf Papier geprüft („trägt“) und festgehalten, daß die
+zurückgezogene Uhr `q_r` und der zeitabhängige Koeffizient in Lean fehlen und der erste Bau wären.
+Beide sind jetzt gebaut, über `ℝ≥0` mit einem beliebigen Maß `q`, das auf den Mengen `Iic t`
+endlich ist, in der optionalen Konvention (Fenster `Ioc 0 t`, das ist `Clock.interval optional ⊥ t`).
+
+**Neu** (`MartingaleProblems/Suggested.lean`, Abschnitt `ShiftSystemInhomogeneous`, unmittelbar
+nach `end ChapmanKolmogorovInhomogeneous`):
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| **die zurückgezogene Uhr** `q_r = (q\|_{[r,∞)}) ∘ (v ↦ v − r)⁻¹`, wörtlich wie in `ex:shiftXA` (Z. 3863 f.) | `pullbackClock` | 50671 |
+| `(q_r)_u = q_{r+u}` | `pullbackClock_pullbackClock` | 50678 |
+| `q_r` endlich auf `Iic t`, wenn `q` es ist | `pullbackClock_Iic_ne_top` | 50701 |
+| **die Substitution `v = r + u`**: `∫_{(0,t]} h(r+u) q_r(du) = ∫_{(r,r+t]} h(v) q(dv)`, ohne jede Voraussetzung an `q` | `setIntegral_pullbackClock` | 50714 |
+| die verschobenen Daten `(f, g) ↦ (f, g(r + ·, ·))`, und `(A_r)_u = A_{r+u}` | `shiftedData`, `shiftedData_shiftedData` | 50735, 50741 |
+| die Testprozesse `f(π_t) − ∫_{(0,t]} g(s, π_s) q(ds)` mit zeitabhängigem `g` | `mpFamilyTime` | 50750 |
+| **`ex:shiftXA`, inhomogener Fall**: `r ↦ 𝓧°_r` (Daten `(A_r, q_r)`) ist ein Schiftsystem, `κ = f(π_r)` | `isShiftSystem_mpFamilyTime` | 50757 |
+| **die Konsistenz**: `r ↦ 𝓧°_r` ist ein konsistentes Schiftsystem (`IsShiftSystem.IsConsistent`) | `isConsistent_mpFamilyTime` | 50812 |
+
+`#print axioms isConsistent_mpFamilyTime`: `propext`, `Classical.choice`, `Quot.sound`. Der
+Abschnitt übersetzt ohne eine Warnung. Hilfslemma dabei: `measurable_nnreal_tsub_const` (50674).
+
+**Die Begründung des Manuskripts trägt.** Der Beweis von `isConsistent_mpFamilyTime` ist der Satz
+aus `rem:strongmarkovscope` (Z. 4544–4546): `q` erst um `r`, dann um `u` zurückgezogen, ist
+`q_{r+u}`. Das Manuskript nennt nur die Uhr. Der Koeffizient braucht dieselbe Assoziativität,
+`g(r + (u + ·)) = g((r + u) + ·)`, und die ist trivial. Die zur Zeit `r + u` gestellte Familie ist
+deshalb die, die `ex:shiftXA` aus den Daten `(q_r, g(r + ·))` zur Zeit `u` baut. Angewandt auf
+diese Daten gibt `isShiftSystem_mpFamilyTime` die Behauptung. Kein Befund am Manuskript.
+
+**Voraussetzungen, und wo sie eingehen.**
+
+* `hgm`: `g` ist **gemeinsam** meßbar in `(s, x)`. Das Manuskript sagt dazu: „measurable as soon as
+  `(r, u, x) ↦ g(r+u, x)` is“ (Z. 3886). Gebraucht wird die gemeinsame Meßbarkeit, weil die
+  Konsistenz den Satz auf die verschobenen Daten anwendet. Dort ist `u ↦ g(r+u, π_u f)` zu messen,
+  und aus der bloßen Meßbarkeit längs der Pfade `u ↦ g(u, π_u f)` folgt das nicht.
+* `hπpath`: `u ↦ π_u f` ist meßbar. Das ist das Gegenstück zu `hpath` in `isShiftSystem_mpFamily`.
+* `hgb`: `g` ist beschränkt, `hq`: `q(Iic t) < ∞`. Beides wird nur für die Additivität
+  `∫_{(0,r+t]} = ∫_{(0,r]} + ∫_{(r,r+t]}` gebraucht.
+* `hfm`, `hfb`: nur für `κ = f(π_r)`.
+* `hY`, `hπ`, `hsm`: wie in `isShiftSystem_mpFamily` (Adaptiertheit, Meßbarkeit der Koordinaten,
+  Schiftklausel). Die Adaptiertheit ist Voraussetzung und nicht bewiesen, aus demselben Grund wie
+  dort.
+
+**Nicht gebaut:** die prädiktable Konvention. Ebenso der Anschluß an die Struktur `Clock` und an
+`mpFamily`: gebaut ist mit einem bloßen `Measure ℝ≥0` auf der Borel-σ-Algebra. Eine `Clock` daraus
+wäre Buchhaltung (`measure_Iic_ne_top` ist `pullbackClock_Iic_ne_top`), ist aber nicht gemacht.
+Offen bleibt auch der nachrangige Zeuge für Chapman–Kolmogorov ohne Konsistenz (Stand wie 18:03).
+Der naheliegende Ansatz trägt nicht: Ist `θ_r` surjektiv wie auf dem vollen Pfadraum, so legt die
+Inkrementklausel `𝓧°_r` bis auf Konstanten auf `𝓧°_0` fest, und Chapman–Kolmogorov gilt. Ein
+Zeuge braucht einen nicht surjektiven Schift, ähnlich wie `StrongMarkovWitness`.
+
+### Derselbe Lauf, Abschluß
+
+`check_master.py` am Ende (Mathlib `94ef6b89544`): **0 Fehler, 0 `sorry`, 0 Veraltungen** in allen
+vier Dateien, Warnungen 18 / 38 / 38 / 76 wie zu Beginn. Die drei neuen Abschnitte
+(`ShiftSystemInhomogeneous`, `StrongMarkovAeFinite`, `StrongMarkovCadlagAeFinite`) und der
+Nachtrag in `JumpUniqueness` übersetzen ohne eine Warnung. Alle neuen Hauptaussagen sind mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft.
+
+**Stand der Liste D/E:** D1, D2, E1, E4, E5, E6 wie nach den Läufen 18:03 und 20:03. **E3 ist jetzt
+vollständig**: f.s. endliche Stoppzeiten in allen vier Instanzen. **E2 ist vollständig bis auf den
+nachrangigen Zeugen**: Die Konsistenz von `ex:shiftXA` steht in Lean, mit zurückgezogener Uhr und
+zeitabhängigem Koeffizienten. Damit stehen D und E. Nach der Regel des Auftrags wird **kein**
+selbstgewähltes Folgeziel vorgeschlagen. Keine README angefaßt, das Manuskript nicht angefaßt,
+nichts nach außen. Kein neuer Befund am Manuskript.
+
+Hilfsdateien dieses Laufs, die mangels `rm`-Freigabe liegen bleiben (alle entbehrlich, ihr Inhalt
+steht in den Roadmaps): `scripts/_dev_spliceE3ae.py`, `scripts/_dev_spliceE2c.py`,
+`scripts/_dev_spliceE3D.py` (nicht von `.gitignore` erfaßt), `scripts/_dev_E3ae.lean`,
+`scripts/_dev_E2c.lean`, `scripts/_dev_E3D.lean` (ignoriert). Dazu kommen die mit `--keep`
+behaltenen Prüfbäume `~/Code/lean/mathlib-master/_check_3396620/` und `_check_3399994/`. Der
+Lauf darf dort nicht auflisten; ob beide noch stehen, ist also nicht nachgesehen. Ein dritter,
+`_check_3383104/`, war beim zweiten Gebrauch schon verschwunden.
+

@@ -23445,6 +23445,29 @@ theorem isStrongMarkov_jumpOperator_coordinate_of_finite {lam : E → ℝ} (hlam
     (fun R R' hR hR' hs hs' h0 u ↦ onedim_mpFamily_jumpOperator_coordinate hlam hlam0 hL 0
       R R' hR hR' hs hs' h0 u) hf hfb t
 
+open RightContinuousPath in
+/-- **`isStrongMarkov_jumpOperator_coordinate` at every almost surely finite stopping time**:
+every solution of the martingale problem of a bounded jump operator is strong Markov at every
+stopping time `τ : F → WithTop ℝ≥0` of the raw filtration with `P (τ = ⊤) = 0`.
+`isStrongMarkov_mpFamily_coordinate_of_ae_finite` with `honedim` from
+`onedim_mpFamily_jumpOperator_coordinate`. -/
+theorem isStrongMarkov_jumpOperator_coordinate_of_ae_finite {lam : E → ℝ} (hlam : Measurable lam)
+    {L : ℝ} (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L) {mu : Kernel E E} [IsMarkovKernel mu]
+    {P : Measure (RightContinuousPath E)} [IsProbabilityMeasure P]
+    (hsol : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (coordinate : ℝ≥0 → RightContinuousPath E → E)) (pathFiltration (E := E)) P)
+    {τ : RightContinuousPath E → WithTop ℝ≥0}
+    (hτ : IsStoppingTime (pathFiltration (E := E)) τ) (hfin : ∀ᵐ ω ∂P, τ ω ≠ ⊤)
+    {f : E → ℝ} (hf : Measurable f) {cf : ℝ} (hfb : ∀ x, ‖f x‖ ≤ cf) (t : ℝ≥0) :
+    P[fun ω ↦ f (coordinate ((τ ω).untopA + t) ω) | hτ.measurableSpace]
+      =ᵐ[P] P[fun ω ↦ f (coordinate ((τ ω).untopA + t) ω) |
+        MeasurableSpace.comap (stoppedValue coordinate τ) inferInstance] :=
+  isStrongMarkov_mpFamily_coordinate_of_ae_finite (fun _ hp ↦ measurable_fst_jumpOperator hp)
+    (fun _ hp ↦ bddAbove_fst_jumpOperator hp) (fun _ hp ↦ measurable_snd_jumpOperator hlam hp)
+    (fun _ hp ↦ bddAbove_snd_jumpOperator hlam0 hL hp) hsol hτ hfin
+    (fun R R' hR hR' hs hs' h0 u ↦ onedim_mpFamily_jumpOperator_coordinate hlam hlam0 hL 0
+      R R' hR hR' hs hs' h0 u) hf hfb t
+
 end JumpUniqueness
 
 /-! ### The acceptance example: the two state chain, existence and uniqueness and a number
