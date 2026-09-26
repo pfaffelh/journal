@@ -1,0 +1,186 @@
+theorem isStrongMarkov_mpFamily_coordinate_of_finite {A : Set ((E → ℝ) × (E → ℝ))}
+    (hfm : ∀ p ∈ A, Measurable p.1) (hfb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.1 x‖ ≤ b)
+    (hgm : ∀ p ∈ A, Measurable p.2) (hgb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.2 x‖ ≤ b)
+    {P : Measure (RightContinuousPath E)} [IsProbabilityMeasure P]
+    (hsol : IsMPSolution (mpFamily A lebesgueClock Clock.Conv.optional
+        (coordinate : ℝ≥0 → RightContinuousPath E → E)) (pathFiltration (E := E)) P)
+    {τ : RightContinuousPath E → ℝ≥0}
+    (hτ : ∀ t : ℝ≥0, IsStoppingTime (pathFiltration (E := E))
+      fun ω ↦ ((τ ω + t : ℝ≥0) : WithTop ℝ≥0))
+    (honedim : ∀ R R' : Measure (RightContinuousPath E), IsProbabilityMeasure R →
+      IsProbabilityMeasure R' →
+      IsMPSolution (mpFamily A lebesgueClock Clock.Conv.optional
+        (coordinate : ℝ≥0 → RightContinuousPath E → E)) (pathFiltration (E := E)) R →
+      IsMPSolution (mpFamily A lebesgueClock Clock.Conv.optional
+        (coordinate : ℝ≥0 → RightContinuousPath E → E)) (pathFiltration (E := E)) R' →
+      R.map (coordinate 0) = R'.map (coordinate 0) →
+        ∀ u : ℝ≥0, R.map (coordinate u) = R'.map (coordinate u))
+    {f : E → ℝ} (hf : Measurable f) {cf : ℝ} (hfb' : ∀ x, ‖f x‖ ≤ cf) (t : ℝ≥0) :
+    P[fun ω ↦ f (coordinate (τ ω + t) ω) | (hτ 0).measurableSpace]
+      =ᵐ[P] P[fun ω ↦ f (coordinate (τ ω + t) ω) |
+        MeasurableSpace.comap (fun ω ↦ coordinate (τ ω) ω) inferInstance] := by
+  have hX : ∀ u : ℝ≥0, Measurable[pathFiltration (E := E) u]
+      fun ω : RightContinuousPath E ↦ coordinate u (id ω) :=
+    fun _ ↦ measurable_pathFiltration le_rfl
+  have hτm : Measurable τ := by
+    have h := (((hτ 0).measurable).untopA).mono (hτ 0).measurableSpace_le le_rfl
+    simp only [add_zero] at h
+    exact h
+  have hadaptY : ∀ Y ∈ mpFamily A lebesgueClock Clock.Conv.optional
+      (coordinate : ℝ≥0 → RightContinuousPath E → E), StronglyAdapted pathFiltration Y :=
+    fun _ hY ↦ stronglyAdapted_mpFamily_coordinate Clock.Conv.optional hfm hgm hY
+  -- the bounded stopping times `τ ∧ n`
+  set τn : ℕ → RightContinuousPath E → ℝ≥0 := fun n ω ↦ min (τ ω) n with hτndef
+  have hτn : ∀ (n : ℕ) (t : ℝ≥0), IsStoppingTime (pathFiltration (E := E))
+      fun ω ↦ ((τn n ω + t : ℝ≥0) : WithTop ℝ≥0) := by
+    intro n t
+    have h := (hτ t).min (isStoppingTime_const (pathFiltration (E := E)) ((n : ℝ≥0) + t))
+    have e : (fun ω ↦ ((τn n ω + t : ℝ≥0) : WithTop ℝ≥0))
+        = fun ω ↦ min ((τ ω + t : ℝ≥0) : WithTop ℝ≥0) (((n : ℝ≥0) + t : ℝ≥0) : WithTop ℝ≥0) := by
+      funext ω
+      simp only [hτndef]
+      rw [← min_add_add_right, WithTop.coe_min]
+    rw [e]
+    exact h
+  have hτnm : ∀ n, Measurable (τn n) := fun n ↦ hτm.min measurable_const
+  set ψ : RightContinuousPath E → RightContinuousPath E := fun ω ↦ pathShift.θ (τ ω) ω with hψdef
+  set ψn : ℕ → RightContinuousPath E → RightContinuousPath E :=
+    fun n ω ↦ pathShift.θ (τn n ω) ω with hψndef
+  have hψ : Measurable ψ := measurable_shift_randomTime hτm measurable_id
+  have hψn : ∀ n, Measurable (ψn n) := fun n ↦ measurable_shift_randomTime (hτnm n) measurable_id
+  -- the restart at `τ ∧ n`
+  have hrestart_n : ∀ (n : ℕ) (Z : RightContinuousPath E → ℝ), (∀ ω, 0 ≤ Z ω) →
+      (∃ b, ∀ ω, Z ω ≤ b) → StronglyMeasurable[(hτn n 0).measurableSpace] Z →
+      IsMPSolution (mpFamily A lebesgueClock Clock.Conv.optional
+        (coordinate : ℝ≥0 → RightContinuousPath E → E)) (pathFiltration (E := E))
+        ((P.withDensity fun ω ↦ ENNReal.ofReal (Z ω)).map (ψn n)) := by
+    intro n Z hZ0 hZb hZm
+    exact isMPSolution_map_withDensity_shiftByTime hadaptY hsol
+      (fun _ hY ↦ isStronglyProgressive_mpFamily_coordinate Clock.Conv.optional hfm hgm hY)
+      (fun _ hY ↦ ae_of_all _ fun ω ↦ tendsto_nhdsGE_mpFamily_coordinate hgm
+        (fun p hp ↦ by
+          obtain ⟨b, hb⟩ := hgb p hp
+          exact ⟨b, fun x ↦ by rw [← Real.norm_eq_abs]; exact hb x⟩) hY ω)
+      (hτn n)
+      (fun _ hY t ↦ integrable_mpFamily_coordinate_randomTime hfm hfb hgm hgb (hτn n)
+        (T := (n : ℝ≥0)) (fun ω ↦ min_le_right _ _) hY t)
+      (hψn n) (measurable_shift_stoppingTime hX (hτn n))
+      (exists_incr_mpFamily_of_shift (lebesgueClock_isShiftInvariant Clock.Conv.optional) hfb hgb
+        (fun p hp g ↦ measurable_comp_coordinate (hgm p hp) g)
+        (fun p hp ↦ measurable_comp_coordinate_randomTime (hfm p hp) (hτnm n) measurable_id))
+      hZ0 hZb hZm
+  -- the events `{τ ≤ n}` cut down to the past at `τ ∧ n`
+  have hcut : ∀ (n : ℕ) (s : Set (RightContinuousPath E)),
+      MeasurableSet[(hτ 0).measurableSpace] s →
+      MeasurableSet[(hτn n 0).measurableSpace] (s ∩ {ω | τ ω ≤ n}) := by
+    intro n s hs
+    have h1 := (hτ 0).measurableSet_inter_le
+      (isStoppingTime_const (pathFiltration (E := E)) (n : ℝ≥0)) s hs
+    have hle := ((hτ 0).min (isStoppingTime_const (pathFiltration (E := E)) (n : ℝ≥0))
+      ).measurableSpace_mono (hτn n 0) fun ω ↦ by
+        simp only [hτndef, add_zero, WithTop.coe_min]
+        exact le_rfl
+    have e : {ω | ((τ ω + 0 : ℝ≥0) : WithTop ℝ≥0) ≤ ((n : ℝ≥0) : WithTop ℝ≥0)}
+        = {ω | τ ω ≤ n} := by
+      ext ω
+      simp only [add_zero, Set.mem_ofPred_eq, WithTop.coe_le_coe]
+    rw [e] at h1
+    exact hle _ h1
+  -- the restart at `τ`
+  have hrestart : ∀ Z : RightContinuousPath E → ℝ, (∀ ω, 0 ≤ Z ω) → (∃ b, ∀ ω, Z ω ≤ b) →
+      StronglyMeasurable[(pathFiltration.shiftByTime τ hτ) 0] Z →
+      ((P.withDensity fun ω ↦ ENNReal.ofReal (Z ω)).map ψ) ∈
+        {R | IsMPSolution (mpFamily A lebesgueClock Clock.Conv.optional
+          (coordinate : ℝ≥0 → RightContinuousPath E → E)) (pathFiltration (E := E)) R} := by
+    intro Z hZ0 ⟨b, hZb⟩ hZm
+    have hZm' : StronglyMeasurable[(hτ 0).measurableSpace] Z := hZm
+    have hZmeas : Measurable Z := (hZm'.mono (hτ 0).measurableSpace_le).measurable
+    set Zn : ℕ → RightContinuousPath E → ℝ := fun n ↦ {ω | τ ω ≤ n}.indicator Z with hZndef
+    have hZn0 : ∀ n ω, 0 ≤ Zn n ω := fun n ω ↦ Set.indicator_nonneg (fun ω _ ↦ hZ0 ω) ω
+    have hZnb : ∀ n ω, Zn n ω ≤ b := fun n ω ↦ by
+      by_cases hω : τ ω ≤ n
+      · simp only [hZndef, Set.indicator_of_mem (show ω ∈ {ω | τ ω ≤ n} from hω)]; exact hZb ω
+      · simp only [hZndef, Set.indicator_of_notMem (show ω ∉ {ω | τ ω ≤ n} from hω)]
+        exact (hZ0 ω).trans (hZb ω)
+    have hset : ∀ n, MeasurableSet {ω : RightContinuousPath E | τ ω ≤ n} := fun n ↦
+      measurableSet_le hτm measurable_const
+    have hZnm : ∀ n, Measurable (Zn n) := fun n ↦ hZmeas.indicator (hset n)
+    have hZnm' : ∀ n, StronglyMeasurable[(hτn n 0).measurableSpace] (Zn n) := by
+      intro n
+      refine Measurable.stronglyMeasurable fun B hB ↦ ?_
+      have e : Zn n ⁻¹' B = (Z ⁻¹' B ∩ {ω | τ ω ≤ n}) ∪
+          ((Set.univ ∩ {ω | τ ω ≤ n})ᶜ ∩ (fun _ : RightContinuousPath E ↦ (0 : ℝ)) ⁻¹' B) := by
+        ext ω
+        by_cases hω : τ ω ≤ n
+        · simp [hZndef, hω]
+        · simp [hZndef, hω]
+      rw [e]
+      exact (hcut n _ (hZm'.measurable hB)).union
+        ((hcut n _ MeasurableSet.univ).compl.inter (measurable_const hB))
+    have hlim : ∀ ω, Tendsto (fun n ↦ Zn n ω) atTop (𝓝 (Z ω)) := fun ω ↦ by
+      refine tendsto_const_nhds.congr' ?_
+      obtain ⟨N, hN⟩ := exists_nat_ge (τ ω)
+      filter_upwards [eventually_ge_atTop N] with n hn
+      have : τ ω ≤ n := hN.trans (by exact_mod_cast hn)
+      simp only [hZndef, Set.indicator_of_mem (show ω ∈ {ω | τ ω ≤ n} from this)]
+    have hmap : ∀ n, (P.withDensity fun ω ↦ ENNReal.ofReal (Zn n ω)).map (ψn n)
+        = (P.withDensity fun ω ↦ ENNReal.ofReal (Zn n ω)).map ψ := by
+      intro n
+      refine Measure.ext fun B hB ↦ ?_
+      rw [Measure.map_apply (hψn n) hB, Measure.map_apply hψ hB,
+        withDensity_apply _ ((hψn n) hB), withDensity_apply _ (hψ hB),
+        ← lintegral_indicator ((hψn n) hB), ← lintegral_indicator (hψ hB)]
+      refine lintegral_congr fun ω ↦ ?_
+      by_cases hω : τ ω ≤ n
+      · have heq : ψn n ω = ψ ω := by
+          show pathShift.θ (min (τ ω) n) ω = pathShift.θ (τ ω) ω
+          rw [min_eq_left (show τ ω ≤ (n : ℝ≥0) from hω)]
+        have hmem : ω ∈ ψn n ⁻¹' B ↔ ω ∈ ψ ⁻¹' B := by
+          rw [Set.mem_preimage, Set.mem_preimage, heq]
+        by_cases hB' : ω ∈ ψ ⁻¹' B
+        · rw [Set.indicator_of_mem hB', Set.indicator_of_mem (hmem.2 hB')]
+        · rw [Set.indicator_of_notMem hB', Set.indicator_of_notMem (fun h ↦ hB' (hmem.1 h))]
+      · have h0 : Zn n ω = 0 := by
+          simp only [hZndef, Set.indicator_of_notMem (show ω ∉ {ω | τ ω ≤ n} from hω)]
+        have hg : ENNReal.ofReal (Zn n ω) = 0 := by
+          rw [h0, ENNReal.ofReal_zero]
+        by_cases h1 : ω ∈ ψn n ⁻¹' B
+        · by_cases h2 : ω ∈ ψ ⁻¹' B
+          · rw [Set.indicator_of_mem h1, Set.indicator_of_mem h2]
+          · rw [Set.indicator_of_mem h1, Set.indicator_of_notMem h2, hg]
+        · by_cases h2 : ω ∈ ψ ⁻¹' B
+          · rw [Set.indicator_of_notMem h1, Set.indicator_of_mem h2, hg]
+          · rw [Set.indicator_of_notMem h1, Set.indicator_of_notMem h2]
+    have hsoln : ∀ n, IsMPSolution (mpFamily A lebesgueClock Clock.Conv.optional
+        (coordinate : ℝ≥0 → RightContinuousPath E → E)) (pathFiltration (E := E))
+        ((P.withDensity fun ω ↦ ENNReal.ofReal (Zn n ω)).map ψ) := fun n ↦ by
+      rw [← hmap n]
+      exact hrestart_n n (Zn n) (hZn0 n) ⟨b, hZnb n⟩ (hZnm' n)
+    exact isMPSolution_map_withDensity_of_tendsto hadaptY
+      (fun Y hY i ↦ by
+        obtain ⟨c, -, hc⟩ := abs_mpFamily_coordinate_le hfb hgb hY i
+        exact ⟨c, fun g ↦ by rw [Real.norm_eq_abs]; exact hc i le_rfl g⟩)
+      hψ hZn0 hZnb hZnm hZ0 hZb hZmeas hlim hsoln
+  -- the Markov step
+  have hπm : ∀ u : ℝ≥0, Measurable (coordinate u : RightContinuousPath E → E) :=
+    fun u ↦ (measurable_pathFiltration le_rfl).mono ((pathFiltration (E := E)).le u) le_rfl
+  have hstate : Measurable[(pathFiltration.shiftByTime τ hτ) 0] fun ω ↦ coordinate ⊥ (ψ ω) :=
+    (measurable_pathFiltration le_rfl).comp (measurable_shift_stoppingTime hX hτ 0)
+  have key := condExp_eq_condExp_state_of_restart (𝕂 := ℝ) (P := P) hπm
+    (𝓖 := pathFiltration.shiftByTime τ hτ) 0 hψ hstate hrestart honedim hf hfb' t
+  have hV : (fun ω ↦ f (coordinate t (ψ ω))) = fun ω ↦ f (coordinate (τ ω + t) ω) := by
+    funext ω
+    rw [hψdef]
+    simp only
+    rw [pathShift.eval_comp]
+  have hS : stateSigmaOf (fun ω ↦ coordinate ⊥ (ψ ω))
+      = MeasurableSpace.comap (fun ω ↦ coordinate (τ ω) ω) inferInstance := by
+    show MeasurableSpace.comap _ _ = _
+    congr 1
+    funext ω
+    have := pathShift.eval_comp (τ ω) 0 ω
+    simp only [add_zero] at this
+    exact this
+  rw [hV, hS] at key
+  exact key
+

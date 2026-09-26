@@ -48796,6 +48796,106 @@ theorem isUniformLocalization_of_boundedJumps {F : Type*} {mF : MeasurableSpace 
 
 end BoundedJumps
 
+namespace MeasureTheory
+
+section CadlagStrongMarkov
+
+variable {E : Type*} [MetricSpace E] [MeasurableSpace E] [BorelSpace E] [PolishSpace E]
+variable {Ω : Type*} {m : MeasurableSpace Ω}
+
+omit [PolishSpace E] in
+/-- **The coordinate of a càdlàg path at a stopping time is measurable for the past at that
+stopping time**, as an `E`-valued map.  This is the progressivity at stopping times the manuscript
+calls standard (`rem:strongmarkovscope`).  Mathlib has progressivity only for continuous paths
+(`StronglyAdapted.isStronglyProgressive_of_continuous`); here it is reduced, open set by open set,
+to the real right continuous process `infDist (X_r) Uᶜ`, which is progressive by
+`StronglyAdapted.isStronglyProgressive_of_rightContinuous`, and Mathlib's `measurable_stoppedValue`
+does the rest: `X_σ ∈ U ↔ 0 < infDist (X_σ) Uᶜ` for open `U`. -/
+theorem measurable_cadlag_eval_stoppingTime {𝓖 : Filtration ℝ≥0 m} {X : Ω → D(ℝ≥0, E)}
+    (hX : ∀ u : ℝ≥0, Measurable[𝓖 u] fun ω ↦ (X ω).toFun u)
+    {σ : Ω → ℝ≥0} (hσ : IsStoppingTime 𝓖 fun ω ↦ ((σ ω : ℝ≥0) : WithTop ℝ≥0)) :
+    Measurable[hσ.measurableSpace] fun ω ↦ (X ω).toFun (σ ω) := by
+  have key : ∀ U : Set E, IsOpen U →
+      MeasurableSet[hσ.measurableSpace] ((fun ω ↦ (X ω).toFun (σ ω)) ⁻¹' U) := by
+    intro U hU
+    by_cases hne : (Uᶜ : Set E).Nonempty
+    · set g : E → ℝ := fun x ↦ Metric.infDist x Uᶜ with hgdef
+      have hg : Continuous g := Metric.continuous_infDist_pt _
+      have hmem : ∀ x, x ∈ U ↔ 0 < g x := fun x ↦ by
+        have h := (hU.isClosed_compl).mem_iff_infDist_zero hne (x := x)
+        constructor
+        · intro hx
+          refine lt_of_le_of_ne Metric.infDist_nonneg fun h0 ↦ ?_
+          exact (h.2 h0.symm) hx
+        · intro hx
+          by_contra hxc
+          exact hx.ne' (h.1 hxc)
+      have hprog : IsStronglyProgressive 𝓖 fun r ω ↦ g ((X ω).toFun r) :=
+        StronglyAdapted.isStronglyProgressive_of_rightContinuous
+          (fun r ↦ (hg.measurable.comp (hX r)).stronglyMeasurable)
+          fun ω s ↦ hg.continuousAt.comp_continuousWithinAt
+            (continuousWithinAt_Ioi_iff_Ici.1 ((X ω).isCadlag.isRightContinuous s))
+      have hmeas := measurable_stoppedValue hprog hσ
+      have heq : stoppedValue (fun r ω ↦ g ((X ω).toFun r)) (fun ω ↦ ((σ ω : ℝ≥0) : WithTop ℝ≥0))
+          = fun ω ↦ g ((X ω).toFun (σ ω)) := by
+        funext ω
+        rfl
+      rw [heq] at hmeas
+      have hset : (fun ω ↦ (X ω).toFun (σ ω)) ⁻¹' U
+          = (fun ω ↦ g ((X ω).toFun (σ ω))) ⁻¹' Set.Ioi 0 := by
+        ext ω
+        simp only [Set.mem_preimage, Set.mem_Ioi]
+        exact hmem _
+      rw [hset]
+      exact hmeas measurableSet_Ioi
+    · have hU' : U = Set.univ := by
+        rw [Set.not_nonempty_iff_eq_empty, Set.compl_empty_iff] at hne
+        exact hne
+      rw [hU', Set.preimage_univ]
+      exact MeasurableSet.univ
+  rw [measurable_iff_comap_le, BorelSpace.measurable_eq (α := E), borel,
+    MeasurableSpace.comap_generateFrom]
+  refine MeasurableSpace.generateFrom_le fun s hs ↦ ?_
+  obtain ⟨U, hU, rfl⟩ := hs
+  exact key U hU
+
+variable [CompleteSpace E]
+
+/-- **`hψ` on the càdlàg path space**: the path shifted by a measurable random time is a
+measurable map into `D(ℝ≥0, E)`.  Joint measurability of the evaluation
+(`SkorokhodSpace.measurable_uncurry_eval_nnreal`) and the characterisation of the Borel
+σ-algebra of `D` by evaluations (`SkorokhodSpace.measurable_of_measurable_eval`). -/
+theorem measurable_cadlagShift_randomTime {Ω' : Type*} {m' : MeasurableSpace Ω'}
+    {τ : Ω' → ℝ≥0} (hτ : Measurable τ) {X : Ω' → D(ℝ≥0, E)} (hX : Measurable X) :
+    Measurable fun ω ↦ (cadlagShift (E := E)).θ (τ ω) (X ω) :=
+  SkorokhodSpace.measurable_of_measurable_eval fun u ↦
+    SkorokhodSpace.measurable_uncurry_eval_nnreal.comp ((hτ.add_const u).prodMk hX)
+
+/-- **`hψadapt` on the càdlàg path space**: the path shifted by `τ`, read up to time `s`, is
+measurable for the past at the stopping time `τ + s`.  Each coordinate `u ≤ s` of the shifted
+path is the coordinate at the stopping time `τ + u ≤ τ + s`
+(`measurable_cadlag_eval_stoppingTime`). -/
+theorem measurable_cadlagShift_stoppingTime {𝓖 : Filtration ℝ≥0 m} {X : Ω → D(ℝ≥0, E)}
+    (hX : ∀ u : ℝ≥0, Measurable[𝓖 u] fun ω ↦ (X ω).toFun u)
+    {τ : Ω → ℝ≥0} (hτ : ∀ t : ℝ≥0, IsStoppingTime 𝓖 fun ω ↦ ((τ ω + t : ℝ≥0) : WithTop ℝ≥0))
+    (s : ℝ≥0) :
+    Measurable[(hτ s).measurableSpace, cadlagFiltration (E := E) s]
+      fun ω ↦ (cadlagShift (E := E)).θ (τ ω) (X ω) := by
+  rw [measurable_iff_comap_le, cadlagFiltration_eq, MeasurableSpace.comap_iSup]
+  refine iSup_le fun u ↦ ?_
+  rw [MeasurableSpace.comap_iSup]
+  refine iSup_le fun hu ↦ ?_
+  rw [MeasurableSpace.comap_comp]
+  have hmono : (hτ u).measurableSpace ≤ (hτ s).measurableSpace :=
+    IsStoppingTime.measurableSpace_mono (hτ u) (hτ s) fun ω ↦
+      WithTop.coe_le_coe.2 (by gcongr; exact Set.mem_Iic.1 hu)
+  refine le_trans ?_ hmono
+  exact measurable_iff_comap_le.mp (measurable_cadlag_eval_stoppingTime hX (hτ u))
+
+end CadlagStrongMarkov
+
+end MeasureTheory
+
 /-! ### Mixtures and disintegration, `lem:localmix`
 
 The martingale property as an identity linear in the measure (`lem:mixture`, `lem:disint`), and
@@ -48880,8 +48980,8 @@ are functionals of the path and the same for every measure; by
 `martingale_stoppedProcess_of_le_supHittingTime` the stopped process is a martingale under
 **each** local solution, and so under the combination.  This avoids the step of the proof of
 `lem:localmix`(a) in which `τ_n ∧ τ'_n` is claimed to tend to `∞` under both measures: here there
-is only one sequence.  For test processes with unbounded jumps it does not apply, and (a) is not
-proved here in that generality. -/
+is only one sequence.  For test processes with unbounded jumps it does not apply, and there (a) is
+false: `LocalMixWitness.not_convex`. -/
 theorem isLocalMPSolution_add_of_boundedJumps {𝓕 : Filtration ℝ≥0 m}
     {𝓧 : Set (ℝ≥0 → Ω → ℝ)}
     (hY : ∀ Y ∈ 𝓧, StronglyAdapted 𝓕 Y) (hcad : ∀ Y ∈ 𝓧, ∀ ω, IsCadlag (Y · ω))
@@ -48908,6 +49008,478 @@ theorem isLocalMPSolution_add_of_boundedJumps {𝓕 : Filtration ℝ≥0 m}
   exact (h1.smul_measure ha).add_measure (h2.smul_measure hb)
 
 end LocalMixtureJumps
+
+/-! ### The witness: `lem:localmix`(a) is false
+
+`lem:localmix`(a) says that `Msol_loc(𝓧°)` is convex, "with no hypothesis".  It is not, and the
+counterexample needs neither a pathological filtration nor a null set: the filtration below is
+**right-continuous** (an instance on `LocalMixWitness.filt`) and every `Q`-null set is **empty**
+(`LocalMixWitness.eq_empty_of_Q_eq_zero`), so the usual conditions hold for the mixture as the
+filtration stands.  The test process has step paths with `Y 0 = 0`; what it does not have is
+bounded jumps, and with bounded jumps (a) holds (`isLocalMPSolution_add_of_boundedJumps`).
+
+The construction.  A coin falls at one of the times `s j = (j + 1) / (j + 2)`, increasing to `1`,
+or never; the outcome `some (j, b)` is "it falls at `s j` and shows `b`", `none` is "it never
+falls", and the coin of step `j` is revealed at `s j`.  The test process is `0` until the coin
+falls and `± 2 ^ (j + 2)` after.  Under `P` the coin never falls and `Y = 0`.  Under `P'` it
+falls at step `j` with probability `2⁻¹ ^ (j + 1)` and is fair; `Y` is a local martingale,
+localized by stopping just before step `n` unless the coin has fallen already (`τ'`), but not a
+martingale, since `Y 1` is not integrable.  Under `Q = ½ P + ½ P'` a localizing time must tend to
+`⊤` at `none`, which has mass `½`, so it exceeds `1` there for some `n`; but before `s j` the
+outcomes `some (j, b)` lie in the same atom of the filtration as `none`, so the stopping time
+exceeds `s j` on them too (`LocalMixWitness.le_of_isStoppingTime`), the stopped process at time
+`1` carries every jump, and it is not integrable (`LocalMixWitness.not_integrable_of`).
+
+**Where the proof of `lem:localmix`(a) breaks**: `σ_n = τ_n ∧ τ'_n` tends to `∞` under `Q` only
+if `τ'_n → ∞` also `P`-almost surely.  Here `τ'_n → 1` on `none`, a `P'`-null set of `P`-mass
+`1`.  No other localizing sequence repairs it (`LocalMixWitness.not_isLocalMPSolution_Q` quantifies
+over all of them), and the reason is not right continuity: the event that separates `P` from `P'`,
+`{none}`, is decided only at time `1`, while every decision a stopping time takes before `1` on
+`none` it takes on a set of positive `P'`-mass. -/
+
+namespace LocalMixWitness
+
+open scoped ENNReal
+
+/-- The sample space: `some (j, b)` is "the coin falls at step `j` and shows `b`", `none` is "it
+never falls". -/
+abbrev Outcome := Option (ℕ × Bool)
+
+/-- The discrete σ-algebra. -/
+@[instance_reducible] def mOutcome : MeasurableSpace Outcome := ⊤
+
+attribute [local instance] mOutcome
+
+instance : DiscreteMeasurableSpace Outcome := ⟨fun _ ↦ MeasurableSpace.measurableSet_top⟩
+
+/-- The times `n / (n + 1)`, increasing to `1`. -/
+noncomputable def u (n : ℕ) : ℝ≥0 := n / (n + 1)
+
+theorem u_strictMono : StrictMono u := by
+  refine strictMono_nat_of_lt_succ fun n ↦ ?_
+  rw [u, u, div_lt_div_iff₀ (by positivity) (by positivity)]
+  push_cast
+  have : (n : ℝ≥0) * (n + 1 + 1) = n * (n + 1) + n := by ring
+  have h2 : ((n : ℝ≥0) + 1) * (n + 1) = n * (n + 1) + (n + 1) := by ring
+  rw [this, h2]
+  exact add_lt_add_right (lt_add_one _) _
+
+theorem u_lt_one (n : ℕ) : u n < 1 :=
+  (div_lt_one (by positivity)).2 (lt_add_one _)
+
+/-- The coin for step `j` falls at time `s j = u (j + 1)`. -/
+noncomputable def s (j : ℕ) : ℝ≥0 := u (j + 1)
+
+theorem s_pos (j : ℕ) : 0 < s j := by
+  have := u_strictMono (Nat.succ_pos j)
+  rwa [show u 0 = 0 by simp [u]] at this
+
+/-- The atom of the filtration at time `t` that is not yet split: `none` and every coin that has
+not fallen by `t`. -/
+def T (t : ℝ≥0) : Set Outcome := {ω | ∀ j b, ω = some (j, b) → t < s j}
+
+theorem none_mem_T (t : ℝ≥0) : (none : Outcome) ∈ T t := fun _ _ h ↦ by cases h
+
+theorem some_mem_T {t : ℝ≥0} {j : ℕ} {b : Bool} : (some (j, b) : Outcome) ∈ T t ↔ t < s j :=
+  ⟨fun h ↦ h j b rfl, fun h j' b' e ↦ by
+    simp only [Option.some.injEq, Prod.mk.injEq] at e
+    obtain ⟨rfl, rfl⟩ := e; exact h⟩
+
+theorem T_anti {t t' : ℝ≥0} (h : t ≤ t') : T t' ⊆ T t :=
+  fun _ hω j b e ↦ lt_of_le_of_lt h (hω j b e)
+
+/-- Every point of `T t` stays in `T t''` for all `t''` below some `t₀ > t`. -/
+theorem exists_gt_mem_T {t : ℝ≥0} {ω : Outcome} (hω : ω ∈ T t) :
+    ∃ t₀, t < t₀ ∧ ∀ t'', t'' < t₀ → ω ∈ T t'' := by
+  rcases ω with _ | ⟨j, b⟩
+  · exact ⟨t + 1, lt_add_one t, fun _ _ ↦ none_mem_T _⟩
+  · exact ⟨s j, some_mem_T.1 hω, fun _ h ↦ some_mem_T.2 h⟩
+
+/-- The σ-algebra at time `t`: the sets that do not split the atom `T t`. -/
+@[instance_reducible] def σalg (t : ℝ≥0) : MeasurableSpace Outcome where
+  MeasurableSet' A := ∀ ω ∈ T t, ∀ ω' ∈ T t, ω ∈ A → ω' ∈ A
+  measurableSet_empty := fun _ _ _ _ h ↦ h.elim
+  measurableSet_compl A hA := fun ω hω ω' hω' h h' ↦ h (hA ω' hω' ω hω h')
+  measurableSet_iUnion f hf := fun ω hω ω' hω' h ↦ by
+    obtain ⟨i, hi⟩ := Set.mem_iUnion.1 h
+    exact Set.mem_iUnion.2 ⟨i, hf i ω hω ω' hω' hi⟩
+
+theorem measurableSet_σalg {t : ℝ≥0} {A : Set Outcome} :
+    MeasurableSet[σalg t] A ↔ ∀ ω ∈ T t, ∀ ω' ∈ T t, ω ∈ A → ω' ∈ A := Iff.rfl
+
+/-- The filtration: the coin of step `j` is revealed at time `s j`, and at time `1` everything is
+known. -/
+def filt : Filtration ℝ≥0 mOutcome where
+  seq := σalg
+  mono' _ _ h _ hA := fun ω hω ω' hω' hA' ↦ hA ω (T_anti h hω) ω' (T_anti h hω') hA'
+  le' _ _ _ := MeasurableSpace.measurableSet_top
+
+/-- **The filtration is right-continuous.** -/
+instance : filt.IsRightContinuous where
+  RC t A hA := by
+    rw [Filtration.rightCont_eq] at hA
+    simp only [MeasurableSpace.measurableSet_iInf] at hA
+    intro ω hω ω' hω' h
+    obtain ⟨t₀, ht₀, h₀⟩ := exists_gt_mem_T hω
+    obtain ⟨t₁, ht₁, h₁⟩ := exists_gt_mem_T hω'
+    obtain ⟨t'', ht'', ht''m⟩ := exists_between (lt_min ht₀ ht₁)
+    exact hA t'' ht'' ω (h₀ _ (lt_of_lt_of_le ht''m (min_le_left _ _))) ω'
+      (h₁ _ (lt_of_lt_of_le ht''m (min_le_right _ _))) h
+
+/-- A function constant on the atom `T t` is `filt t`-measurable. -/
+theorem stronglyMeasurable_of_const {t : ℝ≥0} {f : Outcome → ℝ}
+    (hf : ∀ ω ∈ T t, ∀ ω' ∈ T t, f ω = f ω') : StronglyMeasurable[filt t] f := by
+  have : Measurable[filt t] f := fun B _ ω hω ω' hω' hB ↦ by
+    simpa [Set.mem_preimage, ← hf ω hω ω' hω'] using hB
+  exact this.stronglyMeasurable
+
+theorem untopA_coe' (r : ℝ≥0) : (r : WithTop ℝ≥0).untopA = r := rfl
+
+/-- The jump sizes. -/
+noncomputable def a (j : ℕ) : ℝ := 2 ^ (j + 2)
+
+/-- **The test process**: `0` until the coin falls, then `± a j` according to the coin. -/
+noncomputable def Y (t : ℝ≥0) : Outcome → ℝ
+  | none => 0
+  | some (j, b) => if s j ≤ t then (if b then a j else -a j) else 0
+
+theorem stronglyAdapted_Y : StronglyAdapted filt Y := fun t ↦
+  stronglyMeasurable_of_const fun ω hω ω' hω' ↦ by
+    have key : ∀ ω ∈ T t, Y t ω = 0 := by
+      rintro (_ | ⟨j, b⟩) h
+      · rfl
+      · simp [Y, not_le.2 (some_mem_T.1 h)]
+    rw [key ω hω, key ω' hω']
+
+/-! The measures. -/
+
+/-- The weights `2⁻¹ ^ (j + 2)` of each of the two outcomes at step `j`. -/
+noncomputable def w (j : ℕ) : ℝ≥0∞ := 2⁻¹ ^ (j + 2)
+
+/-- `P`: the coin never falls. -/
+noncomputable def P : Measure Outcome := Measure.dirac none
+
+/-- `P'`: the coin falls at step `j` with probability `2⁻¹ ^ (j + 1)`, and is fair. -/
+noncomputable def P' : Measure Outcome :=
+  Measure.sum fun p : ℕ × Bool ↦ w p.1 • Measure.dirac (some p)
+
+/-- The mixture. -/
+noncomputable def Q : Measure Outcome := (2⁻¹ : ℝ≥0∞) • P + (2⁻¹ : ℝ≥0∞) • P'
+
+theorem P'_some (j : ℕ) (b : Bool) : P' {some (j, b)} = w j := by
+  rw [P', Measure.sum_apply _ (measurableSet_singleton _), tsum_eq_single (j, b)]
+  · simp
+  · intro p hp
+    simp [Set.indicator, hp]
+
+theorem P'_none : P' {none} = 0 := by
+  rw [P', Measure.sum_apply _ (measurableSet_singleton _)]
+  simp
+
+theorem P'_univ : P' univ = 1 := by
+  rw [P', Measure.sum_apply _ MeasurableSet.univ]
+  simp only [Measure.smul_apply, measure_univ, smul_eq_mul, mul_one]
+  rw [ENNReal.tsum_prod']
+  have h2 : (2 : ℝ≥0∞) * 2⁻¹ = 1 := ENNReal.mul_inv_cancel two_ne_zero ENNReal.ofNat_ne_top
+  have h : ∀ j : ℕ, (∑' b : Bool, w (j, b).1) = (2⁻¹ * 2⁻¹ ^ j : ℝ≥0∞) := fun j ↦ by
+    rw [tsum_fintype]
+    simp only [Finset.sum_const, Finset.card_univ, Fintype.card_bool, nsmul_eq_mul, w,
+      Nat.cast_ofNat]
+    calc (2 : ℝ≥0∞) * 2⁻¹ ^ (j + 2) = (2 * 2⁻¹) * (2⁻¹ * 2⁻¹ ^ j) := by ring
+      _ = _ := by rw [h2, one_mul]
+  simp only [h]
+  rw [ENNReal.tsum_mul_left, ENNReal.tsum_geometric, ENNReal.one_sub_inv_two, inv_inv,
+    ENNReal.inv_mul_cancel two_ne_zero ENNReal.ofNat_ne_top]
+
+instance : IsProbabilityMeasure P := by unfold P; infer_instance
+
+instance : IsProbabilityMeasure P' := ⟨P'_univ⟩
+
+instance : IsProbabilityMeasure Q := ⟨by
+  simp only [Q, Measure.add_apply, Measure.smul_apply, measure_univ, smul_eq_mul, mul_one]
+  exact ENNReal.inv_two_add_inv_two⟩
+
+theorem Q_none : Q {none} ≠ 0 := by
+  simp [Q, P, Measure.add_apply, Measure.smul_apply]
+
+theorem Q_some (j : ℕ) (b : Bool) : Q {some (j, b)} ≠ 0 := by
+  simp [Q, Measure.add_apply, Measure.smul_apply, P'_some, w]
+
+/-- **Every `Q`-null set is empty**, so the filtration is complete for `Q` as it stands. -/
+theorem eq_empty_of_Q_eq_zero {A : Set Outcome} (h : Q A = 0) : A = ∅ := by
+  refine Set.eq_empty_of_forall_notMem fun ω hω ↦ ?_
+  have := measure_mono_null (Set.singleton_subset_iff.2 hω) h
+  rcases ω with _ | ⟨j, b⟩
+  · exact Q_none this
+  · exact Q_some j b this
+
+/-! Under `P` the test process is `0`. -/
+
+theorem martingale_Y_P : Martingale Y filt P :=
+  (martingale_zero ℝ filt P).congr stronglyAdapted_Y fun t ↦ by
+    rw [P, EventuallyEq, ae_dirac_eq, eventually_pure]
+    simp [Y]
+
+theorem isLocalMPSolution_P : IsLocalMPSolution ({Y} : Set (ℝ≥0 → Outcome → ℝ)) filt P := by
+  rintro _ rfl
+  exact Locally.of_prop martingale_Y_P
+
+/-! Under `P'` the test process is a local martingale, localized by `τ' n`. -/
+
+/-- The fair jump of step `j`. -/
+noncomputable def g (j : ℕ) (ω : Outcome) : ℝ :=
+  a j * (({some (j, true)} : Set Outcome).indicator 1 ω
+    - ({some (j, false)} : Set Outcome).indicator 1 ω)
+
+/-- The test process restricted to step `j`. -/
+noncomputable def D (j : ℕ) (t : ℝ≥0) : Outcome → ℝ := if s j ≤ t then g j else 0
+
+theorem D_apply (j : ℕ) (t : ℝ≥0) (ω : Outcome) : D j t ω = if s j ≤ t then g j ω else 0 := by
+  unfold D; split_ifs <;> rfl
+
+theorem g_some (j k : ℕ) (b : Bool) :
+    g j (some (k, b)) = if k = j then (if b then a j else -a j) else 0 := by
+  unfold g
+  by_cases h : k = j
+  · subst h; cases b <;> simp
+  · simp [h]
+
+theorem g_none (j : ℕ) : g j none = 0 := by simp [g]
+
+theorem g_eq_zero_of_mem_T {j : ℕ} {t : ℝ≥0} {ω : Outcome} (hj : s j ≤ t) (hω : ω ∈ T t) :
+    g j ω = 0 := by
+  rcases ω with _ | ⟨k, b⟩
+  · exact g_none j
+  · have hk : k ≠ j := by rintro rfl; exact absurd (some_mem_T.1 hω) (not_lt.2 hj)
+    simp [g_some, hk]
+
+theorem stronglyAdapted_D (j : ℕ) : StronglyAdapted filt (D j) := fun t ↦
+  stronglyMeasurable_of_const fun ω hω ω' hω' ↦ by
+    rw [D_apply, D_apply]
+    by_cases hj : s j ≤ t
+    · simp [hj, g_eq_zero_of_mem_T hj hω, g_eq_zero_of_mem_T hj hω']
+    · simp [hj]
+
+theorem integrable_g (j : ℕ) : Integrable (g j) P' := by
+  unfold g
+  refine Integrable.const_mul ?_ _
+  exact ((integrable_const (1 : ℝ)).indicator (measurableSet_singleton _)).sub
+    ((integrable_const (1 : ℝ)).indicator (measurableSet_singleton _))
+
+theorem integrable_D (j : ℕ) (t : ℝ≥0) : Integrable (D j t) P' := by
+  unfold D
+  split_ifs
+  exacts [integrable_g j, integrable_zero _ _ _]
+
+/-- **Before the coin of step `j` falls, its jump integrates to `0` over every event**: an event of
+`filt r`, `r < s j`, contains both outcomes of the coin or neither, and they have the same
+weight. -/
+theorem setIntegral_g {j : ℕ} {r : ℝ≥0} (hr : r < s j) {A : Set Outcome}
+    (hA : MeasurableSet[filt r] A) : ∫ ω in A, g j ω ∂P' = 0 := by
+  have hmem : some (j, true) ∈ A ↔ some (j, false) ∈ A :=
+    ⟨hA _ (some_mem_T.2 hr) _ (some_mem_T.2 hr), hA _ (some_mem_T.2 hr) _ (some_mem_T.2 hr)⟩
+  unfold g
+  rw [integral_const_mul, integral_sub, integral_indicator_one (measurableSet_singleton _),
+    integral_indicator_one (measurableSet_singleton _)]
+  · simp only [measureReal_def, Measure.restrict_apply (measurableSet_singleton _)]
+    by_cases h : some (j, true) ∈ A
+    · rw [Set.singleton_inter_of_mem h, Set.singleton_inter_of_mem (hmem.1 h), P'_some,
+        P'_some, sub_self, mul_zero]
+    · rw [Set.singleton_inter_of_notMem h,
+        Set.singleton_inter_of_notMem fun h' ↦ h (hmem.2 h')]
+      simp
+  · exact ((integrable_const (1 : ℝ)).indicator (measurableSet_singleton _)).integrableOn
+  · exact ((integrable_const (1 : ℝ)).indicator (measurableSet_singleton _)).integrableOn
+
+theorem martingale_D (j : ℕ) : Martingale (D j) filt P' := by
+  refine martingale_of_setIntegral_eq (stronglyAdapted_D j) (integrable_D j)
+    fun r t hrt A hA ↦ ?_
+  by_cases h1 : s j ≤ r
+  · simp [D, h1, h1.trans hrt]
+  · by_cases h2 : s j ≤ t
+    · simp only [D, h1, h2, ite_false, ite_true]
+      rw [setIntegral_g (not_le.1 h1) hA]
+      simp
+    · simp [D, h1, h2]
+
+/-- The test process with the steps `j < n` only. -/
+noncomputable def Z (n : ℕ) : ℝ≥0 → Outcome → ℝ := fun t ↦ ∑ j ∈ Finset.range n, D j t
+
+theorem martingale_Z (n : ℕ) : Martingale (Z n) filt P' := by
+  induction n with
+  | zero =>
+    have : Z 0 = 0 := by funext t; simp [Z]
+    rw [this]; exact martingale_zero ℝ filt P'
+  | succ n ih =>
+    have : Z (n + 1) = Z n + D n := by funext t; simp [Z, Finset.sum_range_succ]
+    rw [this]; exact ih.add (martingale_D n)
+
+theorem Z_none (n : ℕ) (t : ℝ≥0) : Z n t none = 0 := by
+  rw [Z, Finset.sum_apply]
+  exact Finset.sum_eq_zero fun j _ ↦ by simp [D_apply, g_none]
+
+theorem Z_some (n : ℕ) (t : ℝ≥0) (k : ℕ) (b : Bool) :
+    Z n t (some (k, b)) = if k < n then Y t (some (k, b)) else 0 := by
+  rw [Z, Finset.sum_apply]
+  simp only [D_apply, g_some]
+  by_cases hk : k < n
+  · rw [ite_eq_left hk, Finset.sum_eq_single k]
+    · simp [Y]
+    · intro j _ hj; simp [Ne.symm hj]
+    · intro h; exact absurd (Finset.mem_range.2 hk) h
+  · rw [ite_eq_right hk]
+    refine Finset.sum_eq_zero fun j hj ↦ ?_
+    have : k ≠ j := by simp only [Finset.mem_range] at hj; omega
+    simp [this]
+
+/-- The localizing times under `P'`: stop just before the coin of step `n` can fall, unless it
+has fallen already. -/
+noncomputable def τ' (n : ℕ) : Outcome → WithTop ℝ≥0
+  | none => (u n : WithTop ℝ≥0)
+  | some (j, _) => if j < n then ⊤ else (u n : WithTop ℝ≥0)
+
+theorem isStoppingTime_τ' (n : ℕ) : IsStoppingTime filt (τ' n) := fun t ↦ by
+  have key : ∀ ω ∈ T t, τ' n ω ≤ t ↔ u n ≤ t := by
+    rintro (_ | ⟨j, b⟩) h
+    · exact WithTop.coe_le_coe
+    · by_cases hj : j < n
+      · have h1 : t < u n := lt_of_lt_of_le (some_mem_T.1 h) (u_strictMono.monotone hj)
+        simp only [τ', ite_eq_left hj]
+        exact ⟨fun h' ↦ absurd h' (not_le.2 (WithTop.coe_lt_top t)),
+          fun h' ↦ absurd h' (not_le.2 h1)⟩
+      · simp only [τ', ite_eq_right hj]
+        exact WithTop.coe_le_coe
+  exact fun ω hω ω' hω' h ↦ (key ω' hω').2 ((key ω hω).1 h)
+
+theorem monotone_τ' (ω : Outcome) : Monotone (τ' · ω) := by
+  intro n m hnm
+  rcases ω with _ | ⟨j, b⟩
+  · exact WithTop.coe_le_coe.2 (u_strictMono.monotone hnm)
+  · simp only [τ']
+    split_ifs with h1 h2
+    · exact le_rfl
+    · omega
+    · exact le_top
+    · exact WithTop.coe_le_coe.2 (u_strictMono.monotone hnm)
+
+theorem ae_ne_none : ∀ᵐ ω ∂P', ω ≠ none := by
+  rw [ae_iff]
+  simpa using P'_none
+
+theorem tendsto_τ' : ∀ᵐ ω ∂P', Tendsto (τ' · ω) atTop (𝓝 ⊤) := by
+  filter_upwards [ae_ne_none] with ω hω
+  rcases ω with _ | ⟨j, b⟩
+  · exact absurd rfl hω
+  · refine tendsto_const_nhds.congr' ?_
+    filter_upwards [eventually_gt_atTop j] with n hn
+    simp [τ', hn]
+
+theorem stoppedProcess_eq_Z (n : ℕ) :
+    stoppedProcess (fun i ↦ {ω | ⊥ < τ' n ω}.indicator (Y i)) (τ' n) = Z n := by
+  funext t ω
+  rcases ω with _ | ⟨k, b⟩
+  · rw [Z_none]
+    simp [stoppedProcess, Set.indicator_apply, Y]
+  · by_cases hk : k < n
+    · have hτ : τ' n (some (k, b)) = ⊤ := by simp [τ', hk]
+      rw [stoppedProcess_eq_of_le (by rw [hτ]; exact le_top), Z_some, ite_eq_left hk]
+      simp [hτ]
+    · have hτ : τ' n (some (k, b)) = (u n : WithTop ℝ≥0) := by simp only [τ', ite_eq_right hk]
+      have hlt : u n < s k := u_strictMono (by omega)
+      have hY : ∀ r ≤ u n, Y r (some (k, b)) = 0 := fun r hr ↦ by
+        simp [Y, not_le.2 (lt_of_le_of_lt hr hlt)]
+      rw [Z_some, ite_eq_right hk]
+      rcases le_total t (u n) with htu | htu
+      · rw [stoppedProcess_eq_of_le (by rw [hτ]; exact_mod_cast htu)]
+        simp [Set.indicator_apply, hY t htu]
+      · rw [stoppedProcess_eq_of_ge (by rw [hτ]; exact_mod_cast htu), hτ]
+        rw [Set.indicator_apply]
+        split_ifs
+        · exact hY _ (le_of_eq (untopA_coe' (u n)))
+        · rfl
+
+theorem isLocalMPSolution_P' : IsLocalMPSolution ({Y} : Set (ℝ≥0 → Outcome → ℝ)) filt P' := by
+  rintro _ rfl
+  refine ⟨τ', ⟨⟨isStoppingTime_τ', tendsto_τ'⟩, ae_of_all _ monotone_τ'⟩, fun n ↦ ?_⟩
+  rw [stoppedProcess_eq_Z]
+  exact martingale_Z n
+
+/-! Under `Q` it is not. -/
+
+/-- A stopping time that has not stopped at `none` before `1` has not stopped at any coin before
+it falls: before `s j`, the outcome `some (j, b)` is in the same atom as `none`. -/
+theorem le_of_isStoppingTime {τ : Outcome → WithTop ℝ≥0} (hτ : IsStoppingTime filt τ)
+    (hnone : ∀ t : ℝ≥0, t < 1 → ¬ τ none ≤ t) (j : ℕ) (b : Bool) :
+    (s j : WithTop ℝ≥0) ≤ τ (some (j, b)) := by
+  by_contra h
+  rw [not_le] at h
+  obtain ⟨t, ht⟩ := WithTop.ne_top_iff_exists.1 (ne_top_of_lt h)
+  rw [← ht, WithTop.coe_lt_coe] at h
+  have hmem : some (j, b) ∈ {ω | τ ω ≤ (t : WithTop ℝ≥0)} := by
+    show τ _ ≤ _
+    rw [← ht]
+  exact hnone t (lt_trans h (u_lt_one _))
+    (hτ t (some (j, b)) (some_mem_T.2 h) none (none_mem_T t) hmem)
+
+theorem norm_stopped_one {τ : Outcome → WithTop ℝ≥0} (hτ : IsStoppingTime filt τ)
+    (hnone : ∀ t : ℝ≥0, t < 1 → ¬ τ none ≤ t) (j : ℕ) (b : Bool) :
+    ‖stoppedProcess (fun i ↦ {ω | ⊥ < τ ω}.indicator (Y i)) τ 1 (some (j, b))‖ = a j := by
+  have hle := le_of_isStoppingTime hτ hnone j b
+  have hpos : ⊥ < τ (some (j, b)) :=
+    lt_of_lt_of_le (by rw [← WithTop.coe_bot, WithTop.coe_lt_coe]; exact s_pos j) hle
+  have hs1 : s j ≤ 1 := (u_lt_one _).le
+  have hY : ∀ r, s j ≤ r → ‖Y r (some (j, b))‖ = a j := fun r hr ↦ by
+    cases b <;> simp [Y, hr, a]
+  rcases le_total ((1 : ℝ≥0) : WithTop ℝ≥0) (τ (some (j, b))) with h1 | h1
+  · rw [stoppedProcess_eq_of_le h1,
+      Set.indicator_of_mem (show some (j, b) ∈ {ω | ⊥ < τ ω} from hpos)]
+    exact hY 1 hs1
+  · rw [stoppedProcess_eq_of_ge h1]
+    obtain ⟨r, hr⟩ := WithTop.ne_top_iff_exists.1 (ne_top_of_le_ne_top WithTop.coe_ne_top h1)
+    have hle' : s j ≤ r := by rw [← hr] at hle; exact WithTop.coe_le_coe.1 hle
+    rw [Set.indicator_of_mem (show some (j, b) ∈ {ω | ⊥ < τ ω} from hpos), ← hr, untopA_coe']
+    exact hY r hle'
+
+/-- **The stopped value is not `Q`-integrable**: each outcome `some (j, b)` carries the weight
+`2⁻¹ ^ (j + 3)` and the value `± 2 ^ (j + 2)`. -/
+theorem not_integrable_of {f : Outcome → ℝ} (hf : ∀ j b, ‖f (some (j, b))‖ = a j) :
+    ¬ Integrable f Q := by
+  intro hint
+  have h1 : ∀ p : ℕ × Bool, w p.1 * ‖f (some p)‖ₑ = 1 := fun ⟨j, b⟩ ↦ by
+    rw [← ofReal_norm, hf, a, w, ENNReal.ofReal_pow zero_le_two, ENNReal.ofReal_ofNat,
+      ← mul_pow, ENNReal.inv_mul_cancel two_ne_zero ENNReal.ofNat_ne_top, one_pow]
+  have h2 : ∫⁻ ω, ‖f ω‖ₑ ∂((2⁻¹ : ℝ≥0∞) • P') = ∞ := by
+    rw [lintegral_smul_measure, P', lintegral_sum_measure]
+    simp only [lintegral_smul_measure, lintegral_dirac, smul_eq_mul, h1]
+    rw [ENNReal.tsum_const_eq_top_of_ne_zero one_ne_zero, ENNReal.mul_top (by simp)]
+  have h3 : ∫⁻ ω, ‖f ω‖ₑ ∂((2⁻¹ : ℝ≥0∞) • P') ≤ ∫⁻ ω, ‖f ω‖ₑ ∂Q :=
+    lintegral_mono' (by rw [Q]; exact Measure.le_add_left le_rfl) le_rfl
+  exact absurd hint.2 (by rw [HasFiniteIntegral, not_lt, ← h2]; exact h3)
+
+theorem not_isLocalMPSolution_Q : ¬ IsLocalMPSolution ({Y} : Set (ℝ≥0 → Outcome → ℝ)) filt Q := by
+  intro h
+  obtain ⟨τ, hτ, hmart⟩ := h Y rfl
+  have hnone : Tendsto (τ · none) atTop (𝓝 ⊤) := by
+    have := hτ.tendsto_top
+    rw [ae_iff] at this
+    by_contra hc
+    exact Q_none (measure_mono_null (fun ω (hω : ω ∈ ({none} : Set Outcome)) ↦ by
+      rw [Set.mem_singleton_iff.1 hω]; exact hc) this)
+  obtain ⟨n, hn⟩ := (hnone.eventually (Ioi_mem_nhds (WithTop.coe_lt_top (1 : ℝ≥0)))).exists
+  have hno : ∀ t : ℝ≥0, t < 1 → ¬ τ n none ≤ t := fun t ht h ↦
+    absurd (h.trans_lt (WithTop.coe_lt_coe.2 ht)) (not_lt.2 hn.le)
+  exact not_integrable_of (norm_stopped_one (hτ.isStoppingTime n) hno) ((hmart n).integrable 1)
+
+/-- **`lem:localmix`(a) is false, already for a right-continuous filtration that is complete for
+the mixture.** -/
+theorem not_convex :
+    IsLocalMPSolution ({Y} : Set (ℝ≥0 → Outcome → ℝ)) filt P ∧
+      IsLocalMPSolution ({Y} : Set (ℝ≥0 → Outcome → ℝ)) filt P' ∧
+      ¬ IsLocalMPSolution ({Y} : Set (ℝ≥0 → Outcome → ℝ)) filt
+        ((2⁻¹ : ℝ≥0∞) • P + (2⁻¹ : ℝ≥0∞) • P') :=
+  ⟨isLocalMPSolution_P, isLocalMPSolution_P', not_isLocalMPSolution_Q⟩
+
+end LocalMixWitness
 
 section LocalMixtureKernel
 
@@ -49677,6 +50249,415 @@ theorem isStrongMarkov_of_unique_onedim {𝓕₀ : Filtration ℝ≥0 mF}
 
 end StrongMarkovHomogeneous
 
+section StrongMarkovKernelOfRestart
+
+variable {ι : Type*} [Preorder ι]
+variable {E : Type*} [MeasurableSpace E]
+variable {F : Type*} [mF : MeasurableSpace F] {π : ι → F → E}
+variable {Ω : Type*} {m : MeasurableSpace Ω}
+
+/-- **The kernel form at a random time, with the restart as a hypothesis**, for a bounded
+measurable `f`.  The setting of `condExp_eq_condExp_state_of_restart`, with the σ-algebra `𝓖 i`
+(for a random time: of the time-changed filtration `𝓖.shiftByTime τ`), and a Markov kernel `K`
+whose measures start at `δ x` and whose mixtures lie in `𝓜`: then over every `A ∈ 𝓖 i` the future `f (π t ∘ ψ)` integrates as
+`(T_t f)(π ⊥ ∘ ψ)`, with `T_t f x = ∫ f (π t) ∂K x`.
+
+The proof is Step 3 of `thm:absstrongmarkov` and needs no simple function approximation: the two
+solutions `(1_A / P A · P) ∘ ψ⁻¹` and `K ∘ₘ (its initial law)` have the same one dimensional laws,
+and a bounded measurable `f` is integrated against them directly. -/
+theorem setIntegral_eq_kernel_of_restart [OrderBot ι]
+    (hπm : ∀ u : ι, Measurable (π u))
+    {P : Measure Ω} [IsProbabilityMeasure P] {𝓖 : Filtration ι m} (i : ι)
+    {ψ : Ω → F} (hψ : Measurable ψ) (hstate : Measurable[𝓖 i] fun ω ↦ π ⊥ (ψ ω))
+    {𝓜 : Set (Measure F)}
+    (hrestart : ∀ Z : Ω → ℝ, (∀ ω, 0 ≤ Z ω) → (∃ b, ∀ ω, Z ω ≤ b) → StronglyMeasurable[𝓖 i] Z →
+      ((P.withDensity fun ω ↦ ENNReal.ofReal (Z ω)).map ψ) ∈ 𝓜)
+    (honedim : ∀ R R' : Measure F, IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      R ∈ 𝓜 → R' ∈ 𝓜 → R.map (π ⊥) = R'.map (π ⊥) → ∀ u : ι, R.map (π u) = R'.map (π u))
+    {K : Kernel E F} [IsMarkovKernel K] (hKinit : ∀ x, (K x).map (π ⊥) = Measure.dirac x)
+    (hmix : ∀ μ : Measure E, IsProbabilityMeasure μ → K ∘ₘ μ ∈ 𝓜)
+    {f : E → ℝ} (hf : Measurable f) {cf : ℝ} (hfb : ∀ x, ‖f x‖ ≤ cf) (t : ι)
+    {A : Set Ω} (hA : MeasurableSet[𝓖 i] A) :
+    ∫ ω in A, f (π t (ψ ω)) ∂P = ∫ ω in A, (∫ g, f (π t g) ∂(K (π ⊥ (ψ ω)))) ∂P := by
+  have hA' : MeasurableSet A := 𝓖.le i A hA
+  by_cases hp : P A = 0
+  · rw [setIntegral_measure_zero _ hp, setIntegral_measure_zero _ hp]
+  set p : ℝ := P.real A with hpdef
+  have hppos : 0 < p := ENNReal.toReal_pos hp (measure_ne_top _ _)
+  set Z : Ω → ℝ := A.indicator (fun _ ↦ p⁻¹) with hZdef
+  have hZ0 : ∀ ω, 0 ≤ Z ω := fun ω ↦
+    Set.indicator_nonneg (fun _ _ ↦ (inv_pos.mpr hppos).le) ω
+  have hZc : ∀ ω, Z ω ≤ p⁻¹ := fun ω ↦ by
+    by_cases hω : ω ∈ A
+    · simp [hZdef, Set.indicator_of_mem hω]
+    · simp [hZdef, Set.indicator_of_notMem hω, (inv_pos.mpr hppos).le]
+  have hZm : StronglyMeasurable[𝓖 i] Z := stronglyMeasurable_const.indicator hA
+  have hZmeas : Measurable Z := (hZm.mono (𝓖.le i)).measurable
+  have hZ1 : ∫ ω, Z ω ∂P = 1 := by
+    rw [hZdef, integral_indicator_const _ hA', smul_eq_mul, ← hpdef, mul_inv_cancel₀ hppos.ne']
+  have hXr : Measurable fun ω ↦ π ⊥ (ψ ω) := hstate.mono (𝓖.le i) le_rfl
+  set R₁ : Measure F := (P.withDensity fun ω ↦ ENNReal.ofReal (Z ω)).map ψ with hR₁
+  set μ' : Measure E := (P.withDensity fun ω ↦ ENNReal.ofReal (Z ω)).map fun ω ↦ π ⊥ (ψ ω)
+    with hμ'
+  have hR₁sol : R₁ ∈ 𝓜 := hrestart Z hZ0 ⟨p⁻¹, hZc⟩ hZm
+  have hR₁prob : IsProbabilityMeasure R₁ :=
+    isProbabilityMeasure_map_withDensity_ofReal hψ hZmeas hZ0 hZc hZ1
+  have hμ'prob : IsProbabilityMeasure μ' :=
+    isProbabilityMeasure_map_withDensity_ofReal hXr hZmeas hZ0 hZc hZ1
+  set R₂ : Measure F := K ∘ₘ μ' with hR₂
+  have hR₂sol : R₂ ∈ 𝓜 := hmix μ' hμ'prob
+  have hR₂prob : IsProbabilityMeasure R₂ := by rw [hR₂]; infer_instance
+  have hinit₁ : R₁.map (π ⊥) = μ' := by
+    rw [hR₁, Measure.map_map (hπm ⊥) hψ]
+    rfl
+  have hinit₂ : R₂.map (π ⊥) = μ' := by
+    refine Measure.ext fun s hs ↦ ?_
+    rw [Measure.map_apply (hπm ⊥) hs, hR₂, Measure.bind_apply ((hπm ⊥) hs) K.aemeasurable]
+    have : ∀ x, K x (π ⊥ ⁻¹' s) = s.indicator 1 x := fun x ↦ by
+      rw [← Measure.map_apply (hπm ⊥) hs, hKinit x, Measure.dirac_apply' _ hs]
+    simp_rw [this]
+    rw [lintegral_indicator_one hs]
+  have hlaw := honedim R₁ R₂ hR₁prob hR₂prob hR₁sol hR₂sol (hinit₁.trans hinit₂.symm) t
+  have hfm : Measurable fun g : F ↦ f (π t g) := hf.comp (hπm t)
+  have hT : Measurable fun x ↦ ∫ g, f (π t g) ∂(K x) :=
+    (hfm.stronglyMeasurable.integral_kernel (κ := K)).measurable
+  have h₁ : ∫ y, f y ∂(R₁.map (π t)) = p⁻¹ * ∫ ω in A, f (π t (ψ ω)) ∂P := by
+    rw [integral_map (hπm t).aemeasurable hf.aestronglyMeasurable, hR₁,
+      integral_map_withDensity_ofReal hψ hZmeas hZ0 hfm]
+    exact integral_indicator_const_smul hA' _ _
+  have h₂ : ∫ y, f y ∂(R₂.map (π t))
+      = p⁻¹ * ∫ ω in A, (∫ g, f (π t g) ∂(K (π ⊥ (ψ ω)))) ∂P := by
+    have hint : Integrable (fun q : E × F ↦ f (π t q.2)) (μ' ⊗ₘ K) :=
+      Integrable.mono' (integrable_const cf) (hfm.comp measurable_snd).aestronglyMeasurable
+        (Eventually.of_forall fun q ↦ hfb _)
+    rw [integral_map (hπm t).aemeasurable hf.aestronglyMeasurable, hR₂, ← Measure.snd_compProd,
+      Measure.snd, integral_map measurable_snd.aemeasurable hfm.aestronglyMeasurable,
+      Measure.integral_compProd hint, hμ', integral_map_withDensity_ofReal hXr hZmeas hZ0 hT]
+    exact integral_indicator_const_smul hA' _ _
+  have heq := congrArg (fun μ : Measure E ↦ ∫ y, f y ∂μ) hlaw
+  rw [h₁, h₂] at heq
+  exact mul_left_cancel₀ (inv_ne_zero hppos.ne') heq
+
+/-- `setIntegral_eq_kernel_of_restart` read as a conditional expectation:
+`E[f (π t ∘ ψ) | 𝓖 i] = (T_t f)(π ⊥ ∘ ψ)`. -/
+theorem condExp_eq_kernel_of_restart [OrderBot ι]
+    (hπm : ∀ u : ι, Measurable (π u))
+    {P : Measure Ω} [IsProbabilityMeasure P] {𝓖 : Filtration ι m} (i : ι)
+    {ψ : Ω → F} (hψ : Measurable ψ) (hstate : Measurable[𝓖 i] fun ω ↦ π ⊥ (ψ ω))
+    {𝓜 : Set (Measure F)}
+    (hrestart : ∀ Z : Ω → ℝ, (∀ ω, 0 ≤ Z ω) → (∃ b, ∀ ω, Z ω ≤ b) → StronglyMeasurable[𝓖 i] Z →
+      ((P.withDensity fun ω ↦ ENNReal.ofReal (Z ω)).map ψ) ∈ 𝓜)
+    (honedim : ∀ R R' : Measure F, IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      R ∈ 𝓜 → R' ∈ 𝓜 → R.map (π ⊥) = R'.map (π ⊥) → ∀ u : ι, R.map (π u) = R'.map (π u))
+    {K : Kernel E F} [IsMarkovKernel K] (hKinit : ∀ x, (K x).map (π ⊥) = Measure.dirac x)
+    (hmix : ∀ μ : Measure E, IsProbabilityMeasure μ → K ∘ₘ μ ∈ 𝓜)
+    {f : E → ℝ} (hf : Measurable f) {cf : ℝ} (hfb : ∀ x, ‖f x‖ ≤ cf) (t : ι) :
+    P[fun ω ↦ f (π t (ψ ω)) | 𝓖 i] =ᵐ[P] fun ω ↦ ∫ g, f (π t g) ∂(K (π ⊥ (ψ ω))) := by
+  have hfm : Measurable fun g : F ↦ f (π t g) := hf.comp (hπm t)
+  have hT : Measurable fun x ↦ ∫ g, f (π t g) ∂(K x) :=
+    (hfm.stronglyMeasurable.integral_kernel (κ := K)).measurable
+  have hTb : ∀ x, ‖∫ g, f (π t g) ∂(K x)‖ ≤ cf := fun x ↦ by
+    have := norm_integral_le_of_norm_le_const (μ := K x) (Eventually.of_forall fun g ↦ hfb (π t g))
+    simpa using this
+  have hVint : Integrable (fun ω ↦ f (π t (ψ ω))) P :=
+    Integrable.mono' (integrable_const cf) (hfm.comp hψ).aestronglyMeasurable
+      (Eventually.of_forall fun ω ↦ hfb _)
+  have hgm : Measurable[𝓖 i] fun ω ↦ ∫ g, f (π t g) ∂(K (π ⊥ (ψ ω))) := hT.comp hstate
+  have hgint : Integrable (fun ω ↦ ∫ g, f (π t g) ∂(K (π ⊥ (ψ ω)))) P :=
+    Integrable.mono' (integrable_const cf) (hgm.mono (𝓖.le i) le_rfl).aestronglyMeasurable
+      (Eventually.of_forall fun ω ↦ hTb _)
+  exact (ae_eq_condExp_of_forall_setIntegral_eq (𝓖.le i) hVint (fun _ _ _ ↦ hgint.integrableOn)
+    (fun A hA _ ↦ (setIntegral_eq_kernel_of_restart hπm i hψ hstate hrestart honedim hKinit
+      hmix hf hfb t hA).symm) hgm.stronglyMeasurable.aestronglyMeasurable).symm
+
+end StrongMarkovKernelOfRestart
+
+section StrongMarkovHomogeneousKernel
+
+variable {E : Type*} [MeasurableSpace E]
+variable {F : Type*} [mF : MeasurableSpace F] {π : ℝ≥0 → F → E}
+variable {Ω : Type*} {m : MeasurableSpace Ω}
+
+/-- **`thm:absstrongmarkov`(a), the kernel form, at a finite stopping time with arbitrary range,
+for bounded measurable `f`**: `E[f(X(τ+t)) | 𝓖_τ] = (T_t f)(X τ)` with
+`T_t f x = ∫ f (π t) ∂K x`, where `K x` solves the problem from `δ x`.
+
+The hypotheses are those of `isStrongMarkov_of_unique_onedim`, together with the measurable
+family `(P_x)` of the manuscript as a Markov kernel `K`, and the integrability of `lem:mixture`
+(`hKint`).  The proof is `condExp_eq_kernel_of_restart` for the time-changed filtration at `0`;
+no partition into values of `τ`, and `f` need not be an indicator. -/
+theorem isStrongMarkov_kernel_of_unique_onedim {𝓕₀ : Filtration ℝ≥0 mF}
+    (hπ : ∀ u : ℝ≥0, Measurable[𝓕₀ u] (π u))
+    {𝓧 : Set (ℝ≥0 → F → ℝ)} (hadaptY : ∀ Y' ∈ 𝓧, StronglyAdapted 𝓕₀ Y')
+    {X : Ω → F} {𝓖 : Filtration ℝ≥0 m} {P : Measure Ω} [IsProbabilityMeasure P]
+    (hsol : ∀ Y ∈ 𝓧, Martingale (fun u ω ↦ Y u (X ω)) 𝓖 P)
+    (hprog : ∀ Y ∈ 𝓧, IsStronglyProgressive 𝓖 (fun u ω ↦ Y u (X ω)))
+    (hrc : ∀ Y ∈ 𝓧, ∀ᵐ ω ∂P, ∀ s : ℝ≥0,
+      Tendsto (fun r ↦ Y r (X ω)) (𝓝[≥] s) (𝓝 (Y s (X ω))))
+    {τ : Ω → ℝ≥0} (hτ : ∀ t : ℝ≥0, IsStoppingTime 𝓖 fun ω ↦ ((τ ω + t : ℝ≥0) : WithTop ℝ≥0))
+    (hint : ∀ Y ∈ 𝓧, ∀ t : ℝ≥0, Integrable (fun ω ↦ Y (τ ω + t) (X ω)) P)
+    {ψ : Ω → F} (hψ : Measurable ψ)
+    (hψadapt : ∀ s : ℝ≥0, Measurable[(hτ s).measurableSpace, 𝓕₀ s] ψ)
+    (hψeval : ∀ (t : ℝ≥0) (ω : Ω), π t (ψ ω) = π (τ ω + t) (X ω))
+    (hincr : ∀ Y' ∈ 𝓧, ∃ Y ∈ 𝓧, ∃ K : Ω → ℝ, Measurable K ∧ (∃ c : ℝ, ∀ ω, ‖K ω‖ ≤ c) ∧
+      ∀ (t : ℝ≥0) (ω : Ω), Y' t (ψ ω) = Y (τ ω + t) (X ω) - Y (τ ω) (X ω) + K ω)
+    (honedim : ∀ R R' : Measure F, IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      IsMPSolution 𝓧 𝓕₀ R → IsMPSolution 𝓧 𝓕₀ R' →
+      R.map (π 0) = R'.map (π 0) → ∀ u : ℝ≥0, R.map (π u) = R'.map (π u))
+    {K : Kernel E F} [IsMarkovKernel K] (hKsol : ∀ x, IsMPSolution 𝓧 𝓕₀ (K x))
+    (hKinit : ∀ x, (K x).map (π 0) = Measure.dirac x)
+    (hKint : ∀ ν : Measure E, IsProbabilityMeasure ν → ∀ Y ∈ 𝓧, ∀ i,
+      Integrable (fun x ↦ ∫ ω, ‖Y i ω‖ ∂K x) ν)
+    {f : E → ℝ} (hf : Measurable f) {cf : ℝ} (hfb : ∀ x, ‖f x‖ ≤ cf) (t : ℝ≥0) :
+    P[fun ω ↦ f (π (τ ω + t) (X ω)) | (hτ 0).measurableSpace]
+      =ᵐ[P] fun ω ↦ ∫ g, f (π t g) ∂(K (π (τ ω) (X ω))) := by
+  have hπm : ∀ u : ℝ≥0, Measurable (π u) := fun u ↦ (hπ u).mono (𝓕₀.le u) le_rfl
+  have hstate : Measurable[(hτ 0).measurableSpace] fun ω ↦ π ⊥ (ψ ω) :=
+    (hπ 0).comp (hψadapt 0)
+  have key := condExp_eq_kernel_of_restart hπm (P := P) (𝓖 := 𝓖.shiftByTime τ hτ) 0 hψ hstate
+    (𝓜 := {R | IsMPSolution 𝓧 𝓕₀ R})
+    (fun Z hZ0 hZb hZm ↦ isMPSolution_map_withDensity_shiftByTime hadaptY hsol hprog hrc hτ
+      hint hψ hψadapt hincr hZ0 hZb hZm)
+    honedim hKinit
+    (fun μ hμ ↦ mpSolutions_comp (Eventually.of_forall fun x ↦ hKsol x) (hKint μ hμ)) hf hfb t
+  have hV : (fun ω ↦ f (π t (ψ ω))) = fun ω ↦ f (π (τ ω + t) (X ω)) := by
+    funext ω; rw [hψeval]
+  have hS : ∀ ω, π ⊥ (ψ ω) = π (τ ω) (X ω) := fun ω ↦ by
+    have := hψeval 0 ω
+    rw [add_zero] at this
+    exact this
+  rw [hV] at key
+  refine key.trans (Eventually.of_forall fun ω ↦ ?_)
+  simp only [hS]
+
+end StrongMarkovHomogeneousKernel
+
+section StrongMarkovKernelBounded
+
+variable {ι : Type*} [LinearOrder ι] [OrderBot ι] [AddCommMonoid ι] [AddLeftMono ι]
+variable {E : Type*} [MeasurableSpace E]
+variable {F : Type*} [mF : MeasurableSpace F] {π : ι → F → E}
+variable {Ω : Type*} {m : MeasurableSpace Ω} {𝕂 : Type*} [RCLike 𝕂]
+
+/-- **The semigroup `T_{s+t} = T_s T_t` for bounded measurable `f`**, the last sentence of
+`thm:absstrongmarkov`(a), in the time homogeneous case `𝓧₀ r = 𝓧₀ 0`:
+
+```
+∫ f (π (s + t)) ∂K x = ∫ (∫ f (π t) ∂K (π s g)) ∂(K x) g.
+```
+
+`chapmanKolmogorov_of_unique_onedim` is the case of an indicator.  The proof is
+`setIntegral_eq_kernel_of_restart` on the canonical space, `P = K x`, `ψ = θ s`, `A = univ`. -/
+theorem semigroup_of_unique_onedim
+    {S : Shift F π} {𝓕₀ : Filtration ι mF} {𝓧₀ : ι → Set (ι → F → 𝕂)}
+    (hS : IsShiftSystem S 𝓕₀ 𝓧₀)
+    (hbot : (⊥ : ι) = 0) (hadd : ∀ r u : ι, r ≤ r + u)
+    (hadapt : ∀ u : ι, Measurable[𝓕₀ u] (π u))
+    (hhom : ∀ r : ι, 𝓧₀ r = 𝓧₀ 0)
+    (honedim : ∀ R R' : Measure F, IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      IsMPSolution (𝓧₀ 0) 𝓕₀ R → IsMPSolution (𝓧₀ 0) 𝓕₀ R' →
+      R.map (π ⊥) = R'.map (π ⊥) → ∀ u : ι, R.map (π u) = R'.map (π u))
+    {K : Kernel E F} [IsMarkovKernel K] (hKsol : ∀ x, IsMPSolution (𝓧₀ 0) 𝓕₀ (K x))
+    (hKinit : ∀ x, (K x).map (π ⊥) = Measure.dirac x)
+    (hKint : ∀ ν : Measure E, IsProbabilityMeasure ν → ∀ Y ∈ 𝓧₀ 0, ∀ i,
+      Integrable (fun x ↦ ∫ ω, ‖Y i ω‖ ∂K x) ν)
+    (hKint' : ∀ x, ∀ Y ∈ 𝓧₀ 0, ∀ u : ι, Integrable (Y u) (K x))
+    {f : E → ℝ} (hf : Measurable f) {cf : ℝ} (hfb : ∀ x, ‖f x‖ ≤ cf) (x : E) (s t : ι) :
+    ∫ g, f (π (s + t) g) ∂(K x) = ∫ g, (∫ g', f (π t g') ∂(K (π s g))) ∂(K x) := by
+  have hπm : ∀ u : ι, Measurable (π u) := fun u ↦ (hadapt u).mono (𝓕₀.le u) le_rfl
+  have e2 : ∀ g, π ⊥ (S.θ s g) = π s g := fun g ↦ by rw [S.eval_comp, hbot, add_zero]
+  have hstate : Measurable[𝓕₀ s] fun g ↦ π ⊥ (S.θ s g) := by
+    have : (fun g ↦ π ⊥ (S.θ s g)) = π s := funext e2
+    rw [this]; exact hadapt s
+  have h := setIntegral_eq_kernel_of_restart hπm (P := K x) (𝓖 := 𝓕₀) s (S.measurable s) hstate
+    (𝓜 := {R | IsMPSolution (𝓧₀ 0) 𝓕₀ R})
+    (fun Z hZ0 hZb hZm ↦ by
+      have := restart_canonical hS (hKsol x) (hKint' x) s (hadd s) hZ0 hZb hZm
+      rw [hhom s] at this
+      exact this)
+    honedim hKinit
+    (fun μ hμ ↦ mpSolutions_comp (Eventually.of_forall fun y ↦ hKsol y) (hKint μ hμ))
+    hf hfb t (A := Set.univ) MeasurableSet.univ
+  simp only [Measure.restrict_univ, S.eval_comp, hbot, add_zero] at h
+  exact h
+
+/-- **The kernel form at a fixed time for bounded measurable `f`**: the conditional expectation
+of `f (X (r + t))` given the past at `r` is `(T_{r,r+t} f)(X r)`, where `K x` solves the problem
+posed at `r` from `δ x`.  `condExp_indicator_eq_kernel` is the case of an indicator. -/
+theorem condExp_eq_kernel
+    {S : Shift F π} {𝓕₀ : Filtration ι mF} {𝓧₀ : ι → Set (ι → F → 𝕂)}
+    (hS : IsShiftSystem S 𝓕₀ 𝓧₀)
+    (hbot : (⊥ : ι) = 0) (hadd : ∀ r u : ι, r ≤ r + u)
+    (hadapt : ∀ u : ι, Measurable[𝓕₀ u] (π u))
+    {X : Ω → F} (hX : Measurable X) {𝓖 : Filtration ι m} {P : Measure Ω}
+    [IsProbabilityMeasure P] (hXadapt : ∀ u : ι, Measurable[𝓖 u, 𝓕₀ u] X)
+    (hsol : IsMPSolution ((fun (Y : ι → F → 𝕂) t ω ↦ Y t (X ω)) '' 𝓧₀ 0) 𝓖 P)
+    (hint : ∀ Y ∈ 𝓧₀ 0, ∀ u : ι, Integrable (fun ω ↦ Y u (X ω)) P)
+    (r : ι)
+    (honedim : ∀ R R' : Measure F, IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      IsMPSolution (𝓧₀ r) 𝓕₀ R → IsMPSolution (𝓧₀ r) 𝓕₀ R' →
+      R.map (π ⊥) = R'.map (π ⊥) → ∀ u : ι, R.map (π u) = R'.map (π u))
+    {K : Kernel E F} [IsMarkovKernel K] (hKsol : ∀ x, IsMPSolution (𝓧₀ r) 𝓕₀ (K x))
+    (hKinit : ∀ x, (K x).map (π ⊥) = Measure.dirac x)
+    (hKint : ∀ ν : Measure E, IsProbabilityMeasure ν → ∀ Y ∈ 𝓧₀ r, ∀ i,
+      Integrable (fun x ↦ ∫ ω, ‖Y i ω‖ ∂K x) ν)
+    {f : E → ℝ} (hf : Measurable f) {cf : ℝ} (hfb : ∀ x, ‖f x‖ ≤ cf) (t : ι) :
+    P[fun ω ↦ f (π (r + t) (X ω)) | 𝓖 r]
+      =ᵐ[P] fun ω ↦ ∫ g, f (π t g) ∂(K (π r (X ω))) := by
+  have hπm : ∀ u : ι, Measurable (π u) := fun u ↦ (hadapt u).mono (𝓕₀.le u) le_rfl
+  have e2 : ∀ ω, π ⊥ (S.θ r (X ω)) = π r (X ω) := fun ω ↦ by rw [S.eval_comp, hbot, add_zero]
+  have hstate : Measurable[𝓖 r] fun ω ↦ π ⊥ (S.θ r (X ω)) := by
+    have : (fun ω ↦ π ⊥ (S.θ r (X ω))) = fun ω ↦ π r (X ω) := funext e2
+    rw [this]; exact (hadapt r).comp (hXadapt r)
+  have key := condExp_eq_kernel_of_restart hπm (P := P) (𝓖 := 𝓖) r
+    ((S.measurable r).comp hX) hstate (𝓜 := {R | IsMPSolution (𝓧₀ r) 𝓕₀ R})
+    (fun Z hZ0 hZb hZm ↦ restart hS hX hXadapt hsol hint r (hadd r) hZ0 hZb hZm)
+    honedim hKinit
+    (fun μ hμ ↦ mpSolutions_comp (Eventually.of_forall fun x ↦ hKsol x) (hKint μ hμ)) hf hfb t
+  have hV : (fun ω ↦ f (π t (S.θ r (X ω)))) = fun ω ↦ f (π (r + t) (X ω)) :=
+    funext fun ω ↦ by rw [S.eval_comp]
+  calc P[fun ω ↦ f (π (r + t) (X ω)) | 𝓖 r] = P[fun ω ↦ f (π t (S.θ r (X ω))) | 𝓖 r] := by
+        rw [hV]
+    _ =ᵐ[P] fun ω ↦ ∫ g, f (π t g) ∂(K (π ⊥ (S.θ r (X ω)))) := key
+    _ = fun ω ↦ ∫ g, f (π t g) ∂(K (π r (X ω))) := by funext ω; rw [e2]
+
+/-- **`thm:absstrongmarkov`(b), the kernel form, at a stopping time with countably many values,
+for bounded measurable `f`**: on `{τ = r}`, `E[f(X(τ+t)) | 𝓖_τ] = (T_{r,r+t} f)(X r)`.
+`isStrongMarkov_kernel_of_countable_range` is the case of an indicator. -/
+theorem isStrongMarkov_kernel_of_countable_range_of_bounded
+    {S : Shift F π} {𝓕₀ : Filtration ι mF} {𝓧₀ : ι → Set (ι → F → 𝕂)}
+    (hS : IsShiftSystem S 𝓕₀ 𝓧₀)
+    (hbot : (⊥ : ι) = 0) (hadd : ∀ r u : ι, r ≤ r + u)
+    (hadapt : ∀ u : ι, Measurable[𝓕₀ u] (π u))
+    {X : Ω → F} (hX : Measurable X) {𝓖 : Filtration ι m} {P : Measure Ω}
+    [IsProbabilityMeasure P] (hXadapt : ∀ u : ι, Measurable[𝓖 u, 𝓕₀ u] X)
+    (hsol : IsMPSolution ((fun (Y : ι → F → 𝕂) t ω ↦ Y t (X ω)) '' 𝓧₀ 0) 𝓖 P)
+    (hint : ∀ Y ∈ 𝓧₀ 0, ∀ u : ι, Integrable (fun ω ↦ Y u (X ω)) P)
+    {τ : Ω → WithTop ι} (hτ : IsStoppingTime 𝓖 τ) (hcount : (Set.range τ).Countable)
+    (r : ι)
+    (honedim : ∀ R R' : Measure F, IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      IsMPSolution (𝓧₀ r) 𝓕₀ R → IsMPSolution (𝓧₀ r) 𝓕₀ R' →
+      R.map (π ⊥) = R'.map (π ⊥) → ∀ u : ι, R.map (π u) = R'.map (π u))
+    {K : Kernel E F} [IsMarkovKernel K] (hKsol : ∀ x, IsMPSolution (𝓧₀ r) 𝓕₀ (K x))
+    (hKinit : ∀ x, (K x).map (π ⊥) = Measure.dirac x)
+    (hKint : ∀ ν : Measure E, IsProbabilityMeasure ν → ∀ Y ∈ 𝓧₀ r, ∀ i,
+      Integrable (fun x ↦ ∫ ω, ‖Y i ω‖ ∂K x) ν)
+    {f : E → ℝ} (hf : Measurable f) {cf : ℝ} (hfb : ∀ x, ‖f x‖ ≤ cf) (t : ι)
+    {V : Ω → ℝ} (hVint : Integrable V P)
+    (hV : ∀ ω, τ ω = r → V ω = f (π (r + t) (X ω))) :
+    P[V | hτ.measurableSpace]
+      =ᵐ[P.restrict {ω | τ ω = r}] fun ω ↦ ∫ g, f (π t g) ∂(K (π r (X ω))) := by
+  set A : Set Ω := {ω | τ ω = r} with hAdef
+  set W : Ω → ℝ := fun ω ↦ f (π (r + t) (X ω)) with hWdef
+  have hπm : ∀ u : ι, Measurable (π u) := fun u ↦ (hadapt u).mono (𝓕₀.le u) le_rfl
+  have hWint : Integrable W P :=
+    Integrable.mono' (integrable_const cf) (hf.comp ((hπm (r + t)).comp hX)).aestronglyMeasurable
+      (Eventually.of_forall fun ω ↦ hfb _)
+  have hAG : MeasurableSet[𝓖 r] A := hτ.measurableSet_eq_of_countable_range hcount r
+  have hA : MeasurableSet A := 𝓖.le r A hAG
+  have h1 : P[V | hτ.measurableSpace] =ᵐ[P.restrict A] P[V | 𝓖 r] :=
+    condExp_stopping_time_ae_eq_restrict_eq_of_countable_range hτ hcount r
+  have hind : A.indicator V = A.indicator W := by
+    funext ω
+    by_cases hω : ω ∈ A
+    · rw [Set.indicator_of_mem hω, Set.indicator_of_mem hω]; exact hV ω hω
+    · rw [Set.indicator_of_notMem hω, Set.indicator_of_notMem hω]
+  have h2' : A.indicator (P[V | 𝓖 r]) =ᵐ[P] A.indicator (P[W | 𝓖 r]) := by
+    refine (condExp_indicator hVint hAG).symm.trans ?_
+    rw [hind]
+    exact condExp_indicator hWint hAG
+  have h2 : P[V | 𝓖 r] =ᵐ[P.restrict A] P[W | 𝓖 r] := by
+    rw [EventuallyEq, ae_restrict_iff' hA]
+    filter_upwards [h2'] with ω hω hωA
+    simpa [Set.indicator_of_mem hωA] using hω
+  have h3 := condExp_eq_kernel hS hbot hadd hadapt hX hXadapt hsol hint r honedim
+    hKsol hKinit hKint hf hfb t
+  exact h1.trans (h2.trans (ae_restrict_of_ae h3))
+
+end StrongMarkovKernelBounded
+
+section ChapmanKolmogorovInhomogeneous
+
+variable {ι : Type*} [LinearOrder ι] [OrderBot ι] [AddCommMonoid ι] [AddLeftMono ι]
+variable {E : Type*} [MeasurableSpace E]
+variable {F : Type*} [mF : MeasurableSpace F] {π : ι → F → E}
+variable {𝕂 : Type*} [RCLike 𝕂]
+
+/-- **A consistent shift system**, the hypothesis of the last sentence of
+`thm:absstrongmarkov`(b): for every `r` the family `u ↦ 𝓧₀ (r + u)` is a shift system, i.e. the
+problems posed after `r` form a shift system for the problem posed at `r`.  At `r = 0` it is a
+shift system for `𝓧₀` itself (`IsShiftSystem.IsConsistent.isShiftSystem`). -/
+def IsShiftSystem.IsConsistent (S : Shift F π) (𝓕₀ : Filtration ι mF)
+    (𝓧₀ : ι → Set (ι → F → 𝕂)) : Prop :=
+  ∀ r : ι, IsShiftSystem S 𝓕₀ fun u ↦ 𝓧₀ (r + u)
+
+omit [OrderBot ι] [AddLeftMono ι] [MeasurableSpace E] in
+theorem IsShiftSystem.IsConsistent.isShiftSystem {S : Shift F π} {𝓕₀ : Filtration ι mF}
+    {𝓧₀ : ι → Set (ι → F → 𝕂)} (h : IsShiftSystem.IsConsistent S 𝓕₀ 𝓧₀) :
+    IsShiftSystem S 𝓕₀ 𝓧₀ := by
+  simpa only [zero_add] using h 0
+
+omit [OrderBot ι] [AddLeftMono ι] [MeasurableSpace E] in
+/-- **A homogeneous shift system is consistent**: `u ↦ 𝓧` is the same family for every `r`. -/
+theorem IsShiftSystem.isConsistent_const {S : Shift F π} {𝓕₀ : Filtration ι mF}
+    {𝓧 : Set (ι → F → 𝕂)} (h : IsShiftSystem S 𝓕₀ fun _ ↦ 𝓧) :
+    IsShiftSystem.IsConsistent S 𝓕₀ fun _ ↦ 𝓧 :=
+  fun _ ↦ h
+
+/-- **Chapman--Kolmogorov in the inhomogeneous case**, the last sentence of
+`thm:absstrongmarkov`(b): for a consistent shift system and kernels `K r` with `K r x` solving
+the problem posed at `r` from `δ x`,
+
+```
+∫ f (π (u + v)) ∂(K r x) = ∫ (∫ f (π v) ∂K (r + u) (π u g)) ∂(K r x) g,
+```
+
+that is `T_{r,t} = T_{r,s} T_{s,t}` for `s = r + u`, `t = s + v`, and bounded measurable `f`.
+
+The proof is Step 3 of the manuscript: under `K r x` the canonical process solves the problem
+posed at `r` **from time `0`**, and consistency makes `u ↦ 𝓧₀ (r + u)` a shift system for that
+problem, so `restart_canonical` at `u` lands in the problem posed at `r + u`, whose one
+dimensional laws are unique.  Without consistency `restart` has nothing to apply to: a shift
+system for `𝓧₀` expresses the problem at `r + u` through `𝓧₀ 0`, not through `𝓧₀ r`
+(`chapmanKolmogorov_of_unique_onedim`). -/
+theorem chapmanKolmogorov_of_isConsistent
+    {S : Shift F π} {𝓕₀ : Filtration ι mF} {𝓧₀ : ι → Set (ι → F → 𝕂)}
+    (hS : IsShiftSystem.IsConsistent S 𝓕₀ 𝓧₀)
+    (hbot : (⊥ : ι) = 0) (hadd : ∀ r u : ι, r ≤ r + u)
+    (hadapt : ∀ u : ι, Measurable[𝓕₀ u] (π u))
+    (honedim : ∀ r : ι, ∀ R R' : Measure F, IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      IsMPSolution (𝓧₀ r) 𝓕₀ R → IsMPSolution (𝓧₀ r) 𝓕₀ R' →
+      R.map (π ⊥) = R'.map (π ⊥) → ∀ u : ι, R.map (π u) = R'.map (π u))
+    {K : ι → Kernel E F} [∀ r, IsMarkovKernel (K r)]
+    (hKsol : ∀ r x, IsMPSolution (𝓧₀ r) 𝓕₀ (K r x))
+    (hKinit : ∀ r x, (K r x).map (π ⊥) = Measure.dirac x)
+    (hKint : ∀ r : ι, ∀ ν : Measure E, IsProbabilityMeasure ν → ∀ Y ∈ 𝓧₀ r, ∀ i,
+      Integrable (fun x ↦ ∫ ω, ‖Y i ω‖ ∂K r x) ν)
+    (hKint' : ∀ r x, ∀ Y ∈ 𝓧₀ r, ∀ u : ι, Integrable (Y u) (K r x))
+    {f : E → ℝ} (hf : Measurable f) {cf : ℝ} (hfb : ∀ x, ‖f x‖ ≤ cf) (r u v : ι) (x : E) :
+    ∫ g, f (π (u + v) g) ∂(K r x)
+      = ∫ g, (∫ g', f (π v g') ∂(K (r + u) (π u g))) ∂(K r x) := by
+  have hπm : ∀ w : ι, Measurable (π w) := fun w ↦ (hadapt w).mono (𝓕₀.le w) le_rfl
+  have hsol : IsMPSolution ((fun w ↦ 𝓧₀ (r + w)) 0) 𝓕₀ (K r x) := by
+    simpa only [add_zero] using hKsol r x
+  have hint : ∀ Y ∈ (fun w ↦ 𝓧₀ (r + w)) 0, ∀ w : ι, Integrable (Y w) (K r x) :=
+    fun Y hY w ↦ hKint' r x Y (by simpa only [add_zero] using hY) w
+  have e2 : ∀ g, π ⊥ (S.θ u g) = π u g := fun g ↦ by rw [S.eval_comp, hbot, add_zero]
+  have hstate : Measurable[𝓕₀ u] fun g ↦ π ⊥ (S.θ u g) := by
+    have : (fun g ↦ π ⊥ (S.θ u g)) = π u := funext e2
+    rw [this]; exact hadapt u
+  have h := setIntegral_eq_kernel_of_restart hπm (P := K r x) (𝓖 := 𝓕₀) u (S.measurable u)
+    hstate (𝓜 := {R | IsMPSolution (𝓧₀ (r + u)) 𝓕₀ R})
+    (fun Z hZ0 hZb hZm ↦ restart_canonical (hS r) hsol hint u (hadd u) hZ0 hZb hZm)
+    (honedim (r + u)) (hKinit (r + u))
+    (fun μ hμ ↦ mpSolutions_comp (Eventually.of_forall fun y ↦ hKsol (r + u) y)
+      (hKint (r + u) μ hμ))
+    hf hfb v (A := Set.univ) MeasurableSet.univ
+  simp only [Measure.restrict_univ, S.eval_comp, hbot, add_zero] at h
+  exact h
+
+end ChapmanKolmogorovInhomogeneous
+
 section StrongMarkovMpFamily
 
 variable {E : Type*} [MeasurableSpace E]
@@ -49881,6 +50862,721 @@ theorem RightContinuousPath.isStoppingTime_firstHitCapped_add {B : Set E} (hB : 
   exact h
 
 end StrongMarkovCanonical
+
+section RestartLimit
+
+variable {ι : Type*} [Preorder ι]
+variable {F : Type*} [mF : MeasurableSpace F]
+variable {Ω : Type*} {m : MeasurableSpace Ω}
+
+/-- A bounded density gives a finite reweighted transported measure. -/
+theorem isFiniteMeasure_map_withDensity_ofReal {P : Measure Ω} [IsFiniteMeasure P]
+    {ψ : Ω → F} (hψ : Measurable ψ) {Z : Ω → ℝ} {b : ℝ} (hZb : ∀ ω, Z ω ≤ b) :
+    IsFiniteMeasure ((P.withDensity fun ω ↦ ENNReal.ofReal (Z ω)).map ψ) := by
+  constructor
+  rw [Measure.map_apply hψ MeasurableSet.univ, Set.preimage_univ,
+    withDensity_apply _ MeasurableSet.univ, Measure.restrict_univ]
+  calc ∫⁻ ω, ENNReal.ofReal (Z ω) ∂P ≤ ∫⁻ _, ENNReal.ofReal b ∂P :=
+        lintegral_mono fun ω ↦ ENNReal.ofReal_le_ofReal (hZb ω)
+    _ = ENNReal.ofReal b * P univ := lintegral_const _
+    _ < ⊤ := ENNReal.mul_lt_top ENNReal.ofReal_lt_top (measure_lt_top _ _)
+
+/-- **The solution set is closed under limits of bounded densities**, for a family of test
+processes bounded at each time.  If `(Zₙ · P) ∘ ψ⁻¹` solves the problem for every `n` and
+`Zₙ → Z` pointwise under a common bound, then so does `(Z · P) ∘ ψ⁻¹`: the martingale identity is
+`∫ Zₙ · (1_s Y_i)(ψ) dP = ∫ Zₙ · (1_s Y_j)(ψ) dP`, and dominated convergence carries it to `Z`.
+
+This is what lets the restart of `thm:absstrongmarkov` pass from the bounded stopping times
+`τ ∧ n` to a finite `τ` without any integrability of the test processes at `τ`. -/
+theorem isMPSolution_map_withDensity_of_tendsto {𝓧 : Set (ι → F → ℝ)} {𝓕₀ : Filtration ι mF}
+    (hadapt : ∀ Y ∈ 𝓧, StronglyAdapted 𝓕₀ Y)
+    (hbdd : ∀ Y ∈ 𝓧, ∀ i, ∃ c, ∀ f, ‖Y i f‖ ≤ c)
+    {P : Measure Ω} [IsFiniteMeasure P] {ψ : Ω → F} (hψ : Measurable ψ)
+    {Z : Ω → ℝ} {Zn : ℕ → Ω → ℝ} {b : ℝ}
+    (hZn0 : ∀ n ω, 0 ≤ Zn n ω) (hZnb : ∀ n ω, Zn n ω ≤ b) (hZnm : ∀ n, Measurable (Zn n))
+    (hZ0 : ∀ ω, 0 ≤ Z ω) (hZb : ∀ ω, Z ω ≤ b) (hZm : Measurable Z)
+    (hlim : ∀ ω, Tendsto (fun n ↦ Zn n ω) atTop (𝓝 (Z ω)))
+    (hsol : ∀ n, IsMPSolution 𝓧 𝓕₀ ((P.withDensity fun ω ↦ ENNReal.ofReal (Zn n ω)).map ψ)) :
+    IsMPSolution 𝓧 𝓕₀ ((P.withDensity fun ω ↦ ENNReal.ofReal (Z ω)).map ψ) := by
+  intro Y hY
+  have := isFiniteMeasure_map_withDensity_ofReal hψ (P := P) hZb
+  have hYm : ∀ i, Measurable (Y i) := fun i ↦ ((hadapt Y hY i).mono (𝓕₀.le i)).measurable
+  have hYi : ∀ i, Integrable (fun ω ↦ Y i (ψ ω)) P := fun i ↦ by
+    obtain ⟨c, hc⟩ := hbdd Y hY i
+    exact Integrable.mono' (integrable_const c) ((hYm i).comp hψ).aestronglyMeasurable
+      (Eventually.of_forall fun ω ↦ hc _)
+  have key : ∀ (W : Ω → ℝ), Measurable W → (∀ ω, 0 ≤ W ω) → ∀ i s, MeasurableSet s →
+      ∫ y in s, Y i y ∂((P.withDensity fun ω ↦ ENNReal.ofReal (W ω)).map ψ)
+        = ∫ ω, W ω • s.indicator (Y i) (ψ ω) ∂P := by
+    intro W hWm hW0 i s hs
+    rw [← integral_indicator hs,
+      integral_map_withDensity_ofReal hψ hWm hW0 ((hYm i).indicator hs)]
+  refine martingale_of_setIntegral_eq (hadapt Y hY)
+    (fun i ↦ integrable_map_withDensity_ofReal hψ hZm hZ0 hZb (hYm i) (hYi i))
+    fun i j hij s hs ↦ ?_
+  have hs' : MeasurableSet s := 𝓕₀.le i s hs
+  rw [key Z hZm hZ0 i s hs', key Z hZm hZ0 j s hs']
+  have hn : ∀ n, ∫ ω, Zn n ω • s.indicator (Y i) (ψ ω) ∂P
+      = ∫ ω, Zn n ω • s.indicator (Y j) (ψ ω) ∂P := fun n ↦ by
+    have := isFiniteMeasure_map_withDensity_ofReal hψ (P := P) (hZnb n)
+    rw [← key (Zn n) (hZnm n) (hZn0 n) i s hs', ← key (Zn n) (hZnm n) (hZn0 n) j s hs']
+    exact ((hsol n) Y hY).setIntegral_eq hij hs
+  have hconv : ∀ k, Tendsto (fun n ↦ ∫ ω, Zn n ω • s.indicator (Y k) (ψ ω) ∂P) atTop
+      (𝓝 (∫ ω, Z ω • s.indicator (Y k) (ψ ω) ∂P)) := fun k ↦ by
+    obtain ⟨c, hc⟩ := hbdd Y hY k
+    refine tendsto_integral_of_dominated_convergence (fun _ ↦ |b| * |c|)
+      (fun n ↦ ((hZnm n).smul (((hYm k).indicator hs').comp hψ)).aestronglyMeasurable)
+      (integrable_const _) (fun n ↦ Eventually.of_forall fun ω ↦ ?_)
+      (Eventually.of_forall fun ω ↦ (hlim ω).smul_const _)
+    rw [norm_smul, Real.norm_eq_abs]
+    refine mul_le_mul ?_ ?_ (norm_nonneg _) (abs_nonneg _)
+    · rw [abs_of_nonneg (hZn0 n ω)]; exact (hZnb n ω).trans (le_abs_self b)
+    · by_cases hω : ψ ω ∈ s
+      · rw [Set.indicator_of_mem hω]; exact (hc _).trans (le_abs_self c)
+      · rw [Set.indicator_of_notMem hω, norm_zero]; exact abs_nonneg c
+  exact tendsto_nhds_unique (hconv i) ((hconv j).congr fun n ↦ (hn n).symm)
+
+end RestartLimit
+
+section StrongMarkovFinite
+
+variable {E : Type*} [MeasurableSpace E]
+
+open RightContinuousPath in
+/-- **`thm:absstrongmarkov`(a), first assertion, on the canonical path space, at every finite
+stopping time**, with no integrability at `τ`: for a solution `P` of the problem of a bounded
+operator `A` with the Lebesgue clock,
+`E[f(X(τ+t)) | 𝓖_τ] = E[f(X(τ+t)) | X(τ)]` for every stopping time `τ : F → ℝ≥0` of the raw
+filtration.
+
+`isStrongMarkov_mpFamily_coordinate` needs `hint` at `τ`, which an unbounded `τ` need not give.
+Here the restart is made at `τ ∧ n`, where `hint` is free, with the weight `1_{τ ≤ n} Z`, which is
+measurable for the past at `τ ∧ n`; on `{τ ≤ n}` the two shifted paths agree, so the transported
+measures are the same, and `isMPSolution_map_withDensity_of_tendsto` lets `n → ∞`, because the
+test processes of a bounded operator are bounded at each time. -/
+theorem isStrongMarkov_mpFamily_coordinate_of_finite {A : Set ((E → ℝ) × (E → ℝ))}
+    (hfm : ∀ p ∈ A, Measurable p.1) (hfb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.1 x‖ ≤ b)
+    (hgm : ∀ p ∈ A, Measurable p.2) (hgb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.2 x‖ ≤ b)
+    {P : Measure (RightContinuousPath E)} [IsProbabilityMeasure P]
+    (hsol : IsMPSolution (mpFamily A lebesgueClock Clock.Conv.optional
+        (coordinate : ℝ≥0 → RightContinuousPath E → E)) (pathFiltration (E := E)) P)
+    {τ : RightContinuousPath E → ℝ≥0}
+    (hτ : ∀ t : ℝ≥0, IsStoppingTime (pathFiltration (E := E))
+      fun ω ↦ ((τ ω + t : ℝ≥0) : WithTop ℝ≥0))
+    (honedim : ∀ R R' : Measure (RightContinuousPath E), IsProbabilityMeasure R →
+      IsProbabilityMeasure R' →
+      IsMPSolution (mpFamily A lebesgueClock Clock.Conv.optional
+        (coordinate : ℝ≥0 → RightContinuousPath E → E)) (pathFiltration (E := E)) R →
+      IsMPSolution (mpFamily A lebesgueClock Clock.Conv.optional
+        (coordinate : ℝ≥0 → RightContinuousPath E → E)) (pathFiltration (E := E)) R' →
+      R.map (coordinate 0) = R'.map (coordinate 0) →
+        ∀ u : ℝ≥0, R.map (coordinate u) = R'.map (coordinate u))
+    {f : E → ℝ} (hf : Measurable f) {cf : ℝ} (hfb' : ∀ x, ‖f x‖ ≤ cf) (t : ℝ≥0) :
+    P[fun ω ↦ f (coordinate (τ ω + t) ω) | (hτ 0).measurableSpace]
+      =ᵐ[P] P[fun ω ↦ f (coordinate (τ ω + t) ω) |
+        MeasurableSpace.comap (fun ω ↦ coordinate (τ ω) ω) inferInstance] := by
+  have hX : ∀ u : ℝ≥0, Measurable[pathFiltration (E := E) u]
+      fun ω : RightContinuousPath E ↦ coordinate u (id ω) :=
+    fun _ ↦ measurable_pathFiltration le_rfl
+  have hτm : Measurable τ := by
+    have h := (((hτ 0).measurable).untopA).mono (hτ 0).measurableSpace_le le_rfl
+    simp only [add_zero] at h
+    exact h
+  have hadaptY : ∀ Y ∈ mpFamily A lebesgueClock Clock.Conv.optional
+      (coordinate : ℝ≥0 → RightContinuousPath E → E), StronglyAdapted pathFiltration Y :=
+    fun _ hY ↦ stronglyAdapted_mpFamily_coordinate Clock.Conv.optional hfm hgm hY
+  -- the bounded stopping times `τ ∧ n`
+  set τn : ℕ → RightContinuousPath E → ℝ≥0 := fun n ω ↦ min (τ ω) n with hτndef
+  have hτn : ∀ (n : ℕ) (t : ℝ≥0), IsStoppingTime (pathFiltration (E := E))
+      fun ω ↦ ((τn n ω + t : ℝ≥0) : WithTop ℝ≥0) := by
+    intro n t
+    have h := (hτ t).min (isStoppingTime_const (pathFiltration (E := E)) ((n : ℝ≥0) + t))
+    have e : (fun ω ↦ ((τn n ω + t : ℝ≥0) : WithTop ℝ≥0))
+        = fun ω ↦ min ((τ ω + t : ℝ≥0) : WithTop ℝ≥0) (((n : ℝ≥0) + t : ℝ≥0) : WithTop ℝ≥0) := by
+      funext ω
+      simp only [hτndef]
+      rw [← min_add_add_right, WithTop.coe_min]
+    rw [e]
+    exact h
+  have hτnm : ∀ n, Measurable (τn n) := fun n ↦ hτm.min measurable_const
+  set ψ : RightContinuousPath E → RightContinuousPath E := fun ω ↦ pathShift.θ (τ ω) ω with hψdef
+  set ψn : ℕ → RightContinuousPath E → RightContinuousPath E :=
+    fun n ω ↦ pathShift.θ (τn n ω) ω with hψndef
+  have hψ : Measurable ψ := measurable_shift_randomTime hτm measurable_id
+  have hψn : ∀ n, Measurable (ψn n) := fun n ↦ measurable_shift_randomTime (hτnm n) measurable_id
+  -- the restart at `τ ∧ n`
+  have hrestart_n : ∀ (n : ℕ) (Z : RightContinuousPath E → ℝ), (∀ ω, 0 ≤ Z ω) →
+      (∃ b, ∀ ω, Z ω ≤ b) → StronglyMeasurable[(hτn n 0).measurableSpace] Z →
+      IsMPSolution (mpFamily A lebesgueClock Clock.Conv.optional
+        (coordinate : ℝ≥0 → RightContinuousPath E → E)) (pathFiltration (E := E))
+        ((P.withDensity fun ω ↦ ENNReal.ofReal (Z ω)).map (ψn n)) := by
+    intro n Z hZ0 hZb hZm
+    exact isMPSolution_map_withDensity_shiftByTime hadaptY hsol
+      (fun _ hY ↦ isStronglyProgressive_mpFamily_coordinate Clock.Conv.optional hfm hgm hY)
+      (fun _ hY ↦ ae_of_all _ fun ω ↦ tendsto_nhdsGE_mpFamily_coordinate hgm
+        (fun p hp ↦ by
+          obtain ⟨b, hb⟩ := hgb p hp
+          exact ⟨b, fun x ↦ by rw [← Real.norm_eq_abs]; exact hb x⟩) hY ω)
+      (hτn n)
+      (fun _ hY t ↦ integrable_mpFamily_coordinate_randomTime hfm hfb hgm hgb (hτn n)
+        (T := (n : ℝ≥0)) (fun ω ↦ min_le_right _ _) hY t)
+      (hψn n) (measurable_shift_stoppingTime hX (hτn n))
+      (exists_incr_mpFamily_of_shift (lebesgueClock_isShiftInvariant Clock.Conv.optional) hfb hgb
+        (fun p hp g ↦ measurable_comp_coordinate (hgm p hp) g)
+        (fun p hp ↦ measurable_comp_coordinate_randomTime (hfm p hp) (hτnm n) measurable_id))
+      hZ0 hZb hZm
+  -- the events `{τ ≤ n}` cut down to the past at `τ ∧ n`
+  have hcut : ∀ (n : ℕ) (s : Set (RightContinuousPath E)),
+      MeasurableSet[(hτ 0).measurableSpace] s →
+      MeasurableSet[(hτn n 0).measurableSpace] (s ∩ {ω | τ ω ≤ n}) := by
+    intro n s hs
+    have h1 := (hτ 0).measurableSet_inter_le
+      (isStoppingTime_const (pathFiltration (E := E)) (n : ℝ≥0)) s hs
+    have hle := ((hτ 0).min (isStoppingTime_const (pathFiltration (E := E)) (n : ℝ≥0))
+      ).measurableSpace_mono (hτn n 0) fun ω ↦ by
+        simp only [hτndef, add_zero, WithTop.coe_min]
+        exact le_rfl
+    have e : {ω | ((τ ω + 0 : ℝ≥0) : WithTop ℝ≥0) ≤ ((n : ℝ≥0) : WithTop ℝ≥0)}
+        = {ω | τ ω ≤ n} := by
+      ext ω
+      simp only [add_zero, Set.mem_ofPred_eq, WithTop.coe_le_coe]
+    rw [e] at h1
+    exact hle _ h1
+  -- the restart at `τ`
+  have hrestart : ∀ Z : RightContinuousPath E → ℝ, (∀ ω, 0 ≤ Z ω) → (∃ b, ∀ ω, Z ω ≤ b) →
+      StronglyMeasurable[(pathFiltration.shiftByTime τ hτ) 0] Z →
+      ((P.withDensity fun ω ↦ ENNReal.ofReal (Z ω)).map ψ) ∈
+        {R | IsMPSolution (mpFamily A lebesgueClock Clock.Conv.optional
+          (coordinate : ℝ≥0 → RightContinuousPath E → E)) (pathFiltration (E := E)) R} := by
+    intro Z hZ0 ⟨b, hZb⟩ hZm
+    have hZm' : StronglyMeasurable[(hτ 0).measurableSpace] Z := hZm
+    have hZmeas : Measurable Z := (hZm'.mono (hτ 0).measurableSpace_le).measurable
+    set Zn : ℕ → RightContinuousPath E → ℝ := fun n ↦ {ω | τ ω ≤ n}.indicator Z with hZndef
+    have hZn0 : ∀ n ω, 0 ≤ Zn n ω := fun n ω ↦ Set.indicator_nonneg (fun ω _ ↦ hZ0 ω) ω
+    have hZnb : ∀ n ω, Zn n ω ≤ b := fun n ω ↦ by
+      by_cases hω : τ ω ≤ n
+      · simp only [hZndef, Set.indicator_of_mem (show ω ∈ {ω | τ ω ≤ n} from hω)]; exact hZb ω
+      · simp only [hZndef, Set.indicator_of_notMem (show ω ∉ {ω | τ ω ≤ n} from hω)]
+        exact (hZ0 ω).trans (hZb ω)
+    have hset : ∀ n, MeasurableSet {ω : RightContinuousPath E | τ ω ≤ n} := fun n ↦
+      measurableSet_le hτm measurable_const
+    have hZnm : ∀ n, Measurable (Zn n) := fun n ↦ hZmeas.indicator (hset n)
+    have hZnm' : ∀ n, StronglyMeasurable[(hτn n 0).measurableSpace] (Zn n) := by
+      intro n
+      refine Measurable.stronglyMeasurable fun B hB ↦ ?_
+      have e : Zn n ⁻¹' B = (Z ⁻¹' B ∩ {ω | τ ω ≤ n}) ∪
+          ((Set.univ ∩ {ω | τ ω ≤ n})ᶜ ∩ (fun _ : RightContinuousPath E ↦ (0 : ℝ)) ⁻¹' B) := by
+        ext ω
+        by_cases hω : τ ω ≤ n
+        · simp [hZndef, hω]
+        · simp [hZndef, hω]
+      rw [e]
+      exact (hcut n _ (hZm'.measurable hB)).union
+        ((hcut n _ MeasurableSet.univ).compl.inter (measurable_const hB))
+    have hlim : ∀ ω, Tendsto (fun n ↦ Zn n ω) atTop (𝓝 (Z ω)) := fun ω ↦ by
+      refine tendsto_const_nhds.congr' ?_
+      obtain ⟨N, hN⟩ := exists_nat_ge (τ ω)
+      filter_upwards [eventually_ge_atTop N] with n hn
+      have : τ ω ≤ n := hN.trans (by exact_mod_cast hn)
+      simp only [hZndef, Set.indicator_of_mem (show ω ∈ {ω | τ ω ≤ n} from this)]
+    have hmap : ∀ n, (P.withDensity fun ω ↦ ENNReal.ofReal (Zn n ω)).map (ψn n)
+        = (P.withDensity fun ω ↦ ENNReal.ofReal (Zn n ω)).map ψ := by
+      intro n
+      refine Measure.ext fun B hB ↦ ?_
+      rw [Measure.map_apply (hψn n) hB, Measure.map_apply hψ hB,
+        withDensity_apply _ ((hψn n) hB), withDensity_apply _ (hψ hB),
+        ← lintegral_indicator ((hψn n) hB), ← lintegral_indicator (hψ hB)]
+      refine lintegral_congr fun ω ↦ ?_
+      by_cases hω : τ ω ≤ n
+      · have heq : ψn n ω = ψ ω := by
+          show pathShift.θ (min (τ ω) n) ω = pathShift.θ (τ ω) ω
+          rw [min_eq_left (show τ ω ≤ (n : ℝ≥0) from hω)]
+        have hmem : ω ∈ ψn n ⁻¹' B ↔ ω ∈ ψ ⁻¹' B := by
+          rw [Set.mem_preimage, Set.mem_preimage, heq]
+        by_cases hB' : ω ∈ ψ ⁻¹' B
+        · rw [Set.indicator_of_mem hB', Set.indicator_of_mem (hmem.2 hB')]
+        · rw [Set.indicator_of_notMem hB', Set.indicator_of_notMem (fun h ↦ hB' (hmem.1 h))]
+      · have h0 : Zn n ω = 0 := by
+          simp only [hZndef, Set.indicator_of_notMem (show ω ∉ {ω | τ ω ≤ n} from hω)]
+        have hg : ENNReal.ofReal (Zn n ω) = 0 := by
+          rw [h0, ENNReal.ofReal_zero]
+        by_cases h1 : ω ∈ ψn n ⁻¹' B
+        · by_cases h2 : ω ∈ ψ ⁻¹' B
+          · rw [Set.indicator_of_mem h1, Set.indicator_of_mem h2]
+          · rw [Set.indicator_of_mem h1, Set.indicator_of_notMem h2, hg]
+        · by_cases h2 : ω ∈ ψ ⁻¹' B
+          · rw [Set.indicator_of_notMem h1, Set.indicator_of_mem h2, hg]
+          · rw [Set.indicator_of_notMem h1, Set.indicator_of_notMem h2]
+    have hsoln : ∀ n, IsMPSolution (mpFamily A lebesgueClock Clock.Conv.optional
+        (coordinate : ℝ≥0 → RightContinuousPath E → E)) (pathFiltration (E := E))
+        ((P.withDensity fun ω ↦ ENNReal.ofReal (Zn n ω)).map ψ) := fun n ↦ by
+      rw [← hmap n]
+      exact hrestart_n n (Zn n) (hZn0 n) ⟨b, hZnb n⟩ (hZnm' n)
+    exact isMPSolution_map_withDensity_of_tendsto hadaptY
+      (fun Y hY i ↦ by
+        obtain ⟨c, -, hc⟩ := abs_mpFamily_coordinate_le hfb hgb hY i
+        exact ⟨c, fun g ↦ by rw [Real.norm_eq_abs]; exact hc i le_rfl g⟩)
+      hψ hZn0 hZnb hZnm hZ0 hZb hZmeas hlim hsoln
+  -- the Markov step
+  have hπm : ∀ u : ℝ≥0, Measurable (coordinate u : RightContinuousPath E → E) :=
+    fun u ↦ (measurable_pathFiltration le_rfl).mono ((pathFiltration (E := E)).le u) le_rfl
+  have hstate : Measurable[(pathFiltration.shiftByTime τ hτ) 0] fun ω ↦ coordinate ⊥ (ψ ω) :=
+    (measurable_pathFiltration le_rfl).comp (measurable_shift_stoppingTime hX hτ 0)
+  have key := condExp_eq_condExp_state_of_restart (𝕂 := ℝ) (P := P) hπm
+    (𝓖 := pathFiltration.shiftByTime τ hτ) 0 hψ hstate hrestart honedim hf hfb' t
+  have hV : (fun ω ↦ f (coordinate t (ψ ω))) = fun ω ↦ f (coordinate (τ ω + t) ω) := by
+    funext ω
+    rw [hψdef]
+    simp only
+    rw [pathShift.eval_comp]
+  have hS : stateSigmaOf (fun ω ↦ coordinate ⊥ (ψ ω))
+      = MeasurableSpace.comap (fun ω ↦ coordinate (τ ω) ω) inferInstance := by
+    show MeasurableSpace.comap _ _ = _
+    congr 1
+    funext ω
+    have := pathShift.eval_comp (τ ω) 0 ω
+    simp only [add_zero] at this
+    exact this
+  rw [hV, hS] at key
+  exact key
+
+end StrongMarkovFinite
+
+section ProgressiveCompOfRightContinuous
+
+variable {Ω : Type*} {m : MeasurableSpace Ω} {E : Type*} [MeasurableSpace E]
+
+/-- **The real version of `Clock.IsProgressiveComp` over a bare `[MeasurableSpace E]`, by
+approximation from the right**: an adapted process all of whose real functionals `h ∘ X`
+(`h` measurable) have right continuous paths is progressive for the Lebesgue clock in the sense
+of `Clock.IsProgressiveComp`.
+
+The extension below `t` is `u ↦ X (u ∧ t)`, and each `h (X (u ∧ t) ω)` is the limit of its values
+at the dyadic points above `u ∧ t` (`measurable_uncurry_min_of_rightContinuous`), a limit taken in
+`ℝ`, where limits of measurable maps are measurable.  No topology on `E` and no measurability of
+its diagonal is read; that is why the statement is about the real functionals and not the
+`E`-valued `Clock.IsProgressive`.  The paths of `RightContinuousPath E` satisfy `hrc` for every
+`h`, being right locally constant. -/
+theorem Clock.isProgressiveComp_lebesgueClock_of_rightContinuous {𝓕 : Filtration ℝ≥0 m}
+    {X : ℝ≥0 → Ω → E} (hX : ∀ u, Measurable[𝓕 u] (X u))
+    (hrc : ∀ h : E → ℝ, Measurable h → ∀ ω s,
+      ContinuousWithinAt (fun u ↦ h (X u ω)) (Ici s) s) :
+    lebesgueClock.IsProgressiveComp X 𝓕 := by
+  intro t
+  refine ⟨fun u ω ↦ X (min u t) ω, fun u hu ↦ ?_, fun h hh ↦ ?_⟩
+  · funext ω
+    show X (min u t) ω = X u ω
+    rw [min_eq_left hu]
+  set G : ℝ → Ω → ℝ := fun r ω ↦ h (X r.toNNReal ω) with hGdef
+  have hmeas : ∀ r : ℝ, r ≤ (t : ℝ) → Measurable[𝓕 t] (G r) := fun r hr ↦
+    hh.comp ((hX r.toNNReal).mono (𝓕.mono (Real.toNNReal_le_iff_le_coe.2 hr)) le_rfl)
+  have key := measurable_uncurry_min_of_rightContinuous (φ := fun u : ℝ≥0 ↦ (u : ℝ))
+    measurable_coe_nnreal_real hmeas fun ω s ↦ tendsto_nhdsGE_comp_toNNReal (hrc h hh ω) s
+  have heq : (fun p : ℝ≥0 × Ω ↦ G (min (p.1 : ℝ) (t : ℝ)) p.2)
+      = fun x : ℝ≥0 × Ω ↦ h (X (min x.1 t) x.2) := by
+    funext p
+    simp only [hGdef]
+    rw [← NNReal.coe_min, Real.toNNReal_coe]
+  rw [heq] at key
+  exact key
+
+end ProgressiveCompOfRightContinuous
+
+namespace MeasureTheory
+
+open scoped _root_.BoundedContinuousFunction
+
+section StrongMarkovCadlag
+
+variable {E : Type*} [MetricSpace E] [MeasurableSpace E] [BorelSpace E] [PolishSpace E]
+  [CompleteSpace E]
+
+/-- **`thm:absstrongmarkov`(a), first assertion, the classical instance on the càdlàg path
+space**: for `A ⊆ Cb(E) × Cb(E)` with the Lebesgue clock, every solution `P` on `D(ℝ≥0, E)` of
+the martingale problem for the coordinate filtration is strong Markov at every finite stopping
+time `τ` of the raw coordinate filtration with `eq:optafterint` (`hint`), provided the one
+dimensional laws are unique (`honedim`):
+`E[f(X(τ+t)) | 𝓖_τ] = E[f(X(τ+t)) | X(τ)]`.
+
+`isStrongMarkov_mpFamily` with `S = cadlagShift`, `X = id`.  Every regularity hypothesis is
+discharged: the shift system data by the bounded continuous representatives, `hprog` and `hrc` by
+the right continuity of `SkorokhodSpace.mpTest` (`isRightContinuous_mpTest`) and
+`StronglyAdapted.isStronglyProgressive_of_rightContinuous`, `hψ` by
+`measurable_cadlagShift_randomTime` and `hψadapt` by `measurable_cadlagShift_stoppingTime`.  No
+right continuity of the filtration and no completion. -/
+theorem isStrongMarkov_mpFamily_cadlag {A : Set ((E →ᵇ ℝ) × (E →ᵇ ℝ))}
+    {A' : Set ((E → ℝ) × (E → ℝ))}
+    (hA' : ∀ q ∈ A', ∃ p ∈ A, (⇑p.1 : E → ℝ) = q.1 ∧ (⇑p.2 : E → ℝ) = q.2)
+    {P : Measure D(ℝ≥0, E)} [IsProbabilityMeasure P]
+    (hsol : IsMPSolution (mpFamily A' lebesgueClock Clock.Conv.optional
+        (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r)) (cadlagFiltration (E := E)) P)
+    {τ : D(ℝ≥0, E) → ℝ≥0}
+    (hτ : ∀ t : ℝ≥0, IsStoppingTime (cadlagFiltration (E := E))
+      fun ω ↦ ((τ ω + t : ℝ≥0) : WithTop ℝ≥0))
+    (hint : ∀ Y ∈ mpFamily A' lebesgueClock Clock.Conv.optional
+        (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r),
+      ∀ t : ℝ≥0, Integrable (fun ω ↦ Y (τ ω + t) ω) P)
+    (honedim : ∀ R R' : Measure D(ℝ≥0, E), IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      IsMPSolution (mpFamily A' lebesgueClock Clock.Conv.optional
+        (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r)) (cadlagFiltration (E := E)) R →
+      IsMPSolution (mpFamily A' lebesgueClock Clock.Conv.optional
+        (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r)) (cadlagFiltration (E := E)) R' →
+      R.map (fun z : D(ℝ≥0, E) ↦ z.toFun 0) = R'.map (fun z : D(ℝ≥0, E) ↦ z.toFun 0) →
+        ∀ u : ℝ≥0, R.map (fun z : D(ℝ≥0, E) ↦ z.toFun u)
+          = R'.map (fun z : D(ℝ≥0, E) ↦ z.toFun u))
+    {f : E → ℝ} (hf : Measurable f) {cf : ℝ} (hfb' : ∀ x, ‖f x‖ ≤ cf) (t : ℝ≥0) :
+    P[fun ω ↦ f (ω.toFun (τ ω + t)) | (hτ 0).measurableSpace]
+      =ᵐ[P] P[fun ω ↦ f (ω.toFun (τ ω + t)) |
+        MeasurableSpace.comap (fun ω : D(ℝ≥0, E) ↦ ω.toFun (τ ω)) inferInstance] := by
+  have hX : ∀ u : ℝ≥0, Measurable[cadlagFiltration (E := E) u]
+      fun ω : D(ℝ≥0, E) ↦ (id ω).toFun u :=
+    fun _ ↦ measurable_cadlagFiltration le_rfl
+  have hτm : Measurable τ := by
+    have h := (((hτ 0).measurable).untopA).mono (hτ 0).measurableSpace_le le_rfl
+    simp only [add_zero] at h
+    exact h
+  have hrcY : ∀ Y ∈ mpFamily A' lebesgueClock Clock.Conv.optional
+      (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r), ∀ ω s, ContinuousWithinAt (Y · ω) (Ici s) s := by
+    intro Y hY ω s
+    obtain ⟨p, -, hYp⟩ := exists_mpTest_eq_of_mem_mpFamily hA' hY
+    have h := isRightContinuous_mpTest p.1 p.2 ω s
+    have e : (fun r ↦ Y r ω) = fun r ↦ SkorokhodSpace.mpTest p.1 p.2 r ω :=
+      funext fun r ↦ by rw [hYp r]
+    rw [e]
+    exact continuousWithinAt_Ioi_iff_Ici.1 h
+  exact isStrongMarkov_mpFamily (S := cadlagShift (E := E)) (X := id)
+    (lebesgueClock_isShiftInvariant Clock.Conv.optional)
+    (exists_norm_fst_le_of_boundedContinuous hA') (exists_norm_snd_le_of_boundedContinuous hA')
+    (measurable_snd_comp_of_boundedContinuous hA')
+    (fun _ ↦ measurable_cadlagFiltration le_rfl)
+    (fun _ hY ↦ stronglyAdapted_mpFamily_cadlagFiltration hA' hY)
+    hsol
+    (fun Y hY ↦ (stronglyAdapted_mpFamily_cadlagFiltration hA' hY
+      ).isStronglyProgressive_of_rightContinuous (hrcY Y hY))
+    (fun Y hY ↦ ae_of_all _ fun ω s ↦ hrcY Y hY ω s)
+    hτ hint (measurable_cadlagShift_randomTime hτm measurable_id)
+    (measurable_cadlagShift_stoppingTime hX hτ)
+    (fun p hp ↦ (measurable_fst_of_boundedContinuous hA' p hp).comp
+      (SkorokhodSpace.measurable_uncurry_eval_nnreal.comp (hτm.prodMk measurable_id)))
+    honedim hf hfb' t
+
+end StrongMarkovCadlag
+
+section StrongMarkovBrownian
+
+/-- **The Brownian martingale problem is strong Markov**, `thm:absstrongmarkov`(a) as an instance
+for `½ v Δ` on `C²_c(ℝ)`: every càdlàg solution `P` on `D(ℝ≥0, ℝ)` of the martingale problem of
+`brownianGeneratorPairs v` satisfies `E[f(X(τ+t)) | 𝓖_τ] = E[f(X(τ+t)) | X(τ)]` at every bounded
+stopping time of the raw coordinate filtration, with arbitrary range.  By
+`isCadlagMPSolution_of_isBrownianReal`, the path law of `√v · B` for a Brownian motion `B` in
+Mathlib's sense is such a solution.
+
+Nothing is assumed beyond the solution property: the one dimensional laws are unique by
+`map_eval_eq_of_isCadlagMPSolution_of_map_zero_eq` (through the characteristic function, without
+the shift), the two readings of "solution" are bridged by `isMPSolution_of_isCadlagMPSolution`
+and `isCadlagMPSolution_of_isMPSolution`, and `hint` holds because `τ ≤ T` and the test processes
+are bounded on bounded windows (`abs_mpTest_le`).  Strong Markov is a **conclusion** from the
+martingale problem, in the direction of `rem:noch1`, not an input. -/
+theorem isStrongMarkov_brownian {v : ℝ} {P : Measure D(ℝ≥0, ℝ)} [IsProbabilityMeasure P]
+    (h : IsCadlagMPSolution (brownianGeneratorPairs v) P)
+    {τ : D(ℝ≥0, ℝ) → ℝ≥0}
+    (hτ : ∀ t : ℝ≥0, IsStoppingTime (cadlagFiltration (E := ℝ))
+      fun ω ↦ ((τ ω + t : ℝ≥0) : WithTop ℝ≥0))
+    {T : ℝ≥0} (hτT : ∀ ω, τ ω ≤ T)
+    {f : ℝ → ℝ} (hf : Measurable f) {cf : ℝ} (hfb : ∀ x, ‖f x‖ ≤ cf) (t : ℝ≥0) :
+    P[fun ω ↦ f (ω.toFun (τ ω + t)) | (hτ 0).measurableSpace]
+      =ᵐ[P] P[fun ω ↦ f (ω.toFun (τ ω + t)) |
+        MeasurableSpace.comap (fun ω : D(ℝ≥0, ℝ) ↦ ω.toFun (τ ω)) inferInstance] := by
+  set A := brownianGeneratorPairs v with hAdef
+  set A' : Set ((ℝ → ℝ) × (ℝ → ℝ)) :=
+    (fun p : (ℝ →ᵇ ℝ) × (ℝ →ᵇ ℝ) ↦ ((⇑p.1 : ℝ → ℝ), (⇑p.2 : ℝ → ℝ))) '' A with hA'def
+  have hA' : ∀ q ∈ A', ∃ p ∈ A, (⇑p.1 : ℝ → ℝ) = q.1 ∧ (⇑p.2 : ℝ → ℝ) = q.2 := by
+    rintro q ⟨p, hp, rfl⟩
+    exact ⟨p, hp, rfl, rfl⟩
+  have hAA' : ∀ p ∈ A, ((⇑p.1 : ℝ → ℝ), (⇑p.2 : ℝ → ℝ)) ∈ A' := fun p hp ↦
+    Set.mem_image_of_mem _ hp
+  have hsol := isMPSolution_of_isCadlagMPSolution hA' P h
+  refine isStrongMarkov_mpFamily_cadlag hA' hsol hτ (fun Y hY s ↦ ?_)
+    (fun R R' hR hR' hs hs' h0 u ↦ ?_) hf hfb t
+  · obtain ⟨p, -, hYp⟩ := exists_mpTest_eq_of_mem_mpFamily hA' hY
+    have hrc : ∀ ω s, ContinuousWithinAt (Y · ω) (Ici s) s := by
+      intro ω s
+      have e : (fun r ↦ Y r ω) = fun r ↦ SkorokhodSpace.mpTest p.1 p.2 r ω :=
+        funext fun r ↦ by rw [hYp r]
+      rw [e]
+      exact continuousWithinAt_Ioi_iff_Ici.1 (isRightContinuous_mpTest p.1 p.2 ω s)
+    have hprog : IsStronglyProgressive cadlagFiltration Y :=
+      (stronglyAdapted_mpFamily_cadlagFiltration hA' hY).isStronglyProgressive_of_rightContinuous
+        hrc
+    have hm : Measurable[(hτ s).measurableSpace] fun ω ↦ Y (τ ω + s) ω :=
+      measurable_stoppedValue hprog (hτ s)
+    refine Integrable.mono' (integrable_const (‖p.1‖ + ‖p.2‖ * ((T + s : ℝ≥0) : ℝ)))
+      (hm.mono (hτ s).measurableSpace_le le_rfl).aestronglyMeasurable
+      (Eventually.of_forall fun ω ↦ ?_)
+    rw [Real.norm_eq_abs, hYp]
+    exact abs_mpTest_le p.1 p.2 (add_le_add_left (hτT ω) s) ω
+  · have := hR
+    have := hR'
+    exact map_eval_eq_of_isCadlagMPSolution_of_map_zero_eq R R'
+      (isCadlagMPSolution_of_isMPSolution hAA' R hs)
+      (isCadlagMPSolution_of_isMPSolution hAA' R' hs') h0 u
+
+end StrongMarkovBrownian
+
+section StrongMarkovCadlagFinite
+
+variable {E : Type*} [MetricSpace E] [MeasurableSpace E] [BorelSpace E] [PolishSpace E]
+  [CompleteSpace E]
+
+/-- **`isStrongMarkov_mpFamily_cadlag` at every finite stopping time, without `hint`**: the
+classical instance on `D(ℝ≥0, E)` for `A ⊆ Cb × Cb` and the Lebesgue clock, at every stopping time
+`τ : D(ℝ≥0, E) → ℝ≥0` of the raw coordinate filtration.  The proof is the localization of
+`isStrongMarkov_mpFamily_coordinate_of_finite`, read on the càdlàg path space: the restart at
+`τ ∧ n`, where `hint` holds by `abs_mpTest_le`, the weights `1_{τ ≤ n} Z`, and
+`isMPSolution_map_withDensity_of_tendsto`. -/
+theorem isStrongMarkov_mpFamily_cadlag_of_finite {A : Set ((E →ᵇ ℝ) × (E →ᵇ ℝ))}
+    {A' : Set ((E → ℝ) × (E → ℝ))}
+    (hA' : ∀ q ∈ A', ∃ p ∈ A, (⇑p.1 : E → ℝ) = q.1 ∧ (⇑p.2 : E → ℝ) = q.2)
+    {P : Measure D(ℝ≥0, E)} [IsProbabilityMeasure P]
+    (hsol : IsMPSolution (mpFamily A' lebesgueClock Clock.Conv.optional
+        (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r)) (cadlagFiltration (E := E)) P)
+    {τ : D(ℝ≥0, E) → ℝ≥0}
+    (hτ : ∀ t : ℝ≥0, IsStoppingTime (cadlagFiltration (E := E))
+      fun ω ↦ ((τ ω + t : ℝ≥0) : WithTop ℝ≥0))
+    (honedim : ∀ R R' : Measure D(ℝ≥0, E), IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      IsMPSolution (mpFamily A' lebesgueClock Clock.Conv.optional
+        (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r)) (cadlagFiltration (E := E)) R →
+      IsMPSolution (mpFamily A' lebesgueClock Clock.Conv.optional
+        (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r)) (cadlagFiltration (E := E)) R' →
+      R.map (fun z : D(ℝ≥0, E) ↦ z.toFun 0) = R'.map (fun z : D(ℝ≥0, E) ↦ z.toFun 0) →
+        ∀ u : ℝ≥0, R.map (fun z : D(ℝ≥0, E) ↦ z.toFun u)
+          = R'.map (fun z : D(ℝ≥0, E) ↦ z.toFun u))
+    {f : E → ℝ} (hf : Measurable f) {cf : ℝ} (hfb' : ∀ x, ‖f x‖ ≤ cf) (t : ℝ≥0) :
+    P[fun ω ↦ f (ω.toFun (τ ω + t)) | (hτ 0).measurableSpace]
+      =ᵐ[P] P[fun ω ↦ f (ω.toFun (τ ω + t)) |
+        MeasurableSpace.comap (fun ω : D(ℝ≥0, E) ↦ ω.toFun (τ ω)) inferInstance] := by
+  have hX : ∀ u : ℝ≥0, Measurable[cadlagFiltration (E := E) u]
+      fun ω : D(ℝ≥0, E) ↦ (id ω).toFun u :=
+    fun _ ↦ measurable_cadlagFiltration le_rfl
+  have hτm : Measurable τ := by
+    have h := (((hτ 0).measurable).untopA).mono (hτ 0).measurableSpace_le le_rfl
+    simp only [add_zero] at h
+    exact h
+  have hadaptY : ∀ Y ∈ mpFamily A' lebesgueClock Clock.Conv.optional
+      (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r), StronglyAdapted (cadlagFiltration (E := E)) Y :=
+    fun _ hY ↦ stronglyAdapted_mpFamily_cadlagFiltration hA' hY
+  have hrcY : ∀ Y ∈ mpFamily A' lebesgueClock Clock.Conv.optional
+      (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r), ∀ ω s, ContinuousWithinAt (Y · ω) (Ici s) s := by
+    intro Y hY ω s
+    obtain ⟨p, -, hYp⟩ := exists_mpTest_eq_of_mem_mpFamily hA' hY
+    have e : (fun r ↦ Y r ω) = fun r ↦ SkorokhodSpace.mpTest p.1 p.2 r ω :=
+      funext fun r ↦ by rw [hYp r]
+    rw [e]
+    exact continuousWithinAt_Ioi_iff_Ici.1 (isRightContinuous_mpTest p.1 p.2 ω s)
+  have hprogY : ∀ Y ∈ mpFamily A' lebesgueClock Clock.Conv.optional
+      (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r), IsStronglyProgressive (cadlagFiltration (E := E)) Y :=
+    fun Y hY ↦ (hadaptY Y hY).isStronglyProgressive_of_rightContinuous (hrcY Y hY)
+  -- the bounded stopping times `τ ∧ n`
+  set τn : ℕ → D(ℝ≥0, E) → ℝ≥0 := fun n ω ↦ min (τ ω) n with hτndef
+  have hτn : ∀ (n : ℕ) (t : ℝ≥0), IsStoppingTime (cadlagFiltration (E := E))
+      fun ω ↦ ((τn n ω + t : ℝ≥0) : WithTop ℝ≥0) := by
+    intro n t
+    have h := (hτ t).min (isStoppingTime_const (cadlagFiltration (E := E)) ((n : ℝ≥0) + t))
+    have e : (fun ω ↦ ((τn n ω + t : ℝ≥0) : WithTop ℝ≥0))
+        = fun ω ↦ min ((τ ω + t : ℝ≥0) : WithTop ℝ≥0) (((n : ℝ≥0) + t : ℝ≥0) : WithTop ℝ≥0) := by
+      funext ω
+      simp only [hτndef]
+      rw [← min_add_add_right, WithTop.coe_min]
+    rw [e]
+    exact h
+  have hτnm : ∀ n, Measurable (τn n) := fun n ↦ hτm.min measurable_const
+  set ψ : D(ℝ≥0, E) → D(ℝ≥0, E) := fun ω ↦ (cadlagShift (E := E)).θ (τ ω) ω with hψdef
+  set ψn : ℕ → D(ℝ≥0, E) → D(ℝ≥0, E) :=
+    fun n ω ↦ (cadlagShift (E := E)).θ (τn n ω) ω with hψndef
+  have hψ : Measurable ψ := measurable_cadlagShift_randomTime hτm measurable_id
+  have hψn : ∀ n, Measurable (ψn n) := fun n ↦
+    measurable_cadlagShift_randomTime (hτnm n) measurable_id
+  -- the restart at `τ ∧ n`
+  have hrestart_n : ∀ (n : ℕ) (Z : D(ℝ≥0, E) → ℝ), (∀ ω, 0 ≤ Z ω) →
+      (∃ b, ∀ ω, Z ω ≤ b) → StronglyMeasurable[(hτn n 0).measurableSpace] Z →
+      IsMPSolution (mpFamily A' lebesgueClock Clock.Conv.optional
+        (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r)) (cadlagFiltration (E := E))
+        ((P.withDensity fun ω ↦ ENNReal.ofReal (Z ω)).map (ψn n)) := by
+    intro n Z hZ0 hZb hZm
+    have hintn : ∀ Y ∈ mpFamily A' lebesgueClock Clock.Conv.optional
+        (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r),
+        ∀ s : ℝ≥0, Integrable (fun ω ↦ Y (τn n ω + s) ω) P := by
+      intro Y hY s
+      obtain ⟨p, -, hYp⟩ := exists_mpTest_eq_of_mem_mpFamily hA' hY
+      have hm : Measurable[(hτn n s).measurableSpace] fun ω ↦ Y (τn n ω + s) ω :=
+        measurable_stoppedValue (hprogY Y hY) (hτn n s)
+      refine Integrable.mono'
+        (integrable_const (‖p.1‖ + ‖p.2‖ * (((n : ℝ≥0) + s : ℝ≥0) : ℝ)))
+        (hm.mono (hτn n s).measurableSpace_le le_rfl).aestronglyMeasurable
+        (Eventually.of_forall fun ω ↦ ?_)
+      rw [Real.norm_eq_abs, hYp]
+      exact abs_mpTest_le p.1 p.2 (add_le_add_left (min_le_right _ _) s) ω
+    exact isMPSolution_map_withDensity_shiftByTime hadaptY hsol hprogY
+      (fun Y hY ↦ ae_of_all _ fun ω s ↦ hrcY Y hY ω s)
+      (hτn n) hintn
+      (hψn n) (measurable_cadlagShift_stoppingTime hX (hτn n))
+      (exists_incr_mpFamily_of_shift (lebesgueClock_isShiftInvariant Clock.Conv.optional)
+        (exists_norm_fst_le_of_boundedContinuous hA')
+        (exists_norm_snd_le_of_boundedContinuous hA')
+        (measurable_snd_comp_of_boundedContinuous hA')
+        (fun p hp ↦ (measurable_fst_of_boundedContinuous hA' p hp).comp
+          (SkorokhodSpace.measurable_uncurry_eval_nnreal.comp
+            ((hτnm n).prodMk measurable_id))))
+      hZ0 hZb hZm
+  -- the events `{τ ≤ n}` cut down to the past at `τ ∧ n`
+  have hcut : ∀ (n : ℕ) (s : Set (D(ℝ≥0, E))),
+      MeasurableSet[(hτ 0).measurableSpace] s →
+      MeasurableSet[(hτn n 0).measurableSpace] (s ∩ {ω | τ ω ≤ n}) := by
+    intro n s hs
+    have h1 := (hτ 0).measurableSet_inter_le
+      (isStoppingTime_const (cadlagFiltration (E := E)) (n : ℝ≥0)) s hs
+    have hle := ((hτ 0).min (isStoppingTime_const (cadlagFiltration (E := E)) (n : ℝ≥0))
+      ).measurableSpace_mono (hτn n 0) fun ω ↦ by
+        simp only [hτndef, add_zero, WithTop.coe_min]
+        exact le_rfl
+    have e : {ω | ((τ ω + 0 : ℝ≥0) : WithTop ℝ≥0) ≤ ((n : ℝ≥0) : WithTop ℝ≥0)}
+        = {ω | τ ω ≤ n} := by
+      ext ω
+      simp only [add_zero, Set.mem_ofPred_eq, WithTop.coe_le_coe]
+    rw [e] at h1
+    exact hle _ h1
+  -- the restart at `τ`
+  have hrestart : ∀ Z : D(ℝ≥0, E) → ℝ, (∀ ω, 0 ≤ Z ω) → (∃ b, ∀ ω, Z ω ≤ b) →
+      StronglyMeasurable[((cadlagFiltration (E := E)).shiftByTime τ hτ) 0] Z →
+      ((P.withDensity fun ω ↦ ENNReal.ofReal (Z ω)).map ψ) ∈
+        {R | IsMPSolution (mpFamily A' lebesgueClock Clock.Conv.optional
+          (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r)) (cadlagFiltration (E := E)) R} := by
+    intro Z hZ0 ⟨b, hZb⟩ hZm
+    have hZm' : StronglyMeasurable[(hτ 0).measurableSpace] Z := hZm
+    have hZmeas : Measurable Z := (hZm'.mono (hτ 0).measurableSpace_le).measurable
+    set Zn : ℕ → D(ℝ≥0, E) → ℝ := fun n ↦ {ω | τ ω ≤ n}.indicator Z with hZndef
+    have hZn0 : ∀ n ω, 0 ≤ Zn n ω := fun n ω ↦ Set.indicator_nonneg (fun ω _ ↦ hZ0 ω) ω
+    have hZnb : ∀ n ω, Zn n ω ≤ b := fun n ω ↦ by
+      by_cases hω : τ ω ≤ n
+      · simp only [hZndef, Set.indicator_of_mem (show ω ∈ {ω | τ ω ≤ n} from hω)]; exact hZb ω
+      · simp only [hZndef, Set.indicator_of_notMem (show ω ∉ {ω | τ ω ≤ n} from hω)]
+        exact (hZ0 ω).trans (hZb ω)
+    have hset : ∀ n, MeasurableSet {ω : D(ℝ≥0, E) | τ ω ≤ n} := fun n ↦
+      measurableSet_le hτm measurable_const
+    have hZnm : ∀ n, Measurable (Zn n) := fun n ↦ hZmeas.indicator (hset n)
+    have hZnm' : ∀ n, StronglyMeasurable[(hτn n 0).measurableSpace] (Zn n) := by
+      intro n
+      refine Measurable.stronglyMeasurable fun B hB ↦ ?_
+      have e : Zn n ⁻¹' B = (Z ⁻¹' B ∩ {ω | τ ω ≤ n}) ∪
+          ((Set.univ ∩ {ω | τ ω ≤ n})ᶜ ∩ (fun _ : D(ℝ≥0, E) ↦ (0 : ℝ)) ⁻¹' B) := by
+        ext ω
+        by_cases hω : τ ω ≤ n
+        · simp [hZndef, hω]
+        · simp [hZndef, hω]
+      rw [e]
+      exact (hcut n _ (hZm'.measurable hB)).union
+        ((hcut n _ MeasurableSet.univ).compl.inter (measurable_const hB))
+    have hlim : ∀ ω, Tendsto (fun n ↦ Zn n ω) atTop (𝓝 (Z ω)) := fun ω ↦ by
+      refine tendsto_const_nhds.congr' ?_
+      obtain ⟨N, hN⟩ := exists_nat_ge (τ ω)
+      filter_upwards [eventually_ge_atTop N] with n hn
+      have : τ ω ≤ n := hN.trans (by exact_mod_cast hn)
+      simp only [hZndef, Set.indicator_of_mem (show ω ∈ {ω | τ ω ≤ n} from this)]
+    have hmap : ∀ n, (P.withDensity fun ω ↦ ENNReal.ofReal (Zn n ω)).map (ψn n)
+        = (P.withDensity fun ω ↦ ENNReal.ofReal (Zn n ω)).map ψ := by
+      intro n
+      refine Measure.ext fun B hB ↦ ?_
+      rw [Measure.map_apply (hψn n) hB, Measure.map_apply hψ hB,
+        withDensity_apply _ ((hψn n) hB), withDensity_apply _ (hψ hB),
+        ← lintegral_indicator ((hψn n) hB), ← lintegral_indicator (hψ hB)]
+      refine lintegral_congr fun ω ↦ ?_
+      by_cases hω : τ ω ≤ n
+      · have heq : ψn n ω = ψ ω := by
+          show (cadlagShift (E := E)).θ (min (τ ω) n) ω = (cadlagShift (E := E)).θ (τ ω) ω
+          rw [min_eq_left (show τ ω ≤ (n : ℝ≥0) from hω)]
+        have hmem : ω ∈ ψn n ⁻¹' B ↔ ω ∈ ψ ⁻¹' B := by
+          rw [Set.mem_preimage, Set.mem_preimage, heq]
+        by_cases hB' : ω ∈ ψ ⁻¹' B
+        · rw [Set.indicator_of_mem hB', Set.indicator_of_mem (hmem.2 hB')]
+        · rw [Set.indicator_of_notMem hB', Set.indicator_of_notMem (fun h ↦ hB' (hmem.1 h))]
+      · have h0 : Zn n ω = 0 := by
+          simp only [hZndef, Set.indicator_of_notMem (show ω ∉ {ω | τ ω ≤ n} from hω)]
+        have hg : ENNReal.ofReal (Zn n ω) = 0 := by
+          rw [h0, ENNReal.ofReal_zero]
+        by_cases h1 : ω ∈ ψn n ⁻¹' B
+        · by_cases h2 : ω ∈ ψ ⁻¹' B
+          · rw [Set.indicator_of_mem h1, Set.indicator_of_mem h2]
+          · rw [Set.indicator_of_mem h1, Set.indicator_of_notMem h2, hg]
+        · by_cases h2 : ω ∈ ψ ⁻¹' B
+          · rw [Set.indicator_of_notMem h1, Set.indicator_of_mem h2, hg]
+          · rw [Set.indicator_of_notMem h1, Set.indicator_of_notMem h2]
+    have hsoln : ∀ n, IsMPSolution (mpFamily A' lebesgueClock Clock.Conv.optional
+        (fun r (z : D(ℝ≥0, E)) ↦ z.toFun r)) (cadlagFiltration (E := E))
+        ((P.withDensity fun ω ↦ ENNReal.ofReal (Zn n ω)).map ψ) := fun n ↦ by
+      rw [← hmap n]
+      exact hrestart_n n (Zn n) (hZn0 n) ⟨b, hZnb n⟩ (hZnm' n)
+    exact isMPSolution_map_withDensity_of_tendsto hadaptY
+      (fun Y hY i ↦ by
+        obtain ⟨p, -, hYp⟩ := exists_mpTest_eq_of_mem_mpFamily hA' hY
+        exact ⟨‖p.1‖ + ‖p.2‖ * (i : ℝ), fun g ↦ by
+          rw [Real.norm_eq_abs, hYp]; exact abs_mpTest_le p.1 p.2 le_rfl g⟩)
+      hψ hZn0 hZnb hZnm hZ0 hZb hZmeas hlim hsoln
+  -- the Markov step
+  have hπm : ∀ u : ℝ≥0, Measurable (fun z : D(ℝ≥0, E) ↦ z.toFun u) :=
+    fun u ↦ (measurable_cadlagFiltration le_rfl).mono ((cadlagFiltration (E := E)).le u) le_rfl
+  have hstate : Measurable[((cadlagFiltration (E := E)).shiftByTime τ hτ) 0]
+      fun ω ↦ (ψ ω).toFun ⊥ :=
+    (measurable_cadlagFiltration le_rfl).comp (measurable_cadlagShift_stoppingTime hX hτ 0)
+  have key := condExp_eq_condExp_state_of_restart (𝕂 := ℝ) (P := P)
+    (π := fun r (z : D(ℝ≥0, E)) ↦ z.toFun r) hπm
+    (𝓖 := (cadlagFiltration (E := E)).shiftByTime τ hτ) 0 hψ hstate hrestart honedim hf hfb' t
+  have hV : (fun ω ↦ f ((ψ ω).toFun t)) = fun ω ↦ f (ω.toFun (τ ω + t)) := by
+    funext ω
+    rw [hψdef]
+    simp only
+    rw [(cadlagShift (E := E)).eval_comp]
+  have hS : stateSigmaOf (fun ω ↦ (ψ ω).toFun ⊥)
+      = MeasurableSpace.comap (fun ω ↦ ω.toFun (τ ω)) inferInstance := by
+    show MeasurableSpace.comap _ _ = _
+    congr 1
+    funext ω
+    have := (cadlagShift (E := E)).eval_comp (τ ω) 0 ω
+    simp only [add_zero] at this
+    exact this
+  rw [hV, hS] at key
+  exact key
+
+/-- **The Brownian martingale problem is strong Markov at every finite stopping time**:
+`isStrongMarkov_brownian` without the bound on `τ`, through
+`isStrongMarkov_mpFamily_cadlag_of_finite`.  Nothing is assumed beyond the solution property. -/
+theorem isStrongMarkov_brownian_of_finite {v : ℝ} {P : Measure D(ℝ≥0, ℝ)}
+    [IsProbabilityMeasure P] (h : IsCadlagMPSolution (brownianGeneratorPairs v) P)
+    {τ : D(ℝ≥0, ℝ) → ℝ≥0}
+    (hτ : ∀ t : ℝ≥0, IsStoppingTime (cadlagFiltration (E := ℝ))
+      fun ω ↦ ((τ ω + t : ℝ≥0) : WithTop ℝ≥0))
+    {f : ℝ → ℝ} (hf : Measurable f) {cf : ℝ} (hfb : ∀ x, ‖f x‖ ≤ cf) (t : ℝ≥0) :
+    P[fun ω ↦ f (ω.toFun (τ ω + t)) | (hτ 0).measurableSpace]
+      =ᵐ[P] P[fun ω ↦ f (ω.toFun (τ ω + t)) |
+        MeasurableSpace.comap (fun ω : D(ℝ≥0, ℝ) ↦ ω.toFun (τ ω)) inferInstance] := by
+  set A := brownianGeneratorPairs v with hAdef
+  set A' : Set ((ℝ → ℝ) × (ℝ → ℝ)) :=
+    (fun p : (ℝ →ᵇ ℝ) × (ℝ →ᵇ ℝ) ↦ ((⇑p.1 : ℝ → ℝ), (⇑p.2 : ℝ → ℝ))) '' A with hA'def
+  have hA' : ∀ q ∈ A', ∃ p ∈ A, (⇑p.1 : ℝ → ℝ) = q.1 ∧ (⇑p.2 : ℝ → ℝ) = q.2 := by
+    rintro q ⟨p, hp, rfl⟩
+    exact ⟨p, hp, rfl, rfl⟩
+  have hAA' : ∀ p ∈ A, ((⇑p.1 : ℝ → ℝ), (⇑p.2 : ℝ → ℝ)) ∈ A' := fun p hp ↦
+    Set.mem_image_of_mem _ hp
+  refine isStrongMarkov_mpFamily_cadlag_of_finite hA' (isMPSolution_of_isCadlagMPSolution hA' P h)
+    hτ (fun R R' hR hR' hs hs' h0 u ↦ ?_) hf hfb t
+  have := hR
+  have := hR'
+  exact map_eval_eq_of_isCadlagMPSolution_of_map_zero_eq R R'
+    (isCadlagMPSolution_of_isMPSolution hAA' R hs)
+    (isCadlagMPSolution_of_isMPSolution hAA' R' hs') h0 u
+
+end StrongMarkovCadlagFinite
+
+end MeasureTheory
 
 section LocalMixtureKernelSolutions
 

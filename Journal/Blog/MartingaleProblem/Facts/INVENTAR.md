@@ -65596,3 +65596,376 @@ Lévys Satz nach oben (`MeasureTheory.tendsto_ae_condExp`, `Probability/Martinga
 für die beschränkte Funktion `f (X(τ+t))`. Zu klären ist dabei, wie auf `{τ ≤ n}` die Aussage an
 `τ ∧ n` (Zukunft `X(τ∧n + t)`) zur Aussage an `τ` wird; das ist die eigentliche Arbeit.
 
+### 2026-09-26, Lauf 18:03 UTC — Aufgabe D, Schritt D1: **`lem:localmix`(a) ist falsch**, schon bei rechtsstetiger und für die Mischung vollständiger Filtration; ein Zeuge in Lean, und damit ist auch D2 (die rohe Fassung) entschieden
+
+`check_master.py` zu Beginn (Mathlib `94ef6b89544`): 0 Fehler, 0 `sorry`, 0 Veraltungen;
+Warnungen 18 / 38 / 38 / 76.
+
+**D1, Gerüstpunkt 1 stand schon.** Die Eintrittszeit eines rechtsstetigen adaptierten Prozesses in
+eine offene Menge als Stoppzeit einer rechtsstetigen Filtration ist
+`MeasureTheory.isStoppingTime_debutTime` (`MartingaleProblems/Suggested.lean`, Z. 25497), für
+jede rechtsoffene Zufallsmenge `A ω` (bei `A ω = {t | Z t ω ∈ U}`, `U` offen, `Z` rechtsstetig,
+ist `A` rechtsoffen), mit genau dem Beweis des Auftrags: `setOf_debutTime_lt_eq` ist
+`{σ < t} = ⋃_{q ∈ D, q < t} {q ∈ A}`, und Mathlibs
+`MeasureTheory.isStoppingTime_of_measurableSet_lt_of_isRightContinuous` macht daraus die
+Stoppzeit. Nichts neu gebaut.
+
+**D1, Gerüstpunkt 3 geht nicht, und zwar nicht aus Mangel an Rechtsstetigkeit.** Beim Aufstellen
+der lokalisierenden Folge unter `Q` aus `τ_n`, `τ'_n` und den Eintrittszeiten des Dichteprozesses
+ergab sich: eine Folge `σ_n` mit `σ_n ≤ τ'_n` `P'`-f.s. müßte auf der `P'`-Nullmenge
+`B = {τ'_n ↑ L < ∞}` über `L` hinausgehen; die Entscheidung „über `τ'_n` hinaus“ fällt aber zur
+Zeit `τ'_n < L`, wo der Dichteprozeß `dP'/dQ` noch positiv ist, also auf einer Menge positiver
+`P'`-Masse. Das ist kein Beweisloch, sondern ein Gegenbeispiel, und es ist gebaut, und zwar gegen
+**jede** lokalisierende Folge, nicht nur gegen solche unter `τ'_n`.
+
+**Neu** (`MartingaleProblems/Suggested.lean`, Abschnitt „The witness: `lem:localmix`(a) is false“,
+Namensraum `LocalMixWitness`, unmittelbar nach `end LocalMixtureJumps`):
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| Stichprobenraum `Option (ℕ × Bool)`, diskret: `some (j, b)` = „die Münze fällt zur Zeit `s j = (j+1)/(j+2)` und zeigt `b`“, `none` = „sie fällt nie“ | `LocalMixWitness.Outcome`, `.mOutcome`, `.s`, `.u` | 49046 |
+| Filtration: `A ∈ 𝓕_t` gdw. `A` das ungeteilte Atom `T t` (`none` und alle noch nicht gefallenen Münzen) nicht spaltet | `LocalMixWitness.T`, `.σalg`, `.filt` | 49079 |
+| **die Filtration ist rechtsstetig** (Instanz, über `Filtration.rightCont_eq`) | `instance : filt.IsRightContinuous` | 49118 |
+| **jede `Q`-Nullmenge ist leer**, die Filtration ist für `Q` also vollständig, wie sie steht | `LocalMixWitness.eq_empty_of_Q_eq_zero` | 49209 |
+| Testprozeß: `0`, bis die Münze fällt, danach `± 2^(j+2)`; `Y 0 = 0`, Treppenpfade, unbeschränkte Sprünge | `LocalMixWitness.Y` | — |
+| `P = δ_none`: `Y = 0`, Martingal | `LocalMixWitness.isLocalMPSolution_P` | 49223 |
+| `P'`: Münze fällt bei Schritt `j` mit W. `2⁻¹^(j+1)`, fair; die gestoppten Prozesse sind endliche Summen fairer Einzelsprünge | `LocalMixWitness.martingale_D`, `.stoppedProcess_eq_Z` | 49294, 49377 |
+| `Y` ist lokales `P'`-Martingal, lokalisiert durch `τ' n` („kurz vor Schritt `n` stoppen, falls die Münze nicht schon gefallen ist“) | `LocalMixWitness.isLocalMPSolution_P'` | 49401 |
+| eine Stoppzeit, die bei `none` nicht vor `1` stoppt, stoppt bei `some (j, b)` nicht vor `s j` | `LocalMixWitness.le_of_isStoppingTime` | 49411 |
+| der gestoppte Wert zur Zeit `1` ist nicht `Q`-integrabel | `LocalMixWitness.not_integrable_of` | 49445 |
+| **`Y` ist unter `Q = ½P + ½P'` kein lokales Martingal**, für keine lokalisierende Folge | `LocalMixWitness.not_isLocalMPSolution_Q` | 49459 |
+| **Zusammenfassung** | `LocalMixWitness.not_convex` | 49475 |
+
+`#print axioms LocalMixWitness.not_convex`, `…eq_empty_of_Q_eq_zero`: `propext`,
+`Classical.choice`, `Quot.sound`. Formuliert über Mathlibs `Locally` (`IsLocalMPSolution`); `P`,
+`P'`, `Q` sind Wahrscheinlichkeitsmaße (Instanzen), die Indexmenge ist `ℝ≥0`. Der neue Abschnitt
+übersetzt ohne eine Warnung.
+
+**Was damit entschieden ist.**
+
+* **D1 (Nebenfassung unter `[𝓕.IsRightContinuous]`): falsch.** Der Zeuge hat die Instanz. Die
+  Frage des Auftrags, *an welcher Stelle* die Rechtsstetigkeit gebraucht wird, hat die Antwort:
+  an keiner, die den Satz retten könnte. Die Rechtsstetigkeit liefert die càdlàg-Version des
+  Dichteprozesses und die Eintrittszeiten offener Mengen; beides gibt es im Zeugen (der
+  Dichteprozeß ist dort eine Treppenfunktion), und der Satz fällt trotzdem. Auch die
+  Vervollständigung hilft nicht (`eq_empty_of_Q_eq_zero`): die üblichen Bedingungen gelten.
+* **D2 (rohe Fassung): falsch**, mit demselben Zeugen, denn eine rechtsstetige Filtration ist
+  insbesondere eine rohe. Damit ist B2 geschlossen; es gibt keinen Beweis zu suchen, und kein
+  weiterer Lauf faßt es an. Die Eingrenzung der Läufe 11:03 und 14:03 war richtig und trifft den
+  Zeugen genau: `P` und `P'` sind auf keinem `𝓕_t` gleich, auf `𝓕_t`, `t < 1`, aber äquivalent,
+  und trennen sich erst bei `t = 1`; das ist kein erster *sichtbarer* Trennzeitpunkt, weil jede
+  Entscheidung, die eine Stoppzeit vor `1` auf `none` trifft, zugleich auf einer Menge positiver
+  `P'`-Masse fällt. `τ'_n ↑ 1` auf der `P'`-Nullmenge `{none}` von `P`-Masse `1` ist genau die
+  „explosionsartige Folge“ des Laufs 14:03.
+* **Was wahr bleibt:** mit beschränkten Sprüngen gilt (a) (`isLocalMPSolution_add_of_boundedJumps`,
+  die lokalisierende Folge ist dort ein Funktional des Pfades); unter (L1) gelten die
+  Mischungsaussagen (`isLocalMPSolution_add_of_isUniformLocalization` und die Kernfassung), weil
+  *eine* Folge für alle Maße lokalisiert. Genau das fehlt im Zeugen: die Sprünge `± 2^(j+2)` sind
+  unbeschränkt, und keine Folge lokalisiert unter `P` und `P'` zugleich.
+* Der Doc-Kommentar von `isLocalMPSolution_add_of_boundedJumps` sagte, (a) sei für unbeschränkte
+  Sprünge „not proved here in that generality“; er sagt jetzt, daß es dort falsch ist, und nennt
+  den Zeugen.
+
+**Befunde am Manuskript (nicht angefaßt), mit Zeilen:**
+
+1. **Z. 4707–4709**, `lem:localmix`\ref{it:lm_conv}: „`Msol_loc(𝓧°)` is convex. *No hypothesis is
+   needed for this.*“ — falsch (`LocalMixWitness.not_convex`). Richtig wird es unter (L1) oder für
+   càdlàg Testprozesse mit `Y 0 = 0` und beschränkten Sprüngen (`lem:L1auto`).
+2. **Z. 4724–4731**, der Beweis: „`σ_n → ∞` `Q`-a.s. because `τ_n → ∞` `P`-a.s. and `τ'_n → ∞`
+   `P'`-a.s.“ — der Schluß fehlt: `Q`-f.s. heißt `P`-f.s. *und* `P'`-f.s., und `τ'_n → ∞` ist nur
+   `P'`-f.s. bekannt. Im Zeugen ist `τ'_n → 1` auf `{none}`, also `P`-f.s.
+3. **Z. 4747–4756**, `rem:convexfree`: „A *finite* convex combination costs nothing, because two
+   localizing sequences can be combined by `τ_n ∧ τ'_n`.“ — falsch aus demselben Grund. Die
+   Bemerkung zieht die Grenze an der falschen Stelle: nicht zwischen endlicher und
+   kontinuierlicher Mischung, sondern zwischen *einer* gemeinsamen lokalisierenden Folge und
+   zweien. Schon zwei Maße brauchen (L1) oder etwas Gleichwertiges.
+4. **Z. 10803**: nennt `lem:localmix`\ref{it:lm_conv} eine der „only genuinely new proofs“ des
+   Abschnitts. Der Punkt entfällt oder wird zur Aussage unter (L1).
+5. Keine weitere Stelle stützt sich auf (a): Z. 947 und 4984 benutzen `it:lm_b` bzw. `it:lm_a`,
+   beide unter (L1) und unberührt.
+
+Ein Hinweis aus der Erinnerung, **nicht** nachgesehen: In der Arbitragetheorie ist bekannt, daß
+die Menge der nur absolut stetigen lokalen Martingalmaße nicht konvex sein muß (Delbaen und
+Schachermayer); der Zeuge hier ist von dieser Art. Die Fundstelle wäre vor einer Zitierung zu
+prüfen.
+
+### Derselbe Lauf, zweiter Teil — Aufgabe E, Schritt E1: **`thm:absstrongmarkov` ↦ Lean**, Voraussetzung für Voraussetzung; die Kernform von (a) an Stoppzeiten mit beliebigem Wertebereich; alle Kernformen für beschränktes meßbares `f`
+
+**Nachgesehen, ehe gebaut wurde.** Stand vorher: Kernform nur für Indikatoren und nur an festen
+Zeiten bzw. abzählbar wertigen Stoppzeiten (`condExp_indicator_eq_kernel`,
+`isStrongMarkov_kernel_of_countable_range`); die Halbgruppe nur für Indikatoren
+(`chapmanKolmogorov_of_unique_onedim`, das *ist* schon die Halbgruppenform
+`(K x){π(s+t) ∈ C} = ∫ (K (π s g)){π t ∈ C} ∂K x`). Für beschränktes `f` und für die Kernform
+von (a) an beliebigen Stoppzeiten stand nichts.
+
+**Der Weg ohne einfache Funktionen.** Statt die Indikatorform über einfache Funktionen auf
+beschränktes `f` zu heben, ist Schritt 3 des Manuskripts einmal allgemein bewiesen, mit dem
+Neustart als Voraussetzung (wie `condExp_eq_condExp_state_of_restart`): die beiden Lösungen
+`(1_A/P A · P) ∘ ψ⁻¹` und `K ∘ₘ (ihr Anfangsgesetz)` haben dieselben eindimensionalen Gesetze, und
+ein beschränktes meßbares `f` wird gegen sie unmittelbar integriert (über `Measure.snd_compProd`
+und `Measure.integral_compProd`). Alle Kernformen sind Einsetzungen darin.
+
+**Neu** (`MartingaleProblems/Suggested.lean`, drei neue Abschnitte nach `end StrongMarkovHomogeneous`):
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| Schritt 3, allgemein: `∫_A f(π t ∘ ψ) dP = ∫_A (T_t f)(π ⊥ ∘ ψ) dP` für `A ∈ 𝓖 i`, Neustart und Mischung als Voraussetzungen | `setIntegral_eq_kernel_of_restart` | 50268 |
+| dasselbe als bedingte Erwartung | `condExp_eq_kernel_of_restart` | 50343 |
+| **(a), Kernform, Stoppzeit mit beliebigem Wertebereich, `f` beschränkt meßbar**: `E[f(X(τ+t)) \| 𝓖_τ] = (T_t f)(X τ)` | `isStrongMarkov_kernel_of_unique_onedim` | 50284 |
+| **(a), `T_{s+t} = T_s T_t` für beschränktes meßbares `f`** (homogen) | `semigroup_of_unique_onedim` | 50451 |
+| Kernform an fester Zeit `r`, `f` beschränkt meßbar (verallgemeinert `condExp_indicator_eq_kernel`) | `condExp_eq_kernel` | 50487 |
+| **(b), Kernform an abzählbar wertiger Stoppzeit, `f` beschränkt meßbar** (verallgemeinert `isStrongMarkov_kernel_of_countable_range`) | `isStrongMarkov_kernel_of_countable_range_of_bounded` | 50527 |
+
+`#print axioms` für alle: `propext`, `Classical.choice`, `Quot.sound`.
+
+**Die Tabelle „Manuskript ↦ Lean“ für `thm:absstrongmarkov` (Z. 4396–4441).**
+
+*(a), homogener Fall.* Lean: `isStrongMarkov_of_unique_onedim` (Z. 50207, erste Aussage),
+`isStrongMarkov_kernel_of_unique_onedim` (50389, Kernform), `semigroup_of_unique_onedim` (50451)
+und `chapmanKolmogorov_of_unique_onedim` (49809, Indikatoren); auf dem kanonischen Raum
+`isStrongMarkov_mpFamily_coordinate` (50779), für Sprungoperatoren
+`isStrongMarkov_jumpOperator_coordinate` (`JumpProcesses`, 23401).
+
+| Manuskript | Lean | Befund |
+| --- | --- | --- |
+| „situation of `thm:absuniq`“: Schiftsystem, `π` adaptiert | `hπ`, `hadaptY`, und das Schiftsystem nur am Zufallszeitpunkt: `hincr` | Lean braucht kein `IsShiftSystem`, nur dessen Inkrementklausel längs `X` bei `τ` |
+| `𝓧°_r = 𝓧°` | eine einzige Familie `𝓧` | — |
+| `X` löst das Problem bzgl. `(𝓖_t)` | `hsol` | — |
+| `F ⊂ D_E` (càdlàg Pfade) | **keine Voraussetzung**; ersetzt durch `hprog` (Testprozesse längs `X` stark progressiv) und `hrc` | Lean schwächer: gebraucht wird nur die Rechtsstetigkeit der Testprozesse und ihre Progressivität, nicht die der Pfade |
+| `(ω, r) ↦ θ_r ω` meßbar | `hψ : Measurable ψ` für den einen geschobenen Pfad `ψ = θ_τ ∘ X` | Lean schwächer: nur am Zeitpunkt `τ` |
+| `κ` gemeinsam meßbar in `(ω, r)` | `hincr` mit `Measurable K`, `K` beschränkt | Lean schwächer (nur `κ(·, τ(·))`), aber **beschränkt** statt integrabel |
+| jedes `Y°` rechtsstetig | `hrc`, fast sicher, längs `X` | Lean schwächer (f.s.) |
+| `τ` f.s. endliche Stoppzeit | `τ : Ω → ℝ≥0` **überall** endlich, `hτ : ∀ t, IsStoppingTime (τ + t)` | abweichend: überall statt f.s. endlich; bei roher Filtration läßt sich `τ` nicht auf einer Nullmenge abändern, ohne die Stoppzeiteigenschaft zu riskieren. `hτ` folgt aus `IsStoppingTime τ` über `IsStoppingTime.add_const_of_orderedSub` (Schritt 1 des Manuskripts), ist in Lean aber Voraussetzung |
+| `eq:shiftadapt` | `hψadapt` | wörtlich |
+| `eq:optafterint` für `s ≤ t` | `hint`, für alle `t` | gleichwertig (`t` beliebig) |
+| `eq:absonedim` für jedes `r` | `honedim` für die eine Familie | im homogenen Fall dasselbe |
+| `f ∈ Bdd(E)` | `hf`, `hfb` | — |
+| meßbare Familie `(P_x)`, `P_x ∈ Msol(𝓧°, δ_x)` | `K : Kernel E F`, Markovkern, `hKsol`, `hKinit` | — |
+| (stillschweigend) | **`hKint`**: `∫ E^{K x}\|Y_i\| ν(dx) < ∞` für jedes W-Maß `ν` | **Befund am Manuskript**: die Kernform braucht `lem:mixture` für `∫ P_x μ(dx)`, und `lem:mixture` verlangt genau diese Integrierbarkeit; (a) nennt sie nicht (Z. 4418–4421). Für beschränkte Operatoren ist sie frei |
+| `T_s T_t = T_{s+t}` | `semigroup_of_unique_onedim`, zusätzlich `hKint'` (`Y u` integrabel unter `K x`) | 50451 |
+
+*(b), allgemeiner Fall.* Lean: `isStrongMarkov_of_countable_range` (17807),
+`isStrongMarkov_kernel_of_countable_range` (49732, Indikatoren),
+`isStrongMarkov_kernel_of_countable_range_of_bounded` (50527), `chapmanKolmogorov_of_isConsistent`
+(50623, siehe E2).
+
+| Manuskript | Lean | Befund |
+| --- | --- | --- |
+| Schiftsystem `(𝓧°_r)` | `hS : IsShiftSystem S 𝓕₀ 𝓧₀` | — |
+| `τ` mit abzählbar vielen Werten | `hτ : IsStoppingTime 𝓖 τ`, `hcount` | — |
+| auf `{τ = r}` bedingt auf `X(r)` | Aussage auf `P.restrict {τ = r}` | — |
+| `eq:absonedim` für jedes `r` | `honedim` am **einen** Wert `r` | Lean schwächer: je Wert `r` einzeln |
+| meßbare Familie `(P_{x,r})` in `(x, r)` | je `r` ein Kern `K` in `x` | Lean schwächer: Meßbarkeit in `r` wird nicht gebraucht, weil die Aussage je `{τ = r}` steht. Sie würde erst gebraucht, um `T_{τ,τ+t} f (X τ)` als *eine* meßbare Funktion zu schreiben |
+| (stillschweigend) | `hKint` | wie in (a) |
+| keine Pfadregularität, kein optionales Stoppen | keine | wörtlich |
+| „konsistentes Schiftsystem“ ⇒ Chapman–Kolmogorov | `IsShiftSystem.IsConsistent`, `chapmanKolmogorov_of_isConsistent` | 50590 |
+
+### Derselbe Lauf, dritter Teil — Aufgabe E, Schritt E2: **konsistentes Schiftsystem** und **Chapman–Kolmogorov im inhomogenen Fall**
+
+**Neu** (`MartingaleProblems/Suggested.lean`, Abschnitt `ChapmanKolmogorovInhomogeneous`):
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| **Definition**, wörtlich wie in (b): für jedes `r` ist `u ↦ 𝓧₀ (r + u)` ein Schiftsystem | `IsShiftSystem.IsConsistent` | 50590 |
+| bei `r = 0` ein Schiftsystem für `𝓧₀` selbst | `IsShiftSystem.IsConsistent.isShiftSystem` | 50595 |
+| ein homogenes Schiftsystem ist konsistent | `IsShiftSystem.isConsistent_const` | 50602 |
+| **`T_{r,t} = T_{r,s} T_{s,t}`** für `s = r + u`, `t = s + v`, `f` beschränkt meßbar | `chapmanKolmogorov_of_isConsistent` | 50623 |
+
+Der Beweis ist Schritt 3 des Manuskripts: unter `K r x` löst der kanonische Prozeß das zur Zeit `r`
+gestellte Problem *ab der Zeit `0`*; die Konsistenz macht `u ↦ 𝓧₀ (r + u)` zu einem Schiftsystem
+dafür, `restart_canonical` bei `u` landet im zur Zeit `r + u` gestellten Problem, und dessen
+eindimensionale Gesetze sind eindeutig. Voraussetzungen: `honedim` für **jedes** `r`, Kerne `K r`
+mit `hKsol`, `hKinit`, `hKint`, `hKint'` je `r`. Die Konsistenz geht genau an einer Stelle ein, im
+Argument `hS r` von `restart_canonical`. `#print axioms`: `propext`, `Classical.choice`,
+`Quot.sound`.
+
+**Die Konsistenz für `ex:shiftXA` (Z. 3854 ff.), auf Papier geprüft; die Begründung trägt.** Mit
+`q_r(A) = q(r + A)` ist `(q_r)_u(A) = q_r(u + A) = q(r + (u + A)) = q((r + u) + A) = q_{r+u}(A)`
+(Assoziativität), und der Koeffizient `g(r + ·)` um `u` zurückgezogen ist `g(r + u + ·)`. Die zu
+den Daten `(q_r, g(r + ·))` gebildete Familie hat also an der Stelle `u` genau `𝓧°_{r+u}`, und
+`ex:shiftXA`, auf diese Daten angewandt, *ist* die Konsistenz. **In Lean nicht gebaut:** Lean hat
+`ex:shiftXA` nur im verschiebungsinvarianten Fall (`isShiftSystem_mpFamily`, Z. 18136, Familie
+`fun _ ↦ mpFamily A Q c π`); dort gibt `IsShiftSystem.isConsistent_const` die Konsistenz sofort.
+Die zurückgezogene Uhr `q_r` und der zeitabhängige Koeffizient gibt es in Lean nicht; sie wären
+der erste Bau, ehe die Konsistenz für `ex:shiftXA` in Lean stehen kann.
+
+**Nachrangig, nicht gebaut: ein Zeuge für Chapman–Kolmogorov ohne Konsistenz.** Geprüft und
+verworfen: `StrongMarkovWitness` (Z. 17867) taugt nicht, dort gilt Chapman–Kolmogorov, denn
+`d r u + d (r + u) v = d r (u + v)` für `d r t = (r + t − 1)⁺ − (r − 1)⁺`.
+
+### Derselbe Lauf, vierter Teil — Aufgabe E, Schritt E3: **endliche statt beschränkter Stoppzeiten**, ohne jede Integrierbarkeit an `τ`, und ohne Lévys Satz
+
+**Ein anderer Weg als der des Plans von 17:03, und ein kürzerer.** Der Plan war
+`τ ∧ n`, `𝓖_{τ∧n} = 𝓖_τ ⊓ 𝓖_n` und Lévys Satz nach oben für die bedingten Erwartungen. Genommen ist
+statt dessen der Grenzübergang **im Neustart** (Schritt 2), nicht in der Markov-Aussage: für
+`Z ≥ 0` beschränkt und `𝓖_τ`-meßbar ist `Zₙ = 1_{τ ≤ n} Z` meßbar für `𝓖_{τ∧n}`
+(`IsStoppingTime.measurableSet_inter_le`), auf `{τ ≤ n}` stimmen die bei `τ` und bei `τ ∧ n`
+geschobenen Pfade überein, also `(Zₙ·P)∘ψ_{τ∧n}⁻¹ = (Zₙ·P)∘ψ_τ⁻¹`, und das ist eine Lösung nach
+dem Neustart an der beschränkten Stoppzeit `τ ∧ n`, wo `hint` frei ist. `Zₙ → Z` punktweise, weil
+`τ` endlich ist, und die Lösungsmenge ist unter solchen Grenzwerten abgeschlossen, sobald die
+Testprozesse zu jeder festen Zeit beschränkt sind (dominierte Konvergenz). Danach ist es
+`condExp_eq_condExp_state_of_restart` wie vorher. Die „eigentliche Arbeit“ des Plans, der Übergang
+von `X(τ∧n + t)` zu `X(τ + t)` in der bedingten Erwartung, fällt weg: er geschieht an Maßen, wo er
+eine Gleichheit ist.
+
+**Neu:**
+
+| Rolle | Lean-Name | Datei, Zeile |
+| --- | --- | --- |
+| beschränkte Dichte gibt ein endliches transportiertes Maß | `isFiniteMeasure_map_withDensity_ofReal` | `MartingaleProblems`, 50873 |
+| **die Lösungsmenge ist abgeschlossen unter Grenzwerten beschränkter Dichten**, für zu jeder Zeit beschränkte Testprozesse | `isMPSolution_map_withDensity_of_tendsto` | `MartingaleProblems`, 50891 |
+| **(a), erste Aussage, kanonischer Raum, jede endliche Stoppzeit der rohen Filtration, ohne `hint`** | `isStrongMarkov_mpFamily_coordinate_of_finite` | `MartingaleProblems`, 50957 |
+| **jede Lösung eines beschränkten Sprungoperators ist stark markovsch an jeder endlichen Stoppzeit der rohen Filtration**, ohne Schranke und ohne Integrierbarkeit von `τ` | `isStrongMarkov_jumpOperator_coordinate_of_finite` | `JumpProcesses`, 23430 |
+
+`#print axioms`: `propext`, `Classical.choice`, `Quot.sound`. Eine im Lauf zuerst gebaute
+Zwischenfassung für `E τ < ∞` ist durch diese ersetzt und wieder entfernt.
+
+**Was offen bleibt, und warum es klein ist:** „f.s. endlich“ statt „überall endlich“. In der rohen
+Filtration läßt sich `τ` auf `{τ = ∞}` nicht abändern, ohne die Stoppzeiteigenschaft zu gefährden
+(`{τ = ∞}` liegt in keinem `𝓖_t`); die Aussage selbst lebt ohnehin auf `{τ < ∞}`. Formuliert man
+sie für `τ : Ω → WithTop ℝ≥0` auf `P.restrict {τ < ⊤}`, so ist das eine eigene, kleine Aussage.
+
+### Derselbe Lauf, fünfter Teil — Aufgabe E, Schritt E4: **die klassische Instanz auf `D(ℝ≥0, E)`**, mit `hψ` und `hψadapt`
+
+**Nachgesehen, ehe gebaut wurde:** Der kanonische Raum càdlàg Pfade mit Koordinatenfiltration steht
+schon, in `MartingaleProblems/Suggested.lean` über `SkorokhodSpace`: `D(ℝ≥0, E)`,
+`cadlagFiltration` (Z. 35136), `cadlagShift` (36725), das Schiftsystem
+`isShiftSystem_mpFamily_cadlagFiltration` (36847). Nichts davon neu gebaut.
+
+**Neu** (`MartingaleProblems/Suggested.lean`):
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| **Progressivität an Stoppzeiten**: die Koordinate eines càdlàg Pfades an einer Stoppzeit ist `𝓖_σ`-meßbar, `E`-wertig, für `E` metrisch mit Borel-σ-Algebra (ohne Separabilität) | `MeasureTheory.measurable_cadlag_eval_stoppingTime` | 48814 |
+| **`hψ`** auf `D(ℝ≥0, E)` | `MeasureTheory.measurable_cadlagShift_randomTime` | 48868 |
+| **`hψadapt`** auf `D(ℝ≥0, E)` | `MeasureTheory.measurable_cadlagShift_stoppingTime` | 48878 |
+| **(a), erste Aussage, klassische Instanz**: `A ⊆ Cb × Cb`, Lebesgue-Uhr, rohe Koordinatenfiltration, jede endliche Stoppzeit mit `hint`; offen bleiben `hint` und `honedim` | `MeasureTheory.isStrongMarkov_mpFamily_cadlag` | 51207 |
+
+`#print axioms`: `propext`, `Classical.choice`, `Quot.sound`.
+
+**Befund zu „standard“ (`rem:strongmarkovscope`).** Mathlib hat die Progressivität nur für
+**stetige** Pfade (`StronglyAdapted.isStronglyProgressive_of_continuous`,
+`Probability/Process/Adapted.lean:365`) und für diskrete Zeit (`:376`); für rechtsstetige Pfade
+nicht, nachgesehen auf `upstream/master` (alle Deklarationen mit `rogressive` im Namen unter
+`Mathlib/Probability/`). Die reelle Fassung steht im Prototyp
+(`StronglyAdapted.isStronglyProgressive_of_rightContinuous`, Z. 48617); die `E`-wertige an
+Stoppzeiten ist jetzt `measurable_cadlag_eval_stoppingTime`, über `infDist · Uᶜ` für offenes `U`.
+„Standard“ ist sie also in der Literatur, nicht in Mathlib.
+
+**Abweichungen der Instanz vom Manuskript (`thm:uniqueness`, Z. 5444 ff.), in beide Richtungen:**
+
+1. **`E` polnisch und vollständig metrisch, nicht bloß metrisierbar.** Die Meßbarkeit auf `D(ℝ≥0, E)`
+   (`SkorokhodSpace.measurable_of_measurable_eval`, Borel-σ-Algebra von `D` = von den Auswertungen
+   erzeugt) braucht die Separabilität, der Shift (`SkorokhodSpace.measurable_shift`) zusätzlich
+   `[CompleteSpace E]`. Die Separabilität ist nach der Literatur echt (ohne sie kann die Borel-σ-Algebra von `D`
+   größer sein als die der Auswertungen; aus der Erinnerung, hier nicht nachgeprüft); ob die Vollständigkeit nur ein Werkzeugrest ist,
+   ist nicht geprüft. Die Progressivität an Stoppzeiten selbst braucht beides nicht.
+2. **`A ⊆ Cb × Cb` statt `Cb × Bdd`.** Das vorhandene Schiftsystem auf `D` ist für beschränkt
+   stetige zweite Komponenten gebaut; für bloß beschränkt meßbares `g` ist `u ↦ g(z_u)` ebenfalls
+   meßbar und der Kompensator ebenfalls stetig in `t`, die Einschränkung ist also eine des
+   Bestandes, nicht der Sache. Nicht verallgemeinert.
+3. **`hint`** ist in `isStrongMarkov_mpFamily_cadlag` Voraussetzung; **ohne `hint`**, an jeder
+   endlichen Stoppzeit, steht `MeasureTheory.isStrongMarkov_mpFamily_cadlag_of_finite` (Z. 51337):
+   die Lokalisierung von E3 auf `D` gelesen (`isMPSolution_map_withDensity_of_tendsto` ist
+   allgemein in `F`), `hint` an `τ ∧ n` aus `abs_mpTest_le`. `#print axioms`: `propext`,
+   `Classical.choice`, `Quot.sound`.
+
+### Derselbe Lauf, sechster Teil — Aufgabe E, Schritt E5: **die Brownsche Bewegung ist stark markovsch, als Folgerung aus dem Martingalproblem**
+
+**Nachgesehen, ehe gebaut wurde; alles Nötige stand:**
+
+* die Brownsche Bewegung löst das Problem zu `½ v Δ`: `isCadlagMPSolution_of_isBrownianReal`
+  (Z. 44125, Pfadgesetz von `√v · B` für Mathlibs `IsBrownianReal`), ebenso
+  `isCadlagMPSolution_of_isPreBrownianReal`;
+* die eindimensionalen Gesetze der Lösungen sind eindeutig:
+  `map_eval_eq_of_isCadlagMPSolution_of_map_zero_eq` (über die charakteristische Funktion, ohne
+  Schift);
+* die Brücke zwischen den beiden Lösungsbegriffen, `isMPSolution_of_isCadlagMPSolution` und
+  `isCadlagMPSolution_of_isMPSolution` (Z. 36120, 36159).
+
+**Neu** (`MartingaleProblems/Suggested.lean`):
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| **jede càdlàg Lösung des Problems von `brownianGeneratorPairs v` ist stark markovsch** an jeder beschränkten Stoppzeit der rohen Koordinatenfiltration, beliebiger Wertebereich; keine Voraussetzung außer der Lösungseigenschaft | `MeasureTheory.isStrongMarkov_brownian` | 51280 |
+
+Zusammengesetzt aus `isStrongMarkov_mpFamily_cadlag` (E4), der eindimensionalen Eindeutigkeit und
+`hint` aus `τ ≤ T` mit `abs_mpTest_le`. `#print axioms`: `propext`, `Classical.choice`,
+`Quot.sound`. Nichts aus BrownianMotion übernommen (kein Herkunftskommentar nötig).
+
+**Und an jeder endlichen Stoppzeit**, ohne Schranke: `MeasureTheory.isStrongMarkov_brownian_of_finite`
+(Z. 51552), über `isStrongMarkov_mpFamily_cadlag_of_finite`. `#print axioms`: `propext`,
+`Classical.choice`, `Quot.sound`.
+
+### Derselbe Lauf, siebter Teil — Aufgabe E, Schritt E6: **C3, die beiden offenen Punkte**
+
+**1. Die reelle Fassung von `Clock.IsProgressiveComp` über bloßem `[MeasurableSpace E]`: steht.**
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| ein adaptierter Prozeß, dessen reelle Funktionale `h ∘ X` (`h` meßbar) rechtsstetige Pfade haben, ist `Clock.IsProgressiveComp` für die Lebesgue-Uhr | `Clock.isProgressiveComp_lebesgueClock_of_rightContinuous` | 51160 |
+
+Fortsetzung unterhalb `t` ist `u ↦ X (u ∧ t)`; Approximation von rechts über die dyadischen Punkte
+(`measurable_uncurry_min_of_rightContinuous`), der Limes in `ℝ`. Keine Topologie auf `E`, keine
+Meßbarkeit der Diagonale. `#print axioms`: `propext`, `Classical.choice`, `Quot.sound`.
+
+**2. „Meßbar zu jeder Zeit, progressiv zu keiner“: geprüft, und die Antwort ist zweigeteilt.**
+
+* **Für das Scheitern der Progressivität selbst genügt eine nicht Borel-meßbare Menge.** Mit
+  `Ω` einpunktig und `X_s = 1_N(s)` ist jedes `X_s` meßbar und adaptiert, und
+  `Clock.IsProgressive` (Z. 1561: Meßbarkeit für `Q.measurableSpace ⊗ 𝓕_t`, also **nicht** die
+  Lebesgue-Vervollständigung) fällt genau dann, wenn `N ∩ [0, t]` nicht Borel ist. Eine solche
+  Menge liefert `MeasurableSpace.cardinal_measurableSet_le_continuum`
+  (`Mathlib/MeasureTheory/MeasurableSpace/Card.lean:216`, auf `upstream/master` nachgesehen) mit
+  `2^𝔠 > 𝔠`.
+* **Für das Akzeptanzbeispiel der README (Z. 599–607) genügt sie nicht.** Dort soll die Richtung
+  von rechts nach links des fdd-Kriteriums am Müllwert des Bochner-Integrals scheitern. Das
+  Integral liest aber nur `AEStronglyMeasurable` bezüglich `Q.q`: eine nicht Borel-meßbare
+  Teilmenge einer Lebesgue-Nullmenge (etwa der Cantormenge) ist `Q.q`-f.ü. gleich `∅`, der
+  Integrand ist dann f.ü.-meßbar, und das Integral hat seinen echten Wert. Gebraucht wird also
+  wirklich eine Menge, die nicht **Lebesgue**-meßbar ist, und nach dem Argument des Laufs 16:03 auf
+  **jedem** Teilintervall; das ist eine Bernstein-Menge.
+* Die Bernstein-Menge ist in diesem Lauf **nicht gebaut** (transfinite Rekursion über die `𝔠`
+  perfekten Mengen; Mathlib hat keine nichtmeßbare Menge, nachgesehen am 16:03). Nach dem Auftrag
+  bekommt sie höchstens einen Lauf; danach wird der Punkt begründet und endgültig zurückgestellt.
+
+### Derselbe Lauf, Abschluß
+
+`check_master.py` am Ende (Mathlib `94ef6b89544`): **0 Fehler, 0 `sorry`, 0 Veraltungen** in allen
+vier Dateien, Warnungen 18 / 38 / 38 / 76 wie zu Beginn. Alle neuen Hauptaussagen mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft.
+
+**Stand von D und E nach diesem Lauf.**
+
+* **D1: geht nicht, mit Zeugen.** `lem:localmix`(a) ist falsch, schon unter
+  `[𝓕.IsRightContinuous]` und bei für die Mischung vollständiger Filtration
+  (`LocalMixWitness.not_convex`). Die Rechtsstetigkeit wird an keiner Stelle gebraucht, die den
+  Satz retten könnte; die Bruchstelle ist `τ'_n → ∞` nur `P'`-f.s.
+* **D2: damit entschieden**, derselbe Zeuge (rechtsstetig ist insbesondere roh). B2 ist
+  geschlossen. Es bleibt keine Frage an den Nutzer offen, wohl aber die Befunde am Manuskript
+  (Z. 4707–4709, 4724–4731, 4747–4756, 10803).
+* **E1: steht** (Tabelle, Kernform von (a) an beliebigen Stoppzeiten, alle Kernformen für
+  beschränktes meßbares `f`, Halbgruppe).
+* **E2: steht** bis auf die Konsistenz von `ex:shiftXA` in Lean (auf Papier geprüft, trägt; in Lean
+  fehlt die zurückgezogene Uhr, siehe dort) und den nachrangigen Zeugen.
+* **E3: steht** (endliche Stoppzeiten ohne Integrierbarkeit, kanonischer Raum und
+  Sprungoperatoren).
+* **E4: steht**, an jeder endlichen Stoppzeit und ohne `hint`; `hψ`, `hψadapt`, die
+  Progressivität an Stoppzeiten auf `D(ℝ≥0, E)` sind gebaut. Abweichungen: `E` polnisch und
+  vollständig, `A ⊆ Cb × Cb`.
+* **E5: steht**, an jeder endlichen Stoppzeit, ohne weitere Voraussetzung als die Lösungseigenschaft.
+* **E6: Punkt 1 steht; Punkt 2** geprüft: die Lebesgue-Fassung wird gebraucht, die Bernstein-Menge
+  ist nicht gebaut.
+
+**Nach der Regel des Auftrags wird kein selbstgewähltes Folgeziel vorgeschlagen.** Offen aus der
+Liste sind nur noch: die Bernstein-Menge (E6, Punkt 2, höchstens ein Lauf), die zurückgezogene Uhr
+für die Konsistenz von `ex:shiftXA` (E2, dritter Punkt), und überall „f.s. endlich“ statt
+„überall endlich“ (E3, klein). Keine README angefaßt, das Manuskript nicht angefaßt, nichts nach außen.
+
+Hilfsdateien, die mangels `rm`-Freigabe liegen bleiben (alle entbehrlich, ihr Inhalt steht in den
+Roadmaps): `scripts/_dev_fixlines.py`, `scripts/_dev_mkD.py`, `scripts/_dev_E3src.txt` (nicht von
+`.gitignore` erfaßt), sowie die ignorierten `scripts/_dev_E4c.lean`, `_dev_Dhead.lean`,
+`scripts/_dev_D1mix.lean`, `_dev_E1.lean`, `_dev_E3.lean`, `_dev_E3b.lean`, `_dev_E4.lean`,
+`_dev_E4b.lean`, `_dev_E5.lean`, `_dev_E6.lean`, `_dev_ax.lean` und aus dem Lauf 17:03
+`_dev_C5hit.lean`, `_dev_C5hit_ax.lean`, `_dev_C5psi.lean`, `_dev_C5psi_ax.lean`.
+
