@@ -63808,3 +63808,180 @@ Er ruht auf:
 Danach Schritt 7, der explodierende Sprungprozeß. Dort ist zuerst zu entscheiden, auf welchem
 Pfadraum die Nichtexistenz der globalen Lösung ausgesprochen wird (Befund (i) des 21:03-Laufs:
 `rateTime → ⊤` gilt nur auf `NonExplosiveE`).
+
+### 2026-09-26, Lauf 01:03 UTC — Schritt 6, zweiter Teil: **`cor:pastingmarkov`** (`isRestartKernel_concatKernel`); Schritt 6 damit vollständig
+
+*`check_master.py`: 0 / 0 / 0 in allen vier Dateien*, Warnungen 18 / 38 / 38 / 76 (unverändert
+gegenüber dem Beginn des Laufs). Axiome der sieben neuen Deklarationen: nur `propext`,
+`Classical.choice`, `Quot.sound`. Abschnitt `PastingMarkov` am Ende von
+`MartingaleProblems/Suggested.lean`, entwickelt in `scripts/_dev_pastingmarkov.lean`. Der Einschub
+war schon erledigt (Bericht vom Lauf 22:03).
+
+**Deklarationen.**
+
+* `mem_iff_of_eval_eq_of_natural`: eine Menge der natürlichen Vergangenheit bei `r` trennt keine
+  zwei Pfade, die auf `[0, r]` übereinstimmen. Der Beweis zeigt, daß die nicht trennenden Mengen
+  eine σ-Algebra bilden, die jeden Erzeuger `π_v⁻¹ D` mit `v ≤ r` enthält. Ohne
+  Faktorisierungssatz.
+* **`measurable_of_eval_concat_of_natural`**: der Transport „`𝓕°_{r+u}` = `θ_r⁻¹ 𝓕°_u`“
+  (Z. 5155–5162), von der Seite der Konkatenation her gelesen. Hält `γ` einen festen Pfad strikt
+  vor `r` fest und setzt danach `β` ein, so ist `γ` meßbar von `𝓕°_u` nach `𝓕°_{r+u}`. Das ist
+  das Gegenstück zu `shiftMeasurable_of_natural`. Es gilt **punktweise**, nicht nur
+  `Q_α`-fast sicher.
+* `concatKernel κ₀ γ := (Kernel.id ×ₖ κ₀).map (uncurry γ)` und `concatKernel_apply`:
+  `α ↦ (κ₀ α).map (γ α)`, das Gesetz von `γ(α, β)` für `β ∼ κ₀ α`.
+* **`isRestartKernel_concatKernel`** (`cor:pastingmarkov`): Auf dem kanonischen Raum mit
+  natürlicher Filtration seien gegeben: ein volles System (`hfull`, wörtlich die Vollheit aus
+  Z. 5133–5136), ein Markovkern `κ₀` mit `κ₀ α ∈ M(𝓧₀ (T α))` und eine meßbare Konkatenation `γ`
+  mit drei Eigenschaften. `hbefore`: punktweise gleich `α` strikt vor `T α`. `hshift`: punktweise
+  `θ_{T α} γ(α, β) = β`. `hkeep`: `κ₀ α`-fast sicher `a_T γ(α, β) = a_T α`. Dann ist
+  `concatKernel κ₀ γ` ein `IsRestartKernel` bei der strikten Stoppzeit `T`.
+* `hasLocalUniqueness_of_concatenation`: der Schlußsatz „and Theorem `thm:localuniqueness`
+  applies“, über `hasLocalUniqueness_of_restartKernel`.
+* Leerheitsprobe: `concatKernel_const_apply` und `isRestartKernel_concatKernel_top`. Bei
+  `T ≡ ⊤`, `a = id` und `γ α β = α` sind alle Voraussetzungen erfüllt, und das Ergebnis ist ein
+  Restartkern. Die Probe zeigt, daß die Voraussetzungen zusammen erfüllbar sind. Sie zeigt
+  **nicht**, daß sie es bei endlicher Zeit sind; siehe Befund 6.
+
+**Befunde.**
+
+1. **(E1) kommt hier zurück, genau an der Stelle, die das Manuskript nennt.** Der Lauf 23:03
+   hat festgestellt, daß die *Definition* des Restartkerns (E1) nicht braucht, weil (R1) als
+   `∀ᵐ` formuliert ist. Für den *Konkatenationskern* wird es wieder gebraucht. Das Bildmaß
+   überträgt eine fast sichere Aussage nur für ein meßbares Ereignis (`ae_map_iff`), und
+   `{β | a β = a α} = a⁻¹{a α}` ist meßbar, sobald Punkte meßbar sind. In Lean steht deshalb
+   `[MeasurableSingletonClass F]`. Das ist die Folgerung aus (E1), die das Manuskript in
+   Z. 5037–5040 zieht („the diagonal is measurable because 𝓢 is countably generated and
+   separating“). Befund 1 des Laufs 23:03 ist damit so zu lesen: (E1) wandert aus
+   `def:restartkernel` in `cor:pastingmarkov`.
+2. **Die Anfangsbedingung `δ_{α_{T(α)}}` wird nur an einer Stelle gelesen, nämlich in `hkeep`.**
+   Im Beweis von (R2) kommt sie nicht vor. Für die Konkatenation auf dem Skorokhodraum,
+   `γ(α, β)(v) = α(v)` für `v < r` und `β(v − r)` für `v ≥ r`, sind `hbefore` und `hshift`
+   punktweise wahr. `a_T γ(α, β) = a_T α` gilt dagegen nur bei `β_0 = α_r`, also
+   `P_{α_r, r}`-fast sicher. Das Manuskript schreibt `a_T γ(α,β) = a_T α` ohne Einschränkung
+   (Z. 5146, „agreeing with α before T(α)“ in Z. 5140). Wörtlich genommen ist das für einen
+   càdlàg-Raum falsch, sobald `β_0 ≠ α_r`. **Manuskript nicht angefaßt.** Vorschlag für
+   Z. 5140–5141: „a measurable `γ(α, β)` agreeing with `α` on `[0, T(α))` and, when
+   `β_0 = α_{T(α)}`, on `[0, T(α)]`“.
+3. **Von der meßbaren Schiftfamilie wird nur die Vollheit gebraucht.** `IsShiftSystem` mit
+   `increment` und `shiftMeasurable` kommt im Beweis nicht vor. Der Transport der Filtrationen
+   läuft über `γ`, nicht über `θ`, und `θ` wird nur in `hshift` gelesen. Auch die Meßbarkeit von
+   `(x, r) ↦ P_{x,r}` wird nicht gebraucht. Sie dient nur dazu, `α ↦ P_{α_{T α}, T α}` zu einem
+   Kern zu machen, und das ist in Lean die Voraussetzung, daß `κ₀` ein `Kernel` ist. Wie sich
+   `κ₀` aus einer meßbaren Familie ergibt, hängt an der Meßbarkeit von
+   `α ↦ (π_{T α} α, T α)`. Das ist die `𝓕°_T`-Meßbarkeit von `X_T` (Progressivität unter
+   (T2b)), wie schon in Befund 4 des Laufs 23:03. Nicht gebaut.
+4. **Der Transport ist punktweise, nicht nur „`Q_α`-a.s.“ wie in Z. 5155.** Grund ist, daß er
+   über `γ` geführt wird: `A ∈ 𝓕°_{r+u}` ⟹ `γ_α⁻¹ A ∈ 𝓕°_u`, und
+   `1_A(γ(α, β)) = 1_{γ_α⁻¹ A}(β)` gilt ohne Ausnahme. Fast sicher ist nur die Konstanz des
+   `𝓕°_r`-meßbaren Summanden `Y_r − κ` längs `γ(α, ·)`. Sie kommt aus `hkeep` und
+   `mem_iff_of_eval_eq_of_natural`, mit `T(γ(α, β)) = T(α)` aus `T ∘ a_T = T`.
+5. **Ordnungsvoraussetzungen:** `[IsOrderedCancelAddMonoid ι] [CanonicallyOrderedAdd ι]`. `ℝ≥0`
+   und `ℕ` erfüllen sie. Gebraucht werden `exists_add_of_le` (um `s = r + u` zu schreiben),
+   `le_of_add_le_add_left` (`r + w ≤ r + u ⟹ w ≤ u` im Transport) und `le_self_add`. Das ist
+   (T0) mit Shift, wie `def:shiftstable` es ohnehin verlangt.
+6. **Nicht gebaut:** eine Probe bei endlicher Zeit, also die Konkatenation auf einem konkreten
+   Pfadraum (`RightContinuousPath E` oder `ι → E`). Sie bräuchte dort
+   `MeasurableSingletonClass`, die Meßbarkeit von `uncurry γ` und die Anfangsbedingung aus
+   Befund 2. Das ist ein eigener Schritt und gehört nicht zu den sieben.
+
+**Stand der Aufgabe.** Die Schritte 1–6 stehen, mit den früher genannten Einschränkungen (Schritt
+2 für endliche Familien, 3(a) unter (L1) oder beschränkten Sprüngen, 4 und 5 auf dem kanonischen
+Raum). Offen ist nur noch **Schritt 7**, der explodierende Sprungprozeß.
+
+### Derselbe Lauf, zweiter Teil — Schritt 7, Abnahme: **der explodierende Sprungprozeß**. Das globale Problem hat keine Lösung, und das lokale im Sinn von `def:absMP` und `def:localizing` auch keine
+
+*`check_master.py`: 0 / 0 / 0 in allen vier Dateien*, Warnungen 18 / 38 / 38 / 76 (unverändert).
+Axiome: nur die drei Standardaxiome, auch für den umgebauten `jumpProcess_isLocalMPSolution`.
+`check_duplicates.py`: kein Treffer auf die neuen Namen. Neuer Abschnitt `ExplosiveAcceptance` am
+Ende von `JumpProcesses/Suggested.lean`, entwickelt in `scripts/_dev_explode.lean`.
+
+**Daten** (`rem:jumpexplosion`, Z. 8775–8796): `E = ℕ`, `μ(n, ·) = δ_{n+1}` (`explodeKernel`),
+`λ(n) = 2ⁿ` (`explodeRate`, schon vorhanden).
+
+**Deklarationen.**
+
+* `explodeTest n = 1 - 2⁻ⁿ` mit `0 ≤ f ≤ 1`, und **`jumpApply_explodeTest`**: der Erzeuger ist
+  die Konstante `1/2`, obwohl die Rate unbeschränkt ist.
+* **`not_isLocalMPSolution_explode`**: Für **keine** Darstellung ist das lokale Problem gelöst,
+  also für keinen Stichprobenraum, keine Filtration, kein Wahrscheinlichkeitsmaß, keinen
+  `ℕ`-wertigen Prozeß und keine Konvention. Beweis: Der Testprozeß ist `f(X_t) − I_t` mit
+  `I_t = q(interval ⊥ t)/2`. Eine lokalisierende Folge `τ_n → ⊤` gibt
+  `0 ≤ E[f(X_0)] = E[Y^{τ_n}_3]`. Der Limes ist nach dominierter Konvergenz
+  (Schranke `1 + q(Iic 3)/2`) `E[Y_3] ≤ 1 − 5/4 < 0`. Weder Meßbarkeit von `X` noch
+  Rechtsstetigkeit wird gebraucht: die Meßbarkeit von `Y_3` kommt aus dem f.s.-Limes
+  (`aestronglyMeasurable_of_tendsto_ae`).
+* `not_isMPSolution_explode`: dasselbe für das globale Problem, über
+  `isLocalMPSolution_of_isMPSolution`.
+* **`martingale_stoppedProcess_rateTime_jumpProcessE`**, aus `jumpProcess_isLocalMPSolution`
+  **herausgelöst**: Auf jeder Stufe ist der bei `rateTime lam (n+1)` gestoppte Testprozeß ein
+  Martingal, **ohne** Nichtexplosion. Das ist die ehrliche lokale Aussage „löst das Problem auf
+  `[0, ζ)`“. `jumpProcess_isLocalMPSolution` ist jetzt ein Korollar davon, mit unveränderter
+  Signatur. Die Nichtexplosion wird dort nur noch für `rateTime → ⊤` gelesen.
+* **`not_ae_mem_nonExplosiveE_explode`**: Die Daten explodieren mit positiver
+  Wahrscheinlichkeit, **bewiesen mit dem Martingalargument**. Aus f.s. Nichtexplosion würde mit
+  `jumpProcess_isLocalMPSolution` eine lokale Lösung folgen. Die Verteilung von `ζ` wird dabei
+  nicht berechnet (das Manuskript rechnet `E[ζ] = ∑ 2⁻ⁿ` aus).
+
+**Befunde.**
+
+1. **„Das lokale Problem hat eine Lösung“ ist im Sinn der Definitionen des Manuskripts falsch.**
+   `def:absMP` (Z. 2397–2403) verlangt ein lokales Martingal auf ganz `𝕋 = ℝ≥0`, also
+   lokalisierende Folgen mit `τ_n → ∞`. `def:localizing`(L1) (Z. 4567–4568) verlangt sogar
+   `τ_n ↑ ∞` **punktweise**. Die Sprungzeiten wachsen gegen `ζ`, und `ζ < ∞` hat positive
+   Wahrscheinlichkeit. Nach `not_isLocalMPSolution_explode` tut es auch keine andere Folge.
+   **Falsch sind deshalb** Z. 8788–8791 („hence `(τ_n)` is a localizing system in the sense of
+   Definition `def:localizing`“), Z. 8793–8794 („`X` solves the local martingale problem … on
+   `[0, ζ)`, and Section `ssec:localmp` applies verbatim“), Z. 8818 („a genuine instance of
+   (L1)–(L3)“) und Z. 359–361. Wahr ist die Stufenaussage
+   `martingale_stoppedProcess_rateTime_jumpProcessE`. Ein lokales Problem „auf `[0, ζ)`“ mit
+   Folgen `τ_n ↑ ζ` definiert das Manuskript nirgends, und `ssec:localmp` läßt sich darauf nicht
+   wörtlich anwenden. (L1) mit `τ_n ↑ ζ` wäre schon in der Richtung „⇐“ falsch, und die ist nach
+   `rem:localhyp` gerade der Grund für `τ_n ↑ ∞`. **Manuskript nicht angefaßt.**
+   Derselbe Befund trifft `thm:pathjumpMP`(a), Z. 10293–10298 („on `[0, ζ)` … with `(τ_n)` a
+   localizing system in the sense of Definition `def:localizing`“).
+2. **Was stimmt, und wie man es sagen könnte.** Die Stufen `τ_n` lokalisieren den Prozeß genau
+   auf der Menge `{τ_n ↑ ∞}` der nicht explodierenden Pfade. Eine lokale Lösung gibt es nur, wenn
+   diese Menge volles Maß hat, und für das Beispiel hat sie das nach
+   `not_ae_mem_nonExplosiveE_explode` nicht. Vorschlag für Z. 8784–8796, **nicht eingetragen**: „There is then no solution of
+   the global martingale problem, and none of the local one either: with `f(n) = 1 − 2^{−n}` one
+   has `Af ≡ 1/2`, and `E f(X_{t∧τ_n}) − E f(X_0) → t/2` along any localizing sequence
+   contradicts `f ≤ 1`. What survives is the stopped statement: `M^{τ_n}` is a martingale for
+   every `n`, i.e. `X` solves the martingale problem on `[0, ζ)`.“
+3. **Der Beweis der Nichtexistenz ist ein Lyapunov-Argument in Gegenrichtung.** `f` ist
+   beschränkt und `Af ≥ c > 0`. Das ist das Gegenstück zu `isNonExplosive_of_lyapunov`
+   (`A f ≤ C f` mit unbeschränktem `f`) und ebenso allgemein: Ein beschränktes `f` mit
+   `inf Af > 0` schließt jede Lösung aus, global wie lokal.
+4. **„Die lokalisierende Folge kommt aus einem Lokalisierungssystem“ geht nicht.** Der Grund
+   steht in Befund 1: Die Folge `rateTime explodeRate (n+1)` wächst gegen `ζ` und nicht gegen
+   `⊤`, verletzt also (L1). Ein Lokalisierungssystem im Sinn von `LocalizingSystem` kann es für
+   diese Familie zwar geben, etwa aus Niveautreffzeiten auf einem Pfadraum. Dann ist aber
+   `M_loc = ∅`, und es lokalisiert nichts. Strikt ist `rateTime` trotzdem
+   (`isStoppingTime_rateTime`, rohe Filtration `jumpFiltrationE`). Die Sprungzeiten selbst sind
+   dort keine Stoppzeiten (`not_isStoppingTime_min_jumpTimeE`). Auch das weicht vom Manuskript
+   ab, das die Sprungzeiten nennt.
+
+**Stand der Aufgabe: alle sieben Schritte stehen**, mit den Einschränkungen aus den Berichten.
+Schritt 2 gilt für endliche Familien, 3(a) unter (L1) oder beschränkten Sprüngen, 4 und 5 auf dem
+kanonischen Raum. Schritt 7 hat als Ergebnis ein begründetes Nein zur Formulierung des
+Manuskripts, dazu die Stufenaussage und die Nichtexistenz. Nach dem Auftrag schlägt dieser Lauf
+**kein** Folgeziel vor; den nächsten Auftrag stellt der Nutzer.
+
+### Derselbe Lauf, Abschluß
+
+Bearbeitet wurden Schritt 6 (Rest: `cor:pastingmarkov`) und Schritt 7. Der Einschub war schon
+erledigt. `check_master.py` am Anfang und am Ende: 0 Fehler, 0 `sorry`, 0 veraltet in allen vier
+Dateien; Warnungen 18 / 38 / 38 / 76 unverändert. Umgebaut ist, mit unveränderter Signatur,
+`jumpProcess_isLocalMPSolution`, jetzt Korollar von
+`martingale_stoppedProcess_rateTime_jumpProcessE`. Das Manuskript und die READMEs sind nicht
+angefaßt.
+
+Befunde am Manuskript aus diesem Lauf, mit Zeilen:
+
+* Z. 8788–8794, 8818, 359–361, 10293–10298: Explosive Sprungprozesse sind keine lokalen Lösungen
+  im Sinn von `def:absMP`, und die Sprungzeiten bilden kein Lokalisierungssystem im Sinn von
+  `def:localizing`, weil `τ_n ↑ ζ` und nicht `↑ ∞`. Für `λ(n) = 2ⁿ` gibt es in Lean bewiesen
+  keine lokale Lösung.
+* Z. 5140–5146: „`a_T γ(α, β) = a_T α`“ gilt für die Konkatenation auf `D` nur bei
+  `β_0 = α_{T(α)}`, also nur `P_{α_r, r}`-fast sicher.
+* Z. 5037–5040: (E1) wird in `cor:pastingmarkov` gebraucht, in `def:restartkernel` nicht.

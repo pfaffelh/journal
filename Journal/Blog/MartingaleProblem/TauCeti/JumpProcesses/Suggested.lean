@@ -8123,47 +8123,23 @@ theorem stronglyAdapted_stoppedProcess_mpFamily_jumpProcessE {lam : E → ℝ}
   rw [hfun]
   exact h1.stronglyMeasurable.sub hsm
 
-/-- **The local jump process solves the martingale problem of its generator locally.**  This is
-the goal of Point 5 of Milestone 4, and the first solution in this file whose rate is neither
-bounded nor even locally bounded: what is asked of it is a positive measurable rate and almost
-sure non explosion, and `ae_mem_nonExplosiveE_jumpMeasure` discharges the second at the data
-(for the linear birth and death chain, `ae_mem_nonExplosiveE_linear`).
+/-- **At every level the stopped test process is a martingale, explosion or not.**  This is the
+part of `jumpProcess_isLocalMPSolution` that asks nothing about non explosion: at the level `n` the
+stopped process is the stopped process of the truncated rate `truncRate lam (n + 1)`, as a function
+(`stoppedProcess_mpFamily_truncRate_eq`), and there the bounded theorem applies.  Non explosion is
+read only in `rateTime lam (n + 1) → ⊤`, which is what makes the levels a localizing sequence.
 
-Every input is a theorem and not a description.  The localizing sequence is the hitting times of
-the running supremum of the rate along the path -- the jump times themselves are not stopping
-times for any filtration of the process (`not_isStoppingTime_min_jumpTimeE`), and
-`isLocalizingSequence_rateTime` is what replaces them.  At the level `n` the stopped process is
-the stopped process of the **truncated** rate `truncRate lam n`, as a function and not merely
-almost surely (`stoppedProcess_mpFamily_truncRate_eq`); there the rate is bounded by `n`, so
-`martingale_stoppedProcess_mpFamily_jumpProcessE` applies and gives a martingale for the
-truncated filtration.  The passage back to the local filtration is the tower step
-`martingale_of_martingale_of_stopped`, whose cut hypothesis is
-`jumpFiltrationE_inter_lt_rateTime` and whose adaptedness hypothesis is the theorem above.
-
-The localizing sequence is `fun n ↦ rateTime lam (n + 1)` and not `rateTime lam`, and the shift is
-not cosmetic: `truncRate lam 0` is the zero rate, at which no bounded theorem applies, and
-`rateTime_zero` says the level `0` stops at once anyway.  A subsequence of a localizing sequence
-is one, so nothing is lost. -/
-theorem jumpProcess_isLocalMPSolution {lam : E → ℝ} (hlam : Measurable lam)
+For an explosive rate this is the honest local statement of `rem:jumpexplosion`: the process solves
+the martingale problem on `[0, ζ)`, localized by `rateTime lam (n + 1) ↑ ζ`.  It is not a solution
+of the local problem on `ℝ≥0` in the sense of `IsLocalMPSolution`, and for the explosion witness
+there is none at all (`not_isLocalMPSolution_explode`). -/
+theorem martingale_stoppedProcess_rateTime_jumpProcessE {lam : E → ℝ} (hlam : Measurable lam)
     (hlam0 : ∀ x, 0 < lam x) (nu : Measure E) [IsProbabilityMeasure nu]
-    (hne : ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam) :
-    IsLocalMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
-        (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω))
-      (jumpFiltrationE lam hlam) (jumpMeasure mu nu) := by
-  intro Y hY
-  have hloc : ProbabilityTheory.IsLocalizingSequence (jumpFiltrationE lam hlam)
-      (fun n ↦ rateTime lam (n + 1)) (jumpMeasure mu nu) := by
-    have h1 : ∀ n : ℕ, IsStoppingTime (jumpFiltrationE lam hlam) (rateTime lam (n + 1)) :=
-      fun n ↦ isStoppingTime_rateTime hlam (n + 1)
-    have h2 : ∀ᵐ ω ∂(jumpMeasure mu nu),
-        Filter.Tendsto (fun n : ℕ ↦ rateTime lam (n + 1) ω) Filter.atTop (𝓝 ⊤) := by
-      filter_upwards [hne] with ω hω
-      exact (tendsto_rateTime_atTop (y := ω.1) (xi := ω.2) hω).comp
-        (Filter.tendsto_add_atTop_nat 1)
-    have h3 : ∀ᵐ ω ∂(jumpMeasure mu nu), Monotone fun n : ℕ ↦ rateTime lam (n + 1) ω :=
-      Filter.Eventually.of_forall fun ω a b hab ↦ monotone_rateTime lam ω (Nat.succ_le_succ hab)
-    exact ⟨⟨h1, h2⟩, h3⟩
-  refine ⟨fun n ↦ rateTime lam (n + 1), hloc, fun n ↦ ?_⟩
+    {Y : ℝ≥0 → (ℕ → E) × (ℕ → ℝ) → ℝ}
+    (hY : Y ∈ mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω)) (n : ℕ) :
+    Martingale (stoppedProcess (fun i ↦ {ω | ⊥ < rateTime lam (n + 1) ω}.indicator (Y i))
+      (rateTime lam (n + 1))) (jumpFiltrationE lam hlam) (jumpMeasure mu nu) := by
   obtain ⟨p, hpmem, hYeq⟩ := id hY
   obtain ⟨hf, ⟨C, hC⟩, hp2⟩ := hpmem
   have hY'mem : (fun (t : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
@@ -8209,6 +8185,49 @@ theorem jumpProcess_isLocalMPSolution {lam : E → ℝ} (hlam : Measurable lam)
     simp only [Set.mem_compl_iff, Set.mem_ofPred_eq]
     exact not_le
   exact martingale_indicator_bot hmartG hbot
+
+/-- **The local jump process solves the martingale problem of its generator locally.**  This is
+the goal of Point 5 of Milestone 4, and the first solution in this file whose rate is neither
+bounded nor even locally bounded: what is asked of it is a positive measurable rate and almost
+sure non explosion, and `ae_mem_nonExplosiveE_jumpMeasure` discharges the second at the data
+(for the linear birth and death chain, `ae_mem_nonExplosiveE_linear`).
+
+Every input is a theorem and not a description.  The localizing sequence is the hitting times of
+the running supremum of the rate along the path -- the jump times themselves are not stopping
+times for any filtration of the process (`not_isStoppingTime_min_jumpTimeE`), and
+`isLocalizingSequence_rateTime` is what replaces them.  At the level `n` the stopped process is
+the stopped process of the **truncated** rate `truncRate lam n`, as a function and not merely
+almost surely (`stoppedProcess_mpFamily_truncRate_eq`); there the rate is bounded by `n`, so
+`martingale_stoppedProcess_mpFamily_jumpProcessE` applies and gives a martingale for the
+truncated filtration.  The passage back to the local filtration is the tower step
+`martingale_of_martingale_of_stopped`, whose cut hypothesis is
+`jumpFiltrationE_inter_lt_rateTime` and whose adaptedness hypothesis is the theorem above.
+
+The localizing sequence is `fun n ↦ rateTime lam (n + 1)` and not `rateTime lam`, and the shift is
+not cosmetic: `truncRate lam 0` is the zero rate, at which no bounded theorem applies, and
+`rateTime_zero` says the level `0` stops at once anyway.  A subsequence of a localizing sequence
+is one, so nothing is lost. -/
+theorem jumpProcess_isLocalMPSolution {lam : E → ℝ} (hlam : Measurable lam)
+    (hlam0 : ∀ x, 0 < lam x) (nu : Measure E) [IsProbabilityMeasure nu]
+    (hne : ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam) :
+    IsLocalMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω))
+      (jumpFiltrationE lam hlam) (jumpMeasure mu nu) := by
+  intro Y hY
+  have hloc : ProbabilityTheory.IsLocalizingSequence (jumpFiltrationE lam hlam)
+      (fun n ↦ rateTime lam (n + 1)) (jumpMeasure mu nu) := by
+    have h1 : ∀ n : ℕ, IsStoppingTime (jumpFiltrationE lam hlam) (rateTime lam (n + 1)) :=
+      fun n ↦ isStoppingTime_rateTime hlam (n + 1)
+    have h2 : ∀ᵐ ω ∂(jumpMeasure mu nu),
+        Filter.Tendsto (fun n : ℕ ↦ rateTime lam (n + 1) ω) Filter.atTop (𝓝 ⊤) := by
+      filter_upwards [hne] with ω hω
+      exact (tendsto_rateTime_atTop (y := ω.1) (xi := ω.2) hω).comp
+        (Filter.tendsto_add_atTop_nat 1)
+    have h3 : ∀ᵐ ω ∂(jumpMeasure mu nu), Monotone fun n : ℕ ↦ rateTime lam (n + 1) ω :=
+      Filter.Eventually.of_forall fun ω a b hab ↦ monotone_rateTime lam ω (Nat.succ_le_succ hab)
+    exact ⟨⟨h1, h2⟩, h3⟩
+  exact ⟨fun n ↦ rateTime lam (n + 1), hloc,
+    fun n ↦ martingale_stoppedProcess_rateTime_jumpProcessE hlam hlam0 nu hY n⟩
 
 /-! ### The emptiness probe
 
@@ -27199,5 +27218,198 @@ second is the only item of the computation the acceptance test still owes that i
 probability. -/
 
 end WalkContainment
+
+/-! ### Acceptance of the local problem: the explosive jump process of `rem:jumpexplosion`
+
+`E = ℕ`, `μ(n, ·) = δ_{n+1}`, `λ(n) = 2ⁿ`.  The test function `f n = 1 - 2⁻ⁿ` has the constant
+generator `1/2`, and that refuses every solution, global and local, on `ℝ≥0`. -/
+
+section ExplosiveAcceptance
+
+/-- The jump kernel of `rem:jumpexplosion`: from `n` to `n + 1`. -/
+noncomputable def explodeKernel : Kernel ℕ ℕ :=
+  Kernel.deterministic (· + 1) (Measurable.of_discrete)
+
+instance : IsMarkovKernel explodeKernel := by
+  unfold explodeKernel
+  infer_instance
+
+/-- The test function of the explosion argument, `f n = 1 - 2⁻ⁿ`: bounded, and its generator
+under the rate `2ⁿ` and the kernel `n ↦ δ_{n+1}` is the constant `1/2`. -/
+noncomputable def explodeTest : ℕ → ℝ := fun n ↦ 1 - ((2 : ℝ) ^ n)⁻¹
+
+theorem explodeTest_nonneg (n : ℕ) : 0 ≤ explodeTest n := by
+  simp only [explodeTest, sub_nonneg]
+  exact inv_le_one_of_one_le₀ (one_le_pow₀ (by norm_num))
+
+theorem explodeTest_le_one (n : ℕ) : explodeTest n ≤ 1 := by
+  simp only [explodeTest, sub_le_self_iff, inv_nonneg]
+  positivity
+
+theorem jumpApply_explodeTest :
+    jumpApply explodeRate explodeKernel explodeTest = fun _ ↦ 1 / 2 := by
+  funext n
+  simp only [jumpApply, explodeKernel, Kernel.deterministic_apply, integral_dirac, explodeTest,
+    explodeRate, pow_succ]
+  have h : (2 : ℝ) ^ n ≠ 0 := by positivity
+  field_simp
+  ring
+
+/-- **The explosive jump process solves not even the local martingale problem on `ℝ≥0`**, for any
+presentation: any sample space, filtration, probability measure, `ℕ`-valued process and
+convention.  With `f n = 1 - 2⁻ⁿ` the test process is `f (X t) - t / 2` up to the convention, a
+localizing sequence `τ_n → ∞` gives `E[f (X_{t ∧ τ_n})] - E[f (X_0)] → t / 2`, and `0 ≤ f ≤ 1`
+refuses this at `t = 3`.
+
+This is `rem:jumpexplosion` read against `def:absMP` and `def:localizing`(L1): the jump times
+increase to `ζ`, not to `∞`, so they are no localizing sequence in the sense of either, and no
+other sequence is. -/
+theorem not_isLocalMPSolution_explode {Ω : Type*} {m : MeasurableSpace Ω}
+    (𝓕 : Filtration ℝ≥0 m) (P : Measure Ω) [IsProbabilityMeasure P] (X : ℝ≥0 → Ω → ℕ)
+    (c : Clock.Conv) :
+    ¬ IsLocalMPSolution (mpFamily (jumpOperator explodeRate explodeKernel) lebesgueClock c X)
+      𝓕 P := by
+  intro h
+  set Q := lebesgueClock
+  set I : ℝ≥0 → ℝ := fun t ↦ ∫ _ in Q.interval c ⊥ t, (1 / 2 : ℝ) ∂Q.q with hIdef
+  set Y : ℝ≥0 → Ω → ℝ := fun t ω ↦ explodeTest (X t ω) - I t with hYdef
+  have hY : Y ∈ mpFamily (jumpOperator explodeRate explodeKernel) lebesgueClock c X := by
+    refine ⟨(explodeTest, jumpApply explodeRate explodeKernel explodeTest),
+      mem_jumpOperator (f := explodeTest) Measurable.of_discrete (C := 1) fun n ↦ ?_,
+      fun t ω ↦ ?_⟩
+    · rw [abs_of_nonneg (explodeTest_nonneg n)]
+      exact explodeTest_le_one n
+    · show explodeTest (X t ω) - I t = explodeTest (X t ω) - ∫ s in lebesgueClock.interval c ⊥ t,
+        jumpApply explodeRate explodeKernel explodeTest (X s ω) ∂lebesgueClock.q
+      rw [jumpApply_explodeTest]
+  obtain ⟨τ, hτ, hmart⟩ := h Y hY
+  -- the compensator: `I t = q (interval) / 2`, nonnegative, `0` at `⊥`, at least `5/4` at `3`
+  have hIeq : ∀ t, I t = Q.q.real (Q.interval c ⊥ t) * (1 / 2) := fun t ↦ by
+    simp only [hIdef, setIntegral_const, smul_eq_mul]
+  have hsub : ∀ t, Q.interval c ⊥ t ⊆ Set.Iic t := fun t ↦ by
+    cases c <;> intro x hx <;> simp only [Clock.interval, Set.mem_sdiff] at hx
+    · exact hx.1
+    · exact (Set.mem_Iio.1 hx.1).le
+  have hfin : ∀ t, Q.q (Q.interval c ⊥ t) ≠ ⊤ := fun t ↦
+    ne_top_of_le_ne_top (Q.measure_Iic_ne_top t) (measure_mono (hsub t))
+  have hI0 : I ⊥ = 0 := by
+    have : Q.interval c ⊥ ⊥ = ∅ := by cases c <;> simp [Clock.interval]
+    rw [hIeq, this, measureReal_empty, zero_mul]
+  have hInn : ∀ t, 0 ≤ I t := fun t ↦ by rw [hIeq]; positivity
+  have hIle : ∀ t ≤ 3, I t ≤ Q.q.real (Set.Iic 3) * (1 / 2) := by
+    intro t ht
+    rw [hIeq]
+    gcongr
+    · exact Q.measure_Iic_ne_top 3
+    · exact (hsub t).trans (Set.Iic_subset_Iic.2 ht)
+  have hI3 : 5 / 4 ≤ I 3 := by
+    have hsub3 : Set.Ioc (0 : ℝ≥0) (5 / 2) ⊆ Q.interval c ⊥ 3 := by
+      intro x hx
+      have hx3 : x < 3 := hx.2.trans_lt (by norm_num)
+      cases c <;> simp only [Clock.interval, Set.mem_sdiff, Set.mem_Iic, Set.mem_Iio, bot_eq_zero',
+        not_le, not_lt]
+      · exact ⟨hx3.le, hx.1⟩
+      · exact ⟨hx3, zero_le⟩
+    have hmass : Q.q.real (Set.Ioc (0 : ℝ≥0) (5 / 2)) = 5 / 2 := by
+      rw [measureReal_def, lebesgueClock_apply_Ioc]
+      norm_num
+    rw [hIeq]
+    have := measureReal_mono hsub3 (hfin 3)
+    rw [hmass] at this
+    linarith
+  set C : ℝ := 1 + Q.q.real (Set.Iic 3) * (1 / 2) with hCdef
+  set Z : ℕ → Ω → ℝ := fun n ↦
+    stoppedProcess (fun i ↦ {ω | ⊥ < τ n ω}.indicator (Y i)) (τ n) 3 with hZdef
+  -- each stopped process has the mean it has at time `⊥`, which is nonnegative
+  have hmean : ∀ n, 0 ≤ ∫ ω, Z n ω ∂P := by
+    intro n
+    rw [hZdef, ← setIntegral_univ, ← (hmart n).setIntegral_eq (bot_le : (⊥ : ℝ≥0) ≤ 3)
+      MeasurableSet.univ, setIntegral_univ]
+    refine integral_nonneg fun ω ↦ ?_
+    simp only [stoppedProcess]
+    have hbot : (min ((⊥ : ℝ≥0) : WithTop ℝ≥0) (τ n ω)).untopA = ⊥ :=
+      le_bot_iff.1 (by
+        have : min ((⊥ : ℝ≥0) : WithTop ℝ≥0) (τ n ω) = ((⊥ : ℝ≥0) : WithTop ℝ≥0) :=
+          min_eq_left (by rw [WithTop.coe_bot]; exact bot_le)
+        rw [this]; rfl)
+    rw [hbot]
+    by_cases hω : ω ∈ {ω | ⊥ < τ n ω}
+    · rw [Set.indicator_of_mem hω, hYdef]
+      simp only [hI0, sub_zero]
+      exact explodeTest_nonneg _
+    · rw [Set.indicator_of_notMem hω]
+      simp
+  have hbound : ∀ n ω, ‖Z n ω‖ ≤ C := by
+    intro n ω
+    simp only [hZdef, stoppedProcess]
+    set u := (min ((3 : ℝ≥0) : WithTop ℝ≥0) (τ n ω)).untopA
+    have hu : u ≤ 3 := by
+      show (min ((3 : ℝ≥0) : WithTop ℝ≥0) (τ n ω)).untopA ≤ 3
+      induction τ n ω using WithTop.recTopCoe with
+      | top => exact le_of_eq (by simp; rfl)
+      | coe v => rw [← WithTop.coe_min]; exact min_le_left _ _
+    have hC0 : 0 ≤ C := by rw [hCdef]; positivity
+    by_cases hω : ω ∈ {ω | ⊥ < τ n ω}
+    · rw [Set.indicator_of_mem hω, hYdef, Real.norm_eq_abs, abs_le]
+      have h1 := explodeTest_nonneg (X u ω)
+      have h2 := explodeTest_le_one (X u ω)
+      have h3 := hInn u
+      have h4 := hIle u hu
+      constructor <;> simp only [] <;> linarith
+    · rw [Set.indicator_of_notMem hω, norm_zero]
+      exact hC0
+  have hlim : ∀ᵐ ω ∂P, Tendsto (fun n ↦ Z n ω) atTop (𝓝 (Y 3 ω)) := by
+    filter_upwards [hτ.tendsto_top] with ω hω
+    have hev : ∀ᶠ n in atTop, ((3 : ℝ≥0) : WithTop ℝ≥0) < τ n ω :=
+      hω.eventually (lt_mem_nhds (WithTop.coe_lt_top 3))
+    refine tendsto_const_nhds.congr' (hev.mono fun n hn ↦ ?_)
+    have hpos : ⊥ < τ n ω := lt_of_le_of_lt bot_le hn
+    simp only [hZdef, stoppedProcess, min_eq_left hn.le]
+    rw [Set.indicator_of_mem (show ω ∈ {ω | ⊥ < τ n ω} from hpos)]
+    rfl
+  have hconv := tendsto_integral_of_dominated_convergence (fun _ ↦ C)
+    (fun n ↦ ((hmart n).integrable 3).aestronglyMeasurable) (integrable_const C)
+    (fun n ↦ ae_of_all _ (hbound n)) hlim
+  have hlimnn : 0 ≤ ∫ ω, Y 3 ω ∂P := ge_of_tendsto' hconv hmean
+  have hY3m : AEStronglyMeasurable (Y 3) P :=
+    aestronglyMeasurable_of_tendsto_ae atTop
+      (fun n ↦ ((hmart n).integrable 3).aestronglyMeasurable) hlim
+  have hY3i : Integrable (Y 3) P := by
+    refine Integrable.mono' (integrable_const C) hY3m (ae_of_all _ fun ω ↦ ?_)
+    rw [hYdef, Real.norm_eq_abs, abs_le]
+    have h1 := explodeTest_nonneg (X 3 ω)
+    have h2 := explodeTest_le_one (X 3 ω)
+    have h3 := hInn 3
+    have h4 := hIle 3 le_rfl
+    constructor <;> simp only [] <;> linarith
+  have hY3 : ∫ ω, Y 3 ω ∂P ≤ -(1 / 4) := by
+    calc ∫ ω, Y 3 ω ∂P ≤ ∫ _ : Ω, (-(1 / 4) : ℝ) ∂P := by
+          refine integral_mono hY3i (integrable_const _) fun ω ↦ ?_
+          have h2 := explodeTest_le_one (X 3 ω)
+          show explodeTest (X 3 ω) - I 3 ≤ -(1 / 4)
+          linarith
+      _ = -(1 / 4) := by simp
+  linarith
+
+
+/-- The global problem has no solution either, a fortiori. -/
+theorem not_isMPSolution_explode {Ω : Type*} {m : MeasurableSpace Ω}
+    (𝓕 : Filtration ℝ≥0 m) (P : Measure Ω) [IsProbabilityMeasure P] (X : ℝ≥0 → Ω → ℕ)
+    (c : Clock.Conv) :
+    ¬ IsMPSolution (mpFamily (jumpOperator explodeRate explodeKernel) lebesgueClock c X) 𝓕 P :=
+  fun h ↦ not_isLocalMPSolution_explode 𝓕 P X c (isLocalMPSolution_of_isMPSolution h)
+
+/-- **The explosion witness explodes with positive probability, by the martingale argument.**
+If the data of `rem:jumpexplosion` did not explode almost surely, `jumpProcess_isLocalMPSolution`
+would make the constructed process a local solution, which `not_isLocalMPSolution_explode`
+forbids.  The manuscript computes `E[ζ] = ∑ 2⁻ⁿ < ∞` instead; here no distribution of `ζ` is
+computed.  What stays true is `martingale_stoppedProcess_rateTime_jumpProcessE` at every level:
+the process solves the problem on `[0, ζ)`. -/
+theorem not_ae_mem_nonExplosiveE_explode (nu : Measure ℕ) [IsProbabilityMeasure nu] :
+    ¬ ∀ᵐ ω ∂(jumpMeasure explodeKernel nu), ω ∈ NonExplosiveE explodeRate := fun hne ↦
+  not_isLocalMPSolution_explode _ _ _ _ (jumpProcess_isLocalMPSolution (mu := explodeKernel)
+    Measurable.of_discrete (fun x ↦ by simp only [explodeRate]; positivity) nu hne)
+
+end ExplosiveAcceptance
 
 end MeasureTheory

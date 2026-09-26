@@ -1,8 +1,8 @@
 # Deklarationen, die es auf `94ef6b89544e58e90f119da869f3fb48d1da0f4c` schon geben könnte
 
-* geprüfte eigene Deklarationen: **2213**
+* geprüfte eigene Deklarationen: **2233**
 * Treffer auf dem letzten Namensbestandteil: **48**
-* als zu allgemein übergangen (kurz oder generisch): 26
+* als zu allgemein übergangen (kurz oder generisch): 27
 
 Ein Treffer ist ein **Anhaltspunkt**, keine Doppelung. Er sagt, daß Mathlib einen Satz mit demselben letzten Namensbestandteil hat — nachzusehen ist, ob es dieselbe Aussage ist.
 

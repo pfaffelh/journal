@@ -47740,3 +47740,234 @@ theorem isStrictStoppingTime_top {𝓕₀ : Filtration ι mF} {π : ι → F →
   comp_self := fun _ ↦ rfl
 
 end StrictTop
+
+/-! ### The Markovian case of pasting, `cor:pastingmarkov`
+
+A concatenation at a strict stopping time and a kernel of solutions after it give a restart
+kernel.  On the canonical space with the natural filtration; the transport of the filtrations is
+`measurable_of_eval_concat_of_natural`, the constancy of the past along the concatenation is
+`mem_iff_of_eval_eq_of_natural`. -/
+
+section PastingMarkov
+
+variable {ι : Type*} [LinearOrder ι] [OrderBot ι] [AddCommMonoid ι] [IsOrderedCancelAddMonoid ι]
+  [CanonicallyOrderedAdd ι]
+variable {F : Type*} {mF : MeasurableSpace F} {𝕂 : Type*} [RCLike 𝕂]
+variable {E : Type*} [MeasurableSpace E] {π : ι → F → E}
+
+omit [OrderBot ι] [AddCommMonoid ι] [IsOrderedCancelAddMonoid ι] [CanonicallyOrderedAdd ι] in
+/-- A set of the natural past at `r` does not separate two paths that agree on `[0, r]`.  The sets
+that do not separate them form a σ-algebra containing every generator `π v⁻¹ D`, `v ≤ r`. -/
+theorem mem_iff_of_eval_eq_of_natural {𝓕₀ : Filtration ι mF}
+    (h𝓕 : ∀ s : ι, (𝓕₀ s : MeasurableSpace F)
+      = ⨆ u ∈ Set.Iic s, MeasurableSpace.comap (π u) inferInstance)
+    {r : ι} {B : Set F} (hB : MeasurableSet[𝓕₀ r] B) {f g : F}
+    (hfg : ∀ v ≤ r, π v f = π v g) : f ∈ B ↔ g ∈ B := by
+  let m : MeasurableSpace F :=
+    { MeasurableSet' := fun C ↦ (f ∈ C ↔ g ∈ C)
+      measurableSet_empty := by simp
+      measurableSet_compl := fun C hC ↦ by simp only [Set.mem_compl_iff]; exact not_congr hC
+      measurableSet_iUnion := fun C hC ↦ by simp only [Set.mem_iUnion]; exact exists_congr hC }
+  have hle : (𝓕₀ r : MeasurableSpace F) ≤ m := by
+    rw [h𝓕 r]
+    refine iSup₂_le fun v hv ↦ ?_
+    rintro C ⟨D, -, rfl⟩
+    show f ∈ π v ⁻¹' D ↔ g ∈ π v ⁻¹' D
+    simp only [Set.mem_preimage, hfg v hv]
+  exact hle B hB
+
+omit [OrderBot ι] in
+/-- **The transport of the natural filtration under concatenation**, the step "`𝓕°_{r+u}`
+coincides with `θ_r⁻¹ 𝓕°_u`" of `cor:pastingmarkov`, read from the side of the concatenation: if
+`γ` keeps a fixed path `c` strictly before `r` and puts `β` after `r`, then `γ` is measurable from
+the past at `u` to the past at `r + u`.  It is the counterpart of `shiftMeasurable_of_natural`. -/
+theorem measurable_of_eval_concat_of_natural {𝓕₀ : Filtration ι mF}
+    (h𝓕 : ∀ s : ι, (𝓕₀ s : MeasurableSpace F)
+      = ⨆ u ∈ Set.Iic s, MeasurableSpace.comap (π u) inferInstance)
+    {γ : F → F} {r : ι} {c : F} (hbefore : ∀ v : ι, v < r → ∀ β, π v (γ β) = π v c)
+    (hafter : ∀ (w : ι) β, π (r + w) (γ β) = π w β) (u : ι) :
+    Measurable[𝓕₀ u, 𝓕₀ (r + u)] γ := by
+  rw [measurable_iff_comap_le, h𝓕 (r + u), MeasurableSpace.comap_iSup]
+  refine iSup_le fun v ↦ ?_
+  rw [MeasurableSpace.comap_iSup]
+  refine iSup_le fun hv ↦ ?_
+  rw [MeasurableSpace.comap_comp]
+  rcases lt_or_ge v r with hvr | hrv
+  · have hc : (π v ∘ γ) = fun _ ↦ π v c := funext fun β ↦ hbefore v hvr β
+    rw [hc, MeasurableSpace.comap_const]
+    exact bot_le
+  · obtain ⟨w, rfl⟩ := exists_add_of_le hrv
+    have hw : w ≤ u := le_of_add_le_add_left (a := r) hv
+    have hc : (π (r + w) ∘ γ) = π w := funext fun β ↦ hafter w β
+    rw [hc, h𝓕 u]
+    exact le_iSup₂ (f := fun v (_ : v ∈ Set.Iic u) ↦
+      MeasurableSpace.comap (π v) (inferInstance : MeasurableSpace E)) w hw
+
+omit [LinearOrder ι] [OrderBot ι] [AddCommMonoid ι] [IsOrderedCancelAddMonoid ι]
+  [CanonicallyOrderedAdd ι] [MeasurableSpace E] in
+/-- **The concatenation kernel** `α ↦ law of γ(α, β)`, `β ∼ κ₀ α`, of `cor:pastingmarkov`. -/
+noncomputable def concatKernel (κ₀ : Kernel F F) (γ : F → F → F) : Kernel F F :=
+  (Kernel.id ×ₖ κ₀).map (Function.uncurry γ)
+
+omit [LinearOrder ι] [OrderBot ι] [AddCommMonoid ι] [IsOrderedCancelAddMonoid ι]
+  [CanonicallyOrderedAdd ι] [MeasurableSpace E] in
+theorem concatKernel_apply {κ₀ : Kernel F F} [IsSFiniteKernel κ₀] {γ : F → F → F}
+    (hγ : Measurable (Function.uncurry γ)) (α : F) :
+    concatKernel κ₀ γ α = (κ₀ α).map (γ α) := by
+  rw [concatKernel, Kernel.map_apply _ hγ, Kernel.prod_apply, Kernel.id_apply, Measure.dirac_prod,
+    Measure.map_map hγ measurable_prodMk_left]
+  rfl
+
+/-- **`cor:pastingmarkov`**: on the canonical space with its natural filtration, a full shift
+system, a kernel `κ₀` of solutions after `T` and a concatenation `γ` at the strict stopping time
+`T` give the restart kernel `α ↦ law of γ(α, β)`, `β ∼ κ₀ α`.
+
+`hfull` is fullness; `hsol` says that `κ₀ α` solves the problem `𝓧₀ r` posed at `r = T α`.  The
+concatenation keeps the path strictly before `T α` (`hbefore`), is undone by the shift
+(`hshift`), and keeps the stopped path almost surely (`hkeep`).  `hkeep` is almost sure because
+at `T α` the concatenated path takes the value `β_0`, which is `α_{T α}` only for almost every
+`β`; this is where the initial law `δ_{α_{T α}}` of the manuscript enters, and the only place.
+
+`[MeasurableSingletonClass F]` is (E1) of the manuscript: the push forward of an almost sure
+statement is almost sure only for a measurable event, and `{β | a β = a α}` is measurable as the
+preimage of a point.  The shift-system clauses of `IsShiftSystem` other than fullness are not used,
+and neither is the measurability of `(x, r) ↦ P_{x,r}`: it only serves to make `κ₀` a kernel,
+which is here a hypothesis. -/
+theorem isRestartKernel_concatKernel [MeasurableSingletonClass F] {S : Shift F π}
+    {𝓕₀ : Filtration ι mF}
+    (h𝓕 : ∀ s : ι, (𝓕₀ s : MeasurableSpace F)
+      = ⨆ u ∈ Set.Iic s, MeasurableSpace.comap (π u) inferInstance)
+    {𝓧 : Set (ι → F → 𝕂)} {𝓧₀ : ι → Set (ι → F → 𝕂)}
+    (hadapt : ∀ Y ∈ 𝓧, StronglyAdapted 𝓕₀ Y)
+    (hfull : ∀ Y ∈ 𝓧, ∀ r : ι, ∃ Ŷ ∈ 𝓧₀ r, ∃ κ : F → 𝕂, StronglyMeasurable[𝓕₀ r] κ ∧
+      ∀ (u : ι) (f : F), Ŷ u (S.θ r f) = Y (r + u) f - Y r f + κ f)
+    {T : F → WithTop ι} {a : F → F} (hT : IsStrictStoppingTime 𝓕₀ π T a)
+    {κ₀ : Kernel F F} [IsMarkovKernel κ₀]
+    (hsol : ∀ α (r : ι), T α = r → IsMPSolution (𝓧₀ r) 𝓕₀ (κ₀ α))
+    {γ : F → F → F} (hγ : Measurable (Function.uncurry γ))
+    (hkeep : ∀ α, ∀ᵐ β ∂κ₀ α, a (γ α β) = a α)
+    (hbefore : ∀ α β (v : ι), (v : WithTop ι) < T α → π v (γ α β) = π v α)
+    (hshift : ∀ α β (r : ι), T α = r → S.θ r (γ α β) = β) :
+    IsRestartKernel 𝓧 𝓕₀ T a (concatKernel κ₀ γ) := by
+  have hγα : ∀ α, Measurable (γ α) := fun α ↦ hγ.comp measurable_prodMk_left
+  have happ := concatKernel_apply (κ₀ := κ₀) hγ
+  have hsm : ∀ Y ∈ 𝓧, ∀ u, StronglyMeasurable (Y u) := fun Y hY u ↦
+    (hadapt Y hY u).mono (𝓕₀.le u)
+  -- an `𝓕₀ r`-measurable function is almost surely constant along the concatenation at `r = T α`
+  have hconst : ∀ α (r : ι), T α = r → ∀ g : F → 𝕂, StronglyMeasurable[𝓕₀ r] g →
+      ∀ᵐ β ∂κ₀ α, g (γ α β) = g α := by
+    intro α r hr g hg
+    filter_upwards [hkeep α] with β hβ
+    have hTβ : T (γ α β) = r := by rw [← hT.comp_self, hβ, hT.comp_self, hr]
+    have hmin : ∀ f, T f = r → ∀ v ≤ r, π v (a f) = π v f := by
+      intro f hf v hv
+      rw [hT.eval_comp, hf, min_eq_left (WithTop.coe_le_coe.2 hv)]
+      rfl
+    have hfg : ∀ v ≤ r, π v (γ α β) = π v α := fun v hv ↦ by
+      rw [← hmin _ hTβ v hv, hβ, hmin _ hr v hv]
+    have hm : MeasurableSet[𝓕₀ r] (g ⁻¹' {g α}) := hg.measurable (measurableSet_singleton _)
+    exact (mem_iff_of_eval_eq_of_natural h𝓕 hm hfg).2 rfl
+  -- after `r = T α`, a test process along the concatenation is the restarted one plus a constant
+  have hkey : ∀ Y ∈ 𝓧, ∀ α (r : ι), T α = r → ∃ Ŷ ∈ 𝓧₀ r, ∃ c : 𝕂, ∀ w : ι,
+      ∀ᵐ β ∂κ₀ α, Y (r + w) (γ α β) = Ŷ w β + c := by
+    intro Y hY α r hr
+    obtain ⟨Ŷ, hŶ, κ, hκm, hrep⟩ := hfull Y hY r
+    refine ⟨Ŷ, hŶ, Y r α - κ α, fun w ↦ ?_⟩
+    filter_upwards [hconst α r hr (Y r - κ) ((hadapt Y hY r).sub hκm)] with β hβ
+    have h := hrep w (γ α β)
+    rw [hshift α β r hr] at h
+    rw [Pi.sub_apply, Pi.sub_apply] at hβ
+    rw [← hβ, h]
+    ring
+  have huntop : ∀ α (t : ι), T α ≤ t → ∃ r : ι, T α = r := fun α t ht ↦
+    ⟨(T α).untop (ne_top_of_le_ne_top WithTop.coe_ne_top ht), (WithTop.coe_untop _ _).symm⟩
+  refine ⟨⟨fun α ↦ ?_⟩, fun α ↦ ?_, fun Y hY α t ht ↦ ?_, fun Y hY α s t hs hst A hA ↦ ?_⟩
+  · rw [happ]
+    infer_instance
+  · rw [happ]
+    exact (ae_map_iff (hγα α).aemeasurable (hT.measurable (measurableSet_singleton (a α)))).2
+      (hkeep α)
+  · obtain ⟨r, hr⟩ := huntop α t ht
+    obtain ⟨v, rfl⟩ := exists_add_of_le (WithTop.coe_le_coe.1 (hr ▸ ht))
+    obtain ⟨Ŷ, hŶ, c, hc⟩ := hkey Y hY α r hr
+    rw [happ, integrable_map_measure (hsm Y hY _).aestronglyMeasurable (hγα α).aemeasurable]
+    exact ((((hsol α r hr) Ŷ hŶ).integrable v).add (integrable_const c)).congr
+      ((hc v).mono fun β h ↦ h.symm)
+  · obtain ⟨r, hr⟩ := huntop α s hs
+    obtain ⟨u, rfl⟩ := exists_add_of_le (WithTop.coe_le_coe.1 (hr ▸ hs))
+    obtain ⟨v, rfl⟩ := exists_add_of_le hst
+    obtain ⟨Ŷ, hŶ, c, hc⟩ := hkey Y hY α r hr
+    have hM := (hsol α r hr) Ŷ hŶ
+    have hAm : MeasurableSet A := 𝓕₀.le _ A hA
+    have hA' : MeasurableSet[𝓕₀ u] (γ α ⁻¹' A) := by
+      refine measurable_of_eval_concat_of_natural h𝓕 (c := α)
+        (fun w hw β ↦ hbefore α β w (hr ▸ WithTop.coe_lt_coe.2 hw))
+        (fun w β ↦ ?_) u hA
+      rw [← S.eval_comp r w, hshift α β r hr]
+    have hrepr : ∀ w : ι, ∫ β in A, Y (r + w) β ∂(concatKernel κ₀ γ α)
+        = ∫ β in γ α ⁻¹' A, Ŷ w β ∂κ₀ α + ∫ _ in γ α ⁻¹' A, c ∂κ₀ α := by
+      intro w
+      rw [happ, setIntegral_map hAm (hsm Y hY _).aestronglyMeasurable (hγα α).aemeasurable,
+        ← integral_add (hM.integrable w).integrableOn (integrable_const c).integrableOn]
+      exact setIntegral_congr_ae (hγα α hAm) ((hc w).mono fun β h _ ↦ h)
+    rw [add_assoc, hrepr, hrepr, ← hM.setIntegral_eq (le_self_add : u ≤ u + v) hA']
+
+/-- **`cor:pastingmarkov`, last clause: `thm:localuniqueness` applies.**  If at every strict
+stopping time there are a kernel of solutions after `T` and a concatenation as in
+`isRestartKernel_concatKernel`, together with the integrability of `lem:pasting`, uniqueness
+implies local uniqueness. -/
+theorem hasLocalUniqueness_of_concatenation [MeasurableSingletonClass F] {S : Shift F π}
+    {𝓕₀ : Filtration ι mF}
+    (h𝓕 : ∀ s : ι, (𝓕₀ s : MeasurableSpace F)
+      = ⨆ u ∈ Set.Iic s, MeasurableSpace.comap (π u) inferInstance)
+    {𝓧 : Set (ι → F → 𝕂)} {𝓧₀ : ι → Set (ι → F → 𝕂)} (hπ : Measurable (π ⊥))
+    (hadapt : ∀ Y ∈ 𝓧, StronglyAdapted 𝓕₀ Y)
+    (hfull : ∀ Y ∈ 𝓧, ∀ r : ι, ∃ Ŷ ∈ 𝓧₀ r, ∃ κ : F → 𝕂, StronglyMeasurable[𝓕₀ r] κ ∧
+      ∀ (u : ι) (f : F), Ŷ u (S.θ r f) = Y (r + u) f - Y r f + κ f)
+    (hYT : ∀ (T : F → WithTop ι) (a : F → F) (hT : IsStrictStoppingTime 𝓕₀ π T a), ∀ Y ∈ 𝓧,
+      ∀ u : ι, StronglyMeasurable[hT.isStoppingTime.measurableSpace] (stoppedProcess Y T u))
+    (hconcat : ∀ (T : F → WithTop ι) (a : F → F), IsStrictStoppingTime 𝓕₀ π T a →
+      ∃ (κ₀ : Kernel F F) (γ : F → F → F), IsMarkovKernel κ₀ ∧
+        (∀ α (r : ι), T α = r → IsMPSolution (𝓧₀ r) 𝓕₀ (κ₀ α)) ∧
+        Measurable (Function.uncurry γ) ∧ (∀ α, ∀ᵐ β ∂κ₀ α, a (γ α β) = a α) ∧
+        (∀ α β (v : ι), (v : WithTop ι) < T α → π v (γ α β) = π v α) ∧
+        (∀ α β (r : ι), T α = r → S.θ r (γ α β) = β) ∧
+        ∀ P : Measure F, IsProbabilityMeasure P →
+          IsMPSolution ((fun Y ↦ stoppedProcess Y T) '' 𝓧) 𝓕₀ P →
+          ∀ Y ∈ 𝓧, ∀ t : ι, Integrable (fun α ↦ ∫ β, ‖Y t β‖ ∂(concatKernel κ₀ γ α)) P)
+    (huniq : ∀ Q Q' : Measure F, IsProbabilityMeasure Q → IsProbabilityMeasure Q' →
+      IsMPSolution 𝓧 𝓕₀ Q → IsMPSolution 𝓧 𝓕₀ Q' → Q.map (π ⊥) = Q'.map (π ⊥) → Q = Q') :
+    HasLocalUniqueness 𝓧 𝓕₀ π := by
+  refine hasLocalUniqueness_of_restartKernel hπ hadapt hYT (fun T a hT ↦ ?_) huniq
+  obtain ⟨κ₀, γ, hκ₀, hsol, hγ, hkeep, hbefore, hshift, hint⟩ := hconcat T a hT
+  exact ⟨concatKernel κ₀ γ,
+    isRestartKernel_concatKernel h𝓕 hadapt hfull hT hsol hγ hkeep hbefore hshift, hint⟩
+
+omit [AddCommMonoid ι] [IsOrderedCancelAddMonoid ι] [CanonicallyOrderedAdd ι]
+  [MeasurableSpace E] in
+/-- **Emptiness check of the concatenation hypotheses at `T ≡ ⊤`**: `γ α β = α` keeps the whole
+path, the conditions after `T` are void, and the concatenation kernel is `α ↦ δ_α`.  It checks
+that the hypotheses of `isRestartKernel_concatKernel` are jointly satisfiable, not that they are
+satisfiable at a finite time. -/
+theorem concatKernel_const_apply {κ₀ : Kernel F F} [IsMarkovKernel κ₀] (α : F) :
+    concatKernel κ₀ (fun α _ ↦ α) α = Measure.dirac α := by
+  rw [concatKernel_apply (by exact measurable_fst), Measure.map_const, measure_univ, one_smul]
+
+/-- The emptiness check run through `isRestartKernel_concatKernel`: at `T ≡ ⊤` with `a = id` and
+`γ α β = α`, every hypothesis is met and the conclusion is a restart kernel. -/
+theorem isRestartKernel_concatKernel_top [MeasurableSingletonClass F] {S : Shift F π}
+    {𝓕₀ : Filtration ι mF}
+    (h𝓕 : ∀ s : ι, (𝓕₀ s : MeasurableSpace F)
+      = ⨆ u ∈ Set.Iic s, MeasurableSpace.comap (π u) inferInstance)
+    (hgen : (⨆ t, 𝓕₀ t : MeasurableSpace F) = mF)
+    {𝓧 : Set (ι → F → 𝕂)} {𝓧₀ : ι → Set (ι → F → 𝕂)}
+    (hadapt : ∀ Y ∈ 𝓧, StronglyAdapted 𝓕₀ Y)
+    (hfull : ∀ Y ∈ 𝓧, ∀ r : ι, ∃ Ŷ ∈ 𝓧₀ r, ∃ κ : F → 𝕂, StronglyMeasurable[𝓕₀ r] κ ∧
+      ∀ (u : ι) (f : F), Ŷ u (S.θ r f) = Y (r + u) f - Y r f + κ f)
+    {κ₀ : Kernel F F} [IsMarkovKernel κ₀] :
+    IsRestartKernel 𝓧 𝓕₀ (fun _ ↦ ⊤) id (concatKernel κ₀ (fun α _ ↦ α)) :=
+  isRestartKernel_concatKernel (𝓧₀ := 𝓧₀) h𝓕 hadapt hfull (isStrictStoppingTime_top hgen)
+    (fun _ _ h ↦ absurd h WithTop.top_ne_coe) measurable_fst
+    (fun _ ↦ ae_of_all _ fun _ ↦ rfl) (fun _ _ _ _ ↦ rfl) (fun _ _ _ h ↦ absurd h WithTop.top_ne_coe)
+
+end PastingMarkov
