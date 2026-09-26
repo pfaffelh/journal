@@ -18879,6 +18879,78 @@ theorem integrable_mpFamily_coordinate {A : Set ((E → ℝ) × (E → ℝ))} (c
   rw [Real.norm_eq_abs] at hb h1
   linarith
 
+/-! #### The regularity hypotheses of `isStrongMarkov_mpFamily` on the canonical space
+
+`isStrongMarkov_mpFamily` asks the test processes along the process for right continuity (`hrc`)
+and strong progressivity (`hprog`), and it asks for the value of `p.1` at the random time to be
+measurable (`hK`).  For the coordinate process of `RightContinuousPath E` and the Lebesgue clock
+the three hold over a bare `[MeasurableSpace E]`, at every path and not only almost surely.  Right
+local constancy is all they read.  The shifted path at a random time (`hψ`, `hψadapt`) is not
+among them: its measurability is an `E`-valued statement, and over a bare measurable space only
+the real functionals of the coordinates are jointly measurable
+(`measurable_uncurry_of_isRightLocallyConstant`). -/
+
+/-- **`hrc` on the canonical space**: every test process of the optional convention has right
+continuous paths, at every path.  The state term is right locally constant, and the compensator
+is a primitive of a bounded measurable function. -/
+theorem tendsto_nhdsGE_mpFamily_coordinate {A : Set ((E → ℝ) × (E → ℝ))}
+    (hgm : ∀ p ∈ A, Measurable p.2) (hgb : ∀ p ∈ A, ∃ b, ∀ x, |p.2 x| ≤ b)
+    {Y : ℝ≥0 → RightContinuousPath E → ℝ}
+    (hY : Y ∈ mpFamily A lebesgueClock Clock.Conv.optional
+      (coordinate : ℝ≥0 → RightContinuousPath E → E))
+    (f : RightContinuousPath E) (s : ℝ≥0) :
+    Tendsto (fun r ↦ Y r f) (𝓝[≥] s) (𝓝 (Y s f)) := by
+  obtain ⟨p, hp, hYeq⟩ := hY
+  obtain ⟨b, hb⟩ := hgb p hp
+  have hWm : Measurable fun u : ℝ ↦ p.2 (coordinate u.toNNReal f) :=
+    (measurable_comp_coordinate (hgm p hp) f).comp measurable_real_toNNReal
+  refine tendsto_nhdsGE_of_intervalIntegrable_mpFamilyF (X := coordinate)
+    (W := fun u f' ↦ p.2 (coordinate u.toNNReal f')) (f := p.1) f
+    (fun r f' ↦ by simpa only [Real.toNNReal_coe] using hYeq r f') ?_ hWm
+    (fun r ↦ intervalIntegrable_of_abs_le hWm (fun u ↦ hb _) 0 r) s
+  intro u
+  obtain ⟨ε, hε, hconst⟩ := isRightLocallyConstant_coordinate f u
+  filter_upwards [Ico_mem_nhdsGE (show u < u + ε from lt_add_of_pos_right u hε)] with v hv
+  rw [hconst v hv.1 hv.2]
+
+/-- A real functional of the coordinate process, stopped at `t`, is measurable for
+`Borel ℝ≥0 ⊗ pathFiltration t`.  `measurable_uncurry_min_of_isRightLocallyConstant` with the past
+at `t` as the σ-algebra on the path space. -/
+theorem measurable_uncurry_min_coordinate_pathFiltration {h : E → ℝ} (hh : Measurable h)
+    (t : ℝ≥0) :
+    Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod (pathFiltration t)]
+      fun p : ℝ≥0 × RightContinuousPath E ↦ h (coordinate (min p.1 t) p.2) :=
+  @measurable_uncurry_min_of_isRightLocallyConstant E _ (RightContinuousPath E) (pathFiltration t)
+    coordinate t (fun _ hu ↦ measurable_pathFiltration hu) isRightLocallyConstant_coordinate h hh
+
+/-- **`hprog` on the canonical space**: every test process of the coordinate process is strongly
+progressive for `pathFiltration`, in either convention.
+`isStronglyProgressive_of_measurable_uncurry_mpFamilyF`, fed twice with
+`measurable_uncurry_min_coordinate_pathFiltration`. -/
+theorem isStronglyProgressive_mpFamily_coordinate {A : Set ((E → ℝ) × (E → ℝ))}
+    (c : Clock.Conv) (hfm : ∀ p ∈ A, Measurable p.1) (hgm : ∀ p ∈ A, Measurable p.2)
+    {Y : ℝ≥0 → RightContinuousPath E → ℝ}
+    (hY : Y ∈ mpFamily A lebesgueClock c (coordinate : ℝ≥0 → RightContinuousPath E → E)) :
+    IsStronglyProgressive (pathFiltration (E := E)) Y := by
+  obtain ⟨p, hp, hYeq⟩ := hY
+  refine isStronglyProgressive_of_measurable_uncurry_mpFamilyF (c := c) (f := p.1)
+    (X := coordinate) (W := fun u f' ↦ p.2 (coordinate u.toNNReal f'))
+    (fun r f' ↦ by simpa only [Real.toNNReal_coe] using hYeq r f')
+    (measurable_uncurry_min_coordinate_pathFiltration (hfm p hp)) fun t ↦ ?_
+  have hmin : ∀ q : ℝ≥0 × RightContinuousPath E,
+      (min (q.1 : ℝ) (t : ℝ)).toNNReal = min q.1 t := fun q ↦ by
+    rw [← NNReal.coe_min, Real.toNNReal_coe]
+  simp only [hmin]
+  exact measurable_uncurry_min_coordinate_pathFiltration (hgm p hp) t
+
+/-- **`hK` on the canonical space**: a real functional of the coordinate at a measurable random
+time is measurable.  `measurable_uncurry_coordinate` composed with `(τ, X)`. -/
+theorem measurable_comp_coordinate_randomTime {Ω' : Type*} {m' : MeasurableSpace Ω'}
+    {h : E → ℝ} (hh : Measurable h) {τ : Ω' → ℝ≥0} (hτ : Measurable τ)
+    {X : Ω' → RightContinuousPath E} (hX : Measurable X) :
+    Measurable fun ω ↦ h (coordinate (τ ω) (X ω)) :=
+  (measurable_uncurry_coordinate hh).comp (hτ.prodMk hX)
+
 end RightContinuousPath
 
 end CanonicalPathSpace
@@ -52270,3 +52342,160 @@ theorem measure_biSup_enorm_le_of_isBrownianReal {Ω' : Type*} {mΩ' : Measurabl
     (integral_norm_le_sqrt_of_isPreBrownianReal hX.toIsPreBrownianReal hm T)
 
 end ContinuousTimeMartingales
+
+/-! ### `IsMPSolutionFor.map` along equality of laws
+
+Milestone 2 asks that the solution property depend on `P` only through the law of `X`.  Along a
+modification this is `IsMPSolutionFor.of_forall_ae_eq`.  Along equality of laws it is the
+statement below.  `X` factors through a path map `Φ : Ω → F` into a space with coordinates `π`,
+and for the natural filtrations `P` solves the problem for `X` exactly when `P.map Φ` solves it
+for the coordinates.  Two processes with the same path law therefore solve the same problems.
+
+The one hypothesis beyond measurability is the adaptedness of the coordinate test processes on
+`F`, and it is a genuine hypothesis.  On the full product `ι → E` with `ι` uncountable the
+compensator `x ↦ ∫ g (x u) du` is not measurable for the product σ-algebra, and the law of `Φ`
+on that σ-algebra does not determine the law of the compensator.  On `RightContinuousPath E` it
+holds (`RightContinuousPath.stronglyAdapted_mpFamily_coordinate`), and there the statement has no
+hypothesis beyond measurability (`isMPSolutionFor_iff_map_pathFiltration`). -/
+
+section MPSolutionLaw
+
+/-- **A martingale transfers along a map in both directions** when the filtration on the source is
+the pull back of the filtration on the target and the process on the target is adapted.  The two
+directions are `martingale_comp_of_map_eq` and `martingale_map_of_martingale_comp`.  Here they are
+stated for values in a real Banach space, as the `𝕂`-valued test processes need. -/
+theorem martingale_comp_iff_of_comap_eq {Ω' Ω'' : Type*} {m' : MeasurableSpace Ω'}
+    {m'' : MeasurableSpace Ω''} {ι' : Type*} [Preorder ι'] {V : Type*} [NormedAddCommGroup V]
+    [NormedSpace ℝ V] [CompleteSpace V] {θ : Ω'' → Ω'} (hθ : Measurable θ) {P : Measure Ω''}
+    [IsFiniteMeasure P] {𝓕 : Filtration ι' m'} {𝓖 : Filtration ι' m''}
+    (h𝓖 : ∀ i, (𝓖 i : MeasurableSpace Ω'') = MeasurableSpace.comap θ (𝓕 i))
+    {Y : ι' → Ω' → V} (hadp : StronglyAdapted 𝓕 Y) :
+    Martingale (fun i ω ↦ Y i (θ ω)) 𝓖 P ↔ Martingale Y 𝓕 (P.map θ) := by
+  have : IsFiniteMeasure (P.map θ) := P.isFiniteMeasure_map θ
+  have haes : ∀ i, AEStronglyMeasurable (Y i) (P.map θ) := fun i ↦
+    ((hadp i).mono (𝓕.le i)).aestronglyMeasurable
+  have hθi : ∀ i, Measurable[𝓖 i, 𝓕 i] θ := fun i ↦ by
+    rw [measurable_iff_comap_le]
+    exact (h𝓖 i).ge
+  have hswap : ∀ k {A : Set Ω'}, MeasurableSet A →
+      ∫ y in A, Y k y ∂(P.map θ) = ∫ ω in θ ⁻¹' A, Y k (θ ω) ∂P := fun k _ hA ↦
+    setIntegral_map hA (haes k) hθ.aemeasurable
+  constructor
+  · intro hY
+    have hint : ∀ i, Integrable (Y i) (P.map θ) := fun i ↦
+      (integrable_map_measure (haes i) hθ.aemeasurable).2 (hY.integrable i)
+    refine ⟨hadp, fun i j hij ↦ ?_⟩
+    refine (ae_eq_condExp_of_forall_setIntegral_eq (𝓕.le i) (hint j)
+      (fun S _ _ ↦ (hint i).integrableOn) ?_ (hadp i).aestronglyMeasurable).symm
+    intro A hA _
+    rw [hswap i (𝓕.le i A hA), hswap j (𝓕.le i A hA)]
+    exact hY.setIntegral_eq hij (hθi i hA)
+  · intro hY
+    have hadp' : ∀ i, StronglyMeasurable[𝓖 i] fun ω ↦ Y i (θ ω) := fun i ↦
+      (hadp i).comp_measurable (hθi i)
+    have hint : ∀ k, Integrable (fun ω ↦ Y k (θ ω)) P := fun k ↦
+      (integrable_map_measure (haes k) hθ.aemeasurable).1 (hY.integrable k)
+    refine ⟨hadp', fun i j hij ↦ ?_⟩
+    refine (ae_eq_condExp_of_forall_setIntegral_eq (𝓖.le i) (hint j)
+      (fun S _ _ ↦ (hint i).integrableOn) ?_ (hadp' i).aestronglyMeasurable).symm
+    intro S hS _
+    rw [h𝓖 i] at hS
+    obtain ⟨A, hA, rfl⟩ := hS
+    rw [← hswap i (𝓕.le i A hA), ← hswap j (𝓕.le i A hA)]
+    exact hY.setIntegral_eq hij hA
+
+omit [MeasurableSpace E] in
+/-- The test process of a process that factors through a path map is the test process of the
+coordinates, composed with the path map.  Pointwise and without hypothesis. -/
+theorem mpProcess_comp_eq [OrderBot ι] {Q : Clock ι} {c : Clock.Conv} {F : Type*}
+    {π : ι → F → E} {X : ι → Ω → E} {Φ : Ω → F} (hΦX : ∀ t ω, X t ω = π t (Φ ω))
+    (f g : E → 𝕂) :
+    mpProcess Q c X f g = fun t ω ↦ mpProcess Q c π f g t (Φ ω) := by
+  funext t ω
+  simp only [mpProcess, hΦX]
+
+/-- **`IsMPSolutionFor.map`: the solution property is a property of the path law.**  If
+`X t = π t ∘ Φ`, then `P` solves the problem for `X` and its natural filtration exactly when
+`P.map Φ` solves it for the coordinates `π` and theirs.  The natural filtration of `X` is the pull
+back of that of `π` (`naturalFiltration_comp`), so this is `martingale_comp_iff_of_comap_eq` for
+each test process.  The hypothesis `hadp` is the adaptedness of the coordinate test processes;
+see the section header for why it cannot be dropped. -/
+theorem isMPSolutionFor_iff_map [OrderBot ι] {A : Set ((E → 𝕂) × (E → 𝕂))}
+    {Q : Clock ι} {c : Clock.Conv} {F : Type*} [mF : MeasurableSpace F]
+    {π : ι → F → E} (hπ : ∀ t, Measurable (π t)) {X : ι → Ω → E} (hX : ∀ t, Measurable (X t))
+    {Φ : Ω → F} (hΦ : Measurable Φ) (hΦX : ∀ t ω, X t ω = π t (Φ ω))
+    {P : Measure Ω} [IsFiniteMeasure P]
+    (hadp : ∀ p ∈ A, StronglyAdapted (naturalFiltration π hπ) (mpProcess Q c π p.1 p.2)) :
+    IsMPSolutionFor A Q c X (naturalFiltration X hX) P ↔
+      IsMPSolutionFor A Q c π (naturalFiltration π hπ) (P.map Φ) := by
+  have h𝓖 : ∀ i, (naturalFiltration (m' := m) X hX i : MeasurableSpace Ω)
+      = MeasurableSpace.comap Φ (naturalFiltration (m' := mF) π hπ i) :=
+    naturalFiltration_comp hπ hX hΦX
+  simp only [IsMPSolutionFor, IsMPSolution, mpFamily_eq_image_mpProcess, Set.mem_image]
+  constructor
+  · rintro h _ ⟨p, hp, rfl⟩
+    have := h _ ⟨p, hp, rfl⟩
+    rw [mpProcess_comp_eq hΦX] at this
+    exact (martingale_comp_iff_of_comap_eq hΦ h𝓖 (hadp p hp)).1 this
+  · rintro h _ ⟨p, hp, rfl⟩
+    rw [mpProcess_comp_eq hΦX]
+    exact (martingale_comp_iff_of_comap_eq hΦ h𝓖 (hadp p hp)).2 (h _ ⟨p, hp, rfl⟩)
+
+/-- **Two processes with the same path law solve the same problems**, each for its natural
+filtration.  `isMPSolutionFor_iff_map` twice. -/
+theorem IsMPSolutionFor.of_map_eq [OrderBot ι] {A : Set ((E → 𝕂) × (E → 𝕂))}
+    {Q : Clock ι} {c : Clock.Conv} {F : Type*} [mF : MeasurableSpace F]
+    {π : ι → F → E} (hπ : ∀ t, Measurable (π t))
+    (hadp : ∀ p ∈ A, StronglyAdapted (naturalFiltration π hπ) (mpProcess Q c π p.1 p.2))
+    {X : ι → Ω → E} (hX : ∀ t, Measurable (X t)) {Φ : Ω → F} (hΦ : Measurable Φ)
+    (hΦX : ∀ t ω, X t ω = π t (Φ ω)) {P : Measure Ω} [IsFiniteMeasure P]
+    {Ω' : Type*} {m' : MeasurableSpace Ω'} {X' : ι → Ω' → E} (hX' : ∀ t, Measurable (X' t))
+    {Φ' : Ω' → F} (hΦ' : Measurable Φ') (hΦX' : ∀ t ω, X' t ω = π t (Φ' ω))
+    {P' : Measure Ω'} [IsFiniteMeasure P'] (hlaw : P.map Φ = P'.map Φ')
+    (hsol : IsMPSolutionFor A Q c X (naturalFiltration X hX) P) :
+    IsMPSolutionFor A Q c X' (naturalFiltration X' hX') P' := by
+  rw [isMPSolutionFor_iff_map hπ hX' hΦ' hΦX' hadp, ← hlaw]
+  exact (isMPSolutionFor_iff_map hπ hX hΦ hΦX hadp).1 hsol
+
+/-- The hypothesis `hadp` of `isMPSolutionFor_iff_map` from the progressive measurability of the
+coordinates, `Clock.IsProgressiveComp`. -/
+theorem stronglyAdapted_mpProcess_of_isProgressiveComp [OrderBot ι] {Q : Clock ι}
+    {c : Clock.Conv} {F : Type*} [mF : MeasurableSpace F] {π : ι → F → E}
+    (hπ : ∀ t, Measurable (π t)) (hπprog : Q.IsProgressiveComp π (naturalFiltration π hπ))
+    {f g : E → 𝕂} (hf : Measurable f) (hg : Measurable g) :
+    StronglyAdapted (naturalFiltration π hπ) (mpProcess Q c π f g) :=
+  stronglyAdapted_mpFamily_of_isProgressiveComp (fun _ _ ↦ rfl) hf hg hπprog
+    (fun _ ↦ measurable_naturalFiltration hπ le_rfl)
+
+open RightContinuousPath in
+/-- **`IsMPSolutionFor.map` on the canonical path space**, with no hypothesis beyond measurability:
+for a process with right locally constant paths, given by a measurable path map
+`Φ : Ω → RightContinuousPath E`, solving the problem for the Lebesgue clock is a property of the law
+`P.map Φ`.  The adaptedness `hadp` is `stronglyAdapted_mpFamily_coordinate`. -/
+theorem isMPSolutionFor_iff_map_pathFiltration {A : Set ((E → ℝ) × (E → ℝ))} (c : Clock.Conv)
+    (hfm : ∀ p ∈ A, Measurable p.1) (hgm : ∀ p ∈ A, Measurable p.2)
+    {X : ℝ≥0 → Ω → E} (hX : ∀ t, Measurable (X t)) {Φ : Ω → RightContinuousPath E}
+    (hΦ : Measurable Φ) (hΦX : ∀ t ω, X t ω = coordinate t (Φ ω))
+    {P : Measure Ω} [IsFiniteMeasure P] :
+    IsMPSolutionFor A lebesgueClock c X (naturalFiltration X hX) P ↔
+      IsMPSolutionFor A lebesgueClock c coordinate pathFiltration (P.map Φ) :=
+  isMPSolutionFor_iff_map measurable_coordinate hX hΦ hΦX fun p hp ↦
+    stronglyAdapted_mpFamily_coordinate c hfm hgm ⟨p, hp, fun _ _ ↦ rfl⟩
+
+open RightContinuousPath in
+/-- **Two processes with the same law on the canonical path space solve the same problems.** -/
+theorem IsMPSolutionFor.of_map_eq_pathFiltration {A : Set ((E → ℝ) × (E → ℝ))}
+    {c : Clock.Conv} (hfm : ∀ p ∈ A, Measurable p.1) (hgm : ∀ p ∈ A, Measurable p.2)
+    {X : ℝ≥0 → Ω → E} (hX : ∀ t, Measurable (X t)) {Φ : Ω → RightContinuousPath E}
+    (hΦ : Measurable Φ) (hΦX : ∀ t ω, X t ω = coordinate t (Φ ω))
+    {P : Measure Ω} [IsFiniteMeasure P]
+    {Ω' : Type*} {m' : MeasurableSpace Ω'} {X' : ℝ≥0 → Ω' → E} (hX' : ∀ t, Measurable (X' t))
+    {Φ' : Ω' → RightContinuousPath E} (hΦ' : Measurable Φ')
+    (hΦX' : ∀ t ω, X' t ω = coordinate t (Φ' ω)) {P' : Measure Ω'} [IsFiniteMeasure P']
+    (hlaw : P.map Φ = P'.map Φ')
+    (hsol : IsMPSolutionFor A lebesgueClock c X (naturalFiltration X hX) P) :
+    IsMPSolutionFor A lebesgueClock c X' (naturalFiltration X' hX') P' := by
+  rw [isMPSolutionFor_iff_map_pathFiltration c hfm hgm hX' hΦ' hΦX', ← hlaw]
+  exact (isMPSolutionFor_iff_map_pathFiltration c hfm hgm hX hΦ hΦX).1 hsol
+
+end MPSolutionLaw

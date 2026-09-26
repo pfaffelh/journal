@@ -65358,3 +65358,117 @@ für `mpFamily (jumpOperator lam mu) lebesgueClock` auf `RightContinuousPath E`,
 Zwei-Zustands-Kette. Grundlage: `measurable_uncurry_of_isRightLocallyConstant` und
 `measurable_uncurry_min_of_isRightLocallyConstant` für die Progressivität,
 `isRightLocallyConstant_coordinate` für die Rechtsstetigkeit von `f ∘ X`.
+
+### 2026-09-26, Lauf 16:03 UTC — B2 nicht angefaßt; Aufgabe C, Schritt C2, letzter Punkt: **`IsMPSolutionFor.map` längs Gleichheit der Gesetze**, allgemein und auf dem kanonischen Pfadraum; C3 „progressiv zu keiner“ begründet zurückgestellt
+
+`check_master.py` zu Beginn (Mathlib `94ef6b89544`): 0 Fehler, 0 `sorry`, 0 Veraltungen;
+Warnungen 18 / 38 / 38 / 76.
+
+**B2.** Nicht angefaßt, aus dem Grund des Laufs 15:03: kein neuer Gedanke, und die Nebenfassung
+über den Dichteprozeß (Jacod–Shiryaev III.3.8) braucht Treffzeiten von `{Z ≤ 1/n}` für ein
+càdlàg-`Z` als Stoppzeiten der rechtsstetigen rohen Filtration. Das ist mehr als ein Lauf.
+
+**C2, neu** (`MartingaleProblems/Suggested.lean`, neuer Abschnitt `MPSolutionLaw` am Dateiende):
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| Martingale in beide Richtungen längs `θ`, wenn `𝓖 i = comap θ (𝓕 i)` und `Y` adaptiert ist; Werte in einem reellen Banachraum | `martingale_comp_iff_of_comap_eq` | 52367 |
+| Testprozeß von `X = π ∘ Φ` ist der der Koordinaten, verkettet mit `Φ`, punktweise | `mpProcess_comp_eq` | 52410 |
+| **`IsMPSolutionFor.map`**: `P` löst für `X` (natürliche Filtration) ⇔ `P.map Φ` löst für `π` (natürliche Filtration) | `isMPSolutionFor_iff_map` | 52423 |
+| zwei Prozesse mit gleichem Pfadgesetz lösen dieselben Probleme | `IsMPSolutionFor.of_map_eq` | 52446 |
+| die Voraussetzung `hadp` aus `Clock.IsProgressiveComp` der Koordinaten | `stronglyAdapted_mpProcess_of_isProgressiveComp` | 52462 |
+| **auf `RightContinuousPath E`, Lebesgue-Uhr, ohne Voraussetzung außer Meßbarkeit** | `isMPSolutionFor_iff_map_pathFiltration` | 52475 |
+| dasselbe für zwei Prozesse mit gleichem Gesetz dort | `IsMPSolutionFor.of_map_eq_pathFiltration` | 52487 |
+
+`martingale_comp_iff_of_comap_eq` faßt `martingale_comp_of_map_eq` und
+`martingale_map_of_martingale_comp` (beide schon im Prototyp, reellwertig) zu einer Äquivalenz
+zusammen, für Werte in einem reellen Banachraum, wie es die `𝕂`-wertigen Testprozesse brauchen.
+Die Filtrationsgleichung ist `naturalFiltration_comp`. `#print axioms` für alle sieben:
+`propext`, `Classical.choice`, `Quot.sound`.
+
+**Befund (README nicht angefaßt).** `IsMPSolutionFor.map` „depends on `P` only through the law of
+`X`“ (README-kurz, Meilenstein 2) braucht eine Voraussetzung, die die README nicht nennt: die
+**Adaptiertheit der Testprozesse der Koordinaten** auf dem Bildraum (`hadp`). Auf dem vollen
+Produkt `ι → E` mit überabzählbarem `ι` ist der Kompensator `x ↦ ∫ g (x u) du` für die
+Produkt-σ-Algebra nicht meßbar, und das Gesetz von `Φ` bestimmt dann das des Kompensators nicht.
+Auf `RightContinuousPath E` ist `hadp` bewiesen (`RightContinuousPath.stronglyAdapted_mpFamily_coordinate`,
+Z. 18831), und die Aussage gilt dort ohne Zusatz. **C2 ist damit vollständig.**
+
+**C3, „meßbar zu jeder Zeit und progressiv zu keiner“: zurückgestellt, mit Grund.** Nachgerechnet:
+Das Akzeptanzbeispiel der README (`README.md` Z. 599–607) verlangt, daß die Richtung von rechts nach
+links des fdd-Kriteriums an einem Müllwert des Kompensators scheitert. Die rechte Seite enthält das
+Fenster `(⊥, t]` und liefert damit `E[Y t - Y ⊥] = 0`. Die Nichtadditivität der Müllwerte muß
+also mit der Vergangenheit korreliert und im Mittel null sein. Soll kein Fenster jenseits der
+schlechten Stelle einen unkontrollierten echten Wert annehmen, braucht man eine Menge `V`, die auf
+**jedem** Teilintervall eines Intervalls nicht Lebesgue-meßbar ist. Das Argument dafür: die Fenster, auf
+denen `u ↦ g (X u ω)` meßbar ist, sind unter abzählbaren Vereinigungen abgeschlossen, also ist die
+schlechte Menge perfekt. Mathlib hat keine nichtmeßbare Menge
+(`git grep -i "vitali set\|bernstein set\|nonmeasurable" upstream/master -- Mathlib/` gibt nur
+Doc-Kommentare in `MeasureTheory/Integral/Lebesgue/Basic.lean:307,334,340`). Der Zeuge ist damit
+ein eigener Bau (Bernstein-Menge oder eine Kardinalitätsschranke je Intervall) und nicht in diesem
+Lauf gemacht.
+
+Zwei Probedateien dieses Laufs (`scratch/LawTransfer.lean`, `scratch/Axioms.lean`) konnten nicht
+gelöscht werden (keine Freigabe für `rm`). Sie sind auf einen Doc-Kommentar geleert.
+
+### Derselbe Lauf, zweiter Teil — Aufgabe C, Schritt C5: **drei der Voraussetzungen von `isStrongMarkov_mpFamily` auf dem kanonischen Pfadraum** (`hrc`, `hprog`, `hK`)
+
+**Neu** (`MartingaleProblems/Suggested.lean`, Ende des Namensraums `RightContinuousPath`, vor
+`end CanonicalPathSpace`), alle über bloßem `[MeasurableSpace E]`:
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| **`hrc`**: jeder Testprozeß der optionalen Konvention ist rechtsstetig, an **jedem** Pfad | `RightContinuousPath.tendsto_nhdsGE_mpFamily_coordinate` | 18896 |
+| reelles Funktional der bei `t` gestoppten Koordinate, meßbar für `Borel ℝ≥0 ⊗ pathFiltration t` | `RightContinuousPath.measurable_uncurry_min_coordinate_pathFiltration` | 18919 |
+| **`hprog`**: jeder Testprozeß ist stark progressiv für `pathFiltration`, beide Konventionen | `RightContinuousPath.isStronglyProgressive_mpFamily_coordinate` | 18930 |
+| **`hK`**: `ω ↦ h (coordinate (τ ω) (X ω))` meßbar für meßbares `τ`, `X` | `RightContinuousPath.measurable_comp_coordinate_randomTime` | 18948 |
+
+Die Beweise sind Zusammensetzungen vorhandener Bausteine: `tendsto_nhdsGE_of_intervalIntegrable_mpFamilyF`
+mit `isRightLocallyConstant_coordinate` (über `Ico_mem_nhdsGE`) für `hrc`;
+`isStronglyProgressive_of_measurable_uncurry_mpFamilyF` mit
+`measurable_uncurry_min_of_isRightLocallyConstant`, ausgewertet mit `pathFiltration t` als σ-Algebra
+auf dem Pfadraum, für `hprog`; `measurable_uncurry_coordinate` für `hK`. `#print axioms` für alle
+vier: `propext`, `Classical.choice`, `Quot.sound`.
+
+**Was für die Instanz noch fehlt**, genau benannt: `hψ` und `hψadapt` für
+`ω ↦ pathShift (τ ω) ω`. Beides sind Aussagen über `E`-wertige Abbildungen
+`ω ↦ coordinate (τ ω + u) ω`. Über bloßem `[MeasurableSpace E]` ist nur die gemeinsame Meßbarkeit
+**reeller** Funktionale der Koordinaten gezeigt (`measurable_uncurry_of_isRightLocallyConstant`).
+Für `E = Bool` (oder allgemeiner, wenn die meßbaren Mengen von `E` durch abzählbar viele reelle
+Funktionale erzeugt werden) folgt die `E`-wertige Fassung aus der reellen; das ist der nächste
+Schritt. `hψadapt` braucht dazu die Meßbarkeit bezüglich `𝓖_{τ+s}`, also die Fassung der
+Progressivität an einer Stoppzeit (Mathlibs `measurable_stoppedValue` verlangt metrisierbares
+borelsches `E` und ist hier nur über `Bool` direkt anwendbar). Ebenfalls offen: `honedim` für
+`jumpOperator` auf dem kanonischen Raum. `hsi` steht schon (`lebesgueClock_isShiftInvariant`, Z. 18253).
+
+### Derselbe Lauf, Abschluß
+
+`check_master.py` am Ende (Mathlib `94ef6b89544`): **0 Fehler, 0 `sorry`, 0 Veraltungen** in allen
+vier Dateien, Warnungen 18 / 38 / 38 / 76 wie zu Beginn.
+
+**Stand der drei Aufgaben nach diesem Lauf.**
+
+* **A:** erledigt (unverändert; offen nur „cutting down to an open subset“, siehe Lauf 13:03).
+* **B:** B1, B3, B4 stehen. **B2 offen**, nicht angefaßt.
+* **C:** C1 vollständig; **C2 jetzt vollständig** (`IsMPSolutionFor.map` längs Gleichheit der
+  Gesetze); C3 offen in zwei Punkten (reelle Fassung über bloßem `[MeasurableSpace E]` durch
+  Approximation; „meßbar zu jeder Zeit, progressiv zu keiner“, zurückgestellt mangels einer
+  lokal nirgends meßbaren Menge in Mathlib); C4 global. **C5:** abstrakt und für `mpFamily` bewiesen
+  (Läufe 14:03, 15:03). Auf dem kanonischen Pfadraum stehen jetzt `hrc`, `hprog`, `hK`. Offen sind
+  `hψ`, `hψadapt`, `honedim` für die Instanz (`hsi` ist `lebesgueClock_isShiftInvariant`), die klassische Instanz und die
+  Akzeptanzbeispiele.
+
+**Befunde für den Nutzer (kein Manuskript, keine README angefaßt; nichts nach außen):**
+
+1. README-kurz, Meilenstein 2, `IsMPSolutionFor.map`: „depends on `P` only through the law of `X`“
+   gilt nur mit der Adaptiertheit der Koordinaten-Testprozesse auf dem Bildraum. Auf dem vollen
+   Produktraum mit überabzählbarem Index fehlt sie; auf `RightContinuousPath E` ist sie bewiesen.
+2. README.md Z. 599–607 (Akzeptanzbeispiel „progressiv zu keiner“): verlangt der Sache nach eine
+   auf jedem Teilintervall nicht meßbare Menge. Mathlib hat keine nichtmeßbare Menge.
+
+**Benanntes Ziel für den nächsten Lauf, der nächste offene Schritt der Liste: B2**, und kommt es
+nicht voran, **C5, `hψ` und `hψadapt` für `E = Bool`**: `Measurable fun ω ↦ pathShift (τ ω) ω` auf
+`RightContinuousPath Bool` aus `measurable_uncurry_coordinate` mit `h = indicator {true}`, dann die
+`𝓖_{τ+s}`-Meßbarkeit über `measurable_uncurry_min_coordinate_pathFiltration` (dieser Lauf) an der
+Stoppzeit `τ + u`. Damit ist `isStrongMarkov_mpFamily` an der Zwei-Zustands-Kette bis auf
+`honedim` anwendbar.
