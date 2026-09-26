@@ -4013,7 +4013,7 @@ theorem integral_sub_eq_intervalIntegral_of_isMPSolution [IsProbabilityMeasure P
       _ = ∫ ω, Y 0 ω ∂P := integral_congr_ae (hmart.2 0 t (by simp))
   have hY0 : ∀ ω, Y 0 ω = f (X 0 ω) := by
     intro ω
-    simp [hYdef, lebesgueClock_interval_optional_eq]
+    simp [hYdef]
   have hYt : ∫ ω, Y t ω ∂P
       = (∫ ω, f (X t ω) ∂P) - ∫ ω, (∫ u in S, g (X u ω) ∂lebesgueClock.q) ∂P :=
     integral_sub (hintf t) hintc
@@ -27411,5 +27411,180 @@ theorem not_ae_mem_nonExplosiveE_explode (nu : Measure ℕ) [IsProbabilityMeasur
     Measurable.of_discrete (fun x ↦ by simp only [explodeRate]; positivity) nu hne)
 
 end ExplosiveAcceptance
+
+section ExplosionTime
+
+variable {E : Type*} [MeasurableSpace E]
+
+/-- **The explosion time** of the local construction, the supremum of the jump times, in
+`ENNReal`. -/
+noncomputable def explosionTimeE (lam : E → ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) : ENNReal :=
+  ⨆ n, jumpTimeE lam ω.1 ω.2 n
+
+variable {lam : E → ℝ}
+
+/-- `rateSup_lt_top_of_mem_nonExplosiveE` at one time: before a jump time only finitely many
+states are visited. -/
+theorem rateSup_lt_top_of_lt_jumpTimeE {y : ℕ → E} {xi : ℕ → ℝ} {t : ℝ}
+    (hex : ∃ n, ENNReal.ofReal t < jumpTimeE lam y xi (n + 1)) : rateSup lam t (y, xi) < ⊤ := by
+  set k := stepIndex (jumpTimeE lam y xi) (ENNReal.ofReal t) with hk
+  have htop : ENNReal.ofReal t < jumpTimeE lam y xi (k + 1) := lt_stepIndex_succ hex
+  have hle : rateSup lam t (y, xi)
+      ≤ ∑ i ∈ Finset.range (k + 1), ENNReal.ofReal (lam (y i)) := by
+    refine rateSup_le fun s hs ↦ ?_
+    have hsk : stepIndex (jumpTimeE lam y xi) (ENNReal.ofReal s) ≤ k :=
+      stepIndex_le ((ENNReal.ofReal_le_ofReal hs.2).trans_lt htop)
+    have : jumpProcessE lam s (y, xi)
+        = y (stepIndex (jumpTimeE lam y xi) (ENNReal.ofReal s)) := rfl
+    rw [this]
+    exact Finset.single_le_sum (f := fun i ↦ ENNReal.ofReal (lam (y i)))
+      (fun i _ ↦ zero_le) (Finset.mem_range.2 (Nat.lt_succ_of_le hsk))
+  exact hle.trans_lt (ENNReal.sum_lt_top.2 fun i _ ↦ ENNReal.ofReal_lt_top)
+
+/-- **The hitting times of the rate levels reach at least the explosion time**, at every sample
+point: before the explosion time the running supremum of the rate is finite. -/
+theorem explosionTimeE_le_iSup_rateTime (ω : (ℕ → E) × (ℕ → ℝ)) :
+    explosionTimeE lam ω ≤ ⨆ n, rateTime lam (n + 1) ω := by
+  obtain ⟨y, xi⟩ := ω
+  refine le_of_forall_lt fun c hc ↦ ?_
+  obtain ⟨k, hk⟩ := lt_iSup_iff.1 hc
+  have hcne : c ≠ ⊤ := ne_top_of_lt hk
+  set s : ℝ≥0 := c.toNNReal with hs
+  have hcs : c = (s : ENNReal) := (ENNReal.coe_toNNReal hcne).symm
+  have hex : ∃ n, ENNReal.ofReal (s : ℝ) < jumpTimeE lam y xi (n + 1) :=
+    ⟨k, by rw [ENNReal.ofReal_coe_nnreal, ← hcs]; exact hk.trans_le (monotone_jumpTimeE k.le_succ)⟩
+  obtain ⟨N, hN⟩ := ENNReal.exists_nat_gt (rateSup_lt_top_of_lt_jumpTimeE hex).ne
+  have hlt : c < rateTime lam N (y, xi) := by
+    rw [hcs]
+    refine lt_of_not_ge fun hcon ↦ ?_
+    exact absurd ((rateTime_le_iff s).1 hcon) (not_le.2 hN)
+  exact hlt.trans_le ((monotone_rateTime lam (y, xi) N.le_succ).trans (le_iSup
+    (fun n ↦ rateTime lam (n + 1) (y, xi)) N))
+
+omit [MeasurableSpace E] in
+/-- The jump times are bounded below by the waiting times over a bound of the rates. -/
+theorem ofReal_sum_div_le_jumpTimeE {y : ℕ → E} {xi : ℕ → ℝ} (hpos : ∀ n, 0 < xi n)
+    {M : ℕ} (hlam : ∀ k, ENNReal.ofReal (lam (y k)) < M) (N : ℕ) :
+    ENNReal.ofReal (∑ k ∈ Finset.range N, xi k) / M ≤ jumpTimeE lam y xi N := by
+  induction N with
+  | zero => simp
+  | succ N ih =>
+    rw [Finset.sum_range_succ, ENNReal.ofReal_add (Finset.sum_nonneg fun k _ ↦ (hpos k).le)
+      (hpos N).le, ENNReal.add_div, jumpTimeE_succ]
+    exact add_le_add ih (ENNReal.div_le_div_left (hlam N).le _)
+
+/-- **Almost surely the hitting times of the rate levels do not pass the explosion time**:
+exploding needs an unbounded rate along the chain, because with rates below `M` the jump times
+are at least the waiting time sums over `M`, which diverge. -/
+theorem iSup_rateTime_le_explosionTimeE {y : ℕ → E} {xi : ℕ → ℝ} (hpos : ∀ n, 0 < xi n)
+    (hsum : Tendsto (fun n ↦ ∑ k ∈ Finset.range n, xi k) atTop atTop) :
+    ⨆ n, rateTime lam (n + 1) (y, xi) ≤ explosionTimeE lam (y, xi) := by
+  set ζ := explosionTimeE lam (y, xi) with hζdef
+  by_cases hζ : ζ = ⊤
+  · rw [hζ]; exact le_top
+  refine iSup_le fun n ↦ ?_
+  set M : ℕ := n + 1 with hM
+  have hTle : ∀ k, jumpTimeE lam y xi k ≤ ζ := fun k ↦ le_iSup (fun k ↦ jumpTimeE lam y xi k) k
+  -- some state along the chain has rate at least `M`
+  obtain ⟨k, hk⟩ : ∃ k, (M : ENNReal) ≤ ENNReal.ofReal (lam (y k)) := by
+    by_contra hcon
+    push Not at hcon
+    have hbd := ofReal_sum_div_le_jumpTimeE hpos hcon
+    obtain ⟨N, hN⟩ := eventually_atTop.1 ((tendsto_atTop.1 hsum) (M * (ζ.toReal + 1)))
+    have h1 : ENNReal.ofReal (M * (ζ.toReal + 1)) / M ≤ ζ :=
+      (ENNReal.div_le_div_right (ENNReal.ofReal_le_ofReal (hN N le_rfl)) _).trans
+        ((hbd N).trans (hTle N))
+    have hM0 : (M : ENNReal) ≠ 0 := by simp [hM]
+    rw [ENNReal.ofReal_mul (Nat.cast_nonneg _), ENNReal.ofReal_natCast,
+      ENNReal.mul_div_right_comm, ENNReal.div_self hM0 (ENNReal.natCast_ne_top M), one_mul] at h1
+    have h2 : ζ < ENNReal.ofReal (ζ.toReal + 1) := by
+      rw [← ENNReal.ofReal_toReal hζ]
+      refine (ENNReal.ofReal_lt_ofReal_iff (by positivity)).2 ?_
+      rw [ENNReal.toReal_ofReal ENNReal.toReal_nonneg]
+      linarith
+    exact absurd h1 (not_le.2 h2)
+  -- the path visits that state before the explosion time
+  have hTk : jumpTimeE lam y xi k ≠ ⊤ := ne_top_of_le_ne_top hζ (hTle k)
+  have hlt : jumpTimeE lam y xi k < jumpTimeE lam y xi (k + 1) := lt_jumpTimeE_succ (hpos k) hTk
+  set s : ℝ := (jumpTimeE lam y xi k).toReal with hsdef
+  have hofs : ENNReal.ofReal s = jumpTimeE lam y xi k := ENNReal.ofReal_toReal hTk
+  have hval : jumpProcessE lam s (y, xi) = y k := by
+    show y (stepIndex (jumpTimeE lam y xi) (ENNReal.ofReal s)) = y k
+    rw [hofs, stepIndex_eq_of (Or.inr le_rfl) hlt monotone_jumpTimeE]
+  have hsmem : s ∈ Set.Icc (0 : ℝ) ((ζ.toNNReal : ℝ≥0) : ℝ) := by
+    refine ⟨ENNReal.toReal_nonneg, ?_⟩
+    rw [ENNReal.coe_toNNReal_eq_toReal]
+    exact ENNReal.toReal_mono hζ (hTle k)
+  have hsup : (M : ENNReal) ≤ rateSup lam ((ζ.toNNReal : ℝ≥0) : ℝ) (y, xi) :=
+    hk.trans (hval ▸ le_rateSup hsmem)
+  have := (rateTime_le_iff (lam := lam) (ω := (y, xi)) (n := M) ζ.toNNReal).2 hsup
+  rwa [ENNReal.coe_toNNReal hζ] at this
+
+/-- **The hitting times of the rate levels increase to the explosion time**, almost surely under
+the law of the construction. -/
+theorem ae_tendsto_rateTime_explosionTimeE (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] :
+    ∀ᵐ ω ∂(jumpMeasure mu nu),
+      Tendsto (fun n ↦ rateTime lam (n + 1) ω) atTop (𝓝 (explosionTimeE lam ω)) := by
+  have h : ∀ᵐ ω ∂(jumpMeasure mu nu), (∀ n, 0 < ω.2 n) ∧
+      Tendsto (fun n ↦ ∑ k ∈ Finset.range n, ω.2 k) atTop atTop := by
+    refine ae_of_ae_map (f := fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ω.2)
+      (p := fun xi : ℕ → ℝ ↦ (∀ n, 0 < xi n) ∧
+        Tendsto (fun n ↦ ∑ k ∈ Finset.range n, xi k) atTop atTop)
+      measurable_snd.aemeasurable ?_
+    rw [jumpMeasure_map_snd]
+    exact ae_pos_waiting.and tendsto_sum_waiting_atTop
+  filter_upwards [h] with ω hω
+  obtain ⟨y, xi⟩ := ω
+  have heq : ⨆ n, rateTime lam (n + 1) (y, xi) = explosionTimeE lam (y, xi) :=
+    le_antisymm (iSup_rateTime_le_explosionTimeE hω.1 hω.2) (explosionTimeE_le_iSup_rateTime _)
+  rw [← heq]
+  exact tendsto_atTop_iSup fun a b hab ↦ monotone_rateTime lam (y, xi) (Nat.succ_le_succ hab)
+
+/-- **The jump process solves the local martingale problem on `[0, ζ)`**, `ζ` the explosion time,
+explosion or not.  Localized by `rateTime lam (n + 1) ↑ ζ`. -/
+theorem jumpProcessE_isLocalMPSolutionUpTo (hlam : Measurable lam) (hlam0 : ∀ x, 0 < lam x)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] :
+    IsLocalMPSolutionUpTo (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω)) (jumpFiltrationE lam hlam)
+      (jumpMeasure mu nu) (explosionTimeE lam) := by
+  intro Y hY
+  exact ⟨fun n ↦ rateTime lam (n + 1), fun n ↦ isStoppingTime_rateTime hlam (n + 1),
+    ae_of_all _ fun ω a b hab ↦ monotone_rateTime lam ω (Nat.succ_le_succ hab),
+    ae_tendsto_rateTime_explosionTimeE mu nu,
+    martingale_stoppedProcess_rateTime_jumpProcessE hlam hlam0 nu hY⟩
+
+end ExplosionTime
+
+section ExplosionTimeExplode
+
+variable {E : Type*}
+
+/-- The explosion time is `⊤` exactly on the non explosive sample points. -/
+theorem explosionTimeE_eq_top_iff {lam : E → ℝ} {ω : (ℕ → E) × (ℕ → ℝ)} :
+    explosionTimeE lam ω = ⊤ ↔ ω ∈ NonExplosiveE lam := by
+  refine ⟨fun h t ↦ ?_, fun h ↦ ?_⟩
+  · have : ENNReal.ofReal t < explosionTimeE lam ω := h ▸ ENNReal.ofReal_lt_top
+    obtain ⟨n, hn⟩ := lt_iSup_iff.1 this
+    exact ⟨n, hn.trans_le (monotone_jumpTimeE n.le_succ)⟩
+  · refine ENNReal.eq_top_of_forall_nnreal_le fun r ↦ ?_
+    obtain ⟨n, hn⟩ := h (r : ℝ)
+    rw [ENNReal.ofReal_coe_nnreal] at hn
+    exact hn.le.trans (le_iSup (fun n ↦ jumpTimeE lam ω.1 ω.2 n) (n + 1))
+
+/-- **The explosion witness solves the local problem on `[0, ζ)`, and `ζ < ⊤` with positive
+probability**; on `[0, ⊤)` it has no solution (`not_isLocalMPSolution_explode`). -/
+theorem explode_isLocalMPSolutionUpTo (nu : Measure ℕ) [IsProbabilityMeasure nu] :
+    IsLocalMPSolutionUpTo (mpFamily (jumpOperator explodeRate explodeKernel) lebesgueClock
+        Clock.Conv.optional (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE explodeRate (t : ℝ) ω))
+      (jumpFiltrationE explodeRate Measurable.of_discrete) (jumpMeasure explodeKernel nu)
+      (explosionTimeE explodeRate) ∧
+    ¬ ∀ᵐ ω ∂(jumpMeasure explodeKernel nu), explosionTimeE explodeRate ω = ⊤ := by
+  refine ⟨jumpProcessE_isLocalMPSolutionUpTo Measurable.of_discrete
+    (fun x ↦ by simp only [explodeRate]; positivity) explodeKernel nu, fun h ↦ ?_⟩
+  exact not_ae_mem_nonExplosiveE_explode nu (by
+    filter_upwards [h] with ω hω using explosionTimeE_eq_top_iff.1 hω)
+
+end ExplosionTimeExplode
 
 end MeasureTheory

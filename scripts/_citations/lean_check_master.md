@@ -7,5 +7,5 @@
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | `WeakConvergence` | 0 | 0 | 0 | 18 | 0 | 7 |
 | `SkorokhodSpace` | 0 | 0 | 0 | 38 | 0 | 21 |
-| `MartingaleProblems` | 0 | 0 | 0 | 38 | 0 | 44 |
-| `JumpProcesses` | 0 | 0 | 0 | 76 | 0 | 63 |
+| `MartingaleProblems` | 0 | 0 | 0 | 38 | 0 | 45 |
+| `JumpProcesses` | 0 | 0 | 0 | 76 | 0 | 64 |

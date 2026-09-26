@@ -759,6 +759,121 @@ def Clock.IsContinuousFor (Q : Clock ι) (c : Clock.Conv) : Prop :=
 
 end ClockContinuity
 
+section ClockLinear
+
+variable {ι : Type*} [LinearOrder ι]
+
+/-- **The predictable window is Mathlib's `Set.Ico`** over a linear order. -/
+@[simp] theorem Clock.Ico_eq_setIco (Q : Clock ι) (s t : ι) :
+    Q.interval .predictable s t = Set.Ico s t := by
+  ext x
+  simp only [Clock.interval, Set.mem_sdiff, Set.mem_Iio, Set.mem_Ico, not_lt]
+  tauto
+
+/-- **The optional window is Mathlib's `Set.Ioc`** over a linear order. -/
+@[simp] theorem Clock.Ioc_eq_setIoc (Q : Clock ι) (s t : ι) :
+    Q.interval .optional s t = Set.Ioc s t := by
+  ext x
+  simp only [Clock.interval, Set.mem_sdiff, Set.mem_Iic, Set.mem_Ioc, not_le]
+  tauto
+
+/-- **For an atomless clock the two conventions give windows of the same mass.**  They differ by
+the two end points, which are null. -/
+theorem Clock.interval_eq_of_isAtomless (Q : Clock ι) (hQ : Q.IsAtomless) (s t : ι) :
+    Q.q (Q.interval .optional s t) = Q.q (Q.interval .predictable s t) := by
+  let _ : MeasurableSpace ι := Q.measurableSpace
+  have hpt : ∀ u : ι, Q.q {u} = 0 := fun u ↦ by
+    have h := hQ u
+    rwa [show {v | u ≤ v ∧ v ≤ u} = ({u} : Set ι) from by
+      ext v; simp only [Set.mem_ofPred_eq, Set.mem_singleton_iff]
+      exact ⟨fun h ↦ le_antisymm h.2 h.1, fun h ↦ ⟨h.ge, h.le⟩⟩] at h
+  rw [Clock.Ioc_eq_setIoc, Clock.Ico_eq_setIco]
+  exact (measure_congr (Ico_ae_eq_Ioc' (hpt s) (hpt t))).symm
+
+end ClockLinear
+
+section ClockAdd
+
+variable {ι : Type*} [AddCommMonoid ι] [LinearOrder ι] [IsOrderedCancelAddMonoid ι]
+  [ExistsAddOfLE ι]
+
+/-- **Translation carries the window from `s` to `t` onto the window from `r + s` to `r + t`**,
+under both conventions.  The linear order is used: over a partial order the image is a proper
+subset (`Clock.not_image_add_interval_prod`). -/
+theorem Clock.interval_add (Q : Clock ι) (c : Clock.Conv) (r s t : ι) :
+    (fun u ↦ r + u) '' Q.interval c s t = Q.interval c (r + s) (r + t) := by
+  cases c with
+  | optional => rw [Clock.Ioc_eq_setIoc, Clock.Ioc_eq_setIoc, Set.image_const_add_Ioc]
+  | predictable => rw [Clock.Ico_eq_setIco, Clock.Ico_eq_setIco, Set.image_const_add_Ico]
+
+end ClockAdd
+
+/-- **`Clock.interval_add` needs the linear order.**  On `ℕ × ℕ` with the product order, `r = (1,0)`,
+`s = (0,0)`, `t = (1,1)`: the point `(0,1)` lies in the window from `r + s` to `r + t` (it is
+below `(2,1)` and not below `(1,0)`) but is not of the form `r + u`.  For every clock. -/
+theorem Clock.not_image_add_interval_prod (Q : Clock (ℕ × ℕ)) :
+    (fun u ↦ ((1, 0) : ℕ × ℕ) + u) '' Q.interval .optional (0, 0) (1, 1)
+      ≠ Q.interval .optional ((1, 0) + (0, 0)) ((1, 0) + (1, 1)) := by
+  intro h
+  have hmem : ((0, 1) : ℕ × ℕ) ∈ Q.interval .optional ((1, 0) + (0, 0)) ((1, 0) + (1, 1)) := by
+    simp only [Clock.interval, Set.mem_sdiff, Set.mem_Iic, Prod.mk_add_mk, Prod.mk_le_mk]
+    decide
+  rw [← h] at hmem
+  obtain ⟨u, -, hu⟩ := hmem
+  have := congrArg Prod.fst hu
+  simp only [Prod.fst_add] at this
+  omega
+
+/-! ### Clocks from measures finite on compacts -/
+
+/-- **Every measure finite on compact sets is a clock**, over an index with a least element in
+which closed intervals are compact: `Set.Iic t = Set.Icc ⊥ t` is compact.  This covers counting
+measure on `ℕ`, and every locally finite Borel measure on `[0, ∞)`, in particular
+`∑ n, δ n`. -/
+noncomputable def Clock.ofFiniteOnCompacts {ι : Type*} [LinearOrder ι] [OrderBot ι]
+    [TopologicalSpace ι] [OrderTopology ι] [CompactIccSpace ι] [MeasurableSpace ι]
+    [OpensMeasurableSpace ι] (μ : Measure ι) [IsFiniteMeasureOnCompacts μ] : Clock ι where
+  measurableSpace := inferInstance
+  q := μ
+  measurableSet_Iic _ := _root_.measurableSet_Iic
+  measurableSet_Iio _ := _root_.measurableSet_Iio
+  measure_Iic_ne_top t := by
+    rw [← Set.Icc_bot]
+    exact isCompact_Icc.measure_lt_top.ne
+
+/-! ### The diamond -/
+
+/-- **The diamond, where `Set.Ico` is the wrong interval.**  On `Bool × Bool` with the product
+order, `a = (true, false)` and `b = (false, true)` are incomparable, both strictly between the
+bottom and the top `t = (true, true)`.  Mathlib's `Set.Ico a t` is `{a}`; the clock window is
+`{a, b}`; and only the clock window is additive: the window from the bottom to `t` is the union
+of the windows from the bottom to `a` and from `a` to `t`, while `Set.Ico` loses `b`. -/
+theorem Clock.diamond (Q : Clock (Bool × Bool)) :
+    Set.Ico ((true, false) : Bool × Bool) (true, true) = {(true, false)} ∧
+      Q.interval .predictable (true, false) (true, true) = {(true, false), (false, true)} ∧
+      Q.interval .predictable (false, false) (true, true)
+        = Q.interval .predictable (false, false) (true, false)
+          ∪ Q.interval .predictable (true, false) (true, true) ∧
+      Set.Ico ((false, false) : Bool × Bool) (true, true)
+        ≠ Set.Ico (false, false) (true, false) ∪ Set.Ico (true, false) (true, true) := by
+  refine ⟨?_, ?_, (Q.interval_union .predictable (by decide) (by decide)).1, ?_⟩
+  · ext ⟨x, y⟩
+    simp only [Set.mem_Ico, Set.mem_singleton_iff, Prod.mk_le_mk, Prod.mk_lt_mk, Prod.mk.injEq]
+    revert x y
+    decide
+  · ext ⟨x, y⟩
+    simp only [Clock.interval, Set.mem_sdiff, Set.mem_Iio, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Prod.mk_lt_mk, Prod.mk.injEq]
+    revert x y
+    decide
+  · intro h
+    have hb : ((false, true) : Bool × Bool) ∈ Set.Ico (false, false) (true, true) := by
+      simp only [Set.mem_Ico, Prod.mk_le_mk, Prod.mk_lt_mk]; decide
+    rw [h] at hb
+    simp only [Set.mem_union, Set.mem_Ico, Prod.mk_le_mk, Prod.mk_lt_mk] at hb
+    revert hb
+    decide
+
 /-! ## Milestone 2: the abstract martingale problem -/
 
 variable {Ω : Type*} {m : MeasurableSpace Ω} {𝕂 : Type*} [RCLike 𝕂]
@@ -798,6 +913,26 @@ theorem isLocalMPSolution_of_isMPSolution
     (h : IsMPSolution 𝓧 F P) : IsLocalMPSolution 𝓧 F P :=
   fun Y hY => Locally.of_prop (h Y hY)
 
+/-- **The local martingale problem on `[0, ζ)`**: every test process is localized by stopping
+times increasing to `ζ` almost surely, rather than to `⊤`.  For `ζ = ⊤` it is
+`IsLocalMPSolution` (`isLocalMPSolutionUpTo_top_iff`); for an explosive jump process, `ζ` the
+explosion time, it is what the process solves (`jumpProcessE_isLocalMPSolutionUpTo`), while
+`IsLocalMPSolution` may have no solution at all (`not_isLocalMPSolution_explode`). -/
+def IsLocalMPSolutionUpTo (𝓧 : Set (ι → Ω → 𝕂)) (𝓕 : Filtration ι m) (P : Measure Ω)
+    (ζ : Ω → WithTop ι) : Prop :=
+  ∀ Y ∈ 𝓧, ∃ τ : ℕ → Ω → WithTop ι, (∀ n, IsStoppingTime 𝓕 (τ n)) ∧
+    (∀ᵐ ω ∂P, Monotone (τ · ω)) ∧ (∀ᵐ ω ∂P, Tendsto (τ · ω) atTop (𝓝 (ζ ω))) ∧
+    ∀ n, Martingale (stoppedProcess (fun i ↦ {ω | ⊥ < τ n ω}.indicator (Y i)) (τ n)) 𝓕 P
+
+/-- On `[0, ⊤)` the local problem is the local problem. -/
+theorem isLocalMPSolutionUpTo_top_iff {𝓧 : Set (ι → Ω → 𝕂)} {𝓕 : Filtration ι m}
+    {P : Measure Ω} : IsLocalMPSolutionUpTo 𝓧 𝓕 P (fun _ ↦ ⊤) ↔ IsLocalMPSolution 𝓧 𝓕 P := by
+  refine ⟨fun h Y hY ↦ ?_, fun h Y hY ↦ ?_⟩
+  · obtain ⟨τ, hst, hmono, htop, hmart⟩ := h Y hY
+    exact ⟨τ, ⟨⟨hst, htop⟩, hmono⟩, hmart⟩
+  · obtain ⟨τ, hτ, hmart⟩ := h Y hY
+    exact ⟨τ, hτ.isStoppingTime, hτ.mono, hτ.tendsto_top, hmart⟩
+
 end Local
 
 variable {E : Type*} [MeasurableSpace E]
@@ -814,6 +949,154 @@ def mpFamily [OrderBot ι] (A : Set ((E → 𝕂) × (E → 𝕂))) (Q : Clock �
     (X : ι → Ω → E) : Set (ι → Ω → 𝕂) :=
   {Y | ∃ p ∈ A, ∀ t ω, Y t ω =
     p.1 (X t ω) - ∫ s in Q.interval c ⊥ t, p.2 (X s ω) ∂Q.q}
+
+/-- **The solution set of a union is the intersection of the solution sets.** -/
+theorem mpSolutions_union (𝓧 𝓨 : Set (ι → Ω → 𝕂)) (𝓕 : Filtration ι m) :
+    mpSolutions (𝓧 ∪ 𝓨) 𝓕 = mpSolutions 𝓧 𝓕 ∩ mpSolutions 𝓨 𝓕 := by
+  ext P
+  simp only [mpSolutions, IsMPSolution, Set.mem_ofPred_eq, Set.mem_inter_iff, Set.mem_union]
+  exact ⟨fun h ↦ ⟨fun Y hY ↦ h Y (Or.inl hY), fun Y hY ↦ h Y (Or.inr hY)⟩,
+    fun h Y hY ↦ hY.elim (h.1 Y) (h.2 Y)⟩
+
+/-- A martingale times a constant of `𝕂` is a martingale, over any preordered index. -/
+theorem MeasureTheory.Martingale.const_mul_rclike {𝓕 : Filtration ι m} {P : Measure Ω}
+    {Y : ι → Ω → 𝕂} (hY : Martingale Y 𝓕 P) (c : 𝕂) :
+    Martingale (fun t ω ↦ c * Y t ω) 𝓕 P := by
+  refine ⟨fun t ↦ (hY.stronglyMeasurable t).const_mul c, fun i j hij ↦ ?_⟩
+  have h1 : P[fun ω ↦ c * Y j ω | 𝓕 i] =ᵐ[P] c • P[Y j | 𝓕 i] := condExp_smul c (Y j) (𝓕 i)
+  filter_upwards [h1, hY.condExp_ae_eq hij] with ω h1ω h2ω
+  rw [h1ω, Pi.smul_apply, h2ω, smul_eq_mul]
+
+
+/-- **The test process of one pair**, `f (X t) - ∫_{(⊥, t]} g (X s) q(ds)` in the convention
+`c`.  `mpFamily A q c X` is the set of these for `(f, g) ∈ A` (`mpFamily_eq_image_mpProcess`). -/
+noncomputable def mpProcess [OrderBot ι] (Q : Clock ι) (c : Clock.Conv) (X : ι → Ω → E)
+    (f g : E → 𝕂) : ι → Ω → 𝕂 :=
+  fun t ω ↦ f (X t ω) - ∫ s in Q.interval c ⊥ t, g (X s ω) ∂Q.q
+
+omit [MeasurableSpace E] in
+theorem mpFamily_eq_image_mpProcess [OrderBot ι] (A : Set ((E → 𝕂) × (E → 𝕂))) (Q : Clock ι)
+    (c : Clock.Conv) (X : ι → Ω → E) :
+    mpFamily A Q c X = (fun p ↦ mpProcess Q c X p.1 p.2) '' A := by
+  ext Y
+  constructor
+  · rintro ⟨p, hp, hY⟩
+    exact ⟨p, hp, funext fun t ↦ funext fun ω ↦ (hY t ω).symm⟩
+  · rintro ⟨p, hp, rfl⟩
+    exact ⟨p, hp, fun t ω ↦ rfl⟩
+
+/-- **`P` solves the martingale problem for the operator `A`**, the clock `Q`, the convention `c`
+and the process `X`, for the filtration `𝓖`. -/
+def IsMPSolutionFor [OrderBot ι] (A : Set ((E → 𝕂) × (E → 𝕂))) (Q : Clock ι) (c : Clock.Conv)
+    (X : ι → Ω → E) (𝓖 : Filtration ι m) (P : Measure Ω) : Prop :=
+  IsMPSolution (mpFamily A Q c X) 𝓖 P
+
+omit [MeasurableSpace E] in
+/-- **`MPSolutions.span`: a solution for `A` solves for `Submodule.span 𝕂 A`**, provided the
+second components are integrable along the paths over every window.  The proviso is not
+decoration: `mpProcess` is linear in the pair only where the compensating integrals are honest
+Bochner integrals, and for two non integrable `g`, `g'` with integrable `g + g'` the junk value
+`0` of the two integrals makes the sum of the test processes differ from the test process of the
+sum. -/
+theorem IsMPSolutionFor.span [OrderBot ι] {A : Set ((E → 𝕂) × (E → 𝕂))} {Q : Clock ι}
+    {c : Clock.Conv} {X : ι → Ω → E} {𝓖 : Filtration ι m} {P : Measure Ω}
+    (hint : ∀ p ∈ A, ∀ t ω,
+      IntegrableOn (fun s ↦ p.2 (X s ω)) (Q.interval c ⊥ t) Q.q)
+    (hA : IsMPSolutionFor A Q c X 𝓖 P) :
+    IsMPSolutionFor (Submodule.span 𝕂 A : Set ((E → 𝕂) × (E → 𝕂))) Q c X 𝓖 P := by
+  rw [IsMPSolutionFor, mpFamily_eq_image_mpProcess]
+  rintro _ ⟨p, hp, rfl⟩
+  let good : ((E → 𝕂) × (E → 𝕂)) → Prop := fun p ↦
+    (∀ t ω, IntegrableOn (fun s ↦ p.2 (X s ω)) (Q.interval c ⊥ t) Q.q) ∧
+      Martingale (mpProcess Q c X p.1 p.2) 𝓖 P
+  have hgood : good p := by
+    refine Submodule.span_induction (p := fun p _ ↦ good p) (fun q hq ↦ ⟨hint q hq, ?_⟩)
+      ⟨fun _ _ ↦ integrableOn_zero, ?_⟩ (fun q q' _ _ hq hq' ↦ ⟨fun t ω ↦ ?_, ?_⟩)
+      (fun a q _ hq ↦ ⟨fun t ω ↦ ?_, ?_⟩) (SetLike.mem_coe.1 hp)
+    · rw [IsMPSolutionFor, mpFamily_eq_image_mpProcess] at hA
+      exact hA _ ⟨q, hq, rfl⟩
+    · have h0 : mpProcess Q c X (0 : (E → 𝕂) × (E → 𝕂)).1 (0 : (E → 𝕂) × (E → 𝕂)).2 = 0 := by
+        funext t ω
+        simp [mpProcess]
+      rw [h0]
+      exact martingale_zero _ _ _
+    · exact (hq.1 t ω).add (hq'.1 t ω)
+    · have heq : mpProcess Q c X (q + q').1 (q + q').2
+          = mpProcess Q c X q.1 q.2 + mpProcess Q c X q'.1 q'.2 := by
+        funext t ω
+        simp only [mpProcess, Prod.fst_add, Prod.snd_add, Pi.add_apply]
+        rw [integral_add (hq.1 t ω) (hq'.1 t ω)]
+        ring
+      rw [heq]
+      exact hq.2.add hq'.2
+    · exact (hq.1 t ω).const_mul a
+    · have heq : mpProcess Q c X (a • q).1 (a • q).2
+          = fun t ω ↦ a * mpProcess Q c X q.1 q.2 t ω := by
+        funext t ω
+        simp only [mpProcess, Prod.smul_fst, Prod.smul_snd, Pi.smul_apply, smul_eq_mul]
+        rw [integral_const_mul]
+        ring
+      rw [heq]
+      exact hq.2.const_mul_rclike a
+  exact hgood.2
+
+omit [MeasurableSpace E] in
+/-- **`IsMPSolutionFor.insert_of_forall_norm_le`: closure of the solution property under bounded
+pointwise limits of test pairs.**  If `p n ∈ A` converge pointwise to `(f, g)` with a common bound
+`C`, and the second components are measurable along the paths, then every solution for `A` is one
+for `insert (f, g) A`.  The test processes converge pointwise by dominated convergence on the
+windows, which have finite mass, and are bounded by `C + C q((⊥, t])`; the martingale identity
+passes to the limit by `tendsto_condExp_unique`. -/
+theorem IsMPSolutionFor.insert_of_forall_norm_le [OrderBot ι] {A : Set ((E → 𝕂) × (E → 𝕂))}
+    {Q : Clock ι} {c : Clock.Conv} {X : ι → Ω → E} {𝓖 : Filtration ι m} {P : Measure Ω}
+    [IsFiniteMeasure P] (hA : IsMPSolutionFor A Q c X 𝓖 P) {p : ℕ → (E → 𝕂) × (E → 𝕂)}
+    (hpA : ∀ n, p n ∈ A) {f g : E → 𝕂} (hf : ∀ x, Tendsto (fun n ↦ (p n).1 x) atTop (𝓝 (f x)))
+    (hg : ∀ x, Tendsto (fun n ↦ (p n).2 x) atTop (𝓝 (g x)))
+    {C : ℝ} (hC1 : ∀ n x, ‖(p n).1 x‖ ≤ C) (hC2 : ∀ n x, ‖(p n).2 x‖ ≤ C)
+    (hmeas : ∀ n ω, StronglyMeasurable[Q.measurableSpace] fun s ↦ (p n).2 (X s ω)) :
+    IsMPSolutionFor (insert (f, g) A) Q c X 𝓖 P := by
+  let _ : MeasurableSpace ι := Q.measurableSpace
+  rw [IsMPSolutionFor, mpFamily_eq_image_mpProcess] at hA ⊢
+  rintro _ ⟨q, hq, rfl⟩
+  rcases hq with rfl | hq
+  · set Z : ℕ → ι → Ω → 𝕂 := fun n ↦ mpProcess Q c X (p n).1 (p n).2 with hZdef
+    set Y := mpProcess Q c X (f, g).1 (f, g).2 with hYdef
+    have hZ : ∀ n, Martingale (Z n) 𝓖 P := fun n ↦ hA _ ⟨p n, hpA n, rfl⟩
+    have hfin : ∀ t, IsFiniteMeasure (Q.q.restrict (Q.interval c ⊥ t)) := fun t ↦
+      ⟨by rw [Measure.restrict_apply_univ]; exact (Q.measure_interval_ne_top c ⊥ t).lt_top⟩
+    have hconv : ∀ t ω, Tendsto (fun n ↦ Z n t ω) atTop (𝓝 (Y t ω)) := by
+      intro t ω
+      have := hfin t
+      refine (hf _).sub ?_
+      exact tendsto_integral_of_dominated_convergence (fun _ ↦ C) (fun n ↦ (hmeas n ω).aestronglyMeasurable)
+        (integrable_const C) (fun n ↦ ae_of_all _ fun s ↦ hC2 n _)
+        (ae_of_all _ fun s ↦ hg _)
+    set B : ι → ℝ := fun t ↦ C + C * Q.q.real (Q.interval c ⊥ t) with hBdef
+    have hbd : ∀ n t ω, ‖Z n t ω‖ ≤ B t := by
+      intro n t ω
+      calc ‖Z n t ω‖ ≤ ‖(p n).1 (X t ω)‖
+            + ‖∫ s in Q.interval c ⊥ t, (p n).2 (X s ω) ∂Q.q‖ := norm_sub_le _ _
+        _ ≤ B t := add_le_add (hC1 n _) (norm_setIntegral_le_of_norm_le_const
+            (Q.measure_interval_ne_top c ⊥ t).lt_top fun s _ ↦ hC2 n _)
+    have hYb : ∀ t ω, ‖Y t ω‖ ≤ B t := fun t ω ↦
+      le_of_tendsto' ((hconv t ω).norm) fun n ↦ hbd n t ω
+    have hadapt : ∀ t, StronglyMeasurable[𝓖 t] (Y t) := fun t ↦
+      stronglyMeasurable_of_tendsto atTop (fun n ↦ (hZ n).stronglyMeasurable t)
+        (tendsto_pi_nhds.2 (hconv t))
+    have hYint : ∀ t, Integrable (Y t) P := fun t ↦
+      Integrable.mono' (integrable_const (B t)) ((hadapt t).mono (𝓖.le t)).aestronglyMeasurable
+        (ae_of_all _ (hYb t))
+    refine ⟨hadapt, fun i j hij ↦ ?_⟩
+    have h := tendsto_condExp_unique (m := 𝓖 i) (μ := P) (fun n ↦ Z n j) (fun n ↦ Z n i) (Y j)
+      (Y i) (fun n ↦ (hZ n).integrable j) (fun n ↦ (hZ n).integrable i)
+      (ae_of_all _ (hconv j)) (ae_of_all _ (hconv i))
+      (fun _ ↦ B j) (integrable_const _) (fun _ ↦ B i) (integrable_const _)
+      (fun n ↦ ae_of_all _ (hbd n j)) (fun n ↦ ae_of_all _ (hbd n i))
+      (fun n ↦ ((hZ n).condExp_ae_eq hij).trans
+        (condExp_of_stronglyMeasurable (𝓖.le i) ((hZ n).stronglyMeasurable i)
+          ((hZ n).integrable i)).symm.eventuallyEq)
+    exact h.trans (condExp_of_stronglyMeasurable (𝓖.le i) (hadapt i) (hYint i)).eventuallyEq
+  · exact hA _ ⟨q, hq, rfl⟩
 
 /-- **The test processes attached to a *path dependent* operator.**  The second component of an
 element of the operator is a functional of the time and the sample point, `ι → Ω → 𝕂`, and not a
@@ -46259,6 +46542,45 @@ theorem isLocalMPSolution_iff_of_isUniformLocalization {𝓧 : Set (ι → F →
         (stoppedProcess (fun i ↦ {f | ⊥ < τ n f}.indicator (Y i)) (τ n)) 𝓕₀ P :=
   ⟨hτ.martingale P inferInstance, fun hmart Y hY ↦ ⟨τ, hτ.isLocalizingSequence P, hmart Y hY⟩⟩
 
+/-- **Clause (L1) of `def:localizing` read per test process**: a sequence `τ Y` of strict stopping
+times for **each** test process `Y`, increasing and tending to `⊤` at every path, such that for
+every local solution the stopped `Y^{τ Y n}` is a martingale.
+
+This is what the proof of `lem:L1auto` delivers and what every use of (L1) in `lem:localmix`,
+`lem:localrestart` and `thm:localuniq` spends.  `IsUniformLocalization` is the special case of a
+sequence independent of `Y` (`IsUniformLocalization.isLocalizationForEach`); unlike it, the
+per-process form is reached by `lem:L1auto` for **arbitrary** families
+(`isLocalizationForEach_of_boundedJumps`). -/
+structure IsLocalizationForEach (𝓧 : Set (ι → F → 𝕂)) (𝓕₀ : Filtration ι mF)
+    (τ : (ι → F → 𝕂) → ℕ → F → WithTop ι) : Prop where
+  isStoppingTime : ∀ Y ∈ 𝓧, ∀ n, IsStoppingTime 𝓕₀ (τ Y n)
+  mono : ∀ Y ∈ 𝓧, ∀ f, Monotone (τ Y · f)
+  tendsto_top : ∀ Y ∈ 𝓧, ∀ f, Tendsto (τ Y · f) atTop (𝓝 ⊤)
+  martingale : ∀ P : Measure F, IsProbabilityMeasure P → IsLocalMPSolution 𝓧 𝓕₀ P →
+    ∀ Y ∈ 𝓧, ∀ n, Martingale
+      (stoppedProcess (fun i ↦ {f | ⊥ < τ Y n f}.indicator (Y i)) (τ Y n)) 𝓕₀ P
+
+/-- One sequence for all test processes is one sequence for each. -/
+theorem IsUniformLocalization.isLocalizationForEach {𝓧 : Set (ι → F → 𝕂)}
+    {𝓕₀ : Filtration ι mF} {τ : ℕ → F → WithTop ι} (hτ : IsUniformLocalization 𝓧 𝓕₀ τ) :
+    IsLocalizationForEach 𝓧 𝓕₀ (fun _ ↦ τ) where
+  isStoppingTime _ _ := hτ.isStoppingTime
+  mono _ _ := hτ.mono
+  tendsto_top _ _ := hτ.tendsto_top
+  martingale := hτ.martingale
+
+/-- **(L1) per test process turns the local problem into a family of martingale conditions**, for
+every probability measure, as `isLocalMPSolution_iff_of_isUniformLocalization` does for one
+sequence. -/
+theorem isLocalMPSolution_iff_of_isLocalizationForEach {𝓧 : Set (ι → F → 𝕂)}
+    {𝓕₀ : Filtration ι mF} {τ : (ι → F → 𝕂) → ℕ → F → WithTop ι}
+    (hτ : IsLocalizationForEach 𝓧 𝓕₀ τ) (P : Measure F) [IsProbabilityMeasure P] :
+    IsLocalMPSolution 𝓧 𝓕₀ P ↔ ∀ Y ∈ 𝓧, ∀ n, Martingale
+        (stoppedProcess (fun i ↦ {f | ⊥ < τ Y n f}.indicator (Y i)) (τ Y n)) 𝓕₀ P :=
+  ⟨hτ.martingale P inferInstance, fun hmart Y hY ↦
+    ⟨τ Y, isLocalizingSequence_of_forall (hτ.isStoppingTime Y hY) (hτ.mono Y hY)
+      (hτ.tendsto_top Y hY) P, hmart Y hY⟩⟩
+
 variable [AddCommMonoid ι] [AddLeftMono ι]
 
 /-- **The filtration seen from time `r`**, `t ↦ 𝓕₀ (r + t)`, the filtration of
@@ -46355,6 +46677,34 @@ structure LocalizingSystem (S : Shift F π) (𝓕₀ : Filtration ι mF) (𝓧 :
   restart : ∀ P : Measure F, IsProbabilityMeasure P → IsLocalMPSolution 𝓧 𝓕₀ P →
     ∀ Y ∈ 𝓧, ∀ r : ι, ∀ σ ∈ 𝔖, (∀ f, (r : WithTop ι) ≤ σ f) →
       Martingale (fun t f ↦ stoppedProcess Y σ (r + t) f - Y r f) (𝓕₀.shiftBy r) P
+
+/-- **A localizing system with (L1) per test process**: `LocalizingSystem` with the field
+`uniform` weakened to `each`, a sequence in `𝔖` for each test process
+(`IsLocalizationForEach`).  This is what `lem:L1auto` supplies for an arbitrary family, and it is
+all that `localRestart`, `subsingleton_localMPSolutions` and `isMarkov_of_unique_onedim_local`
+read: their proofs use `isStoppingTime`, `shift_mem` and `restart` and not the martingale clause of
+(L1).  A `LocalizingSystem` is one (`LocalizingSystem.toEach`). -/
+structure LocalizingSystemEach (S : Shift F π) (𝓕₀ : Filtration ι mF) (𝓧 : Set (ι → F → 𝕂))
+    (𝔖 : Set (F → WithTop ι)) : Prop where
+  isStoppingTime : ∀ σ ∈ 𝔖, IsStoppingTime 𝓕₀ σ
+  each : ∃ τ : (ι → F → 𝕂) → ℕ → F → WithTop ι, (∀ Y ∈ 𝓧, ∀ n, τ Y n ∈ 𝔖) ∧
+    IsLocalizationForEach 𝓧 𝓕₀ τ
+  shift_mem : ∀ σ ∈ 𝔖, ∀ r : ι, (fun f ↦ (r : WithTop ι) + σ (S.θ r f)) ∈ 𝔖
+  restart : ∀ P : Measure F, IsProbabilityMeasure P → IsLocalMPSolution 𝓧 𝓕₀ P →
+    ∀ Y ∈ 𝓧, ∀ r : ι, ∀ σ ∈ 𝔖, (∀ f, (r : WithTop ι) ≤ σ f) →
+      Martingale (fun t f ↦ stoppedProcess Y σ (r + t) f - Y r f) (𝓕₀.shiftBy r) P
+
+omit [MeasurableSpace E] in
+/-- A localizing system is one with (L1) per test process. -/
+theorem LocalizingSystem.toEach {S : Shift F π} {𝓕₀ : Filtration ι mF} {𝓧 : Set (ι → F → 𝕂)}
+    {𝔖 : Set (F → WithTop ι)} (h : LocalizingSystem S 𝓕₀ 𝓧 𝔖) :
+    LocalizingSystemEach S 𝓕₀ 𝓧 𝔖 where
+  isStoppingTime := h.isStoppingTime
+  each := by
+    obtain ⟨τ, hτ𝔖, hτ⟩ := h.uniform
+    exact ⟨fun _ ↦ τ, fun _ _ n ↦ hτ𝔖 n, hτ.isLocalizationForEach⟩
+  shift_mem := h.shift_mem
+  restart := h.restart
 
 
 /-- **The filtration seen from a stopping time**, `t ↦ 𝓕₀_{τ + t}`, built from Mathlib's
@@ -46953,6 +47303,43 @@ theorem MeasureTheory.Martingale.comp_measure {Θ : Type*} {mΘ : MeasurableSpac
 
 end LocalMixtureKernel
 
+section GlobalMixture
+
+variable {ι : Type*} [Preorder ι] {Ω : Type*} {m : MeasurableSpace Ω} {𝕂 : Type*} [RCLike 𝕂]
+
+/-- **`lem:mixture`, finite form**: a finite combination of finite solutions is a solution. -/
+theorem mpSolutions_add_smul {𝓧 : Set (ι → Ω → 𝕂)} {𝓕 : Filtration ι m} {P P' : Measure Ω}
+    [IsFiniteMeasure P] [IsFiniteMeasure P'] (hP : P ∈ mpSolutions 𝓧 𝓕)
+    (hP' : P' ∈ mpSolutions 𝓧 𝓕) {a b : ℝ≥0∞} (ha : a ≠ ∞) (hb : b ≠ ∞) :
+    a • P + b • P' ∈ mpSolutions 𝓧 𝓕 := by
+  have : IsFiniteMeasure (a • P) := Measure.smul_finite P ha
+  have : IsFiniteMeasure (b • P') := Measure.smul_finite P' hb
+  exact fun Y hY ↦ ((hP Y hY).smul_measure ha).add_measure ((hP' Y hY).smul_measure hb)
+
+/-- **`MPSolutions.isConvex`**: the probability solutions form a convex set, over `ℝ≥0∞`, the
+scalars of `Measure`. -/
+theorem convex_mpSolutions (𝓧 : Set (ι → Ω → 𝕂)) (𝓕 : Filtration ι m) :
+    Convex ℝ≥0∞ {P : Measure Ω | P ∈ mpSolutions 𝓧 𝓕 ∧ IsProbabilityMeasure P} := by
+  rintro P ⟨hP, hPp⟩ P' ⟨hP', hP'p⟩ a b - - hab
+  have ha : a ≠ ∞ := ne_top_of_le_ne_top ENNReal.one_ne_top (hab ▸ le_self_add)
+  have hb : b ≠ ∞ := ne_top_of_le_ne_top ENNReal.one_ne_top (hab ▸ le_add_self)
+  refine ⟨mpSolutions_add_smul hP hP' ha hb, ⟨?_⟩⟩
+  simp only [Measure.add_apply, Measure.smul_apply, measure_univ, smul_eq_mul, mul_one, hab]
+
+/-- **`MPSolutions.integral_mem`, `lem:mixture` for a measurable family**: `κ ∘ₘ ν` is a solution
+when `κ θ` is one for `ν`-almost every `θ`, under the integrability of the manuscript. -/
+theorem mpSolutions_comp {Θ : Type*} {mΘ : MeasurableSpace Θ} {𝓧 : Set (ι → Ω → 𝕂)}
+    {𝓕 : Filtration ι m} {ν : Measure Θ} [IsProbabilityMeasure ν] {κ : Kernel Θ Ω}
+    [IsMarkovKernel κ] (hκ : ∀ᵐ θ ∂ν, κ θ ∈ mpSolutions 𝓧 𝓕)
+    (hint : ∀ Y ∈ 𝓧, ∀ i, Integrable (fun θ ↦ ∫ ω, ‖Y i ω‖ ∂κ θ) ν) :
+    κ ∘ₘ ν ∈ mpSolutions 𝓧 𝓕 := by
+  intro Y hY
+  obtain ⟨θ₀, hθ₀⟩ := hκ.exists
+  exact Martingale.comp_measure (hθ₀ Y hY).stronglyAdapted
+    (by filter_upwards [hκ] with θ hθ using hθ Y hY) (hint Y hY)
+
+end GlobalMixture
+
 section LocalMixtureKernelSolutions
 
 variable {ι : Type*} [LinearOrder ι] [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι]
@@ -47106,6 +47493,135 @@ theorem ae_isLocalMPSolution_of_countableTest {𝓧 : Set (ι → F → 𝕂)} {
 
 end LocalizedFamily
 
+section LocalizationForEachMixture
+
+variable {ι : Type*} [LinearOrder ι] [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι]
+variable {F : Type*} {mF : MeasurableSpace F} {𝕂 : Type*} [RCLike 𝕂]
+
+/-- **`lem:localmix`, finite mixtures, under (L1) per test process.** -/
+theorem isLocalMPSolution_add_of_isLocalizationForEach {𝓧 : Set (ι → F → 𝕂)}
+    {𝓕₀ : Filtration ι mF} {τ : (ι → F → 𝕂) → ℕ → F → WithTop ι}
+    (hτ : IsLocalizationForEach 𝓧 𝓕₀ τ)
+    {P P' : Measure F} [IsProbabilityMeasure P] [IsProbabilityMeasure P']
+    (hP : IsLocalMPSolution 𝓧 𝓕₀ P) (hP' : IsLocalMPSolution 𝓧 𝓕₀ P')
+    {a b : ℝ≥0∞} (ha : a ≠ ∞) (hb : b ≠ ∞) :
+    IsLocalMPSolution 𝓧 𝓕₀ (a • P + b • P') := by
+  have : IsFiniteMeasure (a • P) := Measure.smul_finite P ha
+  have : IsFiniteMeasure (b • P') := Measure.smul_finite P' hb
+  intro Y hY
+  exact ⟨τ Y, isLocalizingSequence_of_forall (hτ.isStoppingTime Y hY) (hτ.mono Y hY)
+    (hτ.tendsto_top Y hY) _, fun n ↦
+    ((hτ.martingale P inferInstance hP Y hY n).smul_measure ha).add_measure
+      ((hτ.martingale P' inferInstance hP' Y hY n).smul_measure hb)⟩
+
+/-- **`lem:localmix`(b) under (L1) per test process**: a measurable mixture of local solutions is
+a local solution, subject to the integrability of the stopped processes of each sequence. -/
+theorem isLocalMPSolution_comp_of_isLocalizationForEach {Θ : Type*} {mΘ : MeasurableSpace Θ}
+    {𝓧 : Set (ι → F → 𝕂)} {𝓕₀ : Filtration ι mF} {τ : (ι → F → 𝕂) → ℕ → F → WithTop ι}
+    (hτ : IsLocalizationForEach 𝓧 𝓕₀ τ) {ν : Measure Θ} [IsProbabilityMeasure ν]
+    {κ : Kernel Θ F} [IsMarkovKernel κ] (hκ : ∀ᵐ θ ∂ν, IsLocalMPSolution 𝓧 𝓕₀ (κ θ))
+    (hint : ∀ Y ∈ 𝓧, ∀ n i, Integrable (fun θ ↦ ∫ f,
+      ‖stoppedProcess (fun i ↦ {f | ⊥ < τ Y n f}.indicator (Y i)) (τ Y n) i f‖ ∂κ θ) ν) :
+    IsLocalMPSolution 𝓧 𝓕₀ (κ ∘ₘ ν) := by
+  intro Y hY
+  refine ⟨τ Y, isLocalizingSequence_of_forall (hτ.isStoppingTime Y hY) (hτ.mono Y hY)
+    (hτ.tendsto_top Y hY) _, fun n ↦ ?_⟩
+  obtain ⟨θ₀, hθ₀⟩ := hκ.exists
+  refine Martingale.comp_measure
+    (hτ.martingale (κ θ₀) inferInstance hθ₀ Y hY n).stronglyAdapted ?_ (hint Y hY n)
+  filter_upwards [hκ] with θ hθ using hτ.martingale (κ θ) inferInstance hθ Y hY n
+
+/-- **The localized family `𝓧_•` for a sequence per test process.** -/
+def localizedFamilyEach (𝓧 : Set (ι → F → 𝕂)) (τ : (ι → F → 𝕂) → ℕ → F → WithTop ι) :
+    Set (ι → F → 𝕂) :=
+  {Z | ∃ Y ∈ 𝓧, ∃ n, Z = stoppedProcess (fun i ↦ {f | ⊥ < τ Y n f}.indicator (Y i)) (τ Y n)}
+
+/-- **`M_loc(𝓧) = M(𝓧_•)` under (L1) per test process.** -/
+theorem isLocalMPSolution_iff_isMPSolution_localizedFamilyEach {𝓧 : Set (ι → F → 𝕂)}
+    {𝓕₀ : Filtration ι mF} {τ : (ι → F → 𝕂) → ℕ → F → WithTop ι}
+    (hτ : IsLocalizationForEach 𝓧 𝓕₀ τ) (P : Measure F) [IsProbabilityMeasure P] :
+    IsLocalMPSolution 𝓧 𝓕₀ P ↔ IsMPSolution (localizedFamilyEach 𝓧 τ) 𝓕₀ P := by
+  rw [isLocalMPSolution_iff_of_isLocalizationForEach hτ]
+  refine ⟨?_, fun h Y hY n ↦ h _ ⟨Y, hY, n, rfl⟩⟩
+  rintro h _ ⟨Y, hY, n, rfl⟩
+  exact h Y hY n
+
+variable {E : Type*} {mE : MeasurableSpace E}
+
+/-- **`lem:localmix`(c) under (L1) per test process.** -/
+theorem ae_isLocalMPSolution_of_countableTest_each {𝓧 : Set (ι → F → 𝕂)}
+    {𝓕₀ : Filtration ι mF} {τ : (ι → F → 𝕂) → ℕ → F → WithTop ι}
+    (hτ : IsLocalizationForEach 𝓧 𝓕₀ τ)
+    {K : Type*} [Countable K] (Y : K → ι → F → 𝕂) (hY : ∀ k, Y k ∈ localizedFamilyEach 𝓧 τ)
+    (s t : K → ι) (hst : ∀ k, s k ≤ t k) (Z : K → F → ℝ)
+    (hZ : ∀ k, StronglyMeasurable[𝓕₀ (s k)] (Z k)) (b : K → ℝ) (hb : ∀ k f, ‖Z k f‖ ≤ b k)
+    (htest : ∀ Q : Measure F, IsProbabilityMeasure Q →
+      (∀ k, Integrable (Y k (s k)) Q ∧ Integrable (Y k (t k)) Q) →
+      (∀ k, ∫ f, (Y k (t k) f - Y k (s k) f) * (Z k f : 𝕂) ∂Q = 0) →
+      IsMPSolution (localizedFamilyEach 𝓧 τ) 𝓕₀ Q)
+    {π₀ : F → E} (hπ₀ : ∀ i, Measurable[𝓕₀ i] π₀)
+    {μ : Measure E} [IsProbabilityMeasure μ] {κ : Kernel E F} [IsMarkovKernel κ]
+    (hκ : ∀ᵐ x ∂μ, ∀ᵐ f ∂κ x, π₀ f = x) (hP : IsLocalMPSolution 𝓧 𝓕₀ (κ ∘ₘ μ)) :
+    ∀ᵐ x ∂μ, IsLocalMPSolution 𝓧 𝓕₀ (κ x) ∧ ∀ᵐ f ∂κ x, π₀ f = x := by
+  have hP' := (isLocalMPSolution_iff_isMPSolution_localizedFamilyEach hτ _).1 hP
+  filter_upwards [ae_isMPSolution_of_countableTest Y hY s t hst Z hZ b hb htest hπ₀ hκ hP']
+    with x hx
+  exact ⟨(isLocalMPSolution_iff_isMPSolution_localizedFamilyEach hτ _).2 hx.1, hx.2⟩
+
+end LocalizationForEachMixture
+
+section LocalMixtureCorollary
+
+variable {ι : Type*} [LinearOrder ι] [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι]
+variable {F : Type*} {mF : MeasurableSpace F} {𝕂 : Type*} [RCLike 𝕂]
+
+/-- **The local convexity under (L1) as a corollary of the global one**: `M_loc(𝓧) = M(𝓧_•)`
+(`isLocalMPSolution_iff_isMPSolution_localizedFamilyEach`) and `convex_mpSolutions` for `𝓧_•`. -/
+theorem convex_localMPSolutions_of_isLocalizationForEach {𝓧 : Set (ι → F → 𝕂)}
+    {𝓕₀ : Filtration ι mF} {τ : (ι → F → 𝕂) → ℕ → F → WithTop ι}
+    (hτ : IsLocalizationForEach 𝓧 𝓕₀ τ) :
+    Convex ℝ≥0∞ {P : Measure F | IsLocalMPSolution 𝓧 𝓕₀ P ∧ IsProbabilityMeasure P} := by
+  have hset : {P : Measure F | IsLocalMPSolution 𝓧 𝓕₀ P ∧ IsProbabilityMeasure P}
+      = {P | P ∈ mpSolutions (localizedFamilyEach 𝓧 τ) 𝓕₀ ∧ IsProbabilityMeasure P} := by
+    ext P
+    simp only [Set.mem_ofPred_eq, mpSolutions]
+    constructor
+    · rintro ⟨h1, h2⟩
+      exact ⟨(isLocalMPSolution_iff_isMPSolution_localizedFamilyEach hτ P).1 h1, h2⟩
+    · rintro ⟨h1, h2⟩
+      exact ⟨(isLocalMPSolution_iff_isMPSolution_localizedFamilyEach hτ P).2 h1, h2⟩
+  rw [hset]
+  exact convex_mpSolutions _ _
+
+end LocalMixtureCorollary
+
+/-- **`Σ₀` of `lem:L1auto`**: the hitting times `τ^Y_n` of the running suprema of the members of
+`𝓧`. -/
+def supHittingTimes {F : Type*} (𝓧 : Set (ℝ≥0 → F → ℝ)) : Set (F → ℝ≥0∞) :=
+  {σ | ∃ Y ∈ 𝓧, ∃ n, σ = supHittingTime Y n}
+
+/-- **`lem:L1auto` for an arbitrary family**, in the form (L1) per test process: for adapted
+càdlàg test processes with `Y 0 = 0` and jumps bounded by a constant depending on `Y`, the hitting
+times `τ^Y_n` of the running suprema localize each `Y` under every local solution, and they lie
+in `Σ₀ = supHittingTimes 𝓧`.  No finiteness of `𝓧`, no minimum, no hypothesis on the
+filtration. -/
+theorem isLocalizationForEach_of_boundedJumps {F : Type*} {mF : MeasurableSpace F}
+    {𝓕₀ : Filtration ℝ≥0 mF} {𝓧 : Set (ℝ≥0 → F → ℝ)}
+    (hY : ∀ Y ∈ 𝓧, StronglyAdapted 𝓕₀ Y) (hcad : ∀ Y ∈ 𝓧, ∀ f, IsCadlag (Y · f))
+    (h0 : ∀ Y ∈ 𝓧, ∀ f, Y 0 f = 0)
+    (hjump : ∀ Y ∈ 𝓧, ∃ c, 0 ≤ c ∧
+      ∀ f t, 0 < t → ∀ l, Tendsto (Y · f) (𝓝[<] t) (𝓝 l) → ‖Y t f - l‖ ≤ c) :
+    IsLocalizationForEach 𝓧 𝓕₀ supHittingTime ∧
+      ∀ Y ∈ 𝓧, ∀ n, supHittingTime Y n ∈ supHittingTimes 𝓧 := by
+  refine ⟨⟨fun Y hYX ↦ isStoppingTime_supHittingTime (hY Y hYX)
+      (fun f ↦ (hcad Y hYX f).continuousWithinAt_Ici),
+    fun Y _ ↦ monotone_supHittingTime Y, fun Y hYX f ↦ tendsto_supHittingTime (hcad Y hYX f),
+    fun P _ hP Y hYX n ↦ ?_⟩, fun Y hYX n ↦ ⟨Y, hYX, n, rfl⟩⟩
+  obtain ⟨c, hc, hj⟩ := hjump Y hYX
+  exact martingale_stoppedProcess_of_le_supHittingTime (hP Y hYX) (hY Y hYX) (hcad Y hYX)
+    (h0 Y hYX) hc hj (isStoppingTime_supHittingTime (hY Y hYX)
+      (fun f ↦ (hcad Y hYX f).continuousWithinAt_Ici) n) fun _ ↦ le_rfl
+
 /-! ### The local restart, `lem:localrestart`
 
 `restart` rests on a martingale identity that a local martingale does not supply; (L3) supplies
@@ -47242,13 +47758,15 @@ at every path; (L2) puts `σ = r + τ_n ∘ θ_r` into `𝔖`, (L3) makes
 `t ↦ Y_{(r+t) ∧ σ} - Y_r` a martingale for the filtration seen from `r`, and
 `eq:shiftedstopped` is `IsShiftSystem.increment` read through `shift_add_min_untopA`.  The
 martingale clause of (L1) is **not** used, neither for `𝓧₀ 0` nor for `𝓧₀ r`; only its sequence.
+Accordingly the hypothesis is `LocalizingSystemEach`, (L1) per test process; a `LocalizingSystem`
+enters through `LocalizingSystem.toEach`.
 
 `hadapt` is the adaptedness of the stopped test processes, which the manuscript obtains from
 progressive measurability under (T2b) (`IsStronglyProgressive.stronglyAdapted_stoppedProcess`);
 it is carried as what the proof uses.  The determining set is not needed, as in `restart`. -/
 theorem localRestart {S : Shift F π} {𝓕₀ : Filtration ι mF} {𝓧₀ : ι → Set (ι → F → 𝕂)}
     (hS : IsShiftSystem S 𝓕₀ 𝓧₀) {𝔖 : Set (F → WithTop ι)}
-    (hsys : LocalizingSystem S 𝓕₀ (𝓧₀ 0) 𝔖) {τ : ℕ → F → WithTop ι} (hτ𝔖 : ∀ n, τ n ∈ 𝔖)
+    (hsys : LocalizingSystemEach S 𝓕₀ (𝓧₀ 0) 𝔖) {τ : ℕ → F → WithTop ι} (hτ𝔖 : ∀ n, τ n ∈ 𝔖)
     (hτmono : ∀ f, Monotone (τ · f)) (hτtop : ∀ f, Tendsto (τ · f) atTop (𝓝 ⊤))
     {P : Measure F} [IsProbabilityMeasure P] (hP : IsLocalMPSolution (𝓧₀ 0) 𝓕₀ P)
     (r : ι) (hr : ∀ u : ι, r ≤ r + u)
@@ -47332,7 +47850,7 @@ variable {E : Type*} [MeasurableSpace E] {π : ι → F → E}
 `𝓜 r = M_loc(𝓧₀ r)` and `localRestart` in place of `restart`, and nothing else changed. -/
 theorem propagatesAgreement_localMPSolutions {S : Shift F π} {𝓕₀ : Filtration ι mF}
     {𝓧₀ : ι → Set (ι → F → 𝕂)} (hS : IsShiftSystem S 𝓕₀ 𝓧₀) {𝔖 : Set (F → WithTop ι)}
-    (hsys : LocalizingSystem S 𝓕₀ (𝓧₀ 0) 𝔖) {τ : ℕ → F → WithTop ι} (hτ𝔖 : ∀ n, τ n ∈ 𝔖)
+    (hsys : LocalizingSystemEach S 𝓕₀ (𝓧₀ 0) 𝔖) {τ : ℕ → F → WithTop ι} (hτ𝔖 : ∀ n, τ n ∈ 𝔖)
     (hτmono : ∀ f, Monotone (τ · f)) (hτtop : ∀ f, Tendsto (τ · f) atTop (𝓝 ⊤))
     (hadapt : ∀ r : ι, ∀ Y' ∈ 𝓧₀ r, ∀ n, StronglyAdapted 𝓕₀
       (stoppedProcess (fun i ↦ {f | ⊥ < τ n f}.indicator (Y' i)) (τ n)))
@@ -47358,7 +47876,7 @@ the only change against `subsingleton_mpSolutions_of_unique_onedim` is the resta
 the integrability of the increments after `r`, and nothing else is read. -/
 theorem subsingleton_localMPSolutions {S : Shift F π} {𝓕₀ : Filtration ι mF}
     {𝓧₀ : ι → Set (ι → F → 𝕂)} (hS : IsShiftSystem S 𝓕₀ 𝓧₀) {𝔖 : Set (F → WithTop ι)}
-    (hsys : LocalizingSystem S 𝓕₀ (𝓧₀ 0) 𝔖) {τ : ℕ → F → WithTop ι} (hτ𝔖 : ∀ n, τ n ∈ 𝔖)
+    (hsys : LocalizingSystemEach S 𝓕₀ (𝓧₀ 0) 𝔖) {τ : ℕ → F → WithTop ι} (hτ𝔖 : ∀ n, τ n ∈ 𝔖)
     (hτmono : ∀ f, Monotone (τ · f)) (hτtop : ∀ f, Tendsto (τ · f) atTop (𝓝 ⊤))
     (hadapt : ∀ r : ι, ∀ Y' ∈ 𝓧₀ r, ∀ n, StronglyAdapted 𝓕₀
       (stoppedProcess (fun i ↦ {f | ⊥ < τ n f}.indicator (Y' i)) (τ n)))
@@ -47383,7 +47901,7 @@ local solution is Markov at `r`.  It is `isMarkov_of_restart` with `localRestart
 `thm:absuniq`(a) is not repeated. -/
 theorem isMarkov_of_unique_onedim_local {S : Shift F π} {𝓕₀ : Filtration ι mF}
     {𝓧₀ : ι → Set (ι → F → 𝕂)} (hS : IsShiftSystem S 𝓕₀ 𝓧₀) {𝔖 : Set (F → WithTop ι)}
-    (hsys : LocalizingSystem S 𝓕₀ (𝓧₀ 0) 𝔖) {τ : ℕ → F → WithTop ι} (hτ𝔖 : ∀ n, τ n ∈ 𝔖)
+    (hsys : LocalizingSystemEach S 𝓕₀ (𝓧₀ 0) 𝔖) {τ : ℕ → F → WithTop ι} (hτ𝔖 : ∀ n, τ n ∈ 𝔖)
     (hτmono : ∀ f, Monotone (τ · f)) (hτtop : ∀ f, Tendsto (τ · f) atTop (𝓝 ⊤))
     (hbot : (⊥ : ι) = 0) (hadd : ∀ r u : ι, r ≤ r + u)
     (hπadapt : ∀ u : ι, Measurable[𝓕₀ u] (π u))
@@ -47401,6 +47919,121 @@ theorem isMarkov_of_unique_onedim_local {S : Shift F π} {𝓕₀ : Filtration �
     honedim hg hgb t
 
 end LocalUniqueness
+
+section LocalOnAmbient
+
+/-- **A martingale pushes forward along a measurable map**, `martingale_map_of_martingale_comp`
+for a value space `𝕂` in place of `ℝ`; the proof is the same. -/
+theorem martingale_map_of_martingale_comp_rclike {𝕂 : Type*} [RCLike 𝕂]
+    {Ω' Ω'' : Type*} {m' : MeasurableSpace Ω'}
+    {m'' : MeasurableSpace Ω''} {ι' : Type*} [Preorder ι'] {θ : Ω'' → Ω'}
+    (hθ : Measurable θ) {P : Measure Ω''} [IsFiniteMeasure P]
+    {𝓕 : Filtration ι' m'} {𝓖 : Filtration ι' m''}
+    (hθi : ∀ i, Measurable[𝓖 i, 𝓕 i] θ)
+    {Y : ι' → Ω' → 𝕂} (hadp : StronglyAdapted 𝓕 Y)
+    (hY : Martingale (fun i ω ↦ Y i (θ ω)) 𝓖 P) :
+    Martingale Y 𝓕 (P.map θ) := by
+  have : IsFiniteMeasure (P.map θ) := P.isFiniteMeasure_map θ
+  have haes : ∀ i, AEStronglyMeasurable (Y i) (P.map θ) := fun i ↦
+    ((hadp i).mono (𝓕.le i)).aestronglyMeasurable
+  have hint : ∀ i, Integrable (Y i) (P.map θ) := fun i ↦
+    (integrable_map_measure (haes i) hθ.aemeasurable).2 (hY.integrable i)
+  refine ⟨hadp, fun i j hij ↦ ?_⟩
+  refine (ae_eq_condExp_of_forall_setIntegral_eq (𝓕.le i) (hint j)
+    (fun S _ _ ↦ (hint i).integrableOn) ?_ (hadp i).aestronglyMeasurable).symm
+  intro A hA _
+  have hAm : MeasurableSet A := 𝓕.le i A hA
+  have hswap : ∀ k, ∫ y in A, Y k y ∂(P.map θ) = ∫ ω in θ ⁻¹' A, Y k (θ ω) ∂P := fun k ↦
+    setIntegral_map hAm (haes k) hθ.aemeasurable
+  rw [hswap i, hswap j]
+  exact hY.setIntegral_eq hij (hθi i hA)
+
+variable {ι : Type*} [LinearOrder ι] [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι]
+variable {F : Type*} {mF : MeasurableSpace F} {𝕂 : Type*} [RCLike 𝕂]
+
+/-- **From an ambient space to the path space.**  Let `Φ : Ω → F` be the path map of a process on
+`(Ω, 𝓖, P)`, measurable from `𝓖 i` to `𝓕₀ i` at every time (the process is adapted).  If every
+test process read through `Φ` and stopped along the path functionals `τ n ∘ Φ` is a
+`P`-martingale -- this is (L1) of `def:localizing` read on the ambient space, with `Y°(X)` in
+place of `Y°` -- then the law `P.map Φ` solves the local problem on the path space.
+
+The stopped test processes must be adapted on the path space (`hadapt`): a push forward does not
+produce adaptedness.  Nothing else is asked. -/
+theorem isLocalMPSolution_map_of_martingale_comp {𝓧 : Set (ι → F → 𝕂)} {𝓕₀ : Filtration ι mF}
+    {τ : ℕ → F → WithTop ι} (hτst : ∀ n, IsStoppingTime 𝓕₀ (τ n))
+    (hτmono : ∀ f, Monotone (τ · f)) (hτtop : ∀ f, Tendsto (τ · f) atTop (𝓝 ⊤))
+    (hadapt : ∀ Y ∈ 𝓧, ∀ n, StronglyAdapted 𝓕₀
+      (stoppedProcess (fun i ↦ {f | ⊥ < τ n f}.indicator (Y i)) (τ n)))
+    {Ω : Type*} {m : MeasurableSpace Ω} {𝓖 : Filtration ι m} {P : Measure Ω}
+    [IsFiniteMeasure P] {Φ : Ω → F} (hΦ : Measurable Φ) (hΦi : ∀ i, Measurable[𝓖 i, 𝓕₀ i] Φ)
+    (hmart : ∀ Y ∈ 𝓧, ∀ n, Martingale (fun i ω ↦
+      stoppedProcess (fun i ↦ {f | ⊥ < τ n f}.indicator (Y i)) (τ n) i (Φ ω)) 𝓖 P) :
+    IsLocalMPSolution 𝓧 𝓕₀ (P.map Φ) := fun Y hY ↦
+  ⟨τ, isLocalizingSequence_of_forall hτst hτmono hτtop _, fun n ↦
+    martingale_map_of_martingale_comp_rclike hΦ hΦi (hadapt Y hY n) (hmart Y hY n)⟩
+
+variable [AddCommMonoid ι] [AddLeftMono ι]
+variable {E : Type*} [MeasurableSpace E] {π : ι → F → E}
+
+/-- **`thm:localuniq`, uniqueness half, on arbitrary spaces**: two processes on possibly different
+spaces, adapted, whose test processes read along the path satisfy (L1) on the ambient space, and
+with the same initial law, have the same law.  `subsingleton_localMPSolutions` applied to the two
+image measures (`isLocalMPSolution_map_of_martingale_comp`). -/
+theorem map_eq_of_martingale_comp_localizingSystemEach {S : Shift F π} {𝓕₀ : Filtration ι mF}
+    {𝓧₀ : ι → Set (ι → F → 𝕂)} (hS : IsShiftSystem S 𝓕₀ 𝓧₀) {𝔖 : Set (F → WithTop ι)}
+    (hsys : LocalizingSystemEach S 𝓕₀ (𝓧₀ 0) 𝔖) {τ : ℕ → F → WithTop ι} (hτ𝔖 : ∀ n, τ n ∈ 𝔖)
+    (hτmono : ∀ f, Monotone (τ · f)) (hτtop : ∀ f, Tendsto (τ · f) atTop (𝓝 ⊤))
+    (hadapt : ∀ r : ι, ∀ Y' ∈ 𝓧₀ r, ∀ n, StronglyAdapted 𝓕₀
+      (stoppedProcess (fun i ↦ {f | ⊥ < τ n f}.indicator (Y' i)) (τ n)))
+    (hbot : (⊥ : ι) = 0) (hadd : ∀ r u : ι, r ≤ r + u)
+    (hsub : ∀ s t : ι, s ≤ t → ∃ u : ι, t = s + u)
+    (hπadapt : ∀ u v : ι, u ≤ v → Measurable[𝓕₀ v] (π u))
+    (hgen : mF = ⨆ i : ι, MeasurableSpace.comap (π i) inferInstance)
+    (honedim : ∀ r : ι, ∀ R R' : Measure F, IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      IsLocalMPSolution (𝓧₀ r) 𝓕₀ R → IsLocalMPSolution (𝓧₀ r) 𝓕₀ R' →
+      R.map (π ⊥) = R'.map (π ⊥) → ∀ u : ι, R.map (π u) = R'.map (π u))
+    {Ω₁ Ω₂ : Type*} {m₁ : MeasurableSpace Ω₁} {m₂ : MeasurableSpace Ω₂}
+    {𝓖₁ : Filtration ι m₁} {𝓖₂ : Filtration ι m₂} {P₁ : Measure Ω₁} {P₂ : Measure Ω₂}
+    [IsProbabilityMeasure P₁] [IsProbabilityMeasure P₂] {Φ₁ : Ω₁ → F} {Φ₂ : Ω₂ → F}
+    (hΦ₁ : ∀ i, Measurable[𝓖₁ i, 𝓕₀ i] Φ₁) (hΦ₂ : ∀ i, Measurable[𝓖₂ i, 𝓕₀ i] Φ₂)
+    (hgenΦ₁ : Measurable Φ₁) (hgenΦ₂ : Measurable Φ₂)
+    (hmart₁ : ∀ Y ∈ 𝓧₀ 0, ∀ n, Martingale (fun i ω ↦
+      stoppedProcess (fun i ↦ {f | ⊥ < τ n f}.indicator (Y i)) (τ n) i (Φ₁ ω)) 𝓖₁ P₁)
+    (hmart₂ : ∀ Y ∈ 𝓧₀ 0, ∀ n, Martingale (fun i ω ↦
+      stoppedProcess (fun i ↦ {f | ⊥ < τ n f}.indicator (Y i)) (τ n) i (Φ₂ ω)) 𝓖₂ P₂)
+    (hinit : (P₁.map Φ₁).map (π ⊥) = (P₂.map Φ₂).map (π ⊥)) :
+    P₁.map Φ₁ = P₂.map Φ₂ := by
+  have hst : ∀ n, IsStoppingTime 𝓕₀ (τ n) := fun n ↦ hsys.isStoppingTime _ (hτ𝔖 n)
+  have h1 := isLocalMPSolution_map_of_martingale_comp hst hτmono hτtop (hadapt 0) hgenΦ₁ hΦ₁
+    hmart₁
+  have h2 := isLocalMPSolution_map_of_martingale_comp hst hτmono hτtop (hadapt 0) hgenΦ₂ hΦ₂
+    hmart₂
+  exact subsingleton_localMPSolutions hS hsys hτ𝔖 hτmono hτtop hadapt hbot hadd hsub hπadapt
+    hgen honedim ((P₁.map Φ₁).map (π ⊥)) ⟨h1, inferInstance, rfl⟩ ⟨h2, inferInstance, hinit.symm⟩
+
+end LocalOnAmbient
+
+/-- **(L1) on the ambient space is automatic for bounded jumps**: if a test process `Y` on the
+path space is adapted, càdlàg, starts in `0` and has jumps bounded by `c`, and `Y ∘ Φ` is a local
+martingale under `P` for an adapted path map `Φ`, then `Y ∘ Φ` stopped along the path functionals
+`τ^Y_n ∘ Φ` is a `P`-martingale.  This is the hypothesis `hmart` of
+`isLocalMPSolution_map_of_martingale_comp`, obtained from `lem:L1auto` on `Ω` itself. -/
+theorem martingale_comp_stoppedProcess_supHittingTime {F : Type*} {mF : MeasurableSpace F}
+    {𝓕₀ : Filtration ℝ≥0 mF} {Y : ℝ≥0 → F → ℝ} (hY : StronglyAdapted 𝓕₀ Y)
+    (hcad : ∀ f, IsCadlag (Y · f)) (h0 : ∀ f, Y 0 f = 0) {c : ℝ} (hc : 0 ≤ c)
+    (hjump : ∀ f t, 0 < t → ∀ l, Tendsto (Y · f) (𝓝[<] t) (𝓝 l) → ‖Y t f - l‖ ≤ c)
+    {Ω : Type*} {m : MeasurableSpace Ω} {𝓖 : Filtration ℝ≥0 m} {P : Measure Ω}
+    [IsFiniteMeasure P] {Φ : Ω → F} (hΦi : ∀ i, Measurable[𝓖 i, 𝓕₀ i] Φ)
+    (hloc : Locally (fun Z ↦ Martingale Z 𝓖 P) 𝓖 (fun t ω ↦ Y t (Φ ω)) P) (n : ℕ) :
+    Martingale (fun i ω ↦ stoppedProcess (fun i ↦ {f | ⊥ < supHittingTime Y n f}.indicator
+      (Y i)) (supHittingTime Y n) i (Φ ω)) 𝓖 P := by
+  have hYΦ : StronglyAdapted 𝓖 (fun t ω ↦ Y t (Φ ω)) := fun t ↦
+    (hY t).comp_measurable (hΦi t)
+  have hrc : ∀ ω s, ContinuousWithinAt (fun t ↦ Y t (Φ ω)) (Ici s) s := fun ω ↦
+    (hcad (Φ ω)).continuousWithinAt_Ici
+  exact martingale_stoppedProcess_of_le_supHittingTime hloc hYΦ (fun ω ↦ hcad (Φ ω))
+    (fun ω ↦ h0 (Φ ω)) hc (fun ω ↦ hjump (Φ ω)) (isStoppingTime_supHittingTime hYΦ hrc n)
+    (n := n) fun _ ↦ le_rfl
 
 /-! ### Local uniqueness, `ssec:localuniq`
 
@@ -48575,5 +49208,717 @@ theorem Submartingale.stoppedValue_min_le_condExp_zero {j : ℝ≥0} {τ σ : Ω
   (martingale_zero ℝ 𝓕 P).submartingale.stoppedValue_min_le_condExp
     (isStronglyProgressive_const 𝓕 0) (Filter.Eventually.of_forall fun _ _ ↦ tendsto_const_nhds)
     hτ hσ hτj
+
+/-! ## The càdlàg modification of a submartingale
+
+Milestone 8, `Submartingale.cadlagModif_ae_eq_iff_continuousWithinAt_integral`.  The modification is
+the construction `cadlagModif D Y t ω = rightLimAlong D (Y · ω) t` for a countable dense `D`, and
+Doob's regularization (`Submartingale.ae_exists_tendsto_nhdsWithin`) says it is almost surely a
+right limit along `D` (`Submartingale.ae_tendsto_cadlagModif`).
+
+**What each direction needs of the filtration.**  `→` (a modification forces a right continuous
+expectation) holds for the raw filtration.  `←` needs the right limit to be `𝓕 t`-measurable, and
+that is what `[𝓕.IsRightContinuous]` gives through `𝓕.rightCont t = ⨅ j > t, 𝓕 j`
+(`Submartingale.aestronglyMeasurable_rightCont_of_ae_tendsto`).  It cannot be dropped:
+`CadlagModifWitness.not_cadlagModif_ae_eq_lateCoin` is a martingale for the raw filtration with
+constant expectation whose right limit at `1` is not its value.
+
+**No uniform integrability of the whole family is used.**  Along a sequence `u n ↓ t` below `s`
+only the positive parts are uniformly integrable for free (`Y⁺ (u n) ≤ E[Y⁺ s | 𝓕 (u n)]`).  The
+negative parts are cut off by the continuous weight `cutWeight K`: `x * cutWeight K x` is bounded
+below by `-(K + 1)` and above by `x⁺`, so Vitali applies to it
+(`Submartingale.tendsto_setIntegral_mul_cutWeight_of_ae_tendsto`), and `K → ∞` is dominated
+convergence.  Two inequalities come out, and they are all the two directions spend:
+`limsup ∫_A Y (u n) ≤ ∫_A V` (`Submartingale.eventually_setIntegral_le_of_ae_tendsto`, because
+`x ≤ x * cutWeight K x`), and `∫_A V ≤ ∫_A Y s` for `A` in every `𝓕 (u n)`
+(`Submartingale.setIntegral_le_of_ae_tendsto`, the submartingale inequality against the weight
+`cutWeight K (Y (u n))`, which is `𝓕 (u n)`-measurable).  The weight has to be continuous: an
+indicator `1_{Y (u n) ≥ -K}` would not pass to the limit. -/
+
+/-- A continuous cut-off: `1` above `-K`, `0` below `-K - 1`, linear in between. -/
+noncomputable def cutWeight (K : ℕ) (x : ℝ) : ℝ := min 1 (max 0 (x + K + 1))
+
+theorem continuous_cutWeight (K : ℕ) : Continuous (cutWeight K) :=
+  continuous_const.min (continuous_const.max ((continuous_id.add continuous_const).add
+    continuous_const))
+
+theorem cutWeight_nonneg (K : ℕ) (x : ℝ) : 0 ≤ cutWeight K x :=
+  le_min zero_le_one (le_max_left _ _)
+
+theorem cutWeight_le_one (K : ℕ) (x : ℝ) : cutWeight K x ≤ 1 := min_le_left _ _
+
+theorem cutWeight_eq_one {K : ℕ} {x : ℝ} (h : -(K : ℝ) ≤ x) : cutWeight K x = 1 :=
+  min_eq_left (le_max_of_le_right (by linarith))
+
+theorem le_mul_cutWeight (K : ℕ) (x : ℝ) : x ≤ x * cutWeight K x := by
+  rcases le_total 0 x with hx | hx
+  · rw [cutWeight_eq_one (by linarith [K.cast_nonneg (α := ℝ)]), mul_one]
+  · nlinarith [cutWeight_le_one K x, cutWeight_nonneg K x]
+
+theorem mul_cutWeight_le (K : ℕ) (x : ℝ) : x * cutWeight K x ≤ max x 0 := by
+  rcases le_total 0 x with hx | hx
+  · nlinarith [cutWeight_le_one K x, cutWeight_nonneg K x, le_max_left x 0]
+  · nlinarith [cutWeight_nonneg K x, le_max_right x 0]
+
+theorem neg_le_mul_cutWeight (K : ℕ) (x : ℝ) : -((K : ℝ) + 1) ≤ x * cutWeight K x := by
+  rcases le_total 0 x with hx | hx
+  · nlinarith [cutWeight_nonneg K x]
+  · rcases le_total (-((K : ℝ) + 1)) x with h | h
+    · nlinarith [cutWeight_le_one K x, cutWeight_nonneg K x]
+    · have : cutWeight K x = 0 := by
+        unfold cutWeight
+        rw [max_eq_left (by linarith), min_eq_right zero_le_one]
+      rw [this, mul_zero]
+      linarith [K.cast_nonneg (α := ℝ)]
+
+theorem abs_mul_cutWeight_le (K : ℕ) (x y : ℝ) : |x * cutWeight K y| ≤ |x| := by
+  rw [abs_mul, abs_of_nonneg (cutWeight_nonneg K y)]
+  exact mul_le_of_le_one_right (abs_nonneg x) (cutWeight_le_one K y)
+
+theorem eventually_cutWeight_eq_one (x : ℝ) : ∀ᶠ K : ℕ in atTop, cutWeight K x = 1 := by
+  filter_upwards [eventually_ge_atTop ⌈-x⌉₊] with K hK
+  exact cutWeight_eq_one (by linarith [(Nat.le_ceil (-x)).trans (by exact_mod_cast hK :
+    ((⌈-x⌉₊ : ℕ) : ℝ) ≤ K)])
+
+/-- `K → ∞` in the cut-off, dominated by `|f|`. -/
+theorem tendsto_setIntegral_mul_cutWeight {μ : Measure Ω} {f h : Ω → ℝ} (hf : Integrable f μ)
+    (hh : AEStronglyMeasurable h μ) (A : Set Ω) :
+    Tendsto (fun K : ℕ ↦ ∫ ω in A, f ω * cutWeight K (h ω) ∂μ) atTop
+      (𝓝 (∫ ω in A, f ω ∂μ)) := by
+  refine tendsto_integral_of_dominated_convergence (fun ω ↦ |f ω|)
+    (fun K ↦ (hf.aestronglyMeasurable.mul
+      ((continuous_cutWeight K).comp_aestronglyMeasurable hh)).restrict)
+    hf.abs.integrableOn (fun K ↦ ae_of_all _ fun ω ↦ ?_) (ae_of_all _ fun ω ↦ ?_)
+  · rw [Real.norm_eq_abs]; exact abs_mul_cutWeight_le K _ _
+  · refine tendsto_const_nhds.congr' ?_
+    filter_upwards [eventually_cutWeight_eq_one (h ω)] with K hK
+    rw [hK, mul_one]
+
+
+/-- **The submartingale inequality against a bounded nonnegative weight**, on a set of the
+earlier σ-algebra. -/
+theorem MeasureTheory.Submartingale.setIntegral_mul_le (hY : Submartingale Y 𝓕 P) {u s : ℝ≥0}
+    (hus : u ≤ s) {Z : Ω → ℝ} (hZm : StronglyMeasurable[𝓕 u] Z) (hZ0 : ∀ ω, 0 ≤ Z ω)
+    (hZ1 : ∀ ω, Z ω ≤ 1) {A : Set Ω} (hA : MeasurableSet[𝓕 u] A) :
+    ∫ ω in A, Z ω * Y u ω ∂P ≤ ∫ ω in A, Z ω * Y s ω ∂P := by
+  classical
+  have hAm : MeasurableSet A := 𝓕.le u _ hA
+  set Z' : Ω → ℝ := A.indicator Z with hZ'
+  have hZ'm : StronglyMeasurable[𝓕 u] Z' := hZm.indicator hA
+  have hZ'0 : ∀ ω, 0 ≤ Z' ω := fun ω ↦ Set.indicator_nonneg (fun ω _ ↦ hZ0 ω) ω
+  have hZ'ae : AEStronglyMeasurable Z' P := (hZ'm.mono (𝓕.le u)).aestronglyMeasurable
+  have hbd : ∀ᵐ ω ∂P, ‖Z' ω‖ ≤ 1 := ae_of_all _ fun ω ↦ by
+    rw [Real.norm_of_nonneg (hZ'0 ω)]
+    by_cases h : ω ∈ A
+    · rw [hZ', Set.indicator_of_mem h]; exact hZ1 ω
+    · rw [hZ', Set.indicator_of_notMem h]; exact zero_le_one
+  have hrw : ∀ r : ℝ≥0, ∫ ω in A, Z ω * Y r ω ∂P = ∫ ω, Z' ω * Y r ω ∂P := fun r ↦ by
+    rw [← integral_indicator hAm]
+    refine integral_congr_ae (ae_of_all _ fun ω ↦ ?_)
+    by_cases h : ω ∈ A
+    · simp [hZ', h]
+    · simp [hZ', h]
+  rw [hrw, hrw]
+  have hZs : Integrable (fun ω ↦ Z' ω * Y s ω) P := (hY.integrable s).bdd_mul hZ'ae hbd
+  have hZu : Integrable (fun ω ↦ Z' ω * Y u ω) P := (hY.integrable u).bdd_mul hZ'ae hbd
+  have hpull : P[Z' * Y s | 𝓕 u] =ᵐ[P] Z' * P[Y s | 𝓕 u] :=
+    condExp_mul_of_stronglyMeasurable_left hZ'm hZs (hY.integrable s)
+  calc ∫ ω, Z' ω * Y u ω ∂P ≤ ∫ ω, Z' ω * (P[Y s | 𝓕 u]) ω ∂P := by
+        refine integral_mono_ae hZu (integrable_condExp.bdd_mul hZ'ae hbd) ?_
+        filter_upwards [hY.ae_le_condExp hus] with ω hω
+        exact mul_le_mul_of_nonneg_left hω (hZ'0 ω)
+    _ = ∫ ω, (P[Z' * Y s | 𝓕 u]) ω ∂P := by
+        refine integral_congr_ae ?_
+        filter_upwards [hpull] with ω hω
+        exact hω.symm
+    _ = ∫ ω, Z' ω * Y s ω ∂P := integral_condExp (𝓕.le u)
+
+theorem MeasureTheory.Submartingale.integral_mono (hY : Submartingale Y 𝓕 P) {i j : ℝ≥0}
+    (hij : i ≤ j) : ∫ ω, Y i ω ∂P ≤ ∫ ω, Y j ω ∂P := by
+  simpa using hY.setIntegral_le hij MeasurableSet.univ
+
+/-- **An almost sure limit of a submartingale along times bounded by `s` is integrable**: Fatou,
+the `L¹` norms being at most `2 E[(Y s)⁺] - E[Y 0]`. -/
+theorem MeasureTheory.Submartingale.integrable_of_ae_tendsto (hY : Submartingale Y 𝓕 P)
+    {u : ℕ → ℝ≥0} {s : ℝ≥0} (hus : ∀ n, u n ≤ s) {V : Ω → ℝ}
+    (hlim : ∀ᵐ ω ∂P, Tendsto (fun n ↦ Y (u n) ω) atTop (𝓝 (V ω))) : Integrable V P := by
+  have hpos : Submartingale (Y⁺) 𝓕 P := hY.pos
+  set B : ℝ := 2 * ∫ ω, max (Y s ω) 0 ∂P - ∫ ω, Y 0 ω ∂P with hB
+  have hbd : ∀ n, ∫⁻ ω, ‖Y (u n) ω‖ₑ ∂P ≤ ENNReal.ofReal B := fun n ↦ by
+    rw [← ofReal_integral_norm_eq_lintegral_enorm (hY.integrable (u n))]
+    refine ENNReal.ofReal_le_ofReal ?_
+    have heq : ∫ ω, ‖Y (u n) ω‖ ∂P = 2 * ∫ ω, max (Y (u n) ω) 0 ∂P - ∫ ω, Y (u n) ω ∂P := by
+      simp_rw [Real.norm_eq_abs, abs_eq_two_mul_max_zero_sub]
+      have hp : Integrable (fun ω ↦ max (Y (u n) ω) 0) P := hpos.integrable (u n)
+      rw [integral_sub (hp.const_mul 2) (hY.integrable (u n)), integral_const_mul]
+    have h1 : ∫ ω, max (Y (u n) ω) 0 ∂P ≤ ∫ ω, max (Y s ω) 0 ∂P := hpos.integral_mono (hus n)
+    have h2 : ∫ ω, Y 0 ω ∂P ≤ ∫ ω, Y (u n) ω ∂P := hY.integral_mono zero_le
+    rw [heq, hB]
+    linarith
+  refine ⟨aestronglyMeasurable_of_tendsto_ae _
+    (fun n ↦ (hY.integrable (u n)).aestronglyMeasurable) hlim, ?_⟩
+  have hfatou : ∫⁻ ω, ‖V ω‖ₑ ∂P ≤ liminf (fun n ↦ ∫⁻ ω, ‖Y (u n) ω‖ₑ ∂P) atTop :=
+    lintegral_congr_ae (by filter_upwards [hlim] with x hx using hx.enorm.liminf_eq) ▸
+      (lintegral_liminf_le' fun n ↦ (hY.integrable (u n)).aestronglyMeasurable.aemeasurable.enorm)
+  exact lt_of_le_of_lt (hfatou.trans
+    (liminf_le_of_frequently_le' (Frequently.of_forall hbd))) ENNReal.ofReal_lt_top
+
+/-- **Vitali for the cut-off values along a sequence of times bounded by `s`.** -/
+theorem MeasureTheory.Submartingale.tendsto_setIntegral_mul_cutWeight_of_ae_tendsto
+    (hY : Submartingale Y 𝓕 P) {u : ℕ → ℝ≥0} {s : ℝ≥0} (hus : ∀ n, u n ≤ s) {V : Ω → ℝ}
+    (hlim : ∀ᵐ ω ∂P, Tendsto (fun n ↦ Y (u n) ω) atTop (𝓝 (V ω))) (K : ℕ) (A : Set Ω) :
+    Tendsto (fun n ↦ ∫ ω in A, Y (u n) ω * cutWeight K (Y (u n) ω) ∂P) atTop
+      (𝓝 (∫ ω in A, V ω * cutWeight K (V ω) ∂P)) := by
+  have hcont : Continuous fun x : ℝ ↦ x * cutWeight K x := continuous_id.mul (continuous_cutWeight K)
+  have hmeas : ∀ n, AEStronglyMeasurable (fun ω ↦ Y (u n) ω * cutWeight K (Y (u n) ω)) P :=
+    fun n ↦ hcont.comp_aestronglyMeasurable (hY.integrable (u n)).aestronglyMeasurable
+  have hUI : UniformIntegrable (fun n ω ↦ Y (u n) ω * cutWeight K (Y (u n) ω)) 1 P :=
+    uniformIntegrable_of_le_condExp (mσ := fun n ↦ 𝓕 (u n)) (fun n ↦ 𝓕.le _)
+      (hY.pos.integrable s) hmeas (c := -((K : ℝ) + 1))
+      (fun n ↦ ae_of_all _ fun ω ↦ neg_le_mul_cutWeight K _)
+      (fun n ↦ by
+        filter_upwards [hY.pos.ae_le_condExp (hus n)] with ω hω
+        exact (mul_cutWeight_le K _).trans hω)
+  exact tendsto_setIntegral_of_uniformIntegrable_of_ae_tendsto hUI hmeas
+    (by filter_upwards [hlim] with ω hω using (hcont.tendsto _).comp hω) A
+
+/-- **Upper semicontinuity of the set integrals along an almost sure limit**: eventually
+`∫_A Y (u n) ≤ ∫_A V + ε`.  Only the positive parts need to be uniformly integrable, and they
+are; the negative parts are cut off by `cutWeight`. -/
+theorem MeasureTheory.Submartingale.eventually_setIntegral_le_of_ae_tendsto
+    (hY : Submartingale Y 𝓕 P) {u : ℕ → ℝ≥0} {s : ℝ≥0} (hus : ∀ n, u n ≤ s) {V : Ω → ℝ}
+    (hlim : ∀ᵐ ω ∂P, Tendsto (fun n ↦ Y (u n) ω) atTop (𝓝 (V ω))) (A : Set Ω) {ε : ℝ}
+    (hε : 0 < ε) : ∀ᶠ n in atTop, ∫ ω in A, Y (u n) ω ∂P ≤ ∫ ω in A, V ω ∂P + ε := by
+  have hV := hY.integrable_of_ae_tendsto hus hlim
+  obtain ⟨K, hK⟩ := ((tendsto_order.1 (tendsto_setIntegral_mul_cutWeight hV
+    hV.aestronglyMeasurable A)).2 _ (lt_add_of_pos_right _ (half_pos hε))).exists
+  filter_upwards [(tendsto_order.1 (hY.tendsto_setIntegral_mul_cutWeight_of_ae_tendsto hus hlim
+    K A)).2 _ (lt_add_of_pos_right _ (half_pos hε))] with n hn
+  have hle : ∫ ω in A, Y (u n) ω ∂P ≤ ∫ ω in A, Y (u n) ω * cutWeight K (Y (u n) ω) ∂P :=
+    setIntegral_mono (hY.integrable (u n)).integrableOn
+      (((hY.integrable (u n)).bdd_mul (c := 1)
+        ((continuous_cutWeight K).comp_aestronglyMeasurable
+          (hY.integrable (u n)).aestronglyMeasurable)
+        (ae_of_all _ fun ω ↦ by
+          rw [Real.norm_of_nonneg (cutWeight_nonneg _ _)]; exact cutWeight_le_one _ _)).congr
+        (ae_of_all _ fun ω ↦ mul_comm _ _)).integrableOn
+      fun ω ↦ le_mul_cutWeight K _
+  linarith
+
+/-- **The set integral of an almost sure limit along times below `s` is at most that at `s`**, for
+a set in all the σ-algebras along the way. -/
+theorem MeasureTheory.Submartingale.setIntegral_le_of_ae_tendsto
+    (hY : Submartingale Y 𝓕 P) {u : ℕ → ℝ≥0} {s : ℝ≥0} (hus : ∀ n, u n ≤ s) {V : Ω → ℝ}
+    (hlim : ∀ᵐ ω ∂P, Tendsto (fun n ↦ Y (u n) ω) atTop (𝓝 (V ω))) {A : Set Ω}
+    (hA : ∀ n, MeasurableSet[𝓕 (u n)] A) : ∫ ω in A, V ω ∂P ≤ ∫ ω in A, Y s ω ∂P := by
+  have hV := hY.integrable_of_ae_tendsto hus hlim
+  have hK : ∀ K : ℕ, ∫ ω in A, V ω * cutWeight K (V ω) ∂P
+      ≤ ∫ ω in A, Y s ω * cutWeight K (V ω) ∂P := fun K ↦ by
+    have hwn : ∀ n, ∫ ω in A, Y (u n) ω * cutWeight K (Y (u n) ω) ∂P
+        ≤ ∫ ω in A, Y s ω * cutWeight K (Y (u n) ω) ∂P := fun n ↦ by
+      have h := hY.setIntegral_mul_le (hus n)
+        ((continuous_cutWeight K).comp_stronglyMeasurable (hY.stronglyAdapted (u n)))
+        (fun ω ↦ cutWeight_nonneg K _) (fun ω ↦ cutWeight_le_one K _) (hA n)
+      simpa only [mul_comm] using h
+    have hR : Tendsto (fun n ↦ ∫ ω in A, Y s ω * cutWeight K (Y (u n) ω) ∂P) atTop
+        (𝓝 (∫ ω in A, Y s ω * cutWeight K (V ω) ∂P)) := by
+      refine tendsto_integral_of_dominated_convergence (fun ω ↦ |Y s ω|)
+        (fun n ↦ ((hY.integrable s).aestronglyMeasurable.mul
+          ((continuous_cutWeight K).comp_aestronglyMeasurable
+            (hY.integrable (u n)).aestronglyMeasurable)).restrict)
+        (hY.integrable s).abs.integrableOn (fun n ↦ ae_of_all _ fun ω ↦ ?_) ?_
+      · rw [Real.norm_eq_abs]; exact abs_mul_cutWeight_le K _ _
+      · refine ae_restrict_of_ae ?_
+        filter_upwards [hlim] with ω hω
+        exact tendsto_const_nhds.mul (((continuous_cutWeight K).tendsto _).comp hω)
+    exact le_of_tendsto_of_tendsto'
+      (hY.tendsto_setIntegral_mul_cutWeight_of_ae_tendsto hus hlim K A) hR hwn
+  exact le_of_tendsto_of_tendsto'
+    (tendsto_setIntegral_mul_cutWeight hV hV.aestronglyMeasurable A)
+    (tendsto_setIntegral_mul_cutWeight (hY.integrable s) hV.aestronglyMeasurable A) hK
+
+/-- **The càdlàg modification of a real process along `D`**, as a construction:
+the right limit of the path along `D`, `rightLimAlong`, and the path value where that limit
+does not exist. -/
+noncomputable def cadlagModif (D : Set ℝ≥0) (Y : ℝ≥0 → Ω → ℝ) (t : ℝ≥0) (ω : Ω) : ℝ :=
+  rightLimAlong D (fun s ↦ Y s ω) t
+
+/-- **A submartingale converges almost surely to `cadlagModif` from the right along `D`**, at a
+fixed time.  Doob's regularization `Submartingale.ae_exists_tendsto_nhdsWithin` on the countable
+set `D ∩ [0, t + 1]`, and `tendsto_rightLimAlong`. -/
+theorem MeasureTheory.Submartingale.ae_tendsto_cadlagModif (hY : Submartingale Y 𝓕 P)
+    {D : Set ℝ≥0} (hD : D.Countable) (hDd : Dense D) (t : ℝ≥0) :
+    ∀ᵐ ω ∂P, Tendsto (fun s ↦ Y s ω) (𝓝[D ∩ Ioi t] t) (𝓝 (cadlagModif D Y t ω)) := by
+  have hS : (D ∩ Iic (t + 1)).Countable := hD.mono inter_subset_left
+  have hfil : 𝓝[D ∩ Iic (t + 1) ∩ Ioi t] t = 𝓝[D ∩ Ioi t] t := by
+    have hmem : Iic (t + 1) ∈ 𝓝[D ∩ Ioi t] t :=
+      mem_nhdsWithin_of_mem_nhds (Iic_mem_nhds (lt_add_one t))
+    rw [← nhdsWithin_inter_of_mem hmem]
+    congr 1
+    ext x
+    simp only [mem_inter_iff, mem_Iic, mem_Ioi]
+    tauto
+  have : (𝓝[D ∩ Ioi t] t).NeBot := nhdsWithin_inter_Ioi_neBot hDd ⟨t + 1, lt_add_one t⟩
+  filter_upwards [hY.ae_exists_tendsto_nhdsWithin hS (R := 0) (T := t + 1)
+    (fun _ _ ↦ zero_le) (fun _ hs ↦ hs.2)] with ω hω
+  obtain ⟨c, hc⟩ := (hω t).2
+  rw [hfil] at hc
+  exact tendsto_rightLimAlong ⟨c, hc⟩
+
+/-- A sequence in `D` strictly above `t`, below `t + 1`, running into `𝓝[D ∩ Ioi t] t`. -/
+theorem exists_seq_tendsto_nhdsWithin_inter_Ioi {D : Set ℝ≥0} (hDd : Dense D) (t : ℝ≥0) :
+    ∃ u : ℕ → ℝ≥0, (∀ n, t < u n) ∧ (∀ n, u n ≤ t + 1) ∧
+      Tendsto u atTop (𝓝[D ∩ Ioi t] t) := by
+  have : (𝓝[D ∩ Ioi t] t).NeBot := nhdsWithin_inter_Ioi_neBot hDd ⟨t + 1, lt_add_one t⟩
+  obtain ⟨u, hu⟩ := Filter.exists_seq_tendsto (𝓝[D ∩ Ioi t] t)
+  have hIio : Iic (t + 1) ∈ 𝓝[D ∩ Ioi t] t :=
+    mem_nhdsWithin_of_mem_nhds (Iic_mem_nhds (lt_add_one t))
+  obtain ⟨N, hN⟩ := eventually_atTop.1
+    ((hu.eventually_mem hIio).and (hu.eventually_mem self_mem_nhdsWithin))
+  refine ⟨fun n ↦ u (n + N), fun n ↦ (hN (n + N) (Nat.le_add_left N n)).2.2,
+    fun n ↦ (hN (n + N) (Nat.le_add_left N n)).1, hu.comp (tendsto_add_atTop_nat N)⟩
+
+/-- **A submartingale whose `cadlagModif` is a modification at `t` has a right continuous
+expectation at `t`.**  No hypothesis on the filtration: the expectation is monotone, and along a
+sequence from the right it is eventually below `E[Y t] + ε` by
+`Submartingale.eventually_setIntegral_le_of_ae_tendsto`. -/
+theorem MeasureTheory.Submartingale.continuousWithinAt_integral_of_cadlagModif_ae_eq
+    (hY : Submartingale Y 𝓕 P) {D : Set ℝ≥0} (hD : D.Countable) (hDd : Dense D) {t : ℝ≥0}
+    (h : cadlagModif D Y t =ᵐ[P] Y t) :
+    ContinuousWithinAt (fun s ↦ ∫ ω, Y s ω ∂P) (Ici t) t := by
+  obtain ⟨u, hut, hu1, hu⟩ := exists_seq_tendsto_nhdsWithin_inter_Ioi hDd t
+  have hlim : ∀ᵐ ω ∂P, Tendsto (fun n ↦ Y (u n) ω) atTop (𝓝 (Y t ω)) := by
+    filter_upwards [hY.ae_tendsto_cadlagModif hD hDd t, h] with ω h1 h2
+    rw [← h2]
+    exact h1.comp hu
+  rw [ContinuousWithinAt, tendsto_order]
+  refine ⟨fun a ha ↦ ?_, fun b hb ↦ ?_⟩
+  · filter_upwards [self_mem_nhdsWithin] with s hs
+    exact ha.trans_le (hY.integral_mono hs)
+  · obtain ⟨n, hn⟩ := (hY.eventually_setIntegral_le_of_ae_tendsto hu1 hlim univ
+      (half_pos (sub_pos.2 hb))).exists
+    simp only [Measure.restrict_univ] at hn
+    filter_upwards [Ico_mem_nhdsGE (hut n)] with s hs
+    have := hY.integral_mono hs.2.le
+    linarith
+
+omit [IsFiniteMeasure P] in
+/-- A `limsup` along times running down to `t` is measurable for `𝓕.rightCont t`: for every
+`j > t` it is the `limsup` of a tail that is `𝓕 j`-measurable. -/
+theorem MeasureTheory.StronglyAdapted.measurable_limsup_rightCont (hY : StronglyAdapted 𝓕 Y)
+    {u : ℕ → ℝ≥0} {t : ℝ≥0} (hu : Tendsto u atTop (𝓝 t)) :
+    Measurable[𝓕.rightCont t] fun ω ↦ limsup (fun n ↦ Y (u n) ω) atTop := by
+  rw [Filtration.rightCont_eq]
+  refine measurable_iff_comap_le.2 (le_iInf₂ fun j hj ↦ measurable_iff_comap_le.1 ?_)
+  obtain ⟨N, hN⟩ := eventually_atTop.1 ((tendsto_order.1 hu).2 j hj)
+  have hW : (fun ω ↦ limsup (fun n ↦ Y (u n) ω) atTop)
+      = fun ω ↦ limsup (fun n ↦ Y (u (n + N)) ω) atTop := by
+    funext ω
+    exact (Filter.limsup_nat_add (fun n ↦ Y (u n) ω) N).symm
+  rw [hW]
+  have hmeas : ∀ n, Measurable[𝓕 j] (Y (u (n + N))) := fun n ↦
+    ((hY (u (n + N))).mono (𝓕.mono (hN (n + N) (Nat.le_add_left N n)).le)).measurable
+  let _ : MeasurableSpace Ω := 𝓕 j
+  exact Measurable.limsup hmeas
+
+omit [IsFiniteMeasure P] in
+/-- **A limit from the right along times above `t` is measurable for `𝓕.rightCont t`**, up to a null set;
+the representative is the `limsup`, measurable for every `𝓕 j` with `j > t`. -/
+theorem MeasureTheory.Submartingale.aestronglyMeasurable_rightCont_of_ae_tendsto
+    (hY : Submartingale Y 𝓕 P) {u : ℕ → ℝ≥0} {t : ℝ≥0}
+    (hu : Tendsto u atTop (𝓝 t)) {V : Ω → ℝ}
+    (hlim : ∀ᵐ ω ∂P, Tendsto (fun n ↦ Y (u n) ω) atTop (𝓝 (V ω))) :
+    AEStronglyMeasurable[𝓕.rightCont t] V P := by
+  set W : Ω → ℝ := fun ω ↦ limsup (fun n ↦ Y (u n) ω) atTop with hWdef
+  have hWm : Measurable[𝓕.rightCont t] W := hY.stronglyAdapted.measurable_limsup_rightCont hu
+  refine ⟨W, hWm.stronglyMeasurable, ?_⟩
+  filter_upwards [hlim] with ω hω
+  exact hω.limsup_eq.symm
+
+/-- **Where the expectation is right continuous, `cadlagModif` is a modification**, for a right
+continuous filtration.  `Y t ≤ V` from the set integrals over `𝓕 t` and the measurability of `V`
+for `𝓕₊ t = 𝓕 t`; `E[V] ≤ E[Y t]` from `Submartingale.setIntegral_le_of_ae_tendsto` and the
+continuity of the expectation. -/
+theorem MeasureTheory.Submartingale.cadlagModif_ae_eq_of_continuousWithinAt_integral
+    [𝓕.IsRightContinuous] (hY : Submartingale Y 𝓕 P) {D : Set ℝ≥0} (hD : D.Countable)
+    (hDd : Dense D) {t : ℝ≥0} (h : ContinuousWithinAt (fun s ↦ ∫ ω, Y s ω ∂P) (Ici t) t) :
+    cadlagModif D Y t =ᵐ[P] Y t := by
+  obtain ⟨u, hut, hu1, hu⟩ := exists_seq_tendsto_nhdsWithin_inter_Ioi hDd t
+  set V := cadlagModif D Y t with hVdef
+  have hlim : ∀ᵐ ω ∂P, Tendsto (fun n ↦ Y (u n) ω) atTop (𝓝 (V ω)) := by
+    filter_upwards [hY.ae_tendsto_cadlagModif hD hDd t] with ω h1
+    exact h1.comp hu
+  have hut' : Tendsto u atTop (𝓝 t) := tendsto_nhds_of_tendsto_nhdsWithin hu
+  have hVint : Integrable V P := hY.integrable_of_ae_tendsto hu1 hlim
+  -- `E[V] ≤ E[Y j]` for every `j > t`, hence `E[V] ≤ E[Y t]`
+  have hj : ∀ j, t < j → ∫ ω, V ω ∂P ≤ ∫ ω, Y j ω ∂P := fun j hj ↦ by
+    obtain ⟨N, hN⟩ := eventually_atTop.1 ((tendsto_order.1 hut').2 j hj)
+    have h' := hY.setIntegral_le_of_ae_tendsto (u := fun n ↦ u (n + N)) (s := j)
+      (fun n ↦ (hN (n + N) (Nat.le_add_left N n)).le)
+      (by filter_upwards [hlim] with ω hω using hω.comp (tendsto_add_atTop_nat N))
+      (A := univ) (fun _ ↦ MeasurableSet.univ)
+    simpa only [Measure.restrict_univ] using h'
+  have hint : ∫ ω, V ω ∂P ≤ ∫ ω, Y t ω ∂P := by
+    have h' : Tendsto (fun s ↦ ∫ ω, Y s ω ∂P) (𝓝[>] t) (𝓝 (∫ ω, Y t ω ∂P)) :=
+      h.mono_left (nhdsWithin_mono _ Ioi_subset_Ici_self)
+    exact ge_of_tendsto h' (eventually_nhdsWithin_of_forall hj)
+  -- `Y t ≤ V`
+  have hVm : AEStronglyMeasurable[𝓕 t] V P := by
+    have := hY.aestronglyMeasurable_rightCont_of_ae_tendsto hut' hlim
+    rwa [Filtration.IsRightContinuous.eq] at this
+  have hset : ∀ A, MeasurableSet[𝓕 t] A → ∫ ω in A, Y t ω ∂P ≤ ∫ ω in A, V ω ∂P := fun A hA ↦ by
+    refine le_of_forall_pos_le_add fun ε hε ↦ ?_
+    obtain ⟨n, hn⟩ := (hY.eventually_setIntegral_le_of_ae_tendsto hu1 hlim A hε).exists
+    exact (hY.setIntegral_le (hut n).le hA).trans hn
+  have hle : Y t ≤ᵐ[P] V :=
+    (ae_le_condExp_of_forall_setIntegral_le (𝓕.le t) (hY.stronglyAdapted t) (hY.integrable t)
+      hVint hset).trans (condExp_of_aestronglyMeasurable' (𝓕.le t) hVm hVint).le
+  exact ((integral_eq_iff_of_ae_le (hY.integrable t) hVint hle).1
+    (le_antisymm (integral_mono_ae (hY.integrable t) hVint hle) hint)).symm
+
+/-- **`Submartingale.cadlagModif_ae_eq_iff_continuousWithinAt_integral`**: for a right continuous
+filtration, `cadlagModif D Y` is a modification at `t` exactly where `s ↦ E[Y s]` is right
+continuous.  The direction `→` holds for the raw filtration
+(`continuousWithinAt_integral_of_cadlagModif_ae_eq`); the direction `←` does not
+(`CadlagModifWitness`). -/
+theorem MeasureTheory.Submartingale.cadlagModif_ae_eq_iff_continuousWithinAt_integral
+    [𝓕.IsRightContinuous] (hY : Submartingale Y 𝓕 P) {D : Set ℝ≥0} (hD : D.Countable)
+    (hDd : Dense D) (t : ℝ≥0) :
+    cadlagModif D Y t =ᵐ[P] Y t ↔ ContinuousWithinAt (fun s ↦ ∫ ω, Y s ω ∂P) (Ici t) t :=
+  ⟨hY.continuousWithinAt_integral_of_cadlagModif_ae_eq hD hDd,
+    hY.cadlagModif_ae_eq_of_continuousWithinAt_integral hD hDd⟩
+
+/-- **`Martingale.cadlagModif_ae_eq`**: for a martingale and a right continuous filtration the
+expectation is constant, so `cadlagModif D Y` is a modification at every time. -/
+theorem MeasureTheory.Martingale.cadlagModif_ae_eq [𝓕.IsRightContinuous]
+    (hY : Martingale Y 𝓕 P) {D : Set ℝ≥0} (hD : D.Countable) (hDd : Dense D) (t : ℝ≥0) :
+    cadlagModif D Y t =ᵐ[P] Y t := by
+  refine hY.submartingale.cadlagModif_ae_eq_of_continuousWithinAt_integral hD hDd ?_
+  refine (continuousWithinAt_const (b := ∫ ω, Y t ω ∂P)).congr (fun s hs ↦ ?_) rfl
+  simpa using (hY.setIntegral_eq hs MeasurableSet.univ).symm
+
+/-- **The set where the right limit along `D` exists is measurable for `𝓕.rightCont t`**, exactly
+and not up to a null set.  For `j > t` the filter `𝓝[D ∩ Ioi t] t` lives on the countable set
+`D ∩ Ioo t j`, over which the values are `𝓕 j`-measurable, and Mathlib's
+`StronglyMeasurable.measurableSet_exists_tendsto` applies to the countable index. -/
+theorem MeasureTheory.StronglyAdapted.measurableSet_exists_tendsto_rightCont
+    (hY : StronglyAdapted 𝓕 Y) {D : Set ℝ≥0} (hD : D.Countable) (t : ℝ≥0) :
+    MeasurableSet[𝓕.rightCont t]
+      {ω | ∃ x, Tendsto (fun s ↦ Y s ω) (𝓝[D ∩ Ioi t] t) (𝓝 x)} := by
+  rw [Filtration.rightCont_eq]
+  refine MeasurableSpace.measurableSet_iInf.2 fun j ↦ MeasurableSpace.measurableSet_iInf.2
+    fun hj ↦ ?_
+  set S : Set ℝ≥0 := D ∩ Ioo t j with hSdef
+  have hS : S ∈ 𝓝[D ∩ Ioi t] t :=
+    mem_nhdsWithin.2 ⟨Iio j, isOpen_Iio, hj, fun x hx ↦ ⟨hx.2.1, hx.2.2, hx.1⟩⟩
+  have hmap : map ((↑) : S → ℝ≥0) (comap (↑) (𝓝[D ∩ Ioi t] t)) = 𝓝[D ∩ Ioi t] t :=
+    map_comap_of_mem (by rw [Subtype.range_coe]; exact hS)
+  have hset : {ω | ∃ x, Tendsto (fun s ↦ Y s ω) (𝓝[D ∩ Ioi t] t) (𝓝 x)}
+      = {ω | ∃ x, Tendsto (fun s : S ↦ Y s ω) (comap (↑) (𝓝[D ∩ Ioi t] t)) (𝓝 x)} := by
+    ext ω
+    simp only [mem_ofPred_eq]
+    refine exists_congr fun x ↦ ?_
+    have h := tendsto_map'_iff (f := fun s ↦ Y s ω) (g := ((↑) : S → ℝ≥0))
+      (x := comap (↑) (𝓝[D ∩ Ioi t] t)) (y := 𝓝 x)
+    rw [hmap] at h
+    exact h
+  rw [hset]
+  have : Countable S := (hD.mono inter_subset_left).to_subtype
+  have hmeas : ∀ i : S, StronglyMeasurable[𝓕 j] (Y i) := fun i ↦
+    (hY i).mono (𝓕.mono i.2.2.2.le)
+  let _ : MeasurableSpace Ω := 𝓕 j
+  exact StronglyMeasurable.measurableSet_exists_tendsto hmeas
+
+open scoped Classical in
+/-- `cadlagModif` read through a sequence: the `limsup` along the sequence where the right limit
+along `D` exists, the path value elsewhere. -/
+theorem cadlagModif_eq_ite {D : Set ℝ≥0} (hDd : Dense D) (t : ℝ≥0) {u : ℕ → ℝ≥0}
+    (hu : Tendsto u atTop (𝓝[D ∩ Ioi t] t)) (ω : Ω) :
+    cadlagModif D Y t ω = if (∃ x, Tendsto (fun s ↦ Y s ω) (𝓝[D ∩ Ioi t] t) (𝓝 x))
+      then limsup (fun n ↦ Y (u n) ω) atTop else Y t ω := by
+  have : (𝓝[D ∩ Ioi t] t).NeBot := nhdsWithin_inter_Ioi_neBot hDd ⟨t + 1, lt_add_one t⟩
+  split_ifs with h
+  · exact (((tendsto_rightLimAlong h).comp hu).limsup_eq).symm
+  · rw [cadlagModif, rightLimAlong, dite_eq_right fun hc ↦ h hc.2]
+
+/-- **`cadlagModif D Y` is adapted to the right continuous hull**, at every sample point. -/
+theorem MeasureTheory.StronglyAdapted.cadlagModif_rightCont (hY : StronglyAdapted 𝓕 Y)
+    {D : Set ℝ≥0} (hD : D.Countable) (hDd : Dense D) :
+    StronglyAdapted 𝓕.rightCont (cadlagModif D Y) := by
+  classical
+  intro t
+  obtain ⟨u, -, -, hu⟩ := exists_seq_tendsto_nhdsWithin_inter_Ioi hDd t
+  have heq : cadlagModif D Y t = {ω | ∃ x, Tendsto (fun s ↦ Y s ω) (𝓝[D ∩ Ioi t] t) (𝓝 x)}.piecewise
+      (fun ω ↦ limsup (fun n ↦ Y (u n) ω) atTop) (Y t) := by
+    funext ω
+    rw [cadlagModif_eq_ite hDd t hu ω]
+    by_cases h : ω ∈ {ω | ∃ x, Tendsto (fun s ↦ Y s ω) (𝓝[D ∩ Ioi t] t) (𝓝 x)}
+    · rw [Set.piecewise_eq_of_mem _ _ _ h,
+        ite_eq_left (show ∃ x, Tendsto (fun s ↦ Y s ω) (𝓝[D ∩ Ioi t] t) (𝓝 x) from h)]
+    · rw [Set.piecewise_eq_of_notMem _ _ _ h,
+        ite_eq_right (show ¬ ∃ x, Tendsto (fun s ↦ Y s ω) (𝓝[D ∩ Ioi t] t) (𝓝 x) from h)]
+  rw [heq]
+  exact (Measurable.piecewise (hY.measurableSet_exists_tendsto_rightCont hD t)
+    (hY.measurable_limsup_rightCont (tendsto_nhds_of_tendsto_nhdsWithin hu))
+    ((hY t).mono (𝓕.le_rightCont t)).measurable).stronglyMeasurable
+
+/-- **The càdlàg modification of a submartingale is a submartingale for the right continuous
+hull `𝓕.rightCont`**, with no hypothesis on `𝓕` and none on the expectation.  For `s < t` and
+`A ∈ 𝓕.rightCont s`: `∫_A Y_{s+} ≤ ∫_A Y (v k)` along the times `v k ↓ t`
+(`Submartingale.setIntegral_le_of_ae_tendsto`, `A` lying in every `𝓕 (u n)` with `u n > s`),
+and `∫_A Y (v k)` is eventually below `∫_A Y_{t+} + ε`
+(`Submartingale.eventually_setIntegral_le_of_ae_tendsto`). -/
+theorem MeasureTheory.Submartingale.cadlagModif_rightCont (hY : Submartingale Y 𝓕 P)
+    {D : Set ℝ≥0} (hD : D.Countable) (hDd : Dense D) :
+    Submartingale (cadlagModif D Y) 𝓕.rightCont P := by
+  have hseq : ∀ t : ℝ≥0, ∃ u : ℕ → ℝ≥0, (∀ n, t < u n) ∧ (∀ n, u n ≤ t + 1) ∧
+      Tendsto u atTop (𝓝 t) ∧
+      ∀ᵐ ω ∂P, Tendsto (fun n ↦ Y (u n) ω) atTop (𝓝 (cadlagModif D Y t ω)) := fun t ↦ by
+    obtain ⟨u, hut, hu1, hu⟩ := exists_seq_tendsto_nhdsWithin_inter_Ioi hDd t
+    refine ⟨u, hut, hu1, tendsto_nhds_of_tendsto_nhdsWithin hu, ?_⟩
+    filter_upwards [hY.ae_tendsto_cadlagModif hD hDd t] with ω h1
+    exact h1.comp hu
+  have hint : ∀ t, Integrable (cadlagModif D Y t) P := fun t ↦ by
+    obtain ⟨u, -, hu1, -, hlim⟩ := hseq t
+    exact hY.integrable_of_ae_tendsto hu1 hlim
+  refine submartingale_of_setIntegral_le (hY.stronglyAdapted.cadlagModif_rightCont hD hDd) hint
+    fun s t hst A hA ↦ ?_
+  rcases hst.lt_or_eq with hst | rfl
+  · obtain ⟨u, hus, -, hu, hlimu⟩ := hseq s
+    obtain ⟨v, hvt, hv1, -, hlimv⟩ := hseq t
+    have hAj : ∀ j, s < j → MeasurableSet[𝓕 j] A := fun j hj ↦ by
+      rw [Filtration.rightCont_eq] at hA
+      exact (iInf₂_le j hj : (⨅ j > s, 𝓕 j : MeasurableSpace Ω) ≤ 𝓕 j) A hA
+    have hk : ∀ k, ∫ ω in A, cadlagModif D Y s ω ∂P ≤ ∫ ω in A, Y (v k) ω ∂P := fun k ↦ by
+      have hsv : s < v k := hst.trans (hvt k)
+      obtain ⟨N, hN⟩ := eventually_atTop.1 ((tendsto_order.1 hu).2 (v k) hsv)
+      exact hY.setIntegral_le_of_ae_tendsto (u := fun n ↦ u (n + N)) (s := v k)
+        (fun n ↦ (hN (n + N) (Nat.le_add_left N n)).le)
+        (by filter_upwards [hlimu] with ω hω using hω.comp (tendsto_add_atTop_nat N))
+        (fun n ↦ hAj _ (hus (n + N)))
+    refine le_of_forall_pos_le_add fun ε hε ↦ ?_
+    obtain ⟨k, hk'⟩ := (hY.eventually_setIntegral_le_of_ae_tendsto hv1 hlimv A hε).exists
+    exact (hk k).trans hk'
+  · exact le_rfl
+
+/-- **The paths of `cadlagModif D Y` are almost surely càdlàg.**  Doob's regularization on
+`D ∩ [0, N]` for every `N`, one null set for all of them, and the deterministic
+`isCadlag_rightLimAlong`. -/
+theorem MeasureTheory.Submartingale.ae_isCadlag_cadlagModif (hY : Submartingale Y 𝓕 P)
+    {D : Set ℝ≥0} (hD : D.Countable) (hDd : Dense D) :
+    ∀ᵐ ω ∂P, IsCadlag fun t ↦ cadlagModif D Y t ω := by
+  have hN : ∀ N : ℕ, ∀ᵐ ω ∂P, ∀ t : ℝ≥0,
+      (∃ c : ℝ, Tendsto (fun s ↦ Y s ω) (𝓝[D ∩ Iic (N : ℝ≥0) ∩ Iio t] t) (𝓝 c)) ∧
+      (∃ c : ℝ, Tendsto (fun s ↦ Y s ω) (𝓝[D ∩ Iic (N : ℝ≥0) ∩ Ioi t] t) (𝓝 c)) :=
+    fun N ↦ hY.ae_exists_tendsto_nhdsWithin (hD.mono inter_subset_left) (R := 0) (T := N)
+      (fun _ _ ↦ zero_le) (fun _ hs ↦ hs.2)
+  have hfil : ∀ (r : ℝ≥0) (N : ℕ), r < N → ∀ U : Set ℝ≥0,
+      𝓝[D ∩ Iic (N : ℝ≥0) ∩ U] r = 𝓝[D ∩ U] r := by
+    intro r N hr U
+    have hmem : Iic (N : ℝ≥0) ∈ 𝓝[D ∩ U] r := mem_nhdsWithin_of_mem_nhds (Iic_mem_nhds hr)
+    rw [← nhdsWithin_inter_of_mem hmem]
+    congr 1
+    ext x
+    simp only [mem_inter_iff, mem_Iic]
+    tauto
+  filter_upwards [ae_all_iff.2 hN] with ω hω
+  have hex : ∀ r : ℝ≥0, ∃ x, Tendsto (fun s ↦ Y s ω) (𝓝[D ∩ Ioi r] r) (𝓝 x) := fun r ↦ by
+    obtain ⟨N, hrN⟩ := exists_nat_gt r
+    obtain ⟨c, hc⟩ := (hω N r).2
+    rw [hfil r N hrN] at hc
+    exact ⟨c, hc⟩
+  have hexl : ∀ r : ℝ≥0, ∃ x, Tendsto (fun s ↦ Y s ω) (𝓝[D ∩ Iio r] r) (𝓝 x) := fun r ↦ by
+    obtain ⟨N, hrN⟩ := exists_nat_gt r
+    obtain ⟨c, hc⟩ := (hω N r).1
+    rw [hfil r N hrN] at hc
+    exact ⟨c, hc⟩
+  exact isCadlag_rightLimAlong hDd hex hexl
+
+/-! ### The witness: `←` fails for the raw filtration
+
+A fair coin thrown **immediately after** time `1`: the process is `0` up to and including `1` and
+`±1` afterwards, the filtration is `⊥` up to and including `1` and everything afterwards.  It is a
+martingale, its expectation is constantly `0`, and yet its right limit at `1` is the coin and not
+`0`.  The filtration is not right continuous at `1`: `𝓕.rightCont 1` is everything, `𝓕 1` is `⊥`. -/
+
+namespace CadlagModifWitness
+
+open AtomWitness
+
+/-- Nothing up to and including `1`, everything after. -/
+noncomputable def lateFiltration : Filtration ℝ≥0 (inferInstance : MeasurableSpace Bool) where
+  seq t := if 1 < t then (inferInstance : MeasurableSpace Bool) else ⊥
+  mono' := fun a b hab ↦ by
+    show (if 1 < a then (inferInstance : MeasurableSpace Bool) else ⊥) ≤
+      (if 1 < b then (inferInstance : MeasurableSpace Bool) else ⊥)
+    by_cases ha : 1 < a
+    · simp only [ite_eq_left ha, ite_eq_left (ha.trans_le hab), le_refl]
+    · simp only [ite_eq_right ha]
+      exact bot_le
+  le' := fun t ↦ by
+    show (if 1 < t then (inferInstance : MeasurableSpace Bool) else ⊥) ≤
+      (inferInstance : MeasurableSpace Bool)
+    by_cases ht : 1 < t
+    · simp only [ite_eq_left ht, le_refl]
+    · simp only [ite_eq_right ht]
+      exact bot_le
+
+/-- The coin thrown immediately after `1`. -/
+noncomputable def lateCoin (t : ℝ≥0) (ω : Bool) : ℝ := if 1 < t then (if ω then (1 : ℝ) else -1) else 0
+
+theorem integral_lateCoin (t : ℝ≥0) : ∫ ω, lateCoin t ω ∂coinMeasure = 0 := by
+  rw [integral_coinMeasure]
+  simp only [lateCoin]
+  by_cases ht : 1 < t
+  · simp only [ite_eq_left ht]; norm_num
+  · simp only [ite_eq_right ht]; norm_num
+
+theorem martingale_lateCoin : Martingale lateCoin lateFiltration coinMeasure := by
+  refine ⟨fun t ↦ ?_, fun s t hst ↦ ?_⟩
+  · by_cases ht : 1 < t
+    · have hf : lateFiltration t = (inferInstance : MeasurableSpace Bool) := ite_eq_left ht
+      rw [hf]
+      exact (measurable_of_finite _).stronglyMeasurable
+    · have hf : lateFiltration t = ⊥ := ite_eq_right ht
+      have hz : lateCoin t = fun _ ↦ (0 : ℝ) :=
+        funext fun ω ↦ by simp only [lateCoin]; rw [ite_eq_right ht]
+      rw [hf, hz]
+      exact stronglyMeasurable_const
+  · by_cases hs : 1 < s
+    · have hYts : lateCoin t = lateCoin s := funext fun ω ↦ by
+        simp only [lateCoin]
+        rw [ite_eq_left (hs.trans_le hst), ite_eq_left hs]
+      have hle : lateFiltration s ≤ (inferInstance : MeasurableSpace Bool) := lateFiltration.le' s
+      have hsm : StronglyMeasurable[lateFiltration s] (lateCoin s) := by
+        rw [show lateFiltration s = (inferInstance : MeasurableSpace Bool) from ite_eq_left hs]
+        exact (measurable_of_finite _).stronglyMeasurable
+      rw [hYts, condExp_of_stronglyMeasurable hle hsm (integrable_bool _)]
+    · have hf : lateFiltration s = ⊥ := ite_eq_right hs
+      have hz : lateCoin s = fun _ ↦ (0 : ℝ) :=
+        funext fun ω ↦ by simp only [lateCoin]; rw [ite_eq_right hs]
+      rw [hf, hz, condExp_bot]
+      exact Filter.Eventually.of_forall fun _ ↦ integral_lateCoin t
+
+/-- The expectation is constant, hence right continuous at `1`. -/
+theorem continuousWithinAt_integral_lateCoin :
+    ContinuousWithinAt (fun s ↦ ∫ ω, lateCoin s ω ∂coinMeasure) (Ici 1) 1 := by
+  simp only [integral_lateCoin]
+  exact continuousWithinAt_const
+
+/-- The right limit at `1` is the coin, at every sample point and along every dense `D`. -/
+theorem cadlagModif_lateCoin {D : Set ℝ≥0} (hDd : Dense D) (ω : Bool) :
+    cadlagModif D lateCoin 1 ω = if ω then 1 else -1 := by
+  have : (𝓝[D ∩ Ioi 1] (1 : ℝ≥0)).NeBot := nhdsWithin_inter_Ioi_neBot hDd ⟨2, one_lt_two⟩
+  have hc : Tendsto (fun s ↦ lateCoin s ω) (𝓝[D ∩ Ioi 1] 1)
+      (𝓝 (if ω then (1 : ℝ) else -1)) := by
+    refine tendsto_const_nhds.congr' ?_
+    filter_upwards [self_mem_nhdsWithin] with s hs
+    have h1 : (1 : ℝ≥0) < s := hs.2
+    simp only [lateCoin]
+    rw [ite_eq_left h1]
+  exact tendsto_nhds_unique (tendsto_rightLimAlong ⟨_, hc⟩) hc
+
+/-- **The witness**: a martingale for the raw filtration with constant expectation, for which
+`cadlagModif` is not a modification at `1`.  So the direction `←` of
+`Submartingale.cadlagModif_ae_eq_iff_continuousWithinAt_integral` needs a hypothesis on the
+filtration, and `[𝓕.IsRightContinuous]` there is not a convenience. -/
+theorem not_cadlagModif_ae_eq_lateCoin {D : Set ℝ≥0} (hDd : Dense D) :
+    Martingale lateCoin lateFiltration coinMeasure ∧
+      ContinuousWithinAt (fun s ↦ ∫ ω, lateCoin s ω ∂coinMeasure) (Ici 1) 1 ∧
+      ¬ cadlagModif D lateCoin 1 =ᵐ[coinMeasure] lateCoin 1 := by
+  refine ⟨martingale_lateCoin, continuousWithinAt_integral_lateCoin, fun h ↦ ?_⟩
+  have hset : {ω | cadlagModif D lateCoin 1 ω ≠ lateCoin 1 ω} = univ := by
+    ext ω
+    simp only [cadlagModif_lateCoin hDd, lateCoin, lt_irrefl, ite_false, mem_ofPred_eq,
+      mem_univ, iff_true]
+    cases ω <;> norm_num
+  have h0 : coinMeasure {ω | cadlagModif D lateCoin 1 ω ≠ lateCoin 1 ω} = 0 := h
+  rw [hset, measure_univ] at h0
+  exact one_ne_zero h0
+
+/-- A deterministic step just after `1`. -/
+noncomputable def lateStep (t : ℝ≥0) (_ : Bool) : ℝ := if 1 < t then 1 else 0
+
+/-- A deterministic nondecreasing process is a submartingale, here for the filtration of the
+coin. -/
+theorem submartingale_lateStep : Submartingale lateStep lateFiltration coinMeasure := by
+  refine ⟨fun t ↦ stronglyMeasurable_const, fun s t hst ↦ ?_, fun t ↦ integrable_bool _⟩
+  have hconst : lateStep t = fun _ ↦ (if 1 < t then (1 : ℝ) else 0) := rfl
+  rw [hconst, condExp_const (lateFiltration.le s)]
+  refine Filter.Eventually.of_forall fun ω ↦ ?_
+  simp only [lateStep]
+  by_cases hs : 1 < s
+  · rw [ite_eq_left hs, ite_eq_left (hs.trans_le hst)]
+  · rw [ite_eq_right hs]
+    split_ifs <;> norm_num
+
+/-- The expectation of `lateStep` jumps just after `1`: it is not right continuous there.  This is
+the obstruction of `Submartingale.cadlagModif_ae_eq_iff_continuousWithinAt_integral`. -/
+theorem not_continuousWithinAt_integral_lateStep :
+    ¬ ContinuousWithinAt (fun s ↦ ∫ ω, lateStep s ω ∂coinMeasure) (Ici 1) 1 := by
+  intro h
+  have hval : ∀ s : ℝ≥0, ∫ ω, lateStep s ω ∂coinMeasure = if 1 < s then 1 else 0 := fun s ↦ by
+    rw [integral_coinMeasure]
+    simp only [lateStep]
+    split_ifs <;> norm_num
+  obtain ⟨u, hu1, -, hu⟩ := exists_seq_tendsto_nhdsWithin_inter_Ioi dense_univ (1 : ℝ≥0)
+  have hu' : Tendsto u atTop (𝓝[Ici 1] 1) :=
+    tendsto_nhdsWithin_mono_right (fun x hx ↦ mem_Ici.2 (mem_Ioi.1 hx.2).le) hu
+  have hlim := h.tendsto.comp hu'
+  simp only [Function.comp_def, hval, ite_eq_left (hu1 _), lt_irrefl, ite_false] at hlim
+  exact one_ne_zero (tendsto_nhds_unique tendsto_const_nhds hlim)
+
+/-- **A submartingale with no càdlàg modification**: `lateStep` has none, for the exact reason of
+`not_continuousWithinAt_integral_lateStep`.  A càdlàg `Z` with `Z t = lateStep t` almost surely
+equals `0` at `1` and `1` along a sequence decreasing to `1`, on one sample point of positive
+mass, and right continuity at `1` contradicts that. -/
+theorem not_exists_cadlag_modification_lateStep :
+    ¬ ∃ Z : ℝ≥0 → Bool → ℝ, (∀ᵐ ω ∂coinMeasure, IsCadlag (Z · ω)) ∧
+      ∀ t, Z t =ᵐ[coinMeasure] lateStep t := by
+  rintro ⟨Z, hZc, hZ⟩
+  obtain ⟨u, hu1, -, hu⟩ := exists_seq_tendsto_nhdsWithin_inter_Ioi dense_univ (1 : ℝ≥0)
+  have hae : ∀ᵐ ω ∂coinMeasure, IsCadlag (Z · ω) ∧ Z 1 ω = lateStep 1 ω ∧
+      ∀ n, Z (u n) ω = lateStep (u n) ω :=
+    hZc.and ((hZ 1).and (ae_all_iff.2 fun n ↦ hZ (u n)))
+  obtain ⟨ω, hc, h1, hn⟩ := hae.exists
+  have hu' : Tendsto u atTop (𝓝[>] 1) :=
+    tendsto_nhdsWithin_mono_right (fun x hx ↦ hx.2) hu
+  have hlim := ((hc.isRightContinuous 1).tendsto).comp hu'
+  simp only [Function.comp_def, hn, lateStep, ite_eq_left (hu1 _), h1, lt_irrefl, ite_false]
+    at hlim
+  exact one_ne_zero (tendsto_nhds_unique tendsto_const_nhds hlim)
+
+end CadlagModifWitness
+
+/-- **Optional sampling needs its boundedness**: for a Brownian motion and its first passage
+time `τ` at `1`, which is almost surely finite, `E[X_τ] = 1` and `E[X_0] = 0`.  So the martingale
+`-X` violates the conclusion of `Submartingale.stoppedValue_min_le_condExp_of_ae_finite` at
+`σ = 0`, and its two uniform integrability hypotheses cannot be dropped; the bounded form
+`Submartingale.stoppedValue_min_le_condExp` applies to `τ ∧ n` and not to `τ`. -/
+theorem integral_stoppedValue_hittingAfter_one_of_isBrownianReal
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {Q : Measure Ω'}
+    {X : ℝ≥0 → Ω' → ℝ} (hX : IsBrownianReal X Q) (hsm : ∀ t, StronglyMeasurable (X t))
+    (hc : ∀ ω, Continuous (X · ω)) :
+    Martingale X (Filtration.natural X hsm) Q ∧
+      IsStoppingTime (Filtration.natural X hsm) (hittingAfter X (Ici 1) 0) ∧
+      (∀ᵐ ω ∂Q, hittingAfter X (Ici 1) 0 ω ≠ ⊤) ∧
+      ∫ ω, stoppedValue X (hittingAfter X (Ici 1) 0) ω ∂Q = 1 ∧ ∫ ω, X 0 ω ∂Q = 0 := by
+  have : IsProbabilityMeasure Q := hX.isGaussianProcess.isProbabilityMeasure
+  have hfin := ae_hittingAfter_ne_top_of_isBrownianReal hX (fun t ↦ (hsm t).measurable) 1
+  refine ⟨martingale_of_isPreBrownianReal hX.toIsPreBrownianReal hsm,
+    isStoppingTime_hittingAfter_of_isClosed_of_continuous
+      (Filtration.stronglyAdapted_natural hsm).adapted hc isClosed_Ici 0, hfin, ?_,
+    hX.toIsPreBrownianReal.integral_eval 0⟩
+  have hval : ∀ᵐ ω ∂Q, stoppedValue X (hittingAfter X (Ici 1) 0) ω = 1 := by
+    filter_upwards [hfin, hX.toIsPreBrownianReal.eval_zero_ae_eq_zero] with ω hω h0
+    obtain ⟨u, hu⟩ := WithTop.ne_top_iff_exists.1 hω
+    have hsv : stoppedValue X (hittingAfter X (Ici 1) 0) ω = X u ω := by
+      simp only [stoppedValue, ← hu]
+      rfl
+    rw [hsv]
+    exact le_antisymm (le_of_le_hittingAfter_Ici_of_continuous (hc ω) (by rw [h0]; norm_num)
+      hu.le) (mem_of_coe_eq_hittingAfter_of_isClosed (hc ω) isClosed_Ici hu)
+  rw [integral_congr_ae hval]
+  simp
 
 end ContinuousTimeMartingales

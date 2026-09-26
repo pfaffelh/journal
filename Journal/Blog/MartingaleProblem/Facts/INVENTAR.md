@@ -64095,3 +64095,488 @@ càdlàg-Modifikationssatzes und der Zeugen, soweit nicht vorhanden) sind nicht 
 Richtung „Modifikation ⇒ `t ↦ 𝔼[Y t]` rechtsstetig“ braucht gleichgradige Integrierbarkeit von
 `Y_{t+1/n}` von oben, die über `uniformIntegrable_of_le_condExp` und das Abschneiden `Y ⊔ −K` aus
 diesem Lauf zu haben ist, und ist ohne Voraussetzung an die Filtration zu versuchen.
+
+### 2026-09-26, Lauf 08:03 UTC — Aufgabe A, Schritt A4: **`Submartingale.cadlagModif_ae_eq_iff_continuousWithinAt_integral`**, beide Richtungen; `→` für die rohe Filtration, `←` unter `[𝓕.IsRightContinuous]`, und ein Zeuge, daß `←` sie braucht
+
+**Stand der Prüfung.** `check_master.py` (Mathlib `94ef6b89544`, Lean v4.35.0-rc2): 0 Fehler,
+0 `sorry`, 0 Veraltungen in allen vier Dateien; Warnungen 18 / 38 / 38 / 76, **unverändert**.
+`#print axioms` gegen das gebaute Modul: die acht tragenden neuen Aussagen stehen auf `propext`,
+`Classical.choice`, `Quot.sound`.
+
+**Zuerst nachgesehen.** Im Prototyp stand `rightLimAlong` (Z. 4370) mit `isCadlag_rightLimAlong`,
+Doobs Regularisierung `Submartingale.ae_exists_tendsto_nhdsWithin` (Z. 2601) und der
+Martingalfall für den bedingten Erwartungswert `Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi`
+(Z. 4181, `P[Y_{t+} | 𝓕 t] = Y t`, ohne Meßbarkeit von `Y_{t+}`). Ein `cadlagModif` und die
+Äquivalenz fehlten; nichts wurde doppelt gebaut.
+
+**Neu, im Abschnitt `ContinuousTimeMartingales`** (`MartingaleProblems/Suggested.lean`
+Z. 48579–49062), 3 Definitionen, 29 Sätze:
+
+| Roadmap / Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| die Konstruktion | `cadlagModif D Y t ω := rightLimAlong D (Y · ω) t` | 48810 |
+| f.s. Rechtslimes längs `D` | `MeasureTheory.Submartingale.ae_tendsto_cadlagModif` | 48816 |
+| A4, `→`, rohe Filtration | `MeasureTheory.Submartingale.continuousWithinAt_integral_of_cadlagModif_ae_eq` | 48852 |
+| A4, `←`, `[𝓕.IsRightContinuous]` | `MeasureTheory.Submartingale.cadlagModif_ae_eq_of_continuousWithinAt_integral` | 48901 |
+| A4, die Äquivalenz | `MeasureTheory.Submartingale.cadlagModif_ae_eq_iff_continuousWithinAt_integral` | 48943 |
+| Korollar | `MeasureTheory.Martingale.cadlagModif_ae_eq` | 48952 |
+| Zeuge: `←` falsch für rohe Filtration | `CadlagModifWitness.not_cadlagModif_ae_eq_lateCoin` | 49047 |
+| `limsup ∫_A Y(u n) ≤ ∫_A V` | `MeasureTheory.Submartingale.eventually_setIntegral_le_of_ae_tendsto` | 48755 |
+| `∫_A V ≤ ∫_A Y s`, `A` in allen `𝓕 (u n)` | `MeasureTheory.Submartingale.setIntegral_le_of_ae_tendsto` | 48777 |
+| Meßbarkeit des Limes für `𝓕.rightCont t` | `MeasureTheory.Submartingale.aestronglyMeasurable_rightCont_of_ae_tendsto` | 48875 |
+
+Index `ℝ≥0`, reellwertig, `IsFiniteMeasure P`, `D` abzählbar und dicht. Keine Rechtsstetigkeit der
+Pfade, keine Vollständigkeit der Filtration.
+
+**Befund zur Filtration (verlangt von der Aufgabe).**
+
+* `→` (Modifikation ⇒ `t ↦ 𝔼[Y t]` rechtsstetig in `t`) gilt für die **rohe** Filtration. Der
+  Erwartungswert ist monoton, und längs einer Folge von rechts ist `∫ Y (u n)` schließlich unter
+  `∫ Y t + ε`.
+* `←` braucht, daß der Rechtslimes `𝓕 t`-meßbar ist; `[𝓕.IsRightContinuous]` gibt das über
+  Mathlibs `Filtration.rightCont_eq` (`𝓕₊ t = ⨅ j > t, 𝓕 j`) mit dem `limsup` als meßbarem
+  Vertreter. Die Voraussetzung steht **in der Signatur**, wie verlangt.
+* **Sie ist nicht entbehrlich**, auch nicht für Martingale: `lateCoin` ist `0` bis einschließlich
+  `1` und danach eine faire Münze `±1`, `lateFiltration` ist `⊥` bis einschließlich `1` und danach
+  alles. Das ist ein Martingal für diese rohe Filtration mit konstantem Erwartungswert `0`, und
+  `cadlagModif D lateCoin 1` ist die Münze, an **jedem** Stichprobenpunkt `≠ lateCoin 1 = 0`.
+  Damit ist auch `Martingale.cadlagModif_ae_eq` ohne `[𝓕.IsRightContinuous]` falsch.
+* Vergleich mit BrownianMotion (`CadlagModification.lean`, `0d5b6eb`, nur gelesen): dort steht
+  **nur** `←`, unter `[𝓕.IsRightContinuous]`. Hier ist zusätzlich `→` ohne jede Voraussetzung
+  an die Filtration bewiesen, und die Notwendigkeit für `←` belegt.
+
+**Der Weg, und wo er von der Ansage abweicht.** Die Ansage war gleichgradige Integrierbarkeit von
+`Y_{t+1/n}` über `uniformIntegrable_of_le_condExp` und das Abschneiden `Y ⊔ -K`. Das Abschneiden
+trägt hier **nicht**: `∫ (Y ⊔ -K)` läßt sich nicht gleichmäßig in `n` gegen `∫ Y` drücken, ohne die
+Unterseite der ganzen Familie zu kontrollieren (das wäre der klassische Satz über
+Rückwärts-Submartingale). Genommen ist statt dessen ein **stetiges Gewicht**
+`cutWeight K x = min 1 (max 0 (x + K + 1))`:
+
+1. `x * cutWeight K x` liegt zwischen `-(K+1)` und `x⁺`, also ist die Familie
+   `Y (u n) * cutWeight K (Y (u n))` gleichgradig integrierbar (`uniformIntegrable_of_le_condExp`)
+   und Vitali greift.
+2. Aus `x ≤ x * cutWeight K x` folgt `limsup ∫_A Y (u n) ≤ ∫_A V` für jedes meßbare `A`.
+3. Die Submartingalungleichung **gegen das Gewicht** `cutWeight K (Y (u n))`, das
+   `𝓕 (u n)`-meßbar ist (`Submartingale.setIntegral_mul_le`, Pull-out
+   `condExp_mul_of_stronglyMeasurable_left`), gibt `∫_A V · w_K(V) ≤ ∫_A Y s · w_K(V)`, und `K → ∞`
+   ist dominierte Konvergenz: `∫_A V ≤ ∫_A Y s`.
+
+Ein Indikator `1_{Y (u n) ≥ -K}` statt des stetigen Gewichts ginge beim Grenzübergang `n → ∞`
+nicht mit. Gleichgradige Integrierbarkeit der **ganzen** Familie `Y (u n)` wird nirgends gebraucht.
+
+**Die Modifikation ist wieder ein Submartingal** — im selben Lauf nachgezogen:
+`MeasureTheory.Submartingale.cadlagModif_rightCont` (Z. 49038): `Submartingale (cadlagModif D Y)
+𝓕.rightCont P`, **ohne** Voraussetzung an `𝓕` und **ohne** Rechtsstetigkeit des Erwartungswerts.
+Die Ungleichung kommt aus den beiden Bausteinen (für `s < t`, `A ∈ 𝓕₊ s`:
+`∫_A Y_{s+} ≤ ∫_A Y (v k)` aus `setIntegral_le_of_ae_tendsto`, dann `≤ ∫_A Y_{t+} + ε` aus
+`eventually_setIntegral_le_of_ae_tendsto`). Die Hürde war die **exakte** Adaptiertheit
+(`MeasureTheory.StronglyAdapted.cadlagModif_rightCont`, Z. 49016): `rightLimAlong` wählt per
+`Classical.choice`. Gelöst ohne Vervollständigung:
+
+* `cadlagModif_eq_ite`: wo der Rechtslimes längs `D` existiert, ist die Wahl der `limsup` längs
+  einer Folge (reelle Limiten sind eindeutig), sonst `Y t ω`;
+* `StronglyAdapted.measurableSet_exists_tendsto_rightCont`: die Existenzmenge liegt in
+  `𝓕.rightCont t`, weil der Filter `𝓝[D ∩ Ioi t] t` für jedes `j > t` auf der abzählbaren Menge
+  `D ∩ Ioo t j` lebt (`map_comap_of_mem`) und Mathlibs
+  `StronglyMeasurable.measurableSet_exists_tendsto`
+  (`MeasureTheory/Constructions/Polish/StronglyMeasurable.lean:35`, verlangt abzählbaren Index)
+  dort greift;
+* `StronglyAdapted.measurable_limsup_rightCont`: der `limsup` ist für jedes `𝓕 j`, `j > t`,
+  meßbar (`Filter.limsup_nat_add`, ein durch `@[to_dual]` aus `liminf_nat_add` erzeugter Name,
+  `Order/LiminfLimsup.lean:234`; ein Grep nach `theorem limsup_nat_add` findet ihn **nicht**).
+
+Die `fallback`-Wahl `Y t ω` in `rightLimAlong` ist dabei **nicht harmlos, sondern nötig**: ein
+beliebiger Wert auf der Nichtexistenzmenge wäre nicht meßbar zu machen; `Y t` ist es.
+
+Mit `Martingale.cadlagModif_ae_eq` zusammen: für ein Martingal und eine rechtsstetige Filtration
+ist `cadlagModif D Y` eine Modifikation und ein Submartingal (für `𝓕₊ = 𝓕`); seine Pfade sind
+für **jedes** Submartingal fast sicher càdlàg, `MeasureTheory.Submartingale.ae_isCadlag_cadlagModif`
+(Doobs Regularisierung auf `D ∩ [0, N]` für alle `N`, eine Nullmenge, dann das deterministische
+`isCadlag_rightLimAlong`). A4 ist damit **vollständig**.
+
+**Manuskript:** keine Änderung. Keine README angefaßt.
+
+### Derselbe Lauf, zweiter Teil — Aufgabe A, Schritt A5: der càdlàg-Modifikationssatz und die Zeugen **standen alle schon**; zwei Akzeptanzbeispiele neu
+
+**Zuerst nachgesehen; Zuordnung README-Name ↦ Lean-Name** (`MartingaleProblems/Suggested.lean`,
+alle ohne `sorry`, nichts neu gebaut):
+
+| README (Meilenstein 8) | Lean | Zeile |
+| --- | --- | ---: |
+| `IsRegularizingClass Φ X 𝓧` | `IsRegularizingClass` | 5970 |
+| `CompactContainment X D` | `CompactContainment` | 3943 |
+| `exists_cadlag_modification_of_isRegularizingClass` | gleichnamig | 6356 |
+| `exists_tendsto_of_forall_tendsto_comp` | gleichnamig | 3966 |
+| `isRegularizingClass_mpFamily` | gleichnamig | 6584 |
+| `isCompensatorFor_mpFamily` | gleichnamig | 6514 |
+| `IsQuasiLeftContinuous`, `.ae_eq_leftLim` | gleichnamig | 4559, 4588 |
+| `isQuasiLeftContinuous_of_forall_ae_tendsto_comp` | gleichnamig | 4689 |
+| `isQuasiLeftContinuous_of_isRegularizingClass` | gleichnamig | 6853 |
+| `tendsto_ae_condExp_rclike` | gleichnamig | 4776 |
+| `LiftWitness` | Namensraum `LiftWitness` | 4963, 6685 |
+| `not_isQuasiLeftContinuous_of_isRegularizingClass_of_free_solutionSet` | gleichnamig | 7108 |
+| `not_isQuasiLeftContinuous_of_atom` (die Münze am Atom) | gleichnamig | 5885 |
+
+**Akzeptanzbeispiele, neu** (Z. 49220–49290):
+
+* *Ein Submartingal ohne càdlàg-Modifikation, mit der genauen Obstruktion:*
+  `CadlagModifWitness.lateStep` (deterministisch `1_{t > 1}`) ist Submartingal
+  (`submartingale_lateStep`), sein Erwartungswert ist bei `1` nicht rechtsstetig
+  (`not_continuousWithinAt_integral_lateStep`, das ist genau die Bedingung von A4), und es hat
+  **keine** càdlàg-Modifikation, auch keine mit nur f.s. càdlàg-Pfaden
+  (`not_exists_cadlag_modification_lateStep`).
+* *Optional sampling braucht seine Beschränktheit:*
+  `integral_stoppedValue_hittingAfter_one_of_isBrownianReal`: für Mathlibs `IsBrownianReal` mit
+  stetigen Pfaden ist die Treffzeit `τ` von `[1, ∞)` eine f.s. endliche Stoppzeit der natürlichen
+  Filtration, `E[X_τ] = 1`, `E[X_0] = 0`. Mit `Y = -X` verletzt das den Schluß von
+  `Submartingale.stoppedValue_min_le_condExp_of_ae_finite` bei `σ = 0`; dessen zwei
+  UI-Voraussetzungen sind also nicht entbehrlich.
+* *Die Münze am Atom:* `not_isQuasiLeftContinuous_of_atom` (schon vorhanden).
+* *Nicht gebaut:* „Doob's two inequalities computed“ und „cutting down to an open subset“. Das
+  zweite ist in der README nicht so bestimmt, daß ein Satz daraus abzulesen wäre; das erste ist
+  eine Rechnung an einem Beispiel, die keinen Satz prüft, den die Kette braucht. Beide sind
+  benannt und offen.
+
+`check_master.py` nach A5: 0 Fehler, 0 `sorry`, 0 Veraltungen, Warnungen 18 / 38 / 38 / 76.
+
+**Aufgabe A ist damit bis auf die zwei genannten Akzeptanzrechnungen erledigt.** Weiter mit B1.
+
+### Derselbe Lauf, dritter Teil — Aufgabe B, Schritt B1: **(L1) je Testprozeß** als `IsLocalizationForEach`, `lem:L1auto` für **beliebige** Familien, und Schritte 3–5 gehen alle mit ihr
+
+`check_master.py`: 0 Fehler, 0 `sorry`, 0 Veraltungen; Warnungen 18 / 38 / 38 / 76, unverändert.
+
+**Neu** (`MartingaleProblems/Suggested.lean`), zusätzlich zu `IsUniformLocalization`, das bleibt:
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| (L1) je Testprozeß, Folge `τ Y` | `IsLocalizationForEach 𝓧 𝓕₀ τ` | 46271 |
+| gleichmäßig ⇒ je Testprozeß | `IsUniformLocalization.isLocalizationForEach` | 46281 |
+| `M_loc` als Martingalbedingungen | `isLocalMPSolution_iff_of_isLocalizationForEach` | 46292 |
+| Lokalisierendes System, (L1) je Testprozeß | `LocalizingSystemEach` | 46404 |
+| `LocalizingSystem` ⇒ `LocalizingSystemEach` | `LocalizingSystem.toEach` | 46416 |
+| `lem:localmix`, endliche Mischungen | `isLocalMPSolution_add_of_isLocalizationForEach` | 47182 |
+| `lem:localmix`(b) | `isLocalMPSolution_comp_of_isLocalizationForEach` | 47199 |
+| `𝓧_•` und `M_loc(𝓧) = M(𝓧_•)` | `localizedFamilyEach`, `isLocalMPSolution_iff_isMPSolution_localizedFamilyEach` | 47215, 47220 |
+| `lem:localmix`(c) | `ae_isLocalMPSolution_of_countableTest_each` | 47232 |
+| `Σ₀ = {τ^Y_n}` | `supHittingTimes 𝓧` | 47255 |
+| **`lem:L1auto`, beliebige Familie** | `isLocalizationForEach_of_boundedJumps` | 47263 |
+
+`isLocalizationForEach_of_boundedJumps`: für **jede** Menge `𝓧` adaptierter càdlàg-Testprozesse
+mit `Y 0 = 0` und Sprüngen `≤ c_Y` ist `τ Y = supHittingTime Y` eine Lokalisierung je Testprozeß,
+mit `τ Y n ∈ Σ₀`. Keine Endlichkeit, **kein Minimum**, keine Voraussetzung an die Filtration.
+
+**Schritte 4 und 5 gehen mit ihr genauso, und zwar ohne neuen Beweis.** `localRestart`,
+`propagatesAgreement_localMPSolutions`, `subsingleton_localMPSolutions` und
+`isMarkov_of_unique_onedim_local` lesen vom lokalisierenden System nur `isStoppingTime`,
+`shift_mem` und `restart`, nicht die Martingalklausel von (L1) (das stand schon im
+Doc-Kommentar von `localRestart`). Ihre Voraussetzung ist deshalb **auf `LocalizingSystemEach`
+abgeschwächt**; die Beweise sind unverändert, weil die Felder gleich heißen. Wer ein
+`LocalizingSystem` hat, übergibt `hsys.toEach`. Das ist eine Änderung an vier bestehenden
+Signaturen, und zwar eine Abschwächung der Voraussetzung; kein Aufrufer in den vier Dateien war
+betroffen (`grep` nach den vier Namen).
+
+**Befund zu `Σ₀` und `LocalizingSystem` ((L2), (L3)), begründetes Nein.** Mit (L1) je Testprozeß
+braucht `Σ₀` für (L1) **keine** Minima mehr: `τ Y n ∈ Σ₀` genügt. Für ein volles
+`LocalizingSystemEach` fehlen (L2) und (L3), und die Erweiterung um endliche Minima hilft bei
+keinem der beiden:
+
+* (L2) verlangt `r + τ^Y_n ∘ θ_r ∈ Σ`. Das ist die Trefferzeit des laufenden Supremums des
+  Prozesses `t ↦ 1_{t ≥ r} Y_{t−r} ∘ θ_r`. Sie ist nur dann von der Form `τ^{Y'}_{n'}` mit
+  `Y' ∈ 𝓧`, wenn `𝓧` unter dieser Verschiebung abgeschlossen ist. Minima ändern daran nichts.
+* Nimmt man den Abschluß von `Σ₀` unter Verschiebungen, so gilt (L3), die Martingaleigenschaft
+  von `Y_{(r+t)∧σ} − Y_r`, nur für `σ`, die zu **demselben** `Y` gehören (dort ist der gestoppte
+  Zuwachs durch `n + c` beschränkt, wenn das Schiftsystem Zuwächse auf Zuwächse abbildet). Für
+  `σ` aus einem anderen Testprozeß ist der gestoppte Zuwachs nicht beschränkt, und der Beweis
+  von Schritt 4 greift nicht.
+
+Ein Lean-Zeuge dafür ist **nicht** gebaut. Ebenso nicht gebaut ist der nachrangige Zeuge, daß für
+unendliche Familien kein gemeinsames `τ_n` existiert.
+
+**Vorschlag an den Nutzer (keine Änderung am Manuskript):** Z. 4564–4571 (`def:localizing`(L1))
+auf „für jedes `Y° ∈ 𝓧°` eine Folge `τ_n ∈ Σ`“ umstellen. Dann ist `lem:L1auto` (Z. 4692–4694)
+wörtlich richtig, und `lem:localmix`, `lem:localrestart` und `thm:localuniq` bleiben es. Das ist
+jetzt in Lean belegt.
+
+### Derselbe Lauf, vierter Teil — Aufgabe B: **B2 übersprungen, mit Grund**; **B4, das lokale Problem auf `[0, ζ)`**, als eigene Definition, mit dem Sprungprozeß als Lösung und `⨆ rateTime = ζ` fast sicher
+
+`check_master.py`: 0 Fehler, 0 `sorry`, 0 Veraltungen; Warnungen 18 / 38 / 38 / 76, unverändert.
+`#print axioms`: nur die drei Standardaxiome.
+
+**B2 (Konvexität ohne Voraussetzung): nicht bearbeitet, und zwar begründet.** Beide verlangten
+Ausgänge sind in einem Lauf nicht zu haben. Für einen Beweis bei roher Filtration reicht
+`τ_n ∧ τ'_n` nicht: die Folge `τ_n` läuft unter `P` gegen `⊤`, unter `P'` aber nicht
+notwendig, und umgekehrt. Der Standardweg geht über den Dichteprozeß `Z = dP/dQ` und
+`Y Z` als `Q`-lokales Martingal (Girsanov-artig). Er braucht eine càdlàg-Version von `Z` und
+damit `[𝓕.IsRightContinuous]`; das ist die erlaubte Nebenfassung. Die Bausteine dafür stehen
+jetzt (A4, `Martingale.cadlagModif_ae_eq`, `Submartingale.cadlagModif_rightCont`). Der Satz
+„`Y` ist `P`-lokales Martingal ⇔ `Y Z` ist `Q`-lokales Martingal“ fehlt aber, und er ist eine
+eigene Arbeit von mehreren Läufen. Für einen Zeugen der Falschheit bei roher Filtration wäre die
+Trennung von `P` und `P'` so zu legen, daß sie erst in `𝓕_{0+}` sichtbar wird. Die naheliegende
+Konstruktion (Trennung in `𝓕_t` für jedes `t > 0`) ist **kein** Zeuge: dort ist
+`ρ_n = τ_n` auf `A` und `τ'_n` auf `Aᶜ` eine rohe Stoppzeit, sobald `τ_n, τ'_n > 0`. Ein Zeuge
+müßte also feiner sein. **Offen, nächster Schritt dieser Aufgabe.**
+
+**B4, neu:**
+
+| Rolle | Lean-Name | Datei:Zeile |
+| --- | --- | --- |
+| das lokale Problem auf `[0, ζ)` | `IsLocalMPSolutionUpTo 𝓧 𝓕 P ζ` | `MartingaleProblems` 806 |
+| für `ζ = ⊤` ist es `IsLocalMPSolution` | `isLocalMPSolutionUpTo_top_iff` | `MartingaleProblems` 813 |
+| die Explosionszeit `ζ = ⨆ T_n` | `MeasureTheory.explosionTimeE` | `JumpProcesses` 27421 |
+| `ζ ≤ ⨆ rateTime`, an **jedem** Punkt | `MeasureTheory.explosionTimeE_le_iSup_rateTime` | `JumpProcesses` 27446 |
+| `⨆ rateTime ≤ ζ`, wo `ξ > 0` und `∑ ξ = ∞` | `MeasureTheory.iSup_rateTime_le_explosionTimeE` | `JumpProcesses` 27479 |
+| `rateTime (n+1) ↑ ζ` f.s. | `MeasureTheory.ae_tendsto_rateTime_explosionTimeE` | `JumpProcesses` 27525 |
+| **der Sprungprozeß löst das Problem auf `[0, ζ)`** | `MeasureTheory.jumpProcessE_isLocalMPSolutionUpTo` | `JumpProcesses` 27546 |
+| `ζ = ⊤ ↔ NonExplosiveE` | `MeasureTheory.explosionTimeE_eq_top_iff` | `JumpProcesses` 27564 |
+| Beispiel: Lösung auf `[0, ζ)`, und `ζ < ⊤` mit positiver Wahrscheinlichkeit | `MeasureTheory.explode_isLocalMPSolutionUpTo` | `JumpProcesses` 27577 |
+
+Die Nichtexistenz der globalen und der gewöhnlichen lokalen Lösung stand schon
+(`not_isMPSolution_explode`, `not_isLocalMPSolution_explode`).
+
+`jumpProcessE_isLocalMPSolutionUpTo` hat dieselben Voraussetzungen wie
+`martingale_stoppedProcess_rateTime_jumpProcessE`: `Measurable lam`, `∀ x, 0 < lam x`, und
+**keine** Nichtexplosion. Der Kern ist `⨆ rateTime = ζ`. Die Richtung `≥` gilt an jedem Punkt
+(vor `ζ` ist das laufende Supremum der Rate endlich). Die Richtung `≤` braucht eine
+**unbeschränkte Rate längs der Kette** auf der Explosionsmenge. Die kommt fast sicher aus der
+Divergenz der Wartezeitsummen: mit Raten unter `M` ist `T_N ≥ (∑_{k<N} ξ_k)/M`
+(`ofReal_sum_div_le_jumpTimeE`). **An einzelnen Punkten ist `≤` falsch**: bei `∑ ξ_k < ∞` und
+beschränkter Rate explodiert der Pfad, und `rateTime` bleibt `⊤`. Deshalb ist die Aussage
+fast sicher und nicht punktweise. Das ist die Stelle, an der die Formulierung „`τ_n ↑ ζ`“ im
+Manuskript stillschweigend ein f.s. trägt.
+
+**Welche Zeilen des Manuskripts sich damit ändern würden (Vorschlag, nichts eingetragen):**
+
+* Z. 8788–8791: statt „`(τ_n)` is a localizing system in the sense of `def:localizing`“ etwa
+  „`(τ_n)` localizes on `[0, ζ)`: `τ_n ↑ ζ` almost surely and every stopped test process is a
+  martingale“. Dazu gehört eine Definition des lokalen Problems auf `[0, ζ)` in
+  `ssec:localmp`, parallel zu `def:absMP`, mit `τ_n ↑ ζ` statt `τ_n ↑ ∞`.
+* Z. 8793–8794: „solves the local martingale problem on `[0, ζ)`“ bleibt, aber mit Verweis auf
+  diese Definition. „Section `ssec:localmp` applies verbatim“ entfällt: `thm:localuniq` und
+  `lem:localmix` sind für `τ_n ↑ ∞` bewiesen. Für `[0, ζ)` gibt es dort nichts, und die Richtung
+  „⇐“ von (L1) hat keine Entsprechung.
+* Z. 8818 („a genuine instance of (L1)–(L3)“): streichen oder auf den nicht explodierenden Fall
+  beschränken.
+* Z. 359–361 (Einleitung): entsprechend „on `[0, ζ)`“ statt „local martingale problem“.
+* Z. 10293–10298 (`thm:pathjumpMP`(a)): dieselbe Umstellung. Dort ist zusätzlich die Folge zu
+  ersetzen: die Sprungzeiten sind keine Stoppzeiten der rohen Filtration
+  (`not_isStoppingTime_min_jumpTimeE`), die Niveautreffzeiten `rateTime` schon.
+
+### Derselbe Lauf, fünfter Teil — Aufgabe B, Schritt B3: **Eindeutigkeit des lokalen Problems auf beliebigem `Ω`**, über das Bildmaß; die fehlende Voraussetzung ist (L1) auf `Ω` gelesen
+
+`check_master.py`: 0 Fehler, 0 `sorry`, 0 Veraltungen; Warnungen 18 / 38 / 38 / 76, unverändert.
+
+**Neu** (`MartingaleProblems/Suggested.lean`, Abschnitt `LocalOnAmbient` hinter `LocalUniqueness`):
+
+| Rolle | Lean-Name | Zeile |
+| --- | --- | ---: |
+| Martingal vorwärts längs `Φ`, `𝕂`-wertig | `martingale_map_of_martingale_comp_rclike` | 47602 |
+| Lösung auf `Ω` ⇒ Bildmaß löst auf `F` | `isLocalMPSolution_map_of_martingale_comp` | 47637 |
+| **`thm:localuniq` auf beliebigen Räumen** | `map_eq_of_martingale_comp_localizingSystemEach` | 47657 |
+| (L1) auf `Ω` automatisch bei beschränkten Sprüngen | `martingale_comp_stoppedProcess_supHittingTime` | 47696 |
+
+`map_eq_of_martingale_comp_localizingSystemEach`: zwei Prozesse auf verschiedenen Räumen
+`(Ω₁, 𝓖₁, P₁)`, `(Ω₂, 𝓖₂, P₂)` mit Pfadabbildungen `Φ₁`, `Φ₂` und gleicher Anfangsverteilung haben
+dasselbe Gesetz `P₁.map Φ₁ = P₂.map Φ₂`. Die Voraussetzungen sind die von
+`subsingleton_localMPSolutions` und drei weitere.
+
+**Befund: was die Übertragung braucht und das Manuskript nicht nennt.**
+
+1. *Adaptiertheit der Pfadabbildung*, `∀ i, Measurable[𝓖 i, 𝓕₀ i] Φ`, und ihre Meßbarkeit.
+   Das Manuskript setzt das stillschweigend mit „`X` adaptiert“ voraus.
+2. *`hadapt`*, die Adaptiertheit der gestoppten Testprozesse **auf dem Pfadraum**. Sie stand schon
+   in der kanonischen Fassung. Das Bildmaß erzeugt sie nicht.
+3. **(L1) auf `Ω` gelesen** (`hmart`): `Y ∘ Φ`, gestoppt an den Pfadfunktionalen `τ n ∘ Φ`, ist ein
+   `P`-Martingal. Das folgt **nicht** aus (L1) auf dem Pfadraum. (L1) dort spricht nur über Maße
+   auf `F`, die schon lokale Lösungen sind, und daß `P.map Φ` eine ist, soll ja erst gezeigt werden.
+   Eine lokalisierende Folge von `Y ∘ Φ` unter `P` ist eine `𝓖`-Stoppzeit und im allgemeinen kein
+   Pfadfunktional, läßt sich also nicht vorwärts schieben. Genau das meint die Bemerkung am
+   Doc-Kommentar von `LocalizingSystem`, man lese (L1) „mit `Y°(X)` statt `Y°`“. In Lean ist es
+   jetzt eine benannte Voraussetzung.
+4. Im Fall von `lem:L1auto` (beschränkte Sprünge) ist 3 **kein** Zusatz:
+   `martingale_comp_stoppedProcess_supHittingTime` leitet `hmart` aus der lokalen
+   Martingaleigenschaft von `Y ∘ Φ` unter `P` her, mit `τ^Y_n ∘ Φ = τ^{Y∘Φ}_n` (definitionsgleich).
+
+**Nicht gebaut:** die Markov-Hälfte (`isMarkov_of_unique_onedim_local`) auf beliebigem `Ω`, und
+`localRestart` auf `Ω` selbst. Die Eindeutigkeit geht über das Bildmaß, ohne den Neustart auf
+`Ω` zu brauchen. Für die Markov-Eigenschaft von `X` auf `Ω` müßte die bedingte Erwartung
+bezüglich `𝓖 r` durch die bezüglich `Φ⁻¹ 𝓕₀ r` ersetzt werden. Das ist nur dann dasselbe, wenn
+`𝓖` die natürliche Filtration von `X` ist. Dieser Schritt ist benannt und offen.
+
+**Stand von Aufgabe B:** B1, B3 (Eindeutigkeitshälfte) und B4 stehen. B2 ist offen, mit Grund
+(vierter Teil). Nächster offener Schritt der Liste: B2, danach C1.
+
+### Derselbe Lauf, sechster Teil — Aufgabe C, Schritt C1: **die Uhr**. `Clock.Ico_eq_setIco`, `Clock.Ioc_eq_setIoc`, `Clock.interval_eq_of_isAtomless`, `Clock.interval_add` mit Zeugen, die Raute; zwei Beispiele offen
+
+`check_master.py`: 0 Fehler, 0 `sorry`, 0 Veraltungen; Warnungen 18 / 38 / 38 / 76, unverändert.
+Die neuen `@[simp]`-Lemmata machten ein `simp`-Argument in `JumpProcesses/Suggested.lean`
+Z. 4016 überflüssig (`lebesgueClock_interval_optional_eq`). Es ist entfernt, sonst wäre die Zahl
+auf 77 gestiegen.
+
+**Zuerst nachgesehen.** Es standen `countClock` (`ℕ`, Z. ~20600), `lebesgueClock` (`ℝ≥0`),
+`atomClock`, `Clock.IsShiftInvariant` samt `lebesgueClock_isShiftInvariant`,
+`Clock.IsContinuousFor`. Es fehlten alle unten genannten.
+
+**Neu** (`MartingaleProblems/Suggested.lean`, hinter `ClockContinuity`):
+
+| README (Meilenstein 1) | Lean-Name | Zeile |
+| --- | --- | ---: |
+| `Clock.Ico_eq_setIco`, `@[simp]`, in Mathlibs Form | gleichnamig: `Q.interval .predictable s t = Set.Ico s t` | 767 |
+| `Clock.Ioc_eq_setIoc`, `@[simp]` | gleichnamig: `Q.interval .optional s t = Set.Ioc s t` | 774 |
+| `Clock.interval_eq_of_isAtomless` | gleichnamig, als Gleichheit der **Massen** | 782 |
+| `Clock.interval_add` | gleichnamig, beide Konventionen | 803 |
+| lineare Ordnung nötig | `Clock.not_image_add_interval_prod` | 814 |
+| Instanz „jedes lokal endliche Maß“ | `Clock.ofFiniteOnCompacts` | 833 |
+| Akzeptanz: die Raute | `Clock.diamond` | 851 |
+
+* `interval_eq_of_isAtomless` ist als `Q.q (interval .optional s t) = Q.q (interval .predictable s t)`
+  formuliert, nicht als Gleichheit der Mengen: die Mengen unterscheiden sich um die Endpunkte, und
+  nur die Masse ist gleich (Mathlibs `Ico_ae_eq_Ioc'`).
+* `interval_add` unter `[LinearOrder ι] [IsOrderedCancelAddMonoid ι] [ExistsAddOfLE ι]`, über
+  Mathlibs `Set.image_const_add_Ioc`/`…_Ico`. Der Zeuge `not_image_add_interval_prod` gilt für
+  **jede** Uhr auf `ℕ × ℕ` mit der Produktordnung: `(0,1)` liegt im Fenster von `(1,0)` bis
+  `(2,1)`, ist aber nicht von der Form `(1,0) + u`.
+* `Clock.diamond` auf `Bool × Bool`: `Set.Ico a t = {a}`, das Uhrfenster ist `{a, b}`, die
+  Additivität gilt für das Uhrfenster (`interval_union`) und **nicht** für `Set.Ico`, das `b`
+  verliert.
+* `Clock.ofFiniteOnCompacts`: jedes auf Kompakta endliche Maß über einer linearen Ordnung mit
+  `⊥` und kompakten `Icc` ist eine Uhr. Das deckt `ℕ` und `[0, ∞)` ab, also auch `∑ n, δ n`. Die
+  README-Formulierung „every locally finite Borel measure on a closed subset of `ℝ`“ ist so
+  **falsch**, und die README widerspricht sich darin selbst: Lebesgue auf `ℝ` ist lokal endlich,
+  verletzt aber `measure_Iic_ne_top`, wie die README drei Zeilen darüber sagt. Richtig ist
+  „… on a closed subset of `ℝ` that is bounded below“, und das ist die hiesige Fassung. **Befund
+  für den Nutzer; die README ist nicht angefaßt.**
+
+**Offen aus C1, benannt:**
+
+* `volume + δ 1` als Uhr mit den beiden verschiedenen Fenstermassen `2` und `1`. Der Versuch
+  scheiterte an der Instanzfrage: `lebesgueClock.q` hat den Typ
+  `@Measure ℝ≥0 lebesgueClock.measurableSpace`. Die Summe mit `Measure.dirac 1` unter der
+  Standardinstanz wird zwar gebildet, `Measure.add_apply` greift aber nicht (die `HAdd`-Instanzen
+  stimmen nur bis auf Entfaltung überein). Der Weg ist, das Lebesguemaß auf `ℝ≥0` unter der
+  Standardinstanz zu nehmen und `Clock.ofFiniteOnCompacts` zu benutzen.
+* `∑ n, δ n` als benannte Instanz und „nicht verschiebungsinvariant“. Über `ofFiniteOnCompacts`
+  fehlt nur die Instanz `IsFiniteMeasureOnCompacts` der Summe.
+
+### Derselbe Lauf, siebter Teil — Aufgabe C, Schritt C2, erster Teil: `mpSolutions_union`, `mpProcess`, `IsMPSolutionFor`, `IsMPSolutionFor.span` (mit einer Voraussetzung, die die README nicht nennt)
+
+`check_master.py`: 0 Fehler, 0 `sorry`, 0 Veraltungen; Warnungen 18 / 38 / 38 / 76, unverändert.
+
+**Zuerst nachgesehen:** vorhanden waren nur `IsMPSolution`, `mpSolutions` (klein geschrieben,
+Z. 886) und `mpFamily`. Keiner der C2-Namen stand unter anderem Namen.
+
+**Neu** (`MartingaleProblems/Suggested.lean`, hinter `mpFamily`):
+
+| README (Meilenstein 2) | Lean-Name | Zeile |
+| --- | --- | ---: |
+| `MPSolutions (𝓧 ∪ 𝓨) = MPSolutions 𝓧 ∩ MPSolutions 𝓨` | `mpSolutions_union` | 954 |
+| (Hilfssatz) `c * Y` Martingal, `c : 𝕂`, beliebige Präordnung | `MeasureTheory.Martingale.const_mul_rclike` | 962 |
+| `mpProcess q c X f g` | `mpProcess` | 973 |
+| `mpFamily` über `mpProcess` | `mpFamily_eq_image_mpProcess` | 978 |
+| `IsMPSolutionFor A q c X 𝓖 P` | `IsMPSolutionFor` | 990 |
+| `MPSolutions.span` | `IsMPSolutionFor.span` | 1001 |
+
+**Befund zu `span`.** Die README sagt, `mpProcess` sei linear im Paar, und das ist ohne Zusatz
+**falsch**. Der Bochner-Müllwert `∫ g = 0` für nicht integrierbares `g` macht die Summe zweier
+Testprozesse mit nicht integrierbaren `g`, `g'` verschieden vom Testprozeß der Summe, wenn
+`g + g'` integrierbar ist. `IsMPSolutionFor.span` trägt deshalb die Voraussetzung
+`∀ p ∈ A, ∀ t ω, IntegrableOn (p.2 ∘ X · ω) (Q.interval c ⊥ t) Q.q`. Sie ist für beschränktes
+`p.2` und meßbare Pfade automatisch. Der Beweis ist `Submodule.span_induction` über die
+Eigenschaft „integrierbar längs der Pfade und Martingal“.
+
+**Offen aus C2:** `IsMPSolutionFor.map` (Übertragung längs einer Modifikation; sie braucht
+gemeinsame Meßbarkeit, damit die Pfadintegrale unter der Modifikation f.s. gleich bleiben),
+`insert_of_tendsto`, `…_of_forall_norm_le`, `submartingale_mpProcess_of_tendsto`, und die
+Akzeptanzbeispiele (Poisson von Hand, Uhr mit Atom, Beulenfolge).
+
+### Derselbe Lauf, achter Teil — C2 weiter: **`IsMPSolutionFor.insert_of_forall_norm_le`**; und der Abschluß des Laufs
+
+**Neu:** `IsMPSolutionFor.insert_of_forall_norm_le` (`MartingaleProblems/Suggested.lean` Z. 1050):
+Konvergieren `p n ∈ A` punktweise und gleichmäßig beschränkt gegen `(f, g)`, und sind die zweiten
+Komponenten längs der Pfade meßbar für `Q.measurableSpace`, so löst jede Lösung für `A` auch das
+Problem für `insert (f, g) A`. Der Beweis: dominierte Konvergenz auf den Fenstern (endliche
+Masse), die Schranke `C + C · q((⊥, t])`, und `tendsto_condExp_unique` wie in
+`martingale_of_locally_of_bounded`. Die Meßbarkeit längs der Pfade ist die Voraussetzung, die die
+README nicht nennt; ohne sie ist die dominierte Konvergenz der Fensterintegrale nicht zu haben.
+Offen aus C2 bleiben `insert_of_tendsto` (allgemeine Konvergenz),
+`submartingale_mpProcess_of_tendsto`, `IsMPSolutionFor.map` und die Akzeptanzbeispiele.
+
+`check_master.py` am Ende des Laufs (Mathlib `94ef6b89544`): **0 Fehler, 0 `sorry`, 0
+Veraltungen** in allen vier Dateien, Warnungen 18 / 38 / 38 / 76 wie zu Beginn. `#print axioms`
+für alle tragenden neuen Sätze: `propext`, `Classical.choice`, `Quot.sound`.
+
+**Die Zeilennummern in den Tabellen der Teile eins bis fünf** gelten für den Stand, als sie
+geschrieben wurden. Die späteren Einfügungen (C1 hinter `ClockContinuity`, C2 hinter `mpFamily`,
+`IsLocalMPSolutionUpTo` in `section Local`) liegen weiter vorn in der Datei und verschieben alles
+dahinter. Aktuell (`MartingaleProblems/Suggested.lean`):
+
+| Name | Zeile |
+| --- | ---: |
+| `IsLocalMPSolutionUpTo` | 921 |
+| `IsLocalizationForEach` | 46554 |
+| `LocalizingSystemEach` | 46687 |
+| `isLocalizationForEach_of_boundedJumps` | 47546 |
+| `localRestart` | 47705 |
+| `subsingleton_localMPSolutions` | 47815 |
+| `map_eq_of_martingale_comp_localizingSystemEach` | 47920 |
+| `Submartingale.stoppedValue_min_le_condExp` | 48971 |
+| `cadlagModif` | 49381 |
+| `Submartingale.cadlagModif_ae_eq_iff_continuousWithinAt_integral` | 49522 |
+| `Martingale.cadlagModif_ae_eq` | 49531 |
+| `Submartingale.cadlagModif_rightCont` | 49609 |
+| `Submartingale.ae_isCadlag_cadlagModif` | 49645 |
+| `CadlagModifWitness.not_cadlagModif_ae_eq_lateCoin` | 49763 |
+| `CadlagModifWitness.not_exists_cadlag_modification_lateStep` | 49813 |
+| `integral_stoppedValue_hittingAfter_one_of_isBrownianReal` | 49836 |
+
+Die Zeilen in `JumpProcesses/Suggested.lean` (Teil vier) stimmen noch.
+
+**Stand der drei Aufgaben nach diesem Lauf.**
+
+* **A:** A1–A4 vollständig, A5 bis auf zwei Akzeptanzrechnungen („Doob's two inequalities
+  computed“, „cutting down to an open subset“).
+* **B:** B1 vollständig, samt Abschwächung von Schritt 4/5 auf `LocalizingSystemEach`. B3: die
+  Eindeutigkeitshälfte auf beliebigem `Ω`. B4 vollständig. **B2 offen**, mit Grund (vierter Teil).
+* **C:** C1 bis auf `volume + δ 1` und `∑ n, δ n` (benannt, mit Grund). C2: `mpSolutions_union`,
+  `mpProcess`, `IsMPSolutionFor`, `span`, `insert_of_forall_norm_le`. C3–C5 nicht begonnen.
+
+**Benanntes Ziel für den nächsten Lauf, der nächste offene Schritt der Liste: B2.** Zuerst ein
+Zeuge oder ein Beweis für die rohe Filtration. Der Zeuge braucht eine Trennung von `P` und `P'`,
+die in `𝓕_{0+}` sichtbar ist und in keinem `𝓕_t` so, daß die stückweise Folge eine rohe Stoppzeit
+wird. Die naheliegende Trennung „in jedem `𝓕_t`, `t > 0`“ taugt nicht, siehe vierter Teil. Danach
+die erlaubte Nebenfassung unter `[𝓕.IsRightContinuous]` über den Dichteprozeß. Ihr fehlender
+Baustein ist benannt: `Y` ist `P`-lokales Martingal genau dann, wenn `Y · Z` ein `Q`-lokales
+Martingal ist, mit `Z` der càdlàg-Modifikation (A4) von `dP/dQ` auf `𝓕_t`.
+
+**Keine README, kein Manuskript angefaßt; nichts nach außen gegeben.** Die Vorschläge an den Nutzer
+stehen in den Teilen drei (`def:localizing`(L1)), vier (Z. 8788–8794, 8818, 359–361,
+10293–10298) und sechs (README Meilenstein 1, „closed subset of `ℝ`“).
+
+### Derselbe Lauf, neunter Teil — Aufgabe C, Schritt C4: **die globalen Mischungen** (`lem:mixture`), und die lokale Konvexität als Korollar
+
+`check_master.py`: 0 Fehler, 0 `sorry`, 0 Veraltungen; Warnungen 18 / 38 / 38 / 76, unverändert.
+
+**Zuerst nachgesehen:** `Martingale.add_measure`, `Martingale.smul_measure`,
+`Martingale.comp_measure` standen (Meilenstein 6, `lem:localmix`); die Aussagen über die
+**Lösungsmenge** fehlten.
+
+| README (Meilenstein 4) | Lean-Name | Zeile |
+| --- | --- | ---: |
+| endliche Mischungen | `mpSolutions_add_smul` | 47311 |
+| `MPSolutions.isConvex` | `convex_mpSolutions` (über `ℝ≥0∞`, die Skalare von `Measure`) | 47321 |
+| `MPSolutions.integral_mem` (`lem:mixture`, meßbare Familie) | `mpSolutions_comp` | 47331 |
+| lokale Konvexität unter (L1) je Testprozeß, **als Korollar** | `convex_localMPSolutions_of_isLocalizationForEach` | 47580 |
+
+**Die lokalen Fassungen als Korollare:** Unter (L1) je Testprozeß ist `M_loc(𝓧) = M(𝓧_•)`
+(`isLocalMPSolution_iff_isMPSolution_localizedFamilyEach`), und die Konvexität von `M_loc(𝓧)`
+ist dann `convex_mpSolutions` für `𝓧_•`, ohne neues Argument. Die älteren lokalen Sätze
+(`isLocalMPSolution_add_of_isUniformLocalization`, `…_comp_…`) bleiben stehen. Sie sind allgemeiner
+in den Gewichten (`a`, `b` beliebig endlich, nicht `a + b = 1`) und rechnen deshalb direkt.
+`lem:disint` global (`ae_isMPSolution_of_countableTest`) stand schon.
+
+**Zeilen:** Durch diese Einfügung sind in der Tabelle des achten Teils alle Zeilen ab
+`isLocalizationForEach_of_boundedJumps` um **62** zu erhöhen
+(z. B. `Submartingale.cadlagModif_ae_eq_iff_continuousWithinAt_integral` jetzt Z. 49584,
+`integral_stoppedValue_hittingAfter_one_of_isBrownianReal` Z. 49898).
+
+**Stand C:** C1 (bis auf zwei Beispiele), C2 (Teil), C4 global mit lokalem Korollar. Offen:
+C2-Rest, C3, C5. Das benannte Ziel des nächsten Laufs bleibt **B2** (achter Teil).
