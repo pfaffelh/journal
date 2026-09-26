@@ -1040,6 +1040,97 @@ theorem IsMPSolutionFor.span [OrderBot ι] {A : Set ((E → 𝕂) × (E → 𝕂
       exact hq.2.const_mul_rclike a
   exact hgood.2
 
+/-- A process adapted and almost surely equal at every time to a martingale is a martingale. -/
+theorem MeasureTheory.Martingale.of_forall_ae_eq {F : Type*} [NormedAddCommGroup F]
+    [NormedSpace ℝ F] [CompleteSpace F] {𝓖 : Filtration ι m} {P : Measure Ω}
+    {Y Y' : ι → Ω → F} (hY : Martingale Y 𝓖 P) (hY' : StronglyAdapted 𝓖 Y')
+    (h : ∀ t, Y t =ᵐ[P] Y' t) : Martingale Y' 𝓖 P :=
+  ⟨hY', fun s t hst ↦ (condExp_congr_ae (h t).symm).trans ((hY.condExp_ae_eq hst).trans (h s))⟩
+
+omit [MeasurableSpace E] in
+/-- **The test process of a modification is a modification of the test process**, once the
+integrand is jointly measurable along both processes.  The joint measurability is what turns
+"`X s = X' s` almost surely for every `s`" into "`X · ω = X' · ω` for `q`-almost every `s`, for
+almost every `ω`" (`Measure.ae_ae_comm`); without it the compensators of the two processes need
+not be comparable at all. -/
+theorem mpProcess_ae_eq_of_forall_ae_eq [OrderBot ι] {Q : Clock ι} {c : Clock.Conv}
+    {X X' : ι → Ω → E} {P : Measure Ω} [IsFiniteMeasure P] (hmod : ∀ t, X t =ᵐ[P] X' t)
+    {f g : E → 𝕂}
+    (hj : Measurable[Q.measurableSpace.prod m] fun x : ι × Ω ↦ g (X x.1 x.2))
+    (hj' : Measurable[Q.measurableSpace.prod m] fun x : ι × Ω ↦ g (X' x.1 x.2)) (t : ι) :
+    mpProcess Q c X f g t =ᵐ[P] mpProcess Q c X' f g t := by
+  let _ : MeasurableSpace ι := Q.measurableSpace
+  have : IsFiniteMeasure (Q.q.restrict (Q.interval c ⊥ t)) :=
+    ⟨by rw [Measure.restrict_apply_univ]; exact (Q.measure_interval_ne_top c ⊥ t).lt_top⟩
+  have hS : MeasurableSet {x : ι × Ω | g (X x.1 x.2) = g (X' x.1 x.2)} :=
+    measurableSet_eq_fun hj hj'
+  have h1 : ∀ᵐ s ∂(Q.q.restrict (Q.interval c ⊥ t)), ∀ᵐ ω ∂P, g (X s ω) = g (X' s ω) :=
+    ae_of_all _ fun s ↦ by filter_upwards [hmod s] with ω hω using by rw [hω]
+  have h2 := (Measure.ae_ae_comm (μ := Q.q.restrict (Q.interval c ⊥ t)) (ν := P) hS).1 h1
+  filter_upwards [h2, hmod t] with ω hω hωt
+  simp only [mpProcess, hωt]
+  rw [integral_congr_ae hω]
+
+omit [MeasurableSpace E] in
+/-- **`IsMPSolutionFor.map`, along a modification.**  If `X` solves the problem for `A` and `X'`
+is a modification of `X`, then `X'` solves it too, provided the integrands are jointly measurable
+along both processes and the test processes of `X'` are adapted.  The adaptedness is a
+hypothesis because a modification of an adapted process need not be adapted to a filtration that
+is not complete. -/
+theorem IsMPSolutionFor.of_forall_ae_eq [OrderBot ι] {A : Set ((E → 𝕂) × (E → 𝕂))}
+    {Q : Clock ι} {c : Clock.Conv} {X X' : ι → Ω → E} {𝓖 : Filtration ι m} {P : Measure Ω}
+    [IsFiniteMeasure P] (hA : IsMPSolutionFor A Q c X 𝓖 P) (hmod : ∀ t, X t =ᵐ[P] X' t)
+    (hj : ∀ p ∈ A, Measurable[Q.measurableSpace.prod m] fun x : ι × Ω ↦ p.2 (X x.1 x.2))
+    (hj' : ∀ p ∈ A, Measurable[Q.measurableSpace.prod m] fun x : ι × Ω ↦ p.2 (X' x.1 x.2))
+    (hadapt : ∀ p ∈ A, StronglyAdapted 𝓖 (mpProcess Q c X' p.1 p.2)) :
+    IsMPSolutionFor A Q c X' 𝓖 P := by
+  rw [IsMPSolutionFor, mpFamily_eq_image_mpProcess] at hA ⊢
+  rintro _ ⟨p, hp, rfl⟩
+  exact (hA _ ⟨p, hp, rfl⟩).of_forall_ae_eq (hadapt p hp)
+    (mpProcess_ae_eq_of_forall_ae_eq hmod (hj p hp) (hj' p hp))
+
+/-- **An `L¹` limit of martingales is a martingale**, once the limit is adapted.  Adaptedness is a
+hypothesis and not a conclusion: an `L¹` limit of `𝓖 t`-measurable functions is only almost
+everywhere equal to one, and the filtration is not assumed complete. -/
+theorem MeasureTheory.martingale_of_tendsto_eLpNorm {F : Type*} [NormedAddCommGroup F]
+    [NormedSpace ℝ F] [CompleteSpace F] {𝓖 : Filtration ι m} {P : Measure Ω} [IsFiniteMeasure P]
+    {Z : ℕ → ι → Ω → F} {Y : ι → Ω → F} (hZ : ∀ n, Martingale (Z n) 𝓖 P)
+    (hY : StronglyAdapted 𝓖 Y) (hYint : ∀ t, Integrable (Y t) P)
+    (hlim : ∀ t, Tendsto (fun n ↦ eLpNorm (Z n t - Y t) 1 P) atTop (𝓝 0)) :
+    Martingale Y 𝓖 P := by
+  refine ⟨hY, fun s t hst ↦ ?_⟩
+  refine (ae_eq_condExp_of_forall_setIntegral_eq (𝓖.le s) (hYint t)
+    (fun B _ _ ↦ (hYint s).integrableOn) (fun B hB _ ↦ ?_)
+    (hY s).aestronglyMeasurable).symm
+  have hs := tendsto_setIntegral_of_L1' (Y s) (Eventually.of_forall fun n ↦ (hZ n).integrable s)
+    (hlim s) B
+  have ht := tendsto_setIntegral_of_L1' (Y t) (Eventually.of_forall fun n ↦ (hZ n).integrable t)
+    (hlim t) B
+  refine tendsto_nhds_unique hs (ht.congr fun n ↦ ?_)
+  exact ((hZ n).setIntegral_eq hst hB).symm
+
+omit [MeasurableSpace E] in
+/-- **`IsMPSolutionFor.insert_of_tendsto`: closure of the solution property along a solution.**  If
+`p n ∈ A` and the test processes of `p n` converge in `L¹ P` at every time to that of `(f, g)`, then
+a solution for `A` solves for `insert (f, g) A`.  The hypothesis is on the pairs composed with `X`,
+so `f` and `g` may be unbounded.  Adaptedness of the new test process is carried as a hypothesis,
+for the reason given at `martingale_of_tendsto_eLpNorm`.  For pairs in `Submodule.span 𝕂 A` apply
+`IsMPSolutionFor.span` first. -/
+theorem IsMPSolutionFor.insert_of_tendsto [OrderBot ι] {A : Set ((E → 𝕂) × (E → 𝕂))}
+    {Q : Clock ι} {c : Clock.Conv} {X : ι → Ω → E} {𝓖 : Filtration ι m} {P : Measure Ω}
+    [IsFiniteMeasure P] (hA : IsMPSolutionFor A Q c X 𝓖 P) {p : ℕ → (E → 𝕂) × (E → 𝕂)}
+    (hpA : ∀ n, p n ∈ A) {f g : E → 𝕂}
+    (hadapt : StronglyAdapted 𝓖 (mpProcess Q c X f g))
+    (hYint : ∀ t, Integrable (mpProcess Q c X f g t) P)
+    (hlim : ∀ t, Tendsto (fun n ↦
+      eLpNorm (mpProcess Q c X (p n).1 (p n).2 t - mpProcess Q c X f g t) 1 P) atTop (𝓝 0)) :
+    IsMPSolutionFor (insert (f, g) A) Q c X 𝓖 P := by
+  rw [IsMPSolutionFor, mpFamily_eq_image_mpProcess] at hA ⊢
+  rintro _ ⟨q, hq, rfl⟩
+  rcases hq with rfl | hq
+  · exact martingale_of_tendsto_eLpNorm (fun n ↦ hA _ ⟨p n, hpA n, rfl⟩) hadapt hYint hlim
+  · exact hA _ ⟨q, hq, rfl⟩
+
 omit [MeasurableSpace E] in
 /-- **`IsMPSolutionFor.insert_of_forall_norm_le`: closure of the solution property under bounded
 pointwise limits of test pairs.**  If `p n ∈ A` converge pointwise to `(f, g)` with a common bound
@@ -1097,6 +1188,283 @@ theorem IsMPSolutionFor.insert_of_forall_norm_le [OrderBot ι] {A : Set ((E → 
           ((hZ n).integrable i)).symm.eventuallyEq)
     exact h.trans (condExp_of_stronglyMeasurable (𝓖.le i) (hadapt i) (hYint i)).eventuallyEq
   · exact hA _ ⟨q, hq, rfl⟩
+
+/-- **Fatou's lemma for real functions bounded below by a constant**, on a finite measure, in the
+form that survives a sequence of integrals which need not be bounded above: both sides are read in
+`ℝ≥0∞` after adding the constant. -/
+theorem MeasureTheory.ofReal_integral_add_le_liminf {α : Type*} {mα : MeasurableSpace α}
+    {μ : Measure α} [IsFiniteMeasure μ] {F : ℕ → α → ℝ} {G : α → ℝ} {C : ℝ}
+    (hF : ∀ n, Integrable (F n) μ) (hC : ∀ n, ∀ᵐ x ∂μ, -C ≤ F n x)
+    (hG : Integrable G μ) (hGC : ∀ᵐ x ∂μ, -C ≤ G x)
+    (hlim : ∀ᵐ x ∂μ,
+      ENNReal.ofReal (G x + C) ≤ liminf (fun n ↦ ENNReal.ofReal (F n x + C)) atTop) :
+    ENNReal.ofReal (∫ x, G x ∂μ + μ.real univ * C)
+      ≤ liminf (fun n ↦ ENNReal.ofReal (∫ x, F n x ∂μ + μ.real univ * C)) atTop := by
+  have hGi : ∫ x, G x ∂μ + μ.real univ * C = ∫ x, (G x + C) ∂μ := by
+    rw [integral_add hG (integrable_const C), integral_const, smul_eq_mul]
+  have hFi : ∀ n, ∫ x, F n x ∂μ + μ.real univ * C = ∫ x, (F n x + C) ∂μ := fun n ↦ by
+    rw [integral_add (hF n) (integrable_const C), integral_const, smul_eq_mul]
+  simp_rw [hGi, hFi]
+  calc ENNReal.ofReal (∫ x, (G x + C) ∂μ) = ∫⁻ x, ENNReal.ofReal (G x + C) ∂μ := by
+        refine ofReal_integral_eq_lintegral_ofReal (hG.add (integrable_const C)) ?_
+        filter_upwards [hGC] with x hx
+        simp only [Pi.zero_apply]
+        linarith
+    _ ≤ ∫⁻ x, liminf (fun n ↦ ENNReal.ofReal (F n x + C)) atTop ∂μ := lintegral_mono_ae hlim
+    _ ≤ liminf (fun n ↦ ∫⁻ x, ENNReal.ofReal (F n x + C) ∂μ) atTop :=
+        lintegral_liminf_le' fun n ↦
+          ((hF n).add (integrable_const C)).aemeasurable.ennreal_ofReal
+    _ = liminf (fun n ↦ ENNReal.ofReal (∫ x, (F n x + C) ∂μ)) atTop := by
+        congr 1
+        funext n
+        refine (ofReal_integral_eq_lintegral_ofReal ((hF n).add (integrable_const C)) ?_).symm
+        filter_upwards [hC n] with x hx
+        show 0 ≤ F n x + C
+        linarith
+
+omit [MeasurableSpace E] in
+/-- **`IsMPSolutionFor.submartingale_mpProcess_of_tendsto`, the one sided companion of
+`insert_of_forall_norm_le`**, for real valued test pairs.  If `p n ∈ A` converge pointwise to
+`(f, g)`, the first components bounded by `C` and the second bounded **from below** by `-C` only,
+then the test process of `(f, g)` is a submartingale.  The martingale identity of `p n` on a set
+`B ∈ 𝓖 s` reads `∫_B (f_n(X_t) - f_n(X_s)) = ∫_B ∫_{(s,t]} g_n(X_u) q(du)`; the left side converges
+by dominated convergence, and the right side is bounded below in the limit by Fatou's lemma, once
+along the path and once in `ω` (`ofReal_integral_add_le_liminf`).
+
+Three hypotheses are carried that the pointwise bounds do not give, and no measurability along the
+paths is asked: the integrability over the windows carries it.  `hadapt`: with `g_n` bounded
+only from below the compensators need not converge, so the adaptedness of the limit process is not
+inherited from the `p n`.  `hint` and `hintn`: the compensating integrals are Bochner integrals,
+and a window on which `g_n` or `g` is not integrable along a path would give the junk value `0`.
+`hfX`: the measurability of `f_n ∘ X_t`, from which that of the path integrals over a window
+follows. -/
+theorem IsMPSolutionFor.submartingale_mpProcess_of_tendsto [OrderBot ι]
+    {A : Set ((E → ℝ) × (E → ℝ))} {Q : Clock ι} {c : Clock.Conv} {X : ι → Ω → E}
+    {𝓖 : Filtration ι m} {P : Measure Ω} [IsFiniteMeasure P]
+    (hA : IsMPSolutionFor A Q c X 𝓖 P) {p : ℕ → (E → ℝ) × (E → ℝ)}
+    (hpA : ∀ n, p n ∈ A) {f g : E → ℝ} (hf : ∀ x, Tendsto (fun n ↦ (p n).1 x) atTop (𝓝 (f x)))
+    (hg : ∀ x, Tendsto (fun n ↦ (p n).2 x) atTop (𝓝 (g x)))
+    {C : ℝ} (hC1 : ∀ n x, ‖(p n).1 x‖ ≤ C) (hC2 : ∀ n x, -C ≤ (p n).2 x)
+    (hintn : ∀ n t ω, IntegrableOn (fun s ↦ (p n).2 (X s ω)) (Q.interval c ⊥ t) Q.q)
+    (hint : ∀ t ω, IntegrableOn (fun s ↦ g (X s ω)) (Q.interval c ⊥ t) Q.q)
+    (hfX : ∀ n t, AEStronglyMeasurable (fun ω ↦ (p n).1 (X t ω)) P)
+    (hadapt : StronglyAdapted 𝓖 (mpProcess Q c X f g))
+    (hYint : ∀ t, Integrable (mpProcess Q c X f g t) P) :
+    Submartingale (mpProcess Q c X f g) 𝓖 P := by
+  let _ : MeasurableSpace ι := Q.measurableSpace
+  set Z : ℕ → ι → Ω → ℝ := fun n ↦ mpProcess Q c X (p n).1 (p n).2 with hZdef
+  set Y := mpProcess Q c X f g with hYdef
+  have hZ : ∀ n, Martingale (Z n) 𝓖 P := fun n ↦ by
+    rw [IsMPSolutionFor, mpFamily_eq_image_mpProcess] at hA
+    exact hA _ ⟨p n, hpA n, rfl⟩
+  have hfC : ∀ x, ‖f x‖ ≤ C := fun x ↦ le_of_tendsto' (hf x).norm fun n ↦ hC1 n x
+  have hgC : ∀ x, -C ≤ g x := fun x ↦ ge_of_tendsto' (hg x) fun n ↦ hC2 n x
+  have hfXl : ∀ t, AEStronglyMeasurable (fun ω ↦ f (X t ω)) P := fun t ↦
+    aestronglyMeasurable_of_tendsto_ae atTop (fun n ↦ hfX n t)
+      (ae_of_all _ fun ω ↦ hf (X t ω))
+  refine submartingale_of_setIntegral_le hadapt hYint fun s t hst B hB ↦ ?_
+  -- the window and the path integrals over it
+  set W := Q.interval c s t with hW
+  have hWfin : Q.q W ≠ ⊤ := Q.measure_interval_ne_top c s t
+  have : IsFiniteMeasure (Q.q.restrict W) :=
+    ⟨by rw [Measure.restrict_apply_univ]; exact hWfin.lt_top⟩
+  have hsplit := Q.interval_union c (bot_le : (⊥ : ι) ≤ s) hst
+  have hWm : MeasurableSet W := Q.measurableSet_interval c s t
+  set H : ℕ → Ω → ℝ := fun n ω ↦ ∫ u in W, (p n).2 (X u ω) ∂Q.q with hHdef
+  set H' : Ω → ℝ := fun ω ↦ ∫ u in W, g (X u ω) ∂Q.q with hH'def
+  have hsplitI : ∀ (φ : ι → ℝ), IntegrableOn φ (Q.interval c ⊥ t) Q.q →
+      ∫ u in Q.interval c ⊥ t, φ u ∂Q.q
+        = ∫ u in Q.interval c ⊥ s, φ u ∂Q.q + ∫ u in W, φ u ∂Q.q := by
+    intro φ hφ
+    rw [hsplit.1] at hφ ⊢
+    exact setIntegral_union hsplit.2 hWm (hφ.mono_set subset_union_left)
+      (hφ.mono_set subset_union_right)
+  -- the increments of the test processes
+  have hZinc : ∀ n ω, Z n t ω - Z n s ω = (p n).1 (X t ω) - (p n).1 (X s ω) - H n ω := by
+    intro n ω
+    simp only [hZdef, mpProcess, hHdef]
+    rw [hsplitI _ (hintn n t ω)]
+    ring
+  have hYinc : ∀ ω, Y t ω - Y s ω = f (X t ω) - f (X s ω) - H' ω := by
+    intro ω
+    simp only [hYdef, mpProcess, hH'def]
+    rw [hsplitI _ (hint t ω)]
+    ring
+  -- integrability of the pieces
+  have hfnI : ∀ n t, Integrable (fun ω ↦ (p n).1 (X t ω)) P := fun n t ↦
+    Integrable.mono' (integrable_const C) (hfX n t) (ae_of_all _ fun ω ↦ hC1 n _)
+  have hfI : ∀ t, Integrable (fun ω ↦ f (X t ω)) P := fun t ↦
+    Integrable.mono' (integrable_const C) (hfXl t) (ae_of_all _ fun ω ↦ hfC _)
+  have hHeq : ∀ n, H n = fun ω ↦ (p n).1 (X t ω) - (p n).1 (X s ω) - (Z n t ω - Z n s ω) := by
+    intro n; funext ω; rw [hZinc]; ring
+  have hHI : ∀ n, Integrable (H n) P := fun n ↦ by
+    rw [hHeq n]
+    exact ((hfnI n t).sub (hfnI n s)).sub (((hZ n).integrable t).sub ((hZ n).integrable s))
+  have hH'eq : H' = fun ω ↦ f (X t ω) - f (X s ω) - (Y t ω - Y s ω) := by
+    funext ω; rw [hYinc]; ring
+  have hH'I : Integrable H' P := by
+    rw [hH'eq]
+    exact ((hfI t).sub (hfI s)).sub ((hYint t).sub (hYint s))
+  -- lower bounds
+  set K : ℝ := Q.q.real W * C with hK
+  have hHlow : ∀ n ω, -K ≤ H n ω := by
+    intro n ω
+    have h1 : ∫ u in W, (-C) ∂Q.q ≤ H n ω :=
+      setIntegral_mono_on (integrableOn_const hWfin) ((hintn n t ω).mono_set
+        (by rw [hsplit.1]; exact subset_union_right)) hWm fun u _ ↦ hC2 n _
+    rw [setIntegral_const, smul_eq_mul] at h1
+    simp only [hK]
+    linarith
+  have hH'low : ∀ ω, -K ≤ H' ω := by
+    intro ω
+    have h1 : ∫ u in W, (-C) ∂Q.q ≤ H' ω :=
+      setIntegral_mono_on (integrableOn_const hWfin) ((hint t ω).mono_set
+        (by rw [hsplit.1]; exact subset_union_right)) hWm fun u _ ↦ hgC _
+    rw [setIntegral_const, smul_eq_mul] at h1
+    simp only [hK]
+    linarith
+  -- Fatou along the path
+  have hinner : ∀ ω, ENNReal.ofReal (H' ω + K)
+      ≤ liminf (fun n ↦ ENNReal.ofReal (H n ω + K)) atTop := by
+    intro ω
+    have hWreal : (Q.q.restrict W).real univ = Q.q.real W := by
+      simp [Measure.real]
+    have := ofReal_integral_add_le_liminf (μ := Q.q.restrict W)
+      (F := fun n u ↦ (p n).2 (X u ω)) (G := fun u ↦ g (X u ω)) (C := C)
+      (fun n ↦ (hintn n t ω).mono_set (by rw [hsplit.1]; exact subset_union_right))
+      (fun n ↦ ae_of_all _ fun u ↦ hC2 n _)
+      ((hint t ω).mono_set (by rw [hsplit.1]; exact subset_union_right))
+      (ae_of_all _ fun u ↦ hgC _)
+      (ae_of_all _ fun u ↦ by
+        rw [(ENNReal.tendsto_ofReal ((hg (X u ω)).add_const C)).liminf_eq])
+    rw [hWreal] at this
+    simpa only [hK, hHdef, hH'def] using this
+  -- Fatou in `ω`, on `B`
+  have hBreal : (P.restrict B).real univ = P.real B := by
+    simp [Measure.real]
+  have houter := ofReal_integral_add_le_liminf (μ := P.restrict B) (F := H) (G := H') (C := K)
+    (fun n ↦ (hHI n).restrict) (fun n ↦ ae_of_all _ fun ω ↦ hHlow n ω) hH'I.restrict
+    (ae_of_all _ hH'low) (ae_of_all _ hinner)
+  rw [hBreal] at houter
+  -- the integrals of `H n` over `B` converge to that of the increment of `f ∘ X`
+  have hmartB : ∀ n, ∫ ω in B, Z n t ω ∂P = ∫ ω in B, Z n s ω ∂P := fun n ↦
+    ((hZ n).setIntegral_eq hst hB).symm
+  have hHB : ∀ n, ∫ ω in B, H n ω ∂P
+      = ∫ ω in B, (p n).1 (X t ω) ∂P - ∫ ω in B, (p n).1 (X s ω) ∂P := by
+    intro n
+    rw [hHeq n]
+    rw [integral_sub (f := fun ω ↦ (p n).1 (X t ω) - (p n).1 (X s ω))
+      (g := fun ω ↦ Z n t ω - Z n s ω) (((hfnI n t).sub (hfnI n s)).restrict)
+      ((((hZ n).integrable t).sub ((hZ n).integrable s)).restrict),
+      integral_sub (hfnI n t).restrict (hfnI n s).restrict,
+      integral_sub ((hZ n).integrable t).restrict ((hZ n).integrable s).restrict, hmartB n]
+    ring
+  have hlimf : ∀ r, Tendsto (fun n ↦ ∫ ω in B, (p n).1 (X r ω) ∂P) atTop
+      (𝓝 (∫ ω in B, f (X r ω) ∂P)) := fun r ↦
+    tendsto_integral_of_dominated_convergence (fun _ ↦ C)
+      (fun n ↦ (hfX n r).restrict) (integrable_const C)
+      (fun n ↦ ae_of_all _ fun ω ↦ hC1 n _) (ae_of_all _ fun ω ↦ hf _)
+  set a : ℝ := ∫ ω in B, f (X t ω) ∂P - ∫ ω in B, f (X s ω) ∂P with ha
+  have hconv : Tendsto (fun n ↦ ENNReal.ofReal (∫ ω in B, H n ω ∂P + P.real B * K)) atTop
+      (𝓝 (ENNReal.ofReal (a + P.real B * K))) := by
+    simp_rw [hHB]
+    exact ENNReal.tendsto_ofReal (((hlimf t).sub (hlimf s)).add_const _)
+  rw [hconv.liminf_eq] at houter
+  have hBK : ∀ n, 0 ≤ ∫ ω in B, H n ω ∂P + P.real B * K := by
+    intro n
+    have h1 : ∫ ω in B, (-K) ∂P ≤ ∫ ω in B, H n ω ∂P :=
+      setIntegral_mono_on (integrableOn_const (measure_ne_top _ _)) (hHI n).integrableOn
+        (𝓖.le s _ hB) fun ω _ ↦ hHlow n ω
+    rw [setIntegral_const, smul_eq_mul] at h1
+    linarith
+  have hapos : 0 ≤ a + P.real B * K := by
+    have htend : Tendsto (fun n ↦ ∫ ω in B, H n ω ∂P + P.real B * K) atTop
+        (𝓝 (a + P.real B * K)) := by
+      simp_rw [hHB]
+      exact ((hlimf t).sub (hlimf s)).add_const _
+    exact ge_of_tendsto' htend hBK
+  have hle : ∫ ω in B, H' ω ∂P ≤ a := by
+    have := (ENNReal.ofReal_le_ofReal_iff hapos).1 houter
+    linarith
+  -- conclude
+  have hYB : ∫ ω in B, Y t ω ∂P - ∫ ω in B, Y s ω ∂P
+      = (∫ ω in B, f (X t ω) ∂P - ∫ ω in B, f (X s ω) ∂P) - ∫ ω in B, H' ω ∂P := by
+    rw [← integral_sub (hYint t).restrict (hYint s).restrict]
+    simp_rw [hYinc]
+    rw [integral_sub (f := fun ω ↦ f (X t ω) - f (X s ω)) ((hfI t).sub (hfI s)).restrict
+      hH'I.restrict, integral_sub (hfI t).restrict (hfI s).restrict]
+  linarith
+
+omit [MeasurableSpace E] in
+/-- The test process of `(0, -C)` is the deterministic `C q((⊥, t])`. -/
+theorem mpProcess_zero_const [OrderBot ι] (Q : Clock ι) (c : Clock.Conv) (X : ι → Ω → E)
+    (C : ℝ) :
+    mpProcess Q c X (fun _ ↦ (0 : ℝ)) (fun _ ↦ -C) = fun t _ ↦ C * Q.q.real (Q.interval c ⊥ t) := by
+  funext t ω
+  simp only [mpProcess, setIntegral_const, smul_eq_mul]
+  ring
+
+omit [MeasurableSpace E] in
+/-- **The one sided companion is genuinely weaker.**  For `f_n = 0`, `g_n = -C` the hypotheses of
+`submartingale_mpProcess_of_tendsto` hold with the bound `-C ≤ g_n`, and its conclusion is true, the
+test process `C q((⊥, t])` being increasing and deterministic for `C ≥ 0`; but it is **no**
+martingale as soon as `C ≠ 0` and the clock puts mass between two times.  So the conclusion cannot
+be upgraded to `Martingale`, and the two closure statements are separate. -/
+theorem not_martingale_mpProcess_zero_const [OrderBot ι] {Q : Clock ι} {c : Clock.Conv}
+    {X : ι → Ω → E} {𝓖 : Filtration ι m} {P : Measure Ω} [IsProbabilityMeasure P] {C : ℝ}
+    (hC : C ≠ 0)
+    {s t : ι} (hst : s ≤ t)
+    (hne : Q.q.real (Q.interval c ⊥ s) ≠ Q.q.real (Q.interval c ⊥ t)) :
+    ¬ Martingale (mpProcess Q c X (fun _ ↦ (0 : ℝ)) (fun _ ↦ -C)) 𝓖 P := by
+  intro h
+  have h1 := h.setIntegral_eq hst MeasurableSet.univ
+  rw [mpProcess_zero_const] at h1
+  simp only [Measure.restrict_univ, integral_const, probReal_univ, one_smul] at h1
+  exact hne (mul_left_cancel₀ hC h1)
+
+namespace BumpWitness
+
+/-- The bump sequence `min 1 (n · d(x, Uᶜ))` for `U = (-1, 1)`: `0` off `U`, increasing to `1` on
+`U`. -/
+noncomputable def bump (n : ℕ) (x : ℝ) : ℝ := min 1 (n * Metric.infDist x (Set.Ioo (-1) 1)ᶜ)
+
+theorem norm_bump_le (n : ℕ) (x : ℝ) : ‖bump n x‖ ≤ 1 := by
+  have h0 : 0 ≤ bump n x :=
+    le_min zero_le_one (mul_nonneg n.cast_nonneg Metric.infDist_nonneg)
+  rw [Real.norm_eq_abs, abs_of_nonneg h0]
+  exact min_le_left _ _
+
+theorem tendsto_bump (x : ℝ) :
+    Tendsto (fun n ↦ bump n x) atTop (𝓝 ((Set.Ioo (-1 : ℝ) 1).indicator 1 x)) := by
+  by_cases hx : x ∈ Set.Ioo (-1 : ℝ) 1
+  · rw [Set.indicator_of_mem hx, Pi.one_apply]
+    have hne : ((Set.Ioo (-1 : ℝ) 1)ᶜ).Nonempty := ⟨2, by norm_num⟩
+    have hpos : 0 < Metric.infDist x (Set.Ioo (-1 : ℝ) 1)ᶜ :=
+      (isOpen_Ioo.isClosed_compl.notMem_iff_infDist_pos hne).1 (not_not.2 hx)
+    have htop : Tendsto (fun n : ℕ ↦ (n : ℝ) * Metric.infDist x (Set.Ioo (-1) 1)ᶜ) atTop atTop :=
+      tendsto_natCast_atTop_atTop.atTop_mul_const hpos
+    refine tendsto_const_nhds.congr' ?_
+    filter_upwards [htop.eventually_ge_atTop 1] with n hn
+    exact (min_eq_left hn).symm
+  · rw [Set.indicator_of_notMem hx]
+    have h0 : Metric.infDist x (Set.Ioo (-1 : ℝ) 1)ᶜ = 0 := Metric.infDist_zero_of_mem hx
+    refine tendsto_const_nhds.congr fun n ↦ ?_
+    simp [bump, h0]
+
+/-- **`insert_of_forall_norm_le` against the indicator.**  A solution for an operator containing
+the bumps `(bump n, 0)` solves for `insert (1_{(-1,1)}, 0)`, without any closure construction:
+the one sequence suffices.  This is the single use Ethier–Kurtz make of the bounded pointwise
+closure (Theorem 4.3.8). -/
+theorem isMPSolutionFor_insert_indicator [OrderBot ι] {A : Set ((ℝ → ℝ) × (ℝ → ℝ))}
+    {Q : Clock ι} {c : Clock.Conv} {X : ι → Ω → ℝ} {𝓖 : Filtration ι m} {P : Measure Ω}
+    [IsFiniteMeasure P] (hA : IsMPSolutionFor A Q c X 𝓖 P)
+    (hbump : ∀ n, (bump n, (0 : ℝ → ℝ)) ∈ A) :
+    IsMPSolutionFor (insert ((Set.Ioo (-1 : ℝ) 1).indicator 1, 0) A) Q c X 𝓖 P :=
+  hA.insert_of_forall_norm_le (p := fun n ↦ (bump n, 0)) hbump tendsto_bump
+    (fun _ ↦ tendsto_const_nhds) (C := 1) norm_bump_le (fun _ _ ↦ by simp)
+    (fun _ _ ↦ stronglyMeasurable_const)
+
+end BumpWitness
 
 /-- **The test processes attached to a *path dependent* operator.**  The second component of an
 element of the operator is a functional of the time and the sample point, `ι → Ω → 𝕂`, and not a
@@ -1193,6 +1561,23 @@ for a fixed `ω` the integrand `fun u ↦ p.2 (X u ω)` need not even be
 def Clock.IsProgressive (Q : Clock ι) (X : ι → Ω → E) (𝓕 : Filtration ι m) : Prop :=
   ∀ t : ι, ∃ Z : ι → Ω → E, (∀ u, u ≤ t → Z u = X u) ∧
     Measurable[Q.measurableSpace.prod (𝓕 t)] (Function.uncurry Z)
+
+/-- **Progressive measurability of the real functionals of the process**: below each `t` the path
+has an extension `Z` such that `(u, ω) ↦ h (Z u ω)` is `Q.measurableSpace ⊗ 𝓕 t`-measurable for
+every measurable `h : E → ℝ`.  This is what the compensator consumes, and unlike
+`Clock.IsProgressive` it is reachable over a bare `[MeasurableSpace E]` by approximation in `ℝ`,
+where limits of measurable maps are measurable. -/
+def Clock.IsProgressiveComp (Q : Clock ι) (X : ι → Ω → E) (𝓕 : Filtration ι m) : Prop :=
+  ∀ t : ι, ∃ Z : ι → Ω → E, (∀ u, u ≤ t → Z u = X u) ∧
+    ∀ h : E → ℝ, Measurable h →
+      Measurable[Q.measurableSpace.prod (𝓕 t)] fun x : ι × Ω ↦ h (Z x.1 x.2)
+
+/-- The `E` valued form gives the real one, by composition. -/
+theorem Clock.IsProgressive.isProgressiveComp {Q : Clock ι} {X : ι → Ω → E}
+    {𝓕 : Filtration ι m} (hX : Q.IsProgressive X 𝓕) : Q.IsProgressiveComp X 𝓕 := by
+  intro t
+  obtain ⟨Z, hZ, hZm⟩ := hX t
+  exact ⟨Z, hZ, fun h hh ↦ hh.comp hZm⟩
 
 /-- The parametrised Bochner integral is strongly measurable in the parameter.
 This is `MeasureTheory.StronglyMeasurable.integral_prod_left`, packaged so that a
@@ -7418,6 +7803,83 @@ theorem not_isQuasiLeftContinuous_of_isRegularizingClass_of_free_solutionSet :
     fun _ _ _ _ ↦ by
       simp only [stoppedValue, Pi.zero_apply, sub_self, norm_zero, abs_zero, integral_zero]
       exact tendsto_const_nhds⟩
+
+namespace AtomConvWitness
+
+open AtomWitness
+
+/-- Integrals against the clock with a single atom are evaluations at the atom. -/
+theorem setIntegral_atomClock (u : ℝ≥0) (S : Set ℝ≥0) (F : ℝ≥0 → ℝ) :
+    ∫ s in S, F s ∂(atomClock u).q = S.indicator F u := by
+  let _ : MeasurableSpace ℝ≥0 := ⊤
+  have hdisc : DiscreteMeasurableSpace ℝ≥0 := ⟨fun _ ↦ trivial⟩
+  change ∫ s in S, F s ∂(Measure.dirac u) = S.indicator F u
+  classical
+  rw [@restrict_dirac' ℝ≥0 ⊤ S u trivial (Classical.dec _)]
+  split_ifs with h
+  · rw [integral_dirac' F u (Measurable.of_discrete (f := F)).stronglyMeasurable,
+      Set.indicator_of_mem h]
+  · rw [integral_zero_measure, Set.indicator_of_notMem h]
+
+/-- The deterministic path that jumps from `0` to `1` at time `1`. -/
+noncomputable def stepPath {Ω : Type*} : ℝ≥0 → Ω → ℝ := fun t _ ↦ if 1 ≤ t then 1 else 0
+
+/-- In the **optional** convention the test process of `(id, id)` along `stepPath` vanishes: the
+compensator `∫_{(0,t]} X dδ₁ = 1_{t ≥ 1}` is the path itself. -/
+theorem mpProcess_optional_stepPath {Ω : Type*} :
+    mpProcess (atomClock (1 : ℝ≥0)) .optional (stepPath (Ω := Ω)) id id = 0 := by
+  funext t ω
+  simp only [mpProcess, setIntegral_atomClock, Pi.zero_apply, id, stepPath]
+  by_cases h : (1 : ℝ≥0) ≤ t
+  · rw [Set.indicator_of_mem (show (1 : ℝ≥0) ∈ (atomClock (1 : ℝ≥0)).interval .optional ⊥ t from
+      ⟨h, by simp⟩)]
+    simp [h]
+  · rw [Set.indicator_of_notMem (fun hm : (1 : ℝ≥0) ∈ _ ↦ h hm.1)]
+    simp [h]
+
+/-- In the **predictable** convention it is the indicator of `{1}`: the compensator
+`∫_{[0,t)} X dδ₁ = 1_{t > 1}` lags the path by the atom. -/
+theorem mpProcess_predictable_stepPath {Ω : Type*} (t : ℝ≥0) (ω : Ω) :
+    mpProcess (atomClock (1 : ℝ≥0)) .predictable (stepPath (Ω := Ω)) id id t ω
+      = if t = 1 then 1 else 0 := by
+  simp only [mpProcess, setIntegral_atomClock, id, stepPath]
+  by_cases h : (1 : ℝ≥0) < t
+  · rw [Set.indicator_of_mem (show (1 : ℝ≥0) ∈ (atomClock (1 : ℝ≥0)).interval .predictable ⊥ t
+      from ⟨h, by simp⟩)]
+    simp [h.le, h.ne']
+  · rw [Set.indicator_of_notMem (fun hm : (1 : ℝ≥0) ∈ _ ↦ h hm.1)]
+    by_cases h1 : t = 1
+    · simp [h1]
+    · have : ¬ (1 : ℝ≥0) ≤ t := fun h' ↦ h (lt_of_le_of_ne h' (Ne.symm h1))
+      simp [this, h1]
+
+/-- **A clock with an atom, where the two conventions give different solutions.**  For the clock
+`δ₁` on `ℝ≥0`, the operator `{(id, id)}` and the deterministic path `1_{t ≥ 1}`, every probability
+measure and every filtration solve the problem in the optional convention, and none in the
+predictable one.  This is the manuscript's `ex:atomicdiscontinuity`, and it is why the convention
+is a parameter of `mpFamily`. -/
+theorem isMPSolutionFor_optional_and_not_predictable {Ω : Type*} {m : MeasurableSpace Ω}
+    (𝓖 : Filtration ℝ≥0 m) (P : Measure Ω) [IsProbabilityMeasure P] :
+    IsMPSolutionFor {((id : ℝ → ℝ), (id : ℝ → ℝ))} (atomClock (1 : ℝ≥0)) .optional
+        (stepPath (Ω := Ω)) 𝓖 P ∧
+      ¬ IsMPSolutionFor {((id : ℝ → ℝ), (id : ℝ → ℝ))} (atomClock (1 : ℝ≥0)) .predictable
+        (stepPath (Ω := Ω)) 𝓖 P := by
+  constructor
+  · rw [IsMPSolutionFor, mpFamily_eq_image_mpProcess]
+    rintro _ ⟨p, hp, rfl⟩
+    rw [Set.mem_singleton_iff] at hp
+    subst hp
+    dsimp only
+    rw [mpProcess_optional_stepPath]
+    exact martingale_zero _ _ _
+  · intro h
+    rw [IsMPSolutionFor, mpFamily_eq_image_mpProcess] at h
+    have hm := h _ ⟨_, Set.mem_singleton _, rfl⟩
+    have h1 := hm.setIntegral_eq (show (1 : ℝ≥0) ≤ 2 by norm_num) MeasurableSet.univ
+    simp only [mpProcess_predictable_stepPath, Measure.restrict_univ] at h1
+    norm_num at h1
+
+end AtomConvWitness
 
 end Regularizing
 
@@ -20260,6 +20722,93 @@ theorem isDetermining_pathCylinders {F : Type*} [MeasurableSpace F] {G : Type*}
   · intro s
     rw [generateFrom_pathCylinders, h𝓖 s, iSup_subtype']
   · exact fun s ↦ ⟨∅, fun _ ↦ Set.univ, fun _ ↦ MeasurableSet.univ, by simp⟩
+
+omit [LinearOrder ι] [TopologicalSpace ι] in
+/-- **The products of bounded measurable functions of finitely many coordinates** with times in
+`S`: `x ↦ ∏_{i ∈ u} h_i (π_i x)` for a finite `u ⊆ S`. -/
+def pastProducts {F G : Type*} [MeasurableSpace G] (π : ι → F → G) (S : Set ι) : Set (F → ℝ) :=
+  {Z | ∃ (u : Finset ι) (h : ι → G → ℝ), (↑u ⊆ S) ∧ (∀ i, Measurable (h i)) ∧
+    (∀ i, ∃ C, ∀ y, |h i y| ≤ C) ∧ Z = fun x ↦ ∏ i ∈ u, h i (π i x)}
+
+omit [LinearOrder ι] [TopologicalSpace ι] in
+theorem isMulSystem_pastProducts {F G : Type*} [MeasurableSpace G] (π : ι → F → G) (S : Set ι) :
+    IsMulSystem (pastProducts π S) := by
+  classical
+  rintro _ ⟨u, h, hu, hm, hb, rfl⟩ _ ⟨v, h', hv, hm', hb', rfl⟩
+  let k : ι → G → ℝ := fun i y ↦ (if i ∈ u then h i y else 1) * (if i ∈ v then h' i y else 1)
+  refine ⟨u ∪ v, k, ?_, fun i ↦ ?_, fun i ↦ ?_, ?_⟩
+  · rw [Finset.coe_union]; exact Set.union_subset hu hv
+  · by_cases h1 : i ∈ u <;> by_cases h2 : i ∈ v <;> simp only [k, h1, h2] <;>
+      first
+        | exact (hm i).mul (hm' i)
+        | exact (hm i).mul measurable_const
+        | exact measurable_const.mul (hm' i)
+        | exact measurable_const.mul measurable_const
+  · obtain ⟨C, hC⟩ := hb i
+    obtain ⟨C', hC'⟩ := hb' i
+    refine ⟨max C 1 * max C' 1, fun y ↦ ?_⟩
+    simp only [k, abs_mul]
+    refine mul_le_mul ?_ ?_ (abs_nonneg _) (le_trans zero_le_one (le_max_right _ _))
+    · split_ifs
+      · exact (hC y).trans (le_max_left _ _)
+      · simp
+    · split_ifs
+      · exact (hC' y).trans (le_max_left _ _)
+      · simp
+  · funext x
+    simp only [Pi.mul_apply, k, Finset.prod_mul_distrib]
+    congr 1
+    · rw [← Finset.prod_subset (Finset.subset_union_left) (fun i _ hi ↦ by simp [hi])]
+      exact Finset.prod_congr rfl fun i hi ↦ by simp [hi]
+    · rw [← Finset.prod_subset (Finset.subset_union_right) (fun i _ hi ↦ by simp [hi])]
+      exact Finset.prod_congr rfl fun i hi ↦ by simp [hi]
+
+/-- **`isDetermining_products`: the products of bounded measurable functions of finitely many
+coordinates are a determining set**, for a filtration that is pulled back along the path map from
+the σ-algebras generated by the coordinates at the times in `S s`.  The natural filtration is
+`S s = Set.Iic s`.  The proof is `isDetermining_of_generateFromFuns`: the products are a
+multiplicative class (`isMulSystem_pastProducts`), contain `1` as the empty product, and generate
+the coordinate σ-algebra because the indicator of `{π r ∈ B}` is one of them. -/
+theorem isDetermining_products {F G : Type*} [MeasurableSpace F] [MeasurableSpace G]
+    {π : ι → F → G} {S : ι → Set ι} {𝓖 : ι → MeasurableSpace F}
+    (h𝓖 : ∀ s : ι, 𝓖 s = ⨆ r ∈ S s, MeasurableSpace.comap (π r) inferInstance)
+    {X : Ω → F} {𝓕 : Filtration ι m}
+    (h𝓕 : ∀ s : ι, (𝓕 s : MeasurableSpace Ω) = MeasurableSpace.comap X (𝓖 s))
+    {𝓧 : Set (ι → Ω → 𝕂)} (hadp : ∀ Y ∈ 𝓧, StronglyAdapted 𝓕 Y) :
+    IsDetermining (fun s ↦ pastProducts π (S s)) 𝓧 X 𝓕 := by
+  classical
+  have hπ : ∀ s, ∀ r ∈ S s, Measurable[𝓖 s] (π r) := fun s r hr ↦ by
+    rw [h𝓖 s]
+    exact measurable_iff_comap_le.2 (le_iSup₂ (f := fun r (_ : r ∈ S s) ↦
+      MeasurableSpace.comap (π r) (inferInstance : MeasurableSpace G)) r hr)
+  have hKm : ∀ s, ∀ Z ∈ pastProducts π (S s), Measurable[𝓖 s] Z := by
+    rintro s _ ⟨u, h, hu, hm, -, rfl⟩
+    exact Finset.measurable_prod u fun i hi ↦ (hm i).comp (hπ s i (hu hi))
+  refine isDetermining_of_generateFromFuns h𝓕 (fun s ↦ isMulSystem_pastProducts π (S s))
+    hKm ?_ ?_ ?_ hadp
+  · rintro s _ ⟨u, h, -, -, hb, rfl⟩
+    choose C hC using hb
+    refine ⟨∏ i ∈ u, C i, fun x ↦ ?_⟩
+    rw [Finset.abs_prod]
+    exact Finset.prod_le_prod₀ (fun i _ ↦ abs_nonneg _) fun i _ ↦ hC i _
+  · intro s
+    refine le_antisymm (generateFromFuns_le_iff.2 (hKm s)) ?_
+    rw [h𝓖 s]
+    refine iSup₂_le fun r hr ↦ measurable_iff_comap_le.1 ?_
+    intro B hB
+    have hmem : (fun x ↦ ∏ i ∈ ({r} : Finset ι), (B.indicator (1 : G → ℝ)) (π i x))
+        ∈ pastProducts π (S s) := by
+      refine ⟨{r}, fun _ ↦ B.indicator 1, by simpa using hr, fun _ ↦ measurable_const.indicator hB,
+        fun _ ↦ ⟨1, fun y ↦ ?_⟩, rfl⟩
+      by_cases hy : y ∈ B <;> simp [hy]
+    have h1 := measurable_generateFromFuns_of_mem hmem (measurableSet_singleton (1 : ℝ))
+    convert h1 using 1
+    ext x
+    simp only [Finset.prod_singleton, Set.mem_preimage, Set.mem_singleton_iff]
+    by_cases hx : π r x ∈ B <;> simp [hx]
+  · intro s
+    exact ⟨∅, fun _ _ ↦ 1, by simp, fun _ ↦ measurable_const, fun _ ↦ ⟨1, fun _ ↦ by simp⟩,
+      by simp⟩
 
 end DeterminingWitness
 

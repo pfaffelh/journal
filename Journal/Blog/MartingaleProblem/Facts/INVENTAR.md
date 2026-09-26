@@ -64580,3 +64580,181 @@ in den Gewichten (`a`, `b` beliebig endlich, nicht `a + b = 1`) und rechnen desh
 
 **Stand C:** C1 (bis auf zwei Beispiele), C2 (Teil), C4 global mit lokalem Korollar. Offen:
 C2-Rest, C3, C5. Das benannte Ziel des nächsten Laufs bleibt **B2** (achter Teil).
+
+### 2026-09-26, Lauf 10:03 UTC — B2 weiter offen; Aufgabe C, Schritt C2 weiter: **`submartingale_mpProcess_of_tendsto`**, **`insert_of_tendsto`**, und der Zeuge, daß die einseitige Fassung echt schwächer ist
+
+`check_master.py` zu Beginn: 0 Fehler, 0 `sorry`, 0 Veraltungen; Warnungen 18 / 38 / 38 / 76.
+
+**B2 (Konvexität bei roher Filtration): nicht weitergekommen, und das ist der Stand.** Der
+nächste Schritt der Liste war B2. Nachgerechnet ist diesmal nur, *wo* ein Zeuge sitzen müßte.
+`min τ_n τ'_n` trägt unter beiden Maßen die Martingaleigenschaft (A2 in der rohen Filtration,
+angewandt auf `Y^{τ_n}` unter `P` und `Y^{τ'_n}` unter `P'`), geht aber nur dann gegen `⊤`, wenn
+`τ_n → ⊤` auch `P'`-f.s. gilt. Bei einem Kandidaten mit einem Sprung zur Zeit `1` ist
+`{ρ ≥ 1} = (⋃_{s<1} {ρ ≤ s})ᶜ` in `𝓕_{1-}`. Ein Zeuge braucht also eine Größe, die unter `P` die
+Integrierbarkeit des Sprungs regelt, unter `P'` nicht beobachtbar ist und erst nach `1` sichtbar
+wird. Die naheliegende Wahl (zwei beobachtbare Größen `w`, `w'`, die unter `P` bzw. `P'` die
+Sprunghöhe regeln) lokalisiert mit `{|w| ≤ n, |w'| ≤ n}` und ist **kein** Zeuge. Weder Beweis
+noch Zeuge stehen, also weiter mit C2, das nicht daran hängt.
+
+**Neu** (`MartingaleProblems/Suggested.lean`, hinter `IsMPSolutionFor.span`):
+
+| README (Meilenstein 2) | Lean-Name | Zeile |
+| --- | --- | ---: |
+| (Hilfssatz) `L¹`-Limes von Martingalen ist Martingal, wenn der Limes adaptiert ist | `MeasureTheory.martingale_of_tendsto_eLpNorm` | 1046 |
+| `IsMPSolutionFor.insert_of_tendsto` | gleichnamig | 1070 |
+| (Hilfssatz) Fatou für nach unten beschränkte reelle Funktionen, in `ℝ≥0∞` | `MeasureTheory.ofReal_integral_add_le_liminf` | 1146 |
+| `IsMPSolutionFor.submartingale_mpProcess_of_tendsto` | gleichnamig | 1192 |
+| Akzeptanz: die einseitige Fassung ist echt schwächer | `mpProcess_zero_const`, `not_martingale_mpProcess_zero_const` | 1351, 1363 |
+
+**Befunde zu den README-Aussagen (README nicht angefaßt):**
+
+* *Adaptiertheit fehlt in beiden Aussagen der README.* Bei `insert_of_tendsto` ist ein
+  `L¹`-Limes `𝓖 t`-meßbarer Funktionen nur f.ü. gleich einer `𝓖 t`-meßbaren, und die Filtration
+  ist nicht vollständig. Bei `submartingale_mpProcess_of_tendsto` konvergieren die Kompensatoren
+  überhaupt nicht, weil `g_n` nur nach unten beschränkt ist. Beide Sätze tragen deshalb
+  `StronglyAdapted 𝓖 (mpProcess Q c X f g)` als Voraussetzung.
+* *`submartingale_mpProcess_of_tendsto` braucht Integrierbarkeit längs der Pfade* von `g_n` und
+  `g` auf den Fenstern, und die Meßbarkeit von `f_n ∘ X_t`. Das ist derselbe Befund wie bei
+  `span`: der Bochner-Müllwert `0` eines nicht integrierbaren Fensterintegrals zerstört die
+  Zerlegung `∫_{(⊥,t]} = ∫_{(⊥,s]} + ∫_{(s,t]}`. Eine Meßbarkeit längs der Pfade wird **nicht**
+  verlangt; die Integrierbarkeit trägt sie. Die Klasse ist `Preorder ι` mit `OrderBot ι`.
+* *Fatou in Bochner-Form fehlt in Mathlib* (unter `Mathlib/MeasureTheory/Integral` sind
+  `lintegral_liminf_le` und `lintegral_liminf_le'` die einzigen Fatou-Sätze, gesucht nach
+  `liminf` in Satznamen). `ofReal_integral_add_le_liminf` liest beide Seiten in `ℝ≥0∞` nach
+  Addition der Konstanten. Der reelle `liminf` wäre für eine nach oben unbeschränkte Folge ein
+  Müllwert, deshalb diese Form.
+* `insert_of_tendsto` ist mit der `L¹`-Konvergenz **der Testprozesse** formuliert, nicht getrennt
+  für `f_n ∘ X_t` und die Fensterintegrale wie in der README. Aus der README-Form folgt sie
+  durch die Dreiecksungleichung, sobald die Stücke meßbar sind. Der Satz nimmt Paare aus `A`; für
+  Paare aus dem Spann ist erst `IsMPSolutionFor.span` anzuwenden.
+* Der Zeuge `not_martingale_mpProcess_zero_const`: für `(f_n, g_n) = (0, -C)` ist der Testprozeß
+  `C q((⊥, t])`, deterministisch, und kein Martingal, sobald `C ≠ 0` und die Uhr zwischen zwei
+  Zeiten Masse hat. Der Schluß „Submartingal“ läßt sich also nicht zu „Martingal“ verschärfen.
+
+`#print axioms` für die drei tragenden Sätze: `propext`, `Classical.choice`, `Quot.sound`.
+
+### Derselbe Lauf, zweiter Teil — C2 weiter: **`IsMPSolutionFor.map` längs einer Modifikation**, die Uhr mit Atom, die Beulenfolge; C2 damit bis auf zwei Punkte fertig
+
+**Neu** (`MartingaleProblems/Suggested.lean`). Die Zeilen der Tabelle des ersten Teils sind
+durch die Einfügung hinter `span` verschoben; hier gelten die aktuellen, für alle neuen Namen des
+Laufs:
+
+| README (Meilenstein 2) | Lean-Name | Zeile |
+| --- | --- | ---: |
+| (Hilfssatz) adaptiert und zu jeder Zeit f.s. gleich einem Martingal ⇒ Martingal | `MeasureTheory.Martingale.of_forall_ae_eq` | 1044 |
+| (Hilfssatz) Testprozeß einer Modifikation ist Modifikation des Testprozesses | `mpProcess_ae_eq_of_forall_ae_eq` | 1056 |
+| **`IsMPSolutionFor.map`**, längs einer Modifikation | `IsMPSolutionFor.of_forall_ae_eq` | 1080 |
+| (Hilfssatz, erster Teil) | `MeasureTheory.martingale_of_tendsto_eLpNorm` | 1095 |
+| `IsMPSolutionFor.insert_of_tendsto` (erster Teil) | gleichnamig | 1119 |
+| (Hilfssatz, erster Teil) Fatou | `MeasureTheory.ofReal_integral_add_le_liminf` | 1195 |
+| `IsMPSolutionFor.submartingale_mpProcess_of_tendsto` (erster Teil) | gleichnamig | 1241 |
+| Akzeptanz: einseitig echt schwächer (erster Teil) | `mpProcess_zero_const`, `not_martingale_mpProcess_zero_const` | 1400, 1413 |
+| Akzeptanz: **die Beulenfolge** gegen `insert_of_forall_norm_le` | `BumpWitness.bump`, `tendsto_bump`, `isMPSolutionFor_insert_indicator` | 1437, 1458 |
+| (Hilfssatz) Integral gegen `δ_u` ist Auswertung | `AtomConvWitness.setIntegral_atomClock` | 7795 |
+| Akzeptanz: **Uhr mit Atom, die Konventionen geben verschiedene Lösungen** | `AtomConvWitness.isMPSolutionFor_optional_and_not_predictable` (mit `mpProcess_optional_stepPath`, `mpProcess_predictable_stepPath`) | 7844 |
+| Akzeptanz: Poisson | **stand schon**: `poissonProcess_isMPSolution`, `martingale_compensated_poisson` | `JumpProcesses` 4737, 4748 |
+
+**Befunde (README nicht angefaßt):**
+
+* *`IsMPSolutionFor.map` braucht zwei Voraussetzungen, die die README nicht nennt.* Erstens die
+  **gemeinsame Meßbarkeit** von `(s, ω) ↦ g (X s ω)` und `g (X' s ω)` für `Q.measurableSpace ⊗ m`.
+  Erst sie macht aus „`X s = X' s` f.s. für jedes `s`“ die Aussage „für f.a. `ω` stimmen die Pfade
+  `q`-f.ü. überein“ (`Measure.ae_ae_comm`, `Mathlib/MeasureTheory/Measure/Prod.lean:711`). Ohne
+  sie sind die Kompensatoren der beiden Prozesse nicht vergleichbar. Zweitens die
+  **Adaptiertheit** der Testprozesse von `X'`: eine Modifikation eines adaptierten Prozesses ist
+  bei nicht vollständiger Filtration nicht adaptiert. Die Fassung „längs Gleichheit der Gesetze auf
+  dem kanonischen Raum“ ist **nicht** gebaut. Die Hinweise der README auf
+  `ProbabilityTheory.map_eq_of_forall_ae_eq` (`FiniteDimensionalLaws.lean:99`) und
+  `identDistrib_iff_forall_finset_identDistrib` (`:77`) stimmen auf master (nachgesehen); gebraucht
+  wurden sie für die Modifikationsfassung nicht.
+* *Uhr mit Atom: die README-Begründung stimmt nicht.* Sie sagt, von den beiden Testprozessen sei
+  „genau einer adaptiert an die natürliche Filtration“. Beide sind **deterministisch**, also an
+  jede Filtration adaptiert: `0` in der optionalen Konvention, `1_{t = 1}` in der
+  vorhersagbaren. Der Unterschied liegt in der **Martingaleigenschaft**: der erste ist eines, der
+  zweite nicht (Erwartung `1` bei `t = 1`, `0` bei `t = 2`). Der Satz sagt deshalb: jedes
+  Wahrscheinlichkeitsmaß und jede Filtration lösen das Problem optional, keines vorhersagbar.
+* *Beulenfolge:* ohne neue Voraussetzung. `insert_of_forall_norm_le` greift mit `C = 1`, die
+  Meßbarkeit längs der Pfade ist für `g_n = 0` trivial.
+* *Nicht gebaut aus C2:* der Poissonprozeß „von Hand“ mit dem **unbeschränkten** `f = id`
+  (kompensiert `X t - t`); der vorhandene Satz nimmt beschränkte `f`. Der Weg dahin ist jetzt
+  `insert_of_tendsto` mit `f_n = min id n`. Ebenso nicht gebaut: ein Paar, an dem die einseitige
+  Fassung echt schwächer ist **als Anwendung** des Satzes (der Zeuge oben zeigt nur, daß die
+  Folgerung nicht zu „Martingal“ zu verschärfen ist).
+
+`check_master.py` nach allen Einfügungen: 0 Fehler, 0 `sorry`, 0 Veraltungen; Warnungen
+18 / 38 / 38 / 76, unverändert.
+
+### Derselbe Lauf, dritter Teil — Aufgabe C, Schritt C3: **`isDetermining_products`** und **`Clock.IsProgressiveComp`**; und der Abschluß des Laufs
+
+**Zuerst nachgesehen.** `IsCanonical` (Z. 1528) und `IsDetermining` (Z. 1541) standen, ebenso
+fünf Zeugen für `IsDetermining`: `isDetermining_of_comap`, `isDetermining_of_generateFromFuns`,
+`isDetermining_indicatorFuns`, `isDetermining_pathCylinders` (Indikatoren endlich vieler
+Koordinatenbedingungen, das ist inhaltlich schon die Zylinderfassung) und die beiden Instanzen auf
+dem kanonischen Pfadraum. Es fehlten die README-Namen `isDetermining_products` und
+`Clock.IsProgressiveComp`.
+
+**Neu:**
+
+| README (Meilenstein 3) | Lean-Name | Zeile |
+| --- | --- | ---: |
+| `Clock.IsProgressiveComp Q X 𝓕` | gleichnamig | 1570 |
+| die `E`-wertige Fassung gibt die reelle | `Clock.IsProgressive.isProgressiveComp` | 1576 |
+| die Produkte beschränkter Funktionen endlich vieler Koordinaten | `pastProducts π S` | 20729 |
+| … sind multiplikativ | `isMulSystem_pastProducts` | 20734 |
+| **`isDetermining_products`** | gleichnamig | 20772 |
+
+Durch die Einfügung bei Z. 1570 sind die Zeilen des zweiten Teils ab `setIntegral_atomClock` um
+17 verschoben: `AtomConvWitness.setIntegral_atomClock` steht jetzt bei 7812,
+`isMPSolutionFor_optional_and_not_predictable` bei 7861.
+
+**Befund zu `isDetermining_products`: „für jedes dichte `D`“ ist ohne Zusatz falsch formuliert.**
+Die README sagt, für die natürliche Filtration und jedes dichte `D` seien die Produkte über Zeiten
+in `D` determinierend. Das braucht, daß die Koordinaten an Zeiten `r ∈ D ∩ [0, s]` die ganze
+σ-Algebra `𝓕_s` erzeugen. Rechtsstetigkeit der Pfade gibt das **nicht** für die Koordinate bei
+`s` selbst, wenn `s ∉ D`: sie ist ein Limes von Koordinaten bei Zeiten `> s`, die nicht in `𝓕_s`
+liegen. Richtig ist etwa `D ∪ {s}` oder `D ∩ [0, s] ∪ {s}`. Der Lean-Satz nimmt deshalb eine
+beliebige Zeitmenge `S s` mit der Voraussetzung `𝓖 s = ⨆ r ∈ S s, comap (π r)`; die natürliche
+Filtration ist `S s = Set.Iic s`, und wer eine dichte Menge nehmen will, beweist diese Gleichung
+für seine Pfade. Keine Voraussetzung an `ι` außer den Abschnittsvariablen von
+`isDetermining_of_generateFromFuns` (`LinearOrder`, `TopologicalSpace`); keine Topologie auf dem
+Zustandsraum.
+
+**`Clock.IsProgressiveComp`:** definiert nach der README (reelle Funktionale einer Fortsetzung
+`Z`, meßbar für `Q.measurableSpace ⊗ 𝓕 t`). **Nicht gebaut:** `isMPSolutionFor_iff_forall_fdd`
+auf `IsProgressiveComp` umgestellt, und die Konstruktion der reellen Fassung über einem bloßen
+`[MeasurableSpace E]` durch Approximation von rechts. Ebenso nicht gebaut die Akzeptanzbeispiele
+von C3 („die Filtration ist Voraussetzung, nicht Konvention“; „meßbar zu jeder Zeit und progressiv
+zu keiner“).
+
+`check_master.py` am Ende des Laufs (Mathlib `94ef6b89544`): **0 Fehler, 0 `sorry`, 0
+Veraltungen** in allen vier Dateien, Warnungen 18 / 38 / 38 / 76 wie zu Beginn. `#print axioms`
+für alle tragenden neuen Sätze (`submartingale_mpProcess_of_tendsto`,
+`not_martingale_mpProcess_zero_const`, `ofReal_integral_add_le_liminf`, `insert_of_tendsto`,
+`IsMPSolutionFor.of_forall_ae_eq`, `isMPSolutionFor_insert_indicator`,
+`isMPSolutionFor_optional_and_not_predictable`, `isDetermining_products`,
+`Clock.IsProgressive.isProgressiveComp`): `propext`, `Classical.choice`, `Quot.sound`.
+
+**Stand der drei Aufgaben nach diesem Lauf.**
+
+* **A:** unverändert, A1–A4 vollständig, A5 bis auf zwei Akzeptanzrechnungen.
+* **B:** unverändert. **B2 offen**; diesmal nur eingegrenzt, wo ein Zeuge sitzen müßte (erster
+  Teil).
+* **C:** C1 bis auf `volume + δ 1` und `∑ n, δ n`. **C2 bis auf zwei Punkte fertig:**
+  `insert_of_tendsto`, `submartingale_mpProcess_of_tendsto`, `map` (als `of_forall_ae_eq`, längs
+  einer Modifikation), und die Akzeptanzbeispiele Uhr mit Atom, Beulenfolge, einseitig schwächer;
+  offen sind Poisson mit unbeschränktem `f = id` und die Fassung von `map` längs Gleichheit der
+  Gesetze. C3: `isDetermining_products`, `IsProgressiveComp`; offen die Umstellung des
+  fdd-Kriteriums und die zwei Beispiele. C4 global (voriger Lauf). **C5 nicht begonnen.**
+
+**Benanntes Ziel für den nächsten Lauf, der nächste offene Schritt der Liste: B2.** Unverändert
+gegenüber dem vorigen Lauf, mit der Eingrenzung aus dem ersten Teil: ein Zeuge braucht eine Größe,
+die unter `P` die Integrierbarkeit eines Sprungs bei `1` regelt, unter `P'` nicht, und die erst
+nach `1` sichtbar wird. Kommt B2 wieder nicht voran, ist der nächste Schritt, der nicht daran
+hängt, **C5** (`isStrongMarkov`, auf A1 gestützt, `Submartingale.stoppedValue_min_le_condExp`
+und `stoppedValue_min_ae_eq_condExp'`-artig für Martingale).
+
+**Keine README, kein Manuskript angefaßt; nichts nach außen gegeben.** Die Befunde für den Nutzer
+zu den README-Formulierungen stehen in den drei Teilen dieses Laufs (fehlende Adaptiertheit bei
+`insert_of_tendsto` und `submartingale_mpProcess_of_tendsto`; gemeinsame Meßbarkeit bei `map`; die
+falsche Begründung „genau einer adaptiert“ beim Atombeispiel; „jedes dichte `D`“ bei
+`isDetermining_products`).
