@@ -87,6 +87,17 @@ Laufbericht.
   2026-09-19: 2 275 eigene Deklarationen, 38 Treffer, davon zwei echte
   Doppelungen (`integrableOn_of_bounded`, `sum_smul_dirac_singleton`).
   Dieselbe Aussage unter einem **anderen** Namen findet es nicht.
+* **`decl_deps.py`** beantwortet für eine Deklaration von `JumpProcesses`, welche
+  Namen ihres **Rumpfes** dort und nicht in `MartingaleProblems` definiert sind.
+  Am 2026-09-24 hat es gezeigt, daß von den sechzehn Deklarationen des Abschnitts
+  `Regularizing` **keine** Sprungmaterial liest; sie sind danach zurückgewandert.
+  Die Erkennung ist syntaktisch und nach oben grob (Doc-Kommentare sind
+  abgeschnitten): ein **leerer** Befund ist belastbar, ein nichtleerer ist eine
+  Liste von Verdächtigen.
+* **`move_regularizing.py`** ist der Umzug vom 2026-09-24, einmal gelaufen und
+  seither gegenstandslos. Es bleibt stehen, weil es Zeile für Zeile umhängt und
+  keinen Text ändert — daran ist nachprüfbar, daß der Umzug ein Verschieben war
+  und keine Neufassung.
 * **`check_citations.py`** schlägt jeden Namen in beiden Indizes nach und
   sortiert nach: auf beiden, nur v4.33.1 (also von master verschwunden), nur
   master, `deprecated`, gar nicht gefunden.

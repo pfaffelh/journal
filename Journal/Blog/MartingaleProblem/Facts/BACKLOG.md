@@ -95,8 +95,11 @@ Lauf, passiert; `axcheck_tmp.lean` steht seither eingedampft und in `.gitignore`
    `Measure/MeasureSpace.lean:118`), ebenso `Set.diff_eq` (jetzt
    `Set.sdiff_eq`).
 
-1. **`SkorokhodSpace` und `MartingaleProblems` weiter beweisen.** *(Stand
-   2026-09-07, vom Nutzer nachgezogen; die frühere Fassung dieses Punktes war
+1. ~~**`SkorokhodSpace` und `MartingaleProblems` weiter beweisen.**~~
+   *(erledigt; festgestellt 2026-09-25, fünfzehnter Lauf: `check_master.py`
+   meldet für alle vier Dateien der Kette 0 Fehler und 0 `sorry`, zuletzt im
+   vierzehnten Lauf des 2026-09-25. Der Punkt stand nur noch ungestrichen da.)*
+   *(Stand 2026-09-07, vom Nutzer nachgezogen; die frühere Fassung dieses Punktes war
    in ihrer Begründung falsch — beide Dateien übersetzten schon, als er
    gestellt wurde, und die Zahlen darin sind längst überholt.)*
 
@@ -674,8 +677,18 @@ Lauf, passiert; `axcheck_tmp.lean` steht seither eingedampft und in `.gitignore`
    Meilensteintexte der Meilensteine 3, 5, 9 und 10, die noch keine Proposition
    sind. Wer diese aufnimmt, arbeitet an den Aussagen, nicht am Übersetzen.
 
-4. **Die Grundtheorie von `ProbabilityMeasure E` als metrischem Raum
-   formalisieren.** Am 2026-08-31 als Lücke belegt und als Block an den Kopf von
+4. ~~**Die Grundtheorie von `ProbabilityMeasure E` als metrischem Raum
+   formalisieren.**~~ *(erledigt am 2026-09-08, vierter Lauf; festgestellt
+   2026-09-25, fünfzehnter Lauf, nachdem der vierzehnte Lauf den Punkt für
+   offen gehalten und als nächstes Ziel benannt hatte. In
+   `WeakConvergence/Suggested.lean` stehen bewiesen
+   `separableSpace_probabilityMeasure` (Zeile 2972),
+   `completeSpace_levyProkhorov_probabilityMeasure` (3155),
+   `isCompletelyMetrizableSpace_probabilityMeasure` und
+   `polishSpace_probabilityMeasure`; die Zeile `fact:PSpolish` des Inventars
+   sagt das seit dem 2026-09-08. Die Lehre: vor dem Benennen eines
+   Rückstaupunktes die Inventarzeile des Facts lesen, nicht den Punkt allein —
+   der Punkt wird beim Erledigen nicht immer gestrichen.)* Am 2026-08-31 als Lücke belegt und als Block an den Kopf von
    `WeakConvergence` Meilenstein 3 eingetragen: Mathlib hat die Metrisierbarkeit
    (`MeasureTheory.instMetrizableSpaceProbabilityMeasure`,
    `Measure/LevyProkhorovMetric.lean:695`) und weder die Separabilität noch die
@@ -1250,7 +1263,11 @@ Lauf, passiert; `axcheck_tmp.lean` steht seither eingedampft und in `.gitignore`
    `P.map (X n) = μ n` in `WeakConvergence`. Mechanisch, aber breit — deshalb
    nicht vor dem offenen Beweis.
 
-8. **Die 37 `Set.mem_setOf_eq` ersetzen.** *(gestellt 2026-09-18, achtzehnter
+8. ~~**Die 37 `Set.mem_setOf_eq` ersetzen.**~~ *(erledigt; festgestellt
+   2026-09-25, fünfzehnter Lauf: `Set.mem_setOf_eq` kommt in keiner der vier
+   `Suggested.lean` mehr vor, und `check_master.py` führt eine Spalte
+   Warnungen. Die Ersetzung ist Stufe 2 der Veraltungsaufgabe vom
+   2026-09-18.)* *(gestellt 2026-09-18, achtzehnter
    Lauf des Tages.)* Der Name ist auf v4.33.1 `deprecated` — Lean sagt es selbst
    beim Übersetzen: „`Set.mem_setOf_eq` has been deprecated: Use
    `Set.mem_ofPred_eq` instead". Er kommt in den drei Roadmap-Dateien 37mal vor,

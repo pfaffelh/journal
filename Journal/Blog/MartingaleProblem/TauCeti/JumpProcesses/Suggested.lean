@@ -359,1254 +359,6 @@ what `Memℒp (f k) p` for `k ≤ n` would supply. -/
 
 end MeasureTheory
 
-/-! ## Milestone 9: the regularizing class and quasi-left-continuity
-
-The index is the one the milestone fixes for its last block: a linear order with
-the order topology, `[OrderBot ι]`, and the conditionally complete lattice
-structure, which is what the suprema of stopping times are taken in.  A stopping
-time is `WithTop ι`-valued, its supremum is taken in `WithTop ι` through
-`SupSet (WithTop α)` (`Order/ConditionallyCompleteLattice/Basic.lean:52`), and a
-process is read at one through `MeasureTheory.stoppedValue`
-(`Probability/Process/Stopping.lean:797`, `fun ω ↦ u (τ ω).untopA ω` under
-`[Nonempty ι]`). -/
-
-section Regularizing
-
-variable {ι : Type*} [ConditionallyCompleteLinearOrder ι] [OrderBot ι]
-  [TopologicalSpace ι] [OrderTopology ι]
-variable {E : Type*} [TopologicalSpace E] [MeasurableSpace E]
-
-/-! Separating classes are **not** defined here.  `MeasureTheory.IsSeparating`
-of the roadmap **WeakConvergence**, Milestone 1, is the one predicate, and since
-the twenty-second run of 2026-09-17 it carries the scalar field `𝕂` of the
-operator `A : Set ((E → 𝕂) × (E → 𝕂))` rather than `ℝ`.  Until that run this
-file restated the same proposition over `𝕂` under the same name; the two
-coexisted after the import of 2026-09-17 and had to be told apart by
-`_root_.IsSeparating`, which is a trap for the reader of a submission in which
-both roadmaps appear. -/
-
-/-! Càdlàg paths are **not** defined here either.  `IsCadlag` is Mathlib's, from
-`Mathlib/Topology/Order/Cadlag.lean` (`#43352`), reached through the import of
-**SkorokhodSpace**; it is the path property and not the membership in `D(ι, E)`,
-so it applies to a process whose paths are not yet known to live in the path
-space.
-
-Until the twenty-second run of 2026-09-17 this file carried `IsCadlagPath`, the
-conjunction of the two fields of that structure, restated because the path space
-was said to be unavailable here; the import of 2026-09-17 removed the reason.
-**SkorokhodSpace** then carried its own copy, because that file was checked
-against `v4.33.1`, which does not have `Mathlib/Topology/Order/Cadlag.lean`; the
-move of the chain to `upstream/master` on 2026-09-18 removed that reason too, and
-the copy is gone.  All three agreed field for field, so nothing here changed at
-either step. -/
-
-/-- The decomposition attached to one `f` of a regularizing class: `f ∘ X` splits
-into a member of `𝓧` and a compensator `C` that is adapted, has one sided limits
-along `D` almost surely, and is right continuous in `L¹`.
-
-The decomposition itself is not a hypothesis -- `C := f ∘ X - Y` satisfies it --
-so the content is the choice of `Y` in `𝓧` together with the last two fields.
-`C` is `StronglyAdapted`, not `Adapted`: since 2026-01-13 Mathlib's `Adapted`
-(`Probability/Process/Adapted.lean:60`) is measurability with respect to `f i`
-and asks for `[MeasurableSpace 𝕂]`, while the notion the roadmap means, and the
-one `Martingale` is built from (`Probability/Martingale/Basic.lean:53`), is
-`StronglyAdapted` (`ibid.:105`).
-
-**`l1_rightContinuous` is stated in `ℝ≥0∞` and not through the Bochner
-integral**, and the difference is not cosmetic (found 2026-09-17, second run of
-that day).  `∫ ω, ‖C s ω - C t ω‖ ∂P` returns the junk value `0` whenever the
-integrand is not integrable, so the Bochner form of this field is satisfied by
-compensators that are nowhere near right continuous: take `C s = g` for `s ≠ t`
-with `g` measurable and not integrable, `C t = 0`, and `Y := f ∘ X - C`.  Every
-field holds -- the paths are constant in `s` off `t`, so the one sided limits
-exist -- while the right limit of `C` at `t` is `g` and not `C t`.  The lower
-integral has no junk value, the witness dies at once, and
-`IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi` below is exactly the statement
-that it dies.  The lower integral is also what Fatou is stated in, so the
-formulation and the proof want the same thing. -/
-structure IsCompensatorFor (X : ι → Ω → E) (𝓕 : Filtration ι m) (P : Measure Ω)
-    (D : Set ι) (f : E → 𝕂) (Y C : ι → Ω → 𝕂) : Prop where
-  stronglyAdapted : StronglyAdapted 𝓕 C
-  decomposition : ∀ t : ι, ∀ᵐ ω ∂P, f (X t ω) = Y t ω + C t ω
-  exists_limits : ∀ᵐ ω ∂P, ∀ t : ι,
-    (∃ l : 𝕂, Tendsto (fun s ↦ C s ω) (𝓝[D ∩ Set.Iio t] t) (𝓝 l)) ∧
-      ∃ l : 𝕂, Tendsto (fun s ↦ C s ω) (𝓝[D ∩ Set.Ioi t] t) (𝓝 l)
-  l1_rightContinuous : ∀ t : ι,
-    Tendsto (fun s ↦ ∫⁻ ω, ‖C s ω - C t ω‖ₑ ∂P) (𝓝[>] t) (𝓝 0)
-
-/-- A class of functions that forces a càdlàg modification: every `f ∈ Φ` admits
-a compensated decomposition along some `Y ∈ 𝓧`. -/
-def IsRegularizingClass (Φ : Set (E → 𝕂)) (X : ι → Ω → E) (𝓧 : Set (ι → Ω → 𝕂))
-    (𝓕 : Filtration ι m) (P : Measure Ω) (D : Set ι) : Prop :=
-  ∀ f ∈ Φ, ∃ Y ∈ 𝓧, ∃ C : ι → Ω → 𝕂, IsCompensatorFor X 𝓕 P D f Y C
-
-omit [TopologicalSpace E] [MeasurableSpace E] in
-/-- **The real valued half of Doob's regularization, read through a regularizing
-class.**  For one `f` of the class, `f ∘ X` has almost surely, at **every** point
-of the index at once, both one sided limits along `D`.
-
-This is the statement that `exists_cadlag_modification_of_isRegularizingClass`
-assembles over a countable separating subclass, and it is where `h𝓧` is spent:
-`h𝓧` turns the member `Y` of `𝓧` into a martingale, `Martingale.submartingale_re`
-and `Martingale.submartingale_im` into two real submartingales,
-`Submartingale.ae_exists_tendsto_nhdsWithin` gives them their one sided limits
-along `D`, and `IsCompensatorFor.exists_limits` carries those of the compensator.
-
-**The countable cofinal family is the hypothesis that cannot be dropped, and it
-is `[(atTop : Filter ι).IsCountablyGenerated]`.**
-`Submartingale.ae_exists_tendsto_nhdsWithin` reads its time set between two
-bounds -- the lower one is `⊥`, the upper one is an honest hypothesis -- while
-the conclusion here is quantified over **every** `t : ι`.  One null set for each
-`t` is not a null set; a countable cofinal `u : ℕ → ι` makes it a countable
-union.  The instance holds for `ℝ≥0` and for `ℝ` through
-`atTop_isCountablyGenerated_of_archimedean`
-(`Order/Filter/AtTopBot/Archimedean.lean:147`).
-
-**A greatest element of `ι`, if there is one, costs nothing.**  Where no `u n`
-exceeds `t`, cofinality makes `t` the greatest element, `Set.Ioi t` is empty, the
-filter is `⊥` and the right limit is vacuous.  That is why no `NoMaxOrder`
-appears. -/
-theorem ae_exists_tendsto_comp_of_isRegularizingClass
-    [(atTop : Filter ι).IsCountablyGenerated]
-    {Φ : Set (E → 𝕂)} {X : ι → Ω → E} {𝓧 : Set (ι → Ω → 𝕂)} {𝓕 : Filtration ι m}
-    {P : Measure Ω} [IsProbabilityMeasure P] {D : Set ι} (hD : D.Countable)
-    (h𝓧 : IsMPSolution 𝓧 𝓕 P) (hΦ : IsRegularizingClass Φ X 𝓧 𝓕 P D)
-    {f : E → 𝕂} (hf : f ∈ Φ) :
-    ∀ᵐ ω ∂P, ∀ t : ι,
-      (∃ c : 𝕂, Tendsto (fun s ↦ f (X s ω)) (𝓝[D ∩ Set.Iio t] t) (𝓝 c)) ∧
-      (∃ c : 𝕂, Tendsto (fun s ↦ f (X s ω)) (𝓝[D ∩ Set.Ioi t] t) (𝓝 c)) := by
-  obtain ⟨Y, hY𝓧, C, hC⟩ := hΦ f hf
-  have hYm : Martingale Y 𝓕 P := h𝓧 Y hY𝓧
-  obtain ⟨u, hu⟩ := Filter.exists_seq_tendsto (atTop : Filter ι)
-  have hucof : ∀ t : ι, ∃ n : ℕ, t ≤ u n := fun t ↦ (hu.eventually_ge_atTop t).exists
-  have hstep : ∀ n : ℕ, ∀ᵐ ω ∂P, ∀ t : ι,
-      (∃ c : 𝕂, Tendsto (fun s ↦ Y s ω)
-        (𝓝[D ∩ Set.Iic (u n) ∩ Set.Iio t] t) (𝓝 c)) ∧
-      (∃ c : 𝕂, Tendsto (fun s ↦ Y s ω)
-        (𝓝[D ∩ Set.Iic (u n) ∩ Set.Ioi t] t) (𝓝 c)) := by
-    intro n
-    have hre := hYm.submartingale_re.ae_exists_tendsto_nhdsWithin
-      (S := D ∩ Set.Iic (u n)) (hD.mono Set.inter_subset_left) (R := ⊥)
-      (fun s _ ↦ bot_le) (fun s hs ↦ hs.2)
-    have him := hYm.submartingale_im.ae_exists_tendsto_nhdsWithin
-      (S := D ∩ Set.Iic (u n)) (hD.mono Set.inter_subset_left) (R := ⊥)
-      (fun s _ ↦ bot_le) (fun s hs ↦ hs.2)
-    filter_upwards [hre, him] with ω hreω himω
-    intro t
-    obtain ⟨⟨a1, ha1⟩, ⟨a2, ha2⟩⟩ := hreω t
-    obtain ⟨⟨b1, hb1⟩, ⟨b2, hb2⟩⟩ := himω t
-    exact ⟨exists_tendsto_of_tendsto_re_of_tendsto_im ha1 hb1,
-      exists_tendsto_of_tendsto_re_of_tendsto_im ha2 hb2⟩
-  have hdec : ∀ᵐ ω ∂P, ∀ s ∈ D, f (X s ω) = Y s ω + C s ω :=
-    (ae_ball_iff hD).2 fun s _ ↦ hC.decomposition s
-  filter_upwards [ae_all_iff.2 hstep, hC.exists_limits, hdec] with ω hYω hCω hdecω
-  intro t
-  constructor
-  · obtain ⟨n, hn⟩ := hucof t
-    obtain ⟨c, hc⟩ := (hYω n t).1
-    obtain ⟨l, hl⟩ := (hCω t).1
-    refine ⟨c + l, ?_⟩
-    have hset : D ∩ Set.Iic (u n) ∩ Set.Iio t = D ∩ Set.Iio t := by
-      ext s
-      simp only [Set.mem_inter_iff, Set.mem_Iic, Set.mem_Iio]
-      exact ⟨fun h ↦ ⟨h.1.1, h.2⟩, fun h ↦ ⟨⟨h.1, h.2.le.trans hn⟩, h.2⟩⟩
-    rw [hset] at hc
-    refine (hc.add hl).congr' ?_
-    filter_upwards [self_mem_nhdsWithin] with s hs
-    exact (hdecω s hs.1).symm
-  · by_cases hmax : ∃ n : ℕ, t < u n
-    · obtain ⟨n, hn⟩ := hmax
-      obtain ⟨c, hc⟩ := (hYω n t).2
-      obtain ⟨l, hl⟩ := (hCω t).2
-      refine ⟨c + l, ?_⟩
-      have hmem : Set.Iio (u n) ∈ 𝓝[D ∩ Set.Ioi t] t :=
-        mem_nhdsWithin_of_mem_nhds (isOpen_Iio.mem_nhds hn)
-      have hsub : Set.Iio (u n) ∩ (D ∩ Set.Ioi t) ⊆ D ∩ Set.Iic (u n) ∩ Set.Ioi t :=
-        fun s hs ↦ ⟨⟨hs.2.1, hs.1.le⟩, hs.2.2⟩
-      have hmono : 𝓝[D ∩ Set.Ioi t] t ≤ 𝓝[D ∩ Set.Iic (u n) ∩ Set.Ioi t] t := by
-        rw [← nhdsWithin_inter_of_mem hmem]
-        exact nhdsWithin_mono t hsub
-      refine ((hc.mono_left hmono).add hl).congr' ?_
-      filter_upwards [self_mem_nhdsWithin] with s hs
-      exact (hdecω s hs.1).symm
-    · simp only [not_exists, not_lt] at hmax
-      have hempty : D ∩ Set.Ioi t = ∅ := by
-        refine Set.eq_empty_of_forall_notMem fun s hs ↦ ?_
-        obtain ⟨n, hn⟩ := hucof s
-        exact absurd (hn.trans (hmax n)) (not_le.2 hs.2)
-      refine ⟨0, ?_⟩
-      rw [hempty, nhdsWithin_empty]
-      exact tendsto_bot
-
-omit [OrderBot ι] [OrderTopology ι] [TopologicalSpace E] [MeasurableSpace E] in
-/-- **The right limit of the compensator along `D` is the compensator**, and this
-is the only place `l1_rightContinuous` of `IsCompensatorFor` is used.  In the
-notation of the càdlàg theorem: `C_{t+} = C t` almost surely.
-
-The proof is Fatou and nothing else.  Along a sequence `u` running into
-`𝓝[D ∩ Ioi t] t` -- there is one because the filter is countably generated and
-not `⊥` -- the paths `C (u n) ω` go to `W ω` almost surely, so `‖C (u n) ω - C t ω‖ₑ`
-goes to `‖W ω - C t ω‖ₑ`, in particular the `liminf` is that; and the lower
-integrals `∫⁻ ‖C (u n) - C t‖ₑ` go to `0` by right continuity.  Fatou
-(`lintegral_liminf_le`) puts `∫⁻ ‖W - C t‖ₑ ≤ 0`, and a lower integral that
-vanishes has a vanishing integrand almost everywhere.
-
-**No integrability of `C` is needed anywhere**, which is the gain of stating
-`l1_rightContinuous` in `ℝ≥0∞`: neither `W` nor `C t` has to be in `L¹`, neither
-has to be measurable -- `W` is not assumed measurable at all, and `C t` is
-through `stronglyAdapted`.
-
-`[(𝓝[D ∩ Set.Ioi t] t).NeBot]` cannot be dropped and is not a technicality: at an
-isolated point from the right the hypothesis `hW` is vacuous and `W` is
-arbitrary.  It holds where the càdlàg theorem uses it, `D` being dense and `t`
-not the greatest element.  `[FirstCountableTopology ι]` is what makes the filter
-countably generated, hence what produces `u`; `ℝ≥0` and `ℝ` have it. -/
-theorem IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi [FirstCountableTopology ι]
-    {X : ι → Ω → E} {𝓕 : Filtration ι m} {P : Measure Ω} {D : Set ι} {f : E → 𝕂}
-    {Y C : ι → Ω → 𝕂} (hC : IsCompensatorFor X 𝓕 P D f Y C) {t : ι}
-    [(𝓝[D ∩ Set.Ioi t] t).NeBot] {W : Ω → 𝕂}
-    (hW : ∀ᵐ ω ∂P, Tendsto (fun s ↦ C s ω) (𝓝[D ∩ Set.Ioi t] t) (𝓝 (W ω))) :
-    W =ᵐ[P] C t := by
-  obtain ⟨u, hu⟩ := Filter.exists_seq_tendsto (𝓝[D ∩ Set.Ioi t] t)
-  have hmeas : ∀ n : ℕ, Measurable fun ω ↦ ‖C (u n) ω - C t ω‖ₑ := fun n ↦
-    ((((hC.stronglyAdapted (u n)).mono (𝓕.le (u n))).sub
-      ((hC.stronglyAdapted t).mono (𝓕.le t))).measurable).enorm
-  have hfat := lintegral_liminf_le (μ := P) (u := atTop)
-    (f := fun n ω ↦ ‖C (u n) ω - C t ω‖ₑ) hmeas
-  have hzero : Tendsto (fun n ↦ ∫⁻ ω, ‖C (u n) ω - C t ω‖ₑ ∂P) atTop (𝓝 0) :=
-    ((hC.l1_rightContinuous t).mono_left
-      (nhdsWithin_mono t Set.inter_subset_right)).comp hu
-  rw [hzero.liminf_eq, le_zero_iff] at hfat
-  have hae := (lintegral_eq_zero_iff (Measurable.liminf hmeas)).1 hfat
-  filter_upwards [hae, hW] with ω hω hWω
-  have hconv : Tendsto (fun n ↦ ‖C (u n) ω - C t ω‖ₑ) atTop (𝓝 ‖W ω - C t ω‖ₑ) :=
-    (continuous_enorm.tendsto _).comp ((hWω.comp hu).sub tendsto_const_nhds)
-  have : ‖W ω - C t ω‖ₑ = 0 := by rw [← hconv.liminf_eq]; simpa using hω
-  simpa [sub_eq_zero] using this
-
-/-- **The `E`-valued regularization at every point of the index at once.**
-`ae_exists_tendsto_comp_of_isRegularizingClass` gives this for one real test
-function `f ∈ Φ`, and `exists_tendsto_of_forall_tendsto_comp` turns a family of
-scalar limits into an `E`-valued one; what this statement adds is that the two
-are joined under **one** null set, quantified over every `t : ι`.
-
-Countability is spent twice and in two different places, and they are not
-interchangeable.  `hΦ₀c` collects the exceptional sets of the members of `Φ₀`;
-`[(atTop : Filter ι).IsCountablyGenerated]`, inherited from
-`ae_exists_tendsto_comp_of_isRegularizingClass`, supplies the cofinal sequence
-`u` along which compact containment is read, and `hD` is what makes the compact
-containment event measurable.  One compact set per `n` and per `ω`, not one per
-`t`: that is why `u` appears here rather than a bound in the statement.
-
-**The filter is allowed to be `⊥` and the statement stays true**, which is what
-removes every hypothesis about maxima and about isolated points.  Where
-`𝓝[D ∩ Set.Ioi t] t = ⊥` the convergence holds for any value whatever, and
-`X t ω` is named as the witness so that no `[Nonempty E]` is needed.  Where it is
-not `⊥`, the filter itself produces a point `b ∈ D` above `t`, and `u` produces
-an `n` with `b ≤ u n`; the filter is eventually below `b`, hence inside
-`Set.Iic (u n) ∩ D`, which is where the compact set lives.  The same reading with
-`Set.Iic t` in place of `b` does the left hand side. -/
-theorem ae_forall_exists_tendsto_of_isRegularizingClass [T2Space E] [OpensMeasurableSpace E]
-    [(atTop : Filter ι).IsCountablyGenerated]
-    {Φ Φ₀ : Set (E → 𝕂)} {X : ι → Ω → E} {𝓧 : Set (ι → Ω → 𝕂)} {𝓕 : Filtration ι m}
-    {P : Measure Ω} [IsProbabilityMeasure P] {D : Set ι} (hD : D.Countable)
-    (hXm : ∀ t : ι, Measurable (X t)) (hcc : CompactContainment X P D)
-    (h𝓧 : IsMPSolution 𝓧 𝓕 P) (hΦ : IsRegularizingClass Φ X 𝓧 𝓕 P D)
-    (hΦ₀ : Φ₀ ⊆ Φ) (hΦ₀c : Φ₀.Countable) (hcont : ∀ f ∈ Φ₀, Continuous f)
-    (hsep : ∀ x y : E, x ≠ y → ∃ f ∈ Φ₀, f x ≠ f y) :
-    ∀ᵐ ω ∂P, ∀ t : ι,
-      (∃ x : E, Tendsto (fun s ↦ X s ω) (𝓝[D ∩ Set.Iio t] t) (𝓝 x)) ∧
-      (∃ x : E, Tendsto (fun s ↦ X s ω) (𝓝[D ∩ Set.Ioi t] t) (𝓝 x)) := by
-  obtain ⟨u, hu⟩ := Filter.exists_seq_tendsto (atTop : Filter ι)
-  have hucof : ∀ t : ι, ∃ n : ℕ, t ≤ u n := fun t ↦ (hu.eventually_ge_atTop t).exists
-  have hcomp : ∀ᵐ ω ∂P, ∀ n : ℕ, ∃ K : Set E, IsCompact K ∧
-      ∀ s ∈ Set.Iic (u n) ∩ D, X s ω ∈ K :=
-    ae_all_iff.2 fun n ↦ hcc.ae_exists_isCompact hD hXm (u n)
-  have hall : ∀ᵐ ω ∂P, ∀ f ∈ Φ₀, ∀ t : ι,
-      (∃ c : 𝕂, Tendsto (fun s ↦ f (X s ω)) (𝓝[D ∩ Set.Iio t] t) (𝓝 c)) ∧
-      (∃ c : 𝕂, Tendsto (fun s ↦ f (X s ω)) (𝓝[D ∩ Set.Ioi t] t) (𝓝 c)) :=
-    (ae_ball_iff hΦ₀c).2 fun f hf ↦
-      ae_exists_tendsto_comp_of_isRegularizingClass hD h𝓧 hΦ (hΦ₀ hf)
-  filter_upwards [hcomp, hall] with ω hωK hωf
-  intro t
-  constructor
-  · by_cases hne : (𝓝[D ∩ Set.Iio t] t).NeBot
-    · obtain ⟨n, hn⟩ := hucof t
-      obtain ⟨K, hKc, hKmem⟩ := hωK n
-      have hmem : ∀ᶠ s in 𝓝[D ∩ Set.Iio t] t, X s ω ∈ K := by
-        filter_upwards [self_mem_nhdsWithin] with s hs
-        exact hKmem s ⟨hs.2.le.trans hn, hs.1⟩
-      obtain ⟨x, -, hx⟩ := exists_tendsto_of_forall_tendsto_comp hKc hmem hcont
-        (fun a _ b _ hab ↦ hsep a b hab) (fun f hf ↦ (hωf f hf t).1)
-      exact ⟨x, hx⟩
-    · rw [Filter.not_neBot] at hne
-      exact ⟨X t ω, by rw [hne]; exact tendsto_bot⟩
-  · by_cases hne : (𝓝[D ∩ Set.Ioi t] t).NeBot
-    · obtain ⟨b, hbD, hbt⟩ := Filter.nonempty_of_mem (self_mem_nhdsWithin (a := t)
-        (s := D ∩ Set.Ioi t))
-      obtain ⟨n, hn⟩ := hucof b
-      obtain ⟨K, hKc, hKmem⟩ := hωK n
-      have hmem : ∀ᶠ s in 𝓝[D ∩ Set.Ioi t] t, X s ω ∈ K := by
-        filter_upwards [self_mem_nhdsWithin,
-          mem_nhdsWithin_of_mem_nhds (isOpen_Iio.mem_nhds hbt)] with s hs hsb
-        exact hKmem s ⟨hsb.le.trans hn, hs.1⟩
-      obtain ⟨x, -, hx⟩ := exists_tendsto_of_forall_tendsto_comp hKc hmem hcont
-        (fun a _ b _ hab ↦ hsep a b hab) (fun f hf ↦ (hωf f hf t).2)
-      exact ⟨x, hx⟩
-    · rw [Filter.not_neBot] at hne
-      exact ⟨X t ω, by rw [hne]; exact tendsto_bot⟩
-
-/-- **The càdlàg half of the modification theorem**: the right limit of the path
-along `D` is, almost surely, a càdlàg path.  The candidate modification is
-therefore named and its path property proved, and what
-`exists_cadlag_modification_of_isRegularizingClass` still owes is the
-modification property `X' t = X t` almost surely for each `t`, which is the
-conditional expectation argument and not a path argument.
-
-Every hypothesis is read at one step and the step is named:
-`[RegularSpace E]` at `tendsto_rightLimAlong_nhdsWithin_Ioi`, `[T2Space E]` at
-`exists_tendsto_of_forall_tendsto_comp`, `[DenselyOrdered ι]` and `hD'` at
-`nhdsWithin_inter_Ioi_neBot`, `hD` and `hXm` at
-`CompactContainment.ae_exists_isCompact`, and
-`[(atTop : Filter ι).IsCountablyGenerated]` at the cofinal sequence. -/
-theorem ae_isCadlag_rightLimAlong_of_isRegularizingClass [T2Space E] [RegularSpace E]
-    [OpensMeasurableSpace E] [DenselyOrdered ι] [(atTop : Filter ι).IsCountablyGenerated]
-    {Φ Φ₀ : Set (E → 𝕂)} {X : ι → Ω → E} {𝓧 : Set (ι → Ω → 𝕂)} {𝓕 : Filtration ι m}
-    {P : Measure Ω} [IsProbabilityMeasure P] {D : Set ι} (hD : D.Countable) (hD' : Dense D)
-    (hXm : ∀ t : ι, Measurable (X t)) (hcc : CompactContainment X P D)
-    (h𝓧 : IsMPSolution 𝓧 𝓕 P) (hΦ : IsRegularizingClass Φ X 𝓧 𝓕 P D)
-    (hΦ₀ : Φ₀ ⊆ Φ) (hΦ₀c : Φ₀.Countable) (hcont : ∀ f ∈ Φ₀, Continuous f)
-    (hsep : ∀ x y : E, x ≠ y → ∃ f ∈ Φ₀, f x ≠ f y) :
-    ∀ᵐ ω ∂P, IsCadlag (rightLimAlong D (fun s ↦ X s ω)) := by
-  filter_upwards [ae_forall_exists_tendsto_of_isRegularizingClass hD hXm hcc h𝓧 hΦ
-    hΦ₀ hΦ₀c hcont hsep] with ω hω
-  exact isCadlag_rightLimAlong hD' (fun r ↦ (hω r).2) (fun t ↦ (hω t).1)
-
-/-- A regularizing class whose countable subset separates the points of `E`, and
-compact containment, give a modification with càdlàg paths.  The conclusion is
-the path property rather than membership in `D(ι, E)`, which is the object of the
-roadmap **SkorokhodSpace**.
-
-**`h𝓧` belongs to the statement**, and the theorem is false without it (found
-2026-09-16, second run of that day).  `IsRegularizingClass` constrains `𝓧` only
-through the membership `Y ∈ 𝓧`; nothing in it says what a member of `𝓧` is, so
-taking `𝓧 = Set.univ`, `Y = fun t ω ↦ f (X t ω)` and `C = 0` makes the hypothesis
-hold for **every** process `X` and every `Φ`, all four fields of
-`IsCompensatorFor` being trivial for `C = 0`.  The witness that the conclusion
-then fails: `ι = E = ℝ`, `P` any probability measure, `X t ω = if t ∈ Set.range
-((↑) : ℚ → ℝ) then 1 else 0`, deterministic and with values in the compact
-`Set.Icc 0 1`, so `CompactContainment` holds; `Φ` the bounded continuous
-functions, which is separating, with `Φ₀ = {Real.arctan}`, which separates points
-by itself.  A càdlàg modification `X'` would satisfy `X' q ω = 1` almost surely
-for each rational `q`, hence -- countably many -- for all of them at once almost
-surely, and `X' t₀ ω = 0` almost surely at an irrational `t₀`; right continuity
-along a rational sequence decreasing to `t₀` forces `0 = 1` on a set of positive
-measure.
-
-What `h𝓧` supplies is the regularization of `Y`: a member of `𝓧` is a
-`𝕂`-valued martingale, its real and imaginary parts are real submartingales, and
-`Submartingale.ae_exists_tendsto_nhdsWithin` gives them one sided limits along
-`D`.  The compensator `C` carries its own limits as a field of
-`IsCompensatorFor`, and `f ∘ X = Y + C` inherits them.  That half is done and is
-`ae_exists_tendsto_comp_of_isRegularizingClass` above.
-
-**Four hypotheses carry the modification half, and each is read at exactly one
-step** (written out 2026-09-17, fifth run of that day, when the half was proved).
-
-* **`hcont`, the continuity of the members of `Φ₀`.**  Point separation alone
-  does not reach an `E`-valued limit: the one route from the real limits to it is
-  `exists_tendsto_of_forall_tendsto_comp`, which reads `∀ f ∈ Φ₀, Continuous f`
-  -- a compact set catches a cluster point and a *continuous* function carries
-  it.  Neither `IsSeparating Φ` nor `IsRegularizingClass` gives the continuity of
-  a single member.  It is read a second time in the modification half, at
-  `f (X' t) = lim f (X s)`.
-* **`hsq`, closure under `f ↦ f * conj f`**, is what carries the modification
-  property, and point separation by itself does not.  With `X'` the right limit
-  along `D` the chain is `f (X' t) = Y_{t+} + C_{t+}`, then `C_{t+} = C t` almost
-  surely -- that is `IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi` above, the
-  only place `l1_rightContinuous` is used, so the field sits where it belongs --
-  and `P[Y_{t+} | 𝓕 t] = Y t` by `Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi`.
-  Together `P[fun ω ↦ f (X' t ω) | 𝓕 t] =ᵐ[P] fun ω ↦ f (X t ω)` for every
-  continuous bounded `f ∈ Φ`.  Reading it at `f` and at `f * conj f` and
-  expanding is `ae_eq_of_condExp_eq_of_condExp_mul_conj`, hence
-  `f (X' t) = f (X t)` almost surely for each of the countably many `f ∈ Φ₀`, and
-  point separation finishes.  Without `hsq` the null set of the identity depends
-  on `f` and a countable point separating family does not determine a conditional
-  law; the alternative is a right continuous filtration, which is the usual
-  conditions, which Mathlib does not have (checked 2026-09-12) and which would be
-  a milestone of its own.  `hsq` is the cheaper of the two and asks nothing of
-  the filtration.  **It is asked of the members of `Φ₀` only**, and the square
-  lands in `Φ`, not in `Φ₀`: the square is fed to the compensated decomposition
-  and never to the point separation, so nothing is gained by closing `Φ₀`.
-* **`hbdd`, a bound on each member of `Φ₀`** -- named as expected one run before
-  this one, and now paid for.  `ae_eq_of_condExp_eq_of_condExp_mul_conj` asks
-  `MemLp _ 2 P` of both sides, and nothing in `IsRegularizingClass` gives it: the
-  martingale part `Y t` is integrable by definition, but the compensator `C t` is
-  only `StronglyAdapted`, so `f ∘ X t = Y t + C t` is not even known to be
-  integrable.  A bound supplies everything at once -- `f ∘ X t` and `f ∘ X' t`
-  are bounded, hence in every `Lᵖ` under a probability measure, and `C t` is
-  integrable as the difference of two integrable functions.  A class of bounded
-  continuous functions satisfies it anyway.  The bound is asked of `Φ₀` and
-  inherited by the square, `‖f x * conj (f x)‖ = ‖f x‖ ^ 2 ≤ M ^ 2`.
-* **`[FirstCountableTopology ι]`**, because `C_{t+} = C t` passes through a
-  sequence running into `𝓝[D ∩ Set.Ioi t] t`, hence through a countably
-  generated filter.  `[(atTop : Filter ι).IsCountablyGenerated]` is the
-  hypothesis of `ae_exists_tendsto_comp_of_isRegularizingClass` and is a
-  different one: cofinality is not first countability.  `ℝ≥0` and `ℝ` have both.
-
-**`IsSeparating Φ` is not among them, and was dropped when the proof was
-written** (2026-09-17, fifth run of that day).  It stood in the statement from
-the beginning and no step reads it.  What the proof separates with is the
-*pointwise* separation `hsep` of the countable subclass, at the very last line:
-two points of `E` on which every member of `Φ₀` agrees are equal.  Separation of
-*measures* -- which is what `IsSeparating` says, and which is a strictly
-different property, neither implying nor implied by pointwise separation -- is
-what the uniqueness statements of the roadmap **WeakConvergence** need, and it
-belongs there and not here.  Carrying it would have made the theorem inapplicable
-to a class that determines paths but not laws.
-
-That the theorem is **false** without `hcont`, `hsq` or `hbdd` is not claimed; no
-witness is known for any of the three.
-
-**Four further hypotheses were missing and are now in, found 2026-09-17 by
-proving the path half.**  Each is consumed at a named step of
-`ae_isCadlag_rightLimAlong_of_isRegularizingClass` above, and none of them is
-a convenience.
-
-* **`hXm`, the measurability of each `X t`**, at
-  `CompactContainment.ae_exists_isCompact`.  Compact containment bounds the outer
-  measure of a set that is not asserted to be measurable, and a lower bound on the
-  outer measure of a union says nothing about its complement; the event is a
-  countable intersection of preimages of a compact set, and it is measurable
-  because those preimages are.  `[OpensMeasurableSpace E]` is read at the same
-  step, for the compact set is closed and therefore measurable only there.
-* **`[T2Space E]`**, at `exists_tendsto_of_forall_tendsto_comp`: a compact set
-  catches a cluster point, and it is the uniqueness of cluster points that turns
-  the scalar limits into an `E`-valued one.
-* **`[RegularSpace E]`**, at `tendsto_rightLimAlong_nhdsWithin_Ioi`: the values of
-  the modification off `D` are limits, and a limit is held inside a neighbourhood
-  only if the neighbourhood is closed.  Regularity and separation are read at two
-  different steps and neither implies the other here.
-* **`[DenselyOrdered ι]`**, at `nhdsWithin_inter_Ioi_neBot`: at a point with an
-  immediate successor the filter `𝓝[D ∩ Set.Ioi t] t` is `⊥` however dense `D`
-  is, the right limit there is unconstrained, and the path through that point is
-  uncontrolled.  `ℝ≥0` and `ℝ` are densely ordered.
-
-**The witness, and the two points at which the modification property is read.**
-The modification is `fun t ω ↦ rightLimAlong D (fun s ↦ X s ω) t`, and its path
-property is `ae_isCadlag_rightLimAlong_of_isRegularizingClass` above.  The
-modification property `X' t = X t` almost surely splits on whether `t` is
-isolated from the right along `D`.  Where it is, the filter is `⊥` and
-`rightLimAlong_of_not_neBot` gives the equality **at every sample point** and not
-almost surely -- that is the whole return on guarding the definition by the
-filter rather than by the existence of a limit.  Where it is not, the filter
-produces a `b > t`, which is the bound
-`Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi` asks for, so no `NoMaxOrder`
-is needed here either: the greatest element, where there is one, is exactly a
-point isolated from the right and falls under the first case.
-
-The chain in the second case, with `Y` and `C` the decomposition of `f ∘ X`:
-`W_f := rightLimAlong D (C · ω) t` is `C t` almost surely
-(`IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi`); `V_f := f ∘ X' t - W_f` is
-the limit of `Y` along the filter, because on `D` the decomposition holds and the
-two other limits exist; `P[V_f | 𝓕 t] = Y t`
-(`Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi`); and `P[W_f | 𝓕 t] = C t`
-because `C t` is `𝓕 t`-strongly measurable.  Adding gives
-`P[f ∘ X' t | 𝓕 t] =ᵐ[P] f ∘ X t`, and reading it at `f` and at `f * conj f`
-closes by `ae_eq_of_condExp_eq_of_condExp_mul_conj`.
-
-**Where the `𝓕 t`-measurability of `f ∘ X t` comes from, and why no adaptedness
-of `X` is assumed.**  `ae_eq_of_condExp_eq_of_condExp_mul_conj` asks it, and
-`IsRegularizingClass` supplies it without a word about `X`: the decomposition
-`f (X t ω) = Y t ω + C t ω` exhibits `f ∘ X t` as almost everywhere equal to a
-sum of two `𝓕 t`-strongly measurable functions.  Adaptedness of `X` itself is
-neither assumed nor available -- `X` is `E`-valued and `𝓕` is a filtration on
-`Ω`, and the class sees `X` only through its members. -/
-theorem exists_cadlag_modification_of_isRegularizingClass [FirstCountableTopology ι]
-    [(atTop : Filter ι).IsCountablyGenerated] [DenselyOrdered ι]
-    [T2Space E] [RegularSpace E] [OpensMeasurableSpace E] {Φ Φ₀ : Set (E → 𝕂)}
-    {X : ι → Ω → E} {𝓧 : Set (ι → Ω → 𝕂)} {𝓕 : Filtration ι m} {P : Measure Ω}
-    [IsProbabilityMeasure P]
-    {D : Set ι} (hD : D.Countable) (hD' : Dense D)
-    (hXm : ∀ t : ι, Measurable (X t))
-    (h𝓧 : IsMPSolution 𝓧 𝓕 P) (hΦ : IsRegularizingClass Φ X 𝓧 𝓕 P D)
-    (hΦ₀ : Φ₀ ⊆ Φ) (hΦ₀c : Φ₀.Countable) (hcont : ∀ f ∈ Φ₀, Continuous f)
-    (hbdd : ∀ f ∈ Φ₀, ∃ M : ℝ, ∀ x, ‖f x‖ ≤ M)
-    (hsq : ∀ f ∈ Φ₀, (fun x ↦ f x * (starRingEnd 𝕂) (f x)) ∈ Φ)
-    (hsep : ∀ x y : E, x ≠ y → ∃ f ∈ Φ₀, f x ≠ f y)
-    (hcc : CompactContainment X P D) :
-    ∃ X' : ι → Ω → E, (∀ t : ι, ∀ᵐ ω ∂P, X' t ω = X t ω) ∧
-      ∀ᵐ ω ∂P, IsCadlag (fun t ↦ X' t ω) := by
-  refine ⟨fun t ω ↦ rightLimAlong D (fun s ↦ X s ω) t, ?_,
-    ae_isCadlag_rightLimAlong_of_isRegularizingClass hD hD' hXm hcc h𝓧 hΦ
-      hΦ₀ hΦ₀c hcont hsep⟩
-  intro t
-  by_cases hne : (𝓝[D ∩ Set.Ioi t] t).NeBot
-  swap
-  · exact Filter.Eventually.of_forall fun ω ↦ rightLimAlong_of_not_neBot hne
-  have := hne
-  obtain ⟨b, -, hbt⟩ := Filter.nonempty_of_mem
-    (self_mem_nhdsWithin (a := t) (s := D ∩ Set.Ioi t))
-  have hXtend : ∀ᵐ ω ∂P, Tendsto (fun s ↦ X s ω) (𝓝[D ∩ Set.Ioi t] t)
-      (𝓝 (rightLimAlong D (fun s ↦ X s ω) t)) := by
-    filter_upwards [ae_forall_exists_tendsto_of_isRegularizingClass hD hXm hcc h𝓧 hΦ
-      hΦ₀ hΦ₀c hcont hsep] with ω hω using tendsto_rightLimAlong (hω t).2
-  -- the conditional expectation identity for one bounded continuous member of `Φ`
-  have key : ∀ g ∈ Φ, Continuous g → ∀ M : ℝ, (∀ x, ‖g x‖ ≤ M) →
-      MemLp (fun ω ↦ g (rightLimAlong D (fun s ↦ X s ω) t)) 2 P ∧
-      MemLp (fun ω ↦ g (X t ω)) 2 P ∧
-      AEStronglyMeasurable[𝓕 t] (fun ω ↦ g (X t ω)) P ∧
-      P[fun ω ↦ g (rightLimAlong D (fun s ↦ X s ω) t) | 𝓕 t] =ᵐ[P] fun ω ↦ g (X t ω) := by
-    intro g hgΦ hgc M hM
-    obtain ⟨Y, hY𝓧, C, hC⟩ := hΦ g hgΦ
-    have hYm : Martingale Y 𝓕 P := h𝓧 Y hY𝓧
-    have hmeas : ∀ s : ι, AEStronglyMeasurable (fun ω ↦ g (X s ω)) P := by
-      intro s
-      refine AEStronglyMeasurable.congr (f := fun ω ↦ Y s ω + C s ω) ?_
-        (Filter.EventuallyEq.symm (hC.decomposition s))
-      exact ((hYm.stronglyMeasurable s).mono (𝓕.le s)).aestronglyMeasurable.add
-        ((hC.stronglyAdapted s).mono (𝓕.le s)).aestronglyMeasurable
-    have hgXt2 : MemLp (fun ω ↦ g (X t ω)) 2 P :=
-      MemLp.of_bound (hmeas t) M (Filter.Eventually.of_forall fun ω ↦ hM _)
-    have hfm : AEStronglyMeasurable[𝓕 t] (fun ω ↦ g (X t ω)) P :=
-      ⟨fun ω ↦ Y t ω + C t ω,
-        (hYm.stronglyMeasurable t).add (hC.stronglyAdapted t), hC.decomposition t⟩
-    have hCint : Integrable (C t) P := by
-      refine Integrable.congr (f := fun ω ↦ g (X t ω) - Y t ω) ?_ ?_
-      · exact (hgXt2.integrable one_le_two).sub (hYm.integrable t)
-      · filter_upwards [hC.decomposition t] with ω hω
-        rw [hω]; ring
-    have hWt : ∀ᵐ ω ∂P, Tendsto (fun s ↦ C s ω) (𝓝[D ∩ Set.Ioi t] t)
-        (𝓝 (rightLimAlong D (fun s ↦ C s ω) t)) := by
-      filter_upwards [hC.exists_limits] with ω hω using tendsto_rightLimAlong (hω t).2
-    have hWC : (fun ω ↦ rightLimAlong D (fun s ↦ C s ω) t) =ᵐ[P] C t :=
-      hC.ae_eq_of_tendsto_nhdsWithin_Ioi hWt
-    have hWint : Integrable (fun ω ↦ rightLimAlong D (fun s ↦ C s ω) t) P :=
-      hCint.congr hWC.symm
-    have hgX' : ∀ᵐ ω ∂P, Tendsto (fun s ↦ g (X s ω)) (𝓝[D ∩ Set.Ioi t] t)
-        (𝓝 (g (rightLimAlong D (fun s ↦ X s ω) t))) := by
-      filter_upwards [hXtend] with ω hω using (hgc.tendsto _).comp hω
-    have hgX'meas : AEStronglyMeasurable
-        (fun ω ↦ g (rightLimAlong D (fun s ↦ X s ω) t)) P := by
-      obtain ⟨u, hu⟩ := Filter.exists_seq_tendsto (𝓝[D ∩ Set.Ioi t] t)
-      refine aestronglyMeasurable_of_tendsto_ae atTop (fun n ↦ hmeas (u n)) ?_
-      filter_upwards [hgX'] with ω hω using hω.comp hu
-    have hgX'2 : MemLp (fun ω ↦ g (rightLimAlong D (fun s ↦ X s ω) t)) 2 P :=
-      MemLp.of_bound hgX'meas M (Filter.Eventually.of_forall fun ω ↦ hM _)
-    set V : Ω → 𝕂 := fun ω ↦ g (rightLimAlong D (fun s ↦ X s ω) t)
-      - rightLimAlong D (fun s ↦ C s ω) t with hVdef
-    have hVtend : ∀ᵐ ω ∂P, Tendsto (fun s ↦ Y s ω) (𝓝[D ∩ Set.Ioi t] t) (𝓝 (V ω)) := by
-      have hdec : ∀ᵐ ω ∂P, ∀ s ∈ D, g (X s ω) = Y s ω + C s ω :=
-        (ae_ball_iff hD).2 fun s _ ↦ hC.decomposition s
-      filter_upwards [hgX', hWt, hdec] with ω h1 h2 h3
-      refine (h1.sub h2).congr' ?_
-      filter_upwards [self_mem_nhdsWithin] with s hs
-      rw [h3 s hs.1]; ring
-    have hVY : P[V | 𝓕 t] =ᵐ[P] Y t :=
-      Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi hYm hbt hVtend
-    have hVint : Integrable V P := (hgX'2.integrable one_le_two).sub hWint
-    refine ⟨hgX'2, hgXt2, hfm, ?_⟩
-    have hsum : (fun ω ↦ g (rightLimAlong D (fun s ↦ X s ω) t))
-        =ᵐ[P] V + fun ω ↦ rightLimAlong D (fun s ↦ C s ω) t := by
-      filter_upwards with ω
-      simp [hVdef]
-    calc P[fun ω ↦ g (rightLimAlong D (fun s ↦ X s ω) t) | 𝓕 t]
-        =ᵐ[P] P[V + fun ω ↦ rightLimAlong D (fun s ↦ C s ω) t | 𝓕 t] :=
-          condExp_congr_ae hsum
-      _ =ᵐ[P] P[V | 𝓕 t] + P[fun ω ↦ rightLimAlong D (fun s ↦ C s ω) t | 𝓕 t] :=
-          condExp_add hVint hWint (𝓕 t)
-      _ =ᵐ[P] fun ω ↦ g (X t ω) := by
-          have hW2 : P[fun ω ↦ rightLimAlong D (fun s ↦ C s ω) t | 𝓕 t] =ᵐ[P] C t :=
-            (condExp_congr_ae hWC).trans (Filter.EventuallyEq.of_eq
-              (condExp_of_stronglyMeasurable (𝓕.le t) (hC.stronglyAdapted t) hCint))
-          filter_upwards [hVY, hW2, hC.decomposition t] with ω h1 h2 h3
-          simp only [Pi.add_apply]
-          rw [h1, h2, h3]
-  -- read at `f` and at `f * conj f`, for each of the countably many `f ∈ Φ₀`
-  have hEach : ∀ f ∈ Φ₀, ∀ᵐ ω ∂P,
-      f (rightLimAlong D (fun s ↦ X s ω) t) = f (X t ω) := by
-    intro f hf
-    obtain ⟨M, hM⟩ := hbdd f hf
-    have hM2 : ∀ x, ‖(fun x ↦ f x * (starRingEnd 𝕂) (f x)) x‖ ≤ M * M := by
-      intro x
-      have h1 := hM x
-      have h0 : (0 : ℝ) ≤ ‖f x‖ := norm_nonneg _
-      simp only [norm_mul, RCLike.norm_conj]
-      nlinarith
-    obtain ⟨hA1, hA2, hA3, hA4⟩ := key f (hΦ₀ hf) (hcont f hf) M hM
-    obtain ⟨-, -, -, hB4⟩ := key (fun x ↦ f x * (starRingEnd 𝕂) (f x)) (hsq f hf)
-      ((hcont f hf).mul (RCLike.continuous_conj.comp (hcont f hf))) (M * M) hM2
-    exact ae_eq_of_condExp_eq_of_condExp_mul_conj (𝓕.le t) hA3 hA2 hA1 hA4 hB4
-  filter_upwards [(ae_ball_iff hΦ₀c).2 hEach] with ω hω
-  by_contra hcon
-  obtain ⟨f, hf, hfne⟩ := hsep _ _ hcon
-  exact hfne (hω f hf)
-
-/-! ### The regularizing class of a bounded operator
-
-`exists_cadlag_modification_of_isRegularizingClass` above asks for a
-`IsRegularizingClass Φ X 𝓧 𝓕 P D`, and nothing so far produces one.  This block
-does, out of the martingale problem itself: for a **bounded** second component
-and a clock whose windows shrink to nothing, the compensator of `mpFamily` is a
-compensator in the sense of `IsCompensatorFor`, and `Prod.fst '' A` is a
-regularizing class for it.
-
-The three statements are the same estimate read three times.  Everything rests
-on `norm_compensator_sub_le_of_isProgressive`: the increment of the compensator
-over `[s,t]` is the integral over the window, so its norm is at most `b` times
-the mass of the window.  From it, the path regularity (`exists_limits`) is a
-squeeze at every point, and the `L¹` right continuity is the same squeeze under
-the lower integral of a finite measure.
-
-Two hypotheses that the abstract statement carries and this one does **not**:
-
-* **The measurability of `f`.**  `IsCompensatorFor` constrains `C`, and `C` does
-  not see `f`; the decomposition field is `sub_add_cancel` and holds at every
-  sample point.  A measurable `f` is needed for `Y` to be a martingale, which is
-  a different hypothesis of the càdlàg theorem (`h𝓧`), not for the class to be
-  regularizing.
-* **`[OrderTopology ι]`.**  The estimate and the squeeze read the topology of
-  the index only through `𝓝 t`.
--/
-
-omit [TopologicalSpace E] [OrderTopology ι] in
-/-- **The compensator of `mpFamily` is a compensator.**  For a bounded generator
-over a clock whose windows shrink to nothing, all four fields of
-`IsCompensatorFor` hold, three of them by the single estimate
-`norm_compensator_sub_le_of_isProgressive`.
-
-The compensator is even **continuous in `t` at every sample point**, not merely
-possessed of one sided limits along `D`; `exists_limits` is that continuity
-restricted to the two filters, and the restriction is `nhdsWithin_le_nhds`.  The
-strong adaptedness is `stronglyAdapted_mpFamily_of_isProgressive` read at
-`f = 0`, so that it is the compensator alone that is asserted to be adapted. -/
-theorem isCompensatorFor_mpFamily {Q : Clock ι} {c : Clock.Conv} {D : Set ι}
-    {X : ι → Ω → E} {𝓕 : Filtration ι m} {P : Measure Ω} [IsFiniteMeasure P]
-    {f g : E → 𝕂} (hg : Measurable g) {b : ℝ} (hgb : ∀ x, ‖g x‖ ≤ b)
-    (hXprog : Q.IsProgressive X 𝓕) (hXm : ∀ t, Measurable[𝓕 t] (X t))
-    (hQc : Q.IsContinuousFor c) :
-    IsCompensatorFor X 𝓕 P D f
-      (fun t ω ↦ f (X t ω) - ∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q)
-      (fun t ω ↦ ∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q) := by
-  set C : ι → Ω → 𝕂 := fun t ω ↦ ∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q with hCdef
-  have key : ∀ (t s : ι) (ω : Ω),
-      ‖C s ω - C t ω‖ ≤ b * Q.q.real (Q.interval c (min s t) (max s t)) := by
-    intro t s ω
-    rcases le_total s t with h | h
-    · rw [norm_sub_rev, min_eq_left h, max_eq_right h]
-      exact norm_compensator_sub_le_of_isProgressive hg hgb hXprog h ω
-    · rw [min_eq_right h, max_eq_left h]
-      exact norm_compensator_sub_le_of_isProgressive hg hgb hXprog h ω
-  have hbound : ∀ t : ι,
-      Tendsto (fun s ↦ b * Q.q.real (Q.interval c (min s t) (max s t))) (𝓝 t) (𝓝 0) := by
-    intro t
-    simpa using (hQc t).const_mul b
-  have hcont : ∀ (t : ι) (ω : Ω), Tendsto (fun s ↦ C s ω) (𝓝 t) (𝓝 (C t ω)) := by
-    intro t ω
-    rw [← tendsto_sub_nhds_zero_iff]
-    exact squeeze_zero_norm (fun s ↦ key t s ω) (hbound t)
-  refine ⟨?_, ?_, ?_, ?_⟩
-  · intro t
-    have h := stronglyAdapted_mpFamily_of_isProgressive (Q := Q) (c := c) (X := X) (𝓕 := 𝓕)
-      (f := fun _ ↦ (0 : 𝕂)) (g := g) (Y := fun t ω ↦ -(C t ω))
-      (fun t ω ↦ by rw [zero_sub]) measurable_const hg hXprog hXm t
-    have hCt : C t = fun ω ↦ -(-(C t ω)) := by funext ω; rw [neg_neg]
-    rw [hCt]
-    exact h.neg
-  · exact fun t ↦ Filter.Eventually.of_forall fun ω ↦ by ring
-  · exact Filter.Eventually.of_forall fun ω t ↦
-      ⟨⟨C t ω, (hcont t ω).mono_left nhdsWithin_le_nhds⟩,
-        ⟨C t ω, (hcont t ω).mono_left nhdsWithin_le_nhds⟩⟩
-  · intro t
-    have hle : ∀ s : ι, ∫⁻ ω, ‖C s ω - C t ω‖ₑ ∂P ≤
-        ENNReal.ofReal (b * Q.q.real (Q.interval c (min s t) (max s t))) * P Set.univ := by
-      intro s
-      calc ∫⁻ ω, ‖C s ω - C t ω‖ₑ ∂P
-          ≤ ∫⁻ _ : Ω, ENNReal.ofReal
-              (b * Q.q.real (Q.interval c (min s t) (max s t))) ∂P := by
-            refine lintegral_mono fun ω ↦ ?_
-            rw [← ofReal_norm]
-            exact ENNReal.ofReal_le_ofReal (key t s ω)
-        _ = _ := lintegral_const _
-    have hup : Tendsto (fun s ↦ ENNReal.ofReal
-        (b * Q.q.real (Q.interval c (min s t) (max s t))) * P Set.univ) (𝓝[>] t) (𝓝 0) := by
-      have h0 : Tendsto (fun s ↦ ENNReal.ofReal
-          (b * Q.q.real (Q.interval c (min s t) (max s t)))) (𝓝[>] t) (𝓝 0) := by
-        have hb' : Tendsto (fun s ↦ b * Q.q.real (Q.interval c (min s t) (max s t)))
-            (𝓝[>] t) (𝓝 0) := (hbound t).mono_left nhdsWithin_le_nhds
-        simpa using ENNReal.tendsto_ofReal hb'
-      simpa using ENNReal.Tendsto.mul_const h0 (Or.inr (measure_ne_top P Set.univ))
-    exact tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hup
-      (fun s ↦ by simp) hle
-
-omit [TopologicalSpace E] [OrderTopology ι] in
-/-- **The test functions of a bounded operator form a regularizing class.**  This
-is the hypothesis `hΦ` of `exists_cadlag_modification_of_isRegularizingClass`,
-read off the data of the martingale problem and not assumed: the member of `𝓧` is
-the test process of `mpFamily` itself, so that the càdlàg theorem and the
-solution speak about the same processes.
-
-Only the second component of each pair is constrained, and only by measurability
-and a bound; the first is arbitrary.  The bound may depend on the pair, which is
-what `∃ b` inside the quantifier says and what an operator with unbounded domain
-needs. -/
-theorem isRegularizingClass_mpFamily {A : Set ((E → 𝕂) × (E → 𝕂))}
-    {Q : Clock ι} {c : Clock.Conv} {D : Set ι} {X : ι → Ω → E} {𝓕 : Filtration ι m}
-    {P : Measure Ω} [IsFiniteMeasure P]
-    (hA : ∀ p ∈ A, Measurable p.2 ∧ ∃ b : ℝ, ∀ x, ‖p.2 x‖ ≤ b)
-    (hXprog : Q.IsProgressive X 𝓕) (hXm : ∀ t, Measurable[𝓕 t] (X t))
-    (hQc : Q.IsContinuousFor c) :
-    IsRegularizingClass (Prod.fst '' A) X (mpFamily A Q c X) 𝓕 P D := by
-  rintro _ ⟨p, hp, rfl⟩
-  obtain ⟨hg, b, hgb⟩ := hA p hp
-  exact ⟨fun t ω ↦ p.1 (X t ω) - ∫ u in Q.interval c ⊥ t, p.2 (X u ω) ∂Q.q,
-    ⟨p, hp, fun t ω ↦ rfl⟩, _, isCompensatorFor_mpFamily hg hgb hXprog hXm hQc⟩
-
-/-! #### The passage to the limit
-
-The three analytic inputs of `isQuasiLeftContinuous_of_isRegularizingClass`, each
-stated so that no stopping time occurs in it: none of them reads the
-construction, and all three are about a filtration indexed by `ℕ`, which is what
-`n ↦ (hτ n).measurableSpace` is.  The order of the chain is Lévy upward on the
-martingale part, conditional Jensen on the compensator increment, and uniqueness
-of limits to identify the two. -/
-
-section LevyUpward
-
-variable {ℱ : Filtration ℕ m} {μ : Measure Ω}
-
-end LevyUpward
-
-/-! #### The lifting of the decomposition to a random time
-
-`IsCompensatorFor.decomposition` is an identity between two processes that holds,
-for each time separately, almost surely; the null set therefore depends on the
-time.  Quasi-left-continuity reads the decomposition **at a stopping time**, and
-a null set per time is worth nothing there.  The passage is the countability of
-`D` together with right continuity, and what comes out is more than the stopped
-form: the decomposition holds, almost surely, at **every** time at once, and
-hence at every random time, measurable or not, stopping time or not.  The stopped
-form below is the one line that reads it at `σ`.
-
-**Two hypotheses that `IsCompensatorFor` does not carry, and that this needs.**
-Both were decided by writing the proof, and both are genuine:
-
-* **`D` approximates every time from the right.**  `IsCompensatorFor` lets `D` be
-  an arbitrary `Set ι`, and `D = ∅` satisfies every one of its fields, so nothing
-  outside `D` is reached without a hypothesis.  The weakest form that carries the
-  argument is `∀ t, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot`: either `t` lies in `D`,
-  where the decomposition holds outright, or `t` is approached from the right
-  along `D`.  Density of `D` is not needed, only right approximation, and at a
-  greatest element of `ι` -- where `Set.Ioi t` is empty -- the first alternative
-  is what carries it.
-* **The right continuity of `Y`, and it does not follow from the other two.**
-  The namespace `LiftWitness` below is the proof that it does not: with `X`
-  constant, `f = 0` and `C = 0` every field of `IsCompensatorFor` holds, `D` may
-  be any countable right dense set, the paths of `f ∘ X` and of `C` are constant
-  and hence right continuous, and the conclusion is false.  What fails is only
-  the right continuity of `Y`, and it fails at one time per sample point.
-
-The proof reads no measurability at all, on either side: the hypotheses are about
-paths and the conclusion is about paths. -/
-
-/-- The decomposition of a compensator, at all times at once. -/
-theorem IsCompensatorFor.ae_forall_decomposition {X : ι → Ω → E} {𝓕 : Filtration ι m}
-    {P : Measure Ω} {D : Set ι} {f : E → 𝕂} {Y C : ι → Ω → 𝕂}
-    (hC : IsCompensatorFor X 𝓕 P D f Y C) (hDcount : D.Countable)
-    (hD : ∀ t : ι, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot)
-    (hXr : ∀ᵐ ω ∂P, ∀ t : ι, ContinuousWithinAt (fun s ↦ f (X s ω)) (D ∩ Set.Ioi t) t)
-    (hYr : ∀ᵐ ω ∂P, ∀ t : ι, ContinuousWithinAt (fun s ↦ Y s ω) (D ∩ Set.Ioi t) t)
-    (hCr : ∀ᵐ ω ∂P, ∀ t : ι, ContinuousWithinAt (fun s ↦ C s ω) (D ∩ Set.Ioi t) t) :
-    ∀ᵐ ω ∂P, ∀ t : ι, f (X t ω) = Y t ω + C t ω :=
-  ae_forall_eq_of_right_dense hDcount hD (fun t _ ↦ hC.decomposition t) hXr hYr hCr
-
-/-- **The decomposition at a random time**, and the missing input of
-`isQuasiLeftContinuous_of_isRegularizingClass`.  Neither a stopping time property
-nor measurability of `σ` occurs: the previous theorem holds at all times at once,
-so evaluating it at `(σ ω).untopA` is the whole proof. -/
-theorem IsCompensatorFor.decomposition_stoppedValue {X : ι → Ω → E} {𝓕 : Filtration ι m}
-    {P : Measure Ω} {D : Set ι} {f : E → 𝕂} {Y C : ι → Ω → 𝕂}
-    (hC : IsCompensatorFor X 𝓕 P D f Y C) (hDcount : D.Countable)
-    (hD : ∀ t : ι, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot)
-    (hXr : ∀ᵐ ω ∂P, ∀ t : ι, ContinuousWithinAt (fun s ↦ f (X s ω)) (D ∩ Set.Ioi t) t)
-    (hYr : ∀ᵐ ω ∂P, ∀ t : ι, ContinuousWithinAt (fun s ↦ Y s ω) (D ∩ Set.Ioi t) t)
-    (hCr : ∀ᵐ ω ∂P, ∀ t : ι, ContinuousWithinAt (fun s ↦ C s ω) (D ∩ Set.Ioi t) t)
-    (σ : Ω → WithTop ι) :
-    ∀ᵐ ω ∂P, f (stoppedValue X σ ω) = stoppedValue Y σ ω + stoppedValue C σ ω := by
-  filter_upwards [hC.ae_forall_decomposition hDcount hD hXr hYr hCr] with ω hω
-  exact hω _
-
-/-! #### The witness that the right continuity of `Y` is not implied
-
-The data are `ι = ℝ≥0`, `Ω = ℝ` with Lebesgue measure on `Set.Icc 0 1`,
-`E = Unit`, `f = 0`, `C = 0`, and `Y t ω = 1` exactly on the diagonal `t = ω`.
-Every field of `IsCompensatorFor` holds for **every** `D`, and `D` may be taken
-countable and right dense; the paths of `f ∘ X` and of `C` are constant.  The
-conclusion of `ae_forall_eq_of_right_dense` nevertheless fails, because for each
-`ω` it fails at the single time `t = ω`, and those times fill `Set.Icc 0 1`.
-
-The mechanism is the one the lifting is built to survive: an identity that holds,
-for each time, off a null set can fail everywhere once the times are quantified
-inside.  What the witness shows is that right continuity of `Y` is what forbids
-it, and that it has to be assumed, since `IsCompensatorFor` says nothing about
-`Y` beyond the decomposition. -/
-
-namespace LiftWitness
-
-/-- Every field of `IsCompensatorFor` holds for the witness, for an arbitrary
-`D`: the compensator is `0`, so adaptedness, the one sided limits and the `L¹`
-right continuity are constants, and the decomposition is
-`diagY_ae_eq_zero`. -/
-theorem isCompensatorFor_diagY (D : Set ℝ≥0) :
-    IsCompensatorFor (fun (_ : ℝ≥0) (_ : ℝ) ↦ ())
-      (⊥ : Filtration ℝ≥0 (inferInstance : MeasurableSpace ℝ))
-      witnessMeasure D (fun _ ↦ (0 : ℝ)) diagY 0 where
-  stronglyAdapted := fun _ ↦ stronglyMeasurable_zero
-  decomposition := fun t ↦ by
-    filter_upwards [diagY_ae_eq_zero t] with ω hω
-    simp [hω]
-  exists_limits := .of_forall fun _ _ ↦ ⟨⟨0, tendsto_const_nhds⟩, ⟨0, tendsto_const_nhds⟩⟩
-  l1_rightContinuous := fun _ ↦ by simp
-
-end LiftWitness
-
-/-! #### The middle step
-
-Everything of `isQuasiLeftContinuous_of_isRegularizingClass` except the final
-appeal to the separating class: the almost sure limit of `f (X_{σ n})` is the
-conditional expectation of `f (X_{σ'})` for `⨆ n, 𝓕_{σ n}`. -/
-
-omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] [TopologicalSpace E]
-  [MeasurableSpace E] in
-omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] [TopologicalSpace E]
-  [MeasurableSpace E] in
-omit [TopologicalSpace ι] [OrderTopology ι] [TopologicalSpace E]
-  [MeasurableSpace E] in
-/-! #### The assembly
-
-The supremum of the stopping times, the two properties of the decomposition that
-no structure of this file carries, and the theorem. -/
-
-/-- **One test function and one nondecreasing family of stopping times**: the
-almost sure limit of `g (X_{σ n})` is the conditional expectation of
-`g (X_{σ'})` for `⨆ n, 𝓕_{σ n}`, and the value at `σ'` is almost everywhere
-strongly measurable.  This is `ae_eq_condExp_iSup_stoppedValue` with its seven
-hypotheses discharged, and the discharging is where the shape of the theorem
-below is decided.
-
-Three of them are worth naming, because each is paid for by a different thing:
-
-* **The decomposition at all times at once** is
-  `IsCompensatorFor.ae_forall_decomposition`, whose three right continuities are
-  the càdlàg paths of `X` composed with the continuous `g`, and the two carried
-  in `hYr` and `hCr`.
-* **Optional sampling at `σ n` against `stoppedValue Y σ'`** is the tower
-  property and not a second hypothesis: `hOS` gives both sides against `Y t`, and
-  `condExp_condExp_of_le` joins them, because `σ n ≤ σ'` makes `𝓕_{σ n}` a
-  sub-σ-algebra of `𝓕_{σ'}`.
-* **The integrability of the compensator is not assumed anywhere.**  It follows
-  from the decomposition: `C_ρ = g (X_ρ) - Y_ρ` is bounded by `M + ‖Y_ρ‖`, and
-  `Y_ρ` is integrable because it is almost everywhere a conditional expectation.
-
-The limit is taken in `𝕂` and not in `E` -- it is `limUnder`, and the theorem
-that consumes it asks for measurability of a scalar function -- so no hypothesis
-on `E` occurs here beyond its topology. -/
-theorem ae_eq_limUnder_condExp_stoppedValue {g : E → 𝕂} {M : ℝ}
-    {X : ι → Ω → E} {Y C : ι → Ω → 𝕂} {𝓕 : Filtration ι m} {P : Measure Ω}
-    [IsFiniteMeasure P] {D : Set ι}
-    (hDcount : D.Countable) (hD : ∀ t : ι, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot)
-    (hgc : Continuous g) (hgb : ∀ x, ‖g x‖ ≤ M)
-    (hX : ∀ᵐ ω ∂P, IsCadlag fun t ↦ X t ω)
-    (hC : IsCompensatorFor X 𝓕 P D g Y C)
-    (hYr : ∀ᵐ ω ∂P, ∀ t : ι, ContinuousWithinAt (fun s ↦ Y s ω) (Set.Ioi t) t)
-    (hCr : ∀ᵐ ω ∂P, ∀ t : ι, ContinuousWithinAt (fun s ↦ C s ω) (Set.Ioi t) t)
-    (hOS : IsOptionalSamplingFor Y 𝓕 P)
-    (hCm : IsStronglyMeasurableAlongStoppingTimes C 𝓕)
-    {t : ι} {σ : ℕ → Ω → WithTop ι} {σ' : Ω → WithTop ι}
-    (hσ : ∀ n, IsStoppingTime 𝓕 (σ n)) (hσmono : Monotone σ)
-    (hσ' : IsStoppingTime 𝓕 σ') (hσle : ∀ n ω, σ n ω ≤ σ' ω)
-    (hσ't : ∀ ω, σ' ω ≤ (t : WithTop ι))
-    (hZ : Tendsto (fun n ↦ ∫ ω, ‖stoppedValue C σ' ω - stoppedValue C (σ n) ω‖ ∂P)
-      atTop (𝓝 0))
-    (hlim : ∀ᵐ ω ∂P, ∃ l, Tendsto (fun n ↦ g (stoppedValue X (σ n) ω)) atTop (𝓝 l)) :
-    AEStronglyMeasurable (fun ω ↦ g (stoppedValue X σ' ω)) P ∧
-      (fun ω ↦ limUnder atTop fun n ↦ g (stoppedValue X (σ n) ω))
-        =ᵐ[P] P[fun ω ↦ g (stoppedValue X σ' ω) | ⨆ n, stoppingFiltration hσ hσmono n] := by
-  have hXr : ∀ᵐ ω ∂P, ∀ s : ι, ContinuousWithinAt (fun r ↦ g (X r ω)) (D ∩ Set.Ioi s) s := by
-    filter_upwards [hX] with ω hω s
-    exact (hgc.continuousAt.comp_continuousWithinAt (hω.1 s)).mono Set.inter_subset_right
-  have hYr' : ∀ᵐ ω ∂P, ∀ s : ι, ContinuousWithinAt (fun r ↦ Y r ω) (D ∩ Set.Ioi s) s := by
-    filter_upwards [hYr] with ω hω s using (hω s).mono Set.inter_subset_right
-  have hCr' : ∀ᵐ ω ∂P, ∀ s : ι, ContinuousWithinAt (fun r ↦ C r ω) (D ∩ Set.Ioi s) s := by
-    filter_upwards [hCr] with ω hω s using (hω s).mono Set.inter_subset_right
-  have hdec : ∀ᵐ ω ∂P, ∀ s : ι, g (X s ω) = Y s ω + C s ω :=
-    hC.ae_forall_decomposition hDcount hD hXr hYr' hCr'
-  have hYn : ∀ n, stoppedValue Y (σ n) =ᵐ[P] P[Y t | (hσ n).measurableSpace] :=
-    fun n ↦ hOS t (σ n) (hσ n) fun ω ↦ (hσle n ω).trans (hσ't ω)
-  have hY' : stoppedValue Y σ' =ᵐ[P] P[Y t | hσ'.measurableSpace] := hOS t σ' hσ' hσ't
-  have hYi : Integrable (stoppedValue Y σ') P := integrable_condExp.congr hY'.symm
-  have hYin : ∀ n, Integrable (stoppedValue Y (σ n)) P :=
-    fun n ↦ integrable_condExp.congr (hYn n).symm
-  have hlem : ∀ n, (hσ n).measurableSpace ≤ hσ'.measurableSpace :=
-    fun n ↦ (hσ n).measurableSpace_mono hσ' fun ω ↦ hσle n ω
-  have hOSn : ∀ n, stoppedValue Y (σ n)
-      =ᵐ[P] P[stoppedValue Y σ' | stoppingFiltration hσ hσmono n] := by
-    intro n
-    refine (hYn n).trans (Filter.EventuallyEq.symm ?_)
-    exact (condExp_congr_ae hY').trans (condExp_condExp_of_le (hlem n) hσ'.measurableSpace_le)
-  have hCmn : ∀ n, StronglyMeasurable[stoppingFiltration hσ hσmono n] (stoppedValue C (σ n)) :=
-    fun n ↦ hCm (σ n) (hσ n)
-  have hCm' : StronglyMeasurable[hσ'.measurableSpace] (stoppedValue C σ') := hCm σ' hσ'
-  have hbound : ∀ ρ : Ω → WithTop ι, ∀ᵐ ω ∂P,
-      ‖stoppedValue C ρ ω‖ ≤ M + ‖stoppedValue Y ρ ω‖ := by
-    intro ρ
-    filter_upwards [hdec] with ω hω
-    have he : stoppedValue C ρ ω = g (X (ρ ω).untopA ω) - stoppedValue Y ρ ω := by
-      simp only [stoppedValue]
-      rw [hω (ρ ω).untopA]
-      ring
-    rw [he]
-    exact (norm_sub_le _ _).trans (add_le_add (hgb _) le_rfl)
-  have hCi' : Integrable (stoppedValue C σ') P :=
-    Integrable.mono' ((integrable_const M).add hYi.norm)
-      (hCm'.mono hσ'.measurableSpace_le).aestronglyMeasurable (hbound σ')
-  have hCin : ∀ n, Integrable (stoppedValue C (σ n)) P := fun n ↦
-    Integrable.mono' ((integrable_const M).add (hYin n).norm)
-      ((hCmn n).mono ((stoppingFiltration hσ hσmono).le n)).aestronglyMeasurable (hbound (σ n))
-  have hA : ∀ᵐ ω ∂P, Tendsto (fun n ↦ g (stoppedValue X (σ n) ω)) atTop
-      (𝓝 (limUnder atTop fun n ↦ g (stoppedValue X (σ n) ω))) := by
-    filter_upwards [hlim] with ω hω
-    obtain ⟨l, hl⟩ := hω
-    rw [hl.limUnder_eq]
-    exact hl
-  refine ⟨?_, ae_eq_condExp_iSup_stoppedValue hdec hOSn hCmn hYi hCin hCi' hZ hA⟩
-  refine AEStronglyMeasurable.congr (f := fun ω ↦ stoppedValue Y σ' ω + stoppedValue C σ' ω)
-    (hYi.aestronglyMeasurable.add hCi'.aestronglyMeasurable) ?_
-  filter_upwards [hdec] with ω hω
-  simp only [stoppedValue]
-  exact (hω _).symm
-
-/-- The abstract form of Ethier--Kurtz, Theorem 4.3.12: no operator and no
-compensator of any special shape.  The compensator is quantified inside the
-hypothesis rather than recovered from `IsRegularizingClass`, because it is *the*
-compensator attached to `f` that must be right continuous and `L¹` left
-continuous.
-
-**The class is read through a countable, bounded, continuous, point separating
-subclass `Φ₀`, and `Φ` itself is asked only for the squares `f * conj f`** --
-exactly the hypotheses of `exists_cadlag_modification_of_isRegularizingClass`,
-and for the same reason.  Identifying the pathwise limit with `f (X_{σ'})` is
-`ae_eq_of_condExp_eq_of_condExp_mul_conj`: a conditional expectation together
-with the conditional expectation of the square determines the function.  Until
-2026-09-17, fourteenth run, the statement carried `IsSeparating Φ` instead and
-was to be closed by `IsSeparating.ae_eq_of_forall_condExp_eq` of the roadmap
-**WeakConvergence**.  That route costs three things this one does not: a file
-boundary, real valuedness where `𝕂` is wanted, and two instances on `E`
-(`OpensMeasurableSpace`, `MeasurableSpace.CountablySeparated`).  The theorem that
-carries the present proof does not mention `E` at all, and the bound `hbdd` it
-asks for is needed for the integrabilities in any case.
-
-**The solution set `𝓧` has disappeared from the statement**, and
-`IsOptionalSamplingFor Y 𝓕 P` stands where `IsMPSolution 𝓧 𝓕 P` stood.  The
-martingale property was carried for one purpose, to give optional sampling, and
-over a general index it does not give it: optional sampling in continuous time
-needs right continuous paths and a bound.
-`not_isQuasiLeftContinuous_of_isRegularizingClass_of_free_solutionSet` below is
-still the proof that the hypothesis cannot simply be dropped -- there `C = 0` and
-`Y = f ∘ X` satisfy everything else for a process that is not
-quasi-left-continuous.
-
-**`hDcount`, `hD` and the right continuity of `Y`** are the price of reading the
-decomposition at a random time; `LiftWitness` above is the proof that the last of
-them does not follow from the other two. -/
-theorem isQuasiLeftContinuous_of_isRegularizingClass {Φ Φ₀ : Set (E → 𝕂)}
-    {X : ι → Ω → E} {𝓕 : Filtration ι m} {P : Measure Ω} [IsFiniteMeasure P]
-    {D : Set ι} (hDcount : D.Countable)
-    (hD : ∀ t : ι, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot)
-    (hΦ₀ : Φ₀ ⊆ Φ) (hΦ₀c : Φ₀.Countable) (hcont : ∀ f ∈ Φ₀, Continuous f)
-    (hbdd : ∀ f ∈ Φ₀, ∃ M : ℝ, ∀ x, ‖f x‖ ≤ M)
-    (hsq : ∀ f ∈ Φ₀, (fun x ↦ f x * (starRingEnd 𝕂) (f x)) ∈ Φ)
-    (hsep : ∀ x y : E, x ≠ y → ∃ f ∈ Φ₀, f x ≠ f y)
-    (hX : ∀ᵐ ω ∂P, IsCadlag fun t ↦ X t ω)
-    (hΦ : ∀ f ∈ Φ, ∃ Y C : ι → Ω → 𝕂, IsCompensatorFor X 𝓕 P D f Y C ∧
-      (∀ᵐ ω ∂P, ∀ t : ι, ContinuousWithinAt (fun s ↦ Y s ω) (Set.Ioi t) t) ∧
-      (∀ᵐ ω ∂P, ∀ t : ι, ContinuousWithinAt (fun s ↦ C s ω) (Set.Ioi t) t) ∧
-      IsOptionalSamplingFor Y 𝓕 P ∧
-      IsStronglyMeasurableAlongStoppingTimes C 𝓕 ∧
-      IsL1LeftContinuousAlongStoppingTimes C 𝓕 P) :
-    IsQuasiLeftContinuous X 𝓕 P := by
-  refine isQuasiLeftContinuous_of_forall_ae_tendsto_comp hΦ₀c hcont hsep hX ?_
-  intro f hf τ hτ hmono t
-  obtain ⟨M, hM⟩ := hbdd f hf
-  have hgc : Continuous f := hcont f hf
-  have hσ : ∀ n, IsStoppingTime 𝓕 (fun ω ↦ min (τ n ω) (t : WithTop ι)) :=
-    fun n ↦ (hτ n).min_const t
-  have hσmono : Monotone (fun (n : ℕ) (ω : Ω) ↦ min (τ n ω) (t : WithTop ι)) :=
-    fun a b hab ω ↦ min_le_min (hmono hab ω) le_rfl
-  have hσ' : IsStoppingTime 𝓕 (fun ω ↦ min (⨆ k, τ k ω) (t : WithTop ι)) :=
-    (isStoppingTime_iSup hτ).min_const t
-  have hσle : ∀ (n : ℕ) (ω : Ω),
-      min (τ n ω) (t : WithTop ι) ≤ min (⨆ k, τ k ω) (t : WithTop ι) :=
-    fun n ω ↦ min_le_min (le_ciSup (f := fun k ↦ τ k ω) (OrderTop.bddAbove _) n) le_rfl
-  have hσ't : ∀ ω, min (⨆ k, τ k ω) (t : WithTop ι) ≤ (t : WithTop ι) :=
-    fun ω ↦ min_le_right _ _
-  -- the paths converge along the stopped times, for every continuous test function
-  have hpath : ∀ g : E → 𝕂, Continuous g → ∀ᵐ ω ∂P, ∃ l,
-      Tendsto (fun n ↦ g (stoppedValue X (fun ω ↦ min (τ n ω) (t : WithTop ι)) ω)) atTop
-        (𝓝 l) := by
-    intro g hg
-    filter_upwards [hX] with ω hω
-    have hne : ∀ n, min (τ n ω) (t : WithTop ι) ≠ ⊤ := fun n ↦
-      ne_top_of_le_ne_top WithTop.coe_ne_top (min_le_right _ _)
-    have hcoe : ∀ n, (((min (τ n ω) (t : WithTop ι)).untopA : ι) : WithTop ι)
-        = min (τ n ω) (t : WithTop ι) := fun n ↦ coe_untopA (hne n)
-    have hst : ∀ n, (min (τ n ω) (t : WithTop ι)).untopA ≤ t := fun n ↦ by
-      have h := min_le_right (τ n ω) (t : WithTop ι)
-      rw [← hcoe n] at h
-      exact_mod_cast h
-    have hsmono : Monotone fun n ↦ (min (τ n ω) (t : WithTop ι)).untopA := fun a b hab ↦ by
-      have h : min (τ a ω) (t : WithTop ι) ≤ min (τ b ω) (t : WithTop ι) := hσmono hab ω
-      rw [← hcoe a, ← hcoe b] at h
-      exact_mod_cast h
-    have hsbdd : BddAbove (Set.range fun n ↦ (min (τ n ω) (t : WithTop ι)).untopA) :=
-      ⟨t, by rintro _ ⟨n, rfl⟩; exact hst n⟩
-    obtain ⟨l, hl⟩ := hω.exists_tendsto_comp_monotone hsmono (fun n ↦ le_ciSup hsbdd n) rfl
-    exact ⟨g l, (hg.tendsto l).comp hl⟩
-  obtain ⟨Y, C, hC, hYr, hCr, hOS, hCm, hL1⟩ := hΦ f (hΦ₀ hf)
-  obtain ⟨Y2, C2, hC2, hYr2, hCr2, hOS2, hCm2, hL12⟩ := hΦ _ (hsq f hf)
-  have hg2c : Continuous fun x ↦ f x * (starRingEnd 𝕂) (f x) :=
-    hgc.mul (RCLike.continuous_conj.comp hgc)
-  have hM2 : ∀ x : E, ‖f x * (starRingEnd 𝕂) (f x)‖ ≤ M * M := by
-    intro x
-    have h0 : (0 : ℝ) ≤ M := le_trans (norm_nonneg _) (hM x)
-    rw [norm_mul, RCLike.norm_conj]
-    exact mul_le_mul (hM x) (hM x) (norm_nonneg _) h0
-  have key1 := ae_eq_limUnder_condExp_stoppedValue hDcount hD hgc hM hX hC hYr hCr hOS hCm
-    hσ hσmono hσ' hσle hσ't (hL1 τ hτ hmono t) (hpath f hgc)
-  have key2 := ae_eq_limUnder_condExp_stoppedValue hDcount hD hg2c hM2 hX hC2 hYr2 hCr2 hOS2
-    hCm2 hσ hσmono hσ' hσle hσ't (hL12 τ hτ hmono t) (hpath _ hg2c)
-  have hm' : (⨆ n, stoppingFiltration hσ hσmono n) ≤ m :=
-    iSup_le fun n ↦ (stoppingFiltration hσ hσmono).le n
-  -- the limit of the squares is the square of the limit
-  have hprod : (fun ω ↦ limUnder atTop fun n ↦
-        (fun x ↦ f x * (starRingEnd 𝕂) (f x))
-          (stoppedValue X (fun ω ↦ min (τ n ω) (t : WithTop ι)) ω))
-      =ᵐ[P] fun ω ↦
-        (limUnder atTop fun n ↦ f (stoppedValue X (fun ω ↦ min (τ n ω) (t : WithTop ι)) ω)) *
-          (starRingEnd 𝕂) (limUnder atTop fun n ↦
-            f (stoppedValue X (fun ω ↦ min (τ n ω) (t : WithTop ι)) ω)) := by
-    filter_upwards [hpath f hgc] with ω hω
-    obtain ⟨l, hl⟩ := hω
-    have h2 : Tendsto (fun n ↦ f (stoppedValue X (fun ω ↦ min (τ n ω) (t : WithTop ι)) ω) *
-        (starRingEnd 𝕂) (f (stoppedValue X (fun ω ↦ min (τ n ω) (t : WithTop ι)) ω))) atTop
-        (𝓝 (l * (starRingEnd 𝕂) l)) :=
-      hl.mul ((RCLike.continuous_conj.tendsto l).comp hl)
-    rw [hl.limUnder_eq, h2.limUnder_eq]
-  have hAb : ∀ᵐ ω ∂P,
-      ‖limUnder atTop fun n ↦ f (stoppedValue X (fun ω ↦ min (τ n ω) (t : WithTop ι)) ω)‖
-        ≤ M := by
-    filter_upwards [hpath f hgc] with ω hω
-    obtain ⟨l, hl⟩ := hω
-    rw [hl.limUnder_eq]
-    exact le_of_tendsto hl.norm (.of_forall fun n ↦ hM _)
-  have hAm : AEStronglyMeasurable
-      (fun ω ↦ limUnder atTop fun n ↦
-        f (stoppedValue X (fun ω ↦ min (τ n ω) (t : WithTop ι)) ω)) P :=
-    (stronglyMeasurable_condExp.mono hm').aestronglyMeasurable.congr key1.2.symm
-  have hfinal : (fun ω ↦ f (stoppedValue X (fun ω ↦ min (⨆ k, τ k ω) (t : WithTop ι)) ω))
-      =ᵐ[P] fun ω ↦ limUnder atTop fun n ↦
-        f (stoppedValue X (fun ω ↦ min (τ n ω) (t : WithTop ι)) ω) :=
-    ae_eq_of_condExp_eq_of_condExp_mul_conj hm'
-      ⟨_, stronglyMeasurable_condExp, key1.2⟩ (MemLp.of_bound hAm M hAb)
-      (MemLp.of_bound key1.1 M (.of_forall fun ω ↦ hM _)) key1.2.symm
-      (key2.2.symm.trans hprod)
-  filter_upwards [hpath f hgc, hfinal] with ω hω hfω
-  intro hle
-  obtain ⟨l, hl⟩ := hω
-  have hτle : ∀ n, τ n ω ≤ (t : WithTop ι) := fun n ↦
-    (le_ciSup (f := fun k ↦ τ k ω) (OrderTop.bddAbove _) n).trans hle
-  have hl' : Tendsto (fun n ↦ f (stoppedValue X (τ n) ω)) atTop (𝓝 l) := by
-    refine hl.congr fun n ↦ ?_
-    simp only [stoppedValue, min_eq_left (hτle n)]
-  have heq : f (stoppedValue X (fun ω ↦ ⨆ n, τ n ω) ω) = l := by
-    have h1 : f (stoppedValue X (fun ω ↦ ⨆ n, τ n ω) ω)
-        = f (stoppedValue X (fun ω ↦ min (⨆ k, τ k ω) (t : WithTop ι)) ω) := by
-      simp only [stoppedValue, min_eq_left hle]
-    rw [h1, hfω, hl.limUnder_eq]
-  rw [heq]
-  exact hl'
-
-/-! ### The instance on the data of a bounded operator
-
-What `isQuasiLeftContinuous_of_isRegularizingClass` asks of the class, read off
-`mpFamily`.  Three of its six fields are already proved for this compensator --
-`isCompensatorFor_mpFamily` -- and of the remaining three, one is the clock and
-two are hypotheses over a general index.  The clock one is the only mathematics
-here: `IsL1LeftContinuousAlongStoppingTimes`, and it costs no hypothesis the
-compensator did not already have. -/
-
-/-- The classical instance (Ethier--Kurtz, Theorem 4.3.12), for a bounded
-operator and a process whose test processes admit optional sampling.  The
-compensator is `∫ u in Q.interval c ⊥ t, p.2 (X u) ∂q`, and it is the shrinking
-of the windows of the clock, `Clock.IsContinuousFor`, that gives the `L¹`
-hypothesis of the abstract form.
-
-**Four differences from the statement this replaces**, each found by supplying
-the hypotheses of `isQuasiLeftContinuous_of_isRegularizingClass` on data:
-
-* **`Clock.IsAtomless` is not a hypothesis**, although the statement this
-  replaces carried it and Ethier--Kurtz state the theorem for a clock without
-  atoms.  The `L¹` left continuity of the compensator needs the windows between
-  `min (τ n) t` and `min (⨆ τ) t` to shrink to nothing, and
-  `Clock.IsContinuousFor` -- which `isCompensatorFor_mpFamily` asks for in any
-  case, so that the compensator have one sided limits -- says exactly that along
-  the filter `𝓝 T`, which a nondecreasing sequence with least upper bound `T`
-  converges along.  Atomlessness would give the same conclusion by continuity
-  from above (`tendsto_measureReal_interval_of_forall_exists_lt` above), and it
-  is neither needed nor implied.  **The sharpness is unaffected**: the witness of
-  `not_isQuasiLeftContinuous_of_atom` fails `Clock.IsContinuousFor` and not only
-  `Clock.IsAtomless`, which is `AtomWitness.not_isContinuousFor_atomClock` below.
-* **`IsSeparating (Prod.fst '' A)` is not enough.**  The abstract theorem reads
-  its class through a *countable* subclass `Φ₀` that separates points and whose
-  squares lie in the class, exactly as
-  `exists_cadlag_modification_of_isRegularizingClass` does.  A separating class
-  gives a null set per test function and there is no way to take countably many
-  of them without countability.
-* **`Measurable p.2` is needed** and was not asked: the compensator is a Bochner
-  integral of `p.2 ∘ X` and `isCompensatorFor_mpFamily` cannot be applied
-  without it.  Boundedness of `p.2` alone does not give it.
-* **`IsMPSolution` is replaced by `IsOptionalSamplingFor`**, for the reason
-  recorded at the abstract theorem: over a general index the martingale property
-  does not give optional sampling.  Over `ι = ℝ≥0` it does, and
-  `stoppedValue_ae_eq_condExp` below is the statement that it does; the
-  hypothesis is where a concrete index pays for it.
-
-`hCm` is the second hypothesis that the general index costs, and the docstring
-of `IsStronglyMeasurableAlongStoppingTimes` says why it cannot be discharged
-here: `𝕂` carries no `MeasurableSpace`. -/
-theorem isQuasiLeftContinuous_of_isMPSolutionFor {A : Set ((E → 𝕂) × (E → 𝕂))}
-    {Φ₀ : Set (E → 𝕂)} {Q : Clock ι} {c : Clock.Conv} {X : ι → Ω → E}
-    {𝓕 : Filtration ι m} {P : Measure Ω} [IsFiniteMeasure P] {D : Set ι}
-    (hDcount : D.Countable) (hD : ∀ t : ι, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot)
-    (hA : ∀ p ∈ A, Continuous p.1 ∧ (∃ M : ℝ, ∀ x, ‖p.1 x‖ ≤ M) ∧
-      Measurable p.2 ∧ ∃ b : ℝ, ∀ x, ‖p.2 x‖ ≤ b)
-    (hΦ₀ : Φ₀ ⊆ Prod.fst '' A) (hΦ₀c : Φ₀.Countable)
-    (hsq : ∀ f ∈ Φ₀, (fun x ↦ f x * (starRingEnd 𝕂) (f x)) ∈ Prod.fst '' A)
-    (hsep : ∀ x y : E, x ≠ y → ∃ f ∈ Φ₀, f x ≠ f y)
-    (hXprog : Q.IsProgressive X 𝓕) (hXm : ∀ t, Measurable[𝓕 t] (X t))
-    (hQc : Q.IsContinuousFor c)
-    (hX : ∀ᵐ ω ∂P, IsCadlag fun t ↦ X t ω)
-    (hOS : ∀ Y ∈ mpFamily A Q c X, IsOptionalSamplingFor Y 𝓕 P)
-    (hCm : ∀ p ∈ A, IsStronglyMeasurableAlongStoppingTimes
-      (fun t ω ↦ ∫ u in Q.interval c ⊥ t, p.2 (X u ω) ∂Q.q) 𝓕) :
-    IsQuasiLeftContinuous X 𝓕 P := by
-  refine isQuasiLeftContinuous_of_isRegularizingClass (Φ := Prod.fst '' A) hDcount hD
-    hΦ₀ hΦ₀c ?_ ?_ hsq hsep hX ?_
-  · rintro f hf
-    obtain ⟨p, hp, rfl⟩ := hΦ₀ hf
-    exact (hA p hp).1
-  · rintro f hf
-    obtain ⟨p, hp, rfl⟩ := hΦ₀ hf
-    exact (hA p hp).2.1
-  · rintro _ ⟨p, hp, rfl⟩
-    obtain ⟨hpc, -, hg, b, hgb⟩ := hA p hp
-    refine ⟨fun t ω ↦ p.1 (X t ω) - ∫ u in Q.interval c ⊥ t, p.2 (X u ω) ∂Q.q,
-      fun t ω ↦ ∫ u in Q.interval c ⊥ t, p.2 (X u ω) ∂Q.q,
-      isCompensatorFor_mpFamily hg hgb hXprog hXm hQc, ?_, ?_,
-      hOS _ ⟨p, hp, fun t ω ↦ rfl⟩, hCm p hp,
-      isL1LeftContinuousAlongStoppingTimes_mpFamily hg hgb hXprog hQc (hCm p hp)⟩
-    · filter_upwards [hX] with ω hω t
-      exact (hpc.continuousAt.comp_continuousWithinAt (hω.1 t)).sub
-        ((tendsto_compensator_mpFamily hg hgb hXprog hQc t ω).mono_left nhdsWithin_le_nhds)
-    · exact Filter.Eventually.of_forall fun ω t ↦
-        (tendsto_compensator_mpFamily hg hgb hXprog hQc t ω).mono_left nhdsWithin_le_nhds
-
-/-! ### The witness of `not_isQuasiLeftContinuous_of_atom`
-
-The pieces of the counterexample that do not mention the martingale problem: the
-fair coin, the path that flips it at `u`, that its paths are càdlàg for **every**
-clock, and that it is not quasi-left-continuous.  What the counterexample needs
-beyond this block is that the path solves the martingale problem for a separating
-`A` -- and nothing else. -/
-
-namespace AtomWitness
-
-/-! #### The witness that a martingale increment is not small in `L¹`
-
-The eighteenth run of 2026-09-20 found that the last open quantity of the first item of
-Milestone 11 cannot be bounded by Doob or by Hölder, because the **martingale part** of the
-increment is not small in `L¹` at all -- only its integral against a bounded weight from the past
-is.  That was an argument in a paragraph; these five declarations make it a theorem, on the same
-coin the rest of this block uses.
-
-`coinMartingale u` is a martingale over `coinFiltration u` with `sup_t 𝔼|M t| ≤ 1` and
-compensator `0`, so both conditions of \EK's class `𝓐 n` hold of the pair `(M, 0)` with any `q`
-and `K = 0`.  Yet `𝔼|M t - M s| = 1` whenever `s` lies below `u` and `t` at or above it, and
-`exists_integral_abs_coinMartingale_sub_eq_one` chooses such a pair **inside a window of length
-`δ`, for every `δ > 0`, with one and the same martingale**.  So no hypothesis of that class
-bounds the `L¹` increment over a short window, and the square identity of
-`ofReal_integral_sq_sub_le` is not a convenience but the only route. -/
-
-end AtomWitness
-
-namespace AtomWitness
-
-end AtomWitness
-
-/-- **A martingale hypothesis on `Y` is indispensable in
-`isQuasiLeftContinuous_of_isRegularizingClass`**: without one the statement is
-false, and the witness is the one this file already carries.  Until 2026-09-17,
-twelfth run, there was none; the twelfth run put `IsMPSolution 𝓧 𝓕 P` there and
-the fourteenth replaced it by `IsOptionalSamplingFor Y 𝓕 P`, which is what the
-proof reads.
-
-Constrain `Y` by nothing at all and `Y := f ∘ X`, `C := 0` satisfy every
-hypothesis about the compensator -- adaptedness, the one sided limits, `L¹` right
-continuity, pathwise right continuity, strong measurability along stopping times
-and `L¹` left continuity along stopping times are all statements about the zero
-process -- for **any** `X` whatever, and even for `D = ∅`.  What is then left of
-the hypotheses is that the class separates and that the paths are càdlàg, and the
-coin of `AtomWitness` has both while failing to be quasi-left-continuous.
-
-**What is missing there is optional sampling.**  It is what the proof of the
-theorem turns on, and with `C = 0` the decomposition `f ∘ X = Y + C` says nothing
-whatever about `Y`.
-
-Found on 2026-09-17, twelfth run, while assembling the theorem from its four
-analytic inputs. -/
-theorem not_isQuasiLeftContinuous_of_isRegularizingClass_of_free_solutionSet :
-    ∃ (Φ : Set (Bool → ℝ)) (𝓧 : Set (ENNReal → Bool → ℝ))
-      (𝓕 : Filtration ENNReal (inferInstance : MeasurableSpace Bool))
-      (D : Set ENNReal) (X : ENNReal → Bool → Bool),
-      IsSeparating Φ ∧
-      (∀ᵐ ω ∂AtomWitness.coinMeasure, IsCadlag fun t ↦ X t ω) ∧
-      (∀ f ∈ Φ, ∃ Y ∈ 𝓧, ∃ C : ENNReal → Bool → ℝ,
-        IsCompensatorFor X 𝓕 AtomWitness.coinMeasure D f Y C ∧
-        (∀ᵐ ω ∂AtomWitness.coinMeasure, ∀ t : ENNReal,
-          ContinuousWithinAt (fun s ↦ C s ω) (Set.Ioi t) t) ∧
-        IsL1LeftContinuousAlongStoppingTimes C 𝓕 AtomWitness.coinMeasure) ∧
-      ¬ IsQuasiLeftContinuous X 𝓕 AtomWitness.coinMeasure := by
-  have hmono : Monotone (fun n : ℕ ↦ (n : ENNReal)) :=
-    (Nat.strictMono_cast (α := ENNReal)).monotone
-  have hlt : ∀ n : ℕ, (n : ENNReal) < ⊤ := fun n ↦ lt_top_iff_ne_top.2 (ENNReal.natCast_ne_top n)
-  have hbdd : BddAbove (Set.range fun n : ℕ ↦ (n : ENNReal)) := OrderTop.bddAbove _
-  have hsup : ⨆ n : ℕ, (n : ENNReal) = ⊤ :=
-    tendsto_nhds_unique (tendsto_atTop_ciSup hmono hbdd) ENNReal.tendsto_nat_nhds_top
-  refine ⟨Prod.fst '' AtomWitness.coinClass, Set.univ, AtomWitness.coinFiltration ⊤, ∅,
-    AtomWitness.coinProcess ⊤, AtomWitness.isSeparating_coinClass,
-    .of_forall (AtomWitness.isCadlag_coinProcess ⊤), fun f _ ↦ ?_,
-    AtomWitness.not_isQuasiLeftContinuous_coinProcess ⊤ hmono hlt hsup _⟩
-  refine ⟨fun t ω ↦ f (AtomWitness.coinProcess ⊤ t ω), Set.mem_univ _, 0,
-    ⟨fun _ ↦ stronglyMeasurable_zero, fun _ ↦ .of_forall fun _ ↦ by simp,
-      .of_forall fun _ _ ↦ ⟨⟨0, tendsto_const_nhds⟩, ⟨0, tendsto_const_nhds⟩⟩,
-      fun _ ↦ by simpa using tendsto_const_nhds⟩,
-    .of_forall fun _ _ ↦ continuousWithinAt_const,
-    fun _ _ _ _ ↦ by
-      simp only [stoppedValue, Pi.zero_apply, sub_self, norm_zero, abs_zero, integral_zero]
-      exact tendsto_const_nhds⟩
-
-end Regularizing
-
 /-! ## Milestone 10: the abstract convergence theorem
 
 Stated without any topology on the path space: the hypothesis is convergence in
@@ -5261,7 +4013,7 @@ theorem integral_sub_eq_intervalIntegral_of_isMPSolution [IsProbabilityMeasure P
       _ = ∫ ω, Y 0 ω ∂P := integral_congr_ae (hmart.2 0 t (by simp))
   have hY0 : ∀ ω, Y 0 ω = f (X 0 ω) := by
     intro ω
-    simp [hYdef, lebesgueClock_interval_optional_eq]
+    simp [hYdef]
   have hYt : ∫ ω, Y t ω ∂P
       = (∫ ω, f (X t ω) ∂P) - ∫ ω, (∫ u in S, g (X u ω) ∂lebesgueClock.q) ∂P :=
     integral_sub (hintf t) hintc
@@ -6082,6 +4834,150 @@ example (t : ℝ≥0) (f : ℕ → ℝ) (C : ℝ) (hC : ∀ x, |f x| ≤ C) :
       (by intro p hp; rw [List.mem_singleton] at hp; subst hp; exact measurable_of_countable _)
       (by intro p hp; rw [List.mem_singleton] at hp; subst hp; exact ⟨C, hC⟩),
     fddExp_singleton]
+
+/-- **The Poisson law has a first moment**: `n ↦ (n : ℝ)` is integrable against
+`ProbabilityTheory.poissonMeasure r`.  `integrable_poissonMeasure_iff` reduces it to the
+summability of `e^{-r} r^n n / n!`, which is dominated by `e^{-r} (2r)^n / n!` because `n ≤ 2^n`
+(`Real.summable_pow_div_factorial`).  Mathlib states no moment of the Poisson law. -/
+theorem integrable_natCast_poissonMeasure (r : ℝ≥0) :
+    Integrable (fun n : ℕ ↦ (n : ℝ)) (poissonMeasure r) := by
+  rw [integrable_poissonMeasure_iff]
+  refine Summable.of_nonneg_of_le (fun n ↦ by positivity) (fun n ↦ ?_)
+    ((Real.summable_pow_div_factorial (2 * r)).mul_left (Real.exp (-r)))
+  have h2 : (n : ℝ) ≤ 2 ^ n := by exact_mod_cast (Nat.lt_two_pow_self).le
+  rw [Real.norm_natCast, mul_pow, mul_div_assoc, mul_div_assoc, mul_assoc]
+  refine mul_le_mul_of_nonneg_left ?_ (Real.exp_pos _).le
+  rw [mul_comm, ← mul_div_assoc, mul_div_assoc]
+  exact mul_le_mul_of_nonneg_right h2 (by positivity)
+
+/-- The generator applied to the truncation `min · n` is the indicator of `{x < n}`. -/
+theorem jumpApply_poisson_min (n x : ℕ) :
+    jumpApply poissonRate poissonJumpKernel (fun y : ℕ ↦ ((min y n : ℕ) : ℝ)) x
+      = if x < n then 1 else 0 := by
+  rw [jumpApply_poisson]
+  split_ifs with h
+  · rw [min_eq_left (Nat.succ_le_of_lt h), min_eq_left h.le]
+    push_cast; ring
+  · push Not at h
+    rw [min_eq_right (h.trans (Nat.le_succ x)), min_eq_right h, sub_self]
+
+/-- **Acceptance of Milestone 2: the Poisson process by hand, with the unbounded `f = id`.**
+The constructed Poisson process solves the martingale problem for its operator **together with the
+pair `(id, 1)`**, that is, `N t - t` is a martingale, and this is obtained from the bounded pairs
+alone through `IsMPSolutionFor.insert_of_tendsto`, with the truncations `f n = min · n`.
+
+On them the generator is `1_{x < n}` (`jumpApply_poisson_min`), so the test processes are
+`min (N t) n - ∫_0^t 1_{N s < n} ds`.  They converge pointwise (for fixed `ω` the first term is
+eventually `N t`, the second converges by dominated convergence on the window), are dominated by
+`2 N t + 2 t`, and `N t` is integrable because its law is `Po(t)`
+(`jumpMeasure_map_jumpProcess_poisson`, `integrable_natCast_poissonMeasure`).  Adaptedness of
+`N t - t` is read off the pointwise limit of adapted processes, so no statement about the
+filtration of the construction is needed.  The bounded form
+`IsMPSolutionFor.insert_of_forall_norm_le` does **not** apply here, `id` being unbounded; that is
+the point of the example. -/
+theorem poissonProcess_isMPSolutionFor_insert_id :
+    IsMPSolutionFor (insert ((fun x : ℕ ↦ (x : ℝ)), fun _ ↦ (1 : ℝ))
+        (jumpOperator poissonRate poissonJumpKernel)) lebesgueClock Clock.Conv.optional
+      (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcess poissonRate (t : ℝ) ω)
+      (jumpFiltration poissonRate measurable_poissonRate)
+      (jumpMeasure poissonJumpKernel (Measure.dirac 0)) := by
+  set X : ℝ≥0 → (ℕ → ℕ) × (ℕ → ℝ) → ℕ := fun t ω ↦ jumpProcess poissonRate (t : ℝ) ω with hXdef
+  set P := jumpMeasure poissonJumpKernel (Measure.dirac 0) with hPdef
+  set 𝓖 := jumpFiltration poissonRate measurable_poissonRate with h𝓖def
+  set Q := lebesgueClock with hQdef
+  set c := Clock.Conv.optional with hcdef
+  set p : ℕ → (ℕ → ℝ) × (ℕ → ℝ) := fun n ↦ ((fun y : ℕ ↦ ((min y n : ℕ) : ℝ)),
+    jumpApply poissonRate poissonJumpKernel (fun y : ℕ ↦ ((min y n : ℕ) : ℝ))) with hpdef
+  have hpA : ∀ n, p n ∈ jumpOperator poissonRate poissonJumpKernel := fun n ↦
+    mem_jumpOperator (measurable_of_countable _) (C := n) fun y ↦ by
+      rw [abs_of_nonneg (by positivity)]; exact_mod_cast min_le_right y n
+  have hZ : ∀ n, Martingale (mpProcess Q c X (p n).1 (p n).2) 𝓖 P := by
+    intro n
+    have h : IsMPSolutionFor (jumpOperator poissonRate poissonJumpKernel) Q c X 𝓖 P :=
+      poissonProcess_isMPSolution
+    rw [IsMPSolutionFor, mpFamily_eq_image_mpProcess] at h
+    exact h _ ⟨p n, hpA n, rfl⟩
+  set Y := mpProcess Q c X (fun x : ℕ ↦ (x : ℝ)) (fun _ ↦ (1 : ℝ)) with hYdef
+  have hfin : ∀ t, IsFiniteMeasure (Q.q.restrict (Q.interval c ⊥ t)) := fun t ↦
+    ⟨by rw [Measure.restrict_apply_univ]; exact (Q.measure_interval_ne_top c ⊥ t).lt_top⟩
+  have hg1 : ∀ n x, ‖(p n).2 x‖ ≤ 1 := fun n x ↦ by
+    simp only [hpdef, jumpApply_poisson_min]
+    split_ifs <;> simp
+  have hgconv : ∀ x, Tendsto (fun n ↦ (p n).2 x) atTop (𝓝 1) := fun x ↦ by
+    refine tendsto_const_nhds.congr' (eventually_atTop.2 ⟨x + 1, fun n hn ↦ ?_⟩)
+    simp only [hpdef, jumpApply_poisson_min, ite_eq_left (Nat.lt_of_succ_le hn)]
+  have hXs : ∀ ω, Measurable fun s : ℝ≥0 ↦ X s ω := fun ω ↦
+    (measurable_jumpProcess measurable_poissonRate).comp
+      (measurable_coe_nnreal_real.prodMk measurable_const)
+  have hconv : ∀ t ω, Tendsto (fun n ↦ mpProcess Q c X (p n).1 (p n).2 t ω) atTop
+      (𝓝 (Y t ω)) := by
+    intro t ω
+    have := hfin t
+    refine Tendsto.sub ?_ ?_
+    · refine tendsto_const_nhds.congr' (eventually_atTop.2 ⟨X t ω, fun n hn ↦ ?_⟩)
+      simp only [hpdef, min_eq_left hn]
+    · exact tendsto_integral_of_dominated_convergence (fun _ ↦ 1)
+        (fun n ↦ ((measurable_of_countable (p n).2).comp (hXs ω)).aestronglyMeasurable)
+        (integrable_const 1) (fun n ↦ ae_of_all _ fun s ↦ hg1 n _)
+        (ae_of_all _ fun s ↦ hgconv _)
+  have hXt : ∀ t, Measurable (X t) := fun t ↦
+    (measurable_jumpProcess measurable_poissonRate).comp (measurable_const.prodMk measurable_id)
+  have hNint : ∀ t, Integrable (fun ω ↦ (X t ω : ℝ)) P := fun t ↦ by
+    have h := integrable_natCast_poissonMeasure t
+    rw [← jumpMeasure_map_jumpProcess_poisson t] at h
+    exact (integrable_map_measure (by fun_prop) (hXt t).aemeasurable).1 h
+  -- the bound `‖Z n t - Y t‖ ≤ N t + 2 q(window)`
+  have hwin : ∀ t (g : ℕ → ℝ), (∀ x, ‖g x‖ ≤ 1) → ∀ ω,
+      ‖∫ s in Q.interval c ⊥ t, g (X s ω) ∂Q.q‖ ≤ Q.q.real (Q.interval c ⊥ t) := by
+    intro t g hg ω
+    have := hfin t
+    have h := norm_setIntegral_le_of_norm_le_const (μ := Q.q) (s := Q.interval c ⊥ t)
+      (C := 1) (Q.measure_interval_ne_top c ⊥ t).lt_top (fun s _ ↦ hg (X s ω))
+    simpa using h
+  have hbound : ∀ n t ω, ‖mpProcess Q c X (p n).1 (p n).2 t ω - Y t ω‖
+      ≤ 2 * (X t ω : ℝ) + 2 * Q.q.real (Q.interval c ⊥ t) := by
+    intro n t ω
+    have h1 := hwin t (p n).2 (hg1 n) ω
+    have h2 : ‖∫ s in Q.interval c ⊥ t, (1 : ℝ) ∂Q.q‖ ≤ Q.q.real (Q.interval c ⊥ t) :=
+      hwin t (fun _ ↦ (1 : ℝ)) (fun _ ↦ by simp) ω
+    have h3 : ‖((p n).1 (X t ω))‖ ≤ (X t ω : ℝ) := by
+      simp only [hpdef, Real.norm_natCast]; exact_mod_cast min_le_left _ _
+    have h4 : ‖((X t ω : ℕ) : ℝ)‖ ≤ (X t ω : ℝ) := by rw [Real.norm_natCast]
+    refine (norm_sub_le _ _).trans ((add_le_add (norm_sub_le _ _) (norm_sub_le _ _)).trans ?_)
+    linarith [h1, h2, h3, h4]
+  have hZsm : ∀ n t, StronglyMeasurable[𝓖 t] (mpProcess Q c X (p n).1 (p n).2 t) := fun n t ↦
+    (hZ n).stronglyAdapted t
+  have hadapt : StronglyAdapted 𝓖 Y := fun t ↦
+    stronglyMeasurable_of_tendsto atTop (hZsm · t) (tendsto_pi_nhds.2 (hconv t))
+  have hYint : ∀ t, Integrable (Y t) P := fun t ↦ by
+    refine Integrable.mono' (((hNint t).norm).add (integrable_const
+      (Q.q.real (Q.interval c ⊥ t)))) ((hadapt t).mono (𝓖.le t)).aestronglyMeasurable
+      (ae_of_all _ fun ω ↦ ?_)
+    simp only [hYdef, mpProcess, Pi.add_apply]
+    refine (norm_sub_le _ _).trans ?_
+    exact add_le_add le_rfl (hwin t (fun _ ↦ (1 : ℝ)) (fun _ ↦ by simp) ω)
+  apply IsMPSolutionFor.insert_of_tendsto (p := p) poissonProcess_isMPSolution hpA hadapt hYint
+  intro t
+  have hmeas : ∀ n, AEStronglyMeasurable
+      (mpProcess Q c X (p n).1 (p n).2 t - Y t) P := fun n ↦
+    (((hZsm n t).mono (𝓖.le t)).sub ((hadapt t).mono (𝓖.le t))).aestronglyMeasurable
+  have hdom : Integrable (fun ω ↦ 2 * (X t ω : ℝ) + 2 * Q.q.real (Q.interval c ⊥ t)) P :=
+    ((hNint t).const_mul 2).add (integrable_const _)
+  refine (tendsto_congr fun n ↦ (eLpNorm_one_eq_lintegral_enorm (hmeas n)).symm).1 ?_
+  have h := tendsto_lintegral_of_dominated_convergence' (μ := P) (f := fun _ ↦ 0)
+    (fun ω ↦ ENNReal.ofReal (2 * (X t ω : ℝ) + 2 * Q.q.real (Q.interval c ⊥ t)))
+    (fun n ↦ (hmeas n).enorm)
+    (fun n ↦ ae_of_all _ fun ω ↦ by
+      show ‖mpProcess Q c X (p n).1 (p n).2 t ω - Y t ω‖ₑ ≤ _
+      rw [← ofReal_norm]
+      exact ENNReal.ofReal_le_ofReal (hbound n t ω))
+    (by
+      rw [← ofReal_integral_eq_lintegral_ofReal hdom (ae_of_all _ fun ω ↦ by positivity)]
+      exact ENNReal.ofReal_ne_top)
+    (ae_of_all _ fun ω ↦ by
+      have h1 := (continuous_enorm.tendsto _).comp ((hconv t ω).sub_const (Y t ω))
+      simpa [Function.comp_def, sub_self] using h1)
+  simpa using h
 
 end PoissonExample
 
@@ -9371,47 +8267,23 @@ theorem stronglyAdapted_stoppedProcess_mpFamily_jumpProcessE {lam : E → ℝ}
   rw [hfun]
   exact h1.stronglyMeasurable.sub hsm
 
-/-- **The local jump process solves the martingale problem of its generator locally.**  This is
-the goal of Point 5 of Milestone 4, and the first solution in this file whose rate is neither
-bounded nor even locally bounded: what is asked of it is a positive measurable rate and almost
-sure non explosion, and `ae_mem_nonExplosiveE_jumpMeasure` discharges the second at the data
-(for the linear birth and death chain, `ae_mem_nonExplosiveE_linear`).
+/-- **At every level the stopped test process is a martingale, explosion or not.**  This is the
+part of `jumpProcess_isLocalMPSolution` that asks nothing about non explosion: at the level `n` the
+stopped process is the stopped process of the truncated rate `truncRate lam (n + 1)`, as a function
+(`stoppedProcess_mpFamily_truncRate_eq`), and there the bounded theorem applies.  Non explosion is
+read only in `rateTime lam (n + 1) → ⊤`, which is what makes the levels a localizing sequence.
 
-Every input is a theorem and not a description.  The localizing sequence is the hitting times of
-the running supremum of the rate along the path -- the jump times themselves are not stopping
-times for any filtration of the process (`not_isStoppingTime_min_jumpTimeE`), and
-`isLocalizingSequence_rateTime` is what replaces them.  At the level `n` the stopped process is
-the stopped process of the **truncated** rate `truncRate lam n`, as a function and not merely
-almost surely (`stoppedProcess_mpFamily_truncRate_eq`); there the rate is bounded by `n`, so
-`martingale_stoppedProcess_mpFamily_jumpProcessE` applies and gives a martingale for the
-truncated filtration.  The passage back to the local filtration is the tower step
-`martingale_of_martingale_of_stopped`, whose cut hypothesis is
-`jumpFiltrationE_inter_lt_rateTime` and whose adaptedness hypothesis is the theorem above.
-
-The localizing sequence is `fun n ↦ rateTime lam (n + 1)` and not `rateTime lam`, and the shift is
-not cosmetic: `truncRate lam 0` is the zero rate, at which no bounded theorem applies, and
-`rateTime_zero` says the level `0` stops at once anyway.  A subsequence of a localizing sequence
-is one, so nothing is lost. -/
-theorem jumpProcess_isLocalMPSolution {lam : E → ℝ} (hlam : Measurable lam)
+For an explosive rate this is the honest local statement of `rem:jumpexplosion`: the process solves
+the martingale problem on `[0, ζ)`, localized by `rateTime lam (n + 1) ↑ ζ`.  It is not a solution
+of the local problem on `ℝ≥0` in the sense of `IsLocalMPSolution`, and for the explosion witness
+there is none at all (`not_isLocalMPSolution_explode`). -/
+theorem martingale_stoppedProcess_rateTime_jumpProcessE {lam : E → ℝ} (hlam : Measurable lam)
     (hlam0 : ∀ x, 0 < lam x) (nu : Measure E) [IsProbabilityMeasure nu]
-    (hne : ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam) :
-    IsLocalMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
-        (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω))
-      (jumpFiltrationE lam hlam) (jumpMeasure mu nu) := by
-  intro Y hY
-  have hloc : ProbabilityTheory.IsLocalizingSequence (jumpFiltrationE lam hlam)
-      (fun n ↦ rateTime lam (n + 1)) (jumpMeasure mu nu) := by
-    have h1 : ∀ n : ℕ, IsStoppingTime (jumpFiltrationE lam hlam) (rateTime lam (n + 1)) :=
-      fun n ↦ isStoppingTime_rateTime hlam (n + 1)
-    have h2 : ∀ᵐ ω ∂(jumpMeasure mu nu),
-        Filter.Tendsto (fun n : ℕ ↦ rateTime lam (n + 1) ω) Filter.atTop (𝓝 ⊤) := by
-      filter_upwards [hne] with ω hω
-      exact (tendsto_rateTime_atTop (y := ω.1) (xi := ω.2) hω).comp
-        (Filter.tendsto_add_atTop_nat 1)
-    have h3 : ∀ᵐ ω ∂(jumpMeasure mu nu), Monotone fun n : ℕ ↦ rateTime lam (n + 1) ω :=
-      Filter.Eventually.of_forall fun ω a b hab ↦ monotone_rateTime lam ω (Nat.succ_le_succ hab)
-    exact ⟨⟨h1, h2⟩, h3⟩
-  refine ⟨fun n ↦ rateTime lam (n + 1), hloc, fun n ↦ ?_⟩
+    {Y : ℝ≥0 → (ℕ → E) × (ℕ → ℝ) → ℝ}
+    (hY : Y ∈ mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω)) (n : ℕ) :
+    Martingale (stoppedProcess (fun i ↦ {ω | ⊥ < rateTime lam (n + 1) ω}.indicator (Y i))
+      (rateTime lam (n + 1))) (jumpFiltrationE lam hlam) (jumpMeasure mu nu) := by
   obtain ⟨p, hpmem, hYeq⟩ := id hY
   obtain ⟨hf, ⟨C, hC⟩, hp2⟩ := hpmem
   have hY'mem : (fun (t : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
@@ -9457,6 +8329,49 @@ theorem jumpProcess_isLocalMPSolution {lam : E → ℝ} (hlam : Measurable lam)
     simp only [Set.mem_compl_iff, Set.mem_ofPred_eq]
     exact not_le
   exact martingale_indicator_bot hmartG hbot
+
+/-- **The local jump process solves the martingale problem of its generator locally.**  This is
+the goal of Point 5 of Milestone 4, and the first solution in this file whose rate is neither
+bounded nor even locally bounded: what is asked of it is a positive measurable rate and almost
+sure non explosion, and `ae_mem_nonExplosiveE_jumpMeasure` discharges the second at the data
+(for the linear birth and death chain, `ae_mem_nonExplosiveE_linear`).
+
+Every input is a theorem and not a description.  The localizing sequence is the hitting times of
+the running supremum of the rate along the path -- the jump times themselves are not stopping
+times for any filtration of the process (`not_isStoppingTime_min_jumpTimeE`), and
+`isLocalizingSequence_rateTime` is what replaces them.  At the level `n` the stopped process is
+the stopped process of the **truncated** rate `truncRate lam n`, as a function and not merely
+almost surely (`stoppedProcess_mpFamily_truncRate_eq`); there the rate is bounded by `n`, so
+`martingale_stoppedProcess_mpFamily_jumpProcessE` applies and gives a martingale for the
+truncated filtration.  The passage back to the local filtration is the tower step
+`martingale_of_martingale_of_stopped`, whose cut hypothesis is
+`jumpFiltrationE_inter_lt_rateTime` and whose adaptedness hypothesis is the theorem above.
+
+The localizing sequence is `fun n ↦ rateTime lam (n + 1)` and not `rateTime lam`, and the shift is
+not cosmetic: `truncRate lam 0` is the zero rate, at which no bounded theorem applies, and
+`rateTime_zero` says the level `0` stops at once anyway.  A subsequence of a localizing sequence
+is one, so nothing is lost. -/
+theorem jumpProcess_isLocalMPSolution {lam : E → ℝ} (hlam : Measurable lam)
+    (hlam0 : ∀ x, 0 < lam x) (nu : Measure E) [IsProbabilityMeasure nu]
+    (hne : ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam) :
+    IsLocalMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω))
+      (jumpFiltrationE lam hlam) (jumpMeasure mu nu) := by
+  intro Y hY
+  have hloc : ProbabilityTheory.IsLocalizingSequence (jumpFiltrationE lam hlam)
+      (fun n ↦ rateTime lam (n + 1)) (jumpMeasure mu nu) := by
+    have h1 : ∀ n : ℕ, IsStoppingTime (jumpFiltrationE lam hlam) (rateTime lam (n + 1)) :=
+      fun n ↦ isStoppingTime_rateTime hlam (n + 1)
+    have h2 : ∀ᵐ ω ∂(jumpMeasure mu nu),
+        Filter.Tendsto (fun n : ℕ ↦ rateTime lam (n + 1) ω) Filter.atTop (𝓝 ⊤) := by
+      filter_upwards [hne] with ω hω
+      exact (tendsto_rateTime_atTop (y := ω.1) (xi := ω.2) hω).comp
+        (Filter.tendsto_add_atTop_nat 1)
+    have h3 : ∀ᵐ ω ∂(jumpMeasure mu nu), Monotone fun n : ℕ ↦ rateTime lam (n + 1) ω :=
+      Filter.Eventually.of_forall fun ω a b hab ↦ monotone_rateTime lam ω (Nat.succ_le_succ hab)
+    exact ⟨⟨h1, h2⟩, h3⟩
+  exact ⟨fun n ↦ rateTime lam (n + 1), hloc,
+    fun n ↦ martingale_stoppedProcess_rateTime_jumpProcessE hlam hlam0 nu hY n⟩
 
 /-! ### The emptiness probe
 
@@ -24471,6 +23386,88 @@ theorem isMarkov_jumpOperator_coordinate {lam : E → ℝ} (hlam : Measurable la
       Clock.Conv.optional hY P u)
     r (onedim_mpFamily_jumpOperator_coordinate hlam hlam0 hL r) hf hfb t
 
+open RightContinuousPath in
+/-- **`thm:absstrongmarkov`, first assertion, on the data of Milestone 4: every solution of the
+martingale problem of a bounded jump operator is strong Markov** at every bounded stopping time of
+the raw filtration `pathFiltration`, with arbitrary range:
+`E[f(X(τ+t)) | 𝓖_τ] = E[f(X(τ+t)) | X(τ)]`.
+
+`isStrongMarkov_mpFamily_coordinate` with `hint` from `integrable_mpFamily_coordinate_randomTime`
+and `honedim` from `onedim_mpFamily_jumpOperator_coordinate`, the same lemma that gives
+uniqueness (`subsingleton_mpSolutions_jumpOperator_coordinate`) and the simple Markov property
+(`isMarkov_jumpOperator_coordinate`).  Strong Markov is a **conclusion** here, from uniqueness of
+the one dimensional laws, and no hypothesis beyond the data of `isMarkov_jumpOperator_coordinate`
+and the bound on `τ` enters: no topology on `E`, no right continuity of the filtration. -/
+theorem isStrongMarkov_jumpOperator_coordinate {lam : E → ℝ} (hlam : Measurable lam) {L : ℝ}
+    (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L) {mu : Kernel E E} [IsMarkovKernel mu]
+    {P : Measure (RightContinuousPath E)} [IsProbabilityMeasure P]
+    (hsol : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (coordinate : ℝ≥0 → RightContinuousPath E → E)) (pathFiltration (E := E)) P)
+    {τ : RightContinuousPath E → ℝ≥0}
+    (hτ : ∀ t : ℝ≥0, IsStoppingTime (pathFiltration (E := E))
+      fun ω ↦ ((τ ω + t : ℝ≥0) : WithTop ℝ≥0))
+    {T : ℝ≥0} (hτT : ∀ ω, τ ω ≤ T)
+    {f : E → ℝ} (hf : Measurable f) {cf : ℝ} (hfb : ∀ x, ‖f x‖ ≤ cf) (t : ℝ≥0) :
+    P[fun ω ↦ f (coordinate (τ ω + t) ω) | (hτ 0).measurableSpace]
+      =ᵐ[P] P[fun ω ↦ f (coordinate (τ ω + t) ω) |
+        MeasurableSpace.comap (fun ω ↦ coordinate (τ ω) ω) inferInstance] :=
+  isStrongMarkov_mpFamily_coordinate (fun _ hp ↦ measurable_fst_jumpOperator hp)
+    (fun _ hp ↦ bddAbove_fst_jumpOperator hp) (fun _ hp ↦ measurable_snd_jumpOperator hlam hp)
+    (fun _ hp ↦ bddAbove_snd_jumpOperator hlam0 hL hp) hsol hτ
+    (fun _ hY t ↦ integrable_mpFamily_coordinate_randomTime
+      (fun _ hp ↦ measurable_fst_jumpOperator hp) (fun _ hp ↦ bddAbove_fst_jumpOperator hp)
+      (fun _ hp ↦ measurable_snd_jumpOperator hlam hp)
+      (fun _ hp ↦ bddAbove_snd_jumpOperator hlam0 hL hp) hτ hτT hY t)
+    (fun R R' hR hR' hs hs' h0 u ↦ onedim_mpFamily_jumpOperator_coordinate hlam hlam0 hL 0
+      R R' hR hR' hs hs' h0 u) hf hfb t
+
+open RightContinuousPath in
+/-- **`isStrongMarkov_jumpOperator_coordinate` at every finite stopping time**: every solution of
+the martingale problem of a bounded jump operator is strong Markov at every stopping time
+`τ : F → ℝ≥0` of the raw filtration, with arbitrary range, and with neither a bound nor an
+integrability condition on `τ`.  `isStrongMarkov_mpFamily_coordinate_of_finite` with `honedim` from
+`onedim_mpFamily_jumpOperator_coordinate`. -/
+theorem isStrongMarkov_jumpOperator_coordinate_of_finite {lam : E → ℝ} (hlam : Measurable lam)
+    {L : ℝ} (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L) {mu : Kernel E E} [IsMarkovKernel mu]
+    {P : Measure (RightContinuousPath E)} [IsProbabilityMeasure P]
+    (hsol : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (coordinate : ℝ≥0 → RightContinuousPath E → E)) (pathFiltration (E := E)) P)
+    {τ : RightContinuousPath E → ℝ≥0}
+    (hτ : ∀ t : ℝ≥0, IsStoppingTime (pathFiltration (E := E))
+      fun ω ↦ ((τ ω + t : ℝ≥0) : WithTop ℝ≥0))
+    {f : E → ℝ} (hf : Measurable f) {cf : ℝ} (hfb : ∀ x, ‖f x‖ ≤ cf) (t : ℝ≥0) :
+    P[fun ω ↦ f (coordinate (τ ω + t) ω) | (hτ 0).measurableSpace]
+      =ᵐ[P] P[fun ω ↦ f (coordinate (τ ω + t) ω) |
+        MeasurableSpace.comap (fun ω ↦ coordinate (τ ω) ω) inferInstance] :=
+  isStrongMarkov_mpFamily_coordinate_of_finite (fun _ hp ↦ measurable_fst_jumpOperator hp)
+    (fun _ hp ↦ bddAbove_fst_jumpOperator hp) (fun _ hp ↦ measurable_snd_jumpOperator hlam hp)
+    (fun _ hp ↦ bddAbove_snd_jumpOperator hlam0 hL hp) hsol hτ
+    (fun R R' hR hR' hs hs' h0 u ↦ onedim_mpFamily_jumpOperator_coordinate hlam hlam0 hL 0
+      R R' hR hR' hs hs' h0 u) hf hfb t
+
+open RightContinuousPath in
+/-- **`isStrongMarkov_jumpOperator_coordinate` at every almost surely finite stopping time**:
+every solution of the martingale problem of a bounded jump operator is strong Markov at every
+stopping time `τ : F → WithTop ℝ≥0` of the raw filtration with `P (τ = ⊤) = 0`.
+`isStrongMarkov_mpFamily_coordinate_of_ae_finite` with `honedim` from
+`onedim_mpFamily_jumpOperator_coordinate`. -/
+theorem isStrongMarkov_jumpOperator_coordinate_of_ae_finite {lam : E → ℝ} (hlam : Measurable lam)
+    {L : ℝ} (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L) {mu : Kernel E E} [IsMarkovKernel mu]
+    {P : Measure (RightContinuousPath E)} [IsProbabilityMeasure P]
+    (hsol : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (coordinate : ℝ≥0 → RightContinuousPath E → E)) (pathFiltration (E := E)) P)
+    {τ : RightContinuousPath E → WithTop ℝ≥0}
+    (hτ : IsStoppingTime (pathFiltration (E := E)) τ) (hfin : ∀ᵐ ω ∂P, τ ω ≠ ⊤)
+    {f : E → ℝ} (hf : Measurable f) {cf : ℝ} (hfb : ∀ x, ‖f x‖ ≤ cf) (t : ℝ≥0) :
+    P[fun ω ↦ f (coordinate ((τ ω).untopA + t) ω) | hτ.measurableSpace]
+      =ᵐ[P] P[fun ω ↦ f (coordinate ((τ ω).untopA + t) ω) |
+        MeasurableSpace.comap (stoppedValue coordinate τ) inferInstance] :=
+  isStrongMarkov_mpFamily_coordinate_of_ae_finite (fun _ hp ↦ measurable_fst_jumpOperator hp)
+    (fun _ hp ↦ bddAbove_fst_jumpOperator hp) (fun _ hp ↦ measurable_snd_jumpOperator hlam hp)
+    (fun _ hp ↦ bddAbove_snd_jumpOperator hlam0 hL hp) hsol hτ hfin
+    (fun R R' hR hR' hs hs' h0 u ↦ onedim_mpFamily_jumpOperator_coordinate hlam hlam0 hL 0
+      R R' hR hR' hs hs' h0 u) hf hfb t
+
 end JumpUniqueness
 
 /-! ### The acceptance example: the two state chain, existence and uniqueness and a number
@@ -24561,6 +23558,30 @@ example (P : Measure (RightContinuousPath Bool)) [IsProbabilityMeasure P]
     (P.map (RightContinuousPath.coordinate (E := Bool) 0)).real {true} = 0 := by
   rw [real_map_coordinate_flip_eq P hsol hinit 0]
   norm_num
+
+open RightContinuousPath in
+/-- **The acceptance example of `thm:absstrongmarkov` on the two state chain, at a genuine
+stopping time.**  Let `P` be any solution of the martingale problem of the flip generator
+`A f x = f (!x) - f x` on the canonical path space over `Bool`, and let `τ` be the first time the
+path is at `true`, capped at `T`.  Then the future after `τ` depends on the past up to `τ` only
+through the state at `τ`.
+
+`τ` has uncountable range, so `isStrongMarkov_of_countable_range` does not reach it; this is
+`isStrongMarkov_jumpOperator_coordinate` with `isStoppingTime_firstHitCapped_add`. -/
+theorem isStrongMarkov_flip_firstHitCapped (P : Measure (RightContinuousPath Bool))
+    [IsProbabilityMeasure P]
+    (hsol : IsMPSolution (mpFamily (jumpOperator flipRate flipKernel) lebesgueClock
+        Clock.Conv.optional (coordinate : ℝ≥0 → RightContinuousPath Bool → Bool))
+      (pathFiltration (E := Bool)) P)
+    (T : ℝ≥0) {f : Bool → ℝ} (hf : Measurable f) {cf : ℝ} (hfb : ∀ x, ‖f x‖ ≤ cf) (t : ℝ≥0) :
+    P[fun ω ↦ f (coordinate (firstHitCapped {true} T ω + t) ω) |
+        (isStoppingTime_firstHitCapped_add (measurableSet_singleton true) T 0).measurableSpace]
+      =ᵐ[P] P[fun ω ↦ f (coordinate (firstHitCapped {true} T ω + t) ω) |
+        MeasurableSpace.comap (fun ω ↦ coordinate (firstHitCapped {true} T ω) ω)
+          inferInstance] :=
+  isStrongMarkov_jumpOperator_coordinate measurable_flipRate (fun x ↦ (flipRate_pos x).le)
+    flipRate_le_one hsol (isStoppingTime_firstHitCapped_add (measurableSet_singleton true) T)
+    (firstHitCapped_le {true} T) hf hfb t
 
 end TwoStateSolution
 
@@ -28447,5 +27468,373 @@ second is the only item of the computation the acceptance test still owes that i
 probability. -/
 
 end WalkContainment
+
+/-! ### Acceptance of the local problem: the explosive jump process of `rem:jumpexplosion`
+
+`E = ℕ`, `μ(n, ·) = δ_{n+1}`, `λ(n) = 2ⁿ`.  The test function `f n = 1 - 2⁻ⁿ` has the constant
+generator `1/2`, and that refuses every solution, global and local, on `ℝ≥0`. -/
+
+section ExplosiveAcceptance
+
+/-- The jump kernel of `rem:jumpexplosion`: from `n` to `n + 1`. -/
+noncomputable def explodeKernel : Kernel ℕ ℕ :=
+  Kernel.deterministic (· + 1) (Measurable.of_discrete)
+
+instance : IsMarkovKernel explodeKernel := by
+  unfold explodeKernel
+  infer_instance
+
+/-- The test function of the explosion argument, `f n = 1 - 2⁻ⁿ`: bounded, and its generator
+under the rate `2ⁿ` and the kernel `n ↦ δ_{n+1}` is the constant `1/2`. -/
+noncomputable def explodeTest : ℕ → ℝ := fun n ↦ 1 - ((2 : ℝ) ^ n)⁻¹
+
+theorem explodeTest_nonneg (n : ℕ) : 0 ≤ explodeTest n := by
+  simp only [explodeTest, sub_nonneg]
+  exact inv_le_one_of_one_le₀ (one_le_pow₀ (by norm_num))
+
+theorem explodeTest_le_one (n : ℕ) : explodeTest n ≤ 1 := by
+  simp only [explodeTest, sub_le_self_iff, inv_nonneg]
+  positivity
+
+theorem jumpApply_explodeTest :
+    jumpApply explodeRate explodeKernel explodeTest = fun _ ↦ 1 / 2 := by
+  funext n
+  simp only [jumpApply, explodeKernel, Kernel.deterministic_apply, integral_dirac, explodeTest,
+    explodeRate, pow_succ]
+  have h : (2 : ℝ) ^ n ≠ 0 := by positivity
+  field_simp
+  ring
+
+/-- **The explosive jump process solves not even the local martingale problem on `ℝ≥0`**, for any
+presentation: any sample space, filtration, probability measure, `ℕ`-valued process and
+convention.  With `f n = 1 - 2⁻ⁿ` the test process is `f (X t) - t / 2` up to the convention, a
+localizing sequence `τ_n → ∞` gives `E[f (X_{t ∧ τ_n})] - E[f (X_0)] → t / 2`, and `0 ≤ f ≤ 1`
+refuses this at `t = 3`.
+
+This is `rem:jumpexplosion` read against `def:absMP` and `def:localizing`(L1): the jump times
+increase to `ζ`, not to `∞`, so they are no localizing sequence in the sense of either, and no
+other sequence is. -/
+theorem not_isLocalMPSolution_explode {Ω : Type*} {m : MeasurableSpace Ω}
+    (𝓕 : Filtration ℝ≥0 m) (P : Measure Ω) [IsProbabilityMeasure P] (X : ℝ≥0 → Ω → ℕ)
+    (c : Clock.Conv) :
+    ¬ IsLocalMPSolution (mpFamily (jumpOperator explodeRate explodeKernel) lebesgueClock c X)
+      𝓕 P := by
+  intro h
+  set Q := lebesgueClock
+  set I : ℝ≥0 → ℝ := fun t ↦ ∫ _ in Q.interval c ⊥ t, (1 / 2 : ℝ) ∂Q.q with hIdef
+  set Y : ℝ≥0 → Ω → ℝ := fun t ω ↦ explodeTest (X t ω) - I t with hYdef
+  have hY : Y ∈ mpFamily (jumpOperator explodeRate explodeKernel) lebesgueClock c X := by
+    refine ⟨(explodeTest, jumpApply explodeRate explodeKernel explodeTest),
+      mem_jumpOperator (f := explodeTest) Measurable.of_discrete (C := 1) fun n ↦ ?_,
+      fun t ω ↦ ?_⟩
+    · rw [abs_of_nonneg (explodeTest_nonneg n)]
+      exact explodeTest_le_one n
+    · show explodeTest (X t ω) - I t = explodeTest (X t ω) - ∫ s in lebesgueClock.interval c ⊥ t,
+        jumpApply explodeRate explodeKernel explodeTest (X s ω) ∂lebesgueClock.q
+      rw [jumpApply_explodeTest]
+  obtain ⟨τ, hτ, hmart⟩ := h Y hY
+  -- the compensator: `I t = q (interval) / 2`, nonnegative, `0` at `⊥`, at least `5/4` at `3`
+  have hIeq : ∀ t, I t = Q.q.real (Q.interval c ⊥ t) * (1 / 2) := fun t ↦ by
+    simp only [hIdef, setIntegral_const, smul_eq_mul]
+  have hsub : ∀ t, Q.interval c ⊥ t ⊆ Set.Iic t := fun t ↦ by
+    cases c <;> intro x hx <;> simp only [Clock.interval, Set.mem_sdiff] at hx
+    · exact hx.1
+    · exact (Set.mem_Iio.1 hx.1).le
+  have hfin : ∀ t, Q.q (Q.interval c ⊥ t) ≠ ⊤ := fun t ↦
+    ne_top_of_le_ne_top (Q.measure_Iic_ne_top t) (measure_mono (hsub t))
+  have hI0 : I ⊥ = 0 := by
+    have : Q.interval c ⊥ ⊥ = ∅ := by cases c <;> simp [Clock.interval]
+    rw [hIeq, this, measureReal_empty, zero_mul]
+  have hInn : ∀ t, 0 ≤ I t := fun t ↦ by rw [hIeq]; positivity
+  have hIle : ∀ t ≤ 3, I t ≤ Q.q.real (Set.Iic 3) * (1 / 2) := by
+    intro t ht
+    rw [hIeq]
+    gcongr
+    · exact Q.measure_Iic_ne_top 3
+    · exact (hsub t).trans (Set.Iic_subset_Iic.2 ht)
+  have hI3 : 5 / 4 ≤ I 3 := by
+    have hsub3 : Set.Ioc (0 : ℝ≥0) (5 / 2) ⊆ Q.interval c ⊥ 3 := by
+      intro x hx
+      have hx3 : x < 3 := hx.2.trans_lt (by norm_num)
+      cases c <;> simp only [Clock.interval, Set.mem_sdiff, Set.mem_Iic, Set.mem_Iio, bot_eq_zero',
+        not_le, not_lt]
+      · exact ⟨hx3.le, hx.1⟩
+      · exact ⟨hx3, zero_le⟩
+    have hmass : Q.q.real (Set.Ioc (0 : ℝ≥0) (5 / 2)) = 5 / 2 := by
+      rw [measureReal_def, lebesgueClock_apply_Ioc]
+      norm_num
+    rw [hIeq]
+    have := measureReal_mono hsub3 (hfin 3)
+    rw [hmass] at this
+    linarith
+  set C : ℝ := 1 + Q.q.real (Set.Iic 3) * (1 / 2) with hCdef
+  set Z : ℕ → Ω → ℝ := fun n ↦
+    stoppedProcess (fun i ↦ {ω | ⊥ < τ n ω}.indicator (Y i)) (τ n) 3 with hZdef
+  -- each stopped process has the mean it has at time `⊥`, which is nonnegative
+  have hmean : ∀ n, 0 ≤ ∫ ω, Z n ω ∂P := by
+    intro n
+    rw [hZdef, ← setIntegral_univ, ← (hmart n).setIntegral_eq (bot_le : (⊥ : ℝ≥0) ≤ 3)
+      MeasurableSet.univ, setIntegral_univ]
+    refine integral_nonneg fun ω ↦ ?_
+    simp only [stoppedProcess]
+    have hbot : (min ((⊥ : ℝ≥0) : WithTop ℝ≥0) (τ n ω)).untopA = ⊥ :=
+      le_bot_iff.1 (by
+        have : min ((⊥ : ℝ≥0) : WithTop ℝ≥0) (τ n ω) = ((⊥ : ℝ≥0) : WithTop ℝ≥0) :=
+          min_eq_left (by rw [WithTop.coe_bot]; exact bot_le)
+        rw [this]; rfl)
+    rw [hbot]
+    by_cases hω : ω ∈ {ω | ⊥ < τ n ω}
+    · rw [Set.indicator_of_mem hω, hYdef]
+      simp only [hI0, sub_zero]
+      exact explodeTest_nonneg _
+    · rw [Set.indicator_of_notMem hω]
+      simp
+  have hbound : ∀ n ω, ‖Z n ω‖ ≤ C := by
+    intro n ω
+    simp only [hZdef, stoppedProcess]
+    set u := (min ((3 : ℝ≥0) : WithTop ℝ≥0) (τ n ω)).untopA
+    have hu : u ≤ 3 := by
+      show (min ((3 : ℝ≥0) : WithTop ℝ≥0) (τ n ω)).untopA ≤ 3
+      induction τ n ω using WithTop.recTopCoe with
+      | top => exact le_of_eq (by simp; rfl)
+      | coe v => rw [← WithTop.coe_min]; exact min_le_left _ _
+    have hC0 : 0 ≤ C := by rw [hCdef]; positivity
+    by_cases hω : ω ∈ {ω | ⊥ < τ n ω}
+    · rw [Set.indicator_of_mem hω, hYdef, Real.norm_eq_abs, abs_le]
+      have h1 := explodeTest_nonneg (X u ω)
+      have h2 := explodeTest_le_one (X u ω)
+      have h3 := hInn u
+      have h4 := hIle u hu
+      constructor <;> simp only [] <;> linarith
+    · rw [Set.indicator_of_notMem hω, norm_zero]
+      exact hC0
+  have hlim : ∀ᵐ ω ∂P, Tendsto (fun n ↦ Z n ω) atTop (𝓝 (Y 3 ω)) := by
+    filter_upwards [hτ.tendsto_top] with ω hω
+    have hev : ∀ᶠ n in atTop, ((3 : ℝ≥0) : WithTop ℝ≥0) < τ n ω :=
+      hω.eventually (lt_mem_nhds (WithTop.coe_lt_top 3))
+    refine tendsto_const_nhds.congr' (hev.mono fun n hn ↦ ?_)
+    have hpos : ⊥ < τ n ω := lt_of_le_of_lt bot_le hn
+    simp only [hZdef, stoppedProcess, min_eq_left hn.le]
+    rw [Set.indicator_of_mem (show ω ∈ {ω | ⊥ < τ n ω} from hpos)]
+    rfl
+  have hconv := tendsto_integral_of_dominated_convergence (fun _ ↦ C)
+    (fun n ↦ ((hmart n).integrable 3).aestronglyMeasurable) (integrable_const C)
+    (fun n ↦ ae_of_all _ (hbound n)) hlim
+  have hlimnn : 0 ≤ ∫ ω, Y 3 ω ∂P := ge_of_tendsto' hconv hmean
+  have hY3m : AEStronglyMeasurable (Y 3) P :=
+    aestronglyMeasurable_of_tendsto_ae atTop
+      (fun n ↦ ((hmart n).integrable 3).aestronglyMeasurable) hlim
+  have hY3i : Integrable (Y 3) P := by
+    refine Integrable.mono' (integrable_const C) hY3m (ae_of_all _ fun ω ↦ ?_)
+    rw [hYdef, Real.norm_eq_abs, abs_le]
+    have h1 := explodeTest_nonneg (X 3 ω)
+    have h2 := explodeTest_le_one (X 3 ω)
+    have h3 := hInn 3
+    have h4 := hIle 3 le_rfl
+    constructor <;> simp only [] <;> linarith
+  have hY3 : ∫ ω, Y 3 ω ∂P ≤ -(1 / 4) := by
+    calc ∫ ω, Y 3 ω ∂P ≤ ∫ _ : Ω, (-(1 / 4) : ℝ) ∂P := by
+          refine integral_mono hY3i (integrable_const _) fun ω ↦ ?_
+          have h2 := explodeTest_le_one (X 3 ω)
+          show explodeTest (X 3 ω) - I 3 ≤ -(1 / 4)
+          linarith
+      _ = -(1 / 4) := by simp
+  linarith
+
+
+/-- The global problem has no solution either, a fortiori. -/
+theorem not_isMPSolution_explode {Ω : Type*} {m : MeasurableSpace Ω}
+    (𝓕 : Filtration ℝ≥0 m) (P : Measure Ω) [IsProbabilityMeasure P] (X : ℝ≥0 → Ω → ℕ)
+    (c : Clock.Conv) :
+    ¬ IsMPSolution (mpFamily (jumpOperator explodeRate explodeKernel) lebesgueClock c X) 𝓕 P :=
+  fun h ↦ not_isLocalMPSolution_explode 𝓕 P X c (isLocalMPSolution_of_isMPSolution h)
+
+/-- **The explosion witness explodes with positive probability, by the martingale argument.**
+If the data of `rem:jumpexplosion` did not explode almost surely, `jumpProcess_isLocalMPSolution`
+would make the constructed process a local solution, which `not_isLocalMPSolution_explode`
+forbids.  The manuscript computes `E[ζ] = ∑ 2⁻ⁿ < ∞` instead; here no distribution of `ζ` is
+computed.  What stays true is `martingale_stoppedProcess_rateTime_jumpProcessE` at every level:
+the process solves the problem on `[0, ζ)`. -/
+theorem not_ae_mem_nonExplosiveE_explode (nu : Measure ℕ) [IsProbabilityMeasure nu] :
+    ¬ ∀ᵐ ω ∂(jumpMeasure explodeKernel nu), ω ∈ NonExplosiveE explodeRate := fun hne ↦
+  not_isLocalMPSolution_explode _ _ _ _ (jumpProcess_isLocalMPSolution (mu := explodeKernel)
+    Measurable.of_discrete (fun x ↦ by simp only [explodeRate]; positivity) nu hne)
+
+end ExplosiveAcceptance
+
+section ExplosionTime
+
+variable {E : Type*} [MeasurableSpace E]
+
+/-- **The explosion time** of the local construction, the supremum of the jump times, in
+`ENNReal`. -/
+noncomputable def explosionTimeE (lam : E → ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) : ENNReal :=
+  ⨆ n, jumpTimeE lam ω.1 ω.2 n
+
+variable {lam : E → ℝ}
+
+/-- `rateSup_lt_top_of_mem_nonExplosiveE` at one time: before a jump time only finitely many
+states are visited. -/
+theorem rateSup_lt_top_of_lt_jumpTimeE {y : ℕ → E} {xi : ℕ → ℝ} {t : ℝ}
+    (hex : ∃ n, ENNReal.ofReal t < jumpTimeE lam y xi (n + 1)) : rateSup lam t (y, xi) < ⊤ := by
+  set k := stepIndex (jumpTimeE lam y xi) (ENNReal.ofReal t) with hk
+  have htop : ENNReal.ofReal t < jumpTimeE lam y xi (k + 1) := lt_stepIndex_succ hex
+  have hle : rateSup lam t (y, xi)
+      ≤ ∑ i ∈ Finset.range (k + 1), ENNReal.ofReal (lam (y i)) := by
+    refine rateSup_le fun s hs ↦ ?_
+    have hsk : stepIndex (jumpTimeE lam y xi) (ENNReal.ofReal s) ≤ k :=
+      stepIndex_le ((ENNReal.ofReal_le_ofReal hs.2).trans_lt htop)
+    have : jumpProcessE lam s (y, xi)
+        = y (stepIndex (jumpTimeE lam y xi) (ENNReal.ofReal s)) := rfl
+    rw [this]
+    exact Finset.single_le_sum (f := fun i ↦ ENNReal.ofReal (lam (y i)))
+      (fun i _ ↦ zero_le) (Finset.mem_range.2 (Nat.lt_succ_of_le hsk))
+  exact hle.trans_lt (ENNReal.sum_lt_top.2 fun i _ ↦ ENNReal.ofReal_lt_top)
+
+/-- **The hitting times of the rate levels reach at least the explosion time**, at every sample
+point: before the explosion time the running supremum of the rate is finite. -/
+theorem explosionTimeE_le_iSup_rateTime (ω : (ℕ → E) × (ℕ → ℝ)) :
+    explosionTimeE lam ω ≤ ⨆ n, rateTime lam (n + 1) ω := by
+  obtain ⟨y, xi⟩ := ω
+  refine le_of_forall_lt fun c hc ↦ ?_
+  obtain ⟨k, hk⟩ := lt_iSup_iff.1 hc
+  have hcne : c ≠ ⊤ := ne_top_of_lt hk
+  set s : ℝ≥0 := c.toNNReal with hs
+  have hcs : c = (s : ENNReal) := (ENNReal.coe_toNNReal hcne).symm
+  have hex : ∃ n, ENNReal.ofReal (s : ℝ) < jumpTimeE lam y xi (n + 1) :=
+    ⟨k, by rw [ENNReal.ofReal_coe_nnreal, ← hcs]; exact hk.trans_le (monotone_jumpTimeE k.le_succ)⟩
+  obtain ⟨N, hN⟩ := ENNReal.exists_nat_gt (rateSup_lt_top_of_lt_jumpTimeE hex).ne
+  have hlt : c < rateTime lam N (y, xi) := by
+    rw [hcs]
+    refine lt_of_not_ge fun hcon ↦ ?_
+    exact absurd ((rateTime_le_iff s).1 hcon) (not_le.2 hN)
+  exact hlt.trans_le ((monotone_rateTime lam (y, xi) N.le_succ).trans (le_iSup
+    (fun n ↦ rateTime lam (n + 1) (y, xi)) N))
+
+omit [MeasurableSpace E] in
+/-- The jump times are bounded below by the waiting times over a bound of the rates. -/
+theorem ofReal_sum_div_le_jumpTimeE {y : ℕ → E} {xi : ℕ → ℝ} (hpos : ∀ n, 0 < xi n)
+    {M : ℕ} (hlam : ∀ k, ENNReal.ofReal (lam (y k)) < M) (N : ℕ) :
+    ENNReal.ofReal (∑ k ∈ Finset.range N, xi k) / M ≤ jumpTimeE lam y xi N := by
+  induction N with
+  | zero => simp
+  | succ N ih =>
+    rw [Finset.sum_range_succ, ENNReal.ofReal_add (Finset.sum_nonneg fun k _ ↦ (hpos k).le)
+      (hpos N).le, ENNReal.add_div, jumpTimeE_succ]
+    exact add_le_add ih (ENNReal.div_le_div_left (hlam N).le _)
+
+/-- **Almost surely the hitting times of the rate levels do not pass the explosion time**:
+exploding needs an unbounded rate along the chain, because with rates below `M` the jump times
+are at least the waiting time sums over `M`, which diverge. -/
+theorem iSup_rateTime_le_explosionTimeE {y : ℕ → E} {xi : ℕ → ℝ} (hpos : ∀ n, 0 < xi n)
+    (hsum : Tendsto (fun n ↦ ∑ k ∈ Finset.range n, xi k) atTop atTop) :
+    ⨆ n, rateTime lam (n + 1) (y, xi) ≤ explosionTimeE lam (y, xi) := by
+  set ζ := explosionTimeE lam (y, xi) with hζdef
+  by_cases hζ : ζ = ⊤
+  · rw [hζ]; exact le_top
+  refine iSup_le fun n ↦ ?_
+  set M : ℕ := n + 1 with hM
+  have hTle : ∀ k, jumpTimeE lam y xi k ≤ ζ := fun k ↦ le_iSup (fun k ↦ jumpTimeE lam y xi k) k
+  -- some state along the chain has rate at least `M`
+  obtain ⟨k, hk⟩ : ∃ k, (M : ENNReal) ≤ ENNReal.ofReal (lam (y k)) := by
+    by_contra hcon
+    push Not at hcon
+    have hbd := ofReal_sum_div_le_jumpTimeE hpos hcon
+    obtain ⟨N, hN⟩ := eventually_atTop.1 ((tendsto_atTop.1 hsum) (M * (ζ.toReal + 1)))
+    have h1 : ENNReal.ofReal (M * (ζ.toReal + 1)) / M ≤ ζ :=
+      (ENNReal.div_le_div_right (ENNReal.ofReal_le_ofReal (hN N le_rfl)) _).trans
+        ((hbd N).trans (hTle N))
+    have hM0 : (M : ENNReal) ≠ 0 := by simp [hM]
+    rw [ENNReal.ofReal_mul (Nat.cast_nonneg _), ENNReal.ofReal_natCast,
+      ENNReal.mul_div_right_comm, ENNReal.div_self hM0 (ENNReal.natCast_ne_top M), one_mul] at h1
+    have h2 : ζ < ENNReal.ofReal (ζ.toReal + 1) := by
+      rw [← ENNReal.ofReal_toReal hζ]
+      refine (ENNReal.ofReal_lt_ofReal_iff (by positivity)).2 ?_
+      rw [ENNReal.toReal_ofReal ENNReal.toReal_nonneg]
+      linarith
+    exact absurd h1 (not_le.2 h2)
+  -- the path visits that state before the explosion time
+  have hTk : jumpTimeE lam y xi k ≠ ⊤ := ne_top_of_le_ne_top hζ (hTle k)
+  have hlt : jumpTimeE lam y xi k < jumpTimeE lam y xi (k + 1) := lt_jumpTimeE_succ (hpos k) hTk
+  set s : ℝ := (jumpTimeE lam y xi k).toReal with hsdef
+  have hofs : ENNReal.ofReal s = jumpTimeE lam y xi k := ENNReal.ofReal_toReal hTk
+  have hval : jumpProcessE lam s (y, xi) = y k := by
+    show y (stepIndex (jumpTimeE lam y xi) (ENNReal.ofReal s)) = y k
+    rw [hofs, stepIndex_eq_of (Or.inr le_rfl) hlt monotone_jumpTimeE]
+  have hsmem : s ∈ Set.Icc (0 : ℝ) ((ζ.toNNReal : ℝ≥0) : ℝ) := by
+    refine ⟨ENNReal.toReal_nonneg, ?_⟩
+    rw [ENNReal.coe_toNNReal_eq_toReal]
+    exact ENNReal.toReal_mono hζ (hTle k)
+  have hsup : (M : ENNReal) ≤ rateSup lam ((ζ.toNNReal : ℝ≥0) : ℝ) (y, xi) :=
+    hk.trans (hval ▸ le_rateSup hsmem)
+  have := (rateTime_le_iff (lam := lam) (ω := (y, xi)) (n := M) ζ.toNNReal).2 hsup
+  rwa [ENNReal.coe_toNNReal hζ] at this
+
+/-- **The hitting times of the rate levels increase to the explosion time**, almost surely under
+the law of the construction. -/
+theorem ae_tendsto_rateTime_explosionTimeE (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] :
+    ∀ᵐ ω ∂(jumpMeasure mu nu),
+      Tendsto (fun n ↦ rateTime lam (n + 1) ω) atTop (𝓝 (explosionTimeE lam ω)) := by
+  have h : ∀ᵐ ω ∂(jumpMeasure mu nu), (∀ n, 0 < ω.2 n) ∧
+      Tendsto (fun n ↦ ∑ k ∈ Finset.range n, ω.2 k) atTop atTop := by
+    refine ae_of_ae_map (f := fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ω.2)
+      (p := fun xi : ℕ → ℝ ↦ (∀ n, 0 < xi n) ∧
+        Tendsto (fun n ↦ ∑ k ∈ Finset.range n, xi k) atTop atTop)
+      measurable_snd.aemeasurable ?_
+    rw [jumpMeasure_map_snd]
+    exact ae_pos_waiting.and tendsto_sum_waiting_atTop
+  filter_upwards [h] with ω hω
+  obtain ⟨y, xi⟩ := ω
+  have heq : ⨆ n, rateTime lam (n + 1) (y, xi) = explosionTimeE lam (y, xi) :=
+    le_antisymm (iSup_rateTime_le_explosionTimeE hω.1 hω.2) (explosionTimeE_le_iSup_rateTime _)
+  rw [← heq]
+  exact tendsto_atTop_iSup fun a b hab ↦ monotone_rateTime lam (y, xi) (Nat.succ_le_succ hab)
+
+/-- **The jump process solves the local martingale problem on `[0, ζ)`**, `ζ` the explosion time,
+explosion or not.  Localized by `rateTime lam (n + 1) ↑ ζ`. -/
+theorem jumpProcessE_isLocalMPSolutionUpTo (hlam : Measurable lam) (hlam0 : ∀ x, 0 < lam x)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] :
+    IsLocalMPSolutionUpTo (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω)) (jumpFiltrationE lam hlam)
+      (jumpMeasure mu nu) (explosionTimeE lam) := by
+  intro Y hY
+  exact ⟨fun n ↦ rateTime lam (n + 1), fun n ↦ isStoppingTime_rateTime hlam (n + 1),
+    ae_of_all _ fun ω a b hab ↦ monotone_rateTime lam ω (Nat.succ_le_succ hab),
+    ae_tendsto_rateTime_explosionTimeE mu nu,
+    martingale_stoppedProcess_rateTime_jumpProcessE hlam hlam0 nu hY⟩
+
+end ExplosionTime
+
+section ExplosionTimeExplode
+
+variable {E : Type*}
+
+/-- The explosion time is `⊤` exactly on the non explosive sample points. -/
+theorem explosionTimeE_eq_top_iff {lam : E → ℝ} {ω : (ℕ → E) × (ℕ → ℝ)} :
+    explosionTimeE lam ω = ⊤ ↔ ω ∈ NonExplosiveE lam := by
+  refine ⟨fun h t ↦ ?_, fun h ↦ ?_⟩
+  · have : ENNReal.ofReal t < explosionTimeE lam ω := h ▸ ENNReal.ofReal_lt_top
+    obtain ⟨n, hn⟩ := lt_iSup_iff.1 this
+    exact ⟨n, hn.trans_le (monotone_jumpTimeE n.le_succ)⟩
+  · refine ENNReal.eq_top_of_forall_nnreal_le fun r ↦ ?_
+    obtain ⟨n, hn⟩ := h (r : ℝ)
+    rw [ENNReal.ofReal_coe_nnreal] at hn
+    exact hn.le.trans (le_iSup (fun n ↦ jumpTimeE lam ω.1 ω.2 n) (n + 1))
+
+/-- **The explosion witness solves the local problem on `[0, ζ)`, and `ζ < ⊤` with positive
+probability**; on `[0, ⊤)` it has no solution (`not_isLocalMPSolution_explode`). -/
+theorem explode_isLocalMPSolutionUpTo (nu : Measure ℕ) [IsProbabilityMeasure nu] :
+    IsLocalMPSolutionUpTo (mpFamily (jumpOperator explodeRate explodeKernel) lebesgueClock
+        Clock.Conv.optional (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE explodeRate (t : ℝ) ω))
+      (jumpFiltrationE explodeRate Measurable.of_discrete) (jumpMeasure explodeKernel nu)
+      (explosionTimeE explodeRate) ∧
+    ¬ ∀ᵐ ω ∂(jumpMeasure explodeKernel nu), explosionTimeE explodeRate ω = ⊤ := by
+  refine ⟨jumpProcessE_isLocalMPSolutionUpTo Measurable.of_discrete
+    (fun x ↦ by simp only [explodeRate]; positivity) explodeKernel nu, fun h ↦ ?_⟩
+  exact not_ae_mem_nonExplosiveE_explode nu (by
+    filter_upwards [h] with ω hω using explosionTimeE_eq_top_iff.1 hω)
+
+end ExplosionTimeExplode
 
 end MeasureTheory
