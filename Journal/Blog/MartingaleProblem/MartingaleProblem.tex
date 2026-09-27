@@ -4701,12 +4701,9 @@ point of the exercise is that nothing is being waved through.
 
 \begin{lemma}[Local mixtures and disintegration; \eqref{T0} + \eqref{E1}]
   \label{lem:localmix}
-  Parts \ref{it:lm_conv} and \ref{it:lm_a} need only \eqref{E0}; \eqref{E1} is used in
+  Part \ref{it:lm_a} needs only \eqref{E0}; \eqref{E1} is used in
   \ref{it:lm_b}.
   \begin{enumerate}[label=(\alph*)]
-  \item \label{it:lm_conv}
-    $\Msol_{\mathrm{loc}}(\XX^\circ)$ is convex.  \emph{No hypothesis is needed
-    for this.}
   \item \label{it:lm_a}
     If $\Sigma$ satisfies \ref{it:L1}, then $\Msol_{\mathrm{loc}}(\XX^\circ)$ is
     stable under measurable mixtures $P = \int P_\vartheta \nu(\dif\vartheta)$
@@ -4721,17 +4718,7 @@ point of the exercise is that nothing is being waved through.
 \end{lemma}
 
 \begin{proof}
-  \ref{it:lm_conv}  Let $P, P' \in \Msol_{\mathrm{loc}}(\XX^\circ)$,
-  $Q = \alpha P + (1-\alpha)P'$, and let $Y^\circ \in \XX^\circ$ be localized by
-  $(\tau_n)$ under $P$ and by $(\tau'_n)$ under $P'$.  Put
-  $\sigma_n = \tau_n \wedge \tau'_n$.  Then $Y^{\circ,\sigma_n}$ is a martingale
-  under $P$ and under $P'$ --- stopping a martingale at a further stopping time
-  leaves a martingale --- hence under $Q$, and $\sigma_n \to \infty$ $Q$-a.s.
-  because $\tau_n \to \infty$ $P$-a.s.\ and $\tau'_n \to \infty$ $P'$-a.s.  Here
-  the two localizing sequences are allowed to differ; it is only for
-  \ref{it:lm_a} that this ceases to be possible.
-
-  \ref{it:lm_a}, \ref{it:lm_b}  By \ref{it:L1},
+  By \ref{it:L1},
   $\Msol_{\mathrm{loc}}(\XX^\circ) = \Msol(\XX^\circ_\bullet)$ with
   $\XX^\circ_\bullet = \{Y^{\circ,\tau_n} : Y^\circ \in \XX^\circ, n \in \N\}$, a
   family of $(\Filt^\circ_t)$-adapted processes --- stopping a process at a
@@ -4742,18 +4729,6 @@ point of the exercise is that nothing is being waved through.
   adaptedness, and the countability hypothesis for \ref{it:lm_b} is inherited
   because $n$ ranges over $\N$.
 \end{proof}
-
-\begin{remark}
-  \label{rem:convexfree}
-  The contrast between \ref{it:lm_conv} and \ref{it:lm_a} is the whole point of
-  \ref{it:L1}, and it is easy to get wrong.  A \emph{finite} convex combination
-  costs nothing, because two localizing sequences can be combined by
-  $\tau_n \wedge \tau'_n$.  A mixture over a continuum cannot: one would need
-  $\inf_\vartheta \tau^\vartheta_n$, which need not tend to infinity and need not
-  even be measurable.  That is exactly where a localizing sequence common to all
-  $P$ becomes indispensable, and it is why \KA{} states his Theorem~32.10 for a
-  \emph{kernel} $x \mapsto P_x$ and takes the trouble to exhibit one.
-\end{remark}
 
 The hypothesis \ref{it:L1} is less exotic than it looks: in the two places in the
 literature where it is used it is not assumed but \emph{constructed}, and always
@@ -10800,8 +10775,8 @@ any bespoke index theory.
   deferred until after \ref{it:F4}, and so should the local theory of
   Section~\ref{ssec:localmp} --- Definition~\ref{def:localizing} is about
   stopping times.  Note that
-  Lemma~\ref{lem:localmix}\ref{it:lm_conv} and Lemma~\ref{lem:L1auto} are the
-  only genuinely new proofs there; Lemma~\ref{lem:localrestart} is
+  Lemma~\ref{lem:L1auto} is the only genuinely new proof there;
+  Lemma~\ref{lem:localrestart} is
   Lemma~\ref{lem:restart} plus the one identity \eqref{eq:shiftedstopped}, and
   Theorem~\ref{thm:localuniq} is bookkeeping.
   \emph{Status.}  Lemma~\ref{lem:restart} and Theorem~\ref{thm:absuniq} are
