@@ -81,6 +81,7 @@
 \newcommand{\Ku}{\cite{Kurtz91}}
 \newcommand{\BM}{\cite{BM25}}
 \newcommand{\JR}{\cite{JR16}}
+\newcommand{\BK}{\cite{BK93}}
 \DeclareMathOperator{\Lip}{Lip}
 \newcommand{\DT}{D(\T,E)}
 
@@ -9155,7 +9156,9 @@ Lemma~\ref{lem:EKconv} has no proof of its own.
   problem for $A$; in particular the martingale problem for $A$ has a solution
   with sample paths in $\DE$.  If in addition uniqueness holds (e.g.\ by
   Theorem~\ref{thm:uniqueness} or Corollary~\ref{cor:uniqviadual}), then
-  $X_n \wto X$ for the unique solution $X$.
+  $X_n \wto X$ for the unique solution $X$.  Section~\ref{ssec:BKtight} shows
+  that, once uniqueness is being assumed anyway, the compact containment
+  condition \eqref{eq:ccn} can be dropped from this remark altogether.
 \end{remark}
 
 \subsection{By convergence: the abstract theorem}
@@ -9478,6 +9481,248 @@ directions:
   one that does the work here.
 \end{remark}
 
+% =====================================================================
+\subsection{Tightness from well-posedness}
+\label{ssec:BKtight}
+
+Every convergence result of this section so far assumes \ref{it:C1}: that
+$X^n \wto X$ is a hypothesis and not a conclusion.  Remark~\ref{rem:EKrelcompact}
+supplies it the way \EK{} do, out of the compact containment condition
+\eqref{eq:ccn} --- a condition on the paths, and the one item in that circle of
+results which is hard to come by when $E$ is not locally compact.  \BK{} trade it
+for two conditions of an entirely different kind: tightness of the
+\emph{one-dimensional} marginals, and well-posedness in the sense of
+Definition~\ref{def:wellposed}.
+
+\begin{fact}[Transport along an embedding; \BK, Lemma 1.1; \eqref{T3} + \eqref{E0}]
+  \label{fact:BKtransport}
+  Let $g : E \to \bar E$ be Borel, injective, with Borel inverse on $g(E)$.  Let
+  $(A_t)$ have domain $\dom(A) \subset \Bdd(E)$ and let $(\bar A_t)$ have domain
+  $\overline{\dom} \subset \Bdd(\bar E)$, and suppose $u \circ g \in \dom(A)$ with
+  $(\bar A_t u) \circ g = A_t(u \circ g)$ for every $u \in \overline{\dom}$.
+  \begin{enumerate}[label=(\alph*)]
+  \item If $X$ is a progressively measurable solution of the martingale problem
+    for $(A_t)$, then $Z = g \circ X$ is one for $(\bar A_t)$.
+  \item Conversely, suppose $\{(f, A_\cdot f) : f \in \dom(A)\}$ lies in the
+    bp-closure of $\{(u \circ g, (\bar A_\cdot u) \circ g) : u \in \overline{\dom}\}$.
+    If $Z$ is a progressively measurable solution for $(\bar A_t)$ with
+    \begin{equation}
+      \label{eq:BKinside}
+      P\{ Z(t) \in g(E) \} = 1 \qquad \text{for all } t \geq 0 ,
+    \end{equation}
+    then $X = g^{-1} \circ Z$ is a progressively measurable solution for $(A_t)$.
+  \end{enumerate}
+  Consequently, if the martingale problem for $(A_t)$ is well-posed, then for each
+  initial law there is exactly one solution of the martingale problem for
+  $(\bar A_t)$ satisfying \eqref{eq:BKinside}.
+\end{fact}
+
+\begin{fact}[\BK, Theorem 2.1; \eqref{T3} + \eqref{E3}]
+  \label{fact:BKtight}
+  For $t \geq 0$ let $A_t$ be a linear operator on $\Cb(E)$ with a common domain
+  $\dom(A) \subset \Cb(E)$, such that $(t,x) \mapsto A_tf(x)$ is bounded and
+  measurable for each $f \in \dom(A)$, and assume
+  \begin{enumerate}[label=(\Roman*)]
+  \item \label{it:BK1} there is a countable $\{g_k\} \subset \dom(A)$ such that
+    $\{(f, A_\cdot f) : f \in \dom(A)\}$ is contained in the bp-closure
+    (Definition~\ref{def:bp}) of $\{(g_k, A_\cdot g_k) : k \geq 1\}$;
+  \item \label{it:BK2} $\dom(A)$ is an algebra that separates points and vanishes
+    nowhere;
+  \item \label{it:BK3} the martingale problem for $(A_t)$ is well-posed
+    (Definition~\ref{def:wellposed}) --- uniqueness being required, as it is
+    there, among all progressively measurable solutions, and not merely
+    in $\DE$.
+  \end{enumerate}
+  Suppose moreover that $\dom(A)$ contains a countable subset which strongly
+  separates points, and that the martingale problem for $((A_t),\mu)$ has a
+  solution $X$ with sample paths in $\DE$.  Let the $X_n$ have sample paths in
+  $\DE$ and suppose
+  \begin{enumerate}[label=(\alph*)]
+  \item \label{it:BKa} $X_n(0) \wto \mu$, and $\{X_n(t)\}_{n \geq 1}$ is tight in
+    $E$ for every $t > 0$;
+  \item \label{it:BKb} for all $f \in \dom(A)$, $0 < t_1 < \dots < t_m \leq t < r$
+    and $h_1,\dots,h_m \in \Cb(E)$,
+    \begin{equation}
+      \label{eq:BKIV}
+      \lim_{n \to \infty} E\Bigl[ \Bigl( f(X_n(r)) - f(X_n(t))
+        - \int_t^r A_sf(X_n(s)) \dif s \Bigr)
+        \prod_{i=1}^m h_i(X_n(t_i)) \Bigr] \;=\; 0 ;
+    \end{equation}
+  \item \label{it:BKc} for every $f \in \dom(A)$ and every $T < \infty$ there are
+    progressively measurable real-valued $\xi_n, \varphi_n$ such that
+    $\xi_n(\cdot) - \int_0^{\cdot} \varphi_n(s) \dif s$ is a martingale and
+    \begin{equation}
+      \label{eq:BKapprox}
+      \lim_{n \to \infty}
+        E\Bigl[ \sup_{t \in [0,T]} \bigl| \xi_n(t) - f(X_n(t)) \bigr| \Bigr] = 0,
+      \qquad
+      \sup_{n \in \N} E\bigl[ \lVert \varphi_n \rVert_{p,T} \bigr] < \infty
+      \ \text{ for some } p \in (1,\infty) .
+    \end{equation}
+  \end{enumerate}
+  Then $X_n \wto X$ on $\DE$.  Dropping the countable strongly separating subset
+  and the c\`adl\`ag paths, so that $X_n$ and $X$ are merely progressively
+  measurable, the same hypotheses give convergence of the finite-dimensional
+  distributions of $X_n$ to those of $X$ (\BK, Theorem 2.2).  If the $X_n$ solve
+  martingale problems for operators $A^n$ with domains $\dom(A^n)$ and each
+  $f \in \dom(A)$ admits $f_n \in \dom(A^n)$ approximating it uniformly on
+  compact sets in the manner of \eqref{eq:approxA}, then \ref{it:BKb} and
+  \ref{it:BKc} hold, and both conclusions follow from that (\BK, Theorems 2.3
+  and 2.4).
+\end{fact}
+
+\begin{remark}[How the three hypotheses divide the work]
+  \label{rem:BKmechanism}
+  The proof is worth recording, because \ref{it:BKa}, \ref{it:BKc} and
+  \ref{it:BK3} do three different jobs and no two of them can be merged.  Let
+  $\{g_k\}$ be as in \ref{it:BK1}, without loss of generality strongly
+  separating, put $a_k = \lVert g_k \rVert$, and let
+  \[
+    \bar E \;=\; \prod_{k \geq 1} [-a_k, a_k], \qquad
+    g \;=\; (g_k)_{k \geq 1} : E \to \bar E ,
+  \]
+  so that $\bar E$ is compact metrizable and $g$ is a homeomorphism onto its
+  image.  Write $Z_n = g(X_n)$ and $Z = g(X)$.
+  \begin{enumerate}[label=(\arabic*)]
+  \item \emph{Relative compactness, for free.}  $\bar E$ being compact, the
+    compact containment condition \eqref{eq:ccn} is vacuous for $\{Z_n\}$, so
+    \ref{it:BKc} together with Fact~\ref{fact:relcompact2} --- of which
+    \eqref{eq:BKapprox} is exactly hypothesis \eqref{eq:relcompact2}, with
+    $\dom(A)$ in the r\^ole of the subalgebra $C_a$, which is where \ref{it:BK2}
+    is first used --- makes $\{Z_n\}$ relatively compact in
+    $D_{\bar E}[0,\infty)$.  This is the step that \eqref{eq:ccn} was there for,
+    and the compactification performs it instead.
+  \item \emph{The marginals keep the limit inside $E$.}  A subsequential limit
+    $\bar Z$ lives a priori in $D_{\bar E}[0,\infty)$, and nothing so far
+    prevents its mass from escaping to $\bar E \setminus g(E)$.  Here
+    \ref{it:BKa} enters, and only here.  Marginal tightness gives, for each $t$
+    and $\varepsilon$, a compact $K_t \subset E$ with
+    $\inf_n P\{X_n(t) \in K_t\} \geq 1 - \varepsilon$, hence
+    $\inf_n P\{Z_n(t) \in g(K_t)\} \geq 1 - \varepsilon$ with $g(K_t)$ compact in
+    $g(E)$.  Since $\dom(A)$ is an algebra, $u^2$ is available alongside $u$, and
+    the predictable quadratic variation of the martingale attached to $u$ is
+    $\int_0^{\cdot}(\bar A_su^2 - 2u \bar A_su)(\bar Z(s))\dif s$, which is
+    continuous; so $\bar Z$ has no fixed point of discontinuity, and
+    $Z_n(t) \wto \bar Z(t)$ for \emph{every} $t$.  Together this gives
+    $P\{\bar Z(t) \in g(E)\} = 1$ for all $t$, which is \eqref{eq:BKinside}.
+  \item \emph{Well-posedness identifies the limit.}  By \ref{it:BKb} and
+    \ref{it:BK1}, $\bar Z$ solves the martingale problem for the transported
+    operator, and so does $Z$ by Fact~\ref{fact:BKtransport}(a); the last
+    sentence of that Fact, which is where \ref{it:BK3} is used, forces the two to
+    have the same law.  Every subsequence thus has the same limit, so the whole sequence
+    converges, and $g^{-1}$ carries the conclusion back to $E$.
+  \end{enumerate}
+  Step~(3) is what uniqueness already does in the last sentence of
+  Remark~\ref{rem:EKrelcompact}: it upgrades ``every limit point solves the
+  martingale problem'' to ``the sequence converges''.  What is new is step~(1),
+  where the compactification has bought relative compactness outright, so that
+  \eqref{eq:ccn} is no longer needed for anything and only the identification of
+  the limit is left over.
+\end{remark}
+
+\begin{remark}[Where this sits]
+  \label{rem:BKvsCPS}
+  Three comparisons.
+  \begin{enumerate}[label=(\roman*)]
+  \item \emph{Against Theorem~\ref{thm:CPSconv}}, Fact~\ref{fact:BKtight} is
+    complementary rather than stronger or weaker: \CPS{} assume \ref{it:C1} and
+    conclude that the limit solves the martingale problem, \BK{} assume
+    well-posedness and conclude \ref{it:C1}.  The shapes agree --- \eqref{eq:BKIV}
+    is \eqref{eq:cps2}--\eqref{eq:cps3} with $\xi^n = f(X^n)$, the same test
+    variables $\prod_i h_i(X^n_{t_i})$ --- but \eqref{eq:BKapprox} is genuinely
+    stronger than \eqref{eq:cps1}, the supremum over $t \in [0,T]$ sitting inside
+    the expectation.  The natural division of labour is therefore to take
+    \ref{it:C1} from Fact~\ref{fact:BKtight} and everything the limit inherits
+    from Theorem~\ref{thm:absconv}.
+  \item \emph{Against Section~\ref{ssec:measureconv}}, it is the other way of
+    doing without \eqref{eq:ccn}.  Fact~\ref{fact:MZtight} pays for it with a
+    weaker topology --- convergence in measure rather than $J_1$ --- and buys it
+    with quasimartingale bounds; Fact~\ref{fact:BKtight} keeps $J_1$ and buys it
+    with well-posedness.  Neither implies the other, and for a state space with
+    no linear structure both need something extra: a separating class there, an
+    algebra here.
+  \item \emph{Against the organization of this manuscript}, the trade is the one
+    of Section~\ref{ssec:addedsplit}: a topological hypothesis is exchanged
+    for a probabilistic one, and the probabilistic one --- uniqueness --- is
+    exactly what Sections~\ref{sec:uniqueness} and \ref{sec:duality} supply
+    without any reference to convergence.  The price is only that the two must be
+    established in the right order.
+  \end{enumerate}
+  The setting in which this pays is the one \BK{} were after: $E$ Polish but not
+  locally compact, where \eqref{eq:ccn} is the hypothesis one cannot check.
+  Their applications are Donsker's invariance principle for Hilbert space valued
+  random variables, deduced from the central limit theorem, and the continuous
+  dependence of Hilbert space valued diffusions on their drift and diffusion
+  coefficients.
+\end{remark}
+
+\begin{remark}[Why this one does not abstract]
+  \label{rem:BKnotabstract}
+  Theorem~\ref{thm:absconv} holds in Setting~\ref{set:abstract}, with no operator,
+  no structure on the state space and no topology on $F$ beyond a Polish one.
+  Fact~\ref{fact:BKtight} does not, and it is worth saying where the obstruction
+  sits, the two results being close enough together to look as though they should
+  abstract alike.
+
+  \emph{What is irreducibly Markovian.}  Three hypotheses speak about an operator
+  on $\Cb(E)$ and have no counterpart in Definition~\ref{def:absMP}, where the
+  elements of $\XX$ are processes and not functions of the state.
+  \begin{enumerate}[label=(\arabic*)]
+  \item \ref{it:BK1} forms the bp-closure of $\{(f,A_\cdot f) : f \in \dom(A)\}$,
+    a set of pairs of \emph{functions}; there is no map $\XX \to \Cb(E)$ along
+    which a bp-closure could be taken.
+  \item \ref{it:BK2} is used twice, and is load-bearing both times.  In step~(1)
+    of Remark~\ref{rem:BKmechanism} $\dom(A)$ \emph{is} the subalgebra $C_a$ of
+    Fact~\ref{fact:relcompact2}, a criterion about $\{f \circ X_n\}$ for $f$ in an
+    algebra of $\Cb(E)$; in step~(2) it supplies $u^2$ next to $u$, without which
+    the predictable quadratic variation cannot be written down.  The abstract
+    $\XX$ carries no multiplicative structure, and should not: that is what admits
+    the test objects of Section~\ref{ssec:testobjects}.
+  \item The compactification is built out of the domain,
+    $g = (g_k)_{k \geq 1}$ with $g_k \in \dom(A)$.  Without an operator there is
+    no canonical candidate for $g$.
+  \end{enumerate}
+
+  \emph{What does abstract.}  Step~(3) generalizes entirely: identifying the limit
+  is pure uniqueness, and Theorem~\ref{thm:absuniq}\ref{it:absuniq_b} supplies it
+  with no Markov structure --- which is the point of
+  Section~\ref{ssec:addedsplit}.  Fact~\ref{fact:BKtransport} is abstractly almost
+  empty: if $\XX$ is canonical for $X$ with $Y_t = Y^\circ_t(X)$ and
+  $g : F \to \bar F$ is an embedding of path spaces, then
+  $\bar Y^\circ_t = Y^\circ_t \circ g^{-1}$ are test processes for
+  $Z = g \circ X$, and that is a relabelling.  The content of \BK, Lemma 1.1 lies
+  entirely in the \emph{operator} descending,
+  $(\bar A_t u) \circ g = A_t(u \circ g)$.
+
+  \emph{An abstract version, and what it would cost.}  One can state
+  Fact~\ref{fact:BKtight} without an operator, at the price of turning two
+  conclusions into hypotheses: a strongly separating $\{g_k\} \subset \Cb(E)$
+  given outright instead of extracted from $\dom(A)$; relative compactness of
+  $\{g_k \circ X_n\}$ in $D_{\R}[0,\infty)$ assumed directly instead of derived
+  from \ref{it:BKc} and Fact~\ref{fact:relcompact2}; \ref{it:BKa} unchanged, being
+  meaningful in Setting~\ref{set:abstract} already; and
+  Theorem~\ref{thm:absuniq} in place of \ref{it:BK3}.  That is a genuine theorem
+  and not a change of notation.  One gap, however, does not close.  Step~(2) needs
+  $P\{\bar Z(t) \in g(E)\} = 1$ for \emph{every} $t$, since that is what
+  \eqref{eq:BKinside} demands.  Without \ref{it:BK2} one obtains it only for
+  $t \in D(\bar Z)$, whose complement is countable by
+  Fact~\ref{fact:Dcountable} --- from Fact~\ref{fact:fddconv}(a) and
+  Fact~\ref{fact:portmanteau} applied to the compact set $g(K_t)$ --- and right
+  continuity does not extend it, $g(E)$ being in general not closed in $\bar E$.
+  The algebra buys exactly that step.  An abstract version must therefore either
+  assume the marginals of the limit to be continuous, or reintroduce
+  \ref{it:BK2} in some other guise.
+
+  \emph{The reason behind all of this.}  Theorem~\ref{thm:absconv} is a transfer
+  theorem: it moves a property along a convergence that it assumes, and therefore
+  needs no structure.  Tightness is by its nature a statement about the topology
+  of the path space, and Setting~\ref{set:abstract} keeps $F$ deliberately
+  arbitrary.  Hypothesis \ref{it:C1} is the one place where all the topology of
+  this section is concentrated --- which is why everything around it could be made
+  abstract, and this could not.
+\end{remark}
+
+% =====================================================================
 \subsection{Approximation on different clocks}
 \label{ssec:diffclocks}
 
@@ -9679,7 +9924,9 @@ the following isolates it.
   \end{enumerate}
   What is \emph{not} supplied here is tightness: Theorem~\ref{thm:clockchange}
   assumes \ref{it:C1}, and establishing $X^n \wto X$ on $\DE$ is the Skorokhod
-  half of the theory, cited in Remark~\ref{rem:EKrelcompact} and not proved.
+  half of the theory, cited in Remark~\ref{rem:EKrelcompact} and not proved
+  there.  Section~\ref{ssec:BKtight} is the one place where this manuscript does
+  supply it, at the price of well-posedness.
 \end{remark}
 
 % =====================================================================
@@ -10652,7 +10899,9 @@ Fact~\ref{fact:kolmogorov} needs --- see the list there.
 \item bounded pointwise convergence and bp-closures
   (Definition~\ref{def:bp}, Fact~\ref{fact:bp}) --- but only for
   Corollary~\ref{cor:bpclosure}, which is itself optional: the working statement
-  is Lemma~\ref{lem:closure}, and that is dominated convergence;
+  is Lemma~\ref{lem:closure}, and that is dominated convergence.  The one place
+  where the bp-closure is not optional is Fact~\ref{fact:BKtight}\ref{it:BK1},
+  should Section~\ref{ssec:BKtight} be formalized;
 \item the continuous mapping theorem in the form of Fact~\ref{fact:cmt} and the
   Skorokhod representation (Fact~\ref{fact:PSpolish}) --- both only for Polish
   spaces, by Remark~\ref{rem:MZcost}.  The almost everywhere continuous half of
@@ -10848,6 +11097,18 @@ any bespoke index theory.
   Section~\ref{ssec:weakstrong} beyond that --- Definitions~\ref{def:weakstrong}
   and \ref{def:PnPcont} and Fact~\ref{fact:jacodmemin} --- should be skipped:
   nothing in this manuscript needs it, by Remark~\ref{rem:augvsws}.
+  Section~\ref{ssec:BKtight} belongs here as well, and is the only item in this
+  list that makes \ref{it:F5b} depend on \ref{it:F2}: Fact~\ref{fact:BKtight}
+  \emph{consumes} well-posedness, which is what \ref{it:F2} produces, so the
+  dependency runs against the order of the literature.  Beyond the Skorokhod
+  theory it needs only Fact~\ref{fact:relcompact2}, Fact~\ref{fact:prohorov} and
+  the bp-closure of Definition~\ref{def:bp}, all three of which are on the list
+  above already; it introduces no new topology and no new kind of object.  The
+  piece of it worth isolating is Fact~\ref{fact:BKtransport}: transport of a
+  martingale problem along an embedding is stated nowhere else in this manuscript,
+  it is what carries well-posedness from $E$ to $\bar E$ and back, and it is
+  independent of everything around it --- a candidate for being formalized on its
+  own, ahead of the rest of \ref{it:F5b}.
 \end{enumerate}
 
 \subsection{Design decisions}
@@ -11366,6 +11627,11 @@ works'' and a substitution into a theorem.
 
 % =====================================================================
 \begin{thebibliography}{9}
+
+\bibitem{BK93}
+A.~G.~Bhatt and R.~L.~Karandikar.
+\newblock Weak convergence to a Markov process: the martingale approach.
+\newblock \emph{Probab.\ Theory Related Fields} \textbf{96} (1993), 335--351.
 
 \bibitem{BM25}
 R.~Degenne, D.~Ledvinka, E.~Marion and P.~Pfaffelhuber.
